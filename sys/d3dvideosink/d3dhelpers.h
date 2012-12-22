@@ -92,7 +92,6 @@ typedef struct _GstD3DData {
   gboolean               device_lost;
 } GstD3DData;
 
-
 gboolean       d3d_class_init(GstD3DVideoSink * klass);
 void           d3d_class_destroy(GstD3DVideoSink * klass);
 
@@ -104,5 +103,34 @@ void           d3d_expose_window(GstD3DVideoSink * sink);
 GstFlowReturn  d3d_render_buffer(GstD3DVideoSink * sink, GstBuffer * buf);
 GstCaps *      d3d_supported_caps(GstD3DVideoSink * sink);
 gboolean       d3d_set_render_format(GstD3DVideoSink * sink);
+
+#define GST_TYPE_D3DSURFACE_BUFFER_POOL      (gst_d3dsurface_buffer_pool_get_type())
+#define GST_IS_D3DSURFACE_BUFFER_POOL(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_D3DSURFACE_BUFFER_POOL))
+#define GST_D3DSURFACE_BUFFER_POOL(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_D3DSURFACE_BUFFER_POOL, GstD3DSurfaceBufferPool))
+#define GST_D3DSURFACE_BUFFER_POOL_CAST(obj) ((GstD3DSurfaceBufferPool*)(obj))
+
+typedef struct _GstD3DSurfaceBufferPool {
+  GstVideoBufferPool parent;
+
+  GstD3DVideoSink *sink;
+  GstVideoInfo info;
+  gboolean add_metavideo;
+
+  GstAllocator *allocator;
+} GstD3DSurfaceBufferPool;
+
+typedef struct _GstD3DSurfaceBufferPoolClass {
+  GstVideoBufferPoolClass parent_class;
+} GstD3DSurfaceBufferPoolClass;
+
+GType gst_d3dsurface_meta_api_get_type (void);
+#define GST_D3DSURFACE_META_API_TYPE  (gst_d3dsurface_meta_api_get_type())
+const GstMetaInfo * gst_d3dsurface_meta_get_info (void);
+#define GST_D3DSURFACE_META_INFO  (gst_d3dsurface_meta_get_info())
+
+#define gst_buffer_get_d3dsurface_meta(b) ((GstD3DSurfaceMeta*)gst_buffer_get_meta((b),GST_D3DSURFACE_META_API_TYPE))
+
+GType gst_d3dsurface_buffer_pool_get_type (void);
+GstBufferPool * gst_d3dsurface_buffer_pool_new (GstD3DVideoSink * sink);
 
 #endif /* _D3DHELPERS_H_ */

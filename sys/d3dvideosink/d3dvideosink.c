@@ -185,6 +185,9 @@ gst_d3dvideosink_finalize (GObject * gobject)
 
   GST_DEBUG_OBJECT (sink, " ");
 
+  gst_object_replace ((GstObject **) & sink->pool, NULL);
+  gst_object_replace ((GstObject **) & sink->fallback_pool, NULL);
+
   gst_caps_replace (&sink->supported_caps, NULL);
 
   g_rec_mutex_clear (&sink->lock);
@@ -274,6 +277,9 @@ gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gint display_par_n = 1, display_par_d = 1;    /* display's PAR */
   guint num, den;
   gchar *tmp = NULL;
+  GstBufferPool *newpool, *oldpool;
+  GstBufferPool *newfbpool, *oldfbpool;
+  GstStructure *config;
 
   GST_DEBUG_OBJECT (bsink, " ");
 
@@ -356,6 +362,40 @@ gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   /* Create a window (or start using an application-supplied one, then connect the graph */
   d3d_prepare_window (sink);
 
+  newpool = gst_d3dsurface_buffer_pool_new (sink);
+  config = gst_buffer_pool_get_config (newpool);
+  /* we need at least 2 buffer because we hold on to the last one */
+  gst_buffer_pool_config_set_params (config, caps, sink->info.size, 2, 0);
+  if (!gst_buffer_pool_set_config (newpool, config)) {
+    gst_object_unref (newpool);
+    GST_ERROR_OBJECT (sink, "Failed to set buffer pool configuration");
+    return FALSE;
+  }
+
+  newfbpool = gst_d3dsurface_buffer_pool_new (sink);
+  config = gst_buffer_pool_get_config (newfbpool);
+  /* we need at least 2 buffer because we hold on to the last one */
+  gst_buffer_pool_config_set_params (config, caps, sink->info.size, 2, 0);
+  /* Fallback pool must use videometa */
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  if (!gst_buffer_pool_set_config (newfbpool, config)) {
+    gst_object_unref (newfbpool);
+    GST_ERROR_OBJECT (sink, "Failed to set buffer pool configuration");
+    return FALSE;
+  }
+
+  GST_OBJECT_LOCK (sink);
+  oldpool = sink->pool;
+  sink->pool = newpool;
+  oldfbpool = sink->fallback_pool;
+  sink->fallback_pool = newfbpool;
+  GST_OBJECT_UNLOCK (sink);
+
+  if (oldpool)
+    gst_object_unref (oldpool);
+  if (oldfbpool)
+    gst_object_unref (oldfbpool);
+
   return TRUE;
   /* ERRORS */
 incompatible_caps:
@@ -411,7 +451,72 @@ gst_d3dvideosink_stop (GstBaseSink * bsink)
 static gboolean
 gst_d3dvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
+  GstD3DVideoSink *sink = GST_D3DVIDEOSINK (bsink);
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstCaps *caps;
+  guint size;
+  gboolean need_pool;
+
+  gst_query_parse_allocation (query, &caps, &need_pool);
+  if (!caps) {
+    GST_DEBUG_OBJECT (sink, "no caps specified");
+    return FALSE;
+  }
+
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  GST_OBJECT_LOCK (sink);
+  pool = sink->pool ? gst_object_ref (sink->pool) : NULL;
+  GST_OBJECT_UNLOCK (sink);
+
+  if (pool) {
+    GstCaps *pcaps;
+
+    /* we had a pool, check caps */
+    GST_DEBUG_OBJECT (sink, "check existing pool caps");
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
+
+    if (!gst_caps_is_equal (caps, pcaps)) {
+      GST_DEBUG_OBJECT (sink, "pool has different caps");
+      /* different caps, we can't use this pool */
+      gst_object_unref (pool);
+      pool = NULL;
+    }
+    gst_structure_free (config);
+  }
+
+  if (pool == NULL && need_pool) {
+    GstVideoInfo info;
+
+    if (!gst_video_info_from_caps (&info, caps)) {
+      GST_ERROR_OBJECT (sink, "allocation query has invalid caps %"
+          GST_PTR_FORMAT, caps);
+      return FALSE;
+    }
+
+    GST_DEBUG_OBJECT (sink, "create new pool");
+    pool = gst_d3dsurface_buffer_pool_new (sink);
+
+    /* the normal size of a frame */
+    size = info.size;
+
+    config = gst_buffer_pool_get_config (pool);
+    /* we need at least 2 buffer because we hold on to the last one */
+    gst_buffer_pool_config_set_params (config, caps, size, 2, 0);
+    if (!gst_buffer_pool_set_config (pool, config)) {
+      gst_object_unref (pool);
+      GST_ERROR_OBJECT (sink, "failed to set pool configuration");
+      return FALSE;
+    }
+  }
+
+  if (pool) {
+    /* we need at least 2 buffer because we hold on to the last one */
+    gst_query_add_allocation_pool (query, pool, size, 2, 0);
+    gst_object_unref (pool);
+  }
 
   return TRUE;
 }

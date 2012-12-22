@@ -37,8 +37,8 @@ static gboolean d3d_init_swap_chain (GstD3DVideoSink * sink, HWND hWnd);
 static gboolean d3d_release_swap_chain (GstD3DVideoSink * sink);
 static gboolean d3d_resize_swap_chain (GstD3DVideoSink * sink);
 static gboolean d3d_present_swap_chain (GstD3DVideoSink * sink);
-static gboolean d3d_copy_buffer_to_surface (GstD3DVideoSink * sink,
-    LPDIRECT3DSURFACE9 surface, GstBuffer * buffer);
+static gboolean d3d_copy_buffer (GstD3DVideoSink * sink,
+    GstBuffer * from, GstBuffer * to);
 static gboolean d3d_stretch_and_copy (GstD3DVideoSink * sink,
     LPDIRECT3DSURFACE9 back_buffer);
 static HWND d3d_create_internal_window (GstD3DVideoSink * sink);
@@ -313,6 +313,392 @@ d3d_format_comp_compare (gconstpointer a, gconstpointer b)
     return 0;
   else
     return 1;
+}
+
+#define GST_D3D_SURFACE_MEMORY_NAME "D3DSurface"
+
+typedef struct
+{
+  GstMemory mem;
+
+  GstD3DVideoSink *sink;
+
+  GMutex lock;
+  gint map_count;
+
+  LPDIRECT3DSURFACE9 surface;
+  D3DLOCKED_RECT lr;
+  gint x, y, width, height;
+} GstD3DSurfaceMemory;
+
+static GstMemory *
+gst_d3d_surface_memory_allocator_alloc (GstAllocator * allocator, gsize size,
+    GstAllocationParams * params)
+{
+  g_assert_not_reached ();
+  return NULL;
+}
+
+static void
+gst_d3d_surface_memory_allocator_free (GstAllocator * allocator,
+    GstMemory * mem)
+{
+  GstD3DSurfaceMemory *dmem = (GstD3DSurfaceMemory *) mem;
+
+  /* If this is a sub-memory, do nothing */
+  if (mem->parent)
+    return;
+
+  if (dmem->lr.pBits)
+    g_warning ("d3dvideosink: Freeing memory that is still mapped");
+
+  IDirect3DSurface9_Release (dmem->surface);
+  gst_object_unref (dmem->sink);
+  g_mutex_clear (&dmem->lock);
+  g_slice_free (GstD3DSurfaceMemory, dmem);
+}
+
+static gpointer
+gst_d3d_surface_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
+{
+  GstD3DSurfaceMemory *parent;
+  gpointer ret = NULL;
+  gint d3d_flags = ((flags & GST_MAP_WRITE) == 0) ? D3DLOCK_READONLY : 0;
+
+  /* find the real parent */
+  if ((parent = (GstD3DSurfaceMemory *) mem->parent) == NULL)
+    parent = (GstD3DSurfaceMemory *) mem;
+
+  g_mutex_lock (&parent->lock);
+  if (!parent->map_count
+      && IDirect3DSurface9_LockRect (parent->surface, &parent->lr, NULL,
+          d3d_flags) != D3D_OK) {
+    ret = NULL;
+    goto done;
+  }
+
+  ret = parent->lr.pBits;
+  parent->map_count++;
+
+done:
+  g_mutex_unlock (&parent->lock);
+
+  return ret;
+}
+
+static void
+gst_d3d_surface_memory_unmap (GstMemory * mem)
+{
+  GstD3DSurfaceMemory *parent;
+
+  /* find the real parent */
+  if ((parent = (GstD3DSurfaceMemory *) mem->parent) == NULL)
+    parent = (GstD3DSurfaceMemory *) mem;
+
+  g_mutex_lock (&parent->lock);
+  parent->map_count--;
+  if (parent->map_count == 0) {
+    IDirect3DSurface9_UnlockRect (parent->surface);
+    memset (&parent->lr, 0, sizeof (parent->lr));
+  }
+
+  g_mutex_unlock (&parent->lock);
+}
+
+static GstMemory *
+gst_d3d_surface_memory_share (GstMemory * mem, gssize offset, gssize size)
+{
+  GstD3DSurfaceMemory *sub;
+  GstD3DSurfaceMemory *parent;
+
+  /* find the real parent */
+  if ((parent = (GstD3DSurfaceMemory *) mem->parent) == NULL)
+    parent = (GstD3DSurfaceMemory *) mem;
+
+  if (size == -1)
+    size = mem->size - offset;
+
+  sub = g_slice_new0 (GstD3DSurfaceMemory);
+  /* the shared memory is always readonly */
+  gst_memory_init (GST_MEMORY_CAST (sub), GST_MINI_OBJECT_FLAGS (parent) |
+      GST_MINI_OBJECT_FLAG_LOCK_READONLY, mem->allocator,
+      GST_MEMORY_CAST (parent), mem->maxsize, mem->align, mem->offset + offset,
+      size);
+
+  return GST_MEMORY_CAST (sub);
+}
+
+typedef struct
+{
+  GstAllocator parent;
+} GstD3DSurfaceMemoryAllocator;
+
+typedef struct
+{
+  GstAllocatorClass parent_class;
+} GstD3DSurfaceMemoryAllocatorClass;
+
+GType gst_d3d_surface_memory_allocator_get_type (void);
+G_DEFINE_TYPE (GstD3DSurfaceMemoryAllocator, gst_d3d_surface_memory_allocator,
+    GST_TYPE_ALLOCATOR);
+
+#define GST_TYPE_D3D_SURFACE_MEMORY_ALLOCATOR   (gst_d3d_surface_memory_allocator_get_type())
+#define GST_IS_D3D_SURFACE_MEMORY_ALLOCATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_D3D_SURFACE_MEMORY_ALLOCATOR))
+
+static void
+gst_d3d_surface_memory_allocator_class_init (GstD3DSurfaceMemoryAllocatorClass *
+    klass)
+{
+  GstAllocatorClass *allocator_class;
+
+  allocator_class = (GstAllocatorClass *) klass;
+
+  allocator_class->alloc = gst_d3d_surface_memory_allocator_alloc;
+  allocator_class->free = gst_d3d_surface_memory_allocator_free;
+}
+
+static void
+gst_d3d_surface_memory_allocator_init (GstD3DSurfaceMemoryAllocator * allocator)
+{
+  GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
+
+  alloc->mem_type = GST_D3D_SURFACE_MEMORY_NAME;
+  alloc->mem_map = gst_d3d_surface_memory_map;
+  alloc->mem_unmap = gst_d3d_surface_memory_unmap;
+  alloc->mem_share = gst_d3d_surface_memory_share;
+  /* fallback copy */
+
+  GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
+}
+
+G_DEFINE_TYPE (GstD3DSurfaceBufferPool, gst_d3dsurface_buffer_pool,
+    GST_TYPE_VIDEO_BUFFER_POOL);
+
+GstBufferPool *
+gst_d3dsurface_buffer_pool_new (GstD3DVideoSink * sink)
+{
+  GstD3DSurfaceBufferPool *pool;
+
+  pool = g_object_new (GST_TYPE_D3DSURFACE_BUFFER_POOL, NULL);
+  pool->sink = gst_object_ref (sink);
+
+  GST_LOG_OBJECT (pool, "new buffer pool %p", pool);
+
+  return GST_BUFFER_POOL_CAST (pool);
+}
+
+static void
+gst_d3dsurface_buffer_pool_finalize (GObject * object)
+{
+  GstD3DSurfaceBufferPool *pool = GST_D3DSURFACE_BUFFER_POOL_CAST (object);
+
+  GST_LOG_OBJECT (pool, "finalize buffer pool %p", pool);
+
+  gst_object_unref (pool->sink);
+  if (pool->allocator)
+    gst_object_unref (pool->allocator);
+
+  G_OBJECT_CLASS (gst_d3dsurface_buffer_pool_parent_class)->finalize (object);
+}
+
+static const gchar **
+gst_d3dsurface_buffer_pool_get_options (GstBufferPool * pool)
+{
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL };
+
+  return options;
+}
+
+static gboolean
+gst_d3dsurface_buffer_pool_set_config (GstBufferPool * bpool,
+    GstStructure * config)
+{
+  GstD3DSurfaceBufferPool *pool = GST_D3DSURFACE_BUFFER_POOL_CAST (bpool);
+  GstCaps *caps;
+  GstVideoInfo info;
+
+  if (!GST_BUFFER_POOL_CLASS
+      (gst_d3dsurface_buffer_pool_parent_class)->set_config (bpool, config)) {
+    return FALSE;
+  }
+
+  if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL)
+      || !caps) {
+    GST_ERROR_OBJECT (pool, "Buffer pool configuration without caps");
+    return FALSE;
+  }
+
+  /* now parse the caps from the config */
+  if (!gst_video_info_from_caps (&info, caps)) {
+    GST_ERROR_OBJECT (pool, "Failed to parse caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+
+  if (gst_video_format_to_d3d_format (GST_VIDEO_INFO_FORMAT (&info)) ==
+      D3DFMT_UNKNOWN) {
+    GST_ERROR_OBJECT (pool, "Unsupported video format in caps %" GST_PTR_FORMAT,
+        caps);
+    return FALSE;
+  }
+
+  GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, info.width, info.height,
+      caps);
+
+  pool->info = info;
+
+  pool->add_metavideo =
+      gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  if (pool->add_metavideo)
+    pool->allocator =
+        g_object_new (GST_TYPE_D3D_SURFACE_MEMORY_ALLOCATOR, NULL);
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_d3dsurface_buffer_pool_alloc (GstBufferPool * bpool, GstBuffer ** buffer,
+    GstBufferPoolAcquireParams * params)
+{
+  GstD3DSurfaceBufferPool *pool = GST_D3DSURFACE_BUFFER_POOL_CAST (bpool);
+  GstD3DVideoSink *sink = pool->sink;
+  GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
+  GstD3DSurfaceMemory *mem;
+  LPDIRECT3DSURFACE9 surface;
+  D3DFORMAT d3dformat;
+  gint stride[GST_VIDEO_MAX_PLANES] = { 0, };
+  gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
+  D3DLOCKED_RECT lr;
+  HRESULT hr;
+  gsize size = 0;
+
+  *buffer = NULL;
+  if (!pool->add_metavideo) {
+    GST_DEBUG_OBJECT (pool, "No video meta allowed, fallback alloc");
+    goto fallback;
+  }
+
+  d3dformat =
+      gst_video_format_to_d3d_format (GST_VIDEO_INFO_FORMAT (&pool->info));
+  hr = IDirect3DDevice9_CreateOffscreenPlainSurface (klass->d3d.
+      device.d3d_device, GST_VIDEO_INFO_WIDTH (&pool->info),
+      GST_VIDEO_INFO_HEIGHT (&pool->info), d3dformat, D3DPOOL_DEFAULT, &surface,
+      NULL);
+  if (hr != D3D_OK) {
+    GST_ERROR_OBJECT (sink, "Failed to create D3D surface");
+    goto fallback;
+  }
+
+  IDirect3DSurface9_LockRect (surface, &lr, NULL, D3DLOCK_READONLY);
+  if (!lr.pBits) {
+    GST_ERROR_OBJECT (sink, "Failed to lock D3D surface");
+    IDirect3DSurface9_Release (surface);
+    goto fallback;
+  }
+
+  switch (GST_VIDEO_INFO_FORMAT (&pool->info)) {
+    case GST_VIDEO_FORMAT_BGR:
+      offset[0] = 0;
+      stride[0] = lr.Pitch;
+      size = lr.Pitch * GST_VIDEO_INFO_HEIGHT (&pool->info) * 3;
+      break;
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_RGBA:
+      offset[0] = 0;
+      stride[0] = lr.Pitch;
+      size = lr.Pitch * GST_VIDEO_INFO_HEIGHT (&pool->info) * 4;
+      break;
+    case GST_VIDEO_FORMAT_RGB16:
+    case GST_VIDEO_FORMAT_RGB15:
+      offset[0] = 0;
+      stride[0] = lr.Pitch;
+      size = lr.Pitch * GST_VIDEO_INFO_HEIGHT (&pool->info) * 2;
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+      offset[0] = 0;
+      stride[0] = lr.Pitch;
+      size = lr.Pitch * GST_VIDEO_INFO_HEIGHT (&pool->info) * 2;
+      break;
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+      offset[0] = 0;
+      stride[0] = lr.Pitch;
+      offset[2] =
+          offset[0] + stride[0] * GST_VIDEO_INFO_COMP_HEIGHT (&pool->info, 0);
+      stride[2] = lr.Pitch / 2;
+      offset[1] =
+          offset[2] + stride[2] * GST_VIDEO_INFO_COMP_HEIGHT (&pool->info, 2);
+      stride[1] = lr.Pitch / 2;
+      size =
+          offset[1] + stride[1] * GST_VIDEO_INFO_COMP_HEIGHT (&pool->info, 1);
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+      offset[0] = 0;
+      stride[0] = lr.Pitch;
+      offset[1] =
+          offset[0] + stride[0] * GST_VIDEO_INFO_COMP_HEIGHT (&pool->info, 0);
+      stride[1] = lr.Pitch;
+      size =
+          offset[1] + stride[1] * GST_VIDEO_INFO_COMP_HEIGHT (&pool->info, 1);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  IDirect3DSurface9_UnlockRect (surface);
+
+  *buffer = gst_buffer_new ();
+
+  gst_buffer_add_video_meta_full (*buffer, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_INFO_FORMAT (&pool->info), GST_VIDEO_INFO_WIDTH (&pool->info),
+      GST_VIDEO_INFO_HEIGHT (&pool->info),
+      GST_VIDEO_INFO_N_PLANES (&pool->info), offset, stride);
+
+  mem = g_slice_new0 (GstD3DSurfaceMemory);
+  gst_memory_init (GST_MEMORY_CAST (mem), 0, pool->allocator, NULL, size, 0, 0,
+      size);
+
+  mem->surface = surface;
+  mem->sink = gst_object_ref (sink);
+  mem->x = mem->y = 0;
+  mem->width = GST_VIDEO_INFO_WIDTH (&pool->info);
+  mem->height = GST_VIDEO_INFO_HEIGHT (&pool->info);
+  g_mutex_init (&mem->lock);
+
+  gst_buffer_append_memory (*buffer, GST_MEMORY_CAST (mem));
+
+  return GST_FLOW_OK;
+
+fallback:
+  {
+    return
+        GST_BUFFER_POOL_CLASS
+        (gst_d3dsurface_buffer_pool_parent_class)->alloc_buffer (bpool, buffer,
+        params);
+  }
+}
+
+static void
+gst_d3dsurface_buffer_pool_class_init (GstD3DSurfaceBufferPoolClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBufferPoolClass *gstbufferpool_class = (GstBufferPoolClass *) klass;
+
+  gobject_class->finalize = gst_d3dsurface_buffer_pool_finalize;
+
+  gstbufferpool_class->get_options = gst_d3dsurface_buffer_pool_get_options;
+  gstbufferpool_class->set_config = gst_d3dsurface_buffer_pool_set_config;
+  gstbufferpool_class->alloc_buffer = gst_d3dsurface_buffer_pool_alloc;
+}
+
+static void
+gst_d3dsurface_buffer_pool_init (GstD3DSurfaceBufferPool * pool)
+{
 }
 
 GstCaps *
@@ -759,6 +1145,14 @@ end:
 gboolean
 d3d_stop (GstD3DVideoSink * sink)
 {
+  if (sink->pool)
+    gst_buffer_pool_set_active (sink->pool, FALSE);
+  if (sink->fallback_pool)
+    gst_buffer_pool_set_active (sink->fallback_pool, FALSE);
+  gst_object_replace ((GstObject **) & sink->pool, NULL);
+  gst_object_replace ((GstObject **) & sink->fallback_pool, NULL);
+  gst_buffer_replace (&sink->fallback_buffer, NULL);
+
   /* Release D3D resources */
   d3d_set_window_handle (sink, 0, FALSE);
   return TRUE;
@@ -1031,51 +1425,43 @@ end:
 }
 
 static gboolean
-d3d_copy_buffer_to_surface (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 surface,
-    GstBuffer * buffer)
+d3d_copy_buffer (GstD3DVideoSink * sink, GstBuffer * from, GstBuffer * to)
 {
-  D3DLOCKED_RECT lr;
-  guint8 *dest;
-  int deststride;
   gboolean ret = FALSE;
-  gint unhdl_line = 0;
-  GstVideoFrame frame;
+  GstVideoFrame from_frame, to_frame;
+
+  memset (&from_frame, 0, sizeof (from_frame));
+  memset (&to_frame, 0, sizeof (to_frame));
+
   LOCK_SINK (sink);
 
   if (!sink->d3d.renderable || sink->d3d.device_lost)
     goto end;
 
-  if (!buffer
-      || !gst_video_frame_map (&frame, &sink->info, buffer, GST_MAP_READ)) {
+  if (!gst_video_frame_map (&from_frame, &sink->info, from, GST_MAP_READ) ||
+      !gst_video_frame_map (&to_frame, &sink->info, to, GST_MAP_WRITE)) {
     GST_ERROR_OBJECT (sink, "NULL GstBuffer");
     goto end;
   }
-
-  IDirect3DSurface9_LockRect (surface, &lr, NULL, 0);
-  dest = (guint8 *) lr.pBits;
-
-  if (!dest) {
-    GST_ERROR_OBJECT (sink, "No D3D surface dest buffer");
-    goto unlock_surface;
-  }
-
-  deststride = lr.Pitch;
 
   switch (sink->format) {
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:{
       const guint8 *src;
-      gint srcstride;
+      guint8 *dst;
+      gint dststride, srcstride;
       gint i, h, w;
 
-      src = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
-      srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
-      h = GST_VIDEO_FRAME_HEIGHT (&frame);
-      w = GST_ROUND_UP_4 (GST_VIDEO_FRAME_WIDTH (&frame) * 2);
+      src = GST_VIDEO_FRAME_PLANE_DATA (&from_frame, 0);
+      dst = GST_VIDEO_FRAME_PLANE_DATA (&to_frame, 0);
+      srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&from_frame, 0);
+      dststride = GST_VIDEO_FRAME_PLANE_STRIDE (&to_frame, 0);
+      h = GST_VIDEO_FRAME_HEIGHT (&from_frame);
+      w = GST_ROUND_UP_4 (GST_VIDEO_FRAME_WIDTH (&from_frame) * 2);
 
       for (i = 0; i < h; i++) {
-        memcpy (dest, src, w);
-        dest += deststride;
+        memcpy (dst, src, w);
+        dst += dststride;
         src += srcstride;
       }
 
@@ -1084,36 +1470,21 @@ d3d_copy_buffer_to_surface (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 surface,
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:{
       const guint8 *src;
-      gint srcstride, deststride_;
-      guint8 *dest_;
-      gint i, j, h, h_, w_;
-
-      h = GST_VIDEO_FRAME_HEIGHT (&frame);
+      guint8 *dst;
+      gint srcstride, dststride;
+      gint i, j, h_, w_;
 
       for (i = 0; i < 3; i++) {
-        src = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
-        srcstride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, i);
-        h_ = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
-        w_ = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i);
-
-        switch (i) {
-          case 0:
-            deststride_ = deststride;
-            dest_ = dest;
-            break;
-          case 2:
-            deststride_ = deststride / 2;
-            dest_ = dest + h * deststride;
-            break;
-          case 1:
-            deststride_ = deststride / 2;
-            dest_ = dest + h * deststride + h_ * deststride_;
-            break;
-        }
+        src = GST_VIDEO_FRAME_COMP_DATA (&from_frame, i);
+        dst = GST_VIDEO_FRAME_COMP_DATA (&to_frame, i);
+        srcstride = GST_VIDEO_FRAME_COMP_STRIDE (&from_frame, i);
+        dststride = GST_VIDEO_FRAME_COMP_STRIDE (&to_frame, i);
+        h_ = GST_VIDEO_FRAME_COMP_HEIGHT (&from_frame, i);
+        w_ = GST_VIDEO_FRAME_COMP_WIDTH (&from_frame, i);
 
         for (j = 0; j < h_; j++) {
-          memcpy (dest_, src, w_);
-          dest_ += deststride_;
+          memcpy (dst, src, w_);
+          dst += dststride;
           src += srcstride;
         }
       }
@@ -1122,30 +1493,21 @@ d3d_copy_buffer_to_surface (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 surface,
     }
     case GST_VIDEO_FORMAT_NV12:{
       const guint8 *src;
-      gint srcstride;
-      guint8 *dest_;
-      gint i, j, h, h_, w_;
-
-      h = GST_VIDEO_FRAME_HEIGHT (&frame);
+      guint8 *dst;
+      gint srcstride, dststride;
+      gint i, j, h_, w_;
 
       for (i = 0; i < 2; i++) {
-        src = GST_VIDEO_FRAME_PLANE_DATA (&frame, i);
-        srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, i);
-        h_ = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
-        w_ = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i);
-
-        switch (i) {
-          case 0:
-            dest_ = dest;
-            break;
-          case 1:
-            dest_ = dest + h * deststride;
-            break;
-        }
+        src = GST_VIDEO_FRAME_PLANE_DATA (&from_frame, i);
+        dst = GST_VIDEO_FRAME_PLANE_DATA (&to_frame, i);
+        srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&from_frame, i);
+        dststride = GST_VIDEO_FRAME_PLANE_STRIDE (&to_frame, i);
+        h_ = GST_VIDEO_FRAME_COMP_HEIGHT (&from_frame, i);
+        w_ = GST_VIDEO_FRAME_COMP_WIDTH (&from_frame, i);
 
         for (j = 0; j < h_; j++) {
-          memcpy (dest_, src, w_ * 2);
-          dest_ += deststride;
+          memcpy (dst, src, w_ * 2);
+          dst += dststride;
           src += srcstride;
         }
       }
@@ -1157,17 +1519,20 @@ d3d_copy_buffer_to_surface (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 surface,
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_RGBx:{
       const guint8 *src;
-      gint srcstride;
+      guint8 *dst;
+      gint srcstride, dststride;
       gint i, h, w;
 
-      src = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
-      srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
-      h = GST_VIDEO_FRAME_HEIGHT (&frame);
-      w = GST_VIDEO_FRAME_WIDTH (&frame) * 4;
+      src = GST_VIDEO_FRAME_PLANE_DATA (&from_frame, 0);
+      dst = GST_VIDEO_FRAME_PLANE_DATA (&to_frame, 0);
+      srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&from_frame, 0);
+      dststride = GST_VIDEO_FRAME_PLANE_STRIDE (&to_frame, 0);
+      h = GST_VIDEO_FRAME_HEIGHT (&from_frame);
+      w = GST_VIDEO_FRAME_WIDTH (&from_frame) * 4;
 
       for (i = 0; i < h; i++) {
-        memcpy (dest, src, w);
-        dest += deststride;
+        memcpy (dst, src, w);
+        dst += dststride;
         src += srcstride;
       }
 
@@ -1175,17 +1540,20 @@ d3d_copy_buffer_to_surface (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 surface,
     }
     case GST_VIDEO_FORMAT_BGR:{
       const guint8 *src;
-      gint srcstride;
+      guint8 *dst;
+      gint srcstride, dststride;
       gint i, h, w;
 
-      src = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
-      srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
-      h = GST_VIDEO_FRAME_HEIGHT (&frame);
-      w = GST_VIDEO_FRAME_WIDTH (&frame) * 3;
+      src = GST_VIDEO_FRAME_PLANE_DATA (&from_frame, 0);
+      dst = GST_VIDEO_FRAME_PLANE_DATA (&to_frame, 0);
+      srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&from_frame, 0);
+      dststride = GST_VIDEO_FRAME_PLANE_STRIDE (&to_frame, 0);
+      h = GST_VIDEO_FRAME_HEIGHT (&from_frame);
+      w = GST_VIDEO_FRAME_WIDTH (&from_frame) * 3;
 
       for (i = 0; i < h; i++) {
-        memcpy (dest, src, w);
-        dest += deststride;
+        memcpy (dst, src, w);
+        dst += dststride;
         src += srcstride;
       }
 
@@ -1194,45 +1562,47 @@ d3d_copy_buffer_to_surface (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 surface,
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_RGB15:{
       const guint8 *src;
-      gint srcstride;
+      guint8 *dst;
+      gint srcstride, dststride;
       gint i, h, w;
 
-      src = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
-      srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
-      h = GST_VIDEO_FRAME_HEIGHT (&frame);
-      w = GST_VIDEO_FRAME_WIDTH (&frame) * 2;
+      src = GST_VIDEO_FRAME_PLANE_DATA (&from_frame, 0);
+      dst = GST_VIDEO_FRAME_PLANE_DATA (&to_frame, 0);
+      srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&from_frame, 0);
+      dststride = GST_VIDEO_FRAME_PLANE_STRIDE (&to_frame, 0);
+      h = GST_VIDEO_FRAME_HEIGHT (&from_frame);
+      w = GST_VIDEO_FRAME_WIDTH (&from_frame) * 2;
 
       for (i = 0; i < h; i++) {
-        memcpy (dest, src, w);
-        dest += deststride;
+        memcpy (dst, src, w);
+        dst += dststride;
         src += srcstride;
       }
 
       break;
     }
     default:
-      unhdl_line = __LINE__;
       goto unhandled_format;
   }
 
-  goto done;
+  ret = TRUE;
+
+end:
+  if (from_frame.buffer)
+    gst_video_frame_unmap (&from_frame);
+  if (to_frame.buffer)
+    gst_video_frame_unmap (&to_frame);
+
+  UNLOCK_SINK (sink);
+  return ret;
 
 unhandled_format:
   GST_ERROR_OBJECT (sink,
-      "Unhandled format [LN:%d] '%s' -> '%s' (should not get here)", unhdl_line,
+      "Unhandled format '%s' -> '%s' (should not get here)",
       gst_video_format_to_string (sink->format),
       d3d_format_to_string (sink->d3d.format));
-  goto unlock_surface;
-
-done:
-  ret = TRUE;
-unlock_surface:
-  IDirect3DSurface9_UnlockRect (surface);
-  gst_video_frame_unmap (&frame);
-
-end:
-  UNLOCK_SINK (sink);
-  return ret;
+  ret = FALSE;
+  goto end;
 }
 
 static gboolean
@@ -1397,11 +1767,8 @@ GstFlowReturn
 d3d_render_buffer (GstD3DVideoSink * sink, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstMapInfo map;
+  GstMemory *mem;
   LPDIRECT3DSURFACE9 surface = NULL;
-
-  g_return_val_if_fail (gst_buffer_map (buf, &map, GST_MAP_READ) != FALSE,
-      GST_FLOW_ERROR);
 
   LOCK_SINK (sink);
 
@@ -1428,26 +1795,59 @@ d3d_render_buffer (GstD3DVideoSink * sink, GstBuffer * buf)
     goto end;
   }
 
-  if (!surface) {
-    HRESULT hr;
-    GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
+  if (gst_buffer_n_memory (buf) != 1 ||
+      (mem = gst_buffer_peek_memory (buf, 0)) == 0 ||
+      !gst_memory_is_type (mem, GST_D3D_SURFACE_MEMORY_NAME)) {
+    GstBuffer *tmp;
+    GstBufferPoolAcquireParams params = { 0, };
 
-    hr = IDirect3DDevice9_CreateOffscreenPlainSurface (klass->d3d.
-        device.d3d_device, GST_VIDEO_SINK_WIDTH (sink),
-        GST_VIDEO_SINK_HEIGHT (sink), sink->d3d.format, D3DPOOL_DEFAULT,
-        &surface, NULL);
-    if (hr != D3D_OK || surface == NULL) {
-      GST_ERROR_OBJECT (sink, "Failed to create D3D surface");
-      ret = GST_FLOW_ERROR;
+    if (!sink->fallback_pool
+        || !gst_buffer_pool_set_active (sink->fallback_pool, TRUE)) {
+      ret = GST_FLOW_NOT_NEGOTIATED;
       goto end;
     }
-    d3d_copy_buffer_to_surface (sink, surface, buf);
-    if (sink->d3d.surface)
-      IDirect3DSurface9_Release (sink->d3d.surface);
-    IDirect3DSurface9_AddRef (surface);
-    sink->d3d.surface = surface;
+
+    /* take a buffer from our pool, if there is no buffer in the pool something
+     * is seriously wrong, waiting for the pool here might deadlock when we try
+     * to go to PAUSED because we never flush the pool. */
+    params.flags = GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT;
+    ret = gst_buffer_pool_acquire_buffer (sink->fallback_pool, &tmp, &params);
+    if (ret != GST_FLOW_OK)
+      goto end;
+
+    if (sink->fallback_buffer) {
+      gst_buffer_unref (sink->fallback_buffer);
+      sink->fallback_buffer = NULL;
+    }
+
+    mem = gst_buffer_peek_memory (tmp, 0);
+    if (!mem || !gst_memory_is_type (mem, GST_D3D_SURFACE_MEMORY_NAME)) {
+      ret = GST_FLOW_ERROR;
+      gst_buffer_unref (tmp);
+      goto end;
+    }
+    d3d_copy_buffer (sink, buf, tmp);
+    buf = tmp;
+
+    surface = ((GstD3DSurfaceMemory *) mem)->surface;
+
+    /* Need to keep an additional ref until the next buffer
+     * to make sure it isn't reused until then */
+    sink->fallback_buffer = buf;
+  } else {
+    mem = gst_buffer_peek_memory (buf, 0);
+    surface = ((GstD3DSurfaceMemory *) mem)->surface;
+
+    if (sink->fallback_buffer) {
+      gst_buffer_unref (sink->fallback_buffer);
+      sink->fallback_buffer = NULL;
+    }
   }
 
+  if (sink->d3d.surface)
+    IDirect3DSurface9_Release (sink->d3d.surface);
+  IDirect3DSurface9_AddRef (surface);
+  sink->d3d.surface = surface;
 
   if (!d3d_present_swap_chain (sink)) {
     ret = GST_FLOW_ERROR;
