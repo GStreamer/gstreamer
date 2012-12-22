@@ -83,9 +83,6 @@ gst_ffmpeg_log_callback (void *ptr, int level, const char *fmt, va_list vl)
   gint len = strlen (fmt);
   gchar *fmt2 = NULL;
 
-  if (_shut_up_I_am_probing)
-    return;
-
   switch (level) {
     case AV_LOG_QUIET:
       gst_level = GST_LEVEL_NONE;
@@ -117,10 +114,6 @@ gst_ffmpeg_log_callback (void *ptr, int level, const char *fmt, va_list vl)
 }
 #endif
 
-#ifndef GST_DISABLE_GST_DEBUG
-gboolean _shut_up_I_am_probing = FALSE;
-#endif
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -145,7 +138,6 @@ plugin_init (GstPlugin * plugin)
   gst_ffmpegscale_register (plugin);
 #endif
 #if 0
-  gst_ffmpegcsp_register (plugin);
   gst_ffmpegaudioresample_register (plugin);
 #endif
 

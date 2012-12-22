@@ -36,21 +36,16 @@ GST_DEBUG_CATEGORY_EXTERN (ffmpeg_debug);
 
 G_BEGIN_DECLS
 
-#ifndef GST_DISABLE_GST_DEBUG
-extern gboolean _shut_up_I_am_probing;
-#endif
-
 extern gboolean gst_ffmpegdemux_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegauddec_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegviddec_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegaudenc_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegvidenc_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegmux_register (GstPlugin * plugin);
-extern gboolean gst_ffmpegcsp_register (GstPlugin * plugin);
 #if 0
 extern gboolean gst_ffmpegscale_register (GstPlugin * plugin);
-#endif
 extern gboolean gst_ffmpegaudioresample_register (GstPlugin * plugin);
+#endif
 extern gboolean gst_ffmpegdeinterlace_register (GstPlugin * plugin);
 
 int gst_ffmpeg_avcodec_open (AVCodecContext *avctx, AVCodec *codec);
