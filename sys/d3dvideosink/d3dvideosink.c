@@ -547,7 +547,6 @@ gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gint video_width, video_height;
   gint video_par_n, video_par_d;        /* video's PAR */
   gint display_par_n, display_par_d;    /* display's PAR */
-  gint fps_n, fps_d;
   guint num, den;
   gchar *tmp = NULL;
 
@@ -568,8 +567,6 @@ gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   sink->format = sink->info.finfo->format;
   video_width = sink->info.width;
   video_height = sink->info.height;
-  fps_n = sink->info.fps_n;
-  fps_d = sink->info.fps_d;
   video_par_n = sink->info.par_n;
   video_par_d = sink->info.par_d;
 
