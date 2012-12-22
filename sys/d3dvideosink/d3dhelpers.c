@@ -334,6 +334,13 @@ d3d_supported_caps (GstD3DVideoSink * sink)
     goto unlock;
   }
 
+  LOCK_CLASS (sink, class);
+  if (class->d3d.refs == 0) {
+    UNLOCK_CLASS (sink, class);
+    goto unlock;
+  }
+  UNLOCK_CLASS (sink, class);
+
   for (i = 0; i < G_N_ELEMENTS (gst_d3d_format_map); i++) {
     D3DFormatComp *comp;
 

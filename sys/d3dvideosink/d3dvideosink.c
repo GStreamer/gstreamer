@@ -79,6 +79,7 @@ static void gst_d3dvideosink_finalize (GObject * gobject);
 static GstCaps *gst_d3dvideosink_get_caps (GstBaseSink * basesink,
     GstCaps * filter);
 static gboolean gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps);
+static gboolean gst_d3dvideosink_start (GstBaseSink * sink);
 static gboolean gst_d3dvideosink_stop (GstBaseSink * sink);
 /* GstVideoSink */
 static GstFlowReturn gst_d3dvideosink_show_frame (GstVideoSink * vsink,
@@ -113,6 +114,7 @@ gst_d3dvideosink_class_init (GstD3DVideoSinkClass * klass)
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_d3dvideosink_get_caps);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_d3dvideosink_set_caps);
+  gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_d3dvideosink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_d3dvideosink_stop);
 
   gstvideosink_class->show_frame =
@@ -161,8 +163,6 @@ gst_d3dvideosink_init (GstD3DVideoSink * sink)
 {
   GST_DEBUG_OBJECT (sink, " ");
 
-  d3d_class_init (sink);
-
   /* Init Properties */
   sink->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   sink->create_internal_window = DEFAULT_CREATE_RENDER_WINDOW;
@@ -181,7 +181,6 @@ gst_d3dvideosink_finalize (GObject * gobject)
 
   GST_DEBUG_OBJECT (sink, " ");
 
-  d3d_class_destroy (sink);
   gst_caps_replace (&sink->supported_caps, NULL);
 
   g_rec_mutex_clear (&sink->lock);
@@ -384,11 +383,24 @@ no_display_size:
 }
 
 static gboolean
+gst_d3dvideosink_start (GstBaseSink * bsink)
+{
+  GstD3DVideoSink *sink = GST_D3DVIDEOSINK (bsink);
+
+  GST_DEBUG_OBJECT (bsink, "Start() called");
+
+  return d3d_class_init (sink);
+}
+
+static gboolean
 gst_d3dvideosink_stop (GstBaseSink * bsink)
 {
   GstD3DVideoSink *sink = GST_D3DVIDEOSINK (bsink);
+
   GST_DEBUG_OBJECT (bsink, "Stop() called");
   d3d_stop (sink);
+  d3d_class_destroy (sink);
+
   return TRUE;
 }
 
