@@ -71,7 +71,6 @@ struct _GstD3DVideoSink
 
   GstCaps *          supported_caps;
 
-  GValue             par;
   GstVideoFormat     format;
   GstVideoInfo       info;
   GstVideoFormatDetails fmt_details;

@@ -91,8 +91,6 @@ static GstFlowReturn gst_d3dvideosink_show_frame (GstVideoSink * vsink,
 G_DEFINE_TYPE_WITH_CODE (GstD3DVideoSink, gst_d3dvideosink, GST_TYPE_VIDEO_SINK,
     _do_init);
 
-
-
 static void
 gst_d3dvideosink_class_init (GstD3DVideoSinkClass * klass)
 {
@@ -138,13 +136,6 @@ gst_d3dvideosink_class_init (GstD3DVideoSinkClass * klass)
           "If the render window is closed stop stream",
           DEFAULT_STREAM_STOP_ON_CLOSE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#if 0
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_PIXEL_ASPECT_RATIO, g_param_spec_string ("pixel-aspect-ratio",
-          "Pixel Aspect Ratio",
-          "The pixel aspect ratio of the device", "1/1",
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-#endif
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_ENABLE_NAVIGATION_EVENTS,
       g_param_spec_boolean ("enable-navigation-events",
@@ -171,9 +162,6 @@ gst_d3dvideosink_init (GstD3DVideoSink * sink)
 
   d3d_class_init (sink);
 
-  g_value_init (&sink->par, GST_TYPE_FRACTION);
-  gst_value_set_fraction (&sink->par, 1, 1);
-
   /* Init Properties */
   sink->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   sink->create_internal_window = DEFAULT_CREATE_RENDER_WINDOW;
@@ -199,7 +187,6 @@ gst_d3dvideosink_finalize (GObject * gobject)
 
   G_OBJECT_CLASS (gst_d3dvideosink_parent_class)->finalize (gobject);
 }
-
 
 static void
 gst_d3dvideosink_set_property (GObject * object, guint prop_id,
@@ -545,7 +532,7 @@ gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   GstCaps *sink_caps;
   gint video_width, video_height;
   gint video_par_n, video_par_d;        /* video's PAR */
-  gint display_par_n, display_par_d;    /* display's PAR */
+  gint display_par_n = 1, display_par_d = 1;    /* display's PAR */
   guint num, den;
   gchar *tmp = NULL;
 
@@ -586,9 +573,7 @@ gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
    * convert video width and height to a display width and height
    * using wd / hd = wv / hv * PARv / PARd */
 
-  /* get video's PAR */
-  display_par_n = gst_value_get_fraction_numerator (&sink->par);
-  display_par_d = gst_value_get_fraction_denominator (&sink->par);
+  /* TODO: Get display PAR */
 
   if (!gst_video_calculate_display_ratio (&num, &den, video_width,
           video_height, video_par_n, video_par_d, display_par_n, display_par_d))
