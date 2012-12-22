@@ -25,6 +25,8 @@
 #include "d3dvideosink.h"
 #include "d3dhelpers.h"
 
+#include <stdio.h>
+
 /** FWD DECLS **/
 
 static gboolean d3d_hidden_window_thread (GstD3DVideoSinkClass * class);
@@ -850,7 +852,8 @@ d3d_set_window_handle (GstD3DVideoSink * sink, guintptr window_id,
   LOCK_SINK (sink);
 
   if (sink->d3d.window_handle == (HWND) window_id) {
-    GST_WARNING_OBJECT (sink, "Window HWND already set to: %u", window_id);
+    GST_WARNING_OBJECT (sink, "Window HWND already set to: %" G_GUINTPTR_FORMAT,
+        window_id);
     goto end;
   }
 
@@ -1922,8 +1925,8 @@ d3d_create_internal_window (GstD3DVideoSink * sink)
   dat.hWnd = 0;
 
   thread =
-      g_thread_create ((GThreadFunc) d3d_internal_window_thread, &dat, TRUE,
-      NULL);
+      g_thread_new ("d3dvideosink-window-thread",
+      (GThreadFunc) d3d_internal_window_thread, &dat);
   if (!thread) {
     GST_ERROR ("Failed to created internal window thread");
     return 0;
@@ -1934,7 +1937,7 @@ d3d_create_internal_window (GstD3DVideoSink * sink)
     g_usleep (timeout_interval);
   }
 
-  GST_DEBUG_OBJECT (sink, "Created window: %p (intervals: %ul)", dat.hWnd, i);
+  GST_DEBUG_OBJECT (sink, "Created window: %p (intervals: %lu)", dat.hWnd, i);
 
   return dat.hWnd;
 }
@@ -1991,8 +1994,8 @@ d3d_class_init (GstD3DVideoSink * sink)
   class->d3d.error_exit = FALSE;
   UNLOCK_CLASS (sink, class);
   class->d3d.thread =
-      g_thread_create ((GThreadFunc) d3d_hidden_window_thread, class, TRUE,
-      NULL);
+      g_thread_new ("d3dvideosink-window-thread",
+      (GThreadFunc) d3d_hidden_window_thread, class);
   LOCK_CLASS (sink, class);
 
   if (!class->d3d.thread) {
