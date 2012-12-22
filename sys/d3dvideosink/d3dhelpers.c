@@ -924,16 +924,12 @@ d3d_release_swap_chain (GstD3DVideoSink * sink)
 
   if (sink->d3d.surface) {
     ref_count = IDirect3DSurface9_Release (sink->d3d.surface);
-    if (ref_count > 0)
-      while (IDirect3DSurface9_Release (sink->d3d.surface) > 0);
     sink->d3d.surface = NULL;
     GST_DEBUG_OBJECT (sink, "D3D surface released. Ref count: %d", ref_count);
   }
 
   if (sink->d3d.swapchain) {
     ref_count = IDirect3DSwapChain9_Release (sink->d3d.swapchain);
-    if (ref_count > 0)
-      while (IDirect3DSwapChain9_Release (sink->d3d.swapchain) > 0);
     sink->d3d.swapchain = NULL;
     GST_DEBUG_OBJECT (sink, "D3D swapchain released. Ref count: %d", ref_count);
   }
@@ -1019,8 +1015,6 @@ d3d_resize_swap_chain (GstD3DVideoSink * sink)
   /* Release current swapchain */
   if (sink->d3d.swapchain != NULL) {
     ref_count = IDirect3DSwapChain9_Release (sink->d3d.swapchain);
-    if (ref_count > 0)
-      while (IDirect3DSwapChain9_Release (sink->d3d.swapchain) > 0);
     if (ref_count > 0) {
       GST_WARNING_OBJECT (sink, "Release swapchain refcount: %d", ref_count);
     }
