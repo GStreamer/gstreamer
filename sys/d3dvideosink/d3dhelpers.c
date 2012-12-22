@@ -38,7 +38,7 @@ static gboolean d3d_release_swap_chain (GstD3DVideoSink * sink);
 static gboolean d3d_resize_swap_chain (GstD3DVideoSink * sink);
 static gboolean d3d_present_swap_chain (GstD3DVideoSink * sink);
 static gboolean d3d_copy_buffer_to_surface (GstD3DVideoSink * sink,
-    GstBuffer * buffer);
+    LPDIRECT3DSURFACE9 surface, GstBuffer * buffer);
 static gboolean d3d_stretch_and_copy (GstD3DVideoSink * sink,
     LPDIRECT3DSURFACE9 back_buffer);
 static HWND d3d_create_internal_window (GstD3DVideoSink * sink);
@@ -819,7 +819,6 @@ d3d_init_swap_chain (GstD3DVideoSink * sink, HWND hWnd)
 {
   D3DPRESENT_PARAMETERS present_params;
   LPDIRECT3DSWAPCHAIN9 d3d_swapchain = NULL;
-  LPDIRECT3DSURFACE9 d3d_surface = NULL;
   D3DTEXTUREFILTERTYPE d3d_filtertype;
   HRESULT hr;
   GstD3DVideoSinkClass *klass;
@@ -859,15 +858,6 @@ d3d_init_swap_chain (GstD3DVideoSink * sink, HWND hWnd)
     goto error;
   }
 
-  hr = IDirect3DDevice9_CreateOffscreenPlainSurface (klass->d3d.
-      device.d3d_device, GST_VIDEO_SINK_WIDTH (sink),
-      GST_VIDEO_SINK_HEIGHT (sink), sink->d3d.format, D3DPOOL_DEFAULT,
-      &d3d_surface, NULL);
-  if (hr != D3D_OK) {
-    GST_ERROR_OBJECT (sink, "Failed to create D3D surface");
-    goto error;
-  }
-
   /* Determine texture filtering support. If it's supported for this format,
    * use the filter type determined when we created the dev and checked the 
    * dev caps.
@@ -886,7 +876,6 @@ d3d_init_swap_chain (GstD3DVideoSink * sink, HWND hWnd)
 
   sink->d3d.filtertype = d3d_filtertype;
   sink->d3d.swapchain = d3d_swapchain;
-  sink->d3d.surface = d3d_surface;
 
   ret = TRUE;
 
@@ -894,8 +883,6 @@ error:
   if (!ret) {
     if (d3d_swapchain)
       IDirect3DSwapChain9_Release (d3d_swapchain);
-    if (d3d_surface)
-      IDirect3DSurface9_Release (d3d_surface);
   }
 
   UNLOCK_CLASS (sink, klass);
@@ -917,21 +904,21 @@ d3d_release_swap_chain (GstD3DVideoSink * sink)
 
   CHECK_D3D_DEVICE (klass, sink, end);
 
-  if (!sink->d3d.swapchain && !sink->d3d.surface) {
+  if (!sink->d3d.swapchain) {
     ret = TRUE;
     goto end;
-  }
-
-  if (sink->d3d.surface) {
-    ref_count = IDirect3DSurface9_Release (sink->d3d.surface);
-    sink->d3d.surface = NULL;
-    GST_DEBUG_OBJECT (sink, "D3D surface released. Ref count: %d", ref_count);
   }
 
   if (sink->d3d.swapchain) {
     ref_count = IDirect3DSwapChain9_Release (sink->d3d.swapchain);
     sink->d3d.swapchain = NULL;
     GST_DEBUG_OBJECT (sink, "D3D swapchain released. Ref count: %d", ref_count);
+  }
+
+  if (sink->d3d.surface) {
+    ref_count = IDirect3DSurface9_Release (sink->d3d.surface);
+    sink->d3d.surface = NULL;
+    GST_DEBUG_OBJECT (sink, "D3D surface released. Ref count: %d", ref_count);
   }
 
   ret = TRUE;
@@ -1044,7 +1031,8 @@ end:
 }
 
 static gboolean
-d3d_copy_buffer_to_surface (GstD3DVideoSink * sink, GstBuffer * buffer)
+d3d_copy_buffer_to_surface (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 surface,
+    GstBuffer * buffer)
 {
   D3DLOCKED_RECT lr;
   guint8 *dest;
@@ -1063,9 +1051,7 @@ d3d_copy_buffer_to_surface (GstD3DVideoSink * sink, GstBuffer * buffer)
     goto end;
   }
 
-  CHECK_D3D_SURFACE (sink, end);
-
-  IDirect3DSurface9_LockRect (sink->d3d.surface, &lr, NULL, 0);
+  IDirect3DSurface9_LockRect (surface, &lr, NULL, 0);
   dest = (guint8 *) lr.pBits;
 
   if (!dest) {
@@ -1241,7 +1227,7 @@ unhandled_format:
 done:
   ret = TRUE;
 unlock_surface:
-  IDirect3DSurface9_UnlockRect (sink->d3d.surface);
+  IDirect3DSurface9_UnlockRect (surface);
   gst_video_frame_unmap (&frame);
 
 end:
@@ -1412,6 +1398,7 @@ d3d_render_buffer (GstD3DVideoSink * sink, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstMapInfo map;
+  LPDIRECT3DSURFACE9 surface = NULL;
 
   g_return_val_if_fail (gst_buffer_map (buf, &map, GST_MAP_READ) != FALSE,
       GST_FLOW_ERROR);
@@ -1441,7 +1428,26 @@ d3d_render_buffer (GstD3DVideoSink * sink, GstBuffer * buf)
     goto end;
   }
 
-  d3d_copy_buffer_to_surface (sink, buf);
+  if (!surface) {
+    HRESULT hr;
+    GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
+
+    hr = IDirect3DDevice9_CreateOffscreenPlainSurface (klass->d3d.
+        device.d3d_device, GST_VIDEO_SINK_WIDTH (sink),
+        GST_VIDEO_SINK_HEIGHT (sink), sink->d3d.format, D3DPOOL_DEFAULT,
+        &surface, NULL);
+    if (hr != D3D_OK || surface == NULL) {
+      GST_ERROR_OBJECT (sink, "Failed to create D3D surface");
+      ret = GST_FLOW_ERROR;
+      goto end;
+    }
+    d3d_copy_buffer_to_surface (sink, surface, buf);
+    if (sink->d3d.surface)
+      IDirect3DSurface9_Release (sink->d3d.surface);
+    IDirect3DSurface9_AddRef (surface);
+    sink->d3d.surface = surface;
+  }
+
 
   if (!d3d_present_swap_chain (sink)) {
     ret = GST_FLOW_ERROR;
