@@ -530,7 +530,7 @@ AG_GST_CHECK_FEATURE(DIRECT3D, [Direct3D plug-in], direct3dsink, [
   LIBS=$save_LIBS
 
   if test "x$HAVE_DIRECT3D" = "xyes";  then
-    DIRECT3D_LIBS="-lgdi32"
+    DIRECT3D_LIBS="-ld3d9 -lgdi32"
     AC_SUBST(DIRECT3D_LIBS)
   fi
   AC_SUBST(HAVE_DIRECT3D)
