@@ -121,48 +121,6 @@ GST_DEBUG_CATEGORY (pango_debug);
 #define MINIMUM_OUTLINE_OFFSET 1.0
 #define DEFAULT_SCALE_BASIS    640
 
-#define COMP_Y(ret, r, g, b) \
-{ \
-   ret = (int) (((19595 * r) >> 16) + ((38470 * g) >> 16) + ((7471 * b) >> 16)); \
-   ret = CLAMP (ret, 0, 255); \
-}
-
-#define COMP_U(ret, r, g, b) \
-{ \
-   ret = (int) (-((11059 * r) >> 16) - ((21709 * g) >> 16) + ((32768 * b) >> 16) + 128); \
-   ret = CLAMP (ret, 0, 255); \
-}
-
-#define COMP_V(ret, r, g, b) \
-{ \
-   ret = (int) (((32768 * r) >> 16) - ((27439 * g) >> 16) - ((5329 * b) >> 16) + 128); \
-   ret = CLAMP (ret, 0, 255); \
-}
-
-#define BLEND(ret, alpha, v0, v1) \
-{ \
-	ret = (v0 * alpha + v1 * (255 - alpha)) / 255; \
-}
-
-#define OVER(ret, alphaA, Ca, alphaB, Cb, alphaNew)	\
-{ \
-    gint _tmp; \
-    _tmp = (Ca * alphaA + Cb * alphaB * (255 - alphaA) / 255) / alphaNew; \
-    ret = CLAMP (_tmp, 0, 255); \
-}
-
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-# define CAIRO_ARGB_A 3
-# define CAIRO_ARGB_R 2
-# define CAIRO_ARGB_G 1
-# define CAIRO_ARGB_B 0
-#else
-# define CAIRO_ARGB_A 0
-# define CAIRO_ARGB_R 1
-# define CAIRO_ARGB_G 2
-# define CAIRO_ARGB_B 3
-#endif
-
 enum
 {
   PROP_0,
