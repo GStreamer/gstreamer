@@ -163,7 +163,7 @@ gst_d3dvideosink_class_init (GstD3DVideoSinkClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
 
-  g_static_rec_mutex_init (&klass->lock);
+  g_rec_mutex_init (&klass->lock);
 }
 
 static void
@@ -182,7 +182,7 @@ gst_d3dvideosink_init (GstD3DVideoSink * sink)
   sink->stream_stop_on_close = DEFAULT_STREAM_STOP_ON_CLOSE;
   sink->enable_navigation_events = DEFAULT_ENABLE_NAVIGATION_EVENTS;
 
-  g_static_rec_mutex_init (&sink->lock);
+  g_rec_mutex_init (&sink->lock);
 }
 
 /** GObject Functions **/
@@ -196,7 +196,7 @@ gst_d3dvideosink_finalize (GObject * gobject)
 
   d3d_class_destroy (sink);
 
-  g_static_rec_mutex_free (&sink->lock);
+  g_rec_mutex_clear (&sink->lock);
 
   G_OBJECT_CLASS (gst_d3dvideosink_parent_class)->finalize (gobject);
 }

@@ -80,7 +80,7 @@ struct _GstD3DVideoSink
 
   GstVideoRectangle  render_rect;
 
-  GStaticRecMutex    lock;
+  GRecMutex    lock;
 
   /* Properties */
   gboolean           force_aspect_ratio;
@@ -93,7 +93,7 @@ struct _GstD3DVideoSinkClass
 {
   GstVideoSinkClass parent_class;
   GstD3DDataClass   d3d;
-  GStaticRecMutex   lock;
+  GRecMutex   lock;
 };
 
 #if 1
