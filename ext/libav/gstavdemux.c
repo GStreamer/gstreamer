@@ -32,7 +32,7 @@
 #include "gstav.h"
 #include "gstavcodecmap.h"
 #include "gstavutils.h"
-#include "gstavpipe.h"
+#include "gstavprotocol.h"
 
 #define MAX_STREAMS 20
 

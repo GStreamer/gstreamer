@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __GST_FFMPEGPIPE_H__
-#define __GST_FFMPEGPIPE_H__
+#ifndef __GST_FFMPEGPROTOCOL_H__
+#define __GST_FFMPEGPROTOCOL_H__
 
 #include <gst/base/gstadapter.h>
 #include "gstav.h"
@@ -70,6 +70,9 @@ struct _GstFFMpegPipe
 int gst_ffmpeg_pipe_open (GstFFMpegPipe *ffpipe, int flags, AVIOContext ** context);
 int gst_ffmpeg_pipe_close (AVIOContext * h);
 
+int gst_ffmpegdata_open (GstPad * pad, int flags, AVIOContext ** context);
+int gst_ffmpegdata_close (AVIOContext * h);
+
 G_END_DECLS
 
-#endif /* __GST_FFMPEGPIPE_H__ */
+#endif /* __GST_FFMPEGPROTOCOL_H__ */

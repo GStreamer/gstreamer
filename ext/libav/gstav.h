@@ -57,9 +57,6 @@ int gst_ffmpeg_avcodec_open (AVCodecContext *avctx, AVCodec *codec);
 int gst_ffmpeg_avcodec_close (AVCodecContext *avctx);
 int gst_ffmpeg_av_find_stream_info(AVFormatContext *ic);
 
-int gst_ffmpegdata_open (GstPad * pad, int flags, AVIOContext ** context);
-int gst_ffmpegdata_close (AVIOContext * h);
-
 G_END_DECLS
 
 /* use GST_FFMPEG URL_STREAMHEADER with URL_WRONLY if the first

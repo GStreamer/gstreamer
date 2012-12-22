@@ -45,4 +45,4 @@ noinst_HEADERS = \
 	gstavaudenc.h \
 	gstavvidenc.h \
 	gstavcfg.h \
-	gstavpipe.h
+	gstavprotocol.h

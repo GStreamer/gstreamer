@@ -31,6 +31,7 @@
 #include "gstav.h"
 #include "gstavcodecmap.h"
 #include "gstavutils.h"
+#include "gstavprotocol.h"
 
 typedef struct _GstFFMpegMux GstFFMpegMux;
 typedef struct _GstFFMpegMuxPad GstFFMpegMuxPad;

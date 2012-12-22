@@ -29,7 +29,7 @@
 #include <gst/gst.h>
 
 #include "gstav.h"
-#include "gstavpipe.h"
+#include "gstavprotocol.h"
 
 typedef struct _GstProtocolInfo GstProtocolInfo;
 
