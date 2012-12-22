@@ -57,9 +57,6 @@ GST_DEBUG_CATEGORY (gst_d3dvideosink_debug);
 /* Interfaces */
 static void gst_d3dvideosink_init_interfaces (GType type);
 /* GstXOverlay Interface */
-static void
-gst_d3dvideosink_video_overlay_interface_init (GstVideoOverlayInterface *
-    iface);
 static void gst_d3dvideosink_set_window_handle (GstVideoOverlay * overlay,
     guintptr window_id);
 static void gst_d3dvideosink_set_render_rectangle (GstVideoOverlay * overlay,
@@ -92,8 +89,6 @@ static GstFlowReturn gst_d3dvideosink_show_frame (GstVideoSink * vsink,
 
 G_DEFINE_TYPE_WITH_CODE (GstD3DVideoSink, gst_d3dvideosink, GST_TYPE_VIDEO_SINK,
     _do_init);
-
-
 
 static void
 gst_d3dvideosink_class_init (GstD3DVideoSinkClass * klass)
