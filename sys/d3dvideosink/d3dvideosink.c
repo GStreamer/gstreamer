@@ -126,17 +126,20 @@ gst_d3dvideosink_class_init (GstD3DVideoSinkClass * klass)
       PROP_FORCE_ASPECT_RATIO, g_param_spec_boolean ("force-aspect-ratio",
           "Force aspect ratio",
           "When enabled, scaling will respect original aspect ratio",
-          DEFAULT_FORCE_ASPECT_RATIO, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_FORCE_ASPECT_RATIO,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_CREATE_RENDER_WINDOW, g_param_spec_boolean ("create-render-window",
           "Create render window",
           "If no window ID is given, a new render window is created",
-          DEFAULT_CREATE_RENDER_WINDOW, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_CREATE_RENDER_WINDOW,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_STREAM_STOP_ON_CLOSE, g_param_spec_boolean ("stream-stop-on-close",
           "Stop streaming on window close",
           "If the render window is closed stop stream",
-          DEFAULT_STREAM_STOP_ON_CLOSE, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_STREAM_STOP_ON_CLOSE,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #if 0
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_PIXEL_ASPECT_RATIO, g_param_spec_string ("pixel-aspect-ratio",
@@ -149,7 +152,8 @@ gst_d3dvideosink_class_init (GstD3DVideoSinkClass * klass)
       g_param_spec_boolean ("enable-navigation-events",
           "Enable navigation events",
           "When enabled, navigation events are sent upstream",
-          DEFAULT_ENABLE_NAVIGATION_EVENTS, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_ENABLE_NAVIGATION_EVENTS,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Direct3D video sink", "Sink/Video",
