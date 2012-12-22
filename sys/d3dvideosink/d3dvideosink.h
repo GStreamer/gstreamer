@@ -97,15 +97,15 @@ struct _GstD3DVideoSinkClass
 };
 
 #if 1
-# define LOCK_SINK(sink)          g_static_rec_mutex_lock(&sink->lock);
-# define UNLOCK_SINK(sink)        g_static_rec_mutex_unlock(&sink->lock);
-# define LOCK_CLASS(obj, class)   g_static_rec_mutex_lock(&class->lock);
-# define UNLOCK_CLASS(obj, class) g_static_rec_mutex_unlock(&class->lock);
+# define LOCK_SINK(sink)          g_rec_mutex_lock(&sink->lock);
+# define UNLOCK_SINK(sink)        g_rec_mutex_unlock(&sink->lock);
+# define LOCK_CLASS(obj, class)   g_rec_mutex_lock(&class->lock);
+# define UNLOCK_CLASS(obj, class) g_rec_mutex_unlock(&class->lock);
 #else
-# define LOCK_SINK(sink)          GST_LOG_OBJECT(sink, "SINK   LOCK"); g_static_rec_mutex_lock(&sink->lock); GST_LOG_OBJECT(sink, "SINK LOCKED");
-# define UNLOCK_SINK(sink)        g_static_rec_mutex_unlock(&sink->lock); GST_LOG_OBJECT(sink, "SINK UNLOCKED");
-# define LOCK_CLASS(obj, class)   GST_LOG_OBJECT(obj, "CLASS   LOCK"); g_static_rec_mutex_lock(&class->lock); GST_LOG_OBJECT(obj, "CLASS LOCKED");
-# define UNLOCK_CLASS(obj, class) g_static_rec_mutex_unlock(&class->lock); GST_LOG_OBJECT(obj, "CLASS UNLOCKED");
+# define LOCK_SINK(sink)          GST_LOG_OBJECT(sink, "SINK   LOCK"); g_rec_mutex_lock(&sink->lock); GST_LOG_OBJECT(sink, "SINK LOCKED");
+# define UNLOCK_SINK(sink)        g_rec_mutex_unlock(&sink->lock); GST_LOG_OBJECT(sink, "SINK UNLOCKED");
+# define LOCK_CLASS(obj, class)   GST_LOG_OBJECT(obj, "CLASS   LOCK"); g_rec_mutex_lock(&class->lock); GST_LOG_OBJECT(obj, "CLASS LOCKED");
+# define UNLOCK_CLASS(obj, class) g_rec_mutex_unlock(&class->lock); GST_LOG_OBJECT(obj, "CLASS UNLOCKED");
 #endif
 
 GType    gst_d3dvideosink_get_type (void);
