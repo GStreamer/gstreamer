@@ -75,8 +75,8 @@ typedef struct _GstD3DData {
 } GstD3DData;
 
 
-gboolean       d3d_class_init(GstD3DVideoSink * class);
-void           d3d_class_destroy(GstD3DVideoSink * class);
+gboolean       d3d_class_init(GstD3DVideoSink * klass);
+void           d3d_class_destroy(GstD3DVideoSink * klass);
 
 gboolean       d3d_prepare_window(GstD3DVideoSink * sink);
 gboolean       d3d_stop(GstD3DVideoSink * sink);
