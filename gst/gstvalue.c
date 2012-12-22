@@ -144,6 +144,12 @@ static gchar *gst_string_wrap (const gchar * s);
 static gchar *gst_string_take_and_wrap (gchar * s);
 static gchar *gst_string_unwrap (const gchar * s);
 
+static void gst_value_move (GValue * dest, GValue * src);
+static void gst_value_list_append_and_take_value (GValue * value,
+    GValue * append_value);
+static void gst_value_array_append_and_take_value (GValue * value,
+    GValue * append_value);
+
 static inline GstValueTable *
 gst_value_hash_lookup_type (GType type)
 {
@@ -407,6 +413,13 @@ gst_value_list_or_array_are_compatible (const GValue * value1,
   return FALSE;
 }
 
+static void
+gst_value_list_append_and_take_value (GValue * value, GValue * append_value)
+{
+  g_array_append_vals ((GArray *) value->data[0].v_pointer, append_value, 1);
+  memset (append_value, 0, sizeof (GValue));
+}
+
 /**
  * gst_value_list_append_value:
  * @value: a #GValue of type #GST_TYPE_LIST
@@ -657,6 +670,13 @@ gst_value_array_append_value (GValue * value, const GValue * append_value)
 
   gst_value_init_and_copy (&val, append_value);
   g_array_append_vals ((GArray *) value->data[0].v_pointer, &val, 1);
+}
+
+static void
+gst_value_array_append_and_take_value (GValue * value, GValue * append_value)
+{
+  g_array_append_vals ((GArray *) value->data[0].v_pointer, append_value, 1);
+  memset (append_value, 0, sizeof (GValue));
 }
 
 /**
@@ -3489,19 +3509,18 @@ gst_value_intersect_list (GValue * dest, const GValue * value1,
     if (gst_value_intersect (&intersection, cur, value2)) {
       /* append value */
       if (!ret) {
-        gst_value_init_and_copy (dest, &intersection);
+        gst_value_move (dest, &intersection);
         ret = TRUE;
       } else if (GST_VALUE_HOLDS_LIST (dest)) {
-        gst_value_list_append_value (dest, &intersection);
+        gst_value_list_append_and_take_value (dest, &intersection);
       } else {
-        GValue temp = { 0, };
+        GValue temp;
 
-        gst_value_init_and_copy (&temp, dest);
-        g_value_unset (dest);
+        gst_value_move (&temp, dest);
         gst_value_list_merge (dest, &temp, &intersection);
         g_value_unset (&temp);
+        g_value_unset (&intersection);
       }
-      g_value_unset (&intersection);
     }
   }
 
@@ -3540,8 +3559,7 @@ gst_value_intersect_array (GValue * dest, const GValue * src1,
       g_value_unset (dest);
       return FALSE;
     }
-    gst_value_array_append_value (dest, &val);
-    g_value_unset (&val);
+    gst_value_array_append_and_take_value (dest, &val);
   }
 
   return TRUE;
@@ -4014,20 +4032,19 @@ gst_value_subtract_from_list (GValue * dest, const GValue * minuend,
 
     if (gst_value_subtract (&subtraction, cur, subtrahend)) {
       if (!ret) {
-        gst_value_init_and_copy (dest, &subtraction);
+        gst_value_move (dest, &subtraction);
         ret = TRUE;
       } else if (G_VALUE_HOLDS (dest, ltype)
           && !G_VALUE_HOLDS (&subtraction, ltype)) {
-        gst_value_list_append_value (dest, &subtraction);
+        gst_value_list_append_and_take_value (dest, &subtraction);
       } else {
-        GValue temp = { 0, };
+        GValue temp;
 
-        gst_value_init_and_copy (&temp, dest);
-        g_value_unset (dest);
+        gst_value_move (&temp, dest);
         gst_value_list_concat (dest, &temp, &subtraction);
         g_value_unset (&temp);
+        g_value_unset (&subtraction);
       }
-      g_value_unset (&subtraction);
     }
   }
   return ret;
@@ -4057,9 +4074,11 @@ gst_value_subtract_list (GValue * dest, const GValue * minuend,
       return FALSE;
     }
   }
-  if (dest)
-    gst_value_init_and_copy (dest, result);
-  g_value_unset (result);
+  if (dest) {
+    gst_value_move (dest, result);
+  } else {
+    g_value_unset (result);
+  }
   return TRUE;
 }
 
@@ -4792,6 +4811,17 @@ gst_value_init_and_copy (GValue * dest, const GValue * src)
   g_value_copy (src, dest);
 }
 
+/* move src into dest and clear src */
+static void
+gst_value_move (GValue * dest, GValue * src)
+{
+  g_assert (G_IS_VALUE (src));
+  g_assert (dest != NULL);
+
+  *dest = *src;
+  memset (src, 0, sizeof (GValue));
+}
+
 /**
  * gst_value_serialize:
  * @value: a #GValue to serialize
@@ -4961,9 +4991,11 @@ gst_value_fixate (GValue * dest, const GValue * src)
 
     gst_value_init_and_copy (&temp, gst_value_list_get_value (src, 0));
 
-    if (!gst_value_fixate (dest, &temp))
-      gst_value_init_and_copy (dest, &temp);
-    g_value_unset (&temp);
+    if (!gst_value_fixate (dest, &temp)) {
+      gst_value_move (dest, &temp);
+    } else {
+      g_value_unset (&temp);
+    }
   } else if (G_VALUE_TYPE (src) == GST_TYPE_ARRAY) {
     gboolean res = FALSE;
     guint n, len;
@@ -4978,8 +5010,7 @@ gst_value_fixate (GValue * dest, const GValue * src)
         gst_value_init_and_copy (&kid, orig_kid);
       else
         res = TRUE;
-      gst_value_array_append_value (dest, &kid);
-      g_value_unset (&kid);
+      gst_value_array_append_and_take_value (dest, &kid);
     }
 
     if (!res)
