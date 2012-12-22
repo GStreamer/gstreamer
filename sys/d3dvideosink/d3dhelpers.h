@@ -20,7 +20,10 @@
  */
 #ifndef _D3DHELPERS_H_
 #define _D3DHELPERS_H_
-#include <glib.h>
+
+#include <gst/gst.h>
+#include <gst/video/video.h>
+
 #include <windows.h>
 #include <d3d9.h>
 #include <d3dx9tex.h>
@@ -66,7 +69,6 @@ typedef struct _GstD3DData {
   LPDIRECT3DSURFACE9     surface;
   D3DTEXTUREFILTERTYPE   filtertype;
   D3DFORMAT              format;
-  gboolean               exact_copy;
   GstVideoRectangle    * render_rect;
   gboolean               renderable;
   gboolean               device_lost;

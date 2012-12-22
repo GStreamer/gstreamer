@@ -41,29 +41,6 @@ G_BEGIN_DECLS
 typedef struct _GstD3DVideoSink GstD3DVideoSink;
 typedef struct _GstD3DVideoSinkClass GstD3DVideoSinkClass;
 
-typedef struct _GstVideoFormatDetails {
-  guint32 r_mask;
-  guint32 g_mask;
-  guint32 b_mask;
-  guint32 a_mask;
-  guint32 r_mask16;
-  guint32 g_mask16;
-  guint32 b_mask16;
-  guint32 a_mask16;
-  guint   r_shift;
-  guint   g_shift;
-  guint   b_shift;
-  guint   a_shift;
-  guint   r_bits;
-  guint   g_bits;
-  guint   b_bits;
-  guint   a_bits;
-  gint    bpp;
-  gint    depth;
-  gint    endianness;
-  gint    pixel_width;
-} GstVideoFormatDetails;
-
 struct _GstD3DVideoSink
 {
   GstVideoSink       sink;
@@ -73,7 +50,6 @@ struct _GstD3DVideoSink
 
   GstVideoFormat     format;
   GstVideoInfo       info;
-  GstVideoFormatDetails fmt_details;
   gint               width;
   gint               height;
 

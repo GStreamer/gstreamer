@@ -2,6 +2,7 @@
  * Copyright (C) 2012 Roland Krikava <info@bluedigits.com>
  * Copyright (C) 2010-2011 David Hoyt <dhoyt@hoytsoft.org>
  * Copyright (C) 2010 Andoni Morales <ylatuya@gmail.com>
+ * Copyright (C) 2012 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -108,20 +109,11 @@ static gint WM_D3DVIDEO_NOTIFY_DEVICE_LOST = 0;
 #define D3DFMT_NV12 MAKEFOURCC ('N', 'V', '1', '2')
 #endif
 
-#define BIT_MAX(bits) ((1<<bits)-1)
-#define _BIT_CONV(val, from_bit, to_bit) ((gdouble)val*(((gdouble)BIT_MAX(to_bit))/((gdouble)BIT_MAX(from_bit))))
-#define BIT_CONV(val,from_bit,to_bit) ((from_bit==to_bit)?val:_BIT_CONV(val, from_bit, to_bit))
-
-#define ALPHA  3
-#define RED    2
-#define GREEN  1
-#define BLUE   0
-
 /** FORMATS **/
 
 #define CASE(x) case x: return #x;
 static const gchar *
-d3d_format2string (D3DFORMAT format)
+d3d_format_to_string (D3DFORMAT format)
 {
   /* Self defined up above */
   if (format == D3DFMT_YV12)
@@ -137,7 +129,6 @@ d3d_format2string (D3DFORMAT format)
       CASE (D3DFMT_A8R8G8B8);
       CASE (D3DFMT_UYVY);
       CASE (D3DFMT_R8G8B8);
-
       CASE (D3DFMT_R5G6B5);
       CASE (D3DFMT_X1R5G5B5);
       CASE (D3DFMT_A1R5G5B5);
@@ -195,175 +186,40 @@ d3d_format2string (D3DFORMAT format)
       CASE (D3DFMT_FORCE_DWORD);
   }
 
-  return "";
-}
-
-static const gchar *
-gst_video_format2string (GstVideoFormat format)
-{
-  switch (format) {
-      CASE (GST_VIDEO_FORMAT_UNKNOWN);
-      CASE (GST_VIDEO_FORMAT_ENCODED);
-      CASE (GST_VIDEO_FORMAT_I420);
-      CASE (GST_VIDEO_FORMAT_YV12);
-      CASE (GST_VIDEO_FORMAT_YUY2);
-      CASE (GST_VIDEO_FORMAT_UYVY);
-      CASE (GST_VIDEO_FORMAT_AYUV);
-      CASE (GST_VIDEO_FORMAT_RGBx);
-      CASE (GST_VIDEO_FORMAT_BGRx);
-      CASE (GST_VIDEO_FORMAT_xRGB);
-      CASE (GST_VIDEO_FORMAT_xBGR);
-      CASE (GST_VIDEO_FORMAT_RGBA);
-      CASE (GST_VIDEO_FORMAT_BGRA);
-      CASE (GST_VIDEO_FORMAT_ARGB);
-      CASE (GST_VIDEO_FORMAT_ABGR);
-      CASE (GST_VIDEO_FORMAT_RGB);
-      CASE (GST_VIDEO_FORMAT_BGR);
-      CASE (GST_VIDEO_FORMAT_Y41B);
-      CASE (GST_VIDEO_FORMAT_Y42B);
-      CASE (GST_VIDEO_FORMAT_YVYU);
-      CASE (GST_VIDEO_FORMAT_Y444);
-      CASE (GST_VIDEO_FORMAT_v210);
-      CASE (GST_VIDEO_FORMAT_v216);
-      CASE (GST_VIDEO_FORMAT_NV12);
-      CASE (GST_VIDEO_FORMAT_NV21);
-      CASE (GST_VIDEO_FORMAT_GRAY8);
-      CASE (GST_VIDEO_FORMAT_GRAY16_BE);
-      CASE (GST_VIDEO_FORMAT_GRAY16_LE);
-      CASE (GST_VIDEO_FORMAT_v308);
-      CASE (GST_VIDEO_FORMAT_RGB16);
-      CASE (GST_VIDEO_FORMAT_BGR16);
-      CASE (GST_VIDEO_FORMAT_RGB15);
-      CASE (GST_VIDEO_FORMAT_BGR15);
-      CASE (GST_VIDEO_FORMAT_UYVP);
-      CASE (GST_VIDEO_FORMAT_A420);
-      CASE (GST_VIDEO_FORMAT_RGB8P);
-      CASE (GST_VIDEO_FORMAT_YUV9);
-      CASE (GST_VIDEO_FORMAT_YVU9);
-      CASE (GST_VIDEO_FORMAT_IYU1);
-      CASE (GST_VIDEO_FORMAT_ARGB64);
-      CASE (GST_VIDEO_FORMAT_AYUV64);
-      CASE (GST_VIDEO_FORMAT_r210);
-      CASE (GST_VIDEO_FORMAT_I420_10BE);
-      CASE (GST_VIDEO_FORMAT_I420_10LE);
-      CASE (GST_VIDEO_FORMAT_I422_10BE);
-      CASE (GST_VIDEO_FORMAT_I422_10LE);
-      CASE (GST_VIDEO_FORMAT_Y444_10BE);
-      CASE (GST_VIDEO_FORMAT_Y444_10LE);
-      CASE (GST_VIDEO_FORMAT_GBR);
-      CASE (GST_VIDEO_FORMAT_GBR_10BE);
-      CASE (GST_VIDEO_FORMAT_GBR_10LE);
-  }
-  return "";
+  return "UNKNOWN";
 }
 
 #undef CASE
 
-static gboolean
-gst_video_can_handle_d3d_rgb (D3DFORMAT fmt)
+static const struct
 {
-  switch (fmt) {
-    case D3DFMT_A8R8G8B8:
-    case D3DFMT_X8R8G8B8:
-    case D3DFMT_A8B8G8R8:
-    case D3DFMT_X8B8G8R8:
-    case D3DFMT_R8G8B8:
-    case D3DFMT_R5G6B5:
-      return TRUE;
-      /* TODO: */
-    case D3DFMT_X1R5G5B5:
-    case D3DFMT_A1R5G5B5:
-    case D3DFMT_X4R4G4B4:
-    case D3DFMT_A4R4G4B4:
-    case D3DFMT_A8R3G3B2:
-    case D3DFMT_R3G3B2:
-    default:;
-  }
-  return FALSE;
-}
-
-static gboolean
-gst_video_can_handle_gst_rgb (GstVideoFormat format)
-{
-  switch (format) {
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_RGB16:
-    case GST_VIDEO_FORMAT_BGR16:
-    case GST_VIDEO_FORMAT_RGB15:
-    case GST_VIDEO_FORMAT_BGR15:
-      return TRUE;
-    default:;
-  }
-  return FALSE;
-}
+  GstVideoFormat gst_format;
+  D3DFORMAT d3d_format;
+} gst_d3d_format_map[] = {
+  {
+  GST_VIDEO_FORMAT_BGRx, D3DFMT_X8R8G8B8}, {
+  GST_VIDEO_FORMAT_RGBx, D3DFMT_X8B8G8R8}, {
+  GST_VIDEO_FORMAT_BGRA, D3DFMT_A8R8G8B8}, {
+  GST_VIDEO_FORMAT_RGBA, D3DFMT_A8B8G8R8}, {
+  GST_VIDEO_FORMAT_BGR, D3DFMT_R8G8B8}, {
+  GST_VIDEO_FORMAT_RGB16, D3DFMT_R5G6B5}, {
+  GST_VIDEO_FORMAT_RGB15, D3DFMT_X1R5G5B5}, {
+  GST_VIDEO_FORMAT_I420, D3DFMT_YV12}, {
+  GST_VIDEO_FORMAT_YV12, D3DFMT_YV12}, {
+  GST_VIDEO_FORMAT_NV12, D3DFMT_NV12}, {
+  GST_VIDEO_FORMAT_YUY2, D3DFMT_YUY2}, {
+  GST_VIDEO_FORMAT_UYVY, D3DFMT_UYVY}
+};
 
 static D3DFORMAT
-gst_rgb_video_format_exact_d3d (GstVideoFormat format, D3DFORMAT * next_choice)
+gst_video_format_to_d3d_format (GstVideoFormat format)
 {
-  D3DFORMAT ret;
+  gint i;
 
-  g_return_val_if_fail (next_choice != NULL, D3DFMT_UNKNOWN);
-
-  /*
-   * Note: Only 1st choice is an exact match
-   */
-  *next_choice = D3DFMT_UNKNOWN;
-  ret = D3DFMT_UNKNOWN;
-
-  switch (format) {
-    case GST_VIDEO_FORMAT_BGRx:
-      *next_choice = D3DFMT_X8B8G8R8;
-      ret = D3DFMT_X8R8G8B8;
-      break;
-    case GST_VIDEO_FORMAT_RGBx:
-      *next_choice = D3DFMT_X8R8G8B8;
-      ret = D3DFMT_X8B8G8R8;
-      break;
-    case GST_VIDEO_FORMAT_xRGB:
-      *next_choice = D3DFMT_X8R8G8B8;
-      break;
-    case GST_VIDEO_FORMAT_xBGR:
-      *next_choice = D3DFMT_X8R8G8B8;
-      break;
-    case GST_VIDEO_FORMAT_RGBA:
-      *next_choice = D3DFMT_A8R8G8B8;
-      ret = D3DFMT_A8B8G8R8;
-      break;
-    case GST_VIDEO_FORMAT_BGRA:
-      *next_choice = D3DFMT_A8B8G8R8;
-      ret = D3DFMT_A8R8G8B8;
-      break;
-    case GST_VIDEO_FORMAT_ARGB:
-      *next_choice = D3DFMT_A8R8G8B8;
-      break;
-    case GST_VIDEO_FORMAT_ABGR:
-      *next_choice = D3DFMT_A8R8G8B8;
-      break;
-    case GST_VIDEO_FORMAT_RGB:
-      *next_choice = D3DFMT_R8G8B8;
-      break;
-    case GST_VIDEO_FORMAT_BGR:
-      ret = D3DFMT_R8G8B8;
-      break;
-    case GST_VIDEO_FORMAT_RGB16:
-      ret = D3DFMT_R5G6B5;
-      break;
-    case GST_VIDEO_FORMAT_BGR16:
-      *next_choice = D3DFMT_R5G6B5;
-      break;
-    default:;
-  }
-
-  return ret;
+  for (i = 0; i < G_N_ELEMENTS (gst_d3d_format_map); i++)
+    if (gst_d3d_format_map[i].gst_format == format)
+      return gst_d3d_format_map[i].d3d_format;
+  return D3DFMT_UNKNOWN;
 }
 
 static gboolean
@@ -378,7 +234,7 @@ gst_video_d3d_format_check (GstD3DVideoSink * sink, D3DFORMAT fmt)
       D3DDEVTYPE_HAL, class->d3d.device.format, 0, D3DRTYPE_SURFACE, fmt);
   if (hr == D3D_OK) {
     /* test whether device can perform color-conversion
-     ** from that format to target format
+     * from that format to target format
      */
     hr = IDirect3D9_CheckDeviceFormatConversion (class->d3d.d3d,
         class->d3d.device.adapter,
@@ -386,98 +242,49 @@ gst_video_d3d_format_check (GstD3DVideoSink * sink, D3DFORMAT fmt)
     if (hr == D3D_OK)
       ret = TRUE;
   }
-  //GST_DEBUG_OBJECT(sink, "Checking: %s - %s", d3d_format2string(fmt), ret?"TRUE":"FALSE");
+  GST_DEBUG_OBJECT (sink, "Checking: %s - %s", d3d_format_to_string (fmt),
+      ret ? "TRUE" : "FALSE");
 
   return ret;
 }
 
-static D3DFORMAT
-gst_video_query_d3d_format (GstD3DVideoSink * sink, GstVideoFormat format,
-    gboolean * exact)
+static gboolean
+gst_video_query_d3d_format (GstD3DVideoSink * sink, D3DFORMAT d3dformat)
 {
-  D3DFORMAT ret = D3DFMT_UNKNOWN;
-  const GstVideoFormatInfo *info;
+  GstD3DVideoSinkClass *class = GST_D3DVIDEOSINK_GET_CLASS (sink);
 
-  g_return_val_if_fail (exact != NULL, D3DFMT_UNKNOWN);
+  /* If it's the display adapter format we don't need to probe */
+  if (d3dformat == class->d3d.device.format)
+    return TRUE;
 
-  *exact = FALSE;
+  if (gst_video_d3d_format_check (sink, d3dformat))
+    return TRUE;
 
-  if (!(info = gst_video_format_get_info (format))) {
-    GST_ERROR_OBJECT (sink, "Failed to get GstVideoFormatInfo for format: %u",
-        format);
-    return D3DFMT_UNKNOWN;
-  }
-
-  if (GST_VIDEO_FORMAT_INFO_IS_RGB (info)) {
-    GstD3DVideoSinkClass *class = GST_D3DVIDEOSINK_GET_CLASS (sink);
-    D3DFORMAT try1 = D3DFMT_UNKNOWN, try2 = D3DFMT_UNKNOWN;
-    if (gst_video_can_handle_gst_rgb (format)) {
-      try1 = gst_rgb_video_format_exact_d3d (format, &try2);
-      if (try1 != D3DFMT_UNKNOWN && gst_video_d3d_format_check (sink, try1)) {
-        ret = try1;
-        *exact = TRUE;
-      } else if (try2 != D3DFMT_UNKNOWN
-          && gst_video_d3d_format_check (sink, try2)) {
-        ret = try2;
-      }
-      /* Fall back to display adapter format */
-      if (ret == D3DFMT_UNKNOWN) {
-        if (gst_video_can_handle_d3d_rgb (class->d3d.device.format)) {
-          ret = class->d3d.device.format;
-        }
-      }
-    }
-  } else if (GST_VIDEO_FORMAT_INFO_IS_YUV (info)) {
-    switch (format) {
-      case GST_VIDEO_FORMAT_YV12:
-      case GST_VIDEO_FORMAT_I420:
-        if (gst_video_d3d_format_check (sink, D3DFMT_YV12))
-          ret = D3DFMT_YV12;
-        break;
-      case GST_VIDEO_FORMAT_YUY2:
-        if (gst_video_d3d_format_check (sink, D3DFMT_YUY2)) {
-          ret = D3DFMT_YUY2;
-        }
-        break;
-      case GST_VIDEO_FORMAT_UYVY:
-        if (gst_video_d3d_format_check (sink, D3DFMT_UYVY)) {
-          ret = D3DFMT_UYVY;
-        }
-        break;
-      case GST_VIDEO_FORMAT_NV12:
-        if (gst_video_d3d_format_check (sink, D3DFMT_NV12)) {
-          ret = D3DFMT_NV12;
-        }
-        break;
-      default:;
-    }
-  }
-
-  return ret;
+  return FALSE;
 }
 
 typedef struct
 {
   GstVideoFormat fmt;
   D3DFORMAT d3d_fmt;
-  gboolean exact;
   gboolean display;
-} GstFormatComp;
+} D3DFormatComp;
+
+static void
+d3d_format_comp_free (D3DFormatComp * comp)
+{
+  g_slice_free (D3DFormatComp, comp);
+}
 
 static gint
-format_points (GstFormatComp * dat)
+d3d_format_comp_rate (const D3DFormatComp * comp)
 {
   gint points = 0;
   const GstVideoFormatInfo *info;
 
-  if (!(info = gst_video_format_get_info (dat->fmt)))
-    return 0;
+  info = gst_video_format_get_info (comp->fmt);
 
-  if (dat->display)
-    points += 1;
-  else if (dat->exact)
-    points += 2;
-  if (dat->exact && dat->display)
+  if (comp->display)
     points += 10;
   if (GST_VIDEO_FORMAT_INFO_IS_YUV (info))
     points += 5;
@@ -488,15 +295,18 @@ format_points (GstFormatComp * dat)
     if (bit_depth >= 24)
       points += 1;
   }
+
   return points;
 }
 
 static gint
-format_compare_cb (gconstpointer a, gconstpointer b)
+d3d_format_comp_compare (gconstpointer a, gconstpointer b)
 {
   gint ptsa = 0, ptsb = 0;
-  ptsa = format_points ((GstFormatComp *) a);
-  ptsb = format_points ((GstFormatComp *) b);
+
+  ptsa = d3d_format_comp_rate ((const D3DFormatComp *) a);
+  ptsb = d3d_format_comp_rate ((const D3DFormatComp *) b);
+
   if (ptsa < ptsb)
     return -1;
   else if (ptsa == ptsb)
@@ -505,30 +315,17 @@ format_compare_cb (gconstpointer a, gconstpointer b)
     return 1;
 }
 
-static GstCaps *
-d3dvideosink_format_new_template_caps (GstVideoFormat fmt)
-{
-  gchar *tmp = g_strdup_printf ("video/x-raw, "
-      "format=(string)%s, "
-      "width=(int)[ 1, 2147483647 ], "
-      "height=(int)[ 1, 2147483647 ], "
-      "framerate=(fraction)[ 0/1, 2147483647/1 ]",
-      gst_video_format_to_string (fmt));
-  //GST_DEBUG("CAPS: %s", tmp);
-
-  return gst_caps_from_string (tmp);
-}
-
 GstCaps *
 d3d_supported_caps (GstD3DVideoSink * sink)
 {
   GstD3DVideoSinkClass *class = GST_D3DVIDEOSINK_GET_CLASS (sink);
   int i;
-  gboolean exact;
-  GList *lst = NULL, *lsto = NULL;
+  GList *fmts = NULL, *l;
   GstCaps *caps = NULL;
+  GstVideoFormat gst_format;
   D3DFORMAT d3d_format;
-  gchar *tmp = NULL;
+  GValue va = { 0, };
+  GValue v = { 0, };
 
   LOCK_SINK (sink);
 
@@ -537,43 +334,54 @@ d3d_supported_caps (GstD3DVideoSink * sink)
     goto unlock;
   }
 
-  for (i = 0; i <= GST_VIDEO_FORMAT_GBR_10LE; i++) {
-    GstFormatComp *dat;
+  for (i = 0; i < G_N_ELEMENTS (gst_d3d_format_map); i++) {
+    D3DFormatComp *comp;
 
-    d3d_format = gst_video_query_d3d_format (sink, (GstVideoFormat) i, &exact);
-
-    if (d3d_format == D3DFMT_UNKNOWN)
+    gst_format = gst_d3d_format_map[i].gst_format;
+    d3d_format = gst_d3d_format_map[i].d3d_format;
+    if (!gst_video_query_d3d_format (sink, d3d_format))
       continue;
 
-    dat = g_new0 (GstFormatComp, 1);
-    dat->fmt = (GstVideoFormat) i;
-    dat->d3d_fmt = d3d_format;
-    dat->exact = exact;
-    dat->display = (d3d_format == class->d3d.device.format);
-    lst = g_list_insert_sorted (lst, dat, format_compare_cb);
+    comp = g_slice_new0 (D3DFormatComp);
+    comp->fmt = (GstVideoFormat) gst_format;
+    comp->d3d_fmt = d3d_format;
+    comp->display = (d3d_format == class->d3d.device.format);
+    fmts = g_list_insert_sorted (fmts, comp, d3d_format_comp_compare);
   }
 
   GST_DEBUG_OBJECT (sink, "Supported Caps:");
 
-  lsto = lst;
-  for (lst = g_list_last (lst); lst != NULL; lst = g_list_previous (lst)) {
-    GstFormatComp *dat = (GstFormatComp *) lst->data;
-    GST_DEBUG_OBJECT (sink, "%s -> %s %s%s",
-        gst_video_format2string (dat->fmt), d3d_format2string (dat->d3d_fmt),
-        dat->exact ? "[exact]" : "", dat->display ? "[display]" : "");
-    if (!caps)
-      caps = d3dvideosink_format_new_template_caps (dat->fmt);
-    else
-      gst_caps_append (caps, d3dvideosink_format_new_template_caps (dat->fmt));
+  g_value_init (&va, GST_TYPE_LIST);
+  g_value_init (&v, G_TYPE_STRING);
+
+  for (l = fmts; l; l = g_list_next (l)) {
+    D3DFormatComp *comp = (D3DFormatComp *) l->data;
+
+    GST_DEBUG_OBJECT (sink, "%s -> %s %s",
+        gst_video_format_to_string (comp->fmt),
+        d3d_format_to_string (comp->d3d_fmt), comp->display ? "[display]" : "");
+    g_value_set_string (&v, gst_video_format_to_string (comp->fmt));
+    gst_value_list_append_value (&va, &v);
   }
-  g_list_foreach (lsto, (GFunc) g_free, NULL);
-  g_list_free (lsto);
+
+  caps = gst_caps_new_simple ("video/x-raw",
+      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+  gst_caps_set_value (caps, "format", &va);
+  g_value_unset (&v);
+  g_value_unset (&va);
+  g_list_free_full (fmts, (GDestroyNotify) d3d_format_comp_free);
 
   sink->supported_caps = gst_caps_ref (caps);
 
-  GST_DEBUG_OBJECT (sink, "Supported caps: %s", (tmp =
-          gst_caps_to_string (caps)));
-  g_free (tmp);
+#ifndef GST_DISABLE_GST_DEBUG
+  {
+    gchar *tmp = gst_caps_to_string (caps);
+    GST_DEBUG_OBJECT (sink, "Supported caps: %s", tmp);
+    g_free (tmp);
+  }
+#endif
 
 unlock:
   UNLOCK_SINK (sink);
@@ -585,24 +393,27 @@ gboolean
 d3d_set_render_format (GstD3DVideoSink * sink)
 {
   D3DFORMAT fmt;
-  gboolean exact = FALSE;
   gboolean ret = FALSE;
 
   LOCK_SINK (sink);
 
-  fmt = gst_video_query_d3d_format (sink, sink->format, &exact);
+  fmt = gst_video_format_to_d3d_format (sink->format);
   if (fmt == D3DFMT_UNKNOWN) {
-    GST_ERROR_OBJECT (sink, "Failed to query a D3D render format for %s",
-        gst_video_format2string (sink->format));
+    GST_ERROR_OBJECT (sink, "Unsupported video format %s",
+        gst_video_format_to_string (sink->format));
     goto end;
   }
 
-  GST_DEBUG_OBJECT (sink, "Selected %s -> %s %s",
-      gst_video_format2string (sink->format), d3d_format2string (fmt),
-      exact ? "(exact)" : "");
+  if (!gst_video_query_d3d_format (sink, fmt)) {
+    GST_ERROR_OBJECT (sink, "Failed to query a D3D render format for %s",
+        gst_video_format_to_string (sink->format));
+    goto end;
+  }
+
+  GST_DEBUG_OBJECT (sink, "Selected %s -> %s",
+      gst_video_format_to_string (sink->format), d3d_format_to_string (fmt));
 
   sink->d3d.format = fmt;
-  sink->d3d.exact_copy = exact;
 
   ret = TRUE;
 
@@ -688,9 +499,9 @@ d3d_get_render_coordinates (GstD3DVideoSink * sink, gint in_x, gint in_y,
 
   /* Convert window coordinates to source frame pixel coordinates */
   if (sink->force_aspect_ratio) {
-    GstVideoRectangle tmp = { 0, 0, 0, 0 }
-    , dst = {
-    0, 0, 0, 0};
+    GstVideoRectangle tmp = { 0, 0, 0, 0 };
+    GstVideoRectangle dst = { 0, 0, 0, 0 };
+
     tmp.w = GST_VIDEO_SINK_WIDTH (sink);
     tmp.h = GST_VIDEO_SINK_HEIGHT (sink);
     gst_video_sink_center_rect (tmp, r_area, &dst, TRUE);
@@ -1235,17 +1046,18 @@ static gboolean
 d3d_copy_buffer_to_surface (GstD3DVideoSink * sink, GstBuffer * buffer)
 {
   D3DLOCKED_RECT lr;
-  guint8 *dest, *source;
-  int i;
+  guint8 *dest;
+  int deststride;
   gboolean ret = FALSE;
   gint unhdl_line = 0;
-  GstMapInfo map;
+  GstVideoFrame frame;
   LOCK_SINK (sink);
 
   if (!sink->d3d.renderable || sink->d3d.device_lost)
     goto end;
 
-  if (!buffer || !gst_buffer_map (buffer, &map, GST_MAP_READ)) {
+  if (!buffer
+      || !gst_video_frame_map (&frame, &sink->info, buffer, GST_MAP_READ)) {
     GST_ERROR_OBJECT (sink, "NULL GstBuffer");
     goto end;
   }
@@ -1254,210 +1066,183 @@ d3d_copy_buffer_to_surface (GstD3DVideoSink * sink, GstBuffer * buffer)
 
   IDirect3DSurface9_LockRect (sink->d3d.surface, &lr, NULL, 0);
   dest = (guint8 *) lr.pBits;
-  source = map.data;
 
   if (!dest) {
     GST_ERROR_OBJECT (sink, "No D3D surface dest buffer");
     goto unlock_surface;
   }
 
-  if (sink->d3d.exact_copy) {
-    memcpy (dest, source, gst_buffer_get_size (buffer));
-    goto done;
+  deststride = lr.Pitch;
+
+  switch (sink->format) {
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:{
+      const guint8 *src;
+      gint srcstride;
+      gint i, h, w;
+
+      src = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
+      srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
+      h = GST_VIDEO_FRAME_HEIGHT (&frame);
+      w = GST_ROUND_UP_4 (GST_VIDEO_FRAME_WIDTH (&frame) * 2);
+
+      for (i = 0; i < h; i++) {
+        memcpy (dest, src, w);
+        dest += deststride;
+        src += srcstride;
+      }
+
+      break;
+    }
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:{
+      const guint8 *src;
+      gint srcstride, deststride_;
+      guint8 *dest_;
+      gint i, j, h, h_, w_;
+
+      h = GST_VIDEO_FRAME_HEIGHT (&frame);
+
+      for (i = 0; i < 3; i++) {
+        src = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
+        srcstride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, i);
+        h_ = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
+        w_ = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i);
+
+        switch (i) {
+          case 0:
+            deststride_ = deststride;
+            dest_ = dest;
+            break;
+          case 2:
+            deststride_ = deststride / 2;
+            dest_ = dest + h * deststride;
+            break;
+          case 1:
+            deststride_ = deststride / 2;
+            dest_ = dest + h * deststride + h_ * deststride_;
+            break;
+        }
+
+        for (j = 0; j < h_; j++) {
+          memcpy (dest_, src, w_);
+          dest_ += deststride_;
+          src += srcstride;
+        }
+      }
+
+      break;
+    }
+    case GST_VIDEO_FORMAT_NV12:{
+      const guint8 *src;
+      gint srcstride;
+      guint8 *dest_;
+      gint i, j, h, h_, w_;
+
+      h = GST_VIDEO_FRAME_HEIGHT (&frame);
+
+      for (i = 0; i < 2; i++) {
+        src = GST_VIDEO_FRAME_PLANE_DATA (&frame, i);
+        srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, i);
+        h_ = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
+        w_ = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i);
+
+        switch (i) {
+          case 0:
+            dest_ = dest;
+            break;
+          case 1:
+            dest_ = dest + h * deststride;
+            break;
+        }
+
+        for (j = 0; j < h_; j++) {
+          memcpy (dest_, src, w_ * 2);
+          dest_ += deststride;
+          src += srcstride;
+        }
+      }
+
+      break;
+    }
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_RGBx:{
+      const guint8 *src;
+      gint srcstride;
+      gint i, h, w;
+
+      src = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
+      srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
+      h = GST_VIDEO_FRAME_HEIGHT (&frame);
+      w = GST_VIDEO_FRAME_WIDTH (&frame) * 4;
+
+      for (i = 0; i < h; i++) {
+        memcpy (dest, src, w);
+        dest += deststride;
+        src += srcstride;
+      }
+
+      break;
+    }
+    case GST_VIDEO_FORMAT_BGR:{
+      const guint8 *src;
+      gint srcstride;
+      gint i, h, w;
+
+      src = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
+      srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
+      h = GST_VIDEO_FRAME_HEIGHT (&frame);
+      w = GST_VIDEO_FRAME_WIDTH (&frame) * 3;
+
+      for (i = 0; i < h; i++) {
+        memcpy (dest, src, w);
+        dest += deststride;
+        src += srcstride;
+      }
+
+      break;
+    }
+    case GST_VIDEO_FORMAT_RGB16:
+    case GST_VIDEO_FORMAT_RGB15:{
+      const guint8 *src;
+      gint srcstride;
+      gint i, h, w;
+
+      src = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
+      srcstride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
+      h = GST_VIDEO_FRAME_HEIGHT (&frame);
+      w = GST_VIDEO_FRAME_WIDTH (&frame) * 2;
+
+      for (i = 0; i < h; i++) {
+        memcpy (dest, src, w);
+        dest += deststride;
+        src += srcstride;
+      }
+
+      break;
+    }
+    default:
+      unhdl_line = __LINE__;
+      goto unhandled_format;
   }
 
-  if (GST_VIDEO_INFO_IS_YUV (&sink->info)) {
-    switch (sink->format) {
-      case GST_VIDEO_FORMAT_YUY2:
-      case GST_VIDEO_FORMAT_UYVY:{
-        int srcstride, dststride;
-        dststride = lr.Pitch;
-        srcstride = gst_buffer_get_size (buffer) / GST_VIDEO_SINK_HEIGHT (sink);
-        for (i = 0; i < GST_VIDEO_SINK_HEIGHT (sink); ++i)
-          memcpy (dest + dststride * i, source + srcstride * i, srcstride);
-        break;
-      }
-      case GST_VIDEO_FORMAT_YV12:
-      case GST_VIDEO_FORMAT_I420:{
-        int srcystride, srcvstride, srcustride;
-        int dstystride, dstvstride, dstustride;
-        guint8 *srcv, *srcu, *dstv, *dstu;
-        int rows;
-
-        rows = sink->height;
-
-        /* Source y, u and v strides */
-        srcystride = GST_ROUND_UP_4 (sink->width);
-        srcustride = GST_ROUND_UP_8 (sink->width) / 2;
-        srcvstride = GST_ROUND_UP_8 (srcystride) / 2;
-
-        /* Destination y, u and v strides */
-        dstystride = lr.Pitch;
-        dstustride = dstystride / 2;
-        dstvstride = dstustride;
-
-        srcu = source + srcystride * GST_ROUND_UP_2 (rows);
-        srcv = srcu + srcustride * GST_ROUND_UP_2 (rows) / 2;
-
-        if (sink->format == GST_VIDEO_FORMAT_I420) {
-          /* swap u and v planes */
-          dstv = dest + dstystride * rows;
-          dstu = dstv + dstustride * rows / 2;
-        } else {
-          dstu = dest + dstystride * rows;
-          dstv = dstu + dstustride * rows / 2;
-        }
-
-        for (i = 0; i < rows; ++i) {
-          /* Copy the y plane */
-          memcpy (dest + (dstystride * i), source + (srcystride * i),
-              srcystride);
-        }
-
-        for (i = 0; i < (rows / 2); ++i) {
-          /* Copy the u plane */
-          memcpy (dstu + (dstustride * i), srcu + (srcustride * i), srcustride);
-          /* Copy the v plane */
-          memcpy (dstv + (dstvstride * i), srcv + (srcvstride * i), srcvstride);
-        }
-        goto done;
-      }
-      case GST_VIDEO_FORMAT_NV12:{
-        int srcstride, dststride;
-        guint8 *dst = dest;
-        int component;
-        dststride = lr.Pitch;
-        for (component = 0; component < 2; component++) {
-          const int compHeight =
-              GST_VIDEO_INFO_COMP_HEIGHT (&sink->info, component);
-          guint8 *src = source + GST_VIDEO_INFO_COMP_OFFSET (&sink->info,
-              component);
-          srcstride = GST_VIDEO_INFO_COMP_STRIDE (&sink->info, component);
-          for (i = 0; i < compHeight; i++) {
-            memcpy (dst + dststride * i, src + srcstride * i, srcstride);
-          }
-          dst += dststride * compHeight;
-        }
-        break;
-      }
-      default:;
-        unhdl_line = __LINE__;
-        goto unhandled_format;
-    }                           /* end switch */
-  } else if (GST_VIDEO_INFO_IS_RGB (&sink->info)) {
-    for (i = 0; i < sink->height * sink->width; i++) {
-      guint8 p[4] = { 0, 0, 0, 0 };
-
-      /* Input */
-      switch (sink->fmt_details.bpp) {
-        case 32:
-        case 24:{
-          guint32 *p32 =
-              (guint32 *) (source + (i * sink->fmt_details.pixel_width));
-          if (sink->fmt_details.a_shift)
-            p[ALPHA] =
-                (*p32 & sink->fmt_details.a_mask) >> sink->fmt_details.a_shift;
-          p[RED] =
-              (*p32 & sink->fmt_details.r_mask) >> sink->fmt_details.r_shift;
-          p[GREEN] =
-              (*p32 & sink->fmt_details.g_mask) >> sink->fmt_details.g_shift;
-          p[BLUE] =
-              (*p32 & sink->fmt_details.b_mask) >> sink->fmt_details.b_shift;
-          break;
-        }
-        case 16:{
-          guint16 *p16 =
-              (guint16 *) (source + (i * sink->fmt_details.pixel_width));
-          if (sink->fmt_details.a_shift)
-            p[ALPHA] =
-                (*p16 & sink->fmt_details.a_mask16) >> sink->fmt_details.
-                a_shift;
-          p[RED] =
-              (*p16 & sink->fmt_details.r_mask16) >> sink->fmt_details.r_shift;
-          p[GREEN] =
-              (*p16 & sink->fmt_details.g_mask16) >> sink->fmt_details.g_shift;
-          p[BLUE] =
-              (*p16 & sink->fmt_details.b_mask16) >> sink->fmt_details.b_shift;
-          break;
-        }
-        default:;
-          unhdl_line = __LINE__;
-          goto unhandled_format;
-      }
-
-      /* Output */
-      switch (sink->d3d.format) {
-        case D3DFMT_A8R8G8B8:
-          p[RED] = BIT_CONV (p[RED], sink->fmt_details.r_bits, 8);
-          p[GREEN] = BIT_CONV (p[GREEN], sink->fmt_details.g_bits, 8);
-          p[BLUE] = BIT_CONV (p[BLUE], sink->fmt_details.b_bits, 8);
-          if (sink->fmt_details.a_shift)
-            p[ALPHA] = BIT_CONV (p[ALPHA], sink->fmt_details.a_bits, 8);
-          else
-            p[ALPHA] = 255;
-          memcpy ((dest + (i * 4)), &p, 4);
-          break;
-        case D3DFMT_X8R8G8B8:
-          p[RED] = BIT_CONV (p[RED], sink->fmt_details.r_bits, 8);
-          p[GREEN] = BIT_CONV (p[GREEN], sink->fmt_details.g_bits, 8);
-          p[BLUE] = BIT_CONV (p[BLUE], sink->fmt_details.b_bits, 8);
-          memcpy ((dest + (i * 4)), &p, 4);
-          break;
-        case D3DFMT_A8B8G8R8:
-          *(dest + (i * 4) + 0) = p[RED];
-          *(dest + (i * 4) + 1) = p[GREEN];
-          *(dest + (i * 4) + 2) = p[BLUE];
-          if (sink->fmt_details.a_shift)
-            *(dest + (i * 4) + 3) = p[ALPHA];
-          else
-            *(dest + (i * 4) + 3) = 255;
-          break;
-        case D3DFMT_X8B8G8R8:
-          *(dest + (i * 4) + 0) = p[RED];
-          *(dest + (i * 4) + 1) = p[GREEN];
-          *(dest + (i * 4) + 2) = p[BLUE];
-          break;
-        case D3DFMT_R8G8B8:
-          p[RED] = BIT_CONV (p[RED], sink->fmt_details.r_bits, 8);
-          p[GREEN] = BIT_CONV (p[GREEN], sink->fmt_details.g_bits, 8);
-          p[BLUE] = BIT_CONV (p[BLUE], sink->fmt_details.b_bits, 8);
-          memcpy ((dest + (i * 3)), &p, 3);
-          break;
-        case D3DFMT_R5G6B5:{
-          p[RED] = BIT_CONV (p[RED], sink->fmt_details.r_bits, 5);
-          p[GREEN] = BIT_CONV (p[GREEN], sink->fmt_details.g_bits, 6);
-          p[BLUE] = BIT_CONV (p[BLUE], sink->fmt_details.b_bits, 5);
-          *((guint16 *) (dest + (i * 2))) =
-              (p[RED] << 11 | p[GREEN] << 5 | p[BLUE]);
-          break;
-        }
-        case D3DFMT_X1R5G5B5:
-        case D3DFMT_A1R5G5B5:
-        case D3DFMT_X4R4G4B4:
-        case D3DFMT_A4R4G4B4:
-        case D3DFMT_A8R3G3B2:
-        case D3DFMT_R3G3B2:
-          //break;
-        default:
-          unhdl_line = __LINE__;
-          goto unhandled_format;
-      }
-    }                           /* end for */
-  }
-  /* end if rgb */
   goto done;
 
 unhandled_format:
   GST_ERROR_OBJECT (sink,
       "Unhandled format [LN:%d] '%s' -> '%s' (should not get here)", unhdl_line,
-      gst_video_format2string (sink->format),
-      d3d_format2string (sink->d3d.format));
+      gst_video_format_to_string (sink->format),
+      d3d_format_to_string (sink->d3d.format));
   goto unlock_surface;
 
 done:
   ret = TRUE;
 unlock_surface:
   IDirect3DSurface9_UnlockRect (sink->d3d.surface);
+  gst_video_frame_unmap (&frame);
+
 end:
   UNLOCK_SINK (sink);
   return ret;
@@ -1608,6 +1393,7 @@ d3d_stretch_and_copy (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 back_buffer)
       back_buffer,              /* Dest Surface */
       r_ptr,                    /* Dest Surface Rect (NULL: Whole) */
       class->d3d.device.filter_type);
+
   if (hr == D3D_OK) {
     ret = TRUE;
   } else {
@@ -2070,8 +1856,6 @@ d3d_class_destroy (GstD3DVideoSink * sink)
   UnregisterClass (class->d3d.wnd_class.lpszClassName,
       class->d3d.wnd_class.hInstance);
 
-  g_list_free (class->d3d.sink_list);
-
   memset (&class->d3d, 0, sizeof (GstD3DDataClass));
 
 end:
@@ -2167,7 +1951,8 @@ d3d_class_display_device_create (GstD3DVideoSinkClass * class, UINT adapter)
     goto error;
   }
 
-  GST_DEBUG ("Display Device format: %s", d3d_format2string (disp_mode.Format));
+  GST_DEBUG ("Display Device format: %s",
+      d3d_format_to_string (disp_mode.Format));
 
   ret = TRUE;
   goto end;
