@@ -193,6 +193,7 @@ gst_d3dvideosink_finalize (GObject * gobject)
   GST_DEBUG_OBJECT (sink, " ");
 
   d3d_class_destroy (sink);
+  gst_caps_replace (&sink->supported_caps, NULL);
 
   g_rec_mutex_clear (&sink->lock);
 
@@ -557,6 +558,7 @@ gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   if (!gst_caps_can_intersect (sink_caps, caps))
     goto incompatible_caps;
+  gst_caps_replace (&sink_caps, NULL);
 
   memset (&sink->info, 0, sizeof (GstVideoInfo));
   if (!gst_video_info_from_caps (&sink->info, caps))
@@ -644,6 +646,7 @@ gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 incompatible_caps:
   {
     GST_ERROR_OBJECT (sink, "caps incompatible");
+    gst_caps_unref (sink_caps);
     return FALSE;
   }
 invalid_format:
