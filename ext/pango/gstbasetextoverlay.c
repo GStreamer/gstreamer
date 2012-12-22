@@ -1653,6 +1653,7 @@ gst_base_text_overlay_shade_background (GstBaseTextOverlay * overlay,
     case GST_VIDEO_FORMAT_YUV9:
     case GST_VIDEO_FORMAT_YVU9:
     case GST_VIDEO_FORMAT_GRAY8:
+    case GST_VIDEO_FORMAT_A420:
       gst_base_text_overlay_shade_planar_Y (overlay, frame, x0, x1, y0, y1);
       break;
     case GST_VIDEO_FORMAT_AYUV:
