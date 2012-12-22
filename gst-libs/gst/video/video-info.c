@@ -506,7 +506,7 @@ fill_planes (GstVideoInfo * info)
           info->stride[1] * (GST_ROUND_UP_2 (height) / 2);
       info->offset[3] = info->offset[2] +
           info->stride[2] * (GST_ROUND_UP_2 (height) / 2);
-      info->size = info->offset[3] + info->stride[0];
+      info->size = info->offset[3] + info->stride[0] * GST_ROUND_UP_2 (height);
       break;
     case GST_VIDEO_FORMAT_YUV9:
     case GST_VIDEO_FORMAT_YVU9:
