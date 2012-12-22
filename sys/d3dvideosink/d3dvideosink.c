@@ -81,6 +81,8 @@ static GstCaps *gst_d3dvideosink_get_caps (GstBaseSink * basesink,
 static gboolean gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static gboolean gst_d3dvideosink_start (GstBaseSink * sink);
 static gboolean gst_d3dvideosink_stop (GstBaseSink * sink);
+static gboolean gst_d3dvideosink_propose_allocation (GstBaseSink * bsink,
+    GstQuery * query);
 /* GstVideoSink */
 static GstFlowReturn gst_d3dvideosink_show_frame (GstVideoSink * vsink,
     GstBuffer * buffer);
@@ -116,6 +118,8 @@ gst_d3dvideosink_class_init (GstD3DVideoSinkClass * klass)
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_d3dvideosink_set_caps);
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_d3dvideosink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_d3dvideosink_stop);
+  gstbasesink_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_d3dvideosink_propose_allocation);
 
   gstvideosink_class->show_frame =
       GST_DEBUG_FUNCPTR (gst_d3dvideosink_show_frame);
@@ -402,6 +406,12 @@ gst_d3dvideosink_stop (GstBaseSink * bsink)
   d3d_class_destroy (sink);
 
   return TRUE;
+}
+
+static gboolean
+gst_d3dvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+{
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
 }
 
 /** PUBLIC FUNCTIONS **/
