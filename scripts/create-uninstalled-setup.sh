@@ -98,7 +98,7 @@ cd $UNINSTALLED_ROOT/$BRANCH
 for m in $MODULES
 do
   if test "$GIT_ACCESS" = "ssh"; then
-    git clone ssh://git.freedesktop.org/gstreamer/$m
+    git clone ssh://git.freedesktop.org/git/gstreamer/$m
   else
     git clone git://anongit.freedesktop.org/gstreamer/$m
   fi
