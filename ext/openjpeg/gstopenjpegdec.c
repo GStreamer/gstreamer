@@ -802,27 +802,33 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
             format = GST_VIDEO_FORMAT_AYUV;
           }
         } else if (get_highest_prec (image) <= 16) {
-          if (image->comps[1].dx == 1 && image->comps[1].dy == 1) {
-            self->fill_frame = fill_frame_planar16_3;
+          if (image->comps[0].prec == 10 &&
+              image->comps[1].prec == 10 && image->comps[2].prec == 10) {
+            if (image->comps[1].dx == 1 && image->comps[1].dy == 1) {
+              self->fill_frame = fill_frame_planar16_3;
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-            format = GST_VIDEO_FORMAT_Y444_10LE;
+              format = GST_VIDEO_FORMAT_Y444_10LE;
 #else
-            format = GST_VIDEO_FORMAT_Y444_10BE;
+              format = GST_VIDEO_FORMAT_Y444_10BE;
 #endif
-          } else if (image->comps[1].dx == 2 && image->comps[1].dy == 1) {
-            self->fill_frame = fill_frame_planar16_3;
+            } else if (image->comps[1].dx == 2 && image->comps[1].dy == 1) {
+              self->fill_frame = fill_frame_planar16_3;
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-            format = GST_VIDEO_FORMAT_I422_10LE;
+              format = GST_VIDEO_FORMAT_I422_10LE;
 #else
-            format = GST_VIDEO_FORMAT_I422_10BE;
+              format = GST_VIDEO_FORMAT_I422_10BE;
 #endif
-          } else if (image->comps[1].dx == 2 && image->comps[1].dy == 2) {
-            self->fill_frame = fill_frame_planar16_3;
+            } else if (image->comps[1].dx == 2 && image->comps[1].dy == 2) {
+              self->fill_frame = fill_frame_planar16_3;
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-            format = GST_VIDEO_FORMAT_I420_10LE;
+              format = GST_VIDEO_FORMAT_I420_10LE;
 #else
-            format = GST_VIDEO_FORMAT_I420_10BE;
+              format = GST_VIDEO_FORMAT_I420_10BE;
 #endif
+            } else {
+              self->fill_frame = fill_frame_planar16_3_generic;
+              format = GST_VIDEO_FORMAT_AYUV64;
+            }
           } else {
             self->fill_frame = fill_frame_planar16_3_generic;
             format = GST_VIDEO_FORMAT_AYUV64;
