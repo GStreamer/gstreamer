@@ -35,7 +35,7 @@ static gboolean gst_mfc_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_mfc_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
 static gboolean gst_mfc_dec_reset (GstVideoDecoder * decoder, gboolean hard);
-static gboolean gst_mfc_dec_finish (GstVideoDecoder * decoder);
+static GstFlowReturn gst_mfc_dec_finish (GstVideoDecoder * decoder);
 static GstFlowReturn gst_mfc_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 
@@ -68,6 +68,7 @@ gst_mfc_dec_class_init (GstMFCDecClass * klass)
   video_decoder_class = (GstVideoDecoderClass *) klass;
 
   mfc_dec_init_debug ();
+  fimc_init_debug ();
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_mfc_dec_src_template));
@@ -104,17 +105,35 @@ static gboolean
 gst_mfc_dec_start (GstVideoDecoder * decoder)
 {
   GstMFCDec *self = GST_MFC_DEC (decoder);
+  Fimc *fimc;
 
   GST_DEBUG_OBJECT (self, "Starting");
+
+  self->width = 0;
+  self->height = 0;
+  self->crop_left = 0;
+  self->crop_top = 0;
+  self->crop_width = 0;
+  self->crop_height = 0;
 
   /* Initialize with H264 here, we chose the correct codec in set_format */
   self->context = mfc_dec_create (CODEC_TYPE_H264, 1);
   if (!self->context) {
     GST_ELEMENT_ERROR (self, LIBRARY, INIT,
         ("Failed to initialize MFC decoder context"), (NULL));
+    return FALSE;
   }
 
-  return self->context != NULL;
+  fimc = fimc_new ();
+
+  if (!fimc) {
+    GST_ELEMENT_ERROR (self, LIBRARY, INIT,
+        ("Failed to initialize FIMC context"), (NULL));
+    return FALSE;
+  }
+  self->fimc = fimc;
+
+  return TRUE;
 }
 
 static gboolean
@@ -134,6 +153,11 @@ gst_mfc_dec_stop (GstVideoDecoder * video_decoder)
     self->context = NULL;
   }
   self->initialized = FALSE;
+
+  if (self->fimc) {
+    fimc_free (self->fimc);
+    self->fimc = NULL;
+  }
 
   GST_DEBUG_OBJECT (self, "Stopped");
 
@@ -207,14 +231,14 @@ gst_mfc_dec_queue_input (GstMFCDec * self, GstBuffer * inbuf)
   if (inbuf) {
     gst_buffer_map (inbuf, &map, GST_MAP_READ);
 
-    mfc_inbuf_data = mfc_buffer_get_input_data (mfc_inbuf);
+    mfc_inbuf_data = (guint8 *) mfc_buffer_get_input_data (mfc_inbuf);
     g_assert (mfc_inbuf_data != NULL);
     mfc_inbuf_size = mfc_buffer_get_input_max_size (mfc_inbuf);
 
     GST_DEBUG_OBJECT (self, "Have input buffer %p with size %d", mfc_inbuf_data,
         mfc_inbuf_size);
 
-    if (mfc_inbuf_size < map.size)
+    if ((gsize) mfc_inbuf_size < map.size)
       goto too_small_inbuf;
 
     memcpy (mfc_inbuf_data, map.data, map.size);
@@ -270,7 +294,7 @@ gst_mfc_dec_get_earliest_frame (GstMFCDec * self)
   frames = gst_video_decoder_get_frames (GST_VIDEO_DECODER (self));
 
   for (l = frames; l; l = l->next) {
-    GstVideoCodecFrame *tmp = l->data;
+    GstVideoCodecFrame *tmp = (GstVideoCodecFrame *) l->data;
 
     if (!frame) {
       frame = tmp;
@@ -299,109 +323,179 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
   gint crop_left, crop_top, crop_width, crop_height;
   GstVideoCodecState *state = NULL;
   gint64 deadline;
-
-  GST_DEBUG_OBJECT (self, "Dequeueing output");
+  Fimc *fimc = NULL;
+  GstVideoFrame vframe;
 
   if (!self->initialized) {
+    GST_DEBUG_OBJECT (self, "Initializing decoder");
     if ((mfc_ret = mfc_dec_init (self->context, 1)) < 0)
       goto initialize_error;
     self->initialized = TRUE;
   }
 
-  if ((mfc_ret = mfc_dec_output_available (self->context)) == 0)
-    return GST_FLOW_OK;
-  else if (mfc_ret < 0)
-    goto output_available_error;
+  while ((mfc_ret = mfc_dec_output_available (self->context)) > 0) {
+    GST_DEBUG_OBJECT (self, "Dequeueing output");
 
-  mfc_dec_get_output_size (self->context, &width, &height);
-  mfc_dec_get_crop_size (self->context, &crop_left, &crop_top, &crop_width,
-      &crop_height);
+    mfc_dec_get_output_size (self->context, &width, &height);
+    mfc_dec_get_crop_size (self->context, &crop_left, &crop_top, &crop_width,
+        &crop_height);
 
-  GST_DEBUG_OBJECT (self, "Have output buffer: width %d, height %d, "
-      "crop_left %d, crop_right %d, "
-      "crop_width %d, crop_height %d", width, height,
-      crop_left, crop_top, crop_width, crop_height);
+    GST_DEBUG_OBJECT (self, "Have output buffer: width %d, height %d, "
+        "crop_left %d, crop_right %d, "
+        "crop_width %d, crop_height %d", width, height,
+        crop_left, crop_top, crop_width, crop_height);
 
-  state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
-  if (!state || state->info.width != crop_width
-      || state->info.height != crop_height) {
-    GST_DEBUG_OBJECT (self, "Creating new output state");
+    if (self->width != width || self->height != height ||
+        self->crop_left != self->crop_left || self->crop_top != crop_top ||
+        self->crop_width != crop_width || self->crop_height != crop_height) {
+      fimc = self->fimc;
 
-    if (state)
-      gst_video_codec_state_unref (state);
-    state =
-        gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-        GST_VIDEO_FORMAT_NV12, crop_width, crop_height, self->input_state);
-  }
+      if (fimc_set_src_format (fimc, FIMC_COLOR_FORMAT_YUV420SPT, width, height,
+              NULL, crop_left, crop_top, crop_width, crop_height) < 0)
+        goto fimc_src_error;
 
-  if ((mfc_ret = mfc_dec_dequeue_output (self->context, &mfc_outbuf)) < 0) {
-    if (mfc_ret == -2) {
-      GST_DEBUG_OBJECT (self, "Timeout dequeueing output, trying again");
-      mfc_ret = mfc_dec_dequeue_output (self->context, &mfc_outbuf);
+      if (fimc_set_dst_format_direct (fimc, FIMC_COLOR_FORMAT_YUV420SPT, width,
+              height, crop_left, crop_top, crop_width, crop_height, self->dst,
+              self->stride) < 0)
+        goto fimc_dst_error;
+
+      self->width = width;
+      self->height = height;
+      self->crop_left = crop_left;
+      self->crop_top = crop_top;
+      self->crop_width = crop_width;
+      self->crop_height = crop_height;
     }
 
-    if (mfc_ret < 0)
-      goto dequeue_error;
-  }
+    state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
+    if (!state || state->info.width != crop_width
+        || state->info.height != crop_height) {
+      GST_DEBUG_OBJECT (self, "Creating new output state");
 
-  g_assert (mfc_outbuf != NULL);
-
-  /* FIXME: Replace this by gst_video_decoder_get_frame() with an ID */
-  frame = gst_mfc_dec_get_earliest_frame (self);
-
-  if (frame) {
-    deadline =
-        gst_video_decoder_get_max_decode_time (GST_VIDEO_DECODER (self), frame);
-    if (deadline < 0) {
-      GST_LOG_OBJECT (self,
-          "Dropping too late frame: deadline %" G_GINT64_FORMAT, deadline);
-      ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
-      goto done;
-
+      if (state)
+        gst_video_codec_state_unref (state);
+      state =
+          gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
+          GST_VIDEO_FORMAT_NV12, crop_width, crop_height, self->input_state);
     }
-    ret =
-        gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (self),
-        frame);
+
+    if ((mfc_ret = mfc_dec_dequeue_output (self->context, &mfc_outbuf)) < 0) {
+      if (mfc_ret == -2) {
+        GST_DEBUG_OBJECT (self, "Timeout dequeueing output, trying again");
+        mfc_ret = mfc_dec_dequeue_output (self->context, &mfc_outbuf);
+      }
+
+      if (mfc_ret < 0)
+        goto dequeue_error;
+    }
+
+    g_assert (mfc_outbuf != NULL);
+
+    /* FIXME: Replace this by gst_video_decoder_get_frame() with an ID */
+    frame = gst_mfc_dec_get_earliest_frame (self);
+
+    if (frame) {
+      deadline =
+          gst_video_decoder_get_max_decode_time (GST_VIDEO_DECODER (self),
+          frame);
+      if (deadline < 0) {
+        GST_LOG_OBJECT (self,
+            "Dropping too late frame: deadline %" G_GINT64_FORMAT, deadline);
+        ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
+        goto done;
+      }
+
+      if (!frame->output_buffer)
+        ret =
+            gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (self),
+            frame);
+
+      if (ret != GST_FLOW_OK)
+        goto alloc_error;
+
+      outbuf = frame->output_buffer;
+    } else {
+      outbuf =
+          gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
+
+      if (!outbuf) {
+        ret = GST_FLOW_ERROR;
+        goto alloc_error;
+      }
+    }
+
+    {
+      const guint8 *mfc_outbuf_comps[3] = { NULL, };
+      gint i, h, w, src_stride, dst_stride;
+      guint8 *dst_, *src_;
+
+      fimc = self->fimc;
+
+      mfc_buffer_get_output_data (mfc_outbuf, (void **) &mfc_outbuf_comps[0],
+          (void **) &mfc_outbuf_comps[1]);
+
+      if (fimc_convert_direct (fimc, (void **) mfc_outbuf_comps) < 0)
+        goto fimc_convert_error;
+
+      if (!gst_video_frame_map (&vframe, &state->info, outbuf, GST_MAP_WRITE))
+        goto frame_map_error;
+
+      dst_ = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
+      src_ = self->dst[0];
+      h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0);
+      w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 0);
+      src_stride = self->stride[0];
+      dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
+      for (i = 0; i < h; i++) {
+        memcpy (dst_, src_, w);
+        dst_ += dst_stride;
+        src_ += src_stride;
+      }
+
+      dst_ = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1);
+      src_ = self->dst[1];
+      h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 1);
+      w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 1);
+      src_stride = self->stride[1];
+      dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 1);
+      for (i = 0; i < h; i++) {
+        memcpy (dst_, src_, w * 2);
+        dst_ += dst_stride;
+        src_ += src_stride;
+      }
+
+      gst_video_frame_unmap (&vframe);
+    }
+
+    if (frame) {
+      ret = gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+      frame = NULL;
+      outbuf = NULL;
+    } else {
+      ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (self), outbuf);
+      outbuf = NULL;
+    }
 
     if (ret != GST_FLOW_OK)
-      goto alloc_error;
+      GST_INFO_OBJECT (self, "Pushing frame returned: %s",
+          gst_flow_get_name (ret));
 
-    outbuf = frame->output_buffer;
-  } else {
-    outbuf =
-        gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
-
-    if (!outbuf) {
-      ret = GST_FLOW_ERROR;
-      goto alloc_error;
+  done:
+    if (mfc_outbuf) {
+      if ((mfc_ret = mfc_dec_enqueue_output (self->context, mfc_outbuf)) < 0)
+        goto enqueue_error;
     }
+
+    if (!frame && outbuf)
+      gst_buffer_unref (outbuf);
+    if (state)
+      gst_video_codec_state_unref (state);
+    if (frame)
+      gst_video_codec_frame_unref (frame);
+
+    if (ret != GST_FLOW_OK)
+      break;
   }
-
-  /* TODO: Here now copy the mfc_outbuf to outbuf using the FIMC detiler */
-
-  if (frame) {
-    ret = gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
-    frame = NULL;
-  } else {
-    ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (self), outbuf);
-  }
-
-  if (ret != GST_FLOW_OK)
-    GST_INFO_OBJECT (self, "Pushing frame returned: %s",
-        gst_flow_get_name (ret));
-
-done:
-  if (mfc_outbuf) {
-    if ((mfc_ret = mfc_dec_enqueue_output (self->context, mfc_outbuf)) < 0)
-      goto enqueue_error;
-  }
-
-  if (!frame && outbuf)
-    gst_buffer_unref (outbuf);
-  if (state)
-    gst_video_codec_state_unref (state);
-  if (frame)
-    gst_video_codec_frame_unref (frame);
 
   return ret;
 
@@ -413,11 +507,18 @@ initialize_error:
     goto done;
   }
 
-output_available_error:
+fimc_src_error:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
-        ("Failed to check if output is available"),
-        ("mfc_dec_output_available: %d", mfc_ret));
+        ("Failed to set FIMC source parameters"), (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
+fimc_dst_error:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
+        ("Failed to set FIMC destination parameters"), (NULL));
     ret = GST_FLOW_ERROR;
     goto done;
   }
@@ -435,6 +536,22 @@ alloc_error:
   {
     GST_ELEMENT_ERROR (self, CORE, FAILED, ("Failed to allocate output buffer"),
         (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
+frame_map_error:
+  {
+    GST_ELEMENT_ERROR (self, CORE, FAILED, ("Failed to map output buffer"),
+        (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
+fimc_convert_error:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
+        ("Failed to convert via FIMC"), (NULL));
     ret = GST_FLOW_ERROR;
     goto done;
   }

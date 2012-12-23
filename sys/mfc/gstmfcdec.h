@@ -27,6 +27,7 @@
 #include <gst/video/gstvideodecoder.h>
 
 #include "mfc_decoder/mfc_decoder.h"
+#include "fimc/fimc.h"
 
 G_BEGIN_DECLS
 
@@ -52,6 +53,13 @@ struct _GstMFCDec
   GstVideoCodecState *input_state;
   struct mfc_dec_context* context;
   gboolean initialized;
+  
+  Fimc *fimc;
+  gint width, height;
+  gint crop_left, crop_top;
+  gint crop_width, crop_height;
+  void *dst[3];
+  int stride[3];
 };
 
 struct _GstMFCDecClass

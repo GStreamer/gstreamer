@@ -2,11 +2,13 @@ plugin_LTLIBRARIES = libgstmfc.la
 
 libgstmfc_la_SOURCES = \
 	mfc_decoder/mfc_decoder.c \
+	fimc/fimc.c \
 	gstmfc.c \
 	gstmfcdec.c
 
 noinst_HEADERS = \
 	mfc_decoder/mfc_decoder.h \
+	fimc/fimc.h \
 	gstmfcdec.h
 
 libgstmfc_la_CFLAGS = \
