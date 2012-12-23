@@ -979,9 +979,13 @@ gst_encoding_profile_get_file_extension (GstEncodingProfile * profile)
     goto done;
   }
 
+  if (num_children == 0)
+    goto done;
+
   /* special cases */
   has_video = gst_encoding_container_profile_has_video (cprofile);
 
+  /* Ogg */
   if (strcmp (ext, "ogg") == 0) {
     /* ogg with video => .ogv */
     if (has_video) {
@@ -1002,8 +1006,35 @@ gst_encoding_profile_get_file_extension (GstEncodingProfile * profile)
     goto done;
   }
 
-  if (has_video && strcmp (ext, "mka") == 0)
+  /* Matroska */
+  if (has_video && strcmp (ext, "mka") == 0) {
     ext = "mkv";
+    goto done;
+  }
+
+  /* Windows Media / ASF */
+  if (gst_encoding_profile_has_format (profile, "video/x-ms-asf")) {
+    const GList *l;
+    guint num_wmv = 0, num_wma = 0, num_other = 0;
+
+    for (l = cprofile->encodingprofiles; l != NULL; l = l->next) {
+      if (gst_encoding_profile_has_format (l->data, "video/x-wmv"))
+        ++num_wmv;
+      else if (gst_encoding_profile_has_format (l->data, "audio/x-wma"))
+        ++num_wma;
+      else
+        ++num_other;
+    }
+
+    if (num_other > 0)
+      ext = "asf";
+    else if (num_wmv > 0)
+      ext = "wmv";
+    else if (num_wma > 0)
+      ext = "wma";
+
+    goto done;
+  }
 
 done:
 
