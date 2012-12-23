@@ -396,6 +396,8 @@ done:
       goto enqueue_error;
   }
 
+  if (!frame && outbuf)
+    gst_buffer_unref (outbuf);
   if (state)
     gst_video_codec_state_unref (state);
   if (frame)
