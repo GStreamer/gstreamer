@@ -42,6 +42,8 @@ enum mfc_codec_type {
 extern "C" {
 #endif
 
+void mfc_dec_init_debug (void);
+
 /*
  * Open the MFC decoding device node, and allocate input buffers.
  *

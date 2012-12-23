@@ -24,13 +24,15 @@
 #include <poll.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <videodev2.h>
+#include <linux/videodev2.h>
 
-#define LOG_TAG "MFC-DEC"
-#include <utils/Log.h>
-
+/* For logging */
+#include <gst/gst.h>
+GST_DEBUG_CATEGORY (mfc_decoder_debug);
+#define GST_CAT_DEFAULT mfc_decoder_debug
 
 #define MAX_DECODER_INPUT_BUFFER_SIZE  (1024 * 3072)
 #define NUM_INPUT_PLANES 1
@@ -110,12 +112,13 @@ static unsigned int to_v4l2_codec(enum mfc_codec_type codec)
         case CODEC_TYPE_H263:
             return V4L2_PIX_FMT_H263;
     }
-    LOGE("Invalid codec type %d", codec);
+    GST_ERROR ("Invalid codec type %d", codec);
     return 0;
 }
 
 int mfc_dec_set_codec(struct mfc_dec_context *ctx, enum mfc_codec_type codec)
 {
+    int ret;
     struct v4l2_format fmt = {
         .type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE,
         .fmt = {
@@ -131,9 +134,9 @@ int mfc_dec_set_codec(struct mfc_dec_context *ctx, enum mfc_codec_type codec)
     };
     fmt.fmt.pix_mp.pixelformat = to_v4l2_codec(codec);
 
-    int ret = ioctl(ctx->fd, VIDIOC_S_FMT, &fmt);
+    ret = ioctl(ctx->fd, VIDIOC_S_FMT, &fmt);
     if (ret)
-        LOGE("Unable to set input format");
+        GST_ERROR ("Unable to set input format");
     return ret;
 }
 
@@ -148,16 +151,16 @@ static int request_input_buffers(struct mfc_dec_context *ctx, int num)
 
     ctx->input_buffer = calloc(num, sizeof (struct mfc_buffer));
     if (!ctx->input_buffer) {
-        LOGE("Failed to allocate space for input buffer meta data");
+        GST_ERROR ("Failed to allocate space for input buffer meta data");
         return -1;
     }
 
     if (ioctl(ctx->fd, VIDIOC_REQBUFS, &reqbuf) < 0) {
-        LOGE("Unable to request input buffers");
+        GST_ERROR ("Unable to request input buffers");
         return -1;
     }
     ctx->num_input_buffers = reqbuf.count;
-    LOGI("Requested %d input buffers, got %d", num, reqbuf.count);
+    GST_ERROR ("Requested %d input buffers, got %d", num, reqbuf.count);
     for (i = 0; i < num; i++) {
         void *ptr;
         struct v4l2_plane planes[NUM_INPUT_PLANES] = {{.length = 0}};
@@ -171,13 +174,13 @@ static int request_input_buffers(struct mfc_dec_context *ctx, int num)
             },
         };
         if (ioctl(ctx->fd, VIDIOC_QUERYBUF, &buffer) < 0) {
-            LOGE("Query of input buffer failed");
+            GST_ERROR ("Query of input buffer failed");
             return -1;
         }
         ptr = mmap(NULL, buffer.m.planes[0].length, PROT_READ | PROT_WRITE,
                    MAP_SHARED, ctx->fd, buffer.m.planes[0].m.mem_offset);
         if (ptr == MAP_FAILED) {
-            LOGE("Failed to map input buffer");
+            GST_ERROR  ("Failed to map input buffer");
             return -1;
         }
         ctx->input_buffer[i].plane[0].length = planes[0].length;
@@ -201,16 +204,16 @@ static int request_output_buffers(struct mfc_dec_context *ctx, int num)
 
     ctx->output_buffer = calloc(num, sizeof (struct mfc_buffer));
     if (!ctx->output_buffer) {
-        LOGE("Failed to allocate space for output buffer meta data");
+        GST_ERROR ("Failed to allocate space for output buffer meta data");
         return -1;
     }
 
     if (ioctl(ctx->fd, VIDIOC_REQBUFS, &reqbuf) < 0) {
-        LOGE("Unable to request output buffers");
+        GST_ERROR ("Unable to request output buffers");
         return -1;
     }
     ctx->num_output_buffers = reqbuf.count;
-    LOGI("Requested %d output buffers, got %d", num, reqbuf.count);
+    GST_INFO ("Requested %d output buffers, got %d", num, reqbuf.count);
     for (i = 0; i < ctx->num_output_buffers; i++) {
         int p;
         struct v4l2_plane planes[NUM_OUTPUT_PLANES] = {{.length = 0}};
@@ -225,7 +228,7 @@ static int request_output_buffers(struct mfc_dec_context *ctx, int num)
         };
         ctx->output_buffer[i].index = i;
         if (ioctl(ctx->fd, VIDIOC_QUERYBUF, &buffer) < 0) {
-            LOGE("Query of output buffer failed");
+            GST_ERROR ("Query of output buffer failed");
             return -1;
         }
         for (p = 0; p < NUM_OUTPUT_PLANES; p++) {
@@ -233,7 +236,7 @@ static int request_output_buffers(struct mfc_dec_context *ctx, int num)
                              PROT_READ | PROT_WRITE, MAP_SHARED,
                              ctx->fd, buffer.m.planes[p].m.mem_offset);
             if (ptr == MAP_FAILED) {
-                LOGE("Failed to map output buffer");
+                GST_ERROR ("Failed to map output buffer");
                 return -1;
             }
             ctx->output_buffer[i].plane[p].length = planes[p].length;
@@ -251,7 +254,7 @@ struct mfc_dec_context* mfc_dec_create(unsigned int codec, int num_input_buffers
 
     pthread_mutex_lock(&mutex);
     if (mfc_in_use) {
-        LOGE("Rejected because MFC is already in use");
+        GST_ERROR ("Rejected because MFC is already in use");
         pthread_mutex_unlock(&mutex);
         return NULL;
     }
@@ -263,13 +266,13 @@ struct mfc_dec_context* mfc_dec_create(unsigned int codec, int num_input_buffers
     // TODO: do this better
     ctx->output_frames_available = -1;
     if (!ctx) {
-        LOGE("Unable to allocate memory for context");
+        GST_ERROR ("Unable to allocate memory for context");
         return NULL;
     }
-    LOGI("Opening MFC device node at: %s", MFC_PATH);
+    GST_INFO ("Opening MFC device node at: %s", MFC_PATH);
     ctx->fd = open(MFC_PATH, O_RDWR, 0);
     if (ctx->fd == -1) {
-        LOGE("Unable to open MFC device node: %d", errno);
+        GST_ERROR ("Unable to open MFC device node: %d", errno);
         free(ctx);
         return NULL;
     }
@@ -288,7 +291,7 @@ static int get_output_format(struct mfc_dec_context *ctx)
     };
 
     if (ioctl(ctx->fd, VIDIOC_G_FMT, &fmt) < 0) {
-        LOGE("Failed to get output format");
+        GST_ERROR ("Failed to get output format");
         return -1;
     }
 
@@ -304,7 +307,7 @@ static int get_crop_data(struct mfc_dec_context *ctx)
         .type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE,
     };
     if (ioctl(ctx->fd, VIDIOC_G_CROP, &crop) < 0) {
-        LOGE("Unable to get crop data");
+        GST_ERROR ("Unable to get crop data");
         return -1;
     }
     ctx->crop_size.left = crop.c.left;
@@ -314,13 +317,13 @@ static int get_crop_data(struct mfc_dec_context *ctx)
     return 0;
 }
 
-int get_minimum_output_buffers(struct mfc_dec_context *ctx)
+static int get_minimum_output_buffers(struct mfc_dec_context *ctx)
 {
     struct v4l2_control ctrl = {
         .id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE,
     };
     if (ioctl(ctx->fd, VIDIOC_G_CTRL, &ctrl) < 0) {
-        LOGE("Failed to get number of output buffers required");
+        GST_ERROR ("Failed to get number of output buffers required");
         return -1;
     }
     ctx->required_output_buffers = ctrl.value;
@@ -331,7 +334,7 @@ static int start_input_stream(struct mfc_dec_context *ctx)
 {
     int type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
     if (ioctl(ctx->fd, VIDIOC_STREAMON, &type) < 0) {
-        LOGE("Unable to start input stream");
+        GST_ERROR ("Unable to start input stream");
         return -1;
     }
     return 0;
@@ -341,7 +344,7 @@ static int start_output_stream(struct mfc_dec_context *ctx)
 {
     int type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
     if (ioctl(ctx->fd, VIDIOC_STREAMON, &type) < 0) {
-        LOGE("Unable to start output stream");
+        GST_ERROR ("Unable to start output stream");
         return -1;
     }
     return 0;
@@ -386,11 +389,11 @@ void mfc_dec_destroy(struct mfc_dec_context *ctx)
     int i;
     int type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
     if (ioctl(ctx->fd, VIDIOC_STREAMOFF, &type) < 0)
-        LOGE("Streamoff failed on output");
+        GST_ERROR ("Streamoff failed on output");
 
     type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
     if (ioctl(ctx->fd, VIDIOC_STREAMOFF, &type) < 0)
-        LOGE("Streamoff failed on input");
+        GST_ERROR ("Streamoff failed on input");
 
     for (i = 0; i < ctx->num_input_buffers; i++) {
         if (ctx->input_buffer[i].plane[0].data)
@@ -408,7 +411,7 @@ void mfc_dec_destroy(struct mfc_dec_context *ctx)
     pthread_mutex_lock(&mutex);
     mfc_in_use = 0;
     pthread_mutex_unlock(&mutex);
-    LOGI("MFC device closed");
+    GST_INFO ("MFC device closed");
     free(ctx);
 }
 
@@ -430,7 +433,7 @@ int mfc_dec_enqueue_input(struct mfc_dec_context *ctx, struct mfc_buffer *buffer
     };
 
     if (ioctl(ctx->fd, VIDIOC_QBUF, &qbuf) < 0) {
-        LOGE("Enqueuing of input buffer %d failed; prev state: %d",
+        GST_ERROR ("Enqueuing of input buffer %d failed; prev state: %d",
              buffer->index, buffer->state);
         return -1;
     }
@@ -442,7 +445,7 @@ int mfc_dec_enqueue_input(struct mfc_dec_context *ctx, struct mfc_buffer *buffer
     return 0;
 }
 
-int input_dqbuf(struct mfc_dec_context *ctx, struct mfc_buffer **buffer)
+static int input_dqbuf(struct mfc_dec_context *ctx, struct mfc_buffer **buffer)
 {
     struct v4l2_buffer qbuf = {
         .type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE,
@@ -456,16 +459,16 @@ int input_dqbuf(struct mfc_dec_context *ctx, struct mfc_buffer **buffer)
 
     pollret = poll(&fd, 1, MAX_DECODING_TIME);
     if (pollret < 0) {
-        LOGE("%s: Poll returned error: %d", __func__, errno);
+        GST_ERROR ("%s: Poll returned error: %d", __func__, errno);
         return -1;
     }
     if (pollret == 0) {
-        LOGI("%s: timed out", __func__);
+        GST_INFO ("%s: timed out", __func__);
         return -2;
     }
 
     if (ioctl(ctx->fd, VIDIOC_DQBUF, &qbuf) < 0) {
-        LOGE("Dequeuing failed");
+        GST_ERROR ("Dequeuing failed");
         return -1;
     }
     ctx->input_buffer[qbuf.index].plane[0].bytesused = 0;
@@ -509,21 +512,21 @@ static int release_input_buffer(struct mfc_dec_context *ctx)
     int pollret;
 
     if (ctx->input_frames_queued == 0) {
-        LOGI("Nothing to release!");
+        GST_INFO ("Nothing to release!");
         return -1;
     }
 
     pollret = poll(&fd, 1, MAX_DECODING_TIME);
     if (pollret < 0) {
-        LOGE("%s: Poll returned error: %d", __func__, errno);
+        GST_ERROR ("%s: Poll returned error: %d", __func__, errno);
         return -1;
     }
     if (pollret == 0) {
-        LOGI("%s: timed out", __func__);
+        GST_INFO ("%s: timed out", __func__);
         return -2;
     }
 
-    LOGV("releasing frame; frames queued: %d", ctx->input_frames_queued);
+    GST_DEBUG ("releasing frame; frames queued: %d", ctx->input_frames_queued);
     input_dqbuf(ctx, &buffer);
     buffer->state = BUFFER_FREE;
     ctx->has_free_input_buffers = 1;
@@ -543,7 +546,7 @@ int mfc_dec_enqueue_output(struct mfc_dec_context *ctx, struct mfc_buffer *buffe
         },
     };
     if (ioctl(ctx->fd, VIDIOC_QBUF, &qbuf) < 0) {
-        LOGE("Enqueuing of output buffer %d failed; prev state: %d",
+        GST_ERROR ("Enqueuing of output buffer %d failed; prev state: %d",
              buffer->index, buffer->state);
         return -1;
     }
@@ -565,7 +568,7 @@ int mfc_dec_dequeue_output(struct mfc_dec_context *ctx, struct mfc_buffer **buff
     };
 
     if (ioctl(ctx->fd, VIDIOC_DQBUF, &qbuf) < 0) {
-        LOGE("Dequeuing failed");
+        GST_ERROR ("Dequeuing failed");
         return -1;
     }
 
@@ -615,7 +618,7 @@ int mfc_dec_flush(struct mfc_dec_context *ctx)
 
     type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
     if (ioctl(ctx->fd, VIDIOC_STREAMOFF, &type) < 0) {
-        LOGE("Unable to stop output stream");
+        GST_ERROR ("Unable to stop output stream");
         return -1;
     }
 
@@ -655,4 +658,9 @@ void mfc_buffer_get_output_data(struct mfc_buffer *buffer,
 {
     *ybuf = buffer->plane[0].data;
     *uvbuf = buffer->plane[1].data;
+}
+
+void mfc_dec_init_debug (void)
+{
+  GST_DEBUG_CATEGORY_INIT (mfc_decoder_debug, "mfc_decoder", 0, "MFC decoder library");
 }
