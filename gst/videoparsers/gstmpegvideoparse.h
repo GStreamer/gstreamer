@@ -69,6 +69,7 @@ struct _GstMpegvParse {
   guint slice_offset;
   gboolean update_caps;
   gboolean send_codec_tag;
+  gboolean send_mpeg_meta;
 
   GstBuffer *config;
   guint8 profile;
