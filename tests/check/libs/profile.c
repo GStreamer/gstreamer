@@ -605,6 +605,70 @@ test_teardown (void)
   remove_profile_file ();
 }
 
+GST_START_TEST (test_file_extension)
+{
+  GstEncodingContainerProfile *cprof;
+  GstCaps *ogg, *speex, *vorbis, *theora, *id3, *mp3;
+
+  /* 1 - ogg variants */
+  ogg = gst_caps_new_empty_simple ("application/ogg");
+  cprof = gst_encoding_container_profile_new ("myprofile", NULL, ogg, NULL);
+  gst_caps_unref (ogg);
+
+  fail_unless_equals_string (gst_encoding_profile_get_file_extension
+      (GST_ENCODING_PROFILE (cprof)), "ogg");
+
+  speex = gst_caps_new_empty_simple ("audio/x-speex");
+  gst_encoding_container_profile_add_profile (cprof,
+      (GstEncodingProfile *) gst_encoding_audio_profile_new (speex, NULL,
+          NULL, 1));
+  gst_caps_unref (speex);
+
+  fail_unless_equals_string (gst_encoding_profile_get_file_extension
+      (GST_ENCODING_PROFILE (cprof)), "spx");
+
+  vorbis = gst_caps_new_empty_simple ("audio/x-vorbis");
+  gst_encoding_container_profile_add_profile (cprof,
+      (GstEncodingProfile *) gst_encoding_audio_profile_new (vorbis, NULL,
+          NULL, 1));
+  gst_caps_unref (vorbis);
+
+  fail_unless_equals_string (gst_encoding_profile_get_file_extension
+      (GST_ENCODING_PROFILE (cprof)), "ogg");
+
+  theora = gst_caps_new_empty_simple ("video/x-theora");
+  gst_encoding_container_profile_add_profile (cprof,
+      (GstEncodingProfile *) gst_encoding_video_profile_new (theora, NULL,
+          NULL, 1));
+  gst_caps_unref (theora);
+
+  fail_unless_equals_string (gst_encoding_profile_get_file_extension
+      (GST_ENCODING_PROFILE (cprof)), "ogv");
+
+  gst_encoding_profile_unref (cprof);
+
+  /* 2 - tag container */
+  id3 = gst_caps_new_empty_simple ("application/x-id3");
+  cprof = gst_encoding_container_profile_new ("myprofile", NULL, id3, NULL);
+  gst_caps_unref (id3);
+
+  fail_unless (gst_encoding_profile_get_file_extension (GST_ENCODING_PROFILE
+          (cprof)) == NULL);
+
+  mp3 = gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
+      "layer", G_TYPE_INT, 3, NULL);
+  gst_encoding_container_profile_add_profile (cprof,
+      (GstEncodingProfile *) gst_encoding_audio_profile_new (mp3, NULL,
+          NULL, 1));
+  gst_caps_unref (mp3);
+
+  fail_unless_equals_string (gst_encoding_profile_get_file_extension
+      (GST_ENCODING_PROFILE (cprof)), "mp3");
+
+  gst_encoding_profile_unref (cprof);
+}
+
+GST_END_TEST;
 
 static Suite *
 profile_suite (void)
@@ -625,6 +689,7 @@ profile_suite (void)
   tcase_add_test (tc_chain, test_profile_input_caps);
   tcase_add_test (tc_chain, test_target_naming);
   tcase_add_test (tc_chain, test_target_profile);
+  tcase_add_test (tc_chain, test_file_extension);
   if (can_write) {
     tcase_add_test (tc_chain, test_loading_profile);
     tcase_add_test (tc_chain, test_saving_profile);

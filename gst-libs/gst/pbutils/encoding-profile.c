@@ -127,6 +127,8 @@
 #include "encoding-profile.h"
 #include "encoding-target.h"
 
+#include <string.h>
+
 /* GstEncodingProfile API */
 
 struct _GstEncodingProfile
@@ -900,6 +902,114 @@ gst_encoding_profile_get_type_nick (GstEncodingProfile * profile)
   if (GST_IS_ENCODING_AUDIO_PROFILE (profile))
     return "audio";
   return NULL;
+}
+
+extern const gchar *pb_utils_get_file_extension_from_caps (const GstCaps *
+    caps);
+gboolean pb_utils_is_tag (const GstCaps * caps);
+
+static gboolean
+gst_encoding_profile_has_format (GstEncodingProfile * profile,
+    const gchar * media_type)
+{
+  GstCaps *caps;
+  gboolean ret;
+
+  caps = gst_encoding_profile_get_format (profile);
+  ret = gst_structure_has_name (gst_caps_get_structure (caps, 0), media_type);
+  gst_caps_unref (caps);
+
+  return ret;
+}
+
+static gboolean
+gst_encoding_container_profile_has_video (GstEncodingContainerProfile * profile)
+{
+  const GList *l;
+
+  for (l = profile->encodingprofiles; l != NULL; l = l->next) {
+    if (GST_IS_ENCODING_VIDEO_PROFILE (l->data))
+      return TRUE;
+    if (GST_IS_ENCODING_CONTAINER_PROFILE (l->data) &&
+        gst_encoding_container_profile_has_video (l->data))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_encoding_profile_get_file_extension:
+ * @profile: a #GstEncodingProfile
+ *
+ * Returns: a suitable file extension for @profile, or NULL.
+ */
+const gchar *
+gst_encoding_profile_get_file_extension (GstEncodingProfile * profile)
+{
+  GstEncodingContainerProfile *cprofile;
+  const gchar *ext = NULL;
+  gboolean has_video;
+  GstCaps *caps;
+  guint num_children;
+
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), NULL);
+
+  caps = gst_encoding_profile_get_format (profile);
+  ext = pb_utils_get_file_extension_from_caps (caps);
+
+  if (!GST_IS_ENCODING_CONTAINER_PROFILE (profile))
+    goto done;
+
+  cprofile = GST_ENCODING_CONTAINER_PROFILE (profile);
+
+  num_children = g_list_length (cprofile->encodingprofiles);
+
+  /* if it's a tag container profile (e.g. id3mux/apemux), we need
+   * to look at what's inside it */
+  if (pb_utils_is_tag (caps)) {
+    GST_DEBUG ("tag container profile");
+    if (num_children == 1) {
+      GstEncodingProfile *child_profile = cprofile->encodingprofiles->data;
+
+      ext = gst_encoding_profile_get_file_extension (child_profile);
+    } else {
+      GST_WARNING ("expected exactly one child profile with tag profile");
+    }
+    goto done;
+  }
+
+  /* special cases */
+  has_video = gst_encoding_container_profile_has_video (cprofile);
+
+  if (strcmp (ext, "ogg") == 0) {
+    /* ogg with video => .ogv */
+    if (has_video) {
+      ext = "ogv";
+      goto done;
+    }
+    /* ogg with just speex audio => .spx */
+    if (num_children == 1) {
+      GstEncodingProfile *child_profile = cprofile->encodingprofiles->data;
+
+      if (GST_IS_ENCODING_AUDIO_PROFILE (child_profile) &&
+          gst_encoding_profile_has_format (child_profile, "audio/x-speex")) {
+        ext = "spx";
+        goto done;
+      }
+    }
+    /* does anyone actually use .oga for ogg audio files? */
+    goto done;
+  }
+
+  if (has_video && strcmp (ext, "mka") == 0)
+    ext = "mkv";
+
+done:
+
+  GST_INFO ("caps %" GST_PTR_FORMAT ", ext: %s", caps, GST_STR_NULL (ext));
+  gst_caps_unref (caps);
+  return ext;
 }
 
 /**

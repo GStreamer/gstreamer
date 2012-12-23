@@ -300,7 +300,7 @@ static const FormatInfo formats[] = {
   {"video/x-dv", "Digital Video (DV) System Stream",
       FLAG_CONTAINER | FLAG_SYSTEMSTREAM, "dv"},
   {"video/x-dv", "Digital Video (DV)", FLAG_VIDEO, ""},
-  {"video/x-h263", NULL, FLAG_VIDEO, ""},
+  {"video/x-h263", NULL, FLAG_VIDEO, "h263"},
   {"video/x-h264", NULL, FLAG_VIDEO, "h264"},
   {"video/x-indeo", NULL, FLAG_VIDEO, ""},
   {"video/x-msmpeg", NULL, FLAG_VIDEO, ""},
@@ -1026,6 +1026,79 @@ gst_pb_utils_get_codec_description (const GstCaps * caps)
   gst_caps_unref (tmp);
 
   return str;
+}
+
+/* internal helper functions for gst_encoding_profile_get_file_extension() */
+const gchar *pb_utils_get_file_extension_from_caps (const GstCaps * caps);
+gboolean pb_utils_is_tag (const GstCaps * caps);
+
+const gchar *
+pb_utils_get_file_extension_from_caps (const GstCaps * caps)
+{
+  const FormatInfo *info;
+  const gchar *ext = NULL;
+  GstCaps *stripped_caps;
+
+  g_assert (GST_IS_CAPS (caps));
+
+  stripped_caps = copy_and_clean_caps (caps);
+
+  g_assert (gst_caps_is_fixed (stripped_caps));
+
+  info = find_format_info (stripped_caps);
+
+  if (info && info->ext[0] != '\0') {
+    ext = info->ext;
+  } else if (info && info->desc == NULL) {
+    const GstStructure *s;
+
+    s = gst_caps_get_structure (stripped_caps, 0);
+
+    /* cases where we have to evaluate the caps more closely */
+    if (strcmp (info->type, "audio/mpeg") == 0) {
+      int version = 0, layer = 3;
+
+      if (gst_structure_get_int (s, "mpegversion", &version)) {
+        if (version == 2 || version == 4) {
+          ext = "aac";
+        } else if (version == 1) {
+          gst_structure_get_int (s, "layer", &layer);
+          if (layer == 1)
+            ext = "mp1";
+          else if (layer == 2)
+            ext = "mp2";
+          else
+            ext = "mp3";
+        }
+      }
+    }
+  }
+
+  gst_caps_unref (stripped_caps);
+  return ext;
+}
+
+gboolean
+pb_utils_is_tag (const GstCaps * caps)
+{
+  const FormatInfo *info;
+  GstCaps *stripped_caps;
+  gboolean is_tag = FALSE;
+
+  g_assert (GST_IS_CAPS (caps));
+
+  stripped_caps = copy_and_clean_caps (caps);
+
+  g_assert (gst_caps_is_fixed (stripped_caps));
+
+  info = find_format_info (stripped_caps);
+
+  if (info) {
+    is_tag = (info->flags & FLAG_TAG) != 0;
+  }
+  gst_caps_unref (stripped_caps);
+
+  return is_tag;
 }
 
 #if 0

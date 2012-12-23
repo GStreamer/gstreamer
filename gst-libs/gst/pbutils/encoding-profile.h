@@ -143,6 +143,8 @@ gboolean        gst_encoding_profile_is_equal           (GstEncodingProfile *a,
 GstCaps *       gst_encoding_profile_get_input_caps     (GstEncodingProfile *profile);
 const gchar *   gst_encoding_profile_get_type_nick      (GstEncodingProfile *profile);
 
+const gchar *   gst_encoding_profile_get_file_extension (GstEncodingProfile * profile);
+
 GstEncodingProfile * gst_encoding_profile_find (const gchar *targetname,
                                                 const gchar *profilename,
                                                 const gchar *category);
