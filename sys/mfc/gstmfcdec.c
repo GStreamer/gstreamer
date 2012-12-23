@@ -52,37 +52,33 @@ static GstStaticPadTemplate gst_mfc_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("NV12"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("NV12"))
     );
 
-GST_BOILERPLATE (GstMFCDec, gst_mfc_dec, GstVideoDecoder,
-    GST_TYPE_VIDEO_DECODER);
+#define parent_class gst_mfc_dec_parent_class
+G_DEFINE_TYPE (GstMFCDec, gst_mfc_dec, GST_TYPE_VIDEO_DECODER);
 
 static void
-gst_mfc_dec_base_init (gpointer g_class)
+gst_mfc_dec_class_init (GstMFCDecClass * klass)
 {
-  GstElementClass *element_class = (GstElementClass *) g_class;
+  GstElementClass *element_class;
+  GstVideoDecoderClass *video_decoder_class;
+
+  element_class = (GstElementClass *) klass;
+  video_decoder_class = (GstVideoDecoderClass *) klass;
+
+  mfc_dec_init_debug ();
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_mfc_dec_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_mfc_dec_sink_template));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Samsung Exynos MFC decoder",
       "Codec/Decoder/Video",
       "Decode video streams via Samsung Exynos",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
-
-static void
-gst_mfc_dec_class_init (GstMFCDecClass * klass)
-{
-  GstVideoDecoderClass *video_decoder_class;
-
-  video_decoder_class = (GstVideoDecoderClass *) klass;
-
-  mfc_dec_init_debug ();
 
   video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_mfc_dec_start);
   video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_mfc_dec_stop);
@@ -97,7 +93,7 @@ gst_mfc_dec_class_init (GstMFCDecClass * klass)
 }
 
 static void
-gst_mfc_dec_init (GstMFCDec * self, GstMFCDecClass * klass)
+gst_mfc_dec_init (GstMFCDec * self)
 {
   GstVideoDecoder *decoder = (GstVideoDecoder *) self;
 
@@ -192,8 +188,7 @@ gst_mfc_dec_queue_input (GstMFCDec * self, GstBuffer * inbuf)
   struct mfc_buffer *mfc_inbuf = NULL;
   guint8 *mfc_inbuf_data;
   gint mfc_inbuf_size;
-  const guint8 *inbuf_data;
-  gsize inbuf_size;
+  GstMapInfo map;
 
   GST_DEBUG_OBJECT (self, "Dequeueing input");
 
@@ -210,8 +205,7 @@ gst_mfc_dec_queue_input (GstMFCDec * self, GstBuffer * inbuf)
   g_assert (mfc_inbuf != NULL);
 
   if (inbuf) {
-    inbuf_data = GST_BUFFER_DATA (inbuf);
-    inbuf_size = GST_BUFFER_SIZE (inbuf);
+    gst_buffer_map (inbuf, &map, GST_MAP_READ);
 
     mfc_inbuf_data = mfc_buffer_get_input_data (mfc_inbuf);
     g_assert (mfc_inbuf_data != NULL);
@@ -220,11 +214,13 @@ gst_mfc_dec_queue_input (GstMFCDec * self, GstBuffer * inbuf)
     GST_DEBUG_OBJECT (self, "Have input buffer %p with size %d", mfc_inbuf_data,
         mfc_inbuf_size);
 
-    if (mfc_inbuf_size < inbuf_size)
+    if (mfc_inbuf_size < map.size)
       goto too_small_inbuf;
 
-    memcpy (mfc_inbuf_data, inbuf_data, inbuf_size);
-    mfc_buffer_set_input_size (mfc_inbuf, inbuf_size);
+    memcpy (mfc_inbuf_data, map.data, map.size);
+    mfc_buffer_set_input_size (mfc_inbuf, map.size);
+
+    gst_buffer_unmap (inbuf, &map);
   } else {
     GST_DEBUG_OBJECT (self, "Passing EOS input buffer");
 
@@ -249,8 +245,9 @@ dequeue_error:
 too_small_inbuf:
   {
     GST_ELEMENT_ERROR (self, STREAM, FORMAT, ("Too large input frames"),
-        ("Maximum size %d, got %d", mfc_inbuf_size, inbuf_size));
+        ("Maximum size %d, got %d", mfc_inbuf_size, map.size));
     ret = GST_FLOW_ERROR;
+    gst_buffer_unmap (inbuf, &map);
     goto done;
   }
 
@@ -363,14 +360,16 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
     }
     ret =
-        gst_video_decoder_alloc_output_frame (GST_VIDEO_DECODER (self), frame);
+        gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (self),
+        frame);
 
     if (ret != GST_FLOW_OK)
       goto alloc_error;
 
     outbuf = frame->output_buffer;
   } else {
-    outbuf = gst_video_decoder_alloc_output_buffer (GST_VIDEO_DECODER (self));
+    outbuf =
+        gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
 
     if (!outbuf) {
       ret = GST_FLOW_ERROR;

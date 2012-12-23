@@ -16,7 +16,7 @@ libgstmfc_la_CFLAGS = \
 	-I$(srcdir)
 libgstmfc_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstvideo-@GST_MAJORMINOR@ \
+	-lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 libgstmfc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
