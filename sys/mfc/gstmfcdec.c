@@ -52,7 +52,7 @@ static GstStaticPadTemplate gst_mfc_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("NV12"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420"))
     );
 
 #define parent_class gst_mfc_dec_parent_class
@@ -354,7 +354,7 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
               NULL, crop_left, crop_top, crop_width, crop_height) < 0)
         goto fimc_src_error;
 
-      if (fimc_set_dst_format_direct (fimc, FIMC_COLOR_FORMAT_YUV420SPT, width,
+      if (fimc_set_dst_format_direct (fimc, FIMC_COLOR_FORMAT_YUV420P, width,
               height, crop_left, crop_top, crop_width, crop_height, self->dst,
               self->stride) < 0)
         goto fimc_dst_error;
@@ -381,7 +381,7 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
         gst_video_codec_state_unref (state);
       state =
           gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-          GST_VIDEO_FORMAT_NV12, crop_width, crop_height, self->input_state);
+          GST_VIDEO_FORMAT_I420, crop_width, crop_height, self->input_state);
     }
 
     if ((mfc_ret = mfc_dec_dequeue_output (self->context, &mfc_outbuf)) < 0) {
@@ -464,7 +464,19 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
       src_stride = self->stride[1];
       dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 1);
       for (i = 0; i < h; i++) {
-        memcpy (dst_, src_, w * 2);
+        memcpy (dst_, src_, w);
+        dst_ += dst_stride;
+        src_ += src_stride;
+      }
+
+      dst_ = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, 2);
+      src_ = self->dst[2];
+      h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 2);
+      w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 2);
+      src_stride = self->stride[2];
+      dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 2);
+      for (i = 0; i < h; i++) {
+        memcpy (dst_, src_, w);
         dst_ += dst_stride;
         src_ += src_stride;
       }
