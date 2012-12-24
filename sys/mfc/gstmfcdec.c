@@ -39,6 +39,8 @@ static GstFlowReturn gst_mfc_dec_finish (GstVideoDecoder * decoder);
 static GstFlowReturn gst_mfc_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_mfc_dec_negotiate (GstVideoDecoder * decoder);
+static gboolean gst_mfc_dec_decide_allocation (GstVideoDecoder * decoder,
+    GstQuery * query);
 
 static GstStaticPadTemplate gst_mfc_dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -88,6 +90,8 @@ gst_mfc_dec_class_init (GstMFCDecClass * klass)
   video_decoder_class->reset = GST_DEBUG_FUNCPTR (gst_mfc_dec_reset);
   video_decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_mfc_dec_set_format);
   video_decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_mfc_dec_negotiate);
+  video_decoder_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_mfc_dec_decide_allocation);
   video_decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_mfc_dec_handle_frame);
 
@@ -370,8 +374,7 @@ gst_mfc_dec_negotiate (GstVideoDecoder * decoder)
 
   gst_video_codec_state_unref (state);
 
-  return
-      GST_VIDEO_DECODER_CLASS (gst_mfc_dec_parent_class)->negotiate (decoder);
+  return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 
 fimc_src_error:
   {
@@ -679,4 +682,29 @@ gst_mfc_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   gst_video_codec_frame_unref (frame);
 
   return gst_mfc_dec_dequeue_output (self);
+}
+
+static gboolean
+gst_mfc_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
+{
+  GstBufferPool *pool;
+  GstStructure *config;
+
+  if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
+          query))
+    return FALSE;
+
+  g_assert (gst_query_get_n_allocation_pools (query) > 0);
+  gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
+  g_assert (pool != NULL);
+
+  config = gst_buffer_pool_get_config (pool);
+  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
+  gst_buffer_pool_set_config (pool, config);
+  gst_object_unref (pool);
+
+  return TRUE;
 }

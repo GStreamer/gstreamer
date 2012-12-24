@@ -25,6 +25,8 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideodecoder.h>
+#include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideopool.h>
 
 #include "mfc_decoder/mfc_decoder.h"
 #include "fimc/fimc.h"
