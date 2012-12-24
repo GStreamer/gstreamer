@@ -221,7 +221,7 @@ gst_mfc_dec_reset (GstVideoDecoder * decoder, gboolean hard)
 }
 
 static GstFlowReturn
-gst_mfc_dec_queue_input (GstMFCDec * self, GstBuffer * inbuf)
+gst_mfc_dec_queue_input (GstMFCDec * self, GstVideoCodecFrame * frame)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   gint mfc_ret;
@@ -229,6 +229,7 @@ gst_mfc_dec_queue_input (GstMFCDec * self, GstBuffer * inbuf)
   guint8 *mfc_inbuf_data;
   gint mfc_inbuf_size;
   GstMapInfo map;
+  struct timeval timestamp;
 
   GST_DEBUG_OBJECT (self, "Dequeueing input");
 
@@ -244,8 +245,8 @@ gst_mfc_dec_queue_input (GstMFCDec * self, GstBuffer * inbuf)
 
   g_assert (mfc_inbuf != NULL);
 
-  if (inbuf) {
-    gst_buffer_map (inbuf, &map, GST_MAP_READ);
+  if (frame) {
+    gst_buffer_map (frame->input_buffer, &map, GST_MAP_READ);
 
     mfc_inbuf_data = (guint8 *) mfc_buffer_get_input_data (mfc_inbuf);
     g_assert (mfc_inbuf_data != NULL);
@@ -260,14 +261,20 @@ gst_mfc_dec_queue_input (GstMFCDec * self, GstBuffer * inbuf)
     memcpy (mfc_inbuf_data, map.data, map.size);
     mfc_buffer_set_input_size (mfc_inbuf, map.size);
 
-    gst_buffer_unmap (inbuf, &map);
+    gst_buffer_unmap (frame->input_buffer, &map);
+
+    timestamp.tv_usec = 0;
+    timestamp.tv_sec = frame->system_frame_number;
   } else {
     GST_DEBUG_OBJECT (self, "Passing EOS input buffer");
 
     mfc_buffer_set_input_size (mfc_inbuf, 0);
+    timestamp.tv_usec = 0;
+    timestamp.tv_sec = -1;
   }
 
-  if ((mfc_ret = mfc_dec_enqueue_input (self->context, mfc_inbuf)) < 0)
+  if ((mfc_ret =
+          mfc_dec_enqueue_input (self->context, mfc_inbuf, &timestamp)) < 0)
     goto enqueue_error;
 
 done:
@@ -287,7 +294,7 @@ too_small_inbuf:
     GST_ELEMENT_ERROR (self, STREAM, FORMAT, ("Too large input frames"),
         ("Maximum size %d, got %d", mfc_inbuf_size, map.size));
     ret = GST_FLOW_ERROR;
-    gst_buffer_unmap (inbuf, &map);
+    gst_buffer_unmap (frame->input_buffer, &map);
     goto done;
   }
 
@@ -299,32 +306,6 @@ enqueue_error:
     ret = GST_FLOW_ERROR;
     goto done;
   }
-}
-
-static GstVideoCodecFrame *
-gst_mfc_dec_get_earliest_frame (GstMFCDec * self)
-{
-  GstVideoCodecFrame *frame = NULL;
-  GList *frames, *l;
-
-  frames = gst_video_decoder_get_frames (GST_VIDEO_DECODER (self));
-
-  for (l = frames; l; l = l->next) {
-    GstVideoCodecFrame *tmp = (GstVideoCodecFrame *) l->data;
-
-    if (!frame) {
-      frame = tmp;
-    } else if (frame->pts > tmp->pts) {
-      gst_video_codec_frame_unref (frame);
-      frame = tmp;
-    } else {
-      gst_video_codec_frame_unref (tmp);
-    }
-  }
-
-  g_list_free (frames);
-
-  return frame;
 }
 
 static gboolean
@@ -416,6 +397,7 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
   gint64 deadline;
   Fimc *fimc = NULL;
   GstVideoFrame vframe;
+  struct timeval timestamp;
 
   if (!self->initialized) {
     GST_DEBUG_OBJECT (self, "Initializing decoder");
@@ -463,10 +445,13 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
       state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
     }
 
-    if ((mfc_ret = mfc_dec_dequeue_output (self->context, &mfc_outbuf)) < 0) {
+    if ((mfc_ret =
+            mfc_dec_dequeue_output (self->context, &mfc_outbuf,
+                &timestamp)) < 0) {
       if (mfc_ret == -2) {
         GST_DEBUG_OBJECT (self, "Timeout dequeueing output, trying again");
-        mfc_ret = mfc_dec_dequeue_output (self->context, &mfc_outbuf);
+        mfc_ret =
+            mfc_dec_dequeue_output (self->context, &mfc_outbuf, &timestamp);
       }
 
       if (mfc_ret < 0)
@@ -475,8 +460,11 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
     g_assert (mfc_outbuf != NULL);
 
-    /* FIXME: Replace this by gst_video_decoder_get_frame() with an ID */
-    frame = gst_mfc_dec_get_earliest_frame (self);
+    frame = NULL;
+    if (timestamp.tv_sec != -1)
+      frame =
+          gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
+          timestamp.tv_sec);
 
     if (frame) {
       deadline =
@@ -677,15 +665,7 @@ gst_mfc_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   GST_DEBUG_OBJECT (self, "Handling frame");
 
-  /* FIXME: Would be good to assign an ID to input frames */
-  if (frame->pts == GST_CLOCK_TIME_NONE) {
-    GST_ERROR_OBJECT (self, "Only PTS timestamped streams supported so far");
-    gst_video_codec_frame_unref (frame);
-    return GST_FLOW_ERROR;
-  }
-
-  if ((ret =
-          gst_mfc_dec_queue_input (self, frame->input_buffer)) != GST_FLOW_OK) {
+  if ((ret = gst_mfc_dec_queue_input (self, frame)) != GST_FLOW_OK) {
     gst_video_codec_frame_unref (frame);
     return ret;
   }

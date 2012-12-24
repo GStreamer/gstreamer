@@ -48,6 +48,8 @@
 #ifndef VIDEO_EXYNOS4_MFC_V4L2_INCLUDE_MFC_DECODER_H
 #define VIDEO_EXYNOS4_MFC_V4L2_INCLUDE_MFC_DECODER_H
 
+#include <sys/time.h>
+
 struct mfc_buffer;
 struct mfc_dec_context;
 
@@ -157,7 +159,7 @@ int mfc_dec_output_available(struct mfc_dec_context*);
  */
 
 /* Enqueue frame containing compressed data */
-int mfc_dec_enqueue_input(struct mfc_dec_context*, struct mfc_buffer *buffer);
+int mfc_dec_enqueue_input(struct mfc_dec_context*, struct mfc_buffer *buffer, struct timeval *timestamp);
 /*
  * Dequeue a processed input frame.  Will block until one is available.
  *
@@ -173,7 +175,7 @@ int mfc_dec_enqueue_output(struct mfc_dec_context*, struct mfc_buffer *buffer);
  * when mfc_dec_output_available() is not true, subsequent video
  * frames may not decode correctly.
  */
-int mfc_dec_dequeue_output(struct mfc_dec_context*, struct mfc_buffer **buffer);
+int mfc_dec_dequeue_output(struct mfc_dec_context*, struct mfc_buffer **buffer, struct timeval *timestamp);
 
 
 /*

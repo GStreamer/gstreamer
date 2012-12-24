@@ -450,7 +450,7 @@ void mfc_dec_destroy(struct mfc_dec_context *ctx)
     free(ctx);
 }
 
-int mfc_dec_enqueue_input(struct mfc_dec_context *ctx, struct mfc_buffer *buffer)
+int mfc_dec_enqueue_input(struct mfc_dec_context *ctx, struct mfc_buffer *buffer, struct timeval *timestamp)
 {
     struct v4l2_plane planes[NUM_INPUT_PLANES] = {
         [0] = {
@@ -466,6 +466,9 @@ int mfc_dec_enqueue_input(struct mfc_dec_context *ctx, struct mfc_buffer *buffer
             .planes = planes,
         },
     };
+
+    if (timestamp)
+      qbuf.timestamp = *timestamp;
 
     if (ioctl(ctx->fd, VIDIOC_QBUF, &qbuf) < 0) {
         GST_ERROR ("Enqueuing of input buffer %d failed; prev state: %d",
@@ -589,7 +592,7 @@ int mfc_dec_enqueue_output(struct mfc_dec_context *ctx, struct mfc_buffer *buffe
     return 0;
 }
 
-int mfc_dec_dequeue_output(struct mfc_dec_context *ctx, struct mfc_buffer **buffer)
+int mfc_dec_dequeue_output(struct mfc_dec_context *ctx, struct mfc_buffer **buffer, struct timeval *timestamp)
 {
     int i;
     struct v4l2_plane planes[NUM_OUTPUT_PLANES];
@@ -611,6 +614,10 @@ int mfc_dec_dequeue_output(struct mfc_dec_context *ctx, struct mfc_buffer **buff
         ctx->output_buffer[qbuf.index].plane[i].bytesused = qbuf.m.planes[i].bytesused;
 
     *buffer = &(ctx->output_buffer[qbuf.index]);
+
+    if (timestamp)
+      *timestamp = qbuf.timestamp;
+
     ctx->output_frames_available--;
     return 0;
 }
@@ -637,7 +644,7 @@ int mfc_dec_flush(struct mfc_dec_context *ctx)
         struct mfc_buffer *buffer;
         /* Make sure there is room for the decode to finish */
         if (mfc_dec_output_available(ctx) || force_dequeue_output) {
-            if (mfc_dec_dequeue_output(ctx, &buffer) < 0)
+            if (mfc_dec_dequeue_output(ctx, &buffer, NULL) < 0)
                 return -1;
             if (mfc_dec_enqueue_output(ctx, buffer) < 0)
                 return -1;
