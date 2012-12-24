@@ -130,6 +130,8 @@ fimc_new (void)
     return NULL;
   }
 
+  GST_DEBUG ("Created new FIMC context");
+
   return fimc;
 }
 
@@ -248,10 +250,13 @@ fimc_set_src_format (Fimc * fimc, FimcColorFormat format, int width, int height,
   fmt.fmt.pix_mp.field = V4L2_FIELD_ANY;
   fmt.fmt.pix_mp.num_planes = fimc_color_format_get_nplanes (format);
 
-  for (i = 0; i < fmt.fmt.pix_mp.num_planes; i++) {
-    fmt.fmt.pix_mp.plane_fmt[i].bytesperline = stride[i];
-    fmt.fmt.pix_mp.plane_fmt[i].sizeimage =
-        fimc_color_format_get_component_height (format, i, height) * stride[i];
+  if (stride) {
+    for (i = 0; i < fmt.fmt.pix_mp.num_planes; i++) {
+      fmt.fmt.pix_mp.plane_fmt[i].bytesperline = stride[i];
+      fmt.fmt.pix_mp.plane_fmt[i].sizeimage =
+          fimc_color_format_get_component_height (format, i,
+          height) * stride[i];
+    }
   }
 
   if (ioctl (fimc->fd, VIDIOC_S_FMT, &fmt) < 0) {
