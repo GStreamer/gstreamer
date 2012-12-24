@@ -47,7 +47,7 @@ GST_START_TEST (test_object_properties)
 
   ges_init ();
 
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
   object =
@@ -115,7 +115,7 @@ GST_START_TEST (test_object_properties_unlocked)
 
   ges_init ();
 
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
   object =
@@ -189,7 +189,7 @@ GST_START_TEST (test_split_object)
 
   ges_init ();
 
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
   object =

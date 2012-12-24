@@ -43,7 +43,7 @@ GST_START_TEST (test_overlay_properties)
 
   ges_init ();
 
-  track = ges_track_new (GES_TRACK_TYPE_VIDEO, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_VIDEO, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
   object = (GESTimelineObject *)
@@ -166,18 +166,18 @@ GST_START_TEST (test_overlay_in_layer)
   /* test xpos */
   g_object_set (source, "xpos", (gdouble) 0.5, NULL);
   g_object_get (source, "xpos", &xpos, NULL);
-  assert_equals_int (xpos, 0.5);
+  assert_equals_float (xpos, 0.5);
 
   xpos = ges_track_text_overlay_get_xpos (GES_TRACK_TEXT_OVERLAY (trobj));
-  assert_equals_int (xpos, 0.5);
+  assert_equals_float (xpos, 0.5);
 
   /* test ypos */
   g_object_set (source, "ypos", (gdouble) 0.33, NULL);
   g_object_get (source, "ypos", &ypos, NULL);
-  assert_equals_int (ypos, 0.33);
+  assert_equals_float (ypos, 0.33);
 
   ypos = ges_track_text_overlay_get_ypos (GES_TRACK_TEXT_OVERLAY (trobj));
-  assert_equals_int (ypos, 0.33);
+  assert_equals_float (ypos, 0.33);
 
   GST_DEBUG ("removing the source");
 

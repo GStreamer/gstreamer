@@ -65,7 +65,7 @@ GST_START_TEST (test_layer_properties)
   fail_unless (ges_timeline_add_layer (timeline, layer));
   fail_if (g_object_is_floating (layer));
 
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
   fail_unless (ges_timeline_add_track (timeline, track));
 
@@ -471,7 +471,7 @@ GST_START_TEST (test_layer_meta_float)
   fail_unless (ges_meta_container_get_float (GES_META_CONTAINER (layer),
           "ges-test", &result));
 
-  assert_equals_int64 (result, 23.456);
+  assert_equals_float (result, 23.456f);
 }
 
 GST_END_TEST;

@@ -83,7 +83,7 @@ GST_START_TEST (test_ges_scenario)
 
   /* Give the Timeline a Track */
   GST_DEBUG ("Create a Track");
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
   GST_DEBUG ("Add the track to the timeline");
@@ -203,7 +203,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
   fail_unless (layer != NULL);
   /* Give the Timeline a Track */
   GST_DEBUG ("Create a Track");
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
   GST_DEBUG ("Add the track to the timeline");
@@ -328,7 +328,7 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   fail_unless (layer != NULL);
   /* Give the Timeline a Track */
   GST_DEBUG ("Create a Track");
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
   /* Create a source and add it to the Layer */
@@ -442,7 +442,7 @@ GST_START_TEST (test_ges_timeline_remove_track)
   fail_unless (layer != NULL);
   /* Give the Timeline a Track */
   GST_DEBUG ("Create a Track");
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
   /* Create a source and add it to the Layer */

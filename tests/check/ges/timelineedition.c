@@ -62,7 +62,7 @@ GST_START_TEST (test_basic_timeline_edition)
 
   ges_init ();
 
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
   timeline = ges_timeline_new ();
@@ -262,7 +262,7 @@ GST_START_TEST (test_snapping)
 
   ges_init ();
 
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
   timeline = ges_timeline_new ();
@@ -502,7 +502,7 @@ GST_START_TEST (test_timeline_edition_mode)
 
   ges_init ();
 
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
   timeline = ges_timeline_new ();

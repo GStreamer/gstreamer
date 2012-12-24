@@ -25,7 +25,7 @@
 
 /**
  * ges_play_sink_convert_frame:
- * @playsink: The olaysink to get last frame from
+ * @playsink: The playsink to get last frame from
  * @caps: The caps defining the format the return value will have
  *
  * Get the last buffer @playsink showed

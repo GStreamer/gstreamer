@@ -168,18 +168,18 @@ GST_START_TEST (test_title_source_in_layer)
   /* test xpos */
   g_object_set (source, "xpos", (gdouble) 0.25, NULL);
   g_object_get (source, "xpos", &xpos, NULL);
-  assert_equals_int (xpos, 0.25);
+  assert_equals_float (xpos, 0.25);
 
   xpos = ges_track_title_source_get_xpos (GES_TRACK_TITLE_SOURCE (trobj));
-  assert_equals_int (xpos, 0.25);
+  assert_equals_float (xpos, 0.25);
 
   /* test ypos */
   g_object_set (source, "ypos", (gdouble) 0.66, NULL);
   g_object_get (source, "ypos", &ypos, NULL);
-  assert_equals_int (ypos, 0.66);
+  assert_equals_float (ypos, 0.66);
 
   xpos = ges_track_title_source_get_xpos (GES_TRACK_TITLE_SOURCE (trobj));
-  assert_equals_int (ypos, 0.66);
+  assert_equals_float (ypos, 0.66);
 
   GST_DEBUG ("removing the source");
 

@@ -76,7 +76,7 @@ GST_START_TEST (test_gsl_add)
   timeline = ges_timeline_new ();
   layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
   fail_unless (ges_timeline_add_layer (timeline, layer));
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (ges_timeline_add_track (timeline, track));
 
   source = ges_custom_timeline_source_new (my_fill_track_func, NULL);
