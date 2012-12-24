@@ -359,6 +359,11 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
               self->stride) < 0)
         goto fimc_dst_error;
 
+      GST_DEBUG_OBJECT (self,
+          "Got direct output buffer: %p [%d], %p [%d], %p [%d]", self->dst[0],
+          self->stride[0], self->dst[1], self->stride[1], self->dst[2],
+          self->stride[2]);
+
       self->width = width;
       self->height = height;
       self->crop_left = crop_left;
