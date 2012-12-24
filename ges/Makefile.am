@@ -5,7 +5,7 @@ lib_LTLIBRARIES = libges-@GST_API_VERSION@.la
 
 EXTRA_libges_@GST_API_VERSION@_la_SOURCES = gesmarshal.list
 
-CLEANFILES = $(BUILT_SOURCES) $(built_header_make) $(built_source_make)
+CLEANFILES = $(BUILT_SOURCES) $(built_header_make) $(built_source_make) *.gcno *.gcda *.gcov *.gcov.out
 
 libges_@GST_API_VERSION@_la_SOURCES = 		\
 	$(built_source_make)			\
@@ -199,6 +199,11 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
+
+%.c.gcov: .libs/libges_@GST_API_VERSION@_la-%.gcda %.c
+	$(GCOV) -b -f -o $^ > $@.out
+
+gcov: $(libges_@GST_API_VERSION@_la_SOURCES:=.gcov)
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer -:PROJECT libges -:SHARED libges-@GST_API_VERSION@ \
