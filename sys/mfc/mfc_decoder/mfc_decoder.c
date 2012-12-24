@@ -99,6 +99,7 @@ struct mfc_dec_context {
         int w;
         int h;
     } crop_size;
+    int output_stride[NUM_OUTPUT_PLANES];
 };
 
 struct mfc_buffer {
@@ -310,6 +311,7 @@ struct mfc_dec_context* mfc_dec_create(unsigned int codec, int num_input_buffers
 
 static int get_output_format(struct mfc_dec_context *ctx)
 {
+    int i;
     struct v4l2_format fmt = {
         .type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE,
     };
@@ -321,6 +323,9 @@ static int get_output_format(struct mfc_dec_context *ctx)
 
     ctx->output_size.w = fmt.fmt.pix_mp.width;
     ctx->output_size.h = fmt.fmt.pix_mp.height;
+
+    for (i = 0; i < NUM_OUTPUT_PLANES; i++)
+      ctx->output_stride[i] = fmt.fmt.pix_mp.plane_fmt[i].bytesperline;
 
     return 0;
 }
@@ -397,6 +402,12 @@ void mfc_dec_get_output_size(struct mfc_dec_context *ctx, int *w, int *h)
 {
     *w = ctx->output_size.w;
     *h = ctx->output_size.h;
+}
+
+void mfc_dec_get_output_stride(struct mfc_dec_context *ctx, int *ystride, int *uvstride)
+{
+    *ystride = ctx->output_stride[0];
+    *uvstride = ctx->output_stride[1];
 }
 
 void mfc_dec_get_crop_size(struct mfc_dec_context *ctx,

@@ -58,8 +58,10 @@ struct _GstMFCDec
   gint width, height;
   gint crop_left, crop_top;
   gint crop_width, crop_height;
+  int src_stride[3];
+
   void *dst[3];
-  int stride[3];
+  int dst_stride[3];
 };
 
 struct _GstMFCDecClass

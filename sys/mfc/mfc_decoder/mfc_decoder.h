@@ -132,6 +132,7 @@ int mfc_dec_set_codec(struct mfc_dec_context*, enum mfc_codec_type codec);
  * Returns: Zero for success, negative value on failure.
  */
 void mfc_dec_get_output_size(struct mfc_dec_context*, int *w, int *h);
+void mfc_dec_get_output_stride(struct mfc_dec_context*, int *ystride, int *uvstride);
 void mfc_dec_get_crop_size(struct mfc_dec_context*,
                            int *left, int *top, int *w, int *h);
 

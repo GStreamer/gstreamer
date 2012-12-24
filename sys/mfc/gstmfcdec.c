@@ -321,6 +321,7 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
   struct mfc_buffer *mfc_outbuf = NULL;
   gint width, height;
   gint crop_left, crop_top, crop_width, crop_height;
+  gint src_ystride, src_uvstride;
   GstVideoCodecState *state = NULL;
   gint64 deadline;
   Fimc *fimc = NULL;
@@ -337,32 +338,22 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
     GST_DEBUG_OBJECT (self, "Dequeueing output");
 
     mfc_dec_get_output_size (self->context, &width, &height);
+    mfc_dec_get_output_stride (self->context, &src_ystride, &src_uvstride);
     mfc_dec_get_crop_size (self->context, &crop_left, &crop_top, &crop_width,
         &crop_height);
 
     GST_DEBUG_OBJECT (self, "Have output buffer: width %d, height %d, "
+        "Y stride %d, UV stride %d, "
         "crop_left %d, crop_right %d, "
-        "crop_width %d, crop_height %d", width, height,
-        crop_left, crop_top, crop_width, crop_height);
+        "crop_width %d, crop_height %d", width, height, src_ystride,
+        src_uvstride, crop_left, crop_top, crop_width, crop_height);
 
     if (self->width != width || self->height != height ||
-        self->crop_left != self->crop_left || self->crop_top != crop_top ||
-        self->crop_width != crop_width || self->crop_height != crop_height) {
+        self->src_stride[0] != src_ystride
+        || self->src_stride[1] != src_uvstride
+        || self->crop_left != self->crop_left || self->crop_top != crop_top
+        || self->crop_width != crop_width || self->crop_height != crop_height) {
       fimc = self->fimc;
-
-      if (fimc_set_src_format (fimc, FIMC_COLOR_FORMAT_YUV420SPT, width, height,
-              NULL, crop_left, crop_top, crop_width, crop_height) < 0)
-        goto fimc_src_error;
-
-      if (fimc_set_dst_format_direct (fimc, FIMC_COLOR_FORMAT_YUV420P, width,
-              height, crop_left, crop_top, crop_width, crop_height, self->dst,
-              self->stride) < 0)
-        goto fimc_dst_error;
-
-      GST_DEBUG_OBJECT (self,
-          "Got direct output buffer: %p [%d], %p [%d], %p [%d]", self->dst[0],
-          self->stride[0], self->dst[1], self->stride[1], self->dst[2],
-          self->stride[2]);
 
       self->width = width;
       self->height = height;
@@ -370,6 +361,24 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
       self->crop_top = crop_top;
       self->crop_width = crop_width;
       self->crop_height = crop_height;
+      self->src_stride[0] = src_ystride;
+      self->src_stride[1] = src_uvstride;
+      self->src_stride[2] = 0;
+
+      if (fimc_set_src_format (fimc, FIMC_COLOR_FORMAT_YUV420SPT, width, height,
+              self->src_stride, crop_left, crop_top, crop_width,
+              crop_height) < 0)
+        goto fimc_src_error;
+
+      if (fimc_set_dst_format_direct (fimc, FIMC_COLOR_FORMAT_YUV420P, width,
+              height, crop_left, crop_top, crop_width, crop_height, self->dst,
+              self->dst_stride) < 0)
+        goto fimc_dst_error;
+
+      GST_DEBUG_OBJECT (self,
+          "Got direct output buffer: %p [%d], %p [%d], %p [%d]", self->dst[0],
+          self->dst_stride[0], self->dst[1], self->dst_stride[1], self->dst[2],
+          self->dst_stride[2]);
     }
 
     state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
@@ -447,9 +456,9 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
       dst_ = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
       src_ = self->dst[0];
+      src_stride = self->dst_stride[0];
       h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0);
       w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 0);
-      src_stride = self->stride[0];
       dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
       for (i = 0; i < h; i++) {
         memcpy (dst_, src_, w);
@@ -459,9 +468,9 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
       dst_ = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1);
       src_ = self->dst[1];
+      src_stride = self->dst_stride[1];
       h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 1);
       w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 1);
-      src_stride = self->stride[1];
       dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 1);
       for (i = 0; i < h; i++) {
         memcpy (dst_, src_, w);
@@ -471,9 +480,9 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
       dst_ = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, 2);
       src_ = self->dst[2];
+      src_stride = self->dst_stride[2];
       h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 2);
       w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 2);
-      src_stride = self->stride[2];
       dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 2);
       for (i = 0; i < h; i++) {
         memcpy (dst_, src_, w);
