@@ -471,6 +471,12 @@ fimc_set_dst_format_direct (Fimc * fimc, FimcColorFormat format, int width,
     stride[i] = fimc->dst_fmt.fmt.pix_mp.plane_fmt[i].bytesperline;
   }
 
+  /* FIXME: The device reports wrong strides */
+  if (fimc->dst_format == FIMC_COLOR_FORMAT_YUV420P) {
+    stride[1] /= 2;
+    stride[2] /= 2;
+  }
+
   return 0;
 }
 
