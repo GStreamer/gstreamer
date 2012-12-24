@@ -38,6 +38,7 @@ static gboolean gst_mfc_dec_reset (GstVideoDecoder * decoder, gboolean hard);
 static GstFlowReturn gst_mfc_dec_finish (GstVideoDecoder * decoder);
 static GstFlowReturn gst_mfc_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
+static gboolean gst_mfc_dec_negotiate (GstVideoDecoder * decoder);
 
 static GstStaticPadTemplate gst_mfc_dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -52,7 +53,7 @@ static GstStaticPadTemplate gst_mfc_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, NV12 }"))
     );
 
 #define parent_class gst_mfc_dec_parent_class
@@ -86,6 +87,7 @@ gst_mfc_dec_class_init (GstMFCDecClass * klass)
   video_decoder_class->finish = GST_DEBUG_FUNCPTR (gst_mfc_dec_finish);
   video_decoder_class->reset = GST_DEBUG_FUNCPTR (gst_mfc_dec_reset);
   video_decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_mfc_dec_set_format);
+  video_decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_mfc_dec_negotiate);
   video_decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_mfc_dec_handle_frame);
 
@@ -311,6 +313,81 @@ gst_mfc_dec_get_earliest_frame (GstMFCDec * self)
   return frame;
 }
 
+static gboolean
+gst_mfc_dec_negotiate (GstVideoDecoder * decoder)
+{
+  GstMFCDec *self = GST_MFC_DEC (decoder);
+  Fimc *fimc = self->fimc;
+  GstVideoCodecState *state;
+  GstCaps *allowed_caps;
+  GstVideoFormat format = GST_VIDEO_FORMAT_I420;
+  FimcColorFormat fimc_format;
+
+  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_DECODER_SRC_PAD (self));
+  allowed_caps = gst_caps_truncate (allowed_caps);
+  allowed_caps = gst_caps_fixate (allowed_caps);
+  if (!gst_caps_is_empty (allowed_caps)) {
+    const gchar *format_str;
+    GstStructure *s = gst_caps_get_structure (allowed_caps, 0);
+
+    format_str = gst_structure_get_string (s, "format");
+    if (format_str)
+      format = gst_video_format_from_string (format_str);
+  }
+  gst_caps_unref (allowed_caps);
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_I420:
+      fimc_format = FIMC_COLOR_FORMAT_YUV420P;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+      fimc_format = FIMC_COLOR_FORMAT_YUV420SP;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  if (fimc_set_src_format (fimc, FIMC_COLOR_FORMAT_YUV420SPT, self->width,
+          self->height, self->src_stride, self->crop_left, self->crop_top,
+          self->crop_width, self->crop_height) < 0)
+    goto fimc_src_error;
+
+  if (fimc_set_dst_format_direct (fimc, fimc_format, self->width,
+          self->height, self->crop_left, self->crop_top, self->crop_width,
+          self->crop_height, self->dst, self->dst_stride) < 0)
+    goto fimc_dst_error;
+
+  GST_DEBUG_OBJECT (self,
+      "Got direct output buffer: %p [%d], %p [%d], %p [%d]", self->dst[0],
+      self->dst_stride[0], self->dst[1], self->dst_stride[1], self->dst[2],
+      self->dst_stride[2]);
+
+  state =
+      gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
+      GST_VIDEO_FORMAT_I420, self->crop_width, self->crop_height,
+      self->input_state);
+
+  gst_video_codec_state_unref (state);
+
+  return
+      GST_VIDEO_DECODER_CLASS (gst_mfc_dec_parent_class)->negotiate (decoder);
+
+fimc_src_error:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
+        ("Failed to set FIMC source parameters"), (NULL));
+    return FALSE;
+  }
+
+fimc_dst_error:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
+        ("Failed to set FIMC destination parameters"), (NULL));
+    return FALSE;
+  }
+}
+
 static GstFlowReturn
 gst_mfc_dec_dequeue_output (GstMFCDec * self)
 {
@@ -348,13 +425,13 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
         "crop_width %d, crop_height %d", width, height, src_ystride,
         src_uvstride, crop_left, crop_top, crop_width, crop_height);
 
-    if (self->width != width || self->height != height ||
+    state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
+
+    if (!state || self->width != width || self->height != height ||
         self->src_stride[0] != src_ystride
         || self->src_stride[1] != src_uvstride
         || self->crop_left != self->crop_left || self->crop_top != crop_top
         || self->crop_width != crop_width || self->crop_height != crop_height) {
-      fimc = self->fimc;
-
       self->width = width;
       self->height = height;
       self->crop_left = crop_left;
@@ -365,32 +442,12 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
       self->src_stride[1] = src_uvstride;
       self->src_stride[2] = 0;
 
-      if (fimc_set_src_format (fimc, FIMC_COLOR_FORMAT_YUV420SPT, width, height,
-              self->src_stride, crop_left, crop_top, crop_width,
-              crop_height) < 0)
-        goto fimc_src_error;
-
-      if (fimc_set_dst_format_direct (fimc, FIMC_COLOR_FORMAT_YUV420P, width,
-              height, crop_left, crop_top, crop_width, crop_height, self->dst,
-              self->dst_stride) < 0)
-        goto fimc_dst_error;
-
-      GST_DEBUG_OBJECT (self,
-          "Got direct output buffer: %p [%d], %p [%d], %p [%d]", self->dst[0],
-          self->dst_stride[0], self->dst[1], self->dst_stride[1], self->dst[2],
-          self->dst_stride[2]);
-    }
-
-    state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
-    if (!state || state->info.width != crop_width
-        || state->info.height != crop_height) {
-      GST_DEBUG_OBJECT (self, "Creating new output state");
+      if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self)))
+        goto negotiate_error;
 
       if (state)
         gst_video_codec_state_unref (state);
-      state =
-          gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-          GST_VIDEO_FORMAT_I420, crop_width, crop_height, self->input_state);
+      state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
     }
 
     if ((mfc_ret = mfc_dec_dequeue_output (self->context, &mfc_outbuf)) < 0) {
@@ -440,7 +497,7 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
     {
       const guint8 *mfc_outbuf_comps[3] = { NULL, };
-      gint i, h, w, src_stride, dst_stride;
+      gint i, j, h, w, src_stride, dst_stride;
       guint8 *dst_, *src_;
 
       fimc = self->fimc;
@@ -454,40 +511,40 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
       if (!gst_video_frame_map (&vframe, &state->info, outbuf, GST_MAP_WRITE))
         goto frame_map_error;
 
-      dst_ = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
-      src_ = self->dst[0];
-      src_stride = self->dst_stride[0];
-      h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0);
-      w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 0);
-      dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
-      for (i = 0; i < h; i++) {
-        memcpy (dst_, src_, w);
-        dst_ += dst_stride;
-        src_ += src_stride;
-      }
-
-      dst_ = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1);
-      src_ = self->dst[1];
-      src_stride = self->dst_stride[1];
-      h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 1);
-      w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 1);
-      dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 1);
-      for (i = 0; i < h; i++) {
-        memcpy (dst_, src_, w);
-        dst_ += dst_stride;
-        src_ += src_stride;
-      }
-
-      dst_ = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, 2);
-      src_ = self->dst[2];
-      src_stride = self->dst_stride[2];
-      h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 2);
-      w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 2);
-      dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 2);
-      for (i = 0; i < h; i++) {
-        memcpy (dst_, src_, w);
-        dst_ += dst_stride;
-        src_ += src_stride;
+      switch (state->info.finfo->format) {
+        case GST_VIDEO_FORMAT_I420:
+          for (j = 0; j < 3; j++) {
+            dst_ = (guint8 *) GST_VIDEO_FRAME_COMP_DATA (&vframe, j);
+            src_ = self->dst[j];
+            src_stride = self->dst_stride[j];
+            h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, j);
+            w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, j);
+            dst_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, j);
+            for (i = 0; i < h; i++) {
+              memcpy (dst_, src_, w);
+              dst_ += dst_stride;
+              src_ += src_stride;
+            }
+          }
+          break;
+        case GST_VIDEO_FORMAT_NV12:
+          for (j = 0; j < 2; j++) {
+            dst_ = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, j);
+            src_ = self->dst[j];
+            src_stride = self->dst_stride[j];
+            h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, j);
+            w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, j) * (j == 0 ? 1 : 2);
+            dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, j);
+            for (i = 0; i < h; i++) {
+              memcpy (dst_, src_, w);
+              dst_ += dst_stride;
+              src_ += src_stride;
+            }
+          }
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
       }
 
       gst_video_frame_unmap (&vframe);
@@ -533,19 +590,11 @@ initialize_error:
     goto done;
   }
 
-fimc_src_error:
+negotiate_error:
   {
-    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
-        ("Failed to set FIMC source parameters"), (NULL));
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
-
-fimc_dst_error:
-  {
-    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
-        ("Failed to set FIMC destination parameters"), (NULL));
-    ret = GST_FLOW_ERROR;
+    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION, ("Failed to negotiate"),
+        (NULL));
+    ret = GST_FLOW_NOT_NEGOTIATED;
     goto done;
   }
 

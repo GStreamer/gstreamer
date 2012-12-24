@@ -53,7 +53,8 @@ struct _GstMFCDec
   GstVideoCodecState *input_state;
   struct mfc_dec_context* context;
   gboolean initialized;
-  
+
+  GstVideoFormat format;  
   Fimc *fimc;
   gint width, height;
   gint crop_left, crop_top;
