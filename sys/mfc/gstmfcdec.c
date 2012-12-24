@@ -55,7 +55,7 @@ static GstStaticPadTemplate gst_mfc_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, NV12 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12, NV12 }"))
     );
 
 #define parent_class gst_mfc_dec_parent_class
@@ -342,6 +342,7 @@ gst_mfc_dec_negotiate (GstVideoDecoder * decoder)
 
   switch (format) {
     case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
       fimc_format = FIMC_COLOR_FORMAT_YUV420P;
       break;
     case GST_VIDEO_FORMAT_NV12:
@@ -369,8 +370,7 @@ gst_mfc_dec_negotiate (GstVideoDecoder * decoder)
 
   state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-      GST_VIDEO_FORMAT_I420, self->crop_width, self->crop_height,
-      self->input_state);
+      format, self->crop_width, self->crop_height, self->input_state);
 
   gst_video_codec_state_unref (state);
 
@@ -516,6 +516,7 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
       switch (state->info.finfo->format) {
         case GST_VIDEO_FORMAT_I420:
+        case GST_VIDEO_FORMAT_YV12:
           for (j = 0; j < 3; j++) {
             dst_ = (guint8 *) GST_VIDEO_FRAME_COMP_DATA (&vframe, j);
             src_ = self->dst[j];
