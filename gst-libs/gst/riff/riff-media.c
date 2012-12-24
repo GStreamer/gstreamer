@@ -1564,7 +1564,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
                   strf->bits_per_sample);
             }
           }
-        } else if (subformat_guid[0] == 00000006) {
+        } else if (subformat_guid[0] == 0x0000006) {
           GST_DEBUG ("ALAW");
           if (strf != NULL) {
             if (strf->bits_per_sample != 8) {
@@ -1611,14 +1611,27 @@ gst_riff_create_audio_caps (guint16 codec_id,
             *codec_name = g_strdup ("Mu-law audio");
         } else if (subformat_guid[0] == 0x00000092) {
           GST_DEBUG ("FIXME: handle DOLBY AC3 SPDIF format");
-        } else if (subformat_guid[0] == 0x00002000) {
-          GST_DEBUG ("WAVE_FORMAT_EXTENSIBLE AC-3 audio");
-          channels_max = 6;
+          GST_DEBUG ("WAVE_FORMAT_EXTENSIBLE AC-3 SPDIF audio");
           caps = gst_caps_new_empty_simple ("audio/x-ac3");
           if (codec_name)
-            *codec_name = g_strdup ("AC-3 audio");
+            *codec_name = g_strdup ("wavext AC-3 SPDIF audio");
+        } else if (subformat_guid[0] == GST_RIFF_WAVE_FORMAT_EXTENSIBLE) {
+          GST_DEBUG ("WAVE_FORMAT_EXTENSIBLE nested");
+        } else {
+          /* recurse where no special consideration has yet to be identified 
+           * for the subformat guid */
+          caps = gst_riff_create_audio_caps (subformat_guid[0], strh, strf,
+                     strf_data, strd_data, codec_name, channel_reorder_map);
+          if (!codec_name)
+            GST_DEBUG ("WAVE_FORMAT_EXTENSIBLE audio");
+          if (caps) {
+            if (codec_name) {
+              GST_DEBUG ("WAVE_FORMAT_EXTENSIBLE %s", *codec_name);
+              *codec_name = g_strjoin ("wavext ", *codec_name, NULL);
+            }
+            return caps;
+          }
         }
-
       } else if (subformat_guid[0] == 0x6ba47966 &&
           subformat_guid[1] == 0x41783f83 &&
           subformat_guid[2] == 0xf0006596 && subformat_guid[3] == 0xe59262bf) {
