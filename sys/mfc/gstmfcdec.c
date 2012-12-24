@@ -414,7 +414,7 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
     mfc_dec_get_crop_size (self->context, &crop_left, &crop_top, &crop_width,
         &crop_height);
 
-    GST_DEBUG_OBJECT (self, "Have output buffer: width %d, height %d, "
+    GST_DEBUG_OBJECT (self, "Have output: width %d, height %d, "
         "Y stride %d, UV stride %d, "
         "crop_left %d, crop_right %d, "
         "crop_width %d, crop_height %d", width, height, src_ystride,
@@ -460,6 +460,8 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
     g_assert (mfc_outbuf != NULL);
 
+    GST_DEBUG_OBJECT (self, "Got output buffer with ID %d", timestamp.tv_sec);
+
     frame = NULL;
     if (timestamp.tv_sec != -1)
       frame =
@@ -487,6 +489,8 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
       outbuf = frame->output_buffer;
     } else {
+      GST_WARNING_OBJECT (self, "Didn't find a frame for ID %d", timestamp.tv_sec);
+
       outbuf =
           gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
 
@@ -663,7 +667,7 @@ gst_mfc_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   GstMFCDec *self = GST_MFC_DEC (decoder);
   GstFlowReturn ret = GST_FLOW_OK;
 
-  GST_DEBUG_OBJECT (self, "Handling frame");
+  GST_DEBUG_OBJECT (self, "Handling frame %d", frame->system_frame_number);
 
   if ((ret = gst_mfc_dec_queue_input (self, frame)) != GST_FLOW_OK) {
     gst_video_codec_frame_unref (frame);
