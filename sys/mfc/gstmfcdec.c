@@ -121,6 +121,16 @@ gst_mfc_dec_start (GstVideoDecoder * decoder)
   self->crop_top = 0;
   self->crop_width = 0;
   self->crop_height = 0;
+  self->format = GST_VIDEO_FORMAT_UNKNOWN;
+  self->src_stride[0] = 0;
+  self->src_stride[1] = 0;
+  self->src_stride[2] = 0;
+  self->dst[0] = NULL;
+  self->dst[1] = NULL;
+  self->dst[2] = NULL;
+  self->dst_stride[0] = 0;
+  self->dst_stride[1] = 0;
+  self->dst_stride[2] = 0;
 
   /* Initialize with H264 here, we chose the correct codec in set_format */
   self->context = mfc_dec_create (CODEC_TYPE_H264, 1);
