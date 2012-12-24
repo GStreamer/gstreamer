@@ -48,7 +48,10 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, "
         "parsed = (boolean) true, "
-        "stream-format = (string) byte-stream, " "alignment = (string) au")
+        "stream-format = (string) byte-stream, " "alignment = (string) au; "
+        "video/mpeg, "
+        "mpegversion = (int) 4, "
+        "systemstream = (boolean) false")
     );
 
 static GstStaticPadTemplate gst_mfc_dec_src_template =
@@ -195,6 +198,19 @@ gst_mfc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     if ((ret = mfc_dec_set_codec (self->context, CODEC_TYPE_H264)) < 0) {
       GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS,
           ("Failed to set codec to H264"), (NULL));
+      return FALSE;
+    }
+  } else if (gst_structure_has_name (s, "video/mpeg")) {
+    gint mpegversion;
+
+    if (!gst_structure_get_int (s, "mpegversion", &mpegversion))
+      return FALSE;
+    if (mpegversion != 4)
+      return FALSE;
+
+    if ((ret = mfc_dec_set_codec (self->context, CODEC_TYPE_MPEG4)) < 0) {
+      GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS,
+          ("Failed to set codec to MPEG4"), (NULL));
       return FALSE;
     }
   } else {
