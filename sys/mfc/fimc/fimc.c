@@ -439,6 +439,13 @@ fimc_set_dst_format_direct (Fimc * fimc, FimcColorFormat format, int width,
           crop_top, crop_width, crop_height) < 0)
     return -1;
 
+  for (i = 0; i < 3; i++) {
+    if (fimc->dst_buffer_data[i])
+      munmap (fimc->dst_buffer_data[i], fimc->dst_buffer_size[i]);
+    fimc->dst_buffer_data[i] = NULL;
+    fimc->dst_buffer_size[i] = 0;
+  }
+
   buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
   buffer.memory = V4L2_MEMORY_MMAP;
   buffer.index = 0;
