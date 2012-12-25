@@ -545,7 +545,13 @@ non_block:
 static gboolean
 gst_oss4_sink_open_func (GstAudioSink * asink)
 {
-  return gst_oss4_sink_open (asink, FALSE);
+  if (!gst_oss4_sink_open (asink, FALSE))
+    return FALSE;
+
+  /* the initial volume might not be the property default, so notify
+   * application to make it get a reading of the current volume */
+  g_object_notify (G_OBJECT (asink), "volume");
+  return TRUE;
 }
 
 static gboolean
