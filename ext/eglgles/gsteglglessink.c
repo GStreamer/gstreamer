@@ -866,7 +866,9 @@ gst_eglglessink_create_window (GstEglGlesSink * eglglessink, gint width,
   } else
     GST_INFO_OBJECT (eglglessink, "Attempting internal window creation");
 
-  window = platform_create_native_window (width, height, &eglglessink->own_window_data);
+  window =
+      platform_create_native_window (width, height,
+      &eglglessink->own_window_data);
   if (!window) {
     GST_ERROR_OBJECT (eglglessink, "Could not create window");
     return window;
@@ -1761,19 +1763,21 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
   GstVideoRectangle frame, surface;
   gint w, h;
   guint dar_n, dar_d;
-  GstVideoCropMeta *crop;
+  GstVideoCropMeta *crop = NULL;
 
   memset (&vframe, 0, sizeof (vframe));
 
   w = GST_VIDEO_SINK_WIDTH (eglglessink);
   h = GST_VIDEO_SINK_HEIGHT (eglglessink);
 
-  crop = gst_buffer_get_video_crop_meta (buf);
+  if (buf) {
+    crop = gst_buffer_get_video_crop_meta (buf);
 
-  if (!gst_video_frame_map (&vframe, &eglglessink->configured_info, buf,
-          GST_MAP_READ)) {
-    GST_ERROR_OBJECT (eglglessink, "Couldn't map frame");
-    goto HANDLE_ERROR;
+    if (!gst_video_frame_map (&vframe, &eglglessink->configured_info, buf,
+            GST_MAP_READ)) {
+      GST_ERROR_OBJECT (eglglessink, "Couldn't map frame");
+      goto HANDLE_ERROR;
+    }
   }
 
   GST_DEBUG_OBJECT (eglglessink,
@@ -2027,7 +2031,8 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     goto HANDLE_ERROR;
   }
 
-  gst_video_frame_unmap (&vframe);
+  if (buf)
+    gst_video_frame_unmap (&vframe);
 
   GST_DEBUG_OBJECT (eglglessink, "Succesfully rendered 1 frame");
   return GST_FLOW_OK;
