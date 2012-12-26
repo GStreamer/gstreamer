@@ -250,13 +250,11 @@ fimc_set_src_format (Fimc * fimc, FimcColorFormat format, int width, int height,
   fmt.fmt.pix_mp.field = V4L2_FIELD_ANY;
   fmt.fmt.pix_mp.num_planes = fimc_color_format_get_nplanes (format);
 
-  if (stride) {
-    for (i = 0; i < fmt.fmt.pix_mp.num_planes; i++) {
-      fmt.fmt.pix_mp.plane_fmt[i].bytesperline = stride[i];
-      fmt.fmt.pix_mp.plane_fmt[i].sizeimage =
-          fimc_color_format_get_component_height (format, i,
-          height) * stride[i];
-    }
+  for (i = 0; i < fmt.fmt.pix_mp.num_planes; i++) {
+    fmt.fmt.pix_mp.plane_fmt[i].bytesperline = stride[i];
+    fmt.fmt.pix_mp.plane_fmt[i].sizeimage =
+        fimc_color_format_get_component_height (format, i,
+        height) * stride[i];
   }
 
   if (ioctl (fimc->fd, VIDIOC_S_FMT, &fmt) < 0) {
@@ -308,9 +306,9 @@ fimc_set_src_format (Fimc * fimc, FimcColorFormat format, int width, int height,
   return 0;
 }
 
-int
-fimc_set_dst_format (Fimc * fimc, FimcColorFormat format, int width, int height,
-    int stride[3], int crop_left, int crop_top, int crop_width, int crop_height)
+static int
+fimc_set_dst_format_internal (Fimc * fimc, FimcColorFormat format, int width, int height,
+    int stride[3], int crop_left, int crop_top, int crop_width, int crop_height, int direct)
 {
   struct v4l2_format fmt;
   struct v4l2_crop crop;
@@ -326,7 +324,7 @@ fimc_set_dst_format (Fimc * fimc, FimcColorFormat format, int width, int height,
       && fimc->dst_crop.c.left == crop_left && fimc->dst_crop.c.top == crop_top
       && fimc->dst_crop.c.width == crop_width
       && fimc->dst_crop.c.height == crop_height) {
-    if (stride) {
+    if (!direct) {
       if (fimc->dst_requestbuffers.memory == V4L2_MEMORY_USERPTR &&
           fimc->dst_fmt.fmt.pix_mp.plane_fmt[0].bytesperline == stride[0] &&
           fimc->dst_fmt.fmt.pix_mp.plane_fmt[1].bytesperline == stride[1] &&
@@ -365,12 +363,11 @@ fimc_set_dst_format (Fimc * fimc, FimcColorFormat format, int width, int height,
   fmt.fmt.pix_mp.field = V4L2_FIELD_ANY;
   fmt.fmt.pix_mp.num_planes = fimc_color_format_get_nplanes (format);
 
-  if (stride) {
+  if (!direct) {
     for (i = 0; i < fmt.fmt.pix_mp.num_planes; i++) {
       fmt.fmt.pix_mp.plane_fmt[i].bytesperline = stride[i];
       fmt.fmt.pix_mp.plane_fmt[i].sizeimage =
-          fimc_color_format_get_component_height (format, i,
-          height) * stride[i];
+          fimc_color_format_get_component_height (format, i, height) * stride[i];
     }
   }
 
@@ -395,7 +392,7 @@ fimc_set_dst_format (Fimc * fimc, FimcColorFormat format, int width, int height,
   fimc->dst_crop = crop;
 
   requestbuffers.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
-  requestbuffers.memory = stride ? V4L2_MEMORY_USERPTR : V4L2_MEMORY_MMAP;
+  requestbuffers.memory = direct ? V4L2_MEMORY_MMAP : V4L2_MEMORY_USERPTR;
   requestbuffers.count = 1;
 
   if (ioctl (fimc->fd, VIDIOC_REQBUFS, &requestbuffers) < 0) {
@@ -424,6 +421,13 @@ fimc_set_dst_format (Fimc * fimc, FimcColorFormat format, int width, int height,
 }
 
 int
+fimc_set_dst_format (Fimc * fimc, FimcColorFormat format, int width, int height,
+    int stride[3], int crop_left, int crop_top, int crop_width, int crop_height)
+{
+  return fimc_set_dst_format_internal (fimc, format, width, height, stride, crop_left, crop_top, crop_width, crop_height, 0);
+}
+
+int
 fimc_set_dst_format_direct (Fimc * fimc, FimcColorFormat format, int width,
     int height, int crop_left, int crop_top, int crop_width, int crop_height,
     void *dst[3], int stride[3])
@@ -435,16 +439,9 @@ fimc_set_dst_format_direct (Fimc * fimc, FimcColorFormat format, int width,
   memset (planes, 0, sizeof (planes));
   memset (&buffer, 0, sizeof (buffer));
 
-  if (fimc_set_dst_format (fimc, format, width, height, NULL, crop_left,
-          crop_top, crop_width, crop_height) < 0)
+  if (fimc_set_dst_format_internal (fimc, format, width, height, NULL, crop_left,
+          crop_top, crop_width, crop_height, 1) < 0)
     return -1;
-
-  for (i = 0; i < 3; i++) {
-    if (fimc->dst_buffer_data[i])
-      munmap (fimc->dst_buffer_data[i], fimc->dst_buffer_size[i]);
-    fimc->dst_buffer_data[i] = NULL;
-    fimc->dst_buffer_size[i] = 0;
-  }
 
   buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
   buffer.memory = V4L2_MEMORY_MMAP;
