@@ -204,6 +204,8 @@ struct _GstEglGlesSink
   gboolean have_texture;
   gboolean egl_started;
 
+  gpointer own_window_data;
+
   GThread *thread;
   gboolean thread_running;
   GstDataQueue *queue;

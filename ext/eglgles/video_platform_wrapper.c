@@ -73,13 +73,17 @@ platform_wrapper_init (void)
 }
 
 #ifdef HAVE_X11
+typedef struct {
+  Display *display;
+} X11WindowData;
+
 EGLNativeWindowType
-platform_create_native_window (gint width, gint height)
+platform_create_native_window (gint width, gint height, gpointer * window_data)
 {
   Display *d;
   Window w;
-  //XEvent e;
   int s;
+  X11WindowData *data;
 
   d = XOpenDisplay (NULL);
   if (d == NULL) {
@@ -93,15 +97,26 @@ platform_create_native_window (gint width, gint height)
   XStoreName (d, w, "eglglessink");
   XMapWindow (d, w);
   XFlush (d);
+
+  *window_data = data = g_slice_new0 (X11WindowData);
+  data->display = d;
+
   return (EGLNativeWindowType) w;
 }
 
 gboolean
 platform_destroy_native_window (EGLNativeDisplayType display,
-    EGLNativeWindowType window)
+    EGLNativeWindowType window, gpointer * window_data)
 {
+  X11WindowData *data = *window_data;
+
   /* XXX: Should proly catch BadWindow */
-  XDestroyWindow (display, window);
+  XDestroyWindow (data->display, window);
+  XSync (data->display, FALSE);
+  XCloseDisplay (data->display);
+
+  g_slice_free (X11WindowData, data);
+  *window_data = NULL;
   return TRUE;
 }
 #endif
@@ -109,7 +124,7 @@ platform_destroy_native_window (EGLNativeDisplayType display,
 #if !defined(HAVE_X11)
 /* Dummy functions for creating a native Window */
 EGLNativeWindowType
-platform_create_native_window (gint width, gint height)
+platform_create_native_window (gint width, gint height, gpointer * window_data)
 {
   GST_ERROR ("Can't create native window");
   return (EGLNativeWindowType) 0;
@@ -117,7 +132,7 @@ platform_create_native_window (gint width, gint height)
 
 gboolean
 platform_destroy_native_window (EGLNativeDisplayType display,
-    EGLNativeWindowType window)
+    EGLNativeWindowType window, gpointer * window_data)
 {
   GST_ERROR ("Can't destroy native window");
   return TRUE;

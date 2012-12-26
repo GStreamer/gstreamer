@@ -54,11 +54,9 @@
 #include <EGL/egl.h>
 
 gboolean platform_wrapper_init (void);
-EGLNativeWindowType platform_create_native_window (gint width, gint height);
+EGLNativeWindowType platform_create_native_window (gint width, gint height, gpointer * window_data);
 gboolean platform_destroy_native_window (EGLNativeDisplayType display,
-    EGLNativeWindowType w);
-EGLint *platform_crate_native_image_buffer (EGLNativeWindowType win,
-    EGLConfig config, EGLNativeDisplayType display, const EGLint * egl_attribs);
+    EGLNativeWindowType w, gpointer * window_data);
 
 
 #endif
