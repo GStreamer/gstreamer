@@ -404,8 +404,6 @@ static inline gboolean egl_init (GstEglGlesSink * eglglessink);
 static gboolean gst_eglglessink_context_make_current (GstEglGlesSink *
     eglglessink, gboolean bind);
 static void gst_eglglessink_wipe_eglglesctx (GstEglGlesSink * eglglessink);
-static inline void gst_eglglessink_reset_display_region (GstEglGlesSink *
-    eglglessink);
 
 #define parent_class gst_eglglessink_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstEglGlesSink, gst_eglglessink, GST_TYPE_VIDEO_SINK,
@@ -727,21 +725,6 @@ gst_eglglessink_wipe_eglglesctx (GstEglGlesSink * eglglessink)
         eglglessink->eglglesctx.eglcontext);
     eglglessink->eglglesctx.eglcontext = NULL;
   }
-
-  gst_eglglessink_reset_display_region (eglglessink);
-}
-
-/* Reset display region
- * XXX: Should probably keep old ones if set_render_rect()
- * has been called.
- */
-static inline void
-gst_eglglessink_reset_display_region (GstEglGlesSink * eglglessink)
-{
-  GST_OBJECT_LOCK (eglglessink);
-  eglglessink->display_region.w = 0;
-  eglglessink->display_region.h = 0;
-  GST_OBJECT_UNLOCK (eglglessink);
 }
 
 static gboolean
@@ -766,8 +749,10 @@ gst_eglglessink_start (GstEglGlesSink * eglglessink)
     goto HANDLE_ERROR;
   }
 
-  gst_eglglessink_reset_display_region (eglglessink);
   eglglessink->last_flow = GST_FLOW_OK;
+  eglglessink->display_region.w = 0;
+  eglglessink->display_region.h = 0;
+
   gst_data_queue_set_flushing (eglglessink->queue, FALSE);
 
 #if !GLIB_CHECK_VERSION (2, 31, 0)
@@ -916,7 +901,8 @@ gst_eglglessink_init_egl_exts (GstEglGlesSink * eglglessink)
 static gboolean
 gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
 {
-  gdouble surface_width, surface_height;
+  gdouble render_width, render_height;
+  gdouble texture_width, texture_height;
   gdouble x1, x2, y1, y2;
   gdouble tx1, tx2, ty1, ty2;
 
@@ -929,26 +915,25 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
     eglglessink->have_vbo = FALSE;
   }
 
-  surface_width = eglglessink->eglglesctx.surface_width;
-  surface_height = eglglessink->eglglesctx.surface_height;
+  render_width = eglglessink->render_region.w;
+  render_height = eglglessink->render_region.h;
+
+  texture_width = eglglessink->configured_info.width;
+  texture_height = eglglessink->configured_info.height;
 
   GST_DEBUG_OBJECT (eglglessink, "Performing VBO setup");
 
-  x1 = (eglglessink->display_region.x / surface_width) * 2.0 - 1;
-  y1 = (eglglessink->display_region.y / surface_height) * 2.0 - 1;
+  x1 = (eglglessink->display_region.x / render_width) * 2.0 - 1;
+  y1 = (eglglessink->display_region.y / render_height) * 2.0 - 1;
   x2 = ((eglglessink->display_region.x +
-          eglglessink->display_region.w) / surface_width) * 2.0 - 1;
+          eglglessink->display_region.w) / render_width) * 2.0 - 1;
   y2 = ((eglglessink->display_region.y +
-          eglglessink->display_region.h) / surface_height) * 2.0 - 1;
+          eglglessink->display_region.h) / render_height) * 2.0 - 1;
 
-  tx1 = (eglglessink->crop.x / eglglessink->configured_info.width);
-  tx2 =
-      ((eglglessink->crop.x +
-          eglglessink->crop.width) / eglglessink->configured_info.width);
-  ty1 = (eglglessink->crop.y / eglglessink->configured_info.height);
-  ty2 =
-      ((eglglessink->crop.y +
-          eglglessink->crop.height) / eglglessink->configured_info.height);
+  tx1 = (eglglessink->crop.x / texture_width);
+  tx2 = ((eglglessink->crop.x + eglglessink->crop.w) / texture_width);
+  ty1 = (eglglessink->crop.y / texture_height);
+  ty2 = ((eglglessink->crop.y + eglglessink->crop.h) / texture_height);
 
   eglglessink->eglglesctx.position_array[0].x = x2;
   eglglessink->eglglesctx.position_array[0].y = y2;
@@ -1676,19 +1661,13 @@ gst_eglglessink_set_render_rectangle (GstVideoOverlay * overlay, gint x, gint y,
   g_return_if_fail (GST_IS_EGLGLESSINK (eglglessink));
 
   GST_OBJECT_LOCK (eglglessink);
-  if (width == -1 && height == -1) {
-    /* This is the set-defaults condition according to
-     * the xOverlay interface docs
-     */
-    gst_eglglessink_reset_display_region (eglglessink);
-  } else {
-    GST_OBJECT_LOCK (eglglessink);
-    eglglessink->display_region.x = x;
-    eglglessink->display_region.y = y;
-    eglglessink->display_region.w = width;
-    eglglessink->display_region.h = height;
-    GST_OBJECT_UNLOCK (eglglessink);
-  }
+  eglglessink->render_region.x = x;
+  eglglessink->render_region.y = y;
+  eglglessink->render_region.w = width;
+  eglglessink->render_region.h = height;
+  eglglessink->render_region_changed = TRUE;
+  eglglessink->render_region_user = (width != -1 && height != -1);
+  GST_OBJECT_UNLOCK (eglglessink);
 
   return;
 }
@@ -1745,13 +1724,13 @@ gst_eglglessink_crop_changed (GstEglGlesSink * eglglessink,
   if (crop) {
     return (crop->x != eglglessink->crop.x ||
         crop->y != eglglessink->crop.y ||
-        crop->width != eglglessink->crop.width ||
-        crop->height != eglglessink->crop.height);
+        crop->width != eglglessink->crop.w ||
+        crop->height != eglglessink->crop.h);
   }
 
   return (eglglessink->crop.x != 0 || eglglessink->crop.y != 0 ||
-      eglglessink->crop.width != GST_VIDEO_SINK_WIDTH (eglglessink) ||
-      eglglessink->crop.height != GST_VIDEO_SINK_HEIGHT (eglglessink));
+      eglglessink->crop.w != eglglessink->configured_info.width ||
+      eglglessink->crop.h != eglglessink->configured_info.height);
 }
 
 /* Rendering and display */
@@ -1760,15 +1739,11 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     GstBuffer * buf)
 {
   GstVideoFrame vframe;
-  GstVideoRectangle frame, surface;
   gint w, h;
   guint dar_n, dar_d;
   GstVideoCropMeta *crop = NULL;
 
   memset (&vframe, 0, sizeof (vframe));
-
-  w = GST_VIDEO_SINK_WIDTH (eglglessink);
-  h = GST_VIDEO_SINK_HEIGHT (eglglessink);
 
   if (buf) {
     crop = gst_buffer_get_video_crop_meta (buf);
@@ -1779,6 +1754,9 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       goto HANDLE_ERROR;
     }
   }
+
+  w = GST_VIDEO_FRAME_WIDTH (&vframe);
+  h = GST_VIDEO_FRAME_HEIGHT (&vframe);
 
   GST_DEBUG_OBJECT (eglglessink,
       "Got good buffer %p. Sink geometry is %dx%d size %d", buf, w, h,
@@ -1901,72 +1879,84 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
    * force_aspect_ratio to FALSE.
    */
   if (gst_eglglessink_update_surface_dimensions (eglglessink) ||
+      eglglessink->render_region_changed ||
       !eglglessink->display_region.w || !eglglessink->display_region.h ||
       gst_eglglessink_crop_changed (eglglessink, crop)) {
     GST_OBJECT_LOCK (eglglessink);
+
+    if (!eglglessink->render_region_user) {
+      eglglessink->render_region.x = 0;
+      eglglessink->render_region.y = 0;
+      eglglessink->render_region.w = eglglessink->eglglesctx.surface_width;
+      eglglessink->render_region.h = eglglessink->eglglesctx.surface_height;
+    }
+    eglglessink->render_region_changed = FALSE;
+
     if (crop) {
       eglglessink->crop.x = crop->x;
       eglglessink->crop.y = crop->y;
-      eglglessink->crop.width = crop->width;
-      eglglessink->crop.height = crop->height;
+      eglglessink->crop.w = crop->width;
+      eglglessink->crop.h = crop->height;
     } else {
       eglglessink->crop.x = 0;
       eglglessink->crop.y = 0;
-      eglglessink->crop.width = w;
-      eglglessink->crop.height = h;
+      eglglessink->crop.w = w;
+      eglglessink->crop.h = h;
     }
 
     if (!eglglessink->force_aspect_ratio) {
       eglglessink->display_region.x = 0;
       eglglessink->display_region.y = 0;
-      eglglessink->display_region.w = eglglessink->eglglesctx.surface_width;
-      eglglessink->display_region.h = eglglessink->eglglesctx.surface_height;
+      eglglessink->display_region.w = eglglessink->render_region.w;
+      eglglessink->display_region.h = eglglessink->render_region.h;
     } else {
+      GstVideoRectangle frame;
+
+      frame.x = 0;
+      frame.y = 0;
+
       if (!gst_video_calculate_display_ratio (&dar_n, &dar_d,
-              eglglessink->crop.width, eglglessink->crop.height,
+              eglglessink->crop.w, eglglessink->crop.h,
               eglglessink->configured_info.par_n,
               eglglessink->configured_info.par_d,
               eglglessink->eglglesctx.pixel_aspect_ratio,
               EGL_DISPLAY_SCALING)) {
         GST_WARNING_OBJECT (eglglessink, "Could not compute resulting DAR");
-        frame.w = eglglessink->crop.width;
-        frame.h = eglglessink->crop.height;
+        frame.w = eglglessink->crop.w;
+        frame.h = eglglessink->crop.h;
       } else {
         /* Find suitable matching new size acording to dar & par
          * rationale for prefering leaving the height untouched
          * comes from interlacing considerations.
          * XXX: Move this to gstutils?
          */
-        if (eglglessink->crop.height % dar_d == 0) {
+        if (eglglessink->crop.h % dar_d == 0) {
           frame.w =
-              gst_util_uint64_scale_int (eglglessink->crop.height, dar_n,
-              dar_d);
-          frame.h = eglglessink->crop.height;
-        } else if (eglglessink->crop.width % dar_n == 0) {
+              gst_util_uint64_scale_int (eglglessink->crop.h, dar_n, dar_d);
+          frame.h = eglglessink->crop.h;
+        } else if (eglglessink->crop.w % dar_n == 0) {
           frame.h =
-              gst_util_uint64_scale_int (eglglessink->crop.width, dar_d, dar_n);
-          frame.w = eglglessink->crop.width;
+              gst_util_uint64_scale_int (eglglessink->crop.w, dar_d, dar_n);
+          frame.w = eglglessink->crop.w;
         } else {
           /* Neither width nor height can be precisely scaled.
            * Prefer to leave height untouched. See comment above.
            */
           frame.w =
-              gst_util_uint64_scale_int (eglglessink->crop.height, dar_n,
-              dar_d);
-          frame.h = eglglessink->crop.height;
+              gst_util_uint64_scale_int (eglglessink->crop.h, dar_n, dar_d);
+          frame.h = eglglessink->crop.h;
         }
       }
 
-      surface.w = eglglessink->eglglesctx.surface_width;
-      surface.h = eglglessink->eglglesctx.surface_height;
-      gst_video_sink_center_rect (frame, surface,
+      gst_video_sink_center_rect (frame, eglglessink->render_region,
           &eglglessink->display_region, TRUE);
     }
-    GST_OBJECT_UNLOCK (eglglessink);
 
-    glViewport (0, 0,
-        eglglessink->eglglesctx.surface_width,
-        eglglessink->eglglesctx.surface_height);
+    glViewport (eglglessink->render_region.x,
+        eglglessink->eglglesctx.surface_height -
+        eglglessink->render_region.y -
+        eglglessink->render_region.w,
+        eglglessink->render_region.w, eglglessink->render_region.h);
 
     /* Clear the surface once if its content is preserved */
     if (eglglessink->eglglesctx.buffer_preserved) {
@@ -1975,9 +1965,11 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     }
 
     if (!gst_eglglessink_setup_vbo (eglglessink, FALSE)) {
+      GST_OBJECT_UNLOCK (eglglessink);
       GST_ERROR_OBJECT (eglglessink, "VBO setup failed");
       goto HANDLE_ERROR;
     }
+    GST_OBJECT_UNLOCK (eglglessink);
   }
 
   if (!eglglessink->eglglesctx.buffer_preserved) {
@@ -2440,6 +2432,16 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink)
   eglglessink->queue =
       gst_data_queue_new (queue_check_full_func, NULL, NULL, NULL);
   eglglessink->last_flow = GST_FLOW_FLUSHING;
+
+  eglglessink->render_region.x = 0;
+  eglglessink->render_region.y = 0;
+  eglglessink->render_region.w = -1;
+  eglglessink->render_region.h = -1;
+  eglglessink->render_region_changed = TRUE;
+  eglglessink->render_region_user = FALSE;
+
+  gst_eglglessink_set_render_rectangle (GST_VIDEO_OVERLAY (eglglessink), 100,
+      100, 100, 100);
 }
 
 /* entry point to initialize the plug-in
