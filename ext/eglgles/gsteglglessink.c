@@ -810,7 +810,7 @@ gst_eglglessink_stop (GstEglGlesSink * eglglessink)
 
   if (eglglessink->using_own_window) {
     platform_destroy_native_window (eglglessink->eglglesctx.display,
-        eglglessink->eglglesctx.used_window);
+        eglglessink->eglglesctx.used_window, &eglglessink->own_window_data);
     eglglessink->eglglesctx.used_window = 0;
     eglglessink->have_window = FALSE;
   }
@@ -866,7 +866,7 @@ gst_eglglessink_create_window (GstEglGlesSink * eglglessink, gint width,
   } else
     GST_INFO_OBJECT (eglglessink, "Attempting internal window creation");
 
-  window = platform_create_native_window (width, height);
+  window = platform_create_native_window (width, height, &eglglessink->own_window_data);
   if (!window) {
     GST_ERROR_OBJECT (eglglessink, "Could not create window");
     return window;
