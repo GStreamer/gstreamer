@@ -1,9 +1,8 @@
 # Bash tab-completion for GStreamer.                      -*- shell-script -*-
 # Put this in /etc/bash_completion.d/
 
-_gst_version=1.0
-
 _gst_inspect() {
+    local _gst_version=1.0
     local cur cword prev words
     _gst_init_completion
     [[ "$cur" == "=" ]] && cur=
@@ -17,9 +16,10 @@ _gst_inspect() {
         -- "$cur") )
     [[ $COMPREPLY == *= ]] && compopt -o nospace 2>/dev/null
 } &&
-complete -F _gst_inspect gst-inspect-$_gst_version
+complete -F _gst_inspect gst-inspect-1.0
 
 _gst_launch() {
+    local _gst_version=1.0
     local cur cword prev words
     _gst_init_completion
     local curtype option element property
@@ -29,7 +29,7 @@ _gst_launch() {
     COMPREPLY=( $(_gst_launch_compgen) )
     [[ $COMPREPLY == *= ]] && compopt -o nospace 2>/dev/null
 } &&
-complete -o default -F _gst_launch gst-launch-$_gst_version
+complete -o default -F _gst_launch gst-launch-1.0
 
 _gst_common_options() {
     if [[ -n "$curtype" ]]; then  # Called from _gst_launch
