@@ -72,11 +72,16 @@ print_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
       g_print ("\t%20s : %s\n", tag,
           (g_value_get_boolean (val)) ? "true" : "false");
     } else if (GST_VALUE_HOLDS_BUFFER (val)) {
-      g_print ("\t%20s : buffer of size %u\n", tag,
-          GST_BUFFER_SIZE (gst_value_get_buffer (val)));
-    } else if (GST_VALUE_HOLDS_DATE (val)) {
-      g_print ("\t%20s : date (year=%u,...)\n", tag,
-          g_date_get_year (gst_value_get_date (val)));
+      GstBuffer *buf = gst_value_get_buffer (val);
+      guint buffer_size = gst_buffer_get_size (buf);
+
+      g_print ("\t%20s : buffer of size %u\n", tag, buffer_size);
+    } else if (GST_VALUE_HOLDS_DATE_TIME (val)) {
+      GstDateTime *dt = g_value_get_boxed (val);
+      gchar *dt_str = gst_date_time_to_iso8601_string (dt);
+
+      g_print ("\t%20s : %s\n", tag, dt_str);
+      g_free (dt_str);
     } else {
       g_print ("\t%20s : tag of type '%s'\n", tag, G_VALUE_TYPE_NAME (val));
     }
