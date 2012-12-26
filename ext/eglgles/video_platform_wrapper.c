@@ -111,7 +111,7 @@ platform_destroy_native_window (EGLNativeDisplayType display,
   X11WindowData *data = *window_data;
 
   /* XXX: Should proly catch BadWindow */
-  XDestroyWindow (data->display, window);
+  XDestroyWindow (data->display, (Window) window);
   XSync (data->display, FALSE);
   XCloseDisplay (data->display);
 
