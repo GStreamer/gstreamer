@@ -59,6 +59,10 @@
 #include <X11/Xlib.h>
 #endif
 
+#ifdef HAVE_FBDEV_EGL
+#include <EGL/fbdev_window.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (eglgles_platform_wrapper);
 #define GST_CAT_DEFAULT eglgles_platform_wrapper
 
@@ -122,7 +126,29 @@ platform_destroy_native_window (EGLNativeDisplayType display,
 }
 #endif
 
-#if !defined(HAVE_X11)
+#if defined(HAVE_FBDEV_EGL) && !defined(HAVE_X11)
+EGLNativeWindowType
+platform_create_native_window (gint width, gint height, gpointer * window_data)
+{
+  fbdev_window * w = g_slice_new0 (fbdev_window);
+
+  w->width = width;
+  w->height = height;
+
+  return (EGLNativeWindowType) w;
+}
+
+gboolean
+platform_destroy_native_window (EGLNativeDisplayType display,
+    EGLNativeWindowType window, gpointer * window_data)
+{
+  g_slice_free (fbdev_window, ((fbdev_window *) window));
+
+  return TRUE;
+}
+#endif
+
+#if !defined(HAVE_X11) && !defined(HAVE_FBDEV_EGL)
 /* Dummy functions for creating a native Window */
 EGLNativeWindowType
 platform_create_native_window (gint width, gint height, gpointer * window_data)
