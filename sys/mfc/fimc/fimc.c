@@ -63,12 +63,14 @@ struct _Fimc
   struct v4l2_capability caps;
 
   int set_src;
+  int has_src_buffers;
   FimcColorFormat src_format;
   struct v4l2_format src_fmt;
   struct v4l2_crop src_crop;
   struct v4l2_requestbuffers src_requestbuffers;
 
   int set_dst;
+  int has_dst_buffers;
   FimcColorFormat dst_format;
   struct v4l2_format dst_fmt;
   struct v4l2_crop dst_crop;
@@ -212,7 +214,6 @@ fimc_set_src_format (Fimc * fimc, FimcColorFormat format, int width, int height,
 {
   struct v4l2_format fmt;
   struct v4l2_crop crop;
-  struct v4l2_requestbuffers requestbuffers;
   struct v4l2_control control;
   int i;
 
@@ -224,10 +225,9 @@ fimc_set_src_format (Fimc * fimc, FimcColorFormat format, int width, int height,
       && fimc->src_crop.c.left == crop_left && fimc->src_crop.c.top == crop_top
       && fimc->src_crop.c.width == crop_width
       && fimc->src_crop.c.height == crop_height) {
-    if (fimc->src_requestbuffers.memory == V4L2_MEMORY_USERPTR
-        && fimc->src_fmt.fmt.pix_mp.plane_fmt[0].bytesperline == stride[0]
-        && fimc->src_fmt.fmt.pix_mp.plane_fmt[1].bytesperline == stride[1]
-        && fimc->src_fmt.fmt.pix_mp.plane_fmt[2].bytesperline == stride[2]) {
+    if (fimc->src_fmt.fmt.pix_mp.plane_fmt[0].bytesperline == stride[0] &&
+        fimc->src_fmt.fmt.pix_mp.plane_fmt[1].bytesperline == stride[1] &&
+        fimc->src_fmt.fmt.pix_mp.plane_fmt[2].bytesperline == stride[2]) {
       GST_DEBUG ("Nothing has changed");
       return 0;
     }
@@ -238,7 +238,6 @@ fimc_set_src_format (Fimc * fimc, FimcColorFormat format, int width, int height,
 
   memset (&fmt, 0, sizeof (fmt));
   memset (&crop, 0, sizeof (crop));
-  memset (&requestbuffers, 0, sizeof (requestbuffers));
   memset (&control, 0, sizeof (control));
 
   fimc->src_format = format;
@@ -253,8 +252,7 @@ fimc_set_src_format (Fimc * fimc, FimcColorFormat format, int width, int height,
   for (i = 0; i < fmt.fmt.pix_mp.num_planes; i++) {
     fmt.fmt.pix_mp.plane_fmt[i].bytesperline = stride[i];
     fmt.fmt.pix_mp.plane_fmt[i].sizeimage =
-        fimc_color_format_get_component_height (format, i,
-        height) * stride[i];
+        fimc_color_format_get_component_height (format, i, height) * stride[i];
   }
 
   if (ioctl (fimc->fd, VIDIOC_S_FMT, &fmt) < 0) {
@@ -277,6 +275,33 @@ fimc_set_src_format (Fimc * fimc, FimcColorFormat format, int width, int height,
 
   fimc->src_crop = crop;
 
+  control.id = V4L2_CID_ROTATE;
+  control.value = 0;
+
+  if (ioctl (fimc->fd, VIDIOC_S_CTRL, &control) < 0) {
+    GST_ERROR ("Failed to set rotation to 0: %d", errno);
+    return -1;
+  }
+
+  fimc->set_src = 1;
+
+  return 0;
+}
+
+int
+fimc_request_src_buffers (Fimc * fimc)
+{
+  struct v4l2_requestbuffers requestbuffers;
+
+  if (fimc->has_dst_buffers) {
+    GST_ERROR ("Already have dst buffers");
+    return -1;
+  }
+
+  fimc->has_src_buffers = 0;
+
+  memset (&requestbuffers, 0, sizeof (requestbuffers));
+
   requestbuffers.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
   requestbuffers.memory = V4L2_MEMORY_USERPTR;
   requestbuffers.count = 1;
@@ -293,26 +318,26 @@ fimc_set_src_format (Fimc * fimc, FimcColorFormat format, int width, int height,
     return -1;
   }
 
-  control.id = V4L2_CID_ROTATE;
-  control.value = 0;
-
-  if (ioctl (fimc->fd, VIDIOC_S_CTRL, &control) < 0) {
-    GST_ERROR ("Failed to set rotation to 0: %d", errno);
-    return -1;
-  }
-
-  fimc->set_src = 1;
+  fimc->has_src_buffers = 1;
 
   return 0;
 }
 
-static int
-fimc_set_dst_format_internal (Fimc * fimc, FimcColorFormat format, int width, int height,
-    int stride[3], int crop_left, int crop_top, int crop_width, int crop_height, int direct)
+int
+fimc_release_src_buffers (Fimc * fimc)
+{
+  /* Nothing to do here now */
+  fimc->has_src_buffers = 0;
+
+  return 0;
+}
+
+int
+fimc_set_dst_format (Fimc * fimc, FimcColorFormat format, int width, int height,
+    int stride[3], int crop_left, int crop_top, int crop_width, int crop_height)
 {
   struct v4l2_format fmt;
   struct v4l2_crop crop;
-  struct v4l2_requestbuffers requestbuffers;
   struct v4l2_control control;
   int i;
 
@@ -324,34 +349,19 @@ fimc_set_dst_format_internal (Fimc * fimc, FimcColorFormat format, int width, in
       && fimc->dst_crop.c.left == crop_left && fimc->dst_crop.c.top == crop_top
       && fimc->dst_crop.c.width == crop_width
       && fimc->dst_crop.c.height == crop_height) {
-    if (!direct) {
-      if (fimc->dst_requestbuffers.memory == V4L2_MEMORY_USERPTR &&
-          fimc->dst_fmt.fmt.pix_mp.plane_fmt[0].bytesperline == stride[0] &&
-          fimc->dst_fmt.fmt.pix_mp.plane_fmt[1].bytesperline == stride[1] &&
-          fimc->dst_fmt.fmt.pix_mp.plane_fmt[2].bytesperline == stride[2]) {
-        GST_DEBUG ("Nothing has changed");
-        return 0;
-      }
-    } else {
-      if (fimc->dst_requestbuffers.memory == V4L2_MEMORY_MMAP) {
-        GST_DEBUG ("Nothing has changed");
-        return 0;
-      }
+    if (fimc->dst_fmt.fmt.pix_mp.plane_fmt[0].bytesperline == stride[0] &&
+        fimc->dst_fmt.fmt.pix_mp.plane_fmt[1].bytesperline == stride[1] &&
+        fimc->dst_fmt.fmt.pix_mp.plane_fmt[2].bytesperline == stride[2]) {
+      GST_DEBUG ("Nothing has changed");
+      return 0;
     }
   }
 
   /* Something has changed */
   fimc->set_dst = 0;
-  for (i = 0; i < 3; i++) {
-    if (fimc->dst_buffer_data[i])
-      munmap (fimc->dst_buffer_data[i], fimc->dst_buffer_size[i]);
-    fimc->dst_buffer_data[i] = NULL;
-    fimc->dst_buffer_size[i] = 0;
-  }
 
   memset (&fmt, 0, sizeof (fmt));
   memset (&crop, 0, sizeof (crop));
-  memset (&requestbuffers, 0, sizeof (requestbuffers));
   memset (&control, 0, sizeof (control));
 
   fimc->dst_format = format;
@@ -363,12 +373,10 @@ fimc_set_dst_format_internal (Fimc * fimc, FimcColorFormat format, int width, in
   fmt.fmt.pix_mp.field = V4L2_FIELD_ANY;
   fmt.fmt.pix_mp.num_planes = fimc_color_format_get_nplanes (format);
 
-  if (!direct) {
-    for (i = 0; i < fmt.fmt.pix_mp.num_planes; i++) {
-      fmt.fmt.pix_mp.plane_fmt[i].bytesperline = stride[i];
-      fmt.fmt.pix_mp.plane_fmt[i].sizeimage =
-          fimc_color_format_get_component_height (format, i, height) * stride[i];
-    }
+  for (i = 0; i < fmt.fmt.pix_mp.num_planes; i++) {
+    fmt.fmt.pix_mp.plane_fmt[i].bytesperline = stride[i];
+    fmt.fmt.pix_mp.plane_fmt[i].sizeimage =
+        fimc_color_format_get_component_height (format, i, height) * stride[i];
   }
 
   if (ioctl (fimc->fd, VIDIOC_S_FMT, &fmt) < 0) {
@@ -391,22 +399,6 @@ fimc_set_dst_format_internal (Fimc * fimc, FimcColorFormat format, int width, in
 
   fimc->dst_crop = crop;
 
-  requestbuffers.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
-  requestbuffers.memory = direct ? V4L2_MEMORY_MMAP : V4L2_MEMORY_USERPTR;
-  requestbuffers.count = 1;
-
-  if (ioctl (fimc->fd, VIDIOC_REQBUFS, &requestbuffers) < 0) {
-    GST_ERROR ("Failed to request dst buffers: %d", errno);
-    return -1;
-  }
-
-  fimc->dst_requestbuffers = requestbuffers;
-
-  if (requestbuffers.count < 1) {
-    GST_ERROR ("Got %d buffers instead of %d", requestbuffers.count, 1);
-    return -1;
-  }
-
   control.id = V4L2_CID_ROTATE;
   control.value = 0;
 
@@ -421,32 +413,79 @@ fimc_set_dst_format_internal (Fimc * fimc, FimcColorFormat format, int width, in
 }
 
 int
-fimc_set_dst_format (Fimc * fimc, FimcColorFormat format, int width, int height,
-    int stride[3], int crop_left, int crop_top, int crop_width, int crop_height)
+fimc_request_dst_buffers (Fimc * fimc)
 {
-  return fimc_set_dst_format_internal (fimc, format, width, height, stride, crop_left, crop_top, crop_width, crop_height, 0);
+  struct v4l2_requestbuffers requestbuffers;
+
+  if (fimc->has_dst_buffers) {
+    GST_ERROR ("Already have dst buffers");
+    return -1;
+  }
+
+  fimc->has_dst_buffers = 0;
+
+  memset (&requestbuffers, 0, sizeof (requestbuffers));
+
+  requestbuffers.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+  requestbuffers.memory = V4L2_MEMORY_USERPTR;
+  requestbuffers.count = 1;
+
+  if (ioctl (fimc->fd, VIDIOC_REQBUFS, &requestbuffers) < 0) {
+    GST_ERROR ("Failed to request dst buffers: %d", errno);
+    return -1;
+  }
+
+  fimc->dst_requestbuffers = requestbuffers;
+
+  if (requestbuffers.count < 1) {
+    GST_ERROR ("Got %d buffers instead of %d", requestbuffers.count, 1);
+    return -1;
+  }
+
+  fimc->has_dst_buffers = 1;
+
+  return 0;
 }
 
 int
-fimc_set_dst_format_direct (Fimc * fimc, FimcColorFormat format, int width,
-    int height, int crop_left, int crop_top, int crop_width, int crop_height,
-    void *dst[3], int stride[3])
+fimc_request_dst_buffers_mmap (Fimc * fimc, void *dst[3], int stride[3])
 {
+  struct v4l2_requestbuffers requestbuffers;
   struct v4l2_plane planes[3];
   struct v4l2_buffer buffer;
   int i;
 
+  if (fimc->has_dst_buffers) {
+    GST_ERROR ("Already have dst buffers");
+    return -1;
+  }
+
+  fimc->has_dst_buffers = 0;
+
+  memset (&requestbuffers, 0, sizeof (requestbuffers));
   memset (planes, 0, sizeof (planes));
   memset (&buffer, 0, sizeof (buffer));
 
-  if (fimc_set_dst_format_internal (fimc, format, width, height, NULL, crop_left,
-          crop_top, crop_width, crop_height, 1) < 0)
-    return -1;
+  requestbuffers.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+  requestbuffers.memory = V4L2_MEMORY_MMAP;
+  requestbuffers.count = 1;
 
-  buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
-  buffer.memory = V4L2_MEMORY_MMAP;
+  if (ioctl (fimc->fd, VIDIOC_REQBUFS, &requestbuffers) < 0) {
+    GST_ERROR ("Failed to request dst buffers: %d", errno);
+    return -1;
+  }
+
+  fimc->dst_requestbuffers = requestbuffers;
+
+  if (requestbuffers.count < 1) {
+    GST_ERROR ("Got %d buffers instead of %d", requestbuffers.count, 1);
+    return -1;
+  }
+
+  buffer.type = fimc->dst_requestbuffers.type;
+  buffer.memory = fimc->dst_requestbuffers.memory;
   buffer.index = 0;
-  buffer.length = fimc_color_format_get_nplanes (format);
+  buffer.length = fimc_color_format_get_nplanes (fimc->dst_format);
   buffer.m.planes = planes;
 
   if (ioctl (fimc->fd, VIDIOC_QUERYBUF, &buffer) < 0) {
@@ -481,22 +520,45 @@ fimc_set_dst_format_direct (Fimc * fimc, FimcColorFormat format, int width,
     stride[2] /= 2;
   }
 
+  fimc->has_dst_buffers = 1;
+
   return 0;
 }
 
-static int
-fimc_convert_internal (Fimc * fimc, void *src[3], void *dst[3], int direct)
+int
+fimc_release_dst_buffers (Fimc * fimc)
+{
+  int i;
+
+  fimc->has_dst_buffers = 0;
+
+  for (i = 0; i < 3; i++) {
+    if (fimc->dst_buffer_data[i])
+      munmap (fimc->dst_buffer_data[i], fimc->dst_buffer_size[i]);
+  }
+
+  return 0;
+}
+
+int
+fimc_convert (Fimc * fimc, void *src[3], void *dst[3])
 {
   struct v4l2_plane planes[3];
   struct v4l2_buffer buffer;
   enum v4l2_buf_type type;
   int i;
 
+  if (!fimc->set_src || !fimc->set_dst ||
+      !fimc->has_src_buffers || !fimc->has_dst_buffers) {
+    GST_ERROR ("Not configured yet");
+    return -1;
+  }
+
   memset (planes, 0, sizeof (planes));
   memset (&buffer, 0, sizeof (buffer));
 
-  buffer.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
-  buffer.memory = V4L2_MEMORY_USERPTR;
+  buffer.type = fimc->src_requestbuffers.type;
+  buffer.memory = fimc->src_requestbuffers.memory;
   buffer.length = fimc->src_fmt.fmt.pix_mp.num_planes;
   buffer.index = 0;
   buffer.m.planes = planes;
@@ -514,15 +576,15 @@ fimc_convert_internal (Fimc * fimc, void *src[3], void *dst[3], int direct)
   memset (planes, 0, sizeof (planes));
   memset (&buffer, 0, sizeof (buffer));
 
-  buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
-  buffer.memory = direct ? V4L2_MEMORY_MMAP : V4L2_MEMORY_USERPTR;
+  buffer.type = fimc->dst_requestbuffers.type;
+  buffer.memory = fimc->dst_requestbuffers.memory;
   buffer.length = fimc->dst_fmt.fmt.pix_mp.num_planes;
   buffer.index = 0;
   buffer.m.planes = planes;
 
   for (i = 0; i < buffer.length; i++) {
     buffer.m.planes[i].length = fimc->dst_fmt.fmt.pix_mp.plane_fmt[i].sizeimage;
-    if (direct)
+    if (fimc->dst_requestbuffers.memory == V4L2_MEMORY_MMAP)
       buffer.m.planes[i].m.mem_offset = fimc->dst_planes[i].m.mem_offset;
     else
       buffer.m.planes[i].m.userptr = (unsigned long) dst[i];
@@ -533,13 +595,13 @@ fimc_convert_internal (Fimc * fimc, void *src[3], void *dst[3], int direct)
     return -1;
   }
 
-  type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+  type = fimc->src_requestbuffers.type;
   if (ioctl (fimc->fd, VIDIOC_STREAMON, &type) < 0) {
     GST_ERROR ("Activating input stream failed: %d", errno);
     return -1;
   }
 
-  type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+  type = fimc->dst_requestbuffers.type;
   if (ioctl (fimc->fd, VIDIOC_STREAMON, &type) < 0) {
     GST_ERROR ("Activating output stream failed: %d", errno);
     return -1;
@@ -548,8 +610,8 @@ fimc_convert_internal (Fimc * fimc, void *src[3], void *dst[3], int direct)
   memset (planes, 0, sizeof (planes));
   memset (&buffer, 0, sizeof (buffer));
 
-  buffer.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
-  buffer.memory = V4L2_MEMORY_USERPTR;
+  buffer.type = fimc->src_requestbuffers.type;
+  buffer.memory = fimc->src_requestbuffers.memory;
   buffer.length = fimc->src_fmt.fmt.pix_mp.num_planes;
   buffer.m.planes = planes;
 
@@ -561,8 +623,8 @@ fimc_convert_internal (Fimc * fimc, void *src[3], void *dst[3], int direct)
   memset (planes, 0, sizeof (planes));
   memset (&buffer, 0, sizeof (buffer));
 
-  buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
-  buffer.memory = direct ? V4L2_MEMORY_MMAP : V4L2_MEMORY_USERPTR;
+  buffer.type = fimc->dst_requestbuffers.type;
+  buffer.memory = fimc->dst_requestbuffers.memory;
   buffer.length = fimc->dst_fmt.fmt.pix_mp.num_planes;
   buffer.m.planes = planes;
 
@@ -571,13 +633,13 @@ fimc_convert_internal (Fimc * fimc, void *src[3], void *dst[3], int direct)
     return -1;
   }
 
-  type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+  type = fimc->src_requestbuffers.type;
   if (ioctl (fimc->fd, VIDIOC_STREAMOFF, &type) < 0) {
     GST_ERROR ("Deactivating input stream failed: %d", errno);
     return -1;
   }
 
-  type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+  type = fimc->dst_requestbuffers.type;
   if (ioctl (fimc->fd, VIDIOC_STREAMOFF, &type) < 0) {
     GST_ERROR ("Deactivating output stream failed: %d", errno);
     return -1;
@@ -586,22 +648,3 @@ fimc_convert_internal (Fimc * fimc, void *src[3], void *dst[3], int direct)
   return 0;
 }
 
-int
-fimc_convert (Fimc * fimc, void *src[3], void *dst[3])
-{
-  if (!fimc->set_src || !fimc->set_dst ||
-      fimc->dst_requestbuffers.memory == V4L2_MEMORY_MMAP)
-    return -1;
-
-  return fimc_convert_internal (fimc, src, dst, 0);
-}
-
-int
-fimc_convert_direct (Fimc * fimc, void *src[3])
-{
-  if (!fimc->set_src || !fimc->set_dst ||
-      fimc->dst_requestbuffers.memory == V4L2_MEMORY_USERPTR)
-    return -1;
-
-  return fimc_convert_internal (fimc, src, NULL, 1);
-}

@@ -60,12 +60,15 @@ Fimc * fimc_new (void);
 void fimc_free (Fimc * fimc);
 
 int fimc_set_src_format (Fimc *fimc, FimcColorFormat format, int width, int height, int stride[3], int crop_left, int crop_top, int crop_width, int crop_height);
+int fimc_request_src_buffers (Fimc *fimc);
+int fimc_release_src_buffers (Fimc *fimc);
 
 int fimc_set_dst_format (Fimc *fimc, FimcColorFormat format, int width, int height, int stride[3], int crop_left, int crop_top, int crop_width, int crop_height);
-int fimc_set_dst_format_direct (Fimc *fimc, FimcColorFormat format, int width, int height, int crop_left, int crop_top, int crop_width, int crop_height, void *dst[3], int stride[3]);
+int fimc_request_dst_buffers (Fimc *fimc);
+int fimc_request_dst_buffers_mmap (Fimc *fimc, void *dst[3], int stride[3]);
+int fimc_release_dst_buffers (Fimc *fimc);
 
 int fimc_convert (Fimc *fimc, void *src[3], void *dst[3]);
-int fimc_convert_direct (Fimc *fimc, void *src[3]);
 
 #ifdef __cplusplus
 }
