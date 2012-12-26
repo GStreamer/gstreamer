@@ -42,15 +42,25 @@ static gboolean gst_mfc_dec_negotiate (GstVideoDecoder * decoder);
 static gboolean gst_mfc_dec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query);
 
+/* *INDENT-OFF* */
 static GstStaticPadTemplate gst_mfc_dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, "
+        "profile = (string) {constrained-baseline, baseline, main, high}, "
+        "level = (string) {1, 1b, 1.1, 1.2, 1.3, 2, 2.1, 2.2, 3, 3.1, 3.2, 4}, "
+        "width = (int) [32, 1920], "
+        "height = (int) [32, 1080], "
         "parsed = (boolean) true, "
-        "stream-format = (string) byte-stream, " "alignment = (string) au; "
+        "stream-format = (string) byte-stream, "
+        "alignment = (string) au; "
         "video/mpeg, "
         "mpegversion = (int) 4, "
+        "profile = (string) {simple, advanced-simple}, "
+        "level = (string) {0, 0b, 1, 2, 3, 4, 4a, 5}, "
+        "width = (int) [32, 1920], "
+        "height = (int) [32, 1080], "
         "systemstream = (boolean) false")
     );
 
@@ -60,6 +70,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12, NV12 }"))
     );
+/* *INDENT-ON* */
 
 #define parent_class gst_mfc_dec_parent_class
 G_DEFINE_TYPE (GstMFCDec, gst_mfc_dec, GST_TYPE_VIDEO_DECODER);
