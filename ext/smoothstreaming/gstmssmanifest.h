@@ -41,6 +41,8 @@ typedef enum _GstMssStreamType {
 GstMssManifest * gst_mss_manifest_new (const GstBuffer * data);
 void gst_mss_manifest_free (GstMssManifest * manifest);
 GSList * gst_mss_manifest_get_streams (GstMssManifest * manifest);
+guint64 gst_mss_manifest_get_timescale (GstMssManifest * manifest);
+guint64 gst_mss_manifest_get_duration (GstMssManifest * manifest);
 
 GstMssStreamType gst_mss_stream_get_type (GstMssStream *stream);
 GstCaps * gst_mss_stream_get_caps (GstMssStream * stream);

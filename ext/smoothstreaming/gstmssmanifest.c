@@ -38,6 +38,7 @@
 #define MSS_PROP_BITRATE              "Bitrate"
 #define MSS_PROP_DURATION             "d"
 #define MSS_PROP_NUMBER               "n"
+#define MSS_PROP_STREAM_DURATION      "Duration"
 #define MSS_PROP_TIME                 "t"
 #define MSS_PROP_TIMESCALE            "TimeScale"
 #define MSS_PROP_URL                  "Url"
@@ -461,6 +462,38 @@ gst_mss_stream_get_timescale (GstMssStream * stream)
     g_free (timescale);
   }
   return ts;
+}
+
+guint64
+gst_mss_manifest_get_timescale (GstMssManifest * manifest)
+{
+  gchar *timescale;
+  guint64 ts = DEFAULT_TIMESCALE;
+
+  timescale =
+      (gchar *) xmlGetProp (manifest->xmlrootnode,
+      (xmlChar *) MSS_PROP_TIMESCALE);
+  if (timescale) {
+    ts = strtoull (timescale, NULL, 10);
+    g_free (timescale);
+  }
+  return ts;
+}
+
+guint64
+gst_mss_manifest_get_duration (GstMssManifest * manifest)
+{
+  gchar *duration;
+  guint64 dur = -1;
+
+  duration =
+      (gchar *) xmlGetProp (manifest->xmlrootnode,
+      (xmlChar *) MSS_PROP_STREAM_DURATION);
+  if (duration) {
+    dur = strtoull (duration, NULL, 10);
+    g_free (duration);
+  }
+  return dur;
 }
 
 GstCaps *

@@ -69,6 +69,8 @@ gst_mss_demux_change_state (GstElement * element, GstStateChange transition);
 static GstFlowReturn gst_mss_demux_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_mss_demux_event (GstPad * pad, GstEvent * event);
 
+static gboolean gst_mss_demux_src_query (GstPad * pad, GstQuery * query);
+
 static void gst_mss_demux_stream_loop (GstMssDemuxStream * stream);
 
 static void gst_mss_demux_process_manifest (GstMssDemux * mssdemux);
@@ -293,6 +295,63 @@ gst_mss_demux_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
+static gboolean
+gst_mss_demux_src_query (GstPad * pad, GstQuery * query)
+{
+  GstMssDemux *mssdemux;
+  gboolean ret = FALSE;
+
+  if (query == NULL)
+    return FALSE;
+
+  mssdemux = GST_MSS_DEMUX (GST_PAD_PARENT (pad));
+
+  switch (query->type) {
+    case GST_QUERY_DURATION:{
+      GstClockTime duration = -1;
+      GstFormat fmt;
+
+      gst_query_parse_duration (query, &fmt, NULL);
+      if (fmt == GST_FORMAT_TIME && mssdemux->manifest) {
+        /* TODO should we use the streams accumulated duration? */
+        guint64 dur = gst_mss_manifest_get_duration (mssdemux->manifest);
+        guint64 timescale = gst_mss_manifest_get_timescale (mssdemux->manifest);
+
+        if (dur != -1 && timescale != -1)
+          duration =
+              (GstClockTime) gst_util_uint64_scale_round (dur, GST_SECOND,
+              timescale);
+
+        if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0) {
+          gst_query_set_duration (query, GST_FORMAT_TIME, duration);
+          ret = TRUE;
+        }
+      }
+      GST_INFO_OBJECT (mssdemux, "GST_QUERY_DURATION returns %s with duration %"
+          GST_TIME_FORMAT, ret ? "TRUE" : "FALSE", GST_TIME_ARGS (duration));
+      break;
+    }
+    case GST_QUERY_LATENCY:
+      gst_query_set_latency (query, FALSE, 0, -1);
+      ret = TRUE;
+      break;
+    default:
+      /* Don't fordward queries upstream because of the special nature of this
+       *  "demuxer", which relies on the upstream element only to be fed
+       *  the Manifest
+       */
+      break;
+  }
+
+  return ret;
+}
+
+static void
+_set_src_pad_functions (GstPad * pad)
+{
+  gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_mss_demux_src_query));
+}
+
 static void
 gst_mss_demux_create_streams (GstMssDemux * mssdemux)
 {
@@ -337,6 +396,8 @@ gst_mss_demux_create_streams (GstMssDemux * mssdemux)
       GST_WARNING_OBJECT (mssdemux, "Ignoring unknown type stream");
       continue;
     }
+
+    _set_src_pad_functions (srcpad);
 
     stream = gst_mss_demux_stream_new (mssdemux, manifeststream, srcpad);
     mssdemux->streams = g_slist_append (mssdemux->streams, stream);
