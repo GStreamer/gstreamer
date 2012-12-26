@@ -293,13 +293,11 @@ gst_mfc_dec_queue_input (GstMFCDec * self, GstVideoCodecFrame * frame)
     mfc_buffer_set_input_size (mfc_inbuf, map.size);
 
     gst_buffer_unmap (inbuf, &map);
+    gst_buffer_replace (&self->codec_data, NULL);
+    inbuf = NULL;
 
     timestamp.tv_usec = 0;
     timestamp.tv_sec = -1;
-
-    gst_buffer_unmap (self->codec_data, &map);
-    gst_buffer_replace (&self->codec_data, NULL);
-    inbuf = NULL;
 
     if ((mfc_ret =
             mfc_dec_enqueue_input (self->context, mfc_inbuf, &timestamp)) < 0)
