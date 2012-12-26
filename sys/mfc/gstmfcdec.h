@@ -55,6 +55,7 @@ struct _GstMFCDec
   GstVideoCodecState *input_state;
   struct mfc_dec_context* context;
   gboolean initialized;
+  GstBuffer *codec_data;
 
   GstVideoFormat format;  
   Fimc *fimc;

@@ -173,6 +173,8 @@ gst_mfc_dec_stop (GstVideoDecoder * video_decoder)
 
   GST_DEBUG_OBJECT (self, "Stopping");
 
+  gst_buffer_replace (&self->codec_data, NULL);
+
   if (self->input_state) {
     gst_video_codec_state_unref (self->input_state);
     self->input_state = NULL;
@@ -228,6 +230,8 @@ gst_mfc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     g_return_val_if_reached (FALSE);
   }
 
+  gst_buffer_replace (&self->codec_data, state->codec_data);
+
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
   self->input_state = gst_video_codec_state_ref (state);
@@ -252,6 +256,7 @@ gst_mfc_dec_queue_input (GstMFCDec * self, GstVideoCodecFrame * frame)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   gint mfc_ret;
+  GstBuffer *inbuf = NULL;
   struct mfc_buffer *mfc_inbuf = NULL;
   guint8 *mfc_inbuf_data;
   gint mfc_inbuf_size;
@@ -270,10 +275,9 @@ gst_mfc_dec_queue_input (GstMFCDec * self, GstVideoCodecFrame * frame)
       goto dequeue_error;
   }
 
-  g_assert (mfc_inbuf != NULL);
-
-  if (frame) {
-    gst_buffer_map (frame->input_buffer, &map, GST_MAP_READ);
+  if (self->codec_data) {
+    inbuf = self->codec_data;
+    gst_buffer_map (inbuf, &map, GST_MAP_READ);
 
     mfc_inbuf_data = (guint8 *) mfc_buffer_get_input_data (mfc_inbuf);
     g_assert (mfc_inbuf_data != NULL);
@@ -288,7 +292,51 @@ gst_mfc_dec_queue_input (GstMFCDec * self, GstVideoCodecFrame * frame)
     memcpy (mfc_inbuf_data, map.data, map.size);
     mfc_buffer_set_input_size (mfc_inbuf, map.size);
 
-    gst_buffer_unmap (frame->input_buffer, &map);
+    gst_buffer_unmap (inbuf, &map);
+
+    timestamp.tv_usec = 0;
+    timestamp.tv_sec = -1;
+
+    gst_buffer_unmap (self->codec_data, &map);
+    gst_buffer_replace (&self->codec_data, NULL);
+    inbuf = NULL;
+
+    if ((mfc_ret =
+            mfc_dec_enqueue_input (self->context, mfc_inbuf, &timestamp)) < 0)
+      goto enqueue_error;
+
+    if ((mfc_ret = mfc_dec_dequeue_input (self->context, &mfc_inbuf)) < 0) {
+      if (mfc_ret == -2) {
+        GST_DEBUG_OBJECT (self, "Timeout dequeueing input, trying again");
+        mfc_ret = mfc_dec_dequeue_input (self->context, &mfc_inbuf);
+      }
+
+      if (mfc_ret < 0)
+        goto dequeue_error;
+    }
+  }
+
+  g_assert (mfc_inbuf != NULL);
+
+  if (frame) {
+    inbuf = frame->input_buffer;
+    gst_buffer_map (inbuf, &map, GST_MAP_READ);
+
+    mfc_inbuf_data = (guint8 *) mfc_buffer_get_input_data (mfc_inbuf);
+    g_assert (mfc_inbuf_data != NULL);
+    mfc_inbuf_size = mfc_buffer_get_input_max_size (mfc_inbuf);
+
+    GST_DEBUG_OBJECT (self, "Have input buffer %p with size %d", mfc_inbuf_data,
+        mfc_inbuf_size);
+
+    if ((gsize) mfc_inbuf_size < map.size)
+      goto too_small_inbuf;
+
+    memcpy (mfc_inbuf_data, map.data, map.size);
+    mfc_buffer_set_input_size (mfc_inbuf, map.size);
+
+    gst_buffer_unmap (inbuf, &map);
+    inbuf = NULL;
 
     timestamp.tv_usec = 0;
     timestamp.tv_sec = frame->system_frame_number;
@@ -321,7 +369,7 @@ too_small_inbuf:
     GST_ELEMENT_ERROR (self, STREAM, FORMAT, ("Too large input frames"),
         ("Maximum size %d, got %d", mfc_inbuf_size, map.size));
     ret = GST_FLOW_ERROR;
-    gst_buffer_unmap (frame->input_buffer, &map);
+    gst_buffer_unmap (inbuf, &map);
     goto done;
   }
 
@@ -538,7 +586,8 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
       outbuf = frame->output_buffer;
     } else {
-      GST_WARNING_OBJECT (self, "Didn't find a frame for ID %d", timestamp.tv_sec);
+      GST_WARNING_OBJECT (self, "Didn't find a frame for ID %d",
+          timestamp.tv_sec);
 
       outbuf =
           gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
@@ -556,13 +605,16 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
       fimc = self->fimc;
 
-      if (!self->dst[0] && fimc_request_dst_buffers_mmap (fimc, self->dst, self->dst_stride) < 0)
+      if (!self->dst[0]
+          && fimc_request_dst_buffers_mmap (fimc, self->dst,
+              self->dst_stride) < 0)
         goto fimc_dst_requestbuffers_error;
 
       mfc_buffer_get_output_data (mfc_outbuf, (void **) &mfc_outbuf_comps[0],
           (void **) &mfc_outbuf_comps[1]);
 
-      if (fimc_convert (fimc, (void **) mfc_outbuf_comps, (void **) self->dst) < 0)
+      if (fimc_convert (fimc, (void **) mfc_outbuf_comps,
+              (void **) self->dst) < 0)
         goto fimc_convert_error;
 
       if (!gst_video_frame_map (&vframe, &state->info, outbuf, GST_MAP_WRITE))

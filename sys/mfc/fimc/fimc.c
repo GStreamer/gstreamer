@@ -647,4 +647,3 @@ fimc_convert (Fimc * fimc, void *src[3], void *dst[3])
 
   return 0;
 }
-
