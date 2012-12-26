@@ -134,8 +134,9 @@ struct _GstEglGlesRenderContext
 
   /* shader vars */
   GLuint position_loc[2], texpos_loc;
+  GLuint tex_scale_loc[3];
   GLuint tex_loc[3];
-  coord5 position_array[12];    /* 3 x Frame, 3 x Border1, 3 x Border2 */
+  coord5 position_array[12];    /* 4 x Frame, 4 x Border1, 4 x Border2 */
   unsigned short index_array[4];
   unsigned int position_buffer, index_buffer;
 };
@@ -196,6 +197,7 @@ struct _GstEglGlesSink
   GstCaps *sinkcaps;
   GstCaps *current_caps, *configured_caps;
   GstVideoInfo configured_info;
+  gfloat stride[3];
 
   GstEglGlesImageFmt *selected_fmt;
   GstEglGlesRenderContext eglglesctx;

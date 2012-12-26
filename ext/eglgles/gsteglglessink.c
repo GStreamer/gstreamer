@@ -186,9 +186,12 @@ static const char *frag_COPY_prog = {
   "precision mediump float;"
       "varying vec2 opos;"
       "uniform sampler2D tex;"
+      "uniform vec2 tex_scale0;"
+      "uniform vec2 tex_scale1;"
+      "uniform vec2 tex_scale2;"
       "void main(void)"
       "{"
-      " vec4 t = texture2D(tex, opos);"
+      " vec4 t = texture2D(tex, opos / tex_scale0);"
       " gl_FragColor = vec4(t.rgb, 1.0);"
       "}"
 };
@@ -198,9 +201,12 @@ static const char *frag_REORDER_prog = {
   "precision mediump float;"
       "varying vec2 opos;"
       "uniform sampler2D tex;"
+      "uniform vec2 tex_scale0;"
+      "uniform vec2 tex_scale1;"
+      "uniform vec2 tex_scale2;"
       "void main(void)"
       "{"
-      " vec4 t = texture2D(tex, opos);"
+      " vec4 t = texture2D(tex, opos / tex_scale0);"
       " gl_FragColor = vec4(t.%c, t.%c, t.%c, 1.0);"
       "}"
 };
@@ -212,6 +218,9 @@ static const char *frag_AYUV_prog = {
       "precision mediump float;"
       "varying vec2 opos;"
       "uniform sampler2D tex;"
+      "uniform vec2 tex_scale0;"
+      "uniform vec2 tex_scale1;"
+      "uniform vec2 tex_scale2;"
       "const vec3 offset = vec3(-0.0625, -0.5, -0.5);"
       "const vec3 rcoeff = vec3(1.164, 0.000, 1.596);"
       "const vec3 gcoeff = vec3(1.164,-0.391,-0.813);"
@@ -219,7 +228,7 @@ static const char *frag_AYUV_prog = {
       "void main(void) {"
       "  float r,g,b;"
       "  vec3 yuv;"
-      "  yuv  = texture2D(tex,opos).gba;"
+      "  yuv  = texture2D(tex,opos / tex_scale0).gba;"
       "  yuv += offset;"
       "  r = dot(yuv, rcoeff);"
       "  g = dot(yuv, gcoeff);"
@@ -233,6 +242,9 @@ static const char *frag_YUY2_YVYU_UYVY_prog = {
       "precision mediump float;"
       "varying vec2 opos;"
       "uniform sampler2D Ytex, UVtex;"
+      "uniform vec2 tex_scale0;"
+      "uniform vec2 tex_scale1;"
+      "uniform vec2 tex_scale2;"
       "const vec3 offset = vec3(-0.0625, -0.5, -0.5);"
       "const vec3 rcoeff = vec3(1.164, 0.000, 1.596);"
       "const vec3 gcoeff = vec3(1.164,-0.391,-0.813);"
@@ -240,8 +252,8 @@ static const char *frag_YUY2_YVYU_UYVY_prog = {
       "void main(void) {"
       "  float r, g, b;"
       "  vec3 yuv;"
-      "  yuv.x = texture2D(Ytex,opos).%c;"
-      "  yuv.yz = texture2D(UVtex,opos).%c%c;"
+      "  yuv.x = texture2D(Ytex,opos / tex_scale0).%c;"
+      "  yuv.yz = texture2D(UVtex,opos / tex_scale0).%c%c;"
       "  yuv += offset;"
       "  r = dot(yuv, rcoeff);"
       "  g = dot(yuv, gcoeff);"
@@ -257,6 +269,9 @@ static const char *frag_PLANAR_YUV_prog = {
       "precision mediump float;"
       "varying vec2 opos;"
       "uniform sampler2D Ytex,Utex,Vtex;"
+      "uniform vec2 tex_scale0;"
+      "uniform vec2 tex_scale1;"
+      "uniform vec2 tex_scale2;"
       "const vec3 offset = vec3(-0.0625, -0.5, -0.5);"
       "const vec3 rcoeff = vec3(1.164, 0.000, 1.596);"
       "const vec3 gcoeff = vec3(1.164,-0.391,-0.813);"
@@ -264,9 +279,9 @@ static const char *frag_PLANAR_YUV_prog = {
       "void main(void) {"
       "  float r,g,b;"
       "  vec3 yuv;"
-      "  yuv.x=texture2D(Ytex,opos).r;"
-      "  yuv.y=texture2D(Utex,opos).r;"
-      "  yuv.z=texture2D(Vtex,opos).r;"
+      "  yuv.x=texture2D(Ytex,opos / tex_scale0).r;"
+      "  yuv.y=texture2D(Utex,opos / tex_scale1).r;"
+      "  yuv.z=texture2D(Vtex,opos / tex_scale2).r;"
       "  yuv += offset;"
       "  r = dot(yuv, rcoeff);"
       "  g = dot(yuv, gcoeff);"
@@ -280,6 +295,9 @@ static const char *frag_NV12_NV21_prog = {
       "precision mediump float;"
       "varying vec2 opos;"
       "uniform sampler2D Ytex,UVtex;"
+      "uniform vec2 tex_scale0;"
+      "uniform vec2 tex_scale1;"
+      "uniform vec2 tex_scale2;"
       "const vec3 offset = vec3(-0.0625, -0.5, -0.5);"
       "const vec3 rcoeff = vec3(1.164, 0.000, 1.596);"
       "const vec3 gcoeff = vec3(1.164,-0.391,-0.813);"
@@ -287,8 +305,8 @@ static const char *frag_NV12_NV21_prog = {
       "void main(void) {"
       "  float r,g,b;"
       "  vec3 yuv;"
-      "  yuv.x=texture2D(Ytex,opos).r;"
-      "  yuv.yz=texture2D(UVtex,opos).%c%c;"
+      "  yuv.x=texture2D(Ytex,opos / tex_scale0).r;"
+      "  yuv.yz=texture2D(UVtex,opos / tex_scale1).%c%c;"
       "  yuv += offset;"
       "  r = dot(yuv, rcoeff);"
       "  g = dot(yuv, gcoeff);"
@@ -1249,6 +1267,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   eglglessink->eglglesctx.fragshader[0] = glCreateShader (GL_FRAGMENT_SHADER);
   switch (eglglessink->configured_info.finfo->format) {
     case GST_VIDEO_FORMAT_AYUV:
+      GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d", frag_AYUV_prog,
+          eglglessink->eglglesctx.fragshader[0]);
       glShaderSource (eglglessink->eglglesctx.fragshader[0], 1, &frag_AYUV_prog,
           NULL);
       eglglessink->eglglesctx.n_textures = 1;
@@ -1259,6 +1279,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y41B:
+      GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d",
+          frag_PLANAR_YUV_prog, eglglessink->eglglesctx.fragshader[0]);
       glShaderSource (eglglessink->eglglesctx.fragshader[0], 1,
           &frag_PLANAR_YUV_prog, NULL);
       eglglessink->eglglesctx.n_textures = 3;
@@ -1267,6 +1289,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       texnames[2] = "Vtex";
       break;
     case GST_VIDEO_FORMAT_YUY2:
+      GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d",
+          frag_YUY2_YVYU_UYVY_prog, eglglessink->eglglesctx.fragshader[0]);
       tmp_prog = g_strdup_printf (frag_YUY2_YVYU_UYVY_prog, 'r', 'g', 'a');
       glShaderSource (eglglessink->eglglesctx.fragshader[0], 1,
           (const GLchar **) &tmp_prog, NULL);
@@ -1275,6 +1299,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       texnames[1] = "UVtex";
       break;
     case GST_VIDEO_FORMAT_YVYU:
+      GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d",
+          frag_YUY2_YVYU_UYVY_prog, eglglessink->eglglesctx.fragshader[0]);
       tmp_prog = g_strdup_printf (frag_YUY2_YVYU_UYVY_prog, 'r', 'a', 'g');
       glShaderSource (eglglessink->eglglesctx.fragshader[0], 1,
           (const GLchar **) &tmp_prog, NULL);
@@ -1283,6 +1309,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       texnames[1] = "UVtex";
       break;
     case GST_VIDEO_FORMAT_UYVY:
+      GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d",
+          frag_YUY2_YVYU_UYVY_prog, eglglessink->eglglesctx.fragshader[0]);
       tmp_prog = g_strdup_printf (frag_YUY2_YVYU_UYVY_prog, 'a', 'r', 'b');
       glShaderSource (eglglessink->eglglesctx.fragshader[0], 1,
           (const GLchar **) &tmp_prog, NULL);
@@ -1291,6 +1319,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       texnames[1] = "UVtex";
       break;
     case GST_VIDEO_FORMAT_NV12:
+      GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d",
+          frag_NV12_NV21_prog, eglglessink->eglglesctx.fragshader[0]);
       tmp_prog = g_strdup_printf (frag_NV12_NV21_prog, 'r', 'a');
       glShaderSource (eglglessink->eglglesctx.fragshader[0], 1,
           (const GLchar **) &tmp_prog, NULL);
@@ -1299,6 +1329,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       texnames[1] = "UVtex";
       break;
     case GST_VIDEO_FORMAT_NV21:
+      GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d",
+          frag_NV12_NV21_prog, eglglessink->eglglesctx.fragshader[0]);
       tmp_prog = g_strdup_printf (frag_NV12_NV21_prog, 'a', 'r');
       glShaderSource (eglglessink->eglglesctx.fragshader[0], 1,
           (const GLchar **) &tmp_prog, NULL);
@@ -1309,6 +1341,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     case GST_VIDEO_FORMAT_BGR:
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_BGRA:
+      GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d",
+          frag_REORDER_prog, eglglessink->eglglesctx.fragshader[0]);
       tmp_prog = g_strdup_printf (frag_REORDER_prog, 'b', 'g', 'r');
       glShaderSource (eglglessink->eglglesctx.fragshader[0], 1,
           (const GLchar **) &tmp_prog, NULL);
@@ -1317,6 +1351,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       break;
     case GST_VIDEO_FORMAT_xRGB:
     case GST_VIDEO_FORMAT_ARGB:
+      GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d",
+          frag_REORDER_prog, eglglessink->eglglesctx.fragshader[0]);
       tmp_prog = g_strdup_printf (frag_REORDER_prog, 'g', 'b', 'a');
       glShaderSource (eglglessink->eglglesctx.fragshader[0], 1,
           (const GLchar **) &tmp_prog, NULL);
@@ -1325,6 +1361,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       break;
     case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_ABGR:
+      GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d",
+          frag_REORDER_prog, eglglessink->eglglesctx.fragshader[0]);
       tmp_prog = g_strdup_printf (frag_REORDER_prog, 'a', 'b', 'g');
       glShaderSource (eglglessink->eglglesctx.fragshader[0], 1,
           (const GLchar **) &tmp_prog, NULL);
@@ -1335,6 +1373,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_RGB16:
+      GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d", frag_COPY_prog,
+          eglglessink->eglglesctx.fragshader[0]);
       glShaderSource (eglglessink->eglglesctx.fragshader[0], 1, &frag_COPY_prog,
           NULL);
       eglglessink->eglglesctx.n_textures = 1;
@@ -1393,6 +1433,15 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       glGetAttribLocation (eglglessink->eglglesctx.glslprogram[0], "position");
   eglglessink->eglglesctx.texpos_loc =
       glGetAttribLocation (eglglessink->eglglesctx.glslprogram[0], "texpos");
+  eglglessink->eglglesctx.tex_scale_loc[0] =
+      glGetUniformLocation (eglglessink->eglglesctx.glslprogram[0],
+      "tex_scale0");
+  eglglessink->eglglesctx.tex_scale_loc[1] =
+      glGetUniformLocation (eglglessink->eglglesctx.glslprogram[0],
+      "tex_scale1");
+  eglglessink->eglglesctx.tex_scale_loc[2] =
+      glGetUniformLocation (eglglessink->eglglesctx.glslprogram[0],
+      "tex_scale2");
 
   glEnableVertexAttribArray (eglglessink->eglglesctx.position_loc[0]);
   if (got_gl_error ("glEnableVertexAttribArray"))
@@ -1764,18 +1813,90 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
 
   if (buf) {
     switch (eglglessink->selected_fmt->fmt) {
-      case GST_EGLGLESSINK_IMAGE_RGB888:
+      case GST_EGLGLESSINK_IMAGE_RGB888:{
+        gint stride;
+        gint stride_width;
+        gint c_w;
+
+        stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
+        stride_width = c_w = GST_VIDEO_FRAME_WIDTH (&vframe);
+
         glActiveTexture (GL_TEXTURE0);
+
+        if (GST_ROUND_UP_8 (c_w * 3) == stride) {
+          glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+        } else if (GST_ROUND_UP_4 (c_w * 3) == stride) {
+          glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+        } else if (GST_ROUND_UP_2 (c_w * 3) == stride) {
+          glPixelStorei (GL_UNPACK_ALIGNMENT, 2);
+        } else if (c_w * 3 == stride) {
+          glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+        } else {
+          stride_width = stride;
+
+          if (GST_ROUND_UP_8 (stride_width * 3) == stride) {
+            glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+          } else if (GST_ROUND_UP_4 (stride_width * 3) == stride) {
+            glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+          } else if (GST_ROUND_UP_2 (stride_width * 3) == stride) {
+            glPixelStorei (GL_UNPACK_ALIGNMENT, 2);
+          } else if (stride_width * 3 == stride) {
+            glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+          } else {
+            GST_ERROR_OBJECT (eglglessink, "Unsupported stride %d", stride);
+            goto HANDLE_ERROR;
+          }
+        }
+        if (got_gl_error ("glPixelStorei"))
+          goto HANDLE_ERROR;
+
+        eglglessink->stride[0] = ((gdouble) stride_width) / ((gdouble) c_w);
+
         glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, stride_width, h, 0, GL_RGB,
             GL_UNSIGNED_BYTE, GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
         break;
-      case GST_EGLGLESSINK_IMAGE_RGB565:
+      }
+      case GST_EGLGLESSINK_IMAGE_RGB565:{
+        gint stride;
+        gint stride_width;
+        gint c_w;
+
+        stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
+        stride_width = c_w = GST_VIDEO_FRAME_WIDTH (&vframe);
+
         glActiveTexture (GL_TEXTURE0);
+
+        if (GST_ROUND_UP_8 (c_w * 2) == stride) {
+          glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+        } else if (GST_ROUND_UP_4 (c_w * 2) == stride) {
+          glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+        } else if (c_w * 2 == stride) {
+          glPixelStorei (GL_UNPACK_ALIGNMENT, 2);
+        } else {
+          stride_width = stride;
+
+          if (GST_ROUND_UP_8 (stride_width * 4) == stride) {
+            glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+          } else if (GST_ROUND_UP_4 (stride_width * 2) == stride) {
+            glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+          } else if (stride_width * 2 == stride) {
+            glPixelStorei (GL_UNPACK_ALIGNMENT, 2);
+          } else {
+            GST_ERROR_OBJECT (eglglessink, "Unsupported stride %d", stride);
+            goto HANDLE_ERROR;
+          }
+        }
+        if (got_gl_error ("glPixelStorei"))
+          goto HANDLE_ERROR;
+
+        eglglessink->stride[0] = ((gdouble) stride_width) / ((gdouble) c_w);
+
         glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, stride_width, h, 0, GL_RGB,
             GL_UNSIGNED_SHORT_5_6_5, GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
         break;
+      }
       case GST_EGLGLESSINK_IMAGE_RGBA8888:
 
         switch (eglglessink->configured_info.finfo->format) {
@@ -1786,43 +1907,210 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
           case GST_VIDEO_FORMAT_RGBx:
           case GST_VIDEO_FORMAT_BGRx:
           case GST_VIDEO_FORMAT_xRGB:
-          case GST_VIDEO_FORMAT_xBGR:
+          case GST_VIDEO_FORMAT_xBGR:{
+            gint stride;
+            gint stride_width;
+            gint c_w;
+
+            stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
+            stride_width = c_w = GST_VIDEO_FRAME_WIDTH (&vframe);
+
             glActiveTexture (GL_TEXTURE0);
+
+            if (GST_ROUND_UP_8 (c_w * 4) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+            } else if (c_w * 4 == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+            } else {
+              stride_width = stride;
+
+              if (GST_ROUND_UP_8 (stride_width * 4) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+              } else if (stride_width * 4 == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+              } else {
+                GST_ERROR_OBJECT (eglglessink, "Unsupported stride %d", stride);
+                goto HANDLE_ERROR;
+              }
+            }
+            if (got_gl_error ("glPixelStorei"))
+              goto HANDLE_ERROR;
+
+            eglglessink->stride[0] = ((gdouble) stride_width) / ((gdouble) c_w);
+
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
-            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
-                GL_UNSIGNED_BYTE, GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, stride_width, h, 0,
+                GL_RGBA, GL_UNSIGNED_BYTE, GST_VIDEO_FRAME_PLANE_DATA (&vframe,
+                    0));
             break;
-          case GST_VIDEO_FORMAT_AYUV:
+          }
+          case GST_VIDEO_FORMAT_AYUV:{
+            gint stride;
+            gint stride_width;
+            gint c_w;
+
+            stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
+            stride_width = c_w = GST_VIDEO_FRAME_WIDTH (&vframe);
+
             glActiveTexture (GL_TEXTURE0);
+
+            if (GST_ROUND_UP_8 (c_w * 4) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+            } else if (c_w * 4 == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+            } else {
+              stride_width = stride;
+
+              if (GST_ROUND_UP_8 (stride_width * 4) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+              } else if (stride_width * 4 == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+              } else {
+                GST_ERROR_OBJECT (eglglessink, "Unsupported stride %d", stride);
+                goto HANDLE_ERROR;
+              }
+            }
+            if (got_gl_error ("glPixelStorei"))
+              goto HANDLE_ERROR;
+
+            eglglessink->stride[0] = ((gdouble) stride_width) / ((gdouble) c_w);
+
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
-            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
-                GL_UNSIGNED_BYTE, GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, stride_width, h, 0,
+                GL_RGBA, GL_UNSIGNED_BYTE, GST_VIDEO_FRAME_PLANE_DATA (&vframe,
+                    0));
             break;
+          }
           case GST_VIDEO_FORMAT_Y444:
           case GST_VIDEO_FORMAT_I420:
           case GST_VIDEO_FORMAT_YV12:
           case GST_VIDEO_FORMAT_Y42B:
           case GST_VIDEO_FORMAT_Y41B:{
+            gint stride;
+            gint stride_width;
+            gint c_w;
+
+            stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
+            stride_width = c_w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 0);
+
             glActiveTexture (GL_TEXTURE0);
+
+            if (GST_ROUND_UP_8 (c_w) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+            } else if (GST_ROUND_UP_4 (c_w) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+            } else if (GST_ROUND_UP_2 (c_w) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 2);
+            } else if (c_w == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+            } else {
+              stride_width = stride;
+
+              if (GST_ROUND_UP_8 (stride_width) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+              } else if (GST_ROUND_UP_4 (stride_width) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+              } else if (GST_ROUND_UP_2 (stride_width) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 2);
+              } else if (stride_width == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+              } else {
+                GST_ERROR_OBJECT (eglglessink, "Unsupported stride %d", stride);
+                goto HANDLE_ERROR;
+              }
+            }
+            if (got_gl_error ("glPixelStorei"))
+              goto HANDLE_ERROR;
+
+            eglglessink->stride[0] = ((gdouble) stride_width) / ((gdouble) c_w);
+
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
             glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
-                GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 0),
+                stride_width,
                 GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0),
                 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
                 GST_VIDEO_FRAME_COMP_DATA (&vframe, 0));
 
+
+            stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 1);
+            stride_width = c_w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 1);
+
             glActiveTexture (GL_TEXTURE1);
+
+            if (GST_ROUND_UP_8 (c_w) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+            } else if (GST_ROUND_UP_4 (c_w) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+            } else if (GST_ROUND_UP_2 (c_w) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 2);
+            } else if (c_w == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+            } else {
+              stride_width = stride;
+
+              if (GST_ROUND_UP_8 (stride_width) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+              } else if (GST_ROUND_UP_4 (stride_width) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+              } else if (GST_ROUND_UP_2 (stride_width) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 2);
+              } else if (stride_width == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+              } else {
+                GST_ERROR_OBJECT (eglglessink, "Unsupported stride %d", stride);
+                goto HANDLE_ERROR;
+              }
+            }
+            if (got_gl_error ("glPixelStorei"))
+              goto HANDLE_ERROR;
+
+            eglglessink->stride[1] = ((gdouble) stride_width) / ((gdouble) c_w);
+
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[1]);
             glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
-                GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 1),
+                stride_width,
                 GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 1),
                 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
                 GST_VIDEO_FRAME_COMP_DATA (&vframe, 1));
 
+
+            stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 2);
+            stride_width = c_w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 2);
+
             glActiveTexture (GL_TEXTURE2);
+
+            if (GST_ROUND_UP_8 (c_w) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+            } else if (GST_ROUND_UP_4 (c_w) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+            } else if (GST_ROUND_UP_2 (c_w) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 2);
+            } else if (c_w == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+            } else {
+              stride_width = stride;
+
+              if (GST_ROUND_UP_8 (stride_width) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+              } else if (GST_ROUND_UP_4 (stride_width) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+              } else if (GST_ROUND_UP_2 (stride_width) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 2);
+              } else if (stride_width == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+              } else {
+                GST_ERROR_OBJECT (eglglessink, "Unsupported stride %d", stride);
+                goto HANDLE_ERROR;
+              }
+            }
+            if (got_gl_error ("glPixelStorei"))
+              goto HANDLE_ERROR;
+
+            eglglessink->stride[2] = ((gdouble) stride_width) / ((gdouble) c_w);
+
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[2]);
             glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
-                GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 2),
+                stride_width,
                 GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 2),
                 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
                 GST_VIDEO_FRAME_COMP_DATA (&vframe, 2));
@@ -1830,32 +2118,130 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
           }
           case GST_VIDEO_FORMAT_YUY2:
           case GST_VIDEO_FORMAT_YVYU:
-          case GST_VIDEO_FORMAT_UYVY:
+          case GST_VIDEO_FORMAT_UYVY:{
+            gint stride;
+            gint stride_width;
+            gint c_w;
+
+            stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
+            stride_width = c_w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 1);
+
             glActiveTexture (GL_TEXTURE0);
+
+            if (GST_ROUND_UP_8 (c_w * 4) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+            } else if (c_w * 4 == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+            } else {
+              stride_width = stride / 4;
+
+              if (GST_ROUND_UP_8 (stride_width * 4) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+              } else if (stride_width * 4 == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+              } else {
+                GST_ERROR_OBJECT (eglglessink, "Unsupported stride %d", stride);
+                goto HANDLE_ERROR;
+              }
+            }
+            if (got_gl_error ("glPixelStorei"))
+              goto HANDLE_ERROR;
+
+            eglglessink->stride[0] = ((gdouble) stride_width) / ((gdouble) c_w);
+
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
-            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, w, h, 0,
-                GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
-                GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
-            glActiveTexture (GL_TEXTURE1);
-            glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[1]);
-            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, GST_ROUND_UP_2 (w) / 2,
-                h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
-            break;
-          case GST_VIDEO_FORMAT_NV12:
-          case GST_VIDEO_FORMAT_NV21:{
-            glActiveTexture (GL_TEXTURE0);
-            glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
-            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
-                GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 0),
-                GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0),
-                0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
+                stride_width * 2, h, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
                 GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
 
             glActiveTexture (GL_TEXTURE1);
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[1]);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, stride_width,
+                h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
+            break;
+          }
+          case GST_VIDEO_FORMAT_NV12:
+          case GST_VIDEO_FORMAT_NV21:{
+            gint stride;
+            gint stride_width;
+            gint c_w;
+
+            stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
+            stride_width = c_w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 0);
+
+            glActiveTexture (GL_TEXTURE0);
+
+            if (GST_ROUND_UP_8 (c_w) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+            } else if (GST_ROUND_UP_4 (c_w) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+            } else if (GST_ROUND_UP_2 (c_w) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 2);
+            } else if (c_w == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+            } else {
+              stride_width = stride;
+
+              if (GST_ROUND_UP_8 (stride_width) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+              } else if (GST_ROUND_UP_4 (stride_width) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+              } else if (GST_ROUND_UP_2 (stride_width) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 2);
+              } else if (stride_width == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+              } else {
+                GST_ERROR_OBJECT (eglglessink, "Unsupported stride %d", stride);
+                goto HANDLE_ERROR;
+              }
+            }
+            if (got_gl_error ("glPixelStorei"))
+              goto HANDLE_ERROR;
+
+            eglglessink->stride[0] = ((gdouble) stride_width) / ((gdouble) c_w);
+
+            glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
+                stride_width,
+                GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0),
+                0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
+
+
+            stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 1);
+            stride_width = c_w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 1);
+
+            glActiveTexture (GL_TEXTURE1);
+
+            if (GST_ROUND_UP_8 (c_w * 2) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+            } else if (GST_ROUND_UP_4 (c_w * 2) == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+            } else if (c_w * 2 == stride) {
+              glPixelStorei (GL_UNPACK_ALIGNMENT, 2);
+            } else {
+              stride_width = stride / 2;
+
+              if (GST_ROUND_UP_8 (stride_width * 2) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
+              } else if (GST_ROUND_UP_4 (stride_width * 2) == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+              } else if (stride_width * 2 == stride) {
+                glPixelStorei (GL_UNPACK_ALIGNMENT, 2);
+              } else {
+                GST_ERROR_OBJECT (eglglessink, "Unsupported stride %d", stride);
+                goto HANDLE_ERROR;
+              }
+            }
+            if (got_gl_error ("glPixelStorei"))
+              goto HANDLE_ERROR;
+
+            eglglessink->stride[1] = ((gdouble) stride_width) / ((gdouble) c_w);
+
+            glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[1]);
             glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
-                GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 1),
+                stride_width,
                 GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 1),
                 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
                 GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1));
@@ -2002,6 +2388,13 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
   GST_DEBUG_OBJECT (eglglessink, "Drawing video frame");
   glUseProgram (eglglessink->eglglesctx.glslprogram[0]);
 
+  glUniform2f (eglglessink->eglglesctx.tex_scale_loc[0], eglglessink->stride[0],
+      1);
+  glUniform2f (eglglessink->eglglesctx.tex_scale_loc[1], eglglessink->stride[1],
+      1);
+  glUniform2f (eglglessink->eglglesctx.tex_scale_loc[2], eglglessink->stride[2],
+      1);
+
   glVertexAttribPointer (eglglessink->eglglesctx.position_loc[0], 3,
       GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (0 * sizeof (coord5)));
   if (got_gl_error ("glVertexAttribPointer"))
@@ -2082,9 +2475,7 @@ gst_eglglessink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 static gboolean
 gst_eglglessink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
-  /* FIXME: Add support for video meta, i.e. arbitrary strides
-     gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-   */
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
   gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
 
   return TRUE;
