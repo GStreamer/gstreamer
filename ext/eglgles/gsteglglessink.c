@@ -1955,7 +1955,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     glViewport (eglglessink->render_region.x,
         eglglessink->eglglesctx.surface_height -
         eglglessink->render_region.y -
-        eglglessink->render_region.w,
+        eglglessink->render_region.h,
         eglglessink->render_region.w, eglglessink->render_region.h);
 
     /* Clear the surface once if its content is preserved */
