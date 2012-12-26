@@ -2439,9 +2439,6 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink)
   eglglessink->render_region.h = -1;
   eglglessink->render_region_changed = TRUE;
   eglglessink->render_region_user = FALSE;
-
-  gst_eglglessink_set_render_rectangle (GST_VIDEO_OVERLAY (eglglessink), 100,
-      100, 100, 100);
 }
 
 /* entry point to initialize the plug-in
