@@ -73,7 +73,8 @@ platform_wrapper_init (void)
 }
 
 #ifdef HAVE_X11
-typedef struct {
+typedef struct
+{
   Display *display;
 } X11WindowData;
 

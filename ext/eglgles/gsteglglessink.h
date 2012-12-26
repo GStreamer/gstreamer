@@ -183,10 +183,16 @@ struct _GstEglGlesSink
 {
   GstVideoSink videosink;       /* Element hook */
 
+  /* Region of the surface that should be rendered */
+  GstVideoRectangle render_region;
+  gboolean render_region_changed;
+  gboolean render_region_user;
+
+  /* Region of render_region that should be filled
+   * with the video frames */
   GstVideoRectangle display_region;
-  struct {
-    gint x, y, width, height;
-  } crop;
+
+  GstVideoRectangle crop;
   GstCaps *sinkcaps;
   GstCaps *current_caps, *configured_caps;
   GstVideoInfo configured_info;
