@@ -185,7 +185,7 @@ static int request_input_buffers(struct mfc_dec_context *ctx, int num)
         return -1;
     }
     ctx->num_input_buffers = reqbuf.count;
-    GST_ERROR ("Requested %d input buffers, got %d", num, reqbuf.count);
+    GST_INFO ("Requested %d input buffers, got %d", num, reqbuf.count);
     for (i = 0; i < num; i++) {
         void *ptr;
         struct v4l2_plane planes[NUM_INPUT_PLANES] = {{.length = 0}};
