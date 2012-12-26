@@ -1615,6 +1615,11 @@ AG_GST_CHECK_FEATURE(EGLGLES, [eglgles sink], eglgles, [
   ])
   AC_SUBST(EGLGLES_CFLAGS)
   AC_SUBST(EGLGLES_LIBS)
+
+  AC_CHECK_HEADER([EGL/fbdev_window.h], HAVE_FBDEV_EGL="yes", HAVE_FBDEV_EGL="no")
+  if test x"$HAVE_FBDEV_EGL" = "xyes"; then
+    AC_DEFINE(HAVE_FBDEV_EGL, [1], [Have EGL/fbdev_window.h])    
+  fi
 ])
 
 dnl *** timidity ***
