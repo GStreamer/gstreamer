@@ -55,7 +55,7 @@
 #include <gst/gst.h>
 #include "video_platform_wrapper.h"
 
-#ifndef __BIONIC__
+#ifdef HAVE_X11
 #include <X11/Xlib.h>
 #endif
 
@@ -67,12 +67,12 @@ gboolean
 platform_wrapper_init (void)
 {
   GST_DEBUG_CATEGORY_INIT (eglgles_platform_wrapper,
-      "EglGles Platform Wrapper", 0,
+      "eglglessink-platform", 0,
       "Platform dependent native-window utility routines for EglGles");
   return TRUE;
 }
 
-#ifndef __BIONIC__
+#ifdef HAVE_X11
 EGLNativeWindowType
 platform_create_native_window (gint width, gint height)
 {
@@ -83,7 +83,7 @@ platform_create_native_window (gint width, gint height)
 
   d = XOpenDisplay (NULL);
   if (d == NULL) {
-    GST_CAT_ERROR (GST_CAT_DEFAULT, "Can't open X11 display");
+    GST_ERROR ("Can't open X11 display");
     return (EGLNativeWindowType) 0;
   }
 
@@ -104,30 +104,14 @@ platform_destroy_native_window (EGLNativeDisplayType display,
   XDestroyWindow (display, window);
   return TRUE;
 }
+#endif
 
-/* XXX: Missing implementation */
-EGLint *
-platform_crate_native_image_buffer (EGLNativeWindowType win, EGLConfig config,
-    EGLNativeDisplayType display, const EGLint * egl_attribs)
-{
-  return NULL;
-}
-
-#else
-/* Android does not support the creation of an egl window surface
- * from native code. Hence, we just return NULL here for the time
- * being. Function is left for reference as implementing it should
- * help us suport other EGL platforms.
- */
+#if !defined(HAVE_X11)
+/* Dummy functions for creating a native Window */
 EGLNativeWindowType
 platform_create_native_window (gint width, gint height)
 {
-  /* XXX: There was one example on AOSP that was using something
-   * along the lines of window = android_createDisplaySurface();
-   * but wasn't working properly.
-   */
-
-  GST_CAT_ERROR (GST_CAT_DEFAULT, "Android: Can't create native window");
+  GST_ERROR ("Can't create native window");
   return (EGLNativeWindowType) 0;
 }
 
@@ -135,7 +119,7 @@ gboolean
 platform_destroy_native_window (EGLNativeDisplayType display,
     EGLNativeWindowType window)
 {
-  GST_CAT_ERROR (GST_CAT_DEFAULT, "Android: Can't destroy native window");
+  GST_ERROR ("Can't destroy native window");
   return TRUE;
 }
 
