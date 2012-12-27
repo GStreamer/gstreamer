@@ -276,7 +276,6 @@ error_create_buffer:
 error_commit_buffer:
     {
         GST_DEBUG("video sink rejected the video buffer (error %d)", ret);
-        gst_video_decoder_drop_frame(vdec, out_frame);
         gst_video_codec_frame_unref(out_frame);
         return GST_FLOW_UNEXPECTED;
     }
