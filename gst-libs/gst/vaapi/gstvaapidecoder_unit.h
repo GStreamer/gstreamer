@@ -40,7 +40,7 @@ typedef struct _GstVaapiDecoderUnit             GstVaapiDecoderUnit;
  * @GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START: marks the start of a frame.
  * @GST_VAAPI_DECODER_UNIT_FLAG_FRAME_END: marks the end of a frame.
  * @GST_VAAPI_DECODER_UNIT_FLAG_STREAM_END: marks the end of a stream.
- * @GST_VAAPI_DECODER_UNIT_FLAG_SLICE: marks the unit contains slice data.
+ * @GST_VAAPI_DECODER_UNIT_FLAG_SLICE: the unit contains slice data.
  * @GST_VAAPI_DECODER_UNIT_FLAG_SKIP: marks the unit as unused/skipped.
  *
  * Flags for #GstVaapiDecoderUnit.

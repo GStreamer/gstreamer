@@ -37,6 +37,17 @@ gst_vaapi_decoder_frame_class(void)
     return &GstVaapiDecoderFrameClass;
 }
 
+static inline void
+free_units(GSList **units_ptr)
+{
+    GSList * const units = *units_ptr;
+
+    if (units) {
+        g_slist_free_full(units, (GDestroyNotify)gst_vaapi_mini_object_unref);
+        *units_ptr = NULL;
+    }
+}
+
 /**
  * gst_vaapi_decoder_frame_new:
  *
@@ -47,17 +58,8 @@ gst_vaapi_decoder_frame_class(void)
 GstVaapiDecoderFrame *
 gst_vaapi_decoder_frame_new(void)
 {
-    GstVaapiDecoderFrame *frame;
-
-    frame = (GstVaapiDecoderFrame *)
-        gst_vaapi_mini_object_new(gst_vaapi_decoder_frame_class());
-    if (!frame)
-        return NULL;
-
-    frame->output_offset = 0;
-    frame->units = NULL;
-    frame->prev_slice = NULL;
-    return frame;
+    return (GstVaapiDecoderFrame *)
+        gst_vaapi_mini_object_new0(gst_vaapi_decoder_frame_class());
 }
 
 /**
@@ -73,9 +75,7 @@ gst_vaapi_decoder_frame_new(void)
 void
 gst_vaapi_decoder_frame_free(GstVaapiDecoderFrame *frame)
 {
-    if (frame->units) {
-        g_slist_free_full(frame->units,
-            (GDestroyNotify)gst_vaapi_mini_object_unref);
-        frame->units = NULL;
-    }
+    free_units(&frame->units);
+    free_units(&frame->pre_units);
+    free_units(&frame->post_units);
 }

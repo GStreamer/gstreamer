@@ -150,6 +150,7 @@ do_parse(GstVaapiDecoder *decoder,
     GstVaapiDecoderFrame *frame;
     GstVaapiDecoderUnit *unit;
     GstVaapiDecoderStatus status;
+    GSList **unit_list_ptr;
 
     *got_unit_size_ptr = 0;
     *got_frame_ptr = FALSE;
@@ -178,23 +179,48 @@ do_parse(GstVaapiDecoder *decoder,
         return status;
     }
 
-    if (GST_VAAPI_DECODER_UNIT_IS_FRAME_START(unit) && frame->prev_slice) {
+    if (GST_VAAPI_DECODER_UNIT_IS_FRAME_START(unit) && frame->units) {
         parser_state_set_pending_unit(ps, adapter, unit);
         goto got_frame;
     }
 
 got_unit:
     unit->offset = frame->output_offset;
-    frame->units = g_slist_prepend(frame->units, unit);
     frame->output_offset += unit->size;
+
     if (GST_VAAPI_DECODER_UNIT_IS_SLICE(unit))
-        frame->prev_slice = unit;
+        unit_list_ptr = &frame->units;
+    else if (GST_VAAPI_DECODER_UNIT_IS_FRAME_END(unit))
+        unit_list_ptr = &frame->post_units;
+    else
+        unit_list_ptr = &frame->pre_units;
+    *unit_list_ptr = g_slist_prepend(*unit_list_ptr, unit);
 
     *got_unit_size_ptr = unit->size;
     if (GST_VAAPI_DECODER_UNIT_IS_FRAME_END(unit)) {
     got_frame:
-        frame->units = g_slist_reverse(frame->units);
-        *got_frame_ptr = TRUE;
+        frame->units      = g_slist_reverse(frame->units);
+        frame->pre_units  = g_slist_reverse(frame->pre_units);
+        frame->post_units = g_slist_reverse(frame->post_units);
+        *got_frame_ptr    = TRUE;
+    }
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+do_decode_list(GstVaapiDecoder *decoder, GSList *units)
+{
+    GstVaapiDecoderClass * const klass = GST_VAAPI_DECODER_GET_CLASS(decoder);
+    GstVaapiDecoderStatus status;
+    GSList *l;
+
+    for (l = units; l != NULL; l = l->next) {
+        GstVaapiDecoderUnit * const unit = l->data;
+        if (GST_VAAPI_DECODER_UNIT_IS_SKIPPED(unit))
+            continue;
+        status = klass->decode(decoder, unit);
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            return status;
     }
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -206,33 +232,35 @@ do_decode(GstVaapiDecoder *decoder, GstVideoCodecFrame *base_frame)
     GstVaapiParserState * const ps = &decoder->priv->parser_state;
     GstVaapiDecoderFrame * const frame = base_frame->user_data;
     GstVaapiDecoderStatus status;
-    GSList *l;
 
     ps->current_frame = base_frame;
 
-    if (klass->start_frame) {
-        for (l = frame->units; l != NULL; l = l->next) {
-            GstVaapiDecoderUnit * const unit = l->data;
-            if (GST_VAAPI_DECODER_UNIT_IS_SLICE(unit)) {
-                status = klass->start_frame(decoder, unit);
-                if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-                    return status;
-                break;
-            }
-        }
-    }
-
-    for (l = frame->units; l != NULL; l = l->next) {
-        GstVaapiDecoderUnit * const unit = l->data;
-        if (GST_VAAPI_DECODER_UNIT_IS_SKIPPED(unit))
-            continue;
-        status = klass->decode(decoder, unit);
+    if (frame->pre_units) {
+        status = do_decode_list(decoder, frame->pre_units);
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             return status;
     }
 
-    if (klass->end_frame) {
-        status = klass->end_frame(decoder);
+    if (frame->units) {
+        if (klass->start_frame) {
+            status = klass->start_frame(decoder, frame->units->data);
+            if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+                return status;
+        }
+
+        status = do_decode_list(decoder, frame->units);
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            return status;
+
+        if (klass->end_frame) {
+            status = klass->end_frame(decoder);
+            if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+                return status;
+        }
+    }
+
+    if (frame->post_units) {
+        status = do_decode_list(decoder, frame->post_units);
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             return status;
     }
