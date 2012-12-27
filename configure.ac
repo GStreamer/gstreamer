@@ -1588,38 +1588,90 @@ AG_GST_CHECK_FEATURE(RSVG, [rsvg decoder], rsvg, [
 ])
 
 dnl *** eglgles ***
+AC_ARG_WITH([egl-window-system],
+              AS_HELP_STRING([--with-egl-window-system],[EGL window system to use (x11, mali-fb, none)]),
+              [EGL_WINDOW_SYSTEM="$withval"],
+              [EGL_WINDOW_SYSTEM="none"])
+
 translit(dnm, m, l) AM_CONDITIONAL(USE_EGLGLES, true)
 AG_GST_CHECK_FEATURE(EGLGLES, [eglgles sink], eglgles, [
   HAVE_EGLGLES="no"
-  PKG_CHECK_MODULES(EGLGLES, egl glesv2, HAVE_EGLGLES="yes", [
-    HAVE_EGLGLES="no"
-    old_LIBS=$LIBS
-    old_CFLAGS=$CFLAGS
-    AC_CHECK_LIB([GLESv2], [glEnable],
-      [
-        AC_CHECK_HEADER([GLES2/gl2.h],
+
+  case "$EGL_WINDOW_SYSTEM" in
+    x11|none)
+      PKG_CHECK_MODULES(EGLGLES, egl glesv2, HAVE_EGLGLES="yes", [
+        HAVE_EGLGLES="no"
+        old_LIBS=$LIBS
+        old_CFLAGS=$CFLAGS
+        AC_CHECK_LIB([GLESv2], [glEnable],
           [
-            AC_CHECK_LIB([EGL], [eglGetProcAddress],
+            AC_CHECK_HEADER([GLES2/gl2.h],
               [
-                AC_CHECK_HEADER([EGL/egl.h],
+                AC_CHECK_LIB([EGL], [eglGetProcAddress],
                   [
-                    HAVE_EGLGLES="yes"
-                    EGLGLES_LIBS="-lGLESv2 -lEGL"
-                    EGLGLES_CFLAGS=""
+                    AC_CHECK_HEADER([EGL/egl.h],
+                      [
+                        HAVE_EGLGLES="yes"
+                        EGLGLES_LIBS="-lGLESv2 -lEGL"
+                        EGLGLES_CFLAGS=""
+                      ])
                   ])
               ])
           ])
+        LIBS=$old_LIBS
+        CFLAGS=$old_CFLAGS
       ])
-    LIBS=$old_LIBS
-    CFLAGS=$old_CFLAGS
-  ])
+      
+      if test x"$HAVE_EGLGLES" = x"yes" -a x"$EGL_WINDOW_SYSTEM" = x"x11"; then
+        if test x"$HAVE_X11" != x"yes"; then
+          AC_MSG_ERROR([libX11 not found and is required for EGL X11 window system])
+        else
+          AC_DEFINE(USE_EGL_X11, [1], [Use X11 EGL window system])
+          EGLGLES_CFLAGS="$EGLGLES_CFLAGS $X11_CFLAGS"
+          EGLGLES_LIBS="$EGLGLES_LIBS $X11_LIBS"
+        fi
+      fi
+      ;;
+    mali-fb)
+      HAVE_EGLGLES="no"
+      AC_CHECK_HEADER([EGL/fbdev_window.h],
+        [
+          old_LIBS=$LIBS
+          old_CFLAGS=$CFLAGS
+
+          LIBS="$LIBS -lUMP"
+          AC_CHECK_LIB([Mali], [mali_image_create],
+            [
+              LIBS="$LIBS -lMali"
+              AC_CHECK_LIB([GLESv2], [glEnable],
+                [
+                  AC_CHECK_HEADER([GLES2/gl2.h],
+                    [
+                      AC_CHECK_LIB([EGL], [eglGetProcAddress],
+                        [
+                          AC_CHECK_HEADER([EGL/egl.h],
+                            [
+                              HAVE_EGLGLES="yes"
+                              EGLGLES_LIBS="-lGLESv2 -lEGL -lMali -lUMP"
+                              EGLGLES_CFLAGS=""
+                              AC_DEFINE(USE_EGL_MALI_FB, [1], [Use Mali FB EGL window system])
+                            ])
+                        ])
+                    ])
+                ])
+            ])
+
+          LIBS=$old_LIBS
+          CFLAGS=$old_CFLAGS
+        ])
+      ;;
+    *)
+      AC_MSG_ERROR([invalid EGL window system specified])
+      ;;
+  esac
+
   AC_SUBST(EGLGLES_CFLAGS)
   AC_SUBST(EGLGLES_LIBS)
-
-  AC_CHECK_HEADER([EGL/fbdev_window.h], HAVE_FBDEV_EGL="yes", HAVE_FBDEV_EGL="no")
-  if test x"$HAVE_FBDEV_EGL" = "xyes"; then
-    AC_DEFINE(HAVE_FBDEV_EGL, [1], [Have EGL/fbdev_window.h])    
-  fi
 ])
 
 dnl *** timidity ***
