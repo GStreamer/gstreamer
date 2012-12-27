@@ -55,14 +55,6 @@
 #include <gst/gst.h>
 #include "video_platform_wrapper.h"
 
-#ifdef HAVE_X11
-#include <X11/Xlib.h>
-#endif
-
-#ifdef HAVE_FBDEV_EGL
-#include <EGL/fbdev_window.h>
-#endif
-
 GST_DEBUG_CATEGORY_STATIC (eglgles_platform_wrapper);
 #define GST_CAT_DEFAULT eglgles_platform_wrapper
 
@@ -76,7 +68,9 @@ platform_wrapper_init (void)
   return TRUE;
 }
 
-#ifdef HAVE_X11
+#ifdef USE_EGL_X11
+#include <X11/Xlib.h>
+
 typedef struct
 {
   Display *display;
@@ -126,7 +120,9 @@ platform_destroy_native_window (EGLNativeDisplayType display,
 }
 #endif
 
-#if defined(HAVE_FBDEV_EGL) && !defined(HAVE_X11)
+#ifdef USE_EGL_MALI_FB
+#include <EGL/fbdev_window.h>
+
 EGLNativeWindowType
 platform_create_native_window (gint width, gint height, gpointer * window_data)
 {
@@ -148,7 +144,7 @@ platform_destroy_native_window (EGLNativeDisplayType display,
 }
 #endif
 
-#if !defined(HAVE_X11) && !defined(HAVE_FBDEV_EGL)
+#if !defined(USE_EGL_X11) && !defined(USE_EGL_MALI_FB)
 /* Dummy functions for creating a native Window */
 EGLNativeWindowType
 platform_create_native_window (gint width, gint height, gpointer * window_data)
