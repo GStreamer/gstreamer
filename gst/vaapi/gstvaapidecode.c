@@ -241,13 +241,13 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
     /* ERRORS */
 error_decode_timeout:
     {
-        GST_DEBUG("decode timeout. Decoder required a VA surface but none "
-                  "got available within one second");
+        GST_WARNING("decode timeout. Decoder required a VA surface but none "
+                    "got available within one second");
         return GST_FLOW_UNEXPECTED;
     }
 error_decode:
     {
-        GST_DEBUG("decode error %d", status);
+        GST_ERROR("decode error %d", status);
         switch (status) {
         case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC:
         case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE:
@@ -266,7 +266,7 @@ error_create_buffer:
         const GstVaapiID surface_id =
             gst_vaapi_surface_get_id(GST_VAAPI_SURFACE_PROXY_SURFACE(proxy));
 
-        GST_DEBUG("video sink failed to create video buffer for proxy'ed "
+        GST_ERROR("video sink failed to create video buffer for proxy'ed "
                   "surface %" GST_VAAPI_ID_FORMAT,
                   GST_VAAPI_ID_ARGS(surface_id));
         gst_video_decoder_drop_frame(vdec, out_frame);
@@ -575,17 +575,17 @@ gst_vaapidecode_ensure_allowed_caps(GstVaapiDecode *decode)
     /* ERRORS */
 error_no_display:
     {
-        GST_DEBUG("failed to retrieve VA display");
+        GST_ERROR("failed to retrieve VA display");
         return FALSE;
     }
 error_no_decode_caps:
     {
-        GST_DEBUG("failed to retrieve VA decode caps");
+        GST_ERROR("failed to retrieve VA decode caps");
         return FALSE;
     }
 error_no_memory:
     {
-        GST_DEBUG("failed to allocate allowed-caps set");
+        GST_ERROR("failed to allocate allowed-caps set");
         gst_caps_unref(decode_caps);
         return FALSE;
     }
