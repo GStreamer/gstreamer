@@ -61,7 +61,10 @@ G_DEFINE_TYPE(GstVaapiDecoderMpeg2,
   } \
 } G_STMT_END
 
-/* PTS Generator */
+/* ------------------------------------------------------------------------- */
+/* --- PTS Generator                                                     --- */
+/* ------------------------------------------------------------------------- */
+
 typedef struct _PTSGenerator PTSGenerator;
 struct _PTSGenerator {
     GstClockTime        gop_pts; // Current GOP PTS
@@ -163,6 +166,48 @@ pts_eval(PTSGenerator *tsg, GstClockTime pic_pts, guint pic_tsn)
     tsg->lst_tsn = pic_tsn;
     return pts;
 }
+
+/* ------------------------------------------------------------------------- */
+/* --- MPEG-2 Decoder Units                                              --- */
+/* ------------------------------------------------------------------------- */
+
+typedef struct _GstVaapiDecoderUnitMpeg2 GstVaapiDecoderUnitMpeg2;
+struct _GstVaapiDecoderUnitMpeg2 {
+    GstVaapiDecoderUnit         base;
+    GstMpegVideoPacket          packet;
+    guint8                      extension_type; /* for Extension packets */
+    union {
+        GstMpegVideoSequenceHdr         seq_hdr;
+        GstMpegVideoSequenceExt         seq_ext;
+        GstMpegVideoGop                 gop;
+        GstMpegVideoQuantMatrixExt      quant_matrix;
+        GstMpegVideoPictureHdr          pic_hdr;
+        GstMpegVideoPictureExt          pic_ext;
+    }                                   data;
+};
+
+static GstVaapiDecoderUnitMpeg2 *
+gst_vaapi_decoder_unit_mpeg2_new(guint size)
+{
+    GstVaapiDecoderUnitMpeg2 *unit;
+
+    static const GstVaapiMiniObjectClass GstVaapiDecoderUnitMpeg2Class = {
+        sizeof(GstVaapiDecoderUnitMpeg2),
+        (GDestroyNotify)gst_vaapi_decoder_unit_finalize
+    };
+
+    unit = (GstVaapiDecoderUnitMpeg2 *)
+        gst_vaapi_mini_object_new(&GstVaapiDecoderUnitMpeg2Class);
+    if (!unit)
+        return NULL;
+
+    gst_vaapi_decoder_unit_init(&unit->base, size);
+    return unit;
+}
+
+/* ------------------------------------------------------------------------- */
+/* --- MPEG-2 Decoder                                                    --- */
+/* ------------------------------------------------------------------------- */
 
 struct _GstVaapiDecoderMpeg2Private {
     GstVaapiProfile             profile;
@@ -492,16 +537,26 @@ decode_current_picture(GstVaapiDecoderMpeg2 *decoder)
 }
 
 static GstVaapiDecoderStatus
-decode_sequence(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
+parse_sequence(GstVaapiDecoderUnitMpeg2 *unit)
+{
+    GstMpegVideoPacket * const packet = &unit->packet;
+
+    if (!gst_mpeg_video_parse_sequence_header(&unit->data.seq_hdr,
+            packet->data, packet->size, packet->offset)) {
+        GST_ERROR("failed to parse sequence header");
+        return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+    }
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+decode_sequence(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnitMpeg2 *unit)
 {
     GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GstMpegVideoSequenceHdr * const seq_hdr = &priv->seq_hdr;
 
-    if (!gst_mpeg_video_parse_sequence_header(seq_hdr, buf, buf_size, 4)) {
-        GST_ERROR("failed to parse sequence header");
-        return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
-    }
+    *seq_hdr = unit->data.seq_hdr;
 
     priv->fps_n = seq_hdr->fps_n;
     priv->fps_d = seq_hdr->fps_d;
@@ -522,7 +577,21 @@ decode_sequence(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
 }
 
 static GstVaapiDecoderStatus
-decode_sequence_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
+parse_sequence_ext(GstVaapiDecoderUnitMpeg2 *unit)
+{
+    GstMpegVideoPacket * const packet = &unit->packet;
+
+    if (!gst_mpeg_video_parse_sequence_extension(&unit->data.seq_ext,
+            packet->data, packet->size, packet->offset)) {
+        GST_ERROR("failed to parse sequence-extension");
+        return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+    }
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+decode_sequence_ext(GstVaapiDecoderMpeg2 *decoder,
+    GstVaapiDecoderUnitMpeg2 *unit)
 {
     GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
@@ -531,10 +600,8 @@ decode_sequence_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     GstVaapiProfile profile;
     guint width, height;
 
-    if (!gst_mpeg_video_parse_sequence_extension(seq_ext, buf, buf_size, 4)) {
-        GST_ERROR("failed to parse sequence-extension");
-        return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
-    }
+    *seq_ext = unit->data.seq_ext;
+
     priv->has_seq_ext = TRUE;
     priv->progressive_sequence = seq_ext->progressive;
     gst_vaapi_decoder_set_interlaced(base_decoder, !priv->progressive_sequence);
@@ -595,40 +662,58 @@ decode_sequence_end(GstVaapiDecoderMpeg2 *decoder)
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
     gst_vaapi_dpb_flush(priv->dpb);
-    return GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 static GstVaapiDecoderStatus
-decode_quant_matrix_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
+parse_quant_matrix_ext(GstVaapiDecoderUnitMpeg2 *unit)
 {
-    GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
-    GstMpegVideoQuantMatrixExt * const quant_matrix_ext = &priv->quant_matrix_ext;
+    GstMpegVideoPacket * const packet = &unit->packet;
 
-    if (!gst_mpeg_video_parse_quant_matrix_extension(quant_matrix_ext, buf, buf_size, 4)) {
+    if (!gst_mpeg_video_parse_quant_matrix_extension(&unit->data.quant_matrix,
+            packet->data, packet->size, packet->offset)) {
         GST_ERROR("failed to parse quant-matrix-extension");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+decode_quant_matrix_ext(GstVaapiDecoderMpeg2 *decoder,
+    GstVaapiDecoderUnitMpeg2 *unit)
+{
+    GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
+
+    priv->quant_matrix_ext     = unit->data.quant_matrix;
     priv->has_quant_matrix_ext = TRUE;
     priv->quant_matrix_changed = TRUE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 static GstVaapiDecoderStatus
-decode_gop(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
+parse_gop(GstVaapiDecoderUnitMpeg2 *unit)
 {
-    GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
-    GstMpegVideoGop gop;
+    GstMpegVideoPacket * const packet = &unit->packet;
 
-    if (!gst_mpeg_video_parse_gop(&gop, buf, buf_size, 4)) {
+    if (!gst_mpeg_video_parse_gop(&unit->data.gop,
+            packet->data, packet->size, packet->offset)) {
         GST_ERROR("failed to parse GOP");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
 
-    priv->closed_gop  = gop.closed_gop;
-    priv->broken_link = gop.broken_link;
+static GstVaapiDecoderStatus
+decode_gop(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnitMpeg2 *unit)
+{
+    GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
+    GstMpegVideoGop * const gop = &unit->data.gop;
+
+    priv->closed_gop  = gop->closed_gop;
+    priv->broken_link = gop->broken_link;
 
     GST_DEBUG("GOP %02u:%02u:%02u:%02u (closed_gop %d, broken_link %d)",
-              gop.hour, gop.minute, gop.second, gop.frame,
+              gop->hour, gop->minute, gop->second, gop->frame,
               priv->closed_gop, priv->broken_link);
 
     pts_sync(&priv->tsg, GST_VAAPI_DECODER_CODEC_FRAME(decoder)->pts);
@@ -636,12 +721,27 @@ decode_gop(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
 }
 
 static GstVaapiDecoderStatus
-decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
+parse_picture(GstVaapiDecoderUnitMpeg2 *unit)
+{
+    GstMpegVideoPacket * const packet = &unit->packet;
+
+    if (!gst_mpeg_video_parse_picture_header(&unit->data.pic_hdr,
+            packet->data, packet->size, packet->offset)) {
+        GST_ERROR("failed to parse picture header");
+        return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+    }
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+decode_picture(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnitMpeg2 *unit)
 {
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GstMpegVideoPictureHdr * const pic_hdr = &priv->pic_hdr;
     GstVaapiPicture *picture;
     GstVaapiDecoderStatus status;
+
+    *pic_hdr = unit->data.pic_hdr;
 
     status = ensure_context(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
@@ -677,10 +777,6 @@ decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
         return status;
     }
 
-    if (!gst_mpeg_video_parse_picture_header(pic_hdr, buf, buf_size, 4)) {
-        GST_ERROR("failed to parse picture header");
-        return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
-    }
     priv->has_pic_ext = FALSE;
 
     switch (pic_hdr->pic_type) {
@@ -704,20 +800,32 @@ decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     picture->pts = pts_eval(&priv->tsg,
         GST_VAAPI_DECODER_CODEC_FRAME(decoder)->pts, pic_hdr->tsn);
     picture->poc = pts_get_poc(&priv->tsg);
-    return status;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 static GstVaapiDecoderStatus
-decode_picture_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
+parse_picture_ext(GstVaapiDecoderUnitMpeg2 *unit)
+{
+    GstMpegVideoPacket * const packet = &unit->packet;
+
+    if (!gst_mpeg_video_parse_picture_extension(&unit->data.pic_ext,
+            packet->data, packet->size, packet->offset)) {
+        GST_ERROR("failed to parse picture-extension");
+        return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+    }
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+decode_picture_ext(GstVaapiDecoderMpeg2 *decoder,
+    GstVaapiDecoderUnitMpeg2 *unit)
 {
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GstMpegVideoPictureExt * const pic_ext = &priv->pic_ext;
     GstVaapiPicture * const picture = priv->current_picture;
 
-    if (!gst_mpeg_video_parse_picture_extension(pic_ext, buf, buf_size, 4)) {
-        GST_ERROR("failed to parse picture-extension");
-        return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
-    }
+    *pic_ext = unit->data.pic_ext;
+
     priv->has_pic_ext = TRUE;
 
     if (priv->progressive_sequence && !pic_ext->progressive_frame) {
@@ -855,17 +963,14 @@ fill_picture(GstVaapiDecoderMpeg2 *decoder, GstVaapiPicture *picture)
 }
 
 static GstVaapiDecoderStatus
-decode_slice(
-    GstVaapiDecoderMpeg2 *decoder,
-    int                   slice_no,
-    guchar               *buf,
-    guint                 buf_size
-)
+decode_slice(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnitMpeg2 *unit)
 {
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GstVaapiPicture * const picture = priv->current_picture;
     GstVaapiSlice *slice;
     VASliceParameterBufferMPEG2 *slice_param;
+    GstMpegVideoPacket * const packet = &unit->packet;
+    const gint slice_no = packet->type - GST_MPEG_VIDEO_PACKET_SLICE_MIN;
     GstBitReader br;
     gint mb_x, mb_y, mb_inc;
     guint macroblock_offset;
@@ -874,12 +979,24 @@ decode_slice(
     guint8 intra_slice = 0;
     guint8 extra_bit_slice, junk8;
 
-    GST_DEBUG("slice %d @ %p, %u bytes)", slice_no, buf, buf_size);
+    GST_DEBUG("slice %d (%u bytes)", slice_no, packet->size);
+
+    if (!picture)
+        return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
     if (picture->slices->len == 0 && !fill_picture(decoder, picture))
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
-    slice = GST_VAAPI_SLICE_NEW(MPEG2, decoder, buf, buf_size);
+    unit->base.buffer = gst_buffer_create_sub(
+        GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer,
+        unit->base.offset, unit->base.size);
+    if (!unit->base.buffer) {
+        GST_ERROR("failed to allocate slice data");
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    }
+
+    slice = GST_VAAPI_SLICE_NEW(MPEG2, decoder,
+        GST_BUFFER_DATA(unit->base.buffer), packet->size);
     if (!slice) {
         GST_ERROR("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -887,7 +1004,7 @@ decode_slice(
     gst_vaapi_picture_add_slice(picture, slice);
 
     /* Parse slice */
-    gst_bit_reader_init(&br, buf, buf_size);
+    gst_bit_reader_init(&br, GST_BUFFER_DATA(unit->base.buffer), packet->size);
     SKIP(&br, 32); /* slice_start_code */
     if (priv->height > 2800)
         READ_UINT8(&br, slice_vertical_position_extension, 3);
@@ -942,73 +1059,55 @@ scan_for_start_code(GstAdapter *adapter, guint ofs, guint size, guint32 *scp)
 }
 
 static GstVaapiDecoderStatus
-decode_packet(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
+decode_unit(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnitMpeg2 *unit)
 {
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
+    const GstMpegVideoPacketTypeCode type = unit->packet.type;
     GstVaapiDecoderStatus status;
-    guchar type;
 
-    /* The packet defined by buf and buf_size contains the start code */
-    type = buf[3];
     switch (type) {
     case GST_MPEG_VIDEO_PACKET_PICTURE:
         if (!priv->width || !priv->height)
             goto unknown_picture_size;
-        status = decode_picture(decoder, buf, buf_size);
+        status = decode_picture(decoder, unit);
         break;
     case GST_MPEG_VIDEO_PACKET_SEQUENCE:
-        status = decode_sequence(decoder, buf, buf_size);
+        status = decode_sequence(decoder, unit);
         break;
-    case GST_MPEG_VIDEO_PACKET_EXTENSION: {
-        const guchar id = buf[4] >> 4;
-        switch (id) {
+    case GST_MPEG_VIDEO_PACKET_EXTENSION:
+        switch (unit->extension_type) {
         case GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE:
-            status = decode_sequence_ext(decoder, buf, buf_size);
+            status = decode_sequence_ext(decoder, unit);
             break;
         case GST_MPEG_VIDEO_PACKET_EXT_QUANT_MATRIX:
-            status = decode_quant_matrix_ext(decoder, buf, buf_size);
+            status = decode_quant_matrix_ext(decoder, unit);
             break;
         case GST_MPEG_VIDEO_PACKET_EXT_PICTURE:
             if (!priv->width || !priv->height)
                 goto unknown_picture_size;
-            status = decode_picture_ext(decoder, buf, buf_size);
+            status = decode_picture_ext(decoder, unit);
             break;
         default:
             // Ignore unknown start-code extensions
-            GST_WARNING("unsupported start code extension (0x%02x)", id);
+            GST_WARNING("unsupported packet extension type 0x%02x",
+                        unit->extension_type);
             status = GST_VAAPI_DECODER_STATUS_SUCCESS;
             break;
         }
         break;
-    }
     case GST_MPEG_VIDEO_PACKET_SEQUENCE_END:
         status = decode_sequence_end(decoder);
         break;
     case GST_MPEG_VIDEO_PACKET_GOP:
-        status = decode_gop(decoder, buf, buf_size);
-        break;
-    case GST_MPEG_VIDEO_PACKET_USER_DATA:
-        // Ignore user-data packets
-        status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+        status = decode_gop(decoder, unit);
         break;
     default:
         if (type >= GST_MPEG_VIDEO_PACKET_SLICE_MIN &&
             type <= GST_MPEG_VIDEO_PACKET_SLICE_MAX) {
-            if (!priv->current_picture)
-                goto undefined_picture;
-            status = decode_slice(
-                decoder,
-                type - GST_MPEG_VIDEO_PACKET_SLICE_MIN,
-                buf, buf_size
-            );
+            status = decode_slice(decoder, unit);
             break;
         }
-        else if (type >= 0xb9 && type <= 0xff) {
-            // Ignore system start codes (PES headers)
-            status = GST_VAAPI_DECODER_STATUS_SUCCESS;
-            break;
-        }
-        GST_WARNING("unsupported start code (0x%02x)", type);
+        GST_WARNING("unsupported packet type 0x%02x", type);
         status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
         break;
     }
@@ -1019,28 +1118,6 @@ unknown_picture_size:
     // i.e. missing sequence headers, or not parsed correctly
     GST_WARNING("failed to parse picture of unknown size");
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
-
-undefined_picture:
-    // Ignore packet while picture is undefined
-    // i.e. missing picture headers, or not parsed correctly
-    GST_WARNING("failed to parse slice with undefined picture");
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
-}
-
-static GstVaapiDecoderStatus
-decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
-{
-    GstVaapiDecoderStatus status;
-    guchar *buf;
-    guint buf_size;
-
-    buf      = GST_BUFFER_DATA(buffer);
-    buf_size = GST_BUFFER_SIZE(buffer);
-
-    status = decode_packet(decoder, buf, buf_size);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-        return status;
-    return status;
 }
 
 static GstVaapiDecoderStatus
@@ -1065,11 +1142,12 @@ gst_vaapi_decoder_mpeg2_parse(GstVaapiDecoder *base_decoder,
 {
     GstVaapiDecoderMpeg2 * const decoder =
         GST_VAAPI_DECODER_MPEG2(base_decoder);
-    GstVaapiDecoderUnit *unit = NULL;
+    GstVaapiDecoderUnitMpeg2 *unit;
     GstVaapiDecoderStatus status;
+    GstMpegVideoPacket *packet;
+    const guchar *buf;
     guint32 start_code;
-    guint8 pkt_type, ext_type;
-    guint size, buf_size, flags = 0;
+    guint size, buf_size, flags;
     gint ofs;
 
     status = ensure_decoder(decoder);
@@ -1096,13 +1174,62 @@ gst_vaapi_decoder_mpeg2_parse(GstVaapiDecoder *base_decoder,
     }
     buf_size = ofs;
 
-    unit = gst_vaapi_decoder_unit_new(buf_size);
+    buf = gst_adapter_peek(adapter, buf_size);
+    if (!buf)
+        return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+
+    unit = gst_vaapi_decoder_unit_mpeg2_new(buf_size);
     if (!unit)
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
 
+    packet         = &unit->packet;
+    packet->data   = buf;
+    packet->size   = buf_size;
+    packet->offset = 4;
+    packet->type   = start_code & 0xff;
+
+    /* Parse data */
+    switch (packet->type) {
+    case GST_MPEG_VIDEO_PACKET_SEQUENCE:
+        status = parse_sequence(unit);
+        break;
+    case GST_MPEG_VIDEO_PACKET_GOP:
+        status = parse_gop(unit);
+        break;
+    case GST_MPEG_VIDEO_PACKET_PICTURE:
+        status = parse_picture(unit);
+        break;
+    case GST_MPEG_VIDEO_PACKET_EXTENSION:
+        if (G_UNLIKELY(buf_size < 5)) {
+            status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+            break;
+        }
+        unit->extension_type = buf[4] >> 4;
+        switch (unit->extension_type) {
+        case GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE:
+            status = parse_sequence_ext(unit);
+            break;
+        case GST_MPEG_VIDEO_PACKET_EXT_QUANT_MATRIX:
+            status = parse_quant_matrix_ext(unit);
+            break;
+        case GST_MPEG_VIDEO_PACKET_EXT_PICTURE:
+            status = parse_picture_ext(unit);
+            break;
+        default:
+            status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+            break;
+        }
+        break;
+    default:
+        status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+        break;
+    }
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+        return status;
+
     /* Check for start of new picture */
-    pkt_type = start_code & 0xff;
-    switch (pkt_type) {
+    flags = 0;
+    switch (packet->type) {
     case GST_MPEG_VIDEO_PACKET_SEQUENCE_END:
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_END;
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_STREAM_END;
@@ -1115,25 +1242,20 @@ gst_vaapi_decoder_mpeg2_parse(GstVaapiDecoder *base_decoder,
     case GST_MPEG_VIDEO_PACKET_PICTURE:
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
         break;
-    case GST_MPEG_VIDEO_PACKET_EXTENSION:
-        if (buf_size < 5)
-            break;
-        gst_adapter_copy(adapter, &ext_type, 4, 1);
-        switch (ext_type) {
-        case GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE:
-            flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
-            break;
-        }
-        break;
     default:
-        if (pkt_type >= GST_MPEG_VIDEO_PACKET_SLICE_MIN &&
-            pkt_type <= GST_MPEG_VIDEO_PACKET_SLICE_MAX)
+        if (packet->type >= GST_MPEG_VIDEO_PACKET_SLICE_MIN &&
+            packet->type <= GST_MPEG_VIDEO_PACKET_SLICE_MAX)
             flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
+
+        // Ignore system start codes (PES headers)
+        else if (packet->type >= 0xb9 && packet->type <= 0xff)
+            flags |= GST_VAAPI_DECODER_UNIT_FLAG_SKIP;
         break;
     }
     GST_VAAPI_DECODER_UNIT_FLAG_SET(unit, flags);
 
-    *unit_ptr = unit;
+    unit->packet.data = NULL;
+    *unit_ptr = &unit->base;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -1148,17 +1270,7 @@ gst_vaapi_decoder_mpeg2_decode(GstVaapiDecoder *base_decoder,
     status = ensure_decoder(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
-
-    unit->buffer = gst_buffer_create_sub(
-        GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer,
-        unit->offset, unit->size);
-    if (!unit->buffer)
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-
-    status = decode_buffer(decoder, unit->buffer);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-        return status;
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+    return decode_unit(decoder, (GstVaapiDecoderUnitMpeg2 *)unit);
 }
 
 static void
