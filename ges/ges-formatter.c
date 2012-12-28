@@ -27,6 +27,7 @@
 #include <gst/gst.h>
 #include <gio/gio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ges-formatter.h"
 #include "ges-internal.h"
@@ -162,6 +163,49 @@ default_can_save_uri (GESFormatterClass * class,
   return FALSE;
 }
 
+static gchar *
+_get_extension (const gchar * uri)
+{
+  gchar *result;
+  gsize len;
+  gint find;
+
+  GST_DEBUG ("finding extension of %s", uri);
+
+  if (uri == NULL)
+    goto no_uri;
+
+  /* find the extension on the uri, this is everything after a '.' */
+  len = strlen (uri);
+  find = len - 1;
+
+  while (find >= 0) {
+    if (uri[find] == '.')
+      break;
+    find--;
+  }
+  if (find < 0)
+    goto no_extension;
+
+  result = g_strdup (&uri[find + 1]);
+
+  GST_DEBUG ("found extension %s", result);
+
+  return result;
+
+  /* ERRORS */
+no_uri:
+  {
+    GST_WARNING ("could not parse the peer uri");
+    return NULL;
+  }
+no_extension:
+  {
+    GST_WARNING ("could not find uri extension in %s", uri);
+    return NULL;
+  }
+}
+
 /**
  * ges_formatter_can_load_uri:
  * @uri: a #gchar * pointing to the URI
@@ -178,6 +222,7 @@ gboolean
 ges_formatter_can_load_uri (const gchar * uri, GError ** error)
 {
   gboolean ret = FALSE;
+  gchar *extension;
   GList *formatter_assets, *tmp;
   GESFormatterClass *class = NULL;
 
@@ -186,16 +231,17 @@ ges_formatter_can_load_uri (const gchar * uri, GError ** error)
     return FALSE;
   }
 
-  if (!(gst_uri_has_protocol (uri, "file"))) {
-    gchar *proto = gst_uri_get_protocol (uri);
-    GST_ERROR ("Unspported protocol '%s'", proto);
-    g_free (proto);
-    return FALSE;
-  }
+  extension = _get_extension (uri);
 
   formatter_assets = ges_list_assets (GES_TYPE_FORMATTER);
   for (tmp = formatter_assets; tmp; tmp = tmp->next) {
     GESAsset *asset = GES_ASSET (tmp->data);
+
+    if (extension
+        && g_strcmp0 (extension,
+            ges_meta_container_get_string (GES_META_CONTAINER (asset),
+                GES_META_FORMATTER_EXTENSION)))
+      continue;
 
     class = g_type_class_ref (ges_asset_get_extractable_type (asset));
     if (class->can_load_uri (class, uri, error)) {
