@@ -59,6 +59,8 @@ struct _GstMssDemuxStream {
 
   GstUriDownloader *downloader;
 
+  GstEvent *pending_newsegment;
+
   /* Streaming task */
   GstTask *stream_task;
   GStaticRecMutex stream_lock;
@@ -78,6 +80,7 @@ struct _GstMssDemux {
   GSList *streams;
   guint n_videos;
   guint n_audios;
+
 };
 
 struct _GstMssDemuxClass {

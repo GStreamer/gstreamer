@@ -496,6 +496,28 @@ gst_mss_manifest_get_duration (GstMssManifest * manifest)
   return dur;
 }
 
+
+/**
+ * Gets the duration in nanoseconds
+ */
+GstClockTime
+gst_mss_manifest_get_gst_duration (GstMssManifest * manifest)
+{
+  guint64 duration = -1;
+  guint64 timescale;
+  GstClockTime gstdur = GST_CLOCK_TIME_NONE;
+
+  duration = gst_mss_manifest_get_duration (manifest);
+  timescale = gst_mss_manifest_get_timescale (manifest);
+
+  if (duration != -1 && timescale != -1)
+    gstdur =
+        (GstClockTime) gst_util_uint64_scale_round (duration, GST_SECOND,
+        timescale);
+
+  return gstdur;
+}
+
 GstCaps *
 gst_mss_stream_get_caps (GstMssStream * stream)
 {
@@ -564,4 +586,59 @@ gst_mss_stream_type_name (GstMssStreamType streamtype)
     default:
       return "unknown";
   }
+}
+
+/**
+ * Seeks all streams to the fragment that contains the set time
+ *
+ * @time: time in nanoseconds
+ */
+gboolean
+gst_mss_manifest_seek (GstMssManifest * manifest, guint64 time)
+{
+  gboolean ret = TRUE;
+  GSList *iter;
+
+  for (iter = manifest->streams; iter; iter = g_slist_next (iter)) {
+    ret = gst_mss_stream_seek (iter->data, time) & ret;
+  }
+
+  return ret;
+}
+
+/**
+ * Seeks this stream to the fragment that contains the sample at time
+ *
+ * @time: time in nanoseconds
+ */
+gboolean
+gst_mss_stream_seek (GstMssStream * stream, guint64 time)
+{
+  GList *iter;
+  guint64 timescale;
+
+  timescale = gst_mss_stream_get_timescale (stream);
+  time = gst_util_uint64_scale_round (time, timescale, GST_SECOND);
+
+  for (iter = stream->fragments; iter; iter = g_list_next (iter)) {
+    GList *next = g_list_next (iter);
+    if (next) {
+      GstMssStreamFragment *fragment = next->data;
+
+      if (fragment->time > time) {
+        stream->current_fragment = iter;
+        break;
+      }
+    } else {
+      GstMssStreamFragment *fragment = iter->data;
+      if (fragment->time + fragment->duration > time) {
+        stream->current_fragment = iter;
+      } else {
+        stream->current_fragment = NULL;        /* EOS */
+      }
+      break;
+    }
+  }
+
+  return TRUE;
 }

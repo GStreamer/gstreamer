@@ -43,12 +43,15 @@ void gst_mss_manifest_free (GstMssManifest * manifest);
 GSList * gst_mss_manifest_get_streams (GstMssManifest * manifest);
 guint64 gst_mss_manifest_get_timescale (GstMssManifest * manifest);
 guint64 gst_mss_manifest_get_duration (GstMssManifest * manifest);
+GstClockTime gst_mss_manifest_get_gst_duration (GstMssManifest * manifest);
+gboolean gst_mss_manifest_seek (GstMssManifest * manifest, guint64 time);
 
 GstMssStreamType gst_mss_stream_get_type (GstMssStream *stream);
 GstCaps * gst_mss_stream_get_caps (GstMssStream * stream);
 guint64 gst_mss_stream_get_timescale (GstMssStream * stream);
 GstFlowReturn gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url);
 GstFlowReturn gst_mss_stream_advance_fragment (GstMssStream * stream);
+gboolean gst_mss_stream_seek (GstMssStream * stream, guint64 time);
 
 const gchar * gst_mss_stream_type_name (GstMssStreamType streamtype);
 
