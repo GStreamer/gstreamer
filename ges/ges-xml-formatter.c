@@ -1101,7 +1101,7 @@ ges_xml_formatter_class_init (GESXmlFormatterClass * self_class)
   basexmlformatter_class->content_parser.error = _error_parsing;
 
   ges_formatter_class_register_metas (GES_FORMATTER_CLASS (self_class),
-      "ges", "The GStreamer Editing Services file format",
+      "ges", "GStreamer Editing Services project files",
       "xges", "application/ges", VERSION, GST_RANK_PRIMARY);
 
   basexmlformatter_class->save = _save;

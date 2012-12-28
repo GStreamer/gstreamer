@@ -1105,7 +1105,7 @@ ges_pitivi_formatter_class_init (GESPitiviFormatterClass * klass)
   object_class->finalize = ges_pitivi_formatter_finalize;
 
   ges_formatter_class_register_metas (formatter_klass, "pitivi",
-      "The PiTiVi file format", "xptv", "text/x-xptv",
+      "Legacy Pitivi project files", "xptv", "text/x-xptv",
       DOUBLE_VERSION, GST_RANK_MARGINAL);
 }
 
