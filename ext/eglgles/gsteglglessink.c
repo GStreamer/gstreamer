@@ -620,6 +620,8 @@ render_thread_func (GstEglGlesSink * eglglessink)
   gst_element_post_message (GST_ELEMENT_CAST (eglglessink), message);
   g_value_unset (&val);
 
+  eglBindAPI (EGL_OPENGL_ES_API);
+
   while (gst_data_queue_pop (eglglessink->queue, &item)) {
     GstBuffer *buf = NULL;
 
