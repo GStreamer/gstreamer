@@ -345,7 +345,7 @@ ges_project_class_init (GESProjectClass * klass)
    */
   _signals[LOADED_SIGNAL] =
       g_signal_new ("loaded", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GESProjectClass, loaded),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESProjectClass, loaded),
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
       1, GES_TYPE_TIMELINE);
 
