@@ -569,8 +569,8 @@ gst_mss_stream_advance_fragment (GstMssStream * stream)
     return GST_FLOW_UNEXPECTED;
 
   stream->current_fragment = g_list_next (stream->current_fragment);
-  if (stream->current_fragment == NULL);
-  return GST_FLOW_UNEXPECTED;
+  if (stream->current_fragment == NULL)
+    return GST_FLOW_UNEXPECTED;
   return GST_FLOW_OK;
 }
 
