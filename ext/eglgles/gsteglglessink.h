@@ -124,8 +124,10 @@ struct _GstEglGlesRenderContext
   EGLNativeWindowType window, used_window;
   EGLSurface surface;
   gboolean buffer_preserved;
-  GLuint fragshader[2], vertshader[2], glslprogram[2];
-  GLuint texture[3];
+  GLuint fragshader[2]; /* frame, border */
+  GLuint vertshader[2]; /* frame, border */
+  GLuint glslprogram[2]; /* frame, border */
+  GLuint texture[3]; /* RGB/Y, U/UV, V */
   EGLint surface_width;
   EGLint surface_height;
   EGLint pixel_aspect_ratio;
@@ -133,9 +135,10 @@ struct _GstEglGlesRenderContext
   gint n_textures;
 
   /* shader vars */
-  GLuint position_loc[2], texpos_loc;
-  GLuint tex_scale_loc[3];
-  GLuint tex_loc[3];
+  GLuint position_loc[2]; /* frame, border */
+  GLuint texpos_loc; /* frame */
+  GLuint tex_scale_loc[3]; /* RGB/Y, U/UV, V */
+  GLuint tex_loc[3]; /* RGB/Y, U/UV, V */
   coord5 position_array[12];    /* 4 x Frame, 4 x Border1, 4 x Border2 */
   unsigned short index_array[4];
   unsigned int position_buffer, index_buffer;
