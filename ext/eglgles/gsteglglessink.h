@@ -56,6 +56,8 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
+#include "video_platform_wrapper.h"
+
 G_BEGIN_DECLS
 #define GST_TYPE_EGLGLESSINK \
   (gst_eglglessink_get_type())
@@ -124,9 +126,9 @@ struct _GstEglGlesRenderContext
   EGLNativeWindowType window, used_window;
   EGLSurface surface;
   gboolean buffer_preserved;
-  GLuint fragshader[3]; /* frame, border, frame-platform */
-  GLuint vertshader[3]; /* frame, border, frame-platform */
-  GLuint glslprogram[3]; /* frame, border, frame-platform */
+  GLuint fragshader[2]; /* frame, border */
+  GLuint vertshader[2]; /* frame, border */
+  GLuint glslprogram[2]; /* frame, border */
   GLuint texture[3]; /* RGB/Y, U/UV, V */
   EGLint surface_width;
   EGLint surface_height;
@@ -135,13 +137,19 @@ struct _GstEglGlesRenderContext
   gint n_textures;
 
   /* shader vars */
-  GLuint position_loc[3]; /* frame, border, frame-platform */
-  GLuint texpos_loc[2]; /* frame, frame-platform */
-  GLuint tex_scale_loc[2][3]; /* [frame, frame-platform] RGB/Y, U/UV, V */
-  GLuint tex_loc[2][3]; /* [frame, frame-platform] RGB/Y, U/UV, V */
+  GLuint position_loc[2]; /* frame, border */
+  GLuint texpos_loc[2]; /* frame */
+  GLuint tex_scale_loc[1][3]; /* [frame] RGB/Y, U/UV, V */
+  GLuint tex_loc[1][3]; /* [frame] RGB/Y, U/UV, V */
   coord5 position_array[12];    /* 4 x Frame, 4 x Border1, 4 x Border2 */
   unsigned short index_array[4];
   unsigned int position_buffer, index_buffer;
+
+  gboolean can_map_eglimage;
+  GstMemoryMapFunction eglimage_map;
+  GstMemoryUnmapFunction eglimage_unmap;
+  PlatformMapVideo eglimage_video_map;
+  PlatformUnmapVideo eglimage_video_unmap;
 };
 
 /*
@@ -201,6 +209,7 @@ struct _GstEglGlesSink
   GstCaps *current_caps, *configured_caps;
   GstVideoInfo configured_info;
   gfloat stride[3];
+  GstBufferPool *pool;
 
   GstEglGlesImageFmt *selected_fmt;
   GstEglGlesRenderContext eglglesctx;
