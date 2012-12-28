@@ -1788,7 +1788,6 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     GstBuffer * buf)
 {
   GstVideoFrame vframe;
-  gint w, h;
   guint dar_n, dar_d;
   GstVideoCropMeta *crop = NULL;
 
@@ -1802,16 +1801,19 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       GST_ERROR_OBJECT (eglglessink, "Couldn't map frame");
       goto HANDLE_ERROR;
     }
+  } else {
+    GST_DEBUG_OBJECT (eglglessink, "Rendering previous buffer again");
   }
 
-  w = GST_VIDEO_FRAME_WIDTH (&vframe);
-  h = GST_VIDEO_FRAME_HEIGHT (&vframe);
-
-  GST_DEBUG_OBJECT (eglglessink,
-      "Got good buffer %p. Sink geometry is %dx%d size %d", buf, w, h,
-      buf ? gst_buffer_get_size (buf) : -1);
-
   if (buf) {
+    gint w, h;
+
+    w = GST_VIDEO_FRAME_WIDTH (&vframe);
+    h = GST_VIDEO_FRAME_HEIGHT (&vframe);
+
+    GST_DEBUG_OBJECT (eglglessink,
+        "Got buffer %p: %dx%d size %d", buf, w, h, gst_buffer_get_size (buf));
+
     switch (eglglessink->selected_fmt->fmt) {
       case GST_EGLGLESSINK_IMAGE_RGB888:{
         gint stride;
@@ -2283,11 +2285,11 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       eglglessink->crop.y = crop->y;
       eglglessink->crop.w = crop->width;
       eglglessink->crop.h = crop->height;
-    } else {
+    } else if (buf) {
       eglglessink->crop.x = 0;
       eglglessink->crop.y = 0;
-      eglglessink->crop.w = w;
-      eglglessink->crop.h = h;
+      eglglessink->crop.w = GST_VIDEO_FRAME_WIDTH (&vframe);
+      eglglessink->crop.h = GST_VIDEO_FRAME_HEIGHT (&vframe);
     }
 
     if (!eglglessink->force_aspect_ratio) {
