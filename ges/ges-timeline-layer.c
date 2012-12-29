@@ -1057,8 +1057,8 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
  * Creates TimelineObject from asset, adds it to layer and
  * returns a reference to it.
  *
- * Returns: (transfer floating): Created #GESTimelineObject
-*/
+ * Returns: (transfer none): Created #GESTimelineObject
+ */
 GESTimelineObject *
 ges_timeline_layer_add_asset (GESTimelineLayer * layer,
     GESAsset * asset, GstClockTime start, GstClockTime inpoint,

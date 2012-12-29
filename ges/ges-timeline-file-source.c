@@ -247,8 +247,6 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
         (GES_ASSET_TIMELINE_OBJECT (filesource_asset)));
   }
 
-  ges_timeline_filesource_set_uri (tfs, g_strdup (ges_asset_get_id (asset)));
-
   GES_TIMELINE_OBJECT (tfs)->asset = asset;
 }
 

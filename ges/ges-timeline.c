@@ -1497,7 +1497,7 @@ add_object_to_tracks (GESTimeline * timeline, GESTimelineObject * object,
 {
   gint i;
   GPtrArray *tracks = NULL;
-  GESTrackType types, visited_type = 1;
+  GESTrackType types, visited_type = GES_TRACK_TYPE_UNKNOWN;
   GList *tmp, *l, *track_objects;
 
   GST_DEBUG_OBJECT (timeline, "Creating %" GST_PTR_FORMAT

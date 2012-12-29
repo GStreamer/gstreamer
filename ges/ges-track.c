@@ -755,7 +755,6 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
 
   GST_DEBUG ("track:%p, caps:%" GST_PTR_FORMAT, track, caps);
   g_return_if_fail (GST_IS_CAPS (caps));
-  GST_DEBUG ("IS CAPS MOFOP:%p, caps:%" GST_PTR_FORMAT, track, caps);
 
   priv = track->priv;
 
