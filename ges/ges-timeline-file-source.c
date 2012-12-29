@@ -208,7 +208,7 @@ extractable_get_parameters_from_id (const gchar * id, guint * n_params)
 {
   GParameter *params = g_new0 (GParameter, 2);
 
-  params[0].name = g_strdup ("uri");
+  params[0].name = "uri";
   g_value_init (&params[0].value, G_TYPE_STRING);
   g_value_set_string (&params[0].value, id);
 

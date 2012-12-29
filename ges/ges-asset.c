@@ -275,11 +275,19 @@ ges_asset_extract_default (GESAsset * asset, GError ** error)
   guint n_params;
   GParameter *params;
   GESAssetPrivate *priv = asset->priv;
+  GESExtractable *n_extractable;
 
   params = ges_extractable_type_get_parameters_from_id (priv->extractable_type,
       priv->id, &n_params);
 
-  return g_object_newv (priv->extractable_type, n_params, params);
+  n_extractable = g_object_newv (priv->extractable_type, n_params, params);
+
+  while (n_params--)
+    g_value_unset (&params[n_params].value);
+  if (params)
+    g_free (params);
+
+  return n_extractable;
 }
 
 static gboolean

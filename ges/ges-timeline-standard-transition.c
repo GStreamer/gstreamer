@@ -118,7 +118,7 @@ extractable_get_parameters_from_id (const gchar * id, guint * n_params)
   GParameter *params = g_new0 (GParameter, 1);
   GEnumValue *value = g_enum_get_value_by_nick (enum_class, id);
 
-  params[0].name = g_strdup ("vtype");
+  params[0].name = "vtype";
   g_value_init (&params[0].value, GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE);
   g_value_set_enum (&params[0].value, value->value);
   *n_params = 1;

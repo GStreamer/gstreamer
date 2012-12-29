@@ -71,17 +71,17 @@ extractable_get_parameters_from_id (const gchar * id, guint * n_params)
   /* We already know that we have a valid ID here */
   func_udata = g_strsplit (id, "!", -1);
 
-  params[0].name = g_strdup ("fill-func");
+  params[0].name = "fill-func";
   g_value_init (&params[0].value, G_TYPE_POINTER);
   g_value_set_pointer (&params[0].value,
       GUINT_TO_POINTER (g_ascii_strtoll (func_udata[0], NULL, 10)));
 
-  params[1].name = g_strdup ("user-data");
+  params[1].name = "user-data";
   g_value_init (&params[1].value, G_TYPE_POINTER);
   g_value_set_pointer (&params[1].value,
       GUINT_TO_POINTER (g_ascii_strtoll (func_udata[1], NULL, 10)));
 
-  params[2].name = g_strdup ("supported-formats");
+  params[2].name = "supported-formats";
   g_value_init (&params[2].value, G_TYPE_ENUM);
   g_value_set_enum (&params[2].value, GES_TRACK_TYPE_CUSTOM);
 
