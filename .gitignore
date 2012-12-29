@@ -54,3 +54,10 @@ log
 /tools/ges-launch-1.0
 /tests/check/ges/project
 /tests/examples/assets
+
+/tests/check/coverage/
+*gcno
+*BACKUP*
+*REMOTE*
+*LOCAL*
+*BASE*
