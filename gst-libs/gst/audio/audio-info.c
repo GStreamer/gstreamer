@@ -454,7 +454,8 @@ gst_audio_info_convert (const GstAudioInfo * info,
       break;
   }
 done:
-  GST_DEBUG ("ret=%d result %" G_GINT64_FORMAT, res, *dest_val);
+
+  GST_DEBUG ("ret=%d result %" G_GINT64_FORMAT, res, res ? *dest_val : -1);
 
   return res;
 }
