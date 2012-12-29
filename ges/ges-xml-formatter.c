@@ -216,11 +216,6 @@ _parse_stream_profile (GMarkupParseContext * context,
       type, parent, name, description, format_caps, preset, preset_name, id,
       presence, restriction_caps, pass, variableframerate, NULL, error);
 
-  if (format_caps)
-    gst_caps_unref (format_caps);
-  if (restriction_caps)
-    gst_caps_unref (restriction_caps);
-
   return;
 
 convertion_failed:
@@ -332,7 +327,6 @@ _parse_track (GMarkupParseContext * context, const gchar * element_name,
   if (errno)
     goto convertion_failed;
 
-  /* TODO Implemet IDs */
   ges_base_xml_formatter_add_track (GES_BASE_XML_FORMATTER (self), track_type,
       caps, strtrack_id, NULL, metadatas, error);
 
@@ -345,6 +339,7 @@ wrong_caps:
   return;
 
 convertion_failed:
+  gst_caps_unref (caps);
   g_set_error (error, G_MARKUP_ERROR,
       G_MARKUP_ERROR_INVALID_CONTENT,
       "element '%s', Wrong property type, error: %s'", element_name,

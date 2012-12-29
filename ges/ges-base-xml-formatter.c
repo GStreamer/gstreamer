@@ -124,9 +124,9 @@ static GMarkupParseContext *
 create_parser_context (GESBaseXmlFormatter * self, const gchar * uri,
     GError ** error)
 {
-  GFile *file;
   gsize xmlsize;
-  gchar *xmlcontent;
+  GFile *file = NULL;
+  gchar *xmlcontent = NULL;
   GMarkupParseContext *parsecontext = NULL;
   GESBaseXmlFormatterClass *self_class =
       GES_BASE_XML_FORMATTER_GET_CLASS (self);
@@ -147,21 +147,29 @@ create_parser_context (GESBaseXmlFormatter * self, const gchar * uri,
           &err) == FALSE)
     goto failed;
 
+done:
+  if (xmlcontent)
+    g_free (xmlcontent);
+
+  if (file)
+    g_object_unref (file);
+
   return parsecontext;
 
 wrong_uri:
   GST_WARNING ("%s wrong uri", uri);
-  return NULL;
+
+  goto done;
 
 failed:
   g_propagate_error (error, err);
 
-  if (parsecontext)
+  if (parsecontext) {
     g_markup_parse_context_free (parsecontext);
+    parsecontext = NULL;
+  }
 
-  g_object_unref (file);
-
-  return NULL;
+  goto done;
 }
 
 /***********************************************
@@ -173,6 +181,7 @@ failed:
 static gboolean
 _can_load_uri (GESFormatterClass * class, const gchar * uri, GError ** error)
 {
+  gboolean ret = FALSE;
   GMarkupParseContext *ctx;
 
   /* we create a temporary object so we can use it as a context */
@@ -182,11 +191,14 @@ _can_load_uri (GESFormatterClass * class, const gchar * uri, GError ** error)
 
   ctx = create_parser_context (self, uri, error);
   if (!ctx)
-    return FALSE;
+    goto done;
 
+  ret = TRUE;
   g_markup_parse_context_free (ctx);
 
-  return TRUE;
+done:
+  g_object_unref (self);
+  return ret;
 }
 
 static gboolean
@@ -799,8 +811,12 @@ ges_base_xml_formatter_add_track (GESBaseXmlFormatter * self,
   GESTrack *track;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
-  if (priv->check_only)
+  if (priv->check_only) {
+    if (caps)
+      gst_caps_unref (caps);
+
     return;
+  }
 
   track = ges_track_new (track_type, caps);
   ges_timeline_add_track (GES_FORMATTER (self)->timeline, track);
@@ -908,7 +924,7 @@ ges_base_xml_formatter_add_encoding_profile (GESBaseXmlFormatter * self,
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
   if (priv->check_only)
-    return;
+    goto done;
 
   if (parent == NULL) {
     profile =
@@ -917,7 +933,7 @@ ges_base_xml_formatter_add_encoding_profile (GESBaseXmlFormatter * self,
     ges_project_add_encoding_profile (GES_FORMATTER (self)->project, profile);
     gst_object_unref (profile);
 
-    return;
+    goto done;
   }
 
   for (tmp = ges_project_list_encoding_profiles (GES_FORMATTER (self)->project);
@@ -930,7 +946,7 @@ ges_base_xml_formatter_add_encoding_profile (GESBaseXmlFormatter * self,
       if (!GST_IS_ENCODING_CONTAINER_PROFILE (tmpprofile)) {
         g_set_error (error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
             "Profile '%s' parent %s is not a container...'", name, parent);
-        return;
+        goto done;
       }
 
       parent_profile = GST_ENCODING_CONTAINER_PROFILE (tmpprofile);
@@ -941,7 +957,7 @@ ges_base_xml_formatter_add_encoding_profile (GESBaseXmlFormatter * self,
   if (parent_profile == NULL) {
     g_set_error (error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
         "Profile '%s' parent %s does not exist'", name, parent);
-    return;
+    goto done;
   }
 
   profile =
@@ -949,7 +965,13 @@ ges_base_xml_formatter_add_encoding_profile (GESBaseXmlFormatter * self,
       preset_name, id, presence, restriction, pass, variableframerate);
 
   if (profile == NULL)
-    return;
+    goto done;
 
   gst_encoding_container_profile_add_profile (parent_profile, profile);
+
+done:
+  if (format)
+    gst_caps_unref (format);
+  if (restriction)
+    gst_caps_unref (restriction);
 }
