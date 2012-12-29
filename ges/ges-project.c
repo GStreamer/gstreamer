@@ -124,7 +124,7 @@ ges_project_remove_formatter (GESProject * project, GESFormatter * formatter)
   for (tmp = priv->formatters; tmp; tmp = tmp->next) {
     if (tmp->data == formatter) {
       gst_object_unref (formatter);
-      priv->formatters = g_list_remove_link (priv->formatters, tmp);
+      priv->formatters = g_list_delete_link (priv->formatters, tmp);
 
       return;
     }
@@ -444,13 +444,13 @@ ges_project_try_updating_id (GESProject * project, GESAsset * asset,
         &new_id);
 
   if (new_id) {
-    if (ges_asset_set_proxy (asset, new_id))
-      return new_id;
-    else
+    if (!ges_asset_set_proxy (asset, new_id)) {
       g_free (new_id);
+      new_id = NULL;
+    }
   }
 
-  return NULL;
+  return new_id;
 }
 
 static void
@@ -473,6 +473,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, GESProject * project)
         possible_id, NULL, (GAsyncReadyCallback) new_asset_cb, project);
 
     g_free (possible_id);
+    g_error_free (error);
     return;
   }
 
