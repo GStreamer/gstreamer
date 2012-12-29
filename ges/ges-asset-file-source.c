@@ -145,9 +145,9 @@ _request_id_update (GESAsset * self, gchar ** proposed_new_id, GError * error)
         *proposed_new_id = g_file_get_uri (new_file);
 
         g_object_unref (new_file);
-        g_object_unref (parent);
         g_free (basename);
       }
+      g_object_unref (parent);
     }
 
     g_object_unref (file);
@@ -287,7 +287,7 @@ ges_asset_filesource_set_info (GESAssetFileSource * self,
       type = GES_TRACK_TYPE_VIDEO;
     }
 
-    GST_DEBUG_OBJECT (self, "Creating AsserTrackFileSource for stream: %s",
+    GST_DEBUG_OBJECT (self, "Creating GESAssetTrackFileSource for stream: %s",
         gst_discoverer_stream_info_get_stream_id (sinf));
     _create_track_file_source_asset (self, sinf, type);
   }
