@@ -346,6 +346,9 @@ ges_asset_finalize (GObject * object)
   if (priv->proxied_asset_id)
     g_free (priv->proxied_asset_id);
 
+  if (priv->error)
+    g_error_free (priv->error);
+
   G_OBJECT_CLASS (ges_asset_parent_class)->finalize (object);
 }
 
@@ -484,6 +487,8 @@ ges_asset_cache_set_loaded (GType extractable_type, const gchar * id,
     GList *results = entry->results;
 
     asset->priv->state = ASSET_INITIALIZED_WITH_ERROR;
+    if (asset->priv->error)
+      g_error_free (asset->priv->error);
     asset->priv->error = g_error_copy (error);
     entry->results = NULL;
     UNLOCK_CACHE;
@@ -494,6 +499,7 @@ ges_asset_cache_set_loaded (GType extractable_type, const gchar * id,
       g_simple_async_result_set_from_error (G_SIMPLE_ASYNC_RESULT (tmp->data),
           error);
       g_simple_async_result_complete (G_SIMPLE_ASYNC_RESULT (tmp->data));
+      gst_object_unref (tmp->data);
     }
 
     g_list_free (results);
@@ -501,8 +507,9 @@ ges_asset_cache_set_loaded (GType extractable_type, const gchar * id,
   } else {
     asset->priv->state = ASSET_INITIALIZED;
 
-    g_list_free_full (entry->results,
-        (GDestroyNotify) g_simple_async_result_complete_in_idle);
+    g_list_foreach (entry->results,
+        (GFunc) g_simple_async_result_complete_in_idle, NULL);
+    g_list_free_full (entry->results, g_object_unref);
     entry->results = NULL;
     UNLOCK_CACHE;
   }
