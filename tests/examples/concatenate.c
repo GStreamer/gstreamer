@@ -31,7 +31,6 @@ GESTimelinePipeline *pipeline = NULL;
 gchar *output_uri = NULL;
 guint assetsCount = 0;
 guint assetsLoaded = 0;
-GStaticMutex assetsLoadedLock = G_STATIC_MUTEX_INIT;
 
 static void
 asset_loaded_cb (GObject * source_object, GAsyncResult * res,
@@ -48,10 +47,7 @@ asset_loaded_cb (GObject * source_object, GAsyncResult * res,
     return;
   }
 
-  g_static_mutex_lock (&assetsLoadedLock);
   assetsLoaded++;
-  g_static_mutex_unlock (&assetsLoadedLock);
-
   /*
    * Check if we have loaded last asset and trigger concatenating
    */
