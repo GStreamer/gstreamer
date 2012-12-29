@@ -14,7 +14,8 @@ static GQuark ges_meta_key;
 
 G_DEFINE_INTERFACE_WITH_CODE (GESMetaContainer, ges_meta_container,
     G_TYPE_OBJECT, ges_meta_key =
-    g_quark_from_static_string ("ges-meta-container-data"););
+    g_quark_from_static_string ("ges-meta-container-data");
+    );
 
 enum
 {
@@ -393,9 +394,7 @@ ges_meta_container_set_meta (GESMetaContainer * container,
   if (_can_write_value (container, meta_item, G_VALUE_TYPE (value)) == FALSE)
     return FALSE;
 
-  _set_value (container, meta_item, value);
-
-  return TRUE;
+  return _set_value (container, meta_item, value);
 }
 
 /**
@@ -446,6 +445,7 @@ ges_meta_container_add_metas_from_string (GESMetaContainer * container,
   gst_structure_foreach (n_structure, (GstStructureForeachFunc) _append_foreach,
       container);
 
+  gst_structure_free (n_structure);
   return TRUE;
 }
 
@@ -454,18 +454,22 @@ gboolean                                                                      \
 ges_meta_container_register_meta_ ## name (GESMetaContainer *container,\
     GESMetaFlag flags, const gchar *meta_item, value_ctype value)             \
 {                                                                             \
+  gboolean ret;                                                               \
   GValue gval = { 0 };                                                        \
                                                                               \
   g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);            \
   g_return_val_if_fail (meta_item != NULL, FALSE);                            \
                                                                               \
-  if (!_register_meta (container, flags, meta_item, value_gtype))       \
+  if (!_register_meta (container, flags, meta_item, value_gtype))             \
     return FALSE;                                                             \
                                                                               \
   g_value_init (&gval, value_gtype);                                          \
   g_value_set_ ##setter_name (&gval, value);                                  \
                                                                               \
-  return _set_value (container, meta_item, &gval);                            \
+  ret = _set_value  (container, meta_item, &gval);                            \
+                                                                              \
+  g_value_unset (&gval);                                                      \
+  return ret;                                                                 \
 }
 
 /**
