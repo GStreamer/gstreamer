@@ -22,24 +22,42 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
+static void
+project_loaded_cb (GESProject * project, GESTimeline * timeline,
+    GMainLoop * mainloop)
+{
+  g_main_loop_quit (mainloop);
+}
+
 GST_START_TEST (test_project_simple)
 {
   gchar *id;
   GESProject *project;
   GESTimeline *timeline;
+  GMainLoop *mainloop;
 
   ges_init ();
 
+  mainloop = g_main_loop_new (NULL, FALSE);
   project = GES_PROJECT (ges_asset_request (GES_TYPE_TIMELINE, NULL, NULL));
   fail_unless (GES_IS_PROJECT (project));
   assert_equals_string (ges_asset_get_id (GES_ASSET (project)), "project-0");
+  g_signal_connect (project, "loaded", (GCallback) project_loaded_cb, mainloop);
 
   timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
+  g_main_loop_run (mainloop);
+
   fail_unless (GES_IS_TIMELINE (timeline));
   id = ges_extractable_get_id (GES_EXTRACTABLE (timeline));
   assert_equals_string (id, "project-0");
+  ASSERT_OBJECT_REFCOUNT (timeline, "We own the only ref", 1);
 
   g_free (id);
+  gst_object_unref (project);
+  gst_object_unref (timeline);
+  g_main_loop_unref (mainloop);
+  g_signal_handlers_disconnect_by_func (project, (GCallback) project_loaded_cb,
+      mainloop);
 }
 
 GST_END_TEST;
@@ -81,6 +99,11 @@ GST_START_TEST (test_project_add_assets)
   fail_unless (removed_cb_called);
   gst_object_unref (asset);
   gst_object_unref (project);
+
+  g_signal_handlers_disconnect_by_func (project,
+      (GCallback) asset_removed_add_cb, &added_cb_called);
+  g_signal_handlers_disconnect_by_func (project,
+      (GCallback) asset_removed_add_cb, &removed_cb_called);
 
   ASSERT_OBJECT_REFCOUNT (asset, "The asset (1 ref in cache)", 1);
   ASSERT_OBJECT_REFCOUNT (project, "The project (1 ref in cache)", 1);
@@ -141,8 +164,6 @@ GST_START_TEST (test_project_unexistant_effect)
 
 GST_END_TEST;
 
-static GMainLoop *mainloop;
-
 static void
 asset_added_cb (GESProject * project, GESAsset * asset)
 {
@@ -159,12 +180,6 @@ asset_added_cb (GESProject * project, GESAsset * asset)
   }
 
   g_free (uri);
-}
-
-static void
-project_loaded_cb (GESProject * project, GESTimeline * timeline)
-{
-  g_main_loop_quit (mainloop);
 }
 
 static gchar *
@@ -192,16 +207,17 @@ _test_project (GESProject * project, GESTimeline * timeline)
   assert_equals_string (ges_meta_container_get_string (GES_META_CONTAINER
           (project), "name"), "Example project");
   tlobjs =
-      ges_timeline_layer_get_objects (GES_TIMELINE_LAYER (timeline->layers->
-          data));
-  fail_unless (ges_meta_container_get_uint (GES_META_CONTAINER (timeline->
-              layers->data), "a", &a_meta));
+      ges_timeline_layer_get_objects (GES_TIMELINE_LAYER (timeline->
+          layers->data));
+  fail_unless (ges_meta_container_get_uint (GES_META_CONTAINER
+          (timeline->layers->data), "a", &a_meta));
   assert_equals_int (a_meta, 3);
   assert_equals_int (g_list_length (tlobjs), 1);
   media_uri = ges_test_file_uri ("audio_video.ogg");
   assert_equals_string (ges_asset_get_id (ges_extractable_get_asset
           (GES_EXTRACTABLE (tlobjs->data))), media_uri);
   g_free (media_uri);
+  g_list_free_full (tlobjs, gst_object_unref);
 
   /* Check tracks and the objects  they contain */
   tracks = ges_timeline_get_tracks (timeline);
@@ -211,9 +227,9 @@ _test_project (GESProject * project, GESTimeline * timeline)
     track = GES_TRACK (tmp->data);
 
     trackobjs = ges_track_get_objects (track);
+    GST_DEBUG_OBJECT (track, "Testing track");
     switch (track->type) {
       case GES_TRACK_TYPE_VIDEO:
-        GST_DEBUG_OBJECT (track, "Testing track");
         assert_equals_int (g_list_length (trackobjs), 2);
         for (tmptckobj = trackobjs; tmptckobj; tmptckobj = tmptckobj->next) {
           GESTrackObject *tckobj = GES_TRACK_OBJECT (tmptckobj->data);
@@ -257,17 +273,19 @@ _test_project (GESProject * project, GESTimeline * timeline)
 GST_START_TEST (test_project_load_xges)
 {
   gboolean saved;
+  GMainLoop *mainloop;
   GESProject *project;
   GESTimeline *timeline;
   GESAsset *formatter_asset;
   gchar *tmpuri, *uri = ges_test_file_uri ("test-project.xges");
 
   project = ges_project_new (uri);
+  mainloop = g_main_loop_new (NULL, FALSE);
   fail_unless (GES_IS_PROJECT (project));
 
   /* Connect the signals */
   g_signal_connect (project, "asset-added", (GCallback) asset_added_cb, NULL);
-  g_signal_connect (project, "loaded", (GCallback) project_loaded_cb, NULL);
+  g_signal_connect (project, "loaded", (GCallback) project_loaded_cb, mainloop);
 
   /* Make sure we update the project's dummy URL to some actual URL */
   g_signal_connect (project, "missing-uri", (GCallback) _set_new_uri, NULL);
@@ -277,7 +295,6 @@ GST_START_TEST (test_project_load_xges)
   timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
   fail_unless (GES_IS_TIMELINE (timeline));
 
-  mainloop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (mainloop);
   GST_LOG ("Test first loading");
   _test_project (project, timeline);
@@ -297,7 +314,7 @@ GST_START_TEST (test_project_load_xges)
   project = ges_project_new (uri);
   ASSERT_OBJECT_REFCOUNT (project, "Our + cache", 2);
   g_signal_connect (project, "asset-added", (GCallback) asset_added_cb, NULL);
-  g_signal_connect (project, "loaded", (GCallback) project_loaded_cb, NULL);
+  g_signal_connect (project, "loaded", (GCallback) project_loaded_cb, mainloop);
 
   GST_LOG ("Loading saved project");
   timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
@@ -311,6 +328,10 @@ GST_START_TEST (test_project_load_xges)
   ASSERT_OBJECT_REFCOUNT (project, "Still 1 ref for asset cache", 1);
 
   g_main_loop_unref (mainloop);
+  g_signal_handlers_disconnect_by_func (project, (GCallback) project_loaded_cb,
+      mainloop);
+  g_signal_handlers_disconnect_by_func (project, (GCallback) asset_added_cb,
+      NULL);
 }
 
 GST_END_TEST;
