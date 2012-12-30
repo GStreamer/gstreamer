@@ -413,8 +413,8 @@ static gboolean
 gst_eglglessink_configure_caps (GstEglGlesSink * eglglessink, GstCaps * caps);
 static GstFlowReturn gst_eglglessink_render_and_display (GstEglGlesSink * sink,
     GstBuffer * buf);
-static GstFlowReturn gst_eglglessink_queue_buffer (GstEglGlesSink * sink,
-    GstBuffer * buf);
+static GstFlowReturn gst_eglglessink_queue_object (GstEglGlesSink * sink,
+    GstMiniObject * obj);
 static inline gboolean got_gl_error (const char *wtf);
 static inline void show_egl_error (const char *wtf);
 static void gst_eglglessink_wipe_fmt (gpointer data);
@@ -623,18 +623,12 @@ render_thread_func (GstEglGlesSink * eglglessink)
   eglBindAPI (EGL_OPENGL_ES_API);
 
   while (gst_data_queue_pop (eglglessink->queue, &item)) {
-    GstBuffer *buf = NULL;
-
     GST_DEBUG_OBJECT (eglglessink, "Handling object %" GST_PTR_FORMAT,
         item->object);
 
-    if (item->object) {
-      GstSample *sample;
-      GstCaps *caps;
+    if (GST_IS_CAPS (item->object)) {
+      GstCaps *caps = GST_CAPS_CAST (item->object);
 
-      sample = GST_SAMPLE (item->object);
-      buf = gst_sample_get_buffer (sample);
-      caps = gst_sample_get_caps (sample);
       if (caps != eglglessink->configured_caps) {
         if (!gst_eglglessink_configure_caps (eglglessink, caps)) {
           eglglessink->last_flow = GST_FLOW_NOT_NEGOTIATED;
@@ -645,17 +639,20 @@ render_thread_func (GstEglGlesSink * eglglessink)
           break;
         }
       }
+    } else if (GST_IS_BUFFER (item->object) || !item->object) {
+      GstBuffer *buf = GST_BUFFER_CAST (item->object);
+
+      if (eglglessink->configured_caps) {
+        eglglessink->last_flow =
+            gst_eglglessink_render_and_display (eglglessink, buf);
+      } else {
+        GST_DEBUG_OBJECT (eglglessink,
+            "No caps configured yet, not drawing anything");
+      }
     }
 
-    if (eglglessink->configured_caps) {
-      eglglessink->last_flow =
-          gst_eglglessink_render_and_display (eglglessink, buf);
-    } else {
-      GST_DEBUG_OBJECT (eglglessink,
-          "No caps configured yet, not drawing anything");
-    }
 
-    if (buf) {
+    if (item->object) {
       g_mutex_lock (&eglglessink->render_lock);
       g_cond_broadcast (&eglglessink->render_cond);
       g_mutex_unlock (&eglglessink->render_lock);
@@ -891,7 +888,7 @@ gst_eglglessink_expose (GstVideoOverlay * overlay)
   GST_DEBUG_OBJECT (eglglessink, "Expose catched, redisplay");
 
   /* Render from last seen buffer */
-  ret = gst_eglglessink_queue_buffer (eglglessink, NULL);
+  ret = gst_eglglessink_queue_object (eglglessink, NULL);
   if (ret == GST_FLOW_ERROR)
     GST_ERROR_OBJECT (eglglessink, "Redisplay failed");
 }
@@ -1663,24 +1660,19 @@ queue_item_destroy (GstDataQueueItem * item)
 }
 
 static GstFlowReturn
-gst_eglglessink_queue_buffer (GstEglGlesSink * eglglessink, GstBuffer * buf)
+gst_eglglessink_queue_object (GstEglGlesSink * eglglessink, GstMiniObject * obj)
 {
   GstDataQueueItem *item = g_slice_new0 (GstDataQueueItem);
-  GstSample *sample;
 
-  sample =
-      (buf ? gst_sample_new (buf, eglglessink->current_caps, NULL,
-          NULL) : NULL);
-
-  item->object = GST_MINI_OBJECT_CAST (sample);
-  item->size = (buf ? gst_buffer_get_size (buf) : 0);
-  item->duration = (buf ? GST_BUFFER_DURATION (buf) : GST_CLOCK_TIME_NONE);
-  item->visible = (buf ? TRUE : FALSE);
+  item->object = obj ? gst_mini_object_ref (obj) : NULL;
+  item->size = 0;
+  item->duration = GST_CLOCK_TIME_NONE;
+  item->visible = TRUE;
   item->destroy = (GDestroyNotify) queue_item_destroy;
 
-  GST_DEBUG_OBJECT (eglglessink, "Queueing buffer %" GST_PTR_FORMAT, buf);
+  GST_DEBUG_OBJECT (eglglessink, "Queueing object %" GST_PTR_FORMAT, obj);
 
-  if (buf)
+  if (obj)
     g_mutex_lock (&eglglessink->render_lock);
   if (!gst_data_queue_push (eglglessink->queue, item)) {
     item->destroy (item);
@@ -1689,15 +1681,15 @@ gst_eglglessink_queue_buffer (GstEglGlesSink * eglglessink, GstBuffer * buf)
     return GST_FLOW_FLUSHING;
   }
 
-  if (buf) {
-    GST_DEBUG_OBJECT (eglglessink, "Waiting for buffer to be rendered");
+  if (obj) {
+    GST_DEBUG_OBJECT (eglglessink, "Waiting for obj to be handled");
     g_cond_wait (&eglglessink->render_cond, &eglglessink->render_lock);
     GST_DEBUG_OBJECT (eglglessink, "Buffer rendered: %s",
         gst_flow_get_name (eglglessink->last_flow));
     g_mutex_unlock (&eglglessink->render_lock);
   }
 
-  return (buf ? eglglessink->last_flow : GST_FLOW_OK);
+  return (obj ? eglglessink->last_flow : GST_FLOW_OK);
 }
 
 static gboolean
@@ -2390,7 +2382,7 @@ gst_eglglessink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   eglglessink = GST_EGLGLESSINK (vsink);
   GST_DEBUG_OBJECT (eglglessink, "Got buffer: %p", buf);
 
-  return gst_eglglessink_queue_buffer (eglglessink, buf);
+  return gst_eglglessink_queue_object (eglglessink, GST_MINI_OBJECT_CAST (buf));
 }
 
 static GstCaps *
@@ -2534,6 +2526,12 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GST_DEBUG_OBJECT (eglglessink,
       "Current caps %" GST_PTR_FORMAT ", setting caps %"
       GST_PTR_FORMAT, eglglessink->current_caps, caps);
+
+  if (gst_eglglessink_queue_object (eglglessink,
+          GST_MINI_OBJECT_CAST (caps)) != GST_FLOW_OK) {
+    GST_ERROR_OBJECT (eglglessink, "Failed to configure caps");
+    return FALSE;
+  }
 
   gst_caps_replace (&eglglessink->current_caps, caps);
 
