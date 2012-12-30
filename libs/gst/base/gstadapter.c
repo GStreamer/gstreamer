@@ -964,7 +964,7 @@ gst_adapter_prev_dts (GstAdapter * adapter, guint64 * distance)
  *
  * Returns: offset of the first match, or -1 if no match was found.
  */
-gsize
+gssize
 gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
     guint32 pattern, gsize offset, gsize size, guint32 * value)
 {
@@ -1099,7 +1099,7 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
  * // -> returns -1
  * </programlisting>
  */
-gsize
+gssize
 gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
     guint32 pattern, gsize offset, gsize size)
 {
