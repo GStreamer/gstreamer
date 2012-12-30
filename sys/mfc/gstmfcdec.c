@@ -49,7 +49,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, "
         "profile = (string) {constrained-baseline, baseline, main, high}, "
-        "level = (string) {1, 1b, 1.1, 1.2, 1.3, 2, 2.1, 2.2, 3, 3.1, 3.2, 4}, "
         "width = (int) [32, 1920], "
         "height = (int) [32, 1080], "
         "parsed = (boolean) true, "
@@ -58,7 +57,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "video/mpeg, "
         "mpegversion = (int) 4, "
         "profile = (string) {simple, advanced-simple}, "
-        "level = (string) {0, 0b, 1, 2, 3, 4, 4a, 5}, "
         "width = (int) [32, 1920], "
         "height = (int) [32, 1080], "
         "systemstream = (boolean) false")
@@ -571,13 +569,13 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
         GST_LOG_OBJECT (self,
             "Dropping too late frame: deadline %" G_GINT64_FORMAT, deadline);
         ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
+        frame = NULL;
         goto done;
       }
 
-      if (!frame->output_buffer)
-        ret =
-            gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (self),
-            frame);
+      ret =
+          gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (self),
+          frame);
 
       if (ret != GST_FLOW_OK)
         goto alloc_error;
