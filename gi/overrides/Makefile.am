@@ -23,7 +23,7 @@ _gi_gst_la_LDFLAGS = $(common_ldflags)
 # source tree; Python does not accept the extensions and modules in different
 # paths
 build_pylinks:
-	for f in $(pygioverrides_PYTHON); do \
+	for f in $(pygioverrides_PYTHON) __init__.py; do \
 	    [ -e $(builddir)/$$f ] || $(LN_S) $(srcdir)/$$f $(builddir)/$$f; \
 	done
 
