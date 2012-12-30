@@ -2220,7 +2220,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       eglglessink->crop.x = 0;
       eglglessink->crop.y = 0;
       eglglessink->crop.w = eglglessink->configured_info.width;
-      eglglessink->crop.h = eglglessink->configured_info.width;
+      eglglessink->crop.h = eglglessink->configured_info.height;
     }
 
     if (!eglglessink->force_aspect_ratio) {
