@@ -1666,7 +1666,12 @@ queue_item_destroy (GstDataQueueItem * item)
 static GstFlowReturn
 gst_eglglessink_queue_object (GstEglGlesSink * eglglessink, GstMiniObject * obj)
 {
-  GstDataQueueItem *item = g_slice_new0 (GstDataQueueItem);
+  GstDataQueueItem *item;
+
+  if (eglglessink->last_flow != GST_FLOW_OK)
+    return eglglessink->last_flow;
+  
+  item = g_slice_new0 (GstDataQueueItem);
 
   item->object = obj ? gst_mini_object_ref (obj) : NULL;
   item->size = 0;
