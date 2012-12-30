@@ -853,7 +853,8 @@ got_egl_error (const char *wtf)
   EGLint error;
 
   if ((error = eglGetError ()) != EGL_SUCCESS) {
-    GST_CAT_DEBUG (GST_CAT_DEFAULT, "EGL ERROR: %s returned 0x%04x", wtf, error);
+    GST_CAT_DEBUG (GST_CAT_DEFAULT, "EGL ERROR: %s returned 0x%04x", wtf,
+        error);
     return TRUE;
   }
 
@@ -1670,7 +1671,7 @@ gst_eglglessink_queue_object (GstEglGlesSink * eglglessink, GstMiniObject * obj)
 
   if (eglglessink->last_flow != GST_FLOW_OK)
     return eglglessink->last_flow;
-  
+
   item = g_slice_new0 (GstDataQueueItem);
 
   item->object = obj ? gst_mini_object_ref (obj) : NULL;

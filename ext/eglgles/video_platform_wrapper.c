@@ -126,7 +126,7 @@ platform_destroy_native_window (EGLNativeDisplayType display,
 EGLNativeWindowType
 platform_create_native_window (gint width, gint height, gpointer * window_data)
 {
-  fbdev_window * w = g_slice_new0 (fbdev_window);
+  fbdev_window *w = g_slice_new0 (fbdev_window);
 
   w->width = width;
   w->height = height;
