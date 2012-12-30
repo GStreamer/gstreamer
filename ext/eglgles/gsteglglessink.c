@@ -2215,8 +2215,8 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     } else if (buf) {
       eglglessink->crop.x = 0;
       eglglessink->crop.y = 0;
-      eglglessink->crop.w = GST_VIDEO_FRAME_WIDTH (&vframe);
-      eglglessink->crop.h = GST_VIDEO_FRAME_HEIGHT (&vframe);
+      eglglessink->crop.w = eglglessink->configured_info.width;
+      eglglessink->crop.h = eglglessink->configured_info.width;
     }
 
     if (!eglglessink->force_aspect_ratio) {
