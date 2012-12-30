@@ -416,7 +416,7 @@ static GstFlowReturn gst_eglglessink_render_and_display (GstEglGlesSink * sink,
 static GstFlowReturn gst_eglglessink_queue_object (GstEglGlesSink * sink,
     GstMiniObject * obj);
 static inline gboolean got_gl_error (const char *wtf);
-static inline void show_egl_error (const char *wtf);
+static inline gboolean got_egl_error (const char *wtf);
 static void gst_eglglessink_wipe_fmt (gpointer data);
 static inline gboolean egl_init (GstEglGlesSink * eglglessink);
 static gboolean gst_eglglessink_context_make_current (GstEglGlesSink *
@@ -841,19 +841,23 @@ got_gl_error (const char *wtf)
   GLuint error = GL_NO_ERROR;
 
   if ((error = glGetError ()) != GL_NO_ERROR) {
-    GST_CAT_ERROR (GST_CAT_DEFAULT, "GL ERROR: %s returned %x", wtf, error);
+    GST_CAT_ERROR (GST_CAT_DEFAULT, "GL ERROR: %s returned 0x%04x", wtf, error);
     return TRUE;
   }
   return FALSE;
 }
 
-static inline void
-show_egl_error (const char *wtf)
+static inline gboolean
+got_egl_error (const char *wtf)
 {
   EGLint error;
 
-  if ((error = eglGetError ()) != EGL_SUCCESS)
-    GST_CAT_DEBUG (GST_CAT_DEFAULT, "EGL ERROR: %s returned %x", wtf, error);
+  if ((error = eglGetError ()) != EGL_SUCCESS) {
+    GST_CAT_DEBUG (GST_CAT_DEFAULT, "EGL ERROR: %s returned 0x%04x", wtf, error);
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 static EGLNativeWindowType
@@ -1130,7 +1134,7 @@ gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink,
     if (!eglMakeCurrent (eglglessink->eglglesctx.display,
             eglglessink->eglglesctx.surface, eglglessink->eglglesctx.surface,
             eglglessink->eglglesctx.eglcontext)) {
-      show_egl_error ("eglMakeCurrent");
+      got_egl_error ("eglMakeCurrent");
       GST_ERROR_OBJECT (eglglessink, "Couldn't bind context");
       return FALSE;
     }
@@ -1139,7 +1143,7 @@ gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink,
         g_thread_self ());
     if (!eglMakeCurrent (eglglessink->eglglesctx.display, EGL_NO_SURFACE,
             EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
-      show_egl_error ("eglMakeCurrent");
+      got_egl_error ("eglMakeCurrent");
       GST_ERROR_OBJECT (eglglessink, "Couldn't unbind context");
       return FALSE;
     }
@@ -1262,7 +1266,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       NULL);
 
   if (eglglessink->eglglesctx.surface == EGL_NO_SURFACE) {
-    show_egl_error ("eglCreateWindowSurface");
+    got_egl_error ("eglCreateWindowSurface");
     GST_ERROR_OBJECT (eglglessink, "Can't create surface");
     goto HANDLE_EGL_ERROR_LOCKED;
   }
@@ -1543,7 +1547,7 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
   if (!eglInitialize (eglglessink->eglglesctx.display,
           &eglglessink->eglglesctx.egl_major,
           &eglglessink->eglglesctx.egl_minor)) {
-    show_egl_error ("eglInitialize");
+    got_egl_error ("eglInitialize");
     GST_ERROR_OBJECT (eglglessink, "Could not init EGL display connection");
     goto HANDLE_EGL_ERROR;
   }
@@ -1582,7 +1586,7 @@ gst_eglglessink_choose_config (GstEglGlesSink * eglglessink)
   if ((eglChooseConfig (eglglessink->eglglesctx.display,
               eglglessink->selected_fmt->attribs,
               &eglglessink->eglglesctx.config, 1, &egl_configs)) == EGL_FALSE) {
-    show_egl_error ("eglChooseConfig");
+    got_egl_error ("eglChooseConfig");
     GST_ERROR_OBJECT (eglglessink, "eglChooseConfig failed");
     goto HANDLE_EGL_ERROR;
   }
@@ -2354,7 +2358,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
   if ((eglSwapBuffers (eglglessink->eglglesctx.display,
               eglglessink->eglglesctx.surface))
       == EGL_FALSE) {
-    show_egl_error ("eglSwapBuffers");
+    got_egl_error ("eglSwapBuffers");
     goto HANDLE_ERROR;
   }
 
