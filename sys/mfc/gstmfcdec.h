@@ -58,6 +58,7 @@ struct _GstMFCDec
   GstBuffer *codec_data;
 
   GstVideoFormat format;  
+  FimcColorFormat fimc_format;
   Fimc *fimc;
   gint width, height;
   gint crop_left, crop_top;
@@ -66,6 +67,7 @@ struct _GstMFCDec
 
   void *dst[3];
   int dst_stride[3];
+  gboolean mmap;
 };
 
 struct _GstMFCDecClass
