@@ -45,7 +45,7 @@
 #ifndef __PSMUXSTREAM_H__
 #define __PSMUXSTREAM_H__
 
-#include <glib.h>
+#include <gst/gst.h>
 
 #include "psmuxcommon.h"
 
@@ -83,16 +83,14 @@ enum PsMuxStreamType { /* Table 2-29 in spec */
 
 struct PsMuxStreamBuffer
 {
-  guint8 *data;
-  guint32 size;
-
   gboolean keyunit;
 
   /* PTS & DTS associated with the contents of this buffer */
   GstClockTime pts;
   GstClockTime dts;
 
-  void *user_data;
+  GstBuffer *buf;
+  GstMapInfo map;
 };
 
 /* PsMuxStream receives elementary streams for parsing.
@@ -116,9 +114,6 @@ struct PsMuxStream{
   guint16 cur_pes_payload_size;
   guint16 pes_bytes_written; /* delete*/
 
-  /* Release function */
-  PsMuxStreamBufferReleaseFunc buffer_release;
-
   /* PTS/DTS to write if the flags in the packet info are set */
   gint64 pts; /* TODO: cur_buffer->pts?*/
   gint64 dts; /* TODO: cur_buffer->dts?*/
@@ -141,14 +136,11 @@ struct PsMuxStream{
 PsMuxStream*    psmux_stream_new                (PsMux * mux, PsMuxStreamType stream_type);
 void 		psmux_stream_free 		(PsMuxStream *stream);
 
-/* The callback when a buffer is released. Used to unref the buffer in GStreamer */
-void 		psmux_stream_set_buffer_release_func 	(PsMuxStream *stream,
-       							 PsMuxStreamBufferReleaseFunc func);
-
 /* Add a new buffer to the pool of available bytes. If pts or dts are not -1, they
  * indicate the PTS or DTS of the first access unit within this packet */
-void 		psmux_stream_add_data 		(PsMuxStream *stream, guint8 *data, guint len,
-						 void *user_data, gint64 pts, gint64 dts,
+void 		psmux_stream_add_data 		(PsMuxStream *stream,
+						 GstBuffer * buffer,
+						 gint64 pts, gint64 dts,
 						 gboolean keyunit);
 
 /* total bytes in buffer */

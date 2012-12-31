@@ -341,20 +341,19 @@ psmux_write_pack_header (PsMux * mux)
 static void
 psmux_ensure_system_header (PsMux * mux)
 {
-  GstBuffer *buf;
   bits_buffer_t bw;
   guint len = 12 + (mux->nb_streams +
       (mux->nb_private_streams > 1 ? mux->nb_private_streams - 1 : 0)) * 3;
   GList *cur;
   gboolean private_hit = FALSE;
+  guint8 *data;
 
   if (mux->sys_header != NULL)
     return;
 
-  buf = gst_buffer_new_and_alloc (len);
+  data = g_malloc (len);
 
-  /* system_header_start_code */
-  bits_initwrite (&bw, len, GST_BUFFER_DATA (buf));
+  bits_initwrite (&bw, len, data);
 
   /* system_header start code */
   bits_write (&bw, 24, PSMUX_START_CODE_PREFIX);
@@ -374,8 +373,7 @@ psmux_ensure_system_header (PsMux * mux)
   bits_write (&bw, 1, 0);       /* packet_rate_restriction_flag */
   bits_write (&bw, 7, 0x7f);    /* reserved_bits */
 
-  for (cur = g_list_first (mux->streams), private_hit = FALSE; cur != NULL;
-      cur = g_list_next (cur)) {
+  for (cur = mux->streams, private_hit = FALSE; cur != NULL; cur = cur->next) {
     PsMuxStream *stream = (PsMuxStream *) cur->data;
 
     if (private_hit && stream->stream_id == PSMUX_EXTENDED_STREAM)
@@ -390,19 +388,22 @@ psmux_ensure_system_header (PsMux * mux)
       private_hit = TRUE;
   }
 
-  GST_MEMDUMP ("System Header", GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  GST_MEMDUMP ("System Header", data, len);
 
-  mux->sys_header = buf;
+  mux->sys_header = gst_buffer_new_wrapped (data, len);
 }
 
 static gboolean
 psmux_write_system_header (PsMux * mux)
 {
+  GstMapInfo map;
+
   psmux_ensure_system_header (mux);
 
-  memcpy (mux->packet_buf, GST_BUFFER_DATA (mux->sys_header),
-      GST_BUFFER_SIZE (mux->sys_header));
-  mux->packet_bytes_written = GST_BUFFER_SIZE (mux->sys_header);
+  gst_buffer_map (mux->sys_header, &map, GST_MAP_READ);
+  memcpy (mux->packet_buf, map.data, map.size);
+  mux->packet_bytes_written = map.size;
+  gst_buffer_unmap (mux->sys_header, &map);
 
   return psmux_packet_out (mux);
 }
@@ -410,19 +411,19 @@ psmux_write_system_header (PsMux * mux)
 static void
 psmux_ensure_program_stream_map (PsMux * mux)
 {
-  GstBuffer *buf;
   gint psm_size = 16, es_map_size = 0;
   bits_buffer_t bw;
   GList *cur;
   guint16 len;
   guint8 *pos;
+  guint8 *data;
 
   if (mux->psm != NULL)
     return;
 
   /* pre-write the descriptor loop */
   pos = mux->es_info_buf;
-  for (cur = g_list_first (mux->streams); cur != NULL; cur = g_list_next (cur)) {
+  for (cur = mux->streams; cur != NULL; cur = cur->next) {
     PsMuxStream *stream = (PsMuxStream *) cur->data;
     len = 0;
 
@@ -442,9 +443,9 @@ psmux_ensure_program_stream_map (PsMux * mux)
 
   psm_size += es_map_size;
 
-  buf = gst_buffer_new_and_alloc (psm_size);
+  data = g_malloc (psm_size);
 
-  bits_initwrite (&bw, psm_size, GST_BUFFER_DATA (buf));
+  bits_initwrite (&bw, psm_size, data);
 
   /* psm start code */
   bits_write (&bw, 24, PSMUX_START_CODE_PREFIX);
@@ -471,20 +472,22 @@ psmux_ensure_program_stream_map (PsMux * mux)
     psmux_put32 (&pos, crc);
   }
 
-  GST_MEMDUMP ("Program Stream Map", GST_BUFFER_DATA (buf),
-      GST_BUFFER_SIZE (buf));
+  GST_MEMDUMP ("Program Stream Map", data, psm_size);
 
-  mux->psm = buf;
+  mux->psm = gst_buffer_new_wrapped (data, psm_size);
 }
 
 static gboolean
 psmux_write_program_stream_map (PsMux * mux)
 {
+  GstMapInfo map;
+
   psmux_ensure_program_stream_map (mux);
 
-  memcpy (mux->packet_buf, GST_BUFFER_DATA (mux->psm),
-      GST_BUFFER_SIZE (mux->psm));
-  mux->packet_bytes_written = GST_BUFFER_SIZE (mux->psm);
+  gst_buffer_map (mux->psm, &map, GST_MAP_READ);
+  memcpy (mux->packet_buf, map.data, map.size);
+  mux->packet_bytes_written = map.size;
+  gst_buffer_unmap (mux->psm, &map);
 
   return psmux_packet_out (mux);
 }
