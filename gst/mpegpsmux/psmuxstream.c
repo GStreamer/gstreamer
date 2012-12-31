@@ -303,7 +303,7 @@ psmux_stream_get_data (PsMuxStream * stream, guint8 * buf, guint len)
   pes_hdr_length = psmux_stream_pes_header_length (stream);
 
   /* write pes header */
-  PS_DEBUG ("Writing PES header of length %u and payload %d",
+  GST_LOG ("Writing PES header of length %u and payload %d",
       pes_hdr_length, stream->cur_pes_payload_size);
   psmux_stream_write_pes_header (stream, buf);
 

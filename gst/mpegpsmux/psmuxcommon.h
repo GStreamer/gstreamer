@@ -49,8 +49,6 @@
 #include <gst/gst.h>
 #include "bits.h" /* from VLC */
 
-#undef PS_DEBUG_ON
-
 G_BEGIN_DECLS
 
 #define PSMUX_PACK_HDR_FREQ	30
@@ -150,12 +148,6 @@ psmux_put_ts (guint8 **pos, guint8 id, gint64 ts)
   /* 4, 5: TS[14..0] | marker_bit */
   psmux_put16 (pos, ((ts << 1) & 0xfffe) | 0x01);
 }
-
-#ifdef PS_DEBUG_ON
-#define PS_DEBUG(...) g_print(__VA_ARGS__); g_print ("\n")
-#else
-#define PS_DEBUG(...)
-#endif
 
 G_END_DECLS
 

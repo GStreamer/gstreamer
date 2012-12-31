@@ -288,7 +288,7 @@ psmux_write_stream_packet (PsMux * mux, PsMuxStream * stream)
 
   res = psmux_packet_out (mux);
   if (!res) {
-    PS_DEBUG ("packet write false");
+    GST_DEBUG_OBJECT (mux, "packet write false");
     return FALSE;
   }
 
