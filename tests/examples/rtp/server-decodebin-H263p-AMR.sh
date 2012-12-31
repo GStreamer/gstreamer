@@ -14,7 +14,8 @@
 AOFFSET=0
 VOFFSET=0
 
-VCAPS="video/x-raw,width=352,height=288,framerate=15/1"
+# encoder seems to be picky about PAR, so force one that should work
+VCAPS="video/x-raw,width=352,height=288,framerate=15/1,pixel-aspect-ratio=1/1"
 
 # video and audio encoding and payloading
 VENCPAY="avenc_h263p ! rtph263ppay"
@@ -27,6 +28,12 @@ ACONV="audioconvert ! audioresample"
 
 #HOST=192.168.1.126
 HOST=127.0.0.1
+
+if test -z "$1"; then
+  echo "No URI argument.";
+  echo "Usage: $0 file:///path/to/video.file";
+  exit 1;
+fi
 
 gst-launch-1.0 -v rtpbin name=rtpbin \
            uridecodebin uri="$1" name=decode \
