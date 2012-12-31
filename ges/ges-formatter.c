@@ -433,8 +433,8 @@ _list_formatters (GType * formatters, guint n_formatters)
     if (tmp_n_types) {
       /* Recurse as g_type_children does not */
       _list_formatters (tmptypes, tmp_n_types);
-      g_free (tmptypes);
     }
+    g_free (tmptypes);
 
     if (G_TYPE_IS_ABSTRACT (type)) {
       GST_DEBUG ("%s is abstract, not using", g_type_name (type));
