@@ -144,14 +144,6 @@ gst_mfc_dec_start (GstVideoDecoder * decoder)
   self->dst_stride[2] = 0;
   self->mmap = TRUE;
 
-  /* Initialize with H264 here, we chose the correct codec in set_format */
-  self->context = mfc_dec_create (CODEC_TYPE_H264, 1);
-  if (!self->context) {
-    GST_ELEMENT_ERROR (self, LIBRARY, INIT,
-        ("Failed to initialize MFC decoder context"), (NULL));
-    return FALSE;
-  }
-
   return TRUE;
 }
 
@@ -190,16 +182,22 @@ gst_mfc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 {
   GstMFCDec *self = GST_MFC_DEC (decoder);
   GstStructure *s;
-  gint ret;
 
   GST_DEBUG_OBJECT (self, "Setting format: %" GST_PTR_FORMAT, state->caps);
 
   s = gst_caps_get_structure (state->caps, 0);
 
+  if (self->context) {
+    mfc_dec_destroy (self->context);
+    self->context = NULL;
+  }
+  self->initialized = FALSE;
+
   if (gst_structure_has_name (s, "video/x-h264")) {
-    if ((ret = mfc_dec_set_codec (self->context, CODEC_TYPE_H264)) < 0) {
-      GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS,
-          ("Failed to set codec to H264"), (NULL));
+    self->context = mfc_dec_create (CODEC_TYPE_H264, 1);
+    if (!self->context) {
+      GST_ELEMENT_ERROR (self, LIBRARY, INIT,
+          ("Failed to initialize MFC decoder context"), (NULL));
       return FALSE;
     }
   } else if (gst_structure_has_name (s, "video/mpeg")) {
@@ -210,9 +208,10 @@ gst_mfc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     if (mpegversion != 4)
       return FALSE;
 
-    if ((ret = mfc_dec_set_codec (self->context, CODEC_TYPE_MPEG4)) < 0) {
-      GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS,
-          ("Failed to set codec to MPEG4"), (NULL));
+    self->context = mfc_dec_create (CODEC_TYPE_MPEG4, 1);
+    if (!self->context) {
+      GST_ELEMENT_ERROR (self, LIBRARY, INIT,
+          ("Failed to initialize MFC decoder context"), (NULL));
       return FALSE;
     }
   } else {
