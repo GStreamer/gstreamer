@@ -466,6 +466,168 @@ fimc_src_requestbuffers_error:
 }
 
 static GstFlowReturn
+gst_mfc_dec_fill_outbuf (GstMFCDec * self, GstBuffer * outbuf,
+    struct mfc_buffer *mfc_outbuf, GstVideoCodecState * state)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  const guint8 *mfc_outbuf_comps[3] = { NULL, };
+  gint i, j, h, w, src_stride, dst_stride;
+  guint8 *dst_, *src_;
+  GstMemory *mem;
+  GstVideoFrame vframe;
+  Fimc *fimc = self->fimc;
+
+  memset (&vframe, 0, sizeof (vframe));
+
+  if (!gst_video_frame_map (&vframe, &state->info, outbuf, GST_MAP_WRITE))
+    goto frame_map_error;
+
+  mfc_buffer_get_output_data (mfc_outbuf, (void **) &mfc_outbuf_comps[0],
+      (void **) &mfc_outbuf_comps[1]);
+
+  if (gst_buffer_n_memory (outbuf) == 1
+      && (mem = gst_buffer_peek_memory (outbuf, 0))
+      && strcmp (mem->allocator->mem_type, "GstEGLImage") == 0) {
+    void *dst[3];
+
+    if (self->mmap) {
+      fimc_release_dst_buffers (fimc);
+
+      if (self->format == GST_VIDEO_FORMAT_NV12) {
+        self->dst_stride[0] = GST_ROUND_UP_4 (self->width);
+        self->dst_stride[1] = GST_ROUND_UP_4 (self->width);
+        self->dst_stride[2] = 0;
+      } else {
+        self->dst_stride[0] = GST_ROUND_UP_4 (self->width);
+        self->dst_stride[1] = GST_ROUND_UP_4 ((self->width + 1) / 2);
+        self->dst_stride[2] = GST_ROUND_UP_4 ((self->width + 1) / 2);
+      }
+      if (fimc_set_dst_format (fimc, self->fimc_format, self->width,
+              self->height, self->dst_stride, self->crop_left,
+              self->crop_top, self->crop_width, self->crop_height) < 0)
+        goto fimc_dst_error;
+      self->mmap = FALSE;
+
+      if (fimc_request_dst_buffers (fimc) < 0)
+        goto fimc_dst_requestbuffers_error;
+
+      self->dst[0] = NULL;
+      self->dst[1] = NULL;
+      self->dst[2] = NULL;
+    }
+
+    dst[0] = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
+    dst[1] = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1);
+    if (self->format == GST_VIDEO_FORMAT_NV12)
+      dst[2] = NULL;
+    else
+      dst[2] = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 2);
+
+    if (fimc_convert (fimc, (void **) mfc_outbuf_comps, (void **) dst) < 0)
+      goto fimc_convert_error;
+  } else {
+    if (!self->mmap) {
+      fimc_release_dst_buffers (fimc);
+
+      self->dst_stride[0] = 0;
+      self->dst_stride[1] = 0;
+      self->dst_stride[2] = 0;
+      self->mmap = TRUE;
+    }
+
+    if (!self->dst[0]) {
+      if (fimc_set_dst_format (fimc, self->fimc_format, self->width,
+              self->height, self->dst_stride, self->crop_left,
+              self->crop_top, self->crop_width, self->crop_height) < 0)
+        goto fimc_dst_error;
+
+      if (fimc_request_dst_buffers_mmap (fimc, self->dst, self->dst_stride) < 0)
+        goto fimc_dst_requestbuffers_error;
+    }
+
+    if (fimc_convert (fimc, (void **) mfc_outbuf_comps,
+            (void **) self->dst) < 0)
+      goto fimc_convert_error;
+
+    switch (state->info.finfo->format) {
+      case GST_VIDEO_FORMAT_I420:
+      case GST_VIDEO_FORMAT_YV12:
+        for (j = 0; j < 3; j++) {
+          dst_ = (guint8 *) GST_VIDEO_FRAME_COMP_DATA (&vframe, j);
+          src_ = self->dst[j];
+          src_stride = self->dst_stride[j];
+          h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, j);
+          w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, j);
+          dst_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, j);
+          for (i = 0; i < h; i++) {
+            memcpy (dst_, src_, w);
+            dst_ += dst_stride;
+            src_ += src_stride;
+          }
+        }
+        break;
+      case GST_VIDEO_FORMAT_NV12:
+        for (j = 0; j < 2; j++) {
+          dst_ = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, j);
+          src_ = self->dst[j];
+          src_stride = self->dst_stride[j];
+          h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, j);
+          w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, j) * (j == 0 ? 1 : 2);
+          dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, j);
+          for (i = 0; i < h; i++) {
+            memcpy (dst_, src_, w);
+            dst_ += dst_stride;
+            src_ += src_stride;
+          }
+        }
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+  }
+
+done:
+  if (vframe.buffer)
+    gst_video_frame_unmap (&vframe);
+
+  return ret;
+
+frame_map_error:
+  {
+    GST_ELEMENT_ERROR (self, CORE, FAILED, ("Failed to map output buffer"),
+        (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
+
+fimc_dst_error:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
+        ("Failed to set FIMC destination parameters"), (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
+fimc_dst_requestbuffers_error:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
+        ("Failed to request FIMC destination buffers"), (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
+fimc_convert_error:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
+        ("Failed to convert via FIMC"), (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+}
+
+static GstFlowReturn
 gst_mfc_dec_dequeue_output (GstMFCDec * self)
 {
   GstFlowReturn ret = GST_FLOW_OK;
@@ -478,8 +640,6 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
   gint src_ystride, src_uvstride;
   GstVideoCodecState *state = NULL;
   gint64 deadline;
-  Fimc *fimc = NULL;
-  GstVideoFrame vframe;
   struct timeval timestamp;
 
   if (!self->initialized) {
@@ -584,129 +744,9 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
       }
     }
 
-    {
-      const guint8 *mfc_outbuf_comps[3] = { NULL, };
-      gint i, j, h, w, src_stride, dst_stride;
-      guint8 *dst_, *src_;
-      GstMemory *mem;
-
-      fimc = self->fimc;
-
-      mfc_buffer_get_output_data (mfc_outbuf, (void **) &mfc_outbuf_comps[0],
-          (void **) &mfc_outbuf_comps[1]);
-
-      if (gst_buffer_n_memory (outbuf) == 1
-          && (mem = gst_buffer_peek_memory (outbuf, 0))
-          && strcmp (mem->allocator->mem_type, "GstEGLImage") == 0) {
-        void *dst[3];
-
-        if (self->mmap) {
-          fimc_release_dst_buffers (fimc);
-
-
-          if (self->format == GST_VIDEO_FORMAT_NV12) {
-            self->dst_stride[0] = GST_ROUND_UP_4 (self->width);
-            self->dst_stride[1] = GST_ROUND_UP_4 (self->width);
-            self->dst_stride[2] = 0;
-          } else {
-            self->dst_stride[0] = GST_ROUND_UP_4 (self->width);
-            self->dst_stride[1] = GST_ROUND_UP_4 ((self->width + 1) / 2);
-            self->dst_stride[2] = GST_ROUND_UP_4 ((self->width + 1) / 2);
-          }
-          if (fimc_set_dst_format (fimc, self->fimc_format, self->width,
-                  self->height, self->dst_stride, self->crop_left,
-                  self->crop_top, self->crop_width, self->crop_height) < 0)
-            goto fimc_dst_error;
-          self->mmap = FALSE;
-          
-          if (fimc_request_dst_buffers (fimc) < 0)
-            goto fimc_dst_requestbuffers_error;
-
-          self->dst[0] = NULL;
-          self->dst[1] = NULL;
-          self->dst[2] = NULL;
-        }
-
-        if (!gst_video_frame_map (&vframe, &state->info, outbuf, GST_MAP_WRITE))
-          goto frame_map_error;
-
-        dst[0] = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
-        dst[1] = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1);
-        if (self->format == GST_VIDEO_FORMAT_NV12)
-          dst[2] = NULL;
-        else
-          dst[2] = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 2);
-
-        if (fimc_convert (fimc, (void **) mfc_outbuf_comps, (void **) dst) < 0)
-          goto fimc_convert_error;
-
-        gst_video_frame_unmap (&vframe);
-      } else {
-        if (!self->mmap) {
-          fimc_release_dst_buffers (fimc);
-
-          self->dst_stride[0] = 0;
-          self->dst_stride[1] = 0;
-          self->dst_stride[2] = 0;
-          if (fimc_set_dst_format (fimc, self->fimc_format, self->width,
-                  self->height, self->dst_stride, self->crop_left,
-                  self->crop_top, self->crop_width, self->crop_height) < 0)
-            goto fimc_dst_error;
-          self->mmap = TRUE;
-        }
-
-        if (!self->dst[0]
-            && fimc_request_dst_buffers_mmap (fimc, self->dst,
-                self->dst_stride) < 0)
-          goto fimc_dst_requestbuffers_error;
-
-        if (fimc_convert (fimc, (void **) mfc_outbuf_comps,
-                (void **) self->dst) < 0)
-          goto fimc_convert_error;
-
-        if (!gst_video_frame_map (&vframe, &state->info, outbuf, GST_MAP_WRITE))
-          goto frame_map_error;
-
-        switch (state->info.finfo->format) {
-          case GST_VIDEO_FORMAT_I420:
-          case GST_VIDEO_FORMAT_YV12:
-            for (j = 0; j < 3; j++) {
-              dst_ = (guint8 *) GST_VIDEO_FRAME_COMP_DATA (&vframe, j);
-              src_ = self->dst[j];
-              src_stride = self->dst_stride[j];
-              h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, j);
-              w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, j);
-              dst_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, j);
-              for (i = 0; i < h; i++) {
-                memcpy (dst_, src_, w);
-                dst_ += dst_stride;
-                src_ += src_stride;
-              }
-            }
-            break;
-          case GST_VIDEO_FORMAT_NV12:
-            for (j = 0; j < 2; j++) {
-              dst_ = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, j);
-              src_ = self->dst[j];
-              src_stride = self->dst_stride[j];
-              h = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, j);
-              w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, j) * (j == 0 ? 1 : 2);
-              dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, j);
-              for (i = 0; i < h; i++) {
-                memcpy (dst_, src_, w);
-                dst_ += dst_stride;
-                src_ += src_stride;
-              }
-            }
-            break;
-          default:
-            g_assert_not_reached ();
-            break;
-        }
-
-        gst_video_frame_unmap (&vframe);
-      }
-    }
+    ret = gst_mfc_dec_fill_outbuf (self, outbuf, mfc_outbuf, state);
+    if (ret != GST_FLOW_OK)
+      goto fill_error;
 
     if (frame) {
       ret = gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
@@ -729,10 +769,10 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
     if (!frame && outbuf)
       gst_buffer_unref (outbuf);
-    if (state)
-      gst_video_codec_state_unref (state);
     if (frame)
       gst_video_codec_frame_unref (frame);
+    if (state)
+      gst_video_codec_state_unref (state);
 
     if (ret != GST_FLOW_OK)
       break;
@@ -773,35 +813,10 @@ alloc_error:
     goto done;
   }
 
-frame_map_error:
+fill_error:
   {
-    GST_ELEMENT_ERROR (self, CORE, FAILED, ("Failed to map output buffer"),
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, ("Failed to fill output buffer"),
         (NULL));
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
-
-
-fimc_dst_error:
-  {
-    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
-        ("Failed to set FIMC destination parameters"), (NULL));
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
-
-fimc_dst_requestbuffers_error:
-  {
-    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
-        ("Failed to request FIMC destination buffers"), (NULL));
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
-
-fimc_convert_error:
-  {
-    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
-        ("Failed to convert via FIMC"), (NULL));
     ret = GST_FLOW_ERROR;
     goto done;
   }
