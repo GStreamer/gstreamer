@@ -123,7 +123,6 @@ static gboolean
 gst_mfc_dec_start (GstVideoDecoder * decoder)
 {
   GstMFCDec *self = GST_MFC_DEC (decoder);
-  Fimc *fimc;
 
   GST_DEBUG_OBJECT (self, "Starting");
 
@@ -152,15 +151,6 @@ gst_mfc_dec_start (GstVideoDecoder * decoder)
         ("Failed to initialize MFC decoder context"), (NULL));
     return FALSE;
   }
-
-  fimc = fimc_new ();
-
-  if (!fimc) {
-    GST_ELEMENT_ERROR (self, LIBRARY, INIT,
-        ("Failed to initialize FIMC context"), (NULL));
-    return FALSE;
-  }
-  self->fimc = fimc;
 
   return TRUE;
 }
@@ -381,14 +371,76 @@ enqueue_error:
 }
 
 static gboolean
+gst_mfc_dec_create_fimc (GstMFCDec * self, GstVideoCodecState * state)
+{
+  Fimc *fimc;
+  FimcColorFormat fimc_format;
+
+  fimc = self->fimc;
+  if (fimc) {
+    fimc_free (fimc);
+    self->fimc = fimc = NULL;
+  }
+
+  fimc = fimc_new ();
+
+  switch (state->info.finfo->format) {
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+      fimc_format = FIMC_COLOR_FORMAT_YUV420P;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+      fimc_format = FIMC_COLOR_FORMAT_YUV420SP;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  if (fimc_set_src_format (fimc, FIMC_COLOR_FORMAT_YUV420SPT, self->width,
+          self->height, self->src_stride, self->crop_left, self->crop_top,
+          self->crop_width, self->crop_height) < 0)
+    goto fimc_src_error;
+
+  if (fimc_request_src_buffers (fimc) < 0)
+    goto fimc_src_requestbuffers_error;
+
+  self->fimc = fimc;
+  self->dst[0] = NULL;
+  self->dst[1] = NULL;
+  self->dst[2] = NULL;
+  self->dst_stride[0] = 0;
+  self->dst_stride[1] = 0;
+  self->dst_stride[2] = 0;
+
+  self->fimc_format = fimc_format;
+
+  return TRUE;
+
+fimc_src_error:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
+        ("Failed to set FIMC source parameters"), (NULL));
+    fimc_free (fimc);
+    return FALSE;
+  }
+
+fimc_src_requestbuffers_error:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
+        ("Failed to request FIMC source buffers"), (NULL));
+    fimc_free (fimc);
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_mfc_dec_negotiate (GstVideoDecoder * decoder)
 {
   GstMFCDec *self = GST_MFC_DEC (decoder);
-  Fimc *fimc = self->fimc;
   GstVideoCodecState *state;
   GstCaps *allowed_caps;
   GstVideoFormat format = GST_VIDEO_FORMAT_I420;
-  FimcColorFormat fimc_format;
 
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_DECODER_SRC_PAD (self));
   allowed_caps = gst_caps_truncate (allowed_caps);
@@ -403,39 +455,6 @@ gst_mfc_dec_negotiate (GstVideoDecoder * decoder)
   }
   gst_caps_unref (allowed_caps);
 
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-      fimc_format = FIMC_COLOR_FORMAT_YUV420P;
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-      fimc_format = FIMC_COLOR_FORMAT_YUV420SP;
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
-  fimc_release_src_buffers (fimc);
-
-  if (fimc_set_src_format (fimc, FIMC_COLOR_FORMAT_YUV420SPT, self->width,
-          self->height, self->src_stride, self->crop_left, self->crop_top,
-          self->crop_width, self->crop_height) < 0)
-    goto fimc_src_error;
-
-  if (fimc_request_src_buffers (fimc) < 0)
-    goto fimc_src_requestbuffers_error;
-
-  fimc_release_dst_buffers (fimc);
-  self->dst[0] = NULL;
-  self->dst[1] = NULL;
-  self->dst[2] = NULL;
-  self->dst_stride[0] = 0;
-  self->dst_stride[1] = 0;
-  self->dst_stride[2] = 0;
-
-  self->fimc_format = fimc_format;
-
   state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
       format, self->crop_width, self->crop_height, self->input_state);
@@ -443,26 +462,6 @@ gst_mfc_dec_negotiate (GstVideoDecoder * decoder)
   gst_video_codec_state_unref (state);
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
-
-
-  GST_DEBUG_OBJECT (self,
-      "Got direct output buffer: %p [%d], %p [%d], %p [%d]", self->dst[0],
-      self->dst_stride[0], self->dst[1], self->dst_stride[1], self->dst[2],
-      self->dst_stride[2]);
-
-fimc_src_error:
-  {
-    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
-        ("Failed to set FIMC source parameters"), (NULL));
-    return FALSE;
-  }
-
-fimc_src_requestbuffers_error:
-  {
-    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
-        ("Failed to request FIMC source buffers"), (NULL));
-    return FALSE;
-  }
 }
 
 static GstFlowReturn
@@ -490,8 +489,11 @@ gst_mfc_dec_fill_outbuf (GstMFCDec * self, GstBuffer * outbuf,
       && strcmp (mem->allocator->mem_type, "GstEGLImage") == 0) {
     void *dst[3];
 
-    if (self->mmap) {
-      fimc_release_dst_buffers (fimc);
+    if (self->mmap || !self->fimc) {
+      if (!gst_mfc_dec_create_fimc (self, state))
+        goto fimc_create_error;
+
+      fimc = self->fimc;
 
       if (self->format == GST_VIDEO_FORMAT_NV12) {
         self->dst_stride[0] = GST_ROUND_UP_4 (self->width);
@@ -526,13 +528,15 @@ gst_mfc_dec_fill_outbuf (GstMFCDec * self, GstBuffer * outbuf,
     if (fimc_convert (fimc, (void **) mfc_outbuf_comps, (void **) dst) < 0)
       goto fimc_convert_error;
   } else {
-    if (!self->mmap) {
-      fimc_release_dst_buffers (fimc);
+    if (!self->mmap || !self->fimc) {
+      if (!gst_mfc_dec_create_fimc (self, state))
+        goto fimc_create_error;
 
       self->dst_stride[0] = 0;
       self->dst_stride[1] = 0;
       self->dst_stride[2] = 0;
       self->mmap = TRUE;
+      fimc = self->fimc;
     }
 
     if (!self->dst[0]) {
@@ -601,6 +605,11 @@ frame_map_error:
     goto done;
   }
 
+fimc_create_error:
+  {
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 
 fimc_dst_error:
   {
