@@ -2612,9 +2612,9 @@ gst_eglglessink_configure_caps (GstEglGlesSink * eglglessink, GstCaps * caps)
   GST_VIDEO_SINK_HEIGHT (eglglessink) = info.height;
 
   if (eglglessink->configured_caps) {
-    GST_ERROR_OBJECT (eglglessink, "Caps were already set");
+    GST_DEBUG_OBJECT (eglglessink, "Caps were already set");
     if (gst_caps_can_intersect (caps, eglglessink->configured_caps)) {
-      GST_INFO_OBJECT (eglglessink, "Caps are compatible anyway");
+      GST_DEBUG_OBJECT (eglglessink, "Caps are compatible anyway");
       goto SUCCEED;
     }
 
