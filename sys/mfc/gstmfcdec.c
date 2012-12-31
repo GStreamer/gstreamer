@@ -185,6 +185,11 @@ gst_mfc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 
   GST_DEBUG_OBJECT (self, "Setting format: %" GST_PTR_FORMAT, state->caps);
 
+  if (self->input_state && gst_caps_can_intersect (self->input_state->caps, state->caps)) {
+    GST_DEBUG_OBJECT (self, "Compatible caps");
+    goto done;
+  }
+
   s = gst_caps_get_structure (state->caps, 0);
 
   if (self->context) {
@@ -220,6 +225,7 @@ gst_mfc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 
   gst_buffer_replace (&self->codec_data, state->codec_data);
 
+done:
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
   self->input_state = gst_video_codec_state_ref (state);
