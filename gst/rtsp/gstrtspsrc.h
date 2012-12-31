@@ -208,8 +208,10 @@ struct _GstRTSPSrc {
   gboolean          do_rtsp_keep_alive;
   gchar            *proxy_host;
   guint             proxy_port;
-  gchar            *proxy_user;
-  gchar            *proxy_passwd;
+  gchar            *proxy_user;        /* from url or property */
+  gchar            *proxy_passwd;      /* from url or property */
+  gchar            *prop_proxy_id;     /* set via property */
+  gchar            *prop_proxy_pw;     /* set via property */
   guint             rtp_blocksize;
   gchar            *user_id;
   gchar            *user_pw;

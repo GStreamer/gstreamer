@@ -197,6 +197,8 @@ enum
   PROP_DO_RTCP,
   PROP_DO_RTSP_KEEP_ALIVE,
   PROP_PROXY,
+  PROP_PROXY_ID,
+  PROP_PROXY_PW,
   PROP_RTP_BLOCKSIZE,
   PROP_USER_ID,
   PROP_USER_PW,
@@ -410,6 +412,30 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       g_param_spec_string ("proxy", "Proxy",
           "Proxy settings for HTTP tunneling. Format: [http://][user:passwd@]host[:port]",
           DEFAULT_PROXY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstRTSPSrc::proxy-id
+   *
+   * Sets the proxy URI user id for authentication. If the URI set via the
+   * "proxy" property contains a user-id already, that will take precedence.
+   *
+   * Since: 1.2
+   */
+  g_object_class_install_property (gobject_class, PROP_PROXY_ID,
+      g_param_spec_string ("proxy-id", "proxy-id",
+          "HTTP proxy URI user id for authentication", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstRTSPSrc::proxy-pw
+   *
+   * Sets the proxy URI password for authentication. If the URI set via the
+   * "proxy" property contains a password already, that will take precedence.
+   *
+   * Since: 1.2
+   */
+  g_object_class_install_property (gobject_class, PROP_PROXY_PW,
+      g_param_spec_string ("proxy-pw", "proxy-pw",
+          "HTTP proxy URI user password for authentication", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstRTSPSrc::rtp_blocksize
@@ -624,6 +650,15 @@ gst_rtspsrc_set_proxy (GstRTSPSrc * rtsp, const gchar * proxy)
 
     /* move to host */
     p = at + 1;
+  } else {
+    if (rtsp->prop_proxy_id != NULL && *rtsp->prop_proxy_id != '\0')
+      rtsp->proxy_user = g_strdup (rtsp->prop_proxy_id);
+    if (rtsp->prop_proxy_pw != NULL && *rtsp->prop_proxy_pw != '\0')
+      rtsp->proxy_passwd = g_strdup (rtsp->prop_proxy_pw);
+    if (rtsp->proxy_user != NULL || rtsp->proxy_passwd != NULL) {
+      GST_LOG_OBJECT (rtsp, "set proxy user/pw from properties: %s:%s",
+          GST_STR_NULL (rtsp->proxy_user), GST_STR_NULL (rtsp->proxy_passwd));
+    }
   }
   col = strchr (p, ':');
 
@@ -699,6 +734,16 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case PROP_PROXY:
       gst_rtspsrc_set_proxy (rtspsrc, g_value_get_string (value));
+      break;
+    case PROP_PROXY_ID:
+      if (rtspsrc->prop_proxy_id)
+        g_free (rtspsrc->prop_proxy_id);
+      rtspsrc->prop_proxy_id = g_value_dup_string (value);
+      break;
+    case PROP_PROXY_PW:
+      if (rtspsrc->prop_proxy_pw)
+        g_free (rtspsrc->prop_proxy_pw);
+      rtspsrc->prop_proxy_pw = g_value_dup_string (value);
       break;
     case PROP_RTP_BLOCKSIZE:
       rtspsrc->rtp_blocksize = g_value_get_uint (value);
@@ -812,6 +857,12 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_take_string (value, str);
       break;
     }
+    case PROP_PROXY_ID:
+      g_value_set_string (value, rtspsrc->prop_proxy_id);
+      break;
+    case PROP_PROXY_PW:
+      g_value_set_string (value, rtspsrc->prop_proxy_pw);
+      break;
     case PROP_RTP_BLOCKSIZE:
       g_value_set_uint (value, rtspsrc->rtp_blocksize);
       break;
