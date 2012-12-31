@@ -95,24 +95,28 @@ GST_DEBUG_CATEGORY_EXTERN (mpegpsmux_debug);
 GstBuffer *
 mpegpsmux_prepare_aac (GstBuffer * buf, MpegPsPadData * data, MpegPsMux * mux)
 {
-  guint8 adts_header[7] = { 0, };
-  GstBuffer *out_buf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buf) + 7);
-  gsize out_offset = 0;
+  GstBuffer *out_buf;
+  GstMemory *mem;
+  gsize out_size;
+  guint8 *adts_header, codec_data[2];
   guint8 rate_idx = 0, channels = 0, obj_type = 0;
 
   GST_DEBUG_OBJECT (mux, "Preparing AAC buffer for output");
 
-  /* We want the same metadata */
-  gst_buffer_copy_metadata (out_buf, buf, GST_BUFFER_COPY_ALL);
+  adts_header = g_malloc0 (7);
+
+  /* We want the same data and metadata, and then prepend some bytes */
+  out_buf = gst_buffer_copy (buf);
+  out_size = gst_buffer_get_size (buf) + 7;
+
+  gst_buffer_extract (data->codec_data, 0, codec_data, 2);
 
   /* Generate ADTS header */
-  obj_type = (GST_READ_UINT8 (GST_BUFFER_DATA (data->codec_data)) & 0xC) >> 2;
+  obj_type = (codec_data[0] & 0xC) >> 2;
   obj_type++;
-  rate_idx = (GST_READ_UINT8 (GST_BUFFER_DATA (data->codec_data)) & 0x3) << 1;
-  rate_idx |=
-      (GST_READ_UINT8 (GST_BUFFER_DATA (data->codec_data) + 1) & 0x80) >> 7;
-  channels =
-      (GST_READ_UINT8 (GST_BUFFER_DATA (data->codec_data) + 1) & 0x78) >> 3;
+  rate_idx = (codec_data[0] & 0x3) << 1;
+  rate_idx |= (codec_data[1] & 0x80) >> 7;
+  channels = (codec_data[1] & 0x78) >> 3;
   GST_DEBUG_OBJECT (mux, "Rate index %u, channels %u, object type %u", rate_idx,
       channels, obj_type);
   /* Sync point over a full byte */
@@ -129,24 +133,20 @@ mpegpsmux_prepare_aac (GstBuffer * buf, MpegPsPadData * data, MpegPsMux * mux)
   /* channels continued over next 2 bits + 4 bits at zero */
   adts_header[3] = (channels & 0x3) << 6;
   /* frame size over last 2 bits */
-  adts_header[3] |= (GST_BUFFER_SIZE (out_buf) & 0x1800) >> 11;
+  adts_header[3] |= (gst_buffer_get_size (out_buf) & 0x1800) >> 11;
   /* frame size continued over full byte */
-  adts_header[4] = (GST_BUFFER_SIZE (out_buf) & 0x1FF8) >> 3;
+  adts_header[4] = (out_size & 0x1FF8) >> 3;
   /* frame size continued first 3 bits */
-  adts_header[5] = (GST_BUFFER_SIZE (out_buf) & 0x7) << 5;
+  adts_header[5] = (out_size & 0x7) << 5;
   /* buffer fullness (0x7FF for VBR) over 5 last bits */
   adts_header[5] |= 0x1F;
   /* buffer fullness (0x7FF for VBR) continued over 6 first bits + 2 zeros for
    * number of raw data blocks */
   adts_header[6] = 0xFC;
 
-  /* Insert ADTS header */
-  memcpy (GST_BUFFER_DATA (out_buf) + out_offset, adts_header, 7);
-  out_offset += 7;
-
-  /* Now copy complete frame */
-  memcpy (GST_BUFFER_DATA (out_buf) + out_offset, GST_BUFFER_DATA (buf),
-      GST_BUFFER_SIZE (buf));
+  /* Prepend ADTS header */
+  mem = gst_memory_new_wrapped (0, adts_header, 7, 0, 7, adts_header, g_free);
+  gst_buffer_prepend_memory (out_buf, mem);
 
   return out_buf;
 }

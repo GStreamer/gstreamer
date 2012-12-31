@@ -315,7 +315,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  freeverb \
  hdvparse ivfparse jp2kdecimator \
  kate librfb \
- mpegpsmux mve mythtv nsf nuvdemux \
+ mve mythtv nsf nuvdemux \
  patchdetect real \
  sdi stereo tta videofilters \
  videomeasure videosignal vmnc \
