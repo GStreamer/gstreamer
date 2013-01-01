@@ -472,49 +472,6 @@ gst_cacasink_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-cairotextoverlay</FILE>
-<TITLE>cairotextoverlay</TITLE>
-GstCairoTextOverlay
-<SUBSECTION Standard>
-GstCairoTextOverlayClass
-GST_TYPE_CAIRO_TEXT_OVERLAY
-GST_CAIRO_TEXT_OVERLAY
-GST_CAIRO_TEXT_OVERLAY_CLASS
-GST_IS_CAIRO_TEXT_OVERLAY
-GST_IS_CAIRO_TEXT_OVERLAY_CLASS
-GST_CAIRO_TEXT_OVERLAY_GET_CLASS
-gst_text_overlay_get_type
-GstCairoTextOverlayHAlign
-GstCairoTextOverlayVAlign
-</SECTION>
-
-<SECTION>
-<FILE>element-cairotimeoverlay</FILE>
-<TITLE>cairotimeoverlay</TITLE>
-GstCairoTimeOverlay
-<SUBSECTION Standard>
-GstCairoTimeOverlayClass
-GST_TYPE_CAIRO_TIME_OVERLAY
-GST_CAIRO_TIME_OVERLAY
-GST_CAIRO_TIME_OVERLAY_CLASS
-GST_IS_CAIRO_TIME_OVERLAY
-GST_IS_CAIRO_TIME_OVERLAY_CLASS
-gst_cairo_time_overlay_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-cairorender</FILE>
-<TITLE>cairorender</TITLE>
-GstCairoRender
-<SUBSECTION Standard>
-GstCairoRenderClass
-GST_TYPE_CAIRO_RENDER
-GST_CAIRO_RENDER
-GST_CAIRO_RENDER_CLASS
-gst_cairo_render_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-cairooverlay</FILE>
 <TITLE>cairooverlay</TITLE>
 GstCairoOverlay
