@@ -69,8 +69,7 @@ on_message (GstBus * bus, GstMessage * message, gpointer user_data)
 typedef struct
 {
   gboolean valid;
-  int width;
-  int height;
+  GstVideoInfo vinfo;
 } CairoOverlayState;
 
 /* Store the information from the caps that we are interested in. */
@@ -79,8 +78,7 @@ prepare_overlay (GstElement * overlay, GstCaps * caps, gpointer user_data)
 {
   CairoOverlayState *state = (CairoOverlayState *) user_data;
 
-  gst_video_format_parse_caps (caps, NULL, &state->width, &state->height);
-  state->valid = TRUE;
+  state->valid = gst_video_info_from_caps (&state->vinfo, caps);
 }
 
 /* Draw the overlay. 
@@ -91,12 +89,18 @@ draw_overlay (GstElement * overlay, cairo_t * cr, guint64 timestamp,
 {
   CairoOverlayState *s = (CairoOverlayState *) user_data;
   double scale;
+  int width, height;
 
   if (!s->valid)
     return;
 
+  width = GST_VIDEO_INFO_WIDTH (&s->vinfo);
+  height = GST_VIDEO_INFO_HEIGHT (&s->vinfo);
+
   scale = 2 * (((timestamp / (int) 1e7) % 70) + 30) / 100.0;
-  cairo_translate (cr, s->width / 2, (s->height / 2) - 30);
+  cairo_translate (cr, width / 2, (height / 2) - 30);
+
+  /* FIXME: this assumes a pixel-aspect-ratio of 1/1 */
   cairo_scale (cr, scale, scale);
 
   cairo_move_to (cr, 0, 0);
@@ -122,7 +126,9 @@ setup_gst_pipeline (CairoOverlayState * overlay_state)
   adaptor1 = gst_element_factory_make ("videoconvert", "adaptor1");
   cairo_overlay = gst_element_factory_make ("cairooverlay", "overlay");
   adaptor2 = gst_element_factory_make ("videoconvert", "adaptor2");
-  sink = gst_element_factory_make ("autovideosink", "sink");
+  sink = gst_element_factory_make ("ximagesink", "sink");
+  if (sink == NULL)
+    sink = gst_element_factory_make ("autovideosink", "sink");
 
   /* If failing, the element could not be created */
   g_assert (cairo_overlay);
@@ -150,12 +156,15 @@ main (int argc, char **argv)
   GMainLoop *loop;
   GstElement *pipeline;
   GstBus *bus;
-  CairoOverlayState overlay_state = { FALSE, 0, 0 };
+  CairoOverlayState *overlay_state;
 
   gst_init (&argc, &argv);
   loop = g_main_loop_new (NULL, FALSE);
 
-  pipeline = setup_gst_pipeline (&overlay_state);
+  /* allocate on heap for pedagogical reasons, makes code easier to transfer */
+  overlay_state = g_new0 (CairoOverlayState, 1);
+
+  pipeline = setup_gst_pipeline (overlay_state);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_add_signal_watch (bus);
@@ -168,5 +177,6 @@ main (int argc, char **argv)
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
 
+  g_free (overlay_state);
   return 0;
 }

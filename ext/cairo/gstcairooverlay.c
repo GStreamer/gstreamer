@@ -91,16 +91,15 @@
 #endif
 
 #include "gstcairooverlay.h"
-#include "gstcairo-marshal.h"
 
 #include <gst/video/video.h>
 
 #include <cairo.h>
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define TEMPLATE_CAPS GST_VIDEO_CAPS_BGRx " ; " GST_VIDEO_CAPS_BGRA " ; "
+#define TEMPLATE_CAPS GST_VIDEO_CAPS_MAKE("{ BGRx, BGRA }")
 #else
-#define TEMPLATE_CAPS GST_VIDEO_CAPS_xRGB " ; " GST_VIDEO_CAPS_ARGB " ; "
+#define TEMPLATE_CAPS GST_VIDEO_CAPS_MAKE("{ xRGB, ARGB }")
 
 #endif
 
@@ -118,9 +117,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (TEMPLATE_CAPS)
     );
 
-
-GST_BOILERPLATE (GstCairoOverlay, gst_cairo_overlay, GstVideoFilter,
-    GST_TYPE_VIDEO_FILTER);
+G_DEFINE_TYPE (GstCairoOverlay, gst_cairo_overlay, GST_TYPE_VIDEO_FILTER);
 
 enum
 {
@@ -132,40 +129,36 @@ enum
 static guint gst_cairo_overlay_signals[N_SIGNALS];
 
 static gboolean
-gst_cairo_overlay_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_cairo_overlay_set_info (GstVideoFilter * vfilter, GstCaps * in_caps,
+    GstVideoInfo * in_info, GstCaps * out_caps, GstVideoInfo * out_info)
 {
-  GstCairoOverlay *overlay = GST_CAIRO_OVERLAY (btrans);
-  gboolean ret;
-
-  ret =
-      gst_video_format_parse_caps (incaps, &overlay->format, &overlay->width,
-      &overlay->height);
-  if (G_UNLIKELY (!ret))
-    return FALSE;
+  GstCairoOverlay *overlay = GST_CAIRO_OVERLAY (vfilter);
 
   g_signal_emit (overlay, gst_cairo_overlay_signals[SIGNAL_CAPS_CHANGED], 0,
-      incaps, NULL);
+      in_caps, NULL);
 
-  return ret;
+  return TRUE;
 }
 
 static GstFlowReturn
-gst_cairo_overlay_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
+gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
+    GstVideoFrame * frame)
 {
-
-  GstCairoOverlay *overlay = GST_CAIRO_OVERLAY (btrans);
+  GstCairoOverlay *overlay = GST_CAIRO_OVERLAY (vfilter);
   cairo_surface_t *surface;
   cairo_t *cr;
   cairo_format_t format;
 
-  format = (overlay->format == GST_VIDEO_FORMAT_ARGB
-      || overlay->format == GST_VIDEO_FORMAT_BGRA) ?
-      CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
+  if (GST_VIDEO_FRAME_N_COMPONENTS (frame) == 4)
+    format = CAIRO_FORMAT_ARGB32;
+  else
+    format = CAIRO_FORMAT_RGB24;
 
   surface =
-      cairo_image_surface_create_for_data (GST_BUFFER_DATA (buf), format,
-      overlay->width, overlay->height, overlay->width * 4);
+      cairo_image_surface_create_for_data (GST_VIDEO_FRAME_PLANE_DATA (frame,
+          0), format, GST_VIDEO_FRAME_WIDTH (frame),
+      GST_VIDEO_FRAME_HEIGHT (frame), GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0));
+
   if (G_UNLIKELY (!surface))
     return GST_FLOW_ERROR;
 
@@ -176,7 +169,8 @@ gst_cairo_overlay_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   }
 
   g_signal_emit (overlay, gst_cairo_overlay_signals[SIGNAL_DRAW], 0,
-      cr, GST_BUFFER_TIMESTAMP (buf), GST_BUFFER_DURATION (buf), NULL);
+      cr, GST_BUFFER_PTS (frame->buffer), GST_BUFFER_DURATION (frame->buffer),
+      NULL);
 
   cairo_destroy (cr);
   cairo_surface_destroy (surface);
@@ -185,30 +179,16 @@ gst_cairo_overlay_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
 }
 
 static void
-gst_cairo_overlay_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_static_metadata (element_class, "Cairo overlay",
-      "Filter/Editor/Video",
-      "Render overlay on a video stream using Cairo",
-      "Jon Nordby <jononor@gmail.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_cairo_overlay_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_cairo_overlay_src_template));
-}
-
-static void
 gst_cairo_overlay_class_init (GstCairoOverlayClass * klass)
 {
-  GstBaseTransformClass *trans_class;
+  GstVideoFilterClass *vfilter_class;
+  GstElementClass *element_class;
 
-  trans_class = (GstBaseTransformClass *) klass;
+  vfilter_class = (GstVideoFilterClass *) klass;
+  element_class = (GstElementClass *) klass;
 
-  trans_class->set_caps = gst_cairo_overlay_set_caps;
-  trans_class->transform_ip = gst_cairo_overlay_transform_ip;
+  vfilter_class->set_info = gst_cairo_overlay_set_info;
+  vfilter_class->transform_frame_ip = gst_cairo_overlay_transform_frame_ip;
 
   /**
    * GstCairoOverlay::draw:
@@ -226,7 +206,7 @@ gst_cairo_overlay_class_init (GstCairoOverlayClass * klass)
       0,
       NULL,
       NULL,
-      gst_cairo_marshal_VOID__BOXED_UINT64_UINT64,
+      g_cclosure_marshal_generic,
       G_TYPE_NONE, 3, CAIRO_GOBJECT_TYPE_CONTEXT, G_TYPE_UINT64, G_TYPE_UINT64);
 
   /**
@@ -240,11 +220,21 @@ gst_cairo_overlay_class_init (GstCairoOverlayClass * klass)
       g_signal_new ("caps-changed",
       G_TYPE_FROM_CLASS (klass),
       0,
-      0,
-      NULL, NULL, gst_cairo_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_CAPS);
+      0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_CAPS);
+
+  gst_element_class_set_static_metadata (element_class, "Cairo overlay",
+      "Filter/Editor/Video",
+      "Render overlay on a video stream using Cairo",
+      "Jon Nordby <jononor@gmail.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_cairo_overlay_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_cairo_overlay_src_template));
 }
 
 static void
-gst_cairo_overlay_init (GstCairoOverlay * overlay, GstCairoOverlayClass * klass)
+gst_cairo_overlay_init (GstCairoOverlay * overlay)
 {
+  /* nothing to do */
 }
