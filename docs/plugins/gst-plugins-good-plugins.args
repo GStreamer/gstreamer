@@ -909,6 +909,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTSPSrc::proxy-id</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>proxy-id</NICK>
+<BLURB>HTTP proxy URI user id for authentication.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::proxy-pw</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>proxy-pw</NICK>
+<BLURB>HTTP proxy URI user password for authentication.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDec::skip</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
