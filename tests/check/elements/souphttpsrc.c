@@ -161,6 +161,11 @@ run_test (const char *format, ...)
     else if (g_str_has_suffix (err->message, "Found"))
       rc = 302;
     GST_INFO ("debug: %s", debug);
+    /* should not've gotten any output in case of a 40x error. Wait a bit
+     * to give streaming thread a chance to push out a buffer and triggering
+     * our callback before shutting down the pipeline */
+    g_usleep (G_USEC_PER_SEC / 2);
+    fail_unless (buf == NULL);
     g_error_free (err);
     g_free (debug);
     gst_message_unref (msg);
@@ -204,6 +209,8 @@ GST_END_TEST;
 GST_START_TEST (test_not_found)
 {
   fail_unless (run_test ("http://127.0.0.1:%u/404", http_port) == 404);
+  fail_unless (run_test ("http://127.0.0.1:%u/404-with-data",
+          http_port) == 404);
 }
 
 GST_END_TEST;
@@ -479,6 +486,7 @@ GST_CHECK_MAIN (souphttpsrc);
 static void
 do_get (SoupMessage * msg, const char *path)
 {
+  gboolean send_error_doc = FALSE;
   char *uri;
 
   int buflen = 4096;
@@ -498,6 +506,10 @@ do_get (SoupMessage * msg, const char *path)
     status = SOUP_STATUS_FORBIDDEN;
   else if (!strcmp (path, "/404"))
     status = SOUP_STATUS_NOT_FOUND;
+  else if (!strcmp (path, "/404-with-data")) {
+    status = SOUP_STATUS_NOT_FOUND;
+    send_error_doc = TRUE;
+  }
 
   if (SOUP_STATUS_IS_REDIRECTION (status)) {
     char *redir_uri;
@@ -506,7 +518,7 @@ do_get (SoupMessage * msg, const char *path)
     soup_message_headers_append (msg->response_headers, "Location", redir_uri);
     g_free (redir_uri);
   }
-  if (status != SOUP_STATUS_OK)
+  if (status != SOUP_STATUS_OK && !send_error_doc)
     goto leave;
 
   if (msg->method == SOUP_METHOD_GET) {
