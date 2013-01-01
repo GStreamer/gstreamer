@@ -147,6 +147,8 @@
 GST_DEBUG_CATEGORY_STATIC (gst_eglglessink_debug);
 #define GST_CAT_DEFAULT gst_eglglessink_debug
 
+GST_DEBUG_CATEGORY_EXTERN(GST_CAT_PERFORMANCE);
+
 /* GLESv2 GLSL Shaders
  *
  * OpenGL ES Standard does not mandate YUV support. This is
@@ -3483,6 +3485,8 @@ gst_egl_image_allocator_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
 {
   GstMemory *parent;
 
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "Mapping EGLImage to normal memory");
+
   if ((parent = gmem->parent) == NULL)
     parent = gmem;
 
@@ -3507,6 +3511,8 @@ gst_egl_image_allocator_copy (GstMemory * mem, gssize offset, gssize size)
 {
   GstMemory *ret;
   GstMapInfo mapi, mapo;
+
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "Copying EGLImage to normal memory");
 
   if (size == -1)
     size = mem->size > offset ? mem->size - offset : 0;
