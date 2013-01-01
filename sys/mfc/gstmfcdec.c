@@ -49,14 +49,27 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, "
         "profile = (string) {constrained-baseline, baseline, main, high}, "
+        "parsed = (boolean) true, "
         "width = (int) [32, 1920], "
         "height = (int) [32, 1080], "
-        "parsed = (boolean) true, "
         "stream-format = (string) byte-stream, "
         "alignment = (string) au; "
         "video/mpeg, "
         "mpegversion = (int) 4, "
         "profile = (string) {simple, advanced-simple}, "
+        "parsed = (boolean) true, "
+        "width = (int) [32, 1920], "
+        "height = (int) [32, 1080], "
+        "systemstream = (boolean) false; "
+        "video/x-h263, "
+        "variant = (string) itu, "
+        "profile = (string) {0, 1, 2, 3}, "
+        "parsed = (boolean) true, "
+        "width = (int) [32, 1920], "
+        "height = (int) [32, 1080]; "
+        "video/mpeg, "
+        "mpegversion = (int) [1, 2], "
+        "parsed = (boolean) true, "
         "width = (int) [32, 1920], "
         "height = (int) [32, 1080], "
         "systemstream = (boolean) false")
@@ -185,7 +198,8 @@ gst_mfc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 
   GST_DEBUG_OBJECT (self, "Setting format: %" GST_PTR_FORMAT, state->caps);
 
-  if (self->input_state && gst_caps_can_intersect (self->input_state->caps, state->caps)) {
+  if (self->input_state
+      && gst_caps_can_intersect (self->input_state->caps, state->caps)) {
     GST_DEBUG_OBJECT (self, "Compatible caps");
     goto done;
   }
@@ -210,10 +224,22 @@ gst_mfc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 
     if (!gst_structure_get_int (s, "mpegversion", &mpegversion))
       return FALSE;
-    if (mpegversion != 4)
+    if (mpegversion != 1 && mpegversion != 2 && mpegversion != 4)
       return FALSE;
 
-    self->context = mfc_dec_create (CODEC_TYPE_MPEG4, 1);
+    if (mpegversion == 1 || mpegversion == 2) {
+      self->context = mfc_dec_create (CODEC_TYPE_MPEG2, 1);
+    } else {
+      self->context = mfc_dec_create (CODEC_TYPE_MPEG4, 1);
+    }
+
+    if (!self->context) {
+      GST_ELEMENT_ERROR (self, LIBRARY, INIT,
+          ("Failed to initialize MFC decoder context"), (NULL));
+      return FALSE;
+    }
+  } else if (gst_structure_has_name (s, "video/x-h263")) {
+    self->context = mfc_dec_create (CODEC_TYPE_H263, 1);
     if (!self->context) {
       GST_ELEMENT_ERROR (self, LIBRARY, INIT,
           ("Failed to initialize MFC decoder context"), (NULL));
