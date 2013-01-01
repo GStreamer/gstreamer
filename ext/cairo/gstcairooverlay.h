@@ -44,19 +44,14 @@ typedef struct _GstCairoOverlay GstCairoOverlay;
 typedef struct _GstCairoOverlayClass GstCairoOverlayClass;
 
 struct _GstCairoOverlay {
-  GstVideoFilter parent_instance;
-
-  /* < private > */
-  GstVideoFormat format;
-  gint width;
-  gint height;
+  GstVideoFilter video_filter;
 };
 
 struct _GstCairoOverlayClass {
-  GstVideoFilterClass parent_class;
+  GstVideoFilterClass video_filter_class;
 };
 
-GType gst_cairo_overlay_get_type(void);
+GType gst_cairo_overlay_get_type (void);
 
 G_END_DECLS
 

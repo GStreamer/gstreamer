@@ -4,7 +4,7 @@ else
 JACK_DIR=
 endif
 
-if USE_CAIRO_GOBJECT
+if USE_CAIRO
 CAIRO_DIR=cairo
 else
 CAIRO_DIR=

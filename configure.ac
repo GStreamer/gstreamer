@@ -302,7 +302,7 @@ dnl *** plug-ins to include ***
 
 dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
-GST_PLUGINS_NONPORTED="cairo cairo_gobject osx_audio "
+GST_PLUGINS_NONPORTED="osx_audio "
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs
@@ -682,15 +682,8 @@ AG_GST_CHECK_FEATURE(AALIB, [aalib ASCII Art library], aasink, [
 
 dnl *** cairo ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CAIRO, true)
-AG_GST_CHECK_FEATURE(CAIRO, [Cairo graphics rendering], cairo, [
-  AG_GST_PKG_CHECK_MODULES(CAIRO, cairo >= 1.0.0)
-])
-
-dnl *** cairo-gobject ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_CAIRO_GOBJECT, true)
-AG_GST_CHECK_FEATURE(CAIRO_GOBJECT, 
-  [Cairo graphics rendering gobject bindings], cairooverlay, [
-  AG_GST_PKG_CHECK_MODULES(CAIRO_GOBJECT, cairo-gobject >= 1.10.0)
+AG_GST_CHECK_FEATURE(CAIRO, [Cairo graphics rendering and gobject bindings], cairo, [
+  AG_GST_PKG_CHECK_MODULES(CAIRO, cairo >= 1.10.0 cairo-gobject >= 1.10.0)
 ])
 
 dnl *** FLAC ***
@@ -969,7 +962,6 @@ dnl but we still need to set the conditionals
 AM_CONDITIONAL(USE_AALIB, false)
 AM_CONDITIONAL(USE_BZ2, false)
 AM_CONDITIONAL(USE_CAIRO, false)
-AM_CONDITIONAL(USE_CAIRO_GOBJECT, false)
 AM_CONDITIONAL(USE_DIRECTSOUND, false)
 AM_CONDITIONAL(USE_DV1394, false)
 AM_CONDITIONAL(USE_FLAC, false)
