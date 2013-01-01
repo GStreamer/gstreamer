@@ -109,6 +109,7 @@ GObject
             GstAgingTV
             GstAlpha
             GstAlphaColor
+            GstCairoOverlay
             GstDiceTV
             GstEdgeTV
             GstGamma
