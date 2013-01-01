@@ -1,13 +1,5 @@
 plugin_LTLIBRARIES = libgstcairo.la
 
-# we probably don't really want to port these
-#	gsttimeoverlay.h
-#	gsttextoverlay.h
-#	gstcairorender.h
-#	gsttimeoverlay.c
-#	gsttextoverlay.c
-#	gstcairorender.c
-
 noinst_HEADERS = \
 	gstcairooverlay.h
 libgstcairo_la_SOURCES = \
