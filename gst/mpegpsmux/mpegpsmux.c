@@ -373,6 +373,66 @@ no_stream:
   return ret;
 }
 
+static GstBuffer *
+mpegpsmux_queue_buffer_for_stream (MpegPsMux * mux, MpegPsPadData * ps_data)
+{
+  GstCollectData *c_data = (GstCollectData *) ps_data;
+  GstBuffer *buf;
+
+  g_assert (ps_data->queued.buf == NULL);
+
+  buf = gst_collect_pads_peek (mux->collect, c_data);
+  if (buf == NULL)
+    return NULL;
+
+  ps_data->queued.buf = buf;
+
+  /* do any raw -> byte-stream format conversions (e.g. for H.264, AAC) */
+  if (ps_data->prepare_func) {
+    buf = ps_data->prepare_func (buf, ps_data, mux);
+    if (buf) {                  /* Take the prepared buffer instead */
+      gst_buffer_unref (ps_data->queued.buf);
+      ps_data->queued.buf = buf;
+    } else {                    /* If data preparation returned NULL, use unprepared one */
+      buf = ps_data->queued.buf;
+    }
+  }
+
+  ps_data->queued.pts = GST_BUFFER_PTS (buf);
+  if (GST_CLOCK_TIME_IS_VALID (ps_data->queued.pts)) {
+    ps_data->queued.pts = gst_segment_to_running_time (&c_data->segment,
+        GST_FORMAT_TIME, ps_data->queued.pts);
+  }
+
+  ps_data->queued.dts = GST_BUFFER_DTS (buf);
+  if (GST_CLOCK_TIME_IS_VALID (ps_data->queued.dts)) {
+    ps_data->queued.dts = gst_segment_to_running_time (&c_data->segment,
+        GST_FORMAT_TIME, ps_data->queued.dts);
+  }
+
+  if (GST_BUFFER_PTS_IS_VALID (buf) && GST_BUFFER_DTS_IS_VALID (buf)) {
+    ps_data->queued.ts = MIN (ps_data->queued.dts, ps_data->queued.pts);
+  } else if (GST_BUFFER_PTS_IS_VALID (buf) && !GST_BUFFER_DTS_IS_VALID (buf)) {
+    ps_data->queued.ts = ps_data->queued.pts;
+  } else if (GST_BUFFER_DTS_IS_VALID (buf) && !GST_BUFFER_PTS_IS_VALID (buf)) {
+    GST_WARNING_OBJECT (c_data->pad, "got DTS without PTS");
+    ps_data->queued.ts = ps_data->queued.dts;
+  } else {
+    ps_data->queued.ts = GST_CLOCK_TIME_NONE;
+  }
+
+  GST_DEBUG_OBJECT (mux, "Queued buffer with ts %" GST_TIME_FORMAT ": "
+      "uncorrected pts %" GST_TIME_FORMAT " dts %" GST_TIME_FORMAT ", "
+      "buffer pts %" GST_TIME_FORMAT " dts %" GST_TIME_FORMAT " for PID 0x%04x",
+      GST_TIME_ARGS (ps_data->queued.ts),
+      GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DTS (buf)),
+      GST_TIME_ARGS (ps_data->queued.pts),
+      GST_TIME_ARGS (ps_data->queued.dts), ps_data->stream_id);
+
+  return buf;
+}
+
 static MpegPsPadData *
 mpegpsmux_choose_best_stream (MpegPsMux * mux)
 {
@@ -387,52 +447,20 @@ mpegpsmux_choose_best_stream (MpegPsMux * mux)
     MpegPsPadData *ps_data = (MpegPsPadData *) walk->data;
 
     if (ps_data->eos == FALSE) {
-      if (ps_data->queued_buf == NULL) {
+      if (ps_data->queued.buf == NULL) {
         GstBuffer *buf;
 
-        ps_data->queued_buf = buf =
-            gst_collect_pads_peek (mux->collect, c_data);
-
-        if (buf != NULL) {
-          if (ps_data->prepare_func) {
-            buf = ps_data->prepare_func (buf, ps_data, mux);
-            if (buf) {          /* Take the prepared buffer instead */
-              gst_buffer_unref (ps_data->queued_buf);
-              ps_data->queued_buf = buf;
-            } else {            /* If data preparation returned NULL, use unprepared one */
-              buf = ps_data->queued_buf;
-            }
-          }
-          if (GST_BUFFER_TIMESTAMP (buf) != GST_CLOCK_TIME_NONE) {
-            /* Ignore timestamps that go backward for now. FIXME: Handle all
-             * incoming PTS */
-            if (ps_data->last_ts == GST_CLOCK_TIME_NONE ||
-                ps_data->last_ts < GST_BUFFER_TIMESTAMP (buf)) {
-              ps_data->cur_ts = ps_data->last_ts =
-                  gst_segment_to_running_time (&c_data->segment,
-                  GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf));
-            } else {
-              GST_DEBUG_OBJECT (mux, "Ignoring PTS that has gone backward");
-            }
-          } else
-            ps_data->cur_ts = GST_CLOCK_TIME_NONE;
-
-          GST_DEBUG_OBJECT (mux, "Pulled buffer with ts %" GST_TIME_FORMAT
-              " (uncorrected ts %" GST_TIME_FORMAT " %" G_GUINT64_FORMAT
-              ") for PID 0x%04x",
-              GST_TIME_ARGS (ps_data->cur_ts),
-              GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-              GST_BUFFER_TIMESTAMP (buf), ps_data->stream_id);
-
-          /* Choose a stream we've never seen a timestamp for to ensure
-           * we push enough buffers from it to reach a timestamp */
-          if (ps_data->last_ts == GST_CLOCK_TIME_NONE) {
-            best = ps_data;
-            c_best = c_data;
-          }
-        } else {
+        buf = mpegpsmux_queue_buffer_for_stream (mux, ps_data);
+        if (buf == NULL) {
           ps_data->eos = TRUE;
           continue;
+        }
+
+        /* Choose a stream we've never seen a timestamp for to ensure
+         * we push enough buffers from it to reach a timestamp */
+        if (ps_data->last_ts == GST_CLOCK_TIME_NONE) {
+          best = ps_data;
+          c_best = c_data;
         }
       }
 
@@ -505,22 +533,20 @@ mpegpsmux_collected (GstCollectPads * pads, MpegPsMux * mux)
   }
 
   if (best != NULL) {
-    /* @*buf : the buffer to be processed */
-    GstBuffer *buf = best->queued_buf;
-    gint64 pts = -1;
+    GstBuffer *buf = best->queued.buf;
+    gint64 pts, dts;
 
-    g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
+    g_assert (buf != NULL);
 
-    GST_DEBUG_OBJECT (mux,
-        "Chose stream from pad %" GST_PTR_FORMAT " for output (PID: 0x%04x)",
-        best->collect.pad, best->stream_id);
+    GST_LOG_OBJECT (mux,
+        "Chose stream from pad %" GST_PTR_FORMAT " for output (PID: 0x%04x): "
+        "adjusted pts: %" GST_TIME_FORMAT ", dts: %" GST_TIME_FORMAT,
+        best->collect.pad, best->stream_id,
+        GST_TIME_ARGS (best->queued.pts), GST_TIME_ARGS (best->queued.dts));
 
-    /* set timestamp */
-    if (GST_CLOCK_TIME_IS_VALID (best->cur_ts)) {
-      pts = GSTTIME_TO_MPEGTIME (best->cur_ts); /* @pts: current timestamp */
-      GST_DEBUG_OBJECT (mux, "Buffer has TS %" GST_TIME_FORMAT " pts %"
-          G_GINT64_FORMAT, GST_TIME_ARGS (best->cur_ts), pts);
-    }
+    /* and convert to mpeg time stamps */
+    pts = GSTTIME_TO_MPEGTIME (best->queued.pts);
+    dts = GSTTIME_TO_MPEGTIME (best->queued.dts);
 
     /* start of new GOP? */
     keyunit = !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -532,11 +558,10 @@ mpegpsmux_collected (GstCollectPads * pads, MpegPsMux * mux)
         goto done;
     }
 
-    /* FIXME: porting: add DTS */
     /* give the buffer to libpsmux for processing */
-    psmux_stream_add_data (best->stream, buf, pts, -1, keyunit);
+    psmux_stream_add_data (best->stream, buf, pts, dts, keyunit);
 
-    best->queued_buf = NULL;
+    best->queued.buf = NULL;
 
     /* write the data from libpsmux to stream */
     while (psmux_stream_bytes_in_buffer (best->stream) > 0) {
