@@ -205,6 +205,7 @@ struct _GstEglGlesSink
   GstVideoRectangle display_region;
 
   GstVideoRectangle crop;
+  gboolean crop_changed;
   GstCaps *sinkcaps;
   GstCaps *current_caps, *configured_caps;
   GstVideoInfo configured_info;

@@ -381,6 +381,8 @@ static void gst_eglglessink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static GstStateChangeReturn gst_eglglessink_change_state (GstElement * element,
     GstStateChange transition);
+static GstFlowReturn gst_eglglessink_prepare (GstBaseSink * bsink,
+    GstBuffer * buf);
 static GstFlowReturn gst_eglglessink_show_frame (GstVideoSink * vsink,
     GstBuffer * buf);
 static gboolean gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps);
@@ -414,8 +416,9 @@ static gboolean gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink,
     gboolean reset);
 static gboolean
 gst_eglglessink_configure_caps (GstEglGlesSink * eglglessink, GstCaps * caps);
-static GstFlowReturn gst_eglglessink_render_and_display (GstEglGlesSink * sink,
+static GstFlowReturn gst_eglglessink_upload (GstEglGlesSink * sink,
     GstBuffer * buf);
+static GstFlowReturn gst_eglglessink_render (GstEglGlesSink * sink);
 static GstFlowReturn gst_eglglessink_queue_object (GstEglGlesSink * sink,
     GstMiniObject * obj);
 static inline gboolean got_gl_error (const char *wtf);
@@ -677,11 +680,19 @@ render_thread_func (GstEglGlesSink * eglglessink)
         g_assert_not_reached ();
       }
       last_flow = GST_FLOW_OK;
-    } else if (GST_IS_BUFFER (item->object) || !item->object) {
+    } else if (GST_IS_BUFFER (item->object)) {
       GstBuffer *buf = GST_BUFFER_CAST (item->object);
 
       if (eglglessink->configured_caps) {
-        last_flow = gst_eglglessink_render_and_display (eglglessink, buf);
+        last_flow = gst_eglglessink_upload (eglglessink, buf);
+      } else {
+        last_flow = GST_FLOW_OK;
+        GST_DEBUG_OBJECT (eglglessink,
+            "No caps configured yet, not drawing anything");
+      }
+    } else if (!item->object) {
+      if (eglglessink->configured_caps) {
+        last_flow = gst_eglglessink_render (eglglessink);
       } else {
         last_flow = GST_FLOW_OK;
         GST_DEBUG_OBJECT (eglglessink,
@@ -691,16 +702,11 @@ render_thread_func (GstEglGlesSink * eglglessink)
       g_assert_not_reached ();
     }
 
-
-    if (item->object) {
-      item->destroy (item);
-      g_mutex_lock (&eglglessink->render_lock);
-      eglglessink->last_flow = last_flow;
-      g_cond_broadcast (&eglglessink->render_cond);
-      g_mutex_unlock (&eglglessink->render_lock);
-    } else {
-      item->destroy (item);
-    }
+    item->destroy (item);
+    g_mutex_lock (&eglglessink->render_lock);
+    eglglessink->last_flow = last_flow;
+    g_cond_broadcast (&eglglessink->render_cond);
+    g_mutex_unlock (&eglglessink->render_lock);
 
     if (last_flow != GST_FLOW_OK)
       break;
@@ -1730,8 +1736,7 @@ gst_eglglessink_queue_object (GstEglGlesSink * eglglessink, GstMiniObject * obj)
 
   GST_DEBUG_OBJECT (eglglessink, "Queueing object %" GST_PTR_FORMAT, obj);
 
-  if (obj)
-    g_mutex_lock (&eglglessink->render_lock);
+  g_mutex_lock (&eglglessink->render_lock);
   if (!gst_data_queue_push (eglglessink->queue, item)) {
     item->destroy (item);
     g_mutex_unlock (&eglglessink->render_lock);
@@ -1739,14 +1744,12 @@ gst_eglglessink_queue_object (GstEglGlesSink * eglglessink, GstMiniObject * obj)
     return GST_FLOW_FLUSHING;
   }
 
-  if (obj) {
-    GST_DEBUG_OBJECT (eglglessink, "Waiting for object to be handled");
-    g_cond_wait (&eglglessink->render_cond, &eglglessink->render_lock);
-    GST_DEBUG_OBJECT (eglglessink, "Object handled: %s",
-        gst_flow_get_name (eglglessink->last_flow));
-    last_flow = eglglessink->last_flow;
-    g_mutex_unlock (&eglglessink->render_lock);
-  }
+  GST_DEBUG_OBJECT (eglglessink, "Waiting for object to be handled");
+  g_cond_wait (&eglglessink->render_cond, &eglglessink->render_lock);
+  GST_DEBUG_OBJECT (eglglessink, "Object handled: %s",
+      gst_flow_get_name (eglglessink->last_flow));
+  last_flow = eglglessink->last_flow;
+  g_mutex_unlock (&eglglessink->render_lock);
 
   return (obj ? last_flow : GST_FLOW_OK);
 }
@@ -2245,12 +2248,9 @@ HANDLE_ERROR:
 
 /* Rendering and display */
 static GstFlowReturn
-gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
-    GstBuffer * buf)
+gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
 {
-  guint dar_n, dar_d;
   GstVideoCropMeta *crop = NULL;
-  gint i;
 
   if (!buf) {
     GST_DEBUG_OBJECT (eglglessink, "Rendering previous buffer again");
@@ -2258,6 +2258,21 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     GstMemory *gmem;
 
     crop = gst_buffer_get_video_crop_meta (buf);
+
+    if (gst_eglglessink_crop_changed (eglglessink, crop)) {
+      if (crop) {
+        eglglessink->crop.x = crop->x;
+        eglglessink->crop.y = crop->y;
+        eglglessink->crop.w = crop->width;
+        eglglessink->crop.h = crop->height;
+      } else {
+        eglglessink->crop.x = 0;
+        eglglessink->crop.y = 0;
+        eglglessink->crop.w = eglglessink->configured_info.width;
+        eglglessink->crop.h = eglglessink->configured_info.height;
+      }
+      eglglessink->crop_changed = TRUE;
+    }
 
     if (gst_buffer_n_memory (buf) == 1 &&
         (gmem = gst_buffer_peek_memory (buf, 0)) &&
@@ -2287,6 +2302,21 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     }
   }
 
+  return GST_FLOW_OK;
+
+HANDLE_ERROR:
+  {
+    GST_ERROR_OBJECT (eglglessink, "Failed to upload texture");
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+gst_eglglessink_render (GstEglGlesSink * eglglessink)
+{
+  guint dar_n, dar_d;
+  gint i;
+
   /* If no one has set a display rectangle on us initialize
    * a sane default. According to the docs on the xOverlay
    * interface we are supposed to fill the overlay 100%. We
@@ -2297,7 +2327,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
   if (gst_eglglessink_update_surface_dimensions (eglglessink) ||
       eglglessink->render_region_changed ||
       !eglglessink->display_region.w || !eglglessink->display_region.h ||
-      gst_eglglessink_crop_changed (eglglessink, crop)) {
+      eglglessink->crop_changed) {
     GST_OBJECT_LOCK (eglglessink);
 
     if (!eglglessink->render_region_user) {
@@ -2307,18 +2337,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       eglglessink->render_region.h = eglglessink->eglglesctx.surface_height;
     }
     eglglessink->render_region_changed = FALSE;
-
-    if (crop) {
-      eglglessink->crop.x = crop->x;
-      eglglessink->crop.y = crop->y;
-      eglglessink->crop.w = crop->width;
-      eglglessink->crop.h = crop->height;
-    } else if (buf) {
-      eglglessink->crop.x = 0;
-      eglglessink->crop.y = 0;
-      eglglessink->crop.w = eglglessink->configured_info.width;
-      eglglessink->crop.h = eglglessink->configured_info.height;
-    }
+    eglglessink->crop_changed = FALSE;
 
     if (!eglglessink->force_aspect_ratio) {
       eglglessink->display_region.x = 0;
@@ -2463,6 +2482,19 @@ HANDLE_ERROR:
 }
 
 static GstFlowReturn
+gst_eglglessink_prepare (GstBaseSink * bsink, GstBuffer * buf)
+{
+  GstEglGlesSink *eglglessink;
+
+  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
+
+  eglglessink = GST_EGLGLESSINK (bsink);
+  GST_DEBUG_OBJECT (eglglessink, "Got buffer: %p", buf);
+
+  return gst_eglglessink_queue_object (eglglessink, GST_MINI_OBJECT_CAST (buf));
+}
+
+static GstFlowReturn
 gst_eglglessink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
   GstEglGlesSink *eglglessink;
@@ -2472,7 +2504,7 @@ gst_eglglessink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   eglglessink = GST_EGLGLESSINK (vsink);
   GST_DEBUG_OBJECT (eglglessink, "Got buffer: %p", buf);
 
-  return gst_eglglessink_queue_object (eglglessink, GST_MINI_OBJECT_CAST (buf));
+  return gst_eglglessink_queue_object (eglglessink, NULL);
 }
 
 static GstCaps *
@@ -2910,6 +2942,7 @@ gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_eglglessink_getcaps);
   gstbasesink_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_eglglessink_propose_allocation);
+  gstbasesink_class->prepare = GST_DEBUG_FUNCPTR (gst_eglglessink_prepare);
 
   gstvideosink_class->show_frame =
       GST_DEBUG_FUNCPTR (gst_eglglessink_show_frame);
