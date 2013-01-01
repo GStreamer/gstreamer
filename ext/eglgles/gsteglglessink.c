@@ -2292,6 +2292,8 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
 
         glBindTexture (GL_TEXTURE_2D, mem->texture[i]);
         glEGLImageTargetTexture2DOES (GL_TEXTURE_2D, mem->image[i]);
+        if (got_gl_error ("glEGLImageTargetTexture2DOES"))
+          goto HANDLE_ERROR;
       }
       eglglessink->stride[0] = 1;
       eglglessink->stride[1] = 1;
