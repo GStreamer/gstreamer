@@ -3259,17 +3259,36 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
       goto out_of_segment;
   }
 
-  if (!is_list) {
-    if (bclass->prepare) {
-      ret = bclass->prepare (basesink, GST_BUFFER_CAST (obj));
-      if (G_UNLIKELY (ret != GST_FLOW_OK))
-        goto prepare_failed;
-    }
-  } else {
-    if (bclass->prepare_list) {
-      ret = bclass->prepare_list (basesink, GST_BUFFER_LIST_CAST (obj));
-      if (G_UNLIKELY (ret != GST_FLOW_OK))
-        goto prepare_failed;
+  if (bclass->prepare || bclass->prepare_list) {
+    gboolean late = FALSE;
+    gboolean do_sync = TRUE, stepped = FALSE, step_end, syncable = TRUE;
+    GstClockTime sstart, sstop, rstart, rstop;
+    GstStepInfo *current;
+
+    current = &priv->current_step;
+    syncable =
+        gst_base_sink_get_sync_times (basesink, obj, &sstart, &sstop, &rstart,
+        &rstop, &do_sync, &stepped, current, &step_end);
+
+    if (!stepped && syncable && do_sync)
+      late =
+          gst_base_sink_is_too_late (basesink, obj, rstart, rstop,
+          GST_CLOCK_EARLY, 0);
+    if (late)
+      goto dropped;
+
+    if (!is_list) {
+      if (bclass->prepare) {
+        ret = bclass->prepare (basesink, GST_BUFFER_CAST (obj));
+        if (G_UNLIKELY (ret != GST_FLOW_OK))
+          goto prepare_failed;
+      }
+    } else {
+      if (bclass->prepare_list) {
+        ret = bclass->prepare_list (basesink, GST_BUFFER_LIST_CAST (obj));
+        if (G_UNLIKELY (ret != GST_FLOW_OK))
+          goto prepare_failed;
+      }
     }
   }
 
