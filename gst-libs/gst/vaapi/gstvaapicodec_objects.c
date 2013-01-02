@@ -75,8 +75,6 @@ gst_vaapi_codec_object_new(const GstVaapiCodecObjectClass *object_class,
     GstVaapiCodecObject *va_obj;
     GstVaapiCodecObjectConstructorArgs args;
 
-    g_return_val_if_fail(codec != NULL, NULL);
-
     obj = gst_vaapi_mini_object_new0(&object_class->parent_class);
     if (!obj)
         return NULL;
@@ -139,8 +137,6 @@ gst_vaapi_iq_matrix_new(
 {
     GstVaapiCodecObject *object;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
-
     object = gst_vaapi_codec_object_new(
         &GstVaapiIqMatrixClass,
         GST_VAAPI_CODEC_BASE(decoder),
@@ -187,8 +183,6 @@ GstVaapiBitPlane *
 gst_vaapi_bitplane_new(GstVaapiDecoder *decoder, guint8 *data, guint data_size)
 {
     GstVaapiCodecObject *object;
-
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
 
     object = gst_vaapi_codec_object_new(
         &GstVaapiBitPlaneClass,
@@ -240,8 +234,6 @@ gst_vaapi_huffman_table_new(
 )
 {
     GstVaapiCodecObject *object;
-
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
 
     object = gst_vaapi_codec_object_new(
         &GstVaapiHuffmanTableClass,

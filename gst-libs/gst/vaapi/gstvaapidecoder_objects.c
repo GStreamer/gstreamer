@@ -183,8 +183,6 @@ gst_vaapi_picture_new(
 {
     GstVaapiCodecObject *object;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
-
     object = gst_vaapi_codec_object_new(
         &GstVaapiPictureClass,
         GST_VAAPI_CODEC_BASE(decoder),
@@ -404,8 +402,6 @@ gst_vaapi_slice_new(
 )
 {
     GstVaapiCodecObject *object;
-
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
 
     object = gst_vaapi_codec_object_new(
         &GstVaapiSliceClass,
