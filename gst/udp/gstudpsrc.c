@@ -116,6 +116,9 @@
 #include <sys/socket.h>
 #endif
 
+/* not 100% correct, but a good upper bound for memory allocation purposes */
+#define MAX_IPV4_UDP_PACKET_SIZE (65536 - 8)
+
 GST_DEBUG_CATEGORY_STATIC (udpsrc_debug);
 #define GST_CAT_DEFAULT (udpsrc_debug)
 
@@ -441,6 +444,11 @@ retry:
 
 no_select:
   GST_LOG_OBJECT (udpsrc, "ioctl says %d bytes available", (int) readsize);
+
+  /* sanity check value from _get_available_bytes(), which might be as
+   * large as the kernel-side buffer on some operating systems */
+  if (g_socket_get_family (udpsrc->used_socket) == G_SOCKET_FAMILY_IPV4)
+    readsize = MIN (MAX_IPV4_UDP_PACKET_SIZE, readsize);
 
   ret = GST_BASE_SRC_CLASS (parent_class)->alloc (GST_BASE_SRC_CAST (udpsrc),
       -1, readsize, &outbuf);
