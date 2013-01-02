@@ -370,7 +370,7 @@ static int get_minimum_output_buffers(struct mfc_dec_context *ctx)
         GST_ERROR ("Failed to get number of output buffers required");
         return -1;
     }
-    ctx->required_output_buffers = ctrl.value;
+    ctx->required_output_buffers = ctrl.value + 1;
     return 0;
 }
 
