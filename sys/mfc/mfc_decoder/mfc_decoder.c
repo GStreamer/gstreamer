@@ -220,7 +220,6 @@ static int request_input_buffers(struct mfc_dec_context *ctx, int num)
     return 0;
 }
 
-
 static int request_output_buffers(struct mfc_dec_context *ctx, int num)
 {
     struct v4l2_requestbuffers reqbuf = {
@@ -276,7 +275,7 @@ static int request_output_buffers(struct mfc_dec_context *ctx, int num)
     return 0;
 }
 
-struct mfc_dec_context* mfc_dec_create(unsigned int codec, int num_input_buffers)
+struct mfc_dec_context* mfc_dec_create(unsigned int codec)
 {
     struct mfc_dec_context *ctx;
     struct v4l2_capability caps;
@@ -320,8 +319,7 @@ struct mfc_dec_context* mfc_dec_create(unsigned int codec, int num_input_buffers
         return NULL;
     }
 
-    if (mfc_dec_set_codec(ctx, codec) ||
-        request_input_buffers(ctx, num_input_buffers)) {
+    if (mfc_dec_set_codec(ctx, codec) < 0) {
         mfc_dec_destroy(ctx);
         return NULL;
     }
@@ -400,7 +398,15 @@ static int start_output_stream(struct mfc_dec_context *ctx)
     return 0;
 }
 
-int mfc_dec_init(struct mfc_dec_context *ctx, int extra_buffers)
+int mfc_dec_init_input(struct mfc_dec_context *ctx, int num_input_buffers)
+{
+    if (request_input_buffers(ctx, num_input_buffers) < 0)
+        return -1;
+
+    return 0;
+}
+
+int mfc_dec_init_output(struct mfc_dec_context *ctx, int extra_buffers)
 {
     if (start_input_stream(ctx) < 0)
         return -1;

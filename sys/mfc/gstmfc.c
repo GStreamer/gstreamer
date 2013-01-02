@@ -35,9 +35,10 @@ plugin_init (GstPlugin * plugin)
   /* Just check here once if we can create a MFC context, i.e.
    * if the hardware is available */
   mfc_dec_init_debug ();
-  context = mfc_dec_create (CODEC_TYPE_H264, 1);
+  context = mfc_dec_create (CODEC_TYPE_H264);
   if (!context) {
-    GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "Failed to initialize MFC decoder context");
+    GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING,
+        "Failed to initialize MFC decoder context");
     return FALSE;
   }
   mfc_dec_destroy (context);

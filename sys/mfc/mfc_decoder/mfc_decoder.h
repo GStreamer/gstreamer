@@ -84,8 +84,9 @@ void mfc_dec_init_debug (void);
  * context is needed for most other calls below, and should be
  * deallocated with mfc_dec_destroy().
  */
-struct mfc_dec_context* mfc_dec_create(enum mfc_codec_type codec,
-                                       int num_input_buffers);
+struct mfc_dec_context* mfc_dec_create(enum mfc_codec_type codec);
+
+int mfc_dec_init_input(struct mfc_dec_context*, int num_input_buffers);
 
 /*
  * Destroy context created with mfc_dec_create().
@@ -105,7 +106,7 @@ void mfc_dec_destroy(struct mfc_dec_context*);
  *
  * Returns: Zero for success, negative value on failure.
  */
-int mfc_dec_init(struct mfc_dec_context*, int extra_buffers);
+int mfc_dec_init_output(struct mfc_dec_context*, int extra_buffers);
 
 
 /*

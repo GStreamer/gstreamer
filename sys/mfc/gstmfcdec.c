@@ -144,7 +144,7 @@ gst_mfc_dec_open (GstVideoDecoder * decoder)
   /* Just check here once if we can create a MFC context, i.e.
    * if the hardware is available
    */
-  self->context = mfc_dec_create (CODEC_TYPE_H264, 1);
+  self->context = mfc_dec_create (CODEC_TYPE_H264);
   if (!self->context) {
     GST_ELEMENT_ERROR (self, LIBRARY, INIT,
         ("Failed to initialize MFC decoder context"), (NULL));
@@ -237,7 +237,7 @@ gst_mfc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   self->initialized = FALSE;
 
   if (gst_structure_has_name (s, "video/x-h264")) {
-    self->context = mfc_dec_create (CODEC_TYPE_H264, 1);
+    self->context = mfc_dec_create (CODEC_TYPE_H264);
     if (!self->context) {
       GST_ELEMENT_ERROR (self, LIBRARY, INIT,
           ("Failed to initialize MFC decoder context"), (NULL));
@@ -252,9 +252,9 @@ gst_mfc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
       return FALSE;
 
     if (mpegversion == 1 || mpegversion == 2) {
-      self->context = mfc_dec_create (CODEC_TYPE_MPEG2, 1);
+      self->context = mfc_dec_create (CODEC_TYPE_MPEG2);
     } else {
-      self->context = mfc_dec_create (CODEC_TYPE_MPEG4, 1);
+      self->context = mfc_dec_create (CODEC_TYPE_MPEG4);
     }
 
     if (!self->context) {
@@ -263,7 +263,7 @@ gst_mfc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
       return FALSE;
     }
   } else if (gst_structure_has_name (s, "video/x-h263")) {
-    self->context = mfc_dec_create (CODEC_TYPE_H263, 1);
+    self->context = mfc_dec_create (CODEC_TYPE_H263);
     if (!self->context) {
       GST_ELEMENT_ERROR (self, LIBRARY, INIT,
           ("Failed to initialize MFC decoder context"), (NULL));
@@ -271,6 +271,12 @@ gst_mfc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     }
   } else {
     g_return_val_if_reached (FALSE);
+  }
+
+  if (mfc_dec_init_input (self->context, 1) < 0) {
+    GST_ELEMENT_ERROR (self, LIBRARY, INIT,
+        ("Failed to initialize MFC decoder context input"), (NULL));
+    return FALSE;
   }
 
   gst_buffer_replace (&self->codec_data, state->codec_data);
@@ -721,7 +727,7 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
   if (!self->initialized) {
     GST_DEBUG_OBJECT (self, "Initializing decoder");
-    if ((mfc_ret = mfc_dec_init (self->context, 1)) < 0)
+    if ((mfc_ret = mfc_dec_init_output (self->context, 1)) < 0)
       goto initialize_error;
     self->initialized = TRUE;
   }
