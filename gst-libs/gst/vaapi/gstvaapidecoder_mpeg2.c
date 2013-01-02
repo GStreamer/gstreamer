@@ -38,14 +38,9 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiDecoderMpeg2,
-              gst_vaapi_decoder_mpeg2,
-              GST_VAAPI_TYPE_DECODER)
-
-#define GST_VAAPI_DECODER_MPEG2_GET_PRIVATE(obj)                \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_DECODER_MPEG2,  \
-                                 GstVaapiDecoderMpeg2Private))
+/* ------------------------------------------------------------------------- */
+/* --- VLC Reader                                                        --- */
+/* ------------------------------------------------------------------------- */
 
 #define READ_UINT8(br, val, nbits) G_STMT_START {  \
   if (!gst_bit_reader_get_bits_uint8 (br, &val, nbits)) { \
@@ -60,6 +55,85 @@ G_DEFINE_TYPE(GstVaapiDecoderMpeg2,
     goto failed; \
   } \
 } G_STMT_END
+
+/* VLC decoder from gst-plugins-bad */
+typedef struct _VLCTable VLCTable;
+struct _VLCTable {
+    gint  value;
+    guint cword;
+    guint cbits;
+};
+
+static gboolean
+decode_vlc(GstBitReader *br, gint *res, const VLCTable *table, guint length)
+{
+    guint8 i;
+    guint cbits = 0;
+    guint32 value = 0;
+
+    for (i = 0; i < length; i++) {
+        if (cbits != table[i].cbits) {
+            cbits = table[i].cbits;
+            if (!gst_bit_reader_peek_bits_uint32(br, &value, cbits)) {
+                goto failed;
+            }
+        }
+
+        if (value == table[i].cword) {
+            SKIP(br, cbits);
+            if (res)
+                *res = table[i].value;
+            return TRUE;
+        }
+    }
+    GST_DEBUG("failed to find VLC code");
+
+failed:
+    GST_WARNING("failed to decode VLC, returning");
+    return FALSE;
+}
+
+enum {
+    GST_MPEG_VIDEO_MACROBLOCK_ESCAPE = -1,
+};
+
+/* Table B-1: Variable length codes for macroblock_address_increment */
+static const VLCTable mpeg2_mbaddr_vlc_table[] = {
+    {  1, 0x01,  1 },
+    {  2, 0x03,  3 },
+    {  3, 0x02,  3 },
+    {  4, 0x03,  4 },
+    {  5, 0x02,  4 },
+    {  6, 0x03,  5 },
+    {  7, 0x02,  5 },
+    {  8, 0x07,  7 },
+    {  9, 0x06,  7 },
+    { 10, 0x0b,  8 },
+    { 11, 0x0a,  8 },
+    { 12, 0x09,  8 },
+    { 13, 0x08,  8 },
+    { 14, 0x07,  8 },
+    { 15, 0x06,  8 },
+    { 16, 0x17, 10 },
+    { 17, 0x16, 10 },
+    { 18, 0x15, 10 },
+    { 19, 0x14, 10 },
+    { 20, 0x13, 10 },
+    { 21, 0x12, 10 },
+    { 22, 0x23, 11 },
+    { 23, 0x22, 11 },
+    { 24, 0x21, 11 },
+    { 25, 0x20, 11 },
+    { 26, 0x1f, 11 },
+    { 27, 0x1e, 11 },
+    { 28, 0x1d, 11 },
+    { 29, 0x1c, 11 },
+    { 30, 0x1b, 11 },
+    { 31, 0x1a, 11 },
+    { 32, 0x19, 11 },
+    { 33, 0x18, 11 },
+    { GST_MPEG_VIDEO_MACROBLOCK_ESCAPE, 0x08, 11 }
+};
 
 /* ------------------------------------------------------------------------- */
 /* --- PTS Generator                                                     --- */
@@ -222,6 +296,18 @@ gst_vaapi_decoder_unit_mpeg2_new(guint size)
 /* --- MPEG-2 Decoder                                                    --- */
 /* ------------------------------------------------------------------------- */
 
+G_DEFINE_TYPE(GstVaapiDecoderMpeg2,
+              gst_vaapi_decoder_mpeg2,
+              GST_VAAPI_TYPE_DECODER)
+
+#define GST_VAAPI_DECODER_MPEG2_CAST(decoder) \
+    ((GstVaapiDecoderMpeg2 *)(decoder))
+
+#define GST_VAAPI_DECODER_MPEG2_GET_PRIVATE(obj)                \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
+                                 GST_VAAPI_TYPE_DECODER_MPEG2,  \
+                                 GstVaapiDecoderMpeg2Private))
+
 struct _GstVaapiDecoderMpeg2Private {
     GstVaapiProfile             profile;
     GstVaapiProfile             hw_profile;
@@ -247,85 +333,6 @@ struct _GstVaapiDecoderMpeg2Private {
     guint                       progressive_sequence    : 1;
     guint                       closed_gop              : 1;
     guint                       broken_link             : 1;
-};
-
-/* VLC decoder from gst-plugins-bad */
-typedef struct _VLCTable VLCTable;
-struct _VLCTable {
-    gint  value;
-    guint cword;
-    guint cbits;
-};
-
-static gboolean
-decode_vlc(GstBitReader *br, gint *res, const VLCTable *table, guint length)
-{
-    guint8 i;
-    guint cbits = 0;
-    guint32 value = 0;
-
-    for (i = 0; i < length; i++) {
-        if (cbits != table[i].cbits) {
-            cbits = table[i].cbits;
-            if (!gst_bit_reader_peek_bits_uint32(br, &value, cbits)) {
-                goto failed;
-            }
-        }
-
-        if (value == table[i].cword) {
-            SKIP(br, cbits);
-            if (res)
-                *res = table[i].value;
-            return TRUE;
-        }
-    }
-    GST_DEBUG("failed to find VLC code");
-
-failed:
-    GST_WARNING("failed to decode VLC, returning");
-    return FALSE;
-}
-
-enum {
-    GST_MPEG_VIDEO_MACROBLOCK_ESCAPE = -1,
-};
-
-/* Table B-1: Variable length codes for macroblock_address_increment */
-static const VLCTable mpeg2_mbaddr_vlc_table[] = {
-    {  1, 0x01,  1 },
-    {  2, 0x03,  3 },
-    {  3, 0x02,  3 },
-    {  4, 0x03,  4 },
-    {  5, 0x02,  4 },
-    {  6, 0x03,  5 },
-    {  7, 0x02,  5 },
-    {  8, 0x07,  7 },
-    {  9, 0x06,  7 },
-    { 10, 0x0b,  8 },
-    { 11, 0x0a,  8 },
-    { 12, 0x09,  8 },
-    { 13, 0x08,  8 },
-    { 14, 0x07,  8 },
-    { 15, 0x06,  8 },
-    { 16, 0x17, 10 },
-    { 17, 0x16, 10 },
-    { 18, 0x15, 10 },
-    { 19, 0x14, 10 },
-    { 20, 0x13, 10 },
-    { 21, 0x12, 10 },
-    { 22, 0x23, 11 },
-    { 23, 0x22, 11 },
-    { 24, 0x21, 11 },
-    { 25, 0x20, 11 },
-    { 26, 0x1f, 11 },
-    { 27, 0x1e, 11 },
-    { 28, 0x1d, 11 },
-    { 29, 0x1c, 11 },
-    { 30, 0x1b, 11 },
-    { 31, 0x1a, 11 },
-    { 32, 0x19, 11 },
-    { 33, 0x18, 11 },
-    { GST_MPEG_VIDEO_MACROBLOCK_ESCAPE, 0x08, 11 }
 };
 
 static void
@@ -472,7 +479,7 @@ ensure_context(GstVaapiDecoderMpeg2 *decoder)
         info.height     = priv->height;
         info.ref_frames = 2;
         reset_context   = gst_vaapi_decoder_ensure_context(
-            GST_VAAPI_DECODER(decoder),
+            GST_VAAPI_DECODER_CAST(decoder),
             &info
         );
         if (!reset_context)
@@ -582,7 +589,7 @@ parse_sequence(GstVaapiDecoderUnitMpeg2 *unit)
 static GstVaapiDecoderStatus
 decode_sequence(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnitMpeg2 *unit)
 {
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
+    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER_CAST(decoder);
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GstMpegVideoSequenceHdr *seq_hdr;
 
@@ -621,7 +628,7 @@ static GstVaapiDecoderStatus
 decode_sequence_ext(GstVaapiDecoderMpeg2 *decoder,
     GstVaapiDecoderUnitMpeg2 *unit)
 {
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
+    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER_CAST(decoder);
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GstMpegVideoSequenceExt *seq_ext;
     GstVaapiProfile profile;
@@ -1159,7 +1166,7 @@ gst_vaapi_decoder_mpeg2_parse(GstVaapiDecoder *base_decoder,
     GstAdapter *adapter, gboolean at_eos, GstVaapiDecoderUnit **unit_ptr)
 {
     GstVaapiDecoderMpeg2 * const decoder =
-        GST_VAAPI_DECODER_MPEG2(base_decoder);
+        GST_VAAPI_DECODER_MPEG2_CAST(base_decoder);
     GstVaapiParserState * const ps = GST_VAAPI_PARSER_STATE(base_decoder);
     GstVaapiDecoderUnitMpeg2 *unit;
     GstVaapiDecoderStatus status;
@@ -1302,7 +1309,7 @@ gst_vaapi_decoder_mpeg2_decode(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderMpeg2 * const decoder =
-        GST_VAAPI_DECODER_MPEG2(base_decoder);
+        GST_VAAPI_DECODER_MPEG2_CAST(base_decoder);
     GstVaapiDecoderStatus status;
 
     status = ensure_decoder(decoder);
@@ -1316,7 +1323,7 @@ gst_vaapi_decoder_mpeg2_start_frame(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderUnit *base_unit)
 {
     GstVaapiDecoderMpeg2 * const decoder =
-        GST_VAAPI_DECODER_MPEG2(base_decoder);
+        GST_VAAPI_DECODER_MPEG2_CAST(base_decoder);
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GstMpegVideoSequenceHdr *seq_hdr;
     GstMpegVideoSequenceExt *seq_ext;
@@ -1383,7 +1390,7 @@ static GstVaapiDecoderStatus
 gst_vaapi_decoder_mpeg2_end_frame(GstVaapiDecoder *base_decoder)
 {
     GstVaapiDecoderMpeg2 * const decoder =
-        GST_VAAPI_DECODER_MPEG2(base_decoder);
+        GST_VAAPI_DECODER_MPEG2_CAST(base_decoder);
 
     return decode_current_picture(decoder);
 }
@@ -1391,7 +1398,7 @@ gst_vaapi_decoder_mpeg2_end_frame(GstVaapiDecoder *base_decoder)
 static void
 gst_vaapi_decoder_mpeg2_finalize(GObject *object)
 {
-    GstVaapiDecoderMpeg2 * const decoder = GST_VAAPI_DECODER_MPEG2(object);
+    GstVaapiDecoderMpeg2 * const decoder = GST_VAAPI_DECODER_MPEG2_CAST(object);
 
     gst_vaapi_decoder_mpeg2_destroy(decoder);
 
@@ -1401,7 +1408,7 @@ gst_vaapi_decoder_mpeg2_finalize(GObject *object)
 static void
 gst_vaapi_decoder_mpeg2_constructed(GObject *object)
 {
-    GstVaapiDecoderMpeg2 * const decoder = GST_VAAPI_DECODER_MPEG2(object);
+    GstVaapiDecoderMpeg2 * const decoder = GST_VAAPI_DECODER_MPEG2_CAST(object);
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GObjectClass *parent_class;
 
@@ -1436,21 +1443,9 @@ gst_vaapi_decoder_mpeg2_init(GstVaapiDecoderMpeg2 *decoder)
 
     priv                        = GST_VAAPI_DECODER_MPEG2_GET_PRIVATE(decoder);
     decoder->priv               = priv;
-    priv->width                 = 0;
-    priv->height                = 0;
-    priv->fps_n                 = 0;
-    priv->fps_d                 = 0;
     priv->hw_profile            = GST_VAAPI_PROFILE_UNKNOWN;
     priv->profile               = GST_VAAPI_PROFILE_MPEG2_SIMPLE;
-    priv->current_picture       = NULL;
-    priv->is_constructed        = FALSE;
-    priv->is_opened             = FALSE;
-    priv->size_changed          = FALSE;
     priv->profile_changed       = TRUE; /* Allow fallbacks to work */
-    priv->quant_matrix_changed  = FALSE;
-    priv->progressive_sequence  = FALSE;
-    priv->closed_gop            = FALSE;
-    priv->broken_link           = FALSE;
 }
 
 /**
