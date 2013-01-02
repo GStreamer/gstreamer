@@ -242,31 +242,6 @@ static const char *frag_AYUV_prog = {
       "}"
 };
 
-/** YUY2/YVYU/UYVY to RGB conversion */
-static const char *frag_YUY2_YVYU_UYVY_prog = {
-      "precision mediump float;"
-      "varying vec2 opos;"
-      "uniform sampler2D Ytex, UVtex;"
-      "uniform vec2 tex_scale0;"
-      "uniform vec2 tex_scale1;"
-      "uniform vec2 tex_scale2;"
-      "const vec3 offset = vec3(-0.0625, -0.5, -0.5);"
-      "const vec3 rcoeff = vec3(1.164, 0.000, 1.596);"
-      "const vec3 gcoeff = vec3(1.164,-0.391,-0.813);"
-      "const vec3 bcoeff = vec3(1.164, 2.018, 0.000);"
-      "void main(void) {"
-      "  float r, g, b;"
-      "  vec3 yuv;"
-      "  yuv.x = texture2D(Ytex,opos / tex_scale0).%c;"
-      "  yuv.yz = texture2D(UVtex,opos / tex_scale0).%c%c;"
-      "  yuv += offset;"
-      "  r = dot(yuv, rcoeff);"
-      "  g = dot(yuv, gcoeff);"
-      "  b = dot(yuv, bcoeff);"
-      "  gl_FragColor=vec4(r,g,b,1.0);"
-      "}"
-};
-
 /* Planar YUV converters */
 
 /** YUV to RGB conversion */
@@ -330,8 +305,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
             "RGBA, BGRA, ARGB, ABGR, "
             "RGBx, BGRx, xRGB, xBGR, "
             "AYUV, Y444, I420, YV12, "
-            "NV12, NV21, YUY2, YVYU, "
-            "UYVY, Y42B, Y41B, RGB, " "BGR, RGB16 }")));
+            "NV12, NV21, Y42B, Y41B, "
+            "RGB, BGR, RGB16 }")));
 
 /* Filter signals and args */
 enum
@@ -529,12 +504,6 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
         _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_NV12));
     gst_caps_append (format->caps,
         _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_NV21));
-    gst_caps_append (format->caps,
-        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YUY2));
-    gst_caps_append (format->caps,
-        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YVYU));
-    gst_caps_append (format->caps,
-        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_UYVY));
     gst_caps_append (format->caps,
         _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_Y42B));
     gst_caps_append (format->caps,
@@ -1406,27 +1375,6 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       texnames[1] = "Utex";
       texnames[2] = "Vtex";
       break;
-    case GST_VIDEO_FORMAT_YUY2:
-      frag_prog = g_strdup_printf (frag_YUY2_YVYU_UYVY_prog, 'r', 'g', 'a');
-      free_frag_prog = TRUE;
-      eglglessink->eglglesctx.n_textures = 2;
-      texnames[0] = "Ytex";
-      texnames[1] = "UVtex";
-      break;
-    case GST_VIDEO_FORMAT_YVYU:
-      frag_prog = g_strdup_printf (frag_YUY2_YVYU_UYVY_prog, 'r', 'a', 'g');
-      free_frag_prog = TRUE;
-      eglglessink->eglglesctx.n_textures = 2;
-      texnames[0] = "Ytex";
-      texnames[1] = "UVtex";
-      break;
-    case GST_VIDEO_FORMAT_UYVY:
-      frag_prog = g_strdup_printf (frag_YUY2_YVYU_UYVY_prog, 'a', 'r', 'b');
-      free_frag_prog = TRUE;
-      eglglessink->eglglesctx.n_textures = 2;
-      texnames[0] = "Ytex";
-      texnames[1] = "UVtex";
-      break;
     case GST_VIDEO_FORMAT_NV12:
       frag_prog = g_strdup_printf (frag_NV12_NV21_prog, 'r', 'a');
       free_frag_prog = TRUE;
@@ -2094,51 +2042,6 @@ gst_eglglessink_fill_texture (GstEglGlesSink * eglglessink, GstBuffer * buf)
               GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 2),
               0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
               GST_VIDEO_FRAME_COMP_DATA (&vframe, 2));
-          break;
-        }
-        case GST_VIDEO_FORMAT_YUY2:
-        case GST_VIDEO_FORMAT_YVYU:
-        case GST_VIDEO_FORMAT_UYVY:{
-          gint stride;
-          gint stride_width;
-          gint c_w;
-
-          stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
-          stride_width = c_w = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 1);
-
-          glActiveTexture (GL_TEXTURE0);
-
-          if (GST_ROUND_UP_8 (c_w * 4) == stride) {
-            glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
-          } else if (c_w * 4 == stride) {
-            glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
-          } else {
-            stride_width = stride / 4;
-
-            if (GST_ROUND_UP_8 (stride_width * 4) == stride) {
-              glPixelStorei (GL_UNPACK_ALIGNMENT, 8);
-            } else if (stride_width * 4 == stride) {
-              glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
-            } else {
-              GST_ERROR_OBJECT (eglglessink, "Unsupported stride %d", stride);
-              goto HANDLE_ERROR;
-            }
-          }
-          if (got_gl_error ("glPixelStorei"))
-            goto HANDLE_ERROR;
-
-          eglglessink->stride[0] = ((gdouble) stride_width) / ((gdouble) c_w);
-
-          glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
-              stride_width * 2, h, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
-              GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
-
-          glActiveTexture (GL_TEXTURE1);
-          glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[1]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, stride_width,
-              h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-              GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
           break;
         }
         case GST_VIDEO_FORMAT_NV12:
@@ -3703,9 +3606,6 @@ gst_egl_image_buffer_pool_alloc_buffer (GstBufferPool * bpool,
       return GST_FLOW_OK;
       break;
     }
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_YVYU:
-    case GST_VIDEO_FORMAT_UYVY:
     default:
       return
           GST_BUFFER_POOL_CLASS
