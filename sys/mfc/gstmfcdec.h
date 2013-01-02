@@ -57,6 +57,8 @@ struct _GstMFCDec
   gboolean initialized;
   GstBuffer *codec_data;
 
+  gboolean has_cropping;
+
   GstVideoFormat format;  
   FimcColorFormat fimc_format;
   Fimc *fimc;

@@ -530,8 +530,31 @@ gst_mfc_dec_fill_outbuf (GstMFCDec * self, GstBuffer * outbuf,
   GstMemory *mem;
   GstVideoFrame vframe;
   Fimc *fimc = self->fimc;
+  gboolean zerocopy, has_cropping;
 
   memset (&vframe, 0, sizeof (vframe));
+
+  zerocopy = (gst_buffer_n_memory (outbuf) == 1
+      && (mem = gst_buffer_peek_memory (outbuf, 0))
+      && strcmp (mem->allocator->mem_type, "GstEGLImage") == 0);
+  has_cropping = self->has_cropping;
+
+  /* We only do cropping if we do zerocopy and downstream
+   * supports cropping. For non-zerocopy we can do cropping
+   * more efficient.
+   * We can't do cropping ourself with zerocopy because
+   * FIMC returns EFAULT when queueing the destination
+   * buffers
+   */
+  if (zerocopy && has_cropping) {
+    GstVideoCropMeta *crop;
+
+    crop = gst_buffer_add_video_crop_meta (outbuf);
+    crop->x = self->crop_left;
+    crop->y = self->crop_top;
+    crop->width = self->crop_width;
+    crop->height = self->crop_height;
+  }
 
   if (!gst_video_frame_map (&vframe, &state->info, outbuf, GST_MAP_WRITE))
     goto frame_map_error;
@@ -539,9 +562,8 @@ gst_mfc_dec_fill_outbuf (GstMFCDec * self, GstBuffer * outbuf,
   mfc_buffer_get_output_data (mfc_outbuf, (void **) &mfc_outbuf_comps[0],
       (void **) &mfc_outbuf_comps[1]);
 
-  if (gst_buffer_n_memory (outbuf) == 1
-      && (mem = gst_buffer_peek_memory (outbuf, 0))
-      && strcmp (mem->allocator->mem_type, "GstEGLImage") == 0) {
+  if (zerocopy && (has_cropping || (self->width == self->crop_width
+              && self->height == self->crop_height))) {
     void *dst[3];
 
     if (self->mmap || !self->fimc) {
@@ -559,10 +581,18 @@ gst_mfc_dec_fill_outbuf (GstMFCDec * self, GstBuffer * outbuf,
         self->dst_stride[1] = GST_ROUND_UP_4 ((self->width + 1) / 2);
         self->dst_stride[2] = GST_ROUND_UP_4 ((self->width + 1) / 2);
       }
-      if (fimc_set_dst_format (fimc, self->fimc_format, self->width,
-              self->height, self->dst_stride, self->crop_left,
-              self->crop_top, self->crop_width, self->crop_height) < 0)
-        goto fimc_dst_error;
+
+      if (has_cropping) {
+        if (fimc_set_dst_format (fimc, self->fimc_format, self->width,
+                self->height, self->dst_stride, 0, 0, self->width,
+                self->height) < 0)
+          goto fimc_dst_error;
+      } else {
+        if (fimc_set_dst_format (fimc, self->fimc_format, self->width,
+                self->height, self->dst_stride, self->crop_left,
+                self->crop_top, self->crop_width, self->crop_height) < 0)
+          goto fimc_dst_error;
+      }
       self->mmap = FALSE;
 
       if (fimc_request_dst_buffers (fimc) < 0)
@@ -930,22 +960,45 @@ gst_mfc_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 static gboolean
 gst_mfc_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 {
+  GstMFCDec *self = GST_MFC_DEC (decoder);
   GstBufferPool *pool;
   GstStructure *config;
+  guint size, min, max;
 
   if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
           query))
     return FALSE;
 
   g_assert (gst_query_get_n_allocation_pools (query) > 0);
-  gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
+  gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
   g_assert (pool != NULL);
 
+  self->has_cropping = FALSE;
   config = gst_buffer_pool_get_config (pool);
   if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
+    self->has_cropping =
+        gst_query_find_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE,
+        NULL);
   }
+
+  if (self->has_cropping) {
+    GstVideoInfo info;
+    GstCaps *caps;
+
+    /* Calculate uncropped size */
+    gst_buffer_pool_config_get_params (config, &caps, &size, &min, &max);
+    gst_video_info_from_caps (&info, caps);
+    gst_video_info_set_format (&info, self->format, self->width, self->height);
+    size = MAX (size, info.size);
+    caps = gst_video_info_to_caps (&info);
+    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+    gst_caps_unref (caps);
+  }
+
+  gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+
   gst_buffer_pool_set_config (pool, config);
   gst_object_unref (pool);
 
