@@ -290,9 +290,7 @@ struct mfc_dec_context* mfc_dec_create(unsigned int codec)
     pthread_mutex_unlock(&mutex);
 
     ctx = calloc(1, sizeof (struct mfc_dec_context));
-    // The first frame never generate any output.
-    // TODO: do this better
-    ctx->output_frames_available = -1;
+    ctx->output_frames_available = 0;
     if (!ctx) {
         GST_ERROR ("Unable to allocate memory for context");
         return NULL;
