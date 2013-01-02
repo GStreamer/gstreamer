@@ -64,6 +64,7 @@ struct _Fimc
 
   int set_src;
   int has_src_buffers;
+  int streamon_src;
   FimcColorFormat src_format;
   struct v4l2_format src_fmt;
   struct v4l2_crop src_crop;
@@ -71,6 +72,7 @@ struct _Fimc
 
   int set_dst;
   int has_dst_buffers;
+  int streamon_dst;
   FimcColorFormat dst_format;
   struct v4l2_format dst_fmt;
   struct v4l2_crop dst_crop;
@@ -140,12 +142,8 @@ fimc_new (void)
 void
 fimc_free (Fimc * fimc)
 {
-  int i;
-
-  for (i = 0; i < 3; i++) {
-    if (fimc->dst_buffer_data[i])
-      munmap (fimc->dst_buffer_data[i], fimc->dst_buffer_size[i]);
-  }
+  fimc_release_src_buffers (fimc);
+  fimc_release_dst_buffers (fimc);
 
   if (fimc->fd != -1)
     close (fimc->fd);
@@ -326,6 +324,17 @@ fimc_request_src_buffers (Fimc * fimc)
 int
 fimc_release_src_buffers (Fimc * fimc)
 {
+  enum v4l2_buf_type type;
+
+  if (fimc->streamon_src) {
+    type = fimc->src_requestbuffers.type;
+    if (ioctl (fimc->fd, VIDIOC_STREAMOFF, &type) < 0) {
+      GST_ERROR ("Deactivating input stream failed: %d", errno);
+      return -1;
+    }
+    fimc->streamon_src = 0;
+  }
+
   /* Nothing to do here now */
   fimc->has_src_buffers = 0;
 
@@ -528,7 +537,17 @@ fimc_request_dst_buffers_mmap (Fimc * fimc, void *dst[3], int stride[3])
 int
 fimc_release_dst_buffers (Fimc * fimc)
 {
+  enum v4l2_buf_type type;
   int i;
+
+  if (fimc->streamon_dst) {
+    type = fimc->dst_requestbuffers.type;
+    if (ioctl (fimc->fd, VIDIOC_STREAMOFF, &type) < 0) {
+      GST_ERROR ("Deactivating output stream failed: %d", errno);
+      return -1;
+    }
+    fimc->streamon_dst = 0;
+  }
 
   fimc->has_dst_buffers = 0;
 
@@ -595,16 +614,22 @@ fimc_convert (Fimc * fimc, void *src[3], void *dst[3])
     return -1;
   }
 
-  type = fimc->src_requestbuffers.type;
-  if (ioctl (fimc->fd, VIDIOC_STREAMON, &type) < 0) {
-    GST_ERROR ("Activating input stream failed: %d", errno);
-    return -1;
+  if (!fimc->streamon_src) {
+    type = fimc->src_requestbuffers.type;
+    if (ioctl (fimc->fd, VIDIOC_STREAMON, &type) < 0) {
+      GST_ERROR ("Activating input stream failed: %d", errno);
+      return -1;
+    }
+    fimc->streamon_src = 1;
   }
 
-  type = fimc->dst_requestbuffers.type;
-  if (ioctl (fimc->fd, VIDIOC_STREAMON, &type) < 0) {
-    GST_ERROR ("Activating output stream failed: %d", errno);
-    return -1;
+  if (!fimc->streamon_dst) {
+    type = fimc->dst_requestbuffers.type;
+    if (ioctl (fimc->fd, VIDIOC_STREAMON, &type) < 0) {
+      GST_ERROR ("Activating output stream failed: %d", errno);
+      return -1;
+    }
+    fimc->streamon_dst = 1;
   }
 
   memset (planes, 0, sizeof (planes));
@@ -630,18 +655,6 @@ fimc_convert (Fimc * fimc, void *src[3], void *dst[3])
 
   if (ioctl (fimc->fd, VIDIOC_DQBUF, &buffer) < 0) {
     GST_ERROR ("Failed to dequeue output buffer: %d", errno);
-    return -1;
-  }
-
-  type = fimc->src_requestbuffers.type;
-  if (ioctl (fimc->fd, VIDIOC_STREAMOFF, &type) < 0) {
-    GST_ERROR ("Deactivating input stream failed: %d", errno);
-    return -1;
-  }
-
-  type = fimc->dst_requestbuffers.type;
-  if (ioctl (fimc->fd, VIDIOC_STREAMOFF, &type) < 0) {
-    GST_ERROR ("Deactivating output stream failed: %d", errno);
     return -1;
   }
 
