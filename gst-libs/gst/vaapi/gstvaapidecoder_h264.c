@@ -2675,16 +2675,9 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
         return GST_VAAPI_DECODER_STATUS_SUCCESS;
     }
 
-    unit->base.buffer = gst_buffer_create_sub(
-        GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer,
-        unit->base.offset, unit->base.size);
-    if (!unit->base.buffer) {
-        GST_ERROR("failed to allocate slice data");
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-    }
-
     slice = GST_VAAPI_SLICE_NEW(H264, decoder,
-        GST_BUFFER_DATA(unit->base.buffer) + nalu->offset, nalu->size);
+        (GST_BUFFER_DATA(GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer) +
+         unit->base.offset + nalu->offset), nalu->size);
     if (!slice) {
         GST_ERROR("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
