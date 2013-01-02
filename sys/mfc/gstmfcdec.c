@@ -80,7 +80,7 @@ static GstStaticPadTemplate gst_mfc_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12, NV12 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ NV12, I420, YV12 }"))
     );
 /* *INDENT-ON* */
 
@@ -483,7 +483,7 @@ gst_mfc_dec_negotiate (GstVideoDecoder * decoder)
   GstMFCDec *self = GST_MFC_DEC (decoder);
   GstVideoCodecState *state;
   GstCaps *allowed_caps;
-  GstVideoFormat format = GST_VIDEO_FORMAT_I420;
+  GstVideoFormat format = GST_VIDEO_FORMAT_NV12;
 
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_DECODER_SRC_PAD (self));
   allowed_caps = gst_caps_truncate (allowed_caps);
