@@ -596,10 +596,6 @@ decode_sequence(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnitMpeg2 *unit)
     pts_set_framerate(&priv->tsg, priv->fps_n, priv->fps_d);
     gst_vaapi_decoder_set_framerate(base_decoder, priv->fps_n, priv->fps_d);
 
-    if (gst_mpeg_video_finalise_mpeg2_sequence_header(seq_hdr, NULL, NULL))
-        gst_vaapi_decoder_set_pixel_aspect_ratio(base_decoder,
-            seq_hdr->par_w, seq_hdr->par_h);
-
     priv->width                 = seq_hdr->width;
     priv->height                = seq_hdr->height;
     priv->size_changed          = TRUE;
@@ -627,7 +623,6 @@ decode_sequence_ext(GstVaapiDecoderMpeg2 *decoder,
 {
     GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
-    GstMpegVideoSequenceHdr * const seq_hdr = &priv->seq_hdr_unit->data.seq_hdr;
     GstMpegVideoSequenceExt *seq_ext;
     GstVaapiProfile profile;
     guint width, height;
@@ -677,11 +672,6 @@ decode_sequence_ext(GstVaapiDecoderMpeg2 *decoder,
         priv->profile = profile;
         priv->profile_changed = TRUE;
     }
-
-    if (gst_mpeg_video_finalise_mpeg2_sequence_header(seq_hdr, seq_ext, NULL))
-        gst_vaapi_decoder_set_pixel_aspect_ratio(base_decoder,
-            seq_hdr->par_w, seq_hdr->par_h);
-
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -1317,6 +1307,9 @@ gst_vaapi_decoder_mpeg2_start_frame(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderMpeg2 * const decoder =
         GST_VAAPI_DECODER_MPEG2(base_decoder);
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
+    GstMpegVideoSequenceHdr *seq_hdr;
+    GstMpegVideoSequenceExt *seq_ext;
+    GstMpegVideoSequenceDisplayExt *seq_display_ext;
     GstVaapiPicture *picture;
     GstVaapiDecoderStatus status;
 
@@ -1326,6 +1319,15 @@ gst_vaapi_decoder_mpeg2_start_frame(GstVaapiDecoder *base_decoder,
         GST_WARNING("failed to decode picture of unknown size");
         return GST_VAAPI_DECODER_STATUS_SUCCESS;
     }
+
+    seq_hdr = &priv->seq_hdr_unit->data.seq_hdr;
+    seq_ext = priv->seq_ext_unit ? &priv->seq_ext_unit->data.seq_ext : NULL;
+    seq_display_ext = priv->seq_display_ext_unit ?
+        &priv->seq_display_ext_unit->data.seq_display_ext : NULL;
+    if (gst_mpeg_video_finalise_mpeg2_sequence_header(seq_hdr, seq_ext,
+            seq_display_ext))
+        gst_vaapi_decoder_set_pixel_aspect_ratio(base_decoder,
+            seq_hdr->par_w, seq_hdr->par_h);
 
     status = ensure_context(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
