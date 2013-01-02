@@ -276,6 +276,7 @@ static int request_output_buffers(struct mfc_dec_context *ctx, int num)
 struct mfc_dec_context* mfc_dec_create(unsigned int codec, int num_input_buffers)
 {
     struct mfc_dec_context *ctx;
+    struct v4l2_capability caps;
 
     pthread_mutex_lock(&mutex);
     if (mfc_in_use) {
@@ -301,6 +302,21 @@ struct mfc_dec_context* mfc_dec_create(unsigned int codec, int num_input_buffers
         free(ctx);
         return NULL;
     }
+
+    if (ioctl (ctx->fd, VIDIOC_QUERYCAP, &caps) < 0) {
+        GST_ERROR ("Unable to query capabilities: %d", errno);
+        mfc_dec_destroy(ctx);
+        return NULL;
+    }
+
+    if ((caps.capabilities & V4L2_CAP_STREAMING) == 0 ||
+        (caps.capabilities & V4L2_CAP_VIDEO_OUTPUT_MPLANE) == 0 ||
+        (caps.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE) == 0) {
+        GST_ERROR ("Required capabilities not available");
+        mfc_dec_destroy(ctx);
+        return NULL;
+    }
+
     if (mfc_dec_set_codec(ctx, codec) ||
         request_input_buffers(ctx, num_input_buffers)) {
         mfc_dec_destroy(ctx);
