@@ -303,7 +303,7 @@ gst_mfc_dec_queue_input (GstMFCDec * self, GstVideoCodecFrame * frame)
   GstBuffer *inbuf = NULL;
   struct mfc_buffer *mfc_inbuf = NULL;
   guint8 *mfc_inbuf_data;
-  gint mfc_inbuf_size;
+  gint mfc_inbuf_max_size, mfc_inbuf_size = 0;
   GstMapInfo map;
   struct timeval timestamp;
 
@@ -319,63 +319,45 @@ gst_mfc_dec_queue_input (GstMFCDec * self, GstVideoCodecFrame * frame)
       goto dequeue_error;
   }
 
-  if (self->codec_data) {
-    inbuf = self->codec_data;
-    gst_buffer_map (inbuf, &map, GST_MAP_READ);
+  mfc_inbuf_data = (guint8 *) mfc_buffer_get_input_data (mfc_inbuf);
+  g_assert (mfc_inbuf_data != NULL);
+  mfc_inbuf_max_size = mfc_buffer_get_input_max_size (mfc_inbuf);
 
-    mfc_inbuf_data = (guint8 *) mfc_buffer_get_input_data (mfc_inbuf);
-    g_assert (mfc_inbuf_data != NULL);
-    mfc_inbuf_size = mfc_buffer_get_input_max_size (mfc_inbuf);
-
-    GST_DEBUG_OBJECT (self, "Have input buffer %p with size %d", mfc_inbuf_data,
-        mfc_inbuf_size);
-
-    if ((gsize) mfc_inbuf_size < map.size)
-      goto too_small_inbuf;
-
-    memcpy (mfc_inbuf_data, map.data, map.size);
-    mfc_buffer_set_input_size (mfc_inbuf, map.size);
-
-    gst_buffer_unmap (inbuf, &map);
-    gst_buffer_replace (&self->codec_data, NULL);
-    inbuf = NULL;
-
-    timestamp.tv_usec = 0;
-    timestamp.tv_sec = -1;
-
-    if ((mfc_ret =
-            mfc_dec_enqueue_input (self->context, mfc_inbuf, &timestamp)) < 0)
-      goto enqueue_error;
-
-    if ((mfc_ret = mfc_dec_dequeue_input (self->context, &mfc_inbuf)) < 0) {
-      if (mfc_ret == -2) {
-        GST_DEBUG_OBJECT (self, "Timeout dequeueing input, trying again");
-        mfc_ret = mfc_dec_dequeue_input (self->context, &mfc_inbuf);
-      }
-
-      if (mfc_ret < 0)
-        goto dequeue_error;
-    }
-  }
+  GST_DEBUG_OBJECT (self, "Have input buffer %p with max size %d",
+      mfc_inbuf_data, mfc_inbuf_max_size);
 
   g_assert (mfc_inbuf != NULL);
 
   if (frame) {
+    if (self->codec_data) {
+      inbuf = self->codec_data;
+      gst_buffer_map (inbuf, &map, GST_MAP_READ);
+
+      if ((gsize) mfc_inbuf_max_size < map.size)
+        goto too_small_inbuf;
+
+      memcpy (mfc_inbuf_data, map.data, map.size);
+      mfc_inbuf_size += map.size;
+      mfc_inbuf_data += map.size;
+      mfc_inbuf_max_size -= map.size;
+
+      gst_buffer_unmap (inbuf, &map);
+      gst_buffer_replace (&self->codec_data, NULL);
+      inbuf = NULL;
+    }
+
     inbuf = frame->input_buffer;
     gst_buffer_map (inbuf, &map, GST_MAP_READ);
 
-    mfc_inbuf_data = (guint8 *) mfc_buffer_get_input_data (mfc_inbuf);
-    g_assert (mfc_inbuf_data != NULL);
-    mfc_inbuf_size = mfc_buffer_get_input_max_size (mfc_inbuf);
-
-    GST_DEBUG_OBJECT (self, "Have input buffer %p with size %d", mfc_inbuf_data,
-        mfc_inbuf_size);
-
-    if ((gsize) mfc_inbuf_size < map.size)
+    if ((gsize) mfc_inbuf_max_size < map.size)
       goto too_small_inbuf;
 
     memcpy (mfc_inbuf_data, map.data, map.size);
-    mfc_buffer_set_input_size (mfc_inbuf, map.size);
+    mfc_inbuf_size += map.size;
+    mfc_inbuf_data += map.size;
+    mfc_inbuf_max_size -= map.size;
+
+    mfc_buffer_set_input_size (mfc_inbuf, mfc_inbuf_size);
 
     gst_buffer_unmap (inbuf, &map);
     inbuf = NULL;
@@ -409,7 +391,7 @@ dequeue_error:
 too_small_inbuf:
   {
     GST_ELEMENT_ERROR (self, STREAM, FORMAT, ("Too large input frames"),
-        ("Maximum size %d, got %d", mfc_inbuf_size, map.size));
+        ("Maximum size %d, got %d", mfc_inbuf_max_size, map.size));
     ret = GST_FLOW_ERROR;
     gst_buffer_unmap (inbuf, &map);
     goto done;
