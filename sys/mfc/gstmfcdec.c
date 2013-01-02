@@ -30,6 +30,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_mfc_dec_debug);
 #define GST_CAT_DEFAULT gst_mfc_dec_debug
 
+static gboolean gst_mfc_dec_open (GstVideoDecoder * decoder);
 static gboolean gst_mfc_dec_start (GstVideoDecoder * decoder);
 static gboolean gst_mfc_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_mfc_dec_set_format (GstVideoDecoder * decoder,
@@ -109,6 +110,7 @@ gst_mfc_dec_class_init (GstMFCDecClass * klass)
       "Decode video streams via Samsung Exynos",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
+  video_decoder_class->open = GST_DEBUG_FUNCPTR (gst_mfc_dec_open);
   video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_mfc_dec_start);
   video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_mfc_dec_stop);
   video_decoder_class->finish = GST_DEBUG_FUNCPTR (gst_mfc_dec_finish);
@@ -130,6 +132,28 @@ gst_mfc_dec_init (GstMFCDec * self)
   GstVideoDecoder *decoder = (GstVideoDecoder *) self;
 
   gst_video_decoder_set_packetized (decoder, TRUE);
+}
+
+static gboolean
+gst_mfc_dec_open (GstVideoDecoder * decoder)
+{
+  GstMFCDec *self = GST_MFC_DEC (decoder);
+
+  GST_DEBUG_OBJECT (self, "Opening");
+
+  /* Just check here once if we can create a MFC context, i.e.
+   * if the hardware is available
+   */
+  self->context = mfc_dec_create (CODEC_TYPE_H264, 1);
+  if (!self->context) {
+    GST_ELEMENT_ERROR (self, LIBRARY, INIT,
+        ("Failed to initialize MFC decoder context"), (NULL));
+    return FALSE;
+  }
+  mfc_dec_destroy (self->context);
+  self->context = NULL;
+
+  return TRUE;
 }
 
 static gboolean
