@@ -75,6 +75,9 @@ struct mfc_dec_context {
     int num_output_buffers;
     struct mfc_buffer *input_buffer;
     struct mfc_buffer *output_buffer;
+
+    int input_streamon, output_streamon;
+
     /*
      * Number of decoded frames the MFC needs to have access to to
      * decode correctly.
@@ -382,6 +385,7 @@ static int start_input_stream(struct mfc_dec_context *ctx)
         GST_ERROR ("Unable to start input stream");
         return -1;
     }
+    ctx->input_streamon = 1;
     return 0;
 }
 
@@ -392,6 +396,7 @@ static int start_output_stream(struct mfc_dec_context *ctx)
         GST_ERROR ("Unable to start output stream");
         return -1;
     }
+    ctx->output_streamon = 1;
     return 0;
 }
 
@@ -439,12 +444,17 @@ void mfc_dec_destroy(struct mfc_dec_context *ctx)
 {
     int i;
     int type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
-    if (ioctl(ctx->fd, VIDIOC_STREAMOFF, &type) < 0)
-        GST_ERROR ("Streamoff failed on output");
+
+    if (ctx->output_streamon)
+        if (ioctl(ctx->fd, VIDIOC_STREAMOFF, &type) < 0)
+            GST_ERROR ("Streamoff failed on output");
+    ctx->output_streamon = 0;
 
     type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
-    if (ioctl(ctx->fd, VIDIOC_STREAMOFF, &type) < 0)
-        GST_ERROR ("Streamoff failed on input");
+    if (ctx->input_streamon)
+        if (ioctl(ctx->fd, VIDIOC_STREAMOFF, &type) < 0)
+            GST_ERROR ("Streamoff failed on input");
+    ctx->input_streamon = 0;
 
     for (i = 0; i < ctx->num_input_buffers; i++) {
         if (ctx->input_buffer[i].plane[0].data)
