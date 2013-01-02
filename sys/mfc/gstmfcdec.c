@@ -510,9 +510,10 @@ gst_mfc_dec_negotiate (GstVideoDecoder * decoder)
   }
   gst_caps_unref (allowed_caps);
 
+  self->format = format;
   state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-      format, self->crop_width, self->crop_height, self->input_state);
+      self->format, self->crop_width, self->crop_height, self->input_state);
 
   gst_video_codec_state_unref (state);
 
