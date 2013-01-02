@@ -23,12 +23,25 @@
 #endif
 
 #include <gst/gst.h>
-
 #include "gstmfcdec.h"
+
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PLUGIN_LOADING);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  struct mfc_dec_context *context;
+
+  /* Just check here once if we can create a MFC context, i.e.
+   * if the hardware is available */
+  mfc_dec_init_debug ();
+  context = mfc_dec_create (CODEC_TYPE_H264, 1);
+  if (!context) {
+    GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "Failed to initialize MFC decoder context");
+    return FALSE;
+  }
+  mfc_dec_destroy (context);
+
   if (!gst_element_register (plugin, "mfcdec", GST_RANK_PRIMARY,
           GST_TYPE_MFC_DEC))
     return FALSE;
