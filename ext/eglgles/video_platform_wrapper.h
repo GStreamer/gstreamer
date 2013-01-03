@@ -95,6 +95,9 @@ typedef struct
 typedef gboolean (*PlatformMapVideo)    (GstVideoMeta *meta, guint plane, GstMapInfo *info, gpointer *data, gint * stride, GstMapFlags flags);
 typedef gboolean (*PlatformUnmapVideo)  (GstVideoMeta *meta, guint plane, GstMapInfo *info);
 
+extern PlatformMapVideo default_map_video;
+extern PlatformUnmapVideo default_unmap_video;
+
 gboolean platform_can_map_eglimage (GstMemoryMapFunction *map, GstMemoryUnmapFunction *unmap, PlatformMapVideo *video_map, PlatformUnmapVideo *video_unmap);
 gboolean platform_has_custom_eglimage_alloc (void);
 gboolean platform_alloc_eglimage (EGLDisplay display, EGLContext context, GLint format, GLint type, gint width, gint height, GLuint tex_id, EGLImageKHR *image, gpointer *image_platform_data);

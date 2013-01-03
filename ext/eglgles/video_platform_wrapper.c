@@ -61,6 +61,9 @@
 GST_DEBUG_CATEGORY_STATIC (eglgles_platform_wrapper);
 #define GST_CAT_DEFAULT eglgles_platform_wrapper
 
+PlatformMapVideo default_map_video;
+PlatformUnmapVideo default_unmap_video;
+
 /* XXX: Likely to be removed */
 gboolean
 platform_wrapper_init (void)
@@ -345,11 +348,12 @@ eglimage_video_map (GstVideoMeta * meta, guint plane,
   GstEGLImageMemory *mem;
   GstVideoInfo vinfo;
 
-  g_return_val_if_fail (gst_buffer_n_memory (meta->buffer) == 1, FALSE);
+  if (gst_buffer_n_memory (meta->buffer) != 1)
+    return default_map_video (meta, plane, info, data, stride, flags);
 
   gmem = gst_buffer_peek_memory (meta->buffer, 0);
-  g_return_val_if_fail (strcmp (gmem->allocator->mem_type,
-          GST_EGL_IMAGE_MEMORY_NAME) == 0, FALSE);
+  if (strcmp (gmem->allocator->mem_type, GST_EGL_IMAGE_MEMORY_NAME) != 0)
+    return default_map_video (meta, plane, info, data, stride, flags);
 
   mem = GST_EGL_IMAGE_MEMORY ((gmem->parent ? gmem->parent : gmem));
 
@@ -446,11 +450,13 @@ eglimage_video_unmap (GstVideoMeta * meta, guint plane, GstMapInfo * info)
     EGL_NONE
   };
 
-  g_return_val_if_fail (gst_buffer_n_memory (meta->buffer) == 1, FALSE);
+  if (gst_buffer_n_memory (meta->buffer) != 1)
+    return default_unmap_video (meta, plane, info);
 
   gmem = gst_buffer_peek_memory (meta->buffer, 0);
-  g_return_val_if_fail (strcmp (gmem->allocator->mem_type,
-          GST_EGL_IMAGE_MEMORY_NAME) == 0, FALSE);
+  if (strcmp (gmem->allocator->mem_type, GST_EGL_IMAGE_MEMORY_NAME) != 0)
+    return default_unmap_video (meta, plane, info);
+
   mem = GST_EGL_IMAGE_MEMORY ((gmem->parent ? gmem->parent : gmem));
 
   g_mutex_lock (&mem->lock);

@@ -3303,6 +3303,11 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
       gst_buffer_add_video_meta_full (buffer, 0, format, width, height,
       mem->n_textures, offset, stride);
 
+  if (!default_map_video) {
+    default_map_video = meta->map;
+    default_unmap_video = meta->unmap;
+  }
+
   meta->map = eglglessink->eglglesctx.eglimage_video_map;
   meta->unmap = eglglessink->eglglesctx.eglimage_video_unmap;
 
