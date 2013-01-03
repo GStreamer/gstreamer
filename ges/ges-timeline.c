@@ -63,13 +63,6 @@ GST_DEBUG_CATEGORY_STATIC (ges_timeline_debug);
 #undef GST_CAT_DEFAULT
 #define GST_CAT_DEFAULT ges_timeline_debug
 
-#define GES_TIMELINE_PENDINGOBJS_GET_LOCK(timeline) \
-  (&GES_TIMELINE(timeline)->priv->pendingobjects_lock)
-#define GES_TIMELINE_PENDINGOBJS_LOCK(timeline) \
-  (g_mutex_lock(GES_TIMELINE_PENDINGOBJS_GET_LOCK (timeline)))
-#define GES_TIMELINE_PENDINGOBJS_UNLOCK(timeline) \
-  (g_mutex_unlock(GES_TIMELINE_PENDINGOBJS_GET_LOCK (timeline)))
-
 typedef struct TrackObjIters
 {
   GSequenceIter *iter_start;
