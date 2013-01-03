@@ -319,8 +319,7 @@ gst_vaapi_picture_output(GstVaapiPicture *picture)
     gst_video_codec_frame_set_user_data(out_frame,
         proxy, (GDestroyNotify)gst_vaapi_mini_object_unref);
 
-    if (!GST_CLOCK_TIME_IS_VALID(out_frame->pts))
-        out_frame->pts = picture->pts;
+    out_frame->pts = picture->pts;
     if (GST_VAAPI_PICTURE_IS_SKIPPED(picture))
         GST_VIDEO_CODEC_FRAME_FLAG_SET(out_frame,
             GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
