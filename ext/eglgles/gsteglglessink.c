@@ -832,6 +832,8 @@ gst_eglglessink_stop (GstEglGlesSink * eglglessink)
   }
   eglglessink->last_flow = GST_FLOW_FLUSHING;
 
+  eglglessink->last_memory = NULL;
+
   if (eglglessink->using_own_window) {
     platform_destroy_native_window (eglglessink->eglglesctx.display,
         eglglessink->eglglesctx.used_window, &eglglessink->own_window_data);
@@ -2205,6 +2207,7 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
         if (got_gl_error ("glEGLImageTargetTexture2DOES"))
           goto HANDLE_ERROR;
       }
+      eglglessink->last_memory = gmem;
       eglglessink->stride[0] = 1;
       eglglessink->stride[1] = 1;
       eglglessink->stride[2] = 1;
@@ -3633,6 +3636,45 @@ gst_egl_image_buffer_pool_alloc_buffer (GstBufferPool * bpool,
   return GST_FLOW_ERROR;
 }
 
+static GstFlowReturn
+gst_egl_image_buffer_pool_acquire_buffer (GstBufferPool * bpool,
+    GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
+{
+  GstFlowReturn ret;
+  GstMemory *gmem;
+  GstEGLImageBufferPool *pool;
+
+  ret =
+      GST_BUFFER_POOL_CLASS
+      (gst_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool, buffer,
+      params);
+  if (ret != GST_FLOW_OK || !*buffer)
+    return ret;
+
+  pool = GST_EGL_IMAGE_BUFFER_POOL (bpool);
+
+  /* XXX: Don't return the memory we just rendered, glEGLImageTargetTexture2DOES()
+   * keeps the EGLImage unmappable until the next one is uploaded
+   */
+  if (gst_buffer_n_memory (*buffer) == 1 &&
+      (gmem = gst_buffer_peek_memory (*buffer, 0)) &&
+      strcmp (gmem->allocator->mem_type, GST_EGL_IMAGE_MEMORY_NAME) == 0) {
+    if (gmem == pool->sink->last_memory) {
+      GstBuffer *oldbuf = *buffer;
+
+      ret =
+          GST_BUFFER_POOL_CLASS
+          (gst_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool,
+          buffer, params);
+      gst_buffer_unref (oldbuf);
+      if (ret != GST_FLOW_OK || !*buffer)
+        return ret;
+    }
+  }
+
+  return ret;
+}
+
 static void
 gst_egl_image_buffer_pool_finalize (GObject * object)
 {
@@ -3659,6 +3701,8 @@ gst_egl_image_buffer_pool_class_init (GstEGLImageBufferPoolClass * klass)
   gstbufferpool_class->get_options = gst_egl_image_buffer_pool_get_options;
   gstbufferpool_class->set_config = gst_egl_image_buffer_pool_set_config;
   gstbufferpool_class->alloc_buffer = gst_egl_image_buffer_pool_alloc_buffer;
+  gstbufferpool_class->acquire_buffer =
+      gst_egl_image_buffer_pool_acquire_buffer;
 }
 
 static void

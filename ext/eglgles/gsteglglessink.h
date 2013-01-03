@@ -235,6 +235,8 @@ struct _GstEglGlesSink
   GstFlowReturn last_flow;
   GstMiniObject *dequeued_object;
 
+  GstMemory *last_memory;
+
   /* Properties */
   gboolean create_window;
   gboolean force_aspect_ratio;
