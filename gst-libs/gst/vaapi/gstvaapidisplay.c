@@ -53,6 +53,12 @@ struct _GstVaapiProperty {
     gint                old_value;
 };
 
+typedef struct _GstVaapiFormatInfo GstVaapiFormatInfo;
+struct _GstVaapiFormatInfo {
+    GstVaapiImageFormat format;
+    guint               flags;
+};
+
 #define DEFAULT_RENDER_MODE     GST_VAAPI_RENDER_MODE_TEXTURE
 #define DEFAULT_ROTATION        GST_VAAPI_ROTATION_0
 
@@ -149,22 +155,28 @@ gst_vaapi_display_type_get_type(void)
 
 /* Append GstVaapiImageFormat to formats array */
 static inline void
-append_format(GArray *formats, GstVaapiImageFormat format)
+append_format(GArray *formats, GstVaapiImageFormat format, guint flags)
 {
-    g_array_append_val(formats, format);
+    GstVaapiFormatInfo fi;
+
+    fi.format = format;
+    fi.flags = flags;
+    g_array_append_val(formats, fi);
 }
 
 /* Append VAImageFormats to formats array */
 static void
-append_formats(GArray *formats, const VAImageFormat *va_formats, guint n)
+append_formats(GArray *formats, const VAImageFormat *va_formats,
+    guint *flags, guint n)
 {
     GstVaapiImageFormat format;
-    gboolean has_YV12 = FALSE;
-    gboolean has_I420 = FALSE;
+    const GstVaapiFormatInfo *YV12_fip = NULL;
+    const GstVaapiFormatInfo *I420_fip = NULL;
     guint i;
 
     for (i = 0; i < n; i++) {
         const VAImageFormat * const va_format = &va_formats[i];
+        const GstVaapiFormatInfo **fipp;
 
         format = gst_vaapi_image_format(va_format);
         if (!format) {
@@ -172,34 +184,38 @@ append_formats(GArray *formats, const VAImageFormat *va_formats, guint n)
                       GST_FOURCC_ARGS(va_format->fourcc));
             continue;
         }
+        append_format(formats, format, flags ? flags[i] : 0);
 
         switch (format) {
         case GST_VAAPI_IMAGE_YV12:
-            has_YV12 = TRUE;
+            fipp = &YV12_fip;
             break;
         case GST_VAAPI_IMAGE_I420:
-            has_I420 = TRUE;
+            fipp = &I420_fip;
             break;
         default:
+            fipp = NULL;
             break;
         }
-        append_format(formats, format);
+        if (fipp)
+            *fipp = &g_array_index(formats, GstVaapiFormatInfo,
+                formats->len - 1);
     }
 
     /* Append I420 (resp. YV12) format if YV12 (resp. I420) is not
        supported by the underlying driver */
-    if (has_YV12 && !has_I420)
-        append_format(formats, GST_VAAPI_IMAGE_I420);
-    else if (has_I420 && !has_YV12)
-        append_format(formats, GST_VAAPI_IMAGE_YV12);
+    if (YV12_fip && !I420_fip)
+        append_format(formats, GST_VAAPI_IMAGE_I420, YV12_fip->flags);
+    else if (I420_fip && !YV12_fip)
+        append_format(formats, GST_VAAPI_IMAGE_YV12, I420_fip->flags);
 }
 
 /* Sort image formats. Prefer YUV formats first */
 static gint
 compare_yuv_formats(gconstpointer a, gconstpointer b)
 {
-    const GstVaapiImageFormat fmt1 = *(GstVaapiImageFormat *)a;
-    const GstVaapiImageFormat fmt2 = *(GstVaapiImageFormat *)b;
+    const GstVaapiImageFormat fmt1 = ((GstVaapiFormatInfo *)a)->format;
+    const GstVaapiImageFormat fmt2 = ((GstVaapiFormatInfo *)b)->format;
 
     const gboolean is_fmt1_yuv = gst_vaapi_image_format_is_yuv(fmt1);
     const gboolean is_fmt2_yuv = gst_vaapi_image_format_is_yuv(fmt2);
@@ -215,8 +231,8 @@ compare_yuv_formats(gconstpointer a, gconstpointer b)
 static gint
 compare_rgb_formats(gconstpointer a, gconstpointer b)
 {
-    const GstVaapiImageFormat fmt1 = *(GstVaapiImageFormat *)a;
-    const GstVaapiImageFormat fmt2 = *(GstVaapiImageFormat *)b;
+    const GstVaapiImageFormat fmt1 = ((GstVaapiFormatInfo *)a)->format;
+    const GstVaapiImageFormat fmt2 = ((GstVaapiFormatInfo *)b)->format;
 
     const gboolean is_fmt1_rgb = gst_vaapi_image_format_is_rgb(fmt1);
     const gboolean is_fmt2_rgb = gst_vaapi_image_format_is_rgb(fmt2);
@@ -304,23 +320,33 @@ get_profile_caps(GArray *configs)
     return out_caps;
 }
 
+/* Find format info */
+static const GstVaapiFormatInfo *
+find_format_info(GArray *formats, GstVaapiImageFormat format)
+{
+    const GstVaapiFormatInfo *fip;
+    guint i;
+
+    for (i = 0; i < formats->len; i++) {
+        fip = &g_array_index(formats, GstVaapiFormatInfo, i);
+        if (fip->format == format)
+            return fip;
+    }
+    return NULL;
+}
+
 /* Check if formats array contains format */
 static inline gboolean
 find_format(GArray *formats, GstVaapiImageFormat format)
 {
-    guint i;
-
-    for (i = 0; i < formats->len; i++)
-        if (g_array_index(formats, GstVaapiImageFormat, i) == format)
-            return TRUE;
-    return FALSE;
+    return find_format_info(formats, format) != NULL;
 }
 
 /* Convert formats array to GstCaps */
 static GstCaps *
 get_format_caps(GArray *formats)
 {
-    GstVaapiImageFormat format;
+    const GstVaapiFormatInfo *fip;
     GstCaps *out_caps, *caps;
     guint i;
 
@@ -329,8 +355,8 @@ get_format_caps(GArray *formats)
         return NULL;
 
     for (i = 0; i < formats->len; i++) {
-        format = g_array_index(formats, GstVaapiImageFormat, i);
-        caps   = gst_vaapi_image_format_get_caps(format);
+        fip = &g_array_index(formats, GstVaapiFormatInfo, i);
+        caps = gst_vaapi_image_format_get_caps(fip->format);
         if (caps)
             gst_caps_append(out_caps, caps);
     }
@@ -676,10 +702,10 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
         GST_DEBUG("  %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS(formats[i].fourcc));
 
     priv->image_formats =
-        g_array_new(FALSE, FALSE, sizeof(GstVaapiImageFormat));
+        g_array_new(FALSE, FALSE, sizeof(GstVaapiFormatInfo));
     if (!priv->image_formats)
         goto end;
-    append_formats(priv->image_formats, formats, n);
+    append_formats(priv->image_formats, formats, NULL, n);
     g_array_sort(priv->image_formats, compare_yuv_formats);
 
     /* VA subpicture formats */
@@ -697,10 +723,10 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
         GST_DEBUG("  %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS(formats[i].fourcc));
 
     priv->subpicture_formats =
-        g_array_new(FALSE, FALSE, sizeof(GstVaapiImageFormat));
+        g_array_new(FALSE, FALSE, sizeof(GstVaapiFormatInfo));
     if (!priv->subpicture_formats)
         goto end;
-    append_formats(priv->subpicture_formats, formats, n);
+    append_formats(priv->subpicture_formats, formats, NULL, n);
     g_array_sort(priv->subpicture_formats, compare_rgb_formats);
 
     if (!cached_info) {
