@@ -2928,7 +2928,6 @@ typedef struct
 {
   GstAllocator parent;
 
-  EGLDisplay display;
   GstEglGlesSink *sink;
 } GstEGLImageAllocator;
 
@@ -3350,6 +3349,7 @@ gst_egl_image_allocator_free (GstAllocator * gallocator, GstMemory * gmem)
 {
   GstEGLImageAllocator *allocator = GST_EGL_IMAGE_ALLOCATOR (gallocator);
   GstEGLImageMemory *mem = GST_EGL_IMAGE_MEMORY (gmem);
+  gint i;
 
   g_return_if_fail (gallocator == gmem->allocator);
 
@@ -3360,12 +3360,21 @@ gst_egl_image_allocator_free (GstAllocator * gallocator, GstMemory * gmem)
   }
 
   g_mutex_lock (&mem->lock);
-  if (mem->image[0])
-    eglDestroyImageKHR (allocator->display, mem->image[0]);
-  if (mem->image[1])
-    eglDestroyImageKHR (allocator->display, mem->image[1]);
-  if (mem->image[2])
-    eglDestroyImageKHR (allocator->display, mem->image[2]);
+  if (platform_has_custom_eglimage_alloc ()) {
+    for (i = 0; i < 3; i++) {
+      if (mem->image[i])
+        platform_free_eglimage (allocator->sink->eglglesctx.display,
+            allocator->sink->eglglesctx.eglcontext, mem->texture[i],
+            &mem->image[i], &mem->image_platform_data[i]);
+    }
+  } else {
+    if (mem->image[0])
+      eglDestroyImageKHR (allocator->sink->eglglesctx.display, mem->image[0]);
+    if (mem->image[1])
+      eglDestroyImageKHR (allocator->sink->eglglesctx.display, mem->image[1]);
+    if (mem->image[2])
+      eglDestroyImageKHR (allocator->sink->eglglesctx.display, mem->image[2]);
+  }
 
   glDeleteTextures (mem->n_textures, mem->texture);
   g_mutex_unlock (&mem->lock);
@@ -3481,8 +3490,6 @@ gst_egl_image_allocator_init (GstEGLImageAllocator * allocator)
   GST_ALLOCATOR (allocator)->mem_copy = gst_egl_image_allocator_copy;
   GST_ALLOCATOR (allocator)->mem_share = gst_egl_image_allocator_share;
   GST_ALLOCATOR (allocator)->mem_is_span = gst_egl_image_allocator_is_span;
-
-  allocator->display = EGL_NO_DISPLAY;
 }
 
 G_DEFINE_TYPE (GstEGLImageBufferPool, gst_egl_image_buffer_pool,
@@ -3527,7 +3534,6 @@ gst_egl_image_buffer_pool_set_config (GstBufferPool * bpool,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   pool->allocator = g_object_new (gst_egl_image_allocator_get_type (), NULL);
-  GST_EGL_IMAGE_ALLOCATOR (pool->allocator)->display = pool->display;
   GST_EGL_IMAGE_ALLOCATOR (pool->allocator)->sink = gst_object_ref (pool->sink);
 
   pool->info = info;
