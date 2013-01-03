@@ -3261,7 +3261,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
 
   if (bclass->prepare || bclass->prepare_list) {
     gboolean late = FALSE;
-    gboolean do_sync = TRUE, stepped = FALSE, step_end, syncable = TRUE;
+    gboolean do_sync = TRUE, stepped = FALSE, step_end = FALSE, syncable = TRUE;
     GstClockTime sstart, sstop, rstart, rstop;
     GstStepInfo *current;
 
