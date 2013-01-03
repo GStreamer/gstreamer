@@ -527,7 +527,7 @@ gst_mfc_dec_fill_outbuf (GstMFCDec * self, GstBuffer * outbuf,
       && (mem = gst_buffer_peek_memory (outbuf, 0))
       && strcmp (mem->allocator->mem_type, "GstEGLImage") == 0);
   has_cropping = self->has_cropping && (self->width != self->crop_width
-      || self->height != self->crop_heigth);
+      || self->height != self->crop_height);
 
   /* We only do cropping if we do zerocopy and downstream
    * supports cropping. For non-zerocopy we can do cropping
