@@ -351,7 +351,7 @@ eglimage_video_map (GstVideoMeta * meta, guint plane,
   g_return_val_if_fail (strcmp (gmem->allocator->mem_type,
           GST_EGL_IMAGE_MEMORY_NAME) == 0, FALSE);
 
-  mem = GST_EGL_IMAGE_MEMORY (gmem);
+  mem = GST_EGL_IMAGE_MEMORY ((gmem->parent ? gmem->parent : gmem));
 
   g_mutex_lock (&mem->lock);
   if (mem->format == GST_VIDEO_FORMAT_YV12) {
@@ -451,7 +451,7 @@ eglimage_video_unmap (GstVideoMeta * meta, guint plane, GstMapInfo * info)
   gmem = gst_buffer_peek_memory (meta->buffer, 0);
   g_return_val_if_fail (strcmp (gmem->allocator->mem_type,
           GST_EGL_IMAGE_MEMORY_NAME) == 0, FALSE);
-  mem = GST_EGL_IMAGE_MEMORY (gmem);
+  mem = GST_EGL_IMAGE_MEMORY ((gmem->parent ? gmem->parent : gmem));
 
   g_mutex_lock (&mem->lock);
   if (mem->format == GST_VIDEO_FORMAT_YV12) {

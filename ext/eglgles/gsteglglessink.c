@@ -2190,7 +2190,7 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
       GstEGLImageMemory *mem;
       gint i;
 
-      mem = GST_EGL_IMAGE_MEMORY (gmem);
+      mem = GST_EGL_IMAGE_MEMORY ((gmem->parent ? gmem->parent : gmem));
 
       for (i = 0; i < mem->n_textures; i++) {
         if (i == 0)
