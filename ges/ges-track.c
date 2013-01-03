@@ -53,6 +53,7 @@ struct _GESTrackPrivate
   /*< private > */
   GESTimeline *timeline;
   GSequence *tckobjs_by_start;
+  GHashTable *tckobjs_iter;
   GList *gaps;
 
   guint64 duration;
@@ -396,49 +397,6 @@ remove_object_internal (GESTrack * track, GESTrackObject * object)
   return TRUE;
 }
 
-static GSequenceIter *
-lookup_trackobj_it (GSequence * seq, GESTrackObject * object)
-{
-  GSequenceIter *iter, *tmpiter;
-  GESTrackObject *found, *tmptckobj;
-
-  iter = g_sequence_lookup (seq, object,
-      (GCompareDataFunc) objects_start_compare, NULL);
-
-  found = g_sequence_get (iter);
-
-  /* We have the same TrackObject so we are all fine */
-  if (found == object)
-    return iter;
-
-  if (!g_sequence_iter_is_end (iter)) {
-    /* Looking frontward for the good TrackObject */
-    tmpiter = iter;
-    while ((tmpiter = g_sequence_iter_next (tmpiter))) {
-      if (g_sequence_iter_is_end (tmpiter))
-        break;
-
-      tmptckobj = g_sequence_get (tmpiter);
-      if (tmptckobj == object)
-        return tmpiter;
-    }
-  }
-
-  if (!g_sequence_iter_is_begin (iter)) {
-    /* Looking backward for the good TrackObject */
-    tmpiter = iter;
-    while ((tmpiter = g_sequence_iter_prev (tmpiter))) {
-      tmptckobj = g_sequence_get (tmpiter);
-      if (tmptckobj == object)
-        return tmpiter;
-    }
-  }
-
-  GST_ERROR_OBJECT (object, "TrackObject not found this should never happen");
-
-  return NULL;
-}
-
 static void
 dispose_tckobjs_foreach (GESTrackObject * tckobj, GESTrack * track)
 {
@@ -497,6 +455,7 @@ ges_track_dispose (GObject * object)
   GESTrackPrivate *priv = track->priv;
 
   /* Remove all TrackObjects and drop our reference */
+  g_hash_table_unref (priv->tckobjs_iter);
   g_sequence_foreach (track->priv->tckobjs_by_start,
       (GFunc) dispose_tckobjs_foreach, track);
   g_sequence_free (priv->tckobjs_by_start);
@@ -615,6 +574,7 @@ ges_track_init (GESTrack * self)
   self->priv->composition = gst_element_factory_make ("gnlcomposition", NULL);
   self->priv->updating = TRUE;
   self->priv->tckobjs_by_start = g_sequence_new (NULL);
+  self->priv->tckobjs_iter = g_hash_table_new (g_direct_hash, g_direct_equal);
   self->priv->create_element_for_gaps = NULL;
   self->priv->gaps = NULL;
 
@@ -808,8 +768,9 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
   }
 
   g_object_ref_sink (object);
-  g_sequence_insert_sorted (track->priv->tckobjs_by_start, object,
-      (GCompareDataFunc) objects_start_compare, NULL);
+  g_hash_table_insert (track->priv->tckobjs_iter, object,
+      g_sequence_insert_sorted (track->priv->tckobjs_by_start, object,
+          (GCompareDataFunc) objects_start_compare, NULL));
 
   g_signal_emit (track, ges_track_signals[TRACK_OBJECT_ADDED], 0,
       GES_TRACK_OBJECT (object));
@@ -876,7 +837,7 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
   priv = track->priv;
 
   if (remove_object_internal (track, object) == TRUE) {
-    it = lookup_trackobj_it (priv->tckobjs_by_start, object);
+    it = g_hash_table_lookup (priv->tckobjs_iter, object);
     g_sequence_remove (it);
 
     resort_and_fill_gaps (track);
