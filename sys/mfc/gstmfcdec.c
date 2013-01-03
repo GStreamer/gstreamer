@@ -804,6 +804,7 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
             "Dropping too late frame: deadline %" G_GINT64_FORMAT, deadline);
         ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
         frame = NULL;
+        outbuf = NULL;
         goto done;
       }
 
@@ -857,6 +858,9 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
       gst_video_codec_frame_unref (frame);
     if (state)
       gst_video_codec_state_unref (state);
+
+    frame = NULL;
+    outbuf = NULL;
 
     if (ret != GST_FLOW_OK)
       break;
