@@ -186,14 +186,14 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
     GstFlowReturn ret;
     gint64 end_time;
 
+    if (!decode->render_time_base)
+        decode->render_time_base = g_get_monotonic_time();
+    end_time = decode->render_time_base;
+    end_time += GST_TIME_AS_USECONDS(decode->last_buffer_time);
+    end_time += G_TIME_SPAN_SECOND;
+
     /* Decode current frame */
     for (;;) {
-        end_time = decode->render_time_base;
-        if (!end_time)
-            end_time = g_get_monotonic_time();
-        end_time += GST_TIME_AS_USECONDS(decode->last_buffer_time);
-        end_time += G_TIME_SPAN_SECOND;
-
         status = gst_vaapi_decoder_decode(decode->decoder, frame);
         if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE) {
             gboolean was_signalled;
@@ -234,6 +234,8 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
         ret = gst_video_decoder_finish_frame(vdec, out_frame);
         if (ret != GST_FLOW_OK)
             goto error_commit_buffer;
+
+        decode->last_buffer_time = out_frame->pts;
         gst_video_codec_frame_unref(out_frame);
     };
     return GST_FLOW_OK;
