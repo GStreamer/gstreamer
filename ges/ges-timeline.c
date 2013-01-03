@@ -597,9 +597,11 @@ objects_start_compare (GESTrackObject * a, GESTrackObject * b)
 }
 
 static inline void
-sort_track_objects (GESTimeline * timeline)
+sort_track_objects (GESTimeline * timeline, GESTrackObject * obj)
 {
-  g_sequence_sort (timeline->priv->tracksources,
+  TrackObjIters *iters = g_hash_table_lookup (timeline->priv->obj_iters, obj);
+
+  g_sequence_sort_changed (iters->iter_obj,
       (GCompareDataFunc) objects_start_compare, NULL);
 }
 
@@ -1633,7 +1635,7 @@ static void
 trackobj_start_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
 {
-  sort_track_objects (timeline);
+  sort_track_objects (timeline, child);
   sort_starts_ends_start (timeline, child);
   sort_starts_ends_end (timeline, child);
 
