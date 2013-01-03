@@ -472,6 +472,11 @@ void mfc_dec_destroy(struct mfc_dec_context *ctx)
                 munmap(ctx->output_buffer[i].plane[j].data,
                        ctx->output_buffer[i].plane[j].length);
     }
+    if (ctx->input_buffer)
+        free (ctx->input_buffer);
+    if (ctx->output_buffer)
+        free (ctx->output_buffer);
+
     close(ctx->fd);
     pthread_mutex_lock(&mutex);
     mfc_in_use = 0;
