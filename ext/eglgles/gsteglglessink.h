@@ -233,6 +233,7 @@ struct _GstEglGlesSink
   GCond render_cond;
   GMutex render_lock;
   GstFlowReturn last_flow;
+  GstMiniObject *dequeued_object;
 
   /* Properties */
   gboolean create_window;

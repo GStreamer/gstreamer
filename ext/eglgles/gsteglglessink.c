@@ -147,7 +147,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_eglglessink_debug);
 #define GST_CAT_DEFAULT gst_eglglessink_debug
 
-GST_DEBUG_CATEGORY_EXTERN(GST_CAT_PERFORMANCE);
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 
 /* GLESv2 GLSL Shaders
  *
@@ -305,8 +305,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
             "RGBA, BGRA, ARGB, ABGR, "
             "RGBx, BGRx, xRGB, xBGR, "
             "AYUV, Y444, I420, YV12, "
-            "NV12, NV21, Y42B, Y41B, "
-            "RGB, BGR, RGB16 }")));
+            "NV12, NV21, Y42B, Y41B, " "RGB, BGR, RGB16 }")));
 
 /* Filter signals and args */
 enum
@@ -612,19 +611,20 @@ render_thread_func (GstEglGlesSink * eglglessink)
   eglBindAPI (EGL_OPENGL_ES_API);
 
   while (gst_data_queue_pop (eglglessink->queue, &item)) {
-    GST_DEBUG_OBJECT (eglglessink, "Handling object %" GST_PTR_FORMAT,
-        item->object);
+    GstMiniObject *object = item->object;
 
-    if (GST_IS_CAPS (item->object)) {
-      GstCaps *caps = GST_CAPS_CAST (item->object);
+    GST_DEBUG_OBJECT (eglglessink, "Handling object %" GST_PTR_FORMAT, object);
+
+    if (GST_IS_CAPS (object)) {
+      GstCaps *caps = GST_CAPS_CAST (object);
 
       if (caps != eglglessink->configured_caps) {
         if (!gst_eglglessink_configure_caps (eglglessink, caps)) {
           last_flow = GST_FLOW_NOT_NEGOTIATED;
         }
       }
-    } else if (GST_IS_QUERY (item->object)) {
-      GstQuery *query = GST_QUERY_CAST (item->object);
+    } else if (GST_IS_QUERY (object)) {
+      GstQuery *query = GST_QUERY_CAST (object);
       GstStructure *s = (GstStructure *) gst_query_get_structure (query);
 
       if (gst_structure_has_name (s, "eglglessink-allocate-eglimage")) {
@@ -651,7 +651,7 @@ render_thread_func (GstEglGlesSink * eglglessink)
         g_assert_not_reached ();
       }
       last_flow = GST_FLOW_OK;
-    } else if (GST_IS_BUFFER (item->object)) {
+    } else if (GST_IS_BUFFER (object)) {
       GstBuffer *buf = GST_BUFFER_CAST (item->object);
 
       if (eglglessink->configured_caps) {
@@ -661,7 +661,7 @@ render_thread_func (GstEglGlesSink * eglglessink)
         GST_DEBUG_OBJECT (eglglessink,
             "No caps configured yet, not drawing anything");
       }
-    } else if (!item->object) {
+    } else if (!object) {
       if (eglglessink->configured_caps) {
         last_flow = gst_eglglessink_render (eglglessink);
       } else {
@@ -676,6 +676,7 @@ render_thread_func (GstEglGlesSink * eglglessink)
     item->destroy (item);
     g_mutex_lock (&eglglessink->render_lock);
     eglglessink->last_flow = last_flow;
+    eglglessink->dequeued_object = object;
     g_cond_broadcast (&eglglessink->render_cond);
     g_mutex_unlock (&eglglessink->render_lock);
 
@@ -687,6 +688,7 @@ render_thread_func (GstEglGlesSink * eglglessink)
   if (last_flow == GST_FLOW_OK) {
     g_mutex_lock (&eglglessink->render_lock);
     eglglessink->last_flow = GST_FLOW_FLUSHING;
+    eglglessink->dequeued_object = NULL;
     g_cond_broadcast (&eglglessink->render_cond);
     g_mutex_unlock (&eglglessink->render_lock);
   }
@@ -1695,7 +1697,10 @@ gst_eglglessink_queue_object (GstEglGlesSink * eglglessink, GstMiniObject * obj)
   }
 
   GST_DEBUG_OBJECT (eglglessink, "Waiting for object to be handled");
-  g_cond_wait (&eglglessink->render_cond, &eglglessink->render_lock);
+  do {
+    g_cond_wait (&eglglessink->render_cond, &eglglessink->render_lock);
+  } while (eglglessink->dequeued_object != obj
+      && eglglessink->last_flow != GST_FLOW_FLUSHING);
   GST_DEBUG_OBJECT (eglglessink, "Object handled: %s",
       gst_flow_get_name (eglglessink->last_flow));
   last_flow = eglglessink->last_flow;
