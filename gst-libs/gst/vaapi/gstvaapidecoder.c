@@ -818,8 +818,19 @@ gst_vaapi_decoder_ensure_context(
 )
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVideoCodecState * const codec_state = priv->codec_state;
+    gboolean size_changed;
 
-    gst_vaapi_decoder_set_picture_size(decoder, cip->width, cip->height);
+    size_changed = codec_state->info.width != cip->width ||
+        codec_state->info.height != cip->height;
+
+    /* Create a new context if the requested size for surfaces changed
+     * because we need to keep the context underlying surface pool
+     * until all surfaces are released */
+    if (size_changed) {
+        gst_vaapi_decoder_set_picture_size(decoder, cip->width, cip->height);
+        g_clear_object(&priv->context);
+    }
 
     if (priv->context) {
         if (!gst_vaapi_context_reset_full(priv->context, cip))
