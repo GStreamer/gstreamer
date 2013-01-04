@@ -27,7 +27,7 @@
 #include "gstintersurface.h"
 
 static GList *list;
-static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
+static GMutex mutex;
 
 
 GstInterSurface *
@@ -36,12 +36,12 @@ gst_inter_surface_get (const char *name)
   GList *g;
   GstInterSurface *surface;
 
-  g_static_mutex_lock (&mutex);
+  g_mutex_lock (&mutex);
 
   for (g = list; g; g = g_list_next (g)) {
     surface = (GstInterSurface *) g->data;
     if (strcmp (name, surface->name) == 0) {
-      g_static_mutex_unlock (&mutex);
+      g_mutex_unlock (&mutex);
       return surface;
     }
   }
@@ -52,7 +52,7 @@ gst_inter_surface_get (const char *name)
   surface->audio_adapter = gst_adapter_new ();
 
   list = g_list_append (list, surface);
-  g_static_mutex_unlock (&mutex);
+  g_mutex_unlock (&mutex);
 
   return surface;
 }
