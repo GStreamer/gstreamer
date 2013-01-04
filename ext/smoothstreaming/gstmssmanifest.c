@@ -384,7 +384,7 @@ _gst_mss_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
     gst_structure_set (structure, "height", G_TYPE_INT, atoi (max_height),
         NULL);
 
-  if (codec_data) {
+  if (codec_data && strlen (codec_data)) {
     if (strcmp (fourcc, "H264") == 0) {
       _gst_mss_stream_add_h264_codec_data (caps, codec_data);
     } else {
@@ -427,7 +427,7 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
   if (rate)
     gst_structure_set (structure, "rate", G_TYPE_INT, atoi (rate), NULL);
 
-  if (codec_data) {
+  if (codec_data && strlen (codec_data)) {
     GValue *value = g_new0 (GValue, 1);
     g_value_init (value, GST_TYPE_BUFFER);
     gst_value_deserialize (value, (gchar *) codec_data);
