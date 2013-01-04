@@ -82,11 +82,9 @@ ges_asset_track_object_class_init (GESAssetTrackObjectClass * klass)
   object_class->set_property = _set_property;
 
   /**
-   * GESTimelineObject:supported-formats:
+   * GESTimelineObject:track-type:
    *
    * The formats supported by the object.
-   *
-   * Since: 0.10.XX
    */
   properties[PROP_TRACK_TYPE] = g_param_spec_flags ("track-type",
       "Track type", "The GESTrackType in which the object is",
