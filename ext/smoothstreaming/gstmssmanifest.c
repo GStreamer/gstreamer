@@ -562,6 +562,42 @@ gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url)
   return GST_FLOW_OK;
 }
 
+GstClockTime
+gst_mss_stream_get_fragment_gst_timestamp (GstMssStream * stream)
+{
+  guint64 time;
+  guint64 timescale;
+  GstMssStreamFragment *fragment;
+
+  if (!stream->current_fragment)
+    return GST_CLOCK_TIME_NONE;
+
+  fragment = stream->current_fragment->data;
+
+  time = fragment->time;
+  timescale = gst_mss_stream_get_timescale (stream);
+  return (GstClockTime) gst_util_uint64_scale_round (time, GST_SECOND,
+      timescale);
+}
+
+GstClockTime
+gst_mss_stream_get_fragment_gst_duration (GstMssStream * stream)
+{
+  guint64 dur;
+  guint64 timescale;
+  GstMssStreamFragment *fragment;
+
+  if (!stream->current_fragment)
+    return GST_CLOCK_TIME_NONE;
+
+  fragment = stream->current_fragment->data;
+
+  dur = fragment->duration;
+  timescale = gst_mss_stream_get_timescale (stream);
+  return (GstClockTime) gst_util_uint64_scale_round (dur, GST_SECOND,
+      timescale);
+}
+
 GstFlowReturn
 gst_mss_stream_advance_fragment (GstMssStream * stream)
 {

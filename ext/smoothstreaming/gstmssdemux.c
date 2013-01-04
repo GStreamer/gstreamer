@@ -646,12 +646,18 @@ gst_mss_demux_stream_loop (GstMssDemuxStream * stream)
   buffer = gst_fragment_get_buffer (fragment);
   buffer = gst_buffer_make_metadata_writable (buffer);
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (stream->pad));
+  GST_BUFFER_TIMESTAMP (buffer) =
+      gst_mss_stream_get_fragment_gst_timestamp (stream->manifest_stream);
+  GST_BUFFER_DURATION (buffer) =
+      gst_mss_stream_get_fragment_gst_duration (stream->manifest_stream);
 
   if (G_UNLIKELY (stream->pending_newsegment)) {
     gst_pad_push_event (stream->pad, stream->pending_newsegment);
     stream->pending_newsegment = NULL;
   }
 
+  GST_DEBUG_OBJECT (mssdemux, "Pushing buffer of size %u on pad %s",
+      GST_BUFFER_SIZE (buffer), GST_PAD_NAME (stream->pad));
   ret = gst_pad_push (stream->pad, buffer);
   switch (ret) {
     case GST_FLOW_UNEXPECTED:

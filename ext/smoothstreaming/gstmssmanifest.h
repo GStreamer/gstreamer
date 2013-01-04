@@ -50,6 +50,8 @@ GstMssStreamType gst_mss_stream_get_type (GstMssStream *stream);
 GstCaps * gst_mss_stream_get_caps (GstMssStream * stream);
 guint64 gst_mss_stream_get_timescale (GstMssStream * stream);
 GstFlowReturn gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url);
+GstClockTime gst_mss_stream_get_fragment_gst_timestamp (GstMssStream * stream);
+GstClockTime gst_mss_stream_get_fragment_gst_duration (GstMssStream * stream);
 GstFlowReturn gst_mss_stream_advance_fragment (GstMssStream * stream);
 gboolean gst_mss_stream_seek (GstMssStream * stream, guint64 time);
 
