@@ -34,12 +34,17 @@ static inline void pause(void)
 }
 
 static gchar *g_codec_str;
+static gdouble g_global_alpha = 1.0;
 
 static GOptionEntry g_options[] = {
     { "codec", 'c',
       0,
       G_OPTION_ARG_STRING, &g_codec_str,
       "codec to test", NULL },
+    { "global-alpha", 'g',
+      0,
+      G_OPTION_ARG_DOUBLE, &g_global_alpha,
+      "global-alpha value", NULL },
     { NULL, }
 };
 
@@ -76,6 +81,9 @@ main(int argc, char *argv[])
 
     if (!video_output_init(&argc, argv, g_options))
         g_error("failed to initialize video output subsystem");
+
+    if (g_global_alpha != 1.0)
+        flags |= GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA;
 
     g_print("Test subpicture\n");
 
@@ -114,6 +122,9 @@ main(int argc, char *argv[])
     if (!overlay)
         g_error("could not create video overlay");
     gst_buffer_unref(buffer);
+
+    if (flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA)
+        gst_video_overlay_rectangle_set_global_alpha(overlay, g_global_alpha);
 
     compo = gst_video_overlay_composition_new(overlay);
     if (!compo)
