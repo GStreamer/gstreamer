@@ -533,7 +533,7 @@ gst_mss_demux_create_streams (GstMssDemux * mssdemux)
   }
 }
 
-static void
+static gboolean
 gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
 {
   GstCaps *caps;
@@ -541,13 +541,13 @@ gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
   GstPad *pad = stream->pad;
 
   media_caps = gst_mss_stream_get_caps (stream->manifest_stream);
-  caps = gst_caps_new_simple ("video/quicktime", "variant", G_TYPE_STRING,
-      "mss-fragmented", "timescale", G_TYPE_UINT64,
-      gst_mss_stream_get_timescale (stream->manifest_stream), "media-caps",
-      GST_TYPE_CAPS, media_caps, NULL);
-  gst_caps_unref (media_caps);
 
-  if (caps) {
+  if (media_caps) {
+    caps = gst_caps_new_simple ("video/quicktime", "variant", G_TYPE_STRING,
+        "mss-fragmented", "timescale", G_TYPE_UINT64,
+        gst_mss_stream_get_timescale (stream->manifest_stream), "media-caps",
+        GST_TYPE_CAPS, media_caps, NULL);
+    gst_caps_unref (media_caps);
     gst_pad_set_caps (pad, caps);
     gst_caps_unref (caps);
 
@@ -557,8 +557,12 @@ gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
     gst_object_ref (pad);
     gst_element_add_pad (GST_ELEMENT_CAST (mssdemux), pad);
   } else {
-    GST_WARNING_OBJECT (mssdemux, "Not exposing stream of unrecognized format");
+    GST_WARNING_OBJECT (mssdemux,
+        "Couldn't get caps from manifest stream %p %s, not exposing it", stream,
+        GST_PAD_NAME (stream->pad));
+    return FALSE;
   }
+  return TRUE;
 }
 
 static void
@@ -599,8 +603,24 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
   }
 
   gst_mss_demux_create_streams (mssdemux);
-  for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
-    gst_mss_demux_expose_stream (mssdemux, iter->data);
+  for (iter = mssdemux->streams; iter;) {
+    GSList *current = iter;
+    GstMssDemuxStream *stream = iter->data;
+    iter = g_slist_next (iter); /* do it ourselves as we want it done in the beginning of the loop */
+    if (!gst_mss_demux_expose_stream (mssdemux, stream)) {
+      gst_mss_demux_stream_free (stream);
+      mssdemux->streams = g_slist_delete_link (mssdemux->streams, current);
+    }
+  }
+
+  if (!mssdemux->streams) {
+    /* no streams */
+    GST_WARNING_OBJECT (mssdemux, "Couldn't identify the caps for any of the "
+        "streams found in the manifest");
+    GST_ELEMENT_ERROR (mssdemux, STREAM, DEMUX,
+        (_("This file contains no playable streams.")),
+        ("No known stream formats found at the Manifest"));
+    return;
   }
 }
 
