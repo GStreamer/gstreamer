@@ -59,6 +59,21 @@ typedef struct _GstVaapiSubpicturePrivate       GstVaapiSubpicturePrivate;
 typedef struct _GstVaapiSubpictureClass         GstVaapiSubpictureClass;
 
 /**
+ * GstVaapiSubpictureFlags:
+ * @GST_VAAPI_SUBPICTURE_FLAG_PREMULTIPLIED_ALPHA:
+ *   subpicture has RGB pixels with pre-multiplied alpha
+ * @GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA:
+ *   subpicture needs to be blended with some global-alpha value at
+ *   rendering time
+ *
+ * The set of all subpicture rendering flags for #GstVaapiSubpicture.
+ */
+typedef enum {
+    GST_VAAPI_SUBPICTURE_FLAG_PREMULTIPLIED_ALPHA    = (1 << 0),
+    GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA           = (1 << 1),
+} GstVaapiSubpictureFlags;
+
+/**
  * GstVaapiSubpicture:
  *
  * A VA subpicture wrapper

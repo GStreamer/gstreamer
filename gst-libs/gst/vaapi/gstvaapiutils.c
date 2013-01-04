@@ -24,6 +24,7 @@
 #include "gstvaapicompat.h"
 #include "gstvaapiutils.h"
 #include "gstvaapisurface.h"
+#include "gstvaapisubpicture.h"
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -200,6 +201,50 @@ string_of_VADisplayAttributeType(VADisplayAttribType attribute_type)
     default: break;
     }
     return "<unknown>";
+}
+
+/**
+ * from_GstVaapiSubpictureFlags:
+ * @flags: the #GstVaapiSubpictureFlags
+ *
+ * Converts #GstVaapiSubpictureFlags to flags suitable for
+ * vaAssociateSubpicture().
+ */
+guint
+from_GstVaapiSubpictureFlags(guint flags)
+{
+    guint va_flags = 0;
+
+    if (flags & GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA)
+        va_flags |= VA_SUBPICTURE_GLOBAL_ALPHA;
+#ifdef VA_SUBPICTURE_PREMULTIPLIED_ALPHA
+    if (flags & GST_VAAPI_SUBPICTURE_FLAG_PREMULTIPLIED_ALPHA)
+        flags |= VA_SUBPICTURE_PREMULTIPLIED_ALPHA;
+#endif
+    return va_flags;
+}
+
+/**
+ * to_GstVaapiSubpictureFlags:
+ * @flags: the #GstVaapiSubpictureFlags flags to translate
+ *
+ * Converts vaQuerySubpictureFormats() @flags to #GstVaapiSubpictureFlags
+ * flags.
+ *
+ * Return value: the #GstVaapiSubpictureFlags flags
+ */
+guint
+to_GstVaapiSubpictureFlags(guint va_flags)
+{
+    guint flags = 0;
+
+    if (va_flags & VA_SUBPICTURE_GLOBAL_ALPHA)
+        flags |= GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA;
+#ifdef VA_SUBPICTURE_PREMULTIPLIED_ALPHA
+    if (va_flags & VA_SUBPICTURE_PREMULTIPLIED_ALPHA)
+        flags |= GST_VAAPI_SUBPICTURE_FLAG_PREMULTIPLIED_ALPHA;
+#endif
+    return flags;
 }
 
 /**

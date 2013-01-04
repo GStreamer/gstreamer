@@ -75,6 +75,14 @@ string_of_VADisplayAttributeType(VADisplayAttribType attribute_type);
 
 G_GNUC_INTERNAL
 guint
+from_GstVaapiSubpictureFlags(guint flags);
+
+G_GNUC_INTERNAL
+guint
+to_GstVaapiSubpictureFlags(guint va_flags);
+
+G_GNUC_INTERNAL
+guint
 from_GstVaapiSurfaceRenderFlags(guint flags);
 
 G_GNUC_INTERNAL
