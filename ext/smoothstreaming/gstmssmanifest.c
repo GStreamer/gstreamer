@@ -239,6 +239,9 @@ _gst_mss_stream_video_caps_from_fourcc (gchar * fourcc)
   if (strcmp (fourcc, "H264") == 0) {
     return gst_caps_new_simple ("video/x-h264", "stream-format", G_TYPE_STRING,
         "avc", NULL);
+  } else if (strcmp (fourcc, "WVC1") == 0) {
+    return gst_caps_new_simple ("video/x-wmv", "wmvversion", G_TYPE_INT, 3,
+        NULL);
   }
   return NULL;
 }
@@ -251,6 +254,9 @@ _gst_mss_stream_audio_caps_from_fourcc (gchar * fourcc)
 
   if (strcmp (fourcc, "AACL") == 0) {
     return gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 4,
+        NULL);
+  } else if (strcmp (fourcc, "WmaPro") == 0) {
+    return gst_caps_new_simple ("audio/x-wma", "wmaversion", G_TYPE_INT, 2,
         NULL);
   }
   return NULL;
@@ -372,6 +378,11 @@ _gst_mss_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
   gchar *codec_data =
       (gchar *) xmlGetProp (node, (xmlChar *) "CodecPrivateData");
 
+  if (!max_width)
+    max_width = (gchar *) xmlGetProp (node, (xmlChar *) "Width");
+  if (!max_height)
+    max_height = (gchar *) xmlGetProp (node, (xmlChar *) "Height");
+
   caps = _gst_mss_stream_video_caps_from_fourcc (fourcc);
   if (!caps)
     goto end;
@@ -414,6 +425,11 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
   gchar *rate = (gchar *) xmlGetProp (node, (xmlChar *) "SamplingRate");
   gchar *codec_data =
       (gchar *) xmlGetProp (node, (xmlChar *) "CodecPrivateData");
+
+  if (!fourcc)                  /* sometimes the fourcc is omitted, we fallback to the Subtype in the StreamIndex node */
+    fourcc = (gchar *) xmlGetProp (node->parent, (xmlChar *) "Subtype");
+  if (!codec_data)
+    codec_data = (gchar *) xmlGetProp (node, (xmlChar *) "WaveFormatEx");
 
   caps = _gst_mss_stream_audio_caps_from_fourcc (fourcc);
   if (!caps)
