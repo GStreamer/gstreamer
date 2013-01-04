@@ -33,6 +33,8 @@
 GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define GST_CAT_DEFAULT _ges_debug
 
+#define LAYER_HEIGHT 1000
+
 G_GNUC_INTERNAL gboolean
 timeline_ripple_object         (GESTimeline *timeline, GESTrackObject *obj,
                                     GList * layers, GESEdge edge,

@@ -34,8 +34,6 @@
 #include "ges.h"
 #include "ges-timeline-source.h"
 
-#define LAYER_HEIGHT 1000
-
 static void
 timeline_object_height_changed_cb (GESTimelineObject * obj,
     GESTrackEffect * tr_eff, GESTimelineObject * second_obj);
