@@ -41,7 +41,7 @@ G_BEGIN_DECLS
 /**
  * GstBinFlags:
  * @GST_BIN_FLAG_NO_RESYNC: don't resync a state change when elements are
- *             added or linked in the bin.
+ *             added or linked in the bin (Since 1.0.5)
  * @GST_BIN_FLAG_LAST: the last enum in the series of flags for bins.
  * Derived classes can use this as first value in a list of flags.
  *
@@ -62,7 +62,7 @@ typedef enum {
  * Check if @bin will resync its state change when elements are added and
  * removed.
  *
- * Since: 1.1.1
+ * Since: 1.0.5
  */
 #define GST_BIN_IS_NO_RESYNC(bin)        (GST_OBJECT_FLAG_IS_SET(bin,GST_BIN_FLAG_NO_RESYNC))
 
