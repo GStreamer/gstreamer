@@ -265,15 +265,7 @@ gst_shm_sink_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, self->socket_path);
       break;
     case PROP_PERMS:
-      self->perms = g_value_get_uint (value);
-      if (self->pipe) {
-        int ret;
-
-        ret = sp_writer_setperms_shm (self->pipe, self->perms);
-        if (ret < 0)
-          GST_WARNING_OBJECT (object, "Could not set permissions on pipe: %s",
-              strerror (ret));
-      }
+      g_value_set_uint (value, self->perms);
       break;
     case PROP_SHM_SIZE:
       g_value_set_uint (value, self->size);
