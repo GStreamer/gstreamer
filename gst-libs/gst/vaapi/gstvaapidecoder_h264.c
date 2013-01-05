@@ -983,6 +983,10 @@ parse_sps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
 
     GST_DEBUG("parse SPS");
 
+    /* Variables that don't have inferred values per the H.264
+       standard but that should get a default value anyway */
+    sps->log2_max_pic_order_cnt_lsb_minus4 = 0;
+
     result = gst_h264_parser_parse_sps(priv->parser, &unit->nalu, sps, TRUE);
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
@@ -999,6 +1003,11 @@ parse_pps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
     GstH264ParserResult result;
 
     GST_DEBUG("parse PPS");
+
+    /* Variables that don't have inferred values per the H.264
+       standard but that should get a default value anyway */
+    pps->slice_group_map_type = 0;
+    pps->slice_group_change_rate_minus1 = 0;
 
     result = gst_h264_parser_parse_pps(priv->parser, &unit->nalu, pps);
     if (result != GST_H264_PARSER_OK)
@@ -1035,6 +1044,11 @@ parse_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
     GstH264ParserResult result;
 
     GST_DEBUG("parse slice");
+
+    /* Variables that don't have inferred values per the H.264
+       standard but that should get a default value anyway */
+    slice_hdr->cabac_init_idc = 0;
+    slice_hdr->direct_spatial_mv_pred_flag = 0;
 
     result = gst_h264_parser_parse_slice_hdr(priv->parser, &unit->nalu,
         slice_hdr, TRUE, TRUE);
