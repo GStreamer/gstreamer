@@ -31,7 +31,7 @@
 #include "gst/vaapi/sysdeps.h"
 #include <gst/video/video.h>
 #include <gst/video/videocontext.h>
-#include <gst/vaapi/gstvaapivideobuffer.h>
+#include <gst/vaapi/gstvaapivideometa.h>
 
 #include "gstvaapipostproc.h"
 #include "gstvaapipluginutil.h"
@@ -255,7 +255,7 @@ gst_vaapipostproc_stop(GstVaapiPostproc *postproc)
 static GstFlowReturn
 gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
 {
-    GstVaapiVideoBuffer *vbuf;
+    GstVaapiVideoMeta *meta;
     GstVaapiSurfaceProxy *proxy;
     GstClockTime timestamp;
     GstFlowReturn ret;
@@ -263,18 +263,15 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
     guint outbuf_flags, flags;
     gboolean tff;
 
-    if (GST_VAAPI_IS_VIDEO_BUFFER(buf))
-        vbuf = GST_VAAPI_VIDEO_BUFFER(buf);
-    else if (GST_VAAPI_IS_VIDEO_BUFFER(buf->parent))
-        vbuf = GST_VAAPI_VIDEO_BUFFER(buf->parent);
-    else
+    meta = gst_buffer_get_vaapi_video_meta(buf);
+    if (!meta)
         goto error_invalid_buffer;
 
-    flags = gst_vaapi_video_buffer_get_render_flags(vbuf);
+    flags = gst_vaapi_video_meta_get_render_flags(meta);
 
     /* Deinterlacing disabled, push frame */
     if (!postproc->deinterlace) {
-        gst_vaapi_video_buffer_set_render_flags(vbuf, flags);
+        gst_vaapi_video_meta_set_render_flags(meta, flags);
         ret = gst_pad_push(postproc->srcpad, buf);
         if (ret != GST_FLOW_OK)
             goto error_push_buffer;
@@ -282,7 +279,7 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
     }
 
     timestamp  = GST_BUFFER_TIMESTAMP(buf);
-    proxy      = gst_vaapi_video_buffer_get_surface_proxy(vbuf);
+    proxy      = gst_vaapi_video_meta_get_surface_proxy(meta);
     tff        = GST_BUFFER_FLAG_IS_SET(buf, GST_VIDEO_BUFFER_TFF);
 
     flags &= ~(GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD|
@@ -293,14 +290,14 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
     if (!outbuf)
         goto error_create_buffer;
 
-    vbuf = GST_VAAPI_VIDEO_BUFFER(outbuf);
+    meta = gst_buffer_get_vaapi_video_meta(outbuf);
     outbuf_flags = flags;
     outbuf_flags |= postproc->deinterlace ? (
         tff ?
         GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD :
         GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD) :
         GST_VAAPI_PICTURE_STRUCTURE_FRAME;
-    gst_vaapi_video_buffer_set_render_flags(vbuf, outbuf_flags);
+    gst_vaapi_video_meta_set_render_flags(meta, outbuf_flags);
 
     GST_BUFFER_TIMESTAMP(outbuf) = timestamp;
     GST_BUFFER_DURATION(outbuf)  = postproc->field_duration;
@@ -314,14 +311,14 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
     if (!outbuf)
         goto error_create_buffer;
 
-    vbuf = GST_VAAPI_VIDEO_BUFFER(outbuf);
+    meta = gst_buffer_get_vaapi_video_meta(outbuf);
     outbuf_flags = flags;
     outbuf_flags |= postproc->deinterlace ? (
         tff ?
         GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD :
         GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD) :
         GST_VAAPI_PICTURE_STRUCTURE_FRAME;
-    gst_vaapi_video_buffer_set_render_flags(vbuf, outbuf_flags);
+    gst_vaapi_video_meta_set_render_flags(meta, outbuf_flags);
 
     GST_BUFFER_TIMESTAMP(outbuf) = timestamp + postproc->field_duration;
     GST_BUFFER_DURATION(outbuf)  = postproc->field_duration;

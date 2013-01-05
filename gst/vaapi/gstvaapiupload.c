@@ -32,7 +32,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/videocontext.h>
-#include <gst/vaapi/gstvaapivideobuffer.h>
+#include <gst/vaapi/gstvaapivideometa.h>
 
 #include "gstvaapiupload.h"
 #include "gstvaapipluginutil.h"
@@ -465,12 +465,8 @@ gst_vaapiupload_prepare_output_buffer(
 
     if (!gst_vaapi_uploader_has_direct_rendering(upload->uploader))
         buffer = gst_vaapi_uploader_get_buffer(upload->uploader);
-    else if (GST_VAAPI_IS_VIDEO_BUFFER(inbuf))
-        buffer = gst_vaapi_video_buffer_new_from_buffer(inbuf);
-    else if (GST_VAAPI_IS_VIDEO_BUFFER(inbuf->parent))
-        buffer = gst_vaapi_video_buffer_new_from_buffer(inbuf->parent);
     else
-        buffer = NULL;
+        buffer = gst_vaapi_video_buffer_new_from_buffer(inbuf);
     if (!buffer)
         return GST_FLOW_UNEXPECTED;
 

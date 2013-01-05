@@ -26,7 +26,7 @@
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapiimagepool.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
-#include <gst/vaapi/gstvaapivideobuffer.h>
+#include <gst/vaapi/gstvaapivideometa.h>
 
 #include "gstvaapiuploader.h"
 #include "gstvaapipluginbuffer.h"
@@ -370,46 +370,36 @@ gst_vaapi_uploader_process(
     GstBuffer        *out_buffer
 )
 {
-    GstVaapiVideoBuffer *out_vbuffer;
+    GstVaapiVideoMeta *src_meta, *out_meta;
     GstVaapiSurface *surface;
     GstVaapiImage *image;
 
     g_return_val_if_fail(GST_VAAPI_IS_UPLOADER(uploader), FALSE);
 
-    if (GST_VAAPI_IS_VIDEO_BUFFER(out_buffer))
-        out_vbuffer = GST_VAAPI_VIDEO_BUFFER(out_buffer);
-    else if (GST_VAAPI_IS_VIDEO_BUFFER(out_buffer->parent))
-        out_vbuffer = GST_VAAPI_VIDEO_BUFFER(out_buffer->parent);
-    else {
+    out_meta = gst_buffer_get_vaapi_video_meta(out_buffer);
+    if (!out_meta) {
         GST_WARNING("expected an output video buffer");
         return FALSE;
     }
 
-    surface = gst_vaapi_video_buffer_get_surface(out_vbuffer);
+    surface = gst_vaapi_video_meta_get_surface(out_meta);
     g_return_val_if_fail(surface != NULL, FALSE);
 
-    if (GST_VAAPI_IS_VIDEO_BUFFER(src_buffer)) {
+    src_meta = gst_buffer_get_vaapi_video_meta(src_buffer);
+    if (src_meta) {
         /* GstVaapiVideoBuffer with mapped VA image */
-        image = gst_vaapi_video_buffer_get_image(
-            GST_VAAPI_VIDEO_BUFFER(src_buffer));
-        if (!image || !gst_vaapi_image_unmap(image))
-            return FALSE;
-    }
-    else if (GST_VAAPI_IS_VIDEO_BUFFER(src_buffer->parent)) {
-        /* Sub-buffer from GstVaapiVideoBuffer with mapped VA image */
-        image = gst_vaapi_video_buffer_get_image(
-            GST_VAAPI_VIDEO_BUFFER(src_buffer->parent));
+        image = gst_vaapi_video_meta_get_image(src_meta);
         if (!image || !gst_vaapi_image_unmap(image))
             return FALSE;
     }
     else {
         /* Regular GstBuffer that needs to be uploaded to a VA image */
-        image = gst_vaapi_video_buffer_get_image(out_vbuffer);
+        image = gst_vaapi_video_meta_get_image(out_meta);
         if (!image) {
             image = gst_vaapi_video_pool_get_object(uploader->priv->images);
             if (!image)
                 return FALSE;
-            gst_vaapi_video_buffer_set_image(out_vbuffer, image);
+            gst_vaapi_video_meta_set_image(out_meta, image);
         }
         if (!gst_vaapi_image_update_from_buffer(image, src_buffer, NULL))
             return FALSE;
@@ -443,8 +433,8 @@ gst_vaapi_uploader_get_buffer(GstVaapiUploader *uploader)
     GstVaapiUploaderPrivate *priv;
     GstVaapiSurface *surface;
     GstVaapiImage *image;
-    GstVaapiVideoBuffer *vbuffer;
-    GstBuffer *buffer = NULL;
+    GstVaapiVideoMeta *meta;
+    GstBuffer *buffer;
 
     g_return_val_if_fail(GST_VAAPI_IS_UPLOADER(uploader), NULL);
 
@@ -455,7 +445,8 @@ gst_vaapi_uploader_get_buffer(GstVaapiUploader *uploader)
         GST_WARNING("failed to allocate video buffer");
         goto error;
     }
-    vbuffer = GST_VAAPI_VIDEO_BUFFER(buffer);
+
+    meta = gst_buffer_get_vaapi_video_meta(buffer);
 
     surface = gst_vaapi_video_pool_get_object(priv->surfaces);
     if (!surface) {
@@ -463,9 +454,9 @@ gst_vaapi_uploader_get_buffer(GstVaapiUploader *uploader)
         goto error;
     }
 
-    gst_vaapi_video_buffer_set_surface(vbuffer, surface);
+    gst_vaapi_video_meta_set_surface(meta, surface);
 
-    image = gst_vaapi_video_buffer_get_image(vbuffer);
+    image = gst_vaapi_video_meta_get_image(meta);
     if (!gst_vaapi_image_map(image)) {
         GST_WARNING("failed to map VA image");
         goto error;

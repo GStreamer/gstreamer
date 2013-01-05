@@ -30,7 +30,7 @@
 
 #include "gst/vaapi/sysdeps.h"
 #include <gst/vaapi/gstvaapidisplay.h>
-#include <gst/vaapi/gstvaapivideobuffer.h>
+#include <gst/vaapi/gstvaapivideometa.h>
 #include <gst/video/videocontext.h>
 
 #include "gstvaapidecode.h"
@@ -224,12 +224,10 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
         gst_vaapi_surface_proxy_set_user_data(proxy,
             decode, (GDestroyNotify)gst_vaapidecode_release);
 
-        out_frame->output_buffer = gst_vaapi_video_buffer_new(decode->display);
+        out_frame->output_buffer =
+            gst_vaapi_video_buffer_new_with_surface_proxy(proxy);
         if (!out_frame->output_buffer)
             goto error_create_buffer;
-
-        gst_vaapi_video_buffer_set_surface_proxy(
-            GST_VAAPI_VIDEO_BUFFER(out_frame->output_buffer), proxy);
 
         ret = gst_video_decoder_finish_frame(vdec, out_frame);
         if (ret != GST_FLOW_OK)

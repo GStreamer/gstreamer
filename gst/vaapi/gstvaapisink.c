@@ -34,7 +34,7 @@
 #include <gst/video/video.h>
 #include <gst/video/videocontext.h>
 #include <gst/vaapi/gstvaapivalue.h>
-#include <gst/vaapi/gstvaapivideobuffer.h>
+#include <gst/vaapi/gstvaapivideometa.h>
 #if USE_DRM
 # include <gst/vaapi/gstvaapidisplay_drm.h>
 #endif
@@ -858,33 +858,31 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstVideoOverlayComposition *composition;
-    GstVaapiVideoBuffer *vbuffer;
+    GstVaapiVideoMeta *meta;
     GstVaapiSurface *surface;
     GstBuffer *buffer;
     guint flags;
     gboolean success;
 
-    if (GST_VAAPI_IS_VIDEO_BUFFER(src_buffer))
+    meta = gst_buffer_get_vaapi_video_meta(src_buffer);
+    if (meta)
         buffer = gst_buffer_ref(src_buffer);
-    else if (GST_VAAPI_IS_VIDEO_BUFFER(src_buffer->parent))
-        buffer = gst_buffer_ref(src_buffer->parent);
-    else if (sink->use_video_raw)
+    else if (sink->use_video_raw) {
         buffer = gst_vaapi_uploader_get_buffer(sink->uploader);
+        if (!buffer)
+            return GST_FLOW_UNEXPECTED;
+        if (!gst_vaapi_uploader_process(sink->uploader, src_buffer, buffer))
+            goto error;
+        meta = gst_buffer_get_vaapi_video_meta(buffer);
+        if (!meta)
+            goto error;
+    }
     else
-        buffer = NULL;
-    if (!buffer)
         return GST_FLOW_UNEXPECTED;
 
-    if (sink->use_video_raw && !gst_vaapi_uploader_process(sink->uploader,
-            src_buffer, buffer))
-        goto error;
-
-    vbuffer = GST_VAAPI_VIDEO_BUFFER(buffer);
-    g_return_val_if_fail(vbuffer != NULL, GST_FLOW_UNEXPECTED);
-
-    if (sink->display != gst_vaapi_video_buffer_get_display (vbuffer)) {
-      g_clear_object(&sink->display);
-      sink->display = g_object_ref (gst_vaapi_video_buffer_get_display (vbuffer));
+    if (sink->display != gst_vaapi_video_meta_get_display(meta)) {
+        g_clear_object(&sink->display);
+        sink->display = g_object_ref(gst_vaapi_video_meta_get_display(meta));
     }
 
     if (!sink->window)
@@ -892,14 +890,14 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
 
     gst_vaapisink_ensure_rotation(sink, TRUE);
 
-    surface = gst_vaapi_video_buffer_get_surface(vbuffer);
+    surface = gst_vaapi_video_meta_get_surface(meta);
     if (!surface)
         goto error;
 
     GST_DEBUG("render surface %" GST_VAAPI_ID_FORMAT,
               GST_VAAPI_ID_ARGS(gst_vaapi_surface_get_id(surface)));
 
-    flags = gst_vaapi_video_buffer_get_render_flags(vbuffer);
+    flags = gst_vaapi_video_meta_get_render_flags(meta);
 
     composition = gst_video_buffer_get_overlay_composition(src_buffer);
     if (!gst_vaapi_surface_set_subpictures_from_composition(surface,

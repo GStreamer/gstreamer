@@ -31,7 +31,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/videocontext.h>
-#include <gst/vaapi/gstvaapivideobuffer.h>
+#include <gst/vaapi/gstvaapivideometa.h>
 
 #include "gstvaapidownload.h"
 #include "gstvaapipluginutil.h"
@@ -333,14 +333,14 @@ get_surface_format(GstVaapiSurface *surface)
 static gboolean
 gst_vaapidownload_update_src_caps(GstVaapiDownload *download, GstBuffer *buffer)
 {
-    GstVaapiVideoBuffer *vbuffer;
+    GstVaapiVideoMeta *meta;
     GstVaapiSurface *surface;
     GstVaapiImageFormat format;
     GstPad *srcpad;
     GstCaps *in_caps, *out_caps;
 
-    vbuffer = GST_VAAPI_VIDEO_BUFFER(buffer);
-    surface = gst_vaapi_video_buffer_get_surface(vbuffer);
+    meta = gst_buffer_get_vaapi_video_meta(buffer);
+    surface = gst_vaapi_video_meta_get_surface(meta);
     if (!surface) {
         GST_WARNING("failed to retrieve VA surface from buffer");
         return FALSE;
@@ -395,13 +395,13 @@ gst_vaapidownload_transform(
 )
 {
     GstVaapiDownload * const download = GST_VAAPIDOWNLOAD(trans);
-    GstVaapiVideoBuffer *vbuffer;
+    GstVaapiVideoMeta *meta;
     GstVaapiSurface *surface;
     GstVaapiImage *image = NULL;
     gboolean success;
 
-    vbuffer = GST_VAAPI_VIDEO_BUFFER(inbuf);
-    surface = gst_vaapi_video_buffer_get_surface(vbuffer);
+    meta = gst_buffer_get_vaapi_video_meta(inbuf);
+    surface = gst_vaapi_video_meta_get_surface(meta);
     if (!surface)
         return GST_FLOW_UNEXPECTED;
 
