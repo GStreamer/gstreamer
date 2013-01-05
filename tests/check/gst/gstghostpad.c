@@ -1133,7 +1133,6 @@ GST_START_TEST (test_ghost_pads_remove_while_playing)
 
   bin = gst_bin_new (NULL);
   gst_element_set_state (bin, GST_STATE_PLAYING);
-  sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
 
   ghostsrc = gst_ghost_pad_new_no_target ("ghostsrc", GST_PAD_SRC);
   sinkpad = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (ghostsrc)));
