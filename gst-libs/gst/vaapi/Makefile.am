@@ -69,6 +69,7 @@ libgstvaapi_source_c =				\
 	gstvaapiutils.c				\
 	gstvaapivalue.c				\
 	gstvaapivideobuffer.c			\
+	gstvaapivideometa.c			\
 	gstvaapivideopool.c			\
 	gstvaapiwindow.c			\
 	$(NULL)
@@ -95,6 +96,7 @@ libgstvaapi_source_h =				\
 	gstvaapitypes.h				\
 	gstvaapivalue.h				\
 	gstvaapivideobuffer.h			\
+	gstvaapivideometa.h			\
 	gstvaapivideopool.h			\
 	gstvaapiwindow.h			\
 	$(NULL)
