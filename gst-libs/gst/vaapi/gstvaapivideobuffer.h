@@ -24,11 +24,7 @@
 #define GST_VAAPI_VIDEO_BUFFER_H
 
 #include <gst/video/gstsurfacebuffer.h>
-#include <gst/vaapi/gstvaapidisplay.h>
-#include <gst/vaapi/gstvaapiimage.h>
-#include <gst/vaapi/gstvaapisurface.h>
-#include <gst/vaapi/gstvaapisurfaceproxy.h>
-#include <gst/vaapi/gstvaapivideopool.h>
+#include <gst/vaapi/gstvaapivideometa.h>
 
 G_BEGIN_DECLS
 
@@ -57,7 +53,6 @@ G_BEGIN_DECLS
                                GstVaapiVideoBufferClass))
 
 typedef struct _GstVaapiVideoBuffer             GstVaapiVideoBuffer;
-typedef struct _GstVaapiVideoBufferPrivate      GstVaapiVideoBufferPrivate;
 typedef struct _GstVaapiVideoBufferClass        GstVaapiVideoBufferClass;
 
 /**
@@ -69,7 +64,7 @@ struct _GstVaapiVideoBuffer {
     /*< private >*/
     GstSurfaceBuffer parent_instance;
 
-    GstVaapiVideoBufferPrivate *priv;
+    GstVaapiVideoMeta *meta;
 };
 
 /**
@@ -85,53 +80,11 @@ struct _GstVaapiVideoBufferClass {
 GType
 gst_vaapi_video_buffer_get_type(void) G_GNUC_CONST;
 
-GstVaapiDisplay *
-gst_vaapi_video_buffer_get_display(GstVaapiVideoBuffer *buffer);
+GstBuffer *
+gst_vaapi_video_buffer_new(GstVaapiVideoMeta *meta);
 
-GstVaapiImage *
-gst_vaapi_video_buffer_get_image(GstVaapiVideoBuffer *buffer);
-
-void
-gst_vaapi_video_buffer_set_image(
-    GstVaapiVideoBuffer *buffer,
-    GstVaapiImage       *image
-);
-
-gboolean
-gst_vaapi_video_buffer_set_image_from_pool(
-    GstVaapiVideoBuffer *buffer,
-    GstVaapiVideoPool   *pool
-);
-
-GstVaapiSurface *
-gst_vaapi_video_buffer_get_surface(GstVaapiVideoBuffer *buffer);
-
-void
-gst_vaapi_video_buffer_set_surface(
-    GstVaapiVideoBuffer *buffer,
-    GstVaapiSurface     *surface
-);
-
-gboolean
-gst_vaapi_video_buffer_set_surface_from_pool(
-    GstVaapiVideoBuffer *buffer,
-    GstVaapiVideoPool   *pool
-);
-
-GstVaapiSurfaceProxy *
-gst_vaapi_video_buffer_get_surface_proxy(GstVaapiVideoBuffer *buffer);
-
-void
-gst_vaapi_video_buffer_set_surface_proxy(
-    GstVaapiVideoBuffer  *buffer,
-    GstVaapiSurfaceProxy *proxy
-);
-
-guint
-gst_vaapi_video_buffer_get_render_flags(GstVaapiVideoBuffer *buffer);
-
-void
-gst_vaapi_video_buffer_set_render_flags(GstVaapiVideoBuffer *buffer, guint flags);
+GstVaapiVideoMeta *
+gst_vaapi_video_buffer_get_meta(GstVaapiVideoBuffer *buffer);
 
 G_END_DECLS
 

@@ -117,7 +117,6 @@ libgstvaapi_source_priv_h =			\
 	gstvaapiobject_priv.h			\
 	gstvaapisurface_priv.h			\
 	gstvaapiutils.h				\
-	gstvaapivideobuffer_priv.h		\
 	gstvaapiworkarounds.h			\
 	sysdeps.h				\
 	$(NULL)
@@ -169,7 +168,6 @@ libgstvaapi_glx_source_c =			\
 	gstvaapiutils.c				\
 	gstvaapiutils_glx.c			\
 	gstvaapiutils_x11.c			\
-	gstvaapivideobuffer_glx.c		\
 	gstvaapivideoconverter_glx.c		\
 	gstvaapiwindow_glx.c			\
 	$(NULL)
@@ -177,7 +175,6 @@ libgstvaapi_glx_source_c =			\
 libgstvaapi_glx_source_h =			\
 	gstvaapidisplay_glx.h			\
 	gstvaapitexture.h			\
-	gstvaapivideobuffer_glx.h		\
 	gstvaapivideoconverter_glx.h		\
 	gstvaapiwindow_glx.h			\
 	$(NULL)
