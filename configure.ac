@@ -246,6 +246,19 @@ fi
 AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_X11, test "x$HAVE_GTK_X11" = "xyes")
 
+dnl building of benchmarks
+AC_ARG_ENABLE(benchmarks,
+  AS_HELP_STRING([--disable-benchmarks],[disable building benchmarks apps]),
+  [
+    case "${enableval}" in
+      yes) BUILD_BENCHMARKS=yes ;;
+      no)  BUILD_BENCHMARKS=no ;;
+      *)   AC_MSG_ERROR(bad value ${enableval} for --disable-benchmarks) ;;
+    esac
+  ],
+[BUILD_BENCHMARKS=yes]) dnl Default value
+AM_CONDITIONAL(BUILD_BENCHMARKS, test "x$BUILD_BENCHMARKS" = "xyes")
+
 dnl set license and copyright notice
 GST_LICENSE="LGPL"
 AC_DEFINE_UNQUOTED(GST_LICENSE, "$GST_LICENSE", [GStreamer license])
@@ -335,6 +348,7 @@ m4/Makefile
 ges/Makefile
 tests/Makefile
 tests/check/Makefile
+tests/benchmarks/Makefile
 tests/examples/Makefile
 tools/Makefile
 docs/Makefile
