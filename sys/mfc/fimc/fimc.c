@@ -164,6 +164,8 @@ fimc_color_format_to_v4l2 (FimcColorFormat format)
       return V4L2_PIX_FMT_NV12M;
     case FIMC_COLOR_FORMAT_YUV420P:
       return V4L2_PIX_FMT_YUV420M;
+    case FIMC_COLOR_FORMAT_RGB32:
+      return V4L2_PIX_FMT_RGB32;
     default:
       break;
   }
@@ -175,6 +177,8 @@ static int
 fimc_color_format_get_nplanes (FimcColorFormat format)
 {
   switch (format) {
+    case FIMC_COLOR_FORMAT_RGB32:
+      return 1;
     case FIMC_COLOR_FORMAT_YUV420SPT:
     case FIMC_COLOR_FORMAT_YUV420SP:
       return 2;
@@ -192,6 +196,8 @@ fimc_color_format_get_component_height (FimcColorFormat format, int c,
     int height)
 {
   switch (format) {
+    case FIMC_COLOR_FORMAT_RGB32:
+      return height;
     case FIMC_COLOR_FORMAT_YUV420SPT:
     case FIMC_COLOR_FORMAT_YUV420SP:
     case FIMC_COLOR_FORMAT_YUV420P:

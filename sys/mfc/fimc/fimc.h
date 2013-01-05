@@ -51,7 +51,8 @@ typedef struct _Fimc Fimc;
 typedef enum {
   FIMC_COLOR_FORMAT_YUV420SPT,
   FIMC_COLOR_FORMAT_YUV420SP,
-  FIMC_COLOR_FORMAT_YUV420P
+  FIMC_COLOR_FORMAT_YUV420P,
+  FIMC_COLOR_FORMAT_RGB32
 } FimcColorFormat;
 
 void fimc_init_debug (void);

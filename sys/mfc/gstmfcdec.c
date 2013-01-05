@@ -80,7 +80,7 @@ static GstStaticPadTemplate gst_mfc_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ NV12, I420, YV12 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ NV12, I420, YV12, RGBx }"))
     );
 /* *INDENT-ON* */
 
@@ -428,6 +428,9 @@ gst_mfc_dec_create_fimc (GstMFCDec * self, GstVideoCodecState * state)
   fimc = fimc_new ();
 
   switch (state->info.finfo->format) {
+    case GST_VIDEO_FORMAT_RGBx:
+      fimc_format = FIMC_COLOR_FORMAT_RGB32;
+      break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
       fimc_format = FIMC_COLOR_FORMAT_YUV420P;
@@ -629,6 +632,19 @@ gst_mfc_dec_fill_outbuf (GstMFCDec * self, GstBuffer * outbuf,
       goto fimc_convert_error;
 
     switch (state->info.finfo->format) {
+      case GST_VIDEO_FORMAT_RGBx:
+        dst_ = (guint8 *) GST_VIDEO_FRAME_COMP_DATA (&vframe, 0);
+        src_ = self->dst[0];
+        src_stride = self->dst_stride[0];
+        h = GST_VIDEO_FRAME_HEIGHT (&vframe);
+        w = GST_VIDEO_FRAME_WIDTH (&vframe);
+        dst_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, 0);
+        for (i = 0; i < h; i++) {
+          memcpy (dst_, src_, w);
+          dst_ += dst_stride;
+          src_ += src_stride;
+        }
+        break;
       case GST_VIDEO_FORMAT_I420:
       case GST_VIDEO_FORMAT_YV12:
         for (j = 0; j < 3; j++) {
