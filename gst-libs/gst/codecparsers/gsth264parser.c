@@ -1815,6 +1815,7 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
   slice->num_ref_idx_l1_active_minus1 = pps->num_ref_idx_l1_active_minus1;
   slice->disable_deblocking_filter_idc = 0;
   slice->slice_alpha_c0_offset_div2 = 0;
+  slice->slice_beta_offset_div2 = 0;
 
   if (sps->separate_colour_plane_flag)
     READ_UINT8 (&nr, slice->colour_plane_id, 2);
