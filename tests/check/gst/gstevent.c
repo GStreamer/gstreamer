@@ -198,6 +198,27 @@ GST_START_TEST (create_events)
     gst_event_unref (event);
   }
 
+  /* STREAM_START */
+  {
+    GstStreamFlags flags = ~GST_STREAM_FLAG_NONE;
+
+    event = gst_event_new_stream_start ("7f4b2f0/audio_02");
+    fail_if (event == NULL);
+    fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
+    fail_if (GST_EVENT_IS_UPSTREAM (event));
+    fail_unless (GST_EVENT_IS_DOWNSTREAM (event));
+    fail_unless (GST_EVENT_IS_SERIALIZED (event));
+    gst_event_parse_stream_flags (event, &flags);
+    fail_unless_equals_int (flags, GST_STREAM_FLAG_NONE);
+    gst_event_set_stream_flags (event, GST_STREAM_FLAG_SPARSE);
+    gst_event_parse_stream_flags (event, &flags);
+    fail_unless_equals_int (flags, GST_STREAM_FLAG_SPARSE);
+    gst_event_ref (event);
+    ASSERT_CRITICAL (gst_event_set_stream_flags (event, GST_STREAM_FLAG_NONE));
+    gst_event_unref (event);
+    gst_event_unref (event);
+  }
+
   /* NAVIGATION */
   {
     structure = gst_structure_new ("application/x-gst-navigation", "event",

@@ -473,11 +473,13 @@ EXPORTS
 	gst_event_parse_segment_done
 	gst_event_parse_sink_message
 	gst_event_parse_step
+	gst_event_parse_stream_flags
 	gst_event_parse_stream_start
 	gst_event_parse_tag
 	gst_event_parse_toc
 	gst_event_parse_toc_select
 	gst_event_set_seqnum
+	gst_event_set_stream_flags
 	gst_event_type_flags_get_type
 	gst_event_type_get_flags
 	gst_event_type_get_name
@@ -1014,6 +1016,7 @@ EXPORTS
 	gst_static_pad_template_get_type
 	gst_stream_error_get_type
 	gst_stream_error_quark
+	gst_stream_flags_get_type
 	gst_stream_status_type_get_type
 	gst_structure_can_intersect
 	gst_structure_change_type_get_type

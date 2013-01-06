@@ -1404,7 +1404,8 @@ gst_event_new_stream_start (const gchar * stream_id)
   g_return_val_if_fail (stream_id != NULL, NULL);
 
   s = gst_structure_new_id (GST_QUARK (EVENT_STREAM_START),
-      GST_QUARK (STREAM_ID), G_TYPE_STRING, stream_id, NULL);
+      GST_QUARK (STREAM_ID), G_TYPE_STRING, stream_id,
+      GST_QUARK (FLAGS), GST_TYPE_STREAM_FLAGS, GST_STREAM_FLAG_NONE, NULL);
 
   return gst_event_new_custom (GST_EVENT_STREAM_START, s);
 }
@@ -1433,6 +1434,43 @@ gst_event_parse_stream_start (GstEvent * event, const gchar ** stream_id)
 
   if (stream_id)
     *stream_id = g_value_get_string (val);
+}
+
+/**
+ * gst_event_set_stream_flags:
+ * @event: a stream-start event
+ * @flags: the stream flags to set
+ *
+ * Since: 1.2
+ */
+void
+gst_event_set_stream_flags (GstEvent * event, GstStreamFlags flags)
+{
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
+  g_return_if_fail (gst_event_is_writable (event));
+
+  gst_structure_id_set (GST_EVENT_STRUCTURE (event),
+      GST_QUARK (FLAGS), GST_TYPE_STREAM_FLAGS, flags, NULL);
+}
+
+/**
+ * gst_event_parse_stream_flags:
+ * @event: a stream-start event
+ * @flags: (out): address of variable where to store the stream flags
+ *
+ * Since: 1.2
+ */
+void
+gst_event_parse_stream_flags (GstEvent * event, GstStreamFlags * flags)
+{
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
+
+  if (flags) {
+    gst_structure_id_get (GST_EVENT_STRUCTURE (event),
+        GST_QUARK (FLAGS), GST_TYPE_STREAM_FLAGS, flags, NULL);
+  }
 }
 
 /**

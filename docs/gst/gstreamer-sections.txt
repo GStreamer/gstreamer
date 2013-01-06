@@ -1003,6 +1003,8 @@ gst_event_parse_gap
 
 gst_event_new_stream_start
 gst_event_parse_stream_start
+gst_event_set_stream_flags
+gst_event_parse_stream_flags
 
 gst_event_new_segment
 gst_event_parse_segment

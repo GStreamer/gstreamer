@@ -367,6 +367,20 @@ typedef enum {
 } GstQOSType;
 
 /**
+ * GstStreamFlags:
+ * @GST_STREAM_FLAG_NONE: This stream has no special attributes
+ * @GST_STREAM_FLAG_SPARSE: This stream is a sparse stream (e.g. a subtitle
+ *    stream), data may flow only in irregular intervals with large gaps in
+ *    between.
+ *
+ * Since: 1.2
+ */
+typedef enum {
+  GST_STREAM_FLAG_NONE,
+  GST_STREAM_FLAG_SPARSE       = (1 << 0)
+} GstStreamFlags;
+
+/**
  * GstEvent:
  * @mini_object: the parent structure
  * @type: the #GstEventType of the event
@@ -462,6 +476,9 @@ void            gst_event_set_seqnum            (GstEvent *event, guint32 seqnum
 /* Stream start event */
 GstEvent *      gst_event_new_stream_start      (const gchar *stream_id) G_GNUC_MALLOC;
 void            gst_event_parse_stream_start    (GstEvent *event, const gchar **stream_id);
+
+void            gst_event_set_stream_flags      (GstEvent *event, GstStreamFlags flags);
+void            gst_event_parse_stream_flags    (GstEvent *event, GstStreamFlags *flags);
 
 /* flush events */
 GstEvent *      gst_event_new_flush_start       (void) G_GNUC_MALLOC;
