@@ -59,7 +59,7 @@ GstM3U8Playlist * gst_m3u8_playlist_new (guint version,
 				         guint window_size,
 					 gboolean allow_cache);
 void gst_m3u8_playlist_free (GstM3U8Playlist * playlist);
-GList * gst_m3u8_playlist_add_entry (GstM3U8Playlist * playlist,
+gboolean gst_m3u8_playlist_add_entry (GstM3U8Playlist * playlist,
     				     const gchar * url,
     				     GFile * file,
 				     const gchar *title,

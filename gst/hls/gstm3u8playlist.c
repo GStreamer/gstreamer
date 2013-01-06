@@ -116,13 +116,12 @@ gst_m3u8_playlist_free (GstM3U8Playlist * playlist)
 }
 
 
-GList *
+gboolean
 gst_m3u8_playlist_add_entry (GstM3U8Playlist * playlist,
     const gchar * url, GFile * file, const gchar * title,
     gfloat duration, guint index, gboolean discontinuous)
 {
   GstM3U8Entry *entry;
-  GList *old_files = NULL;
 
   g_return_val_if_fail (playlist != NULL, FALSE);
   g_return_val_if_fail (url != NULL, FALSE);
@@ -139,8 +138,6 @@ gst_m3u8_playlist_add_entry (GstM3U8Playlist * playlist,
       GstM3U8Entry *old_entry;
 
       old_entry = g_queue_pop_head (playlist->entries);
-      g_object_ref (old_entry->file);
-      old_files = g_list_prepend (old_files, old_entry->file);
       gst_m3u8_entry_free (old_entry);
     }
   }
@@ -148,7 +145,7 @@ gst_m3u8_playlist_add_entry (GstM3U8Playlist * playlist,
   playlist->sequence_number = index + 1;
   g_queue_push_tail (playlist->entries, entry);
 
-  return old_files;
+  return TRUE;
 }
 
 static guint
