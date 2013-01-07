@@ -56,7 +56,7 @@ extern gint MediaCodec_BUFFER_FLAG_SYNC_FRAME;
 extern gint MediaCodec_BUFFER_FLAG_CODEC_CONFIG;
 extern gint MediaCodec_BUFFER_FLAG_END_OF_STREAM;
 
-extern gint MediaCodec_CONFIGURE_FLAG_ENCODE; 
+extern gint MediaCodec_CONFIGURE_FLAG_ENCODE;
 
 extern gint MediaCodec_INFO_TRY_AGAIN_LATER;
 extern gint MediaCodec_INFO_OUTPUT_FORMAT_CHANGED;

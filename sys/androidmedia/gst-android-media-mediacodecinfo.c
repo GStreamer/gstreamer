@@ -74,6 +74,26 @@ static struct
   jint CHANNEL_OUT_TOP_BACK_RIGHT;
 } android_media_audioformat;
 
+gint AudioFormat_CHANNEL_OUT_FRONT_LEFT;
+gint AudioFormat_CHANNEL_OUT_FRONT_RIGHT;
+gint AudioFormat_CHANNEL_OUT_FRONT_CENTER;
+gint AudioFormat_CHANNEL_OUT_LOW_FREQUENCY;
+gint AudioFormat_CHANNEL_OUT_BACK_LEFT;
+gint AudioFormat_CHANNEL_OUT_BACK_RIGHT;
+gint AudioFormat_CHANNEL_OUT_FRONT_LEFT_OF_CENTER;
+gint AudioFormat_CHANNEL_OUT_FRONT_RIGHT_OF_CENTER;
+gint AudioFormat_CHANNEL_OUT_BACK_CENTER;
+gint AudioFormat_CHANNEL_OUT_SIDE_LEFT;
+gint AudioFormat_CHANNEL_OUT_SIDE_RIGHT;
+gint AudioFormat_CHANNEL_OUT_TOP_CENTER;
+gint AudioFormat_CHANNEL_OUT_TOP_FRONT_LEFT;
+gint AudioFormat_CHANNEL_OUT_TOP_FRONT_CENTER;
+gint AudioFormat_CHANNEL_OUT_TOP_FRONT_RIGHT;
+gint AudioFormat_CHANNEL_OUT_TOP_BACK_LEFT;
+gint AudioFormat_CHANNEL_OUT_TOP_BACK_CENTER;
+gint AudioFormat_CHANNEL_OUT_TOP_BACK_RIGHT;
+
+
 static gboolean
 _init_classes (void)
 {

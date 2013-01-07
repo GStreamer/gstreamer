@@ -65,6 +65,16 @@ static struct
   jint INFO_OUTPUT_BUFFERS_CHANGED;
 } android_media_mediacodec;
 
+gint MediaCodec_BUFFER_FLAG_SYNC_FRAME;
+gint MediaCodec_BUFFER_FLAG_CODEC_CONFIG;
+gint MediaCodec_BUFFER_FLAG_END_OF_STREAM;
+
+gint MediaCodec_CONFIGURE_FLAG_ENCODE;
+
+gint MediaCodec_INFO_TRY_AGAIN_LATER;
+gint MediaCodec_INFO_OUTPUT_FORMAT_CHANGED;
+gint MediaCodec_INFO_OUTPUT_BUFFERS_CHANGED;
+
 static gboolean
 _init_classes (void)
 {
