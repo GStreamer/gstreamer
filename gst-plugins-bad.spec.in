@@ -28,7 +28,6 @@ BuildRequires: gtk-doc
 BuildRequires: bzip2-devel
 BuildRequires: celt-devel
 BuildRequires: exempi-devel
-BuildRequires: jasper-devel
 BuildRequires: ladspa-devel
 BuildRequires: libass-devel
 %ifnarch s390 s390x

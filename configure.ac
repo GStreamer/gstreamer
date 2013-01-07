@@ -321,7 +321,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  videomeasure videosignal vmnc \
  decklink fbdev linsys vcd \
  apexsink cdaudio cog dc1394 dirac directfb \
- gsettings jasper ladspa \
+ gsettings ladspa \
  musepack musicbrainz nas neon ofa openal rsvg sdl sndfile timidity \
  directdraw direct3d9 acm wininet \
  wildmidi xvid lv2 teletextdec sndio uvch264 wasapi"
@@ -1181,26 +1181,6 @@ AG_GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
   AC_SUBST(GSM_LIBS)
 ])
 
-dnl *** jasper ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_JASPER, true)
-AG_GST_CHECK_FEATURE(JASPER, [jasper], jasperdec jasperenc, [
-  AG_GST_CHECK_LIBHEADER(JASPER, jasper, jas_stream_fopen, , jasper/jasper.h,
-    JASPER_LIBS="-ljasper")
-  AC_SUBST(JASPER_LIBS)
-])
-
-dnl *** OpenJPEG ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_OPENJPEG, true)
-AG_GST_CHECK_FEATURE(OPENJPEG, [openjpeg library], openjpeg, [
-  HAVE_OPENJPEG="no"
-  PKG_CHECK_MODULES(OPENJPEG, libopenjpeg1,
-    HAVE_OPENJPEG="yes",
-    AG_GST_CHECK_LIBHEADER(OPENJPEG, openjpeg, opj_version, , openjpeg.h, OPENJPEG_LIBS="-lopenjpeg")
-  )
-  AC_SUBST(OPENJPEG_CFLAGS)
-  AC_SUBST(OPENJPEG_LIBS)
-])
-
 dnl *** kate ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_KATE, true)
 AG_GST_CHECK_FEATURE(KATE, [Kate], kate, [
@@ -1588,6 +1568,18 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
   AC_SUBST(OPENCV_PREFIX)
   AC_SUBST(OPENCV_CFLAGS)
   AC_SUBST(OPENCV_LIBS)
+])
+
+dnl *** OpenJPEG ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPENJPEG, true)
+AG_GST_CHECK_FEATURE(OPENJPEG, [openjpeg library], openjpeg, [
+  HAVE_OPENJPEG="no"
+  PKG_CHECK_MODULES(OPENJPEG, libopenjpeg1,
+    HAVE_OPENJPEG="yes",
+    AG_GST_CHECK_LIBHEADER(OPENJPEG, openjpeg, opj_version, , openjpeg.h, OPENJPEG_LIBS="-lopenjpeg")
+  )
+  AC_SUBST(OPENJPEG_CFLAGS)
+  AC_SUBST(OPENJPEG_LIBS)
 ])
 
 dnl *** Opus ***
@@ -2058,8 +2050,6 @@ AM_CONDITIONAL(USE_FAAD, false)
 AM_CONDITIONAL(USE_FBDEV, false)
 AM_CONDITIONAL(USE_FLITE, false)
 AM_CONDITIONAL(USE_GSM, false)
-AM_CONDITIONAL(USE_JASPER, false)
-AM_CONDITIONAL(USE_OPENJPEG, false)
 AM_CONDITIONAL(USE_KATE, false)
 AM_CONDITIONAL(USE_TIGER, false)
 AM_CONDITIONAL(USE_LADSPA, false)
@@ -2079,6 +2069,7 @@ AM_CONDITIONAL(USE_NEON, false)
 AM_CONDITIONAL(USE_OFA, false)
 AM_CONDITIONAL(USE_OPENAL, false)
 AM_CONDITIONAL(USE_OPENCV, false)
+AM_CONDITIONAL(USE_OPENJPEG, false)
 AM_CONDITIONAL(USE_OPUS, false)
 AM_CONDITIONAL(USE_PVR, false)
 AM_CONDITIONAL(USE_RSVG, false)
@@ -2318,7 +2309,6 @@ ext/faac/Makefile
 ext/faad/Makefile
 ext/flite/Makefile
 ext/gsm/Makefile
-ext/jasper/Makefile
 ext/kate/Makefile
 ext/ladspa/Makefile
 ext/lv2/Makefile

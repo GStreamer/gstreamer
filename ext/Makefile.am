@@ -136,18 +136,6 @@ else
 GSM_DIR=
 endif
 
-if USE_JASPER
-JASPER_DIR = jasper
-else
-JASPER_DIR =
-endif
-
-if USE_OPENJPEG
-OPENJPEG_DIR = openjpeg
-else
-OPENJPEG_DIR =
-endif
-
 if USE_KATE
 KATE_DIR=kate
 else
@@ -254,6 +242,12 @@ if USE_OPENCV
 OPENCV_DIR=opencv
 else
 OPENCV_DIR=
+endif
+
+if USE_OPENJPEG
+OPENJPEG_DIR = openjpeg
+else
+OPENJPEG_DIR =
 endif
 
 if USE_OPUS
@@ -398,8 +392,6 @@ SUBDIRS=\
 	$(GSETTINGS_DIR) \
 	$(GSM_DIR) \
 	$(G729_DIR) \
-	$(JASPER_DIR) \
-	$(OPENJPEG_DIR) \
 	$(KATE_DIR) \
 	$(LADSPA_DIR) \
 	$(LV2_DIR) \
@@ -418,6 +410,7 @@ SUBDIRS=\
 	$(OFA_DIR) \
 	$(OPENAL_DIR) \
 	$(OPENCV_DIR) \
+	$(OPENJPEG_DIR) \
 	$(OPUS_DIR) \
 	$(RSVG_DIR) \
 	$(SCHRO_DIR) \
@@ -455,8 +448,6 @@ DIST_SUBDIRS = \
 	gsettings \
 	gsm \
 	ladspa \
-	jasper \
-	openjpeg \
 	kate \
 	libmms \
 	lv2 \
@@ -475,6 +466,7 @@ DIST_SUBDIRS = \
 	ofa \
 	openal \
 	opencv \
+	openjpeg \
 	opus \
 	rsvg \
 	resindvd \
