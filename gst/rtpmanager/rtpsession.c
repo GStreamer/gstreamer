@@ -2673,7 +2673,8 @@ rtp_session_next_timeout (RTPSession * sess, GstClockTime current_time)
 
   result = sess->next_rtcp_check_time;
 
-  GST_DEBUG ("current time: %" GST_TIME_FORMAT ", next :%" GST_TIME_FORMAT,
+  GST_DEBUG ("current time: %" GST_TIME_FORMAT
+      ", next time: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (current_time), GST_TIME_ARGS (result));
 
   if (result < current_time) {
@@ -3114,8 +3115,9 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
 
-  GST_DEBUG ("reporting at %" GST_TIME_FORMAT ", NTP time %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (current_time), GST_TIME_ARGS (ntpnstime));
+  GST_DEBUG ("reporting at %" GST_TIME_FORMAT ", NTP time %" GST_TIME_FORMAT
+      ", running-time %" GST_TIME_FORMAT, GST_TIME_ARGS (current_time),
+      GST_TIME_ARGS (ntpnstime), GST_TIME_ARGS (running_time));
 
   data.sess = sess;
   data.rtcp = NULL;
