@@ -498,14 +498,20 @@ gint
 gst_am_mediacodecprofilelevel_get_level (GstAmMediaCodecProfileLevel * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
+  gint ret;
 
-  return AMMCPL_FIELD (return -1, Int, level);
+  ret = AMMCPL_FIELD (return -1, Int, level);
+
+  return ret;
 }
 
 gint
 gst_am_mediacodecprofilelevel_get_profile (GstAmMediaCodecProfileLevel * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
+  gint ret;
 
-  return AMMCPL_FIELD (return -1, Int, profile);
+  ret = AMMCPL_FIELD (return -1, Int, profile);
+
+  return ret;
 }
