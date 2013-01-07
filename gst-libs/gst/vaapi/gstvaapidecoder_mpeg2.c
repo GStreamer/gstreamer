@@ -867,67 +867,6 @@ parse_picture(GstVaapiDecoderMpeg2 *decoder,
 }
 
 static GstVaapiDecoderStatus
-parse_slice(GstVaapiDecoderMpeg2 *decoder,
-    GstVaapiDecoderUnit *unit, GstMpegVideoPacket *packet)
-{
-    GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
-    GstMpegVideoSliceHdr *slice_hdr;
-    GstBitReader br;
-    gint mb_x, mb_y, mb_inc;
-    guint8 slice_vertical_position_extension;
-    guint8 extra_bit_slice, junk8;
-
-    if (!gst_vaapi_parser_info_mpeg2_ensure(&priv->slice_hdr)) {
-        GST_ERROR("failed to allocate parser info for slice header");
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-    }
-
-    slice_hdr = &priv->slice_hdr->data.slice_hdr;
-
-    gst_bit_reader_init(&br, packet->data + packet->offset, packet->size);
-    if (priv->height > 2800)
-        READ_UINT8(&br, slice_vertical_position_extension, 3);
-    if (priv->seq_scalable_ext) {
-        GST_ERROR("failed to parse slice with sequence_scalable_extension()");
-        return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
-    }
-    READ_UINT8(&br, slice_hdr->quantiser_scale_code, 5);
-    READ_UINT8(&br, extra_bit_slice, 1);
-    if (!extra_bit_slice)
-        slice_hdr->intra_slice = 0;
-    else {
-        READ_UINT8(&br, slice_hdr->intra_slice, 1);
-        READ_UINT8(&br, junk8, 7);
-        READ_UINT8(&br, extra_bit_slice, 1);
-        while (extra_bit_slice) {
-            READ_UINT8(&br, junk8, 8);
-            READ_UINT8(&br, extra_bit_slice, 1);
-        }
-    }
-    slice_hdr->header_size = 32 + gst_bit_reader_get_pos(&br);
-
-    mb_y = packet->type - GST_MPEG_VIDEO_PACKET_SLICE_MIN;
-    mb_x = -1;
-    do {
-        if (!decode_vlc(&br, &mb_inc, mpeg2_mbaddr_vlc_table,
-                G_N_ELEMENTS(mpeg2_mbaddr_vlc_table))) {
-            GST_WARNING("failed to decode first macroblock_address_increment");
-            goto failed;
-        }
-        mb_x += mb_inc == GST_MPEG_VIDEO_MACROBLOCK_ESCAPE ? 33 : mb_inc;
-    } while (mb_inc == GST_MPEG_VIDEO_MACROBLOCK_ESCAPE);
-
-    slice_hdr->slice_horizontal_position = mb_x;
-    slice_hdr->slice_vertical_position   = mb_y;
-
-    gst_vaapi_decoder_unit_set_parsed_info(unit, slice_hdr, NULL);
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
-
-failed:
-    return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
-}
-
-static GstVaapiDecoderStatus
 decode_picture(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
@@ -1122,6 +1061,67 @@ fill_picture(GstVaapiDecoderMpeg2 *decoder, GstVaapiPicture *picture)
             pic_param->forward_reference_picture = prev_picture->surface_id;
         break;
     }
+}
+
+static GstVaapiDecoderStatus
+parse_slice(GstVaapiDecoderMpeg2 *decoder,
+    GstVaapiDecoderUnit *unit, GstMpegVideoPacket *packet)
+{
+    GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
+    GstMpegVideoSliceHdr *slice_hdr;
+    GstBitReader br;
+    gint mb_x, mb_y, mb_inc;
+    guint8 slice_vertical_position_extension;
+    guint8 extra_bit_slice, junk8;
+
+    if (!gst_vaapi_parser_info_mpeg2_ensure(&priv->slice_hdr)) {
+        GST_ERROR("failed to allocate parser info for slice header");
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    }
+
+    slice_hdr = &priv->slice_hdr->data.slice_hdr;
+
+    gst_bit_reader_init(&br, packet->data + packet->offset, packet->size);
+    if (priv->height > 2800)
+        READ_UINT8(&br, slice_vertical_position_extension, 3);
+    if (priv->seq_scalable_ext) {
+        GST_ERROR("failed to parse slice with sequence_scalable_extension()");
+        return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+    }
+    READ_UINT8(&br, slice_hdr->quantiser_scale_code, 5);
+    READ_UINT8(&br, extra_bit_slice, 1);
+    if (!extra_bit_slice)
+        slice_hdr->intra_slice = 0;
+    else {
+        READ_UINT8(&br, slice_hdr->intra_slice, 1);
+        READ_UINT8(&br, junk8, 7);
+        READ_UINT8(&br, extra_bit_slice, 1);
+        while (extra_bit_slice) {
+            READ_UINT8(&br, junk8, 8);
+            READ_UINT8(&br, extra_bit_slice, 1);
+        }
+    }
+    slice_hdr->header_size = 32 + gst_bit_reader_get_pos(&br);
+
+    mb_y = packet->type - GST_MPEG_VIDEO_PACKET_SLICE_MIN;
+    mb_x = -1;
+    do {
+        if (!decode_vlc(&br, &mb_inc, mpeg2_mbaddr_vlc_table,
+                G_N_ELEMENTS(mpeg2_mbaddr_vlc_table))) {
+            GST_WARNING("failed to decode first macroblock_address_increment");
+            goto failed;
+        }
+        mb_x += mb_inc == GST_MPEG_VIDEO_MACROBLOCK_ESCAPE ? 33 : mb_inc;
+    } while (mb_inc == GST_MPEG_VIDEO_MACROBLOCK_ESCAPE);
+
+    slice_hdr->slice_horizontal_position = mb_x;
+    slice_hdr->slice_vertical_position   = mb_y;
+
+    gst_vaapi_decoder_unit_set_parsed_info(unit, slice_hdr, NULL);
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+failed:
+    return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
 }
 
 static GstVaapiDecoderStatus
