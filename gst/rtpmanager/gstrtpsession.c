@@ -1885,7 +1885,7 @@ create_recv_rtp_sink (GstRtpSession * rtpsession)
   gst_pad_set_chain_function (rtpsession->recv_rtp_sink,
       gst_rtp_session_chain_recv_rtp);
   gst_pad_set_event_function (rtpsession->recv_rtp_sink,
-      (GstPadEventFunction) gst_rtp_session_event_recv_rtp_sink);
+      gst_rtp_session_event_recv_rtp_sink);
   gst_pad_set_iterate_internal_links_function (rtpsession->recv_rtp_sink,
       gst_rtp_session_iterate_internal_links);
   gst_pad_set_active (rtpsession->recv_rtp_sink, TRUE);
@@ -1897,7 +1897,7 @@ create_recv_rtp_sink (GstRtpSession * rtpsession)
       gst_pad_new_from_static_template (&rtpsession_recv_rtp_src_template,
       "recv_rtp_src");
   gst_pad_set_event_function (rtpsession->recv_rtp_src,
-      (GstPadEventFunction) gst_rtp_session_event_recv_rtp_src);
+      gst_rtp_session_event_recv_rtp_src);
   gst_pad_set_iterate_internal_links_function (rtpsession->recv_rtp_src,
       gst_rtp_session_iterate_internal_links);
   gst_pad_use_fixed_caps (rtpsession->recv_rtp_src);
@@ -1944,7 +1944,7 @@ create_recv_rtcp_sink (GstRtpSession * rtpsession)
   gst_pad_set_chain_function (rtpsession->recv_rtcp_sink,
       gst_rtp_session_chain_recv_rtcp);
   gst_pad_set_event_function (rtpsession->recv_rtcp_sink,
-      (GstPadEventFunction) gst_rtp_session_event_recv_rtcp_sink);
+      gst_rtp_session_event_recv_rtcp_sink);
   gst_pad_set_iterate_internal_links_function (rtpsession->recv_rtcp_sink,
       gst_rtp_session_iterate_internal_links);
   gst_pad_set_active (rtpsession->recv_rtcp_sink, TRUE);
@@ -1999,7 +1999,7 @@ create_send_rtp_sink (GstRtpSession * rtpsession)
   gst_pad_set_query_function (rtpsession->send_rtp_sink,
       gst_rtp_session_query_send_rtp);
   gst_pad_set_event_function (rtpsession->send_rtp_sink,
-      (GstPadEventFunction) gst_rtp_session_event_send_rtp_sink);
+      gst_rtp_session_event_send_rtp_sink);
   gst_pad_set_iterate_internal_links_function (rtpsession->send_rtp_sink,
       gst_rtp_session_iterate_internal_links);
   gst_pad_set_active (rtpsession->send_rtp_sink, TRUE);
