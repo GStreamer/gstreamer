@@ -2308,11 +2308,14 @@ gst_ahc_src_close (GstAHCSrc * self)
     gst_ah_camera_set_error_callback (self->camera, NULL, NULL);
     gst_ah_camera_set_preview_callback_with_buffer (self->camera, NULL, NULL);
     gst_ah_camera_release (self->camera);
+    gst_ah_camera_free (self->camera);
   }
   self->camera = NULL;
 
-  if (self->texture)
+  if (self->texture) {
     gst_ag_surfacetexture_release (self->texture);
+    gst_ag_surfacetexture_free (self->texture);
+  }
   self->texture = NULL;
 }
 

@@ -108,6 +108,12 @@ gst_ag_surfacetexture_release (GstAGSurfaceTexture * self)
   JNIEnv *env = gst_dvm_get_env ();
 
   GST_DVM_CALL (, self->object, Void, android_graphics_surfacetexture, release);
+}
+
+void
+gst_ag_surfacetexture_free (GstAGSurfaceTexture * self)
+{
+  JNIEnv *env = gst_dvm_get_env ();
 
   (*env)->DeleteGlobalRef (env, self->object);
   g_slice_free (GstAGSurfaceTexture, self);

@@ -43,6 +43,7 @@ void gst_android_graphics_surfacetexture_deinit (void);
 /* android.graphics.SurfaceTexture */
 GstAGSurfaceTexture *gst_ag_surfacetexture_new (gint texture_id);
 void gst_ag_surfacetexture_release (GstAGSurfaceTexture *self);
+void gst_ag_surfacetexture_free (GstAGSurfaceTexture *self);
 
 G_END_DECLS
 

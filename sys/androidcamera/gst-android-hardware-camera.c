@@ -1855,10 +1855,17 @@ gst_ah_camera_release (GstAHCamera * self)
   JNIEnv *env = gst_dvm_get_env ();
 
   AHC_CALL (, Void, release);
+}
+
+void
+gst_ah_camera_release (GstAHCamera * self)
+{
+  JNIEnv *env = gst_dvm_get_env ();
 
   (*env)->DeleteGlobalRef (env, self->object);
   g_slice_free (GstAHCamera, self);
 }
+
 
 gboolean
 gst_ah_camera_set_parameters (GstAHCamera * self, GstAHCParameters * params)

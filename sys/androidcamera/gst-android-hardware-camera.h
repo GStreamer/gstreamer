@@ -139,6 +139,7 @@ gboolean gst_ah_camera_lock (GstAHCamera * self);
 GstAHCamera *gst_ah_camera_open (gint camera_id);
 gboolean gst_ah_camera_reconnect (GstAHCamera * self);
 void gst_ah_camera_release (GstAHCamera * self);
+void gst_ah_camera_free (GstAHCamera * self);
 gboolean gst_ah_camera_set_parameters (GstAHCamera * self,
     GstAHCParameters * params);
 gboolean gst_ah_camera_set_error_callback (GstAHCamera * self,
