@@ -76,7 +76,7 @@ struct _GstVaapiDecoderFrame {
 
 G_GNUC_INTERNAL
 GstVaapiDecoderFrame *
-gst_vaapi_decoder_frame_new(void);
+gst_vaapi_decoder_frame_new(guint width, guint height);
 
 G_GNUC_INTERNAL
 void

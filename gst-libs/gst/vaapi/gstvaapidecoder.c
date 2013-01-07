@@ -135,7 +135,8 @@ do_parse(GstVaapiDecoder *decoder,
     GstVideoCodecFrame *base_frame, GstAdapter *adapter, gboolean at_eos,
     guint *got_unit_size_ptr, gboolean *got_frame_ptr)
 {
-    GstVaapiParserState * const ps = &decoder->priv->parser_state;
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVaapiParserState * const ps = &priv->parser_state;
     GstVaapiDecoderFrame *frame;
     GstVaapiDecoderUnit *unit;
     GstVaapiDecoderStatus status;
@@ -145,7 +146,9 @@ do_parse(GstVaapiDecoder *decoder,
 
     frame = gst_video_codec_frame_get_user_data(base_frame);
     if (!frame) {
-        frame = gst_vaapi_decoder_frame_new();
+        GstVideoCodecState * const codec_state = priv->codec_state;
+        frame = gst_vaapi_decoder_frame_new(codec_state->info.width,
+            codec_state->info.height);
         if (!frame)
             return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
         gst_video_codec_frame_set_user_data(base_frame,

@@ -66,24 +66,31 @@ free_units(GArray **units_ptr)
 
 /**
  * gst_vaapi_decoder_frame_new:
+ * @width: frame width in pixels
+ * @height: frame height in pixels
  *
  * Creates a new #GstVaapiDecoderFrame object.
  *
  * Returns: The newly allocated #GstVaapiDecoderFrame
  */
 GstVaapiDecoderFrame *
-gst_vaapi_decoder_frame_new(void)
+gst_vaapi_decoder_frame_new(guint width, guint height)
 {
     GstVaapiDecoderFrame *frame;
+    guint num_slices;
 
     frame = (GstVaapiDecoderFrame *)
         gst_vaapi_mini_object_new(gst_vaapi_decoder_frame_class());
     if (!frame)
         return NULL;
 
-    if (!alloc_units(&frame->pre_units, 4))
+    if (!height)
+        height = 1088;
+    num_slices = (height + 15) / 16;
+
+    if (!alloc_units(&frame->pre_units, 16))
         goto error;
-    if (!alloc_units(&frame->units, 1))
+    if (!alloc_units(&frame->units, num_slices))
         goto error;
     if (!alloc_units(&frame->post_units, 1))
         goto error;
