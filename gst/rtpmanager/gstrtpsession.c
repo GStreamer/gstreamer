@@ -1589,7 +1589,8 @@ gst_rtp_session_query_send_rtcp_src (GstPad * pad, GstObject * parent,
 
   rtpsession = GST_RTP_SESSION (parent);
 
-  GST_DEBUG_OBJECT (rtpsession, "received QUERY");
+  GST_DEBUG_OBJECT (rtpsession, "received QUERY %s",
+      GST_QUERY_TYPE_NAME (query));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
@@ -1613,7 +1614,8 @@ gst_rtp_session_event_send_rtcp_src (GstPad * pad, GstObject * parent,
   gboolean ret = TRUE;
 
   rtpsession = GST_RTP_SESSION (parent);
-  GST_DEBUG_OBJECT (rtpsession, "received EVENT");
+  GST_DEBUG_OBJECT (rtpsession, "received EVENT %s",
+      GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -1641,7 +1643,8 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstObject * parent,
 
   rtpsession = GST_RTP_SESSION (parent);
 
-  GST_DEBUG_OBJECT (rtpsession, "received event");
+  GST_DEBUG_OBJECT (rtpsession, "received EVENT %s",
+      GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
