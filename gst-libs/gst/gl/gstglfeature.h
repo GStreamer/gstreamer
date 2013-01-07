@@ -53,7 +53,7 @@ struct _GstGLFeatureData
   int min_gl_major, min_gl_minor;
   /* Flags specifying which versions of GL the feature is available
      in core in */
-  GstGLApi gl_availability;
+  GstGLAPI gl_availability;
   /* \0 separated list of namespaces to try. Eg "EXT\0ARB\0" */
   const char *namespaces;
   /* \0 separated list of required extension names without the GL_EXT
@@ -62,13 +62,6 @@ struct _GstGLFeatureData
      extension is different from the namespace, you can specify it
      with a ':' after the namespace */
   const char *extension_names;
-  /* A set of feature flags to enable if the extension is available */
-  GstGLFeatureFlags feature_flags;
-  /* A set of private feature flags to enable if the extension is
-   * available */
-  int feature_flags_private;
-  /* An optional corresponding winsys feature. */
-//  CoglWinsysFeature winsys_feature;
   /* A list of functions required for this feature. Terminated with a
      NULL name */
   const GstGLFeatureFunction *functions;
