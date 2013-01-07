@@ -179,6 +179,8 @@ struct _GstRtpJitterBufferPrivate
   /* the latency of the upstream peer, we have to take this into account when
    * synchronizing the buffers. */
   GstClockTime peer_latency;
+  guint64 ext_rtptime;
+  GstBuffer *last_sr;
 
   /* some accounting */
   guint64 num_late;
@@ -976,6 +978,7 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
         ret = GST_STATE_CHANGE_NO_PREROLL;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_buffer_replace (&priv->last_sr, NULL);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
@@ -1983,6 +1986,90 @@ pause:
   }
 }
 
+/* collect the info form the lastest RTCP packet and the jittebuffer sync, do
+ * some sanity checks and then emit the handle-sync signal with the parameters.
+ * This function must be called with the LOCK */
+static void
+do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
+{
+  GstRtpJitterBufferPrivate *priv;
+  guint64 base_rtptime, base_time;
+  guint32 clock_rate;
+  guint64 last_rtptime;
+  guint64 clock_base;
+  guint64 ext_rtptime, diff;
+  gboolean drop = FALSE;
+
+  priv = jitterbuffer->priv;
+
+  if (priv->last_sr == NULL) {
+    GST_DEBUG_OBJECT (jitterbuffer, "dropping, no SR RTCP");
+    return;
+  }
+
+  /* get the last values from the jitterbuffer */
+  rtp_jitter_buffer_get_sync (priv->jbuf, &base_rtptime, &base_time,
+      &clock_rate, &last_rtptime);
+
+  clock_base = priv->clock_base;
+  ext_rtptime = priv->ext_rtptime;
+
+  GST_DEBUG_OBJECT (jitterbuffer, "ext SR %" G_GUINT64_FORMAT ", base %"
+      G_GUINT64_FORMAT ", clock-rate %" G_GUINT32_FORMAT
+      ", clock-base %" G_GUINT64_FORMAT ", last-rtptime %" G_GUINT64_FORMAT,
+      ext_rtptime, base_rtptime, clock_rate, clock_base, last_rtptime);
+
+  if (base_rtptime == -1 || clock_rate == -1 || base_time == -1) {
+    GST_DEBUG_OBJECT (jitterbuffer, "dropping, no RTP values");
+    drop = TRUE;
+  } else {
+    /* we can't accept anything that happened before we did the last resync */
+    if (base_rtptime > ext_rtptime) {
+      GST_DEBUG_OBJECT (jitterbuffer, "dropping, older than base time");
+      drop = TRUE;
+    } else {
+      /* the SR RTP timestamp must be something close to what we last observed
+       * in the jitterbuffer */
+      if (ext_rtptime > last_rtptime) {
+        /* check how far ahead it is to our RTP timestamps */
+        diff = ext_rtptime - last_rtptime;
+        /* if bigger than 1 second, we drop it */
+        if (diff > clock_rate) {
+          GST_DEBUG_OBJECT (jitterbuffer, "too far ahead");
+          /* should drop this, but some RTSP servers end up with bogus
+           * way too ahead RTCP packet when repeated PAUSE/PLAY,
+           * so still trigger rptbin sync but invalidate RTCP data
+           * (sync might use other methods) */
+          ext_rtptime = -1;
+        }
+        GST_DEBUG_OBJECT (jitterbuffer, "ext last %" G_GUINT64_FORMAT ", diff %"
+            G_GUINT64_FORMAT, last_rtptime, diff);
+      }
+    }
+  }
+
+  if (!drop) {
+    GstStructure *s;
+
+    s = gst_structure_new ("application/x-rtp-sync",
+        "base-rtptime", G_TYPE_UINT64, base_rtptime,
+        "base-time", G_TYPE_UINT64, base_time,
+        "clock-rate", G_TYPE_UINT, clock_rate,
+        "clock-base", G_TYPE_UINT64, clock_base,
+        "sr-ext-rtptime", G_TYPE_UINT64, ext_rtptime,
+        "sr-buffer", GST_TYPE_BUFFER, priv->last_sr, NULL);
+
+    GST_DEBUG_OBJECT (jitterbuffer, "signaling sync");
+    JBUF_UNLOCK (priv);
+    g_signal_emit (jitterbuffer,
+        gst_rtp_jitter_buffer_signals[SIGNAL_HANDLE_SYNC], 0, s);
+    JBUF_LOCK (priv);
+    gst_structure_free (s);
+  } else {
+    GST_DEBUG_OBJECT (jitterbuffer, "dropping RTCP packet");
+  }
+}
+
 static GstFlowReturn
 gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -1990,16 +2077,11 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstObject * parent,
   GstRtpJitterBuffer *jitterbuffer;
   GstRtpJitterBufferPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint64 base_rtptime, base_time;
-  guint32 clock_rate;
-  guint64 last_rtptime;
   guint32 ssrc;
   GstRTCPPacket packet;
-  guint64 ext_rtptime, diff;
+  guint64 ext_rtptime;
   guint32 rtptime;
-  gboolean drop = FALSE;
   GstRTCPBuffer rtcp = { NULL, };
-  guint64 clock_base;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
 
@@ -2032,66 +2114,11 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstObject * parent,
   ext_rtptime = priv->jbuf->ext_rtptime;
   ext_rtptime = gst_rtp_buffer_ext_timestamp (&ext_rtptime, rtptime);
 
-  /* get the last values from the jitterbuffer */
-  rtp_jitter_buffer_get_sync (priv->jbuf, &base_rtptime, &base_time,
-      &clock_rate, &last_rtptime);
+  priv->ext_rtptime = ext_rtptime;
+  gst_buffer_replace (&priv->last_sr, buffer);
 
-  clock_base = priv->clock_base;
-
-  GST_DEBUG_OBJECT (jitterbuffer, "ext SR %" G_GUINT64_FORMAT ", base %"
-      G_GUINT64_FORMAT ", clock-rate %" G_GUINT32_FORMAT
-      ", clock-base %" G_GUINT64_FORMAT,
-      ext_rtptime, base_rtptime, clock_rate, clock_base);
-
-  if (base_rtptime == -1 || clock_rate == -1 || base_time == -1) {
-    GST_DEBUG_OBJECT (jitterbuffer, "dropping, no RTP values");
-    drop = TRUE;
-  } else {
-    /* we can't accept anything that happened before we did the last resync */
-    if (base_rtptime > ext_rtptime) {
-      GST_DEBUG_OBJECT (jitterbuffer, "dropping, older than base time");
-      drop = TRUE;
-    } else {
-      /* the SR RTP timestamp must be something close to what we last observed
-       * in the jitterbuffer */
-      if (ext_rtptime > last_rtptime) {
-        /* check how far ahead it is to our RTP timestamps */
-        diff = ext_rtptime - last_rtptime;
-        /* if bigger than 1 second, we drop it */
-        if (diff > clock_rate) {
-          GST_DEBUG_OBJECT (jitterbuffer, "too far ahead");
-          /* should drop this, but some RTSP servers end up with bogus
-           * way too ahead RTCP packet when repeated PAUSE/PLAY,
-           * so still trigger rptbin sync but invalidate RTCP data
-           * (sync might use other methods) */
-          ext_rtptime = -1;
-        }
-        GST_DEBUG_OBJECT (jitterbuffer, "ext last %" G_GUINT64_FORMAT ", diff %"
-            G_GUINT64_FORMAT, last_rtptime, diff);
-      }
-    }
-  }
+  do_handle_sync (jitterbuffer);
   JBUF_UNLOCK (priv);
-
-  if (!drop) {
-    GstStructure *s;
-
-    s = gst_structure_new ("application/x-rtp-sync",
-        "base-rtptime", G_TYPE_UINT64, base_rtptime,
-        "base-time", G_TYPE_UINT64, base_time,
-        "clock-rate", G_TYPE_UINT, clock_rate,
-        "clock-base", G_TYPE_UINT64, clock_base,
-        "sr-ext-rtptime", G_TYPE_UINT64, ext_rtptime,
-        "sr-buffer", GST_TYPE_BUFFER, buffer, NULL);
-
-    GST_DEBUG_OBJECT (jitterbuffer, "signaling sync");
-    g_signal_emit (jitterbuffer,
-        gst_rtp_jitter_buffer_signals[SIGNAL_HANDLE_SYNC], 0, s);
-    gst_structure_free (s);
-  } else {
-    GST_DEBUG_OBJECT (jitterbuffer, "dropping RTCP packet");
-    ret = GST_FLOW_OK;
-  }
 
 done:
   gst_buffer_unref (buffer);
