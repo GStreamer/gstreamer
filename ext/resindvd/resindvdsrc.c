@@ -30,6 +30,7 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/video/video.h>
 #include <gst/video/navigation.h>
+#include <gst/tag/tag.h>
 
 #include "resindvdsrc.h"
 
@@ -351,6 +352,7 @@ rsn_dvdsrc_start (GstBaseSrc * bsrc)
 {
   resinDvdSrc *src = RESINDVDSRC (bsrc);
   const gchar *const *langs, *const *cur;
+  const char *disc_name;
   gchar lang[8];
 
   g_mutex_lock (src->dvd_lock);
@@ -397,7 +399,13 @@ rsn_dvdsrc_start (GstBaseSrc * bsrc)
     }
   }
 
-  dvdnav_get_title_string (src->dvdnav, &src->disc_name);
+  /* Get disc name and convert to UTF-8 */
+  g_free (src->disc_name);
+  dvdnav_get_title_string (src->dvdnav, &disc_name);
+  if (disc_name != NULL && *disc_name != '\0')
+    src->disc_name = gst_tag_freeform_string_to_utf8 (disc_name, -1, NULL);
+  else
+    src->disc_name = NULL;
 
   src->first_seek = TRUE;
   src->running = TRUE;
@@ -576,6 +584,7 @@ rsn_dvdsrc_stop (GstBaseSrc * bsrc)
     src->highlight_event = NULL;
   }
 
+  g_free (src->disc_name);
   src->disc_name = NULL;
 
   if (src->dvdnav) {

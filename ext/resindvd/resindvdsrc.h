@@ -58,7 +58,7 @@ struct _resinDvdSrc
   gchar		*device;
   dvdnav_t	*dvdnav;
 
-  const char    *disc_name;
+  gchar     *disc_name;
 
   /* dvd_reader instance is used to load and cache VTS/VMG ifo info */
   dvd_reader_t  *dvdread;
