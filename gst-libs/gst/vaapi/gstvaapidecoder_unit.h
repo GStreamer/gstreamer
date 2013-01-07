@@ -23,7 +23,6 @@
 #define GST_VAAPI_DECODER_UNIT_H
 
 #include <gst/gstbuffer.h>
-#include <gst/vaapi/gstvaapiminiobject.h>
 
 G_BEGIN_DECLS
 
@@ -54,10 +53,44 @@ typedef enum {
     GST_VAAPI_DECODER_UNIT_FLAG_LAST        = (1 << 5)
 } GstVaapiDecoderUnitFlags;
 
-#define GST_VAAPI_DECODER_UNIT_FLAGS        GST_VAAPI_MINI_OBJECT_FLAGS
-#define GST_VAAPI_DECODER_UNIT_FLAG_IS_SET  GST_VAAPI_MINI_OBJECT_FLAG_IS_SET
-#define GST_VAAPI_DECODER_UNIT_FLAG_SET     GST_VAAPI_MINI_OBJECT_FLAG_SET
-#define GST_VAAPI_DECODER_UNIT_FLAG_UNSET   GST_VAAPI_MINI_OBJECT_FLAG_UNSET
+/**
+ * GST_VAAPI_DECODER_UNIT_FLAGS:
+ * @unit: a #GstVaapiDecoderUnit
+ *
+ * The entire set of flags for the @unit
+ */
+#define GST_VAAPI_DECODER_UNIT_FLAGS(unit) \
+    ((unit)->flags)
+
+/**
+ * GST_VAAPI_DECODER_UNIT_FLAG_IS_SET:
+ * @unit: a #GstVaapiDecoderUnit
+ * @flag: a flag to check for
+ *
+ * Checks whether the given @flag is set
+ */
+#define GST_VAAPI_DECODER_UNIT_FLAG_IS_SET(unit, flag) \
+    ((GST_VAAPI_DECODER_UNIT_FLAGS(unit) & (flag)) != 0)
+
+/**
+ * GST_VAAPI_DECODER_UNIT_FLAG_SET:
+ * @unit: a #GstVaapiDecoderUnit
+ * @flags: flags to set
+ *
+ * This macro sets the given bits
+ */
+#define GST_VAAPI_DECODER_UNIT_FLAG_SET(unit, flags) \
+    (GST_VAAPI_DECODER_UNIT_FLAGS(unit) |= (flags))
+
+/**
+ * GST_VAAPI_DECODER_UNIT_FLAG_UNSET:
+ * @unit: a #GstVaapiDecoderUnit
+ * @flags: flags to unset
+ *
+ * This macro unsets the given bits.
+ */
+#define GST_VAAPI_DECODER_UNIT_FLAG_UNSET(unit, flags) \
+    (GST_VAAPI_DECODER_UNIT_FLAGS(unit) &= ~(flags))
 
 /**
  * GST_VAAPI_DECODER_UNIT_IS_FRAME_START:
@@ -129,9 +162,7 @@ typedef enum {
  * A chunk of bitstream data that was parsed.
  */
 struct _GstVaapiDecoderUnit {
-    /*< private >*/
-    GstVaapiMiniObject  parent_instance;
-
+    guint               flags;
     guint               size;
     guint               offset;
     GstBuffer          *buffer;
@@ -159,16 +190,6 @@ G_GNUC_INTERNAL
 void
 gst_vaapi_decoder_unit_set_parsed_info(GstVaapiDecoderUnit *unit,
     gpointer parsed_info, GDestroyNotify destroy_notify);
-
-#define gst_vaapi_decoder_unit_ref(unit) \
-    gst_vaapi_mini_object_ref(GST_VAAPI_MINI_OBJECT(unit))
-
-#define gst_vaapi_decoder_unit_unref(unit) \
-    gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(unit))
-
-#define gst_vaapi_decoder_unit_replace(old_unit_p, new_unit)            \
-    gst_vaapi_mini_object_replace((GstVaapiMiniObject **)(old_unit_p),  \
-        (GstVaapiMiniObject *)(new_unit))
 
 G_END_DECLS
 
