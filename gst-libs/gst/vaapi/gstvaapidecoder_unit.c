@@ -55,6 +55,8 @@ decoder_unit_init(GstVaapiDecoderUnit *unit)
 
     unit->parsed_info = NULL;
     unit->parsed_info_destroy_notify = NULL;
+
+    GST_VAAPI_DECODER_UNIT_FLAGS(unit) = 0;
 }
 
 void

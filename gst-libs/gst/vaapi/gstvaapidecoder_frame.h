@@ -69,9 +69,9 @@ struct _GstVaapiDecoderFrame {
     GstVaapiMiniObject   parent_instance;
 
     guint                output_offset;
-    GSList              *units;
-    GSList              *pre_units;
-    GSList              *post_units;
+    GArray              *units;
+    GArray              *pre_units;
+    GArray              *post_units;
 };
 
 G_GNUC_INTERNAL
@@ -81,6 +81,11 @@ gst_vaapi_decoder_frame_new(void);
 G_GNUC_INTERNAL
 void
 gst_vaapi_decoder_frame_free(GstVaapiDecoderFrame *frame);
+
+G_GNUC_INTERNAL
+void
+gst_vaapi_decoder_frame_append_unit(GstVaapiDecoderFrame *frame,
+    GstVaapiDecoderUnit *unit);
 
 #define gst_vaapi_decoder_frame_ref(frame) \
     gst_vaapi_mini_object_ref(GST_VAAPI_MINI_OBJECT(frame))

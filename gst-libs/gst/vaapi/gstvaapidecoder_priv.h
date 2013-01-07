@@ -147,12 +147,13 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiParserState GstVaapiParserState;
 struct _GstVaapiParserState {
-    GstVideoCodecFrame  *current_frame;
-    GstAdapter          *current_adapter;
-    GstAdapter          *input_adapter;
-    gint                 input_offset2;
-    GstAdapter          *output_adapter;
-    GstVaapiDecoderUnit *pending_unit;
+    GstVideoCodecFrame *current_frame;
+    GstAdapter         *current_adapter;
+    GstAdapter         *input_adapter;
+    gint                input_offset2;
+    GstAdapter         *output_adapter;
+    GstVaapiDecoderUnit next_unit;
+    gboolean            next_unit_pending;
 };
 
 struct _GstVaapiDecoderPrivate {

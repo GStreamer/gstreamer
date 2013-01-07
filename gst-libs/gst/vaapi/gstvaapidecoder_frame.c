@@ -37,13 +37,29 @@ gst_vaapi_decoder_frame_class(void)
     return &GstVaapiDecoderFrameClass;
 }
 
-static inline void
-free_units(GSList **units_ptr)
+static inline gboolean
+alloc_units(GArray **units_ptr, guint size)
 {
-    GSList * const units = *units_ptr;
+    GArray *units;
+
+    units = g_array_sized_new(FALSE, FALSE, sizeof(GstVaapiDecoderUnit), size);
+    *units_ptr = units;
+    return units != NULL;
+}
+
+static inline void
+free_units(GArray **units_ptr)
+{
+    GArray * const units = *units_ptr;
+    guint i;
 
     if (units) {
-        g_slist_free_full(units, (GDestroyNotify)gst_vaapi_mini_object_unref);
+        for (i = 0; i < units->len; i++) {
+            GstVaapiDecoderUnit * const unit =
+                &g_array_index(units, GstVaapiDecoderUnit, i);
+            gst_vaapi_decoder_unit_clear(unit);
+        }
+        g_array_free(units, TRUE);
         *units_ptr = NULL;
     }
 }
@@ -58,8 +74,25 @@ free_units(GSList **units_ptr)
 GstVaapiDecoderFrame *
 gst_vaapi_decoder_frame_new(void)
 {
-    return (GstVaapiDecoderFrame *)
-        gst_vaapi_mini_object_new0(gst_vaapi_decoder_frame_class());
+    GstVaapiDecoderFrame *frame;
+
+    frame = (GstVaapiDecoderFrame *)
+        gst_vaapi_mini_object_new(gst_vaapi_decoder_frame_class());
+    if (!frame)
+        return NULL;
+
+    if (!alloc_units(&frame->pre_units, 4))
+        goto error;
+    if (!alloc_units(&frame->units, 1))
+        goto error;
+    if (!alloc_units(&frame->post_units, 1))
+        goto error;
+    frame->output_offset = 0;
+    return frame;
+
+error:
+    gst_vaapi_decoder_frame_unref(frame);
+    return NULL;
 }
 
 /**
@@ -78,4 +111,29 @@ gst_vaapi_decoder_frame_free(GstVaapiDecoderFrame *frame)
     free_units(&frame->units);
     free_units(&frame->pre_units);
     free_units(&frame->post_units);
+}
+
+/**
+ * gst_vaapi_decoder_frame_append_unit:
+ * @frame: a #GstVaapiDecoderFrame
+ * @unit: a #GstVaapiDecoderUnit
+ *
+ * Appends unit to the @frame.
+ */
+void
+gst_vaapi_decoder_frame_append_unit(GstVaapiDecoderFrame *frame,
+    GstVaapiDecoderUnit *unit)
+{
+    GArray **unit_array_ptr;
+
+    unit->offset = frame->output_offset;
+    frame->output_offset += unit->size;
+
+    if (GST_VAAPI_DECODER_UNIT_IS_SLICE(unit))
+        unit_array_ptr = &frame->units;
+    else if (GST_VAAPI_DECODER_UNIT_IS_FRAME_END(unit))
+        unit_array_ptr = &frame->post_units;
+    else
+        unit_array_ptr = &frame->pre_units;
+    g_array_append_val(*unit_array_ptr, *unit);
 }
