@@ -132,7 +132,7 @@
   }
 
 #define GST_DVM_STATIC_FIELD(error_statement, type, k, field)           \
-  (*env)->Get##type##Field (env, k.klass, k.field);                     \
+  (*env)->GetStatic##type##Field (env, k.klass, k.field);               \
   if ((*env)->ExceptionCheck (env)) {                                   \
     GST_ERROR ("Failed to get Java static field");                      \
     (*env)->ExceptionDescribe (env);                                    \
