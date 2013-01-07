@@ -42,7 +42,7 @@
 
 typedef struct _GstVaapiFrameStore              GstVaapiFrameStore;
 typedef struct _GstVaapiFrameStoreClass         GstVaapiFrameStoreClass;
-typedef struct _GstVaapiDecoderUnitH264         GstVaapiDecoderUnitH264;
+typedef struct _GstVaapiParserInfoH264          GstVaapiParserInfoH264;
 typedef struct _GstVaapiPictureH264             GstVaapiPictureH264;
 
 // Used for field_poc[]
@@ -50,11 +50,13 @@ typedef struct _GstVaapiPictureH264             GstVaapiPictureH264;
 #define BOTTOM_FIELD    1
 
 /* ------------------------------------------------------------------------- */
-/* --- H.264 Decoder Units                                               --- */
+/* --- H.264 Parser Info                                                 --- */
 /* ------------------------------------------------------------------------- */
 
-struct _GstVaapiDecoderUnitH264 {
-    GstVaapiDecoderUnit base;
+#define GST_VAAPI_PARSER_INFO_H264(obj) \
+    ((GstVaapiParserInfoH264 *)(obj))
+
+struct _GstVaapiParserInfoH264 {
     GstH264NalUnit      nalu;
     union {
         GstH264SPS      sps;
@@ -63,24 +65,32 @@ struct _GstVaapiDecoderUnitH264 {
     }                   data;
 };
 
-static GstVaapiDecoderUnitH264 *
-gst_vaapi_decoder_unit_h264_new(guint size)
+static inline const GstVaapiMiniObjectClass *
+gst_vaapi_parser_info_h264_class(void)
 {
-    GstVaapiDecoderUnitH264 *unit;
-
-    static const GstVaapiMiniObjectClass GstVaapiDecoderUnitH264Class = {
-        sizeof(GstVaapiDecoderUnitH264),
-        (GDestroyNotify)gst_vaapi_decoder_unit_finalize
+    static const GstVaapiMiniObjectClass GstVaapiParserInfoH264Class = {
+        sizeof(GstVaapiParserInfoH264),
+        NULL
     };
-
-    unit = (GstVaapiDecoderUnitH264 *)
-        gst_vaapi_mini_object_new(&GstVaapiDecoderUnitH264Class);
-    if (!unit)
-        return NULL;
-
-    gst_vaapi_decoder_unit_init(&unit->base, size);
-    return unit;
+    return &GstVaapiParserInfoH264Class;
 }
+
+static inline GstVaapiParserInfoH264 *
+gst_vaapi_parser_info_h264_new(void)
+{
+    return (GstVaapiParserInfoH264 *)
+        gst_vaapi_mini_object_new(gst_vaapi_parser_info_h264_class());
+}
+
+#define gst_vaapi_parser_info_h264_ref(pi) \
+    gst_vaapi_mini_object_ref(GST_VAAPI_MINI_OBJECT(pi))
+
+#define gst_vaapi_parser_info_h264_unref(pi) \
+    gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(pi))
+
+#define gst_vaapi_parser_info_h264_replace(old_pi_ptr, new_pi)          \
+    gst_vaapi_mini_object_replace((GstVaapiMiniObject **)(old_pi_ptr),  \
+        (GstVaapiMiniObject *)(new_pi))
 
 /* ------------------------------------------------------------------------- */
 /* --- H.264 Pictures                                                    --- */
@@ -346,7 +356,7 @@ G_DEFINE_TYPE(GstVaapiDecoderH264,
 struct _GstVaapiDecoderH264Private {
     GstH264NalParser           *parser;
     GstVaapiPictureH264        *current_picture;
-    GstVaapiDecoderUnitH264    *prev_slice_unit;
+    GstVaapiParserInfoH264     *prev_slice_pi;
     GstVaapiFrameStore         *prev_frame;
     GstVaapiFrameStore         *dpb[16];
     guint                       dpb_count;
@@ -691,7 +701,7 @@ gst_vaapi_decoder_h264_close(GstVaapiDecoderH264 *decoder)
     GstVaapiDecoderH264Private * const priv = decoder->priv;
 
     gst_vaapi_picture_replace(&priv->current_picture, NULL);
-    gst_vaapi_decoder_unit_replace(&priv->prev_slice_unit, NULL);
+    gst_vaapi_parser_info_h264_replace(&priv->prev_slice_pi, NULL);
 
     dpb_clear(decoder);
 
@@ -975,10 +985,11 @@ error:
 }
 
 static GstVaapiDecoderStatus
-parse_sps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
+parse_sps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    GstH264SPS * const sps = &unit->data.sps;
+    GstVaapiParserInfoH264 * const pi = unit->parsed_info;
+    GstH264SPS * const sps = &pi->data.sps;
     GstH264ParserResult result;
 
     GST_DEBUG("parse SPS");
@@ -987,7 +998,7 @@ parse_sps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
        standard but that should get a default value anyway */
     sps->log2_max_pic_order_cnt_lsb_minus4 = 0;
 
-    result = gst_h264_parser_parse_sps(priv->parser, &unit->nalu, sps, TRUE);
+    result = gst_h264_parser_parse_sps(priv->parser, &pi->nalu, sps, TRUE);
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
 
@@ -996,10 +1007,11 @@ parse_sps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
 }
 
 static GstVaapiDecoderStatus
-parse_pps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
+parse_pps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    GstH264PPS * const pps = &unit->data.pps;
+    GstVaapiParserInfoH264 * const pi = unit->parsed_info;
+    GstH264PPS * const pps = &pi->data.pps;
     GstH264ParserResult result;
 
     GST_DEBUG("parse PPS");
@@ -1009,7 +1021,7 @@ parse_pps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
     pps->slice_group_map_type = 0;
     pps->slice_group_change_rate_minus1 = 0;
 
-    result = gst_h264_parser_parse_pps(priv->parser, &unit->nalu, pps);
+    result = gst_h264_parser_parse_pps(priv->parser, &pi->nalu, pps);
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
 
@@ -1018,16 +1030,17 @@ parse_pps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
 }
 
 static GstVaapiDecoderStatus
-parse_sei(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
+parse_sei(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
+    GstVaapiParserInfoH264 * const pi = unit->parsed_info;
     GstH264SEIMessage sei;
     GstH264ParserResult result;
 
     GST_DEBUG("parse SEI");
 
     memset(&sei, 0, sizeof(sei));
-    result = gst_h264_parser_parse_sei(priv->parser, &unit->nalu, &sei);
+    result = gst_h264_parser_parse_sei(priv->parser, &pi->nalu, &sei);
     if (result != GST_H264_PARSER_OK) {
         GST_WARNING("failed to parse SEI, payload type:%d", sei.payloadType);
         return get_status(result);
@@ -1037,10 +1050,11 @@ parse_sei(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
 }
 
 static GstVaapiDecoderStatus
-parse_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
+parse_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    GstH264SliceHdr * const slice_hdr = &unit->data.slice_hdr;
+    GstVaapiParserInfoH264 * const pi = unit->parsed_info;
+    GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
     GstH264ParserResult result;
 
     GST_DEBUG("parse slice");
@@ -1050,7 +1064,7 @@ parse_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
     slice_hdr->cabac_init_idc = 0;
     slice_hdr->direct_spatial_mv_pred_flag = 0;
 
-    result = gst_h264_parser_parse_slice_hdr(priv->parser, &unit->nalu,
+    result = gst_h264_parser_parse_slice_hdr(priv->parser, &pi->nalu,
         slice_hdr, TRUE, TRUE);
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
@@ -1952,11 +1966,11 @@ init_picture_refs(
 static gboolean
 init_picture(
     GstVaapiDecoderH264 *decoder,
-    GstVaapiPictureH264 *picture, GstVaapiDecoderUnitH264 *unit)
+    GstVaapiPictureH264 *picture, GstVaapiParserInfoH264 *pi)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstVaapiPicture * const base_picture = &picture->base;
-    GstH264SliceHdr * const slice_hdr = &unit->data.slice_hdr;
+    GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
 
     priv->prev_frame_num        = priv->frame_num;
     priv->frame_num             = slice_hdr->frame_num;
@@ -1966,7 +1980,7 @@ init_picture(
     base_picture->pts           = GST_VAAPI_DECODER_CODEC_FRAME(decoder)->pts;
 
     /* Reset decoder state for IDR pictures */
-    if (unit->nalu.type == GST_H264_NAL_SLICE_IDR) {
+    if (pi->nalu.type == GST_H264_NAL_SLICE_IDR) {
         GST_DEBUG("<IDR>");
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_IDR);
         dpb_flush(decoder);
@@ -2004,7 +2018,7 @@ init_picture(
     picture->structure = base_picture->structure;
 
     /* Initialize reference flags */
-    if (unit->nalu.ref_idc) {
+    if (pi->nalu.ref_idc) {
         GstH264DecRefPicMarking * const dec_ref_pic_marking =
             &slice_hdr->dec_ref_pic_marking;
 
@@ -2344,11 +2358,11 @@ vaapi_fill_picture(VAPictureH264 *pic, GstVaapiPictureH264 *picture,
 
 static gboolean
 fill_picture(GstVaapiDecoderH264 *decoder,
-    GstVaapiPictureH264 *picture, GstVaapiDecoderUnitH264 *unit)
+    GstVaapiPictureH264 *picture, GstVaapiParserInfoH264 *pi)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstVaapiPicture * const base_picture = &picture->base;
-    GstH264SliceHdr * const slice_hdr = &unit->data.slice_hdr;
+    GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
     GstH264PPS * const pps = picture->pps;
     GstH264SPS * const sps = pps->sequence;
     VAPictureParameterBufferH264 * const pic_param = base_picture->param;
@@ -2418,17 +2432,16 @@ fill_picture(GstVaapiDecoderH264 *decoder,
 
 /* Detection of the first VCL NAL unit of a primary coded picture (7.4.1.2.4) */
 static gboolean
-is_new_picture(GstVaapiDecoderUnitH264 *unit,
-    GstVaapiDecoderUnitH264 *prev_unit)
+is_new_picture(GstVaapiParserInfoH264 *pi, GstVaapiParserInfoH264 *prev_pi)
 {
-    GstH264SliceHdr * const slice_hdr = &unit->data.slice_hdr;
+    GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
     GstH264PPS * const pps = slice_hdr->pps;
     GstH264SPS * const sps = pps->sequence;
     GstH264SliceHdr *prev_slice_hdr;
 
-    if (!prev_unit)
+    if (!prev_pi)
         return TRUE;
-    prev_slice_hdr = &prev_unit->data.slice_hdr;
+    prev_slice_hdr = &prev_pi->data.slice_hdr;
 
 #define CHECK_EXPR(expr, field_name) do {              \
         if (!(expr)) {                                 \
@@ -2454,8 +2467,8 @@ is_new_picture(GstVaapiDecoderUnitH264 *unit,
         CHECK_VALUE(slice_hdr, prev_slice_hdr, bottom_field_flag);
 
     /* nal_ref_idc differs in value with one of the nal_ref_idc values is 0 */
-    CHECK_EXPR((unit->nalu.ref_idc != 0) ==
-               (prev_unit->nalu.ref_idc != 0), "nal_ref_idc");
+    CHECK_EXPR((pi->nalu.ref_idc != 0) ==
+               (prev_pi->nalu.ref_idc != 0), "nal_ref_idc");
 
     /* POC type is 0 for both and either pic_order_cnt_lsb differs in
        value or delta_pic_order_cnt_bottom differs in value */
@@ -2473,10 +2486,10 @@ is_new_picture(GstVaapiDecoderUnitH264 *unit,
     }
 
     /* IdrPicFlag differs in value */
-    CHECK_VALUE(&unit->nalu, &prev_unit->nalu, idr_pic_flag);
+    CHECK_VALUE(&pi->nalu, &prev_pi->nalu, idr_pic_flag);
 
     /* IdrPicFlag is equal to 1 for both and idr_pic_id differs in value */
-    if (unit->nalu.idr_pic_flag)
+    if (pi->nalu.idr_pic_flag)
         CHECK_VALUE(slice_hdr, prev_slice_hdr, idr_pic_id);
 
 #undef CHECK_EXPR
@@ -2485,10 +2498,11 @@ is_new_picture(GstVaapiDecoderUnitH264 *unit,
 }
 
 static GstVaapiDecoderStatus
-decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
+decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    GstH264SliceHdr * const slice_hdr = &unit->data.slice_hdr;
+    GstVaapiParserInfoH264 * const pi = unit->parsed_info;
+    GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
     GstH264PPS * const pps = slice_hdr->pps;
     GstH264SPS * const sps = pps->sequence;
     GstVaapiPictureH264 *picture;
@@ -2525,9 +2539,9 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
         return status;
     }
 
-    if (!init_picture(decoder, picture, unit))
+    if (!init_picture(decoder, picture, pi))
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-    if (!fill_picture(decoder, picture, unit))
+    if (!fill_picture(decoder, picture, pi))
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -2674,15 +2688,15 @@ fill_slice(GstVaapiDecoderH264 *decoder,
 }
 
 static GstVaapiDecoderStatus
-decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
+decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
+    GstVaapiParserInfoH264 * const pi = unit->parsed_info;
     GstVaapiPictureH264 * const picture = priv->current_picture;
-    GstH264SliceHdr * const slice_hdr = &unit->data.slice_hdr;
-    GstH264NalUnit * const nalu = &unit->nalu;
+    GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
     GstVaapiSlice *slice;
 
-    GST_DEBUG("slice (%u bytes)", nalu->size);
+    GST_DEBUG("slice (%u bytes)", pi->nalu.size);
 
     if (!priv->got_sps || !priv->got_pps) {
         GST_ERROR("not initialized yet");
@@ -2691,7 +2705,7 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
 
     slice = GST_VAAPI_SLICE_NEW(H264, decoder,
         (GST_BUFFER_DATA(GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer) +
-         unit->base.offset + nalu->offset), nalu->size);
+         unit->offset + pi->nalu.offset), pi->nalu.size);
     if (!slice) {
         GST_ERROR("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -2717,11 +2731,12 @@ scan_for_start_code(GstAdapter *adapter, guint ofs, guint size, guint32 *scp)
 }
 
 static GstVaapiDecoderStatus
-decode_unit(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
+decode_unit(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 {
+    GstVaapiParserInfoH264 * const pi = unit->parsed_info;
     GstVaapiDecoderStatus status;
 
-    switch (unit->nalu.type) {
+    switch (pi->nalu.type) {
     case GST_H264_NAL_SLICE_IDR:
         /* fall-through. IDR specifics are handled in init_picture() */
     case GST_H264_NAL_SLICE:
@@ -2734,7 +2749,7 @@ decode_unit(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
         status = GST_VAAPI_DECODER_STATUS_SUCCESS;
         break;
     default:
-        GST_WARNING("unsupported NAL unit type %d", unit->nalu.type);
+        GST_WARNING("unsupported NAL unit type %d", pi->nalu.type);
         status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
         break;
     }
@@ -2746,11 +2761,14 @@ decode_codec_data(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstVaapiDecoderStatus status;
-    GstVaapiDecoderUnitH264 unit;
+    GstVaapiDecoderUnit unit;
+    GstVaapiParserInfoH264 pi;
     GstH264ParserResult result;
     guchar *buf;
     guint buf_size;
     guint i, ofs, num_sps, num_pps;
+
+    unit.parsed_info = &pi;
 
     buf      = GST_BUFFER_DATA(buffer);
     buf_size = GST_BUFFER_SIZE(buffer);
@@ -2774,7 +2792,7 @@ decode_codec_data(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
         result = gst_h264_parser_identify_nalu_avc(
             priv->parser,
             buf, ofs, buf_size, 2,
-            &unit.nalu
+            &pi.nalu
         );
         if (result != GST_H264_PARSER_OK)
             return get_status(result);
@@ -2782,7 +2800,7 @@ decode_codec_data(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
         status = parse_sps(decoder, &unit);
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             return status;
-        ofs = unit.nalu.offset + unit.nalu.size;
+        ofs = pi.nalu.offset + pi.nalu.size;
     }
 
     num_pps = buf[ofs];
@@ -2792,7 +2810,7 @@ decode_codec_data(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
         result = gst_h264_parser_identify_nalu_avc(
             priv->parser,
             buf, ofs, buf_size, 2,
-            &unit.nalu
+            &pi.nalu
         );
         if (result != GST_H264_PARSER_OK)
             return get_status(result);
@@ -2800,7 +2818,7 @@ decode_codec_data(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
         status = parse_pps(decoder, &unit);
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             return status;
-        ofs = unit.nalu.offset + unit.nalu.size;
+        ofs = pi.nalu.offset + pi.nalu.size;
     }
 
     priv->is_avcC = TRUE;
@@ -2840,7 +2858,8 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
         GST_VAAPI_DECODER_H264_CAST(base_decoder);
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstVaapiParserState * const ps = GST_VAAPI_PARSER_STATE(base_decoder);
-    GstVaapiDecoderUnitH264 *unit;
+    GstVaapiParserInfoH264 *pi;
+    GstVaapiDecoderUnit *unit;
     GstVaapiDecoderStatus status;
     GstH264ParserResult result;
     guchar *buf;
@@ -2905,23 +2924,29 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     if (!buf)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
-    unit = gst_vaapi_decoder_unit_h264_new(buf_size);
+    unit = gst_vaapi_decoder_unit_new(buf_size);
     if (!unit)
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    *unit_ptr = unit;
+
+    pi = gst_vaapi_parser_info_h264_new();
+    if (!pi)
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+
+    gst_vaapi_decoder_unit_set_parsed_info(unit,
+        pi, (GDestroyNotify)gst_vaapi_mini_object_unref);
 
     if (priv->is_avcC)
         result = gst_h264_parser_identify_nalu_avc(priv->parser,
-            buf, 0, buf_size, priv->nal_length_size, &unit->nalu);
+            buf, 0, buf_size, priv->nal_length_size, &pi->nalu);
     else
         result = gst_h264_parser_identify_nalu_unchecked(priv->parser,
-            buf, 0, buf_size, &unit->nalu);
+            buf, 0, buf_size, &pi->nalu);
     status = get_status(result);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
-        gst_vaapi_decoder_unit_unref(unit);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
-    }
 
-    switch (unit->nalu.type) {
+    switch (pi->nalu.type) {
     case GST_H264_NAL_SPS:
         status = parse_sps(decoder, unit);
         break;
@@ -2943,7 +2968,7 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
         return status;
 
     flags = 0;
-    switch (unit->nalu.type) {
+    switch (pi->nalu.type) {
     case GST_H264_NAL_AU_DELIMITER:
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
         /* fall-through */
@@ -2966,19 +2991,18 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     case GST_H264_NAL_SLICE_IDR:
     case GST_H264_NAL_SLICE:
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
-        if (is_new_picture(unit, priv->prev_slice_unit))
+        if (is_new_picture(pi, priv->prev_slice_pi))
             flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
-        gst_vaapi_decoder_unit_replace(&priv->prev_slice_unit, unit);
+        gst_vaapi_parser_info_h264_replace(&priv->prev_slice_pi, pi);
         break;
     default:
-        if (unit->nalu.type >= 14 && unit->nalu.type <= 18)
+        if (pi->nalu.type >= 14 && pi->nalu.type <= 18)
             flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
         break;
     }
     GST_VAAPI_DECODER_UNIT_FLAG_SET(unit, flags);
 
-    unit->nalu.data = NULL;
-    *unit_ptr = &unit->base;
+    pi->nalu.data = NULL;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -2993,16 +3017,15 @@ gst_vaapi_decoder_h264_decode(GstVaapiDecoder *base_decoder,
     status = ensure_decoder(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
-    return decode_unit(decoder, (GstVaapiDecoderUnitH264 *)unit);
+    return decode_unit(decoder, unit);
 }
 
 static GstVaapiDecoderStatus
 gst_vaapi_decoder_h264_start_frame(GstVaapiDecoder *base_decoder,
-    GstVaapiDecoderUnit *base_unit)
+    GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderH264 * const decoder =
         GST_VAAPI_DECODER_H264_CAST(base_decoder);
-    GstVaapiDecoderUnitH264 * const unit = (GstVaapiDecoderUnitH264 *)base_unit;
 
     return decode_picture(decoder, unit);
 }
