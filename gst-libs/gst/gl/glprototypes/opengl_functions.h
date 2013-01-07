@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "gl-prototypes/cogl-opengl.h"
-#include "gl-prototypes/cogl-gles1-opengl.h"
-#include "gl-prototypes/cogl-gles1-gles2-opengl.h"
-#include "gl-prototypes/cogl-gles2-opengl.h"
+#include "glprototypes/opengl.h"
+#include "glprototypes/gles1opengl.h"
+#include "glprototypes/gles1gles2opengl.h"
+#include "glprototypes/gles2opengl.h"
