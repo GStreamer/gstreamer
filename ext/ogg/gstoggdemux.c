@@ -878,7 +878,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
   granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
       packet->granulepos);
-  if (granule != -1) {
+  if (granule >= 0) {
     GST_DEBUG_OBJECT (ogg, "%p has granulepos %" G_GINT64_FORMAT, pad, granule);
     pad->current_granule = granule;
   } else if (granule != -1) {
