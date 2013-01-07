@@ -2852,14 +2852,13 @@ ensure_decoder(GstVaapiDecoderH264 *decoder)
 
 static GstVaapiDecoderStatus
 gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
-    GstAdapter *adapter, gboolean at_eos, GstVaapiDecoderUnit **unit_ptr)
+    GstAdapter *adapter, gboolean at_eos, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderH264 * const decoder =
         GST_VAAPI_DECODER_H264_CAST(base_decoder);
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstVaapiParserState * const ps = GST_VAAPI_PARSER_STATE(base_decoder);
     GstVaapiParserInfoH264 *pi;
-    GstVaapiDecoderUnit *unit;
     GstVaapiDecoderStatus status;
     GstH264ParserResult result;
     guchar *buf;
@@ -2924,10 +2923,7 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     if (!buf)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
-    unit = gst_vaapi_decoder_unit_new(buf_size);
-    if (!unit)
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-    *unit_ptr = unit;
+    unit->size = buf_size;
 
     pi = gst_vaapi_parser_info_h264_new();
     if (!pi)

@@ -1173,13 +1173,12 @@ ensure_decoder(GstVaapiDecoderMpeg2 *decoder)
 
 static GstVaapiDecoderStatus
 gst_vaapi_decoder_mpeg2_parse(GstVaapiDecoder *base_decoder,
-    GstAdapter *adapter, gboolean at_eos, GstVaapiDecoderUnit **unit_ptr)
+    GstAdapter *adapter, gboolean at_eos, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderMpeg2 * const decoder =
         GST_VAAPI_DECODER_MPEG2_CAST(base_decoder);
     GstVaapiParserState * const ps = GST_VAAPI_PARSER_STATE(base_decoder);
     GstVaapiParserInfoMpeg2 *pi;
-    GstVaapiDecoderUnit *unit;
     GstVaapiDecoderStatus status;
     GstMpegVideoPacket *packet;
     const guchar *buf;
@@ -1225,10 +1224,7 @@ gst_vaapi_decoder_mpeg2_parse(GstVaapiDecoder *base_decoder,
     if (!buf)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
-    unit = gst_vaapi_decoder_unit_new(buf_size);
-    if (!unit)
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-    *unit_ptr = unit;
+    unit->size = buf_size;
 
     pi = gst_vaapi_parser_info_mpeg2_new();
     if (!pi)

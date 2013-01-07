@@ -991,12 +991,11 @@ ensure_decoder(GstVaapiDecoderMpeg4 *decoder)
 
 static GstVaapiDecoderStatus
 gst_vaapi_decoder_mpeg4_parse(GstVaapiDecoder *base_decoder,
-    GstAdapter *adapter, gboolean at_eos, GstVaapiDecoderUnit **unit_ptr)
+    GstAdapter *adapter, gboolean at_eos, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderMpeg4 * const decoder =
         GST_VAAPI_DECODER_MPEG4(base_decoder);
     GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
-    GstVaapiDecoderUnit *unit = NULL;
     GstVaapiDecoderStatus status;
     GstMpeg4Packet packet;
     GstMpeg4ParseResult result;
@@ -1025,6 +1024,7 @@ gst_vaapi_decoder_mpeg4_parse(GstVaapiDecoder *base_decoder,
 
     buf_size = packet.size;
     gst_adapter_flush(adapter, packet.offset);
+    unit->size = buf_size;
 
     /* Check for start of new picture */
     switch (packet.type) {
@@ -1075,14 +1075,7 @@ gst_vaapi_decoder_mpeg4_parse(GstVaapiDecoder *base_decoder,
         GST_WARNING("unsupported start code (0x%02x)", packet.type);
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
-
-    unit = gst_vaapi_decoder_unit_new(buf_size);
-    if (!unit)
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-
     GST_VAAPI_DECODER_UNIT_FLAG_SET(unit, flags);
-
-    *unit_ptr = unit;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 

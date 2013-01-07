@@ -32,7 +32,7 @@ gst_vaapi_decoder_unit_class(void)
 {
     static const GstVaapiMiniObjectClass GstVaapiDecoderUnitClass = {
         sizeof(GstVaapiDecoderUnit),
-        (GDestroyNotify)gst_vaapi_decoder_unit_finalize
+        (GDestroyNotify)gst_vaapi_decoder_unit_clear
     };
     return &GstVaapiDecoderUnitClass;
 }
@@ -47,9 +47,9 @@ gst_vaapi_decoder_unit_class(void)
  * sub-classes.
  */
 static inline void
-decoder_unit_init(GstVaapiDecoderUnit *unit, guint size)
+decoder_unit_init(GstVaapiDecoderUnit *unit)
 {
-    unit->size = size;
+    unit->size = 0;
     unit->offset = 0;
     unit->buffer = NULL;
 
@@ -58,13 +58,13 @@ decoder_unit_init(GstVaapiDecoderUnit *unit, guint size)
 }
 
 void
-gst_vaapi_decoder_unit_init(GstVaapiDecoderUnit *unit, guint size)
+gst_vaapi_decoder_unit_init(GstVaapiDecoderUnit *unit)
 {
-    decoder_unit_init(unit, size);
+    decoder_unit_init(unit);
 }
 
 /**
- * gst_vaapi_decoder_unit_finalize:
+ * gst_vaapi_decoder_unit_clear:
  * @unit: a #GstVaapiDecoderUnit
  *
  * Deallocates any internal resources bound to the supplied decoder
@@ -74,16 +74,16 @@ gst_vaapi_decoder_unit_init(GstVaapiDecoderUnit *unit, guint size)
  * sub-classes.
  */
 static inline void
-decoder_unit_finalize(GstVaapiDecoderUnit *unit)
+decoder_unit_clear(GstVaapiDecoderUnit *unit)
 {
     gst_buffer_replace(&unit->buffer, NULL);
     gst_vaapi_decoder_unit_set_parsed_info(unit, NULL, NULL);
 }
 
 void
-gst_vaapi_decoder_unit_finalize(GstVaapiDecoderUnit *unit)
+gst_vaapi_decoder_unit_clear(GstVaapiDecoderUnit *unit)
 {
-    decoder_unit_finalize(unit);
+    decoder_unit_clear(unit);
 }
 
 /**
@@ -95,7 +95,7 @@ gst_vaapi_decoder_unit_finalize(GstVaapiDecoderUnit *unit)
  * Returns: The newly allocated #GstVaapiDecoderUnit
  */
 GstVaapiDecoderUnit *
-gst_vaapi_decoder_unit_new(guint size)
+gst_vaapi_decoder_unit_new(void)
 {
     GstVaapiDecoderUnit *unit;
 
@@ -104,7 +104,7 @@ gst_vaapi_decoder_unit_new(guint size)
     if (!unit)
         return NULL;
 
-    decoder_unit_init(unit, size);
+    decoder_unit_init(unit);
     return unit;
 }
 

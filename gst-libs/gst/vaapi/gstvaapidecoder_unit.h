@@ -141,15 +141,15 @@ struct _GstVaapiDecoderUnit {
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_decoder_unit_init(GstVaapiDecoderUnit *unit, guint size);
+gst_vaapi_decoder_unit_init(GstVaapiDecoderUnit *unit);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_decoder_unit_finalize(GstVaapiDecoderUnit *unit);
+gst_vaapi_decoder_unit_clear(GstVaapiDecoderUnit *unit);
 
 G_GNUC_INTERNAL
 GstVaapiDecoderUnit *
-gst_vaapi_decoder_unit_new(guint size);
+gst_vaapi_decoder_unit_new(void);
 
 G_GNUC_INTERNAL
 void

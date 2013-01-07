@@ -117,7 +117,7 @@ struct _GstVaapiDecoderClass {
 
     GstVaapiDecoderStatus (*parse)(GstVaapiDecoder *decoder,
         GstAdapter *adapter, gboolean at_eos,
-        struct _GstVaapiDecoderUnit **unit_ptr);
+        struct _GstVaapiDecoderUnit *unit);
     GstVaapiDecoderStatus (*decode)(GstVaapiDecoder *decoder,
         struct _GstVaapiDecoderUnit *unit);
     GstVaapiDecoderStatus (*start_frame)(GstVaapiDecoder *decoder,

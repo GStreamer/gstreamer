@@ -170,9 +170,13 @@ do_parse(GstVaapiDecoder *decoder,
     if (unit)
         goto got_unit;
 
+    unit = gst_vaapi_decoder_unit_new();
+    if (!unit)
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+
     ps->current_frame = base_frame;
     status = GST_VAAPI_DECODER_GET_CLASS(decoder)->parse(decoder,
-        adapter, at_eos, &unit);
+        adapter, at_eos, unit);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
         if (unit)
             gst_vaapi_decoder_unit_unref(unit);

@@ -634,11 +634,10 @@ scan_for_start_code(GstAdapter *adapter, guint ofs, guint size, guint32 *scp)
 
 static GstVaapiDecoderStatus
 gst_vaapi_decoder_jpeg_parse(GstVaapiDecoder *base_decoder,
-    GstAdapter *adapter, gboolean at_eos, GstVaapiDecoderUnit **unit_ptr)
+    GstAdapter *adapter, gboolean at_eos, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderJpeg * const decoder = GST_VAAPI_DECODER_JPEG(base_decoder);
     GstVaapiDecoderStatus status;
-    GstVaapiDecoderUnit *unit;
     guint size, buf_size, flags = 0;
     gint ofs;
 
@@ -667,16 +666,12 @@ gst_vaapi_decoder_jpeg_parse(GstVaapiDecoder *base_decoder,
     }
     buf_size = ofs;
 
-    unit = gst_vaapi_decoder_unit_new(buf_size);
-    if (!unit)
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    unit->size = buf_size;
 
     flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
     flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_END;
     flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
     GST_VAAPI_DECODER_UNIT_FLAG_SET(unit, flags);
-
-    *unit_ptr = unit;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
