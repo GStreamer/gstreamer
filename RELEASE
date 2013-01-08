@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Bad Plugins 1.0.4
+Release notes for GStreamer Bad Plugins 1.0.5
 
 
-The GStreamer team is proud to announce a new bug-fix release
+The GStreamer team is pleased to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -62,19 +62,14 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * mpeg4videoparse: also parse divx 4/5
-      * mpeg4videoparse: export number of sprite warping points in caps (decoders might have no or only limited GMC support)
-      * mpegtsmux: propagate flow returns upstream; don't crash when reused
-      * rtmpsrc: disable seeking if the configured url specifies live=true
-      * build fixes for OS/X (shm) and Windows (d3dvideosink)
+      * psdemux: tentative port to 1.0; take into account both DTS and PTS
+      * shm: Actually get the permissions on get_property
+      * waylandsink: do not default to fullscreen mode
 
 Bugs fixed in this release
      
-      * 688870 : mpegtsmux: does not propagate flow status
-      * 689107 : mpegtsmux: crashes when re-used
-      * 689183 : [shm] Modifications to get shm to compile on OSX
-      * 690031 : d3dvideosink makefile missing GST_PLUGINS_BASE_CFLAGS and GMODULE_NO_EXPORT_LIBS
-      * 690149 : [mpeg4videoparse] support divx and add GMC info in caps
+      * 690097 : resindvd: Handle non-utf8 dvd title string correctly
+      * 690442 : [waylandsink] Should not default to a fullscreen surface
 
 ==== Download ====
 
@@ -111,12 +106,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alessandro Decina
-      * Arnaud Vrac
-      * Emmanuel Durand
-      * Krzysztof Konopko
-      * Michael Esemplare
+      * Joe Konno
+      * Olivier Crête
       * Sebastian Dröge
-      * Thijs Vermeir
       * Tim-Philipp Müller
+      * Youness Alaoui
  

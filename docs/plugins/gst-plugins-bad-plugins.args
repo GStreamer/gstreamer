@@ -26900,7 +26900,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>1.37974e-309</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26980,7 +26980,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>1.53447e-316</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26990,7 +26990,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>1.69363e-316</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27030,7 +27030,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>1.02167e-37</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27050,7 +27050,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color-R</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>8.00461e-38</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27380,7 +27380,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>7.06238e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27570,7 +27570,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>8.22356e-121</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27580,7 +27580,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>1.37975e-309</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59431,5 +59431,15 @@
 <NICK>Offset for the starttime</NICK>
 <BLURB>Offset for the starttime for the subtitles.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>MpegPsMux::aggregate-gops</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aggregate GOPs</NICK>
+<BLURB>Whether to aggregate GOPs and push them out as buffer lists.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 

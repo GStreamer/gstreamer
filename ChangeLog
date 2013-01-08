@@ -1,9 +1,196 @@
-=== release 1.0.4 ===
+=== release 1.0.5 ===
 
-2012-12-18  Tim-Philipp Müller <tim@centricular.net>
+2013-01-08  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.4
+	  releasing 1.0.5
+
+2013-01-07 10:37:53 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/resindvd/Makefile.am:
+	* ext/resindvd/resindvdsrc.c:
+	* ext/resindvd/resindvdsrc.h:
+	  resindvd: handle non-utf8 dvd disc titles better
+	  Maybe something based on the code in bug #688367
+	  and the language encodings would work even better
+	  though (now it will try things based on the locale).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690097
+	  Conflicts:
+	  ext/resindvd/Makefile.am
+
+2013-01-04 15:38:58 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* sys/shm/gstshmsink.c:
+	  shm: Actually get the permissions on get_property
+
+2012-12-21 07:35:13 -0500  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* sys/decklink/gstdecklinksink.cpp:
+	* sys/decklink/gstdecklinksrc.cpp:
+	  decklink: remove useless and uninitialized list causing a crash in the device probe
+
+2013-01-01 11:56:16 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/mpegpsmux/mpegpsmux.c:
+	* gst/mpegpsmux/mpegpsmux.h:
+	  mpegpsmux: use DTS in addition to PTS
+	  And refactor choose_best_stream() a little.
+	  videotestsrc pattern=ball ! x264enc ! mpegpsmux ! ...
+	  plays much nicer now.
+
+2012-12-31 19:45:54 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/mpegpsmux/psmux.c:
+	* gst/mpegpsmux/psmuxcommon.h:
+	* gst/mpegpsmux/psmuxstream.c:
+	  mpegpsmux: use gstreamer debug logging system everywhere
+
+2012-12-31 19:42:03 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* gst/mpegpsmux/mpegpsmux.c:
+	* gst/mpegpsmux/mpegpsmux_aac.c:
+	* gst/mpegpsmux/mpegpsmux_h264.c:
+	* gst/mpegpsmux/psmux.c:
+	* gst/mpegpsmux/psmuxstream.c:
+	* gst/mpegpsmux/psmuxstream.h:
+	  mpegpsmux: port to 0.11
+	  Naive port. Barely tested.
+	  Conflicts:
+	  configure.ac
+
+2012-12-31 00:16:42 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  configure: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+	  AM_CONFIG_HEADER has been removed in the just-released automake 1.13:
+	  https://lists.gnu.org/archive/html/automake/2012-12/msg00038.html
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690881
+
+2012-12-18 09:53:16 -0800  Joe Konno <joe.konno@intel.com>
+
+	* ext/wayland/gstwaylandsink.c:
+	  waylandsink: do not default to a fullscreen canvas
+	  Defer certain canvas particulars to the player (or the Wayland
+	  compositor). Before this change, a fullscreen canvas was always
+	  requested. This may not be desirable in all cases.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690442
+
+2012-12-17 15:16:48 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoparsers/gstdiracparse.c:
+	* gst/videoparsers/gsth263parse.c:
+	* gst/videoparsers/gsth264parse.c:
+	* gst/videoparsers/gstmpeg4videoparse.c:
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  videoparsers: Make sure the caps are actually writable before changing them
+
+2012-12-17 15:04:44 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoparsers/gstdiracparse.c:
+	* gst/videoparsers/gsth263parse.c:
+	* gst/videoparsers/gsth264parse.c:
+	* gst/videoparsers/gstmpeg4videoparse.c:
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  videoparsers: Use the peer caps for restrictions instead of the srcpad allowed caps
+	  Otherwise we will intersect with the srcpad template caps and add all the caps fields
+	  that the parser will ever set, no matter if downstream restricts this field or not.
+	  This requires upstream to set this field on the caps to successfully negotiate.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690184
+
+=== release 1.0.4 ===
+
+2012-12-18 20:17:57 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-rtpmux.xml:
+	* docs/plugins/inspect/plugin-rtpvp8.xml:
+	* docs/plugins/inspect/plugin-scaletempo.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* gst-plugins-bad.doap:
+	* po/el.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/ky.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/sv.po:
+	* po/vi.po:
+	* win32/common/config.h:
+	  Release 1.0.4
 
 2012-12-18 19:00:19 +0000  Tim-Philipp Müller <tim@centricular.net>
 

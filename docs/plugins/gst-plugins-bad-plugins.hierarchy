@@ -244,6 +244,7 @@ GObject
           GstSchroEnc
         GstWebvttEnc
         GstY4mDec
+        MpegPsMux
         MpegTSBase
           GstTSDemux
           MpegTSParse2

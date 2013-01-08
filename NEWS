@@ -1,4 +1,15 @@
-This is GStreamer Bad Plugins 1.0.4
+This is GStreamer Bad Plugins 1.0.5
+
+Changes since 1.0.4:
+
+      * psdemux: tentative port to 1.0; take into account both DTS and PTS
+      * shm: Actually get the permissions on get_property
+      * waylandsink: do not default to fullscreen mode
+
+Bugs fixed since 1.0.4:
+
+      * 690097 : resindvd: Handle non-utf8 dvd title string correctly
+      * 690442 : waylandsink: Should not default to a fullscreen surface
 
 Changes since 1.0.3:
 
