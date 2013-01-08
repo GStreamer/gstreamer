@@ -44,6 +44,9 @@ struct _GstGLWindowX11EGL {
   EGLContext egl_context;
   EGLDisplay egl_display;
   EGLSurface egl_surface;
+  EGLConfig  egl_config;
+
+  GstGLAPI gl_api;
   
   gpointer _reserved[GST_PADDING];
 };
