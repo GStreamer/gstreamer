@@ -1,9 +1,178 @@
-=== release 1.0.4 ===
+=== release 1.0.5 ===
 
-2012-12-18  Tim-Philipp Müller <tim@centricular.net>
+2013-01-08  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.4
+	  releasing 1.0.5
+
+2013-01-04 13:53:45 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	  docs: add gdkpixbufoverlay element to docs
+
+2013-01-01 12:19:23 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	  docs: fix docs build and update after removal of old cairo elements
+
+2013-01-01 11:52:09 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* ext/cairo/.gitignore:
+	* ext/cairo/Makefile.am:
+	* ext/cairo/gstcairo-marshal.list:
+	* ext/cairo/gstcairo.c:
+	* ext/cairo/gstcairooverlay.c:
+	* ext/cairo/gstcairooverlay.h:
+	* tests/examples/Makefile.am:
+	* tests/examples/cairo/Makefile.am:
+	* tests/examples/cairo/cairo_overlay.c:
+	  cairo: port cairooverlay to 0.11
+	  The other elements are not that interesting now that we're
+	  using pangocairo in the pango plugin, and should probably
+	  just be removed.
+
+2012-12-31 18:59:18 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/examples/rtp/server-decodebin-H263p-AMR.sh:
+	  examples: check for uri argument in decodebin-h264p-amr server example
+	  Otherwise people get a rather confusing error message.
+
+2013-01-04 10:03:32 +0100  Robert Krakora <rob.krakora@messagenetsystems.com>
+
+	* sys/v4l2/v4l2_calls.c:
+	  v4l2: Also handle the new ENOENT return value of VIDIOC_QUERYCTRL
+	  https://bugzilla.gnome.org/show_bug.cgi?id=691098
+
+2012-10-25 12:18:03 -0700  Michael Smith <msmith@rdio.com>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux_fourcc.h:
+	  qtdemux: read video format header fully (so we can find 'pasp' atoms) for more fourccs. Fixes aspect ratio of prores files.
+
+2012-12-17 15:17:12 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/audioparsers/gstaacparse.c:
+	* gst/audioparsers/gstac3parse.c:
+	* gst/audioparsers/gstamrparse.c:
+	* gst/audioparsers/gstdcaparse.c:
+	* gst/audioparsers/gstflacparse.c:
+	* gst/audioparsers/gstmpegaudioparse.c:
+	* gst/audioparsers/gstwavpackparse.c:
+	  audioparsers: Make sure the caps are actually writable before changing them
+
+2012-12-17 15:01:02 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/audioparsers/gstaacparse.c:
+	* gst/audioparsers/gstac3parse.c:
+	* gst/audioparsers/gstamrparse.c:
+	* gst/audioparsers/gstdcaparse.c:
+	* gst/audioparsers/gstflacparse.c:
+	* gst/audioparsers/gstmpegaudioparse.c:
+	* gst/audioparsers/gstwavpackparse.c:
+	  audioparsers: Use the peer caps for restrictions instead of the srcpad allowed caps
+	  Otherwise we will intersect with the srcpad template caps and add all the caps fields
+	  that the parser will ever set, no matter if downstream restricts this field or not.
+	  This requires upstream to set this field on the caps to successfully negotiate.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690184
+
+2012-12-20 17:12:30 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: fix cmd comparison
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=690476
+
+2012-12-20 17:12:20 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: add some more debug
+
+2012-12-20 15:55:02 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/jpeg/gstjpegenc.c:
+	* ext/jpeg/gstjpegenc.h:
+	  jpegenc: pass flowreturn upstream
+
+=== release 1.0.4 ===
+
+2012-12-18 19:11:37 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 1.0.4
 
 2012-12-18 18:53:14 +0000  Tim-Philipp Müller <tim@centricular.net>
 

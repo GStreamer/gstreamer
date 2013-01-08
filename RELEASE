@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Good Plugins 1.0.4
+Release notes for GStreamer Good Plugins 1.0.5
 
 
-The GStreamer team is proud to announce a new bug-fix release
+The GStreamer team is pleased to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -57,21 +57,18 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * deinterleave: properly set srcpad channel position
-      * osxvideosink: Fix resizing the Cocoa window on receiving new caps
-      * rtspsrc fixes
-      * shout2send: also accept audio/webm in addition to video/webm
-      * videobox: fix border filling for planar YUV formats
-      * webmmux: fix linking to shout2send
-      * v4l2: fix build on FreeBSD
+      * rtspsrc: fix regression that make rtspsrc hang when stopping
+      * audio/video parsers: fix negotiation with encoders in some transcoding cases
+      * cairo: port cairooverlay to 1.0
+      * jpegenc: pass flow returns upstream
+      * qtdemux: fix pixel-aspect-ratio of some files with ProRes video
+      * cairo: port cairooverlay to 1.0
 
 Bugs fixed in this release
      
-      * 684312 : rtspsrc: mutex blocks going to NULL state
-      * 684991 : videobox: sometimes incorrectly crops producing visual artifacts, and green instead of black border
-      * 687469 : mulawdec: integer overrun with large chunks of data
-      * 689732 : osxvideosink can't resize Cocoa window on receiving caps
-      * 689336 : webmmux: can't link webmux to shout2send
+      * 690184 : [parsers] Return too strict caps on the sinkpads
+      * 690476 : regression: unable to stop rtsp stream
+      * 691098 : v4l2src: breaks because of changed ioctl error return code from driver on failed control query in 3.8-rc1
 
 ==== Download ====
 
@@ -108,12 +105,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaque
-      * Alexey Chernov
-      * Koop Mast
-      * Philippe Normand
-      * Roland Krikava
-      * Thijs Vermeir
+      * Michael Smith
+      * Robert Krakora
+      * Sebastian Dröge
       * Tim-Philipp Müller
       * Wim Taymans
  
