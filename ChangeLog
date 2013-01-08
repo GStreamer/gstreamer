@@ -1,9 +1,126 @@
-=== release 1.0.4 ===
+=== release 1.0.5 ===
 
-2012-12-18  Tim-Philipp Müller <tim@centricular.net>
+2013-01-08  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.4
+	  releasing 1.0.5
+
+2012-05-02 13:50:45 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  videoencoder: Documentation fix
+	  https://bugzilla.gnome.org/show_bug.cgi?id=675761
+
+2012-12-21 16:38:36 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin2: use NO_RESYNC flag
+	  to avoid the state change function from messing with the state of the elements
+	  that we add.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=690420
+
+2012-12-20 16:42:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudioclock.c:
+	  audioclock: mark as using some other clock
+	  We need to mark our clock as using some other clock source. Alsa source uses the
+	  clock type to decide if it can use alsa driver timestamps or not.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=690465
+
+2012-12-20 16:41:48 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiobasesrc.c:
+	  audiobasesrc: init variable
+	  We need to initialize this variable because we can't be sure that the subclass
+	  will set it.
+
+2012-12-22 21:04:11 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/gst/video/video-info.c:
+	  video: fix A420 size calculation
+
+=== release 1.0.4 ===
+
+2012-12-18 18:13:59 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.0.4
+
+2012-12-18 18:13:36 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* po/LINGUAS:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: update translations
 
 2012-12-18 15:34:42 +0100  Thijs Vermeir <thijsvermeir@gmail.com>
 

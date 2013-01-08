@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Base Plugins 1.0.4
+Release notes for GStreamer Base Plugins 1.0.5
 
 
-The GStreamer team is proud to announce a new bug-fix release
+The GStreamer team is pleased to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -60,17 +60,14 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * playbin: fix occasional not-negotiated errors when switching visualisations
-      * ssaparse: ignore invalid UTF-8 in SSA/ASS subtitles init sections in matroska files
-      * streamsynchronizer: better timestamp and gap handling at EOS, fixing potential OOM in baseaudiosink
-      * bindings: fix annotation for gst_app_src_push_buffer(), fixing crash
-      * bindings: add several missing annotations for GstRtspMessage API
+      * alsasrc: don't output buffers without timestamps or with bogus timestamps
+      * discoverer, decodebin: fix state change re-sync race that might lead to deadlocks
+      * video: fix crashes with and frame sizes of A420 video format
 
 Bugs fixed in this release
-     
-      * 679976 : playbin: switching visualisations results in not-negotiated flow erros
-      * 689814 : Memory allocated by GstVideoDecoder base class is not freed
-      * 689873 : gstrtspmessage: Several functions are missing introspection annotations...
+
+      * 691244 : unable to play flv file with VP6 alpha video
+
 
 ==== Download ====
 
@@ -107,9 +104,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Sebastian Dröge
-      * Sebastian Rasmussen
-      * Thijs Vermeir
+      * Nicolas Dufresne
       * Tim-Philipp Müller
       * Wim Taymans
  

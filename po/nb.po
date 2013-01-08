@@ -6,19 +6,18 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
+"Project-Id-Version: gst-plugins-base 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-12-18 00:25+0000\n"
-"PO-Revision-Date: 2012-07-29 01:38+0100\n"
+"POT-Creation-Date: 2013-01-04 13:11+0000\n"
+"PO-Revision-Date: 2012-12-21 21:43+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
-"Language: \n"
+"Language: nb_NO\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Poedit-Language: Norwegian Bokmal\n"
-"X-Poedit-Country: NORWAY\n"
+"X-Generator: Poedit 1.5.4\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunne ikke åpne enheten for avspilling i mono-modus."
@@ -325,10 +324,10 @@ msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Media (bilde/video) beregnet vertikal piksel tetthet i ppi"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "ID3v2-ramme"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "Utolket id3v2 merkeramme"
 
 msgid "ID3 tag"
 msgstr "ID3-merke"
@@ -364,19 +363,16 @@ msgid "Run-length encoding"
 msgstr "Kjørelengde-koding"
 
 msgid "Subtitle"
-msgstr ""
+msgstr "Undertekst"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "TMPlayer undertekstformat"
+msgstr "MPL2 undertekstformat"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Samisk undertekstformat"
+msgstr "DKS undertekstformat"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Kate undertekstformat"
+msgstr "QTtext undertekstformat"
 
 msgid "Sami subtitle format"
 msgstr "Samisk undertekstformat"
@@ -387,33 +383,30 @@ msgstr "TMPlayer undertekstformat"
 msgid "Kate subtitle format"
 msgstr "Kate undertekstformat"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "Ukomprimert YUV"
+msgstr "Ukomprimert video"
 
-#, fuzzy
 msgid "Uncompressed gray"
-msgstr "Ukomprimert grått bilde"
+msgstr "Ukomprimert grå"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s YUV %s"
-msgstr "Ukomprimert YUV"
+msgstr "Ukomprimert %s YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s%d-bit %s"
-msgstr "Ukomprimert palettisert %d-bit %s"
+msgstr "Ukomprimert %s%d-bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4-versjon %d"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "Ukomprimert YUV"
+msgstr "Ukomprimert lyd"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Rå %d-bit PCM-lyd"
+msgstr "Rå %d-bit %s-lyd"
 
 msgid "Audio CD source"
 msgstr "Lyd-CD-kilde"

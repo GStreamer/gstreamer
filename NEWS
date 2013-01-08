@@ -1,4 +1,14 @@
-This is GStreamer Base Plugins 1.0.4
+This is GStreamer Base Plugins 1.0.5
+
+Changes since 1.0.4:
+
+      * alsasrc: don't output buffers without timestamps or with bogus timestamps
+      * discoverer, decodebin: fix state change re-sync race that might lead to deadlocks
+      * video: fix crashes with and frame sizes of A420 video format
+
+Bugs fixed since 1.0.4:
+
+      * 691244 : unable to play flv file with VP6 alpha video
 
 Changes since 1.0.3:
 
