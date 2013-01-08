@@ -158,6 +158,7 @@ struct _GstSingleQueue
   GstDataQueueSize max_size, extra_size;
   GstClockTime cur_time;
   gboolean is_eos;
+  gboolean is_sparse;
   gboolean flushing;
 
   /* Protected by global lock */
@@ -898,7 +899,7 @@ get_percentage (GstSingleQueue * sq)
       size.bytes, sq->max_size.bytes, sq->cur_time, sq->max_size.time);
 
   /* get bytes and time percentages and take the max */
-  if (sq->is_eos || sq->srcresult == GST_FLOW_NOT_LINKED) {
+  if (sq->is_eos || sq->srcresult == GST_FLOW_NOT_LINKED || sq->is_sparse) {
     percent = 100;
   } else {
     percent = 0;
@@ -1792,8 +1793,20 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (type) {
     case GST_EVENT_STREAM_START:
+    {
+      if (mq->sync_by_running_time) {
+        GstStreamFlags stream_flags;
+        gst_event_parse_stream_flags (event, &stream_flags);
+        if ((stream_flags & GST_STREAM_FLAG_SPARSE)) {
+          GST_INFO_OBJECT (mq, "SingleQueue %d is a sparse stream", sq->id);
+          sq->is_sparse = TRUE;
+        }
+        sq->thread = g_thread_self ();
+      }
+
       /* Remove EOS flag */
       sq->is_eos = FALSE;
+    }
       break;
     case GST_EVENT_FLUSH_START:
       GST_DEBUG_OBJECT (mq, "SingleQueue %d : received flush start event",
@@ -2213,7 +2226,7 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
 
   /* check if we reached the hard time/bytes limits */
-  if (sq->is_eos || IS_FILLED (sq, bytes, size.bytes) ||
+  if (sq->is_eos || sq->is_sparse || IS_FILLED (sq, bytes, size.bytes) ||
       IS_FILLED (sq, time, sq->cur_time)) {
     goto done;
   }
@@ -2231,7 +2244,7 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
     }
 
     GST_LOG_OBJECT (mq, "Checking Queue %d", oq->id);
-    if (gst_data_queue_is_empty (oq->queue)) {
+    if (gst_data_queue_is_empty (oq->queue) && !oq->is_sparse) {
       GST_LOG_OBJECT (mq, "Queue %d is empty", oq->id);
       empty_found = TRUE;
       break;
@@ -2291,7 +2304,7 @@ single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
         gst_data_queue_limits_changed (oq->queue);
       }
     }
-    if (!gst_data_queue_is_empty (oq->queue))
+    if (!gst_data_queue_is_empty (oq->queue) || oq->is_sparse)
       empty = FALSE;
   }
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
@@ -2323,7 +2336,11 @@ single_queue_check_full (GstDataQueue * dataq, guint visible, guint bytes,
     return TRUE;
 
   /* check time or bytes */
-  res = IS_FILLED (sq, time, sq->cur_time) || IS_FILLED (sq, bytes, bytes);
+  res = IS_FILLED (sq, bytes, bytes);
+  /* We only care about limits in time if we're not a sparse stream or
+   * we're not syncing by running time */
+  if (!sq->is_sparse || !mq->sync_by_running_time)
+    res |= IS_FILLED (sq, time, sq->cur_time);
 
   return res;
 }
@@ -2436,6 +2453,7 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
       (GstDataQueueFullCallback) single_queue_overrun_cb,
       (GstDataQueueEmptyCallback) single_queue_underrun_cb, sq);
   sq->is_eos = FALSE;
+  sq->is_sparse = FALSE;
   sq->flushing = FALSE;
   gst_segment_init (&sq->sink_segment, GST_FORMAT_TIME);
   gst_segment_init (&sq->src_segment, GST_FORMAT_TIME);
