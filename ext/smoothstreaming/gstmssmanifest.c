@@ -64,6 +64,7 @@ struct _GstMssStream
 {
   xmlNodePtr xmlnode;
 
+  gboolean active;              /* if the stream is currently being used */
   gint selectedQualityIndex;
 
   GList *fragments;
@@ -504,6 +505,12 @@ end:
   return caps;
 }
 
+void
+gst_mss_stream_set_active (GstMssStream * stream, gboolean active)
+{
+  stream->active = active;
+}
+
 guint64
 gst_mss_stream_get_timescale (GstMssStream * stream)
 {
@@ -606,6 +613,8 @@ gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url)
   GstMssStreamFragment *fragment;
   GstMssStreamQuality *quality = stream->current_quality->data;
 
+  g_return_val_if_fail (stream->active, GST_FLOW_ERROR);
+
   if (stream->current_fragment == NULL) /* stream is over */
     return GST_FLOW_UNEXPECTED;
 
@@ -630,6 +639,8 @@ gst_mss_stream_get_fragment_gst_timestamp (GstMssStream * stream)
   guint64 timescale;
   GstMssStreamFragment *fragment;
 
+  g_return_val_if_fail (stream->active, GST_FLOW_ERROR);
+
   if (!stream->current_fragment)
     return GST_CLOCK_TIME_NONE;
 
@@ -648,6 +659,8 @@ gst_mss_stream_get_fragment_gst_duration (GstMssStream * stream)
   guint64 timescale;
   GstMssStreamFragment *fragment;
 
+  g_return_val_if_fail (stream->active, GST_FLOW_ERROR);
+
   if (!stream->current_fragment)
     return GST_CLOCK_TIME_NONE;
 
@@ -662,6 +675,8 @@ gst_mss_stream_get_fragment_gst_duration (GstMssStream * stream)
 GstFlowReturn
 gst_mss_stream_advance_fragment (GstMssStream * stream)
 {
+  g_return_val_if_fail (stream->active, GST_FLOW_ERROR);
+
   if (stream->current_fragment == NULL)
     return GST_FLOW_UNEXPECTED;
 

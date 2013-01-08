@@ -48,6 +48,7 @@ gboolean gst_mss_manifest_seek (GstMssManifest * manifest, guint64 time);
 
 GstMssStreamType gst_mss_stream_get_type (GstMssStream *stream);
 GstCaps * gst_mss_stream_get_caps (GstMssStream * stream);
+void gst_mss_stream_set_active (GstMssStream * stream, gboolean active);
 guint64 gst_mss_stream_get_timescale (GstMssStream * stream);
 GstFlowReturn gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url);
 GstClockTime gst_mss_stream_get_fragment_gst_timestamp (GstMssStream * stream);

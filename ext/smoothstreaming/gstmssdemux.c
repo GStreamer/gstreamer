@@ -529,6 +529,7 @@ gst_mss_demux_create_streams (GstMssDemux * mssdemux)
     _set_src_pad_functions (srcpad);
 
     stream = gst_mss_demux_stream_new (mssdemux, manifeststream, srcpad);
+    gst_mss_stream_set_active (manifeststream, TRUE);
     mssdemux->streams = g_slist_append (mssdemux->streams, stream);
   }
 }
