@@ -220,8 +220,7 @@ gst_gl_window_x11_new (GstGLAPI gl_api, guintptr external_gl_context,
 #ifdef HAVE_GLX
 #ifdef HAVE_EGL
   /* try GLX first for Desktop OpenGL */
-  if (gl_api == GST_GL_API_OPENGL
-      || gl_api == GST_GL_API_OPENGL3 || gl_api == GST_GL_API_ANY) {
+  if (gl_api & GST_GL_API_OPENGL || gl_api & GST_GL_API_OPENGL3) {
     if (!window && (!user_choice
             || g_strstr_len (user_choice, 3, "glx") != NULL))
       window =
@@ -361,20 +360,13 @@ gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
   if (window_x11->visual_info->visual != window_x11->visual)
     GST_LOG ("selected visual is different from the default");
 
-  if (window_x11->visual_info->class == TrueColor)
-    GST_LOG ("visual is using TrueColor");
-
-  GST_LOG ("visual ID: %d",
-      (gint) XVisualIDFromVisual (window_x11->visual_info->visual));
-  GST_LOG ("visual info screen: %d", window_x11->visual_info->screen);
-  GST_LOG ("visual info visualid: %d",
-      (gint) window_x11->visual_info->visualid);
-  GST_LOG ("visual info depth: %d", window_x11->visual_info->depth);
-  GST_LOG ("visual info class: %d", window_x11->visual_info->class);
-  GST_LOG ("visual info red_mask: %ld", window_x11->visual_info->red_mask);
-  GST_LOG ("visual info green_mask: %ld", window_x11->visual_info->green_mask);
-  GST_LOG ("visual info blue_mask: %ld", window_x11->visual_info->blue_mask);
-  GST_LOG ("visual info bits_per_rgb: %d",
+  GST_LOG ("visual XID:%d, screen:%d, visualid:%d, depth:%d, class:%d, "
+      "red_mask:%ld, green_mask:%ld, blue_mask:%ld bpp:%d",
+      (gint) XVisualIDFromVisual (window_x11->visual_info->visual),
+      window_x11->visual_info->screen, (gint) window_x11->visual_info->visualid,
+      window_x11->visual_info->depth, window_x11->visual_info->class,
+      window_x11->visual_info->red_mask, window_x11->visual_info->green_mask,
+      window_x11->visual_info->blue_mask,
       window_x11->visual_info->bits_per_rgb);
 
   win_attr.event_mask =
@@ -405,7 +397,6 @@ gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
       None);
 
   GST_LOG ("gl window id: %lud", (gulong) window_x11->internal_win_id);
-
   GST_LOG ("gl window props: x:%d y:%d", x, y);
 
   wm_atoms[0] = XInternAtom (window_x11->device, "WM_DELETE_WINDOW", True);
@@ -644,13 +635,13 @@ gst_gl_window_x11_run (GstGLWindow * window)
           if (window_x11->running) {
 #if SIZEOF_VOID_P == 8
             GstGLWindowCB custom_cb =
-                (GstGLWindowCB) (((event.xclient.data.
-                        l[0] & 0xffffffff) << 32) | (event.xclient.data.
-                    l[1] & 0xffffffff));
+                (GstGLWindowCB) (((event.xclient.
+                        data.l[0] & 0xffffffff) << 32) | (event.xclient.
+                    data.l[1] & 0xffffffff));
             gpointer custom_data =
-                (gpointer) (((event.xclient.data.
-                        l[2] & 0xffffffff) << 32) | (event.xclient.data.
-                    l[3] & 0xffffffff));
+                (gpointer) (((event.xclient.
+                        data.l[2] & 0xffffffff) << 32) | (event.xclient.
+                    data.l[3] & 0xffffffff));
 #else
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];
@@ -679,13 +670,13 @@ gst_gl_window_x11_run (GstGLWindow * window)
             && event.xclient.message_type == wm_quit_loop) {
 #if SIZEOF_VOID_P == 8
           GstGLWindowCB destroy_cb =
-              (GstGLWindowCB) (((event.xclient.data.
-                      l[0] & 0xffffffff) << 32) | (event.xclient.data.
-                  l[1] & 0xffffffff));
+              (GstGLWindowCB) (((event.xclient.
+                      data.l[0] & 0xffffffff) << 32) | (event.xclient.
+                  data.l[1] & 0xffffffff));
           gpointer destroy_data =
-              (gpointer) (((event.xclient.data.
-                      l[2] & 0xffffffff) << 32) | (event.xclient.data.
-                  l[3] & 0xffffffff));
+              (gpointer) (((event.xclient.
+                      data.l[2] & 0xffffffff) << 32) | (event.xclient.
+                  data.l[3] & 0xffffffff));
 #else
           GstGLWindowCB destroy_cb = (GstGLWindowCB) event.xclient.data.l[0];
           gpointer destroy_data = (gpointer) event.xclient.data.l[1];
@@ -703,13 +694,13 @@ gst_gl_window_x11_run (GstGLWindow * window)
                   &pending_event)) {
 #if SIZEOF_VOID_P == 8
             GstGLWindowCB custom_cb =
-                (GstGLWindowCB) (((event.xclient.data.
-                        l[0] & 0xffffffff) << 32) | (event.xclient.data.
-                    l[1] & 0xffffffff));
+                (GstGLWindowCB) (((event.xclient.
+                        data.l[0] & 0xffffffff) << 32) | (event.xclient.
+                    data.l[1] & 0xffffffff));
             gpointer custom_data =
-                (gpointer) (((event.xclient.data.
-                        l[2] & 0xffffffff) << 32) | (event.xclient.data.
-                    l[3] & 0xffffffff));
+                (gpointer) (((event.xclient.
+                        data.l[2] & 0xffffffff) << 32) | (event.xclient.
+                    data.l[3] & 0xffffffff));
 #else
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];
