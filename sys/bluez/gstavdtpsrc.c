@@ -111,7 +111,7 @@ gst_avdtp_src_init (GstAvdtpSrc * avdtpsrc, GstAvdtpSrcClass * klass)
 {
   avdtpsrc->poll = gst_poll_new (TRUE);
 
-  gst_base_src_set_format (GST_BASE_SRC (avdtpsrc), GST_FORMAT_DEFAULT);
+  gst_base_src_set_format (GST_BASE_SRC (avdtpsrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (avdtpsrc), TRUE);
   gst_base_src_set_do_timestamp (GST_BASE_SRC (avdtpsrc), TRUE);
 
