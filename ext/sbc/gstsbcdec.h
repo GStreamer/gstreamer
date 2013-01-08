@@ -22,6 +22,7 @@
  */
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 #include "sbc.h"
 
@@ -47,13 +48,14 @@ struct _GstSbcDec {
 	GstPad *sinkpad;
 	GstPad *srcpad;
 
-	GstBuffer *buffer;
+	GstAdapter *adapter;
 
 	/* caps for outgoing buffers */
 	GstCaps *outcaps;
 
 	sbc_t sbc;
         guint64 next_sample;
+        guint64 next_timestamp;
 };
 
 struct _GstSbcDecClass {
