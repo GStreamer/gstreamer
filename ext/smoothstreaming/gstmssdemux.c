@@ -622,6 +622,8 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
         ("No known stream formats found at the Manifest"));
     return;
   }
+
+  gst_element_no_more_pads (GST_ELEMENT_CAST (mssdemux));
 }
 
 static void
