@@ -1308,7 +1308,6 @@ gst_vaapi_decoder_mpeg2_parse(GstVaapiDecoder *base_decoder,
     GstVaapiParserState * const ps = GST_VAAPI_PARSER_STATE(base_decoder);
     GstVaapiDecoderStatus status;
     GstMpegVideoPacketTypeCode type;
-    const guchar *buf;
     guint32 start_code;
     guint size, buf_size, flags;
     gint ofs, ofs2;
@@ -1346,10 +1345,6 @@ gst_vaapi_decoder_mpeg2_parse(GstVaapiDecoder *base_decoder,
     }
     buf_size = ofs;
     ps->input_offset2 = 0;
-
-    buf = gst_adapter_peek(adapter, buf_size);
-    if (!buf)
-        return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
     unit->size = buf_size;
 
