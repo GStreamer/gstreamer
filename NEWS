@@ -1,4 +1,9 @@
-This is GStreamer Ugly Plugins 1.0.4
+This is GStreamer Ugly Plugins 1.0.5
+
+Changes since 1.0.4:
+
+      * fix build with automake 1.13
+      * mpeg2dec: debug logging printf format fixes
 
 Changes since 1.0.3:
 
