@@ -163,9 +163,7 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
    * GstV4l2Src::prepare-format:
    * @v4l2src: the v4l2src instance
    * @fd: the file descriptor of the current device
-   * @fourcc: the fourcc of the format being set
-   * @width: The width of the video
-   * @height: The height of the video
+   * @caps: the caps of the format being set
    *
    * This signal gets emitted before calling the v4l2 VIDIOC_S_FMT ioctl
    * (set format). This allows for any custom configuration of the device to
@@ -178,9 +176,7 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   gst_v4l2_signals[SIGNAL_PRE_SET_FORMAT] = g_signal_new ("prepare-format",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
-      0,
-      NULL, NULL,
-      NULL, G_TYPE_NONE, 4, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT);
+      0, NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_INT, GST_TYPE_CAPS);
 
   gst_element_class_set_static_metadata (element_class,
       "Video (video4linux2) Source", "Source/Video",
@@ -510,6 +506,9 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
   /* make sure we stop capturing and dealloc buffers */
   if (!gst_v4l2_object_stop (obj))
     return FALSE;
+
+  g_signal_emit (v4l2src, gst_v4l2_signals[SIGNAL_PRE_SET_FORMAT], 0,
+      v4l2src->v4l2object->video_fd, caps);
 
   if (!gst_v4l2_object_set_format (obj, caps))
     /* error already posted */
