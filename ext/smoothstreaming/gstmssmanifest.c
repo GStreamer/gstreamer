@@ -52,6 +52,14 @@ typedef struct _GstMssStreamFragment
   guint64 duration;
 } GstMssStreamFragment;
 
+typedef struct _GstMssStreamQuality
+{
+  xmlNodePtr xmlnode;
+
+  gchar *bitrate_str;
+  guint64 bitrate;
+} GstMssStreamQuality;
+
 struct _GstMssStream
 {
   xmlNodePtr xmlnode;
@@ -83,6 +91,38 @@ static gboolean
 node_has_type (xmlNodePtr node, const gchar * name)
 {
   return strcmp ((gchar *) node->name, name) == 0;
+}
+
+static GstMssStreamQuality *
+gst_mss_stream_quality_new (xmlNodePtr node)
+{
+  GstMssStreamQuality *q = g_slice_new (GstMssStreamQuality);
+
+  q->xmlnode = node;
+  q->bitrate_str = (gchar *) xmlGetProp (node, (xmlChar *) MSS_PROP_BITRATE);
+  q->bitrate = strtoull (q->bitrate_str, NULL, 10);
+
+  return q;
+}
+
+static void
+gst_mss_stream_quality_free (GstMssStreamQuality * quality)
+{
+  g_return_if_fail (quality != NULL);
+
+  g_free (quality->bitrate_str);
+  g_slice_free (GstMssStreamQuality, quality);
+}
+
+static gint
+compare_bitrate (GstMssStreamQuality * a, GstMssStreamQuality * b)
+{
+  if (a->bitrate > b->bitrate)
+    return 1;
+  if (a->bitrate < b->bitrate)
+    return -1;
+  return 0;
+
 }
 
 static void
@@ -145,14 +185,18 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
       stream->fragments = g_list_prepend (stream->fragments, fragment);
 
     } else if (node_has_type (iter, MSS_NODE_STREAM_QUALITY)) {
-      stream->qualities = g_list_prepend (stream->qualities, iter);
+      GstMssStreamQuality *quality = gst_mss_stream_quality_new (iter);
+      stream->qualities = g_list_prepend (stream->qualities, quality);
     } else {
       /* TODO gst log this */
     }
   }
 
   stream->fragments = g_list_reverse (stream->fragments);
-  stream->qualities = g_list_reverse (stream->qualities);
+
+  /* order them from smaller to bigger based on bitrates */
+  stream->qualities =
+      g_list_sort (stream->qualities, (GCompareFunc) compare_bitrate);
 
   stream->current_fragment = stream->fragments;
   stream->current_quality = stream->qualities;
@@ -191,7 +235,8 @@ static void
 gst_mss_stream_free (GstMssStream * stream)
 {
   g_list_free_full (stream->fragments, g_free);
-  g_list_free (stream->qualities);
+  g_list_free_full (stream->qualities,
+      (GDestroyNotify) gst_mss_stream_quality_free);
   g_free (stream->url);
   g_regex_unref (stream->regex_position);
   g_regex_unref (stream->regex_bitrate);
@@ -538,13 +583,17 @@ GstCaps *
 gst_mss_stream_get_caps (GstMssStream * stream)
 {
   GstMssStreamType streamtype = gst_mss_stream_get_type (stream);
-  xmlNodePtr qualitylevel = stream->current_quality->data;
+  GstMssStreamQuality *qualitylevel = stream->current_quality->data;
   GstCaps *caps = NULL;
 
   if (streamtype == MSS_STREAM_TYPE_VIDEO)
-    caps = _gst_mss_stream_video_caps_from_qualitylevel_xml (qualitylevel);
+    caps =
+        _gst_mss_stream_video_caps_from_qualitylevel_xml
+        (qualitylevel->xmlnode);
   else if (streamtype == MSS_STREAM_TYPE_AUDIO)
-    caps = _gst_mss_stream_audio_caps_from_qualitylevel_xml (qualitylevel);
+    caps =
+        _gst_mss_stream_audio_caps_from_qualitylevel_xml
+        (qualitylevel->xmlnode);
 
   return caps;
 }
@@ -553,28 +602,24 @@ GstFlowReturn
 gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url)
 {
   gchar *tmp;
-  gchar *bitrate_str;
   gchar *start_time_str;
   GstMssStreamFragment *fragment;
+  GstMssStreamQuality *quality = stream->current_quality->data;
 
   if (stream->current_fragment == NULL) /* stream is over */
     return GST_FLOW_UNEXPECTED;
 
   fragment = stream->current_fragment->data;
 
-  bitrate_str =
-      (gchar *) xmlGetProp (stream->current_quality->data,
-      (xmlChar *) MSS_PROP_BITRATE);
   start_time_str = g_strdup_printf ("%" G_GUINT64_FORMAT, fragment->time);
 
   tmp = g_regex_replace_literal (stream->regex_bitrate, stream->url,
-      strlen (stream->url), 0, bitrate_str, 0, NULL);
+      strlen (stream->url), 0, quality->bitrate_str, 0, NULL);
   *url = g_regex_replace_literal (stream->regex_position, tmp,
       strlen (tmp), 0, start_time_str, 0, NULL);
 
   g_free (tmp);
   g_free (start_time_str);
-  g_free (bitrate_str);
   return GST_FLOW_OK;
 }
 
