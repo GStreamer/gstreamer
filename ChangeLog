@@ -1,9 +1,94 @@
-=== release 1.0.4 ===
+=== release 1.0.5 ===
 
-2012-12-18  Tim-Philipp Müller <tim@centricular.net>
+2013-01-08  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.4
+	  releasing 1.0.5
+
+2013-01-05 16:30:04 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/gst/gstghostpad.c:
+	  tests: fix leak in ghostpad unit test
+	  The created pad is never used and overwritten with
+	  another newly-created pad a few lines below.
+
+2013-01-04 12:50:47 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstbin.h:
+	  docs: update since markers for new NO_RESYNC flag
+
+2013-01-04 12:27:38 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstsystemclock.h:
+	  docs: minor systemsclock doc fix
+
+2012-12-30 23:48:47 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  configure: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+	  AM_CONFIG_HEADER has been removed in the just-released automake 1.13:
+	  https://lists.gnu.org/archive/html/automake/2012-12/msg00038.html
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690881
+
+2012-12-22 16:53:47 +0100  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* scripts/create-uninstalled-setup.sh:
+	  scripts: fix location of repository with ssh
+
+2012-12-21 16:36:37 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbin.c:
+	* gst/gstbin.h:
+	  bin: add flag to disable resync state change
+	  Add a GST_BIN_FLAG_NO_RESYNC that disables a resync when an element is added,
+	  removed or linked in the bin. This is interesting for complex bins that
+	  dynamically add elements to themselves and want to manage the state of those
+	  elements without interference from resyncs.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=690420
+
+2012-12-21 10:09:30 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-synchronisation.txt:
+	  docs: update synchronization document a little
+
+2012-12-20 16:40:04 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstsystemclock.h:
+	  systemclock: add OTHER clock type
+	  Add an OTHER clock type so that subclasses are able to mark themselves as
+	  using some other clock source than the realtime or monotonic clock.
+
+=== release 1.0.4 ===
+
+2012-12-18 17:25:34 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstversion.h:
+	  Release 1.0.4
+
+2012-12-18 17:09:18 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* po/LINGUAS:
+	* po/de.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/ru.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: update translations
 
 2012-12-14 11:09:30 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 

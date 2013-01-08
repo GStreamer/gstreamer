@@ -62,7 +62,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2012-12-18"
+#define GST_PACKAGE_RELEASE_DATETIME "2013-01-05"
 
 /* location of the installed gst-plugin-scanner */
 #define GST_PLUGIN_SCANNER_INSTALLED LIBDIR "\\gst-plugin-scanner"
@@ -340,7 +340,7 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 1.0.4"
+#define PACKAGE_STRING "GStreamer 1.0.5"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
@@ -349,7 +349,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.0.4"
+#define PACKAGE_VERSION "1.0.5"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -387,7 +387,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "1.0.4"
+#define VERSION "1.0.5"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

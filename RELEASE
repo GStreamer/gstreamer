@@ -1,8 +1,8 @@
 
-Release notes for GStreamer 1.0.4
+Release notes for GStreamer 1.0.5
 
 
-The GStreamer team is proud to announce a new bug-fix release
+The GStreamer team is pleased to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -38,20 +38,28 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 
 
-  
+
 
 Features of this release
-    
-      * basesrc: fix potential leaks when re-activating in a different mode
-      * bindings: make all pad probe types work with bindings
-      * bindings: fix gst_event_parse_stream_start() annotation, fixing crash
-      * documentation improvements
+
+      * add GST_BIN_FLAG_NO_RESYNC flag that disables a resync when
+        an element is added, removed or linked in the bin; this is
+        interesting for complex bins that dynamically add elements
+        to themselves and want to manage the state of those elements
+        without interference from state resync threads (which may
+        cause deadlocks)
+      * add OTHER clock type
 
 Bugs fixed in this release
-     
-      * 687845 : filesrc: leaks file descriptor if activation in pull mode fails
-      * 688804 : Getting error trying to add a pad_probe
-      * 688934 : Gst.Event.parse_stream_start seems to not function correctly
+
+      * 690915 : Replace AM_CONFIG_HEADER with AC_CONFIG_HEADERS in configure.ac
+
+API changes in this release
+
+ - API additions:
+
+      * GST_BIN_FLAG_NO_RESYNC
+      * GST_CLOCK_TYPE_OTHER
 
 ==== Download ====
 
@@ -88,9 +96,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alessandro Decina
-      * Luis de Bethencourt
-      * Olivier Crête
+      * Thijs Vermeir
       * Tim-Philipp Müller
       * Wim Taymans
  

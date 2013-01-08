@@ -51,6 +51,7 @@ gst_bin_flags_get_type (void)
 {
   static gsize id = 0;
   static const GFlagsValue values[] = {
+    {C_FLAGS (GST_BIN_FLAG_NO_RESYNC), "GST_BIN_FLAG_NO_RESYNC", "no-resync"},
     {C_FLAGS (GST_BIN_FLAG_LAST), "GST_BIN_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
@@ -1569,6 +1570,7 @@ gst_clock_type_get_type (void)
     {C_ENUM (GST_CLOCK_TYPE_REALTIME), "GST_CLOCK_TYPE_REALTIME", "realtime"},
     {C_ENUM (GST_CLOCK_TYPE_MONOTONIC), "GST_CLOCK_TYPE_MONOTONIC",
         "monotonic"},
+    {C_ENUM (GST_CLOCK_TYPE_OTHER), "GST_CLOCK_TYPE_OTHER", "other"},
     {0, NULL, NULL}
   };
 

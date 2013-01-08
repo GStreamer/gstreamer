@@ -1,4 +1,23 @@
-This is GStreamer 1.0.4
+This is GStreamer 1.0.5
+
+Changes since 1.0.4:
+
+      * add GST_BIN_FLAG_NO_RESYNC flag that disables a resync when
+        an element is added, removed or linked in the bin; this is
+        interesting for complex bins that dynamically add elements
+        to themselves and want to manage the state of those elements
+        without interference from state resync threads (which may
+        cause deadlocks)
+      * add OTHER clock type
+
+Bugs fixed since 1.0.4:
+
+      * 690915 : Replace AM_CONFIG_HEADER with AC_CONFIG_HEADERS in configure.ac
+
+API additions since 1.0.4:
+
+      * GST_BIN_FLAG_NO_RESYNC
+      * GST_CLOCK_TYPE_OTHER
 
 Changes since 1.0.3:
 
