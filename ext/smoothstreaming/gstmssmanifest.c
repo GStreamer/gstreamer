@@ -236,7 +236,7 @@ _gst_mss_stream_video_caps_from_fourcc (gchar * fourcc)
   if (!fourcc)
     return NULL;
 
-  if (strcmp (fourcc, "H264") == 0) {
+  if (strcmp (fourcc, "H264") == 0 || strcmp (fourcc, "AVC1") == 0) {
     return gst_caps_new_simple ("video/x-h264", "stream-format", G_TYPE_STRING,
         "avc", NULL);
   } else if (strcmp (fourcc, "WVC1") == 0) {
@@ -396,7 +396,7 @@ _gst_mss_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
         NULL);
 
   if (codec_data && strlen (codec_data)) {
-    if (strcmp (fourcc, "H264") == 0) {
+    if (strcmp (fourcc, "H264") == 0 || strcmp (fourcc, "AVC1") == 0) {
       _gst_mss_stream_add_h264_codec_data (caps, codec_data);
     } else {
       GValue *value = g_new0 (GValue, 1);
