@@ -22,6 +22,8 @@
 # include "config.h"
 #endif
 
+#include <gmodule.h>
+
 #include "gstglwindow.h"
 
 #ifdef HAVE_WINDOW_X11
@@ -59,6 +61,8 @@ gst_gl_window_init (GstGLWindow * window)
 static void
 gst_gl_window_class_init (GstGLWindowClass * klass)
 {
+  klass->get_proc_address =
+      GST_DEBUG_FUNCPTR (gst_gl_window_default_get_proc_address);
 }
 
 GstGLWindow *
@@ -319,6 +323,43 @@ gst_gl_window_get_gl_api (GstGLWindow * window)
   ret = window_class->get_gl_api (window);
 
   GST_GL_WINDOW_UNLOCK (window);
+
+  return ret;
+}
+
+gpointer
+gst_gl_window_get_proc_address (GstGLWindow * window, const gchar * name)
+{
+  gpointer ret;
+  GstGLWindowClass *window_class;
+
+  g_return_val_if_fail (GST_GL_IS_WINDOW (window), NULL);
+  window_class = GST_GL_WINDOW_GET_CLASS (window);
+  g_return_val_if_fail (window_class->get_proc_address != NULL, NULL);
+
+  GST_GL_WINDOW_LOCK (window);
+
+  ret = window_class->get_proc_address (window, name);
+
+  GST_GL_WINDOW_UNLOCK (window);
+
+  return ret;
+}
+
+gpointer
+gst_gl_window_default_get_proc_address (GstGLWindow * window,
+    const gchar * name)
+{
+  static GModule *module = NULL;
+  gpointer ret = NULL;
+
+  if (!module)
+    module = g_module_open (NULL, G_MODULE_BIND_LAZY);
+
+  if (module) {
+    if (!g_module_symbol (module, name, &ret))
+      return NULL;
+  }
 
   return ret;
 }

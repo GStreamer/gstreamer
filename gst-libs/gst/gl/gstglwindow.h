@@ -55,6 +55,8 @@ typedef enum
 {
   GST_GL_WINDOW_ERROR_FAILED,
   GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+  GST_GL_WINDOW_ERROR_WRONG_API,
+  GST_GL_WINDOW_ERROR_OLD_LIBS,
   GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
   GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
 } GstGLWindowError;
@@ -96,6 +98,7 @@ struct _GstGLWindowClass {
 
   guintptr (*get_gl_context)     (GstGLWindow *window);
   GstGLAPI (*get_gl_api)         (GstGLWindow *window);
+  gpointer (*get_proc_address)   (GstGLWindow *window, const gchar *name);
   gboolean (*activate)           (GstGLWindow *window, gboolean activate);
   void     (*set_window_handle)  (GstGLWindow *window, guintptr id);
   gboolean (*share_context)      (GstGLWindow *window, guintptr external_gl_context);
@@ -131,8 +134,11 @@ void     gst_gl_window_run                  (GstGLWindow *window);
 void     gst_gl_window_quit                 (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 void     gst_gl_window_send_message         (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 
-GstGLPlatform gst_gl_window_get_platform (GstGLWindow *window);
-GstGLAPI      gst_gl_window_get_gl_api   (GstGLWindow *window);
+gpointer      gst_gl_window_get_proc_address (GstGLWindow *window, const gchar *name);
+GstGLPlatform gst_gl_window_get_platform     (GstGLWindow *window);
+GstGLAPI      gst_gl_window_get_gl_api       (GstGLWindow *window);
+
+gpointer gst_gl_window_default_get_proc_address (GstGLWindow *window, const gchar *name);
 
 GST_DEBUG_CATEGORY_EXTERN (gst_gl_window_debug);
 
