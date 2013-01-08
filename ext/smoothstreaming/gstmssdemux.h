@@ -81,6 +81,8 @@ struct _GstMssDemux {
   guint n_videos;
   guint n_audios;
 
+  /* properties */
+  guint64 connection_speed; /* in bps */
 };
 
 struct _GstMssDemuxClass {

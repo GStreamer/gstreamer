@@ -754,3 +754,98 @@ gst_mss_stream_seek (GstMssStream * stream, guint64 time)
 
   return TRUE;
 }
+
+guint64
+gst_mss_manifest_get_current_bitrate (GstMssManifest * manifest)
+{
+  guint64 bitrate = 0;
+  GSList *iter;
+
+  for (iter = gst_mss_manifest_get_streams (manifest); iter;
+      iter = g_slist_next (iter)) {
+    GstMssStream *stream = iter->data;
+    if (stream->active && stream->current_quality) {
+      GstMssStreamQuality *q = stream->current_quality->data;
+
+      bitrate += q->bitrate;
+    }
+  }
+
+  return bitrate;
+}
+
+static gboolean
+gst_mss_stream_select_bitrate (GstMssStream * stream, guint64 bitrate)
+{
+  GList *iter = stream->current_quality;
+  GList *next;
+  GstMssStreamQuality *q = iter->data;
+
+  while (q->bitrate > bitrate) {
+    next = g_list_previous (iter);
+    if (next) {
+      iter = next;
+      q = iter->data;
+    } else {
+      break;
+    }
+  }
+
+  while (q->bitrate < bitrate) {
+    GstMssStreamQuality *next_q;
+    next = g_list_next (iter);
+    if (next) {
+      next_q = next->data;
+      if (next_q->bitrate < bitrate) {
+        iter = next;
+        q = iter->data;
+      } else {
+        break;
+      }
+    } else {
+      break;
+    }
+  }
+
+  if (iter == stream->current_quality)
+    return FALSE;
+  stream->current_quality = iter;
+  return TRUE;
+}
+
+/**
+ * gst_mss_manifest_change_bitrate:
+ * @manifest: the manifest
+ * @bitrate: the maximum bitrate to use (bps)
+ *
+ * Iterates over the active streams and changes their bitrates to the maximum
+ * value so that the bitrates of all streams are not larger than
+ * @bitrate.
+ *
+ * Return: %TRUE if any stream changed its bitrate
+ */
+gboolean
+gst_mss_manifest_change_bitrate (GstMssManifest * manifest, guint64 bitrate)
+{
+  gboolean ret = FALSE;
+  GSList *iter;
+
+  /* TODO This algorithm currently sets the same bitrate for all streams,
+   * it should actually use the sum of all streams bitrates to compare to
+   * the target value */
+
+  if (bitrate == 0) {
+    /* use maximum */
+    bitrate = G_MAXUINT64;
+  }
+
+  for (iter = gst_mss_manifest_get_streams (manifest); iter;
+      iter = g_slist_next (iter)) {
+    GstMssStream *stream = iter->data;
+    if (stream->active) {
+      ret = ret | gst_mss_stream_select_bitrate (stream, bitrate);
+    }
+  }
+
+  return ret;
+}

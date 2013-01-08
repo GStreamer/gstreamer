@@ -42,6 +42,16 @@
 
 GST_DEBUG_CATEGORY (mssdemux_debug);
 
+#define DEFAULT_CONNECTION_SPEED 0
+
+enum
+{
+  PROP_0,
+
+  PROP_CONNECTION_SPEED,
+  PROP_LAST
+};
+
 static GstStaticPadTemplate gst_mss_demux_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -64,8 +74,12 @@ GST_STATIC_PAD_TEMPLATE ("audio_%02u",
 GST_BOILERPLATE (GstMssDemux, gst_mss_demux, GstMssDemux, GST_TYPE_ELEMENT);
 
 static void gst_mss_demux_dispose (GObject * object);
-static GstStateChangeReturn
-gst_mss_demux_change_state (GstElement * element, GstStateChange transition);
+static void gst_mss_demux_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_mss_demux_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static GstStateChangeReturn gst_mss_demux_change_state (GstElement * element,
+    GstStateChange transition);
 static GstFlowReturn gst_mss_demux_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_mss_demux_event (GstPad * pad, GstEvent * event);
 
@@ -106,6 +120,14 @@ gst_mss_demux_class_init (GstMssDemuxClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_mss_demux_dispose;
+  gobject_class->set_property = gst_mss_demux_set_property;
+  gobject_class->get_property = gst_mss_demux_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
+      g_param_spec_uint64 ("connection-speed", "Connection Speed",
+          "Network connection speed in kbps (0 = unknown)",
+          0, G_MAXUINT64 / 1000, DEFAULT_CONNECTION_SPEED,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_mss_demux_change_state);
@@ -214,6 +236,38 @@ gst_mss_demux_dispose (GObject * object)
   /* GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (object); */
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_mss_demux_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMssDemux *mssdemux = GST_MSS_DEMUX (object);
+
+  switch (prop_id) {
+    case PROP_CONNECTION_SPEED:
+      mssdemux->connection_speed = g_value_get_uint (value) * 1000;
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mss_demux_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstMssDemux *mssdemux = GST_MSS_DEMUX (object);
+
+  switch (prop_id) {
+    case PROP_CONNECTION_SPEED:
+      g_value_set_uint (value, mssdemux->connection_speed / 1000);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static GstStateChangeReturn
@@ -532,6 +586,10 @@ gst_mss_demux_create_streams (GstMssDemux * mssdemux)
     gst_mss_stream_set_active (manifeststream, TRUE);
     mssdemux->streams = g_slist_append (mssdemux->streams, stream);
   }
+
+  /* select initial bitrates */
+  gst_mss_manifest_change_bitrate (mssdemux->manifest,
+      mssdemux->connection_speed);
 }
 
 static gboolean

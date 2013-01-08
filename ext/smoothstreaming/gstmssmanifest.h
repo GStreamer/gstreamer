@@ -45,6 +45,8 @@ guint64 gst_mss_manifest_get_timescale (GstMssManifest * manifest);
 guint64 gst_mss_manifest_get_duration (GstMssManifest * manifest);
 GstClockTime gst_mss_manifest_get_gst_duration (GstMssManifest * manifest);
 gboolean gst_mss_manifest_seek (GstMssManifest * manifest, guint64 time);
+gboolean gst_mss_manifest_change_bitrate (GstMssManifest *manifest, guint64 bitrate);
+guint64 gst_mss_manifest_get_current_bitrate (GstMssManifest * manifest);
 
 GstMssStreamType gst_mss_stream_get_type (GstMssStream *stream);
 GstCaps * gst_mss_stream_get_caps (GstMssStream * stream);
