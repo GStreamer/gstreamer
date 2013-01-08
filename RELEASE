@@ -1,7 +1,7 @@
 
-Release notes for GStreamer libav Plugins 1.0.4
+Release notes for GStreamer libav Plugins 1.0.5
 
-The GStreamer team is proud to announce a new bug-fix release
+The GStreamer team is pleased to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -38,11 +38,10 @@ contains a set of less supported plugins that haven't passed the
 
 Features of this release
     
-      * G.726 decoder fixes
+      * Pass CC, LD, AS, AR and NM to the libav configure if set
 
-Bugs fixed in this release
-
-      * 689975 : Incorrect use of object in log statement
+There were no bugs fixed in this release
+    
 
 ==== Download ====
 
@@ -79,7 +78,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Rasmus Rohde
+      * Sebastian Dröge
       * Tim-Philipp Müller
-      * Wim Taymans
  

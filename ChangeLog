@@ -1,9 +1,33 @@
-=== release 1.0.4 ===
+=== release 1.0.5 ===
 
-2012-12-18  Tim-Philipp Müller <tim@centricular.net>
+2013-01-08  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.0.4
+	  releasing 1.0.5
+
+2012-12-31 00:32:41 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  configure: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+	  AM_CONFIG_HEADER has been removed in the just-released automake 1.13:
+	  https://lists.gnu.org/archive/html/automake/2012-12/msg00038.html
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690881
+
+2012-12-21 14:28:57 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Pass CC, LD, AS, AR and NM to the libav configure if set
+
+=== release 1.0.4 ===
+
+2012-12-18 21:30:43 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.0.4
 
 2012-12-12 17:01:28 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 

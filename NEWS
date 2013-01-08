@@ -1,4 +1,8 @@
-This is GStreamer Libav Plugins 1.0.4
+This is GStreamer Libav Plugins 1.0.5
+
+Changes since 1.0.4:
+
+      * Pass CC, LD, AS, AR and NM to the libav configure if set
 
 Changes since 1.0.3:
 
