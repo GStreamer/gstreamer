@@ -9878,10 +9878,10 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
         format = gst_audio_format_build_integer ((flags & FLAG_IS_SIGNED) ?
             TRUE : FALSE, (flags & FLAG_IS_BIG_ENDIAN) ?
             G_BIG_ENDIAN : G_LITTLE_ENDIAN, width, depth);
-        // FIXME: check FLAG_IS_NON_INTERLEAVED flag for layout
         caps = gst_caps_new_simple ("audio/x-raw",
             "format", G_TYPE_STRING, gst_audio_format_to_string (format),
-            "layout", G_TYPE_STRING, "interleaved", NULL);
+            "layout", G_TYPE_STRING, (flags & FLAG_IS_NON_INTERLEAVED) ?
+            "non-interleaved" : "interleaved", NULL);
       } else {
         if (depth == 0)
           depth = 32;
@@ -9900,7 +9900,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
         }
         caps = gst_caps_new_simple ("audio/x-raw",
             "format", G_TYPE_STRING, gst_audio_format_to_string (format),
-            "layout", G_TYPE_STRING, "interleaved", NULL);
+            "layout", G_TYPE_STRING, (flags & FLAG_IS_NON_INTERLEAVED) ?
+            "non-interleaved" : "interleaved", NULL);
       }
       break;
     }
