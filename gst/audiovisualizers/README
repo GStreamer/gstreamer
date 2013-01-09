@@ -32,6 +32,12 @@ afterwards.
 gst-plugins-ugly/gst/synaestesia -> synaescope
 gst-plugins-bad/gst/smoothwave -> wavescope
 gst-plugins-good/gst/monoscope -> blend into what we have in wavescope
+- it keeps an array of the values we just showed last[width]
+- each audio-buffer is 2*width
+- it uses convolution to finde the best match in current[2*width] compared to 
+  last[width]
+- then it shows current[match ... match+width] and copies it into last
+
 gst-plugins-base/ext/libvisual - done
 
 = Elements to add =
