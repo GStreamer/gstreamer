@@ -7182,11 +7182,17 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       stream->rate = qtfp.fp;
       stream->n_channels = QT_UINT32 (stsd_data + offset + 12);
 
-      GST_LOG_OBJECT (qtdemux, "samples/packet:   %d",
-          stream->samples_per_packet);
-      GST_LOG_OBJECT (qtdemux, "sample rate:      %g", stream->rate);
-      GST_LOG_OBJECT (qtdemux, "n_channels:       %d", stream->n_channels);
-
+      GST_LOG_OBJECT (qtdemux, "Sound sample description Version 2");
+      GST_LOG_OBJECT (qtdemux, "sample rate:        %g", stream->rate);
+      GST_LOG_OBJECT (qtdemux, "n_channels:         %d", stream->n_channels);
+      GST_LOG_OBJECT (qtdemux, "bits/channel:       %d",
+          QT_UINT32 (stsd_data + offset + 20));
+      GST_LOG_OBJECT (qtdemux, "format flags:       %X",
+          QT_UINT32 (stsd_data + offset + 24));
+      GST_LOG_OBJECT (qtdemux, "bytes/packet:       %d",
+          QT_UINT32 (stsd_data + offset + 28));
+      GST_LOG_OBJECT (qtdemux, "LPCM frames/packet: %d",
+          QT_UINT32 (stsd_data + offset + 32));
     } else {
       GST_WARNING_OBJECT (qtdemux, "unknown version %08x", version);
     }
