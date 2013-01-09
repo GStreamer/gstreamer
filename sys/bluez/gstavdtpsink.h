@@ -66,7 +66,7 @@ struct _GstAvdtpSink {
 
 	GstCaps *dev_caps;
 
-	GMutex *sink_lock;
+	GMutex sink_lock;
 
 	guint watch_id;
 };

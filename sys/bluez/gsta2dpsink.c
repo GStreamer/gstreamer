@@ -21,15 +21,19 @@
  *
  */
 
+/* FIXME:
+ *  - the segment_event caching and re-sending should not be needed any
+ *    longer with sticky events
+ */
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include <unistd.h>
-#include <pthread.h>
 
-#include "gstpragma.h"
 #include "gsta2dpsink.h"
+
+#include <gst/rtp/gstrtpbasepayload.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_a2dp_sink_debug);
 #define GST_CAT_DEFAULT gst_a2dp_sink_debug
@@ -47,13 +51,8 @@ enum
   PROP_TRANSPORT
 };
 
-GST_BOILERPLATE (GstA2dpSink, gst_a2dp_sink, GstBin, GST_TYPE_BIN);
-
-static const GstElementDetails gst_a2dp_sink_details =
-GST_ELEMENT_DETAILS ("Bluetooth A2DP sink",
-    "Sink/Audio",
-    "Plays audio to an A2DP device",
-    "Marcel Holtmann <marcel@holtmann.org>");
+#define parent_class gst_a2dp_sink_parent_class
+G_DEFINE_TYPE (GstA2dpSink, gst_a2dp_sink, GST_TYPE_BIN);
 
 static GstStaticPadTemplate gst_a2dp_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -66,9 +65,11 @@ static GstStaticPadTemplate gst_a2dp_sink_factory =
         "allocation = (string) { \"snr\", \"loudness\" }, "
         "bitpool = (int) [ 2, " TEMPLATE_MAX_BITPOOL_STR " ]; " "audio/mpeg"));
 
-static gboolean gst_a2dp_sink_handle_event (GstPad * pad, GstEvent * event);
-static gboolean gst_a2dp_sink_set_caps (GstPad * pad, GstCaps * caps);
-static GstCaps *gst_a2dp_sink_get_caps (GstPad * pad);
+static gboolean gst_a2dp_sink_handle_event (GstPad * pad,
+    GstObject * pad_parent, GstEvent * event);
+static gboolean gst_a2dp_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
+static GstCaps *gst_a2dp_sink_get_caps (GstA2dpSink * self);
 static gboolean gst_a2dp_sink_init_caps_filter (GstA2dpSink * self);
 static gboolean gst_a2dp_sink_init_fakesink (GstA2dpSink * self);
 static gboolean gst_a2dp_sink_remove_fakesink (GstA2dpSink * self);
@@ -78,7 +79,7 @@ gst_a2dp_sink_finalize (GObject * obj)
 {
   GstA2dpSink *self = GST_A2DP_SINK (obj);
 
-  g_mutex_free (self->cb_mutex);
+  g_mutex_clear (&self->cb_mutex);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -142,16 +143,6 @@ cleanup_and_fail:
   g_object_unref (G_OBJECT (element));
 
   return NULL;
-}
-
-static void
-gst_a2dp_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details (element_class, &gst_a2dp_sink_details);
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_a2dp_sink_factory));
 }
 
 static void
@@ -237,23 +228,18 @@ gst_a2dp_sink_init_ghost_pad (GstA2dpSink * self)
   capsfilter_pad = gst_element_get_static_pad (self->capsfilter, "sink");
 
   /* now we add a ghostpad */
-  self->ghostpad = GST_GHOST_PAD (gst_ghost_pad_new ("sink", capsfilter_pad));
+  self->ghostpad = gst_ghost_pad_new ("sink", capsfilter_pad);
   g_object_unref (capsfilter_pad);
 
   /* the getcaps of our ghostpad must reflect the device caps */
-  gst_pad_set_getcaps_function (GST_PAD (self->ghostpad),
-      gst_a2dp_sink_get_caps);
-  self->ghostpad_setcapsfunc = GST_PAD_SETCAPSFUNC (self->ghostpad);
-  gst_pad_set_setcaps_function (GST_PAD (self->ghostpad),
-      GST_DEBUG_FUNCPTR (gst_a2dp_sink_set_caps));
+  gst_pad_set_query_function (self->ghostpad, gst_a2dp_sink_query);
 
   /* we need to handle events on our own and we also need the eventfunc
    * of the ghostpad for forwarding calls */
-  self->ghostpad_eventfunc = GST_PAD_EVENTFUNC (GST_PAD (self->ghostpad));
-  gst_pad_set_event_function (GST_PAD (self->ghostpad),
-      gst_a2dp_sink_handle_event);
+  self->ghostpad_eventfunc = GST_PAD_EVENTFUNC (self->ghostpad);
+  gst_pad_set_event_function (self->ghostpad, gst_a2dp_sink_handle_event);
 
-  if (!gst_element_add_pad (GST_ELEMENT (self), GST_PAD (self->ghostpad)))
+  if (!gst_element_add_pad (GST_ELEMENT (self), self->ghostpad))
     GST_ERROR_OBJECT (self, "failed to add ghostpad");
 
   return TRUE;
@@ -279,7 +265,7 @@ gst_a2dp_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      self->taglist = gst_tag_list_new ();
+      self->taglist = gst_tag_list_new_empty ();
 
       gst_a2dp_sink_init_fakesink (self);
       break;
@@ -316,12 +302,12 @@ gst_a2dp_sink_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (self->taglist) {
-        gst_tag_list_free (self->taglist);
+        gst_tag_list_unref (self->taglist);
         self->taglist = NULL;
       }
-      if (self->newseg_event != NULL) {
-        gst_event_unref (self->newseg_event);
-        self->newseg_event = NULL;
+      if (self->segment_event != NULL) {
+        gst_event_unref (self->segment_event);
+        self->segment_event = NULL;
       }
       gst_a2dp_sink_remove_fakesink (self);
       break;
@@ -374,8 +360,15 @@ gst_a2dp_sink_class_init (GstA2dpSinkClass * klass)
       g_param_spec_string ("transport", "Transport",
           "Use configured transport", NULL, G_PARAM_READWRITE));
 
+  gst_element_class_set_static_metadata (element_class, "Bluetooth A2DP sink",
+      "Sink/Audio", "Plays audio to an A2DP device",
+      "Marcel Holtmann <marcel@holtmann.org>");
+
   GST_DEBUG_CATEGORY_INIT (gst_a2dp_sink_debug, "a2dpsink", 0,
       "A2DP sink element");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_a2dp_sink_factory));
 }
 
 GstCaps *
@@ -385,11 +378,10 @@ gst_a2dp_sink_get_device_caps (GstA2dpSink * self)
 }
 
 static GstCaps *
-gst_a2dp_sink_get_caps (GstPad * pad)
+gst_a2dp_sink_get_caps (GstA2dpSink * self)
 {
   GstCaps *caps;
   GstCaps *caps_aux;
-  GstA2dpSink *self = GST_A2DP_SINK (GST_PAD_PARENT (pad));
 
   if (self->sink == NULL) {
     GST_DEBUG_OBJECT (self, "a2dpsink isn't initialized "
@@ -476,8 +468,8 @@ gst_a2dp_sink_init_rtp_sbc_element (GstA2dpSink * self)
   if (rtppay == NULL)
     return FALSE;
 
-  self->rtp = GST_BASE_RTP_PAYLOAD (rtppay);
-  g_object_set (G_OBJECT (self->rtp), "min-frames", -1, NULL);
+  self->rtp = rtppay;
+  g_object_set (self->rtp, "min-frames", -1, NULL);
 
   gst_element_set_state (rtppay, GST_STATE_PAUSED);
 
@@ -503,7 +495,7 @@ gst_a2dp_sink_init_rtp_mpeg_element (GstA2dpSink * self)
   if (rtppay == NULL)
     return FALSE;
 
-  self->rtp = GST_BASE_RTP_PAYLOAD (rtppay);
+  self->rtp = rtppay;
 
   gst_element_set_state (rtppay, GST_STATE_PAUSED);
 
@@ -554,7 +546,7 @@ gst_a2dp_sink_init_dynamic_elements (GstA2dpSink * self, GstCaps * caps)
     if (gst_tag_list_get_string (self->taglist, "channel-mode", &mode))
       gst_avdtp_sink_set_channel_mode (self->sink, mode);
 
-    capsfilterpad = gst_ghost_pad_get_target (self->ghostpad);
+    capsfilterpad = gst_ghost_pad_get_target (GST_GHOST_PAD (self->ghostpad));
     gst_pad_send_event (capsfilterpad, event);
     self->taglist = NULL;
     g_free (mode);
@@ -563,50 +555,39 @@ gst_a2dp_sink_init_dynamic_elements (GstA2dpSink * self, GstCaps * caps)
   if (!gst_avdtp_sink_set_device_caps (self->sink, caps))
     return FALSE;
 
-  g_object_set (G_OBJECT (self->rtp), "mtu",
+  g_object_set (self->rtp, "mtu",
       gst_avdtp_sink_get_link_mtu (self->sink), NULL);
 
-  /* we forward our new segment here if we have one */
-  if (self->newseg_event) {
+#if 0
+  /* we forward our new segment here if we have one (FIXME: not needed any more) */
+  if (self->segment_event) {
     gst_pad_send_event (GST_BASE_RTP_PAYLOAD_SINKPAD (self->rtp),
-        self->newseg_event);
-    self->newseg_event = NULL;
+        self->segment_event);
+    self->segment_event = NULL;
   }
+#endif
 
   return TRUE;
-}
-
-static gboolean
-gst_a2dp_sink_set_caps (GstPad * pad, GstCaps * caps)
-{
-  GstA2dpSink *self;
-
-  self = GST_A2DP_SINK (GST_PAD_PARENT (pad));
-  GST_INFO_OBJECT (self, "setting caps");
-
-  /* now we know the caps */
-  gst_a2dp_sink_init_dynamic_elements (self, caps);
-
-  return self->ghostpad_setcapsfunc (GST_PAD (self->ghostpad), caps);
 }
 
 /* used for catching newsegment events while we don't have a sink, for
  * later forwarding it to the sink */
 static gboolean
-gst_a2dp_sink_handle_event (GstPad * pad, GstEvent * event)
+gst_a2dp_sink_handle_event (GstPad * pad, GstObject * pad_parent,
+    GstEvent * event)
 {
   GstA2dpSink *self;
   GstTagList *taglist = NULL;
   GstObject *parent;
 
-  self = GST_A2DP_SINK (GST_PAD_PARENT (pad));
+  self = GST_A2DP_SINK (pad_parent);
   parent = gst_element_get_parent (GST_ELEMENT (self->sink));
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT &&
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT &&
       parent != GST_OBJECT_CAST (self)) {
-    if (self->newseg_event != NULL)
-      gst_event_unref (self->newseg_event);
-    self->newseg_event = gst_event_ref (event);
+    if (self->segment_event != NULL)
+      gst_event_unref (self->segment_event);
+    self->segment_event = gst_event_ref (event);
 
   } else if (GST_EVENT_TYPE (event) == GST_EVENT_TAG &&
       parent != GST_OBJECT_CAST (self)) {
@@ -616,13 +597,42 @@ gst_a2dp_sink_handle_event (GstPad * pad, GstEvent * event)
       gst_event_parse_tag (event, &taglist);
       gst_tag_list_insert (self->taglist, taglist, GST_TAG_MERGE_REPLACE);
     }
+  } else if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS &&
+      parent != GST_OBJECT_CAST (self)) {
+    GstCaps *caps = NULL;
+
+    /* FIXME: really check for parent != self above? */
+    /* now we know the caps */
+    gst_event_parse_caps (event, &caps);
+    gst_a2dp_sink_init_dynamic_elements (self, caps);
   }
 
   if (parent != NULL)
     gst_object_unref (GST_OBJECT (parent));
 
-  return self->ghostpad_eventfunc (GST_PAD (self->ghostpad), event);
+  return self->ghostpad_eventfunc (self->ghostpad, GST_OBJECT (self), event);
 }
+
+static gboolean
+gst_a2dp_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstA2dpSink *sink = GST_A2DP_SINK (parent);
+  gboolean ret;
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_CAPS) {
+    GstCaps *caps;
+
+    caps = gst_a2dp_sink_get_caps (sink);
+    gst_query_set_caps_result (query, caps);
+    gst_caps_unref (caps);
+    ret = TRUE;
+  } else {
+    ret = sink->ghostpad_queryfunc (pad, parent, query);
+  }
+
+  return ret;
+}
+
 
 static gboolean
 gst_a2dp_sink_init_caps_filter (GstA2dpSink * self)
@@ -650,10 +660,10 @@ gst_a2dp_sink_init_fakesink (GstA2dpSink * self)
   if (self->fakesink != NULL)
     return TRUE;
 
-  g_mutex_lock (self->cb_mutex);
+  g_mutex_lock (&self->cb_mutex);
   self->fakesink = gst_a2dp_sink_init_element (self, "fakesink",
       "fakesink", self->capsfilter);
-  g_mutex_unlock (self->cb_mutex);
+  g_mutex_unlock (&self->cb_mutex);
 
   if (!self->fakesink)
     return FALSE;
@@ -664,7 +674,7 @@ gst_a2dp_sink_init_fakesink (GstA2dpSink * self)
 static gboolean
 gst_a2dp_sink_remove_fakesink (GstA2dpSink * self)
 {
-  g_mutex_lock (self->cb_mutex);
+  g_mutex_lock (&self->cb_mutex);
 
   if (self->fakesink != NULL) {
     gst_element_set_locked_state (self->fakesink, TRUE);
@@ -674,13 +684,13 @@ gst_a2dp_sink_remove_fakesink (GstA2dpSink * self)
     self->fakesink = NULL;
   }
 
-  g_mutex_unlock (self->cb_mutex);
+  g_mutex_unlock (&self->cb_mutex);
 
   return TRUE;
 }
 
 static void
-gst_a2dp_sink_init (GstA2dpSink * self, GstA2dpSinkClass * klass)
+gst_a2dp_sink_init (GstA2dpSink * self)
 {
   self->sink = NULL;
   self->fakesink = NULL;
@@ -689,12 +699,12 @@ gst_a2dp_sink_init (GstA2dpSink * self, GstA2dpSinkClass * klass)
   self->transport = NULL;
   self->autoconnect = DEFAULT_AUTOCONNECT;
   self->capsfilter = NULL;
-  self->newseg_event = NULL;
+  self->segment_event = NULL;
   self->taglist = NULL;
   self->ghostpad = NULL;
   self->sink_is_in_bin = FALSE;
 
-  self->cb_mutex = g_mutex_new ();
+  g_mutex_init (&self->cb_mutex);
 
   /* we initialize our capsfilter */
   gst_a2dp_sink_init_caps_filter (self);
@@ -704,12 +714,4 @@ gst_a2dp_sink_init (GstA2dpSink * self, GstA2dpSinkClass * klass)
   gst_a2dp_sink_init_fakesink (self);
 
   gst_a2dp_sink_init_ghost_pad (self);
-
-}
-
-gboolean
-gst_a2dp_sink_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "a2dpsink",
-      GST_RANK_MARGINAL, GST_TYPE_A2DP_SINK);
 }

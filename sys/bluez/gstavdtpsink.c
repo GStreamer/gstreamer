@@ -25,25 +25,20 @@
 #include <config.h>
 #endif
 
+/* FIXME: check which includes are really required */
 #include <unistd.h>
 #include <sys/un.h>
 #include <sys/socket.h>
 #include <fcntl.h>
-#include <pthread.h>
-
 #include <netinet/in.h>
-
-#include <bluetooth/bluetooth.h>
-
-#include <gst/rtp/gstrtpbuffer.h>
 
 #include <dbus/dbus.h>
 
-#include "rtp.h"
 #include "a2dp-codecs.h"
 
-#include "gstpragma.h"
 #include "gstavdtpsink.h"
+
+#include <gst/rtp/rtp.h>
 
 GST_DEBUG_CATEGORY_STATIC (avdtp_sink_debug);
 #define GST_CAT_DEFAULT avdtp_sink_debug
@@ -56,11 +51,11 @@ GST_DEBUG_CATEGORY_STATIC (avdtp_sink_debug);
 #define DEFAULT_AUTOCONNECT TRUE
 
 #define GST_AVDTP_SINK_MUTEX_LOCK(s) G_STMT_START {	\
-		g_mutex_lock(s->sink_lock);		\
+		g_mutex_lock(&s->sink_lock);		\
 	} G_STMT_END
 
 #define GST_AVDTP_SINK_MUTEX_UNLOCK(s) G_STMT_START {	\
-		g_mutex_unlock(s->sink_lock);		\
+		g_mutex_unlock(&s->sink_lock);		\
 	} G_STMT_END
 
 struct bluetooth_data
@@ -87,13 +82,8 @@ enum
   PROP_TRANSPORT
 };
 
-GST_BOILERPLATE (GstAvdtpSink, gst_avdtp_sink, GstBaseSink, GST_TYPE_BASE_SINK);
-
-static const GstElementDetails avdtp_sink_details =
-GST_ELEMENT_DETAILS ("Bluetooth AVDTP sink",
-    "Sink/Audio",
-    "Plays audio to an A2DP device",
-    "Marcel Holtmann <marcel@holtmann.org>");
+#define parent_class gst_avdtp_sink_parent_class
+G_DEFINE_TYPE (GstAvdtpSink, gst_avdtp_sink, GST_TYPE_BASE_SINK);
 
 static GstStaticPadTemplate avdtp_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -114,17 +104,6 @@ static GstStaticPadTemplate avdtp_sink_factory =
         "payload = (int) "
         GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 90000, " "encoding-name = (string) \"MPA\""));
-
-static void
-gst_avdtp_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&avdtp_sink_factory));
-
-  gst_element_class_set_details (element_class, &avdtp_sink_details);
-}
 
 static void
 gst_avdtp_sink_transport_release (GstAvdtpSink * self)
@@ -197,7 +176,7 @@ gst_avdtp_sink_finalize (GObject * object)
   if (self->transport)
     g_free (self->transport);
 
-  g_mutex_free (self->sink_lock);
+  g_mutex_clear (&self->sink_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -265,7 +244,7 @@ gst_avdtp_sink_parse_sbc_raw (GstAvdtpSink * self)
   GValue *list;
   gboolean mono, stereo;
 
-  structure = gst_structure_empty_new ("audio/x-sbc");
+  structure = gst_structure_new_empty ("audio/x-sbc");
   value = g_value_init (g_new0 (GValue, 1), G_TYPE_STRING);
 
   /* mode */
@@ -433,7 +412,7 @@ gst_avdtp_sink_parse_mpeg_raw (GstAvdtpSink * self)
 
   GST_LOG_OBJECT (self, "parsing mpeg caps");
 
-  structure = gst_structure_empty_new ("audio/mpeg");
+  structure = gst_structure_new_empty ("audio/mpeg");
   value = g_new0 (GValue, 1);
   g_value_init (value, G_TYPE_INT);
 
@@ -939,20 +918,29 @@ gst_avdtp_sink_preroll (GstBaseSink * basesink, GstBuffer * buffer)
 static GstFlowReturn
 gst_avdtp_sink_render (GstBaseSink * basesink, GstBuffer * buffer)
 {
+  GstFlowReturn flow_ret = GST_FLOW_OK;
   GstAvdtpSink *self = GST_AVDTP_SINK (basesink);
+  GstMapInfo map;
   ssize_t ret;
   int fd;
 
-  fd = g_io_channel_unix_get_fd (self->stream);
-
-  ret = write (fd, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
-  if (ret < 0) {
-    GST_ERROR_OBJECT (self, "Error while writting to socket: %s",
-        strerror (errno));
+  if (!gst_buffer_map (buffer, &map, GST_MAP_READ))
     return GST_FLOW_ERROR;
+
+  /* FIXME: temporary sanity check */
+  g_assert (!(g_io_channel_get_flags (self->stream) & G_IO_FLAG_NONBLOCK));
+
+  /* FIXME: why not use g_io_channel_write_chars() instead? */
+  fd = g_io_channel_unix_get_fd (self->stream);
+  ret = write (fd, map.data, map.size);
+  if (ret < 0) {
+    /* FIXME: since this is probably fatal, shouldn't we post an error here? */
+    GST_ERROR_OBJECT (self, "Error writing to socket: %s", g_strerror (errno));
+    flow_ret = GST_FLOW_ERROR;
   }
 
-  return GST_FLOW_OK;
+  gst_buffer_unmap (buffer, &map);
+  return flow_ret;
 }
 
 static gboolean
@@ -966,29 +954,11 @@ gst_avdtp_sink_unlock (GstBaseSink * basesink)
   return TRUE;
 }
 
-static GstFlowReturn
-gst_avdtp_sink_buffer_alloc (GstBaseSink * basesink,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf)
-{
-  GstAvdtpSink *self = GST_AVDTP_SINK (basesink);
-
-  *buf = gst_buffer_new_and_alloc (size);
-  if (!(*buf)) {
-    GST_ERROR_OBJECT (self, "buffer allocation failed");
-    return GST_FLOW_ERROR;
-  }
-
-  gst_buffer_set_caps (*buf, caps);
-
-  GST_BUFFER_OFFSET (*buf) = offset;
-
-  return GST_FLOW_OK;
-}
-
 static void
 gst_avdtp_sink_class_init (GstAvdtpSinkClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseSinkClass *basesink_class = GST_BASE_SINK_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
@@ -1003,9 +973,6 @@ gst_avdtp_sink_class_init (GstAvdtpSinkClass * klass)
   basesink_class->preroll = GST_DEBUG_FUNCPTR (gst_avdtp_sink_preroll);
   basesink_class->unlock = GST_DEBUG_FUNCPTR (gst_avdtp_sink_unlock);
   basesink_class->event = GST_DEBUG_FUNCPTR (gst_avdtp_sink_event);
-
-  basesink_class->buffer_alloc =
-      GST_DEBUG_FUNCPTR (gst_avdtp_sink_buffer_alloc);
 
   g_object_class_install_property (object_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
@@ -1023,10 +990,17 @@ gst_avdtp_sink_class_init (GstAvdtpSinkClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (avdtp_sink_debug, "avdtpsink", 0,
       "A2DP headset sink element");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&avdtp_sink_factory));
+
+  gst_element_class_set_static_metadata (element_class, "Bluetooth AVDTP sink",
+      "Sink/Audio", "Plays audio to an A2DP device",
+      "Marcel Holtmann <marcel@holtmann.org>");
 }
 
 static void
-gst_avdtp_sink_init (GstAvdtpSink * self, GstAvdtpSinkClass * klass)
+gst_avdtp_sink_init (GstAvdtpSink * self)
 {
   self->device = NULL;
   self->transport = NULL;
@@ -1038,7 +1012,7 @@ gst_avdtp_sink_init (GstAvdtpSink * self, GstAvdtpSinkClass * klass)
 
   self->autoconnect = DEFAULT_AUTOCONNECT;
 
-  self->sink_lock = g_mutex_new ();
+  g_mutex_init (&self->sink_lock);
 
   /* FIXME this is for not synchronizing with clock, should be tested
    * with devices to see the behaviour
