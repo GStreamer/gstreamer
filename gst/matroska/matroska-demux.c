@@ -556,12 +556,14 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (demux);
   GstMatroskaTrackContext *context;
   GstPadTemplate *templ = NULL;
+  GstStreamFlags stream_flags;
   GstCaps *caps = NULL;
   gchar *padname = NULL;
   GstFlowReturn ret;
   guint32 id, riff_fourcc = 0;
   guint16 riff_audio_fmt = 0;
   GstTagList *list = NULL;
+  GstEvent *stream_start;
   gchar *codec = NULL;
   gchar *stream_id;
 
@@ -1371,8 +1373,15 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   stream_id =
       gst_pad_create_stream_id_printf (context->pad, GST_ELEMENT_CAST (demux),
       "%03u", context->uid);
-  gst_pad_push_event (context->pad, gst_event_new_stream_start (stream_id));
+  stream_start = gst_event_new_stream_start (stream_id);
   g_free (stream_id);
+  stream_flags = GST_STREAM_FLAG_NONE;
+  if (context->type == GST_MATROSKA_TRACK_TYPE_SUBTITLE)
+    stream_flags |= GST_STREAM_FLAG_SPARSE;
+  if (context->flags & GST_MATROSKA_TRACK_DEFAULT)
+    stream_flags |= GST_STREAM_FLAG_SELECT;
+  gst_event_set_stream_flags (stream_start, stream_flags);
+  gst_pad_push_event (context->pad, stream_start);
   gst_pad_set_caps (context->pad, context->caps);
 
   gst_element_add_pad (GST_ELEMENT (demux), context->pad);
