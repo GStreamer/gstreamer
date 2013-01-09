@@ -7178,7 +7178,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       if (len < 72)
         goto corrupt_file;
 
-      stream->samples_per_packet = QT_UINT32 (stsd_data + offset);
       qtfp.val = QT_UINT64 (stsd_data + offset + 4);
       stream->rate = qtfp.fp;
       stream->n_channels = QT_UINT32 (stsd_data + offset + 12);
