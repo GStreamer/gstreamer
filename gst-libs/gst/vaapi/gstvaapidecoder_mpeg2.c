@@ -1323,7 +1323,7 @@ gst_vaapi_decoder_mpeg2_parse(GstVaapiDecoder *base_decoder,
         GST_VAAPI_DECODER_MPEG2_CAST(base_decoder);
     GstVaapiParserState * const ps = GST_VAAPI_PARSER_STATE(base_decoder);
     GstVaapiDecoderStatus status;
-    GstMpegVideoPacketTypeCode type;
+    GstMpegVideoPacketTypeCode type, type2 = GST_MPEG_VIDEO_PACKET_NONE;
     const guchar *buf;
     guint buf_size, flags;
     gint ofs, ofs1, ofs2;
@@ -1350,7 +1350,7 @@ gst_vaapi_decoder_mpeg2_parse(GstVaapiDecoder *base_decoder,
         ofs2 = ofs1 + 4;
 
     ofs = G_UNLIKELY(buf_size < ofs2 + 4) ? -1 :
-        scan_for_start_code(&buf[ofs2], buf_size - ofs2, NULL);
+        scan_for_start_code(&buf[ofs2], buf_size - ofs2, &type2);
     if (ofs < 0) {
         // Assume the whole packet is present if end-of-stream
         if (!at_eos) {
@@ -1386,8 +1386,19 @@ gst_vaapi_decoder_mpeg2_parse(GstVaapiDecoder *base_decoder,
         break;
     default:
         if (type >= GST_MPEG_VIDEO_PACKET_SLICE_MIN &&
-            type <= GST_MPEG_VIDEO_PACKET_SLICE_MAX)
+            type <= GST_MPEG_VIDEO_PACKET_SLICE_MAX) {
             flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
+            switch (type2) {
+            case GST_MPEG_VIDEO_PACKET_USER_DATA:
+            case GST_MPEG_VIDEO_PACKET_SEQUENCE:
+            case GST_MPEG_VIDEO_PACKET_GOP:
+            case GST_MPEG_VIDEO_PACKET_PICTURE:
+                flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_END;
+                break;
+            default:
+                break;
+            }
+        }
 
         // Ignore system start codes (PES headers)
         else if (type >= 0xb9 && type <= 0xff)
