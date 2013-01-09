@@ -739,7 +739,8 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
     guint nsamples = map.size / (width * channels);
     GstClockTime interval = gst_util_uint64_scale_int (1, GST_SECOND, rate);
     GstClockTime ts = GST_BUFFER_TIMESTAMP (outbuf);
-    gboolean use_mutes = FALSE;
+    gboolean have_mutes = FALSE;
+    gboolean have_volumes = FALSE;
 
     ts = gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, ts);
 
@@ -753,31 +754,27 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
       self->volumes_count = nsamples;
     }
 
-    if (mute_cb) {
-      if (!gst_control_binding_get_value_array (mute_cb, ts, interval,
-              nsamples, (gpointer) self->mutes))
-        goto controller_failure;
+    if (volume_cb) {
+      have_volumes =
+          gst_control_binding_get_value_array (volume_cb, ts, interval,
+          nsamples, (gpointer) self->volumes);
+      gst_object_replace ((GstObject **) & volume_cb, NULL);
+    }
+    if (!have_volumes) {
+      volume_orc_memset_f64 (self->volumes, self->current_volume, nsamples);
+    }
 
+    if (mute_cb) {
+      have_mutes = gst_control_binding_get_value_array (mute_cb, ts, interval,
+          nsamples, (gpointer) self->mutes);
       gst_object_replace ((GstObject **) & mute_cb, NULL);
-      use_mutes = TRUE;
+    }
+    if (have_mutes) {
+      volume_orc_prepare_volumes (self->volumes, self->mutes, nsamples);
     } else {
       g_free (self->mutes);
       self->mutes = NULL;
       self->mutes_count = 0;
-    }
-
-    if (volume_cb) {
-      if (!gst_control_binding_get_value_array (volume_cb, ts, interval,
-              nsamples, (gpointer) self->volumes))
-        goto controller_failure;
-
-      gst_object_replace ((GstObject **) & volume_cb, NULL);
-    } else {
-      volume_orc_memset_f64 (self->volumes, self->current_volume, nsamples);
-    }
-
-    if (use_mutes) {
-      volume_orc_prepare_volumes (self->volumes, self->mutes, nsamples);
     }
 
     self->process_controlled (self, map.data, self->volumes, channels,
@@ -806,18 +803,6 @@ not_negotiated:
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("No format was negotiated"), (NULL));
     return GST_FLOW_NOT_NEGOTIATED;
-  }
-controller_failure:
-  {
-    if (mute_cb)
-      gst_object_unref (mute_cb);
-    if (volume_cb)
-      gst_object_unref (volume_cb);
-
-    GST_ELEMENT_ERROR (self, CORE, FAILED,
-        ("Failed to get values from controller"), (NULL));
-    gst_buffer_unmap (outbuf, &map);
-    return GST_FLOW_ERROR;
   }
 }
 

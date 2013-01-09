@@ -1814,6 +1814,55 @@ GST_START_TEST (test_controller_processing)
 
 GST_END_TEST;
 
+GST_START_TEST (test_controller_defaults_at_ts0)
+{
+  GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
+  GstElement *volume;
+  GstBuffer *inbuffer;
+  GstCaps *caps;
+  GstSegment seg;
+
+  volume = setup_volume ();
+
+  cs = gst_interpolation_control_source_new ();
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  gst_object_add_control_binding (GST_OBJECT_CAST (volume),
+      gst_direct_control_binding_new (GST_OBJECT_CAST (volume), "volume", cs));
+
+  /* make a control curve that does not start at ts=0, the element will use
+   * the current property value (default) until the control curve starts 
+   */
+  tvcs = (GstTimedValueControlSource *) cs;
+  gst_timed_value_control_source_set (tvcs, GST_SECOND / 100, 0.1);
+  gst_timed_value_control_source_set (tvcs, GST_SECOND, 1.0);
+
+  fail_unless (gst_element_set_state (volume,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  /* controller curve starts at sample: 441 */
+  inbuffer = gst_buffer_new_and_alloc (1000 * sizeof (gint16));
+  gst_buffer_memset (inbuffer, 0, 0, 1000 * sizeof (gint16));
+  caps = gst_caps_from_string (VOLUME_CAPS_STRING_S16);
+  gst_pad_set_caps (mysrcpad, caps);
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
+  gst_caps_unref (caps);
+
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_segment (&seg)) == TRUE);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+
+  gst_object_unref (cs);
+  cleanup_volume (volume);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 volume_suite (void)
 {
@@ -1856,6 +1905,7 @@ volume_suite (void)
   tcase_add_test (tc_chain, test_passthrough);
   tcase_add_test (tc_chain, test_controller_usability);
   tcase_add_test (tc_chain, test_controller_processing);
+  tcase_add_test (tc_chain, test_controller_defaults_at_ts0);
 
   return s;
 }
