@@ -33,6 +33,7 @@
 #include "gstgldisplay.h"
 #include "gstgldownload.h"
 #include "gstglmemory.h"
+#include "gstglfeature.h"
 
 #ifndef GLEW_VERSION_MAJOR
 #define GLEW_VERSION_MAJOR 4
@@ -341,20 +342,11 @@ _create_context_gles2 (GstGLDisplay * display, gint * gl_major, gint * gl_minor)
 {
   GLenum gl_err = GL_NO_ERROR;
 
-  if (glGetString (GL_VERSION))
-    GST_INFO ("GL_VERSION: %s", glGetString (GL_VERSION));
-
-  if (glGetString (GL_SHADING_LANGUAGE_VERSION))
-    GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
-        glGetString (GL_SHADING_LANGUAGE_VERSION));
-  else
-    GST_INFO ("Your driver does not support GLSL (OpenGL Shading Language)");
-
-  if (glGetString (GL_VENDOR))
-    GST_INFO ("GL_VENDOR: %s", glGetString (GL_VENDOR));
-
-  if (glGetString (GL_RENDERER))
-    GST_INFO ("GL_RENDERER: %s", glGetString (GL_RENDERER));
+  GST_INFO ("GL_VERSION: %s", glGetString (GL_VERSION));
+  GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
+      glGetString (GL_SHADING_LANGUAGE_VERSION));
+  GST_INFO ("GL_VENDOR: %s", glGetString (GL_VENDOR));
+  GST_INFO ("GL_RENDERER: %s", glGetString (GL_RENDERER));
 
   gl_err = glGetError ();
   if (gl_err != GL_NO_ERROR) {
@@ -364,6 +356,9 @@ _create_context_gles2 (GstGLDisplay * display, gint * gl_major, gint * gl_minor)
   if (!GL_ES_VERSION_2_0)
     gst_gl_display_set_error (display, "OpenGL|ES >= 2.0 is required");
 
+  _gst_gl_feature_check_ext_functions (display, 0, 0,
+      glGetString (GL_EXTENSIONS));
+
   display->priv->vtable.gen_fbo = (GstGLWindowCB) _gen_fbo_gles2;
   display->priv->vtable.use_fbo = (GstGLWindowCB) _use_fbo_gles2;
   display->priv->vtable.use_fbo_v2 = (GstGLWindowCB) _use_fbo_v2_gles2;
@@ -371,8 +366,10 @@ _create_context_gles2 (GstGLDisplay * display, gint * gl_major, gint * gl_minor)
   display->priv->vtable.gen_shader = (GstGLWindowCB) _gen_shader_gles2;
   display->priv->vtable.del_shader = (GstGLWindowCB) _del_shader_gles2;
 
-  *gl_major = 2;
-  *gl_minor = 0;
+  if (gl_major)
+    *gl_major = 2;
+  if (gl_minor)
+    *gl_minor = 0;
 
   return TRUE;
 }
@@ -382,56 +379,44 @@ _create_context_gles2 (GstGLDisplay * display, gint * gl_major, gint * gl_minor)
 gboolean
 _create_context_opengl (GstGLDisplay * display, gint * gl_major, gint * gl_minor)
 {
-  GLenum err = GLEW_OK;
+  guint maj, min;
   GLenum gl_err = GL_NO_ERROR;
+  GLenum err;
   GString *opengl_version = NULL;
 
-  if (glewInit () != GLEW_OK) {
+  if ((err = glewInit ()) != GLEW_OK) {
     gst_gl_display_set_error (display, "Failed to init GLEW: %s",
         glewGetErrorString (err));
     return TRUE;
   }
 
   /* OpenGL > 1.2.0 and Glew > 1.4.0 */
-  if (glGetString (GL_VERSION))
-    GST_INFO ("GL_VERSION: %s", glGetString (GL_VERSION));
-
-  GST_INFO ("GLEW_VERSION: %s", glewGetString (GLEW_VERSION));
-
-  if (glGetString (GL_SHADING_LANGUAGE_VERSION))
-    GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
-        glGetString (GL_SHADING_LANGUAGE_VERSION));
-  else
-    GST_WARNING ("Your driver does not support GLSL (OpenGL Shading Language)");
-
-  if (glGetString (GL_VENDOR))
-    GST_INFO ("GL_VENDOR: %s", glGetString (GL_VENDOR));
-
-  if (glGetString (GL_RENDERER))
-    GST_INFO ("GL_RENDERER: %s", glGetString (GL_RENDERER));
+  GST_INFO ("GL_VERSION: %s", glGetString (GL_VERSION));
+  GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
+      glGetString (GL_SHADING_LANGUAGE_VERSION));
+  GST_INFO ("GL_VENDOR: %s", glGetString (GL_VENDOR));
+  GST_INFO ("GL_RENDERER: %s", glGetString (GL_RENDERER));
 
   gl_err = glGetError ();
   if (gl_err != GL_NO_ERROR) {
     gst_gl_display_set_error (display, "glGetString error: 0x%x", gl_err);
   }
-  if (glGetString (GL_VERSION)) {
-    opengl_version =
-        g_string_truncate (g_string_new ((gchar *) glGetString (GL_VERSION)), 3);
+  opengl_version =
+      g_string_truncate (g_string_new ((gchar *) glGetString (GL_VERSION)), 3);
 
-    sscanf (opengl_version->str, "%d.%d", gl_major, gl_minor);
+  sscanf (opengl_version->str, "%d.%d", &maj, &min);
 
-    g_string_free (opengl_version, TRUE);
+  g_string_free (opengl_version, TRUE);
 
-    if ((*gl_major < 1) ||
-        (GLEW_VERSION_MAJOR < 1) ||
-        (*gl_major < 2 && *gl_major >= 1
-            && *gl_minor < 2) || (GLEW_VERSION_MAJOR < 2
-            && GLEW_VERSION_MAJOR >= 1 && GLEW_VERSION_MINOR < 4)) {
-      /* turn off the pipeline, the old drivers are not yet supported */
-      gst_gl_display_set_error (display,
-          "OpenGL >= 1.2.0 and Glew >= 1.4.0 is required");
-    }
+  if ((maj < 1) || (maj < 2 && maj >= 1 && min < 2)) {
+    /* turn off the pipeline, the old drivers are not yet supported */
+    gst_gl_display_set_error (display,
+        "OpenGL >= 1.2.0 and Glew >= 1.4.0 is required");
+    return FALSE;
   }
+
+  _gst_gl_feature_check_ext_functions (display, maj, min,
+      (const gchar *) glGetString (GL_EXTENSIONS));
 
   display->priv->vtable.gen_fbo = (GstGLWindowCB) _gen_fbo_opengl;
   display->priv->vtable.use_fbo = (GstGLWindowCB) _use_fbo_opengl;
@@ -439,6 +424,11 @@ _create_context_opengl (GstGLDisplay * display, gint * gl_major, gint * gl_minor
   display->priv->vtable.del_fbo = (GstGLWindowCB) _del_fbo_opengl;
   display->priv->vtable.gen_shader = (GstGLWindowCB) _gen_shader_opengl;
   display->priv->vtable.del_shader = (GstGLWindowCB) _del_shader_opengl;
+
+  if (gl_major)
+    *gl_major = maj;
+  if (gl_minor)
+    *gl_minor = min;
 
   return TRUE;
 }
@@ -462,7 +452,7 @@ _compiled_api (void)
 gpointer
 gst_gl_display_thread_create_context (GstGLDisplay * display)
 {
-  gint gl_major = 0, gl_minor = 0;
+  gint gl_major = 0;
   gboolean ret = FALSE;
   GError *error = NULL;
   GstGLAPI compiled_api;
@@ -505,11 +495,11 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   /* gl api specific code */
 #if HAVE_OPENGL
   if (!ret && USING_OPENGL(display))
-    ret = _create_context_opengl (display, &gl_major, &gl_minor);
+    ret = _create_context_opengl (display, &gl_major, NULL);
 #endif
 #if HAVE_GLES2
   if (!ret && USING_GLES2(display))
-    ret = _create_context_gles2 (display, &gl_major, &gl_minor);
+    ret = _create_context_gles2 (display, &gl_major, NULL);
 #endif
 
   if (!ret || !gl_major) {
