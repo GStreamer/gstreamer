@@ -7048,6 +7048,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     gboolean amrwb = FALSE;
 
     offset = 32;
+    /* sample description entry (16) + sound sample description v0 (20) */
     if (len < 36)
       goto corrupt_file;
 
@@ -7131,6 +7132,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
 
     if (version == 0x00010000) {
+      /* sample description entry (16) + sound sample description v1 (20+16) */
+      if (len < 52)
+        goto corrupt_file;
+
       switch (fourcc) {
         case FOURCC_twos:
         case FOURCC_sowt:
@@ -7168,6 +7173,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         gdouble fp;
         guint64 val;
       } qtfp;
+
+      /* sample description entry (16) + sound sample description v2 (56) */
+      if (len < 72)
+        goto corrupt_file;
 
       stream->samples_per_packet = QT_UINT32 (stsd_data + offset);
       qtfp.val = QT_UINT64 (stsd_data + offset + 4);
