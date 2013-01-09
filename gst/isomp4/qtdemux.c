@@ -9848,6 +9848,62 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("WMA");
       caps = gst_caps_new_empty_simple ("audio/x-wma");
       break;
+    case GST_MAKE_FOURCC ('l', 'p', 'c', 'm'):
+    {
+      guint32 flags = 0;
+      guint32 depth = 0;
+      guint32 width = 0;
+      GstAudioFormat format;
+      enum
+      {
+        FLAG_IS_FLOAT = 0x1,
+        FLAG_IS_BIG_ENDIAN = 0x2,
+        FLAG_IS_SIGNED = 0x4,
+        FLAG_IS_PACKED = 0x8,
+        FLAG_IS_ALIGNED_HIGH = 0x10,
+        FLAG_IS_NON_INTERLEAVED = 0x20
+      };
+      _codec ("Raw LPCM audio");
+
+      if (data && len >= 56) {
+        depth = QT_UINT32 (data + 40);
+        flags = QT_UINT32 (data + 44);
+        width = QT_UINT32 (data + 48) * 8 / stream->n_channels;
+      }
+      if ((flags & FLAG_IS_FLOAT) == 0) {
+        if (depth == 0)
+          depth = 16;
+        if (width == 0)
+          width = 16;
+        format = gst_audio_format_build_integer ((flags & FLAG_IS_SIGNED) ?
+            TRUE : FALSE, (flags & FLAG_IS_BIG_ENDIAN) ?
+            G_BIG_ENDIAN : G_LITTLE_ENDIAN, width, depth);
+        // FIXME: check FLAG_IS_NON_INTERLEAVED flag for layout
+        caps = gst_caps_new_simple ("audio/x-raw",
+            "format", G_TYPE_STRING, gst_audio_format_to_string (format),
+            "layout", G_TYPE_STRING, "interleaved", NULL);
+      } else {
+        if (depth == 0)
+          depth = 32;
+        if (width == 0)
+          width = 32;
+        if (width == 64) {
+          if (flags & FLAG_IS_BIG_ENDIAN)
+            format = GST_AUDIO_FORMAT_F64BE;
+          else
+            format = GST_AUDIO_FORMAT_F64LE;
+        } else {
+          if (flags & FLAG_IS_BIG_ENDIAN)
+            format = GST_AUDIO_FORMAT_F32BE;
+          else
+            format = GST_AUDIO_FORMAT_F32LE;
+        }
+        caps = gst_caps_new_simple ("audio/x-raw",
+            "format", G_TYPE_STRING, gst_audio_format_to_string (format),
+            "layout", G_TYPE_STRING, "interleaved", NULL);
+      }
+      break;
+    }
     case GST_MAKE_FOURCC ('q', 't', 'v', 'r'):
       /* ? */
     default:
