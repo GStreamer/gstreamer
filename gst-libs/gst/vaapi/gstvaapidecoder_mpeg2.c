@@ -1156,12 +1156,28 @@ decode_slice(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnit *unit)
 }
 
 static inline gint
-scan_for_start_code(GstAdapter *adapter, guint ofs, guint size, guint32 *scp)
+scan_for_start_code(const guchar *buf, guint buf_size,
+    GstMpegVideoPacketTypeCode *type_ptr)
 {
-    return (gint)gst_adapter_masked_scan_uint32_peek(adapter,
-                                                     0xffffff00, 0x00000100,
-                                                     ofs, size,
-                                                     scp);
+    guint i = 0;
+
+    while (i <= (buf_size - 4)) {
+        if (buf[i + 2] > 1)
+            i += 3;
+        else if (buf[i + 1])
+            i += 2;
+        else if (buf[i] || buf[i + 2] != 1)
+            i++;
+        else
+            break;
+    }
+
+    if (i <= (buf_size - 4)) {
+        if (type_ptr)
+            *type_ptr = buf[i + 3];
+        return i;
+    }
+    return -1;
 }
 
 static GstVaapiDecoderStatus
@@ -1308,47 +1324,46 @@ gst_vaapi_decoder_mpeg2_parse(GstVaapiDecoder *base_decoder,
     GstVaapiParserState * const ps = GST_VAAPI_PARSER_STATE(base_decoder);
     GstVaapiDecoderStatus status;
     GstMpegVideoPacketTypeCode type;
-    guint32 start_code;
-    guint size, buf_size, flags;
-    gint ofs, ofs2;
+    const guchar *buf;
+    guint buf_size, flags;
+    gint ofs, ofs1, ofs2;
 
     status = ensure_decoder(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
-    size = gst_adapter_available(adapter);
-    if (size < 4)
+    buf_size = gst_adapter_available(adapter);
+    if (buf_size < 4)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
-    ofs = scan_for_start_code(adapter, 0, size, &start_code);
+    buf = gst_adapter_peek(adapter, buf_size);
+    if (!buf)
+        return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+
+    ofs = scan_for_start_code(buf, buf_size, &type);
     if (ofs < 0)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+    ofs1 = ofs;
 
-    if (ofs > 0) {
-        gst_adapter_flush(adapter, ofs);
-        size -= ofs;
-    }
+    ofs2 = ps->input_offset2 - 4;
+    if (ofs2 < ofs1 + 4)
+        ofs2 = ofs1 + 4;
 
-    ofs2 = ps->input_offset2 - ofs - 4;
-    if (ofs2 < 4)
-        ofs2 = 4;
-
-    ofs = G_UNLIKELY(size < ofs2 + 4) ? -1 :
-        scan_for_start_code(adapter, ofs2, size - ofs2, NULL);
+    ofs = G_UNLIKELY(buf_size < ofs2 + 4) ? -1 :
+        scan_for_start_code(&buf[ofs2], buf_size - ofs2, NULL);
     if (ofs < 0) {
         // Assume the whole packet is present if end-of-stream
         if (!at_eos) {
-            ps->input_offset2 = size;
+            ps->input_offset2 = buf_size;
             return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
         }
-        ofs = size;
+        ofs = buf_size - ofs2;
     }
-    buf_size = ofs;
-    ps->input_offset2 = 0;
+    ofs2 += ofs;
 
-    unit->size = buf_size;
-
-    type = start_code & 0xff;
+    unit->size = ofs2 - ofs1;
+    gst_adapter_flush(adapter, ofs1);
+    ps->input_offset2 = 4;
 
     /* Check for start of new picture */
     flags = 0;
@@ -1366,7 +1381,7 @@ gst_vaapi_decoder_mpeg2_parse(GstVaapiDecoder *base_decoder,
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
         break;
     case GST_MPEG_VIDEO_PACKET_EXTENSION:
-        if (G_UNLIKELY(buf_size < 5))
+        if (G_UNLIKELY(unit->size < 5))
             return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
         break;
     default:
