@@ -147,80 +147,15 @@ struct _GstGLDisplay
 
   /* gl API we are using */
   GstGLAPI       gl_api;
-
-  /* conditions */
-  GCond         *cond_create_context;
-  GCond         *cond_destroy_context;
-
-  /* generic gl code */
-  GstGLDisplayThreadFunc   generic_callback;
-  gpointer                 data;
-
-  /* action redisplay */
-  GLuint         redisplay_texture;
-  GLuint         redisplay_texture_width;
-  GLuint         redisplay_texture_height;
   gboolean       keep_aspect_ratio;
-#if GST_GL_HAVE_GLES2
-  GstGLShader   *redisplay_shader;
-  gchar         *redisplay_vertex_shader_str_gles2;
-  gchar         *redisplay_fragment_shader_str_gles2;
-  GLint          redisplay_attr_position_loc;
-  GLint          redisplay_attr_texture_loc;
-#endif
 
-  /* action gen and del texture */
-  GLuint         gen_texture;
-  GLuint         gen_texture_width;
-  GLuint         gen_texture_height;
-  GstVideoFormat gen_texture_video_format;
-
-  /* client callbacks */
-  CRCB           clientReshapeCallback;
-  CDCB           clientDrawCallback;
-  gpointer       client_data;
+  /* foreign gl context */
+  gulong         external_gl_context;
 
   GstGLDisplayConversion colorspace_conversion;
 
   GSList        *uploads;
   GSList        *downloads;
-
-  /* foreign gl context */
-  gulong         external_gl_context;
-
-  /* filter gen fbo */
-  GLuint         gen_fbo_width;
-  GLuint         gen_fbo_height;
-  GLuint         generated_fbo;
-  GLuint         generated_depth_buffer;
-
-  /* filter use fbo */
-  GLuint         use_fbo;
-  GLuint         use_depth_buffer;
-  GLuint         use_fbo_texture;
-  GLuint         use_fbo_width;
-  GLuint         use_fbo_height;
-  GLCB           use_fbo_scene_cb;
-  GLCB_V2        use_fbo_scene_cb_v2;
-  gdouble        use_fbo_proj_param1;
-  gdouble        use_fbo_proj_param2;
-  gdouble        use_fbo_proj_param3;
-  gdouble        use_fbo_proj_param4;
-  GstGLDisplayProjection use_fbo_projection;
-  gpointer      *use_fbo_stuff;
-  GLuint         input_texture_width;
-  GLuint         input_texture_height;
-  GLuint         input_texture;
-
-  /* filter del fbo */
-  GLuint         del_fbo;
-  GLuint         del_depth_buffer;
-
-  /* action gen and del shader */
-  const gchar   *gen_shader_fragment_source;
-  const gchar   *gen_shader_vertex_source;
-  GstGLShader   *gen_shader;
-  GstGLShader   *del_shader;
 
   gchar *error_message;
 
