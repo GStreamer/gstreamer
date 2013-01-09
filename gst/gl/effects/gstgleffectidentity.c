@@ -33,13 +33,13 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
   GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (filter->display)) {
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
   }
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   if (USING_GLES2 (filter->display)) {
     GstGLShader *shader =
         g_hash_table_lookup (effects->shaderstable, "identity0");

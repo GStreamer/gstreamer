@@ -30,10 +30,10 @@
 
 #include "gstglwindow_x11.h"
 
-#ifdef HAVE_GLX
+#if GST_GL_HAVE_PLATFORM_GLX
 # include "gstglwindow_x11_glx.h"
 #endif
-#ifdef HAVE_EGL
+#if GST_GL_HAVE_PLATFORM_EGL
 # include "gstglwindow_x11_egl.h"
 #endif
 
@@ -217,8 +217,8 @@ gst_gl_window_x11_new (GstGLAPI gl_api, guintptr external_gl_context,
 
   user_choice = g_getenv ("GST_GL_PLATFORM");
 
-#ifdef HAVE_GLX
-#ifdef HAVE_EGL
+#if GST_GL_HAVE_PLATFORM_GLX
+#if GST_GL_HAVE_PLATFORM_EGL
   /* try GLX first for Desktop OpenGL */
   if (gl_api & GST_GL_API_OPENGL || gl_api & GST_GL_API_OPENGL3) {
     if (!window && (!user_choice
@@ -243,18 +243,18 @@ gst_gl_window_x11_new (GstGLAPI gl_api, guintptr external_gl_context,
           GST_GL_WINDOW_X11 (gst_gl_window_x11_glx_new (gl_api,
               external_gl_context, error));
   }
-#endif /* HAVE_EGL */
+#endif /* GST_GL_HAVE_PLATFORM_EGL */
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "glx") != NULL))
     window =
         GST_GL_WINDOW_X11 (gst_gl_window_x11_glx_new (gl_api,
             external_gl_context, error));
-#endif /* HAVE_GLX */
-#ifdef HAVE_EGL
+#endif /* GST_GL_HAVE_PLATFORM_GLX */
+#ifdef GST_GL_HAVE_PLATFORM_EGL
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "egl") != NULL))
     window =
         GST_GL_WINDOW_X11 (gst_gl_window_x11_egl_new (gl_api,
             external_gl_context, error));
-#endif /* HAVE_EGL */
+#endif /* GST_GL_HAVE_PLATFORM_EGL */
   if (!window) {
     GST_WARNING ("Failed to create x11 window, user_choice:%s",
         user_choice ? user_choice : "NULL");

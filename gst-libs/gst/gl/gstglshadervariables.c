@@ -566,7 +566,7 @@ gst_gl_shadervariable_set (GstGLShader * shader,
           (float *) ret->value);
       break;
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
     case _mat2x3:
       gst_gl_shader_set_uniform_matrix_2x3fv (shader, ret->name, ret->count, 0,
           (float *) ret->value);

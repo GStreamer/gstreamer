@@ -23,6 +23,8 @@
 #ifndef __GST_GL_H__
 #define __GST_GL_H__
 
+#include "gstglconfig.h"
+
 #include <gst/video/video.h>
 
 typedef struct _GstGLUpload GstGLUpload;
@@ -159,7 +161,7 @@ struct _GstGLDisplay
   GLuint         redisplay_texture_width;
   GLuint         redisplay_texture_height;
   gboolean       keep_aspect_ratio;
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   GstGLShader   *redisplay_shader;
   gchar         *redisplay_vertex_shader_str_gles2;
   gchar         *redisplay_fragment_shader_str_gles2;

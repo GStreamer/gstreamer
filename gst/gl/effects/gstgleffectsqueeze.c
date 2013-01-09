@@ -40,7 +40,7 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
     shader = gst_gl_shader_new (filter->display);
     g_hash_table_insert (effects->shaderstable, "squeeze0", shader);
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
     if (USING_GLES2 (filter->display)) {
       if (shader) {
         GError *error = NULL;
@@ -68,7 +68,7 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
       }
     }
 #endif
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
     if (USING_OPENGL (filter->display)) {
       if (!gst_gl_shader_compile_and_check (shader,
               squeeze_fragment_source_opengl, GST_GL_SHADER_FRAGMENT_SOURCE)) {
@@ -92,7 +92,7 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   if (USING_GLES2 (filter->display)) {
     gst_gl_shader_set_uniform_1f (shader, "width", (gfloat) width / 2.0f);
     gst_gl_shader_set_uniform_1f (shader, "height", (gfloat) height / 2.0f);

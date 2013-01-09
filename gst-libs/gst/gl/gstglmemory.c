@@ -226,7 +226,7 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
   glGenRenderbuffersEXT (1, &rboId);
   glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, rboId);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (display)) {
     glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, width,
         height);
@@ -234,7 +234,7 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
         width, height);
   }
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   if (USING_GLES2 (display)) {
     glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
         width, height);
@@ -244,7 +244,7 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
   glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
       GL_RENDERBUFFER_EXT, rboId);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (display)) {
     glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
         GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, rboId);
@@ -277,7 +277,7 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
         GST_CAT_ERROR (GST_CAT_GL_MEMORY,
             "GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
         break;
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
       case GL_FRAMEBUFFER_UNDEFINED:
         GST_CAT_ERROR (GST_CAT_GL_MEMORY, "GL_FRAMEBUFFER_UNDEFINED");
         break;

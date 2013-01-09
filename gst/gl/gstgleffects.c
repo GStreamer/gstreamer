@@ -97,7 +97,7 @@ gst_gl_effects_effect_get_type (void)
     {GST_GL_EFFECT_IDENTITY, "Do nothing Effect", "identity"},
     {GST_GL_EFFECT_MIRROR, "Mirror Effect", "mirror"},
     {GST_GL_EFFECT_SQUEEZE, "Squeeze Effect", "squeeze"},
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
     {GST_GL_EFFECT_STRETCH, "Stretch Effect", "stretch"},
     {GST_GL_EFFECT_FISHEYE, "FishEye Effect", "fisheye"},
     {GST_GL_EFFECT_TWIRL, "Twirl Effect", "twirl"},
@@ -136,7 +136,7 @@ gst_gl_effects_set_effect (GstGLEffects * effects, gint effect_type)
     case GST_GL_EFFECT_SQUEEZE:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_squeeze;
       break;
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
     case GST_GL_EFFECT_STRETCH:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_stretch;
       break;
@@ -270,7 +270,7 @@ void
 gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
     guint height)
 {
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (gst_gl_display_get_gl_api_unlocked (GST_GL_FILTER (effects)->display) &
       GST_GL_API_OPENGL) {
     glActiveTexture (GL_TEXTURE0);
@@ -291,7 +291,7 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
     glEnd ();
   }
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   if (gst_gl_display_get_gl_api_unlocked (GST_GL_FILTER (effects)->display) &
       GST_GL_API_GLES2) {
     const GLfloat vVertices[] = {
@@ -327,7 +327,7 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
 static void
 set_horizontal_swap (GstGLDisplay * display, gpointer data)
 {
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_OPENGL) {
     const double mirrormatrix[16] = {
       -1.0, 0.0, 0.0, 0.0,

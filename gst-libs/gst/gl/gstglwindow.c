@@ -26,16 +26,16 @@
 
 #include "gstglwindow.h"
 
-#ifdef HAVE_WINDOW_X11
+#if GST_GL_HAVE_WINDOW_X11
 #include "x11/gstglwindow_x11.h"
 #endif
-#ifdef HAVE_WINDOW_WIN32
+#if GST_GL_HAVE_WINDOW_WIN32
 #include "win32/gstglwindow_win32.h"
 #endif
-#ifdef HAVE_WINDOW_COCOA
+#if GST_GL_HAVE_WINDOW_COCOA
 #include "cocoa/gstglwindow_cocoa.h"
 #endif
-#ifdef HAVE_WINDOW_WAYLAND
+#if GST_GL_HAVE_WINDOW_WAYLAND
 #include "wayland/gstglwindow_wayland_egl.h"
 #endif
 
@@ -83,24 +83,24 @@ gst_gl_window_new (GstGLAPI api, guintptr external_gl_context, GError ** error)
   user_choice = g_getenv ("GST_GL_WINDOW");
   GST_INFO ("creating a window, user choice:%s", user_choice);
 
-#ifdef HAVE_WINDOW_X11
+#if GST_GL_HAVE_WINDOW_X11
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
     window =
         GST_GL_WINDOW (gst_gl_window_x11_new (api, external_gl_context, error));
 #endif
-#ifdef HAVE_WINDOW_WIN32
+#if GST_GL_HAVE_WINDOW_WIN32
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "win32")))
     window =
         GST_GL_WINDOW (gst_gl_window_win32_new (api, external_gl_context,
             error));
 #endif
-#ifdef HAVE_WINDOW_COCOA
+#if GST_GL_HAVE_WINDOW_COCOA
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "cocoa")))
     window =
         GST_GL_WINDOW (gst_gl_window_cocoa_new (api, external_gl_context,
             error));
 #endif
-#ifdef HAVE_WINDOW_WAYLAND
+#if GST_GL_HAVE_WINDOW_WAYLAND
   if (!window && (!user_choice || g_strstr_len (user_choice, 7, "wayland")))
     window =
         GST_GL_WINDOW (gst_gl_window_wayland_egl_new (api,

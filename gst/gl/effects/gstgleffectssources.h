@@ -27,11 +27,11 @@
 
 extern const gchar *vertex_shader_source;
 extern const gchar *identity_fragment_source;
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 extern const gchar *mirror_fragment_source_opengl;
 extern const gchar *squeeze_fragment_source_opengl;
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 extern const gchar *mirror_fragment_source_gles2;
 extern const gchar *squeeze_fragment_source_gles2;
 #endif

@@ -80,7 +80,7 @@ const gchar *identity_fragment_source =
   "}";
 
 /* Mirror effect */
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 const gchar *mirror_fragment_source_opengl =
   "#extension GL_ARB_texture_rectangle : enable\n"
   "uniform sampler2DRect tex;"
@@ -96,7 +96,7 @@ const gchar *mirror_fragment_source_opengl =
   "  gl_FragColor = color * gl_Color;"
   "}";
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 const gchar *mirror_fragment_source_gles2 =
   "precision mediump float;"
   "varying vec2 v_texCoord;"
@@ -111,7 +111,7 @@ const gchar *mirror_fragment_source_gles2 =
 #endif
 
 /* Squeeze effect */
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 const gchar *squeeze_fragment_source_opengl =
   "#extension GL_ARB_texture_rectangle : enable\n"
   "uniform sampler2DRect tex;"
@@ -129,7 +129,7 @@ const gchar *squeeze_fragment_source_opengl =
   "  gl_FragColor = color * gl_Color;"
   "}";
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 const gchar *squeeze_fragment_source_gles2 =
   "precision mediump float;"
   "varying vec2 v_texCoord;"

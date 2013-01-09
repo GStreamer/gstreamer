@@ -124,12 +124,12 @@ gboolean gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
 void gst_gl_filter_render_to_target (GstGLFilter *filter, gboolean resize, GLuint input,
                                      GLuint target, GLCB func, gpointer data);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 void gst_gl_filter_render_to_target_with_shader (GstGLFilter * filter, gboolean resize,
                                                  GLuint input, GLuint target, GstGLShader *shader);
 
 void gst_gl_filter_draw_texture (GstGLFilter *filter, GLuint texture, guint width, guint height);
-#endif /* HAVE_OPENGL */
+#endif /* GST_GL_HAVE_OPENGL */
 
 G_END_DECLS
 

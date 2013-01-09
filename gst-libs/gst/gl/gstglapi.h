@@ -21,17 +21,19 @@
 #ifndef __GST_GL_API_H__
 #define __GST_GL_API_H__
 
+#include "gstglconfig.h"
+
 /* OpenGL 2.0 for Embedded Systems */
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 # include <GLES2/gl2.h>
 # include <GLES2/gl2ext.h>
-# if !HAVE_OPENGL
+# if !GST_GL_HAVE_OPENGL
 #  include "gstgles2.h"
 # endif
 #endif
 
 /* OpenGL for desktop systems */
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 # if __APPLE__
 #  include <GL/glew.h>
 #  include <OpenGL/OpenGL.h>
@@ -73,7 +75,7 @@ typedef enum
   ret (*name) args;
 #define GST_GL_EXT_END()
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 typedef struct _GstGLFuncs
 {
 #include "glprototypes/opengl.h"
@@ -89,7 +91,7 @@ typedef struct _GstGLFuncs
 const GstGLFuncs *gst_gl_get_opengl_vtable (void);
 #endif
 
-#if GST_GL_GLES2
+#if GST_GL_HAVE_GLES2
 typedef struct _GstGLES2Funcs
 {
 #include "glprototypes/gles1gles2.h"

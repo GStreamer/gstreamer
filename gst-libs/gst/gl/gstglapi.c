@@ -25,7 +25,7 @@
   NULL,
 #define GST_GL_EXT_END()
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 static GstGLFuncs gst_gl = {
 #include "glprototypes/opengl.h"
   {NULL,},
@@ -44,7 +44,7 @@ gst_gl_get_opengl_vtable (void)
 }
 #endif
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 static GstGLES2Funcs gst_gles2 = {
 #include "glprototypes/gles1gles2.h"
   {NULL,},

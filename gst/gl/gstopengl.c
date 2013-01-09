@@ -51,7 +51,7 @@
 GType gst_gl_filter_cube_get_type (void);
 GType gst_gl_effects_get_type (void);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 #include "gstgltestsrc.h"
 #include "gstglfilterlaplacian.h"
 #include "gstglfilterglass.h"
@@ -86,7 +86,7 @@ GType gst_gl_overlay_get_type (void);
 
 #endif /* HAVE_JPEG */
 #endif /* HAVE_PNG */
-#endif /* HAVE_OPENGL */
+#endif /* GST_GL_HAVE_OPENGL */
 
 #define GST_CAT_DEFAULT gst_gl_gstgl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -111,7 +111,7 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, gst_gl_effects_get_type ())) {
     return FALSE;
   }
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (!gst_element_register (plugin, "gltestsrc",
           GST_RANK_NONE, GST_TYPE_GL_TEST_SRC)) {
     return FALSE;
@@ -183,7 +183,7 @@ plugin_init (GstPlugin * plugin)
   }
 #endif /* HAVE_JPEG */
 #endif /* HAVE_PNG */
-#endif /* HAVE_OPENGL */
+#endif /* GST_GL_HAVE_OPENGL */
 
   return TRUE;
 }

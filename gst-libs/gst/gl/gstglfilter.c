@@ -1075,7 +1075,7 @@ gst_gl_filter_render_to_target (GstGLFilter * filter, gboolean resize,
       in_width, 0, in_height, GST_GL_DISPLAY_PROJECTION_ORTHO2D, data);
 }
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 static void
 _draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
 {
@@ -1156,4 +1156,4 @@ gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
 
   glEnd ();
 }
-#endif /* HAVE_OPENGL */
+#endif /* GST_GL_HAVE_OPENGL */

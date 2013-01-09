@@ -75,20 +75,20 @@ static void gst_gl_filter_cube_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_gl_filter_cube_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 static void gst_gl_filter_cube_reset (GstGLFilter * filter);
 static gboolean gst_gl_filter_cube_init_shader (GstGLFilter * filter);
 static void _callback_gles2 (gint width, gint height, guint texture,
     gpointer stuff);
 #endif
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 static void _callback_opengl (gint width, gint height, guint texture,
     gpointer stuff);
 #endif
 static gboolean gst_gl_filter_cube_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 /* vertex source */
 static const gchar *cube_v_src =
     "attribute vec4 a_position;                                   \n"
@@ -144,7 +144,7 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
   gobject_class->set_property = gst_gl_filter_cube_set_property;
   gobject_class->get_property = gst_gl_filter_cube_get_property;
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_cube_init_shader;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_filter_cube_reset;
 #endif
@@ -256,7 +256,7 @@ gst_gl_filter_cube_set_caps (GstGLFilter * filter, GstCaps * incaps,
   return TRUE;
 }
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 static void
 gst_gl_filter_cube_reset (GstGLFilter * filter)
 {
@@ -292,11 +292,11 @@ gst_gl_filter_cube_filter_texture (GstGLFilter * filter, guint in_tex,
   api =
       gst_gl_display_get_gl_api_unlocked (GST_GL_FILTER (cube_filter)->display);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (api & GST_GL_API_OPENGL)
     cb = _callback_opengl;
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   if (api & GST_GL_API_GLES2)
     cb = _callback_gles2;
 #endif
@@ -317,7 +317,7 @@ gst_gl_filter_cube_filter_texture (GstGLFilter * filter, guint in_tex,
 }
 
 /* opengl scene, params: input texture (not the output filter->texture) */
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 static void
 _callback_opengl (gint width, gint height, guint texture, gpointer stuff)
 {
@@ -416,7 +416,7 @@ _callback_opengl (gint width, gint height, guint texture, gpointer stuff)
 }
 #endif
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 static void
 _callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
 {

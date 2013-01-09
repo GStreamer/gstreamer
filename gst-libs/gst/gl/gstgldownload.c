@@ -58,13 +58,13 @@ static gboolean gst_gl_download_perform_with_data_unlocked (GstGLDownload *
 static gboolean gst_gl_download_perform_with_data_unlocked_thread (GstGLDownload
     * download, GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 static void _do_download_draw_rgb_opengl (GstGLDisplay * display,
     GstGLDownload * download);
 static void _do_download_draw_yuv_opengl (GstGLDisplay * display,
     GstGLDownload * download);
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 static void _do_download_draw_rgb_gles2 (GstGLDisplay * display,
     GstGLDownload * download);
 static void _do_download_draw_yuv_gles2 (GstGLDisplay * display,
@@ -75,7 +75,7 @@ static void _do_download_draw_yuv_gles2 (GstGLDisplay * display,
 
 /* YUY2:y2,u,y1,v
    UYVY:v,y1,u,y2 */
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 static gchar *text_shader_YUY2_UYVY_opengl =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect tex;\n"
@@ -144,9 +144,9 @@ static gchar *text_shader_AYUV_opengl =
     "}\n";
 
 #define text_vertex_shader_opengl NULL
-#endif /* HAVE_OPENGL */
+#endif /* GST_GL_HAVE_OPENGL */
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 static gchar *text_shader_YUY2_UYVY_gles2 =
     "precision mediump float;\n"
     "varying vec2 v_texCoord;\n"
@@ -214,7 +214,7 @@ static gchar *text_shader_RGB_gles2 =
     "{                                                   \n"
     "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
     "}                                                   \n";
-#endif /* HAVE_GLES2 */
+#endif /* GST_GL_HAVE_GLES2 */
 
 /* *INDENT-ON* */
 
@@ -288,7 +288,7 @@ gst_gl_download_new (GstGLDisplay * display)
   download->display = g_object_ref (display);
   priv = download->priv;
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (display)) {
     priv->YUY2_UYVY = text_shader_YUY2_UYVY_opengl;
     priv->I420_YV12 = text_shader_I420_YV12_opengl;
@@ -298,7 +298,7 @@ gst_gl_download_new (GstGLDisplay * display)
     priv->do_yuv = _do_download_draw_yuv_opengl;
   }
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   if (USING_GLES2 (display)) {
     priv->YUY2_UYVY = text_shader_YUY2_UYVY_gles2;
     priv->I420_YV12 = text_shader_I420_YV12_gles2;
@@ -781,7 +781,7 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
       /* setup the render buffer for depth */
       glGenRenderbuffersEXT (1, &download->depth_buffer);
       glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, download->depth_buffer);
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
       if (USING_OPENGL (display)) {
         glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
             out_width, out_height);
@@ -789,7 +789,7 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
             out_width, out_height);
       }
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
       if (USING_GLES2 (display)) {
         glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
             out_width, out_height);
@@ -859,7 +859,7 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
       glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
           GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, download->depth_buffer);
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
       if (USING_GLES2 (display)) {
         glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
             GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT,
@@ -936,7 +936,7 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
       /* color space conversion is not needed */
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
     {
       if (USING_GLES2 (display)) {
         /* glGetTexImage2D not available in OpenGL ES 2.0 */
@@ -1093,7 +1093,7 @@ _do_download (GstGLDisplay * display, GstGLDownload * download)
   }
 }
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 static void
 _do_download_draw_rgb_opengl (GstGLDisplay * display, GstGLDownload * download)
 {
@@ -1159,7 +1159,7 @@ _do_download_draw_rgb_opengl (GstGLDisplay * display, GstGLDownload * download)
 #endif
 
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 static void
 _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
 {
@@ -1243,7 +1243,7 @@ _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
 }
 #endif
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 static void
 _do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
 {
@@ -1428,7 +1428,7 @@ _do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
 }
 #endif
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 static void
 _do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
 {

@@ -131,7 +131,7 @@ GST_START_TEST (test_glfiltercube)
 }
 
 GST_END_TEST
-#ifdef OPENGL_ES2
+#if GST_GL_HAVE_GLES2
 # define N_EFFECTS 3
 #else
 # define N_EFFECTS 16
@@ -154,7 +154,7 @@ GST_START_TEST (test_gleffects)
 
 GST_END_TEST
 #undef N_EFFECTS
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 #define N_SRCS 13
 GST_START_TEST (test_gltestsrc)
 {
@@ -311,7 +311,7 @@ GST_START_TEST (test_glfilterapp)
 
 GST_END_TEST
 #endif /* 0 */
-#endif /* HAVE_OPENGL */
+#endif /* GST_GL_HAVE_OPENGL */
 #endif /* !GST_DISABLE_PARSE */
     Suite * simple_launch_lines_suite (void)
 {
@@ -326,7 +326,7 @@ GST_END_TEST
   tcase_add_test (tc_chain, test_glimagesink);
   tcase_add_test (tc_chain, test_glfiltercube);
   tcase_add_test (tc_chain, test_gleffects);
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   tcase_add_test (tc_chain, test_gltestsrc);
   tcase_add_test (tc_chain, test_glfilterblur);
   tcase_add_test (tc_chain, test_glfiltersobel);
@@ -345,7 +345,7 @@ GST_END_TEST
 #endif /* HAVE_JPEG */
 #endif /* HAVE_PNG */
 #endif
-#endif /* HAVE_OPENGL */
+#endif /* GST_GL_HAVE_OPENGL */
 #endif /* !GST_DISABLE_PARSE */
   return s;
 }
