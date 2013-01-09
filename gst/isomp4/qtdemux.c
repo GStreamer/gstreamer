@@ -7192,8 +7192,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       GST_WARNING_OBJECT (qtdemux, "unknown version %08x", version);
     }
 
-    stream->caps = qtdemux_audio_caps (qtdemux, stream, fourcc, NULL, 0,
-        &codec);
+    stream->caps = qtdemux_audio_caps (qtdemux, stream, fourcc,
+        stsd_data + 32, len - 16, &codec);
 
     switch (fourcc) {
       case FOURCC_in24:
@@ -9805,7 +9805,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('Q', 'D', 'M', '2'):
       _codec ("QDesign Music v.2");
       /* FIXME: QDesign music version 2 (no constant) */
-      if (data) {
+      if (FALSE && data) {
         caps = gst_caps_new_simple ("audio/x-qdm2",
             "framesize", G_TYPE_INT, QT_UINT32 (data + 52),
             "bitrate", G_TYPE_INT, QT_UINT32 (data + 40),
