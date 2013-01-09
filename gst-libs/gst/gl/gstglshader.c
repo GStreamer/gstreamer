@@ -303,12 +303,12 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
     glGetObjectParameterivARB (priv->vertex_handle,
         GL_OBJECT_COMPILE_STATUS_ARB, &status);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
     if (USING_OPENGL (shader->display))
       glGetInfoLogARB (priv->vertex_handle,
           sizeof (info_buffer) - 1, &len, info_buffer);
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
     if (USING_GLES2 (shader->display))
       glGetShaderInfoLog (priv->vertex_handle,
           sizeof (info_buffer) - 1, &len, info_buffer);
@@ -342,12 +342,12 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
     glGetObjectParameterivARB (priv->fragment_handle,
         GL_OBJECT_COMPILE_STATUS_ARB, &status);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
     if (USING_OPENGL (shader->display))
       glGetInfoLogARB (priv->fragment_handle,
           sizeof (info_buffer) - 1, &len, info_buffer);
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
     if (USING_GLES2 (shader->display))
       glGetShaderInfoLog (priv->fragment_handle,
           sizeof (info_buffer) - 1, &len, info_buffer);
@@ -372,11 +372,11 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
   /* if nothing failed link shaders */
   glLinkProgramARB (priv->program_handle);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (shader->display))
     glGetObjectParameterivARB (priv->program_handle, GL_LINK_STATUS, &status);
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   if (USING_GLES2 (shader->display))
     glGetProgramiv (priv->program_handle, GL_LINK_STATUS, &status);
 #endif
@@ -419,11 +419,11 @@ gst_gl_shader_release (GstGLShader * shader)
   if (priv->vertex_handle) {    /* not needed but nvidia doesn't care to respect the spec */
     GST_TRACE ("finalizing vertex shader %u", priv->vertex_handle);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
     if (USING_OPENGL (shader->display))
       glDeleteObjectARB (priv->vertex_handle);
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
     if (USING_GLES2 (shader->display))
       glDeleteShader (priv->vertex_handle);
 #endif
@@ -438,11 +438,11 @@ gst_gl_shader_release (GstGLShader * shader)
     GST_TRACE ("finalizing fragment shader %u", priv->fragment_handle);
 
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
     if (USING_OPENGL (shader->display))
       glDeleteObjectARB (priv->fragment_handle);
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
     if (USING_GLES2 (shader->display))
       glDeleteShader (priv->fragment_handle);
 #endif
@@ -820,7 +820,7 @@ gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
   glUniformMatrix4fvARB (location, count, transpose, value);
 }
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 void
 gst_gl_shader_set_uniform_matrix_2x3fv (GstGLShader * shader,
     const gchar * name, gint count, gboolean transpose, const gfloat * value)
@@ -916,7 +916,7 @@ gst_gl_shader_set_uniform_matrix_4x3fv (GstGLShader * shader,
 
   glUniformMatrix4x3fv (location, count, transpose, value);
 }
-#endif /* HAVE_OPENGL */
+#endif /* GST_GL_HAVE_OPENGL */
 
 GLint
 gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar * name)

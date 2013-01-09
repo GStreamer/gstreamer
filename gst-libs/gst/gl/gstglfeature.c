@@ -54,7 +54,7 @@ gst_gl_check_extension (const char *name, const gchar * ext)
 
 /* Define a set of arrays containing the functions required from GL
    for each feature */
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 #define GST_GL_EXT_BEGIN(name,                                            \
                        min_gl_major, min_gl_minor,                      \
                        gles_availability,                               \
@@ -83,13 +83,13 @@ gst_gl_check_extension (const char *name, const gchar * ext)
 static const GstGLFeatureData gst_gl_feature_ext_functions_data_opengl[] = {
 #include "glprototypes/opengl_functions.h"
 };
-#endif /* HAVE_OPENGL */
+#endif /* GST_GL_HAVE_OPENGL */
 
 #undef GST_GL_EXT_BEGIN
 #undef GST_GL_EXT_FUNCTION
 #undef GST_GL_EXT_END
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 #define GST_GL_EXT_BEGIN(name,                                          \
                        min_gl_major, min_gl_minor,                      \
                        gles_availability,                               \
@@ -118,7 +118,7 @@ static const GstGLFeatureData gst_gl_feature_ext_functions_data_opengl[] = {
 static const GstGLFeatureData gst_gl_feature_ext_functions_data_gles2[] = {
 #include "glprototypes/gles2_functions.h"
 };
-#endif /* HAVE_GLES2 */
+#endif /* GST_GL_HAVE_GLES2 */
 
 #undef GST_GL_EXT_BEGIN
 #undef GST_GL_EXT_FUNCTION
@@ -132,18 +132,18 @@ _gst_gl_feature_check (GstGLDisplay * display,
 {
   const char *suffix = NULL;
   int func_num;
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   static const GstGLFuncs *gst_gl = NULL;
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   static const GstGLES2Funcs *gst_gles2 = NULL;
 #endif
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (!gst_gl)
     gst_gl = gst_gl_get_opengl_vtable ();
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   if (!gst_gles2)
     gst_gles2 = gst_gl_get_gles2_vtable ();
 #endif
@@ -219,13 +219,13 @@ _gst_gl_feature_check (GstGLDisplay * display,
       goto error;
 
     /* Set the function pointer in the context */
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
     if (display->gl_api & GST_GL_API_OPENGL) {
       *(void **) ((guint8 *) gst_gl +
           data->functions[func_num].pointer_offset) = func;
     }
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
     if (display->gl_api & GST_GL_API_GLES2) {
       *(void **) ((guint8 *) gst_gles2 +
           data->functions[func_num].pointer_offset) = func;
@@ -240,13 +240,13 @@ _gst_gl_feature_check (GstGLDisplay * display,
    * do feature testing by just looking at the function pointers */
 error:
   for (func_num = 0; data->functions[func_num].name; func_num++) {
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
     if (display->gl_api & GST_GL_API_OPENGL) {
       *(void **) ((guint8 *) gst_gl +
           data->functions[func_num].pointer_offset) = NULL;
     }
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
     if (display->gl_api & GST_GL_API_GLES2) {
       *(void **) ((guint8 *) gst_gles2 +
           data->functions[func_num].pointer_offset) = NULL;
@@ -263,7 +263,7 @@ _gst_gl_feature_check_ext_functions (GstGLDisplay * display,
 {
   int i;
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (display->gl_api & GST_GL_API_OPENGL) {
     for (i = 0; i < G_N_ELEMENTS (gst_gl_feature_ext_functions_data_opengl);
         i++)
@@ -272,7 +272,7 @@ _gst_gl_feature_check_ext_functions (GstGLDisplay * display,
           gl_extensions);
   }
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   if (display->gl_api & GST_GL_API_GLES2) {
     for (i = 0; i < G_N_ELEMENTS (gst_gl_feature_ext_functions_data_gles2); i++)
       _gst_gl_feature_check (display, "GL",

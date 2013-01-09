@@ -25,10 +25,10 @@
 
 #include "gstglwindow_win32.h"
 
-#if HAVE_WGL
+#if GST_GL_HAVE_PLATFORM_WGL
 #include "gstglwindow_win32_wgl.h"
 #endif
-#if HAVE_EGL
+#if GST_GL_HAVE_PLATFORM_EGL
 #include "gstglwindow_win32_egl.h"
 #endif
 

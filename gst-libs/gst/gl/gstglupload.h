@@ -101,12 +101,12 @@ struct _GstGLUploadClass
  *
  * The currently supported formats that can be uploaded
  */
-#if !HAVE_GLES2
+#if !GST_GL_HAVE_GLES2
 #define GST_GL_UPLOAD_FORMATS "{ RGB, RGBx, RGBA, BGR, BGRx, BGRA, xRGB, " \
                                "xBGR, ARGB, ABGR, I420, YV12, YUY2, UYVY, AYUV }"
-#else /* HAVE_GLES2 */
+#else /* GST_GL_HAVE_GLES2 */
 # define GST_GL_UPLOAD_FORMATS "{ RGB, RGBx, RGBA, I420, YV12, YUY2, UYVY, AYUV }"
-#endif /* !HAVE_GLES2 */
+#endif /* !GST_GL_HAVE_GLES2 */
 
 /**
  * GST_GL_UPLOAD_VIDEO_CAPS:

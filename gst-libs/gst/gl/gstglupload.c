@@ -59,18 +59,18 @@ static gboolean gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
 static gboolean gst_gl_upload_perform_with_data_unlocked_thread (GstGLUpload *
     upload, GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 static void _do_upload_draw_opengl (GstGLDisplay * display,
     GstGLUpload * upload);
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 static void _do_upload_draw_gles2 (GstGLDisplay * display,
     GstGLUpload * upload);
 #endif
 
 /* *INDENT-OFF* */
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 /* YUY2:r,g,a
    UYVY:a,b,r */
 static gchar *text_shader_YUY2_UYVY_opengl =
@@ -133,7 +133,7 @@ static gchar *text_shader_AYUV_opengl =
 #define text_vertex_shader_opengl NULL
 #endif
 
-#ifdef HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 /* YUY2:r,g,a
    UYVY:a,b,r */
 static gchar *text_shader_YUY2_UYVY_gles2 =
@@ -276,7 +276,7 @@ gst_gl_upload_new (GstGLDisplay * display)
 
   g_mutex_init (&upload->lock);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (display)) {
     priv->YUY2_UYVY = text_shader_YUY2_UYVY_opengl;
     priv->I420_YV12 = text_shader_I420_YV12_opengl;
@@ -285,7 +285,7 @@ gst_gl_upload_new (GstGLDisplay * display)
     priv->draw = _do_upload_draw_opengl;
   }
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   if (USING_GLES2 (display)) {
     priv->YUY2_UYVY = text_shader_YUY2_UYVY_gles2;
     priv->I420_YV12 = text_shader_I420_YV12_gles2;
@@ -795,13 +795,13 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
           case GST_VIDEO_FORMAT_UYVY:
           {
             gchar text_shader_UYVY[2048];
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
             if (USING_GLES2 (display)) {
               sprintf (text_shader_UYVY, upload->priv->YUY2_UYVY,
                   'a', 'b', 'r');
             }
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
             if (USING_GLES2 (display)) {
               sprintf (text_shader_UYVY, upload->priv->YUY2_UYVY,
                   'a', 'r', 'b');
@@ -825,7 +825,7 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
           case GST_VIDEO_FORMAT_YV12:
           {
             gchar text_shader_I420_YV12[2048];
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
             if (USING_OPENGL (display)) {
               if ((g_ascii_strncasecmp ("ATI",
                           (gchar *) glGetString (GL_VENDOR), 3) == 0)
@@ -840,7 +840,7 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
                     "*0.5");
             }
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
             if (USING_GLES2 (display))
               g_strlcpy (text_shader_I420_YV12, upload->priv->I420_YV12, 2048);
 #endif
@@ -959,7 +959,7 @@ _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload)
   /* setup the render buffer for depth */
   glGenRenderbuffersEXT (1, &upload->depth_buffer);
   glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, upload->depth_buffer);
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (display)) {
     glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
         out_width, out_height);
@@ -967,7 +967,7 @@ _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload)
         out_width, out_height);
   }
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   if (USING_GLES2 (display)) {
     glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
         out_width, out_height);
@@ -994,7 +994,7 @@ _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload)
   glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
       GL_RENDERBUFFER_EXT, upload->depth_buffer);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (display)) {
     glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT,
         GL_RENDERBUFFER_EXT, upload->depth_buffer);
@@ -1379,7 +1379,7 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
 }
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 /* called by _do_upload (in the gl thread) */
 static void
 _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
@@ -1625,7 +1625,7 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
 }
 #endif
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 static void
 _do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
 {

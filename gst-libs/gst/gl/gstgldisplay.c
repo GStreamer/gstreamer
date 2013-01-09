@@ -67,7 +67,7 @@ static void gst_gl_display_finalize (GObject * object);
 gpointer gst_gl_display_thread_create_context (GstGLDisplay * display);
 void gst_gl_display_thread_destroy_context (GstGLDisplay * display);
 void gst_gl_display_thread_run_generic (GstGLDisplay * display);
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 void gst_gl_display_thread_init_redisplay (GstGLDisplay * display);
 #endif
 void gst_gl_display_thread_gen_fbo (GstGLDisplay * display);
@@ -88,7 +88,7 @@ void gst_gl_display_del_texture_thread (GstGLDisplay * display,
 
 void gst_gl_display_gen_texture_window_cb (GstGLDisplay * display);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 void _gen_fbo_opengl (GstGLDisplay * display);
 void _use_fbo_opengl (GstGLDisplay * display);
 void _use_fbo_v2_opengl (GstGLDisplay * display);
@@ -96,7 +96,7 @@ void _del_fbo_opengl (GstGLDisplay * display);
 void _gen_shader_opengl (GstGLDisplay * display);
 void _del_shader_opengl (GstGLDisplay * display);
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 void _gen_fbo_gles2 (GstGLDisplay * display);
 void _use_fbo_gles2 (GstGLDisplay * display);
 void _use_fbo_v2_gles2 (GstGLDisplay * display);
@@ -154,7 +154,7 @@ gst_gl_display_init (GstGLDisplay * display)
   display->redisplay_texture_width = 0;
   display->redisplay_texture_height = 0;
   display->keep_aspect_ratio = FALSE;
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   display->redisplay_shader = NULL;
   display->redisplay_attr_position_loc = 0;
   display->redisplay_attr_texture_loc = 0;
@@ -213,7 +213,7 @@ gst_gl_display_init (GstGLDisplay * display)
   display->uploads = NULL;
   display->downloads = NULL;
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 /* *INDENT-OFF* */
   display->redisplay_vertex_shader_str_gles2 =
       "attribute vec4 a_position;   \n"
@@ -336,7 +336,7 @@ gst_gl_display_set_error (GstGLDisplay * display, const char *format, ...)
   display->isAlive = FALSE;
 }
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 static gboolean
 _create_context_gles2 (GstGLDisplay * display, gint * gl_major, gint * gl_minor)
 {
@@ -375,7 +375,7 @@ _create_context_gles2 (GstGLDisplay * display, gint * gl_major, gint * gl_minor)
 }
 #endif
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 gboolean
 _create_context_opengl (GstGLDisplay * display, gint * gl_major, gint * gl_minor)
 {
@@ -439,10 +439,10 @@ _compiled_api (void)
 {
   GstGLAPI ret = GST_GL_API_NONE;
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   ret |= GST_GL_API_OPENGL;
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   ret |= GST_GL_API_GLES2;
 #endif
 
@@ -493,11 +493,11 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   g_free (compiled_api_s);
 
   /* gl api specific code */
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (!ret && USING_OPENGL(display))
     ret = _create_context_opengl (display, &gl_major, NULL);
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   if (!ret && USING_GLES2(display))
     ret = _create_context_gles2 (display, &gl_major, NULL);
 #endif
@@ -555,7 +555,7 @@ failure:
 void
 gst_gl_display_thread_destroy_context (GstGLDisplay * display)
 {
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
   if (display->redisplay_shader) {
     g_object_unref (G_OBJECT (display->redisplay_shader));
     display->redisplay_shader = NULL;
@@ -575,7 +575,7 @@ gst_gl_display_thread_run_generic (GstGLDisplay * display)
   display->generic_callback (display, display->data);
 }
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 /* Called in the gl thread */
 void
 gst_gl_display_thread_init_redisplay (GstGLDisplay * display)
@@ -605,7 +605,7 @@ gst_gl_display_thread_init_redisplay (GstGLDisplay * display)
 }
 #endif
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 void
 _gen_fbo_opengl (GstGLDisplay * display)
 {
@@ -671,7 +671,7 @@ _gen_fbo_opengl (GstGLDisplay * display)
 }
 #endif
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 void
 _gen_fbo_gles2 (GstGLDisplay * display)
 {
@@ -732,7 +732,7 @@ _gen_fbo_gles2 (GstGLDisplay * display)
 #endif
 
 /* Called in the gl thread */
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 void
 _use_fbo_opengl (GstGLDisplay * display)
 {
@@ -801,7 +801,7 @@ _use_fbo_opengl (GstGLDisplay * display)
 }
 #endif
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 void
 _use_fbo_gles2 (GstGLDisplay * display)
 {
@@ -842,7 +842,7 @@ _use_fbo_gles2 (GstGLDisplay * display)
 
 /* Called in a gl thread
  * Need full shader support */
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 void
 _use_fbo_v2_opengl (GstGLDisplay * display)
 {
@@ -882,7 +882,7 @@ _use_fbo_v2_opengl (GstGLDisplay * display)
 }
 #endif
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 void
 _use_fbo_v2_gles2 (GstGLDisplay * display)
 {
@@ -919,7 +919,7 @@ _use_fbo_v2_gles2 (GstGLDisplay * display)
 #endif
 
 /* Called in the gl thread */
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 void
 _del_fbo_opengl (GstGLDisplay * display)
 {
@@ -936,7 +936,7 @@ _del_fbo_opengl (GstGLDisplay * display)
 }
 #endif
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 void
 _del_fbo_gles2 (GstGLDisplay * display)
 {
@@ -991,7 +991,7 @@ _gen_shader_opengl (GstGLDisplay * display)
   }
 }
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 void
 _gen_shader_gles2 (GstGLDisplay * display)
 {
@@ -1031,7 +1031,7 @@ _gen_shader_gles2 (GstGLDisplay * display)
 #endif
 
 /* Called in the gl thread */
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
 void
 _del_shader_opengl (GstGLDisplay * display)
 {
@@ -1044,7 +1044,7 @@ _del_shader_opengl (GstGLDisplay * display)
 }
 #endif
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
 void
 _del_shader_gles2 (GstGLDisplay * display)
 {
@@ -1096,7 +1096,7 @@ gst_gl_display_on_resize (GstGLDisplay * display, gint width, gint height)
     } else {
       glViewport (0, 0, width, height);
     }
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
     if (USING_OPENGL(display)) {
       glMatrixMode (GL_PROJECTION);
       glLoadIdentity ();
@@ -1122,7 +1122,7 @@ gst_gl_display_on_draw (GstGLDisplay * display)
   if (display->colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
     glUseProgramObjectARB (0);
 
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
   if (USING_OPENGL(display))
     glDisable (GL_TEXTURE_RECTANGLE_ARB);
 #endif
@@ -1142,7 +1142,7 @@ gst_gl_display_on_draw (GstGLDisplay * display)
   }
   /* default opengl scene */
   else {
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
     if (USING_OPENGL(display)) {
       glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1177,7 +1177,7 @@ gst_gl_display_on_draw (GstGLDisplay * display)
       glDisable (GL_TEXTURE_RECTANGLE_ARB);
     }
 #endif
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
     if (USING_GLES2(display)) {
       const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,
         1.0f, 0.0f,
@@ -1355,7 +1355,7 @@ gst_gl_display_check_framebuffer_status (void)
     case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
       GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
       break;
-#if HAVE_OPENGL
+#if GST_GL_HAVE_OPENGL
     case GL_FRAMEBUFFER_UNDEFINED:
       GST_ERROR ("GL_FRAMEBUFFER_UNDEFINED");
       break;
@@ -1413,7 +1413,7 @@ gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture,
   gst_gl_display_lock (display);
   if (display->isAlive) {
 
-#if HAVE_GLES2
+#if GST_GL_HAVE_GLES2
     if (USING_GLES2(display)) {
       if (!display->redisplay_shader) {
         gst_gl_window_send_message (display->gl_window,
