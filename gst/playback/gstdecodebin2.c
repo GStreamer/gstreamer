@@ -3397,6 +3397,9 @@ drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
         chain->drained = TRUE;
         /* We're drained ! */
       }
+    } else {
+      if (subdrained && !chain->next_groups)
+        *drained = TRUE;
     }
   }
 
