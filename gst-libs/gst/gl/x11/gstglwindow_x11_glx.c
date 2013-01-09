@@ -46,6 +46,8 @@ static void gst_gl_window_x11_glx_destroy_context (GstGLWindowX11 * window_x11);
 static gboolean gst_gl_window_x11_glx_choose_format (GstGLWindowX11 *
     window_x11, GError ** error);
 GstGLAPI gst_gl_window_x11_glx_get_gl_api (GstGLWindow * window);
+static gpointer gst_gl_window_x11_glx_get_proc_address (GstGLWindow * window,
+    const gchar * name);
 
 static void
 gst_gl_window_x11_glx_class_init (GstGLWindowX11GLXClass * klass)
@@ -68,6 +70,8 @@ gst_gl_window_x11_glx_class_init (GstGLWindowX11GLXClass * klass)
 
   window_class->get_gl_api =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_glx_get_gl_api);
+  window_class->get_proc_address =
+      GST_DEBUG_FUNCPTR (gst_gl_window_x11_glx_get_proc_address);
 }
 
 static void
@@ -193,4 +197,17 @@ GstGLAPI
 gst_gl_window_x11_glx_get_gl_api (GstGLWindow * window)
 {
   return GST_GL_API_OPENGL;
+}
+
+static gpointer
+gst_gl_window_x11_glx_get_proc_address (GstGLWindow * window,
+    const gchar * name)
+{
+  gpointer result;
+
+  if (!(result = glXGetProcAddressARB ((const GLubyte *) name))) {
+    result = gst_gl_window_default_get_proc_address (window, name);
+  }
+
+  return result;
 }
