@@ -25,12 +25,14 @@
 #endif
 
 #include "gstspanplc.h"
+#include "gstdtmfdetect.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "spanplc",
-      GST_RANK_PRIMARY, GST_TYPE_SPAN_PLC);
+      GST_RANK_PRIMARY, GST_TYPE_SPAN_PLC) &&
+      gst_dtmf_detect_plugin_init (plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

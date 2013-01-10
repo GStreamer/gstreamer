@@ -98,6 +98,8 @@ enum
   PROP_0,
 };
 
+static void gst_dtmf_detect_finalize (GObject * object);
+
 static gboolean gst_dtmf_detect_set_caps (GstBaseTransform * trans,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_dtmf_detect_transform_ip (GstBaseTransform * trans,
@@ -110,13 +112,17 @@ G_DEFINE_TYPE (GstDtmfDetect, gst_dtmf_detect, GST_TYPE_BASE_TRANSFORM);
 static void
 gst_dtmf_detect_class_init (GstDtmfDetectClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseTransformClass *gstbasetransform_class;
 
+  gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbasetransform_class = (GstBaseTransformClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (dtmf_detect_debug, "dtmfdetect", 0, "dtmfdetect");
+
+  gobject_class->finalize = gst_dtmf_detect_finalize;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
@@ -143,13 +149,32 @@ gst_dtmf_detect_init (GstDtmfDetect * dtmfdetect)
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (dtmfdetect), TRUE);
 }
 
+static void
+gst_dtmf_detect_finalize (GObject * object)
+{
+  GstDtmfDetect *self = GST_DTMF_DETECT (object);
+
+  if (self->dtmf_state)
+    dtmf_rx_free (self->dtmf_state);
+
+  G_OBJECT_CLASS (gst_dtmf_detect_parent_class)->finalize (object);
+}
+
+static void
+gst_dtmf_detect_state_reset (GstDtmfDetect * self)
+{
+  if (self->dtmf_state)
+    dtmf_rx_free (self->dtmf_state);
+  self->dtmf_state = dtmf_rx_init (NULL, NULL, NULL);
+}
+
 static gboolean
 gst_dtmf_detect_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstDtmfDetect *self = GST_DTMF_DETECT (trans);
 
-  zap_dtmf_detect_init (&self->dtmf_state);
+  gst_dtmf_detect_state_reset (self);
 
   return TRUE;
 }
@@ -165,15 +190,15 @@ gst_dtmf_detect_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   GstMapInfo map;
 
   if (GST_BUFFER_IS_DISCONT (buf))
-    zap_dtmf_detect_init (&self->dtmf_state);
+    gst_dtmf_detect_state_reset (self);
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP))
     return GST_FLOW_OK;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  zap_dtmf_detect (&self->dtmf_state, (gint16 *) map.data, map.size / 2, FALSE);
+  dtmf_rx (self->dtmf_state, (gint16 *) map.data, map.size / 2);
 
-  dtmf_count = zap_dtmf_get (&self->dtmf_state, dtmfbuf, MAX_DTMF_DIGITS);
+  dtmf_count = dtmf_rx_get (self->dtmf_state, dtmfbuf, MAX_DTMF_DIGITS);
 
   if (dtmf_count)
     GST_DEBUG_OBJECT (self, "Got %d DTMF events: %s", dtmf_count, dtmfbuf);
@@ -261,7 +286,7 @@ gst_dtmf_detect_sink_event (GstBaseTransform * trans, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-      zap_dtmf_detect_init (&self->dtmf_state);
+      gst_dtmf_detect_state_reset (self);
       break;
     default:
       break;

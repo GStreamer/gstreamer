@@ -500,6 +500,7 @@ gst_dtmf_src_plugin_init
 GstDtmfDetect
 <SUBSECTION Standard>
 GstDtmfDetectClass
+GstDtmfDetectPrivate
 GST_TYPE_DTMF_DETECT
 GST_DTMF_DETECT
 GST_DTMF_DETECT_CAST

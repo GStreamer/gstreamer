@@ -104,6 +104,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/opencv/gsttextoverlay.h \
 	$(top_srcdir)/ext/rsvg/gstrsvgdec.h \
 	$(top_srcdir)/ext/rsvg/gstrsvgoverlay.h \
+	$(top_srcdir)/ext/spandsp/gstspanplc.h \
+	$(top_srcdir)/ext/spandsp/gstdtmfdetect.h \
 	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
 	$(top_srcdir)/ext/sdl/sdlvideosink.h \
 	$(top_srcdir)/ext/timidity/gsttimidity.h \
@@ -128,7 +130,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/dccp/gstdccpserversrc.h \
 	$(top_srcdir)/gst/debugutils/fpsdisplaysink.h \
 	$(top_srcdir)/gst/dtmf/gstdtmfsrc.h \
-	$(top_srcdir)/gst/dtmf/gstdtmfdetect.h \
 	$(top_srcdir)/gst/dtmf/gstrtpdtmfsrc.h \
 	$(top_srcdir)/gst/dtmf/gstrtpdtmfdepay.h \
 	$(top_srcdir)/gst/dvdspu/gstdvdspu.h \

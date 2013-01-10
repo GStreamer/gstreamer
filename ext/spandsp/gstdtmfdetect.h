@@ -28,7 +28,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 
-#include "tone_detect.h"
+#include <spandsp.h>
 
 G_BEGIN_DECLS
 
@@ -54,7 +54,7 @@ struct _GstDtmfDetect
 {
   GstBaseTransform parent;
 
-  dtmf_detect_state_t dtmf_state;
+  dtmf_rx_state_t *dtmf_state;
 };
 
 struct _GstDtmfDetectClass
