@@ -1221,7 +1221,7 @@ timeline_slide_object (GESTimeline * timeline, GESTrackObject * obj,
 {
 
   /* FIXME implement me! */
-  GST_WARNING ("Slide mode editing not implemented yet");
+  GST_FIXME_OBJECT (timeline, "Slide mode editing not implemented yet");
 
   return FALSE;
 }

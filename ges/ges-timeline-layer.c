@@ -935,10 +935,9 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
     GESTimelineObject * object)
 {
   GESAsset *asset;
+  GESTimelineLayerPrivate *priv;
   GESTimelineLayer *current_layer;
   guint32 maxprio, minprio, prio;
-
-  GESTimelineLayerPrivate *priv;
 
   g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
@@ -1047,8 +1046,12 @@ ges_timeline_layer_add_asset (GESTimelineLayer * layer,
   g_return_val_if_fail (g_type_is_a (ges_asset_get_extractable_type
           (asset), GES_TYPE_TIMELINE_OBJECT), NULL);
 
+  GST_DEBUG_OBJECT (layer, "Adding asset %s with: start: %" GST_TIME_FORMAT
+      " inpoint: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT " rate %d"
+      " track types: %d (%s)", ges_asset_get_id (asset), GST_TIME_ARGS (start),
+      GST_TIME_ARGS (inpoint), GST_TIME_ARGS (duration), track_types,
+      ges_track_type_name (track_types));
 
-  GST_DEBUG_OBJECT (layer, "Adding asset: %s", ges_asset_get_id (asset));
   tlobj = GES_TIMELINE_OBJECT (ges_asset_extract (asset, NULL));
   ges_timeline_object_set_start (tlobj, start);
   ges_timeline_object_set_inpoint (tlobj, inpoint);

@@ -799,8 +799,9 @@ ges_timeline_object_set_start_internal (GESTimelineObject * object,
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
 
-  GST_DEBUG ("object:%p, start:%" GST_TIME_FORMAT,
-      object, GST_TIME_ARGS (start));
+  GST_DEBUG_OBJECT (object, "current start: %" GST_TIME_FORMAT,
+      " new start: %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
+      GST_TIME_ARGS (object->start));
 
   /* If the class has snapping enabled and the object is in a timeline,
    * we snap */
@@ -868,8 +869,9 @@ ges_timeline_object_set_inpoint_internal (GESTimelineObject * object,
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
 
-  GST_DEBUG ("object:%p, inpoint:%" GST_TIME_FORMAT,
-      object, GST_TIME_ARGS (inpoint));
+  GST_DEBUG_OBJECT (object, "current inpoint: %" GST_TIME_FORMAT,
+      " new inpoint: %" GST_TIME_FORMAT, GST_TIME_ARGS (inpoint),
+      GST_TIME_ARGS (object->inpoint));
 
   for (tmp = object->trackobjects; tmp; tmp = g_list_next (tmp)) {
     tr = (GESTrackObject *) tmp->data;
@@ -910,8 +912,9 @@ ges_timeline_object_set_duration_internal (GESTimelineObject * object,
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
 
-  GST_DEBUG ("object:%p, duration:%" GST_TIME_FORMAT,
-      object, GST_TIME_ARGS (duration));
+  GST_DEBUG_OBJECT (object, "current duration: %" GST_TIME_FORMAT,
+      " new duration: %" GST_TIME_FORMAT, GST_TIME_ARGS (duration),
+      GST_TIME_ARGS (object->duration));
 
   if (priv->layer && GES_TIMELINE_OBJECT_GET_CLASS (object)->snaps)
     timeline = ges_timeline_layer_get_timeline (object->priv->layer);
