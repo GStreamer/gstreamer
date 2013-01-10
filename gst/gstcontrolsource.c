@@ -25,20 +25,18 @@
  * @short_description: base class for control source sources
  *
  * The #GstControlSource is a base class for control value sources that could
- * be used by #GstController to get timestamp-value pairs.
+ * be used by #GstController to get timestamp-value pairs. A control source
+ * essentially is a function over time, returning gloat values between 0.0 and 1.0.
  *
- * A #GstControlSource is used by first getting an instance, binding it to a
- * #GParamSpec (for example by using gst_controller_set_control_source()) and
- * then by having it used by the #GstController or calling
- * gst_control_source_get_value() or gst_control_source_get_value_array().
+ * A #GstControlSource is used by first getting an instance of a specific
+ * control-source, creating a binding for the control-source to the target property
+ * of the element and then adding the binding to the element. The binding will
+ * convert the data types and value range to fit to the bound property.
  *
- * For implementing a new #GstControlSource one has to implement a
- * #GstControlSourceBind method, which will depending on the #GParamSpec set up
- * the control source for use and sets the #GstControlSourceGetValue and
- * #GstControlSourceGetValueArray functions. These are then used by
- * gst_control_source_get_value() or gst_control_source_get_value_array()
- * to get values for specific timestamps.
- *
+ * For implementing a new #GstControlSource one has to implement
+ * #GstControlSourceGetValue and #GstControlSourceGetValueArray functions.
+ * These are then used by gst_control_source_get_value() and
+ * gst_control_source_get_value_array() to get values for specific timestamps.
  */
 
 #include "gst_private.h"
