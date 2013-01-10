@@ -66,4 +66,11 @@ gchar * ges_test_file_uri (const gchar *filename);
     g_error_free (error);						\
   } G_STMT_END;
 
+#define assert_is_type(object, type)                    \
+G_STMT_START {                                          \
+ fail_unless (g_type_is_a(G_OBJECT_TYPE(object), type), \
+     "%s is not a %s", G_OBJECT_TYPE_NAME(object),      \
+     g_type_name (type));                               \
+} G_STMT_END;
+
 #endif /* _GES_TEST_UTILS */
