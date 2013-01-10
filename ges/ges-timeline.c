@@ -68,6 +68,10 @@ typedef struct TrackObjIters
   GSequenceIter *iter_start;
   GSequenceIter *iter_end;
   GSequenceIter *iter_obj;
+  GSequenceIter *iter_by_layer;
+
+  GESTimelineLayer *layer;
+  GESTrackObject *tckobj;
 } TrackObjIters;
 
 static void
@@ -135,6 +139,9 @@ struct _GESTimelinePrivate
   GSequence *tracksources;      /* TrackSource-s sorted by start/priorities */
 
   GList *priv_tracks;
+  /* FIXME: We should definitly offer an API over this,
+   * probably through a ges_timeline_layer_get_track_objects () method */
+  GHashTable *by_layer;         /* {layer: GSequence of TrackObject by start/priorities} */
 
   MoveContext movecontext;
 };
@@ -518,6 +525,8 @@ ges_timeline_init (GESTimeline * self)
   priv->by_start = g_hash_table_new (g_direct_hash, g_direct_equal);
   priv->by_end = g_hash_table_new (g_direct_hash, g_direct_equal);
   priv->by_object = g_hash_table_new (g_direct_hash, g_direct_equal);
+  priv->by_layer = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
+      (GDestroyNotify) g_sequence_free);
   priv->obj_iters = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
       (GDestroyNotify) _destroy_obj_iters);
   priv->starts_ends = g_sequence_new (g_free);
@@ -572,11 +581,22 @@ timeline_update_duration (GESTimeline * timeline)
   }
 }
 
-static inline void
-sort_track_objects (GESTimeline * timeline, GESTrackObject * obj)
+static gint
+find_layer_by_prio (GESTimelineLayer * a, gpointer pprio)
 {
-  TrackObjIters *iters = g_hash_table_lookup (timeline->priv->obj_iters, obj);
+  gint prio = GPOINTER_TO_INT (pprio), lprio =
+      ges_timeline_layer_get_priority (a);
 
+  if (lprio < prio)
+    return -1;
+  if (lprio > prio)
+    return 1;
+  return 0;
+}
+
+static void
+sort_track_objects (GESTimeline * timeline, TrackObjIters * iters)
+{
   g_sequence_sort_changed (iters->iter_obj,
       (GCompareDataFunc) track_object_start_compare, NULL);
 }
@@ -601,11 +621,11 @@ custom_find_track (TrackPrivate * tr_priv, GESTrack * track)
 }
 
 static inline void
-sort_starts_ends_end (GESTimeline * timeline, GESTrackObject * obj)
+sort_starts_ends_end (GESTimeline * timeline, TrackObjIters * iters)
 {
+  GESTrackObject *obj = iters->tckobj;
   GESTimelinePrivate *priv = timeline->priv;
   guint64 *end = g_hash_table_lookup (priv->by_end, obj);
-  TrackObjIters *iters = g_hash_table_lookup (priv->obj_iters, obj);
 
   *end = obj->start + obj->duration;
 
@@ -615,11 +635,11 @@ sort_starts_ends_end (GESTimeline * timeline, GESTrackObject * obj)
 }
 
 static inline void
-sort_starts_ends_start (GESTimeline * timeline, GESTrackObject * obj)
+sort_starts_ends_start (GESTimeline * timeline, TrackObjIters * iters)
 {
+  GESTrackObject *obj = iters->tckobj;
   GESTimelinePrivate *priv = timeline->priv;
   guint64 *start = g_hash_table_lookup (priv->by_start, obj);
-  TrackObjIters *iters = g_hash_table_lookup (priv->obj_iters, obj);
 
   *start = obj->start;
 
@@ -651,58 +671,97 @@ clean_movecontext (MoveContext * mv_ctx)
 }
 
 static void
-stop_tracking_for_snapping (GESTimeline * timeline, GESTrackObject * tckobj)
+stop_tracking_track_object (GESTimeline * timeline, GESTrackObject * tckobj)
 {
   guint64 *start, *end;
-  GESTimelinePrivate *priv = timeline->priv;
   TrackObjIters *iters;
+  GESTimelinePrivate *priv = timeline->priv;
 
-
-  start = g_hash_table_lookup (priv->by_start, tckobj);
-  end = g_hash_table_lookup (priv->by_end, tckobj);
   iters = g_hash_table_lookup (priv->obj_iters, tckobj);
+  if (G_LIKELY (iters->iter_by_layer)) {
+    g_sequence_remove (iters->iter_by_layer);
+  } else {
+    GST_WARNING_OBJECT (timeline, "TrackObject %p was in no layer", tckobj);
+  }
 
-  g_hash_table_remove (priv->by_start, tckobj);
-  g_hash_table_remove (priv->by_end, tckobj);
-  g_hash_table_remove (priv->by_object, end);
-  g_hash_table_remove (priv->by_object, start);
-  g_sequence_remove (iters->iter_start);
-  g_sequence_remove (iters->iter_end);
-  g_sequence_remove (iters->iter_obj);
+  if (GES_IS_TRACK_SOURCE (tckobj)) {
+    start = g_hash_table_lookup (priv->by_start, tckobj);
+    end = g_hash_table_lookup (priv->by_end, tckobj);
+
+    g_hash_table_remove (priv->by_start, tckobj);
+    g_hash_table_remove (priv->by_end, tckobj);
+    g_hash_table_remove (priv->by_object, end);
+    g_hash_table_remove (priv->by_object, start);
+    g_sequence_remove (iters->iter_start);
+    g_sequence_remove (iters->iter_end);
+    g_sequence_remove (iters->iter_obj);
+    timeline_update_duration (timeline);
+  }
   g_hash_table_remove (priv->obj_iters, tckobj);
-  timeline_update_duration (timeline);
 }
 
 static void
-start_tracking_track_obj (GESTimeline * timeline, GESTrackObject * tckobj)
+start_tracking_track_object (GESTimeline * timeline, GESTrackObject * tckobj)
 {
-  TrackObjIters *iters;
   guint64 *pstart, *pend;
+  GSequence *by_layer_sequence;
+  TrackObjIters *iters;
   GESTimelinePrivate *priv = timeline->priv;
 
-  pstart = g_malloc (sizeof (guint64));
-  pend = g_malloc (sizeof (guint64));
-  *pstart = tckobj->start;
-  *pend = *pstart + tckobj->duration;
+  guint layer_prio = tckobj->priority / LAYER_HEIGHT;
+  GList *layer_node = g_list_find_custom (timeline->layers,
+      GINT_TO_POINTER (layer_prio), (GCompareFunc) find_layer_by_prio);
+  GESTimelineLayer *layer = layer_node ? layer_node->data : NULL;
 
-  iters = g_slice_new (TrackObjIters);
-  iters->iter_start = g_sequence_insert_sorted (priv->starts_ends, pstart,
-      (GCompareDataFunc) compare_uint64, NULL);
-  iters->iter_end = g_sequence_insert_sorted (priv->starts_ends, pend,
-      (GCompareDataFunc) compare_uint64, NULL);
-  iters->iter_obj =
-      g_sequence_insert_sorted (priv->tracksources, g_object_ref (tckobj),
-      (GCompareDataFunc) track_object_start_compare, NULL);
+  iters = g_slice_new0 (TrackObjIters);
 
-  g_hash_table_insert (priv->by_start, tckobj, pstart);
-  g_hash_table_insert (priv->by_object, pstart, tckobj);
-  g_hash_table_insert (priv->by_end, tckobj, pend);
-  g_hash_table_insert (priv->by_object, pend, tckobj);
+  /* We add all TrackObject to obj_iters as we always follow them
+   * in the by_layer Sequences */
   g_hash_table_insert (priv->obj_iters, tckobj, iters);
 
-  timeline->priv->movecontext.needs_move_ctx = TRUE;
+  /* Track all objects by layer */
+  if (G_UNLIKELY (layer == NULL)) {
+    /* We handle the case where we have TrackObject that are in no layer by not
+     * tracking them
+     *
+     * FIXME: Check if we should rather try to track them in some sort of
+     * dummy layer, or even refuse TrackObjects to be added in Tracks if
+     * they land in no layer the timeline controls.
+     */
+    GST_ERROR_OBJECT (timeline, "Adding a TrackObject that lands in no layer "
+        "we are controlling");
+  } else {
+    by_layer_sequence = g_hash_table_lookup (priv->by_layer, layer);
+    iters->iter_by_layer = g_sequence_insert_sorted (by_layer_sequence, tckobj,
+        (GCompareDataFunc) track_object_start_compare, NULL);
+    iters->layer = layer;
+  }
 
-  timeline_update_duration (timeline);
+  if (GES_IS_TRACK_SOURCE (tckobj)) {
+    /* Track only sources for timeline edition and snapping */
+    pstart = g_malloc (sizeof (guint64));
+    pend = g_malloc (sizeof (guint64));
+    *pstart = tckobj->start;
+    *pend = *pstart + tckobj->duration;
+
+    iters->iter_start = g_sequence_insert_sorted (priv->starts_ends, pstart,
+        (GCompareDataFunc) compare_uint64, NULL);
+    iters->iter_end = g_sequence_insert_sorted (priv->starts_ends, pend,
+        (GCompareDataFunc) compare_uint64, NULL);
+    iters->iter_obj =
+        g_sequence_insert_sorted (priv->tracksources, g_object_ref (tckobj),
+        (GCompareDataFunc) track_object_start_compare, NULL);
+    iters->tckobj = tckobj;
+
+    g_hash_table_insert (priv->by_start, tckobj, pstart);
+    g_hash_table_insert (priv->by_object, pstart, tckobj);
+    g_hash_table_insert (priv->by_end, tckobj, pend);
+    g_hash_table_insert (priv->by_object, pend, tckobj);
+
+    timeline->priv->movecontext.needs_move_ctx = TRUE;
+
+    timeline_update_duration (timeline);
+  }
 }
 
 static inline void
@@ -885,7 +944,7 @@ ges_move_context_set_objects (GESTimeline * timeline, GESTrackObject * obj,
   tckobj_iter = iters->iter_obj;
   switch (edge) {
     case GES_EDGE_START:
-      /* set it properly int the context of "trimming" */
+      /* set it properly in the context of "trimming" */
       mv_ctx->max_trim_pos = 0;
       start = obj->start;
 
@@ -1611,64 +1670,123 @@ static void
 trackobj_start_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
 {
-  sort_track_objects (timeline, child);
-  sort_starts_ends_start (timeline, child);
-  sort_starts_ends_end (timeline, child);
+  GESTimelinePrivate *priv = timeline->priv;
+  TrackObjIters *iters = g_hash_table_lookup (priv->obj_iters, child);
 
-  /* If the timeline is set to snap objects together, we
-   * are sure that all movement of TrackObject-s are done within
-   * the moving context, so we do not need to recalculate the
-   * move context as often */
-  if (timeline->priv->movecontext.ignore_needs_ctx &&
-      timeline->priv->snapping_distance == 0)
-    timeline->priv->movecontext.needs_move_ctx = TRUE;
+  if (G_LIKELY (iters->iter_by_layer))
+    g_sequence_sort_changed (iters->iter_by_layer,
+        (GCompareDataFunc) track_object_start_compare, NULL);
+
+  if (GES_IS_TRACK_SOURCE (child)) {
+    sort_track_objects (timeline, iters);
+    sort_starts_ends_start (timeline, iters);
+    sort_starts_ends_end (timeline, iters);
+
+    /* If the timeline is set to snap objects together, we
+     * are sure that all movement of TrackObject-s are done within
+     * the moving context, so we do not need to recalculate the
+     * move context as often */
+    if (timeline->priv->movecontext.ignore_needs_ctx &&
+        timeline->priv->snapping_distance == 0)
+      timeline->priv->movecontext.needs_move_ctx = TRUE;
+
+  }
+}
+
+static void
+trackobj_priority_changed_cb (GESTrackObject * child,
+    GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
+{
+  GESTimelinePrivate *priv = timeline->priv;
+
+  GList *layer_node = g_list_find_custom (timeline->layers,
+      GINT_TO_POINTER (child->priority / LAYER_HEIGHT),
+      (GCompareFunc) find_layer_by_prio);
+  GESTimelineLayer *layer = layer_node ? layer_node->data : NULL;
+  TrackObjIters *iters = g_hash_table_lookup (priv->obj_iters,
+      child);
+
+  if (G_UNLIKELY (layer == NULL)) {
+    GST_ERROR_OBJECT (timeline,
+        "Changing a TrackObject prio, which would not "
+        "land in no layer we are controlling");
+    g_sequence_remove (iters->iter_by_layer);
+    iters->iter_by_layer = NULL;
+    iters->layer = NULL;
+  } else {
+    /* If it moves from layer, properly change it */
+    if (layer != iters->layer) {
+      GSequence *by_layer_sequence =
+          g_hash_table_lookup (priv->by_layer, layer);
+
+      g_sequence_remove (iters->iter_by_layer);
+      iters->iter_by_layer =
+          g_sequence_insert_sorted (by_layer_sequence, child,
+          (GCompareDataFunc) track_object_start_compare, NULL);
+      iters->layer = layer;
+    } else {
+      g_sequence_sort_changed (iters->iter_by_layer,
+          (GCompareDataFunc) track_object_start_compare, NULL);
+    }
+  }
+
+  if (GES_IS_TRACK_SOURCE (child))
+    sort_track_objects (timeline, iters);
 }
 
 static void
 trackobj_duration_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
 {
-  sort_starts_ends_end (timeline, child);
+  GESTimelinePrivate *priv = timeline->priv;
+  TrackObjIters *iters = g_hash_table_lookup (priv->obj_iters, child);
 
-  /* If the timeline is set to snap objects together, we
-   * are sure that all movement of TrackObject-s are done within
-   * the moving context, so we do not need to recalculate the
-   * move context as often */
-  if (timeline->priv->movecontext.ignore_needs_ctx &&
-      timeline->priv->snapping_distance == 0)
-    timeline->priv->movecontext.needs_move_ctx = TRUE;
+  if (GES_IS_TRACK_SOURCE (child)) {
+    sort_starts_ends_end (timeline, iters);
+
+    /* If the timeline is set to snap objects together, we
+     * are sure that all movement of TrackObject-s are done within
+     * the moving context, so we do not need to recalculate the
+     * move context as often */
+    if (timeline->priv->movecontext.ignore_needs_ctx &&
+        timeline->priv->snapping_distance == 0) {
+      timeline->priv->movecontext.needs_move_ctx = TRUE;
+    }
+  }
 }
 
 static void
 track_object_added_cb (GESTrack * track, GESTrackObject * object,
     GESTimeline * timeline)
 {
-  /* We only work with sources */
-  if (GES_IS_TRACK_SOURCE (object)) {
-    start_tracking_track_obj (timeline, object);
+  /* Auto transition should be updated before we receive the signal */
+  g_signal_connect_after (GES_TRACK_OBJECT (object), "notify::start",
+      G_CALLBACK (trackobj_start_changed_cb), timeline);
+  g_signal_connect_after (GES_TRACK_OBJECT (object), "notify::duration",
+      G_CALLBACK (trackobj_duration_changed_cb), timeline);
+  g_signal_connect_after (GES_TRACK_OBJECT (object), "notify::priority",
+      G_CALLBACK (trackobj_priority_changed_cb), timeline);
 
-    g_signal_connect (GES_TRACK_OBJECT (object), "notify::start",
-        G_CALLBACK (trackobj_start_changed_cb), timeline);
-    g_signal_connect (GES_TRACK_OBJECT (object), "notify::duration",
-        G_CALLBACK (trackobj_duration_changed_cb), timeline);
-  }
+  start_tracking_track_object (timeline, object);
 }
 
 static void
 track_object_removed_cb (GESTrack * track, GESTrackObject * object,
     GESTimeline * timeline)
 {
-  /* We only work with sources */
+
   if (GES_IS_TRACK_SOURCE (object)) {
-    g_signal_handlers_disconnect_by_func (object, trackobj_start_changed_cb,
-        NULL);
-    g_signal_handlers_disconnect_by_func (object, trackobj_duration_changed_cb,
-        NULL);
 
     /* Make sure to reinitialise the moving context next time */
     timeline->priv->movecontext.needs_move_ctx = TRUE;
-    stop_tracking_for_snapping (timeline, object);
   }
+
+  /* Disconnect all signal handlers */
+  g_signal_handlers_disconnect_by_func (object, trackobj_duration_changed_cb,
+      NULL);
+  g_signal_handlers_disconnect_by_func (object, trackobj_priority_changed_cb,
+      NULL);
+  stop_tracking_track_object (timeline, object);
 }
 
 static void
@@ -1903,6 +2021,8 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   /* Inform the layer that it belongs to a new timeline */
   ges_timeline_layer_set_timeline (layer, timeline);
 
+  g_hash_table_insert (timeline->priv->by_layer, layer, g_sequence_new (NULL));
+
   /* Connect to 'object-added'/'object-removed' signal from the new layer */
   g_signal_connect (layer, "object-added", G_CALLBACK (layer_object_added_cb),
       timeline);
@@ -1966,6 +2086,7 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   g_signal_handlers_disconnect_by_func (layer, layer_object_removed_cb,
       timeline);
 
+  g_hash_table_remove (timeline->priv->by_layer, layer);
   timeline->layers = g_list_remove (timeline->layers, layer);
 
   ges_timeline_layer_set_timeline (layer, NULL);
