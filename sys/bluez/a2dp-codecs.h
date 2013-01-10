@@ -22,6 +22,11 @@
  *
  */
 
+#ifndef __GST_BLUEZ_A2DP_CODECS_H_INCLUDED__
+#define __GST_BLUEZ_A2DP_CODECS_H_INCLUDED__
+
+#include <glib.h>
+
 #define A2DP_CODEC_SBC			0x00
 #define A2DP_CODEC_MPEG12		0x01
 #define A2DP_CODEC_MPEG24		0x02
@@ -85,7 +90,7 @@
 #define MPEG_BIT_RATE_32000		0x0002
 #define MPEG_BIT_RATE_FREE		0x0001
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
 
 typedef struct {
 	uint8_t channel_mode:4;
@@ -107,7 +112,7 @@ typedef struct {
 	uint16_t bitrate;
 } __attribute__ ((packed)) a2dp_mpeg_t;
 
-#elif __BYTE_ORDER == __BIG_ENDIAN
+#elif G_BYTE_ORDER == G_BIG_ENDIAN
 
 typedef struct {
 	uint8_t frequency:4;
@@ -137,3 +142,5 @@ typedef struct {
 	uint8_t vendor_id[4];
 	uint8_t codec_id[2];
 } __attribute__ ((packed)) a2dp_vendor_codec_t;
+
+#endif /* #define __GST_BLUEZ_A2DP_CODECS_H_INCLUDED__ */
