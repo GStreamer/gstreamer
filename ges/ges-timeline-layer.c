@@ -2,6 +2,7 @@
  * Copyright (C) 2009 Edward Hervey <edward.hervey@collabora.co.uk>
  *               2009 Nokia Corporation
  *               2011 Mathieu Duponchelle <mathieu.duponchelle@epitech.eu>
+ *               2013 Thibault Saunier <thibault.saunier@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -845,6 +846,7 @@ ges_timeline_layer_set_auto_transition (GESTimelineLayer * layer,
     start_calculating_transitions (layer);
 
   layer->priv->auto_transition = auto_transition;
+  g_object_notify (G_OBJECT (layer), "auto-transition");
 }
 
 /**
