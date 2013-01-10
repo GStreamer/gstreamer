@@ -144,6 +144,8 @@ struct _GESTimelinePrivate
   GHashTable *by_layer;         /* {layer: GSequence of TrackObject by start/priorities} */
 
   MoveContext movecontext;
+
+  gboolean updates_enabled;
 };
 
 /* private structure to contain our track-related information */
@@ -227,26 +229,6 @@ ges_meta_container_interface_init (GESMetaContainerInterface * iface)
 {
 }
 
-/* Internal methods */
-static gboolean
-ges_timeline_enable_update_internal (GESTimeline * timeline, gboolean enabled)
-{
-  GList *tmp;
-  gboolean res = TRUE;
-
-  GST_DEBUG_OBJECT (timeline, "%s updates", enabled ? "Enabling" : "Disabling");
-
-  for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
-    if (!ges_track_enable_update (GES_TRACK (tmp->data), enabled))
-      res = FALSE;
-  }
-
-  /* Make sure we reset the context */
-  timeline->priv->movecontext.needs_move_ctx = TRUE;
-
-  return res;
-}
-
 /* GObject Standard vmethods*/
 static void
 ges_timeline_get_property (GObject * object, guint property_id,
@@ -255,8 +237,6 @@ ges_timeline_get_property (GObject * object, guint property_id,
   GESTimeline *timeline = GES_TIMELINE (object);
 
   switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
     case PROP_DURATION:
       g_value_set_uint64 (value, timeline->priv->duration);
       break;
@@ -266,6 +246,8 @@ ges_timeline_get_property (GObject * object, guint property_id,
     case PROP_UPDATE:
       g_value_set_boolean (value, ges_timeline_is_updating (timeline));
       break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
 }
 
@@ -280,8 +262,7 @@ ges_timeline_set_property (GObject * object, guint property_id,
       timeline->priv->snapping_distance = g_value_get_uint64 (value);
       break;
     case PROP_UPDATE:
-      ges_timeline_enable_update_internal (timeline,
-          g_value_get_boolean (value));
+      ges_timeline_enable_update (timeline, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -2361,13 +2342,23 @@ ges_timeline_is_updating (GESTimeline * timeline)
 gboolean
 ges_timeline_enable_update (GESTimeline * timeline, gboolean enabled)
 {
-  if (ges_timeline_enable_update_internal (timeline, enabled)) {
-    g_object_notify_by_pspec (G_OBJECT (timeline), properties[PROP_UPDATE]);
+  GList *tmp;
+  gboolean res = TRUE;
 
-    return TRUE;
+  GST_DEBUG_OBJECT (timeline, "%s updates", enabled ? "Enabling" : "Disabling");
+
+  for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
+    if (!ges_track_enable_update (GES_TRACK (tmp->data), enabled))
+      res = FALSE;
   }
 
-  return FALSE;
+  /* Make sure we reset the context */
+  timeline->priv->movecontext.needs_move_ctx = TRUE;
+  timeline->priv->updates_enabled = enabled;
+  if (res)
+    g_object_notify_by_pspec (G_OBJECT (timeline), properties[PROP_UPDATE]);
+
+  return res;
 }
 
 /**
