@@ -89,6 +89,7 @@ enum
   PROP_LOCKED,
   PROP_MAX_DURATION,
   PROP_TRACK_TYPE,
+  PROP_TRACK,
   PROP_LAST
 };
 
@@ -170,6 +171,9 @@ ges_track_object_get_property (GObject * object, guint property_id,
       break;
     case PROP_TRACK_TYPE:
       g_value_set_flags (value, tobj->priv->track_type);
+      break;
+    case PROP_TRACK:
+      g_value_set_object (value, tobj->priv->track);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -358,6 +362,11 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
       GES_TRACK_TYPE_UNKNOWN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
   g_object_class_install_property (object_class, PROP_TRACK_TYPE,
       properties[PROP_TRACK_TYPE]);
+
+  properties[PROP_TRACK] = g_param_spec_object ("track", "Track",
+      "The track the object is in", GES_TYPE_TRACK, G_PARAM_READABLE);
+  g_object_class_install_property (object_class, PROP_TRACK,
+      properties[PROP_TRACK]);
 
 
   /**
@@ -920,6 +929,7 @@ done:
 gboolean
 ges_track_object_set_track (GESTrackObject * object, GESTrack * track)
 {
+  gboolean ret = TRUE;
   GST_DEBUG ("object:%p, track:%p", object, track);
 
   object->priv->track = track;
@@ -929,13 +939,13 @@ ges_track_object_set_track (GESTrackObject * object, GESTrack * track)
     if (object->priv->gnlobject) {
       g_object_set (object->priv->gnlobject,
           "caps", ges_track_get_caps (object->priv->track), NULL);
-      return TRUE;
     } else {
-      return ensure_gnl_object (object);
+      ret = ensure_gnl_object (object);
     }
   }
 
-  return TRUE;
+  g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_TRACK]);
+  return ret;
 }
 
 /**
