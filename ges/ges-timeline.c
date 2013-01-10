@@ -1351,17 +1351,18 @@ timeline_roll_object (GESTimeline * timeline, GESTrackObject * obj,
       break;
   }
 
+done:
+  timeline->priv->needs_transitions_update = TRUE;
   mv_ctx->ignore_needs_ctx = FALSE;
 
   return ret;
 
 error:
-  mv_ctx->ignore_needs_ctx = FALSE;
-
   GST_DEBUG_OBJECT (obj, "Could not roll edge %d to %" GST_TIME_FORMAT,
       edge, GST_TIME_ARGS (position));
 
-  return FALSE;
+  ret = FALSE;
+  goto done;
 }
 
 gboolean
