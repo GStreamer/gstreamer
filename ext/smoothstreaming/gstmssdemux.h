@@ -64,6 +64,7 @@ struct _GstMssDemuxStream {
   /* Streaming task */
   GstTask *stream_task;
   GStaticRecMutex stream_lock;
+
 };
 
 struct _GstMssDemux {
@@ -80,6 +81,8 @@ struct _GstMssDemux {
   GSList *streams;
   guint n_videos;
   guint n_audios;
+
+  gboolean update_bitrates;
 
   /* properties */
   guint64 connection_speed; /* in bps */
