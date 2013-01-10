@@ -762,29 +762,16 @@ gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
   gst_mss_demux_restart_tasks (mssdemux);
 }
 
-static void
-gst_mss_demux_stream_loop (GstMssDemuxStream * stream)
+static GstFlowReturn
+gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
+    GstBuffer ** buffer)
 {
   GstMssDemux *mssdemux = stream->parent;
   gchar *path;
   gchar *url;
   GstFragment *fragment;
-  GstBuffer *buffer;
-  GstFlowReturn ret;
-
-  GST_OBJECT_LOCK (mssdemux);
-  if (mssdemux->update_bitrates) {
-    mssdemux->update_bitrates = FALSE;
-    GST_OBJECT_UNLOCK (mssdemux);
-
-    GST_DEBUG_OBJECT (mssdemux,
-        "Starting streams reconfiguration due to bitrate changes");
-    g_thread_create ((GThreadFunc) gst_mss_demux_reconfigure, mssdemux, FALSE,
-        NULL);
-    GST_DEBUG_OBJECT (mssdemux, "Finished streams reconfiguration");
-  } else {
-    GST_OBJECT_UNLOCK (mssdemux);
-  }
+  GstBuffer *_buffer;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (mssdemux, "Getting url for stream %p", stream);
   ret = gst_mss_stream_get_fragment_url (stream->manifest_stream, &path);
@@ -792,7 +779,7 @@ gst_mss_demux_stream_loop (GstMssDemuxStream * stream)
     case GST_FLOW_OK:
       break;                    /* all is good, let's go */
     case GST_FLOW_UNEXPECTED:  /* EOS */
-      goto eos;
+      return GST_FLOW_UNEXPECTED;
     case GST_FLOW_ERROR:
       goto error;
     default:
@@ -812,22 +799,70 @@ gst_mss_demux_stream_loop (GstMssDemuxStream * stream)
   if (!fragment) {
     GST_INFO_OBJECT (mssdemux, "No fragment downloaded");
     /* TODO check if we are truly stoping */
-    return;
+    return GST_FLOW_ERROR;
   }
 
-  buffer = gst_fragment_get_buffer (fragment);
-  buffer = gst_buffer_make_metadata_writable (buffer);
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (stream->pad));
-  GST_BUFFER_TIMESTAMP (buffer) =
+  _buffer = gst_fragment_get_buffer (fragment);
+  _buffer = gst_buffer_make_metadata_writable (_buffer);
+  gst_buffer_set_caps (_buffer, GST_PAD_CAPS (stream->pad));
+  GST_BUFFER_TIMESTAMP (_buffer) =
       gst_mss_stream_get_fragment_gst_timestamp (stream->manifest_stream);
-  GST_BUFFER_DURATION (buffer) =
+  GST_BUFFER_DURATION (_buffer) =
       gst_mss_stream_get_fragment_gst_duration (stream->manifest_stream);
 
-  if (GST_BUFFER_TIMESTAMP (buffer) > 10 * GST_SECOND
-      && mssdemux->connection_speed != 1000) {
-    mssdemux->connection_speed = 1000;
-    mssdemux->update_bitrates = TRUE;
+  *buffer = _buffer;
+  return ret;
+
+no_url_error:
+  {
+    GST_ELEMENT_ERROR (mssdemux, STREAM, DEMUX,
+        (_("Failed to get fragment URL.")),
+        ("An error happened when getting fragment URL"));
+    gst_task_stop (stream->stream_task);
+    return GST_FLOW_ERROR;
   }
+error:
+  {
+    GST_WARNING_OBJECT (mssdemux, "Error while pushing fragment");
+    gst_task_stop (stream->stream_task);
+    return GST_FLOW_ERROR;
+  }
+}
+
+static void
+gst_mss_demux_stream_loop (GstMssDemuxStream * stream)
+{
+  GstMssDemux *mssdemux = stream->parent;
+  GstBuffer *buffer = NULL;
+  GstFlowReturn ret;
+
+  GST_OBJECT_LOCK (mssdemux);
+  if (mssdemux->update_bitrates) {
+    mssdemux->update_bitrates = FALSE;
+    GST_OBJECT_UNLOCK (mssdemux);
+
+    GST_DEBUG_OBJECT (mssdemux,
+        "Starting streams reconfiguration due to bitrate changes");
+    g_thread_create ((GThreadFunc) gst_mss_demux_reconfigure, mssdemux, FALSE,
+        NULL);
+    GST_DEBUG_OBJECT (mssdemux, "Finished streams reconfiguration");
+  } else {
+    GST_OBJECT_UNLOCK (mssdemux);
+  }
+
+  ret = gst_mss_demux_stream_download_fragment (stream, &buffer);
+  switch (ret) {
+    case GST_FLOW_OK:
+      break;                    /* all is good, let's go */
+    case GST_FLOW_UNEXPECTED:  /* EOS */
+      goto eos;
+    case GST_FLOW_ERROR:
+      goto error;
+    default:
+      break;
+  }
+
+  g_assert (buffer != NULL);
 
   if (G_UNLIKELY (stream->pending_newsegment)) {
     gst_pad_push_event (stream->pad, stream->pending_newsegment);
