@@ -1,9 +1,7 @@
-/*
- *
+/*  GStreamer RTP SBC payloader
  *  BlueZ - Bluetooth protocol stack for Linux
  *
  *  Copyright (C) 2004-2010  Marcel Holtmann <marcel@holtmann.org>
- *
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -25,7 +23,6 @@
 #include <config.h>
 #endif
 
-#include "gstpragma.h"
 #include "gstrtpsbcpay.h"
 #include <math.h>
 #include <string.h>
@@ -34,8 +31,9 @@
 #define DEFAULT_MIN_FRAMES 0
 #define RTP_SBC_HEADER_TOTAL (12 + RTP_SBC_PAYLOAD_HEADER_SIZE)
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
 
+/* FIXME: this seems all a bit over the top for a single byte.. */
 struct rtp_payload
 {
   guint8 frame_count:4;
@@ -45,7 +43,7 @@ struct rtp_payload
   guint8 is_fragmented:1;
 } __attribute__ ((packed));
 
-#elif __BYTE_ORDER == __BIG_ENDIAN
+#elif G_BYTE_ORDER == G_BIG_ENDIAN
 
 struct rtp_payload
 {
@@ -69,34 +67,27 @@ enum
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_sbc_pay_debug);
 #define GST_CAT_DEFAULT gst_rtp_sbc_pay_debug
 
-GST_BOILERPLATE (GstRtpSBCPay, gst_rtp_sbc_pay, GstBaseRTPPayload,
-    GST_TYPE_BASE_RTP_PAYLOAD);
-
-static const GstElementDetails gst_rtp_sbc_pay_details =
-GST_ELEMENT_DETAILS ("RTP packet payloader",
-    "Codec/Payloader/Network",
-    "Payload SBC audio as RTP packets",
-    "Thiago Sousa Santos " "<thiagoss@lcc.ufcg.edu.br>");
+#define parent_class gst_rtp_sbc_pay_parent_class
+G_DEFINE_TYPE (GstRtpSBCPay, gst_rtp_sbc_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
 static GstStaticPadTemplate gst_rtp_sbc_pay_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-sbc, "
         "rate = (int) { 16000, 32000, 44100, 48000 }, "
         "channels = (int) [ 1, 2 ], "
-        "mode = (string) { \"mono\", \"dual\", \"stereo\", \"joint\" }, "
+        "mode = (string) { mono, dual, stereo, joint }, "
         "blocks = (int) { 4, 8, 12, 16 }, "
         "subbands = (int) { 4, 8 }, "
-        "allocation = (string) { \"snr\", \"loudness\" }, "
-        "bitpool = (int) [ 2, 64 ]")
+        "allocation = (string) { snr, loudness }, " "bitpool = (int) [ 2, 64 ]")
     );
 
 static GstStaticPadTemplate gst_rtp_sbc_pay_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
-        "media = (string) \"audio\","
+        "media = (string) audio,"
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) { 16000, 32000, 44100, 48000 },"
-        "encoding-name = (string) \"SBC\"")
+        "encoding-name = (string) SBC")
     );
 
 static void gst_rtp_sbc_pay_set_property (GObject * object, guint prop_id,
@@ -124,7 +115,7 @@ gst_rtp_sbc_pay_get_frame_len (gint subbands, gint channels,
 }
 
 static gboolean
-gst_rtp_sbc_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_sbc_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   GstRtpSBCPay *sbcpay;
   gint rate, subbands, channels, blocks, bitpool;
@@ -155,16 +146,17 @@ gst_rtp_sbc_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
 
   sbcpay->frame_length = frame_len;
 
-  gst_basertppayload_set_options (payload, "audio", TRUE, "SBC", rate);
+  gst_rtp_base_payload_set_options (payload, "audio", TRUE, "SBC", rate);
 
   GST_DEBUG_OBJECT (payload, "calculated frame length: %d ", frame_len);
 
-  return gst_basertppayload_set_outcaps (payload, NULL);
+  return gst_rtp_base_payload_set_outcaps (payload, NULL);
 }
 
 static GstFlowReturn
 gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
 {
+  GstRTPBuffer rtp;
   guint available;
   guint max_payload;
   GstBuffer *outbuf;
@@ -181,7 +173,7 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
   available = gst_adapter_available (sbcpay->adapter);
 
   max_payload =
-      gst_rtp_buffer_calc_payload_len (GST_BASE_RTP_PAYLOAD_MTU (sbcpay) -
+      gst_rtp_buffer_calc_payload_len (GST_RTP_BASE_PAYLOAD_MTU (sbcpay) -
       RTP_SBC_PAYLOAD_HEADER_SIZE, 0, 0);
 
   max_payload = MIN (max_payload, available);
@@ -193,25 +185,33 @@ gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
   outbuf = gst_rtp_buffer_new_allocate (payload_length +
       RTP_SBC_PAYLOAD_HEADER_SIZE, 0, 0);
 
-  gst_rtp_buffer_set_payload_type (outbuf, GST_BASE_RTP_PAYLOAD_PT (sbcpay));
+  /* get payload */
+  gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
-  payload_data = gst_rtp_buffer_get_payload (outbuf);
+  gst_rtp_buffer_set_payload_type (&rtp, GST_RTP_BASE_PAYLOAD_PT (sbcpay));
+
+  /* write header and copy data into payload */
+  payload_data = gst_rtp_buffer_get_payload (&rtp);
   payload = (struct rtp_payload *) payload_data;
   memset (payload, 0, sizeof (struct rtp_payload));
   payload->frame_count = frame_count;
 
   gst_adapter_copy (sbcpay->adapter, payload_data +
       RTP_SBC_PAYLOAD_HEADER_SIZE, 0, payload_length);
+
+  gst_rtp_buffer_unmap (&rtp);
+
   gst_adapter_flush (sbcpay->adapter, payload_length);
 
+  /* FIXME: what about duration? */
   GST_BUFFER_TIMESTAMP (outbuf) = sbcpay->timestamp;
   GST_DEBUG_OBJECT (sbcpay, "Pushing %d bytes", payload_length);
 
-  return gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (sbcpay), outbuf);
+  return gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (sbcpay), outbuf);
 }
 
 static GstFlowReturn
-gst_rtp_sbc_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
+gst_rtp_sbc_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 {
   GstRtpSBCPay *sbcpay;
   guint available;
@@ -225,7 +225,7 @@ gst_rtp_sbc_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
 
   available = gst_adapter_available (sbcpay->adapter);
   if (available + RTP_SBC_HEADER_TOTAL >=
-      GST_BASE_RTP_PAYLOAD_MTU (sbcpay) ||
+      GST_RTP_BASE_PAYLOAD_MTU (sbcpay) ||
       (available > (sbcpay->min_frames * sbcpay->frame_length)))
     return gst_rtp_sbc_pay_flush_buffers (sbcpay);
 
@@ -233,9 +233,9 @@ gst_rtp_sbc_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
 }
 
 static gboolean
-gst_rtp_sbc_pay_handle_event (GstPad * pad, GstEvent * event)
+gst_rtp_sbc_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 {
-  GstRtpSBCPay *sbcpay = GST_RTP_SBC_PAY (GST_PAD_PARENT (pad));
+  GstRtpSBCPay *sbcpay = GST_RTP_SBC_PAY (payload);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -245,26 +245,14 @@ gst_rtp_sbc_pay_handle_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  return FALSE;
-}
-
-static void
-gst_rtp_sbc_pay_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_sbc_pay_sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_sbc_pay_src_factory));
-
-  gst_element_class_set_details (element_class, &gst_rtp_sbc_pay_details);
+  return GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (payload, event);
 }
 
 static void
 gst_rtp_sbc_pay_finalize (GObject * object)
 {
   GstRtpSBCPay *sbcpay = GST_RTP_SBC_PAY (object);
+
   g_object_unref (sbcpay->adapter);
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
@@ -273,23 +261,18 @@ gst_rtp_sbc_pay_finalize (GObject * object)
 static void
 gst_rtp_sbc_pay_class_init (GstRtpSBCPayClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstBaseRTPPayloadClass *payload_class = GST_BASE_RTP_PAYLOAD_CLASS (klass);
+  GstRTPBasePayloadClass *payload_class = GST_RTP_BASE_PAYLOAD_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class = G_OBJECT_CLASS (klass);
-  parent_class = g_type_class_peek_parent (klass);
-
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_rtp_sbc_pay_finalize);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_rtp_sbc_pay_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_rtp_sbc_pay_get_property);
+  gobject_class->finalize = gst_rtp_sbc_pay_finalize;
+  gobject_class->set_property = gst_rtp_sbc_pay_set_property;
+  gobject_class->get_property = gst_rtp_sbc_pay_get_property;
 
   payload_class->set_caps = GST_DEBUG_FUNCPTR (gst_rtp_sbc_pay_set_caps);
   payload_class->handle_buffer =
       GST_DEBUG_FUNCPTR (gst_rtp_sbc_pay_handle_buffer);
-  payload_class->handle_event =
-      GST_DEBUG_FUNCPTR (gst_rtp_sbc_pay_handle_event);
+  payload_class->sink_event = GST_DEBUG_FUNCPTR (gst_rtp_sbc_pay_sink_event);
 
   /* properties */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
@@ -298,6 +281,15 @@ gst_rtp_sbc_pay_class_init (GstRtpSBCPayClass * klass)
           "Minimum quantity of frames to send in one packet "
           "(-1 for maximum allowed by the mtu)",
           -1, G_MAXINT, DEFAULT_MIN_FRAMES, G_PARAM_READWRITE));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_rtp_sbc_pay_sink_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_rtp_sbc_pay_src_factory));
+
+  gst_element_class_set_static_metadata (element_class, "RTP packet payloader",
+      "Codec/Payloader/Network", "Payload SBC audio as RTP packets",
+      "Thiago Sousa Santos <thiagoss@lcc.ufcg.edu.br>");
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_sbc_pay_debug, "rtpsbcpay", 0,
       "RTP SBC payloader");
@@ -340,7 +332,7 @@ gst_rtp_sbc_pay_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_rtp_sbc_pay_init (GstRtpSBCPay * self, GstRtpSBCPayClass * klass)
+gst_rtp_sbc_pay_init (GstRtpSBCPay * self)
 {
   self->adapter = gst_adapter_new ();
   self->frame_length = 0;

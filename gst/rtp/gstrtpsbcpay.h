@@ -1,9 +1,7 @@
-/*
- *
+/*  GStreamer RTP SBC payloader
  *  BlueZ - Bluetooth protocol stack for Linux
  *
  *  Copyright (C) 2004-2010  Marcel Holtmann <marcel@holtmann.org>
- *
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -22,8 +20,8 @@
  */
 
 #include <gst/gst.h>
-#include <gst/rtp/gstbasertppayload.h>
 #include <gst/base/gstadapter.h>
+#include <gst/rtp/gstrtpbasepayload.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
 G_BEGIN_DECLS
@@ -45,7 +43,7 @@ typedef struct _GstRtpSBCPay GstRtpSBCPay;
 typedef struct _GstRtpSBCPayClass GstRtpSBCPayClass;
 
 struct _GstRtpSBCPay {
-	GstBaseRTPPayload base;
+	GstRTPBasePayload base;
 
 	GstAdapter *adapter;
 	GstClockTime timestamp;
@@ -56,7 +54,7 @@ struct _GstRtpSBCPay {
 };
 
 struct _GstRtpSBCPayClass {
-	GstBaseRTPPayloadClass parent_class;
+	GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_sbc_pay_get_type(void);
