@@ -90,7 +90,7 @@ test_surfaces_LDADD	= libutils.la $(TEST_LIBS)
 
 test_subpicture_SOURCES = test-subpicture.c test-subpicture-data.c
 test_subpicture_CFLAGS  = $(TEST_CFLAGS)
-test_subpicture_LDADD   = libutils.la $(TEST_LIBS)
+test_subpicture_LDADD   = libutils.la libutils_dec.la $(TEST_LIBS)
 
 test_windows_SOURCES	= test-windows.c
 test_windows_CFLAGS	= $(TEST_CFLAGS)

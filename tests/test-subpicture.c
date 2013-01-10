@@ -22,37 +22,10 @@
 
 #include "config.h"
 #include <string.h>
-#include <gst/vaapi/gstvaapidecoder.h>
-#include <gst/vaapi/gstvaapidecoder_mpeg2.h>
 #include <gst/vaapi/gstvaapisurface.h>
+#include "decoder.h"
 #include "output.h"
-#include "test-mpeg2.h"
 #include "test-subpicture-data.h"
-
-typedef void (*GetVideoInfoFunc)(VideoDecodeInfo *info);
-
-typedef struct _CodecDefs CodecDefs;
-struct _CodecDefs {
-    const gchar        *codec_str;
-    GetVideoInfoFunc    get_video_info;
-};
-
-static const CodecDefs g_codec_defs[] = {
-#define INIT_FUNCS(CODEC) { #CODEC, CODEC##_get_video_info }
-    INIT_FUNCS(mpeg2),
-#undef INIT_FUNCS
-    { NULL, }
-};
-
-static const CodecDefs *
-get_codec_defs(const gchar *codec_str)
-{
-    const CodecDefs *c;
-    for (c = g_codec_defs; c->codec_str; c++)
-        if (strcmp(codec_str, c->codec_str) == 0)
-            return c;
-    return NULL;
-}
 
 static inline void pause(void)
 {
@@ -88,15 +61,9 @@ main(int argc, char *argv[])
 {
     GstVaapiDisplay      *display;
     GstVaapiWindow       *window;
-    GstVaapiDecoder      *decoder = NULL;
-    GstCaps              *decoder_caps;
-    GstStructure         *structure;
-    GstVaapiDecoderStatus status;
-    const CodecDefs      *codec;
-    GstBuffer            *buffer;
-    GstVaapiSurfaceProxy *proxy;
+    GstVaapiDecoder      *decoder;
     GstVaapiSurface      *surface;
-    VideoDecodeInfo       info;
+    GstBuffer            *buffer;
     VideoSubpictureInfo   subinfo;
     GstVaapiImage        *subtitle_image;
     GstVaapiSubpicture   *subpicture;
@@ -110,13 +77,7 @@ main(int argc, char *argv[])
     if (!video_output_init(&argc, argv, g_options))
         g_error("failed to initialize video output subsystem");
 
-    if (!g_codec_str)
-        g_codec_str = g_strdup("mpeg2");
-
-    g_print("Test %s decode\n", g_codec_str);
-    codec = get_codec_defs(g_codec_str);
-    if (!codec)
-        g_error("no %s codec data found", g_codec_str);
+    g_print("Test subpicture\n");
 
     display = video_output_create_display(NULL);
     if (!display)
@@ -126,44 +87,16 @@ main(int argc, char *argv[])
     if (!window)
         g_error("could not create window");
 
-    codec->get_video_info(&info);
-    decoder_caps = gst_vaapi_profile_get_caps(info.profile);
-    if (!decoder_caps)
-        g_error("could not create decoder caps");
-
-    structure = gst_caps_get_structure(decoder_caps, 0);
-    if (info.width > 0 && info.height > 0)
-        gst_structure_set(
-            structure,
-            "width",  G_TYPE_INT, info.width,
-            "height", G_TYPE_INT, info.height,
-            NULL
-        );
-
-    decoder = gst_vaapi_decoder_mpeg2_new(display, decoder_caps);
+    decoder = decoder_new(display, g_codec_str);
     if (!decoder)
-        g_error("could not create video decoder");
-    gst_caps_unref(decoder_caps);
+        g_error("could not create decoder");
 
-    buffer = gst_buffer_new();
-    if (!buffer)
-        g_error("could not create encoded data buffer");
-    gst_buffer_set_data(buffer, (guchar *)info.data, info.data_size);
+    if (!decoder_put_buffers(decoder))
+        g_error("could not fill decoder with sample data");
 
-    if (!gst_vaapi_decoder_put_buffer(decoder, buffer))
-        g_error("could not send video data to the decoder");
-    gst_buffer_unref(buffer);
-
-    if (!gst_vaapi_decoder_put_buffer(decoder, NULL))
-        g_error("could not send EOS to the decoder");
-
-    status = gst_vaapi_decoder_get_surface(decoder, &proxy);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-        g_error("could not get decoded surface (decoder status %d)", status);
-
-    surface = gst_vaapi_surface_proxy_get_surface(proxy);
+    surface = decoder_get_surface(decoder);
     if (!surface)
-        g_error("could not get underlying surface");
+        g_error("could not get decoded surface");
 
     gst_vaapi_surface_get_size(surface, &surf_width, &surf_height);
     printf("surface size %dx%d\n", surf_width, surf_height);
@@ -209,17 +142,13 @@ main(int argc, char *argv[])
 
     gst_vaapi_window_show(window);
 
-    if (!gst_vaapi_window_put_surface(window,
-                                      GST_VAAPI_SURFACE_PROXY_SURFACE(proxy),
-                                      NULL,
-                                      NULL,
-                                      GST_VAAPI_PICTURE_STRUCTURE_FRAME))
+    if (!gst_vaapi_window_put_surface(window, surface, NULL, NULL,
+            GST_VAAPI_PICTURE_STRUCTURE_FRAME))
         g_error("could not render surface");
 
     pause();
 
     gst_buffer_unref(buffer);
-    gst_vaapi_surface_proxy_unref(proxy);
     g_object_unref(decoder);
     g_object_unref(window);
     g_object_unref(display);
