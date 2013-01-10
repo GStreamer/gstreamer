@@ -34,6 +34,7 @@
 #include "gstvaapisurfacepool.h"
 #include "gstvaapiimage.h"
 #include "gstvaapisubpicture.h"
+#include "gstvaapiminiobject.h"
 #include "gstvaapiutils.h"
 #include "gstvaapi_priv.h"
 
@@ -51,8 +52,9 @@ typedef struct _GstVaapiOverlayRectangle GstVaapiOverlayRectangle;
 struct _GstVaapiOverlayRectangle {
     GstVaapiContext    *context;
     GstVaapiSubpicture *subpicture;
-    GstVaapiRectangle   rect;
+    GstVaapiRectangle   render_rect;
     guint               seq_num;
+    guint               is_associated   : 1;
 };
 
 /* XXX: optimize for the effective number of reference frames */
@@ -92,50 +94,151 @@ get_max_ref_frames(GstVaapiProfile profile)
     return ref_frames;
 }
 
+#define overlay_rectangle_ref(overlay) \
+    gst_vaapi_mini_object_ref(GST_VAAPI_MINI_OBJECT(overlay))
+
+#define overlay_rectangle_unref(overlay) \
+    gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(overlay))
+
+#define overlay_rectangle_replace(old_overlay_ptr, new_overlay) \
+    gst_vaapi_mini_object_replace((GstVaapiMiniObject **)(old_overlay_ptr), \
+        (GstVaapiMiniObject *)(new_overlay))
+
+static void
+overlay_rectangle_finalize(GstVaapiOverlayRectangle *overlay);
+
+static gboolean
+overlay_rectangle_associate(GstVaapiOverlayRectangle *overlay);
+
+static gboolean
+overlay_rectangle_deassociate(GstVaapiOverlayRectangle *overlay);
+
+static inline const GstVaapiMiniObjectClass *
+overlay_rectangle_class(void)
+{
+    static const GstVaapiMiniObjectClass GstVaapiOverlayRectangleClass = {
+        sizeof(GstVaapiOverlayRectangle),
+        (GDestroyNotify)overlay_rectangle_finalize
+    };
+    return &GstVaapiOverlayRectangleClass;
+}
+
 static GstVaapiOverlayRectangle *
-overlay_rectangle_new(GstVaapiContext *context)
+overlay_rectangle_new(GstVideoOverlayRectangle *rect, GstVaapiContext *context)
 {
     GstVaapiOverlayRectangle *overlay;
+    GstVaapiRectangle *render_rect;
+    guint width, height;
+    gint x, y;
 
-    overlay = g_slice_new0(GstVaapiOverlayRectangle);
+    overlay = (GstVaapiOverlayRectangle *)
+        gst_vaapi_mini_object_new0(overlay_rectangle_class());
     if (!overlay)
         return NULL;
 
-    overlay->context = context;
+    overlay->context    = context;
+    overlay->seq_num    = gst_video_overlay_rectangle_get_seqnum(rect);
+
+    overlay->subpicture = gst_vaapi_subpicture_new_from_overlay_rectangle(
+        GST_VAAPI_OBJECT_DISPLAY(context), rect);
+    if (!overlay->subpicture)
+        goto error;
+
+    gst_video_overlay_rectangle_get_render_rectangle(rect,
+        &x, &y, &width, &height);
+    render_rect = &overlay->render_rect;
+    render_rect->x = x;
+    render_rect->y = y;
+    render_rect->width = width;
+    render_rect->height = height;
+
+    if (!overlay_rectangle_associate(overlay)) {
+        GST_WARNING("could not render overlay rectangle %p", rect);
+        goto error;
+    }
     return overlay;
+
+error:
+    overlay_rectangle_unref(overlay);
+    return NULL;
 }
 
 static void
-overlay_rectangle_destroy(GstVaapiOverlayRectangle *overlay)
+overlay_rectangle_finalize(GstVaapiOverlayRectangle *overlay)
 {
-    GstVaapiContextPrivate *priv;
-    guint i;
-
-    if (!overlay)
-        return;
-    priv = overlay->context->priv;
-
     if (overlay->subpicture) {
-        if (priv->surfaces) {
-            GstVaapiSubpicture * const subpicture = overlay->subpicture;
-            for (i = 0; i < priv->surfaces->len; i++) {
-                GstVaapiSurface * const surface =
-                    g_ptr_array_index(priv->surfaces, i);
-                gst_vaapi_surface_deassociate_subpicture(surface, subpicture);
-            }
-        }
+        overlay_rectangle_deassociate(overlay);
         g_object_unref(overlay->subpicture);
         overlay->subpicture = NULL;
     }
-    g_slice_free(GstVaapiOverlayRectangle, overlay);
+}
+
+static gboolean
+overlay_rectangle_associate(GstVaapiOverlayRectangle *overlay)
+{
+    GstVaapiSubpicture * const subpicture = overlay->subpicture;
+    GPtrArray * const surfaces = overlay->context->priv->surfaces;
+    guint i, n_associated;
+
+    if (overlay->is_associated)
+        return TRUE;
+
+    n_associated = 0;
+    for (i = 0; i < surfaces->len; i++) {
+        GstVaapiSurface * const surface = g_ptr_array_index(surfaces, i);
+        if (gst_vaapi_surface_associate_subpicture(surface, subpicture,
+                NULL, &overlay->render_rect))
+            n_associated++;
+    }
+
+    overlay->is_associated = TRUE;
+    return n_associated == surfaces->len;
+}
+
+static gboolean
+overlay_rectangle_deassociate(GstVaapiOverlayRectangle *overlay)
+{
+    GstVaapiSubpicture * const subpicture = overlay->subpicture;
+    GPtrArray * const surfaces = overlay->context->priv->surfaces;
+    guint i, n_associated;
+
+    if (!overlay->is_associated)
+        return TRUE;
+
+    n_associated = surfaces->len;
+    for (i = 0; i < surfaces->len; i++) {
+        GstVaapiSurface * const surface = g_ptr_array_index(surfaces, i);
+        if (gst_vaapi_surface_deassociate_subpicture(surface, subpicture))
+            n_associated--;
+    }
+
+    overlay->is_associated = FALSE;
+    return n_associated == 0;
+}
+
+static inline GPtrArray *
+overlay_new(void)
+{
+    return g_ptr_array_new_with_free_func(
+        (GDestroyNotify)gst_vaapi_mini_object_unref);
 }
 
 static void
-destroy_overlay_cb(gpointer data, gpointer user_data)
+overlay_destroy(GPtrArray **overlay_ptr)
 {
-    GstVaapiOverlayRectangle * const overlay = data;
+    GPtrArray * const overlay = *overlay_ptr;
 
-    overlay_rectangle_destroy(overlay);
+    if (!overlay)
+        return;
+    g_ptr_array_unref(overlay);
+    *overlay_ptr = NULL;
+}
+
+static void
+overlay_clear(GPtrArray *overlay)
+{
+    if (overlay && overlay->len > 0)
+        g_ptr_array_remove_range(overlay, 0, overlay->len);
 }
 
 static void
@@ -143,12 +246,7 @@ gst_vaapi_context_destroy_overlay(GstVaapiContext *context)
 {
     GstVaapiContextPrivate * const priv = context->priv;
 
-    if (!priv->overlay)
-        return;
-
-    g_ptr_array_foreach(priv->overlay, destroy_overlay_cb, priv);
-    g_ptr_array_free(priv->overlay, TRUE);
-    priv->overlay = NULL;
+    overlay_clear(priv->overlay);
 }
 
 static void
@@ -219,11 +317,10 @@ gst_vaapi_context_create_overlay(GstVaapiContext *context)
 {
     GstVaapiContextPrivate * const priv = context->priv;
 
-    if (!priv->overlay) {
-        priv->overlay = g_ptr_array_new();
-        if (!priv->overlay)
-            return FALSE;
-    }
+    if (!priv->overlay)
+        return FALSE;
+
+    overlay_clear(priv->overlay);
     return TRUE;
 }
 
@@ -377,7 +474,9 @@ static void
 gst_vaapi_context_finalize(GObject *object)
 {
     GstVaapiContext * const context = GST_VAAPI_CONTEXT(object);
+    GstVaapiContextPrivate * const priv = context->priv;
 
+    overlay_destroy(&priv->overlay);
     gst_vaapi_context_destroy(context);
     gst_vaapi_context_destroy_surfaces(context);
 
@@ -516,7 +615,7 @@ gst_vaapi_context_init(GstVaapiContext *context)
     priv->config_id     = VA_INVALID_ID;
     priv->surfaces      = NULL;
     priv->surfaces_pool = NULL;
-    priv->overlay       = NULL;
+    priv->overlay       = overlay_new();
     priv->profile       = 0;
     priv->entrypoint    = 0;
     priv->width         = 0;
@@ -869,9 +968,6 @@ gst_vaapi_context_composition_changed(
     GstVideoOverlayRectangle *rect;
     guint i, n_rectangles;
 
-    if (!priv->overlay || !composition)
-        return TRUE;
-
     n_rectangles = gst_video_overlay_composition_n_rectangles(composition);
     if (priv->overlay->len != n_rectangles)
         return TRUE;
@@ -907,69 +1003,41 @@ gst_vaapi_context_apply_composition(
 )
 {
     GstVaapiContextPrivate *priv;
-    GstVideoOverlayRectangle *rect;
-    GstVaapiOverlayRectangle *overlay = NULL;
-    GstVaapiDisplay *display;
-    guint i, j, n_rectangles;
+    guint i, n_rectangles;
 
     g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), FALSE);
 
     priv = context->priv;
+
     if (!priv->surfaces)
         return FALSE;
 
-    display = GST_VAAPI_OBJECT_DISPLAY(context);
-    if (!display)
-        return FALSE;
-
-    if (!gst_vaapi_context_composition_changed(context, composition))
+    if (!composition) {
+        if (priv->overlay->len > 0)
+            overlay_clear(priv->overlay);
         return TRUE;
-    gst_vaapi_context_destroy_overlay(context);
-
-    if (!composition)
+    }
+    else if (!gst_vaapi_context_composition_changed(context, composition))
         return TRUE;
-    if (!gst_vaapi_context_create_overlay(context))
-        return FALSE;
+
+    overlay_clear(priv->overlay);
 
     n_rectangles = gst_video_overlay_composition_n_rectangles(composition);
     for (i = 0; i < n_rectangles; i++) {
-        rect = gst_video_overlay_composition_get_rectangle(composition, i);
+        GstVideoOverlayRectangle * const rect =
+            gst_video_overlay_composition_get_rectangle(composition, i);
+        GstVaapiOverlayRectangle *overlay;
 
-        overlay = overlay_rectangle_new(context);
+        overlay = overlay_rectangle_new(rect, context);
         if (!overlay) {
             GST_WARNING("could not create VA overlay rectangle");
-            return FALSE;
-        }
-        overlay->seq_num = gst_video_overlay_rectangle_get_seqnum(rect);
-
-        overlay->subpicture = gst_vaapi_subpicture_new_from_overlay_rectangle(
-            display,
-            rect
-        );
-        if (!overlay->subpicture) {
-            overlay_rectangle_destroy(overlay);
-            return FALSE;
-        }
-
-        gst_video_overlay_rectangle_get_render_rectangle(
-            rect,
-            (gint *)&overlay->rect.x,
-            (gint *)&overlay->rect.y,
-            &overlay->rect.width,
-            &overlay->rect.height
-        );
-
-        for (j = 0; j < priv->surfaces->len; j++) {
-            GstVaapiSurface * const surface =
-                g_ptr_array_index(priv->surfaces, j);
-            if (!gst_vaapi_surface_associate_subpicture(surface,
-                         overlay->subpicture, NULL, &overlay->rect)) {
-                GST_WARNING("could not render overlay rectangle %p", rect);
-                overlay_rectangle_destroy(overlay);
-                return FALSE;
-            }
+            goto error;
         }
         g_ptr_array_add(priv->overlay, overlay);
     }
     return TRUE;
+
+error:
+    overlay_clear(priv->overlay);
+    return FALSE;
 }
