@@ -350,7 +350,7 @@ _create_context_gles2 (GstGLDisplay * display, gint * gl_major, gint * gl_minor)
     gst_gl_display_set_error (display, "OpenGL|ES >= 2.0 is required");
 
   _gst_gl_feature_check_ext_functions (display, 0, 0,
-      glGetString (GL_EXTENSIONS));
+      (const gchar *) glGetString (GL_EXTENSIONS));
 
   display->priv->vtable.gen_fbo = (GstGLWindowCB) _gen_fbo_gles2;
   display->priv->vtable.use_fbo = (GstGLWindowCB) _use_fbo_gles2;
@@ -554,9 +554,9 @@ void
 gst_gl_display_thread_destroy_context (GstGLDisplay * display)
 {
 #if GST_GL_HAVE_GLES2
-  if (display->redisplay_shader) {
-    g_object_unref (G_OBJECT (display->redisplay_shader));
-    display->redisplay_shader = NULL;
+  if (display->priv->redisplay_shader) {
+    g_object_unref (G_OBJECT (display->priv->redisplay_shader));
+    display->priv->redisplay_shader = NULL;
   }
 #endif
 
@@ -827,7 +827,8 @@ _use_fbo_gles2 (GstGLDisplay * display)
 
   glGetIntegerv (GL_VIEWPORT, viewport_dim);
 
-  glViewport (0, 0, display->use_fbo_width, display->use_fbo_height);
+  glViewport (0, 0, display->priv->use_fbo_width,
+      display->priv->use_fbo_height);
 
   glClearColor (0.0, 0.0, 0.0, 0.0);
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -952,7 +953,7 @@ _del_fbo_gles2 (GstGLDisplay * display)
     glDeleteFramebuffersEXT (1, &display->priv->del_fbo);
     display->priv->del_fbo = 0;
   }
-  if (display->del_depth_buffer) {
+  if (display->priv->del_depth_buffer) {
     glDeleteRenderbuffersEXT (1, &display->priv->del_depth_buffer);
     display->priv->del_depth_buffer = 0;
   }
@@ -1060,7 +1061,7 @@ _del_shader_gles2 (GstGLDisplay * display)
 
   if (display->priv->del_shader) {
     g_object_unref (G_OBJECT (display->priv->del_shader));
-    display->del_shader = NULL;
+    display->priv->del_shader = NULL;
   }
 }
 #endif
