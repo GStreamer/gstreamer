@@ -32,14 +32,14 @@ struct _GstVaapiMiniObjectBase {
 static inline GstVaapiMiniObjectBase *
 object2base(GstVaapiMiniObject *object)
 {
-    return GUINT_TO_POINTER(GPOINTER_TO_UINT(object) -
+    return GSIZE_TO_POINTER(GPOINTER_TO_SIZE(object) -
         sizeof(GstVaapiMiniObjectBase));
 }
 
 static inline GstVaapiMiniObject *
 base2object(GstVaapiMiniObjectBase *base_object)
 {
-    return GUINT_TO_POINTER(GPOINTER_TO_UINT(base_object) +
+    return GSIZE_TO_POINTER(GPOINTER_TO_SIZE(base_object) +
         sizeof(GstVaapiMiniObjectBase));
 }
 
