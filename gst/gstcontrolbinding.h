@@ -47,14 +47,7 @@ G_BEGIN_DECLS
 typedef struct _GstControlBinding GstControlBinding;
 typedef struct _GstControlBindingClass GstControlBindingClass;
 
-/**
- * GstControlBindingConvert:
- * @binding: the #GstControlBinding instance
- * @src_value: the value returned by the cotnrol source
- * @dest_value: the target GValue
- *
- * Function to map a control-value to the target GValue.
- */
+/* FIXME(2.0): remove, this is unused */
 typedef void (* GstControlBindingConvert) (GstControlBinding *binding, gdouble src_value, GValue *dest_value);
 
 /**
