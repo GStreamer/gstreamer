@@ -57,25 +57,28 @@ TEST_LIBS	+= \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-wayland-@GST_MAJORMINOR@.la
 endif
 
-test_codecs_source_c =	\
+test_utils_dec_source_c =	\
+	decoder.c	\
 	test-h264.c	\
 	test-jpeg.c	\
 	test-mpeg2.c	\
 	test-mpeg4.c	\
 	test-vc1.c	\
 	$(NULL)
-test_codecs_source_h	= $(test_codecs_source_c:%.c=%.h) test-decode.h
+test_utils_dec_source_h	= $(test_utils_dec_source_c:%.c=%.h) test-decode.h
 
-test_utils_source_c	= image.c output.c $(test_codecs_source_c)
-test_utils_source_h	= image.h output.h $(test_codecs_source_h)
+test_utils_source_c	= image.c output.c
+test_utils_source_h	= image.h output.h
 
-noinst_LTLIBRARIES	= libutils.la
+noinst_LTLIBRARIES	= libutils.la libutils_dec.la
 libutils_la_SOURCES	= $(test_utils_source_c)
 libutils_la_CFLAGS	= $(TEST_CFLAGS)
+libutils_dec_la_SOURCES	= $(test_utils_dec_source_c)
+libutils_dec_la_CFLAGS	= $(TEST_CFLAGS)
 
-test_decode_SOURCES	= test-decode.c $(test_codecs_source_c)
+test_decode_SOURCES	= test-decode.c
 test_decode_CFLAGS	= $(TEST_CFLAGS)
-test_decode_LDADD	= libutils.la $(TEST_LIBS)
+test_decode_LDADD	= libutils.la libutils_dec.la $(TEST_LIBS)
 
 test_display_SOURCES	= test-display.c
 test_display_CFLAGS	= $(TEST_CFLAGS)
@@ -98,8 +101,9 @@ test_textures_CFLAGS	= $(TEST_CFLAGS)
 test_textures_LDADD	= libutils.la $(TEST_LIBS)
 
 EXTRA_DIST = \
-	test-subpicture-data.h	\
-	$(test_utils_source_h)	\
+	test-subpicture-data.h		\
+	$(test_utils_dec_source_h)	\
+	$(test_utils_source_h)		\
 	$(NULL)
 
 # Extra clean files so that maintainer-clean removes *everything*
