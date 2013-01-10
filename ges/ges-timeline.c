@@ -48,7 +48,7 @@ typedef struct _MoveContext MoveContext;
 
 static GPtrArray *select_tracks_for_object_default (GESTimeline * timeline,
     GESTimelineObject * tl_obj, GESTrackObject * tr_obj, gpointer user_data);
-static inline void init_movecontext (MoveContext * mv_ctx);
+static inline void init_movecontext (MoveContext * mv_ctx, gboolean first_init);
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
 static void ges_meta_container_interface_init
     (GESMetaContainerInterface * iface);
@@ -499,7 +499,7 @@ ges_timeline_init (GESTimeline * self)
   priv->snapping_distance = 0;
 
   /* Move context initialization */
-  init_movecontext (&self->priv->movecontext);
+  init_movecontext (&self->priv->movecontext, TRUE);
   priv->movecontext.ignore_needs_ctx = FALSE;
 
   priv->priv_tracks = NULL;
@@ -631,10 +631,12 @@ sort_starts_ends_start (GESTimeline * timeline, TrackObjIters * iters)
 
 /* Timeline edition functions */
 static inline void
-init_movecontext (MoveContext * mv_ctx)
+init_movecontext (MoveContext * mv_ctx, gboolean first_init)
 {
+  if (G_UNLIKELY (first_init))
+    mv_ctx->moving_tlobjs = g_hash_table_new (g_direct_hash, g_direct_equal);
+
   mv_ctx->moving_tckobjs = NULL;
-  mv_ctx->moving_tlobjs = g_hash_table_new (g_direct_hash, g_direct_equal);
   mv_ctx->max_trim_pos = G_MAXUINT64;
   mv_ctx->min_move_layer = G_MAXUINT;
   mv_ctx->max_layer_prio = 0;
@@ -647,8 +649,8 @@ static inline void
 clean_movecontext (MoveContext * mv_ctx)
 {
   g_list_free (mv_ctx->moving_tckobjs);
-  g_hash_table_unref (mv_ctx->moving_tlobjs);
-  init_movecontext (mv_ctx);
+  g_hash_table_remove_all (mv_ctx->moving_tlobjs);
+  init_movecontext (mv_ctx, FALSE);
 }
 
 static void
