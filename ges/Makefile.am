@@ -55,6 +55,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-project.c \
 	ges-base-xml-formatter.c \
 	ges-xml-formatter.c \
+	ges-auto-transition.c \
 	ges-utils.c
 
 libges_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/ges/
@@ -111,6 +112,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 
 noinst_HEADERS = \
 	ges-internal.h \
+	ges-auto-transition.h \
 	ges-internal-enums.h
 
 libges_@GST_API_VERSION@_la_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) \

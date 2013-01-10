@@ -42,6 +42,7 @@
 #include "ges-timeline.h"
 #include "ges-track.h"
 #include "ges-timeline-layer.h"
+#include "ges-auto-transition.h"
 #include "ges.h"
 
 typedef struct _MoveContext MoveContext;
@@ -143,7 +144,16 @@ struct _GESTimelinePrivate
    * probably through a ges_timeline_layer_get_track_objects () method */
   GHashTable *by_layer;         /* {layer: GSequence of TrackObject by start/priorities} */
 
+  /* The set of auto_transitions we control, currently the key is
+   * pointerToPreviousiTrackObjAdresspointerToNextTrackObjAdress as a string,
+   * ... not really optimal but it works */
+  GHashTable *auto_transitions;
+
   MoveContext movecontext;
+
+  /* This variable is set to %TRUE when it makes sense to update the transitions,
+   * and %FALSE otherwize */
+  gboolean needs_transitions_update;
 
   gboolean updates_enabled;
 };
@@ -292,11 +302,14 @@ ges_timeline_dispose (GObject * object)
   g_hash_table_unref (priv->by_start);
   g_hash_table_unref (priv->by_end);
   g_hash_table_unref (priv->by_object);
+  g_hash_table_unref (priv->by_layer);
   g_hash_table_unref (priv->obj_iters);
   g_sequence_free (priv->starts_ends);
   g_sequence_free (priv->tracksources);
   g_list_free (priv->movecontext.moving_tckobjs);
   g_hash_table_unref (priv->movecontext.moving_tlobjs);
+
+  g_hash_table_unref (priv->auto_transitions);
 
   G_OBJECT_CLASS (ges_timeline_parent_class)->dispose (object);
 }
@@ -513,6 +526,12 @@ ges_timeline_init (GESTimeline * self)
   priv->starts_ends = g_sequence_new (g_free);
   priv->tracksources = g_sequence_new (g_object_unref);
 
+  priv->auto_transitions =
+      g_hash_table_new_full (g_str_hash, g_str_equal, NULL, gst_object_unref);
+  priv->needs_transitions_update = TRUE;
+
+  priv->updates_enabled = TRUE;
+
   g_signal_connect_after (self, "select-tracks-for-object",
       G_CALLBACK (select_tracks_for_object_default), NULL);
 }
@@ -627,6 +646,227 @@ sort_starts_ends_start (GESTimeline * timeline, TrackObjIters * iters)
   g_sequence_sort_changed (iters->iter_start,
       (GCompareDataFunc) compare_uint64, NULL);
   timeline_update_duration (timeline);
+}
+
+static void
+_destroy_auto_transition_cb (GESAutoTransition * auto_transition,
+    GESTimeline * timeline)
+{
+  GESTimelinePrivate *priv = timeline->priv;
+  GESTimelineObject *transition = auto_transition->timeline_transition;
+  GESTimelineLayer *layer = ges_timeline_object_get_layer (transition);
+
+  ges_timeline_layer_remove_object (layer, transition);
+  g_signal_handlers_disconnect_by_func (auto_transition,
+      _destroy_auto_transition_cb, timeline);
+
+  if (!g_hash_table_remove (priv->auto_transitions, auto_transition->key))
+    GST_WARNING_OBJECT (timeline, "Could not remove auto_transition %"
+        GST_PTR_FORMAT, auto_transition->key);
+}
+
+static GESAutoTransition *
+create_transition (GESTimeline * timeline, GESTrackObject * previous,
+    GESTrackObject * next, GESTimelineObject * transition,
+    GESTimelineLayer * layer, guint64 start, guint64 duration)
+{
+  GList *tckobjs;
+  GESAsset *asset;
+  GESAutoTransition *auto_transition;
+
+  if (transition == NULL) {
+    /* TODO make it possible to specify a Transition asset in the API */
+    asset = ges_asset_request (GES_TYPE_TIMELINE_STANDARD_TRANSITION,
+        "crossfade", NULL);
+    transition =
+        ges_timeline_layer_add_asset (layer, asset, start, 0, duration, 1,
+        ges_track_object_get_track_type (next));
+  } else {
+    GST_DEBUG_OBJECT (timeline,
+        "Reusing already existing transition: %" GST_PTR_FORMAT, transition);
+  }
+
+  /* We know there is only 1 TrackObject */
+  tckobjs = ges_timeline_object_get_track_objects (transition);
+  auto_transition = ges_auto_transition_new (tckobjs->data, previous, next);
+  g_list_free_full (tckobjs, gst_object_unref);
+
+  g_signal_connect (auto_transition, "destroy-me",
+      G_CALLBACK (_destroy_auto_transition_cb), timeline);
+
+  g_hash_table_insert (timeline->priv->auto_transitions,
+      auto_transition->key, auto_transition);
+
+  return auto_transition;
+}
+
+typedef GESAutoTransition *(*GetAutoTransitionFunc) (GESTimeline * timeline,
+    GESTimelineLayer * layer, GESTrack * track, GESTrackObject * previous,
+    GESTrackObject * next, GstClockTime transition_duration);
+
+static GESAutoTransition *
+_find_transition_from_auto_transitions (GESTimeline * timeline,
+    GESTimelineLayer * layer, GESTrack * track, GESTrackObject * prev,
+    GESTrackObject * next, GstClockTime transition_duration)
+{
+  GESAutoTransition *auto_transition;
+
+  gchar *key = g_strdup_printf ("%p%p", prev, next);
+
+  auto_transition = g_hash_table_lookup (timeline->priv->auto_transitions, key);
+  g_free (key);
+
+  return auto_transition;
+}
+
+static GESAutoTransition *
+_create_auto_transition_from_transitions (GESTimeline * timeline,
+    GESTimelineLayer * layer, GESTrack * track, GESTrackObject * prev,
+    GESTrackObject * next, GstClockTime transition_duration)
+{
+  GSequenceIter *tmp_iter;
+  GSequence *by_layer_sequence;
+
+  GESTimelinePrivate *priv = timeline->priv;
+  GESAutoTransition *auto_transition =
+      _find_transition_from_auto_transitions (timeline, layer, track, prev,
+      next, transition_duration);
+
+  if (auto_transition)
+    return auto_transition;
+
+
+  /* Try to find a transition that perfectly fits with the one that
+   * should be added at that place
+   * optimize: Use g_sequence_search instead of going over all the
+   * sequence */
+  by_layer_sequence = g_hash_table_lookup (priv->by_layer, layer);
+  for (tmp_iter = g_sequence_get_begin_iter (by_layer_sequence);
+      tmp_iter && !g_sequence_iter_is_end (tmp_iter);
+      tmp_iter = g_sequence_iter_next (tmp_iter)) {
+    GESTrackObject *maybe_transition = g_sequence_get (tmp_iter);
+
+    if (ges_track_object_get_track (maybe_transition) != track)
+      continue;
+
+    if (maybe_transition->start > next->start)
+      break;
+    else if (maybe_transition->start != next->start ||
+        maybe_transition->duration != transition_duration)
+      continue;
+    else if (GES_IS_TRACK_TRANSITION (maybe_transition))
+      /* Use that transition */
+      /* TODO We should make sure that the transition contains only
+       * TrackObject-s in @track and if it is not the case properly unlink the
+       * object to use it */
+      return create_transition (timeline, prev, next,
+          ges_track_object_get_timeline_object (maybe_transition), layer,
+          next->start, transition_duration);
+  }
+
+  return NULL;
+}
+
+/* Create all transition that do not exist on @layer.
+ * @get_auto_transition is called to check if a particular transition exists
+ * if @ track is specified, we will create the transitions only for that particular
+ * track */
+static void
+_create_transitions_on_layer (GESTimeline * timeline, GESTimelineLayer * layer,
+    GESTrack * track, GESTrackObject * initiating_obj,
+    GetAutoTransitionFunc get_auto_transition)
+{
+  guint32 layer_prio;
+  GSequenceIter *iter;
+  GESAutoTransition *transition;
+
+  GESTrack *ctrack = track;
+  GList *entered = NULL;        /* List of TrackObject for wich we walk through the
+                                 * "start" but not the "end" in the starts_ends list */
+  GESTimelinePrivate *priv = timeline->priv;
+
+  if (!layer || !ges_timeline_layer_get_auto_transition (layer))
+    return;
+
+  layer_prio = ges_timeline_layer_get_priority (layer);
+  for (iter = g_sequence_get_begin_iter (priv->starts_ends);
+      iter && !g_sequence_iter_is_end (iter);
+      iter = g_sequence_iter_next (iter)) {
+    GList *tmp;
+    guint *start_or_end = g_sequence_get (iter);
+    GESTrackObject *next = g_hash_table_lookup (timeline->priv->by_object,
+        start_or_end);
+
+    /* Only object that are in that layer and track */
+    if ((next->priority / LAYER_HEIGHT) != layer_prio ||
+        (track && track != ges_track_object_get_track (next)))
+      continue;
+
+    if (track == NULL)
+      ctrack = ges_track_object_get_track (next);
+
+    if (start_or_end == g_hash_table_lookup (priv->by_end, next)) {
+      if (initiating_obj == next) {
+        /* We passed the objects that initiated the research
+         * we are now done */
+        g_list_free (entered);
+        return;
+      }
+      entered = g_list_remove (entered, next);
+
+      continue;
+    }
+
+    for (tmp = entered; tmp; tmp = tmp->next) {
+      gint64 transition_duration;
+
+      GESTrackObject *prev = tmp->data;
+
+      if (ctrack != ges_track_object_get_track (prev))
+        continue;
+
+      transition_duration = (prev->start + prev->duration) - next->start;
+      if (transition_duration > 0 && transition_duration < prev->duration &&
+          transition_duration < next->duration) {
+        transition =
+            get_auto_transition (timeline, layer, ctrack, prev, next,
+            transition_duration);
+        if (!transition)
+          transition = create_transition (timeline, prev, next, NULL, layer,
+              next->start, transition_duration);
+      }
+    }
+
+    /* And add that object to the entered list so that it we can possibly set
+     * a transition on its end edge */
+    entered = g_list_append (entered, next);
+  }
+}
+
+/* @tck_obj must be a GESTrackSource */
+static void
+create_transitions (GESTimeline * timeline, GESTrackObject * tck_obj)
+{
+  GESTrack *track;
+  GList *layer_node;
+
+  GESTimelinePrivate *priv = timeline->priv;
+
+  if (!priv->needs_transitions_update || !priv->updates_enabled)
+    return;
+
+  GST_DEBUG_OBJECT (timeline, "Creating transitions around %p", tck_obj);
+
+  track = ges_track_object_get_track (tck_obj);
+  layer_node = g_list_find_custom (timeline->layers,
+      GINT_TO_POINTER (tck_obj->priority / LAYER_HEIGHT),
+      (GCompareFunc) find_layer_by_prio);
+
+  _create_transitions_on_layer (timeline,
+      layer_node ? layer_node->data : NULL, track, tck_obj,
+      _find_transition_from_auto_transitions);
+
+  GST_DEBUG_OBJECT (timeline, "Done updating transitions");
 }
 
 /* Timeline edition functions */
@@ -744,6 +984,7 @@ start_tracking_track_object (GESTimeline * timeline, GESTrackObject * tckobj)
     timeline->priv->movecontext.needs_move_ctx = TRUE;
 
     timeline_update_duration (timeline);
+    create_transitions (timeline, tckobj);
   }
 }
 
@@ -1084,9 +1325,12 @@ ges_timeline_trim_object_simple (GESTimeline * timeline, GESTrackObject * obj,
       duration = MAX (0, real_dur);
       duration = MIN (duration, max_duration - obj->inpoint);
 
+      timeline->priv->needs_transitions_update = FALSE;
       ges_track_object_set_start (obj, nstart);
-      ges_track_object_set_duration (obj, duration);
       ges_track_object_set_inpoint (obj, inpoint);
+      timeline->priv->needs_transitions_update = TRUE;
+
+      ges_track_object_set_duration (obj, duration);
       break;
     case GES_EDGE_END:
     {
@@ -1133,6 +1377,7 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackObject * obj,
     case GES_EDGE_NONE:
       GST_DEBUG ("Simply rippling");
 
+      /* We should be smart here to avoid recalculate transitions when possible */
       cur = g_hash_table_lookup (timeline->priv->by_end, obj);
       snapped = ges_timeline_snap_position (timeline, obj, cur, position, TRUE);
       if (snapped)
@@ -1163,6 +1408,7 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackObject * obj,
 
       break;
     case GES_EDGE_END:
+      timeline->priv->needs_transitions_update = FALSE;
       GST_DEBUG ("Rippling end");
 
       cur = g_hash_table_lookup (timeline->priv->by_end, obj);
@@ -1195,6 +1441,7 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackObject * obj,
       }
 
       g_list_free (moved_tlobjs);
+      timeline->priv->needs_transitions_update = TRUE;
       GST_DEBUG ("Done Rippling end");
       break;
     case GES_EDGE_START:
@@ -1273,6 +1520,7 @@ timeline_roll_object (GESTimeline * timeline, GESTrackObject * obj,
   duration = ges_track_object_get_duration (obj);
   end = start + duration;
 
+  timeline->priv->needs_transitions_update = FALSE;
   switch (edge) {
     case GES_EDGE_START:
 
@@ -1588,6 +1836,15 @@ add_object_to_tracks (GESTimeline * timeline, GESTimelineObject * object,
 }
 
 static void
+layer_auto_transition_changed_cb (GESTimelineLayer * layer,
+    GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
+{
+  _create_transitions_on_layer (timeline, layer, NULL, NULL,
+      _create_auto_transition_from_transitions);
+
+}
+
+static void
 layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     GESTimeline * timeline)
 {
@@ -1595,6 +1852,10 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     GST_DEBUG ("TimelineObject %p is moving from a layer to another, not doing"
         " anything on it", object);
     timeline->priv->movecontext.needs_move_ctx = TRUE;
+
+    _create_transitions_on_layer (timeline, layer, NULL, NULL,
+        _find_transition_from_auto_transitions);
+
     return;
   }
 
@@ -1637,8 +1898,8 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
                 ges_track_object_get_track (trobj),
                 (GCompareFunc) custom_find_track))) {
       GST_DEBUG ("Belongs to one of the tracks we control");
-      ges_track_remove_object (ges_track_object_get_track (trobj), trobj);
 
+      ges_track_remove_object (ges_track_object_get_track (trobj), trobj);
       ges_timeline_object_release_track_object (object, trobj);
     }
     /* removing the reference added by _get_track_objects() */
@@ -1674,6 +1935,7 @@ trackobj_start_changed_cb (GESTrackObject * child,
         timeline->priv->snapping_distance == 0)
       timeline->priv->movecontext.needs_move_ctx = TRUE;
 
+    create_transitions (timeline, child);
   }
 }
 
@@ -1736,6 +1998,8 @@ trackobj_duration_changed_cb (GESTrackObject * child,
         timeline->priv->snapping_distance == 0) {
       timeline->priv->movecontext.needs_move_ctx = TRUE;
     }
+
+    create_transitions (timeline, child);
   }
 }
 
@@ -1760,16 +2024,18 @@ track_object_removed_cb (GESTrack * track, GESTrackObject * object,
 {
 
   if (GES_IS_TRACK_SOURCE (object)) {
-
     /* Make sure to reinitialise the moving context next time */
     timeline->priv->movecontext.needs_move_ctx = TRUE;
   }
 
   /* Disconnect all signal handlers */
+  g_signal_handlers_disconnect_by_func (object, trackobj_start_changed_cb,
+      NULL);
   g_signal_handlers_disconnect_by_func (object, trackobj_duration_changed_cb,
       NULL);
   g_signal_handlers_disconnect_by_func (object, trackobj_priority_changed_cb,
       NULL);
+
   stop_tracking_track_object (timeline, object);
 }
 
@@ -2014,6 +2280,8 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
       G_CALLBACK (layer_object_removed_cb), timeline);
   g_signal_connect (layer, "notify::priority",
       G_CALLBACK (layer_priority_changed_cb), timeline);
+  g_signal_connect (layer, "notify::auto-transition",
+      G_CALLBACK (layer_auto_transition_changed_cb), timeline);
 
   GST_DEBUG ("Done adding layer, emitting 'layer-added' signal");
   g_signal_emit (timeline, ges_timeline_signals[LAYER_ADDED], 0, layer);
@@ -2069,10 +2337,13 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   g_signal_handlers_disconnect_by_func (layer, layer_object_added_cb, timeline);
   g_signal_handlers_disconnect_by_func (layer, layer_object_removed_cb,
       timeline);
+  g_signal_handlers_disconnect_by_func (layer, layer_priority_changed_cb,
+      timeline);
+  g_signal_handlers_disconnect_by_func (layer,
+      layer_auto_transition_changed_cb, timeline);
 
   g_hash_table_remove (timeline->priv->by_layer, layer);
   timeline->layers = g_list_remove (timeline->layers, layer);
-
   ges_timeline_layer_set_timeline (layer, NULL);
 
   g_signal_emit (timeline, ges_timeline_signals[LAYER_REMOVED], 0, layer);
@@ -2358,6 +2629,12 @@ ges_timeline_enable_update (GESTimeline * timeline, gboolean enabled)
   /* Make sure we reset the context */
   timeline->priv->movecontext.needs_move_ctx = TRUE;
   timeline->priv->updates_enabled = enabled;
+
+  for (tmp = timeline->layers; tmp; tmp = tmp->next) {
+    _create_transitions_on_layer (timeline, GES_TIMELINE_LAYER (tmp->data),
+        NULL, NULL, _find_transition_from_auto_transitions);
+  }
+
   if (res)
     g_object_notify_by_pspec (G_OBJECT (timeline), properties[PROP_UPDATE]);
 

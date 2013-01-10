@@ -1,0 +1,182 @@
+/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*-  */
+/*
+ * gst-editing-services
+ * Copyright (C) 2013 Thibault Saunier <thibault.saunier@collabora.com>
+ *
+ * gst-editing-services is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * gst-editing-services is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
+ */
+
+/* This class warps a GESTimelineTransition, letting any implementation
+ * of a GESTimelineTransition to be used.
+ *
+ * NOTE: This is for internal use exclusively
+ */
+
+#include "ges-auto-transition.h"
+#include "ges-internal.h"
+enum
+{
+  DESTROY_ME,
+  LAST_SIGNAL
+};
+
+static guint auto_transition_signals[LAST_SIGNAL] = { 0 };
+
+G_DEFINE_TYPE (GESAutoTransition, ges_auto_transition, G_TYPE_OBJECT);
+
+static void
+neighbour_changed_cb (GESTimelineObject * obj, GParamSpec * arg G_GNUC_UNUSED,
+    GESAutoTransition * self)
+{
+  gint64 new_duration;
+
+  if (self->next_source->priority / LAYER_HEIGHT !=
+      self->previous_source->priority / LAYER_HEIGHT) {
+    GST_DEBUG_OBJECT (self, "Destroy changed layer");
+    g_signal_emit (self, auto_transition_signals[DESTROY_ME], 0);
+    return;
+  }
+
+  new_duration =
+      (self->previous_source->start + self->previous_source->duration) -
+      self->next_source->start;
+
+  if (new_duration <= 0 || new_duration >= self->previous_source->duration ||
+      new_duration >= self->next_source->duration) {
+
+    GST_DEBUG_OBJECT (self, "Destroy %" G_GINT64_FORMAT " not a valid duration",
+        new_duration);
+    g_signal_emit (self, auto_transition_signals[DESTROY_ME], 0);
+    return;
+  }
+
+  ges_timeline_object_set_start (self->timeline_transition,
+      self->next_source->start);
+  ges_timeline_object_set_duration (self->timeline_transition, new_duration);
+}
+
+static void
+_height_changed_cb (GESTimelineObject * obj, GParamSpec * arg G_GNUC_UNUSED,
+    GESAutoTransition * self)
+{
+  /* FIXME This is really not smart and we should properly implement timelineobject
+   * priority management at the TimelineLayer level */
+  ges_timeline_object_set_priority (self->next_timeline_object,
+      self->previous_timeline_object->priority +
+      self->previous_timeline_object->height);
+}
+
+static void
+_track_changed_cb (GESTrackObject * obj, GParamSpec * arg G_GNUC_UNUSED,
+    GESAutoTransition * self)
+{
+  if (ges_track_object_get_track (obj) == NULL) {
+    GST_DEBUG_OBJECT (self, "Neighboor %" GST_PTR_FORMAT
+        " removed from track ... auto destructing", obj);
+
+    g_signal_emit (self, auto_transition_signals[DESTROY_ME], 0);
+  }
+
+}
+
+static void
+ges_auto_transition_init (GESAutoTransition * ges_auto_transition)
+{
+}
+
+static void
+ges_auto_transition_finalize (GObject * object)
+{
+  GESAutoTransition *self = GES_AUTO_TRANSITION (object);
+
+  g_signal_handlers_disconnect_by_func (self->previous_source,
+      neighbour_changed_cb, self);
+  g_signal_handlers_disconnect_by_func (self->next_source, neighbour_changed_cb,
+      self);
+  g_signal_handlers_disconnect_by_func (self->previous_timeline_object,
+      _height_changed_cb, self);
+  g_signal_handlers_disconnect_by_func (self->next_source, _track_changed_cb,
+      self);
+  g_signal_handlers_disconnect_by_func (self->previous_source,
+      _track_changed_cb, self);
+
+  g_free (self->key);
+
+  G_OBJECT_CLASS (ges_auto_transition_parent_class)->finalize (object);
+}
+
+static void
+ges_auto_transition_class_init (GESAutoTransitionClass * klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  auto_transition_signals[DESTROY_ME] =
+      g_signal_new ("destroy-me", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE, 0, NULL, NULL, NULL,
+      G_TYPE_NONE, 0);
+  object_class->finalize = ges_auto_transition_finalize;
+}
+
+
+GESAutoTransition *
+ges_auto_transition_new (GESTrackObject * transition,
+    GESTrackObject * previous_source, GESTrackObject * next_source)
+{
+  GESAutoTransition *self = g_object_new (GES_TYPE_AUTO_TRANSITION, NULL);
+
+  self->previous_source = previous_source;
+  self->next_source = next_source;
+  self->transition = transition;
+
+  self->previous_timeline_object =
+      ges_track_object_get_timeline_object (previous_source);
+  self->next_timeline_object =
+      ges_track_object_get_timeline_object (next_source);
+  self->timeline_transition = ges_track_object_get_timeline_object (transition);
+
+  g_signal_connect (previous_source, "notify::start",
+      G_CALLBACK (neighbour_changed_cb), self);
+  g_signal_connect (previous_source, "notify::priority",
+      G_CALLBACK (neighbour_changed_cb), self);
+  g_signal_connect (next_source, "notify::start",
+      G_CALLBACK (neighbour_changed_cb), self);
+  g_signal_connect (next_source, "notify::priority",
+      G_CALLBACK (neighbour_changed_cb), self);
+  g_signal_connect (previous_source, "notify::duration",
+      G_CALLBACK (neighbour_changed_cb), self);
+  g_signal_connect (next_source, "notify::duration",
+      G_CALLBACK (neighbour_changed_cb), self);
+  g_signal_connect (self->previous_timeline_object, "notify::height",
+      G_CALLBACK (_height_changed_cb), self);
+
+  g_signal_connect (next_source, "notify::track",
+      G_CALLBACK (_track_changed_cb), self);
+  g_signal_connect (previous_source, "notify::track",
+      G_CALLBACK (_track_changed_cb), self);
+
+  _height_changed_cb (self->previous_timeline_object, NULL, self);
+
+  GST_DEBUG_OBJECT (self, "Created transition %" GST_PTR_FORMAT
+      " between %" GST_PTR_FORMAT " and: %" GST_PTR_FORMAT
+      " in layer nb %i, start: %" GST_TIME_FORMAT " duration: %"
+      GST_TIME_FORMAT, transition, next_source, previous_source,
+      ges_timeline_layer_get_priority (ges_timeline_object_get_layer
+          (self->previous_timeline_object)), GST_TIME_ARGS (transition->start),
+      GST_TIME_ARGS (transition->duration));
+
+  self->key = g_strdup_printf ("%p%p", self->previous_source,
+      self->next_source);
+
+  return self;
+}
