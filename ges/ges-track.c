@@ -92,27 +92,6 @@ static void composition_duration_cb (GstElement * composition, GParamSpec * arg
     G_GNUC_UNUSED, GESTrack * obj);
 
 /* Private methods/functions/callbacks */
-
-/* Utilities */
-static gint
-objects_start_compare (GESTrackObject * a, GESTrackObject * b,
-    gpointer user_data)
-{
-
-  if (a->start == b->start) {
-    if (a->priority < b->priority)
-      return -1;
-    if (a->priority > b->priority)
-      return 1;
-    return 0;
-  }
-  if (a->start < b->start)
-    return -1;
-  if (a->start > b->start)
-    return 1;
-  return 0;
-}
-
 static void
 add_trackobj_to_list_foreach (GESTrackObject * trackobj, GList ** list)
 {
@@ -248,7 +227,7 @@ static inline void
 resort_and_fill_gaps (GESTrack * track)
 {
   g_sequence_sort (track->priv->tckobjs_by_start,
-      (GCompareDataFunc) objects_start_compare, NULL);
+      (GCompareDataFunc) track_object_start_compare, NULL);
 
   if (track->priv->updating == TRUE) {
     update_gaps (track);
@@ -770,7 +749,7 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
   g_object_ref_sink (object);
   g_hash_table_insert (track->priv->tckobjs_iter, object,
       g_sequence_insert_sorted (track->priv->tckobjs_by_start, object,
-          (GCompareDataFunc) objects_start_compare, NULL));
+          (GCompareDataFunc) track_object_start_compare, NULL));
 
   g_signal_emit (track, ges_track_signals[TRACK_OBJECT_ADDED], 0,
       GES_TRACK_OBJECT (object));

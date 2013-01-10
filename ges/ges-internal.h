@@ -208,4 +208,10 @@ G_GNUC_INTERNAL void set_property_foreach                       (GQuark field_id
 G_GNUC_INTERNAL void _init_standard_transition_assets        (void);
 G_GNUC_INTERNAL void _init_formatter_assets                  (void);
 
+/* Utilities */
+G_GNUC_INTERNAL gint track_object_start_compare              (GESTrackObject * a,
+                                                              GESTrackObject * b);
+G_GNUC_INTERNAL gint timeline_object_start_compare           (GESTimelineObject * a,
+                                                              GESTimelineObject * b);
+
 #endif /* __GES_INTERNAL_H__ */

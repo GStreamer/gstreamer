@@ -210,24 +210,6 @@ ges_timeline_layer_init (GESTimelineLayer * self)
   self->max_gnl_priority = LAYER_HEIGHT;
 }
 
-/* Private methods and utils */
-static gint
-objects_start_compare (GESTimelineObject * a, GESTimelineObject * b)
-{
-  if (a->start == b->start) {
-    if (a->priority < b->priority)
-      return -1;
-    if (a->priority > b->priority)
-      return 1;
-    return 0;
-  }
-  if (a->start < b->start)
-    return -1;
-  if (a->start > b->start)
-    return 1;
-  return 0;
-}
-
 static GList *
 track_get_by_layer (GESTimelineLayer * layer, GESTrack * track)
 {
@@ -895,8 +877,6 @@ ges_timeline_layer_get_priority (GESTimelineLayer * layer)
 GList *
 ges_timeline_layer_get_objects (GESTimelineLayer * layer)
 {
-  GList *ret = NULL;
-  GList *tmp;
   GESTimelineLayerClass *klass;
 
   g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), NULL);
@@ -907,13 +887,9 @@ ges_timeline_layer_get_objects (GESTimelineLayer * layer)
     return klass->get_objects (layer);
   }
 
-  for (tmp = layer->priv->objects_start; tmp; tmp = tmp->next) {
-    ret = g_list_prepend (ret, tmp->data);
-    g_object_ref (tmp->data);
-  }
-
-  ret = g_list_reverse (ret);
-  return ret;
+  return g_list_sort (g_list_copy_deep (layer->priv->objects_start,
+          (GCopyFunc) gst_object_ref, NULL),
+      (GCompareFunc) timeline_object_start_compare);
 }
 
 /**
@@ -1010,7 +986,7 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
 
   /* Take a reference to the object and store it stored by start/priority */
   priv->objects_start = g_list_insert_sorted (priv->objects_start, object,
-      (GCompareFunc) objects_start_compare);
+      (GCompareFunc) timeline_object_start_compare);
 
   /* Inform the object it's now in this layer */
   ges_timeline_object_set_layer (object, layer);

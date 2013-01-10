@@ -572,30 +572,13 @@ timeline_update_duration (GESTimeline * timeline)
   }
 }
 
-static gint
-objects_start_compare (GESTrackObject * a, GESTrackObject * b)
-{
-  if (a->start == b->start) {
-    if (a->priority < b->priority)
-      return -1;
-    if (a->priority > b->priority)
-      return 1;
-    return 0;
-  }
-  if (a->start < b->start)
-    return -1;
-  if (a->start > b->start)
-    return 1;
-  return 0;
-}
-
 static inline void
 sort_track_objects (GESTimeline * timeline, GESTrackObject * obj)
 {
   TrackObjIters *iters = g_hash_table_lookup (timeline->priv->obj_iters, obj);
 
   g_sequence_sort_changed (iters->iter_obj,
-      (GCompareDataFunc) objects_start_compare, NULL);
+      (GCompareDataFunc) track_object_start_compare, NULL);
 }
 
 static gint
@@ -709,7 +692,7 @@ start_tracking_track_obj (GESTimeline * timeline, GESTrackObject * tckobj)
       (GCompareDataFunc) compare_uint64, NULL);
   iters->iter_obj =
       g_sequence_insert_sorted (priv->tracksources, g_object_ref (tckobj),
-      (GCompareDataFunc) objects_start_compare, NULL);
+      (GCompareDataFunc) track_object_start_compare, NULL);
 
   g_hash_table_insert (priv->by_start, tckobj, pstart);
   g_hash_table_insert (priv->by_object, pstart, tckobj);
