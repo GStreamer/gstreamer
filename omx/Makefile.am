@@ -12,8 +12,7 @@ libgstopenmax_la_SOURCES = \
 	gstomxmpeg4videoenc.c \
 	gstomxh264enc.c \
 	gstomxh263enc.c \
-	gstomxaacenc.c \
-	gstomxrecmutex.c
+	gstomxaacenc.c
 
 noinst_HEADERS = \
 	gstomx.h \
@@ -27,8 +26,7 @@ noinst_HEADERS = \
 	gstomxmpeg4videoenc.h \
 	gstomxh264enc.h \
 	gstomxh263enc.h \
-	gstomxaacenc.h \
-	gstomxrecmutex.h
+	gstomxaacenc.h
 
 libgstopenmax_la_CFLAGS = \
 	-DGST_USE_UNSTABLE_API=1 \
