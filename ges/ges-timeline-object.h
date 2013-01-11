@@ -144,14 +144,14 @@ typedef GList * (*GESCreateTrackObjectsFunc) (GESTimelineObject * object, GESTra
  * GESTimelineObject:
  *
  * The #GESTimelineObject base class.
+ * @trackobjects: (element-type GES.TrackObject): A list of TrackObject
+ * controlled by this TimelineObject sorted by priority. NOTE: Do not modify.
  */
 struct _GESTimelineObject
 {
   GInitiallyUnowned parent;
 
   /*< readonly >*/
-  /* A list of TrackObject controlled by this TimelineObject sorted by
-   * priority */
   GList *trackobjects;
 
   /* We don't add those properties to the priv struct for optimization purposes
@@ -161,7 +161,6 @@ struct _GESTimelineObject
   guint64 duration;             /* duration of the object used in the layer */
   guint32 priority;             /* priority of the object in the layer (0:top priority) */
   guint32 height;               /* the span of priorities this object needs */
-
   guint64 fullduration;         /* Full usable duration of the object (-1: no duration) */
 
   /*< protected >*/
