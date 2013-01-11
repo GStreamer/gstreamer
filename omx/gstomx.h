@@ -141,6 +141,7 @@ struct _GstOMXCore {
   OMX_ERRORTYPE (*get_handle) (OMX_HANDLETYPE * handle,
       OMX_STRING name, OMX_PTR data, OMX_CALLBACKTYPE * callbacks);
   OMX_ERRORTYPE (*free_handle) (OMX_HANDLETYPE handle);
+  OMX_ERRORTYPE (*setup_tunnel) (OMX_HANDLETYPE output, OMX_U32 outport, OMX_HANDLETYPE input, OMX_U32 inport);
 };
 
 typedef enum {
@@ -184,6 +185,8 @@ struct _GstOMXMessage {
 struct _GstOMXPort {
   GstOMXComponent *comp;
   guint32 index;
+
+  gboolean tunneled;
 
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
   GPtrArray *buffers; /* Contains GstOMXBuffer* */
@@ -288,6 +291,8 @@ OMX_ERRORTYPE     gst_omx_component_set_parameter (GstOMXComponent * comp, OMX_I
 
 OMX_ERRORTYPE     gst_omx_component_get_config (GstOMXComponent * comp, OMX_INDEXTYPE index, gpointer config);
 OMX_ERRORTYPE     gst_omx_component_set_config (GstOMXComponent * comp, OMX_INDEXTYPE index, gpointer config);
+OMX_ERRORTYPE     gst_omx_component_setup_tunnel (GstOMXComponent * comp1, GstOMXPort * port1, GstOMXComponent * comp2, GstOMXPort * port2);
+OMX_ERRORTYPE     gst_omx_component_close_tunnel (GstOMXComponent * comp1, GstOMXPort * port1, GstOMXComponent * comp2, GstOMXPort * port2);
 
 
 void              gst_omx_port_get_port_definition (GstOMXPort * port, OMX_PARAM_PORTDEFINITIONTYPE * port_def);
