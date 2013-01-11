@@ -1042,6 +1042,7 @@ decode_codec_data(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
     guint buf_size, ofs;
     gint width, height;
     guint32 format;
+    gint version;
 
     buf      = GST_BUFFER_DATA(buffer);
     buf_size = GST_BUFFER_SIZE(buffer);
@@ -1058,6 +1059,12 @@ decode_codec_data(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
     caps = GST_VAAPI_DECODER_CODEC_STATE(decoder)->caps;
     structure = gst_caps_get_structure(caps, 0);
     if (!gst_structure_get_fourcc(structure, "format", &format)) {
+        /* Try to determine format from "wmvversion" property */
+        if (gst_structure_get_int(structure, "wmvversion", &version))
+            format = (version >= 1 && version <= 3) ?
+                GST_MAKE_FOURCC('W','M','V',('0'+version)) : 0;
+    }
+    if (!format) {
         GST_ERROR("failed to parse profile from codec-data");
         return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC;
     }
