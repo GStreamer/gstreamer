@@ -507,8 +507,15 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
     id = ges_extractable_get_id (GES_EXTRACTABLE (object));
     asset = ges_asset_request (G_OBJECT_TYPE (object), id, NULL);
     if (asset == NULL) {
+      GESProject *project = layer->timeline ?
+          GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE
+              (layer->timeline))) : NULL;
+
       ges_asset_request_async (G_OBJECT_TYPE (object),
           id, NULL, (GAsyncReadyCallback) new_asset_cb, mudata);
+
+      if (project)
+        ges_project_add_loading_asset (project, G_OBJECT_TYPE (object), id);
       g_free (id);
 
       GST_LOG_OBJECT (layer, "Object added async");
