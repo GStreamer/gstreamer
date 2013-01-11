@@ -1117,7 +1117,7 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
 
   switch (info->finfo->format) {
     case GST_VIDEO_FORMAT_I420:{
-      gint i, j, height;
+      gint i, j, height, width;
       guint8 *src, *dest;
       gint src_stride, dest_stride;
 
@@ -1157,7 +1157,8 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
               (port_def->format.video.nStride / 2);
 
         src = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
-        height = GST_VIDEO_FRAME_HEIGHT (&frame);
+        height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
+        width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i);
 
         if (dest + dest_stride * height >
             outbuf->omx_buf->pBuffer + outbuf->omx_buf->nAllocLen) {
@@ -1167,7 +1168,7 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
         }
 
         for (j = 0; j < height; j++) {
-          memcpy (dest, src, MIN (src_stride, dest_stride));
+          memcpy (dest, src, width);
           outbuf->omx_buf->nFilledLen += dest_stride;
           src += src_stride;
           dest += dest_stride;
@@ -1178,7 +1179,7 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
       break;
     }
     case GST_VIDEO_FORMAT_NV12:{
-      gint i, j, height;
+      gint i, j, height, width;
       guint8 *src, *dest;
       gint src_stride, dest_stride;
 
@@ -1213,7 +1214,8 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
               port_def->format.video.nStride;
 
         src = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
-        height = GST_VIDEO_FRAME_HEIGHT (&frame);
+        height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
+        width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i) * (i == 0 ? 1 : 2);
 
         if (dest + dest_stride * height >
             outbuf->omx_buf->pBuffer + outbuf->omx_buf->nAllocLen) {
@@ -1223,7 +1225,7 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
         }
 
         for (j = 0; j < height; j++) {
-          memcpy (dest, src, MIN (src_stride, dest_stride));
+          memcpy (dest, src, width);
           outbuf->omx_buf->nFilledLen += dest_stride;
           src += src_stride;
           dest += dest_stride;
