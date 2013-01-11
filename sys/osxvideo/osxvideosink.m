@@ -683,6 +683,10 @@ gst_osx_video_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle
         osxvideosink->osxwindow->gstview,
         @selector(addToSuperview:), osxvideosink->superview, YES);
   }
+
+  if (window_id) {
+    osxvideosink->osxwindow->internal = FALSE;
+  }
 }
 
 static void
@@ -838,7 +842,12 @@ gst_osx_video_sink_get_type (void)
 
   GST_INFO_OBJECT (osxvideosink, "resizing");
   NSSize size = {osxwindow->width, osxwindow->height};
-  [osxwindow->win setContentSize:size];
+  if (osxwindow->internal) {
+    [osxwindow->win setContentSize:size];
+  }
+  if (osxwindow->gstview) {
+      [osxwindow->gstview setVideoSize :(int)osxwindow->width :(int)osxwindow->height];
+  }
   GST_INFO_OBJECT (osxvideosink, "done");
 
   [pool release];

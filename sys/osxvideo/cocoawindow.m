@@ -69,8 +69,6 @@
   width = size.width;
   height = size.height;
 
-  [gstview setVideoSize: (int) width:(int) height];
-
   [super setContentSize:size];
 }
 
