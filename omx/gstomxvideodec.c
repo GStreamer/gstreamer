@@ -400,7 +400,7 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self, GstOMXBuffer * inbuf,
 
   switch (vinfo->finfo->format) {
     case GST_VIDEO_FORMAT_I420:{
-      gint i, j, height;
+      gint i, j, height, width;
       guint8 *src, *dest;
       gint src_stride, dest_stride;
 
@@ -433,10 +433,11 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self, GstOMXBuffer * inbuf,
               (port_def->format.video.nStride / 2);
 
         dest = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
-        height = GST_VIDEO_FRAME_HEIGHT (&frame);
+        height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
+        width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i);
 
         for (j = 0; j < height; j++) {
-          memcpy (dest, src, MIN (src_stride, dest_stride));
+          memcpy (dest, src, width);
           src += src_stride;
           dest += dest_stride;
         }
@@ -446,7 +447,7 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self, GstOMXBuffer * inbuf,
       break;
     }
     case GST_VIDEO_FORMAT_NV12:{
-      gint i, j, height;
+      gint i, j, height, width;
       guint8 *src, *dest;
       gint src_stride, dest_stride;
 
@@ -475,10 +476,11 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self, GstOMXBuffer * inbuf,
               port_def->format.video.nStride;
 
         dest = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
-        height = GST_VIDEO_FRAME_HEIGHT (&frame);
+        height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
+        width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i) * (i == 0 ? 1 : 2);
 
         for (j = 0; j < height; j++) {
-          memcpy (dest, src, MIN (src_stride, dest_stride));
+          memcpy (dest, src, width);
           src += src_stride;
           dest += dest_stride;
         }
