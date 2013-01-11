@@ -56,6 +56,7 @@ struct _GESProjectPrivate
   GHashTable *assets;
   /* Set of asset ID being loaded */
   GHashTable *loading_assets;
+  GHashTable *loaded_with_error;
   GESAsset *formatter_asset;
 
   GList *formatters;
@@ -252,6 +253,8 @@ _dispose (GObject * object)
     g_hash_table_unref (priv->assets);
   if (priv->loading_assets)
     g_hash_table_unref (priv->loading_assets);
+  if (priv->loaded_with_error)
+    g_hash_table_unref (priv->loaded_with_error);
   if (priv->formatter_asset)
     gst_object_unref (priv->formatter_asset);
 
@@ -425,6 +428,8 @@ ges_project_init (GESProject * project)
       g_free, gst_object_unref);
   priv->loading_assets = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, gst_object_unref);
+  priv->loaded_with_error = g_hash_table_new_full (g_str_hash, g_str_equal,
+      g_free, NULL);
 }
 
 gchar *
@@ -471,6 +476,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, GESProject * project)
     possible_id = ges_project_try_updating_id (project, source, error);
     if (possible_id == NULL) {
       g_hash_table_remove (project->priv->loading_assets, id);
+      g_hash_table_add (project->priv->loaded_with_error, g_strdup (id));
       g_signal_emit (project, _signals[ERROR_LOADING_ASSET], 0, error, id,
           ges_asset_get_extractable_type (source));
 
@@ -548,7 +554,8 @@ ges_project_create_asset (GESProject * project, const gchar * id,
       FALSE);
 
   if (g_hash_table_lookup (project->priv->assets, id) ||
-      g_hash_table_lookup (project->priv->loading_assets, id))
+      g_hash_table_lookup (project->priv->loading_assets, id) ||
+      g_hash_table_lookup (project->priv->loaded_with_error, id))
     return FALSE;
 
   /* TODO Add a GCancellable somewhere in our API */

@@ -147,9 +147,8 @@ GST_START_TEST (test_project_unexistant_effect)
   g_main_loop_run (mainloop);
 
   /* And.... try again! */
-  fail_unless (ges_project_create_asset (project, "nowaythiselementexists",
+  fail_if (ges_project_create_asset (project, "nowaythiselementexists",
           GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT));
-  g_main_loop_run (mainloop);
 
   fail_if (added_cb_called);
   fail_if (removed_cb_called);
