@@ -54,6 +54,8 @@ G_DEFINE_TYPE (GESProject, ges_project, GES_TYPE_ASSET);
 struct _GESProjectPrivate
 {
   GHashTable *assets;
+  /* Set of asset ID being loaded */
+  GHashTable *loading_assets;
   GESAsset *formatter_asset;
 
   GList *formatters;
@@ -248,6 +250,8 @@ _dispose (GObject * object)
 
   if (priv->assets)
     g_hash_table_unref (priv->assets);
+  if (priv->loading_assets)
+    g_hash_table_unref (priv->loading_assets);
   if (priv->formatter_asset)
     gst_object_unref (priv->formatter_asset);
 
@@ -419,6 +423,8 @@ ges_project_init (GESProject * project)
   priv->encoding_profiles = NULL;
   priv->assets = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, gst_object_unref);
+  priv->loading_assets = g_hash_table_new_full (g_str_hash, g_str_equal,
+      g_free, gst_object_unref);
 }
 
 gchar *
@@ -464,6 +470,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, GESProject * project)
   if (error) {
     possible_id = ges_project_try_updating_id (project, source, error);
     if (possible_id == NULL) {
+      g_hash_table_remove (project->priv->loading_assets, id);
       g_signal_emit (project, _signals[ERROR_LOADING_ASSET], 0, error, id,
           ges_asset_get_extractable_type (source));
 
@@ -502,6 +509,17 @@ ges_project_set_loaded (GESProject * project, GESFormatter * formatter)
   return TRUE;
 }
 
+void
+ges_project_add_loading_asset (GESProject * project, GType extractable_type,
+    const gchar * id)
+{
+  GESAsset *asset;
+
+  if ((asset = ges_asset_cache_lookup (extractable_type, id)))
+    g_hash_table_insert (project->priv->loading_assets, g_strdup (id),
+        gst_object_ref (asset));
+}
+
 /**************************************
  *                                    *
  *         API Implementation         *
@@ -529,12 +547,14 @@ ges_project_create_asset (GESProject * project, const gchar * id,
   g_return_val_if_fail (g_type_is_a (extractable_type, GES_TYPE_EXTRACTABLE),
       FALSE);
 
-  if (g_hash_table_lookup (project->priv->assets, id))
+  if (g_hash_table_lookup (project->priv->assets, id) ||
+      g_hash_table_lookup (project->priv->loading_assets, id))
     return FALSE;
 
   /* TODO Add a GCancellable somewhere in our API */
   ges_asset_request_async (extractable_type, id, NULL,
       (GAsyncReadyCallback) new_asset_cb, project);
+  ges_project_add_loading_asset (project, extractable_type, id);
 
   return TRUE;
 }
@@ -561,6 +581,7 @@ ges_project_add_asset (GESProject * project, GESAsset * asset)
   g_hash_table_insert (project->priv->assets,
       g_strdup (ges_asset_get_id (asset)), gst_object_ref (asset));
 
+  g_hash_table_remove (project->priv->loading_assets, ges_asset_get_id (asset));
   GST_DEBUG_OBJECT (project, "Asset added: %s", ges_asset_get_id (asset));
   g_signal_emit (project, _signals[ASSET_ADDED_SIGNAL], 0, asset);
 
@@ -584,7 +605,6 @@ ges_project_remove_asset (GESProject * project, GESAsset * asset)
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
 
   ret = g_hash_table_remove (project->priv->assets, ges_asset_get_id (asset));
-
   g_signal_emit (project, _signals[ASSET_REMOVED_SIGNAL], 0, asset);
 
   return ret;
@@ -865,4 +885,31 @@ ges_project_list_encoding_profiles (GESProject * project)
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
 
   return project->priv->encoding_profiles;
+}
+
+/**
+ * ges_project_get_loading_assets:
+ * @project: A #GESProject
+ *
+ * Get the assets that are being loaded
+ *
+ * Returns: (transfer full) (element-type GES.Asset): A set of loading asset
+ * that will be added to @project. Note that those Asset are *not* loaded yet,
+ * and thus can not be used
+ */
+GList *
+ges_project_get_loading_assets (GESProject * project)
+{
+  GHashTableIter iter;
+  gpointer key, value;
+
+  GList *ret = NULL;
+
+  g_return_val_if_fail (GES_IS_PROJECT (project), NULL);
+
+  g_hash_table_iter_init (&iter, project->priv->loading_assets);
+  while (g_hash_table_iter_next (&iter, &key, &value))
+    ret = g_list_prepend (ret, gst_object_ref (value));
+
+  return ret;
 }

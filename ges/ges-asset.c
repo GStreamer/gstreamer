@@ -952,7 +952,8 @@ ges_asset_extract (GESAsset * self, GError ** error)
   if (extractable == NULL)
     return NULL;
 
-  ges_extractable_set_asset (extractable, self);
+  if (ges_extractable_get_asset (extractable) == NULL)
+    ges_extractable_set_asset (extractable, self);
 
   return extractable;
 }

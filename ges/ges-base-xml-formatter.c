@@ -586,7 +586,6 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
 
   /* And now add to the project */
   ges_project_add_asset (self->project, asset);
-
   gst_object_unref (self);
 
   _free_pending_asset (priv, passet);
@@ -668,8 +667,11 @@ ges_base_xml_formatter_add_asset (GESBaseXmlFormatter * self,
   passet->formatter = gst_object_ref (self);
   if (properties)
     passet->properties = gst_structure_copy (properties);
+
   ges_asset_request_async (extractable_type, id, NULL,
       (GAsyncReadyCallback) new_asset_cb, passet);
+  ges_project_add_loading_asset (GES_FORMATTER (self)->project,
+      extractable_type, id);
   priv->pending_assets = g_list_prepend (priv->pending_assets, passet);
 }
 

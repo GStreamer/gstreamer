@@ -1065,6 +1065,7 @@ ges_project_get_uri
 ges_project_new
 ges_project_add_encoding_profile
 ges_project_list_encoding_profiles
+ges_project_get_loading_assets
 <SUBSECTION Standard>
 GESProjectPrivate
 GES_PROJECT

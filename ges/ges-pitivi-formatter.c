@@ -553,6 +553,9 @@ list_sources (GESFormatter * self)
     g_hash_table_insert (priv->sources_table, g_strdup (id), table);
     g_hash_table_insert (priv->source_uris, g_strdup (filename),
         g_strdup (filename));
+    if (self->project)
+      ges_project_create_asset (self->project, filename,
+          GES_TYPE_TIMELINE_FILE_SOURCE);
   }
 
   xmlXPathFreeObject (xpathObj);

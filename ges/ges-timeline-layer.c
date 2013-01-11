@@ -259,7 +259,10 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
         return;
       }
     }
-    GST_ERROR ("Asset could not be created for uri");
+
+    GST_ERROR ("Asset could not be created for uri %s, error: %s",
+        ges_asset_get_id (asset), error->message);
+
   } else {
     GESProject *project = udata->layer->timeline ?
         GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE
@@ -585,7 +588,7 @@ ges_timeline_layer_add_asset (GESTimelineLayer * layer,
   GST_DEBUG_OBJECT (layer, "Adding asset %s with: start: %" GST_TIME_FORMAT
       " inpoint: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT " rate %d"
       " track types: %d (%s)", ges_asset_get_id (asset), GST_TIME_ARGS (start),
-      GST_TIME_ARGS (inpoint), GST_TIME_ARGS (duration), track_types,
+      GST_TIME_ARGS (inpoint), GST_TIME_ARGS (duration), rate, track_types,
       ges_track_type_name (track_types));
 
   tlobj = GES_TIMELINE_OBJECT (ges_asset_extract (asset, NULL));

@@ -294,6 +294,8 @@ GST_START_TEST (test_project_load_xges)
   GST_LOG ("Loading project");
   timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
   fail_unless (GES_IS_TIMELINE (timeline));
+  assert_equals_int (g_list_length (ges_project_get_loading_assets (project)),
+      1);
 
   g_main_loop_run (mainloop);
   GST_LOG ("Test first loading");
