@@ -1162,6 +1162,7 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
 
         if (dest + dest_stride * height >
             outbuf->omx_buf->pBuffer + outbuf->omx_buf->nAllocLen) {
+          gst_video_frame_unmap (&frame);
           GST_ERROR_OBJECT (self, "Invalid output buffer size");
           ret = FALSE;
           break;
@@ -1219,6 +1220,7 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
 
         if (dest + dest_stride * height >
             outbuf->omx_buf->pBuffer + outbuf->omx_buf->nAllocLen) {
+          gst_video_frame_unmap (&frame);
           GST_ERROR_OBJECT (self, "Invalid output buffer size");
           ret = FALSE;
           break;
