@@ -4,9 +4,10 @@ Copyright (C) 2011-2012 Intel Corporation
 Copyright (C) 2011 Collabora
 
 Version 0.5.0 - DD.Dec.2012
+* Optimize MPEG-2 and H.264 decoders
 * Use GstVideoDecoder API for vaapidecode (+Sreerenj Balachandran)
 * Add support for raw YUV buffers in vaapisink (+Halley Zhao)
-* Fix memory leak in GstVaapiVideoBuffer for images and surfaces (Feng Yuan)
+* Add support for global-alpha subpictures/overlay (+Holger Kaelberer)
 
 Version 0.4.2 - 18.Dec.2012
 * Fix H.264 decoding on Cedar Trail platforms
