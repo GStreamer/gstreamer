@@ -354,6 +354,17 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
   g_mutex_unlock (&comp->messages_lock);
 }
 
+/* NOTE: comp->messages_lock will be used */
+static void
+gst_omx_component_send_message (GstOMXComponent * comp, GstOMXMessage * msg)
+{
+  g_mutex_lock (&comp->messages_lock);
+  if (msg)
+    g_queue_push_tail (&comp->messages, msg);
+  g_cond_broadcast (&comp->messages_cond);
+  g_mutex_unlock (&comp->messages_lock);
+}
+
 static OMX_ERRORTYPE
 EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
     OMX_U32 nData1, OMX_U32 nData2, OMX_PTR pEventData)
@@ -377,10 +388,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
           GST_DEBUG_OBJECT (comp->parent, "State change to %d finished",
               msg->content.state_set.state);
 
-          g_mutex_lock (&comp->messages_lock);
-          g_queue_push_tail (&comp->messages, msg);
-          g_cond_broadcast (&comp->messages_cond);
-          g_mutex_unlock (&comp->messages_lock);
+          gst_omx_component_send_message (comp, msg);
           break;
         }
         case OMX_CommandFlush:{
@@ -391,10 +399,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
           GST_DEBUG_OBJECT (comp->parent, "Port %u flushed",
               msg->content.flush.port);
 
-          g_mutex_lock (&comp->messages_lock);
-          g_queue_push_tail (&comp->messages, msg);
-          g_cond_broadcast (&comp->messages_cond);
-          g_mutex_unlock (&comp->messages_lock);
+          gst_omx_component_send_message (comp, msg);
           break;
         }
         case OMX_CommandPortEnable:
@@ -408,10 +413,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
               msg->content.port_enable.port,
               (msg->content.port_enable.enable ? "enabled" : "disabled"));
 
-          g_mutex_lock (&comp->messages_lock);
-          g_queue_push_tail (&comp->messages, msg);
-          g_cond_broadcast (&comp->messages_cond);
-          g_mutex_unlock (&comp->messages_lock);
+          gst_omx_component_send_message (comp, msg);
           break;
         }
         default:
@@ -435,10 +437,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
           gst_omx_error_to_string (msg->content.error.error),
           msg->content.error.error);
 
-      g_mutex_lock (&comp->messages_lock);
-      g_queue_push_tail (&comp->messages, msg);
-      g_cond_broadcast (&comp->messages_cond);
-      g_mutex_unlock (&comp->messages_lock);
+      gst_omx_component_send_message (comp, msg);
       break;
     }
     case OMX_EventPortSettingsChanged:
@@ -465,11 +464,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
       GST_DEBUG_OBJECT (comp->parent, "Settings changed (port index: %d)",
           msg->content.port_settings_changed.port);
 
-      g_mutex_lock (&comp->messages_lock);
-      g_queue_push_tail (&comp->messages, msg);
-      g_cond_broadcast (&comp->messages_cond);
-      g_mutex_unlock (&comp->messages_lock);
-
+      gst_omx_component_send_message (comp, msg);
       break;
     }
     case OMX_EventPortFormatDetected:
@@ -509,10 +504,7 @@ EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
   GST_DEBUG_OBJECT (comp->parent, "Port %u emptied buffer %p (%p)",
       buf->port->index, buf, buf->omx_buf->pBuffer);
 
-  g_mutex_lock (&comp->messages_lock);
-  g_queue_push_tail (&comp->messages, msg);
-  g_cond_broadcast (&comp->messages_cond);
-  g_mutex_unlock (&comp->messages_lock);
+  gst_omx_component_send_message (comp, msg);
 
   return OMX_ErrorNone;
 }
@@ -545,10 +537,7 @@ FillBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
   GST_DEBUG_OBJECT (comp->parent, "Port %u filled buffer %p (%p)",
       buf->port->index, buf, buf->omx_buf->pBuffer);
 
-  g_mutex_lock (&comp->messages_lock);
-  g_queue_push_tail (&comp->messages, msg);
-  g_cond_broadcast (&comp->messages_cond);
-  g_mutex_unlock (&comp->messages_lock);
+  gst_omx_component_send_message (comp, msg);
 
   return OMX_ErrorNone;
 }
@@ -705,9 +694,7 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
     g_list_free (comp->pending_reconfigure_outports);
     comp->pending_reconfigure_outports = NULL;
     /* Notify all inports that are still waiting */
-    g_mutex_lock (&comp->messages_lock);
-    g_cond_broadcast (&comp->messages_cond);
-    g_mutex_unlock (&comp->messages_lock);
+    gst_omx_component_send_message (comp, NULL);
   }
 
   err = OMX_SendCommand (comp->handle, OMX_CommandStateSet, state, NULL);
@@ -925,9 +912,7 @@ gst_omx_component_set_last_error (GstOMXComponent * comp, OMX_ERRORTYPE err)
     comp->last_error = err;
   g_mutex_unlock (&comp->lock);
 
-  g_mutex_lock (&comp->messages_lock);
-  g_cond_broadcast (&comp->messages_cond);
-  g_mutex_unlock (&comp->messages_lock);
+  gst_omx_component_send_message (comp, NULL);
 }
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
@@ -1249,9 +1234,7 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
     GST_ERROR_OBJECT (comp->parent, "Component is in error state: %s (0x%08x)",
         gst_omx_error_to_string (err), err);
     g_queue_push_tail (&port->pending_buffers, buf);
-    g_mutex_lock (&comp->messages_lock);
-    g_cond_broadcast (&comp->messages_cond);
-    g_mutex_lock (&comp->messages_lock);
+    gst_omx_component_send_message (comp, NULL);
     goto done;
   }
 
@@ -1259,9 +1242,7 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
     GST_DEBUG_OBJECT (comp->parent, "Port %u is flushing, not releasing buffer",
         port->index);
     g_queue_push_tail (&port->pending_buffers, buf);
-    g_mutex_lock (&comp->messages_lock);
-    g_cond_broadcast (&comp->messages_cond);
-    g_mutex_unlock (&comp->messages_lock);
+    gst_omx_component_send_message (comp, NULL);
     goto done;
   }
 
@@ -1334,9 +1315,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
     gboolean signalled;
     OMX_ERRORTYPE last_error;
 
-    g_mutex_lock (&comp->messages_lock);
-    g_cond_broadcast (&comp->messages_cond);
-    g_mutex_unlock (&comp->messages_lock);
+    gst_omx_component_send_message (comp, NULL);
 
     /* Now flush the port */
     port->flushed = FALSE;
@@ -1977,11 +1956,8 @@ gst_omx_port_reconfigure (GstOMXPort * port)
         break;
       }
     }
-    if (!comp->pending_reconfigure_outports) {
-      g_mutex_lock (&comp->messages_lock);
-      g_cond_broadcast (&comp->messages_cond);
-      g_mutex_unlock (&comp->messages_lock);
-    }
+    if (!comp->pending_reconfigure_outports)
+      gst_omx_component_send_message (comp, NULL);
   }
 
 done:
@@ -2040,11 +2016,8 @@ gst_omx_port_manual_reconfigure (GstOMXPort * port, gboolean start)
           break;
         }
       }
-      if (!comp->pending_reconfigure_outports) {
-        g_mutex_lock (&comp->messages_lock);
-        g_cond_broadcast (&comp->messages_cond);
-        g_mutex_unlock (&comp->messages_lock);
-      }
+      if (!comp->pending_reconfigure_outports)
+        gst_omx_component_send_message (comp, NULL);
     }
   }
 
