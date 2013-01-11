@@ -163,8 +163,8 @@ PKG_CHECK_MODULES([GST],      [gstreamer-$GST_MAJORMINOR >= gst_version])
 PKG_CHECK_MODULES([GST_BASE], [gstreamer-base-$GST_MAJORMINOR >= gst_version])
 
 AC_CACHE_CHECK([for GstBaseSink::query hook], ac_cv_have_gst_base_sink_query, [
-    saved_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $GST_BASE_CFLAGS"
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $GST_BASE_CFLAGS"
     saved_LIBS="$LIBS"
     LIBS="$LIBS $GST_BASE_LIBS"
     AC_COMPILE_IFELSE(
@@ -174,7 +174,7 @@ AC_CACHE_CHECK([for GstBaseSink::query hook], ac_cv_have_gst_base_sink_query, [
         [ac_cv_have_gst_base_sink_query="yes"],
         [ac_cv_have_gst_base_sink_query="no"]
     )
-    CFLAGS="$saved_CFLAGS"
+    CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
 ])
 if test "$ac_cv_have_gst_base_sink_query" != "yes"; then
@@ -193,8 +193,8 @@ PKG_CHECK_MODULES([GST_VIDEO],
 
 AC_CACHE_CHECK([for GstVideoOverlayComposition],
     ac_cv_have_gst_video_overlay_composition, [
-    saved_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $GST_CFLAGS"
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $GST_CFLAGS"
     saved_LIBS="$LIBS"
     LIBS="$LIBS $GST_LIBS"
     AC_COMPILE_IFELSE(
@@ -204,7 +204,7 @@ AC_CACHE_CHECK([for GstVideoOverlayComposition],
         [ac_cv_have_gst_video_overlay_composition="yes"],
         [ac_cv_have_gst_video_overlay_composition="no"]
     )
-    CFLAGS="$saved_CFLAGS"
+    CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
 ])
 if test "$ac_cv_have_gst_video_overlay_composition" != "yes"; then
@@ -506,10 +506,10 @@ dnl Check for JPEG decoding API (0.32.1+)
 USE_JPEG_DECODER=0
 AC_CACHE_CHECK([for JPEG decoding API],
     ac_cv_have_jpeg_decoding_api, [
-    saved_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $LIBVA_CFLAGS"
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
     saved_LIBS="$LIBS"
-    LIBS="$CFLAGS $LIBVA_LIBS"
+    LIBS="$LIBS $LIBVA_LIBS"
     AC_COMPILE_IFELSE(
         [AC_LANG_PROGRAM(
             [[#include <va/va.h>]],
@@ -520,7 +520,7 @@ AC_CACHE_CHECK([for JPEG decoding API],
         [ac_cv_have_jpeg_decoding_api="yes" USE_JPEG_DECODER=1],
         [ac_cv_have_jpeg_decoding_api="no"]
     )
-    CFLAGS="$saved_CFLAGS"
+    CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
 ])
 
