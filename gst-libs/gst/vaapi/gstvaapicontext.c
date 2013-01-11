@@ -54,6 +54,7 @@ struct _GstVaapiOverlayRectangle {
     GstVaapiSubpicture *subpicture;
     GstVaapiRectangle   render_rect;
     guint               seq_num;
+    guint               layer_id;
     GstBuffer          *rect_buffer;
     GstVideoOverlayRectangle *rect;
     guint               is_associated   : 1;
@@ -150,7 +151,8 @@ overlay_rectangle_class(void)
 }
 
 static GstVaapiOverlayRectangle *
-overlay_rectangle_new(GstVideoOverlayRectangle *rect, GstVaapiContext *context)
+overlay_rectangle_new(GstVideoOverlayRectangle *rect, GstVaapiContext *context,
+    guint layer_id)
 {
     GstVaapiOverlayRectangle *overlay;
     GstVaapiRectangle *render_rect;
@@ -164,6 +166,7 @@ overlay_rectangle_new(GstVideoOverlayRectangle *rect, GstVaapiContext *context)
 
     overlay->context    = context;
     overlay->seq_num    = gst_video_overlay_rectangle_get_seqnum(rect);
+    overlay->layer_id   = layer_id;
     overlay->rect       = gst_video_overlay_rectangle_ref(rect);
 
     gst_buffer_replace(&overlay->rect_buffer,
@@ -183,11 +186,6 @@ overlay_rectangle_new(GstVideoOverlayRectangle *rect, GstVaapiContext *context)
     render_rect->y = y;
     render_rect->width = width;
     render_rect->height = height;
-
-    if (!overlay_rectangle_associate(overlay)) {
-        GST_WARNING("could not render overlay rectangle %p", rect);
-        goto error;
-    }
     return overlay;
 
 error:
@@ -270,7 +268,7 @@ overlay_rectangle_changed_pixels(GstVaapiOverlayRectangle *overlay,
 }
 
 static gboolean
-overlay_rectangle_update_render_rect(GstVaapiOverlayRectangle *overlay,
+overlay_rectangle_changed_render_rect(GstVaapiOverlayRectangle *overlay,
     GstVideoOverlayRectangle *rect)
 {
     GstVaapiRectangle * const render_rect = &overlay->render_rect;
@@ -284,15 +282,13 @@ overlay_rectangle_update_render_rect(GstVaapiOverlayRectangle *overlay,
         y == render_rect->y &&
         width == render_rect->width &&
         height == render_rect->height)
-        return TRUE;
-
-    overlay_rectangle_deassociate(overlay);
+        return FALSE;
 
     render_rect->x = x;
     render_rect->y = y;
     render_rect->width = width;
     render_rect->height = height;
-    return overlay_rectangle_associate(overlay);
+    return TRUE;
 }
 
 static inline gboolean
@@ -308,12 +304,12 @@ overlay_rectangle_update_global_alpha(GstVaapiOverlayRectangle *overlay,
 
 static gboolean
 overlay_rectangle_update(GstVaapiOverlayRectangle *overlay,
-    GstVideoOverlayRectangle *rect)
+    GstVideoOverlayRectangle *rect, gboolean *reassociate_ptr)
 {
     if (overlay_rectangle_changed_pixels(overlay, rect))
         return FALSE;
-    if (!overlay_rectangle_update_render_rect(overlay, rect))
-        return FALSE;
+    if (overlay_rectangle_changed_render_rect(overlay, rect))
+        *reassociate_ptr = TRUE;
     if (!overlay_rectangle_update_global_alpha(overlay, rect))
         return FALSE;
     gst_video_overlay_rectangle_replace(&overlay->rect, rect);
@@ -358,6 +354,21 @@ overlay_lookup(GPtrArray *overlays, GstVideoOverlayRectangle *rect)
             return overlay;
     }
     return NULL;
+}
+
+static gboolean
+overlay_reassociate(GPtrArray *overlays)
+{
+    guint i;
+
+    for (i = 0; i < overlays->len; i++)
+        overlay_rectangle_deassociate(g_ptr_array_index(overlays, i));
+
+    for (i = 0; i < overlays->len; i++) {
+        if (!overlay_rectangle_associate(g_ptr_array_index(overlays, i)))
+            return FALSE;
+    }
+    return TRUE;
 }
 
 static void
@@ -1107,6 +1118,7 @@ gst_vaapi_context_apply_composition(
     GstVaapiContextPrivate *priv;
     GPtrArray *curr_overlay, *next_overlay;
     guint i, n_rectangles;
+    gboolean reassociate = FALSE;
 
     g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), FALSE);
 
@@ -1131,20 +1143,27 @@ gst_vaapi_context_apply_composition(
         GstVaapiOverlayRectangle *overlay;
 
         overlay = overlay_lookup(curr_overlay, rect);
-        if (overlay && overlay_rectangle_update(overlay, rect))
+        if (overlay && overlay_rectangle_update(overlay, rect, &reassociate)) {
             overlay_rectangle_ref(overlay);
+            if (overlay->layer_id != i)
+                reassociate = TRUE;
+        }
         else {
-            overlay = overlay_rectangle_new(rect, context);
+            overlay = overlay_rectangle_new(rect, context, i);
             if (!overlay) {
                 GST_WARNING("could not create VA overlay rectangle");
                 goto error;
             }
+            reassociate = TRUE;
         }
         g_ptr_array_add(next_overlay, overlay);
     }
 
     overlay_clear(curr_overlay);
     priv->overlay_id ^= 1;
+
+    if (reassociate && !overlay_reassociate(next_overlay))
+        return FALSE;
     return TRUE;
 
 error:
