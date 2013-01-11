@@ -8,6 +8,7 @@ local_codecparsers_srcdir = \
 libgstvaapi_codecparsers_cflags =		\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
+	-I$(top_builddir)/gst-libs		\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_CFLAGS)				\
 	$(NULL)

@@ -8,6 +8,7 @@ local_videoutils_srcdir = \
 libgstvaapi_videoutils_cflags =			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
+	-I$(top_builddir)/gst-libs		\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_CFLAGS)				\
 	$(NULL)

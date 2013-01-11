@@ -15,6 +15,7 @@ endif
 TEST_CFLAGS = \
 	-DGST_USE_UNSTABLE_API		\
 	-I$(top_srcdir)/gst-libs	\
+	-I$(top_builddir)/gst-libs	\
 	$(LIBVA_CFLAGS)			\
 	$(GST_CFLAGS)			\
 	$(NULL)
