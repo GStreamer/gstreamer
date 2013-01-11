@@ -275,6 +275,7 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
     return;
   }
 
+  GST_AUDIO_ENCODER_STREAM_LOCK (self);
   if (!gst_pad_has_current_caps (GST_AUDIO_ENCODER_SRC_PAD (self))
       || acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURED) {
     GstAudioInfo *info =
@@ -283,7 +284,6 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
 
     GST_DEBUG_OBJECT (self, "Port settings have changed, updating caps");
 
-    GST_AUDIO_ENCODER_STREAM_LOCK (self);
     caps = klass->get_caps (self, self->out_port, info);
     if (!caps) {
       if (buf)
@@ -302,17 +302,18 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
       goto caps_failed;
     }
     gst_caps_unref (caps);
-    GST_AUDIO_ENCODER_STREAM_UNLOCK (self);
 
     /* Now get a buffer */
-    if (acq_return != GST_OMX_ACQUIRE_BUFFER_OK)
+    if (acq_return != GST_OMX_ACQUIRE_BUFFER_OK) {
+      GST_AUDIO_ENCODER_STREAM_UNLOCK (self);
       return;
+    }
   }
+  GST_AUDIO_ENCODER_STREAM_UNLOCK (self);
 
   g_assert (acq_return == GST_OMX_ACQUIRE_BUFFER_OK);
 
   if (buf) {
-
     GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08x %lu", buf->omx_buf->nFlags,
         buf->omx_buf->nTimeStamp);
 
@@ -757,9 +758,6 @@ gst_omx_audio_enc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
   }
 
   if (self->downstream_flow_ret != GST_FLOW_OK) {
-    GST_ERROR_OBJECT (self, "Downstream returned %s",
-        gst_flow_get_name (self->downstream_flow_ret));
-
     return self->downstream_flow_ret;
   }
 
@@ -778,28 +776,31 @@ gst_omx_audio_enc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
      * because no input buffers are released */
     GST_AUDIO_ENCODER_STREAM_UNLOCK (self);
     acq_ret = gst_omx_port_acquire_buffer (self->in_port, &buf);
-    GST_AUDIO_ENCODER_STREAM_LOCK (self);
 
     if (acq_ret == GST_OMX_ACQUIRE_BUFFER_ERROR) {
+      GST_AUDIO_ENCODER_STREAM_LOCK (self);
       goto component_error;
     } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_FLUSHING) {
+      GST_AUDIO_ENCODER_STREAM_LOCK (self);
       goto flushing;
     } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
-      if (gst_omx_port_reconfigure (self->in_port) != OMX_ErrorNone)
+      if (gst_omx_port_reconfigure (self->in_port) != OMX_ErrorNone) {
+        GST_AUDIO_ENCODER_STREAM_LOCK (self);
         goto reconfigure_error;
+      }
       /* Now get a new buffer and fill it */
+      GST_AUDIO_ENCODER_STREAM_LOCK (self);
       continue;
     } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_RECONFIGURED) {
       /* TODO: Anything to do here? Don't think so */
+      GST_AUDIO_ENCODER_STREAM_LOCK (self);
       continue;
     }
+    GST_AUDIO_ENCODER_STREAM_LOCK (self);
 
     g_assert (acq_ret == GST_OMX_ACQUIRE_BUFFER_OK && buf != NULL);
 
     if (self->downstream_flow_ret != GST_FLOW_OK) {
-      GST_ERROR_OBJECT (self, "Downstream returned %s",
-          gst_flow_get_name (self->downstream_flow_ret));
-
       gst_omx_port_release_buffer (self->in_port, buf);
       return self->downstream_flow_ret;
     }

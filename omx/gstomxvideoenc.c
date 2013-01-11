@@ -632,8 +632,10 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
         gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (self), caps,
         self->input_state);
     state->codec_data = codec_data;
-    if (!gst_video_encoder_negotiate (GST_VIDEO_ENCODER (self)))
+    if (!gst_video_encoder_negotiate (GST_VIDEO_ENCODER (self))) {
+      gst_video_codec_frame_unref (frame);
       return GST_FLOW_NOT_NEGOTIATED;
+    }
     flow_ret = GST_FLOW_OK;
   } else if (buf->omx_buf->nFilledLen > 0) {
     GstBuffer *outbuf;
@@ -714,12 +716,11 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
     return;
   }
 
+  GST_VIDEO_ENCODER_STREAM_LOCK (self);
   if (!gst_pad_has_current_caps (GST_VIDEO_ENCODER_SRC_PAD (self))
       || acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURED) {
     GstCaps *caps;
     GstVideoCodecState *state;
-
-    GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
     GST_DEBUG_OBJECT (self, "Port settings have changed, updating caps");
 
@@ -745,28 +746,29 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
       goto caps_failed;
     }
 
-    GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
-
     /* Now get a buffer */
-    if (acq_return != GST_OMX_ACQUIRE_BUFFER_OK)
+    if (acq_return != GST_OMX_ACQUIRE_BUFFER_OK) {
+      GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
       return;
+    }
   }
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
 
   g_assert (acq_return == GST_OMX_ACQUIRE_BUFFER_OK);
+
+  /* This prevents a deadlock between the srcpad stream
+   * lock and the videocodec stream lock, if ::reset()
+   * is called at the wrong time
+   */
+  if (gst_omx_port_is_flushing (self->out_port)) {
+    GST_DEBUG_OBJECT (self, "Flushing");
+    gst_omx_port_release_buffer (self->out_port, buf);
+    goto flushing;
+  }
 
   if (buf) {
     GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08x %lu", buf->omx_buf->nFlags,
         buf->omx_buf->nTimeStamp);
-
-    /* This prevents a deadlock between the srcpad stream
-     * lock and the videocodec stream lock, if ::reset()
-     * is called at the wrong time
-     */
-    if (gst_omx_port_is_flushing (self->out_port)) {
-      GST_DEBUG_OBJECT (self, "Flushing");
-      gst_omx_port_release_buffer (self->out_port, buf);
-      goto flushing;
-    }
 
     GST_VIDEO_ENCODER_STREAM_LOCK (self);
     frame = _find_nearest_frame (self, buf);
@@ -795,7 +797,6 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
     gst_omx_port_release_buffer (port, buf);
 
     self->downstream_flow_ret = flow_ret;
-
   } else {
     g_assert ((klass->cdata.hacks & GST_OMX_HACK_NO_EMPTY_EOS_BUFFER));
     GST_VIDEO_ENCODER_STREAM_LOCK (self);
@@ -1265,13 +1266,12 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
 
   if (self->eos) {
     GST_WARNING_OBJECT (self, "Got frame after EOS");
+    gst_video_codec_frame_unref (frame);
     return GST_FLOW_EOS;
   }
 
   if (self->downstream_flow_ret != GST_FLOW_OK) {
-    GST_ERROR_OBJECT (self, "Downstream returned %s",
-        gst_flow_get_name (self->downstream_flow_ret));
-
+    gst_video_codec_frame_unref (frame);
     return self->downstream_flow_ret;
   }
 
@@ -1284,21 +1284,27 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
      * because no input buffers are released */
     GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
     acq_ret = gst_omx_port_acquire_buffer (self->in_port, &buf);
-    GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
     if (acq_ret == GST_OMX_ACQUIRE_BUFFER_ERROR) {
+      GST_VIDEO_ENCODER_STREAM_LOCK (self);
       goto component_error;
     } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_FLUSHING) {
+      GST_VIDEO_ENCODER_STREAM_LOCK (self);
       goto flushing;
     } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
-      if (gst_omx_port_reconfigure (self->in_port) != OMX_ErrorNone)
+      if (gst_omx_port_reconfigure (self->in_port) != OMX_ErrorNone) {
+        GST_VIDEO_ENCODER_STREAM_LOCK (self);
         goto reconfigure_error;
+      }
       /* Now get a new buffer and fill it */
+      GST_VIDEO_ENCODER_STREAM_LOCK (self);
       continue;
     } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_RECONFIGURED) {
       /* TODO: Anything to do here? Don't think so */
+      GST_VIDEO_ENCODER_STREAM_LOCK (self);
       continue;
     }
+    GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
     g_assert (acq_ret == GST_OMX_ACQUIRE_BUFFER_OK && buf != NULL);
 
@@ -1308,11 +1314,8 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
     }
 
     if (self->downstream_flow_ret != GST_FLOW_OK) {
-      GST_ERROR_OBJECT (self, "Downstream returned %s",
-          gst_flow_get_name (self->downstream_flow_ret));
-
       gst_omx_port_release_buffer (self->in_port, buf);
-      return self->downstream_flow_ret;
+      goto flow_error;
     }
 
     /* Now handle the frame */
@@ -1368,6 +1371,8 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
     GST_DEBUG_OBJECT (self, "Passed frame to component");
   }
 
+  gst_video_codec_frame_unref (frame);
+
   return self->downstream_flow_ret;;
 
 full_buffer:
@@ -1375,7 +1380,14 @@ full_buffer:
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
         ("Got OpenMAX buffer with no free space (%p, %u/%u)", buf,
             buf->omx_buf->nOffset, buf->omx_buf->nAllocLen));
+    gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
+  }
+
+flow_error:
+  {
+    gst_video_codec_frame_unref (frame);
+    return self->downstream_flow_ret;
   }
 
 component_error:
@@ -1384,24 +1396,28 @@ component_error:
         ("OpenMAX component in error state %s (0x%08x)",
             gst_omx_component_get_last_error_string (self->component),
             gst_omx_component_get_last_error (self->component)));
+    gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
 
 flushing:
   {
     GST_DEBUG_OBJECT (self, "Flushing -- returning FLUSHING");
+    gst_video_codec_frame_unref (frame);
     return GST_FLOW_FLUSHING;
   }
 reconfigure_error:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
         ("Unable to reconfigure input port"));
+    gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
 buffer_fill_error:
   {
     GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
         ("Failed to write input into the OpenMAX buffer"));
+    gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
 }
