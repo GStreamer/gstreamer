@@ -270,10 +270,38 @@ overlay_rectangle_changed_pixels(GstVaapiOverlayRectangle *overlay,
 }
 
 static gboolean
+overlay_rectangle_update_render_rect(GstVaapiOverlayRectangle *overlay,
+    GstVideoOverlayRectangle *rect)
+{
+    GstVaapiRectangle * const render_rect = &overlay->render_rect;
+    guint width, height;
+    gint x, y;
+
+    gst_video_overlay_rectangle_get_render_rectangle(rect,
+        &x, &y, &width, &height);
+
+    if (x == render_rect->x &&
+        y == render_rect->y &&
+        width == render_rect->width &&
+        height == render_rect->height)
+        return TRUE;
+
+    overlay_rectangle_deassociate(overlay);
+
+    render_rect->x = x;
+    render_rect->y = y;
+    render_rect->width = width;
+    render_rect->height = height;
+    return overlay_rectangle_associate(overlay);
+}
+
+static gboolean
 overlay_rectangle_update(GstVaapiOverlayRectangle *overlay,
     GstVideoOverlayRectangle *rect)
 {
     if (overlay_rectangle_changed_pixels(overlay, rect))
+        return FALSE;
+    if (!overlay_rectangle_update_render_rect(overlay, rect))
         return FALSE;
     gst_video_overlay_rectangle_replace(&overlay->rect, rect);
     return TRUE;
