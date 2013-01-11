@@ -735,16 +735,19 @@ gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
     /* if we changed the bitrate, we need to add new pads */
     for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
       GstMssDemuxStream *stream = iter->data;
+      GstPad *oldpad = stream->pad;
       GstClockTime ts =
           gst_mss_stream_get_fragment_gst_timestamp (stream->manifest_stream);
 
-      oldpads = g_slist_prepend (oldpads, stream->pad);
+      oldpads = g_slist_prepend (oldpads, oldpad);
 
       stream->pad = _create_pad (mssdemux, stream->manifest_stream);
       /* TODO keep the same playback rate */
       stream->pending_newsegment =
           gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, ts, -1, ts);
       gst_mss_demux_expose_stream (mssdemux, stream);
+
+      gst_pad_push_event (oldpad, gst_event_new_eos ());
     }
 
     gst_element_no_more_pads (GST_ELEMENT (mssdemux));
@@ -752,8 +755,6 @@ gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
     for (iter = oldpads; iter; iter = g_slist_next (iter)) {
       GstPad *oldpad = iter->data;
 
-      /* Push out EOS */
-      gst_pad_push_event (oldpad, gst_event_new_eos ());
       gst_pad_set_active (oldpad, FALSE);
       gst_element_remove_pad (GST_ELEMENT (mssdemux), oldpad);
       gst_object_unref (oldpad);
@@ -846,6 +847,8 @@ gst_mss_demux_stream_loop (GstMssDemuxStream * stream)
     g_thread_create ((GThreadFunc) gst_mss_demux_reconfigure, mssdemux, FALSE,
         NULL);
     GST_DEBUG_OBJECT (mssdemux, "Finished streams reconfiguration");
+    gst_task_stop (stream->stream_task);
+    return;
   } else {
     GST_OBJECT_UNLOCK (mssdemux);
   }
