@@ -231,7 +231,6 @@ struct _GstOMXComponent {
   /* OMX_ErrorNone usually, if different nothing will work */
   OMX_ERRORTYPE last_error;
 
-  gint have_pending_reconfigure_outports; /* atomic */
   GList *pending_reconfigure_outports;
 };
 

@@ -295,9 +295,6 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
                 g_list_prepend (comp->pending_reconfigure_outports, k->data);
         }
 
-        if (comp->pending_reconfigure_outports)
-          g_atomic_int_set (&comp->have_pending_reconfigure_outports, 1);
-
         g_list_free (outports);
 
         break;
@@ -705,7 +702,6 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
 
   /* Reset some things */
   if (old_state == OMX_StateExecuting && state < old_state) {
-    g_atomic_int_set (&comp->have_pending_reconfigure_outports, 0);
     g_list_free (comp->pending_reconfigure_outports);
     comp->pending_reconfigure_outports = NULL;
     /* Notify all inports that are still waiting */
@@ -1118,9 +1114,9 @@ retry:
    * or buffers are returned to be filled as usual.
    */
   if (port->port_def.eDir == OMX_DirInput) {
-    if (g_atomic_int_get (&comp->have_pending_reconfigure_outports)) {
+    if (comp->pending_reconfigure_outports) {
       gst_omx_component_handle_messages (comp);
-      while (g_atomic_int_get (&comp->have_pending_reconfigure_outports) &&
+      while (comp->pending_reconfigure_outports &&
           (err = comp->last_error) == OMX_ErrorNone && !port->flushing) {
         GST_DEBUG_OBJECT (comp->parent,
             "Waiting for output ports to reconfigure");
@@ -1982,7 +1978,6 @@ gst_omx_port_reconfigure (GstOMXPort * port)
       }
     }
     if (!comp->pending_reconfigure_outports) {
-      g_atomic_int_set (&comp->have_pending_reconfigure_outports, 0);
       g_mutex_lock (&comp->messages_lock);
       g_cond_broadcast (&comp->messages_cond);
       g_mutex_unlock (&comp->messages_lock);
@@ -2036,7 +2031,6 @@ gst_omx_port_manual_reconfigure (GstOMXPort * port, gboolean start)
       if (!l) {
         comp->pending_reconfigure_outports =
             g_list_prepend (comp->pending_reconfigure_outports, port);
-        g_atomic_int_set (&comp->have_pending_reconfigure_outports, 1);
       }
     } else {
       for (l = comp->pending_reconfigure_outports; l; l = l->next) {
@@ -2047,7 +2041,6 @@ gst_omx_port_manual_reconfigure (GstOMXPort * port, gboolean start)
         }
       }
       if (!comp->pending_reconfigure_outports) {
-        g_atomic_int_set (&comp->have_pending_reconfigure_outports, 0);
         g_mutex_lock (&comp->messages_lock);
         g_cond_broadcast (&comp->messages_cond);
         g_mutex_unlock (&comp->messages_lock);
