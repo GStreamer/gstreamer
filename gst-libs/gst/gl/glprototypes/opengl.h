@@ -131,3 +131,24 @@ GST_GL_EXT_FUNCTION (void, ProgramLocalParameter4fv,
                       GLfloat              *params))
 GST_GL_EXT_END ()
 
+GST_GL_EXT_BEGIN (fixed_function_gl_only,
+                  0, 0,
+                  0,
+                  "\0",
+                  "\0")
+GST_GL_EXT_FUNCTION (void, PushAttrib,
+                     (GLbitfield            mask))
+GST_GL_EXT_FUNCTION (void, PopAttrib,
+                     (void))
+GST_GL_EXT_FUNCTION (void, TexImage1D,
+                     (GLenum                target,
+                      GLint                 level,
+                      GLint                 internalFormat,
+                      GLsizei               width,
+                      GLint                 border,
+                      GLenum                format,
+                      GLenum                type,
+                      const GLvoid         *data))
+GST_GL_EXT_FUNCTION (void, Rotatef,
+                     (GLfloat angle, GLfloat x, GLfloat y, GLfloat z))
+GST_GL_EXT_END ()

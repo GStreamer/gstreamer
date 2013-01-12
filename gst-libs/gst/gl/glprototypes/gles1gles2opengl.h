@@ -100,7 +100,7 @@ GST_GL_EXT_FUNCTION (void, CullFace,
                      (GLenum mode))
 GST_GL_EXT_FUNCTION (void, GenTextures,
                      (GLsizei n, GLuint* textures))
-GST_GL_EXT_FUNCTION (GLenum, glGetError,
+GST_GL_EXT_FUNCTION (GLenum, GetError,
                      (void))
 GST_GL_EXT_FUNCTION (void, GetIntegerv,
                      (GLenum pname, GLint* params))
@@ -112,7 +112,7 @@ GST_GL_EXT_FUNCTION (const GLubyte*, GetString,
                      (GLenum name))
 GST_GL_EXT_FUNCTION (void, Hint,
                      (GLenum target, GLenum mode))
-GST_GL_EXT_FUNCTION (GLboolean, glIsTexture,
+GST_GL_EXT_FUNCTION (GLboolean, IsTexture,
                      (GLuint texture))
 GST_GL_EXT_FUNCTION (void, PixelStorei,
                      (GLenum pname, GLint param))
@@ -173,7 +173,7 @@ GST_GL_EXT_FUNCTION (void, CopyTexImage2D,
                       GLint border))
 GST_GL_EXT_FUNCTION (void, Viewport,
                      (GLint x, GLint y, GLsizei width, GLsizei height))
-GST_GL_EXT_FUNCTION (GLboolean, glIsEnabled, (GLenum cap))
+GST_GL_EXT_FUNCTION (GLboolean, IsEnabled, (GLenum cap))
 GST_GL_EXT_FUNCTION (void, LineWidth, (GLfloat width))
 GST_GL_EXT_FUNCTION (void, PolygonOffset, (GLfloat factor, GLfloat units))
 GST_GL_EXT_END ()
