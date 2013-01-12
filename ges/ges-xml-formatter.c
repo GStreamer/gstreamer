@@ -665,7 +665,7 @@ append_printf_escaped (GString * str, const gchar * format, ...)
 static inline gboolean
 _can_serialize_spec (GParamSpec * spec)
 {
-  if (spec->flags & G_PARAM_WRITABLE
+  if (spec->flags & G_PARAM_WRITABLE && !(spec->flags & G_PARAM_CONSTRUCT_ONLY)
       && !g_type_is_a (G_PARAM_SPEC_VALUE_TYPE (spec), G_TYPE_OBJECT)
       && g_strcmp0 (spec->name, "name")
       && G_PARAM_SPEC_VALUE_TYPE (spec) != G_TYPE_GTYPE)

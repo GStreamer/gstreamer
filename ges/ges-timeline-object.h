@@ -142,10 +142,10 @@ typedef GList * (*GESCreateTrackObjectsFunc) (GESTimelineObject * object, GESTra
 
 /**
  * GESTimelineObject:
- *
- * The #GESTimelineObject base class.
  * @trackobjects: (element-type GES.TrackObject): A list of TrackObject
  * controlled by this TimelineObject sorted by priority. NOTE: Do not modify.
+ *
+ * The #GESTimelineObject base class.
  */
 struct _GESTimelineObject
 {
