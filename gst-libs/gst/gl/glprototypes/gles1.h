@@ -43,5 +43,5 @@ GST_GL_EXT_BEGIN (only_in_gles1,
                 GST_GL_API_GLES,
                 "\0",
                 "\0")
-COGL_EXT_FUNCTION (void, ClipPlanef, (GLenum plane, const GLfloat *equation))
-COGL_EXT_END ()
+GST_GL_EXT_FUNCTION (void, ClipPlanef, (GLenum plane, const GLfloat *equation))
+GST_GL_EXT_END ()

@@ -98,4 +98,8 @@ GST_GL_EXT_FUNCTION (void, VertexPointer,
                       GLenum type,
                       GLsizei stride,
                       const GLvoid *pointer))
+GST_GL_EXT_FUNCTION (void, PushMatrix,
+                     (void))
+GST_GL_EXT_FUNCTION (void, PopMatrix,
+                     (void))
 GST_GL_EXT_END ()

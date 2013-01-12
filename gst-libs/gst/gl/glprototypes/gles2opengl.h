@@ -39,7 +39,7 @@
  */
 
 GST_GL_EXT_BEGIN (offscreen,
-                  255, 255,
+                  3, 0,
                   GST_GL_API_GLES2,
                   /* for some reason the ARB version of this
                      extension doesn't have an ARB suffix for the
@@ -192,9 +192,9 @@ GST_GL_EXT_FUNCTION (void, GetAttachedShaders,
                       GLsizei maxcount,
                       GLsizei* count,
                       GLuint* shaders))
-GST_GL_EXT_FUNCTION (GLboolean, glIsShader,
+GST_GL_EXT_FUNCTION (GLboolean, IsShader,
                      (GLuint shader))
-GST_GL_EXT_FUNCTION (GLboolean, glIsProgram,
+GST_GL_EXT_FUNCTION (GLboolean, IsProgram,
                      (GLuint program))
 GST_GL_EXT_END ()
 
@@ -321,7 +321,7 @@ GST_GL_EXT_FUNCTION (void, GetShaderSource,
                       GLsizei bufsize,
                       GLsizei* length,
                       GLchar* source))
-GST_GL_EXT_FUNCTION (void, glValidateProgram, (GLuint program))
+GST_GL_EXT_FUNCTION (void, ValidateProgram, (GLuint program))
 GST_GL_EXT_END ()
 
 /* These functions are provided by GL_ARB_vertex_shader or are in GL
@@ -361,7 +361,7 @@ GST_GL_EXT_FUNCTION (void, GetVertexAttribiv,
                      (GLuint index, GLenum pname, GLint* params))
 GST_GL_EXT_FUNCTION (void, GetVertexAttribPointerv,
                      (GLuint index, GLenum pname, GLvoid** pointer))
-GST_GL_EXT_FUNCTION (GLint, glGetAttribLocation,
+GST_GL_EXT_FUNCTION (GLint, GetAttribLocation,
                      (GLuint program, const char *name))
 GST_GL_EXT_FUNCTION (void, BindAttribLocation,
                      (GLuint program,
