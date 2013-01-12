@@ -189,6 +189,9 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstmplex.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfaac.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmfc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpegpsmux.so
+
 
 %files free
 %defattr(-,root,root,-)
