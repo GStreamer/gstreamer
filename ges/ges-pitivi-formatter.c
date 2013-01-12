@@ -532,6 +532,30 @@ create_tracks (GESFormatter * self)
 }
 
 static void
+parse_metadatas (GESFormatter * self)
+{
+  guint i, size;
+  xmlNodePtr node;
+  xmlAttr *cur_attr;
+  xmlNodeSetPtr nodes;
+  xmlXPathObjectPtr xpathObj;
+  GESMetaContainer *metacontainer = GES_META_CONTAINER (self->project);
+
+  xpathObj = xmlXPathEvalExpression ((const xmlChar *)
+      "/pitivi/metadata", GES_PITIVI_FORMATTER (self)->priv->xpathCtx);
+  nodes = xpathObj->nodesetval;
+
+  size = (nodes) ? nodes->nodeNr : 0;
+  for (i = 0; i < size; i++) {
+    node = nodes->nodeTab[i];
+    for (cur_attr = node->properties; cur_attr; cur_attr = cur_attr->next) {
+      ges_meta_container_set_string (metacontainer, (gchar *) cur_attr->name,
+          (gchar *) xmlGetProp (node, cur_attr->name));
+    }
+  }
+}
+
+static void
 list_sources (GESFormatter * self)
 {
   GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (self)->priv;
@@ -1022,6 +1046,9 @@ load_pitivi_file_from_uri (GESFormatter * self,
   }
 
   priv->xpathCtx = xmlXPathNewContext (doc);
+
+  if (self->project)
+    parse_metadatas (self);
 
   if (!create_tracks (self)) {
     GST_ERROR ("Couldn't create tracks");
