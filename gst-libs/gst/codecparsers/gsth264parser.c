@@ -1446,6 +1446,7 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
   sps->bit_depth_chroma_minus8 = 0;
   memset (sps->scaling_lists_4x4, 16, 96);
   memset (sps->scaling_lists_8x8, 16, 384);
+  memset (&sps->vui_parameters, 0, sizeof (sps->vui_parameters));
   sps->mb_adaptive_frame_field_flag = 0;
   sps->frame_crop_left_offset = 0;
   sps->frame_crop_right_offset = 0;
