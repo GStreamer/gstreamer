@@ -430,10 +430,10 @@ static void gst_base_parse_loop (GstPad * pad);
 static GstFlowReturn gst_base_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 
-static gboolean gst_base_parse_sink_default (GstBaseParse * parse,
+static gboolean gst_base_parse_sink_event_default (GstBaseParse * parse,
     GstEvent * event);
 
-static gboolean gst_base_parse_src_default (GstBaseParse * parse,
+static gboolean gst_base_parse_src_event_default (GstBaseParse * parse,
     GstEvent * event);
 
 static void gst_base_parse_drain (GstBaseParse * parse);
@@ -538,8 +538,8 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
 #endif
 
   /* Default handlers */
-  klass->sink_event = gst_base_parse_sink_default;
-  klass->src_event = gst_base_parse_src_default;
+  klass->sink_event = gst_base_parse_sink_event_default;
+  klass->src_event = gst_base_parse_src_event_default;
   klass->convert = gst_base_parse_convert_default;
 
   GST_DEBUG_CATEGORY_INIT (gst_base_parse_debug, "baseparse", 0,
@@ -881,7 +881,7 @@ gst_base_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 
-/* gst_base_parse_sink_default:
+/* gst_base_parse_sink_event_default:
  * @parse: #GstBaseParse.
  * @event: #GstEvent to be handled.
  *
@@ -893,7 +893,7 @@ gst_base_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
  * Returns: %TRUE if the event was handled and not need forwarding.
  */
 static gboolean
-gst_base_parse_sink_default (GstBaseParse * parse, GstEvent * event)
+gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
 {
   GstBaseParseClass *klass = GST_BASE_PARSE_GET_CLASS (parse);
   gboolean ret = FALSE;
@@ -1250,7 +1250,7 @@ gst_base_parse_is_seekable (GstBaseParse * parse)
   return parse->priv->syncable;
 }
 
-/* gst_base_parse_src_default:
+/* gst_base_parse_src_event_default:
  * @parse: #GstBaseParse.
  * @event: #GstEvent that was received.
  *
@@ -1259,7 +1259,7 @@ gst_base_parse_is_seekable (GstBaseParse * parse)
  * Returns: TRUE if the event was handled and can be dropped.
  */
 static gboolean
-gst_base_parse_src_default (GstBaseParse * parse, GstEvent * event)
+gst_base_parse_src_event_default (GstBaseParse * parse, GstEvent * event)
 {
   gboolean res = FALSE;
 
