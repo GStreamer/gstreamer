@@ -213,6 +213,13 @@ struct _GstBaseParse {
  *                   Called until it doesn't return GST_FLOW_OK anymore for
  *                   the first buffers. Can be used by the subclass to detect
  *                   the stream format.
+ * @sink_query:     Optional.
+ *                   Query handler on the sink pad. This function should chain
+ *                   up to the parent implementation to let the default handler
+ *                   run (Since 1.2)
+ * @src_query:      Optional.
+ *                   Query handler on the source pad. Should chain up to the
+ *                   parent to let the default handler run (Since 1.2)
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @check_valid_frame and @parse_frame needs to be
@@ -256,8 +263,14 @@ struct _GstBaseParseClass {
   GstFlowReturn (*detect)             (GstBaseParse * parse,
                                        GstBuffer    * buffer);
 
+  gboolean      (*sink_query)         (GstBaseParse * parse,
+                                       GstQuery     * query);
+
+  gboolean      (*src_query)          (GstBaseParse * parse,
+                                       GstQuery     * query);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 2];
 };
 
 GType           gst_base_parse_get_type (void);
