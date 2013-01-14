@@ -28,8 +28,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiDpb             GstVaapiDpb;
 typedef struct _GstVaapiDpbClass        GstVaapiDpbClass;
-typedef struct _GstVaapiDpb2            GstVaapiDpb2;
-typedef struct _GstVaapiDpb2Class       GstVaapiDpb2Class;
 
 /* ------------------------------------------------------------------------- */
 /* --- Base Decoded Picture Buffer                                       --- */
@@ -87,13 +85,19 @@ struct _GstVaapiDpbClass {
     GstMiniObjectClass  parent_class;
 
     /*< protected >*/
-    void              (*flush)  (GstVaapiDpb *dpb);
-    gboolean          (*add)    (GstVaapiDpb *dpb, GstVaapiPicture *picture);
+    void      (*flush)          (GstVaapiDpb *dpb);
+    gboolean  (*add)            (GstVaapiDpb *dpb, GstVaapiPicture *picture);
+    void      (*get_neighbours) (GstVaapiDpb *dpb, GstVaapiPicture *picture,
+        GstVaapiPicture **prev_picture_ptr, GstVaapiPicture **next_picture_ptr);
 };
 
 G_GNUC_INTERNAL
 GType
 gst_vaapi_dpb_get_type(void) G_GNUC_CONST;
+
+G_GNUC_INTERNAL
+GstVaapiDpb *
+gst_vaapi_dpb_new(guint max_pictures);
 
 G_GNUC_INTERNAL
 void
@@ -107,6 +111,15 @@ G_GNUC_INTERNAL
 guint
 gst_vaapi_dpb_size(GstVaapiDpb *dpb);
 
+G_GNUC_INTERNAL
+void
+gst_vaapi_dpb_get_neighbours(
+    GstVaapiDpb        *dpb,
+    GstVaapiPicture    *picture,
+    GstVaapiPicture   **prev_picture_ptr,
+    GstVaapiPicture   **next_picture_ptr
+);
+
 static inline gpointer
 gst_vaapi_dpb_ref(gpointer ptr)
 {
@@ -118,74 +131,6 @@ gst_vaapi_dpb_unref(gpointer ptr)
 {
     gst_mini_object_unref(GST_MINI_OBJECT(ptr));
 }
-
-/* ------------------------------------------------------------------------- */
-/* --- Decoded Picture Buffer (optimized for 2 reference pictures)       --- */
-/* ------------------------------------------------------------------------- */
-
-#define GST_VAAPI_TYPE_DPB2 \
-    (gst_vaapi_dpb2_get_type())
-
-#define GST_VAAPI_DPB2_CAST(obj) \
-    ((GstVaapiDpb2 *)(obj))
-
-#define GST_VAAPI_DPB2(obj)                             \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_VAAPI_TYPE_DPB2,    \
-                                GstVaapiDpb2))
-
-#define GST_VAAPI_DPB2_CLASS(klass)                     \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_VAAPI_TYPE_DPB2,       \
-                             GstVaapiDpb2Class))
-
-#define GST_VAAPI_IS_DPB2(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_DPB2))
-
-#define GST_VAAPI_IS_DPB2_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_DPB2))
-
-#define GST_VAAPI_DPB2_GET_CLASS(obj)                   \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_VAAPI_TYPE_DPB2,     \
-                               GstVaapiDpb2Class))
-
-/**
- * GstVaapiDpb2:
- *
- * A decoded picture buffer (DPB2) object.
- */
-struct _GstVaapiDpb2 {
-    /*< private >*/
-    GstVaapiDpb         parent_instance;
-};
-
-/**
- * GstVaapiDpb2Class:
- *
- * The #GstVaapiDpb2 base class.
- */
-struct _GstVaapiDpb2Class {
-    /*< private >*/
-    GstVaapiDpbClass    parent_class;
-};
-
-G_GNUC_INTERNAL
-GType
-gst_vaapi_dpb2_get_type(void) G_GNUC_CONST;
-
-G_GNUC_INTERNAL
-GstVaapiDpb *
-gst_vaapi_dpb2_new(void);
-
-G_GNUC_INTERNAL
-void
-gst_vaapi_dpb2_get_references(
-    GstVaapiDpb        *dpb,
-    GstVaapiPicture    *picture,
-    GstVaapiPicture   **prev_picture_ptr,
-    GstVaapiPicture   **next_picture_ptr
-);
 
 G_END_DECLS
 

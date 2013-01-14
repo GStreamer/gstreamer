@@ -25,6 +25,13 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
+G_GNUC_INTERNAL
+GType
+gst_vaapi_dpb2_get_type(void) G_GNUC_CONST;
+
+#define GST_VAAPI_TYPE_DPB2 \
+    (gst_vaapi_dpb2_get_type())
+
 /* ------------------------------------------------------------------------- */
 /* --- Common Decoded Picture Buffer utilities                           --- */
 /* ------------------------------------------------------------------------- */
@@ -177,6 +184,45 @@ gst_vaapi_dpb_base_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
     return TRUE;
 }
 
+void
+gst_vaapi_dpb_base_get_neighbours(
+    GstVaapiDpb        *dpb,
+    GstVaapiPicture    *picture,
+    GstVaapiPicture   **prev_picture_ptr,
+    GstVaapiPicture   **next_picture_ptr
+)
+{
+    GstVaapiPicture *prev_picture = NULL;
+    GstVaapiPicture *next_picture = NULL;
+    guint i;
+
+    /* Find the first picture with POC > specified picture POC */
+    for (i = 0; i < dpb->num_pictures; i++) {
+        GstVaapiPicture * const ref_picture = dpb->pictures[i];
+        if (ref_picture->poc == picture->poc) {
+            if (i > 0)
+                prev_picture = dpb->pictures[i - 1];
+            if (i + 1 < dpb->num_pictures)
+                next_picture = dpb->pictures[i + 1];
+            break;
+        }
+        else if (ref_picture->poc > picture->poc) {
+            next_picture = ref_picture;
+            if (i > 0)
+                prev_picture = dpb->pictures[i - 1];
+            break;
+        }
+    }
+
+    g_assert(next_picture ? next_picture->poc > picture->poc : TRUE);
+    g_assert(prev_picture ? prev_picture->poc < picture->poc : TRUE);
+
+    if (prev_picture_ptr)
+        *prev_picture_ptr = prev_picture;
+    if (next_picture_ptr)
+        *next_picture_ptr = next_picture;
+}
+
 static void
 gst_vaapi_dpb_finalize(GstMiniObject *object)
 {
@@ -209,6 +255,15 @@ gst_vaapi_dpb_class_init(GstVaapiDpbClass *klass)
     object_class->finalize = gst_vaapi_dpb_finalize;
     klass->flush           = gst_vaapi_dpb_base_flush;
     klass->add             = gst_vaapi_dpb_base_add;
+    klass->get_neighbours  = gst_vaapi_dpb_base_get_neighbours;
+}
+
+GstVaapiDpb *
+gst_vaapi_dpb_new(guint max_pictures)
+{
+    if (G_LIKELY(max_pictures == 2))
+        return dpb_new(GST_VAAPI_TYPE_DPB2, max_pictures);
+    return dpb_new(GST_VAAPI_TYPE_DPB, max_pictures);
 }
 
 void
@@ -246,14 +301,85 @@ gst_vaapi_dpb_size(GstVaapiDpb *dpb)
     return dpb->num_pictures;
 }
 
+void
+gst_vaapi_dpb_get_neighbours(
+    GstVaapiDpb        *dpb,
+    GstVaapiPicture    *picture,
+    GstVaapiPicture   **prev_picture_ptr,
+    GstVaapiPicture   **next_picture_ptr
+)
+{
+    GstVaapiDpbClass *klass;
+
+    g_return_if_fail(GST_VAAPI_IS_DPB(dpb));
+    g_return_if_fail(GST_VAAPI_IS_PICTURE(picture));
+
+    klass = GST_VAAPI_DPB_GET_CLASS(dpb);
+    if (G_UNLIKELY(!klass || !klass->get_neighbours))
+        return;
+    klass->get_neighbours(dpb, picture, prev_picture_ptr, next_picture_ptr);
+}
+
 /* ------------------------------------------------------------------------- */
 /* --- Decoded Picture Buffer (optimized for 2 reference pictures)       --- */
 /* ------------------------------------------------------------------------- */
 
-/* At most two reference pictures for DPB2*/
-#define MAX_DPB2_REFERENCES 2
+typedef struct _GstVaapiDpb2            GstVaapiDpb2;
+typedef struct _GstVaapiDpb2Class       GstVaapiDpb2Class;
+
+#define GST_VAAPI_DPB2_CAST(obj) \
+    ((GstVaapiDpb2 *)(obj))
+
+#define GST_VAAPI_DPB2(obj)                             \
+    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
+                                GST_VAAPI_TYPE_DPB2,    \
+                                GstVaapiDpb2))
+
+#define GST_VAAPI_DPB2_CLASS(klass)                     \
+    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
+                             GST_VAAPI_TYPE_DPB2,       \
+                             GstVaapiDpb2Class))
+
+#define GST_VAAPI_IS_DPB2(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_DPB2))
+
+#define GST_VAAPI_IS_DPB2_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_DPB2))
+
+#define GST_VAAPI_DPB2_GET_CLASS(obj)                   \
+    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
+                               GST_VAAPI_TYPE_DPB2,     \
+                               GstVaapiDpb2Class))
+
+/**
+ * GstVaapiDpb2:
+ *
+ * A decoded picture buffer (DPB2) object.
+ */
+struct _GstVaapiDpb2 {
+    /*< private >*/
+    GstVaapiDpb         parent_instance;
+};
+
+/**
+ * GstVaapiDpb2Class:
+ *
+ * The #GstVaapiDpb2 base class.
+ */
+struct _GstVaapiDpb2Class {
+    /*< private >*/
+    GstVaapiDpbClass    parent_class;
+};
 
 G_DEFINE_TYPE(GstVaapiDpb2, gst_vaapi_dpb2, GST_VAAPI_TYPE_DPB)
+
+static void
+gst_vaapi_dpb2_get_neighbours(
+    GstVaapiDpb        *dpb,
+    GstVaapiPicture    *picture,
+    GstVaapiPicture   **prev_picture_ptr,
+    GstVaapiPicture   **next_picture_ptr
+);
 
 static gboolean
 gst_vaapi_dpb2_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
@@ -261,7 +387,8 @@ gst_vaapi_dpb2_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
     GstVaapiPicture *ref_picture;
     gint index = -1;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DPB2(dpb), FALSE);
+    g_return_val_if_fail(GST_VAAPI_IS_DPB(dpb), FALSE);
+    g_return_val_if_fail(dpb->max_pictures == 2, FALSE);
 
     /*
      * Purpose: only store reference decoded pictures into the DPB
@@ -271,7 +398,7 @@ gst_vaapi_dpb2_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
      * - ... thus causing older reference pictures to be output, if not already
      * - the oldest reference picture is replaced with the new reference picture
      */
-    if (G_LIKELY(dpb->num_pictures == MAX_DPB2_REFERENCES)) {
+    if (G_LIKELY(dpb->num_pictures == 2)) {
         index = (dpb->pictures[0]->poc > dpb->pictures[1]->poc);
         ref_picture = dpb->pictures[index];
         if (!GST_VAAPI_PICTURE_IS_OUTPUT(ref_picture)) {
@@ -300,27 +427,23 @@ gst_vaapi_dpb2_class_init(GstVaapiDpb2Class *klass)
     GstVaapiDpbClass * const dpb_class = GST_VAAPI_DPB_CLASS(klass);
 
     dpb_class->add = gst_vaapi_dpb2_add;
-}
-
-GstVaapiDpb *
-gst_vaapi_dpb2_new(void)
-{
-    return dpb_new(GST_VAAPI_TYPE_DPB2, MAX_DPB2_REFERENCES);
+    dpb_class->get_neighbours = gst_vaapi_dpb2_get_neighbours;
 }
 
 void
-gst_vaapi_dpb2_get_references(
+gst_vaapi_dpb2_get_neighbours(
     GstVaapiDpb        *dpb,
     GstVaapiPicture    *picture,
     GstVaapiPicture   **prev_picture_ptr,
     GstVaapiPicture   **next_picture_ptr
 )
 {
-    GstVaapiPicture *ref_picture, *ref_pictures[MAX_DPB2_REFERENCES];
+    GstVaapiPicture *ref_picture, *ref_pictures[2];
     GstVaapiPicture **picture_ptr;
     guint i, index;
 
-    g_return_if_fail(GST_VAAPI_IS_DPB2(dpb));
+    g_return_if_fail(GST_VAAPI_IS_DPB(dpb));
+    g_return_if_fail(dpb->max_pictures == 2);
     g_return_if_fail(GST_VAAPI_IS_PICTURE(picture));
 
     ref_pictures[0] = NULL;
