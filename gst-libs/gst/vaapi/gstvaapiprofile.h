@@ -35,6 +35,7 @@ G_BEGIN_DECLS
  * @GST_VAAPI_CODEC_H264: H.264 aka MPEG-4 Part 10 (ISO/IEC 14496-10)
  * @GST_VAAPI_CODEC_WMV3: Windows Media Video 9. VC-1 Simple or Main profile (SMPTE 421M)
  * @GST_VAAPI_CODEC_VC1: VC-1 Advanced profile (SMPTE 421M)
+ * @GST_VAAPI_CODEC_JPEG: JPEG (ITU-T 81)
  *
  * The set of all codecs for #GstVaapiCodec.
  */
@@ -92,6 +93,8 @@ typedef enum {
  *   VC-1 main profile
  * @GST_VAAPI_PROFILE_VC1_ADVANCED:
  *   VC-1 advanced profile
+ * @GST_VAAPI_PROFILE_JPEG_BASELINE:
+ *   JPEG baseline profile
  *
  * The set of all profiles for #GstVaapiProfile.
  */

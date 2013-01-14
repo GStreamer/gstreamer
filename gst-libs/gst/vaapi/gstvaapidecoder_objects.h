@@ -55,7 +55,7 @@ typedef enum {
 } GstVaapiPictureType;
 
 /**
- * Picture flags:
+ * GstVaapiPictureFlags:
  * @GST_VAAPI_PICTURE_FLAG_SKIPPED: skipped frame
  * @GST_VAAPI_PICTURE_FLAG_REFERENCE: reference frame
  * @GST_VAAPI_PICTURE_FLAG_OUTPUT: frame was output
@@ -66,7 +66,7 @@ typedef enum {
  *
  * Enum values used for #GstVaapiPicture flags.
  */
-enum {
+typedef enum {
     GST_VAAPI_PICTURE_FLAG_SKIPPED    = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 0),
     GST_VAAPI_PICTURE_FLAG_REFERENCE  = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 1),
     GST_VAAPI_PICTURE_FLAG_OUTPUT     = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 2),
@@ -74,7 +74,7 @@ enum {
     GST_VAAPI_PICTURE_FLAG_FF         = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 4),
     GST_VAAPI_PICTURE_FLAG_TFF        = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 5),
     GST_VAAPI_PICTURE_FLAG_LAST       = (GST_VAAPI_CODEC_OBJECT_FLAG_LAST << 6),
-};
+} GstVaapiPictureFlags;
 
 #define GST_VAAPI_PICTURE_FLAGS         GST_VAAPI_MINI_OBJECT_FLAGS
 #define GST_VAAPI_PICTURE_FLAG_IS_SET   GST_VAAPI_MINI_OBJECT_FLAG_IS_SET

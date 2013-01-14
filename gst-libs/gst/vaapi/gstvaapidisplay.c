@@ -1406,7 +1406,7 @@ gst_vaapi_display_get_subpicture_caps(GstVaapiDisplay *display)
  * gst_vaapi_display_has_subpicture_format:
  * @display: a #GstVaapiDisplay
  * @format: a #GstVaapiFormat
- * @flags: #GstVaapiSubpictureFlags, or zero
+ * @flags_ptr: pointer to #GstVaapiSubpictureFlags, or zero
  *
  * Returns whether VA @display supports @format subpicture format with
  * the supplied @flags.
