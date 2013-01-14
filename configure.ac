@@ -358,7 +358,7 @@ else
   fi
 
   dnl checks for extra enable/disable flags
-  LIBAV_OPTS="(cd $srcdir/gst-libs/ext/libav && ./configure --help)"
+  LIBAV_OPTS=`cd $srcdir/gst-libs/ext/libav && ./configure --help`
   # Let's check if we can disable the building of the libav binary
   can_disable=`echo "$LIBAV_OPTS" | grep 'disable-ffmpeg'`
   if test "$can_disable" != ""; then
