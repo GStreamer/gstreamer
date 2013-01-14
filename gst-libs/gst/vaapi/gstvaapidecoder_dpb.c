@@ -70,20 +70,18 @@ static const GstVaapiMiniObjectClass *
 gst_vaapi_dpb2_class(void);
 
 /* ------------------------------------------------------------------------- */
-/* --- Common Decoded Picture Buffer utilities                           --- */
+/* --- Common utilities                                                  --- */
 /* ------------------------------------------------------------------------- */
 
-static GstVaapiDpb *
+static inline GstVaapiDpb *
 dpb_new(guint max_pictures)
 {
-    const GstVaapiMiniObjectClass *klass;
     GstVaapiDpb *dpb;
 
     g_return_val_if_fail(max_pictures > 0, NULL);
 
-    klass = max_pictures == 2 ? gst_vaapi_dpb2_class() : gst_vaapi_dpb_class();
-
-    dpb = (GstVaapiDpb *)gst_vaapi_mini_object_new(klass);
+    dpb = (GstVaapiDpb *)gst_vaapi_mini_object_new(
+        max_pictures == 2 ? gst_vaapi_dpb2_class() : gst_vaapi_dpb_class());
     if (!dpb)
         return NULL;
 
@@ -166,20 +164,20 @@ dpb_clear(GstVaapiDpb *dpb)
     dpb->num_pictures = 0;
 }
 
-/* ------------------------------------------------------------------------- */
-/* --- Base Decoded Picture Buffer                                       --- */
-/* ------------------------------------------------------------------------- */
-
 static void
-gst_vaapi_dpb_base_flush(GstVaapiDpb *dpb)
+dpb_flush(GstVaapiDpb *dpb)
 {
     while (dpb_bump(dpb))
         ;
     dpb_clear(dpb);
 }
 
+/* ------------------------------------------------------------------------- */
+/* --- Generic implementation                                            --- */
+/* ------------------------------------------------------------------------- */
+
 static gboolean
-gst_vaapi_dpb_base_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
+dpb_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
 {
     guint i;
 
@@ -222,13 +220,9 @@ gst_vaapi_dpb_base_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
     return TRUE;
 }
 
-void
-gst_vaapi_dpb_base_get_neighbours(
-    GstVaapiDpb        *dpb,
-    GstVaapiPicture    *picture,
-    GstVaapiPicture   **prev_picture_ptr,
-    GstVaapiPicture   **next_picture_ptr
-)
+static void
+dpb_get_neighbours(GstVaapiDpb *dpb, GstVaapiPicture *picture,
+    GstVaapiPicture **prev_picture_ptr, GstVaapiPicture **next_picture_ptr)
 {
     GstVaapiPicture *prev_picture = NULL;
     GstVaapiPicture *next_picture = NULL;
@@ -261,13 +255,82 @@ gst_vaapi_dpb_base_get_neighbours(
         *next_picture_ptr = next_picture;
 }
 
+/* ------------------------------------------------------------------------- */
+/* --- Optimized implementation for 2 reference pictures                 --- */
+/* ------------------------------------------------------------------------- */
+
+static gboolean
+dpb2_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
+{
+    GstVaapiPicture *ref_picture;
+    gint index = -1;
+
+    g_return_val_if_fail(GST_VAAPI_IS_DPB(dpb), FALSE);
+    g_return_val_if_fail(dpb->max_pictures == 2, FALSE);
+
+    /*
+     * Purpose: only store reference decoded pictures into the DPB
+     *
+     * This means:
+     * - non-reference decoded pictures are output immediately
+     * - ... thus causing older reference pictures to be output, if not already
+     * - the oldest reference picture is replaced with the new reference picture
+     */
+    if (G_LIKELY(dpb->num_pictures == 2)) {
+        index = (dpb->pictures[0]->poc > dpb->pictures[1]->poc);
+        ref_picture = dpb->pictures[index];
+        if (!GST_VAAPI_PICTURE_IS_OUTPUT(ref_picture)) {
+            if (!dpb_output(dpb, ref_picture))
+                return FALSE;
+        }
+    }
+
+    if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture))
+        return dpb_output(dpb, picture);
+
+    if (index < 0)
+        index = dpb->num_pictures++;
+    gst_vaapi_picture_replace(&dpb->pictures[index], picture);
+    return TRUE;
+}
+
+static void
+dpb2_get_neighbours(GstVaapiDpb *dpb, GstVaapiPicture *picture,
+    GstVaapiPicture **prev_picture_ptr, GstVaapiPicture **next_picture_ptr)
+{
+    GstVaapiPicture *ref_picture, *ref_pictures[2];
+    GstVaapiPicture **picture_ptr;
+    guint i, index;
+
+    g_return_if_fail(GST_VAAPI_IS_DPB(dpb));
+    g_return_if_fail(dpb->max_pictures == 2);
+    g_return_if_fail(GST_VAAPI_IS_PICTURE(picture));
+
+    ref_pictures[0] = NULL;
+    ref_pictures[1] = NULL;
+    for (i = 0; i < dpb->num_pictures; i++) {
+        ref_picture = dpb->pictures[i];
+        index       = ref_picture->poc > picture->poc;
+        picture_ptr = &ref_pictures[index];
+        if (!*picture_ptr || ((*picture_ptr)->poc > ref_picture->poc) == index)
+            *picture_ptr = ref_picture;
+    }
+
+    if (prev_picture_ptr)
+        *prev_picture_ptr = ref_pictures[0];
+    if (next_picture_ptr)
+        *next_picture_ptr = ref_pictures[1];
+}
+
+/* ------------------------------------------------------------------------- */
+/* --- Interface                                                         --- */
+/* ------------------------------------------------------------------------- */
+
 static void
 gst_vaapi_dpb_finalize(GstVaapiDpb *dpb)
 {
-    if (dpb->pictures) {
-        dpb_clear(dpb);
-        g_free(dpb->pictures);
-    }
+    dpb_clear(dpb);
+    g_free(dpb->pictures);
 }
 
 static const GstVaapiMiniObjectClass *
@@ -277,11 +340,25 @@ gst_vaapi_dpb_class(void)
         { sizeof(GstVaapiDpb),
           (GDestroyNotify)gst_vaapi_dpb_finalize },
 
-        gst_vaapi_dpb_base_flush,
-        gst_vaapi_dpb_base_add,
-        gst_vaapi_dpb_base_get_neighbours
+        dpb_flush,
+        dpb_add,
+        dpb_get_neighbours
     };
     return &GstVaapiDpbClass.parent_class;
+}
+
+static const GstVaapiMiniObjectClass *
+gst_vaapi_dpb2_class(void)
+{
+    static const GstVaapiDpbClass GstVaapiDpb2Class = {
+        { sizeof(GstVaapiDpb),
+          (GDestroyNotify)gst_vaapi_dpb_finalize },
+
+        dpb_flush,
+        dpb2_add,
+        dpb2_get_neighbours
+    };
+    return &GstVaapiDpb2Class.parent_class;
 }
 
 GstVaapiDpb *
@@ -326,12 +403,8 @@ gst_vaapi_dpb_size(GstVaapiDpb *dpb)
 }
 
 void
-gst_vaapi_dpb_get_neighbours(
-    GstVaapiDpb        *dpb,
-    GstVaapiPicture    *picture,
-    GstVaapiPicture   **prev_picture_ptr,
-    GstVaapiPicture   **next_picture_ptr
-)
+gst_vaapi_dpb_get_neighbours(GstVaapiDpb *dpb, GstVaapiPicture *picture,
+    GstVaapiPicture **prev_picture_ptr, GstVaapiPicture **next_picture_ptr)
 {
     const GstVaapiDpbClass *klass;
 
@@ -342,97 +415,4 @@ gst_vaapi_dpb_get_neighbours(
     if (G_UNLIKELY(!klass || !klass->get_neighbours))
         return;
     klass->get_neighbours(dpb, picture, prev_picture_ptr, next_picture_ptr);
-}
-
-/* ------------------------------------------------------------------------- */
-/* --- Decoded Picture Buffer (optimized for 2 reference pictures)       --- */
-/* ------------------------------------------------------------------------- */
-
-static void
-gst_vaapi_dpb2_get_neighbours(
-    GstVaapiDpb        *dpb,
-    GstVaapiPicture    *picture,
-    GstVaapiPicture   **prev_picture_ptr,
-    GstVaapiPicture   **next_picture_ptr
-);
-
-static gboolean
-gst_vaapi_dpb2_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
-{
-    GstVaapiPicture *ref_picture;
-    gint index = -1;
-
-    g_return_val_if_fail(GST_VAAPI_IS_DPB(dpb), FALSE);
-    g_return_val_if_fail(dpb->max_pictures == 2, FALSE);
-
-    /*
-     * Purpose: only store reference decoded pictures into the DPB
-     *
-     * This means:
-     * - non-reference decoded pictures are output immediately
-     * - ... thus causing older reference pictures to be output, if not already
-     * - the oldest reference picture is replaced with the new reference picture
-     */
-    if (G_LIKELY(dpb->num_pictures == 2)) {
-        index = (dpb->pictures[0]->poc > dpb->pictures[1]->poc);
-        ref_picture = dpb->pictures[index];
-        if (!GST_VAAPI_PICTURE_IS_OUTPUT(ref_picture)) {
-            if (!dpb_output(dpb, ref_picture))
-                return FALSE;
-        }
-    }
-
-    if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture))
-        return dpb_output(dpb, picture);
-
-    if (index < 0)
-        index = dpb->num_pictures++;
-    gst_vaapi_picture_replace(&dpb->pictures[index], picture);
-    return TRUE;
-}
-
-static const GstVaapiMiniObjectClass *
-gst_vaapi_dpb2_class(void)
-{
-    static const GstVaapiDpbClass GstVaapiDpb2Class = {
-        { sizeof(GstVaapiDpb),
-          (GDestroyNotify)gst_vaapi_dpb_finalize },
-
-        gst_vaapi_dpb_base_flush,
-        gst_vaapi_dpb2_add,
-        gst_vaapi_dpb2_get_neighbours
-    };
-    return &GstVaapiDpb2Class.parent_class;
-}
-
-void
-gst_vaapi_dpb2_get_neighbours(
-    GstVaapiDpb        *dpb,
-    GstVaapiPicture    *picture,
-    GstVaapiPicture   **prev_picture_ptr,
-    GstVaapiPicture   **next_picture_ptr
-)
-{
-    GstVaapiPicture *ref_picture, *ref_pictures[2];
-    GstVaapiPicture **picture_ptr;
-    guint i, index;
-
-    g_return_if_fail(GST_VAAPI_IS_DPB(dpb));
-    g_return_if_fail(dpb->max_pictures == 2);
-    g_return_if_fail(GST_VAAPI_IS_PICTURE(picture));
-
-    ref_pictures[0] = NULL;
-    ref_pictures[1] = NULL;
-    for (i = 0; i < dpb->num_pictures; i++) {
-        ref_picture = dpb->pictures[i];
-        index       = ref_picture->poc > picture->poc;
-        picture_ptr = &ref_pictures[index];
-        if (!*picture_ptr || ((*picture_ptr)->poc > ref_picture->poc) == index)
-            *picture_ptr = ref_picture;
-    }
-
-    if (prev_picture_ptr)
-        *prev_picture_ptr = ref_pictures[0];
-    if (next_picture_ptr)
-        *next_picture_ptr = ref_pictures[1];
 }
