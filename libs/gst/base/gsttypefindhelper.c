@@ -176,7 +176,12 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   }
 
   bmap = g_slice_new0 (GstMappedBuffer);
+
+  if (!gst_buffer_map (buffer, &bmap->map, GST_MAP_READ))
+    goto map_failed;
+
   bmap->buffer = buffer;
+
   if (insert_pos) {
     helper->buffers = g_slist_insert_before (helper->buffers, insert_pos, bmap);
   } else {
@@ -187,13 +192,18 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
     helper->buffers = g_slist_prepend (helper->buffers, bmap);
   }
 
-  gst_buffer_map (buffer, &bmap->map, GST_MAP_READ);
-
   return bmap->map.data;
 
 error:
   {
     GST_INFO ("typefind function returned: %s", gst_flow_get_name (ret));
+    return NULL;
+  }
+map_failed:
+  {
+    GST_ERROR ("map failed");
+    gst_buffer_unref (buffer);
+    g_slice_free (GstMappedBuffer, bmap);
     return NULL;
   }
 }
