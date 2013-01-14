@@ -358,8 +358,8 @@ G_BEGIN_DECLS
  * @GST_TAG_IMAGE_TYPE_BAND_ARTIST_LOGO      : Band/artist logotype
  * @GST_TAG_IMAGE_TYPE_PUBLISHER_STUDIO_LOGO : Publisher/studio logotype
  *
- * Type of image contained in an image tag (specified as field in
- * the image buffer's caps structure)
+ * Type of image contained in an image tag (specified as "image-type" field in
+ * the info structure in the image's #GstSample)
  */
 /* Note: keep in sync with register_tag_image_type_enum() */
 typedef enum {
