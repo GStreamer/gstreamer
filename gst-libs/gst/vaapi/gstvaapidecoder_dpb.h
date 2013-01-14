@@ -30,70 +30,14 @@ typedef struct _GstVaapiDpb             GstVaapiDpb;
 typedef struct _GstVaapiDpbClass        GstVaapiDpbClass;
 
 /* ------------------------------------------------------------------------- */
-/* --- Base Decoded Picture Buffer                                       --- */
+/* --- Decoded Picture Buffer                                            --- */
 /* ------------------------------------------------------------------------- */
 
-#define GST_VAAPI_TYPE_DPB \
-    (gst_vaapi_dpb_get_type())
-
-#define GST_VAAPI_DPB_CAST(obj) \
+#define GST_VAAPI_DPB(obj) \
     ((GstVaapiDpb *)(obj))
 
-#define GST_VAAPI_DPB(obj)                              \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_VAAPI_TYPE_DPB,     \
-                                GstVaapiDpb))
-
-#define GST_VAAPI_DPB_CLASS(klass)                      \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_VAAPI_TYPE_DPB,        \
-                             GstVaapiDpbClass))
-
 #define GST_VAAPI_IS_DPB(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_DPB))
-
-#define GST_VAAPI_IS_DPB_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_DPB))
-
-#define GST_VAAPI_DPB_GET_CLASS(obj)                    \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_VAAPI_TYPE_DPB,      \
-                               GstVaapiDpbClass))
-
-/**
- * GstVaapiDpb:
- *
- * A decoded picture buffer (DPB) object.
- */
-struct _GstVaapiDpb {
-    /*< private >*/
-    GstMiniObject       parent_instance;
-
-    /*< protected >*/
-    GstVaapiPicture   **pictures;
-    guint               num_pictures;
-    guint               max_pictures;
-};
-
-/**
- * GstVaapiDpbClass:
- *
- * The #GstVaapiDpb base class.
- */
-struct _GstVaapiDpbClass {
-    /*< private >*/
-    GstMiniObjectClass  parent_class;
-
-    /*< protected >*/
-    void      (*flush)          (GstVaapiDpb *dpb);
-    gboolean  (*add)            (GstVaapiDpb *dpb, GstVaapiPicture *picture);
-    void      (*get_neighbours) (GstVaapiDpb *dpb, GstVaapiPicture *picture,
-        GstVaapiPicture **prev_picture_ptr, GstVaapiPicture **next_picture_ptr);
-};
-
-G_GNUC_INTERNAL
-GType
-gst_vaapi_dpb_get_type(void) G_GNUC_CONST;
+    (GST_VAAPI_DPB(obj) != NULL)
 
 G_GNUC_INTERNAL
 GstVaapiDpb *
@@ -120,17 +64,15 @@ gst_vaapi_dpb_get_neighbours(
     GstVaapiPicture   **next_picture_ptr
 );
 
-static inline gpointer
-gst_vaapi_dpb_ref(gpointer ptr)
-{
-    return gst_mini_object_ref(GST_MINI_OBJECT(ptr));
-}
+#define gst_vaapi_dpb_ref(dpb) \
+    gst_vaapi_mini_object_ref(GST_VAAPI_MINI_OBJECT(dpb))
 
-static inline void
-gst_vaapi_dpb_unref(gpointer ptr)
-{
-    gst_mini_object_unref(GST_MINI_OBJECT(ptr));
-}
+#define gst_vaapi_dpb_unref(dpb) \
+    gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(dpb))
+
+#define gst_vaapi_dpb_replace(old_dpb_ptr, new_dpb) \
+    gst_vaapi_mini_object_replace((GstVaapiMiniObject **)(old_dpb_ptr), \
+        (GstVaapiMiniObject *)(new_dpb))
 
 G_END_DECLS
 

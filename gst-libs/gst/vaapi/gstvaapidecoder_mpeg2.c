@@ -373,10 +373,7 @@ gst_vaapi_decoder_mpeg2_close(GstVaapiDecoderMpeg2 *decoder)
     gst_vaapi_parser_info_mpeg2_replace(&priv->quant_matrix, NULL);
     gst_vaapi_parser_info_mpeg2_replace(&priv->slice_hdr, NULL);
 
-    if (priv->dpb) {
-        gst_vaapi_dpb_unref(priv->dpb);
-        priv->dpb = NULL;
-    }
+    gst_vaapi_dpb_replace(&priv->dpb, NULL);
 }
 
 static gboolean

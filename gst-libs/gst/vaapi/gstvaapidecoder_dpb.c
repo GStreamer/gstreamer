@@ -25,38 +25,78 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_GNUC_INTERNAL
-GType
-gst_vaapi_dpb2_get_type(void) G_GNUC_CONST;
+#define GST_VAAPI_DPB_CLASS(klass) \
+    ((GstVaapiDpbClass *)(klass))
 
-#define GST_VAAPI_TYPE_DPB2 \
-    (gst_vaapi_dpb2_get_type())
+#define GST_VAAPI_DPB_GET_CLASS(obj) \
+    GST_VAAPI_DPB_CLASS(gst_vaapi_mini_object_get_class( \
+                            GST_VAAPI_MINI_OBJECT(obj)))
+
+/**
+ * GstVaapiDpb:
+ *
+ * A decoded picture buffer (DPB) object.
+ */
+struct _GstVaapiDpb {
+    /*< private >*/
+    GstVaapiMiniObject   parent_instance;
+
+    /*< protected >*/
+    GstVaapiPicture   **pictures;
+    guint               num_pictures;
+    guint               max_pictures;
+};
+
+/**
+ * GstVaapiDpbClass:
+ *
+ * The #GstVaapiDpb base class.
+ */
+struct _GstVaapiDpbClass {
+    /*< private >*/
+    GstVaapiMiniObjectClass parent_class;
+
+    /*< protected >*/
+    void      (*flush)          (GstVaapiDpb *dpb);
+    gboolean  (*add)            (GstVaapiDpb *dpb, GstVaapiPicture *picture);
+    void      (*get_neighbours) (GstVaapiDpb *dpb, GstVaapiPicture *picture,
+        GstVaapiPicture **prev_picture_ptr, GstVaapiPicture **next_picture_ptr);
+};
+
+static const GstVaapiMiniObjectClass *
+gst_vaapi_dpb_class(void);
+
+static const GstVaapiMiniObjectClass *
+gst_vaapi_dpb2_class(void);
 
 /* ------------------------------------------------------------------------- */
 /* --- Common Decoded Picture Buffer utilities                           --- */
 /* ------------------------------------------------------------------------- */
 
 static GstVaapiDpb *
-dpb_new(GType type, guint max_pictures)
+dpb_new(guint max_pictures)
 {
-    GstMiniObject *obj;
+    const GstVaapiMiniObjectClass *klass;
     GstVaapiDpb *dpb;
 
     g_return_val_if_fail(max_pictures > 0, NULL);
 
-    obj = gst_mini_object_new(type);
-    if (!obj)
+    klass = max_pictures == 2 ? gst_vaapi_dpb2_class() : gst_vaapi_dpb_class();
+
+    dpb = (GstVaapiDpb *)gst_vaapi_mini_object_new(klass);
+    if (!dpb)
         return NULL;
 
-    dpb = GST_VAAPI_DPB_CAST(obj);
+    dpb->num_pictures = 0;
+    dpb->max_pictures = max_pictures;
+
     dpb->pictures = g_new0(GstVaapiPicture *, max_pictures);
     if (!dpb->pictures)
         goto error;
-    dpb->max_pictures = max_pictures;
     return dpb;
 
 error:
-    gst_mini_object_unref(obj);
+    gst_vaapi_dpb_unref(dpb);
     return NULL;
 }
 
@@ -129,8 +169,6 @@ dpb_clear(GstVaapiDpb *dpb)
 /* ------------------------------------------------------------------------- */
 /* --- Base Decoded Picture Buffer                                       --- */
 /* ------------------------------------------------------------------------- */
-
-G_DEFINE_TYPE(GstVaapiDpb, gst_vaapi_dpb, GST_TYPE_MINI_OBJECT)
 
 static void
 gst_vaapi_dpb_base_flush(GstVaapiDpb *dpb)
@@ -224,52 +262,38 @@ gst_vaapi_dpb_base_get_neighbours(
 }
 
 static void
-gst_vaapi_dpb_finalize(GstMiniObject *object)
+gst_vaapi_dpb_finalize(GstVaapiDpb *dpb)
 {
-    GstVaapiDpb * const dpb = GST_VAAPI_DPB_CAST(object);
-    GstMiniObjectClass *parent_class;
-
     if (dpb->pictures) {
         dpb_clear(dpb);
         g_free(dpb->pictures);
     }
-
-    parent_class = GST_MINI_OBJECT_CLASS(gst_vaapi_dpb_parent_class);
-    if (parent_class->finalize)
-        parent_class->finalize(object);
 }
 
-static void
-gst_vaapi_dpb_init(GstVaapiDpb *dpb)
+static const GstVaapiMiniObjectClass *
+gst_vaapi_dpb_class(void)
 {
-    dpb->pictures     = NULL;
-    dpb->num_pictures = 0;
-    dpb->max_pictures = 0;
-}
+    static const GstVaapiDpbClass GstVaapiDpbClass = {
+        { sizeof(GstVaapiDpb),
+          (GDestroyNotify)gst_vaapi_dpb_finalize },
 
-static void
-gst_vaapi_dpb_class_init(GstVaapiDpbClass *klass)
-{
-    GstMiniObjectClass * const object_class = GST_MINI_OBJECT_CLASS(klass);
-
-    object_class->finalize = gst_vaapi_dpb_finalize;
-    klass->flush           = gst_vaapi_dpb_base_flush;
-    klass->add             = gst_vaapi_dpb_base_add;
-    klass->get_neighbours  = gst_vaapi_dpb_base_get_neighbours;
+        gst_vaapi_dpb_base_flush,
+        gst_vaapi_dpb_base_add,
+        gst_vaapi_dpb_base_get_neighbours
+    };
+    return &GstVaapiDpbClass.parent_class;
 }
 
 GstVaapiDpb *
 gst_vaapi_dpb_new(guint max_pictures)
 {
-    if (G_LIKELY(max_pictures == 2))
-        return dpb_new(GST_VAAPI_TYPE_DPB2, max_pictures);
-    return dpb_new(GST_VAAPI_TYPE_DPB, max_pictures);
+    return dpb_new(max_pictures);
 }
 
 void
 gst_vaapi_dpb_flush(GstVaapiDpb *dpb)
 {
-    GstVaapiDpbClass *klass;
+    const GstVaapiDpbClass *klass;
 
     g_return_if_fail(GST_VAAPI_IS_DPB(dpb));
 
@@ -282,7 +306,7 @@ gst_vaapi_dpb_flush(GstVaapiDpb *dpb)
 gboolean
 gst_vaapi_dpb_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
 {
-    GstVaapiDpbClass *klass;
+    const GstVaapiDpbClass *klass;
 
     g_return_val_if_fail(GST_VAAPI_IS_DPB(dpb), FALSE);
     g_return_val_if_fail(GST_VAAPI_IS_PICTURE(picture), FALSE);
@@ -309,7 +333,7 @@ gst_vaapi_dpb_get_neighbours(
     GstVaapiPicture   **next_picture_ptr
 )
 {
-    GstVaapiDpbClass *klass;
+    const GstVaapiDpbClass *klass;
 
     g_return_if_fail(GST_VAAPI_IS_DPB(dpb));
     g_return_if_fail(GST_VAAPI_IS_PICTURE(picture));
@@ -323,55 +347,6 @@ gst_vaapi_dpb_get_neighbours(
 /* ------------------------------------------------------------------------- */
 /* --- Decoded Picture Buffer (optimized for 2 reference pictures)       --- */
 /* ------------------------------------------------------------------------- */
-
-typedef struct _GstVaapiDpb2            GstVaapiDpb2;
-typedef struct _GstVaapiDpb2Class       GstVaapiDpb2Class;
-
-#define GST_VAAPI_DPB2_CAST(obj) \
-    ((GstVaapiDpb2 *)(obj))
-
-#define GST_VAAPI_DPB2(obj)                             \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_VAAPI_TYPE_DPB2,    \
-                                GstVaapiDpb2))
-
-#define GST_VAAPI_DPB2_CLASS(klass)                     \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_VAAPI_TYPE_DPB2,       \
-                             GstVaapiDpb2Class))
-
-#define GST_VAAPI_IS_DPB2(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_DPB2))
-
-#define GST_VAAPI_IS_DPB2_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_DPB2))
-
-#define GST_VAAPI_DPB2_GET_CLASS(obj)                   \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_VAAPI_TYPE_DPB2,     \
-                               GstVaapiDpb2Class))
-
-/**
- * GstVaapiDpb2:
- *
- * A decoded picture buffer (DPB2) object.
- */
-struct _GstVaapiDpb2 {
-    /*< private >*/
-    GstVaapiDpb         parent_instance;
-};
-
-/**
- * GstVaapiDpb2Class:
- *
- * The #GstVaapiDpb2 base class.
- */
-struct _GstVaapiDpb2Class {
-    /*< private >*/
-    GstVaapiDpbClass    parent_class;
-};
-
-G_DEFINE_TYPE(GstVaapiDpb2, gst_vaapi_dpb2, GST_VAAPI_TYPE_DPB)
 
 static void
 gst_vaapi_dpb2_get_neighbours(
@@ -416,18 +391,18 @@ gst_vaapi_dpb2_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
     return TRUE;
 }
 
-static void
-gst_vaapi_dpb2_init(GstVaapiDpb2 *dpb)
+static const GstVaapiMiniObjectClass *
+gst_vaapi_dpb2_class(void)
 {
-}
+    static const GstVaapiDpbClass GstVaapiDpb2Class = {
+        { sizeof(GstVaapiDpb),
+          (GDestroyNotify)gst_vaapi_dpb_finalize },
 
-static void
-gst_vaapi_dpb2_class_init(GstVaapiDpb2Class *klass)
-{
-    GstVaapiDpbClass * const dpb_class = GST_VAAPI_DPB_CLASS(klass);
-
-    dpb_class->add = gst_vaapi_dpb2_add;
-    dpb_class->get_neighbours = gst_vaapi_dpb2_get_neighbours;
+        gst_vaapi_dpb_base_flush,
+        gst_vaapi_dpb2_add,
+        gst_vaapi_dpb2_get_neighbours
+    };
+    return &GstVaapiDpb2Class.parent_class;
 }
 
 void
