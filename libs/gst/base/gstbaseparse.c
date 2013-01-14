@@ -88,8 +88,8 @@
  *       data is available.  In push mode this amounts to an
  *       additional input buffer (thus minimal additional latency), in pull mode
  *       this amounts to some arbitrary reasonable buffer size increase.
- *       Of course, gst_base_parse_set_min_size() could also be used if a very
- *       specific known amount of additional data is required.
+ *       Of course, gst_base_parse_set_min_frame_size() could also be used if a
+ *       very specific known amount of additional data is required.
  *       If, however, the buffer holds a complete valid frame, it can pass
  *       the size of this frame to gst_base_parse_finish_frame().
  *       If acting as a converter, it can also merely indicate consumed input data
