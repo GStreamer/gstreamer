@@ -1,6 +1,6 @@
-plugin_LTLIBRARIES = libgstopenmax.la
+plugin_LTLIBRARIES = libgstomx.la
 
-libgstopenmax_la_SOURCES = \
+libgstomx_la_SOURCES = \
 	gstomx.c \
 	gstomxvideodec.c \
 	gstomxvideoenc.c \
@@ -28,33 +28,33 @@ noinst_HEADERS = \
 	gstomxh263enc.h \
 	gstomxaacenc.h
 
-libgstopenmax_la_CFLAGS = \
+libgstomx_la_CFLAGS = \
 	-DGST_USE_UNSTABLE_API=1 \
 	-I$(abs_srcdir)/openmax \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS)
-libgstopenmax_la_LIBADD = \
+libgstomx_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstaudio-@GST_API_VERSION@ \
 	-lgstpbutils-@GST_API_VERSION@ \
 	-lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
-libgstopenmax_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstomx_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 EXTRA_DIST = openmax gstomx.conf
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
-	-:PROJECT libgstopenmax -:SHARED libgstopenmax \
+	-:PROJECT libgstomx -:SHARED libgstomx \
 	 -:TAGS eng debug \
          -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstopenmax_la_SOURCES) \
-	           $(nodist_libgstopenmax_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstopenmax_la_CFLAGS) \
-	 -:LDFLAGS $(libgstopenmax_la_LDFLAGS) \
-	           $(libgstopenmax_la_LIBADD) \
+	 -:SOURCES $(libgstomx_la_SOURCES) \
+	           $(nodist_libgstomx_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstomx_la_CFLAGS) \
+	 -:LDFLAGS $(libgstomx_la_LDFLAGS) \
+	           $(libgstomx_la_LIBADD) \
 	           -ldl \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
 		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-$(GST_API_VERSION)' \
