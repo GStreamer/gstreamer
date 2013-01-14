@@ -1044,7 +1044,9 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
     gst_buffer_unmap (buf, &info);
     buf = g->data;
 
-    gst_buffer_map (buf, &info, GST_MAP_READ);
+    if (!gst_buffer_map (buf, &info, GST_MAP_READ))
+      return -1;
+
     bsize = info.size;
     bdata = info.data;
   } while (TRUE);
