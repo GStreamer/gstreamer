@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include <gst/base/gstdataqueue.h>
 #include "gstmssmanifest.h"
 #include "gsturidownloader.h"
 
@@ -58,13 +59,15 @@ struct _GstMssDemuxStream {
   GstMssStream *manifest_stream;
 
   GstUriDownloader *downloader;
+  GstDataQueue *dataqueue;
 
   GstEvent *pending_newsegment;
 
-  /* Streaming task */
-  GstTask *stream_task;
-  GStaticRecMutex stream_lock;
+  /* Downloading task */
+  GstTask *download_task;
+  GStaticRecMutex download_lock;
 
+  gboolean eos;
 };
 
 struct _GstMssDemux {
@@ -84,8 +87,13 @@ struct _GstMssDemux {
 
   gboolean update_bitrates;
 
+  /* Streaming task */
+  GstTask *stream_task;
+  GStaticRecMutex stream_lock;
+
   /* properties */
   guint64 connection_speed; /* in bps */
+  guint data_queue_max_size;
 };
 
 struct _GstMssDemuxClass {
