@@ -2376,7 +2376,9 @@ again:
     GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, src, "create function didn't "
         "fill the provided buffer, copying");
 
-    gst_buffer_map (in_buf, &info, GST_MAP_WRITE);
+    if (!gst_buffer_map (in_buf, &info, GST_MAP_WRITE))
+      goto map_failed;
+
     copied_size = gst_buffer_extract (res_buf, 0, info.data, info.size);
     gst_buffer_unmap (in_buf, &info);
     gst_buffer_set_size (in_buf, copied_size);
@@ -2459,6 +2461,15 @@ not_ok:
     GST_DEBUG_OBJECT (src, "create returned %d (%s)", ret,
         gst_flow_get_name (ret));
     return ret;
+  }
+map_failed:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, BUSY,
+        (_("Failed to map buffer.")),
+        ("failed to map result buffer in WRITE mode"));
+    if (*buf == NULL)
+      gst_buffer_unref (res_buf);
+    return GST_FLOW_ERROR;
   }
 not_started:
   {
