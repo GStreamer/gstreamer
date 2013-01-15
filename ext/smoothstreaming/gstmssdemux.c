@@ -780,6 +780,7 @@ gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
   gst_mss_demux_stop_tasks (mssdemux, TRUE);
   if (gst_mss_manifest_change_bitrate (mssdemux->manifest,
           mssdemux->connection_speed)) {
+    GstClockTime newseg_ts = GST_CLOCK_TIME_NONE;
 
     GST_DEBUG_OBJECT (mssdemux, "Creating new pad group");
     /* if we changed the bitrate, we need to add new pads */
@@ -819,6 +820,9 @@ gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
             (stream->manifest_stream);
       }
 
+      if (ts < newseg_ts)
+        newseg_ts = ts;
+
       GST_DEBUG_OBJECT (mssdemux,
           "Seeking stream %p %s to ts %" GST_TIME_FORMAT, stream,
           GST_PAD_NAME (stream->pad), GST_TIME_ARGS (ts));
@@ -839,6 +843,13 @@ gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
       gst_pad_set_active (oldpad, FALSE);
       gst_element_remove_pad (GST_ELEMENT (mssdemux), oldpad);
       gst_object_unref (oldpad);
+    }
+    for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
+      GstMssDemuxStream *stream = iter->data;
+
+      stream->pending_newsegment =
+          gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, newseg_ts, -1,
+          newseg_ts);
     }
   }
   gst_mss_demux_restart_tasks (mssdemux);
