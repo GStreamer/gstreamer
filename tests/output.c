@@ -72,6 +72,7 @@ static const VideoOutputInfo g_video_outputs[] = {
 
 static gchar *g_output_name;
 static gboolean g_list_outputs = FALSE;
+static gboolean g_fullscreen = FALSE;
 
 static GOptionEntry g_options[] = {
     { "list-outputs", 0,
@@ -82,6 +83,10 @@ static GOptionEntry g_options[] = {
       0,
       G_OPTION_ARG_STRING, &g_output_name,
       "video output name", NULL },
+    { "fullscreen", 'f',
+      0,
+      G_OPTION_ARG_NONE, &g_fullscreen,
+      "fullscreen mode", NULL },
     { NULL, }
 };
 
@@ -181,7 +186,17 @@ video_output_create_display(const gchar *display_name)
 GstVaapiWindow *
 video_output_create_window(GstVaapiDisplay *display, guint width, guint height)
 {
+    GstVaapiWindow *window;
+
     if (!g_video_output)
         return NULL;
-    return g_video_output->create_window(display, width, height);
+
+    window = g_video_output->create_window(display, width, height);
+    if (!window)
+        return NULL;
+
+    /* Force fullscreen mode, should this be requested by the user */
+    if (g_fullscreen)
+        gst_vaapi_window_set_fullscreen(window, TRUE);
+    return window;
 }
