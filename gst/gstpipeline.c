@@ -290,7 +290,7 @@ reset_start_time (GstPipeline * pipeline, GstClockTime start_time)
 
 /**
  * gst_pipeline_new:
- * @name: name of new pipeline
+ * @name: (allow-none): name of new pipeline
  *
  * Create a new pipeline with the given name.
  *
