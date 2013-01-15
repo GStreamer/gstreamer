@@ -23508,3 +23508,12 @@
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstRtpSBCPay::min-frames</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>minimum frame number</NICK>
+<BLURB>Minimum quantity of frames to send in one packet (-1 for maximum allowed by the mtu).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>

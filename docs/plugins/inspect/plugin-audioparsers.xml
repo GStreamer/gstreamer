@@ -136,6 +136,27 @@
       </pads>
     </element>
     <element>
+      <name>sbcparse</name>
+      <longname>SBC audio parser</longname>
+      <class>Codec/Parser/Audio</class>
+      <description>Parses an SBC bluetooth audio stream</description>
+      <author>Tim-Philipp Müller &lt;tim.muller@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-sbc</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-sbc, parsed=(boolean)true, channels=(int)[ 1, 2 ], rate=(int){ 16000, 32000, 44100, 48000 }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>wavpackparse</name>
       <longname>Wavpack audio stream parser</longname>
       <class>Codec/Parser/Audio</class>

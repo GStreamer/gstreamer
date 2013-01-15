@@ -1207,6 +1207,27 @@
       </pads>
     </element>
     <element>
+      <name>rtpsbcpay</name>
+      <longname>RTP packet payloader</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Payload SBC audio as RTP packets</description>
+      <author>Thiago Sousa Santos &lt;thiagoss@lcc.ufcg.edu.br&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-sbc, rate=(int){ 16000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ], mode=(string){ mono, dual, stereo, joint }, blocks=(int){ 4, 8, 12, 16 }, subbands=(int){ 4, 8 }, allocation=(string){ snr, loudness }, bitpool=(int)[ 2, 64 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int){ 16000, 32000, 44100, 48000 }, encoding-name=(string)SBC</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>rtpsirendepay</name>
       <longname>RTP Siren packet depayloader</longname>
       <class>Codec/Depayloader/Network/RTP</class>

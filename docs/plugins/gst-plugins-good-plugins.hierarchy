@@ -38,6 +38,7 @@ GObject
           GstDcaParse
           GstFlacParse
           GstMpegAudioParse
+          GstSbcParse
           GstWavpackParse
         GstBaseSink
           GstAudioBaseSink
@@ -238,6 +239,7 @@ GObject
           GstRtpMP4GPay
           GstRtpMP4VPay
           GstRtpMPAPay
+          GstRtpSBCPay
           GstRtpSPEEXPay
           GstRtpTheoraPay
           GstRtpVP8Pay

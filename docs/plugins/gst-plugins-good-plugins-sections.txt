@@ -1602,6 +1602,20 @@ gst_rtp_jpeg_pay_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-rtpsbcpay</FILE>
+<TITLE>rtpsbcpay</TITLE>
+GstRtpSBCPay
+<SUBSECTION Standard>
+GstRtpSBCPayClass
+GST_RTP_SBC_PAY
+GST_RTP_SBC_PAY_CLASS
+GST_IS_RTP_SBC_PAY
+GST_IS_RTP_SBC_PAY_CLASS
+GST_TYPE_RTP_SBC_PAY
+gst_rtp_sbc_pay_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-rtspsrc</FILE>
 <TITLE>rtspsrc</TITLE>
 GstRTSPSrc
@@ -1625,6 +1639,20 @@ GST_RTSP_STREAM_GET_LOCK
 GST_RTSP_STREAM_LOCK
 GST_RTSP_STREAM_UNLOCK
 gst_rtspsrc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-sbcparse</FILE>
+<TITLE>sbcparse</TITLE>
+GstSbcParse
+<SUBSECTION Standard>
+GstSbcParseClass
+GST_SBC_PARSE
+GST_SBC_PARSE_CLASS
+GST_IS_SBC_PARSE
+GST_IS_SBC_PARSE_CLASS
+GST_TYPE_SBC_PARSE
+gst_sbc_parse_get_type
 </SECTION>
 
 <SECTION>
