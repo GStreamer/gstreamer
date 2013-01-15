@@ -264,8 +264,11 @@ decode_step(GstVaapiDecoder *decoder)
     GstVaapiParserState * const ps = &priv->parser_state;
     GstVaapiDecoderStatus status;
     GstBuffer *buffer;
-    gboolean got_frame, at_eos = FALSE;
+    gboolean got_frame;
     guint got_unit_size;
+
+    if (G_UNLIKELY(ps->at_eos))
+        return GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
 
     status = gst_vaapi_decoder_check_status(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
@@ -279,8 +282,8 @@ decode_step(GstVaapiDecoder *decoder)
         if (!buffer)
             return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
-        at_eos = GST_BUFFER_IS_EOS(buffer);
-        if (!at_eos)
+        ps->at_eos = GST_BUFFER_IS_EOS(buffer);
+        if (!ps->at_eos)
             gst_adapter_push(ps->input_adapter, buffer);
 
         do {
@@ -293,7 +296,7 @@ decode_step(GstVaapiDecoder *decoder)
 
         parse:
             status = do_parse(decoder, ps->current_frame,
-                ps->input_adapter, at_eos, &got_unit_size, &got_frame);
+                ps->input_adapter, ps->at_eos, &got_unit_size, &got_frame);
             GST_DEBUG("parse frame (status = %d)", status);
             if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
                 break;

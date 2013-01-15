@@ -153,7 +153,8 @@ struct _GstVaapiParserState {
     gint                input_offset2;
     GstAdapter         *output_adapter;
     GstVaapiDecoderUnit next_unit;
-    gboolean            next_unit_pending;
+    guint               next_unit_pending       : 1;
+    guint               at_eos                  : 1;
 };
 
 struct _GstVaapiDecoderPrivate {
