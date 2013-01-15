@@ -61,28 +61,7 @@ ges_timeline_new_audio_video (void)
 
 /* Internal utilities */
 gint
-track_object_start_compare (GESTrackObject * a, GESTrackObject * b)
-{
-  if (a->start == b->start) {
-    if (a->priority < b->priority)
-      return -1;
-    if (a->priority > b->priority)
-      return 1;
-    if (a->duration < b->duration)
-      return -1;
-    if (a->duration > b->duration)
-      return 1;
-    return 0;
-  }
-  if (a->start < b->start)
-    return -1;
-  if (a->start > b->start)
-    return 1;
-  return 0;
-}
-
-gint
-timeline_object_start_compare (GESTimelineObject * a, GESTimelineObject * b)
+element_start_compare (GESTimelineElement * a, GESTimelineElement * b)
 {
   if (a->start == b->start) {
     if (a->priority < b->priority)

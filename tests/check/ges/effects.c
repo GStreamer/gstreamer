@@ -17,6 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include "test-utils.h"
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
@@ -288,13 +289,11 @@ GST_START_TEST (test_priorities_tl_object)
   fail_unless (ges_timeline_object_set_top_effect_priority (GES_TIMELINE_OBJECT
           (tl_effect), GES_TRACK_EFFECT (tck_effect1), 0));
 
-  fail_unless (ges_track_object_get_priority (GES_TRACK_OBJECT (tck_effect)) ==
-      3);
+  fail_unless (_PRIORITY (tck_effect), 3);
 
   fail_unless (ges_timeline_object_set_top_effect_priority (GES_TIMELINE_OBJECT
           (tl_effect), GES_TRACK_EFFECT (tck_effect1), 3));
-  fail_unless (ges_track_object_get_priority (GES_TRACK_OBJECT (tck_effect)) ==
-      2);
+  fail_unless (_PRIORITY (tck_effect) == 2);
 
   g_object_get (tl_effect, "height", &tl_object_height, NULL);
   fail_unless (tl_object_height == 4);

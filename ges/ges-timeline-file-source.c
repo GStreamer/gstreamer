@@ -38,6 +38,8 @@
 
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
 
+#define parent_class ges_timeline_filesource_parent_class
+
 G_DEFINE_TYPE_WITH_CODE (GESTimelineFileSource, ges_timeline_filesource,
     GES_TYPE_TIMELINE_SOURCE,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
@@ -71,8 +73,9 @@ static GESTrackObject
 void ges_timeline_filesource_set_uri (GESTimelineFileSource * self,
     gchar * uri);
 
-static void
-filesource_set_max_duration (GESTimelineObject * object, guint64 maxduration);
+gboolean
+filesource_set_max_duration (GESTimelineElement * element,
+    GstClockTime maxduration);
 
 static void
 ges_timeline_filesource_get_property (GObject * object, guint property_id,
@@ -132,7 +135,7 @@ ges_timeline_filesource_finalize (GObject * object)
 
   if (priv->uri)
     g_free (priv->uri);
-  G_OBJECT_CLASS (ges_timeline_filesource_parent_class)->finalize (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -140,6 +143,7 @@ ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
+  GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTimelineFileSourcePrivate));
 
@@ -185,11 +189,12 @@ ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
           GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_UNKNOWN,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  element_class->set_max_duration = filesource_set_max_duration;
+
   timobj_class->create_track_objects =
       ges_timeline_filesource_create_track_objects;
   timobj_class->create_track_object =
       ges_timeline_filesource_create_track_object;
-  timobj_class->set_max_duration = filesource_set_max_duration;
   timobj_class->need_fill_track = FALSE;
 
 }
@@ -230,11 +235,11 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
   GESAssetFileSource *filesource_asset = GES_ASSET_FILESOURCE (asset);
   GESTimelineObject *tlobj = GES_TIMELINE_OBJECT (self);
 
-  if (GST_CLOCK_TIME_IS_VALID (tlobj->duration) == FALSE)
-    ges_timeline_object_set_duration (GES_TIMELINE_OBJECT (tfs),
+  if (GST_CLOCK_TIME_IS_VALID (GES_TIMELINE_ELEMENT (tlobj)) == FALSE)
+    _set_duration0 (GES_TIMELINE_ELEMENT (tfs),
         ges_asset_filesource_get_duration (filesource_asset));
 
-  ges_timeline_filesource_set_max_duration (tfs,
+  ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (tfs),
       ges_asset_filesource_get_duration (filesource_asset));
   ges_timeline_filesource_set_is_image (tfs,
       ges_asset_filesource_is_image (filesource_asset));
@@ -247,7 +252,7 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
         (GES_ASSET_TIMELINE_OBJECT (filesource_asset)));
   }
 
-  GES_TIMELINE_OBJECT (tfs)->asset = asset;
+  GES_TIMELINE_ELEMENT (tfs)->asset = asset;
 }
 
 static void
@@ -267,7 +272,7 @@ ges_timeline_filesource_init (GESTimelineFileSource * self)
       GES_TYPE_TIMELINE_FILE_SOURCE, GESTimelineFileSourcePrivate);
 
   /* Setting the duration to -1 by default. */
-  GES_TIMELINE_OBJECT (self)->duration = GST_CLOCK_TIME_NONE;
+  GES_TIMELINE_ELEMENT (self)->duration = GST_CLOCK_TIME_NONE;
 }
 
 /**
@@ -301,39 +306,17 @@ ges_timeline_filesource_set_mute (GESTimelineFileSource * self, gboolean mute)
   g_list_free (trackobjects);
 }
 
-/**
- * ges_timeline_filesource_set_max_duration:
- * @self: the #GESTimelineFileSource to set the maximum duration on
- * @maxduration: the maximum duration of @self
- *
- * Sets the maximum duration (in nanoseconds) of the file.
- *
- */
-void
-ges_timeline_filesource_set_max_duration (GESTimelineFileSource * self,
-    guint64 maxduration)
+gboolean
+filesource_set_max_duration (GESTimelineElement * element,
+    GstClockTime maxduration)
 {
-  ges_timeline_object_set_max_duration (GES_TIMELINE_OBJECT (self),
-      maxduration);
-}
-
-void
-filesource_set_max_duration (GESTimelineObject * object, guint64 maxduration)
-{
-  GList *tmp, *tckobjs;
-
-  if (object->duration == GST_CLOCK_TIME_NONE || object->duration == 0) {
+  if (_DURATION (element) == GST_CLOCK_TIME_NONE || _DURATION (element) == 0)
     /* If we don't have a valid duration, use the max duration */
-    g_object_set (object, "duration", maxduration - object->inpoint, NULL);
-  }
+    _set_duration0 (element, maxduration - _INPOINT (element));
 
-  tckobjs = ges_timeline_object_get_track_objects (object);
-  for (tmp = tckobjs; tmp; tmp = g_list_next (tmp)) {
-    ges_track_object_set_max_duration (GES_TRACK_OBJECT (tmp->data),
-        maxduration);
-  }
-
-  g_list_free_full (tckobjs, g_object_unref);
+  return
+      GES_TIMELINE_ELEMENT_CLASS (parent_class)->set_max_duration (element,
+      maxduration);
 }
 
 /**
@@ -362,20 +345,6 @@ gboolean
 ges_timeline_filesource_is_muted (GESTimelineFileSource * self)
 {
   return self->priv->mute;
-}
-
-/**
- * ges_timeline_filesource_get_max_duration:
- * @self: the #GESTimelineFileSource
- *
- * Get the duration of the object.
- *
- * Returns: The duration of @self.
- */
-guint64
-ges_timeline_filesource_get_max_duration (GESTimelineFileSource * self)
-{
-  return ges_timeline_object_get_max_duration (GES_TIMELINE_OBJECT (self));
 }
 
 /**
@@ -413,11 +382,11 @@ ges_timeline_filesource_create_track_objects (GESTimelineObject * obj,
   GList *res = NULL;
   const GList *tmp, *stream_assets;
 
-  g_return_val_if_fail (obj->asset, NULL);
+  g_return_val_if_fail (GES_TIMELINE_ELEMENT (obj)->asset, NULL);
 
   stream_assets =
       ges_asset_filesource_get_stream_assets (GES_ASSET_FILESOURCE
-      (obj->asset));
+      (GES_TIMELINE_ELEMENT (obj)->asset));
   for (tmp = stream_assets; tmp; tmp = tmp->next) {
     GESAssetTrackObject *asset = GES_ASSET_TRACK_OBJECT (tmp->data);
 

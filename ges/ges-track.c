@@ -192,8 +192,8 @@ update_gaps (GESTrack * track)
       g_sequence_iter_is_end (it) == FALSE; it = g_sequence_iter_next (it)) {
     tckobj = g_sequence_get (it);
 
-    start = GES_TRACK_OBJECT_START (tckobj);
-    end = start + GES_TRACK_OBJECT_DURATION (tckobj);
+    start = _START (tckobj);
+    end = start + _DURATION (tckobj);
 
     if (start > duration) {
       /* 3- Fill gap */
@@ -206,7 +206,7 @@ update_gaps (GESTrack * track)
     duration = MAX (duration, end);
   }
 
-  /* 4- Add a gap at the end of the timeline if needed */
+  /* 3- Add a gap at the end of the timeline if needed */
   if (priv->timeline) {
     g_object_get (priv->timeline, "duration", &timeline_duration, NULL);
 
@@ -227,7 +227,7 @@ static inline void
 resort_and_fill_gaps (GESTrack * track)
 {
   g_sequence_sort (track->priv->tckobjs_by_start,
-      (GCompareDataFunc) track_object_start_compare, NULL);
+      (GCompareDataFunc) element_start_compare, NULL);
 
   if (track->priv->updating == TRUE) {
     update_gaps (track);
@@ -749,7 +749,7 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
   g_object_ref_sink (object);
   g_hash_table_insert (track->priv->tckobjs_iter, object,
       g_sequence_insert_sorted (track->priv->tckobjs_by_start, object,
-          (GCompareDataFunc) track_object_start_compare, NULL));
+          (GCompareDataFunc) element_start_compare, NULL));
 
   g_signal_emit (track, ges_track_signals[TRACK_OBJECT_ADDED], 0,
       GES_TRACK_OBJECT (object));

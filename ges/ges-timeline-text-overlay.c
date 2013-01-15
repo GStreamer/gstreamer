@@ -245,7 +245,7 @@ ges_timeline_text_overlay_init (GESTimelineTextOverlay * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TIMELINE_TEXT_OVERLAY, GESTimelineTextOverlayPrivate);
 
-  GES_TIMELINE_OBJECT (self)->duration = 0;
+  GES_TIMELINE_ELEMENT (self)->duration = 0;
   /* Not 100% needed since gobject contents are memzero'd when created */
   self->priv->text = NULL;
   self->priv->font_desc = NULL;

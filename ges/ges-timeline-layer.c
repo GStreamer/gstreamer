@@ -218,7 +218,7 @@ static gboolean
 ges_timeline_layer_resync_priorities (GESTimelineLayer * layer)
 {
   GList *tmp;
-  GESTimelineObject *obj;
+  GESTimelineElement *obj;
 
   GST_DEBUG ("Resync priorities of %p", layer);
 
@@ -227,8 +227,8 @@ ges_timeline_layer_resync_priorities (GESTimelineLayer * layer)
    * do in the meantime. */
 
   for (tmp = layer->priv->objects_start; tmp; tmp = tmp->next) {
-    obj = GES_TIMELINE_OBJECT (tmp->data);
-    ges_timeline_object_set_priority (obj, GES_TIMELINE_OBJECT_PRIORITY (obj));
+    obj = GES_TIMELINE_ELEMENT (tmp->data);
+    _set_priority0 (obj, _PRIORITY (obj));
   }
 
   return TRUE;
@@ -431,7 +431,7 @@ ges_timeline_layer_get_objects (GESTimelineLayer * layer)
 
   return g_list_sort (g_list_copy_deep (layer->priv->objects_start,
           (GCopyFunc) gst_object_ref, NULL),
-      (GCompareFunc) timeline_object_start_compare);
+      (GCompareFunc) element_start_compare);
 }
 
 /**
@@ -533,26 +533,25 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
 
   /* Take a reference to the object and store it stored by start/priority */
   priv->objects_start = g_list_insert_sorted (priv->objects_start, object,
-      (GCompareFunc) timeline_object_start_compare);
+      (GCompareFunc) element_start_compare);
 
   /* Inform the object it's now in this layer */
   ges_timeline_object_set_layer (object, layer);
 
   GST_DEBUG ("current object priority : %d, layer min/max : %d/%d",
-      GES_TIMELINE_OBJECT_PRIORITY (object),
-      layer->min_gnl_priority, layer->max_gnl_priority);
+      _PRIORITY (object), layer->min_gnl_priority, layer->max_gnl_priority);
 
   /* Set the priority. */
   maxprio = layer->max_gnl_priority;
   minprio = layer->min_gnl_priority;
-  prio = GES_TIMELINE_OBJECT_PRIORITY (object);
+  prio = _PRIORITY (object);
 
   if (minprio + prio > (maxprio)) {
     GST_WARNING_OBJECT (layer,
         "%p is out of the layer space, setting its priority to "
         "%d, setting it to the maximum priority of the layer: %d", object, prio,
         maxprio - minprio);
-    ges_timeline_object_set_priority (object, LAYER_HEIGHT - 1);
+    _set_priority0 (GES_TIMELINE_ELEMENT (object), LAYER_HEIGHT - 1);
   }
 
   /* If the object has an acceptable priority, we just let it with its current
@@ -599,13 +598,13 @@ ges_timeline_layer_add_asset (GESTimelineLayer * layer,
       ges_track_type_name (track_types));
 
   tlobj = GES_TIMELINE_OBJECT (ges_asset_extract (asset, NULL));
-  ges_timeline_object_set_start (tlobj, start);
-  ges_timeline_object_set_inpoint (tlobj, inpoint);
+  _set_start0 (GES_TIMELINE_ELEMENT (tlobj), start);
+  _set_inpoint0 (GES_TIMELINE_ELEMENT (tlobj), inpoint);
   if (track_types != GES_TRACK_TYPE_UNKNOWN)
     ges_timeline_object_set_supported_formats (tlobj, track_types);
 
   if (GST_CLOCK_TIME_IS_VALID (duration)) {
-    ges_timeline_object_set_duration (tlobj, duration);
+    _set_duration0 (GES_TIMELINE_ELEMENT (tlobj), duration);
   }
 
   if (!ges_timeline_layer_add_object (layer, tlobj)) {

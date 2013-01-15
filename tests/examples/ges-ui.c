@@ -271,15 +271,13 @@ filesource_notify_duration_cb (GESTimelineObject * object,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
   guint64 duration, max_inpoint;
-  duration = GES_TIMELINE_OBJECT_DURATION (object);
-  max_inpoint =
-      ges_timeline_filesource_get_max_duration (GES_TIMELINE_FILE_SOURCE
-      (object)) - duration;
+  duration = GES_TIMELINE_ELEMENT_DURATION (object);
+  max_inpoint = GES_TIMELINE_ELEMENT_MAX_DURATION (object) - duration;
 
   gtk_range_set_value (GTK_RANGE (app->duration), duration);
   gtk_range_set_fill_level (GTK_RANGE (app->in_point), max_inpoint);
 
-  if (max_inpoint < GES_TIMELINE_OBJECT_INPOINT (object))
+  if (max_inpoint < GES_TIMELINE_ELEMENT_INPOINT (object))
     g_object_set (object, "in-point", max_inpoint, NULL);
 
 }
@@ -289,11 +287,9 @@ filesource_notify_max_duration_cb (GESTimelineObject * object,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
   gtk_range_set_range (GTK_RANGE (app->duration), 0, (gdouble)
-      ges_timeline_filesource_get_max_duration (GES_TIMELINE_FILE_SOURCE
-          (object)));
+      GES_TIMELINE_ELEMENT_MAX_DURATION (object));
   gtk_range_set_range (GTK_RANGE (app->in_point), 0, (gdouble)
-      ges_timeline_filesource_get_max_duration (GES_TIMELINE_FILE_SOURCE
-          (object)));
+      GES_TIMELINE_ELEMENT_MAX_DURATION (object));
 }
 
 static void
@@ -301,7 +297,7 @@ filesource_notify_in_point_cb (GESTimelineObject * object,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
   gtk_range_set_value (GTK_RANGE (app->in_point),
-      GES_TIMELINE_OBJECT_INPOINT (object));
+      GES_TIMELINE_ELEMENT_INPOINT (object));
 }
 
 static void
@@ -683,7 +679,7 @@ connect_to_object (GESTimelineObject * object, App * app)
 
   app->ignore_input = TRUE;
 
-  duration = GES_TIMELINE_OBJECT_DURATION (object);
+  duration = GES_TIMELINE_ELEMENT_DURATION (object);
   g_snprintf (buf, sizeof (buf), "%02u:%02u:%02u.%09u",
       GST_TIME_ARGS (duration));
   gtk_entry_set_text (app->seconds, buf);
@@ -1633,9 +1629,7 @@ duration_scale_change_value_cb (GtkRange * range, GtkScrollType unused,
 
   for (i = app->selected_objects; i; i = i->next) {
     guint64 duration, maxduration;
-    maxduration =
-        ges_timeline_filesource_get_max_duration (GES_TIMELINE_FILE_SOURCE
-        (i->data));
+    maxduration = GES_TIMELINE_ELEMENT_MAX_DURATION (i->data);
     duration = (value < maxduration ? (value > 0 ? value : 0) : maxduration);
     g_object_set (G_OBJECT (i->data), "duration", (guint64) duration, NULL);
   }
@@ -1650,9 +1644,8 @@ in_point_scale_change_value_cb (GtkRange * range, GtkScrollType unused,
 
   for (i = app->selected_objects; i; i = i->next) {
     guint64 in_point, maxduration;
-    maxduration =
-        ges_timeline_filesource_get_max_duration (GES_TIMELINE_FILE_SOURCE
-        (i->data)) - GES_TIMELINE_OBJECT_DURATION (i->data);
+    maxduration = GES_TIMELINE_ELEMENT_MAX_DURATION (i->data) -
+        GES_TIMELINE_ELEMENT_DURATION (i->data);
     in_point = (value < maxduration ? (value > 0 ? value : 0) : maxduration);
     g_object_set (G_OBJECT (i->data), "in-point", (guint64) in_point, NULL);
   }

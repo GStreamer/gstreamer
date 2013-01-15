@@ -56,6 +56,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-base-xml-formatter.c \
 	ges-xml-formatter.c \
 	ges-auto-transition.c \
+	ges-timeline-element.c \
 	ges-utils.c
 
 libges_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/ges/
@@ -108,6 +109,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-project.h \
 	ges-base-xml-formatter.h \
 	ges-xml-formatter.h \
+	ges-timeline-element.h \
 	ges-utils.h
 
 noinst_HEADERS = \

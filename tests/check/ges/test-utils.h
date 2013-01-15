@@ -73,4 +73,9 @@ G_STMT_START {                                          \
      g_type_name (type));                               \
 } G_STMT_END;
 
+#define _START(obj) GES_TIMELINE_ELEMENT_START (obj)
+#define _DURATION(obj) GES_TIMELINE_ELEMENT_DURATION (obj)
+#define _INPOINT(obj) GES_TIMELINE_ELEMENT_INPOINT (obj)
+#define _PRIORITY(obj) GES_TIMELINE_ELEMENT_PRIORITY (obj)
+
 #endif /* _GES_TEST_UTILS */

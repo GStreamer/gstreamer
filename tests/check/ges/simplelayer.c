@@ -17,6 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include "test-utils.h"
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
@@ -82,15 +83,15 @@ GST_START_TEST (test_gsl_add)
   source = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (source != NULL);
   g_object_set (source, "duration", GST_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source), GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source), 42);
+  fail_unless_equals_uint64 (_DURATION (source), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source), 42);
 
   fail_unless (ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
           (layer), GES_TIMELINE_OBJECT (source), -1));
   fail_unless (ges_timeline_object_get_layer (GES_TIMELINE_OBJECT (source)) ==
       layer);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source), GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source), 0);
+  fail_unless_equals_uint64 (_DURATION (source), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source), 0);
 
   /* test nth */
   source2 =
@@ -157,47 +158,45 @@ GST_START_TEST (test_gsl_move_simple)
   /* Create two 1s sources */
   source1 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   g_object_set (source1, "duration", GST_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source1),
-      GST_SECOND);
+  fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);
   source2 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   g_object_set (source2, "duration", GST_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source2),
-      GST_SECOND);
+  fail_unless_equals_uint64 (_DURATION (source2), GST_SECOND);
 
   /* Add source to any position */
   GST_DEBUG ("Adding the source to the timeline layer");
   fail_unless (ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
           (layer), GES_TIMELINE_OBJECT (source1), -1));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), 0);
+  fail_unless_equals_uint64 (_START (source1), 0);
 
   /* Add source2 to the end */
   GST_DEBUG ("Adding the source to the timeline layer");
   fail_unless (ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
           (layer), GES_TIMELINE_OBJECT (source2), -1));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), 0);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source1), 0);
+  fail_unless_equals_uint64 (_START (source2), GST_SECOND);
 
   /* Move source2 before source 1 (newpos:0) */
   fail_unless (ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER
           (layer), GES_TIMELINE_OBJECT (source2), 0));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), 0);
+  fail_unless_equals_uint64 (_START (source1), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source2), 0);
   fail_unless_equals_int (info.new, 0);
   fail_unless_equals_int (info.old, 1);
 
   /* Move source2 after source 1 (newpos:0) */
   fail_unless (ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER
           (layer), GES_TIMELINE_OBJECT (source2), 1));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), 0);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source1), 0);
+  fail_unless_equals_uint64 (_START (source2), GST_SECOND);
   fail_unless_equals_int (info.new, 1);
   fail_unless_equals_int (info.old, 0);
 
   /* Move source1 to end (newpos:-1) */
   fail_unless (ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER
           (layer), GES_TIMELINE_OBJECT (source1), -1));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), 0);
+  fail_unless_equals_uint64 (_START (source1), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source2), 0);
   /* position will be decremented, this is expected */
   fail_unless_equals_int (info.new, -1);
   fail_unless_equals_int (info.old, 0);
@@ -206,20 +205,20 @@ GST_START_TEST (test_gsl_move_simple)
   g_object_ref (source1);
   fail_unless (ges_timeline_layer_remove_object (layer,
           GES_TIMELINE_OBJECT (source1)));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), 0);
+  fail_unless_equals_uint64 (_START (source2), 0);
 
   g_object_set (source1, "start", (guint64) 42, NULL);
 
   /* re-add source1... using the normal API, it should be added to the end */
   fail_unless (ges_timeline_layer_add_object (layer,
           GES_TIMELINE_OBJECT (source1)));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), 0);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source2), 0);
+  fail_unless_equals_uint64 (_START (source1), GST_SECOND);
 
   /* remove source1 ... */
   fail_unless (ges_timeline_layer_remove_object (layer,
           GES_TIMELINE_OBJECT (source1)));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), 0);
+  fail_unless_equals_uint64 (_START (source2), 0);
   /* ... and source2 */
   fail_unless (ges_timeline_layer_remove_object (layer,
           GES_TIMELINE_OBJECT (source2)));
@@ -273,8 +272,7 @@ GST_START_TEST (test_gsl_with_transitions)
   source1 = ges_custom_timeline_source_new (arbitrary_fill_track_func,
       (gpointer) ELEMENT);
   g_object_set (source1, "duration", GST_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source1),
-      GST_SECOND);
+  fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);
 
   /* make this source taller than the others, so we can check that
    * gstlrecalculate handles this properly */
@@ -283,20 +281,17 @@ GST_START_TEST (test_gsl_with_transitions)
       (gpointer) ELEMENT);
   g_object_set (source2, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   GES_TIMELINE_OBJECT (source2)->height = 4;
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source2),
-      GST_SECOND);
+  fail_unless_equals_uint64 (_DURATION (source2), GST_SECOND);
 
   source3 = ges_custom_timeline_source_new (arbitrary_fill_track_func,
       (gpointer) ELEMENT);
   g_object_set (source3, "duration", GST_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source3),
-      GST_SECOND);
+  fail_unless_equals_uint64 (_DURATION (source3), GST_SECOND);
 
   source4 = ges_custom_timeline_source_new (arbitrary_fill_track_func,
       (gpointer) ELEMENT);
   g_object_set (source4, "duration", GST_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source4),
-      GST_SECOND);
+  fail_unless_equals_uint64 (_DURATION (source4), GST_SECOND);
 
   /* create half-second transitions */
 
@@ -307,31 +302,31 @@ GST_START_TEST (test_gsl_with_transitions)
       ges_timeline_standard_transition_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   g_object_set (tr1, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (_DURATION (tr1), HALF_SECOND);
 
   tr2 =
       ges_timeline_standard_transition_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   g_object_set (tr2, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr2), HALF_SECOND);
+  fail_unless_equals_uint64 (_DURATION (tr2), HALF_SECOND);
 
   tr3 =
       ges_timeline_standard_transition_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   g_object_set (tr3, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr3), HALF_SECOND);
+  fail_unless_equals_uint64 (_DURATION (tr3), HALF_SECOND);
 
   tr4 =
       ges_timeline_standard_transition_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   g_object_set (tr4, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr4), HALF_SECOND);
+  fail_unless_equals_uint64 (_DURATION (tr4), HALF_SECOND);
 
   tr5 =
       ges_timeline_standard_transition_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   g_object_set (tr5, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr5), HALF_SECOND);
+  fail_unless_equals_uint64 (_DURATION (tr5), HALF_SECOND);
 
   /*   simple test scenario with several sources in layer */
   /*   [0     0.5     1       1.5     2       2.5     3]  */
@@ -354,38 +349,34 @@ GST_START_TEST (test_gsl_with_transitions)
 
   fail_unless (ges_simple_timeline_layer_add_object (gstl,
           GES_TIMELINE_OBJECT (source1), -1));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source1),
-      GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), 0);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source1), 2);
+  fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source1), 0);
+  fail_unless_equals_uint64 (_PRIORITY (source1), 2);
 
   GST_DEBUG ("Adding tr1");
 
   fail_unless (ges_simple_timeline_layer_add_object (gstl,
           GES_TIMELINE_OBJECT (tr1), -1));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source1),
-      GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), 0);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source1), 2);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr1), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (tr1), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (tr1), 1);
+  fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source1), 0);
+  fail_unless_equals_uint64 (_PRIORITY (source1), 2);
+  fail_unless_equals_uint64 (_DURATION (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (_START (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (_PRIORITY (tr1), 1);
 
   GST_DEBUG ("Adding source2");
 
   fail_unless (ges_simple_timeline_layer_add_object (gstl,
           GES_TIMELINE_OBJECT (source2), -1));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source1),
-      GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), 0);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source1), 2);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr1), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (tr1), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (tr1), 1);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source2),
-      GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source2), 3);
+  fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source1), 0);
+  fail_unless_equals_uint64 (_PRIORITY (source1), 2);
+  fail_unless_equals_uint64 (_DURATION (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (_START (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (_PRIORITY (tr1), 1);
+  fail_unless_equals_uint64 (_DURATION (source2), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source2), HALF_SECOND);
+  fail_unless_equals_uint64 (_PRIORITY (source2), 3);
 
   /* add the third source before the second transition */
 
@@ -393,21 +384,18 @@ GST_START_TEST (test_gsl_with_transitions)
 
   fail_unless (ges_simple_timeline_layer_add_object (gstl,
           GES_TIMELINE_OBJECT (source3), -1));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source1),
-      GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), 0);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source1), 2);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr1), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (tr1), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (tr1), 1);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source2),
-      GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source2), 3);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source3),
-      GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source3), SECOND (1.5));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source3), 7);
+  fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source1), 0);
+  fail_unless_equals_uint64 (_PRIORITY (source1), 2);
+  fail_unless_equals_uint64 (_DURATION (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (_START (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (_PRIORITY (tr1), 1);
+  fail_unless_equals_uint64 (_DURATION (source2), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source2), HALF_SECOND);
+  fail_unless_equals_uint64 (_PRIORITY (source2), 3);
+  fail_unless_equals_uint64 (_DURATION (source3), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source3), SECOND (1.5));
+  fail_unless_equals_uint64 (_PRIORITY (source3), 7);
 
   /* now add the second transition */
 
@@ -415,24 +403,21 @@ GST_START_TEST (test_gsl_with_transitions)
 
   fail_unless (ges_simple_timeline_layer_add_object (gstl,
           GES_TIMELINE_OBJECT (tr2), 3));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source1),
-      GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), 0);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source1), 2);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr1), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (tr1), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (tr1), 1);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source2),
-      GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source2), 3);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr2), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (tr2), GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (tr2), 2);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source3),
-      GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source3), GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source3), 7);
+  fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source1), 0);
+  fail_unless_equals_uint64 (_PRIORITY (source1), 2);
+  fail_unless_equals_uint64 (_DURATION (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (_START (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (_PRIORITY (tr1), 1);
+  fail_unless_equals_uint64 (_DURATION (source2), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source2), HALF_SECOND);
+  fail_unless_equals_uint64 (_PRIORITY (source2), 3);
+  fail_unless_equals_uint64 (_DURATION (tr2), HALF_SECOND);
+  fail_unless_equals_uint64 (_START (tr2), GST_SECOND);
+  fail_unless_equals_uint64 (_PRIORITY (tr2), 2);
+  fail_unless_equals_uint64 (_DURATION (source3), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source3), GST_SECOND);
+  fail_unless_equals_uint64 (_PRIORITY (source3), 7);
 
   /* fourth source */
 
@@ -440,28 +425,24 @@ GST_START_TEST (test_gsl_with_transitions)
 
   fail_unless (ges_simple_timeline_layer_add_object (gstl,
           GES_TIMELINE_OBJECT (source4), -1));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source1),
-      GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), 0);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source1), 2);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr1), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (tr1), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (tr1), 1);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source2),
-      GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source2), 3);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr2), HALF_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (tr2), GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (tr2), 2);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source3),
-      GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source3), GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source3), 7);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source4),
-      GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source4), SECOND (2));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source4), 8);
+  fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source1), 0);
+  fail_unless_equals_uint64 (_PRIORITY (source1), 2);
+  fail_unless_equals_uint64 (_DURATION (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (_START (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (_PRIORITY (tr1), 1);
+  fail_unless_equals_uint64 (_DURATION (source2), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source2), HALF_SECOND);
+  fail_unless_equals_uint64 (_PRIORITY (source2), 3);
+  fail_unless_equals_uint64 (_DURATION (tr2), HALF_SECOND);
+  fail_unless_equals_uint64 (_START (tr2), GST_SECOND);
+  fail_unless_equals_uint64 (_PRIORITY (tr2), 2);
+  fail_unless_equals_uint64 (_DURATION (source3), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source3), GST_SECOND);
+  fail_unless_equals_uint64 (_PRIORITY (source3), 7);
+  fail_unless_equals_uint64 (_DURATION (source4), GST_SECOND);
+  fail_unless_equals_uint64 (_START (source4), SECOND (2));
+  fail_unless_equals_uint64 (_PRIORITY (source4), 8);
 
   /* check that any insertion which might result in two adjacent transitions
    * will fail */

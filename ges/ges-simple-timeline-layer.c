@@ -184,19 +184,19 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
     GList *l_next;
 
     obj = (GESTimelineObject *) tmp->data;
-    dur = GES_TIMELINE_OBJECT_DURATION (obj);
+    dur = _DURATION (obj);
     height = GES_TIMELINE_OBJECT_HEIGHT (obj);
 
     if (GES_IS_TIMELINE_SOURCE (obj)) {
 
       GST_LOG ("%p obj: height: %d: priority %d", obj, height, priority);
 
-      if (G_UNLIKELY (GES_TIMELINE_OBJECT_START (obj) != pos)) {
-        ges_timeline_object_set_start (obj, pos);
+      if (G_UNLIKELY (_START (obj) != pos)) {
+        _set_start0 (GES_TIMELINE_ELEMENT (obj), pos);
       }
 
-      if (G_UNLIKELY (GES_TIMELINE_OBJECT_PRIORITY (obj) != priority)) {
-        ges_timeline_object_set_priority (obj, priority);
+      if (G_UNLIKELY (_PRIORITY (obj) != priority)) {
+        _set_priority0 (GES_TIMELINE_ELEMENT (obj), priority);
       }
 
       transition_priority = MAX (0, priority - 1);
@@ -217,12 +217,11 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
 
       g_assert (transition_priority != -1);
 
-      if (G_UNLIKELY (GES_TIMELINE_OBJECT_START (obj) != pos))
-        ges_timeline_object_set_start (obj, pos);
+      if (G_UNLIKELY (_START (obj) != pos))
+        _set_start0 (GES_TIMELINE_ELEMENT (obj), pos);
 
-      if (G_UNLIKELY (GES_TIMELINE_OBJECT_PRIORITY (obj) !=
-              transition_priority)) {
-        ges_timeline_object_set_priority (obj, transition_priority);
+      if (G_UNLIKELY (_PRIORITY (obj) != transition_priority)) {
+        _set_priority0 (GES_TIMELINE_ELEMENT (obj), transition_priority);
       }
 
       /* sanity checks */
@@ -233,20 +232,19 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
         valid = FALSE;
       }
 
-      if (prev_object && (GES_TIMELINE_OBJECT_DURATION (prev_object) < dur)) {
+      if (prev_object && (_DURATION (prev_object) < dur)) {
         GST_ERROR ("transition duration exceeds that of previous neighbor!");
         valid = FALSE;
       }
 
-      if (l_next && (GES_TIMELINE_OBJECT_DURATION (l_next->data) < dur)) {
+      if (l_next && (_DURATION (l_next->data) < dur)) {
         GST_ERROR ("transition duration exceeds that of next neighbor!");
         valid = FALSE;
       }
 
       if (prev_transition) {
         guint64 start, end;
-        end = (GES_TIMELINE_OBJECT_DURATION (prev_transition) +
-            GES_TIMELINE_OBJECT_START (prev_transition));
+        end = (_DURATION (prev_transition) + _START (prev_transition));
 
         start = pos;
 

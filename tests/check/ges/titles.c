@@ -53,9 +53,9 @@ GST_START_TEST (test_title_source_properties)
   /* Set some properties */
   g_object_set (object, "start", (guint64) 42, "duration", (guint64) 51,
       "in-point", (guint64) 12, NULL);
-  assert_equals_uint64 (GES_TIMELINE_OBJECT_START (object), 42);
-  assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object), 51);
-  assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (object), 12);
+  assert_equals_uint64 (_START (object), 42);
+  assert_equals_uint64 (_DURATION (object), 51);
+  assert_equals_uint64 (_INPOINT (object), 12);
 
   trackobject = ges_timeline_object_create_track_object (object, track->type);
   ges_timeline_object_add_track_object (object, trackobject);
@@ -63,9 +63,9 @@ GST_START_TEST (test_title_source_properties)
   fail_unless (ges_track_object_set_track (trackobject, track));
 
   /* Check that trackobject has the same properties */
-  assert_equals_uint64 (GES_TRACK_OBJECT_START (trackobject), 42);
-  assert_equals_uint64 (GES_TRACK_OBJECT_DURATION (trackobject), 51);
-  assert_equals_uint64 (GES_TRACK_OBJECT_INPOINT (trackobject), 12);
+  assert_equals_uint64 (_START (trackobject), 42);
+  assert_equals_uint64 (_DURATION (trackobject), 51);
+  assert_equals_uint64 (_INPOINT (trackobject), 12);
 
   /* And let's also check that it propagated correctly to GNonLin */
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
@@ -74,12 +74,12 @@ GST_START_TEST (test_title_source_properties)
   /* Change more properties, see if they propagate */
   g_object_set (object, "start", (guint64) 420, "duration", (guint64) 510,
       "in-point", (guint64) 120, NULL);
-  assert_equals_uint64 (GES_TIMELINE_OBJECT_START (object), 420);
-  assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object), 510);
-  assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (object), 120);
-  assert_equals_uint64 (GES_TRACK_OBJECT_START (trackobject), 420);
-  assert_equals_uint64 (GES_TRACK_OBJECT_DURATION (trackobject), 510);
-  assert_equals_uint64 (GES_TRACK_OBJECT_INPOINT (trackobject), 120);
+  assert_equals_uint64 (_START (object), 420);
+  assert_equals_uint64 (_DURATION (object), 510);
+  assert_equals_uint64 (_INPOINT (object), 120);
+  assert_equals_uint64 (_START (trackobject), 420);
+  assert_equals_uint64 (_DURATION (trackobject), 510);
+  assert_equals_uint64 (_INPOINT (trackobject), 120);
 
   /* And let's also check that it propagated correctly to GNonLin */
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,

@@ -26,6 +26,7 @@
 
 #include "ges-timeline.h"
 #include "ges-track-object.h"
+#include "ges-timeline-element.h"
 
 #include "ges-asset.h"
 #include "ges-base-xml-formatter.h"
@@ -34,6 +35,16 @@ GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define GST_CAT_DEFAULT _ges_debug
 
 #define LAYER_HEIGHT 1000
+
+#define _START(obj) GES_TIMELINE_ELEMENT_START (obj)
+#define _INPOINT(obj) GES_TIMELINE_ELEMENT_INPOINT (obj)
+#define _DURATION(obj) GES_TIMELINE_ELEMENT_DURATION (obj)
+#define _MAXDURATION(obj) GES_TIMELINE_ELEMENT_MAX_DURATION (obj)
+#define _PRIORITY(obj) GES_TIMELINE_ELEMENT_PRIORITY (obj)
+#define _set_start0 ges_timeline_element_set_start
+#define _set_inpoint0 ges_timeline_element_set_inpoint
+#define _set_duration0 ges_timeline_element_set_duration
+#define _set_priority0 ges_timeline_element_set_priority
 
 G_GNUC_INTERNAL gboolean
 timeline_ripple_object         (GESTimeline *timeline, GESTrackObject *obj,
@@ -212,9 +223,7 @@ G_GNUC_INTERNAL void _init_standard_transition_assets        (void);
 G_GNUC_INTERNAL void _init_formatter_assets                  (void);
 
 /* Utilities */
-G_GNUC_INTERNAL gint track_object_start_compare              (GESTrackObject * a,
-                                                              GESTrackObject * b);
-G_GNUC_INTERNAL gint timeline_object_start_compare           (GESTimelineObject * a,
-                                                              GESTimelineObject * b);
+G_GNUC_INTERNAL gint element_start_compare                (GESTimelineElement * a,
+                                                              GESTimelineElement * b);
 
 #endif /* __GES_INTERNAL_H__ */

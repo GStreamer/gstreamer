@@ -75,15 +75,10 @@ void
 ges_timeline_filesource_set_mute (GESTimelineFileSource * self, gboolean mute);
 
 void
-ges_timeline_filesource_set_max_duration (GESTimelineFileSource * self,
-    guint64 maxduration);
-
-void
 ges_timeline_filesource_set_is_image (GESTimelineFileSource * self,
     gboolean is_image);
 
 gboolean ges_timeline_filesource_is_muted (GESTimelineFileSource * self);
-guint64 ges_timeline_filesource_get_max_duration (GESTimelineFileSource * self);
 gboolean ges_timeline_filesource_is_image (GESTimelineFileSource * self);
 const gchar *ges_timeline_filesource_get_uri (GESTimelineFileSource * self);
 

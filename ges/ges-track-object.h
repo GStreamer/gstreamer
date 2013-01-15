@@ -46,30 +46,6 @@ G_BEGIN_DECLS
 #define GES_TRACK_OBJECT_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_OBJECT, GESTrackObjectClass))
 
-/**
- * GES_TRACK_OBJECT_START:
- * @obj: a #GESTrackObject
- *
- * The start position of the object (in nanoseconds).
- */
-#define GES_TRACK_OBJECT_START(obj) (((GESTrackObject*)obj)->start)
-
-/**
- * GES_TRACK_OBJECT_INPOINT:
- * @obj: a #GESTrackObject
- *
- * The in-point of the object (in nanoseconds).
- */
-#define GES_TRACK_OBJECT_INPOINT(obj) (((GESTrackObject*)obj)->inpoint)
-
-/**
- * GES_TRACK_OBJECT_DURATION:
- * @obj: a #GESTrackObject
- *
- * The duration position of the object (in nanoseconds).
- */
-#define GES_TRACK_OBJECT_DURATION(obj) (((GESTrackObject*)obj)->duration)
-
 typedef struct _GESTrackObjectPrivate GESTrackObjectPrivate;
 
 /**
@@ -78,13 +54,9 @@ typedef struct _GESTrackObjectPrivate GESTrackObjectPrivate;
  * The GESTrackObject base class.
  */
 struct _GESTrackObject {
-  GInitiallyUnowned parent;
+  GESTimelineElement parent;
 
   /*< private >*/
-  guint64 start;
-  guint64 inpoint;
-  guint64 duration;
-  guint32 priority;
   gboolean active;
 
   GESTrackObjectPrivate *priv;
@@ -100,10 +72,7 @@ struct _GESTrackObject {
  * @gnlobject_factorytype: name of the GNonLin GStElementFactory type to use.
  * @create_gnl_object: method to create the GNonLin container object.
  * @create_element: method to return the GstElement to put in the gnlobject.
- * @start_changed: start property of gnlobject has changed
- * @media_start_changed: media-start property of gnlobject has changed
  * @duration_changed: duration property glnobject has changed
- * @gnl_priority_changed: duration property glnobject has changed
  * @active_changed: active property of gnlobject has changed
  * @get_props_hastable: method to list children properties that user could like
  *                      to configure. Since: 0.10.2
@@ -118,7 +87,7 @@ struct _GESTrackObject {
  */
 struct _GESTrackObjectClass {
   /*< private >*/
-  GInitiallyUnownedClass parent_class;
+  GESTimelineElementClass parent_class;
 
   /*< public >*/
   /* virtual methods for subclasses */
@@ -126,9 +95,6 @@ struct _GESTrackObjectClass {
   GstElement*  (*create_gnl_object)        (GESTrackObject * object);
   GstElement*  (*create_element)           (GESTrackObject * object);
 
-  void (*start_changed)        (GESTrackObject *object, guint64 start);
-  void (*media_start_changed)  (GESTrackObject *object, guint64 media_start);
-  void (*gnl_priority_changed) (GESTrackObject *object, guint priority);
   void (*duration_changed)     (GESTrackObject *object, guint64 duration);
   void (*active_changed)       (GESTrackObject *object, gboolean active);
 
@@ -170,29 +136,9 @@ void ges_track_object_set_locked              (GESTrackObject * object,
 
 gboolean ges_track_object_is_locked           (GESTrackObject * object);
 
-void ges_track_object_set_start               (GESTrackObject * object,
-                                               guint64 start);
-
-void ges_track_object_set_inpoint             (GESTrackObject * object,
-                                               guint64 inpoint);
-
-void ges_track_object_set_duration            (GESTrackObject * object,
-                                               guint64 duration);
-
-void ges_track_object_set_max_duration        (GESTrackObject * object,
-                                               guint64 maxduration);
-
-void ges_track_object_set_priority            (GESTrackObject * object,
-                                               guint32 priority);
-
 gboolean ges_track_object_set_active          (GESTrackObject * object,
                                                gboolean active);
 
-guint64 ges_track_object_get_start            (GESTrackObject * object);
-guint64 ges_track_object_get_inpoint          (GESTrackObject * object);
-guint64 ges_track_object_get_duration         (GESTrackObject * object);
-guint64 ges_track_object_get_max_duration     (GESTrackObject * object);
-guint32 ges_track_object_get_priority         (GESTrackObject * object);
 gboolean ges_track_object_is_active           (GESTrackObject * object);
 
 GParamSpec **
@@ -231,9 +177,6 @@ ges_track_object_set_child_property_by_pspec (GESTrackObject * object,
 void ges_track_object_set_child_properties   (GESTrackObject * object,
                                               const gchar * first_property_name,
                                               ...) G_GNUC_NULL_TERMINATED;
-
-GESTrackObject * ges_track_object_copy       (GESTrackObject * object,
-                                              gboolean deep);
 
 gboolean ges_track_object_set_child_property (GESTrackObject *object,
                                               const gchar *property_name,

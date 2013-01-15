@@ -93,11 +93,7 @@ GES_TYPE_TRACK
 <TITLE>GESTrackObject</TITLE>
 GESTrackObject
 GESTrackObjectClass
-ges_track_object_set_duration
 ges_track_object_set_max_duration
-ges_track_object_set_inpoint
-ges_track_object_set_priority
-ges_track_object_set_start
 ges_track_object_set_active
 ges_track_object_set_locked
 ges_track_object_is_locked
@@ -105,11 +101,7 @@ ges_track_object_get_track
 ges_track_object_get_timeline_object
 ges_track_object_get_gnlobject
 ges_track_object_get_element
-ges_track_object_get_start
-ges_track_object_get_inpoint
-ges_track_object_get_duration
 ges_track_object_get_max_duration
-ges_track_object_get_priority
 ges_track_object_is_active
 ges_track_object_lookup_child
 ges_track_object_list_children_properties
@@ -124,9 +116,6 @@ ges_track_object_get_child_property_by_pspec
 ges_track_object_edit
 ges_track_object_copy
 <SUBSECTION Standard>
-GES_TRACK_OBJECT_DURATION
-GES_TRACK_OBJECT_INPOINT
-GES_TRACK_OBJECT_START
 GESTrackObjectPrivate
 ges_track_object_set_timeline_object
 ges_track_object_set_track
@@ -328,6 +317,36 @@ GES_TIMELINE_LAYER_GET_CLASS
 GES_TYPE_TIMELINE_LAYER
 </SECTION>
 
+<SECTION>
+<FILE>ges-timeline-element</FILE>
+<TITLE>GESTimelineElement</TITLE>
+GESTimelineElement
+GESTimelineElementClass
+ges_timeline_element_set_start
+ges_timeline_element_set_inpoint
+ges_timeline_element_set_duration
+ges_timeline_element_set_max_duration
+ges_timeline_element_set_priority
+ges_timeline_element_ripple
+ges_timeline_element_ripple_end
+ges_timeline_element_roll_start
+ges_timeline_element_roll_end
+ges_timeline_element_trim
+GES_TIMELINE_ELEMENT_START
+GES_TIMELINE_ELEMENT_INPOINT
+GES_TIMELINE_ELEMENT_DURATION
+GES_TIMELINE_ELEMENT_MAX_DURATION
+GES_TIMELINE_ELEMENT_PRIORITY
+<SUBSECTION Standard>
+GESTimelineElementPrivate
+ges_timeline_element_get_type
+GES_TYPE_TIMELINE_ELEMENT
+GES_TIMELINE_ELEMENT
+GES_TIMELINE_ELEMENT_CLASS
+GES_IS_TIMELINE_ELEMENT
+GES_IS_TIMELINE_ELEMENT_CLASS
+GES_TIMELINE_ELEMENT_GET_CLASS
+</SECTION>
 
 <SECTION>
 <FILE>ges-timeline-object</FILE>
@@ -337,9 +356,6 @@ GESTimelineObjectClass
 GESCreateTrackObjectFunc
 GESCreateTrackObjectsFunc
 GESFillTrackObjectFunc
-ges_timeline_object_set_inpoint
-ges_timeline_object_set_start
-ges_timeline_object_set_duration
 ges_timeline_object_get_layer
 ges_timeline_object_find_track_object
 ges_timeline_object_add_track_object
@@ -352,19 +368,10 @@ ges_timeline_object_set_supported_formats
 ges_timeline_object_get_supported_formats
 ges_timeline_object_split
 ges_timeline_object_edit
-ges_timeline_object_ripple
-ges_timeline_object_ripple_end
-ges_timeline_object_roll_start
-ges_timeline_object_roll_end
-ges_timeline_object_trim_start
 ges_timeline_object_get_max_duration
 ges_timeline_object_objects_set_locked
 ges_timeline_object_set_max_duration
 <SUBSECTION Standard>
-GES_TIMELINE_OBJECT_DURATION
-GES_TIMELINE_OBJECT_INPOINT
-GES_TIMELINE_OBJECT_PRIORITY
-GES_TIMELINE_OBJECT_START
 GES_TIMELINE_OBJECT_HEIGHT
 ges_timeline_object_create_track_objects
 ges_timeline_object_create_track_object
@@ -374,7 +381,6 @@ ges_timeline_object_release_track_object
 ges_timeline_object_get_track_objects
 ges_timeline_object_set_layer
 ges_timeline_object_set_moving_from_layer
-ges_timeline_object_set_priority
 ges_timeline_object_lock_track_objects
 GESTimelineObjectPrivate
 GES_IS_TIMELINE_OBJECT

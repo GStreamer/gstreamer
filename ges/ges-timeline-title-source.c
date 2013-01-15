@@ -290,7 +290,7 @@ ges_timeline_title_source_init (GESTimelineTitleSource * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TIMELINE_TITLE_SOURCE, GESTimelineTitleSourcePrivate);
 
-  GES_TIMELINE_OBJECT (self)->duration = 0;
+  GES_TIMELINE_ELEMENT (self)->duration = 0;
   /* Not 100% required since a new gobject's content will always be memzero'd */
   self->priv->mute = FALSE;
   self->priv->text = NULL;

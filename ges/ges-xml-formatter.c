@@ -867,8 +867,8 @@ _save_layers (GString * str, GESTimeline * timeline)
           G_GUINT64_FORMAT "' rate='%d' properties='%s' >\n", nbtlobjs,
           ges_extractable_get_id (GES_EXTRACTABLE (tlobj)),
           g_type_name (G_OBJECT_TYPE (tlobj)), priority,
-          ges_timeline_object_get_supported_formats (tlobj), tlobj->start,
-          tlobj->duration, tlobj->inpoint, 0, properties);
+          ges_timeline_object_get_supported_formats (tlobj), _START (tlobj),
+          _DURATION (tlobj), _INPOINT (tlobj), 0, properties);
       g_free (properties);
 
       for (tmpeffect = effects; tmpeffect; tmpeffect = tmpeffect->next)

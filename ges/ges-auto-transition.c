@@ -41,19 +41,19 @@ neighbour_changed_cb (GESTimelineObject * obj, GParamSpec * arg G_GNUC_UNUSED,
 {
   gint64 new_duration;
 
-  if (self->next_source->priority / LAYER_HEIGHT !=
-      self->previous_source->priority / LAYER_HEIGHT) {
+  if (_PRIORITY (self->next_source) / LAYER_HEIGHT !=
+      _PRIORITY (self->previous_source) / LAYER_HEIGHT) {
     GST_DEBUG_OBJECT (self, "Destroy changed layer");
     g_signal_emit (self, auto_transition_signals[DESTROY_ME], 0);
     return;
   }
 
   new_duration =
-      (self->previous_source->start + self->previous_source->duration) -
-      self->next_source->start;
+      (_START (self->previous_source) +
+      _DURATION (self->previous_source)) - _START (self->next_source);
 
-  if (new_duration <= 0 || new_duration >= self->previous_source->duration ||
-      new_duration >= self->next_source->duration) {
+  if (new_duration <= 0 || new_duration >= _DURATION (self->previous_source)
+      || new_duration >= _DURATION (self->next_source)) {
 
     GST_DEBUG_OBJECT (self, "Destroy %" G_GINT64_FORMAT " not a valid duration",
         new_duration);
@@ -61,9 +61,10 @@ neighbour_changed_cb (GESTimelineObject * obj, GParamSpec * arg G_GNUC_UNUSED,
     return;
   }
 
-  ges_timeline_object_set_start (self->timeline_transition,
-      self->next_source->start);
-  ges_timeline_object_set_duration (self->timeline_transition, new_duration);
+  _set_start0 (GES_TIMELINE_ELEMENT (self->timeline_transition),
+      _START (self->next_source));
+  _set_duration0 (GES_TIMELINE_ELEMENT (self->timeline_transition),
+      new_duration);
 }
 
 static void
@@ -72,8 +73,8 @@ _height_changed_cb (GESTimelineObject * obj, GParamSpec * arg G_GNUC_UNUSED,
 {
   /* FIXME This is really not smart and we should properly implement timelineobject
    * priority management at the TimelineLayer level */
-  ges_timeline_object_set_priority (self->next_timeline_object,
-      self->previous_timeline_object->priority +
+  _set_priority0 (GES_TIMELINE_ELEMENT (self->next_timeline_object),
+      _PRIORITY (self->previous_timeline_object) +
       self->previous_timeline_object->height);
 }
 
@@ -172,8 +173,9 @@ ges_auto_transition_new (GESTrackObject * transition,
       " in layer nb %i, start: %" GST_TIME_FORMAT " duration: %"
       GST_TIME_FORMAT, transition, next_source, previous_source,
       ges_timeline_layer_get_priority (ges_timeline_object_get_layer
-          (self->previous_timeline_object)), GST_TIME_ARGS (transition->start),
-      GST_TIME_ARGS (transition->duration));
+          (self->previous_timeline_object)),
+      GST_TIME_ARGS (_START (transition)),
+      GST_TIME_ARGS (_DURATION (transition)));
 
   self->key = g_strdup_printf ("%p%p", self->previous_source,
       self->next_source);

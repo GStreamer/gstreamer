@@ -174,7 +174,7 @@ ges_timeline_test_source_init (GESTimelineTestSource * self)
 
   self->priv->freq = 0;
   self->priv->volume = 0;
-  GES_TIMELINE_OBJECT (self)->duration = 0;
+  GES_TIMELINE_ELEMENT (self)->duration = 0;
 }
 
 /**
