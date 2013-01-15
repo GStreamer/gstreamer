@@ -3,12 +3,12 @@ include $(top_srcdir)/common/check.mak
 CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.reg
 
 REGISTRY_ENVIRONMENT = \
-	GST_REGISTRY=$(CHECK_REGISTRY)
+	GST_REGISTRY_1_0=$(CHECK_REGISTRY)
 
 TESTS_ENVIRONMENT = \
 	$(REGISTRY_ENVIRONMENT)					\
-	GST_PLUGIN_SYSTEM_PATH=					\
-	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(top_builddir)/sys:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)  \
+	GST_PLUGIN_SYSTEM_PATH_1_0=				\
+	GST_PLUGIN_PATH_1_0=$(top_builddir)/gst:$(top_builddir)/ext:$(top_builddir)/sys:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)  \
 	GST_PLUGIN_LOADING_WHITELIST="gstreamer@$(GST_PLUGINS_DIR):gst-plugins-base@$(GSTPB_PLUGINS_DIR):gst-plugins-ugly@$(top_builddir)" \
 	GST_STATE_IGNORE_ELEMENTS="siddec dvdreadsrc cdiocddasrc"
 
