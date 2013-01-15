@@ -484,6 +484,21 @@ flushing:
   }
 }
 
+static gboolean
+_gst_data_queue_wait_non_empty (GstDataQueue * queue)
+{
+  GstDataQueuePrivate *priv = queue->priv;
+
+  while (gst_data_queue_locked_is_empty (queue)) {
+    priv->waiting_add = TRUE;
+    g_cond_wait (&priv->item_add, &priv->qlock);
+    priv->waiting_add = FALSE;
+    if (priv->flushing)
+      return FALSE;
+  }
+  return TRUE;
+}
+
 /**
  * gst_data_queue_pop:
  * @queue: a #GstDataQueue.
@@ -518,13 +533,8 @@ gst_data_queue_pop (GstDataQueue * queue, GstDataQueueItem ** item)
       g_signal_emit (queue, gst_data_queue_signals[SIGNAL_EMPTY], 0);
     GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, flushing);
 
-    while (gst_data_queue_locked_is_empty (queue)) {
-      priv->waiting_add = TRUE;
-      g_cond_wait (&priv->item_add, &priv->qlock);
-      priv->waiting_add = FALSE;
-      if (priv->flushing)
-        goto flushing;
-    }
+    if (!_gst_data_queue_wait_non_empty (queue))
+      goto flushing;
   }
 
   /* Get the item from the GQueue */
@@ -557,6 +567,61 @@ static gint
 is_of_type (gconstpointer a, gconstpointer b)
 {
   return !G_TYPE_CHECK_INSTANCE_TYPE (a, GPOINTER_TO_SIZE (b));
+}
+
+/**
+ * gst_data_queue_peek:
+ * @queue: a #GstDataQueue.
+ * @item: pointer to store the returned #GstDataQueueItem.
+ *
+ * Retrieves the first @item available on the @queue without removing it.
+ * If the queue is currently empty, the call will block until at least
+ * one item is available, OR the @queue is set to the flushing state.
+ * MT safe.
+ *
+ * Returns: #TRUE if an @item was successfully retrieved from the @queue.
+ *
+ * Since: 1.2.0
+ */
+gboolean
+gst_data_queue_peek (GstDataQueue * queue, GstDataQueueItem ** item)
+{
+  GstDataQueuePrivate *priv = queue->priv;
+
+  g_return_val_if_fail (GST_IS_DATA_QUEUE (queue), FALSE);
+  g_return_val_if_fail (item != NULL, FALSE);
+
+  GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, flushing);
+
+  STATUS (queue, "before peeking");
+
+  if (gst_data_queue_locked_is_empty (queue)) {
+    GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
+    if (G_LIKELY (priv->emptycallback))
+      priv->emptycallback (queue, priv->checkdata);
+    else
+      g_signal_emit (queue, gst_data_queue_signals[SIGNAL_EMPTY], 0);
+    GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, flushing);
+
+    if (!_gst_data_queue_wait_non_empty (queue))
+      goto flushing;
+  }
+
+  /* Get the item from the GQueue */
+  *item = gst_queue_array_peek_head (priv->queue);
+
+  STATUS (queue, "after peeking");
+  GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
+
+  return TRUE;
+
+  /* ERRORS */
+flushing:
+  {
+    GST_DEBUG ("queue:%p, we are flushing", queue);
+    GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
+    return FALSE;
+  }
 }
 
 /**
