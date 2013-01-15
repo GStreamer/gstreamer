@@ -1416,6 +1416,8 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
   }
 
 done:
+  gst_omx_port_update_port_definition (port, NULL);
+
   GST_DEBUG_OBJECT (comp->parent, "Set port %u to %sflushing: %s (0x%08x)",
       port->index, (flush ? "" : "not "), gst_omx_error_to_string (err), err);
   gst_omx_component_handle_messages (comp);
@@ -1539,6 +1541,8 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
   gst_omx_component_handle_messages (comp);
 
 done:
+  gst_omx_port_update_port_definition (port, NULL);
+
   GST_DEBUG_OBJECT (comp->parent, "Allocated buffers for port %u: %s (0x%08x)",
       port->index, gst_omx_error_to_string (err), err);
 
@@ -1639,6 +1643,8 @@ gst_omx_port_deallocate_buffers_unlocked (GstOMXPort * port)
   gst_omx_component_handle_messages (comp);
 
 done:
+  gst_omx_port_update_port_definition (port, NULL);
+
   GST_DEBUG_OBJECT (comp->parent, "Deallocated buffers of port %u: %s (0x%08x)",
       port->index, gst_omx_error_to_string (err), err);
 
@@ -1857,6 +1863,8 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
   gst_omx_component_handle_messages (comp);
 
 done:
+  gst_omx_port_update_port_definition (port, NULL);
+
   GST_DEBUG_OBJECT (comp->parent, "Port %u is %s%s: %s (0x%08x)", port->index,
       (err == OMX_ErrorNone ? "" : "not "),
       (enabled ? "enabled" : "disabled"), gst_omx_error_to_string (err), err);
@@ -1961,6 +1969,8 @@ gst_omx_port_reconfigure (GstOMXPort * port)
   }
 
 done:
+  gst_omx_port_update_port_definition (port, NULL);
+
   GST_DEBUG_OBJECT (comp->parent, "Reconfigured port %u: %s (0x%08x)",
       port->index, gst_omx_error_to_string (err), err);
 
@@ -2023,6 +2033,8 @@ gst_omx_port_manual_reconfigure (GstOMXPort * port, gboolean start)
 
 
 done:
+  gst_omx_port_update_port_definition (port, NULL);
+
   GST_DEBUG_OBJECT (comp->parent, "Manual reconfigure of port %u: %s (0x%08x)",
       port->index, gst_omx_error_to_string (err), err);
 
