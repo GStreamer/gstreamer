@@ -1,9 +1,9 @@
-gst-vaapi NEWS -- summary of changes.  2013-01-DD
+gst-vaapi NEWS -- summary of changes.  2013-01-15
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2012 Intel Corporation
 Copyright (C) 2011 Collabora
 
-Version 0.5.0 - DD.Jan.2013
+Version 0.5.0 - 15.Jan.2013
 * Optimize MPEG-2 and H.264 decoders
 * Use GstVideoDecoder API for vaapidecode (+Sreerenj Balachandran)
 * Add support for raw YUV buffers in vaapisink (+Halley Zhao)
