@@ -10,9 +10,9 @@ REGISTRY_ENVIRONMENT = \
 TESTS_ENVIRONMENT = \
         GST_STATE_IGNORE_ELEMENTS="$(STATE_IGNORE_ELEMENTS)"	\
         $(REGISTRY_ENVIRONMENT)					\
-        GST_PLUGIN_SCANNER=$(top_builddir)/libs/gst/helpers/gst-plugin-scanner \
-        GST_PLUGIN_SYSTEM_PATH=					\
-        GST_PLUGIN_PATH=$(top_builddir)/plugins
+        GST_PLUGIN_SCANNER_1_0=$(top_builddir)/libs/gst/helpers/gst-plugin-scanner \
+        GST_PLUGIN_SYSTEM_PATH_1_0=					\
+        GST_PLUGIN_PATH_1_0=$(top_builddir)/plugins
 
 plugindir = $(libdir)/gstreamer-@GST_API_VERSION@
 

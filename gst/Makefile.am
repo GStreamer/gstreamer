@@ -263,7 +263,7 @@ gir_headers=$(patsubst %,$(srcdir)/%, $(libgstreamer_@GST_API_VERSION@include_HE
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstreamer_@GST_API_VERSION@_la_SOURCES))
 
 Gst-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstreamer-@GST_API_VERSION@.la
-	$(AM_V_GEN)GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
+	$(AM_V_GEN)GST_PLUGIN_SYSTEM_PATH_1_0="" GST_PLUGIN_PATH_1_0="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace Gst \
 		--nsversion=@GST_API_VERSION@ \
 		--warn-all \

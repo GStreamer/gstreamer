@@ -15,7 +15,7 @@ include $(top_srcdir)/common/upload-doc.mak
 
 # Extra environment needed for Core only...
 INSPECT_EXTRA_ENVIRONMENT= \
-    GST_PLUGIN_SCANNER=$(top_builddir)/libs/gst/helpers/gst-plugin-scanner
+    GST_PLUGIN_SCANNER_1_0=$(top_builddir)/libs/gst/helpers/gst-plugin-scanner
 
 # The top-level SGML file. Change it if you want.
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
