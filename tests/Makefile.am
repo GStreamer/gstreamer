@@ -67,8 +67,8 @@ test_utils_dec_source_c =	\
 	$(NULL)
 test_utils_dec_source_h	= $(test_utils_dec_source_c:%.c=%.h) test-decode.h
 
-test_utils_source_c	= image.c output.c
-test_utils_source_h	= image.h output.h
+test_utils_source_c	= codec.c image.c output.c
+test_utils_source_h	= codec.h image.h output.h
 
 noinst_LTLIBRARIES	= libutils.la libutils_dec.la
 libutils_la_SOURCES	= $(test_utils_source_c)
