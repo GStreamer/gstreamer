@@ -74,8 +74,11 @@ typedef struct {
     GCond               decoder_ready;
     GAsyncQueue        *decoder_queue;
     GstVaapiCodec       codec;
-    GstVideoCodecState  codec_state;
+    guint               surface_width;
+    guint               surface_height;
     GstVaapiWindow     *window;
+    guint               window_width;
+    guint               window_height;
     GThread            *render_thread;
     volatile gboolean   render_thread_cancel;
     GstBuffer          *last_buffer;
@@ -324,6 +327,25 @@ stop_decoder(App *app)
     return TRUE;
 }
 
+static void
+ensure_window_size(App *app, GstVaapiSurface *surface)
+{
+    guint width, height;
+
+    if (gst_vaapi_window_get_fullscreen(app->window))
+        return;
+
+    gst_vaapi_surface_get_size(surface, &width, &height);
+    if (app->surface_width == width && app->surface_height == height)
+        return;
+    app->surface_width = width;
+    app->surface_height = height;
+
+    gst_vaapi_window_set_size(app->window, width, height);
+    gst_vaapi_window_get_size(app->window,
+        &app->window_width, &app->window_height);
+}
+
 static gboolean
 renderer_process(App *app, GstBuffer *buffer)
 {
@@ -344,6 +366,8 @@ renderer_process(App *app, GstBuffer *buffer)
     surface = gst_vaapi_video_meta_get_surface(meta);
     if (!surface)
         SEND_ERROR("failed to get decoded surface from video meta");
+
+    ensure_window_size(app, surface);
 
     if (!gst_vaapi_window_put_surface(app->window, surface, NULL, NULL,
             GST_VAAPI_PICTURE_STRUCTURE_FRAME))
@@ -453,6 +477,9 @@ app_new(void)
     g_cond_init(&app->event_cond);
     g_cond_init(&app->decoder_ready);
 
+    app->window_width = 640;
+    app->window_height = 480;
+
     app->decoder_queue = g_async_queue_new_full(
         (GDestroyNotify)gst_buffer_unref);
     if (!app->decoder_queue)
@@ -533,7 +560,8 @@ app_run(App *app, int argc, char *argv[])
         return FALSE;
     }
 
-    app->window = video_output_create_window(app->display, 640, 480);
+    app->window = video_output_create_window(app->display,
+        app->window_width, app->window_height);
     if (!app->window) {
         g_message("failed to create window");
         return FALSE;
