@@ -351,7 +351,7 @@ decode_sequence_end(GstVaapiDecoderVC1 *decoder)
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             return status;
     }
-    return GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 static GstVaapiDecoderStatus
