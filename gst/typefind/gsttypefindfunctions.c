@@ -4341,6 +4341,66 @@ paris_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** audio/x-sbc ***/
+static GstStaticCaps sbc_caps = GST_STATIC_CAPS ("audio/x-sbc");
+#define SBC_CAPS (gst_static_caps_get(&sbc_caps))
+
+static gsize
+sbc_check_header (const guint8 * data, gsize len, guint * rate,
+    guint * channels)
+{
+  static const guint16 sbc_rates[4] = { 16000, 32000, 44100, 48000 };
+  static const guint8 sbc_blocks[4] = { 4, 8, 12, 16 };
+  guint n_blocks, ch_mode, n_subbands, bitpool;
+
+  if (data[0] != 0x9C || len < 4)
+    return 0;
+
+  n_blocks = sbc_blocks[(data[1] >> 4) & 0x03];
+  ch_mode = (data[1] >> 2) & 0x03;
+  n_subbands = (data[1] & 0x01) ? 8 : 4;
+  bitpool = data[2];
+  if (bitpool < 2)
+    return 0;
+
+  *rate = sbc_rates[(data[1] >> 6) & 0x03];
+  *channels = (ch_mode == 0) ? 1 : 2;
+
+  if (ch_mode == 0)
+    return 4 + (n_subbands * 1) / 2 + (n_blocks * 1 * bitpool) / 8;
+  else if (ch_mode == 1)
+    return 4 + (n_subbands * 2) / 2 + (n_blocks * 2 * bitpool) / 8;
+  else if (ch_mode == 2)
+    return 4 + (n_subbands * 2) / 2 + (n_blocks * bitpool) / 8;
+  else if (ch_mode == 3)
+    return 4 + (n_subbands * 2) / 2 + (n_subbands + n_blocks * bitpool) / 8;
+
+  return 0;
+}
+
+static void
+sbc_type_find (GstTypeFind * tf, gpointer unused)
+{
+  const guint8 *data;
+  gsize frame_len;
+  guint i, rate, channels, offset = 0;
+
+  for (i = 0; i < 10; ++i) {
+    data = gst_type_find_peek (tf, offset, 8);
+    if (data == NULL)
+      return;
+
+    frame_len = sbc_check_header (data, 8, &rate, &channels);
+    if (frame_len == 0)
+      return;
+
+    offset += frame_len;
+  }
+  gst_type_find_suggest_simple (tf, GST_TYPE_FIND_POSSIBLE, "audio/x-sbc",
+      "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels,
+      "parsed", G_TYPE_BOOLEAN, FALSE, NULL);
+}
+
 /*** audio/iLBC-sh ***/
 /* NOTE: do not replace this function with two TYPE_FIND_REGISTER_START_WITH */
 static GstStaticCaps ilbc_caps = GST_STATIC_CAPS ("audio/iLBC-sh");
@@ -5042,6 +5102,8 @@ plugin_init (GstPlugin * plugin)
       "amr", "#!AMR-WB", 7, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "audio/iLBC-sh", GST_RANK_PRIMARY, ilbc_type_find,
       "ilbc", ILBC_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "audio/x-sbc", GST_RANK_MARGINAL, sbc_type_find,
+      "sbc", SBC_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-sid", GST_RANK_MARGINAL,
       "sid", "PSID", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_START_WITH (plugin, "image/x-xcf", GST_RANK_SECONDARY,
