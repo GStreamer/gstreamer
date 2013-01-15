@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-25 13:13+0100\n"
+"POT-Creation-Date: 2013-01-15 13:23+0000\n"
 "PO-Revision-Date: 2011-10-02 15:45+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -869,6 +869,9 @@ msgstr "no se permite un conducto vacío"
 
 msgid "Internal clock error."
 msgstr "Error en el reloj interno."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Internal data flow error."
 msgstr "Error en el flujo de datos interno."

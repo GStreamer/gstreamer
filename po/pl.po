@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-25 13:13+0100\n"
+"POT-Creation-Date: 2013-01-15 13:23+0000\n"
 "PO-Revision-Date: 2011-04-26 17:54+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -862,6 +862,9 @@ msgstr "pusty potok nie jest dozwolony"
 
 msgid "Internal clock error."
 msgstr "Wewnętrzny błąd zegara."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Internal data flow error."
 msgstr "Wewnętrzny błąd przepływu danych."

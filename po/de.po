@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-25 13:13+0100\n"
+"POT-Creation-Date: 2013-01-15 13:23+0000\n"
 "PO-Revision-Date: 2011-04-27 23:44+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -884,6 +884,9 @@ msgstr "Leere Leitung ist nicht erlaubt"
 
 msgid "Internal clock error."
 msgstr "Interner Zeitfehler"
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Internal data flow error."
 msgstr "Interner Fehler im Datenfluss."

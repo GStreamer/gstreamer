@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-25 13:13+0100\n"
+"POT-Creation-Date: 2013-01-15 13:23+0000\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -867,6 +867,10 @@ msgstr "no es permet un conducte buit"
 msgid "Internal clock error."
 msgstr "S'ha produït un error intern del rellotge."
 
+#, fuzzy
+msgid "Failed to map buffer."
+msgstr "No s'ha pogut codificar la imatge."
+
 msgid "Internal data flow error."
 msgstr "S'ha produït un error intern de flux de dades."
 
@@ -1369,9 +1373,6 @@ msgstr "S'està alliberant el conducte…\n"
 
 #~ msgid "Could not set settings."
 #~ msgstr "No s'ha pogut establir els paràmetres."
-
-#~ msgid "Failed to encode image."
-#~ msgstr "No s'ha pogut codificar la imatge."
 
 #~ msgid "date the data was created (in Julian calendar days)"
 #~ msgstr ""
