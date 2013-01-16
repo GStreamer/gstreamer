@@ -4922,11 +4922,11 @@ ssa_type_find (GstTypeFind * tf, gpointer private)
   if (data == NULL)
     return;
 
-  /* there might be a BOM at the beginning */
+  /* FIXME: detect utf-16/32 BOM and convert before typefinding the rest */
+
+  /* there might be a UTF-8 BOM at the beginning */
   if (memcmp (data, "[Script Info]", 13) != 0 &&
-      memcmp (data + 2, "[Script Info]", 13) != 0 &&
-      memcmp (data + 3, "[Script Info]", 13) != 0 &&
-      memcmp (data + 4, "[Script Info]", 13) != 0) {
+      memcmp (data + 3, "[Script Info]", 13) != 0) {
     return;
   }
 
