@@ -53,7 +53,7 @@ static const char *realm = "SOUPHTTPSRC_REALM";
 static const char *basic_auth_path = "/basic_auth";
 static const char *digest_auth_path = "/digest_auth";
 
-static int run_server (guint * http_port, guint * https_port);
+static gboolean run_server (guint * http_port, guint * https_port);
 static void stop_server (void);
 
 static void
@@ -457,22 +457,27 @@ souphttpsrc_suite (void)
   tc_internet = tcase_create ("internet");
 
   suite_add_tcase (s, tc_chain);
-  run_server (&http_port, &https_port);
-  atexit (stop_server);
-  tcase_add_test (tc_chain, test_first_buffer_has_offset);
-  tcase_add_test (tc_chain, test_redirect_yes);
-  tcase_add_test (tc_chain, test_redirect_no);
-  tcase_add_test (tc_chain, test_not_found);
-  tcase_add_test (tc_chain, test_forbidden);
-  tcase_add_test (tc_chain, test_cookies);
-  tcase_add_test (tc_chain, test_good_user_basic_auth);
-  tcase_add_test (tc_chain, test_bad_user_basic_auth);
-  tcase_add_test (tc_chain, test_bad_password_basic_auth);
-  tcase_add_test (tc_chain, test_good_user_digest_auth);
-  tcase_add_test (tc_chain, test_bad_user_digest_auth);
-  tcase_add_test (tc_chain, test_bad_password_digest_auth);
-  if (soup_ssl_supported)
-    tcase_add_test (tc_chain, test_https);
+  if (run_server (&http_port, &https_port)) {
+    atexit (stop_server);
+    tcase_add_test (tc_chain, test_first_buffer_has_offset);
+    tcase_add_test (tc_chain, test_redirect_yes);
+    tcase_add_test (tc_chain, test_redirect_no);
+    tcase_add_test (tc_chain, test_not_found);
+    tcase_add_test (tc_chain, test_forbidden);
+    tcase_add_test (tc_chain, test_cookies);
+    tcase_add_test (tc_chain, test_good_user_basic_auth);
+    tcase_add_test (tc_chain, test_bad_user_basic_auth);
+    tcase_add_test (tc_chain, test_bad_password_basic_auth);
+    tcase_add_test (tc_chain, test_good_user_digest_auth);
+    tcase_add_test (tc_chain, test_bad_user_digest_auth);
+    tcase_add_test (tc_chain, test_bad_password_digest_auth);
+
+    if (soup_ssl_supported)
+      tcase_add_test (tc_chain, test_https);
+  } else {
+    g_print ("Skipping 12 souphttpsrc tests, couldn't start or connect to "
+        "local http server\n");
+  }
 
   suite_add_tcase (s, tc_internet);
   tcase_set_timeout (tc_internet, 250);
@@ -575,7 +580,7 @@ server_callback (SoupServer * server, SoupMessage * msg,
 static SoupServer *server;      /* NULL */
 static SoupServer *ssl_server;  /* NULL */
 
-int
+static gboolean
 run_server (guint * http_port, guint * https_port)
 {
   guint port = SOUP_ADDRESS_ANY_PORT;
@@ -587,7 +592,8 @@ run_server (guint * http_port, guint * https_port)
   SoupAuthDomain *domain = NULL;
 
   if (server_running)
-    return 0;
+    return TRUE;
+
   server_running = 1;
 
   *http_port = *https_port = 0;
@@ -595,7 +601,7 @@ run_server (guint * http_port, guint * https_port)
   server = soup_server_new (SOUP_SERVER_PORT, port, NULL);
   if (!server) {
     GST_DEBUG ("Unable to bind to server port %u", port);
-    return 1;
+    return FALSE;
   }
   *http_port = soup_server_get_port (server);
   GST_INFO ("HTTP server listening on port %u", *http_port);
@@ -619,7 +625,8 @@ run_server (guint * http_port, guint * https_port)
 
     if (!ssl_server) {
       GST_DEBUG ("Unable to bind to SSL server port %u", ssl_port);
-      return 1;
+      stop_server ();
+      return FALSE;
     }
     *https_port = soup_server_get_port (ssl_server);
     GST_INFO ("HTTPS server listening on port %u", *https_port);
@@ -627,7 +634,35 @@ run_server (guint * http_port, guint * https_port)
     soup_server_run_async (ssl_server);
   }
 
-  return 0;
+  /* check if we can connect to our local http server */
+  {
+    GSocketConnection *conn;
+    GSocketClient *client;
+
+    client = g_socket_client_new ();
+    g_socket_client_set_timeout (client, 2);
+    conn = g_socket_client_connect_to_host (client, "127.0.0.1", *http_port,
+        NULL, NULL);
+    if (conn == NULL) {
+      GST_INFO ("Couldn't connect to http server 127.0.0.1:%u", *http_port);
+      g_object_unref (client);
+      stop_server ();
+      return FALSE;
+    }
+    g_object_unref (conn);
+    conn = g_socket_client_connect_to_host (client, "127.0.0.1", *http_port,
+        NULL, NULL);
+    if (conn == NULL) {
+      GST_INFO ("Couldn't connect to https server 127.0.0.1:%u", *https_port);
+      g_object_unref (client);
+      stop_server ();
+      return FALSE;
+    }
+    g_object_unref (conn);
+    g_object_unref (client);
+  }
+
+  return TRUE;
 }
 
 static void
