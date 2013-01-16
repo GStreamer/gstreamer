@@ -74,6 +74,9 @@ typedef struct {
     GCond               decoder_ready;
     GAsyncQueue        *decoder_queue;
     GstVaapiCodec       codec;
+    guint               fps_n;
+    guint               fps_d;
+    guint32             frame_duration;
     guint               surface_width;
     guint               surface_height;
     GstVaapiWindow     *window;
@@ -81,6 +84,7 @@ typedef struct {
     guint               window_height;
     GThread            *render_thread;
     volatile gboolean   render_thread_cancel;
+    GCond               render_ready;
     GstBuffer          *last_buffer;
     GError             *error;
     AppEvent            event;
@@ -193,6 +197,7 @@ decoder_thread(gpointer data)
     GstVaapiSurfaceProxy *proxy;
     GstVaapiVideoMeta *meta;
     GstBuffer *buffer;
+    GstClockTime pts;
     gboolean got_surface;
     gint64 end_time;
     guint ofs;
@@ -205,6 +210,7 @@ decoder_thread(gpointer data)
         goto send_error;                                                \
     } while (0)
 
+    pts = g_get_monotonic_time();
     ofs = 0;
     while (!app->decoder_thread_cancel) {
         if (G_UNLIKELY(ofs == app->file_size))
@@ -235,6 +241,9 @@ decoder_thread(gpointer data)
             buffer = gst_buffer_new();
             if (!buffer)
                 SEND_ERROR("failed to allocate output buffer");
+            GST_BUFFER_TIMESTAMP(buffer) = pts;
+            GST_BUFFER_DURATION(buffer) = app->frame_duration;
+            pts += app->frame_duration;
             gst_buffer_set_vaapi_video_meta(buffer, meta);
             gst_vaapi_video_meta_unref(meta);
             g_async_queue_push(app->decoder_queue, buffer);
@@ -270,6 +279,35 @@ send_eos:
 send_error:
     app_send_error(app, error);
     return NULL;
+}
+
+static void
+app_set_framerate(App *app, guint fps_n, guint fps_d)
+{
+    if (!fps_n || !fps_d)
+        return;
+
+    g_mutex_lock(&app->mutex);
+    if (fps_n != app->fps_n || fps_d != app->fps_d) {
+        app->fps_n = fps_n;
+        app->fps_d = fps_d;
+        app->frame_duration = gst_util_uint64_scale(
+            GST_TIME_AS_USECONDS(GST_SECOND), fps_d, fps_n);
+    }
+    g_mutex_unlock(&app->mutex);
+}
+
+static void
+handle_decoder_caps(GObject *obj, GParamSpec *pspec, void *user_data)
+{
+    App * const app = user_data;
+    GstVideoCodecState *codec_state;
+
+    g_assert(app->decoder == GST_VAAPI_DECODER(obj));
+
+    codec_state = gst_vaapi_decoder_get_codec_state(app->decoder);
+    app_set_framerate(app, codec_state->info.fps_n, codec_state->info.fps_d);
+    gst_video_codec_state_unref(codec_state);
 }
 
 static gboolean
@@ -312,6 +350,9 @@ start_decoder(App *app)
     if (!app->decoder)
         return FALSE;
 
+    g_signal_connect(G_OBJECT(app->decoder), "notify::caps",
+        G_CALLBACK(handle_decoder_caps), app);
+
     app->decoder_thread = g_thread_create(decoder_thread, app, TRUE, NULL);
     if (!app->decoder_thread)
         return FALSE;
@@ -346,6 +387,15 @@ ensure_window_size(App *app, GstVaapiSurface *surface)
         &app->window_width, &app->window_height);
 }
 
+static inline void
+renderer_wait_until(App *app, GstClockTime pts)
+{
+    g_mutex_lock(&app->mutex);
+    do {
+    } while (g_cond_wait_until(&app->render_ready, &app->mutex, pts));
+    g_mutex_unlock(&app->mutex);
+}
+
 static gboolean
 renderer_process(App *app, GstBuffer *buffer)
 {
@@ -368,6 +418,8 @@ renderer_process(App *app, GstBuffer *buffer)
         SEND_ERROR("failed to get decoded surface from video meta");
 
     ensure_window_size(app, surface);
+
+    renderer_wait_until(app, GST_BUFFER_TIMESTAMP(buffer));
 
     if (!gst_vaapi_window_put_surface(app->window, surface, NULL, NULL,
             GST_VAAPI_PICTURE_STRUCTURE_FRAME))
@@ -459,6 +511,7 @@ app_free(App *app)
     }
     g_cond_clear(&app->decoder_ready);
 
+    g_cond_clear(&app->render_ready);
     g_cond_clear(&app->event_cond);
     g_mutex_clear(&app->mutex);
     g_slice_free(App, app);
@@ -476,7 +529,9 @@ app_new(void)
     g_mutex_init(&app->mutex);
     g_cond_init(&app->event_cond);
     g_cond_init(&app->decoder_ready);
+    g_cond_init(&app->render_ready);
 
+    app_set_framerate(app, 60, 1);
     app->window_width = 640;
     app->window_height = 480;
 
