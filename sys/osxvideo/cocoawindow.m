@@ -543,34 +543,41 @@
 - (void)keyDown:(NSEvent *) event;
 {
   [self sendKeyEvent: event: "key-press"];
+  [super keyDown: event];
 }
 
 - (void)keyUp:(NSEvent *) event;
 {
   [self sendKeyEvent: event: "key-release"];
+  [super keyUp: event];
 }
 
 - (void)mouseDown:(NSEvent *) event;
 {
   [self sendMouseEvent:event: "mouse-button-press"];
+  [super mouseDown: event];
 }
 
 - (void)mouseUp:(NSEvent *) event;
 {
   [self sendMouseEvent:event: "mouse-button-release"];
+  [super mouseUp: event];
 }
 
 - (void)mouseMoved:(NSEvent *)event;
 {
   [self sendMouseEvent:event: "mouse-move"];
+  [super mouseMoved: event];
 }
 
 - (void)mouseEntered:(NSEvent *)event;
 {
+  [super mouseEntered: event];
 }
 
 - (void)mouseExited:(NSEvent *)event;
 {
+  [super mouseExited: event];
 }
 
 @end
