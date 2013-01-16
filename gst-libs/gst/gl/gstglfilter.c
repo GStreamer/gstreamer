@@ -1140,15 +1140,15 @@ gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
 {
   GstGLFuncs *gl = filter->display->gl_vtable;
 
-  gfloat verts[8] = { -1.0f, 1.0f,
+  gfloat verts[] = { -1.0f, -1.0f,
     1.0f, -1.0f,
     1.0f, 1.0f,
     -1.0f, 1.0f
   };
-  gint texcoords[8] = { 0, 0,
+  gint texcoords[] = { 0, 0,
     width, 0,
-    0, height,
-    width, height
+    width, height,
+    0, height
   };
 
   GST_DEBUG ("drawing texture:%u dimensions:%ux%u", texture, width, height);
@@ -1157,8 +1157,11 @@ gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
   gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
   gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
+  gl->ClientActiveTexture (GL_TEXTURE0);
+
   gl->EnableClientState (GL_VERTEX_ARRAY);
   gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
+
   gl->VertexPointer (2, GL_FLOAT, 0, &verts);
   gl->TexCoordPointer (2, GL_INT, 0, &texcoords);
 
