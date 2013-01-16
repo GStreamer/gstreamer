@@ -22,3 +22,4 @@
 #include "glprototypes/gles1opengl.h"
 #include "glprototypes/gles1gles2opengl.h"
 #include "glprototypes/gles2opengl.h"
+#include "glprototypes/gles3opengl.h"

@@ -20,53 +20,6 @@
 
 #include "gstglapi.h"
 
-#define GST_GL_EXT_BEGIN(name, min_gl, maj_gl, in_gles, ext_suf, ext_name)
-#define GST_GL_EXT_FUNCTION(ret, name, args) \
-  NULL,
-#define GST_GL_EXT_END()
-
-#if GST_GL_HAVE_OPENGL
-static GstGLFuncs gst_gl = {
-#include "glprototypes/opengl.h"
-  {NULL,},
-#include "glprototypes/gles1opengl.h"
-  {NULL,},
-#include "glprototypes/gles2opengl.h"
-  {NULL,},
-#include "glprototypes/gles1gles2opengl.h"
-  {NULL,},
-};
-
-const GstGLFuncs *
-gst_gl_get_opengl_vtable (void)
-{
-  return &gst_gl;
-}
-#endif
-
-#if GST_GL_HAVE_GLES2
-static GstGLES2Funcs gst_gles2 = {
-#include "glprototypes/gles1gles2.h"
-  {NULL,},
-#include "glprototypes/gles1gles2opengl.h"
-  {NULL,},
-#include "glprototypes/gles2.h"
-  {NULL,},
-#include "glprototypes/gles2opengl.h"
-  {NULL,},
-};
-
-const GstGLES2Funcs *
-gst_gl_get_gles2_vtable (void)
-{
-  return &gst_gles2;
-}
-#endif
-
-#undef GST_GL_EXT_BEGIN
-#undef GST_GL_EXT_FUNCTION
-#undef GST_GL_EXT_END
-
 gchar *
 gst_gl_api_string (GstGLAPI api)
 {

@@ -159,6 +159,8 @@ struct _GstGLDisplay
 
   gchar *error_message;
 
+  GstGLFuncs *gl_vtable;
+
   GstGLDisplayPrivate *priv;
 };
 
@@ -219,12 +221,14 @@ void gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activa
 
 /* Must be called inside a lock/unlock on display, or within the glthread */
 void gst_gl_display_set_error (GstGLDisplay * display, const char * format, ...);
-void gst_gl_display_check_framebuffer_status (void);
+gboolean gst_gl_display_check_framebuffer_status (GstGLDisplay * display);
 
 void gst_gl_display_lock (GstGLDisplay * display);
 void gst_gl_display_unlock (GstGLDisplay * display);
 GstGLAPI gst_gl_display_get_gl_api (GstGLDisplay * display);
 GstGLAPI gst_gl_display_get_gl_api_unlocked (GstGLDisplay * display);
+
+gpointer gst_gl_display_get_gl_vtable (GstGLDisplay * display);
 
 G_END_DECLS
 

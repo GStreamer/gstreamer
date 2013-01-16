@@ -27,15 +27,6 @@
 
 G_BEGIN_DECLS
 
-/* GLEW */
-
-#define GLEW_OK 0
-#define GLEW_NO_ERROR 0
-#define GLEW_VERSION 1
-#define GLEW_VERSION_MAJOR 5
-#define GLEW_VERSION_MINOR 1
-#define GLEW_VERSION_MICRO 0
-
 /* SUPPORTED */
 
 //FIXME:
@@ -46,91 +37,20 @@ G_BEGIN_DECLS
 //END FIXME
 
 #define GL_TEXTURE_RECTANGLE_ARB GL_TEXTURE_2D
-#define GL_TEXTURE0_ARB GL_TEXTURE0
-#define GL_TEXTURE1_ARB GL_TEXTURE1
-#define GL_TEXTURE2_ARB GL_TEXTURE2
-
-#define GLEW_EXT_framebuffer_object 1
-#define GL_FRAMEBUFFER_EXT GL_FRAMEBUFFER
-#define GL_RENDERBUFFER_EXT GL_RENDERBUFFER
-#define GL_STENCIL_ATTACHMENT_EXT GL_STENCIL_ATTACHMENT
-#define GL_DEPTH_ATTACHMENT_EXT GL_DEPTH_ATTACHMENT
-#define GL_FRAMEBUFFER_COMPLETE_EXT GL_FRAMEBUFFER_COMPLETE
-#define GL_FRAMEBUFFER_UNSUPPORTED_EXT GL_FRAMEBUFFER_UNSUPPORTED
-#define GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT
-#define GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT
-#define GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS
-
-#define GL_COLOR_ATTACHMENT0_EXT GL_COLOR_ATTACHMENT0
-
-#define glFramebufferTexture2DEXT glFramebufferTexture2D
-#define glFramebufferRenderbufferEXT glFramebufferRenderbuffer
-#define glGenFramebuffersEXT glGenFramebuffers
-#define glBindFramebufferEXT glBindFramebuffer
-#define glRenderbufferStorageEXT glRenderbufferStorage
-#define glDeleteRenderbuffersEXT glDeleteRenderbuffers
-#define glDeleteFramebuffersEXT glDeleteFramebuffers
-#define glCheckFramebufferStatusEXT glCheckFramebufferStatus
-#define glGenRenderbuffersEXT glGenRenderbuffers
-#define glBindRenderbufferEXT glBindRenderbuffer
-#define glFramebufferTexture2DEXT glFramebufferTexture2D
-
-#define glActiveTextureARB glActiveTexture
-
-#define GLEW_ARB_fragment_shader 1
-#define GLhandleARB GLuint
-#define GL_FRAGMENT_SHADER_ARB GL_FRAGMENT_SHADER
-#define GL_VERTEX_SHADER_ARB GL_VERTEX_SHADER
-#define GL_OBJECT_COMPILE_STATUS_ARB GL_COMPILE_STATUS
-
-#define glUseProgramObjectARB glUseProgram
-#define glCreateProgramObjectARB glCreateProgram
-#define glCreateShaderObjectARB glCreateShader
-#define glCompileShaderARB glCompileShader
-#define glShaderSourceARB glShaderSource
-#define glGetInfoLogARB glGetProgramInfoLog
-#define glAttachObjectARB glAttachShader
-#define glDetachObjectARB glDetachShader
-#define glDeleteObjectARB glDeleteProgram
-#define glLinkProgramARB glLinkProgram
-#define glGetObjectParameterivARB glGetShaderiv
-#define glUniform1fARB glUniform1f
-#define glUniform1fvARB glUniform1fv
-#define glUniform1iARB glUniform1i
-#define glUniform1ivARB glUniform1iv
-#define glUniform2fARB glUniform2f
-#define glUniform2fvARB glUniform2fv
-#define glUniform2iARB glUniform2i
-#define glUniform2ivARB glUniform2iv
-#define glUniform3fARB glUniform3f
-#define glUniform3fvARB glUniform3fv
-#define glUniform3iARB glUniform3i
-#define glUniform3ivARB glUniform3iv
-#define glUniform4fARB glUniform4f
-#define glUniform4fvARB glUniform4fv
-#define glUniform4iARB glUniform4i
-#define glUniform4ivARB glUniform4iv
-#define glUniformMatrix2fvARB glUniformMatrix2fv
-#define glUniformMatrix3fvARB glUniformMatrix3fv
-#define glUniformMatrix4fvARB glUniformMatrix4fv
-#define glGetUniformLocationARB glGetUniformLocation
-#define glGetAttribLocationARB glGetAttribLocation
-#define glBindAttribLocationARB glBindAttribLocation
 
 /* UNSUPPORTED */
 
-#define GLEW_ARB_imaging 0
-#define GLEW_MESA_ycbcr_texture 0
 #define GL_BGR 0
 #define GL_YCBCR_MESA 0
 #define GL_UNSIGNED_SHORT_8_8_MESA 0
 #define GL_UNSIGNED_SHORT_8_8_MESA 0
 #define GL_UNSIGNED_SHORT_8_8_REV_MESA 0
 
-#define GL_COLOR_ATTACHMENT1_EXT 0
-#define GL_COLOR_ATTACHMENT2_EXT 0
+#define GL_COLOR_ATTACHMENT1 0
+#define GL_COLOR_ATTACHMENT2 0
 #define GL_TEXTURE_ENV 0
 #define GL_TEXTURE_ENV_MODE 0
+#define GL_DEPTH24_STENCIL8 0
 
 G_END_DECLS
 

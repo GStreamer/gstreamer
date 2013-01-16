@@ -35,11 +35,10 @@
 /* OpenGL for desktop systems */
 #if GST_GL_HAVE_OPENGL
 # if __APPLE__
-#  include <GL/glew.h>
 #  include <OpenGL/OpenGL.h>
 #  include <OpenGL/gl.h>
 # else
-#  include <GL/glew.h>
+#  include <GL/glu.h>
 #  include <GL/gl.h>
 # endif
 #endif
@@ -75,37 +74,25 @@ typedef enum
   ret (*name) args;
 #define GST_GL_EXT_END()
 
-#if GST_GL_HAVE_OPENGL
 typedef struct _GstGLFuncs
 {
 #include "glprototypes/opengl.h"
   gpointer padding1[GST_PADDING_LARGE];
-#include "glprototypes/gles1opengl.h"
+#include "glprototypes/gles1.h"
   gpointer padding2[GST_PADDING_LARGE];
-#include "glprototypes/gles2opengl.h"
-  gpointer padding3[GST_PADDING_LARGE*2];
-#include "glprototypes/gles1gles2opengl.h"
-  gpointer padding4[GST_PADDING_LARGE*4];
-} GstGLFuncs;
-
-const GstGLFuncs *gst_gl_get_opengl_vtable (void);
-#endif
-
-#if GST_GL_HAVE_GLES2
-typedef struct _GstGLES2Funcs
-{
 #include "glprototypes/gles1gles2.h"
-  gpointer padding1[GST_PADDING_LARGE];
-#include "glprototypes/gles1gles2opengl.h"
   gpointer padding3[GST_PADDING_LARGE];
+#include "glprototypes/gles1opengl.h"
+  gpointer padding4[GST_PADDING_LARGE*2];
 #include "glprototypes/gles2.h"
-  gpointer padding2[GST_PADDING_LARGE*2];
+  gpointer padding5[GST_PADDING_LARGE*2];
 #include "glprototypes/gles2opengl.h"
-  gpointer padding4[GST_PADDING_LARGE*4];
-} GstGLES2Funcs;
-
-const GstGLES2Funcs *gst_gl_get_gles2_vtable (void);
-#endif
+  gpointer padding6[GST_PADDING_LARGE*2];
+#include "glprototypes/gles1gles2opengl.h"
+  gpointer padding7[GST_PADDING_LARGE*2];
+#include "glprototypes/gles3opengl.h"
+  gpointer padding8[GST_PADDING_LARGE*4];
+} GstGLFuncs;
 
 #undef GST_GL_EXT_BEGIN
 #undef GST_GL_EXT_FUNCTION

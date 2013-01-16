@@ -717,9 +717,11 @@ gst_gl_display_find_download (GstGLDisplay * display, GstVideoFormat v_format,
 static void
 _init_download (GstGLDisplay * display, GstGLDownload * download)
 {
+  GstGLFuncs *gl;
   GstVideoFormat v_format;
   guint out_width, out_height;
 
+  gl = display->gl_vtable;
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
   out_width = GST_VIDEO_INFO_WIDTH (&download->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
@@ -764,7 +766,7 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
       /* color space conversion is needed */
     {
 
-      if (!GLEW_EXT_framebuffer_object) {
+      if (!gl->GenFramebuffers) {
         /* Frame buffer object is a requirement 
          * when using GLSL colorspace conversion
          */
@@ -775,107 +777,102 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
       GST_INFO ("Context, EXT_framebuffer_object supported: yes");
 
       /* setup FBO */
-      glGenFramebuffersEXT (1, &download->fbo);
-      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, download->fbo);
+      gl->GenFramebuffers (1, &download->fbo);
+      gl->BindFramebuffer (GL_FRAMEBUFFER, download->fbo);
 
       /* setup the render buffer for depth */
-      glGenRenderbuffersEXT (1, &download->depth_buffer);
-      glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, download->depth_buffer);
+      gl->GenRenderbuffers (1, &download->depth_buffer);
+      gl->BindRenderbuffer (GL_RENDERBUFFER, download->depth_buffer);
 #if GST_GL_HAVE_OPENGL
       if (USING_OPENGL (display)) {
-        glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
+        gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
             out_width, out_height);
-        glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH24_STENCIL8_EXT,
+        gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
             out_width, out_height);
       }
 #endif
 #if GST_GL_HAVE_GLES2
       if (USING_GLES2 (display)) {
-        glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
+        gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
             out_width, out_height);
       }
 #endif
 
       /* setup a first texture to render to */
-      glGenTextures (1, &download->out_texture[0]);
-      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, download->out_texture[0]);
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+      gl->GenTextures (1, &download->out_texture[0]);
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->out_texture[0]);
+      gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
           out_width, out_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
           GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
           GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
           GL_CLAMP_TO_EDGE);
-      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
           GL_CLAMP_TO_EDGE);
 
       /* attach the first texture to the FBO to renderer to */
-      glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+      gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
           GL_TEXTURE_RECTANGLE_ARB, download->out_texture[0], 0);
 
       if (v_format == GST_VIDEO_FORMAT_I420 ||
           v_format == GST_VIDEO_FORMAT_YV12) {
         /* setup a second texture to render to */
-        glGenTextures (1, &download->out_texture[1]);
-        glBindTexture (GL_TEXTURE_RECTANGLE_ARB, download->out_texture[1]);
-        glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+        gl->GenTextures (1, &download->out_texture[1]);
+        gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->out_texture[1]);
+        gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
             out_width, out_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+        gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
             GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+        gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
             GL_LINEAR);
         glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
             GL_CLAMP_TO_EDGE);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+        gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
             GL_CLAMP_TO_EDGE);
 
         /* attach the second texture to the FBO to renderer to */
-        glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
-            GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_RECTANGLE_ARB,
+        gl->FramebufferTexture2D (GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT1, GL_TEXTURE_RECTANGLE_ARB,
             download->out_texture[1], 0);
 
         /* setup a third texture to render to */
-        glGenTextures (1, &download->out_texture[2]);
-        glBindTexture (GL_TEXTURE_RECTANGLE_ARB, download->out_texture[2]);
-        glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+        gl->GenTextures (1, &download->out_texture[2]);
+        gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->out_texture[2]);
+        gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
             out_width, out_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+        gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
             GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+        gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
             GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+        gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
             GL_CLAMP_TO_EDGE);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+        gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
             GL_CLAMP_TO_EDGE);
 
         /* attach the third texture to the FBO to renderer to */
-        glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
-            GL_COLOR_ATTACHMENT2_EXT, GL_TEXTURE_RECTANGLE_ARB,
+        gl->FramebufferTexture2D (GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT2, GL_TEXTURE_RECTANGLE_ARB,
             download->out_texture[2], 0);
       }
 
       /* attach the depth render buffer to the FBO */
-      glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
-          GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, download->depth_buffer);
+      gl->FramebufferRenderbuffer (GL_FRAMEBUFFER,
+          GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, download->depth_buffer);
 
 #if GST_GL_HAVE_GLES2
       if (USING_GLES2 (display)) {
-        glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
-            GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT,
-            download->depth_buffer);
+        gl->FramebufferRenderbuffer (GL_FRAMEBUFFER,
+            GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, download->depth_buffer);
       }
 #endif
 
-      gst_gl_display_check_framebuffer_status ();
-
-      if (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) !=
-          GL_FRAMEBUFFER_COMPLETE_EXT) {
+      if (!gst_gl_display_check_framebuffer_status (display))
         gst_gl_display_set_error (display, "GL framebuffer status incomplete");
-      }
 
       /* unbind the FBO */
-      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+      gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
     }
       break;
     default:
@@ -908,7 +905,7 @@ _create_shader (GstGLDisplay * display, const gchar * vertex_src,
   if (!gst_gl_shader_compile (shader, &error)) {
     gst_gl_display_set_error (display, "%s", error->message);
     g_error_free (error);
-    gst_gl_shader_use (NULL);
+    gst_gl_display_clear_shader (display);
     g_object_unref (G_OBJECT (shader));
     return FALSE;
   }
@@ -920,8 +917,10 @@ _create_shader (GstGLDisplay * display, const gchar * vertex_src,
 static void
 _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
 {
+  GstGLFuncs *gl;
   GstVideoFormat v_format;
 
+  gl = display->gl_vtable;
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
 
   switch (v_format) {
@@ -963,7 +962,7 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
       /* check if fragment shader is available, then load them
        * GLSL is a requirement for download
        */
-      if (!GLEW_ARB_fragment_shader) {
+      if (!gl->CreateProgramObject && !gl->CreateProgram) {
         /* colorspace conversion is not possible */
         gst_gl_display_set_error (display,
             "Context, ARB_fragment_shader supported: no");
@@ -1097,41 +1096,43 @@ _do_download (GstGLDisplay * display, GstGLDownload * download)
 static void
 _do_download_draw_rgb_opengl (GstGLDisplay * display, GstGLDownload * download)
 {
+  GstGLFuncs *gl;
   GstVideoFormat v_format;
 
-  if (download->display->colorspace_conversion ==
-      GST_GL_DISPLAY_CONVERSION_GLSL)
-    glUseProgramObjectARB (0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
+  gl = display->gl_vtable;
+
+  gst_gl_display_clear_shader (display);
+
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
 
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_RGBx:
-      glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+      gl->GetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
           GL_UNSIGNED_BYTE, download->data[0]);
       break;
     case GST_VIDEO_FORMAT_xRGB:
     case GST_VIDEO_FORMAT_ARGB:
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
+      gl->GetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8, download->data[0]);
 #else
-      glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
+      gl->GetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8_REV, download->data[0]);
 #endif /* G_BYTE_ORDER */
       break;
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_BGRA:
-      glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
+      gl->GetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
           GL_UNSIGNED_BYTE, download->data[0]);
       break;
     case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_ABGR:
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+      gl->GetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
           GL_UNSIGNED_INT_8_8_8_8, download->data[0]);
 #else
       glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
@@ -1139,11 +1140,11 @@ _do_download_draw_rgb_opengl (GstGLDisplay * display, GstGLDownload * download)
 #endif /* G_BYTE_ORDER */
       break;
     case GST_VIDEO_FORMAT_RGB:
-      glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
+      gl->GetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
           GL_UNSIGNED_BYTE, download->data[0]);
       break;
     case GST_VIDEO_FORMAT_BGR:
-      glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGR,
+      gl->GetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGR,
           GL_UNSIGNED_BYTE, download->data[0]);
       break;
     default:
@@ -1163,6 +1164,7 @@ _do_download_draw_rgb_opengl (GstGLDisplay * display, GstGLDownload * download)
 static void
 _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
 {
+  GstGLFuncs *gl;
   GstVideoFormat v_format;
   guint out_width, out_height;
 
@@ -1178,54 +1180,56 @@ _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
 
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
+  gl = display->gl_vtable;
+
   out_width = GST_VIDEO_INFO_WIDTH (&download->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
 
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, download->fbo);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, download->fbo);
 
-  glViewport (0, 0, out_width, out_height);
+  gl->Viewport (0, 0, out_width, out_height);
 
-  glClearColor (0.0, 0.0, 0.0, 0.0);
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  gl->ClearColor (0.0, 0.0, 0.0, 0.0);
+  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   gst_gl_shader_use (download->shader);
 
-  glVertexAttribPointer (download->shader_attr_position_loc, 3,
+  gl->VertexAttribPointer (download->shader_attr_position_loc, 3,
       GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-  glVertexAttribPointer (download->shader_attr_texture_loc, 2,
+  gl->VertexAttribPointer (download->shader_attr_texture_loc, 2,
       GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
-  glEnableVertexAttribArray (download->shader_attr_position_loc);
-  glEnableVertexAttribArray (download->shader_attr_texture_loc);
+  gl->EnableVertexAttribArray (download->shader_attr_position_loc);
+  gl->EnableVertexAttribArray (download->shader_attr_texture_loc);
 
-  glActiveTextureARB (GL_TEXTURE0_ARB);
+  gl->ActiveTexture (GL_TEXTURE0);
   gst_gl_shader_set_uniform_1i (download->shader, "s_texture", 0);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
 
-  glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
-  glUseProgramObjectARB (0);
+  gst_gl_display_clear_shader (display);
 
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_RGBx:
-      glReadPixels (0, 0, out_width, out_height, GL_RGBA, GL_UNSIGNED_BYTE,
+      gl->ReadPixels (0, 0, out_width, out_height, GL_RGBA, GL_UNSIGNED_BYTE,
           download->data[0]);
       break;
     case GST_VIDEO_FORMAT_xRGB:
     case GST_VIDEO_FORMAT_ARGB:
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      glReadPixels (0, 0, out_width, out_height, GL_BGRA,
+      gl->ReadPixels (0, 0, out_width, out_height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8, download->data[0]);
 #else
-      glReadPixels (0, 0, out_width, out_eight, GL_BGRA,
+      gl->ReadPixels (0, 0, out_width, out_eight, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8_REV, download->data[0]);
 #endif /* G_BYTE_ORDER */
       break;
     case GST_VIDEO_FORMAT_RGB:
-      glReadPixels (0, 0, out_width, out_height, GL_RGB, GL_UNSIGNED_BYTE,
+      gl->ReadPixels (0, 0, out_width, out_height, GL_RGB, GL_UNSIGNED_BYTE,
           download->data[0]);
       break;
     case GST_VIDEO_FORMAT_BGRx:
@@ -1247,76 +1251,89 @@ _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
 static void
 _do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
 {
+  GstGLFuncs *gl;
   GstVideoFormat v_format;
-  guint out_width, out_height;
+  guint out_width = GST_VIDEO_INFO_WIDTH (&download->info);
+  guint out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
 
   GLenum multipleRT[] = {
-    GL_COLOR_ATTACHMENT0_EXT,
-    GL_COLOR_ATTACHMENT1_EXT,
-    GL_COLOR_ATTACHMENT2_EXT
+    GL_COLOR_ATTACHMENT0,
+    GL_COLOR_ATTACHMENT1,
+    GL_COLOR_ATTACHMENT2
   };
 
-  out_width = GST_VIDEO_INFO_WIDTH (&download->info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
+  gfloat verts[8] = { -1.0f, -1.0f,
+    1.0f, -1.0f,
+    1.0f, 1.0f,
+    -1.0f, 1.0f
+  };
+  gint texcoords[8] = { 0, 0,
+    out_width, 0,
+    out_width, out_height,
+    0, out_height
+  };
+
+  gl = display->gl_vtable;
+
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
 
   GST_TRACE ("doing YUV download of texture:%u (%ux%u) using fbo:%u",
       download->in_texture, out_width, out_height, download->fbo);
 
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, download->fbo);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, download->fbo);
 
-  glPushAttrib (GL_VIEWPORT_BIT);
+  gl->PushAttrib (GL_VIEWPORT_BIT);
 
-  glMatrixMode (GL_PROJECTION);
-  glPushMatrix ();
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->PushMatrix ();
+  gl->LoadIdentity ();
   gluOrtho2D (0.0, out_width, 0.0, out_height);
 
-  glMatrixMode (GL_MODELVIEW);
-  glPushMatrix ();
-  glLoadIdentity ();
+  gl->MatrixMode (GL_MODELVIEW);
+  gl->PushMatrix ();
+  gl->LoadIdentity ();
 
-  glViewport (0, 0, out_width, out_height);
+  gl->Viewport (0, 0, out_width, out_height);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
     case GST_VIDEO_FORMAT_AYUV:
     {
-      glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
+      gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
 
-      glClearColor (0.0, 0.0, 0.0, 0.0);
-      glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      gl->ClearColor (0.0, 0.0, 0.0, 0.0);
+      gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       gst_gl_shader_use (download->shader);
 
-      glMatrixMode (GL_PROJECTION);
-      glLoadIdentity ();
+      gl->MatrixMode (GL_PROJECTION);
+      gl->LoadIdentity ();
 
-      glActiveTextureARB (GL_TEXTURE0_ARB);
+      gl->ActiveTexture (GL_TEXTURE0);
       gst_gl_shader_set_uniform_1i (download->shader, "tex", 0);
-      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
     }
       break;
 
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     {
-      glDrawBuffers (3, multipleRT);
+      gl->DrawBuffers (3, multipleRT);
 
-      glClearColor (0.0, 0.0, 0.0, 0.0);
-      glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      gl->ClearColor (0.0, 0.0, 0.0, 0.0);
+      gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       gst_gl_shader_use (download->shader);
 
-      glMatrixMode (GL_PROJECTION);
-      glLoadIdentity ();
+      gl->MatrixMode (GL_PROJECTION);
+      gl->LoadIdentity ();
 
-      glActiveTextureARB (GL_TEXTURE0_ARB);
+      gl->ActiveTexture (GL_TEXTURE0_ARB);
       gst_gl_shader_set_uniform_1i (download->shader, "tex", 0);
       gst_gl_shader_set_uniform_1f (download->shader, "w", (gfloat) out_width);
       gst_gl_shader_set_uniform_1f (download->shader, "h", (gfloat) out_height);
-      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
     }
       break;
 
@@ -1324,92 +1341,91 @@ _do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
       break;
       gst_gl_display_set_error (display,
           "Download video format inconsistensy %d", v_format);
-
   }
 
-  glBegin (GL_QUADS);
-  glTexCoord2i (0, 0);
-  glVertex2f (-1.0f, -1.0f);
-  glTexCoord2i (out_width, 0);
-  glVertex2f (1.0f, -1.0f);
-  glTexCoord2i (out_width, out_height);
-  glVertex2f (1.0f, 1.0f);
-  glTexCoord2i (0, out_height);
-  glVertex2f (-1.0f, 1.0f);
-  glEnd ();
+  gl->EnableClientState (GL_VERTEX_ARRAY);
+  gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
 
-  glDrawBuffer (GL_NONE);
+  gl->VertexPointer (2, GL_FLOAT, 0, &verts);
+  gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
+
+  gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
+
+  gl->DisableClientState (GL_VERTEX_ARRAY);
+  gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
+
+  gl->DrawBuffer (GL_NONE);
 
   /* don't check if GLSL is available
    * because download yuv is not available
    * without GLSL (whereas rgb is)
    */
-  glUseProgramObjectARB (0);
+  gl->UseProgramObject (0);
 
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
-  glMatrixMode (GL_PROJECTION);
-  glPopMatrix ();
-  glMatrixMode (GL_MODELVIEW);
-  glPopMatrix ();
-  glPopAttrib ();
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->MatrixMode (GL_PROJECTION);
+  gl->PopMatrix ();
+  gl->MatrixMode (GL_MODELVIEW);
+  gl->PopMatrix ();
+  gl->PopAttrib ();
 
-  gst_gl_display_check_framebuffer_status ();
+  gst_gl_display_check_framebuffer_status (display);
 
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, download->fbo);
-  glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, download->fbo);
+  gl->ReadBuffer (GL_COLOR_ATTACHMENT0);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_AYUV:
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      glReadPixels (0, 0, out_width, out_height, GL_BGRA,
+      gl->ReadPixels (0, 0, out_width, out_height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8, download->data[0]);
 #else
-      glReadPixels (0, 0, out_width, out_height, GL_BGRA,
+      gl->ReadPixels (0, 0, out_width, out_height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8_REV, download->data[0]);
 #endif
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2, out_height, GL_BGRA,
+      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2, out_height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8_REV, download->data[0]);
 #else
-      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2, out_height, GL_BGRA,
+      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2, out_height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8, download->data[0]);
 #endif
       break;
     case GST_VIDEO_FORMAT_I420:
     {
-      glReadPixels (0, 0, out_width, out_height, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          download->data[0]);
+      gl->ReadPixels (0, 0, out_width, out_height, GL_LUMINANCE,
+          GL_UNSIGNED_BYTE, download->data[0]);
 
-      glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
+      gl->ReadBuffer (GL_COLOR_ATTACHMENT1);
 
-      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
+      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
           GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[1]);
 
-      glReadBuffer (GL_COLOR_ATTACHMENT2_EXT);
+      gl->ReadBuffer (GL_COLOR_ATTACHMENT2);
 
-      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
+      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
           GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[2]);
     }
       break;
     case GST_VIDEO_FORMAT_YV12:
     {
-      glReadPixels (0, 0, out_width, out_height, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          download->data[0]);
+      gl->ReadPixels (0, 0, out_width, out_height, GL_LUMINANCE,
+          GL_UNSIGNED_BYTE, download->data[0]);
 
-      glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
+      gl->ReadBuffer (GL_COLOR_ATTACHMENT1);
 
-      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
+      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
           GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[2]);
 
-      glReadBuffer (GL_COLOR_ATTACHMENT2_EXT);
+      gl->ReadBuffer (GL_COLOR_ATTACHMENT2);
 
-      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
+      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
           GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[1]);
     }
@@ -1420,11 +1436,11 @@ _do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
           "Download video format inconsistensy %d", v_format);
       g_assert_not_reached ();
   }
-  glReadBuffer (GL_NONE);
+  gl->ReadBuffer (GL_NONE);
 
-  gst_gl_display_check_framebuffer_status ();
+  gst_gl_display_check_framebuffer_status (display);
 
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 }
 #endif
 
@@ -1432,6 +1448,7 @@ _do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
 static void
 _do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
 {
+  GstGLFuncs *gl;
   GstVideoFormat v_format;
   guint out_width, out_height;
 
@@ -1449,6 +1466,8 @@ _do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
 
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
+  gl = display->gl_vtable;
+
   out_width = GST_VIDEO_INFO_WIDTH (&download->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
@@ -1456,49 +1475,49 @@ _do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
   GST_TRACE ("doing YUV download of texture:%u (%ux%u) using fbo:%u",
       download->in_texture, out_width, out_height, download->fbo);
 
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, download->fbo);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, download->fbo);
 
-  glGetIntegerv (GL_VIEWPORT, viewport_dim);
+  gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
 
-  glViewport (0, 0, out_width, out_height);
+  gl->Viewport (0, 0, out_width, out_height);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
     case GST_VIDEO_FORMAT_AYUV:
     {
-      glClearColor (0.0, 0.0, 0.0, 0.0);
-      glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      gl->ClearColor (0.0, 0.0, 0.0, 0.0);
+      gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       gst_gl_shader_use (download->shader);
 
-      glVertexAttribPointer (download->shader_attr_position_loc, 3,
+      gl->VertexAttribPointer (download->shader_attr_position_loc, 3,
           GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-      glVertexAttribPointer (download->shader_attr_texture_loc, 2,
+      gl->VertexAttribPointer (download->shader_attr_texture_loc, 2,
           GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
-      glEnableVertexAttribArray (download->shader_attr_position_loc);
-      glEnableVertexAttribArray (download->shader_attr_texture_loc);
+      gl->EnableVertexAttribArray (download->shader_attr_position_loc);
+      gl->EnableVertexAttribArray (download->shader_attr_texture_loc);
 
-      glActiveTextureARB (GL_TEXTURE0_ARB);
+      gl->ActiveTexture (GL_TEXTURE0);
       gst_gl_shader_set_uniform_1i (download->shader, "tex", 0);
-      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
     }
       break;
 
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     {
-      glClearColor (0.0, 0.0, 0.0, 0.0);
-      glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      gl->ClearColor (0.0, 0.0, 0.0, 0.0);
+      gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       gst_gl_shader_use (download->shader);
 
-      glActiveTextureARB (GL_TEXTURE0_ARB);
+      gl->ActiveTexture (GL_TEXTURE0);
       gst_gl_shader_set_uniform_1i (download->shader, "tex", 0);
       gst_gl_shader_set_uniform_1f (download->shader, "w", (gfloat) out_width);
       gst_gl_shader_set_uniform_1f (download->shader, "h", (gfloat) out_height);
-      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
     }
       break;
 
@@ -1509,65 +1528,65 @@ _do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
 
   }
 
-  glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
   /* don't check if GLSL is available
    * because download yuv is not available
    * without GLSL (whereas rgb is)
    */
-  glUseProgramObjectARB (0);
+  gst_gl_display_clear_shader (display);
 
-  glViewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
+  gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
       viewport_dim[3]);
 
-  gst_gl_display_check_framebuffer_status ();
+  gst_gl_display_check_framebuffer_status (display);
 
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, download->fbo);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, download->fbo);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_AYUV:
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      glReadPixels (0, 0, out_width, out_height, GL_BGRA,
+      gl->ReadPixels (0, 0, out_width, out_height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8, download->data[0]);
 #else
-      glReadPixels (0, 0, out_width, out_height, GL_BGRA,
+      gl->ReadPixels (0, 0, out_width, out_height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8_REV, download->data[0]);
 #endif
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2, out_height, GL_BGRA,
+      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2, out_height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8_REV, download->data[0]);
 #else
-      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2, out_height, GL_BGRA,
+      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2, out_height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8, download->data[0]);
 #endif
       break;
     case GST_VIDEO_FORMAT_I420:
     {
-      glReadPixels (0, 0, out_width, out_height, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          download->data[0]);
+      gl->ReadPixels (0, 0, out_width, out_height, GL_LUMINANCE,
+          GL_UNSIGNED_BYTE, download->data[0]);
 
-      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
+      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
           GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[1]);
 
-      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
+      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
           GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[2]);
     }
       break;
     case GST_VIDEO_FORMAT_YV12:
     {
-      glReadPixels (0, 0, out_width, out_height, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          download->data[0]);
+      gl->ReadPixels (0, 0, out_width, out_height, GL_LUMINANCE,
+          GL_UNSIGNED_BYTE, download->data[0]);
 
-      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
+      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
           GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[2]);
 
-      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
+      gl->ReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
           GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[1]);
     }
@@ -1579,8 +1598,8 @@ _do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
       g_assert_not_reached ();
   }
 
-  gst_gl_display_check_framebuffer_status ();
+  gst_gl_display_check_framebuffer_status (display);
 
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 }
 #endif

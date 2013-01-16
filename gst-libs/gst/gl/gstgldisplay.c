@@ -30,17 +30,27 @@
 
 #include <gst/gst.h>
 #include <gst/video/gstvideosink.h>
-#include "gstgldisplay.h"
 #include "gstgldownload.h"
 #include "gstglmemory.h"
 #include "gstglfeature.h"
+#include "gstglapi.h"
 
-#ifndef GLEW_VERSION_MAJOR
-#define GLEW_VERSION_MAJOR 4
+#include "gstgldisplay.h"
+
+#ifndef GL_FRAMEBUFFER_UNDEFINED
+#define GL_FRAMEBUFFER_UNDEFINED          0x8219
 #endif
-
-#ifndef GLEW_VERSION_MINOR
-#define GLEW_VERSION_MINOR 0
+#ifndef GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+#define GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT 0x8CD6
+#endif
+#ifndef GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT
+#define GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT 0x8CD7
+#endif
+#ifndef GL_FRAMEBUFFER_UNSUPPORTED
+#define GL_FRAMEBUFFER_UNSUPPORTED        0x8CDD
+#endif
+#ifndef GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS
+#define GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS 0x8CD9
 #endif
 
 #define USING_OPENGL(display) (display->gl_api & GST_GL_API_OPENGL)
@@ -88,32 +98,12 @@ void gst_gl_display_del_texture_thread (GstGLDisplay * display,
 
 void gst_gl_display_gen_texture_window_cb (GstGLDisplay * display);
 
-#if GST_GL_HAVE_OPENGL
-void _gen_fbo_opengl (GstGLDisplay * display);
-void _use_fbo_opengl (GstGLDisplay * display);
-void _use_fbo_v2_opengl (GstGLDisplay * display);
-void _del_fbo_opengl (GstGLDisplay * display);
-void _gen_shader_opengl (GstGLDisplay * display);
-void _del_shader_opengl (GstGLDisplay * display);
-#endif
-#if GST_GL_HAVE_GLES2
-void _gen_fbo_gles2 (GstGLDisplay * display);
-void _use_fbo_gles2 (GstGLDisplay * display);
-void _use_fbo_v2_gles2 (GstGLDisplay * display);
-void _del_fbo_gles2 (GstGLDisplay * display);
-void _gen_shader_gles2 (GstGLDisplay * display);
-void _del_shader_gles2 (GstGLDisplay * display);
-#endif
-
-typedef struct _GstGLVtable
-{
-  GstGLWindowCB gen_fbo;
-  GstGLWindowCB use_fbo;
-  GstGLWindowCB use_fbo_v2;
-  GstGLWindowCB del_fbo;
-  GstGLWindowCB gen_shader;
-  GstGLWindowCB del_shader;
-} GstGLVtable;
+void _gen_fbo (GstGLDisplay * display);
+void _del_fbo (GstGLDisplay * display);
+void _gen_shader (GstGLDisplay * display);
+void _del_shader (GstGLDisplay * display);
+void _use_fbo (GstGLDisplay * display);
+void _use_fbo_v2 (GstGLDisplay * display);
 
 #if GST_GL_HAVE_GLES2
 /* *INDENT-OFF* */
@@ -204,8 +194,6 @@ struct _GstGLDisplayPrivate
   const gchar *gen_shader_vertex_source;
   GstGLShader *gen_shader;
   GstGLShader *del_shader;
-
-  GstGLVtable vtable;
 };
 
 /*------------------------------------------------------------
@@ -230,6 +218,8 @@ gst_gl_display_init (GstGLDisplay * display)
 
   display->priv->cond_create_context = g_cond_new ();
   display->priv->cond_destroy_context = g_cond_new ();
+
+  display->gl_vtable = g_slice_alloc0 (sizeof (GstGLFuncs));
 
   gst_gl_memory_init ();
 }
@@ -303,6 +293,11 @@ gst_gl_display_finalize (GObject * object)
     g_slist_free_full (display->downloads, g_object_unref);
     display->downloads = NULL;
   }
+
+  if (display->gl_vtable) {
+    g_slice_free (GstGLFuncs, display->gl_vtable);
+    display->gl_vtable = NULL;
+  }
 }
 
 
@@ -329,35 +324,34 @@ gst_gl_display_set_error (GstGLDisplay * display, const char *format, ...)
   display->isAlive = FALSE;
 }
 
-#if GST_GL_HAVE_GLES2
 static gboolean
 _create_context_gles2 (GstGLDisplay * display, gint * gl_major, gint * gl_minor)
 {
+  GstGLFuncs *gl;
   GLenum gl_err = GL_NO_ERROR;
 
-  GST_INFO ("GL_VERSION: %s", glGetString (GL_VERSION));
-  GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
-      glGetString (GL_SHADING_LANGUAGE_VERSION));
-  GST_INFO ("GL_VENDOR: %s", glGetString (GL_VENDOR));
-  GST_INFO ("GL_RENDERER: %s", glGetString (GL_RENDERER));
+  gl = display->gl_vtable;
 
-  gl_err = glGetError ();
+  GST_INFO ("GL_VERSION: %s", gl->GetString (GL_VERSION));
+  GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
+      gl->GetString (GL_SHADING_LANGUAGE_VERSION));
+  GST_INFO ("GL_VENDOR: %s", gl->GetString (GL_VENDOR));
+  GST_INFO ("GL_RENDERER: %s", gl->GetString (GL_RENDERER));
+
+  gl_err = gl->GetError ();
   if (gl_err != GL_NO_ERROR) {
     gst_gl_display_set_error (display, "glGetString error: 0x%x", gl_err);
+    return FALSE;
   }
-
-  if (!GL_ES_VERSION_2_0)
+#if GST_GL_HAVE_GLES2
+  if (!GL_ES_VERSION_2_0) {
     gst_gl_display_set_error (display, "OpenGL|ES >= 2.0 is required");
+    return FALSE;
+  }
+#endif
 
   _gst_gl_feature_check_ext_functions (display, 0, 0,
-      (const gchar *) glGetString (GL_EXTENSIONS));
-
-  display->priv->vtable.gen_fbo = (GstGLWindowCB) _gen_fbo_gles2;
-  display->priv->vtable.use_fbo = (GstGLWindowCB) _use_fbo_gles2;
-  display->priv->vtable.use_fbo_v2 = (GstGLWindowCB) _use_fbo_v2_gles2;
-  display->priv->vtable.del_fbo = (GstGLWindowCB) _del_fbo_gles2;
-  display->priv->vtable.gen_shader = (GstGLWindowCB) _gen_shader_gles2;
-  display->priv->vtable.del_shader = (GstGLWindowCB) _del_shader_gles2;
+      (const gchar *) gl->GetString (GL_EXTENSIONS));
 
   if (gl_major)
     *gl_major = 2;
@@ -366,58 +360,46 @@ _create_context_gles2 (GstGLDisplay * display, gint * gl_major, gint * gl_minor)
 
   return TRUE;
 }
-#endif
 
-#if GST_GL_HAVE_OPENGL
 gboolean
 _create_context_opengl (GstGLDisplay * display, gint * gl_major,
     gint * gl_minor)
 {
+  GstGLFuncs *gl;
   guint maj, min;
   GLenum gl_err = GL_NO_ERROR;
-  GLenum err;
   GString *opengl_version = NULL;
 
-  if ((err = glewInit ()) != GLEW_OK) {
-    gst_gl_display_set_error (display, "Failed to init GLEW: %s",
-        glewGetErrorString (err));
-    return TRUE;
-  }
+  gl = display->gl_vtable;
 
-  /* OpenGL > 1.2.0 and Glew > 1.4.0 */
-  GST_INFO ("GL_VERSION: %s", glGetString (GL_VERSION));
+  GST_INFO ("GL_VERSION: %s", gl->GetString (GL_VERSION));
   GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
-      glGetString (GL_SHADING_LANGUAGE_VERSION));
-  GST_INFO ("GL_VENDOR: %s", glGetString (GL_VENDOR));
-  GST_INFO ("GL_RENDERER: %s", glGetString (GL_RENDERER));
+      gl->GetString (GL_SHADING_LANGUAGE_VERSION));
+  GST_INFO ("GL_VENDOR: %s", gl->GetString (GL_VENDOR));
+  GST_INFO ("GL_RENDERER: %s", gl->GetString (GL_RENDERER));
 
-  gl_err = glGetError ();
+  gl_err = gl->GetError ();
   if (gl_err != GL_NO_ERROR) {
     gst_gl_display_set_error (display, "glGetString error: 0x%x", gl_err);
+    return FALSE;
   }
   opengl_version =
-      g_string_truncate (g_string_new ((gchar *) glGetString (GL_VERSION)), 3);
+      g_string_truncate (g_string_new ((gchar *) gl->GetString (GL_VERSION)),
+      3);
 
   sscanf (opengl_version->str, "%d.%d", &maj, &min);
 
   g_string_free (opengl_version, TRUE);
 
+  /* OpenGL > 1.2.0 */
   if ((maj < 1) || (maj < 2 && maj >= 1 && min < 2)) {
-    /* turn off the pipeline, the old drivers are not yet supported */
-    gst_gl_display_set_error (display,
-        "OpenGL >= 1.2.0 and Glew >= 1.4.0 is required");
+    gst_gl_display_set_error (display, "OpenGL >= 1.2.0 required, found %u.%u",
+        maj, min);
     return FALSE;
   }
 
   _gst_gl_feature_check_ext_functions (display, maj, min,
-      (const gchar *) glGetString (GL_EXTENSIONS));
-
-  display->priv->vtable.gen_fbo = (GstGLWindowCB) _gen_fbo_opengl;
-  display->priv->vtable.use_fbo = (GstGLWindowCB) _use_fbo_opengl;
-  display->priv->vtable.use_fbo_v2 = (GstGLWindowCB) _use_fbo_v2_opengl;
-  display->priv->vtable.del_fbo = (GstGLWindowCB) _del_fbo_opengl;
-  display->priv->vtable.gen_shader = (GstGLWindowCB) _gen_shader_opengl;
-  display->priv->vtable.del_shader = (GstGLWindowCB) _del_shader_opengl;
+      (const gchar *) gl->GetString (GL_EXTENSIONS));
 
   if (gl_major)
     *gl_major = maj;
@@ -426,7 +408,6 @@ _create_context_opengl (GstGLDisplay * display, gint * gl_major,
 
   return TRUE;
 }
-#endif
 
 GstGLAPI
 _compiled_api (void)
@@ -446,6 +427,7 @@ _compiled_api (void)
 gpointer
 gst_gl_display_thread_create_context (GstGLDisplay * display)
 {
+  GstGLFuncs *gl;
   gint gl_major = 0;
   gboolean ret = FALSE;
   GError *error = NULL;
@@ -454,6 +436,8 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   gchar *compiled_api_s;
 
   gst_gl_display_lock (display);
+
+  gl = display->gl_vtable;
 
   compiled_api = _compiled_api ();
 
@@ -488,19 +472,24 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   g_free (api_string);
   g_free (compiled_api_s);
 
+  gl->GetError =
+      gst_gl_window_get_proc_address (display->gl_window, "glGetError");
+  gl->GetString =
+      gst_gl_window_get_proc_address (display->gl_window, "glGetString");
+
+  if (!gl->GetError || !gl->GetString) {
+    gst_gl_display_set_error (display,
+        "could not GetProcAddress core opengl functions");
+    goto failure;
+  }
+
   /* gl api specific code */
-#if GST_GL_HAVE_OPENGL
   if (!ret && USING_OPENGL (display))
     ret = _create_context_opengl (display, &gl_major, NULL);
-#endif
-#if GST_GL_HAVE_GLES2
   if (!ret && USING_GLES2 (display))
     ret = _create_context_gles2 (display, &gl_major, NULL);
-#endif
 
   if (!ret || !gl_major) {
-    gst_gl_display_set_error (display,
-        "failed to create context, unknown reason");
     goto failure;
   }
 
@@ -591,7 +580,7 @@ gst_gl_display_thread_init_redisplay (GstGLDisplay * display)
     gst_gl_display_set_error (display, "%s", error->message);
     g_error_free (error);
     error = NULL;
-    gst_gl_shader_use (NULL);
+    gst_gl_display_clear_shader (display);
   } else {
     display->priv->redisplay_attr_position_loc =
         gst_gl_shader_get_attribute_location (display->priv->redisplay_shader,
@@ -603,11 +592,11 @@ gst_gl_display_thread_init_redisplay (GstGLDisplay * display)
 }
 #endif
 
-#if GST_GL_HAVE_OPENGL
 void
-_gen_fbo_opengl (GstGLDisplay * display)
+_gen_fbo (GstGLDisplay * display)
 {
   /* a texture must be attached to the FBO */
+  GstGLFuncs *gl = display->gl_vtable;
   GLuint fake_texture = 0;
 
   GST_TRACE ("creating FBO dimensions:%ux%u", display->priv->gen_fbo_width,
@@ -615,359 +604,234 @@ _gen_fbo_opengl (GstGLDisplay * display)
 
   /* -- generate frame buffer object */
 
-  if (!GLEW_EXT_framebuffer_object) {
+  if (!gl->GenFramebuffers) {
     gst_gl_display_set_error (display,
         "Context, EXT_framebuffer_object not supported");
     return;
   }
   /* setup FBO */
-  glGenFramebuffersEXT (1, &display->priv->generated_fbo);
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->priv->generated_fbo);
+  gl->GenFramebuffers (1, &display->priv->generated_fbo);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, display->priv->generated_fbo);
 
   /* setup the render buffer for depth */
-  glGenRenderbuffersEXT (1, &display->priv->generated_depth_buffer);
-  glBindRenderbufferEXT (GL_RENDERBUFFER_EXT,
-      display->priv->generated_depth_buffer);
+  gl->GenRenderbuffers (1, &display->priv->generated_depth_buffer);
+  gl->BindRenderbuffer (GL_RENDERBUFFER, display->priv->generated_depth_buffer);
 
-  glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
-      display->priv->gen_fbo_width, display->priv->gen_fbo_height);
-  glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH24_STENCIL8_EXT,
-      display->priv->gen_fbo_width, display->priv->gen_fbo_height);
+  if (USING_OPENGL (display)) {
+    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
+        display->priv->gen_fbo_width, display->priv->gen_fbo_height);
+    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
+        display->priv->gen_fbo_width, display->priv->gen_fbo_height);
+  }
+  if (USING_GLES2 (display)) {
+    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
+        display->priv->gen_fbo_width, display->priv->gen_fbo_height);
+  }
 
   /* setup a texture to render to */
-  glGenTextures (1, &fake_texture);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, fake_texture);
-  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+  gl->GenTextures (1, &fake_texture);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, fake_texture);
+  gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
       display->priv->gen_fbo_width, display->priv->gen_fbo_height, 0, GL_RGBA,
       GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+      GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+      GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
       GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
       GL_CLAMP_TO_EDGE);
 
   /* attach the texture to the FBO to renderer to */
-  glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
       GL_TEXTURE_RECTANGLE_ARB, fake_texture, 0);
 
   /* attach the depth render buffer to the FBO */
-  glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
-      GL_RENDERBUFFER_EXT, display->priv->generated_depth_buffer);
+  gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+      GL_RENDERBUFFER, display->priv->generated_depth_buffer);
 
-  if (USING_OPENGL (display))
-    glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT,
-        GL_RENDERBUFFER_EXT, display->priv->generated_depth_buffer);
+  if (USING_OPENGL (display)) {
+    gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+        GL_RENDERBUFFER, display->priv->generated_depth_buffer);
+  }
 
-  if (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) !=
-      GL_FRAMEBUFFER_COMPLETE_EXT)
+  if (gl->CheckFramebufferStatus (GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     gst_gl_display_set_error (display, "GL framebuffer status incomplete");
 
   /* unbind the FBO */
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 
-  glDeleteTextures (1, &fake_texture);
+  gl->DeleteTextures (1, &fake_texture);
 }
-#endif
 
+void
+_use_fbo (GstGLDisplay * display)
+{
+  GstGLFuncs *gl = display->gl_vtable;
 #if GST_GL_HAVE_GLES2
-void
-_gen_fbo_gles2 (GstGLDisplay * display)
-{
-  /* a texture must be attached to the FBO */
-  GLuint fake_texture = 0;
-
-  GST_TRACE ("creating FBO dimensions:%ux%u", display->priv->gen_fbo_width,
-      display->priv->gen_fbo_height);
-
-  /* -- generate frame buffer object */
-
-  if (!GLEW_EXT_framebuffer_object) {
-    gst_gl_display_set_error (display,
-        "Context, EXT_framebuffer_object not supported");
-    return;
-  }
-  /* setup FBO */
-  glGenFramebuffersEXT (1, &display->priv->generated_fbo);
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->priv->generated_fbo);
-
-  /* setup the render buffer for depth */
-  glGenRenderbuffersEXT (1, &display->priv->generated_depth_buffer);
-  glBindRenderbufferEXT (GL_RENDERBUFFER_EXT,
-      display->priv->generated_depth_buffer);
-
-  glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
-      display->priv->gen_fbo_width, display->priv->gen_fbo_height);
-
-  /* setup a texture to render to */
-  glGenTextures (1, &fake_texture);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, fake_texture);
-  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-      display->priv->gen_fbo_width, display->priv->gen_fbo_height, 0, GL_RGBA,
-      GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-      GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-      GL_CLAMP_TO_EDGE);
-
-  /* attach the texture to the FBO to renderer to */
-  glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
-      GL_TEXTURE_RECTANGLE_ARB, fake_texture, 0);
-
-  /* attach the depth render buffer to the FBO */
-  glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
-      GL_RENDERBUFFER_EXT, display->priv->generated_depth_buffer);
-
-  if (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) !=
-      GL_FRAMEBUFFER_COMPLETE_EXT)
-    gst_gl_display_set_error (display, "GL framebuffer status incomplete");
-
-  /* unbind the FBO */
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
-
-  glDeleteTextures (1, &fake_texture);
-}
-#endif
-
-/* Called in the gl thread */
-#if GST_GL_HAVE_OPENGL
-void
-_use_fbo_opengl (GstGLDisplay * display)
-{
-  GST_TRACE ("Binding v1 FBO %u dimensions:%ux%u with texture:%u "
-      "dimensions:%ux%u", display->priv->use_fbo, display->priv->use_fbo_width,
-      display->priv->use_fbo_height, display->priv->use_fbo_texture,
-      display->priv->input_texture_width, display->priv->input_texture_height);
-
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->priv->use_fbo);
-
-  /* setup a texture to render to */
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->priv->use_fbo_texture);
-
-  /* attach the texture to the FBO to renderer to */
-  glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
-      GL_TEXTURE_RECTANGLE_ARB, display->priv->use_fbo_texture, 0);
-
-  if (GLEW_ARB_fragment_shader)
-    gst_gl_shader_use (NULL);
-
-  glPushAttrib (GL_VIEWPORT_BIT);
-  glMatrixMode (GL_PROJECTION);
-  glPushMatrix ();
-  glLoadIdentity ();
-
-  switch (display->priv->use_fbo_projection) {
-    case GST_GL_DISPLAY_PROJECTION_ORTHO2D:
-      gluOrtho2D (display->priv->use_fbo_proj_param1,
-          display->priv->use_fbo_proj_param2,
-          display->priv->use_fbo_proj_param3,
-          display->priv->use_fbo_proj_param4);
-      break;
-    case GST_GL_DISPLAY_PROJECTION_PERSPECTIVE:
-      gluPerspective (display->priv->use_fbo_proj_param1,
-          display->priv->use_fbo_proj_param2,
-          display->priv->use_fbo_proj_param3,
-          display->priv->use_fbo_proj_param4);
-      break;
-    default:
-      gst_gl_display_set_error (display, "Unknow fbo projection %d",
-          display->priv->use_fbo_projection);
-  }
-
-  glMatrixMode (GL_MODELVIEW);
-  glPushMatrix ();
-  glLoadIdentity ();
-
-
-  glViewport (0, 0, display->priv->use_fbo_width,
-      display->priv->use_fbo_height);
-
-  glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
-
-  glClearColor (0.0, 0.0, 0.0, 0.0);
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  /* the opengl scene */
-  display->priv->use_fbo_scene_cb (display->priv->input_texture_width,
-      display->priv->input_texture_height, display->priv->input_texture,
-      display->priv->use_fbo_stuff);
-
-  glDrawBuffer (GL_NONE);
-  glMatrixMode (GL_PROJECTION);
-  glPopMatrix ();
-  glMatrixMode (GL_MODELVIEW);
-  glPopMatrix ();
-  glPopAttrib ();
-
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
-}
-#endif
-
-#if GST_GL_HAVE_GLES2
-void
-_use_fbo_gles2 (GstGLDisplay * display)
-{
   GLint viewport_dim[4];
+#endif
 
   GST_TRACE ("Binding v1 FBO %u dimensions:%ux%u with texture:%u "
       "dimensions:%ux%u", display->priv->use_fbo, display->priv->use_fbo_width,
       display->priv->use_fbo_height, display->priv->use_fbo_texture,
       display->priv->input_texture_width, display->priv->input_texture_height);
 
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->priv->use_fbo);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, display->priv->use_fbo);
 
-  /* setup a texture to render to */
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->priv->use_fbo_texture);
+  /*setup a texture to render to */
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, display->priv->use_fbo_texture);
 
   /* attach the texture to the FBO to renderer to */
-  glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
       GL_TEXTURE_RECTANGLE_ARB, display->priv->use_fbo_texture, 0);
 
-  glGetIntegerv (GL_VIEWPORT, viewport_dim);
+  gst_gl_display_clear_shader (display);
 
-  glViewport (0, 0, display->priv->use_fbo_width,
+
+#if GST_GL_HAVE_OPENGL
+  if (USING_OPENGL (display)) {
+    gl->PushAttrib (GL_VIEWPORT_BIT);
+    gl->MatrixMode (GL_PROJECTION);
+    gl->PushMatrix ();
+    gl->LoadIdentity ();
+
+    switch (display->priv->use_fbo_projection) {
+      case GST_GL_DISPLAY_PROJECTION_ORTHO2D:
+        gluOrtho2D (display->priv->use_fbo_proj_param1,
+            display->priv->use_fbo_proj_param2,
+            display->priv->use_fbo_proj_param3,
+            display->priv->use_fbo_proj_param4);
+        break;
+      case GST_GL_DISPLAY_PROJECTION_PERSPECTIVE:
+        gluPerspective (display->priv->use_fbo_proj_param1,
+            display->priv->use_fbo_proj_param2,
+            display->priv->use_fbo_proj_param3,
+            display->priv->use_fbo_proj_param4);
+        break;
+      default:
+        gst_gl_display_set_error (display, "Unknow fbo projection %d",
+            display->priv->use_fbo_projection);
+    }
+
+    gl->MatrixMode (GL_MODELVIEW);
+    gl->PushMatrix ();
+    gl->LoadIdentity ();
+  }
+#endif
+#if GST_GL_HAVE_GLES2
+  if (USING_GLES2 (display))
+    gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
+#endif
+
+  gl->Viewport (0, 0, display->priv->use_fbo_width,
       display->priv->use_fbo_height);
 
-  glClearColor (0.0, 0.0, 0.0, 0.0);
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#if GST_GL_HAVE_OPENGL
+  if (USING_OPENGL (display)) {
+    const GLenum rt[] = { GL_COLOR_ATTACHMENT0 };
+    gl->DrawBuffers (1, rt);
+  }
+#endif
 
-  /* the opengl scene */
+  gl->ClearColor (0.0, 0.0, 0.0, 0.0);
+  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   display->priv->use_fbo_scene_cb (display->priv->input_texture_width,
       display->priv->input_texture_height, display->priv->input_texture,
       display->priv->use_fbo_stuff);
 
-  glViewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
-      viewport_dim[3]);
-
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
-}
+#if GST_GL_HAVE_OPENGL
+  if (USING_OPENGL (display)) {
+    const GLenum rt[] = { GL_NONE };
+    gl->DrawBuffers (1, rt);
+    gl->MatrixMode (GL_PROJECTION);
+    gl->PopMatrix ();
+    gl->MatrixMode (GL_MODELVIEW);
+    gl->PopMatrix ();
+    gl->PopAttrib ();
+  }
 #endif
+#if GST_GL_HAVE_GLES2
+  if (USING_GLES2 (display)) {
+    gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
+        viewport_dim[3]);
+  }
+#endif
+
+  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
+}
 
 /* Called in a gl thread
  * Need full shader support */
-#if GST_GL_HAVE_OPENGL
 void
-_use_fbo_v2_opengl (GstGLDisplay * display)
+_use_fbo_v2 (GstGLDisplay * display)
 {
+  GstGLFuncs *gl = display->gl_vtable;
   GLint viewport_dim[4];
 
   GST_TRACE ("Binding v2 FBO %u dimensions:%ux%u with texture:%u ",
       display->priv->use_fbo, display->priv->use_fbo_width,
       display->priv->use_fbo_height, display->priv->use_fbo_texture);
 
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->priv->use_fbo);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, display->priv->use_fbo);
 
   /* setup a texture to render to */
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->priv->use_fbo_texture);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, display->priv->use_fbo_texture);
 
   /* attach the texture to the FBO to renderer to */
-  glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
       GL_TEXTURE_RECTANGLE_ARB, display->priv->use_fbo_texture, 0);
 
-  glGetIntegerv (GL_VIEWPORT, viewport_dim);
+  gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
 
-  glViewport (0, 0, display->priv->use_fbo_width,
+  gl->Viewport (0, 0, display->priv->use_fbo_width,
       display->priv->use_fbo_height);
 
-  glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
+  gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
 
-  glClearColor (0.0, 0.0, 0.0, 0.0);
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  gl->ClearColor (0.0, 0.0, 0.0, 0.0);
+  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   /* the opengl scene */
   display->priv->use_fbo_scene_cb_v2 (display->priv->use_fbo_stuff);
 
-  glDrawBuffer (GL_NONE);
+  gl->DrawBuffer (GL_NONE);
 
-  glViewport (viewport_dim[0], viewport_dim[1],
+  gl->Viewport (viewport_dim[0], viewport_dim[1],
       viewport_dim[2], viewport_dim[3]);
 
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 }
-#endif
-
-#if GST_GL_HAVE_GLES2
-void
-_use_fbo_v2_gles2 (GstGLDisplay * display)
-{
-  GLint viewport_dim[4];
-
-  GST_TRACE ("Binding v2 FBO %u dimensions:%ux%u with texture:%u ",
-      display->priv->use_fbo, display->priv->use_fbo_width,
-      display->priv->use_fbo_height, display->priv->use_fbo_texture);
-
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->priv->use_fbo);
-
-  /* setup a texture to render to */
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->priv->use_fbo_texture);
-
-  /* attach the texture to the FBO to renderer to */
-  glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
-      GL_TEXTURE_RECTANGLE_ARB, display->priv->use_fbo_texture, 0);
-
-  glGetIntegerv (GL_VIEWPORT, viewport_dim);
-
-  glViewport (0, 0, display->priv->use_fbo_width,
-      display->priv->use_fbo_height);
-
-  glClearColor (0.0, 0.0, 0.0, 0.0);
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  //the opengl scene
-  display->priv->use_fbo_scene_cb_v2 (display->priv->use_fbo_stuff);
-
-  glViewport (viewport_dim[0], viewport_dim[1],
-      viewport_dim[2], viewport_dim[3]);
-
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
-}
-#endif
 
 /* Called in the gl thread */
-#if GST_GL_HAVE_OPENGL
 void
-_del_fbo_opengl (GstGLDisplay * display)
+_del_fbo (GstGLDisplay * display)
 {
+  GstGLFuncs *gl = display->gl_vtable;
+
   GST_TRACE ("Deleting FBO %u", display->priv->del_fbo);
 
   if (display->priv->del_fbo) {
-    glDeleteFramebuffersEXT (1, &display->priv->del_fbo);
+    gl->DeleteFramebuffers (1, &display->priv->del_fbo);
     display->priv->del_fbo = 0;
   }
   if (display->priv->del_depth_buffer) {
-    glDeleteRenderbuffersEXT (1, &display->priv->del_depth_buffer);
+    gl->DeleteRenderbuffers (1, &display->priv->del_depth_buffer);
     display->priv->del_depth_buffer = 0;
   }
 }
-#endif
 
-#if GST_GL_HAVE_GLES2
-void
-_del_fbo_gles2 (GstGLDisplay * display)
-{
-  GST_TRACE ("Deleting FBO %u", display->priv->del_fbo);
-
-  if (display->priv->del_fbo) {
-    glDeleteFramebuffersEXT (1, &display->priv->del_fbo);
-    display->priv->del_fbo = 0;
-  }
-  if (display->priv->del_depth_buffer) {
-    glDeleteRenderbuffersEXT (1, &display->priv->del_depth_buffer);
-    display->priv->del_depth_buffer = 0;
-  }
-}
-#endif
-
-#if GST_GL_HAVE_OPENGL
 /* Called in the gl thread */
 void
-_gen_shader_opengl (GstGLDisplay * display)
+_gen_shader (GstGLDisplay * display)
 {
+  GstGLFuncs *gl = display->gl_vtable;
+
   GST_TRACE ("Generating shader %" GST_PTR_FORMAT, display->priv->gen_shader);
 
-  if (GLEW_ARB_fragment_shader) {
+  if (gl->CreateProgramObject || gl->CreateProgram) {
     if (display->priv->gen_shader_vertex_source ||
         display->priv->gen_shader_fragment_source) {
       GError *error = NULL;
@@ -987,7 +851,7 @@ _gen_shader_opengl (GstGLDisplay * display)
         gst_gl_display_set_error (display, "%s", error->message);
         g_error_free (error);
         error = NULL;
-        gst_gl_shader_use (NULL);
+        gst_gl_display_clear_shader (display);
         g_object_unref (G_OBJECT (display->priv->gen_shader));
         display->priv->gen_shader = NULL;
       }
@@ -998,51 +862,10 @@ _gen_shader_opengl (GstGLDisplay * display)
     display->priv->gen_shader = NULL;
   }
 }
-#endif
-
-#if GST_GL_HAVE_GLES2
-void
-_gen_shader_gles2 (GstGLDisplay * display)
-{
-  GST_TRACE ("Generating shader %" GST_PTR_FORMAT, display->priv->gen_shader);
-
-  if (GLEW_ARB_fragment_shader) {
-    if (display->priv->gen_shader_vertex_source ||
-        display->priv->gen_shader_fragment_source) {
-      GError *error = NULL;
-
-      display->priv->gen_shader = gst_gl_shader_new (display);
-
-      if (display->priv->gen_shader_vertex_source)
-        gst_gl_shader_set_vertex_source (display->priv->gen_shader,
-            display->priv->gen_shader_vertex_source);
-
-      if (display->priv->gen_shader_fragment_source)
-        gst_gl_shader_set_fragment_source (display->priv->gen_shader,
-            display->priv->gen_shader_fragment_source);
-
-      gst_gl_shader_compile (display->priv->gen_shader, &error);
-      if (error) {
-        gst_gl_display_set_error (display, "%s", error->message);
-        g_error_free (error);
-        error = NULL;
-        gst_gl_shader_use (NULL);
-        g_object_unref (G_OBJECT (display->priv->gen_shader));
-        display->priv->gen_shader = NULL;
-      }
-    }
-  } else {
-    gst_gl_display_set_error (display,
-        "One of the filter required ARB_fragment_shader");
-    display->priv->gen_shader = NULL;
-  }
-}
-#endif
 
 /* Called in the gl thread */
-#if GST_GL_HAVE_OPENGL
 void
-_del_shader_opengl (GstGLDisplay * display)
+_del_shader (GstGLDisplay * display)
 {
   GST_TRACE ("Deleting shader %" GST_PTR_FORMAT, display->priv->del_shader);
 
@@ -1051,20 +874,6 @@ _del_shader_opengl (GstGLDisplay * display)
     display->priv->del_shader = NULL;
   }
 }
-#endif
-
-#if GST_GL_HAVE_GLES2
-void
-_del_shader_gles2 (GstGLDisplay * display)
-{
-  GST_TRACE ("Deleting shader %" GST_PTR_FORMAT, display->priv->del_shader);
-
-  if (display->priv->del_shader) {
-    g_object_unref (G_OBJECT (display->priv->del_shader));
-    display->priv->del_shader = NULL;
-  }
-}
-#endif
 
 //------------------------------------------------------------
 //------------------ BEGIN GL THREAD ACTIONS -----------------
@@ -1079,6 +888,8 @@ _del_shader_gles2 (GstGLDisplay * display)
 void
 gst_gl_display_on_resize (GstGLDisplay * display, gint width, gint height)
 {
+  GstGLFuncs *gl = display->gl_vtable;
+
   GST_TRACE ("GL Window resized to %ux%u", width, height);
 
   //check if a client reshape callback is registered
@@ -1102,16 +913,16 @@ gst_gl_display_on_resize (GstGLDisplay * display, gint width, gint height)
       dst.h = height;
 
       gst_video_sink_center_rect (src, dst, &result, TRUE);
-      glViewport (result.x, result.y, result.w, result.h);
+      gl->Viewport (result.x, result.y, result.w, result.h);
     } else {
-      glViewport (0, 0, width, height);
+      gl->Viewport (0, 0, width, height);
     }
 #if GST_GL_HAVE_OPENGL
     if (USING_OPENGL (display)) {
-      glMatrixMode (GL_PROJECTION);
-      glLoadIdentity ();
+      gl->MatrixMode (GL_PROJECTION);
+      gl->LoadIdentity ();
       gluOrtho2D (0, width, 0, height);
-      glMatrixMode (GL_MODELVIEW);
+      gl->MatrixMode (GL_MODELVIEW);
     }
 #endif
   }
@@ -1121,23 +932,23 @@ gst_gl_display_on_resize (GstGLDisplay * display, gint width, gint height)
 void
 gst_gl_display_on_draw (GstGLDisplay * display)
 {
+  GstGLFuncs *gl = display->gl_vtable;
+
   /* check if texture is ready for being drawn */
   if (!display->priv->redisplay_texture)
     return;
-
   /* opengl scene */
-  GST_TRACE ("on draw");
+  GST_TRACE ("drawing texture:%u", display->priv->redisplay_texture);
 
   /* make sure that the environnement is clean */
-  if (display->colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
-    glUseProgramObjectARB (0);
+  gst_gl_display_clear_shader (display);
 
 #if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (display))
-    glDisable (GL_TEXTURE_RECTANGLE_ARB);
+    gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 #endif
 
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
 
   /* check if a client draw callback is registered */
   if (display->priv->clientDrawCallback) {
@@ -1156,38 +967,37 @@ gst_gl_display_on_draw (GstGLDisplay * display)
   else {
 #if GST_GL_HAVE_OPENGL
     if (USING_OPENGL (display)) {
-      glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      gfloat verts[8] = { 1.0f, 1.0f,
+        -1.0f, 1.0f,
+        -1.0f, -1.0f,
+        1.0f, -1.0f
+      };
+      gint texcoords[8] = { display->priv->redisplay_texture_width, 0,
+        0, 0,
+        0, display->priv->redisplay_texture_height,
+        display->priv->redisplay_texture_width,
+        display->priv->redisplay_texture_height
+      };
+      gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      glMatrixMode (GL_PROJECTION);
-      glLoadIdentity ();
+      gl->MatrixMode (GL_PROJECTION);
+      gl->LoadIdentity ();
 
-      glBindTexture (GL_TEXTURE_RECTANGLE_ARB,
+      gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB,
           display->priv->redisplay_texture);
-      glEnable (GL_TEXTURE_RECTANGLE_ARB);
 
-      glBegin (GL_QUADS);
-      /* gst images are top-down while opengl plane is bottom-up */
-      glTexCoord2i (display->priv->redisplay_texture_width, 0);
-      glVertex2f (1.0f, 1.0f);
-      glTexCoord2i (0, 0);
-      glVertex2f (-1.0f, 1.0f);
-      glTexCoord2i (0, display->priv->redisplay_texture_height);
-      glVertex2f (-1.0f, -1.0f);
-      glTexCoord2i (display->priv->redisplay_texture_width,
-          display->priv->redisplay_texture_height);
-      glVertex2f (1.0f, -1.0f);
-      /*glTexCoord2i (display->priv->redisplay_texture_width, 0);
-         glVertex2i (1, -1);
-         glTexCoord2i (0, 0);
-         glVertex2f (-1.0f, -1.0f);
-         glTexCoord2i (0, display->priv->redisplay_texture_height);
-         glVertex2f (-1.0f, 1.0f);
-         glTexCoord2i (display->priv->redisplay_texture_width,
-         display->priv->redisplay_texture_height);
-         glVertex2f (1.0f, 1.0f); */
-      glEnd ();
+      gl->EnableClientState (GL_VERTEX_ARRAY);
+      gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
+      gl->VertexPointer (2, GL_FLOAT, 0, &verts);
+      gl->TexCoordPointer (2, GL_INT, 0, &texcoords);
 
-      glDisable (GL_TEXTURE_RECTANGLE_ARB);
+      gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
+
+      gl->DisableClientState (GL_VERTEX_ARRAY);
+      gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
+
+      gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
     }
 #endif
 #if GST_GL_HAVE_GLES2
@@ -1204,32 +1014,31 @@ gst_gl_display_on_draw (GstGLDisplay * display)
 
       GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-      glClear (GL_COLOR_BUFFER_BIT);
+      gl->Clear (GL_COLOR_BUFFER_BIT);
 
       gst_gl_shader_use (display->priv->redisplay_shader);
 
       /* Load the vertex position */
-      glVertexAttribPointer (display->priv->redisplay_attr_position_loc, 3,
+      gl->VertexAttribPointer (display->priv->redisplay_attr_position_loc, 3,
           GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
 
       /* Load the texture coordinate */
-      glVertexAttribPointer (display->priv->redisplay_attr_texture_loc, 2,
+      gl->VertexAttribPointer (display->priv->redisplay_attr_texture_loc, 2,
           GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
-      glEnableVertexAttribArray (display->priv->redisplay_attr_position_loc);
-      glEnableVertexAttribArray (display->priv->redisplay_attr_texture_loc);
+      gl->EnableVertexAttribArray (display->priv->redisplay_attr_position_loc);
+      gl->EnableVertexAttribArray (display->priv->redisplay_attr_texture_loc);
 
-      glActiveTexture (GL_TEXTURE0);
-      glBindTexture (GL_TEXTURE_2D, display->priv->redisplay_texture);
+      gl->ActiveTexture (GL_TEXTURE0);
+      gl->BindTexture (GL_TEXTURE_2D, display->priv->redisplay_texture);
       gst_gl_shader_set_uniform_1i (display->priv->redisplay_shader,
           "s_texture", 0);
 
-      glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+      gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
     }
 #endif
   }                             /* end default opengl scene */
 }
-
 
 void
 gst_gl_display_on_close (GstGLDisplay * display)
@@ -1251,11 +1060,13 @@ void
 gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height)
 {
+  GstGLFuncs *gl = display->gl_vtable;
+
   GST_TRACE ("Generating texture format:%u dimensions:%ux%u", v_format,
       width, height);
 
-  glGenTextures (1, pTexture);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture);
+  gl->GenTextures (1, pTexture);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGB:
@@ -1268,7 +1079,7 @@ gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+      gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
           width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       break;
     case GST_VIDEO_FORMAT_YUY2:
@@ -1276,17 +1087,17 @@ gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
       switch (display->colorspace_conversion) {
         case GST_GL_DISPLAY_CONVERSION_GLSL:
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
-          glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+          gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
               width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
           break;
 #if 0
         case GST_GL_DISPLAY_CONVERSION_MESA:
           if (display->upload_width != display->upload_data_width ||
               display->upload_height != display->upload_data_height)
-            glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+            gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
                 width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
           else
-            glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width,
+            gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width,
                 height, 0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
           break;
 #endif
@@ -1298,7 +1109,7 @@ gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_AYUV:
-      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+      gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
           width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       break;
     default:
@@ -1307,11 +1118,13 @@ gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
       break;
   }
 
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+      GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+      GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
       GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
       GL_CLAMP_TO_EDGE);
 
   GST_LOG ("generated texture id:%d", *pTexture);
@@ -1346,27 +1159,29 @@ gst_gl_display_unlock (GstGLDisplay * display)
 }
 
 /* called in the gl thread */
-void
-gst_gl_display_check_framebuffer_status (void)
+gboolean
+gst_gl_display_check_framebuffer_status (GstGLDisplay * display)
 {
-  GLenum status = glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT);
+  GLenum status = 0;
+  status = display->gl_vtable->CheckFramebufferStatus (GL_FRAMEBUFFER);
 
   switch (status) {
-    case GL_FRAMEBUFFER_COMPLETE_EXT:
+    case GL_FRAMEBUFFER_COMPLETE:
+      return TRUE;
       break;
 
-    case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
+    case GL_FRAMEBUFFER_UNSUPPORTED:
       GST_ERROR ("GL_FRAMEBUFFER_UNSUPPORTED");
       break;
 
-    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
+    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
       GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
       break;
 
-    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
+    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
       GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
       break;
-    case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
+    case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
       GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
       break;
 #if GST_GL_HAVE_OPENGL
@@ -1377,6 +1192,8 @@ gst_gl_display_check_framebuffer_status (void)
     default:
       GST_ERROR ("General FBO error");
   }
+
+  return FALSE;
 }
 
 /* Called by the first gl element of a video/x-raw-gl flow */
@@ -1506,8 +1323,8 @@ gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
   if (display->isAlive) {
     display->priv->gen_fbo_width = width;
     display->priv->gen_fbo_height = height;
-    gst_gl_window_send_message (display->gl_window,
-        GST_GL_WINDOW_CB (display->priv->vtable.gen_fbo), display);
+    gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (_gen_fbo),
+        display);
     *fbo = display->priv->generated_fbo;
     *depthbuffer = display->priv->generated_depth_buffer;
   }
@@ -1553,8 +1370,8 @@ gst_gl_display_use_fbo (GstGLDisplay * display, gint texture_fbo_width,
     display->priv->input_texture_width = input_texture_width;
     display->priv->input_texture_height = input_texture_height;
     display->priv->input_texture = input_texture;
-    gst_gl_window_send_message (display->gl_window,
-        display->priv->vtable.use_fbo, display);
+    gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (_use_fbo),
+        display);
   }
   isAlive = display->isAlive;
   gst_gl_display_unlock (display);
@@ -1579,7 +1396,7 @@ gst_gl_display_use_fbo_v2 (GstGLDisplay * display, gint texture_fbo_width,
     display->priv->use_fbo_scene_cb_v2 = cb;
     display->priv->use_fbo_stuff = stuff;
     gst_gl_window_send_message (display->gl_window,
-        display->priv->vtable.use_fbo_v2, display);
+        GST_GL_WINDOW_CB (_use_fbo_v2), display);
   }
   isAlive = display->isAlive;
   gst_gl_display_unlock (display);
@@ -1595,8 +1412,8 @@ gst_gl_display_del_fbo (GstGLDisplay * display, GLuint fbo, GLuint depth_buffer)
   if (display->isAlive) {
     display->priv->del_fbo = fbo;
     display->priv->del_depth_buffer = depth_buffer;
-    gst_gl_window_send_message (display->gl_window,
-        display->priv->vtable.del_fbo, display);
+    gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (_del_fbo),
+        display);
   }
   gst_gl_display_unlock (display);
 }
@@ -1615,7 +1432,7 @@ gst_gl_display_gen_shader (GstGLDisplay * display,
     display->priv->gen_shader_vertex_source = shader_vertex_source;
     display->priv->gen_shader_fragment_source = shader_fragment_source;
     gst_gl_window_send_message (display->gl_window,
-        display->priv->vtable.gen_shader, display);
+        GST_GL_WINDOW_CB (_gen_shader), display);
     if (shader)
       *shader = display->priv->gen_shader;
     display->priv->gen_shader = NULL;
@@ -1637,7 +1454,7 @@ gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader)
   if (display->isAlive) {
     display->priv->del_shader = shader;
     gst_gl_window_send_message (display->gl_window,
-        display->priv->vtable.del_shader, display);
+        GST_GL_WINDOW_CB (_del_shader), display);
   }
   gst_gl_display_unlock (display);
 }
@@ -1716,6 +1533,18 @@ gst_gl_display_get_gl_api (GstGLDisplay * display)
   gst_gl_display_unlock (display);
 
   return api;
+}
+
+gpointer
+gst_gl_display_get_gl_vtable (GstGLDisplay * display)
+{
+  gpointer gl;
+
+  gst_gl_display_lock (display);
+  gl = display->gl_vtable;
+  gst_gl_display_unlock (display);
+
+  return gl;
 }
 
 //------------------------------------------------------------
