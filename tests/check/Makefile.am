@@ -4,12 +4,12 @@ CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.xml
 TEST_FILES_DIRECTORY = $(top_srcdir)/tests/files
 
 REGISTRY_ENVIRONMENT = \
-	GST_REGISTRY=$(CHECK_REGISTRY)
+	GST_REGISTRY_1_0=$(CHECK_REGISTRY)
 
 TESTS_ENVIRONMENT = \
 	$(REGISTRY_ENVIRONMENT)					\
-	GST_PLUGIN_SYSTEM_PATH=					\
-	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(top_builddir)/../gst-plugins-good/gst:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)
+	GST_PLUGIN_SYSTEM_PATH_1_0=					\
+	GST_PLUGIN_PATH_1_0=$(top_builddir)/gst:$(top_builddir)/ext:$(top_builddir)/../gst-plugins-good/gst:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)
 
 # ths core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.xml
