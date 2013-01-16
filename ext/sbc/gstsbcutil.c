@@ -1,5 +1,4 @@
-/*
- *
+/*  SBC audio utilities
  *  BlueZ - Bluetooth protocol stack for Linux
  *
  *  Copyright (C) 2004-2010  Marcel Holtmann <marcel@holtmann.org>
@@ -317,155 +316,18 @@ gst_sbc_parse_caps_from_sbc (sbc_t * sbc)
       gst_sbc_parse_rate_from_sbc (sbc->frequency),
       "channels", G_TYPE_INT,
       gst_sbc_get_channel_number (sbc->mode),
-      "mode", G_TYPE_STRING, mode_str,
+      "channel-mode", G_TYPE_STRING, mode_str,
       "subbands", G_TYPE_INT,
       gst_sbc_parse_subbands_from_sbc (sbc->subbands),
       "blocks", G_TYPE_INT,
       gst_sbc_parse_blocks_from_sbc (sbc->blocks),
-      "allocation", G_TYPE_STRING, allocation_str,
+      "allocation-method", G_TYPE_STRING, allocation_str,
       "bitpool", G_TYPE_INT, sbc->bitpool, NULL);
 
   return caps;
 }
 
-/*
- * Given a GstCaps, this will return a fixed GstCaps on successful conversion.
- * If an error occurs, it will return NULL and error_message will contain the
- * error message.
- *
- * error_message must be passed NULL, if an error occurs, the caller has the
- * ownership of the error_message, it must be freed after use.
- */
-GstCaps *
-gst_sbc_util_caps_fixate (GstCaps * caps, gchar ** error_message)
-{
-  GstCaps *result;
-  GstStructure *structure;
-  const GValue *value;
-  gboolean error = FALSE;
-  gint temp, rate, channels, blocks, subbands, bitpool;
-  const gchar *allocation = NULL;
-  const gchar *mode = NULL;
-
-  g_assert (*error_message == NULL);
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_has_field (structure, "rate")) {
-    error = TRUE;
-    *error_message = g_strdup ("no rate");
-    goto error;
-  } else {
-    value = gst_structure_get_value (structure, "rate");
-    if (GST_VALUE_HOLDS_LIST (value))
-      temp = gst_sbc_select_rate_from_list (value);
-    else
-      temp = g_value_get_int (value);
-    rate = temp;
-  }
-
-  if (!gst_structure_has_field (structure, "channels")) {
-    error = TRUE;
-    *error_message = g_strdup ("no channels");
-    goto error;
-  } else {
-    value = gst_structure_get_value (structure, "channels");
-    if (GST_VALUE_HOLDS_INT_RANGE (value))
-      temp = gst_sbc_select_channels_from_range (value);
-    else
-      temp = g_value_get_int (value);
-    channels = temp;
-  }
-
-  if (!gst_structure_has_field (structure, "blocks")) {
-    error = TRUE;
-    *error_message = g_strdup ("no blocks.");
-    goto error;
-  } else {
-    value = gst_structure_get_value (structure, "blocks");
-    if (GST_VALUE_HOLDS_LIST (value))
-      temp = gst_sbc_select_blocks_from_list (value);
-    else
-      temp = g_value_get_int (value);
-    blocks = temp;
-  }
-
-  if (!gst_structure_has_field (structure, "subbands")) {
-    error = TRUE;
-    *error_message = g_strdup ("no subbands");
-    goto error;
-  } else {
-    value = gst_structure_get_value (structure, "subbands");
-    if (GST_VALUE_HOLDS_LIST (value))
-      temp = gst_sbc_select_subbands_from_list (value);
-    else
-      temp = g_value_get_int (value);
-    subbands = temp;
-  }
-
-  if (!gst_structure_has_field (structure, "bitpool")) {
-    error = TRUE;
-    *error_message = g_strdup ("no bitpool");
-    goto error;
-  } else {
-    value = gst_structure_get_value (structure, "bitpool");
-    if (GST_VALUE_HOLDS_INT_RANGE (value))
-      temp = gst_sbc_select_bitpool_from_range (value);
-    else
-      temp = g_value_get_int (value);
-    bitpool = temp;
-  }
-
-  if (!gst_structure_has_field (structure, "allocation")) {
-    error = TRUE;
-    *error_message = g_strdup ("no allocation");
-    goto error;
-  } else {
-    value = gst_structure_get_value (structure, "allocation");
-    if (GST_VALUE_HOLDS_LIST (value))
-      allocation = gst_sbc_get_allocation_from_list (value);
-    else
-      allocation = g_value_get_string (value);
-  }
-
-  if (!gst_structure_has_field (structure, "mode")) {
-    error = TRUE;
-    *error_message = g_strdup ("no mode");
-    goto error;
-  } else {
-    value = gst_structure_get_value (structure, "mode");
-    if (GST_VALUE_HOLDS_LIST (value)) {
-      mode = gst_sbc_get_mode_from_list (value, channels);
-    } else
-      mode = g_value_get_string (value);
-  }
-
-  /* perform validation
-   * if channels is 1, we must have channel mode = mono
-   * if channels is 2, we can't have channel mode = mono */
-  if ((channels == 1 && (strcmp (mode, "mono") != 0)) ||
-      (channels == 2 && (strcmp (mode, "mono") == 0))) {
-    *error_message = g_strdup_printf ("Invalid combination of "
-        "channels (%d) and channel mode (%s)", channels, mode);
-    error = TRUE;
-  }
-
-error:
-  if (error)
-    return NULL;
-
-  result = gst_caps_new_simple ("audio/x-sbc",
-      "rate", G_TYPE_INT, rate,
-      "channels", G_TYPE_INT, channels,
-      "mode", G_TYPE_STRING, mode,
-      "blocks", G_TYPE_INT, blocks,
-      "subbands", G_TYPE_INT, subbands,
-      "allocation", G_TYPE_STRING, allocation,
-      "bitpool", G_TYPE_INT, bitpool, NULL);
-
-  return result;
-}
-
+/* FIXME: this function is not needed, just use gst_structure_set() */
 /**
  * Sets the int field_value to the  param "field" on the structure.
  * value is used to do the operation, it must be a uninitialized (zero-filled)
@@ -519,9 +381,9 @@ gst_sbc_util_fill_sbc_params (sbc_t * sbc, GstCaps * caps)
   if (!gst_structure_get_int (structure, "bitpool", &bitpool))
     return FALSE;
 
-  if (!(mode = gst_structure_get_string (structure, "mode")))
+  if (!(mode = gst_structure_get_string (structure, "channel-mode")))
     return FALSE;
-  if (!(allocation = gst_structure_get_string (structure, "allocation")))
+  if (!(allocation = gst_structure_get_string (structure, "allocation-method")))
     return FALSE;
 
   if (channels == 1 && strcmp (mode, "mono") != 0)

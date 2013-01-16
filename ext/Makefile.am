@@ -274,6 +274,12 @@ if USE_FLUIDSYNTH
 FLUIDSYNTH_DIR=fluidsynth
 endif
 
+if USE_SBC
+SBC_DIR=sbc
+else
+SBC_DIR=
+endif
+
 if USE_SCHRO
 SCHRO_DIR=schroedinger
 else
@@ -417,6 +423,7 @@ SUBDIRS=\
 	$(OPENJPEG_DIR) \
 	$(OPUS_DIR) \
 	$(RSVG_DIR) \
+	$(SBC_DIR) \
 	$(SCHRO_DIR) \
 	$(SDL_DIR) \
 	$(SMOOTHWAVE_DIR) \
@@ -476,6 +483,7 @@ DIST_SUBDIRS = \
 	opus \
 	rsvg \
 	resindvd \
+	sbc \
 	schroedinger \
 	sdl \
 	sndfile \

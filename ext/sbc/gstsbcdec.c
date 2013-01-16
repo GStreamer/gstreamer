@@ -1,5 +1,4 @@
-/*
- *
+/*  GStreamer SBC audio decoder
  *  BlueZ - Bluetooth protocol stack for Linux
  *
  *  Copyright (C) 2004-2010  Marcel Holtmann <marcel@holtmann.org>
@@ -27,10 +26,11 @@
 
 #include <string.h>
 
-#include "gstpragma.h"
 #include "gstsbcutil.h"
 #include "gstsbcdec.h"
+#include <gst/audio/audio.h>
 
+/* FIXME: where does this come from? how is it derived? */
 #define BUF_SIZE 8192
 
 GST_DEBUG_CATEGORY_STATIC (sbc_dec_debug);
@@ -38,13 +38,9 @@ GST_DEBUG_CATEGORY_STATIC (sbc_dec_debug);
 
 static void gst_sbc_dec_finalize (GObject * obj);
 
-GST_BOILERPLATE (GstSbcDec, gst_sbc_dec, GstElement, GST_TYPE_ELEMENT);
-
-static const GstElementDetails sbc_dec_details =
-GST_ELEMENT_DETAILS ("Bluetooth SBC decoder",
-    "Codec/Decoder/Audio",
-    "Decode a SBC audio stream",
-    "Marcel Holtmann <marcel@holtmann.org>");
+/* FIXME: port to GstAudioDecoder base class */
+#define parent_class gst_sbc_dec_parent_class
+G_DEFINE_TYPE (GstSbcDec, gst_sbc_dec, GST_TYPE_ELEMENT);
 
 static GstStaticPadTemplate sbc_dec_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -52,11 +48,9 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
 
 static GstStaticPadTemplate sbc_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
+    GST_STATIC_CAPS ("audio/x-raw, format=" GST_AUDIO_NE (S16) ", "
         "rate = (int) { 16000, 32000, 44100, 48000 }, "
-        "channels = (int) [ 1, 2 ], "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) true, " "width = (int) 16, " "depth = (int) 16"));
+        "channels = (int) [ 1, 2 ], layout=interleaved"));
 
 static GstFlowReturn
 gst_sbc_dec_flush (GstSbcDec * dec, GstBuffer * outbuf,
@@ -65,23 +59,18 @@ gst_sbc_dec_flush (GstSbcDec * dec, GstBuffer * outbuf,
   GstClockTime outtime, duration;
 
   /* we will reuse the same caps object */
-  if (dec->outcaps == NULL) {
+  if (dec->send_caps) {
     GstCaps *caps;
-    GstPadTemplate *template;
 
-    caps = gst_caps_new_simple ("audio/x-raw-int",
-        "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
+    caps = gst_caps_new_simple ("audio/x-raw",
+        "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
+        "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels,
+        "layout", G_TYPE_STRING, "interleaved", NULL);
 
-    template = gst_static_pad_template_get (&sbc_dec_src_factory);
-
-    dec->outcaps = gst_caps_intersect (caps,
-        gst_pad_template_get_caps (template));
+    gst_pad_push_event (dec->srcpad, gst_event_new_caps (caps));
 
     gst_caps_unref (caps);
-    gst_object_unref (template);
   }
-
-  gst_buffer_set_caps (outbuf, dec->outcaps);
 
   /* calculate duration */
   outtime = GST_BUFFER_TIMESTAMP (outbuf);
@@ -95,23 +84,23 @@ gst_sbc_dec_flush (GstSbcDec * dec, GstBuffer * outbuf,
     duration = GST_CLOCK_TIME_NONE;
   }
   GST_BUFFER_DURATION (outbuf) = duration;
-  GST_BUFFER_SIZE (outbuf) = outoffset;
+  gst_buffer_resize (outbuf, 0, outoffset);
 
   return gst_pad_push (dec->srcpad, outbuf);
 
 }
 
 static GstFlowReturn
-sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
+sbc_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstSbcDec *dec = GST_SBC_DEC (gst_pad_get_parent (pad));
+  GstSbcDec *dec = GST_SBC_DEC (parent);
   GstFlowReturn res = GST_FLOW_OK;
   const guint8 *indata;
   guint insize;
   GstClockTime timestamp;
   gboolean discont;
+  GstMapInfo out_map;
   GstBuffer *outbuf;
-  guint8 *outdata;
   guint inoffset, outoffset;
   gint rate, channels;
 
@@ -130,8 +119,7 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
     dec->next_timestamp = timestamp;
 
   insize = gst_adapter_available (dec->adapter);
-  indata = gst_adapter_peek (dec->adapter, insize);
-
+  indata = gst_adapter_map (dec->adapter, insize);
 
   inoffset = 0;
   outbuf = NULL;
@@ -143,11 +131,7 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
     size_t outconsumed;
 
     if (outbuf == NULL) {
-      res = gst_pad_alloc_buffer_and_set_caps (dec->srcpad,
-          GST_BUFFER_OFFSET_NONE, BUF_SIZE, NULL, &outbuf);
-
-      if (res != GST_FLOW_OK)
-        goto done;
+      outbuf = gst_buffer_new_and_alloc (BUF_SIZE);
 
       if (discont) {
         GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
@@ -155,8 +139,9 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
       }
 
       GST_BUFFER_TIMESTAMP (outbuf) = dec->next_timestamp;
-      outdata = GST_BUFFER_DATA (outbuf);
-      outsize = GST_BUFFER_SIZE (outbuf);
+
+      gst_buffer_map (outbuf, &out_map, GST_MAP_WRITE);
+      outsize = out_map.size;
       outoffset = 0;
     }
 
@@ -164,7 +149,7 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
         insize, outoffset, outsize);
 
     inconsumed = sbc_decode (&dec->sbc, indata + inoffset, insize,
-        outdata + outoffset, outsize, &outconsumed);
+        out_map.data + outoffset, outsize, &outconsumed);
 
     GST_INFO_OBJECT (dec, "consumed %d, produced %d", inconsumed, outconsumed);
 
@@ -209,21 +194,27 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
     /* check for space, push outbuf buffer */
     outlen = sbc_get_codesize (&dec->sbc);
     if (outsize < outlen) {
+      gst_buffer_unmap (outbuf, &out_map);
+
       res = gst_sbc_dec_flush (dec, outbuf, outoffset, channels, rate);
-      if (res != GST_FLOW_OK)
-        goto done;
 
       outbuf = NULL;
-    }
 
+      if (res != GST_FLOW_OK)
+        goto done;
+    }
   }
 
-  if (outbuf)
-    res = gst_sbc_dec_flush (dec, outbuf, outoffset, channels, rate);
+  if (outbuf) {
+    gst_buffer_unmap (outbuf, &out_map);
 
-  gst_adapter_flush (dec->adapter, inoffset);
+    res = gst_sbc_dec_flush (dec, outbuf, outoffset, channels, rate);
+  }
+
 done:
-  gst_object_unref (dec);
+
+  gst_adapter_unmap (dec->adapter);
+  gst_adapter_flush (dec->adapter, inoffset);
 
   return res;
 }
@@ -238,24 +229,21 @@ gst_sbc_dec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG ("Setup subband codec");
       sbc_init (&dec->sbc, 0);
-      dec->outcaps = NULL;
+      dec->send_caps = TRUE;
       dec->next_sample = -1;
       break;
     default:
       break;
   }
 
-  result = parent_class->change_state (element, transition);
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG ("Finish subband codec");
       gst_adapter_clear (dec->adapter);
       sbc_finish (&dec->sbc);
-      if (dec->outcaps) {
-        gst_caps_unref (dec->outcaps);
-        dec->outcaps = NULL;
-      }
+      dec->send_caps = TRUE;
       break;
 
     default:
@@ -266,9 +254,14 @@ gst_sbc_dec_change_state (GstElement * element, GstStateChange transition)
 }
 
 static void
-gst_sbc_dec_base_init (gpointer g_class)
+gst_sbc_dec_class_init (GstSbcDecClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  object_class->finalize = gst_sbc_dec_finalize;
+
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_sbc_dec_change_state);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sbc_dec_sink_factory));
@@ -276,26 +269,15 @@ gst_sbc_dec_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sbc_dec_src_factory));
 
-  gst_element_class_set_details (element_class, &sbc_dec_details);
-}
-
-static void
-gst_sbc_dec_class_init (GstSbcDecClass * klass)
-{
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  parent_class = g_type_class_peek_parent (klass);
-
-  object_class->finalize = GST_DEBUG_FUNCPTR (gst_sbc_dec_finalize);
-
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_sbc_dec_change_state);
+  gst_element_class_set_static_metadata (element_class,
+      "Bluetooth SBC audio decoder", "Codec/Decoder/Audio",
+      "Decode an SBC audio stream", "Marcel Holtmann <marcel@holtmann.org>");
 
   GST_DEBUG_CATEGORY_INIT (sbc_dec_debug, "sbcdec", 0, "SBC decoding element");
 }
 
 static void
-gst_sbc_dec_init (GstSbcDec * self, GstSbcDecClass * klass)
+gst_sbc_dec_init (GstSbcDec * self)
 {
   self->sinkpad =
       gst_pad_new_from_static_template (&sbc_dec_sink_factory, "sink");
@@ -306,7 +288,7 @@ gst_sbc_dec_init (GstSbcDec * self, GstSbcDecClass * klass)
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   self->adapter = gst_adapter_new ();
-  self->outcaps = NULL;
+  self->send_caps = TRUE;
 }
 
 static void
@@ -315,14 +297,7 @@ gst_sbc_dec_finalize (GObject * obj)
   GstSbcDec *self = GST_SBC_DEC (obj);
 
   g_object_unref (self->adapter);
+  self->adapter = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
-
-}
-
-gboolean
-gst_sbc_dec_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "sbcdec", GST_RANK_PRIMARY,
-      GST_TYPE_SBC_DEC);
 }

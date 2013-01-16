@@ -1,5 +1,4 @@
-/*
- *
+/*  GStreamer SBC audio decoder
  *  BlueZ - Bluetooth protocol stack for Linux
  *
  *  Copyright (C) 2004-2010  Marcel Holtmann <marcel@holtmann.org>
@@ -24,46 +23,43 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
-#include "sbc.h"
+#include <sbc/sbc.h>
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_SBC_DEC \
-	(gst_sbc_dec_get_type())
+    (gst_sbc_dec_get_type())
 #define GST_SBC_DEC(obj) \
-	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SBC_DEC,GstSbcDec))
+    (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SBC_DEC,GstSbcDec))
 #define GST_SBC_DEC_CLASS(klass) \
-	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SBC_DEC,GstSbcDecClass))
+    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SBC_DEC,GstSbcDecClass))
 #define GST_IS_SBC_DEC(obj) \
-	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SBC_DEC))
+    (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SBC_DEC))
 #define GST_IS_SBC_DEC_CLASS(obj) \
-	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SBC_DEC))
+    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SBC_DEC))
 
 typedef struct _GstSbcDec GstSbcDec;
 typedef struct _GstSbcDecClass GstSbcDecClass;
 
 struct _GstSbcDec {
-	GstElement element;
+    GstElement element;
 
-	GstPad *sinkpad;
-	GstPad *srcpad;
+    GstPad *sinkpad;
+    GstPad *srcpad;
 
-	GstAdapter *adapter;
+    GstAdapter *adapter;
 
-	/* caps for outgoing buffers */
-	GstCaps *outcaps;
+    gboolean send_caps;
 
-	sbc_t sbc;
-        guint64 next_sample;
-        guint64 next_timestamp;
+    sbc_t sbc;
+    guint64 next_sample;
+    guint64 next_timestamp;
 };
 
 struct _GstSbcDecClass {
-	GstElementClass parent_class;
+    GstElementClass parent_class;
 };
 
-GType gst_sbc_dec_get_type(void);
-
-gboolean gst_sbc_dec_plugin_init(GstPlugin *plugin);
+GType gst_sbc_dec_get_type (void);
 
 G_END_DECLS

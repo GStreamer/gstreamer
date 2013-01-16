@@ -1,5 +1,4 @@
-/*
- *
+/*  SBC audio utilities
  *  BlueZ - Bluetooth protocol stack for Linux
  *
  *  Copyright (C) 2004-2010  Marcel Holtmann <marcel@holtmann.org>
@@ -23,7 +22,7 @@
 
 #include <gst/gst.h>
 
-#include "sbc.h"
+#include <sbc/sbc.h>
 #include <string.h>
 
 #define SBC_AM_AUTO 0x02
@@ -60,8 +59,6 @@ const gchar *gst_sbc_parse_allocation_from_sbc(gint alloc);
 gint gst_sbc_parse_allocation_to_sbc(const gchar *allocation);
 
 GstCaps *gst_sbc_parse_caps_from_sbc(sbc_t *sbc);
-
-GstCaps *gst_sbc_util_caps_fixate(GstCaps *caps, gchar **error_message);
 
 void gst_sbc_util_set_structure_int_param(GstStructure *structure,
 			const gchar *field, gint field_value,
