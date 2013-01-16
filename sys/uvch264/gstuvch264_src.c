@@ -2187,6 +2187,7 @@ _transform_caps (GstUvcH264Src * self, GstCaps * caps, const gchar * name)
   GstElement *cf = gst_element_factory_make ("capsfilter", NULL);
   GstElement *fs = gst_element_factory_make ("fakesink", NULL);
   GstPad *sink;
+  GstCaps *out_caps = NULL;
 
   if (!el || !cf || !fs || !gst_bin_add (GST_BIN (self), el)) {
     if (el)
@@ -2210,6 +2211,8 @@ _transform_caps (GstUvcH264Src * self, GstCaps * caps, const gchar * name)
     goto done;
   }
 
+  g_object_set (cf, "caps", caps, NULL);
+
   if (!gst_element_link (cf, fs))
     goto error_remove;
   if (!gst_element_link (el, cf))
@@ -2218,10 +2221,12 @@ _transform_caps (GstUvcH264Src * self, GstCaps * caps, const gchar * name)
   sink = gst_element_get_static_pad (el, "sink");
   if (!sink)
     goto error_remove;
-  g_object_set (cf, "caps", caps, NULL);
+  GST_DEBUG_OBJECT (self, "Transforming: %" GST_PTR_FORMAT, caps);
 
-  caps = gst_pad_get_caps (sink);
+  out_caps = gst_pad_get_caps (sink);
   gst_object_unref (sink);
+
+  GST_DEBUG_OBJECT (self, "Result: %" GST_PTR_FORMAT, out_caps);
 
 error_remove:
   gst_bin_remove (GST_BIN (self), cf);
@@ -2229,7 +2234,10 @@ error_remove:
   gst_bin_remove (GST_BIN (self), fs);
 
 done:
-  return caps;
+  if (out_caps == NULL)
+    out_caps = gst_caps_copy (caps);
+
+  return out_caps;
 }
 
 static GstCaps *
