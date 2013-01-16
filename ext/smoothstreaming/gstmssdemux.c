@@ -88,7 +88,7 @@ static gboolean gst_mss_demux_src_query (GstPad * pad, GstQuery * query);
 static void gst_mss_demux_download_loop (GstMssDemuxStream * stream);
 static void gst_mss_demux_stream_loop (GstMssDemux * mssdemux);
 
-static void gst_mss_demux_process_manifest (GstMssDemux * mssdemux);
+static gboolean gst_mss_demux_process_manifest (GstMssDemux * mssdemux);
 
 static void
 gst_mss_demux_base_init (gpointer klass)
@@ -396,8 +396,8 @@ gst_mss_demux_event (GstPad * pad, GstEvent * event)
         break;
       }
 
-      gst_mss_demux_process_manifest (mssdemux);
-      gst_mss_demux_start (mssdemux);
+      if (gst_mss_demux_process_manifest (mssdemux))
+        gst_mss_demux_start (mssdemux);
       forward = FALSE;
       break;
     default:
@@ -710,7 +710,7 @@ gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
   return TRUE;
 }
 
-static void
+static gboolean
 gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
 {
   GstQuery *query;
@@ -718,8 +718,8 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
   gboolean ret;
   GSList *iter;
 
-  g_return_if_fail (mssdemux->manifest_buffer != NULL);
-  g_return_if_fail (mssdemux->manifest == NULL);
+  g_return_val_if_fail (mssdemux->manifest_buffer != NULL, FALSE);
+  g_return_val_if_fail (mssdemux->manifest == NULL, FALSE);
 
   query = gst_query_new_uri ();
   ret = gst_pad_peer_query (mssdemux->sinkpad, query);
@@ -740,11 +740,18 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
   }
   gst_query_unref (query);
 
+  if (mssdemux->base_url == NULL) {
+    GST_ELEMENT_ERROR (mssdemux, RESOURCE, NOT_FOUND,
+        (_("Couldn't get the Manifest's URI")),
+        ("need to get the manifest's URI from upstream elements"));
+    return FALSE;
+  }
+
   mssdemux->manifest = gst_mss_manifest_new (mssdemux->manifest_buffer);
   if (!mssdemux->manifest) {
     GST_ELEMENT_ERROR (mssdemux, STREAM, FORMAT, ("Bad manifest file"),
         ("Xml manifest file couldn't be parsed"));
-    return;
+    return FALSE;
   }
 
   gst_mss_demux_create_streams (mssdemux);
@@ -765,10 +772,11 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
     GST_ELEMENT_ERROR (mssdemux, STREAM, DEMUX,
         (_("This file contains no playable streams.")),
         ("No known stream formats found at the Manifest"));
-    return;
+    return FALSE;
   }
 
   gst_element_no_more_pads (GST_ELEMENT_CAST (mssdemux));
+  return TRUE;
 }
 
 static void
