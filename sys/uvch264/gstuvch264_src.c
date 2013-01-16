@@ -44,6 +44,9 @@
 #include "gstuvch264-marshal.h"
 #include <gudev/gudev.h>
 #include <libusb.h>
+#ifndef LIBUSB_CLASS_VIDEO
+#define LIBUSB_CLASS_VIDEO 0x0e
+#endif
 
 typedef struct
 {
