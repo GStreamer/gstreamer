@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 00:45+0100\n"
+"POT-Creation-Date: 2013-01-16 10:03+0000\n"
 "PO-Revision-Date: 2011-04-26 19:22+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -34,6 +34,9 @@ msgstr ""
 msgid "Could not open audio device for playback."
 msgstr "Aygıtı çalma için açamıyor."
 
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr ""
+
 msgid "Could not open device for recording in mono mode."
 msgstr "Mono kipte kaydetmek için aygıtı açamıyor."
 
@@ -53,6 +56,9 @@ msgstr ""
 
 msgid "Could not open audio device for recording."
 msgstr "Kayıt için ses aygıtı açılamıyor."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr ""
 
 msgid "Could not open CD device for reading."
 msgstr "Okumak için CD aygıtı açılamıyor."

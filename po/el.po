@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 00:45+0100\n"
+"POT-Creation-Date: 2013-01-16 10:03+0000\n"
 "PO-Revision-Date: 2010-10-27 12:05+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -40,6 +40,9 @@ msgstr ""
 msgid "Could not open audio device for playback."
 msgstr "Αδυναμία ανοίγματος συσκευής για αναπαραγωγή."
 
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr ""
+
 msgid "Could not open device for recording in mono mode."
 msgstr "Αδυναμία ανοίγματος συσκευής για μονοφωνική εγγραφή."
 
@@ -59,6 +62,9 @@ msgstr ""
 
 msgid "Could not open audio device for recording."
 msgstr "Αδυναμία ανοίγματος συσκευής ήχου για εγγραφή."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr ""
 
 msgid "Could not open CD device for reading."
 msgstr "Αδυναμία ανοίγματος συσκευής CD για ανάγνωση."

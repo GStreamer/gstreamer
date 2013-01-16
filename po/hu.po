@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 00:45+0100\n"
+"POT-Creation-Date: 2013-01-16 10:03+0000\n"
 "PO-Revision-Date: 2010-11-03 02:48+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -40,6 +40,9 @@ msgstr ""
 msgid "Could not open audio device for playback."
 msgstr "Nem lehet lejátszásra megnyitni a hangeszközt."
 
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr ""
+
 msgid "Could not open device for recording in mono mode."
 msgstr "Nem lehet felvételre megnyitni az eszközt mono módban."
 
@@ -59,6 +62,9 @@ msgstr ""
 
 msgid "Could not open audio device for recording."
 msgstr "Nem lehet felvételre megnyitni a hangeszközt."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr ""
 
 msgid "Could not open CD device for reading."
 msgstr "Nem lehet olvasásra megnyitni a CD-eszközt."

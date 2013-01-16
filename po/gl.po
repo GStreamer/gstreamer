@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 00:45+0100\n"
+"POT-Creation-Date: 2013-01-16 10:03+0000\n"
 "PO-Revision-Date: 2011-09-05 12:48+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -40,6 +40,9 @@ msgstr ""
 msgid "Could not open audio device for playback."
 msgstr "Non foi posíbel abrir o dispositivo de son para reproducir."
 
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr ""
+
 msgid "Could not open device for recording in mono mode."
 msgstr "Non foi posíbel abrir o dispositivo para gravar en modo mono."
 
@@ -59,6 +62,9 @@ msgstr ""
 
 msgid "Could not open audio device for recording."
 msgstr "Non foi posíbel abrir o dispositivo de son para gravar."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr ""
 
 msgid "Could not open CD device for reading."
 msgstr "Non foi posíbel abrir o dispositivo de CD para ler."

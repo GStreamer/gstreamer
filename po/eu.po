@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 00:45+0100\n"
+"POT-Creation-Date: 2013-01-16 10:03+0000\n"
 "PO-Revision-Date: 2010-03-25 12:32+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -39,6 +39,9 @@ msgstr ""
 msgid "Could not open audio device for playback."
 msgstr "Ezin izan da audioaren gailua ireki erreproduzitzeko."
 
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr ""
+
 msgid "Could not open device for recording in mono mode."
 msgstr "Ezin izan da gailua ireki mono moduan grabatzeko."
 
@@ -58,6 +61,9 @@ msgstr ""
 
 msgid "Could not open audio device for recording."
 msgstr "Ezin izan da audioaren gailua ireki grabatzeko."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr ""
 
 msgid "Could not open CD device for reading."
 msgstr "Ezin izan da CD gailua ireki irakurtzeko."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 00:45+0100\n"
+"POT-Creation-Date: 2013-01-16 10:03+0000\n"
 "PO-Revision-Date: 2011-04-26 22:31+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -38,6 +38,9 @@ msgstr ""
 msgid "Could not open audio device for playback."
 msgstr "Звуковото устройство не може да се отвори за изпълнение."
 
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr ""
+
 msgid "Could not open device for recording in mono mode."
 msgstr "Устройството не може да се отвори за запис в моно режим."
 
@@ -57,6 +60,9 @@ msgstr ""
 
 msgid "Could not open audio device for recording."
 msgstr "Звуковото устройство не може да се отвори за запис."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr ""
 
 msgid "Could not open CD device for reading."
 msgstr "Устройството за CD-та не може да се отвори за четене."

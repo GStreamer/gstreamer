@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 00:45+0100\n"
+"POT-Creation-Date: 2013-01-16 10:03+0000\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -41,6 +41,9 @@ msgstr ""
 msgid "Could not open audio device for playback."
 msgstr "No s'ha pogut obrir el dispositiu d'àudio per a la reproducció."
 
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr ""
+
 msgid "Could not open device for recording in mono mode."
 msgstr "No s'ha pogut obrir el dispositiu per a l'enregistrament en mode mono."
 
@@ -62,6 +65,9 @@ msgstr ""
 
 msgid "Could not open audio device for recording."
 msgstr "No s'ha pogut obrir el dispositiu d'àudio per a l'enregistrament."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr ""
 
 msgid "Could not open CD device for reading."
 msgstr "No s'ha pogut obrir el dispositiu del CD per a la lectura."

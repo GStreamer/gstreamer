@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 00:45+0100\n"
+"POT-Creation-Date: 2013-01-16 10:03+0000\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -37,6 +37,9 @@ msgstr ""
 msgid "Could not open audio device for playback."
 msgstr "Kon nie oudio-toestel \"%s\" oopmaak vir skryf nie."
 
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr ""
+
 #, fuzzy
 msgid "Could not open device for recording in mono mode."
 msgstr "Kon nie CD-toestel oopmaak om te lees nie."
@@ -58,6 +61,9 @@ msgstr "Kon nie toestel \"%s\" oopmaak vir lees en skryf nie."
 #, fuzzy
 msgid "Could not open audio device for recording."
 msgstr "Kon nie CD-toestel oopmaak om te lees nie."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr ""
 
 msgid "Could not open CD device for reading."
 msgstr "Kon nie CD-toestel oopmaak om te lees nie."

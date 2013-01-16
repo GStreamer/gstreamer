@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 00:45+0100\n"
+"POT-Creation-Date: 2013-01-16 10:03+0000\n"
 "PO-Revision-Date: 2010-10-24 21:44+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -35,6 +35,9 @@ msgstr "Kunne ikke åpne CD-enheten for lesing."
 msgid "Could not open audio device for playback."
 msgstr "Kunne ikke åpne lydenheten for avspilling."
 
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr ""
+
 #, fuzzy
 msgid "Could not open device for recording in mono mode."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
@@ -55,6 +58,9 @@ msgstr "Kunne ikke åpne CD-enheten for lesing."
 
 msgid "Could not open audio device for recording."
 msgstr "Kunne ikke åpne lydenheten for opptak."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr ""
 
 msgid "Could not open CD device for reading."
 msgstr "Kunne ikke åpne CD-enheten for lesing."

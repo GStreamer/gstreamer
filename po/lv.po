@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 00:45+0100\n"
+"POT-Creation-Date: 2013-01-16 10:03+0000\n"
 "PO-Revision-Date: 2011-09-02 12:02-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -42,6 +42,9 @@ msgstr ""
 msgid "Could not open audio device for playback."
 msgstr "Nevarēja atvērt audio ierīci atskaņošanai."
 
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr ""
+
 msgid "Could not open device for recording in mono mode."
 msgstr "Nevarēja atvērt ierīci ierakstīšanai mono režīmā."
 
@@ -61,6 +64,9 @@ msgstr ""
 
 msgid "Could not open audio device for recording."
 msgstr "Nevarēja atvērt audio ierīci ierakstīšanai."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr ""
 
 msgid "Could not open CD device for reading."
 msgstr "Nevarēja atvērt CD ierīci lasīšanai."
