@@ -78,11 +78,15 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
             GST_GL_DISPLAY_ERR_MSG (display), (NULL));
         return;
       }
-      gl->MatrixMode (GL_PROJECTION);
-      gl->LoadIdentity ();
     }
 #endif
   }
+#if GST_GL_HAVE_OPENGL
+  if (USING_OPENGL (display)) {
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
+  }
+#endif
 
   gst_gl_shader_use (shader);
 
@@ -92,8 +96,8 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
-#if GST_GL_HAVE_GLES2
-  if (USING_GLES2 (filter->display)) {
+#if GST_GL_HAVE_OPENGL
+  if (USING_OPENGL (filter->display)) {
     gst_gl_shader_set_uniform_1f (shader, "width", (gfloat) width / 2.0f);
     gst_gl_shader_set_uniform_1f (shader, "height", (gfloat) height / 2.0f);
   }

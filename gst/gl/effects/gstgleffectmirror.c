@@ -79,11 +79,15 @@ gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
         return;
       }
 
-      gl->MatrixMode (GL_PROJECTION);
-      gl->LoadIdentity ();
     }
 #endif
   }
+#if GST_GL_HAVE_OPENGL
+  if (USING_OPENGL (display)) {
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
+  }
+#endif
 
   gst_gl_shader_use (shader);
 
