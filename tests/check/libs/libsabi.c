@@ -50,7 +50,7 @@
 #else
 #ifdef __powerpc64__
 #include "struct_ppc64.h"
-#define HAVE_ABI_SIZES TRUE
+#define HAVE_ABI_SIZES FALSE
 #else
 #ifdef __powerpc__
 #include "struct_ppc32.h"
@@ -62,15 +62,15 @@
 #else
 #ifdef HAVE_CPU_HPPA
 #include "struct_hppa.h"
-#define HAVE_ABI_SIZES TRUE
+#define HAVE_ABI_SIZES FALSE
 #else
 #ifdef HAVE_CPU_SPARC
 #include "struct_sparc.h"
-#define HAVE_ABI_SIZES TRUE
+#define HAVE_ABI_SIZES FALSE
 #else
 #ifdef HAVE_CPU_ARM
 #include "struct_arm.h"
-#define HAVE_ABI_SIZES TRUE
+#define HAVE_ABI_SIZES FALSE
 #else
 /* in case someone wants to generate a new arch */
 #include "struct_i386.h"
