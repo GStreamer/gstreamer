@@ -39,12 +39,17 @@
 #include "output.h"
 
 static gchar *g_codec_str;
+static gboolean g_benchmark;
 
 static GOptionEntry g_options[] = {
     { "codec", 'c',
       0,
       G_OPTION_ARG_STRING, &g_codec_str,
       "suggested codec", NULL },
+    { "benchmark", 0,
+      0,
+      G_OPTION_ARG_NONE, &g_benchmark,
+      "benchmark mode", NULL },
     { NULL, }
 };
 
@@ -89,6 +94,8 @@ typedef struct {
     GError             *error;
     AppEvent            event;
     GCond               event_cond;
+    GTimer             *timer;
+    guint32             num_frames;
 } App;
 
 #define APP_ERROR app_error_quark()
@@ -353,6 +360,8 @@ start_decoder(App *app)
     g_signal_connect(G_OBJECT(app->decoder), "notify::caps",
         G_CALLBACK(handle_decoder_caps), app);
 
+    g_timer_start(app->timer);
+
     app->decoder_thread = g_thread_create(decoder_thread, app, TRUE, NULL);
     if (!app->decoder_thread)
         return FALSE;
@@ -362,6 +371,8 @@ start_decoder(App *app)
 static gboolean
 stop_decoder(App *app)
 {
+    g_timer_stop(app->timer);
+
     app->decoder_thread_cancel = TRUE;
     g_thread_join(app->decoder_thread);
     g_print("Decoder thread stopped\n");
@@ -419,12 +430,18 @@ renderer_process(App *app, GstBuffer *buffer)
 
     ensure_window_size(app, surface);
 
-    renderer_wait_until(app, GST_BUFFER_TIMESTAMP(buffer));
+    if (!gst_vaapi_surface_sync(surface))
+        SEND_ERROR("failed to sync decoded surface");
+
+    if (G_LIKELY(!g_benchmark))
+        renderer_wait_until(app, GST_BUFFER_TIMESTAMP(buffer));
 
     if (!gst_vaapi_window_put_surface(app->window, surface, NULL, NULL,
             GST_VAAPI_PICTURE_STRUCTURE_FRAME))
         SEND_ERROR("failed to render surface %" GST_VAAPI_ID_FORMAT,
                    GST_VAAPI_ID_ARGS(gst_vaapi_surface_get_id(surface)));
+
+    app->num_frames++;
 
     gst_buffer_replace(&app->last_buffer, buffer);
     gst_buffer_unref(buffer);
@@ -511,6 +528,11 @@ app_free(App *app)
     }
     g_cond_clear(&app->decoder_ready);
 
+    if (app->timer) {
+        g_timer_destroy(app->timer);
+        app->timer = NULL;
+    }
+
     g_cond_clear(&app->render_ready);
     g_cond_clear(&app->event_cond);
     g_mutex_clear(&app->mutex);
@@ -538,6 +560,10 @@ app_new(void)
     app->decoder_queue = g_async_queue_new_full(
         (GDestroyNotify)gst_buffer_unref);
     if (!app->decoder_queue)
+        goto error;
+
+    app->timer = g_timer_new();
+    if (!app->timer)
         goto error;
     return app;
 
@@ -638,6 +664,15 @@ app_run(App *app, int argc, char *argv[])
 
     stop_renderer(app);
     stop_decoder(app);
+
+    g_print("Decoded %u frames", app->num_frames);
+    if (g_benchmark) {
+        const gdouble elapsed = g_timer_elapsed(app->timer, NULL);
+        g_print(" in %.2f sec (%.1f fps)\n",
+                elapsed, (gdouble)app->num_frames / elapsed);
+    }
+    g_print("\n");
+
     video_output_exit();
     return TRUE;
 }
