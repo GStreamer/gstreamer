@@ -266,7 +266,8 @@ resync:
   }
 need_more_data:
   {
-    GST_LOG_OBJECT (parse, "need %u bytes, but only have %" G_GSIZE_FORMAT,
+    GST_LOG_OBJECT (parse,
+        "need %" G_GSIZE_FORMAT " bytes, but only have %" G_GSIZE_FORMAT,
         frame_len, map.size);
     gst_base_parse_set_min_frame_size (parse, frame_len);
     gst_buffer_unmap (frame->buffer, &map);
