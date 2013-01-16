@@ -717,12 +717,19 @@ gst_adapter_take (GstAdapter * adapter, gsize nbytes)
  * since it can reuse the memory in pushed buffers by subbuffering
  * or merging.
  *
- * Caller owns returned value. gst_buffer_unref() after usage.
+ * Note that no assumptions should be made as to whether certain buffer
+ * flags such as the DISCONT flag are set on the returned buffer, or not.
+ * The caller needs to explicitly set or unset flags that should be set or
+ * unset.
+ *
+ * Caller owns a reference to the returned buffer. gst_buffer_unref() after
+ * usage.
  *
  * Free-function: gst_buffer_unref
  *
  * Returns: (transfer full): a #GstBuffer containing the first @nbytes of
- *     the adapter, or #NULL if @nbytes bytes are not available
+ *     the adapter, or #NULL if @nbytes bytes are not available.
+ *     gst_buffer_unref() when no longer needed.
  */
 GstBuffer *
 gst_adapter_take_buffer (GstAdapter * adapter, gsize nbytes)
