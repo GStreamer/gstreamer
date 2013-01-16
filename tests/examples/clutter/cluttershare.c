@@ -18,19 +18,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <GL/glew.h>
-#ifdef WIN32
-#include <GL/wglew.h>
-#else
-#include <GL/glxew.h>
-#endif
-
 #include <GL/gl.h>
 
 #define CLUTTER_VERSION_MIN_REQUIRED CLUTTER_VERSION_1_8
 #include <clutter/clutter.h>
 #ifndef WIN32
 #include <clutter/x11/clutter-x11.h>
+#include <GL/glx.h>
 #endif
 
 #include <gst/gst.h>
@@ -236,7 +230,6 @@ int
 main (int argc, char *argv[])
 {
   ClutterInitError clutter_err = CLUTTER_INIT_ERROR_UNKNOWN;
-  GLenum err = 0;
 #ifdef WIN32
   HGLRC clutter_gl_context = 0;
   HDC clutter_dc = 0;
@@ -266,22 +259,12 @@ main (int argc, char *argv[])
   g_print ("clutter version: %s\n", CLUTTER_VERSION_S);
   clutter_set_default_frame_rate (2);
 
-  /* init glew */
-
-  err = glewInit ();
-  if (err != GLEW_OK)
-    g_debug ("failed to init GLEW: %s", glewGetErrorString (err));
-
   /* avoid to dispatch unecesary events */
-
   clutter_ungrab_keyboard ();
   clutter_ungrab_pointer ();
 
   /* retrieve and turn off clutter opengl context */
-
   stage = clutter_stage_get_default ();
-
-  /* retrieve and turn off clutter opengl context */
 
 #ifdef WIN32
   clutter_gl_context = wglGetCurrentContext ();
@@ -312,7 +295,6 @@ main (int argc, char *argv[])
   gst_object_unref (bus);
 
   /* clutter_gl_context is an external OpenGL context with which gst-plugins-gl want to share textures */
-
   glfilter = gst_bin_get_by_name (GST_BIN (pipeline), "glfiltercube0");
   g_object_set (G_OBJECT (glfilter), "external-opengl-context",
       clutter_gl_context, NULL);
@@ -320,7 +302,6 @@ main (int argc, char *argv[])
 
   /* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
    * shared with the clutter one */
-
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
   state = GST_STATE_PAUSED;
   if (gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
@@ -330,7 +311,6 @@ main (int argc, char *argv[])
   }
 
   /* turn on back clutter opengl context */
-
 #ifdef WIN32
   wglMakeCurrent (clutter_dc, clutter_gl_context);
 #else
@@ -338,14 +318,12 @@ main (int argc, char *argv[])
 #endif
 
   /* clutter stage */
-
   clutter_actor_set_size (stage, 640, 480);
   clutter_actor_set_position (stage, 0, 0);
   clutter_stage_set_title (CLUTTER_STAGE (stage), "clutter and gst-plugins-gl");
   clutter_texture = setup_stage (CLUTTER_STAGE (stage));
 
   /* append a gst-gl texture to this queue when you do not need it no more */
-
   queue_input_buf = g_async_queue_new ();
   queue_output_buf = g_async_queue_new ();
   g_object_set_data (G_OBJECT (clutter_texture), "queue_input_buf",
@@ -354,7 +332,6 @@ main (int argc, char *argv[])
       queue_output_buf);
 
   /* set a callback to retrieve the gst gl textures */
-
   fakesink = gst_bin_get_by_name (GST_BIN (pipeline), "fakesink0");
   g_object_set (G_OBJECT (fakesink), "signal-handoffs", TRUE, NULL);
   g_signal_connect (fakesink, "handoff", G_CALLBACK (on_gst_buffer),
@@ -362,11 +339,9 @@ main (int argc, char *argv[])
   g_object_unref (fakesink);
 
   /* play gst */
-
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
   /* main loop */
-
   clutter_main ();
 
   /* before to deinitialize the gst-gl-opengl context,
@@ -381,14 +356,12 @@ main (int argc, char *argv[])
   clutter_threads_leave ();
 
   /* stop and clean up the pipeline */
-
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   g_object_unref (pipeline);
 
   /* make sure there is no pending gst gl buffer in the communication queues
    * between clutter and gst-gl
    */
-
   while (g_async_queue_length (queue_input_buf) > 0) {
     GstBuffer *buf = g_async_queue_pop (queue_input_buf);
     gst_buffer_unref (buf);
