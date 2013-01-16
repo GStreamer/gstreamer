@@ -30,18 +30,20 @@ static void
 gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
     gpointer data)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLFilter *filter = GST_GL_FILTER (effects);
   GstGLShader *shader;
+  GstGLFilter *filter = GST_GL_FILTER (data);
+  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLDisplay *display = filter->display;
+  GstGLFuncs *gl = display->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "squeeze0");
 
   if (!shader) {
-    shader = gst_gl_shader_new (filter->display);
+    shader = gst_gl_shader_new (display);
     g_hash_table_insert (effects->shaderstable, "squeeze0", shader);
 
 #if GST_GL_HAVE_GLES2
-    if (USING_GLES2 (filter->display)) {
+    if (USING_GLES2 (display)) {
       if (shader) {
         GError *error = NULL;
         gst_gl_shader_set_vertex_source (shader, vertex_shader_source);
@@ -50,15 +52,13 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
 
         gst_gl_shader_compile (shader, &error);
         if (error) {
-          GstGLFilter *filter = GST_GL_FILTER (effects);
-          gst_gl_display_set_error (filter->display,
+          gst_gl_display_set_error (display,
               "Failed to initialize squeeze shader, %s", error->message);
           g_error_free (error);
           error = NULL;
           gst_gl_shader_use (NULL);
           GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-              GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display),
-              (NULL));
+              GST_GL_DISPLAY_ERR_MSG (display), (NULL));
         } else {
           effects->draw_attr_position_loc =
               gst_gl_shader_get_attribute_location (shader, "a_position");
@@ -69,26 +69,26 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
     }
 #endif
 #if GST_GL_HAVE_OPENGL
-    if (USING_OPENGL (filter->display)) {
+    if (USING_OPENGL (display)) {
       if (!gst_gl_shader_compile_and_check (shader,
               squeeze_fragment_source_opengl, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-        gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+        gst_gl_display_set_error (display,
             "Failed to initialize squeeze shader");
         GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-            GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
+            GST_GL_DISPLAY_ERR_MSG (display), (NULL));
         return;
       }
-      glMatrixMode (GL_PROJECTION);
-      glLoadIdentity ();
+      gl->MatrixMode (GL_PROJECTION);
+      gl->LoadIdentity ();
     }
 #endif
   }
 
   gst_gl_shader_use (shader);
 
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 

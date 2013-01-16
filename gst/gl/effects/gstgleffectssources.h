@@ -21,10 +21,6 @@
 #ifndef __GST_GL_EFFECTS_SOURCES_H__
 #define __GST_GL_EFFECTS_SOURCES_H__
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 extern const gchar *vertex_shader_source;
 extern const gchar *identity_fragment_source;
 #if GST_GL_HAVE_OPENGL

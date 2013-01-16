@@ -24,7 +24,7 @@
 #ifndef __COGL_FEATURE_PRIVATE_H
 #define __COGL_FEATURE_PRIVATE_H
 
-#include <glib.h>
+#include <gst/gst.h>
 
 #include "gstgldisplay.h"
 

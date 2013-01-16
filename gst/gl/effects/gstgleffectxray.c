@@ -39,13 +39,15 @@ static void
 gst_gl_effects_xray_step_two (gint width, gint height, guint texture,
     gpointer data)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLShader *shader;
+  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLDisplay *display = GST_GL_FILTER (effects)->display;
+  GstGLFuncs *gl = display->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "xray1");
 
   if (!shader) {
-    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->display);
+    shader = gst_gl_shader_new (display);
     g_hash_table_insert (effects->shaderstable, "xray1", shader);
   }
 
@@ -56,22 +58,21 @@ gst_gl_effects_xray_step_two (gint width, gint height, guint texture,
 
   if (!gst_gl_shader_compile_and_check (shader,
           hconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
-        "Failed to initialize hconv7 shader");
+    gst_gl_display_set_error (display, "Failed to initialize hconv7 shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (display), (NULL));
     return;
   }
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (shader);
 
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
@@ -83,34 +84,35 @@ static void
 gst_gl_effects_xray_step_three (gint width, gint height, guint texture,
     gpointer data)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLShader *shader;
+  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLDisplay *display = GST_GL_FILTER (effects)->display;
+  GstGLFuncs *gl = display->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "xray2");
 
   if (!shader) {
-    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->display);
+    shader = gst_gl_shader_new (display);
     g_hash_table_insert (effects->shaderstable, "xray2", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
           vconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
-        "Failed to initialize vconv7 shader");
+    gst_gl_display_set_error (display, "Failed to initialize vconv7 shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (display), (NULL));
     return;
   }
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (shader);
 
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
@@ -123,34 +125,36 @@ static void
 gst_gl_effects_xray_desaturate (gint width, gint height, guint texture,
     gpointer data)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLShader *shader;
+  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLDisplay *display = GST_GL_FILTER (effects)->display;
+  GstGLFuncs *gl = display->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "xray_desat");
 
   if (!shader) {
-    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->display);
+    shader = gst_gl_shader_new (display);
     g_hash_table_insert (effects->shaderstable, "xray_desat", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
           desaturate_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+    gst_gl_display_set_error (display,
         "Failed to initialize desaturate shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (display), (NULL));
     return;
   }
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (shader);
 
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_effects_draw_texture (effects, texture, width, height);
@@ -160,34 +164,36 @@ static void
 gst_gl_effects_xray_sobel_hconv (gint width, gint height, guint texture,
     gpointer data)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLShader *shader;
+  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLDisplay *display = GST_GL_FILTER (effects)->display;
+  GstGLFuncs *gl = display->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "xray_sob_hconv");
 
   if (!shader) {
-    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->display);
+    shader = gst_gl_shader_new (display);
     g_hash_table_insert (effects->shaderstable, "xray_sob_hconv", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
           sep_sobel_hconv3_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+    gst_gl_display_set_error (display,
         "Failed to initialize sobel hvonc3 shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (display), (NULL));
     return;
   }
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (shader);
 
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_effects_draw_texture (effects, texture, width, height);
@@ -197,34 +203,36 @@ static void
 gst_gl_effects_xray_sobel_vconv (gint width, gint height, guint texture,
     gpointer data)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLShader *shader;
+  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLDisplay *display = GST_GL_FILTER (effects)->display;
+  GstGLFuncs *gl = display->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "xray_sob_vconv");
 
   if (!shader) {
-    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->display);
+    shader = gst_gl_shader_new (display);
     g_hash_table_insert (effects->shaderstable, "xray_sob_vconv", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
           sep_sobel_vconv3_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+    gst_gl_display_set_error (display,
         "Failed to initialize sobel vconv3 shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (display), (NULL));
     return;
   }
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (shader);
 
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_effects_draw_texture (effects, texture, width, height);
@@ -234,34 +242,36 @@ static void
 gst_gl_effects_xray_sobel_length (gint width, gint height, guint texture,
     gpointer data)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLShader *shader;
+  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLDisplay *display = GST_GL_FILTER (effects)->display;
+  GstGLFuncs *gl = display->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "xray_sob_len");
 
   if (!shader) {
-    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->display);
+    shader = gst_gl_shader_new (display);
     g_hash_table_insert (effects->shaderstable, "xray_sob_len", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
           sep_sobel_length_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+    gst_gl_display_set_error (display,
         "Failed to initialize seobel length shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (display), (NULL));
     return;
   }
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (shader);
 
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1i (shader, "invert", TRUE);
@@ -272,43 +282,44 @@ gst_gl_effects_xray_sobel_length (gint width, gint height, guint texture,
 
 void
 gst_gl_effects_xray_step_five (gint width, gint height, guint texture,
-    gpointer stuff)
+    gpointer data)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (stuff);
   GstGLShader *shader;
+  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLDisplay *display = GST_GL_FILTER (effects)->display;
+  GstGLFuncs *gl = display->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "xray4");
 
   if (!shader) {
-    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->display);
+    shader = gst_gl_shader_new (display);
     g_hash_table_insert (effects->shaderstable, "xray4", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
           multiply_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
-        "Failed to initialize multiply shader");
+    gst_gl_display_set_error (display, "Failed to initialize multiply shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (display), (NULL));
     return;
   }
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (shader);
 
-  glActiveTexture (GL_TEXTURE2);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, effects->midtexture[2]);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE2);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, effects->midtexture[2]);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (shader, "base", 2);
 
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1f (shader, "alpha", (gfloat) 0.5f);
   gst_gl_shader_set_uniform_1i (shader, "blend", 1);

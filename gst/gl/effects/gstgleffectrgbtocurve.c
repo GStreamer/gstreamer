@@ -27,59 +27,61 @@ gst_gl_effects_rgb_to_curve (GstGLEffects * effects,
     gint curve_index, gint width, gint height, GLuint texture)
 {
   GstGLShader *shader;
+  GstGLDisplay *display = GST_GL_FILTER (effects)->display;
+  GstGLFuncs *gl = display->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "rgbmap0");
 
   if (!shader) {
-    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->display);
+    shader = gst_gl_shader_new (display);
     g_hash_table_insert (effects->shaderstable, "rgbmap0", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
           rgb_to_curve_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+    gst_gl_display_set_error (display,
         "Failed to initialize rgb to curve shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (display), (NULL));
     return;
   }
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (shader);
 
   if (effects->curve[curve_index] == 0) {
     /* this parameters are needed to have a right, predictable, mapping */
-    glGenTextures (1, &effects->curve[curve_index]);
-    glEnable (GL_TEXTURE_1D);
-    glBindTexture (GL_TEXTURE_1D, effects->curve[curve_index]);
-    glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    gl->GenTextures (1, &effects->curve[curve_index]);
+    gl->Enable (GL_TEXTURE_1D);
+    gl->BindTexture (GL_TEXTURE_1D, effects->curve[curve_index]);
+    gl->TexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    gl->TexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    gl->TexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    gl->TexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-    glTexImage1D (GL_TEXTURE_1D, 0, curve.bytes_per_pixel,
+    gl->TexImage1D (GL_TEXTURE_1D, 0, curve.bytes_per_pixel,
         curve.width, 0, GL_RGB, GL_UNSIGNED_BYTE, curve.pixel_data);
 
-    glDisable (GL_TEXTURE_1D);
+    gl->Disable (GL_TEXTURE_1D);
   }
 
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_1D);
-  glBindTexture (GL_TEXTURE_1D, effects->curve[curve_index]);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_1D);
+  gl->BindTexture (GL_TEXTURE_1D, effects->curve[curve_index]);
 
   gst_gl_shader_set_uniform_1i (shader, "curve", 1);
 
-  glDisable (GL_TEXTURE_1D);
+  gl->Disable (GL_TEXTURE_1D);
 
   gst_gl_effects_draw_texture (effects, texture, width, height);
 }

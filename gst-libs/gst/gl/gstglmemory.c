@@ -191,10 +191,10 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
   GstGLMemory *src;
   GLuint tex_id;
   GLuint rboId, fboId;
-  GLenum status;
   gsize width, height;
   GLuint gl_format;
   GstVideoFormat v_format;
+  GstGLFuncs *gl = display->gl_vtable;
 
   copy_params = (GstGLMemoryCopyParams *) data;
   src = copy_params->src;
@@ -203,7 +203,7 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
   v_format = src->v_format;
   gl_format = src->gl_format;
 
-  if (!GLEW_EXT_framebuffer_object) {
+  if (!gl->GenFramebuffers) {
     gst_gl_display_set_error (display,
         "Context, EXT_framebuffer_object not supported");
     return;
@@ -219,85 +219,49 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
   GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "created texture %i", tex_id);
 
   /* create a framebuffer object */
-  glGenFramebuffersEXT (1, &fboId);
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, fboId);
+  gl->GenFramebuffers (1, &fboId);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, fboId);
 
   /* create a renderbuffer object */
-  glGenRenderbuffersEXT (1, &rboId);
-  glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, rboId);
+  gl->GenRenderbuffers (1, &rboId);
+  gl->BindRenderbuffer (GL_RENDERBUFFER, rboId);
 
-#if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (display)) {
-    glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, width,
+    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width,
         height);
-    glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH24_STENCIL8_EXT,
+    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
         width, height);
   }
-#endif
-#if GST_GL_HAVE_GLES2
   if (USING_GLES2 (display)) {
-    glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
+    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
         width, height);
   }
-#endif
   /* attach the renderbuffer to depth attachment point */
-  glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
-      GL_RENDERBUFFER_EXT, rboId);
+  gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+      GL_RENDERBUFFER, rboId);
 
-#if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (display)) {
-    glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
-        GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, rboId);
+    gl->FramebufferRenderbuffer (GL_FRAMEBUFFER,
+        GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rboId);
   }
-#endif
 
-  glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
       GL_TEXTURE_RECTANGLE_ARB, src->tex_id, 0);
 
   /* check FBO status */
-  status = glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT);
-
-  if (status != GL_FRAMEBUFFER_COMPLETE) {
-    switch (status) {
-      case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
-        GST_CAT_ERROR (GST_CAT_GL_MEMORY, "GL_FRAMEBUFFER_UNSUPPORTED");
-        break;
-
-      case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
-        GST_CAT_ERROR (GST_CAT_GL_MEMORY,
-            "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
-        break;
-
-      case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
-        GST_CAT_ERROR (GST_CAT_GL_MEMORY,
-            "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
-        break;
-
-      case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
-        GST_CAT_ERROR (GST_CAT_GL_MEMORY,
-            "GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
-        break;
-#if GST_GL_HAVE_OPENGL
-      case GL_FRAMEBUFFER_UNDEFINED:
-        GST_CAT_ERROR (GST_CAT_GL_MEMORY, "GL_FRAMEBUFFER_UNDEFINED");
-        break;
-#endif
-      default:
-        GST_CAT_ERROR (GST_CAT_GL_MEMORY, "Unknown FBO error");
-    }
+  if (!gst_gl_display_check_framebuffer_status (display))
     goto fbo_error;
-  }
 
   /* copy tex */
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex_id);
-  glCopyTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, gl_format, 0, 0,
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, tex_id);
+  gl->CopyTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, gl_format, 0, 0,
       width, height, 0);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
 
-  glBindFramebuffer (GL_FRAMEBUFFER_EXT, 0);
+  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 
-  glDeleteRenderbuffers (1, &rboId);
-  glDeleteFramebuffers (1, &fboId);
+  gl->DeleteRenderbuffers (1, &rboId);
+  gl->DeleteFramebuffers (1, &fboId);
 
   copy_params->tex_id = tex_id;
 
@@ -306,8 +270,8 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
 /* ERRORS */
 fbo_error:
   {
-    glDeleteRenderbuffers (1, &rboId);
-    glDeleteFramebuffers (1, &fboId);
+    gl->DeleteRenderbuffers (1, &rboId);
+    gl->DeleteFramebuffers (1, &fboId);
 
     copy_params->tex_id = 0;
   }

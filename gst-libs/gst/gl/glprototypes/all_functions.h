@@ -25,3 +25,4 @@
 #include "glprototypes/gles1gles2opengl.h"
 #include "glprototypes/gles2.h"
 #include "glprototypes/gles2opengl.h"
+#include "glprototypes/gles3opengl.h"

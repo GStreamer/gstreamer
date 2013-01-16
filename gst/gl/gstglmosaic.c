@@ -212,6 +212,7 @@ static void
 gst_gl_mosaic_callback (gpointer stuff)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (stuff);
+  GstGLFuncs *gl = GST_GL_MIXER (mosaic)->display->gl_vtable;
 
   static GLfloat xrot = 0;
   static GLfloat yrot = 0;
@@ -233,14 +234,14 @@ gst_gl_mosaic_callback (gpointer stuff)
 
   guint count = 0;
 
-  gst_gl_shader_use (NULL);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gst_gl_display_clear_shader (NULL);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
-  glEnable (GL_DEPTH_TEST);
+  gl->Enable (GL_DEPTH_TEST);
 
-  glClearColor (0.0, 0.0, 0.0, 0.0);
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  gl->ClearColor (0.0, 0.0, 0.0, 0.0);
+  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   gst_gl_shader_use (mosaic->shader);
 
@@ -328,17 +329,17 @@ gst_gl_mosaic_callback (gpointer stuff)
     };
     /* *INDENT-ON* */
 
-    glVertexAttribPointerARB (attr_position_loc, 3, GL_FLOAT,
+    gl->VertexAttribPointer (attr_position_loc, 3, GL_FLOAT,
         GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[5 * 4 * count]);
 
-    glVertexAttribPointerARB (attr_texture_loc, 2, GL_FLOAT,
+    gl->VertexAttribPointer (attr_texture_loc, 2, GL_FLOAT,
         GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[5 * 4 * count + 3]);
 
-    glEnableVertexAttribArrayARB (attr_position_loc);
-    glEnableVertexAttribArrayARB (attr_texture_loc);
+    gl->EnableVertexAttribArray (attr_position_loc);
+    gl->EnableVertexAttribArray (attr_texture_loc);
 
-    glActiveTextureARB (GL_TEXTURE0_ARB);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, in_tex);
+    gl->ActiveTexture (GL_TEXTURE0);
+    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, in_tex);
     gst_gl_shader_set_uniform_1i (mosaic->shader, "s_texture", 0);
     gst_gl_shader_set_uniform_1f (mosaic->shader, "xrot_degree", xrot);
     gst_gl_shader_set_uniform_1f (mosaic->shader, "yrot_degree", yrot);
@@ -346,19 +347,19 @@ gst_gl_mosaic_callback (gpointer stuff)
     gst_gl_shader_set_uniform_matrix_4fv (mosaic->shader, "u_matrix", 1,
         GL_FALSE, matrix);
 
-    glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+    gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
     ++count;
   }
 
-  glDisableVertexAttribArrayARB (attr_position_loc);
-  glDisableVertexAttribArrayARB (attr_texture_loc);
+  gl->DisableVertexAttribArray (attr_position_loc);
+  gl->DisableVertexAttribArray (attr_texture_loc);
 
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
 
-  glDisable (GL_DEPTH_TEST);
+  gl->Disable (GL_DEPTH_TEST);
 
-  gst_gl_shader_use (NULL);
+  gst_gl_display_clear_shader (NULL);
 
   xrot += 0.6f;
   yrot += 0.4f;

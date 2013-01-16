@@ -83,8 +83,9 @@ gboolean gst_gl_shader_is_compiled       (GstGLShader *shader);
 gboolean gst_gl_shader_compile           (GstGLShader *shader, GError **error);
 gboolean gst_gl_shader_compile_and_check (GstGLShader *shader, const gchar *source, GstGLShaderSourceType type);
 
-void gst_gl_shader_release (GstGLShader *shader);
-void gst_gl_shader_use     (GstGLShader *shader);
+void gst_gl_shader_release       (GstGLShader *shader);
+void gst_gl_shader_use           (GstGLShader *shader);
+void gst_gl_display_clear_shader (GstGLDisplay *display);
 
 void gst_gl_shader_set_uniform_1i           (GstGLShader *shader, const gchar *name, gint value);
 void gst_gl_shader_set_uniform_1iv          (GstGLShader *shader, const gchar *name, guint count, gint *value);

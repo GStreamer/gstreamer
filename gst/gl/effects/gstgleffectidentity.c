@@ -32,20 +32,22 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
 {
   GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLFilter *filter = GST_GL_FILTER (effects);
+  GstGLDisplay *display = filter->display;
+  GstGLFuncs *gl = display->gl_vtable;
 
 #if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (filter->display)) {
-    glMatrixMode (GL_PROJECTION);
-    glLoadIdentity ();
+  if (USING_OPENGL (display)) {
+    gl->MatrixMode (GL_PROJECTION);
+    gl->LoadIdentity ();
   }
 #endif
 #if GST_GL_HAVE_GLES2
-  if (USING_GLES2 (filter->display)) {
+  if (USING_GLES2 (display)) {
     GstGLShader *shader =
         g_hash_table_lookup (effects->shaderstable, "identity0");
 
     if (!shader) {
-      shader = gst_gl_shader_new (filter->display);
+      shader = gst_gl_shader_new (display);
       g_hash_table_insert (effects->shaderstable, "identity0", shader);
 
       if (shader) {
@@ -69,9 +71,9 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
     }
     gst_gl_shader_use (shader);
 
-    glActiveTexture (GL_TEXTURE0);
-    glEnable (GL_TEXTURE_RECTANGLE_ARB);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+    gl->ActiveTexture (GL_TEXTURE0);
+    gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
     gst_gl_shader_set_uniform_1i (shader, "tex", 0);
   }

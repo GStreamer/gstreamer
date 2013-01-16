@@ -32,6 +32,12 @@
  * </refsect2>
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <gstglconfig.h>
+
 #include <gstgleffects.h>
 
 #define GST_TYPE_GL_EFFECTS            (gst_gl_effects_get_type())
@@ -270,30 +276,41 @@ void
 gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
     guint height)
 {
+  GstGLDisplay *display = GST_GL_FILTER (effects)->display;
+  GstGLFuncs *gl = display->gl_vtable;
+
 #if GST_GL_HAVE_OPENGL
-  if (gst_gl_display_get_gl_api_unlocked (GST_GL_FILTER (effects)->display) &
-      GST_GL_API_OPENGL) {
-    glActiveTexture (GL_TEXTURE0);
-    glEnable (GL_TEXTURE_RECTANGLE_ARB);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
+  if (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_OPENGL) {
+    gfloat verts[] = { -1.0f, -1.0f,
+      1.0f, -1.0f,
+      1.0f, 1.0f,
+      -1.0f, 1.0f
+    };
+    gint texcoords[] = { 0, 0,
+      width, 0,
+      width, height,
+      0, height
+    };
 
-    glBegin (GL_QUADS);
+    gl->ActiveTexture (GL_TEXTURE0);
 
-    glTexCoord2f (0.0, 0.0);
-    glVertex2f (-1.0, -1.0);
-    glTexCoord2f ((gfloat) width, 0.0);
-    glVertex2f (1.0, -1.0);
-    glTexCoord2f ((gfloat) width, (gfloat) height);
-    glVertex2f (1.0, 1.0);
-    glTexCoord2f (0.0, (gfloat) height);
-    glVertex2f (-1.0, 1.0);
+    gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
 
-    glEnd ();
+    gl->EnableClientState (GL_VERTEX_ARRAY);
+    gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
+
+    gl->VertexPointer (2, GL_FLOAT, 0, &verts);
+    gl->TexCoordPointer (2, GL_INT, 0, &texcoords);
+
+    gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
+
+    gl->DisableClientState (GL_VERTEX_ARRAY);
+    gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
   }
 #endif
 #if GST_GL_HAVE_GLES2
-  if (gst_gl_display_get_gl_api_unlocked (GST_GL_FILTER (effects)->display) &
-      GST_GL_API_GLES2) {
+  if (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_GLES2) {
     const GLfloat vVertices[] = {
       -1.0f, -1.0f, 0.0f,
       0.0f, 0.0f,
@@ -307,35 +324,37 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
     /* glClear (GL_COLOR_BUFFER_BIT); */
 
     /* Load the vertex position */
-    glVertexAttribPointer (effects->draw_attr_position_loc, 3, GL_FLOAT,
+    gl->VertexAttribPointer (effects->draw_attr_position_loc, 3, GL_FLOAT,
         GL_FALSE, 5 * sizeof (GLfloat), vVertices);
 
     /* Load the texture coordinate */
-    glVertexAttribPointer (effects->draw_attr_texture_loc, 2, GL_FLOAT,
+    gl->VertexAttribPointer (effects->draw_attr_texture_loc, 2, GL_FLOAT,
         GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
-    glEnableVertexAttribArray (effects->draw_attr_position_loc);
-    glEnableVertexAttribArray (effects->draw_attr_texture_loc);
+    gl->EnableVertexAttribArray (effects->draw_attr_position_loc);
+    gl->EnableVertexAttribArray (effects->draw_attr_texture_loc);
 
-    glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+    gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
   }
 #endif
 
-  glUseProgramObjectARB (0);
+  gst_gl_display_clear_shader (display);
 }
 
 static void
 set_horizontal_swap (GstGLDisplay * display, gpointer data)
 {
 #if GST_GL_HAVE_OPENGL
+  GstGLFuncs *gl = display->gl_vtable;
+
   if (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_OPENGL) {
-    const double mirrormatrix[16] = {
+    const gfloat mirrormatrix[16] = {
       -1.0, 0.0, 0.0, 0.0,
       0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
     };
 
-    glMatrixMode (GL_MODELVIEW);
-    glLoadMatrixd (mirrormatrix);
+    gl->MatrixMode (GL_MODELVIEW);
+    gl->LoadMatrixf (mirrormatrix);
   }
 #endif
 }

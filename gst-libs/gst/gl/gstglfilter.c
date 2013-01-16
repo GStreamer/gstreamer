@@ -1080,16 +1080,17 @@ static void
 _draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (filter->default_shader);
 
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (filter->default_shader, "tex", 1);
 
@@ -1137,23 +1138,33 @@ void
 gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
     guint width, guint height)
 {
+  GstGLFuncs *gl = filter->display->gl_vtable;
+
+  gfloat verts[8] = { -1.0f, 1.0f,
+    1.0f, -1.0f,
+    1.0f, 1.0f,
+    -1.0f, 1.0f
+  };
+  gint texcoords[8] = { 0, 0,
+    width, 0,
+    0, height,
+    width, height
+  };
+
   GST_DEBUG ("drawing texture:%u dimensions:%ux%u", texture, width, height);
 
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
-  glBegin (GL_QUADS);
+  gl->EnableClientState (GL_VERTEX_ARRAY);
+  gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
+  gl->VertexPointer (2, GL_FLOAT, 0, &verts);
+  gl->TexCoordPointer (2, GL_INT, 0, &texcoords);
 
-  glTexCoord2f (0.0, 0.0);
-  glVertex2f (-1.0, -1.0);
-  glTexCoord2f ((gfloat) width, 0.0);
-  glVertex2f (1.0, -1.0);
-  glTexCoord2f ((gfloat) width, (gfloat) height);
-  glVertex2f (1.0, 1.0);
-  glTexCoord2f (0.0, (gfloat) height);
-  glVertex2f (-1.0, 1.0);
+  gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
 
-  glEnd ();
+  gl->DisableClientState (GL_VERTEX_ARRAY);
+  gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
 }
 #endif /* GST_GL_HAVE_OPENGL */

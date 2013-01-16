@@ -382,25 +382,55 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   static GLfloat yrot = 0;
   static GLfloat zrot = 0;
 
+  GstGLFuncs *gl;
   GstGLBumper *bumper = GST_GL_BUMPER (stuff);
-  GLint locTangent = 0;
-
+  GstGLDisplay *display = GST_GL_FILTER (bumper)->display;
+//  GLint locTangent = 0;
+#if 0
   //choose the lights
   GLfloat light_direction0[] = { 1.0, 0.0, -1.0, 0.0 }; // light goes along -x
   GLfloat light_direction1[] = { -1.0, 0.0, -1.0, 0.0 };        // light goes along x
   GLfloat light_diffuse0[] = { 1.0, 1.0, 1.0, 1.0 };
   GLfloat light_diffuse1[] = { 1.0, 1.0, 1.0, 1.0 };
   GLfloat mat_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+#endif
+  gfloat verts_front[12] = {
+    1.0, 1.0, -1.0,
+    1.0, -1.0, -1.0,
+    -1.0, -1.0, -1.0,
+    -1.0, 1.0, -1.0
+  };
+  gfloat texcoords0_front[8] = {
+    0.0, 0.0,
+    0.0, height,
+    width, height,
+    width, 0.0
+  };
+  gfloat texcoords1_front[8] = {
+    0.0, 0.0,
+    0.0, bumper->bumpmap_height,
+    bumper->bumpmap_width, bumper->bumpmap_height,
+    bumper->bumpmap_width, 0.0
+  };
+  gfloat normal_front[12] = {
+    0.0, 0.0, -1.0,
+    0.0, 0.0, -1.0,
+    0.0, 0.0, -1.0,
+    0.0, 0.0, -1.0
+  };
+
+  gl = GST_GL_FILTER (bumper)->display->gl_vtable;
 
   //eye point
-  glMatrixMode (GL_PROJECTION);
+  gl->MatrixMode (GL_PROJECTION);
   gluLookAt (0.0, 0.0, -6.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-  glMatrixMode (GL_MODELVIEW);
+  gl->MatrixMode (GL_MODELVIEW);
 
   //scene conf
-  glEnable (GL_DEPTH_TEST);
-  glDepthFunc (GL_LEQUAL);
-  glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+  gl->Enable (GL_DEPTH_TEST);
+  gl->DepthFunc (GL_LEQUAL);
+  gl->Hint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+#if 0
   glShadeModel (GL_SMOOTH);
 
   //set the lights
@@ -414,28 +444,60 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   glEnable (GL_LIGHTING);
   glEnable (GL_LIGHT0);
   glEnable (GL_LIGHT1);
-
+#endif
   //configure shader
   gst_gl_shader_use (bumper->shader);
-  locTangent =
-      gst_gl_shader_get_attribute_location (bumper->shader, "aTangent");
+//  locTangent =
+//      gst_gl_shader_get_attribute_location (bumper->shader, "aTangent");
 
   //set the normal map
-  glActiveTextureARB (GL_TEXTURE1_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
   gst_gl_shader_set_uniform_1i (bumper->shader, "texture1", 1);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, bumper->bumpmap);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, bumper->bumpmap);
 
   //set the video texture
-  glActiveTextureARB (GL_TEXTURE0_ARB);
+  gl->ActiveTexture (GL_TEXTURE0);
   gst_gl_shader_set_uniform_1i (bumper->shader, "texture0", 0);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
   //glTranslatef(2.0f, 2.0f, 5.0f);
 
-  glRotatef (xrot, 1.0f, 0.0f, 0.0f);
-  glRotatef (yrot, 0.0f, 1.0f, 0.0f);
-  glRotatef (zrot, 0.0f, 0.0f, 1.0f);
+  gl->Rotatef (xrot, 1.0f, 0.0f, 0.0f);
+  gl->Rotatef (yrot, 0.0f, 1.0f, 0.0f);
+  gl->Rotatef (zrot, 0.0f, 0.0f, 1.0f);
 
+
+  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
+
+//  glVertexAttrib3d (locTangent, 0.0, 1.0, 0.0);
+
+  gl->VertexPointer (2, GL_FLOAT, 0, &verts_front);
+  gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords0_front);
+  gl->NormalPointer (GL_FLOAT, 0, &normal_front);
+  gl->ClientActiveTexture (GL_TEXTURE0);
+  gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
+  gl->EnableClientState (GL_VERTEX_ARRAY);
+  gl->EnableClientState (GL_NORMAL_ARRAY);
+
+  gl->ClientActiveTexture (GL_TEXTURE1);
+  gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords1_front);
+  gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
+  gl->EnableClientState (GL_VERTEX_ARRAY);
+  gl->EnableClientState (GL_NORMAL_ARRAY);
+
+  gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
+
+  gl->DisableClientState (GL_VERTEX_ARRAY);
+  gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
+  gl->DisableClientState (GL_NORMAL_ARRAY);
+
+  gl->ClientActiveTexture (GL_TEXTURE0);
+  gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
+
+#if 0
   //Cube
   glBegin (GL_QUADS);
 
@@ -455,7 +517,9 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   glMultiTexCoord2dARB (GL_TEXTURE0_ARB, width, 0.0);
   glMultiTexCoord2dARB (GL_TEXTURE1_ARB, bumper->bumpmap_width, 0.0);
   glVertex3d (-1.0, 1.0, -1.0); // C
+#endif
 
+#if 0
   // right face
   glNormal3d (-1.0, 0.0, 0.0);
   glVertexAttrib3dARB (locTangent, 0.0, 1.0, 0.0);
@@ -541,12 +605,13 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   glMultiTexCoord2dARB (GL_TEXTURE1_ARB, bumper->bumpmap_width, 0.0);
   glVertex3d (-1.0, -1.0, -1.0);        // D
   glEnd ();
+#endif
+  gst_gl_display_clear_shader (display);
 
-  glUseProgram (0);
-  glDisable (GL_LIGHT0);
-  glDisable (GL_LIGHT1);
-  glDisable (GL_LIGHTING);
-  glDisable (GL_COLOR_MATERIAL);
+  gl->Disable (GL_LIGHT0);
+  gl->Disable (GL_LIGHT1);
+  gl->Disable (GL_LIGHTING);
+  gl->Disable (GL_COLOR_MATERIAL);
 
   xrot += 1.0f;
   yrot += 0.9f;

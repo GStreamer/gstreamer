@@ -24,34 +24,34 @@ static void
 gst_gl_effects_tunnel_callback (gint width, gint height, guint texture,
     gpointer data)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
-
   GstGLShader *shader;
+  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLDisplay *display = GST_GL_FILTER (effects)->display;
+  GstGLFuncs *gl = display->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "tunnel0");
 
   if (!shader) {
-    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->display);
+    shader = gst_gl_shader_new (display);
     g_hash_table_insert (effects->shaderstable, "tunnel0", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
           tunnel_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
-        "Failed to initialize tunnel shader");
+    gst_gl_display_set_error (display, "Failed to initialize tunnel shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (display), (NULL));
     return;
   }
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (shader);
 
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
