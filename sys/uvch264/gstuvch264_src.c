@@ -29,7 +29,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include <config.h>
+#include <config.h>
 #endif
 
 #include "gstuvch264_src.h"
@@ -2189,13 +2189,24 @@ _transform_caps (GstUvcH264Src * self, GstCaps * caps, const gchar * name)
   GstPad *sink;
   GstCaps *out_caps = NULL;
 
-  if (!el || !cf || !fs || !gst_bin_add (GST_BIN (self), el)) {
+  if (!el || !cf || !fs) {
     if (el)
       gst_object_unref (el);
     if (cf)
       gst_object_unref (cf);
     if (fs)
       gst_object_unref (fs);
+    goto done;
+  }
+
+  gst_element_set_locked_state (el, TRUE);
+  gst_element_set_locked_state (cf, TRUE);
+  gst_element_set_locked_state (fs, TRUE);
+
+  if (!gst_bin_add (GST_BIN (self), el)) {
+    gst_object_unref (el);
+    gst_object_unref (cf);
+    gst_object_unref (fs);
     goto done;
   }
   if (!gst_bin_add (GST_BIN (self), cf)) {
