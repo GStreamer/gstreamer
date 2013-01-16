@@ -474,6 +474,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
   GstDashDemux *demux;
 
   demux = GST_DASH_DEMUX (gst_pad_get_element_private (pad));
+  GST_WARNING_OBJECT (demux, "Received an event");
 
   switch (event->type) {
     case GST_EVENT_SEEK:
@@ -491,6 +492,8 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
       GstStreamPeriod *period;
       guint nb_active_stream;
       guint stream_idx;
+
+      GST_WARNING_OBJECT (demux, "Received seek event");
 
       if (gst_mpd_client_is_live (demux->client)) {
         GST_WARNING_OBJECT (demux, "Received seek event for live stream");
@@ -537,15 +540,18 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
 
       stream = gst_mpdparser_get_active_stream_by_index (demux->client, 0);
       current_pos = 0;
+      current_sequence = 0;
       for (list = g_list_first (stream->segments); list;
           list = g_list_next (list)) {
         chunk = list->data;
         current_pos = chunk->start_time;
-        current_sequence = chunk->number;
+        //current_sequence = chunk->number;
+        GST_WARNING_OBJECT (demux, "%i <= %i (%i)", current_pos, target_pos, chunk->duration);
         if (current_pos <= target_pos
             && target_pos < current_pos + chunk->duration) {
           break;
         }
+        current_sequence++;
       }
       //GST_MPD_CLIENT_UNLOCK (demux->client);
 
@@ -601,6 +607,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
 
       /* Restart the demux */
       demux->cancelled = FALSE;
+      demux->end_of_manifest = FALSE;
       gst_dash_demux_resume_download_task (demux);
       gst_dash_demux_resume_stream_task (demux);
       g_static_rec_mutex_unlock (&demux->stream_lock);
@@ -637,10 +644,10 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
 
   for (i = 0; i < nb_audio; i++) {
     lang = (gchar *) g_list_nth_data (listLang, i);
-    if (gst_mpdparser_get_nb_adaptationSet (demux->client) > 1)
-      if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_AUDIO,
-              lang))
-        GST_INFO_OBJECT (demux, "No audio adaptation set found");
+    GST_INFO ("nb adaptation set: %i", gst_mpdparser_get_nb_adaptationSet (demux->client));
+    if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_AUDIO,
+            lang))
+      GST_INFO_OBJECT (demux, "No audio adaptation set found");
 
     if (gst_mpdparser_get_nb_adaptationSet (demux->client) > nb_audio)
       if (!gst_mpd_client_setup_streaming (demux->client,
@@ -779,11 +786,13 @@ gst_dash_demux_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_SEEKING:{
       GstFormat fmt;
+      gint64 start;
+      gint64 end;
       gint64 stop = -1;
 
-      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
-      GST_DEBUG_OBJECT (dashdemux, "Received GST_QUERY_SEEKING with format %d",
-          fmt);
+      gst_query_parse_seeking (query, &fmt, NULL, &start, &end);
+      GST_DEBUG_OBJECT (dashdemux, "Received GST_QUERY_SEEKING with format %d - %i %i",
+          fmt, start, end);
       if (fmt == GST_FORMAT_TIME) {
         GstClockTime duration;
 
@@ -876,6 +885,8 @@ switch_pads (GstDashDemux * demux, guint nb_adaptation_set)
     gst_pad_set_active (demux->srcpad[i], TRUE);
     gst_pad_set_caps (demux->srcpad[i], demux->output_caps[i]);
     gst_element_add_pad (GST_ELEMENT (demux), demux->srcpad[i]);
+    GST_INFO_OBJECT (demux, "Adding srcpad %s:%s with caps %" GST_PTR_FORMAT,
+        GST_DEBUG_PAD_NAME (demux->srcpad[i]), demux->output_caps[i]);
     i++;
   }
   /* Send 'no-more-pads' to have decodebin create the new group */
@@ -923,8 +934,7 @@ needs_pad_switch (GstDashDemux * demux, GList * fragment)
     if (G_LIKELY (demux->srcpad[i]))
       srccaps = gst_pad_get_negotiated_caps (demux->srcpad[i]);
     if (G_UNLIKELY (!srccaps
-            || (!gst_caps_is_equal_fixed (demux->output_caps[i], srccaps))
-            || demux->need_segment)) {
+            || (!gst_caps_is_equal_fixed (demux->output_caps[i], srccaps)))) {
       switch_pad = TRUE;
     }
     if (G_LIKELY (srccaps))
@@ -982,6 +992,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
         demux->min_buffering_time) {
       /* Warn we are below our threshold: this will eventually pause 
        * the pipeline */
+      GST_WARNING ("Below the threshold: this will eventually pause the pipeline");
       gst_element_post_message (GST_ELEMENT (demux),
           gst_message_new_buffering (GST_OBJECT (demux),
               100 * gst_dash_demux_get_buffering_ratio (demux)));
@@ -1007,10 +1018,9 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       gst_pad_push_event (demux->srcpad[i],
           gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
               start, GST_CLOCK_TIME_NONE, start));
-      demux->position_shift = 0;
     }
 
-    GST_DEBUG_OBJECT (demux, "Pushing fragment #%d", fragment->index);
+    GST_DEBUG_OBJECT (demux, "Pushing fragment #%d (stream %i)", fragment->index, i);
     buffer_list = gst_fragment_get_buffer_list (fragment);
     g_object_unref (fragment);
     ret = gst_pad_push_list (demux->srcpad[i], buffer_list);
@@ -1018,6 +1028,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       goto error_pushing;
   }
   demux->need_segment = FALSE;
+  demux->position_shift = 0;
   g_list_free (listfragment);
   if (GST_STATE (demux) == GST_STATE_PLAYING) {
     /* Wait for the duration of a fragment before resuming this task */
@@ -1284,6 +1295,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
   /* Target buffering time MUST at least exceeds mimimum buffering time 
    * by the duration of a fragment, but SHOULD NOT exceed maximum
    * buffering time */
+  GST_DEBUG_OBJECT (demux, "download loop %i", demux->end_of_manifest);
   GstClockTime target_buffering_time =
       demux->min_buffering_time +
       gst_mpd_client_get_next_fragment_duration (demux->client);
@@ -1428,8 +1440,9 @@ gst_dash_demux_select_representations (GstDashDemux * demux, guint64 bitrate)
 
     /* if no representation has the required bandwidth, take the lowest one */
     if (new_index == -1)
-      new_index = 0;
+      new_index = gst_mpdparser_get_rep_idx_with_min_bandwidth (rep_list);
 
+#if 0
     if (new_index != stream->representation_idx) {
       GST_MPD_CLIENT_LOCK (demux->client);
       ret =
@@ -1444,6 +1457,7 @@ gst_dash_demux_select_representations (GstDashDemux * demux, guint64 bitrate)
             "Can not switch representation, aborting...");
       }
     }
+#endif
     i++;
   }
   return ret;
@@ -1462,7 +1476,7 @@ gst_dash_demux_get_next_header (GstDashDemux * demux, guint stream_idx)
 
   if (strncmp (initializationURL, "http://", 7) != 0) {
     next_header_uri =
-        g_strconcat (gst_mpdparser_get_baseURL (demux->client),
+        g_strconcat (gst_mpdparser_get_baseURL (demux->client, stream_idx),
         initializationURL, NULL);
   } else {
     next_header_uri = g_strdup (initializationURL);
@@ -1673,6 +1687,7 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
       return FALSE;
     }
 
+    GST_INFO_OBJECT (demux, "Next fragment for stream #%i", stream_idx);
     GST_INFO_OBJECT (demux, "Fetching next fragment %s", next_fragment_uri);
 
     download = gst_uri_downloader_fetch_uri (demux->downloader,

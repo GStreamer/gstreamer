@@ -480,9 +480,10 @@ guint gst_mpd_client_get_period_index (GstMpdClient *client);
 
 /* Representation selection */
 gint gst_mpdparser_get_rep_idx_with_max_bandwidth (GList *Representations, gint max_bandwidth);
+gint gst_mpdparser_get_rep_idx_with_min_bandwidth (GList * Representations);
 
 /* URL management */
-const gchar *gst_mpdparser_get_baseURL (GstMpdClient *client);
+const gchar *gst_mpdparser_get_baseURL (GstMpdClient *client, guint indexStream);
 GstMediaSegment *gst_mpdparser_get_chunk_by_index (GstMpdClient *client, guint indexStream, guint indexChunk);
 
 /* Active stream */
