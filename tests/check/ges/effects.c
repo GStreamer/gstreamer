@@ -220,8 +220,8 @@ GST_START_TEST (test_effect_clip)
         GES_TRACK_EFFECT (tmp->data));
     fail_unless (priority > effect_prio);
     fail_unless (GES_IS_TRACK_EFFECT (tmp->data));
-    fail_unless (ges_track_object_get_track (GES_TRACK_OBJECT (tmp->
-                data))->type == track_type[i]);
+    fail_unless (ges_track_object_get_track (GES_TRACK_OBJECT (tmp->data))->
+        type == track_type[i]);
     effect_prio = priority;
 
     g_object_unref (tmp->data);

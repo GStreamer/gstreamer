@@ -60,7 +60,7 @@ struct _GESAutoTransition
 
   GESClip *previous_clip;
   GESClip *next_clip;
-  GESClip *timeline_transition;
+  GESClip *transition_clip;
 
   gchar *key;
 

@@ -19,7 +19,7 @@ LOCAL_SRC_FILES := 				\
 	ges-timeline-source.c			\
 	ges-uri-clip.c		\
 	ges-timeline-operation.c		\
-	ges-timeline-transition.c		\
+	ges-transition-clip.c		\
 	ges-timeline-standard-transition.c	\
 	ges-timeline-test-source.c		\
 	ges-timeline-title-source.c		\

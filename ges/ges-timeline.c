@@ -653,7 +653,7 @@ _destroy_auto_transition_cb (GESAutoTransition * auto_transition,
     GESTimeline * timeline)
 {
   GESTimelinePrivate *priv = timeline->priv;
-  GESClip *transition = auto_transition->timeline_transition;
+  GESClip *transition = auto_transition->transition_clip;
   GESTimelineLayer *layer = ges_clip_get_layer (transition);
 
   ges_timeline_layer_remove_object (layer, transition);

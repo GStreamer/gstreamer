@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 
-/* This class warps a GESTimelineTransition, letting any implementation
- * of a GESTimelineTransition to be used.
+/* This class warps a GESTransitionClip, letting any implementation
+ * of a GESTransitionClip to be used.
  *
  * NOTE: This is for internal use exclusively
  */
@@ -61,10 +61,9 @@ neighbour_changed_cb (GESClip * obj, GParamSpec * arg G_GNUC_UNUSED,
     return;
   }
 
-  _set_start0 (GES_TIMELINE_ELEMENT (self->timeline_transition),
+  _set_start0 (GES_TIMELINE_ELEMENT (self->transition_clip),
       _START (self->next_source));
-  _set_duration0 (GES_TIMELINE_ELEMENT (self->timeline_transition),
-      new_duration);
+  _set_duration0 (GES_TIMELINE_ELEMENT (self->transition_clip), new_duration);
 }
 
 static void
@@ -141,7 +140,7 @@ ges_auto_transition_new (GESTrackObject * transition,
 
   self->previous_clip = ges_track_object_get_clip (previous_source);
   self->next_clip = ges_track_object_get_clip (next_source);
-  self->timeline_transition = ges_track_object_get_clip (transition);
+  self->transition_clip = ges_track_object_get_clip (transition);
 
   g_signal_connect (previous_source, "notify::start",
       G_CALLBACK (neighbour_changed_cb), self);

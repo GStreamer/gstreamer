@@ -19,31 +19,31 @@
  */
 
 /**
- * SECTION: ges-timeline-transition
+ * SECTION: ges-transition-clip
  * @short_description: Base classes for transitions
  */
 
 #include <ges/ges.h>
 #include "ges-internal.h"
 
-struct _GESTimelineTransitionPrivate
+struct _GESTransitionClipPrivate
 {
   /* Dummy variable */
   void *nothing;
 };
 
-G_DEFINE_ABSTRACT_TYPE (GESTimelineTransition, ges_timeline_transition,
+G_DEFINE_ABSTRACT_TYPE (GESTransitionClip, ges_transition_clip,
     GES_TYPE_TIMELINE_OPERATION);
 
 static void
-ges_timeline_transition_class_init (GESTimelineTransitionClass * klass)
+ges_transition_clip_class_init (GESTransitionClipClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GESTimelineTransitionPrivate));
+  g_type_class_add_private (klass, sizeof (GESTransitionClipPrivate));
 }
 
 static void
-ges_timeline_transition_init (GESTimelineTransition * self)
+ges_transition_clip_init (GESTransitionClip * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TIMELINE_TRANSITION, GESTimelineTransitionPrivate);
+      GES_TYPE_TRANSITION_CLIP, GESTransitionClipPrivate);
 }

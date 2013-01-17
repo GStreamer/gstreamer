@@ -364,7 +364,7 @@ layer_object_added_cb (GESTimelineLayer * layer, GESClip * object, App * app)
     gtk_list_store_set (app->model, &iter, 2, object, 0, "Test Source", -1);
   }
 
-  else if (GES_IS_TIMELINE_TRANSITION (object)) {
+  else if (GES_IS_TRANSITION_CLIP (object)) {
     gtk_list_store_set (app->model, &iter, 2, object, 0, "Transition", -1);
   }
 

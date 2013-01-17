@@ -27,9 +27,9 @@
  * GESSimpleTimelineLayer, and the layer will automatically compute the
  * appropriate start times.
  *
- * Users should be aware that GESTimelineTransition objects are considered to
+ * Users should be aware that GESTransitionClip objects are considered to
  * have a negative duration for the purposes of positioning GESTimelineSource
- * objects (i.e., adding a GESTimelineTransition creates an overlap between
+ * objects (i.e., adding a GESTransitionClip creates an overlap between
  * the two adjacent sources.
  */
 
@@ -174,7 +174,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
 
   GST_DEBUG ("recalculating values");
 
-  if (priv->objects && GES_IS_TIMELINE_TRANSITION (priv->objects->data)) {
+  if (priv->objects && GES_IS_TRANSITION_CLIP (priv->objects->data)) {
     valid = FALSE;
   }
 
@@ -205,7 +205,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
 
       g_assert (priority != -1);
 
-    } else if (GES_IS_TIMELINE_TRANSITION (obj)) {
+    } else if (GES_IS_TRANSITION_CLIP (obj)) {
 
       pos -= dur;
       if (pos < 0)
@@ -227,7 +227,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
       /* sanity checks */
       l_next = g_list_next (tmp);
 
-      if (GES_IS_TIMELINE_TRANSITION (prev_object)) {
+      if (GES_IS_TRANSITION_CLIP (prev_object)) {
         GST_ERROR ("two transitions in sequence!");
         valid = FALSE;
       }
@@ -261,7 +261,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
 
   }
 
-  if (prev_object && GES_IS_TIMELINE_TRANSITION (prev_object)) {
+  if (prev_object && GES_IS_TRANSITION_CLIP (prev_object)) {
     valid = FALSE;
   }
 
@@ -307,14 +307,14 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
 
   nth = g_list_nth (priv->objects, position);
 
-  if (GES_IS_TIMELINE_TRANSITION (object)) {
+  if (GES_IS_TRANSITION_CLIP (object)) {
     GList *lprev = g_list_previous (nth);
 
     GESClip *prev = GES_CLIP (lprev ? lprev->data : NULL);
     GESClip *next = GES_CLIP (nth ? nth->data : NULL);
 
-    if ((prev && GES_IS_TIMELINE_TRANSITION (prev)) ||
-        (next && GES_IS_TIMELINE_TRANSITION (next))) {
+    if ((prev && GES_IS_TRANSITION_CLIP (prev)) ||
+        (next && GES_IS_TRANSITION_CLIP (next))) {
       GST_ERROR ("Not adding transition: Only insert transitions between two"
           " sources, or at the begining or end the layer\n");
       return FALSE;

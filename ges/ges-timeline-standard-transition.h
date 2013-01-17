@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-timeline-transition.h>
+#include <ges/ges-transition-clip.h>
 
 G_BEGIN_DECLS
 
@@ -53,7 +53,7 @@ typedef struct _GESTimelineStandardTransitionPrivate GESTimelineStandardTransiti
  */
 struct _GESTimelineStandardTransition {
   /*< private >*/
-  GESTimelineTransition parent;
+  GESTransitionClip parent;
 
   /*< public >*/
   GESVideoStandardTransitionType vtype;
@@ -72,7 +72,7 @@ struct _GESTimelineStandardTransition {
 
 struct _GESTimelineStandardTransitionClass {
   /*< private >*/
-  GESTimelineTransitionClass parent_class;
+  GESTransitionClipClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

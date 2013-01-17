@@ -196,7 +196,7 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESTimelineStandardTransition,
-    ges_timeline_standard_transition, GES_TYPE_TIMELINE_TRANSITION,
+    ges_timeline_standard_transition, GES_TYPE_TRANSITION_CLIP,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 

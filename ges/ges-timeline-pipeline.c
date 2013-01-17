@@ -374,8 +374,8 @@ ges_timeline_pipeline_change_state (GstElement * element,
         ret = GST_STATE_CHANGE_FAILURE;
         goto done;
       }
-      if (self->
-          priv->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
+      if (self->priv->
+          mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
         GST_DEBUG ("rendering => Updating pipeline caps");
       if (!ges_timeline_pipeline_update_caps (self)) {
         GST_ERROR_OBJECT (element, "Error setting the caps for rendering");
