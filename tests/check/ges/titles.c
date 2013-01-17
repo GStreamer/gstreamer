@@ -23,11 +23,11 @@
 
 GST_START_TEST (test_title_source_basic)
 {
-  GESTimelineTitleSource *source;
+  GESTitleClip *source;
 
   ges_init ();
 
-  source = ges_timeline_title_source_new ();
+  source = ges_title_clip_new ();
   fail_unless (source != NULL);
 
   g_object_unref (source);
@@ -47,7 +47,7 @@ GST_START_TEST (test_title_source_properties)
   fail_unless (track != NULL);
 
   object = (GESClip *)
-      ges_timeline_title_source_new ();
+      ges_title_clip_new ();
   fail_unless (object != NULL);
 
   /* Set some properties */
@@ -97,7 +97,7 @@ GST_START_TEST (test_title_source_in_layer)
   GESTimelineLayer *layer;
   GESTrack *a, *v;
   GESTrackObject *trobj;
-  GESTimelineTitleSource *source;
+  GESTitleClip *source;
   gchar *text;
   gint halign, valign;
   guint32 color;
@@ -115,7 +115,7 @@ GST_START_TEST (test_title_source_in_layer)
   ges_timeline_add_track (timeline, v);
   ges_timeline_add_layer (timeline, layer);
 
-  source = ges_timeline_title_source_new ();
+  source = ges_title_clip_new ();
 
   g_object_set (source, "duration", (guint64) GST_SECOND, NULL);
 

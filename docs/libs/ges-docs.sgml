@@ -54,7 +54,7 @@ platform as well as Windows. It is released under the GNU Library General Public
   <chapter>
     <title>Timeline objects</title>
     <xi:include href="xml/ges-timeline-filesource.xml"/>
-    <xi:include href="xml/ges-timeline-title-source.xml"/>
+    <xi:include href="xml/ges-title-clip.xml"/>
     <xi:include href="xml/ges-timeline-test-source.xml"/>
     <xi:include href="xml/ges-text-overlay-clip.xml"/>
     <xi:include href="xml/ges-standard-transition-clip.xml"/>

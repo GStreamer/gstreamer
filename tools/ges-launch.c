@@ -193,7 +193,7 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
     }
 
     else if (!g_strcmp0 ("+title", source)) {
-      obj = GES_CLIP (ges_timeline_title_source_new ());
+      obj = GES_CLIP (ges_title_clip_new ());
 
       g_object_set (obj, "duration", duration, "text", arg0, NULL);
 

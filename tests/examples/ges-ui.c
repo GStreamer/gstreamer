@@ -353,7 +353,7 @@ layer_object_added_cb (GESTimelineLayer * layer, GESClip * object, App * app)
     gtk_list_store_set (app->model, &iter, 0, description, 2, object, -1);
   }
 
-  else if (GES_IS_TIMELINE_TITLE_SOURCE (object)) {
+  else if (GES_IS_TITLE_CLIP (object)) {
     gtk_list_store_set (app->model, &iter, 2, object, -1);
     g_signal_connect (G_OBJECT (object), "notify::text",
         G_CALLBACK (title_source_text_changed_cb), app);
@@ -620,13 +620,11 @@ disconnect_from_filesource (GESClip * object, App * app)
 static void
 connect_to_title_source (GESClip * object, App * app)
 {
-  GESTimelineTitleSource *obj;
-  obj = GES_TIMELINE_TITLE_SOURCE (object);
-  gtk_combo_box_set_active (app->halign,
-      ges_timeline_title_source_get_halignment (obj));
-  gtk_combo_box_set_active (app->valign,
-      ges_timeline_title_source_get_valignment (obj));
-  gtk_entry_set_text (app->text, ges_timeline_title_source_get_text (obj));
+  GESTitleClip *obj;
+  obj = GES_TITLE_CLIP (object);
+  gtk_combo_box_set_active (app->halign, ges_title_clip_get_halignment (obj));
+  gtk_combo_box_set_active (app->valign, ges_title_clip_get_valignment (obj));
+  gtk_entry_set_text (app->text, ges_title_clip_get_text (obj));
 }
 
 static void
@@ -683,7 +681,7 @@ connect_to_object (GESClip * object, App * app)
 
   if (GES_IS_URI_CLIP (object)) {
     connect_to_filesource (object, app);
-  } else if (GES_IS_TIMELINE_TITLE_SOURCE (object)) {
+  } else if (GES_IS_TITLE_CLIP (object)) {
     connect_to_title_source (object, app);
   } else if (GES_IS_TIMELINE_TEST_SOURCE (object)) {
     connect_to_test_source (object, app);
@@ -697,7 +695,7 @@ disconnect_from_object (GESClip * object, App * app)
 {
   if (GES_IS_URI_CLIP (object)) {
     disconnect_from_filesource (object, app);
-  } else if (GES_IS_TIMELINE_TITLE_SOURCE (object)) {
+  } else if (GES_IS_TITLE_CLIP (object)) {
     disconnect_from_title_source (object, app);
   } else if (GES_IS_TIMELINE_TEST_SOURCE (object)) {
     disconnect_from_test_source (object, app);
@@ -1191,7 +1189,7 @@ app_add_title (App * app)
 
   GST_DEBUG ("adding title");
 
-  obj = GES_CLIP (ges_timeline_title_source_new ());
+  obj = GES_CLIP (ges_title_clip_new ());
   g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
 
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
@@ -1606,7 +1604,7 @@ app_selection_changed_cb (GtkTreeSelection * selection, App * app)
       app->selected_type == GES_TYPE_URI_CLIP);
 
   gtk_widget_set_visible (app->text_properties,
-      app->selected_type == GES_TYPE_TIMELINE_TITLE_SOURCE);
+      app->selected_type == GES_TYPE_TITLE_CLIP);
 
   gtk_widget_set_visible (app->generic_duration,
       app->selected_type != G_TYPE_NONE &&

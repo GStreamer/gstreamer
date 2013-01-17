@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-timeline-title-source
+ * SECTION:ges-title-clip
  * @short_description: Render stand-alone titles in  GESTimelineLayer.
  *
  * Renders the given text in the specified font, at specified position, and
@@ -27,21 +27,20 @@
  */
 
 #include "ges-internal.h"
-#include "ges-timeline-title-source.h"
+#include "ges-title-clip.h"
 #include "ges-source-clip.h"
 #include "ges-track-object.h"
 #include "ges-track-title-source.h"
 #include <string.h>
 
-G_DEFINE_TYPE (GESTimelineTitleSource, ges_timeline_title_source,
-    GES_TYPE_SOURCE_CLIP);
+G_DEFINE_TYPE (GESTitleClip, ges_title_clip, GES_TYPE_SOURCE_CLIP);
 
 #define DEFAULT_TEXT ""
 #define DEFAULT_FONT_DESC "Serif 36"
-#define GES_TIMELINE_TITLE_SOURCE_VALIGN_TYPE (ges_timeline_title_source_valign_get_type())
-#define GES_TIMELINE_TITLE_SOURCE_HALIGN_TYPE (ges_timeline_title_source_halign_get_type())
+#define GES_TITLE_CLIP_VALIGN_TYPE (ges_title_clip_valign_get_type())
+#define GES_TITLE_CLIP_HALIGN_TYPE (ges_title_clip_halign_get_type())
 
-struct _GESTimelineTitleSourcePrivate
+struct _GESTitleClipPrivate
 {
   gboolean mute;
   gchar *text;
@@ -70,22 +69,18 @@ enum
 };
 
 static GESTrackObject
-    * ges_timeline_title_source_create_track_object (GESClip * obj,
-    GESTrackType type);
+    * ges_title_clip_create_track_object (GESClip * obj, GESTrackType type);
 
 static void
-ges_timeline_title_source_track_object_added (GESClip * obj,
-    GESTrackObject * tckobj);
+ges_title_clip_track_object_added (GESClip * obj, GESTrackObject * tckobj);
 static void
-ges_timeline_title_source_track_object_released (GESClip * obj,
-    GESTrackObject * tckobj);
+ges_title_clip_track_object_released (GESClip * obj, GESTrackObject * tckobj);
 
 static void
-ges_timeline_title_source_get_property (GObject * object, guint property_id,
+ges_title_clip_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESTimelineTitleSourcePrivate *priv =
-      GES_TIMELINE_TITLE_SOURCE (object)->priv;
+  GESTitleClipPrivate *priv = GES_TITLE_CLIP (object)->priv;
 
   switch (property_id) {
     case PROP_MUTE:
@@ -121,42 +116,38 @@ ges_timeline_title_source_get_property (GObject * object, guint property_id,
 }
 
 static void
-ges_timeline_title_source_set_property (GObject * object, guint property_id,
+ges_title_clip_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESTimelineTitleSource *uriclip = GES_TIMELINE_TITLE_SOURCE (object);
+  GESTitleClip *uriclip = GES_TITLE_CLIP (object);
 
   switch (property_id) {
     case PROP_MUTE:
-      ges_timeline_title_source_set_mute (uriclip, g_value_get_boolean (value));
+      ges_title_clip_set_mute (uriclip, g_value_get_boolean (value));
       break;
     case PROP_TEXT:
-      ges_timeline_title_source_set_text (uriclip, g_value_get_string (value));
+      ges_title_clip_set_text (uriclip, g_value_get_string (value));
       break;
     case PROP_FONT_DESC:
-      ges_timeline_title_source_set_font_desc (uriclip,
-          g_value_get_string (value));
+      ges_title_clip_set_font_desc (uriclip, g_value_get_string (value));
       break;
     case PROP_HALIGNMENT:
-      ges_timeline_title_source_set_halignment (uriclip,
-          g_value_get_enum (value));
+      ges_title_clip_set_halignment (uriclip, g_value_get_enum (value));
       break;
     case PROP_VALIGNMENT:
-      ges_timeline_title_source_set_valignment (uriclip,
-          g_value_get_enum (value));
+      ges_title_clip_set_valignment (uriclip, g_value_get_enum (value));
       break;
     case PROP_COLOR:
-      ges_timeline_title_source_set_color (uriclip, g_value_get_uint (value));
+      ges_title_clip_set_color (uriclip, g_value_get_uint (value));
       break;
     case PROP_BACKGROUND:
-      ges_timeline_title_source_set_background (uriclip,
-          g_value_get_uint (value));
+      ges_title_clip_set_background (uriclip, g_value_get_uint (value));
       break;
     case PROP_XPOS:
-      ges_timeline_title_source_set_xpos (uriclip, g_value_get_double (value));
+      ges_title_clip_set_xpos (uriclip, g_value_get_double (value));
       break;
     case PROP_YPOS:
-      ges_timeline_title_source_set_ypos (uriclip, g_value_get_double (value));
+      ges_title_clip_set_ypos (uriclip, g_value_get_double (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -164,32 +155,32 @@ ges_timeline_title_source_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_timeline_title_source_dispose (GObject * object)
+ges_title_clip_dispose (GObject * object)
 {
-  GESTimelineTitleSource *self = GES_TIMELINE_TITLE_SOURCE (object);
+  GESTitleClip *self = GES_TITLE_CLIP (object);
 
   if (self->priv->text)
     g_free (self->priv->text);
   if (self->priv->font_desc)
     g_free (self->priv->font_desc);
 
-  G_OBJECT_CLASS (ges_timeline_title_source_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_title_clip_parent_class)->dispose (object);
 }
 
 static void
-ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
+ges_title_clip_class_init (GESTitleClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTimelineTitleSourcePrivate));
+  g_type_class_add_private (klass, sizeof (GESTitleClipPrivate));
 
-  object_class->get_property = ges_timeline_title_source_get_property;
-  object_class->set_property = ges_timeline_title_source_set_property;
-  object_class->dispose = ges_timeline_title_source_dispose;
+  object_class->get_property = ges_title_clip_get_property;
+  object_class->set_property = ges_title_clip_set_property;
+  object_class->dispose = ges_title_clip_dispose;
 
   /**
-   * GESTimelineTitleSource:text:
+   * GESTitleClip:text:
    *
    * The text to diplay
    */
@@ -198,7 +189,7 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
           DEFAULT_TEXT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTitleSource:font-desc:
+   * GESTitleClip:font-desc:
    *
    * Pango font description string
    */
@@ -210,7 +201,7 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GESTimelineTitleSource:valignment:
+   * GESTitleClip:valignment:
    *
    * Vertical alignent of the text
    */
@@ -220,7 +211,7 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
           DEFAULT_VALIGNMENT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   /**
-   * GESTimelineTitleSource:halignment:
+   * GESTitleClip:halignment:
    *
    * Horizontal alignment of the text
    */
@@ -230,7 +221,7 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
           GES_TEXT_HALIGN_TYPE, DEFAULT_HALIGNMENT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   /**
-   * GESTimelineTitleSource:mute:
+   * GESTitleClip:mute:
    *
    * Whether the sound will be played or not.
    */
@@ -238,16 +229,13 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
       g_param_spec_boolean ("mute", "Mute", "Mute audio track",
           FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  timobj_class->create_track_object =
-      ges_timeline_title_source_create_track_object;
+  timobj_class->create_track_object = ges_title_clip_create_track_object;
   timobj_class->need_fill_track = FALSE;
-  timobj_class->track_object_added =
-      ges_timeline_title_source_track_object_added;
-  timobj_class->track_object_released =
-      ges_timeline_title_source_track_object_released;
+  timobj_class->track_object_added = ges_title_clip_track_object_added;
+  timobj_class->track_object_released = ges_title_clip_track_object_released;
 
   /**
-   * GESTimelineTitleSource:color:
+   * GESTitleClip:color:
    *
    * The color of the text
    */
@@ -257,7 +245,7 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
           0, G_MAXUINT32, G_MAXUINT32, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTitleSource:background:
+   * GESTitleClip:background:
    *
    * The background of the text
    */
@@ -268,7 +256,7 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTitleSource:xpos:
+   * GESTitleClip:xpos:
    *
    * The horizontal position of the text
    */
@@ -278,7 +266,7 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
           0, 1, 0.5, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTitleSource:ypos:
+   * GESTitleClip:ypos:
    *
    * The vertical position of the text
    */
@@ -289,10 +277,10 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
 }
 
 static void
-ges_timeline_title_source_init (GESTimelineTitleSource * self)
+ges_title_clip_init (GESTitleClip * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TIMELINE_TITLE_SOURCE, GESTimelineTitleSourcePrivate);
+      GES_TYPE_TITLE_CLIP, GESTitleClipPrivate);
 
   GES_TIMELINE_ELEMENT (self)->duration = 0;
   /* Not 100% required since a new gobject's content will always be memzero'd */
@@ -308,8 +296,8 @@ ges_timeline_title_source_init (GESTimelineTitleSource * self)
 }
 
 /**
- * ges_timeline_title_source_set_text:
- * @self: the #GESTimelineTitleSource* to set text on
+ * ges_title_clip_set_text:
+ * @self: the #GESTitleClip* to set text on
  * @text: the text to render. an internal copy of this text will be
  * made.
  *
@@ -317,8 +305,7 @@ ges_timeline_title_source_init (GESTimelineTitleSource * self)
  *
  */
 void
-ges_timeline_title_source_set_text (GESTimelineTitleSource * self,
-    const gchar * text)
+ges_title_clip_set_text (GESTitleClip * self, const gchar * text)
 {
   GSList *tmp;
 
@@ -336,16 +323,15 @@ ges_timeline_title_source_set_text (GESTimelineTitleSource * self,
 }
 
 /**
- * ges_timeline_title_source_set_font_desc:
- * @self: the #GESTimelineTitleSource*
+ * ges_title_clip_set_font_desc:
+ * @self: the #GESTitleClip*
  * @font_desc: the pango font description
  *
  * Sets the pango font description of the text.
  *
  */
 void
-ges_timeline_title_source_set_font_desc (GESTimelineTitleSource * self,
-    const gchar * font_desc)
+ges_title_clip_set_font_desc (GESTitleClip * self, const gchar * font_desc)
 {
   GSList *tmp;
 
@@ -363,16 +349,15 @@ ges_timeline_title_source_set_font_desc (GESTimelineTitleSource * self,
 }
 
 /**
- * ges_timeline_title_source_set_halignment:
- * @self: the #GESTimelineTitleSource* to set horizontal alignement of text on
+ * ges_title_clip_set_halignment:
+ * @self: the #GESTitleClip* to set horizontal alignement of text on
  * @halign: #GESTextHAlign
  *
  * Sets the horizontal aligment of the text.
  *
  */
 void
-ges_timeline_title_source_set_halignment (GESTimelineTitleSource * self,
-    GESTextHAlign halign)
+ges_title_clip_set_halignment (GESTitleClip * self, GESTextHAlign halign)
 {
   GSList *tmp;
 
@@ -387,16 +372,15 @@ ges_timeline_title_source_set_halignment (GESTimelineTitleSource * self,
 }
 
 /**
- * ges_timeline_title_source_set_valignment:
- * @self: the #GESTimelineTitleSource* to set vertical alignement of text on
+ * ges_title_clip_set_valignment:
+ * @self: the #GESTitleClip* to set vertical alignement of text on
  * @valign: #GESTextVAlign
  *
  * Sets the vertical aligment of the text.
  *
  */
 void
-ges_timeline_title_source_set_valignment (GESTimelineTitleSource * self,
-    GESTextVAlign valign)
+ges_title_clip_set_valignment (GESTitleClip * self, GESTextVAlign valign)
 {
   GSList *tmp;
 
@@ -411,16 +395,15 @@ ges_timeline_title_source_set_valignment (GESTimelineTitleSource * self,
 }
 
 /**
- * ges_timeline_title_source_set_mute:
- * @self: the #GESTimelineTitleSource on which to mute or unmute the audio track
+ * ges_title_clip_set_mute:
+ * @self: the #GESTitleClip on which to mute or unmute the audio track
  * @mute: %TRUE to mute the audio track, %FALSE to unmute it
  *
  * Sets whether the audio track of this timeline object is muted or not
  *
  */
 void
-ges_timeline_title_source_set_mute (GESTimelineTitleSource * self,
-    gboolean mute)
+ges_title_clip_set_mute (GESTitleClip * self, gboolean mute)
 {
   GList *tmp, *trackobjects;
   GESClip *object = (GESClip *) self;
@@ -444,8 +427,8 @@ ges_timeline_title_source_set_mute (GESTimelineTitleSource * self,
 }
 
 /**
- * ges_timeline_title_source_set_color:
- * @self: the #GESTimelineTitleSource* to set
+ * ges_title_clip_set_color:
+ * @self: the #GESTitleClip* to set
  * @color: The color @self is being set to
  *
  * Sets the color of the text.
@@ -453,8 +436,7 @@ ges_timeline_title_source_set_mute (GESTimelineTitleSource * self,
  * Since: 0.10.2
  */
 void
-ges_timeline_title_source_set_color (GESTimelineTitleSource * self,
-    guint32 color)
+ges_title_clip_set_color (GESTitleClip * self, guint32 color)
 {
   GSList *tmp;
 
@@ -469,15 +451,14 @@ ges_timeline_title_source_set_color (GESTimelineTitleSource * self,
 }
 
 /**
- * ges_timeline_title_source_set_background:
- * @self: the #GESTimelineTitleSource* to set
+ * ges_title_clip_set_background:
+ * @self: the #GESTitleClip* to set
  * @background: The color @self is being set to
  *
  * Sets the background of the text.
  */
 void
-ges_timeline_title_source_set_background (GESTimelineTitleSource * self,
-    guint32 background)
+ges_title_clip_set_background (GESTitleClip * self, guint32 background)
 {
   GSList *tmp;
 
@@ -493,8 +474,8 @@ ges_timeline_title_source_set_background (GESTimelineTitleSource * self,
 
 
 /**
- * ges_timeline_title_source_set_xpos:
- * @self: the #GESTimelineTitleSource* to set
+ * ges_title_clip_set_xpos:
+ * @self: the #GESTitleClip* to set
  * @position: The horizontal position @self is being set to
  *
  * Sets the horizontal position of the text.
@@ -502,8 +483,7 @@ ges_timeline_title_source_set_background (GESTimelineTitleSource * self,
  * Since: 0.10.2
  */
 void
-ges_timeline_title_source_set_xpos (GESTimelineTitleSource * self,
-    gdouble position)
+ges_title_clip_set_xpos (GESTitleClip * self, gdouble position)
 {
   GSList *tmp;
 
@@ -518,8 +498,8 @@ ges_timeline_title_source_set_xpos (GESTimelineTitleSource * self,
 }
 
 /**
- * ges_timeline_title_source_set_ypos:
- * @self: the #GESTimelineTitleSource* to set
+ * ges_title_clip_set_ypos:
+ * @self: the #GESTitleClip* to set
  * @position: The vertical position @self is being set to
  *
  * Sets the vertical position of the text.
@@ -527,8 +507,7 @@ ges_timeline_title_source_set_xpos (GESTimelineTitleSource * self,
  * Since: 0.10.2
  */
 void
-ges_timeline_title_source_set_ypos (GESTimelineTitleSource * self,
-    gdouble position)
+ges_title_clip_set_ypos (GESTitleClip * self, gdouble position)
 {
   GSList *tmp;
 
@@ -543,8 +522,8 @@ ges_timeline_title_source_set_ypos (GESTimelineTitleSource * self,
 }
 
 /**
- * ges_timeline_title_source_get_text:
- * @self: a #GESTimelineTitleSource
+ * ges_title_clip_get_text:
+ * @self: a #GESTitleClip
  *
  * Get the text currently set on @self.
  *
@@ -552,14 +531,14 @@ ges_timeline_title_source_set_ypos (GESTimelineTitleSource * self,
  *
  */
 const gchar *
-ges_timeline_title_source_get_text (GESTimelineTitleSource * self)
+ges_title_clip_get_text (GESTitleClip * self)
 {
   return self->priv->text;
 }
 
 /**
- * ges_timeline_title_source_get_font_desc:
- * @self: a #GESTimelineTitleSource
+ * ges_title_clip_get_font_desc:
+ * @self: a #GESTitleClip
  *
  * Get the pango font description used by @self.
  *
@@ -567,14 +546,14 @@ ges_timeline_title_source_get_text (GESTimelineTitleSource * self)
  *
  */
 const char *
-ges_timeline_title_source_get_font_desc (GESTimelineTitleSource * self)
+ges_title_clip_get_font_desc (GESTitleClip * self)
 {
   return self->priv->font_desc;
 }
 
 /**
- * ges_timeline_title_source_get_halignment:
- * @self: a #GESTimelineTitleSource
+ * ges_title_clip_get_halignment:
+ * @self: a #GESTitleClip
  *
  * Get the horizontal aligment used by @self.
  *
@@ -582,14 +561,14 @@ ges_timeline_title_source_get_font_desc (GESTimelineTitleSource * self)
  *
  */
 GESTextHAlign
-ges_timeline_title_source_get_halignment (GESTimelineTitleSource * self)
+ges_title_clip_get_halignment (GESTitleClip * self)
 {
   return self->priv->halign;
 }
 
 /**
- * ges_timeline_title_source_get_valignment:
- * @self: a #GESTimelineTitleSource
+ * ges_title_clip_get_valignment:
+ * @self: a #GESTitleClip
  *
  * Get the vertical aligment used by @self.
  *
@@ -597,14 +576,14 @@ ges_timeline_title_source_get_halignment (GESTimelineTitleSource * self)
  *
  */
 GESTextVAlign
-ges_timeline_title_source_get_valignment (GESTimelineTitleSource * self)
+ges_title_clip_get_valignment (GESTitleClip * self)
 {
   return self->priv->valign;
 }
 
 /**
- * ges_timeline_title_source_is_muted:
- * @self: a #GESTimelineTitleSource
+ * ges_title_clip_is_muted:
+ * @self: a #GESTitleClip
  *
  * Let you know if the audio track of @self is muted or not.
  *
@@ -612,14 +591,14 @@ ges_timeline_title_source_get_valignment (GESTimelineTitleSource * self)
  *
  */
 gboolean
-ges_timeline_title_source_is_muted (GESTimelineTitleSource * self)
+ges_title_clip_is_muted (GESTitleClip * self)
 {
   return self->priv->mute;
 }
 
 /**
- * ges_timeline_title_source_get_color:
- * @self: a #GESTimelineTitleSource
+ * ges_title_clip_get_color:
+ * @self: a #GESTitleClip
  *
  * Get the color used by @self.
  *
@@ -628,28 +607,28 @@ ges_timeline_title_source_is_muted (GESTimelineTitleSource * self)
  * Since: 0.10.2
  */
 const guint32
-ges_timeline_title_source_get_color (GESTimelineTitleSource * self)
+ges_title_clip_get_color (GESTitleClip * self)
 {
   return self->priv->color;
 }
 
 /**
- * ges_timeline_title_source_get_background:
- * @self: a #GESTimelineTitleSource
+ * ges_title_clip_get_background:
+ * @self: a #GESTitleClip
  *
  * Get the background used by @self.
  *
  * Returns: The color used by @self.
  */
 const guint32
-ges_timeline_title_source_get_background (GESTimelineTitleSource * self)
+ges_title_clip_get_background (GESTitleClip * self)
 {
   return self->priv->background;
 }
 
 /**
- * ges_timeline_title_source_get_xpos:
- * @self: a #GESTimelineTitleSource
+ * ges_title_clip_get_xpos:
+ * @self: a #GESTitleClip
  *
  * Get the horizontal position used by @self.
  *
@@ -658,14 +637,14 @@ ges_timeline_title_source_get_background (GESTimelineTitleSource * self)
  * Since: 0.10.2
  */
 const gdouble
-ges_timeline_title_source_get_xpos (GESTimelineTitleSource * self)
+ges_title_clip_get_xpos (GESTitleClip * self)
 {
   return self->priv->xpos;
 }
 
 /**
- * ges_timeline_title_source_get_ypos:
- * @self: a #GESTimelineTitleSource
+ * ges_title_clip_get_ypos:
+ * @self: a #GESTitleClip
  *
  * Get the vertical position used by @self.
  *
@@ -674,16 +653,15 @@ ges_timeline_title_source_get_xpos (GESTimelineTitleSource * self)
  * Since: 0.10.2
  */
 const gdouble
-ges_timeline_title_source_get_ypos (GESTimelineTitleSource * self)
+ges_title_clip_get_ypos (GESTitleClip * self)
 {
   return self->priv->ypos;
 }
 
 static void
-ges_timeline_title_source_track_object_released (GESClip * obj,
-    GESTrackObject * tckobj)
+ges_title_clip_track_object_released (GESClip * obj, GESTrackObject * tckobj)
 {
-  GESTimelineTitleSourcePrivate *priv = GES_TIMELINE_TITLE_SOURCE (obj)->priv;
+  GESTitleClipPrivate *priv = GES_TITLE_CLIP (obj)->priv;
 
   /* If this is called, we should be sure the tckobj exists */
   if (GES_IS_TRACK_TITLE_SOURCE (tckobj)) {
@@ -694,10 +672,9 @@ ges_timeline_title_source_track_object_released (GESClip * obj,
 }
 
 static void
-ges_timeline_title_source_track_object_added (GESClip * obj,
-    GESTrackObject * tckobj)
+ges_title_clip_track_object_added (GESClip * obj, GESTrackObject * tckobj)
 {
-  GESTimelineTitleSourcePrivate *priv = GES_TIMELINE_TITLE_SOURCE (obj)->priv;
+  GESTitleClipPrivate *priv = GES_TITLE_CLIP (obj)->priv;
 
   if (GES_IS_TRACK_TITLE_SOURCE (tckobj)) {
     GST_DEBUG_OBJECT (obj, "%p added to %p", tckobj, obj);
@@ -707,10 +684,10 @@ ges_timeline_title_source_track_object_added (GESClip * obj,
 }
 
 static GESTrackObject *
-ges_timeline_title_source_create_track_object (GESClip * obj, GESTrackType type)
+ges_title_clip_create_track_object (GESClip * obj, GESTrackType type)
 {
 
-  GESTimelineTitleSourcePrivate *priv = GES_TIMELINE_TITLE_SOURCE (obj)->priv;
+  GESTitleClipPrivate *priv = GES_TITLE_CLIP (obj)->priv;
   GESTrackObject *res = NULL;
 
   GST_DEBUG_OBJECT (obj, "a GESTrackTitleSource");
@@ -736,16 +713,16 @@ ges_timeline_title_source_create_track_object (GESClip * obj, GESTrackType type)
 }
 
 /**
- * ges_timeline_title_source_new:
+ * ges_title_clip_new:
  *
- * Creates a new #GESTimelineTitleSource
+ * Creates a new #GESTitleClip
  *
- * Returns: The newly created #GESTimelineTitleSource, or NULL if there was an
+ * Returns: The newly created #GESTitleClip, or NULL if there was an
  * error.
  */
-GESTimelineTitleSource *
-ges_timeline_title_source_new (void)
+GESTitleClip *
+ges_title_clip_new (void)
 {
   /* FIXME : Check for validity/existence of URI */
-  return g_object_new (GES_TYPE_TIMELINE_TITLE_SOURCE, NULL);
+  return g_object_new (GES_TYPE_TITLE_CLIP, NULL);
 }
