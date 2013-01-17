@@ -132,7 +132,7 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
   xmlNodePtr iter;
   GstMssStreamFragment *previous_fragment = NULL;
   guint fragment_number = 0;
-  guint fragment_time_accum = 0;
+  guint64 fragment_time_accum = 0;
   GError *gerror = NULL;
 
   stream->xmlnode = node;
@@ -153,16 +153,19 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
 
       /* use the node's seq number or use the previous + 1 */
       if (seqnum_str) {
-        fragment->number = atoi (seqnum_str);
+        fragment->number = g_ascii_strtoull (seqnum_str, NULL, 10);
         g_free (seqnum_str);
+        fragment_number = fragment->number;
       } else {
         fragment->number = fragment_number;
       }
       fragment_number = fragment->number + 1;
 
       if (time_str) {
-        fragment->time = atoi (time_str);
+        fragment->time = g_ascii_strtoull (time_str, NULL, 10);
+
         g_free (time_str);
+        fragment_time_accum = fragment->time;
       } else {
         fragment->time = fragment_time_accum;
       }
@@ -172,7 +175,7 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
         previous_fragment->duration = fragment->time - previous_fragment->time;
 
       if (duration_str) {
-        fragment->duration = atoi (duration_str);
+        fragment->duration = g_ascii_strtoull (duration_str, NULL, 10);
 
         previous_fragment = NULL;
         fragment_time_accum += fragment->duration;
