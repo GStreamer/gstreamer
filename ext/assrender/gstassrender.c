@@ -212,6 +212,8 @@ gst_ass_render_init (GstAssRender * render)
   gst_pad_set_query_function (render->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_ass_render_query_video));
 
+  GST_PAD_SET_PROXY_ALLOCATION (render->video_sinkpad);
+
   gst_element_add_pad (GST_ELEMENT (render), render->srcpad);
   gst_element_add_pad (GST_ELEMENT (render), render->video_sinkpad);
   gst_element_add_pad (GST_ELEMENT (render), render->text_sinkpad);
