@@ -14,8 +14,7 @@ static GQuark ges_meta_key;
 
 G_DEFINE_INTERFACE_WITH_CODE (GESMetaContainer, ges_meta_container,
     G_TYPE_OBJECT, ges_meta_key =
-    g_quark_from_static_string ("ges-meta-container-data");
-    );
+    g_quark_from_static_string ("ges-meta-container-data"););
 
 enum
 {

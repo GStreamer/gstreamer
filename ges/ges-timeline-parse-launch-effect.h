@@ -49,7 +49,7 @@ typedef struct _GESTimelineParseLaunchEffectPrivate GESTimelineParseLaunchEffect
  */
 struct _GESTimelineParseLaunchEffect {
   /*< private >*/
-  GESTimelineEffect parent;
+  GESEffectClip parent;
 
   GESTimelineParseLaunchEffectPrivate *priv;
 
@@ -64,7 +64,7 @@ struct _GESTimelineParseLaunchEffect {
 
 struct _GESTimelineParseLaunchEffectClass {
   /*< private >*/
-  GESTimelineEffectClass parent_class;
+  GESEffectClipClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

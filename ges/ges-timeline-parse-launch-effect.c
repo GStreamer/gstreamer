@@ -37,7 +37,7 @@
 #include "ges-types.h"
 
 G_DEFINE_TYPE (GESTimelineParseLaunchEffect, ges_timeline_parse_launch_effect,
-    GES_TYPE_TIMELINE_EFFECT);
+    GES_TYPE_EFFECT_CLIP);
 
 struct _GESTimelineParseLaunchEffectPrivate
 {
