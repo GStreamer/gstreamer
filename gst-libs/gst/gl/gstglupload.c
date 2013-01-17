@@ -703,7 +703,7 @@ _create_shader (GstGLDisplay * display, const gchar * vertex_src,
     const gchar * fragment_src, GstGLShader ** out_shader)
 {
   GstGLShader *shader;
-  GError *error;
+  GError *error = NULL;
 
   g_return_val_if_fail (vertex_src != NULL || fragment_src != NULL, FALSE);
 
@@ -799,7 +799,7 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
           {
             gchar text_shader_UYVY[2048];
 #if GST_GL_HAVE_OPENGL
-            if (USING_GLES2 (display)) {
+            if (USING_OPENGL (display)) {
               sprintf (text_shader_UYVY, upload->priv->YUY2_UYVY,
                   'a', 'b', 'r');
             }
