@@ -942,6 +942,8 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
   GST_BUFFER_DURATION (_buffer) =
       gst_mss_stream_get_fragment_gst_duration (stream->manifest_stream);
 
+  g_object_unref (fragment);
+
   if (buffer)
     *buffer = _buffer;
 
