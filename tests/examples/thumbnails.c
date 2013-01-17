@@ -92,7 +92,7 @@ create_timeline (void)
     return NULL;
 
   /* Add the main audio/video file */
-  src = GES_CLIP (ges_timeline_test_source_new ());
+  src = GES_CLIP (ges_test_clip_new ());
   g_object_set (src,
       "vpattern", GES_VIDEO_TEST_PATTERN_SNOW,
       "duration", 10 * GST_SECOND, NULL);

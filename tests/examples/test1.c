@@ -49,8 +49,8 @@ main (int argc, gchar ** argv)
   if (!ges_timeline_add_layer (timeline, layer))
     return -1;
 
-  /* We create a simple asset able to extract GESTimelineTestSource */
-  src_asset = ges_asset_request (GES_TYPE_TIMELINE_TEST_SOURCE, NULL, NULL);
+  /* We create a simple asset able to extract GESTestClip */
+  src_asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
 
   /* Add sources to our layer */
   ges_timeline_layer_add_asset (layer, src_asset, 0, 0, GST_SECOND, 1,

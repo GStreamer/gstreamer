@@ -71,7 +71,7 @@ ges_init (void)
 
   /* register timeline object classes with the system */
 
-  GES_TYPE_TIMELINE_TEST_SOURCE;
+  GES_TYPE_TEST_CLIP;
   GES_TYPE_URI_CLIP;
   GES_TYPE_TITLE_CLIP;
   GES_TYPE_STANDARD_TRANSITION_CLIP;

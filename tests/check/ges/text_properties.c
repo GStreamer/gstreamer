@@ -27,7 +27,7 @@ GST_START_TEST (test_text_properties_in_layer)
   GESTimelineLayer *layer;
   GESTrack *a, *v;
   GESTrackObject *trobj;
-  GESTimelineTestSource *source;
+  GESTestClip *source;
   gchar *text;
   gint halign, valign;
 
@@ -42,7 +42,7 @@ GST_START_TEST (test_text_properties_in_layer)
   ges_timeline_add_track (timeline, v);
   ges_timeline_add_layer (timeline, layer);
 
-  source = ges_timeline_test_source_new ();
+  source = ges_test_clip_new ();
 
   g_object_set (source, "duration", (guint64) GST_SECOND, NULL);
 

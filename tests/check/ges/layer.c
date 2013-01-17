@@ -284,7 +284,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
 
   ges_init ();
 
-  asset = ges_asset_request (GES_TYPE_TIMELINE_TEST_SOURCE, NULL, NULL);
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   fail_unless (GES_IS_ASSET (asset));
 
   GST_DEBUG ("Create timeline");
@@ -329,7 +329,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   GST_DEBUG ("Checking that a transition has been added");
   objects = ges_timeline_layer_get_objects (layer);
   assert_equals_int (g_list_length (objects), 4);
-  assert_is_type (objects->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (objects->data, GES_TYPE_TEST_CLIP);
 
   transition = objects->next->data;
   assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
@@ -359,7 +359,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
 
   objects = ges_timeline_layer_get_objects (layer);
   assert_equals_int (g_list_length (objects), 4);
-  assert_is_type (objects->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (objects->data, GES_TYPE_TEST_CLIP);
 
   transition = objects->next->data;
   assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
@@ -483,7 +483,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   src2 =
       GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 1250, 0,
           1000, 1, GES_TRACK_TYPE_UNKNOWN));
-  assert_is_type (src2, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (src2, GES_TYPE_TEST_CLIP);
 
   /*             600____src___1100
    *        500___________src1________1250
@@ -517,7 +517,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
 
   current = objects = ges_timeline_layer_get_objects (layer);
   assert_equals_int (g_list_length (objects), 7);
-  assert_is_type (objects->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (objects->data, GES_TYPE_TEST_CLIP);
   fail_unless (objects->data == src1);
 
   current = current->next;
@@ -592,7 +592,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
 
   current = objects = ges_timeline_layer_get_objects (layer);
   assert_equals_int (g_list_length (objects), 5);
-  assert_is_type (objects->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (objects->data, GES_TYPE_TEST_CLIP);
   fail_unless (current->data == src1);
 
   current = current->next;
@@ -633,7 +633,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   current = objects = ges_timeline_layer_get_objects (layer);
   current = objects;
   assert_equals_int (g_list_length (objects), 7);
-  assert_is_type (objects->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (objects->data, GES_TYPE_TEST_CLIP);
   fail_unless (current->data == src1);
 
   current = current->next;
@@ -683,7 +683,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
 
   ges_init ();
 
-  asset = ges_asset_request (GES_TYPE_TIMELINE_TEST_SOURCE, NULL, NULL);
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   fail_unless (GES_IS_ASSET (asset));
 
   GST_DEBUG ("Create timeline");
@@ -733,7 +733,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   GST_DEBUG ("Checking that a transition has been added");
   current = objects = ges_timeline_layer_get_objects (layer);
   assert_equals_int (g_list_length (objects), 4);
-  assert_is_type (current->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (current->data, GES_TYPE_TEST_CLIP);
 
   current = current->next;
   transition = current->data;
@@ -755,7 +755,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   GST_DEBUG ("Adding object 3 from 500 -- 1000 to second layer");
   src3 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer1, asset, 500,
           0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
-  assert_is_type (src3, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (src3, GES_TYPE_TEST_CLIP);
 
   /*        500__transition__1000
    * 0___________src_________1000
@@ -777,7 +777,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   GST_DEBUG ("Checking transitions on first layer");
   current = objects = ges_timeline_layer_get_objects (layer);
   assert_equals_int (g_list_length (objects), 4);
-  assert_is_type (current->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (current->data, GES_TYPE_TEST_CLIP);
 
   current = current->next;
   transition = current->data;
@@ -825,7 +825,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   GST_DEBUG ("Checking transitions on first layer");
   current = objects = ges_timeline_layer_get_objects (layer);
   assert_equals_int (g_list_length (objects), 4);
-  assert_is_type (current->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (current->data, GES_TYPE_TEST_CLIP);
 
   current = current->next;
   transition = current->data;
@@ -844,7 +844,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   GST_DEBUG ("Checking transitions has been added on second layer");
   current = objects = ges_timeline_layer_get_objects (layer1);
   assert_equals_int (g_list_length (objects), 4);
-  assert_is_type (current->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (current->data, GES_TYPE_TEST_CLIP);
 
   current = current->next;
   transition = current->data;
@@ -883,7 +883,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   GST_DEBUG ("Checking transitions on first layer");
   current = objects = ges_timeline_layer_get_objects (layer);
   assert_equals_int (g_list_length (objects), 4);
-  assert_is_type (current->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (current->data, GES_TYPE_TEST_CLIP);
 
   current = current->next;
   transition = current->data;
@@ -1019,8 +1019,8 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   GST_DEBUG ("Checking second layer");
   current = objects = ges_timeline_layer_get_objects (layer1);
   assert_equals_int (g_list_length (objects), 2);
-  assert_is_type (current->data, GES_TYPE_TIMELINE_TEST_SOURCE);
-  assert_is_type (current->next->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (current->data, GES_TYPE_TEST_CLIP);
+  assert_is_type (current->next->data, GES_TYPE_TEST_CLIP);
   g_list_free_full (objects, gst_object_unref);
   ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
 
@@ -1085,7 +1085,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   GST_DEBUG ("Checking second layer");
   current = objects = ges_timeline_layer_get_objects (layer1);
   assert_equals_int (g_list_length (objects), 1);
-  assert_is_type (current->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   g_list_free_full (objects, gst_object_unref);
   ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
 
@@ -1150,7 +1150,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   GST_DEBUG ("Checking second layer");
   current = objects = ges_timeline_layer_get_objects (layer1);
   assert_equals_int (g_list_length (objects), 1);
-  assert_is_type (current->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   g_list_free_full (objects, gst_object_unref);
   ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
 
@@ -1170,7 +1170,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
 
   ges_init ();
 
-  asset = ges_asset_request (GES_TYPE_TIMELINE_TEST_SOURCE, NULL, NULL);
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   transition_asset =
       ges_asset_request (GES_TYPE_STANDARD_TRANSITION_CLIP, "crossfade", NULL);
   fail_unless (GES_IS_ASSET (asset));
@@ -1222,7 +1222,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
   GST_DEBUG ("Checking that no transition has been added");
   current = objects = ges_timeline_layer_get_objects (layer);
   assert_equals_int (g_list_length (objects), 4);
-  assert_is_type (current->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   g_list_free_full (objects, gst_object_unref);
 
   GST_DEBUG ("Adding transition from 1000 -- 1500 to layer");
@@ -1245,13 +1245,13 @@ GST_START_TEST (test_layer_activate_automatic_transition)
   current = objects = ges_timeline_layer_get_objects (layer);
   assert_equals_int (g_list_length (objects), 5);
   current = current->next;
-  assert_is_type (current->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   current = current->next;
   assert_is_type (current->data, GES_TYPE_STANDARD_TRANSITION_CLIP);
   current = current->next;
-  assert_is_type (current->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   current = current->next;
-  assert_is_type (current->data, GES_TYPE_TIMELINE_TEST_SOURCE);
+  assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   g_list_free_full (objects, gst_object_unref);
 
   ges_timeline_layer_set_auto_transition (layer, TRUE);

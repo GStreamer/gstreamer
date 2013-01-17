@@ -360,7 +360,7 @@ layer_object_added_cb (GESTimelineLayer * layer, GESClip * object, App * app)
     title_source_text_changed_cb (object, NULL, app);
   }
 
-  else if (GES_IS_TIMELINE_TEST_SOURCE (object)) {
+  else if (GES_IS_TEST_CLIP (object)) {
     gtk_list_store_set (app->model, &iter, 2, object, 0, "Test Source", -1);
   }
 
@@ -638,10 +638,10 @@ connect_to_test_source (GESClip * object, App * app)
   GObjectClass *klass;
   GParamSpecDouble *pspec;
 
-  GESTimelineTestSource *obj;
-  obj = GES_TIMELINE_TEST_SOURCE (object);
+  GESTestClip *obj;
+  obj = GES_TEST_CLIP (object);
   gtk_combo_box_set_active (app->background_type,
-      ges_timeline_test_source_get_vpattern (obj));
+      ges_test_clip_get_vpattern (obj));
 
   g_signal_connect (G_OBJECT (object), "notify::volume",
       G_CALLBACK (test_source_notify_volume_changed_cb), app);
@@ -655,8 +655,7 @@ connect_to_test_source (GESClip * object, App * app)
   pspec = G_PARAM_SPEC_DOUBLE (g_object_class_find_property (klass, "freq"));
   gtk_spin_button_set_range (app->frequency, pspec->minimum, pspec->maximum);
   gtk_spin_button_set_value (app->frequency,
-      ges_timeline_test_source_get_frequency (GES_TIMELINE_TEST_SOURCE
-          (object)));
+      ges_test_clip_get_frequency (GES_TEST_CLIP (object)));
 }
 
 static void
@@ -683,7 +682,7 @@ connect_to_object (GESClip * object, App * app)
     connect_to_filesource (object, app);
   } else if (GES_IS_TITLE_CLIP (object)) {
     connect_to_title_source (object, app);
-  } else if (GES_IS_TIMELINE_TEST_SOURCE (object)) {
+  } else if (GES_IS_TEST_CLIP (object)) {
     connect_to_test_source (object, app);
   }
 
@@ -697,7 +696,7 @@ disconnect_from_object (GESClip * object, App * app)
     disconnect_from_filesource (object, app);
   } else if (GES_IS_TITLE_CLIP (object)) {
     disconnect_from_title_source (object, app);
-  } else if (GES_IS_TIMELINE_TEST_SOURCE (object)) {
+  } else if (GES_IS_TEST_CLIP (object)) {
     disconnect_from_test_source (object, app);
   }
 }
@@ -706,8 +705,8 @@ static GtkListStore *
 get_video_patterns (void)
 {
   GEnumClass *enum_class;
-  GESTimelineTestSource *tr;
-  GESTimelineTestSourceClass *klass;
+  GESTestClip *tr;
+  GESTestClipClass *klass;
   GParamSpec *pspec;
   GEnumValue *v;
   GtkListStore *m;
@@ -715,8 +714,8 @@ get_video_patterns (void)
 
   m = gtk_list_store_new (1, G_TYPE_STRING);
 
-  tr = ges_timeline_test_source_new ();
-  klass = GES_TIMELINE_TEST_SOURCE_GET_CLASS (tr);
+  tr = ges_test_clip_new ();
+  klass = GES_TEST_CLIP_GET_CLASS (tr);
 
   pspec = g_object_class_find_property (G_OBJECT_CLASS (klass), "vpattern");
 
@@ -1203,7 +1202,7 @@ app_add_test (App * app)
 
   GST_DEBUG ("adding test");
 
-  obj = GES_CLIP (ges_timeline_test_source_new ());
+  obj = GES_CLIP (ges_test_clip_new ());
   g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
 
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
@@ -1611,7 +1610,7 @@ app_selection_changed_cb (GtkTreeSelection * selection, App * app)
       app->selected_type != G_TYPE_INVALID);
 
   gtk_widget_set_visible (app->background_properties,
-      app->selected_type == GES_TYPE_TIMELINE_TEST_SOURCE);
+      app->selected_type == GES_TYPE_TEST_CLIP);
 }
 
 gboolean

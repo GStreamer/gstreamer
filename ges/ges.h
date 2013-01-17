@@ -33,7 +33,7 @@
 #include <ges/ges-clip.h>
 #include <ges/ges-timeline-pipeline.h>
 #include <ges/ges-source-clip.h>
-#include <ges/ges-timeline-test-source.h>
+#include <ges/ges-test-clip.h>
 #include <ges/ges-title-clip.h>
 #include <ges/ges-operation-clip.h>
 #include <ges/ges-effect-clip.h>

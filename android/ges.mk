@@ -21,7 +21,7 @@ LOCAL_SRC_FILES := 				\
 	ges-operation-clip.c		\
 	ges-transition-clip.c		\
 	ges-standard-transition-clip.c	\
-	ges-timeline-test-source.c		\
+	ges-test-clip.c		\
 	ges-title-clip.c		\
 	ges-overlay-clip.c			\
 	ges-text-overlay-clip.c		\

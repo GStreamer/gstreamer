@@ -23,11 +23,11 @@
 
 GST_START_TEST (test_test_source_basic)
 {
-  GESTimelineTestSource *source;
+  GESTestClip *source;
 
   ges_init ();
 
-  source = ges_timeline_test_source_new ();
+  source = ges_test_clip_new ();
   fail_unless (source != NULL);
 
   g_object_unref (source);
@@ -47,7 +47,7 @@ GST_START_TEST (test_test_source_properties)
   fail_unless (track != NULL);
 
   object = (GESClip *)
-      ges_timeline_test_source_new ();
+      ges_test_clip_new ();
   fail_unless (object != NULL);
 
   /* Set some properties */
@@ -105,7 +105,7 @@ GST_START_TEST (test_test_source_in_layer)
   GESTimelineLayer *layer;
   GESTrack *a, *v;
   GESTrackObject *trobj;
-  GESTimelineTestSource *source;
+  GESTestClip *source;
   GESVideoTestPattern ptrn;
   gdouble freq, volume;
 
@@ -120,7 +120,7 @@ GST_START_TEST (test_test_source_in_layer)
   ges_timeline_add_track (timeline, v);
   ges_timeline_add_layer (timeline, layer);
 
-  source = ges_timeline_test_source_new_for_nick ((gchar *) "red");
+  source = ges_test_clip_new_for_nick ((gchar *) "red");
   g_object_get (source, "vpattern", &ptrn, NULL);
   assert_equals_int (ptrn, GES_VIDEO_TEST_PATTERN_RED);
 
@@ -150,8 +150,8 @@ GST_START_TEST (test_test_source_in_layer)
   trobj = ges_clip_find_track_object (GES_CLIP (source),
       a, GES_TYPE_TRACK_AUDIO_TEST_SOURCE);
   g_assert (GES_IS_TRACK_AUDIO_TEST_SOURCE (trobj));
-  assert_equals_float (ges_timeline_test_source_get_frequency (source), 440);
-  assert_equals_float (ges_timeline_test_source_get_volume (source), 0);
+  assert_equals_float (ges_test_clip_get_frequency (source), 440);
+  assert_equals_float (ges_test_clip_get_volume (source), 0);
 
   g_object_get (source, "freq", &freq, "volume", &volume, NULL);
   assert_equals_float (freq, 440);
@@ -251,7 +251,7 @@ GST_START_TEST (test_gap_filling_basic)
   composition = find_composition (track);
   fail_unless (composition != NULL);
 
-  object = GES_CLIP (ges_timeline_test_source_new ());
+  object = GES_CLIP (ges_test_clip_new ());
   fail_unless (object != NULL);
 
   /* Set some properties */
@@ -274,7 +274,7 @@ GST_START_TEST (test_gap_filling_basic)
   /* Check no gap were wrongly added */
   assert_equals_int (g_list_length (GST_BIN_CHILDREN (composition)), 1);
 
-  object1 = GES_CLIP (ges_timeline_test_source_new ());
+  object1 = GES_CLIP (ges_test_clip_new ());
   fail_unless (object1 != NULL);
 
   g_object_set (object1, "start", (guint64) 15, "duration", (guint64) 5, NULL);
@@ -305,7 +305,7 @@ GST_START_TEST (test_gap_filling_basic)
   fail_unless (gap != NULL);
   gap_object_check (gap, 5, 10, 0)
 
-      object2 = GES_CLIP (ges_timeline_test_source_new ());
+      object2 = GES_CLIP (ges_test_clip_new ());
   fail_unless (object2 != NULL);
   g_object_set (object2, "start", (guint64) 35, "duration", (guint64) 5, NULL);
   trackobject2 = ges_clip_create_track_object (object2, track->type);

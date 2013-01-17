@@ -36,7 +36,7 @@ main (gint argc, gchar * argv[])
 
   gst_init (&argc, &argv);
   ges_init ();
-  asset = ges_asset_request (GES_TYPE_TIMELINE_TEST_SOURCE, NULL, NULL);
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
 
   layer = ges_timeline_layer_new ();
   timeline = ges_timeline_new_audio_video ();

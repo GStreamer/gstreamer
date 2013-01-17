@@ -45,7 +45,7 @@ GST_START_TEST (test_add_effect_to_clip)
   GESTimelineLayer *layer;
   GESTrack *track_audio, *track_video;
   GESTrackParseLaunchEffect *track_effect;
-  GESTimelineTestSource *source;
+  GESTestClip *source;
 
   ges_init ();
 
@@ -58,7 +58,7 @@ GST_START_TEST (test_add_effect_to_clip)
   ges_timeline_add_track (timeline, track_video);
   ges_timeline_add_layer (timeline, layer);
 
-  source = ges_timeline_test_source_new ();
+  source = ges_test_clip_new ();
 
   g_object_set (source, "duration", 10 * GST_SECOND, NULL);
 
@@ -92,7 +92,7 @@ GST_START_TEST (test_get_effects_from_tl)
   GESTimelineLayer *layer;
   GESTrack *track_video;
   GESTrackParseLaunchEffect *track_effect, *track_effect1, *track_effect2;
-  GESTimelineTestSource *source;
+  GESTestClip *source;
   GList *effects, *tmp = NULL;
   gint effect_prio = -1;
   guint clip_height = 0;
@@ -106,7 +106,7 @@ GST_START_TEST (test_get_effects_from_tl)
   ges_timeline_add_track (timeline, track_video);
   ges_timeline_add_layer (timeline, layer);
 
-  source = ges_timeline_test_source_new ();
+  source = ges_test_clip_new ();
 
   g_object_set (source, "duration", 10 * GST_SECOND, NULL);
 

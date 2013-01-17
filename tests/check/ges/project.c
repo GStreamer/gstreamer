@@ -86,7 +86,7 @@ GST_START_TEST (test_project_add_assets)
   g_signal_connect (project, "asset-removed",
       (GCallback) asset_removed_add_cb, &removed_cb_called);
 
-  asset = ges_asset_request (GES_TYPE_TIMELINE_TEST_SOURCE, NULL, NULL);
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   fail_unless (GES_IS_ASSET (asset));
 
   fail_unless (ges_project_add_asset (project, asset));

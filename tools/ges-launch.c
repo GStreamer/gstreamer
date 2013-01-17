@@ -160,7 +160,7 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
     guint64 duration = str_to_time (argv[(i * 3) + 2]);
 
     if (!g_strcmp0 ("+pattern", source)) {
-      obj = GES_CLIP (ges_timeline_test_source_new_for_nick (arg0));
+      obj = GES_CLIP (ges_test_clip_new_for_nick (arg0));
       if (!obj) {
         g_error ("%s is an invalid pattern name!\n", arg0);
         goto build_failure;
