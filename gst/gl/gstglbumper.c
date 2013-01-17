@@ -374,6 +374,15 @@ gst_gl_bumper_filter_texture (GstGLFilter * filter, guint in_tex, guint out_tex)
   return TRUE;
 }
 
+typedef struct _MeshData
+{
+  float x, y, z;                /* Vertex */
+  float nx, ny, nz;             /* Normal */
+  float s0, t0;                 /* TexCoord0 */
+  float s1, t1;                 /* TexCoord1 */
+  float va0, vb0, vc0;          /* VertexAttrib */
+} MeshData;
+
 //opengl scene, params: input texture (not the output filter->texture)
 static void
 gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
@@ -385,39 +394,51 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   GstGLFuncs *gl;
   GstGLBumper *bumper = GST_GL_BUMPER (stuff);
   GstGLDisplay *display = GST_GL_FILTER (bumper)->display;
-//  GLint locTangent = 0;
-#if 0
+  GLint locTangent = 0;
+
   //choose the lights
   GLfloat light_direction0[] = { 1.0, 0.0, -1.0, 0.0 }; // light goes along -x
   GLfloat light_direction1[] = { -1.0, 0.0, -1.0, 0.0 };        // light goes along x
   GLfloat light_diffuse0[] = { 1.0, 1.0, 1.0, 1.0 };
   GLfloat light_diffuse1[] = { 1.0, 1.0, 1.0, 1.0 };
   GLfloat mat_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
-#endif
-  gfloat verts_front[12] = {
-    1.0, 1.0, -1.0,
-    1.0, -1.0, -1.0,
-    -1.0, -1.0, -1.0,
-    -1.0, 1.0, -1.0
+
+  /* image size */
+  gfloat i_w = (gfloat) width;
+  gfloat i_h = (gfloat) height;
+  /* bumpmap size */
+  gfloat b_w = (gfloat) bumper->bumpmap_width;
+  gfloat b_h = (gfloat) bumper->bumpmap_height;
+
+/* *INDENT-OFF* */
+  MeshData mesh[] = {
+   /* |     Vertex      |     Normal      |TexCoord0|TexCoord1|  VertexAttrib  | */
+/*F*/ { 1.0,  1.0, -1.0,  0.0,  0.0, -1.0, 0.0, 0.0, 0.0, 0.0,  0.0,  1.0,  0.0},
+/*r*/ { 1.0, -1.0, -1.0,  0.0,  0.0, -1.0, i_w, 0.0, b_w, 0.0,  0.0,  1.0,  0.0},
+/*o*/ {-1.0, -1.0, -1.0,  0.0,  0.0, -1.0, i_w, i_h, b_w, b_h,  0.0,  1.0,  0.0},
+      {-1.0,  1.0, -1.0,  0.0,  0.0, -1.0, 0.0, i_h, 0.0, b_h,  0.0,  1.0,  0.0},
+/*R*/ {-1.0,  1.0, -1.0, -1.0,  0.0,  0.0, 0.0, 0.0, 0.0, 0.0,  0.0,  1.0,  0.0},
+/*i*/ {-1.0, -1.0, -1.0, -1.0,  0.0,  0.0, i_w, 0.0, b_w, 0.0,  0.0,  1.0,  0.0},
+/*g*/ {-1.0, -1.0,  1.0, -1.0,  0.0,  0.0, i_w, i_h, b_w, b_h,  0.0,  1.0,  0.0},
+      {-1.0,  1.0,  1.0, -1.0,  0.0,  0.0, 0.0, i_h, 0.0, b_h,  0.0,  1.0,  0.0},
+/*B*/ {-1.0,  1.0,  1.0,  0.0,  0.0,  1.0, 0.0, 0.0, 0.0, 0.0,  0.0,  1.0,  0.0},
+/*a*/ {-1.0, -1.0,  1.0,  0.0,  0.0,  1.0, i_w, 0.0, b_w, 0.0,  0.0,  1.0,  0.0},
+/*c*/ { 1.0, -1.0,  1.0,  0.0,  0.0,  1.0, i_w, i_h, b_w, b_h,  0.0,  1.0,  0.0},
+      { 1.0,  1.0,  1.0,  0.0,  0.0,  1.0, 0.0, i_h, 0.0, b_h,  0.0,  1.0,  0.0},
+/*L*/ { 1.0,  1.0,  1.0,  1.0,  0.0,  0.0, 0.0, 0.0, 0.0, 0.0,  0.0,  1.0,  0.0},
+/*e*/ { 1.0, -1.0,  1.0,  1.0,  0.0,  0.0, i_w, 0.0, b_w, 0.0,  0.0,  1.0,  0.0},
+/*f*/ { 1.0, -1.0, -1.0,  1.0,  0.0,  0.0, i_w, i_h, b_w, b_h,  0.0,  1.0,  0.0},
+      { 1.0,  1.0, -1.0,  1.0,  0.0,  0.0, 0.0, i_h, 0.0, b_h,  0.0,  1.0,  0.0},
+/*T*/ { 1.0,  1.0,  1.0,  0.0,  1.0,  0.0, 0.0, 0.0, 0.0, 0.0,  0.0,  0.0,  1.0},
+/*o*/ { 1.0,  1.0, -1.0,  0.0,  1.0,  0.0, i_w, 0.0, b_w, 0.0,  0.0,  0.0,  1.0},
+/*p*/ {-1.0,  1.0, -1.0,  0.0,  1.0,  0.0, i_w, i_h, b_w, b_h,  0.0,  0.0,  1.0},
+      {-1.0,  1.0,  1.0,  0.0,  1.0,  0.0, 0.0, i_h, 0.0, b_h,  0.0,  0.0,  1.0},
+/*B*/ { 1.0, -1.0, -1.0,  0.0, -1.0,  0.0, 0.0, 0.0, 0.0, 0.0,  0.0,  0.0, -1.0},
+/*o*/ { 1.0, -1.0,  1.0,  0.0, -1.0,  0.0, i_w, 0.0, b_w, 0.0,  0.0,  0.0, -1.0},
+/*t*/ {-1.0, -1.0,  1.0,  0.0, -1.0,  0.0, i_w, i_h, b_w, b_h,  0.0,  0.0, -1.0},
+      {-1.0, -1.0, -1.0,  0.0, -1.0,  0.0, 0.0, i_h, 0.0, b_h,  0.0,  0.0, -1.0},
   };
-  gfloat texcoords0_front[8] = {
-    0.0, 0.0,
-    0.0, height,
-    width, height,
-    width, 0.0
-  };
-  gfloat texcoords1_front[8] = {
-    0.0, 0.0,
-    0.0, bumper->bumpmap_height,
-    bumper->bumpmap_width, bumper->bumpmap_height,
-    bumper->bumpmap_width, 0.0
-  };
-  gfloat normal_front[12] = {
-    0.0, 0.0, -1.0,
-    0.0, 0.0, -1.0,
-    0.0, 0.0, -1.0,
-    0.0, 0.0, -1.0
-  };
+/* *INDENT-ON* */
 
   gl = GST_GL_FILTER (bumper)->display->gl_vtable;
 
@@ -430,25 +451,24 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   gl->Enable (GL_DEPTH_TEST);
   gl->DepthFunc (GL_LEQUAL);
   gl->Hint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-#if 0
-  glShadeModel (GL_SMOOTH);
+
+  gl->ShadeModel (GL_SMOOTH);
 
   //set the lights
-  glLightfv (GL_LIGHT0, GL_POSITION, light_direction0);
-  glLightfv (GL_LIGHT0, GL_DIFFUSE, light_diffuse0);
-  glLightfv (GL_LIGHT1, GL_POSITION, light_direction1);
-  glLightfv (GL_LIGHT1, GL_DIFFUSE, light_diffuse1);
-  glMaterialfv (GL_FRONT, GL_DIFFUSE, mat_diffuse);
-  glColorMaterial (GL_FRONT_AND_BACK, GL_DIFFUSE);
-  glEnable (GL_COLOR_MATERIAL);
-  glEnable (GL_LIGHTING);
-  glEnable (GL_LIGHT0);
-  glEnable (GL_LIGHT1);
-#endif
+  gl->Lightfv (GL_LIGHT0, GL_POSITION, light_direction0);
+  gl->Lightfv (GL_LIGHT0, GL_DIFFUSE, light_diffuse0);
+  gl->Lightfv (GL_LIGHT1, GL_POSITION, light_direction1);
+  gl->Lightfv (GL_LIGHT1, GL_DIFFUSE, light_diffuse1);
+  gl->Materialfv (GL_FRONT, GL_DIFFUSE, mat_diffuse);
+  gl->ColorMaterial (GL_FRONT_AND_BACK, GL_DIFFUSE);
+  gl->Enable (GL_COLOR_MATERIAL);
+  gl->Enable (GL_LIGHTING);
+  gl->Enable (GL_LIGHT0);
+  gl->Enable (GL_LIGHT1);
   //configure shader
   gst_gl_shader_use (bumper->shader);
-//  locTangent =
-//      gst_gl_shader_get_attribute_location (bumper->shader, "aTangent");
+  locTangent =
+      gst_gl_shader_get_attribute_location (bumper->shader, "aTangent");
 
   //set the normal map
   gl->ActiveTexture (GL_TEXTURE1);
@@ -460,35 +480,29 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   gst_gl_shader_set_uniform_1i (bumper->shader, "texture0", 0);
   gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
-  //glTranslatef(2.0f, 2.0f, 5.0f);
-
   gl->Rotatef (xrot, 1.0f, 0.0f, 0.0f);
   gl->Rotatef (yrot, 0.0f, 1.0f, 0.0f);
   gl->Rotatef (zrot, 0.0f, 0.0f, 1.0f);
 
+  gl->EnableVertexAttribArray (locTangent);
 
-  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  gl->MatrixMode (GL_PROJECTION);
-  gl->LoadIdentity ();
-
-//  glVertexAttrib3d (locTangent, 0.0, 1.0, 0.0);
-
-  gl->VertexPointer (2, GL_FLOAT, 0, &verts_front);
-  gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords0_front);
-  gl->NormalPointer (GL_FLOAT, 0, &normal_front);
   gl->ClientActiveTexture (GL_TEXTURE0);
   gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
   gl->EnableClientState (GL_VERTEX_ARRAY);
   gl->EnableClientState (GL_NORMAL_ARRAY);
 
-  gl->ClientActiveTexture (GL_TEXTURE1);
-  gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords1_front);
-  gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
-  gl->EnableClientState (GL_VERTEX_ARRAY);
-  gl->EnableClientState (GL_NORMAL_ARRAY);
 
-  gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
+  gl->VertexAttribPointer (locTangent, 3, GL_FLOAT, 0, sizeof (MeshData),
+      &mesh[0].va0);
+  gl->VertexPointer (3, GL_FLOAT, sizeof (MeshData), &mesh[0].x);
+  gl->NormalPointer (GL_FLOAT, sizeof (MeshData), &mesh[0].nx);
+  gl->TexCoordPointer (2, GL_FLOAT, sizeof (MeshData), &mesh[0].s0);
+
+  gl->ClientActiveTexture (GL_TEXTURE1);
+  gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
+  gl->TexCoordPointer (2, GL_FLOAT, sizeof (MeshData), &mesh[0].s1);
+
+  gl->DrawArrays (GL_QUADS, 0, 24);
 
   gl->DisableClientState (GL_VERTEX_ARRAY);
   gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
@@ -497,115 +511,8 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   gl->ClientActiveTexture (GL_TEXTURE0);
   gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
 
-#if 0
-  //Cube
-  glBegin (GL_QUADS);
+  gl->DisableVertexAttribArray (locTangent);
 
-  // front face
-  glNormal3d (0.0, 0.0, -1.0);
-  glVertexAttrib3dARB (locTangent, 0.0, 1.0, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, 0.0, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, 0.0, 0.0);
-  glVertex3d (1.0, 1.0, -1.0);  // B
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, 0.0, height);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, 0.0, bumper->bumpmap_height);
-  glVertex3d (1.0, -1.0, -1.0); // A
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, width, height);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, bumper->bumpmap_width,
-      bumper->bumpmap_height);
-  glVertex3d (-1.0, -1.0, -1.0);        // D
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, width, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, bumper->bumpmap_width, 0.0);
-  glVertex3d (-1.0, 1.0, -1.0); // C
-#endif
-
-#if 0
-  // right face
-  glNormal3d (-1.0, 0.0, 0.0);
-  glVertexAttrib3dARB (locTangent, 0.0, 1.0, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, 0.0, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, 0.0, 0.0);
-  glVertex3d (-1.0, 1.0, -1.0); // C
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, 0.0, height);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, 0.0, bumper->bumpmap_height);
-  glVertex3d (-1.0, -1.0, -1.0);        // D
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, width, height);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, bumper->bumpmap_width,
-      bumper->bumpmap_height);
-  glVertex3d (-1.0, -1.0, 1.0); // H
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, width, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, bumper->bumpmap_width, 0.0);
-  glVertex3d (-1.0, 1.0, 1.0);  // G
-
-  // back face
-  glNormal3d (0.0, 0.0, 1.0);
-  glVertexAttrib3dARB (locTangent, 0.0, 1.0, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, 0.0, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, 0.0, 0.0);
-  glVertex3d (-1.0, 1.0, 1.0);  // G
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, 0.0, height);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, 0.0, bumper->bumpmap_height);
-  glVertex3d (-1.0, -1.0, 1.0); // H
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, width, height);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, bumper->bumpmap_width,
-      bumper->bumpmap_height);
-  glVertex3d (1.0, -1.0, 1.0);  // E
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, width, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, bumper->bumpmap_width, 0.0);
-  glVertex3d (1.0, 1.0, 1.0);   // F
-
-  // left face
-  glNormal3d (1.0, 0.0, 0.0);
-  glVertexAttrib3dARB (locTangent, 0.0, 1.0, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, 0.0, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, 0.0, 0.0);
-  glVertex3d (1.0, 1.0, 1.0);   // F
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, 0.0, height);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, 0.0, bumper->bumpmap_height);
-  glVertex3d (1.0, -1.0, 1.0);  // E
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, width, height);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, bumper->bumpmap_width,
-      bumper->bumpmap_height);
-  glVertex3d (1.0, -1.0, -1.0); // A
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, width, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, bumper->bumpmap_width, 0.0);
-  glVertex3d (1.0, 1.0, -1.0);  // B
-
-  // top face
-  glNormal3d (0.0, 1.0, 0.0);
-  glVertexAttrib3dARB (locTangent, 0.0, 0.0, 1.0);
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, 0.0, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, 0.0, 0.0);
-  glVertex3d (1.0, 1.0, 1.0);   // F
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, 0.0, height);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, 0.0, bumper->bumpmap_height);
-  glVertex3d (1.0, 1.0, -1.0);  // B
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, width, height);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, bumper->bumpmap_width,
-      bumper->bumpmap_height);
-  glVertex3d (-1.0, 1.0, -1.0); // C
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, width, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, bumper->bumpmap_width, 0.0);
-  glVertex3d (-1.0, 1.0, 1.0);  // G
-
-  // bottom face
-  glNormal3d (0.0, -1.0, 0.0);
-  glVertexAttrib3dARB (locTangent, 0.0, 0.0, -1.0);
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, 0.0, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, 0.0, 0.0);
-  glVertex3d (1.0, -1.0, -1.0); // A
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, 0.0, height);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, 0.0, bumper->bumpmap_height);
-  glVertex3d (1.0, -1.0, 1.0);  // E
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, width, height);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, bumper->bumpmap_width,
-      bumper->bumpmap_height);
-  glVertex3d (-1.0, -1.0, 1.0); // H
-  glMultiTexCoord2dARB (GL_TEXTURE0_ARB, width, 0.0);
-  glMultiTexCoord2dARB (GL_TEXTURE1_ARB, bumper->bumpmap_width, 0.0);
-  glVertex3d (-1.0, -1.0, -1.0);        // D
-  glEnd ();
-#endif
   gst_gl_display_clear_shader (display);
 
   gl->Disable (GL_LIGHT0);
@@ -615,5 +522,5 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
 
   xrot += 1.0f;
   yrot += 0.9f;
-  zrot += 1.1f;
+  zrot += 0.6f;
 }

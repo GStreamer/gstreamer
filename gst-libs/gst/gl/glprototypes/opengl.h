@@ -131,6 +131,7 @@ GST_GL_EXT_FUNCTION (void, ProgramLocalParameter4fv,
                       GLfloat              *params))
 GST_GL_EXT_END ()
 
+/* Eventually we want to remove this category */
 GST_GL_EXT_BEGIN (fixed_function_gl_only,
                   0, 0,
                   0,
@@ -151,4 +152,10 @@ GST_GL_EXT_FUNCTION (void, TexImage1D,
                       const GLvoid         *data))
 GST_GL_EXT_FUNCTION (void, Rotatef,
                      (GLfloat angle, GLfloat x, GLfloat y, GLfloat z))
+GST_GL_EXT_FUNCTION (void, Lightfv,
+                     (GLenum light, GLenum pname, const GLfloat *params))
+GST_GL_EXT_FUNCTION (void, ColorMaterial,
+                     (GLenum face, GLenum pname))
+GST_GL_EXT_FUNCTION (void, ShadeModel,
+                     (GLenum value))
 GST_GL_EXT_END ()
