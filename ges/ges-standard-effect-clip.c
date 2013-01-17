@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION: ges-timeline-parse-launch-effect
+ * SECTION: ges-standard-effect-clip
  * @short_description: An effect created by parse-launch style bin descriptions
  * in a #GESTimelineLayer
  *
@@ -36,10 +36,10 @@
 #include "ges-internal.h"
 #include "ges-types.h"
 
-G_DEFINE_TYPE (GESTimelineParseLaunchEffect, ges_timeline_parse_launch_effect,
+G_DEFINE_TYPE (GESStandardEffectClip, ges_standard_effect_clip,
     GES_TYPE_EFFECT_CLIP);
 
-struct _GESTimelineParseLaunchEffectPrivate
+struct _GESStandardEffectClipPrivate
 {
   gchar *video_bin_description;
   gchar *audio_bin_description;
@@ -52,30 +52,27 @@ enum
   PROP_AUDIO_BIN_DESCRIPTION,
 };
 
-static void ges_timeline_parse_launch_effect_finalize (GObject * object);
+static void ges_standard_effect_clip_finalize (GObject * object);
 static GESTrackObject
     * ges_tl_parse_launch_effect_create_track_obj (GESClip * self,
     GESTrackType type);
 
 static void
-ges_timeline_parse_launch_effect_finalize (GObject * object)
+ges_standard_effect_clip_finalize (GObject * object)
 {
-  GESTimelineParseLaunchEffectPrivate *priv =
-      GES_TIMELINE_PARSE_LAUNCH_EFFECT (object)->priv;
+  GESStandardEffectClipPrivate *priv = GES_STANDARD_EFFECT_CLIP (object)->priv;
 
   g_free (priv->audio_bin_description);
   g_free (priv->video_bin_description);
 
-  G_OBJECT_CLASS (ges_timeline_parse_launch_effect_parent_class)->finalize
-      (object);
+  G_OBJECT_CLASS (ges_standard_effect_clip_parent_class)->finalize (object);
 }
 
 static void
-ges_timeline_parse_launch_effect_get_property (GObject * object,
+ges_standard_effect_clip_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
-  GESTimelineParseLaunchEffectPrivate *priv =
-      GES_TIMELINE_PARSE_LAUNCH_EFFECT (object)->priv;
+  GESStandardEffectClipPrivate *priv = GES_STANDARD_EFFECT_CLIP (object)->priv;
 
   switch (property_id) {
     case PROP_VIDEO_BIN_DESCRIPTION:
@@ -90,11 +87,10 @@ ges_timeline_parse_launch_effect_get_property (GObject * object,
 }
 
 static void
-ges_timeline_parse_launch_effect_set_property (GObject * object,
+ges_standard_effect_clip_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec)
 {
-  GESTimelineParseLaunchEffect *self =
-      GES_TIMELINE_PARSE_LAUNCH_EFFECT (object);
+  GESStandardEffectClip *self = GES_STANDARD_EFFECT_CLIP (object);
 
   switch (property_id) {
     case PROP_VIDEO_BIN_DESCRIPTION:
@@ -109,21 +105,19 @@ ges_timeline_parse_launch_effect_set_property (GObject * object,
 }
 
 static void
-ges_timeline_parse_launch_effect_class_init (GESTimelineParseLaunchEffectClass *
-    klass)
+ges_standard_effect_clip_class_init (GESStandardEffectClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
 
-  g_type_class_add_private (klass,
-      sizeof (GESTimelineParseLaunchEffectPrivate));
+  g_type_class_add_private (klass, sizeof (GESStandardEffectClipPrivate));
 
-  object_class->get_property = ges_timeline_parse_launch_effect_get_property;
-  object_class->set_property = ges_timeline_parse_launch_effect_set_property;
-  object_class->finalize = ges_timeline_parse_launch_effect_finalize;
+  object_class->get_property = ges_standard_effect_clip_get_property;
+  object_class->set_property = ges_standard_effect_clip_set_property;
+  object_class->finalize = ges_standard_effect_clip_finalize;
 
   /**
-   * GESTimelineParseLaunchEffect:video-bin-description:
+   * GESStandardEffectClip:video-bin-description:
    *
    * The description of the video track of the effect bin with a gst-launch-style
    * pipeline description. This should be used for test purposes.
@@ -137,7 +131,7 @@ ges_timeline_parse_launch_effect_class_init (GESTimelineParseLaunchEffectClass *
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   /**
-   * GESTimelineParseLaunchEffect:audio-bin-description:
+   * GESStandardEffectClip:audio-bin-description:
    *
    * The description of the audio track of the effect bin with a gst-launch-style
    * pipeline description. This should be used for test purposes.
@@ -156,11 +150,10 @@ ges_timeline_parse_launch_effect_class_init (GESTimelineParseLaunchEffectClass *
 }
 
 static void
-ges_timeline_parse_launch_effect_init (GESTimelineParseLaunchEffect * self)
+ges_standard_effect_clip_init (GESStandardEffectClip * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TIMELINE_PARSE_LAUNCH_EFFECT,
-      GESTimelineParseLaunchEffectPrivate);
+      GES_TYPE_STANDARD_EFFECT_CLIP, GESStandardEffectClipPrivate);
 
 }
 
@@ -168,8 +161,7 @@ static GESTrackObject *
 ges_tl_parse_launch_effect_create_track_obj (GESClip * self, GESTrackType type)
 {
   const gchar *bin_description = NULL;
-  GESTimelineParseLaunchEffect *effect =
-      GES_TIMELINE_PARSE_LAUNCH_EFFECT (self);
+  GESStandardEffectClip *effect = GES_STANDARD_EFFECT_CLIP (self);
 
   if (type == GES_TRACK_TYPE_VIDEO) {
     bin_description = effect->priv->video_bin_description;
@@ -188,22 +180,22 @@ ges_tl_parse_launch_effect_create_track_obj (GESClip * self, GESTrackType type)
 }
 
 /**
- * ges_timeline_parse_launch_effect_new:
+ * ges_standard_effect_clip_new:
  * @video_bin_description: The gst-launch like bin description of the effect
  * @audio_bin_description: The gst-launch like bin description of the effect
  *
- * Creates a new #GESTimelineParseLaunchEffect from the description of the bin.
+ * Creates a new #GESStandardEffectClip from the description of the bin.
  *
- * Returns: a newly created #GESTimelineParseLaunchEffect, or
+ * Returns: a newly created #GESStandardEffectClip, or
  * %NULL if something went wrong.
  *
  * Since: 0.10.2
  */
-GESTimelineParseLaunchEffect *
-ges_timeline_parse_launch_effect_new (const gchar * video_bin_description,
+GESStandardEffectClip *
+ges_standard_effect_clip_new (const gchar * video_bin_description,
     const gchar * audio_bin_description)
 {
-  return g_object_new (GES_TYPE_TIMELINE_PARSE_LAUNCH_EFFECT,
+  return g_object_new (GES_TYPE_STANDARD_EFFECT_CLIP,
       "video-bin-description", video_bin_description,
       "audio-bin-description", audio_bin_description, NULL);
 }

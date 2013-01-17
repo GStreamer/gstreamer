@@ -166,7 +166,7 @@ GST_START_TEST (test_effect_clip)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *track_audio, *track_video;
-  GESTimelineParseLaunchEffect *effect_clip;
+  GESStandardEffectClip *effect_clip;
   GESTrackParseLaunchEffect *tck_effect, *tck_effect1;
   GList *effects, *tmp;
   gint i, clip_height;
@@ -189,7 +189,7 @@ GST_START_TEST (test_effect_clip)
   ges_timeline_add_layer (timeline, layer);
 
   GST_DEBUG ("Create effect");
-  effect_clip = ges_timeline_parse_launch_effect_new ("identity", "identity");
+  effect_clip = ges_standard_effect_clip_new ("identity", "identity");
 
   g_object_set (effect_clip, "duration", 25 * GST_SECOND, NULL);
 
@@ -240,7 +240,7 @@ GST_START_TEST (test_priorities_clip)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *track_audio, *track_video;
-  GESTimelineParseLaunchEffect *effect_clip;
+  GESStandardEffectClip *effect_clip;
   GESTrackParseLaunchEffect *tck_effect, *tck_effect1;
   GList *effects, *tmp;
   gint i, clip_height;
@@ -258,7 +258,7 @@ GST_START_TEST (test_priorities_clip)
   ges_timeline_add_layer (timeline, layer);
 
   GST_DEBUG ("Create effect");
-  effect_clip = ges_timeline_parse_launch_effect_new ("identity", "identity");
+  effect_clip = ges_standard_effect_clip_new ("identity", "identity");
 
   g_object_set (effect_clip, "duration", 25 * GST_SECOND, NULL);
 
@@ -316,7 +316,7 @@ GST_START_TEST (test_track_effect_set_properties)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *track_video;
-  GESTimelineParseLaunchEffect *effect_clip;
+  GESStandardEffectClip *effect_clip;
   GESTrackObject *tck_effect;
   guint scratch_line, n_props, i;
   gboolean color_aging;
@@ -334,7 +334,7 @@ GST_START_TEST (test_track_effect_set_properties)
   ges_timeline_add_layer (timeline, layer);
 
   GST_DEBUG ("Create effect");
-  effect_clip = ges_timeline_parse_launch_effect_new ("agingtv", NULL);
+  effect_clip = ges_standard_effect_clip_new ("agingtv", NULL);
 
   g_object_set (effect_clip, "duration", 25 * GST_SECOND, NULL);
 
@@ -404,7 +404,7 @@ GST_START_TEST (test_clip_signals)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *track_video;
-  GESTimelineParseLaunchEffect *effect_clip;
+  GESStandardEffectClip *effect_clip;
   GESTrackParseLaunchEffect *tck_effect;
   GValue val = { 0, };
 
@@ -418,7 +418,7 @@ GST_START_TEST (test_clip_signals)
   ges_timeline_add_layer (timeline, layer);
 
   GST_DEBUG ("Create effect");
-  effect_clip = ges_timeline_parse_launch_effect_new ("agingtv", NULL);
+  effect_clip = ges_standard_effect_clip_new ("agingtv", NULL);
   g_signal_connect (effect_clip, "effect-added", (GCallback) effect_added_cb,
       effect_clip);
 

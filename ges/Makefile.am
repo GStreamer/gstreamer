@@ -20,7 +20,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-timeline-pipeline.c			\
 	ges-timeline-source.c			\
 	ges-effect-clip.c		\
-	ges-timeline-parse-launch-effect.c		\
+	ges-standard-effect-clip.c		\
 	ges-uri-clip.c		\
 	ges-timeline-operation.c		\
 	ges-transition-clip.c		\
@@ -75,7 +75,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-timeline-source.h			\
 	ges-uri-clip.h		\
 	ges-effect-clip.h		\
-	ges-timeline-parse-launch-effect.h		\
+	ges-standard-effect-clip.h		\
 	ges-timeline-operation.h		\
 	ges-transition-clip.h		\
 	ges-standard-transition-clip.h	\

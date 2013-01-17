@@ -80,8 +80,8 @@ typedef struct _GESTimelineOverlayClass GESTimelineOverlayClass;
 typedef struct _GESTimelineTextOverlay GESTimelineTextOverlay;
 typedef struct _GESTimelineTextOverlayClass GESTimelineTextOverlayClass;
 
-typedef struct _GESTimelineParseLaunchEffect GESTimelineParseLaunchEffect;
-typedef struct _GESTimelineParseLaunchEffectClass GESTimelineParseLaunchEffectClass;
+typedef struct _GESStandardEffectClip GESStandardEffectClip;
+typedef struct _GESStandardEffectClipClass GESStandardEffectClipClass;
 
 typedef struct _GESTrack GESTrack;
 typedef struct _GESTrackClass GESTrackClass;

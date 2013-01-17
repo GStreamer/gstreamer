@@ -58,7 +58,7 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-timeline-test-source.xml"/>
     <xi:include href="xml/ges-timeline-text-overlay.xml"/>
     <xi:include href="xml/ges-standard-transition-clip.xml"/>
-    <xi:include href="xml/ges-timeline-parse-launch-effect.xml"/>
+    <xi:include href="xml/ges-standard-effect-clip.xml"/>
   </chapter>
 
   <chapter>
