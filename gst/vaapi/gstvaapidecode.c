@@ -303,6 +303,25 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
     return gst_vaapidecode_push_decoded_frames(vdec);
 }
 
+static GstFlowReturn
+gst_vaapidecode_finish(GstVideoDecoder *vdec)
+{
+    GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
+    GstVaapiDecoderStatus status;
+
+    status = gst_vaapi_decoder_flush(decode->decoder);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+        goto error_flush;
+    return gst_vaapidecode_push_decoded_frames(vdec);
+
+    /* ERRORS */
+error_flush:
+    {
+        GST_ERROR("failed to flush decoder (status %d)", status);
+        return GST_FLOW_UNEXPECTED;
+    }
+}
+
 static inline gboolean
 gst_vaapidecode_ensure_display(GstVaapiDecode *decode)
 {
@@ -532,6 +551,7 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
     vdec_class->set_format   = GST_DEBUG_FUNCPTR(gst_vaapidecode_set_format);
     vdec_class->parse        = GST_DEBUG_FUNCPTR(gst_vaapidecode_parse);
     vdec_class->handle_frame = GST_DEBUG_FUNCPTR(gst_vaapidecode_handle_frame);
+    vdec_class->finish       = GST_DEBUG_FUNCPTR(gst_vaapidecode_finish);
 
     gst_element_class_set_details_simple(
         element_class,
