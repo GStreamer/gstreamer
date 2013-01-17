@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/video/video-overlay-composition.h>
 
 #include <ass/ass.h>
 #include <ass/ass_types.h>
@@ -78,6 +79,11 @@ struct _GstAssRender
 
   gboolean renderer_init_ok, track_init_ok;
   gboolean need_process;
+
+  /* overlay stuff */
+  GstVideoOverlayComposition *composition;
+  gint width, height;
+  gboolean attach_compo_to_buffer;
 };
 
 struct _GstAssRenderClass

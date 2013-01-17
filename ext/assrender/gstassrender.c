@@ -39,6 +39,8 @@
 #  include <config.h>
 #endif
 
+#include <gst/video/gstvideometa.h>
+
 #include "gstassrender.h"
 
 #include <string.h>
@@ -376,6 +378,10 @@ gst_ass_render_change_state (GstElement * element, GstStateChange transition)
       if (render->ass_track)
         ass_free_track (render->ass_track);
       render->ass_track = NULL;
+      if (render->composition) {
+        gst_video_overlay_composition_unref (render->composition);
+        render->composition = NULL;
+      }
       render->track_init_ok = FALSE;
       render->renderer_init_ok = FALSE;
       g_mutex_unlock (&render->ass_mutex);
@@ -789,14 +795,77 @@ blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstVideoFrame * frame)
   GST_LOG_OBJECT (render, "amount of rendered ass_image: %u", counter);
 }
 
+static void
+blit_bgra_premultiplied (GstAssRender * render, ASS_Image * ass_image,
+    guint8 * data, gint width, gint height, gint stride, gint x_off, gint y_off)
+{
+  guint counter = 0;
+  gint alpha, r, g, b, k;
+  const guint8 *src;
+  guint8 *dst;
+  gint x, y, w, h;
+  gint dst_skip;
+  gint src_skip;
+  gint dst_x, dst_y;
+
+  memset (data, 0, stride * height);
+
+  while (ass_image) {
+    dst_x = ass_image->dst_x + x_off;
+    dst_y = ass_image->dst_y + y_off;
+
+    if (dst_y >= height || dst_x >= width)
+      goto next;
+
+    alpha = 255 - (ass_image->color & 0xff);
+    r = ((ass_image->color) >> 24) & 0xff;
+    g = ((ass_image->color) >> 16) & 0xff;
+    b = ((ass_image->color) >> 8) & 0xff;
+    src = ass_image->bitmap;
+    dst = data + dst_y * stride + dst_x * 4;
+
+    w = MIN (ass_image->w, width - dst_x);
+    h = MIN (ass_image->h, height - dst_y);
+    src_skip = ass_image->stride - w;
+    dst_skip = stride - w * 4;
+
+    for (y = 0; y < h; y++) {
+      for (x = 0; x < w; x++) {
+        k = src[0] * alpha / 255;
+        if (dst[3] == 0) {
+          dst[3] = k;
+          dst[2] = (k * r) / 255;
+          dst[1] = (k * g) / 255;
+          dst[0] = (k * b) / 255;
+        } else {
+          dst[3] = k + (255 - k) * dst[3] / 255;
+          dst[2] = (k * r + (255 - k) * dst[2]) / 255;
+          dst[1] = (k * g + (255 - k) * dst[1]) / 255;
+          dst[0] = (k * b + (255 - k) * dst[0]) / 255;
+        }
+        src++;
+        dst += 4;
+      }
+      src += src_skip;
+      dst += dst_skip;
+    }
+  next:
+    counter++;
+    ass_image = ass_image->next;
+  }
+  GST_LOG_OBJECT (render, "amount of rendered ass_image: %u", counter);
+}
+
 static gboolean
 gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
 {
   GstAssRender *render = GST_ASS_RENDER (gst_pad_get_parent (pad));
+  GstQuery *query;
   gboolean ret = FALSE;
   gint par_n = 1, par_d = 1;
   gdouble dar;
   GstVideoInfo info;
+  gboolean attach = FALSE;
 
   if (!gst_video_info_from_caps (&info, caps))
     goto invalid_caps;
@@ -834,16 +903,29 @@ gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
       goto out;
   }
 
-  g_mutex_lock (&render->ass_mutex);
-  ass_set_frame_size (render->ass_renderer, info.width, info.height);
+  render->width = info.width;
+  render->height = info.height;
 
-  dar = (((gdouble) par_n) * ((gdouble) info.width))
-      / (((gdouble) par_d) * ((gdouble) info.height));
+  query = gst_query_new_allocation (caps, FALSE);
+  if (gst_pad_peer_query (render->srcpad, query)) {
+    if (gst_query_find_allocation_meta (query,
+            GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL))
+      attach = TRUE;
+  }
+  gst_query_unref (query);
+
+  render->attach_compo_to_buffer = attach;
+
+  g_mutex_lock (&render->ass_mutex);
+  ass_set_frame_size (render->ass_renderer, render->width, render->height);
+
+  dar = (((gdouble) par_n) * ((gdouble) render->width))
+      / (((gdouble) par_d) * ((gdouble) render->height));
 #if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907000
   ass_set_aspect_ratio (render->ass_renderer, dar);
 #else
   ass_set_aspect_ratio (render->ass_renderer,
-      dar, ((gdouble) info.width) / ((gdouble) info.height));
+      dar, ((gdouble) render->width) / ((gdouble) render->height));
 #endif
   ass_set_font_scale (render->ass_renderer, 1.0);
   ass_set_hinting (render->ass_renderer, ASS_HINTING_LIGHT);
@@ -955,6 +1037,74 @@ gst_ass_render_process_text (GstAssRender * render, GstBuffer * buffer,
   gst_buffer_unmap (buffer, &map);
 }
 
+static GstVideoOverlayComposition *
+gst_ass_render_composite_overlay (GstAssRender * render, ASS_Image * images)
+{
+  GstVideoOverlayComposition *composition;
+  GstVideoOverlayRectangle *rectangle;
+  GstVideoMeta *vmeta;
+  GstMapInfo map;
+  GstBuffer *buffer;
+  ASS_Image *image;
+  gint min_x, min_y;
+  gint max_x, max_y;
+  gint width, height;
+  gint stride;
+  gpointer data;
+
+  min_x = G_MAXINT;
+  min_y = G_MAXINT;
+  max_x = 0;
+  max_y = 0;
+
+  /* find bounding box of all images, to limit the overlay rectangle size */
+  for (image = images; image; image = image->next) {
+    if (min_x > image->dst_x)
+      min_x = image->dst_x;
+    if (min_y > image->dst_y)
+      min_y = image->dst_y;
+    if (max_x < image->dst_x + image->w)
+      max_x = image->dst_x + image->w;
+    if (max_y < image->dst_y + image->h)
+      max_y = image->dst_y + image->h;
+  }
+
+  width = MIN (max_x - min_x, render->width);
+  height = MIN (max_y - min_y, render->height);
+
+  GST_DEBUG_OBJECT (render, "render overlay rectangle %dx%d%+d%+d",
+      width, height, min_x, min_y);
+
+  buffer = gst_buffer_new_and_alloc (4 * width * height);
+  if (!buffer) {
+    GST_ERROR_OBJECT (render, "Failed to allocate overlay buffer");
+    return NULL;
+  }
+
+  vmeta = gst_buffer_add_video_meta (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, width, height);
+
+  if (!gst_video_meta_map (vmeta, 0, &map, &data, &stride, GST_MAP_READWRITE)) {
+    GST_ERROR_OBJECT (render, "Failed to map overlay buffer");
+    gst_buffer_unref (buffer);
+    return NULL;
+  }
+
+  blit_bgra_premultiplied (render, images, data, width, height, stride,
+      -min_x, -min_y);
+  gst_video_meta_unmap (vmeta, 0, &map);
+
+  rectangle = gst_video_overlay_rectangle_new_raw (buffer, min_x, min_y,
+      width, height, GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+
+  gst_buffer_unref (buffer);
+
+  composition = gst_video_overlay_composition_new (rectangle);
+  gst_video_overlay_rectangle_unref (rectangle);
+
+  return composition;
+}
+
 static GstFlowReturn
 gst_ass_render_chain_video (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -1032,6 +1182,7 @@ wait_for_text_buf:
       GstClockTime text_running_time_end = GST_CLOCK_TIME_NONE;
       GstClockTime vid_running_time, vid_running_time_end;
       gdouble timestamp;
+      gint changed = 0;
 
       /* if the text buffer isn't stamped right, pop it off the
        * queue and display it for the current video frame only */
@@ -1090,18 +1241,32 @@ wait_for_text_buf:
       timestamp = vid_running_time / GST_MSECOND;
 
       g_mutex_lock (&render->ass_mutex);
-      /* not sure what the last parameter to this call is for (detect_change) */
       ass_image = ass_render_frame (render->ass_renderer, render->ass_track,
-          timestamp, NULL);
+          timestamp, &changed);
       g_mutex_unlock (&render->ass_mutex);
+
+      if ((!ass_image || changed) && render->composition) {
+        GST_DEBUG_OBJECT (render, "release overlay (changed %d)", changed);
+        gst_video_overlay_composition_unref (render->composition);
+        render->composition = NULL;
+      }
 
       if (ass_image != NULL) {
         GstVideoFrame frame;
 
         buffer = gst_buffer_make_writable (buffer);
-        gst_video_frame_map (&frame, &render->info, buffer, GST_MAP_WRITE);
-        render->blit (render, ass_image, &frame);
-        gst_video_frame_unmap (&frame);
+        if (render->attach_compo_to_buffer) {
+          if (!render->composition)
+            render->composition = gst_ass_render_composite_overlay (render,
+                ass_image);
+          if (render->composition)
+            gst_buffer_add_video_overlay_composition_meta (buffer,
+                render->composition);
+        } else {
+          gst_video_frame_map (&frame, &render->info, buffer, GST_MAP_WRITE);
+          render->blit (render, ass_image, &frame);
+          gst_video_frame_unmap (&frame);
+        }
       } else {
         GST_DEBUG_OBJECT (render, "nothing to render right now");
       }
