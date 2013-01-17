@@ -80,22 +80,23 @@ static void
 gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (filter);
+  GstGLFuncs *gl = filter->display->gl_vtable;
   gint i;
 
   for (i = 0; i < 4; i++) {
-    glGenTextures (1, &differencematte->midtexture[i]);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->midtexture[i]);
-    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+    gl->GenTextures (1, &differencematte->midtexture[i]);
+    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->midtexture[i]);
+    gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
         GST_VIDEO_INFO_WIDTH (&filter->out_info),
         GST_VIDEO_INFO_HEIGHT (&filter->out_info),
         0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
         GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
         GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
         GL_CLAMP_TO_EDGE);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
         GL_CLAMP_TO_EDGE);
     differencematte->shader[i] = gst_gl_shader_new (filter->display);
   }
@@ -146,17 +147,18 @@ static void
 gst_gl_differencematte_reset_gl_resources (GstGLFilter * filter)
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (filter);
+  GstGLFuncs *gl = filter->display->gl_vtable;
   gint i;
 
-  glDeleteTextures (1, &differencematte->savedbgtexture);
-  glDeleteTextures (1, &differencematte->newbgtexture);
+  gl->DeleteTextures (1, &differencematte->savedbgtexture);
+  gl->DeleteTextures (1, &differencematte->newbgtexture);
   for (i = 0; i < 4; i++) {
     if (differencematte->shader[i]) {
       g_object_unref (differencematte->shader[i]);
       differencematte->shader[i] = NULL;
     }
     if (differencematte->midtexture[i]) {
-      glDeleteTextures (1, &differencematte->midtexture[i]);
+      gl->DeleteTextures (1, &differencematte->midtexture[i]);
       differencematte->midtexture[i] = 0;
     }
   }
@@ -198,31 +200,6 @@ gst_gl_differencematte_class_init (GstGLDifferenceMatteClass * klass)
       "Gstreamer OpenGL DifferenceMatte", "Filter/Effect",
       "Saves a background frame and replace it with a pixbuf",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
-}
-
-void
-gst_gl_differencematte_draw_texture (GstGLDifferenceMatte * differencematte,
-    GLuint tex)
-{
-  GstGLFilter *filter = GST_GL_FILTER (differencematte);
-
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
-
-  glBegin (GL_QUADS);
-
-  glTexCoord2f (0.0, 0.0);
-  glVertex2f (-1.0, -1.0);
-  glTexCoord2f ((gfloat) GST_VIDEO_INFO_WIDTH (&filter->out_info), 0.0);
-  glVertex2f (1.0, -1.0);
-  glTexCoord2f ((gfloat) GST_VIDEO_INFO_WIDTH (&filter->out_info),
-      (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info));
-  glVertex2f (1.0, 1.0);
-  glTexCoord2f (0.0, (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info));
-  glVertex2f (-1.0, 1.0);
-
-  glEnd ();
 }
 
 static void
@@ -292,12 +269,13 @@ static void
 gst_gl_differencematte_save_texture (gint width, gint height, guint texture,
     gpointer stuff)
 {
-  GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (stuff);
+  GstGLFilter *filter = GST_GL_FILTER (stuff);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
-  gst_gl_differencematte_draw_texture (differencematte, texture);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 static void
@@ -305,28 +283,29 @@ init_pixbuf_texture (GstGLDisplay * display, gpointer data)
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (data);
   GstGLFilter *filter = GST_GL_FILTER (data);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
-  glDeleteTextures (1, &differencematte->newbgtexture);
-  glGenTextures (1, &differencematte->newbgtexture);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->newbgtexture);
-  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+  gl->DeleteTextures (1, &differencematte->newbgtexture);
+  gl->GenTextures (1, &differencematte->newbgtexture);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->newbgtexture);
+  gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
       (gint) differencematte->pbuf_width, (gint) differencematte->pbuf_height,
       0, GL_RGBA, GL_UNSIGNED_BYTE, differencematte->pixbuf);
 
   if (differencematte->savedbgtexture == 0) {
-    glGenTextures (1, &differencematte->savedbgtexture);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->savedbgtexture);
-    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+    gl->GenTextures (1, &differencematte->savedbgtexture);
+    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->savedbgtexture);
+    gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
         GST_VIDEO_INFO_WIDTH (&filter->out_info),
         GST_VIDEO_INFO_HEIGHT (&filter->out_info),
         0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
         GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
         GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
         GL_CLAMP_TO_EDGE);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
         GL_CLAMP_TO_EDGE);
   }
 }
@@ -336,27 +315,29 @@ gst_gl_differencematte_diff (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (stuff);
+  GstGLFilter *filter = GST_GL_FILTER (stuff);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (differencematte->shader[0]);
 
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[0], "current", 0);
 
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->savedbgtexture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->savedbgtexture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[0], "saved", 1);
 
-  gst_gl_differencematte_draw_texture (differencematte, texture);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 static void
@@ -364,23 +345,25 @@ gst_gl_differencematte_hblur (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (stuff);
+  GstGLFilter *filter = GST_GL_FILTER (stuff);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (differencematte->shader[1]);
 
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[1], "tex", 0);
 
   gst_gl_shader_set_uniform_1fv (differencematte->shader[1], "kernel", 7,
       differencematte->kernel);
 
-  gst_gl_differencematte_draw_texture (differencematte, texture);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 static void
@@ -388,23 +371,25 @@ gst_gl_differencematte_vblur (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (stuff);
+  GstGLFilter *filter = GST_GL_FILTER (stuff);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (differencematte->shader[2]);
 
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[2], "tex", 0);
 
   gst_gl_shader_set_uniform_1fv (differencematte->shader[2], "kernel", 7,
       differencematte->kernel);
 
-  gst_gl_differencematte_draw_texture (differencematte, texture);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 static void
@@ -413,23 +398,24 @@ gst_gl_differencematte_interp (gint width, gint height, guint texture,
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (stuff);
   GstGLFilter *filter = GST_GL_FILTER (stuff);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
-  glMatrixMode (GL_PROJECTION);
+  gl->MatrixMode (GL_PROJECTION);
   glLoadIdentity ();
 
   gst_gl_shader_use (differencematte->shader[3]);
 
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[3], "blend", 0);
 
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->newbgtexture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->newbgtexture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[3], "base", 1);
   gst_gl_shader_set_uniform_1f (differencematte->shader[3],
@@ -442,14 +428,14 @@ gst_gl_differencematte_interp (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1f (differencematte->shader[3],
       "final_height", (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info));
 
-  glActiveTexture (GL_TEXTURE2);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->midtexture[2]);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE2);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->midtexture[2]);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[3], "alpha", 2);
 
-  gst_gl_differencematte_draw_texture (differencematte, texture);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 static void
@@ -457,11 +443,13 @@ gst_gl_differencematte_identity (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (stuff);
+  GstGLFilter *filter = GST_GL_FILTER (differencematte);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
-  gst_gl_differencematte_draw_texture (differencematte, texture);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 static gboolean
