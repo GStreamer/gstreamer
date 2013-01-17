@@ -3036,6 +3036,16 @@ gst_vaapi_decoder_h264_end_frame(GstVaapiDecoder *base_decoder)
     return decode_current_picture(decoder);
 }
 
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_h264_flush(GstVaapiDecoder *base_decoder)
+{
+    GstVaapiDecoderH264 * const decoder =
+        GST_VAAPI_DECODER_H264_CAST(base_decoder);
+
+    dpb_flush(decoder);
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
 static void
 gst_vaapi_decoder_h264_finalize(GObject *object)
 {
@@ -3075,6 +3085,7 @@ gst_vaapi_decoder_h264_class_init(GstVaapiDecoderH264Class *klass)
     decoder_class->decode       = gst_vaapi_decoder_h264_decode;
     decoder_class->start_frame  = gst_vaapi_decoder_h264_start_frame;
     decoder_class->end_frame    = gst_vaapi_decoder_h264_end_frame;
+    decoder_class->flush        = gst_vaapi_decoder_h264_flush;
 }
 
 static void
