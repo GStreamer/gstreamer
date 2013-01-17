@@ -177,12 +177,10 @@ gst_vaapidecode_release(GstVaapiDecode *decode)
 }
 
 static GstFlowReturn
-gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
+gst_vaapidecode_decode_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
-    GstVaapiSurfaceProxy *proxy;
     GstVaapiDecoderStatus status;
-    GstVideoCodecFrame *out_frame;
     GstFlowReturn ret;
     gint64 end_time;
 
@@ -212,6 +210,41 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
             goto error_decode;
         break;
     }
+    return GST_FLOW_OK;
+
+    /* ERRORS */
+error_decode_timeout:
+    {
+        GST_WARNING("decode timeout. Decoder required a VA surface but none "
+                    "got available within one second");
+        return GST_FLOW_UNEXPECTED;
+    }
+error_decode:
+    {
+        GST_ERROR("decode error %d", status);
+        switch (status) {
+        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC:
+        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE:
+        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT:
+            ret = GST_FLOW_NOT_SUPPORTED;
+            break;
+        default:
+            ret = GST_FLOW_UNEXPECTED;
+            break;
+        }
+        gst_video_decoder_drop_frame(vdec, frame);
+        return ret;
+    }
+}
+
+static GstFlowReturn
+gst_vaapidecode_push_decoded_frames(GstVideoDecoder *vdec)
+{
+    GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
+    GstVaapiSurfaceProxy *proxy;
+    GstVaapiDecoderStatus status;
+    GstVideoCodecFrame *out_frame;
+    GstFlowReturn ret;
 
     /* Output all decoded frames */
     for (;;) {
@@ -239,28 +272,6 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
     return GST_FLOW_OK;
 
     /* ERRORS */
-error_decode_timeout:
-    {
-        GST_WARNING("decode timeout. Decoder required a VA surface but none "
-                    "got available within one second");
-        return GST_FLOW_UNEXPECTED;
-    }
-error_decode:
-    {
-        GST_ERROR("decode error %d", status);
-        switch (status) {
-        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC:
-        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE:
-        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT:
-            ret = GST_FLOW_NOT_SUPPORTED;
-            break;
-        default:
-            ret = GST_FLOW_UNEXPECTED;
-            break;
-        }
-        gst_video_decoder_drop_frame(vdec, frame);
-        return ret;
-    }
 error_create_buffer:
     {
         const GstVaapiID surface_id =
@@ -279,6 +290,17 @@ error_commit_buffer:
         gst_video_codec_frame_unref(out_frame);
         return GST_FLOW_UNEXPECTED;
     }
+}
+
+static GstFlowReturn
+gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
+{
+    GstFlowReturn ret;
+
+    ret = gst_vaapidecode_decode_frame(vdec, frame);
+    if (ret != GST_FLOW_OK)
+        return ret;
+    return gst_vaapidecode_push_decoded_frames(vdec);
 }
 
 static inline gboolean
