@@ -1219,7 +1219,7 @@ app_add_transition (App * app)
 
   GST_DEBUG ("adding transition");
 
-  obj = GES_CLIP (ges_timeline_standard_transition_new
+  obj = GES_CLIP (ges_standard_transition_clip_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE));
   g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
 

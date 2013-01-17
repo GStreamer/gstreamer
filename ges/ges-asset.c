@@ -52,13 +52,13 @@
  * The identifier represents different things depending on the @extractable_type and you should check
  * the documentation of each type to know what the ID of #GESAsset actually represents for that type. By default,
  * we only have one #GESAsset per type, and the @id is the name of the type, but this behaviour is overriden
- * to be more usefull. For example, for GESTimelineStandardTransitions, the ID is the vtype of the transition
+ * to be more usefull. For example, for GESStandardTransitionClips, the ID is the vtype of the transition
  * you will extract from it (ie crossfade, box-wipe-rc etc..) For #GESTrackParseLaunchEffect the id is the
  * @bin-description property of the extracted objects (ie the gst-launch style description of the bin that
  * will be used).
  *
  * Each and every #GESAsset are cached into GES, and you can query those with the #ges_list_assets function.
- * Also the system will automatically register #GESAssets for #GESFormatters and #GESTimelineStandardTransitions
+ * Also the system will automatically register #GESAssets for #GESFormatters and #GESStandardTransitionClips
  * and standard effects (actually not implemented yet) and you can simply query those calling:
  * |[
  *    GList *formatter_assets, *tmp;

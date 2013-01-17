@@ -178,7 +178,7 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
         goto build_failure;
       }
 
-      obj = GES_CLIP (ges_timeline_standard_transition_new_for_nick (arg0));
+      obj = GES_CLIP (ges_standard_transition_clip_new_for_nick (arg0));
 
       if (!obj) {
         g_error ("invalid transition type\n");

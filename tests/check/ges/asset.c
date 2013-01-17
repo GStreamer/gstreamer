@@ -62,7 +62,7 @@ GST_START_TEST (test_change_asset)
   gst_init (NULL, NULL);
   ges_init ();
 
-  a = ges_asset_request (GES_TYPE_TIMELINE_STANDARD_TRANSITION,
+  a = ges_asset_request (GES_TYPE_STANDARD_TRANSITION_CLIP,
       "box-wipe-lc", NULL);
 
   fail_unless (GES_IS_ASSET (a));
@@ -88,10 +88,10 @@ GST_START_TEST (test_change_asset)
   fail_unless_equals_string (ges_asset_get_id (a), "bar-wipe-tb");
 
   /* Now try to set the a and see if the vtype is properly updated */
-  a = ges_asset_request (GES_TYPE_TIMELINE_STANDARD_TRANSITION,
+  a = ges_asset_request (GES_TYPE_STANDARD_TRANSITION_CLIP,
       "box-wipe-lc", NULL);
   ges_extractable_set_asset (extractable, a);
-  fail_unless_equals_int (GES_TIMELINE_STANDARD_TRANSITION (extractable)->vtype,
+  fail_unless_equals_int (GES_STANDARD_TRANSITION_CLIP (extractable)->vtype,
       26);
 
   gst_object_unref (extractable);
@@ -108,7 +108,7 @@ GST_START_TEST (test_list_asset)
   fail_unless (ges_init ());
   fail_if (ges_list_assets (GES_TYPE_TIMELINE_OVERLAY));
 
-  assets = ges_list_assets (GES_TYPE_TIMELINE_STANDARD_TRANSITION);
+  assets = ges_list_assets (GES_TYPE_STANDARD_TRANSITION_CLIP);
   /* note: we do not have a a for value=0 "Transition not set" */
   assert_equals_int (g_list_length (assets), enum_class->n_values - 1);
   g_list_free (assets);

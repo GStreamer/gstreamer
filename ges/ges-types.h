@@ -65,8 +65,8 @@ typedef struct _GESUriClipClass GESUriClipClass;
 typedef struct _GESTransitionClip GESTransitionClip;
 typedef struct _GESTransitionClipClass GESTransitionClipClass;
 
-typedef struct _GESTimelineStandardTransition GESTimelineStandardTransition;
-typedef struct _GESTimelineStandardTransitionClass GESTimelineStandardTransitionClass;
+typedef struct _GESStandardTransitionClip GESStandardTransitionClip;
+typedef struct _GESStandardTransitionClipClass GESStandardTransitionClipClass;
 
 typedef struct _GESTimelineTestSource GESTimelineTestSource;
 typedef struct _GESTimelineTestSourceClass GESTimelineTestSourceClass;

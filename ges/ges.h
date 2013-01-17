@@ -40,7 +40,7 @@
 #include <ges/ges-timeline-overlay.h>
 #include <ges/ges-timeline-text-overlay.h>
 #include <ges/ges-transition-clip.h>
-#include <ges/ges-timeline-standard-transition.h>
+#include <ges/ges-standard-transition-clip.h>
 #include <ges/ges-timeline-parse-launch-effect.h>
 #include <ges/ges-custom-timeline-source.h>
 #include <ges/ges-effect-clip.h>

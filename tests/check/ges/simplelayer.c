@@ -236,7 +236,7 @@ GST_START_TEST (test_gsl_with_transitions)
   GESTimelineLayer *layer;
   GESTrack *track;
   GESCustomTimelineSource *source1, *source2, *source3, *source4;
-  GESTimelineStandardTransition *tr1, *tr2, *tr3, *tr4, *tr5;
+  GESStandardTransitionClip *tr1, *tr2, *tr3, *tr4, *tr5;
   GESSimpleTimelineLayer *gstl;
   gboolean valid;
   gint count = 0;
@@ -293,31 +293,31 @@ GST_START_TEST (test_gsl_with_transitions)
 #define SECOND(a) ((guint64) (a * GST_SECOND))
 
   tr1 =
-      ges_timeline_standard_transition_new
+      ges_standard_transition_clip_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   g_object_set (tr1, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (tr1), HALF_SECOND);
 
   tr2 =
-      ges_timeline_standard_transition_new
+      ges_standard_transition_clip_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   g_object_set (tr2, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (tr2), HALF_SECOND);
 
   tr3 =
-      ges_timeline_standard_transition_new
+      ges_standard_transition_clip_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   g_object_set (tr3, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (tr3), HALF_SECOND);
 
   tr4 =
-      ges_timeline_standard_transition_new
+      ges_standard_transition_clip_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   g_object_set (tr4, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (tr4), HALF_SECOND);
 
   tr5 =
-      ges_timeline_standard_transition_new
+      ges_standard_transition_clip_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   g_object_set (tr5, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (tr5), HALF_SECOND);
