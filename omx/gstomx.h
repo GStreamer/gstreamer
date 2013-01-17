@@ -25,8 +25,6 @@
 
 #include <gmodule.h>
 #include <gst/gst.h>
-#include <gst/audio/audio.h>
-#include <gst/video/video.h>
 #include <string.h>
 
 #ifdef HAVE_CONFIG_H

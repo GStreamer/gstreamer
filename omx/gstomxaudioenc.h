@@ -22,6 +22,7 @@
 #define __GST_OMX_AUDIO_ENC_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <gst/audio/gstaudioencoder.h>
 
 #include "gstomx.h"
