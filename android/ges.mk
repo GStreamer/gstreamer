@@ -24,7 +24,7 @@ LOCAL_SRC_FILES := 				\
 	ges-timeline-test-source.c		\
 	ges-timeline-title-source.c		\
 	ges-overlay-clip.c			\
-	ges-timeline-text-overlay.c		\
+	ges-text-overlay-clip.c		\
 	ges-track.c				\
 	ges-track-object.c			\
 	ges-track-source.c			\

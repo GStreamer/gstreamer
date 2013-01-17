@@ -77,8 +77,8 @@ typedef struct _GESTimelineTitleSourceClass GESTimelineTitleSourceClass;
 typedef struct _GESOverlayClip GESOverlayClip;
 typedef struct _GESOverlayClipClass GESOverlayClipClass;
 
-typedef struct _GESTimelineTextOverlay GESTimelineTextOverlay;
-typedef struct _GESTimelineTextOverlayClass GESTimelineTextOverlayClass;
+typedef struct _GESTextOverlayClip GESTextOverlayClip;
+typedef struct _GESTextOverlayClipClass GESTextOverlayClipClass;
 
 typedef struct _GESStandardEffectClip GESStandardEffectClip;
 typedef struct _GESStandardEffectClipClass GESStandardEffectClipClass;
