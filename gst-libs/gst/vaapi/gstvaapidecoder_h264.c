@@ -2743,6 +2743,7 @@ decode_unit(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
         status = decode_slice(decoder, unit);
         break;
     case GST_H264_NAL_SEQ_END:
+    case GST_H264_NAL_STREAM_END:
         status = decode_sequence_end(decoder);
         break;
     case GST_H264_NAL_SEI:
