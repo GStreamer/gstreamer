@@ -66,14 +66,86 @@ static gboolean gst_gl_deinterlace_filter_texture (GstGLFilter * filter,
 static void gst_gl_deinterlace_callback (gint width, gint height,
     guint texture, gpointer stuff);
 
-static const gchar *greedyh_fragment_source = "#extension GL_ARB_texture_rectangle : enable\n" "uniform sampler2DRect tex;\n" "uniform sampler2DRect tex_prev;\n" "uniform float max_comb;\n" "uniform float motion_threshold;\n" "uniform float motion_sense;\n" "uniform int width;\n" "uniform int height;\n" "" "void main () {\n" "  vec2 texcoord = gl_TexCoord[0].xy;\n" "  if (int(mod(texcoord.y, 2.0)) == 0)\n" "    gl_FragColor = vec4(texture2DRect(tex_prev, texcoord).rgb, 1.0);\n" "  else {\n" ""      // cannot have __ in a var so __ is replaced by _a
-    "    vec2 texcoord_L1_a1, texcoord_L3_a1, texcoord_L1, texcoord_L3, texcoord_L1_1, texcoord_L3_1;\n" "    vec3 L1_a1, L3_a1, L1, L3, L1_1, L3_1;\n" "" "    texcoord_L1 = vec2(texcoord.x, texcoord.y - 1.0);\n" "    texcoord_L3 = vec2(texcoord.x, texcoord.y + 1.0);\n" "    L1 = texture2DRect(tex_prev, texcoord_L1).rgb;\n" "    L3 = texture2DRect(tex_prev, texcoord_L3).rgb;\n" "    if (int(ceil(texcoord.x)) == width && int(ceil(texcoord.y)) == height) {\n" "      L1_1 = L1;\n" "      L3_1 = L3;\n" "    } else {\n" "      texcoord_L1_1 = vec2(texcoord.x + 1.0, texcoord.y - 1.0);\n" "      texcoord_L3_1 = vec2(texcoord.x + 1.0, texcoord.y + 1.0);\n" "      L1_1 = texture2DRect(tex_prev, texcoord_L1_1).rgb;\n" "      L3_1 = texture2DRect(tex_prev, texcoord_L3_1).rgb;\n" "    }\n" "    if (int(ceil(texcoord.x + texcoord.y)) == 0) {\n" "      L1_a1 = L1;\n" "      L3_a1 = L3;\n" "    } else {\n" "      texcoord_L1_a1 = vec2(texcoord.x - 1.0, texcoord.y - 1.0);\n" "      texcoord_L3_a1 = vec2(texcoord.x - 1.0, texcoord.y + 1.0);\n" "      L1_a1 = texture2DRect(tex_prev, texcoord_L1_a1).rgb;\n" "      L3_a1 = texture2DRect(tex_prev, texcoord_L3_a1).rgb;\n" "    }\n" "" ""        //STEP 1
-    "    vec3 avg_a1 = (L1_a1 + L3_a1) / 2.0;\n" "    vec3 avg = (L1 + L3) / 2.0;\n" "    vec3 avg_1 = (L1_1 + L3_1) / 2.0;\n" "" "    vec3 avg_s = (avg_a1 + avg_1) / 2.0;\n" "" "    vec3 avg_sc = (avg_s + avg) / 2.0;\n" "" "    vec3 L2 = texture2DRect(tex, texcoord).rgb;\n" "    vec3 LP2 = texture2DRect(tex_prev, texcoord).rgb;\n" "" "    vec3 best;\n" "" "    if (abs(L2.r - avg_sc.r) < abs(LP2.r - avg_sc.r)) {\n" "      best.r = L2.r;\n" "    } else {\n" "      best.r = LP2.r;\n" "    }\n" "" "    if (abs(L2.g - avg_sc.g) < abs(LP2.g - avg_sc.g)) {\n" "      best.g = L2.g;\n" "    } else {\n" "      best.g = LP2.g;\n" "    }\n" "" "    if (abs(L2.b - avg_sc.b) < abs(LP2.b - avg_sc.b)) {\n" "      best.b = L2.b;\n" "    } else {\n" "      best.b = LP2.b;\n" "    }\n" "" ""        //STEP 2
-    "    vec3 last;\n" "    last.r = clamp(best.r, max(min(L1.r, L3.r) - max_comb, 0.0), min(max(L1.r, L3.r) + max_comb, 1.0));\n" "    last.g = clamp(best.g, max(min(L1.g, L3.g) - max_comb, 0.0), min(max(L1.g, L3.g) + max_comb, 1.0));\n" "    last.b = clamp(best.b, max(min(L1.b, L3.b) - max_comb, 0.0), min(max(L1.b, L3.b) + max_comb, 1.0));\n" "" ""        //STEP 3
-    "    const vec3 luma = vec3 (0.299011, 0.586987, 0.114001);"
-    "    float mov = min(max(abs(dot(L2 - LP2, luma)) - motion_threshold, 0.0) * motion_sense, 1.0);\n"
-    "    last = last * (1.0 - mov) + avg_sc * mov;\n"
-    "" "    gl_FragColor = vec4(last, 1.0);\n" "  }\n" "}\n";
+/* *INDENT-OFF* */
+static const gchar *greedyh_fragment_source =
+  "#extension GL_ARB_texture_rectangle : enable\n"
+  "uniform sampler2DRect tex;\n"
+  "uniform sampler2DRect tex_prev;\n"
+  "uniform float max_comb;\n"
+  "uniform float motion_threshold;\n"
+  "uniform float motion_sense;\n"
+  "uniform int width;\n"
+  "uniform int height;\n"
+
+  "void main () {\n"
+  "  vec2 texcoord = gl_TexCoord[0].xy;\n"
+  "  if (int(mod(texcoord.y, 2.0)) == 0) {\n"
+  "    gl_FragColor = vec4(texture2DRect(tex_prev, texcoord).rgb, 1.0);\n"
+  "  } else {\n"
+  "    vec2 texcoord_L1_a1, texcoord_L3_a1, texcoord_L1, texcoord_L3, texcoord_L1_1, texcoord_L3_1;\n"
+  "    vec3 L1_a1, L3_a1, L1, L3, L1_1, L3_1;\n"
+
+  "    texcoord_L1 = vec2(texcoord.x, texcoord.y - 1.0);\n"
+  "    texcoord_L3 = vec2(texcoord.x, texcoord.y + 1.0);\n"
+  "    L1 = texture2DRect(tex_prev, texcoord_L1).rgb;\n"
+  "    L3 = texture2DRect(tex_prev, texcoord_L3).rgb;\n"
+  "    if (int(ceil(texcoord.x)) == width && int(ceil(texcoord.y)) == height) {\n"
+  "      L1_1 = L1;\n"
+  "      L3_1 = L3;\n"
+  "    } else {\n"
+  "      texcoord_L1_1 = vec2(texcoord.x + 1.0, texcoord.y - 1.0);\n"
+  "      texcoord_L3_1 = vec2(texcoord.x + 1.0, texcoord.y + 1.0);\n"
+  "      L1_1 = texture2DRect(tex_prev, texcoord_L1_1).rgb;\n"
+  "      L3_1 = texture2DRect(tex_prev, texcoord_L3_1).rgb;\n"
+  "    }\n"
+
+  "    if (int(ceil(texcoord.x + texcoord.y)) == 0) {\n"
+  "      L1_a1 = L1;\n"
+  "      L3_a1 = L3;\n"
+  "    } else {\n"
+  "      texcoord_L1_a1 = vec2(texcoord.x - 1.0, texcoord.y - 1.0);\n"
+  "      texcoord_L3_a1 = vec2(texcoord.x - 1.0, texcoord.y + 1.0);\n"
+  "      L1_a1 = texture2DRect(tex_prev, texcoord_L1_a1).rgb;\n"
+  "      L3_a1 = texture2DRect(tex_prev, texcoord_L3_a1).rgb;\n"
+  "    }\n"
+          //STEP 1
+  "    vec3 avg_a1 = (L1_a1 + L3_a1) / 2.0;\n"
+  "    vec3 avg = (L1 + L3) / 2.0;\n"
+  "    vec3 avg_1 = (L1_1 + L3_1) / 2.0;\n"
+  "    vec3 avg_s = (avg_a1 + avg_1) / 2.0;\n"
+  "    vec3 avg_sc = (avg_s + avg) / 2.0;\n"
+  "    vec3 L2 = texture2DRect(tex, texcoord).rgb;\n"
+  "    vec3 LP2 = texture2DRect(tex_prev, texcoord).rgb;\n"
+  "    vec3 best;\n"
+  "    if (abs(L2.r - avg_sc.r) < abs(LP2.r - avg_sc.r)) {\n"
+  "      best.r = L2.r;\n" "    } else {\n"
+  "      best.r = LP2.r;\n"
+  "    }\n"
+
+  "    if (abs(L2.g - avg_sc.g) < abs(LP2.g - avg_sc.g)) {\n"
+  "      best.g = L2.g;\n"
+  "    } else {\n"
+  "      best.g = LP2.g;\n"
+  "    }\n"
+
+  "    if (abs(L2.b - avg_sc.b) < abs(LP2.b - avg_sc.b)) {\n"
+  "      best.b = L2.b;\n"
+  "    } else {\n"
+  "      best.b = LP2.b;\n"
+  "    }\n"
+          //STEP 2
+  "    vec3 last;\n"
+  "    last.r = clamp(best.r, max(min(L1.r, L3.r) - max_comb, 0.0), min(max(L1.r, L3.r) + max_comb, 1.0));\n"
+  "    last.g = clamp(best.g, max(min(L1.g, L3.g) - max_comb, 0.0), min(max(L1.g, L3.g) + max_comb, 1.0));\n"
+  "    last.b = clamp(best.b, max(min(L1.b, L3.b) - max_comb, 0.0), min(max(L1.b, L3.b) + max_comb, 1.0));\n"
+          //STEP 3
+  "    const vec3 luma = vec3 (0.299011, 0.586987, 0.114001);"
+  "    float mov = min(max(abs(dot(L2 - LP2, luma)) - motion_threshold, 0.0) * motion_sense, 1.0);\n"
+  "    last = last * (1.0 - mov) + avg_sc * mov;\n"
+  "    gl_FragColor = vec4(last, 1.0);\n"
+  "  }\n"
+  "}\n";
+/* *INDENT-ON* */
 
 static void
 gst_gl_deinterlace_class_init (GstGLDeinterlaceClass * klass)
@@ -192,14 +264,31 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
 {
   GstGLDeinterlace *deinterlace_filter = GST_GL_DEINTERLACE (stuff);
   GstGLFilter *filter = GST_GL_FILTER (stuff);
+  GstGLFuncs *gl = filter->display->gl_vtable;
   guint temp;
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gfloat verts[] = { -1.0, -1.0,
+    1.0, -1.0,
+    1.0, 1.0,
+    -1.0, 1.0
+  };
+  gint texcoords0[] = { 0, 0,
+    width, 0,
+    width, height,
+    0, height
+  };
+  gint texcoords1[] = { 0, 0,
+    width, 0,
+    width, height,
+    0, height
+  };
+
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (deinterlace_filter->shader);
 
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
 
   if (G_UNLIKELY (deinterlace_filter->prev_tex == 0)) {
     gst_gl_display_gen_texture_thread (filter->display,
@@ -208,14 +297,14 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
         GST_VIDEO_INFO_WIDTH (&filter->out_info),
         GST_VIDEO_INFO_HEIGHT (&filter->out_info));
   } else {
-    glActiveTexture (GL_TEXTURE1_ARB);
+    gl->ActiveTexture (GL_TEXTURE1);
     gst_gl_shader_set_uniform_1i (deinterlace_filter->shader, "tex_prev", 1);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, deinterlace_filter->prev_tex);
+    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, deinterlace_filter->prev_tex);
   }
 
-  glActiveTexture (GL_TEXTURE0_ARB);
+  gl->ActiveTexture (GL_TEXTURE0);
   gst_gl_shader_set_uniform_1i (deinterlace_filter->shader, "tex", 0);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
   gst_gl_shader_set_uniform_1f (deinterlace_filter->shader, "max_comb",
       5.0f / 255.0f);
@@ -229,22 +318,27 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (deinterlace_filter->shader, "height",
       GST_VIDEO_INFO_HEIGHT (&filter->out_info));
 
-  glBegin (GL_QUADS);
-  glMultiTexCoord2iARB (GL_TEXTURE0_ARB, 0, 0);
-  glMultiTexCoord2iARB (GL_TEXTURE1_ARB, 0, 0);
-  glVertex2i (-1, -1);
-  glMultiTexCoord2iARB (GL_TEXTURE0_ARB, width, 0);
-  glMultiTexCoord2iARB (GL_TEXTURE1_ARB, width, 0);
-  glVertex2i (1, -1);
-  glMultiTexCoord2iARB (GL_TEXTURE0_ARB, width, height);
-  glMultiTexCoord2iARB (GL_TEXTURE1_ARB, width, height);
-  glVertex2i (1, 1);
-  glMultiTexCoord2iARB (GL_TEXTURE0_ARB, 0, height);
-  glMultiTexCoord2iARB (GL_TEXTURE1_ARB, 0, height);
-  glVertex2i (-1, 1);
-  glEnd ();
+  gl->ClientActiveTexture (GL_TEXTURE0);
 
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
+  gl->EnableClientState (GL_VERTEX_ARRAY);
+
+  gl->VertexPointer (2, GL_FLOAT, 0, &verts);
+  gl->TexCoordPointer (2, GL_INT, 0, &texcoords0);
+
+  gl->ClientActiveTexture (GL_TEXTURE1);
+  gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
+  gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords1);
+
+  gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
+
+  gl->DisableClientState (GL_VERTEX_ARRAY);
+  gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
+
+  gl->ClientActiveTexture (GL_TEXTURE0);
+  gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
+
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   if (texture == filter->in_tex_id) {
     temp = filter->in_tex_id;
