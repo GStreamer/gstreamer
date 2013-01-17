@@ -35,7 +35,7 @@
 #include <ges/ges-timeline-source.h>
 #include <ges/ges-timeline-test-source.h>
 #include <ges/ges-timeline-title-source.h>
-#include <ges/ges-timeline-operation.h>
+#include <ges/ges-operation-clip.h>
 #include <ges/ges-effect-clip.h>
 #include <ges/ges-timeline-overlay.h>
 #include <ges/ges-timeline-text-overlay.h>

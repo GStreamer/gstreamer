@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TIMELINE_OPERATION
-#define _GES_TIMELINE_OPERATION
+#ifndef _GES_OPERATION_CLIP
+#define _GES_OPERATION_CLIP
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -28,44 +28,44 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TIMELINE_OPERATION ges_timeline_operation_get_type()
+#define GES_TYPE_OPERATION_CLIP ges_operation_clip_get_type()
 
-#define GES_TIMELINE_OPERATION(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE_OPERATION, GESTimelineOperation))
+#define GES_OPERATION_CLIP(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_OPERATION_CLIP, GESOperationClip))
 
-#define GES_TIMELINE_OPERATION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TIMELINE_OPERATION, GESTimelineOperationClass))
+#define GES_OPERATION_CLIP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_OPERATION_CLIP, GESOperationClipClass))
 
-#define GES_IS_TIMELINE_OPERATION(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TIMELINE_OPERATION))
+#define GES_IS_OPERATION_CLIP(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_OPERATION_CLIP))
 
-#define GES_IS_TIMELINE_OPERATION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TIMELINE_OPERATION))
+#define GES_IS_OPERATION_CLIP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_OPERATION_CLIP))
 
-#define GES_TIMELINE_OPERATION_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_OPERATION, GESTimelineOperationClass))
+#define GES_OPERATION_CLIP_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_OPERATION_CLIP, GESOperationClipClass))
 
-typedef struct _GESTimelineOperationPrivate GESTimelineOperationPrivate;
+typedef struct _GESOperationClipPrivate GESOperationClipPrivate;
 
 /**
- * GESTimelineOperation:
+ * GESOperationClip:
  *
- * The GESTimelineOperation subclass. Subclasses can access these fields.
+ * The GESOperationClip subclass. Subclasses can access these fields.
  */
-struct _GESTimelineOperation {
+struct _GESOperationClip {
   /*< private >*/
   GESClip parent;
 
-  GESTimelineOperationPrivate *priv;
+  GESOperationClipPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
- * GESTimelineOperationClass:
+ * GESOperationClipClass:
  */
-struct _GESTimelineOperationClass {
+struct _GESOperationClipClass {
   /*< private >*/
   GESClipClass parent_class;
 
@@ -74,9 +74,9 @@ struct _GESTimelineOperationClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_timeline_operation_get_type (void);
+GType ges_operation_clip_get_type (void);
 
 G_END_DECLS
 
-#endif /* _GES_TIMELINE_OPERATION */
+#endif /* _GES_OPERATION_CLIP */
 

@@ -34,7 +34,7 @@
 #include "ges-types.h"
 
 G_DEFINE_ABSTRACT_TYPE (GESEffectClip, ges_effect_clip,
-    GES_TYPE_TIMELINE_OPERATION);
+    GES_TYPE_OPERATION_CLIP);
 
 struct _GESEffectClipPrivate
 {

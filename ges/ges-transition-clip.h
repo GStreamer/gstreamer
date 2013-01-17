@@ -21,7 +21,7 @@
 #ifndef _GES_TRANSITION_CLIP
 #define _GES_TRANSITION_CLIP
 
-#include "ges-timeline-operation.h"
+#include "ges-operation-clip.h"
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -52,7 +52,7 @@ typedef struct _GESTransitionClipPrivate GESTransitionClipPrivate;
  */
 struct _GESTransitionClip {
   /*< private >*/
-  GESTimelineOperation parent;
+  GESOperationClip parent;
 
   /*< private >*/
   GESTransitionClipPrivate *priv;
@@ -68,7 +68,7 @@ struct _GESTransitionClip {
 
 struct _GESTransitionClipClass {
   /*< private >*/
-  GESTimelineOperationClass parent_class;
+  GESOperationClipClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

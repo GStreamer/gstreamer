@@ -33,7 +33,7 @@ struct _GESTransitionClipPrivate
 };
 
 G_DEFINE_ABSTRACT_TYPE (GESTransitionClip, ges_transition_clip,
-    GES_TYPE_TIMELINE_OPERATION);
+    GES_TYPE_OPERATION_CLIP);
 
 static void
 ges_transition_clip_class_init (GESTransitionClipClass * klass)

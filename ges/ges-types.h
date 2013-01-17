@@ -47,8 +47,8 @@ typedef struct _GESTimelineElement GESTimelineElement;
 typedef struct _GESClip GESClip;
 typedef struct _GESClipClass GESClipClass;
 
-typedef struct _GESTimelineOperation GESTimelineOperation;
-typedef struct _GESTimelineOperationClass GESTimelineOperationClass;
+typedef struct _GESOperationClip GESOperationClip;
+typedef struct _GESOperationClipClass GESOperationClipClass;
 
 typedef struct _GESTimelinePipeline GESTimelinePipeline;
 typedef struct _GESTimelinePipelineClass GESTimelinePipelineClass;

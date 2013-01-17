@@ -31,11 +31,11 @@
  */
 
 #include "ges-internal.h"
-#include "ges-timeline-operation.h"
+#include "ges-operation-clip.h"
 #include "ges-timeline-overlay.h"
 
 G_DEFINE_ABSTRACT_TYPE (GESTimelineOverlay, ges_timeline_overlay,
-    GES_TYPE_TIMELINE_OPERATION);
+    GES_TYPE_OPERATION_CLIP);
 
 struct _GESTimelineOverlayPrivate
 {

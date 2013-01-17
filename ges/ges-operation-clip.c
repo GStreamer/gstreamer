@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-timeline-operation
+ * SECTION:ges-operation-clip
  * @short_description: Base Class for operations in a GESTimelineLayer
  *
  * Operations are any kind of object that both outputs AND consumes data.
@@ -27,25 +27,24 @@
 
 #include "ges.h"
 #include "ges-internal.h"
-#include "ges-timeline-operation.h"
+#include "ges-operation-clip.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESTimelineOperation, ges_timeline_operation,
-    GES_TYPE_CLIP);
+G_DEFINE_ABSTRACT_TYPE (GESOperationClip, ges_operation_clip, GES_TYPE_CLIP);
 
-struct _GESTimelineOperationPrivate
+struct _GESOperationClipPrivate
 {
   void *nada;
 };
 
 static void
-ges_timeline_operation_class_init (GESTimelineOperationClass * klass)
+ges_operation_clip_class_init (GESOperationClipClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GESTimelineOperationPrivate));
+  g_type_class_add_private (klass, sizeof (GESOperationClipPrivate));
 }
 
 static void
-ges_timeline_operation_init (GESTimelineOperation * self)
+ges_operation_clip_init (GESOperationClip * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TIMELINE_OPERATION, GESTimelineOperationPrivate);
+      GES_TYPE_OPERATION_CLIP, GESOperationClipPrivate);
 }

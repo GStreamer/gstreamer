@@ -49,7 +49,7 @@ typedef struct _GESEffectClipPrivate GESEffectClipPrivate;
  */
 struct _GESEffectClip {
   /*< private >*/
-  GESTimelineOperation parent;
+  GESOperationClip parent;
 
   GESEffectClipPrivate *priv;
 
@@ -64,7 +64,7 @@ struct _GESEffectClip {
 
 struct _GESEffectClipClass {
   /*< private >*/
-  GESTimelineOperationClass parent_class;
+  GESOperationClipClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
