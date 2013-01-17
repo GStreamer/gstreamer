@@ -77,7 +77,7 @@
 #ifdef HAVE_CPU_I386
 # ifdef __APPLE__
 #   include "struct_i386_osx.h"
-#   define HAVE_ABI_SIZES TRUE
+#   define HAVE_ABI_SIZES FALSE
 # else
 #   include "struct_i386.h"
 #   define HAVE_ABI_SIZES TRUE
@@ -89,7 +89,7 @@
 #else
 #ifdef HAVE_CPU_ARM
 #include "struct_arm.h"
-#define HAVE_ABI_SIZES TRUE
+#define HAVE_ABI_SIZES FALSE
 #else
 #ifdef __powerpc__
 #include "struct_ppc32.h"
