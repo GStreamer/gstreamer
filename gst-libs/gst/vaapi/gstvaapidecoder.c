@@ -257,6 +257,16 @@ do_decode(GstVaapiDecoder *decoder, GstVideoCodecFrame *base_frame)
     return status;
 }
 
+static inline GstVaapiDecoderStatus
+do_flush(GstVaapiDecoder *decoder)
+{
+    GstVaapiDecoderClass * const klass = GST_VAAPI_DECODER_GET_CLASS(decoder);
+
+    if (klass->flush)
+        return klass->flush(decoder);
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
 static GstVaapiDecoderStatus
 decode_step(GstVaapiDecoder *decoder)
 {
@@ -895,4 +905,13 @@ gst_vaapi_decoder_decode(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
     return do_decode(decoder, frame);
+}
+
+GstVaapiDecoderStatus
+gst_vaapi_decoder_flush(GstVaapiDecoder *decoder)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder),
+        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+
+    return do_flush(decoder);
 }

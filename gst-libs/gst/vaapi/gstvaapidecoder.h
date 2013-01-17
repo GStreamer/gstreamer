@@ -123,6 +123,7 @@ struct _GstVaapiDecoderClass {
     GstVaapiDecoderStatus (*start_frame)(GstVaapiDecoder *decoder,
         struct _GstVaapiDecoderUnit *unit);
     GstVaapiDecoderStatus (*end_frame)(GstVaapiDecoder *decoder);
+    GstVaapiDecoderStatus (*flush)(GstVaapiDecoder *decoder);
 };
 
 GType
@@ -155,6 +156,9 @@ gst_vaapi_decoder_parse(GstVaapiDecoder *decoder,
 
 GstVaapiDecoderStatus
 gst_vaapi_decoder_decode(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame);
+
+GstVaapiDecoderStatus
+gst_vaapi_decoder_flush(GstVaapiDecoder *decoder);
 
 G_END_DECLS
 
