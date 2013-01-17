@@ -258,6 +258,7 @@ gst_mss_demux_reset (GstMssDemux * mssdemux)
 
   mssdemux->n_videos = mssdemux->n_audios = 0;
   g_free (mssdemux->base_url);
+  g_free (mssdemux->manifest_uri);
   mssdemux->base_url = NULL;
 }
 
@@ -562,13 +563,23 @@ gst_mss_demux_src_query (GstPad * pad, GstQuery * query)
           GST_TIME_FORMAT, ret ? "TRUE" : "FALSE", GST_TIME_ARGS (duration));
       break;
     }
-    case GST_QUERY_LATENCY:
-      gst_query_set_latency (query, FALSE, 0, -1);
+    case GST_QUERY_LATENCY:{
+      gboolean live = FALSE;
+
+      live = mssdemux->manifest
+          && gst_mss_manifest_is_live (mssdemux->manifest);
+
+      gst_query_set_latency (query, live, 0, -1);
       ret = TRUE;
       break;
+    }
     case GST_QUERY_SEEKING:{
       GstFormat fmt;
       gint64 stop = -1;
+
+      if (mssdemux->manifest && gst_mss_manifest_is_live (mssdemux->manifest)) {
+        return FALSE;           /* no live seeking */
+      }
 
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
       GST_INFO_OBJECT (mssdemux, "Received GST_QUERY_SEEKING with format %d",
@@ -728,6 +739,7 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
     gst_query_parse_uri (query, &uri);
     GST_INFO_OBJECT (mssdemux, "Upstream is using URI: %s", uri);
 
+    mssdemux->manifest_uri = g_strdup (uri);
     baseurl_end = g_strrstr (uri, "/Manifest");
     if (baseurl_end) {
       /* set the new end of the string */
@@ -754,6 +766,9 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
     return FALSE;
   }
 
+  GST_INFO_OBJECT (mssdemux, "Live stream: %d",
+      gst_mss_manifest_is_live (mssdemux->manifest));
+
   gst_mss_demux_create_streams (mssdemux);
   for (iter = mssdemux->streams; iter;) {
     GSList *current = iter;
@@ -777,6 +792,27 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
 
   gst_element_no_more_pads (GST_ELEMENT_CAST (mssdemux));
   return TRUE;
+}
+
+static void
+gst_mss_demux_reload_manifest (GstMssDemux * mssdemux)
+{
+  GstUriDownloader *downloader;
+  GstFragment *manifest_data;
+  GstBuffer *manifest_buffer;
+
+  downloader = gst_uri_downloader_new ();
+
+  manifest_data =
+      gst_uri_downloader_fetch_uri (downloader, mssdemux->manifest_uri);
+  manifest_buffer = gst_fragment_get_buffer (manifest_data);
+  g_object_unref (manifest_data);
+
+  gst_mss_manifest_reload_fragments (mssdemux->manifest, manifest_buffer);
+  gst_buffer_replace (&mssdemux->manifest_buffer, manifest_buffer);
+  gst_buffer_unref (manifest_buffer);
+
+  g_object_unref (downloader);
 }
 
 static void
@@ -911,6 +947,8 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
     case GST_FLOW_OK:
       break;                    /* all is good, let's go */
     case GST_FLOW_UNEXPECTED:  /* EOS */
+      gst_mss_demux_reload_manifest (mssdemux);
+      return GST_FLOW_OK;
       return GST_FLOW_UNEXPECTED;
     case GST_FLOW_ERROR:
       goto error;
@@ -924,6 +962,8 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
 
   url = g_strdup_printf ("%s/%s", mssdemux->base_url, path);
 
+  GST_DEBUG_OBJECT (mssdemux, "Got url '%s' for stream %p", url, stream);
+
   fragment = gst_uri_downloader_fetch_uri (stream->downloader, url);
   g_free (path);
   g_free (url);
@@ -931,6 +971,11 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
   if (!fragment) {
     GST_INFO_OBJECT (mssdemux, "No fragment downloaded");
     /* TODO check if we are truly stoping */
+    if (gst_mss_manifest_is_live (mssdemux->manifest)) {
+      /* looks like there is no way of knowing when a live stream has ended
+       * Have to assume we are falling behind and cause a manifest reload */
+      return GST_FLOW_OK;
+    }
     return GST_FLOW_ERROR;
   }
 
@@ -949,9 +994,11 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
 
   if (_buffer) {
     GST_DEBUG_OBJECT (mssdemux,
-        "Storing buffer for stream %p - %s. Timestamp: %" GST_TIME_FORMAT,
+        "Storing buffer for stream %p - %s. Timestamp: %" GST_TIME_FORMAT
+        " Duration: %" GST_TIME_FORMAT,
         stream, GST_PAD_NAME (stream->pad),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (_buffer)));
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (_buffer)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (_buffer)));
     gst_mss_demux_stream_store_object (stream, GST_MINI_OBJECT_CAST (_buffer));
   }
 
@@ -995,9 +1042,9 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
       break;
   }
 
-  g_assert (buffer != NULL);
-
-  gst_mss_stream_advance_fragment (stream->manifest_stream);
+  if (buffer) {
+    gst_mss_stream_advance_fragment (stream->manifest_stream);
+  }
   GST_LOG_OBJECT (mssdemux, "download loop end %p", stream);
   return;
 
@@ -1130,10 +1177,25 @@ gst_mss_demux_stream_loop (GstMssDemux * mssdemux)
   }
 
   if (G_LIKELY (GST_IS_BUFFER (object))) {
+    if (GST_BUFFER_TIMESTAMP (object) != stream->next_timestamp) {
+      GST_ERROR_OBJECT (mssdemux, "Marking buffer %p as discont buffer:%"
+          GST_TIME_FORMAT " != expected:%" GST_TIME_FORMAT, object,
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (object)),
+          GST_TIME_ARGS (stream->next_timestamp));
+      GST_BUFFER_FLAG_SET (object, GST_BUFFER_FLAG_DISCONT);
+    }
+
     GST_DEBUG_OBJECT (mssdemux,
-        "Pushing buffer %p %" GST_TIME_FORMAT " on pad %s", object,
+        "Pushing buffer %p %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
+        " discont:%d on pad %s", object,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (object)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (object)),
+        GST_BUFFER_FLAG_IS_SET (object, GST_BUFFER_FLAG_DISCONT),
         GST_PAD_NAME (stream->pad));
+
+    stream->next_timestamp =
+        GST_BUFFER_TIMESTAMP (object) + GST_BUFFER_DURATION (object);
+
     ret = gst_pad_push (stream->pad, GST_BUFFER_CAST (object));
   } else if (GST_IS_EVENT (object)) {
     if (GST_EVENT_TYPE (object) == GST_EVENT_EOS)

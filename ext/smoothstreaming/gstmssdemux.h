@@ -63,6 +63,8 @@ struct _GstMssDemuxStream {
 
   GstEvent *pending_newsegment;
 
+  GstClockTime next_timestamp;
+
   /* Downloading task */
   GstTask *download_task;
   GStaticRecMutex download_lock;
@@ -80,6 +82,7 @@ struct _GstMssDemux {
 
   GstMssManifest *manifest;
   gchar *base_url;
+  gchar *manifest_uri;
 
   GSList *streams;
   guint n_videos;

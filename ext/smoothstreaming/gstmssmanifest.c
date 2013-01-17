@@ -22,6 +22,8 @@
 
 #include <glib.h>
 #include <string.h>
+#include <stdio.h>
+#include <ctype.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -42,6 +44,8 @@
 #define MSS_PROP_TIME                 "t"
 #define MSS_PROP_TIMESCALE            "TimeScale"
 #define MSS_PROP_URL                  "Url"
+
+#define TO_LOWER(str) { char* p = str; for ( ; *p; ++p) *p = tolower(*p); }
 
 /* TODO check if atoi is successful? */
 
@@ -84,6 +88,8 @@ struct _GstMssManifest
 {
   xmlDocPtr xml;
   xmlNodePtr xmlrootnode;
+
+  gboolean is_live;
 
   GSList *streams;
 };
@@ -187,7 +193,6 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
 
       /* we reverse it later */
       stream->fragments = g_list_prepend (stream->fragments, fragment);
-
     } else if (node_has_type (iter, MSS_NODE_STREAM_QUALITY)) {
       GstMssStreamQuality *quality = gst_mss_stream_quality_new (iter);
       stream->qualities = g_list_prepend (stream->qualities, quality);
@@ -215,12 +220,19 @@ gst_mss_manifest_new (const GstBuffer * data)
   GstMssManifest *manifest;
   xmlNodePtr root;
   xmlNodePtr nodeiter;
+  gchar *live_str;
 
   manifest = g_malloc0 (sizeof (GstMssManifest));
 
   manifest->xml = xmlReadMemory ((const gchar *) GST_BUFFER_DATA (data),
       GST_BUFFER_SIZE (data), "manifest", NULL, 0);
   root = manifest->xmlrootnode = xmlDocGetRootElement (manifest->xml);
+
+  live_str = (gchar *) xmlGetProp (root, (xmlChar *) "IsLive");
+  if (live_str) {
+    TO_LOWER (live_str);
+    manifest->is_live = strcmp (live_str, "true") == 0;
+  }
 
   for (nodeiter = root->children; nodeiter; nodeiter = nodeiter->next) {
     if (nodeiter->type == XML_ELEMENT_NODE
@@ -775,6 +787,138 @@ gst_mss_manifest_get_current_bitrate (GstMssManifest * manifest)
   }
 
   return bitrate;
+}
+
+gboolean
+gst_mss_manifest_is_live (GstMssManifest * manifest)
+{
+  return manifest->is_live;
+}
+
+static void
+gst_mss_stream_reload_fragments (GstMssStream * stream, xmlNodePtr streamIndex)
+{
+  xmlNodePtr iter;
+  GList *new_fragments = NULL;
+  GstMssStreamFragment *previous_fragment = NULL;
+  GstMssStreamFragment *current_fragment =
+      stream->current_fragment ? stream->current_fragment->data : NULL;
+  guint64 current_time = gst_mss_stream_get_fragment_gst_timestamp (stream);
+  guint fragment_number = 0;
+  guint64 fragment_time_accum = 0;
+
+  if (!current_fragment && stream->fragments) {
+    current_fragment = g_list_last (stream->fragments)->data;
+  } else if (g_list_previous (stream->current_fragment)) {
+    /* rewind one as this is the next to be pushed */
+    current_fragment = g_list_previous (stream->current_fragment)->data;
+  } else {
+    current_fragment = NULL;
+  }
+
+  if (current_fragment) {
+    current_time = current_fragment->time;
+    fragment_number = current_fragment->number;
+    fragment_time_accum = current_fragment->time;
+  }
+
+  for (iter = streamIndex->children; iter; iter = iter->next) {
+    if (node_has_type (iter, MSS_NODE_STREAM_FRAGMENT)) {
+      gchar *duration_str;
+      gchar *time_str;
+      gchar *seqnum_str;
+      GstMssStreamFragment *fragment = g_new (GstMssStreamFragment, 1);
+
+      duration_str = (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_DURATION);
+      time_str = (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_TIME);
+      seqnum_str = (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_NUMBER);
+
+      /* use the node's seq number or use the previous + 1 */
+      if (seqnum_str) {
+        fragment->number = g_ascii_strtoull (seqnum_str, NULL, 10);
+        g_free (seqnum_str);
+      } else {
+        fragment->number = fragment_number;
+      }
+      fragment_number = fragment->number + 1;
+
+      if (time_str) {
+        fragment->time = g_ascii_strtoull (time_str, NULL, 10);
+        g_free (time_str);
+        fragment_time_accum = fragment->time;
+      } else {
+        fragment->time = fragment_time_accum;
+      }
+
+      /* if we have a previous fragment, means we need to set its duration */
+      if (previous_fragment)
+        previous_fragment->duration = fragment->time - previous_fragment->time;
+
+      if (duration_str) {
+        fragment->duration = g_ascii_strtoull (duration_str, NULL, 10);
+
+        previous_fragment = NULL;
+        fragment_time_accum += fragment->duration;
+        g_free (duration_str);
+      } else {
+        /* store to set the duration at the next iteration */
+        previous_fragment = fragment;
+      }
+
+      if (fragment->time > current_time) {
+        new_fragments = g_list_append (new_fragments, fragment);
+      } else {
+        previous_fragment = NULL;
+        g_free (fragment);
+      }
+
+    } else {
+      /* TODO gst log this */
+    }
+  }
+
+  /* store the new fragments list */
+  if (new_fragments) {
+    g_list_free_full (stream->fragments, g_free);
+    stream->fragments = new_fragments;
+    stream->current_fragment = new_fragments;
+  }
+}
+
+static void
+gst_mss_manifest_reload_fragments_from_xml (GstMssManifest * manifest,
+    xmlNodePtr root)
+{
+  xmlNodePtr nodeiter;
+  GSList *streams = manifest->streams;
+
+  /* we assume the server is providing the streams in the same order in
+   * every manifest */
+  for (nodeiter = root->children; nodeiter && streams;
+      nodeiter = nodeiter->next) {
+    if (nodeiter->type == XML_ELEMENT_NODE
+        && (strcmp ((const char *) nodeiter->name, "StreamIndex") == 0)) {
+      gst_mss_stream_reload_fragments (streams->data, nodeiter);
+      streams = g_slist_next (streams);
+    }
+  }
+}
+
+void
+gst_mss_manifest_reload_fragments (GstMssManifest * manifest, GstBuffer * data)
+{
+  xmlDocPtr xml;
+  xmlNodePtr root;
+
+  g_return_if_fail (manifest->is_live);
+
+  xml = xmlReadMemory ((const gchar *) GST_BUFFER_DATA (data),
+      GST_BUFFER_SIZE (data), "manifest", NULL, 0);
+  root = xmlDocGetRootElement (xml);
+
+  gst_mss_manifest_reload_fragments_from_xml (manifest, root);
+
+  xmlFreeDoc (xml);
 }
 
 static gboolean
