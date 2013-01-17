@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-timeline-overlay
+ * SECTION:ges-overlay-clip
  * @short_description: Base Class for overlays in a GESTimelineLayer
  *
  * Overlays are objects which modify the underlying layer(s).
@@ -32,26 +32,26 @@
 
 #include "ges-internal.h"
 #include "ges-operation-clip.h"
-#include "ges-timeline-overlay.h"
+#include "ges-overlay-clip.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESTimelineOverlay, ges_timeline_overlay,
+G_DEFINE_ABSTRACT_TYPE (GESOverlayClip, ges_overlay_clip,
     GES_TYPE_OPERATION_CLIP);
 
-struct _GESTimelineOverlayPrivate
+struct _GESOverlayClipPrivate
 {
   /*  Dummy variable */
   void *nothing;
 };
 
 static void
-ges_timeline_overlay_class_init (GESTimelineOverlayClass * klass)
+ges_overlay_clip_class_init (GESOverlayClipClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GESTimelineOverlayPrivate));
+  g_type_class_add_private (klass, sizeof (GESOverlayClipPrivate));
 }
 
 static void
-ges_timeline_overlay_init (GESTimelineOverlay * self)
+ges_overlay_clip_init (GESOverlayClip * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TIMELINE_OVERLAY, GESTimelineOverlayPrivate);
+      GES_TYPE_OVERLAY_CLIP, GESOverlayClipPrivate);
 }

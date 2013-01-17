@@ -32,7 +32,7 @@
 #include <string.h>
 
 G_DEFINE_TYPE (GESTimelineTextOverlay, ges_timeline_text_overlay,
-    GES_TYPE_TIMELINE_OVERLAY);
+    GES_TYPE_OVERLAY_CLIP);
 
 #define DEFAULT_PROP_TEXT ""
 #define DEFAULT_PROP_FONT_DESC "Serif 36"

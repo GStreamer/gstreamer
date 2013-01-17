@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TIMELINE_OVERLAY
-#define _GES_TIMELINE_OVERLAY
+#ifndef _GES_OVERLAY_CLIP
+#define _GES_OVERLAY_CLIP
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -27,45 +27,45 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TIMELINE_OVERLAY ges_timeline_overlay_get_type()
+#define GES_TYPE_OVERLAY_CLIP ges_overlay_clip_get_type()
 
-#define GES_TIMELINE_OVERLAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE_OVERLAY, GESTimelineOverlay))
+#define GES_OVERLAY_CLIP(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_OVERLAY_CLIP, GESOverlayClip))
 
-#define GES_TIMELINE_OVERLAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TIMELINE_OVERLAY, GESTimelineOverlayClass))
+#define GES_OVERLAY_CLIP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_OVERLAY_CLIP, GESOverlayClipClass))
 
-#define GES_IS_TIMELINE_OVERLAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TIMELINE_OVERLAY))
+#define GES_IS_OVERLAY_CLIP(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_OVERLAY_CLIP))
 
-#define GES_IS_TIMELINE_OVERLAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TIMELINE_OVERLAY))
+#define GES_IS_OVERLAY_CLIP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_OVERLAY_CLIP))
 
-#define GES_TIMELINE_OVERLAY_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_OVERLAY, GESTimelineOverlayClass))
+#define GES_OVERLAY_CLIP_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_OVERLAY_CLIP, GESOverlayClipClass))
 
-typedef struct _GESTimelineOverlayPrivate GESTimelineOverlayPrivate;
+typedef struct _GESOverlayClipPrivate GESOverlayClipPrivate;
 
 /**
- * GESTimelineOverlay:
+ * GESOverlayClip:
  */
 
-struct _GESTimelineOverlay {
+struct _GESOverlayClip {
   /*< private >*/
   GESOperationClip parent;
 
-  GESTimelineOverlayPrivate *priv;
+  GESOverlayClipPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
- * GESTimelineOverlayClass:
+ * GESOverlayClipClass:
  * @parent_class: parent class
  */
 
-struct _GESTimelineOverlayClass {
+struct _GESOverlayClipClass {
   GESOperationClipClass parent_class;
 
   /*< private >*/
@@ -73,9 +73,9 @@ struct _GESTimelineOverlayClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_timeline_overlay_get_type (void);
+GType ges_overlay_clip_get_type (void);
 
 G_END_DECLS
 
-#endif /* _GES_TIMELINE_OVERLAY */
+#endif /* _GES_OVERLAY_CLIP */
 

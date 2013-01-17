@@ -106,7 +106,7 @@ GST_START_TEST (test_list_asset)
   enum_class = g_type_class_peek (GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE);
 
   fail_unless (ges_init ());
-  fail_if (ges_list_assets (GES_TYPE_TIMELINE_OVERLAY));
+  fail_if (ges_list_assets (GES_TYPE_OVERLAY_CLIP));
 
   assets = ges_list_assets (GES_TYPE_STANDARD_TRANSITION_CLIP);
   /* note: we do not have a a for value=0 "Transition not set" */

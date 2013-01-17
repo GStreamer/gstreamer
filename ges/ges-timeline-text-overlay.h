@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-timeline-overlay.h>
+#include <ges/ges-overlay-clip.h>
 #include <ges/ges-track.h>
 
 G_BEGIN_DECLS
@@ -47,7 +47,7 @@ typedef struct _GESTimelineTextOverlayPrivate GESTimelineTextOverlayPrivate;
 
 struct _GESTimelineTextOverlay
 {
-  GESTimelineOverlay parent;
+  GESOverlayClip parent;
 
   /*< private > */
   GESTimelineTextOverlayPrivate *priv;
@@ -64,7 +64,7 @@ struct _GESTimelineTextOverlayClass
 {
   /*< private > */
 
-  GESTimelineOverlayClass parent_class;
+  GESOverlayClipClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

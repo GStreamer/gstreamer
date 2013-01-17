@@ -23,7 +23,7 @@ LOCAL_SRC_FILES := 				\
 	ges-standard-transition-clip.c	\
 	ges-timeline-test-source.c		\
 	ges-timeline-title-source.c		\
-	ges-timeline-overlay.c			\
+	ges-overlay-clip.c			\
 	ges-timeline-text-overlay.c		\
 	ges-track.c				\
 	ges-track-object.c			\
