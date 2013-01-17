@@ -891,7 +891,7 @@ _create_shader (GstGLDisplay * display, const gchar * vertex_src,
     const gchar * fragment_src, GstGLShader ** out_shader)
 {
   GstGLShader *shader;
-  GError *error;
+  GError *error = NULL;
 
   g_return_val_if_fail (vertex_src != NULL || fragment_src != NULL, FALSE);
 
@@ -1154,8 +1154,8 @@ _do_download_draw_rgb_opengl (GstGLDisplay * display, GstGLDownload * download)
       break;
   }
 
-  glReadBuffer (GL_NONE);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ReadBuffer (GL_NONE);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 }
 #endif
 
@@ -1262,15 +1262,15 @@ _do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
     GL_COLOR_ATTACHMENT2
   };
 
-  gfloat verts[8] = { -1.0f, -1.0f,
-    1.0f, -1.0f,
-    1.0f, 1.0f,
-    -1.0f, 1.0f
+  gfloat verts[8] = { 1.0f, -1.0f,
+    -1.0f, -1.0f,
+    -1.0f, 1.0f,
+    1.0f, 1.0f
   };
-  gint texcoords[8] = { 0, 0,
-    out_width, 0,
-    out_width, out_height,
-    0, out_height
+  gfloat texcoords[8] = { out_width, 0.0,
+    0.0, 0.0,
+    0.0, out_height,
+    out_width, out_height
   };
 
   gl = display->gl_vtable;
@@ -1329,7 +1329,7 @@ _do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
       gl->MatrixMode (GL_PROJECTION);
       gl->LoadIdentity ();
 
-      gl->ActiveTexture (GL_TEXTURE0_ARB);
+      gl->ActiveTexture (GL_TEXTURE0);
       gst_gl_shader_set_uniform_1i (download->shader, "tex", 0);
       gst_gl_shader_set_uniform_1f (download->shader, "w", (gfloat) out_width);
       gst_gl_shader_set_uniform_1f (download->shader, "h", (gfloat) out_height);
@@ -1343,13 +1343,15 @@ _do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
           "Download video format inconsistensy %d", v_format);
   }
 
+  gl->ClientActiveTexture (GL_TEXTURE0);
+
   gl->EnableClientState (GL_VERTEX_ARRAY);
   gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
 
   gl->VertexPointer (2, GL_FLOAT, 0, &verts);
   gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
 
-  gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
+  gl->DrawArrays (GL_QUADS, 0, 4);
 
   gl->DisableClientState (GL_VERTEX_ARRAY);
   gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
