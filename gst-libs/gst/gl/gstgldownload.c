@@ -1154,7 +1154,6 @@ _do_download_draw_rgb_opengl (GstGLDisplay * display, GstGLDownload * download)
       break;
   }
 
-  gl->ReadBuffer (GL_NONE);
   gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 }
 #endif
