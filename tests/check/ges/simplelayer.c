@@ -66,7 +66,7 @@ GST_START_TEST (test_gsl_add)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *track;
-  GESCustomTimelineSource *source;
+  GESCustomSourceClip *source;
   GESClip *source2;
   gint result;
 
@@ -80,7 +80,7 @@ GST_START_TEST (test_gsl_add)
   track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (ges_timeline_add_track (timeline, track));
 
-  source = ges_custom_timeline_source_new (my_fill_track_func, NULL);
+  source = ges_custom_source_clip_new (my_fill_track_func, NULL);
   fail_unless (source != NULL);
   g_object_set (source, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (source), GST_SECOND);
@@ -139,7 +139,7 @@ GST_START_TEST (test_gsl_move_simple)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *track;
-  GESCustomTimelineSource *source1, *source2;
+  GESCustomSourceClip *source1, *source2;
   siginfo info = { 0, 0 };
 
   ges_init ();
@@ -154,10 +154,10 @@ GST_START_TEST (test_gsl_move_simple)
       (object_moved_cb), &info);
 
   /* Create two 1s sources */
-  source1 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
+  source1 = ges_custom_source_clip_new (my_fill_track_func, NULL);
   g_object_set (source1, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);
-  source2 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
+  source2 = ges_custom_source_clip_new (my_fill_track_func, NULL);
   g_object_set (source2, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (source2), GST_SECOND);
 
@@ -235,7 +235,7 @@ GST_START_TEST (test_gsl_with_transitions)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *track;
-  GESCustomTimelineSource *source1, *source2, *source3, *source4;
+  GESCustomSourceClip *source1, *source2, *source3, *source4;
   GESStandardTransitionClip *tr1, *tr2, *tr3, *tr4, *tr5;
   GESSimpleTimelineLayer *gstl;
   gboolean valid;
@@ -263,7 +263,7 @@ GST_START_TEST (test_gsl_with_transitions)
 #define ELEMENT "videotestsrc"
 
   /* Create four 1s sources */
-  source1 = ges_custom_timeline_source_new (arbitrary_fill_track_func,
+  source1 = ges_custom_source_clip_new (arbitrary_fill_track_func,
       (gpointer) ELEMENT);
   g_object_set (source1, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);
@@ -271,18 +271,18 @@ GST_START_TEST (test_gsl_with_transitions)
   /* make this source taller than the others, so we can check that
    * gstlrecalculate handles this properly */
 
-  source2 = ges_custom_timeline_source_new (arbitrary_fill_track_func,
+  source2 = ges_custom_source_clip_new (arbitrary_fill_track_func,
       (gpointer) ELEMENT);
   g_object_set (source2, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   GES_CLIP (source2)->height = 4;
   fail_unless_equals_uint64 (_DURATION (source2), GST_SECOND);
 
-  source3 = ges_custom_timeline_source_new (arbitrary_fill_track_func,
+  source3 = ges_custom_source_clip_new (arbitrary_fill_track_func,
       (gpointer) ELEMENT);
   g_object_set (source3, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (source3), GST_SECOND);
 
-  source4 = ges_custom_timeline_source_new (arbitrary_fill_track_func,
+  source4 = ges_custom_source_clip_new (arbitrary_fill_track_func,
       (gpointer) ELEMENT);
   g_object_set (source4, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (source4), GST_SECOND);

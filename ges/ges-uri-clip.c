@@ -28,7 +28,7 @@
 
 #include "ges-internal.h"
 #include "ges-uri-clip.h"
-#include "ges-timeline-source.h"
+#include "ges-source-clip.h"
 #include "ges-track-filesource.h"
 #include "ges-uri-asset.h"
 #include "ges-asset-track-object.h"
@@ -41,7 +41,7 @@ static void ges_extractable_interface_init (GESExtractableInterface * iface);
 #define parent_class ges_uri_clip_parent_class
 
 G_DEFINE_TYPE_WITH_CODE (GESUriClip, ges_uri_clip,
-    GES_TYPE_TIMELINE_SOURCE,
+    GES_TYPE_SOURCE_CLIP,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 

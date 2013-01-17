@@ -1,7 +1,7 @@
 #include <gst/gst.h>
 #include <ges/ges.h>
 
-ges_custom_timeline_source_get_type
+ges_custom_source_clip_get_type
 ges_formatter_get_type
 ges_simple_timeline_layer_get_type
 %ges_text_halign_get_type
@@ -12,7 +12,7 @@ ges_clip_get_type
 ges_operation_clip_get_type
 ges_timeline_overlay_get_type
 ges_timeline_pipeline_get_type
-ges_timeline_source_get_type
+ges_source_clip_get_type
 ges_timeline_test_source_get_type
 ges_transition_clip_get_type
 ges_standard_transition_clip_get_type

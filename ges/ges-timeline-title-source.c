@@ -28,13 +28,13 @@
 
 #include "ges-internal.h"
 #include "ges-timeline-title-source.h"
-#include "ges-timeline-source.h"
+#include "ges-source-clip.h"
 #include "ges-track-object.h"
 #include "ges-track-title-source.h"
 #include <string.h>
 
 G_DEFINE_TYPE (GESTimelineTitleSource, ges_timeline_title_source,
-    GES_TYPE_TIMELINE_SOURCE);
+    GES_TYPE_SOURCE_CLIP);
 
 #define DEFAULT_TEXT ""
 #define DEFAULT_FONT_DESC "Serif 36"

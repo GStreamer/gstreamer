@@ -423,19 +423,19 @@ GES_TYPE_TIMELINE_PIPELINE
 
 
 <SECTION>
-<FILE>ges-timeline-source</FILE>
-<TITLE>GESTimelineSource</TITLE>
-GESTimelineSource
-GESTimelineSourceClass
+<FILE>ges-source-clip</FILE>
+<TITLE>GESSourceClip</TITLE>
+GESSourceClip
+GESSourceClipClass
 <SUBSECTION Standard>
-GESTimelineSourcePrivate
-ges_timeline_source_get_type
-GES_IS_TIMELINE_SOURCE
-GES_IS_TIMELINE_SOURCE_CLASS
-GES_TIMELINE_SOURCE
-GES_TIMELINE_SOURCE_CLASS
-GES_TIMELINE_SOURCE_GET_CLASS
-GES_TYPE_TIMELINE_SOURCE
+GESSourceClipPrivate
+ges_source_clip_get_type
+GES_IS_SOURCE_CLIP
+GES_IS_SOURCE_CLIP_CLASS
+GES_SOURCE_CLIP
+GES_SOURCE_CLIP_CLASS
+GES_SOURCE_CLIP_GET_CLASS
+GES_TYPE_SOURCE_CLIP
 </SECTION>
 
 <SECTION>
@@ -564,21 +564,21 @@ ges_standard_transition_clip_get_type
 
 
 <SECTION>
-<FILE>ges-custom-timeline-source</FILE>
-<TITLE>GESCustomTimelineSource</TITLE>
-GESCustomTimelineSource
+<FILE>ges-custom-source-clip</FILE>
+<TITLE>GESCustomSourceClip</TITLE>
+GESCustomSourceClip
 GESFillTrackObjectUserFunc
-ges_custom_timeline_source_new
+ges_custom_source_clip_new
 <SUBSECTION Standard>
-GESCustomTimelineSourceClass
-ges_custom_timeline_source_get_type
-GESCustomTimelineSourcePrivate
-GES_CUSTOM_TIMELINE_SOURCE
-GES_CUSTOM_TIMELINE_SOURCE_CLASS
-GES_CUSTOM_TIMELINE_SOURCE_GET_CLASS
-GES_IS_CUSTOM_TIMELINE_SOURCE
-GES_IS_CUSTOM_TIMELINE_SOURCE_CLASS
-GES_TYPE_CUSTOM_TIMELINE_SOURCE
+GESCustomSourceClipClass
+ges_custom_source_clip_get_type
+GESCustomSourceClipPrivate
+GES_CUSTOM_SOURCE_CLIP
+GES_CUSTOM_SOURCE_CLIP_CLASS
+GES_CUSTOM_SOURCE_CLIP_GET_CLASS
+GES_IS_CUSTOM_SOURCE_CLIP
+GES_IS_CUSTOM_SOURCE_CLIP_CLASS
+GES_TYPE_CUSTOM_SOURCE_CLIP
 </SECTION>
 
 <SECTION>
@@ -970,7 +970,7 @@ ges_asset_request_async
 ges_asset_request_finish
 ges_asset_extract
 ges_list_assets
-ges_asset_custom_timeline_source_new
+ges_asset_custom_source_clip_new
 <SUBSECTION Standard>
 GESAssetPrivate
 GES_ASSET

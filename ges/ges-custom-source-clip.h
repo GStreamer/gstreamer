@@ -18,33 +18,33 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_CUSTOM_TIMELINE_SOURCE
-#define _GES_CUSTOM_TIMELINE_SOURCE
+#ifndef _GES_CUSTOM_SOURCE_CLIP
+#define _GES_CUSTOM_SOURCE_CLIP
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-timeline-source.h>
+#include <ges/ges-source-clip.h>
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_CUSTOM_TIMELINE_SOURCE ges_custom_timeline_source_get_type()
+#define GES_TYPE_CUSTOM_SOURCE_CLIP ges_custom_source_clip_get_type()
 
-#define GES_CUSTOM_TIMELINE_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_CUSTOM_TIMELINE_SOURCE, GESCustomTimelineSource))
+#define GES_CUSTOM_SOURCE_CLIP(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_CUSTOM_SOURCE_CLIP, GESCustomSourceClip))
 
-#define GES_CUSTOM_TIMELINE_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_CUSTOM_TIMELINE_SOURCE, GESCustomTimelineSourceClass))
+#define GES_CUSTOM_SOURCE_CLIP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_CUSTOM_SOURCE_CLIP, GESCustomSourceClipClass))
 
-#define GES_IS_CUSTOM_TIMELINE_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_CUSTOM_TIMELINE_SOURCE))
+#define GES_IS_CUSTOM_SOURCE_CLIP(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_CUSTOM_SOURCE_CLIP))
 
-#define GES_IS_CUSTOM_TIMELINE_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_CUSTOM_TIMELINE_SOURCE))
+#define GES_IS_CUSTOM_SOURCE_CLIP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_CUSTOM_SOURCE_CLIP))
 
-#define GES_CUSTOM_TIMELINE_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_CUSTOM_TIMELINE_SOURCE, GESCustomTimelineSourceClass))
+#define GES_CUSTOM_SOURCE_CLIP_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_CUSTOM_SOURCE_CLIP, GESCustomSourceClipClass))
 
-typedef struct _GESCustomTimelineSourcePrivate   GESCustomTimelineSourcePrivate;
+typedef struct _GESCustomSourceClipPrivate   GESCustomSourceClipPrivate;
 
 /**
  * GESFillTrackObjectUserFunc:
@@ -67,45 +67,45 @@ typedef gboolean (*GESFillTrackObjectUserFunc) (GESClip * object,
 					     gpointer user_data);
 
 /**
- * GESCustomTimelineSource:
+ * GESCustomSourceClip:
  *
  * Debugging custom timeline source
  */
 
-struct _GESCustomTimelineSource {
-  GESTimelineSource parent;
+struct _GESCustomSourceClip {
+  GESSourceClip parent;
 
   /*< private >*/
-  GESCustomTimelineSourcePrivate *priv;
+  GESCustomSourceClipPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
- * GESCustomTimelineSourceClass:
+ * GESCustomSourceClipClass:
  */
 
-struct _GESCustomTimelineSourceClass {
-  GESTimelineSourceClass parent_class;
+struct _GESCustomSourceClipClass {
+  GESSourceClipClass parent_class;
 
   /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_custom_timeline_source_get_type (void);
+GType ges_custom_source_clip_get_type (void);
 
-GESCustomTimelineSource*
-ges_custom_timeline_source_new (GESFillTrackObjectUserFunc func,
+GESCustomSourceClip*
+ges_custom_source_clip_new (GESFillTrackObjectUserFunc func,
 				gpointer user_data);
 
 GESAsset*
-ges_asset_custom_timeline_source_new (GESFillTrackObjectUserFunc func,
+ges_asset_custom_source_clip_new (GESFillTrackObjectUserFunc func,
 				gpointer user_data);
 
 
 G_END_DECLS
 
-#endif /* _GES_CUSTOM_TIMELINE_SOURCE */
+#endif /* _GES_CUSTOM_SOURCE_CLIP */
 

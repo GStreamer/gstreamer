@@ -11,14 +11,14 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	$(built_source_make)			\
 	ges.c					\
 	ges-enums.c				\
-	ges-custom-timeline-source.c		\
+	ges-custom-source-clip.c		\
 	ges-meta-container.c        \
 	ges-simple-timeline-layer.c		\
 	ges-timeline.c				\
 	ges-timeline-layer.c			\
 	ges-clip.c			\
 	ges-timeline-pipeline.c			\
-	ges-timeline-source.c			\
+	ges-source-clip.c			\
 	ges-effect-clip.c		\
 	ges-standard-effect-clip.c		\
 	ges-uri-clip.c		\
@@ -65,14 +65,14 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-types.h				\
 	ges.h					\
 	ges-enums.h				\
-	ges-custom-timeline-source.h		\
+	ges-custom-source-clip.h		\
 	ges-meta-container.h        \
 	ges-simple-timeline-layer.h		\
 	ges-timeline.h				\
 	ges-timeline-layer.h			\
 	ges-clip.h			\
 	ges-timeline-pipeline.h			\
-	ges-timeline-source.h			\
+	ges-source-clip.h			\
 	ges-uri-clip.h		\
 	ges-effect-clip.h		\
 	ges-standard-effect-clip.h		\

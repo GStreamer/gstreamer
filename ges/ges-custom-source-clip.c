@@ -19,25 +19,25 @@
  */
 
 /**
- * SECTION:ges-custom-timeline-source
- * @short_description: Convenience GESTimelineSource
+ * SECTION:ges-custom-source-clip
+ * @short_description: Convenience GESSourceClip
  *
- * #GESCustomTimelineSource allows creating #GESTimelineSource(s) without the
+ * #GESCustomSourceClip allows creating #GESSourceClip(s) without the
  * need to subclass.
  *
  * Its usage should be limited to testing and prototyping purposes.
  *
- * To instanciate a asset to extract GESCustomTimelineSource-s the expected
+ * To instanciate a asset to extract GESCustomSourceClip-s the expected
  * ID is:
  *  'PointerToFuncAsInt!PointerToUDataAsInt'
  *
- * You should use the #ges_asset_custom_timeline_source_new helper to create
- * a new GESAsset letting you extract GESCustomTimelineSource.
+ * You should use the #ges_asset_custom_source_clip_new helper to create
+ * a new GESAsset letting you extract GESCustomSourceClip.
  */
 
 #include "ges-internal.h"
-#include "ges-custom-timeline-source.h"
-#include "ges-timeline-source.h"
+#include "ges-custom-source-clip.h"
+#include "ges-source-clip.h"
 #include "ges-track-source.h"
 #include "ges-extractable.h"
 
@@ -48,7 +48,7 @@ enum
   PROP_USER_DATA
 };
 
-struct _GESCustomTimelineSourcePrivate
+struct _GESCustomSourceClipPrivate
 {
   GESFillTrackObjectUserFunc filltrackobjectfunc;
   gpointer user_data;
@@ -56,8 +56,8 @@ struct _GESCustomTimelineSourcePrivate
 
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
 
-G_DEFINE_TYPE_WITH_CODE (GESCustomTimelineSource, ges_custom_timeline_source,
-    GES_TYPE_TIMELINE_SOURCE,
+G_DEFINE_TYPE_WITH_CODE (GESCustomSourceClip, ges_custom_source_clip,
+    GES_TYPE_SOURCE_CLIP,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 
@@ -115,8 +115,7 @@ extractable_check_id (GType type, const gchar * id)
 static gchar *
 extractable_get_id (GESExtractable * self)
 {
-  GESCustomTimelineSourcePrivate *priv =
-      GES_CUSTOM_TIMELINE_SOURCE (self)->priv;
+  GESCustomSourceClipPrivate *priv = GES_CUSTOM_SOURCE_CLIP (self)->priv;
 
   return g_strdup_printf ("%i!%i", GPOINTER_TO_INT (priv->filltrackobjectfunc),
       GPOINTER_TO_INT (priv->user_data));
@@ -131,12 +130,11 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 }
 
 static gboolean
-ges_custom_timeline_source_fill_track_object (GESClip * object,
+ges_custom_source_clip_fill_track_object (GESClip * object,
     GESTrackObject * trobject, GstElement * gnlobj);
 
 static GESTrackObject *
-ges_custom_timeline_source_create_track_object (GESClip * obj,
-    GESTrackType type)
+ges_custom_source_clip_create_track_object (GESClip * obj, GESTrackType type)
 {
   return g_object_new (GES_TYPE_TRACK_SOURCE, "track-type", type, NULL);
 }
@@ -145,8 +143,7 @@ static void
 _set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESCustomTimelineSourcePrivate *priv =
-      GES_CUSTOM_TIMELINE_SOURCE (object)->priv;
+  GESCustomSourceClipPrivate *priv = GES_CUSTOM_SOURCE_CLIP (object)->priv;
   switch (property_id) {
     case PROP_FILL_FUNC:
       priv->filltrackobjectfunc = g_value_get_pointer (value);
@@ -160,21 +157,20 @@ _set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_custom_timeline_source_class_init (GESCustomTimelineSourceClass * klass)
+ges_custom_source_clip_class_init (GESCustomSourceClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESClipClass *clip_class = GES_CLIP_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESCustomTimelineSourcePrivate));
+  g_type_class_add_private (klass, sizeof (GESCustomSourceClipPrivate));
 
-  clip_class->fill_track_object = ges_custom_timeline_source_fill_track_object;
-  clip_class->create_track_object =
-      ges_custom_timeline_source_create_track_object;
+  clip_class->fill_track_object = ges_custom_source_clip_fill_track_object;
+  clip_class->create_track_object = ges_custom_source_clip_create_track_object;
 
   object_class->set_property = _set_property;
 
   /**
-   * GESCustomTimelineSource:fill-func:
+   * GESCustomSourceClip:fill-func:
    *
    * The function pointer to create the TrackObject content
    */
@@ -184,7 +180,7 @@ ges_custom_timeline_source_class_init (GESCustomTimelineSourceClass * klass)
           G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 
   /**
-   * GESCustomTimelineSource:user-data:
+   * GESCustomSourceClip:user-data:
    *
    * The user data that will be passed
    */
@@ -195,23 +191,23 @@ ges_custom_timeline_source_class_init (GESCustomTimelineSourceClass * klass)
 }
 
 static void
-ges_custom_timeline_source_init (GESCustomTimelineSource * self)
+ges_custom_source_clip_init (GESCustomSourceClip * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_CUSTOM_TIMELINE_SOURCE, GESCustomTimelineSourcePrivate);
+      GES_TYPE_CUSTOM_SOURCE_CLIP, GESCustomSourceClipPrivate);
 }
 
 static gboolean
-ges_custom_timeline_source_fill_track_object (GESClip * object,
+ges_custom_source_clip_fill_track_object (GESClip * object,
     GESTrackObject * trobject, GstElement * gnlobj)
 {
   gboolean res;
-  GESCustomTimelineSourcePrivate *priv;
+  GESCustomSourceClipPrivate *priv;
 
   GST_DEBUG ("Calling callback (timelineobj:%p, trackobj:%p, gnlobj:%p)",
       object, trobject, gnlobj);
 
-  priv = GES_CUSTOM_TIMELINE_SOURCE (object)->priv;
+  priv = GES_CUSTOM_SOURCE_CLIP (object)->priv;
   res = priv->filltrackobjectfunc (object, trobject, gnlobj, priv->user_data);
 
   GST_DEBUG ("Returning res:%d", res);
@@ -220,22 +216,21 @@ ges_custom_timeline_source_fill_track_object (GESClip * object,
 }
 
 /**
- * ges_custom_timeline_source_new:
+ * ges_custom_source_clip_new:
  * @func: (scope notified): The #GESFillTrackObjectUserFunc that will be used to fill the track
  * objects.
  * @user_data: (closure): a gpointer that will be used when @func is called.
  *
- * Creates a new #GESCustomTimelineSource.
+ * Creates a new #GESCustomSourceClip.
  *
- * Returns: The new #GESCustomTimelineSource.
+ * Returns: The new #GESCustomSourceClip.
  */
-GESCustomTimelineSource *
-ges_custom_timeline_source_new (GESFillTrackObjectUserFunc func,
-    gpointer user_data)
+GESCustomSourceClip *
+ges_custom_source_clip_new (GESFillTrackObjectUserFunc func, gpointer user_data)
 {
-  GESCustomTimelineSource *src;
+  GESCustomSourceClip *src;
 
-  src = g_object_new (GES_TYPE_CUSTOM_TIMELINE_SOURCE, "supported-formats",
+  src = g_object_new (GES_TYPE_CUSTOM_SOURCE_CLIP, "supported-formats",
       GES_TRACK_TYPE_CUSTOM, NULL);
   src->priv->filltrackobjectfunc = func;
   src->priv->user_data = user_data;
@@ -244,25 +239,25 @@ ges_custom_timeline_source_new (GESFillTrackObjectUserFunc func,
 }
 
 /**
- * ges_asset_custom_timeline_source_new:
+ * ges_asset_custom_source_clip_new:
  * @func: (scope notified): The #GESFillTrackObjectUserFunc that will be used to fill the track
  * objects.
  * @user_data: (closure): a gpointer that will be used when @func is called.
  *
  * Helper constructor to instanciate a new #GESAsset from which you can
- * extract #GESCustomTimelineSource-s
+ * extract #GESCustomSourceClip-s
  *
  * Returns: The new #GESAsset.
  */
 GESAsset *
-ges_asset_custom_timeline_source_new (GESFillTrackObjectUserFunc func,
+ges_asset_custom_source_clip_new (GESFillTrackObjectUserFunc func,
     gpointer user_data)
 {
   GESAsset *asset;
   gchar *id = g_strdup_printf ("%i!%i", GPOINTER_TO_INT (func),
       GPOINTER_TO_INT (user_data));
 
-  asset = ges_asset_request (GES_TYPE_CUSTOM_TIMELINE_SOURCE, id, NULL);
+  asset = ges_asset_request (GES_TYPE_CUSTOM_SOURCE_CLIP, id, NULL);
 
   g_free (id);
 

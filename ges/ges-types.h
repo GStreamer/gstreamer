@@ -29,8 +29,8 @@
 
 /* Type definitions */
 
-typedef struct _GESCustomTimelineSource GESCustomTimelineSource;
-typedef struct _GESCustomTimelineSourceClass GESCustomTimelineSourceClass;
+typedef struct _GESCustomSourceClip GESCustomSourceClip;
+typedef struct _GESCustomSourceClipClass GESCustomSourceClipClass;
 
 typedef struct _GESSimpleTimelineLayer GESSimpleTimelineLayer;
 typedef struct _GESSimpleTimelineLayerClass GESSimpleTimelineLayerClass;
@@ -53,8 +53,8 @@ typedef struct _GESOperationClipClass GESOperationClipClass;
 typedef struct _GESTimelinePipeline GESTimelinePipeline;
 typedef struct _GESTimelinePipelineClass GESTimelinePipelineClass;
 
-typedef struct _GESTimelineSource GESTimelineSource;
-typedef struct _GESTimelineSourceClass GESTimelineSourceClass;
+typedef struct _GESSourceClip GESSourceClip;
+typedef struct _GESSourceClipClass GESSourceClipClass;
 
 typedef struct _GESEffectClip GESEffectClip;
 typedef struct _GESEffectClipClass GESEffectClipClass;

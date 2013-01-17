@@ -32,7 +32,7 @@
 #include <ges/ges-timeline-element.h>
 #include <ges/ges-clip.h>
 #include <ges/ges-timeline-pipeline.h>
-#include <ges/ges-timeline-source.h>
+#include <ges/ges-source-clip.h>
 #include <ges/ges-timeline-test-source.h>
 #include <ges/ges-timeline-title-source.h>
 #include <ges/ges-operation-clip.h>
@@ -42,7 +42,7 @@
 #include <ges/ges-transition-clip.h>
 #include <ges/ges-standard-transition-clip.h>
 #include <ges/ges-standard-effect-clip.h>
-#include <ges/ges-custom-timeline-source.h>
+#include <ges/ges-custom-source-clip.h>
 #include <ges/ges-effect-clip.h>
 #include <ges/ges-uri-clip.h>
 #include <ges/ges-screenshot.h>

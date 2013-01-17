@@ -43,7 +43,7 @@ my_fill_track_func (GESClip * object,
 static inline GESClip *
 create_custom_clip (void)
 {
-  return GES_CLIP (ges_custom_timeline_source_new (my_fill_track_func, NULL));
+  return GES_CLIP (ges_custom_source_clip_new (my_fill_track_func, NULL));
 }
 
 #define CHECK_OBJECT_PROPS(obj, start, inpoint, duration) {\

@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TIMELINE_SOURCE
-#define _GES_TIMELINE_SOURCE
+#ifndef _GES_SOURCE_CLIP
+#define _GES_SOURCE_CLIP
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -28,46 +28,46 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TIMELINE_SOURCE ges_timeline_source_get_type()
+#define GES_TYPE_SOURCE_CLIP ges_source_clip_get_type()
 
-#define GES_TIMELINE_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE_SOURCE, GESTimelineSource))
+#define GES_SOURCE_CLIP(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_SOURCE_CLIP, GESSourceClip))
 
-#define GES_TIMELINE_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TIMELINE_SOURCE, GESTimelineSourceClass))
+#define GES_SOURCE_CLIP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_SOURCE_CLIP, GESSourceClipClass))
 
-#define GES_IS_TIMELINE_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TIMELINE_SOURCE))
+#define GES_IS_SOURCE_CLIP(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_SOURCE_CLIP))
 
-#define GES_IS_TIMELINE_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TIMELINE_SOURCE))
+#define GES_IS_SOURCE_CLIP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_SOURCE_CLIP))
 
-#define GES_TIMELINE_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_SOURCE, GESTimelineSourceClass))
+#define GES_SOURCE_CLIP_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_SOURCE_CLIP, GESSourceClipClass))
 
-typedef struct _GESTimelineSourcePrivate GESTimelineSourcePrivate;
+typedef struct _GESSourceClipPrivate GESSourceClipPrivate;
 
 /**
- * GESTimelineSource:
+ * GESSourceClip:
  *
  * Base class for sources of a #GESTimelineLayer
  */
 
-struct _GESTimelineSource {
+struct _GESSourceClip {
   GESClip parent;
 
   /*< private >*/
-  GESTimelineSourcePrivate *priv;
+  GESSourceClipPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
- * GESTimelineSourceClass:
+ * GESSourceClipClass:
  */
 
-struct _GESTimelineSourceClass {
+struct _GESSourceClipClass {
   /*< private >*/
   GESClipClass parent_class;
 
@@ -75,9 +75,9 @@ struct _GESTimelineSourceClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_timeline_source_get_type (void);
+GType ges_source_clip_get_type (void);
 
 G_END_DECLS
 
-#endif /* _GES_TIMELINE_SOURCE */
+#endif /* _GES_SOURCE_CLIP */
 

@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-timeline-source.h>
+#include <ges/ges-source-clip.h>
 #include <ges/ges-track.h>
 
 G_BEGIN_DECLS
@@ -54,7 +54,7 @@ typedef struct _GESTimelineTitleSourcePrivate GESTimelineTitleSourcePrivate;
  */
 
 struct _GESTimelineTitleSource {
-  GESTimelineSource parent;
+  GESSourceClip parent;
 
   /*< private >*/
   GESTimelineTitleSourcePrivate *priv;
@@ -65,7 +65,7 @@ struct _GESTimelineTitleSource {
 
 struct _GESTimelineTitleSourceClass {
   /*< private >*/
-  GESTimelineSourceClass parent_class;
+  GESSourceClipClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

@@ -19,7 +19,7 @@
 
 /**
  * SECTION:ges-track-effect
- * @short_description: adds an effect to a stream in a GESTimelineSource or a
+ * @short_description: adds an effect to a stream in a GESSourceClip or a
  * #GESTimelineLayer
  */
 

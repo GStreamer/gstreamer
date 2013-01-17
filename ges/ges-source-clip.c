@@ -19,17 +19,17 @@
  */
 
 /**
- * SECTION:ges-timeline-source
+ * SECTION:ges-source-clip
  * @short_description: Base Class for sources of a GESTimelineLayer
  */
 
 #include "ges-internal.h"
 #include "ges-clip.h"
-#include "ges-timeline-source.h"
+#include "ges-source-clip.h"
 #include "ges-track-source.h"
 
 
-struct _GESTimelineSourcePrivate
+struct _GESSourceClipPrivate
 {
   /*  dummy variable */
   void *nothing;
@@ -40,10 +40,10 @@ enum
   PROP_0,
 };
 
-G_DEFINE_TYPE (GESTimelineSource, ges_timeline_source, GES_TYPE_CLIP);
+G_DEFINE_TYPE (GESSourceClip, ges_source_clip, GES_TYPE_CLIP);
 
 static void
-ges_timeline_source_get_property (GObject * object, guint property_id,
+ges_source_clip_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -53,7 +53,7 @@ ges_timeline_source_get_property (GObject * object, guint property_id,
 }
 
 static void
-ges_timeline_source_set_property (GObject * object, guint property_id,
+ges_source_clip_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -63,29 +63,29 @@ ges_timeline_source_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_timeline_source_finalize (GObject * object)
+ges_source_clip_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (ges_timeline_source_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ges_source_clip_parent_class)->finalize (object);
 }
 
 static void
-ges_timeline_source_class_init (GESTimelineSourceClass * klass)
+ges_source_clip_class_init (GESSourceClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTimelineSourcePrivate));
+  g_type_class_add_private (klass, sizeof (GESSourceClipPrivate));
 
-  object_class->get_property = ges_timeline_source_get_property;
-  object_class->set_property = ges_timeline_source_set_property;
-  object_class->finalize = ges_timeline_source_finalize;
+  object_class->get_property = ges_source_clip_get_property;
+  object_class->set_property = ges_source_clip_set_property;
+  object_class->finalize = ges_source_clip_finalize;
 
   /* All subclasses should have snapping enabled */
   GES_CLIP_CLASS (klass)->snaps = TRUE;
 }
 
 static void
-ges_timeline_source_init (GESTimelineSource * self)
+ges_source_clip_init (GESSourceClip * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TIMELINE_SOURCE, GESTimelineSourcePrivate);
+      GES_TYPE_SOURCE_CLIP, GESSourceClipPrivate);
 }

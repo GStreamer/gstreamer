@@ -10,13 +10,13 @@ LOCAL_SRC_FILES := 				\
 	$(built_source_make)			\
 	ges.c					\
 	ges-enums.c				\
-	ges-custom-timeline-source.c		\
+	ges-custom-source-clip.c		\
 	ges-simple-timeline-layer.c		\
 	ges-timeline.c				\
 	ges-timeline-layer.c			\
 	ges-clip.c			\
 	ges-timeline-pipeline.c			\
-	ges-timeline-source.c			\
+	ges-source-clip.c			\
 	ges-uri-clip.c		\
 	ges-operation-clip.c		\
 	ges-transition-clip.c		\

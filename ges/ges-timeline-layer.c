@@ -33,7 +33,7 @@
 #include "ges-internal.h"
 #include "ges-timeline-layer.h"
 #include "ges.h"
-#include "ges-timeline-source.h"
+#include "ges-source-clip.h"
 
 static void ges_meta_container_interface_init
     (GESMetaContainerInterface * iface);

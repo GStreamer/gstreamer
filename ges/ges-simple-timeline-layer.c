@@ -28,7 +28,7 @@
  * appropriate start times.
  *
  * Users should be aware that GESTransitionClip objects are considered to
- * have a negative duration for the purposes of positioning GESTimelineSource
+ * have a negative duration for the purposes of positioning GESSourceClip
  * objects (i.e., adding a GESTransitionClip creates an overlap between
  * the two adjacent sources.
  */
@@ -187,7 +187,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
     dur = _DURATION (obj);
     height = GES_CLIP_HEIGHT (obj);
 
-    if (GES_IS_TIMELINE_SOURCE (obj)) {
+    if (GES_IS_SOURCE_CLIP (obj)) {
 
       GST_LOG ("%p obj: height: %d: priority %d", obj, height, priority);
 
@@ -288,7 +288,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
  *
  * When adding transitions, it is important that the adjacent objects
  * (objects at position, and position + 1) be (1) A derivative of
- * GESTimelineSource or other non-transition, and (2) have a duration at least
+ * GESSourceClip or other non-transition, and (2) have a duration at least
  * as long as the duration of the transition.
  *
  * The layer will steal a reference to the provided object.

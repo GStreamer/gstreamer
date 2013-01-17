@@ -69,8 +69,7 @@ GST_START_TEST (test_layer_properties)
   fail_unless (track != NULL);
   fail_unless (ges_timeline_add_track (timeline, track));
 
-  object =
-      (GESClip *) ges_custom_timeline_source_new (my_fill_track_func, NULL);
+  object = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
   fail_unless (object != NULL);
 
   /* Set some properties */
@@ -159,16 +158,13 @@ GST_START_TEST (test_layer_priorities)
   fail_unless (track != NULL);
   fail_unless (ges_timeline_add_track (timeline, track));
 
-  object1 =
-      GES_CLIP (ges_custom_timeline_source_new (my_fill_track_func, NULL));
+  object1 = GES_CLIP (ges_custom_source_clip_new (my_fill_track_func, NULL));
   ges_clip_set_supported_formats (object1,
       GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO);
-  object2 =
-      GES_CLIP (ges_custom_timeline_source_new (my_fill_track_func, NULL));
+  object2 = GES_CLIP (ges_custom_source_clip_new (my_fill_track_func, NULL));
   ges_clip_set_supported_formats (object2,
       GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO);
-  object3 =
-      GES_CLIP (ges_custom_timeline_source_new (my_fill_track_func, NULL));
+  object3 = GES_CLIP (ges_custom_source_clip_new (my_fill_track_func, NULL));
   ges_clip_set_supported_formats (object3,
       GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO);
   fail_unless (object1 != NULL);

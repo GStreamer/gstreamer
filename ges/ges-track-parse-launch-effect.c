@@ -20,7 +20,7 @@
 /**
  * SECTION:ges-track-parse-launch-effect
  * @short_description: adds an effect build from a parse-launch style 
- * bin description to a stream in a #GESTimelineSource or a #GESTimelineLayer
+ * bin description to a stream in a #GESSourceClip or a #GESTimelineLayer
  */
 
 #include "ges-internal.h"

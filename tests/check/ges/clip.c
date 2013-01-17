@@ -50,8 +50,7 @@ GST_START_TEST (test_object_properties)
   track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
-  object =
-      (GESClip *) ges_custom_timeline_source_new (my_fill_track_func, NULL);
+  object = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
   fail_unless (object != NULL);
 
   /* Set some properties */
@@ -117,8 +116,7 @@ GST_START_TEST (test_object_properties_unlocked)
   track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
-  object =
-      (GESClip *) ges_custom_timeline_source_new (my_fill_track_func, NULL);
+  object = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
   fail_unless (object != NULL);
 
   /* Set some properties */
@@ -190,8 +188,7 @@ GST_START_TEST (test_split_object)
   track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
-  object =
-      (GESClip *) ges_custom_timeline_source_new (my_fill_track_func, NULL);
+  object = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
   fail_unless (object != NULL);
 
   /* Set some properties */
