@@ -32,6 +32,7 @@
 #include "gstvaapidisplay.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiworkarounds.h"
+#include "gstvaapiversion.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -94,6 +95,20 @@ get_color_balance(GstVaapiDisplay *display, guint prop_id, gfloat *v);
 
 static gboolean
 set_color_balance(GstVaapiDisplay *display, guint prop_id, gfloat v);
+
+static void
+dump_version(void)
+{
+    static gsize g_once = FALSE;
+
+    if (!g_once_init_enter(&g_once))
+        return;
+
+    /* Dump gstreamer-vaapi version for debugging purposes */
+    GST_INFO("gstreamer-vaapi version %s", GST_VAAPI_VERSION_ID);
+
+    g_once_init_leave(&g_once, TRUE);
+}
 
 static inline GstVaapiDisplayCache *
 get_display_cache(void)
@@ -884,6 +899,8 @@ gst_vaapi_display_class_init(GstVaapiDisplayClass *klass)
     GstVaapiDisplayClass * const dpy_class = GST_VAAPI_DISPLAY_CLASS(klass);
 
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapi, "vaapi", 0, "VA-API helper");
+
+    dump_version();
 
     g_type_class_add_private(klass, sizeof(GstVaapiDisplayPrivate));
 

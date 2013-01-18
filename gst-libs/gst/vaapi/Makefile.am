@@ -117,6 +117,7 @@ libgstvaapi_source_priv_h =			\
 	gstvaapiobject_priv.h			\
 	gstvaapisurface_priv.h			\
 	gstvaapiutils.h				\
+	gstvaapiversion.h			\
 	gstvaapiworkarounds.h			\
 	sysdeps.h				\
 	$(NULL)
@@ -367,6 +368,42 @@ libgstvaapi_wayland_@GST_MAJORMINOR@_la_LIBADD = \
 libgstvaapi_wayland_@GST_MAJORMINOR@_la_LDFLAGS = \
 	$(GST_ALL_LDFLAGS)			\
 	$(GST_VAAPI_LT_LDFLAGS)			\
+	$(NULL)
+
+VERSION_FILE		= .VERSION
+OLD_VERSION_FILE	= $(VERSION_FILE).old
+NEW_VERSION_FILE	= $(VERSION_FILE).new
+PKG_VERSION_FILE	= $(VERSION_FILE).pkg
+
+gstvaapiversion.h: gen-version
+	$(AM_V_GEN)							    \
+	OV=`[ -f $(OLD_VERSION_FILE) ] && cat $(OLD_VERSION_FILE) || :`;    \
+	NV=`cat $(NEW_VERSION_FILE)`;					    \
+	if [ "$$OV" != "$$NV" -o ! -f gstvaapiversion.h ]; then		    \
+		cp -f $(NEW_VERSION_FILE) $(OLD_VERSION_FILE);		    \
+		$(SED) -e "s|\@GST_VAAPI_VERSION_ID\@|$${NV}|"		    \
+			$(srcdir)/gstvaapiversion.h.in > gstvaapiversion.h; \
+	fi
+
+gen-version:
+	@echo $(VERSION) > $(NEW_VERSION_FILE)
+if HAVE_GIT
+	@[ -d $(top_srcdir)/.git ] && \
+	(cd $(top_srcdir) && $(GIT) describe --tags) > $(NEW_VERSION_FILE) || :
+endif
+	@[ -f $(srcdir)/$(PKG_VERSION_FILE) ] && \
+	cp -f $(srcdir)/$(PKG_VERSION_FILE) $(NEW_VERSION_FILE) || :
+
+$(PKG_VERSION_FILE): $(NEW_VERSION_FILE)
+	@cp -f $< $@
+
+BUILT_SOURCES	= gstvaapiversion.h
+EXTRA_DIST	= gstvaapiversion.h.in $(PKG_VERSION_FILE)
+
+CLEANFILES = \
+	$(OLD_VERSION_FILE)	\
+	$(NEW_VERSION_FILE)	\
+	$(PKG_VERSION_FILE)	\
 	$(NULL)
 
 # Extra clean files so that maintainer-clean removes *everything*

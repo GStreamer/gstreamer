@@ -114,6 +114,10 @@ dnl Check for tools
 AC_PROG_CC
 AM_PROG_CC_C_O
 
+AC_ARG_VAR([GIT], [Path to git program, if any])
+AC_PATH_PROG([GIT], [git])
+AM_CONDITIONAL([HAVE_GIT], [test -n "$GIT"])
+
 dnl Initialize libtool
 LT_PREREQ([2.2])
 LT_INIT
