@@ -659,21 +659,15 @@ gst_vaapi_decoder_get_surface(GstVaapiDecoder *decoder,
 
     do {
         frame = pop_frame(decoder);
-        if (frame)
-            break;
+        if (frame) {
+            *out_proxy_ptr = gst_vaapi_surface_proxy_ref(frame->user_data);
+            gst_video_codec_frame_unref(frame);
+            return GST_VAAPI_DECODER_STATUS_SUCCESS;
+        }
         status = decode_step(decoder);
     } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS);
 
-    if (frame) {
-        *out_proxy_ptr = gst_vaapi_surface_proxy_ref(frame->user_data);
-        gst_video_codec_frame_unref(frame);
-        status = GST_VAAPI_DECODER_STATUS_SUCCESS;
-    }
-    else {
-        *out_proxy_ptr = NULL;
-        if (status == GST_VAAPI_DECODER_STATUS_SUCCESS)
-            status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
-    }
+    *out_proxy_ptr = NULL;
     return status;
 }
 
