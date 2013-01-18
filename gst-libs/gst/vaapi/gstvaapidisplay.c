@@ -97,12 +97,14 @@ static gboolean
 set_color_balance(GstVaapiDisplay *display, guint prop_id, gfloat v);
 
 static void
-dump_version(void)
+libgstvaapi_init_once(void)
 {
     static gsize g_once = FALSE;
 
     if (!g_once_init_enter(&g_once))
         return;
+
+    GST_DEBUG_CATEGORY_INIT(gst_debug_vaapi, "vaapi", 0, "VA-API helper");
 
     /* Dump gstreamer-vaapi version for debugging purposes */
     GST_INFO("gstreamer-vaapi version %s", GST_VAAPI_VERSION_ID);
@@ -898,9 +900,7 @@ gst_vaapi_display_class_init(GstVaapiDisplayClass *klass)
     GObjectClass * const object_class = G_OBJECT_CLASS(klass);
     GstVaapiDisplayClass * const dpy_class = GST_VAAPI_DISPLAY_CLASS(klass);
 
-    GST_DEBUG_CATEGORY_INIT(gst_debug_vaapi, "vaapi", 0, "VA-API helper");
-
-    dump_version();
+    libgstvaapi_init_once();
 
     g_type_class_add_private(klass, sizeof(GstVaapiDisplayPrivate));
 
