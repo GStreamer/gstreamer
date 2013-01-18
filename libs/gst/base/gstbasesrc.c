@@ -2577,8 +2577,10 @@ gst_base_src_loop (GstPad * pad)
 
   /* check if we need to renegotiate */
   if (gst_pad_check_reconfigure (pad)) {
-    if (!gst_base_src_negotiate (src))
+    if (!gst_base_src_negotiate (src)) {
+      gst_pad_mark_reconfigure (pad);
       goto not_negotiated;
+    }
   }
 
   GST_LIVE_LOCK (src);
