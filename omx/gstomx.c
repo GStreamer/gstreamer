@@ -2387,7 +2387,14 @@ plugin_init (GstPlugin * plugin)
   config = g_key_file_new ();
   if (!g_key_file_load_from_dirs (config, *config_name,
           (const gchar **) config_dirs, NULL, G_KEY_FILE_NONE, &err)) {
-    GST_ERROR ("Failed to load configuration file: %s", err->message);
+    gchar *paths;
+
+    paths = g_strjoinv (":", config_dirs);
+    GST_ERROR ("Failed to load configuration file: %s (searched in: %s as per "
+        "GST_OMX_CONFIG_DIR environment variable, the xdg user config "
+        "directory (or XDG_CONFIG_HOME) and the system config directory "
+        "(or XDG_CONFIG_DIRS)", err->message, paths);
+    g_free (paths);
     g_error_free (err);
     goto done;
   }
