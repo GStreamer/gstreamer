@@ -50,6 +50,7 @@ struct _GstOSXImage;
     GstNavigation *navigation;
     NSRect drawingBounds;
     NSThread *mainThread;
+    NSUInteger savedModifierFlags;
 }
 - (void) drawQuad;
 - (void) drawRect: (NSRect) rect;
