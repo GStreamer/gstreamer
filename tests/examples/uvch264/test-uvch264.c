@@ -530,7 +530,7 @@ main (int argc, char *argv[])
         argv[0], device);
 
 
-  self.bin = gst_parse_launch ("uvch264_src name=src src.vidsrc ! queue ! "
+  self.bin = gst_parse_launch ("uvch264src name=src src.vidsrc ! queue ! "
       "capsfilter name=vid_cf ! identity name=identity ! decodebin ! "
       "xvimagesink name=h264_sink async=false "
       "src.vfsrc ! queue ! capsfilter name=vf_cf ! "

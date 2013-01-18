@@ -148,7 +148,7 @@ _setup_test (gboolean link_h264, gboolean link_yuy2, gboolean link_nv12,
   have_h264_eos = have_yuy2_eos = have_nv12_eos = have_jpg_eos = FALSE;
   buffer_h264 = buffer_yuy2 = buffer_nv12 = buffer_jpg = NULL;
 
-  demux = gst_element_factory_make ("uvch264_mjpgdemux", NULL);
+  demux = gst_element_factory_make ("uvch264mjpgdemux", NULL);
   fail_unless (demux != NULL);
 
   gst_element_set_bus (demux, bus);

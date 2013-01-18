@@ -265,7 +265,7 @@ gst_uvc_h264_src_class_init (GstUvcH264SrcClass * klass)
   gstbasecamerasrc_class->start_capture = gst_uvc_h264_src_start_capture;
   gstbasecamerasrc_class->stop_capture = gst_uvc_h264_src_stop_capture;
 
-  GST_DEBUG_CATEGORY_INIT (uvc_h264_src_debug, "uvch264_src",
+  GST_DEBUG_CATEGORY_INIT (uvc_h264_src_debug, "uvch264src",
       0, "UVC H264 Compliant camera bin source");
 
   gst_element_class_set_static_metadata (gstelement_class,
@@ -2753,7 +2753,7 @@ gst_uvc_h264_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
       break;
     case H264_JPG:
       GST_DEBUG_OBJECT (self, "H264+JPG");
-      self->mjpg_demux = gst_element_factory_make ("uvch264_mjpgdemux", NULL);
+      self->mjpg_demux = gst_element_factory_make ("uvch264mjpgdemux", NULL);
       if (!self->mjpg_demux || !gst_bin_add (GST_BIN (self), self->mjpg_demux))
         goto error_remove;
       gst_object_ref (self->mjpg_demux);
@@ -2767,7 +2767,7 @@ gst_uvc_h264_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
       break;
     case H264_RAW:
       GST_DEBUG_OBJECT (self, "H264+Raw");
-      self->mjpg_demux = gst_element_factory_make ("uvch264_mjpgdemux", NULL);
+      self->mjpg_demux = gst_element_factory_make ("uvch264mjpgdemux", NULL);
       self->vf_colorspace = gst_element_factory_make (self->colorspace_name,
           NULL);
       if (!self->mjpg_demux || !self->vf_colorspace)
@@ -2794,7 +2794,7 @@ gst_uvc_h264_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
       break;
     case H264_JPG2RAW:
       GST_DEBUG_OBJECT (self, "H264+Raw(jpegdec)");
-      self->mjpg_demux = gst_element_factory_make ("uvch264_mjpgdemux", NULL);
+      self->mjpg_demux = gst_element_factory_make ("uvch264mjpgdemux", NULL);
       self->jpeg_dec = gst_element_factory_make (self->jpeg_decoder_name, NULL);
       self->vf_colorspace = gst_element_factory_make (self->colorspace_name,
           NULL);

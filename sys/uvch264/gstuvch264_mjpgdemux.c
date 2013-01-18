@@ -22,7 +22,7 @@
  */
 
 /**
- * SECTION:element-uvch264-mjpgdemux
+ * SECTION:element-uvch264mjpgdemux
  * @short_description: UVC H264 compliant MJPG demuxer
  *
  * Parses a MJPG stream from a UVC H264 compliant encoding camera and extracts
@@ -221,7 +221,7 @@ gst_uvc_h264_mjpg_demux_class_init (GstUvcH264MjpgDemuxClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (uvc_h264_mjpg_demux_debug,
-      "uvch264_mjpgdemux", 0, "UVC H264 MJPG Demuxer");
+      "uvch264mjpgdemux", 0, "UVC H264 MJPG Demuxer");
 }
 
 static void

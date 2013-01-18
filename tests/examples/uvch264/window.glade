@@ -3,7 +3,7 @@
   <!-- interface-requires gtk+ 3.0 -->
   <object class="GtkWindow" id="window">
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">Test for uvch264_src</property>
+    <property name="title" translatable="yes">Test for uvch264src</property>
     <signal name="destroy" handler="on_window_destroyed" swapped="no"/>
     <child>
       <object class="GtkHBox" id="hbox1">
