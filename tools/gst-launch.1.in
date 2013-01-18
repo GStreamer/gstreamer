@@ -77,7 +77,9 @@ for each category. Level is in the range 0-9 where 0 will show no messages, and
 Note that the order of categories and levels is important, wildcards at the
 end may override levels set earlier. The log levels are: 1=ERROR, 2=WARNING,
 3=FIXME, 4=INFO, 5=DEBUG, 6=LOG, 7=TRACE, 9=MEMDUMP. Since GStreamer 1.2 one
-can also use the debug level names, e.g. \-\-gst\-debug=*sink:LOG
+can also use the debug level names, e.g. \-\-gst\-debug=*sink:LOG. A full
+description of the various debug levels can be found in the GStreamer core
+library API documentation, in the "Running GStreamer Applications" section.
 
 Use \-\-gst\-debug\-help to show category names
 
@@ -90,7 +92,7 @@ Sets the threshold for printing debugging messages.  A higher level
 will print more messages.  The useful range is 0-9, with the default
 being 0. Level 6 (LOG level) will show all information that is usually
 required for debugging purposes. Higher levels are only useful in very
-specific cases.
+specific cases. See above for the full list of levels.
 .TP 8
 .B  \-\-gst\-debug\-no\-color
 \fIGStreamer\fP normally prints debugging messages so that the
