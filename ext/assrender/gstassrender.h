@@ -76,6 +76,7 @@ struct _GstAssRender
   ASS_Track *ass_track;
 
   gboolean renderer_init_ok, track_init_ok;
+  gboolean need_process;
 };
 
 struct _GstAssRenderClass

@@ -1012,7 +1012,6 @@ wait_for_text_buf:
   if (render->renderer_init_ok && render->track_init_ok && render->enable) {
     /* Text pad linked, check if we have a text buffer queued */
     if (render->subtitle_pending) {
-      gboolean valid_text_time = TRUE;
       GstClockTime text_start = GST_CLOCK_TIME_NONE;
       GstClockTime text_end = GST_CLOCK_TIME_NONE;
       GstClockTime text_running_time = GST_CLOCK_TIME_NONE;
@@ -1026,11 +1025,13 @@ wait_for_text_buf:
           !GST_BUFFER_DURATION_IS_VALID (render->subtitle_pending)) {
         GST_WARNING_OBJECT (render,
             "Got text buffer with invalid timestamp or duration");
-        valid_text_time = FALSE;
-      } else {
-        text_start = GST_BUFFER_TIMESTAMP (render->subtitle_pending);
-        text_end = text_start + GST_BUFFER_DURATION (render->subtitle_pending);
+        gst_ass_render_pop_text (render);
+        GST_ASS_RENDER_UNLOCK (render);
+        goto wait_for_text_buf;
       }
+
+      text_start = GST_BUFFER_TIMESTAMP (render->subtitle_pending);
+      text_end = text_start + GST_BUFFER_DURATION (render->subtitle_pending);
 
       vid_running_time =
           gst_segment_to_running_time (&render->video_segment, GST_FORMAT_TIME,
@@ -1040,14 +1041,12 @@ wait_for_text_buf:
           stop);
 
       /* If timestamp and duration are valid */
-      if (valid_text_time) {
-        text_running_time =
-            gst_segment_to_running_time (&render->video_segment,
-            GST_FORMAT_TIME, text_start);
-        text_running_time_end =
-            gst_segment_to_running_time (&render->video_segment,
-            GST_FORMAT_TIME, text_end);
-      }
+      text_running_time =
+          gst_segment_to_running_time (&render->video_segment,
+          GST_FORMAT_TIME, text_start);
+      text_running_time_end =
+          gst_segment_to_running_time (&render->video_segment,
+          GST_FORMAT_TIME, text_end);
 
       GST_LOG_OBJECT (render, "T: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
           GST_TIME_ARGS (text_running_time),
@@ -1057,17 +1056,18 @@ wait_for_text_buf:
           GST_TIME_ARGS (vid_running_time_end));
 
       /* Text too old */
-      if (valid_text_time && text_running_time_end <= vid_running_time) {
+      if (text_running_time_end <= vid_running_time) {
         GST_DEBUG_OBJECT (render, "text buffer too old, popping");
         gst_ass_render_pop_text (render);
         GST_ASS_RENDER_UNLOCK (render);
         goto wait_for_text_buf;
       }
 
-      if (!valid_text_time || vid_running_time_end > text_running_time) {
+      if (render->need_process) {
+        GST_DEBUG_OBJECT (render, "process text buffer");
         gst_ass_render_process_text (render, render->subtitle_pending,
             text_running_time, text_running_time_end - text_running_time);
-        gst_ass_render_pop_text (render);
+        render->need_process = FALSE;
       }
 
       GST_ASS_RENDER_UNLOCK (render);
@@ -1095,7 +1095,7 @@ wait_for_text_buf:
       /* Push the video frame */
       ret = gst_pad_push (render->srcpad, buffer);
 
-      if (valid_text_time && text_running_time_end <= vid_running_time_end) {
+      if (text_running_time_end <= vid_running_time_end) {
         GST_ASS_RENDER_LOCK (render);
         gst_ass_render_pop_text (render);
         GST_ASS_RENDER_UNLOCK (render);
@@ -1258,6 +1258,7 @@ gst_ass_render_chain_text (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         "New buffer arrived for timestamp %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
     render->subtitle_pending = gst_buffer_ref (buffer);
+    render->need_process = TRUE;
 
     /* in case the video chain is waiting for a text buffer, wake it up */
     GST_ASS_RENDER_BROADCAST (render);
