@@ -1407,9 +1407,10 @@ gst_pad_check_reconfigure (GstPad * pad)
 
   GST_OBJECT_LOCK (pad);
   reconfigure = GST_PAD_NEEDS_RECONFIGURE (pad);
-  if (reconfigure)
+  if (reconfigure) {
     GST_DEBUG_OBJECT (pad, "remove RECONFIGURE flag");
-  GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
+  }
   GST_OBJECT_UNLOCK (pad);
 
   return reconfigure;
