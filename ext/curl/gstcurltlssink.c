@@ -236,9 +236,8 @@ gst_curl_tls_sink_set_options_unlocked (GstCurlBaseSink * bcsink)
 {
   GstCurlTlsSink *sink = GST_CURL_TLS_SINK (bcsink);
 
-  if (!g_str_has_prefix (bcsink->url, "http")) {
-    curl_easy_setopt (bcsink->curl, CURLOPT_USE_SSL, 1L);
-  }
+  if (!g_str_has_prefix (bcsink->url, "http"))
+    curl_easy_setopt (bcsink->curl, CURLOPT_USE_SSL, CURLUSESSL_ALL);
 
   /* crypto engine */
   if ((g_strcmp0 (sink->crypto_engine, "auto") == 0) ||
