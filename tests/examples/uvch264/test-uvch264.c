@@ -1,7 +1,6 @@
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
-#include <gst/interfaces/xoverlay.h>
 #include <gst/video/video.h>
 
 #define WINDOW_GLADE "window.glade"
@@ -247,8 +246,7 @@ set_caps (Main * self, gboolean send_event)
 
   if (send_event) {
     gst_element_send_event (GST_ELEMENT (self->src),
-        gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
-            gst_structure_new ("renegotiate", NULL)));
+        gst_event_new_reconfigure ());
   }
 
 end:
@@ -357,12 +355,14 @@ _bus_callback (GstBus * bus, GstMessage * message, gpointer user_data)
   GstObject *source = NULL;
 
   if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT &&
-      gst_structure_has_name (s, "prepare-xwindow-id")) {
+      gst_structure_has_name (s, "prepare-window-handle")) {
     source = GST_MESSAGE_SRC (message);
     if (!g_strcmp0 (gst_object_get_name (source), "h264_sink"))
-      gst_x_overlay_set_window_handle (GST_X_OVERLAY (source), h264_xid);
+      gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (source),
+          h264_xid);
     else
-      gst_x_overlay_set_window_handle (GST_X_OVERLAY (source), preview_xid);
+      gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (source),
+          preview_xid);
   }
 
   return TRUE;
@@ -531,7 +531,7 @@ main (int argc, char *argv[])
 
 
   self.bin = gst_parse_launch ("uvch264_src name=src src.vidsrc ! queue ! "
-      "capsfilter name=vid_cf ! identity name=identity ! ffdec_h264 ! "
+      "capsfilter name=vid_cf ! identity name=identity ! decodebin ! "
       "xvimagesink name=h264_sink async=false "
       "src.vfsrc ! queue ! capsfilter name=vf_cf ! "
       "xvimagesink name=preview_sink async=false", NULL);

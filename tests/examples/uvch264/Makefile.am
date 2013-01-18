@@ -20,7 +20,6 @@ test_uvch264_LDADD   = \
         $(GST_PLUGINS_BASE_LIBS) \
 	$(GST_VIDEO_LIBS) \
         $(GST_LIBS) \
-        -lgstinterfaces-@GST_MAJORMINOR@ \
 	$(GTK_LIBS) \
 	$(GMODULE_EXPORT_LIBS)
 

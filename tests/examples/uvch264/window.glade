@@ -307,7 +307,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">●</property>
-                <property name="text" translatable="yes">video/x-raw-yuv,width=320,height=240,format=(fourcc)YUY2,framerate=15/1</property>
+                <property name="text" translatable="yes">video/x-raw,width=320,height=240,format=(fourcc)YUY2,framerate=15/1</property>
               </object>
               <packing>
                 <property name="expand">False</property>
