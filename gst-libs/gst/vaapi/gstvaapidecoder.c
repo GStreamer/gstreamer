@@ -275,67 +275,72 @@ decode_step(GstVaapiDecoder *decoder)
     GstVaapiDecoderStatus status;
     GstBuffer *buffer;
     gboolean got_frame;
-    guint got_unit_size;
-
-    if (G_UNLIKELY(ps->at_eos))
-        return GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
+    guint got_unit_size, input_size;
 
     status = gst_vaapi_decoder_check_status(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
-    if (ps->current_frame)
-        goto parse;
-
-    do {
+    /* Fill adapter with all buffers we have in the queue */
+    for (;;) {
         buffer = pop_buffer(decoder);
         if (!buffer)
-            return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+            break;
 
         ps->at_eos = GST_BUFFER_IS_EOS(buffer);
         if (!ps->at_eos)
             gst_adapter_push(ps->input_adapter, buffer);
+    }
 
-        do {
-            if (!ps->current_frame) {
-                ps->current_frame = g_slice_new0(GstVideoCodecFrame);
-                if (!ps->current_frame)
-                    return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-                ps->current_frame->ref_count = 1;
+    /* Parse and decode all decode units */
+    input_size = gst_adapter_available(ps->input_adapter);
+    if (input_size == 0) {
+        if (ps->at_eos)
+            return GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
+        return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+    }
+
+    do {
+        if (!ps->current_frame) {
+            ps->current_frame = g_slice_new0(GstVideoCodecFrame);
+            if (!ps->current_frame)
+                return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+            ps->current_frame->ref_count = 1;
+        }
+
+        status = do_parse(decoder, ps->current_frame, ps->input_adapter,
+            ps->at_eos, &got_unit_size, &got_frame);
+        GST_DEBUG("parse frame (status = %d)", status);
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
+            if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA && ps->at_eos)
+                status = GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
+            break;
+        }
+
+        if (got_unit_size > 0) {
+            buffer = gst_adapter_take_buffer(ps->input_adapter, got_unit_size);
+            input_size -= got_unit_size;
+
+            if (gst_adapter_available(ps->output_adapter) == 0) {
+                ps->current_frame->pts =
+                    gst_adapter_prev_timestamp(ps->input_adapter, NULL);
             }
+            gst_adapter_push(ps->output_adapter, buffer);
+        }
 
-        parse:
-            status = do_parse(decoder, ps->current_frame,
-                ps->input_adapter, ps->at_eos, &got_unit_size, &got_frame);
-            GST_DEBUG("parse frame (status = %d)", status);
-            if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-                break;
+        if (got_frame) {
+            ps->current_frame->input_buffer = gst_adapter_take_buffer(
+                ps->output_adapter,
+                gst_adapter_available(ps->output_adapter));
 
-            if (got_unit_size > 0) {
-                buffer = gst_adapter_take_buffer(ps->input_adapter,
-                    got_unit_size);
-                if (gst_adapter_available(ps->output_adapter) == 0) {
-                    ps->current_frame->pts =
-                        gst_adapter_prev_timestamp(ps->input_adapter, NULL);
-                }
-                gst_adapter_push(ps->output_adapter, buffer);
-            }
+            status = do_decode(decoder, ps->current_frame);
+            GST_DEBUG("decode frame (status = %d)", status);
 
-            if (got_frame) {
-                ps->current_frame->input_buffer = gst_adapter_take_buffer(
-                    ps->output_adapter,
-                    gst_adapter_available(ps->output_adapter));
-
-                status = do_decode(decoder, ps->current_frame);
-                GST_DEBUG("decode frame (status = %d)", status);
-
-                gst_video_codec_frame_unref(ps->current_frame);
-                ps->current_frame = NULL;
-                break;
-            }
-        } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS &&
-                 gst_adapter_available(ps->input_adapter) > 0);
-    } while (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA);
+            gst_video_codec_frame_unref(ps->current_frame);
+            ps->current_frame = NULL;
+            break;
+        }
+    } while (input_size > 0);
     return status;
 }
 
