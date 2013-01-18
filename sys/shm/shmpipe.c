@@ -280,6 +280,7 @@ sp_open_shm (char *path, int id, mode_t perms, size_t size)
 
   memset (area, 0, sizeof (ShmArea));
 
+  area->shm_area_buf = MAP_FAILED;
   area->use_count = 1;
 
   area->shm_area_len = size;
