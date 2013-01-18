@@ -44,7 +44,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstAssRender GstAssRender;
 typedef struct _GstAssRenderClass GstAssRenderClass;
-typedef void (*GstAssRenderBlitFunction) (GstAssRender *render, ASS_Image *ass_image, GstVideoFrame *frame);
 
 struct _GstAssRender
 {
@@ -65,7 +64,6 @@ struct _GstAssRender
   gboolean video_eos;
 
   GstVideoInfo info;
-  GstAssRenderBlitFunction blit;
 
   GstBuffer *subtitle_pending;
   gboolean subtitle_flushing;

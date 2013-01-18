@@ -63,7 +63,12 @@ enum
   PROP_WAIT_TEXT
 };
 
-#define FORMATS "{ RGB, BGR, xRGB, xBGR, RGBx, BGRx, I420 }"
+/* FIXME: video-blend.c doesn't support formats with more than 8 bit per
+ * component (which get unpacked into ARGB64 or AYUV64) yet, such as:
+ *  v210, v216, UYVP, GRAY16_LE, GRAY16_BE */
+#define FORMATS "{ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, \
+    I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, \
+    NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }"
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -522,279 +527,6 @@ gst_ass_render_getcaps (GstPad * pad, GstCaps * filter)
   return caps;
 }
 
-#define CREATE_RGB_BLIT_FUNCTION(name,bpp,R,G,B) \
-static void \
-blit_##name (GstAssRender * render, ASS_Image * ass_image, GstVideoFrame * frame) \
-{ \
-  guint counter = 0; \
-  gint alpha, r, g, b, k; \
-  const guint8 *src; \
-  guint8 *dst, *data; \
-  gint x, y, w, h; \
-  gint width; \
-  gint height; \
-  gint dst_stride; \
-  gint dst_skip; \
-  gint src_skip; \
-  \
-  width = GST_VIDEO_FRAME_WIDTH (frame); \
-  height = GST_VIDEO_FRAME_HEIGHT (frame); \
-  dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0); \
-  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0); \
-  \
-  while (ass_image) { \
-    if (ass_image->dst_y > height || ass_image->dst_x > width) \
-      goto next; \
-    \
-    /* blend subtitles onto the video frame */ \
-    alpha = 255 - ((ass_image->color) & 0xff); \
-    r = ((ass_image->color) >> 24) & 0xff; \
-    g = ((ass_image->color) >> 16) & 0xff; \
-    b = ((ass_image->color) >> 8) & 0xff; \
-    src = ass_image->bitmap; \
-    dst = data + ass_image->dst_y * dst_stride + ass_image->dst_x * bpp; \
-    \
-    w = MIN (ass_image->w, width - ass_image->dst_x); \
-    h = MIN (ass_image->h, height - ass_image->dst_y); \
-    src_skip = ass_image->stride - w; \
-    dst_skip = dst_stride - w * bpp; \
-    \
-    for (y = 0; y < h; y++) { \
-      for (x = 0; x < w; x++) { \
-        k = src[0] * alpha / 255; \
-        dst[R] = (k * r + (255 - k) * dst[R]) / 255; \
-        dst[G] = (k * g + (255 - k) * dst[G]) / 255; \
-        dst[B] = (k * b + (255 - k) * dst[B]) / 255; \
-	src++; \
-	dst += bpp; \
-      } \
-      src += src_skip; \
-      dst += dst_skip; \
-    } \
-next: \
-    counter++; \
-    ass_image = ass_image->next; \
-  } \
-  GST_LOG_OBJECT (render, "amount of rendered ass_image: %u", counter); \
-}
-
-CREATE_RGB_BLIT_FUNCTION (rgb, 3, 0, 1, 2);
-CREATE_RGB_BLIT_FUNCTION (bgr, 3, 2, 1, 0);
-CREATE_RGB_BLIT_FUNCTION (xrgb, 4, 1, 2, 3);
-CREATE_RGB_BLIT_FUNCTION (xbgr, 4, 3, 2, 1);
-CREATE_RGB_BLIT_FUNCTION (rgbx, 4, 0, 1, 2);
-CREATE_RGB_BLIT_FUNCTION (bgrx, 4, 2, 1, 0);
-
-#undef CREATE_RGB_BLIT_FUNCTION
-
-static inline gint
-rgb_to_y (gint r, gint g, gint b)
-{
-  gint ret;
-
-  ret = (gint) (((19595 * r) >> 16) + ((38470 * g) >> 16) + ((7471 * b) >> 16));
-  ret = CLAMP (ret, 0, 255);
-  return ret;
-}
-
-static inline gint
-rgb_to_u (gint r, gint g, gint b)
-{
-  gint ret;
-
-  ret =
-      (gint) (-((11059 * r) >> 16) - ((21709 * g) >> 16) + ((32768 * b) >> 16) +
-      128);
-  ret = CLAMP (ret, 0, 255);
-  return ret;
-}
-
-static inline gint
-rgb_to_v (gint r, gint g, gint b)
-{
-  gint ret;
-
-  ret =
-      (gint) (((32768 * r) >> 16) - ((27439 * g) >> 16) - ((5329 * b) >> 16) +
-      128);
-  ret = CLAMP (ret, 0, 255);
-  return ret;
-}
-
-static void
-blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstVideoFrame * frame)
-{
-  guint counter = 0;
-  gint alpha, r, g, b, k, k2;
-  gint Y, U, V;
-  const guint8 *src;
-  guint8 *dst_y, *dst_u, *dst_v;
-  gint x, y, w, h;
-/* FIXME ignoring source image stride might be wrong here */
-#if 0
-  gint w2;
-  gint src_stride;
-#endif
-  gint width, height;
-  guint8 *y_data, *u_data, *v_data;
-  gint y_stride, u_stride, v_stride;
-
-  width = GST_VIDEO_FRAME_WIDTH (frame);
-  height = GST_VIDEO_FRAME_HEIGHT (frame);
-
-  y_data = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
-  u_data = GST_VIDEO_FRAME_COMP_DATA (frame, 1);
-  v_data = GST_VIDEO_FRAME_COMP_DATA (frame, 2);
-
-  y_stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
-  u_stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 1);
-  v_stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 2);
-
-  while (ass_image) {
-    if (ass_image->dst_y > height || ass_image->dst_x > width)
-      goto next;
-
-    /* blend subtitles onto the video frame */
-    alpha = 255 - ((ass_image->color) & 0xff);
-    r = ((ass_image->color) >> 24) & 0xff;
-    g = ((ass_image->color) >> 16) & 0xff;
-    b = ((ass_image->color) >> 8) & 0xff;
-
-    Y = rgb_to_y (r, g, b);
-    U = rgb_to_u (r, g, b);
-    V = rgb_to_v (r, g, b);
-
-    w = MIN (ass_image->w, width - ass_image->dst_x);
-    h = MIN (ass_image->h, height - ass_image->dst_y);
-
-#if 0
-    w2 = (w + 1) / 2;
-
-    src_stride = ass_image->stride;
-#endif
-
-    src = ass_image->bitmap;
-#if 0
-    dst_y = y_data + ass_image->dst_y * y_stride + ass_image->dst_x;
-    dst_u = u_data + (ass_image->dst_y / 2) * u_stride + ass_image->dst_x / 2;
-    dst_v = v_data + (ass_image->dst_y / 2) * v_stride + ass_image->dst_x / 2;
-#endif
-
-    for (y = 0; y < h; y++) {
-      dst_y = y_data + (ass_image->dst_y + y) * y_stride + ass_image->dst_x;
-      for (x = 0; x < w; x++) {
-        k = src[y * ass_image->w + x] * alpha / 255;
-        dst_y[x] = (k * Y + (255 - k) * dst_y[x]) / 255;
-      }
-    }
-
-    y = 0;
-    if (ass_image->dst_y & 1) {
-      dst_u = u_data + (ass_image->dst_y / 2) * u_stride + ass_image->dst_x / 2;
-      dst_v = v_data + (ass_image->dst_y / 2) * v_stride + ass_image->dst_x / 2;
-      x = 0;
-      if (ass_image->dst_x & 1) {
-        k2 = src[y * ass_image->w + x] * alpha / 255;
-        k2 = (k2 + 2) >> 2;
-        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
-        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
-        x++;
-        dst_u++;
-        dst_v++;
-      }
-      for (; x < w - 1; x += 2) {
-        k2 = src[y * ass_image->w + x] * alpha / 255;
-        k2 += src[y * ass_image->w + x + 1] * alpha / 255;
-        k2 = (k2 + 2) >> 2;
-        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
-        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
-        dst_u++;
-        dst_v++;
-      }
-      if (x < w) {
-        k2 = src[y * ass_image->w + x] * alpha / 255;
-        k2 = (k2 + 2) >> 2;
-        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
-        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
-      }
-    }
-
-    for (; y < h - 1; y += 2) {
-      dst_u = u_data + ((ass_image->dst_y + y) / 2) * u_stride +
-          ass_image->dst_x / 2;
-      dst_v = v_data + ((ass_image->dst_y + y) / 2) * v_stride +
-          ass_image->dst_x / 2;
-      x = 0;
-      if (ass_image->dst_x & 1) {
-        k2 = src[y * ass_image->w + x] * alpha / 255;
-        k2 += src[(y + 1) * ass_image->w + x] * alpha / 255;
-        k2 = (k2 + 2) >> 2;
-        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
-        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
-        x++;
-        dst_u++;
-        dst_v++;
-      }
-      for (; x < w - 1; x += 2) {
-        k2 = src[y * ass_image->w + x] * alpha / 255;
-        k2 += src[y * ass_image->w + x + 1] * alpha / 255;
-        k2 += src[(y + 1) * ass_image->w + x] * alpha / 255;
-        k2 += src[(y + 1) * ass_image->w + x + 1] * alpha / 255;
-        k2 = (k2 + 2) >> 2;
-        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
-        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
-        dst_u++;
-        dst_v++;
-      }
-      if (x < w) {
-        k2 = src[y * ass_image->w + x] * alpha / 255;
-        k2 += src[(y + 1) * ass_image->w + x] * alpha / 255;
-        k2 = (k2 + 2) >> 2;
-        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
-        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
-      }
-    }
-
-    if (y < h) {
-      dst_u = u_data + (ass_image->dst_y / 2) * u_stride + ass_image->dst_x / 2;
-      dst_v = v_data + (ass_image->dst_y / 2) * v_stride + ass_image->dst_x / 2;
-      x = 0;
-      if (ass_image->dst_x & 1) {
-        k2 = src[y * ass_image->w + x] * alpha / 255;
-        k2 = (k2 + 2) >> 2;
-        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
-        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
-        x++;
-        dst_u++;
-        dst_v++;
-      }
-      for (; x < w - 1; x += 2) {
-        k2 = src[y * ass_image->w + x] * alpha / 255;
-        k2 += src[y * ass_image->w + x + 1] * alpha / 255;
-        k2 = (k2 + 2) >> 2;
-        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
-        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
-        dst_u++;
-        dst_v++;
-      }
-      if (x < w) {
-        k2 = src[y * ass_image->w + x] * alpha / 255;
-        k2 = (k2 + 2) >> 2;
-        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
-        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
-      }
-    }
-
-
-
-  next:
-    counter++;
-    ass_image = ass_image->next;
-  }
-
-  GST_LOG_OBJECT (render, "amount of rendered ass_image: %u", counter);
-}
-
 static void
 blit_bgra_premultiplied (GstAssRender * render, ASS_Image * ass_image,
     guint8 * data, gint width, gint height, gint stride, gint x_off, gint y_off)
@@ -875,33 +607,6 @@ gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
   ret = gst_pad_set_caps (render->srcpad, caps);
   if (!ret)
     goto out;
-
-  switch (GST_VIDEO_INFO_FORMAT (&info)) {
-    case GST_VIDEO_FORMAT_RGB:
-      render->blit = blit_rgb;
-      break;
-    case GST_VIDEO_FORMAT_BGR:
-      render->blit = blit_bgr;
-      break;
-    case GST_VIDEO_FORMAT_xRGB:
-      render->blit = blit_xrgb;
-      break;
-    case GST_VIDEO_FORMAT_xBGR:
-      render->blit = blit_xbgr;
-      break;
-    case GST_VIDEO_FORMAT_RGBx:
-      render->blit = blit_rgbx;
-      break;
-    case GST_VIDEO_FORMAT_BGRx:
-      render->blit = blit_bgrx;
-      break;
-    case GST_VIDEO_FORMAT_I420:
-      render->blit = blit_i420;
-      break;
-    default:
-      ret = FALSE;
-      goto out;
-  }
 
   render->width = info.width;
   render->height = info.height;
@@ -1252,20 +957,22 @@ wait_for_text_buf:
       }
 
       if (ass_image != NULL) {
-        GstVideoFrame frame;
+        if (!render->composition)
+          render->composition = gst_ass_render_composite_overlay (render,
+              ass_image);
 
-        buffer = gst_buffer_make_writable (buffer);
-        if (render->attach_compo_to_buffer) {
-          if (!render->composition)
-            render->composition = gst_ass_render_composite_overlay (render,
-                ass_image);
-          if (render->composition)
+        if (render->composition) {
+          buffer = gst_buffer_make_writable (buffer);
+          if (render->attach_compo_to_buffer) {
             gst_buffer_add_video_overlay_composition_meta (buffer,
                 render->composition);
-        } else {
-          gst_video_frame_map (&frame, &render->info, buffer, GST_MAP_WRITE);
-          render->blit (render, ass_image, &frame);
-          gst_video_frame_unmap (&frame);
+          } else {
+            GstVideoFrame frame;
+
+            gst_video_frame_map (&frame, &render->info, buffer, GST_MAP_WRITE);
+            gst_video_overlay_composition_blend (render->composition, &frame);
+            gst_video_frame_unmap (&frame);
+          }
         }
       } else {
         GST_DEBUG_OBJECT (render, "nothing to render right now");
