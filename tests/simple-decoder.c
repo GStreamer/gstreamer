@@ -233,7 +233,7 @@ decoder_thread(gpointer data)
     RenderFrame *rfp;
     GstBuffer *buffer;
     GstClockTime pts;
-    gboolean got_surface;
+    gboolean got_surface, got_eos = FALSE;
     gint64 end_time;
     guint ofs;
 
@@ -282,7 +282,11 @@ decoder_thread(gpointer data)
             /* nothing to do, just continue to the next iteration */
             break;
         case GST_VAAPI_DECODER_STATUS_END_OF_STREAM:
-            goto send_eos;
+            gst_vaapi_decoder_flush(app->decoder);
+            if (got_eos)
+                goto send_eos;
+            got_eos = TRUE;
+            break;
         case GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE:
             end_time = g_get_monotonic_time() + G_TIME_SPAN_SECOND;
             g_mutex_lock(&app->mutex);
