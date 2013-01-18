@@ -196,8 +196,9 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
   GstOMXMessage *msg;
 
   g_mutex_lock (&comp->messages_lock);
-
   while ((msg = g_queue_pop_head (&comp->messages))) {
+    g_mutex_unlock (&comp->messages_lock);
+
     switch (msg->type) {
       case GST_OMX_MESSAGE_STATE_SET:{
         GST_DEBUG_OBJECT (comp->parent, "State change to %d finished",
@@ -349,6 +350,8 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
     }
 
     g_slice_free (GstOMXMessage, msg);
+
+    g_mutex_lock (&comp->messages_lock);
   }
 
   g_mutex_unlock (&comp->messages_lock);
