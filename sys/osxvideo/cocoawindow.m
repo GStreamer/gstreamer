@@ -36,8 +36,295 @@
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
 
+#include <Carbon/Carbon.h>
+
 /* Debugging category */
 #include <gst/gstinfo.h>
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= 1040
+#define kVK_ANSI_Keypad0 0x52
+#define kVK_ANSI_Keypad1 0x53
+#define kVK_ANSI_Keypad2 0x54
+#define kVK_ANSI_Keypad3 0x55
+#define kVK_ANSI_Keypad4 0x56
+#define kVK_ANSI_Keypad5 0x57
+#define kVK_ANSI_Keypad6 0x58
+#define kVK_ANSI_Keypad7 0x59
+#define kVK_ANSI_Keypad8 0x5b
+#define kVK_ANSI_Keypad9 0x5c
+#define kVK_ANSI_KeypadDecimal 0x41
+#define kVK_ANSI_KeypadDivide 0x4b
+#define kVK_ANSI_KeypadEnter 0x4c
+#define kVK_ANSI_KeypadMinus 0x4e
+#define kVK_ANSI_KeypadMultiply 0x43
+#define kVK_ANSI_KeypadPlus 0x45
+#define kVK_Control 0x3b
+#define kVK_Delete 0x33
+#define kVK_DownArrow 0x7d
+#define kVK_End 0x77
+#define kVK_Escape 0x35
+#define kVK_F1 0x7a
+#define kVK_F10 0x6d
+#define kVK_F11 0x67
+#define kVK_F12 0x6f
+#define kVK_F2 0x78
+#define kVK_F3 0x63
+#define kVK_F4 0x76
+#define kVK_F5 0x60
+#define kVK_F6 0x61
+#define kVK_F7 0x62
+#define kVK_F8 0x64
+#define kVK_F9 0x65
+#define kVK_ForwardDelete 0x75
+#define kVK_Help 0x72
+#define kVK_Home 0x73
+#define kVK_LeftArrow 0x7b
+#define kVK_Option 0x3a
+#define kVK_PageDown 0x79
+#define kVK_PageUp 0x74
+#define kVK_Return 0x24
+#define kVK_RightArrow 0x7c
+#define kVK_Shift 0x38
+#define kVK_Tab 0x30
+#define kVK_UpArrow 0x7e
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED <= 1040 */
+
+static
+const gchar* gst_keycode_to_keyname(gint16 keycode)
+{
+    switch (keycode)
+    {
+      case kVK_ANSI_A:
+        return "a";
+      case kVK_ANSI_S:
+        return "s";
+      case kVK_ANSI_D:
+        return "d";
+      case kVK_ANSI_F:
+        return "f";
+      case kVK_ANSI_H:
+        return "h";
+      case kVK_ANSI_G:
+        return "g";
+      case kVK_ANSI_Z:
+        return "z";
+      case kVK_ANSI_X:
+        return "x";
+      case kVK_ANSI_C:
+        return "c";
+      case kVK_ANSI_V:
+        return "v";
+      case kVK_ANSI_B:
+        return "b";
+      case kVK_ANSI_Q:
+        return "q";
+      case kVK_ANSI_W:
+        return "w";
+      case kVK_ANSI_E:
+        return "e";
+      case kVK_ANSI_R:
+        return "r";
+      case kVK_ANSI_Y:
+        return "y";
+      case kVK_ANSI_T:
+        return "t";
+      case kVK_ANSI_1:
+        return "1";
+      case kVK_ANSI_2:
+        return "2";
+      case kVK_ANSI_3:
+        return "3";
+      case kVK_ANSI_4:
+        return "4";
+      case kVK_ANSI_6:
+        return "6";
+      case kVK_ANSI_5:
+        return "5";
+      case kVK_ANSI_Equal:
+        return "equal";
+      case kVK_ANSI_9:
+        return "9";
+      case kVK_ANSI_7:
+        return "7";
+      case kVK_ANSI_Minus:
+        return "minus";
+      case kVK_ANSI_8:
+        return "8";
+      case kVK_ANSI_0:
+        return "0";
+      case kVK_ANSI_RightBracket:
+        return "bracketright";
+      case kVK_ANSI_O:
+        return "0";
+      case kVK_ANSI_U:
+        return "u";
+      case kVK_ANSI_LeftBracket:
+        return "bracketleft";
+      case kVK_ANSI_I:
+        return "i";
+      case kVK_ANSI_P:
+        return "p";
+      case kVK_ANSI_L:
+        return "l";
+      case kVK_ANSI_J:
+        return "j";
+      case kVK_ANSI_Quote:
+        return "apostrophe";
+      case kVK_ANSI_K:
+        return "k";
+      case kVK_ANSI_Semicolon:
+        return "semicolon";
+      case kVK_ANSI_Backslash:
+        return "backslash";
+      case kVK_ANSI_Comma:
+        return "comma";
+      case kVK_ANSI_Slash:
+        return "slash";
+      case kVK_ANSI_N:
+        return "n";
+      case kVK_ANSI_M:
+        return "m";
+      case kVK_ANSI_Period:
+        return "period";
+      case kVK_ANSI_Grave:
+        return "grave";
+      case kVK_ANSI_KeypadDecimal:
+        return "KP_Delete";
+      case kVK_ANSI_KeypadMultiply:
+        return "KP_Multiply";
+      case kVK_ANSI_KeypadPlus:
+        return "KP_Add";
+      case kVK_ANSI_KeypadClear:
+        return "KP_Clear";
+      case kVK_ANSI_KeypadDivide:
+        return "KP_Divide";
+      case kVK_ANSI_KeypadEnter:
+        return "KP_Enter";
+      case kVK_ANSI_KeypadMinus:
+        return "KP_Subtract";
+      case kVK_ANSI_KeypadEquals:
+        return "KP_Equals";
+      case kVK_ANSI_Keypad0:
+        return "KP_Insert";
+      case kVK_ANSI_Keypad1:
+        return "KP_End";
+      case kVK_ANSI_Keypad2:
+        return "KP_Down";
+      case kVK_ANSI_Keypad3:
+        return "KP_Next";
+      case kVK_ANSI_Keypad4:
+        return "KP_Left";
+      case kVK_ANSI_Keypad5:
+        return "KP_Begin";
+      case kVK_ANSI_Keypad6:
+        return "KP_Right";
+      case kVK_ANSI_Keypad7:
+        return "KP_Home";
+      case kVK_ANSI_Keypad8:
+        return "KP_Up";
+      case kVK_ANSI_Keypad9:
+        return "KP_Prior";
+
+    /* keycodes for keys that are independent of keyboard layout*/
+
+      case kVK_Return:
+        return "Return";
+      case kVK_Tab:
+        return "Tab";
+      case kVK_Space:
+        return "space";
+      case kVK_Delete:
+        return "Backspace";
+      case kVK_Escape:
+        return "Escape";
+      case kVK_Command:
+        return "Command";
+      case kVK_Shift:
+        return "Shift_L";
+      case kVK_CapsLock:
+        return "Caps_Lock";
+      case kVK_Option:
+        return "Option_L";
+      case kVK_Control:
+        return "Control_L";
+      case kVK_RightShift:
+        return "Shift_R";
+      case kVK_RightOption:
+        return "Option_R";
+      case kVK_RightControl:
+        return "Control_R";
+      case kVK_Function:
+        return "Function";
+      case kVK_F17:
+        return "F17";
+      case kVK_VolumeUp:
+        return "VolumeUp";
+      case kVK_VolumeDown:
+        return "VolumeDown";
+      case kVK_Mute:
+        return "Mute";
+      case kVK_F18:
+        return "F18";
+      case kVK_F19:
+        return "F19";
+      case kVK_F20:
+        return "F20";
+      case kVK_F5:
+        return "F5";
+      case kVK_F6:
+        return "F6";
+      case kVK_F7:
+        return "F7";
+      case kVK_F3:
+        return "F3";
+      case kVK_F8:
+        return "F8";
+      case kVK_F9:
+        return "F9";
+      case kVK_F11:
+        return "F11";
+      case kVK_F13:
+        return "F13";
+      case kVK_F16:
+        return "F16";
+      case kVK_F14:
+        return "F14";
+      case kVK_F10:
+        return "F10";
+      case kVK_F12:
+        return "F12";
+      case kVK_F15:
+        return "F15";
+      case kVK_Help:
+        return "Help";
+      case kVK_Home:
+        return "Home";
+      case kVK_PageUp:
+        return "Prior";
+      case kVK_ForwardDelete:
+        return "Delete";
+      case kVK_F4:
+        return "F4";
+      case kVK_End:
+        return "End";
+      case kVK_F2:
+        return "F2";
+      case kVK_PageDown:
+        return "Next";
+      case kVK_F1:
+        return "F1";
+      case kVK_LeftArrow:
+        return "Left";
+      case kVK_RightArrow:
+        return "Right";
+      case kVK_DownArrow:
+        return "Down";
+      case kVK_UpArrow:
+        return "Up";
+    default:
+        return "";
+  };
+}
 
 @ implementation GstOSXVideoSinkWindow
 
@@ -522,20 +809,18 @@
 
 - (void)sendKeyEvent:(NSEvent *)event: (const char *)event_name
 {
-  NSString *keyCharStr = [event charactersIgnoringModifiers];
-  gchar * key_str;
-
   if (!navigation)
     return;
 
-  if ( [keyCharStr length] == 0 )
-    return;
+  gst_navigation_send_key_event(navigation, event_name, gst_keycode_to_keyname([event keyCode]));
+}
 
-  if ( [keyCharStr length] == 1 ) {
-    key_str = g_strdup_printf("%c", [keyCharStr characterAtIndex:0]);
-    gst_navigation_send_key_event(navigation, event_name, (const gchar *) key_str);
-    g_free(key_str);
-  }
+- (void)sendModifierKeyEvent:(NSEvent *)event
+{
+  NSUInteger flags = [event modifierFlags];
+  const gchar* event_name = flags > savedModifierFlags ? "key-press" : "key-release";
+  savedModifierFlags = flags;
+  [self sendKeyEvent: event: event_name];
 }
 
 - (void)keyDown:(NSEvent *) event;
@@ -548,6 +833,12 @@
 {
   [self sendKeyEvent: event: "key-release"];
   [super keyUp: event];
+}
+
+- (void)flagsChanged:(NSEvent *) event;
+{
+  [self sendModifierKeyEvent: event];
+  [super flagsChanged: event];
 }
 
 - (void)mouseDown:(NSEvent *) event;
