@@ -33,7 +33,6 @@
 #include <gst/vaapi/gstvaapidecoder_mpeg2.h>
 #include <gst/vaapi/gstvaapidecoder_mpeg4.h>
 #include <gst/vaapi/gstvaapidecoder_vc1.h>
-#include <gst/vaapi/gstvaapivideometa.h>
 #include <gst/vaapi/gstvaapiwindow.h>
 #include "codec.h"
 #include "output.h"
@@ -66,6 +65,12 @@ typedef enum {
 } AppError;
 
 typedef struct {
+    GstVaapiSurfaceProxy *proxy;
+    GstClockTime        pts;
+    GstClockTime        duration;
+} RenderFrame;
+
+typedef struct {
     GMutex              mutex;
     GMappedFile        *file;
     gchar              *file_name;
@@ -90,13 +95,36 @@ typedef struct {
     GThread            *render_thread;
     volatile gboolean   render_thread_cancel;
     GCond               render_ready;
-    GstBuffer          *last_buffer;
+    RenderFrame        *last_frame;
     GError             *error;
     AppEvent            event;
     GCond               event_cond;
     GTimer             *timer;
     guint32             num_frames;
 } App;
+
+static inline RenderFrame *
+render_frame_new(void)
+{
+    return g_slice_new(RenderFrame);
+}
+
+static void
+render_frame_free(RenderFrame *rfp)
+{
+    if (G_UNLIKELY(!rfp))
+        return;
+    gst_vaapi_surface_proxy_replace(&rfp->proxy, NULL);
+    g_slice_free(RenderFrame, rfp);
+}
+
+static inline void
+render_frame_replace(RenderFrame **rfp_ptr, RenderFrame *new_rfp)
+{
+    if (*rfp_ptr)
+        render_frame_free(*rfp_ptr);
+    *rfp_ptr = new_rfp;
+}
 
 #define APP_ERROR app_error_quark()
 static GQuark
@@ -202,7 +230,7 @@ decoder_thread(gpointer data)
     GError *error = NULL;
     GstVaapiDecoderStatus status;
     GstVaapiSurfaceProxy *proxy;
-    GstVaapiVideoMeta *meta;
+    RenderFrame *rfp;
     GstBuffer *buffer;
     GstClockTime pts;
     gboolean got_surface;
@@ -241,19 +269,14 @@ decoder_thread(gpointer data)
         case GST_VAAPI_DECODER_STATUS_SUCCESS:
             gst_vaapi_surface_proxy_set_user_data(proxy,
                 app, (GDestroyNotify)decoder_release);
-            meta = gst_vaapi_video_meta_new_with_surface_proxy(proxy);
-            gst_vaapi_surface_proxy_unref(proxy);
-            if (!meta)
-                SEND_ERROR("failed to allocate video meta");
-            buffer = gst_buffer_new();
-            if (!buffer)
-                SEND_ERROR("failed to allocate output buffer");
-            GST_BUFFER_TIMESTAMP(buffer) = pts;
-            GST_BUFFER_DURATION(buffer) = app->frame_duration;
+            rfp = render_frame_new();
+            if (!rfp)
+                SEND_ERROR("failed to allocate render frame");
+            rfp->proxy = proxy;
+            rfp->pts = pts;
+            rfp->duration = app->frame_duration;
             pts += app->frame_duration;
-            gst_buffer_set_vaapi_video_meta(buffer, meta);
-            gst_vaapi_video_meta_unref(meta);
-            g_async_queue_push(app->decoder_queue, buffer);
+            g_async_queue_push(app->decoder_queue, rfp);
             break;
         case GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA:
             /* nothing to do, just continue to the next iteration */
@@ -408,10 +431,9 @@ renderer_wait_until(App *app, GstClockTime pts)
 }
 
 static gboolean
-renderer_process(App *app, GstBuffer *buffer)
+renderer_process(App *app, RenderFrame *rfp)
 {
     GError *error = NULL;
-    GstVaapiVideoMeta *meta;
     GstVaapiSurface *surface;
 
 #define SEND_ERROR(...)                                                 \
@@ -420,13 +442,9 @@ renderer_process(App *app, GstBuffer *buffer)
         goto send_error;                                                \
     } while (0)
 
-    meta = gst_buffer_get_vaapi_video_meta(buffer);
-    if (!meta)
-        SEND_ERROR("failed to get video meta");
-
-    surface = gst_vaapi_video_meta_get_surface(meta);
+    surface = gst_vaapi_surface_proxy_get_surface(rfp->proxy);
     if (!surface)
-        SEND_ERROR("failed to get decoded surface from video meta");
+        SEND_ERROR("failed to get decoded surface from render frame");
 
     ensure_window_size(app, surface);
 
@@ -434,7 +452,7 @@ renderer_process(App *app, GstBuffer *buffer)
         SEND_ERROR("failed to sync decoded surface");
 
     if (G_LIKELY(!g_benchmark))
-        renderer_wait_until(app, GST_BUFFER_TIMESTAMP(buffer));
+        renderer_wait_until(app, rfp->pts);
 
     if (!gst_vaapi_window_put_surface(app->window, surface, NULL, NULL,
             GST_VAAPI_PICTURE_STRUCTURE_FRAME))
@@ -443,8 +461,7 @@ renderer_process(App *app, GstBuffer *buffer)
 
     app->num_frames++;
 
-    gst_buffer_replace(&app->last_buffer, buffer);
-    gst_buffer_unref(buffer);
+    render_frame_replace(&app->last_frame, rfp);
     return TRUE;
 
 #undef SEND_ERROR
@@ -458,13 +475,13 @@ static gpointer
 renderer_thread(gpointer data)
 {
     App * const app = data;
-    GstBuffer *buffer;
+    RenderFrame *rfp;
 
     g_print("Render thread started\n");
 
     while (!app->render_thread_cancel) {
-        buffer = g_async_queue_timeout_pop(app->decoder_queue, 1000000);
-        if (buffer && !renderer_process(app, buffer))
+        rfp = g_async_queue_timeout_pop(app->decoder_queue, 1000000);
+        if (rfp && !renderer_process(app, rfp))
             break;
     }
     return NULL;
@@ -473,14 +490,14 @@ renderer_thread(gpointer data)
 static gboolean
 flush_decoder_queue(App *app)
 {
-    GstBuffer *buffer;
+    RenderFrame *rfp;
 
     /* Flush pending surfaces */
     do {
-        buffer = g_async_queue_try_pop(app->decoder_queue);
-        if (!buffer)
+        rfp = g_async_queue_try_pop(app->decoder_queue);
+        if (!rfp)
             return TRUE;
-    } while (renderer_process(app, buffer));
+    } while (renderer_process(app, rfp));
     return FALSE;
 }
 
@@ -502,7 +519,7 @@ stop_renderer(App *app)
     g_print("Render thread stopped\n");
 
     flush_decoder_queue(app);
-    gst_buffer_replace(&app->last_buffer, NULL);
+    render_frame_replace(&app->last_frame, NULL);
     return TRUE;
 }
 
@@ -558,7 +575,7 @@ app_new(void)
     app->window_height = 480;
 
     app->decoder_queue = g_async_queue_new_full(
-        (GDestroyNotify)gst_buffer_unref);
+        (GDestroyNotify)render_frame_free);
     if (!app->decoder_queue)
         goto error;
 
