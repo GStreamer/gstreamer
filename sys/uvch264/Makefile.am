@@ -1,6 +1,3 @@
-glib_gen_prefix = __gst_uvc_h264
-glib_gen_basename = gstuvch264
-
 plugin_LTLIBRARIES = libgstuvch264.la
 
 libgstuvch264_la_SOURCES = gstuvch264.c \
@@ -27,7 +24,7 @@ libgstuvch264_la_LIBADD =   $(GST_PLUGINS_BASE_LIBS) \
 			    $(GST_LIBS) \
 			    $(G_UDEV_LIBS) \
 			    $(LIBUSB_LIBS) \
-			    $(top_builddir)/gst-libs/gst/basecamerabinsrc/libgstbasecamerabinsrc-$(GST_MAJORMINOR).la
+			    $(top_builddir)/gst-libs/gst/basecamerabinsrc/libgstbasecamerabinsrc-@GST_API_VERSION@.la
 
 noinst_HEADERS = gstuvch264_mjpgdemux.h \
 		 gstuvch264_src.h \

@@ -96,8 +96,8 @@ static GstStaticPadTemplate yuy2src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("yuy2",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) YUY2, "
+    GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) YUY2, "
         "width = (int) [ 0, MAX ], "
         "height = (int) [ 0, MAX ], " "framerate = (fraction) [ 0/1, MAX ] ")
     );
@@ -105,8 +105,8 @@ static GstStaticPadTemplate nv12src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("nv12",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) NV21, "
+    GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) NV21, "
         "width = (int) [ 0, MAX ], "
         "height = (int) [ 0, MAX ], " "framerate = (fraction) [ 0/1, MAX ] ")
     );
@@ -164,53 +164,22 @@ static void gst_uvc_h264_mjpg_demux_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_uvc_h264_mjpg_demux_dispose (GObject * object);
 static GstFlowReturn gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
-    GstBuffer * buffer);
-static gboolean gst_uvc_h264_mjpg_demux_sink_setcaps (GstPad * pad,
-    GstCaps * caps);
-static GstCaps *gst_uvc_h264_mjpg_demux_getcaps (GstPad * pad);
+    GstObject * parent, GstBuffer * buffer);
+static gboolean gst_uvc_h264_mjpg_demux_sink_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
+static gboolean gst_uvc_h264_mjpg_demux_query (GstPad * pad,
+    GstObject * parent, GstQuery * query);
 
-#define _do_init(x) \
-  GST_DEBUG_CATEGORY_INIT (uvc_h264_mjpg_demux_debug, \
-      "uvch264_mjpgdemux", 0, "UVC H264 MJPG Demuxer");
-
-GST_BOILERPLATE_FULL (GstUvcH264MjpgDemux, gst_uvc_h264_mjpg_demux, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
-
-static void
-gst_uvc_h264_mjpg_demux_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstPadTemplate *pt;
-
-  /* do not use gst_element_class_add_static_pad_template to stay compatible
-   * with gstreamer 0.10.35 */
-  pt = gst_static_pad_template_get (&mjpgsink_pad_template);
-  gst_element_class_add_pad_template (element_class, pt);
-  gst_object_unref (pt);
-  pt = gst_static_pad_template_get (&jpegsrc_pad_template);
-  gst_element_class_add_pad_template (element_class, pt);
-  gst_object_unref (pt);
-  pt = gst_static_pad_template_get (&h264src_pad_template);
-  gst_element_class_add_pad_template (element_class, pt);
-  gst_object_unref (pt);
-  pt = gst_static_pad_template_get (&yuy2src_pad_template);
-  gst_element_class_add_pad_template (element_class, pt);
-  gst_object_unref (pt);
-  pt = gst_static_pad_template_get (&nv12src_pad_template);
-  gst_element_class_add_pad_template (element_class, pt);
-  gst_object_unref (pt);
-
-  gst_element_class_set_static_metadata (element_class,
-      "UVC H264 MJPG Demuxer",
-      "Video/Demuxer",
-      "Demux UVC H264 auxiliary streams from MJPG images",
-      "Youness Alaoui <youness.alaoui@collabora.co.uk>");
-}
+#define gst_uvc_h264_mjpg_demux_parent_class parent_class
+G_DEFINE_TYPE (GstUvcH264MjpgDemux, gst_uvc_h264_mjpg_demux, GST_TYPE_ELEMENT);
 
 static void
 gst_uvc_h264_mjpg_demux_class_init (GstUvcH264MjpgDemuxClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *element_class = (GstElementClass *) klass;
+
+  parent_class = g_type_class_peek_parent (klass);
 
   g_type_class_add_private (gobject_class, sizeof (GstUvcH264MjpgDemuxPrivate));
 
@@ -218,6 +187,26 @@ gst_uvc_h264_mjpg_demux_class_init (GstUvcH264MjpgDemuxClass * klass)
   gobject_class->get_property = gst_uvc_h264_mjpg_demux_get_property;
   gobject_class->dispose = gst_uvc_h264_mjpg_demux_dispose;
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&mjpgsink_pad_template));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&jpegsrc_pad_template));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&h264src_pad_template));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&yuy2src_pad_template));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&nv12src_pad_template));
+
+  gst_element_class_set_static_metadata (element_class,
+      "UVC H264 MJPG Demuxer",
+      "Video/Demuxer",
+      "Demux UVC H264 auxiliary streams from MJPG images",
+      "Youness Alaoui <youness.alaoui@collabora.co.uk>");
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_FD,
       g_param_spec_int ("device-fd", "device-fd",
@@ -230,11 +219,13 @@ gst_uvc_h264_mjpg_demux_class_init (GstUvcH264MjpgDemuxClass * klass)
           " (-1 = unlimited)",
           0, G_MAXINT, DEFAULT_NUM_CLOCK_SAMPLES,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+  GST_DEBUG_CATEGORY_INIT (uvc_h264_mjpg_demux_debug,
+      "uvch264_mjpgdemux", 0, "UVC H264 MJPG Demuxer");
 }
 
 static void
-gst_uvc_h264_mjpg_demux_init (GstUvcH264MjpgDemux * self,
-    GstUvcH264MjpgDemuxClass * g_class)
+gst_uvc_h264_mjpg_demux_init (GstUvcH264MjpgDemux * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_UVC_H264_MJPG_DEMUX,
       GstUvcH264MjpgDemuxPrivate);
@@ -247,17 +238,17 @@ gst_uvc_h264_mjpg_demux_init (GstUvcH264MjpgDemux * self,
       gst_pad_new_from_static_template (&mjpgsink_pad_template, "sink");
   gst_pad_set_chain_function (self->priv->sink_pad,
       GST_DEBUG_FUNCPTR (gst_uvc_h264_mjpg_demux_chain));
-  gst_pad_set_setcaps_function (self->priv->sink_pad,
-      GST_DEBUG_FUNCPTR (gst_uvc_h264_mjpg_demux_sink_setcaps));
-  gst_pad_set_getcaps_function (self->priv->sink_pad,
-      GST_DEBUG_FUNCPTR (gst_uvc_h264_mjpg_demux_getcaps));
+  gst_pad_set_event_function (self->priv->sink_pad,
+      GST_DEBUG_FUNCPTR (gst_uvc_h264_mjpg_demux_sink_event));
+  gst_pad_set_query_function (self->priv->sink_pad,
+      GST_DEBUG_FUNCPTR (gst_uvc_h264_mjpg_demux_query));
   gst_element_add_pad (GST_ELEMENT (self), self->priv->sink_pad);
 
   /* JPEG */
   self->priv->jpeg_pad =
       gst_pad_new_from_static_template (&jpegsrc_pad_template, "jpeg");
-  gst_pad_set_getcaps_function (self->priv->jpeg_pad,
-      GST_DEBUG_FUNCPTR (gst_uvc_h264_mjpg_demux_getcaps));
+  gst_pad_set_query_function (self->priv->jpeg_pad,
+      GST_DEBUG_FUNCPTR (gst_uvc_h264_mjpg_demux_query));
   gst_element_add_pad (GST_ELEMENT (self), self->priv->jpeg_pad);
 
   /* H264 */
@@ -278,11 +269,11 @@ gst_uvc_h264_mjpg_demux_init (GstUvcH264MjpgDemux * self,
   gst_pad_use_fixed_caps (self->priv->nv12_pad);
   gst_element_add_pad (GST_ELEMENT (self), self->priv->nv12_pad);
 
-  self->priv->h264_caps = gst_caps_new_simple ("video/x-h264", NULL);
-  self->priv->yuy2_caps = gst_caps_new_simple ("video/x-raw-yuv",
-      "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'), NULL);
-  self->priv->nv12_caps = gst_caps_new_simple ("video/x-raw-yuv",
-      "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('N', 'V', '1', '2'), NULL);
+  self->priv->h264_caps = gst_caps_new_empty_simple ("video/x-h264");
+  self->priv->yuy2_caps = gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, "YUY2", NULL);
+  self->priv->nv12_caps = gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, "NV12", NULL);
   self->priv->h264_width = self->priv->h264_height = 0;
   self->priv->yuy2_width = self->priv->yuy2_height = 0;
   self->priv->nv12_width = self->priv->nv12_height = 0;
@@ -369,31 +360,40 @@ gst_uvc_h264_mjpg_demux_get_property (GObject * object,
   }
 }
 
-
 static gboolean
-gst_uvc_h264_mjpg_demux_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_uvc_h264_mjpg_demux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstUvcH264MjpgDemux *self = GST_UVC_H264_MJPG_DEMUX (GST_OBJECT_PARENT (pad));
+  GstUvcH264MjpgDemux *self = GST_UVC_H264_MJPG_DEMUX (parent);
 
-  return gst_pad_set_caps (self->priv->jpeg_pad, caps);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+      return gst_pad_push_event (self->priv->jpeg_pad, event);
+    default:
+      break;
+  }
+  return gst_pad_event_default (pad, parent, event);
 }
 
-static GstCaps *
-gst_uvc_h264_mjpg_demux_getcaps (GstPad * pad)
+static gboolean
+gst_uvc_h264_mjpg_demux_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
-  GstUvcH264MjpgDemux *self = GST_UVC_H264_MJPG_DEMUX (GST_OBJECT_PARENT (pad));
-  GstCaps *result = NULL;
+  GstUvcH264MjpgDemux *self = GST_UVC_H264_MJPG_DEMUX (parent);
+  gboolean ret = FALSE;
 
-  if (pad == self->priv->jpeg_pad)
-    result = gst_pad_peer_get_caps (self->priv->sink_pad);
-  else if (pad == self->priv->sink_pad)
-    result = gst_pad_peer_get_caps (self->priv->jpeg_pad);
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+      if (pad == self->priv->sink_pad)
+        ret = gst_pad_peer_query (self->priv->jpeg_pad, query);
+      else
+        ret = gst_pad_peer_query (self->priv->sink_pad, query);
+      break;
+    default:
+      ret = gst_pad_query_default (pad, parent, query);
+  }
 
-  /* TODO: intersect with template and fixate caps */
-  if (result == NULL)
-    result = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
-
-  return result;
+  return ret;
 }
 
 static gboolean
@@ -456,35 +456,37 @@ _pts_to_timestamp (GstUvcH264MjpgDemux * self, GstBuffer * buf, guint32 pts)
 }
 
 static GstFlowReturn
-gst_uvc_h264_mjpg_demux_chain (GstPad * pad, GstBuffer * buf)
+gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
+    GstObject * parent, GstBuffer * buf)
 {
   GstUvcH264MjpgDemux *self;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBufferList *jpeg_buf = gst_buffer_list_new ();
-  GstBufferListIterator *jpeg_it = gst_buffer_list_iterate (jpeg_buf);
-  GstBufferList *aux_buf = NULL;
-  GstBufferListIterator *aux_it = NULL;
+  GstBuffer *jpeg_buf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_METADATA,
+      0, 0);
+  GstBuffer *aux_buf = NULL;
   AuxiliaryStreamHeader aux_header = { 0 };
-  GstBuffer *sub_buffer = NULL;
   guint32 aux_size = 0;
   GstPad *aux_pad = NULL;
   GstCaps **aux_caps = NULL;
   guint last_offset;
   guint i;
   guchar *data;
-  guint size;
+  gsize size;
+  GstMapInfo info;
 
   self = GST_UVC_H264_MJPG_DEMUX (GST_PAD_PARENT (pad));
 
   last_offset = 0;
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
-  if (data == NULL || size == 0) {
+  size = gst_buffer_get_size (buf);
+  if (size == 0) {
     ret = gst_pad_push (self->priv->jpeg_pad, buf);
     goto done;
   }
 
-  gst_buffer_list_iterator_add_group (jpeg_it);
+  gst_buffer_map (buf, &info, GST_MAP_READ);
+
+  data = info.data;
+
   for (i = 0; i < size - 1; i++) {
     /* Check for APP4 (0xe4) marker in the jpeg */
     if (data[i] == 0xff && data[i + 1] == 0xe4) {
@@ -511,9 +513,9 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad, GstBuffer * buf)
 
       /* Add JPEG data between the last offset and this market */
       if (i - last_offset > 0) {
-        sub_buffer = gst_buffer_create_sub (buf, last_offset, i - last_offset);
-        gst_buffer_copy_metadata (sub_buffer, buf, GST_BUFFER_COPY_ALL);
-        gst_buffer_list_iterator_add (jpeg_it, sub_buffer);
+        GstMemory *m = gst_memory_copy (info.memory, last_offset,
+            i - last_offset);
+        gst_buffer_append_memory (jpeg_buf, m);
       }
       last_offset = i + 2 + segment_size;
 
@@ -584,16 +586,18 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad, GstBuffer * buf)
             goto done;
 
           if (*width != aux_header.width || *height != aux_header.height) {
-            GstCaps *peercaps = gst_pad_peer_get_caps (aux_pad);
+            GstCaps *peercaps = gst_pad_peer_query_caps (aux_pad, NULL);
             GstStructure *s = NULL;
             gint fps_num = 1000000000 / aux_header.frame_interval;
             gint fps_den = 100;
 
             /* TODO: intersect with pad template */
             GST_DEBUG ("peercaps : %" GST_PTR_FORMAT, peercaps);
-            if (peercaps && !gst_caps_is_any (peercaps))
+            if (peercaps && !gst_caps_is_any (peercaps)) {
+              peercaps = gst_caps_make_writable (peercaps);
               s = gst_caps_get_structure (peercaps, 0);
-            if (s) {
+            }
+            if (s && gst_structure_has_field (s, "framerate")) {
               /* TODO: make sure it contains the right format/width/height */
               gst_structure_fixate_field_nearest_fraction (s, "framerate",
                   fps_num, fps_den);
@@ -619,9 +623,7 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad, GstBuffer * buf)
           }
 
           /* Create new auxiliary buffer list and adjust i/segment size */
-          aux_buf = gst_buffer_list_new ();
-          aux_it = gst_buffer_list_iterate (aux_buf);
-          gst_buffer_list_iterator_add_group (aux_it);
+          aux_buf = gst_buffer_new ();
         }
 
         i += sizeof (aux_header) + sizeof (aux_size);
@@ -637,26 +639,24 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad, GstBuffer * buf)
       }
 
       if (segment_size > 0) {
-        sub_buffer = gst_buffer_create_sub (buf, i, segment_size);
-        GST_BUFFER_DURATION (sub_buffer) =
+        GstMemory *m;
+        m = gst_memory_copy (info.memory, i, segment_size);
+
+        GST_BUFFER_DURATION (aux_buf) =
             aux_header.frame_interval * 100 * GST_NSECOND;
-        gst_buffer_copy_metadata (sub_buffer, buf, GST_BUFFER_COPY_TIMESTAMPS);
-        gst_buffer_set_caps (sub_buffer, *aux_caps);
 
-        _pts_to_timestamp (self, sub_buffer, aux_header.pts);
+        _pts_to_timestamp (self, aux_buf, aux_header.pts);
 
-        gst_buffer_list_iterator_add (aux_it, sub_buffer);
+        gst_buffer_append_memory (aux_buf, m);
 
         aux_size -= segment_size;
 
         /* Push completed aux data */
         if (aux_size == 0) {
-          gst_buffer_list_iterator_free (aux_it);
-          aux_it = NULL;
           GST_DEBUG_OBJECT (self, "Pushing %" GST_FOURCC_FORMAT
               " auxiliary buffer %" GST_PTR_FORMAT,
               GST_FOURCC_ARGS (aux_header.type), *aux_caps);
-          ret = gst_pad_push_list (aux_pad, aux_buf);
+          ret = gst_pad_push (aux_pad, aux_buf);
           aux_buf = NULL;
           if (ret != GST_FLOW_OK) {
             GST_WARNING_OBJECT (self, "Error pushing %" GST_FOURCC_FORMAT
@@ -668,19 +668,17 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad, GstBuffer * buf)
 
       i += segment_size - 1;
     } else if (data[i] == 0xff && data[i + 1] == 0xda) {
+      GstMemory *m;
 
       /* The APP4 markers must be before the SOS marker, so this is the end */
       GST_DEBUG_OBJECT (self, "Found SOS marker.");
 
-      sub_buffer = gst_buffer_create_sub (buf, last_offset, size - last_offset);
-      gst_buffer_copy_metadata (sub_buffer, buf, GST_BUFFER_COPY_ALL);
-      gst_buffer_list_iterator_add (jpeg_it, sub_buffer);
+      m = gst_memory_copy (info.memory, last_offset, size - last_offset);
+      gst_buffer_append_memory (jpeg_buf, m);
       last_offset = size;
       break;
     }
   }
-  gst_buffer_list_iterator_free (jpeg_it);
-  jpeg_it = NULL;
 
   if (aux_buf != NULL) {
     GST_ELEMENT_ERROR (self, STREAM, DEMUX,
@@ -693,10 +691,10 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad, GstBuffer * buf)
     /* this means there was no SOS marker in the jpg, so we assume the JPG was
        just a container */
     GST_DEBUG_OBJECT (self, "SOS marker wasn't found. MJPG is container only");
-    gst_buffer_list_unref (jpeg_buf);
+    gst_buffer_unref (jpeg_buf);
     jpeg_buf = NULL;
   } else {
-    ret = gst_pad_push_list (self->priv->jpeg_pad, jpeg_buf);
+    ret = gst_pad_push (self->priv->jpeg_pad, jpeg_buf);
     jpeg_buf = NULL;
   }
 
@@ -707,14 +705,10 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad, GstBuffer * buf)
 
 done:
   /* In case of error, unref whatever was left */
-  if (aux_it)
-    gst_buffer_list_iterator_free (aux_it);
   if (aux_buf)
-    gst_buffer_list_unref (aux_buf);
-  if (jpeg_it)
-    gst_buffer_list_iterator_free (jpeg_it);
+    gst_buffer_unref (aux_buf);
   if (jpeg_buf)
-    gst_buffer_list_unref (jpeg_buf);
+    gst_buffer_unref (jpeg_buf);
 
   /* We must always unref the input buffer since we never push it out */
   gst_buffer_unref (buf);
