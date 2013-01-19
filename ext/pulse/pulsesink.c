@@ -2700,11 +2700,12 @@ gst_pulsesink_change_props (GstPulseSink * psink, GstTagList * l)
   if (pbuf == NULL || pbuf->stream == NULL)
     goto no_buffer;
 
-  if (!(o = pa_stream_proplist_update (pbuf->stream, PA_UPDATE_REPLACE,
-              pl, NULL, NULL)))
-    goto update_failed;
-
   /* We're not interested if this operation failed or not */
+  if (!(o = pa_stream_proplist_update (pbuf->stream, PA_UPDATE_REPLACE,
+              pl, NULL, NULL))) {
+    GST_DEBUG_OBJECT (psink, "pa_stream_proplist_update() failed");
+  }
+
 unlock:
 
   if (o)
@@ -2723,13 +2724,6 @@ finish:
 no_buffer:
   {
     GST_DEBUG_OBJECT (psink, "we have no ringbuffer");
-    goto unlock;
-  }
-update_failed:
-  {
-    GST_ELEMENT_ERROR (psink, RESOURCE, FAILED,
-        ("pa_stream_proplist_update() failed: %s",
-            pa_strerror (pa_context_errno (pbuf->context))), (NULL));
     goto unlock;
   }
 }
