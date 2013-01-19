@@ -3471,6 +3471,8 @@ sort_end_pads (GstDecodePad * da, GstDecodePad * db)
   GstCaps *capsa, *capsb;
   GstStructure *sa, *sb;
   const gchar *namea, *nameb;
+  gchar *ida, *idb;
+  gint ret;
 
   capsa = get_pad_caps (GST_PAD_CAST (da));
   capsb = get_pad_caps (GST_PAD_CAST (db));
@@ -3506,7 +3508,17 @@ sort_end_pads (GstDecodePad * da, GstDecodePad * db)
   gst_caps_unref (capsa);
   gst_caps_unref (capsb);
 
-  return va - vb;
+  if (va != vb)
+    return va - vb;
+
+  /* if otherwise the same, sort by stream-id */
+  ida = gst_pad_get_stream_id (GST_PAD_CAST (da));
+  idb = gst_pad_get_stream_id (GST_PAD_CAST (db));
+  ret = (ida) ? ((idb) ? strcmp (ida, idb) : -1) : 1;
+  g_free (ida);
+  g_free (idb);
+
+  return ret;
 }
 
 static GstCaps *
