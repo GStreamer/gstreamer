@@ -1772,6 +1772,8 @@ gst_pad_create_stream_id
 gst_pad_create_stream_id_printf
 gst_pad_create_stream_id_printf_valist
 
+gst_pad_get_stream_id
+
 GstPadForwardFunction
 gst_pad_forward
 <SUBSECTION Core>

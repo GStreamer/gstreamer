@@ -1479,14 +1479,23 @@ GST_START_TEST (test_sticky_events)
   GstPad *srcpad, *sinkpad;
   GstCaps *caps;
   GstSegment seg;
+  gchar *id;
 
   /* make unlinked srcpad */
   srcpad = gst_pad_new ("src", GST_PAD_SRC);
   fail_unless (srcpad != NULL);
   gst_pad_set_active (srcpad, TRUE);
 
+  /* test stream-start */
+  fail_unless (gst_pad_get_stream_id (srcpad) == NULL);
+
   /* push an event, it should be sticky on the srcpad */
   gst_pad_push_event (srcpad, gst_event_new_stream_start ("test"));
+
+  /* let's see if it stuck */
+  id = gst_pad_get_stream_id (srcpad);
+  fail_unless_equals_string (id, "test");
+  g_free (id);
 
   /* make a caps event */
   caps = gst_caps_new_empty_simple ("foo/bar");

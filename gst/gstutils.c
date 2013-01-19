@@ -3707,3 +3707,43 @@ gst_pad_create_stream_id (GstPad * pad, GstElement * parent,
 {
   return gst_pad_create_stream_id_printf (pad, parent, stream_id, NULL);
 }
+
+/**
+ * gst_pad_get_stream_id:
+ * @pad: A source #GstPad
+ *
+ * Returns the current stream-id for the @pad, or %NULL if none has been
+ * set yet, i.e. the pad has not received a stream-start event yet.
+ *
+ * This is a convenience wrapper around gst_pad_get_sticky_event() and
+ * gst_event_parse_stream_start().
+ *
+ * The returned stream-id string should be treated as an opaque string, its
+ * contents should not be interpreted.
+ *
+ * Returns: a newly-allocated copy of the stream-idfor @pad, or %NULL.
+ *     g_free() the returned string when no longer needed.
+ *
+ * Since: 1.2
+ */
+gchar *
+gst_pad_get_stream_id (GstPad * pad)
+{
+  const gchar *stream_id = NULL;
+  GstEvent *event;
+  gchar *ret = NULL;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  event = gst_pad_get_sticky_event (pad, GST_EVENT_STREAM_START, 0);
+  if (event != NULL) {
+    gst_event_parse_stream_start (event, &stream_id);
+    ret = g_strdup (stream_id);
+    gst_event_unref (event);
+    GST_LOG_OBJECT (pad, "pad has stream-id '%s'", ret);
+  } else {
+    GST_DEBUG_OBJECT (pad, "pad has not received a stream-start event yet");
+  }
+
+  return ret;
+}
