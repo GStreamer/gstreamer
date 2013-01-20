@@ -267,7 +267,7 @@ gst_avdtp_sink_parse_sbc_raw (GstAvdtpSink * self)
   }
   g_value_unset (value);
   if (list) {
-    gst_structure_set_value (structure, "mode", list);
+    gst_structure_set_value (structure, "channel-mode", list);
     g_free (list);
     list = NULL;
   }
@@ -329,7 +329,7 @@ gst_avdtp_sink_parse_sbc_raw (GstAvdtpSink * self)
   }
   g_value_unset (value);
   if (list) {
-    gst_structure_set_value (structure, "allocation", list);
+    gst_structure_set_value (structure, "allocation-method", list);
     g_free (list);
     list = NULL;
   }
@@ -1121,5 +1121,5 @@ gst_avdtp_sink_set_channel_mode (GstAvdtpSink * self, const gchar * mode)
 
   self->channel_mode = new_mode;
   if (self->channel_mode == -1)
-    GST_WARNING_OBJECT (self, "Received invalid channel " "mode: %s", mode);
+    GST_WARNING_OBJECT (self, "Received invalid channel mode: %s", mode);
 }

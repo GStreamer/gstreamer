@@ -59,10 +59,10 @@ static GstStaticPadTemplate gst_a2dp_sink_factory =
     GST_STATIC_CAPS ("audio/x-sbc, "
         "rate = (int) { 16000, 32000, 44100, 48000 }, "
         "channels = (int) [ 1, 2 ], "
-        "mode = (string) { \"mono\", \"dual\", \"stereo\", \"joint\" }, "
+        "channel-mode = (string) { mono, dual, stereo, joint }, "
         "blocks = (int) { 4, 8, 12, 16 }, "
         "subbands = (int) { 4, 8 }, "
-        "allocation = (string) { \"snr\", \"loudness\" }, "
+        "allocation-method = (string) { snr, loudness }, "
         "bitpool = (int) [ 2, " TEMPLATE_MAX_BITPOOL_STR " ]; " "audio/mpeg"));
 
 static gboolean gst_a2dp_sink_handle_event (GstPad * pad,
