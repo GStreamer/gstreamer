@@ -40,6 +40,7 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESTimelineElement, ges_timeline_element,
 enum
 {
   PROP_0,
+  PROP_PARENT,
   PROP_START,
   PROP_INPOINT,
   PROP_DURATION,
@@ -62,6 +63,8 @@ _get_property (GObject * object, guint property_id,
   GESTimelineElement *self = GES_TIMELINE_ELEMENT (object);
 
   switch (property_id) {
+    case PROP_PARENT:
+      g_value_set_object (value, self->parent);
     case PROP_START:
       g_value_set_uint64 (value, self->start);
       break;
@@ -89,6 +92,9 @@ _set_property (GObject * object, guint property_id,
   GESTimelineElement *self = GES_TIMELINE_ELEMENT (object);
 
   switch (property_id) {
+    case PROP_PARENT:
+      ges_timeline_element_set_parent (self, g_value_get_object (value));
+      break;
     case PROP_START:
       ges_timeline_element_set_start (self, g_value_get_uint64 (value));
       break;
@@ -128,6 +134,16 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
 
   object_class->get_property = _get_property;
   object_class->set_property = _set_property;
+
+  /**
+   * GESTimelineElement:parent:
+   *
+   * The parent container of the object
+   */
+  properties[PROP_PARENT] =
+      g_param_spec_object ("parent", "Parent",
+      "The parent container of the object", GES_TYPE_TIMELINE_ELEMENT,
+      G_PARAM_READWRITE);
 
   /**
    * GESTimelineElement:start:
@@ -199,6 +215,68 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
 /*********************************************
  *            API implementation             *
  *********************************************/
+
+/**
+ * ges_timeline_element_set_parent:
+ * @self: a #GESTimelineElement
+ * @parent: new parent of self
+ *
+ * Sets the parent of @self to @parent. The object's reference count will
+ * be incremented, and any floating reference will be removed (see g_object_ref_sink()).
+ *
+ * Returns: %TRUE if @parent could be set or %FALSE when @self
+ * already had a parent or @self and @parent are the same.
+ */
+gboolean
+ges_timeline_element_set_parent (GESTimelineElement * self,
+    GESTimelineElement * parent)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (parent), FALSE);
+  g_return_val_if_fail (self != parent, FALSE);
+
+  GST_DEBUG_OBJECT (self, "set parent (ref and sink)");
+
+  if (G_UNLIKELY (self->parent != NULL))
+    goto had_parent;
+
+  self->parent = parent;
+  g_object_ref_sink (self);
+
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_PARENT]);
+  return TRUE;
+
+  /* ERROR handling */
+had_parent:
+  {
+    GST_DEBUG_OBJECT (self, "set parent failed, object already had a parent");
+    return FALSE;
+  }
+}
+
+/**
+ * ges_timeline_element_get_parent:
+ * @self: a #GESTimelineElement
+ *
+ * Returns the parent of @self. This function increases the refcount
+ * of the parent self so you should gst_object_unref() it after usage.
+ *
+ * Returns: (transfer full): parent of @self, this can be %NULL if @self
+ *   has no parent. unref after usage.
+ */
+GESTimelineElement *
+ges_timeline_element_get_parent (GESTimelineElement * self)
+{
+  GESTimelineElement *result = NULL;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
+
+  result = self->parent;
+  if (G_LIKELY (result))
+    gst_object_ref (result);
+
+  return result;
+}
 
 /**
  * ges_timeline_element_set_start:

@@ -322,6 +322,8 @@ GES_TYPE_TIMELINE_LAYER
 <TITLE>GESTimelineElement</TITLE>
 GESTimelineElement
 GESTimelineElementClass
+ges_timeline_element_set_parent
+ges_timeline_element_get_parent
 ges_timeline_element_set_start
 ges_timeline_element_set_inpoint
 ges_timeline_element_set_duration
@@ -332,6 +334,7 @@ ges_timeline_element_ripple_end
 ges_timeline_element_roll_start
 ges_timeline_element_roll_end
 ges_timeline_element_trim
+GES_TIMELINE_ELEMENT_PARENT
 GES_TIMELINE_ELEMENT_START
 GES_TIMELINE_ELEMENT_INPOINT
 GES_TIMELINE_ELEMENT_DURATION

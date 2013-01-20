@@ -76,6 +76,13 @@ typedef struct _GESTimelineElementPrivate GESTimelineElementPrivate;
  */
 #define GES_TIMELINE_ELEMENT_PRIORITY(obj) (((GESTimelineElement*)obj)->priority)
 
+/**
+ * GES_TIMELINE_ELEMENT_PARENT:
+ * @obj: a #GESTimelineElement
+ *
+ * The parent of the object.
+ */
+#define GES_TIMELINE_ELEMENT_PARENT(obj) (((GESTimelineElement*)obj)->parent)
 
 /**
  * GESTimelineElementClass:
@@ -132,7 +139,8 @@ struct _GESTimelineElement
 {
   GInitiallyUnowned parent_instance;
 
-  /*< protected >*/
+  /*< read only >*/
+  GESTimelineElement *parent;
   GESAsset *asset;
   GstClockTime start;
   GstClockTime inpoint;
@@ -149,17 +157,19 @@ struct _GESTimelineElement
 
 GType ges_timeline_element_get_type (void) G_GNUC_CONST;
 
-void ges_timeline_element_set_start            (GESTimelineElement *self, GstClockTime start);
-void ges_timeline_element_set_inpoint          (GESTimelineElement *self, GstClockTime inpoint);
-void ges_timeline_element_set_duration         (GESTimelineElement *self, GstClockTime duration);
-void ges_timeline_element_set_max_duration     (GESTimelineElement *self, GstClockTime duration);
-void ges_timeline_element_set_priority         (GESTimelineElement *self, guint32 priority);
-gboolean ges_timeline_element_ripple           (GESTimelineElement *self, GstClockTime  start);
-gboolean ges_timeline_element_ripple_end       (GESTimelineElement *self, GstClockTime  end);
-gboolean ges_timeline_element_roll_start       (GESTimelineElement *self, GstClockTime  start);
-gboolean ges_timeline_element_roll_end         (GESTimelineElement *self, GstClockTime  end);
-gboolean ges_timeline_element_trim             (GESTimelineElement *self, GstClockTime  start);
-GESTimelineElement * ges_timeline_element_copy      (GESTimelineElement *self, gboolean deep);
+GESTimelineElement * ges_timeline_element_get_parent (GESTimelineElement * self);
+gboolean ges_timeline_element_set_parent             (GESTimelineElement *self, GESTimelineElement *parent);
+void ges_timeline_element_set_start                  (GESTimelineElement *self, GstClockTime start);
+void ges_timeline_element_set_inpoint                (GESTimelineElement *self, GstClockTime inpoint);
+void ges_timeline_element_set_duration               (GESTimelineElement *self, GstClockTime duration);
+void ges_timeline_element_set_max_duration           (GESTimelineElement *self, GstClockTime duration);
+void ges_timeline_element_set_priority               (GESTimelineElement *self, guint32 priority);
+gboolean ges_timeline_element_ripple                 (GESTimelineElement *self, GstClockTime  start);
+gboolean ges_timeline_element_ripple_end             (GESTimelineElement *self, GstClockTime  end);
+gboolean ges_timeline_element_roll_start             (GESTimelineElement *self, GstClockTime  start);
+gboolean ges_timeline_element_roll_end               (GESTimelineElement *self, GstClockTime  end);
+gboolean ges_timeline_element_trim                   (GESTimelineElement *self, GstClockTime  start);
+GESTimelineElement * ges_timeline_element_copy       (GESTimelineElement *self, gboolean deep);
 
 G_END_DECLS
 
