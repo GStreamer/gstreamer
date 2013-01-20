@@ -27,7 +27,7 @@
 #include "ges-asset.h"
 #include "ges-internal.h"
 #include "ges-extractable.h"
-#include "ges-timeline-file-source.h"
+#include "ges-uri-clip.h"
 
 static GQuark ges_asset_key;
 

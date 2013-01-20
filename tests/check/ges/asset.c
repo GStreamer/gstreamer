@@ -44,7 +44,7 @@ GST_START_TEST (test_basic)
   ges_init ();
 
   mainloop = g_main_loop_new (NULL, FALSE);
-  ges_asset_request_async (GES_TYPE_TIMELINE_FILE_SOURCE,
+  ges_asset_request_async (GES_TYPE_URI_CLIP,
       "file:///this/is/not/for/real", NULL, source_asset_created, NULL);
 
   g_main_loop_run (mainloop);

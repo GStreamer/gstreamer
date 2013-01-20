@@ -440,26 +440,26 @@ GES_TYPE_TIMELINE_SOURCE
 
 <SECTION>
 <FILE>ges-timeline-filesource</FILE>
-<TITLE>GESTimelineFileSource</TITLE>
-GESTimelineFileSource
-ges_timeline_filesource_new
-ges_timeline_filesource_get_max_duration
-ges_timeline_filesource_get_uri
-ges_timeline_filesource_is_image
-ges_timeline_filesource_is_muted
-ges_timeline_filesource_set_is_image
-ges_timeline_filesource_set_max_duration
-ges_timeline_filesource_set_mute
+<TITLE>GESUriClip</TITLE>
+GESUriClip
+ges_uri_clip_new
+ges_uri_clip_get_max_duration
+ges_uri_clip_get_uri
+ges_uri_clip_is_image
+ges_uri_clip_is_muted
+ges_uri_clip_set_is_image
+ges_uri_clip_set_max_duration
+ges_uri_clip_set_mute
 <SUBSECTION Standard>
-GESTimelineFileSourceClass
-GESTimelineFileSourcePrivate
-ges_timeline_filesource_get_type
-GES_IS_TIMELINE_FILE_SOURCE
-GES_IS_TIMELINE_FILE_SOURCE_CLASS
-GES_TIMELINE_FILE_SOURCE
-GES_TIMELINE_FILE_SOURCE_CLASS
-GES_TIMELINE_FILE_SOURCE_GET_CLASS
-GES_TYPE_TIMELINE_FILE_SOURCE
+GESUriClipClass
+GESUriClipPrivate
+ges_uri_clip_get_type
+GES_IS_URI_CLIP
+GES_IS_URI_CLIP_CLASS
+GES_URI_CLIP
+GES_URI_CLIP_CLASS
+GES_URI_CLIP_GET_CLASS
+GES_TYPE_URI_CLIP
 </SECTION>
 
 <SECTION>
@@ -1017,24 +1017,24 @@ GES_ASSET_TRACK_OBJECT_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-asset-file-source</FILE>
-<TITLE>GESAssetFileSource</TITLE>
-GESAssetFileSource
-ges_asset_filesource_get_type
-ges_asset_filesource_get_duration
-ges_asset_filesource_is_image
-ges_asset_filesource_get_info
-ges_asset_filesource_new
-ges_asset_filesource_set_timeout
-ges_asset_filesource_get_stream_assets
+<FILE>ges-uri-clip-asset</FILE>
+<TITLE>GESUriClipAsset</TITLE>
+GESUriClipAsset
+ges_uri_clip_asset_get_type
+ges_uri_clip_asset_get_duration
+ges_uri_clip_asset_is_image
+ges_uri_clip_asset_get_info
+ges_uri_clip_asset_new
+ges_uri_clip_asset_set_timeout
+ges_uri_clip_asset_get_stream_assets
 <SUBSECTION Standard>
-GESAssetFileSourcePrivate
-GES_ASSET_FILESOURCE
-GES_TYPE_ASSET_FILESOURCE
-GES_ASSET_FILESOURCE_CLASS
-GES_IS_ASSET_FILESOURCE
-GES_IS_ASSET_FILESOURCE_CLASS
-GES_ASSET_FILESOURCE_GET_CLASS
+GESUriClipAssetPrivate
+GES_URI_CLIP_ASSET
+GES_TYPE_URI_CLIP_ASSET
+GES_URI_CLIP_ASSET_CLASS
+GES_IS_URI_CLIP_ASSET
+GES_IS_URI_CLIP_ASSET_CLASS
+GES_URI_CLIP_ASSET_GET_CLASS
 </SECTION>
 
 <SECTION>

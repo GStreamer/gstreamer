@@ -11,7 +11,7 @@ class Simple:
         timeline.add_track(trackv)
         timeline.add_layer(layer)
 
-        src = GES.TimelineFileSource.new(uri=uri)
+        src = GES.UriClip.new(uri=uri)
         src.set_start(long(0))
         src.set_duration(long(10 * Gst.SECOND))
         print src

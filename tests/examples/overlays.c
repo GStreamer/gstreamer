@@ -43,7 +43,7 @@ make_source (char *path, guint64 start, guint64 duration, gint priority)
 {
   gchar *uri = gst_filename_to_uri (path, NULL);
 
-  GESClip *ret = GES_CLIP (ges_timeline_filesource_new (uri));
+  GESClip *ret = GES_CLIP (ges_uri_clip_new (uri));
 
   g_object_set (ret,
       "start", (guint64) start,

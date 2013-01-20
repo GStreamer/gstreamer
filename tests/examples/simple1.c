@@ -30,7 +30,7 @@ main (int argc, gchar ** argv)
   GESTimeline *timeline;
   GESTrack *tracka, *trackv;
   GESTimelineLayer *layer1, *layer2;
-  GESTimelineFileSource *src;
+  GESUriClip *src;
   GMainLoop *mainloop;
 
   gint inpoint = 0, duration = 10;
@@ -90,7 +90,7 @@ main (int argc, gchar ** argv)
   if (1) {
     gchar *uri = gst_filename_to_uri (argv[1], NULL);
     /* Add the main audio/video file */
-    src = ges_timeline_filesource_new (uri);
+    src = ges_uri_clip_new (uri);
     g_free (uri);
     g_object_set (src, "in-point", inpoint * GST_SECOND,
         "duration", duration * GST_SECOND, "mute", mute, NULL);

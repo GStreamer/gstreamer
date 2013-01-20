@@ -18,7 +18,7 @@
  */
 
 #include <ges/ges.h>
-#include <ges/ges-asset-file-source.h>
+#include <ges/ges-uri-asset.h>
 #include <gst/pbutils/encoding-profile.h>
 #include <gst/pbutils/gstdiscoverer.h>
 #include <ges/ges-internal.h>
@@ -26,15 +26,15 @@
 static void
 asset_loaded_cb (GObject * source, GAsyncResult * res, GMainLoop * mainloop)
 {
-  GESAssetFileSource *mfs =
-      GES_ASSET_FILESOURCE (ges_asset_request_finish (res, NULL));
+  GESUriClipAsset *mfs =
+      GES_URI_CLIP_ASSET (ges_asset_request_finish (res, NULL));
   GstDiscovererInfo *discoverer_info = NULL;
-  discoverer_info = ges_asset_filesource_get_info (mfs);
+  discoverer_info = ges_uri_clip_asset_get_info (mfs);
 
   GST_DEBUG ("Result is %d", gst_discoverer_info_get_result (discoverer_info));
   GST_DEBUG ("Info type is %s", G_OBJECT_TYPE_NAME (mfs));
   GST_DEBUG ("Duration is %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (ges_asset_filesource_get_duration (mfs)));
+      GST_TIME_ARGS (ges_uri_clip_asset_get_duration (mfs)));
 
   g_object_unref (mfs);
 
@@ -60,7 +60,7 @@ main (int argc, gchar ** argv)
    * order to function properly ! */
   mainloop = g_main_loop_new (NULL, FALSE);
 
-  ges_asset_request_async (GES_TYPE_TIMELINE_FILE_SOURCE, argv[1], NULL,
+  ges_asset_request_async (GES_TYPE_URI_CLIP, argv[1], NULL,
       (GAsyncReadyCallback) asset_loaded_cb, mainloop);
 
   g_main_loop_run (mainloop);

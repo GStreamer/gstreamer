@@ -32,7 +32,7 @@ check_PROGRAMS = \
 	ges/basic	\
 	ges/layer	\
 	ges/effects	\
-	ges/filesource	\
+	ges/uriclip	\
 	ges/simplelayer	\
 	ges/clip	\
 	ges/timelineedition	\

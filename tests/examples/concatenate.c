@@ -38,8 +38,8 @@ asset_loaded_cb (GObject * source_object, GAsyncResult * res,
 {
   GError *error = NULL;
 
-  GESAssetFileSource *mfs =
-      GES_ASSET_FILESOURCE (ges_asset_request_finish (res, &error));
+  GESUriClipAsset *mfs =
+      GES_URI_CLIP_ASSET (ges_asset_request_finish (res, &error));
 
   if (error) {
     GST_WARNING ("error creating asseti %s", error->message);
@@ -52,7 +52,7 @@ asset_loaded_cb (GObject * source_object, GAsyncResult * res,
    * Check if we have loaded last asset and trigger concatenating
    */
   if (assetsLoaded == assetsCount) {
-    GstDiscovererInfo *info = ges_asset_filesource_get_info (mfs);
+    GstDiscovererInfo *info = ges_uri_clip_asset_get_info (mfs);
     GstEncodingProfile *profile = make_profile_from_info (info);
     ges_timeline_pipeline_set_render_settings (pipeline, output_uri, profile);
     /* We want the pipeline to render (without any preview) */
@@ -94,7 +94,7 @@ main (int argc, char **argv)
   assetsCount = argc - 2;
 
   for (i = 2; i < argc; i++) {
-    ges_asset_request_async (GES_TYPE_TIMELINE_FILE_SOURCE, argv[i],
+    ges_asset_request_async (GES_TYPE_URI_CLIP, argv[i],
         NULL, (GAsyncReadyCallback) asset_loaded_cb, mainloop);
   }
 

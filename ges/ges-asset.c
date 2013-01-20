@@ -25,7 +25,7 @@
  * The Assets in the GStreamer Editing Services represent the ressources
  * that can be used. You can create assets for any type that implements the #GESExtractable
  * interface, for example #GESClips, #GESFormatter, and #GESTrackObject do implement it.
- * This means that asssets will represent for example a #GESTimelineFileSources, #GESTrackEffect etc,
+ * This means that asssets will represent for example a #GESUriClips, #GESTrackEffect etc,
  * and then you can extract objects of those types with the appropriate parameters from the asset
  * using the #ges_asset_extract method:
  *
@@ -47,7 +47,7 @@
  * custom effects. Note that #GESAsset management is making easier thanks to the #GESProject class.
  *
  * Each asset are represented by a pair of @extractable_type and @id (string). Actually the @extractable_type
- * is the type that implements the #GESExtractable interface, that means that for example for a #GESTimelineFileSource,
+ * is the type that implements the #GESExtractable interface, that means that for example for a #GESUriClip,
  * the type that implements the #GESExtractable interface is #GESClip.
  * The identifier represents different things depending on the @extractable_type and you should check
  * the documentation of each type to know what the ID of #GESAsset actually represents for that type. By default,
@@ -698,7 +698,7 @@ ges_asset_get_extractable_type (GESAsset * self)
  *
  * Note that it won't be possible to instantiate the first %GESAsset with
  * @id depending on the @extractable_type. For example instantiate a
- * #GESAsset that extract #GESTimelineFileSource needs to be done async
+ * #GESAsset that extract #GESUriClip needs to be done async
  * the first time for a specific ID.
  *
  * Returns: (transfer full) (allow-none): A reference to the wanted #GESAsset or %NULL
@@ -789,7 +789,7 @@ done:
  *    new asset. The class must implement the #GESExtractable interface.
  * @id: The Identifier of the asset we want to create. This identifier depends of the extractable,
  * type you want. By default it is the name of the class itself (or %NULL), but for example for a
- * GESTrackParseLaunchEffect, it will be the pipeline description, for a GESTimelineFileSource it
+ * GESTrackParseLaunchEffect, it will be the pipeline description, for a GESUriClip it
  * will be the name of the file, etc... You should refer to the documentation of the #GESExtractable
  * type you want to create a #GESAsset for.
  * @cancellable: (allow-none): optional %GCancellable object, %NULL to ignore.
@@ -824,7 +824,7 @@ done:
  * }
  *
  * // The request:
- * ges_asset_request_async (GES_TYPE_TIMELINE_FILE_SOURCE, some_uri, NULL,
+ * ges_asset_request_async (GES_TYPE_URI_CLIP, some_uri, NULL,
  *    (GAsyncReadyCallback) asset_loaded_cb, user_data);
  * ]|
  */

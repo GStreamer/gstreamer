@@ -19,10 +19,10 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION: ges-asset-file-source
- * @short_description: A GESAsset subclass specialized in GESTimelineFileSource extraction
+ * SECTION: ges-uri-clip-asset
+ * @short_description: A GESAsset subclass specialized in GESUriClip extraction
  *
- * The #GESAssetFileSource is a special #GESAsset that lets you handle
+ * The #GESUriClipAsset is a special #GESAsset that lets you handle
  * the media file to use inside the GStreamer Editing Services. It has APIs that
  * let you get information about the medias. Also, the tags found in the media file are
  * set as Metadatas of the Asser.
@@ -40,7 +40,7 @@ initable_iface_init (GInitableIface * initable_iface)
   initable_iface->init = NULL;
 }
 
-G_DEFINE_TYPE_WITH_CODE (GESAssetFileSource, ges_asset_filesource,
+G_DEFINE_TYPE_WITH_CODE (GESUriClipAsset, ges_uri_clip_asset,
     GES_TYPE_ASSET_CLIP,
     G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init));
 
@@ -58,7 +58,7 @@ static GParamSpec *properties[PROP_LAST];
 static void discoverer_discovered_cb (GstDiscoverer * discoverer,
     GstDiscovererInfo * info, GError * err, gpointer user_data);
 
-struct _GESAssetFileSourcePrivate
+struct _GESUriClipAssetPrivate
 {
   GstDiscovererInfo *info;
   GstClockTime duration;
@@ -70,7 +70,7 @@ struct _GESAssetFileSourcePrivate
 struct _GESAssetTrackFileSourcePrivate
 {
   GstDiscovererStreamInfo *sinfo;
-  GESAssetFileSource *parent_asset;
+  GESUriClipAsset *parent_asset;
 
   const gchar *uri;
   GESTrackType type;
@@ -78,10 +78,10 @@ struct _GESAssetTrackFileSourcePrivate
 
 
 static void
-ges_asset_filesource_get_property (GObject * object, guint property_id,
+ges_uri_clip_asset_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESAssetFileSourcePrivate *priv = GES_ASSET_FILESOURCE (object)->priv;
+  GESUriClipAssetPrivate *priv = GES_URI_CLIP_ASSET (object)->priv;
 
   switch (property_id) {
     case PROP_DURATION:
@@ -93,10 +93,10 @@ ges_asset_filesource_get_property (GObject * object, guint property_id,
 }
 
 static void
-ges_asset_filesource_set_property (GObject * object, guint property_id,
+ges_uri_clip_asset_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESAssetFileSourcePrivate *priv = GES_ASSET_FILESOURCE (object)->priv;
+  GESUriClipAssetPrivate *priv = GES_URI_CLIP_ASSET (object)->priv;
 
   switch (property_id) {
     case PROP_DURATION:
@@ -112,7 +112,7 @@ _start_loading (GESAsset * asset, GError ** error)
 {
   gboolean ret;
   const gchar *uri;
-  GESAssetFileSourceClass *class = GES_ASSET_FILESOURCE_GET_CLASS (asset);
+  GESUriClipAssetClass *class = GES_URI_CLIP_ASSET_GET_CLASS (asset);
 
   GST_DEBUG ("Started loading %p", asset);
 
@@ -173,13 +173,13 @@ _asset_proxied (GESAsset * self, const gchar * new_uri)
 }
 
 static void
-ges_asset_filesource_class_init (GESAssetFileSourceClass * klass)
+ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  g_type_class_add_private (klass, sizeof (GESAssetFileSourcePrivate));
+  g_type_class_add_private (klass, sizeof (GESUriClipAssetPrivate));
 
-  object_class->get_property = ges_asset_filesource_get_property;
-  object_class->set_property = ges_asset_filesource_set_property;
+  object_class->get_property = ges_uri_clip_asset_get_property;
+  object_class->set_property = ges_uri_clip_asset_set_property;
 
   GES_ASSET_CLASS (klass)->start_loading = _start_loading;
   GES_ASSET_CLASS (klass)->request_id_update = _request_id_update;
@@ -187,7 +187,7 @@ ges_asset_filesource_class_init (GESAssetFileSourceClass * klass)
 
 
   /**
-   * GESAssetFileSource:duration:
+   * GESUriClipAsset:duration:
    *
    * The duration (in nanoseconds) of the media file
    */
@@ -211,12 +211,12 @@ ges_asset_filesource_class_init (GESAssetFileSourceClass * klass)
 }
 
 static void
-ges_asset_filesource_init (GESAssetFileSource * self)
+ges_uri_clip_asset_init (GESUriClipAsset * self)
 {
-  GESAssetFileSourcePrivate *priv;
+  GESUriClipAssetPrivate *priv;
 
   priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_ASSET_FILESOURCE, GESAssetFileSourcePrivate);
+      GES_TYPE_URI_CLIP_ASSET, GESUriClipAssetPrivate);
 
   priv->info = NULL;
   priv->duration = GST_CLOCK_TIME_NONE;
@@ -224,12 +224,12 @@ ges_asset_filesource_init (GESAssetFileSource * self)
 }
 
 static void
-_create_track_file_source_asset (GESAssetFileSource * asset,
+_create_track_file_source_asset (GESUriClipAsset * asset,
     GstDiscovererStreamInfo * sinfo, GESTrackType type)
 {
   GESAsset *tck_filesource_asset;
   GESAssetTrackFileSourcePrivate *priv_tckasset;
-  GESAssetFileSourcePrivate *priv = asset->priv;
+  GESUriClipAssetPrivate *priv = asset->priv;
   gchar *stream_id =
       g_strdup (gst_discoverer_stream_info_get_stream_id (sinfo));
 
@@ -255,13 +255,12 @@ _create_track_file_source_asset (GESAssetFileSource * asset,
 }
 
 static void
-ges_asset_filesource_set_info (GESAssetFileSource * self,
-    GstDiscovererInfo * info)
+ges_uri_clip_asset_set_info (GESUriClipAsset * self, GstDiscovererInfo * info)
 {
   GList *tmp, *stream_list;
 
   GESTrackType supportedformats = GES_TRACK_TYPE_UNKNOWN;
-  GESAssetFileSourcePrivate *priv = GES_ASSET_FILESOURCE (self)->priv;
+  GESUriClipAssetPrivate *priv = GES_URI_CLIP_ASSET (self)->priv;
 
   /* Extract infos from the GstDiscovererInfo */
   stream_list = gst_discoverer_info_get_stream_list (info);
@@ -322,22 +321,21 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
   const GstTagList *tags;
 
   const gchar *uri = gst_discoverer_info_get_uri (info);
-  GESAssetFileSource *mfs =
-      GES_ASSET_FILESOURCE (ges_asset_cache_lookup
-      (GES_TYPE_TIMELINE_FILE_SOURCE, uri));
+  GESUriClipAsset *mfs =
+      GES_URI_CLIP_ASSET (ges_asset_cache_lookup (GES_TYPE_URI_CLIP, uri));
 
   tags = gst_discoverer_info_get_tags (info);
   if (tags)
     gst_tag_list_foreach (tags, (GstTagForeachFunc) _set_meta_foreach, mfs);
 
   if (err == NULL)
-    ges_asset_filesource_set_info (mfs, info);
-  ges_asset_cache_set_loaded (GES_TYPE_TIMELINE_FILE_SOURCE, uri, err);
+    ges_uri_clip_asset_set_info (mfs, info);
+  ges_asset_cache_set_loaded (GES_TYPE_URI_CLIP, uri, err);
 }
 
 /* API implementation */
 /**
- * ges_asset_filesource_get_info:
+ * ges_uri_clip_asset_get_info:
  * @self: Target asset
  *
  * Gets #GstDiscovererInfo about the file
@@ -345,68 +343,68 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
  * Returns: (transfer none): #GstDiscovererInfo of specified asset
  */
 GstDiscovererInfo *
-ges_asset_filesource_get_info (const GESAssetFileSource * self)
+ges_uri_clip_asset_get_info (const GESUriClipAsset * self)
 {
   return self->priv->info;
 }
 
 /**
- * ges_asset_filesource_get_duration:
- * @self: a #GESAssetFileSource
+ * ges_uri_clip_asset_get_duration:
+ * @self: a #GESUriClipAsset
  *
  * Gets duration of the file represented by @self
  *
  * Returns: The duration of @self
  */
 GstClockTime
-ges_asset_filesource_get_duration (GESAssetFileSource * self)
+ges_uri_clip_asset_get_duration (GESUriClipAsset * self)
 {
-  g_return_val_if_fail (GES_IS_ASSET_FILESOURCE (self), GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (GES_IS_URI_CLIP_ASSET (self), GST_CLOCK_TIME_NONE);
 
   return self->priv->duration;
 }
 
 /**
- * ges_asset_filesource_is_image:
+ * ges_uri_clip_asset_is_image:
  * @self: a #indent: Standard input:311: Error:Unexpected end of file
-GESAssetFileSource
+GESUriClipAsset
  *
  * Gets Whether the file represented by @self is an image or not
  *
  * Returns: Whether the file represented by @self is an image or not
  */
 gboolean
-ges_asset_filesource_is_image (GESAssetFileSource * self)
+ges_uri_clip_asset_is_image (GESUriClipAsset * self)
 {
-  g_return_val_if_fail (GES_IS_ASSET_FILESOURCE (self), FALSE);
+  g_return_val_if_fail (GES_IS_URI_CLIP_ASSET (self), FALSE);
 
   return self->priv->is_image;
 }
 
 /**
- * ges_asset_filesource_new:
- * @uri: The URI of the file for which to create a #GESAssetFileSource
+ * ges_uri_clip_asset_new:
+ * @uri: The URI of the file for which to create a #GESUriClipAsset
  * @cancellable: optional %GCancellable object, %NULL to ignore.
  * @callback: (scope async): a #GAsyncReadyCallback to call when the initialization is finished
  * @user_data: The user data to pass when @callback is called
  *
- * Creates a #GESAssetFileSource for @uri
+ * Creates a #GESUriClipAsset for @uri
  *
- * Example of request of a GESAssetFileSource:
+ * Example of request of a GESUriClipAsset:
  * |[
  * // The request callback
  * static void
  * filesource_asset_loaded_cb (GESAsset * source, GAsyncResult * res, gpointer user_data)
  * {
  *   GError *error = NULL;
- *   GESAssetFileSource *filesource_asset;
+ *   GESUriClipAsset *filesource_asset;
  *
- *   filesource_asset = GES_ASSET_FILESOURCE (ges_asset_request_finish (res, &error));
+ *   filesource_asset = GES_URI_CLIP_ASSET (ges_asset_request_finish (res, &error));
  *   if (filesource_asset) {
  *    g_print ("The file: %s is usable as a FileSource, it is%s an image and lasts %" GST_TIME_FORMAT,
  *        ges_asset_get_id (GES_ASSET (filesource_asset))
- *        ges_asset_filesource_is_image (filesource_asset) ? "" : " not",
- *        GST_TIME_ARGS (ges_asset_filesource_get_duration (filesource_asset));
+ *        ges_uri_clip_asset_is_image (filesource_asset) ? "" : " not",
+ *        GST_TIME_ARGS (ges_uri_clip_asset_get_duration (filesource_asset));
  *   } else {
  *    g_print ("The file: %s is *not* usable as a FileSource because: %s",
  *        ges_asset_get_id (source), error->message);
@@ -416,36 +414,36 @@ ges_asset_filesource_is_image (GESAssetFileSource * self)
  * }
  *
  * // The request:
- * ges_asset_filesource_new (uri, (GAsyncReadyCallback) filesource_asset_loaded_cb, user_data);
+ * ges_uri_clip_asset_new (uri, (GAsyncReadyCallback) filesource_asset_loaded_cb, user_data);
  * ]|
  */
 void
-ges_asset_filesource_new (const gchar * uri, GCancellable * cancellable,
+ges_uri_clip_asset_new (const gchar * uri, GCancellable * cancellable,
     GAsyncReadyCallback callback, gpointer user_data)
 {
-  ges_asset_request_async (GES_TYPE_TIMELINE_FILE_SOURCE, uri, cancellable,
+  ges_asset_request_async (GES_TYPE_URI_CLIP, uri, cancellable,
       callback, user_data);
 }
 
 /**
- * ges_asset_filesource_set_timeout:
- * @class: The #GESAssetFileSourceClass on which to set the discoverer timeout
+ * ges_uri_clip_asset_set_timeout:
+ * @class: The #GESUriClipAssetClass on which to set the discoverer timeout
  * @timeout: The timeout to set
  *
- * Sets the timeout of #GESAssetFileSource loading
+ * Sets the timeout of #GESUriClipAsset loading
  */
 void
-ges_asset_filesource_set_timeout (GESAssetFileSourceClass * class,
+ges_uri_clip_asset_set_timeout (GESUriClipAssetClass * class,
     GstClockTime timeout)
 {
-  g_return_if_fail (GES_IS_ASSET_FILESOURCE_CLASS (class));
+  g_return_if_fail (GES_IS_URI_CLIP_ASSET_CLASS (class));
 
   g_object_set (class->discoverer, "timeout", timeout, NULL);
 }
 
 /**
- * ges_asset_filesource_get_stream_assets:
- * @self: A #GESAssetFileSource
+ * ges_uri_clip_asset_get_stream_assets:
+ * @self: A #GESUriClipAsset
  *
  * Get the GESAssetTrackFileSource @self containes
  *
@@ -453,9 +451,9 @@ ges_asset_filesource_set_timeout (GESAssetFileSourceClass * class,
  * #GList of #GESAssetTrackFileSource
  */
 const GList *
-ges_asset_filesource_get_stream_assets (GESAssetFileSource * self)
+ges_uri_clip_asset_get_stream_assets (GESUriClipAsset * self)
 {
-  g_return_val_if_fail (GES_IS_ASSET_FILESOURCE (self), FALSE);
+  g_return_val_if_fail (GES_IS_URI_CLIP_ASSET (self), FALSE);
 
   return self->priv->asset_trackfilesources;
 }
@@ -468,7 +466,7 @@ ges_asset_filesource_get_stream_assets (GESAssetFileSource * self)
  * @short_description: A GESAsset subclass specialized in GESTrackFileSource extraction
  *
  * NOTE: You should never request such a #GESAsset as they will be created automatically
- * by #GESAssetFileSource-s.
+ * by #GESUriClipAsset-s.
  */
 
 G_DEFINE_TYPE (GESAssetTrackFileSource, ges_asset_track_filesource,
@@ -524,11 +522,11 @@ ges_asset_track_filesource_init (GESAssetTrackFileSource * self)
 
 /**
  * ges_asset_track_filesource_get_stream_info:
- * @asset: A #GESAssetFileSource
+ * @asset: A #GESUriClipAsset
  *
  * Get the #GstDiscovererStreamInfo user by @asset
  *
- * Returns: (transfer none): a #GESAssetFileSource
+ * Returns: (transfer none): a #GESUriClipAsset
  */
 GstDiscovererStreamInfo *
 ges_asset_track_filesource_get_stream_info (GESAssetTrackFileSource * asset)
@@ -548,13 +546,13 @@ ges_asset_track_filesource_get_stream_uri (GESAssetTrackFileSource * asset)
 
 /**
  * ges_asset_track_filesource_get_filesource_asset:
- * @asset: A #GESAssetFileSource
+ * @asset: A #GESUriClipAsset
  *
- * Get the #GESAssetFileSource @self is contained in
+ * Get the #GESUriClipAsset @self is contained in
  *
- * Returns: a #GESAssetFileSource
+ * Returns: a #GESUriClipAsset
  */
-const GESAssetFileSource *
+const GESUriClipAsset *
 ges_asset_track_filesource_get_filesource_asset (GESAssetTrackFileSource *
     asset)
 {

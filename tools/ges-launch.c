@@ -211,7 +211,7 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
       }
 
       inpoint = str_to_time (argv[i * 3 + 1]);
-      obj = GES_CLIP (ges_timeline_filesource_new (uri));
+      obj = GES_CLIP (ges_uri_clip_new (uri));
       g_object_set (obj,
           "in-point", (guint64) inpoint, "duration", (guint64) duration, NULL);
 

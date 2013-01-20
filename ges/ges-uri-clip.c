@@ -27,10 +27,10 @@
  */
 
 #include "ges-internal.h"
-#include "ges-timeline-file-source.h"
+#include "ges-uri-clip.h"
 #include "ges-timeline-source.h"
 #include "ges-track-filesource.h"
-#include "ges-asset-file-source.h"
+#include "ges-uri-asset.h"
 #include "ges-asset-track-object.h"
 #include "ges-extractable.h"
 #include "ges-track-image-source.h"
@@ -38,16 +38,16 @@
 
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
 
-#define parent_class ges_timeline_filesource_parent_class
+#define parent_class ges_uri_clip_parent_class
 
-G_DEFINE_TYPE_WITH_CODE (GESTimelineFileSource, ges_timeline_filesource,
+G_DEFINE_TYPE_WITH_CODE (GESUriClip, ges_uri_clip,
     GES_TYPE_TIMELINE_SOURCE,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 
 GESExtractableInterface *parent_extractable_iface;
 
-struct _GESTimelineFileSourcePrivate
+struct _GESUriClipPrivate
 {
   gchar *uri;
 
@@ -65,23 +65,21 @@ enum
 };
 
 
-static GList *ges_timeline_filesource_create_track_objects (GESClip *
+static GList *ges_uri_clip_create_track_objects (GESClip *
     obj, GESTrackType type);
 static GESTrackObject
-    * ges_timeline_filesource_create_track_object (GESClip * obj,
-    GESTrackType type);
-void ges_timeline_filesource_set_uri (GESTimelineFileSource * self,
-    gchar * uri);
+    * ges_uri_clip_create_track_object (GESClip * obj, GESTrackType type);
+void ges_uri_clip_set_uri (GESUriClip * self, gchar * uri);
 
 gboolean
 filesource_set_max_duration (GESTimelineElement * element,
     GstClockTime maxduration);
 
 static void
-ges_timeline_filesource_get_property (GObject * object, guint property_id,
+ges_uri_clip_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESTimelineFileSourcePrivate *priv = GES_TIMELINE_FILE_SOURCE (object)->priv;
+  GESUriClipPrivate *priv = GES_URI_CLIP (object)->priv;
 
   switch (property_id) {
     case PROP_URI:
@@ -103,21 +101,20 @@ ges_timeline_filesource_get_property (GObject * object, guint property_id,
 }
 
 static void
-ges_timeline_filesource_set_property (GObject * object, guint property_id,
+ges_uri_clip_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESTimelineFileSource *uriclip = GES_TIMELINE_FILE_SOURCE (object);
+  GESUriClip *uriclip = GES_URI_CLIP (object);
 
   switch (property_id) {
     case PROP_URI:
-      ges_timeline_filesource_set_uri (uriclip, g_value_dup_string (value));
+      ges_uri_clip_set_uri (uriclip, g_value_dup_string (value));
       break;
     case PROP_MUTE:
-      ges_timeline_filesource_set_mute (uriclip, g_value_get_boolean (value));
+      ges_uri_clip_set_mute (uriclip, g_value_get_boolean (value));
       break;
     case PROP_IS_IMAGE:
-      ges_timeline_filesource_set_is_image (uriclip,
-          g_value_get_boolean (value));
+      ges_uri_clip_set_is_image (uriclip, g_value_get_boolean (value));
       break;
     case PROP_SUPPORTED_FORMATS:
       ges_clip_set_supported_formats (GES_CLIP (uriclip),
@@ -129,9 +126,9 @@ ges_timeline_filesource_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_timeline_filesource_finalize (GObject * object)
+ges_uri_clip_finalize (GObject * object)
 {
-  GESTimelineFileSourcePrivate *priv = GES_TIMELINE_FILE_SOURCE (object)->priv;
+  GESUriClipPrivate *priv = GES_URI_CLIP (object)->priv;
 
   if (priv->uri)
     g_free (priv->uri);
@@ -139,21 +136,21 @@ ges_timeline_filesource_finalize (GObject * object)
 }
 
 static void
-ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
+ges_uri_clip_class_init (GESUriClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
   GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTimelineFileSourcePrivate));
+  g_type_class_add_private (klass, sizeof (GESUriClipPrivate));
 
-  object_class->get_property = ges_timeline_filesource_get_property;
-  object_class->set_property = ges_timeline_filesource_set_property;
-  object_class->finalize = ges_timeline_filesource_finalize;
+  object_class->get_property = ges_uri_clip_get_property;
+  object_class->set_property = ges_uri_clip_set_property;
+  object_class->finalize = ges_uri_clip_finalize;
 
 
   /**
-   * GESTimelineFileSource:uri:
+   * GESUriClip:uri:
    *
    * The location of the file/resource to use.
    */
@@ -162,7 +159,7 @@ ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   /**
-   * GESTimelineFileSource:mute:
+   * GESUriClip:mute:
    *
    * Whether the sound will be played or not.
    */
@@ -171,7 +168,7 @@ ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
           FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineFileSource:is-image:
+   * GESUriClip:is-image:
    *
    * Whether this filesource represents a still image or not. This must be set
    * before create_track_objects is called.
@@ -191,10 +188,8 @@ ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
 
   element_class->set_max_duration = filesource_set_max_duration;
 
-  timobj_class->create_track_objects =
-      ges_timeline_filesource_create_track_objects;
-  timobj_class->create_track_object =
-      ges_timeline_filesource_create_track_object;
+  timobj_class->create_track_objects = ges_uri_clip_create_track_objects;
+  timobj_class->create_track_object = ges_uri_clip_create_track_object;
   timobj_class->need_fill_track = FALSE;
 
 }
@@ -225,24 +220,24 @@ extractable_get_parameters_from_id (const gchar * id, guint * n_params)
 static gchar *
 extractable_get_id (GESExtractable * self)
 {
-  return g_strdup (GES_TIMELINE_FILE_SOURCE (self)->priv->uri);
+  return g_strdup (GES_URI_CLIP (self)->priv->uri);
 }
 
 static void
 extractable_set_asset (GESExtractable * self, GESAsset * asset)
 {
-  GESTimelineFileSource *uriclip = GES_TIMELINE_FILE_SOURCE (self);
-  GESAssetFileSource *filesource_asset = GES_ASSET_FILESOURCE (asset);
+  GESUriClip *uriclip = GES_URI_CLIP (self);
+  GESUriClipAsset *filesource_asset = GES_URI_CLIP_ASSET (asset);
   GESClip *clip = GES_CLIP (self);
 
   if (GST_CLOCK_TIME_IS_VALID (GES_TIMELINE_ELEMENT (clip)) == FALSE)
     _set_duration0 (GES_TIMELINE_ELEMENT (uriclip),
-        ges_asset_filesource_get_duration (filesource_asset));
+        ges_uri_clip_asset_get_duration (filesource_asset));
 
   ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (uriclip),
-      ges_asset_filesource_get_duration (filesource_asset));
-  ges_timeline_filesource_set_is_image (uriclip,
-      ges_asset_filesource_is_image (filesource_asset));
+      ges_uri_clip_asset_get_duration (filesource_asset));
+  ges_uri_clip_set_is_image (uriclip,
+      ges_uri_clip_asset_is_image (filesource_asset));
 
   if (ges_clip_get_supported_formats (clip) == GES_TRACK_TYPE_UNKNOWN) {
 
@@ -257,7 +252,7 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
 static void
 ges_extractable_interface_init (GESExtractableInterface * iface)
 {
-  iface->asset_type = GES_TYPE_ASSET_FILESOURCE;
+  iface->asset_type = GES_TYPE_URI_CLIP_ASSET;
   iface->check_id = (GESExtractableCheckId) extractable_check_id;
   iface->get_parameters_from_id = extractable_get_parameters_from_id;
   iface->get_id = extractable_get_id;
@@ -265,25 +260,25 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 }
 
 static void
-ges_timeline_filesource_init (GESTimelineFileSource * self)
+ges_uri_clip_init (GESUriClip * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TIMELINE_FILE_SOURCE, GESTimelineFileSourcePrivate);
+      GES_TYPE_URI_CLIP, GESUriClipPrivate);
 
   /* Setting the duration to -1 by default. */
   GES_TIMELINE_ELEMENT (self)->duration = GST_CLOCK_TIME_NONE;
 }
 
 /**
- * ges_timeline_filesource_set_mute:
- * @self: the #GESTimelineFileSource on which to mute or unmute the audio track
+ * ges_uri_clip_set_mute:
+ * @self: the #GESUriClip on which to mute or unmute the audio track
  * @mute: %TRUE to mute @self audio track, %FALSE to unmute it
  *
  * Sets whether the audio track of this timeline object is muted or not.
  *
  */
 void
-ges_timeline_filesource_set_mute (GESTimelineFileSource * self, gboolean mute)
+ges_uri_clip_set_mute (GESUriClip * self, gboolean mute)
 {
   GList *tmp, *trackobjects;
   GESClip *object = (GESClip *) self;
@@ -319,63 +314,62 @@ filesource_set_max_duration (GESTimelineElement * element,
 }
 
 /**
- * ges_timeline_filesource_set_is_image:
- * @self: the #GESTimelineFileSource
+ * ges_uri_clip_set_is_image:
+ * @self: the #GESUriClip
  * @is_image: %TRUE if @self is a still image, %FALSE otherwise
  *
  * Sets whether the timeline object is a still image or not.
  */
 void
-ges_timeline_filesource_set_is_image (GESTimelineFileSource * self,
-    gboolean is_image)
+ges_uri_clip_set_is_image (GESUriClip * self, gboolean is_image)
 {
   self->priv->is_image = is_image;
 }
 
 /**
- * ges_timeline_filesource_is_muted:
- * @self: the #GESTimelineFileSource
+ * ges_uri_clip_is_muted:
+ * @self: the #GESUriClip
  *
  * Lets you know if the audio track of @self is muted or not.
  *
  * Returns: %TRUE if the audio track of @self is muted, %FALSE otherwise.
  */
 gboolean
-ges_timeline_filesource_is_muted (GESTimelineFileSource * self)
+ges_uri_clip_is_muted (GESUriClip * self)
 {
   return self->priv->mute;
 }
 
 /**
- * ges_timeline_filesource_is_image:
- * @self: the #GESTimelineFileSource
+ * ges_uri_clip_is_image:
+ * @self: the #GESUriClip
  *
  * Lets you know if @self is an image or not.
  *
  * Returns: %TRUE if @self is a still image %FALSE otherwise.
  */
 gboolean
-ges_timeline_filesource_is_image (GESTimelineFileSource * self)
+ges_uri_clip_is_image (GESUriClip * self)
 {
   return self->priv->is_image;
 }
 
 /**
- * ges_timeline_filesource_get_uri:
- * @self: the #GESTimelineFileSource
+ * ges_uri_clip_get_uri:
+ * @self: the #GESUriClip
  *
  * Get the location of the resource.
  *
  * Returns: The location of the resource.
  */
 const gchar *
-ges_timeline_filesource_get_uri (GESTimelineFileSource * self)
+ges_uri_clip_get_uri (GESUriClip * self)
 {
   return self->priv->uri;
 }
 
 static GList *
-ges_timeline_filesource_create_track_objects (GESClip * obj, GESTrackType type)
+ges_uri_clip_create_track_objects (GESClip * obj, GESTrackType type)
 {
   GList *res = NULL;
   const GList *tmp, *stream_assets;
@@ -383,7 +377,7 @@ ges_timeline_filesource_create_track_objects (GESClip * obj, GESTrackType type)
   g_return_val_if_fail (GES_TIMELINE_ELEMENT (obj)->asset, NULL);
 
   stream_assets =
-      ges_asset_filesource_get_stream_assets (GES_ASSET_FILESOURCE
+      ges_uri_clip_asset_get_stream_assets (GES_URI_CLIP_ASSET
       (GES_TIMELINE_ELEMENT (obj)->asset));
   for (tmp = stream_assets; tmp; tmp = tmp->next) {
     GESAssetTrackObject *asset = GES_ASSET_TRACK_OBJECT (tmp->data);
@@ -396,9 +390,9 @@ ges_timeline_filesource_create_track_objects (GESClip * obj, GESTrackType type)
 }
 
 static GESTrackObject *
-ges_timeline_filesource_create_track_object (GESClip * obj, GESTrackType type)
+ges_uri_clip_create_track_object (GESClip * obj, GESTrackType type)
 {
-  GESTimelineFileSourcePrivate *priv = GES_TIMELINE_FILE_SOURCE (obj)->priv;
+  GESUriClipPrivate *priv = GES_URI_CLIP (obj)->priv;
   GESTrackObject *res;
 
   if (priv->is_image) {
@@ -428,27 +422,27 @@ ges_timeline_filesource_create_track_object (GESClip * obj, GESTrackType type)
 }
 
 /**
- * ges_timeline_filesource_new:
+ * ges_uri_clip_new:
  * @uri: the URI the source should control
  *
- * Creates a new #GESTimelineFileSource for the provided @uri.
+ * Creates a new #GESUriClip for the provided @uri.
  *
- * Returns: The newly created #GESTimelineFileSource, or NULL if there was an
+ * Returns: The newly created #GESUriClip, or NULL if there was an
  * error.
  */
-GESTimelineFileSource *
-ges_timeline_filesource_new (gchar * uri)
+GESUriClip *
+ges_uri_clip_new (gchar * uri)
 {
-  GESTimelineFileSource *res = NULL;
+  GESUriClip *res = NULL;
 
   if (gst_uri_is_valid (uri))
-    res = g_object_new (GES_TYPE_TIMELINE_FILE_SOURCE, "uri", uri, NULL);
+    res = g_object_new (GES_TYPE_URI_CLIP, "uri", uri, NULL);
 
   return res;
 }
 
 void
-ges_timeline_filesource_set_uri (GESTimelineFileSource * self, gchar * uri)
+ges_uri_clip_set_uri (GESUriClip * self, gchar * uri)
 {
   GESClip *clip = GES_CLIP (self);
   GList *tckobjs = ges_clip_get_track_objects (clip);

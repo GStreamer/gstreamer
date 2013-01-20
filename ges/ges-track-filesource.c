@@ -29,7 +29,7 @@
 #include "ges-internal.h"
 #include "ges-track-object.h"
 #include "ges-track-filesource.h"
-#include "ges-asset-file-source.h"
+#include "ges-uri-asset.h"
 #include "ges-extractable.h"
 
 static gchar *

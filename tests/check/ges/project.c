@@ -173,7 +173,7 @@ asset_added_cb (GESProject * project, GESAsset * asset)
       GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT) {
     assert_equals_string (ges_asset_get_id (asset), "agingtv");
   } else {
-    info = ges_asset_filesource_get_info (GES_ASSET_FILESOURCE (asset));
+    info = ges_uri_clip_asset_get_info (GES_URI_CLIP_ASSET (asset));
     fail_unless (GST_IS_DISCOVERER_INFO (info));
     assert_equals_string (ges_asset_get_id (asset), uri);
   }
@@ -206,10 +206,10 @@ _test_project (GESProject * project, GESTimeline * timeline)
   assert_equals_string (ges_meta_container_get_string (GES_META_CONTAINER
           (project), "name"), "Example project");
   clips =
-      ges_timeline_layer_get_objects (GES_TIMELINE_LAYER (timeline->layers->
-          data));
-  fail_unless (ges_meta_container_get_uint (GES_META_CONTAINER (timeline->
-              layers->data), "a", &a_meta));
+      ges_timeline_layer_get_objects (GES_TIMELINE_LAYER (timeline->
+          layers->data));
+  fail_unless (ges_meta_container_get_uint (GES_META_CONTAINER
+          (timeline->layers->data), "a", &a_meta));
   assert_equals_int (a_meta, 3);
   assert_equals_int (g_list_length (clips), 1);
   media_uri = ges_test_file_uri ("audio_video.ogg");

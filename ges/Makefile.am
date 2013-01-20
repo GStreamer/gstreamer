@@ -21,7 +21,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-timeline-source.c			\
 	ges-timeline-effect.c		\
 	ges-timeline-parse-launch-effect.c		\
-	ges-timeline-file-source.c		\
+	ges-uri-clip.c		\
 	ges-timeline-operation.c		\
 	ges-timeline-transition.c		\
 	ges-timeline-standard-transition.c	\
@@ -48,7 +48,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-formatter.c				\
 	ges-pitivi-formatter.c			\
 	ges-asset.c \
-	ges-asset-file-source.c \
+	ges-uri-asset.c \
 	ges-asset-clip.c \
 	ges-asset-track-object.c \
 	ges-extractable.c \
@@ -73,7 +73,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-clip.h			\
 	ges-timeline-pipeline.h			\
 	ges-timeline-source.h			\
-	ges-timeline-file-source.h		\
+	ges-uri-clip.h		\
 	ges-timeline-effect.h		\
 	ges-timeline-parse-launch-effect.h		\
 	ges-timeline-operation.h		\
@@ -102,7 +102,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-formatter.h				\
 	ges-pitivi-formatter.h			\
 	ges-asset.h \
-	ges-asset-file-source.h \
+	ges-uri-asset.h \
 	ges-asset-clip.h \
 	ges-asset-track-object.h \
 	ges-extractable.h \

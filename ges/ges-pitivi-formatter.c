@@ -347,7 +347,7 @@ static GList *
 save_sources (GESPitiviFormatter * formatter, GList * layers,
     xmlTextWriterPtr writer)
 {
-  GList *clipects, *tmp, *tmplayer;
+  GList *clips, *tmp, *tmplayer;
   GESTimelineLayer *layer;
   GESPitiviFormatterPrivate *priv = formatter->priv;
 
@@ -361,17 +361,16 @@ save_sources (GESPitiviFormatter * formatter, GList * layers,
   for (tmplayer = layers; tmplayer; tmplayer = tmplayer->next) {
     layer = GES_TIMELINE_LAYER (tmplayer->data);
 
-    clipects = ges_timeline_layer_get_objects (layer);
-    for (tmp = clipects; tmp; tmp = tmp->next) {
+    clips = ges_timeline_layer_get_objects (layer);
+    for (tmp = clips; tmp; tmp = tmp->next) {
       SrcMapping *srcmap = g_slice_new0 (SrcMapping);
       GESClip *clip;
       gchar *uriclip_uri;
       clip = tmp->data;
 
-      if (GES_IS_TIMELINE_FILE_SOURCE (clip)) {
+      if (GES_IS_URI_CLIP (clip)) {
 
-        uriclip_uri = (gchar *) ges_timeline_filesource_get_uri
-            (GES_TIMELINE_FILE_SOURCE (clip));
+        uriclip_uri = (gchar *) ges_uri_clip_get_uri (GES_URI_CLIP (clip));
 
         if (!g_hash_table_lookup (priv->saving_source_table, uriclip_uri)) {
           gchar *strid = g_strdup_printf ("%i", priv->nb_sources);
@@ -391,8 +390,8 @@ save_sources (GESPitiviFormatter * formatter, GList * layers,
         source_list = g_list_append (source_list, srcmap);
       }
     }
-    g_list_foreach (clipects, (GFunc) g_object_unref, NULL);
-    g_list_free (clipects);
+    g_list_foreach (clips, (GFunc) g_object_unref, NULL);
+    g_list_free (clips);
     g_object_unref (G_OBJECT (layer));
   }
 
@@ -579,8 +578,7 @@ list_sources (GESFormatter * self)
     g_hash_table_insert (priv->source_uris, g_strdup (filename),
         g_strdup (filename));
     if (self->project)
-      ges_project_create_asset (self->project, filename,
-          GES_TYPE_TIMELINE_FILE_SOURCE);
+      ges_project_create_asset (self->project, filename, GES_TYPE_URI_CLIP);
   }
 
   xmlXPathFreeObject (xpathObj);
@@ -852,7 +850,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
 
   gchar *fac_ref = NULL, *media_type = NULL, *filename = NULL, *prio_str;
   GList *tmp = NULL, *keys, *tmp_key;
-  GESTimelineFileSource *src = NULL;
+  GESUriClip *src = NULL;
   gint prio;
   gboolean a_avail = FALSE, v_avail = FALSE, video;
   GHashTable *tckobj_table = priv->track_objects_table;
@@ -906,7 +904,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
 
         filename = (gchar *) g_hash_table_lookup (source_table, "filename");
 
-        src = ges_timeline_filesource_new (filename);
+        src = ges_uri_clip_new (filename);
 
         if (!video) {
           v_avail = TRUE;

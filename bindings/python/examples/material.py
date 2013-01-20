@@ -14,7 +14,7 @@ class Simple:
         timeline.add_track(trackv)
         timeline.add_layer(self.layer)
 
-        GES.Asset.new_async(GES.TimelineFileSource, uri, None, self.discoveredCb, None)
+        GES.Asset.new_async(GES.UriClip, uri, None, self.discoveredCb, None)
         self.loop = GLib.MainLoop()
         self.loop.run()
 

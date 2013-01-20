@@ -18,8 +18,8 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef _GES_ASSET_FILESOURCE_
-#define _GES_ASSET_FILESOURCE_
+#ifndef _GES_URI_CLIP_ASSET_
+#define _GES_URI_CLIP_ASSET_
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -29,34 +29,34 @@
 #include <ges/ges-asset-track-object.h>
 
 G_BEGIN_DECLS
-#define GES_TYPE_ASSET_FILESOURCE ges_asset_filesource_get_type()
-#define GES_ASSET_FILESOURCE(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_ASSET_FILESOURCE, GESAssetFileSource))
-#define GES_ASSET_FILESOURCE_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_ASSET_FILESOURCE, GESAssetFileSourceClass))
-#define GES_IS_ASSET_FILESOURCE(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_ASSET_FILESOURCE))
-#define GES_IS_ASSET_FILESOURCE_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_ASSET_FILESOURCE))
-#define GES_ASSET_FILESOURCE_GET_CLASS(obj) \
-    (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_ASSET_FILESOURCE, GESAssetFileSourceClass))
+#define GES_TYPE_URI_CLIP_ASSET ges_uri_clip_asset_get_type()
+#define GES_URI_CLIP_ASSET(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_URI_CLIP_ASSET, GESUriClipAsset))
+#define GES_URI_CLIP_ASSET_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_URI_CLIP_ASSET, GESUriClipAssetClass))
+#define GES_IS_URI_CLIP_ASSET(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_URI_CLIP_ASSET))
+#define GES_IS_URI_CLIP_ASSET_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_URI_CLIP_ASSET))
+#define GES_URI_CLIP_ASSET_GET_CLASS(obj) \
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_URI_CLIP_ASSET, GESUriClipAssetClass))
 
-typedef struct _GESAssetFileSourcePrivate GESAssetFileSourcePrivate;
+typedef struct _GESUriClipAssetPrivate GESUriClipAssetPrivate;
 
-GType ges_asset_filesource_get_type (void);
+GType ges_uri_clip_asset_get_type (void);
 
-struct _GESAssetFileSource
+struct _GESUriClipAsset
 {
   GESAssetClip parent;
 
   /* <private> */
-  GESAssetFileSourcePrivate *priv;
+  GESUriClipAssetPrivate *priv;
 
   /* Padding for API extension */
   gpointer __ges_reserved[GES_PADDING];
 };
 
-struct _GESAssetFileSourceClass
+struct _GESUriClipAssetClass
 {
   GESAssetClipClass parent_class;
 
@@ -66,16 +66,16 @@ struct _GESAssetFileSourceClass
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GstDiscovererInfo *ges_asset_filesource_get_info      (const GESAssetFileSource * self);
-GstClockTime ges_asset_filesource_get_duration        (GESAssetFileSource *self);
-gboolean ges_asset_filesource_is_image                (GESAssetFileSource *self);
-void ges_asset_filesource_new                         (const gchar *uri,
+GstDiscovererInfo *ges_uri_clip_asset_get_info      (const GESUriClipAsset * self);
+GstClockTime ges_uri_clip_asset_get_duration        (GESUriClipAsset *self);
+gboolean ges_uri_clip_asset_is_image                (GESUriClipAsset *self);
+void ges_uri_clip_asset_new                         (const gchar *uri,
                                                        GCancellable *cancellable,
                                                        GAsyncReadyCallback callback,
                                                        gpointer user_data);
-void ges_asset_filesource_set_timeout                 (GESAssetFileSourceClass *class,
+void ges_uri_clip_asset_set_timeout                 (GESUriClipAssetClass *class,
                                                        GstClockTime timeout);
-const GList * ges_asset_filesource_get_stream_assets  (GESAssetFileSource *self);
+const GList * ges_uri_clip_asset_get_stream_assets  (GESUriClipAsset *self);
 
 #define GES_TYPE_ASSET_TRACK_FILESOURCE ges_asset_track_filesource_get_type()
 #define GES_ASSET_TRACK_FILESOURCE(obj) \
@@ -112,7 +112,7 @@ struct _GESAssetTrackFileSourceClass
 };
 GstDiscovererStreamInfo * ges_asset_track_filesource_get_stream_info     (GESAssetTrackFileSource *asset);
 const gchar * ges_asset_track_filesource_get_stream_uri                  (GESAssetTrackFileSource *asset);
-const GESAssetFileSource *ges_asset_track_filesource_get_filesource_asset (GESAssetTrackFileSource *asset);
+const GESUriClipAsset *ges_asset_track_filesource_get_filesource_asset (GESAssetTrackFileSource *asset);
 
 G_END_DECLS
-#endif /* _GES_ASSET_FILESOURCE */
+#endif /* _GES_URI_CLIP_ASSET */

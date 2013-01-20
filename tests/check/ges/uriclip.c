@@ -34,7 +34,7 @@ asset_created_cb (GObject * source, GAsyncResult * res, gpointer udata)
   GList *tracks, *tmp;
   GESAsset *asset;
   GESTimelineLayer *layer;
-  GESTimelineFileSource *tlfs;
+  GESUriClip *tlfs;
 
   GError *error = NULL;
 
@@ -44,10 +44,10 @@ asset_created_cb (GObject * source, GAsyncResult * res, gpointer udata)
   fail_if (g_strcmp0 (ges_asset_get_id (asset), av_uri));
 
   layer = GES_TIMELINE_LAYER (g_async_result_get_user_data (res));
-  tlfs = GES_TIMELINE_FILE_SOURCE (ges_timeline_layer_add_asset (layer,
+  tlfs = GES_URI_CLIP (ges_timeline_layer_add_asset (layer,
           asset, 0, 0, GST_CLOCK_TIME_NONE, 1, GES_TRACK_TYPE_UNKNOWN));
-  fail_unless (GES_IS_TIMELINE_FILE_SOURCE (tlfs));
-  fail_if (g_strcmp0 (ges_timeline_filesource_get_uri (tlfs), av_uri));
+  fail_unless (GES_IS_URI_CLIP (tlfs));
+  fail_if (g_strcmp0 (ges_uri_clip_get_uri (tlfs), av_uri));
   assert_equals_uint64 (_DURATION (tlfs), GST_SECOND);
 
   fail_unless (ges_clip_get_supported_formats
@@ -85,7 +85,7 @@ GST_START_TEST (test_filesource_basic)
   fail_unless (layer != NULL);
   fail_unless (ges_timeline_add_layer (timeline, layer));
 
-  ges_asset_request_async (GES_TYPE_TIMELINE_FILE_SOURCE,
+  ges_asset_request_async (GES_TYPE_URI_CLIP,
       av_uri, NULL, asset_created_cb, layer);
 
   g_main_loop_run (mainloop);
@@ -122,7 +122,7 @@ GST_START_TEST (test_filesource_properties)
   fail_unless (track != NULL);
 
   object = (GESClip *)
-      ges_timeline_filesource_new ((gchar *)
+      ges_uri_clip_new ((gchar *)
       "crack:///there/is/no/way/this/exists");
   fail_unless (object != NULL);
 
@@ -182,12 +182,12 @@ GST_START_TEST (test_filesource_images)
 {
   GESTrackObject *trobj;
   GESClip *clip;
-  GESTimelineFileSource *uriclip;
+  GESUriClip *uriclip;
   GESTrack *a, *v;
 
   ges_init ();
 
-  uriclip = ges_timeline_filesource_new ((gchar *) TEST_URI);
+  uriclip = ges_uri_clip_new ((gchar *) TEST_URI);
   g_object_set (G_OBJECT (uriclip), "supported-formats",
       (GESTrackType) GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO, NULL);
   clip = GES_CLIP (uriclip);

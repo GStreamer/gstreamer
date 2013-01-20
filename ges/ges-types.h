@@ -59,8 +59,8 @@ typedef struct _GESTimelineSourceClass GESTimelineSourceClass;
 typedef struct _GESTimelineEffect GESTimelineEffect;
 typedef struct _GESTimelineEffectClass GESTimelineEffectClass;
 
-typedef struct _GESTimelineFileSource GESTimelineFileSource;
-typedef struct _GESTimelineFileSourceClass GESTimelineFileSourceClass;
+typedef struct _GESUriClip GESUriClip;
+typedef struct _GESUriClipClass GESUriClipClass;
 
 typedef struct _GESTimelineTransition GESTimelineTransition;
 typedef struct _GESTimelineTransitionClass GESTimelineTransitionClass;
@@ -146,8 +146,8 @@ typedef struct _GESAssetClass GESAssetClass;
 typedef struct _GESAssetClip GESAssetClip;
 typedef struct _GESAssetClipClass GESAssetClipClass;
 
-typedef struct _GESAssetFileSource GESAssetFileSource;
-typedef struct _GESAssetFileSourceClass GESAssetFileSourceClass;
+typedef struct _GESUriClipAsset GESUriClipAsset;
+typedef struct _GESUriClipAssetClass GESUriClipAssetClass;
 
 typedef struct _GESAssetTrackObject GESAssetTrackObject;
 typedef struct _GESAssetTrackObjectClass GESAssetTrackObjectClass;

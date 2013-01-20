@@ -117,7 +117,7 @@ main (int argc, gchar ** argv)
 
   for (i = 2; i < argc; i++) {
     gchar *uri = gst_filename_to_uri (argv[i], NULL);
-    GESTimelineFileSource *src = ges_timeline_filesource_new (uri);
+    GESUriClip *src = ges_uri_clip_new (uri);
 
     g_assert (src);
     g_free (uri);

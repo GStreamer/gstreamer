@@ -161,7 +161,7 @@ update_effect_sensitivity (App * app)
 
   /* effects will work for multiple FileSource */
   for (i = app->selected_objects; i; i = i->next) {
-    if (!GES_IS_TIMELINE_FILE_SOURCE (i->data)) {
+    if (!GES_IS_URI_CLIP (i->data)) {
       ok = FALSE;
       break;
     }
@@ -348,7 +348,7 @@ layer_object_added_cb (GESTimelineLayer * layer, GESClip * object, App * app)
 
   gtk_list_store_append (app->model, &iter);
 
-  if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
+  if (GES_IS_URI_CLIP (object)) {
     g_object_get (G_OBJECT (object), "uri", &description, NULL);
     gtk_list_store_set (app->model, &iter, 0, description, 2, object, -1);
   }
@@ -681,7 +681,7 @@ connect_to_object (GESClip * object, App * app)
       GST_TIME_ARGS (duration));
   gtk_entry_set_text (app->seconds, buf);
 
-  if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
+  if (GES_IS_URI_CLIP (object)) {
     connect_to_filesource (object, app);
   } else if (GES_IS_TIMELINE_TITLE_SOURCE (object)) {
     connect_to_title_source (object, app);
@@ -695,7 +695,7 @@ connect_to_object (GESClip * object, App * app)
 static void
 disconnect_from_object (GESClip * object, App * app)
 {
-  if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
+  if (GES_IS_URI_CLIP (object)) {
     disconnect_from_filesource (object, app);
   } else if (GES_IS_TIMELINE_TITLE_SOURCE (object)) {
     disconnect_from_title_source (object, app);
@@ -1151,7 +1151,7 @@ app_add_file (App * app, gchar * uri)
 
   GST_DEBUG ("adding file %s", uri);
 
-  obj = GES_CLIP (ges_timeline_filesource_new (uri));
+  obj = GES_CLIP (ges_uri_clip_new (uri));
 
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
       obj, -1);
@@ -1603,7 +1603,7 @@ app_selection_changed_cb (GtkTreeSelection * selection, App * app)
   gtk_widget_set_visible (app->properties, app->n_selected > 0);
 
   gtk_widget_set_visible (app->filesource_properties,
-      app->selected_type == GES_TYPE_TIMELINE_FILE_SOURCE);
+      app->selected_type == GES_TYPE_URI_CLIP);
 
   gtk_widget_set_visible (app->text_properties,
       app->selected_type == GES_TYPE_TIMELINE_TITLE_SOURCE);
