@@ -240,133 +240,112 @@ gst_avdtp_sink_parse_sbc_raw (GstAvdtpSink * self)
 {
   a2dp_sbc_t *sbc = (a2dp_sbc_t *) self->data->config;
   GstStructure *structure;
-  GValue *value;
-  GValue *list;
+  GValue value = G_VALUE_INIT;
+  GValue list = G_VALUE_INIT;
   gboolean mono, stereo;
 
   structure = gst_structure_new_empty ("audio/x-sbc");
-  value = g_value_init (g_new0 (GValue, 1), G_TYPE_STRING);
 
   /* mode */
-  list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&value, G_TYPE_STRING);
   if (sbc->channel_mode & SBC_CHANNEL_MODE_MONO) {
-    g_value_set_static_string (value, "mono");
-    gst_value_list_prepend_value (list, value);
+    g_value_set_static_string (&value, "mono");
+    gst_value_list_prepend_value (&list, &value);
   }
   if (sbc->channel_mode & SBC_CHANNEL_MODE_STEREO) {
-    g_value_set_static_string (value, "stereo");
-    gst_value_list_prepend_value (list, value);
+    g_value_set_static_string (&value, "stereo");
+    gst_value_list_prepend_value (&list, &value);
   }
   if (sbc->channel_mode & SBC_CHANNEL_MODE_DUAL_CHANNEL) {
-    g_value_set_static_string (value, "dual");
-    gst_value_list_prepend_value (list, value);
+    g_value_set_static_string (&value, "dual");
+    gst_value_list_prepend_value (&list, &value);
   }
   if (sbc->channel_mode & SBC_CHANNEL_MODE_JOINT_STEREO) {
-    g_value_set_static_string (value, "joint");
-    gst_value_list_prepend_value (list, value);
+    g_value_set_static_string (&value, "joint");
+    gst_value_list_prepend_value (&list, &value);
   }
-  g_value_unset (value);
-  if (list) {
-    gst_structure_set_value (structure, "channel-mode", list);
-    g_free (list);
-    list = NULL;
-  }
+  g_value_unset (&value);
+  gst_structure_take_value (structure, "channel-mode", &list);
 
   /* subbands */
-  list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
-  value = g_value_init (value, G_TYPE_INT);
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&value, G_TYPE_INT);
   if (sbc->subbands & SBC_SUBBANDS_4) {
-    g_value_set_int (value, 4);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 4);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (sbc->subbands & SBC_SUBBANDS_8) {
-    g_value_set_int (value, 8);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 8);
+    gst_value_list_prepend_value (&list, &value);
   }
-  g_value_unset (value);
-  if (list) {
-    gst_structure_set_value (structure, "subbands", list);
-    g_free (list);
-    list = NULL;
-  }
+  g_value_unset (&value);
+  gst_structure_take_value (structure, "subbands", &list);
 
   /* blocks */
-  value = g_value_init (value, G_TYPE_INT);
-  list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&value, G_TYPE_INT);
   if (sbc->block_length & SBC_BLOCK_LENGTH_16) {
-    g_value_set_int (value, 16);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 16);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (sbc->block_length & SBC_BLOCK_LENGTH_12) {
-    g_value_set_int (value, 12);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 12);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (sbc->block_length & SBC_BLOCK_LENGTH_8) {
-    g_value_set_int (value, 8);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 8);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (sbc->block_length & SBC_BLOCK_LENGTH_4) {
-    g_value_set_int (value, 4);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 4);
+    gst_value_list_prepend_value (&list, &value);
   }
-  g_value_unset (value);
-  if (list) {
-    gst_structure_set_value (structure, "blocks", list);
-    g_free (list);
-    list = NULL;
-  }
+  g_value_unset (&value);
+  gst_structure_take_value (structure, "blocks", &list);
 
   /* allocation */
-  g_value_init (value, G_TYPE_STRING);
-  list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&value, G_TYPE_STRING);
   if (sbc->allocation_method & SBC_ALLOCATION_LOUDNESS) {
-    g_value_set_static_string (value, "loudness");
-    gst_value_list_prepend_value (list, value);
+    g_value_set_static_string (&value, "loudness");
+    gst_value_list_prepend_value (&list, &value);
   }
   if (sbc->allocation_method & SBC_ALLOCATION_SNR) {
-    g_value_set_static_string (value, "snr");
-    gst_value_list_prepend_value (list, value);
+    g_value_set_static_string (&value, "snr");
+    gst_value_list_prepend_value (&list, &value);
   }
-  g_value_unset (value);
-  if (list) {
-    gst_structure_set_value (structure, "allocation-method", list);
-    g_free (list);
-    list = NULL;
-  }
+  g_value_unset (&value);
+  gst_structure_take_value (structure, "allocation-method", &list);
 
   /* rate */
-  g_value_init (value, G_TYPE_INT);
-  list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&value, G_TYPE_INT);
   if (sbc->frequency & SBC_SAMPLING_FREQ_48000) {
-    g_value_set_int (value, 48000);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 48000);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (sbc->frequency & SBC_SAMPLING_FREQ_44100) {
-    g_value_set_int (value, 44100);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 44100);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (sbc->frequency & SBC_SAMPLING_FREQ_32000) {
-    g_value_set_int (value, 32000);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 32000);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (sbc->frequency & SBC_SAMPLING_FREQ_16000) {
-    g_value_set_int (value, 16000);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 16000);
+    gst_value_list_prepend_value (&list, &value);
   }
-  g_value_unset (value);
-  if (list) {
-    gst_structure_set_value (structure, "rate", list);
-    g_free (list);
-    list = NULL;
-  }
+  g_value_unset (&value);
+  gst_structure_take_value (structure, "rate", &list);
 
   /* bitpool */
-  value = g_value_init (value, GST_TYPE_INT_RANGE);
-  gst_value_set_int_range (value,
+  g_value_init (&value, GST_TYPE_INT_RANGE);
+  gst_value_set_int_range (&value,
       MIN (sbc->min_bitpool, TEMPLATE_MAX_BITPOOL),
       MIN (sbc->max_bitpool, TEMPLATE_MAX_BITPOOL));
-  gst_structure_set_value (structure, "bitpool", value);
-  g_value_unset (value);
+  gst_structure_take_value (structure, "bitpool", &value);
 
   /* channels */
   mono = FALSE;
@@ -380,22 +359,20 @@ gst_avdtp_sink_parse_sbc_raw (GstAvdtpSink * self)
     stereo = TRUE;
 
   if (mono && stereo) {
-    g_value_init (value, GST_TYPE_INT_RANGE);
-    gst_value_set_int_range (value, 1, 2);
+    g_value_init (&value, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (&value, 1, 2);
   } else {
-    g_value_init (value, G_TYPE_INT);
+    g_value_init (&value, G_TYPE_INT);
     if (mono)
-      g_value_set_int (value, 1);
+      g_value_set_int (&value, 1);
     else if (stereo)
-      g_value_set_int (value, 2);
+      g_value_set_int (&value, 2);
     else {
       GST_ERROR_OBJECT (self, "Unexpected number of channels");
-      g_value_set_int (value, 0);
+      g_value_set_int (&value, 0);
     }
   }
-
-  gst_structure_set_value (structure, "channels", value);
-  g_free (value);
+  gst_structure_take_value (structure, "channels", &value);
 
   return structure;
 }
@@ -405,88 +382,77 @@ gst_avdtp_sink_parse_mpeg_raw (GstAvdtpSink * self)
 {
   a2dp_mpeg_t *mpeg = (a2dp_mpeg_t *) self->data->config;
   GstStructure *structure;
-  GValue *value;
-  GValue *list;
-  gboolean valid_layer = FALSE;
+  GValue value = G_VALUE_INIT;
+  GValue list = G_VALUE_INIT;
   gboolean mono, stereo;
 
   GST_LOG_OBJECT (self, "parsing mpeg caps");
 
-  structure = gst_structure_new_empty ("audio/mpeg");
-  value = g_new0 (GValue, 1);
-  g_value_init (value, G_TYPE_INT);
-
-  list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
-  g_value_set_int (value, 1);
-  gst_value_list_prepend_value (list, value);
-  g_value_set_int (value, 2);
-  gst_value_list_prepend_value (list, value);
-  gst_structure_set_value (structure, "mpegversion", list);
-  g_free (list);
-
-  /* layer */
-  GST_LOG_OBJECT (self, "setting mpeg layer");
-  list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
-  if (mpeg->layer & MPEG_LAYER_MP1) {
-    g_value_set_int (value, 1);
-    gst_value_list_prepend_value (list, value);
-    valid_layer = TRUE;
-  }
-  if (mpeg->layer & MPEG_LAYER_MP2) {
-    g_value_set_int (value, 2);
-    gst_value_list_prepend_value (list, value);
-    valid_layer = TRUE;
-  }
-  if (mpeg->layer & MPEG_LAYER_MP3) {
-    g_value_set_int (value, 3);
-    gst_value_list_prepend_value (list, value);
-    valid_layer = TRUE;
-  }
-  if (list) {
-    gst_structure_set_value (structure, "layer", list);
-    g_free (list);
-    list = NULL;
-  }
-
-  if (!valid_layer) {
-    gst_structure_free (structure);
-    g_free (value);
+  if ((mpeg->layer & (MPEG_LAYER_MP1 | MPEG_LAYER_MP2 | MPEG_LAYER_MP3)) == 0) {
+    GST_WARNING_OBJECT (self, "no valid mpeg layer");
     return NULL;
   }
 
+  structure = gst_structure_new_empty ("audio/mpeg");
+
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&value, G_TYPE_INT);
+  g_value_set_int (&value, 1);
+  gst_value_list_prepend_value (&list, &value);
+  g_value_set_int (&value, 2);
+  gst_value_list_prepend_value (&list, &value);
+  g_value_unset (&value);
+  gst_structure_take_value (structure, "mpegversion", &list);
+
+  /* layer */
+  GST_LOG_OBJECT (self, "setting mpeg layer");
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&value, G_TYPE_INT);
+  if (mpeg->layer & MPEG_LAYER_MP1) {
+    g_value_set_int (&value, 1);
+    gst_value_list_prepend_value (&list, &value);
+  }
+  if (mpeg->layer & MPEG_LAYER_MP2) {
+    g_value_set_int (&value, 2);
+    gst_value_list_prepend_value (&list, &value);
+  }
+  if (mpeg->layer & MPEG_LAYER_MP3) {
+    g_value_set_int (&value, 3);
+    gst_value_list_prepend_value (&list, &value);
+  }
+  g_value_unset (&value);
+  gst_structure_take_value (structure, "layer", &list);
+
   /* rate */
   GST_LOG_OBJECT (self, "setting mpeg rate");
-  list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&value, G_TYPE_INT);
   if (mpeg->frequency & MPEG_SAMPLING_FREQ_48000) {
-    g_value_set_int (value, 48000);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 48000);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (mpeg->frequency & MPEG_SAMPLING_FREQ_44100) {
-    g_value_set_int (value, 44100);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 44100);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (mpeg->frequency & MPEG_SAMPLING_FREQ_32000) {
-    g_value_set_int (value, 32000);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 32000);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (mpeg->frequency & MPEG_SAMPLING_FREQ_24000) {
-    g_value_set_int (value, 24000);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 24000);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (mpeg->frequency & MPEG_SAMPLING_FREQ_22050) {
-    g_value_set_int (value, 22050);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 22050);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (mpeg->frequency & MPEG_SAMPLING_FREQ_16000) {
-    g_value_set_int (value, 16000);
-    gst_value_list_prepend_value (list, value);
+    g_value_set_int (&value, 16000);
+    gst_value_list_prepend_value (&list, &value);
   }
-  g_value_unset (value);
-  if (list) {
-    gst_structure_set_value (structure, "rate", list);
-    g_free (list);
-    list = NULL;
-  }
+  g_value_unset (&value);
+  gst_structure_take_value (structure, "rate", &list);
 
   /* channels */
   GST_LOG_OBJECT (self, "setting mpeg channels");
@@ -501,21 +467,20 @@ gst_avdtp_sink_parse_mpeg_raw (GstAvdtpSink * self)
     stereo = TRUE;
 
   if (mono && stereo) {
-    g_value_init (value, GST_TYPE_INT_RANGE);
-    gst_value_set_int_range (value, 1, 2);
+    g_value_init (&value, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (&value, 1, 2);
   } else {
-    g_value_init (value, G_TYPE_INT);
+    g_value_init (&value, G_TYPE_INT);
     if (mono)
-      g_value_set_int (value, 1);
+      g_value_set_int (&value, 1);
     else if (stereo)
-      g_value_set_int (value, 2);
+      g_value_set_int (&value, 2);
     else {
       GST_ERROR_OBJECT (self, "Unexpected number of channels");
-      g_value_set_int (value, 0);
+      g_value_set_int (&value, 0);
     }
   }
-  gst_structure_set_value (structure, "channels", value);
-  g_free (value);
+  gst_structure_take_value (structure, "channels", &value);
 
   return structure;
 }
