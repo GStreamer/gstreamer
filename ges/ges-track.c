@@ -379,12 +379,12 @@ remove_object_internal (GESTrack * track, GESTrackObject * object)
 static void
 dispose_tckobjs_foreach (GESTrackObject * tckobj, GESTrack * track)
 {
-  GESTimelineObject *tlobj;
+  GESClip *clip;
 
-  tlobj = ges_track_object_get_timeline_object (tckobj);
+  clip = ges_track_object_get_clip (tckobj);
 
   remove_object_internal (track, tckobj);
-  ges_timeline_object_release_track_object (tlobj, tckobj);
+  ges_clip_release_track_object (clip, tckobj);
 }
 
 /* GObject virtual methods */

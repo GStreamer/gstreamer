@@ -39,14 +39,14 @@ GST_START_TEST (test_overlay_properties)
 {
   GESTrack *track;
   GESTrackObject *trackobject;
-  GESTimelineObject *object;
+  GESClip *object;
 
   ges_init ();
 
   track = ges_track_new (GES_TRACK_TYPE_VIDEO, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
-  object = (GESTimelineObject *)
+  object = (GESClip *)
       ges_timeline_text_overlay_new ();
   fail_unless (object != NULL);
 
@@ -57,8 +57,8 @@ GST_START_TEST (test_overlay_properties)
   assert_equals_uint64 (_DURATION (object), 51);
   assert_equals_uint64 (_INPOINT (object), 12);
 
-  trackobject = ges_timeline_object_create_track_object (object, track->type);
-  ges_timeline_object_add_track_object (object, trackobject);
+  trackobject = ges_clip_create_track_object (object, track->type);
+  ges_clip_add_track_object (object, trackobject);
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_object_set_track (trackobject, track));
 
@@ -85,7 +85,7 @@ GST_START_TEST (test_overlay_properties)
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
       510, 0, TRUE);
 
-  ges_timeline_object_release_track_object (object, trackobject);
+  ges_clip_release_track_object (object, trackobject);
   g_object_unref (object);
 }
 
@@ -120,7 +120,7 @@ GST_START_TEST (test_overlay_in_layer)
   g_object_set (source, "duration", (guint64) GST_SECOND, NULL);
 
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) layer,
-      (GESTimelineObject *) source, 0);
+      (GESClip *) source, 0);
 
   /* specifically test the text property */
   g_object_set (source, "text", (gchar *) "some text", NULL);
@@ -128,9 +128,7 @@ GST_START_TEST (test_overlay_in_layer)
   assert_equals_string ("some text", text);
   g_free (text);
 
-  trobj =
-      ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v,
-      G_TYPE_NONE);
+  trobj = ges_clip_find_track_object (GES_CLIP (source), v, G_TYPE_NONE);
 
   /* test the font-desc property */
   g_object_set (source, "font-desc", (gchar *) "sans 72", NULL);
@@ -181,7 +179,7 @@ GST_START_TEST (test_overlay_in_layer)
 
   GST_DEBUG ("removing the source");
 
-  ges_timeline_layer_remove_object (layer, (GESTimelineObject *) source);
+  ges_timeline_layer_remove_object (layer, (GESClip *) source);
 
   GST_DEBUG ("removing the layer");
 

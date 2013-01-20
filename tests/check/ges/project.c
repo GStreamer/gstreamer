@@ -198,25 +198,25 @@ _test_project (GESProject * project, GESTimeline * timeline)
   GESTrack *track;
   const GList *profiles;
   GstEncodingContainerProfile *profile;
-  GList *tracks, *tmp, *tmptckobj, *tlobjs;
+  GList *tracks, *tmp, *tmptckobj, *clips;
 
   fail_unless (GES_IS_TIMELINE (timeline));
   assert_equals_int (g_list_length (timeline->layers), 2);
 
   assert_equals_string (ges_meta_container_get_string (GES_META_CONTAINER
           (project), "name"), "Example project");
-  tlobjs =
-      ges_timeline_layer_get_objects (GES_TIMELINE_LAYER (timeline->
-          layers->data));
-  fail_unless (ges_meta_container_get_uint (GES_META_CONTAINER
-          (timeline->layers->data), "a", &a_meta));
+  clips =
+      ges_timeline_layer_get_objects (GES_TIMELINE_LAYER (timeline->layers->
+          data));
+  fail_unless (ges_meta_container_get_uint (GES_META_CONTAINER (timeline->
+              layers->data), "a", &a_meta));
   assert_equals_int (a_meta, 3);
-  assert_equals_int (g_list_length (tlobjs), 1);
+  assert_equals_int (g_list_length (clips), 1);
   media_uri = ges_test_file_uri ("audio_video.ogg");
   assert_equals_string (ges_asset_get_id (ges_extractable_get_asset
-          (GES_EXTRACTABLE (tlobjs->data))), media_uri);
+          (GES_EXTRACTABLE (clips->data))), media_uri);
   g_free (media_uri);
-  g_list_free_full (tlobjs, gst_object_unref);
+  g_list_free_full (clips, gst_object_unref);
 
   /* Check tracks and the objects  they contain */
   tracks = ges_timeline_get_tracks (timeline);

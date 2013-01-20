@@ -44,8 +44,8 @@ typedef struct _GESTimelineLayerClass GESTimelineLayerClass;
 typedef struct _GESTimelineElementClass GESTimelineElementClass;
 typedef struct _GESTimelineElement GESTimelineElement;
 
-typedef struct _GESTimelineObject GESTimelineObject;
-typedef struct _GESTimelineObjectClass GESTimelineObjectClass;
+typedef struct _GESClip GESClip;
+typedef struct _GESClipClass GESClipClass;
 
 typedef struct _GESTimelineOperation GESTimelineOperation;
 typedef struct _GESTimelineOperationClass GESTimelineOperationClass;
@@ -143,8 +143,8 @@ typedef struct _GESPitiviFormatterClass GESPitiviFormatterClass;
 typedef struct _GESAsset GESAsset;
 typedef struct _GESAssetClass GESAssetClass;
 
-typedef struct _GESAssetTimelineObject GESAssetTimelineObject;
-typedef struct _GESAssetTimelineObjectClass GESAssetTimelineObjectClass;
+typedef struct _GESAssetClip GESAssetClip;
+typedef struct _GESAssetClipClass GESAssetClipClass;
 
 typedef struct _GESAssetFileSource GESAssetFileSource;
 typedef struct _GESAssetFileSourceClass GESAssetFileSourceClass;

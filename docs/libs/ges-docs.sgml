@@ -37,7 +37,7 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-timeline.xml"/>
     <xi:include href="xml/ges-timeline-layer.xml"/>
     <xi:include href="xml/ges-timeline-element.xml"/>
-    <xi:include href="xml/ges-timeline-object.xml"/>
+    <xi:include href="xml/ges-clip.xml"/>
     <xi:include href="xml/ges-timeline-source.xml"/>
     <xi:include href="xml/ges-timeline-operation.xml"/>
     <xi:include href="xml/ges-timeline-overlay.xml"/>
@@ -102,7 +102,7 @@ platform as well as Windows. It is released under the GNU Library General Public
 
   <chapter>
     <title>Assets</title>
-    <xi:include href="xml/ges-asset-timeline-object.xml"/>
+    <xi:include href="xml/ges-asset-clip.xml"/>
     <xi:include href="xml/ges-asset-track-object.xml"/>
     <xi:include href="xml/ges-asset-file-source.xml"/>
     <xi:include href="xml/ges-asset-track-file-source.xml"/>

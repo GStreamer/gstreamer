@@ -27,23 +27,22 @@ typedef struct
   char *name;
 } transition_type;
 
-GESTimelineObject *make_source (gchar * path, guint64 start, guint64 inpoint,
+GESClip *make_source (gchar * path, guint64 start, guint64 inpoint,
     guint64 duration, gint priority);
 
-gboolean print_transition_data (GESTimelineObject * tr);
+gboolean print_transition_data (GESClip * tr);
 
 GESTimelinePipeline *make_timeline (gchar * nick, double tdur, gchar * patha,
     gfloat adur, gdouble ainpoint, gchar * pathb, gfloat bdur,
     gdouble binpoint);
 
-GESTimelineObject *
+GESClip *
 make_source (gchar * path, guint64 start, guint64 duration, guint64 inpoint,
     gint priority)
 {
   gchar *uri = gst_filename_to_uri (path, NULL);
 
-  GESTimelineObject *ret =
-      GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
+  GESClip *ret = GES_CLIP (ges_timeline_filesource_new (uri));
 
   g_object_set (ret,
       "start", (guint64) start,
@@ -56,7 +55,7 @@ make_source (gchar * path, guint64 start, guint64 duration, guint64 inpoint,
 }
 
 gboolean
-print_transition_data (GESTimelineObject * tr)
+print_transition_data (GESClip * tr)
 {
   GESTrackObject *trackobj;
   GstElement *gnlobj;
@@ -68,7 +67,7 @@ print_transition_data (GESTimelineObject * tr)
   if (!tr)
     return FALSE;
 
-  if (!(trackobjects = ges_timeline_object_get_track_objects (tr)))
+  if (!(trackobjects = ges_clip_get_track_objects (tr)))
     return FALSE;
   if (!(trackobj = GES_TRACK_OBJECT (trackobjects->data)))
     return FALSE;
@@ -97,7 +96,7 @@ make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
   GESTimeline *timeline;
   GESTrack *trackv, *tracka;
   GESTimelineLayer *layer1;
-  GESTimelineObject *srca, *srcb;
+  GESClip *srca, *srcb;
   GESTimelinePipeline *pipeline;
   guint64 aduration, bduration, tduration, tstart, ainpoint, binpoint;
   GESTimelineStandardTransition *tr = NULL;
@@ -144,7 +143,7 @@ make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
     g_object_set (tr,
         "start", (guint64) tstart,
         "duration", (guint64) tduration, "in-point", (guint64) 0, NULL);
-    ges_timeline_layer_add_object (layer1, GES_TIMELINE_OBJECT (tr));
+    ges_timeline_layer_add_object (layer1, GES_CLIP (tr));
     g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, tr);
   }
 

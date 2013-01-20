@@ -26,10 +26,10 @@ typedef struct
   char *name;
 } transition_type;
 
-GESTimelineObject *make_source (char *path, guint64 start, guint64 duration,
+GESClip *make_source (char *path, guint64 start, guint64 duration,
     gint priority);
 
-GESTimelineObject *make_overlay (char *text, guint64 start, guint64 duration,
+GESClip *make_overlay (char *text, guint64 start, guint64 duration,
     gint priority, guint32 color, gdouble xpos, gdouble ypos);
 
 GESTimelinePipeline *make_timeline (char *path, float duration, char *text,
@@ -38,13 +38,12 @@ GESTimelinePipeline *make_timeline (char *path, float duration, char *text,
 #define DEFAULT_DURATION 5
 #define DEFAULT_POS 0.5
 
-GESTimelineObject *
+GESClip *
 make_source (char *path, guint64 start, guint64 duration, gint priority)
 {
   gchar *uri = gst_filename_to_uri (path, NULL);
 
-  GESTimelineObject *ret =
-      GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
+  GESClip *ret = GES_CLIP (ges_timeline_filesource_new (uri));
 
   g_object_set (ret,
       "start", (guint64) start,
@@ -56,12 +55,11 @@ make_source (char *path, guint64 start, guint64 duration, gint priority)
   return ret;
 }
 
-GESTimelineObject *
+GESClip *
 make_overlay (char *text, guint64 start, guint64 duration, gint priority,
     guint32 color, gdouble xpos, gdouble ypos)
 {
-  GESTimelineObject *ret =
-      GES_TIMELINE_OBJECT (ges_timeline_text_overlay_new ());
+  GESClip *ret = GES_CLIP (ges_timeline_text_overlay_new ());
 
   g_object_set (ret,
       "text", (gchar *) text,
@@ -84,8 +82,8 @@ make_timeline (char *path, float duration, char *text, guint32 color,
   GESTimeline *timeline;
   GESTrack *trackv, *tracka;
   GESTimelineLayer *layer1;
-  GESTimelineObject *srca;
-  GESTimelineObject *overlay;
+  GESClip *srca;
+  GESClip *overlay;
   GESTimelinePipeline *pipeline;
   guint64 aduration;
 

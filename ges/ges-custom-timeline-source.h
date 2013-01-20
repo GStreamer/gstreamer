@@ -48,7 +48,7 @@ typedef struct _GESCustomTimelineSourcePrivate   GESCustomTimelineSourcePrivate;
 
 /**
  * GESFillTrackObjectUserFunc:
- * @object: the #GESTimelineObject controlling the track object
+ * @object: the #GESClip controlling the track object
  * @trobject: the #GESTrackObject
  * @gnlobj: the GNonLin object that needs to be filled.
  * @user_data: the gpointer to optional user data
@@ -61,7 +61,7 @@ typedef struct _GESCustomTimelineSourcePrivate   GESCustomTimelineSourcePrivate;
  *
  * Returns: TRUE if the implementer succesfully filled the @gnlobj, else #FALSE.
  */
-typedef gboolean (*GESFillTrackObjectUserFunc) (GESTimelineObject * object,
+typedef gboolean (*GESFillTrackObjectUserFunc) (GESClip * object,
 					     GESTrackObject * trobject,
 					     GstElement * gnlobj,
 					     gpointer user_data);

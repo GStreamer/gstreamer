@@ -50,7 +50,7 @@ G_BEGIN_DECLS
 
 /**
  * ges_timeline_get_project:
- * @obj: The #GESTimelineObject from which to retrieve the project
+ * @obj: The #GESClip from which to retrieve the project
  *
  * Helper macro to retrieve the project from which a #GESTimeline as been extracted
  */

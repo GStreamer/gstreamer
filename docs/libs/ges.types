@@ -8,7 +8,7 @@ ges_simple_timeline_layer_get_type
 %ges_text_valign_get_type
 ges_timeline_get_type
 ges_timeline_layer_get_type
-ges_timeline_object_get_type
+ges_clip_get_type
 ges_timeline_operation_get_type
 ges_timeline_overlay_get_type
 ges_timeline_pipeline_get_type

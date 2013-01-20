@@ -25,7 +25,7 @@
 #include <gio/gio.h>
 #include <ges/ges-types.h>
 #include <ges/ges-asset.h>
-#include <ges/ges-asset-timeline-object.h>
+#include <ges/ges-asset-clip.h>
 #include <ges/ges-asset-track-object.h>
 
 G_BEGIN_DECLS
@@ -47,7 +47,7 @@ GType ges_asset_filesource_get_type (void);
 
 struct _GESAssetFileSource
 {
-  GESAssetTimelineObject parent;
+  GESAssetClip parent;
 
   /* <private> */
   GESAssetFileSourcePrivate *priv;
@@ -58,7 +58,7 @@ struct _GESAssetFileSource
 
 struct _GESAssetFileSourceClass
 {
-  GESAssetTimelineObjectClass parent_class;
+  GESAssetClipClass parent_class;
 
   /* <private> */
   GstDiscoverer *discoverer;

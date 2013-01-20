@@ -131,11 +131,11 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 }
 
 static gboolean
-ges_custom_timeline_source_fill_track_object (GESTimelineObject * object,
+ges_custom_timeline_source_fill_track_object (GESClip * object,
     GESTrackObject * trobject, GstElement * gnlobj);
 
 static GESTrackObject *
-ges_custom_timeline_source_create_track_object (GESTimelineObject * obj,
+ges_custom_timeline_source_create_track_object (GESClip * obj,
     GESTrackType type)
 {
   return g_object_new (GES_TYPE_TRACK_SOURCE, "track-type", type, NULL);
@@ -163,12 +163,12 @@ static void
 ges_custom_timeline_source_class_init (GESCustomTimelineSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTimelineObjectClass *tlobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
+  GESClipClass *clip_class = GES_CLIP_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESCustomTimelineSourcePrivate));
 
-  tlobj_class->fill_track_object = ges_custom_timeline_source_fill_track_object;
-  tlobj_class->create_track_object =
+  clip_class->fill_track_object = ges_custom_timeline_source_fill_track_object;
+  clip_class->create_track_object =
       ges_custom_timeline_source_create_track_object;
 
   object_class->set_property = _set_property;
@@ -202,7 +202,7 @@ ges_custom_timeline_source_init (GESCustomTimelineSource * self)
 }
 
 static gboolean
-ges_custom_timeline_source_fill_track_object (GESTimelineObject * object,
+ges_custom_timeline_source_fill_track_object (GESClip * object,
     GESTrackObject * trobject, GstElement * gnlobj)
 {
   gboolean res;

@@ -39,14 +39,14 @@ GST_START_TEST (test_title_source_properties)
 {
   GESTrack *track;
   GESTrackObject *trackobject;
-  GESTimelineObject *object;
+  GESClip *object;
 
   ges_init ();
 
   track = ges_track_video_raw_new ();
   fail_unless (track != NULL);
 
-  object = (GESTimelineObject *)
+  object = (GESClip *)
       ges_timeline_title_source_new ();
   fail_unless (object != NULL);
 
@@ -57,8 +57,8 @@ GST_START_TEST (test_title_source_properties)
   assert_equals_uint64 (_DURATION (object), 51);
   assert_equals_uint64 (_INPOINT (object), 12);
 
-  trackobject = ges_timeline_object_create_track_object (object, track->type);
-  ges_timeline_object_add_track_object (object, trackobject);
+  trackobject = ges_clip_create_track_object (object, track->type);
+  ges_clip_add_track_object (object, trackobject);
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_object_set_track (trackobject, track));
 
@@ -85,7 +85,7 @@ GST_START_TEST (test_title_source_properties)
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
       510, 0, TRUE);
 
-  ges_timeline_object_release_track_object (object, trackobject);
+  ges_clip_release_track_object (object, trackobject);
   g_object_unref (object);
 }
 
@@ -120,7 +120,7 @@ GST_START_TEST (test_title_source_in_layer)
   g_object_set (source, "duration", (guint64) GST_SECOND, NULL);
 
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) layer,
-      (GESTimelineObject *) source, 0);
+      (GESClip *) source, 0);
 
   /* specifically test the text property */
   g_object_set (source, "text", (gchar *) "some text", NULL);
@@ -129,7 +129,7 @@ GST_START_TEST (test_title_source_in_layer)
   g_free (text);
 
   trobj =
-      ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v,
+      ges_clip_find_track_object (GES_CLIP (source), v,
       GES_TYPE_TRACK_TITLE_SOURCE);
 
   /* Check the text is still the same */
@@ -183,7 +183,7 @@ GST_START_TEST (test_title_source_in_layer)
 
   GST_DEBUG ("removing the source");
 
-  ges_timeline_layer_remove_object (layer, (GESTimelineObject *) source);
+  ges_timeline_layer_remove_object (layer, (GESClip *) source);
 
   GST_DEBUG ("removing the layer");
 

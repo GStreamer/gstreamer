@@ -153,14 +153,14 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
    * ready to start using it... by solely working with the layer !*/
 
   for (i = 0; i < nbargs / 3; i++) {
-    GESTimelineObject *obj;
+    GESClip *obj;
 
     char *source = argv[i * 3];
     char *arg0 = argv[(i * 3) + 1];
     guint64 duration = str_to_time (argv[(i * 3) + 2]);
 
     if (!g_strcmp0 ("+pattern", source)) {
-      obj = GES_TIMELINE_OBJECT (ges_timeline_test_source_new_for_nick (arg0));
+      obj = GES_CLIP (ges_timeline_test_source_new_for_nick (arg0));
       if (!obj) {
         g_error ("%s is an invalid pattern name!\n", arg0);
         goto build_failure;
@@ -178,9 +178,7 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
         goto build_failure;
       }
 
-      obj =
-          GES_TIMELINE_OBJECT (ges_timeline_standard_transition_new_for_nick
-          (arg0));
+      obj = GES_CLIP (ges_timeline_standard_transition_new_for_nick (arg0));
 
       if (!obj) {
         g_error ("invalid transition type\n");
@@ -195,7 +193,7 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
     }
 
     else if (!g_strcmp0 ("+title", source)) {
-      obj = GES_TIMELINE_OBJECT (ges_timeline_title_source_new ());
+      obj = GES_CLIP (ges_timeline_title_source_new ());
 
       g_object_set (obj, "duration", duration, "text", arg0, NULL);
 
@@ -213,7 +211,7 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
       }
 
       inpoint = str_to_time (argv[i * 3 + 1]);
-      obj = GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
+      obj = GES_CLIP (ges_timeline_filesource_new (uri));
       g_object_set (obj,
           "in-point", (guint64) inpoint, "duration", (guint64) duration, NULL);
 

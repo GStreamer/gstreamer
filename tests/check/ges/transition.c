@@ -47,16 +47,14 @@ GST_START_TEST (test_transition_basic)
   fail_unless (tr2->vtype == 1);
 
   /* Make sure track object is created and vtype is set */
-  trackobject =
-      ges_timeline_object_create_track_object (GES_TIMELINE_OBJECT (tr2),
-      track->type);
-  ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT (tr2), trackobject);
+  trackobject = ges_clip_create_track_object (GES_CLIP (tr2), track->type);
+  ges_clip_add_track_object (GES_CLIP (tr2), trackobject);
 
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_video_transition_get_transition_type
       (GES_TRACK_VIDEO_TRANSITION (trackobject)) == 1);
 
-  fail_unless (ges_timeline_object_release_track_object (GES_TIMELINE_OBJECT
+  fail_unless (ges_clip_release_track_object (GES_CLIP
           (tr2), trackobject) == TRUE);
 
   g_object_unref (track);
@@ -70,12 +68,12 @@ GST_START_TEST (test_transition_properties)
 {
   GESTrack *track;
   GESTrackObject *trackobject;
-  GESTimelineObject *object;
+  GESClip *object;
 
   ges_init ();
 
   object =
-      GES_TIMELINE_OBJECT (ges_timeline_standard_transition_new
+      GES_CLIP (ges_timeline_standard_transition_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE));
 
   track = ges_track_video_raw_new ();
@@ -89,8 +87,8 @@ GST_START_TEST (test_transition_properties)
   assert_equals_uint64 (_DURATION (object), 51);
   assert_equals_uint64 (_INPOINT (object), 12);
 
-  trackobject = ges_timeline_object_create_track_object (object, track->type);
-  ges_timeline_object_add_track_object (object, trackobject);
+  trackobject = ges_clip_create_track_object (object, track->type);
+  ges_clip_add_track_object (object, trackobject);
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_object_set_track (trackobject, track));
 
@@ -137,13 +135,13 @@ GST_START_TEST (test_transition_properties)
       (GES_TRACK_VIDEO_TRANSITION (trackobject)), 1);
 
   GST_DEBUG ("Releasing track object");
-  ges_timeline_object_release_track_object (object, trackobject);
+  ges_clip_release_track_object (object, trackobject);
 
   g_object_set (object, "vtype", 1, NULL);
 
   GST_DEBUG ("creating track object");
-  trackobject = ges_timeline_object_create_track_object (object, track->type);
-  ges_timeline_object_add_track_object (object, trackobject);
+  trackobject = ges_clip_create_track_object (object, track->type);
+  ges_clip_add_track_object (object, trackobject);
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_object_set_track (trackobject, track));
 
@@ -154,7 +152,7 @@ GST_START_TEST (test_transition_properties)
       (GES_TRACK_VIDEO_TRANSITION (trackobject)), 1);
   assert_equals_int (GES_TIMELINE_STANDARD_TRANSITION (object)->vtype, 1);
 
-  ges_timeline_object_release_track_object (object, trackobject);
+  ges_clip_release_track_object (object, trackobject);
   g_object_unref (object);
   g_object_unref (track);
 }

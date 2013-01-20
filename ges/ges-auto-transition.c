@@ -36,7 +36,7 @@ static guint auto_transition_signals[LAST_SIGNAL] = { 0 };
 G_DEFINE_TYPE (GESAutoTransition, ges_auto_transition, G_TYPE_OBJECT);
 
 static void
-neighbour_changed_cb (GESTimelineObject * obj, GParamSpec * arg G_GNUC_UNUSED,
+neighbour_changed_cb (GESClip * obj, GParamSpec * arg G_GNUC_UNUSED,
     GESAutoTransition * self)
 {
   gint64 new_duration;
@@ -68,14 +68,13 @@ neighbour_changed_cb (GESTimelineObject * obj, GParamSpec * arg G_GNUC_UNUSED,
 }
 
 static void
-_height_changed_cb (GESTimelineObject * obj, GParamSpec * arg G_GNUC_UNUSED,
+_height_changed_cb (GESClip * obj, GParamSpec * arg G_GNUC_UNUSED,
     GESAutoTransition * self)
 {
-  /* FIXME This is really not smart and we should properly implement timelineobject
+  /* FIXME This is really not smart and we should properly implement clip
    * priority management at the TimelineLayer level */
-  _set_priority0 (GES_TIMELINE_ELEMENT (self->next_timeline_object),
-      _PRIORITY (self->previous_timeline_object) +
-      self->previous_timeline_object->height);
+  _set_priority0 (GES_TIMELINE_ELEMENT (self->next_clip),
+      _PRIORITY (self->previous_clip) + self->previous_clip->height);
 }
 
 static void
@@ -105,7 +104,7 @@ ges_auto_transition_finalize (GObject * object)
       neighbour_changed_cb, self);
   g_signal_handlers_disconnect_by_func (self->next_source, neighbour_changed_cb,
       self);
-  g_signal_handlers_disconnect_by_func (self->previous_timeline_object,
+  g_signal_handlers_disconnect_by_func (self->previous_clip,
       _height_changed_cb, self);
   g_signal_handlers_disconnect_by_func (self->next_source, _track_changed_cb,
       self);
@@ -140,11 +139,9 @@ ges_auto_transition_new (GESTrackObject * transition,
   self->next_source = next_source;
   self->transition = transition;
 
-  self->previous_timeline_object =
-      ges_track_object_get_timeline_object (previous_source);
-  self->next_timeline_object =
-      ges_track_object_get_timeline_object (next_source);
-  self->timeline_transition = ges_track_object_get_timeline_object (transition);
+  self->previous_clip = ges_track_object_get_clip (previous_source);
+  self->next_clip = ges_track_object_get_clip (next_source);
+  self->timeline_transition = ges_track_object_get_clip (transition);
 
   g_signal_connect (previous_source, "notify::start",
       G_CALLBACK (neighbour_changed_cb), self);
@@ -158,7 +155,7 @@ ges_auto_transition_new (GESTrackObject * transition,
       G_CALLBACK (neighbour_changed_cb), self);
   g_signal_connect (next_source, "notify::duration",
       G_CALLBACK (neighbour_changed_cb), self);
-  g_signal_connect (self->previous_timeline_object, "notify::height",
+  g_signal_connect (self->previous_clip, "notify::height",
       G_CALLBACK (_height_changed_cb), self);
 
   g_signal_connect (next_source, "notify::track",
@@ -166,14 +163,14 @@ ges_auto_transition_new (GESTrackObject * transition,
   g_signal_connect (previous_source, "notify::track",
       G_CALLBACK (_track_changed_cb), self);
 
-  _height_changed_cb (self->previous_timeline_object, NULL, self);
+  _height_changed_cb (self->previous_clip, NULL, self);
 
   GST_DEBUG_OBJECT (self, "Created transition %" GST_PTR_FORMAT
       " between %" GST_PTR_FORMAT " and: %" GST_PTR_FORMAT
       " in layer nb %i, start: %" GST_TIME_FORMAT " duration: %"
       GST_TIME_FORMAT, transition, next_source, previous_source,
-      ges_timeline_layer_get_priority (ges_timeline_object_get_layer
-          (self->previous_timeline_object)),
+      ges_timeline_layer_get_priority (ges_clip_get_layer
+          (self->previous_clip)),
       GST_TIME_ARGS (_START (transition)),
       GST_TIME_ARGS (_DURATION (transition)));
 

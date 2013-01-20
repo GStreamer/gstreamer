@@ -213,7 +213,7 @@ update_play_sensitivity (App * app)
 /* Backend callbacks ********************************************************/
 
 static void
-test_source_notify_volume_changed_cb (GESTimelineObject * object, GParamSpec *
+test_source_notify_volume_changed_cb (GESClip * object, GParamSpec *
     unused G_GNUC_UNUSED, App * app)
 {
   gdouble volume;
@@ -231,13 +231,12 @@ layer_notify_valid_changed_cb (GObject * object, GParamSpec * unused
 }
 
 static gboolean
-find_row_for_object (GtkListStore * model, GtkTreeIter * ret,
-    GESTimelineObject * object)
+find_row_for_object (GtkListStore * model, GtkTreeIter * ret, GESClip * object)
 {
   gtk_tree_model_get_iter_first ((GtkTreeModel *) model, ret);
 
   while (gtk_list_store_iter_is_valid (model, ret)) {
-    GESTimelineObject *obj;
+    GESClip *obj;
     gtk_tree_model_get ((GtkTreeModel *) model, ret, 2, &obj, -1);
     if (obj == object) {
       g_object_unref (obj);
@@ -252,7 +251,7 @@ find_row_for_object (GtkListStore * model, GtkTreeIter * ret,
 /* this callback is registered for every timeline object, and updates the
  * corresponding duration cell in the model */
 static void
-timeline_object_notify_duration_cb (GESTimelineObject * object,
+clip_notify_duration_cb (GESClip * object,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
   GtkTreeIter iter;
@@ -267,7 +266,7 @@ timeline_object_notify_duration_cb (GESTimelineObject * object,
  * current selection */
 
 static void
-filesource_notify_duration_cb (GESTimelineObject * object,
+filesource_notify_duration_cb (GESClip * object,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
   guint64 duration, max_inpoint;
@@ -283,7 +282,7 @@ filesource_notify_duration_cb (GESTimelineObject * object,
 }
 
 static void
-filesource_notify_max_duration_cb (GESTimelineObject * object,
+filesource_notify_max_duration_cb (GESClip * object,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
   gtk_range_set_range (GTK_RANGE (app->duration), 0, (gdouble)
@@ -293,7 +292,7 @@ filesource_notify_max_duration_cb (GESTimelineObject * object,
 }
 
 static void
-filesource_notify_in_point_cb (GESTimelineObject * object,
+filesource_notify_in_point_cb (GESClip * object,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
   gtk_range_set_value (GTK_RANGE (app->in_point),
@@ -326,7 +325,7 @@ object_count_changed (App * app)
 }
 
 static void
-title_source_text_changed_cb (GESTimelineObject * object,
+title_source_text_changed_cb (GESClip * object,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
   GtkTreeIter iter;
@@ -340,8 +339,7 @@ title_source_text_changed_cb (GESTimelineObject * object,
 }
 
 static void
-layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
-    App * app)
+layer_object_added_cb (GESTimelineLayer * layer, GESClip * object, App * app)
 {
   GtkTreeIter iter;
   gchar *description;
@@ -371,16 +369,15 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   }
 
   g_signal_connect (G_OBJECT (object), "notify::duration",
-      G_CALLBACK (timeline_object_notify_duration_cb), app);
-  timeline_object_notify_duration_cb (object, NULL, app);
+      G_CALLBACK (clip_notify_duration_cb), app);
+  clip_notify_duration_cb (object, NULL, app);
 
   app->n_objects++;
   object_count_changed (app);
 }
 
 static void
-layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
-    App * app)
+layer_object_removed_cb (GESTimelineLayer * layer, GESClip * object, App * app)
 {
   GtkTreeIter iter;
 
@@ -397,7 +394,7 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 }
 
 static void
-layer_object_moved_cb (GESTimelineObject * layer, GESTimelineObject * object,
+layer_object_moved_cb (GESClip * layer, GESClip * object,
     gint old, gint new, App * app)
 {
   GtkTreeIter a, b;
@@ -574,7 +571,7 @@ seconds_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused,
     gtk_entry_set_icon_from_stock (app->seconds,
         GTK_ENTRY_ICON_SECONDARY, NULL);
     for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
-      g_object_set (GES_TIMELINE_OBJECT (tmp->data), "duration",
+      g_object_set (GES_CLIP (tmp->data), "duration",
           (guint64) str_to_time (text), NULL);
     }
   }
@@ -595,7 +592,7 @@ duration_cell_func (GtkTreeViewColumn * column, GtkCellRenderer * renderer,
 /* UI Initialization ********************************************************/
 
 static void
-connect_to_filesource (GESTimelineObject * object, App * app)
+connect_to_filesource (GESClip * object, App * app)
 {
   g_signal_connect (G_OBJECT (object), "notify::max-duration",
       G_CALLBACK (filesource_notify_max_duration_cb), app);
@@ -611,7 +608,7 @@ connect_to_filesource (GESTimelineObject * object, App * app)
 }
 
 static void
-disconnect_from_filesource (GESTimelineObject * object, App * app)
+disconnect_from_filesource (GESClip * object, App * app)
 {
   g_signal_handlers_disconnect_by_func (G_OBJECT (object),
       filesource_notify_duration_cb, app);
@@ -621,7 +618,7 @@ disconnect_from_filesource (GESTimelineObject * object, App * app)
 }
 
 static void
-connect_to_title_source (GESTimelineObject * object, App * app)
+connect_to_title_source (GESClip * object, App * app)
 {
   GESTimelineTitleSource *obj;
   obj = GES_TIMELINE_TITLE_SOURCE (object);
@@ -633,12 +630,12 @@ connect_to_title_source (GESTimelineObject * object, App * app)
 }
 
 static void
-disconnect_from_title_source (GESTimelineObject * object, App * app)
+disconnect_from_title_source (GESClip * object, App * app)
 {
 }
 
 static void
-connect_to_test_source (GESTimelineObject * object, App * app)
+connect_to_test_source (GESClip * object, App * app)
 {
   GObjectClass *klass;
   GParamSpecDouble *pspec;
@@ -665,14 +662,14 @@ connect_to_test_source (GESTimelineObject * object, App * app)
 }
 
 static void
-disconnect_from_test_source (GESTimelineObject * object, App * app)
+disconnect_from_test_source (GESClip * object, App * app)
 {
   g_signal_handlers_disconnect_by_func (G_OBJECT (object),
       test_source_notify_volume_changed_cb, app);
 }
 
 static void
-connect_to_object (GESTimelineObject * object, App * app)
+connect_to_object (GESClip * object, App * app)
 {
   gchar buf[30];
   guint64 duration;
@@ -696,7 +693,7 @@ connect_to_object (GESTimelineObject * object, App * app)
 }
 
 static void
-disconnect_from_object (GESTimelineObject * object, App * app)
+disconnect_from_object (GESClip * object, App * app)
 {
   if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
     disconnect_from_filesource (object, app);
@@ -1024,7 +1021,7 @@ selection_foreach (GtkTreeModel * model, GtkTreePath * path, GtkTreeIter
     * iter, gpointer user)
 {
   select_info *info = (select_info *) user;
-  GESTimelineObject *obj;
+  GESClip *obj;
 
   gtk_tree_model_get (model, iter, 2, &obj, -1);
   info->objects = g_list_append (info->objects, obj);
@@ -1045,8 +1042,7 @@ app_delete_objects (App * app, GList * objects)
   GList *cur;
 
   for (cur = objects; cur; cur = cur->next) {
-    ges_timeline_layer_remove_object (app->layer,
-        GES_TIMELINE_OBJECT (cur->data));
+    ges_timeline_layer_remove_object (app->layer, GES_CLIP (cur->data));
     cur->data = NULL;
   }
 
@@ -1066,7 +1062,7 @@ app_move_selected_up (App * app)
   pos = g_list_index (objects, app->selected_objects->data);
 
   ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
-      GES_TIMELINE_OBJECT (app->selected_objects->data), pos - 1);
+      GES_CLIP (app->selected_objects->data), pos - 1);
 
   for (tmp = objects; tmp; tmp = tmp->next) {
     g_object_unref (tmp->data);
@@ -1086,8 +1082,7 @@ app_add_effect_on_selected_clips (App * app, const gchar * bin_desc,
 
   for (tmp = objects; tmp; tmp = tmp->next) {
     effect = GES_TRACK_OBJECT (ges_track_parse_launch_effect_new (bin_desc));
-    ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT (tmp->data),
-        effect);
+    ges_clip_add_track_object (GES_CLIP (tmp->data), effect);
 
     if (type == GES_TRACK_TYPE_VIDEO)
       ges_track_add_object (app->video_track, effect);
@@ -1142,7 +1137,7 @@ app_move_selected_down (App * app)
   pos = g_list_index (objects, app->selected_objects->data);
 
   ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
-      GES_TIMELINE_OBJECT (app->selected_objects->data), pos - 1);
+      GES_CLIP (app->selected_objects->data), pos - 1);
 
   for (tmp = objects; tmp; tmp = tmp->next) {
     g_object_unref (tmp->data);
@@ -1152,11 +1147,11 @@ app_move_selected_down (App * app)
 static void
 app_add_file (App * app, gchar * uri)
 {
-  GESTimelineObject *obj;
+  GESClip *obj;
 
   GST_DEBUG ("adding file %s", uri);
 
-  obj = GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
+  obj = GES_CLIP (ges_timeline_filesource_new (uri));
 
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
       obj, -1);
@@ -1192,11 +1187,11 @@ app_launch_project (App * app, gchar * uri)
 static void
 app_add_title (App * app)
 {
-  GESTimelineObject *obj;
+  GESClip *obj;
 
   GST_DEBUG ("adding title");
 
-  obj = GES_TIMELINE_OBJECT (ges_timeline_title_source_new ());
+  obj = GES_CLIP (ges_timeline_title_source_new ());
   g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
 
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
@@ -1206,11 +1201,11 @@ app_add_title (App * app)
 static void
 app_add_test (App * app)
 {
-  GESTimelineObject *obj;
+  GESClip *obj;
 
   GST_DEBUG ("adding test");
 
-  obj = GES_TIMELINE_OBJECT (ges_timeline_test_source_new ());
+  obj = GES_CLIP (ges_timeline_test_source_new ());
   g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
 
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
@@ -1220,11 +1215,11 @@ app_add_test (App * app)
 static void
 app_add_transition (App * app)
 {
-  GESTimelineObject *obj;
+  GESClip *obj;
 
   GST_DEBUG ("adding transition");
 
-  obj = GES_TIMELINE_OBJECT (ges_timeline_standard_transition_new
+  obj = GES_CLIP (ges_timeline_standard_transition_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE));
   g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
 

@@ -22,7 +22,7 @@
 #include <gst/check/gstcheck.h>
 
 static gboolean
-my_fill_track_func (GESTimelineObject * object,
+my_fill_track_func (GESClip * object,
     GESTrackObject * trobject, GstElement * gnlobj, gpointer user_data)
 {
   GstElement *src;
@@ -43,7 +43,7 @@ GST_START_TEST (test_object_properties)
 {
   GESTrack *track;
   GESTrackObject *trackobject;
-  GESTimelineObject *object;
+  GESClip *object;
 
   ges_init ();
 
@@ -51,8 +51,7 @@ GST_START_TEST (test_object_properties)
   fail_unless (track != NULL);
 
   object =
-      (GESTimelineObject *) ges_custom_timeline_source_new (my_fill_track_func,
-      NULL);
+      (GESClip *) ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (object != NULL);
 
   /* Set some properties */
@@ -62,8 +61,8 @@ GST_START_TEST (test_object_properties)
   assert_equals_uint64 (_DURATION (object), 51);
   assert_equals_uint64 (_INPOINT (object), 12);
 
-  trackobject = ges_timeline_object_create_track_object (object, track->type);
-  ges_timeline_object_add_track_object (object, trackobject);
+  trackobject = ges_clip_create_track_object (object, track->type);
+  ges_clip_add_track_object (object, trackobject);
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_object_set_track (trackobject, track));
 
@@ -99,7 +98,7 @@ GST_START_TEST (test_object_properties)
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 400, 510, 120,
       510, 0, TRUE);
 
-  ges_timeline_object_release_track_object (object, trackobject);
+  ges_clip_release_track_object (object, trackobject);
 
   g_object_unref (object);
   g_object_unref (track);
@@ -111,7 +110,7 @@ GST_START_TEST (test_object_properties_unlocked)
 {
   GESTrack *track;
   GESTrackObject *trackobject;
-  GESTimelineObject *object;
+  GESClip *object;
 
   ges_init ();
 
@@ -119,8 +118,7 @@ GST_START_TEST (test_object_properties_unlocked)
   fail_unless (track != NULL);
 
   object =
-      (GESTimelineObject *) ges_custom_timeline_source_new (my_fill_track_func,
-      NULL);
+      (GESClip *) ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (object != NULL);
 
   /* Set some properties */
@@ -130,8 +128,8 @@ GST_START_TEST (test_object_properties_unlocked)
   assert_equals_uint64 (_DURATION (object), 51);
   assert_equals_uint64 (_INPOINT (object), 12);
 
-  trackobject = ges_timeline_object_create_track_object (object, track->type);
-  ges_timeline_object_add_track_object (object, trackobject);
+  trackobject = ges_clip_create_track_object (object, track->type);
+  ges_clip_add_track_object (object, trackobject);
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_object_set_track (trackobject, track));
 
@@ -147,7 +145,7 @@ GST_START_TEST (test_object_properties_unlocked)
   /* This time we unlock the trackobject and make sure it doesn't propagate */
   ges_track_object_set_locked (trackobject, FALSE);
 
-  /* Change more properties, they will be set on the GESTimelineObject */
+  /* Change more properties, they will be set on the GESClip */
   g_object_set (object, "start", (guint64) 420, "duration", (guint64) 510,
       "in-point", (guint64) 120, NULL);
   assert_equals_uint64 (_START (object), 420);
@@ -161,7 +159,7 @@ GST_START_TEST (test_object_properties_unlocked)
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
       51, 0, TRUE);
 
-  /* When unlocked, moving the GESTrackObject won't move the GESTimelineObject
+  /* When unlocked, moving the GESTrackObject won't move the GESClip
    * either */
   /* This time, we move the trackobject to see if the changes move
    * along to the parent and the gnonlin object */
@@ -172,7 +170,7 @@ GST_START_TEST (test_object_properties_unlocked)
       51, 0, TRUE);
 
 
-  ges_timeline_object_release_track_object (object, trackobject);
+  ges_clip_release_track_object (object, trackobject);
 
   g_object_unref (object);
   g_object_unref (track);
@@ -184,7 +182,7 @@ GST_START_TEST (test_split_object)
 {
   GESTrack *track;
   GESTrackObject *trackobject, *splittckobj;
-  GESTimelineObject *object, *splitobj;
+  GESClip *object, *splitobj;
   GList *splittckobjs;
 
   ges_init ();
@@ -193,8 +191,7 @@ GST_START_TEST (test_split_object)
   fail_unless (track != NULL);
 
   object =
-      (GESTimelineObject *) ges_custom_timeline_source_new (my_fill_track_func,
-      NULL);
+      (GESClip *) ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (object != NULL);
 
   /* Set some properties */
@@ -204,8 +201,8 @@ GST_START_TEST (test_split_object)
   assert_equals_uint64 (_DURATION (object), 50);
   assert_equals_uint64 (_INPOINT (object), 12);
 
-  trackobject = ges_timeline_object_create_track_object (object, track->type);
-  ges_timeline_object_add_track_object (object, trackobject);
+  trackobject = ges_clip_create_track_object (object, track->type);
+  ges_clip_add_track_object (object, trackobject);
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_object_set_track (trackobject, track));
 
@@ -218,8 +215,8 @@ GST_START_TEST (test_split_object)
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 50, 12,
       50, 0, TRUE);
 
-  splitobj = ges_timeline_object_split (object, 67);
-  fail_unless (GES_IS_TIMELINE_OBJECT (splitobj));
+  splitobj = ges_clip_split (object, 67);
+  fail_unless (GES_IS_CLIP (splitobj));
 
   assert_equals_uint64 (_START (object), 42);
   assert_equals_uint64 (_DURATION (object), 25);
@@ -229,7 +226,7 @@ GST_START_TEST (test_split_object)
   assert_equals_uint64 (_DURATION (splitobj), 25);
   assert_equals_uint64 (_INPOINT (splitobj), 37);
 
-  splittckobjs = ges_timeline_object_get_track_objects (splitobj);
+  splittckobjs = ges_clip_get_track_objects (splitobj);
   fail_unless_equals_int (g_list_length (splittckobjs), 1);
 
   splittckobj = GES_TRACK_OBJECT (splittckobjs->data);
@@ -243,7 +240,7 @@ GST_START_TEST (test_split_object)
 
   /* We own the only ref */
   ASSERT_OBJECT_REFCOUNT (splitobj, "splitobj", 1);
-  /* 1 ref for the TimelineObject, 1 ref for the Track and 1 in splittckobjs */
+  /* 1 ref for the Clip, 1 ref for the Track and 1 in splittckobjs */
   ASSERT_OBJECT_REFCOUNT (splittckobj, "splittckobj", 3);
 
   g_object_unref (track);
@@ -259,8 +256,8 @@ GST_END_TEST;
 static Suite *
 ges_suite (void)
 {
-  Suite *s = suite_create ("ges-timeline-object");
-  TCase *tc_chain = tcase_create ("timeline-object");
+  Suite *s = suite_create ("ges-clip");
+  TCase *tc_chain = tcase_create ("clip");
 
   suite_add_tcase (s, tc_chain);
 

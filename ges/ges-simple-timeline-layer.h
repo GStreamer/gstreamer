@@ -65,7 +65,7 @@ struct _GESSimpleTimelineLayerClass {
   GESTimelineLayerClass parent_class;
 
   /*< signals >*/
-  void (*object_moved) (GESTimelineLayer * layer, GESTimelineObject * object,
+  void (*object_moved) (GESTimelineLayer * layer, GESClip * object,
       gint old_position, gint new_position);
 
   /* Padding for API extension */
@@ -78,22 +78,22 @@ GESSimpleTimelineLayer* ges_simple_timeline_layer_new (void);
 
 gboolean
 ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer *layer,
-				      GESTimelineObject *object, gint position);
+				      GESClip *object, gint position);
 
 gboolean
 ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer *layer,
-				       GESTimelineObject *object, gint newposition);
+				       GESClip *object, gint newposition);
 
 gboolean
 ges_simple_timeline_layer_is_valid (GESSimpleTimelineLayer *layer);
 
-GESTimelineObject *
+GESClip *
 ges_simple_timeline_layer_nth (GESSimpleTimelineLayer *layer,
 			       gint position);
 
 gint
 ges_simple_timeline_layer_index (GESSimpleTimelineLayer *layer,
-				 GESTimelineObject *object);
+				 GESClip *object);
 
 G_END_DECLS
 

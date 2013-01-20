@@ -50,10 +50,10 @@ asset_created_cb (GObject * source, GAsyncResult * res, gpointer udata)
   fail_if (g_strcmp0 (ges_timeline_filesource_get_uri (tlfs), av_uri));
   assert_equals_uint64 (_DURATION (tlfs), GST_SECOND);
 
-  fail_unless (ges_timeline_object_get_supported_formats
-      (GES_TIMELINE_OBJECT (tlfs)) & GES_TRACK_TYPE_VIDEO);
-  fail_unless (ges_timeline_object_get_supported_formats
-      (GES_TIMELINE_OBJECT (tlfs)) & GES_TRACK_TYPE_AUDIO);
+  fail_unless (ges_clip_get_supported_formats
+      (GES_CLIP (tlfs)) & GES_TRACK_TYPE_VIDEO);
+  fail_unless (ges_clip_get_supported_formats
+      (GES_CLIP (tlfs)) & GES_TRACK_TYPE_AUDIO);
 
   tracks = ges_timeline_get_tracks (ges_timeline_layer_get_timeline (layer));
   for (tmp = tracks; tmp; tmp = tmp->next) {
@@ -114,14 +114,14 @@ GST_START_TEST (test_filesource_properties)
 {
   GESTrack *track;
   GESTrackObject *trackobject;
-  GESTimelineObject *object;
+  GESClip *object;
 
   ges_init ();
 
   track = ges_track_new (GES_TRACK_TYPE_AUDIO, GST_CAPS_ANY);
   fail_unless (track != NULL);
 
-  object = (GESTimelineObject *)
+  object = (GESClip *)
       ges_timeline_filesource_new ((gchar *)
       "crack:///there/is/no/way/this/exists");
   fail_unless (object != NULL);
@@ -134,8 +134,8 @@ GST_START_TEST (test_filesource_properties)
   assert_equals_uint64 (_DURATION (object), 51);
   assert_equals_uint64 (_INPOINT (object), 12);
 
-  trackobject = ges_timeline_object_create_track_object (object, track->type);
-  ges_timeline_object_add_track_object (object, trackobject);
+  trackobject = ges_clip_create_track_object (object, track->type);
+  ges_clip_add_track_object (object, trackobject);
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_object_set_track (trackobject, track));
 
@@ -170,7 +170,7 @@ GST_START_TEST (test_filesource_properties)
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
       510, 0, TRUE);
 
-  ges_timeline_object_release_track_object (object, trackobject);
+  ges_clip_release_track_object (object, trackobject);
 
   g_object_unref (object);
   g_object_unref (track);
@@ -181,26 +181,26 @@ GST_END_TEST;
 GST_START_TEST (test_filesource_images)
 {
   GESTrackObject *trobj;
-  GESTimelineObject *tlobj;
-  GESTimelineFileSource *tfs;
+  GESClip *clip;
+  GESTimelineFileSource *uriclip;
   GESTrack *a, *v;
 
   ges_init ();
 
-  tfs = ges_timeline_filesource_new ((gchar *) TEST_URI);
-  g_object_set (G_OBJECT (tfs), "supported-formats",
+  uriclip = ges_timeline_filesource_new ((gchar *) TEST_URI);
+  g_object_set (G_OBJECT (uriclip), "supported-formats",
       (GESTrackType) GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO, NULL);
-  tlobj = GES_TIMELINE_OBJECT (tfs);
+  clip = GES_CLIP (uriclip);
 
   a = ges_track_audio_raw_new ();
   v = ges_track_video_raw_new ();
 
   /* set the is_image property to true then create a video track object. */
-  g_object_set (G_OBJECT (tfs), "is-image", TRUE, NULL);
+  g_object_set (G_OBJECT (uriclip), "is-image", TRUE, NULL);
 
   /* the returned track object should be an image source */
-  trobj = ges_timeline_object_create_track_object (tlobj, v->type);
-  ges_timeline_object_add_track_object (tlobj, trobj);
+  trobj = ges_clip_create_track_object (clip, v->type);
+  ges_clip_add_track_object (clip, trobj);
   fail_unless (GES_IS_TRACK_IMAGE_SOURCE (trobj));
 
   /* The track holds a reference to the object
@@ -208,15 +208,15 @@ GST_START_TEST (test_filesource_images)
   ASSERT_OBJECT_REFCOUNT (trobj, "Video Track Object", 2);
 
   ges_track_remove_object (v, trobj);
-  ges_timeline_object_release_track_object (tlobj, trobj);
+  ges_clip_release_track_object (clip, trobj);
 
   /* the timeline object should not create any TrackObject in the audio track */
-  trobj = ges_timeline_object_create_track_object (tlobj, a->type);
+  trobj = ges_clip_create_track_object (clip, a->type);
   fail_unless (trobj == NULL);
 
   g_object_unref (a);
   g_object_unref (v);
-  g_object_unref (tlobj);
+  g_object_unref (clip);
 }
 
 GST_END_TEST;

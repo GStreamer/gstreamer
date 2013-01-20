@@ -47,10 +47,10 @@ GST_START_TEST (test_text_properties_in_layer)
   g_object_set (source, "duration", (guint64) GST_SECOND, NULL);
 
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) layer,
-      (GESTimelineObject *) source, 0);
+      (GESClip *) source, 0);
 
   trobj =
-      ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v,
+      ges_clip_find_track_object (GES_CLIP (source), v,
       GES_TYPE_TRACK_TEXT_OVERLAY);
 
   fail_unless (trobj != NULL);
@@ -92,7 +92,7 @@ GST_START_TEST (test_text_properties_in_layer)
 
   GST_DEBUG ("removing the source");
 
-  ges_timeline_layer_remove_object (layer, (GESTimelineObject *) source);
+  ges_timeline_layer_remove_object (layer, (GESClip *) source);
 
   GST_DEBUG ("removing the layer");
 

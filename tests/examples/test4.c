@@ -125,7 +125,7 @@ main (int argc, gchar ** argv)
     g_object_set (src, "duration", GST_SECOND, NULL);
     /* Since we're using a GESSimpleTimelineLayer, objects will be automatically
      * appended to the end of the layer */
-    ges_timeline_layer_add_object (layer, (GESTimelineObject *) src);
+    ges_timeline_layer_add_object (layer, (GESClip *) src);
   }
 
   /* In order to view our timeline, let's grab a convenience pipeline to put

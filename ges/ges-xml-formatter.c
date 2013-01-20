@@ -418,7 +418,7 @@ wrong_properties:
 }
 
 static inline void
-_parse_timeline_object (GMarkupParseContext * context,
+_parse_clip (GMarkupParseContext * context,
     const gchar * element_name, const gchar ** attribute_names,
     const gchar ** attribute_values, GESXmlFormatter * self, GError ** error)
 {
@@ -448,7 +448,7 @@ _parse_timeline_object (GMarkupParseContext * context,
     return;
   }
   type = g_type_from_name (strtype);
-  if (!g_type_is_a (type, GES_TYPE_TIMELINE_OBJECT))
+  if (!g_type_is_a (type, GES_TYPE_CLIP))
     goto wrong_type;
 
   track_types = g_ascii_strtoll (strtrack_types, NULL, 10);
@@ -485,7 +485,7 @@ _parse_timeline_object (GMarkupParseContext * context,
       goto wrong_properties;
   }
 
-  ges_base_xml_formatter_add_timeline_object (GES_BASE_XML_FORMATTER (self),
+  ges_base_xml_formatter_add_clip (GES_BASE_XML_FORMATTER (self),
       strid, asset_id, type, start, inpoint, duration, rate, layer_prio,
       track_types, props, metadatas, error);
   if (props)
@@ -496,7 +496,7 @@ _parse_timeline_object (GMarkupParseContext * context,
 wrong_properties:
   g_set_error (error, G_MARKUP_ERROR,
       G_MARKUP_ERROR_INVALID_CONTENT,
-      "element '%s', TimelineObject %s properties '%s', could no be deserialized",
+      "element '%s', Clip %s properties '%s', could no be deserialized",
       element_name, asset_id, properties);
   return;
 
@@ -510,7 +510,7 @@ convertion_failed:
 wrong_type:
   g_set_error (error, G_MARKUP_ERROR,
       G_MARKUP_ERROR_INVALID_CONTENT,
-      "element '%s', %s not a GESTimelineObject'", element_name, strtype);
+      "element '%s', %s not a GESClip'", element_name, strtype);
 }
 
 static inline void
@@ -523,13 +523,13 @@ _parse_effect (GMarkupParseContext * context, const gchar * element_name,
   GstStructure *children_props = NULL, *props = NULL;
   const gchar *asset_id = NULL, *strtype = NULL, *track_id =
       NULL, *metadatas = NULL, *properties = NULL, *track_type = NULL,
-      *children_properties = NULL, *tlobj_id;
+      *children_properties = NULL, *clip_id;
 
   if (!g_markup_collect_attributes (element_name, attribute_names,
           attribute_values, error,
           COLLECT_STR_OPT, "metadatas", &metadatas,
           G_MARKUP_COLLECT_STRING, "asset-id", &asset_id,
-          G_MARKUP_COLLECT_STRING, "timeline-object-id", &tlobj_id,
+          G_MARKUP_COLLECT_STRING, "clip-id", &clip_id,
           G_MARKUP_COLLECT_STRING, "type-name", &strtype,
           G_MARKUP_COLLECT_STRING, "track-id", &track_id,
           COLLECT_STR_OPT, "children-properties", &children_properties,
@@ -556,7 +556,7 @@ _parse_effect (GMarkupParseContext * context, const gchar * element_name,
   }
 
   ges_base_xml_formatter_add_track_object (GES_BASE_XML_FORMATTER (self),
-      type, asset_id, track_id, tlobj_id, children_props, props, metadatas,
+      type, asset_id, track_id, clip_id, children_props, props, metadatas,
       error);
 
   if (props)
@@ -617,8 +617,8 @@ _parse_element_start (GMarkupParseContext * context, const gchar * element_name,
   else if (g_strcmp0 (element_name, "layer") == 0)
     _parse_layer (context, element_name, attribute_names,
         attribute_values, self, error);
-  else if (g_strcmp0 (element_name, "timeline-object") == 0)
-    _parse_timeline_object (context, element_name, attribute_names,
+  else if (g_strcmp0 (element_name, "clip") == 0)
+    _parse_clip (context, element_name, attribute_names,
         attribute_values, self, error);
   else if (g_strcmp0 (element_name, "effect") == 0)
     _parse_effect (context, element_name, attribute_names,
@@ -768,7 +768,7 @@ _save_tracks (GString * str, GESTimeline * timeline)
 }
 
 static inline void
-_save_effect (GString * str, guint tlobj_id, GESTrackObject * tckobj,
+_save_effect (GString * str, guint clip_id, GESTrackObject * tckobj,
     GESTimeline * timeline)
 {
   GESTrack *tck;
@@ -796,9 +796,9 @@ _save_effect (GString * str, guint tlobj_id, GESTrackObject * tckobj,
   properties = _serialize_properties (G_OBJECT (tckobj), "start",
       "in-point", "duration", "locked", "max-duration", "name", NULL);
   metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (tckobj));
-  append_printf_escaped (str, "<effect asset-id='%s' timeline-object-id='%u'"
+  append_printf_escaped (str, "<effect asset-id='%s' clip-id='%u'"
       " type-name='%s' track-type='%i' track-id='%i' properties='%s' metadatas='%s'",
-      ges_extractable_get_id (GES_EXTRACTABLE (tckobj)), tlobj_id,
+      ges_extractable_get_id (GES_EXTRACTABLE (tckobj)), clip_id,
       g_type_name (G_OBJECT_TYPE (tckobj)), tck->type, track_id, properties,
       metas);
   g_free (properties);
@@ -830,10 +830,10 @@ _save_layers (GString * str, GESTimeline * timeline)
 {
   gchar *properties, *metas;
   GESTimelineLayer *layer;
-  GESTimelineObject *tlobj;
-  GList *tmplayer, *tmptlobj, *tlobjs;
+  GESClip *clip;
+  GList *tmplayer, *tmpclip, *clips;
 
-  guint nbtlobjs = 0;
+  guint nbclips = 0;
 
   for (tmplayer = timeline->layers; tmplayer; tmplayer = tmplayer->next) {
     guint priority;
@@ -848,34 +848,34 @@ _save_layers (GString * str, GESTimeline * timeline)
     g_free (properties);
     g_free (metas);
 
-    tlobjs = ges_timeline_layer_get_objects (layer);
-    for (tmptlobj = tlobjs; tmptlobj; tmptlobj = tmptlobj->next) {
+    clips = ges_timeline_layer_get_objects (layer);
+    for (tmpclip = clips; tmpclip; tmpclip = tmpclip->next) {
       GList *effects, *tmpeffect;
 
-      tlobj = GES_TIMELINE_OBJECT (tmptlobj->data);
-      effects = ges_timeline_object_get_top_effects (tlobj);
+      clip = GES_CLIP (tmpclip->data);
+      effects = ges_clip_get_top_effects (clip);
 
       /* We escape all mandatrorry properties that are handled sparetely
        * and vtype for StandarTransition as it is the asset ID */
-      properties = _serialize_properties (G_OBJECT (tlobj),
+      properties = _serialize_properties (G_OBJECT (clip),
           "supported-formats", "rate", "in-point", "start", "duration",
           "max-duration", "priority", "vtype", "uri", NULL);
       append_printf_escaped (str,
-          "<timeline-object id='%i' asset-id='%s'"
+          "<clip id='%i' asset-id='%s'"
           " type-name='%s' layer-priority='%i' track-types='%i' start='%"
           G_GUINT64_FORMAT "' duration='%" G_GUINT64_FORMAT "' inpoint='%"
-          G_GUINT64_FORMAT "' rate='%d' properties='%s' >\n", nbtlobjs,
-          ges_extractable_get_id (GES_EXTRACTABLE (tlobj)),
-          g_type_name (G_OBJECT_TYPE (tlobj)), priority,
-          ges_timeline_object_get_supported_formats (tlobj), _START (tlobj),
-          _DURATION (tlobj), _INPOINT (tlobj), 0, properties);
+          G_GUINT64_FORMAT "' rate='%d' properties='%s' >\n", nbclips,
+          ges_extractable_get_id (GES_EXTRACTABLE (clip)),
+          g_type_name (G_OBJECT_TYPE (clip)), priority,
+          ges_clip_get_supported_formats (clip), _START (clip),
+          _DURATION (clip), _INPOINT (clip), 0, properties);
       g_free (properties);
 
       for (tmpeffect = effects; tmpeffect; tmpeffect = tmpeffect->next)
-        _save_effect (str, nbtlobjs, GES_TRACK_OBJECT (tmpeffect->data),
+        _save_effect (str, nbclips, GES_TRACK_OBJECT (tmpeffect->data),
             timeline);
-      g_string_append (str, "</timeline-object>\n");
-      nbtlobjs++;
+      g_string_append (str, "</clip>\n");
+      nbclips++;
     }
     g_string_append (str, "</layer>\n");
   }

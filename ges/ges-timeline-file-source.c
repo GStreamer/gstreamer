@@ -65,10 +65,10 @@ enum
 };
 
 
-static GList *ges_timeline_filesource_create_track_objects (GESTimelineObject *
+static GList *ges_timeline_filesource_create_track_objects (GESClip *
     obj, GESTrackType type);
 static GESTrackObject
-    * ges_timeline_filesource_create_track_object (GESTimelineObject * obj,
+    * ges_timeline_filesource_create_track_object (GESClip * obj,
     GESTrackType type);
 void ges_timeline_filesource_set_uri (GESTimelineFileSource * self,
     gchar * uri);
@@ -95,8 +95,7 @@ ges_timeline_filesource_get_property (GObject * object, guint property_id,
       break;
     case PROP_SUPPORTED_FORMATS:
       g_value_set_flags (value,
-          ges_timeline_object_get_supported_formats (GES_TIMELINE_OBJECT
-              (object)));
+          ges_clip_get_supported_formats (GES_CLIP (object)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -107,20 +106,21 @@ static void
 ges_timeline_filesource_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESTimelineFileSource *tfs = GES_TIMELINE_FILE_SOURCE (object);
+  GESTimelineFileSource *uriclip = GES_TIMELINE_FILE_SOURCE (object);
 
   switch (property_id) {
     case PROP_URI:
-      ges_timeline_filesource_set_uri (tfs, g_value_dup_string (value));
+      ges_timeline_filesource_set_uri (uriclip, g_value_dup_string (value));
       break;
     case PROP_MUTE:
-      ges_timeline_filesource_set_mute (tfs, g_value_get_boolean (value));
+      ges_timeline_filesource_set_mute (uriclip, g_value_get_boolean (value));
       break;
     case PROP_IS_IMAGE:
-      ges_timeline_filesource_set_is_image (tfs, g_value_get_boolean (value));
+      ges_timeline_filesource_set_is_image (uriclip,
+          g_value_get_boolean (value));
       break;
     case PROP_SUPPORTED_FORMATS:
-      ges_timeline_object_set_supported_formats (GES_TIMELINE_OBJECT (tfs),
+      ges_clip_set_supported_formats (GES_CLIP (uriclip),
           g_value_get_flags (value));
       break;
     default:
@@ -142,7 +142,7 @@ static void
 ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
+  GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
   GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTimelineFileSourcePrivate));
@@ -231,28 +231,27 @@ extractable_get_id (GESExtractable * self)
 static void
 extractable_set_asset (GESExtractable * self, GESAsset * asset)
 {
-  GESTimelineFileSource *tfs = GES_TIMELINE_FILE_SOURCE (self);
+  GESTimelineFileSource *uriclip = GES_TIMELINE_FILE_SOURCE (self);
   GESAssetFileSource *filesource_asset = GES_ASSET_FILESOURCE (asset);
-  GESTimelineObject *tlobj = GES_TIMELINE_OBJECT (self);
+  GESClip *clip = GES_CLIP (self);
 
-  if (GST_CLOCK_TIME_IS_VALID (GES_TIMELINE_ELEMENT (tlobj)) == FALSE)
-    _set_duration0 (GES_TIMELINE_ELEMENT (tfs),
+  if (GST_CLOCK_TIME_IS_VALID (GES_TIMELINE_ELEMENT (clip)) == FALSE)
+    _set_duration0 (GES_TIMELINE_ELEMENT (uriclip),
         ges_asset_filesource_get_duration (filesource_asset));
 
-  ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (tfs),
+  ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (uriclip),
       ges_asset_filesource_get_duration (filesource_asset));
-  ges_timeline_filesource_set_is_image (tfs,
+  ges_timeline_filesource_set_is_image (uriclip,
       ges_asset_filesource_is_image (filesource_asset));
 
-  if (ges_timeline_object_get_supported_formats (tlobj) ==
-      GES_TRACK_TYPE_UNKNOWN) {
+  if (ges_clip_get_supported_formats (clip) == GES_TRACK_TYPE_UNKNOWN) {
 
-    ges_timeline_object_set_supported_formats (tlobj,
-        ges_asset_timeline_object_get_supported_formats
-        (GES_ASSET_TIMELINE_OBJECT (filesource_asset)));
+    ges_clip_set_supported_formats (clip,
+        ges_asset_clip_get_supported_formats
+        (GES_ASSET_CLIP (filesource_asset)));
   }
 
-  GES_TIMELINE_ELEMENT (tfs)->asset = asset;
+  GES_TIMELINE_ELEMENT (uriclip)->asset = asset;
 }
 
 static void
@@ -287,14 +286,14 @@ void
 ges_timeline_filesource_set_mute (GESTimelineFileSource * self, gboolean mute)
 {
   GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, mute:%d", self, mute);
 
   self->priv->mute = mute;
 
   /* Go over tracked objects, and update 'active' status on all audio objects */
-  trackobjects = ges_timeline_object_get_track_objects (object);
+  trackobjects = ges_clip_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
@@ -376,8 +375,7 @@ ges_timeline_filesource_get_uri (GESTimelineFileSource * self)
 }
 
 static GList *
-ges_timeline_filesource_create_track_objects (GESTimelineObject * obj,
-    GESTrackType type)
+ges_timeline_filesource_create_track_objects (GESClip * obj, GESTrackType type)
 {
   GList *res = NULL;
   const GList *tmp, *stream_assets;
@@ -398,8 +396,7 @@ ges_timeline_filesource_create_track_objects (GESTimelineObject * obj,
 }
 
 static GESTrackObject *
-ges_timeline_filesource_create_track_object (GESTimelineObject * obj,
-    GESTrackType type)
+ges_timeline_filesource_create_track_object (GESClip * obj, GESTrackType type)
 {
   GESTimelineFileSourcePrivate *priv = GES_TIMELINE_FILE_SOURCE (obj)->priv;
   GESTrackObject *res;
@@ -453,12 +450,12 @@ ges_timeline_filesource_new (gchar * uri)
 void
 ges_timeline_filesource_set_uri (GESTimelineFileSource * self, gchar * uri)
 {
-  GESTimelineObject *tlobj = GES_TIMELINE_OBJECT (self);
-  GList *tckobjs = ges_timeline_object_get_track_objects (tlobj);
+  GESClip *clip = GES_CLIP (self);
+  GList *tckobjs = ges_clip_get_track_objects (clip);
 
   if (tckobjs) {
     /* FIXME handle this case properly */
-    GST_WARNING_OBJECT (tlobj, "Can not change uri when already"
+    GST_WARNING_OBJECT (clip, "Can not change uri when already"
         "containing TrackObjects");
 
     return;

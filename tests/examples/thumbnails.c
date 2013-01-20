@@ -76,7 +76,7 @@ create_timeline (void)
   GESTimelineLayer *layer;
   GESTrack *tracka, *trackv;
   GESTimeline *timeline;
-  GESTimelineObject *src;
+  GESClip *src;
 
   timeline = ges_timeline_new ();
 
@@ -92,13 +92,13 @@ create_timeline (void)
     return NULL;
 
   /* Add the main audio/video file */
-  src = GES_TIMELINE_OBJECT (ges_timeline_test_source_new ());
+  src = GES_CLIP (ges_timeline_test_source_new ());
   g_object_set (src,
       "vpattern", GES_VIDEO_TEST_PATTERN_SNOW,
       "duration", 10 * GST_SECOND, NULL);
 
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) layer,
-      GES_TIMELINE_OBJECT (src), 0);
+      GES_CLIP (src), 0);
 
   pipeline = ges_timeline_pipeline_new ();
 

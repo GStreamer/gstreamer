@@ -14,7 +14,7 @@ LOCAL_SRC_FILES := 				\
 	ges-simple-timeline-layer.c		\
 	ges-timeline.c				\
 	ges-timeline-layer.c			\
-	ges-timeline-object.c			\
+	ges-clip.c			\
 	ges-timeline-pipeline.c			\
 	ges-timeline-source.c			\
 	ges-timeline-file-source.c		\

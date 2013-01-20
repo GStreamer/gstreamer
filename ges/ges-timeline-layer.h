@@ -70,7 +70,7 @@ struct _GESTimelineLayer {
  * @get_objects: method to get the objects contained in the layer
  *
  * Subclasses can override the @get_objects if they can provide a more
- * efficient way of providing the list of contained #GESTimelineObject(s).
+ * efficient way of providing the list of contained #GESClip(s).
  */
 struct _GESTimelineLayerClass {
   /*< private >*/
@@ -82,8 +82,8 @@ struct _GESTimelineLayerClass {
 
   /*< private >*/
   /* Signals */
-  void	(*object_added)		(GESTimelineLayer * layer, GESTimelineObject * object);
-  void	(*object_removed)	(GESTimelineLayer * layer, GESTimelineObject * object);
+  void	(*object_added)		(GESTimelineLayer * layer, GESClip * object);
+  void	(*object_removed)	(GESTimelineLayer * layer, GESClip * object);
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
@@ -101,8 +101,8 @@ ges_timeline_layer_get_timeline           (GESTimelineLayer * layer);
 
 gboolean ges_timeline_layer_add_object    (GESTimelineLayer * layer,
 
-					   GESTimelineObject * object);
-GESTimelineObject * ges_timeline_layer_add_asset   (GESTimelineLayer *layer,
+					   GESClip * object);
+GESClip * ges_timeline_layer_add_asset   (GESTimelineLayer *layer,
                                                        GESAsset *asset,
                                                        GstClockTime start,
                                                        GstClockTime inpoint,
@@ -111,7 +111,7 @@ GESTimelineObject * ges_timeline_layer_add_asset   (GESTimelineLayer *layer,
                                                        GESTrackType track_types);
 
 gboolean ges_timeline_layer_remove_object (GESTimelineLayer * layer,
-					   GESTimelineObject * object);
+					   GESClip * object);
 
 void     ges_timeline_layer_set_priority  (GESTimelineLayer * layer,
 					   guint priority);

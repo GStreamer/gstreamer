@@ -24,7 +24,7 @@
  *
  * The Assets in the GStreamer Editing Services represent the ressources
  * that can be used. You can create assets for any type that implements the #GESExtractable
- * interface, for example #GESTimelineObjects, #GESFormatter, and #GESTrackObject do implement it.
+ * interface, for example #GESClips, #GESFormatter, and #GESTrackObject do implement it.
  * This means that asssets will represent for example a #GESTimelineFileSources, #GESTrackEffect etc,
  * and then you can extract objects of those types with the appropriate parameters from the asset
  * using the #ges_asset_extract method:
@@ -48,7 +48,7 @@
  *
  * Each asset are represented by a pair of @extractable_type and @id (string). Actually the @extractable_type
  * is the type that implements the #GESExtractable interface, that means that for example for a #GESTimelineFileSource,
- * the type that implements the #GESExtractable interface is #GESTimelineObject.
+ * the type that implements the #GESExtractable interface is #GESClip.
  * The identifier represents different things depending on the @extractable_type and you should check
  * the documentation of each type to know what the ID of #GESAsset actually represents for that type. By default,
  * we only have one #GESAsset per type, and the @id is the name of the type, but this behaviour is overriden
@@ -146,7 +146,7 @@ static GMutex asset_cache_lock;
  * }
  *
  * (The first extractable type is the type of the class that implemented
- *  the GESExtractable interface ie: GESTimelineObject, GESTimeline,
+ *  the GESExtractable interface ie: GESClip, GESTimeline,
  *  GESFomatter, etc... but not subclasses)
  *
  * This is in order to be able to have 2 Asset with the same ID but

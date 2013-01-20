@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TIMELINE_OBJECT
-#define _GES_TIMELINE_OBJECT
+#ifndef _GES_CLIP
+#define _GES_CLIP
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -29,18 +29,18 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TIMELINE_OBJECT             ges_timeline_object_get_type()
-#define GES_TIMELINE_OBJECT(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE_OBJECT, GESTimelineObject))
-#define GES_TIMELINE_OBJECT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectClass))
-#define GES_IS_TIMELINE_OBJECT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TIMELINE_OBJECT))
-#define GES_IS_TIMELINE_OBJECT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TIMELINE_OBJECT))
-#define GES_TIMELINE_OBJECT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectClass))
+#define GES_TYPE_CLIP             ges_clip_get_type()
+#define GES_CLIP(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_CLIP, GESClip))
+#define GES_CLIP_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_CLIP, GESClipClass))
+#define GES_IS_CLIP(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_CLIP))
+#define GES_IS_CLIP_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_CLIP))
+#define GES_CLIP_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_CLIP, GESClipClass))
 
-typedef struct _GESTimelineObjectPrivate GESTimelineObjectPrivate;
+typedef struct _GESClipPrivate GESClipPrivate;
 
 /**
  * GESFillTrackObjectFunc:
- * @object: the #GESTimelineObject controlling the track object
+ * @object: the #GESClip controlling the track object
  * @trobject: the #GESTrackObject
  * @gnlobj: the GNonLin object that needs to be filled.
  *
@@ -52,13 +52,13 @@ typedef struct _GESTimelineObjectPrivate GESTimelineObjectPrivate;
  *
  * Returns: TRUE if the implementer succesfully filled the @gnlobj, else #FALSE.
  */
-typedef gboolean (*GESFillTrackObjectFunc) (GESTimelineObject *object,
+typedef gboolean (*GESFillTrackObjectFunc) (GESClip *object,
                                             GESTrackObject *trobject,
                                             GstElement *gnlobj);
 
 /**
  * GESCreateTrackObjectFunc:
- * @object: a #GESTimelineObject
+ * @object: a #GESClip
  * @type: a #GESTrackType
  *
  * Creates the 'primary' track object for this @object.
@@ -74,17 +74,17 @@ typedef gboolean (*GESFillTrackObjectFunc) (GESTimelineObject *object,
  * that should be controlled by @object for the given @track.
  *
  * The returned #GESTrackObject will be automatically added to the list
- * of objects controlled by the #GESTimelineObject.
+ * of objects controlled by the #GESClip.
  *
  * Returns: the #GESTrackObject to be used, or %NULL if it can't provide one
  * for the given @track.
  */
-typedef GESTrackObject *(*GESCreateTrackObjectFunc) (GESTimelineObject * object,
+typedef GESTrackObject *(*GESCreateTrackObjectFunc) (GESClip * object,
                                                      GESTrackType type);
 
 /**
  * GESCreateTrackObjectsFunc:
- * @object: a #GESTimelineObject
+ * @object: a #GESClip
  * @type: a #GESTrackType
  *
  * Create all track objects this object handles for this type of track.
@@ -93,30 +93,30 @@ typedef GESTrackObject *(*GESCreateTrackObjectFunc) (GESTimelineObject * object,
  * return more than one #GESTrackObject(s) for a given #GESTrack.
  *
  * For each object created, the subclass must call
- * ges_timeline_object_add_track_object() with the newly created object
+ * ges_clip_add_track_object() with the newly created object
  * and provided @type.
  *
  * Returns: %TRUE on success %FALSE on failure.
  */
 
-typedef GList * (*GESCreateTrackObjectsFunc) (GESTimelineObject * object, GESTrackType type);
+typedef GList * (*GESCreateTrackObjectsFunc) (GESClip * object, GESTrackType type);
 
 /**
- * GES_TIMELINE_OBJECT_HEIGHT:
- * @obj: a #GESTimelineObject
+ * GES_CLIP_HEIGHT:
+ * @obj: a #GESClip
  *
  * The span of priorities this object occupies.
  */
-#define GES_TIMELINE_OBJECT_HEIGHT(obj) (((GESTimelineObject*)obj)->height)
+#define GES_CLIP_HEIGHT(obj) (((GESClip*)obj)->height)
 
 /**
- * GESTimelineObject:
+ * GESClip:
  * @trackobjects: (element-type GES.TrackObject): A list of TrackObject
- * controlled by this TimelineObject sorted by priority. NOTE: Do not modify.
+ * controlled by this Clip sorted by priority. NOTE: Do not modify.
  *
- * The #GESTimelineObject base class.
+ * The #GESClip base class.
  */
-struct _GESTimelineObject
+struct _GESClip
 {
   GESTimelineElement parent;
 
@@ -129,14 +129,14 @@ struct _GESTimelineObject
   guint64 fullduration;         /* Full usable duration of the object (-1: no duration) */
 
   /*< private >*/
-  GESTimelineObjectPrivate *priv;
+  GESClipPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING_LARGE];
 };
 
 /**
- * GESTimelineObjectClass:
+ * GESClipClass:
  * @create_track_object: method to create a single #GESTrackObject for a given #GESTrack.
  * @create_track_objects: method to create multiple #GESTrackObjects for a
  * #GESTrack.
@@ -152,7 +152,7 @@ struct _GESTimelineObject
  *
  * Subclasses can override the @create_track_object and @fill_track_object methods.
  */
-struct _GESTimelineObjectClass
+struct _GESClipClass
 {
   /*< private > */
   GESTimelineElementClass parent_class;
@@ -166,9 +166,9 @@ struct _GESTimelineObjectClass
   gboolean need_fill_track;
   gboolean snaps;
 
-  void (*track_object_added)    (GESTimelineObject *object,
+  void (*track_object_added)    (GESClip *object,
                                 GESTrackObject *tck_object);
-  void (*track_object_released) (GESTimelineObject *object,
+  void (*track_object_released) (GESClip *object,
                                 GESTrackObject *tck_object);
 
   /*< private >*/
@@ -176,42 +176,42 @@ struct _GESTimelineObjectClass
   gpointer _ges_reserved[GES_PADDING_LARGE];
 };
 
-GType ges_timeline_object_get_type (void);
+GType ges_clip_get_type (void);
 
 /* Setters */
-void ges_timeline_object_set_layer            (GESTimelineObject *object,
+void ges_clip_set_layer            (GESClip *object,
                                                GESTimelineLayer  *layer);
 
 /* TrackObject handling */
-GList* ges_timeline_object_get_track_objects            (GESTimelineObject *object);
-GESTrackType ges_timeline_object_get_supported_formats  (GESTimelineObject *object);
-GESTrackObject *ges_timeline_object_create_track_object (GESTimelineObject *object, GESTrackType type);
-GList * ges_timeline_object_create_track_objects        (GESTimelineObject *object, GESTrackType type);
-gboolean ges_timeline_object_release_track_object       (GESTimelineObject *object, GESTrackObject    *trackobject);
-void ges_timeline_object_set_supported_formats          (GESTimelineObject *object, GESTrackType       supportedformats);
-gboolean ges_timeline_object_add_asset               (GESTimelineObject *object, GESAsset       *asset);
-gboolean ges_timeline_object_add_track_object           (GESTimelineObject *object, GESTrackObject    *trobj);
-gboolean ges_timeline_object_fill_track_object          (GESTimelineObject *object, GESTrackObject    *trackobj, GstElement *gnlobj);
-GESTrackObject *ges_timeline_object_find_track_object   (GESTimelineObject *object, GESTrack          *track,    GType      type);
+GList* ges_clip_get_track_objects            (GESClip *object);
+GESTrackType ges_clip_get_supported_formats  (GESClip *object);
+GESTrackObject *ges_clip_create_track_object (GESClip *object, GESTrackType type);
+GList * ges_clip_create_track_objects        (GESClip *object, GESTrackType type);
+gboolean ges_clip_release_track_object       (GESClip *object, GESTrackObject    *trackobject);
+void ges_clip_set_supported_formats          (GESClip *object, GESTrackType       supportedformats);
+gboolean ges_clip_add_asset               (GESClip *object, GESAsset       *asset);
+gboolean ges_clip_add_track_object           (GESClip *object, GESTrackObject    *trobj);
+gboolean ges_clip_fill_track_object          (GESClip *object, GESTrackObject    *trackobj, GstElement *gnlobj);
+GESTrackObject *ges_clip_find_track_object   (GESClip *object, GESTrack          *track,    GType      type);
 
 /* Layer */
-GESTimelineLayer *ges_timeline_object_get_layer   (GESTimelineObject *object);
-gboolean ges_timeline_object_is_moving_from_layer (GESTimelineObject *object);
-gboolean ges_timeline_object_move_to_layer        (GESTimelineObject *object, GESTimelineLayer  *layer);
-void ges_timeline_object_set_moving_from_layer    (GESTimelineObject *object, gboolean is_moving);
+GESTimelineLayer *ges_clip_get_layer   (GESClip *object);
+gboolean ges_clip_is_moving_from_layer (GESClip *object);
+gboolean ges_clip_move_to_layer        (GESClip *object, GESTimelineLayer  *layer);
+void ges_clip_set_moving_from_layer    (GESClip *object, gboolean is_moving);
 
 /* Effects */
-GList* ges_timeline_object_get_top_effects           (GESTimelineObject *object);
-gint   ges_timeline_object_get_top_effect_position   (GESTimelineObject *object, GESTrackEffect *effect);
-gboolean ges_timeline_object_set_top_effect_priority (GESTimelineObject *object, GESTrackEffect *effect, guint newpriority);
+GList* ges_clip_get_top_effects           (GESClip *object);
+gint   ges_clip_get_top_effect_position   (GESClip *object, GESTrackEffect *effect);
+gboolean ges_clip_set_top_effect_priority (GESClip *object, GESTrackEffect *effect, guint newpriority);
 
 /* Editing */
-GESTimelineObject *ges_timeline_object_split  (GESTimelineObject *object, guint64  position);
-void ges_timeline_object_objects_set_locked   (GESTimelineObject *object, gboolean locked);
+GESClip *ges_clip_split  (GESClip *object, guint64  position);
+void ges_clip_objects_set_locked   (GESClip *object, gboolean locked);
 
-gboolean ges_timeline_object_edit             (GESTimelineObject *object, GList   *layers,
+gboolean ges_clip_edit             (GESClip *object, GList   *layers,
                                                gint  new_layer_priority, GESEditMode mode,
                                                GESEdge edge, guint64 position);
 
 G_END_DECLS
-#endif /* _GES_TIMELINE_OBJECT */
+#endif /* _GES_CLIP */

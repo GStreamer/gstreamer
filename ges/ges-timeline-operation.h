@@ -24,7 +24,7 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 #include <ges/ges-types.h>
-#include <ges/ges-timeline-object.h>
+#include <ges/ges-clip.h>
 
 G_BEGIN_DECLS
 
@@ -54,7 +54,7 @@ typedef struct _GESTimelineOperationPrivate GESTimelineOperationPrivate;
  */
 struct _GESTimelineOperation {
   /*< private >*/
-  GESTimelineObject parent;
+  GESClip parent;
 
   GESTimelineOperationPrivate *priv;
 
@@ -67,7 +67,7 @@ struct _GESTimelineOperation {
  */
 struct _GESTimelineOperationClass {
   /*< private >*/
-  GESTimelineObjectClass parent_class;
+  GESClipClass parent_class;
 
   /*< private >*/
   /* Padding for API extension */

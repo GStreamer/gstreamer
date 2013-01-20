@@ -54,7 +54,7 @@ enum
 
 static void ges_timeline_parse_launch_effect_finalize (GObject * object);
 static GESTrackObject
-    * ges_tl_parse_launch_effect_create_track_obj (GESTimelineObject * self,
+    * ges_tl_parse_launch_effect_create_track_obj (GESClip * self,
     GESTrackType type);
 
 static void
@@ -113,7 +113,7 @@ ges_timeline_parse_launch_effect_class_init (GESTimelineParseLaunchEffectClass *
     klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
+  GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
 
   g_type_class_add_private (klass,
       sizeof (GESTimelineParseLaunchEffectPrivate));
@@ -165,8 +165,7 @@ ges_timeline_parse_launch_effect_init (GESTimelineParseLaunchEffect * self)
 }
 
 static GESTrackObject *
-ges_tl_parse_launch_effect_create_track_obj (GESTimelineObject * self,
-    GESTrackType type)
+ges_tl_parse_launch_effect_create_track_obj (GESClip * self, GESTrackType type)
 {
   const gchar *bin_description = NULL;
   GESTimelineParseLaunchEffect *effect =

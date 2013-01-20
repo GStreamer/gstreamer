@@ -30,7 +30,7 @@
 #include <ges/ges-timeline-layer.h>
 #include <ges/ges-simple-timeline-layer.h>
 #include <ges/ges-timeline-element.h>
-#include <ges/ges-timeline-object.h>
+#include <ges/ges-clip.h>
 #include <ges/ges-timeline-pipeline.h>
 #include <ges/ges-timeline-source.h>
 #include <ges/ges-timeline-test-source.h>
@@ -47,7 +47,7 @@
 #include <ges/ges-timeline-file-source.h>
 #include <ges/ges-screenshot.h>
 #include <ges/ges-asset.h>
-#include <ges/ges-asset-timeline-object.h>
+#include <ges/ges-asset-clip.h>
 #include <ges/ges-asset-track-object.h>
 #include <ges/ges-asset-file-source.h>
 #include <ges/ges-project.h>

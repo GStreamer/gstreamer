@@ -24,7 +24,7 @@
  */
 
 #include "ges-internal.h"
-#include "ges-timeline-object.h"
+#include "ges-clip.h"
 #include "ges-timeline-source.h"
 #include "ges-track-source.h"
 
@@ -40,8 +40,7 @@ enum
   PROP_0,
 };
 
-G_DEFINE_TYPE (GESTimelineSource, ges_timeline_source,
-    GES_TYPE_TIMELINE_OBJECT);
+G_DEFINE_TYPE (GESTimelineSource, ges_timeline_source, GES_TYPE_CLIP);
 
 static void
 ges_timeline_source_get_property (GObject * object, guint property_id,
@@ -81,7 +80,7 @@ ges_timeline_source_class_init (GESTimelineSourceClass * klass)
   object_class->finalize = ges_timeline_source_finalize;
 
   /* All subclasses should have snapping enabled */
-  GES_TIMELINE_OBJECT_CLASS (klass)->snaps = TRUE;
+  GES_CLIP_CLASS (klass)->snaps = TRUE;
 }
 
 static void

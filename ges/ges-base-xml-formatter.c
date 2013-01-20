@@ -40,7 +40,7 @@ typedef struct PendingEffects
 
 } PendingEffects;
 
-typedef struct PendingTimelineObject
+typedef struct PendingClip
 {
   gchar *id;
   gdouble rate;
@@ -59,7 +59,7 @@ typedef struct PendingTimelineObject
 
   /* TODO Implement asset effect management
    * PendingTrackObjects *track_objects; */
-} PendingTimelineObject;
+} PendingClip;
 
 typedef struct LayerEntry
 {
@@ -79,14 +79,14 @@ struct _GESBaseXmlFormatterPrivate
   GMarkupParseContext *parsecontext;
   gboolean check_only;
 
-  /* Asset.id -> PendingTimelineObject */
-  GHashTable *assetid_pendingtlobjs;
+  /* Asset.id -> PendingClip */
+  GHashTable *assetid_pendingclips;
 
-  /* TimelineObject.ID -> Pending */
-  GHashTable *tlobjid_pendings;
+  /* Clip.ID -> Pending */
+  GHashTable *clipid_pendings;
 
-  /* TimelineObject.ID -> TimelineObject */
-  GHashTable *timeline_objects;
+  /* Clip.ID -> Clip */
+  GHashTable *clips;
 
   /* ID -> track */
   GHashTable *tracks;
@@ -298,12 +298,10 @@ _dispose (GObject * object)
 {
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (object);
 
-  g_clear_pointer (&priv->assetid_pendingtlobjs,
+  g_clear_pointer (&priv->assetid_pendingclips,
       (GDestroyNotify) g_hash_table_unref);
-  g_clear_pointer (&priv->timeline_objects,
-      (GDestroyNotify) g_hash_table_unref);
-  g_clear_pointer (&priv->tlobjid_pendings,
-      (GDestroyNotify) g_hash_table_unref);
+  g_clear_pointer (&priv->clips, (GDestroyNotify) g_hash_table_unref);
+  g_clear_pointer (&priv->clipid_pendings, (GDestroyNotify) g_hash_table_unref);
   g_clear_pointer (&priv->tracks, (GDestroyNotify) g_hash_table_unref);
   g_clear_pointer (&priv->layers, (GDestroyNotify) g_hash_table_unref);
 
@@ -330,12 +328,12 @@ ges_base_xml_formatter_init (GESBaseXmlFormatter * self)
   priv->parsecontext = NULL;
   priv->pending_assets = NULL;
 
-  /* The PendingTimelineObject are owned by the assetid_pendingtlobjs table */
-  priv->assetid_pendingtlobjs = g_hash_table_new_full (g_str_hash,
+  /* The PendingClip are owned by the assetid_pendingclips table */
+  priv->assetid_pendingclips = g_hash_table_new_full (g_str_hash,
       g_str_equal, g_free, NULL);
-  priv->tlobjid_pendings = g_hash_table_new_full (g_str_hash,
+  priv->clipid_pendings = g_hash_table_new_full (g_str_hash,
       g_str_equal, g_free, NULL);
-  priv->timeline_objects = g_hash_table_new_full (g_str_hash,
+  priv->clips = g_hash_table_new_full (g_str_hash,
       g_str_equal, g_free, gst_object_unref);
   priv->tracks = g_hash_table_new_full (g_str_hash,
       g_str_equal, g_free, gst_object_unref);
@@ -407,38 +405,37 @@ set_property_foreach (GQuark field_id, const GValue * value, GObject * object)
   g_object_set_property (object, g_quark_to_string (field_id), value);
 }
 
-static inline GESTimelineObject *
+static inline GESClip *
 _add_object_to_layer (GESBaseXmlFormatterPrivate * priv, const gchar * id,
     GESTimelineLayer * layer, GESAsset * asset, GstClockTime start,
     GstClockTime inpoint, GstClockTime duration, gdouble rate,
     GESTrackType track_types, const gchar * metadatas,
     GstStructure * properties)
 {
-  GESTimelineObject *tlobj = ges_timeline_layer_add_asset (layer,
+  GESClip *clip = ges_timeline_layer_add_asset (layer,
       asset, start, inpoint, duration, rate, track_types);
 
-  if (tlobj == NULL) {
-    GST_WARNING_OBJECT (tlobj, "Could not add object from asset: %s",
+  if (clip == NULL) {
+    GST_WARNING_OBJECT (clip, "Could not add object from asset: %s",
         ges_asset_get_id (asset));
 
     return NULL;
   }
 
   if (metadatas)
-    ges_meta_container_add_metas_from_string (GES_META_CONTAINER (tlobj),
+    ges_meta_container_add_metas_from_string (GES_META_CONTAINER (clip),
         metadatas);
 
   if (properties)
     gst_structure_foreach (properties,
-        (GstStructureForeachFunc) set_property_foreach, tlobj);
+        (GstStructureForeachFunc) set_property_foreach, clip);
 
-  g_hash_table_insert (priv->timeline_objects, g_strdup (id),
-      gst_object_ref (tlobj));
-  return tlobj;
+  g_hash_table_insert (priv->clips, g_strdup (id), gst_object_ref (clip));
+  return clip;
 }
 
 static void
-_add_track_object (GESFormatter * self, GESTimelineObject * tlobj,
+_add_track_object (GESFormatter * self, GESClip * clip,
     GESTrackObject * tckobj, const gchar * track_id,
     GstStructure * children_properties, GstStructure * properties)
 {
@@ -453,9 +450,9 @@ _add_track_object (GESFormatter * self, GESTimelineObject * tlobj,
   }
 
   GST_DEBUG_OBJECT (self, "Adding track_object: %" GST_PTR_FORMAT
-      " To : %" GST_PTR_FORMAT, tckobj, tlobj);
+      " To : %" GST_PTR_FORMAT, tckobj, clip);
 
-  ges_timeline_object_add_track_object (tlobj, tckobj);
+  ges_clip_add_track_object (clip, tckobj);
   ges_track_add_object (track, tckobj);
   gst_structure_foreach (children_properties,
       (GstStructureForeachFunc) _set_child_property, tckobj);
@@ -475,16 +472,15 @@ _free_pending_effect (PendingEffects * pend)
 }
 
 static void
-_free_pending_timeline_object (GESBaseXmlFormatterPrivate * priv,
-    PendingTimelineObject * pend)
+_free_pending_clip (GESBaseXmlFormatterPrivate * priv, PendingClip * pend)
 {
   g_free (pend->id);
   gst_object_unref (pend->layer);
   if (pend->properties)
     gst_structure_free (pend->properties);
   g_list_free_full (pend->effects, (GDestroyNotify) _free_pending_effect);
-  g_hash_table_remove (priv->tlobjid_pendings, pend->id);
-  g_slice_free (PendingTimelineObject, pend);
+  g_hash_table_remove (priv->clipid_pendings, pend->id);
+  g_slice_free (PendingClip, pend);
 }
 
 static void
@@ -529,26 +525,25 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
           "- Error: %s", g_type_name (G_OBJECT_TYPE (source)), id,
           error->message);
 
-      pendings = g_hash_table_lookup (priv->assetid_pendingtlobjs, id);
+      pendings = g_hash_table_lookup (priv->assetid_pendingclips, id);
       for (tmp = pendings; tmp; tmp = tmp->next)
-        _free_pending_timeline_object (priv,
-            (PendingTimelineObject *) tmp->data);
+        _free_pending_clip (priv, (PendingClip *) tmp->data);
 
       _free_pending_asset (priv, passet);
       goto done;
     }
 
     /* We got a possible ID replacement for that asset, create it, and
-     * make sure the assetid_pendingtlobjs will use it */
+     * make sure the assetid_pendingclips will use it */
     ges_asset_request_async (ges_asset_get_extractable_type (source),
         possible_id, NULL, (GAsyncReadyCallback) new_asset_cb, passet);
     ges_project_add_loading_asset (GES_FORMATTER (self)->project,
         ges_asset_get_extractable_type (source), possible_id);
 
-    pendings = g_hash_table_lookup (priv->assetid_pendingtlobjs, id);
+    pendings = g_hash_table_lookup (priv->assetid_pendingclips, id);
     if (pendings) {
-      g_hash_table_remove (priv->assetid_pendingtlobjs, id);
-      g_hash_table_insert (priv->assetid_pendingtlobjs,
+      g_hash_table_remove (priv->assetid_pendingclips, id);
+      g_hash_table_insert (priv->assetid_pendingclips,
           g_strdup (possible_id), pendings);
 
       /* pendings should no be freed */
@@ -557,21 +552,21 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
     goto done;
   }
 
-  /* now that we have the GESAsset, we create the GESTimelineObjects */
-  pendings = g_hash_table_lookup (priv->assetid_pendingtlobjs, id);
+  /* now that we have the GESAsset, we create the GESClips */
+  pendings = g_hash_table_lookup (priv->assetid_pendingclips, id);
   GST_DEBUG_OBJECT (self, "Asset created with ID %s, now creating pending "
-      " TimelineObjects, nb pendings: %i", id, g_list_length (pendings));
+      " Clips, nb pendings: %i", id, g_list_length (pendings));
   for (tmp = pendings; tmp; tmp = tmp->next) {
     GList *tmpeffect;
-    GESTimelineObject *tlobj;
-    PendingTimelineObject *pend = (PendingTimelineObject *) tmp->data;
+    GESClip *clip;
+    PendingClip *pend = (PendingClip *) tmp->data;
 
-    tlobj =
+    clip =
         _add_object_to_layer (priv, pend->id, pend->layer, asset,
         pend->start, pend->inpoint, pend->duration, pend->rate,
         pend->track_types, pend->metadatas, pend->properties);
 
-    if (tlobj == NULL)
+    if (clip == NULL)
       continue;
 
     GST_DEBUG_OBJECT (self, "Adding %i effect to new object",
@@ -580,10 +575,10 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
       PendingEffects *peffect = (PendingEffects *) tmpeffect->data;
 
       /* We keep a ref as _free_pending_effect unrefs it */
-      _add_track_object (self, tlobj, gst_object_ref (peffect->tckobj),
+      _add_track_object (self, clip, gst_object_ref (peffect->tckobj),
           peffect->track_id, peffect->children_properties, peffect->properties);
     }
-    _free_pending_timeline_object (priv, pend);
+    _free_pending_clip (priv, pend);
   }
 
   /* And now add to the project */
@@ -599,11 +594,11 @@ done:
     g_free (possible_id);
 
   if (pendings) {
-    g_hash_table_remove (priv->assetid_pendingtlobjs, id);
+    g_hash_table_remove (priv->assetid_pendingclips, id);
     g_list_free (pendings);
   }
 
-  if (g_hash_table_size (priv->assetid_pendingtlobjs) == 0 &&
+  if (g_hash_table_size (priv->assetid_pendingclips) == 0 &&
       priv->pending_assets == NULL)
     _loading_done (self);
 }
@@ -678,14 +673,14 @@ ges_base_xml_formatter_add_asset (GESBaseXmlFormatter * self,
 }
 
 void
-ges_base_xml_formatter_add_timeline_object (GESBaseXmlFormatter * self,
+ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
     const gchar * id, const char *asset_id, GType type, GstClockTime start,
     GstClockTime inpoint, GstClockTime duration, gdouble rate,
     guint layer_prio, GESTrackType track_types, GstStructure * properties,
     const gchar * metadatas, GError ** error)
 {
   GESAsset *asset;
-  GESTimelineObject *nobj;
+  GESClip *nobj;
   LayerEntry *entry;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
@@ -695,7 +690,7 @@ ges_base_xml_formatter_add_timeline_object (GESBaseXmlFormatter * self,
   entry = g_hash_table_lookup (priv->layers, GINT_TO_POINTER (layer_prio));
   if (entry == NULL) {
     g_set_error (error, GES_ERROR_DOMAIN, 0,
-        "We got a TimelineObject in a layer"
+        "We got a Clip in a layer"
         " that does not exist, something is wrong either in the project file or"
         " in %s", g_type_name (G_OBJECT_TYPE (self)));
   }
@@ -708,7 +703,7 @@ ges_base_xml_formatter_add_timeline_object (GESBaseXmlFormatter * self,
   asset = ges_asset_request (type, asset_id, NULL);
   if (asset == NULL) {
     gchar *real_id;
-    PendingTimelineObject *ptlobj;
+    PendingClip *pclip;
     GList *pendings;
 
     real_id = ges_extractable_type_check_id (type, asset_id, error);
@@ -722,27 +717,27 @@ ges_base_xml_formatter_add_timeline_object (GESBaseXmlFormatter * self,
       return;
     }
 
-    pendings = g_hash_table_lookup (priv->assetid_pendingtlobjs, asset_id);
+    pendings = g_hash_table_lookup (priv->assetid_pendingclips, asset_id);
 
-    ptlobj = g_slice_new0 (PendingTimelineObject);
+    pclip = g_slice_new0 (PendingClip);
     GST_DEBUG_OBJECT (self, "Adding pending %p for %s, currently: %i",
-        ptlobj, asset_id, g_list_length (pendings));
+        pclip, asset_id, g_list_length (pendings));
 
-    ptlobj->id = g_strdup (id);
-    ptlobj->rate = rate;
-    ptlobj->track_types = track_types;
-    ptlobj->duration = duration;
-    ptlobj->inpoint = inpoint;
-    ptlobj->start = start;
-    ptlobj->layer = gst_object_ref (entry->layer);
+    pclip->id = g_strdup (id);
+    pclip->rate = rate;
+    pclip->track_types = track_types;
+    pclip->duration = duration;
+    pclip->inpoint = inpoint;
+    pclip->start = start;
+    pclip->layer = gst_object_ref (entry->layer);
 
-    ptlobj->properties = properties ? gst_structure_copy (properties) : NULL;
-    ptlobj->metadatas = g_strdup (metadatas);
+    pclip->properties = properties ? gst_structure_copy (properties) : NULL;
+    pclip->metadatas = g_strdup (metadatas);
 
     /* Add the new pending object to the hashtable */
-    g_hash_table_insert (priv->assetid_pendingtlobjs, real_id,
-        g_list_append (pendings, ptlobj));
-    g_hash_table_insert (priv->tlobjid_pendings, g_strdup (id), ptlobj);
+    g_hash_table_insert (priv->assetid_pendingclips, real_id,
+        g_list_append (pendings, pclip));
+    g_hash_table_insert (priv->clipid_pendings, g_strdup (id), pclip);
 
     return;
   }
@@ -872,21 +867,21 @@ ges_base_xml_formatter_add_track_object (GESBaseXmlFormatter * self,
 
   tckobj = GES_TRACK_OBJECT (ges_asset_extract (asset, NULL));
   if (tckobj) {
-    GESTimelineObject *tlobj;
+    GESClip *clip;
     if (metadatas)
       ges_meta_container_add_metas_from_string (GES_META_CONTAINER (tckobj),
           metadatas);
 
-    tlobj = g_hash_table_lookup (priv->timeline_objects, timeline_obj_id);
-    if (tlobj) {
-      _add_track_object (GES_FORMATTER (self), tlobj, tckobj, track_id,
+    clip = g_hash_table_lookup (priv->clips, timeline_obj_id);
+    if (clip) {
+      _add_track_object (GES_FORMATTER (self), clip, tckobj, track_id,
           children_properties, properties);
     } else {
       PendingEffects *peffect;
-      PendingTimelineObject *pend = g_hash_table_lookup (priv->tlobjid_pendings,
+      PendingClip *pend = g_hash_table_lookup (priv->clipid_pendings,
           timeline_obj_id);
       if (pend == NULL) {
-        GST_WARNING_OBJECT (self, "No TimelineObject with id: %s can not "
+        GST_WARNING_OBJECT (self, "No Clip with id: %s can not "
             "add TrackObject", timeline_obj_id);
         goto out;
       }

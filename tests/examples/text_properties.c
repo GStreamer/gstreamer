@@ -26,19 +26,18 @@ typedef struct
   char *name;
 } transition_type;
 
-GESTimelineObject *make_source (char *path, guint64 start, guint64 duration,
+GESClip *make_source (char *path, guint64 start, guint64 duration,
     gint priority, gchar * text);
 
 GESTimelinePipeline *make_timeline (char *path, float duration, char *text);
 
-GESTimelineObject *
+GESClip *
 make_source (char *path, guint64 start, guint64 duration, gint priority,
     gchar * text)
 {
   gchar *uri = gst_filename_to_uri (path, NULL);
 
-  GESTimelineObject *ret =
-      GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
+  GESClip *ret = GES_CLIP (ges_timeline_filesource_new (uri));
 
   g_object_set (ret,
       "start", (guint64) start,
@@ -57,7 +56,7 @@ make_timeline (char *path, float duration, char *text)
   GESTimeline *timeline;
   GESTrack *trackv, *tracka;
   GESTimelineLayer *layer1;
-  GESTimelineObject *srca;
+  GESClip *srca;
   GESTimelinePipeline *pipeline;
   guint64 aduration;
 

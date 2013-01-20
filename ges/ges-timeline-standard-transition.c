@@ -56,18 +56,18 @@ enum
   PROP_VTYPE = 5,
 };
 
-static GESTrackObject *ges_tl_transition_create_track_object (GESTimelineObject
+static GESTrackObject *ges_tl_transition_create_track_object (GESClip
     * self, GESTrackType type);
 static void
-ges_timeline_standard_transition_track_object_added (GESTimelineObject * obj,
+ges_timeline_standard_transition_track_object_added (GESClip * obj,
     GESTrackObject * tckobj);
 static void
-ges_timeline_standard_transition_track_object_released (GESTimelineObject * obj,
+ges_timeline_standard_transition_track_object_released (GESClip * obj,
     GESTrackObject * tckobj);
 
 /* Internal methods */
 static void
-ges_timeline_standard_transition_update_vtype_internal (GESTimelineObject *
+ges_timeline_standard_transition_update_vtype_internal (GESClip *
     self, GESVideoStandardTransitionType value, gboolean set_asset)
 {
   GSList *tmp;
@@ -181,7 +181,7 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
       }
     }
     ges_timeline_standard_transition_update_vtype_internal
-        (GES_TIMELINE_OBJECT (self), value, FALSE);
+        (GES_CLIP (self), value, FALSE);
   }
 }
 
@@ -219,7 +219,7 @@ static void
 ges_timeline_standard_transition_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec)
 {
-  GESTimelineObject *self = GES_TIMELINE_OBJECT (object);
+  GESClip *self = GES_CLIP (object);
 
   switch (property_id) {
     case PROP_VTYPE:
@@ -236,7 +236,7 @@ ges_timeline_standard_transition_class_init (GESTimelineStandardTransitionClass
     * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
+  GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
 
   g_type_class_add_private (klass,
       sizeof (GESTimelineStandardTransitionPrivate));
@@ -278,7 +278,7 @@ ges_timeline_standard_transition_init (GESTimelineStandardTransition * self)
 }
 
 static void
-ges_timeline_standard_transition_track_object_released (GESTimelineObject * obj,
+ges_timeline_standard_transition_track_object_released (GESClip * obj,
     GESTrackObject * tckobj)
 {
   GESTimelineStandardTransitionPrivate *priv =
@@ -294,7 +294,7 @@ ges_timeline_standard_transition_track_object_released (GESTimelineObject * obj,
 }
 
 static void
-ges_timeline_standard_transition_track_object_added (GESTimelineObject * obj,
+ges_timeline_standard_transition_track_object_added (GESClip * obj,
     GESTrackObject * tckobj)
 {
   GESTimelineStandardTransitionPrivate *priv =
@@ -308,8 +308,7 @@ ges_timeline_standard_transition_track_object_added (GESTimelineObject * obj,
 }
 
 static GESTrackObject *
-ges_tl_transition_create_track_object (GESTimelineObject * obj,
-    GESTrackType type)
+ges_tl_transition_create_track_object (GESClip * obj, GESTrackType type)
 {
   GESTimelineStandardTransition *transition =
       (GESTimelineStandardTransition *) obj;
@@ -318,7 +317,7 @@ ges_tl_transition_create_track_object (GESTimelineObject * obj,
 
   GST_DEBUG ("Creating a GESTrackTransition");
 
-  supportedformats = ges_timeline_object_get_supported_formats (obj);
+  supportedformats = ges_clip_get_supported_formats (obj);
   if (type == GES_TRACK_TYPE_VIDEO) {
     if (supportedformats == GES_TRACK_TYPE_UNKNOWN ||
         supportedformats & GES_TRACK_TYPE_VIDEO) {

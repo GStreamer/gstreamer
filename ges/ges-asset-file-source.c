@@ -41,7 +41,7 @@ initable_iface_init (GInitableIface * initable_iface)
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESAssetFileSource, ges_asset_filesource,
-    GES_TYPE_ASSET_TIMELINE_OBJECT,
+    GES_TYPE_ASSET_CLIP,
     G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init));
 
 /* TODO: We should monitor files here, and add some way of reporting changes
@@ -291,7 +291,7 @@ ges_asset_filesource_set_info (GESAssetFileSource * self,
         gst_discoverer_stream_info_get_stream_id (sinf));
     _create_track_file_source_asset (self, sinf, type);
   }
-  ges_asset_timeline_object_set_supported_formats (GES_ASSET_TIMELINE_OBJECT
+  ges_asset_clip_set_supported_formats (GES_ASSET_CLIP
       (self), supportedformats);
 
   if (stream_list)

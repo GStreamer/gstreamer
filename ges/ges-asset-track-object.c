@@ -82,7 +82,7 @@ ges_asset_track_object_class_init (GESAssetTrackObjectClass * klass)
   object_class->set_property = _set_property;
 
   /**
-   * GESTimelineObject:track-type:
+   * GESClip:track-type:
    *
    * The formats supported by the object.
    */

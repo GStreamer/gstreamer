@@ -58,7 +58,7 @@ enum
 };
 
 static GESTrackObject
-    * ges_timeline_test_source_create_track_object (GESTimelineObject * obj,
+    * ges_timeline_test_source_create_track_object (GESClip * obj,
     GESTrackType type);
 
 static void
@@ -89,20 +89,21 @@ static void
 ges_timeline_test_source_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESTimelineTestSource *tfs = GES_TIMELINE_TEST_SOURCE (object);
+  GESTimelineTestSource *uriclip = GES_TIMELINE_TEST_SOURCE (object);
 
   switch (property_id) {
     case PROP_MUTE:
-      ges_timeline_test_source_set_mute (tfs, g_value_get_boolean (value));
+      ges_timeline_test_source_set_mute (uriclip, g_value_get_boolean (value));
       break;
     case PROP_VPATTERN:
-      ges_timeline_test_source_set_vpattern (tfs, g_value_get_enum (value));
+      ges_timeline_test_source_set_vpattern (uriclip, g_value_get_enum (value));
       break;
     case PROP_FREQ:
-      ges_timeline_test_source_set_frequency (tfs, g_value_get_double (value));
+      ges_timeline_test_source_set_frequency (uriclip,
+          g_value_get_double (value));
       break;
     case PROP_VOLUME:
-      ges_timeline_test_source_set_volume (tfs, g_value_get_double (value));
+      ges_timeline_test_source_set_volume (uriclip, g_value_get_double (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -113,7 +114,7 @@ static void
 ges_timeline_test_source_class_init (GESTimelineTestSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
+  GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTimelineTestSourcePrivate));
 
@@ -189,14 +190,14 @@ void
 ges_timeline_test_source_set_mute (GESTimelineTestSource * self, gboolean mute)
 {
   GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, mute:%d", self, mute);
 
   self->priv->mute = mute;
 
   /* Go over tracked objects, and update 'active' status on all audio objects */
-  trackobjects = ges_timeline_object_get_track_objects (object);
+  trackobjects = ges_clip_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
@@ -221,11 +222,11 @@ ges_timeline_test_source_set_vpattern (GESTimelineTestSource * self,
     GESVideoTestPattern vpattern)
 {
   GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GESClip *object = (GESClip *) self;
 
   self->priv->vpattern = vpattern;
 
-  trackobjects = ges_timeline_object_get_track_objects (object);
+  trackobjects = ges_clip_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
     if (GES_IS_TRACK_VIDEO_TEST_SOURCE (trackobject))
@@ -250,11 +251,11 @@ ges_timeline_test_source_set_frequency (GESTimelineTestSource * self,
     gdouble freq)
 {
   GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GESClip *object = (GESClip *) self;
 
   self->priv->freq = freq;
 
-  trackobjects = ges_timeline_object_get_track_objects (object);
+  trackobjects = ges_clip_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
     if (GES_IS_TRACK_AUDIO_TEST_SOURCE (trackobject))
@@ -279,11 +280,11 @@ ges_timeline_test_source_set_volume (GESTimelineTestSource * self,
     gdouble volume)
 {
   GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GESClip *object = (GESClip *) self;
 
   self->priv->volume = volume;
 
-  trackobjects = ges_timeline_object_get_track_objects (object);
+  trackobjects = ges_clip_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
     if (GES_IS_TRACK_AUDIO_TEST_SOURCE (trackobject))
@@ -352,8 +353,7 @@ ges_timeline_test_source_get_volume (GESTimelineTestSource * self)
 }
 
 static GESTrackObject *
-ges_timeline_test_source_create_track_object (GESTimelineObject * obj,
-    GESTrackType type)
+ges_timeline_test_source_create_track_object (GESClip * obj, GESTrackType type)
 {
   GESTimelineTestSourcePrivate *priv = GES_TIMELINE_TEST_SOURCE (obj)->priv;
   GESTrackObject *res = NULL;

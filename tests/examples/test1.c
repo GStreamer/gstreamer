@@ -26,7 +26,7 @@ main (int argc, gchar ** argv)
   GESAsset *src_asset;
   GESTimelinePipeline *pipeline;
   GESTimeline *timeline;
-  GESTimelineObject *source;
+  GESClip *source;
   GESTimelineLayer *layer;
   GMainLoop *mainloop;
 

@@ -49,7 +49,7 @@ GST_DEBUG_CATEGORY_STATIC (ges_pitivi_formatter_debug);
 typedef struct SrcMapping
 {
   gchar *id;
-  GESTimelineObject *obj;
+  GESClip *obj;
   guint priority;
   GList *tck_obj_ids;
 } SrcMapping;
@@ -73,7 +73,7 @@ struct _GESPitiviFormatterPrivate
   GHashTable *track_objects_table;
 
   /* {factory-ref: [track-object-ref-id,...]} */
-  GHashTable *timeline_objects_table;
+  GHashTable *clips_table;
 
   /* {layerPriority: layer} */
   GHashTable *layers_table;
@@ -82,7 +82,7 @@ struct _GESPitiviFormatterPrivate
 
   GESTrack *tracka, *trackv;
 
-  /* List the TimelineObject that haven't been loaded yet */
+  /* List the Clip that haven't been loaded yet */
   GList *sources_to_load;
 
   /* Saving context */
@@ -158,7 +158,7 @@ save_track_objects (xmlTextWriterPtr writer, GList * source_list,
   GST_DEBUG ("Saving track objects");
   for (tmp = source_list; tmp; tmp = tmp->next) {
     SrcMapping *srcmap;
-    GESTimelineObject *object;
+    GESClip *object;
     guint i, j;
     guint64 inpoint, duration, start;
 
@@ -166,7 +166,7 @@ save_track_objects (xmlTextWriterPtr writer, GList * source_list,
     object = srcmap->obj;
 
     /* Save track associated objects */
-    tck_objs = ges_timeline_object_get_track_objects (object);
+    tck_objs = ges_clip_get_track_objects (object);
     for (tmp_tck = tck_objs; tmp_tck; tmp_tck = tmp_tck->next) {
       xmlChar *cast;
       GESTrackObject *tckobj = GES_TRACK_OBJECT (tmp_tck->data);
@@ -347,7 +347,7 @@ static GList *
 save_sources (GESPitiviFormatter * formatter, GList * layers,
     xmlTextWriterPtr writer)
 {
-  GList *tlobjects, *tmp, *tmplayer;
+  GList *clipects, *tmp, *tmplayer;
   GESTimelineLayer *layer;
   GESPitiviFormatterPrivate *priv = formatter->priv;
 
@@ -361,37 +361,38 @@ save_sources (GESPitiviFormatter * formatter, GList * layers,
   for (tmplayer = layers; tmplayer; tmplayer = tmplayer->next) {
     layer = GES_TIMELINE_LAYER (tmplayer->data);
 
-    tlobjects = ges_timeline_layer_get_objects (layer);
-    for (tmp = tlobjects; tmp; tmp = tmp->next) {
+    clipects = ges_timeline_layer_get_objects (layer);
+    for (tmp = clipects; tmp; tmp = tmp->next) {
       SrcMapping *srcmap = g_slice_new0 (SrcMapping);
-      GESTimelineObject *tlobj;
-      gchar *tfs_uri;
-      tlobj = tmp->data;
+      GESClip *clip;
+      gchar *uriclip_uri;
+      clip = tmp->data;
 
-      if (GES_IS_TIMELINE_FILE_SOURCE (tlobj)) {
+      if (GES_IS_TIMELINE_FILE_SOURCE (clip)) {
 
-        tfs_uri = (gchar *) ges_timeline_filesource_get_uri
-            (GES_TIMELINE_FILE_SOURCE (tlobj));
+        uriclip_uri = (gchar *) ges_timeline_filesource_get_uri
+            (GES_TIMELINE_FILE_SOURCE (clip));
 
-        if (!g_hash_table_lookup (priv->saving_source_table, tfs_uri)) {
+        if (!g_hash_table_lookup (priv->saving_source_table, uriclip_uri)) {
           gchar *strid = g_strdup_printf ("%i", priv->nb_sources);
 
-          g_hash_table_insert (priv->saving_source_table, g_strdup (tfs_uri),
-              strid);
-          write_source (tfs_uri, strid, writer);
+          g_hash_table_insert (priv->saving_source_table,
+              g_strdup (uriclip_uri), strid);
+          write_source (uriclip_uri, strid, writer);
           priv->nb_sources++;
         }
 
         srcmap->id =
-            g_strdup (g_hash_table_lookup (priv->saving_source_table, tfs_uri));
-        srcmap->obj = g_object_ref (tlobj);
+            g_strdup (g_hash_table_lookup (priv->saving_source_table,
+                uriclip_uri));
+        srcmap->obj = g_object_ref (clip);
         srcmap->priority = ges_timeline_layer_get_priority (layer);
         /* We fill up the tck_obj_ids in save_track_objects */
         source_list = g_list_append (source_list, srcmap);
       }
     }
-    g_list_foreach (tlobjects, (GFunc) g_object_unref, NULL);
-    g_list_free (tlobjects);
+    g_list_foreach (clipects, (GFunc) g_object_unref, NULL);
+    g_list_free (clipects);
     g_object_unref (G_OBJECT (layer));
   }
 
@@ -399,11 +400,11 @@ save_sources (GESPitiviFormatter * formatter, GList * layers,
 }
 
 static void
-save_timeline_objects (xmlTextWriterPtr writer, GList * list)
+save_clips (xmlTextWriterPtr writer, GList * list)
 {
   GList *tmp, *tck_obj_ids;
 
-  xmlTextWriterStartElement (writer, BAD_CAST "timeline-objects");
+  xmlTextWriterStartElement (writer, BAD_CAST "clips");
 
   GST_DEBUG ("Saving timeline objects");
 
@@ -411,7 +412,7 @@ save_timeline_objects (xmlTextWriterPtr writer, GList * list)
 
     SrcMapping *srcmap = (SrcMapping *) tmp->data;
 
-    xmlTextWriterStartElement (writer, BAD_CAST "timeline-object");
+    xmlTextWriterStartElement (writer, BAD_CAST "clip");
     xmlTextWriterStartElement (writer, BAD_CAST "factory-ref");
     xmlTextWriterWriteAttribute (writer, BAD_CAST "id", BAD_CAST srcmap->id);
     xmlTextWriterEndElement (writer);
@@ -455,7 +456,7 @@ save_pitivi_timeline_to_uri (GESFormatter * formatter,
   xmlTextWriterEndElement (writer);
 
   save_tracks (timeline, writer, list);
-  save_timeline_objects (writer, list);
+  save_clips (writer, list);
   xmlTextWriterEndDocument (writer);
   xmlFreeTextWriter (writer);
 
@@ -669,20 +670,20 @@ parse_track_objects (GESFormatter * self)
 }
 
 static gboolean
-parse_timeline_objects (GESFormatter * self)
+parse_clips (GESFormatter * self)
 {
   int size, j;
   xmlNodeSetPtr nodes;
   xmlXPathObjectPtr xpathObj;
-  xmlNodePtr tlobj_nd, tmp_nd, tmp_nd2;
+  xmlNodePtr clip_nd, tmp_nd, tmp_nd2;
   xmlChar *tckobjrefId, *facrefId = NULL;
 
   GList *reflist = NULL;
   GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (self)->priv;
-  GHashTable *tlobjs_table = priv->timeline_objects_table;
+  GHashTable *clips_table = priv->clips_table;
 
   xpathObj = xmlXPathEvalExpression ((const xmlChar *)
-      "/pitivi/timeline/timeline-objects/timeline-object", priv->xpathCtx);
+      "/pitivi/timeline/clips/clip", priv->xpathCtx);
 
   if (xpathObj == NULL) {
     xmlXPathFreeObject (xpathObj);
@@ -693,9 +694,9 @@ parse_timeline_objects (GESFormatter * self)
   size = (nodes) ? nodes->nodeNr : 0;
 
   for (j = 0; j < size; j++) {
-    tlobj_nd = nodes->nodeTab[j];
+    clip_nd = nodes->nodeTab[j];
 
-    for (tmp_nd = tlobj_nd->children; tmp_nd; tmp_nd = tmp_nd->next) {
+    for (tmp_nd = clip_nd->children; tmp_nd; tmp_nd = tmp_nd->next) {
       /* We assume that factory-ref is always before the tckobjs-ref */
       if (!xmlStrcmp (tmp_nd->name, (xmlChar *) "factory-ref")) {
         facrefId = xmlGetProp (tmp_nd, (xmlChar *) "id");
@@ -705,12 +706,12 @@ parse_timeline_objects (GESFormatter * self)
         for (tmp_nd2 = tmp_nd->children; tmp_nd2; tmp_nd2 = tmp_nd2->next) {
           if (!xmlStrcmp (tmp_nd2->name, (xmlChar *) "track-object-ref")) {
             /* We add the track object ref ID to the list of the current
-             * TimelineObject tracks, this way we can merge 2
-             * TimelineObject-s into 1 when we have unlinked TrackObject-s */
-            reflist = g_hash_table_lookup (tlobjs_table, facrefId);
+             * Clip tracks, this way we can merge 2
+             * Clip-s into 1 when we have unlinked TrackObject-s */
+            reflist = g_hash_table_lookup (clips_table, facrefId);
             tckobjrefId = xmlGetProp (tmp_nd2, (xmlChar *) "id");
             reflist = g_list_append (reflist, g_strdup ((gchar *) tckobjrefId));
-            g_hash_table_insert (tlobjs_table, g_strdup ((gchar *) facrefId),
+            g_hash_table_insert (clips_table, g_strdup ((gchar *) facrefId),
                 reflist);
 
             xmlFree (tckobjrefId);
@@ -744,7 +745,7 @@ set_properties (GObject * obj, GHashTable * props_table)
 }
 
 static void
-track_object_added_cb (GESTimelineObject * object,
+track_object_added_cb (GESClip * object,
     GESTrackObject * track_object, GHashTable * props_table)
 {
   gchar *media_type = NULL, *lockedstr;
@@ -755,7 +756,7 @@ track_object_added_cb (GESTimelineObject * object,
   gint type = 0;
   GESPitiviFormatter *formatter;
 
-  tck_objs = ges_timeline_object_get_track_objects (object);
+  tck_objs = ges_clip_get_track_objects (object);
   media_type = (gchar *) g_hash_table_lookup (props_table, "media_type");
   lockedstr = (gchar *) g_hash_table_lookup (props_table, "locked");
 
@@ -802,7 +803,7 @@ track_object_added_cb (GESTimelineObject * object,
         || (!g_strcmp0 (media_type, "pitivi.stream.AudioStream")
             && track->type == GES_TRACK_TYPE_AUDIO)) {
 
-      /* We unlock the track objects so we do not move the whole TimelineObject */
+      /* We unlock the track objects so we do not move the whole Clip */
       ges_track_object_set_locked (tmp->data, FALSE);
       set_properties (G_OBJECT (tmp->data), props_table);
 
@@ -815,7 +816,7 @@ track_object_added_cb (GESTimelineObject * object,
   }
 
   if (has_effect) {
-    tck_objs = ges_timeline_object_get_track_objects (object);
+    tck_objs = ges_clip_get_track_objects (object);
 
     /* FIXME make sure this is the way we want to handle that
      * ie: set duration and start as the other trackobject
@@ -827,7 +828,7 @@ track_object_added_cb (GESTimelineObject * object,
 
       if (GES_IS_TRACK_PARSE_LAUNCH_EFFECT (tmp->data)
           && (type == track->type)) {
-        /* We lock the track objects so we do not move the whole TimelineObject */
+        /* We lock the track objects so we do not move the whole Clip */
         ges_track_object_set_locked (tmp->data, FALSE);
         g_object_set (tmp->data, "start", start, "duration", duration, NULL);
         if (locked)
@@ -898,11 +899,9 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
         /* If we only have audio or only video in the previous source,
          * set it has such */
         if (a_avail) {
-          ges_timeline_object_set_supported_formats (GES_TIMELINE_OBJECT (src),
-              GES_TRACK_TYPE_VIDEO);
+          ges_clip_set_supported_formats (GES_CLIP (src), GES_TRACK_TYPE_VIDEO);
         } else if (v_avail) {
-          ges_timeline_object_set_supported_formats (GES_TIMELINE_OBJECT (src),
-              GES_TRACK_TYPE_AUDIO);
+          ges_clip_set_supported_formats (GES_CLIP (src), GES_TRACK_TYPE_AUDIO);
         }
 
         filename = (gchar *) g_hash_table_lookup (source_table, "filename");
@@ -918,7 +917,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
         }
 
         set_properties (G_OBJECT (src), props_table);
-        ges_timeline_layer_add_object (layer, GES_TIMELINE_OBJECT (src));
+        ges_timeline_layer_add_object (layer, GES_CLIP (src));
 
         g_signal_connect (src, "track-object-added",
             G_CALLBACK (track_object_added_cb), props_table);
@@ -937,8 +936,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
       effect_table =
           g_hash_table_lookup (props_table, (gchar *) "effect_props");
 
-      ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT (src),
-          GES_TRACK_OBJECT (effect));
+      ges_clip_add_track_object (GES_CLIP (src), GES_TRACK_OBJECT (effect));
 
       if (!g_strcmp0 (active, (gchar *) "(bool)False"))
         ges_track_object_set_active (GES_TRACK_OBJECT (effect), FALSE);
@@ -986,28 +984,26 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
   }
 
   if (a_avail) {
-    ges_timeline_object_set_supported_formats (GES_TIMELINE_OBJECT (src),
-        GES_TRACK_TYPE_VIDEO);
+    ges_clip_set_supported_formats (GES_CLIP (src), GES_TRACK_TYPE_VIDEO);
   } else if (v_avail) {
-    ges_timeline_object_set_supported_formats (GES_TIMELINE_OBJECT (src),
-        GES_TRACK_TYPE_AUDIO);
+    ges_clip_set_supported_formats (GES_CLIP (src), GES_TRACK_TYPE_AUDIO);
   }
 }
 
 static gboolean
-make_timeline_objects (GESFormatter * self)
+make_clips (GESFormatter * self)
 {
   GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (self)->priv;
   GHashTable *source_table;
 
   GList *keys = NULL, *tmp = NULL, *reflist = NULL;
 
-  keys = g_hash_table_get_keys (priv->timeline_objects_table);
+  keys = g_hash_table_get_keys (priv->clips_table);
 
   for (tmp = keys; tmp; tmp = tmp->next) {
     gchar *fac_id = (gchar *) tmp->data;
 
-    reflist = g_hash_table_lookup (priv->timeline_objects_table, fac_id);
+    reflist = g_hash_table_lookup (priv->clips_table, fac_id);
     source_table = g_hash_table_lookup (priv->sources_table, fac_id);
     make_source (self, reflist, source_table);
   }
@@ -1057,7 +1053,7 @@ load_pitivi_file_from_uri (GESFormatter * self,
 
   list_sources (self);
 
-  if (!parse_timeline_objects (self)) {
+  if (!parse_clips (self)) {
     GST_ERROR ("Couldn't find timeline objects markup in the xptv file");
     return FALSE;
   }
@@ -1072,12 +1068,11 @@ load_pitivi_file_from_uri (GESFormatter * self,
   /* If there are no timeline objects to load we should emit
    * 'project-loaded' signal.
    */
-  if (!g_hash_table_size (priv->timeline_objects_table) &&
-      GES_FORMATTER (self)->project) {
+  if (!g_hash_table_size (priv->clips_table) && GES_FORMATTER (self)->project) {
     ges_project_set_loaded (GES_FORMATTER (self)->project,
         GES_FORMATTER (self));
   } else {
-    if (!make_timeline_objects (self)) {
+    if (!make_clips (self)) {
       GST_ERROR ("Couldn't deserialise the project properly");
       return FALSE;
     }
@@ -1101,8 +1096,8 @@ ges_pitivi_formatter_finalize (GObject * object)
   g_hash_table_destroy (priv->saving_source_table);
   g_list_free (priv->sources_to_load);
 
-  if (priv->timeline_objects_table != NULL) {
-    g_hash_table_foreach (priv->timeline_objects_table,
+  if (priv->clips_table != NULL) {
+    g_hash_table_foreach (priv->clips_table,
         (GHFunc) list_table_destroyer, NULL);
   }
 
@@ -1153,7 +1148,7 @@ ges_pitivi_formatter_init (GESPitiviFormatter * self)
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
       (GDestroyNotify) g_hash_table_destroy);
 
-  priv->timeline_objects_table =
+  priv->clips_table =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 
   priv->layers_table =

@@ -64,7 +64,7 @@ enum
 };
 
 static GESTrackObject
-    * ges_timeline_text_overlay_create_track_object (GESTimelineObject * obj,
+    * ges_timeline_text_overlay_create_track_object (GESClip * obj,
     GESTrackType type);
 
 static void
@@ -105,29 +105,30 @@ static void
 ges_timeline_text_overlay_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESTimelineTextOverlay *tfs = GES_TIMELINE_TEXT_OVERLAY (object);
+  GESTimelineTextOverlay *uriclip = GES_TIMELINE_TEXT_OVERLAY (object);
 
   switch (property_id) {
     case PROP_TEXT:
-      ges_timeline_text_overlay_set_text (tfs, g_value_get_string (value));
+      ges_timeline_text_overlay_set_text (uriclip, g_value_get_string (value));
       break;
     case PROP_FONT_DESC:
-      ges_timeline_text_overlay_set_font_desc (tfs, g_value_get_string (value));
+      ges_timeline_text_overlay_set_font_desc (uriclip,
+          g_value_get_string (value));
       break;
     case PROP_HALIGNMENT:
-      ges_timeline_text_overlay_set_halign (tfs, g_value_get_enum (value));
+      ges_timeline_text_overlay_set_halign (uriclip, g_value_get_enum (value));
       break;
     case PROP_VALIGNMENT:
-      ges_timeline_text_overlay_set_valign (tfs, g_value_get_enum (value));
+      ges_timeline_text_overlay_set_valign (uriclip, g_value_get_enum (value));
       break;
     case PROP_COLOR:
-      ges_timeline_text_overlay_set_color (tfs, g_value_get_uint (value));
+      ges_timeline_text_overlay_set_color (uriclip, g_value_get_uint (value));
       break;
     case PROP_XPOS:
-      ges_timeline_text_overlay_set_xpos (tfs, g_value_get_double (value));
+      ges_timeline_text_overlay_set_xpos (uriclip, g_value_get_double (value));
       break;
     case PROP_YPOS:
-      ges_timeline_text_overlay_set_ypos (tfs, g_value_get_double (value));
+      ges_timeline_text_overlay_set_ypos (uriclip, g_value_get_double (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -152,7 +153,7 @@ static void
 ges_timeline_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
+  GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTimelineTextOverlayPrivate));
 
@@ -270,7 +271,7 @@ ges_timeline_text_overlay_set_text (GESTimelineTextOverlay * self,
     const gchar * text)
 {
   GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, text:%s", self, text);
 
@@ -279,7 +280,7 @@ ges_timeline_text_overlay_set_text (GESTimelineTextOverlay * self,
 
   self->priv->text = g_strdup (text);
 
-  trackobjects = ges_timeline_object_get_track_objects (object);
+  trackobjects = ges_clip_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
@@ -305,7 +306,7 @@ ges_timeline_text_overlay_set_font_desc (GESTimelineTextOverlay * self,
     const gchar * font_desc)
 {
   GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
 
@@ -314,7 +315,7 @@ ges_timeline_text_overlay_set_font_desc (GESTimelineTextOverlay * self,
 
   self->priv->font_desc = g_strdup (font_desc);
 
-  trackobjects = ges_timeline_object_get_track_objects (object);
+  trackobjects = ges_clip_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
@@ -341,13 +342,13 @@ ges_timeline_text_overlay_set_halign (GESTimelineTextOverlay * self,
     GESTextHAlign halign)
 {
   GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, halign:%d", self, halign);
 
   self->priv->halign = halign;
 
-  trackobjects = ges_timeline_object_get_track_objects (object);
+  trackobjects = ges_clip_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
@@ -374,13 +375,13 @@ ges_timeline_text_overlay_set_valign (GESTimelineTextOverlay * self,
     GESTextVAlign valign)
 {
   GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, valign:%d", self, valign);
 
   self->priv->valign = valign;
 
-  trackobjects = ges_timeline_object_get_track_objects (object);
+  trackobjects = ges_clip_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
@@ -408,13 +409,13 @@ ges_timeline_text_overlay_set_color (GESTimelineTextOverlay * self,
     guint32 color)
 {
   GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, color:%d", self, color);
 
   self->priv->color = color;
 
-  trackobjects = ges_timeline_object_get_track_objects (object);
+  trackobjects = ges_clip_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
@@ -441,13 +442,13 @@ ges_timeline_text_overlay_set_xpos (GESTimelineTextOverlay * self,
     gdouble position)
 {
   GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, xpos:%f", self, position);
 
   self->priv->xpos = position;
 
-  trackobjects = ges_timeline_object_get_track_objects (object);
+  trackobjects = ges_clip_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
@@ -474,13 +475,13 @@ ges_timeline_text_overlay_set_ypos (GESTimelineTextOverlay * self,
     gdouble position)
 {
   GList *tmp, *trackobjects;
-  GESTimelineObject *object = (GESTimelineObject *) self;
+  GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, ypos:%f", self, position);
 
   self->priv->ypos = position;
 
-  trackobjects = ges_timeline_object_get_track_objects (object);
+  trackobjects = ges_clip_get_track_objects (object);
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
@@ -602,8 +603,7 @@ ges_timeline_text_overlay_get_ypos (GESTimelineTextOverlay * self)
 }
 
 static GESTrackObject *
-ges_timeline_text_overlay_create_track_object (GESTimelineObject * obj,
-    GESTrackType type)
+ges_timeline_text_overlay_create_track_object (GESClip * obj, GESTrackType type)
 {
 
   GESTimelineTextOverlayPrivate *priv = GES_TIMELINE_TEXT_OVERLAY (obj)->priv;

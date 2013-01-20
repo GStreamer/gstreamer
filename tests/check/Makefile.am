@@ -34,7 +34,7 @@ check_PROGRAMS = \
 	ges/effects	\
 	ges/filesource	\
 	ges/simplelayer	\
-	ges/timelineobject	\
+	ges/clip	\
 	ges/timelineedition	\
 	ges/titles\
 	ges/transition	\

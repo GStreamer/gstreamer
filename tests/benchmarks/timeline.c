@@ -30,7 +30,7 @@ main (gint argc, gchar * argv[])
   GESAsset *asset;
   GESTimeline *timeline;
   GESTimelineLayer *layer;
-  GESTimelineObject *object;
+  GESClip *object;
   GstClockTime start, start_ripple, end, end_ripple, max_rippling_time = 0,
       min_rippling_time = GST_CLOCK_TIME_NONE;
 
@@ -43,7 +43,7 @@ main (gint argc, gchar * argv[])
   ges_timeline_add_layer (timeline, layer);
 
   start = gst_util_get_timestamp ();
-  object = GES_TIMELINE_OBJECT (ges_timeline_layer_add_asset (layer, asset, 0,
+  object = GES_CLIP (ges_timeline_layer_add_asset (layer, asset, 0,
           0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
 
   for (i = 1; i < NUM_OBJECTS; i++)
@@ -56,7 +56,7 @@ main (gint argc, gchar * argv[])
   start_ripple = gst_util_get_timestamp ();
   for (i = 1; i < 501; i++) {
     start = gst_util_get_timestamp ();
-    ges_timeline_object_edit (object, NULL, 0, GES_EDIT_MODE_NORMAL,
+    ges_clip_edit (object, NULL, 0, GES_EDIT_MODE_NORMAL,
         GES_EDGE_NONE, i * 1000);
     end = gst_util_get_timestamp ();
     max_rippling_time = MAX (max_rippling_time, end - start);
@@ -75,7 +75,7 @@ main (gint argc, gchar * argv[])
   start_ripple = gst_util_get_timestamp ();
   for (i = 1; i < 501; i++) {
     start = gst_util_get_timestamp ();
-    ges_timeline_object_edit (object, NULL, 0, GES_EDIT_MODE_NORMAL,
+    ges_clip_edit (object, NULL, 0, GES_EDIT_MODE_NORMAL,
         GES_EDGE_NONE, i * 1000);
     end = gst_util_get_timestamp ();
     max_rippling_time = MAX (max_rippling_time, end - start);

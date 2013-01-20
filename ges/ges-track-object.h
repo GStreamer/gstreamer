@@ -24,7 +24,7 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 #include <ges/ges-types.h>
-#include <ges/ges-timeline-object.h>
+#include <ges/ges-clip.h>
 #include <ges/ges-track.h>
 
 G_BEGIN_DECLS
@@ -122,10 +122,10 @@ GESTrackType ges_track_object_get_track_type  (GESTrackObject * object);
 void ges_track_object_set_track_type          (GESTrackObject * object,
                                                GESTrackType     type);
 
-void ges_track_object_set_timeline_object     (GESTrackObject * object,
-                                               GESTimelineObject * tlobject);
-GESTimelineObject *
-ges_track_object_get_timeline_object          (GESTrackObject* object);
+void ges_track_object_set_clip     (GESTrackObject * object,
+                                               GESClip * clipect);
+GESClip *
+ges_track_object_get_clip          (GESTrackObject* object);
 
 GstElement * ges_track_object_get_gnlobject   (GESTrackObject * object);
 

@@ -20,8 +20,8 @@
  */
 
 
-#ifndef GES_ASSET_TIMELINE_OBJECT_H
-#define GES_ASSET_TIMELINE_OBJECT_H
+#ifndef GES_ASSET_CLIP_H
+#define GES_ASSET_CLIP_H
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -29,36 +29,36 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_ASSET_TIMELINE_OBJECT (ges_asset_timeline_object_get_type ())
-#define GES_ASSET_TIMELINE_OBJECT(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_ASSET_TIMELINE_OBJECT, GESAssetTimelineObject))
-#define GES_ASSET_TIMELINE_OBJECT_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_ASSET_TIMELINE_OBJECT, GESAssetTimelineObjectClass))
-#define GES_IS_ASSET_TIMELINE_OBJECT(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_ASSET_TIMELINE_OBJECT))
-#define GES_IS_ASSET_TIMELINE_OBJECT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_ASSET_TIMELINE_OBJECT))
-#define GES_ASSET_TIMELINE_OBJECT_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_ASSET_TIMELINE_OBJECT, GESAssetTimelineObjectClass))
+#define GES_TYPE_ASSET_CLIP (ges_asset_clip_get_type ())
+#define GES_ASSET_CLIP(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_ASSET_CLIP, GESAssetClip))
+#define GES_ASSET_CLIP_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_ASSET_CLIP, GESAssetClipClass))
+#define GES_IS_ASSET_CLIP(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_ASSET_CLIP))
+#define GES_IS_ASSET_CLIP_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_ASSET_CLIP))
+#define GES_ASSET_CLIP_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_ASSET_CLIP, GESAssetClipClass))
 
-typedef struct _GESAssetTimelineObjectPrivate GESAssetTimelineObjectPrivate;
+typedef struct _GESAssetClipPrivate GESAssetClipPrivate;
 
-struct _GESAssetTimelineObject
+struct _GESAssetClip
 {
   GESAsset parent;
 
   /* <private> */
-  GESAssetTimelineObjectPrivate *priv;
+  GESAssetClipPrivate *priv;
 
   gpointer _ges_reserved[GES_PADDING];
 };
 
-struct _GESAssetTimelineObjectClass
+struct _GESAssetClipClass
 {
   GESAssetClass parent;
 
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_asset_timeline_object_get_type (void);
-void ges_asset_timeline_object_set_supported_formats         (GESAssetTimelineObject *self,
+GType ges_asset_clip_get_type (void);
+void ges_asset_clip_set_supported_formats         (GESAssetClip *self,
                                                               GESTrackType supportedformats);
-GESTrackType ges_asset_timeline_object_get_supported_formats (GESAssetTimelineObject *self);
+GESTrackType ges_asset_clip_get_supported_formats (GESAssetClip *self);
 
 G_END_DECLS
-#endif /* _GES_ASSET_TIMELINE_OBJECT_H */
+#endif /* _GES_ASSET_CLIP_H */

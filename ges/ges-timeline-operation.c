@@ -30,7 +30,7 @@
 #include "ges-timeline-operation.h"
 
 G_DEFINE_ABSTRACT_TYPE (GESTimelineOperation, ges_timeline_operation,
-    GES_TYPE_TIMELINE_OBJECT);
+    GES_TYPE_CLIP);
 
 struct _GESTimelineOperationPrivate
 {

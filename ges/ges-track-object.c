@@ -33,7 +33,7 @@
 #include "ges-internal.h"
 #include "ges-extractable.h"
 #include "ges-track-object.h"
-#include "ges-timeline-object.h"
+#include "ges-clip.h"
 #include "ges-meta-container.h"
 #include <gobject/gvaluecollector.h>
 
@@ -59,13 +59,13 @@ struct _GESTrackObjectPrivate
    * {GParamaSpec ---> element,}*/
   GHashTable *properties_hashtable;
 
-  GESTimelineObject *timelineobj;
+  GESClip *timelineobj;
   GESTrack *track;
 
   gboolean valid;
 
   gboolean locked;              /* If TRUE, then moves in sync with its controlling
-                                 * GESTimelineObject */
+                                 * GESClip */
 };
 
 enum
@@ -236,12 +236,11 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
   /**
    * GESTrackObject:locked:
    *
-   * If %TRUE, then moves in sync with its controlling #GESTimelineObject
+   * If %TRUE, then moves in sync with its controlling #GESClip
    */
   properties[PROP_LOCKED] =
       g_param_spec_boolean ("locked", "Locked",
-      "Moves in sync with its controling TimelineObject", TRUE,
-      G_PARAM_READWRITE);
+      "Moves in sync with its controling Clip", TRUE, G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_LOCKED,
       properties[PROP_LOCKED]);
 
@@ -679,7 +678,7 @@ ensure_gnl_object (GESTrackObject * object)
     object->priv->gnlobject = gst_object_ref (gnlobject);
 
     if (object->priv->timelineobj)
-      res = ges_timeline_object_fill_track_object (object->priv->timelineobj,
+      res = ges_clip_fill_track_object (object->priv->timelineobj,
           object, object->priv->gnlobject);
     else
       res = TRUE;
@@ -775,32 +774,31 @@ ges_track_object_get_track (GESTrackObject * object)
 }
 
 /**
- * ges_track_object_set_timeline_object:
+ * ges_track_object_set_clip:
  * @object: The #GESTrackObject to set the parent to
- * @tlobject: The #GESTimelineObject, parent of @tlobj or %NULL
+ * @clipect: The #GESClip, parent of @clip or %NULL
  *
- * Set the #GESTimelineObject to which @object belongs.
+ * Set the #GESClip to which @object belongs.
  */
 void
-ges_track_object_set_timeline_object (GESTrackObject * object,
-    GESTimelineObject * tlobject)
+ges_track_object_set_clip (GESTrackObject * object, GESClip * clipect)
 {
-  GST_DEBUG ("object:%p, timeline-object:%p", object, tlobject);
+  GST_DEBUG ("object:%p, clip:%p", object, clipect);
 
-  object->priv->timelineobj = tlobject;
+  object->priv->timelineobj = clipect;
 }
 
 /**
- * ges_track_object_get_timeline_object:
+ * ges_track_object_get_clip:
  * @object: a #GESTrackObject
  *
- * Get the #GESTimelineObject which is controlling this track object
+ * Get the #GESClip which is controlling this track object
  *
- * Returns: (transfer none): the #GESTimelineObject which is controlling
+ * Returns: (transfer none): the #GESClip which is controlling
  * this track object
  */
-GESTimelineObject *
-ges_track_object_get_timeline_object (GESTrackObject * object)
+GESClip *
+ges_track_object_get_clip (GESTrackObject * object)
 {
   g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), NULL);
 
@@ -852,8 +850,8 @@ ges_track_object_set_locked_internal (GESTrackObject * object, gboolean locked)
  * @locked: whether the object is lock to its parent
  *
  * Set the locking status of the @object in relationship to its controlling
- * #GESTimelineObject. If @locked is %TRUE, then this object will move synchronously
- * with its controlling #GESTimelineObject.
+ * #GESClip. If @locked is %TRUE, then this object will move synchronously
+ * with its controlling #GESClip.
  */
 void
 ges_track_object_set_locked (GESTrackObject * object, gboolean locked)
@@ -874,7 +872,7 @@ ges_track_object_set_locked (GESTrackObject * object, gboolean locked)
  * Let you know if object us locked or not (moving synchronously).
  *
  * Returns: %TRUE if the object is moving synchronously to its controlling
- * #GESTimelineObject, else %FALSE.
+ * #GESClip, else %FALSE.
  */
 gboolean
 ges_track_object_is_locked (GESTrackObject * object)

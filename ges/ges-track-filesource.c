@@ -79,11 +79,11 @@ static void
 ges_track_filesource_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESTrackFileSource *tfs = GES_TRACK_FILESOURCE (object);
+  GESTrackFileSource *uriclip = GES_TRACK_FILESOURCE (object);
 
   switch (property_id) {
     case PROP_URI:
-      g_value_set_string (value, tfs->uri);
+      g_value_set_string (value, uriclip->uri);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -94,11 +94,11 @@ static void
 ges_track_filesource_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESTrackFileSource *tfs = GES_TRACK_FILESOURCE (object);
+  GESTrackFileSource *uriclip = GES_TRACK_FILESOURCE (object);
 
   switch (property_id) {
     case PROP_URI:
-      tfs->uri = g_value_dup_string (value);
+      uriclip->uri = g_value_dup_string (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -108,10 +108,10 @@ ges_track_filesource_set_property (GObject * object, guint property_id,
 static void
 ges_track_filesource_dispose (GObject * object)
 {
-  GESTrackFileSource *tfs = GES_TRACK_FILESOURCE (object);
+  GESTrackFileSource *uriclip = GES_TRACK_FILESOURCE (object);
 
-  if (tfs->uri)
-    g_free (tfs->uri);
+  if (uriclip->uri)
+    g_free (uriclip->uri);
 
   G_OBJECT_CLASS (ges_track_filesource_parent_class)->dispose (object);
 }

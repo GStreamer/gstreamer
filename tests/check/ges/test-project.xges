@@ -14,14 +14,14 @@
       <track track-type="2" caps="audio/x-raw" track-id="0"/>
       <track track-type="4" caps="video/x-raw" track-id="1"/>
       <layer priority="0" properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, a=(guint)3'>
-        <timeline-object id="0" layer-priority='0' asset-id="file:///test/not/exisiting" type-name="GESTimelineFileSource" track-types="6" start="0" duration="1000000000">
-        <effect asset-id='agingtv' timeline-object-id='0' type-name='GESTrackParseLaunchEffect' track-type='4' track-id='1' metadatas='metadatas;' children-properties='properties, scratch-lines=(uint)12;'/>
-        </timeline-object>
+        <clip id="0" layer-priority='0' asset-id="file:///test/not/exisiting" type-name="GESTimelineFileSource" track-types="6" start="0" duration="1000000000">
+        <effect asset-id='agingtv' clip-id='0' type-name='GESTrackParseLaunchEffect' track-type='4' track-id='1' metadatas='metadatas;' children-properties='properties, scratch-lines=(uint)12;'/>
+        </clip>
       </layer>
       <layer priority="1" properties='properties, auto-transition=(boolean)true;'>
-        <timeline-object id="1" asset-id="file:///test/not/exisiting" layer-priority="1"
+        <clip id="1" asset-id="file:///test/not/exisiting" layer-priority="1"
         type-name="GESTimelineFileSource" track-types="2" start="1000000000" duration="1000000000">
-        </timeline-object>
+        </clip>
       </layer>
     </timeline>
   </project>
