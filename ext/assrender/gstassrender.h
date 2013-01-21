@@ -53,6 +53,7 @@ struct _GstAssRender
 
   /* properties */
   gboolean enable, embeddedfonts;
+  gboolean wait_text;
 
   /* <private> */
   GMutex lock;

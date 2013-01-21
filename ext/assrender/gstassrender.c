@@ -57,7 +57,8 @@ enum
 {
   PROP_0,
   PROP_ENABLE,
-  PROP_EMBEDDEDFONTS
+  PROP_EMBEDDEDFONTS,
+  PROP_WAIT_TEXT
 };
 
 #define FORMATS "{ RGB, BGR, xRGB, xBGR, RGBx, BGRx, I420 }"
@@ -140,9 +141,15 @@ gst_ass_render_class_init (GstAssRenderClass * klass)
       g_param_spec_boolean ("enable", "Enable",
           "Enable rendering of subtitles", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_EMBEDDEDFONTS,
       g_param_spec_boolean ("embeddedfonts", "Embedded Fonts",
           "Extract and use fonts embedded in the stream", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_WAIT_TEXT,
+      g_param_spec_boolean ("wait-text", "Wait Text",
+          "Whether to wait for subtitles", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
@@ -227,6 +234,7 @@ gst_ass_render_init (GstAssRender * render)
   render->track_init_ok = FALSE;
   render->enable = TRUE;
   render->embeddedfonts = TRUE;
+  render->wait_text = FALSE;
 
   gst_segment_init (&render->video_segment, GST_FORMAT_TIME);
   gst_segment_init (&render->subtitle_segment, GST_FORMAT_TIME);
@@ -291,6 +299,9 @@ gst_ass_render_set_property (GObject * object, guint prop_id,
       ass_set_extract_fonts (render->ass_library, render->embeddedfonts);
       g_mutex_unlock (&render->ass_mutex);
       break;
+    case PROP_WAIT_TEXT:
+      render->wait_text = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -311,6 +322,9 @@ gst_ass_render_get_property (GObject * object, guint prop_id,
       break;
     case PROP_EMBEDDEDFONTS:
       g_value_set_boolean (value, render->embeddedfonts);
+      break;
+    case PROP_WAIT_TEXT:
+      g_value_set_boolean (value, render->wait_text);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1104,6 +1118,9 @@ wait_for_text_buf:
       gboolean wait_for_text_buf = TRUE;
 
       if (render->subtitle_eos)
+        wait_for_text_buf = FALSE;
+
+      if (!render->wait_text)
         wait_for_text_buf = FALSE;
 
       /* Text pad linked, but no text buffer available - what now? */
