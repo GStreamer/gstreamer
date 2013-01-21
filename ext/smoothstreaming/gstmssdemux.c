@@ -194,6 +194,7 @@ gst_mss_demux_stream_free (GstMssDemuxStream * stream)
       GST_DEBUG_OBJECT (stream->parent, "Leaving streaming task %s:%s",
           GST_DEBUG_PAD_NAME (stream->pad));
       gst_task_stop (stream->download_task);
+      gst_uri_downloader_cancel (stream->downloader);
       g_static_rec_mutex_lock (&stream->download_lock);
       g_static_rec_mutex_unlock (&stream->download_lock);
       GST_LOG_OBJECT (stream->parent, "Waiting for task to finish");
