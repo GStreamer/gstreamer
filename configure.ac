@@ -785,6 +785,9 @@ AG_GST_CHECK_FEATURE(MFC, [Multi Format Codec], mfc, [
 #if defined(V4L2_MAJOR_VERSION) || defined(V4L2_MINOR_VERSION)
 #error too early v4l2 version or no v4l2 at all
 #endif
+#if !defined(V4L2_PIX_FMT_H264)
+#error v4l2 version too old
+#endif
     ]], [[
 return 0;
     ]])],[
