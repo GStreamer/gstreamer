@@ -862,6 +862,8 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
       case CODEC_ID_SIPR:
         rank = GST_RANK_SECONDARY;
         break;
+        /* avdec_aac: see https://bugzilla.gnome.org/show_bug.cgi?id=690940 */
+      case CODEC_ID_AAC:
       case CODEC_ID_MP3:
         rank = GST_RANK_NONE;
         break;
