@@ -844,45 +844,18 @@ static GstVaapiDecoderStatus
 decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 {
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
-    GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
     GstVC1FrameHdr * const frame_hdr = &priv->frame_hdr;
     GstVC1ParserResult result;
-    GstVaapiPicture *picture;
+    GstVaapiPicture * const picture = priv->current_picture;
     GstVaapiSlice *slice;
-    GstVaapiDecoderStatus status;
     VASliceParameterBufferVC1 *slice_param;
-
-    status = ensure_context(decoder);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
-        GST_DEBUG("failed to reset context");
-        return status;
-    }
-
-    if (priv->current_picture) {
-        status = decode_current_picture(decoder);
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-            return status;
-    }
-
-    picture = GST_VAAPI_PICTURE_NEW(VC1, decoder);
-    if (!picture) {
-        GST_DEBUG("failed to allocate picture");
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-    }
-    gst_vaapi_picture_replace(&priv->current_picture, picture);
-    gst_vaapi_picture_unref(picture);
-
-    if (!gst_vc1_bitplanes_ensure_size(priv->bitplanes, seq_hdr)) {
-        GST_DEBUG("failed to allocate bitplanes");
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-    }
 
     memset(frame_hdr, 0, sizeof(*frame_hdr));
     result = gst_vc1_parse_frame_header(
         rbdu->data + rbdu->offset,
         rbdu->size,
         frame_hdr,
-        seq_hdr,
+        &priv->seq_hdr,
         priv->bitplanes
     );
     if (result != GST_VC1_PARSER_OK) {
@@ -1263,6 +1236,44 @@ gst_vaapi_decoder_vc1_decode(GstVaapiDecoder *base_decoder,
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_vc1_start_frame(GstVaapiDecoder *base_decoder,
+    GstVaapiDecoderUnit *unit)
+{
+    GstVaapiDecoderVC1 * const decoder = GST_VAAPI_DECODER_VC1(base_decoder);
+    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderStatus status;
+    GstVaapiPicture *picture;
+
+    status = ensure_context(decoder);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
+        GST_DEBUG("failed to reset context");
+        return status;
+    }
+
+    picture = GST_VAAPI_PICTURE_NEW(VC1, decoder);
+    if (!picture) {
+        GST_DEBUG("failed to allocate picture");
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    }
+    gst_vaapi_picture_replace(&priv->current_picture, picture);
+    gst_vaapi_picture_unref(picture);
+
+    if (!gst_vc1_bitplanes_ensure_size(priv->bitplanes, &priv->seq_hdr)) {
+        GST_DEBUG("failed to allocate bitplanes");
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    }
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_vc1_end_frame(GstVaapiDecoder *base_decoder)
+{
+    GstVaapiDecoderVC1 * const decoder = GST_VAAPI_DECODER_VC1(base_decoder);
+
+    return decode_current_picture(decoder);
+}
+
 static void
 gst_vaapi_decoder_vc1_finalize(GObject *object)
 {
@@ -1300,6 +1311,8 @@ gst_vaapi_decoder_vc1_class_init(GstVaapiDecoderVC1Class *klass)
 
     decoder_class->parse        = gst_vaapi_decoder_vc1_parse;
     decoder_class->decode       = gst_vaapi_decoder_vc1_decode;
+    decoder_class->start_frame  = gst_vaapi_decoder_vc1_start_frame;
+    decoder_class->end_frame    = gst_vaapi_decoder_vc1_end_frame;
 }
 
 static void
