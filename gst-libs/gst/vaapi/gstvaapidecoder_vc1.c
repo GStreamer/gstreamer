@@ -1008,15 +1008,10 @@ decode_ebdu(GstVaapiDecoderVC1 *decoder, GstVC1BDU *ebdu)
 }
 
 static GstVaapiDecoderStatus
-decode_buffer(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
+decode_buffer(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
 {
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
     GstVC1BDU ebdu;
-    guchar *buf;
-    guint buf_size;
-
-    buf      = GST_BUFFER_DATA(buffer);
-    buf_size = GST_BUFFER_SIZE(buffer);
 
     if (priv->has_codec_data) {
         ebdu.type      = GST_VC1_FRAME;
@@ -1224,13 +1219,9 @@ gst_vaapi_decoder_vc1_decode(GstVaapiDecoder *base_decoder,
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
-    unit->buffer = gst_buffer_create_sub(
-        GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer,
-        unit->offset, unit->size);
-    if (!unit->buffer)
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-
-    status = decode_buffer(decoder, unit->buffer);
+    status = decode_buffer(decoder,
+        (GST_BUFFER_DATA(GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer) +
+         unit->offset), unit->size);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
