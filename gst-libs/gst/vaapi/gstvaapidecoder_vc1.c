@@ -248,6 +248,13 @@ decode_sequence(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 
     priv->has_entrypoint = FALSE;
 
+    /* Reset POC */
+    if (priv->last_non_b_picture) {
+        if (priv->last_non_b_picture->poc == priv->next_poc)
+            priv->next_poc++;
+        gst_vaapi_picture_replace(&priv->last_non_b_picture, NULL);
+    }
+
     /* Validate profile */
     switch (seq_hdr->profile) {
     case GST_VC1_PROFILE_SIMPLE:
