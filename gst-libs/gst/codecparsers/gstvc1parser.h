@@ -485,13 +485,13 @@ struct _GstVC1VopDquant
   guint8 dquantfrm;
   guint8 dqprofile;
 
-  /* if dqprofile == GST_VC1_DQPROFILE_SINGLE_EDGE
-   * or GST_VC1_DQPROFILE_DOUBLE_EDGE:*/
-  guint8 dqsbedge;
-
-  /* if dqprofile == GST_VC1_DQPROFILE_SINGLE_EDGE
-   * or GST_VC1_DQPROFILE_DOUBLE_EDGE:*/
+  /* Boundary edge selection. This represents DQSBEDGE
+   * if dqprofile == GST_VC1_DQPROFILE_SINGLE_EDGE or
+   * DQDBEDGE if dqprofile == GST_VC1_DQPROFILE_DOUBLE_EDGE */
   guint8 dqbedge;
+
+  /* FIXME: remove */
+  guint8 unused;
 
   /* if dqprofile == GST_VC1_DQPROFILE_ALL_MBS */
   guint8 dqbilevel;

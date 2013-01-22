@@ -646,7 +646,7 @@ parse_vopdquant (GstBitReader * br, GstVC1FrameHdr * framehdr, guint8 dquant)
       switch (vopdquant->dqprofile) {
         case GST_VC1_DQPROFILE_SINGLE_EDGE:
         case GST_VC1_DQPROFILE_DOUBLE_EDGES:
-          READ_UINT8 (br, vopdquant->dqsbedge, 2);
+          READ_UINT8 (br, vopdquant->dqbedge, 2);
           break;
 
         case GST_VC1_DQPROFILE_ALL_MBS:
