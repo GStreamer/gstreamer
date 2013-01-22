@@ -43,12 +43,14 @@
 GST_DEBUG_CATEGORY (mssdemux_debug);
 
 #define DEFAULT_CONNECTION_SPEED 0
+#define DEFAULT_MAX_QUEUE_SIZE_BUFFERS 0
 
 enum
 {
   PROP_0,
 
   PROP_CONNECTION_SPEED,
+  PROP_MAX_QUEUE_SIZE_BUFFERS,
   PROP_LAST
 };
 
@@ -130,6 +132,12 @@ gst_mss_demux_class_init (GstMssDemuxClass * klass)
           0, G_MAXUINT / 1000, DEFAULT_CONNECTION_SPEED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MAX_QUEUE_SIZE_BUFFERS,
+      g_param_spec_uint ("max-queue-size-buffers", "Max queue size in buffers",
+          "Maximum buffers that can be stored in each internal stream queue "
+          "(0 = infinite)", 0, G_MAXUINT, DEFAULT_MAX_QUEUE_SIZE_BUFFERS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_mss_demux_change_state);
 }
@@ -149,6 +157,8 @@ gst_mss_demux_init (GstMssDemux * mssdemux, GstMssDemuxClass * klass)
   mssdemux->stream_task =
       gst_task_create ((GstTaskFunction) gst_mss_demux_stream_loop, mssdemux);
   gst_task_set_lock (mssdemux->stream_task, &mssdemux->stream_lock);
+
+  mssdemux->data_queue_max_size = DEFAULT_MAX_QUEUE_SIZE_BUFFERS;
 }
 
 static gboolean
@@ -292,6 +302,9 @@ gst_mss_demux_set_property (GObject * object, guint prop_id,
           mssdemux->connection_speed);
       GST_OBJECT_UNLOCK (mssdemux);
       break;
+    case PROP_MAX_QUEUE_SIZE_BUFFERS:
+      mssdemux->data_queue_max_size = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -307,6 +320,9 @@ gst_mss_demux_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_CONNECTION_SPEED:
       g_value_set_uint (value, mssdemux->connection_speed / 1000);
+      break;
+    case PROP_MAX_QUEUE_SIZE_BUFFERS:
+      g_value_set_uint (value, mssdemux->data_queue_max_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
