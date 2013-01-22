@@ -1274,6 +1274,16 @@ gst_vaapi_decoder_vc1_end_frame(GstVaapiDecoder *base_decoder)
     return decode_current_picture(decoder);
 }
 
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_vc1_flush(GstVaapiDecoder *base_decoder)
+{
+    GstVaapiDecoderVC1 * const decoder = GST_VAAPI_DECODER_VC1(base_decoder);
+    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+
+    gst_vaapi_dpb_flush(priv->dpb);
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
 static void
 gst_vaapi_decoder_vc1_finalize(GObject *object)
 {
@@ -1313,6 +1323,7 @@ gst_vaapi_decoder_vc1_class_init(GstVaapiDecoderVC1Class *klass)
     decoder_class->decode       = gst_vaapi_decoder_vc1_decode;
     decoder_class->start_frame  = gst_vaapi_decoder_vc1_start_frame;
     decoder_class->end_frame    = gst_vaapi_decoder_vc1_end_frame;
+    decoder_class->flush        = gst_vaapi_decoder_vc1_flush;
 }
 
 static void
