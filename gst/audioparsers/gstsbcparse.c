@@ -181,7 +181,7 @@ gst_sbc_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
 {
   GstSbcParse *sbcparse = GST_SBC_PARSE (parse);
   GstSbcAllocationMethod alloc_method;
-  GstSbcChannelMode ch_mode;
+  GstSbcChannelMode ch_mode = GST_SBC_CHANNEL_MODE_INVALID;
   GstMapInfo map;
   guint rate, n_blocks, n_subbands, bitpool;
   gsize frame_len;
