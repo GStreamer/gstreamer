@@ -435,7 +435,7 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
   const guint height = seqhdr->mb_height;
   const guint stride = seqhdr->mb_stride;
   guint imode, invert, invert_mask;
-  guint x, y, v;
+  guint x, y, v, o;
   guint8 *pdata = data;
 
   *is_raw = FALSE;
@@ -464,7 +464,8 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
       GST_DEBUG ("Parsing IMODE_DIFF2 or IMODE_NORM2 biplane");
 
       x = 0;
-      if ((height * width) & 1) {
+      o = (height * width) & 1;
+      if (o) {
         GET_BITS (br, 1, &v);
         if (pdata) {
           *pdata++ = (v ^ invert_mask) & 1;
@@ -475,7 +476,7 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
         }
       }
 
-      for (y = 0; y < height * width; y += 2) {
+      for (y = o; y < height * width; y += 2) {
         if (!decode_vlc (br, &v, vc1_norm2_vlc_table,
                 G_N_ELEMENTS (vc1_norm2_vlc_table)))
           goto failed;
