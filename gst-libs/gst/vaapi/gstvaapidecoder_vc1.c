@@ -1024,7 +1024,7 @@ decode_buffer(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
         ebdu.offset    = 4;
     }
     ebdu.data = buf;
-    ebdu.size = buf_size;
+    ebdu.size = buf_size - ebdu.offset;
     return decode_ebdu(decoder, &ebdu);
 }
 
@@ -1098,7 +1098,7 @@ decode_codec_data(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
         switch (result) {
         case GST_VC1_PARSER_NO_BDU_END:
             /* Assume the EBDU is complete within codec-data bounds */
-            ebdu.size = buf_size - ofs - (ebdu.offset - ebdu.sc_offset);
+            ebdu.size = buf_size - ofs - ebdu.offset;
             // fall-through
         case GST_VC1_PARSER_OK:
             status = decode_ebdu(decoder, &ebdu);
