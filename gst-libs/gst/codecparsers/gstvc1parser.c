@@ -625,7 +625,7 @@ parse_vopdquant (GstBitReader * br, GstVC1FrameHdr * framehdr, guint8 dquant)
   vopdquant->dqbilevel = 0;
 
   if (dquant == 2) {
-    READ_UINT8 (br, vopdquant->dquantfrm, 1);
+    vopdquant->dquantfrm = 0;
 
     READ_UINT8 (br, vopdquant->pqdiff, 3);
 
