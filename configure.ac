@@ -129,7 +129,14 @@ else
   AC_MSG_RESULT(no python)
 fi
 
-AM_CONDITIONAL(WITH_PYTHON, [test "x$HAVE_PYTHON" = "xyes"])
+dnl check for pygobject
+AC_SUBST(PYGOBJECT_REQ, 4.22)
+PKG_CHECK_MODULES(PYGOBJECT, pygobject-3.0 >= $PYGOBJECT_REQ,
+  [
+    HAVE_PYGOBJECT=yes
+  ], HAVE_PYGOBJECT=no)
+
+AM_CONDITIONAL(WITH_PYTHON, [test "x$HAVE_PYGOBJECT" = "xyes"])
 
 dnl *** checks for libraries ***
 
