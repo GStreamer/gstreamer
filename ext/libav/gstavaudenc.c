@@ -663,6 +663,7 @@ gst_ffmpegaudenc_register (GstPlugin * plugin)
   in_plugin = av_codec_next (NULL);
   while (in_plugin) {
     gchar *type_name;
+    guint rank;
 
     /* Skip non-AV codecs */
     if (in_plugin->type != AVMEDIA_TYPE_AUDIO)
@@ -724,7 +725,17 @@ gst_ffmpegaudenc_register (GstPlugin * plugin)
       }
     }
 
-    if (!gst_element_register (plugin, type_name, GST_RANK_SECONDARY, type)) {
+    switch (in_plugin->id) {
+        /* avenc_aac: see https://bugzilla.gnome.org/show_bug.cgi?id=691617 */
+      case CODEC_ID_AAC:
+        rank = GST_RANK_NONE;
+        break;
+      default:
+        rank = GST_RANK_SECONDARY;
+        break;
+    }
+
+    if (!gst_element_register (plugin, type_name, rank, type)) {
       g_free (type_name);
       return FALSE;
     }
