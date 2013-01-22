@@ -1675,7 +1675,7 @@ default_list_children_properties (GESTrackObject * object, guint * n_properties)
 prop_hash_not_set:
   {
     *n_properties = 0;
-    GST_DEBUG_OBJECT (object, "The child properties haven't been set on %p");
+    GST_DEBUG_OBJECT (object, "No child properties have been set yet");
     return NULL;
   }
 }

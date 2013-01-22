@@ -593,7 +593,7 @@ ges_timeline_layer_add_asset (GESTimelineLayer * layer,
           (asset), GES_TYPE_TIMELINE_OBJECT), NULL);
 
   GST_DEBUG_OBJECT (layer, "Adding asset %s with: start: %" GST_TIME_FORMAT
-      " inpoint: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT " rate %d"
+      " inpoint: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT " rate %f"
       " track types: %d (%s)", ges_asset_get_id (asset), GST_TIME_ARGS (start),
       GST_TIME_ARGS (inpoint), GST_TIME_ARGS (duration), rate, track_types,
       ges_track_type_name (track_types));

@@ -736,8 +736,9 @@ ges_project_save (GESProject * project, GESTimeline * timeline,
 
   formatter = GES_FORMATTER (ges_asset_extract (formatter_asset, error));
   if (formatter == NULL) {
-    GST_WARNING_OBJECT (project, "Could not create the formatter %s: Error: %s",
-        formatter_asset, (error && *error) ? (*error)->message : "Unknown");
+    GST_WARNING_OBJECT (project, "Could not create the formatter %p %s: %s",
+        formatter_asset, ges_asset_get_id (formatter_asset),
+        (error && *error) ? (*error)->message : "Unknown Error");
 
     ret = FALSE;
     goto out;

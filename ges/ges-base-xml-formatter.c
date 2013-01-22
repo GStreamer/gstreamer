@@ -418,7 +418,7 @@ _add_object_to_layer (GESBaseXmlFormatterPrivate * priv, const gchar * id,
       asset, start, inpoint, duration, rate, track_types);
 
   if (tlobj == NULL) {
-    GST_WARNING_OBJECT ("Could not add object from asset: %s",
+    GST_WARNING_OBJECT (tlobj, "Could not add object from asset: %s",
         ges_asset_get_id (asset));
 
     return NULL;

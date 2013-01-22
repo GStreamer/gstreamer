@@ -48,7 +48,7 @@ arbitrary_fill_track_func (GESTimelineObject * object,
   g_assert (user_data);
 
   GST_DEBUG ("element:%s, timelineobj:%p, trackobjects:%p, gnlobj:%p,",
-      user_data, object, trobject, gnlobj);
+      (const gchar *) user_data, object, trobject, gnlobj);
 
   /* interpret user_data as name of element to create */
   src = gst_element_factory_make (user_data, NULL);

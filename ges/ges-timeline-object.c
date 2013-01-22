@@ -799,7 +799,7 @@ ges_timeline_object_set_start_internal (GESTimelineObject * object,
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
 
-  GST_DEBUG_OBJECT (object, "current start: %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (object, "current start: %" GST_TIME_FORMAT
       " new start: %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
       GST_TIME_ARGS (object->start));
 
@@ -869,7 +869,7 @@ ges_timeline_object_set_inpoint_internal (GESTimelineObject * object,
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
 
-  GST_DEBUG_OBJECT (object, "current inpoint: %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (object, "current inpoint: %" GST_TIME_FORMAT
       " new inpoint: %" GST_TIME_FORMAT, GST_TIME_ARGS (inpoint),
       GST_TIME_ARGS (object->inpoint));
 
@@ -912,7 +912,7 @@ ges_timeline_object_set_duration_internal (GESTimelineObject * object,
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
 
-  GST_DEBUG_OBJECT (object, "current duration: %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (object, "current duration: %" GST_TIME_FORMAT
       " new duration: %" GST_TIME_FORMAT, GST_TIME_ARGS (duration),
       GST_TIME_ARGS (object->duration));
 
