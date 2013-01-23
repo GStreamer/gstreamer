@@ -34,6 +34,9 @@
 
 #include <gst/gst-i18n-plugin.h>
 #include <gst/video/video.h>
+#include <gst/video/video-overlay-composition.h>
+#include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideosink.h>
 
 #include <string.h>
 
@@ -53,19 +56,19 @@ enum
   LAST_SIGNAL
 };
 
+#define VIDEO_FORMATS GST_VIDEO_OVERLAY_COMPOSITION_BLEND_FORMATS
+
 static GstStaticPadTemplate video_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { I420, NV12, YV12 }, "
-        "width = (int) [ 16, 4096 ], " "height = (int) [ 16, 4096 ]")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS))
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { I420, NV12, YV12 }, "
-        "width = (int) [ 16, 4096 ], " "height = (int) [ 16, 4096 ]")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS))
     );
 
 static GstStaticPadTemplate subpic_sink_factory =
@@ -107,6 +110,7 @@ static gboolean gst_dvd_spu_subpic_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_dvd_spu_subpic_set_caps (GstDVDSpu * dvdspu, GstPad * pad,
     GstCaps * caps);
+static gboolean gst_dvd_spu_negotiate (GstDVDSpu * dvdspu);
 
 static void gst_dvd_spu_clear (GstDVDSpu * dvdspu);
 static void gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu,
@@ -209,14 +213,7 @@ static void
 gst_dvd_spu_finalize (GObject * object)
 {
   GstDVDSpu *dvdspu = GST_DVD_SPU (object);
-  gint i;
 
-  for (i = 0; i < 3; i++) {
-    if (dvdspu->spu_state.comp_bufs[i] != NULL) {
-      g_free (dvdspu->spu_state.comp_bufs[i]);
-      dvdspu->spu_state.comp_bufs[i] = NULL;
-    }
-  }
   g_queue_free (dvdspu->pending_spus);
   g_mutex_clear (&dvdspu->spu_lock);
 
@@ -321,24 +318,20 @@ gst_dvd_spu_video_set_caps (GstDVDSpu * dvdspu, GstPad * pad, GstCaps * caps)
 {
   gboolean res = FALSE;
   GstVideoInfo info;
-  gint i;
   SpuState *state;
 
   if (!gst_video_info_from_caps (&info, caps))
     goto done;
 
-  DVD_SPU_LOCK (dvdspu);
-
-  state = &dvdspu->spu_state;
-
-  state->info = info;
-  for (i = 0; i < 3; i++) {
-    state->comp_bufs[i] = g_realloc (state->comp_bufs[i],
-        sizeof (guint32) * info.width);
+  res = gst_pad_set_caps (dvdspu->srcpad, caps);
+  if (res) {
+    DVD_SPU_LOCK (dvdspu);
+    state = &dvdspu->spu_state;
+    state->info = info;
+    gst_dvd_spu_negotiate (dvdspu);
+    DVD_SPU_UNLOCK (dvdspu);
   }
-  DVD_SPU_UNLOCK (dvdspu);
 
-  res = TRUE;
 done:
   return res;
 }
@@ -555,6 +548,9 @@ gst_dvd_spu_video_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   g_return_val_if_fail (dvdspu != NULL, GST_FLOW_ERROR);
 
+  if (gst_pad_check_reconfigure (dvdspu->srcpad))
+    gst_dvd_spu_negotiate (dvdspu);
+
   GST_LOG_OBJECT (dvdspu, "video buffer %p with TS %" GST_TIME_FORMAT,
       buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
@@ -659,13 +655,104 @@ no_ref_frame:
   return GST_FLOW_OK;
 }
 
-
-static void
-gstspu_render (GstDVDSpu * dvdspu, GstBuffer * buf)
+static gboolean
+gstspu_fit_overlay_rectangle (GstDVDSpu * dvdspu, GstVideoRectangle * rect,
+    gint spu_width, gint spu_height)
 {
-  GstVideoFrame frame;
+  gint video_width = GST_VIDEO_INFO_WIDTH (&dvdspu->spu_state.info);
+  gint video_height = GST_VIDEO_INFO_HEIGHT (&dvdspu->spu_state.info);
+  GstVideoRectangle r;
 
-  gst_video_frame_map (&frame, &dvdspu->spu_state.info, buf, GST_MAP_READWRITE);
+  r = *rect;
+
+  if (spu_width != video_width || spu_height != video_height) {
+    gdouble hscale, vscale;
+
+    hscale = (gdouble) video_width / (gdouble) spu_width;
+    vscale = (gdouble) video_height / (gdouble) spu_height;
+
+    r.x *= hscale;
+    r.y *= vscale;
+    r.w *= hscale;
+    r.h *= vscale;
+  }
+
+  if (r.x + r.w > video_width)
+    r.x = video_width - r.w;
+
+  if (r.x < 0) {
+    r.x = 0;
+    if (r.w > video_width)
+      r.w = video_width;
+  }
+
+  if (r.y + r.h > video_height)
+    r.y = video_height - r.h;
+
+  if (r.y < 0) {
+    r.y = 0;
+    if (r.h > video_height)
+      r.h = video_height;
+  }
+
+  if (r.x != rect->x || r.y != rect->y || r.w != rect->w || r.h != rect->h) {
+    *rect = r;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static GstVideoOverlayComposition *
+gstspu_render_composition (GstDVDSpu * dvdspu)
+{
+  GstBuffer *buffer;
+  GstVideoInfo overlay_info;
+  GstVideoFormat format;
+  GstVideoFrame frame;
+  GstVideoOverlayRectangle *rectangle;
+  GstVideoOverlayComposition *composition;
+  GstVideoRectangle win;
+  gint spu_w, spu_h;
+  gsize size;
+
+  format = GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_YUV;
+
+  switch (dvdspu->spu_input_type) {
+    case SPU_INPUT_TYPE_PGS:
+      gstspu_pgs_get_render_geometry (dvdspu, &spu_w, &spu_h, &win);
+      break;
+    case SPU_INPUT_TYPE_VOBSUB:
+      gstspu_vobsub_get_render_geometry (dvdspu, &spu_w, &spu_h, &win);
+      break;
+    default:
+      return NULL;
+  }
+
+  if (win.w <= 0 || win.h <= 0 || spu_w <= 0 || spu_h <= 0) {
+    GST_DEBUG_OBJECT (dvdspu, "skip render of empty window");
+    return NULL;
+  }
+
+  gst_video_info_init (&overlay_info);
+  gst_video_info_set_format (&overlay_info, format, win.w, win.h);
+  size = GST_VIDEO_INFO_SIZE (&overlay_info);
+
+  buffer = gst_buffer_new_and_alloc (size);
+  if (!buffer) {
+    GST_WARNING_OBJECT (dvdspu, "failed to allocate overlay buffer");
+    return NULL;
+  }
+
+  gst_buffer_add_video_meta (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+      format, win.w, win.h);
+
+  if (!gst_video_frame_map (&frame, &overlay_info, buffer, GST_MAP_READWRITE))
+    goto map_failed;
+
+  memset (GST_VIDEO_FRAME_PLANE_DATA (&frame, 0), 0,
+      GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0) *
+      GST_VIDEO_FRAME_HEIGHT (&frame));
 
   switch (dvdspu->spu_input_type) {
     case SPU_INPUT_TYPE_VOBSUB:
@@ -677,7 +764,61 @@ gstspu_render (GstDVDSpu * dvdspu, GstBuffer * buf)
     default:
       break;
   }
+
   gst_video_frame_unmap (&frame);
+
+  GST_DEBUG_OBJECT (dvdspu, "Overlay rendered for video size %dx%d, "
+      "spu display size %dx%d, window geometry %dx%d+%d%+d",
+      GST_VIDEO_INFO_WIDTH (&dvdspu->spu_state.info),
+      GST_VIDEO_INFO_HEIGHT (&dvdspu->spu_state.info),
+      spu_w, spu_h, win.w, win.h, win.x, win.y);
+
+  if (gstspu_fit_overlay_rectangle (dvdspu, &win, spu_w, spu_h))
+    GST_DEBUG_OBJECT (dvdspu, "Adjusted window to fit video: %dx%d%+d%+d",
+        win.w, win.h, win.x, win.y);
+
+  rectangle = gst_video_overlay_rectangle_new_raw (buffer, win.x, win.y,
+      win.w, win.h, GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+
+  gst_buffer_unref (buffer);
+
+  composition = gst_video_overlay_composition_new (rectangle);
+  gst_video_overlay_rectangle_unref (rectangle);
+
+  return composition;
+
+map_failed:
+  GST_ERROR_OBJECT (dvdspu, "failed to map buffer");
+  gst_buffer_unref (buffer);
+  return NULL;
+}
+
+static void
+gstspu_render (GstDVDSpu * dvdspu, GstBuffer * buf)
+{
+  GstVideoOverlayComposition *composition;
+  GstVideoFrame frame;
+
+  composition = gstspu_render_composition (dvdspu);
+  if (!composition)
+    return;
+
+  if (dvdspu->attach_compo_to_buffer) {
+    gst_buffer_add_video_overlay_composition_meta (buf, composition);
+    goto done;
+  }
+
+  if (!gst_video_frame_map (&frame, &dvdspu->spu_state.info, buf,
+          GST_MAP_READWRITE)) {
+    GST_WARNING_OBJECT (dvdspu, "failed to map video frame for blending");
+    goto done;
+  }
+
+  gst_video_overlay_composition_blend (composition, &frame);
+  gst_video_frame_unmap (&frame);
+
+done:
+  gst_video_overlay_composition_unref (composition);
 }
 
 /* With SPU LOCK */
@@ -901,6 +1042,41 @@ submit_new_spu_packet (GstDVDSpu * dvdspu, GstBuffer * buf)
   } else {
     gst_buffer_unref (buf);
   }
+}
+
+static gboolean
+gst_dvd_spu_negotiate (GstDVDSpu * dvdspu)
+{
+  GstQuery *query;
+  GstCaps *caps;
+  gboolean attach = FALSE;
+
+  GST_DEBUG_OBJECT (dvdspu, "performing negotiation");
+
+  caps = gst_pad_get_current_caps (dvdspu->srcpad);
+  if (!caps || gst_caps_is_empty (caps))
+    goto no_format;
+
+  query = gst_query_new_allocation (caps, FALSE);
+
+  if (!gst_pad_peer_query (dvdspu->srcpad, query))
+    GST_DEBUG_OBJECT (dvdspu, "ALLOCATION query failed");
+
+  if (gst_query_find_allocation_meta (query,
+          GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL))
+    attach = TRUE;
+
+  gst_query_unref (query);
+  gst_caps_unref (caps);
+
+  dvdspu->attach_compo_to_buffer = attach;
+
+  return TRUE;
+
+no_format:
+  if (caps)
+    gst_caps_unref (caps);
+  return FALSE;
 }
 
 static GstFlowReturn

@@ -71,10 +71,6 @@ struct SpuState {
 
   GstVideoInfo info;
 
-  guint32 *comp_bufs[3]; /* Compositing buffers for U+V & A */
-  guint16 comp_left;
-  guint16 comp_right;
-
   SpuVobsubState vobsub;
   SpuPgsState pgs;
 };
@@ -116,6 +112,9 @@ struct _GstDVDSpu {
 
   /* Buffer to push after handling a DVD event, if any */
   GstBuffer *pending_frame;
+
+  /* Overlay composition */
+  gboolean attach_compo_to_buffer;
 };
 
 struct _GstDVDSpuClass {
