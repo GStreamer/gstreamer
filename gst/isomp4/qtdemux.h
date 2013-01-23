@@ -101,6 +101,7 @@ struct _GstQTDemux {
   /* configured playback region */
   GstSegment segment;
   GstEvent *pending_newsegment;
+  gboolean upstream_newsegment;
 
 #if 0
   /* gst index support */

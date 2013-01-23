@@ -504,6 +504,8 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
   qtdemux->mdatbuffer = NULL;
   qtdemux->base_timestamp = GST_CLOCK_TIME_NONE;
+  qtdemux->pending_newsegment = NULL;
+  qtdemux->upstream_newsegment = FALSE;
   gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
 
   GST_OBJECT_FLAG_SET (qtdemux, GST_ELEMENT_FLAG_INDEXABLE);
@@ -869,6 +871,7 @@ gst_qtdemux_push_pending_newsegment (GstQTDemux * qtdemux)
   if (qtdemux->pending_newsegment) {
     gst_qtdemux_push_event (qtdemux, qtdemux->pending_newsegment);
     qtdemux->pending_newsegment = NULL;
+    qtdemux->upstream_newsegment = FALSE;
   }
 }
 
@@ -1737,6 +1740,7 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
           &segment);
 
       gst_event_replace (&demux->pending_newsegment, event);
+      demux->upstream_newsegment = TRUE;
 
       /* chain will send initial newsegment after pads have been added */
       if (demux->state != QTDEMUX_STATE_MOVIE || !demux->n_streams) {
@@ -2373,7 +2377,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     goto out_of_memory;
 
   if (G_UNLIKELY (stream->n_samples == 0)) {
-    if (qtdemux->mss_mode && GST_CLOCK_TIME_IS_VALID (qtdemux->base_timestamp)) {
+    if (GST_CLOCK_TIME_IS_VALID (qtdemux->base_timestamp)) {
       timestamp = qtdemux->base_timestamp;
     } else
       /* the timestamp of the first sample is also provided by the tfra entry
@@ -2616,9 +2620,11 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     if (tfdt_node) {
       guint64 decode_time = 0;
       qtdemux_parse_tfdt (qtdemux, &tfdt_data, &decode_time);
-      /* If there is a new segment pending, update the time/position */
-#if 0
-      if (qtdemux->pending_newsegment) {
+      qtdemux->base_timestamp = decode_time;
+
+      /* If there is a new segment pending, update the time/position.
+       * Don't replace if the pending newsegment is from upstream */
+      if (qtdemux->pending_newsegment && !qtdemux->upstream_newsegment) {
         GstSegment segment;
 
         gst_segment_init (&segment, GST_FORMAT_TIME);
@@ -2629,7 +2635,6 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
         /* ref added when replaced, release the original _new one */
         gst_event_unref (qtdemux->pending_newsegment);
       }
-#endif
     }
 
     if (G_UNLIKELY (!stream)) {
@@ -4672,6 +4677,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
         if (G_UNLIKELY (demux->pending_newsegment)) {
           gst_qtdemux_push_event (demux, demux->pending_newsegment);
           demux->pending_newsegment = NULL;
+          demux->upstream_newsegment = FALSE;
           /* clear to send tags on all streams */
           for (i = 0; i < demux->n_streams; i++) {
             gst_qtdemux_push_tags (demux, demux->streams[i]);
@@ -8085,11 +8091,14 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
 {
   gint i;
   GstFlowReturn ret = GST_FLOW_OK;
+  GSList *oldpads = NULL;
+  GSList *iter;
 
   GST_DEBUG_OBJECT (qtdemux, "exposing streams");
 
   for (i = 0; ret == GST_FLOW_OK && i < qtdemux->n_streams; i++) {
     QtDemuxStream *stream = qtdemux->streams[i];
+    GstPad *oldpad = stream->pad;
     guint32 sample_num = 0;
     guint samples = 20;
     GArray *durations;
@@ -8152,12 +8161,23 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
     /* now we have all info and can expose */
     list = stream->pending_tags;
     stream->pending_tags = NULL;
+    if (oldpad)
+      oldpads = g_slist_prepend (oldpads, oldpad);
     gst_qtdemux_add_stream (qtdemux, stream, list);
   }
 
   gst_qtdemux_guess_bitrate (qtdemux);
 
   gst_element_no_more_pads (GST_ELEMENT_CAST (qtdemux));
+
+  for (iter = oldpads; iter; iter = g_slist_next (iter)) {
+    GstPad *oldpad = iter->data;
+
+    gst_pad_push_event (oldpad, gst_event_new_eos ());
+    gst_pad_set_active (oldpad, FALSE);
+    gst_element_remove_pad (GST_ELEMENT (qtdemux), oldpad);
+    gst_object_unref (oldpad);
+  }
 
   /* check if we should post a redirect in case there is a single trak
    * and it is a redirecting trak */
