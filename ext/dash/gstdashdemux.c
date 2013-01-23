@@ -1030,16 +1030,18 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       goto error_pushing;
   }
   demux->need_segment = FALSE;
+  demux->last_position_shift = demux->position_shift;
   demux->position_shift = 0;
   g_list_free (listfragment);
   if (GST_STATE (demux) == GST_STATE_PLAYING) {
     /* Wait for the duration of a fragment before resuming this task */
     g_get_current_time (&demux->next_push);
     g_time_val_add (&demux->next_push,
-        gst_mpd_client_get_next_fragment_duration (demux->client)
-        / GST_SECOND * G_USEC_PER_SEC);
+        (gst_mpd_client_get_next_fragment_duration (demux->client) -
+         demux->last_position_shift) / GST_SECOND * G_USEC_PER_SEC);
     GST_DEBUG_OBJECT (demux, "Next push scheduled at %s",
         g_time_val_to_iso8601 (&demux->next_push));
+    demux->last_position_shift = 0;
   } else {
     /* The pipeline is now set up, wait until playback begins */
     goto pause_streaming;

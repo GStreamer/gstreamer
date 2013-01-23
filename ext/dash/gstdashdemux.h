@@ -96,6 +96,7 @@ struct _GstDashDemux
   /* Position in the stream */
   GstClockTime position;
   GstClockTime position_shift;
+  GstClockTime last_position_shift;
   gboolean need_segment;
   /* Download rate */
   guint64 dnl_rate;
