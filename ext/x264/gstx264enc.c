@@ -389,57 +389,6 @@ gst_x264_enc_build_tunings_string (GstX264Enc * x264enc)
         x264enc->tunings->str);
 }
 
-#if X264_BIT_DEPTH == 8
-# if X264_CHROMA_FORMAT == 0
-#  define COLOR_FORMATS "I420, YV12, Y42B, Y444, NV12"
-# elif X264_CHROMA_FORMAT == X264_CSP_I420
-#  define COLOR_FORMATS "I420, YV12, NV12"
-# elif X264_CHROMA_FORMAT == X264_CSP_I422
-#  define COLOR_FORMATS "Y42B"
-# elif X264_CHROMA_FORMAT == X264_CSP_I444
-#  define COLOR_FORMATS "Y444"
-# else
-#  error "Unsupported chroma format"
-# endif
-#elif X264_BIT_DEPTH == 10
-# if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#  if X264_CHROMA_FORMAT == 0
-#   define COLOR_FORMATS "I420_10LE, I422_10LE, Y444_10LE"
-#  elif X264_CHROMA_FORMAT == X264_CSP_I420
-#   define COLOR_FORMATS "I420_10LE"
-#  elif X264_CHROMA_FORMAT == X264_CSP_I422
-#   define COLOR_FORMATS "I422_10LE"
-#  elif X264_CHROMA_FORMAT == X264_CSP_I444
-#   define COLOR_FORMATS "Y444_10LE"
-#  else
-#   error "Unsupported chroma format"
-#  endif
-# else
-#  if X264_CHROMA_FORMAT == 0
-#   define COLOR_FORMATS "I420_10BE, I422_10BE, Y444_10BE"
-#  elif X264_CHROMA_FORMAT == X264_CSP_I420
-#   define COLOR_FORMATS "I420_10BE"
-#  elif X264_CHROMA_FORMAT == X264_CSP_I422
-#   define COLOR_FORMATS "I422_10BE"
-#  elif X264_CHROMA_FORMAT == X264_CSP_I444
-#   define COLOR_FORMATS "Y444_10BE"
-#  else
-#   error "Unsupported chroma format"
-#  endif
-# endif
-#else
-# error "Only 8-bit and 10-bit supported"
-#endif
-
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { " COLOR_FORMATS " }, "
-        "framerate = (fraction) [0, MAX], "
-        "width = (int) [ 16, MAX ], " "height = (int) [ 16, MAX ]")
-    );
-
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -505,12 +454,108 @@ gst_x264_enc_build_partitions (gint analyse)
 }
 
 static void
+set_value (GValue * val, gint count, ...)
+{
+  const gchar *fmt = NULL;
+  GValue sval = G_VALUE_INIT;
+  va_list ap;
+  gint i;
+
+  g_value_init (&sval, G_TYPE_STRING);
+
+  if (count > 1)
+    g_value_init (val, GST_TYPE_LIST);
+
+  va_start (ap, count);
+  for (i = 0; i < count; i++) {
+    fmt = va_arg (ap, const gchar *);
+    g_value_set_string (&sval, fmt);
+    if (count > 1) {
+      gst_value_list_append_value (val, &sval);
+    }
+  }
+  va_end (ap);
+
+  if (count == 1)
+    *val = sval;
+  else
+    g_value_unset (&sval);
+}
+
+static GstCaps *
+gst_x264_enc_get_supported_input_caps (void)
+{
+  GValue fmt = G_VALUE_INIT;
+  GstCaps *caps;
+
+  caps = gst_caps_new_empty_simple ("video/x-raw");
+
+  if (x264_bit_depth == 8) {
+    GST_INFO ("This x264 build supports 8-bit depth");
+    if (x264_chroma_format == 0) {
+      set_value (&fmt, 5, "I420", "YV12", "Y42B", "Y444", "NV12");
+    } else if (x264_chroma_format == X264_CSP_I420) {
+      set_value (&fmt, 3, "I420", "YV12", "NV12");
+    } else if (x264_chroma_format == X264_CSP_I422) {
+      set_value (&fmt, 1, "Y42B");
+    } else if (x264_chroma_format == X264_CSP_I444) {
+      set_value (&fmt, 1, "Y444");
+    } else {
+      GST_ERROR ("Unsupported chroma format %d", x264_chroma_format);
+    }
+  } else if (x264_bit_depth == 10) {
+    GST_INFO ("This x264 build supports 10-bit depth");
+
+    if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
+      if (x264_chroma_format == 0) {
+        set_value (&fmt, 3, "I420_10LE", "I422_10LE", "Y444_10LE");
+      } else if (x264_chroma_format == X264_CSP_I420) {
+        set_value (&fmt, 1, "I420_10LE");
+      } else if (x264_chroma_format == X264_CSP_I422) {
+        set_value (&fmt, 1, "Y422_10LE");
+      } else if (x264_chroma_format == X264_CSP_I444) {
+        set_value (&fmt, 1, "Y444_10LE");
+      } else {
+        GST_ERROR ("Unsupported chroma format %d", x264_chroma_format);
+      }
+    } else {
+      if (x264_chroma_format == 0) {
+        set_value (&fmt, 3, "I420_10BE", "I422_10BE", "Y444_10BE");
+      } else if (x264_chroma_format == X264_CSP_I420) {
+        set_value (&fmt, 1, "I420_10BE");
+      } else if (x264_chroma_format == X264_CSP_I422) {
+        set_value (&fmt, 1, "Y422_10BE");
+      } else if (x264_chroma_format == X264_CSP_I444) {
+        set_value (&fmt, 1, "Y444_10BE");
+      } else {
+        GST_ERROR ("Unsupported chroma format %d", x264_chroma_format);
+      }
+    }
+  } else {
+    GST_ERROR ("Unsupported bit depth %d, we only support 8-bit and 10-bit",
+        x264_bit_depth);
+  }
+
+  if (G_VALUE_TYPE (&fmt) != G_TYPE_INVALID)
+    gst_structure_take_value (gst_caps_get_structure (caps, 0), "format", &fmt);
+
+  gst_caps_set_simple (caps,
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+      "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
+
+  return caps;
+}
+
+static void
 gst_x264_enc_class_init (GstX264EncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstVideoEncoderClass *gstencoder_class;
+  GstPadTemplate *tmpl;
   const gchar *partitions = NULL;
+  GstCaps *caps;
 
   x264enc_defaults = g_string_new ("");
 
@@ -764,10 +809,11 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
 
-
+  caps = gst_x264_enc_get_supported_input_caps ();
+  tmpl = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
+  gst_element_class_add_pad_template (element_class, tmpl);
+  gst_caps_unref (caps);
 }
 
 static void
