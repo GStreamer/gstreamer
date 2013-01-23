@@ -391,12 +391,18 @@ gst_vaapidecode_destroy(GstVaapiDecode *decode)
 }
 
 static gboolean
-gst_vaapidecode_reset(GstVaapiDecode *decode, GstCaps *caps)
+gst_vaapidecode_reset_full(GstVaapiDecode *decode, GstCaps *caps, gboolean hard)
 {
     GstVaapiCodec codec;
 
+    /* Reset timers if hard reset was requested (e.g. seek) */
+    if (hard) {
+        decode->render_time_base = 0;
+        decode->last_buffer_time = 0;
+    }
+
     /* Only reset decoder if codec type changed */
-    if (decode->decoder && decode->decoder_caps) {
+    else if (decode->decoder && decode->decoder_caps) {
         if (gst_caps_is_always_compatible(caps, decode->decoder_caps))
             return TRUE;
         codec = gst_vaapi_codec_from_caps(caps);
@@ -481,6 +487,14 @@ gst_vaapidecode_close(GstVideoDecoder *vdec)
 }
 
 static gboolean
+gst_vaapidecode_reset(GstVideoDecoder *vdec, gboolean hard)
+{
+    GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
+
+    return gst_vaapidecode_reset_full(decode, decode->sinkpad_caps, hard);
+}
+
+static gboolean
 gst_vaapidecode_set_format(GstVideoDecoder *vdec, GstVideoCodecState *state)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
@@ -489,7 +503,7 @@ gst_vaapidecode_set_format(GstVideoDecoder *vdec, GstVideoCodecState *state)
         return FALSE;
     if (!gst_vaapidecode_update_src_caps(decode, state))
         return FALSE;
-    if (!gst_vaapidecode_reset(decode, decode->sinkpad_caps))
+    if (!gst_vaapidecode_reset_full(decode, decode->sinkpad_caps, FALSE))
         return FALSE;
     return TRUE;
 }
@@ -549,6 +563,7 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
     vdec_class->open         = GST_DEBUG_FUNCPTR(gst_vaapidecode_open);
     vdec_class->close        = GST_DEBUG_FUNCPTR(gst_vaapidecode_close);
     vdec_class->set_format   = GST_DEBUG_FUNCPTR(gst_vaapidecode_set_format);
+    vdec_class->reset        = GST_DEBUG_FUNCPTR(gst_vaapidecode_reset);
     vdec_class->parse        = GST_DEBUG_FUNCPTR(gst_vaapidecode_parse);
     vdec_class->handle_frame = GST_DEBUG_FUNCPTR(gst_vaapidecode_handle_frame);
     vdec_class->finish       = GST_DEBUG_FUNCPTR(gst_vaapidecode_finish);
