@@ -94,6 +94,7 @@ struct _GstDVDSpu {
   /* Mutex to protect state we access from different chain funcs */
   GMutex spu_lock;
 
+  gboolean video_flushing;
   GstSegment video_seg;
   GstSegment subp_seg;
 
@@ -112,6 +113,9 @@ struct _GstDVDSpu {
 
   /* Buffer to push after handling a DVD event, if any */
   GstBuffer *pending_frame;
+
+  /* Overlay composition */
+  gboolean attach_compo_to_buffer;
 };
 
 struct _GstDVDSpuClass {
