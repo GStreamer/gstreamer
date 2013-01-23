@@ -787,7 +787,11 @@ fill_picture(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
     case GST_VAAPI_PICTURE_TYPE_B:
         if (next_picture)
             pic_param->backward_reference_picture = next_picture->surface_id;
-        // fall-through
+        if (prev_picture)
+            pic_param->forward_reference_picture = prev_picture->surface_id;
+        else if (!priv->closed_entry)
+            GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_SKIPPED);
+        break;
     case GST_VAAPI_PICTURE_TYPE_P:
         if (prev_picture)
             pic_param->forward_reference_picture = prev_picture->surface_id;
