@@ -934,7 +934,8 @@ needs_pad_switch (GstDashDemux * demux, GList * fragment)
     if (G_LIKELY (demux->srcpad[i]))
       srccaps = gst_pad_get_negotiated_caps (demux->srcpad[i]);
     if (G_UNLIKELY (!srccaps
-            || (!gst_caps_is_equal_fixed (demux->output_caps[i], srccaps)))) {
+            || (!gst_caps_is_equal_fixed (demux->output_caps[i], srccaps)))
+            || demux->need_segment) {
       switch_pad = TRUE;
     }
     if (G_LIKELY (srccaps))
@@ -1003,6 +1004,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   /* Figure out if we need to create/switch pads */
   gboolean switch_pad = needs_pad_switch (demux, listfragment);
   if (switch_pad) {
+    GST_WARNING ("Switching pads");
     switch_pads (demux, nb_adaptation_set);
     demux->need_segment = TRUE;
   }
@@ -1636,7 +1638,8 @@ need_add_header (GstDashDemux * demux)
       return FALSE;
     caps = gst_dash_demux_get_input_caps (demux, stream);
     if (!demux->input_caps[stream_idx]
-        || !gst_caps_is_equal (caps, demux->input_caps[stream_idx])) {
+        || !gst_caps_is_equal (caps, demux->input_caps[stream_idx])
+        || demux->need_segment) {
       switch_caps = TRUE;
       gst_caps_unref (caps);
       break;
