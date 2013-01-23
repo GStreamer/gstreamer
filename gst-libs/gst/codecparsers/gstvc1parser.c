@@ -2053,6 +2053,50 @@ gst_vc1_parse_field_header (const guint8 * data, gsize size,
 }
 
 /**
+ * gst_vc1_parse_slice_header:
+ * @data: The data to parse
+ * @size: The size of @data
+ * @slicehdr: The #GstVC1SliceHdr to fill
+ * @seqhdr: The #GstVC1SeqHdr that was previously parsed
+ *
+ * Parses @data, and fills @slicehdr fields.
+ *
+ * Returns: a #GstVC1ParserResult
+ *
+ * Since: 1.2
+ */
+GstVC1ParserResult
+gst_vc1_parse_slice_header (const guint8 * data, gsize size,
+    GstVC1SliceHdr * slicehdr, GstVC1SeqHdr * seqhdr)
+{
+  GstBitReader br;
+  GstVC1FrameHdr framehdr;
+  GstVC1ParserResult result;
+  guint8 pic_header_flag;
+
+  GST_DEBUG ("Parsing slice header");
+
+  if (seqhdr->profile != GST_VC1_PROFILE_ADVANCED)
+    return GST_VC1_PARSER_BROKEN_DATA;
+
+  gst_bit_reader_init (&br, data, size);
+
+  READ_UINT16 (&br, slicehdr->slice_addr, 9);
+  READ_UINT8 (&br, pic_header_flag, 1);
+  if (pic_header_flag)
+    result = parse_frame_header_advanced (&br, &framehdr, seqhdr, NULL, FALSE);
+  else
+    result = GST_VC1_PARSER_OK;
+
+  slicehdr->header_size = gst_bit_reader_get_pos (&br);
+  return result;
+
+failed:
+  GST_WARNING ("Failed to parse slice header");
+  return GST_VC1_PARSER_ERROR;
+}
+
+/**
  * gst_vc1_bitplanes_new:
  * @seqhdr: The #GstVC1SeqHdr from which to set @bitplanes
  *

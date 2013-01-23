@@ -154,6 +154,7 @@ typedef struct _GstVC1FrameHdr          GstVC1FrameHdr;
 typedef struct _GstVC1PicAdvanced       GstVC1PicAdvanced;
 typedef struct _GstVC1PicSimpleMain     GstVC1PicSimpleMain;
 typedef struct _GstVC1Picture           GstVC1Picture;
+typedef struct _GstVC1SliceHdr          GstVC1SliceHdr;
 
 typedef struct _GstVC1VopDquant         GstVC1VopDquant;
 
@@ -548,6 +549,19 @@ struct _GstVC1FrameHdr
 };
 
 /**
+ * GstVC1SliceHdr:
+ *
+ * Structure that represents slice layer in advanced profile.
+ */
+struct _GstVC1SliceHdr
+{
+  guint16 slice_addr;
+
+  /* Size of the slice layer in bits */
+  guint header_size;
+};
+
+/**
  * GstVC1BDU:
  *
  * Structure that represents a Bitstream Data Unit.
@@ -608,6 +622,11 @@ GstVC1ParserResult gst_vc1_parse_field_header          (const guint8 *data,
                                                         GstVC1FrameHdr * fieldhdr,
                                                         GstVC1SeqHdr *seqhdr,
                                                         GstVC1BitPlanes *bitplanes);
+
+GstVC1ParserResult gst_vc1_parse_slice_header           (const guint8 *data,
+                                                         gsize size,
+                                                         GstVC1SliceHdr *slicehdr, 
+                                                         GstVC1SeqHdr *seqhdr);
 
 GstVC1BitPlanes *  gst_vc1_bitplanes_new               (void);
 
