@@ -1,6 +1,5 @@
 dvdspu_sources = [
   'gstdvdspu.c',
-  'gstdvdspu-render.c',
   'gstspu-vobsub.c',
   'gstspu-vobsub-render.c',
   'gstspu-pgs.c',

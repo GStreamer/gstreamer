@@ -171,15 +171,19 @@ dump_rle_data (GstDVDSpu * dvdspu, guint8 * data, guint32 len)
 
 static void
 pgs_composition_object_render (PgsCompositionObject * obj, SpuState * state,
-    GstVideoFrame * frame)
+    GstVideoFrame * window)
 {
   SpuColour *colour;
-  guint8 *planes[3];            /* YUV frame pointers */
-  gint strides[3];
+  guint8 *pixels, *p;
+  gint stride;
+  gint win_w;
+  gint win_h;
   guint8 *data, *end;
-  guint16 obj_w;
-  guint16 obj_h G_GNUC_UNUSED;
-  guint x, y, i, min_x, max_x;
+  guint16 obj_w, obj_h;
+  gint obj_x, obj_y;
+  gint min_x, max_x;
+  gint min_y, max_y;
+  gint x, y, i;
 
   if (G_UNLIKELY (obj->rle_data == NULL || obj->rle_data_size == 0
           || obj->rle_data_used != obj->rle_data_size))
@@ -191,37 +195,47 @@ pgs_composition_object_render (PgsCompositionObject * obj, SpuState * state,
   if (data + 4 > end)
     return;
 
-  /* FIXME: Calculate and use the cropping window for the output, as the
-   * intersection of the crop rectangle for this object (if any) and the
-   * window specified by the object's window_id */
+  pixels = GST_VIDEO_FRAME_PLANE_DATA (window, 0);
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (window, 0);
+  win_w = GST_VIDEO_FRAME_WIDTH (window);
+  win_h = GST_VIDEO_FRAME_HEIGHT (window);
 
-  /* Store the start of each plane */
-  planes[0] = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
-  planes[1] = GST_VIDEO_FRAME_COMP_DATA (frame, 1);
-  planes[2] = GST_VIDEO_FRAME_COMP_DATA (frame, 2);
-
-  strides[0] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
-  strides[1] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 1);
-  strides[2] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 2);
-
-  y = MIN (obj->y, state->info.height);
-
-  planes[0] += strides[0] * y;
-  planes[1] += strides[1] * (y / 2);
-  planes[2] += strides[2] * (y / 2);
-
-  /* RLE data: */
   obj_w = GST_READ_UINT16_BE (data);
   obj_h = GST_READ_UINT16_BE (data + 2);
   data += 4;
 
-  min_x = MIN (obj->x, strides[0]);
-  max_x = MIN (obj->x + obj_w, strides[0]);
+  /* Calculate object coordinates relative to the window */
+  min_x = obj_x = (gint) obj->x - (gint) state->pgs.win_x;
+  min_y = obj_y = (gint) obj->y - (gint) state->pgs.win_y;
 
-  state->comp_left = x = min_x;
-  state->comp_right = max_x;
+  if (obj->flags & PGS_COMPOSITION_OBJECT_FLAG_CROPPED) {
+    obj_x -= obj->crop_x;
+    obj_y -= obj->crop_y;
+    obj_w = MIN (obj_w, obj->crop_w);
+    obj_h = MIN (obj_h, obj->crop_h);
+  }
 
-  gstspu_clear_comp_buffers (state);
+  max_x = min_x + obj_w;
+  max_y = min_y + obj_h;
+
+  /* Early out if object is out of the window */
+  if (max_x <= 0 || max_y < 0 || min_x >= win_w || min_y >= win_h)
+    return;
+
+  /* Crop inside window */
+  if (min_x < 0)
+    min_x = 0;
+  if (max_x > win_w)
+    max_x = win_w;
+  if (min_y < 0)
+    min_y = 0;
+  if (max_y > win_h)
+    max_y = win_h;
+
+  /* Write RLE data to the plane */
+  x = obj_x;
+  y = obj_y;
+  p = pixels + y * stride;
 
   while (data < end) {
     guint8 pal_id;
@@ -264,43 +278,56 @@ pgs_composition_object_render (PgsCompositionObject * obj, SpuState * state,
       }
     }
 
+    if (!run_len) {
+      x = obj_x;
+      y++;
+      if (y >= max_y)
+        break;
+
+      p = pixels + y * stride;
+      continue;
+    }
+
+    if (y < min_y)
+      continue;
+
+    if (x >= max_x)
+      continue;
+
+    if (x < min_x) {
+      if (x + run_len <= min_x) {
+        x += run_len;
+        continue;
+      } else {
+        run_len -= min_x - x;
+        x = min_x;
+      }
+    }
+
     colour = &state->pgs.palette[pal_id];
-    if (colour->A) {
-      guint32 inv_A = 0xff - colour->A;
+
+    if (colour->A > 0) {
+      guint8 inv_A = 255 - colour->A;
+
       if (G_UNLIKELY (x + run_len > max_x))
-        run_len = (max_x - x);
+        run_len = max_x - x;
 
       for (i = 0; i < run_len; i++) {
-        planes[0][x] = (inv_A * planes[0][x] + colour->Y) / 0xff;
+        SpuColour *pix = &((SpuColour *) p)[x++];
 
-        state->comp_bufs[0][x / 2] += colour->U;
-        state->comp_bufs[1][x / 2] += colour->V;
-        state->comp_bufs[2][x / 2] += colour->A;
-        x++;
+        if (pix->A == 0) {
+          memcpy (pix, colour, sizeof (*pix));
+        } else {
+          pix->A = colour->A;
+          pix->Y = colour->Y + pix->Y * inv_A / 255;
+          pix->U = colour->U + pix->U * inv_A / 255;
+          pix->V = colour->V + pix->V * inv_A / 255;
+        }
       }
     } else {
       x += run_len;
     }
-
-    if (!run_len || x > max_x) {
-      x = min_x;
-      planes[0] += strides[0];
-
-      if (y % 2) {
-        gstspu_blend_comp_buffers (state, planes);
-        gstspu_clear_comp_buffers (state);
-
-        planes[1] += strides[1];
-        planes[2] += strides[2];
-      }
-      y++;
-      if (y >= state->info.height)
-        return;                 /* Hit the bottom */
-    }
   }
-
-  if (y % 2)
-    gstspu_blend_comp_buffers (state, planes);
 }
 
 static void
@@ -429,8 +456,10 @@ parse_presentation_segment (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
         "x %u y %u\n", i, obj->id, obj->win_id, obj->flags, obj->x, obj->y);
 
     if (obj->flags & PGS_COMPOSITION_OBJECT_FLAG_CROPPED) {
-      if (payload + 8 > end)
+      if (payload + 8 > end) {
+        obj->flags &= ~PGS_COMPOSITION_OBJECT_FLAG_CROPPED;
         break;
+      }
 
       obj->crop_x = GST_READ_UINT16_BE (payload);
       obj->crop_y = GST_READ_UINT16_BE (payload + 2);
@@ -497,10 +526,10 @@ parse_set_palette (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
 #endif
 
     /* Premultiply the palette entries by the alpha */
-    state->pgs.palette[n].Y = Y * A;
-    state->pgs.palette[n].U = U * A;
-    state->pgs.palette[n].V = V * A;
     state->pgs.palette[n].A = A;
+    state->pgs.palette[n].Y = Y * A / 255;
+    state->pgs.palette[n].U = U * A / 255;
+    state->pgs.palette[n].V = V * A / 255;
 
     payload += PGS_PALETTE_ENTRY_SIZE;
   }
@@ -767,7 +796,7 @@ gstspu_pgs_execute_event (GstDVDSpu * dvdspu)
 }
 
 void
-gstspu_pgs_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
+gstspu_pgs_render (GstDVDSpu * dvdspu, GstVideoFrame * window)
 {
   SpuState *state = &dvdspu->spu_state;
   PgsPresentationSegment *ps = &state->pgs.pres_seg;
@@ -779,7 +808,7 @@ gstspu_pgs_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
   for (i = 0; i < ps->objects->len; i++) {
     PgsCompositionObject *cur =
         &g_array_index (ps->objects, PgsCompositionObject, i);
-    pgs_composition_object_render (cur, state, frame);
+    pgs_composition_object_render (cur, state, window);
   }
 }
 
@@ -788,6 +817,27 @@ gstspu_pgs_handle_dvd_event (GstDVDSpu * dvdspu, GstEvent * event)
 {
   gst_event_unref (event);
   return FALSE;
+}
+
+void
+gstspu_pgs_get_render_geometry (GstDVDSpu * dvdspu,
+    gint * display_width, gint * display_height,
+    GstVideoRectangle * window_rect)
+{
+  SpuPgsState *pgs_state = &dvdspu->spu_state.pgs;
+
+  if (window_rect) {
+    window_rect->x = pgs_state->win_x;
+    window_rect->y = pgs_state->win_y;
+    window_rect->w = pgs_state->win_w;
+    window_rect->h = pgs_state->win_h;
+  }
+
+  if (display_width)
+    *display_width = pgs_state->pres_seg.vid_w;
+
+  if (display_height)
+    *display_height = pgs_state->pres_seg.vid_h;
 }
 
 void

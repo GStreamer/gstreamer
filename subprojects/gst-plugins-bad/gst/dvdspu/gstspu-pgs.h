@@ -99,8 +99,11 @@ struct SpuPgsState {
 
 void gstspu_pgs_handle_new_buf (GstDVDSpu * dvdspu, GstClockTime event_ts, GstBuffer *buf);
 gboolean gstspu_pgs_execute_event (GstDVDSpu *dvdspu);
-void gstspu_pgs_render (GstDVDSpu *dvdspu, GstVideoFrame *frame);
+void gstspu_pgs_render (GstDVDSpu *dvdspu, GstVideoFrame *window);
 gboolean gstspu_pgs_handle_dvd_event (GstDVDSpu *dvdspu, GstEvent *event);
+void gstspu_pgs_get_render_geometry (GstDVDSpu *dvdspu,
+    gint *display_width, gint *display_height,
+    GstVideoRectangle *window_rect);
 void gstspu_pgs_flush (GstDVDSpu *dvdspu);
 
 #endif
