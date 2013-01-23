@@ -208,10 +208,10 @@ frame_redraw_callback(void *data, struct wl_callback *callback, uint32_t time)
 {
     GstVaapiWindowWaylandPrivate * const priv = data;
 
-    priv->redraw_pending = FALSE;
     wl_buffer_destroy(priv->buffer);
     priv->buffer = NULL;
     wl_callback_destroy(callback);
+    priv->redraw_pending = FALSE;
 }
 
 static const struct wl_callback_listener frame_callback_listener = {
@@ -292,14 +292,13 @@ gst_vaapi_window_wayland_render(
         priv->opaque_region = NULL;
     }
 
-    wl_surface_commit(priv->surface);
-
-    wl_display_flush(wl_display);
     priv->redraw_pending = TRUE;
     priv->buffer = buffer;
-
     callback = wl_surface_frame(priv->surface);
     wl_callback_add_listener(callback, &frame_callback_listener, priv);
+
+    wl_surface_commit(priv->surface);
+    wl_display_flush(wl_display);
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
     return TRUE;
 }
