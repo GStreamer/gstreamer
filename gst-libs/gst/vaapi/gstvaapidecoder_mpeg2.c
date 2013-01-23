@@ -1509,6 +1509,17 @@ gst_vaapi_decoder_mpeg2_end_frame(GstVaapiDecoder *base_decoder)
     return decode_current_picture(decoder);
 }
 
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_mpeg2_flush(GstVaapiDecoder *base_decoder)
+{
+    GstVaapiDecoderMpeg2 * const decoder =
+        GST_VAAPI_DECODER_MPEG2_CAST(base_decoder);
+    GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
+
+    gst_vaapi_dpb_flush(priv->dpb);
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
 static void
 gst_vaapi_decoder_mpeg2_finalize(GObject *object)
 {
@@ -1548,6 +1559,7 @@ gst_vaapi_decoder_mpeg2_class_init(GstVaapiDecoderMpeg2Class *klass)
     decoder_class->decode       = gst_vaapi_decoder_mpeg2_decode;
     decoder_class->start_frame  = gst_vaapi_decoder_mpeg2_start_frame;
     decoder_class->end_frame    = gst_vaapi_decoder_mpeg2_end_frame;
+    decoder_class->flush        = gst_vaapi_decoder_mpeg2_flush;
 }
 
 static void
