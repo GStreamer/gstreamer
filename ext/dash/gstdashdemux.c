@@ -593,6 +593,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
       demux->position = gst_mpd_client_get_current_position (demux->client);
       demux->position_shift = start - demux->position;
       demux->need_segment = TRUE;
+      demux->need_header = TRUE;
       //GST_MPD_CLIENT_UNLOCK (demux->client);
 
       if (flags & GST_SEEK_FLAG_FLUSH) {
@@ -1113,6 +1114,7 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
   demux->last_manifest_update = GST_CLOCK_TIME_NONE;
   demux->position = 0;
   demux->position_shift = 0;
+  demux->need_header = TRUE;
   demux->need_segment = TRUE;
 }
 
@@ -1641,7 +1643,8 @@ need_add_header (GstDashDemux * demux)
     caps = gst_dash_demux_get_input_caps (demux, stream);
     if (!demux->input_caps[stream_idx]
         || !gst_caps_is_equal (caps, demux->input_caps[stream_idx])
-        || demux->need_segment) {
+        || demux->need_header) {
+      demux->need_header = FALSE;
       switch_caps = TRUE;
       gst_caps_unref (caps);
       break;
