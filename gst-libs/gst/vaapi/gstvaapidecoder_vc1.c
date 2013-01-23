@@ -846,14 +846,38 @@ fill_picture(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 }
 
 static GstVaapiDecoderStatus
+decode_slice_chunk(GstVaapiDecoderVC1 *decoder, GstVC1BDU *ebdu,
+    guint slice_addr, guint header_size)
+{
+    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiPicture * const picture = priv->current_picture;
+    GstVaapiSlice *slice;
+    VASliceParameterBufferVC1 *slice_param;
+
+    slice = GST_VAAPI_SLICE_NEW(VC1, decoder,
+        ebdu->data + ebdu->sc_offset,
+        ebdu->size + ebdu->offset - ebdu->sc_offset);
+    if (!slice) {
+        GST_ERROR("failed to allocate slice");
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    }
+    gst_vaapi_picture_add_slice(picture, slice);
+
+    /* Fill in VASliceParameterBufferVC1 */
+    slice_param = slice->param;
+    slice_param->macroblock_offset = 8 * (ebdu->offset - ebdu->sc_offset) +
+        header_size;
+    slice_param->slice_vertical_position = slice_addr;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
 decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 {
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
     GstVC1FrameHdr * const frame_hdr = &priv->frame_hdr;
     GstVC1ParserResult result;
     GstVaapiPicture * const picture = priv->current_picture;
-    GstVaapiSlice *slice;
-    VASliceParameterBufferVC1 *slice_param;
 
     memset(frame_hdr, 0, sizeof(*frame_hdr));
     result = gst_vc1_parse_frame_header(
@@ -906,25 +930,29 @@ decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 
     if (!fill_picture(decoder, picture))
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    return decode_slice_chunk(decoder, ebdu, 0, frame_hdr->header_size);
+}
 
-    slice = GST_VAAPI_SLICE_NEW(
-        VC1,
-        decoder,
-        ebdu->data + ebdu->sc_offset,
-        ebdu->size + ebdu->offset - ebdu->sc_offset
+static GstVaapiDecoderStatus
+decode_slice(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
+{
+    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVC1SliceHdr slice_hdr;
+    GstVC1ParserResult result;
+
+    memset(&slice_hdr, 0, sizeof(slice_hdr));
+    result = gst_vc1_parse_slice_header(
+        rbdu->data + rbdu->offset,
+        rbdu->size,
+        &slice_hdr,
+        &priv->seq_hdr
     );
-    if (!slice) {
-        GST_ERROR("failed to allocate slice");
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    if (result != GST_VC1_PARSER_OK) {
+        GST_ERROR("failed to parse slice layer");
+        return get_status(result);
     }
-    gst_vaapi_picture_add_slice(picture, slice);
-
-    /* Fill in VASliceParameterBufferVC1 */
-    slice_param                            = slice->param;
-    slice_param->macroblock_offset         = 8 * (ebdu->offset - ebdu->sc_offset) + frame_hdr->header_size;
-    slice_param->slice_vertical_position   = 0;
-
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+    return decode_slice_chunk(decoder, ebdu, slice_hdr.slice_addr,
+        slice_hdr.header_size);
 }
 
 static gboolean
@@ -998,8 +1026,7 @@ decode_ebdu(GstVaapiDecoderVC1 *decoder, GstVC1BDU *ebdu)
         status = decode_frame(decoder, &rbdu, ebdu);
         break;
     case GST_VC1_SLICE:
-        GST_DEBUG("decode slice");
-        status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+        status = decode_slice(decoder, &rbdu, ebdu);
         break;
     case GST_VC1_END_OF_SEQ:
         status = decode_sequence_end(decoder);
