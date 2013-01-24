@@ -62,7 +62,10 @@ typedef struct _GstMetaXImage GstMetaXImage;
  * @height: the height in pixels of Display @disp
  * @widthmm: the width in millimeters of Display @disp
  * @heightmm: the height in millimeters of Display @disp
- * @par: the pixel aspect ratio calculated from @width, @widthmm and @height,
+ * @par_n: the pixel aspect ratio numerator calculated from @width, @widthmm
+ * and @height,
+ * @par_d: the pixel aspect ratio denumerator calculated from @width, @widthmm
+ * and @height,
  * @heightmm ratio
  * @use_xshm: used to known wether of not XShm extension is usable or not even
  * if the Extension is present
@@ -90,12 +93,13 @@ struct _GstXContext {
   gint width, height;
   gint widthmm, heightmm;
 
-  /* these are the output masks 
+  /* these are the output masks
    * for buffers from ximagesrc
    * and are in big endian */
   guint32 r_mask_output, g_mask_output, b_mask_output;
-  
-  GValue *par;                  /* calculated pixel aspect ratio */
+
+  guint par_n;                  /* calculated pixel aspect ratio numerator */
+  guint par_d;                  /* calculated pixel aspect ratio denumerator */
 
   gboolean use_xshm;
 

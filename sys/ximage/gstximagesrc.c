@@ -1080,7 +1080,7 @@ gst_ximage_src_get_caps (GstBaseSrc * bs, GstCaps * filter)
       "width", G_TYPE_INT, width,
       "height", G_TYPE_INT, height,
       "framerate", GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1,
-      "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, xcontext->par_n, xcontext->par_d,
       NULL);
 }
 

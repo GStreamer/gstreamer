@@ -258,11 +258,6 @@ ximageutil_xcontext_clear (GstXContext * xcontext)
   if (xcontext->caps != NULL)
     gst_caps_unref (xcontext->caps);
 
-  if (xcontext->par) {
-    g_value_unset (xcontext->par);
-    g_free (xcontext->par);
-  }
-
   XCloseDisplay (xcontext->disp);
 
   g_free (xcontext);
@@ -314,14 +309,9 @@ ximageutil_calculate_pixel_aspect_ratio (GstXContext * xcontext)
   GST_DEBUG ("Decided on index %d (%d/%d)", index,
       par[index][0], par[index][1]);
 
-  if (xcontext->par)
-    g_free (xcontext->par);
-  xcontext->par = g_new0 (GValue, 1);
-  g_value_init (xcontext->par, GST_TYPE_FRACTION);
-  gst_value_set_fraction (xcontext->par, par[index][0], par[index][1]);
-  GST_DEBUG ("set xcontext PAR to %d/%d\n",
-      gst_value_get_fraction_numerator (xcontext->par),
-      gst_value_get_fraction_denominator (xcontext->par));
+  xcontext->par_n = par[index][0];
+  xcontext->par_d = par[index][1];
+  GST_DEBUG ("set xcontext PAR to %d/%d\n", xcontext->par_n, xcontext->par_d);
 }
 
 static void
