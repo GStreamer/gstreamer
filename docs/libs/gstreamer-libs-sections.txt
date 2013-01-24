@@ -1002,7 +1002,7 @@ gst_consistency_checker_free
 <SECTION>
 <FILE>gsttestclock</FILE>
 <TITLE>GstTestClock</TITLE>
-<INCLUDE>libs/gst/check/gsttestclock.h</INCLUDE>
+<INCLUDE>gst/check/gsttestclock.h</INCLUDE>
 GstTestClock
 GstTestClockClass
 gst_test_clock_new
