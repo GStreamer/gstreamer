@@ -57,8 +57,6 @@ typedef enum {
  * @units: list of #GstVaapiDecoderUnit objects (slice data)
  * @pre_units: list of units to decode before GstVaapiDecoder:start_frame()
  * @post_units: list of units to decode after GstVaapiDecoder:end_frame()
- * @prev_slice: previous #GstVaapiDecoderUnit that was a slice, or NULL
- *    if no slice data unit was received yet
  *
  * An extension to #GstVideoCodecFrame with #GstVaapiDecoder specific
  * information. Decoder frames are usually attached to codec frames as
