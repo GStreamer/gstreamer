@@ -529,7 +529,7 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
       } else {                  /* decode 3x2 "horizontal" tiles */
 
         if (pdata)
-          pdata += (height & 1) * width;
+          pdata += (height & 1) * stride;
         for (y = height & 1; y < height; y += 2) {
           for (x = width % 3; x < width; x += 3) {
             if (!decode_vlc (br, &v, vc1_norm6_vlc_table,
