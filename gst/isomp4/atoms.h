@@ -953,7 +953,7 @@ void atom_moov_add_3gp_tag           (AtomMOOV * moov, guint32 fourcc, guint8 * 
 
 void atom_moov_add_xmp_tags          (AtomMOOV * moov, GstBuffer * xmp);
 
-#define GST_QT_MUX_DEFAULT_TAG_LANGUAGE   "eng"
+#define GST_QT_MUX_DEFAULT_TAG_LANGUAGE   "und" /* undefined/unknown */
 guint16  language_code               (const char * lang);
 
 #endif /* __ATOMS_H__ */
