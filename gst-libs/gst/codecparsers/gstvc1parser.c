@@ -556,7 +556,7 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
 
       if (x) {
         if (data)
-          pdata = data + y * stride;
+          pdata = data;
         if (!decode_colskip (br, pdata, x, height, stride, invert_mask))
           goto failed;
       }
@@ -564,7 +564,7 @@ bitplane_decoding (GstBitReader * br, guint8 * data,
       if (y) {
         if (data)
           pdata = data + x;
-        if (!decode_rowskip (br, pdata, width, y, stride, invert_mask))
+        if (!decode_rowskip (br, pdata, width - x, y, stride, invert_mask))
           goto failed;
       }
       break;
