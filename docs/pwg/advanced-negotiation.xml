@@ -537,14 +537,14 @@ gst_my_filter_query (GstPad *pad, GstObject * parent, GstQuery * query)
     case GST_QUERY_CAPS
     {
       GstPad *otherpad;
-      GstCaps *temp, *caps, *filter, *tcaps;
+      GstCaps *temp, *caps, *filt, *tcaps;
       gint i;
 
       otherpad = (pad == filter->srcpad) ? filter->sinkpad :
                                            filter->srcpad;
       caps = gst_pad_get_allowed_caps (otherpad);
 
-      gst_query_parse_caps (query, &filter);
+      gst_query_parse_caps (query, &filt);
 
       /* We support *any* samplerate, indifferent from the samplerate
        * supported by the linked elements on both sides. */
@@ -564,8 +564,8 @@ gst_my_filter_query (GstPad *pad, GstObject * parent, GstQuery * query)
         caps = temp;
       }
       /* filter against the query filter when needed */
-      if (filter) {
-        temp = gst_caps_intersect (caps, filter);
+      if (filt) {
+        temp = gst_caps_intersect (caps, filt);
         gst_caps_unref (caps);
         caps = temp;
       }
