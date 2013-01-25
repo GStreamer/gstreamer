@@ -49,7 +49,7 @@ typedef struct _GESStandardEffectClipPrivate GESStandardEffectClipPrivate;
  */
 struct _GESStandardEffectClip {
   /*< private >*/
-  GESEffectClip parent;
+  GESBaseEffectClip parent;
 
   GESStandardEffectClipPrivate *priv;
 
@@ -64,7 +64,7 @@ struct _GESStandardEffectClip {
 
 struct _GESStandardEffectClipClass {
   /*< private >*/
-  GESEffectClipClass parent_class;
+  GESBaseEffectClipClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

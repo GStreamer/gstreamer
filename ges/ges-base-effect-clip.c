@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION: ges-effect-clip
+ * SECTION: ges-base-effect-clip
  * @short_description: An effect in a GESTimelineLayer
  *
  * The effect will be applied on the sources that have lower priorities
@@ -33,26 +33,26 @@
 #include "ges-internal.h"
 #include "ges-types.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESEffectClip, ges_effect_clip,
+G_DEFINE_ABSTRACT_TYPE (GESBaseEffectClip, ges_base_effect_clip,
     GES_TYPE_OPERATION_CLIP);
 
-struct _GESEffectClipPrivate
+struct _GESBaseEffectClipPrivate
 {
   void *nothing;
 };
 
 
 static void
-ges_effect_clip_class_init (GESEffectClipClass * klass)
+ges_base_effect_clip_class_init (GESBaseEffectClipClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GESEffectClipPrivate));
+  g_type_class_add_private (klass, sizeof (GESBaseEffectClipPrivate));
 
 }
 
 static void
-ges_effect_clip_init (GESEffectClip * self)
+ges_base_effect_clip_init (GESBaseEffectClip * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_EFFECT_CLIP, GESEffectClipPrivate);
+      GES_TYPE_BASE_EFFECT_CLIP, GESBaseEffectClipPrivate);
 
 }

@@ -37,7 +37,7 @@
 #include "ges-types.h"
 
 G_DEFINE_TYPE (GESStandardEffectClip, ges_standard_effect_clip,
-    GES_TYPE_EFFECT_CLIP);
+    GES_TYPE_BASE_EFFECT_CLIP);
 
 struct _GESStandardEffectClipPrivate
 {

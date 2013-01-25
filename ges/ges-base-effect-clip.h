@@ -17,52 +17,52 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_EFFECT_CLIP
-#define _GES_EFFECT_CLIP
+#ifndef _GES_BASE_EFFECT_CLIP
+#define _GES_BASE_EFFECT_CLIP
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_EFFECT_CLIP ges_effect_clip_get_type()
+#define GES_TYPE_BASE_EFFECT_CLIP ges_base_effect_clip_get_type()
 
-#define GES_EFFECT_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_EFFECT_CLIP, GESEffectClip))
+#define GES_BASE_EFFECT_CLIP(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_BASE_EFFECT_CLIP, GESBaseEffectClip))
 
-#define GES_EFFECT_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_EFFECT_CLIP, GESEffectClipClass))
+#define GES_BASE_EFFECT_CLIP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_BASE_EFFECT_CLIP, GESBaseEffectClipClass))
 
-#define GES_IS_EFFECT_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_EFFECT_CLIP))
+#define GES_IS_BASE_EFFECT_CLIP(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_BASE_EFFECT_CLIP))
 
-#define GES_IS_EFFECT_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_EFFECT_CLIP))
+#define GES_IS_BASE_EFFECT_CLIP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_BASE_EFFECT_CLIP))
 
-#define GES_EFFECT_CLIP_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_EFFECT_CLIP, GESEffectClipClass))
+#define GES_BASE_EFFECT_CLIP_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_BASE_EFFECT_CLIP, GESBaseEffectClipClass))
 
-typedef struct _GESEffectClipPrivate GESEffectClipPrivate;
+typedef struct _GESBaseEffectClipPrivate GESBaseEffectClipPrivate;
 
 /**
- * GESEffectClip:
+ * GESBaseEffectClip:
  */
-struct _GESEffectClip {
+struct _GESBaseEffectClip {
   /*< private >*/
   GESOperationClip parent;
 
-  GESEffectClipPrivate *priv;
+  GESBaseEffectClipPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
- * GESEffectClipClass:
+ * GESBaseEffectClipClass:
  *
  */
 
-struct _GESEffectClipClass {
+struct _GESBaseEffectClipClass {
   /*< private >*/
   GESOperationClipClass parent_class;
 
@@ -70,7 +70,7 @@ struct _GESEffectClipClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_effect_clip_get_type (void);
+GType ges_base_effect_clip_get_type (void);
 
 G_END_DECLS
-#endif /* _GES_EFFECT_CLIP */
+#endif /* _GES_BASE_EFFECT_CLIP */
