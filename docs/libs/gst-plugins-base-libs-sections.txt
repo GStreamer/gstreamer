@@ -1123,6 +1123,7 @@ gst_rtcp_buffer_validate_data
 gst_rtcp_buffer_validate
 
 GstRTCPBuffer
+GST_RTCP_BUFFER_INIT
 gst_rtcp_buffer_new
 gst_rtcp_buffer_map
 gst_rtcp_buffer_unmap
@@ -1255,6 +1256,7 @@ gst_rtp_buffer_new_allocate
 gst_rtp_buffer_new_allocate_len
 
 GstRTPBuffer
+GST_RTP_BUFFER_INIT
 gst_rtp_buffer_map
 gst_rtp_buffer_unmap
 
