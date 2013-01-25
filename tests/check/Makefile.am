@@ -208,6 +208,7 @@ check_PROGRAMS = \
 	elements/baseaudiovisualizer \
 	elements/camerabin \
 	elements/dataurisrc \
+	elements/dtmf \
 	elements/gdppay \
 	elements/gdpdepay \
 	$(check_jifmux) \
@@ -338,6 +339,8 @@ elements_camerabin_LDADD = \
         -lgstpbutils-$(GST_API_VERSION) \
         $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 elements_camerabin_SOURCES = elements/camerabin.c
+
+elements_dtmf_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstrtp-@GST_API_VERSION@
 
 elements_jifmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(EXIF_CFLAGS) $(AM_CFLAGS)
 elements_jifmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) $(GST_CHECK_LIBS) $(EXIF_LIBS) $(LDADD)

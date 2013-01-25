@@ -12,6 +12,7 @@ curlhttpsink
 curlsmtpsink
 deinterleave
 dataurisrc
+dtmf
 faac
 faad
 gdpdepay
