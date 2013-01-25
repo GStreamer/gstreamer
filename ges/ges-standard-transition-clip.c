@@ -193,7 +193,7 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESStandardTransitionClip,
-    ges_standard_transition_clip, GES_TYPE_TRANSITION_CLIP,
+    ges_standard_transition_clip, GES_TYPE_BASE_TRANSITION_CLIP,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 

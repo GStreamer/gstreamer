@@ -19,31 +19,31 @@
  */
 
 /**
- * SECTION: ges-transition-clip
+ * SECTION: ges-base-transition-clip
  * @short_description: Base classes for transitions
  */
 
 #include <ges/ges.h>
 #include "ges-internal.h"
 
-struct _GESTransitionClipPrivate
+struct _GESBaseTransitionClipPrivate
 {
   /* Dummy variable */
   void *nothing;
 };
 
-G_DEFINE_ABSTRACT_TYPE (GESTransitionClip, ges_transition_clip,
+G_DEFINE_ABSTRACT_TYPE (GESBaseTransitionClip, ges_base_transition_clip,
     GES_TYPE_OPERATION_CLIP);
 
 static void
-ges_transition_clip_class_init (GESTransitionClipClass * klass)
+ges_base_transition_clip_class_init (GESBaseTransitionClipClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GESTransitionClipPrivate));
+  g_type_class_add_private (klass, sizeof (GESBaseTransitionClipPrivate));
 }
 
 static void
-ges_transition_clip_init (GESTransitionClip * self)
+ges_base_transition_clip_init (GESBaseTransitionClip * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRANSITION_CLIP, GESTransitionClipPrivate);
+      GES_TYPE_BASE_TRANSITION_CLIP, GESBaseTransitionClipPrivate);
 }

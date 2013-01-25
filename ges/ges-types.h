@@ -62,8 +62,8 @@ typedef struct _GESEffectClipClass GESEffectClipClass;
 typedef struct _GESUriClip GESUriClip;
 typedef struct _GESUriClipClass GESUriClipClass;
 
-typedef struct _GESTransitionClip GESTransitionClip;
-typedef struct _GESTransitionClipClass GESTransitionClipClass;
+typedef struct _GESBaseTransitionClip GESBaseTransitionClip;
+typedef struct _GESBaseTransitionClipClass GESBaseTransitionClipClass;
 
 typedef struct _GESStandardTransitionClip GESStandardTransitionClip;
 typedef struct _GESStandardTransitionClipClass GESStandardTransitionClipClass;

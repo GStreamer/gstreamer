@@ -19,7 +19,7 @@ LOCAL_SRC_FILES := 				\
 	ges-source-clip.c			\
 	ges-uri-clip.c		\
 	ges-operation-clip.c		\
-	ges-transition-clip.c		\
+	ges-base-transition-clip.c		\
 	ges-standard-transition-clip.c	\
 	ges-test-clip.c		\
 	ges-title-clip.c		\

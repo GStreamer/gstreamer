@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 
-/* This class warps a GESTransitionClip, letting any implementation
- * of a GESTransitionClip to be used.
+/* This class warps a GESBaseTransitionClip, letting any implementation
+ * of a GESBaseTransitionClip to be used.
  *
  * NOTE: This is for internal use exclusively
  */
