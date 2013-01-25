@@ -3161,7 +3161,7 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
     return FALSE;
   }
 
-  GST_DEBUG ("currentChunk->SegmentURL = %s", currentChunk->SegmentURL);
+  GST_DEBUG ("currentChunk->SegmentURL = %p", currentChunk->SegmentURL);
   if (currentChunk->SegmentURL != NULL) {
     mediaURL = gst_mpdparser_get_mediaURL (stream, currentChunk->SegmentURL);
   } else if (stream->cur_seg_template != NULL) {
