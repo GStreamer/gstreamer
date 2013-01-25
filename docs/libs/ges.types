@@ -17,7 +17,7 @@ ges_test_clip_get_type
 ges_base_transition_clip_get_type
 ges_transition_clip_get_type
 ges_base_effect_clip_get_type
-ges_standard_effect_clip_get_type
+ges_effect_clip_get_type
 ges_uri_clip_get_type
 ges_overlay_text_clip_get_type
 ges_title_clip_get_type

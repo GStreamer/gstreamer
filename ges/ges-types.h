@@ -80,8 +80,8 @@ typedef struct _GESOverlayClipClass GESOverlayClipClass;
 typedef struct _GESTextOverlayClip GESTextOverlayClip;
 typedef struct _GESTextOverlayClipClass GESTextOverlayClipClass;
 
-typedef struct _GESStandardEffectClip GESStandardEffectClip;
-typedef struct _GESStandardEffectClipClass GESStandardEffectClipClass;
+typedef struct _GESEffectClip GESEffectClip;
+typedef struct _GESEffectClipClass GESEffectClipClass;
 
 typedef struct _GESTrack GESTrack;
 typedef struct _GESTrackClass GESTrackClass;
