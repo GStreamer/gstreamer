@@ -105,7 +105,7 @@ GST_START_TEST (test_autoconvert_simple)
 
   /* Push 10 items */
   for (i = 0; i < 10; i++) {
-    GST_LOG ("Pushing test buffer %d, caps 1");
+    GST_LOG ("Pushing test buffer %d, caps 1", i);
     fail_unless (gst_pad_push (test_src_pad, gst_buffer_new_and_alloc (4096))
         == GST_FLOW_OK);
   }
@@ -117,7 +117,7 @@ GST_START_TEST (test_autoconvert_simple)
 
   /* Push 10 more items */
   for (i = 0; i < 10; i++) {
-    GST_LOG ("Pushing test buffer %d, caps 2");
+    GST_LOG ("Pushing test buffer %d, caps 2", i);
     fail_unless (gst_pad_push (test_src_pad, gst_buffer_new_and_alloc (4096))
         == GST_FLOW_OK);
   }

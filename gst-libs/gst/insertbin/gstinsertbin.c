@@ -622,7 +622,7 @@ gst_insert_bin_do_change (GstInsertBin * self, GstPad * pad)
       } else {
         if (!gst_ghost_pad_set_target (GST_GHOST_PAD (self->priv->sinkpad),
                 sinkpad)) {
-          GST_WARNING_OBJECT (self, "Can not set %s:%s as target for %s",
+          GST_WARNING_OBJECT (self, "Can not set %s:%s as target for %s:%s",
               GST_DEBUG_PAD_NAME (sinkpad),
               GST_DEBUG_PAD_NAME (self->priv->sinkpad));
           goto error;
@@ -639,7 +639,7 @@ gst_insert_bin_do_change (GstInsertBin * self, GstPad * pad)
       } else {
         if (!gst_ghost_pad_set_target (GST_GHOST_PAD (self->priv->srcpad),
                 srcpad)) {
-          GST_WARNING_OBJECT (self, "Can not set %s:%s as target for %s",
+          GST_WARNING_OBJECT (self, "Can not set %s:%s as target for %s:%s",
               GST_DEBUG_PAD_NAME (srcpad),
               GST_DEBUG_PAD_NAME (self->priv->srcpad));
           goto error;
