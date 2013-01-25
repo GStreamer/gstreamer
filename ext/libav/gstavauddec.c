@@ -453,18 +453,20 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
     } else if (av_sample_fmt_is_planar (ffmpegdec->context->sample_fmt)
         && ffmpegdec->info.channels > 1) {
       gint i, j;
-      gint nsamples, channels;
+      gint nsamples, channels, byte_per_sample;
       GstMapInfo minfo;
 
       channels = ffmpegdec->info.channels;
+      nsamples = frame.nb_samples;
+      byte_per_sample = ffmpegdec->info.finfo->width / 8;
 
+      /* note: linesize[0] might contain padding, allocate only what's needed */
       *outbuf =
           gst_audio_decoder_allocate_output_buffer (GST_AUDIO_DECODER
-          (ffmpegdec), frame.linesize[0] * channels);
+          (ffmpegdec), nsamples * byte_per_sample * channels);
 
       gst_buffer_map (*outbuf, &minfo, GST_MAP_WRITE);
 
-      nsamples = frame.nb_samples;
       switch (ffmpegdec->info.finfo->width) {
         case 8:{
           guint8 *odata = minfo.data;
