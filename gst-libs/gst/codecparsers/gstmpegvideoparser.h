@@ -78,6 +78,7 @@ typedef enum {
  * @GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE: Sequence extension code
  * @GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE_DISPLAY: Sequence Display extension code
  * @GST_MPEG_VIDEO_PACKET_EXT_QUANT_MATRIX: Quantization Matrix extension code
+ * @GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE_SCALABLE: Sequence Scalable extension code
  * @GST_MPEG_VIDEO_PACKET_EXT_PICTURE: Picture coding extension
  *
  * Indicates what type of packets are in this block, some are mutually
@@ -85,11 +86,26 @@ typedef enum {
  * Picture may occur together or separately.
  */
 typedef enum {
-  GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE         = 0x01,
-  GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE_DISPLAY = 0x02,
-  GST_MPEG_VIDEO_PACKET_EXT_QUANT_MATRIX     = 0x03,
-  GST_MPEG_VIDEO_PACKET_EXT_PICTURE          = 0x08
+  GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE          = 0x01,
+  GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE_DISPLAY  = 0x02,
+  GST_MPEG_VIDEO_PACKET_EXT_QUANT_MATRIX      = 0x03,
+  GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE_SCALABLE = 0x05,
+  GST_MPEG_VIDEO_PACKET_EXT_PICTURE           = 0x08
 } GstMpegVideoPacketExtensionCode;
+
+/**
+ * GstMpegVideoSequenceScalableMode:
+ * GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_DATA_PARTITIONING: Data partitioning
+ * GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_SPATIAL: Spatial Scalability            
+ * GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_SNR: SNR Scalability                
+ * GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_TEMPORAL: Temporal Scalability   
+ */
+typedef enum {
+  GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_DATA_PARTITIONING  = 0x00,
+  GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_SPATIAL            = 0x01,
+  GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_SNR                = 0x02,
+  GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_TEMPORAL           = 0x03
+} GstMpegVideoSequenceScalableMode;
 
 /**
  * GstMpegVideoLevel:
@@ -176,6 +192,7 @@ typedef enum {
 typedef struct _GstMpegVideoSequenceHdr     GstMpegVideoSequenceHdr;
 typedef struct _GstMpegVideoSequenceExt     GstMpegVideoSequenceExt;
 typedef struct _GstMpegVideoSequenceDisplayExt GstMpegVideoSequenceDisplayExt;
+typedef struct _GstMpegVideoSequenceScalableExt GstMpegVideoSequenceScalableExt;
 typedef struct _GstMpegVideoPictureHdr      GstMpegVideoPictureHdr;
 typedef struct _GstMpegVideoGop             GstMpegVideoGop;
 typedef struct _GstMpegVideoPictureExt      GstMpegVideoPictureExt;
@@ -270,6 +287,45 @@ struct _GstMpegVideoSequenceDisplayExt
 
   guint16 display_horizontal_size;
   guint16 display_vertical_size;
+};
+
+/**
+ * GstMpegVideoSequenceScalableExt:
+ * @scalable_mode:
+ * @layer_id:
+ * @lower_layer_prediction_horizontal_size:
+ * @lower_layer_prediction_vertical_size:
+ * @horizontal_subsampling_factor_m:
+ * @horizontal_subsampling_factor_n:
+ * @vertical_subsampling_factor_m:
+ * @vertical_subsampling_factor_n:
+ * @picture_mux_enable:
+ * @mux_to_progressive_sequence:
+ * @picture_mux_order:
+ * @picture_mux_factor:
+ *
+ * The Sequence Scalable Extension structure.
+ *
+ * Since: 1.2
+ */
+struct _GstMpegVideoSequenceScalableExt
+{
+  guint8 scalable_mode;
+  guint8 layer_id;
+
+  /* if spatial scalability */
+  guint16 lower_layer_prediction_horizontal_size;
+  guint16 lower_layer_prediction_vertical_size;
+  guint8 horizontal_subsampling_factor_m;
+  guint8 horizontal_subsampling_factor_n;
+  guint8 vertical_subsampling_factor_m;
+  guint8 vertical_subsampling_factor_n;
+
+  /* if temporal scalability */
+  guint8 picture_mux_enable;
+  guint8 mux_to_progressive_sequence;
+  guint8 picture_mux_order;
+  guint8 picture_mux_factor;
 };
 
 /**
@@ -410,6 +466,9 @@ gboolean gst_mpeg_video_packet_parse_sequence_extension (const GstMpegVideoPacke
 
 gboolean gst_mpeg_video_packet_parse_sequence_display_extension (const GstMpegVideoPacket * packet,
                                                          GstMpegVideoSequenceDisplayExt * seqdisplayext);
+
+gboolean gst_mpeg_video_packet_parse_sequence_scalable_extension (const GstMpegVideoPacket * packet,
+                                                         GstMpegVideoSequenceScalableExt * seqscaleext);
 
 gboolean gst_mpeg_video_packet_parse_picture_header     (const GstMpegVideoPacket * packet,
                                                          GstMpegVideoPictureHdr* pichdr);

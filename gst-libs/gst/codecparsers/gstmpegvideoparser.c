@@ -480,6 +480,70 @@ gst_mpeg_video_packet_parse_sequence_display_extension (const GstMpegVideoPacket
   return TRUE;
 }
 
+/**
+ * gst_mpeg_video_packet_parse_sequence_scalable_extension:
+ * @packet: The #GstMpegVideoPacket that carries the data
+ * @seqscaleext: (out): The #GstMpegVideoSequenceScalableExt structure to fill
+ *
+ * Parses the @seqscaleext MPEG Video Sequence Scalable Extension structure
+ * members from video @packet
+ *
+ * Returns: %TRUE if the seqext could be parsed correctly, %FALSE otherwize.
+ *
+ * Since: 1.2
+ */
+gboolean
+    gst_mpeg_video_packet_parse_sequence_scalable_extension
+    (const GstMpegVideoPacket * packet,
+    GstMpegVideoSequenceScalableExt * seqscaleext) {
+  GstBitReader br;
+
+  g_return_val_if_fail (seqscaleext != NULL, FALSE);
+
+  if (packet->size < 5) {
+    GST_DEBUG ("not enough bytes to parse the extension");
+    return FALSE;
+  }
+
+  gst_bit_reader_init (&br, &packet->data[packet->offset], packet->size);
+
+  if (gst_bit_reader_get_bits_uint8_unchecked (&br, 4) !=
+      GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE_SCALABLE) {
+    GST_DEBUG ("Not parsing a sequence scalable extension");
+    return FALSE;
+  }
+
+  READ_UINT8 (&br, seqscaleext->scalable_mode, 2);
+  READ_UINT8 (&br, seqscaleext->layer_id, 4);
+
+  if (seqscaleext->scalable_mode == GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_SPATIAL) {
+    READ_UINT16 (&br, seqscaleext->lower_layer_prediction_horizontal_size, 14);
+
+    SKIP (&br, 1);
+
+    READ_UINT16 (&br, seqscaleext->lower_layer_prediction_vertical_size, 14);
+
+    READ_UINT8 (&br, seqscaleext->horizontal_subsampling_factor_m, 5);
+    READ_UINT8 (&br, seqscaleext->horizontal_subsampling_factor_n, 5);
+    READ_UINT8 (&br, seqscaleext->vertical_subsampling_factor_m, 5);
+    READ_UINT8 (&br, seqscaleext->vertical_subsampling_factor_n, 5);
+  }
+
+  if (seqscaleext->scalable_mode == GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_TEMPORAL) {
+    READ_UINT8 (&br, seqscaleext->picture_mux_enable, 1);
+    if (seqscaleext->picture_mux_enable)
+      READ_UINT8 (&br, seqscaleext->mux_to_progressive_sequence, 1);
+    READ_UINT8 (&br, seqscaleext->picture_mux_order, 3);
+    READ_UINT8 (&br, seqscaleext->picture_mux_factor, 3);
+  }
+
+  return TRUE;
+
+failed:
+  GST_WARNING ("error parsing \"Sequence Scalable Extension\"");
+  return FALSE;
+}
+
 gboolean
 gst_mpeg_video_finalise_mpeg2_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
     GstMpegVideoSequenceExt * seqext,
