@@ -15,7 +15,7 @@ ges_timeline_pipeline_get_type
 ges_source_clip_get_type
 ges_test_clip_get_type
 ges_base_transition_clip_get_type
-ges_standard_transition_clip_get_type
+ges_transition_clip_get_type
 ges_effect_clip_get_type
 ges_standard_effect_clip_get_type
 ges_uri_clip_get_type

@@ -99,7 +99,7 @@ make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
   GESClip *srca, *srcb;
   GESTimelinePipeline *pipeline;
   guint64 aduration, bduration, tduration, tstart, ainpoint, binpoint;
-  GESStandardTransitionClip *tr = NULL;
+  GESTransitionClip *tr = NULL;
 
   pipeline = ges_timeline_pipeline_new ();
 
@@ -137,7 +137,7 @@ make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
     g_print ("creating transition at %" GST_TIME_FORMAT " of %f duration (%"
         GST_TIME_FORMAT ")\n", GST_TIME_ARGS (tstart), tdur,
         GST_TIME_ARGS (tduration));
-    if (!(tr = ges_standard_transition_clip_new_for_nick (nick)))
+    if (!(tr = ges_transition_clip_new_for_nick (nick)))
       g_error ("invalid transition type %s\n", nick);
 
     g_object_set (tr,

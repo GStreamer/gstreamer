@@ -57,7 +57,7 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-title-clip.xml"/>
     <xi:include href="xml/ges-test-clip.xml"/>
     <xi:include href="xml/ges-text-overlay-clip.xml"/>
-    <xi:include href="xml/ges-standard-transition-clip.xml"/>
+    <xi:include href="xml/ges-transition-clip.xml"/>
     <xi:include href="xml/ges-standard-effect-clip.xml"/>
   </chapter>
 

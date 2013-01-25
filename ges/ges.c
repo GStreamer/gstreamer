@@ -74,7 +74,7 @@ ges_init (void)
   GES_TYPE_TEST_CLIP;
   GES_TYPE_URI_CLIP;
   GES_TYPE_TITLE_CLIP;
-  GES_TYPE_STANDARD_TRANSITION_CLIP;
+  GES_TYPE_TRANSITION_CLIP;
   GES_TYPE_OVERLAY_CLIP;
 
   /* register formatter types with the system */

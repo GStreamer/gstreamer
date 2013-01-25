@@ -27,7 +27,7 @@
 #include "ges-internal.h"
 #include "ges-asset.h"
 #include "ges-meta-container.h"
-#include "ges-standard-transition-clip.h"
+#include "ges-transition-clip.h"
 
 #define C_ENUM(v) ((guint) v)
 
@@ -525,7 +525,7 @@ _init_standard_transition_assets (void)
   guint i;
 
   for (i = 1; i < G_N_ELEMENTS (transition_types) - 1; i++) {
-    GESAsset *asset = ges_asset_request (GES_TYPE_STANDARD_TRANSITION_CLIP,
+    GESAsset *asset = ges_asset_request (GES_TYPE_TRANSITION_CLIP,
         transition_types[i].value_nick, NULL);
 
     ges_meta_container_register_meta_string (GES_META_CONTAINER (asset),

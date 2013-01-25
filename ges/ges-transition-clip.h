@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_STANDARD_TRANSITION_CLIP
-#define _GES_STANDARD_TRANSITION_CLIP
+#ifndef _GES_TRANSITION_CLIP
+#define _GES_TRANSITION_CLIP
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -27,31 +27,31 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_STANDARD_TRANSITION_CLIP ges_standard_transition_clip_get_type()
+#define GES_TYPE_TRANSITION_CLIP ges_transition_clip_get_type()
 
-#define GES_STANDARD_TRANSITION_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_STANDARD_TRANSITION_CLIP, GESStandardTransitionClip))
+#define GES_TRANSITION_CLIP(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRANSITION_CLIP, GESTransitionClip))
 
-#define GES_STANDARD_TRANSITION_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_STANDARD_TRANSITION_CLIP, GESStandardTransitionClipClass))
+#define GES_TRANSITION_CLIP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRANSITION_CLIP, GESTransitionClipClass))
 
-#define GES_IS_STANDARD_TRANSITION_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_STANDARD_TRANSITION_CLIP))
+#define GES_IS_TRANSITION_CLIP(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRANSITION_CLIP))
 
-#define GES_IS_STANDARD_TRANSITION_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_STANDARD_TRANSITION_CLIP))
+#define GES_IS_TRANSITION_CLIP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRANSITION_CLIP))
 
-#define GES_STANDARD_TRANSITION_CLIP_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_STANDARD_TRANSITION_CLIP, GESStandardTransitionClipClass))
+#define GES_TRANSITION_CLIP_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRANSITION_CLIP, GESTransitionClipClass))
 
-typedef struct _GESStandardTransitionClipPrivate GESStandardTransitionClipPrivate;
+typedef struct _GESTransitionClipPrivate GESTransitionClipPrivate;
 
 /**
- * GESStandardTransitionClip:
+ * GESTransitionClip:
  * @vtype: a #GESVideoStandardTransitionType indicating the type of video transition
  * to apply.
  */
-struct _GESStandardTransitionClip {
+struct _GESTransitionClip {
   /*< private >*/
   GESBaseTransitionClip parent;
 
@@ -59,18 +59,18 @@ struct _GESStandardTransitionClip {
   GESVideoStandardTransitionType vtype;
 
   /*< private >*/
-  GESStandardTransitionClipPrivate *priv;
+  GESTransitionClipPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
- * GESStandardTransitionClipClass:
+ * GESTransitionClipClass:
  *
  */
 
-struct _GESStandardTransitionClipClass {
+struct _GESTransitionClipClass {
   /*< private >*/
   GESBaseTransitionClipClass parent_class;
 
@@ -78,11 +78,11 @@ struct _GESStandardTransitionClipClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_standard_transition_clip_get_type (void);
+GType ges_transition_clip_get_type (void);
 
-GESStandardTransitionClip *ges_standard_transition_clip_new (GESVideoStandardTransitionType vtype);
-GESStandardTransitionClip *ges_standard_transition_clip_new_for_nick (char *nick);
+GESTransitionClip *ges_transition_clip_new (GESVideoStandardTransitionType vtype);
+GESTransitionClip *ges_transition_clip_new_for_nick (char *nick);
 
 G_END_DECLS
 
-#endif /* _GES_STANDARD_TRANSITION_CLIP */
+#endif /* _GES_TRANSITION_CLIP */

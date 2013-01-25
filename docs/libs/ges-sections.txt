@@ -548,21 +548,21 @@ GES_STANDARD_EFFECT_CLIP_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-standard-transition-clip</FILE>
-<TITLE>GESStandardTransitionClip</TITLE>
-GESStandardTransitionClip
-ges_standard_transition_clip_new
-ges_standard_transition_clip_new_for_nick
+<FILE>ges-transition-clip</FILE>
+<TITLE>GESTransitionClip</TITLE>
+GESTransitionClip
+ges_transition_clip_new
+ges_transition_clip_new_for_nick
 <SUBSECTION Standard>
-GESStandardTransitionClipClass
-GESStandardTransitionClipPrivate
-GES_IS_STANDARD_TRANSITION_CLIP
-GES_IS_STANDARD_TRANSITION_CLIP_CLASS
-GES_STANDARD_TRANSITION_CLIP
-GES_STANDARD_TRANSITION_CLIP_CLASS
-GES_STANDARD_TRANSITION_CLIP_GET_CLASS
-GES_TYPE_STANDARD_TRANSITION_CLIP
-ges_standard_transition_clip_get_type
+GESTransitionClipClass
+GESTransitionClipPrivate
+GES_IS_TRANSITION_CLIP
+GES_IS_TRANSITION_CLIP_CLASS
+GES_TRANSITION_CLIP
+GES_TRANSITION_CLIP_CLASS
+GES_TRANSITION_CLIP_GET_CLASS
+GES_TYPE_TRANSITION_CLIP
+ges_transition_clip_get_type
 </SECTION>
 
 

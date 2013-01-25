@@ -332,12 +332,12 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_is_type (objects->data, GES_TYPE_TEST_CLIP);
 
   transition = objects->next->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
 
   transition = objects->next->next->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
   g_list_free_full (objects, gst_object_unref);
@@ -362,12 +362,12 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_is_type (objects->data, GES_TYPE_TEST_CLIP);
 
   transition = objects->next->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 750);
 
   transition = objects->next->next->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_int (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 750);
   g_list_free_full (objects, gst_object_unref);
@@ -522,14 +522,14 @@ GST_START_TEST (test_single_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 600);
   assert_equals_uint64 (_DURATION (transition), 1250 - 600);
   ASSERT_OBJECT_REFCOUNT (transition, "The layer and ourself own a ref", 2);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 600);
   assert_equals_uint64 (_DURATION (transition), 1250 - 600);
   ASSERT_OBJECT_REFCOUNT (transition, "The layer and ourself own a ref", 2);
@@ -539,14 +539,14 @@ GST_START_TEST (test_single_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1250);
   assert_equals_uint64 (_DURATION (transition), 1400 - 1250);
   ASSERT_OBJECT_REFCOUNT (transition, "The layer and ourself own a ref", 2);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1250);
   assert_equals_uint64 (_DURATION (transition), 1400 - 1250);
   ASSERT_OBJECT_REFCOUNT (transition, "The layer and ourself own a ref", 2);
@@ -569,7 +569,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_DURATION (src2), 1000);
 
   /* We check that the transition as actually been freed */
-  fail_if (GES_IS_STANDARD_TRANSITION_CLIP (transition));
+  fail_if (GES_IS_TRANSITION_CLIP (transition));
 
   objects = ges_timeline_layer_get_objects (layer);
   assert_equals_int (g_list_length (objects), 3);
@@ -600,13 +600,13 @@ GST_START_TEST (test_single_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1100);
   assert_equals_uint64 (_DURATION (transition), 1250 - 1100);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1100);
   assert_equals_uint64 (_DURATION (transition), 1250 - 1100);
 
@@ -641,25 +641,25 @@ GST_START_TEST (test_single_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1000);
   assert_equals_uint64 (_DURATION (transition), 1100 - 1000);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1000);
   assert_equals_uint64 (_DURATION (transition), 1100 - 1000);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1000);
   assert_equals_uint64 (_DURATION (transition), 1250 - 1000);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1000);
   assert_equals_uint64 (_DURATION (transition), 1250 - 1000);
 
@@ -737,13 +737,13 @@ GST_START_TEST (test_multi_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
   g_list_free_full (objects, gst_object_unref);
@@ -781,13 +781,13 @@ GST_START_TEST (test_multi_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
   g_list_free_full (objects, gst_object_unref);
@@ -829,13 +829,13 @@ GST_START_TEST (test_multi_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
   g_list_free_full (objects, gst_object_unref);
@@ -848,13 +848,13 @@ GST_START_TEST (test_multi_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
   g_list_free_full (objects, gst_object_unref);
@@ -887,13 +887,13 @@ GST_START_TEST (test_multi_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
   g_list_free_full (objects, gst_object_unref);
@@ -935,13 +935,13 @@ GST_START_TEST (test_multi_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
 
@@ -950,13 +950,13 @@ GST_START_TEST (test_multi_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1000);
   assert_equals_uint64 (_DURATION (transition), 1500 - 1000);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1000);
   assert_equals_uint64 (_DURATION (transition), 1500 - 1000);
 
@@ -1001,13 +1001,13 @@ GST_START_TEST (test_multi_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1000);
   assert_equals_uint64 (_DURATION (transition), 500);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1000);
   assert_equals_uint64 (_DURATION (transition), 500);
 
@@ -1052,13 +1052,13 @@ GST_START_TEST (test_multi_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1000);
   assert_equals_uint64 (_DURATION (transition), 500);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1000);
   assert_equals_uint64 (_DURATION (transition), 500);
 
@@ -1067,13 +1067,13 @@ GST_START_TEST (test_multi_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1500);
   assert_equals_uint64 (_DURATION (transition), 500);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1500);
   assert_equals_uint64 (_DURATION (transition), 500);
 
@@ -1117,13 +1117,13 @@ GST_START_TEST (test_multi_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1000);
   assert_equals_uint64 (_DURATION (transition), 1700 - 1000);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1000);
   assert_equals_uint64 (_DURATION (transition), 1700 - 1000);
 
@@ -1132,13 +1132,13 @@ GST_START_TEST (test_multi_layer_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1700);
   assert_equals_uint64 (_DURATION (transition), 2000 - 1700);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1700);
   assert_equals_uint64 (_DURATION (transition), 2000 - 1700);
 
@@ -1172,7 +1172,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
 
   asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   transition_asset =
-      ges_asset_request (GES_TYPE_STANDARD_TRANSITION_CLIP, "crossfade", NULL);
+      ges_asset_request (GES_TYPE_TRANSITION_CLIP, "crossfade", NULL);
   fail_unless (GES_IS_ASSET (asset));
 
   GST_DEBUG ("Create timeline");
@@ -1229,7 +1229,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
   transition =
       GES_CLIP (ges_timeline_layer_add_asset (layer,
           transition_asset, 1000, 0, 500, 1, GES_TRACK_TYPE_VIDEO));
-  fail_unless (GES_IS_STANDARD_TRANSITION_CLIP (transition));
+  fail_unless (GES_IS_TRANSITION_CLIP (transition));
   objects = ges_clip_get_track_objects (transition);
   assert_equals_int (g_list_length (objects), 1);
   g_list_free_full (objects, gst_object_unref);
@@ -1247,7 +1247,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
   current = current->next;
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   current = current->next;
-  assert_is_type (current->data, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (current->data, GES_TYPE_TRANSITION_CLIP);
   current = current->next;
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   current = current->next;
@@ -1279,13 +1279,13 @@ GST_START_TEST (test_layer_activate_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
 
@@ -1294,13 +1294,13 @@ GST_START_TEST (test_layer_activate_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1000);
   assert_equals_uint64 (_DURATION (transition), 500);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1000);
   assert_equals_uint64 (_DURATION (transition), 500);
 
@@ -1339,13 +1339,13 @@ GST_START_TEST (test_layer_activate_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 500);
   assert_equals_uint64 (_DURATION (transition), 500);
 
@@ -1354,13 +1354,13 @@ GST_START_TEST (test_layer_activate_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1200);
   assert_equals_uint64 (_DURATION (transition), 300);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 1200);
   assert_equals_uint64 (_DURATION (transition), 300);
 
@@ -1369,13 +1369,13 @@ GST_START_TEST (test_layer_activate_automatic_transition)
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 2000);
   assert_equals_uint64 (_DURATION (transition), 200);
 
   current = current->next;
   transition = current->data;
-  assert_is_type (transition, GES_TYPE_STANDARD_TRANSITION_CLIP);
+  assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
   assert_equals_uint64 (_START (transition), 2000);
   assert_equals_uint64 (_DURATION (transition), 200);
 
