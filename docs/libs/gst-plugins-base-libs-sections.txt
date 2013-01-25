@@ -86,11 +86,27 @@ GstAudioFormat
 GstAudioFormatFlags
 GstAudioFormatInfo
 GstAudioInfo
+GstAudioLayout
+GstAudioPackFlags
+GstAudioFormatPack
+GstAudioFormatUnpack
+
 gst_audio_info_init
 gst_audio_info_from_caps
 gst_audio_info_to_caps
 gst_audio_info_convert
 gst_audio_format_get_info
+
+gst_audio_info_copy
+gst_audio_info_free
+gst_audio_info_new
+gst_audio_info_set_format
+
+gst_audio_format_build_integer
+gst_audio_format_fill_silence
+gst_audio_format_from_string
+gst_audio_format_to_string
+
 GST_AUDIO_FORMAT_INFO_DEPTH
 GST_AUDIO_FORMAT_INFO_ENDIANNESS
 GST_AUDIO_FORMAT_INFO_FLAGS
@@ -113,6 +129,15 @@ GST_AUDIO_INFO_NAME
 GST_AUDIO_INFO_POSITION
 GST_AUDIO_INFO_RATE
 GST_AUDIO_INFO_WIDTH
+GST_AUDIO_INFO_ENDIANNESS
+GST_AUDIO_INFO_IS_BIG_ENDIAN
+GST_AUDIO_INFO_IS_FLOAT
+GST_AUDIO_INFO_IS_INTEGER
+GST_AUDIO_INFO_IS_LITTLE_ENDIAN
+GST_AUDIO_INFO_IS_SIGNED
+GST_AUDIO_INFO_IS_UNPOSITIONED
+GST_AUDIO_INFO_IS_VALID
+GST_AUDIO_INFO_LAYOUT
 
 GST_FRAMES_TO_CLOCK_TIME
 GST_CLOCK_TIME_TO_FRAMES
@@ -121,8 +146,20 @@ gst_audio_buffer_clip
 <SUBSECTION Standard>
 GST_TYPE_BUFFER_FORMAT
 GST_TYPE_BUFFER_FORMAT_TYPE
+GST_TYPE_AUDIO_FORMAT
+GST_TYPE_AUDIO_FORMAT_FLAGS
+GST_TYPE_AUDIO_FLAGS
+GST_TYPE_AUDIO_LAYOUT
+GST_TYPE_AUDIO_PACK_FLAGS
 gst_buffer_format_get_type
 gst_buffer_format_type_get_type
+gst_audio_info_get_type
+gst_audio_flags_get_type
+gst_audio_format_flags_get_type
+gst_audio_format_get_type
+gst_audio_format_info_get_type
+gst_audio_layout_get_type
+gst_audio_pack_flags_get_type
 <SUBSECTION Private>
 _GST_AUDIO_FORMAT_NE
 </SECTION>
@@ -214,6 +251,7 @@ GST_AUDIO_DECODER_CLASS
 GST_IS_AUDIO_DECODER_CLASS
 GST_AUDIO_DECODER_GET_CLASS
 GstAudioDecoderPrivate
+GST_AUDIO_DECODER_CAST
 </SECTION>
 
 <SECTION>
@@ -284,6 +322,14 @@ GST_AUDIO_FILTER_CLASS
 GST_IS_AUDIO_FILTER_CLASS
 GST_AUDIO_FILTER_CAST
 GST_AUDIO_FILTER_CLASS_CAST
+GST_AUDIO_FILTER_GET_CLASS
+<SUBSECTION Private>
+GST_AUDIO_FILTER_BPF
+GST_AUDIO_FILTER_BPS
+GST_AUDIO_FILTER_CHANNELS
+GST_AUDIO_FILTER_FORMAT
+GST_AUDIO_FILTER_INFO
+GST_AUDIO_FILTER_RATE
 </SECTION>
 
 <SECTION>
@@ -337,8 +383,12 @@ gst_audio_base_sink_set_provide_clock
 gst_audio_base_sink_get_provide_clock
 gst_audio_base_sink_set_slave_method
 gst_audio_base_sink_get_slave_method
-gst_audio_base_sink_get_drift_tolerance
 gst_audio_base_sink_set_drift_tolerance
+gst_audio_base_sink_get_drift_tolerance
+gst_audio_base_sink_set_alignment_threshold
+gst_audio_base_sink_get_alignment_threshold
+gst_audio_base_sink_set_discont_wait
+gst_audio_base_sink_get_discont_wait
 <SUBSECTION Standard>
 GST_AUDIO_BASE_SINK
 GST_IS_AUDIO_BASE_SINK
@@ -444,6 +494,10 @@ gst_audio_ring_buffer_may_start
 gst_audio_ring_buffer_parse_caps
 gst_audio_ring_buffer_set_flushing
 
+gst_audio_ring_buffer_is_flushing
+gst_audio_ring_buffer_set_channel_positions
+gst_audio_ring_buffer_set_timestamp
+
 <SUBSECTION Standard>
 GST_TYPE_AUDIO_RING_BUFFER
 GST_AUDIO_RING_BUFFER
@@ -457,6 +511,8 @@ GST_TYPE_AUDIO_RING_BUFFER_SEG_STATE
 gst_audio_ring_buffer_seg_state_get_type
 GST_TYPE_AUDIO_RING_BUFFER_STATE
 gst_audio_ring_buffer_state_get_type
+GST_TYPE_AUDIO_RING_BUFFER_FORMAT_TYPE
+gst_audio_ring_buffer_format_type_get_type
 <SUBSECTION Private>
 gst_audio_ring_buffer_debug_spec_buff
 gst_audio_ring_buffer_debug_spec_caps
@@ -734,6 +790,7 @@ gst_video_overlay_prepare_window_handle
 gst_video_overlay_expose
 gst_video_overlay_handle_events
 gst_video_overlay_set_render_rectangle
+gst_is_video_overlay_prepare_window_handle_message
 <SUBSECTION Standard>
 GST_TYPE_VIDEO_OVERLAY
 GST_VIDEO_OVERLAY
@@ -1067,6 +1124,7 @@ gst_rtcp_buffer_new_copy_data
 gst_rtcp_buffer_validate_data
 gst_rtcp_buffer_validate
 
+GstRTCPBuffer
 gst_rtcp_buffer_new
 gst_rtcp_buffer_map
 gst_rtcp_buffer_unmap
@@ -1198,6 +1256,10 @@ gst_rtp_buffer_new_copy_data
 gst_rtp_buffer_new_allocate
 gst_rtp_buffer_new_allocate_len
 
+GstRTPBuffer
+gst_rtp_buffer_map
+gst_rtp_buffer_unmap
+
 gst_rtp_buffer_calc_header_len
 gst_rtp_buffer_calc_packet_len
 gst_rtp_buffer_calc_payload_len
@@ -1251,6 +1313,15 @@ gst_rtp_buffer_get_extension_onebyte_header
 gst_rtp_buffer_get_extension_twobytes_header
 gst_rtp_buffer_add_extension_onebyte_header
 gst_rtp_buffer_add_extension_twobytes_header
+</SECTION>
+
+<SECTION>
+<FILE>gstrtphdrext</FILE>
+<INCLUDE>gst/rtp/gstrtphdrext.h</INCLUDE>
+gst_rtp_hdrext_get_ntp_56
+gst_rtp_hdrext_get_ntp_64
+gst_rtp_hdrext_set_ntp_56
+gst_rtp_hdrext_set_ntp_64
 </SECTION>
 
 # rtsp
@@ -1326,6 +1397,7 @@ gst_rtsp_lower_trans_get_type
 GstRTSPConnection
 gst_rtsp_connection_create
 gst_rtsp_connection_create_from_fd
+gst_rtsp_connection_create_from_socket
 gst_rtsp_connection_accept
 gst_rtsp_connection_connect
 gst_rtsp_connection_close
@@ -1365,6 +1437,9 @@ gst_rtsp_connection_get_writefd
 gst_rtsp_connection_set_http_mode
 gst_rtsp_connection_set_proxy
 
+gst_rtsp_connection_get_read_socket
+gst_rtsp_connection_get_write_socket
+
 GstRTSPWatch
 GstRTSPWatchFuncs
 gst_rtsp_watch_new
@@ -1373,6 +1448,8 @@ gst_rtsp_watch_attach
 gst_rtsp_watch_reset
 gst_rtsp_watch_send_message
 gst_rtsp_watch_write_data
+gst_rtsp_watch_get_send_backlog
+gst_rtsp_watch_set_send_backlog
 </SECTION>
 
 <SECTION>
@@ -1453,6 +1530,7 @@ GstRTSPTimeRange
 GstRTSPTime
 GstRTSPTimeType
 gst_rtsp_range_parse
+gst_rtsp_range_get_times
 gst_rtsp_range_to_string
 gst_rtsp_range_free
 </SECTION>
@@ -1619,6 +1697,7 @@ gst_tag_from_vorbis_tag
 gst_tag_to_vorbis_tag
 gst_vorbis_tag_add
 gst_tag_to_vorbis_comments
+gst_tag_list_from_vorbiscomment
 <SUBSECTION>
 gst_tag_list_from_vorbiscomment_buffer
 gst_tag_list_to_vorbiscomment_buffer
@@ -1854,6 +1933,7 @@ gst_encoding_profile_get_preset
 gst_encoding_profile_get_preset_name
 gst_encoding_profile_get_presence
 gst_encoding_profile_get_restriction
+gst_encoding_profile_get_file_extension
 gst_encoding_profile_set_name
 gst_encoding_profile_set_description
 gst_encoding_profile_set_format
@@ -1943,6 +2023,9 @@ gst_video_calculate_display_ratio
 GstVideoConvertSampleCallback
 gst_video_convert_sample
 gst_video_convert_sample_async
+
+GstVideoAlignment
+gst_video_alignment_reset
 
 #video-event.h
 <SUBSECTION>
@@ -2078,6 +2161,7 @@ gst_video_info_from_caps
 gst_video_info_to_caps
 gst_video_info_convert
 gst_video_info_is_equal
+gst_video_info_align
 <SUBSECTION Standard>
 gst_video_interlace_mode_get_type
 GST_TYPE_VIDEO_INTERLACE_MODE
@@ -2134,6 +2218,49 @@ GST_TYPE_NAVIGATION_EVENT_TYPE
 
 </SECTION>
 
+<SECTION>
+<FILE>gstvideopool</FILE>
+<INCLUDE>gst/video/gstvideopool.h</INCLUDE>
+GstVideoBufferPool
+GstVideoBufferPoolClass
+gst_video_buffer_pool_new
+gst_buffer_pool_config_get_video_alignment
+gst_buffer_pool_config_set_video_alignment
+<SUBSECTION Standard>
+GST_TYPE_VIDEO_BUFFER_POOL
+GST_VIDEO_BUFFER_POOL
+GST_VIDEO_BUFFER_POOL_CAST
+GST_IS_VIDEO_BUFFER_POOL
+GstVideoBufferPoolPrivate
+gst_video_buffer_pool_get_type
+</SECTION>
+
+
+<SECTION>
+<FILE>gstvideometa</FILE>
+<INCLUDE>>gst/video/gstvideometa.h</INCLUDE>
+GstVideoMeta
+gst_video_meta_map
+gst_video_meta_unmap
+gst_video_meta_get_info
+gst_buffer_add_video_meta
+gst_buffer_add_video_meta_full
+gst_buffer_get_video_meta
+gst_buffer_get_video_meta_id
+GstVideoCropMeta
+gst_buffer_add_video_crop_meta
+gst_buffer_get_video_crop_meta
+<SUBSECTION Standard>
+gst_video_crop_meta_api_get_type
+gst_video_meta_api_get_type
+GST_VIDEO_CROP_META_API_TYPE
+GST_VIDEO_CROP_META_INFO
+GST_VIDEO_META_API_TYPE
+GST_VIDEO_META_INFO
+GST_VIDEO_META_TRANSFORM_IS_SCALE
+gst_video_meta_transform_scale_get_quark
+gst_video_crop_meta_get_info
+</SECTION>
 
 <SECTION>
 <FILE>gstvideooverlaycomposition</FILE>
@@ -2151,9 +2278,14 @@ gst_video_overlay_composition_get_seqnum
 gst_video_overlay_composition_copy
 gst_video_overlay_composition_make_writable
 gst_video_overlay_composition_blend
+
 <SUBSECTION composition-set-get>
-gst_video_buffer_get_overlay_composition
-gst_video_buffer_set_overlay_composition
+GstVideoOverlayCompositionMeta:
+gst_video_overlay_composition_meta_get_info
+gst_buffer_add_video_overlay_composition_meta
+gst_buffer_get_video_overlay_composition_meta
+gst_buffer_remove_video_overlay_composition_meta
+
 <SUBSECTION rectangle>
 GstVideoOverlayFormatFlags
 GstVideoOverlayRectangle
@@ -2172,6 +2304,8 @@ gst_video_overlay_rectangle_get_seqnum
 gst_video_overlay_rectangle_set_render_rectangle
 gst_video_overlay_rectangle_copy
 gst_video_overlay_rectangle_get_flags
+gst_video_overlay_rectangle_get_global_alpha
+gst_video_overlay_rectangle_set_global_alpha
 <SUBSECTION Standard>
 GST_TYPE_VIDEO_OVERLAY_COMPOSITION
 GST_VIDEO_OVERLAY_COMPOSITION
@@ -2179,7 +2313,9 @@ GST_VIDEO_OVERLAY_COMPOSITION_CLASS
 GST_VIDEO_OVERLAY_COMPOSITION_GET_CLASS
 GST_IS_VIDEO_OVERLAY_COMPOSITION
 GST_IS_VIDEO_VIDEO_OVERLAY_COMPOSITION_CLASS
+GST_VIDEO_OVERLAY_COMPOSITION_CAST
 gst_video_overlay_composition_get_type
+gst_video_overlay_composition_meta_api_get_type
 
 GST_TYPE_VIDEO_OVERLAY_RECTANGLE
 GST_VIDEO_OVERLAY_RECTANGLE
@@ -2203,6 +2339,7 @@ GST_VIDEO_FILTER_GET_CLASS
 GST_IS_VIDEO_FILTER
 GST_IS_VIDEO_FILTER_CLASS
 gst_video_filter_get_type
+GST_VIDEO_FILTER_CAST
 </SECTION>
 
 <SECTION>
@@ -2483,4 +2620,16 @@ ngettext
 textdomain
 _
 N_
+inline
+orc_int16
+orc_int32
+orc_int64
+orc_int8
+orc_uint16
+orc_uint32
+orc_uint64
+orc_uint8
+ORC_UINT64_C
+gst_audio_marshal_VOID__OBJECT_INT
+gst_audio_marshal_VOID__OBJECT_ULONG
 </SECTION>
