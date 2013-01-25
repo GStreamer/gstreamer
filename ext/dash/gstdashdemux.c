@@ -452,7 +452,7 @@ gst_dash_demux_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-void
+static void
 gst_dash_demux_clear_queue (GstDashDemux * demux)
 {
   while (!g_queue_is_empty (demux->queue)) {
@@ -546,7 +546,8 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
         chunk = list->data;
         current_pos = chunk->start_time;
         //current_sequence = chunk->number;
-        GST_WARNING_OBJECT (demux, "%i <= %i (%i)", current_pos, target_pos, chunk->duration);
+        GST_WARNING_OBJECT (demux, "%i <= %i (%i)", current_pos, target_pos,
+            chunk->duration);
         if (current_pos <= target_pos
             && target_pos < current_pos + chunk->duration) {
           break;
@@ -645,9 +646,9 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
 
   for (i = 0; i < nb_audio; i++) {
     lang = (gchar *) g_list_nth_data (listLang, i);
-    GST_INFO ("nb adaptation set: %i", gst_mpdparser_get_nb_adaptationSet (demux->client));
-    if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_AUDIO,
-            lang))
+    GST_INFO ("nb adaptation set: %i",
+        gst_mpdparser_get_nb_adaptationSet (demux->client));
+    if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_AUDIO, lang))
       GST_INFO_OBJECT (demux, "No audio adaptation set found");
 
     if (gst_mpdparser_get_nb_adaptationSet (demux->client) > nb_audio)
@@ -792,8 +793,8 @@ gst_dash_demux_src_query (GstPad * pad, GstQuery * query)
       gint64 stop = -1;
 
       gst_query_parse_seeking (query, &fmt, NULL, &start, &end);
-      GST_DEBUG_OBJECT (dashdemux, "Received GST_QUERY_SEEKING with format %d - %i %i",
-          fmt, start, end);
+      GST_DEBUG_OBJECT (dashdemux,
+          "Received GST_QUERY_SEEKING with format %d - %i %i", fmt, start, end);
       if (fmt == GST_FORMAT_TIME) {
         GstClockTime duration;
 
@@ -923,20 +924,21 @@ static gboolean
 needs_pad_switch (GstDashDemux * demux, GList * fragment)
 {
 
+  GstCaps *srccaps = NULL;
   gboolean switch_pad = FALSE;
   guint i = 0;
+
   while (i < g_list_length (fragment)) {
     GstFragment *newFragment = g_list_nth_data (fragment, i);
     if (newFragment == NULL) {
       continue;
     }
-    GstCaps *srccaps = NULL;
     demux->output_caps[i] = gst_fragment_get_caps (newFragment);
     if (G_LIKELY (demux->srcpad[i]))
       srccaps = gst_pad_get_negotiated_caps (demux->srcpad[i]);
     if (G_UNLIKELY (!srccaps
             || (!gst_caps_is_equal_fixed (demux->output_caps[i], srccaps)))
-            || demux->need_segment) {
+        || demux->need_segment) {
       switch_pad = TRUE;
     }
     if (G_LIKELY (srccaps))
@@ -974,6 +976,8 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   GstBufferList *buffer_list;
   guint nb_adaptation_set = 0;
   GstActiveStream *stream;
+  gboolean switch_pad;
+  guint i = 0;
 
   /* Wait until the next scheduled push downstream */
   if (g_cond_timed_wait (GST_TASK_GET_COND (demux->stream_task),
@@ -994,7 +998,8 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
         demux->min_buffering_time) {
       /* Warn we are below our threshold: this will eventually pause 
        * the pipeline */
-      GST_WARNING ("Below the threshold: this will eventually pause the pipeline");
+      GST_WARNING
+          ("Below the threshold: this will eventually pause the pipeline");
       gst_element_post_message (GST_ELEMENT (demux),
           gst_message_new_buffering (GST_OBJECT (demux),
               100 * gst_dash_demux_get_buffering_ratio (demux)));
@@ -1003,13 +1008,12 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   listfragment = g_queue_pop_head (demux->queue);
   nb_adaptation_set = g_list_length (listfragment);
   /* Figure out if we need to create/switch pads */
-  gboolean switch_pad = needs_pad_switch (demux, listfragment);
+  switch_pad = needs_pad_switch (demux, listfragment);
   if (switch_pad) {
     GST_WARNING ("Switching pads");
     switch_pads (demux, nb_adaptation_set);
     demux->need_segment = TRUE;
   }
-  guint i = 0;
   for (i = 0; i < nb_adaptation_set; i++) {
     GstFragment *fragment = g_list_nth_data (listfragment, i);
     stream = gst_mpdparser_get_active_stream_by_index (demux->client, i);
@@ -1023,7 +1027,8 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
               start, GST_CLOCK_TIME_NONE, start));
     }
 
-    GST_DEBUG_OBJECT (demux, "Pushing fragment #%d (stream %i)", fragment->index, i);
+    GST_DEBUG_OBJECT (demux, "Pushing fragment #%d (stream %i)",
+        fragment->index, i);
     buffer_list = gst_fragment_get_buffer_list (fragment);
     g_object_unref (fragment);
     ret = gst_pad_push_list (demux->srcpad[i], buffer_list);
@@ -1039,7 +1044,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
     g_get_current_time (&demux->next_push);
     g_time_val_add (&demux->next_push,
         (gst_mpd_client_get_next_fragment_duration (demux->client) -
-         demux->last_position_shift) / GST_SECOND * G_USEC_PER_SEC);
+            demux->last_position_shift) / GST_SECOND * G_USEC_PER_SEC);
     GST_DEBUG_OBJECT (demux, "Next push scheduled at %s",
         g_time_val_to_iso8601 (&demux->next_push));
     demux->last_position_shift = 0;
@@ -1056,7 +1061,6 @@ quit:
 end_of_manifest:
   {
     GST_INFO_OBJECT (demux, "Reached end of manifest, sending EOS");
-    guint i = 0;
     for (i = 0; i < gst_mpdparser_get_nb_active_stream (demux->client); i++) {
       gst_pad_push_event (demux->srcpad[i], gst_event_new_eos ());
     }
@@ -1086,11 +1090,12 @@ pause_streaming:
 static void
 gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
 {
+  guint i = 0;
+
   demux->end_of_period = FALSE;
   demux->end_of_manifest = FALSE;
   demux->cancelled = FALSE;
 
-  guint i = 0;
   for (i = 0; i < MAX_LANGUAGES; i++)
     if (demux->input_caps[i]) {
       gst_caps_unref (demux->input_caps[i]);
@@ -1211,6 +1216,7 @@ gst_dash_demux_merge_buffer_list (GstFragment * fragment)
 void
 gst_dash_demux_download_loop (GstDashDemux * demux)
 {
+  GstClockTime target_buffering_time;
   GstClock *clock = gst_element_get_clock (GST_ELEMENT (demux));
   gint64 update_period = demux->client->mpd_node->minimumUpdatePeriod;
 
@@ -1302,7 +1308,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
    * by the duration of a fragment, but SHOULD NOT exceed maximum
    * buffering time */
   GST_DEBUG_OBJECT (demux, "download loop %i", demux->end_of_manifest);
-  GstClockTime target_buffering_time =
+  target_buffering_time =
       demux->min_buffering_time +
       gst_mpd_client_get_next_fragment_duration (demux->client);
   if (demux->max_buffering_time > target_buffering_time)
@@ -1512,6 +1518,7 @@ static GstFragment *
 gst_dash_demux_prepend_header (GstDashDemux * demux,
     GstFragment * frag, GstFragment * header)
 {
+  GstBufferList *list;
   GstFragment *res = gst_fragment_new ();
   res->name = g_strdup (frag->name);
   res->download_start_time = frag->download_start_time;
@@ -1521,7 +1528,6 @@ gst_dash_demux_prepend_header (GstDashDemux * demux,
   res->index = frag->index;
   res->discontinuous = frag->discontinuous;
 
-  GstBufferList *list;
   list = gst_fragment_get_buffer_list (header);
   gst_buffer_list_foreach (list, gst_dash_demux_add_buffer_cb, res);
   gst_buffer_list_unref (list);
@@ -1678,16 +1684,19 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
   GTimeVal start;
   GstClockTime diff;
   guint64 size_buffer = 0;
+  gboolean need_header;
+  guint stream_idx = 0;
 
   g_get_current_time (&start);
   /* Figure out if we will need to switch pads, thus requiring a new
    * header to initialize the new decoding chain
    * FIXME: redundant with needs_pad_switch */
-  gboolean need_header = need_add_header (demux);
-  guint stream_idx = 0;
+  need_header = need_add_header (demux);
   fragment_set = NULL;
   /* Get the fragment corresponding to each stream index */
   while (stream_idx < gst_mpdparser_get_nb_active_stream (demux->client)) {
+    GstCaps *caps;
+
     if (!gst_mpd_client_get_next_fragment (demux->client,
             stream_idx, &discont, &next_fragment_uri, &duration, &timestamp)) {
       GST_INFO_OBJECT (demux, "This Period doesn't contain more fragments");
@@ -1715,7 +1724,7 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
 
     download->index = gst_mpd_client_get_segment_index (stream) - 1;
 
-    GstCaps *caps = gst_dash_demux_get_input_caps (demux, stream);
+    caps = gst_dash_demux_get_input_caps (demux, stream);
 
     if (need_header) {
       /* Store the new input caps for that stream */

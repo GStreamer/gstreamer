@@ -456,7 +456,7 @@ struct _GstMpdClient
 };
 
 /* Basic initialization/deinitialization functions */
-GstMpdClient *gst_mpd_client_new ();
+GstMpdClient *gst_mpd_client_new (void);
 void gst_active_streams_free (GstMpdClient * client);
 void gst_mpd_client_free (GstMpdClient * client);
 
@@ -465,7 +465,7 @@ gboolean gst_mpd_parse (GstMpdClient *client, const gchar *data, gint size);
 
 /* Streaming management */
 gboolean gst_mpd_client_setup_media_presentation (GstMpdClient *client);
-gboolean gst_mpd_client_setup_streaming (GstMpdClient *client, GstStreamMimeType mimeType, gchar* lang);
+gboolean gst_mpd_client_setup_streaming (GstMpdClient *client, GstStreamMimeType mimeType, const gchar* lang);
 gboolean gst_mpd_client_setup_representation (GstMpdClient *client, GstActiveStream *stream, GstRepresentationNode *representation);
 GstClockTime gst_mpd_client_get_current_position (GstMpdClient *client);
 GstClockTime gst_mpd_client_get_next_fragment_duration (GstMpdClient * client);

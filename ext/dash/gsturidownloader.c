@@ -19,6 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <glib.h>
 #include "gstfragmented.h"
 #include "gstfragment.h"
@@ -274,13 +276,17 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri)
     return FALSE;
 
   if (downloader->priv->urisrc == NULL) {
-    GST_DEBUG_OBJECT (downloader, "Creating source element for the URI:%s", uri);
-    downloader->priv->urisrc = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
+    GST_DEBUG_OBJECT (downloader, "Creating source element for the URI:%s",
+        uri);
+    downloader->priv->urisrc =
+        gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
     if (!downloader->priv->urisrc)
       return FALSE;
   } else {
-    GST_DEBUG_OBJECT (downloader, "Reusing existing source element for the URI:%s", uri);
-    if (!gst_uri_handler_set_uri (GST_URI_HANDLER (downloader->priv->urisrc), uri))
+    GST_DEBUG_OBJECT (downloader,
+        "Reusing existing source element for the URI:%s", uri);
+    if (!gst_uri_handler_set_uri (GST_URI_HANDLER (downloader->priv->urisrc),
+            uri))
       return FALSE;
   }
 

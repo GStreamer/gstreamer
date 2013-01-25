@@ -24,7 +24,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <string.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 #include "gstfragmented.h"
 #include "gstmpdparser.h"
 
@@ -109,7 +113,7 @@ static gint convert_to_millisecs (gint decimals, gint pos);
 static int strncmp_ext (const char *s1, const char *s2);
 static GstStreamPeriod *gst_mpdparser_get_stream_period (GstMpdClient * client);
 static gchar *gst_mpdparser_parse_baseURL (GstMpdClient * client,
-    GstActiveStream *stream);
+    GstActiveStream * stream);
 static gchar *gst_mpdparser_get_segmentURL_for_range (gchar * url,
     GstRange * range);
 static gchar *gst_mpdparser_get_mediaURL (GstActiveStream * stream,
@@ -128,13 +132,13 @@ static void gst_mpd_client_set_segment_index (GstActiveStream * stream,
 
 /* Adaptation Set */
 static GstAdaptationSetNode
-    *gst_mpdparser_get_first_adapt_set_with_mimeType (GList * AdaptationSets,
+    * gst_mpdparser_get_first_adapt_set_with_mimeType (GList * AdaptationSets,
     const gchar * mimeType);
 static GstAdaptationSetNode
-    *gst_mpdparser_get_adapt_set_with_mimeType_and_idx (GList * AdaptationSets,
+    * gst_mpdparser_get_adapt_set_with_mimeType_and_idx (GList * AdaptationSets,
     const gchar * mimeType, gint idx);
 static GstAdaptationSetNode
-    *gst_mpdparser_get_first_adapt_set_with_mimeType_and_lang (GList *
+    * gst_mpdparser_get_first_adapt_set_with_mimeType_and_lang (GList *
     AdaptationSets, const gchar * mimeType, const gchar * lang);
 
 /* Representation */
@@ -144,7 +148,7 @@ static GstRepresentationNode *gst_mpdparser_get_lowest_representation (GList *
 static GstRepresentationNode *gst_mpdparser_get_highest_representation (GList *
     Representations);
 static GstRepresentationNode
-    *gst_mpdparser_get_representation_with_max_bandwidth (GList *
+    * gst_mpdparser_get_representation_with_max_bandwidth (GList *
     Representations, gint max_bandwidth);
 #endif
 static GstSegmentBaseType *gst_mpdparser_get_segment_base (GstPeriodNode *
@@ -409,13 +413,13 @@ gst_mpdparser_get_xml_prop_range (xmlNode * a_node, const gchar * property)
     }
     /* read first_byte_pos */
     if (pos != 0) {
-      if (sscanf (str, "%llu", &first_byte_pos) != 1) {
+      if (sscanf (str, "%" G_GUINT64_FORMAT, &first_byte_pos) != 1) {
         goto error;
       }
     }
     /* read last_byte_pos */
     if (pos < (len - 1)) {
-      if (sscanf (str + pos + 1, "%llu", &last_byte_pos) != 1) {
+      if (sscanf (str + pos + 1, "%" G_GUINT64_FORMAT, &last_byte_pos) != 1) {
         goto error;
       }
     }
@@ -955,17 +959,17 @@ gst_mpdparser_parse_content_component_node (GList ** list, xmlNode * a_node)
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if (xmlStrcmp (cur_node->name, (xmlChar *) "Accessibility") == 0) {
-        gst_mpdparser_parse_descriptor_type_node (&new_content_component->
-            Accessibility, cur_node);
+        gst_mpdparser_parse_descriptor_type_node
+            (&new_content_component->Accessibility, cur_node);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "Role") == 0) {
         gst_mpdparser_parse_descriptor_type_node (&new_content_component->Role,
             cur_node);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "Rating") == 0) {
-        gst_mpdparser_parse_descriptor_type_node (&new_content_component->
-            Rating, cur_node);
+        gst_mpdparser_parse_descriptor_type_node
+            (&new_content_component->Rating, cur_node);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "Viewpoint") == 0) {
-        gst_mpdparser_parse_descriptor_type_node (&new_content_component->
-            Viewpoint, cur_node);
+        gst_mpdparser_parse_descriptor_type_node
+            (&new_content_component->Viewpoint, cur_node);
       }
     }
   }
@@ -1161,12 +1165,12 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentTimeline") == 0) {
-        gst_mpdparser_parse_segment_timeline_node (&mult_seg_base_type->
-            SegmentTimeline, cur_node);
+        gst_mpdparser_parse_segment_timeline_node
+            (&mult_seg_base_type->SegmentTimeline, cur_node);
       } else if (xmlStrcmp (cur_node->name,
               (xmlChar *) "BitstreamSwitching") == 0) {
-        gst_mpdparser_parse_url_type_node (&mult_seg_base_type->
-            BitstreamSwitching, cur_node);
+        gst_mpdparser_parse_url_type_node
+            (&mult_seg_base_type->BitstreamSwitching, cur_node);
       }
     }
   }
@@ -1187,8 +1191,8 @@ gst_mpdparser_parse_segment_list_node (GstSegmentListNode ** pointer,
   }
 
   GST_LOG ("extension of SegmentList node:");
-  gst_mpdparser_parse_mult_seg_base_type_ext (&new_segment_list->
-      MultSegBaseType, a_node);
+  gst_mpdparser_parse_mult_seg_base_type_ext
+      (&new_segment_list->MultSegBaseType, a_node);
 
   /* explore children nodes */
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -1248,16 +1252,16 @@ gst_mpdparser_parse_representation_base_type (GstRepresentationBaseType **
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if (xmlStrcmp (cur_node->name, (xmlChar *) "FramePacking") == 0) {
-        gst_mpdparser_parse_descriptor_type_node (&representation_base->
-            FramePacking, cur_node);
+        gst_mpdparser_parse_descriptor_type_node
+            (&representation_base->FramePacking, cur_node);
       } else if (xmlStrcmp (cur_node->name,
               (xmlChar *) "AudioChannelConfiguration") == 0) {
-        gst_mpdparser_parse_descriptor_type_node (&representation_base->
-            AudioChannelConfiguration, cur_node);
+        gst_mpdparser_parse_descriptor_type_node
+            (&representation_base->AudioChannelConfiguration, cur_node);
       } else if (xmlStrcmp (cur_node->name,
               (xmlChar *) "ContentProtection") == 0) {
-        gst_mpdparser_parse_descriptor_type_node (&representation_base->
-            ContentProtection, cur_node);
+        gst_mpdparser_parse_descriptor_type_node
+            (&representation_base->ContentProtection, cur_node);
       }
     }
   }
@@ -1289,8 +1293,8 @@ gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node)
       "mediaStreamStructureId");
 
   /* RepresentationBase extension */
-  gst_mpdparser_parse_representation_base_type (&new_representation->
-      RepresentationBase, a_node);
+  gst_mpdparser_parse_representation_base_type
+      (&new_representation->RepresentationBase, a_node);
 
   /* explore children nodes */
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -1299,8 +1303,8 @@ gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node)
         gst_mpdparser_parse_seg_base_type_ext (&new_representation->SegmentBase,
             cur_node);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentTemplate") == 0) {
-        gst_mpdparser_parse_segment_template_node (&new_representation->
-            SegmentTemplate, cur_node);
+        gst_mpdparser_parse_segment_template_node
+            (&new_representation->SegmentTemplate, cur_node);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentList") == 0) {
         gst_mpdparser_parse_segment_list_node (&new_representation->SegmentList,
             cur_node);
@@ -1309,8 +1313,8 @@ gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node)
             cur_node);
       } else if (xmlStrcmp (cur_node->name,
               (xmlChar *) "SubRepresentation") == 0) {
-        gst_mpdparser_parse_subrepresentation_node (&new_representation->
-            SubRepresentations, cur_node);
+        gst_mpdparser_parse_subrepresentation_node
+            (&new_representation->SubRepresentations, cur_node);
       }
     }
   }
@@ -1364,8 +1368,8 @@ gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node)
       gst_mpdparser_get_xml_prop_boolean (a_node, "bitstreamSwitching");
 
   /* RepresentationBase extension */
-  gst_mpdparser_parse_representation_base_type (&new_adap_set->
-      RepresentationBase, a_node);
+  gst_mpdparser_parse_representation_base_type
+      (&new_adap_set->RepresentationBase, a_node);
 
   /* explore children nodes */
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -1395,11 +1399,11 @@ gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node)
             cur_node);
       } else if (xmlStrcmp (cur_node->name,
               (xmlChar *) "ContentComponent") == 0) {
-        gst_mpdparser_parse_content_component_node (&new_adap_set->
-            ContentComponents, cur_node);
+        gst_mpdparser_parse_content_component_node
+            (&new_adap_set->ContentComponents, cur_node);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentTemplate") == 0) {
-        gst_mpdparser_parse_segment_template_node (&new_adap_set->
-            SegmentTemplate, cur_node);
+        gst_mpdparser_parse_segment_template_node
+            (&new_adap_set->SegmentTemplate, cur_node);
       }
     }
   }
@@ -1437,8 +1441,8 @@ gst_mpdparser_parse_segment_template_node (GstSegmentTemplateNode ** pointer,
   }
 
   GST_LOG ("extension of SegmentTemplate node:");
-  gst_mpdparser_parse_mult_seg_base_type_ext (&new_segment_template->
-      MultSegBaseType, a_node);
+  gst_mpdparser_parse_mult_seg_base_type_ext
+      (&new_segment_template->MultSegBaseType, a_node);
 
   GST_LOG ("attributes of SegmentTemplate node:");
   new_segment_template->media =
@@ -1684,7 +1688,7 @@ gst_mpdparser_get_first_adapt_set_with_mimeType (GList * AdaptationSets,
       if (!this_mimeType && adapt_set->RepresentationBase) {
         this_mimeType = adapt_set->RepresentationBase->mimeType;
       }
-      GST_DEBUG("Looking for mime type %s -> %s", mimeType, this_mimeType);
+      GST_DEBUG ("Looking for mime type %s -> %s", mimeType, this_mimeType);
       if (strncmp_ext (this_mimeType, mimeType) == 0)
         return adapt_set;
     }
@@ -1720,7 +1724,8 @@ gst_mpdparser_get_adapt_set_with_mimeType_and_idx (GList * AdaptationSets,
         this_mimeType = rep->RepresentationBase->mimeType;
       if (!this_mimeType && adapt_set->RepresentationBase)
         this_mimeType = adapt_set->RepresentationBase->mimeType;
-      GST_DEBUG("Looking for mime type %s -> %i: %s", mimeType, i, this_mimeType);
+      GST_DEBUG ("Looking for mime type %s -> %i: %s", mimeType, i,
+          this_mimeType);
       if (strncmp_ext (this_mimeType, mimeType) == 0) {
         if (idx < 0 || i <= idx)
           selected = adapt_set;
@@ -1752,14 +1757,14 @@ gst_mpdparser_get_first_adapt_set_with_mimeType_and_lang (GList *
           gst_mpdparser_get_lowest_representation (adapt_set->Representations);
       if (rep && rep->BaseURLs) {
         GstBaseURL *url = rep->BaseURLs->data;
-        GST_DEBUG("%s", url->baseURL);
+        GST_DEBUG ("%s", url->baseURL);
       }
       if (rep->RepresentationBase)
         this_mimeType = rep->RepresentationBase->mimeType;
       if (!this_mimeType && adapt_set->RepresentationBase) {
         this_mimeType = adapt_set->RepresentationBase->mimeType;
       }
-      GST_DEBUG("Looking for mime type %s -> %s", mimeType, this_mimeType);
+      GST_DEBUG ("Looking for mime type %s -> %s", mimeType, this_mimeType);
       if (strncmp_ext (this_mimeType, mimeType) == 0
           && strncmp_ext (this_lang, lang) == 0)
         return adapt_set;
@@ -1849,14 +1854,14 @@ gst_mpdparser_get_segment_base (GstPeriodNode * Period,
     if (Representation && Representation->SegmentList
         && Representation->SegmentList->MultSegBaseType
         && Representation->SegmentList->MultSegBaseType->SegBaseType
-        && Representation->SegmentList->MultSegBaseType->SegBaseType->
-        Initialization) {
+        && Representation->SegmentList->MultSegBaseType->
+        SegBaseType->Initialization) {
       SegmentBase = Representation->SegmentList->MultSegBaseType->SegBaseType;
     } else if (AdaptationSet && AdaptationSet->SegmentList
         && AdaptationSet->SegmentList->MultSegBaseType
         && AdaptationSet->SegmentList->MultSegBaseType->SegBaseType
-        && AdaptationSet->SegmentList->MultSegBaseType->SegBaseType->
-        Initialization) {
+        && AdaptationSet->SegmentList->MultSegBaseType->
+        SegBaseType->Initialization) {
       SegmentBase = AdaptationSet->SegmentList->MultSegBaseType->SegBaseType;
     } else if (Period && Period->SegmentList
         && Period->SegmentList->MultSegBaseType
@@ -1872,12 +1877,12 @@ gst_mpdparser_get_segment_base (GstPeriodNode * Period,
 gint
 gst_mpdparser_get_rep_idx_with_min_bandwidth (GList * Representations)
 {
-  GList *list = NULL, *lowest;
+  GList *list = NULL, *lowest = NULL;
   GstRepresentationNode *rep = NULL;
   gint lowest_bandwidth = -1;
 
   if (Representations == NULL)
-    return NULL;
+    return -1;
 
   for (list = g_list_first (Representations); list; list = g_list_next (list)) {
     rep = (GstRepresentationNode *) list->data;
@@ -2103,8 +2108,8 @@ gst_mpdparser_free_adaptation_set_node (GstAdaptationSetNode *
         (adaptation_set_node->RepresentationBase);
     gst_mpdparser_free_seg_base_type_ext (adaptation_set_node->SegmentBase);
     gst_mpdparser_free_segment_list_node (adaptation_set_node->SegmentList);
-    gst_mpdparser_free_segment_template_node (adaptation_set_node->
-        SegmentTemplate);
+    gst_mpdparser_free_segment_template_node
+        (adaptation_set_node->SegmentTemplate);
     g_list_foreach (adaptation_set_node->BaseURLs,
         (GFunc) gst_mpdparser_free_base_url_node, NULL);
     g_list_free (adaptation_set_node->BaseURLs);
@@ -2132,8 +2137,8 @@ gst_mpdparser_free_representation_node (GstRepresentationNode *
         (GFunc) gst_mpdparser_free_subrepresentation_node, NULL);
     g_list_free (representation_node->SubRepresentations);
     gst_mpdparser_free_seg_base_type_ext (representation_node->SegmentBase);
-    gst_mpdparser_free_segment_template_node (representation_node->
-        SegmentTemplate);
+    gst_mpdparser_free_segment_template_node
+        (representation_node->SegmentTemplate);
     gst_mpdparser_free_segment_list_node (representation_node->SegmentList);
     g_list_foreach (representation_node->BaseURLs,
         (GFunc) gst_mpdparser_free_base_url_node, NULL);
@@ -2147,8 +2152,8 @@ gst_mpdparser_free_subrepresentation_node (GstSubRepresentationNode *
     subrep_node)
 {
   if (subrep_node) {
-    gst_mpdparser_free_representation_base_type (subrep_node->
-        RepresentationBase);
+    gst_mpdparser_free_representation_base_type
+        (subrep_node->RepresentationBase);
     g_free (subrep_node->dependencyLevel);
     g_strfreev (subrep_node->contentComponent);
   }
@@ -2312,8 +2317,8 @@ gst_mpdparser_get_segmentURL_for_range (gchar * url, GstRange * range)
   if (range) {
     gchar *range_suffix;
     range_suffix =
-        g_strdup_printf ("?range=%llu-%llu", range->first_byte_pos,
-        range->last_byte_pos);
+        g_strdup_printf ("?range=%" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT,
+        range->first_byte_pos, range->last_byte_pos);
     segmentURL = g_strconcat (url, range_suffix, NULL);
     g_free (range_suffix);
   } else {
@@ -2324,7 +2329,7 @@ gst_mpdparser_get_segmentURL_for_range (gchar * url, GstRange * range)
 }
 
 static gchar *
-gst_mpdparser_get_mediaURL (GstActiveStream *stream,
+gst_mpdparser_get_mediaURL (GstActiveStream * stream,
     GstSegmentURLNode * segmentURL)
 {
   const gchar *url_prefix;
@@ -2423,7 +2428,7 @@ gst_mpdparser_get_stream_period (GstMpdClient * client)
 
 /* select a stream and extract the baseURL (if present) */
 static gchar *
-gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream *stream)
+gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream)
 {
   //GstActiveStream *stream;
   GstStreamPeriod *stream_period;
@@ -2460,7 +2465,7 @@ gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream *stream)
     }
     baseURL_array[1] = baseURL->baseURL;
   }
-  GST_DEBUG("Current adaptation set id %i (%s)", stream->cur_adapt_set->id,
+  GST_DEBUG ("Current adaptation set id %i (%s)", stream->cur_adapt_set->id,
       stream->cur_adapt_set->contentType);
 
   if ((list = stream->cur_adapt_set->BaseURLs) != NULL) {
@@ -2539,7 +2544,7 @@ gst_mpd_client_get_segment_duration (GstMpdClient * client)
 /*****************************/
 
 GstMpdClient *
-gst_mpd_client_new ()
+gst_mpd_client_new (void)
 {
   GstMpdClient *client;
 
@@ -3006,16 +3011,13 @@ no_mem:
 
 gboolean
 gst_mpd_client_setup_streaming (GstMpdClient * client,
-    GstStreamMimeType mimeType, gchar * lang)
+    GstStreamMimeType mimeType, const gchar * lang)
 {
   GstActiveStream *stream;
   GstStreamPeriod *stream_period;
   GstAdaptationSetNode *adapt_set;
   GstRepresentationNode *representation;
   GList *rep_list = NULL;
-
-  GstRepresentationNode *rep;
-  GstBaseURL *url;
 
   stream_period = gst_mpdparser_get_stream_period (client);
   if (stream_period == NULL || stream_period->period == NULL) {
@@ -3027,8 +3029,8 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
     case GST_STREAM_VIDEO:
       /* select the adaptation set for the video pipeline */
       adapt_set =
-          gst_mpdparser_get_adapt_set_with_mimeType_and_idx (stream_period->
-          period->AdaptationSets, "video", 0);
+          gst_mpdparser_get_adapt_set_with_mimeType_and_idx
+          (stream_period->period->AdaptationSets, "video", 0);
       if (!adapt_set) {
         GST_INFO ("No video adaptation set found");
         return FALSE;
@@ -3047,8 +3049,8 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
       /* if we did not found the requested audio language, get the first one */
       if (!adapt_set)
         adapt_set =
-            gst_mpdparser_get_first_adapt_set_with_mimeType (stream_period->
-            period->AdaptationSets, "audio");
+            gst_mpdparser_get_first_adapt_set_with_mimeType
+            (stream_period->period->AdaptationSets, "audio");
       if (!adapt_set) {
         GST_INFO ("No audio adaptation set found");
         return FALSE;
@@ -3066,8 +3068,8 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
       /* if we did not found the requested subtitles language, get the first one */
       if (!adapt_set)
         adapt_set =
-            gst_mpdparser_get_first_adapt_set_with_mimeType (stream_period->
-            period->AdaptationSets, "application");
+            gst_mpdparser_get_first_adapt_set_with_mimeType
+            (stream_period->period->AdaptationSets, "application");
       if (!adapt_set) {
         GST_INFO ("No application adaptation set found");
         return FALSE;
@@ -3094,7 +3096,7 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
   stream->mimeType = mimeType;
   stream->cur_adapt_set = adapt_set;
 
-  GST_DEBUG("0. Current stream %p", stream);
+  GST_DEBUG ("0. Current stream %p", stream);
 
   /* retrive representation list */
   if (stream->cur_adapt_set != NULL)
@@ -3159,7 +3161,7 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
     return FALSE;
   }
 
-  GST_DEBUG("currentChunk->SegmentURL = %s", currentChunk->SegmentURL);
+  GST_DEBUG ("currentChunk->SegmentURL = %s", currentChunk->SegmentURL);
   if (currentChunk->SegmentURL != NULL) {
     mediaURL = gst_mpdparser_get_mediaURL (stream, currentChunk->SegmentURL);
   } else if (stream->cur_seg_template != NULL) {
@@ -3168,7 +3170,7 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
         stream->cur_representation->id, currentChunk->number,
         stream->cur_representation->bandwidth, currentChunk->start);
   }
-  GST_DEBUG("mediaURL = %s", mediaURL);
+  GST_DEBUG ("mediaURL = %s", mediaURL);
 
   *timestamp = currentChunk->start_time;
   *duration = currentChunk->duration;
@@ -3209,8 +3211,8 @@ gst_mpd_client_get_next_header (GstMpdClient * client, const gchar ** uri,
   *uri = NULL;
   if (stream->cur_segment_base && stream->cur_segment_base->Initialization) {
     *uri =
-        gst_mpdparser_get_initializationURL (stream->cur_segment_base->
-        Initialization);
+        gst_mpdparser_get_initializationURL (stream->
+        cur_segment_base->Initialization);
   } else if (stream->cur_seg_template) {
     const gchar *initialization = NULL;
     if (stream->cur_seg_template->initialization) {
@@ -3500,7 +3502,7 @@ gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient * client,
   GstStreamPeriod *stream_period;
   GstAdaptationSetNode *adapt_set;
   GList *list;
-  gchar *this_mimeType = "audio";
+  const gchar *this_mimeType = "audio";
   gchar *mimeType = NULL;
   guint nb_adapatation_set = 0;
 
