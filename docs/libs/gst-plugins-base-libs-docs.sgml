@@ -101,6 +101,7 @@
       <xi:include href="xml/gstrtpbuffer.xml" />
       <xi:include href="xml/gstrtcpbuffer.xml" />
       <xi:include href="xml/gstrtppayloads.xml" />
+      <xi:include href="xml/gstrtphdrext.xml" />
     </chapter>
 
     <chapter id="gstreamer-rtsp">
@@ -174,6 +175,7 @@
         <filename>-lgstvideo-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <xi:include href="xml/gstvideo.xml" />
+      <xi:include href="xml/gstvideometa.xml" />
       <xi:include href="xml/gstvideooverlaycomposition.xml" />
       <xi:include href="xml/gstvideofilter.xml" />
       <xi:include href="xml/gstvideosink.xml" />
