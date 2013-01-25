@@ -4,10 +4,12 @@
  * gstdashdemux.h
  *
  * Copyright (C) 2012 Orange
- * 
  * Authors:
  *   David Corvoysier <david.corvoysier@orange.com>
  *   Hamid Zakari <hamid.zakari@gmail.com>
+ *
+ * Copyright (C) 2013 Smart TV Alliance
+ *  Author: Thiago Sousa Santos <thiago.sousa.santos@collabora.com>, Collabora Ltd.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -81,7 +83,6 @@ struct _GstDashDemux
   GstTask *stream_task;
   GStaticRecMutex stream_lock;
   GMutex *stream_timed_lock;
-  GTimeVal next_push;           /* Time of the next push */
 
   /* Download task */
   GstTask *download_task;

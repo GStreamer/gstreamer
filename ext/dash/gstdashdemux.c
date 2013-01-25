@@ -9,6 +9,9 @@
  *   David Corvoysier <david.corvoysier@orange.com>
  *   Hamid Zakari <hamid.zakari@gmail.com>
  *
+ * Copyright (C) 2013 Smart TV Alliance
+ *  Author: Thiago Sousa Santos <thiago.sousa.santos@collabora.com>, Collabora Ltd.
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -979,12 +982,6 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   gboolean switch_pad;
   guint i = 0;
 
-  /* Wait until the next scheduled push downstream */
-  if (g_cond_timed_wait (GST_TASK_GET_COND (demux->stream_task),
-          demux->stream_timed_lock, &demux->next_push)) {
-    goto quit;
-  }
-
   if (g_queue_is_empty (demux->queue)) {
     if (demux->end_of_manifest)
       goto end_of_manifest;
@@ -1007,6 +1004,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   }
   listfragment = g_queue_pop_head (demux->queue);
   nb_adaptation_set = g_list_length (listfragment);
+
   /* Figure out if we need to create/switch pads */
   switch_pad = needs_pad_switch (demux, listfragment);
   if (switch_pad) {
@@ -1036,27 +1034,10 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       goto error_pushing;
   }
   demux->need_segment = FALSE;
-  demux->last_position_shift = demux->position_shift;
   demux->position_shift = 0;
   g_list_free (listfragment);
-  if (GST_STATE (demux) == GST_STATE_PLAYING) {
-    /* Wait for the duration of a fragment before resuming this task */
-    g_get_current_time (&demux->next_push);
-    g_time_val_add (&demux->next_push,
-        (gst_mpd_client_get_next_fragment_duration (demux->client) -
-            demux->last_position_shift) / GST_SECOND * G_USEC_PER_SEC);
-    GST_DEBUG_OBJECT (demux, "Next push scheduled at %s",
-        g_time_val_to_iso8601 (&demux->next_push));
-    demux->last_position_shift = 0;
-  } else {
-    /* The pipeline is now set up, wait until playback begins */
-    goto pause_streaming;
-  }
 
-quit:
-  {
-    return;
-  }
+  return;
 
 end_of_manifest:
   {
@@ -1076,13 +1057,6 @@ error_pushing:
         "Error pushing buffer: %s... terminating the demux",
         gst_flow_get_name (ret));
     gst_dash_demux_stop (demux);
-    return;
-  }
-
-pause_streaming:
-  {
-    GST_INFO_OBJECT (demux, "Pausing streaming task");
-    gst_task_pause (demux->stream_task);
     return;
   }
 }
@@ -1403,7 +1377,6 @@ gst_dash_demux_pause_stream_task (GstDashDemux * demux)
 static void
 gst_dash_demux_resume_stream_task (GstDashDemux * demux)
 {
-  g_get_current_time (&demux->next_push);
   gst_task_start (demux->stream_task);
 }
 
@@ -1762,4 +1735,3 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
       demux->dnl_rate / 1000, size_buffer / 1024, ((double) diff / GST_SECOND));
   return TRUE;
 }
-
