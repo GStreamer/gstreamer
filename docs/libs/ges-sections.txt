@@ -161,13 +161,13 @@ GES_TYPE_TRACK_OPERATION
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-filesource</FILE>
-<TITLE>GESTrackFileSource</TITLE>
-GESTrackFileSource
+<FILE>ges-uri-source</FILE>
+<TITLE>GESUriSource</TITLE>
+GESUriSource
 ges_track_filesource_new
 <SUBSECTION Standard>
-GESTrackFileSourceClass
-GESTrackFileSourcePrivate
+GESUriSourceClass
+GESUriSourcePrivate
 GES_TRACK_FILESOURCE
 GES_TRACK_FILESOURCE_CLASS
 GES_TRACK_FILESOURCE_GET_CLASS
@@ -1042,14 +1042,14 @@ GES_URI_CLIP_ASSET_GET_CLASS
 
 <SECTION>
 <FILE>ges-asset-track-file-source</FILE>
-<TITLE>GESAssetTrackFileSource</TITLE>
-GESAssetTrackFileSource
-ges_asset_track_filesource_get_type
-ges_asset_track_filesource_get_filesource_asset
-ges_asset_track_filesource_get_stream_info
-ges_asset_track_filesource_get_stream_uri
+<TITLE>GESUriSourceAsset</TITLE>
+GESUriSourceAsset
+ges_uri_source_asset_get_type
+ges_uri_source_asset_get_filesource_asset
+ges_uri_source_asset_get_stream_info
+ges_uri_source_asset_get_stream_uri
 <SUBSECTION Standard>
-GESAssetTrackFileSourcePrivate
+GESUriSourceAssetPrivate
 GES_ASSET_TRACK_FILESOURCE
 GES_TYPE_ASSET_TRACK_FILESOURCE
 GES_ASSET_TRACK_FILESOURCE_CLASS

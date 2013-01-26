@@ -30,10 +30,10 @@ G_BEGIN_DECLS
 #define GES_TYPE_TRACK_FILESOURCE ges_track_filesource_get_type()
 
 #define GES_TRACK_FILESOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_FILESOURCE, GESTrackFileSource))
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_FILESOURCE, GESUriSource))
 
 #define GES_TRACK_FILESOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_FILESOURCE, GESTrackFileSourceClass))
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_FILESOURCE, GESUriSourceClass))
 
 #define GES_IS_TRACK_FILESOURCE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_FILESOURCE))
@@ -42,26 +42,26 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_FILESOURCE))
 
 #define GES_TRACK_FILESOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_FILESOURCE, GESTrackFileSourceClass))
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_FILESOURCE, GESUriSourceClass))
 
-typedef struct _GESTrackFileSourcePrivate GESTrackFileSourcePrivate;
+typedef struct _GESUriSourcePrivate GESUriSourcePrivate;
 
 /**
- * GESTrackFileSource:
+ * GESUriSource:
  */
-struct _GESTrackFileSource {
+struct _GESUriSource {
   /*< private >*/
   GESSource parent;
 
   gchar *uri;
 
-  GESTrackFileSourcePrivate *priv;
+  GESUriSourcePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-struct _GESTrackFileSourceClass {
+struct _GESUriSourceClass {
   /*< private >*/
   GESSourceClass parent_class;
 
@@ -71,7 +71,7 @@ struct _GESTrackFileSourceClass {
 
 GType ges_track_filesource_get_type (void);
 
-GESTrackFileSource* ges_track_filesource_new (gchar *uri);
+GESUriSource* ges_track_filesource_new (gchar *uri);
 
 G_END_DECLS
 

@@ -29,7 +29,7 @@
 #include "ges-internal.h"
 #include "ges-uri-clip.h"
 #include "ges-source-clip.h"
-#include "ges-track-filesource.h"
+#include "ges-uri-source.h"
 #include "ges-uri-asset.h"
 #include "ges-asset-track-object.h"
 #include "ges-extractable.h"
@@ -406,7 +406,7 @@ ges_uri_clip_create_track_element (GESClip * obj, GESTrackType type)
     }
 
   } else {
-    GST_DEBUG ("Creating a GESTrackFileSource");
+    GST_DEBUG ("Creating a GESUriSource");
 
     /* FIXME : Implement properly ! */
     res = (GESTrackElement *) ges_track_filesource_new (priv->uri);

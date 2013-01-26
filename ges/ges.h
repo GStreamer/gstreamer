@@ -60,7 +60,7 @@
 #include <ges/ges-source.h>
 #include <ges/ges-track-operation.h>
 
-#include <ges/ges-track-filesource.h>
+#include <ges/ges-uri-source.h>
 #include <ges/ges-track-image-source.h>
 #include <ges/ges-video-test-source.h>
 #include <ges/ges-audio-test-source.h>

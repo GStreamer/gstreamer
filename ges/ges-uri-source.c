@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-track-filesource
+ * SECTION:ges-uri-source
  * @short_description: outputs a single media stream from a given file
  *
  * Outputs a single media stream from a given file. The stream chosen depends on
@@ -28,7 +28,7 @@
 
 #include "ges-internal.h"
 #include "ges-track-element.h"
-#include "ges-track-filesource.h"
+#include "ges-uri-source.h"
 #include "ges-uri-asset.h"
 #include "ges-extractable.h"
 
@@ -60,12 +60,12 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
   iface->set_asset = extractable_set_asset;
 }
 
-G_DEFINE_TYPE_WITH_CODE (GESTrackFileSource, ges_track_filesource,
+G_DEFINE_TYPE_WITH_CODE (GESUriSource, ges_track_filesource,
     GES_TYPE_SOURCE,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 
-struct _GESTrackFileSourcePrivate
+struct _GESUriSourcePrivate
 {
   void *dummy;
 };
@@ -80,7 +80,7 @@ static void
 ges_track_filesource_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESTrackFileSource *uriclip = GES_TRACK_FILESOURCE (object);
+  GESUriSource *uriclip = GES_TRACK_FILESOURCE (object);
 
   switch (property_id) {
     case PROP_URI:
@@ -95,7 +95,7 @@ static void
 ges_track_filesource_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESTrackFileSource *uriclip = GES_TRACK_FILESOURCE (object);
+  GESUriSource *uriclip = GES_TRACK_FILESOURCE (object);
 
   switch (property_id) {
     case PROP_URI:
@@ -109,7 +109,7 @@ ges_track_filesource_set_property (GObject * object, guint property_id,
 static void
 ges_track_filesource_dispose (GObject * object)
 {
-  GESTrackFileSource *uriclip = GES_TRACK_FILESOURCE (object);
+  GESUriSource *uriclip = GES_TRACK_FILESOURCE (object);
 
   if (uriclip->uri)
     g_free (uriclip->uri);
@@ -123,25 +123,25 @@ ges_track_filesource_create_gnl_object (GESTrackElement * object)
   GstElement *gnlobject;
 
   gnlobject = gst_element_factory_make ("gnlurisource", NULL);
-  g_object_set (gnlobject, "uri", ((GESTrackFileSource *) object)->uri, NULL);
+  g_object_set (gnlobject, "uri", ((GESUriSource *) object)->uri, NULL);
 
   return gnlobject;
 }
 
 static void
-ges_track_filesource_class_init (GESTrackFileSourceClass * klass)
+ges_track_filesource_class_init (GESUriSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTrackElementClass *track_class = GES_TRACK_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTrackFileSourcePrivate));
+  g_type_class_add_private (klass, sizeof (GESUriSourcePrivate));
 
   object_class->get_property = ges_track_filesource_get_property;
   object_class->set_property = ges_track_filesource_set_property;
   object_class->dispose = ges_track_filesource_dispose;
 
   /**
-   * GESTrackFileSource:uri:
+   * GESUriSource:uri:
    *
    * The location of the file/resource to use.
    */
@@ -152,22 +152,22 @@ ges_track_filesource_class_init (GESTrackFileSourceClass * klass)
 }
 
 static void
-ges_track_filesource_init (GESTrackFileSource * self)
+ges_track_filesource_init (GESUriSource * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRACK_FILESOURCE, GESTrackFileSourcePrivate);
+      GES_TYPE_TRACK_FILESOURCE, GESUriSourcePrivate);
 }
 
 /**
  * ges_track_filesource_new:
  * @uri: the URI the source should control
  *
- * Creates a new #GESTrackFileSource for the provided @uri.
+ * Creates a new #GESUriSource for the provided @uri.
  *
- * Returns: The newly created #GESTrackFileSource, or %NULL if there was an
+ * Returns: The newly created #GESUriSource, or %NULL if there was an
  * error.
  */
-GESTrackFileSource *
+GESUriSource *
 ges_track_filesource_new (gchar * uri)
 {
   return g_object_new (GES_TYPE_TRACK_FILESOURCE, "uri", uri, NULL);

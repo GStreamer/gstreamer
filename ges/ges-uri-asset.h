@@ -77,42 +77,42 @@ void ges_uri_clip_asset_set_timeout                 (GESUriClipAssetClass *class
                                                        GstClockTime timeout);
 const GList * ges_uri_clip_asset_get_stream_assets  (GESUriClipAsset *self);
 
-#define GES_TYPE_ASSET_TRACK_FILESOURCE ges_asset_track_filesource_get_type()
+#define GES_TYPE_ASSET_TRACK_FILESOURCE ges_uri_source_asset_get_type()
 #define GES_ASSET_TRACK_FILESOURCE(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_ASSET_TRACK_FILESOURCE, GESAssetTrackFileSource))
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_ASSET_TRACK_FILESOURCE, GESUriSourceAsset))
 #define GES_ASSET_TRACK_FILESOURCE_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_ASSET_TRACK_FILESOURCE, GESAssetTrackFileSourceClass))
+    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_ASSET_TRACK_FILESOURCE, GESUriSourceAssetClass))
 #define GES_IS_ASSET_TRACK_FILESOURCE(obj) \
     (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_ASSET_TRACK_FILESOURCE))
 #define GES_IS_ASSET_TRACK_FILESOURCE_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_ASSET_TRACK_FILESOURCE))
 #define GES_ASSET_TRACK_FILESOURCE_GET_CLASS(obj) \
-    (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_ASSET_TRACK_FILESOURCE, GESAssetTrackFileSourceClass))
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_ASSET_TRACK_FILESOURCE, GESUriSourceAssetClass))
 
-typedef struct _GESAssetTrackFileSourcePrivate GESAssetTrackFileSourcePrivate;
+typedef struct _GESUriSourceAssetPrivate GESUriSourceAssetPrivate;
 
-GType ges_asset_track_filesource_get_type (void);
+GType ges_uri_source_asset_get_type (void);
 
-struct _GESAssetTrackFileSource
+struct _GESUriSourceAsset
 {
   GESAssetTrackElement parent;
 
   /* <private> */
-  GESAssetTrackFileSourcePrivate *priv;
+  GESUriSourceAssetPrivate *priv;
 
   /* Padding for API extension */
   gpointer __ges_reserved[GES_PADDING];
 };
 
-struct _GESAssetTrackFileSourceClass
+struct _GESUriSourceAssetClass
 {
   GESAssetTrackElementClass parent_class;
 
   gpointer _ges_reserved[GES_PADDING];
 };
-GstDiscovererStreamInfo * ges_asset_track_filesource_get_stream_info     (GESAssetTrackFileSource *asset);
-const gchar * ges_asset_track_filesource_get_stream_uri                  (GESAssetTrackFileSource *asset);
-const GESUriClipAsset *ges_asset_track_filesource_get_filesource_asset (GESAssetTrackFileSource *asset);
+GstDiscovererStreamInfo * ges_uri_source_asset_get_stream_info     (GESUriSourceAsset *asset);
+const gchar * ges_uri_source_asset_get_stream_uri                  (GESUriSourceAsset *asset);
+const GESUriClipAsset *ges_uri_source_asset_get_filesource_asset (GESUriSourceAsset *asset);
 
 G_END_DECLS
 #endif /* _GES_URI_CLIP_ASSET */

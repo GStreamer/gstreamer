@@ -67,7 +67,7 @@ struct _GESUriClipAssetPrivate
   GList *asset_trackfilesources;
 };
 
-struct _GESAssetTrackFileSourcePrivate
+struct _GESUriSourceAssetPrivate
 {
   GstDiscovererStreamInfo *sinfo;
   GESUriClipAsset *parent_asset;
@@ -224,11 +224,11 @@ ges_uri_clip_asset_init (GESUriClipAsset * self)
 }
 
 static void
-_create_track_file_source_asset (GESUriClipAsset * asset,
+_create_uri_source_asset (GESUriClipAsset * asset,
     GstDiscovererStreamInfo * sinfo, GESTrackType type)
 {
   GESAsset *tck_filesource_asset;
-  GESAssetTrackFileSourcePrivate *priv_tckasset;
+  GESUriSourceAssetPrivate *priv_tckasset;
   GESUriClipAssetPrivate *priv = asset->priv;
   gchar *stream_id =
       g_strdup (gst_discoverer_stream_info_get_stream_id (sinfo));
@@ -286,9 +286,9 @@ ges_uri_clip_asset_set_info (GESUriClipAsset * self, GstDiscovererInfo * info)
       type = GES_TRACK_TYPE_VIDEO;
     }
 
-    GST_DEBUG_OBJECT (self, "Creating GESAssetTrackFileSource for stream: %s",
+    GST_DEBUG_OBJECT (self, "Creating GESUriSourceAsset for stream: %s",
         gst_discoverer_stream_info_get_stream_id (sinf));
-    _create_track_file_source_asset (self, sinf, type);
+    _create_uri_source_asset (self, sinf, type);
   }
   ges_asset_clip_set_supported_formats (GES_ASSET_CLIP
       (self), supportedformats);
@@ -445,10 +445,10 @@ ges_uri_clip_asset_set_timeout (GESUriClipAssetClass * class,
  * ges_uri_clip_asset_get_stream_assets:
  * @self: A #GESUriClipAsset
  *
- * Get the GESAssetTrackFileSource @self containes
+ * Get the GESUriSourceAsset @self containes
  *
- * Returns: (transfer none) (element-type GESAssetTrackFileSource): a
- * #GList of #GESAssetTrackFileSource
+ * Returns: (transfer none) (element-type GESUriSourceAsset): a
+ * #GList of #GESUriSourceAsset
  */
 const GList *
 ges_uri_clip_asset_get_stream_assets (GESUriClipAsset * self)
@@ -459,25 +459,24 @@ ges_uri_clip_asset_get_stream_assets (GESUriClipAsset * self)
 }
 
 /*****************************************************************
- *            GESAssetTrackFileSource implementation             *
+ *            GESUriSourceAsset implementation             *
  *****************************************************************/
 /**
  * SECTION: ges-asset-track-file-source
- * @short_description: A GESAsset subclass specialized in GESTrackFileSource extraction
+ * @short_description: A GESAsset subclass specialized in GESUriSource extraction
  *
  * NOTE: You should never request such a #GESAsset as they will be created automatically
  * by #GESUriClipAsset-s.
  */
 
-G_DEFINE_TYPE (GESAssetTrackFileSource, ges_asset_track_filesource,
+G_DEFINE_TYPE (GESUriSourceAsset, ges_uri_source_asset,
     GES_TYPE_ASSET_TRACK_ELEMENT);
 
 static GESExtractable *
 _extract (GESAsset * asset, GError ** error)
 {
   GESTrackElement *trackelement;
-  GESAssetTrackFileSourcePrivate *priv =
-      GES_ASSET_TRACK_FILESOURCE (asset)->priv;
+  GESUriSourceAssetPrivate *priv = GES_ASSET_TRACK_FILESOURCE (asset)->priv;
 
   if (GST_IS_DISCOVERER_STREAM_INFO (priv->sinfo) == FALSE) {
     GST_WARNING_OBJECT (asset, "Can not extract as no strean info set");
@@ -499,20 +498,20 @@ _extract (GESAsset * asset, GError ** error)
 }
 
 static void
-ges_asset_track_filesource_class_init (GESAssetTrackFileSourceClass * klass)
+ges_uri_source_asset_class_init (GESUriSourceAssetClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GESAssetTrackFileSourcePrivate));
+  g_type_class_add_private (klass, sizeof (GESUriSourceAssetPrivate));
 
   GES_ASSET_CLASS (klass)->extract = _extract;
 }
 
 static void
-ges_asset_track_filesource_init (GESAssetTrackFileSource * self)
+ges_uri_source_asset_init (GESUriSourceAsset * self)
 {
-  GESAssetTrackFileSourcePrivate *priv;
+  GESUriSourceAssetPrivate *priv;
 
   priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_ASSET_TRACK_FILESOURCE, GESAssetTrackFileSourcePrivate);
+      GES_TYPE_ASSET_TRACK_FILESOURCE, GESUriSourceAssetPrivate);
 
   priv->sinfo = NULL;
   priv->parent_asset = NULL;
@@ -522,7 +521,7 @@ ges_asset_track_filesource_init (GESAssetTrackFileSource * self)
 }
 
 /**
- * ges_asset_track_filesource_get_stream_info:
+ * ges_uri_source_asset_get_stream_info:
  * @asset: A #GESUriClipAsset
  *
  * Get the #GstDiscovererStreamInfo user by @asset
@@ -530,7 +529,7 @@ ges_asset_track_filesource_init (GESAssetTrackFileSource * self)
  * Returns: (transfer none): a #GESUriClipAsset
  */
 GstDiscovererStreamInfo *
-ges_asset_track_filesource_get_stream_info (GESAssetTrackFileSource * asset)
+ges_uri_source_asset_get_stream_info (GESUriSourceAsset * asset)
 {
   g_return_val_if_fail (GES_IS_ASSET_TRACK_FILESOURCE (asset), NULL);
 
@@ -538,7 +537,7 @@ ges_asset_track_filesource_get_stream_info (GESAssetTrackFileSource * asset)
 }
 
 const gchar *
-ges_asset_track_filesource_get_stream_uri (GESAssetTrackFileSource * asset)
+ges_uri_source_asset_get_stream_uri (GESUriSourceAsset * asset)
 {
   g_return_val_if_fail (GES_IS_ASSET_TRACK_FILESOURCE (asset), NULL);
 
@@ -546,7 +545,7 @@ ges_asset_track_filesource_get_stream_uri (GESAssetTrackFileSource * asset)
 }
 
 /**
- * ges_asset_track_filesource_get_filesource_asset:
+ * ges_uri_source_asset_get_filesource_asset:
  * @asset: A #GESUriClipAsset
  *
  * Get the #GESUriClipAsset @self is contained in
@@ -554,8 +553,7 @@ ges_asset_track_filesource_get_stream_uri (GESAssetTrackFileSource * asset)
  * Returns: a #GESUriClipAsset
  */
 const GESUriClipAsset *
-ges_asset_track_filesource_get_filesource_asset (GESAssetTrackFileSource *
-    asset)
+ges_uri_source_asset_get_filesource_asset (GESUriSourceAsset * asset)
 {
   g_return_val_if_fail (GES_IS_ASSET_TRACK_FILESOURCE (asset), NULL);
 

@@ -29,7 +29,7 @@ LOCAL_SRC_FILES := 				\
 	ges-track-element.c			\
 	ges-source.c			\
 	ges-track-operation.c			\
-	ges-track-filesource.c			\
+	ges-uri-source.c			\
 	ges-track-image-source.c		\
 	ges-track-transition.c			\
 	ges-track-audio-transition.c		\
