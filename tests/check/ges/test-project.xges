@@ -15,7 +15,7 @@
       <track track-type="4" caps="video/x-raw" track-id="1"/>
       <layer priority="0" properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, a=(guint)3'>
         <clip id="0" layer-priority='0' asset-id="file:///test/not/exisiting" type-name="GESUriClip" track-types="6" start="0" duration="1000000000">
-        <effect asset-id='agingtv' clip-id='0' type-name='GESTrackParseLaunchEffect' track-type='4' track-id='1' metadatas='metadatas;' children-properties='properties, scratch-lines=(uint)12;'/>
+        <effect asset-id='agingtv' clip-id='0' type-name='GESEffect' track-type='4' track-id='1' metadatas='metadatas;' children-properties='properties, scratch-lines=(uint)12;'/>
         </clip>
       </layer>
       <layer priority="1" properties='properties, auto-transition=(boolean)true;'>

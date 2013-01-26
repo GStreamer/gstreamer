@@ -28,7 +28,7 @@ ges_track_get_type
 ges_track_image_source_get_type
 ges_track_element_get_type
 ges_base_effect_get_type
-ges_track_parse_launch_effect_get_type
+ges_effect_get_type
 ges_track_operation_get_type
 ges_track_source_get_type
 ges_track_text_overlay_get_type

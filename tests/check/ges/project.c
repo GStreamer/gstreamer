@@ -143,12 +143,12 @@ GST_START_TEST (test_project_unexistant_effect)
       (GCallback) error_loading_asset_cb, mainloop);
 
   fail_unless (ges_project_create_asset (project, "nowaythiselementexists",
-          GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT));
+          GES_TYPE_EFFECT));
   g_main_loop_run (mainloop);
 
   /* And.... try again! */
   fail_if (ges_project_create_asset (project, "nowaythiselementexists",
-          GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT));
+          GES_TYPE_EFFECT));
 
   fail_if (added_cb_called);
   fail_if (removed_cb_called);
@@ -169,8 +169,7 @@ asset_added_cb (GESProject * project, GESAsset * asset)
   gchar *uri = ges_test_file_uri ("audio_video.ogg");
   GstDiscovererInfo *info;
 
-  if (ges_asset_get_extractable_type (asset) ==
-      GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT) {
+  if (ges_asset_get_extractable_type (asset) == GES_TYPE_EFFECT) {
     assert_equals_string (ges_asset_get_id (asset), "agingtv");
   } else {
     info = ges_uri_clip_asset_get_info (GES_URI_CLIP_ASSET (asset));

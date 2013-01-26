@@ -72,7 +72,7 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-track-video-transition.xml"/>
     <xi:include href="xml/ges-track-audio-transition.xml"/>
     <xi:include href="xml/ges-track-image-source.xml"/>
-    <xi:include href="xml/ges-track-parse-launch-effect.xml"/>
+    <xi:include href="xml/ges-effect.xml"/>
   </chapter>
 
   <chapter>

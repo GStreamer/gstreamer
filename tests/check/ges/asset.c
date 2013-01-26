@@ -119,34 +119,28 @@ GST_START_TEST (test_proxy_asset)
 
   fail_unless (ges_init ());
 
-  identity = ges_asset_request (GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT, "identity",
-      NULL);
+  identity = ges_asset_request (GES_TYPE_EFFECT, "identity", NULL);
   fail_unless (identity != NULL);
 
-  nothing = ges_asset_request (GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT, "nothing",
-      NULL);
+  nothing = ges_asset_request (GES_TYPE_EFFECT, "nothing", NULL);
   fail_if (nothing);
 
-  nothing = ges_asset_cache_lookup (GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT,
-      "nothing");
+  nothing = ges_asset_cache_lookup (GES_TYPE_EFFECT, "nothing");
   fail_unless (nothing != NULL);
 
   fail_unless (ges_asset_set_proxy (nothing, "identity"));
 
-  nothing_at_all = ges_asset_request (GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT,
-      "nothing_at_all", NULL);
+  nothing_at_all = ges_asset_request (GES_TYPE_EFFECT, "nothing_at_all", NULL);
   fail_if (nothing_at_all);
 
-  nothing_at_all = ges_asset_cache_lookup (GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT,
-      "nothing_at_all");
+  nothing_at_all = ges_asset_cache_lookup (GES_TYPE_EFFECT, "nothing_at_all");
   fail_unless (nothing_at_all != NULL);
 
   /* Now we proxy nothing_at_all to nothing which is itself proxied to identity */
   fail_unless (ges_asset_set_proxy (nothing_at_all, "nothing"));
 
   /* If we request nothing_at_all we should get the good proxied identity */
-  nothing_at_all = ges_asset_request (GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT,
-      "nothing_at_all", NULL);
+  nothing_at_all = ges_asset_request (GES_TYPE_EFFECT, "nothing_at_all", NULL);
   fail_unless (nothing_at_all == identity);
 
   gst_object_unref (identity);

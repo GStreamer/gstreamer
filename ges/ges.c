@@ -82,7 +82,7 @@ ges_init (void)
   GES_TYPE_XML_FORMATTER;
 
   /* Register track objects */
-  GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT;
+  GES_TYPE_EFFECT;
 
   /* Register interfaces */
   GES_TYPE_META_CONTAINER;

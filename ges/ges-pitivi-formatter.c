@@ -796,7 +796,7 @@ track_element_added_cb (GESClip * object,
       continue;
     }
 
-    if (GES_IS_TRACK_PARSE_LAUNCH_EFFECT (tmp->data)) {
+    if (GES_IS_EFFECT (tmp->data)) {
       has_effect = TRUE;
       continue;
     }
@@ -829,7 +829,7 @@ track_element_added_cb (GESClip * object,
       /* We set the effects start and duration */
       track = ges_track_element_get_track (tmp->data);
 
-      if (GES_IS_TRACK_PARSE_LAUNCH_EFFECT (tmp->data)
+      if (GES_IS_EFFECT (tmp->data)
           && (type == track->type)) {
         /* We lock the track objects so we do not move the whole Clip */
         ges_track_element_set_locked (tmp->data, FALSE);
@@ -929,10 +929,10 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
       }
 
     } else {
-      GESTrackParseLaunchEffect *effect;
+      GESEffect *effect;
       gchar *active = (gchar *) g_hash_table_lookup (props_table, "active");
 
-      effect = ges_track_parse_launch_effect_new ((gchar *)
+      effect = ges_effect_new ((gchar *)
           g_hash_table_lookup (props_table, (gchar *) "effect_name"));
       ges_track_element_set_track_type (GES_TRACK_ELEMENT (effect),
           (video ? GES_TRACK_TYPE_VIDEO : GES_TRACK_TYPE_AUDIO));

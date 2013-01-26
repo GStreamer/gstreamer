@@ -43,7 +43,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-track-title-source.c		\
 	ges-track-text-overlay.c		\
 	ges-base-effect.c		\
-	ges-track-parse-launch-effect.c		\
+	ges-effect.c		\
 	ges-screenshot.c			\
 	ges-formatter.c				\
 	ges-pitivi-formatter.c			\
@@ -84,7 +84,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-overlay-clip.h			\
 	ges-text-overlay-clip.h		\
 	ges-base-effect.h		\
-	ges-track-parse-launch-effect.h		\
+	ges-effect.h		\
 	ges-track.h				\
 	ges-track-element.h			\
 	ges-track-source.h			\

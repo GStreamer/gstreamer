@@ -31,13 +31,13 @@
  *
  * |[
  * GESAsset *effect_asset;
- * GESTrackParseLaunchEffect *effect;
+ * GESEffect *effect;
  *
  * // You create an asset for an effect
- * effect_asset = ges_asset_request (GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT, "agingtv", NULL);
+ * effect_asset = ges_asset_request (GES_TYPE_EFFECT, "agingtv", NULL);
  *
- * // And now you can extract an instance of GESTrackParseLaunchEffect from that asset
- * effect = GES_TRACK_PARSE_LAUNCH_EFFECT (ges_asset_extract (effect_asset));
+ * // And now you can extract an instance of GESEffect from that asset
+ * effect = GES_EFFECT (ges_asset_extract (effect_asset));
  *
  * ]|
  *
@@ -53,7 +53,7 @@
  * the documentation of each type to know what the ID of #GESAsset actually represents for that type. By default,
  * we only have one #GESAsset per type, and the @id is the name of the type, but this behaviour is overriden
  * to be more usefull. For example, for GESTransitionClips, the ID is the vtype of the transition
- * you will extract from it (ie crossfade, box-wipe-rc etc..) For #GESTrackParseLaunchEffect the id is the
+ * you will extract from it (ie crossfade, box-wipe-rc etc..) For #GESEffect the id is the
  * @bin-description property of the extracted objects (ie the gst-launch style description of the bin that
  * will be used).
  *
@@ -789,7 +789,7 @@ done:
  *    new asset. The class must implement the #GESExtractable interface.
  * @id: The Identifier of the asset we want to create. This identifier depends of the extractable,
  * type you want. By default it is the name of the class itself (or %NULL), but for example for a
- * GESTrackParseLaunchEffect, it will be the pipeline description, for a GESUriClip it
+ * GESEffect, it will be the pipeline description, for a GESUriClip it
  * will be the name of the file, etc... You should refer to the documentation of the #GESExtractable
  * type you want to create a #GESAsset for.
  * @cancellable: (allow-none): optional %GCancellable object, %NULL to ignore.

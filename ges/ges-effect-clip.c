@@ -170,7 +170,7 @@ ges_tl_parse_launch_effect_create_track_obj (GESClip * self, GESTrackType type)
 
   if (bin_description) {
     /* FIXME Work with a GESAsset here! */
-    return g_object_new (GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT, "bin-description",
+    return g_object_new (GES_TYPE_EFFECT, "bin-description",
         bin_description, "track-type", type, NULL);
   }
 

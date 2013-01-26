@@ -868,20 +868,20 @@ ges_base_effect_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-parse-launch-effect</FILE>
-<TITLE>GESTrackParseLaunchEffect</TITLE>
-GESTrackParseLaunchEffect
-ges_track_parse_launch_effect_new
+<FILE>ges-effect</FILE>
+<TITLE>GESEffect</TITLE>
+GESEffect
+ges_effect_new
 <SUBSECTION Standard>
-GESTrackParseLaunchEffectClass
-GESTrackParseLaunchEffectPrivate
-GES_IS_TRACK_PARSE_LAUNCH_EFFECT
-GES_IS_TRACK_PARSE_LAUNCH_EFFECT_CLASS
-GES_TRACK_PARSE_LAUNCH_EFFECT
-GES_TRACK_PARSE_LAUNCH_EFFECT_CLASS
-GES_TRACK_PARSE_LAUNCH_EFFECT_GET_CLASS
-GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT
-ges_track_parse_launch_effect_get_type
+GESEffectClass
+GESEffectPrivate
+GES_IS_EFFECT
+GES_IS_EFFECT_CLASS
+GES_EFFECT
+GES_EFFECT_CLASS
+GES_EFFECT_GET_CLASS
+GES_TYPE_EFFECT
+ges_effect_get_type
 </SECTION>
 
 <SECTION>

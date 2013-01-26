@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION:ges-track-parse-launch-effect
+ * SECTION:ges-effect
  * @short_description: adds an effect build from a parse-launch style 
  * bin description to a stream in a #GESSourceClip or a #GESTimelineLayer
  */
@@ -27,21 +27,20 @@
 #include "ges-extractable.h"
 #include "ges-track-element.h"
 #include "ges-base-effect.h"
-#include "ges-track-parse-launch-effect.h"
+#include "ges-effect.h"
 
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
 
-G_DEFINE_TYPE_WITH_CODE (GESTrackParseLaunchEffect,
-    ges_track_parse_launch_effect, GES_TYPE_BASE_EFFECT,
+G_DEFINE_TYPE_WITH_CODE (GESEffect,
+    ges_effect, GES_TYPE_BASE_EFFECT,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 
-static void ges_track_parse_launch_effect_dispose (GObject * object);
-static void ges_track_parse_launch_effect_finalize (GObject * object);
-static GstElement *ges_track_parse_launch_effect_create_element (GESTrackElement
-    * self);
+static void ges_effect_dispose (GObject * object);
+static void ges_effect_finalize (GObject * object);
+static GstElement *ges_effect_create_element (GESTrackElement * self);
 
-struct _GESTrackParseLaunchEffectPrivate
+struct _GESEffectPrivate
 {
   gchar *bin_description;
 };
@@ -81,7 +80,7 @@ extractable_get_parameters_from_id (const gchar * id, guint * n_params)
 static gchar *
 extractable_get_id (GESExtractable * self)
 {
-  return g_strdup (GES_TRACK_PARSE_LAUNCH_EFFECT (self)->priv->bin_description);
+  return g_strdup (GES_EFFECT (self)->priv->bin_description);
 }
 
 static void
@@ -93,11 +92,10 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 }
 
 static void
-ges_track_parse_launch_effect_get_property (GObject * object,
+ges_effect_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
-  GESTrackParseLaunchEffectPrivate *priv =
-      GES_TRACK_PARSE_LAUNCH_EFFECT (object)->priv;
+  GESEffectPrivate *priv = GES_EFFECT (object)->priv;
 
   switch (property_id) {
     case PROP_BIN_DESCRIPTION:
@@ -109,10 +107,10 @@ ges_track_parse_launch_effect_get_property (GObject * object,
 }
 
 static void
-ges_track_parse_launch_effect_set_property (GObject * object,
+ges_effect_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec)
 {
-  GESTrackParseLaunchEffect *self = GES_TRACK_PARSE_LAUNCH_EFFECT (object);
+  GESEffect *self = GES_EFFECT (object);
 
   switch (property_id) {
     case PROP_BIN_DESCRIPTION:
@@ -124,8 +122,7 @@ ges_track_parse_launch_effect_set_property (GObject * object,
 }
 
 static void
-ges_track_parse_launch_effect_class_init (GESTrackParseLaunchEffectClass *
-    klass)
+ges_effect_class_init (GESEffectClass * klass)
 {
   GObjectClass *object_class;
   GESTrackElementClass *obj_bg_class;
@@ -133,17 +130,17 @@ ges_track_parse_launch_effect_class_init (GESTrackParseLaunchEffectClass *
   object_class = G_OBJECT_CLASS (klass);
   obj_bg_class = GES_TRACK_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTrackParseLaunchEffectPrivate));
+  g_type_class_add_private (klass, sizeof (GESEffectPrivate));
 
-  object_class->get_property = ges_track_parse_launch_effect_get_property;
-  object_class->set_property = ges_track_parse_launch_effect_set_property;
-  object_class->dispose = ges_track_parse_launch_effect_dispose;
-  object_class->finalize = ges_track_parse_launch_effect_finalize;
+  object_class->get_property = ges_effect_get_property;
+  object_class->set_property = ges_effect_set_property;
+  object_class->dispose = ges_effect_dispose;
+  object_class->finalize = ges_effect_finalize;
 
-  obj_bg_class->create_element = ges_track_parse_launch_effect_create_element;
+  obj_bg_class->create_element = ges_effect_create_element;
 
   /**
-   * GESTrackParseLaunchEffect:bin-description:
+   * GESEffect:bin-description:
    *
    * The description of the effect bin with a gst-launch-style
    * pipeline description.
@@ -158,39 +155,37 @@ ges_track_parse_launch_effect_class_init (GESTrackParseLaunchEffectClass *
 }
 
 static void
-ges_track_parse_launch_effect_init (GESTrackParseLaunchEffect * self)
+ges_effect_init (GESEffect * self)
 {
   self->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (self, GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT,
-      GESTrackParseLaunchEffectPrivate);
+      G_TYPE_INSTANCE_GET_PRIVATE (self, GES_TYPE_EFFECT, GESEffectPrivate);
 }
 
 static void
-ges_track_parse_launch_effect_dispose (GObject * object)
+ges_effect_dispose (GObject * object)
 {
-  G_OBJECT_CLASS (ges_track_parse_launch_effect_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_effect_parent_class)->dispose (object);
 }
 
 static void
-ges_track_parse_launch_effect_finalize (GObject * object)
+ges_effect_finalize (GObject * object)
 {
-  GESTrackParseLaunchEffect *self = GES_TRACK_PARSE_LAUNCH_EFFECT (object);
+  GESEffect *self = GES_EFFECT (object);
 
   if (self->priv->bin_description)
     g_free (self->priv->bin_description);
 
-  G_OBJECT_CLASS (ges_track_parse_launch_effect_parent_class)->finalize
-      (object);
+  G_OBJECT_CLASS (ges_effect_parent_class)->finalize (object);
 }
 
 static GstElement *
-ges_track_parse_launch_effect_create_element (GESTrackElement * object)
+ges_effect_create_element (GESTrackElement * object)
 {
   GstElement *effect;
   gchar *bin_desc;
 
   GError *error = NULL;
-  GESTrackParseLaunchEffect *self = GES_TRACK_PARSE_LAUNCH_EFFECT (object);
+  GESEffect *self = GES_EFFECT (object);
   GESTrack *track = ges_track_element_get_track (object);
 
   if (!track) {
@@ -230,19 +225,19 @@ ges_track_parse_launch_effect_create_element (GESTrackElement * object)
 }
 
 /**
- * ges_track_parse_launch_effect_new:
+ * ges_effect_new:
  * @bin_description: The gst-launch like bin description of the effect
  *
- * Creates a new #GESTrackParseLaunchEffect from the description of the bin.
+ * Creates a new #GESEffect from the description of the bin.
  *
- * Returns: a newly created #GESTrackParseLaunchEffect, or %NULL if something went
+ * Returns: a newly created #GESEffect, or %NULL if something went
  * wrong.
  *
  * Since: 0.10.2
  */
-GESTrackParseLaunchEffect *
-ges_track_parse_launch_effect_new (const gchar * bin_description)
+GESEffect *
+ges_effect_new (const gchar * bin_description)
 {
-  return g_object_new (GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT, "bin-description",
+  return g_object_new (GES_TYPE_EFFECT, "bin-description",
       bin_description, NULL);
 }
