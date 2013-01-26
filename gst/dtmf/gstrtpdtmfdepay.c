@@ -43,7 +43,7 @@
  * </thead>
  * <tbody>
  * <row>
- * <entry></entry>
+ * <entry>type</entry>
  * <entry>G_TYPE_INT</entry>
  * <entry>0-1</entry>
  * <entry>Which of the two methods
