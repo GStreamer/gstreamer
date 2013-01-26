@@ -664,6 +664,8 @@ gst_dtmf_src_prepare_message (GstRTPDTMFSrc * dtmfsrc,
       break;
     case RTP_DTMF_EVENT_TYPE_PAUSE_TASK:
       return NULL;
+    default:
+      return NULL;
   }
 
   return gst_message_new_element (GST_OBJECT (dtmfsrc), s);
