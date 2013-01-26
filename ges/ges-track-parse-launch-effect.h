@@ -22,7 +22,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-track-effect.h>
+#include <ges/ges-base-effect.h>
 
 G_BEGIN_DECLS
 #define GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT ges_track_parse_launch_effect_get_type()
@@ -52,7 +52,7 @@ typedef struct _GESTrackParseLaunchEffectPrivate   GESTrackParseLaunchEffectPriv
 struct _GESTrackParseLaunchEffect
 {
   /*< private > */
-  GESTrackEffect parent;
+  GESBaseEffect parent;
   GESTrackParseLaunchEffectPrivate *priv;
 
   /* Padding for API extension */
@@ -67,7 +67,7 @@ struct _GESTrackParseLaunchEffect
 struct _GESTrackParseLaunchEffectClass
 {
   /*< private > */
-  GESTrackEffectClass parent_class;
+  GESBaseEffectClass parent_class;
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 

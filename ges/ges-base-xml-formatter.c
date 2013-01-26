@@ -850,7 +850,7 @@ ges_base_xml_formatter_add_track_element (GESBaseXmlFormatter * self,
     goto out;
   }
 
-  if (g_type_is_a (track_element_type, GES_TYPE_TRACK_EFFECT) == FALSE) {
+  if (g_type_is_a (track_element_type, GES_TYPE_BASE_EFFECT) == FALSE) {
     GST_FIXME_OBJECT (self, "%s currently not supported",
         g_type_name (track_element_type));
     goto out;

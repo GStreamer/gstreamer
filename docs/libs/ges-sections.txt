@@ -852,19 +852,19 @@ ges_pitivi_formatter_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-effect</FILE>
-<TITLE>GESTrackEffect</TITLE>
-GESTrackEffect
+<FILE>ges-base-effect</FILE>
+<TITLE>GESBaseEffect</TITLE>
+GESBaseEffect
 <SUBSECTION Standard>
-GESTrackEffectClass
-GESTrackEffectPrivate
-GES_IS_TRACK_EFFECT
-GES_IS_TRACK_EFFECT_CLASS
-GES_TRACK_EFFECT
-GES_TRACK_EFFECT_CLASS
-GES_TRACK_EFFECT_GET_CLASS
-GES_TYPE_TRACK_EFFECT
-ges_track_effect_get_type
+GESBaseEffectClass
+GESBaseEffectPrivate
+GES_IS_BASE_EFFECT
+GES_IS_BASE_EFFECT_CLASS
+GES_BASE_EFFECT
+GES_BASE_EFFECT_CLASS
+GES_BASE_EFFECT_GET_CLASS
+GES_TYPE_BASE_EFFECT
+ges_base_effect_get_type
 </SECTION>
 
 <SECTION>

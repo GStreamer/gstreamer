@@ -21,7 +21,7 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
-void effect_added_cb (GESClip * obj, GESTrackEffect * trop, gpointer data);
+void effect_added_cb (GESClip * obj, GESBaseEffect * trop, gpointer data);
 void
 deep_prop_changed_cb (GESTrackElement * obj, GstElement * element,
     GParamSpec * spec);
@@ -44,7 +44,7 @@ GST_START_TEST (test_add_effect_to_clip)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *track_audio, *track_video;
-  GESTrackParseLaunchEffect *track_effect;
+  GESTrackParseLaunchEffect *base_effect;
   GESTestClip *source;
 
   ges_init ();
@@ -67,17 +67,17 @@ GST_START_TEST (test_add_effect_to_clip)
 
 
   GST_DEBUG ("Create effect");
-  track_effect = ges_track_parse_launch_effect_new ("agingtv");
+  base_effect = ges_track_parse_launch_effect_new ("agingtv");
 
-  fail_unless (GES_IS_TRACK_EFFECT (track_effect));
+  fail_unless (GES_IS_BASE_EFFECT (base_effect));
 
 
   fail_unless (ges_clip_add_track_element (GES_CLIP
-          (source), GES_TRACK_ELEMENT (track_effect)));
+          (source), GES_TRACK_ELEMENT (base_effect)));
   fail_unless (ges_track_add_object (track_video,
-          GES_TRACK_ELEMENT (track_effect)));
+          GES_TRACK_ELEMENT (base_effect)));
 
-  assert_equals_int (GES_TRACK_ELEMENT (track_effect)->active, TRUE);
+  assert_equals_int (GES_TRACK_ELEMENT (base_effect)->active, TRUE);
 
   ges_timeline_layer_remove_object (layer, (GESClip *) source);
 
@@ -91,7 +91,7 @@ GST_START_TEST (test_get_effects_from_tl)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *track_video;
-  GESTrackParseLaunchEffect *track_effect, *track_effect1, *track_effect2;
+  GESTrackParseLaunchEffect *base_effect, *base_effect1, *base_effect2;
   GESTestClip *source;
   GList *effects, *tmp = NULL;
   gint effect_prio = -1;
@@ -115,28 +115,28 @@ GST_START_TEST (test_get_effects_from_tl)
 
 
   GST_DEBUG ("Create effect");
-  track_effect = ges_track_parse_launch_effect_new ("agingtv");
-  track_effect1 = ges_track_parse_launch_effect_new ("agingtv");
-  track_effect2 = ges_track_parse_launch_effect_new ("agingtv");
+  base_effect = ges_track_parse_launch_effect_new ("agingtv");
+  base_effect1 = ges_track_parse_launch_effect_new ("agingtv");
+  base_effect2 = ges_track_parse_launch_effect_new ("agingtv");
 
-  fail_unless (GES_IS_TRACK_EFFECT (track_effect));
-  fail_unless (GES_IS_TRACK_EFFECT (track_effect1));
-  fail_unless (GES_IS_TRACK_EFFECT (track_effect2));
-
-  fail_unless (ges_clip_add_track_element (GES_CLIP
-          (source), GES_TRACK_ELEMENT (track_effect)));
-  fail_unless (ges_track_add_object (track_video,
-          GES_TRACK_ELEMENT (track_effect)));
+  fail_unless (GES_IS_BASE_EFFECT (base_effect));
+  fail_unless (GES_IS_BASE_EFFECT (base_effect1));
+  fail_unless (GES_IS_BASE_EFFECT (base_effect2));
 
   fail_unless (ges_clip_add_track_element (GES_CLIP
-          (source), GES_TRACK_ELEMENT (track_effect1)));
+          (source), GES_TRACK_ELEMENT (base_effect)));
   fail_unless (ges_track_add_object (track_video,
-          GES_TRACK_ELEMENT (track_effect1)));
+          GES_TRACK_ELEMENT (base_effect)));
 
   fail_unless (ges_clip_add_track_element (GES_CLIP
-          (source), GES_TRACK_ELEMENT (track_effect2)));
+          (source), GES_TRACK_ELEMENT (base_effect1)));
   fail_unless (ges_track_add_object (track_video,
-          GES_TRACK_ELEMENT (track_effect2)));
+          GES_TRACK_ELEMENT (base_effect1)));
+
+  fail_unless (ges_clip_add_track_element (GES_CLIP
+          (source), GES_TRACK_ELEMENT (base_effect2)));
+  fail_unless (ges_track_add_object (track_video,
+          GES_TRACK_ELEMENT (base_effect2)));
 
   g_object_get (G_OBJECT (source), "height", &clip_height, NULL);
   fail_unless (clip_height == 4);
@@ -145,9 +145,9 @@ GST_START_TEST (test_get_effects_from_tl)
   fail_unless (g_list_length (effects) == 3);
   for (tmp = effects; tmp; tmp = tmp->next) {
     gint priority = ges_clip_get_top_effect_position (GES_CLIP (source),
-        GES_TRACK_EFFECT (tmp->data));
+        GES_BASE_EFFECT (tmp->data));
     fail_unless (priority > effect_prio);
-    fail_unless (GES_IS_TRACK_EFFECT (tmp->data));
+    fail_unless (GES_IS_BASE_EFFECT (tmp->data));
     effect_prio = priority;
 
     g_object_unref (tmp->data);
@@ -217,9 +217,9 @@ GST_START_TEST (test_effect_clip)
   effects = ges_clip_get_top_effects (GES_CLIP (effect_clip));
   for (tmp = effects, i = 0; tmp; tmp = tmp->next, i++) {
     gint priority = ges_clip_get_top_effect_position (GES_CLIP (effect_clip),
-        GES_TRACK_EFFECT (tmp->data));
+        GES_BASE_EFFECT (tmp->data));
     fail_unless (priority > effect_prio);
-    fail_unless (GES_IS_TRACK_EFFECT (tmp->data));
+    fail_unless (GES_IS_BASE_EFFECT (tmp->data));
     fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (tmp->
                 data))->type == track_type[i]);
     effect_prio = priority;
@@ -281,12 +281,12 @@ GST_START_TEST (test_priorities_clip)
           GES_TRACK_ELEMENT (tck_effect1)));
 
   fail_unless (ges_clip_set_top_effect_priority (GES_CLIP
-          (effect_clip), GES_TRACK_EFFECT (tck_effect1), 0));
+          (effect_clip), GES_BASE_EFFECT (tck_effect1), 0));
 
   fail_unless (_PRIORITY (tck_effect), 3);
 
   fail_unless (ges_clip_set_top_effect_priority (GES_CLIP
-          (effect_clip), GES_TRACK_EFFECT (tck_effect1), 3));
+          (effect_clip), GES_BASE_EFFECT (tck_effect1), 3));
   fail_unless (_PRIORITY (tck_effect) == 2);
 
   g_object_get (effect_clip, "height", &clip_height, NULL);
@@ -295,9 +295,9 @@ GST_START_TEST (test_priorities_clip)
   effects = ges_clip_get_top_effects (GES_CLIP (effect_clip));
   for (tmp = effects, i = 0; tmp; tmp = tmp->next, i++) {
     gint priority = ges_clip_get_top_effect_position (GES_CLIP (effect_clip),
-        GES_TRACK_EFFECT (tmp->data));
+        GES_BASE_EFFECT (tmp->data));
     fail_unless (priority > effect_prio);
-    fail_unless (GES_IS_TRACK_EFFECT (tmp->data));
+    fail_unless (GES_IS_BASE_EFFECT (tmp->data));
     effect_prio = priority;
 
     g_object_unref (tmp->data);
@@ -311,7 +311,7 @@ GST_START_TEST (test_priorities_clip)
 
 GST_END_TEST;
 
-GST_START_TEST (test_track_effect_set_properties)
+GST_START_TEST (test_base_effect_set_properties)
 {
   GESTimeline *timeline;
   GESTimelineLayer *layer;
@@ -384,11 +384,11 @@ GST_START_TEST (test_track_effect_set_properties)
 GST_END_TEST;
 
 void
-effect_added_cb (GESClip * obj, GESTrackEffect * trop, gpointer data)
+effect_added_cb (GESClip * obj, GESBaseEffect * trop, gpointer data)
 {
   GST_DEBUG ("Effect added");
   fail_unless (GES_IS_CLIP (obj));
-  fail_unless (GES_IS_TRACK_EFFECT (trop));
+  fail_unless (GES_IS_BASE_EFFECT (trop));
 }
 
 void
@@ -464,7 +464,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_get_effects_from_tl);
   tcase_add_test (tc_chain, test_effect_clip);
   tcase_add_test (tc_chain, test_priorities_clip);
-  tcase_add_test (tc_chain, test_track_effect_set_properties);
+  tcase_add_test (tc_chain, test_base_effect_set_properties);
   tcase_add_test (tc_chain, test_clip_signals);
 
   return s;

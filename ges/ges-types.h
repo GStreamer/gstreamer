@@ -95,8 +95,8 @@ typedef struct _GESTrackSourceClass GESTrackSourceClass;
 typedef struct _GESTrackOperation GESTrackOperation;
 typedef struct _GESTrackOperationClass GESTrackOperationClass;
 
-typedef struct _GESTrackEffect GESTrackEffect;
-typedef struct _GESTrackEffectClass GESTrackEffectClass;
+typedef struct _GESBaseEffect GESBaseEffect;
+typedef struct _GESBaseEffectClass GESBaseEffectClass;
 
 typedef struct _GESTrackParseLaunchEffect GESTrackParseLaunchEffect;
 typedef struct _GESTrackParseLaunchEffectClass GESTrackParseLaunchEffectClass;

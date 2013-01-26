@@ -207,13 +207,13 @@ save_track_elements (xmlTextWriterPtr writer, GList * source_list,
       xmlTextWriterWriteAttribute (writer, BAD_CAST "id", BAD_CAST cast);
       xmlFree (cast);
 
-      if (GES_IS_TRACK_EFFECT (trackelement)) {
+      if (GES_IS_BASE_EFFECT (trackelement)) {
         GParamSpec **pspecs, *spec;
         gchar *serialized, *concatenated;
         guint n_props = 0;
 
         xmlTextWriterWriteAttribute (writer, BAD_CAST "type",
-            BAD_CAST "pitivi.timeline.track.TrackEffect");
+            BAD_CAST "pitivi.timeline.track.BaseEffect");
 
         g_object_get (trackelement, "bin-description", &bin_desc, NULL);
         xmlTextWriterStartElement (writer, BAD_CAST "effect");
@@ -272,7 +272,7 @@ save_track_elements (xmlTextWriterPtr writer, GList * source_list,
       xmlTextWriterEndElement (writer);
 
       /* We add effects at the end of the trackelement list */
-      if (GES_IS_TRACK_EFFECT (trackelement)) {
+      if (GES_IS_BASE_EFFECT (trackelement)) {
         srcmap->tck_obj_ids = g_list_append (srcmap->tck_obj_ids,
             xmlXPathCastNumberToString (*id));
       } else {

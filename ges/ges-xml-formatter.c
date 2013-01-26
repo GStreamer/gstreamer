@@ -540,7 +540,7 @@ _parse_effect (GMarkupParseContext * context, const gchar * element_name,
   }
 
   type = g_type_from_name (strtype);
-  if (!g_type_is_a (type, GES_TYPE_TRACK_EFFECT))
+  if (!g_type_is_a (type, GES_TYPE_BASE_EFFECT))
     goto wrong_type;
 
   if (children_properties) {
@@ -583,7 +583,7 @@ wrong_children_properties:
 wrong_type:
   g_set_error (error, G_MARKUP_ERROR,
       G_MARKUP_ERROR_INVALID_CONTENT,
-      "element '%s', %s not a GESTrackEffect'", element_name, strtype);
+      "element '%s', %s not a GESBaseEffect'", element_name, strtype);
 }
 
 static void

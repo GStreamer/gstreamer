@@ -26,13 +26,13 @@
 #include "ges-internal.h"
 #include "ges-extractable.h"
 #include "ges-track-element.h"
-#include "ges-track-effect.h"
+#include "ges-base-effect.h"
 #include "ges-track-parse-launch-effect.h"
 
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
 
 G_DEFINE_TYPE_WITH_CODE (GESTrackParseLaunchEffect,
-    ges_track_parse_launch_effect, GES_TYPE_TRACK_EFFECT,
+    ges_track_parse_launch_effect, GES_TYPE_BASE_EFFECT,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 

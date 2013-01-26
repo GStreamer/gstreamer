@@ -69,7 +69,7 @@
 #include <ges/ges-track-transition.h>
 #include <ges/ges-track-video-transition.h>
 #include <ges/ges-track-audio-transition.h>
-#include <ges/ges-track-effect.h>
+#include <ges/ges-base-effect.h>
 #include <ges/ges-track-parse-launch-effect.h>
 #include <ges/ges-formatter.h>
 #include <ges/ges-pitivi-formatter.h>

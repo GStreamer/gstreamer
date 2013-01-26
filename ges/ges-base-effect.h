@@ -17,8 +17,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TRACK_EFFECT
-#define _GES_TRACK_EFFECT
+#ifndef _GES_BASE_EFFECT
+#define _GES_BASE_EFFECT
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -26,40 +26,40 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TRACK_EFFECT ges_track_effect_get_type()
-#define GES_TRACK_EFFECT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_EFFECT, GESTrackEffect))
-#define GES_TRACK_EFFECT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_EFFECT, GESTrackEffectClass))
-#define GES_IS_TRACK_EFFECT(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_EFFECT))
-#define GES_IS_TRACK_EFFECT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_EFFECT))
-#define GES_TRACK_EFFECT_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_EFFECT, GESTrackEffectClass))
+#define GES_TYPE_BASE_EFFECT ges_base_effect_get_type()
+#define GES_BASE_EFFECT(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_BASE_EFFECT, GESBaseEffect))
+#define GES_BASE_EFFECT_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_BASE_EFFECT, GESBaseEffectClass))
+#define GES_IS_BASE_EFFECT(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_BASE_EFFECT))
+#define GES_IS_BASE_EFFECT_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_BASE_EFFECT))
+#define GES_BASE_EFFECT_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_BASE_EFFECT, GESBaseEffectClass))
 
 
-typedef struct _GESTrackEffectPrivate   GESTrackEffectPrivate;
+typedef struct _GESBaseEffectPrivate   GESBaseEffectPrivate;
 
 /**
- * GESTrackEffect:
+ * GESBaseEffect:
  */
-struct _GESTrackEffect
+struct _GESBaseEffect
 {
   /*< private > */
   GESTrackOperation parent;
-  GESTrackEffectPrivate *priv;
+  GESBaseEffectPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
- * GESTrackEffectClass:
+ * GESBaseEffectClass:
  * @parent_class: parent class
  */
 
-struct _GESTrackEffectClass
+struct _GESBaseEffectClass
 {
   /*< private > */
   GESTrackOperationClass parent_class;
@@ -68,7 +68,7 @@ struct _GESTrackEffectClass
 
 };
 
-GType ges_track_effect_get_type (void);
+GType ges_base_effect_get_type (void);
 
 G_END_DECLS
-#endif /* _GES_TRACK_EFFECT */
+#endif /* _GES_BASE_EFFECT */

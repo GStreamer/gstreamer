@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION:ges-track-effect
+ * SECTION:ges-base-effect
  * @short_description: adds an effect to a stream in a GESSourceClip or a
  * #GESTimelineLayer
  */
@@ -28,38 +28,37 @@
 
 #include "ges-internal.h"
 #include "ges-track-element.h"
-#include "ges-track-effect.h"
+#include "ges-base-effect.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESTrackEffect, ges_track_effect,
+G_DEFINE_ABSTRACT_TYPE (GESBaseEffect, ges_base_effect,
     GES_TYPE_TRACK_OPERATION);
 
-static GHashTable *ges_track_effect_get_props_hashtable (GESTrackElement *
-    self);
+static GHashTable *ges_base_effect_get_props_hashtable (GESTrackElement * self);
 guint pspec_hash (gconstpointer key_spec);
 static gboolean pspec_equal (gconstpointer key_spec_1,
     gconstpointer key_spec_2);
 
-struct _GESTrackEffectPrivate
+struct _GESBaseEffectPrivate
 {
   void *nothing;
 };
 
 static void
-ges_track_effect_class_init (GESTrackEffectClass * klass)
+ges_base_effect_class_init (GESBaseEffectClass * klass)
 {
   GESTrackElementClass *obj_bg_class = GES_TRACK_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTrackEffectPrivate));
+  g_type_class_add_private (klass, sizeof (GESBaseEffectPrivate));
 
-  obj_bg_class->get_props_hastable = ges_track_effect_get_props_hashtable;
+  obj_bg_class->get_props_hastable = ges_base_effect_get_props_hashtable;
 }
 
 static void
-ges_track_effect_init (GESTrackEffect * self)
+ges_base_effect_init (GESBaseEffect * self)
 {
   self->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (self, GES_TYPE_TRACK_EFFECT,
-      GESTrackEffectPrivate);
+      G_TYPE_INSTANCE_GET_PRIVATE (self, GES_TYPE_BASE_EFFECT,
+      GESBaseEffectPrivate);
 }
 
 static gboolean
@@ -87,7 +86,7 @@ pspec_hash (gconstpointer key_spec)
 
 /*  Virtual methods */
 static GHashTable *
-ges_track_effect_get_props_hashtable (GESTrackElement * self)
+ges_base_effect_get_props_hashtable (GESTrackElement * self)
 {
   GValue item = { 0, };
   GstIterator *it;

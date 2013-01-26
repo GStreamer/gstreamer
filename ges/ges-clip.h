@@ -202,8 +202,8 @@ void ges_clip_set_moving_from_layer    (GESClip *object, gboolean is_moving);
 
 /* Effects */
 GList* ges_clip_get_top_effects           (GESClip *object);
-gint   ges_clip_get_top_effect_position   (GESClip *object, GESTrackEffect *effect);
-gboolean ges_clip_set_top_effect_priority (GESClip *object, GESTrackEffect *effect, guint newpriority);
+gint   ges_clip_get_top_effect_position   (GESClip *object, GESBaseEffect *effect);
+gboolean ges_clip_set_top_effect_priority (GESClip *object, GESBaseEffect *effect, guint newpriority);
 
 /* Editing */
 GESClip *ges_clip_split  (GESClip *object, guint64  position);

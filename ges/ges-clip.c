@@ -61,7 +61,7 @@ track_element_priority_changed_cb (GESTrackElement * child,
     GParamSpec * arg G_GNUC_UNUSED, GESClip * object);
 static void update_height (GESClip * object);
 
-static gint sort_track_effects (gpointer a, gpointer b, GESClip * object);
+static gint sort_base_effects (gpointer a, gpointer b, GESClip * object);
 static void
 get_layer_priorities (GESTimelineLayer * layer, guint32 * layer_min_gnl_prio,
     guint32 * layer_max_gnl_prio);
@@ -240,7 +240,7 @@ ges_clip_class_init (GESClipClass * klass)
   /**
    * GESClip::effect-added:
    * @object: the #GESClip
-   * @effect: the #GESTrackEffect that was added.
+   * @effect: the #GESBaseEffect that was added.
    *
    * Will be emitted after an effect was added to the object.
    *
@@ -249,12 +249,12 @@ ges_clip_class_init (GESClipClass * klass)
   ges_clip_signals[EFFECT_ADDED] =
       g_signal_new ("effect-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 1, GES_TYPE_TRACK_EFFECT);
+      G_TYPE_NONE, 1, GES_TYPE_BASE_EFFECT);
 
   /**
    * GESClip::effect-removed:
    * @object: the #GESClip
-   * @effect: the #GESTrackEffect that was added.
+   * @effect: the #GESBaseEffect that was added.
    *
    * Will be emitted after an effect was remove from the object.
    *
@@ -263,7 +263,7 @@ ges_clip_class_init (GESClipClass * klass)
   ges_clip_signals[EFFECT_REMOVED] =
       g_signal_new ("effect-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 1, GES_TYPE_TRACK_EFFECT);
+      G_TYPE_NONE, 1, GES_TYPE_BASE_EFFECT);
 
   /**
    * GESClip::track-object-added:
@@ -452,10 +452,10 @@ ges_clip_add_track_element (GESClip * object, GESTrackElement * trobj)
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (trobj), FALSE);
 
   priv = object->priv;
-  is_effect = GES_IS_TRACK_EFFECT (trobj);
+  is_effect = GES_IS_BASE_EFFECT (trobj);
 
   GST_LOG ("Got a TrackElement : %p , setting the timeline object as its"
-      "creator. Is a TrackEffect %i", trobj, is_effect);
+      "creator. Is a BaseEffect %i", trobj, is_effect);
 
   if (!trobj)
     return FALSE;
@@ -476,9 +476,9 @@ ges_clip_add_track_element (GESClip * object, GESTrackElement * trobj)
   mapping->priority_offset = priv->nb_effects;
 
   /* If the trackelement is an effect:
-   *  - We add it on top of the list of TrackEffect
+   *  - We add it on top of the list of BaseEffect
    *  - We put all TrackElement present in the Clip
-   *    which are not TrackEffect on top of them
+   *    which are not BaseEffect on top of them
    *
    * FIXME: Let the full control over priorities to the user
    */
@@ -501,7 +501,7 @@ ges_clip_add_track_element (GESClip * object, GESTrackElement * trobj)
 
   object->trackelements =
       g_list_insert_sorted_with_data (object->trackelements, trobj,
-      (GCompareDataFunc) sort_track_effects, object);
+      (GCompareDataFunc) sort_base_effects, object);
 
   _set_start0 (GES_TIMELINE_ELEMENT (trobj), _START (object));
   _set_duration0 (GES_TIMELINE_ELEMENT (trobj), _DURATION (object));
@@ -537,13 +537,13 @@ ges_clip_add_track_element (GESClip * object, GESTrackElement * trobj)
       _PRIORITY (object) + mapping->priority_offset);
 
   GST_DEBUG ("Returning trobj:%p", trobj);
-  if (!GES_IS_TRACK_EFFECT (trobj)) {
+  if (!GES_IS_BASE_EFFECT (trobj)) {
     g_signal_emit (object, ges_clip_signals[TRACK_ELEMENT_ADDED], 0,
         GES_TRACK_ELEMENT (trobj));
   } else {
     /* emit 'effect-added' */
     g_signal_emit (object, ges_clip_signals[EFFECT_ADDED], 0,
-        GES_TRACK_EFFECT (trobj));
+        GES_BASE_EFFECT (trobj));
   }
 
   return TRUE;
@@ -598,11 +598,11 @@ ges_clip_release_track_element (GESClip * object,
 
   object->trackelements = g_list_remove (object->trackelements, trackelement);
 
-  if (GES_IS_TRACK_EFFECT (trackelement)) {
+  if (GES_IS_BASE_EFFECT (trackelement)) {
     /* emit 'object-removed' */
     object->priv->nb_effects--;
     g_signal_emit (object, ges_clip_signals[EFFECT_REMOVED], 0,
-        GES_TRACK_EFFECT (trackelement));
+        GES_BASE_EFFECT (trackelement));
   } else
     g_signal_emit (object, ges_clip_signals[TRACK_ELEMENT_REMOVED], 0,
         GES_TRACK_ELEMENT (trackelement));
@@ -830,7 +830,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   }
 
   object->trackelements = g_list_sort_with_data (object->trackelements,
-      (GCompareDataFunc) sort_track_effects, object);
+      (GCompareDataFunc) sort_base_effects, object);
   priv->ignore_notifies = FALSE;
 
   return TRUE;
@@ -1015,7 +1015,7 @@ ges_clip_get_track_elements (GESClip * object)
 }
 
 static gint
-sort_track_effects (gpointer a, gpointer b, GESClip * object)
+sort_base_effects (gpointer a, gpointer b, GESClip * object)
 {
   guint prio_offset_a, prio_offset_b;
   ObjectMapping *map_a, *map_b;
@@ -1045,9 +1045,9 @@ sort_track_effects (gpointer a, gpointer b, GESClip * object)
  * Get effects applied on @object
  *
  * Returns: (transfer full) (element-type GESTrackElement): a #GList of the
- * #GESTrackEffect that are applied on @object order by ascendant priorities.
+ * #GESBaseEffect that are applied on @object order by ascendant priorities.
  * The refcount of the objects will be increased. The user will have to
- * unref each #GESTrackEffect and free the #GList.
+ * unref each #GESBaseEffect and free the #GList.
  *
  * Since: 0.10.2
  */
@@ -1074,7 +1074,7 @@ ges_clip_get_top_effects (GESClip * object)
 /**
  * ges_clip_get_top_effect_position:
  * @object: The origin #GESClip
- * @effect: The #GESTrackEffect we want to get the top position from
+ * @effect: The #GESBaseEffect we want to get the top position from
  *
  * Gets the top position of an effect.
  *
@@ -1083,7 +1083,7 @@ ges_clip_get_top_effects (GESClip * object)
  * Since: 0.10.2
  */
 gint
-ges_clip_get_top_effect_position (GESClip * object, GESTrackEffect * effect)
+ges_clip_get_top_effect_position (GESClip * object, GESBaseEffect * effect)
 {
   g_return_val_if_fail (GES_IS_CLIP (object), -1);
 
@@ -1094,7 +1094,7 @@ ges_clip_get_top_effect_position (GESClip * object, GESTrackEffect * effect)
 /**
  * ges_clip_set_top_effect_priority:
  * @object: The origin #GESClip
- * @effect: The #GESTrackEffect to move
+ * @effect: The #GESBaseEffect to move
  * @newpriority: the new position at which to move the @effect inside this
  * #GESClip
  *
@@ -1106,7 +1106,7 @@ ges_clip_get_top_effect_position (GESClip * object, GESTrackEffect * effect)
  */
 gboolean
 ges_clip_set_top_effect_priority (GESClip * object,
-    GESTrackEffect * effect, guint newpriority)
+    GESBaseEffect * effect, guint newpriority)
 {
   gint inc;
   GList *tmp;
@@ -1150,7 +1150,7 @@ ges_clip_set_top_effect_priority (GESClip * object,
   }
 
   object->trackelements = g_list_sort_with_data (object->trackelements,
-      (GCompareDataFunc) sort_track_effects, object);
+      (GCompareDataFunc) sort_base_effects, object);
 
   return TRUE;
 }

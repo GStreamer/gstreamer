@@ -235,7 +235,7 @@ _test_project (GESProject * project, GESTimeline * timeline)
           GESTrackElement *trackelement =
               GES_TRACK_ELEMENT (tmptrackelement->data);
 
-          if (GES_IS_TRACK_EFFECT (trackelement)) {
+          if (GES_IS_BASE_EFFECT (trackelement)) {
             guint nb_scratch_lines;
 
             ges_track_element_get_child_properties (trackelement,

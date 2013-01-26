@@ -42,7 +42,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-track-audio-test-source.c		\
 	ges-track-title-source.c		\
 	ges-track-text-overlay.c		\
-	ges-track-effect.c		\
+	ges-base-effect.c		\
 	ges-track-parse-launch-effect.c		\
 	ges-screenshot.c			\
 	ges-formatter.c				\
@@ -83,7 +83,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-title-clip.h		\
 	ges-overlay-clip.h			\
 	ges-text-overlay-clip.h		\
-	ges-track-effect.h		\
+	ges-base-effect.h		\
 	ges-track-parse-launch-effect.h		\
 	ges-track.h				\
 	ges-track-element.h			\
