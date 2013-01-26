@@ -50,7 +50,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-asset.c \
 	ges-uri-asset.c \
 	ges-asset-clip.c \
-	ges-asset-track-object.c \
+	ges-track-element-asset.c \
 	ges-extractable.c \
 	ges-project.c \
 	ges-base-xml-formatter.c \
@@ -104,7 +104,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-asset.h \
 	ges-uri-asset.h \
 	ges-asset-clip.h \
-	ges-asset-track-object.h \
+	ges-track-element-asset.h \
 	ges-extractable.h \
 	ges-project.h \
 	ges-base-xml-formatter.h \

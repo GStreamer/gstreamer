@@ -30,7 +30,7 @@
 #include <gst/pbutils/pbutils.h>
 #include "ges.h"
 #include "ges-internal.h"
-#include "ges-asset-track-object.h"
+#include "ges-track-element-asset.h"
 
 static GHashTable *parent_newparent_table = NULL;
 static void
@@ -247,7 +247,7 @@ _create_uri_source_asset (GESUriClipAsset * asset,
   priv_tckasset->uri = ges_asset_get_id (GES_ASSET (asset));
   priv_tckasset->sinfo = g_object_ref (sinfo);
   priv_tckasset->parent_asset = asset;
-  ges_asset_track_element_set_track_type (GES_ASSET_TRACK_ELEMENT
+  ges_track_element_asset_set_track_type (GES_TRACK_ELEMENT_ASSET
       (tck_filesource_asset), type);
 
   priv->asset_trackfilesources = g_list_append (priv->asset_trackfilesources,
@@ -470,7 +470,7 @@ ges_uri_clip_asset_get_stream_assets (GESUriClipAsset * self)
  */
 
 G_DEFINE_TYPE (GESUriSourceAsset, ges_uri_source_asset,
-    GES_TYPE_ASSET_TRACK_ELEMENT);
+    GES_TYPE_TRACK_ELEMENT_ASSET);
 
 static GESExtractable *
 _extract (GESAsset * asset, GError ** error)

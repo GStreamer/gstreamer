@@ -1003,20 +1003,20 @@ GES_ASSET_CLIP_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-asset-track-object</FILE>
-<TITLE>GESAssetTrackElement</TITLE>
-GESAssetTrackElement
-ges_asset_track_element_get_type
-ges_asset_track_element_get_track_type
-ges_asset_track_element_set_track_type
+<FILE>ges-track-element-asset</FILE>
+<TITLE>GESTrackElementAsset</TITLE>
+GESTrackElementAsset
+ges_track_element_asset_get_type
+ges_track_element_asset_get_track_type
+ges_track_element_asset_set_track_type
 <SUBSECTION Standard>
-GESAssetTrackElementPrivate
-GES_ASSET_TRACK_ELEMENT
-GES_TYPE_ASSET_TRACK_ELEMENT
-GES_ASSET_TRACK_ELEMENT_CLASS
-GES_IS_ASSET_TRACK_ELEMENT
-GES_IS_ASSET_TRACK_ELEMENT_CLASS
-GES_ASSET_TRACK_ELEMENT_GET_CLASS
+GESTrackElementAssetPrivate
+GES_TRACK_ELEMENT_ASSET
+GES_TYPE_TRACK_ELEMENT_ASSET
+GES_TRACK_ELEMENT_ASSET_CLASS
+GES_IS_TRACK_ELEMENT_ASSET
+GES_IS_TRACK_ELEMENT_ASSET_CLASS
+GES_TRACK_ELEMENT_ASSET_GET_CLASS
 </SECTION>
 
 <SECTION>

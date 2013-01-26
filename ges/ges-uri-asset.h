@@ -26,7 +26,7 @@
 #include <ges/ges-types.h>
 #include <ges/ges-asset.h>
 #include <ges/ges-asset-clip.h>
-#include <ges/ges-asset-track-object.h>
+#include <ges/ges-track-element-asset.h>
 
 G_BEGIN_DECLS
 #define GES_TYPE_URI_CLIP_ASSET ges_uri_clip_asset_get_type()
@@ -95,7 +95,7 @@ GType ges_uri_source_asset_get_type (void);
 
 struct _GESUriSourceAsset
 {
-  GESAssetTrackElement parent;
+  GESTrackElementAsset parent;
 
   /* <private> */
   GESUriSourceAssetPrivate *priv;
@@ -106,7 +106,7 @@ struct _GESUriSourceAsset
 
 struct _GESUriSourceAssetClass
 {
-  GESAssetTrackElementClass parent_class;
+  GESTrackElementAssetClass parent_class;
 
   gpointer _ges_reserved[GES_PADDING];
 };

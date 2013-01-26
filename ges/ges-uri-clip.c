@@ -31,7 +31,7 @@
 #include "ges-source-clip.h"
 #include "ges-uri-source.h"
 #include "ges-uri-asset.h"
-#include "ges-asset-track-object.h"
+#include "ges-track-element-asset.h"
 #include "ges-extractable.h"
 #include "ges-track-image-source.h"
 #include "ges-audio-test-source.h"
@@ -381,9 +381,9 @@ ges_uri_clip_create_track_elements (GESClip * obj, GESTrackType type)
       ges_uri_clip_asset_get_stream_assets (GES_URI_CLIP_ASSET
       (GES_TIMELINE_ELEMENT (obj)->asset));
   for (tmp = stream_assets; tmp; tmp = tmp->next) {
-    GESAssetTrackElement *asset = GES_ASSET_TRACK_ELEMENT (tmp->data);
+    GESTrackElementAsset *asset = GES_TRACK_ELEMENT_ASSET (tmp->data);
 
-    if (ges_asset_track_element_get_track_type (asset) == type)
+    if (ges_track_element_asset_get_track_type (asset) == type)
       res = g_list_prepend (res, ges_asset_extract (GES_ASSET (asset), NULL));
   }
 

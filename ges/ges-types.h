@@ -149,8 +149,8 @@ typedef struct _GESAssetClipClass GESAssetClipClass;
 typedef struct _GESUriClipAsset GESUriClipAsset;
 typedef struct _GESUriClipAssetClass GESUriClipAssetClass;
 
-typedef struct _GESAssetTrackElement GESAssetTrackElement;
-typedef struct _GESAssetTrackElementClass GESAssetTrackElementClass;
+typedef struct _GESTrackElementAsset GESTrackElementAsset;
+typedef struct _GESTrackElementAssetClass GESTrackElementAssetClass;
 
 typedef struct _GESUriSourceAsset GESUriSourceAsset;
 typedef struct _GESUriSourceAssetClass GESUriSourceAssetClass;

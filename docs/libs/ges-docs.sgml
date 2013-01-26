@@ -103,7 +103,7 @@ platform as well as Windows. It is released under the GNU Library General Public
   <chapter>
     <title>Assets</title>
     <xi:include href="xml/ges-asset-clip.xml"/>
-    <xi:include href="xml/ges-asset-track-object.xml"/>
+    <xi:include href="xml/ges-track-element-asset.xml"/>
     <xi:include href="xml/ges-uri-clip-asset.xml"/>
     <xi:include href="xml/ges-asset-track-file-source.xml"/>
     <xi:include href="xml/ges-project.xml"/>

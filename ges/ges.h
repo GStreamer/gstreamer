@@ -48,7 +48,7 @@
 #include <ges/ges-screenshot.h>
 #include <ges/ges-asset.h>
 #include <ges/ges-asset-clip.h>
-#include <ges/ges-asset-track-object.h>
+#include <ges/ges-track-element-asset.h>
 #include <ges/ges-uri-asset.h>
 #include <ges/ges-project.h>
 #include <ges/ges-extractable.h>

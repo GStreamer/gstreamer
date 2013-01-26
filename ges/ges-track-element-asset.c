@@ -19,11 +19,11 @@
  */
 
 /**
- * SECTION: ges-asset-track-object
+ * SECTION: ges-track-element-asset
  * @short_description: A GESAsset subclass specialized in GESTrackElement extraction
  */
 
-#include "ges-asset-track-object.h"
+#include "ges-track-element-asset.h"
 
 enum
 {
@@ -34,9 +34,9 @@ enum
 
 static GParamSpec *properties[PROP_LAST];
 
-G_DEFINE_TYPE (GESAssetTrackElement, ges_asset_track_element, GES_TYPE_ASSET);
+G_DEFINE_TYPE (GESTrackElementAsset, ges_track_element_asset, GES_TYPE_ASSET);
 
-struct _GESAssetTrackElementPrivate
+struct _GESTrackElementAssetPrivate
 {
   GESTrackType type;
 };
@@ -45,7 +45,7 @@ static void
 _get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESAssetTrackElement *asset = GES_ASSET_TRACK_ELEMENT (object);
+  GESTrackElementAsset *asset = GES_TRACK_ELEMENT_ASSET (object);
 
   switch (property_id) {
     case PROP_TRACK_TYPE:
@@ -60,7 +60,7 @@ static void
 _set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESAssetTrackElement *asset = GES_ASSET_TRACK_ELEMENT (object);
+  GESTrackElementAsset *asset = GES_TRACK_ELEMENT_ASSET (object);
 
   switch (property_id) {
     case PROP_TRACK_TYPE:
@@ -72,11 +72,11 @@ _set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_asset_track_element_class_init (GESAssetTrackElementClass * klass)
+ges_track_element_asset_class_init (GESTrackElementAssetClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESAssetTrackElementPrivate));
+  g_type_class_add_private (klass, sizeof (GESTrackElementAssetPrivate));
 
   object_class->get_property = _get_property;
   object_class->set_property = _set_property;
@@ -96,19 +96,19 @@ ges_asset_track_element_class_init (GESAssetTrackElementClass * klass)
 }
 
 static void
-ges_asset_track_element_init (GESAssetTrackElement * self)
+ges_track_element_asset_init (GESTrackElementAsset * self)
 {
-  GESAssetTrackElementPrivate *priv;
+  GESTrackElementAssetPrivate *priv;
 
   priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_ASSET_TRACK_ELEMENT, GESAssetTrackElementPrivate);
+      GES_TYPE_TRACK_ELEMENT_ASSET, GESTrackElementAssetPrivate);
 
   priv->type = GES_TRACK_TYPE_UNKNOWN;
 
 }
 
 /**
- * ges_asset_track_element_set_track_type:
+ * ges_track_element_asset_set_track_type:
  * @asset: A #GESAssetObject
  * @type: A #GESTrackType
  *
@@ -116,16 +116,16 @@ ges_asset_track_element_init (GESAssetTrackElement * self)
  * should get into
  */
 void
-ges_asset_track_element_set_track_type (GESAssetTrackElement * asset,
+ges_track_element_asset_set_track_type (GESTrackElementAsset * asset,
     GESTrackType type)
 {
-  g_return_if_fail (GES_IS_ASSET_TRACK_ELEMENT (asset));
+  g_return_if_fail (GES_IS_TRACK_ELEMENT_ASSET (asset));
 
   asset->priv->type = type;
 }
 
 /**
- * ges_asset_track_element_get_track_type:
+ * ges_track_element_asset_get_track_type:
  * @asset: A #GESAssetObject
  *
  * Get the GESAssetTrackType the #GESTrackElement extracted from @self
@@ -134,9 +134,9 @@ ges_asset_track_element_set_track_type (GESAssetTrackElement * asset,
  * Returns: a #GESTrackType
  */
 const GESTrackType
-ges_asset_track_element_get_track_type (GESAssetTrackElement * asset)
+ges_track_element_asset_get_track_type (GESTrackElementAsset * asset)
 {
-  g_return_val_if_fail (GES_IS_ASSET_TRACK_ELEMENT (asset),
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT_ASSET (asset),
       GES_TRACK_TYPE_UNKNOWN);
 
   return asset->priv->type;

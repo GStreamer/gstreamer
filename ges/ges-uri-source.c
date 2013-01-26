@@ -47,7 +47,7 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
   if (ges_track_element_get_track_type (GES_TRACK_ELEMENT (self)) ==
       GES_TRACK_TYPE_UNKNOWN) {
     ges_track_element_set_track_type (GES_TRACK_ELEMENT (self),
-        ges_asset_track_element_get_track_type (GES_ASSET_TRACK_ELEMENT
+        ges_track_element_asset_get_track_type (GES_TRACK_ELEMENT_ASSET
             (asset)));
   }
 }
