@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TRACK_SOURCE
-#define _GES_TRACK_SOURCE
+#ifndef _GES_SOURCE
+#define _GES_SOURCE
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -28,46 +28,46 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TRACK_SOURCE ges_track_source_get_type()
+#define GES_TYPE_SOURCE ges_source_get_type()
 
-#define GES_TRACK_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_SOURCE, GESTrackSource))
+#define GES_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_SOURCE, GESSource))
 
-#define GES_TRACK_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_SOURCE, GESTrackSourceClass))
+#define GES_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_SOURCE, GESSourceClass))
 
-#define GES_IS_TRACK_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_SOURCE))
+#define GES_IS_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_SOURCE))
 
-#define GES_IS_TRACK_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_SOURCE))
+#define GES_IS_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_SOURCE))
 
-#define GES_TRACK_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_SOURCE, GESTrackSourceClass))
+#define GES_SOURCE_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_SOURCE, GESSourceClass))
 
-typedef struct _GESTrackSourcePrivate GESTrackSourcePrivate;
+typedef struct _GESSourcePrivate GESSourcePrivate;
 
 /**
- * GESTrackSource:
+ * GESSource:
  *
  * Base class for single-media sources
  */
 
-struct _GESTrackSource {
+struct _GESSource {
   /*< private >*/
   GESTrackElement parent;
 
-  GESTrackSourcePrivate *priv;
+  GESSourcePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
- * GESTrackSourceClass:
+ * GESSourceClass:
  */
 
-struct _GESTrackSourceClass {
+struct _GESSourceClass {
   /*< private >*/
   GESTrackElementClass parent_class;
 
@@ -76,8 +76,8 @@ struct _GESTrackSourceClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_track_source_get_type (void);
+GType ges_source_get_type (void);
 
 G_END_DECLS
 
-#endif /* _GES_TRACK_SOURCE */
+#endif /* _GES_SOURCE */

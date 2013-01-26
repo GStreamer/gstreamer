@@ -127,17 +127,17 @@ struct _GESTimelinePrivate
   guint64 snapping_distance;
 
   /* FIXME: Should we offer an API over those fields ?
-   * FIXME: Should other classes than subclasses of TrackSource also
+   * FIXME: Should other classes than subclasses of Source also
    * be tracked? */
 
   /* Snapping fields */
-  GHashTable *by_start;         /* {TrackSource: start} */
-  GHashTable *by_end;           /* {TrackSource: end} */
-  GHashTable *by_object;        /* {timecode: TrackSource} */
-  GHashTable *obj_iters;        /* {TrackSource: TrackObjIters} */
+  GHashTable *by_start;         /* {Source: start} */
+  GHashTable *by_end;           /* {Source: end} */
+  GHashTable *by_object;        /* {timecode: Source} */
+  GHashTable *obj_iters;        /* {Source: TrackObjIters} */
   GSequence *starts_ends;       /* Sorted list of starts/ends */
   /* We keep 1 reference to our trackelement here */
-  GSequence *tracksources;      /* TrackSource-s sorted by start/priorities */
+  GSequence *tracksources;      /* Source-s sorted by start/priorities */
 
   GList *priv_tracks;
   /* FIXME: We should definitly offer an API over this,
@@ -843,7 +843,7 @@ _create_transitions_on_layer (GESTimeline * timeline, GESTimelineLayer * layer,
   }
 }
 
-/* @tck_obj must be a GESTrackSource */
+/* @tck_obj must be a GESSource */
 static void
 create_transitions (GESTimeline * timeline, GESTrackElement * tck_obj)
 {
@@ -909,7 +909,7 @@ stop_tracking_track_element (GESTimeline * timeline,
         trackelement);
   }
 
-  if (GES_IS_TRACK_SOURCE (trackelement)) {
+  if (GES_IS_SOURCE (trackelement)) {
     start = g_hash_table_lookup (priv->by_start, trackelement);
     end = g_hash_table_lookup (priv->by_end, trackelement);
 
@@ -964,7 +964,7 @@ start_tracking_track_element (GESTimeline * timeline,
     iters->layer = layer;
   }
 
-  if (GES_IS_TRACK_SOURCE (trackelement)) {
+  if (GES_IS_SOURCE (trackelement)) {
     /* Track only sources for timeline edition and snapping */
     pstart = g_malloc (sizeof (guint64));
     pend = g_malloc (sizeof (guint64));
@@ -1256,13 +1256,13 @@ ges_timeline_set_moving_context (GESTimeline * timeline, GESTrackElement * obj,
   mv_ctx->obj = clip;
   mv_ctx->needs_move_ctx = FALSE;
 
-  /* We try to find a TrackSource inside the Clip so we can set the
+  /* We try to find a Source inside the Clip so we can set the
    * moving context Else we just move the selected one only */
-  if (GES_IS_TRACK_SOURCE (obj) == FALSE) {
+  if (GES_IS_SOURCE (obj) == FALSE) {
     GList *tmp;
 
     for (tmp = clip->trackelements; tmp; tmp = tmp->next) {
-      if (GES_IS_TRACK_SOURCE (tmp->data)) {
+      if (GES_IS_SOURCE (tmp->data)) {
         editor_trackelement = tmp->data;
         break;
       }
@@ -1931,7 +1931,7 @@ trackelement_start_changed_cb (GESTrackElement * child,
     g_sequence_sort_changed (iters->iter_by_layer,
         (GCompareDataFunc) element_start_compare, NULL);
 
-  if (GES_IS_TRACK_SOURCE (child)) {
+  if (GES_IS_SOURCE (child)) {
     sort_track_elements (timeline, iters);
     sort_starts_ends_start (timeline, iters);
     sort_starts_ends_end (timeline, iters);
@@ -1985,7 +1985,7 @@ trackelement_priority_changed_cb (GESTrackElement * child,
     }
   }
 
-  if (GES_IS_TRACK_SOURCE (child))
+  if (GES_IS_SOURCE (child))
     sort_track_elements (timeline, iters);
 }
 
@@ -1996,7 +1996,7 @@ trackelement_duration_changed_cb (GESTrackElement * child,
   GESTimelinePrivate *priv = timeline->priv;
   TrackObjIters *iters = g_hash_table_lookup (priv->obj_iters, child);
 
-  if (GES_IS_TRACK_SOURCE (child)) {
+  if (GES_IS_SOURCE (child)) {
     sort_starts_ends_end (timeline, iters);
 
     /* If the timeline is set to snap objects together, we
@@ -2032,7 +2032,7 @@ track_element_removed_cb (GESTrack * track, GESTrackElement * object,
     GESTimeline * timeline)
 {
 
-  if (GES_IS_TRACK_SOURCE (object)) {
+  if (GES_IS_SOURCE (object)) {
     /* Make sure to reinitialise the moving context next time */
     timeline->priv->movecontext.needs_move_ctx = TRUE;
   }

@@ -61,7 +61,7 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESTrackFileSource, ges_track_filesource,
-    GES_TYPE_TRACK_SOURCE,
+    GES_TYPE_SOURCE,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 

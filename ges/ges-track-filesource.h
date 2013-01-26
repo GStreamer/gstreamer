@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-track-source.h>
+#include <ges/ges-source.h>
 
 G_BEGIN_DECLS
 
@@ -51,7 +51,7 @@ typedef struct _GESTrackFileSourcePrivate GESTrackFileSourcePrivate;
  */
 struct _GESTrackFileSource {
   /*< private >*/
-  GESTrackSource parent;
+  GESSource parent;
 
   gchar *uri;
 
@@ -63,7 +63,7 @@ struct _GESTrackFileSource {
 
 struct _GESTrackFileSourceClass {
   /*< private >*/
-  GESTrackSourceClass parent_class;
+  GESSourceClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

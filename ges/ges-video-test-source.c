@@ -27,8 +27,7 @@
 #include "ges-track-element.h"
 #include "ges-video-test-source.h"
 
-G_DEFINE_TYPE (GESVideoTestSource, ges_video_test_source,
-    GES_TYPE_TRACK_SOURCE);
+G_DEFINE_TYPE (GESVideoTestSource, ges_video_test_source, GES_TYPE_SOURCE);
 
 struct _GESVideoTestSourcePrivate
 {

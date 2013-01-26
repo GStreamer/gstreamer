@@ -32,8 +32,7 @@
 #include "ges-track-element.h"
 #include "ges-track-image-source.h"
 
-G_DEFINE_TYPE (GESTrackImageSource, ges_track_image_source,
-    GES_TYPE_TRACK_SOURCE);
+G_DEFINE_TYPE (GESTrackImageSource, ges_track_image_source, GES_TYPE_SOURCE);
 
 struct _GESTrackImageSourcePrivate
 {

@@ -26,7 +26,7 @@
 #include "ges-internal.h"
 #include "ges-clip.h"
 #include "ges-source-clip.h"
-#include "ges-track-source.h"
+#include "ges-source.h"
 
 
 struct _GESSourceClipPrivate

@@ -30,7 +30,7 @@ ges_track_element_get_type
 ges_base_effect_get_type
 ges_effect_get_type
 ges_track_operation_get_type
-ges_track_source_get_type
+ges_source_get_type
 ges_track_text_overlay_get_type
 ges_track_title_source_get_type
 ges_track_transition_get_type

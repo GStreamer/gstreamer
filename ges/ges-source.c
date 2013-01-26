@@ -19,36 +19,36 @@
  */
 
 /**
- * SECTION:ges-track-source
+ * SECTION:ges-source
  * @short_description: Base Class for single-media sources
  */
 
 #include "ges-internal.h"
 #include "ges-track-element.h"
-#include "ges-track-source.h"
+#include "ges-source.h"
 
-G_DEFINE_TYPE (GESTrackSource, ges_track_source, GES_TYPE_TRACK_ELEMENT);
+G_DEFINE_TYPE (GESSource, ges_source, GES_TYPE_TRACK_ELEMENT);
 
-struct _GESTrackSourcePrivate
+struct _GESSourcePrivate
 {
   /*  Dummy variable */
   void *nothing;
 };
 
 static void
-ges_track_source_class_init (GESTrackSourceClass * klass)
+ges_source_class_init (GESSourceClass * klass)
 {
   GESTrackElementClass *track_class = GES_TRACK_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTrackSourcePrivate));
+  g_type_class_add_private (klass, sizeof (GESSourcePrivate));
 
   track_class->gnlobject_factorytype = "gnlsource";
   track_class->create_element = NULL;
 }
 
 static void
-ges_track_source_init (GESTrackSource * self)
+ges_source_init (GESSource * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRACK_SOURCE, GESTrackSourcePrivate);
+      GES_TYPE_SOURCE, GESSourcePrivate);
 }

@@ -27,7 +27,7 @@ LOCAL_SRC_FILES := 				\
 	ges-text-overlay-clip.c		\
 	ges-track.c				\
 	ges-track-element.c			\
-	ges-track-source.c			\
+	ges-source.c			\
 	ges-track-operation.c			\
 	ges-track-filesource.c			\
 	ges-track-image-source.c		\

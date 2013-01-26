@@ -38,7 +38,7 @@
 #include "ges-internal.h"
 #include "ges-custom-source-clip.h"
 #include "ges-source-clip.h"
-#include "ges-track-source.h"
+#include "ges-source.h"
 #include "ges-extractable.h"
 
 enum
@@ -136,7 +136,7 @@ ges_custom_source_clip_fill_track_element (GESClip * object,
 static GESTrackElement *
 ges_custom_source_clip_create_track_element (GESClip * obj, GESTrackType type)
 {
-  return g_object_new (GES_TYPE_TRACK_SOURCE, "track-type", type, NULL);
+  return g_object_new (GES_TYPE_SOURCE, "track-type", type, NULL);
 }
 
 static void

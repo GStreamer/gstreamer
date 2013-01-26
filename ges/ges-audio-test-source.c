@@ -31,8 +31,7 @@
 #include "ges-track-element.h"
 #include "ges-audio-test-source.h"
 
-G_DEFINE_TYPE (GESAudioTestSource, ges_audio_test_source,
-    GES_TYPE_TRACK_SOURCE);
+G_DEFINE_TYPE (GESAudioTestSource, ges_audio_test_source, GES_TYPE_SOURCE);
 
 struct _GESAudioTestSourcePrivate
 {

@@ -1194,7 +1194,7 @@ ges_clip_edit (GESClip * object, GList * layers,
 
   for (tmp = object->trackelements; tmp; tmp = g_list_next (tmp)) {
     if (ges_track_element_is_locked (tmp->data)
-        && GES_IS_TRACK_SOURCE (tmp->data)) {
+        && GES_IS_SOURCE (tmp->data)) {
       ret &= ges_track_element_edit (tmp->data, layers, mode, edge, position);
       break;
     }

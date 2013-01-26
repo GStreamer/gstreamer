@@ -31,7 +31,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-text-overlay-clip.c		\
 	ges-track.c				\
 	ges-track-element.c			\
-	ges-track-source.c			\
+	ges-source.c			\
 	ges-track-operation.c			\
 	ges-track-filesource.c			\
 	ges-track-image-source.c		\
@@ -87,7 +87,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-effect.h		\
 	ges-track.h				\
 	ges-track-element.h			\
-	ges-track-source.h			\
+	ges-source.h			\
 	ges-track-operation.h			\
 	ges-track-filesource.h			\
 	ges-track-image-source.h		\

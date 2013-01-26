@@ -57,7 +57,7 @@
 
 #include <ges/ges-track.h>
 #include <ges/ges-track-element.h>
-#include <ges/ges-track-source.h>
+#include <ges/ges-source.h>
 #include <ges/ges-track-operation.h>
 
 #include <ges/ges-track-filesource.h>

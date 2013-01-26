@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-track-source.h>
+#include <ges/ges-source.h>
 
 G_BEGIN_DECLS
 
@@ -53,7 +53,7 @@ typedef struct _GESAudioTestSourcePrivate GESAudioTestSourcePrivate;
  */
 
 struct _GESAudioTestSource {
-  GESTrackSource parent;
+  GESSource parent;
 
   /*< private >*/
   GESAudioTestSourcePrivate *priv;
@@ -64,7 +64,7 @@ struct _GESAudioTestSource {
 
 struct _GESAudioTestSourceClass {
   /*< private >*/
-  GESTrackSourceClass parent_class;
+  GESSourceClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-track-source.h>
+#include <ges/ges-source.h>
 
 G_BEGIN_DECLS
 
@@ -51,7 +51,7 @@ typedef struct _GESTrackTitleSourcePrivate GESTrackTitleSourcePrivate;
  *
  */
 struct _GESTrackTitleSource {
-  GESTrackSource parent;
+  GESSource parent;
 
   /*< private >*/
   GESTrackTitleSourcePrivate *priv;
@@ -66,7 +66,7 @@ struct _GESTrackTitleSource {
  */
 
 struct _GESTrackTitleSourceClass {
-  GESTrackSourceClass parent_class;
+  GESSourceClass parent_class;
 
   /*< private >*/
 
