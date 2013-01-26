@@ -30,7 +30,7 @@
 #include "ges-title-clip.h"
 #include "ges-source-clip.h"
 #include "ges-track-element.h"
-#include "ges-track-title-source.h"
+#include "ges-title-source.h"
 #include <string.h>
 
 G_DEFINE_TYPE (GESTitleClip, ges_title_clip, GES_TYPE_SOURCE_CLIP);
@@ -318,8 +318,7 @@ ges_title_clip_set_text (GESTitleClip * self, const gchar * text)
   self->priv->text = g_strdup (text);
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_title_source_set_text (GES_TRACK_TITLE_SOURCE (tmp->data),
-        self->priv->text);
+    ges_title_source_set_text (GES_TITLE_SOURCE (tmp->data), self->priv->text);
   }
 }
 
@@ -344,7 +343,7 @@ ges_title_clip_set_font_desc (GESTitleClip * self, const gchar * font_desc)
   self->priv->font_desc = g_strdup (font_desc);
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_title_source_set_font_desc (GES_TRACK_TITLE_SOURCE (tmp->data),
+    ges_title_source_set_font_desc (GES_TITLE_SOURCE (tmp->data),
         self->priv->font_desc);
   }
 }
@@ -367,7 +366,7 @@ ges_title_clip_set_halignment (GESTitleClip * self, GESTextHAlign halign)
   self->priv->halign = halign;
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_title_source_set_halignment (GES_TRACK_TITLE_SOURCE (tmp->data),
+    ges_title_source_set_halignment (GES_TITLE_SOURCE (tmp->data),
         self->priv->halign);
   }
 }
@@ -390,7 +389,7 @@ ges_title_clip_set_valignment (GESTitleClip * self, GESTextVAlign valign)
   self->priv->valign = valign;
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_title_source_set_valignment (GES_TRACK_TITLE_SOURCE (tmp->data),
+    ges_title_source_set_valignment (GES_TITLE_SOURCE (tmp->data),
         self->priv->valign);
   }
 }
@@ -447,7 +446,7 @@ ges_title_clip_set_color (GESTitleClip * self, guint32 color)
   self->priv->color = color;
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_title_source_set_color (GES_TRACK_TITLE_SOURCE (tmp->data),
+    ges_title_source_set_color (GES_TITLE_SOURCE (tmp->data),
         self->priv->color);
   }
 }
@@ -469,7 +468,7 @@ ges_title_clip_set_background (GESTitleClip * self, guint32 background)
   self->priv->background = background;
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_title_source_set_background (GES_TRACK_TITLE_SOURCE (tmp->data),
+    ges_title_source_set_background (GES_TITLE_SOURCE (tmp->data),
         self->priv->background);
   }
 }
@@ -494,8 +493,7 @@ ges_title_clip_set_xpos (GESTitleClip * self, gdouble position)
   self->priv->xpos = position;
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_title_source_set_xpos (GES_TRACK_TITLE_SOURCE (tmp->data),
-        self->priv->xpos);
+    ges_title_source_set_xpos (GES_TITLE_SOURCE (tmp->data), self->priv->xpos);
   }
 }
 
@@ -518,8 +516,7 @@ ges_title_clip_set_ypos (GESTitleClip * self, gdouble position)
   self->priv->ypos = position;
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_title_source_set_ypos (GES_TRACK_TITLE_SOURCE (tmp->data),
-        self->priv->ypos);
+    ges_title_source_set_ypos (GES_TITLE_SOURCE (tmp->data), self->priv->ypos);
   }
 }
 
@@ -667,7 +664,7 @@ ges_title_clip_track_element_released (GESClip * obj,
   GESTitleClipPrivate *priv = GES_TITLE_CLIP (obj)->priv;
 
   /* If this is called, we should be sure the trackelement exists */
-  if (GES_IS_TRACK_TITLE_SOURCE (trackelement)) {
+  if (GES_IS_TITLE_SOURCE (trackelement)) {
     GST_DEBUG_OBJECT (obj, "%p released from %p", trackelement, obj);
     priv->track_titles = g_slist_remove (priv->track_titles, trackelement);
     g_object_unref (trackelement);
@@ -680,7 +677,7 @@ ges_title_clip_track_element_added (GESClip * obj,
 {
   GESTitleClipPrivate *priv = GES_TITLE_CLIP (obj)->priv;
 
-  if (GES_IS_TRACK_TITLE_SOURCE (trackelement)) {
+  if (GES_IS_TITLE_SOURCE (trackelement)) {
     GST_DEBUG_OBJECT (obj, "%p added to %p", trackelement, obj);
     priv->track_titles =
         g_slist_prepend (priv->track_titles, g_object_ref (trackelement));
@@ -694,23 +691,19 @@ ges_title_clip_create_track_element (GESClip * obj, GESTrackType type)
   GESTitleClipPrivate *priv = GES_TITLE_CLIP (obj)->priv;
   GESTrackElement *res = NULL;
 
-  GST_DEBUG_OBJECT (obj, "a GESTrackTitleSource");
+  GST_DEBUG_OBJECT (obj, "a GESTitleSource");
 
   if (type == GES_TRACK_TYPE_VIDEO) {
-    res = (GESTrackElement *) ges_track_title_source_new ();
+    res = (GESTrackElement *) ges_title_source_new ();
     GST_DEBUG_OBJECT (obj, "text property");
-    ges_track_title_source_set_text ((GESTrackTitleSource *) res, priv->text);
-    ges_track_title_source_set_font_desc ((GESTrackTitleSource *) res,
-        priv->font_desc);
-    ges_track_title_source_set_halignment ((GESTrackTitleSource *) res,
-        priv->halign);
-    ges_track_title_source_set_valignment ((GESTrackTitleSource *) res,
-        priv->valign);
-    ges_track_title_source_set_color ((GESTrackTitleSource *) res, priv->color);
-    ges_track_title_source_set_background ((GESTrackTitleSource *) res,
-        priv->background);
-    ges_track_title_source_set_xpos ((GESTrackTitleSource *) res, priv->xpos);
-    ges_track_title_source_set_ypos ((GESTrackTitleSource *) res, priv->ypos);
+    ges_title_source_set_text ((GESTitleSource *) res, priv->text);
+    ges_title_source_set_font_desc ((GESTitleSource *) res, priv->font_desc);
+    ges_title_source_set_halignment ((GESTitleSource *) res, priv->halign);
+    ges_title_source_set_valignment ((GESTitleSource *) res, priv->valign);
+    ges_title_source_set_color ((GESTitleSource *) res, priv->color);
+    ges_title_source_set_background ((GESTitleSource *) res, priv->background);
+    ges_title_source_set_xpos ((GESTitleSource *) res, priv->xpos);
+    ges_title_source_set_ypos ((GESTitleSource *) res, priv->ypos);
   }
 
   return res;

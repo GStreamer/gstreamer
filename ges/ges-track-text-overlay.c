@@ -27,7 +27,7 @@
 
 #include "ges-internal.h"
 #include "ges-track-element.h"
-#include "ges-track-title-source.h"
+#include "ges-title-source.h"
 #include "ges-track-text-overlay.h"
 
 G_DEFINE_TYPE (GESTrackTextOverlay, ges_track_text_overlay,

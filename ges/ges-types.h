@@ -126,9 +126,9 @@ typedef struct _GESAudioTestSource GESAudioTestSource;
 typedef struct _GESAudioTestSourceClass
   GESAudioTestSourceClass;
 
-typedef struct _GESTrackTitleSource GESTrackTitleSource;
-typedef struct _GESTrackTitleSourceClass
-  GESTrackTitleSourceClass;
+typedef struct _GESTitleSource GESTitleSource;
+typedef struct _GESTitleSourceClass
+  GESTitleSourceClass;
 
 typedef struct _GESTrackTextOverlay GESTrackTextOverlay;
 typedef struct _GESTrackTextOverlayClass

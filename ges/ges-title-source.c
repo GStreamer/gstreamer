@@ -19,19 +19,19 @@
  */
 
 /**
- * SECTION:ges-track-title-source
+ * SECTION:ges-title-source
  * @short_description: render stand-alone text titles
  * 
  */
 
 #include "ges-internal.h"
 #include "ges-track-element.h"
-#include "ges-track-title-source.h"
+#include "ges-title-source.h"
 #include "ges-video-test-source.h"
 
-G_DEFINE_TYPE (GESTrackTitleSource, ges_track_title_source, GES_TYPE_SOURCE);
+G_DEFINE_TYPE (GESTitleSource, ges_title_source, GES_TYPE_SOURCE);
 
-struct _GESTrackTitleSourcePrivate
+struct _GESTitleSourcePrivate
 {
   gchar *text;
   gchar *font_desc;
@@ -50,37 +50,36 @@ enum
   PROP_0,
 };
 
-static void ges_track_title_source_dispose (GObject * object);
+static void ges_title_source_dispose (GObject * object);
 
-static void ges_track_title_source_get_property (GObject * object, guint
+static void ges_title_source_get_property (GObject * object, guint
     property_id, GValue * value, GParamSpec * pspec);
 
-static void ges_track_title_source_set_property (GObject * object, guint
+static void ges_title_source_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_title_source_create_element (GESTrackElement *
-    self);
+static GstElement *ges_title_source_create_element (GESTrackElement * self);
 
 static void
-ges_track_title_source_class_init (GESTrackTitleSourceClass * klass)
+ges_title_source_class_init (GESTitleSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTrackElementClass *bg_class = GES_TRACK_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTrackTitleSourcePrivate));
+  g_type_class_add_private (klass, sizeof (GESTitleSourcePrivate));
 
-  object_class->get_property = ges_track_title_source_get_property;
-  object_class->set_property = ges_track_title_source_set_property;
-  object_class->dispose = ges_track_title_source_dispose;
+  object_class->get_property = ges_title_source_get_property;
+  object_class->set_property = ges_title_source_set_property;
+  object_class->dispose = ges_title_source_dispose;
 
-  bg_class->create_element = ges_track_title_source_create_element;
+  bg_class->create_element = ges_title_source_create_element;
 }
 
 static void
-ges_track_title_source_init (GESTrackTitleSource * self)
+ges_title_source_init (GESTitleSource * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRACK_TITLE_SOURCE, GESTrackTitleSourcePrivate);
+      GES_TYPE_TITLE_SOURCE, GESTitleSourcePrivate);
 
   self->priv->text = NULL;
   self->priv->font_desc = NULL;
@@ -95,9 +94,9 @@ ges_track_title_source_init (GESTrackTitleSource * self)
 }
 
 static void
-ges_track_title_source_dispose (GObject * object)
+ges_title_source_dispose (GObject * object)
 {
-  GESTrackTitleSource *self = GES_TRACK_TITLE_SOURCE (object);
+  GESTitleSource *self = GES_TITLE_SOURCE (object);
   if (self->priv->text) {
     g_free (self->priv->text);
   }
@@ -116,11 +115,11 @@ ges_track_title_source_dispose (GObject * object)
     self->priv->background_el = NULL;
   }
 
-  G_OBJECT_CLASS (ges_track_title_source_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_title_source_parent_class)->dispose (object);
 }
 
 static void
-ges_track_title_source_get_property (GObject * object,
+ges_title_source_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -130,7 +129,7 @@ ges_track_title_source_get_property (GObject * object,
 }
 
 static void
-ges_track_title_source_set_property (GObject * object,
+ges_title_source_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -140,10 +139,10 @@ ges_track_title_source_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_title_source_create_element (GESTrackElement * object)
+ges_title_source_create_element (GESTrackElement * object)
 {
-  GESTrackTitleSource *self = GES_TRACK_TITLE_SOURCE (object);
-  GESTrackTitleSourcePrivate *priv = self->priv;
+  GESTitleSource *self = GES_TITLE_SOURCE (object);
+  GESTitleSourcePrivate *priv = self->priv;
   GstElement *topbin, *background, *text;
   GstPad *src;
 
@@ -186,8 +185,8 @@ ges_track_title_source_create_element (GESTrackElement * object)
 }
 
 /**
- * ges_track_title_source_set_text:
- * @self: the #GESTrackTitleSource* to set text on
+ * ges_title_source_set_text:
+ * @self: the #GESTitleSource* to set text on
  * @text: the text to render. an internal copy of this text will be
  * made.
  * 
@@ -195,7 +194,7 @@ ges_track_title_source_create_element (GESTrackElement * object)
  */
 
 void
-ges_track_title_source_set_text (GESTrackTitleSource * self, const gchar * text)
+ges_title_source_set_text (GESTitleSource * self, const gchar * text)
 {
   if (self->priv->text)
     g_free (self->priv->text);
@@ -208,8 +207,8 @@ ges_track_title_source_set_text (GESTrackTitleSource * self, const gchar * text)
 }
 
 /**
- * ges_track_title_source_set_font_desc:
- * @self: the #GESTrackTitleSource
+ * ges_title_source_set_font_desc:
+ * @self: the #GESTitleSource
  * @font_desc: the pango font description
  * 
  * Set the pango font description this source will use to render
@@ -217,8 +216,7 @@ ges_track_title_source_set_text (GESTrackTitleSource * self, const gchar * text)
  */
 
 void
-ges_track_title_source_set_font_desc (GESTrackTitleSource * self,
-    const gchar * font_desc)
+ges_title_source_set_font_desc (GESTitleSource * self, const gchar * font_desc)
 {
   if (self->priv->font_desc)
     g_free (self->priv->font_desc);
@@ -231,15 +229,14 @@ ges_track_title_source_set_font_desc (GESTrackTitleSource * self,
 }
 
 /**
- * ges_track_title_source_set_valignment:
- * @self: the #GESTrackTitleSource* to set text on
+ * ges_title_source_set_valignment:
+ * @self: the #GESTitleSource* to set text on
  * @valign: #GESTextVAlign
  *
  * Sets the vertical aligment of the text.
  */
 void
-ges_track_title_source_set_valignment (GESTrackTitleSource * self,
-    GESTextVAlign valign)
+ges_title_source_set_valignment (GESTitleSource * self, GESTextVAlign valign)
 {
   GST_DEBUG ("self:%p, valign:%d", self, valign);
 
@@ -249,15 +246,14 @@ ges_track_title_source_set_valignment (GESTrackTitleSource * self,
 }
 
 /**
- * ges_track_title_source_set_halignment:
- * @self: the #GESTrackTitleSource* to set text on
+ * ges_title_source_set_halignment:
+ * @self: the #GESTitleSource* to set text on
  * @halign: #GESTextHAlign
  *
  * Sets the vertical aligment of the text.
  */
 void
-ges_track_title_source_set_halignment (GESTrackTitleSource * self,
-    GESTextHAlign halign)
+ges_title_source_set_halignment (GESTitleSource * self, GESTextHAlign halign)
 {
   GST_DEBUG ("self:%p, halign:%d", self, halign);
 
@@ -267,8 +263,8 @@ ges_track_title_source_set_halignment (GESTrackTitleSource * self,
 }
 
 /**
- * ges_track_title_source_set_color:
- * @self: the #GESTrackTitleSource* to set
+ * ges_title_source_set_color:
+ * @self: the #GESTitleSource* to set
  * @color: the color @self is being set to
  *
  * Sets the color of the text.
@@ -276,7 +272,7 @@ ges_track_title_source_set_halignment (GESTrackTitleSource * self,
  * Since: 0.10.2
  */
 void
-ges_track_title_source_set_color (GESTrackTitleSource * self, guint32 color)
+ges_title_source_set_color (GESTitleSource * self, guint32 color)
 {
   GST_DEBUG ("self:%p, color:%d", self, color);
 
@@ -286,15 +282,14 @@ ges_track_title_source_set_color (GESTrackTitleSource * self, guint32 color)
 }
 
 /**
- * ges_track_title_source_set_background:
- * @self: the #GESTrackTitleSource* to set
+ * ges_title_source_set_background:
+ * @self: the #GESTitleSource* to set
  * @color: the color @self is being set to
  *
  * Sets the color of the background
  */
 void
-ges_track_title_source_set_background (GESTrackTitleSource * self,
-    guint32 color)
+ges_title_source_set_background (GESTitleSource * self, guint32 color)
 {
   GST_DEBUG ("self:%p, background color:%d", self, color);
 
@@ -304,8 +299,8 @@ ges_track_title_source_set_background (GESTrackTitleSource * self,
 }
 
 /**
- * ges_track_title_source_set_xpos:
- * @self: the #GESTrackTitleSource* to set
+ * ges_title_source_set_xpos:
+ * @self: the #GESTitleSource* to set
  * @position: the horizontal position @self is being set to
  *
  * Sets the horizontal position of the text.
@@ -313,7 +308,7 @@ ges_track_title_source_set_background (GESTrackTitleSource * self,
  * Since: 0.10.2
  */
 void
-ges_track_title_source_set_xpos (GESTrackTitleSource * self, gdouble position)
+ges_title_source_set_xpos (GESTitleSource * self, gdouble position)
 {
   GST_DEBUG ("self:%p, xpos:%f", self, position);
 
@@ -323,8 +318,8 @@ ges_track_title_source_set_xpos (GESTrackTitleSource * self, gdouble position)
 }
 
 /**
- * ges_track_title_source_set_ypos:
- * @self: the #GESTrackTitleSource* to set
+ * ges_title_source_set_ypos:
+ * @self: the #GESTitleSource* to set
  * @position: the color @self is being set to
  *
  * Sets the vertical position of the text.
@@ -332,7 +327,7 @@ ges_track_title_source_set_xpos (GESTrackTitleSource * self, gdouble position)
  * Since: 0.10.2
  */
 void
-ges_track_title_source_set_ypos (GESTrackTitleSource * self, gdouble position)
+ges_title_source_set_ypos (GESTitleSource * self, gdouble position)
 {
   GST_DEBUG ("self:%p, ypos:%f", self, position);
 
@@ -342,22 +337,22 @@ ges_track_title_source_set_ypos (GESTrackTitleSource * self, gdouble position)
 }
 
 /**
- * ges_track_title_source_get_text:
- * @source: a #GESTrackTitleSource
+ * ges_title_source_get_text:
+ * @source: a #GESTitleSource
  *
  * Get the text currently set on the @source.
  *
  * Returns: (transfer none): The text currently set on the @source.
  */
 const gchar *
-ges_track_title_source_get_text (GESTrackTitleSource * source)
+ges_title_source_get_text (GESTitleSource * source)
 {
   return source->priv->text;
 }
 
 /**
- * ges_track_title_source_get_font_desc:
- * @source: a #GESTrackTitleSource
+ * ges_title_source_get_font_desc:
+ * @source: a #GESTitleSource
  *
  * Get the pango font description used by @source.
  *
@@ -365,42 +360,42 @@ ges_track_title_source_get_text (GESTrackTitleSource * source)
  * @source.
  */
 const gchar *
-ges_track_title_source_get_font_desc (GESTrackTitleSource * source)
+ges_title_source_get_font_desc (GESTitleSource * source)
 {
   return source->priv->font_desc;
 }
 
 /**
- * ges_track_title_source_get_halignment:
- * @source: a #GESTrackTitleSource
+ * ges_title_source_get_halignment:
+ * @source: a #GESTitleSource
  *
  * Get the horizontal aligment used by @source.
  *
  * Returns: The horizontal aligment used by @source.
  */
 GESTextHAlign
-ges_track_title_source_get_halignment (GESTrackTitleSource * source)
+ges_title_source_get_halignment (GESTitleSource * source)
 {
   return source->priv->halign;
 }
 
 /**
- * ges_track_title_source_get_valignment:
- * @source: a #GESTrackTitleSource
+ * ges_title_source_get_valignment:
+ * @source: a #GESTitleSource
  *
  * Get the vertical aligment used by @source.
  *
  * Returns: The vertical aligment used by @source.
  */
 GESTextVAlign
-ges_track_title_source_get_valignment (GESTrackTitleSource * source)
+ges_title_source_get_valignment (GESTitleSource * source)
 {
   return source->priv->valign;
 }
 
 /**
- * ges_track_title_source_get_color:
- * @source: a #GESTrackTitleSource
+ * ges_title_source_get_color:
+ * @source: a #GESTitleSource
  *
  * Get the color used by @source.
  *
@@ -409,28 +404,28 @@ ges_track_title_source_get_valignment (GESTrackTitleSource * source)
  * Since: 0.10.2
  */
 const guint32
-ges_track_title_source_get_color (GESTrackTitleSource * source)
+ges_title_source_get_color (GESTitleSource * source)
 {
   return source->priv->color;
 }
 
 /**
- * ges_track_title_source_get_background:
- * @source: a #GESTrackTitleSource
+ * ges_title_source_get_background:
+ * @source: a #GESTitleSource
  *
  * Get the background used by @source.
  *
  * Returns: The background used by @source.
  */
 const guint32
-ges_track_title_source_get_background (GESTrackTitleSource * source)
+ges_title_source_get_background (GESTitleSource * source)
 {
   return source->priv->background;
 }
 
 /**
- * ges_track_title_source_get_xpos:
- * @source: a #GESTrackTitleSource
+ * ges_title_source_get_xpos:
+ * @source: a #GESTitleSource
  *
  * Get the horizontal position used by @source.
  *
@@ -439,14 +434,14 @@ ges_track_title_source_get_background (GESTrackTitleSource * source)
  * Since: 0.10.2
  */
 const gdouble
-ges_track_title_source_get_xpos (GESTrackTitleSource * source)
+ges_title_source_get_xpos (GESTitleSource * source)
 {
   return source->priv->xpos;
 }
 
 /**
- * ges_track_title_source_get_ypos:
- * @source: a #GESTrackTitleSource
+ * ges_title_source_get_ypos:
+ * @source: a #GESTitleSource
  *
  * Get the vertical position used by @source.
  *
@@ -455,22 +450,22 @@ ges_track_title_source_get_xpos (GESTrackTitleSource * source)
  * Since: 0.10.2
  */
 const gdouble
-ges_track_title_source_get_ypos (GESTrackTitleSource * source)
+ges_title_source_get_ypos (GESTitleSource * source)
 {
   return source->priv->ypos;
 }
 
 /**
- * ges_track_title_source_new:
+ * ges_title_source_new:
  *
- * Creates a new #GESTrackTitleSource.
+ * Creates a new #GESTitleSource.
  *
- * Returns: The newly created #GESTrackTitleSource, or %NULL if there was an
+ * Returns: The newly created #GESTitleSource, or %NULL if there was an
  * error.
  */
-GESTrackTitleSource *
-ges_track_title_source_new (void)
+GESTitleSource *
+ges_title_source_new (void)
 {
-  return g_object_new (GES_TYPE_TRACK_TITLE_SOURCE, "track-type",
+  return g_object_new (GES_TYPE_TITLE_SOURCE, "track-type",
       GES_TRACK_TYPE_VIDEO, NULL);
 }

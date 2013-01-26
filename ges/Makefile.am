@@ -40,7 +40,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-track-video-transition.c		\
 	ges-video-test-source.c		\
 	ges-audio-test-source.c		\
-	ges-track-title-source.c		\
+	ges-title-source.c		\
 	ges-track-text-overlay.c		\
 	ges-base-effect.c		\
 	ges-effect.c		\
@@ -96,7 +96,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-track-video-transition.h		\
 	ges-video-test-source.h		\
 	ges-audio-test-source.h		\
-	ges-track-title-source.h		\
+	ges-title-source.h		\
 	ges-track-text-overlay.h		\
 	ges-screenshot.h			\
 	ges-formatter.h				\

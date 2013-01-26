@@ -36,7 +36,7 @@ LOCAL_SRC_FILES := 				\
 	ges-track-video-transition.c		\
 	ges-video-test-source.c		\
 	ges-audio-test-source.c		\
-	ges-track-title-source.c		\
+	ges-title-source.c		\
 	ges-track-text-overlay.c		\
 	ges-screenshot.c			\
 	ges-formatter.c				\

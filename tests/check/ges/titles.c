@@ -129,11 +129,10 @@ GST_START_TEST (test_title_source_in_layer)
   g_free (text);
 
   trobj =
-      ges_clip_find_track_element (GES_CLIP (source), v,
-      GES_TYPE_TRACK_TITLE_SOURCE);
+      ges_clip_find_track_element (GES_CLIP (source), v, GES_TYPE_TITLE_SOURCE);
 
   /* Check the text is still the same */
-  assert_equals_string (ges_track_title_source_get_text (GES_TRACK_TITLE_SOURCE
+  assert_equals_string (ges_title_source_get_text (GES_TITLE_SOURCE
           (trobj)), "some text");
 
   /* test the font-desc property */
@@ -143,7 +142,7 @@ GST_START_TEST (test_title_source_in_layer)
   g_free (text);
 
   assert_equals_string ("sans 72",
-      ges_track_title_source_get_font_desc (GES_TRACK_TITLE_SOURCE (trobj)));
+      ges_title_source_get_font_desc (GES_TITLE_SOURCE (trobj)));
 
   /* test halign and valign */
   g_object_set (source, "halignment", (gint)
@@ -152,17 +151,17 @@ GST_START_TEST (test_title_source_in_layer)
   assert_equals_int (halign, GES_TEXT_HALIGN_LEFT);
   assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
 
-  assert_equals_int (ges_track_title_source_get_halignment
-      (GES_TRACK_TITLE_SOURCE (trobj)), GES_TEXT_HALIGN_LEFT);
-  assert_equals_int (ges_track_title_source_get_valignment
-      (GES_TRACK_TITLE_SOURCE (trobj)), GES_TEXT_VALIGN_TOP);
+  assert_equals_int (ges_title_source_get_halignment
+      (GES_TITLE_SOURCE (trobj)), GES_TEXT_HALIGN_LEFT);
+  assert_equals_int (ges_title_source_get_valignment
+      (GES_TITLE_SOURCE (trobj)), GES_TEXT_VALIGN_TOP);
 
   /* test color */
   g_object_set (source, "color", (gint) 2147483647, NULL);
   g_object_get (source, "color", &color, NULL);
   assert_equals_int (color, 2147483647);
 
-  color = ges_track_title_source_get_color (GES_TRACK_TITLE_SOURCE (trobj));
+  color = ges_title_source_get_color (GES_TITLE_SOURCE (trobj));
   assert_equals_int (color, 2147483647);
 
   /* test xpos */
@@ -170,7 +169,7 @@ GST_START_TEST (test_title_source_in_layer)
   g_object_get (source, "xpos", &xpos, NULL);
   assert_equals_float (xpos, 0.25);
 
-  xpos = ges_track_title_source_get_xpos (GES_TRACK_TITLE_SOURCE (trobj));
+  xpos = ges_title_source_get_xpos (GES_TITLE_SOURCE (trobj));
   assert_equals_float (xpos, 0.25);
 
   /* test ypos */
@@ -178,7 +177,7 @@ GST_START_TEST (test_title_source_in_layer)
   g_object_get (source, "ypos", &ypos, NULL);
   assert_equals_float (ypos, 0.66);
 
-  xpos = ges_track_title_source_get_xpos (GES_TRACK_TITLE_SOURCE (trobj));
+  xpos = ges_title_source_get_xpos (GES_TITLE_SOURCE (trobj));
   assert_equals_float (ypos, 0.66);
 
   GST_DEBUG ("removing the source");
