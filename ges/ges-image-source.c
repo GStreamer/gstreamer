@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-track-image-source
+ * SECTION:ges-image-source
  * @short_description: outputs the video stream from a media file as a still
  * image.
  * 
@@ -30,11 +30,11 @@
 
 #include "ges-internal.h"
 #include "ges-track-element.h"
-#include "ges-track-image-source.h"
+#include "ges-image-source.h"
 
-G_DEFINE_TYPE (GESTrackImageSource, ges_track_image_source, GES_TYPE_SOURCE);
+G_DEFINE_TYPE (GESImageSource, ges_image_source, GES_TYPE_SOURCE);
 
-struct _GESTrackImageSourcePrivate
+struct _GESImageSourcePrivate
 {
   /*  Dummy variable */
   void *nothing;
@@ -47,10 +47,10 @@ enum
 };
 
 static void
-ges_track_image_source_get_property (GObject * object, guint property_id,
+ges_image_source_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESTrackImageSource *uriclip = GES_TRACK_IMAGE_SOURCE (object);
+  GESImageSource *uriclip = GES_IMAGE_SOURCE (object);
 
   switch (property_id) {
     case PROP_URI:
@@ -62,10 +62,10 @@ ges_track_image_source_get_property (GObject * object, guint property_id,
 }
 
 static void
-ges_track_image_source_set_property (GObject * object, guint property_id,
+ges_image_source_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESTrackImageSource *uriclip = GES_TRACK_IMAGE_SOURCE (object);
+  GESImageSource *uriclip = GES_IMAGE_SOURCE (object);
 
   switch (property_id) {
     case PROP_URI:
@@ -77,14 +77,14 @@ ges_track_image_source_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_track_image_source_dispose (GObject * object)
+ges_image_source_dispose (GObject * object)
 {
-  GESTrackImageSource *uriclip = GES_TRACK_IMAGE_SOURCE (object);
+  GESImageSource *uriclip = GES_IMAGE_SOURCE (object);
 
   if (uriclip->uri)
     g_free (uriclip->uri);
 
-  G_OBJECT_CLASS (ges_track_image_source_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_image_source_parent_class)->dispose (object);
 }
 
 static void
@@ -110,7 +110,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GstElement * scale)
 }
 
 static GstElement *
-ges_track_image_source_create_element (GESTrackElement * object)
+ges_image_source_create_element (GESTrackElement * object)
 {
   GstElement *bin, *source, *scale, *freeze, *iconv;
   GstPad *src, *target;
@@ -138,7 +138,7 @@ ges_track_image_source_create_element (GESTrackElement * object)
   gst_element_add_pad (bin, src);
   gst_object_unref (target);
 
-  g_object_set (source, "uri", ((GESTrackImageSource *) object)->uri, NULL);
+  g_object_set (source, "uri", ((GESImageSource *) object)->uri, NULL);
 
   g_signal_connect (G_OBJECT (source), "pad-added",
       G_CALLBACK (pad_added_cb), scale);
@@ -147,46 +147,46 @@ ges_track_image_source_create_element (GESTrackElement * object)
 }
 
 static void
-ges_track_image_source_class_init (GESTrackImageSourceClass * klass)
+ges_image_source_class_init (GESImageSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTrackElementClass *gesobj_class = GES_TRACK_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTrackImageSourcePrivate));
+  g_type_class_add_private (klass, sizeof (GESImageSourcePrivate));
 
-  object_class->get_property = ges_track_image_source_get_property;
-  object_class->set_property = ges_track_image_source_set_property;
-  object_class->dispose = ges_track_image_source_dispose;
+  object_class->get_property = ges_image_source_get_property;
+  object_class->set_property = ges_image_source_set_property;
+  object_class->dispose = ges_image_source_dispose;
 
   /**
-   * GESTrackImageSource:uri:
+   * GESImageSource:uri:
    *
    * The location of the file/resource to use.
    */
   g_object_class_install_property (object_class, PROP_URI,
       g_param_spec_string ("uri", "URI", "uri of the resource",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-  gesobj_class->create_element = ges_track_image_source_create_element;
+  gesobj_class->create_element = ges_image_source_create_element;
 }
 
 static void
-ges_track_image_source_init (GESTrackImageSource * self)
+ges_image_source_init (GESImageSource * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRACK_IMAGE_SOURCE, GESTrackImageSourcePrivate);
+      GES_TYPE_IMAGE_SOURCE, GESImageSourcePrivate);
 }
 
 /**
- * ges_track_image_source_new:
+ * ges_image_source_new:
  * @uri: the URI the source should control
  *
- * Creates a new #GESTrackImageSource for the provided @uri.
+ * Creates a new #GESImageSource for the provided @uri.
  *
- * Returns: A new #GESTrackImageSource.
+ * Returns: A new #GESImageSource.
  */
-GESTrackImageSource *
-ges_track_image_source_new (gchar * uri)
+GESImageSource *
+ges_image_source_new (gchar * uri)
 {
-  return g_object_new (GES_TYPE_TRACK_IMAGE_SOURCE, "uri", uri, "track-type",
+  return g_object_new (GES_TYPE_IMAGE_SOURCE, "uri", uri, "track-type",
       GES_TRACK_TYPE_VIDEO, NULL);
 }

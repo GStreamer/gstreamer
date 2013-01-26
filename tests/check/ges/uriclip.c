@@ -201,7 +201,7 @@ GST_START_TEST (test_filesource_images)
   /* the returned track object should be an image source */
   trobj = ges_clip_create_track_element (clip, v->type);
   ges_clip_add_track_element (clip, trobj);
-  fail_unless (GES_IS_TRACK_IMAGE_SOURCE (trobj));
+  fail_unless (GES_IS_IMAGE_SOURCE (trobj));
 
   /* The track holds a reference to the object
    * and the timelinobject holds a reference to the object */

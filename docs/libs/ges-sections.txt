@@ -178,20 +178,20 @@ ges_track_filesource_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-image-source</FILE>
-<TITLE>GESTrackImageSource</TITLE>
-GESTrackImageSource
-ges_track_image_source_new
+<FILE>ges-image-source</FILE>
+<TITLE>GESImageSource</TITLE>
+GESImageSource
+ges_image_source_new
 <SUBSECTION Standard>
-GESTrackImageSourcePrivate
-GES_IS_TRACK_IMAGE_SOURCE
-GES_IS_TRACK_IMAGE_SOURCE_CLASS
-GES_TRACK_IMAGE_SOURCE
-GES_TRACK_IMAGE_SOURCE_CLASS
-GES_TRACK_IMAGE_SOURCE_GET_CLASS
-GES_TYPE_TRACK_IMAGE_SOURCE
-GESTrackImageSourceClass
-ges_track_image_source_get_type
+GESImageSourcePrivate
+GES_IS_IMAGE_SOURCE
+GES_IS_IMAGE_SOURCE_CLASS
+GES_IMAGE_SOURCE
+GES_IMAGE_SOURCE_CLASS
+GES_IMAGE_SOURCE_GET_CLASS
+GES_TYPE_IMAGE_SOURCE
+GESImageSourceClass
+ges_image_source_get_type
 </SECTION>
 
 <SECTION>

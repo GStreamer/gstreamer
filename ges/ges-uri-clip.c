@@ -33,7 +33,7 @@
 #include "ges-uri-asset.h"
 #include "ges-track-element-asset.h"
 #include "ges-extractable.h"
-#include "ges-track-image-source.h"
+#include "ges-image-source.h"
 #include "ges-audio-test-source.h"
 
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
@@ -401,8 +401,8 @@ ges_uri_clip_create_track_element (GESClip * obj, GESTrackType type)
       GST_DEBUG ("Object is still image, not adding any audio source");
       return NULL;
     } else {
-      GST_DEBUG ("Creating a GESTrackImageSource");
-      res = (GESTrackElement *) ges_track_image_source_new (priv->uri);
+      GST_DEBUG ("Creating a GESImageSource");
+      res = (GESTrackElement *) ges_image_source_new (priv->uri);
     }
 
   } else {

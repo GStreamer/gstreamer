@@ -104,8 +104,8 @@ typedef struct _GESEffectClass GESEffectClass;
 typedef struct _GESUriSource GESUriSource;
 typedef struct _GESUriSourceClass GESUriSourceClass;
 
-typedef struct _GESTrackImageSource GESTrackImageSource;
-typedef struct _GESTrackImageSourceClass GESTrackImageSourceClass;
+typedef struct _GESImageSource GESImageSource;
+typedef struct _GESImageSourceClass GESImageSourceClass;
 
 typedef struct _GESTrackTransition GESTrackTransition;
 typedef struct _GESTrackTransitionClass GESTrackTransitionClass;

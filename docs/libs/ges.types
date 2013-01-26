@@ -25,7 +25,7 @@ ges_audio_test_source_get_type
 ges_track_audio_transition_get_type
 ges_track_filesource_get_type
 ges_track_get_type
-ges_track_image_source_get_type
+ges_image_source_get_type
 ges_track_element_get_type
 ges_base_effect_get_type
 ges_effect_get_type

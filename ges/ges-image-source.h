@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TRACK_IMAGE_SOURCE
-#define _GES_TRACK_IMAGE_SOURCE
+#ifndef _GES_IMAGE_SOURCE
+#define _GES_IMAGE_SOURCE
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -27,52 +27,52 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TRACK_IMAGE_SOURCE ges_track_image_source_get_type()
+#define GES_TYPE_IMAGE_SOURCE ges_image_source_get_type()
 
-#define GES_TRACK_IMAGE_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_IMAGE_SOURCE, GESTrackImageSource))
+#define GES_IMAGE_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_IMAGE_SOURCE, GESImageSource))
 
-#define GES_TRACK_IMAGE_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_IMAGE_SOURCE, GESTrackImageSourceClass))
+#define GES_IMAGE_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_IMAGE_SOURCE, GESImageSourceClass))
 
-#define GES_IS_TRACK_IMAGE_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_IMAGE_SOURCE))
+#define GES_IS_IMAGE_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_IMAGE_SOURCE))
 
-#define GES_IS_TRACK_IMAGE_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_IMAGE_SOURCE))
+#define GES_IS_IMAGE_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_IMAGE_SOURCE))
 
-#define GES_TRACK_IMAGE_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_IMAGE_SOURCE, GESTrackImageSourceClass))
+#define GES_IMAGE_SOURCE_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_IMAGE_SOURCE, GESImageSourceClass))
 
-typedef struct _GESTrackImageSourcePrivate GESTrackImageSourcePrivate;
+typedef struct _GESImageSourcePrivate GESImageSourcePrivate;
 
 /**
- * GESTrackImageSource:
+ * GESImageSource:
  */
-struct _GESTrackImageSource {
+struct _GESImageSource {
   /*< private >*/
   GESSource parent;
 
   gchar *uri;
 
-  GESTrackImageSourcePrivate *priv;
+  GESImageSourcePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-struct _GESTrackImageSourceClass {
+struct _GESImageSourceClass {
   GESSourceClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_track_image_source_get_type (void);
+GType ges_image_source_get_type (void);
 
-GESTrackImageSource* ges_track_image_source_new (gchar *uri);
+GESImageSource* ges_image_source_new (gchar *uri);
 
 G_END_DECLS
 
-#endif /* _GES_TRACK_IMAGE_SOURCE */
+#endif /* _GES_IMAGE_SOURCE */
 
