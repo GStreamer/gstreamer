@@ -170,7 +170,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "media = (string) \"audio\", "
         "payload = (int) [ 96, 127 ], "
         "clock-rate = (int) [ 0, MAX ], "
-        "ssrc = (int) [ 0, MAX ], "
         "encoding-name = (string) \"TELEPHONE-EVENT\"")
     /*  "events = (string) \"0-15\" */
     );
