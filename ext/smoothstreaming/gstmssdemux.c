@@ -25,7 +25,44 @@
  *
  * Demuxes a Microsoft's Smooth Streaming manifest into its audio and/or video streams.
  *
- * TODO
+ *
+ */
+
+/*
+ * == Internals
+ *
+ * = Smooth streaming in a few lines
+ * A SS stream is defined by a xml manifest file. This file has a list of
+ * tracks (StreamIndex), each one can have multiple QualityLevels, that define
+ * different encoding/bitrates. When playing a track, only one of those
+ * QualityLevels can be active at a time (per stream).
+ *
+ * The StreamIndex defines a URL with {time} and {bitrate} tags that are
+ * replaced by values indicated by the fragment start times and the selected
+ * QualityLevel, that generates the fragments URLs.
+ *
+ * Another relevant detail is that the Isomedia fragments for smoothstreaming
+ * won't contains a 'moov' atom, nor a 'stsd', so there is no information
+ * about the media type/configuration on the fragments, it must be extracted
+ * from the Manifest and passed downstream. mssdemux does this via GstCaps.
+ *
+ * = How mssdemux works
+ * There is a gstmssmanifest.c utility that holds the manifest and parses
+ * and has functions to extract information from it. mssdemux received the
+ * manifest from its sink pad and starts processing it when it gets EOS.
+ *
+ * The Manifest is parsed and the streams are exposed, 1 pad for each, with
+ * a initially selected QualityLevel. Each stream starts its own GstTaks that
+ * is responsible for downloading fragments and storing in its own GstDataQueue.
+ *
+ * The mssdemux starts another GstTask, this one iterates through the streams
+ * and selects the fragment with the smaller timestamp to push and repeats this.
+ *
+ * When a new connection-speed is set, mssdemux evaluates the available
+ * QualityLevels and might decide to switch to another one. In this case it
+ * exposes new pads for each stream, pushes EOS to the old ones and removes
+ * them. This should make decodebin2 pad switching mechanism act and the
+ * switch would be smooth for the final user.
  */
 
 #ifdef HAVE_CONFIG_H
