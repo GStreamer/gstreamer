@@ -122,9 +122,9 @@ typedef struct _GESTrackVideoTestSource GESTrackVideoTestSource;
 typedef struct _GESTrackVideoTestSourceClass
   GESTrackVideoTestSourceClass;
 
-typedef struct _GESTrackAudioTestSource GESTrackAudioTestSource;
-typedef struct _GESTrackAudioTestSourceClass
-  GESTrackAudioTestSourceClass;
+typedef struct _GESAudioTestSource GESAudioTestSource;
+typedef struct _GESAudioTestSourceClass
+  GESAudioTestSourceClass;
 
 typedef struct _GESTrackTitleSource GESTrackTitleSource;
 typedef struct _GESTrackTitleSourceClass

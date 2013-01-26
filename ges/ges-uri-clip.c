@@ -34,7 +34,7 @@
 #include "ges-asset-track-object.h"
 #include "ges-extractable.h"
 #include "ges-track-image-source.h"
-#include "ges-track-audio-test-source.h"
+#include "ges-audio-test-source.h"
 
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
 

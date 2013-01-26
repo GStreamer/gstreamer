@@ -34,7 +34,7 @@
 #include "ges-source-clip.h"
 #include "ges-track-element.h"
 #include "ges-track-video-test-source.h"
-#include "ges-track-audio-test-source.h"
+#include "ges-audio-test-source.h"
 #include <string.h>
 
 G_DEFINE_TYPE (GESTestClip, ges_test_clip, GES_TYPE_SOURCE_CLIP);
@@ -253,9 +253,9 @@ ges_test_clip_set_frequency (GESTestClip * self, gdouble freq)
   trackelements = ges_clip_get_track_elements (object);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
-    if (GES_IS_TRACK_AUDIO_TEST_SOURCE (trackelement))
-      ges_track_audio_test_source_set_freq (
-          (GESTrackAudioTestSource *) trackelement, freq);
+    if (GES_IS_AUDIO_TEST_SOURCE (trackelement))
+      ges_audio_test_source_set_freq (
+          (GESAudioTestSource *) trackelement, freq);
 
     g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
@@ -281,9 +281,9 @@ ges_test_clip_set_volume (GESTestClip * self, gdouble volume)
   trackelements = ges_clip_get_track_elements (object);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
-    if (GES_IS_TRACK_AUDIO_TEST_SOURCE (trackelement))
-      ges_track_audio_test_source_set_volume (
-          (GESTrackAudioTestSource *) trackelement, volume);
+    if (GES_IS_AUDIO_TEST_SOURCE (trackelement))
+      ges_audio_test_source_set_volume (
+          (GESAudioTestSource *) trackelement, volume);
 
     g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
@@ -360,15 +360,13 @@ ges_test_clip_create_track_element (GESClip * obj, GESTrackType type)
     ges_track_video_test_source_set_pattern (
         (GESTrackVideoTestSource *) res, priv->vpattern);
   } else if (type == GES_TRACK_TYPE_AUDIO) {
-    res = (GESTrackElement *) ges_track_audio_test_source_new ();
+    res = (GESTrackElement *) ges_audio_test_source_new ();
 
     if (priv->mute)
       ges_track_element_set_active (res, FALSE);
 
-    ges_track_audio_test_source_set_freq ((GESTrackAudioTestSource *) res,
-        priv->freq);
-    ges_track_audio_test_source_set_volume ((GESTrackAudioTestSource *) res,
-        priv->volume);
+    ges_audio_test_source_set_freq ((GESAudioTestSource *) res, priv->freq);
+    ges_audio_test_source_set_volume ((GESAudioTestSource *) res, priv->volume);
   }
 
   return res;

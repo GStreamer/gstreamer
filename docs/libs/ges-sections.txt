@@ -717,24 +717,24 @@ GES_TYPE_TRACK_VIDEO_TEST_SOURCE
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-audio-test-source</FILE>
-<TITLE>GESTrackAudioTestSource</TITLE>
-GESTrackAudioTestSource
-ges_track_audio_test_source_new
-ges_track_audio_test_source_set_freq
-ges_track_audio_test_source_set_volume
-ges_track_audio_test_source_get_freq
-ges_track_audio_test_source_get_volume
+<FILE>ges-audio-test-source</FILE>
+<TITLE>GESAudioTestSource</TITLE>
+GESAudioTestSource
+ges_audio_test_source_new
+ges_audio_test_source_set_freq
+ges_audio_test_source_set_volume
+ges_audio_test_source_get_freq
+ges_audio_test_source_get_volume
 <SUBSECTION Standard>
-GESTrackAudioTestSourceClass
-GESTrackAudioTestSourcePrivate
-ges_track_audio_test_source_get_type
-GES_TRACK_AUDIO_TEST_SOURCE
-GES_TRACK_AUDIO_TEST_SOURCE_CLASS
-GES_TRACK_AUDIO_TEST_SOURCE_GET_CLASS
-GES_TYPE_TRACK_AUDIO_TEST_SOURCE
-GES_IS_TRACK_AUDIO_TEST_SOURCE
-GES_IS_TRACK_AUDIO_TEST_SOURCE_CLASS
+GESAudioTestSourceClass
+GESAudioTestSourcePrivate
+ges_audio_test_source_get_type
+GES_AUDIO_TEST_SOURCE
+GES_AUDIO_TEST_SOURCE_CLASS
+GES_AUDIO_TEST_SOURCE_GET_CLASS
+GES_TYPE_AUDIO_TEST_SOURCE
+GES_IS_AUDIO_TEST_SOURCE
+GES_IS_AUDIO_TEST_SOURCE_CLASS
 </SECTION>
 
 <SECTION>

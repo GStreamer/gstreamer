@@ -148,8 +148,8 @@ GST_START_TEST (test_test_source_in_layer)
   /* test audio properties as well */
 
   trobj = ges_clip_find_track_element (GES_CLIP (source),
-      a, GES_TYPE_TRACK_AUDIO_TEST_SOURCE);
-  g_assert (GES_IS_TRACK_AUDIO_TEST_SOURCE (trobj));
+      a, GES_TYPE_AUDIO_TEST_SOURCE);
+  g_assert (GES_IS_AUDIO_TEST_SOURCE (trobj));
   assert_equals_float (ges_test_clip_get_frequency (source), 440);
   assert_equals_float (ges_test_clip_get_volume (source), 0);
 
@@ -158,12 +158,8 @@ GST_START_TEST (test_test_source_in_layer)
   assert_equals_float (volume, 0);
 
 
-  freq =
-      ges_track_audio_test_source_get_freq (GES_TRACK_AUDIO_TEST_SOURCE
-      (trobj));
-  volume =
-      ges_track_audio_test_source_get_volume (GES_TRACK_AUDIO_TEST_SOURCE
-      (trobj));
+  freq = ges_audio_test_source_get_freq (GES_AUDIO_TEST_SOURCE (trobj));
+  volume = ges_audio_test_source_get_volume (GES_AUDIO_TEST_SOURCE (trobj));
   g_assert (freq == 440);
   g_assert (volume == 0);
 
@@ -174,12 +170,8 @@ GST_START_TEST (test_test_source_in_layer)
   assert_equals_float (freq, 2000);
   assert_equals_float (volume, 0.5);
 
-  freq =
-      ges_track_audio_test_source_get_freq (GES_TRACK_AUDIO_TEST_SOURCE
-      (trobj));
-  volume =
-      ges_track_audio_test_source_get_volume (GES_TRACK_AUDIO_TEST_SOURCE
-      (trobj));
+  freq = ges_audio_test_source_get_freq (GES_AUDIO_TEST_SOURCE (trobj));
+  volume = ges_audio_test_source_get_volume (GES_AUDIO_TEST_SOURCE (trobj));
   g_assert (freq == 2000);
   g_assert (volume == 0.5);
 
