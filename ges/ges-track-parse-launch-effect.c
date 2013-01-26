@@ -25,7 +25,7 @@
 
 #include "ges-internal.h"
 #include "ges-extractable.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-track-effect.h"
 #include "ges-track-parse-launch-effect.h"
 
@@ -38,7 +38,7 @@ G_DEFINE_TYPE_WITH_CODE (GESTrackParseLaunchEffect,
 
 static void ges_track_parse_launch_effect_dispose (GObject * object);
 static void ges_track_parse_launch_effect_finalize (GObject * object);
-static GstElement *ges_track_parse_launch_effect_create_element (GESTrackObject
+static GstElement *ges_track_parse_launch_effect_create_element (GESTrackElement
     * self);
 
 struct _GESTrackParseLaunchEffectPrivate
@@ -128,10 +128,10 @@ ges_track_parse_launch_effect_class_init (GESTrackParseLaunchEffectClass *
     klass)
 {
   GObjectClass *object_class;
-  GESTrackObjectClass *obj_bg_class;
+  GESTrackElementClass *obj_bg_class;
 
   object_class = G_OBJECT_CLASS (klass);
-  obj_bg_class = GES_TRACK_OBJECT_CLASS (klass);
+  obj_bg_class = GES_TRACK_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackParseLaunchEffectPrivate));
 
@@ -184,14 +184,14 @@ ges_track_parse_launch_effect_finalize (GObject * object)
 }
 
 static GstElement *
-ges_track_parse_launch_effect_create_element (GESTrackObject * object)
+ges_track_parse_launch_effect_create_element (GESTrackElement * object)
 {
   GstElement *effect;
   gchar *bin_desc;
 
   GError *error = NULL;
   GESTrackParseLaunchEffect *self = GES_TRACK_PARSE_LAUNCH_EFFECT (object);
-  GESTrack *track = ges_track_object_get_track (object);
+  GESTrack *track = ges_track_element_get_track (object);
 
   if (!track) {
     GST_WARNING

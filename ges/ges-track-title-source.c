@@ -25,7 +25,7 @@
  */
 
 #include "ges-internal.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-track-title-source.h"
 #include "ges-track-video-test-source.h"
 
@@ -59,14 +59,14 @@ static void ges_track_title_source_get_property (GObject * object, guint
 static void ges_track_title_source_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_title_source_create_element (GESTrackObject *
+static GstElement *ges_track_title_source_create_element (GESTrackElement *
     self);
 
 static void
 ges_track_title_source_class_init (GESTrackTitleSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTrackObjectClass *bg_class = GES_TRACK_OBJECT_CLASS (klass);
+  GESTrackElementClass *bg_class = GES_TRACK_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackTitleSourcePrivate));
 
@@ -141,7 +141,7 @@ ges_track_title_source_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_title_source_create_element (GESTrackObject * object)
+ges_track_title_source_create_element (GESTrackElement * object)
 {
   GESTrackTitleSource *self = GES_TRACK_TITLE_SOURCE (object);
   GESTrackTitleSourcePrivate *priv = self->priv;

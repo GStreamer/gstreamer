@@ -24,11 +24,11 @@
 
 static gboolean
 my_fill_track_func (GESClip * object,
-    GESTrackObject * trobject, GstElement * gnlobj, gpointer user_data)
+    GESTrackElement * trobject, GstElement * gnlobj, gpointer user_data)
 {
   GstElement *src;
 
-  GST_DEBUG ("timelineobj:%p, trackobjec:%p, gnlobj:%p",
+  GST_DEBUG ("timelineobj:%p, trackelementec:%p, gnlobj:%p",
       object, trobject, gnlobj);
 
   /* Let's just put a fakesource in for the time being */
@@ -56,7 +56,7 @@ GST_START_TEST (test_basic_timeline_edition)
 {
   GESTrack *track;
   GESTimeline *timeline;
-  GESTrackObject *tckobj, *tckobj1, *tckobj2;
+  GESTrackElement *trackelement, *trackelement1, *trackelement2;
   GESClip *obj, *obj1, *obj2;
 
   ges_init ();
@@ -90,23 +90,23 @@ GST_START_TEST (test_basic_timeline_edition)
   g_object_set (obj2, "start", (guint64) 50, "duration", (guint64) 60,
       "in-point", (guint64) 0, NULL);
 
-  tckobj = ges_clip_create_track_object (obj, track->type);
-  fail_unless (tckobj != NULL);
-  fail_unless (ges_clip_add_track_object (obj, tckobj));
-  fail_unless (ges_track_add_object (track, tckobj));
-  assert_equals_uint64 (_DURATION (tckobj), 10);
+  trackelement = ges_clip_create_track_element (obj, track->type);
+  fail_unless (trackelement != NULL);
+  fail_unless (ges_clip_add_track_element (obj, trackelement));
+  fail_unless (ges_track_add_object (track, trackelement));
+  assert_equals_uint64 (_DURATION (trackelement), 10);
 
-  tckobj1 = ges_clip_create_track_object (obj1, track->type);
-  fail_unless (tckobj1 != NULL);
-  fail_unless (ges_clip_add_track_object (obj1, tckobj1));
-  fail_unless (ges_track_add_object (track, tckobj1));
-  assert_equals_uint64 (_DURATION (tckobj1), 10);
+  trackelement1 = ges_clip_create_track_element (obj1, track->type);
+  fail_unless (trackelement1 != NULL);
+  fail_unless (ges_clip_add_track_element (obj1, trackelement1));
+  fail_unless (ges_track_add_object (track, trackelement1));
+  assert_equals_uint64 (_DURATION (trackelement1), 10);
 
-  tckobj2 = ges_clip_create_track_object (obj2, track->type);
-  fail_unless (ges_clip_add_track_object (obj2, tckobj2));
-  fail_unless (tckobj2 != NULL);
-  fail_unless (ges_track_add_object (track, tckobj2));
-  assert_equals_uint64 (_DURATION (tckobj2), 60);
+  trackelement2 = ges_clip_create_track_element (obj2, track->type);
+  fail_unless (ges_clip_add_track_element (obj2, trackelement2));
+  fail_unless (trackelement2 != NULL);
+  fail_unless (ges_track_add_object (track, trackelement2));
+  assert_equals_uint64 (_DURATION (trackelement2), 60);
 
   /**
    * Simple rippling obj to: 10
@@ -120,27 +120,27 @@ GST_START_TEST (test_basic_timeline_edition)
    */
   fail_unless (ges_clip_edit (obj, NULL, -1, GES_EDIT_MODE_RIPPLE,
           GES_EDGE_NONE, 10) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 10, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 60, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 10, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 60, 0, 60);
 
 
   /* FIXME find a way to check that we are using the same MovingContext
    * inside the GESTrack */
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_RIPPLE,
           GES_EDGE_NONE, 40) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 10, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj1, 40, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 80, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 10, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement1, 40, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 80, 0, 60);
 
   /**
    * Rippling obj1 back to: 20 (getting to the exact same timeline as before
    */
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_RIPPLE,
           GES_EDGE_NONE, 20) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 10, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 60, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 10, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 60, 0, 60);
 
   /**
    * Simple move obj to: 27 and obj2 to 35
@@ -156,9 +156,9 @@ GST_START_TEST (test_basic_timeline_edition)
           GES_EDGE_NONE, 27) == TRUE);
   fail_unless (ges_clip_edit (obj2, NULL, -1, GES_EDIT_MODE_NORMAL,
           GES_EDGE_NONE, 35) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 27, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 35, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 27, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 35, 0, 60);
 
   /**
    * Trim start obj to: 32 and obj2 to 35
@@ -172,9 +172,9 @@ GST_START_TEST (test_basic_timeline_edition)
    */
   fail_unless (ges_clip_edit (obj, NULL, -1, GES_EDIT_MODE_TRIM,
           GES_EDGE_START, 32) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 32, 5, 5);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 35, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 32, 5, 5);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 35, 0, 60);
 
   /* Ripple end obj to 42
    * New timeline:
@@ -186,9 +186,9 @@ GST_START_TEST (test_basic_timeline_edition)
    */
   fail_unless (ges_clip_edit (obj, NULL, -1, GES_EDIT_MODE_RIPPLE,
           GES_EDGE_END, 42) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 32, 5, 10);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 35, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 32, 5, 10);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 35, 0, 60);
 
   /**
    * New timeline:
@@ -201,9 +201,9 @@ GST_START_TEST (test_basic_timeline_edition)
           GES_EDGE_NONE, 42) == TRUE);
   fail_unless (ges_clip_edit (obj, NULL, -1, GES_EDIT_MODE_RIPPLE,
           GES_EDGE_END, 52) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 32, 5, 20);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 52, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 32, 5, 20);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 52, 0, 60);
 
   /**
    * New timeline:
@@ -214,9 +214,9 @@ GST_START_TEST (test_basic_timeline_edition)
    */
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_RIPPLE,
           GES_EDGE_END, 40) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 42, 5, 20);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 20);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 42, 5, 20);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 20);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /**
    * New timeline:
@@ -229,18 +229,18 @@ GST_START_TEST (test_basic_timeline_edition)
           GES_EDGE_START, 40) == TRUE);
   fail_unless (ges_clip_edit (obj, NULL, -1, GES_EDIT_MODE_ROLL,
           GES_EDGE_START, 25) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 5);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /* Make sure that not doing anything when not able to roll */
   fail_unless (ges_clip_edit (obj, NULL, -1, GES_EDIT_MODE_ROLL,
           GES_EDGE_START, 65) == TRUE);
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_ROLL,
           GES_EDGE_END, 65) == TRUE, 0);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 5);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   g_object_unref (timeline);
   g_object_unref (obj);
@@ -254,10 +254,10 @@ GST_START_TEST (test_snapping)
 {
   GESTrack *track;
   GESTimeline *timeline;
-  GESTrackObject *tckobj, *tckobj1, *tckobj2;
+  GESTrackElement *trackelement, *trackelement1, *trackelement2;
   GESClip *obj, *obj1, *obj2;
   GESTimelineLayer *layer;
-  GList *tckobjs;
+  GList *trackelements;
 
   ges_init ();
 
@@ -294,55 +294,58 @@ GST_START_TEST (test_snapping)
 
 
   fail_unless (ges_timeline_layer_add_object (layer, obj));
-  fail_unless ((tckobjs = ges_clip_get_track_objects (obj)) != NULL);
-  fail_unless ((tckobj = GES_TRACK_OBJECT (tckobjs->data)) != NULL);
-  fail_unless (ges_track_object_get_track (tckobj) == track);
-  assert_equals_uint64 (_DURATION (tckobj), 37);
-  g_list_free_full (tckobjs, g_object_unref);
+  fail_unless ((trackelements = ges_clip_get_track_elements (obj)) != NULL);
+  fail_unless ((trackelement =
+          GES_TRACK_ELEMENT (trackelements->data)) != NULL);
+  fail_unless (ges_track_element_get_track (trackelement) == track);
+  assert_equals_uint64 (_DURATION (trackelement), 37);
+  g_list_free_full (trackelements, g_object_unref);
 
-  /* We have 3 references to tckobj from:
+  /* We have 3 references to trackelement from:
    *  track + timeline + obj */
-  ASSERT_OBJECT_REFCOUNT (tckobj, "First tckobj", 3);
+  ASSERT_OBJECT_REFCOUNT (trackelement, "First trackelement", 3);
   /* We have 1 ref to obj1:
    * + layer */
   ASSERT_OBJECT_REFCOUNT (obj, "First clip", 1);
 
   fail_unless (ges_timeline_layer_add_object (layer, obj1));
-  fail_unless ((tckobjs = ges_clip_get_track_objects (obj1)) != NULL);
-  fail_unless ((tckobj1 = GES_TRACK_OBJECT (tckobjs->data)) != NULL);
-  fail_unless (ges_track_object_get_track (tckobj1) == track);
-  assert_equals_uint64 (_DURATION (tckobj1), 15);
-  g_list_free_full (tckobjs, g_object_unref);
+  fail_unless ((trackelements = ges_clip_get_track_elements (obj1)) != NULL);
+  fail_unless ((trackelement1 =
+          GES_TRACK_ELEMENT (trackelements->data)) != NULL);
+  fail_unless (ges_track_element_get_track (trackelement1) == track);
+  assert_equals_uint64 (_DURATION (trackelement1), 15);
+  g_list_free_full (trackelements, g_object_unref);
 
   /* Same ref logic */
-  ASSERT_OBJECT_REFCOUNT (tckobj1, "First tckobj", 3);
+  ASSERT_OBJECT_REFCOUNT (trackelement1, "First trackelement", 3);
   ASSERT_OBJECT_REFCOUNT (obj1, "First clip", 1);
 
   fail_unless (ges_timeline_layer_add_object (layer, obj2));
-  fail_unless ((tckobjs = ges_clip_get_track_objects (obj2)) != NULL);
-  fail_unless ((tckobj2 = GES_TRACK_OBJECT (tckobjs->data)) != NULL);
-  fail_unless (ges_track_object_get_track (tckobj2) == track);
-  assert_equals_uint64 (_DURATION (tckobj2), 60);
-  g_list_free_full (tckobjs, g_object_unref);
+  fail_unless ((trackelements = ges_clip_get_track_elements (obj2)) != NULL);
+  fail_unless ((trackelement2 =
+          GES_TRACK_ELEMENT (trackelements->data)) != NULL);
+  fail_unless (ges_track_element_get_track (trackelement2) == track);
+  assert_equals_uint64 (_DURATION (trackelement2), 60);
+  g_list_free_full (trackelements, g_object_unref);
 
   /* Same ref logic */
-  ASSERT_OBJECT_REFCOUNT (tckobj2, "First tckobj", 3);
+  ASSERT_OBJECT_REFCOUNT (trackelement2, "First trackelement", 3);
   ASSERT_OBJECT_REFCOUNT (obj2, "First clip", 1);
 
   /* Snaping to edge, so no move */
   g_object_set (timeline, "snapping-distance", (guint64) 3, NULL);
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_TRIM,
           GES_EDGE_END, 27) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 5);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /* Snaping to edge, so no move */
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_TRIM,
           GES_EDGE_END, 27) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 5);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /**
    * New timeline:
@@ -354,9 +357,9 @@ GST_START_TEST (test_snapping)
    */
   g_object_set (timeline, "snapping-distance", (guint64) 0, NULL);
   ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (obj1), 10);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /**
    * New timeline(the "layers" are just to help reading diagram, nothing else):
@@ -372,9 +375,9 @@ GST_START_TEST (test_snapping)
   fail_unless (ges_timeline_element_roll_end (GES_TIMELINE_ELEMENT (obj1), 62));
   fail_unless (ges_timeline_element_roll_end (GES_TIMELINE_ELEMENT (obj1),
           72) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 52);
-  CHECK_OBJECT_PROPS (tckobj2, 72, 10, 50);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 52);
+  CHECK_OBJECT_PROPS (trackelement2, 72, 10, 50);
 
   /**
    *                    0----------
@@ -387,9 +390,9 @@ GST_START_TEST (test_snapping)
   g_object_set (timeline, "snapping-distance", (guint64) 4, NULL);
   fail_unless (ges_timeline_element_trim (GES_TIMELINE_ELEMENT (obj1),
           28) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 25, 5, 47);
-  CHECK_OBJECT_PROPS (tckobj2, 72, 10, 50);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 25, 5, 47);
+  CHECK_OBJECT_PROPS (trackelement2, 72, 10, 50);
 
   /**
    *                    0----------
@@ -401,9 +404,9 @@ GST_START_TEST (test_snapping)
    */
   fail_unless (ges_timeline_element_roll_start (GES_TIMELINE_ELEMENT (obj2),
           59) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 25, 5, 37);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 25, 5, 37);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
    /**
    * inpoints           0----------5---------- 0----------
@@ -412,9 +415,9 @@ GST_START_TEST (test_snapping)
    */
   fail_unless (ges_timeline_element_ripple (GES_TIMELINE_ELEMENT (obj1),
           58) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 62, 5, 37);
-  CHECK_OBJECT_PROPS (tckobj2, 99, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 62, 5, 37);
+  CHECK_OBJECT_PROPS (trackelement2, 99, 0, 60);
 
   /**
    * inpoints     0----------5----------     0----------
@@ -422,9 +425,9 @@ GST_START_TEST (test_snapping)
    * time         25---------62-------- 99  110--------170
    */
   ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (obj2), 110);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 62, 5, 37);
-  CHECK_OBJECT_PROPS (tckobj2, 110, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 62, 5, 37);
+  CHECK_OBJECT_PROPS (trackelement2, 110, 0, 60);
 
   /**
    * inpoints     0----------5    5 --------- 0----------
@@ -433,9 +436,9 @@ GST_START_TEST (test_snapping)
    */
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_NORMAL,
           GES_EDGE_NONE, 72) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 73, 5, 37);
-  CHECK_OBJECT_PROPS (tckobj2, 110, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 73, 5, 37);
+  CHECK_OBJECT_PROPS (trackelement2, 110, 0, 60);
 
   /**
    * inpoints     0----------5----------     0----------
@@ -444,9 +447,9 @@ GST_START_TEST (test_snapping)
    */
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_NORMAL,
           GES_EDGE_NONE, 58) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 62, 5, 37);
-  CHECK_OBJECT_PROPS (tckobj2, 110, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 62, 5, 37);
+  CHECK_OBJECT_PROPS (trackelement2, 110, 0, 60);
 
 
   /**
@@ -455,9 +458,9 @@ GST_START_TEST (test_snapping)
    * time         25---------62--------110--------170
    */
   g_object_set (obj1, "duration", 46, NULL);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 62, 5, 48);
-  CHECK_OBJECT_PROPS (tckobj2, 110, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 62, 5, 48);
+  CHECK_OBJECT_PROPS (trackelement2, 110, 0, 60);
 
   /**
    * inpoints     5----------- 0--------- 0----------
@@ -465,14 +468,14 @@ GST_START_TEST (test_snapping)
    * time         62---------110--------170--------207
    */
   g_object_set (obj, "start", 168, NULL);
-  CHECK_OBJECT_PROPS (tckobj, 170, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 62, 5, 48);
-  CHECK_OBJECT_PROPS (tckobj2, 110, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 170, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 62, 5, 48);
+  CHECK_OBJECT_PROPS (trackelement2, 110, 0, 60);
 
   /* Check we didn't lose/screwed any references */
-  ASSERT_OBJECT_REFCOUNT (tckobj, "First tckobj", 3);
-  ASSERT_OBJECT_REFCOUNT (tckobj1, "Second tckobj", 3);
-  ASSERT_OBJECT_REFCOUNT (tckobj2, "Third tckobj", 3);
+  ASSERT_OBJECT_REFCOUNT (trackelement, "First trackelement", 3);
+  ASSERT_OBJECT_REFCOUNT (trackelement1, "Second trackelement", 3);
+  ASSERT_OBJECT_REFCOUNT (trackelement2, "Third trackelement", 3);
   ASSERT_OBJECT_REFCOUNT (obj, "First clip", 1);
   ASSERT_OBJECT_REFCOUNT (obj1, "Second clip", 1);
   ASSERT_OBJECT_REFCOUNT (obj2, "Third clip", 1);
@@ -480,9 +483,9 @@ GST_START_TEST (test_snapping)
   g_object_unref (timeline);
 
   /* Check we destroyed everything */
-  fail_if (G_IS_OBJECT (tckobj));
-  fail_if (G_IS_OBJECT (tckobj1));
-  fail_if (G_IS_OBJECT (tckobj2));
+  fail_if (G_IS_OBJECT (trackelement));
+  fail_if (G_IS_OBJECT (trackelement1));
+  fail_if (G_IS_OBJECT (trackelement2));
   fail_if (G_IS_OBJECT (obj));
   fail_if (G_IS_OBJECT (obj1));
   fail_if (G_IS_OBJECT (obj2));
@@ -496,10 +499,10 @@ GST_START_TEST (test_timeline_edition_mode)
   guint i;
   GESTrack *track;
   GESTimeline *timeline;
-  GESTrackObject *tckobj, *tckobj1, *tckobj2;
+  GESTrackElement *trackelement, *trackelement1, *trackelement2;
   GESClip *obj, *obj1, *obj2;
   GESTimelineLayer *layer, *layer1, *layer2;
-  GList *tckobjs, *layers, *tmp;
+  GList *trackelements, *layers, *tmp;
 
   ges_init ();
 
@@ -540,11 +543,12 @@ GST_START_TEST (test_timeline_edition_mode)
 
 
   fail_unless (ges_timeline_layer_add_object (layer, obj));
-  fail_unless ((tckobjs = ges_clip_get_track_objects (obj)) != NULL);
-  fail_unless ((tckobj = GES_TRACK_OBJECT (tckobjs->data)) != NULL);
-  fail_unless (ges_track_object_get_track (tckobj) == track);
-  assert_equals_uint64 (_DURATION (tckobj), 10);
-  g_list_free_full (tckobjs, g_object_unref);
+  fail_unless ((trackelements = ges_clip_get_track_elements (obj)) != NULL);
+  fail_unless ((trackelement =
+          GES_TRACK_ELEMENT (trackelements->data)) != NULL);
+  fail_unless (ges_track_element_get_track (trackelement) == track);
+  assert_equals_uint64 (_DURATION (trackelement), 10);
+  g_list_free_full (trackelements, g_object_unref);
 
   /* Add a new layer and add objects to it */
   fail_unless ((layer1 = ges_timeline_append_layer (timeline)) != NULL);
@@ -552,18 +556,20 @@ GST_START_TEST (test_timeline_edition_mode)
   assert_equals_int (ges_timeline_layer_get_priority (layer1), 1);
 
   fail_unless (ges_timeline_layer_add_object (layer1, obj1));
-  fail_unless ((tckobjs = ges_clip_get_track_objects (obj1)) != NULL);
-  fail_unless ((tckobj1 = GES_TRACK_OBJECT (tckobjs->data)) != NULL);
-  fail_unless (ges_track_object_get_track (tckobj1) == track);
-  assert_equals_uint64 (_DURATION (tckobj1), 10);
-  g_list_free_full (tckobjs, g_object_unref);
+  fail_unless ((trackelements = ges_clip_get_track_elements (obj1)) != NULL);
+  fail_unless ((trackelement1 =
+          GES_TRACK_ELEMENT (trackelements->data)) != NULL);
+  fail_unless (ges_track_element_get_track (trackelement1) == track);
+  assert_equals_uint64 (_DURATION (trackelement1), 10);
+  g_list_free_full (trackelements, g_object_unref);
 
   fail_unless (ges_timeline_layer_add_object (layer1, obj2));
-  fail_unless ((tckobjs = ges_clip_get_track_objects (obj2)) != NULL);
-  fail_unless ((tckobj2 = GES_TRACK_OBJECT (tckobjs->data)) != NULL);
-  fail_unless (ges_track_object_get_track (tckobj2) == track);
-  assert_equals_uint64 (_DURATION (tckobj2), 60);
-  g_list_free_full (tckobjs, g_object_unref);
+  fail_unless ((trackelements = ges_clip_get_track_elements (obj2)) != NULL);
+  fail_unless ((trackelement2 =
+          GES_TRACK_ELEMENT (trackelements->data)) != NULL);
+  fail_unless (ges_track_element_get_track (trackelement2) == track);
+  assert_equals_uint64 (_DURATION (trackelement2), 60);
+  g_list_free_full (trackelements, g_object_unref);
 
   /**
    * Simple rippling obj to: 10
@@ -581,18 +587,18 @@ GST_START_TEST (test_timeline_edition_mode)
    */
   fail_unless (ges_clip_edit (obj, NULL, -1, GES_EDIT_MODE_RIPPLE,
           GES_EDGE_NONE, 10) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 10, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 60, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 10, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 60, 0, 60);
 
 
   /* FIXME find a way to check that we are using the same MovingContext
    * inside the GESTimeline */
   fail_unless (ges_clip_edit (obj1, NULL, 3, GES_EDIT_MODE_RIPPLE,
           GES_EDGE_NONE, 40) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 10, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj1, 40, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 80, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 10, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement1, 40, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 80, 0, 60);
   layer2 = ges_clip_get_layer (obj1);
   assert_equals_int (ges_timeline_layer_get_priority (layer2), 3);
   /* obj2 should have moved layer too */
@@ -606,9 +612,9 @@ GST_START_TEST (test_timeline_edition_mode)
    */
   fail_unless (ges_clip_edit (obj1, NULL, 1, GES_EDIT_MODE_RIPPLE,
           GES_EDGE_NONE, 20) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 10, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 60, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 10, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 60, 0, 60);
   layer2 = ges_clip_get_layer (obj1);
   assert_equals_int (ges_timeline_layer_get_priority (layer2), 1);
   /* obj2 should have moved layer too */
@@ -635,9 +641,9 @@ GST_START_TEST (test_timeline_edition_mode)
           GES_EDGE_NONE, 27) == TRUE);
   fail_unless (ges_clip_edit (obj2, NULL, -1, GES_EDIT_MODE_NORMAL,
           GES_EDGE_NONE, 35) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 27, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 35, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 27, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 35, 0, 60);
 
   /**
    * Simple trimming start obj to: 32
@@ -655,9 +661,9 @@ GST_START_TEST (test_timeline_edition_mode)
    */
   fail_unless (ges_clip_edit (obj, NULL, -1, GES_EDIT_MODE_TRIM,
           GES_EDGE_START, 32) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 32, 5, 5);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 35, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 32, 5, 5);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 35, 0, 60);
 
   /* Ripple end obj to 35 and move to layer 2
    * New timeline:
@@ -673,9 +679,9 @@ GST_START_TEST (test_timeline_edition_mode)
    */
   fail_unless (ges_clip_edit (obj, NULL, 2, GES_EDIT_MODE_RIPPLE,
           GES_EDGE_END, 35) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 32, 5, 3);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 35, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 32, 5, 3);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 35, 0, 60);
   layer = ges_clip_get_layer (obj);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 2);
   g_object_unref (layer);
@@ -694,9 +700,9 @@ GST_START_TEST (test_timeline_edition_mode)
    */
   fail_unless (ges_clip_edit (obj, NULL, 2, GES_EDIT_MODE_ROLL,
           GES_EDGE_END, 50) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 32, 5, 18);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 50, 15, 45);
+  CHECK_OBJECT_PROPS (trackelement, 32, 5, 18);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 50, 15, 45);
   layer = ges_clip_get_layer (obj);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 2);
   g_object_unref (layer);
@@ -708,9 +714,9 @@ GST_START_TEST (test_timeline_edition_mode)
 
     fail_unless (ges_clip_edit (obj, NULL, -1, GES_EDIT_MODE_ROLL,
             GES_EDGE_END, random) == TRUE);
-    CHECK_OBJECT_PROPS (tckobj, 32, 5, random - 32);
-    CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-    CHECK_OBJECT_PROPS (tckobj2, random, tck3_inpoint, 95 - random);
+    CHECK_OBJECT_PROPS (trackelement, 32, 5, random - 32);
+    CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+    CHECK_OBJECT_PROPS (trackelement2, random, tck3_inpoint, 95 - random);
   }
 
   /* Roll end obj back to 35
@@ -727,9 +733,9 @@ GST_START_TEST (test_timeline_edition_mode)
    */
   fail_unless (ges_clip_edit (obj, NULL, 2, GES_EDIT_MODE_ROLL,
           GES_EDGE_END, 35) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 32, 5, 3);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 35, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 32, 5, 3);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 35, 0, 60);
   layer = ges_clip_get_layer (obj);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 2);
   g_object_unref (layer);
@@ -750,9 +756,9 @@ GST_START_TEST (test_timeline_edition_mode)
   /* Can not move to the first layer as obj2 should move to a layer with priority < 0 */
   fail_unless (ges_clip_edit (obj, NULL, 0, GES_EDIT_MODE_RIPPLE,
           GES_EDGE_END, 52) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 32, 5, 20);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 52, 0, 60)
+  CHECK_OBJECT_PROPS (trackelement, 32, 5, 20);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 52, 0, 60)
       layer = ges_clip_get_layer (obj);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 2);
   g_object_unref (layer);
@@ -771,9 +777,9 @@ GST_START_TEST (test_timeline_edition_mode)
   /* We have 3 references:
    *  track  + timeline  + obj
    */
-  ASSERT_OBJECT_REFCOUNT (tckobj, "First tckobj", 3);
-  ASSERT_OBJECT_REFCOUNT (tckobj1, "Second tckobj", 3);
-  ASSERT_OBJECT_REFCOUNT (tckobj2, "Third tckobj", 3);
+  ASSERT_OBJECT_REFCOUNT (trackelement, "First trackelement", 3);
+  ASSERT_OBJECT_REFCOUNT (trackelement1, "Second trackelement", 3);
+  ASSERT_OBJECT_REFCOUNT (trackelement2, "Third trackelement", 3);
   /* We have 1 ref:
    * + layer */
   ASSERT_OBJECT_REFCOUNT (obj, "First clip", 1);
@@ -795,9 +801,9 @@ GST_START_TEST (test_timeline_edition_mode)
    */
   fail_unless (ges_clip_edit (obj1, NULL, 0, GES_EDIT_MODE_RIPPLE,
           GES_EDGE_END, 40) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 42, 5, 20);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 20);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 42, 5, 20);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 20);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /* Check that movement between layer has been done properly */
   layer1 = ges_clip_get_layer (obj);
@@ -825,9 +831,9 @@ GST_START_TEST (test_timeline_edition_mode)
    */
   fail_unless (ges_clip_edit (obj, NULL, -1, GES_EDIT_MODE_TRIM,
           GES_EDGE_START, 40) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 40, 3, 22);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 20);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 40, 3, 22);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 20);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /* Roll obj end to 25
    * New timeline:
@@ -844,34 +850,34 @@ GST_START_TEST (test_timeline_edition_mode)
    */
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_ROLL,
           GES_EDGE_END, 25) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 5);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /* Make sure that not doing anything when not able to roll */
   fail_unless (ges_clip_edit (obj, NULL, -1, GES_EDIT_MODE_ROLL,
           GES_EDGE_START, 65) == TRUE);
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_ROLL,
           GES_EDGE_END, 65) == TRUE, 0);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 5);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /* Snaping to edge, so no move */
   g_object_set (timeline, "snapping-distance", (guint64) 3, NULL);
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_TRIM,
           GES_EDGE_END, 27) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 5);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /* Snaping to edge, so no move */
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_TRIM,
           GES_EDGE_END, 27) == TRUE);
 
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 5);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /**
    * New timeline:
@@ -884,9 +890,9 @@ GST_START_TEST (test_timeline_edition_mode)
   g_object_set (timeline, "snapping-distance", (guint64) 0, NULL);
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_TRIM,
           GES_EDGE_END, 30) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   /**
    * New timeline
@@ -903,9 +909,9 @@ GST_START_TEST (test_timeline_edition_mode)
           GES_EDGE_END, 62) == TRUE);
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_ROLL,
           GES_EDGE_END, 72) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 20, 0, 52);
-  CHECK_OBJECT_PROPS (tckobj2, 72, 10, 50);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 52);
+  CHECK_OBJECT_PROPS (trackelement2, 72, 10, 50);
 
   /* Test Snapping */
   /**
@@ -919,9 +925,9 @@ GST_START_TEST (test_timeline_edition_mode)
   g_object_set (timeline, "snapping-distance", (guint64) 4, NULL);
   fail_unless (ges_clip_edit (obj1, NULL, -1, GES_EDIT_MODE_TRIM,
           GES_EDGE_START, 28) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 25, 5, 47);
-  CHECK_OBJECT_PROPS (tckobj2, 72, 10, 50);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 25, 5, 47);
+  CHECK_OBJECT_PROPS (trackelement2, 72, 10, 50);
 
   /**
    *                    0----------
@@ -933,9 +939,9 @@ GST_START_TEST (test_timeline_edition_mode)
    */
   fail_unless (ges_clip_edit (obj2, NULL, -1, GES_EDIT_MODE_ROLL,
           GES_EDGE_START, 59) == TRUE);
-  CHECK_OBJECT_PROPS (tckobj, 25, 0, 37);
-  CHECK_OBJECT_PROPS (tckobj1, 25, 5, 37);
-  CHECK_OBJECT_PROPS (tckobj2, 62, 0, 60);
+  CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
+  CHECK_OBJECT_PROPS (trackelement1, 25, 5, 37);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
 }
 

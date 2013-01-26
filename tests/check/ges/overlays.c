@@ -38,7 +38,7 @@ GST_END_TEST;
 GST_START_TEST (test_overlay_properties)
 {
   GESTrack *track;
-  GESTrackObject *trackobject;
+  GESTrackElement *trackelement;
   GESClip *object;
 
   ges_init ();
@@ -57,18 +57,18 @@ GST_START_TEST (test_overlay_properties)
   assert_equals_uint64 (_DURATION (object), 51);
   assert_equals_uint64 (_INPOINT (object), 12);
 
-  trackobject = ges_clip_create_track_object (object, track->type);
-  ges_clip_add_track_object (object, trackobject);
-  fail_unless (trackobject != NULL);
-  fail_unless (ges_track_object_set_track (trackobject, track));
+  trackelement = ges_clip_create_track_element (object, track->type);
+  ges_clip_add_track_element (object, trackelement);
+  fail_unless (trackelement != NULL);
+  fail_unless (ges_track_element_set_track (trackelement, track));
 
-  /* Check that trackobject has the same properties */
-  assert_equals_uint64 (_START (trackobject), 42);
-  assert_equals_uint64 (_DURATION (trackobject), 51);
-  assert_equals_uint64 (_INPOINT (trackobject), 12);
+  /* Check that trackelement has the same properties */
+  assert_equals_uint64 (_START (trackelement), 42);
+  assert_equals_uint64 (_DURATION (trackelement), 51);
+  assert_equals_uint64 (_INPOINT (trackelement), 12);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
+  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
       51, 0, TRUE);
 
   /* Change more properties, see if they propagate */
@@ -77,15 +77,15 @@ GST_START_TEST (test_overlay_properties)
   assert_equals_uint64 (_START (object), 420);
   assert_equals_uint64 (_DURATION (object), 510);
   assert_equals_uint64 (_INPOINT (object), 120);
-  assert_equals_uint64 (_START (trackobject), 420);
-  assert_equals_uint64 (_DURATION (trackobject), 510);
-  assert_equals_uint64 (_INPOINT (trackobject), 120);
+  assert_equals_uint64 (_START (trackelement), 420);
+  assert_equals_uint64 (_DURATION (trackelement), 510);
+  assert_equals_uint64 (_INPOINT (trackelement), 120);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
-      510, 0, TRUE);
+  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
+      120, 510, 0, TRUE);
 
-  ges_clip_release_track_object (object, trackobject);
+  ges_clip_release_track_element (object, trackelement);
   g_object_unref (object);
 }
 
@@ -96,7 +96,7 @@ GST_START_TEST (test_overlay_in_layer)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *a, *v;
-  GESTrackObject *trobj;
+  GESTrackElement *trobj;
   GESTextOverlayClip *source;
   gchar *text;
   gint halign, valign;
@@ -128,7 +128,7 @@ GST_START_TEST (test_overlay_in_layer)
   assert_equals_string ("some text", text);
   g_free (text);
 
-  trobj = ges_clip_find_track_object (GES_CLIP (source), v, G_TYPE_NONE);
+  trobj = ges_clip_find_track_element (GES_CLIP (source), v, G_TYPE_NONE);
 
   /* test the font-desc property */
   g_object_set (source, "font-desc", (gchar *) "sans 72", NULL);

@@ -34,7 +34,7 @@ G_DEFINE_ABSTRACT_TYPE (GESBaseXmlFormatter, ges_base_xml_formatter,
 typedef struct PendingEffects
 {
   gchar *track_id;
-  GESTrackObject *tckobj;
+  GESTrackElement *trackelement;
   GstStructure *children_properties;
   GstStructure *properties;
 
@@ -58,7 +58,7 @@ typedef struct PendingClip
   GList *effects;
 
   /* TODO Implement asset effect management
-   * PendingTrackObjects *track_objects; */
+   * PendingTrackElements *track_elements; */
 } PendingClip;
 
 typedef struct LayerEntry
@@ -385,12 +385,12 @@ _loading_done (GESFormatter * self)
 
 static void
 _set_child_property (GQuark field_id, const GValue * value,
-    GESTrackObject * effect)
+    GESTrackElement * effect)
 {
   GParamSpec *pspec;
   GstElement *element;
 
-  if (!ges_track_object_lookup_child (effect,
+  if (!ges_track_element_lookup_child (effect,
           g_quark_to_string (field_id), &element, &pspec))
     return;
 
@@ -435,34 +435,34 @@ _add_object_to_layer (GESBaseXmlFormatterPrivate * priv, const gchar * id,
 }
 
 static void
-_add_track_object (GESFormatter * self, GESClip * clip,
-    GESTrackObject * tckobj, const gchar * track_id,
+_add_track_element (GESFormatter * self, GESClip * clip,
+    GESTrackElement * trackelement, const gchar * track_id,
     GstStructure * children_properties, GstStructure * properties)
 {
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
   GESTrack *track = g_hash_table_lookup (priv->tracks, track_id);
 
   if (track == NULL) {
-    GST_WARNING_OBJECT (self, "No track with id %s, can not add tckobj",
+    GST_WARNING_OBJECT (self, "No track with id %s, can not add trackelement",
         track_id);
-    gst_object_unref (tckobj);
+    gst_object_unref (trackelement);
     return;
   }
 
-  GST_DEBUG_OBJECT (self, "Adding track_object: %" GST_PTR_FORMAT
-      " To : %" GST_PTR_FORMAT, tckobj, clip);
+  GST_DEBUG_OBJECT (self, "Adding track_element: %" GST_PTR_FORMAT
+      " To : %" GST_PTR_FORMAT, trackelement, clip);
 
-  ges_clip_add_track_object (clip, tckobj);
-  ges_track_add_object (track, tckobj);
+  ges_clip_add_track_element (clip, trackelement);
+  ges_track_add_object (track, trackelement);
   gst_structure_foreach (children_properties,
-      (GstStructureForeachFunc) _set_child_property, tckobj);
+      (GstStructureForeachFunc) _set_child_property, trackelement);
 }
 
 static void
 _free_pending_effect (PendingEffects * pend)
 {
   g_free (pend->track_id);
-  gst_object_unref (pend->tckobj);
+  gst_object_unref (pend->trackelement);
   if (pend->children_properties)
     gst_structure_free (pend->children_properties);
   if (pend->properties)
@@ -575,7 +575,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
       PendingEffects *peffect = (PendingEffects *) tmpeffect->data;
 
       /* We keep a ref as _free_pending_effect unrefs it */
-      _add_track_object (self, clip, gst_object_ref (peffect->tckobj),
+      _add_track_element (self, clip, gst_object_ref (peffect->trackelement),
           peffect->track_id, peffect->children_properties, peffect->properties);
     }
     _free_pending_clip (priv, pend);
@@ -830,12 +830,12 @@ ges_base_xml_formatter_add_track (GESBaseXmlFormatter * self,
 }
 
 void
-ges_base_xml_formatter_add_track_object (GESBaseXmlFormatter * self,
-    GType track_object_type, const gchar * asset_id, const gchar * track_id,
+ges_base_xml_formatter_add_track_element (GESBaseXmlFormatter * self,
+    GType track_element_type, const gchar * asset_id, const gchar * track_id,
     const gchar * timeline_obj_id, GstStructure * children_properties,
     GstStructure * properties, const gchar * metadatas, GError ** error)
 {
-  GESTrackObject *tckobj;
+  GESTrackElement *trackelement;
 
   GError *err = NULL;
   GESAsset *asset = NULL;
@@ -844,37 +844,37 @@ ges_base_xml_formatter_add_track_object (GESBaseXmlFormatter * self,
   if (priv->check_only)
     return;
 
-  if (g_type_is_a (track_object_type, GES_TYPE_TRACK_OBJECT) == FALSE) {
-    GST_DEBUG_OBJECT (self, "%s is not a TrackObject, can not create it",
-        g_type_name (track_object_type));
+  if (g_type_is_a (track_element_type, GES_TYPE_TRACK_ELEMENT) == FALSE) {
+    GST_DEBUG_OBJECT (self, "%s is not a TrackElement, can not create it",
+        g_type_name (track_element_type));
     goto out;
   }
 
-  if (g_type_is_a (track_object_type, GES_TYPE_TRACK_EFFECT) == FALSE) {
+  if (g_type_is_a (track_element_type, GES_TYPE_TRACK_EFFECT) == FALSE) {
     GST_FIXME_OBJECT (self, "%s currently not supported",
-        g_type_name (track_object_type));
+        g_type_name (track_element_type));
     goto out;
   }
 
-  asset = ges_asset_request (track_object_type, asset_id, &err);
+  asset = ges_asset_request (track_element_type, asset_id, &err);
   if (asset == NULL) {
-    GST_DEBUG_OBJECT (self, "Can not create tckobj %s", asset_id);
+    GST_DEBUG_OBJECT (self, "Can not create trackelement %s", asset_id);
     GST_FIXME_OBJECT (self, "Check if missing plugins etc %s",
         err ? err->message : "");
 
     goto out;
   }
 
-  tckobj = GES_TRACK_OBJECT (ges_asset_extract (asset, NULL));
-  if (tckobj) {
+  trackelement = GES_TRACK_ELEMENT (ges_asset_extract (asset, NULL));
+  if (trackelement) {
     GESClip *clip;
     if (metadatas)
-      ges_meta_container_add_metas_from_string (GES_META_CONTAINER (tckobj),
-          metadatas);
+      ges_meta_container_add_metas_from_string (GES_META_CONTAINER
+          (trackelement), metadatas);
 
     clip = g_hash_table_lookup (priv->clips, timeline_obj_id);
     if (clip) {
-      _add_track_object (GES_FORMATTER (self), clip, tckobj, track_id,
+      _add_track_element (GES_FORMATTER (self), clip, trackelement, track_id,
           children_properties, properties);
     } else {
       PendingEffects *peffect;
@@ -882,13 +882,13 @@ ges_base_xml_formatter_add_track_object (GESBaseXmlFormatter * self,
           timeline_obj_id);
       if (pend == NULL) {
         GST_WARNING_OBJECT (self, "No Clip with id: %s can not "
-            "add TrackObject", timeline_obj_id);
+            "add TrackElement", timeline_obj_id);
         goto out;
       }
 
       peffect = g_slice_new0 (PendingEffects);
 
-      peffect->tckobj = tckobj;
+      peffect->trackelement = trackelement;
       peffect->track_id = g_strdup (track_id);
       peffect->properties = properties ? gst_structure_copy (properties) : NULL;
       peffect->children_properties = children_properties ?

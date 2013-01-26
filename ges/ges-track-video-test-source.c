@@ -24,7 +24,7 @@
  */
 
 #include "ges-internal.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-track-video-test-source.h"
 
 G_DEFINE_TYPE (GESTrackVideoTestSource, ges_track_video_test_source,
@@ -35,17 +35,17 @@ struct _GESTrackVideoTestSourcePrivate
   GESVideoTestPattern pattern;
 };
 
-static GstElement *ges_track_video_test_source_create_element (GESTrackObject *
+static GstElement *ges_track_video_test_source_create_element (GESTrackElement *
     self);
 
 static void
 ges_track_video_test_source_class_init (GESTrackVideoTestSourceClass * klass)
 {
-  GESTrackObjectClass *track_object_class = GES_TRACK_OBJECT_CLASS (klass);
+  GESTrackElementClass *track_element_class = GES_TRACK_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackVideoTestSourcePrivate));
 
-  track_object_class->create_element =
+  track_element_class->create_element =
       ges_track_video_test_source_create_element;
 }
 
@@ -59,7 +59,7 @@ ges_track_video_test_source_init (GESTrackVideoTestSource * self)
 }
 
 static GstElement *
-ges_track_video_test_source_create_element (GESTrackObject * self)
+ges_track_video_test_source_create_element (GESTrackElement * self)
 {
   GstElement *ret;
   gint pattern;
@@ -83,7 +83,8 @@ void
 ges_track_video_test_source_set_pattern (GESTrackVideoTestSource
     * self, GESVideoTestPattern pattern)
 {
-  GstElement *element = ges_track_object_get_element (GES_TRACK_OBJECT (self));
+  GstElement *element =
+      ges_track_element_get_element (GES_TRACK_ELEMENT (self));
 
   self->priv->pattern = pattern;
 

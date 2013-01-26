@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TRACK_OBJECT
-#define _GES_TRACK_OBJECT
+#ifndef _GES_TRACK_ELEMENT
+#define _GES_TRACK_ELEMENT
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -29,37 +29,37 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TRACK_OBJECT ges_track_object_get_type()
+#define GES_TYPE_TRACK_ELEMENT ges_track_element_get_type()
 
-#define GES_TRACK_OBJECT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_OBJECT, GESTrackObject))
+#define GES_TRACK_ELEMENT(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_ELEMENT, GESTrackElement))
 
-#define GES_TRACK_OBJECT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_OBJECT, GESTrackObjectClass))
+#define GES_TRACK_ELEMENT_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_ELEMENT, GESTrackElementClass))
 
-#define GES_IS_TRACK_OBJECT(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_OBJECT))
+#define GES_IS_TRACK_ELEMENT(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_ELEMENT))
 
-#define GES_IS_TRACK_OBJECT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_OBJECT))
+#define GES_IS_TRACK_ELEMENT_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_ELEMENT))
 
-#define GES_TRACK_OBJECT_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_OBJECT, GESTrackObjectClass))
+#define GES_TRACK_ELEMENT_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_ELEMENT, GESTrackElementClass))
 
-typedef struct _GESTrackObjectPrivate GESTrackObjectPrivate;
+typedef struct _GESTrackElementPrivate GESTrackElementPrivate;
 
 /**
- * GESTrackObject:
+ * GESTrackElement:
  *
- * The GESTrackObject base class.
+ * The GESTrackElement base class.
  */
-struct _GESTrackObject {
+struct _GESTrackElement {
   GESTimelineElement parent;
 
   /*< private >*/
   gboolean active;
 
-  GESTrackObjectPrivate *priv;
+  GESTrackElementPrivate *priv;
 
   GESAsset *asset;
 
@@ -68,7 +68,7 @@ struct _GESTrackObject {
 };
 
 /**
- * GESTrackObjectClass:
+ * GESTrackElementClass:
  * @gnlobject_factorytype: name of the GNonLin GStElementFactory type to use.
  * @create_gnl_object: method to create the GNonLin container object.
  * @create_element: method to return the GstElement to put in the gnlobject.
@@ -85,111 +85,111 @@ struct _GESTrackObject {
  * Subclasses can override the @create_gnl_object method to override what type
  * of GNonLin object will be created.
  */
-struct _GESTrackObjectClass {
+struct _GESTrackElementClass {
   /*< private >*/
   GESTimelineElementClass parent_class;
 
   /*< public >*/
   /* virtual methods for subclasses */
   const gchar  *gnlobject_factorytype;
-  GstElement*  (*create_gnl_object)        (GESTrackObject * object);
-  GstElement*  (*create_element)           (GESTrackObject * object);
+  GstElement*  (*create_gnl_object)        (GESTrackElement * object);
+  GstElement*  (*create_element)           (GESTrackElement * object);
 
-  void (*duration_changed)     (GESTrackObject *object, guint64 duration);
-  void (*active_changed)       (GESTrackObject *object, gboolean active);
+  void (*duration_changed)     (GESTrackElement *object, guint64 duration);
+  void (*active_changed)       (GESTrackElement *object, gboolean active);
 
   /*< private >*/
   /* signals (currently unused) */
-  void  (*changed)  (GESTrackObject * object);
+  void  (*changed)  (GESTrackElement * object);
 
   /*< public >*/
   /* virtual methods for subclasses */
-  GHashTable*  (*get_props_hastable)       (GESTrackObject * object);
-  GParamSpec** (*list_children_properties) (GESTrackObject * object,
+  GHashTable*  (*get_props_hastable)       (GESTrackElement * object);
+  GParamSpec** (*list_children_properties) (GESTrackElement * object,
               guint *n_properties);
   /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING_LARGE];
 };
 
-GType ges_track_object_get_type               (void);
+GType ges_track_element_get_type               (void);
 
-gboolean ges_track_object_set_track           (GESTrackObject * object,
+gboolean ges_track_element_set_track           (GESTrackElement * object,
               GESTrack * track);
-GESTrack* ges_track_object_get_track          (GESTrackObject * object);
+GESTrack* ges_track_element_get_track          (GESTrackElement * object);
 
-GESTrackType ges_track_object_get_track_type  (GESTrackObject * object);
-void ges_track_object_set_track_type          (GESTrackObject * object,
+GESTrackType ges_track_element_get_track_type  (GESTrackElement * object);
+void ges_track_element_set_track_type          (GESTrackElement * object,
                                                GESTrackType     type);
 
-void ges_track_object_set_clip     (GESTrackObject * object,
+void ges_track_element_set_clip     (GESTrackElement * object,
                                                GESClip * clipect);
 GESClip *
-ges_track_object_get_clip          (GESTrackObject* object);
+ges_track_element_get_clip          (GESTrackElement* object);
 
-GstElement * ges_track_object_get_gnlobject   (GESTrackObject * object);
+GstElement * ges_track_element_get_gnlobject   (GESTrackElement * object);
 
-GstElement * ges_track_object_get_element     (GESTrackObject * object);
+GstElement * ges_track_element_get_element     (GESTrackElement * object);
 
-void ges_track_object_set_locked              (GESTrackObject * object,
+void ges_track_element_set_locked              (GESTrackElement * object,
                                                gboolean locked);
 
-gboolean ges_track_object_is_locked           (GESTrackObject * object);
+gboolean ges_track_element_is_locked           (GESTrackElement * object);
 
-gboolean ges_track_object_set_active          (GESTrackObject * object,
+gboolean ges_track_element_set_active          (GESTrackElement * object,
                                                gboolean active);
 
-gboolean ges_track_object_is_active           (GESTrackObject * object);
+gboolean ges_track_element_is_active           (GESTrackElement * object);
 
 GParamSpec **
-ges_track_object_list_children_properties     (GESTrackObject *object,
+ges_track_element_list_children_properties     (GESTrackElement *object,
                                                guint *n_properties);
 
-gboolean ges_track_object_lookup_child        (GESTrackObject *object,
+gboolean ges_track_element_lookup_child        (GESTrackElement *object,
                                                const gchar *prop_name,
                                                GstElement **element,
                                                GParamSpec **pspec);
 
 void
-ges_track_object_get_child_property_by_pspec (GESTrackObject * object,
+ges_track_element_get_child_property_by_pspec (GESTrackElement * object,
                                               GParamSpec * pspec,
                                               GValue * value);
 
 void
-ges_track_object_get_child_property_valist   (GESTrackObject * object,
+ges_track_element_get_child_property_valist   (GESTrackElement * object,
                                               const gchar * first_property_name,
                                               va_list var_args);
 
-void ges_track_object_get_child_properties   (GESTrackObject *object,
+void ges_track_element_get_child_properties   (GESTrackElement *object,
                                               const gchar * first_property_name,
                                               ...) G_GNUC_NULL_TERMINATED;
 
 void
-ges_track_object_set_child_property_valist   (GESTrackObject * object,
+ges_track_element_set_child_property_valist   (GESTrackElement * object,
                                               const gchar * first_property_name,
                                               va_list var_args);
 
 void
-ges_track_object_set_child_property_by_pspec (GESTrackObject * object,
+ges_track_element_set_child_property_by_pspec (GESTrackElement * object,
                                               GParamSpec * pspec,
                                               GValue * value);
 
-void ges_track_object_set_child_properties   (GESTrackObject * object,
+void ges_track_element_set_child_properties   (GESTrackElement * object,
                                               const gchar * first_property_name,
                                               ...) G_GNUC_NULL_TERMINATED;
 
-gboolean ges_track_object_set_child_property (GESTrackObject *object,
+gboolean ges_track_element_set_child_property (GESTrackElement *object,
                                               const gchar *property_name,
                                               GValue * value);
 
-gboolean ges_track_object_get_child_property (GESTrackObject *object,
+gboolean ges_track_element_get_child_property (GESTrackElement *object,
                                               const gchar *property_name,
                                               GValue * value);
 
 gboolean
-ges_track_object_edit                        (GESTrackObject * object,
+ges_track_element_edit                        (GESTrackElement * object,
                                               GList *layers, GESEditMode mode,
                                               GESEdge edge, guint64 position);
 
 G_END_DECLS
-#endif /* _GES_TRACK_OBJECT */
+#endif /* _GES_TRACK_ELEMENT */

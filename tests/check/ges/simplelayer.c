@@ -23,11 +23,11 @@
 
 static gboolean
 my_fill_track_func (GESClip * object,
-    GESTrackObject * trobject, GstElement * gnlobj, gpointer user_data)
+    GESTrackElement * trobject, GstElement * gnlobj, gpointer user_data)
 {
   GstElement *src;
 
-  GST_DEBUG ("timelineobj:%p, trackobjec:%p, gnlobj:%p",
+  GST_DEBUG ("timelineobj:%p, trackelementec:%p, gnlobj:%p",
       object, trobject, gnlobj);
 
   /* Let's just put a fakesource in for the time being */
@@ -42,13 +42,13 @@ my_fill_track_func (GESClip * object,
 
 static gboolean
 arbitrary_fill_track_func (GESClip * object,
-    GESTrackObject * trobject, GstElement * gnlobj, gpointer user_data)
+    GESTrackElement * trobject, GstElement * gnlobj, gpointer user_data)
 {
   GstElement *src;
 
   g_assert (user_data);
 
-  GST_DEBUG ("element:%s, timelineobj:%p, trackobjects:%p, gnlobj:%p,",
+  GST_DEBUG ("element:%s, timelineobj:%p, trackelements:%p, gnlobj:%p,",
       (const gchar *) user_data, object, trobject, gnlobj);
 
   /* interpret user_data as name of element to create */

@@ -25,7 +25,7 @@
 #include <gio/gio.h>
 
 #include "ges-timeline.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-timeline-element.h"
 
 #include "ges-asset.h"
@@ -47,31 +47,31 @@ GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define _set_priority0 ges_timeline_element_set_priority
 
 G_GNUC_INTERNAL gboolean
-timeline_ripple_object         (GESTimeline *timeline, GESTrackObject *obj,
+timeline_ripple_object         (GESTimeline *timeline, GESTrackElement *obj,
                                     GList * layers, GESEdge edge,
                                     guint64 position);
 
 G_GNUC_INTERNAL gboolean
-timeline_slide_object          (GESTimeline *timeline, GESTrackObject *obj,
+timeline_slide_object          (GESTimeline *timeline, GESTrackElement *obj,
                                     GList * layers, GESEdge edge, guint64 position);
 
 G_GNUC_INTERNAL gboolean
-timeline_roll_object           (GESTimeline *timeline, GESTrackObject *obj,
+timeline_roll_object           (GESTimeline *timeline, GESTrackElement *obj,
                                     GList * layers, GESEdge edge, guint64 position);
 
 G_GNUC_INTERNAL gboolean
-timeline_trim_object           (GESTimeline *timeline, GESTrackObject * object,
+timeline_trim_object           (GESTimeline *timeline, GESTrackElement * object,
                                     GList * layers, GESEdge edge, guint64 position);
 G_GNUC_INTERNAL gboolean
-ges_timeline_trim_object_simple (GESTimeline * timeline, GESTrackObject * obj,
+ges_timeline_trim_object_simple (GESTimeline * timeline, GESTrackElement * obj,
                                  GList * layers, GESEdge edge, guint64 position, gboolean snapping);
 
 G_GNUC_INTERNAL gboolean
-ges_timeline_move_object_simple (GESTimeline * timeline, GESTrackObject * object,
+ges_timeline_move_object_simple (GESTimeline * timeline, GESTrackElement * object,
                                  GList * layers, GESEdge edge, guint64 position);
 
 G_GNUC_INTERNAL gboolean
-timeline_move_object           (GESTimeline *timeline, GESTrackObject * object,
+timeline_move_object           (GESTimeline *timeline, GESTrackElement * object,
                                     GList * layers, GESEdge edge, guint64 position);
 
 G_GNUC_INTERNAL gboolean
@@ -205,7 +205,7 @@ void ges_base_xml_formatter_add_encoding_profile               (GESBaseXmlFormat
                                                                  gboolean variableframerate,
                                                                  GstStructure * properties,
                                                                  GError ** error);
-G_GNUC_INTERNAL void ges_base_xml_formatter_add_track_object    (GESBaseXmlFormatter *self,
+G_GNUC_INTERNAL void ges_base_xml_formatter_add_track_element    (GESBaseXmlFormatter *self,
                                                                  GType effect_type,
                                                                  const gchar *asset_id,
                                                                  const gchar * track_id,

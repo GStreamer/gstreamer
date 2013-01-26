@@ -555,7 +555,7 @@ _parse_effect (GMarkupParseContext * context, const gchar * element_name,
       goto wrong_properties;
   }
 
-  ges_base_xml_formatter_add_track_object (GES_BASE_XML_FORMATTER (self),
+  ges_base_xml_formatter_add_track_element (GES_BASE_XML_FORMATTER (self),
       type, asset_id, track_id, clip_id, children_props, props, metadatas,
       error);
 
@@ -768,7 +768,7 @@ _save_tracks (GString * str, GESTimeline * timeline)
 }
 
 static inline void
-_save_effect (GString * str, guint clip_id, GESTrackObject * tckobj,
+_save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
     GESTimeline * timeline)
 {
   GESTrack *tck;
@@ -778,9 +778,9 @@ _save_effect (GString * str, guint clip_id, GESTrackObject * tckobj,
   GParamSpec **pspecs, *spec;
   guint j, n_props = 0, track_id = 0;
 
-  tck = ges_track_object_get_track (tckobj);
+  tck = ges_track_element_get_track (trackelement);
   if (tck == NULL) {
-    GST_WARNING_OBJECT (tckobj, " Not in any track, can not save it");
+    GST_WARNING_OBJECT (trackelement, " Not in any track, can not save it");
 
     return;
   }
@@ -793,18 +793,20 @@ _save_effect (GString * str, guint clip_id, GESTrackObject * tckobj,
   }
   g_list_free_full (tracks, gst_object_unref);
 
-  properties = _serialize_properties (G_OBJECT (tckobj), "start",
+  properties = _serialize_properties (G_OBJECT (trackelement), "start",
       "in-point", "duration", "locked", "max-duration", "name", NULL);
-  metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (tckobj));
-  append_printf_escaped (str, "<effect asset-id='%s' clip-id='%u'"
+  metas =
+      ges_meta_container_metas_to_string (GES_META_CONTAINER (trackelement));
+  append_printf_escaped (str,
+      "<effect asset-id='%s' clip-id='%u'"
       " type-name='%s' track-type='%i' track-id='%i' properties='%s' metadatas='%s'",
-      ges_extractable_get_id (GES_EXTRACTABLE (tckobj)), clip_id,
-      g_type_name (G_OBJECT_TYPE (tckobj)), tck->type, track_id, properties,
-      metas);
+      ges_extractable_get_id (GES_EXTRACTABLE (trackelement)), clip_id,
+      g_type_name (G_OBJECT_TYPE (trackelement)), tck->type, track_id,
+      properties, metas);
   g_free (properties);
   g_free (metas);
 
-  pspecs = ges_track_object_list_children_properties (tckobj, &n_props);
+  pspecs = ges_track_element_list_children_properties (trackelement, &n_props);
   structure = gst_structure_new_empty ("properties");
   for (j = 0; j < n_props; j++) {
     GValue val = { 0 };
@@ -812,7 +814,7 @@ _save_effect (GString * str, guint clip_id, GESTrackObject * tckobj,
     spec = pspecs[j];
     if (_can_serialize_spec (spec)) {
       _init_value_from_spec_for_serialization (&val, spec);
-      ges_track_object_get_child_property_by_pspec (tckobj, spec, &val);
+      ges_track_element_get_child_property_by_pspec (trackelement, spec, &val);
       gst_structure_set_value (structure, spec->name, &val);
       g_value_unset (&val);
     }
@@ -872,7 +874,7 @@ _save_layers (GString * str, GESTimeline * timeline)
       g_free (properties);
 
       for (tmpeffect = effects; tmpeffect; tmpeffect = tmpeffect->next)
-        _save_effect (str, nbclips, GES_TRACK_OBJECT (tmpeffect->data),
+        _save_effect (str, nbclips, GES_TRACK_ELEMENT (tmpeffect->data),
             timeline);
       g_string_append (str, "</clip>\n");
       nbclips++;

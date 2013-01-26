@@ -95,7 +95,7 @@ GType ges_asset_track_filesource_get_type (void);
 
 struct _GESAssetTrackFileSource
 {
-  GESAssetTrackObject parent;
+  GESAssetTrackElement parent;
 
   /* <private> */
   GESAssetTrackFileSourcePrivate *priv;
@@ -106,7 +106,7 @@ struct _GESAssetTrackFileSource
 
 struct _GESAssetTrackFileSourceClass
 {
-  GESAssetTrackObjectClass parent_class;
+  GESAssetTrackElementClass parent_class;
 
   gpointer _ges_reserved[GES_PADDING];
 };

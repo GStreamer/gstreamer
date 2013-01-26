@@ -17,8 +17,8 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef _GES_ASSET_TRACK_OBJECT_
-#define _GES_ASSET_TRACK_OBJECT_
+#ifndef _GES_ASSET_TRACK_ELEMENT_
+#define _GES_ASSET_TRACK_ELEMENT_
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -27,38 +27,38 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_ASSET_TRACK_OBJECT ges_asset_track_object_get_type()
-#define GES_ASSET_TRACK_OBJECT(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_ASSET_TRACK_OBJECT, GESAssetTrackObject))
-#define GES_ASSET_TRACK_OBJECT_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_ASSET_TRACK_OBJECT, GESAssetTrackObjectClass))
-#define GES_IS_ASSET_TRACK_OBJECT(obj)  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_ASSET_TRACK_OBJECT))
-#define GES_IS_ASSET_TRACK_OBJECT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_ASSET_TRACK_OBJECT))
-#define GES_ASSET_TRACK_OBJECT_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_ASSET_TRACK_OBJECT, GESAssetTrackObjectClass))
+#define GES_TYPE_ASSET_TRACK_ELEMENT ges_asset_track_element_get_type()
+#define GES_ASSET_TRACK_ELEMENT(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_ASSET_TRACK_ELEMENT, GESAssetTrackElement))
+#define GES_ASSET_TRACK_ELEMENT_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_ASSET_TRACK_ELEMENT, GESAssetTrackElementClass))
+#define GES_IS_ASSET_TRACK_ELEMENT(obj)  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_ASSET_TRACK_ELEMENT))
+#define GES_IS_ASSET_TRACK_ELEMENT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_ASSET_TRACK_ELEMENT))
+#define GES_ASSET_TRACK_ELEMENT_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_ASSET_TRACK_ELEMENT, GESAssetTrackElementClass))
 
-typedef struct _GESAssetTrackObjectPrivate GESAssetTrackObjectPrivate;
+typedef struct _GESAssetTrackElementPrivate GESAssetTrackElementPrivate;
 
-GType ges_asset_track_object_get_type (void);
+GType ges_asset_track_element_get_type (void);
 
-struct _GESAssetTrackObject
+struct _GESAssetTrackElement
 {
   GESAsset parent;
 
   /* <private> */
-  GESAssetTrackObjectPrivate *priv;
+  GESAssetTrackElementPrivate *priv;
 
   /* Padding for API extension */
   gpointer __ges_reserved[GES_PADDING];
 };
 
-struct _GESAssetTrackObjectClass
+struct _GESAssetTrackElementClass
 {
   GESAssetClass parent_class;
 
   gpointer _ges_reserved[GES_PADDING];
 };
 
-const GESTrackType ges_asset_track_object_get_track_type (GESAssetTrackObject *asset);
-void ges_asset_track_object_set_track_type               (GESAssetTrackObject * asset, GESTrackType type);
+const GESTrackType ges_asset_track_element_get_track_type (GESAssetTrackElement *asset);
+void ges_asset_track_element_set_track_type               (GESAssetTrackElement * asset, GESTrackType type);
 
 G_END_DECLS
-#endif /* _GES_ASSET_TRACK_OBJECT */
+#endif /* _GES_ASSET_TRACK_ELEMENT */
 

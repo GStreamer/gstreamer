@@ -77,10 +77,10 @@ _height_changed_cb (GESClip * obj, GParamSpec * arg G_GNUC_UNUSED,
 }
 
 static void
-_track_changed_cb (GESTrackObject * obj, GParamSpec * arg G_GNUC_UNUSED,
+_track_changed_cb (GESTrackElement * obj, GParamSpec * arg G_GNUC_UNUSED,
     GESAutoTransition * self)
 {
-  if (ges_track_object_get_track (obj) == NULL) {
+  if (ges_track_element_get_track (obj) == NULL) {
     GST_DEBUG_OBJECT (self, "Neighboor %" GST_PTR_FORMAT
         " removed from track ... auto destructing", obj);
 
@@ -129,8 +129,8 @@ ges_auto_transition_class_init (GESAutoTransitionClass * klass)
 
 
 GESAutoTransition *
-ges_auto_transition_new (GESTrackObject * transition,
-    GESTrackObject * previous_source, GESTrackObject * next_source)
+ges_auto_transition_new (GESTrackElement * transition,
+    GESTrackElement * previous_source, GESTrackElement * next_source)
 {
   GESAutoTransition *self = g_object_new (GES_TYPE_AUTO_TRANSITION, NULL);
 
@@ -138,9 +138,9 @@ ges_auto_transition_new (GESTrackObject * transition,
   self->next_source = next_source;
   self->transition = transition;
 
-  self->previous_clip = ges_track_object_get_clip (previous_source);
-  self->next_clip = ges_track_object_get_clip (next_source);
-  self->transition_clip = ges_track_object_get_clip (transition);
+  self->previous_clip = ges_track_element_get_clip (previous_source);
+  self->next_clip = ges_track_element_get_clip (next_source);
+  self->transition_clip = ges_track_element_get_clip (transition);
 
   g_signal_connect (previous_source, "notify::start",
       G_CALLBACK (neighbour_changed_cb), self);

@@ -24,7 +24,7 @@
  */
 
 #include "ges-internal.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-track-audio-transition.h"
 
 #include <gst/controller/gstdirectcontrolbinding.h>
@@ -51,9 +51,9 @@ enum
 #define fast_element_link(a,b) gst_element_link_pads_full((a),"src",(b),"sink",GST_PAD_LINK_CHECK_NOTHING)
 
 static void
-ges_track_audio_transition_duration_changed (GESTrackObject * self, guint64);
+ges_track_audio_transition_duration_changed (GESTrackElement * self, guint64);
 
-static GstElement *ges_track_audio_transition_create_element (GESTrackObject
+static GstElement *ges_track_audio_transition_create_element (GESTrackElement
     * self);
 
 static void ges_track_audio_transition_dispose (GObject * object);
@@ -70,12 +70,12 @@ static void
 ges_track_audio_transition_class_init (GESTrackAudioTransitionClass * klass)
 {
   GObjectClass *object_class;
-  GESTrackObjectClass *toclass;
+  GESTrackElementClass *toclass;
 
   g_type_class_add_private (klass, sizeof (GESTrackAudioTransitionPrivate));
 
   object_class = G_OBJECT_CLASS (klass);
-  toclass = GES_TRACK_OBJECT_CLASS (klass);
+  toclass = GES_TRACK_ELEMENT_CLASS (klass);
 
   object_class->get_property = ges_track_audio_transition_get_property;
   object_class->set_property = ges_track_audio_transition_set_property;
@@ -161,7 +161,7 @@ link_element_to_mixer_with_volume (GstBin * bin, GstElement * element,
 }
 
 static GstElement *
-ges_track_audio_transition_create_element (GESTrackObject * object)
+ges_track_audio_transition_create_element (GESTrackElement * object)
 {
   GESTrackAudioTransition *self;
   GstElement *topbin, *iconva, *iconvb, *oconv;
@@ -230,11 +230,11 @@ ges_track_audio_transition_create_element (GESTrackObject * object)
 }
 
 static void
-ges_track_audio_transition_duration_changed (GESTrackObject * object,
+ges_track_audio_transition_duration_changed (GESTrackElement * object,
     guint64 duration)
 {
   GESTrackAudioTransition *self;
-  GstElement *gnlobj = ges_track_object_get_gnlobject (object);
+  GstElement *gnlobj = ges_track_element_get_gnlobject (object);
   GstTimedValueControlSource *ta, *tb;
 
   self = GES_TRACK_AUDIO_TRANSITION (object);

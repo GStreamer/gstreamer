@@ -57,11 +57,11 @@ asset_created_cb (GObject * source, GAsyncResult * res, gpointer udata)
 
   tracks = ges_timeline_get_tracks (ges_timeline_layer_get_timeline (layer));
   for (tmp = tracks; tmp; tmp = tmp->next) {
-    GList *tckobjs = ges_track_get_objects (GES_TRACK (tmp->data));
+    GList *trackelements = ges_track_get_objects (GES_TRACK (tmp->data));
 
-    assert_equals_int (g_list_length (tckobjs), 1);
-    fail_unless (GES_IS_TRACK_FILESOURCE (tckobjs->data));
-    g_list_free_full (tckobjs, gst_object_unref);
+    assert_equals_int (g_list_length (trackelements), 1);
+    fail_unless (GES_IS_TRACK_FILESOURCE (trackelements->data));
+    g_list_free_full (trackelements, gst_object_unref);
   }
   g_list_free_full (tracks, gst_object_unref);
 
@@ -113,7 +113,7 @@ GST_END_TEST;
 GST_START_TEST (test_filesource_properties)
 {
   GESTrack *track;
-  GESTrackObject *trackobject;
+  GESTrackElement *trackelement;
   GESClip *object;
 
   ges_init ();
@@ -134,18 +134,18 @@ GST_START_TEST (test_filesource_properties)
   assert_equals_uint64 (_DURATION (object), 51);
   assert_equals_uint64 (_INPOINT (object), 12);
 
-  trackobject = ges_clip_create_track_object (object, track->type);
-  ges_clip_add_track_object (object, trackobject);
-  fail_unless (trackobject != NULL);
-  fail_unless (ges_track_object_set_track (trackobject, track));
+  trackelement = ges_clip_create_track_element (object, track->type);
+  ges_clip_add_track_element (object, trackelement);
+  fail_unless (trackelement != NULL);
+  fail_unless (ges_track_element_set_track (trackelement, track));
 
-  /* Check that trackobject has the same properties */
-  assert_equals_uint64 (_START (trackobject), 42);
-  assert_equals_uint64 (_DURATION (trackobject), 51);
-  assert_equals_uint64 (_INPOINT (trackobject), 12);
+  /* Check that trackelement has the same properties */
+  assert_equals_uint64 (_START (trackelement), 42);
+  assert_equals_uint64 (_DURATION (trackelement), 51);
+  assert_equals_uint64 (_INPOINT (trackelement), 12);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
+  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
       51, 0, TRUE);
 
   /* Change more properties, see if they propagate */
@@ -154,23 +154,23 @@ GST_START_TEST (test_filesource_properties)
   assert_equals_uint64 (_START (object), 420);
   assert_equals_uint64 (_DURATION (object), 510);
   assert_equals_uint64 (_INPOINT (object), 120);
-  assert_equals_uint64 (_START (trackobject), 420);
-  assert_equals_uint64 (_DURATION (trackobject), 510);
-  assert_equals_uint64 (_INPOINT (trackobject), 120);
+  assert_equals_uint64 (_START (trackelement), 420);
+  assert_equals_uint64 (_DURATION (trackelement), 510);
+  assert_equals_uint64 (_INPOINT (trackelement), 120);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
-      510, 0, TRUE);
+  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
+      120, 510, 0, TRUE);
 
   /* Test mute support */
   g_object_set (object, "mute", TRUE, NULL);
-  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
-      510, 0, FALSE);
+  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
+      120, 510, 0, FALSE);
   g_object_set (object, "mute", FALSE, NULL);
-  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
-      510, 0, TRUE);
+  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
+      120, 510, 0, TRUE);
 
-  ges_clip_release_track_object (object, trackobject);
+  ges_clip_release_track_element (object, trackelement);
 
   g_object_unref (object);
   g_object_unref (track);
@@ -180,7 +180,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_filesource_images)
 {
-  GESTrackObject *trobj;
+  GESTrackElement *trobj;
   GESClip *clip;
   GESUriClip *uriclip;
   GESTrack *a, *v;
@@ -199,8 +199,8 @@ GST_START_TEST (test_filesource_images)
   g_object_set (G_OBJECT (uriclip), "is-image", TRUE, NULL);
 
   /* the returned track object should be an image source */
-  trobj = ges_clip_create_track_object (clip, v->type);
-  ges_clip_add_track_object (clip, trobj);
+  trobj = ges_clip_create_track_element (clip, v->type);
+  ges_clip_add_track_element (clip, trobj);
   fail_unless (GES_IS_TRACK_IMAGE_SOURCE (trobj));
 
   /* The track holds a reference to the object
@@ -208,10 +208,10 @@ GST_START_TEST (test_filesource_images)
   ASSERT_OBJECT_REFCOUNT (trobj, "Video Track Object", 2);
 
   ges_track_remove_object (v, trobj);
-  ges_clip_release_track_object (clip, trobj);
+  ges_clip_release_track_element (clip, trobj);
 
-  /* the timeline object should not create any TrackObject in the audio track */
-  trobj = ges_clip_create_track_object (clip, a->type);
+  /* the timeline object should not create any TrackElement in the audio track */
+  trobj = ges_clip_create_track_element (clip, a->type);
   fail_unless (trobj == NULL);
 
   g_object_unref (a);

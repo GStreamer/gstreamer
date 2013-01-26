@@ -19,10 +19,10 @@
  */
 
 /**
- * SECTION:ges-track-object
+ * SECTION:ges-track-element
  * @short_description: Base Class for objects contained in a GESTrack
  *
- * #GESTrackObject is the Base Class for any object that can be contained in a
+ * #GESTrackElement is the Base Class for any object that can be contained in a
  * #GESTrack.
  *
  * It contains the basic information as to the location of the object within
@@ -32,15 +32,15 @@
 
 #include "ges-internal.h"
 #include "ges-extractable.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-clip.h"
 #include "ges-meta-container.h"
 #include <gobject/gvaluecollector.h>
 
-G_DEFINE_ABSTRACT_TYPE (GESTrackObject, ges_track_object,
+G_DEFINE_ABSTRACT_TYPE (GESTrackElement, ges_track_element,
     GES_TYPE_TIMELINE_ELEMENT);
 
-struct _GESTrackObjectPrivate
+struct _GESTrackElementPrivate
 {
   GESTrackType track_type;
 
@@ -86,30 +86,30 @@ enum
   LAST_SIGNAL
 };
 
-static guint ges_track_object_signals[LAST_SIGNAL] = { 0 };
+static guint ges_track_element_signals[LAST_SIGNAL] = { 0 };
 
-static GstElement *ges_track_object_create_gnl_object_func (GESTrackObject *
+static GstElement *ges_track_element_create_gnl_object_func (GESTrackElement *
     object);
 
 static void gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackObject * obj);
+    G_GNUC_UNUSED, GESTrackElement * obj);
 
 static void gnlobject_media_start_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackObject * obj);
+    G_GNUC_UNUSED, GESTrackElement * obj);
 
 static void gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackObject * obj);
+    G_GNUC_UNUSED, GESTrackElement * obj);
 
 static void gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackObject * obj);
+    G_GNUC_UNUSED, GESTrackElement * obj);
 
 static void gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackObject * obj);
+    G_GNUC_UNUSED, GESTrackElement * obj);
 
-static void connect_properties_signals (GESTrackObject * object);
+static void connect_properties_signals (GESTrackElement * object);
 static void connect_signal (gpointer key, gpointer value, gpointer user_data);
 static void gst_element_prop_changed_cb (GstElement * element, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackObject * obj);
+    G_GNUC_UNUSED, GESTrackElement * obj);
 
 static gboolean _set_start (GESTimelineElement * element, GstClockTime start);
 static gboolean _set_inpoint (GESTimelineElement * element,
@@ -121,23 +121,24 @@ static void _deep_copy (GESTimelineElement * element,
     GESTimelineElement * copy);
 
 static inline void
-ges_track_object_set_locked_internal (GESTrackObject * object, gboolean locked);
+ges_track_element_set_locked_internal (GESTrackElement * object,
+    gboolean locked);
 
-static GParamSpec **default_list_children_properties (GESTrackObject * object,
+static GParamSpec **default_list_children_properties (GESTrackElement * object,
     guint * n_properties);
 
 static void
-ges_track_object_get_property (GObject * object, guint property_id,
+ges_track_element_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESTrackObject *tobj = GES_TRACK_OBJECT (object);
+  GESTrackElement *tobj = GES_TRACK_ELEMENT (object);
 
   switch (property_id) {
     case PROP_ACTIVE:
-      g_value_set_boolean (value, ges_track_object_is_active (tobj));
+      g_value_set_boolean (value, ges_track_element_is_active (tobj));
       break;
     case PROP_LOCKED:
-      g_value_set_boolean (value, ges_track_object_is_locked (tobj));
+      g_value_set_boolean (value, ges_track_element_is_locked (tobj));
       break;
     case PROP_TRACK_TYPE:
       g_value_set_flags (value, tobj->priv->track_type);
@@ -151,17 +152,17 @@ ges_track_object_get_property (GObject * object, guint property_id,
 }
 
 static void
-ges_track_object_set_property (GObject * object, guint property_id,
+ges_track_element_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESTrackObject *tobj = GES_TRACK_OBJECT (object);
+  GESTrackElement *tobj = GES_TRACK_ELEMENT (object);
 
   switch (property_id) {
     case PROP_ACTIVE:
-      ges_track_object_set_active (tobj, g_value_get_boolean (value));
+      ges_track_element_set_active (tobj, g_value_get_boolean (value));
       break;
     case PROP_LOCKED:
-      ges_track_object_set_locked_internal (tobj, g_value_get_boolean (value));
+      ges_track_element_set_locked_internal (tobj, g_value_get_boolean (value));
       break;
     case PROP_TRACK_TYPE:
       tobj->priv->track_type = g_value_get_flags (value);
@@ -172,9 +173,9 @@ ges_track_object_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_track_object_dispose (GObject * object)
+ges_track_element_dispose (GObject * object)
 {
-  GESTrackObjectPrivate *priv = GES_TRACK_OBJECT (object)->priv;
+  GESTrackElementPrivate *priv = GES_TRACK_ELEMENT (object)->priv;
 
   if (priv->properties_hashtable)
     g_hash_table_destroy (priv->properties_hashtable);
@@ -185,7 +186,7 @@ ges_track_object_dispose (GObject * object)
     if (priv->track != NULL) {
       GST_ERROR_OBJECT (object, "Still in %p, this means that you forgot"
           " to remove it from the GESTrack it is contained in. You always need"
-          " to remove a GESTrackObject from its track before dropping the last"
+          " to remove a GESTrackElement from its track before dropping the last"
           " reference\n"
           "This problem may also be caused by a refcounting bug in"
           " the application or GES itself.", priv->track);
@@ -198,31 +199,31 @@ ges_track_object_dispose (GObject * object)
     priv->gnlobject = NULL;
   }
 
-  G_OBJECT_CLASS (ges_track_object_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_track_element_parent_class)->dispose (object);
 }
 
 static void
-ges_track_object_finalize (GObject * object)
+ges_track_element_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (ges_track_object_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ges_track_element_parent_class)->finalize (object);
 }
 
 static void
-ges_track_object_class_init (GESTrackObjectClass * klass)
+ges_track_element_class_init (GESTrackElementClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTrackObjectPrivate));
+  g_type_class_add_private (klass, sizeof (GESTrackElementPrivate));
 
-  object_class->get_property = ges_track_object_get_property;
-  object_class->set_property = ges_track_object_set_property;
-  object_class->dispose = ges_track_object_dispose;
-  object_class->finalize = ges_track_object_finalize;
+  object_class->get_property = ges_track_element_get_property;
+  object_class->set_property = ges_track_element_set_property;
+  object_class->dispose = ges_track_element_dispose;
+  object_class->finalize = ges_track_element_finalize;
 
 
   /**
-   * GESTrackObject:active:
+   * GESTrackElement:active:
    *
    * Whether the object should be taken into account in the #GESTrack output.
    * If #FALSE, then its contents will not be used in the resulting track.
@@ -234,7 +235,7 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
       properties[PROP_ACTIVE]);
 
   /**
-   * GESTrackObject:locked:
+   * GESTrackElement:locked:
    *
    * If %TRUE, then moves in sync with its controlling #GESClip
    */
@@ -257,17 +258,17 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
 
 
   /**
-   * GESTrackObject::deep-notify:
-   * @track_object: a #GESTrackObject
+   * GESTrackElement::deep-notify:
+   * @track_element: a #GESTrackElement
    * @prop_object: the object that originated the signal
    * @prop: the property that changed
    *
    * The deep notify signal is used to be notified of property changes of all
-   * the childs of @track_object
+   * the childs of @track_element
    *
    * Since: 0.10.2
    */
-  ges_track_object_signals[DEEP_NOTIFY] =
+  ges_track_element_signals[DEEP_NOTIFY] =
       g_signal_new ("deep-notify", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED |
       G_SIGNAL_NO_HOOKS, 0, NULL, NULL, g_cclosure_marshal_generic,
@@ -279,17 +280,17 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
   element_class->set_priority = _set_priority;
   element_class->deep_copy = _deep_copy;
 
-  klass->create_gnl_object = ges_track_object_create_gnl_object_func;
+  klass->create_gnl_object = ges_track_element_create_gnl_object_func;
   /*  There is no 'get_props_hashtable' default implementation */
   klass->get_props_hastable = NULL;
   klass->list_children_properties = default_list_children_properties;
 }
 
 static void
-ges_track_object_init (GESTrackObject * self)
+ges_track_element_init (GESTrackElement * self)
 {
-  GESTrackObjectPrivate *priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRACK_OBJECT, GESTrackObjectPrivate);
+  GESTrackElementPrivate *priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TRACK_ELEMENT, GESTrackElementPrivate);
 
   /* Sane default values */
   priv->pending_start = 0;
@@ -304,7 +305,7 @@ ges_track_object_init (GESTrackObject * self)
 static gboolean
 _set_start (GESTimelineElement * element, GstClockTime start)
 {
-  GESTrackObject *object = GES_TRACK_OBJECT (element);
+  GESTrackElement *object = GES_TRACK_ELEMENT (element);
 
   GST_DEBUG ("object:%p, start:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (start));
@@ -323,7 +324,7 @@ _set_start (GESTimelineElement * element, GstClockTime start)
 static gboolean
 _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
 {
-  GESTrackObject *object = GES_TRACK_OBJECT (element);
+  GESTrackElement *object = GES_TRACK_ELEMENT (element);
 
   GST_DEBUG ("object:%p, inpoint:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (inpoint));
@@ -343,8 +344,8 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
 static gboolean
 _set_duration (GESTimelineElement * element, GstClockTime duration)
 {
-  GESTrackObject *object = GES_TRACK_OBJECT (element);
-  GESTrackObjectPrivate *priv = object->priv;
+  GESTrackElement *object = GES_TRACK_ELEMENT (element);
+  GESTrackElementPrivate *priv = object->priv;
 
   GST_DEBUG ("object:%p, duration:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (duration));
@@ -368,7 +369,7 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
 static gboolean
 _set_priority (GESTimelineElement * element, guint32 priority)
 {
-  GESTrackObject *object = GES_TRACK_OBJECT (element);
+  GESTrackElement *object = GES_TRACK_ELEMENT (element);
 
   GST_DEBUG ("object:%p, priority:%" G_GUINT32_FORMAT, object, priority);
 
@@ -384,8 +385,8 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 }
 
 /**
- * ges_track_object_set_active:
- * @object: a #GESTrackObject
+ * ges_track_element_set_active:
+ * @object: a #GESTrackElement
  * @active: visibility
  *
  * Sets the usage of the @object. If @active is %TRUE, the object will be used for
@@ -394,9 +395,9 @@ _set_priority (GESTimelineElement * element, guint32 priority)
  * Returns: %TRUE if the property was toggled, else %FALSE
  */
 gboolean
-ges_track_object_set_active (GESTrackObject * object, gboolean active)
+ges_track_element_set_active (GESTrackElement * object, gboolean active)
 {
-  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
 
   GST_DEBUG ("object:%p, active:%d", object, active);
 
@@ -411,9 +412,9 @@ ges_track_object_set_active (GESTrackObject * object, gboolean active)
 }
 
 void
-ges_track_object_set_track_type (GESTrackObject * object, GESTrackType type)
+ges_track_element_set_track_type (GESTrackElement * object, GESTrackType type)
 {
-  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+  g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
 
   if (object->priv->track_type != type) {
     object->priv->track_type = type;
@@ -422,9 +423,9 @@ ges_track_object_set_track_type (GESTrackObject * object, GESTrackType type)
 }
 
 GESTrackType
-ges_track_object_get_track_type (GESTrackObject * object)
+ges_track_element_get_track_type (GESTrackElement * object)
 {
-  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), GES_TRACK_TYPE_UNKNOWN);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), GES_TRACK_TYPE_UNKNOWN);
 
   return object->priv->track_type;
 }
@@ -432,7 +433,7 @@ ges_track_object_get_track_type (GESTrackObject * object)
 /* Callbacks from the GNonLin object */
 static void
 gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
-    GESTrackObject * obj)
+    GESTrackElement * obj)
 {
   guint64 start;
 
@@ -449,9 +450,9 @@ gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
 
 static void
 gst_element_prop_changed_cb (GstElement * element, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackObject * obj)
+    G_GNUC_UNUSED, GESTrackElement * obj)
 {
-  g_signal_emit (obj, ges_track_object_signals[DEEP_NOTIFY], 0,
+  g_signal_emit (obj, ges_track_element_signals[DEEP_NOTIFY], 0,
       GST_ELEMENT (element), arg);
 }
 
@@ -462,13 +463,13 @@ connect_signal (gpointer key, gpointer value, gpointer user_data)
 
   g_signal_connect (G_OBJECT (value),
       signame, G_CALLBACK (gst_element_prop_changed_cb),
-      GES_TRACK_OBJECT (user_data));
+      GES_TRACK_ELEMENT (user_data));
 
   g_free (signame);
 }
 
 static void
-connect_properties_signals (GESTrackObject * object)
+connect_properties_signals (GESTrackElement * object)
 {
   if (G_UNLIKELY (!object->priv->properties_hashtable)) {
     GST_WARNING ("The properties_hashtable hasn't been set");
@@ -483,7 +484,7 @@ connect_properties_signals (GESTrackObject * object)
 /* Callbacks from the GNonLin object */
 static void
 gnlobject_media_start_cb (GstElement * gnlobject,
-    GParamSpec * arg G_GNUC_UNUSED, GESTrackObject * obj)
+    GParamSpec * arg G_GNUC_UNUSED, GESTrackElement * obj)
 {
   guint64 inpoint;
 
@@ -500,7 +501,7 @@ gnlobject_media_start_cb (GstElement * gnlobject,
 
 static void
 gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
-    GESTrackObject * obj)
+    GESTrackElement * obj)
 {
   guint32 priority;
 
@@ -516,12 +517,12 @@ gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
 
 static void
 gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
-    GESTrackObject * obj)
+    GESTrackElement * obj)
 {
   guint64 duration;
-  GESTrackObjectClass *klass;
+  GESTrackElementClass *klass;
 
-  klass = GES_TRACK_OBJECT_GET_CLASS (obj);
+  klass = GES_TRACK_ELEMENT_GET_CLASS (obj);
 
   g_object_get (gnlobject, "duration", &duration, NULL);
 
@@ -539,12 +540,12 @@ gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
 
 static void
 gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
-    GESTrackObject * obj)
+    GESTrackElement * obj)
 {
   gboolean active;
-  GESTrackObjectClass *klass;
+  GESTrackElementClass *klass;
 
-  klass = GES_TRACK_OBJECT_GET_CLASS (obj);
+  klass = GES_TRACK_ELEMENT_GET_CLASS (obj);
 
   g_object_get (gnlobject, "active", &active, NULL);
 
@@ -560,13 +561,13 @@ gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
 
 /* default 'create_gnl_object' virtual method implementation */
 static GstElement *
-ges_track_object_create_gnl_object_func (GESTrackObject * self)
+ges_track_element_create_gnl_object_func (GESTrackElement * self)
 {
-  GESTrackObjectClass *klass = NULL;
+  GESTrackElementClass *klass = NULL;
   GstElement *child = NULL;
   GstElement *gnlobject;
 
-  klass = GES_TRACK_OBJECT_GET_CLASS (self);
+  klass = GES_TRACK_ELEMENT_GET_CLASS (self);
 
   if (G_UNLIKELY (self->priv->gnlobject != NULL))
     goto already_have_gnlobject;
@@ -611,7 +612,7 @@ already_have_gnlobject:
 
 no_gnlfactory:
   {
-    GST_ERROR ("No GESTrackObject::gnlobject_factorytype implementation!");
+    GST_ERROR ("No GESTrackElement::gnlobject_factorytype implementation!");
     return NULL;
   }
 
@@ -639,9 +640,9 @@ add_failure:
 }
 
 static gboolean
-ensure_gnl_object (GESTrackObject * object)
+ensure_gnl_object (GESTrackElement * object)
 {
-  GESTrackObjectClass *class;
+  GESTrackElementClass *class;
   GstElement *gnlobject;
   GHashTable *props_hash;
   gboolean res = TRUE;
@@ -652,7 +653,7 @@ ensure_gnl_object (GESTrackObject * object)
   /* 1. Create the GnlObject */
   GST_DEBUG ("Creating GnlObject");
 
-  class = GES_TRACK_OBJECT_GET_CLASS (object);
+  class = GES_TRACK_ELEMENT_GET_CLASS (object);
 
   if (G_UNLIKELY (class->create_gnl_object == NULL)) {
     GST_ERROR ("No 'create_gnl_object' implementation !");
@@ -678,7 +679,7 @@ ensure_gnl_object (GESTrackObject * object)
     object->priv->gnlobject = gst_object_ref (gnlobject);
 
     if (object->priv->timelineobj)
-      res = ges_clip_fill_track_object (object->priv->timelineobj,
+      res = ges_clip_fill_track_element (object->priv->timelineobj,
           object, object->priv->gnlobject);
     else
       res = TRUE;
@@ -735,7 +736,7 @@ done:
 
 /* INTERNAL USAGE */
 gboolean
-ges_track_object_set_track (GESTrackObject * object, GESTrack * track)
+ges_track_element_set_track (GESTrackElement * object, GESTrack * track)
 {
   gboolean ret = TRUE;
   GST_DEBUG ("object:%p, track:%p", object, track);
@@ -757,8 +758,8 @@ ges_track_object_set_track (GESTrackObject * object, GESTrack * track)
 }
 
 /**
- * ges_track_object_get_track:
- * @object: a #GESTrackObject
+ * ges_track_element_get_track:
+ * @object: a #GESTrackElement
  *
  * Get the #GESTrack to which this object belongs.
  *
@@ -766,22 +767,22 @@ ges_track_object_set_track (GESTrackObject * object, GESTrack * track)
  * is not in any track
  */
 GESTrack *
-ges_track_object_get_track (GESTrackObject * object)
+ges_track_element_get_track (GESTrackElement * object)
 {
-  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), NULL);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
 
   return object->priv->track;
 }
 
 /**
- * ges_track_object_set_clip:
- * @object: The #GESTrackObject to set the parent to
+ * ges_track_element_set_clip:
+ * @object: The #GESTrackElement to set the parent to
  * @clipect: The #GESClip, parent of @clip or %NULL
  *
  * Set the #GESClip to which @object belongs.
  */
 void
-ges_track_object_set_clip (GESTrackObject * object, GESClip * clipect)
+ges_track_element_set_clip (GESTrackElement * object, GESClip * clipect)
 {
   GST_DEBUG ("object:%p, clip:%p", object, clipect);
 
@@ -789,8 +790,8 @@ ges_track_object_set_clip (GESTrackObject * object, GESClip * clipect)
 }
 
 /**
- * ges_track_object_get_clip:
- * @object: a #GESTrackObject
+ * ges_track_element_get_clip:
+ * @object: a #GESTrackElement
  *
  * Get the #GESClip which is controlling this track object
  *
@@ -798,32 +799,32 @@ ges_track_object_set_clip (GESTrackObject * object, GESClip * clipect)
  * this track object
  */
 GESClip *
-ges_track_object_get_clip (GESTrackObject * object)
+ges_track_element_get_clip (GESTrackElement * object)
 {
-  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), NULL);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
 
   return object->priv->timelineobj;
 }
 
 /**
- * ges_track_object_get_gnlobject:
- * @object: a #GESTrackObject
+ * ges_track_element_get_gnlobject:
+ * @object: a #GESTrackElement
  *
  * Get the GNonLin object this object is controlling.
  *
  * Returns: (transfer none): the GNonLin object this object is controlling.
  */
 GstElement *
-ges_track_object_get_gnlobject (GESTrackObject * object)
+ges_track_element_get_gnlobject (GESTrackElement * object)
 {
-  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), NULL);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
 
   return object->priv->gnlobject;
 }
 
 /**
- * ges_track_object_get_element:
- * @object: a #GESTrackObject
+ * ges_track_element_get_element:
+ * @object: a #GESTrackElement
  *
  * Get the #GstElement this track object is controlling within GNonLin.
  *
@@ -831,22 +832,23 @@ ges_track_object_get_gnlobject (GESTrackObject * object)
  * within GNonLin.
  */
 GstElement *
-ges_track_object_get_element (GESTrackObject * object)
+ges_track_element_get_element (GESTrackElement * object)
 {
-  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), NULL);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
 
   return object->priv->element;
 }
 
 static inline void
-ges_track_object_set_locked_internal (GESTrackObject * object, gboolean locked)
+ges_track_element_set_locked_internal (GESTrackElement * object,
+    gboolean locked)
 {
   object->priv->locked = locked;
 }
 
 /**
- * ges_track_object_set_locked:
- * @object: a #GESTrackObject
+ * ges_track_element_set_locked:
+ * @object: a #GESTrackElement
  * @locked: whether the object is lock to its parent
  *
  * Set the locking status of the @object in relationship to its controlling
@@ -854,20 +856,20 @@ ges_track_object_set_locked_internal (GESTrackObject * object, gboolean locked)
  * with its controlling #GESClip.
  */
 void
-ges_track_object_set_locked (GESTrackObject * object, gboolean locked)
+ges_track_element_set_locked (GESTrackElement * object, gboolean locked)
 {
-  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+  g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
 
   GST_DEBUG_OBJECT (object, "%s object", locked ? "Locking" : "Unlocking");
 
-  ges_track_object_set_locked_internal (object, locked);
+  ges_track_element_set_locked_internal (object, locked);
   g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_LOCKED]);
 
 }
 
 /**
- * ges_track_object_is_locked:
- * @object: a #GESTrackObject
+ * ges_track_element_is_locked:
+ * @object: a #GESTrackElement
  *
  * Let you know if object us locked or not (moving synchronously).
  *
@@ -875,17 +877,17 @@ ges_track_object_set_locked (GESTrackObject * object, gboolean locked)
  * #GESClip, else %FALSE.
  */
 gboolean
-ges_track_object_is_locked (GESTrackObject * object)
+ges_track_element_is_locked (GESTrackElement * object)
 {
-  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
 
   return object->priv->locked;
 }
 
 
 /**
- * ges_track_object_is_active:
- * @object: a #GESTrackObject
+ * ges_track_element_is_active:
+ * @object: a #GESTrackElement
  *
  * Lets you know if @object will be used for playback and rendering,
  * or not.
@@ -895,9 +897,9 @@ ges_track_object_is_locked (GESTrackObject * object)
  * Since: 0.10.2
  */
 gboolean
-ges_track_object_is_active (GESTrackObject * object)
+ges_track_element_is_active (GESTrackElement * object)
 {
-  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
 
   if (G_UNLIKELY (object->priv->gnlobject == NULL))
     return object->priv->pending_active;
@@ -906,7 +908,7 @@ ges_track_object_is_active (GESTrackObject * object)
 }
 
 /**
- * ges_track_object_lookup_child:
+ * ges_track_element_lookup_child:
  * @object: object to lookup the property in
  * @prop_name: name of the property to look up. You can specify the name of the
  *     class as such: "ClassName::property-name", to guarantee that you get the
@@ -929,16 +931,16 @@ ges_track_object_is_active (GESTrackObject * object)
  * Since: 0.10.2
  */
 gboolean
-ges_track_object_lookup_child (GESTrackObject * object, const gchar * prop_name,
-    GstElement ** element, GParamSpec ** pspec)
+ges_track_element_lookup_child (GESTrackElement * object,
+    const gchar * prop_name, GstElement ** element, GParamSpec ** pspec)
 {
   GHashTableIter iter;
   gpointer key, value;
   gchar **names, *name, *classename;
   gboolean res;
-  GESTrackObjectPrivate *priv;
+  GESTrackElementPrivate *priv;
 
-  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
 
   priv = object->priv;
 
@@ -982,8 +984,8 @@ prop_hash_not_set:
 }
 
 /**
- * ges_track_object_set_child_property_by_pspec:
- * @object: a #GESTrackObject
+ * ges_track_element_set_child_property_by_pspec:
+ * @object: a #GESTrackElement
  * @pspec: The #GParamSpec that specifies the property you want to set
  * @value: the value
  *
@@ -992,13 +994,13 @@ prop_hash_not_set:
  * Since: 0.10.2
  */
 void
-ges_track_object_set_child_property_by_pspec (GESTrackObject * object,
+ges_track_element_set_child_property_by_pspec (GESTrackElement * object,
     GParamSpec * pspec, GValue * value)
 {
   GstElement *element;
-  GESTrackObjectPrivate *priv;
+  GESTrackElementPrivate *priv;
 
-  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+  g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
 
   priv = object->priv;
 
@@ -1026,8 +1028,8 @@ prop_hash_not_set:
 }
 
 /**
- * ges_track_object_set_child_property_valist:
- * @object: The #GESTrackObject parent object
+ * ges_track_element_set_child_property_valist:
+ * @object: The #GESTrackElement parent object
  * @first_property_name: The name of the first property to set
  * @var_args: value for the first property, followed optionally by more
  * name/return location pairs, followed by NULL
@@ -1040,7 +1042,7 @@ prop_hash_not_set:
  * Since: 0.10.2
  */
 void
-ges_track_object_set_child_property_valist (GESTrackObject * object,
+ges_track_element_set_child_property_valist (GESTrackElement * object,
     const gchar * first_property_name, va_list var_args)
 {
   const gchar *name;
@@ -1050,7 +1052,7 @@ ges_track_object_set_child_property_valist (GESTrackObject * object,
   gchar *error = NULL;
   GValue value = { 0, };
 
-  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+  g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
 
   name = first_property_name;
 
@@ -1059,7 +1061,7 @@ ges_track_object_set_child_property_valist (GESTrackObject * object,
 
   /* iterate over pairs */
   while (name) {
-    if (!ges_track_object_lookup_child (object, name, &element, &pspec))
+    if (!ges_track_element_lookup_child (object, name, &element, &pspec))
       goto not_found;
 
 #if GLIB_CHECK_VERSION(2,23,3)
@@ -1097,8 +1099,8 @@ cant_copy:
 }
 
 /**
- * ges_track_object_set_child_properties:
- * @object: The #GESTrackObject parent object
+ * ges_track_element_set_child_properties:
+ * @object: The #GESTrackElement parent object
  * @first_property_name: The name of the first property to set
  * @...: value for the first property, followed optionally by more
  * name/return location pairs, followed by NULL
@@ -1111,22 +1113,22 @@ cant_copy:
  * Since: 0.10.2
  */
 void
-ges_track_object_set_child_properties (GESTrackObject * object,
+ges_track_element_set_child_properties (GESTrackElement * object,
     const gchar * first_property_name, ...)
 {
   va_list var_args;
 
-  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+  g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
 
   va_start (var_args, first_property_name);
-  ges_track_object_set_child_property_valist (object, first_property_name,
+  ges_track_element_set_child_property_valist (object, first_property_name,
       var_args);
   va_end (var_args);
 }
 
 /**
- * ges_track_object_get_child_property_valist:
- * @object: The #GESTrackObject parent object
+ * ges_track_element_get_child_property_valist:
+ * @object: The #GESTrackElement parent object
  * @first_property_name: The name of the first property to get
  * @var_args: value for the first property, followed optionally by more
  * name/return location pairs, followed by NULL
@@ -1139,7 +1141,7 @@ ges_track_object_set_child_properties (GESTrackObject * object,
  * Since: 0.10.2
  */
 void
-ges_track_object_get_child_property_valist (GESTrackObject * object,
+ges_track_element_get_child_property_valist (GESTrackElement * object,
     const gchar * first_property_name, va_list var_args)
 {
   const gchar *name;
@@ -1154,7 +1156,7 @@ ges_track_object_get_child_property_valist (GESTrackObject * object,
 
   /* This part is in big part copied from the gst_child_object_get_valist method */
   while (name) {
-    if (!ges_track_object_lookup_child (object, name, &element, &pspec))
+    if (!ges_track_element_lookup_child (object, name, &element, &pspec))
       goto not_found;
 
     g_value_init (&value, pspec->value_type);
@@ -1184,8 +1186,8 @@ cant_copy:
 }
 
 /**
- * ges_track_object_list_children_properties:
- * @object: The #GESTrackObject to get the list of children properties from
+ * ges_track_element_list_children_properties:
+ * @object: The #GESTrackElement to get the list of children properties from
  * @n_properties: (out): return location for the length of the returned array
  *
  * Gets an array of #GParamSpec* for all configurable properties of the
@@ -1197,21 +1199,21 @@ cant_copy:
  * Since: 0.10.2
  */
 GParamSpec **
-ges_track_object_list_children_properties (GESTrackObject * object,
+ges_track_element_list_children_properties (GESTrackElement * object,
     guint * n_properties)
 {
-  GESTrackObjectClass *class;
+  GESTrackElementClass *class;
 
-  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), NULL);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
 
-  class = GES_TRACK_OBJECT_GET_CLASS (object);
+  class = GES_TRACK_ELEMENT_GET_CLASS (object);
 
   return class->list_children_properties (object, n_properties);
 }
 
 /**
- * ges_track_object_get_child_properties:
- * @object: The origin #GESTrackObject
+ * ges_track_element_get_child_properties:
+ * @object: The origin #GESTrackElement
  * @first_property_name: The name of the first property to get
  * @...: return location for the first property, followed optionally by more
  * name/return location pairs, followed by NULL
@@ -1221,22 +1223,22 @@ ges_track_object_list_children_properties (GESTrackObject * object,
  * Since: 0.10.2
  */
 void
-ges_track_object_get_child_properties (GESTrackObject * object,
+ges_track_element_get_child_properties (GESTrackElement * object,
     const gchar * first_property_name, ...)
 {
   va_list var_args;
 
-  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+  g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
 
   va_start (var_args, first_property_name);
-  ges_track_object_get_child_property_valist (object, first_property_name,
+  ges_track_element_get_child_property_valist (object, first_property_name,
       var_args);
   va_end (var_args);
 }
 
 /**
- * ges_track_object_get_child_property_by_pspec:
- * @object: a #GESTrackObject
+ * ges_track_element_get_child_property_by_pspec:
+ * @object: a #GESTrackElement
  * @pspec: The #GParamSpec that specifies the property you want to get
  * @value: (out): return location for the value
  *
@@ -1245,13 +1247,13 @@ ges_track_object_get_child_properties (GESTrackObject * object,
  * Since: 0.10.2
  */
 void
-ges_track_object_get_child_property_by_pspec (GESTrackObject * object,
+ges_track_element_get_child_property_by_pspec (GESTrackElement * object,
     GParamSpec * pspec, GValue * value)
 {
   GstElement *element;
-  GESTrackObjectPrivate *priv;
+  GESTrackElementPrivate *priv;
 
-  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+  g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
 
   priv = object->priv;
 
@@ -1279,29 +1281,29 @@ prop_hash_not_set:
 }
 
 /**
- * ges_track_object_set_child_property:
- * @object: The origin #GESTrackObject
+ * ges_track_element_set_child_property:
+ * @object: The origin #GESTrackElement
  * @property_name: The name of the property
  * @value: the value
  *
  * Sets a property of a GstElement contained in @object.
  *
- * Note that #ges_track_object_set_child_property is really
- * intended for language bindings, #ges_track_object_set_child_properties
+ * Note that #ges_track_element_set_child_property is really
+ * intended for language bindings, #ges_track_element_set_child_properties
  * is much more convenient for C programming.
  *
  * Returns: %TRUE if the property was set, %FALSE otherwize
  */
 gboolean
-ges_track_object_set_child_property (GESTrackObject * object,
+ges_track_element_set_child_property (GESTrackElement * object,
     const gchar * property_name, GValue * value)
 {
   GParamSpec *pspec;
   GstElement *element;
 
-  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
 
-  if (!ges_track_object_lookup_child (object, property_name, &element, &pspec))
+  if (!ges_track_element_lookup_child (object, property_name, &element, &pspec))
     goto not_found;
 
   g_object_set_property (G_OBJECT (element), pspec->name, value);
@@ -1320,8 +1322,8 @@ not_found:
 }
 
 /**
-* ges_track_object_get_child_property:
-* @object: The origin #GESTrackObject
+* ges_track_element_get_child_property:
+* @object: The origin #GESTrackElement
 * @property_name: The name of the property
 * @value: (out): return location for the property value, it will
 * be initialized if it is initialized with 0
@@ -1332,22 +1334,22 @@ not_found:
 *
 * Gets a property of a GstElement contained in @object.
 *
-* Note that #ges_track_object_get_child_property is really
-* intended for language bindings, #ges_track_object_get_child_properties
+* Note that #ges_track_element_get_child_property is really
+* intended for language bindings, #ges_track_element_get_child_properties
 * is much more convenient for C programming.
 *
 * Returns: %TRUE if the property was found, %FALSE otherwize
 */
 gboolean
-ges_track_object_get_child_property (GESTrackObject * object,
+ges_track_element_get_child_property (GESTrackElement * object,
     const gchar * property_name, GValue * value)
 {
   GParamSpec *pspec;
   GstElement *element;
 
-  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
 
-  if (!ges_track_object_lookup_child (object, property_name, &element, &pspec))
+  if (!ges_track_element_lookup_child (object, property_name, &element, &pspec))
     goto not_found;
 
   if (G_VALUE_TYPE (value) == G_TYPE_INVALID)
@@ -1369,7 +1371,8 @@ not_found:
 }
 
 static GParamSpec **
-default_list_children_properties (GESTrackObject * object, guint * n_properties)
+default_list_children_properties (GESTrackElement * object,
+    guint * n_properties)
 {
   GParamSpec **pspec, *spec;
   GHashTableIter iter;
@@ -1406,16 +1409,16 @@ _deep_copy (GESTimelineElement * element, GESTimelineElement * elementcopy)
   GParamSpec **specs;
   guint n, n_specs;
   GValue val = { 0 };
-  GESTrackObject *copy = GES_TRACK_OBJECT (elementcopy);
+  GESTrackElement *copy = GES_TRACK_ELEMENT (elementcopy);
 
   ensure_gnl_object (copy);
   specs =
-      ges_track_object_list_children_properties (GES_TRACK_OBJECT (element),
+      ges_track_element_list_children_properties (GES_TRACK_ELEMENT (element),
       &n_specs);
   for (n = 0; n < n_specs; ++n) {
     g_value_init (&val, specs[n]->value_type);
     g_object_get_property (G_OBJECT (element), specs[n]->name, &val);
-    ges_track_object_set_child_property_by_pspec (copy, specs[n], &val);
+    ges_track_element_set_child_property_by_pspec (copy, specs[n], &val);
     g_value_unset (&val);
   }
 
@@ -1423,8 +1426,8 @@ _deep_copy (GESTimelineElement * element, GESTimelineElement * elementcopy)
 }
 
 /**
- * ges_track_object_edit:
- * @object: the #GESTrackObject to edit
+ * ges_track_element_edit:
+ * @object: the #GESTrackElement to edit
  * @layers: (element-type GESTimelineLayer): The layers you want the edit to
  *  happen in, %NULL means that the edition is done in all the
  *  #GESTimelineLayers contained in the current timeline.
@@ -1442,13 +1445,13 @@ _deep_copy (GESTimelineElement * element, GESTimelineElement * elementcopy)
  * Since: 0.10.XX
  */
 gboolean
-ges_track_object_edit (GESTrackObject * object,
+ges_track_element_edit (GESTrackElement * object,
     GList * layers, GESEditMode mode, GESEdge edge, guint64 position)
 {
-  GESTrack *track = ges_track_object_get_track (object);
+  GESTrack *track = ges_track_element_get_track (object);
   GESTimeline *timeline;
 
-  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
 
   if (G_UNLIKELY (!track)) {
     GST_WARNING_OBJECT (object, "Trying to edit in %d mode but not in"

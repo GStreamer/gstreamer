@@ -21,7 +21,7 @@
 #define _GES_AUTO_TRANSITION_H_
 
 #include <glib-object.h>
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-clip.h"
 #include "ges-timeline-layer.h"
 
@@ -52,9 +52,9 @@ struct _GESAutoTransition
   GObject parent_instance;
 
   /* <read only and construct only> */
-  GESTrackObject *previous_source;
-  GESTrackObject *next_source;
-  GESTrackObject *transition;
+  GESTrackElement *previous_source;
+  GESTrackElement *next_source;
+  GESTrackElement *transition;
 
   GESTimelineLayer *layer;
 
@@ -70,9 +70,9 @@ struct _GESAutoTransition
 
 GType ges_auto_transition_get_type (void) G_GNUC_CONST;
 
-GESAutoTransition * ges_auto_transition_new (GESTrackObject * transition,
-                                             GESTrackObject * previous_source,
-                                             GESTrackObject * next_source);
+GESAutoTransition * ges_auto_transition_new (GESTrackElement * transition,
+                                             GESTrackElement * previous_source,
+                                             GESTrackElement * next_source);
 
 G_END_DECLS
 #endif /* _GES_AUTO_TRANSITION_H_ */

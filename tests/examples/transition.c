@@ -57,21 +57,21 @@ make_source (gchar * path, guint64 start, guint64 duration, guint64 inpoint,
 gboolean
 print_transition_data (GESClip * tr)
 {
-  GESTrackObject *trackobj;
+  GESTrackElement *trackelement;
   GstElement *gnlobj;
   guint64 start, duration;
   gint priority;
   char *name;
-  GList *trackobjects, *tmp;
+  GList *trackelements, *tmp;
 
   if (!tr)
     return FALSE;
 
-  if (!(trackobjects = ges_clip_get_track_objects (tr)))
+  if (!(trackelements = ges_clip_get_track_elements (tr)))
     return FALSE;
-  if (!(trackobj = GES_TRACK_OBJECT (trackobjects->data)))
+  if (!(trackelement = GES_TRACK_ELEMENT (trackelements->data)))
     return FALSE;
-  if (!(gnlobj = ges_track_object_get_gnlobject (trackobj)))
+  if (!(gnlobj = ges_track_element_get_gnlobject (trackelement)))
     return FALSE;
 
   g_object_get (gnlobj, "start", &start, "duration", &duration,
@@ -80,11 +80,11 @@ print_transition_data (GESClip * tr)
       ((gfloat) start) / GST_SECOND,
       ((gfloat) duration) / GST_SECOND, priority);
 
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
 
-  g_list_free (trackobjects);
+  g_list_free (trackelements);
 
   return FALSE;
 }

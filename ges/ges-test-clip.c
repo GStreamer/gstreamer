@@ -32,7 +32,7 @@
 #include "ges-internal.h"
 #include "ges-test-clip.h"
 #include "ges-source-clip.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-track-video-test-source.h"
 #include "ges-track-audio-test-source.h"
 #include <string.h>
@@ -56,8 +56,8 @@ enum
   PROP_VOLUME,
 };
 
-static GESTrackObject
-    * ges_test_clip_create_track_object (GESClip * obj, GESTrackType type);
+static GESTrackElement
+    * ges_test_clip_create_track_element (GESClip * obj, GESTrackType type);
 
 static void
 ges_test_clip_get_property (GObject * object, guint property_id,
@@ -159,7 +159,7 @@ ges_test_clip_class_init (GESTestClipClass * klass)
       g_param_spec_boolean ("mute", "Mute", "Mute audio track",
           FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  timobj_class->create_track_object = ges_test_clip_create_track_object;
+  timobj_class->create_track_element = ges_test_clip_create_track_element;
   timobj_class->need_fill_track = FALSE;
 }
 
@@ -185,7 +185,7 @@ ges_test_clip_init (GESTestClip * self)
 void
 ges_test_clip_set_mute (GESTestClip * self, gboolean mute)
 {
-  GList *tmp, *trackobjects;
+  GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, mute:%d", self, mute);
@@ -193,16 +193,17 @@ ges_test_clip_set_mute (GESTestClip * self, gboolean mute)
   self->priv->mute = mute;
 
   /* Go over tracked objects, and update 'active' status on all audio objects */
-  trackobjects = ges_clip_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+  trackelements = ges_clip_get_track_elements (object);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
-    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_AUDIO)
-      ges_track_object_set_active (trackobject, !mute);
+    if (ges_track_element_get_track (trackelement)->type ==
+        GES_TRACK_TYPE_AUDIO)
+      ges_track_element_set_active (trackelement, !mute);
 
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackobjects);
+  g_list_free (trackelements);
 }
 
 /**
@@ -216,21 +217,21 @@ ges_test_clip_set_mute (GESTestClip * self, gboolean mute)
 void
 ges_test_clip_set_vpattern (GESTestClip * self, GESVideoTestPattern vpattern)
 {
-  GList *tmp, *trackobjects;
+  GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
 
   self->priv->vpattern = vpattern;
 
-  trackobjects = ges_clip_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
-    if (GES_IS_TRACK_VIDEO_TEST_SOURCE (trackobject))
+  trackelements = ges_clip_get_track_elements (object);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
+    if (GES_IS_TRACK_VIDEO_TEST_SOURCE (trackelement))
       ges_track_video_test_source_set_pattern (
-          (GESTrackVideoTestSource *) trackobject, vpattern);
+          (GESTrackVideoTestSource *) trackelement, vpattern);
 
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackobjects);
+  g_list_free (trackelements);
 }
 
 /**
@@ -244,21 +245,21 @@ ges_test_clip_set_vpattern (GESTestClip * self, GESVideoTestPattern vpattern)
 void
 ges_test_clip_set_frequency (GESTestClip * self, gdouble freq)
 {
-  GList *tmp, *trackobjects;
+  GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
 
   self->priv->freq = freq;
 
-  trackobjects = ges_clip_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
-    if (GES_IS_TRACK_AUDIO_TEST_SOURCE (trackobject))
+  trackelements = ges_clip_get_track_elements (object);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
+    if (GES_IS_TRACK_AUDIO_TEST_SOURCE (trackelement))
       ges_track_audio_test_source_set_freq (
-          (GESTrackAudioTestSource *) trackobject, freq);
+          (GESTrackAudioTestSource *) trackelement, freq);
 
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackobjects);
+  g_list_free (trackelements);
 }
 
 /**
@@ -272,21 +273,21 @@ ges_test_clip_set_frequency (GESTestClip * self, gdouble freq)
 void
 ges_test_clip_set_volume (GESTestClip * self, gdouble volume)
 {
-  GList *tmp, *trackobjects;
+  GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
 
   self->priv->volume = volume;
 
-  trackobjects = ges_clip_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
-    if (GES_IS_TRACK_AUDIO_TEST_SOURCE (trackobject))
+  trackelements = ges_clip_get_track_elements (object);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
+    if (GES_IS_TRACK_AUDIO_TEST_SOURCE (trackelement))
       ges_track_audio_test_source_set_volume (
-          (GESTrackAudioTestSource *) trackobject, volume);
+          (GESTrackAudioTestSource *) trackelement, volume);
 
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackobjects);
+  g_list_free (trackelements);
 }
 
 /**
@@ -345,24 +346,24 @@ ges_test_clip_get_volume (GESTestClip * self)
   return self->priv->volume;
 }
 
-static GESTrackObject *
-ges_test_clip_create_track_object (GESClip * obj, GESTrackType type)
+static GESTrackElement *
+ges_test_clip_create_track_element (GESClip * obj, GESTrackType type)
 {
   GESTestClipPrivate *priv = GES_TEST_CLIP (obj)->priv;
-  GESTrackObject *res = NULL;
+  GESTrackElement *res = NULL;
 
   GST_DEBUG ("Creating a GESTrackTestSource for type: %s",
       ges_track_type_name (type));
 
   if (type == GES_TRACK_TYPE_VIDEO) {
-    res = (GESTrackObject *) ges_track_video_test_source_new ();
+    res = (GESTrackElement *) ges_track_video_test_source_new ();
     ges_track_video_test_source_set_pattern (
         (GESTrackVideoTestSource *) res, priv->vpattern);
   } else if (type == GES_TRACK_TYPE_AUDIO) {
-    res = (GESTrackObject *) ges_track_audio_test_source_new ();
+    res = (GESTrackElement *) ges_track_audio_test_source_new ();
 
     if (priv->mute)
-      ges_track_object_set_active (res, FALSE);
+      ges_track_element_set_active (res, FALSE);
 
     ges_track_audio_test_source_set_freq ((GESTrackAudioTestSource *) res,
         priv->freq);

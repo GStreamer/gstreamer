@@ -24,7 +24,7 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 #include <ges/ges-types.h>
-#include <ges/ges-track-object.h>
+#include <ges/ges-track-element.h>
 
 G_BEGIN_DECLS
 
@@ -55,7 +55,7 @@ typedef struct _GESTrackOperationPrivate GESTrackOperationPrivate;
 
 struct _GESTrackOperation {
   /*< private >*/
-  GESTrackObject parent;
+  GESTrackElement parent;
 
   GESTrackOperationPrivate *priv;
 
@@ -69,7 +69,7 @@ struct _GESTrackOperation {
 
 struct _GESTrackOperationClass {
   /*< private >*/
-  GESTrackObjectClass parent_class;
+  GESTrackElementClass parent_class;
 
   /*< private >*/
   /* Padding for API extension */

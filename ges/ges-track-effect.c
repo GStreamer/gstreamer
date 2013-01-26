@@ -27,13 +27,14 @@
 #include <string.h>
 
 #include "ges-internal.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-track-effect.h"
 
 G_DEFINE_ABSTRACT_TYPE (GESTrackEffect, ges_track_effect,
     GES_TYPE_TRACK_OPERATION);
 
-static GHashTable *ges_track_effect_get_props_hashtable (GESTrackObject * self);
+static GHashTable *ges_track_effect_get_props_hashtable (GESTrackElement *
+    self);
 guint pspec_hash (gconstpointer key_spec);
 static gboolean pspec_equal (gconstpointer key_spec_1,
     gconstpointer key_spec_2);
@@ -46,7 +47,7 @@ struct _GESTrackEffectPrivate
 static void
 ges_track_effect_class_init (GESTrackEffectClass * klass)
 {
-  GESTrackObjectClass *obj_bg_class = GES_TRACK_OBJECT_CLASS (klass);
+  GESTrackElementClass *obj_bg_class = GES_TRACK_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackEffectPrivate));
 
@@ -86,7 +87,7 @@ pspec_hash (gconstpointer key_spec)
 
 /*  Virtual methods */
 static GHashTable *
-ges_track_effect_get_props_hashtable (GESTrackObject * self)
+ges_track_effect_get_props_hashtable (GESTrackElement * self)
 {
   GValue item = { 0, };
   GstIterator *it;
@@ -98,7 +99,7 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
   gboolean done = FALSE;
   GHashTable *ret = NULL;
 
-  element = ges_track_object_get_element (self);
+  element = ges_track_element_get_element (self);
   if (!element) {
     GST_DEBUG
         ("Can't build the property hashtable until the gnlobject is created");

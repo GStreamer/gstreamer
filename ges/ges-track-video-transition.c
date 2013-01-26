@@ -89,10 +89,10 @@ static GObject *link_element_to_mixer_with_smpte (GstBin * bin,
     GstElement ** smpteref);
 
 static void
-ges_track_video_transition_duration_changed (GESTrackObject * self,
+ges_track_video_transition_duration_changed (GESTrackElement * self,
     guint64 duration);
 
-static GstElement *ges_track_video_transition_create_element (GESTrackObject
+static GstElement *ges_track_video_transition_create_element (GESTrackElement
     * self);
 
 static void ges_track_video_transition_dispose (GObject * object);
@@ -109,7 +109,7 @@ static void
 ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
 {
   GObjectClass *object_class;
-  GESTrackObjectClass *toclass;
+  GESTrackElementClass *toclass;
 
   g_type_class_add_private (klass, sizeof (GESTrackVideoTransitionPrivate));
 
@@ -157,7 +157,7 @@ ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
   g_object_class_install_property (object_class, PROP_INVERT,
       properties[PROP_INVERT]);
 
-  toclass = GES_TRACK_OBJECT_CLASS (klass);
+  toclass = GES_TRACK_ELEMENT_CLASS (klass);
   toclass->duration_changed = ges_track_video_transition_duration_changed;
   toclass->create_element = ges_track_video_transition_create_element;
 }
@@ -333,7 +333,7 @@ set_interpolation (GstObject * element, GESTrackVideoTransitionPrivate * priv,
 }
 
 static GstElement *
-ges_track_video_transition_create_element (GESTrackObject * object)
+ges_track_video_transition_create_element (GESTrackElement * object)
 {
   GstElement *topbin, *iconva, *iconvb, *scalea, *scaleb, *capsfilt, *oconv;
   GstObject *target = NULL;
@@ -507,7 +507,7 @@ switch_to_smpte_cb (GstPad * sink, gboolean blocked,
   priv->end_value = 0.0;
 
   set_interpolation (GST_OBJECT (smptealphab), priv, (gchar *) "position");
-  ges_track_video_transition_duration_changed (GES_TRACK_OBJECT (transition),
+  ges_track_video_transition_duration_changed (GES_TRACK_ELEMENT (transition),
       priv->dur);
 
 
@@ -585,7 +585,7 @@ switch_to_crossfade_cb (GstPad * sink, gboolean blocked,
   priv->start_value = 0.0;
   priv->end_value = 1.0;
   set_interpolation (GST_OBJECT (priv->sinkb), priv, (gchar *) "alpha");
-  ges_track_video_transition_duration_changed (GES_TRACK_OBJECT (transition),
+  ges_track_video_transition_duration_changed (GES_TRACK_ELEMENT (transition),
       priv->dur);
 
   priv->smpte = NULL;
@@ -642,10 +642,10 @@ link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
 }
 
 static void
-ges_track_video_transition_duration_changed (GESTrackObject * object,
+ges_track_video_transition_duration_changed (GESTrackElement * object,
     guint64 duration)
 {
-  GstElement *gnlobj = ges_track_object_get_gnlobject (object);
+  GstElement *gnlobj = ges_track_element_get_gnlobject (object);
   GESTrackVideoTransition *self = GES_TRACK_VIDEO_TRANSITION (object);
   GESTrackVideoTransitionPrivate *priv = self->priv;
   GstTimedValueControlSource *ts;

@@ -28,7 +28,7 @@
  */
 
 #include "ges-internal.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-track-audio-test-source.h"
 
 G_DEFINE_TYPE (GESTrackAudioTestSource, ges_track_audio_test_source,
@@ -51,14 +51,14 @@ static void ges_track_audio_test_source_get_property (GObject * object, guint
 static void ges_track_audio_test_source_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_audio_test_source_create_element (GESTrackObject *
+static GstElement *ges_track_audio_test_source_create_element (GESTrackElement *
     self);
 
 static void
 ges_track_audio_test_source_class_init (GESTrackAudioTestSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTrackObjectClass *bg_class = GES_TRACK_OBJECT_CLASS (klass);
+  GESTrackElementClass *bg_class = GES_TRACK_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackAudioTestSourcePrivate));
 
@@ -99,7 +99,7 @@ ges_track_audio_test_source_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_audio_test_source_create_element (GESTrackObject * trksrc)
+ges_track_audio_test_source_create_element (GESTrackElement * trksrc)
 {
   GESTrackAudioTestSource *self;
   GstElement *ret;
@@ -123,7 +123,8 @@ void
 ges_track_audio_test_source_set_freq (GESTrackAudioTestSource * self,
     gdouble freq)
 {
-  GstElement *element = ges_track_object_get_element (GES_TRACK_OBJECT (self));
+  GstElement *element =
+      ges_track_element_get_element (GES_TRACK_ELEMENT (self));
 
   self->priv->freq = freq;
   if (element)
@@ -141,7 +142,8 @@ void
 ges_track_audio_test_source_set_volume (GESTrackAudioTestSource * self,
     gdouble volume)
 {
-  GstElement *element = ges_track_object_get_element (GES_TRACK_OBJECT (self));
+  GstElement *element =
+      ges_track_element_get_element (GES_TRACK_ELEMENT (self));
 
   self->priv->volume = volume;
   if (element)

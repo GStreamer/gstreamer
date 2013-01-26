@@ -461,7 +461,7 @@ ges_timeline_layer_is_empty (GESTimelineLayer * layer)
  * An object can only be added to one layer.
  *
  * Calling this method will construct and properly set all the media related
- * elements on @object. If you need to know when those objects (actually #GESTrackObject)
+ * elements on @object. If you need to know when those objects (actually #GESTrackElement)
  * are constructed, you should connect to the object::track-object-added signal which
  * is emited right after those elements are ready to be used.
  *

@@ -24,7 +24,7 @@
  *
  * The Assets in the GStreamer Editing Services represent the ressources
  * that can be used. You can create assets for any type that implements the #GESExtractable
- * interface, for example #GESClips, #GESFormatter, and #GESTrackObject do implement it.
+ * interface, for example #GESClips, #GESFormatter, and #GESTrackElement do implement it.
  * This means that asssets will represent for example a #GESUriClips, #GESTrackEffect etc,
  * and then you can extract objects of those types with the appropriate parameters from the asset
  * using the #ges_asset_extract method:

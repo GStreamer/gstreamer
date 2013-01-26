@@ -27,7 +27,7 @@
 
 #include "ges-internal.h"
 #include "ges-text-overlay-clip.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-track-text-overlay.h"
 #include <string.h>
 
@@ -63,8 +63,8 @@ enum
   PROP_YPOS,
 };
 
-static GESTrackObject
-    * ges_overlay_text_clip_create_track_object (GESClip * obj,
+static GESTrackElement
+    * ges_overlay_text_clip_create_track_element (GESClip * obj,
     GESTrackType type);
 
 static void
@@ -202,7 +202,8 @@ ges_overlay_text_clip_class_init (GESTextOverlayClipClass * klass)
           GES_TEXT_HALIGN_TYPE, DEFAULT_PROP_HALIGNMENT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  timobj_class->create_track_object = ges_overlay_text_clip_create_track_object;
+  timobj_class->create_track_element =
+      ges_overlay_text_clip_create_track_element;
   timobj_class->need_fill_track = FALSE;
 
   /**
@@ -265,7 +266,7 @@ ges_overlay_text_clip_init (GESTextOverlayClip * self)
 void
 ges_overlay_text_clip_set_text (GESTextOverlayClip * self, const gchar * text)
 {
-  GList *tmp, *trackobjects;
+  GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, text:%s", self, text);
@@ -275,17 +276,18 @@ ges_overlay_text_clip_set_text (GESTextOverlayClip * self, const gchar * text)
 
   self->priv->text = g_strdup (text);
 
-  trackobjects = ges_clip_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+  trackelements = ges_clip_get_track_elements (object);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
-    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
-      ges_track_text_overlay_set_text (GES_TRACK_TEXT_OVERLAY
-          (trackobject), self->priv->text);
+    if (ges_track_element_get_track (trackelement)->type ==
+        GES_TRACK_TYPE_VIDEO)
+      ges_track_text_overlay_set_text (GES_TRACK_TEXT_OVERLAY (trackelement),
+          self->priv->text);
 
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackobjects);
+  g_list_free (trackelements);
 }
 
 /**
@@ -300,7 +302,7 @@ void
 ges_overlay_text_clip_set_font_desc (GESTextOverlayClip * self,
     const gchar * font_desc)
 {
-  GList *tmp, *trackobjects;
+  GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
@@ -310,17 +312,18 @@ ges_overlay_text_clip_set_font_desc (GESTextOverlayClip * self,
 
   self->priv->font_desc = g_strdup (font_desc);
 
-  trackobjects = ges_clip_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+  trackelements = ges_clip_get_track_elements (object);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
-    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
+    if (ges_track_element_get_track (trackelement)->type ==
+        GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_font_desc (GES_TRACK_TEXT_OVERLAY
-          (trackobject), self->priv->font_desc);
+          (trackelement), self->priv->font_desc);
 
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackobjects);
+  g_list_free (trackelements);
 
 }
 
@@ -336,24 +339,25 @@ void
 ges_overlay_text_clip_set_halign (GESTextOverlayClip * self,
     GESTextHAlign halign)
 {
-  GList *tmp, *trackobjects;
+  GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, halign:%d", self, halign);
 
   self->priv->halign = halign;
 
-  trackobjects = ges_clip_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+  trackelements = ges_clip_get_track_elements (object);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
-    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
+    if (ges_track_element_get_track (trackelement)->type ==
+        GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_halignment (GES_TRACK_TEXT_OVERLAY
-          (trackobject), self->priv->halign);
+          (trackelement), self->priv->halign);
 
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackobjects);
+  g_list_free (trackelements);
 
 }
 
@@ -369,24 +373,25 @@ void
 ges_overlay_text_clip_set_valign (GESTextOverlayClip * self,
     GESTextVAlign valign)
 {
-  GList *tmp, *trackobjects;
+  GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, valign:%d", self, valign);
 
   self->priv->valign = valign;
 
-  trackobjects = ges_clip_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+  trackelements = ges_clip_get_track_elements (object);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
-    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
+    if (ges_track_element_get_track (trackelement)->type ==
+        GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_valignment (GES_TRACK_TEXT_OVERLAY
-          (trackobject), self->priv->valign);
+          (trackelement), self->priv->valign);
 
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackobjects);
+  g_list_free (trackelements);
 
 }
 
@@ -402,24 +407,25 @@ ges_overlay_text_clip_set_valign (GESTextOverlayClip * self,
 void
 ges_overlay_text_clip_set_color (GESTextOverlayClip * self, guint32 color)
 {
-  GList *tmp, *trackobjects;
+  GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, color:%d", self, color);
 
   self->priv->color = color;
 
-  trackobjects = ges_clip_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+  trackelements = ges_clip_get_track_elements (object);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
-    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
-      ges_track_text_overlay_set_color (GES_TRACK_TEXT_OVERLAY
-          (trackobject), self->priv->color);
+    if (ges_track_element_get_track (trackelement)->type ==
+        GES_TRACK_TYPE_VIDEO)
+      ges_track_text_overlay_set_color (GES_TRACK_TEXT_OVERLAY (trackelement),
+          self->priv->color);
 
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackobjects);
+  g_list_free (trackelements);
 }
 
 /**
@@ -434,24 +440,25 @@ ges_overlay_text_clip_set_color (GESTextOverlayClip * self, guint32 color)
 void
 ges_overlay_text_clip_set_xpos (GESTextOverlayClip * self, gdouble position)
 {
-  GList *tmp, *trackobjects;
+  GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, xpos:%f", self, position);
 
   self->priv->xpos = position;
 
-  trackobjects = ges_clip_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+  trackelements = ges_clip_get_track_elements (object);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
-    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
-      ges_track_text_overlay_set_xpos (GES_TRACK_TEXT_OVERLAY
-          (trackobject), self->priv->xpos);
+    if (ges_track_element_get_track (trackelement)->type ==
+        GES_TRACK_TYPE_VIDEO)
+      ges_track_text_overlay_set_xpos (GES_TRACK_TEXT_OVERLAY (trackelement),
+          self->priv->xpos);
 
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackobjects);
+  g_list_free (trackelements);
 }
 
 /**
@@ -466,24 +473,25 @@ ges_overlay_text_clip_set_xpos (GESTextOverlayClip * self, gdouble position)
 void
 ges_overlay_text_clip_set_ypos (GESTextOverlayClip * self, gdouble position)
 {
-  GList *tmp, *trackobjects;
+  GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, ypos:%f", self, position);
 
   self->priv->ypos = position;
 
-  trackobjects = ges_clip_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+  trackelements = ges_clip_get_track_elements (object);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
-    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_VIDEO)
-      ges_track_text_overlay_set_ypos (GES_TRACK_TEXT_OVERLAY
-          (trackobject), self->priv->ypos);
+    if (ges_track_element_get_track (trackelement)->type ==
+        GES_TRACK_TYPE_VIDEO)
+      ges_track_text_overlay_set_ypos (GES_TRACK_TEXT_OVERLAY (trackelement),
+          self->priv->ypos);
 
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackobjects);
+  g_list_free (trackelements);
 }
 
 /**
@@ -594,17 +602,17 @@ ges_overlay_text_clip_get_ypos (GESTextOverlayClip * self)
   return self->priv->ypos;
 }
 
-static GESTrackObject *
-ges_overlay_text_clip_create_track_object (GESClip * obj, GESTrackType type)
+static GESTrackElement *
+ges_overlay_text_clip_create_track_element (GESClip * obj, GESTrackType type)
 {
 
   GESTextOverlayClipPrivate *priv = GES_OVERLAY_TEXT_CLIP (obj)->priv;
-  GESTrackObject *res = NULL;
+  GESTrackElement *res = NULL;
 
   GST_DEBUG ("Creating a GESTrackOverlay");
 
   if (type == GES_TRACK_TYPE_VIDEO) {
-    res = (GESTrackObject *) ges_track_text_overlay_new ();
+    res = (GESTrackElement *) ges_track_text_overlay_new ();
     GST_DEBUG ("Setting text property");
     ges_track_text_overlay_set_text ((GESTrackTextOverlay *) res, priv->text);
     ges_track_text_overlay_set_font_desc ((GESTrackTextOverlay *) res,

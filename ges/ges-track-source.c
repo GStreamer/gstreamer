@@ -24,10 +24,10 @@
  */
 
 #include "ges-internal.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-track-source.h"
 
-G_DEFINE_TYPE (GESTrackSource, ges_track_source, GES_TYPE_TRACK_OBJECT);
+G_DEFINE_TYPE (GESTrackSource, ges_track_source, GES_TYPE_TRACK_ELEMENT);
 
 struct _GESTrackSourcePrivate
 {
@@ -38,7 +38,7 @@ struct _GESTrackSourcePrivate
 static void
 ges_track_source_class_init (GESTrackSourceClass * klass)
 {
-  GESTrackObjectClass *track_class = GES_TRACK_OBJECT_CLASS (klass);
+  GESTrackElementClass *track_class = GES_TRACK_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackSourcePrivate));
 

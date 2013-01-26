@@ -106,10 +106,10 @@ const GstCaps * ges_track_get_caps        (GESTrack *track);
 const GESTimeline *ges_track_get_timeline (GESTrack *track);
 
 gboolean ges_track_add_object             (GESTrack * track,
-                                           GESTrackObject * object);
+                                           GESTrackElement * object);
 
 gboolean ges_track_remove_object          (GESTrack * track,
-                                           GESTrackObject * object);
+                                           GESTrackElement * object);
 
 GESTrack *ges_track_video_raw_new         (void);
 GESTrack *ges_track_audio_raw_new         (void);

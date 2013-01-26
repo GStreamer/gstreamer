@@ -56,13 +56,13 @@ enum
   PROP_VTYPE = 5,
 };
 
-static GESTrackObject *ges_tl_transition_create_track_object (GESClip
+static GESTrackElement *ges_tl_transition_create_track_element (GESClip
     * self, GESTrackType type);
 static void
-ges_transition_clip_track_object_added (GESClip * obj, GESTrackObject * tckobj);
-static void
-ges_transition_clip_track_object_released (GESClip * obj,
-    GESTrackObject * tckobj);
+ges_transition_clip_track_element_added (GESClip * obj,
+    GESTrackElement * trackelement);
+static void ges_transition_clip_track_element_released (GESClip * obj,
+    GESTrackElement * trackelement);
 
 /* Internal methods */
 static void
@@ -249,11 +249,11 @@ ges_transition_clip_class_init (GESTransitionClipClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
 
-  timobj_class->create_track_object = ges_tl_transition_create_track_object;
+  timobj_class->create_track_element = ges_tl_transition_create_track_element;
   timobj_class->need_fill_track = FALSE;
-  timobj_class->track_object_added = ges_transition_clip_track_object_added;
-  timobj_class->track_object_released =
-      ges_transition_clip_track_object_released;
+  timobj_class->track_element_added = ges_transition_clip_track_element_added;
+  timobj_class->track_element_released =
+      ges_transition_clip_track_element_released;
 }
 
 static void
@@ -268,37 +268,40 @@ ges_transition_clip_init (GESTransitionClip * self)
 }
 
 static void
-ges_transition_clip_track_object_released (GESClip * obj,
-    GESTrackObject * tckobj)
+ges_transition_clip_track_element_released (GESClip * obj,
+    GESTrackElement * trackelement)
 {
   GESTransitionClipPrivate *priv = GES_TRANSITION_CLIP (obj)->priv;
 
-  /* If this is called, we should be sure the tckobj exists */
-  if (GES_IS_TRACK_VIDEO_TRANSITION (tckobj)) {
-    GST_DEBUG ("GESTrackVideoTransition %p released from %p", tckobj, obj);
+  /* If this is called, we should be sure the trackelement exists */
+  if (GES_IS_TRACK_VIDEO_TRANSITION (trackelement)) {
+    GST_DEBUG ("GESTrackVideoTransition %p released from %p", trackelement,
+        obj);
     priv->track_video_transitions =
-        g_slist_remove (priv->track_video_transitions, tckobj);
-    g_object_unref (tckobj);
+        g_slist_remove (priv->track_video_transitions, trackelement);
+    g_object_unref (trackelement);
   }
 }
 
 static void
-ges_transition_clip_track_object_added (GESClip * obj, GESTrackObject * tckobj)
+ges_transition_clip_track_element_added (GESClip * obj,
+    GESTrackElement * trackelement)
 {
   GESTransitionClipPrivate *priv = GES_TRANSITION_CLIP (obj)->priv;
 
-  if (GES_IS_TRACK_VIDEO_TRANSITION (tckobj)) {
-    GST_DEBUG ("GESTrackVideoTransition %p added to %p", tckobj, obj);
+  if (GES_IS_TRACK_VIDEO_TRANSITION (trackelement)) {
+    GST_DEBUG ("GESTrackVideoTransition %p added to %p", trackelement, obj);
     priv->track_video_transitions =
-        g_slist_prepend (priv->track_video_transitions, g_object_ref (tckobj));
+        g_slist_prepend (priv->track_video_transitions,
+        g_object_ref (trackelement));
   }
 }
 
-static GESTrackObject *
-ges_tl_transition_create_track_object (GESClip * obj, GESTrackType type)
+static GESTrackElement *
+ges_tl_transition_create_track_element (GESClip * obj, GESTrackType type)
 {
   GESTransitionClip *transition = (GESTransitionClip *) obj;
-  GESTrackObject *res = NULL;
+  GESTrackElement *res = NULL;
   GESTrackType supportedformats;
 
   GST_DEBUG ("Creating a GESTrackTransition");
@@ -312,7 +315,7 @@ ges_tl_transition_create_track_object (GESClip * obj, GESTrackType type)
       trans = ges_track_video_transition_new ();
       ges_track_video_transition_set_transition_type (trans, transition->vtype);
 
-      res = GES_TRACK_OBJECT (trans);
+      res = GES_TRACK_ELEMENT (trans);
     } else {
       GST_DEBUG ("Not creating transition as video track not on"
           " supportedformats");
@@ -322,7 +325,7 @@ ges_tl_transition_create_track_object (GESClip * obj, GESTrackType type)
 
     if (supportedformats == GES_TRACK_TYPE_UNKNOWN ||
         supportedformats & GES_TRACK_TYPE_AUDIO)
-      res = GES_TRACK_OBJECT (ges_track_audio_transition_new ());
+      res = GES_TRACK_ELEMENT (ges_track_audio_transition_new ());
     else
       GST_DEBUG ("Not creating transition as audio track"
           " not on supportedformats");

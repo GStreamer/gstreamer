@@ -23,7 +23,7 @@
  *
  * The #GESUriClipAsset is a special #GESAsset specilized in #GESClip.
  * it is mostly used to get information about the #GESTrackType-s the objects extracted
- * from it can potentialy create #GESTrackObject for.
+ * from it can potentialy create #GESTrackElement for.
  */
 
 #include "ges-asset-clip.h"
@@ -152,7 +152,7 @@ ges_asset_clip_class_init (GESAssetClipClass * self_class)
  * @self: a #GESAssetClip
  * @supportedformats: The track types supported by the GESAssetClip
  *
- * Sets track types for which objects extracted from @self can create #GESTrackObject
+ * Sets track types for which objects extracted from @self can create #GESTrackElement
  */
 void
 ges_asset_clip_set_supported_formats (GESAssetClip * self,
@@ -167,9 +167,9 @@ ges_asset_clip_set_supported_formats (GESAssetClip * self,
  * ges_asset_clip_get_supported_formats:
  * @self: a #GESAssetClip
  *
- * Gets track types for which objects extracted from @self can create #GESTrackObject
+ * Gets track types for which objects extracted from @self can create #GESTrackElement
  *
- * Returns: The track types on which @self will create TrackObject when added to
+ * Returns: The track types on which @self will create TrackElement when added to
  * a layer
  */
 GESTrackType

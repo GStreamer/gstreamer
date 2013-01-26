@@ -65,10 +65,10 @@ enum
 };
 
 
-static GList *ges_uri_clip_create_track_objects (GESClip *
+static GList *ges_uri_clip_create_track_elements (GESClip *
     obj, GESTrackType type);
-static GESTrackObject
-    * ges_uri_clip_create_track_object (GESClip * obj, GESTrackType type);
+static GESTrackElement
+    * ges_uri_clip_create_track_element (GESClip * obj, GESTrackType type);
 void ges_uri_clip_set_uri (GESUriClip * self, gchar * uri);
 
 gboolean
@@ -171,7 +171,7 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
    * GESUriClip:is-image:
    *
    * Whether this filesource represents a still image or not. This must be set
-   * before create_track_objects is called.
+   * before create_track_elements is called.
    */
   g_object_class_install_property (object_class, PROP_IS_IMAGE,
       g_param_spec_boolean ("is-image", "Is still image",
@@ -188,8 +188,8 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
 
   element_class->set_max_duration = filesource_set_max_duration;
 
-  timobj_class->create_track_objects = ges_uri_clip_create_track_objects;
-  timobj_class->create_track_object = ges_uri_clip_create_track_object;
+  timobj_class->create_track_elements = ges_uri_clip_create_track_elements;
+  timobj_class->create_track_element = ges_uri_clip_create_track_element;
   timobj_class->need_fill_track = FALSE;
 
 }
@@ -280,7 +280,7 @@ ges_uri_clip_init (GESUriClip * self)
 void
 ges_uri_clip_set_mute (GESUriClip * self, gboolean mute)
 {
-  GList *tmp, *trackobjects;
+  GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
 
   GST_DEBUG ("self:%p, mute:%d", self, mute);
@@ -288,16 +288,17 @@ ges_uri_clip_set_mute (GESUriClip * self, gboolean mute)
   self->priv->mute = mute;
 
   /* Go over tracked objects, and update 'active' status on all audio objects */
-  trackobjects = ges_clip_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+  trackelements = ges_clip_get_track_elements (object);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
-    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_AUDIO)
-      ges_track_object_set_active (trackobject, !mute);
+    if (ges_track_element_get_track (trackelement)->type ==
+        GES_TRACK_TYPE_AUDIO)
+      ges_track_element_set_active (trackelement, !mute);
 
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackobjects);
+  g_list_free (trackelements);
 }
 
 gboolean
@@ -369,7 +370,7 @@ ges_uri_clip_get_uri (GESUriClip * self)
 }
 
 static GList *
-ges_uri_clip_create_track_objects (GESClip * obj, GESTrackType type)
+ges_uri_clip_create_track_elements (GESClip * obj, GESTrackType type)
 {
   GList *res = NULL;
   const GList *tmp, *stream_assets;
@@ -380,20 +381,20 @@ ges_uri_clip_create_track_objects (GESClip * obj, GESTrackType type)
       ges_uri_clip_asset_get_stream_assets (GES_URI_CLIP_ASSET
       (GES_TIMELINE_ELEMENT (obj)->asset));
   for (tmp = stream_assets; tmp; tmp = tmp->next) {
-    GESAssetTrackObject *asset = GES_ASSET_TRACK_OBJECT (tmp->data);
+    GESAssetTrackElement *asset = GES_ASSET_TRACK_ELEMENT (tmp->data);
 
-    if (ges_asset_track_object_get_track_type (asset) == type)
+    if (ges_asset_track_element_get_track_type (asset) == type)
       res = g_list_prepend (res, ges_asset_extract (GES_ASSET (asset), NULL));
   }
 
   return res;
 }
 
-static GESTrackObject *
-ges_uri_clip_create_track_object (GESClip * obj, GESTrackType type)
+static GESTrackElement *
+ges_uri_clip_create_track_element (GESClip * obj, GESTrackType type)
 {
   GESUriClipPrivate *priv = GES_URI_CLIP (obj)->priv;
-  GESTrackObject *res;
+  GESTrackElement *res;
 
   if (priv->is_image) {
     if (type != GES_TRACK_TYPE_VIDEO) {
@@ -401,22 +402,22 @@ ges_uri_clip_create_track_object (GESClip * obj, GESTrackType type)
       return NULL;
     } else {
       GST_DEBUG ("Creating a GESTrackImageSource");
-      res = (GESTrackObject *) ges_track_image_source_new (priv->uri);
+      res = (GESTrackElement *) ges_track_image_source_new (priv->uri);
     }
 
   } else {
     GST_DEBUG ("Creating a GESTrackFileSource");
 
     /* FIXME : Implement properly ! */
-    res = (GESTrackObject *) ges_track_filesource_new (priv->uri);
+    res = (GESTrackElement *) ges_track_filesource_new (priv->uri);
 
     /* If mute and track is audio, deactivate the track object */
     if (type == GES_TRACK_TYPE_AUDIO && priv->mute)
-      ges_track_object_set_active (res, FALSE);
+      ges_track_element_set_active (res, FALSE);
   }
 
   if (res)
-    ges_track_object_set_track_type (res, type);
+    ges_track_element_set_track_type (res, type);
 
   return res;
 }
@@ -445,12 +446,12 @@ void
 ges_uri_clip_set_uri (GESUriClip * self, gchar * uri)
 {
   GESClip *clip = GES_CLIP (self);
-  GList *tckobjs = ges_clip_get_track_objects (clip);
+  GList *trackelements = ges_clip_get_track_elements (clip);
 
-  if (tckobjs) {
+  if (trackelements) {
     /* FIXME handle this case properly */
     GST_WARNING_OBJECT (clip, "Can not change uri when already"
-        "containing TrackObjects");
+        "containing TrackElements");
 
     return;
   }

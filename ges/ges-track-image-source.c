@@ -29,7 +29,7 @@
  */
 
 #include "ges-internal.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-track-image-source.h"
 
 G_DEFINE_TYPE (GESTrackImageSource, ges_track_image_source,
@@ -111,7 +111,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GstElement * scale)
 }
 
 static GstElement *
-ges_track_image_source_create_element (GESTrackObject * object)
+ges_track_image_source_create_element (GESTrackElement * object)
 {
   GstElement *bin, *source, *scale, *freeze, *iconv;
   GstPad *src, *target;
@@ -151,7 +151,7 @@ static void
 ges_track_image_source_class_init (GESTrackImageSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTrackObjectClass *gesobj_class = GES_TRACK_OBJECT_CLASS (klass);
+  GESTrackElementClass *gesobj_class = GES_TRACK_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackImageSourcePrivate));
 

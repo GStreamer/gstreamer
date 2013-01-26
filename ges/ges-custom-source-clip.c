@@ -50,7 +50,7 @@ enum
 
 struct _GESCustomSourceClipPrivate
 {
-  GESFillTrackObjectUserFunc filltrackobjectfunc;
+  GESFillTrackElementUserFunc filltrackelementfunc;
   gpointer user_data;
 };
 
@@ -117,7 +117,7 @@ extractable_get_id (GESExtractable * self)
 {
   GESCustomSourceClipPrivate *priv = GES_CUSTOM_SOURCE_CLIP (self)->priv;
 
-  return g_strdup_printf ("%i!%i", GPOINTER_TO_INT (priv->filltrackobjectfunc),
+  return g_strdup_printf ("%i!%i", GPOINTER_TO_INT (priv->filltrackelementfunc),
       GPOINTER_TO_INT (priv->user_data));
 }
 
@@ -130,11 +130,11 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 }
 
 static gboolean
-ges_custom_source_clip_fill_track_object (GESClip * object,
-    GESTrackObject * trobject, GstElement * gnlobj);
+ges_custom_source_clip_fill_track_element (GESClip * object,
+    GESTrackElement * trobject, GstElement * gnlobj);
 
-static GESTrackObject *
-ges_custom_source_clip_create_track_object (GESClip * obj, GESTrackType type)
+static GESTrackElement *
+ges_custom_source_clip_create_track_element (GESClip * obj, GESTrackType type)
 {
   return g_object_new (GES_TYPE_TRACK_SOURCE, "track-type", type, NULL);
 }
@@ -146,7 +146,7 @@ _set_property (GObject * object, guint property_id,
   GESCustomSourceClipPrivate *priv = GES_CUSTOM_SOURCE_CLIP (object)->priv;
   switch (property_id) {
     case PROP_FILL_FUNC:
-      priv->filltrackobjectfunc = g_value_get_pointer (value);
+      priv->filltrackelementfunc = g_value_get_pointer (value);
       break;
     case PROP_USER_DATA:
       priv->user_data = g_value_get_pointer (value);
@@ -164,19 +164,20 @@ ges_custom_source_clip_class_init (GESCustomSourceClipClass * klass)
 
   g_type_class_add_private (klass, sizeof (GESCustomSourceClipPrivate));
 
-  clip_class->fill_track_object = ges_custom_source_clip_fill_track_object;
-  clip_class->create_track_object = ges_custom_source_clip_create_track_object;
+  clip_class->fill_track_element = ges_custom_source_clip_fill_track_element;
+  clip_class->create_track_element =
+      ges_custom_source_clip_create_track_element;
 
   object_class->set_property = _set_property;
 
   /**
    * GESCustomSourceClip:fill-func:
    *
-   * The function pointer to create the TrackObject content
+   * The function pointer to create the TrackElement content
    */
   g_object_class_install_property (object_class, PROP_FILL_FUNC,
       g_param_spec_pointer ("fill-func", "Fill func",
-          "A pointer to a GESFillTrackObjectUserFunc",
+          "A pointer to a GESFillTrackElementUserFunc",
           G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 
   /**
@@ -186,7 +187,7 @@ ges_custom_source_clip_class_init (GESCustomSourceClipClass * klass)
    */
   g_object_class_install_property (object_class, PROP_USER_DATA,
       g_param_spec_pointer ("user-data", "User data",
-          "The user data pointer that will be passed when creating TrackObjects",
+          "The user data pointer that will be passed when creating TrackElements",
           G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
@@ -198,17 +199,17 @@ ges_custom_source_clip_init (GESCustomSourceClip * self)
 }
 
 static gboolean
-ges_custom_source_clip_fill_track_object (GESClip * object,
-    GESTrackObject * trobject, GstElement * gnlobj)
+ges_custom_source_clip_fill_track_element (GESClip * object,
+    GESTrackElement * trobject, GstElement * gnlobj)
 {
   gboolean res;
   GESCustomSourceClipPrivate *priv;
 
-  GST_DEBUG ("Calling callback (timelineobj:%p, trackobj:%p, gnlobj:%p)",
+  GST_DEBUG ("Calling callback (timelineobj:%p, trackelement:%p, gnlobj:%p)",
       object, trobject, gnlobj);
 
   priv = GES_CUSTOM_SOURCE_CLIP (object)->priv;
-  res = priv->filltrackobjectfunc (object, trobject, gnlobj, priv->user_data);
+  res = priv->filltrackelementfunc (object, trobject, gnlobj, priv->user_data);
 
   GST_DEBUG ("Returning res:%d", res);
 
@@ -217,7 +218,7 @@ ges_custom_source_clip_fill_track_object (GESClip * object,
 
 /**
  * ges_custom_source_clip_new:
- * @func: (scope notified): The #GESFillTrackObjectUserFunc that will be used to fill the track
+ * @func: (scope notified): The #GESFillTrackElementUserFunc that will be used to fill the track
  * objects.
  * @user_data: (closure): a gpointer that will be used when @func is called.
  *
@@ -226,13 +227,14 @@ ges_custom_source_clip_fill_track_object (GESClip * object,
  * Returns: The new #GESCustomSourceClip.
  */
 GESCustomSourceClip *
-ges_custom_source_clip_new (GESFillTrackObjectUserFunc func, gpointer user_data)
+ges_custom_source_clip_new (GESFillTrackElementUserFunc func,
+    gpointer user_data)
 {
   GESCustomSourceClip *src;
 
   src = g_object_new (GES_TYPE_CUSTOM_SOURCE_CLIP, "supported-formats",
       GES_TRACK_TYPE_CUSTOM, NULL);
-  src->priv->filltrackobjectfunc = func;
+  src->priv->filltrackelementfunc = func;
   src->priv->user_data = user_data;
 
   return src;
@@ -240,7 +242,7 @@ ges_custom_source_clip_new (GESFillTrackObjectUserFunc func, gpointer user_data)
 
 /**
  * ges_asset_custom_source_clip_new:
- * @func: (scope notified): The #GESFillTrackObjectUserFunc that will be used to fill the track
+ * @func: (scope notified): The #GESFillTrackElementUserFunc that will be used to fill the track
  * objects.
  * @user_data: (closure): a gpointer that will be used when @func is called.
  *
@@ -250,7 +252,7 @@ ges_custom_source_clip_new (GESFillTrackObjectUserFunc func, gpointer user_data)
  * Returns: The new #GESAsset.
  */
 GESAsset *
-ges_asset_custom_source_clip_new (GESFillTrackObjectUserFunc func,
+ges_asset_custom_source_clip_new (GESFillTrackElementUserFunc func,
     gpointer user_data)
 {
   GESAsset *asset;

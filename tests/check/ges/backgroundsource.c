@@ -38,7 +38,7 @@ GST_END_TEST;
 GST_START_TEST (test_test_source_properties)
 {
   GESTrack *track;
-  GESTrackObject *trackobject;
+  GESTrackElement *trackelement;
   GESClip *object;
 
   ges_init ();
@@ -57,18 +57,18 @@ GST_START_TEST (test_test_source_properties)
   assert_equals_uint64 (_DURATION (object), 51);
   assert_equals_uint64 (_INPOINT (object), 12);
 
-  trackobject = ges_clip_create_track_object (object, track->type);
-  ges_clip_add_track_object (object, trackobject);
-  fail_unless (trackobject != NULL);
-  fail_unless (ges_track_object_set_track (trackobject, track));
+  trackelement = ges_clip_create_track_element (object, track->type);
+  ges_clip_add_track_element (object, trackelement);
+  fail_unless (trackelement != NULL);
+  fail_unless (ges_track_element_set_track (trackelement, track));
 
-  /* Check that trackobject has the same properties */
-  assert_equals_uint64 (_START (trackobject), 42);
-  assert_equals_uint64 (_DURATION (trackobject), 51);
-  assert_equals_uint64 (_INPOINT (trackobject), 12);
+  /* Check that trackelement has the same properties */
+  assert_equals_uint64 (_START (trackelement), 42);
+  assert_equals_uint64 (_DURATION (trackelement), 51);
+  assert_equals_uint64 (_INPOINT (trackelement), 12);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
+  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
       51, 0, TRUE);
 
   /* Change more properties, see if they propagate */
@@ -77,23 +77,23 @@ GST_START_TEST (test_test_source_properties)
   assert_equals_uint64 (_START (object), 420);
   assert_equals_uint64 (_DURATION (object), 510);
   assert_equals_uint64 (_INPOINT (object), 120);
-  assert_equals_uint64 (_START (trackobject), 420);
-  assert_equals_uint64 (_DURATION (trackobject), 510);
-  assert_equals_uint64 (_INPOINT (trackobject), 120);
+  assert_equals_uint64 (_START (trackelement), 420);
+  assert_equals_uint64 (_DURATION (trackelement), 510);
+  assert_equals_uint64 (_INPOINT (trackelement), 120);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
-      510, 0, TRUE);
+  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
+      120, 510, 0, TRUE);
 
   /* Test mute support */
   g_object_set (object, "mute", TRUE, NULL);
-  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
-      510, 0, FALSE);
+  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
+      120, 510, 0, FALSE);
   g_object_set (object, "mute", FALSE, NULL);
-  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
-      510, 0, TRUE);
+  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
+      120, 510, 0, TRUE);
 
-  ges_clip_release_track_object (object, trackobject);
+  ges_clip_release_track_element (object, trackelement);
   g_object_unref (object);
 }
 
@@ -104,7 +104,7 @@ GST_START_TEST (test_test_source_in_layer)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *a, *v;
-  GESTrackObject *trobj;
+  GESTrackElement *trobj;
   GESTestClip *source;
   GESVideoTestPattern ptrn;
   gdouble freq, volume;
@@ -135,7 +135,7 @@ GST_START_TEST (test_test_source_in_layer)
   assert_equals_int (ptrn, GES_VIDEO_TEST_PATTERN_WHITE);
 
   trobj =
-      ges_clip_find_track_object (GES_CLIP (source), v,
+      ges_clip_find_track_element (GES_CLIP (source), v,
       GES_TYPE_TRACK_VIDEO_TEST_SOURCE);
 
   g_assert (GES_IS_TRACK_VIDEO_TEST_SOURCE (trobj));
@@ -147,7 +147,7 @@ GST_START_TEST (test_test_source_in_layer)
 
   /* test audio properties as well */
 
-  trobj = ges_clip_find_track_object (GES_CLIP (source),
+  trobj = ges_clip_find_track_element (GES_CLIP (source),
       a, GES_TYPE_TRACK_AUDIO_TEST_SOURCE);
   g_assert (GES_IS_TRACK_AUDIO_TEST_SOURCE (trobj));
   assert_equals_float (ges_test_clip_get_frequency (source), 440);
@@ -236,7 +236,7 @@ find_composition (GESTrack * track)
 GST_START_TEST (test_gap_filling_basic)
 {
   GESTrack *track;
-  GESTrackObject *trackobject, *trackobject1, *trackobject2;
+  GESTrackElement *trackelement, *trackelement1, *trackelement2;
   /*GESTimelineLayer *layer; */
   GESClip *object, *object1, *object2;
   GstElement *gnlsrc, *gnlsrc1, *gap = NULL;
@@ -259,17 +259,17 @@ GST_START_TEST (test_gap_filling_basic)
   assert_equals_uint64 (_START (object), 0);
   assert_equals_uint64 (_DURATION (object), 5);
 
-  trackobject = ges_clip_create_track_object (object, track->type);
-  ges_clip_add_track_object (object, trackobject);
+  trackelement = ges_clip_create_track_element (object, track->type);
+  ges_clip_add_track_element (object, trackelement);
 
-  fail_unless (ges_track_add_object (track, trackobject));
-  fail_unless (trackobject != NULL);
-  gnlsrc = ges_track_object_get_gnlobject (trackobject);
+  fail_unless (ges_track_add_object (track, trackelement));
+  fail_unless (trackelement != NULL);
+  gnlsrc = ges_track_element_get_gnlobject (trackelement);
   fail_unless (gnlsrc != NULL);
 
-  /* Check that trackobject has the same properties */
-  assert_equals_uint64 (_START (trackobject), 0);
-  assert_equals_uint64 (_DURATION (trackobject), 5);
+  /* Check that trackelement has the same properties */
+  assert_equals_uint64 (_START (trackelement), 0);
+  assert_equals_uint64 (_DURATION (trackelement), 5);
 
   /* Check no gap were wrongly added */
   assert_equals_int (g_list_length (GST_BIN_CHILDREN (composition)), 1);
@@ -281,16 +281,16 @@ GST_START_TEST (test_gap_filling_basic)
   assert_equals_uint64 (_START (object1), 15);
   assert_equals_uint64 (_DURATION (object1), 5);
 
-  trackobject1 = ges_clip_create_track_object (object1, track->type);
-  ges_clip_add_track_object (object1, trackobject1);
-  fail_unless (ges_track_add_object (track, trackobject1));
-  fail_unless (trackobject1 != NULL);
-  gnlsrc1 = ges_track_object_get_gnlobject (trackobject1);
+  trackelement1 = ges_clip_create_track_element (object1, track->type);
+  ges_clip_add_track_element (object1, trackelement1);
+  fail_unless (ges_track_add_object (track, trackelement1));
+  fail_unless (trackelement1 != NULL);
+  gnlsrc1 = ges_track_element_get_gnlobject (trackelement1);
   fail_unless (gnlsrc1 != NULL);
 
-  /* Check that trackobject1 has the same properties */
-  assert_equals_uint64 (_START (trackobject1), 15);
-  assert_equals_uint64 (_DURATION (trackobject1), 5);
+  /* Check that trackelement1 has the same properties */
+  assert_equals_uint64 (_START (trackelement1), 15);
+  assert_equals_uint64 (_DURATION (trackelement1), 5);
 
   /* Check the gap as properly been added */
   assert_equals_int (g_list_length (GST_BIN_CHILDREN (composition)), 3);
@@ -308,12 +308,12 @@ GST_START_TEST (test_gap_filling_basic)
       object2 = GES_CLIP (ges_test_clip_new ());
   fail_unless (object2 != NULL);
   g_object_set (object2, "start", (guint64) 35, "duration", (guint64) 5, NULL);
-  trackobject2 = ges_clip_create_track_object (object2, track->type);
-  ges_clip_add_track_object (object2, trackobject2);
-  fail_unless (ges_track_add_object (track, trackobject2));
-  fail_unless (trackobject2 != NULL);
-  assert_equals_uint64 (_START (trackobject2), 35);
-  assert_equals_uint64 (_DURATION (trackobject2), 5);
+  trackelement2 = ges_clip_create_track_element (object2, track->type);
+  ges_clip_add_track_element (object2, trackelement2);
+  fail_unless (ges_track_add_object (track, trackelement2));
+  fail_unless (trackelement2 != NULL);
+  assert_equals_uint64 (_START (trackelement2), 35);
+  assert_equals_uint64 (_DURATION (trackelement2), 5);
   assert_equals_int (g_list_length (GST_BIN_CHILDREN (composition)), 5);
 
   gst_object_unref (track);

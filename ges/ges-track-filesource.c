@@ -27,7 +27,7 @@
  */
 
 #include "ges-internal.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-track-filesource.h"
 #include "ges-uri-asset.h"
 #include "ges-extractable.h"
@@ -41,13 +41,14 @@ ges_extractable_check_id (GType type, const gchar * id, GError ** error)
 static void
 extractable_set_asset (GESExtractable * self, GESAsset * asset)
 {
-  /* FIXME That should go into #GESTrackObject, but
+  /* FIXME That should go into #GESTrackElement, but
    * some work is needed to make sure it works properly */
 
-  if (ges_track_object_get_track_type (GES_TRACK_OBJECT (self)) ==
+  if (ges_track_element_get_track_type (GES_TRACK_ELEMENT (self)) ==
       GES_TRACK_TYPE_UNKNOWN) {
-    ges_track_object_set_track_type (GES_TRACK_OBJECT (self),
-        ges_asset_track_object_get_track_type (GES_ASSET_TRACK_OBJECT (asset)));
+    ges_track_element_set_track_type (GES_TRACK_ELEMENT (self),
+        ges_asset_track_element_get_track_type (GES_ASSET_TRACK_ELEMENT
+            (asset)));
   }
 }
 
@@ -117,7 +118,7 @@ ges_track_filesource_dispose (GObject * object)
 }
 
 static GstElement *
-ges_track_filesource_create_gnl_object (GESTrackObject * object)
+ges_track_filesource_create_gnl_object (GESTrackElement * object)
 {
   GstElement *gnlobject;
 
@@ -131,7 +132,7 @@ static void
 ges_track_filesource_class_init (GESTrackFileSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTrackObjectClass *track_class = GES_TRACK_OBJECT_CLASS (klass);
+  GESTrackElementClass *track_class = GES_TRACK_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackFileSourcePrivate));
 

@@ -70,7 +70,7 @@ struct _GESPitiviFormatterPrivate
    *       "effect_name": name
    *       "effect_props": {"propname": value}}}
    */
-  GHashTable *track_objects_table;
+  GHashTable *track_elements_table;
 
   /* {factory-ref: [track-object-ref-id,...]} */
   GHashTable *clips_table;
@@ -148,7 +148,7 @@ write_int_attribute (xmlTextWriterPtr writer, guint64 nb, const gchar * attr,
 }
 
 static void
-save_track_objects (xmlTextWriterPtr writer, GList * source_list,
+save_track_elements (xmlTextWriterPtr writer, GList * source_list,
     GESTrackType type, gint * id)
 {
   GList *tmp, *tck_objs, *tmp_tck;
@@ -166,15 +166,15 @@ save_track_objects (xmlTextWriterPtr writer, GList * source_list,
     object = srcmap->obj;
 
     /* Save track associated objects */
-    tck_objs = ges_clip_get_track_objects (object);
+    tck_objs = ges_clip_get_track_elements (object);
     for (tmp_tck = tck_objs; tmp_tck; tmp_tck = tmp_tck->next) {
       xmlChar *cast;
-      GESTrackObject *tckobj = GES_TRACK_OBJECT (tmp_tck->data);
-      GESTrack *track = ges_track_object_get_track (tckobj);
+      GESTrackElement *trackelement = GES_TRACK_ELEMENT (tmp_tck->data);
+      GESTrack *track = ges_track_element_get_track (trackelement);
       const gchar *active, *locked;
 
       if (!track) {
-        GST_WARNING ("Track object %p not in a track yet", tckobj);
+        GST_WARNING ("Track object %p not in a track yet", trackelement);
         continue;
       }
 
@@ -187,16 +187,18 @@ save_track_objects (xmlTextWriterPtr writer, GList * source_list,
       xmlTextWriterStartElement (writer, BAD_CAST "track-object");
 
       active =
-          ges_track_object_is_active (tckobj) ? "(bool)True" : "(bool)False";
+          ges_track_element_is_active (trackelement) ? "(bool)True" :
+          "(bool)False";
       xmlTextWriterWriteAttribute (writer, BAD_CAST "active", BAD_CAST active);
       locked =
-          ges_track_object_is_locked (tckobj) ? "(bool)True" : "(bool)False";
+          ges_track_element_is_locked (trackelement) ? "(bool)True" :
+          "(bool)False";
       xmlTextWriterWriteAttribute (writer, BAD_CAST "locked", BAD_CAST locked);
 
       /*  Here the priority correspond to the layer priority */
       write_int_attribute (writer, srcmap->priority, "priority", "(int)");
-      g_object_get (G_OBJECT (tckobj), "duration", &duration, "start", &start,
-          "in-point", &inpoint, NULL);
+      g_object_get (G_OBJECT (trackelement), "duration", &duration, "start",
+          &start, "in-point", &inpoint, NULL);
       write_int_attribute (writer, duration, "duration", "(gint64)");
       write_int_attribute (writer, start, "start", "(gint64)");
       write_int_attribute (writer, inpoint, "in_point", "(gint64)");
@@ -205,7 +207,7 @@ save_track_objects (xmlTextWriterPtr writer, GList * source_list,
       xmlTextWriterWriteAttribute (writer, BAD_CAST "id", BAD_CAST cast);
       xmlFree (cast);
 
-      if (GES_IS_TRACK_EFFECT (tckobj)) {
+      if (GES_IS_TRACK_EFFECT (trackelement)) {
         GParamSpec **pspecs, *spec;
         gchar *serialized, *concatenated;
         guint n_props = 0;
@@ -213,7 +215,7 @@ save_track_objects (xmlTextWriterPtr writer, GList * source_list,
         xmlTextWriterWriteAttribute (writer, BAD_CAST "type",
             BAD_CAST "pitivi.timeline.track.TrackEffect");
 
-        g_object_get (tckobj, "bin-description", &bin_desc, NULL);
+        g_object_get (trackelement, "bin-description", &bin_desc, NULL);
         xmlTextWriterStartElement (writer, BAD_CAST "effect");
         xmlTextWriterStartElement (writer, BAD_CAST "factory");
         xmlTextWriterWriteAttribute (writer, BAD_CAST "name",
@@ -221,7 +223,8 @@ save_track_objects (xmlTextWriterPtr writer, GList * source_list,
         xmlTextWriterEndElement (writer);
         xmlTextWriterStartElement (writer, BAD_CAST "gst-element-properties");
 
-        pspecs = ges_track_object_list_children_properties (tckobj, &n_props);
+        pspecs =
+            ges_track_element_list_children_properties (trackelement, &n_props);
 
         j = 0;
 
@@ -230,7 +233,8 @@ save_track_objects (xmlTextWriterPtr writer, GList * source_list,
 
           spec = pspecs[j];
           g_value_init (&val, spec->value_type);
-          ges_track_object_get_child_property_by_pspec (tckobj, spec, &val);
+          ges_track_element_get_child_property_by_pspec (trackelement, spec,
+              &val);
           serialized = gst_value_serialize (&val);
           if (!g_strcmp0 (spec->name, (gchar *) "preset")) {
             concatenated =
@@ -258,7 +262,7 @@ save_track_objects (xmlTextWriterPtr writer, GList * source_list,
 
       } else {
         xmlTextWriterWriteAttribute (writer, BAD_CAST "type",
-            BAD_CAST "pitivi.timeline.track.SourceTrackObject");
+            BAD_CAST "pitivi.timeline.track.SourceTrackElement");
 
         xmlTextWriterStartElement (writer, BAD_CAST "factory-ref");
         xmlTextWriterWriteAttribute (writer, BAD_CAST "id",
@@ -267,8 +271,8 @@ save_track_objects (xmlTextWriterPtr writer, GList * source_list,
       xmlTextWriterEndElement (writer);
       xmlTextWriterEndElement (writer);
 
-      /* We add effects at the end of the trackobject list */
-      if (GES_IS_TRACK_EFFECT (tckobj)) {
+      /* We add effects at the end of the trackelement list */
+      if (GES_IS_TRACK_EFFECT (trackelement)) {
         srcmap->tck_obj_ids = g_list_append (srcmap->tck_obj_ids,
             xmlXPathCastNumberToString (*id));
       } else {
@@ -324,7 +328,7 @@ save_tracks (GESTimeline * timeline, xmlTextWriterPtr writer,
       continue;
     }
 
-    save_track_objects (writer, source_list, type, &id);
+    save_track_elements (writer, source_list, type, &id);
     xmlTextWriterEndElement (writer);
   }
 
@@ -386,7 +390,7 @@ save_sources (GESPitiviFormatter * formatter, GList * layers,
                 uriclip_uri));
         srcmap->obj = g_object_ref (clip);
         srcmap->priority = ges_timeline_layer_get_priority (layer);
-        /* We fill up the tck_obj_ids in save_track_objects */
+        /* We fill up the tck_obj_ids in save_track_elements */
         source_list = g_list_append (source_list, srcmap);
       }
     }
@@ -585,7 +589,7 @@ list_sources (GESFormatter * self)
 }
 
 static gboolean
-parse_track_objects (GESFormatter * self)
+parse_track_elements (GESFormatter * self)
 {
   GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (self)->priv;
   xmlXPathObjectPtr xpathObj;
@@ -660,7 +664,7 @@ parse_track_objects (GESFormatter * self)
     if (effect_table)
       g_hash_table_insert (table, g_strdup ("effect_props"), effect_table);
 
-    g_hash_table_insert (priv->track_objects_table, g_strdup (id), table);
+    g_hash_table_insert (priv->track_elements_table, g_strdup (id), table);
   }
 
   xmlXPathFreeObject (xpathObj);
@@ -674,7 +678,7 @@ parse_clips (GESFormatter * self)
   xmlNodeSetPtr nodes;
   xmlXPathObjectPtr xpathObj;
   xmlNodePtr clip_nd, tmp_nd, tmp_nd2;
-  xmlChar *tckobjrefId, *facrefId = NULL;
+  xmlChar *trackelementrefId, *facrefId = NULL;
 
   GList *reflist = NULL;
   GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (self)->priv;
@@ -695,7 +699,7 @@ parse_clips (GESFormatter * self)
     clip_nd = nodes->nodeTab[j];
 
     for (tmp_nd = clip_nd->children; tmp_nd; tmp_nd = tmp_nd->next) {
-      /* We assume that factory-ref is always before the tckobjs-ref */
+      /* We assume that factory-ref is always before the trackelements-ref */
       if (!xmlStrcmp (tmp_nd->name, (xmlChar *) "factory-ref")) {
         facrefId = xmlGetProp (tmp_nd, (xmlChar *) "id");
 
@@ -705,14 +709,15 @@ parse_clips (GESFormatter * self)
           if (!xmlStrcmp (tmp_nd2->name, (xmlChar *) "track-object-ref")) {
             /* We add the track object ref ID to the list of the current
              * Clip tracks, this way we can merge 2
-             * Clip-s into 1 when we have unlinked TrackObject-s */
+             * Clip-s into 1 when we have unlinked TrackElement-s */
             reflist = g_hash_table_lookup (clips_table, facrefId);
-            tckobjrefId = xmlGetProp (tmp_nd2, (xmlChar *) "id");
-            reflist = g_list_append (reflist, g_strdup ((gchar *) tckobjrefId));
+            trackelementrefId = xmlGetProp (tmp_nd2, (xmlChar *) "id");
+            reflist =
+                g_list_append (reflist, g_strdup ((gchar *) trackelementrefId));
             g_hash_table_insert (clips_table, g_strdup ((gchar *) facrefId),
                 reflist);
 
-            xmlFree (tckobjrefId);
+            xmlFree (trackelementrefId);
           }
         }
       }
@@ -743,8 +748,8 @@ set_properties (GObject * obj, GHashTable * props_table)
 }
 
 static void
-track_object_added_cb (GESClip * object,
-    GESTrackObject * track_object, GHashTable * props_table)
+track_element_added_cb (GESClip * object,
+    GESTrackElement * track_element, GHashTable * props_table)
 {
   gchar *media_type = NULL, *lockedstr;
   GList *tck_objs = NULL, *tmp = NULL;
@@ -754,7 +759,7 @@ track_object_added_cb (GESClip * object,
   gint type = 0;
   GESPitiviFormatter *formatter;
 
-  tck_objs = ges_clip_get_track_objects (object);
+  tck_objs = ges_clip_get_track_elements (object);
   media_type = (gchar *) g_hash_table_lookup (props_table, "media_type");
   lockedstr = (gchar *) g_hash_table_lookup (props_table, "locked");
 
@@ -779,15 +784,15 @@ track_object_added_cb (GESClip * object,
 
   for (tmp = tck_objs; tmp; tmp = tmp->next) {
 
-    if (!GES_IS_TRACK_OBJECT (tmp->data)) {
+    if (!GES_IS_TRACK_ELEMENT (tmp->data)) {
       /* If we arrive here something massively screwed */
-      GST_ERROR ("Not a TrackObject, this is a bug");
+      GST_ERROR ("Not a TrackElement, this is a bug");
       continue;
     }
 
-    track = ges_track_object_get_track (tmp->data);
+    track = ges_track_element_get_track (tmp->data);
     if (!track) {
-      GST_WARNING ("TrackObject not in a track yet");
+      GST_WARNING ("TrackElement not in a track yet");
       continue;
     }
 
@@ -802,11 +807,11 @@ track_object_added_cb (GESClip * object,
             && track->type == GES_TRACK_TYPE_AUDIO)) {
 
       /* We unlock the track objects so we do not move the whole Clip */
-      ges_track_object_set_locked (tmp->data, FALSE);
+      ges_track_element_set_locked (tmp->data, FALSE);
       set_properties (G_OBJECT (tmp->data), props_table);
 
       if (locked)
-        ges_track_object_set_locked (tmp->data, TRUE);
+        ges_track_element_set_locked (tmp->data, TRUE);
 
       type = track->type;
       g_object_get (tmp->data, "start", &start, "duration", &duration, NULL);
@@ -814,29 +819,29 @@ track_object_added_cb (GESClip * object,
   }
 
   if (has_effect) {
-    tck_objs = ges_clip_get_track_objects (object);
+    tck_objs = ges_clip_get_track_elements (object);
 
     /* FIXME make sure this is the way we want to handle that
-     * ie: set duration and start as the other trackobject
+     * ie: set duration and start as the other trackelement
      * and no let full control to the user. */
 
     for (tmp = tck_objs; tmp; tmp = tmp->next) {
       /* We set the effects start and duration */
-      track = ges_track_object_get_track (tmp->data);
+      track = ges_track_element_get_track (tmp->data);
 
       if (GES_IS_TRACK_PARSE_LAUNCH_EFFECT (tmp->data)
           && (type == track->type)) {
         /* We lock the track objects so we do not move the whole Clip */
-        ges_track_object_set_locked (tmp->data, FALSE);
+        ges_track_element_set_locked (tmp->data, FALSE);
         g_object_set (tmp->data, "start", start, "duration", duration, NULL);
         if (locked)
-          ges_track_object_set_locked (tmp->data, TRUE);
+          ges_track_element_set_locked (tmp->data, TRUE);
       }
     }
   }
 
   /* Disconnect the signal */
-  g_signal_handlers_disconnect_by_func (object, track_object_added_cb,
+  g_signal_handlers_disconnect_by_func (object, track_element_added_cb,
       props_table);
 }
 
@@ -853,12 +858,12 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
   GESUriClip *src = NULL;
   gint prio;
   gboolean a_avail = FALSE, v_avail = FALSE, video;
-  GHashTable *tckobj_table = priv->track_objects_table;
+  GHashTable *trackelement_table = priv->track_elements_table;
 
   for (tmp = reflist; tmp; tmp = tmp->next) {
 
     /* Get the layer */
-    props_table = g_hash_table_lookup (tckobj_table, (gchar *) tmp->data);
+    props_table = g_hash_table_lookup (trackelement_table, (gchar *) tmp->data);
     prio_str = (gchar *) g_hash_table_lookup (props_table, "priority");
     prio_array = g_strsplit (prio_str, ")", 0);
     prio = (gint) g_ascii_strtod (prio_array[1], NULL);
@@ -918,7 +923,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
         ges_timeline_layer_add_object (layer, GES_CLIP (src));
 
         g_signal_connect (src, "track-object-added",
-            G_CALLBACK (track_object_added_cb), props_table);
+            G_CALLBACK (track_element_added_cb), props_table);
 
         priv->sources_to_load = g_list_prepend (priv->sources_to_load, src);
       }
@@ -929,20 +934,20 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
 
       effect = ges_track_parse_launch_effect_new ((gchar *)
           g_hash_table_lookup (props_table, (gchar *) "effect_name"));
-      ges_track_object_set_track_type (GES_TRACK_OBJECT (effect),
+      ges_track_element_set_track_type (GES_TRACK_ELEMENT (effect),
           (video ? GES_TRACK_TYPE_VIDEO : GES_TRACK_TYPE_AUDIO));
       effect_table =
           g_hash_table_lookup (props_table, (gchar *) "effect_props");
 
-      ges_clip_add_track_object (GES_CLIP (src), GES_TRACK_OBJECT (effect));
+      ges_clip_add_track_element (GES_CLIP (src), GES_TRACK_ELEMENT (effect));
 
       if (!g_strcmp0 (active, (gchar *) "(bool)False"))
-        ges_track_object_set_active (GES_TRACK_OBJECT (effect), FALSE);
+        ges_track_element_set_active (GES_TRACK_ELEMENT (effect), FALSE);
 
       if (video)
-        ges_track_add_object (priv->trackv, GES_TRACK_OBJECT (effect));
+        ges_track_add_object (priv->trackv, GES_TRACK_ELEMENT (effect));
       else
-        ges_track_add_object (priv->tracka, GES_TRACK_OBJECT (effect));
+        ges_track_add_object (priv->tracka, GES_TRACK_ELEMENT (effect));
 
       /* Set effect properties */
       keys = g_hash_table_get_keys (effect_table);
@@ -959,11 +964,11 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
         if (g_strstr_len (prop_val, -1, "(GEnum)")) {
           gchar **val = g_strsplit (prop_val, ")", 2);
 
-          ges_track_object_set_child_properties (GES_TRACK_OBJECT (effect),
+          ges_track_element_set_child_properties (GES_TRACK_ELEMENT (effect),
               (gchar *) tmp_key->data, atoi (val[1]), NULL);
           g_strfreev (val);
 
-        } else if (ges_track_object_lookup_child (GES_TRACK_OBJECT (effect),
+        } else if (ges_track_element_lookup_child (GES_TRACK_ELEMENT (effect),
                 (gchar *) tmp->data, NULL, &spec)) {
           gchar *caps_str = g_strdup_printf ("structure1, property1=%s;",
               prop_val);
@@ -973,7 +978,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
           structure = gst_caps_get_structure (caps, 0);
           value = gst_structure_get_value (structure, "property1");
 
-          ges_track_object_set_child_property_by_pspec (GES_TRACK_OBJECT
+          ges_track_element_set_child_property_by_pspec (GES_TRACK_ELEMENT
               (effect), spec, (GValue *) value);
           gst_caps_unref (caps);
         }
@@ -1056,7 +1061,7 @@ load_pitivi_file_from_uri (GESFormatter * self,
     return FALSE;
   }
 
-  if (!parse_track_objects (self)) {
+  if (!parse_track_elements (self)) {
     GST_ERROR ("Couldn't find track objects markup in the xptv file");
     return FALSE;
   }
@@ -1102,8 +1107,8 @@ ges_pitivi_formatter_finalize (GObject * object)
   if (priv->layers_table != NULL)
     g_hash_table_destroy (priv->layers_table);
 
-  if (priv->track_objects_table != NULL) {
-    g_hash_table_destroy (priv->track_objects_table);
+  if (priv->track_elements_table != NULL) {
+    g_hash_table_destroy (priv->track_elements_table);
   }
 
   G_OBJECT_CLASS (ges_pitivi_formatter_parent_class)->finalize (object);
@@ -1142,7 +1147,7 @@ ges_pitivi_formatter_init (GESPitiviFormatter * self)
 
   priv = self->priv;
 
-  priv->track_objects_table =
+  priv->track_elements_table =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
       (GDestroyNotify) g_hash_table_destroy);
 

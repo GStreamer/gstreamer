@@ -43,7 +43,7 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-overlay-clip.xml"/>
     <xi:include href="xml/ges-base-effect-clip.xml"/>
     <xi:include href="xml/ges-track.xml"/>
-    <xi:include href="xml/ges-track-object.xml"/>
+    <xi:include href="xml/ges-track-element.xml"/>
     <xi:include href="xml/ges-track-source.xml"/>
     <xi:include href="xml/ges-track-effect.xml"/>
     <xi:include href="xml/ges-track-operation.xml"/>

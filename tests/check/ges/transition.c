@@ -28,7 +28,7 @@
 GST_START_TEST (test_transition_basic)
 {
   GESTransitionClip *tr1, *tr2;
-  GESTrackObject *trackobject;
+  GESTrackElement *trackelement;
   GESTrack *track;
 
   ges_init ();
@@ -45,15 +45,15 @@ GST_START_TEST (test_transition_basic)
   fail_unless (tr2->vtype == 1);
 
   /* Make sure track object is created and vtype is set */
-  trackobject = ges_clip_create_track_object (GES_CLIP (tr2), track->type);
-  ges_clip_add_track_object (GES_CLIP (tr2), trackobject);
+  trackelement = ges_clip_create_track_element (GES_CLIP (tr2), track->type);
+  ges_clip_add_track_element (GES_CLIP (tr2), trackelement);
 
-  fail_unless (trackobject != NULL);
+  fail_unless (trackelement != NULL);
   fail_unless (ges_track_video_transition_get_transition_type
-      (GES_TRACK_VIDEO_TRANSITION (trackobject)) == 1);
+      (GES_TRACK_VIDEO_TRANSITION (trackelement)) == 1);
 
-  fail_unless (ges_clip_release_track_object (GES_CLIP
-          (tr2), trackobject) == TRUE);
+  fail_unless (ges_clip_release_track_element (GES_CLIP
+          (tr2), trackelement) == TRUE);
 
   g_object_unref (track);
   g_object_unref (tr1);
@@ -65,7 +65,7 @@ GST_END_TEST;
 GST_START_TEST (test_transition_properties)
 {
   GESTrack *track;
-  GESTrackObject *trackobject;
+  GESTrackElement *trackelement;
   GESClip *object;
 
   ges_init ();
@@ -85,18 +85,18 @@ GST_START_TEST (test_transition_properties)
   assert_equals_uint64 (_DURATION (object), 51);
   assert_equals_uint64 (_INPOINT (object), 12);
 
-  trackobject = ges_clip_create_track_object (object, track->type);
-  ges_clip_add_track_object (object, trackobject);
-  fail_unless (trackobject != NULL);
-  fail_unless (ges_track_object_set_track (trackobject, track));
+  trackelement = ges_clip_create_track_element (object, track->type);
+  ges_clip_add_track_element (object, trackelement);
+  fail_unless (trackelement != NULL);
+  fail_unless (ges_track_element_set_track (trackelement, track));
 
-  /* Check that trackobject has the same properties */
-  assert_equals_uint64 (_START (trackobject), 42);
-  assert_equals_uint64 (_DURATION (trackobject), 51);
-  assert_equals_uint64 (_INPOINT (trackobject), 12);
+  /* Check that trackelement has the same properties */
+  assert_equals_uint64 (_START (trackelement), 42);
+  assert_equals_uint64 (_DURATION (trackelement), 51);
+  assert_equals_uint64 (_INPOINT (trackelement), 12);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 51, 12,
+  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
       51, 0, TRUE);
 
   /* Change more properties, see if they propagate */
@@ -105,13 +105,13 @@ GST_START_TEST (test_transition_properties)
   assert_equals_uint64 (_START (object), 420);
   assert_equals_uint64 (_DURATION (object), 510);
   assert_equals_uint64 (_INPOINT (object), 120);
-  assert_equals_uint64 (_START (trackobject), 420);
-  assert_equals_uint64 (_DURATION (trackobject), 510);
-  assert_equals_uint64 (_INPOINT (trackobject), 120);
+  assert_equals_uint64 (_START (trackelement), 420);
+  assert_equals_uint64 (_DURATION (trackelement), 510);
+  assert_equals_uint64 (_INPOINT (trackelement), 120);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
-      510, 0, TRUE);
+  gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
+      120, 510, 0, TRUE);
 
   /* test changing vtype */
   GST_DEBUG ("Setting to crossfade");
@@ -120,7 +120,7 @@ GST_START_TEST (test_transition_properties)
   assert_equals_int (GES_TRANSITION_CLIP (object)->vtype,
       GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   assert_equals_int (ges_track_video_transition_get_transition_type
-      (GES_TRACK_VIDEO_TRANSITION (trackobject)),
+      (GES_TRACK_VIDEO_TRANSITION (trackelement)),
       GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
 
   /* Check that changing from crossfade to anything else fails (it should
@@ -130,27 +130,27 @@ GST_START_TEST (test_transition_properties)
 
   assert_equals_int (GES_TRANSITION_CLIP (object)->vtype, 1);
   assert_equals_int (ges_track_video_transition_get_transition_type
-      (GES_TRACK_VIDEO_TRANSITION (trackobject)), 1);
+      (GES_TRACK_VIDEO_TRANSITION (trackelement)), 1);
 
   GST_DEBUG ("Releasing track object");
-  ges_clip_release_track_object (object, trackobject);
+  ges_clip_release_track_element (object, trackelement);
 
   g_object_set (object, "vtype", 1, NULL);
 
   GST_DEBUG ("creating track object");
-  trackobject = ges_clip_create_track_object (object, track->type);
-  ges_clip_add_track_object (object, trackobject);
-  fail_unless (trackobject != NULL);
-  fail_unless (ges_track_object_set_track (trackobject, track));
+  trackelement = ges_clip_create_track_element (object, track->type);
+  ges_clip_add_track_element (object, trackelement);
+  fail_unless (trackelement != NULL);
+  fail_unless (ges_track_element_set_track (trackelement, track));
 
   /* The new track object should have taken the previously set transition
    * type (in this case 1) */
   GST_DEBUG ("Setting to vtype:1");
   assert_equals_int (ges_track_video_transition_get_transition_type
-      (GES_TRACK_VIDEO_TRANSITION (trackobject)), 1);
+      (GES_TRACK_VIDEO_TRANSITION (trackelement)), 1);
   assert_equals_int (GES_TRANSITION_CLIP (object)->vtype, 1);
 
-  ges_clip_release_track_object (object, trackobject);
+  ges_clip_release_track_element (object, trackelement);
   g_object_unref (object);
   g_object_unref (track);
 }

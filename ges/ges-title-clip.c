@@ -29,7 +29,7 @@
 #include "ges-internal.h"
 #include "ges-title-clip.h"
 #include "ges-source-clip.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-track-title-source.h"
 #include <string.h>
 
@@ -68,13 +68,14 @@ enum
   PROP_YPOS,
 };
 
-static GESTrackObject
-    * ges_title_clip_create_track_object (GESClip * obj, GESTrackType type);
+static GESTrackElement
+    * ges_title_clip_create_track_element (GESClip * obj, GESTrackType type);
 
 static void
-ges_title_clip_track_object_added (GESClip * obj, GESTrackObject * tckobj);
-static void
-ges_title_clip_track_object_released (GESClip * obj, GESTrackObject * tckobj);
+ges_title_clip_track_element_added (GESClip * obj,
+    GESTrackElement * trackelement);
+static void ges_title_clip_track_element_released (GESClip * obj,
+    GESTrackElement * trackelement);
 
 static void
 ges_title_clip_get_property (GObject * object, guint property_id,
@@ -229,10 +230,10 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
       g_param_spec_boolean ("mute", "Mute", "Mute audio track",
           FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  timobj_class->create_track_object = ges_title_clip_create_track_object;
+  timobj_class->create_track_element = ges_title_clip_create_track_element;
   timobj_class->need_fill_track = FALSE;
-  timobj_class->track_object_added = ges_title_clip_track_object_added;
-  timobj_class->track_object_released = ges_title_clip_track_object_released;
+  timobj_class->track_element_added = ges_title_clip_track_element_added;
+  timobj_class->track_element_released = ges_title_clip_track_element_released;
 
   /**
    * GESTitleClip:color:
@@ -405,7 +406,7 @@ ges_title_clip_set_valignment (GESTitleClip * self, GESTextVAlign valign)
 void
 ges_title_clip_set_mute (GESTitleClip * self, gboolean mute)
 {
-  GList *tmp, *trackobjects;
+  GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
 
   GST_DEBUG_OBJECT (self, "mute:%d", mute);
@@ -413,17 +414,18 @@ ges_title_clip_set_mute (GESTitleClip * self, gboolean mute)
   self->priv->mute = mute;
 
   /* Go over tracked objects, and update 'active' status on all audio objects */
-  /* FIXME : We need a much less crack way to find the trackobject to change */
-  trackobjects = ges_clip_get_track_objects (object);
-  for (tmp = trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+  /* FIXME : We need a much less crack way to find the trackelement to change */
+  trackelements = ges_clip_get_track_elements (object);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
-    if (ges_track_object_get_track (trackobject)->type == GES_TRACK_TYPE_AUDIO)
-      ges_track_object_set_active (trackobject, !mute);
+    if (ges_track_element_get_track (trackelement)->type ==
+        GES_TRACK_TYPE_AUDIO)
+      ges_track_element_set_active (trackelement, !mute);
 
-    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackobjects);
+  g_list_free (trackelements);
 }
 
 /**
@@ -659,41 +661,43 @@ ges_title_clip_get_ypos (GESTitleClip * self)
 }
 
 static void
-ges_title_clip_track_object_released (GESClip * obj, GESTrackObject * tckobj)
+ges_title_clip_track_element_released (GESClip * obj,
+    GESTrackElement * trackelement)
 {
   GESTitleClipPrivate *priv = GES_TITLE_CLIP (obj)->priv;
 
-  /* If this is called, we should be sure the tckobj exists */
-  if (GES_IS_TRACK_TITLE_SOURCE (tckobj)) {
-    GST_DEBUG_OBJECT (obj, "%p released from %p", tckobj, obj);
-    priv->track_titles = g_slist_remove (priv->track_titles, tckobj);
-    g_object_unref (tckobj);
+  /* If this is called, we should be sure the trackelement exists */
+  if (GES_IS_TRACK_TITLE_SOURCE (trackelement)) {
+    GST_DEBUG_OBJECT (obj, "%p released from %p", trackelement, obj);
+    priv->track_titles = g_slist_remove (priv->track_titles, trackelement);
+    g_object_unref (trackelement);
   }
 }
 
 static void
-ges_title_clip_track_object_added (GESClip * obj, GESTrackObject * tckobj)
+ges_title_clip_track_element_added (GESClip * obj,
+    GESTrackElement * trackelement)
 {
   GESTitleClipPrivate *priv = GES_TITLE_CLIP (obj)->priv;
 
-  if (GES_IS_TRACK_TITLE_SOURCE (tckobj)) {
-    GST_DEBUG_OBJECT (obj, "%p added to %p", tckobj, obj);
+  if (GES_IS_TRACK_TITLE_SOURCE (trackelement)) {
+    GST_DEBUG_OBJECT (obj, "%p added to %p", trackelement, obj);
     priv->track_titles =
-        g_slist_prepend (priv->track_titles, g_object_ref (tckobj));
+        g_slist_prepend (priv->track_titles, g_object_ref (trackelement));
   }
 }
 
-static GESTrackObject *
-ges_title_clip_create_track_object (GESClip * obj, GESTrackType type)
+static GESTrackElement *
+ges_title_clip_create_track_element (GESClip * obj, GESTrackType type)
 {
 
   GESTitleClipPrivate *priv = GES_TITLE_CLIP (obj)->priv;
-  GESTrackObject *res = NULL;
+  GESTrackElement *res = NULL;
 
   GST_DEBUG_OBJECT (obj, "a GESTrackTitleSource");
 
   if (type == GES_TRACK_TYPE_VIDEO) {
-    res = (GESTrackObject *) ges_track_title_source_new ();
+    res = (GESTrackElement *) ges_track_title_source_new ();
     GST_DEBUG_OBJECT (obj, "text property");
     ges_track_title_source_set_text ((GESTrackTitleSource *) res, priv->text);
     ges_track_title_source_set_font_desc ((GESTrackTitleSource *) res,

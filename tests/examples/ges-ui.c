@@ -1071,15 +1071,15 @@ app_add_effect_on_selected_clips (App * app, const gchar * bin_desc,
     GESTrackType type)
 {
   GList *objects, *tmp;
-  GESTrackObject *effect = NULL;
+  GESTrackElement *effect = NULL;
 
   /* No crash if the video is playing */
   gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_PAUSED);
   objects = ges_timeline_layer_get_objects (app->layer);
 
   for (tmp = objects; tmp; tmp = tmp->next) {
-    effect = GES_TRACK_OBJECT (ges_track_parse_launch_effect_new (bin_desc));
-    ges_clip_add_track_object (GES_CLIP (tmp->data), effect);
+    effect = GES_TRACK_ELEMENT (ges_track_parse_launch_effect_new (bin_desc));
+    ges_clip_add_track_element (GES_CLIP (tmp->data), effect);
 
     if (type == GES_TRACK_TYPE_VIDEO)
       ges_track_add_object (app->video_track, effect);

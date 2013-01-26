@@ -86,8 +86,8 @@ typedef struct _GESEffectClipClass GESEffectClipClass;
 typedef struct _GESTrack GESTrack;
 typedef struct _GESTrackClass GESTrackClass;
 
-typedef struct _GESTrackObject GESTrackObject;
-typedef struct _GESTrackObjectClass GESTrackObjectClass;
+typedef struct _GESTrackElement GESTrackElement;
+typedef struct _GESTrackElementClass GESTrackElementClass;
 
 typedef struct _GESTrackSource GESTrackSource;
 typedef struct _GESTrackSourceClass GESTrackSourceClass;
@@ -149,8 +149,8 @@ typedef struct _GESAssetClipClass GESAssetClipClass;
 typedef struct _GESUriClipAsset GESUriClipAsset;
 typedef struct _GESUriClipAssetClass GESUriClipAssetClass;
 
-typedef struct _GESAssetTrackObject GESAssetTrackObject;
-typedef struct _GESAssetTrackObjectClass GESAssetTrackObjectClass;
+typedef struct _GESAssetTrackElement GESAssetTrackElement;
+typedef struct _GESAssetTrackElementClass GESAssetTrackElementClass;
 
 typedef struct _GESAssetTrackFileSource GESAssetTrackFileSource;
 typedef struct _GESAssetTrackFileSourceClass GESAssetTrackFileSourceClass;

@@ -198,7 +198,7 @@ _test_project (GESProject * project, GESTimeline * timeline)
   GESTrack *track;
   const GList *profiles;
   GstEncodingContainerProfile *profile;
-  GList *tracks, *tmp, *tmptckobj, *clips;
+  GList *tracks, *tmp, *tmptrackelement, *clips;
 
   fail_unless (GES_IS_TIMELINE (timeline));
   assert_equals_int (g_list_length (timeline->layers), 2);
@@ -222,40 +222,42 @@ _test_project (GESProject * project, GESTimeline * timeline)
   tracks = ges_timeline_get_tracks (timeline);
   assert_equals_int (g_list_length (tracks), 2);
   for (tmp = tracks; tmp; tmp = tmp->next) {
-    GList *trackobjs;
+    GList *trackelements;
     track = GES_TRACK (tmp->data);
 
-    trackobjs = ges_track_get_objects (track);
+    trackelements = ges_track_get_objects (track);
     GST_DEBUG_OBJECT (track, "Testing track");
     switch (track->type) {
       case GES_TRACK_TYPE_VIDEO:
-        assert_equals_int (g_list_length (trackobjs), 2);
-        for (tmptckobj = trackobjs; tmptckobj; tmptckobj = tmptckobj->next) {
-          GESTrackObject *tckobj = GES_TRACK_OBJECT (tmptckobj->data);
+        assert_equals_int (g_list_length (trackelements), 2);
+        for (tmptrackelement = trackelements; tmptrackelement;
+            tmptrackelement = tmptrackelement->next) {
+          GESTrackElement *trackelement =
+              GES_TRACK_ELEMENT (tmptrackelement->data);
 
-          if (GES_IS_TRACK_EFFECT (tckobj)) {
+          if (GES_IS_TRACK_EFFECT (trackelement)) {
             guint nb_scratch_lines;
 
-            ges_track_object_get_child_properties (tckobj, "scratch-lines",
-                &nb_scratch_lines, NULL);
+            ges_track_element_get_child_properties (trackelement,
+                "scratch-lines", &nb_scratch_lines, NULL);
             assert_equals_int (nb_scratch_lines, 12);
 
-            gnl_object_check (ges_track_object_get_gnlobject (tckobj),
+            gnl_object_check (ges_track_element_get_gnlobject (trackelement),
                 0, 1000000000, 0, 1000000000, 0, TRUE);
           } else {
-            gnl_object_check (ges_track_object_get_gnlobject (tckobj),
+            gnl_object_check (ges_track_element_get_gnlobject (trackelement),
                 0, 1000000000, 0, 1000000000, 1, TRUE);
           }
         }
         break;
       case GES_TRACK_TYPE_AUDIO:
-        assert_equals_int (g_list_length (trackobjs), 2);
+        assert_equals_int (g_list_length (trackelements), 2);
         break;
       default:
         g_assert (1);
     }
 
-    g_list_free_full (trackobjs, gst_object_unref);
+    g_list_free_full (trackelements, gst_object_unref);
 
   }
   g_list_free_full (tracks, gst_object_unref);

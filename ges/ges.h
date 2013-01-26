@@ -56,7 +56,7 @@
 #include <ges/ges-xml-formatter.h>
 
 #include <ges/ges-track.h>
-#include <ges/ges-track-object.h>
+#include <ges/ges-track-element.h>
 #include <ges/ges-track-source.h>
 #include <ges/ges-track-operation.h>
 

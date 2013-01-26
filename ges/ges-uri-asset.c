@@ -247,7 +247,7 @@ _create_track_file_source_asset (GESUriClipAsset * asset,
   priv_tckasset->uri = ges_asset_get_id (GES_ASSET (asset));
   priv_tckasset->sinfo = g_object_ref (sinfo);
   priv_tckasset->parent_asset = asset;
-  ges_asset_track_object_set_track_type (GES_ASSET_TRACK_OBJECT
+  ges_asset_track_element_set_track_type (GES_ASSET_TRACK_ELEMENT
       (tck_filesource_asset), type);
 
   priv->asset_trackfilesources = g_list_append (priv->asset_trackfilesources,
@@ -470,12 +470,12 @@ ges_uri_clip_asset_get_stream_assets (GESUriClipAsset * self)
  */
 
 G_DEFINE_TYPE (GESAssetTrackFileSource, ges_asset_track_filesource,
-    GES_TYPE_ASSET_TRACK_OBJECT);
+    GES_TYPE_ASSET_TRACK_ELEMENT);
 
 static GESExtractable *
 _extract (GESAsset * asset, GError ** error)
 {
-  GESTrackObject *tckobj;
+  GESTrackElement *trackelement;
   GESAssetTrackFileSourcePrivate *priv =
       GES_ASSET_TRACK_FILESOURCE (asset)->priv;
 
@@ -491,10 +491,11 @@ _extract (GESAsset * asset, GError ** error)
     return NULL;
   }
 
-  tckobj = GES_TRACK_OBJECT (ges_track_filesource_new (g_strdup (priv->uri)));
-  ges_track_object_set_track_type (tckobj, priv->type);
+  trackelement =
+      GES_TRACK_ELEMENT (ges_track_filesource_new (g_strdup (priv->uri)));
+  ges_track_element_set_track_type (trackelement, priv->type);
 
-  return GES_EXTRACTABLE (tckobj);
+  return GES_EXTRACTABLE (trackelement);
 }
 
 static void

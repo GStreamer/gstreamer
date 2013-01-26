@@ -24,11 +24,11 @@
  */
 
 #include "ges-internal.h"
-#include "ges-track-object.h"
+#include "ges-track-element.h"
 #include "ges-track-operation.h"
 
 G_DEFINE_ABSTRACT_TYPE (GESTrackOperation, ges_track_operation,
-    GES_TYPE_TRACK_OBJECT);
+    GES_TYPE_TRACK_ELEMENT);
 
 struct _GESTrackOperationPrivate
 {
@@ -39,7 +39,7 @@ struct _GESTrackOperationPrivate
 static void
 ges_track_operation_class_init (GESTrackOperationClass * klass)
 {
-  GESTrackObjectClass *track_class = GES_TRACK_OBJECT_CLASS (klass);
+  GESTrackElementClass *track_class = GES_TRACK_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTrackOperationPrivate));
 

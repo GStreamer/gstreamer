@@ -26,7 +26,7 @@ GST_START_TEST (test_text_properties_in_layer)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *a, *v;
-  GESTrackObject *trobj;
+  GESTrackElement *trobj;
   GESTestClip *source;
   gchar *text;
   gint halign, valign;
@@ -50,7 +50,7 @@ GST_START_TEST (test_text_properties_in_layer)
       (GESClip *) source, 0);
 
   trobj =
-      ges_clip_find_track_object (GES_CLIP (source), v,
+      ges_clip_find_track_element (GES_CLIP (source), v,
       GES_TYPE_TRACK_TEXT_OVERLAY);
 
   fail_unless (trobj != NULL);
