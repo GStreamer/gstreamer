@@ -62,7 +62,7 @@
 
 #include <ges/ges-track-filesource.h>
 #include <ges/ges-track-image-source.h>
-#include <ges/ges-track-video-test-source.h>
+#include <ges/ges-video-test-source.h>
 #include <ges/ges-audio-test-source.h>
 #include <ges/ges-track-title-source.h>
 #include <ges/ges-track-text-overlay.h>

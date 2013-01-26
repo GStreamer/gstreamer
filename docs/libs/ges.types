@@ -35,7 +35,7 @@ ges_track_text_overlay_get_type
 ges_track_title_source_get_type
 ges_track_transition_get_type
 %ges_track_type_get_type
-ges_track_video_test_source_get_type
+ges_video_test_source_get_type
 ges_track_video_transition_get_type
 ges_project_get_type
 %ges_video_test_pattern_get_type

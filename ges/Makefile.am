@@ -38,7 +38,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-track-transition.c			\
 	ges-track-audio-transition.c		\
 	ges-track-video-transition.c		\
-	ges-track-video-test-source.c		\
+	ges-video-test-source.c		\
 	ges-audio-test-source.c		\
 	ges-track-title-source.c		\
 	ges-track-text-overlay.c		\
@@ -94,7 +94,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-track-transition.h			\
 	ges-track-audio-transition.h		\
 	ges-track-video-transition.h		\
-	ges-track-video-test-source.h		\
+	ges-video-test-source.h		\
 	ges-audio-test-source.h		\
 	ges-track-title-source.h		\
 	ges-track-text-overlay.h		\

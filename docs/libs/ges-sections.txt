@@ -698,22 +698,22 @@ GES_TYPE_OVERLAY_TEXT_CLIP
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-video-test-source</FILE>
-<TITLE>GESTrackVideoTestSource</TITLE>
-GESTrackVideoTestSource
-ges_track_video_test_source_new
-ges_track_video_test_source_set_pattern
-ges_track_video_test_source_get_pattern
+<FILE>ges-video-test-source</FILE>
+<TITLE>GESVideoTestSource</TITLE>
+GESVideoTestSource
+ges_video_test_source_new
+ges_video_test_source_set_pattern
+ges_video_test_source_get_pattern
 <SUBSECTION Standard>
-GESTrackVideoTestSourceClass
-GESTrackVideoTestSourcePrivate
-ges_track_video_test_source_get_type
-GES_IS_TRACK_VIDEO_TEST_SOURCE
-GES_IS_TRACK_VIDEO_TEST_SOURCE_CLASS
-GES_TRACK_VIDEO_TEST_SOURCE
-GES_TRACK_VIDEO_TEST_SOURCE_CLASS
-GES_TRACK_VIDEO_TEST_SOURCE_GET_CLASS
-GES_TYPE_TRACK_VIDEO_TEST_SOURCE
+GESVideoTestSourceClass
+GESVideoTestSourcePrivate
+ges_video_test_source_get_type
+GES_IS_VIDEO_TEST_SOURCE
+GES_IS_VIDEO_TEST_SOURCE_CLASS
+GES_VIDEO_TEST_SOURCE
+GES_VIDEO_TEST_SOURCE_CLASS
+GES_VIDEO_TEST_SOURCE_GET_CLASS
+GES_TYPE_VIDEO_TEST_SOURCE
 </SECTION>
 
 <SECTION>

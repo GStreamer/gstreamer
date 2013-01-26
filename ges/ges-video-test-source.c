@@ -19,52 +19,51 @@
  */
 
 /**
- * SECTION:ges-track-video-test-source
+ * SECTION:ges-video-test-source
  * @short_description: produce solid colors and patterns
  */
 
 #include "ges-internal.h"
 #include "ges-track-element.h"
-#include "ges-track-video-test-source.h"
+#include "ges-video-test-source.h"
 
-G_DEFINE_TYPE (GESTrackVideoTestSource, ges_track_video_test_source,
+G_DEFINE_TYPE (GESVideoTestSource, ges_video_test_source,
     GES_TYPE_TRACK_SOURCE);
 
-struct _GESTrackVideoTestSourcePrivate
+struct _GESVideoTestSourcePrivate
 {
   GESVideoTestPattern pattern;
 };
 
-static GstElement *ges_track_video_test_source_create_element (GESTrackElement *
+static GstElement *ges_video_test_source_create_element (GESTrackElement *
     self);
 
 static void
-ges_track_video_test_source_class_init (GESTrackVideoTestSourceClass * klass)
+ges_video_test_source_class_init (GESVideoTestSourceClass * klass)
 {
   GESTrackElementClass *track_element_class = GES_TRACK_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTrackVideoTestSourcePrivate));
+  g_type_class_add_private (klass, sizeof (GESVideoTestSourcePrivate));
 
-  track_element_class->create_element =
-      ges_track_video_test_source_create_element;
+  track_element_class->create_element = ges_video_test_source_create_element;
 }
 
 static void
-ges_track_video_test_source_init (GESTrackVideoTestSource * self)
+ges_video_test_source_init (GESVideoTestSource * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRACK_VIDEO_TEST_SOURCE, GESTrackVideoTestSourcePrivate);
+      GES_TYPE_VIDEO_TEST_SOURCE, GESVideoTestSourcePrivate);
 
   self->priv->pattern = GES_VIDEO_TEST_PATTERN_BLACK;
 }
 
 static GstElement *
-ges_track_video_test_source_create_element (GESTrackElement * self)
+ges_video_test_source_create_element (GESTrackElement * self)
 {
   GstElement *ret;
   gint pattern;
 
-  pattern = ((GESTrackVideoTestSource *) self)->priv->pattern;
+  pattern = ((GESVideoTestSource *) self)->priv->pattern;
 
   ret = gst_element_factory_make ("videotestsrc", NULL);
   g_object_set (ret, "pattern", (gint) pattern, NULL);
@@ -73,14 +72,14 @@ ges_track_video_test_source_create_element (GESTrackElement * self)
 }
 
 /**
- * ges_track_video_test_source_set_pattern:
- * @self: a #GESTrackVideoTestSource
+ * ges_video_test_source_set_pattern:
+ * @self: a #GESVideoTestSource
  * @pattern: a #GESVideoTestPattern
  *
  * Sets the source to use the given @pattern.
  */
 void
-ges_track_video_test_source_set_pattern (GESTrackVideoTestSource
+ges_video_test_source_set_pattern (GESVideoTestSource
     * self, GESVideoTestPattern pattern)
 {
   GstElement *element =
@@ -93,7 +92,7 @@ ges_track_video_test_source_set_pattern (GESTrackVideoTestSource
 }
 
 /**
- * ges_track_video_test_source_get_pattern:
+ * ges_video_test_source_get_pattern:
  * @source: a #GESVideoTestPattern
  *
  * Get the video pattern used by the @source.
@@ -101,22 +100,22 @@ ges_track_video_test_source_set_pattern (GESTrackVideoTestSource
  * Returns: The video pattern used by the @source.
  */
 GESVideoTestPattern
-ges_track_video_test_source_get_pattern (GESTrackVideoTestSource * source)
+ges_video_test_source_get_pattern (GESVideoTestSource * source)
 {
   return source->priv->pattern;
 }
 
 /**
- * ges_track_video_test_source_new:
+ * ges_video_test_source_new:
  *
- * Creates a new #GESTrackVideoTestSource.
+ * Creates a new #GESVideoTestSource.
  *
- * Returns: The newly created #GESTrackVideoTestSource, or %NULL if there was an
+ * Returns: The newly created #GESVideoTestSource, or %NULL if there was an
  * error.
  */
-GESTrackVideoTestSource *
-ges_track_video_test_source_new (void)
+GESVideoTestSource *
+ges_video_test_source_new (void)
 {
-  return g_object_new (GES_TYPE_TRACK_VIDEO_TEST_SOURCE, "track-type",
+  return g_object_new (GES_TYPE_VIDEO_TEST_SOURCE, "track-type",
       GES_TRACK_TYPE_VIDEO, NULL);
 }

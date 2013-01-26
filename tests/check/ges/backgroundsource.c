@@ -136,11 +136,11 @@ GST_START_TEST (test_test_source_in_layer)
 
   trobj =
       ges_clip_find_track_element (GES_CLIP (source), v,
-      GES_TYPE_TRACK_VIDEO_TEST_SOURCE);
+      GES_TYPE_VIDEO_TEST_SOURCE);
 
-  g_assert (GES_IS_TRACK_VIDEO_TEST_SOURCE (trobj));
+  g_assert (GES_IS_VIDEO_TEST_SOURCE (trobj));
 
-  ptrn = (ges_track_video_test_source_get_pattern ((GESTrackVideoTestSource *)
+  ptrn = (ges_video_test_source_get_pattern ((GESVideoTestSource *)
           trobj));
   assert_equals_int (ptrn, GES_VIDEO_TEST_PATTERN_WHITE);
   g_object_unref (trobj);

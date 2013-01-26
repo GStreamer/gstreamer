@@ -33,7 +33,7 @@
 #include "ges-test-clip.h"
 #include "ges-source-clip.h"
 #include "ges-track-element.h"
-#include "ges-track-video-test-source.h"
+#include "ges-video-test-source.h"
 #include "ges-audio-test-source.h"
 #include <string.h>
 
@@ -225,9 +225,9 @@ ges_test_clip_set_vpattern (GESTestClip * self, GESVideoTestPattern vpattern)
   trackelements = ges_clip_get_track_elements (object);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
-    if (GES_IS_TRACK_VIDEO_TEST_SOURCE (trackelement))
-      ges_track_video_test_source_set_pattern (
-          (GESTrackVideoTestSource *) trackelement, vpattern);
+    if (GES_IS_VIDEO_TEST_SOURCE (trackelement))
+      ges_video_test_source_set_pattern (
+          (GESVideoTestSource *) trackelement, vpattern);
 
     g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
@@ -356,9 +356,9 @@ ges_test_clip_create_track_element (GESClip * obj, GESTrackType type)
       ges_track_type_name (type));
 
   if (type == GES_TRACK_TYPE_VIDEO) {
-    res = (GESTrackElement *) ges_track_video_test_source_new ();
-    ges_track_video_test_source_set_pattern (
-        (GESTrackVideoTestSource *) res, priv->vpattern);
+    res = (GESTrackElement *) ges_video_test_source_new ();
+    ges_video_test_source_set_pattern (
+        (GESVideoTestSource *) res, priv->vpattern);
   } else if (type == GES_TRACK_TYPE_AUDIO) {
     res = (GESTrackElement *) ges_audio_test_source_new ();
 
