@@ -550,7 +550,6 @@ gst_rtp_dtmf_src_add_start_event (GstRTPDTMFSrc * dtmfsrc, gint event_number,
   event->payload = g_slice_new0 (GstRTPDTMFPayload);
   event->payload->event = CLAMP (event_number, MIN_EVENT, MAX_EVENT);
   event->payload->volume = CLAMP (event_volume, MIN_VOLUME, MAX_VOLUME);
-  event->payload->duration = dtmfsrc->ptime * dtmfsrc->clock_rate / 1000;
 
   g_async_queue_push (dtmfsrc->event_queue, event);
 }
@@ -711,6 +710,8 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
           gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-processed", event);
           dtmfsrc->payload = event->payload;
+          dtmfsrc->payload->duration =
+              dtmfsrc->ptime * dtmfsrc->clock_rate / 1000;
           event->payload = NULL;
           break;
 
