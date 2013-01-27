@@ -260,7 +260,9 @@ if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = Gst-@GST_API_VERSION@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstreamer_@GST_API_VERSION@include_HEADERS))
+gir_headers+=$(patsubst %,$(builddir)/%, $(built_header_make))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstreamer_@GST_API_VERSION@_la_SOURCES))
+gir_sources+=$(patsubst %,$(builddir)/%, $(built_source_make))
 
 Gst-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstreamer-@GST_API_VERSION@.la
 	$(AM_V_GEN)GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
