@@ -279,7 +279,7 @@ main (gint argc, gchar * argv[])
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   /* add a timeout to cycle between the formats */
-  g_timeout_add (1000, (GSourceFunc) do_switch, pipeline);
+  g_timeout_add_seconds (1, (GSourceFunc) do_switch, pipeline);
 
   /* now run */
   g_main_loop_run (loop);

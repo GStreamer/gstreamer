@@ -131,7 +131,7 @@ main (gint argc, gchar ** argv)
   gst_object_unref (bus);
 
   /* add timeout for queries */
-  g_timeout_add (1000, (GSourceFunc) run_queries, (gpointer) bin);
+  g_timeout_add_seconds (1, (GSourceFunc) run_queries, (gpointer) bin);
 
   /* run the show */
   if (gst_element_set_state (bin,

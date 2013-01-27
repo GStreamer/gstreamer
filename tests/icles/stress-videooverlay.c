@@ -156,7 +156,7 @@ create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
   g_timeout_add (50, (GSourceFunc) resize_window, pipeline);
   g_timeout_add (50, (GSourceFunc) move_window, pipeline);
   g_timeout_add (100, (GSourceFunc) cycle_window, ov);
-  g_timeout_add (2000, (GSourceFunc) toggle_events, ov);
+  g_timeout_add_seconds (2, (GSourceFunc) toggle_events, ov);
 
   gst_message_unref (message);
   return GST_BUS_DROP;
@@ -233,8 +233,8 @@ main (int argc, char **argv)
 
   /* We want to get out after */
   //g_timeout_add (500000, (GSourceFunc) terminate_playback, pipeline);
-  g_timeout_add (10000, (GSourceFunc) pause_playback, pipeline);
-  g_timeout_add (20000, (GSourceFunc) start_playback, pipeline);
+  g_timeout_add_seconds (10, (GSourceFunc) pause_playback, pipeline);
+  g_timeout_add_seconds (20, (GSourceFunc) start_playback, pipeline);
 
   g_main_loop_run (loop);
 

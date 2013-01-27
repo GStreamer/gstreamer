@@ -1,6 +1,6 @@
 #include <gst/gst.h>
 
-#define SWITCH_TIMEOUT 1000
+#define SWITCH_TIMEOUT 1
 #define NUM_VIDEO_BUFFERS 500
 
 static GMainLoop *loop;
@@ -151,7 +151,7 @@ main (gint argc, gchar * argv[])
   }
 
   /* add switch callback */
-  g_timeout_add (SWITCH_TIMEOUT, switch_cb, osel);
+  g_timeout_add_seconds (SWITCH_TIMEOUT, switch_cb, osel);
 
   /* change to playing */
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));

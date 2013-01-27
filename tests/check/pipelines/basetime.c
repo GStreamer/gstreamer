@@ -97,7 +97,7 @@ GST_START_TEST (test_basetime_calculation)
 
   /* Run main pipeline first */
   gst_element_set_state (p1, GST_STATE_PLAYING);
-  g_timeout_add (2 * 1000, break_mainloop, loop);
+  g_timeout_add_seconds (2, break_mainloop, loop);
   g_main_loop_run (loop);
 
   /* Now activate the audio pipeline */
@@ -111,7 +111,7 @@ GST_START_TEST (test_basetime_calculation)
   /* At this point a new clock is selected */
   gst_element_set_state (p1, GST_STATE_PLAYING);
 
-  g_timeout_add (2 * 1000, break_mainloop, loop);
+  g_timeout_add_seconds (2, break_mainloop, loop);
   g_main_loop_run (loop);
 
   gst_object_unref (pad);
