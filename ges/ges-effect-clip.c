@@ -22,8 +22,6 @@
  * @short_description: An effect created by parse-launch style bin descriptions
  * in a #GESTimelineLayer
  *
- * Should be used mainly for testing purposes.
- *
  * The effect will be applied on the sources that have lower priorities
  * (higher number) between the inpoint and the end of it.
  *

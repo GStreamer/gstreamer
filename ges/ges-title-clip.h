@@ -118,7 +118,7 @@ const guint32
 ges_title_clip_get_color (GESTitleClip * self);
 
 const guint32
-ges_title_clip_get_background (GESTitleClip * self);
+ges_title_clip_get_background_color (GESTitleClip * self);
 
 const gdouble
 ges_title_clip_get_xpos (GESTitleClip * self);
