@@ -50,8 +50,7 @@ GST_START_TEST (test_text_properties_in_layer)
       (GESClip *) source, 0);
 
   trobj =
-      ges_clip_find_track_element (GES_CLIP (source), v,
-      GES_TYPE_TRACK_TEXT_OVERLAY);
+      ges_clip_find_track_element (GES_CLIP (source), v, GES_TYPE_TEXT_OVERLAY);
 
   fail_unless (trobj != NULL);
   assert_equals_int (trobj->active, FALSE);
@@ -71,7 +70,7 @@ GST_START_TEST (test_text_properties_in_layer)
   g_free (text);
 
   assert_equals_string ("sans 72",
-      ges_track_text_overlay_get_font_desc (GES_TRACK_TEXT_OVERLAY (trobj)));
+      ges_text_overlay_get_font_desc (GES_TEXT_OVERLAY (trobj)));
 
   g_object_set (source, "text", (gchar *) NULL, NULL);
   assert_equals_int (trobj->active, FALSE);
@@ -83,10 +82,8 @@ GST_START_TEST (test_text_properties_in_layer)
   assert_equals_int (halign, GES_TEXT_HALIGN_LEFT);
   assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
 
-  halign =
-      ges_track_text_overlay_get_halignment (GES_TRACK_TEXT_OVERLAY (trobj));
-  valign =
-      ges_track_text_overlay_get_valignment (GES_TRACK_TEXT_OVERLAY (trobj));
+  halign = ges_text_overlay_get_halignment (GES_TEXT_OVERLAY (trobj));
+  valign = ges_text_overlay_get_valignment (GES_TEXT_OVERLAY (trobj));
   assert_equals_int (halign, GES_TEXT_HALIGN_LEFT);
   assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
 

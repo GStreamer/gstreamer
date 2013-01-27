@@ -28,7 +28,7 @@
 #include "ges-internal.h"
 #include "ges-text-overlay-clip.h"
 #include "ges-track-element.h"
-#include "ges-track-text-overlay.h"
+#include "ges-text-overlay.h"
 #include <string.h>
 
 G_DEFINE_TYPE (GESTextOverlayClip, ges_overlay_text_clip,
@@ -282,7 +282,7 @@ ges_overlay_text_clip_set_text (GESTextOverlayClip * self, const gchar * text)
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_VIDEO)
-      ges_track_text_overlay_set_text (GES_TRACK_TEXT_OVERLAY (trackelement),
+      ges_text_overlay_set_text (GES_TEXT_OVERLAY (trackelement),
           self->priv->text);
 
     g_object_unref (GES_TRACK_ELEMENT (tmp->data));
@@ -318,7 +318,7 @@ ges_overlay_text_clip_set_font_desc (GESTextOverlayClip * self,
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_VIDEO)
-      ges_track_text_overlay_set_font_desc (GES_TRACK_TEXT_OVERLAY
+      ges_text_overlay_set_font_desc (GES_TEXT_OVERLAY
           (trackelement), self->priv->font_desc);
 
     g_object_unref (GES_TRACK_ELEMENT (tmp->data));
@@ -352,7 +352,7 @@ ges_overlay_text_clip_set_halign (GESTextOverlayClip * self,
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_VIDEO)
-      ges_track_text_overlay_set_halignment (GES_TRACK_TEXT_OVERLAY
+      ges_text_overlay_set_halignment (GES_TEXT_OVERLAY
           (trackelement), self->priv->halign);
 
     g_object_unref (GES_TRACK_ELEMENT (tmp->data));
@@ -386,7 +386,7 @@ ges_overlay_text_clip_set_valign (GESTextOverlayClip * self,
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_VIDEO)
-      ges_track_text_overlay_set_valignment (GES_TRACK_TEXT_OVERLAY
+      ges_text_overlay_set_valignment (GES_TEXT_OVERLAY
           (trackelement), self->priv->valign);
 
     g_object_unref (GES_TRACK_ELEMENT (tmp->data));
@@ -420,7 +420,7 @@ ges_overlay_text_clip_set_color (GESTextOverlayClip * self, guint32 color)
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_VIDEO)
-      ges_track_text_overlay_set_color (GES_TRACK_TEXT_OVERLAY (trackelement),
+      ges_text_overlay_set_color (GES_TEXT_OVERLAY (trackelement),
           self->priv->color);
 
     g_object_unref (GES_TRACK_ELEMENT (tmp->data));
@@ -453,7 +453,7 @@ ges_overlay_text_clip_set_xpos (GESTextOverlayClip * self, gdouble position)
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_VIDEO)
-      ges_track_text_overlay_set_xpos (GES_TRACK_TEXT_OVERLAY (trackelement),
+      ges_text_overlay_set_xpos (GES_TEXT_OVERLAY (trackelement),
           self->priv->xpos);
 
     g_object_unref (GES_TRACK_ELEMENT (tmp->data));
@@ -486,7 +486,7 @@ ges_overlay_text_clip_set_ypos (GESTextOverlayClip * self, gdouble position)
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_VIDEO)
-      ges_track_text_overlay_set_ypos (GES_TRACK_TEXT_OVERLAY (trackelement),
+      ges_text_overlay_set_ypos (GES_TEXT_OVERLAY (trackelement),
           self->priv->ypos);
 
     g_object_unref (GES_TRACK_ELEMENT (tmp->data));
@@ -612,18 +612,15 @@ ges_overlay_text_clip_create_track_element (GESClip * obj, GESTrackType type)
   GST_DEBUG ("Creating a GESTrackOverlay");
 
   if (type == GES_TRACK_TYPE_VIDEO) {
-    res = (GESTrackElement *) ges_track_text_overlay_new ();
+    res = (GESTrackElement *) ges_text_overlay_new ();
     GST_DEBUG ("Setting text property");
-    ges_track_text_overlay_set_text ((GESTrackTextOverlay *) res, priv->text);
-    ges_track_text_overlay_set_font_desc ((GESTrackTextOverlay *) res,
-        priv->font_desc);
-    ges_track_text_overlay_set_halignment ((GESTrackTextOverlay *) res,
-        priv->halign);
-    ges_track_text_overlay_set_valignment ((GESTrackTextOverlay *) res,
-        priv->valign);
-    ges_track_text_overlay_set_color ((GESTrackTextOverlay *) res, priv->color);
-    ges_track_text_overlay_set_xpos ((GESTrackTextOverlay *) res, priv->xpos);
-    ges_track_text_overlay_set_ypos ((GESTrackTextOverlay *) res, priv->ypos);
+    ges_text_overlay_set_text ((GESTextOverlay *) res, priv->text);
+    ges_text_overlay_set_font_desc ((GESTextOverlay *) res, priv->font_desc);
+    ges_text_overlay_set_halignment ((GESTextOverlay *) res, priv->halign);
+    ges_text_overlay_set_valignment ((GESTextOverlay *) res, priv->valign);
+    ges_text_overlay_set_color ((GESTextOverlay *) res, priv->color);
+    ges_text_overlay_set_xpos ((GESTextOverlay *) res, priv->xpos);
+    ges_text_overlay_set_ypos ((GESTextOverlay *) res, priv->ypos);
   }
 
   return res;

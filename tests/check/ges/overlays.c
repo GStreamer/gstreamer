@@ -137,7 +137,7 @@ GST_START_TEST (test_overlay_in_layer)
   g_free (text);
 
   assert_equals_string ("sans 72",
-      ges_track_text_overlay_get_font_desc (GES_TRACK_TEXT_OVERLAY (trobj)));
+      ges_text_overlay_get_font_desc (GES_TEXT_OVERLAY (trobj)));
 
   /* test halign and valign */
   g_object_set (source, "halignment", (gint)
@@ -146,10 +146,8 @@ GST_START_TEST (test_overlay_in_layer)
   assert_equals_int (halign, GES_TEXT_HALIGN_LEFT);
   assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
 
-  halign =
-      ges_track_text_overlay_get_halignment (GES_TRACK_TEXT_OVERLAY (trobj));
-  valign =
-      ges_track_text_overlay_get_valignment (GES_TRACK_TEXT_OVERLAY (trobj));
+  halign = ges_text_overlay_get_halignment (GES_TEXT_OVERLAY (trobj));
+  valign = ges_text_overlay_get_valignment (GES_TEXT_OVERLAY (trobj));
   assert_equals_int (halign, GES_TEXT_HALIGN_LEFT);
   assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
 
@@ -158,7 +156,7 @@ GST_START_TEST (test_overlay_in_layer)
   g_object_get (source, "color", &color, NULL);
   assert_equals_int (color, 2147483647);
 
-  color = ges_track_text_overlay_get_color (GES_TRACK_TEXT_OVERLAY (trobj));
+  color = ges_text_overlay_get_color (GES_TEXT_OVERLAY (trobj));
   assert_equals_int (color, 2147483647);
 
   /* test xpos */
@@ -166,7 +164,7 @@ GST_START_TEST (test_overlay_in_layer)
   g_object_get (source, "xpos", &xpos, NULL);
   assert_equals_float (xpos, 0.5);
 
-  xpos = ges_track_text_overlay_get_xpos (GES_TRACK_TEXT_OVERLAY (trobj));
+  xpos = ges_text_overlay_get_xpos (GES_TEXT_OVERLAY (trobj));
   assert_equals_float (xpos, 0.5);
 
   /* test ypos */
@@ -174,7 +172,7 @@ GST_START_TEST (test_overlay_in_layer)
   g_object_get (source, "ypos", &ypos, NULL);
   assert_equals_float (ypos, 0.33);
 
-  ypos = ges_track_text_overlay_get_ypos (GES_TRACK_TEXT_OVERLAY (trobj));
+  ypos = ges_text_overlay_get_ypos (GES_TEXT_OVERLAY (trobj));
   assert_equals_float (ypos, 0.33);
 
   GST_DEBUG ("removing the source");

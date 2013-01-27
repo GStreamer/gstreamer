@@ -67,7 +67,7 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-title-source.xml"/>
     <xi:include href="xml/ges-audio-test-source.xml"/>
     <xi:include href="xml/ges-video-test-source.xml"/>
-    <xi:include href="xml/ges-track-text-overlay.xml"/>
+    <xi:include href="xml/ges-text-overlay.xml"/>
     <xi:include href="xml/ges-track-transition.xml"/>
     <xi:include href="xml/ges-track-video-transition.xml"/>
     <xi:include href="xml/ges-track-audio-transition.xml"/>

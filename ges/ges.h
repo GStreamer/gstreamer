@@ -65,7 +65,7 @@
 #include <ges/ges-video-test-source.h>
 #include <ges/ges-audio-test-source.h>
 #include <ges/ges-title-source.h>
-#include <ges/ges-track-text-overlay.h>
+#include <ges/ges-text-overlay.h>
 #include <ges/ges-track-transition.h>
 #include <ges/ges-track-video-transition.h>
 #include <ges/ges-track-audio-transition.h>

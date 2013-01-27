@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-track-text-overlay
+ * SECTION:ges-text-overlay
  * @short_description: render text onto another video stream in a
  * #GESTimelineLayer
  *
@@ -28,12 +28,11 @@
 #include "ges-internal.h"
 #include "ges-track-element.h"
 #include "ges-title-source.h"
-#include "ges-track-text-overlay.h"
+#include "ges-text-overlay.h"
 
-G_DEFINE_TYPE (GESTrackTextOverlay, ges_track_text_overlay,
-    GES_TYPE_TRACK_OPERATION);
+G_DEFINE_TYPE (GESTextOverlay, ges_text_overlay, GES_TYPE_TRACK_OPERATION);
 
-struct _GESTrackTextOverlayPrivate
+struct _GESTextOverlayPrivate
 {
   gchar *text;
   gchar *font_desc;
@@ -50,40 +49,39 @@ enum
   PROP_0,
 };
 
-static void ges_track_text_overlay_dispose (GObject * object);
+static void ges_text_overlay_dispose (GObject * object);
 
-static void ges_track_text_overlay_finalize (GObject * object);
+static void ges_text_overlay_finalize (GObject * object);
 
-static void ges_track_text_overlay_get_property (GObject * object, guint
+static void ges_text_overlay_get_property (GObject * object, guint
     property_id, GValue * value, GParamSpec * pspec);
 
-static void ges_track_text_overlay_set_property (GObject * object, guint
+static void ges_text_overlay_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_text_overlay_create_element (GESTrackElement
-    * self);
+static GstElement *ges_text_overlay_create_element (GESTrackElement * self);
 
 static void
-ges_track_text_overlay_class_init (GESTrackTextOverlayClass * klass)
+ges_text_overlay_class_init (GESTextOverlayClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTrackElementClass *bg_class = GES_TRACK_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTrackTextOverlayPrivate));
+  g_type_class_add_private (klass, sizeof (GESTextOverlayPrivate));
 
-  object_class->get_property = ges_track_text_overlay_get_property;
-  object_class->set_property = ges_track_text_overlay_set_property;
-  object_class->dispose = ges_track_text_overlay_dispose;
-  object_class->finalize = ges_track_text_overlay_finalize;
+  object_class->get_property = ges_text_overlay_get_property;
+  object_class->set_property = ges_text_overlay_set_property;
+  object_class->dispose = ges_text_overlay_dispose;
+  object_class->finalize = ges_text_overlay_finalize;
 
-  bg_class->create_element = ges_track_text_overlay_create_element;
+  bg_class->create_element = ges_text_overlay_create_element;
 }
 
 static void
-ges_track_text_overlay_init (GESTrackTextOverlay * self)
+ges_text_overlay_init (GESTextOverlay * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRACK_TEXT_OVERLAY, GESTrackTextOverlayPrivate);
+      GES_TYPE_TEXT_OVERLAY, GESTextOverlayPrivate);
 
   self->priv->text = NULL;
   self->priv->font_desc = NULL;
@@ -96,9 +94,9 @@ ges_track_text_overlay_init (GESTrackTextOverlay * self)
 }
 
 static void
-ges_track_text_overlay_dispose (GObject * object)
+ges_text_overlay_dispose (GObject * object)
 {
-  GESTrackTextOverlay *self = GES_TRACK_TEXT_OVERLAY (object);
+  GESTextOverlay *self = GES_TEXT_OVERLAY (object);
   if (self->priv->text) {
     g_free (self->priv->text);
   }
@@ -112,17 +110,17 @@ ges_track_text_overlay_dispose (GObject * object)
     self->priv->text_el = NULL;
   }
 
-  G_OBJECT_CLASS (ges_track_text_overlay_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_text_overlay_parent_class)->dispose (object);
 }
 
 static void
-ges_track_text_overlay_finalize (GObject * object)
+ges_text_overlay_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (ges_track_text_overlay_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ges_text_overlay_parent_class)->finalize (object);
 }
 
 static void
-ges_track_text_overlay_get_property (GObject * object,
+ges_text_overlay_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -132,7 +130,7 @@ ges_track_text_overlay_get_property (GObject * object,
 }
 
 static void
-ges_track_text_overlay_set_property (GObject * object,
+ges_text_overlay_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -142,12 +140,12 @@ ges_track_text_overlay_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_text_overlay_create_element (GESTrackElement * object)
+ges_text_overlay_create_element (GESTrackElement * object)
 {
   GstElement *ret, *text, *iconv, *oconv;
   GstPad *src_target, *sink_target;
   GstPad *src, *sink;
-  GESTrackTextOverlay *self = GES_TRACK_TEXT_OVERLAY (object);
+  GESTextOverlay *self = GES_TEXT_OVERLAY (object);
 
   text = gst_element_factory_make ("textoverlay", NULL);
   iconv = gst_element_factory_make ("videoconvert", NULL);
@@ -185,8 +183,8 @@ ges_track_text_overlay_create_element (GESTrackElement * object)
 }
 
 /**
- * ges_track_text_overlay_set_text:
- * @self: the #GESTrackTextOverlay* to set text on
+ * ges_text_overlay_set_text:
+ * @self: the #GESTextOverlay* to set text on
  * @text: the text to render. an internal copy of this text will be
  * made.
  *
@@ -194,7 +192,7 @@ ges_track_text_overlay_create_element (GESTrackElement * object)
  *
  */
 void
-ges_track_text_overlay_set_text (GESTrackTextOverlay * self, const gchar * text)
+ges_text_overlay_set_text (GESTextOverlay * self, const gchar * text)
 {
   GST_DEBUG ("self:%p, text:%s", self, text);
 
@@ -207,8 +205,8 @@ ges_track_text_overlay_set_text (GESTrackTextOverlay * self, const gchar * text)
 }
 
 /**
- * ges_track_text_overlay_set_font_desc:
- * @self: the #GESTrackTextOverlay
+ * ges_text_overlay_set_font_desc:
+ * @self: the #GESTextOverlay
  * @font_desc: the pango font description
  *
  * Sets the pango font description of the text this track object
@@ -216,8 +214,7 @@ ges_track_text_overlay_set_text (GESTrackTextOverlay * self, const gchar * text)
  *
  */
 void
-ges_track_text_overlay_set_font_desc (GESTrackTextOverlay * self,
-    const gchar * font_desc)
+ges_text_overlay_set_font_desc (GESTextOverlay * self, const gchar * font_desc)
 {
   GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
 
@@ -231,8 +228,8 @@ ges_track_text_overlay_set_font_desc (GESTrackTextOverlay * self,
 }
 
 /**
- * ges_track_text_overlay_set_valignment:
- * @self: the #GESTrackTextOverlay* to set text on
+ * ges_text_overlay_set_valignment:
+ * @self: the #GESTextOverlay* to set text on
  * @valign: The #GESTextVAlign defining the vertical alignment
  * of the text render by @self.
  *
@@ -240,8 +237,7 @@ ges_track_text_overlay_set_font_desc (GESTrackTextOverlay * self,
  *
  */
 void
-ges_track_text_overlay_set_valignment (GESTrackTextOverlay * self,
-    GESTextVAlign valign)
+ges_text_overlay_set_valignment (GESTextOverlay * self, GESTextVAlign valign)
 {
   GST_DEBUG ("self:%p, halign:%d", self, valign);
 
@@ -251,8 +247,8 @@ ges_track_text_overlay_set_valignment (GESTrackTextOverlay * self,
 }
 
 /**
- * ges_track_text_overlay_set_halignment:
- * @self: the #GESTrackTextOverlay* to set text on
+ * ges_text_overlay_set_halignment:
+ * @self: the #GESTextOverlay* to set text on
  * @halign: The #GESTextHAlign defining the horizontal alignment
  * of the text render by @self.
  *
@@ -260,8 +256,7 @@ ges_track_text_overlay_set_valignment (GESTrackTextOverlay * self,
  *
  */
 void
-ges_track_text_overlay_set_halignment (GESTrackTextOverlay * self,
-    GESTextHAlign halign)
+ges_text_overlay_set_halignment (GESTextOverlay * self, GESTextHAlign halign)
 {
   GST_DEBUG ("self:%p, halign:%d", self, halign);
 
@@ -271,8 +266,8 @@ ges_track_text_overlay_set_halignment (GESTrackTextOverlay * self,
 }
 
 /**
- * ges_track_text_overlay_set_color:
- * @self: the #GESTrackTextOverlay* to set
+ * ges_text_overlay_set_color:
+ * @self: the #GESTextOverlay* to set
  * @color: The color @self is being set to
  *
  * Sets the color of the text.
@@ -280,7 +275,7 @@ ges_track_text_overlay_set_halignment (GESTrackTextOverlay * self,
  * Since: 0.10.2
  */
 void
-ges_track_text_overlay_set_color (GESTrackTextOverlay * self, guint32 color)
+ges_text_overlay_set_color (GESTextOverlay * self, guint32 color)
 {
   GST_DEBUG ("self:%p, color:%d", self, color);
 
@@ -290,8 +285,8 @@ ges_track_text_overlay_set_color (GESTrackTextOverlay * self, guint32 color)
 }
 
 /**
- * ges_track_text_overlay_set_xpos:
- * @self: the #GESTrackTextOverlay* to set
+ * ges_text_overlay_set_xpos:
+ * @self: the #GESTextOverlay* to set
  * @position: The horizontal position @self is being set to
  *
  * Sets the horizontal position of the text.
@@ -299,7 +294,7 @@ ges_track_text_overlay_set_color (GESTrackTextOverlay * self, guint32 color)
  * Since: 0.10.2
  */
 void
-ges_track_text_overlay_set_xpos (GESTrackTextOverlay * self, gdouble position)
+ges_text_overlay_set_xpos (GESTextOverlay * self, gdouble position)
 {
   GST_DEBUG ("self:%p, xpos:%f", self, position);
 
@@ -309,8 +304,8 @@ ges_track_text_overlay_set_xpos (GESTrackTextOverlay * self, gdouble position)
 }
 
 /**
- * ges_track_text_overlay_set_ypos:
- * @self: the #GESTrackTextOverlay* to set
+ * ges_text_overlay_set_ypos:
+ * @self: the #GESTextOverlay* to set
  * @position: The vertical position @self is being set to
  *
  * Sets the vertical position of the text.
@@ -318,7 +313,7 @@ ges_track_text_overlay_set_xpos (GESTrackTextOverlay * self, gdouble position)
  * Since: 0.10.2
  */
 void
-ges_track_text_overlay_set_ypos (GESTrackTextOverlay * self, gdouble position)
+ges_text_overlay_set_ypos (GESTextOverlay * self, gdouble position)
 {
   GST_DEBUG ("self:%p, ypos:%f", self, position);
 
@@ -328,64 +323,64 @@ ges_track_text_overlay_set_ypos (GESTrackTextOverlay * self, gdouble position)
 }
 
 /**
- * ges_track_text_overlay_get_text:
- * @self: a GESTrackTextOverlay
+ * ges_text_overlay_get_text:
+ * @self: a GESTextOverlay
  *
  * Get the text currently set on @source.
  *
  * Returns: The text currently set on @source.
  */
 const gchar *
-ges_track_text_overlay_get_text (GESTrackTextOverlay * self)
+ges_text_overlay_get_text (GESTextOverlay * self)
 {
   return self->priv->text;
 }
 
 /**
- * ges_track_text_overlay_get_font_desc:
- * @self: a GESTrackTextOverlay
+ * ges_text_overlay_get_font_desc:
+ * @self: a GESTextOverlay
  *
  * Get the pango font description currently set on @source.
  *
  * Returns: The pango font description currently set on @source.
  */
 const char *
-ges_track_text_overlay_get_font_desc (GESTrackTextOverlay * self)
+ges_text_overlay_get_font_desc (GESTextOverlay * self)
 {
   return self->priv->font_desc;
 }
 
 /**
- * ges_track_text_overlay_get_halignment:
- * @self: a GESTrackTextOverlay
+ * ges_text_overlay_get_halignment:
+ * @self: a GESTextOverlay
  *
  * Get the horizontal aligment used by @source.
  *
  * Returns: The horizontal aligment used by @source.
  */
 GESTextHAlign
-ges_track_text_overlay_get_halignment (GESTrackTextOverlay * self)
+ges_text_overlay_get_halignment (GESTextOverlay * self)
 {
   return self->priv->halign;
 }
 
 /**
- * ges_track_text_overlay_get_valignment:
- * @self: a GESTrackTextOverlay
+ * ges_text_overlay_get_valignment:
+ * @self: a GESTextOverlay
  *
  * Get the vertical aligment used by @source.
  *
  * Returns: The vertical aligment used by @source.
  */
 GESTextVAlign
-ges_track_text_overlay_get_valignment (GESTrackTextOverlay * self)
+ges_text_overlay_get_valignment (GESTextOverlay * self)
 {
   return self->priv->valign;
 }
 
 /**
- * ges_track_text_overlay_get_color:
- * @self: a GESTrackTextOverlay
+ * ges_text_overlay_get_color:
+ * @self: a GESTextOverlay
  *
  * Get the color used by @source.
  *
@@ -394,14 +389,14 @@ ges_track_text_overlay_get_valignment (GESTrackTextOverlay * self)
  * Since: 0.10.2
  */
 const guint32
-ges_track_text_overlay_get_color (GESTrackTextOverlay * self)
+ges_text_overlay_get_color (GESTextOverlay * self)
 {
   return self->priv->color;
 }
 
 /**
- * ges_track_text_overlay_get_xpos:
- * @self: a GESTrackTextOverlay
+ * ges_text_overlay_get_xpos:
+ * @self: a GESTextOverlay
  *
  * Get the horizontal position used by @source.
  *
@@ -410,14 +405,14 @@ ges_track_text_overlay_get_color (GESTrackTextOverlay * self)
  * Since: 0.10.2
  */
 const gdouble
-ges_track_text_overlay_get_xpos (GESTrackTextOverlay * self)
+ges_text_overlay_get_xpos (GESTextOverlay * self)
 {
   return self->priv->xpos;
 }
 
 /**
- * ges_track_text_overlay_get_ypos:
- * @self: a GESTrackTextOverlay
+ * ges_text_overlay_get_ypos:
+ * @self: a GESTextOverlay
  *
  * Get the vertical position used by @source.
  *
@@ -426,22 +421,22 @@ ges_track_text_overlay_get_xpos (GESTrackTextOverlay * self)
  * Since: 0.10.2
  */
 const gdouble
-ges_track_text_overlay_get_ypos (GESTrackTextOverlay * self)
+ges_text_overlay_get_ypos (GESTextOverlay * self)
 {
   return self->priv->ypos;
 }
 
 /**
- * ges_track_text_overlay_new:
+ * ges_text_overlay_new:
  *
- * Creates a new #GESTrackTextOverlay.
+ * Creates a new #GESTextOverlay.
  *
- * Returns: The newly created #GESTrackTextOverlay or %NULL if something went
+ * Returns: The newly created #GESTextOverlay or %NULL if something went
  * wrong.
  */
-GESTrackTextOverlay *
-ges_track_text_overlay_new (void)
+GESTextOverlay *
+ges_text_overlay_new (void)
 {
-  return g_object_new (GES_TYPE_TRACK_TEXT_OVERLAY, "track-type",
+  return g_object_new (GES_TYPE_TEXT_OVERLAY, "track-type",
       GES_TRACK_TYPE_VIDEO, NULL);
 }

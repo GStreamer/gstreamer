@@ -41,7 +41,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-video-test-source.c		\
 	ges-audio-test-source.c		\
 	ges-title-source.c		\
-	ges-track-text-overlay.c		\
+	ges-text-overlay.c		\
 	ges-base-effect.c		\
 	ges-effect.c		\
 	ges-screenshot.c			\
@@ -97,7 +97,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-video-test-source.h		\
 	ges-audio-test-source.h		\
 	ges-title-source.h		\
-	ges-track-text-overlay.h		\
+	ges-text-overlay.h		\
 	ges-screenshot.h			\
 	ges-formatter.h				\
 	ges-pitivi-formatter.h			\

@@ -130,9 +130,9 @@ typedef struct _GESTitleSource GESTitleSource;
 typedef struct _GESTitleSourceClass
   GESTitleSourceClass;
 
-typedef struct _GESTrackTextOverlay GESTrackTextOverlay;
-typedef struct _GESTrackTextOverlayClass
-  GESTrackTextOverlayClass;
+typedef struct _GESTextOverlay GESTextOverlay;
+typedef struct _GESTextOverlayClass
+  GESTextOverlayClass;
 
 typedef struct _GESFormatter GESFormatter;
 typedef struct _GESFormatterClass GESFormatterClass;
