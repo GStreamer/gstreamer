@@ -4226,22 +4226,30 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
         extract_initial_length_and_fourcc (data, demux->neededbytes, NULL,
             &fourcc);
         if (fourcc == FOURCC_moov) {
-          GST_DEBUG_OBJECT (demux, "Parsing [moov]");
+          /* in usual fragmented setup we could try to scan for more
+           * and end up at the the moov (after mdat) again */
+          if (demux->got_moov && demux->n_streams > 0) {
+            GST_DEBUG_OBJECT (demux,
+                "Skipping moov atom as we have one already");
+          } else {
+            GST_DEBUG_OBJECT (demux, "Parsing [moov]");
 
-          demux->got_moov = TRUE;
+            demux->got_moov = TRUE;
 
-          /* prepare newsegment to send when streaming actually starts */
-          if (!demux->pending_newsegment)
-            demux->pending_newsegment = gst_event_new_segment (&demux->segment);
+            /* prepare newsegment to send when streaming actually starts */
+            if (!demux->pending_newsegment)
+              demux->pending_newsegment =
+                  gst_event_new_segment (&demux->segment);
 
-          qtdemux_parse_moov (demux, data, demux->neededbytes);
-          qtdemux_node_dump (demux, demux->moov_node);
-          qtdemux_parse_tree (demux);
-          qtdemux_expose_streams (demux);
+            qtdemux_parse_moov (demux, data, demux->neededbytes);
+            qtdemux_node_dump (demux, demux->moov_node);
+            qtdemux_parse_tree (demux);
+            qtdemux_expose_streams (demux);
 
-          g_node_destroy (demux->moov_node);
-          demux->moov_node = NULL;
-          GST_DEBUG_OBJECT (demux, "Finished parsing the header");
+            g_node_destroy (demux->moov_node);
+            demux->moov_node = NULL;
+            GST_DEBUG_OBJECT (demux, "Finished parsing the header");
+          }
         } else if (fourcc == FOURCC_moof) {
           if (demux->got_moov && demux->fragmented) {
             GST_DEBUG_OBJECT (demux, "Parsing [moof]");
