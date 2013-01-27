@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TRACK_AUDIO_TRANSITION
-#define _GES_TRACK_AUDIO_TRANSITION
+#ifndef _GES_AUDIO_TRANSITION
+#define _GES_AUDIO_TRANSITION
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -27,50 +27,50 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TRACK_AUDIO_TRANSITION ges_track_audio_transition_get_type()
+#define GES_TYPE_AUDIO_TRANSITION ges_audio_transition_get_type()
 
-#define GES_TRACK_AUDIO_TRANSITION(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_AUDIO_TRANSITION, GESTrackAudioTransition))
+#define GES_AUDIO_TRANSITION(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_AUDIO_TRANSITION, GESAudioTransition))
 
-#define GES_TRACK_AUDIO_TRANSITION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_AUDIO_TRANSITION, GESTrackAudioTransitionClass))
+#define GES_AUDIO_TRANSITION_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_AUDIO_TRANSITION, GESAudioTransitionClass))
 
-#define GES_IS_TRACK_AUDIO_TRANSITION(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_AUDIO_TRANSITION))
+#define GES_IS_AUDIO_TRANSITION(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_AUDIO_TRANSITION))
 
-#define GES_IS_TRACK_AUDIO_TRANSITION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_AUDIO_TRANSITION))
+#define GES_IS_AUDIO_TRANSITION_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_AUDIO_TRANSITION))
 
-#define GES_TRACK_AUDIO_TRANSITION_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_AUDIO_TRANSITION, GESTrackAudioTransitionClass))
+#define GES_AUDIO_TRANSITION_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_AUDIO_TRANSITION, GESAudioTransitionClass))
 
-typedef struct _GESTrackAudioTransitionPrivate GESTrackAudioTransitionPrivate;
+typedef struct _GESAudioTransitionPrivate GESAudioTransitionPrivate;
 
 /**
- * GESTrackAudioTransition:
+ * GESAudioTransition:
  *
  */
 
-struct _GESTrackAudioTransition {
+struct _GESAudioTransition {
   GESTransition parent;
 
   /*< private >*/
-  GESTrackAudioTransitionPrivate *priv;
+  GESAudioTransitionPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-struct _GESTrackAudioTransitionClass {
+struct _GESAudioTransitionClass {
   GESTransitionClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_track_audio_transition_get_type (void);
+GType ges_audio_transition_get_type (void);
 
-GESTrackAudioTransition* ges_track_audio_transition_new (void);
+GESAudioTransition* ges_audio_transition_new (void);
 
 G_END_DECLS
 

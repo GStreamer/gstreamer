@@ -211,20 +211,20 @@ ges_transition_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-audio-transition</FILE>
-<TITLE>GESTrackAudioTransition</TITLE>
-GESTrackAudioTransition
-ges_track_audio_transition_new
+<FILE>ges-audio-transition</FILE>
+<TITLE>GESAudioTransition</TITLE>
+GESAudioTransition
+ges_audio_transition_new
 <SUBSECTION Standard>
-GESTrackAudioTransitionClass
-GESTrackAudioTransitionPrivate
-GES_IS_TRACK_AUDIO_TRANSITION
-ges_track_audio_transition_get_type
-GES_IS_TRACK_AUDIO_TRANSITION_CLASS
-GES_TRACK_AUDIO_TRANSITION
-GES_TRACK_AUDIO_TRANSITION_CLASS
-GES_TRACK_AUDIO_TRANSITION_GET_CLASS
-GES_TYPE_TRACK_AUDIO_TRANSITION
+GESAudioTransitionClass
+GESAudioTransitionPrivate
+GES_IS_AUDIO_TRANSITION
+ges_audio_transition_get_type
+GES_IS_AUDIO_TRANSITION_CLASS
+GES_AUDIO_TRANSITION
+GES_AUDIO_TRANSITION_CLASS
+GES_AUDIO_TRANSITION_GET_CLASS
+GES_TYPE_AUDIO_TRANSITION
 </SECTION>
 
 <SECTION>

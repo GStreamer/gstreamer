@@ -68,7 +68,7 @@
 #include <ges/ges-text-overlay.h>
 #include <ges/ges-transition.h>
 #include <ges/ges-video-transition.h>
-#include <ges/ges-track-audio-transition.h>
+#include <ges/ges-audio-transition.h>
 #include <ges/ges-base-effect.h>
 #include <ges/ges-effect.h>
 #include <ges/ges-formatter.h>

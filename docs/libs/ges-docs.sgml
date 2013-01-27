@@ -70,7 +70,7 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-text-overlay.xml"/>
     <xi:include href="xml/ges-transition.xml"/>
     <xi:include href="xml/ges-video-transition.xml"/>
-    <xi:include href="xml/ges-track-audio-transition.xml"/>
+    <xi:include href="xml/ges-audio-transition.xml"/>
     <xi:include href="xml/ges-image-source.xml"/>
     <xi:include href="xml/ges-effect.xml"/>
   </chapter>

@@ -110,9 +110,9 @@ typedef struct _GESImageSourceClass GESImageSourceClass;
 typedef struct _GESTransition GESTransition;
 typedef struct _GESTransitionClass GESTransitionClass;
 
-typedef struct _GESTrackAudioTransition GESTrackAudioTransition;
-typedef struct _GESTrackAudioTransitionClass
-  GESTrackAudioTransitionClass;
+typedef struct _GESAudioTransition GESAudioTransition;
+typedef struct _GESAudioTransitionClass
+  GESAudioTransitionClass;
 
 typedef struct _GESVideoTransition GESVideoTransition;
 typedef struct _GESVideoTransitionClass

@@ -19,20 +19,19 @@
  */
 
 /**
- * SECTION:ges-track-audio-transition
+ * SECTION:ges-audio-transition
  * @short_description: implements audio crossfade transition
  */
 
 #include "ges-internal.h"
 #include "ges-track-element.h"
-#include "ges-track-audio-transition.h"
+#include "ges-audio-transition.h"
 
 #include <gst/controller/gstdirectcontrolbinding.h>
 
-G_DEFINE_TYPE (GESTrackAudioTransition, ges_track_audio_transition,
-    GES_TYPE_TRANSITION);
+G_DEFINE_TYPE (GESAudioTransition, ges_audio_transition, GES_TYPE_TRANSITION);
 
-struct _GESTrackAudioTransitionPrivate
+struct _GESAudioTransitionPrivate
 {
   /* these enable volume interpolation. Unlike video, both inputs are adjusted
    * simultaneously */
@@ -51,57 +50,56 @@ enum
 #define fast_element_link(a,b) gst_element_link_pads_full((a),"src",(b),"sink",GST_PAD_LINK_CHECK_NOTHING)
 
 static void
-ges_track_audio_transition_duration_changed (GESTrackElement * self, guint64);
+ges_audio_transition_duration_changed (GESTrackElement * self, guint64);
 
-static GstElement *ges_track_audio_transition_create_element (GESTrackElement
-    * self);
+static GstElement *ges_audio_transition_create_element (GESTrackElement * self);
 
-static void ges_track_audio_transition_dispose (GObject * object);
+static void ges_audio_transition_dispose (GObject * object);
 
-static void ges_track_audio_transition_finalize (GObject * object);
+static void ges_audio_transition_finalize (GObject * object);
 
-static void ges_track_audio_transition_get_property (GObject * object, guint
+static void ges_audio_transition_get_property (GObject * object, guint
     property_id, GValue * value, GParamSpec * pspec);
 
-static void ges_track_audio_transition_set_property (GObject * object, guint
+static void ges_audio_transition_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
 static void
-ges_track_audio_transition_class_init (GESTrackAudioTransitionClass * klass)
+ges_audio_transition_class_init (GESAudioTransitionClass * klass)
 {
   GObjectClass *object_class;
   GESTrackElementClass *toclass;
 
-  g_type_class_add_private (klass, sizeof (GESTrackAudioTransitionPrivate));
+  g_type_class_add_private (klass, sizeof (GESAudioTransitionPrivate));
 
   object_class = G_OBJECT_CLASS (klass);
   toclass = GES_TRACK_ELEMENT_CLASS (klass);
 
-  object_class->get_property = ges_track_audio_transition_get_property;
-  object_class->set_property = ges_track_audio_transition_set_property;
-  object_class->dispose = ges_track_audio_transition_dispose;
-  object_class->finalize = ges_track_audio_transition_finalize;
+  object_class->get_property = ges_audio_transition_get_property;
+  object_class->set_property = ges_audio_transition_set_property;
+  object_class->dispose = ges_audio_transition_dispose;
+  object_class->finalize = ges_audio_transition_finalize;
 
-  toclass->duration_changed = ges_track_audio_transition_duration_changed;
+  toclass->duration_changed = ges_audio_transition_duration_changed;
 
-  toclass->create_element = ges_track_audio_transition_create_element;
+  toclass->create_element = ges_audio_transition_create_element;
 
 }
 
 static void
-ges_track_audio_transition_init (GESTrackAudioTransition * self)
+ges_audio_transition_init (GESAudioTransition * self)
 {
 
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRACK_AUDIO_TRANSITION, GESTrackAudioTransitionPrivate);
+      GES_TYPE_AUDIO_TRANSITION, GESAudioTransitionPrivate);
 }
 
 static void
-ges_track_audio_transition_dispose (GObject * object)
+ges_audio_transition_dispose (GObject * object)
 {
-  GESTrackAudioTransition *self;
+  GESAudioTransition *self;
 
-  self = GES_TRACK_AUDIO_TRANSITION (object);
+  self = GES_AUDIO_TRANSITION (object);
 
   if (self->priv->a_control_source) {
     if (self->priv->a_control_source)
@@ -115,17 +113,17 @@ ges_track_audio_transition_dispose (GObject * object)
     self->priv->b_control_source = NULL;
   }
 
-  G_OBJECT_CLASS (ges_track_audio_transition_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_audio_transition_parent_class)->dispose (object);
 }
 
 static void
-ges_track_audio_transition_finalize (GObject * object)
+ges_audio_transition_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (ges_track_audio_transition_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ges_audio_transition_parent_class)->finalize (object);
 }
 
 static void
-ges_track_audio_transition_get_property (GObject * object,
+ges_audio_transition_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -135,7 +133,7 @@ ges_track_audio_transition_get_property (GObject * object,
 }
 
 static void
-ges_track_audio_transition_set_property (GObject * object,
+ges_audio_transition_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -161,9 +159,9 @@ link_element_to_mixer_with_volume (GstBin * bin, GstElement * element,
 }
 
 static GstElement *
-ges_track_audio_transition_create_element (GESTrackElement * object)
+ges_audio_transition_create_element (GESTrackElement * object)
 {
-  GESTrackAudioTransition *self;
+  GESAudioTransition *self;
   GstElement *topbin, *iconva, *iconvb, *oconv;
   GObject *atarget, *btarget = NULL;
   const gchar *propname = "volume";
@@ -171,7 +169,7 @@ ges_track_audio_transition_create_element (GESTrackElement * object)
   GstPad *sinka_target, *sinkb_target, *src_target, *sinka, *sinkb, *src;
   GstControlSource *acontrol_source, *bcontrol_source;
 
-  self = GES_TRACK_AUDIO_TRANSITION (object);
+  self = GES_AUDIO_TRANSITION (object);
 
 
   GST_LOG ("creating an audio bin");
@@ -230,14 +228,14 @@ ges_track_audio_transition_create_element (GESTrackElement * object)
 }
 
 static void
-ges_track_audio_transition_duration_changed (GESTrackElement * object,
+ges_audio_transition_duration_changed (GESTrackElement * object,
     guint64 duration)
 {
-  GESTrackAudioTransition *self;
+  GESAudioTransition *self;
   GstElement *gnlobj = ges_track_element_get_gnlobject (object);
   GstTimedValueControlSource *ta, *tb;
 
-  self = GES_TRACK_AUDIO_TRANSITION (object);
+  self = GES_AUDIO_TRANSITION (object);
 
   GST_LOG ("updating controller: gnlobj (%p)", gnlobj);
 
@@ -263,15 +261,15 @@ ges_track_audio_transition_duration_changed (GESTrackElement * object,
 }
 
 /**
- * ges_track_audio_transition_new:
+ * ges_audio_transition_new:
  *
- * Creates a new #GESTrackAudioTransition.
+ * Creates a new #GESAudioTransition.
  *
- * Returns: The newly created #GESTrackAudioTransition.
+ * Returns: The newly created #GESAudioTransition.
  */
-GESTrackAudioTransition *
-ges_track_audio_transition_new (void)
+GESAudioTransition *
+ges_audio_transition_new (void)
 {
-  return g_object_new (GES_TYPE_TRACK_AUDIO_TRANSITION, "track-type",
+  return g_object_new (GES_TYPE_AUDIO_TRANSITION, "track-type",
       GES_TRACK_TYPE_AUDIO, NULL);
 }

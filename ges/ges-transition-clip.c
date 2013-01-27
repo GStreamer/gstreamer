@@ -323,7 +323,7 @@ ges_tl_transition_create_track_element (GESClip * obj, GESTrackType type)
 
     if (supportedformats == GES_TRACK_TYPE_UNKNOWN ||
         supportedformats & GES_TRACK_TYPE_AUDIO)
-      res = GES_TRACK_ELEMENT (ges_track_audio_transition_new ());
+      res = GES_TRACK_ELEMENT (ges_audio_transition_new ());
     else
       GST_DEBUG ("Not creating transition as audio track"
           " not on supportedformats");
