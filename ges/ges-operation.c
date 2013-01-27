@@ -19,36 +19,35 @@
  */
 
 /**
- * SECTION:ges-track-operation
+ * SECTION:ges-operation
  * @short_description: Base Class for effects and overlays
  */
 
 #include "ges-internal.h"
 #include "ges-track-element.h"
-#include "ges-track-operation.h"
+#include "ges-operation.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESTrackOperation, ges_track_operation,
-    GES_TYPE_TRACK_ELEMENT);
+G_DEFINE_ABSTRACT_TYPE (GESOperation, ges_operation, GES_TYPE_TRACK_ELEMENT);
 
-struct _GESTrackOperationPrivate
+struct _GESOperationPrivate
 {
   /* Dummy variable */
   void *nothing;
 };
 
 static void
-ges_track_operation_class_init (GESTrackOperationClass * klass)
+ges_operation_class_init (GESOperationClass * klass)
 {
   GESTrackElementClass *track_class = GES_TRACK_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTrackOperationPrivate));
+  g_type_class_add_private (klass, sizeof (GESOperationPrivate));
 
   track_class->gnlobject_factorytype = "gnloperation";
 }
 
 static void
-ges_track_operation_init (GESTrackOperation * self)
+ges_operation_init (GESOperation * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRACK_OPERATION, GESTrackOperationPrivate);
+      GES_TYPE_OPERATION, GESOperationPrivate);
 }

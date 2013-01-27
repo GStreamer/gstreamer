@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TRACK_OPERATION
-#define _GES_TRACK_OPERATION
+#ifndef _GES_OPERATION
+#define _GES_OPERATION
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -28,46 +28,46 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TRACK_OPERATION ges_track_operation_get_type()
+#define GES_TYPE_OPERATION ges_operation_get_type()
 
-#define GES_TRACK_OPERATION(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_OPERATION, GESTrackOperation))
+#define GES_OPERATION(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_OPERATION, GESOperation))
 
-#define GES_TRACK_OPERATION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_OPERATION, GESTrackOperationClass))
+#define GES_OPERATION_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_OPERATION, GESOperationClass))
 
-#define GES_IS_TRACK_OPERATION(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_OPERATION))
+#define GES_IS_OPERATION(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_OPERATION))
 
-#define GES_IS_TRACK_OPERATION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_OPERATION))
+#define GES_IS_OPERATION_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_OPERATION))
 
-#define GES_TRACK_OPERATION_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_OPERATION, GESTrackOperationClass))
+#define GES_OPERATION_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_OPERATION, GESOperationClass))
 
-typedef struct _GESTrackOperationPrivate GESTrackOperationPrivate;
+typedef struct _GESOperationPrivate GESOperationPrivate;
 
 /**
- * GESTrackOperation:
+ * GESOperation:
  *
  * Base class for overlays, transitions, and effects
  */
 
-struct _GESTrackOperation {
+struct _GESOperation {
   /*< private >*/
   GESTrackElement parent;
 
-  GESTrackOperationPrivate *priv;
+  GESOperationPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
- * GESTrackOperationClass:
+ * GESOperationClass:
  */
 
-struct _GESTrackOperationClass {
+struct _GESOperationClass {
   /*< private >*/
   GESTrackElementClass parent_class;
 
@@ -76,8 +76,8 @@ struct _GESTrackOperationClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_track_operation_get_type (void);
+GType ges_operation_get_type (void);
 
 G_END_DECLS
 
-#endif /* _GES_TRACK_OPERATION */
+#endif /* _GES_OPERATION */

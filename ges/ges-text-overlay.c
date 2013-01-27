@@ -30,7 +30,7 @@
 #include "ges-title-source.h"
 #include "ges-text-overlay.h"
 
-G_DEFINE_TYPE (GESTextOverlay, ges_text_overlay, GES_TYPE_TRACK_OPERATION);
+G_DEFINE_TYPE (GESTextOverlay, ges_text_overlay, GES_TYPE_OPERATION);
 
 struct _GESTextOverlayPrivate
 {

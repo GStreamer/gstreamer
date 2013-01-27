@@ -22,7 +22,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-track-operation.h>
+#include <ges/ges-operation.h>
 
 G_BEGIN_DECLS
 
@@ -47,7 +47,7 @@ typedef struct _GESBaseEffectPrivate   GESBaseEffectPrivate;
 struct _GESBaseEffect
 {
   /*< private > */
-  GESTrackOperation parent;
+  GESOperation parent;
   GESBaseEffectPrivate *priv;
 
   /* Padding for API extension */
@@ -62,7 +62,7 @@ struct _GESBaseEffect
 struct _GESBaseEffectClass
 {
   /*< private > */
-  GESTrackOperationClass parent_class;
+  GESOperationClass parent_class;
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 

@@ -24,7 +24,7 @@
 #include <glib-object.h>
 #include <ges/ges-types.h>
 #include <ges/ges-title-source.h>
-#include <ges/ges-track-operation.h>
+#include <ges/ges-operation.h>
 
 G_BEGIN_DECLS
 #define GES_TYPE_TEXT_OVERLAY ges_text_overlay_get_type()
@@ -45,7 +45,7 @@ typedef struct _GESTextOverlayPrivate GESTextOverlayPrivate;
  */
 struct _GESTextOverlay
 {
-  GESTrackOperation parent;
+  GESOperation parent;
 
   /*< private > */
   GESTextOverlayPrivate *priv;
@@ -56,7 +56,7 @@ struct _GESTextOverlay
 
 struct _GESTextOverlayClass
 {
-  GESTrackOperationClass parent_class;
+  GESOperationClass parent_class;
 
   /*< private > */
 

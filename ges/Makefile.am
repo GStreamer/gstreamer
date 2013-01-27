@@ -32,7 +32,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-track.c				\
 	ges-track-element.c			\
 	ges-source.c			\
-	ges-track-operation.c			\
+	ges-operation.c			\
 	ges-uri-source.c			\
 	ges-image-source.c		\
 	ges-track-transition.c			\
@@ -88,7 +88,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-track.h				\
 	ges-track-element.h			\
 	ges-source.h			\
-	ges-track-operation.h			\
+	ges-operation.h			\
 	ges-uri-source.h			\
 	ges-image-source.h		\
 	ges-track-transition.h			\

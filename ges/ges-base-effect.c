@@ -30,8 +30,7 @@
 #include "ges-track-element.h"
 #include "ges-base-effect.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESBaseEffect, ges_base_effect,
-    GES_TYPE_TRACK_OPERATION);
+G_DEFINE_ABSTRACT_TYPE (GESBaseEffect, ges_base_effect, GES_TYPE_OPERATION);
 
 static GHashTable *ges_base_effect_get_props_hashtable (GESTrackElement * self);
 guint pspec_hash (gconstpointer key_spec);
