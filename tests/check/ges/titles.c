@@ -161,7 +161,7 @@ GST_START_TEST (test_title_source_in_layer)
   g_object_get (source, "color", &color, NULL);
   assert_equals_int (color, 2147483647);
 
-  color = ges_title_source_get_color (GES_TITLE_SOURCE (trobj));
+  color = ges_title_source_get_text_color (GES_TITLE_SOURCE (trobj));
   assert_equals_int (color, 2147483647);
 
   /* test xpos */

@@ -396,7 +396,7 @@ ges_title_clip_set_color (GESTitleClip * self, guint32 color)
   self->priv->color = color;
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_title_source_set_color (GES_TITLE_SOURCE (tmp->data),
+    ges_title_source_set_text_color (GES_TITLE_SOURCE (tmp->data),
         self->priv->color);
   }
 }
@@ -531,7 +531,7 @@ ges_title_clip_get_valignment (GESTitleClip * self)
 }
 
 /**
- * ges_title_clip_get_color:
+ * ges_title_clip_get_text_color:
  * @self: a #GESTitleClip
  *
  * Get the color used by @self.
@@ -541,7 +541,7 @@ ges_title_clip_get_valignment (GESTitleClip * self)
  * Since: 0.10.2
  */
 const guint32
-ges_title_clip_get_color (GESTitleClip * self)
+ges_title_clip_get_text_color (GESTitleClip * self)
 {
   return self->priv->color;
 }
@@ -635,7 +635,7 @@ ges_title_clip_create_track_element (GESClip * obj, GESTrackType type)
     ges_title_source_set_font_desc ((GESTitleSource *) res, priv->font_desc);
     ges_title_source_set_halignment ((GESTitleSource *) res, priv->halign);
     ges_title_source_set_valignment ((GESTitleSource *) res, priv->valign);
-    ges_title_source_set_color ((GESTitleSource *) res, priv->color);
+    ges_title_source_set_text_color ((GESTitleSource *) res, priv->color);
     ges_title_clip_set_background_color_color ((GESTitleSource *) res,
         priv->background);
     ges_title_source_set_xpos ((GESTitleSource *) res, priv->xpos);

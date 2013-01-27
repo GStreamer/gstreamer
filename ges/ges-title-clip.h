@@ -115,7 +115,7 @@ GESTextHAlign
 ges_title_clip_get_halignment (GESTitleClip * self);
 
 const guint32
-ges_title_clip_get_color (GESTitleClip * self);
+ges_title_clip_get_text_color (GESTitleClip * self);
 
 const guint32
 ges_title_clip_get_background_color (GESTitleClip * self);

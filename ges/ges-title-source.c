@@ -263,7 +263,7 @@ ges_title_source_set_halignment (GESTitleSource * self, GESTextHAlign halign)
 }
 
 /**
- * ges_title_source_set_color:
+ * ges_title_source_set_text_color:
  * @self: the #GESTitleSource* to set
  * @color: the color @self is being set to
  *
@@ -272,7 +272,7 @@ ges_title_source_set_halignment (GESTitleSource * self, GESTextHAlign halign)
  * Since: 0.10.2
  */
 void
-ges_title_source_set_color (GESTitleSource * self, guint32 color)
+ges_title_source_set_text_color (GESTitleSource * self, guint32 color)
 {
   GST_DEBUG ("self:%p, color:%d", self, color);
 
@@ -394,7 +394,7 @@ ges_title_source_get_valignment (GESTitleSource * source)
 }
 
 /**
- * ges_title_source_get_color:
+ * ges_title_source_get_text_color:
  * @source: a #GESTitleSource
  *
  * Get the color used by @source.
@@ -404,7 +404,7 @@ ges_title_source_get_valignment (GESTitleSource * source)
  * Since: 0.10.2
  */
 const guint32
-ges_title_source_get_color (GESTitleSource * source)
+ges_title_source_get_text_color (GESTitleSource * source)
 {
   return source->priv->color;
 }
