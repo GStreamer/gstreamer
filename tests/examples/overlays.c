@@ -59,7 +59,7 @@ GESClip *
 make_overlay (char *text, guint64 start, guint64 duration, gint priority,
     guint32 color, gdouble xpos, gdouble ypos)
 {
-  GESClip *ret = GES_CLIP (ges_overlay_text_clip_new ());
+  GESClip *ret = GES_CLIP (ges_text_overlay_clip_new ());
 
   g_object_set (ret,
       "text", (gchar *) text,

@@ -27,7 +27,7 @@
 #include <ges/ges-track.h>
 
 G_BEGIN_DECLS
-#define GES_TYPE_OVERLAY_TEXT_CLIP ges_overlay_text_clip_get_type()
+#define GES_TYPE_OVERLAY_TEXT_CLIP ges_text_overlay_clip_get_type()
 #define GES_OVERLAY_TEXT_CLIP(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_OVERLAY_TEXT_CLIP, GESTextOverlayClip))
 #define GES_OVERLAY_TEXT_CLIP_CLASS(klass) \
@@ -70,57 +70,57 @@ struct _GESTextOverlayClipClass
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_overlay_text_clip_get_type (void);
+GType ges_text_overlay_clip_get_type (void);
 
 void
-ges_overlay_text_clip_set_text (GESTextOverlayClip * self,
+ges_text_overlay_clip_set_text (GESTextOverlayClip * self,
     const gchar * text);
 
 void
-ges_overlay_text_clip_set_font_desc (GESTextOverlayClip * self,
+ges_text_overlay_clip_set_font_desc (GESTextOverlayClip * self,
     const gchar * font_desc);
 
 void
-ges_overlay_text_clip_set_valign (GESTextOverlayClip * self,
+ges_text_overlay_clip_set_valign (GESTextOverlayClip * self,
     GESTextVAlign valign);
 
 void
-ges_overlay_text_clip_set_halign (GESTextOverlayClip * self,
+ges_text_overlay_clip_set_halign (GESTextOverlayClip * self,
     GESTextHAlign halign);
 
 void
-ges_overlay_text_clip_set_color (GESTextOverlayClip * self,
+ges_text_overlay_clip_set_color (GESTextOverlayClip * self,
     guint32 color);
 
 void
-ges_overlay_text_clip_set_xpos (GESTextOverlayClip * self,
+ges_text_overlay_clip_set_xpos (GESTextOverlayClip * self,
     gdouble position);
 
 void
-ges_overlay_text_clip_set_ypos (GESTextOverlayClip * self,
+ges_text_overlay_clip_set_ypos (GESTextOverlayClip * self,
     gdouble position);
 
-const gchar *ges_overlay_text_clip_get_text (GESTextOverlayClip * self);
+const gchar *ges_text_overlay_clip_get_text (GESTextOverlayClip * self);
 
-const gchar *ges_overlay_text_clip_get_font_desc (GESTextOverlayClip *
+const gchar *ges_text_overlay_clip_get_font_desc (GESTextOverlayClip *
     self);
 
 GESTextVAlign
-ges_overlay_text_clip_get_valignment (GESTextOverlayClip * self);
+ges_text_overlay_clip_get_valignment (GESTextOverlayClip * self);
 
 const guint32
-ges_overlay_text_clip_get_color (GESTextOverlayClip * self);
+ges_text_overlay_clip_get_color (GESTextOverlayClip * self);
 
 const gdouble
-ges_overlay_text_clip_get_xpos (GESTextOverlayClip * self);
+ges_text_overlay_clip_get_xpos (GESTextOverlayClip * self);
 
 const gdouble
-ges_overlay_text_clip_get_ypos (GESTextOverlayClip * self);
+ges_text_overlay_clip_get_ypos (GESTextOverlayClip * self);
 
 GESTextHAlign
-ges_overlay_text_clip_get_halignment (GESTextOverlayClip * self);
+ges_text_overlay_clip_get_halignment (GESTextOverlayClip * self);
 
-GESTextOverlayClip *ges_overlay_text_clip_new (void);
+GESTextOverlayClip *ges_text_overlay_clip_new (void);
 
 G_END_DECLS
 #endif /* _GES_TL_OVERLAY */

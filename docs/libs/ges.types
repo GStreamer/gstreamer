@@ -19,7 +19,7 @@ ges_transition_clip_get_type
 ges_base_effect_clip_get_type
 ges_effect_clip_get_type
 ges_uri_clip_get_type
-ges_overlay_text_clip_get_type
+ges_text_overlay_clip_get_type
 ges_title_clip_get_type
 ges_audio_test_source_get_type
 ges_audio_transition_get_type

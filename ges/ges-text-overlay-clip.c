@@ -31,7 +31,7 @@
 #include "ges-text-overlay.h"
 #include <string.h>
 
-G_DEFINE_TYPE (GESTextOverlayClip, ges_overlay_text_clip,
+G_DEFINE_TYPE (GESTextOverlayClip, ges_text_overlay_clip,
     GES_TYPE_OVERLAY_CLIP);
 
 #define DEFAULT_PROP_TEXT ""
@@ -64,11 +64,11 @@ enum
 };
 
 static GESTrackElement
-    * ges_overlay_text_clip_create_track_element (GESClip * obj,
+    * ges_text_overlay_clip_create_track_element (GESClip * obj,
     GESTrackType type);
 
 static void
-ges_overlay_text_clip_get_property (GObject * object, guint property_id,
+ges_text_overlay_clip_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
   GESTextOverlayClipPrivate *priv = GES_OVERLAY_TEXT_CLIP (object)->priv;
@@ -101,32 +101,32 @@ ges_overlay_text_clip_get_property (GObject * object, guint property_id,
 }
 
 static void
-ges_overlay_text_clip_set_property (GObject * object, guint property_id,
+ges_text_overlay_clip_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
   GESTextOverlayClip *uriclip = GES_OVERLAY_TEXT_CLIP (object);
 
   switch (property_id) {
     case PROP_TEXT:
-      ges_overlay_text_clip_set_text (uriclip, g_value_get_string (value));
+      ges_text_overlay_clip_set_text (uriclip, g_value_get_string (value));
       break;
     case PROP_FONT_DESC:
-      ges_overlay_text_clip_set_font_desc (uriclip, g_value_get_string (value));
+      ges_text_overlay_clip_set_font_desc (uriclip, g_value_get_string (value));
       break;
     case PROP_HALIGNMENT:
-      ges_overlay_text_clip_set_halign (uriclip, g_value_get_enum (value));
+      ges_text_overlay_clip_set_halign (uriclip, g_value_get_enum (value));
       break;
     case PROP_VALIGNMENT:
-      ges_overlay_text_clip_set_valign (uriclip, g_value_get_enum (value));
+      ges_text_overlay_clip_set_valign (uriclip, g_value_get_enum (value));
       break;
     case PROP_COLOR:
-      ges_overlay_text_clip_set_color (uriclip, g_value_get_uint (value));
+      ges_text_overlay_clip_set_color (uriclip, g_value_get_uint (value));
       break;
     case PROP_XPOS:
-      ges_overlay_text_clip_set_xpos (uriclip, g_value_get_double (value));
+      ges_text_overlay_clip_set_xpos (uriclip, g_value_get_double (value));
       break;
     case PROP_YPOS:
-      ges_overlay_text_clip_set_ypos (uriclip, g_value_get_double (value));
+      ges_text_overlay_clip_set_ypos (uriclip, g_value_get_double (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -134,7 +134,7 @@ ges_overlay_text_clip_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_overlay_text_clip_dispose (GObject * object)
+ges_text_overlay_clip_dispose (GObject * object)
 {
   GESTextOverlayClipPrivate *priv = GES_OVERLAY_TEXT_CLIP (object)->priv;
 
@@ -143,20 +143,20 @@ ges_overlay_text_clip_dispose (GObject * object)
   if (priv->font_desc)
     g_free (priv->font_desc);
 
-  G_OBJECT_CLASS (ges_overlay_text_clip_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_text_overlay_clip_parent_class)->dispose (object);
 }
 
 static void
-ges_overlay_text_clip_class_init (GESTextOverlayClipClass * klass)
+ges_text_overlay_clip_class_init (GESTextOverlayClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTextOverlayClipPrivate));
 
-  object_class->get_property = ges_overlay_text_clip_get_property;
-  object_class->set_property = ges_overlay_text_clip_set_property;
-  object_class->dispose = ges_overlay_text_clip_dispose;
+  object_class->get_property = ges_text_overlay_clip_get_property;
+  object_class->set_property = ges_text_overlay_clip_set_property;
+  object_class->dispose = ges_text_overlay_clip_dispose;
 
   /**
    * GESTextOverlayClip:text:
@@ -203,7 +203,7 @@ ges_overlay_text_clip_class_init (GESTextOverlayClipClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   timobj_class->create_track_element =
-      ges_overlay_text_clip_create_track_element;
+      ges_text_overlay_clip_create_track_element;
   timobj_class->need_fill_track = FALSE;
 
   /**
@@ -238,7 +238,7 @@ ges_overlay_text_clip_class_init (GESTextOverlayClipClass * klass)
 }
 
 static void
-ges_overlay_text_clip_init (GESTextOverlayClip * self)
+ges_text_overlay_clip_init (GESTextOverlayClip * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_OVERLAY_TEXT_CLIP, GESTextOverlayClipPrivate);
@@ -255,7 +255,7 @@ ges_overlay_text_clip_init (GESTextOverlayClip * self)
 }
 
 /**
- * ges_overlay_text_clip_set_text:
+ * ges_text_overlay_clip_set_text:
  * @self: the #GESTextOverlayClip* to set text on
  * @text: the text to render. an internal copy of this text will be
  * made.
@@ -264,7 +264,7 @@ ges_overlay_text_clip_init (GESTextOverlayClip * self)
  *
  */
 void
-ges_overlay_text_clip_set_text (GESTextOverlayClip * self, const gchar * text)
+ges_text_overlay_clip_set_text (GESTextOverlayClip * self, const gchar * text)
 {
   GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
@@ -291,7 +291,7 @@ ges_overlay_text_clip_set_text (GESTextOverlayClip * self, const gchar * text)
 }
 
 /**
- * ges_overlay_text_clip_set_font_desc:
+ * ges_text_overlay_clip_set_font_desc:
  * @self: the #GESTextOverlayClip*
  * @font_desc: the pango font description
  *
@@ -299,7 +299,7 @@ ges_overlay_text_clip_set_text (GESTextOverlayClip * self, const gchar * text)
  *
  */
 void
-ges_overlay_text_clip_set_font_desc (GESTextOverlayClip * self,
+ges_text_overlay_clip_set_font_desc (GESTextOverlayClip * self,
     const gchar * font_desc)
 {
   GList *tmp, *trackelements;
@@ -328,7 +328,7 @@ ges_overlay_text_clip_set_font_desc (GESTextOverlayClip * self,
 }
 
 /**
- * ges_overlay_text_clip_set_halign:
+ * ges_text_overlay_clip_set_halign:
  * @self: the #GESTextOverlayClip* to set horizontal alignement of text on
  * @halign: #GESTextHAlign
  *
@@ -336,7 +336,7 @@ ges_overlay_text_clip_set_font_desc (GESTextOverlayClip * self,
  *
  */
 void
-ges_overlay_text_clip_set_halign (GESTextOverlayClip * self,
+ges_text_overlay_clip_set_halign (GESTextOverlayClip * self,
     GESTextHAlign halign)
 {
   GList *tmp, *trackelements;
@@ -362,7 +362,7 @@ ges_overlay_text_clip_set_halign (GESTextOverlayClip * self,
 }
 
 /**
- * ges_overlay_text_clip_set_valign:
+ * ges_text_overlay_clip_set_valign:
  * @self: the #GESTextOverlayClip* to set vertical alignement of text on
  * @valign: #GESTextVAlign
  *
@@ -370,7 +370,7 @@ ges_overlay_text_clip_set_halign (GESTextOverlayClip * self,
  *
  */
 void
-ges_overlay_text_clip_set_valign (GESTextOverlayClip * self,
+ges_text_overlay_clip_set_valign (GESTextOverlayClip * self,
     GESTextVAlign valign)
 {
   GList *tmp, *trackelements;
@@ -396,7 +396,7 @@ ges_overlay_text_clip_set_valign (GESTextOverlayClip * self,
 }
 
 /**
- * ges_overlay_text_clip_set_color:
+ * ges_text_overlay_clip_set_color:
  * @self: the #GESTextOverlayClip* to set
  * @color: The color @self is being set to
  *
@@ -405,7 +405,7 @@ ges_overlay_text_clip_set_valign (GESTextOverlayClip * self,
  * Since: 0.10.2
  */
 void
-ges_overlay_text_clip_set_color (GESTextOverlayClip * self, guint32 color)
+ges_text_overlay_clip_set_color (GESTextOverlayClip * self, guint32 color)
 {
   GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
@@ -429,7 +429,7 @@ ges_overlay_text_clip_set_color (GESTextOverlayClip * self, guint32 color)
 }
 
 /**
- * ges_overlay_text_clip_set_xpos:
+ * ges_text_overlay_clip_set_xpos:
  * @self: the #GESTextOverlayClip* to set
  * @position: The horizontal position @self is being set to
  *
@@ -438,7 +438,7 @@ ges_overlay_text_clip_set_color (GESTextOverlayClip * self, guint32 color)
  * Since: 0.10.2
  */
 void
-ges_overlay_text_clip_set_xpos (GESTextOverlayClip * self, gdouble position)
+ges_text_overlay_clip_set_xpos (GESTextOverlayClip * self, gdouble position)
 {
   GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
@@ -462,7 +462,7 @@ ges_overlay_text_clip_set_xpos (GESTextOverlayClip * self, gdouble position)
 }
 
 /**
- * ges_overlay_text_clip_set_ypos:
+ * ges_text_overlay_clip_set_ypos:
  * @self: the #GESTextOverlayClip* to set
  * @position: The vertical position @self is being set to
  *
@@ -471,7 +471,7 @@ ges_overlay_text_clip_set_xpos (GESTextOverlayClip * self, gdouble position)
  * Since: 0.10.2
  */
 void
-ges_overlay_text_clip_set_ypos (GESTextOverlayClip * self, gdouble position)
+ges_text_overlay_clip_set_ypos (GESTextOverlayClip * self, gdouble position)
 {
   GList *tmp, *trackelements;
   GESClip *object = (GESClip *) self;
@@ -495,7 +495,7 @@ ges_overlay_text_clip_set_ypos (GESTextOverlayClip * self, gdouble position)
 }
 
 /**
- * ges_overlay_text_clip_get_text:
+ * ges_text_overlay_clip_get_text:
  * @self: a #GESTextOverlayClip
  *
  * Get the text currently set on @self.
@@ -504,13 +504,13 @@ ges_overlay_text_clip_set_ypos (GESTextOverlayClip * self, gdouble position)
  *
  */
 const gchar *
-ges_overlay_text_clip_get_text (GESTextOverlayClip * self)
+ges_text_overlay_clip_get_text (GESTextOverlayClip * self)
 {
   return self->priv->text;
 }
 
 /**
- * ges_overlay_text_clip_get_font_desc:
+ * ges_text_overlay_clip_get_font_desc:
  * @self: a #GESTextOverlayClip
  *
  * Get the pango font description used by @self.
@@ -518,13 +518,13 @@ ges_overlay_text_clip_get_text (GESTextOverlayClip * self)
  * Returns: The pango font description used by @self.
  */
 const char *
-ges_overlay_text_clip_get_font_desc (GESTextOverlayClip * self)
+ges_text_overlay_clip_get_font_desc (GESTextOverlayClip * self)
 {
   return self->priv->font_desc;
 }
 
 /**
- * ges_overlay_text_clip_get_halignment:
+ * ges_text_overlay_clip_get_halignment:
  * @self: a #GESTextOverlayClip
  *
  * Get the horizontal aligment used by @self.
@@ -532,13 +532,13 @@ ges_overlay_text_clip_get_font_desc (GESTextOverlayClip * self)
  * Returns: The horizontal aligment used by @self.
  */
 GESTextHAlign
-ges_overlay_text_clip_get_halignment (GESTextOverlayClip * self)
+ges_text_overlay_clip_get_halignment (GESTextOverlayClip * self)
 {
   return self->priv->halign;
 }
 
 /**
- * ges_overlay_text_clip_get_valignment:
+ * ges_text_overlay_clip_get_valignment:
  * @self: a #GESTextOverlayClip
  *
  * Get the vertical aligment used by @self.
@@ -546,13 +546,13 @@ ges_overlay_text_clip_get_halignment (GESTextOverlayClip * self)
  * Returns: The vertical aligment used by @self.
  */
 GESTextVAlign
-ges_overlay_text_clip_get_valignment (GESTextOverlayClip * self)
+ges_text_overlay_clip_get_valignment (GESTextOverlayClip * self)
 {
   return self->priv->valign;
 }
 
 /**
- * ges_overlay_text_clip_get_color:
+ * ges_text_overlay_clip_get_color:
  * @self: a #GESTextOverlayClip
  *
  * Get the color used by @source.
@@ -563,13 +563,13 @@ ges_overlay_text_clip_get_valignment (GESTextOverlayClip * self)
  */
 
 const guint32
-ges_overlay_text_clip_get_color (GESTextOverlayClip * self)
+ges_text_overlay_clip_get_color (GESTextOverlayClip * self)
 {
   return self->priv->color;
 }
 
 /**
- * ges_overlay_text_clip_get_xpos:
+ * ges_text_overlay_clip_get_xpos:
  * @self: a #GESTextOverlayClip
  *
  * Get the horizontal position used by @source.
@@ -580,13 +580,13 @@ ges_overlay_text_clip_get_color (GESTextOverlayClip * self)
  */
 
 const gdouble
-ges_overlay_text_clip_get_xpos (GESTextOverlayClip * self)
+ges_text_overlay_clip_get_xpos (GESTextOverlayClip * self)
 {
   return self->priv->xpos;
 }
 
 /**
- * ges_overlay_text_clip_get_ypos:
+ * ges_text_overlay_clip_get_ypos:
  * @self: a #GESTextOverlayClip
  *
  * Get the vertical position used by @source.
@@ -597,13 +597,13 @@ ges_overlay_text_clip_get_xpos (GESTextOverlayClip * self)
  */
 
 const gdouble
-ges_overlay_text_clip_get_ypos (GESTextOverlayClip * self)
+ges_text_overlay_clip_get_ypos (GESTextOverlayClip * self)
 {
   return self->priv->ypos;
 }
 
 static GESTrackElement *
-ges_overlay_text_clip_create_track_element (GESClip * obj, GESTrackType type)
+ges_text_overlay_clip_create_track_element (GESClip * obj, GESTrackType type)
 {
 
   GESTextOverlayClipPrivate *priv = GES_OVERLAY_TEXT_CLIP (obj)->priv;
@@ -627,7 +627,7 @@ ges_overlay_text_clip_create_track_element (GESClip * obj, GESTrackType type)
 }
 
 /**
- * ges_overlay_text_clip_new:
+ * ges_text_overlay_clip_new:
  *
  * Creates a new #GESTextOverlayClip
  *
@@ -635,7 +635,7 @@ ges_overlay_text_clip_create_track_element (GESClip * obj, GESTrackType type)
  * error.
  */
 GESTextOverlayClip *
-ges_overlay_text_clip_new (void)
+ges_text_overlay_clip_new (void)
 {
   /* FIXME : Check for validity/existence of URI */
   return g_object_new (GES_TYPE_OVERLAY_TEXT_CLIP, NULL);

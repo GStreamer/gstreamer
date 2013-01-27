@@ -27,7 +27,7 @@ GST_START_TEST (test_overlay_basic)
 
   ges_init ();
 
-  source = ges_overlay_text_clip_new ();
+  source = ges_text_overlay_clip_new ();
   fail_unless (source != NULL);
 
   g_object_unref (source);
@@ -47,7 +47,7 @@ GST_START_TEST (test_overlay_properties)
   fail_unless (track != NULL);
 
   object = (GESClip *)
-      ges_overlay_text_clip_new ();
+      ges_text_overlay_clip_new ();
   fail_unless (object != NULL);
 
   /* Set some properties */
@@ -115,7 +115,7 @@ GST_START_TEST (test_overlay_in_layer)
   ges_timeline_add_track (timeline, v);
   ges_timeline_add_layer (timeline, layer);
 
-  source = ges_overlay_text_clip_new ();
+  source = ges_text_overlay_clip_new ();
 
   g_object_set (source, "duration", (guint64) GST_SECOND, NULL);
 
