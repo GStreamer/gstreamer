@@ -213,7 +213,7 @@ save_track_elements (xmlTextWriterPtr writer, GList * source_list,
         guint n_props = 0;
 
         xmlTextWriterWriteAttribute (writer, BAD_CAST "type",
-            BAD_CAST "pitivi.timeline.track.BaseEffect");
+            BAD_CAST "pitivi.timeline.track.TrackEffect");
 
         g_object_get (trackelement, "bin-description", &bin_desc, NULL);
         xmlTextWriterStartElement (writer, BAD_CAST "effect");
@@ -262,7 +262,7 @@ save_track_elements (xmlTextWriterPtr writer, GList * source_list,
 
       } else {
         xmlTextWriterWriteAttribute (writer, BAD_CAST "type",
-            BAD_CAST "pitivi.timeline.track.SourceTrackElement");
+            BAD_CAST "pitivi.timeline.track.SourceTrackObject");
 
         xmlTextWriterStartElement (writer, BAD_CAST "factory-ref");
         xmlTextWriterWriteAttribute (writer, BAD_CAST "id",
@@ -407,7 +407,7 @@ save_clips (xmlTextWriterPtr writer, GList * list)
 {
   GList *tmp, *tck_obj_ids;
 
-  xmlTextWriterStartElement (writer, BAD_CAST "clips");
+  xmlTextWriterStartElement (writer, BAD_CAST "timeline-objects");
 
   GST_DEBUG ("Saving timeline objects");
 
@@ -415,7 +415,7 @@ save_clips (xmlTextWriterPtr writer, GList * list)
 
     SrcMapping *srcmap = (SrcMapping *) tmp->data;
 
-    xmlTextWriterStartElement (writer, BAD_CAST "clip");
+    xmlTextWriterStartElement (writer, BAD_CAST "timeline-object");
     xmlTextWriterStartElement (writer, BAD_CAST "factory-ref");
     xmlTextWriterWriteAttribute (writer, BAD_CAST "id", BAD_CAST srcmap->id);
     xmlTextWriterEndElement (writer);
@@ -685,7 +685,7 @@ parse_clips (GESFormatter * self)
   GHashTable *clips_table = priv->clips_table;
 
   xpathObj = xmlXPathEvalExpression ((const xmlChar *)
-      "/pitivi/timeline/clips/clip", priv->xpathCtx);
+      "/pitivi/timeline/timeline-objects/timeline-object", priv->xpathCtx);
 
   if (xpathObj == NULL) {
     xmlXPathFreeObject (xpathObj);
@@ -699,7 +699,7 @@ parse_clips (GESFormatter * self)
     clip_nd = nodes->nodeTab[j];
 
     for (tmp_nd = clip_nd->children; tmp_nd; tmp_nd = tmp_nd->next) {
-      /* We assume that factory-ref is always before the trackelements-ref */
+      /* We assume that factory-ref is always before the tckobjs-ref */
       if (!xmlStrcmp (tmp_nd->name, (xmlChar *) "factory-ref")) {
         facrefId = xmlGetProp (tmp_nd, (xmlChar *) "id");
 
