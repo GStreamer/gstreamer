@@ -107,8 +107,8 @@ typedef struct _GESUriSourceClass GESUriSourceClass;
 typedef struct _GESImageSource GESImageSource;
 typedef struct _GESImageSourceClass GESImageSourceClass;
 
-typedef struct _GESTrackTransition GESTrackTransition;
-typedef struct _GESTrackTransitionClass GESTrackTransitionClass;
+typedef struct _GESTransition GESTransition;
+typedef struct _GESTransitionClass GESTransitionClass;
 
 typedef struct _GESTrackAudioTransition GESTrackAudioTransition;
 typedef struct _GESTrackAudioTransitionClass

@@ -754,7 +754,7 @@ _create_auto_transition_from_transitions (GESTimeline * timeline,
     else if (_START (maybe_transition) != _START (next) ||
         _DURATION (maybe_transition) != transition_duration)
       continue;
-    else if (GES_IS_TRACK_TRANSITION (maybe_transition))
+    else if (GES_IS_TRANSITION (maybe_transition))
       /* Use that transition */
       /* TODO We should make sure that the transition contains only
        * TrackElement-s in @track and if it is not the case properly unlink the

@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-track-transition.h>
+#include <ges/ges-transition.h>
 
 G_BEGIN_DECLS
 
@@ -52,7 +52,7 @@ typedef struct _GESTrackAudioTransitionPrivate GESTrackAudioTransitionPrivate;
  */
 
 struct _GESTrackAudioTransition {
-  GESTrackTransition parent;
+  GESTransition parent;
 
   /*< private >*/
   GESTrackAudioTransitionPrivate *priv;
@@ -62,7 +62,7 @@ struct _GESTrackAudioTransition {
 };
 
 struct _GESTrackAudioTransitionClass {
-  GESTrackTransitionClass parent_class;
+  GESTransitionClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

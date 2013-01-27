@@ -29,7 +29,7 @@
 #include <gst/controller/gstdirectcontrolbinding.h>
 
 G_DEFINE_TYPE (GESTrackVideoTransition, ges_track_video_transition,
-    GES_TYPE_TRACK_TRANSITION);
+    GES_TYPE_TRANSITION);
 
 static inline void
 ges_track_video_transition_set_border_internal (GESTrackVideoTransition * self,

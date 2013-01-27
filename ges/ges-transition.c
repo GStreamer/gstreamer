@@ -19,7 +19,7 @@
  */
 
 /** 
- * SECTION:ges-track-transition
+ * SECTION:ges-transition
  * @short_description: base class for audio and video transitions
  *
  */
@@ -27,10 +27,9 @@
 #include <ges/ges.h>
 #include "ges-internal.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESTrackTransition, ges_track_transition,
-    GES_TYPE_OPERATION);
+G_DEFINE_ABSTRACT_TYPE (GESTransition, ges_transition, GES_TYPE_OPERATION);
 
-struct _GESTrackTransitionPrivate
+struct _GESTransitionPrivate
 {
   /*  Dummy variable */
   void *nothing;
@@ -38,14 +37,14 @@ struct _GESTrackTransitionPrivate
 
 
 static void
-ges_track_transition_class_init (GESTrackTransitionClass * klass)
+ges_transition_class_init (GESTransitionClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GESTrackTransitionPrivate));
+  g_type_class_add_private (klass, sizeof (GESTransitionPrivate));
 }
 
 static void
-ges_track_transition_init (GESTrackTransition * self)
+ges_transition_init (GESTransition * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRACK_TRANSITION, GESTrackTransitionPrivate);
+      GES_TYPE_TRANSITION, GESTransitionPrivate);
 }

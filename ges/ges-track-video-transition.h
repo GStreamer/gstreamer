@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-track-transition.h>
+#include <ges/ges-transition.h>
 
 G_BEGIN_DECLS
 
@@ -51,7 +51,7 @@ typedef struct _GESTrackVideoTransitionPrivate GESTrackVideoTransitionPrivate;
  */
 
 struct _GESTrackVideoTransition {
-  GESTrackTransition parent;
+  GESTransition parent;
 
   /*< private >*/
 
@@ -68,7 +68,7 @@ struct _GESTrackVideoTransition {
  */
 
 struct _GESTrackVideoTransitionClass {
-  GESTrackTransitionClass parent_class;
+  GESTransitionClass parent_class;
 
   /*< private >*/
   /* Padding for API extension */

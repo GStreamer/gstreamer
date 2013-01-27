@@ -30,7 +30,7 @@
 #include <gst/controller/gstdirectcontrolbinding.h>
 
 G_DEFINE_TYPE (GESTrackAudioTransition, ges_track_audio_transition,
-    GES_TYPE_TRACK_TRANSITION);
+    GES_TYPE_TRANSITION);
 
 struct _GESTrackAudioTransitionPrivate
 {

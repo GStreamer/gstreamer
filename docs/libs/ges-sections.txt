@@ -195,19 +195,19 @@ ges_image_source_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-transition</FILE>
-<TITLE>GESTrackTransition</TITLE>
-GESTrackTransition
-GESTrackTransitionClass
+<FILE>ges-transition</FILE>
+<TITLE>GESTransition</TITLE>
+GESTransition
+GESTransitionClass
 <SUBSECTION Standard>
-GESTrackTransitionPrivate
-GES_IS_TRACK_TRANSITION
-GES_IS_TRACK_TRANSITION_CLASS
-GES_TRACK_TRANSITION
-GES_TRACK_TRANSITION_CLASS
-GES_TRACK_TRANSITION_GET_CLASS
-GES_TYPE_TRACK_TRANSITION
-ges_track_transition_get_type
+GESTransitionPrivate
+GES_IS_TRANSITION
+GES_IS_TRANSITION_CLASS
+GES_TRANSITION
+GES_TRANSITION_CLASS
+GES_TRANSITION_GET_CLASS
+GES_TYPE_TRANSITION
+ges_transition_get_type
 </SECTION>
 
 <SECTION>

@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TRACK_TRANSITION
-#define _GES_TRACK_TRANSITION
+#ifndef _GES_TRANSITION
+#define _GES_TRANSITION
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -29,50 +29,50 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TRACK_TRANSITION ges_track_transition_get_type()
+#define GES_TYPE_TRANSITION ges_transition_get_type()
 
-#define GES_TRACK_TRANSITION(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_TRANSITION,\
-        GESTrackTransition))
+#define GES_TRANSITION(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRANSITION,\
+        GESTransition))
 
-#define GES_TRACK_TRANSITION_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_TRANSITION,\
-        GESTrackTransitionClass))
+#define GES_TRANSITION_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRANSITION,\
+        GESTransitionClass))
 
-#define GES_IS_TRACK_TRANSITION(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_TRANSITION))
+#define GES_IS_TRANSITION(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRANSITION))
 
-#define GES_IS_TRACK_TRANSITION_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_TRANSITION))
+#define GES_IS_TRANSITION_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRANSITION))
 
-#define GES_TRACK_TRANSITION_GET_CLASS(obj) \
-    (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_TRANSITION,\
-        GESTrackTransitionClass))
+#define GES_TRANSITION_GET_CLASS(obj) \
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRANSITION,\
+        GESTransitionClass))
 
-typedef struct _GESTrackTransitionPrivate GESTrackTransitionPrivate;
+typedef struct _GESTransitionPrivate GESTransitionPrivate;
 
 /**
- * GESTrackTransition:
+ * GESTransition:
  *
  * Base class for media transitions.
  */
 
-struct _GESTrackTransition
+struct _GESTransition
 {
   /*< private >*/
   GESOperation parent;
 
-  GESTrackTransitionPrivate *priv;
+  GESTransitionPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
- * GESTrackTransitionClass:
+ * GESTransitionClass:
  */
 
-struct _GESTrackTransitionClass {
+struct _GESTransitionClass {
   /*< private >*/
   GESOperationClass parent_class;
   
@@ -81,7 +81,7 @@ struct _GESTrackTransitionClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_track_transition_get_type (void);
+GType ges_transition_get_type (void);
 
 G_END_DECLS
 

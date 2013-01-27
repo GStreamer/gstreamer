@@ -304,7 +304,7 @@ ges_tl_transition_create_track_element (GESClip * obj, GESTrackType type)
   GESTrackElement *res = NULL;
   GESTrackType supportedformats;
 
-  GST_DEBUG ("Creating a GESTrackTransition");
+  GST_DEBUG ("Creating a GESTransition");
 
   supportedformats = ges_clip_get_supported_formats (obj);
   if (type == GES_TRACK_TYPE_VIDEO) {
