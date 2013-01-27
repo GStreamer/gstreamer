@@ -42,7 +42,6 @@ G_DEFINE_TYPE (GESTitleClip, ges_title_clip, GES_TYPE_SOURCE_CLIP);
 
 struct _GESTitleClipPrivate
 {
-  gboolean mute;
   gchar *text;
   gchar *font_desc;
   GESTextHAlign halign;
@@ -57,7 +56,6 @@ struct _GESTitleClipPrivate
 enum
 {
   PROP_0,
-  PROP_MUTE,
   PROP_TEXT,
   PROP_FONT_DESC,
   PROP_HALIGNMENT,
@@ -84,9 +82,6 @@ ges_title_clip_get_property (GObject * object, guint property_id,
   GESTitleClipPrivate *priv = GES_TITLE_CLIP (object)->priv;
 
   switch (property_id) {
-    case PROP_MUTE:
-      g_value_set_boolean (value, priv->mute);
-      break;
     case PROP_TEXT:
       g_value_set_string (value, priv->text);
       break;
@@ -123,9 +118,6 @@ ges_title_clip_set_property (GObject * object, guint property_id,
   GESTitleClip *uriclip = GES_TITLE_CLIP (object);
 
   switch (property_id) {
-    case PROP_MUTE:
-      ges_title_clip_set_mute (uriclip, g_value_get_boolean (value));
-      break;
     case PROP_TEXT:
       ges_title_clip_set_text (uriclip, g_value_get_string (value));
       break;
@@ -221,14 +213,6 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
           "Horizontal alignment of the text",
           GES_TEXT_HALIGN_TYPE, DEFAULT_HALIGNMENT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-  /**
-   * GESTitleClip:mute:
-   *
-   * Whether the sound will be played or not.
-   */
-  g_object_class_install_property (object_class, PROP_MUTE,
-      g_param_spec_boolean ("mute", "Mute", "Mute audio track",
-          FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   timobj_class->create_track_element = ges_title_clip_create_track_element;
   timobj_class->need_fill_track = FALSE;
@@ -285,7 +269,6 @@ ges_title_clip_init (GESTitleClip * self)
 
   GES_TIMELINE_ELEMENT (self)->duration = 0;
   /* Not 100% required since a new gobject's content will always be memzero'd */
-  self->priv->mute = FALSE;
   self->priv->text = NULL;
   self->priv->font_desc = NULL;
   self->priv->halign = DEFAULT_HALIGNMENT;
@@ -392,39 +375,6 @@ ges_title_clip_set_valignment (GESTitleClip * self, GESTextVAlign valign)
     ges_title_source_set_valignment (GES_TITLE_SOURCE (tmp->data),
         self->priv->valign);
   }
-}
-
-/**
- * ges_title_clip_set_mute:
- * @self: the #GESTitleClip on which to mute or unmute the audio track
- * @mute: %TRUE to mute the audio track, %FALSE to unmute it
- *
- * Sets whether the audio track of this timeline object is muted or not
- *
- */
-void
-ges_title_clip_set_mute (GESTitleClip * self, gboolean mute)
-{
-  GList *tmp, *trackelements;
-  GESClip *object = (GESClip *) self;
-
-  GST_DEBUG_OBJECT (self, "mute:%d", mute);
-
-  self->priv->mute = mute;
-
-  /* Go over tracked objects, and update 'active' status on all audio objects */
-  /* FIXME : We need a much less crack way to find the trackelement to change */
-  trackelements = ges_clip_get_track_elements (object);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
-    GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
-
-    if (ges_track_element_get_track (trackelement)->type ==
-        GES_TRACK_TYPE_AUDIO)
-      ges_track_element_set_active (trackelement, !mute);
-
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
-  }
-  g_list_free (trackelements);
 }
 
 /**
@@ -578,21 +528,6 @@ GESTextVAlign
 ges_title_clip_get_valignment (GESTitleClip * self)
 {
   return self->priv->valign;
-}
-
-/**
- * ges_title_clip_is_muted:
- * @self: a #GESTitleClip
- *
- * Let you know if the audio track of @self is muted or not.
- *
- * Returns: Whether the audio track of @self is muted or not.
- *
- */
-gboolean
-ges_title_clip_is_muted (GESTitleClip * self)
-{
-  return self->priv->mute;
 }
 
 /**

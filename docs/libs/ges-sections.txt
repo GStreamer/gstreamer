@@ -641,7 +641,6 @@ ges_title_clip_set_text
 ges_title_clip_set_font_desc
 ges_title_clip_set_halignment
 ges_title_clip_set_valignment
-ges_title_clip_set_mute
 ges_title_clip_set_color
 ges_title_clip_set_background
 ges_title_clip_set_xpos
@@ -650,7 +649,6 @@ ges_title_clip_get_text
 ges_title_clip_get_font_desc
 ges_title_clip_get_valignment
 ges_title_clip_get_halignment
-ges_title_clip_is_muted
 ges_title_clip_get_color
 ges_title_clip_get_background
 ges_title_clip_get_xpos

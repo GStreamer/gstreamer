@@ -74,10 +74,6 @@ struct _GESTitleClipClass {
 GType ges_title_clip_get_type (void);
 
 void
-ges_title_clip_set_mute (GESTitleClip * self,
-    gboolean mute);
-
-void
 ges_title_clip_set_text( GESTitleClip * self,
     const gchar * text);
 
@@ -130,7 +126,6 @@ ges_title_clip_get_xpos (GESTitleClip * self);
 const gdouble
 ges_title_clip_get_ypos (GESTitleClip * self);
 
-gboolean ges_title_clip_is_muted (GESTitleClip * self);
 const gchar* ges_title_clip_get_text (GESTitleClip * self);
 
 GESTitleClip* ges_title_clip_new (void);
