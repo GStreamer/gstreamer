@@ -228,26 +228,26 @@ GES_TYPE_TRACK_AUDIO_TRANSITION
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-video-transition</FILE>
-<TITLE>GESTrackVideoTransition</TITLE>
-GESTrackVideoTransition
-ges_track_video_transition_new
-ges_track_video_transition_set_transition_type
-ges_track_video_transition_get_transition_type
-ges_track_video_transition_set_border
-ges_track_video_transition_get_border
-ges_track_video_transition_set_inverted
-ges_track_video_transition_is_inverted
+<FILE>ges-video-transition</FILE>
+<TITLE>GESVideoTransition</TITLE>
+GESVideoTransition
+ges_video_transition_new
+ges_video_transition_set_transition_type
+ges_video_transition_get_transition_type
+ges_video_transition_set_border
+ges_video_transition_get_border
+ges_video_transition_set_inverted
+ges_video_transition_is_inverted
 <SUBSECTION Standard>
-GESTrackVideoTransitionClass
-GESTrackVideoTransitionPrivate
-ges_track_video_transition_get_type
-GES_IS_TRACK_VIDEO_TRANSITION
-GES_IS_TRACK_VIDEO_TRANSITION_CLASS
-GES_TRACK_VIDEO_TRANSITION
-GES_TRACK_VIDEO_TRANSITION_CLASS
-GES_TRACK_VIDEO_TRANSITION_GET_CLASS
-GES_TYPE_TRACK_VIDEO_TRANSITION
+GESVideoTransitionClass
+GESVideoTransitionPrivate
+ges_video_transition_get_type
+GES_IS_VIDEO_TRANSITION
+GES_IS_VIDEO_TRANSITION_CLASS
+GES_VIDEO_TRANSITION
+GES_VIDEO_TRANSITION_CLASS
+GES_VIDEO_TRANSITION_GET_CLASS
+GES_TYPE_VIDEO_TRANSITION
 </SECTION>
 
 <SECTION>

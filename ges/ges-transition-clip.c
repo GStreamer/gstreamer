@@ -46,7 +46,7 @@
 
 struct _GESTransitionClipPrivate
 {
-  GSList *track_video_transitions;
+  GSList *video_transitions;
 
   const gchar *vtype_name;
 };
@@ -90,9 +90,9 @@ ges_transition_clip_update_vtype_internal (GESClip *
     return;
   }
 
-  for (tmp = trself->priv->track_video_transitions; tmp; tmp = tmp->next) {
-    if (!ges_track_video_transition_set_transition_type
-        (GES_TRACK_VIDEO_TRANSITION (tmp->data), value))
+  for (tmp = trself->priv->video_transitions; tmp; tmp = tmp->next) {
+    if (!ges_video_transition_set_transition_type
+        (GES_VIDEO_TRANSITION (tmp->data), value))
       return;
   }
 
@@ -274,11 +274,10 @@ ges_transition_clip_track_element_released (GESClip * obj,
   GESTransitionClipPrivate *priv = GES_TRANSITION_CLIP (obj)->priv;
 
   /* If this is called, we should be sure the trackelement exists */
-  if (GES_IS_TRACK_VIDEO_TRANSITION (trackelement)) {
-    GST_DEBUG ("GESTrackVideoTransition %p released from %p", trackelement,
-        obj);
-    priv->track_video_transitions =
-        g_slist_remove (priv->track_video_transitions, trackelement);
+  if (GES_IS_VIDEO_TRANSITION (trackelement)) {
+    GST_DEBUG ("GESVideoTransition %p released from %p", trackelement, obj);
+    priv->video_transitions =
+        g_slist_remove (priv->video_transitions, trackelement);
     g_object_unref (trackelement);
   }
 }
@@ -289,11 +288,10 @@ ges_transition_clip_track_element_added (GESClip * obj,
 {
   GESTransitionClipPrivate *priv = GES_TRANSITION_CLIP (obj)->priv;
 
-  if (GES_IS_TRACK_VIDEO_TRANSITION (trackelement)) {
-    GST_DEBUG ("GESTrackVideoTransition %p added to %p", trackelement, obj);
-    priv->track_video_transitions =
-        g_slist_prepend (priv->track_video_transitions,
-        g_object_ref (trackelement));
+  if (GES_IS_VIDEO_TRANSITION (trackelement)) {
+    GST_DEBUG ("GESVideoTransition %p added to %p", trackelement, obj);
+    priv->video_transitions =
+        g_slist_prepend (priv->video_transitions, g_object_ref (trackelement));
   }
 }
 
@@ -310,10 +308,10 @@ ges_tl_transition_create_track_element (GESClip * obj, GESTrackType type)
   if (type == GES_TRACK_TYPE_VIDEO) {
     if (supportedformats == GES_TRACK_TYPE_UNKNOWN ||
         supportedformats & GES_TRACK_TYPE_VIDEO) {
-      GESTrackVideoTransition *trans;
+      GESVideoTransition *trans;
 
-      trans = ges_track_video_transition_new ();
-      ges_track_video_transition_set_transition_type (trans, transition->vtype);
+      trans = ges_video_transition_new ();
+      ges_video_transition_set_transition_type (trans, transition->vtype);
 
       res = GES_TRACK_ELEMENT (trans);
     } else {

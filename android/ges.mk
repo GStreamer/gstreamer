@@ -33,7 +33,7 @@ LOCAL_SRC_FILES := 				\
 	ges-image-source.c		\
 	ges-transition.c			\
 	ges-track-audio-transition.c		\
-	ges-track-video-transition.c		\
+	ges-video-transition.c		\
 	ges-video-test-source.c		\
 	ges-audio-test-source.c		\
 	ges-title-source.c		\

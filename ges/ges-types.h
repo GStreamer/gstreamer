@@ -114,9 +114,9 @@ typedef struct _GESTrackAudioTransition GESTrackAudioTransition;
 typedef struct _GESTrackAudioTransitionClass
   GESTrackAudioTransitionClass;
 
-typedef struct _GESTrackVideoTransition GESTrackVideoTransition;
-typedef struct _GESTrackVideoTransitionClass
-  GESTrackVideoTransitionClass;
+typedef struct _GESVideoTransition GESVideoTransition;
+typedef struct _GESVideoTransitionClass
+  GESVideoTransitionClass;
 
 typedef struct _GESVideoTestSource GESVideoTestSource;
 typedef struct _GESVideoTestSourceClass
