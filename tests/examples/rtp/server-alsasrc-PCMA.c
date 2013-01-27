@@ -212,7 +212,7 @@ main (int argc, char *argv[])
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   /* print stats every second */
-  g_timeout_add (1000, (GSourceFunc) print_stats, rtpbin);
+  g_timeout_add_seconds (1, (GSourceFunc) print_stats, rtpbin);
 
   /* we need to run a GLib main loop to get the messages */
   loop = g_main_loop_new (NULL, FALSE);

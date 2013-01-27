@@ -68,7 +68,7 @@ main (int argc, char **argv)
   }
 
   /* quit after 5 seconds */
-  g_timeout_add (5000, (GSourceFunc) quit_cb, NULL);
+  g_timeout_add_seconds (5, (GSourceFunc) quit_cb, NULL);
   gtk_main ();
 
   /* clean up */

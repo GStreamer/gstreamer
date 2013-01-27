@@ -60,7 +60,7 @@ main (int argc, char **argv)
   }
 
   /* We want to get out after 5 seconds */
-  g_timeout_add (5000, (GSourceFunc) terminate_playback, pipeline);
+  g_timeout_add_seconds (5, (GSourceFunc) terminate_playback, pipeline);
 
   g_main_loop_run (loop);
 
