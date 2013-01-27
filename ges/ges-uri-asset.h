@@ -25,7 +25,7 @@
 #include <gio/gio.h>
 #include <ges/ges-types.h>
 #include <ges/ges-asset.h>
-#include <ges/ges-asset-clip.h>
+#include <ges/ges-clip-asset.h>
 #include <ges/ges-track-element-asset.h>
 
 G_BEGIN_DECLS
@@ -47,7 +47,7 @@ GType ges_uri_clip_asset_get_type (void);
 
 struct _GESUriClipAsset
 {
-  GESAssetClip parent;
+  GESClipAsset parent;
 
   /* <private> */
   GESUriClipAssetPrivate *priv;
@@ -58,7 +58,7 @@ struct _GESUriClipAsset
 
 struct _GESUriClipAssetClass
 {
-  GESAssetClipClass parent_class;
+  GESClipAssetClass parent_class;
 
   /* <private> */
   GstDiscoverer *discoverer;

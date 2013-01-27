@@ -41,7 +41,7 @@ initable_iface_init (GInitableIface * initable_iface)
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESUriClipAsset, ges_uri_clip_asset,
-    GES_TYPE_ASSET_CLIP,
+    GES_TYPE_CLIP_ASSET,
     G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init));
 
 /* TODO: We should monitor files here, and add some way of reporting changes
@@ -290,7 +290,7 @@ ges_uri_clip_asset_set_info (GESUriClipAsset * self, GstDiscovererInfo * info)
         gst_discoverer_stream_info_get_stream_id (sinf));
     _create_uri_source_asset (self, sinf, type);
   }
-  ges_asset_clip_set_supported_formats (GES_ASSET_CLIP
+  ges_clip_asset_set_supported_formats (GES_CLIP_ASSET
       (self), supportedformats);
 
   if (stream_list)

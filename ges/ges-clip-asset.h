@@ -20,8 +20,8 @@
  */
 
 
-#ifndef GES_ASSET_CLIP_H
-#define GES_ASSET_CLIP_H
+#ifndef GES_CLIP_ASSET_H
+#define GES_CLIP_ASSET_H
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -29,36 +29,36 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_ASSET_CLIP (ges_asset_clip_get_type ())
-#define GES_ASSET_CLIP(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_ASSET_CLIP, GESAssetClip))
-#define GES_ASSET_CLIP_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_ASSET_CLIP, GESAssetClipClass))
-#define GES_IS_ASSET_CLIP(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_ASSET_CLIP))
-#define GES_IS_ASSET_CLIP_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_ASSET_CLIP))
-#define GES_ASSET_CLIP_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_ASSET_CLIP, GESAssetClipClass))
+#define GES_TYPE_CLIP_ASSET (ges_clip_asset_get_type ())
+#define GES_CLIP_ASSET(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_CLIP_ASSET, GESClipAsset))
+#define GES_CLIP_ASSET_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_CLIP_ASSET, GESClipAssetClass))
+#define GES_IS_CLIP_ASSET(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_CLIP_ASSET))
+#define GES_IS_CLIP_ASSET_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_CLIP_ASSET))
+#define GES_CLIP_ASSET_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_CLIP_ASSET, GESClipAssetClass))
 
-typedef struct _GESAssetClipPrivate GESAssetClipPrivate;
+typedef struct _GESClipAssetPrivate GESClipAssetPrivate;
 
-struct _GESAssetClip
+struct _GESClipAsset
 {
   GESAsset parent;
 
   /* <private> */
-  GESAssetClipPrivate *priv;
+  GESClipAssetPrivate *priv;
 
   gpointer _ges_reserved[GES_PADDING];
 };
 
-struct _GESAssetClipClass
+struct _GESClipAssetClass
 {
   GESAssetClass parent;
 
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_asset_clip_get_type (void);
-void ges_asset_clip_set_supported_formats         (GESAssetClip *self,
+GType ges_clip_asset_get_type (void);
+void ges_clip_asset_set_supported_formats         (GESClipAsset *self,
                                                               GESTrackType supportedformats);
-GESTrackType ges_asset_clip_get_supported_formats (GESAssetClip *self);
+GESTrackType ges_clip_asset_get_supported_formats (GESClipAsset *self);
 
 G_END_DECLS
-#endif /* _GES_ASSET_CLIP_H */
+#endif /* _GES_CLIP_ASSET_H */

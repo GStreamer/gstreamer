@@ -242,8 +242,8 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
   if (ges_clip_get_supported_formats (clip) == GES_TRACK_TYPE_UNKNOWN) {
 
     ges_clip_set_supported_formats (clip,
-        ges_asset_clip_get_supported_formats
-        (GES_ASSET_CLIP (filesource_asset)));
+        ges_clip_asset_get_supported_formats
+        (GES_CLIP_ASSET (filesource_asset)));
   }
 
   GES_TIMELINE_ELEMENT (uriclip)->asset = asset;

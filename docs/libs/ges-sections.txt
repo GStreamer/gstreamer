@@ -986,20 +986,20 @@ ges_asset_get_type
 </SECTION>
 
 <SECTION>
-<FILE>ges-asset-clip</FILE>
-<TITLE>GESAssetClip</TITLE>
-GESAssetClip
-ges_asset_clip_get_type
-ges_asset_clip_set_supported_formats
-ges_asset_clip_get_supported_formats
+<FILE>ges-clip-asset</FILE>
+<TITLE>GESClipAsset</TITLE>
+GESClipAsset
+ges_clip_asset_get_type
+ges_clip_asset_set_supported_formats
+ges_clip_asset_get_supported_formats
 <SUBSECTION Standard>
-GESAssetClipPrivate
-GES_ASSET_CLIP
-GES_TYPE_ASSET_CLIP
-GES_ASSET_CLIP_CLASS
-GES_IS_ASSET_CLIP
-GES_IS_ASSET_CLIP_CLASS
-GES_ASSET_CLIP_GET_CLASS
+GESClipAssetPrivate
+GES_CLIP_ASSET
+GES_TYPE_CLIP_ASSET
+GES_CLIP_ASSET_CLASS
+GES_IS_CLIP_ASSET
+GES_IS_CLIP_ASSET_CLASS
+GES_CLIP_ASSET_GET_CLASS
 </SECTION>
 
 <SECTION>

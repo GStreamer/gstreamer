@@ -49,7 +49,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-pitivi-formatter.c			\
 	ges-asset.c \
 	ges-uri-asset.c \
-	ges-asset-clip.c \
+	ges-clip-asset.c \
 	ges-track-element-asset.c \
 	ges-extractable.c \
 	ges-project.c \
@@ -103,7 +103,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-pitivi-formatter.h			\
 	ges-asset.h \
 	ges-uri-asset.h \
-	ges-asset-clip.h \
+	ges-clip-asset.h \
 	ges-track-element-asset.h \
 	ges-extractable.h \
 	ges-project.h \

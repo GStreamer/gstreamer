@@ -18,7 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION: ges-asset-clip
+ * SECTION: ges-clip-asset
  * @short_description: A GESAsset subclass specialized in GESClip extraction
  *
  * The #GESUriClipAsset is a special #GESAsset specilized in #GESClip.
@@ -26,16 +26,16 @@
  * from it can potentialy create #GESTrackElement for.
  */
 
-#include "ges-asset-clip.h"
+#include "ges-clip-asset.h"
 
-G_DEFINE_TYPE (GESAssetClip, ges_asset_clip, GES_TYPE_ASSET);
-#define GES_ASSET_CLIP_GET_PRIVATE(o)\
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_ASSET_CLIP, \
-   GESAssetClipPrivate))
+G_DEFINE_TYPE (GESClipAsset, ges_clip_asset, GES_TYPE_ASSET);
+#define GES_CLIP_ASSET_GET_PRIVATE(o)\
+  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_CLIP_ASSET, \
+   GESClipAssetPrivate))
 
-#define parent_class ges_asset_clip_parent_class
+#define parent_class ges_clip_asset_parent_class
 
-struct _GESAssetClipPrivate
+struct _GESClipAssetPrivate
 {
   GESTrackType supportedformats;
 };
@@ -69,7 +69,7 @@ static void
 _get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESAssetClipPrivate *priv = GES_ASSET_CLIP (object)->priv;
+  GESClipAssetPrivate *priv = GES_CLIP_ASSET (object)->priv;
   switch (property_id) {
     case PROP_SUPPORTED_FORMATS:
       g_value_set_flags (value, priv->supportedformats);
@@ -83,7 +83,7 @@ static void
 _set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESAssetClipPrivate *priv = GES_ASSET_CLIP (object)->priv;
+  GESClipAssetPrivate *priv = GES_CLIP_ASSET (object)->priv;
 
   switch (property_id) {
     case PROP_SUPPORTED_FORMATS:
@@ -95,9 +95,9 @@ _set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_asset_clip_init (GESAssetClip * self)
+ges_clip_asset_init (GESClipAsset * self)
 {
-  self->priv = GES_ASSET_CLIP_GET_PRIVATE (self);
+  self->priv = GES_CLIP_ASSET_GET_PRIVATE (self);
 }
 
 static void
@@ -110,18 +110,18 @@ _constructed (GObject * object)
   pspec = G_PARAM_SPEC_FLAGS (g_object_class_find_property (class,
           "supported-formats"));
 
-  GES_ASSET_CLIP (object)->priv->supportedformats = pspec->default_value;
+  GES_CLIP_ASSET (object)->priv->supportedformats = pspec->default_value;
   g_type_class_unref (class);
 
   G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 
 static void
-ges_asset_clip_class_init (GESAssetClipClass * self_class)
+ges_clip_asset_class_init (GESClipAssetClass * self_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (self_class);
 
-  g_type_class_add_private (self_class, sizeof (GESAssetClipPrivate));
+  g_type_class_add_private (self_class, sizeof (GESClipAssetPrivate));
   object_class->constructed = _constructed;
   object_class->dispose = _dispose;
   object_class->finalize = _finalize;
@@ -129,7 +129,7 @@ ges_asset_clip_class_init (GESAssetClipClass * self_class)
   object_class->set_property = _set_property;
 
   /**
-   * GESAssetClip:supported-formats:
+   * GESClipAsset:supported-formats:
    *
    * The formats supported by the asset.
    */
@@ -148,24 +148,24 @@ ges_asset_clip_class_init (GESAssetClipClass * self_class)
  *                                             *
  ***********************************************/
 /**
- * ges_asset_clip_set_supported_formats:
- * @self: a #GESAssetClip
- * @supportedformats: The track types supported by the GESAssetClip
+ * ges_clip_asset_set_supported_formats:
+ * @self: a #GESClipAsset
+ * @supportedformats: The track types supported by the GESClipAsset
  *
  * Sets track types for which objects extracted from @self can create #GESTrackElement
  */
 void
-ges_asset_clip_set_supported_formats (GESAssetClip * self,
+ges_clip_asset_set_supported_formats (GESClipAsset * self,
     GESTrackType supportedformats)
 {
-  g_return_if_fail (GES_IS_ASSET_CLIP (self));
+  g_return_if_fail (GES_IS_CLIP_ASSET (self));
 
   self->priv->supportedformats = supportedformats;
 }
 
 /**
- * ges_asset_clip_get_supported_formats:
- * @self: a #GESAssetClip
+ * ges_clip_asset_get_supported_formats:
+ * @self: a #GESClipAsset
  *
  * Gets track types for which objects extracted from @self can create #GESTrackElement
  *
@@ -173,9 +173,9 @@ ges_asset_clip_set_supported_formats (GESAssetClip * self,
  * a layer
  */
 GESTrackType
-ges_asset_clip_get_supported_formats (GESAssetClip * self)
+ges_clip_asset_get_supported_formats (GESClipAsset * self)
 {
-  g_return_val_if_fail (GES_IS_ASSET_CLIP (self), GES_TRACK_TYPE_UNKNOWN);
+  g_return_val_if_fail (GES_IS_CLIP_ASSET (self), GES_TRACK_TYPE_UNKNOWN);
 
   return self->priv->supportedformats;
 }

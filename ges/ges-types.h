@@ -143,8 +143,8 @@ typedef struct _GESPitiviFormatterClass GESPitiviFormatterClass;
 typedef struct _GESAsset GESAsset;
 typedef struct _GESAssetClass GESAssetClass;
 
-typedef struct _GESAssetClip GESAssetClip;
-typedef struct _GESAssetClipClass GESAssetClipClass;
+typedef struct _GESClipAsset GESClipAsset;
+typedef struct _GESClipAssetClass GESClipAssetClass;
 
 typedef struct _GESUriClipAsset GESUriClipAsset;
 typedef struct _GESUriClipAssetClass GESUriClipAssetClass;
