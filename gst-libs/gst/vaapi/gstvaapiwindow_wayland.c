@@ -50,6 +50,7 @@ struct _GstVaapiWindowWaylandPrivate {
     struct wl_surface          *surface;
     struct wl_buffer           *buffer;
     struct wl_region           *opaque_region;
+    struct wl_event_queue      *event_queue;
     guint                       redraw_pending          : 1;
     guint                       is_shown                : 1;
     guint                       fullscreen_on_show      : 1;
@@ -76,19 +77,17 @@ gst_vaapi_window_wayland_sync(GstVaapiWindow *window)
 {
     GstVaapiWindowWaylandPrivate * const priv =
         GST_VAAPI_WINDOW_WAYLAND(window)->priv;
-    gboolean success = TRUE;
 
     if (priv->redraw_pending) {
         struct wl_display * const wl_display =
             GST_VAAPI_OBJECT_WL_DISPLAY(window);
 
-        GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
         do {
-            success = wl_display_dispatch(wl_display) >= 0;
-        } while (success && priv->redraw_pending);
-        GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+            if (wl_display_dispatch_queue(wl_display, priv->event_queue) < 0)
+                return FALSE;
+        } while (priv->redraw_pending);
     }
-    return success;
+    return TRUE;
 }
 
 static void
@@ -158,10 +157,17 @@ gst_vaapi_window_wayland_create(
     g_return_val_if_fail(priv_display->shell != NULL, FALSE);
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+    priv->event_queue = wl_display_create_queue(priv_display->wl_display);
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+    if (!priv->event_queue)
+        return FALSE;
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
     priv->surface = wl_compositor_create_surface(priv_display->compositor);
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
     if (!priv->surface)
         return FALSE;
+    wl_proxy_set_queue((struct wl_proxy *)priv->surface, priv->event_queue);
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
     priv->shell_surface =
@@ -169,6 +175,8 @@ gst_vaapi_window_wayland_create(
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
     if (!priv->shell_surface)
         return FALSE;
+    wl_proxy_set_queue((struct wl_proxy *)priv->shell_surface,
+        priv->event_queue);
 
     wl_shell_surface_add_listener(priv->shell_surface,
                                   &shell_surface_listener, priv);
@@ -202,6 +210,11 @@ gst_vaapi_window_wayland_destroy(GstVaapiWindow * window)
     if (priv->buffer) {
         wl_buffer_destroy(priv->buffer);
         priv->buffer = NULL;
+    }
+
+    if (priv->event_queue) {
+        wl_event_queue_destroy(priv->event_queue);
+        priv->event_queue = NULL;
     }
 }
 
