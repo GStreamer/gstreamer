@@ -46,7 +46,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ","
         "clock-rate = (int) 90000,"
         "media = (string) \"video\","
         "encoding-name = (string) \"VP8-DRAFT-IETF-01\""));

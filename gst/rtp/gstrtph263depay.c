@@ -54,7 +54,7 @@ static GstStaticPadTemplate gst_rtp_h263_depay_sink_template =
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_H263_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"H263\"; "
+        "clock-rate = (int) 90000; "
         "application/x-rtp, "
         "media = (string) \"video\", "
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H263\"")

@@ -41,9 +41,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
-        "media = (string) \"audio\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "encoding-name = (string)\"X-QDM\"")
+        "media = (string) \"audio\", " "encoding-name = (string)\"X-QDM\"")
     );
 
 #define gst_rtp_qdm2_depay_parent_class parent_class
