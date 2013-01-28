@@ -30,6 +30,7 @@
 struct _GstRTSPClientPrivate
 {
   GMutex lock;
+  GMutex send_lock;
   GstRTSPConnection *connection;
   GstRTSPWatch *watch;
   guint close_seq;
@@ -208,6 +209,7 @@ gst_rtsp_client_init (GstRTSPClient * client)
   client->priv = priv;
 
   g_mutex_init (&priv->lock);
+  g_mutex_init (&priv->send_lock);
   priv->use_client_settings = DEFAULT_USE_CLIENT_SETTINGS;
   priv->close_seq = 0;
 }
@@ -258,11 +260,10 @@ gst_rtsp_client_finalize (GObject * obj)
 
   GST_INFO ("finalize client %p", client);
 
+  gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
+
   if (priv->watch)
     g_source_destroy ((GSource *) priv->watch);
-
-  if (priv->send_notify)
-    priv->send_notify (priv->send_data);
 
   client_cleanup_sessions (client);
 
@@ -284,6 +285,7 @@ gst_rtsp_client_finalize (GObject * obj)
 
   g_free (priv->server_ip);
   g_mutex_clear (&priv->lock);
+  g_mutex_clear (&priv->send_lock);
 
   G_OBJECT_CLASS (gst_rtsp_client_parent_class)->finalize (obj);
 }
@@ -374,8 +376,10 @@ send_response (GstRTSPClient * client, GstRTSPSession * session,
   if (close)
     gst_rtsp_message_add_header (response, GST_RTSP_HDR_CONNECTION, "close");
 
+  g_mutex_lock (&priv->send_lock);
   if (priv->send_func)
     priv->send_func (client, response, close, priv->send_data);
+  g_mutex_unlock (&priv->send_lock);
 
   gst_rtsp_message_unset (response);
 }
@@ -543,8 +547,10 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
 
   gst_rtsp_message_take_body (&message, map_info.data, map_info.size);
 
+  g_mutex_lock (&priv->send_lock);
   if (priv->send_func)
     priv->send_func (client, &message, FALSE, priv->send_data);
+  g_mutex_unlock (&priv->send_lock);
 
   gst_rtsp_message_steal_body (&message, &data, &usize);
   gst_buffer_unmap (buffer, &map_info);
@@ -2026,13 +2032,13 @@ gst_rtsp_client_set_send_func (GstRTSPClient * client,
 
   priv = client->priv;
 
-  g_mutex_lock (&priv->lock);
+  g_mutex_lock (&priv->send_lock);
   priv->send_func = func;
   old_notify = priv->send_notify;
   old_data = priv->send_data;
   priv->send_notify = notify;
   priv->send_data = user_data;
-  g_mutex_unlock (&priv->lock);
+  g_mutex_unlock (&priv->send_lock);
 
   if (old_notify)
     old_notify (old_data);
@@ -2117,6 +2123,8 @@ closed (GstRTSPWatch * watch, gpointer user_data)
     g_hash_table_remove (tunnels, tunnelid);
     g_mutex_unlock (&tunnels_lock);
   }
+
+  gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
 
   return GST_RTSP_OK;
 }
@@ -2461,7 +2469,8 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
   /* create watch for the connection and attach */
   priv->watch = gst_rtsp_watch_new (priv->connection, &watch_funcs,
       g_object_ref (client), (GDestroyNotify) client_watch_notify);
-  gst_rtsp_client_set_send_func (client, do_send_message, NULL, NULL);
+  gst_rtsp_client_set_send_func (client, do_send_message, priv->watch,
+      (GDestroyNotify) gst_rtsp_watch_unref);
 
   /* FIXME make this configurable. We don't want to do this yet because it will
    * be superceeded by a cache object later */
@@ -2469,7 +2478,6 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
 
   GST_INFO ("attaching to context %p", context);
   res = gst_rtsp_watch_attach (priv->watch, context);
-  gst_rtsp_watch_unref (priv->watch);
 
   return res;
 }
