@@ -303,9 +303,9 @@ gst_queue_array_find (GstQueueArray * array, GCompareFunc func, gpointer data)
   guint i;
 
   /* Scan from head to tail */
-  for (i = array->head; i < array->length; i = (i + 1) % array->size)
-    if (func (array->array[i], data) == 0)
-      return i;
+  for (i = 0; i < array->length; i++)
+    if (func (array->array[(i + array->head) % array->size], data) == 0)
+      return (i + array->head) % array->size;
   return -1;
 }
 
