@@ -2224,6 +2224,7 @@ gst_rtp_session_request_key_unit (RTPSession * sess,
 {
   GstRtpSession *rtpsession = GST_RTP_SESSION (user_data);
   GstEvent *event;
+  GstPad *send_rtp_sink;
 
   GST_RTP_SESSION_LOCK (rtpsession);
   if (rtpsession->send_rtp_sink)

@@ -626,6 +626,7 @@ gst_rtp_ssrc_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   guint32 ssrc;
   GstRTPBuffer rtp = { NULL };
   GstPad *srcpad;
+  GstRtpSsrcDemuxPad *dpad;
 
   demux = GST_RTP_SSRC_DEMUX (parent);
 
@@ -687,6 +688,7 @@ gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad, GstObject * parent,
   GstRTCPPacket packet;
   GstRTCPBuffer rtcp = { NULL, };
   GstPad *srcpad;
+  GstRtpSsrcDemuxPad *dpad;
 
   demux = GST_RTP_SSRC_DEMUX (parent);
 
