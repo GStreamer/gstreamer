@@ -44,13 +44,11 @@ static GstStaticPadTemplate gst_rtp_mpa_robust_depay_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 90000, "
         "encoding-name = (string) \"MPA-ROBUST\" " "; "
         /* draft versions appear still in use out there */
         "application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) [1, MAX], "
         "encoding-name = (string) { \"X-MP3-DRAFT-00\", \"X-MP3-DRAFT-01\", "
         " \"X-MP3-DRAFT-02\", \"X-MP3-DRAFT-03\", \"X-MP3-DRAFT-04\", "

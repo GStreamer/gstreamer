@@ -54,11 +54,9 @@ static GstStaticPadTemplate gst_rtp_mp1s_depay_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"other\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"MP1S\";"
         "application/x-rtp, "
         "media = (string) \"video\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"MP1S\"")
     );
 

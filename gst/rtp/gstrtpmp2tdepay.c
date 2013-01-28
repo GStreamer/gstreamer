@@ -55,7 +55,6 @@ static GstStaticPadTemplate gst_rtp_mp2t_depay_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) [1, MAX ], "
         "encoding-name = (string) { MP2T, MP2T-ES } ;"
         /* All optional parameters

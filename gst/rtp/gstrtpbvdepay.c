@@ -33,12 +33,10 @@ static GstStaticPadTemplate gst_rtp_bv_depay_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 8000, "
         "encoding-name = (string) \"BV16\"; "
         "application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 16000, " "encoding-name = (string) \"BV32\"")
     );
 
