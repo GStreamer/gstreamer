@@ -230,7 +230,7 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
   GESUriClipAsset *filesource_asset = GES_URI_CLIP_ASSET (asset);
   GESClip *clip = GES_CLIP (self);
 
-  if (GST_CLOCK_TIME_IS_VALID (GES_TIMELINE_ELEMENT (clip)) == FALSE)
+  if (GST_CLOCK_TIME_IS_VALID (GES_TIMELINE_ELEMENT_DURATION (clip)) == FALSE)
     _set_duration0 (GES_TIMELINE_ELEMENT (uriclip),
         ges_uri_clip_asset_get_duration (filesource_asset));
 
