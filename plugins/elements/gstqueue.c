@@ -811,7 +811,16 @@ gst_queue_handle_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
   /* ERRORS */
 out_flushing:
   {
+    gint index;
+
     GST_DEBUG_OBJECT (queue, "we are flushing");
+
+    /* Remove query from queue if still there, since we hold no ref to it */
+    index = gst_queue_array_find (&queue->queue, NULL, query);
+
+    if (index >= 0)
+      gst_queue_array_drop_element (&queue->queue, index);
+
     GST_QUEUE_MUTEX_UNLOCK (queue);
     return FALSE;
   }
