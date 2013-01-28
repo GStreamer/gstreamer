@@ -2232,7 +2232,7 @@ gst_rtp_session_request_key_unit (RTPSession * sess,
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
   if (send_rtp_sink) {
-    GstEvent *event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+    event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
         gst_structure_new ("GstForceKeyUnit",
             "all-headers", G_TYPE_BOOLEAN, all_headers, NULL));
     gst_pad_push_event (send_rtp_sink, event);
