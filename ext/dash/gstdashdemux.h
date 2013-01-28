@@ -32,8 +32,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
-#include <gst/gst.h>
-#include <gst/base/gstadapter.h>
+#include <gst/base/gstdataqueue.h>
 #include "gstmpdparser.h"
 #include "gstfragmented.h"
 #include "gsturidownloader.h"
@@ -53,7 +52,6 @@ G_BEGIN_DECLS
 typedef struct _GstDashDemuxStream GstDashDemuxStream;
 typedef struct _GstDashDemux GstDashDemux;
 typedef struct _GstDashDemuxClass GstDashDemuxClass;
-#define MAX_LANGUAGES 20
 
 struct _GstDashDemuxStream
 {
@@ -64,7 +62,7 @@ struct _GstDashDemuxStream
   GstCaps *output_caps;
   GstCaps *input_caps;
 
-  GQueue *queue;
+  GstDataQueue *queue;
 };
 
 /**

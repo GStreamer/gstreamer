@@ -20,7 +20,7 @@
  */
 
 #include <glib.h>
-#include <gst/base/gsttypefindhelper.h>
+#include <gst/base/gstadapter.h>
 #include "gstfragmented.h"
 #include "gstfragment.h"
 
@@ -35,42 +35,19 @@ enum
   PROP_NAME,
   PROP_DURATION,
   PROP_DISCONTINOUS,
-  PROP_BUFFER_LIST,
-  PROP_CAPS,
   PROP_LAST
 };
 
 struct _GstFragmentPrivate
 {
-  GstBufferList *buffer_list;
-  guint64 size;
-  GstBufferListIterator *buffer_iterator;
-  GstCaps *caps;
-  GMutex lock;
+  GstAdapter *adapter;
+  GstBuffer *buffer;
 };
 
 G_DEFINE_TYPE (GstFragment, gst_fragment, G_TYPE_OBJECT);
 
 static void gst_fragment_dispose (GObject * object);
 static void gst_fragment_finalize (GObject * object);
-
-static void
-gst_fragment_set_property (GObject * object,
-    guint property_id, const GValue * value, GParamSpec * pspec)
-{
-  GstFragment *fragment = GST_FRAGMENT (object);
-
-  switch (property_id) {
-    case PROP_CAPS:
-      gst_fragment_set_caps (fragment, g_value_get_boxed (value));
-      break;
-
-    default:
-      /* We don't have any other property... */
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
-}
 
 static void
 gst_fragment_get_property (GObject * object,
@@ -95,22 +72,12 @@ gst_fragment_get_property (GObject * object,
       g_value_set_boolean (value, fragment->discontinuous);
       break;
 
-    case PROP_BUFFER_LIST:
-      g_value_set_object (value, gst_fragment_get_buffer_list (fragment));
-      break;
-
-    case PROP_CAPS:
-      g_value_set_boxed (value, gst_fragment_get_caps (fragment));
-      break;
-
     default:
       /* We don't have any other property... */
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
   }
 }
-
-
 
 static void
 gst_fragment_class_init (GstFragmentClass * klass)
@@ -119,7 +86,6 @@ gst_fragment_class_init (GstFragmentClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstFragmentPrivate));
 
-  gobject_class->set_property = gst_fragment_set_property;
   gobject_class->get_property = gst_fragment_get_property;
   gobject_class->dispose = gst_fragment_dispose;
   gobject_class->finalize = gst_fragment_finalize;
@@ -140,16 +106,6 @@ gst_fragment_class_init (GstFragmentClass * klass)
   g_object_class_install_property (gobject_class, PROP_DURATION,
       g_param_spec_uint64 ("duration", "Fragment duration",
           "Duration of the fragment", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
-
-  g_object_class_install_property (gobject_class, PROP_BUFFER_LIST,
-      g_param_spec_object ("buffer-list", "Buffer List",
-          "A list with the fragment's buffers", GST_TYPE_FRAGMENT,
-          G_PARAM_READABLE));
-
-  g_object_class_install_property (gobject_class, PROP_CAPS,
-      g_param_spec_boxed ("caps", "Fragment caps",
-          "The caps of the fragment's buffer. (NULL = detect)", GST_TYPE_CAPS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -159,12 +115,8 @@ gst_fragment_init (GstFragment * fragment)
 
   fragment->priv = priv = GST_FRAGMENT_GET_PRIVATE (fragment);
 
-  g_mutex_init (&fragment->priv->lock);
-  priv->buffer_list = gst_buffer_list_new ();
-  priv->size = 0;
-  priv->buffer_iterator = gst_buffer_list_iterate (priv->buffer_list);
-  gst_buffer_list_iterator_add_group (priv->buffer_iterator);
-  fragment->download_start_time = g_get_real_time ();
+  priv->adapter = gst_adapter_new ();
+  fragment->download_start_time = gst_util_get_timestamp ();
   fragment->start_time = 0;
   fragment->stop_time = 0;
   fragment->index = 0;
@@ -185,7 +137,6 @@ gst_fragment_finalize (GObject * gobject)
   GstFragment *fragment = GST_FRAGMENT (gobject);
 
   g_free (fragment->name);
-  g_mutex_clear (&fragment->priv->lock);
 
   G_OBJECT_CLASS (gst_fragment_parent_class)->finalize (gobject);
 }
@@ -195,73 +146,33 @@ gst_fragment_dispose (GObject * object)
 {
   GstFragmentPrivate *priv = GST_FRAGMENT (object)->priv;
 
-  if (priv->buffer_list != NULL) {
-    gst_buffer_list_iterator_free (priv->buffer_iterator);
-    gst_buffer_list_unref (priv->buffer_list);
-    priv->buffer_list = NULL;
-    priv->size = 0;
+  if (priv->adapter) {
+    gst_object_unref (priv->adapter);
+    priv->adapter = NULL;
   }
-
-  if (priv->caps != NULL) {
-    gst_caps_unref (priv->caps);
-    priv->caps = NULL;
+  if (priv->buffer) {
+    gst_buffer_unref (priv->buffer);
+    priv->buffer = NULL;
   }
 
   G_OBJECT_CLASS (gst_fragment_parent_class)->dispose (object);
 }
 
-GstBufferList *
-gst_fragment_get_buffer_list (GstFragment * fragment)
+GstBuffer *
+gst_fragment_get_buffer (GstFragment * fragment)
 {
   g_return_val_if_fail (fragment != NULL, NULL);
 
   if (!fragment->completed)
     return NULL;
 
-  gst_buffer_list_ref (fragment->priv->buffer_list);
-  return fragment->priv->buffer_list;
-}
-
-void
-gst_fragment_set_caps (GstFragment * fragment, GstCaps * caps)
-{
-  g_return_if_fail (fragment != NULL);
-
-  g_mutex_lock (&fragment->priv->lock);
-  gst_caps_replace (&fragment->priv->caps, caps);
-  g_mutex_unlock (&fragment->priv->lock);
-}
-
-GstCaps *
-gst_fragment_get_caps (GstFragment * fragment)
-{
-  g_return_val_if_fail (fragment != NULL, NULL);
-
-  if (!fragment->completed)
-    return NULL;
-
-  g_mutex_lock (&fragment->priv->lock);
-  if (fragment->priv->caps == NULL) {
-    GstBuffer *buf = gst_buffer_list_get (fragment->priv->buffer_list, 0, 0);
-    fragment->priv->caps = gst_type_find_helper_for_buffer (NULL, buf, NULL);
+  if (!fragment->priv->buffer) {
+    fragment->priv->buffer = gst_adapter_take_buffer (fragment->priv->adapter,
+        gst_adapter_available (fragment->priv->adapter));
   }
-  gst_caps_ref (fragment->priv->caps);
-  g_mutex_unlock (&fragment->priv->lock);
 
-  return fragment->priv->caps;
+  return gst_buffer_ref (fragment->priv->buffer);
 }
-
-guint64
-gst_fragment_get_buffer_size (GstFragment * fragment)
-{
-  g_return_val_if_fail (fragment != NULL, 0);
-
-  if (!fragment->completed)
-    return 0;
-  return fragment->priv->size;
-}
-
-
 
 gboolean
 gst_fragment_add_buffer (GstFragment * fragment, GstBuffer * buffer)
@@ -274,8 +185,20 @@ gst_fragment_add_buffer (GstFragment * fragment, GstBuffer * buffer)
     return FALSE;
   }
 
-  gst_buffer_list_iterator_add (fragment->priv->buffer_iterator, buffer);
-  fragment->priv->size = fragment->priv->size + GST_BUFFER_SIZE (buffer);
+  GST_DEBUG ("Adding new buffer to the fragment");
+  /* We steal the buffers you pass in */
+  gst_adapter_push (fragment->priv->adapter, buffer);
+
   return TRUE;
 }
 
+gsize
+gst_fragment_get_total_size (GstFragment * fragment)
+{
+  g_return_val_if_fail (GST_IS_FRAGMENT (fragment), 0);
+
+  if (fragment->priv->buffer)
+    return GST_BUFFER_SIZE (fragment->priv->buffer);
+
+  return gst_adapter_available (fragment->priv->adapter);
+}

@@ -3256,7 +3256,7 @@ gst_mpd_client_get_next_fragment_duration (GstMpdClient * client)
   GstActiveStream *stream;
   GstMediaSegment *media_segment;
 
-  GST_WARNING ("Stream index: %i", client->stream_idx);
+  GST_DEBUG ("Stream index: %i", client->stream_idx);
   stream = g_list_nth_data (client->active_streams, client->stream_idx);
   g_return_val_if_fail (stream != NULL, 0);
 
