@@ -82,10 +82,8 @@ sync_bus_handler (GstBus * bus, GstMessage * message, GstElement * bin)
           g_message ("created task %p", task);
           break;
         case GST_STREAM_STATUS_TYPE_ENTER:
-          if (task) {
-            /* g_message ("raising task priority for %p", task); */
-            /* FIXME: do something here */
-          }
+          /* g_message ("raising task priority"); */
+          /* setpriority (PRIO_PROCESS, 0, -10); */
           break;
         case GST_STREAM_STATUS_TYPE_LEAVE:
           break;
