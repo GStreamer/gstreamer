@@ -996,7 +996,8 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
       /* this one has an opposite meaning to the opus ctl... */
       g_mutex_lock (&enc->property_lock);
       enc->cbr = g_value_get_boolean (value);
-      opus_multistream_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr));
+      if (enc->state)
+        opus_multistream_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr));
       g_mutex_unlock (&enc->property_lock);
       break;
     case PROP_CONSTRAINED_VBR:
