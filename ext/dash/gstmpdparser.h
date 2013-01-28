@@ -496,6 +496,7 @@ guint gst_mpdparser_get_nb_adaptationSet (GstMpdClient *client);
 /* Segment */
 void gst_mpd_client_set_segment_index_for_all_streams (GstMpdClient * client, guint segment_idx);
 guint gst_mpd_client_get_segment_index (GstActiveStream * stream);
+void gst_mpd_client_set_segment_index (GstActiveStream * stream, guint segment_idx);
 
 /* Get audio/video stream parameters (mimeType, width, height, rate, number of channels) */
 const gchar *gst_mpd_client_get_stream_mimeType (GstActiveStream * stream);

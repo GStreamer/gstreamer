@@ -127,8 +127,6 @@ static gboolean gst_mpd_client_add_media_segment (GstActiveStream * stream,
     GstClockTime start_time, GstClockTime duration);
 static const gchar *gst_mpdparser_mimetype_to_caps (const gchar * mimeType);
 static GstClockTime gst_mpd_client_get_segment_duration (GstMpdClient * client);
-static void gst_mpd_client_set_segment_index (GstActiveStream * stream,
-    guint segment_idx);
 
 /* Adaptation Set */
 static GstAdaptationSetNode
@@ -3338,7 +3336,7 @@ gst_mpd_client_set_segment_index_for_all_streams (GstMpdClient * client,
   }
 }
 
-static void
+void
 gst_mpd_client_set_segment_index (GstActiveStream * stream, guint segment_idx)
 {
   g_return_if_fail (stream != NULL);

@@ -531,10 +531,9 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
       GList *list;
       GstClockTime current_pos, target_pos;
       guint current_sequence, current_period;
-      GstActiveStream *stream;
+      GstActiveStream *active_stream;
       GstMediaSegment *chunk;
       GstStreamPeriod *period;
-      guint nb_active_stream;
       GSList *iter;
 
       GST_WARNING_OBJECT (demux, "Received seek event");
@@ -554,6 +553,26 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
           "seek event, rate: %f type: %d start: %" GST_TIME_FORMAT " stop: %"
           GST_TIME_FORMAT, rate, start_type, GST_TIME_ARGS (start),
           GST_TIME_ARGS (stop));
+
+      if (flags & GST_SEEK_FLAG_FLUSH) {
+        GST_DEBUG_OBJECT (demux, "sending flush start");
+        for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+          GstDashDemuxStream *stream;
+          stream = iter->data;
+          gst_pad_push_event (stream->pad, gst_event_new_flush_start ());
+        }
+      }
+
+      /* Stop the demux */
+      demux->cancelled = TRUE;
+      gst_dash_demux_stop (demux);
+
+      /* Wait for streaming to finish */
+      g_static_rec_mutex_lock (&demux->stream_lock);
+
+      /* Clear the buffering queue */
+      /* FIXME: allow seeking in the buffering queue */
+      gst_dash_demux_clear_queues (demux);
 
       //GST_MPD_CLIENT_LOCK (demux->client);
 
@@ -582,57 +601,35 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
           return FALSE;
       }
 
-      stream = gst_mpdparser_get_active_stream_by_index (demux->client, 0);
-      current_pos = 0;
-      current_sequence = 0;
-      for (list = g_list_first (stream->segments); list;
-          list = g_list_next (list)) {
-        chunk = list->data;
-        current_pos = chunk->start_time;
-        //current_sequence = chunk->number;
-        GST_WARNING_OBJECT (demux, "%llu <= %llu (%llu)", current_pos,
-            target_pos, chunk->duration);
-        if (current_pos <= target_pos
-            && target_pos < current_pos + chunk->duration) {
-          break;
-        }
-        current_sequence++;
-      }
-      //GST_MPD_CLIENT_UNLOCK (demux->client);
-
       if (list == NULL) {
         GST_WARNING_OBJECT (demux, "Could not find seeked fragment");
         return FALSE;
       }
 
-      /* We can actually perform the seek */
-      nb_active_stream = gst_mpdparser_get_nb_active_stream (demux->client);
-
-      if (flags & GST_SEEK_FLAG_FLUSH) {
-        GST_DEBUG_OBJECT (demux, "sending flush start");
-        for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
-          GstDashDemuxStream *stream;
-          stream = iter->data;
-          gst_pad_push_event (stream->pad, gst_event_new_flush_start ());
-        }
-      }
-
-      /* Stop the demux */
-      demux->cancelled = TRUE;
-      gst_dash_demux_stop (demux);
-
-      /* Wait for streaming to finish */
-      g_static_rec_mutex_lock (&demux->stream_lock);
-
-      /* Clear the buffering queue */
-      /* FIXME: allow seeking in the buffering queue */
-      gst_dash_demux_clear_queues (demux);
-
-      //GST_MPD_CLIENT_LOCK (demux->client);
-      GST_DEBUG_OBJECT (demux, "Seeking to sequence %d", current_sequence);
       /* Update the current sequence on all streams */
-      gst_mpd_client_set_segment_index_for_all_streams (demux->client,
-          current_sequence);
+      for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+        GstDashDemuxStream *stream = iter->data;
+
+        active_stream =
+            gst_mpdparser_get_active_stream_by_index (demux->client,
+            stream->index);
+        current_pos = 0;
+        current_sequence = 0;
+        for (list = g_list_first (active_stream->segments); list;
+            list = g_list_next (list)) {
+          chunk = list->data;
+          current_pos = chunk->start_time;
+          //current_sequence = chunk->number;
+          GST_WARNING_OBJECT (demux, "%llu <= %llu (%llu)", current_pos,
+              target_pos, chunk->duration);
+          if (current_pos <= target_pos
+              && target_pos < current_pos + chunk->duration) {
+            break;
+          }
+          current_sequence++;
+        }
+        gst_mpd_client_set_segment_index (active_stream, current_sequence);
+      }
       /* Calculate offset in the next fragment */
       demux->position = gst_mpd_client_get_current_position (demux->client);
       demux->position_shift = start - demux->position;
