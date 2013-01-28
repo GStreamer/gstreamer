@@ -71,6 +71,26 @@ gst_vaapi_window_wayland_hide(GstVaapiWindow *window)
     return TRUE;
 }
 
+static gboolean
+gst_vaapi_window_wayland_sync(GstVaapiWindow *window)
+{
+    GstVaapiWindowWaylandPrivate * const priv =
+        GST_VAAPI_WINDOW_WAYLAND(window)->priv;
+    gboolean success = TRUE;
+
+    if (priv->redraw_pending) {
+        struct wl_display * const wl_display =
+            GST_VAAPI_OBJECT_WL_DISPLAY(window);
+
+        GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+        do {
+            success = wl_display_dispatch(wl_display) >= 0;
+        } while (success && priv->redraw_pending);
+        GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+    }
+    return success;
+}
+
 static void
 handle_ping(void *data, struct wl_shell_surface *shell_surface,
             uint32_t serial)
@@ -256,11 +276,11 @@ gst_vaapi_window_wayland_render(
     if (surface_id == VA_INVALID_ID)
         return FALSE;
 
-    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
-
     /* Wait for the previous frame to complete redraw */
-    if (priv->redraw_pending) 
-        wl_display_dispatch(wl_display);
+    if (!gst_vaapi_window_wayland_sync(window))
+        return FALSE;
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
 
     /* XXX: use VA/VPP for other filters */
     va_flags = from_GstVaapiSurfaceRenderFlags(flags);
