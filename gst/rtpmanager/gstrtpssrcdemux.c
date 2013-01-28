@@ -646,11 +646,11 @@ gst_rtp_ssrc_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   ret = gst_pad_push (srcpad, buf);
 
   if (ret != GST_FLOW_OK) {
-    // check if the ssrc still there, may have been removed
+    /* check if the ssrc still there, may have been removed */
     GST_PAD_LOCK (demux);
     dpad = find_demux_pad_for_ssrc (demux, ssrc);
     if (dpad == NULL || dpad->rtp_pad != srcpad) {
-      // SSRC was removed during the push ... ignore the error
+      /* SSRC was removed during the push ... ignore the error */
       ret = GST_FLOW_OK;
     }
     GST_PAD_UNLOCK (demux);
@@ -723,11 +723,11 @@ gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad, GstObject * parent,
   ret = gst_pad_push (srcpad, buf);
 
   if (ret != GST_FLOW_OK) {
-    // check if the ssrc still there, may have been removed
+    /* check if the ssrc still there, may have been removed */
     GST_PAD_LOCK (demux);
     dpad = find_demux_pad_for_ssrc (demux, ssrc);
     if (dpad == NULL || dpad->rtcp_pad != srcpad) {
-      // SSRC was removed during the push ... ignore the error
+      /* SSRC was removed during the push ... ignore the error */
       ret = GST_FLOW_OK;
     }
     GST_PAD_UNLOCK (demux);
