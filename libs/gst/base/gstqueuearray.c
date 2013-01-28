@@ -212,52 +212,76 @@ gst_queue_array_is_empty (GstQueueArray * array)
 gpointer
 gst_queue_array_drop_element (GstQueueArray * array, guint idx)
 {
+  int first_item_index, last_item_index;
   gpointer element;
 
-  if (idx == array->head) {
-    /* just move the head */
-    element = array->array[idx];
+  g_return_val_if_fail (array->length > 0, NULL);
+  g_return_val_if_fail (idx < array->size, NULL);
+
+  first_item_index = array->head;
+
+  /* tail points to the first free spot */
+  last_item_index = (array->tail - 1 + array->size) % array->size;
+
+  element = array->array[idx];
+
+  /* simple case idx == first item */
+  if (idx == first_item_index) {
+    /* move the head plus one */
     array->head++;
     array->head %= array->size;
+    array->length--;
     return element;
   }
-  if (idx == array->tail - 1) {
-    /* just move the tail */
-    element = array->array[idx];
+
+  /* simple case idx == last item */
+  if (idx == last_item_index) {
+    /* move tail minus one, potentially wrapping */
     array->tail = (array->tail - 1 + array->size) % array->size;
+    array->length--;
     return element;
   }
-  /* drop the element #idx... and readjust the array */
-  if (array->head < array->tail) {
-    /* Make sure it's within the boundaries */
-    g_assert (array->head < idx && idx <= array->tail);
-    element = array->array[idx];
-    /* ends not wrapped */
-    /* move head-idx to head+1 */
-    memcpy (&array->array[array->head + 1],
-        &array->array[array->head], (idx - array->head) * sizeof (gpointer));
-    array->tail--;
-  } else {
-    /* ends are wrapped */
-    if (idx < array->tail) {
-      element = array->array[idx];
-      /* move idx-tail backwards one */
-      memcpy (&array->array[idx - 1],
-          &array->array[idx], (array->tail - idx) * sizeof (gpointer));
-      array->tail--;
-    } else if (idx >= array->head) {
-      element = array->array[idx];
-      /* move head-idx forwards one */
-      memcpy (&array->array[array->head],
-          &array->array[array->head + 1],
-          (idx - array->head) * sizeof (gpointer));
-      array->head++;
-    } else {
-      g_assert_not_reached ();
-      element = NULL;
-    }
+
+  /* non-wrapped case */
+  if (first_item_index < last_item_index) {
+    g_assert (first_item_index < idx && idx < last_item_index);
+    /* move everything beyond idx one step towards zero in array */
+    memmove (&array->array[idx],
+        &array->array[idx + 1], (last_item_index - idx) * sizeof (gpointer));
+    /* tail might wrap, ie if tail == 0 (and last_item_index == size) */
+    array->tail = (array->tail - 1 + array->size) % array->size;
+    array->length--;
+    return element;
   }
-  return element;
+
+  /* only wrapped cases left */
+  g_assert (first_item_index > last_item_index);
+
+  if (idx < last_item_index) {
+    /* idx is before last_item_index, move data towards zero */
+    memmove (&array->array[idx],
+        &array->array[idx + 1], (last_item_index - idx) * sizeof (gpointer));
+    /* tail should not wrap in this case! */
+    g_assert (array->tail > 0);
+    array->tail--;
+    array->length--;
+    return element;
+  }
+
+  if (idx > first_item_index) {
+    element = array->array[idx];
+    /* idx is after first_item_index, move data to higher indices */
+    memmove (&array->array[first_item_index + 1],
+        &array->array[first_item_index],
+        (idx - first_item_index) * sizeof (gpointer));
+    array->head++;
+    /* head should not wrap in this case! */
+    g_assert (array->head < array->size);
+    array->length--;
+    return element;
+  }
+
+  g_return_val_if_reached (NULL);
 }
 
 /**
