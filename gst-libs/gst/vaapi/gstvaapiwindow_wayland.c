@@ -157,12 +157,16 @@ gst_vaapi_window_wayland_create(
     g_return_val_if_fail(priv_display->compositor != NULL, FALSE);
     g_return_val_if_fail(priv_display->shell != NULL, FALSE);
 
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
     priv->surface = wl_compositor_create_surface(priv_display->compositor);
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
     if (!priv->surface)
         return FALSE;
 
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
     priv->shell_surface =
         wl_shell_get_shell_surface(priv_display->shell, priv->surface);
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
     if (!priv->shell_surface)
         return FALSE;
 
@@ -217,7 +221,9 @@ gst_vaapi_window_wayland_resize(
 
     if (priv->opaque_region)
         wl_region_destroy(priv->opaque_region);
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
     priv->opaque_region = wl_compositor_create_region(priv_display->compositor);
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
     wl_region_add(priv->opaque_region, 0, 0, width, height);
 
     return TRUE;
@@ -280,9 +286,8 @@ gst_vaapi_window_wayland_render(
     if (!gst_vaapi_window_wayland_sync(window))
         return FALSE;
 
-    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
-
     /* XXX: use VA/VPP for other filters */
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
     va_flags = from_GstVaapiSurfaceRenderFlags(flags);
     status = vaGetSurfaceBufferWl(
         GST_VAAPI_DISPLAY_VADISPLAY(display),
@@ -299,10 +304,12 @@ gst_vaapi_window_wayland_render(
             &buffer
         );
     }
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
     if (!vaapi_check_status(status, "vaGetSurfaceBufferWl()"))
         return FALSE;
 
     /* XXX: attach to the specified target rectangle */
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
     wl_surface_attach(priv->surface, buffer, 0, 0);
     wl_surface_damage(priv->surface, 0, 0, width, height);
 
