@@ -49,10 +49,22 @@ G_BEGIN_DECLS
         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DASH_DEMUX))
 #define GST_IS_DASH_DEMUX_CLASS(klass) \
         (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DASH_DEMUX))
-//
+
+typedef struct _GstDashDemuxStream GstDashDemuxStream;
 typedef struct _GstDashDemux GstDashDemux;
 typedef struct _GstDashDemuxClass GstDashDemuxClass;
 #define MAX_LANGUAGES 20
+
+struct _GstDashDemuxStream
+{
+  GstPad *pad;
+
+  gint index;
+
+  GstCaps *output_caps;
+  GstCaps *input_caps;
+};
+
 /**
  * GstDashDemux:
  *
@@ -62,9 +74,8 @@ struct _GstDashDemux
 {
   GstElement parent;
   GstPad *sinkpad;
-  GstPad *srcpad[MAX_LANGUAGES];        /*Video/Audio/Application src pad */
-  GstCaps *output_caps[MAX_LANGUAGES];  /*Video/Audio/Application output buf caps */
-  GstCaps *input_caps[MAX_LANGUAGES];   /*Video/Audio/Application input caps */
+
+  GSList *streams;
 
   GstBuffer *manifest;
   GstUriDownloader *downloader;
