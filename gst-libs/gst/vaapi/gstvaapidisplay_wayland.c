@@ -285,18 +285,25 @@ gst_vaapi_display_wayland_open_display(GstVaapiDisplay * display)
     GstVaapiDisplayWaylandPrivate * const priv =
         GST_VAAPI_DISPLAY_WAYLAND(display)->priv;
 
-    if (!priv->create_display)
-        return priv->wl_display != NULL;
-
-    priv->wl_display = wl_display_connect(get_display_name(display));
-    if (!priv->wl_display)
-        return FALSE;
+    if (priv->create_display) {
+        priv->wl_display = wl_display_connect(get_display_name(display));
+        if (!priv->wl_display)
+            return FALSE;
+    }
 
     wl_display_set_user_data(priv->wl_display, priv);
     priv->registry = wl_display_get_registry(priv->wl_display);
     wl_registry_add_listener(priv->registry, &registry_listener, priv);
     priv->event_fd = wl_display_get_fd(priv->wl_display);
     wl_display_roundtrip(priv->wl_display);
+
+    if (!priv->width || !priv->height) {
+        wl_display_roundtrip(priv->wl_display);
+        if (!priv->width || !priv->height) {
+            GST_ERROR("failed to determine the display size");
+            return FALSE;
+        }
+    }
 
     if (!priv->compositor) {
         GST_ERROR("failed to bind compositor interface");
