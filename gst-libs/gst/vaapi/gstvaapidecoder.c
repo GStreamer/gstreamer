@@ -167,8 +167,15 @@ do_parse(GstVaapiDecoder *decoder,
     ps->current_frame = base_frame;
     status = GST_VAAPI_DECODER_GET_CLASS(decoder)->parse(decoder,
         adapter, at_eos, unit);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
+        if (at_eos && frame->units->len > 0 &&
+            status == GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA) {
+            /* XXX: assume the frame is complete at <EOS> */
+            *got_frame_ptr = TRUE;
+            return GST_VAAPI_DECODER_STATUS_SUCCESS;
+        }
         return status;
+    }
 
     if (GST_VAAPI_DECODER_UNIT_IS_FRAME_START(unit) && frame->units->len > 0) {
         ps->next_unit_pending = TRUE;
