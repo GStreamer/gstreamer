@@ -212,9 +212,9 @@ AG_GST_CHECK_PLUGIN(omx)
 
 dnl check for gstreamer core features (subsystems)
 dnl FIXME: this assumes srcdir == builddir for uninstalled setups
-GST_CONFIGPATH=`$PKG_CONFIG --variable=includedir gstreamer-0.10`"/gst/gstconfig.h"
+GST_CONFIGPATH=`$PKG_CONFIG --variable=includedir gstreamer-$GST_API_VERSION`"/gst/gstconfig.h"
 AG_GST_PARSE_SUBSYSTEM_DISABLES($GST_CONFIGPATH)
-AM_CONDITIONAL(USE_XML, test $GST_DISABLE_XML != "1")
+dnl AM_CONDITIONAL(USE_FOO, test $GST_DISABLE_FOO != "1")
 
 dnl *** finalize CFLAGS, LDFLAGS, LIBS
 
