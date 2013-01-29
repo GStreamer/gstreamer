@@ -1237,17 +1237,19 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
 static GstClockTime
 gst_dash_demux_get_buffering_time (GstDashDemux * demux)
 {
-  GstClockTime buffer_time = 0;
+  GstClockTime buffer_time = GST_CLOCK_TIME_NONE;
   GSList *iter;
 
   for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
-    buffer_time = gst_dash_demux_stream_get_buffering_time (iter->data);
+    GstClockTime btime = gst_dash_demux_stream_get_buffering_time (iter->data);
 
-    if (buffer_time)
-      return buffer_time;
+    if (!GST_CLOCK_TIME_IS_VALID (buffer_time) || buffer_time > btime)
+      buffer_time = btime;
   }
 
-  return 0;
+  if (!GST_CLOCK_TIME_IS_VALID (buffer_time))
+    buffer_time = 0;
+  return buffer_time;
 }
 
 static GstClockTime
