@@ -2579,7 +2579,7 @@ gst_base_src_loop (GstPad * pad)
   if (gst_pad_check_reconfigure (pad)) {
     if (!gst_base_src_negotiate (src)) {
       gst_pad_mark_reconfigure (pad);
-      goto not_negotiated;
+      goto negotiate_failed;
     }
   }
 
@@ -2746,7 +2746,12 @@ not_negotiated:
       GST_DEBUG_OBJECT (src, "Retrying to renegotiate");
       return;
     }
-    GST_DEBUG_OBJECT (src, "Failed to renegotiate");
+    /* fallthrough when push returns NOT_NEGOTIATED and we don't have
+     * a pending negotiation request on our srcpad */
+  }
+negotiate_failed:
+  {
+    GST_DEBUG_OBJECT (src, "Not negotiated");
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto pause;
   }
