@@ -477,6 +477,7 @@ gboolean gst_mpd_client_is_live (GstMpdClient * client);
 /* Period selection */
 gboolean gst_mpd_client_set_period_index (GstMpdClient *client, guint period_idx);
 guint gst_mpd_client_get_period_index (GstMpdClient *client);
+gboolean gst_mpd_client_has_next_period (GstMpdClient *client);
 
 /* Representation selection */
 gint gst_mpdparser_get_rep_idx_with_max_bandwidth (GList *Representations, gint max_bandwidth);

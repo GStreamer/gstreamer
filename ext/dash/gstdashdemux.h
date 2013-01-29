@@ -62,6 +62,24 @@ struct _GstDashDemuxStream
   GstCaps *output_caps;
   GstCaps *input_caps;
 
+  /*
+   * Need to store the status for the download and
+   * stream tasks separately as they are working at
+   * different points of the stream timeline.
+   * The download task is ahead of the stream.
+   *
+   * The download_end_of_period is set when a stream
+   * has already downloaded all fragments for the current
+   * period.
+   *
+   * The stream_end_of_period is set when a stream
+   * has pushed all fragments for the current period
+   */
+  gboolean download_end_of_period;
+  gboolean stream_end_of_period;
+
+  gboolean stream_eos;
+
   GstDataQueue *queue;
 };
 

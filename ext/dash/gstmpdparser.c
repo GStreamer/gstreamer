@@ -3316,6 +3316,21 @@ gst_mpd_client_get_period_index (GstMpdClient * client)
   return period_idx;
 }
 
+gboolean
+gst_mpd_client_has_next_period (GstMpdClient * client)
+{
+  GList *next_stream_period;
+  g_return_val_if_fail (client != NULL, FALSE);
+  g_return_val_if_fail (client->periods != NULL, FALSE);
+
+  GST_MPD_CLIENT_LOCK (client);
+  next_stream_period =
+      g_list_nth_data (client->periods, client->period_idx + 1);
+  GST_MPD_CLIENT_UNLOCK (client);
+
+  return next_stream_period != NULL;
+}
+
 void
 gst_mpd_client_set_segment_index_for_all_streams (GstMpdClient * client,
     guint segment_idx)
