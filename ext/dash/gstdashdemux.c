@@ -1126,7 +1126,9 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       goto end;
 
     buffer = GST_BUFFER_CAST (item->object);
-    active_stream = gst_mpdparser_get_active_stream_by_index (demux->client, i);
+    active_stream =
+        gst_mpdparser_get_active_stream_by_index (demux->client,
+        selected_stream->index);
     if (demux->need_segment) {
       GstClockTime start =
           GST_BUFFER_TIMESTAMP (buffer) + demux->position_shift;
@@ -1145,8 +1147,8 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
 
     GST_DEBUG_OBJECT (demux,
         "Pushing fragment %p #%d (stream %i) ts:%" GST_TIME_FORMAT " dur:%"
-        GST_TIME_FORMAT, buffer, GST_BUFFER_OFFSET (buffer), i,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+        GST_TIME_FORMAT, buffer, GST_BUFFER_OFFSET (buffer),
+        selected_stream->index, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
     ret = gst_pad_push (selected_stream->pad, gst_buffer_ref (buffer));
     item->destroy (item);
@@ -1734,6 +1736,7 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
   guint64 size_buffer = 0;
   gboolean need_header;
   GSList *iter;
+  gboolean end_of_period = TRUE;
 
   g_get_current_time (&start);
   /* Figure out if we will need to switch pads, thus requiring a new
@@ -1749,9 +1752,10 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
 
     if (!gst_mpd_client_get_next_fragment (demux->client,
             stream_idx, &discont, &next_fragment_uri, &duration, &timestamp)) {
-      GST_INFO_OBJECT (demux, "This Period doesn't contain more fragments");
-      demux->end_of_period = TRUE;
-      return FALSE;
+      GST_INFO_OBJECT (demux,
+          "This Period doesn't contain more fragments for stream %u",
+          stream_idx);
+      continue;
     }
 
     GST_INFO_OBJECT (demux, "Next fragment for stream #%i", stream_idx);
@@ -1759,6 +1763,9 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
         "Fetching next fragment %s ts:%" GST_TIME_FORMAT " dur:%"
         GST_TIME_FORMAT, next_fragment_uri, GST_TIME_ARGS (timestamp),
         GST_TIME_ARGS (duration));
+
+    /* got a fragment to fetch, no end of period */
+    end_of_period = FALSE;
 
     download = gst_uri_downloader_fetch_uri (demux->downloader,
         next_fragment_uri);
@@ -1798,6 +1805,10 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
     gst_dash_demux_stream_push_data (stream, buffer);
     size_buffer += GST_BUFFER_SIZE (buffer);
   }
+
+  demux->end_of_period = end_of_period;
+  if (end_of_period)
+    return FALSE;
 
   /* Wake the download task up */
   GST_TASK_SIGNAL (demux->download_task);
