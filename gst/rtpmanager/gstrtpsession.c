@@ -1436,10 +1436,11 @@ gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstObject * parent,
   }
 
   if (forward) {
-    GstPad *recv_rtp_sink = NULL;
+    GstPad *recv_rtp_sink;
+
     GST_RTP_SESSION_LOCK (rtpsession);
-    if (rtpsession->recv_rtp_sink)
-      recv_rtp_sink = gst_object_ref (rtpsession->recv_rtp_sink);
+    if ((recv_rtp_sink = rtpsession->recv_rtp_sink))
+      gst_object_ref (recv_rtp_sink);
     GST_RTP_SESSION_UNLOCK (rtpsession);
 
     if (recv_rtp_sink) {
@@ -1707,10 +1708,11 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstObject * parent,
       break;
     }
     default:{
-      GstPad *send_rtp_src = NULL;
+      GstPad *send_rtp_src;
+
       GST_RTP_SESSION_LOCK (rtpsession);
-      if (rtpsession->send_rtp_src)
-        send_rtp_src = gst_object_ref (rtpsession->send_rtp_src);
+      if ((send_rtp_src = rtpsession->send_rtp_src))
+        gst_object_ref (send_rtp_src);
       GST_RTP_SESSION_UNLOCK (rtpsession);
 
       if (send_rtp_src) {
@@ -2227,8 +2229,8 @@ gst_rtp_session_request_key_unit (RTPSession * sess,
   GstPad *send_rtp_sink;
 
   GST_RTP_SESSION_LOCK (rtpsession);
-  if (rtpsession->send_rtp_sink)
-    send_rtp_sink = gst_object_ref (rtpsession->send_rtp_sink);
+  if ((send_rtp_sink = rtpsession->send_rtp_sink))
+    gst_object_ref (send_rtp_sink);
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
   if (send_rtp_sink) {
