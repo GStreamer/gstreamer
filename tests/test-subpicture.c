@@ -1,7 +1,7 @@
 /*
  *  test-subpicture.c - Test GstVaapiSubpicture
  *
- *  Copyright (C) <2011> Intel Corporation
+ *  Copyright (C) <2011-2012> Intel Corporation
  *  Copyright (C) <2011> Collabora Ltd.
  *  Copyright (C) <2011> Thibault Saunier <thibault.saunier@collabora.com>
  *

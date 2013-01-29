@@ -2,7 +2,7 @@
  *  gstvaapicontext.h - VA context abstraction
  *
  *  Copyright (C) 2010-2011 Splitted-Desktop Systems
- *  Copyright (C) 2011 Intel Corporation
+ *  Copyright (C) 2011-2012 Intel Corporation
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License

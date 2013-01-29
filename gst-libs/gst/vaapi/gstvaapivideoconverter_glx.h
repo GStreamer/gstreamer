@@ -1,7 +1,7 @@
 /*
  *  gstvaapivideoconverter_glx.h - Gstreamer/VA video converter
  *
- *  Copyright (C) 2011 Intel Corporation
+ *  Copyright (C) 2011-2012 Intel Corporation
  *  Copyright (C) 2011 Collabora Ltd.
  *    Author: Nicolas Dufresne <nicolas.dufresne@collabora.com>
  *

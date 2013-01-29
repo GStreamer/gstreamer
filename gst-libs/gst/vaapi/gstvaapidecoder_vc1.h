@@ -1,7 +1,7 @@
 /*
  *  gstvaapidecoder_vc1.h - VC-1 decoder
  *
- *  Copyright (C) 2011 Intel Corporation
+ *  Copyright (C) 2011-2012 Intel Corporation
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License
