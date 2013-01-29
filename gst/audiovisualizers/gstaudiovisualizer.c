@@ -91,6 +91,12 @@ static gboolean gst_audio_visualizer_sink_query (GstPad * pad,
 static GstStateChangeReturn gst_audio_visualizer_change_state (GstElement *
     element, GstStateChange transition);
 
+static gboolean gst_audio_visualizer_do_bufferpool (GstAudioVisualizer * scope,
+    GstCaps * outcaps);
+
+static gboolean
+default_decide_allocation (GstAudioVisualizer * scope, GstQuery * query);
+
 /* shading functions */
 
 #define GST_TYPE_AUDIO_VISUALIZER_SHADER (gst_audio_visualizer_shader_get_type())
@@ -488,6 +494,20 @@ gst_audio_visualizer_change_shader (GstAudioVisualizer * scope)
 
 /* base class */
 
+#define GST_AUDIO_VISUALIZER_GET_PRIVATE(obj)  \
+    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_AUDIO_VISUALIZER, GstAudioVisualizerPrivate))
+
+struct _GstAudioVisualizerPrivate
+{
+  gboolean negotiated;
+
+  GstBufferPool *pool;
+  gboolean pool_active;
+  GstAllocator *allocator;
+  GstAllocationParams params;
+  GstQuery *query;
+};
+
 GType
 gst_audio_visualizer_get_type (void)
 {
@@ -522,6 +542,8 @@ gst_audio_visualizer_class_init (GstAudioVisualizerClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *element_class = (GstElementClass *) klass;
 
+  g_type_class_add_private (klass, sizeof (GstAudioVisualizerPrivate));
+
   parent_class = g_type_class_peek_parent (klass);
 
   GST_DEBUG_CATEGORY_INIT (audio_visualizer_debug, "baseaudiovisualizer",
@@ -533,6 +555,8 @@ gst_audio_visualizer_class_init (GstAudioVisualizerClass * klass)
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_audio_visualizer_change_state);
+
+  klass->decide_allocation = GST_DEBUG_FUNCPTR (default_decide_allocation);
 
   g_object_class_install_property (gobject_class, PROP_SHADER,
       g_param_spec_enum ("shader", "shader type",
@@ -551,6 +575,8 @@ gst_audio_visualizer_init (GstAudioVisualizer * scope,
     GstAudioVisualizerClass * g_class)
 {
   GstPadTemplate *pad_template;
+
+  scope->priv = GST_AUDIO_VISUALIZER_GET_PRIVATE (scope);
 
   /* create the sink and src pads */
   pad_template =
@@ -674,7 +700,6 @@ static gboolean
 gst_audio_visualizer_sink_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
 {
   GstAudioInfo info;
-  gboolean res = TRUE;
 
   if (!gst_audio_info_from_caps (&info, caps))
     goto wrong_caps;
@@ -684,15 +709,15 @@ gst_audio_visualizer_sink_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
   GST_DEBUG_OBJECT (scope, "audio: channels %d, rate %d",
       GST_AUDIO_INFO_CHANNELS (&info), GST_AUDIO_INFO_RATE (&info));
 
-done:
-  return res;
+  gst_pad_mark_reconfigure (scope->srcpad);
+
+  return TRUE;
 
   /* Errors */
 wrong_caps:
   {
     GST_WARNING_OBJECT (scope, "could not parse caps");
-    res = FALSE;
-    goto done;
+    return FALSE;
   }
 }
 
@@ -734,7 +759,10 @@ gst_audio_visualizer_src_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
   GST_DEBUG_OBJECT (scope, "blocks: spf %u, req_spf %u",
       scope->spf, scope->req_spf);
 
-  res = gst_pad_set_caps (scope->srcpad, caps);
+  gst_pad_set_caps (scope->srcpad, caps);
+
+  /* find a pool for the negotiated caps now */
+  res = gst_audio_visualizer_do_bufferpool (scope, caps);
 
   return res;
 
@@ -752,10 +780,7 @@ gst_audio_visualizer_src_negotiate (GstAudioVisualizer * scope)
   GstCaps *othercaps, *target;
   GstStructure *structure;
   GstCaps *templ;
-  GstQuery *query;
-  GstBufferPool *pool;
-  GstStructure *config;
-  guint size, min, max;
+  gboolean ret;
 
   templ = gst_pad_get_pad_template_caps (scope->srcpad);
 
@@ -786,23 +811,151 @@ gst_audio_visualizer_src_negotiate (GstAudioVisualizer * scope)
 
   GST_DEBUG_OBJECT (scope, "final caps are %" GST_PTR_FORMAT, target);
 
-  gst_audio_visualizer_src_setcaps (scope, target);
+  ret = gst_audio_visualizer_src_setcaps (scope, target);
 
-  /* try to get a bufferpool now */
+  return ret;
+
+no_format:
+  {
+    gst_caps_unref (target);
+    return FALSE;
+  }
+}
+
+/* takes ownership of the pool, allocator and query */
+static gboolean
+gst_audio_visualizer_set_allocation (GstAudioVisualizer * scope,
+    GstBufferPool * pool, GstAllocator * allocator,
+    GstAllocationParams * params, GstQuery * query)
+{
+  GstAllocator *oldalloc;
+  GstBufferPool *oldpool;
+  GstQuery *oldquery;
+  GstAudioVisualizerPrivate *priv = scope->priv;
+
+  GST_OBJECT_LOCK (scope);
+  oldpool = priv->pool;
+  priv->pool = pool;
+  priv->pool_active = FALSE;
+
+  oldalloc = priv->allocator;
+  priv->allocator = allocator;
+
+  oldquery = priv->query;
+  priv->query = query;
+
+  if (params)
+    priv->params = *params;
+  else
+    gst_allocation_params_init (&priv->params);
+  GST_OBJECT_UNLOCK (scope);
+
+  if (oldpool) {
+    GST_DEBUG_OBJECT (scope, "deactivating old pool %p", oldpool);
+    gst_buffer_pool_set_active (oldpool, FALSE);
+    gst_object_unref (oldpool);
+  }
+  if (oldalloc) {
+    gst_object_unref (oldalloc);
+  }
+  if (oldquery) {
+    gst_query_unref (oldquery);
+  }
+  return TRUE;
+}
+
+static gboolean
+gst_audio_visualizer_do_bufferpool (GstAudioVisualizer * scope,
+    GstCaps * outcaps)
+{
+  GstQuery *query;
+  gboolean result = TRUE;
+  GstBufferPool *pool = NULL;
+  GstAudioVisualizerClass *klass;
+  GstAllocator *allocator;
+  GstAllocationParams params;
+
+  /* not passthrough, we need to allocate */
   /* find a pool for the negotiated caps now */
-  query = gst_query_new_allocation (target, TRUE);
+  GST_DEBUG_OBJECT (scope, "doing allocation query");
+  query = gst_query_new_allocation (outcaps, TRUE);
 
   if (!gst_pad_peer_query (scope->srcpad, query)) {
     /* not a problem, we use the query defaults */
     GST_DEBUG_OBJECT (scope, "allocation query failed");
   }
 
+  klass = GST_AUDIO_VISUALIZER_GET_CLASS (scope);
+
+  GST_DEBUG_OBJECT (scope, "calling decide_allocation");
+  g_assert (klass->decide_allocation != NULL);
+  result = klass->decide_allocation (scope, query);
+
+  GST_DEBUG_OBJECT (scope, "ALLOCATION (%d) params: %" GST_PTR_FORMAT, result,
+      query);
+
+  if (!result)
+    goto no_decide_allocation;
+
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0)
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
+
+  /* now store */
+  result =
+      gst_audio_visualizer_set_allocation (scope, pool, allocator, &params,
+      query);
+
+  return result;
+
+  /* Errors */
+no_decide_allocation:
+  {
+    GST_WARNING_OBJECT (scope, "Subclass failed to decide allocation");
+    gst_query_unref (query);
+
+    return result;
+  }
+}
+
+static gboolean
+default_decide_allocation (GstAudioVisualizer * scope, GstQuery * query)
+{
+  GstCaps *outcaps;
+  GstBufferPool *pool;
+  guint size, min, max;
+  GstAllocator *allocator;
+  GstAllocationParams params;
+  GstStructure *config;
+  gboolean update_allocator;
+
+  gst_query_parse_allocation (query, &outcaps, NULL);
+
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    /* try the allocator */
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+    update_allocator = TRUE;
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+    update_allocator = FALSE;
+  }
+
   if (gst_query_get_n_allocation_pools (query) > 0) {
-    /* we got configuration from our peer, parse them */
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
   } else {
     pool = NULL;
-    size = 0;
+    size = GST_VIDEO_INFO_SIZE (&scope->vinfo);
     min = max = 0;
   }
 
@@ -812,44 +965,54 @@ gst_audio_visualizer_src_negotiate (GstAudioVisualizer * scope)
   }
 
   config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+  gst_buffer_pool_config_set_allocator (config, allocator, &params);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-  gst_buffer_pool_config_set_params (config, target, size, min, max);
   gst_buffer_pool_set_config (pool, config);
 
-  if (scope->pool) {
-    gst_buffer_pool_set_active (scope->pool, FALSE);
-    gst_object_unref (scope->pool);
+  if (update_allocator)
+    gst_query_set_nth_allocation_param (query, 0, allocator, &params);
+  else
+    gst_query_add_allocation_param (query, allocator, &params);
+
+  if (allocator)
+    gst_object_unref (allocator);
+
+  if (pool) {
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+    gst_object_unref (pool);
   }
-  scope->pool = pool;
-
-  /* and activate */
-  gst_buffer_pool_set_active (pool, TRUE);
-
-  gst_caps_unref (target);
 
   return TRUE;
-
-no_format:
-  {
-    gst_caps_unref (target);
-    return FALSE;
-  }
 }
 
-/* make sure we are negotiated */
 static GstFlowReturn
-gst_audio_visualizer_ensure_negotiated (GstAudioVisualizer * scope)
+default_prepare_output_buffer (GstAudioVisualizer * scope, GstBuffer ** outbuf)
 {
-  gboolean reconfigure;
+  GstAudioVisualizerPrivate *priv;
 
-  reconfigure = gst_pad_check_reconfigure (scope->srcpad);
+  priv = scope->priv;
 
-  /* we don't know an output format yet, pick one */
-  if (reconfigure || !gst_pad_has_current_caps (scope->srcpad)) {
-    if (!gst_audio_visualizer_src_negotiate (scope))
-      return GST_FLOW_NOT_NEGOTIATED;
+  g_assert (priv->pool != NULL);
+
+  /* we can't reuse the input buffer */
+  if (!priv->pool_active) {
+    GST_DEBUG_OBJECT (scope, "setting pool %p active", priv->pool);
+    if (!gst_buffer_pool_set_active (priv->pool, TRUE))
+      goto activate_failed;
+    priv->pool_active = TRUE;
   }
-  return GST_FLOW_OK;
+  GST_DEBUG_OBJECT (scope, "using pool alloc");
+
+  return gst_buffer_pool_acquire_buffer (priv->pool, outbuf, NULL);
+
+  /* ERRORS */
+activate_failed:
+  {
+    GST_ELEMENT_ERROR (scope, RESOURCE, SETTINGS,
+        ("failed to activate bufferpool"), ("failed to activate bufferpool"));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn
@@ -876,11 +1039,13 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
   }
 
   /* Make sure have an output format */
-  ret = gst_audio_visualizer_ensure_negotiated (scope);
-  if (ret != GST_FLOW_OK) {
-    gst_buffer_unref (buffer);
-    goto beach;
+  if (gst_pad_check_reconfigure (scope->srcpad)) {
+    if (!gst_audio_visualizer_src_negotiate (scope)) {
+      gst_pad_mark_reconfigure (scope->srcpad);
+      goto not_negotiated;
+    }
   }
+
   channels = GST_AUDIO_INFO_CHANNELS (&scope->ainfo);
   rate = GST_AUDIO_INFO_RATE (&scope->ainfo);
   bps = GST_AUDIO_INFO_BPS (&scope->ainfo);
@@ -938,7 +1103,7 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     }
 
     g_mutex_unlock (&scope->config_lock);
-    ret = gst_buffer_pool_acquire_buffer (scope->pool, &outbuf, NULL);
+    ret = default_prepare_output_buffer (scope, &outbuf);
     g_mutex_lock (&scope->config_lock);
     /* recheck as the value could have changed */
     sbpf = scope->req_spf * channels * sizeof (gint16);
@@ -1017,6 +1182,13 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
 
 beach:
   return ret;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_DEBUG_OBJECT (scope, "Failed to renegotiate");
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static gboolean
@@ -1201,10 +1373,7 @@ gst_audio_visualizer_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (scope->pool) {
-        gst_buffer_pool_set_active (scope->pool, FALSE);
-        gst_object_replace ((GstObject **) & scope->pool, NULL);
-      }
+      gst_audio_visualizer_set_allocation (scope, NULL, NULL, NULL, NULL);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
