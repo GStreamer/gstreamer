@@ -756,6 +756,76 @@ GST_START_TEST (test_newsegment)
 GST_END_TEST;
 #endif
 
+static gpointer
+thread_func (gpointer data)
+{
+  int i = 0;
+  for (i = 0; i < 100; i++) {
+    GstCaps *caps;
+    GstQuery *query;
+    gboolean ok;
+    caps = gst_caps_new_any ();
+    query = gst_query_new_allocation (caps, FALSE);
+    ok = gst_pad_peer_query (mysrcpad, query);
+    gst_query_unref (query);
+    gst_caps_unref (caps);
+    query = NULL;
+    caps = NULL;
+
+    if (!ok)
+      break;
+  }
+
+  return NULL;
+}
+
+static gboolean query_func (GstPad * pad, GstObject * parent, GstQuery * query);
+
+static gboolean
+query_func (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+
+  g_usleep (1000);
+  return TRUE;
+}
+
+GST_START_TEST (test_queries_while_flushing)
+{
+  GstEvent *event;
+  GThread *thread;
+  int i;
+
+  mysinkpad = gst_check_setup_sink_pad (queue, &sinktemplate);
+  gst_pad_set_query_function (mysinkpad, query_func);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  /* hard to reproduce, so just run it a few times in a row */
+  for (i = 0; i < 500; ++i) {
+    GST_DEBUG ("starting");
+    UNDERRUN_LOCK ();
+    fail_unless (gst_element_set_state (queue,
+            GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+        "could not set to playing");
+    UNDERRUN_WAIT ();
+    UNDERRUN_UNLOCK ();
+
+    thread = g_thread_new ("deactivating thread", thread_func, NULL);
+    g_usleep (1000);
+
+    event = gst_event_new_flush_start ();
+    gst_pad_push_event (mysrcpad, event);
+
+    g_thread_join (thread);
+
+    GST_DEBUG ("stopping");
+    fail_unless (gst_element_set_state (queue,
+            GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS,
+        "could not set to null");
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 queue_suite (void)
 {
@@ -770,6 +840,7 @@ queue_suite (void)
   tcase_add_test (tc_chain, test_leaky_downstream);
   tcase_add_test (tc_chain, test_time_level);
   tcase_add_test (tc_chain, test_time_level_task_not_started);
+  tcase_add_test (tc_chain, test_queries_while_flushing);
 #if 0
   tcase_add_test (tc_chain, test_newsegment);
 #endif
