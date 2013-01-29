@@ -394,13 +394,16 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     gst_pad_set_active (srcpad, TRUE);
 
+    /* First sticky events on sink pad are forwarded to the new src pad */
+    gst_pad_sticky_events_foreach (rtpdemux->sink, forward_sticky_events,
+        srcpad);
+
+    /* Then caps event is sent */
     caps = gst_caps_make_writable (caps);
     gst_caps_set_simple (caps, "payload", G_TYPE_INT, pt, NULL);
     gst_pad_set_caps (srcpad, caps);
     gst_caps_unref (caps);
 
-    gst_pad_sticky_events_foreach (rtpdemux->sink, forward_sticky_events,
-        srcpad);
     gst_element_add_pad (GST_ELEMENT_CAST (rtpdemux), srcpad);
 
     GST_DEBUG ("emitting new-payload-type for pt %d", pt);
