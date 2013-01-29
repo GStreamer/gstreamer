@@ -5,6 +5,7 @@ libgstvideoparsersbad_la_SOURCES = plugin.c \
 	gstdiracparse.c dirac_parse.c \
 	gsth264parse.c gstmpegvideoparse.c \
 	gstmpeg4videoparse.c \
+	gstpngparse.c \
 	gstvc1parse.c
 
 libgstvideoparsersbad_la_CFLAGS = \
@@ -27,6 +28,7 @@ noinst_HEADERS = gsth263parse.h h263parse.h \
 	gstdiracparse.h dirac_parse.h \
 	gsth264parse.h gstmpegvideoparse.h \
 	gstmpeg4videoparse.h \
+	gstpngparse.h \
 	gstvc1parse.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
