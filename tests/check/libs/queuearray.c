@@ -370,6 +370,48 @@ GST_START_TEST (test_array_drop)
 
 GST_END_TEST;
 
+GST_START_TEST (test_array_drop2)
+{
+#define NUM_QA_ELEMENTS 674
+  gboolean in_array[NUM_QA_ELEMENTS] = { FALSE, };
+  GstQueueArray *array;
+  guint i, j, count, idx;
+
+  array = gst_queue_array_new (10);
+
+  for (i = 0; i < NUM_QA_ELEMENTS; i++) {
+    gpointer element = GUINT_TO_POINTER (i);
+
+    if (g_random_boolean ()) {
+      gst_queue_array_push_tail (array, element);
+      in_array[i] = TRUE;
+    }
+  }
+
+  for (j = 0, count = 0; j < NUM_QA_ELEMENTS; j++)
+    count += in_array[j] ? 1 : 0;
+  fail_unless_equals_int (array->length, count);
+
+  while (array->length > 0) {
+    for (i = 0; i < NUM_QA_ELEMENTS; i++) {
+      if (g_random_boolean () && g_random_boolean () && in_array[i]) {
+        idx = gst_queue_array_find (array, compare_pointer_value,
+            GUINT_TO_POINTER (i));
+        gst_queue_array_drop_element (array, idx);
+        in_array[i] = FALSE;
+      }
+    }
+
+    for (j = 0, count = 0; j < NUM_QA_ELEMENTS; j++)
+      count += in_array[j] ? 1 : 0;
+    fail_unless_equals_int (array->length, count);
+  }
+
+  gst_queue_array_free (array);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_queue_array_suite (void)
 {
@@ -385,6 +427,7 @@ gst_queue_array_suite (void)
   tcase_add_test (tc_chain, test_array_grow_end);
   tcase_add_test (tc_chain, test_array_find);
   tcase_add_test (tc_chain, test_array_drop);
+  tcase_add_test (tc_chain, test_array_drop2);
 
   return s;
 }
