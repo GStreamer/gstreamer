@@ -1061,10 +1061,12 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   gboolean switch_pad;
   guint i = 0;
   GSList *iter;
+  GstClockTime best_time;
+  GstDashDemuxStream *selected_stream;
 
   GST_LOG_OBJECT (demux, "Starting stream loop");
 
-  if (!gst_dash_demux_all_queues_have_data (demux)) {
+  if (FALSE && !gst_dash_demux_all_queues_have_data (demux)) {
     if (demux->end_of_manifest)
       goto end_of_manifest;
 
@@ -1094,15 +1096,36 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
     demux->need_segment = TRUE;
   }
 
+  best_time = GST_CLOCK_TIME_NONE;
+  selected_stream = NULL;
   for (iter = demux->streams, i = 0; iter; i++, iter = g_slist_next (iter)) {
-    GstDataQueueItem *item;
-    GstBuffer *buffer;
     GstDashDemuxStream *stream = iter->data;
-    if (!gst_data_queue_pop (stream->queue, &item))
+    GstDataQueueItem *item;
+
+    if (!gst_data_queue_peek (stream->queue, &item))
       continue;
 
-    buffer = GST_BUFFER_CAST (item->object);
+    if (GST_IS_BUFFER (item->object)) {
+      if (GST_BUFFER_TIMESTAMP (item->object) < best_time) {
+        best_time = GST_BUFFER_TIMESTAMP (item->object);
+        selected_stream = stream;
+      } else if (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (item->object))) {
+        selected_stream = stream;
+        break;
+      }
+    } else {
+      selected_stream = stream;
+      break;
+    }
+  }
 
+  if (selected_stream) {
+    GstDataQueueItem *item;
+    GstBuffer *buffer;
+    if (!gst_data_queue_pop (selected_stream->queue, &item))
+      goto end;
+
+    buffer = GST_BUFFER_CAST (item->object);
     active_stream = gst_mpdparser_get_active_stream_by_index (demux->client, i);
     if (demux->need_segment) {
       GstClockTime start =
@@ -1110,9 +1133,14 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       /* And send a newsegment */
       GST_DEBUG_OBJECT (demux, "Sending new-segment. segment start:%"
           GST_TIME_FORMAT, GST_TIME_ARGS (start));
-      gst_pad_push_event (stream->pad,
-          gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-              start, GST_CLOCK_TIME_NONE, start));
+      for (iter = demux->streams, i = 0; iter; i++, iter = g_slist_next (iter)) {
+        GstDashDemuxStream *stream = iter->data;
+        gst_pad_push_event (stream->pad,
+            gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+                start, GST_CLOCK_TIME_NONE, start));
+      }
+      demux->need_segment = FALSE;
+      demux->position_shift = 0;
     }
 
     GST_DEBUG_OBJECT (demux,
@@ -1120,14 +1148,14 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
         GST_TIME_FORMAT, buffer, GST_BUFFER_OFFSET (buffer), i,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
-    ret = gst_pad_push (stream->pad, gst_buffer_ref (buffer));
+    ret = gst_pad_push (selected_stream->pad, gst_buffer_ref (buffer));
     item->destroy (item);
-    if ((ret != GST_FLOW_OK) && (active_stream->mimeType == GST_STREAM_VIDEO))
+    if ((ret != GST_FLOW_OK) && (active_stream
+            && active_stream->mimeType == GST_STREAM_VIDEO))
       goto error_pushing;
   }
-  demux->need_segment = FALSE;
-  demux->position_shift = 0;
 
+end:
   return;
 
 end_of_manifest:
