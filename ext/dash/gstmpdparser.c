@@ -126,7 +126,8 @@ static gboolean gst_mpd_client_add_media_segment (GstActiveStream * stream,
     GstSegmentURLNode * url_node, guint number, guint start,
     GstClockTime start_time, GstClockTime duration);
 static const gchar *gst_mpdparser_mimetype_to_caps (const gchar * mimeType);
-static GstClockTime gst_mpd_client_get_segment_duration (GstMpdClient * client);
+static GstClockTime gst_mpd_client_get_segment_duration (GstMpdClient * client,
+    GstActiveStream * stream);
 
 /* Adaptation Set */
 static GstAdaptationSetNode
@@ -2503,16 +2504,14 @@ gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream)
 }
 
 static GstClockTime
-gst_mpd_client_get_segment_duration (GstMpdClient * client)
+gst_mpd_client_get_segment_duration (GstMpdClient * client,
+    GstActiveStream * stream)
 {
-  GstActiveStream *stream;
   GstStreamPeriod *stream_period;
   GstMultSegmentBaseType *base = NULL;
   GstClockTime duration;
   guint timescale;
 
-  stream =
-      gst_mpdparser_get_active_stream_by_index (client, client->stream_idx);
   g_return_val_if_fail (stream != NULL, GST_CLOCK_TIME_NONE);
   stream_period = gst_mpdparser_get_stream_period (client);
   g_return_val_if_fail (stream_period != NULL, GST_CLOCK_TIME_NONE);
@@ -2798,7 +2797,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
           }
         }
       } else {
-        duration = gst_mpd_client_get_segment_duration (client);
+        duration = gst_mpd_client_get_segment_duration (client, stream);
         if (!GST_CLOCK_TIME_IS_VALID (duration))
           return FALSE;
 
@@ -2870,7 +2869,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
           }
         }
       } else {
-        duration = gst_mpd_client_get_segment_duration (client);
+        duration = gst_mpd_client_get_segment_duration (client, stream);
         if (!GST_CLOCK_TIME_IS_VALID (duration)
             || !GST_CLOCK_TIME_IS_VALID (PeriodEnd)
             || duration <= 0)
