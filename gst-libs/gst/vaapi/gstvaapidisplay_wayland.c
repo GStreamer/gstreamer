@@ -1,7 +1,7 @@
 /*
  *  gstvaapidisplay_wayland.c - VA/Wayland display abstraction
  *
- *  Copyright (C) 2012 Intel Corporation
+ *  Copyright (C) 2012-2013 Intel Corporation
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License
