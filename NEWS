@@ -1,7 +1,15 @@
-gst-vaapi NEWS -- summary of changes.  2013-01-15
+gst-vaapi NEWS -- summary of changes.  2013-01-DD
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2012 Intel Corporation
 Copyright (C) 2011 Collabora
+
+Version 0.5.1 - DD.Jan.2013
+* Add simple decoder demo that only uses libgstvaapi
+* Fix thread-safety issues in the Wayland renderer
+* Fix VC-1 decoding bugs #692461, #692312, #692271, #692270, #692267
+* Fix decoding of VC-1 videos in AVI containers (Feng Yuan)
+* Fix H.264 parser to zero-initialize key syntax elements
+* Fix MPEG-2, H.264 and VC-1 decoders to submit all decoded frames on <EOS>
 
 Version 0.5.0 - 15.Jan.2013
 * Optimize MPEG-2 and H.264 decoders
