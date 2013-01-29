@@ -1217,6 +1217,10 @@ gst_rtp_h264_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
       gst_rtp_h264_pay_handle_buffer (payload, NULL);
       break;
     }
+    case GST_EVENT_STREAM_START:
+      GST_DEBUG_OBJECT (rtph264pay, "New stream detected => Clear SPS and PPS");
+      gst_rtp_h264_pay_clear_sps_pps (rtph264pay);
+      break;
     default:
       break;
   }
