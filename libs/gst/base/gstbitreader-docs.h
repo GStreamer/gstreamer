@@ -53,7 +53,7 @@ void gst_bit_reader_skip_to_byte_unchecked (GstBitReader * reader);
  *
  * Returns: unsigned 8 bit integer with the bits.
  */
-guint8 gst_bit_reader_peek_bits_uint8_unchecked (const GstBitReader *reader, guint nbits);
+guint8 gst_bit_reader_get_bits_uint8_unchecked (GstBitReader *reader, guint nbits);
 
 /**
  * gst_bit_reader_peek_bits_uint8_unchecked:
@@ -65,7 +65,7 @@ guint8 gst_bit_reader_peek_bits_uint8_unchecked (const GstBitReader *reader, gui
  *
  * Returns: unsigned 8 bit integer with the bits.
  */
-guint8 gst_bit_reader_get_bits_uint8_unchecked (GstBitReader *reader, guint nbits);
+guint8 gst_bit_reader_peek_bits_uint8_unchecked (const GstBitReader *reader, guint nbits);
 
 /**
  * gst_bit_reader_get_bits_uint16_unchecked:
@@ -77,7 +77,7 @@ guint8 gst_bit_reader_get_bits_uint8_unchecked (GstBitReader *reader, guint nbit
  *
  * Returns: unsigned 16 bit integer with the bits.
  */
-guint16 gst_bit_reader_peek_bits_uint16_unchecked (const GstBitReader *reader, guint nbits);
+guint16 gst_bit_reader_get_bits_uint16_unchecked (GstBitReader *reader, guint nbits);
 
 /**
  * gst_bit_reader_peek_bits_uint16_unchecked:
@@ -89,7 +89,7 @@ guint16 gst_bit_reader_peek_bits_uint16_unchecked (const GstBitReader *reader, g
  *
  * Returns: unsigned 16 bit integer with the bits.
  */
-guint16 gst_bit_reader_get_bits_uint16_unchecked (GstBitReader *reader, guint nbits);
+guint16 gst_bit_reader_peek_bits_uint16_unchecked (const GstBitReader *reader, guint nbits);
 
 /**
  * gst_bit_reader_get_bits_uint32_unchecked:
@@ -101,7 +101,7 @@ guint16 gst_bit_reader_get_bits_uint16_unchecked (GstBitReader *reader, guint nb
  *
  * Returns: unsigned 32 bit integer with the bits.
  */
-guint32 gst_bit_reader_peek_bits_uint32_unchecked (const GstBitReader *reader, guint nbits);
+guint32 gst_bit_reader_get_bits_uint32_unchecked (GstBitReader *reader, guint nbits);
 
 /**
  * gst_bit_reader_peek_bits_uint32_unchecked:
@@ -113,7 +113,7 @@ guint32 gst_bit_reader_peek_bits_uint32_unchecked (const GstBitReader *reader, g
  *
  * Returns: unsigned 32 bit integer with the bits.
  */
-guint32 gst_bit_reader_get_bits_uint32_unchecked (GstBitReader *reader, guint nbits);
+guint32 gst_bit_reader_peek_bits_uint32_unchecked (const GstBitReader *reader, guint nbits);
 
 /**
  * gst_bit_reader_get_bits_uint64_unchecked:
@@ -125,10 +125,10 @@ guint32 gst_bit_reader_get_bits_uint32_unchecked (GstBitReader *reader, guint nb
  *
  * Returns: unsigned 64 bit integer with the bits.
  */
-guint64 gst_bit_reader_peek_bits_uint64_unchecked (const GstBitReader *reader, guint nbits);
+guint64 gst_bit_reader_get_bits_uint64_unchecked (GstBitReader *reader, guint nbits);
 
 /**
- * gst_bit_reader_peek_bits_uint16_unchecked:
+ * gst_bit_reader_peek_bits_uint64_unchecked:
  * @reader: a #GstBitReader instance
  * @nbits: number of bits to read
  *
@@ -137,5 +137,5 @@ guint64 gst_bit_reader_peek_bits_uint64_unchecked (const GstBitReader *reader, g
  *
  * Returns: unsigned 64 bit integer with the bits.
  */
-guint64 gst_bit_reader_get_bits_uint64_unchecked (GstBitReader *reader, guint nbits);
+guint64 gst_bit_reader_peek_bits_uint64_unchecked (const GstBitReader *reader, guint nbits);
 
