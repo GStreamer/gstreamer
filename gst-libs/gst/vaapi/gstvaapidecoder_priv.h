@@ -145,6 +145,10 @@ G_BEGIN_DECLS
                                  GST_VAAPI_TYPE_DECODER,        \
                                  GstVaapiDecoderPrivate))
 
+typedef enum {
+    GST_VAAPI_DECODER_STATUS_DROP_FRAME = -2
+} GstVaapiDecoderStatusPrivate;
+
 typedef struct _GstVaapiParserState GstVaapiParserState;
 struct _GstVaapiParserState {
     GstVideoCodecFrame *current_frame;

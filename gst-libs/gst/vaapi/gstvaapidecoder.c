@@ -49,6 +49,9 @@ enum {
 static GParamSpec *g_properties[N_PROPERTIES] = { NULL, };
 
 static void
+drop_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame);
+
+static void
 parser_state_finalize(GstVaapiParserState *ps)
 {
     if (ps->input_adapter) {
@@ -246,6 +249,10 @@ do_decode_1(GstVaapiDecoder *decoder, GstVaapiDecoderFrame *frame)
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             return status;
     }
+
+    /* Drop frame if there is no slice data unit in there */
+    if (G_UNLIKELY(frame->units->len == 0))
+        return GST_VAAPI_DECODER_STATUS_DROP_FRAME;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -261,6 +268,13 @@ do_decode(GstVaapiDecoder *decoder, GstVideoCodecFrame *base_frame)
     gst_vaapi_decoder_frame_ref(frame);
     status = do_decode_1(decoder, frame);
     gst_vaapi_decoder_frame_unref(frame);
+
+    switch ((guint)status) {
+    case GST_VAAPI_DECODER_STATUS_DROP_FRAME:
+        drop_frame(decoder, base_frame);
+        status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+        break;
+    }
     return status;
 }
 
@@ -349,6 +363,23 @@ decode_step(GstVaapiDecoder *decoder)
         }
     } while (input_size > 0);
     return status;
+}
+
+static void
+drop_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    GST_DEBUG("drop frame %d", frame->system_frame_number);
+
+    /* no surface proxy */
+    gst_video_codec_frame_set_user_data(frame, NULL, NULL);
+
+    frame->pts = GST_CLOCK_TIME_NONE;
+    GST_VIDEO_CODEC_FRAME_FLAG_SET(frame,
+        GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
+
+    g_queue_push_tail(priv->frames, gst_video_codec_frame_ref(frame));
 }
 
 static inline void
