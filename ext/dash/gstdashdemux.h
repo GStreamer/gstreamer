@@ -80,6 +80,8 @@ struct _GstDashDemuxStream
 
   gboolean stream_eos;
 
+  gboolean need_header;
+
   GstDataQueue *queue;
 };
 
@@ -126,7 +128,6 @@ struct _GstDashDemux
   GstClockTime position;
   GstClockTime position_shift;
   GstClockTime last_position_shift;
-  gboolean need_header;
   gboolean need_segment;
   /* Download rate */
   guint64 dnl_rate;
