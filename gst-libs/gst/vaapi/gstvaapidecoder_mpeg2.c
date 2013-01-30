@@ -1127,7 +1127,7 @@ parse_slice(GstVaapiDecoderMpeg2 *decoder,
     GstMpegVideoSliceHdr *slice_hdr;
     GstBitReader br;
     gint mb_x, mb_y, mb_inc;
-    guint8 slice_vertical_position_extension;
+    guint8 slice_vertical_position_extension = 0;
     guint8 extra_bit_slice, junk8;
 
     priv->state &= (GST_MPEG_VIDEO_STATE_GOT_SEQ_HDR|
@@ -1164,7 +1164,8 @@ parse_slice(GstVaapiDecoderMpeg2 *decoder,
     }
     slice_hdr->header_size = 32 + gst_bit_reader_get_pos(&br);
 
-    mb_y = packet->type - GST_MPEG_VIDEO_PACKET_SLICE_MIN;
+    mb_y = ((guint)slice_vertical_position_extension << 7) +
+        packet->type - GST_MPEG_VIDEO_PACKET_SLICE_MIN;
     mb_x = -1;
     do {
         if (!decode_vlc(&br, &mb_inc, mpeg2_mbaddr_vlc_table,
