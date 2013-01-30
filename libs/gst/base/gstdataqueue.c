@@ -556,7 +556,7 @@ flushing:
 static gint
 is_of_type (gconstpointer a, gconstpointer b)
 {
-  return !G_TYPE_CHECK_INSTANCE_TYPE (a, GPOINTER_TO_INT (b));
+  return !G_TYPE_CHECK_INSTANCE_TYPE (a, GPOINTER_TO_SIZE (b));
 }
 
 /**
@@ -583,7 +583,7 @@ gst_data_queue_drop_head (GstDataQueue * queue, GType type)
   GST_DEBUG ("queue:%p", queue);
 
   GST_DATA_QUEUE_MUTEX_LOCK (queue);
-  idx = gst_queue_array_find (priv->queue, is_of_type, GINT_TO_POINTER (type));
+  idx = gst_queue_array_find (priv->queue, is_of_type, GSIZE_TO_POINTER (type));
 
   if (idx == -1)
     goto done;
