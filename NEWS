@@ -1,9 +1,9 @@
-gst-vaapi NEWS -- summary of changes.  2013-01-DD
+gst-vaapi NEWS -- summary of changes.  2013-01-29
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
 
-Version 0.5.1 - DD.Jan.2013
+Version 0.5.1 - 29.Jan.2013
 * Add simple decoder demo that only uses libgstvaapi
 * Fix thread-safety issues in the Wayland renderer
 * Fix VC-1 decoding bugs #692461, #692312, #692271, #692270, #692267
