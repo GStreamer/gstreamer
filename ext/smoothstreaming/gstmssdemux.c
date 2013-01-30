@@ -1001,8 +1001,10 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
     case GST_FLOW_OK:
       break;                    /* all is good, let's go */
     case GST_FLOW_UNEXPECTED:  /* EOS */
-      gst_mss_demux_reload_manifest (mssdemux);
-      return GST_FLOW_OK;
+      if (gst_mss_manifest_is_live (mssdemux->manifest)) {
+        gst_mss_demux_reload_manifest (mssdemux);
+        return GST_FLOW_OK;
+      }
       return GST_FLOW_UNEXPECTED;
     case GST_FLOW_ERROR:
       goto error;
