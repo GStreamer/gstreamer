@@ -252,21 +252,24 @@ gst_vaapidecode_push_decoded_frames(GstVideoDecoder *vdec)
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             return GST_FLOW_OK;
 
-        proxy = gst_video_codec_frame_get_user_data(out_frame);
+        if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY(out_frame)) {
+            proxy = gst_video_codec_frame_get_user_data(out_frame);
 
-        gst_vaapi_surface_proxy_set_user_data(proxy,
-            decode, (GDestroyNotify)gst_vaapidecode_release);
+            gst_vaapi_surface_proxy_set_user_data(proxy,
+                decode, (GDestroyNotify)gst_vaapidecode_release);
 
-        out_frame->output_buffer =
-            gst_vaapi_video_buffer_new_with_surface_proxy(proxy);
-        if (!out_frame->output_buffer)
-            goto error_create_buffer;
+            out_frame->output_buffer =
+                gst_vaapi_video_buffer_new_with_surface_proxy(proxy);
+            if (!out_frame->output_buffer)
+                goto error_create_buffer;
+        }
 
         ret = gst_video_decoder_finish_frame(vdec, out_frame);
         if (ret != GST_FLOW_OK)
             goto error_commit_buffer;
 
-        decode->last_buffer_time = out_frame->pts;
+        if (GST_CLOCK_TIME_IS_VALID(out_frame->pts))
+            decode->last_buffer_time = out_frame->pts;
         gst_video_codec_frame_unref(out_frame);
     };
     return GST_FLOW_OK;
