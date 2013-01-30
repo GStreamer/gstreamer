@@ -59,7 +59,6 @@ struct _GstDashDemuxStream
 
   gint index;
 
-  GstCaps *output_caps;
   GstCaps *input_caps;
 
   /*

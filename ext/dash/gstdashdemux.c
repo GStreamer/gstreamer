@@ -478,20 +478,6 @@ gst_dash_demux_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-static gboolean
-gst_dash_demux_all_queues_have_data (GstDashDemux * demux)
-{
-  GSList *iter;
-
-  for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
-    GstDashDemuxStream *stream = iter->data;
-    if (gst_data_queue_is_empty (stream->queue)) {
-      return FALSE;
-    }
-  }
-  return TRUE;
-}
-
 static void
 gst_dash_demux_clear_queues (GstDashDemux * demux)
 {
@@ -1019,7 +1005,7 @@ switch_pads (GstDashDemux * demux)
     gst_pad_set_caps (stream->pad, caps);
     gst_element_add_pad (GST_ELEMENT (demux), gst_object_ref (stream->pad));
     GST_INFO_OBJECT (demux, "Adding srcpad %s:%s with caps %" GST_PTR_FORMAT,
-        GST_DEBUG_PAD_NAME (stream->pad), stream->output_caps);
+        GST_DEBUG_PAD_NAME (stream->pad), caps);
 
     gst_caps_unref (caps);
     item->destroy (item);
@@ -1037,61 +1023,6 @@ switch_pads (GstDashDemux * demux)
     gst_object_unref (pad);
   }
   g_slist_free (oldpads);
-}
-
-/* needs_pad_switch:
- * 
- * Figure out if the newly selected representations require a new set
- * of demuxers and decoders or if we can carry on with the existing ones.
- * 
- * Basically, we look at the list of fragments we need to push downstream, 
- * and compare their caps with those of the corresponding src pads.
- * 
- * As soon as one fragment requires a new set of caps, we need to switch
- * all decoding pads to recreate a whole decoding group as we cannot 
- * move pads between groups (FIXME: or can we ?).
- * 
- * FIXME: redundant with need_add_header
- * 
- */
-static gboolean
-needs_pad_switch (GstDashDemux * demux)
-{
-  gboolean switch_pad = FALSE;
-  guint i = 0;
-  GSList *iter;
-
-  for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
-    GstDataQueueItem *item;
-    GstDashDemuxStream *stream = iter->data;
-    GstCaps *srccaps = NULL;
-    GstBuffer *buffer;
-
-    if (stream->stream_end_of_period || stream->stream_eos)
-      continue;
-
-    if (!gst_data_queue_peek (stream->queue, &item))
-      continue;
-
-    if (!GST_IS_BUFFER (item->object))
-      continue;
-
-    buffer = GST_BUFFER_CAST (item->object);
-
-    gst_caps_replace (&stream->output_caps, GST_BUFFER_CAPS (buffer));
-
-    if (G_LIKELY (stream->pad))
-      srccaps = gst_pad_get_negotiated_caps (stream->pad);
-    if (G_UNLIKELY (!srccaps
-            || (!gst_caps_is_equal_fixed (stream->output_caps, srccaps)))
-        || demux->need_segment) {
-      switch_pad = TRUE;
-    }
-    if (G_LIKELY (srccaps))
-      gst_caps_unref (srccaps);
-    i++;
-  }
-  return switch_pad;
 }
 
 /* gst_dash_demux_stream_loop:
@@ -1119,7 +1050,6 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
 {
   GstFlowReturn ret;
   GstActiveStream *active_stream;
-  gboolean switch_pad;
   guint i = 0;
   GSList *iter;
   GstClockTime best_time;
@@ -1129,14 +1059,6 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   gboolean pad_switch;
 
   GST_LOG_OBJECT (demux, "Starting stream loop");
-
-  if (FALSE && !gst_dash_demux_all_queues_have_data (demux)) {
-    if (demux->end_of_manifest)
-      goto end_of_manifest;
-
-    GST_DEBUG_OBJECT (demux, "Ending stream loop, no buffers to push");
-    return;
-  }
 
   if (GST_STATE (demux) == GST_STATE_PLAYING) {
     if (!demux->end_of_manifest
@@ -1150,14 +1072,6 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
           gst_message_new_buffering (GST_OBJECT (demux),
               100 * gst_dash_demux_get_buffering_ratio (demux)));
     }
-  }
-
-  /* Figure out if we need to create/switch pads */
-  switch_pad = needs_pad_switch (demux);
-  if (FALSE && switch_pad) {
-    GST_WARNING ("Switching pads");
-    switch_pads (demux);
-    demux->need_segment = TRUE;
   }
 
   best_time = GST_CLOCK_TIME_NONE;
@@ -1297,8 +1211,6 @@ gst_dash_demux_stream_free (GstDashDemuxStream * stream)
 {
   if (stream->input_caps)
     gst_caps_unref (stream->input_caps);
-  if (stream->output_caps)
-    gst_caps_unref (stream->output_caps);
   if (stream->pad)
     gst_object_unref (stream->pad);
 
