@@ -229,10 +229,13 @@ GST_START_TEST (test_array_drop2)
 
   while (gst_queue_array_get_length (array) > 0) {
     for (i = 0; i < NUM_QA_ELEMENTS; i++) {
+      gpointer dropped;
+
       if (g_random_boolean () && g_random_boolean () && in_array[i]) {
         idx = gst_queue_array_find (array, compare_pointer_value,
             GUINT_TO_POINTER (i));
-        gst_queue_array_drop_element (array, idx);
+        dropped = gst_queue_array_drop_element (array, idx);
+        fail_unless_equals_int (i, GPOINTER_TO_INT (dropped));
         in_array[i] = FALSE;
       }
     }
