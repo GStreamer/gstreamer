@@ -287,11 +287,17 @@ gst_queue_array_drop_element (GstQueueArray * array, guint idx)
 /**
  * gst_queue_array_find:
  * @array: a #GstQueueArray object
- * @func: comparison function
+ * @func: (allow-none): comparison function, or %NULL to find @data by value
  * @data: data for comparison function
  *
- * Finds an element in the queue @array by comparing every element
- * with @func and returning the index of the found element.
+ * Finds an element in the queue @array, either by comparing every element
+ * with @func or by looking up @data if no compare function @func is provided,
+ * and returning the index of the found element.
+ *
+ * Note that the index is not 0-based, but an internal index number with a
+ * random offset. The index can be used in connection with
+ * gst_queue_array_drop_element(). FIXME: return index 0-based and make
+ * _drop_element() take a 0-based index.
  *
  * Returns: Index of the found element or -1 if nothing was found.
  *
@@ -302,10 +308,19 @@ gst_queue_array_find (GstQueueArray * array, GCompareFunc func, gpointer data)
 {
   guint i;
 
-  /* Scan from head to tail */
-  for (i = 0; i < array->length; i++)
-    if (func (array->array[(i + array->head) % array->size], data) == 0)
-      return (i + array->head) % array->size;
+  if (func != NULL) {
+    /* Scan from head to tail */
+    for (i = 0; i < array->length; i++) {
+      if (func (array->array[(i + array->head) % array->size], data) == 0)
+        return (i + array->head) % array->size;
+    }
+  } else {
+    for (i = 0; i < array->length; i++) {
+      if (array->array[(i + array->head) % array->size] == data)
+        return (i + array->head) % array->size;
+    }
+  }
+
   return -1;
 }
 
