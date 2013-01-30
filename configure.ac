@@ -22,7 +22,7 @@ dnl can autoconf find the source ?
 AC_CONFIG_SRCDIR([ges/ges-timeline.c])
 
 dnl define the output header for config
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE([enable])
