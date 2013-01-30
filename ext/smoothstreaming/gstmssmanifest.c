@@ -476,6 +476,56 @@ end:
   return caps;
 }
 
+static guint8
+_frequency_index_from_sampling_rate (guint sampling_rate)
+{
+  static const guint aac_sample_rates[] = { 96000, 88200, 64000, 48000, 44100,
+    32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350
+  };
+
+  guint8 i;
+
+  for (i = 0; i < G_N_ELEMENTS (aac_sample_rates); i++) {
+    if (aac_sample_rates[i] == sampling_rate)
+      return i;
+  }
+  return 15;
+}
+
+static GstBuffer *
+_make_accl_codec_data (guint sampling_rate, guint channels)
+{
+  GstBuffer *buf;
+  guint8 *data;
+  guint8 frequency_index;
+  guint8 buf_size;
+
+  buf_size = 2;
+  frequency_index = _frequency_index_from_sampling_rate (sampling_rate);
+  if (frequency_index == 15)
+    buf_size += 3;
+
+  buf = gst_buffer_new_and_alloc (buf_size);
+  data = GST_BUFFER_DATA (buf);
+
+  data[0] = 2 << 3;             /* AAC-LC object type is 2 */
+  data[0] += frequency_index >> 1;
+  data[1] = (frequency_index & 0x01) << 7;
+
+  /* Sampling rate is not in frequencies table, write manually */
+  if (frequency_index == 15) {
+    data[1] += sampling_rate >> 17;
+    data[2] = (sampling_rate >> 9) & 0xFF;
+    data[3] = (sampling_rate >> 1) & 0xFF;
+    data[4] = sampling_rate & 0x01;
+    data += 3;
+  }
+
+  data[1] += (channels & 0x0F) << 3;
+
+  return buf;
+}
+
 static GstCaps *
 _gst_mss_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
 {
@@ -509,6 +559,10 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
     g_value_init (value, GST_TYPE_BUFFER);
     gst_value_deserialize (value, (gchar *) codec_data);
     gst_structure_take_value (structure, "codec_data", value);
+  } else if (strcmp (fourcc, "AACL") == 0) {
+    GstBuffer *buffer = _make_accl_codec_data (atoi (rate), atoi (channels));
+    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buffer, NULL);
+    gst_buffer_unref (buffer);
   }
 
 end:
