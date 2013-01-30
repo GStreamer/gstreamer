@@ -801,11 +801,6 @@ static GstVaapiDecoderStatus
 decode_sequence_end(GstVaapiDecoderMpeg2 *decoder)
 {
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
-    GstVaapiDecoderStatus status;
-
-    status = decode_current_picture(decoder);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-        return status;
 
     gst_vaapi_dpb_flush(priv->dpb);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
