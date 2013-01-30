@@ -193,9 +193,18 @@ gst_queue_array_find (GstQueueArray * array, GCompareFunc func, gpointer data)
 {
   guint i;
 
-  /* Scan from head to tail */
-  for (i = 0; i < array->length; i++)
-    if (func (array->array[(i + array->head) % array->size], data) == 0)
-      return (i + array->head) % array->size;
+  if (func != NULL) {
+    /* Scan from head to tail */
+    for (i = 0; i < array->length; i++) {
+      if (func (array->array[(i + array->head) % array->size], data) == 0)
+        return (i + array->head) % array->size;
+    }
+  } else {
+    for (i = 0; i < array->length; i++) {
+      if (array->array[(i + array->head) % array->size] == data)
+        return (i + array->head) % array->size;
+    }
+  }
+
   return -1;
 }
