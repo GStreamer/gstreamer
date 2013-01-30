@@ -36,6 +36,7 @@
 #include "gstpyramidsegment.h"
 #include "gsttemplatematch.h"
 #include "gsttextoverlay.h"
+#include "gsthanddetect.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -77,6 +78,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_opencv_text_overlay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_handdetect_plugin_init (plugin))
     return FALSE;
 
   return TRUE;

@@ -1,8 +1,7 @@
 /*
  * GStreamer
- * Copyright (C) 2005 Thomas Vander Stichele <thomas@apestaart.org>
- * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2012 andol li <<andol@andol.info>>
+ * Copyright (c) 2013 Sreerenj Balachandran <sreerenj.balachandran@intel.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -46,20 +45,15 @@
 #ifndef __GST_HANDDETECT_H__
 #define __GST_HANDDETECT_H__
 
-#ifndef VERSION
-#define VERSION "0.10.36"       /* for GST_PLUGIN_DEFINE use */
-#endif
-
-#include <math.h>
-#include <string.h>
-#include <stdlib.h>
 #include <gst/gst.h>
-#include <gst/video/gstvideofilter.h>
+#include <gst/video/video.h>
+#include <gst/video/navigation.h>
+
 #include "gstopencvvideofilter.h"
 /* opencv */
-#include <opencv/cv.h>
-#include <opencv/cxcore.h>
-#include <opencv/highgui.h>
+#include <cv.h>
+#include <cxcore.h>
+#include <highgui.h>
 #if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
 #include <opencv2/objdetect/objdetect.hpp>
 #endif
@@ -112,6 +106,8 @@ struct _GstHanddetectClass
 };
 
 GType gst_handdetect_get_type (void);
+
+gboolean gst_handdetect_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 #endif /* __GST_HANDDETECT_H__ */

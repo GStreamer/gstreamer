@@ -14,6 +14,7 @@ libgstopencv_la_SOURCES = gstopencv.c \
 			gstedgedetect.c \
 			gstfaceblur.c \
 			gstfacedetect.c \
+			gsthanddetect.c \
 			gstpyramidsegment.c \
 			gsttemplatematch.c \
 			gsttextoverlay.c \
@@ -50,9 +51,15 @@ noinst_HEADERS = gstopencvvideofilter.h gstopencvutils.h \
 		gstedgedetect.h \
 		gstfaceblur.h \
 		gstfacedetect.h \
+		gsthanddetect.h \
 		gstpyramidsegment.h \
 		gsttemplatematch.h \
 		gsttextoverlay.h \
 		gstmotioncells.h \
 		motioncells_wrapper.h \
 		MotionCells.h
+
+opencv_haarcascadesdir = $(datadir)/gstreamer-$(GST_API_VERSION)/opencv_haarcascades
+opencv_haarcascades_DATA = fist.xml palm.xml
+
+EXTRA_DIST = $(opencv_haarcascades_DATA)
