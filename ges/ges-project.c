@@ -461,6 +461,8 @@ ges_project_try_updating_id (GESProject * project, GESAsset * asset,
     }
   }
 
+  g_hash_table_remove (project->priv->loading_assets, ges_asset_get_id (asset));
+
   return new_id;
 }
 
@@ -482,8 +484,9 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, GESProject * project)
 
       return;
     }
-    ges_asset_request_async (ges_asset_get_extractable_type (source),
-        possible_id, NULL, (GAsyncReadyCallback) new_asset_cb, project);
+
+    ges_project_create_asset (project, possible_id,
+        ges_asset_get_extractable_type (source));
 
     g_free (possible_id);
     g_error_free (error);

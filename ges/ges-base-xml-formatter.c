@@ -542,6 +542,8 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
      * make sure the assetid_pendingtlobjs will use it */
     ges_asset_request_async (ges_asset_get_extractable_type (source),
         possible_id, NULL, (GAsyncReadyCallback) new_asset_cb, passet);
+    ges_project_add_loading_asset (GES_FORMATTER (self)->project,
+        ges_asset_get_extractable_type (source), possible_id);
 
     pendings = g_hash_table_lookup (priv->assetid_pendingtlobjs, id);
     if (pendings) {
