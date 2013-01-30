@@ -1,10 +1,16 @@
 #!/bin/sh
 # Run this to generate all the initial makefiles, etc.
+test -n "$srcdir" || srcdir=`dirname "$0"`
+test -n "$srcdir" || srcdir=.
+
+olddir=`pwd`
+cd "$srcdir"
 
 DIE=0
 package=gst-plugins-ugly
 srcfile=ext/mad/gstmad.c
 
+echo "$(pwd)"
 # Make sure we have common
 if test ! -f common/gst-autogen.sh;
 then
@@ -109,13 +115,15 @@ test -n "$NOCONFIGURE" && {
   exit 0
 }
 
+cd "$olddir"
+
 echo "+ running configure ... "
-test ! -z "$CONFIGURE_DEF_OPT" && echo "  ./configure default flags: $CONFIGURE_DEF_OPT"
-test ! -z "$CONFIGURE_EXT_OPT" && echo "  ./configure external flags: $CONFIGURE_EXT_OPT"
-test ! -z "$CONFIGURE_FILE_OPT" && echo "  ./configure enable/disable flags: $CONFIGURE_FILE_OPT"
+test ! -z "$CONFIGURE_DEF_OPT" && echo "  $srcdir/configure default flags: $CONFIGURE_DEF_OPT"
+test ! -z "$CONFIGURE_EXT_OPT" && echo "  $srcdir/configure external flags: $CONFIGURE_EXT_OPT"
+test ! -z "$CONFIGURE_FILE_OPT" && echo "  $srcdir/configure enable/disable flags: $CONFIGURE_FILE_OPT"
 echo
 
-./configure $CONFIGURE_DEF_OPT $CONFIGURE_EXT_OPT $CONFIGURE_FILE_OPT || {
+$srcdir/configure $CONFIGURE_DEF_OPT $CONFIGURE_EXT_OPT $CONFIGURE_FILE_OPT || {
         echo "  configure failed"
         exit 1
 }
