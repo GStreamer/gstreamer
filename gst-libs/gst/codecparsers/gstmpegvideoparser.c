@@ -78,6 +78,49 @@ static const guint8 mpeg_zigzag_8x8[64] = {
   53, 60, 61, 54, 47, 55, 62, 63
 };
 
+enum
+{
+  GST_MPEG_VIDEO_MACROBLOCK_ESCAPE = G_MAXUINT,
+};
+
+/* Table B-1: Variable length codes for macroblock_address_increment */
+static const VLCTable mpeg2_mbaddr_vlc_table[] = {
+  {1, 0x01, 1},
+  {2, 0x03, 3},
+  {3, 0x02, 3},
+  {4, 0x03, 4},
+  {5, 0x02, 4},
+  {6, 0x03, 5},
+  {7, 0x02, 5},
+  {8, 0x07, 7},
+  {9, 0x06, 7},
+  {10, 0x0b, 8},
+  {11, 0x0a, 8},
+  {12, 0x09, 8},
+  {13, 0x08, 8},
+  {14, 0x07, 8},
+  {15, 0x06, 8},
+  {16, 0x17, 10},
+  {17, 0x16, 10},
+  {18, 0x15, 10},
+  {19, 0x14, 10},
+  {20, 0x13, 10},
+  {21, 0x12, 10},
+  {22, 0x23, 11},
+  {23, 0x22, 11},
+  {24, 0x21, 11},
+  {25, 0x20, 11},
+  {26, 0x1f, 11},
+  {27, 0x1e, 11},
+  {28, 0x1d, 11},
+  {29, 0x1c, 11},
+  {30, 0x1b, 11},
+  {31, 0x1a, 11},
+  {32, 0x19, 11},
+  {33, 0x18, 11},
+  {GST_MPEG_VIDEO_MACROBLOCK_ESCAPE, 0x08, 11}
+};
+
 GST_DEBUG_CATEGORY (mpegvideo_parser_debug);
 #define GST_CAT_DEFAULT mpegvideo_parser_debug
 
@@ -890,6 +933,95 @@ gst_mpeg_video_packet_parse_gop (const GstMpegVideoPacket * packet,
 
 failed:
   GST_WARNING ("error parsing \"GOP\"");
+  return FALSE;
+}
+
+/**
+ * gst_mpeg_video_packet_parse_slice_header:
+ * @packet: The #GstMpegVideoPacket that carries the data
+ * @slice_hdr: (out): The #GstMpegVideoSliceHdr structure to fill
+ * @seqhdr: The #GstMpegVideoSequenceHdr header
+ * @seqscaleext: The #GstMpegVideoSequenceScalableExt header
+ *
+ * Parses the @GstMpegVideoSliceHdr  structure members from @data
+ *
+ * Returns: %TRUE if the slice could be parsed correctly, %FALSE otherwize.
+ *
+ * Since: 1.2
+ */
+gboolean
+gst_mpeg_video_packet_parse_slice_header (const GstMpegVideoPacket * packet,
+    GstMpegVideoSliceHdr * slice_hdr, GstMpegVideoSequenceHdr * seqhdr,
+    GstMpegVideoSequenceScalableExt * seqscaleext)
+{
+  GstBitReader br;
+  guint height;
+  guint mb_inc;
+  guint8 bits, extra_bits;
+  guint8 vertical_position, vertical_position_extension = 0;
+
+  g_return_val_if_fail (seqhdr != NULL, FALSE);
+
+  if (packet->size < 5)
+    return FALSE;
+
+  gst_bit_reader_init (&br, &packet->data[packet->offset], packet->size);
+
+  if (packet->type < GST_MPEG_VIDEO_PACKET_SLICE_MIN ||
+      packet->type > GST_MPEG_VIDEO_PACKET_SLICE_MAX) {
+    GST_DEBUG ("Not parsing a slice");
+    return FALSE;
+  }
+  vertical_position = packet->type - GST_MPEG_VIDEO_PACKET_SLICE_MIN;
+
+  height = seqhdr->height;
+  if (height > 2800)
+    READ_UINT8 (&br, vertical_position_extension, 3);
+
+  if (seqscaleext)
+    if (seqscaleext->scalable_mode ==
+        GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_DATA_PARTITIONING)
+      READ_UINT8 (&br, slice_hdr->priority_breakpoint, 7);
+
+  READ_UINT8 (&br, slice_hdr->quantiser_scale_code, 5);
+
+  READ_UINT8 (&br, extra_bits, 1);
+  if (!extra_bits)
+    slice_hdr->intra_slice = 0;
+  else {
+    READ_UINT8 (&br, slice_hdr->intra_slice, 1);
+    SKIP (&br, 1);
+    READ_UINT8 (&br, slice_hdr->slice_picture_id, 6);
+
+    READ_UINT8 (&br, bits, 1);
+    while (bits) {
+      READ_UINT8 (&br, extra_bits, 8);
+      READ_UINT8 (&br, bits, 1);
+    }
+  }
+
+  slice_hdr->header_size = gst_bit_reader_get_pos (&br);
+
+  if (height > 2800)
+    slice_hdr->mb_row = (vertical_position_extension << 7) + vertical_position;
+  else
+    slice_hdr->mb_row = vertical_position;
+
+  slice_hdr->mb_column = -1;
+  do {
+    if (!decode_vlc (&br, &mb_inc, mpeg2_mbaddr_vlc_table,
+            G_N_ELEMENTS (mpeg2_mbaddr_vlc_table))) {
+      GST_WARNING ("failed to decode first macroblock_address_increment");
+      goto failed;
+    }
+    slice_hdr->mb_column +=
+        mb_inc == GST_MPEG_VIDEO_MACROBLOCK_ESCAPE ? 33 : mb_inc;
+  } while (mb_inc == GST_MPEG_VIDEO_MACROBLOCK_ESCAPE);
+
+  return TRUE;
+
+failed:
+  GST_WARNING ("error parsing \"Slice\"");
   return FALSE;
 }
 

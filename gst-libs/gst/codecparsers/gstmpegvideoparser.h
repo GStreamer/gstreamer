@@ -197,6 +197,7 @@ typedef struct _GstMpegVideoPictureHdr      GstMpegVideoPictureHdr;
 typedef struct _GstMpegVideoGop             GstMpegVideoGop;
 typedef struct _GstMpegVideoPictureExt      GstMpegVideoPictureExt;
 typedef struct _GstMpegVideoQuantMatrixExt  GstMpegVideoQuantMatrixExt;
+typedef struct _GstMpegVideoSliceHdr        GstMpegVideoSliceHdr;
 typedef struct _GstMpegVideoPacket          GstMpegVideoPacket;
 
 /**
@@ -439,6 +440,32 @@ struct _GstMpegVideoGop
 };
 
 /**
+ * GstMpegVideoSliceHdr:
+ * @slice_vertical_position_extension: Extension to slice_vertical_position
+ * @priority_breakpoint: Point where the bitstream shall be partitioned
+ * @quantiser_scale_code: Quantiser value (range: 1-31)
+ * @intra_slice: Equal to one if all the macroblocks are intra macro blocks.
+ * @slice_picture_id: Intended to aid recovery on severe bursts of
+ *   errors for certain types of applications
+ *
+ * The Mpeg2 Video Slice Header structure.
+ *
+ * Since: 1.2
+ */
+struct _GstMpegVideoSliceHdr
+{
+  guint8 priority_breakpoint;
+  guint8 quantiser_scale_code;
+  guint8 intra_slice;
+  guint8 slice_picture_id;
+
+  /* Calculated values */
+  guint header_size;            /* slice_header size in bits */
+  gint mb_row;                  /* macroblock row */
+  gint mb_column;               /* macroblock column */
+};
+
+/**
  * GstMpegVideoTypeOffsetSize:
  * @type: the type of the packet that start at @offset
  * @data: the data containing the packet starting at @offset
@@ -478,6 +505,11 @@ gboolean gst_mpeg_video_packet_parse_picture_extension  (const GstMpegVideoPacke
 
 gboolean gst_mpeg_video_packet_parse_gop                (const GstMpegVideoPacket * packet,
                                                          GstMpegVideoGop * gop);
+
+gboolean gst_mpeg_video_packet_parse_slice_header       (const GstMpegVideoPacket * packet,
+                                                         GstMpegVideoSliceHdr * slice_hdr,
+                                                         GstMpegVideoSequenceHdr * seq_hdr,
+                                                         GstMpegVideoSequenceScalableExt * seqscaleext);
 
 gboolean gst_mpeg_video_packet_parse_quant_matrix_extension (const GstMpegVideoPacket * packet,
                                                          GstMpegVideoQuantMatrixExt * quant);
