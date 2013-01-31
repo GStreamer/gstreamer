@@ -97,6 +97,14 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       }
       break;
     }
+
+    case GST_MAKE_FOURCC ('Y', '8', '0', '0'):
+      caps = gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "GRAY8", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Uncompressed 8-bit monochrome");
+      break;
+
     case GST_MAKE_FOURCC ('r', '2', '1', '0'):
       caps = gst_caps_new_simple ("video/x-raw",
           "format", G_TYPE_STRING, "r210", NULL);
@@ -1621,7 +1629,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
           /* recurse where no special consideration has yet to be identified 
            * for the subformat guid */
           caps = gst_riff_create_audio_caps (subformat_guid[0], strh, strf,
-                     strf_data, strd_data, codec_name, channel_reorder_map);
+              strf_data, strd_data, codec_name, channel_reorder_map);
           if (!codec_name)
             GST_DEBUG ("WAVE_FORMAT_EXTENSIBLE audio");
           if (caps) {
