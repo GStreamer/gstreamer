@@ -1403,7 +1403,7 @@ gst_gl_mixer_fill_queues (GstGLMixer * mix,
       }
     } else {
       if (mixcol->end_time != -1) {
-        if (mixcol->end_time < output_start_time) {
+        if (mixcol->end_time <= output_start_time) {
           gst_buffer_replace (&mixcol->buffer, NULL);
           mixcol->start_time = mixcol->end_time = -1;
           if (!GST_COLLECT_PADS_STATE_IS_SET (mixcol,
@@ -1685,6 +1685,9 @@ gst_gl_mixer_collected (GstCollectPads * pads, GstGLMixer * mix)
       GST_VIDEO_INFO_FPS_N (&mix->out_info));
   if (mix->segment.stop != -1)
     output_end_time = MIN (output_end_time, mix->segment.stop);
+
+  GST_LOG ("got output times start:%" GST_TIME_FORMAT " end:%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (output_start_time), GST_TIME_ARGS (output_end_time));
 
   res = gst_gl_mixer_fill_queues (mix, output_start_time, output_end_time);
 
