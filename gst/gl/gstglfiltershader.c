@@ -75,8 +75,10 @@ static void gst_gl_filtershader_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_gl_filter_filtershader_reset (GstGLFilter * filter);
 
-static void gst_gl_filtershader_load_shader (char *filename, char **storage);
-static void gst_gl_filtershader_load_variables (char *filename, char **storage);
+static gboolean gst_gl_filtershader_load_shader (GstGLFilterShader *
+    filter_shader, char *filename, char **storage);
+static gboolean gst_gl_filtershader_load_variables (GstGLFilterShader *
+    filter_shader, char *filename, char **storage);
 static gboolean gst_gl_filtershader_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filtershader_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
@@ -248,38 +250,38 @@ gst_gl_filtershader_get_property (GObject * object, guint prop_id,
   }
 }
 
-static int
-gst_gl_filtershader_load_file (const gchar * filename, gchar ** storage)
+static gboolean
+gst_gl_filtershader_load_shader (GstGLFilterShader * filter_shader,
+    char *filename, char **storage)
 {
-  GError *err = NULL;
-  gchar *old_storage = *storage;
+  GError *error = NULL;
+  gsize length;
 
-  GST_INFO ("loading file: %s", filename);
-  if (!g_file_get_contents (filename, storage, NULL, &err)) {
-    GST_ERROR ("could not open file '%s':", filename, err->message);
-    g_error_free (err);
-    return -1;
+  g_return_val_if_fail (storage != NULL, FALSE);
+
+  if (!filename) {
+    GST_ELEMENT_ERROR (filter_shader, RESOURCE, NOT_FOUND,
+        ("A shader file is required"), (NULL));
+    return FALSE;
   }
 
-  g_free (old_storage);
-  GST_INFO ("read: %d bytes", (int) strlen (*storage));
-  return 0;
-}
+  if (!g_file_get_contents (filename, storage, &length, &error)) {
+    GST_ELEMENT_ERROR (filter_shader, RESOURCE, NOT_FOUND, (error->message),
+        (NULL));
+    g_error_free (error);
 
-static void
-gst_gl_filtershader_load_shader (char *filename, char **storage)
-{
-  g_return_if_fail (filename != NULL);
-  g_return_if_fail (storage != NULL);
-
-  if (gst_gl_filtershader_load_file (filename, storage)) {
-    exit (1);
+    return FALSE;
   }
+
+  return TRUE;
 }
 
-static void
-gst_gl_filtershader_load_variables (char *filename, char **storage)
+static gboolean
+gst_gl_filtershader_load_variables (GstGLFilterShader * filter_shader,
+    char *filename, char **storage)
 {
+  GError *error = NULL;
+  gsize length;
 
   if (storage[0]) {
     g_free (storage[0]);
@@ -287,11 +289,17 @@ gst_gl_filtershader_load_variables (char *filename, char **storage)
   }
 
   if (!filename)
-    return;
+    return TRUE;
 
-  if (gst_gl_filtershader_load_file (filename, storage)) {
-    exit (1);
+  if (!g_file_get_contents (filename, storage, &length, &error)) {
+    GST_ELEMENT_ERROR (filter_shader, RESOURCE, NOT_FOUND, (error->message),
+        (NULL));
+    g_error_free (error);
+
+    return FALSE;
   }
+
+  return TRUE;
 }
 
 static void
@@ -306,18 +314,21 @@ gst_gl_filtershader_init_shader (GstGLFilter * filter)
 
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
 
-  gst_gl_filtershader_load_shader (filtershader->filename,
-      &hfilter_fragment_source);
+  if (!gst_gl_filtershader_load_shader (filtershader, filtershader->filename,
+          &hfilter_fragment_source))
+    return FALSE;
 
   //blocking call, wait the opengl thread has compiled the shader
   if (!gst_gl_display_gen_shader (filter->display, 0, hfilter_fragment_source,
           &filtershader->shader0))
     return FALSE;
 
-  filtershader->compiled = 1;
 
-  gst_gl_filtershader_load_variables (filtershader->presetfile,
-      &hfilter_fragment_variables[0]);
+  if (!gst_gl_filtershader_load_variables (filtershader,
+          filtershader->presetfile, &hfilter_fragment_variables[0]))
+    return FALSE;
+
+  filtershader->compiled = 1;
 
   return TRUE;
 }
