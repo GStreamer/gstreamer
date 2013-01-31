@@ -775,7 +775,7 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
 
   if (ret) {
     /* find supported meta */
-    query = gst_query_new_allocation (caps, TRUE);
+    query = gst_query_new_allocation (caps, FALSE);
 
     if (!gst_pad_peer_query (overlay->srcpad, query)) {
       /* no problem, we use the query defaults */
