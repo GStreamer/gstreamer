@@ -107,9 +107,18 @@ gst_rtp_opus_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
   GstBuffer *outbuf;
+  GstClockTime pts, dts, duration;
+
+  pts = GST_BUFFER_PTS (buffer);
+  dts = GST_BUFFER_DTS (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
 
   outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
-  outbuf = gst_buffer_append (outbuf, gst_buffer_ref (buffer));
+  outbuf = gst_buffer_append (outbuf, buffer);
+
+  GST_BUFFER_PTS (outbuf) = pts;
+  GST_BUFFER_DTS (outbuf) = dts;
+  GST_BUFFER_DURATION (outbuf) = duration;
 
   /* Push out */
   return gst_rtp_base_payload_push (basepayload, outbuf);
