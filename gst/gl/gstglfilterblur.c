@@ -67,18 +67,21 @@ static void
 gst_gl_filterblur_init_resources (GstGLFilter * filter)
 {
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
-  glGenTextures (1, &filterblur->midtexture);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, filterblur->midtexture);
-  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+  gl->GenTextures (1, &filterblur->midtexture);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, filterblur->midtexture);
+  gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info),
       0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+      GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+      GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
       GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
       GL_CLAMP_TO_EDGE);
 }
 
@@ -86,8 +89,9 @@ static void
 gst_gl_filterblur_reset_resources (GstGLFilter * filter)
 {
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
-  glDeleteTextures (1, &filterblur->midtexture);
+  gl->DeleteTextures (1, &filterblur->midtexture);
 }
 
 static void
@@ -205,16 +209,17 @@ gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (filterblur->shader0);
 
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (filterblur->shader0, "tex", 1);
   gst_gl_shader_set_uniform_1fv (filterblur->shader0, "kernel", 7,
@@ -230,16 +235,17 @@ gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (filterblur->shader1);
 
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (filterblur->shader1, "tex", 1);
   gst_gl_shader_set_uniform_1fv (filterblur->shader1, "kernel", 7,
