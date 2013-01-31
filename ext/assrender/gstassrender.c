@@ -1056,6 +1056,35 @@ gst_ass_render_composite_overlay (GstAssRender * render, ASS_Image * images)
   return composition;
 }
 
+static gboolean
+gst_ass_render_push_frame (GstAssRender * render, GstBuffer * video_frame)
+{
+  GstVideoFrame frame;
+
+  if (!render->composition)
+    goto done;
+
+  video_frame = gst_buffer_make_writable (video_frame);
+
+  if (render->attach_compo_to_buffer) {
+    gst_buffer_add_video_overlay_composition_meta (video_frame,
+        render->composition);
+    goto done;
+  }
+
+  if (!gst_video_frame_map (&frame, &render->info, video_frame,
+          GST_MAP_READWRITE)) {
+    GST_WARNING_OBJECT (render, "failed to map video frame for blending");
+    goto done;
+  }
+
+  gst_video_overlay_composition_blend (render->composition, &frame);
+  gst_video_frame_unmap (&frame);
+
+done:
+  return gst_pad_push (render->srcpad, video_frame);
+}
+
 static GstFlowReturn
 gst_ass_render_chain_video (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -1206,26 +1235,12 @@ wait_for_text_buf:
         if (!render->composition)
           render->composition = gst_ass_render_composite_overlay (render,
               ass_image);
-
-        if (render->composition) {
-          buffer = gst_buffer_make_writable (buffer);
-          if (render->attach_compo_to_buffer) {
-            gst_buffer_add_video_overlay_composition_meta (buffer,
-                render->composition);
-          } else {
-            GstVideoFrame frame;
-
-            gst_video_frame_map (&frame, &render->info, buffer, GST_MAP_WRITE);
-            gst_video_overlay_composition_blend (render->composition, &frame);
-            gst_video_frame_unmap (&frame);
-          }
-        }
       } else {
         GST_DEBUG_OBJECT (render, "nothing to render right now");
       }
 
       /* Push the video frame */
-      ret = gst_pad_push (render->srcpad, buffer);
+      ret = gst_ass_render_push_frame (render, buffer);
 
       if (text_running_time_end <= vid_running_time_end) {
         GST_ASS_RENDER_LOCK (render);
