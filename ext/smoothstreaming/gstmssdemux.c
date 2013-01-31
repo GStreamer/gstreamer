@@ -406,6 +406,9 @@ gst_mss_demux_chain (GstPad * pad, GstBuffer * buffer)
     mssdemux->manifest_buffer =
         gst_buffer_join (mssdemux->manifest_buffer, buffer);
 
+  GST_INFO_OBJECT (mssdemux, "Received manifest buffer, total size is %i bytes",
+      GST_BUFFER_SIZE (mssdemux->manifest_buffer));
+
   return GST_FLOW_OK;
 }
 
@@ -450,6 +453,7 @@ gst_mss_demux_event (GstPad * pad, GstEvent * event)
         GST_WARNING_OBJECT (mssdemux, "Received EOS without a manifest.");
         break;
       }
+      GST_INFO_OBJECT (mssdemux, "Received EOS");
 
       if (gst_mss_demux_process_manifest (mssdemux))
         gst_mss_demux_start (mssdemux);
@@ -812,6 +816,9 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
         ("need to get the manifest's URI from upstream elements"));
     return FALSE;
   }
+
+  GST_INFO_OBJECT (mssdemux, "Received manifest: %i bytes",
+      GST_BUFFER_SIZE (mssdemux->manifest_buffer));
 
   mssdemux->manifest = gst_mss_manifest_new (mssdemux->manifest_buffer);
   if (!mssdemux->manifest) {
