@@ -340,17 +340,17 @@ gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (filtershader->shader0);
 
-
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (filtershader->shader0, "tex", 1);
 
