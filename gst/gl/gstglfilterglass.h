@@ -38,8 +38,10 @@ typedef struct _GstGLFilterGlassClass GstGLFilterGlassClass;
 struct _GstGLFilterGlass
 {
   GstGLFilter filter;
+  GstGLShader *passthrough_shader;
   GstGLShader *shader;
   gint64 timestamp;
+  guint in_tex;
 };
 
 struct _GstGLFilterGlassClass
