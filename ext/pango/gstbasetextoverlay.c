@@ -1084,59 +1084,18 @@ static gboolean
 gst_base_text_overlay_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
-  gboolean ret = FALSE;
-  GstBaseTextOverlay *overlay = NULL;
+  GstBaseTextOverlay *overlay;
+  gboolean ret;
 
   overlay = GST_BASE_TEXT_OVERLAY (parent);
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:{
-      GstSeekFlags flags;
-
-      /* We don't handle seek if we have not text pad */
-      if (!overlay->text_linked) {
-        GST_DEBUG_OBJECT (overlay, "seek received, pushing upstream");
-        ret = gst_pad_push_event (overlay->video_sinkpad, event);
-        goto beach;
-      }
-
-      GST_DEBUG_OBJECT (overlay, "seek received, driving from here");
-
-      gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
-
-      /* Flush downstream, only for flushing seek */
-      if (flags & GST_SEEK_FLAG_FLUSH)
-        gst_pad_push_event (overlay->srcpad, gst_event_new_flush_start ());
-
-      /* Mark ourself as flushing, unblock chains */
-      GST_BASE_TEXT_OVERLAY_LOCK (overlay);
-      overlay->video_flushing = TRUE;
-      overlay->text_flushing = TRUE;
-      gst_base_text_overlay_pop_text (overlay);
-      GST_BASE_TEXT_OVERLAY_UNLOCK (overlay);
-
-      /* Seek on each sink pad */
-      gst_event_ref (event);
-      ret = gst_pad_push_event (overlay->video_sinkpad, event);
-      if (ret) {
-        ret = gst_pad_push_event (overlay->text_sinkpad, event);
-      } else {
-        gst_event_unref (event);
-      }
-      break;
-    }
-    default:
-      if (overlay->text_linked) {
-        gst_event_ref (event);
-        ret = gst_pad_push_event (overlay->video_sinkpad, event);
-        gst_pad_push_event (overlay->text_sinkpad, event);
-      } else {
-        ret = gst_pad_push_event (overlay->video_sinkpad, event);
-      }
-      break;
+  if (overlay->text_linked) {
+    gst_event_ref (event);
+    ret = gst_pad_push_event (overlay->video_sinkpad, event);
+    gst_pad_push_event (overlay->text_sinkpad, event);
+  } else {
+    ret = gst_pad_push_event (overlay->video_sinkpad, event);
   }
-
-beach:
 
   return ret;
 }
