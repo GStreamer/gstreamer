@@ -212,7 +212,8 @@ static void
 gst_gl_mosaic_callback (gpointer stuff)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (stuff);
-  GstGLFuncs *gl = GST_GL_MIXER (mosaic)->display->gl_vtable;
+  GstGLMixer *mixer = GST_GL_MIXER (mosaic);
+  GstGLFuncs *gl = mixer->display->gl_vtable;
 
   static GLfloat xrot = 0;
   static GLfloat yrot = 0;
@@ -234,7 +235,7 @@ gst_gl_mosaic_callback (gpointer stuff)
 
   guint count = 0;
 
-  gst_gl_display_clear_shader (NULL);
+  gst_gl_display_clear_shader (mixer->display);
   gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
   gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
@@ -359,7 +360,7 @@ gst_gl_mosaic_callback (gpointer stuff)
 
   gl->Disable (GL_DEPTH_TEST);
 
-  gst_gl_display_clear_shader (NULL);
+  gst_gl_display_clear_shader (mixer->display);
 
   xrot += 0.6f;
   yrot += 0.4f;
