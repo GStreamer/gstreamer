@@ -135,6 +135,18 @@ g_cond_wait_until(GCompatCond *cond, GStaticMutex *mutex, gint64 end_time)
 #define g_cond_wait(cond, mutex)        g_compat_cond_wait(cond, mutex)
 #endif
 
+#if !GLIB_CHECK_VERSION(2,31,18)
+static inline gpointer
+g_async_queue_timeout_pop(GAsyncQueue *queue, guint64 timeout)
+{
+    GTimeVal end_time;
+
+    g_get_current_time(&end_time);
+    g_time_val_add(&end_time, timeout);
+    return g_async_queue_timed_pop(queue, &end_time);
+}
+#endif
+
 #undef G_COMPAT_DEFINE
 
 #endif /* GLIB_COMPAT_H */
