@@ -189,33 +189,26 @@ static void
 gst_gl_filter_laplacian_callback (gint width, gint height, guint texture,
     gpointer stuff)
 {
-  GstGLFilterLaplacian *laplacian_filter = GST_GL_FILTER_LAPLACIAN (stuff);
+  GstGLFilter *filter = GST_GL_FILTER (stuff);
+  GstGLFilterLaplacian *laplacian_filter = GST_GL_FILTER_LAPLACIAN (filter);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
   gfloat kernel[9] = { 0.0, -1.0, 0.0,
     -1.0, 4.0, -1.0,
     0.0, -1.0, 0.0
   };
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
 
   gst_gl_shader_use (laplacian_filter->shader);
 
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
   gst_gl_shader_set_uniform_1i (laplacian_filter->shader, "tex", 0);
   gst_gl_shader_set_uniform_1fv (laplacian_filter->shader, "kernel", 9, kernel);
 
-  glBegin (GL_QUADS);
-  glTexCoord2i (0, 0);
-  glVertex2f (-1.0f, -1.0f);
-  glTexCoord2i (width, 0);
-  glVertex2f (1.0f, -1.0f);
-  glTexCoord2i (width, height);
-  glVertex2f (1.0f, 1.0f);
-  glTexCoord2i (0, height);
-  glVertex2f (-1.0f, 1.0f);
-  glEnd ();
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
