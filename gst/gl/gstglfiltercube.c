@@ -322,93 +322,99 @@ static void
 _callback_opengl (gint width, gint height, guint texture, gpointer stuff)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (stuff);
+  GstGLFilter *filter = GST_GL_FILTER (stuff);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
   static GLfloat xrot = 0;
   static GLfloat yrot = 0;
   static GLfloat zrot = 0;
 
-  glEnable (GL_DEPTH_TEST);
+  gfloat w = (gfloat) width;
+  gfloat h = (gfloat) height;
 
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-      GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-      GL_CLAMP_TO_EDGE);
-  glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+/* *INDENT-OFF* */
+  const GLfloat v_vertices[] = {
+ /*|     Vertex     | TexCoord |*/ 
+    /* front face */
+     1.0,  1.0, -1.0, 0.0, 0.0,
+     1.0, -1.0, -1.0,   w, 0.0,
+    -1.0, -1.0, -1.0,   w,   h,
+    -1.0,  1.0, -1.0, 0.0,   h,
+    /* back face */
+    -1.0,  1.0,  1.0, 0.0, 0.0,
+    -1.0, -1.0,  1.0,   w, 0.0,
+     1.0, -1.0,  1.0,   w,   h,
+     1.0,  1.0,  1.0, 0.0,   h,
+    /* right face */
+    -1.0,  1.0, -1.0, 0.0, 0.0,
+    -1.0, -1.0, -1.0,   w, 0.0,
+    -1.0, -1.0,  1.0,   w,   h,
+    -1.0,  1.0,  1.0, 0.0,   h,
+    /* left face */
+     1.0,  1.0,  1.0, 0.0, 0.0,
+     1.0, -1.0,  1.0,   w, 0.0,
+     1.0, -1.0, -1.0,   w,   h,
+     1.0,  1.0, -1.0, 0.0,   h,
+    /* top face */
+     1.0,  1.0,  1.0, 0.0, 0.0,
+     1.0,  1.0, -1.0,   w, 0.0,
+    -1.0,  1.0, -1.0,   w,   h,
+    -1.0,  1.0,  1.0, 0.0,   h,
+    /* bottom face */
+     1.0, -1.0,  1.0, 0.0, 0.0,
+     1.0, -1.0, -1.0,   w, 0.0,
+    -1.0, -1.0, -1.0,   w,   h,
+    -1.0, -1.0,  1.0, 0.0,   h,
+  };
+/* *INDENT-ON* */
 
-  glClearColor (cube_filter->red, cube_filter->green, cube_filter->blue, 0.0);
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  GLushort indices[] = {
+    0, 1, 2,
+    0, 2, 3,
+    4, 5, 6,
+    4, 6, 7,
+    8, 9, 10,
+    8, 10, 11,
+    12, 13, 14,
+    12, 14, 15,
+    16, 17, 18,
+    16, 18, 19,
+    20, 21, 22,
+    20, 22, 23
+  };
 
-  glMatrixMode (GL_MODELVIEW);
-  glLoadIdentity ();
+  gl->Enable (GL_DEPTH_TEST);
 
-  glTranslatef (0.0f, 0.0f, -5.0f);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
-  glRotatef (xrot, 1.0f, 0.0f, 0.0f);
-  glRotatef (yrot, 0.0f, 1.0f, 0.0f);
-  glRotatef (zrot, 0.0f, 0.0f, 1.0f);
+  gl->ClearColor (cube_filter->red, cube_filter->green, cube_filter->blue, 0.0);
+  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glBegin (GL_QUADS);
-  /* Front Face */
-  glTexCoord2f ((gfloat) width, 0.0f);
-  glVertex3f (-1.0f, -1.0f, 1.0f);
-  glTexCoord2f (0.0f, 0.0f);
-  glVertex3f (1.0f, -1.0f, 1.0f);
-  glTexCoord2f (0.0f, (gfloat) height);
-  glVertex3f (1.0f, 1.0f, 1.0f);
-  glTexCoord2f ((gfloat) width, (gfloat) height);
-  glVertex3f (-1.0f, 1.0f, 1.0f);
-  /* Back Face */
-  glTexCoord2f (0.0f, 0.0f);
-  glVertex3f (-1.0f, -1.0f, -1.0f);
-  glTexCoord2f (0.0f, (gfloat) height);
-  glVertex3f (-1.0f, 1.0f, -1.0f);
-  glTexCoord2f ((gfloat) width, (gfloat) height);
-  glVertex3f (1.0f, 1.0f, -1.0f);
-  glTexCoord2f ((gfloat) width, 0.0f);
-  glVertex3f (1.0f, -1.0f, -1.0f);
-  /* Top Face */
-  glTexCoord2f ((gfloat) width, (gfloat) height);
-  glVertex3f (-1.0f, 1.0f, -1.0f);
-  glTexCoord2f ((gfloat) width, 0.0f);
-  glVertex3f (-1.0f, 1.0f, 1.0f);
-  glTexCoord2f (0.0f, 0.0f);
-  glVertex3f (1.0f, 1.0f, 1.0f);
-  glTexCoord2f (0.0f, (gfloat) height);
-  glVertex3f (1.0f, 1.0f, -1.0f);
-  /* Bottom Face */
-  glTexCoord2f ((gfloat) width, 0.0f);
-  glVertex3f (-1.0f, -1.0f, -1.0f);
-  glTexCoord2f (0.0f, 0.0f);
-  glVertex3f (1.0f, -1.0f, -1.0f);
-  glTexCoord2f (0.0f, (gfloat) height);
-  glVertex3f (1.0f, -1.0f, 1.0f);
-  glTexCoord2f ((gfloat) width, (gfloat) height);
-  glVertex3f (-1.0f, -1.0f, 1.0f);
-  /* Right face */
-  glTexCoord2f (0.0f, 0.0f);
-  glVertex3f (1.0f, -1.0f, -1.0f);
-  glTexCoord2f (0.0f, (gfloat) height);
-  glVertex3f (1.0f, 1.0f, -1.0f);
-  glTexCoord2f ((gfloat) width, (gfloat) height);
-  glVertex3f (1.0f, 1.0f, 1.0f);
-  glTexCoord2f ((gfloat) width, 0.0f);
-  glVertex3f (1.0f, -1.0f, 1.0f);
-  /* Left Face */
-  glTexCoord2f ((gfloat) width, 0.0f);
-  glVertex3f (-1.0f, -1.0f, -1.0f);
-  glTexCoord2f (0.0f, 0.0f);
-  glVertex3f (-1.0f, -1.0f, 1.0f);
-  glTexCoord2f (0.0f, (gfloat) height);
-  glVertex3f (-1.0f, 1.0f, 1.0f);
-  glTexCoord2f ((gfloat) width, (gfloat) height);
-  glVertex3f (-1.0f, 1.0f, -1.0f);
-  glEnd ();
+  gl->MatrixMode (GL_PROJECTION);
+  gluLookAt (0.0, 0.0, -6.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+  gl->MatrixMode (GL_MODELVIEW);
+  gl->LoadIdentity ();
 
-  glDisable (GL_DEPTH_TEST);
+//  gl->Translatef (0.0f, 0.0f, -5.0f);
+
+  gl->Rotatef (xrot, 1.0f, 0.0f, 0.0f);
+  gl->Rotatef (yrot, 0.0f, 1.0f, 0.0f);
+  gl->Rotatef (zrot, 0.0f, 0.0f, 1.0f);
+
+  gl->ClientActiveTexture (GL_TEXTURE0);
+  gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
+  gl->EnableClientState (GL_VERTEX_ARRAY);
+
+  gl->VertexPointer (3, GL_FLOAT, 5 * sizeof (float), v_vertices);
+  gl->TexCoordPointer (2, GL_FLOAT, 5 * sizeof (float), &v_vertices[3]);
+
+  gl->DrawElements (GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, indices);
+
+  gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
+  gl->DisableClientState (GL_VERTEX_ARRAY);
+
+  gl->Disable (GL_DEPTH_TEST);
 
   xrot += 0.3f;
   yrot += 0.2f;
@@ -426,63 +432,41 @@ _callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
   static GLfloat yrot = 0;
   static GLfloat zrot = 0;
 
+/* *INDENT-OFF* */
   const GLfloat v_vertices[] = {
-
+ /*|     Vertex     | TexCoord |*/ 
     /* front face */
-    1.0f, 1.0f, -1.0f,
-    1.0f, 0.0f,
-    1.0f, -1.0f, -1.0f,
-    1.0f, 1.0f,
-    -1.0f, -1.0f, -1.0f,
-    0.0f, 1.0f,
-    -1.0f, 1.0f, -1.0f,
-    0.0f, 0.0f,
+     1.0,  1.0, -1.0, 1.0, 0.0,
+     1.0, -1.0, -1.0, 1.0, 1.0,
+    -1.0, -1.0, -1.0, 0.0, 1.0,
+    -1.0,  1.0, -1.0, 0.0, 0.0,
     /* back face */
-    1.0f, 1.0f, 1.0f,
-    1.0f, 0.0f,
-    -1.0f, 1.0f, 1.0f,
-    0.0f, 0.0f,
-    -1.0f, -1.0f, 1.0f,
-    0.0f, 1.0f,
-    1.0f, -1.0f, 1.0f,
-    1.0f, 1.0f,
+     1.0,  1.0,  1.0, 1.0, 0.0,
+    -1.0,  1.0,  1.0, 0.0, 0.0,
+    -1.0, -1.0,  1.0, 0.0, 1.0,
+     1.0, -1.0,  1.0, 1.0, 1.0,
     /* right face */
-    1.0f, 1.0f, 1.0f,
-    1.0f, 0.0f,
-    1.0f, -1.0f, 1.0f,
-    0.0f, 0.0f,
-    1.0f, -1.0f, -1.0f,
-    0.0f, 1.0f,
-    1.0f, 1.0f, -1.0f,
-    1.0f, 1.0f,
+     1.0,  1.0,  1.0, 1.0, 0.0,
+     1.0, -1.0,  1.0, 0.0, 0.0,
+     1.0, -1.0, -1.0, 0.0, 1.0,
+     1.0,  1.0, -1.0, 1.0, 1.0,
     /* left face */
-    -1.0f, 1.0f, 1.0f,
-    1.0f, 0.0f,
-    -1.0f, 1.0f, -1.0f,
-    1.0f, 1.0f,
-    -1.0f, -1.0f, -1.0f,
-    0.0f, 1.0f,
-    -1.0f, -1.0f, 1.0f,
-    0.0f, 0.0f,
+    -1.0,  1.0,  1.0, 1.0, 0.0,
+    -1.0,  1.0, -1.0, 1.0, 1.0,
+    -1.0, -1.0, -1.0, 0.0, 1.0,
+    -1.0, -1.0,  1.0, 0.0, 0.0,
     /* top face */
-    1.0f, -1.0f, 1.0f,
-    1.0f, 0.0f,
-    -1.0f, -1.0f, 1.0f,
-    0.0f, 0.0f,
-    -1.0f, -1.0f, -1.0f,
-    0.0f, 1.0f,
-    1.0f, -1.0f, -1.0f,
-    1.0f, 1.0f,
+     1.0, -1.0,  1.0, 1.0, 0.0,
+    -1.0, -1.0,  1.0, 0.0, 0.0,
+    -1.0, -1.0, -1.0, 0.0, 1.0,
+     1.0, -1.0, -1.0, 1.0, 1.0,
     /* bottom face */
-    1.0f, 1.0f, 1.0f,
-    1.0f, 0.0f,
-    1.0f, 1.0f, -1.0f,
-    1.0f, 1.0f,
-    -1.0f, 1.0f, -1.0f,
-    0.0f, 1.0f,
-    -1.0f, 1.0f, 1.0f,
-    0.0f, 0.0f
+     1.0,  1.0,  1.0, 1.0, 0.0,
+     1.0,  1.0, -1.0, 1.0, 1.0,
+    -1.0,  1.0, -1.0, 0.0, 1.0,
+    -1.0,  1.0,  1.0, 0.0, 0.0
   };
+/* *INDENT-ON* */
 
   GLushort indices[] = {
     0, 1, 2,
@@ -509,10 +493,10 @@ _callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
     0.0f, 0.0f, 0.0f, 1.0f
   };
 
-  glEnable (GL_DEPTH_TEST);
+  gl->Enable (GL_DEPTH_TEST);
 
-  glClearColor (cube_filter->red, cube_filter->green, cube_filter->blue, 0.0);
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  gl->ClearColor (cube_filter->red, cube_filter->green, cube_filter->blue, 0.0);
+  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   gst_gl_shader_use (cube_filter->shader);
 
@@ -522,18 +506,18 @@ _callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
       gst_gl_shader_get_attribute_location (cube_filter->shader, "a_texCoord");
 
   /* Load the vertex position */
-  glVertexAttribPointer (attr_position_loc, 3, GL_FLOAT,
+  gl->VertexAttribPointer (attr_position_loc, 3, GL_FLOAT,
       GL_FALSE, 5 * sizeof (GLfloat), v_vertices);
 
   /* Load the texture coordinate */
-  glVertexAttribPointer (attr_texture_loc, 2, GL_FLOAT,
+  gl->VertexAttribPointer (attr_texture_loc, 2, GL_FLOAT,
       GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[3]);
 
-  glEnableVertexAttribArray (attr_position_loc);
-  glEnableVertexAttribArray (attr_texture_loc);
+  gl->EnableVertexAttribArray (attr_position_loc);
+  gl->EnableVertexAttribArray (attr_texture_loc);
 
-  glActiveTexture (GL_TEXTURE0);
-  glBindTexture (GL_TEXTURE_2D, texture);
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
   gst_gl_shader_set_uniform_1i (cube_filter->shader, "s_texture", 0);
   gst_gl_shader_set_uniform_1f (cube_filter->shader, "xrot_degree", xrot);
   gst_gl_shader_set_uniform_1f (cube_filter->shader, "yrot_degree", yrot);
@@ -541,12 +525,12 @@ _callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
   gst_gl_shader_set_uniform_matrix_4fv (cube_filter->shader, "u_matrix", 1,
       GL_FALSE, matrix);
 
-  glDrawElements (GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, indices);
+  gl->DrawElements (GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, indices);
 
-  glDisableVertexAttribArray (attr_position_loc);
-  glDisableVertexAttribArray (attr_texture_loc);
+  gl->DisableVertexAttribArray (attr_position_loc);
+  gl->DisableVertexAttribArray (attr_texture_loc);
 
-  glDisable (GL_DEPTH_TEST);
+  gl->Disable (GL_DEPTH_TEST);
 
   xrot += 0.3f;
   yrot += 0.2f;
