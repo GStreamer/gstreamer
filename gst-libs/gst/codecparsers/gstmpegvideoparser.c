@@ -322,7 +322,7 @@ gst_mpeg_video_parse_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
   if (load_intra_flag) {
     gint i;
     for (i = 0; i < 64; i++)
-      READ_UINT8 (&br, seqhdr->intra_quantizer_matrix[mpeg_zigzag_8x8[i]], 8);
+      READ_UINT8 (&br, seqhdr->intra_quantizer_matrix[i], 8);
   } else
     memcpy (seqhdr->intra_quantizer_matrix, default_intra_quantizer_matrix, 64);
 
@@ -331,8 +331,7 @@ gst_mpeg_video_parse_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
   if (load_non_intra_flag) {
     gint i;
     for (i = 0; i < 64; i++)
-      READ_UINT8 (&br, seqhdr->non_intra_quantizer_matrix[mpeg_zigzag_8x8[i]],
-          8);
+      READ_UINT8 (&br, seqhdr->non_intra_quantizer_matrix[i], 8);
   } else
     memset (seqhdr->non_intra_quantizer_matrix, 16, 64);
 
@@ -564,31 +563,28 @@ gst_mpeg_video_parse_quant_matrix_extension (GstMpegVideoQuantMatrixExt * quant,
   READ_UINT8 (&br, quant->load_intra_quantiser_matrix, 1);
   if (quant->load_intra_quantiser_matrix) {
     for (i = 0; i < 64; i++) {
-      READ_UINT8 (&br, quant->intra_quantiser_matrix[mpeg_zigzag_8x8[i]], 8);
+      READ_UINT8 (&br, quant->intra_quantiser_matrix[i], 8);
     }
   }
 
   READ_UINT8 (&br, quant->load_non_intra_quantiser_matrix, 1);
   if (quant->load_non_intra_quantiser_matrix) {
     for (i = 0; i < 64; i++) {
-      READ_UINT8 (&br, quant->non_intra_quantiser_matrix[mpeg_zigzag_8x8[i]],
-          8);
+      READ_UINT8 (&br, quant->non_intra_quantiser_matrix[i], 8);
     }
   }
 
   READ_UINT8 (&br, quant->load_chroma_intra_quantiser_matrix, 1);
   if (quant->load_chroma_intra_quantiser_matrix) {
     for (i = 0; i < 64; i++) {
-      READ_UINT8 (&br, quant->chroma_intra_quantiser_matrix[mpeg_zigzag_8x8[i]],
-          8);
+      READ_UINT8 (&br, quant->chroma_intra_quantiser_matrix[i], 8);
     }
   }
 
   READ_UINT8 (&br, quant->load_chroma_non_intra_quantiser_matrix, 1);
   if (quant->load_chroma_non_intra_quantiser_matrix) {
     for (i = 0; i < 64; i++) {
-      READ_UINT8 (&br,
-          quant->chroma_non_intra_quantiser_matrix[mpeg_zigzag_8x8[i]], 8);
+      READ_UINT8 (&br, quant->chroma_non_intra_quantiser_matrix[i], 8);
     }
   }
 
