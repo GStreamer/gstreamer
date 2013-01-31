@@ -438,6 +438,22 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
 /*t*/ {-1.0, -1.0,  1.0,  0.0, -1.0,  0.0, i_w, i_h, b_w, b_h,  0.0,  0.0, -1.0},
       {-1.0, -1.0, -1.0,  0.0, -1.0,  0.0, 0.0, i_h, 0.0, b_h,  0.0,  0.0, -1.0},
   };
+
+  GLushort indices[] = {
+    0, 1, 2,
+    0, 2, 3,
+    4, 5, 6,
+    4, 6, 7,
+    8, 9, 10,
+    8, 10, 11,
+    12, 13, 14,
+    12, 14, 15,
+    16, 17, 18,
+    16, 18, 19,
+    20, 21, 22,
+    20, 22, 23
+  };
+
 /* *INDENT-ON* */
 
   gl = GST_GL_FILTER (bumper)->display->gl_vtable;
@@ -491,7 +507,6 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   gl->EnableClientState (GL_VERTEX_ARRAY);
   gl->EnableClientState (GL_NORMAL_ARRAY);
 
-
   gl->VertexAttribPointer (locTangent, 3, GL_FLOAT, 0, sizeof (MeshData),
       &mesh[0].va0);
   gl->VertexPointer (3, GL_FLOAT, sizeof (MeshData), &mesh[0].x);
@@ -502,7 +517,7 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
   gl->TexCoordPointer (2, GL_FLOAT, sizeof (MeshData), &mesh[0].s1);
 
-  gl->DrawArrays (GL_QUADS, 0, 24);
+  gl->DrawElements (GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, indices);
 
   gl->DisableClientState (GL_VERTEX_ARRAY);
   gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
