@@ -2319,22 +2319,14 @@ gst_base_text_overlay_video_chain (GstPad * pad, GstObject * parent,
    * duration (we only use those estimated values internally though, we
    * don't want to set bogus values on the buffer itself) */
   if (stop == -1) {
-    GstCaps *caps;
-    GstStructure *s;
-    gint fps_num, fps_denom;
-
-    /* FIXME, store this in setcaps */
-    caps = gst_pad_get_current_caps (pad);
-    s = gst_caps_get_structure (caps, 0);
-    if (gst_structure_get_fraction (s, "framerate", &fps_num, &fps_denom) &&
-        fps_num && fps_denom) {
+    if (overlay->info.fps_n && overlay->info.fps_d) {
       GST_DEBUG_OBJECT (overlay, "estimating duration based on framerate");
-      stop = start + gst_util_uint64_scale_int (GST_SECOND, fps_denom, fps_num);
+      stop = start + gst_util_uint64_scale_int (GST_SECOND,
+          overlay->info.fps_d, overlay->info.fps_n);
     } else {
       GST_LOG_OBJECT (overlay, "no duration, assuming minimal duration");
       stop = start + 1;         /* we need to assume some interval */
     }
-    gst_caps_unref (caps);
   }
 
   gst_object_sync_values (GST_OBJECT (overlay), GST_BUFFER_TIMESTAMP (buffer));
