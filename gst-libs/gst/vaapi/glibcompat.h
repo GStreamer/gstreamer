@@ -89,6 +89,8 @@ G_COMPAT_DEFINE(g_compat_cond_signal, (GCompatCond *cond),
                 g_cond_signal, (*cond))
 G_COMPAT_DEFINE(g_compat_cond_broadcast, (GCompatCond *cond),
                 g_cond_broadcast, (*cond))
+G_COMPAT_DEFINE(g_compat_cond_wait, (GCompatCond *cond, GCompatMutex *mutex),
+                g_cond_wait, (*cond, g_static_mutex_get_mutex(mutex)))
 
 static inline gboolean
 g_cond_wait_until(GCompatCond *cond, GStaticMutex *mutex, gint64 end_time)
@@ -129,6 +131,8 @@ g_cond_wait_until(GCompatCond *cond, GStaticMutex *mutex, gint64 end_time)
 #define g_cond_clear(cond)              g_compat_cond_clear(cond)
 #undef  g_cond_signal
 #define g_cond_signal(cond)             g_compat_cond_signal(cond)
+#undef  g_cond_wait
+#define g_cond_wait(cond, mutex)        g_compat_cond_wait(cond, mutex)
 #endif
 
 #undef G_COMPAT_DEFINE
