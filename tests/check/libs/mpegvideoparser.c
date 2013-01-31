@@ -97,8 +97,7 @@ GST_START_TEST (test_mpeg_parse_sequence_header)
   gst_mpeg_video_parse (&packet, mpeg2_seq, sizeof (mpeg2_seq), 12);
 
   fail_unless (packet.type == GST_MPEG_VIDEO_PACKET_SEQUENCE);
-  fail_unless (gst_mpeg_video_parse_sequence_header (&seqhdr, mpeg2_seq,
-          sizeof (mpeg2_seq), packet.offset));
+  fail_unless (gst_mpeg_video_packet_parse_sequence_header (&packet, &seqhdr));
   assert_equals_int (seqhdr.width, 1920);
   assert_equals_int (seqhdr.height, 1080);
   assert_equals_int (seqhdr.aspect_ratio_info, 3);
@@ -123,8 +122,8 @@ GST_START_TEST (test_mpeg_parse_sequence_extension)
   gst_mpeg_video_parse (&packet, mpeg2_seq, sizeof (mpeg2_seq), 24);
 
   fail_unless (packet.type == GST_MPEG_VIDEO_PACKET_EXTENSION);
-  fail_unless (gst_mpeg_video_parse_sequence_extension (&seqext,
-          mpeg2_seq, sizeof (mpeg2_seq), packet.offset));
+  fail_unless (gst_mpeg_video_packet_parse_sequence_extension (&packet,
+          &seqext));
   assert_equals_int (seqext.profile, 4);
   assert_equals_int (seqext.level, 8);
   assert_equals_int (seqext.progressive, 1);
