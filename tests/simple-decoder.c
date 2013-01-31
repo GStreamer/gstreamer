@@ -25,7 +25,7 @@
  * the application.
  */
 
-#include "config.h"
+#include "gst/vaapi/sysdeps.h"
 #include <stdarg.h>
 #include <gst/vaapi/gstvaapidecoder.h>
 #include <gst/vaapi/gstvaapidecoder_h264.h>
@@ -629,11 +629,6 @@ app_check_events(App *app)
 static gboolean
 app_run(App *app, int argc, char *argv[])
 {
-    if (!video_output_init(&argc, argv, g_options)) {
-        g_message("failed to initialize video output subsystem");
-        return FALSE;
-    }
-
     if (argc < 2) {
         g_message("no bitstream file specified");
         return FALSE;
@@ -693,8 +688,6 @@ app_run(App *app, int argc, char *argv[])
                 elapsed, (gdouble)app->num_frames / elapsed);
     }
     g_print("\n");
-
-    video_output_exit();
     return TRUE;
 }
 
@@ -704,6 +697,9 @@ main(int argc, char *argv[])
     App *app;
     gint ret;
 
+    if (!video_output_init(&argc, argv, g_options))
+        g_error("failed to initialize video output subsystem");
+
     app = app_new();
     if (!app)
         g_error("failed to create application context");
@@ -712,5 +708,6 @@ main(int argc, char *argv[])
 
     app_free(app);
     g_free(g_codec_str);
+    video_output_exit();
     return ret;
 }
