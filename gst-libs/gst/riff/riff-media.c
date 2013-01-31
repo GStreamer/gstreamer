@@ -98,7 +98,9 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
     }
 
+    case GST_MAKE_FOURCC ('G', 'R', 'E', 'Y'):
     case GST_MAKE_FOURCC ('Y', '8', '0', '0'):
+    case GST_MAKE_FOURCC ('Y', '8', ' ', ' '):
       caps = gst_caps_new_simple ("video/x-raw",
           "format", G_TYPE_STRING, "GRAY8", NULL);
       if (codec_name)
