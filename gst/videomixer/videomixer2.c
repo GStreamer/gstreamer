@@ -791,7 +791,7 @@ gst_videomixer2_fill_queues (GstVideoMixer2 * mix,
       }
     } else {
       if (mixcol->end_time != -1) {
-        if (mixcol->end_time < output_start_time) {
+        if (mixcol->end_time <= output_start_time) {
           gst_buffer_replace (&mixcol->buffer, NULL);
           mixcol->start_time = mixcol->end_time = -1;
           if (!GST_COLLECT_PADS_STATE_IS_SET (mixcol,
