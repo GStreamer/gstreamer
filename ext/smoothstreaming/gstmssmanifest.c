@@ -117,7 +117,7 @@ gst_mss_stream_quality_free (GstMssStreamQuality * quality)
 {
   g_return_if_fail (quality != NULL);
 
-  g_free (quality->bitrate_str);
+  xmlFree (quality->bitrate_str);
   g_slice_free (GstMssStreamQuality, quality);
 }
 
@@ -160,7 +160,7 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
       /* use the node's seq number or use the previous + 1 */
       if (seqnum_str) {
         fragment->number = g_ascii_strtoull (seqnum_str, NULL, 10);
-        g_free (seqnum_str);
+        xmlFree (seqnum_str);
         fragment_number = fragment->number;
       } else {
         fragment->number = fragment_number;
@@ -170,7 +170,7 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
       if (time_str) {
         fragment->time = g_ascii_strtoull (time_str, NULL, 10);
 
-        g_free (time_str);
+        xmlFree (time_str);
         fragment_time_accum = fragment->time;
       } else {
         fragment->time = fragment_time_accum;
@@ -185,7 +185,7 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
 
         previous_fragment = NULL;
         fragment_time_accum += fragment->duration;
-        g_free (duration_str);
+        xmlFree (duration_str);
       } else {
         /* store to set the duration at the next iteration */
         previous_fragment = fragment;
@@ -232,6 +232,7 @@ gst_mss_manifest_new (const GstBuffer * data)
   if (live_str) {
     TO_LOWER (live_str);
     manifest->is_live = strcmp (live_str, "true") == 0;
+    xmlFree (live_str);
   }
 
   for (nodeiter = root->children; nodeiter; nodeiter = nodeiter->next) {
@@ -253,7 +254,7 @@ gst_mss_stream_free (GstMssStream * stream)
   g_list_free_full (stream->fragments, g_free);
   g_list_free_full (stream->qualities,
       (GDestroyNotify) gst_mss_stream_quality_free);
-  g_free (stream->url);
+  xmlFree (stream->url);
   g_regex_unref (stream->regex_position);
   g_regex_unref (stream->regex_bitrate);
   g_free (stream);
@@ -468,10 +469,10 @@ _gst_mss_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
   }
 
 end:
-  g_free (fourcc);
-  g_free (max_width);
-  g_free (max_height);
-  g_free (codec_data);
+  xmlFree (fourcc);
+  xmlFree (max_width);
+  xmlFree (max_height);
+  xmlFree (codec_data);
 
   return caps;
 }
@@ -566,10 +567,10 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
   }
 
 end:
-  g_free (fourcc);
-  g_free (channels);
-  g_free (rate);
-  g_free (codec_data);
+  xmlFree (fourcc);
+  xmlFree (channels);
+  xmlFree (rate);
+  xmlFree (codec_data);
 
   return caps;
 }
@@ -596,7 +597,7 @@ gst_mss_stream_get_timescale (GstMssStream * stream)
 
   if (timescale) {
     ts = strtoull (timescale, NULL, 10);
-    g_free (timescale);
+    xmlFree (timescale);
   }
   return ts;
 }
@@ -612,7 +613,7 @@ gst_mss_manifest_get_timescale (GstMssManifest * manifest)
       (xmlChar *) MSS_PROP_TIMESCALE);
   if (timescale) {
     ts = strtoull (timescale, NULL, 10);
-    g_free (timescale);
+    xmlFree (timescale);
   }
   return ts;
 }
@@ -628,7 +629,7 @@ gst_mss_manifest_get_duration (GstMssManifest * manifest)
       (xmlChar *) MSS_PROP_STREAM_DURATION);
   if (duration) {
     dur = strtoull (duration, NULL, 10);
-    g_free (duration);
+    xmlFree (duration);
   }
   return dur;
 }
@@ -890,7 +891,7 @@ gst_mss_stream_reload_fragments (GstMssStream * stream, xmlNodePtr streamIndex)
       /* use the node's seq number or use the previous + 1 */
       if (seqnum_str) {
         fragment->number = g_ascii_strtoull (seqnum_str, NULL, 10);
-        g_free (seqnum_str);
+        xmlFree (seqnum_str);
       } else {
         fragment->number = fragment_number;
       }
@@ -898,7 +899,7 @@ gst_mss_stream_reload_fragments (GstMssStream * stream, xmlNodePtr streamIndex)
 
       if (time_str) {
         fragment->time = g_ascii_strtoull (time_str, NULL, 10);
-        g_free (time_str);
+        xmlFree (time_str);
         fragment_time_accum = fragment->time;
       } else {
         fragment->time = fragment_time_accum;
@@ -913,7 +914,7 @@ gst_mss_stream_reload_fragments (GstMssStream * stream, xmlNodePtr streamIndex)
 
         previous_fragment = NULL;
         fragment_time_accum += fragment->duration;
-        g_free (duration_str);
+        xmlFree (duration_str);
       } else {
         /* store to set the duration at the next iteration */
         previous_fragment = fragment;

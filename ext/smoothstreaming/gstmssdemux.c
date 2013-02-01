@@ -157,8 +157,6 @@ gst_mss_demux_class_init (GstMssDemuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->dispose = gst_mss_demux_dispose;
   gobject_class->set_property = gst_mss_demux_set_property;
   gobject_class->get_property = gst_mss_demux_get_property;
@@ -437,6 +435,7 @@ gst_mss_demux_push_src_event (GstMssDemux * mssdemux, GstEvent * event)
     gst_event_ref (event);
     ret = ret & gst_pad_push_event (stream->pad, event);
   }
+  gst_event_unref (event);
   return ret;
 }
 
@@ -537,7 +536,7 @@ gst_mss_demux_src_event (GstPad * pad, GstEvent * event)
           &stop_type, &stop);
 
       if (format != GST_FORMAT_TIME)
-        return FALSE;
+        goto not_supported;
 
       GST_DEBUG_OBJECT (mssdemux,
           "seek event, rate: %f start: %" GST_TIME_FORMAT " stop: %"
@@ -549,14 +548,13 @@ gst_mss_demux_src_event (GstPad * pad, GstEvent * event)
 
         gst_event_set_seqnum (flush, gst_event_get_seqnum (event));
         gst_mss_demux_push_src_event (mssdemux, flush);
-        gst_event_unref (flush);
       }
 
       gst_mss_demux_stop_tasks (mssdemux, TRUE);
 
       if (!gst_mss_manifest_seek (mssdemux->manifest, start)) {;
         GST_WARNING_OBJECT (mssdemux, "Could not find seeked fragment");
-        return FALSE;
+        goto not_supported;
       }
 
       newsegment =
@@ -567,7 +565,8 @@ gst_mss_demux_src_event (GstPad * pad, GstEvent * event)
 
         stream->eos = FALSE;
         gst_data_queue_flush (stream->dataqueue);
-        stream->pending_newsegment = gst_event_ref (newsegment);
+        gst_event_ref (newsegment);
+        gst_event_replace (&stream->pending_newsegment, newsegment);
       }
       gst_event_unref (newsegment);
 
@@ -577,11 +576,11 @@ gst_mss_demux_src_event (GstPad * pad, GstEvent * event)
 
         gst_event_set_seqnum (flush, gst_event_get_seqnum (event));
         gst_mss_demux_push_src_event (mssdemux, flush);
-        gst_event_unref (flush);
       }
 
       gst_mss_demux_restart_tasks (mssdemux);
 
+      gst_event_unref (event);
       return TRUE;
     }
     default:
@@ -589,6 +588,10 @@ gst_mss_demux_src_event (GstPad * pad, GstEvent * event)
   }
 
   return gst_pad_event_default (pad, event);
+
+not_supported:
+  gst_event_unref (event);
+  return FALSE;
 }
 
 static gboolean
@@ -986,8 +989,7 @@ gst_mss_demux_stream_store_object (GstMssDemuxStream * stream,
 
   if (!gst_data_queue_push (stream->dataqueue, item)) {
     GST_DEBUG_OBJECT (stream->parent, "Failed to store object %p", obj);
-    gst_mini_object_unref (obj);
-    g_slice_free (GstDataQueueItem, item);
+    item->destroy (item);
   }
 }
 
