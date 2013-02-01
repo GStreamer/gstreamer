@@ -294,7 +294,7 @@ gst_control_binding_get_value (GstControlBinding * binding,
  *
  * The values are unboxed and ready to be used. The similar function 
  * gst_control_binding_get_g_value_array() returns the array as #GValues and is
- * better suites for bindings.
+ * more suitable for bindings.
  *
  * Returns: %TRUE if the given array could be filled, %FALSE otherwise
  */

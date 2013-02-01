@@ -13,6 +13,44 @@
 # <SUBSECTION Private>
 # </SECTION>
 
+# control binding classes
+
+<SECTION>
+<FILE>gstargbcontrolbinding</FILE>
+<TITLE>GstARGBControlBinding</TITLE>
+<INCLUDE>libs/controller/gstargbcontrolbinding.h</INCLUDE>
+gst_argb_control_binding_new
+<SUBSECTION Standard>
+GstARGBControlBinding
+GstARGBControlBindingClass
+GST_ARGB_CONTROL_BINDING
+GST_ARGB_CONTROL_BINDING_CLASS
+GST_ARGB_CONTROL_BINDING_GET_CLASS
+GST_IS_ARGB_CONTROL_BINDING
+GST_IS_ARGB_CONTROL_BINDING_CLASS
+GST_TYPE_ARGB_CONTROL_BINDING
+gst_argb_control_binding_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstdirectcontrolbinding</FILE>
+<TITLE>GstDirectControlBinding</TITLE>
+<INCLUDE>libs/controller/gstdirectcontrolbinding.h</INCLUDE>
+gst_direct_control_binding_new
+<SUBSECTION Standard>
+GstDirectControlBindingConvertValue
+GstDirectControlBindingConvertGValue
+GstDirectControlBinding
+GstDirectControlBindingClass
+GST_DIRECT_CONTROL_BINDING
+GST_DIRECT_CONTROL_BINDING_CLASS
+GST_DIRECT_CONTROL_BINDING_GET_CLASS
+GST_IS_DIRECT_CONTROL_BINDING
+GST_IS_DIRECT_CONTROL_BINDING_CLASS
+GST_TYPE_DIRECT_CONTROL_BINDING
+gst_direct_control_binding_get_type
+</SECTION>
+
 # control source classes
 
 <SECTION>

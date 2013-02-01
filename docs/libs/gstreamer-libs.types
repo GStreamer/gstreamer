@@ -18,11 +18,15 @@ gst_push_src_get_type
 
 % controller
 
+#include <gst/controller/gstargbcontrolbinding.h>
+#include <gst/controller/gstdirectcontrolbinding.h>
 #include <gst/controller/gsttimedvaluecontrolsource.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 #include <gst/controller/gstlfocontrolsource.h>
 #include <gst/controller/gsttriggercontrolsource.h>
 
+gst_argb_control_binding_get_type
+gst_direct_control_binding_get_type
 gst_timed_value_control_source_get_type
 gst_interpolation_control_source_get_type
 gst_lfo_control_source_get_type
