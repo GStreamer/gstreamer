@@ -128,6 +128,7 @@ EXPORTS
 	gst_video_format_from_masks
 	gst_video_format_from_string
 	gst_video_format_get_info
+	gst_video_format_get_palette
 	gst_video_format_get_type
 	gst_video_format_to_fourcc
 	gst_video_format_to_string

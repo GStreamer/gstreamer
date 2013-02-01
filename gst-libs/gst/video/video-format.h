@@ -436,6 +436,8 @@ const gchar *  gst_video_format_to_string            (GstVideoFormat format) G_G
 const GstVideoFormatInfo *
                gst_video_format_get_info             (GstVideoFormat format) G_GNUC_CONST;
 
+const gpointer gst_video_format_get_palette          (GstVideoFormat format, gsize *size);
+
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
 #define GST_VIDEO_FPS_RANGE "(fraction) [ 0, max ]"
 
