@@ -361,6 +361,8 @@ gst_dash_demux_init (GstDashDemux * demux, GstDashDemuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_dash_demux_sink_event));
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 
+  gst_segment_init (&demux->segment, GST_FORMAT_TIME);
+
   /* Downloader */
   demux->downloader = gst_uri_downloader_new ();
 
@@ -546,6 +548,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
       GstMediaSegment *chunk;
       GstStreamPeriod *period;
       GSList *iter;
+      gboolean update;
 
       GST_WARNING_OBJECT (demux, "Received seek event");
 
@@ -565,108 +568,114 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
           GST_TIME_FORMAT, rate, start_type, GST_TIME_ARGS (start),
           GST_TIME_ARGS (stop));
 
-      if (flags & GST_SEEK_FLAG_FLUSH) {
-        GST_DEBUG_OBJECT (demux, "sending flush start");
-        for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
-          GstDashDemuxStream *stream;
-          stream = iter->data;
-          gst_pad_push_event (stream->pad, gst_event_new_flush_start ());
+      gst_segment_set_seek (&demux->segment, rate, format, flags, start_type,
+          start, stop_type, stop, &update);
+
+      if (update) {
+
+        if (flags & GST_SEEK_FLAG_FLUSH) {
+          GST_DEBUG_OBJECT (demux, "sending flush start");
+          for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+            GstDashDemuxStream *stream;
+            stream = iter->data;
+            gst_pad_push_event (stream->pad, gst_event_new_flush_start ());
+          }
         }
-      }
 
-      /* Stop the demux */
-      demux->cancelled = TRUE;
-      gst_dash_demux_stop (demux);
+        /* Stop the demux */
+        demux->cancelled = TRUE;
+        gst_dash_demux_stop (demux);
 
-      /* Wait for streaming to finish */
-      g_static_rec_mutex_lock (&demux->stream_lock);
+        /* Wait for streaming to finish */
+        g_static_rec_mutex_lock (&demux->stream_lock);
 
-      /* Clear the buffering queue */
-      /* FIXME: allow seeking in the buffering queue */
-      gst_dash_demux_clear_queues (demux);
+        /* Clear the buffering queue */
+        /* FIXME: allow seeking in the buffering queue */
+        gst_dash_demux_clear_queues (demux);
 
-      //GST_MPD_CLIENT_LOCK (demux->client);
+        //GST_MPD_CLIENT_LOCK (demux->client);
 
-      /* select the requested Period in the Media Presentation */
-      target_pos = (GstClockTime) start;
-      current_period = 0;
-      for (list = g_list_first (demux->client->periods); list;
-          list = g_list_next (list)) {
-        period = list->data;
-        current_pos = period->start;
-        current_period = period->number;
-        if (current_pos <= target_pos
-            && target_pos < current_pos + period->duration) {
-          break;
-        }
-      }
-      if (list == NULL) {
-        GST_WARNING_OBJECT (demux, "Could not find seeked Period");
-        return FALSE;
-      }
-      if (current_period != gst_mpd_client_get_period_index (demux->client)) {
-        GST_DEBUG_OBJECT (demux, "Seeking to Period %d", current_period);
-        /* setup video, audio and subtitle streams, starting from the new Period */
-        if (!gst_mpd_client_set_period_index (demux->client, current_period) ||
-            !gst_dash_demux_setup_all_streams (demux))
-          return FALSE;
-      }
-
-      if (list == NULL) {
-        GST_WARNING_OBJECT (demux, "Could not find seeked fragment");
-        return FALSE;
-      }
-
-      /* Update the current sequence on all streams */
-      for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
-        GstDashDemuxStream *stream = iter->data;
-
-        active_stream =
-            gst_mpdparser_get_active_stream_by_index (demux->client,
-            stream->index);
-        current_pos = 0;
-        current_sequence = 0;
-        for (list = g_list_first (active_stream->segments); list;
+        /* select the requested Period in the Media Presentation */
+        target_pos = (GstClockTime) demux->segment.start;
+        current_period = 0;
+        for (list = g_list_first (demux->client->periods); list;
             list = g_list_next (list)) {
-          chunk = list->data;
-          current_pos = chunk->start_time;
-          //current_sequence = chunk->number;
-          GST_WARNING_OBJECT (demux, "%llu <= %llu (%llu)", current_pos,
-              target_pos, chunk->duration);
+          period = list->data;
+          current_pos = period->start;
+          current_period = period->number;
           if (current_pos <= target_pos
-              && target_pos < current_pos + chunk->duration) {
+              && target_pos < current_pos + period->duration) {
             break;
           }
-          current_sequence++;
         }
-        gst_mpd_client_set_segment_index (active_stream, current_sequence);
-      }
-      /* Calculate offset in the next fragment */
-      demux->position = gst_mpd_client_get_current_position (demux->client);
-      demux->position_shift = start - demux->position;
-      demux->need_segment = TRUE;
-      //GST_MPD_CLIENT_UNLOCK (demux->client);
+        if (list == NULL) {
+          GST_WARNING_OBJECT (demux, "Could not find seeked Period");
+          return FALSE;
+        }
+        if (current_period != gst_mpd_client_get_period_index (demux->client)) {
+          GST_DEBUG_OBJECT (demux, "Seeking to Period %d", current_period);
+          /* setup video, audio and subtitle streams, starting from the new Period */
+          if (!gst_mpd_client_set_period_index (demux->client, current_period)
+              || !gst_dash_demux_setup_all_streams (demux))
+            return FALSE;
+        }
 
-      if (flags & GST_SEEK_FLAG_FLUSH) {
-        GST_DEBUG_OBJECT (demux, "Sending flush stop on all pad");
+        if (list == NULL) {
+          GST_WARNING_OBJECT (demux, "Could not find seeked fragment");
+          return FALSE;
+        }
+
+        /* Update the current sequence on all streams */
         for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
-          GstDashDemuxStream *stream;
+          GstDashDemuxStream *stream = iter->data;
 
-          stream = iter->data;
-          gst_pad_push_event (stream->pad, gst_event_new_flush_stop ());
+          active_stream =
+              gst_mpdparser_get_active_stream_by_index (demux->client,
+              stream->index);
+          current_pos = 0;
+          current_sequence = 0;
+          for (list = g_list_first (active_stream->segments); list;
+              list = g_list_next (list)) {
+            chunk = list->data;
+            current_pos = chunk->start_time;
+            //current_sequence = chunk->number;
+            GST_WARNING_OBJECT (demux, "%llu <= %llu (%llu)", current_pos,
+                target_pos, chunk->duration);
+            if (current_pos <= target_pos
+                && target_pos < current_pos + chunk->duration) {
+              break;
+            }
+            current_sequence++;
+          }
+          gst_mpd_client_set_segment_index (active_stream, current_sequence);
         }
-      }
+        /* Calculate offset in the next fragment */
+        demux->position = gst_mpd_client_get_current_position (demux->client);
+        demux->position_shift = demux->segment.start - demux->position;
+        //GST_MPD_CLIENT_UNLOCK (demux->client);
 
-      /* Restart the demux */
-      demux->cancelled = FALSE;
-      demux->end_of_manifest = FALSE;
-      for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
-        GstDashDemuxStream *stream = iter->data;
-        gst_data_queue_set_flushing (stream->queue, FALSE);
+        if (flags & GST_SEEK_FLAG_FLUSH) {
+          GST_DEBUG_OBJECT (demux, "Sending flush stop on all pad");
+          for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+            GstDashDemuxStream *stream;
+
+            stream = iter->data;
+            gst_pad_push_event (stream->pad, gst_event_new_flush_stop ());
+          }
+        }
+
+        /* Restart the demux */
+        demux->cancelled = FALSE;
+        demux->end_of_manifest = FALSE;
+        for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+          GstDashDemuxStream *stream = iter->data;
+          stream->need_segment = TRUE;
+          gst_data_queue_set_flushing (stream->queue, FALSE);
+        }
+        gst_dash_demux_resume_download_task (demux);
+        gst_dash_demux_resume_stream_task (demux);
+        g_static_rec_mutex_unlock (&demux->stream_lock);
       }
-      gst_dash_demux_resume_download_task (demux);
-      gst_dash_demux_resume_stream_task (demux);
-      g_static_rec_mutex_unlock (&demux->stream_lock);
 
       return TRUE;
     }
@@ -986,6 +995,7 @@ switch_pads (GstDashDemux * demux)
     gst_structure_get (structure, "caps", GST_TYPE_CAPS, &caps, NULL);
     g_assert (caps != NULL);
 
+    stream->need_segment = TRUE;
     stream->pad = gst_pad_new_from_static_template (&srctemplate, NULL);
     gst_pad_set_event_function (stream->pad,
         GST_DEBUG_FUNCPTR (gst_dash_demux_src_event));
@@ -1092,7 +1102,6 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
 
   if (pad_switch) {
     switch_pads (demux);
-    demux->need_segment = TRUE;
     goto end;
   }
 
@@ -1107,20 +1116,17 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       active_stream =
           gst_mpdparser_get_active_stream_by_index (demux->client,
           selected_stream->index);
-      if (demux->need_segment) {
-        GstClockTime start =
-            GST_BUFFER_TIMESTAMP (buffer) + demux->position_shift;
+      if (selected_stream->need_segment) {
         /* And send a newsegment */
-        GST_DEBUG_OBJECT (demux, "Sending new-segment. segment start:%"
-            GST_TIME_FORMAT, GST_TIME_ARGS (start));
         for (iter = demux->streams, i = 0; iter;
             i++, iter = g_slist_next (iter)) {
           GstDashDemuxStream *stream = iter->data;
           gst_pad_push_event (stream->pad,
-              gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-                  start, GST_CLOCK_TIME_NONE, start));
+              gst_event_new_new_segment (TRUE, demux->segment.rate,
+                  GST_FORMAT_TIME, demux->segment.start, demux->segment.stop,
+                  0));
         }
-        demux->need_segment = FALSE;
+        selected_stream->need_segment = FALSE;
         demux->position_shift = 0;
       }
 
@@ -1130,6 +1136,8 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
           selected_stream->index, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
           GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
       ret = gst_pad_push (selected_stream->pad, gst_buffer_ref (buffer));
+      gst_segment_set_last_stop (&demux->segment, GST_FORMAT_TIME,
+          GST_BUFFER_TIMESTAMP (buffer));
       item->destroy (item);
       if ((ret != GST_FLOW_OK) && (active_stream
               && active_stream->mimeType == GST_STREAM_VIDEO))
@@ -1227,10 +1235,10 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
     demux->client = gst_mpd_client_new ();
   }
 
+  gst_segment_init (&demux->segment, GST_FORMAT_TIME);
   demux->last_manifest_update = GST_CLOCK_TIME_NONE;
   demux->position = 0;
   demux->position_shift = 0;
-  demux->need_segment = TRUE;
 }
 
 static GstClockTime

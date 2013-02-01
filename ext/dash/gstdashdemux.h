@@ -81,6 +81,8 @@ struct _GstDashDemuxStream
 
   gboolean need_header;
 
+  gboolean need_segment;
+
   GstDataQueue *queue;
 };
 
@@ -95,6 +97,8 @@ struct _GstDashDemux
   GstPad *sinkpad;
 
   GSList *streams;
+
+  GstSegment segment;
 
   GstBuffer *manifest;
   GstUriDownloader *downloader;
@@ -125,7 +129,6 @@ struct _GstDashDemux
   GstClockTime position;
   GstClockTime position_shift;
   GstClockTime last_position_shift;
-  gboolean need_segment;
   /* Download rate */
   guint64 dnl_rate;
 };
