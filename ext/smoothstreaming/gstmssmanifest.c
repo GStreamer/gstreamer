@@ -45,8 +45,6 @@
 #define MSS_PROP_TIMESCALE            "TimeScale"
 #define MSS_PROP_URL                  "Url"
 
-#define TO_LOWER(str) { char* p = str; for ( ; *p; ++p) *p = tolower(*p); }
-
 /* TODO check if atoi is successful? */
 
 typedef struct _GstMssStreamFragment
@@ -107,7 +105,11 @@ gst_mss_stream_quality_new (xmlNodePtr node)
 
   q->xmlnode = node;
   q->bitrate_str = (gchar *) xmlGetProp (node, (xmlChar *) MSS_PROP_BITRATE);
-  q->bitrate = strtoull (q->bitrate_str, NULL, 10);
+
+  if (q->bitrate_str != NULL)
+    q->bitrate = g_ascii_strtoull (q->bitrate_str, NULL, 10);
+  else
+    q->bitrate = 0;
 
   return q;
 }
@@ -230,8 +232,7 @@ gst_mss_manifest_new (const GstBuffer * data)
 
   live_str = (gchar *) xmlGetProp (root, (xmlChar *) "IsLive");
   if (live_str) {
-    TO_LOWER (live_str);
-    manifest->is_live = strcmp (live_str, "true") == 0;
+    manifest->is_live = g_ascii_strcasecmp (live_str, "true") == 0;
     xmlFree (live_str);
   }
 
@@ -452,10 +453,11 @@ _gst_mss_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
   structure = gst_caps_get_structure (caps, 0);
 
   if (max_width)
-    gst_structure_set (structure, "width", G_TYPE_INT, atoi (max_width), NULL);
+    gst_structure_set (structure, "width", G_TYPE_INT,
+        g_ascii_strtoull (max_width, NULL, 10), NULL);
   if (max_height)
-    gst_structure_set (structure, "height", G_TYPE_INT, atoi (max_height),
-        NULL);
+    gst_structure_set (structure, "height", G_TYPE_INT,
+        g_ascii_strtoull (max_height, NULL, 10), NULL);
 
   if (codec_data && strlen (codec_data)) {
     if (strcmp (fourcc, "H264") == 0 || strcmp (fourcc, "AVC1") == 0) {
@@ -494,7 +496,7 @@ _frequency_index_from_sampling_rate (guint sampling_rate)
 }
 
 static GstBuffer *
-_make_accl_codec_data (guint sampling_rate, guint channels)
+_make_aacl_codec_data (guint64 sampling_rate, guint64 channels)
 {
   GstBuffer *buf;
   guint8 *data;
@@ -550,18 +552,21 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
   structure = gst_caps_get_structure (caps, 0);
 
   if (channels)
-    gst_structure_set (structure, "channels", G_TYPE_INT, atoi (channels),
-        NULL);
+    gst_structure_set (structure, "channels", G_TYPE_INT,
+        g_ascii_strtoull (channels, NULL, 10), NULL);
   if (rate)
-    gst_structure_set (structure, "rate", G_TYPE_INT, atoi (rate), NULL);
+    gst_structure_set (structure, "rate", G_TYPE_INT,
+        g_ascii_strtoull (rate, NULL, 10), NULL);
 
   if (codec_data && strlen (codec_data)) {
     GValue *value = g_new0 (GValue, 1);
     g_value_init (value, GST_TYPE_BUFFER);
     gst_value_deserialize (value, (gchar *) codec_data);
     gst_structure_take_value (structure, "codec_data", value);
-  } else if (strcmp (fourcc, "AACL") == 0) {
-    GstBuffer *buffer = _make_accl_codec_data (atoi (rate), atoi (channels));
+  } else if (strcmp (fourcc, "AACL") == 0 && rate && channels) {
+    GstBuffer *buffer =
+        _make_aacl_codec_data (g_ascii_strtoull (rate, NULL, 10),
+        g_ascii_strtoull (channels, NULL, 10));
     gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buffer, NULL);
     gst_buffer_unref (buffer);
   }
@@ -596,7 +601,7 @@ gst_mss_stream_get_timescale (GstMssStream * stream)
   }
 
   if (timescale) {
-    ts = strtoull (timescale, NULL, 10);
+    ts = g_ascii_strtoull (timescale, NULL, 10);
     xmlFree (timescale);
   }
   return ts;
@@ -612,7 +617,7 @@ gst_mss_manifest_get_timescale (GstMssManifest * manifest)
       (gchar *) xmlGetProp (manifest->xmlrootnode,
       (xmlChar *) MSS_PROP_TIMESCALE);
   if (timescale) {
-    ts = strtoull (timescale, NULL, 10);
+    ts = g_ascii_strtoull (timescale, NULL, 10);
     xmlFree (timescale);
   }
   return ts;
@@ -628,7 +633,7 @@ gst_mss_manifest_get_duration (GstMssManifest * manifest)
       (gchar *) xmlGetProp (manifest->xmlrootnode,
       (xmlChar *) MSS_PROP_STREAM_DURATION);
   if (duration) {
-    dur = strtoull (duration, NULL, 10);
+    dur = g_ascii_strtoull (duration, NULL, 10);
     xmlFree (duration);
   }
   return dur;
