@@ -155,6 +155,7 @@ CHANGES
     GST_FLOW_WRONG_STATE -> GST_FLOW_FLUSHING
 
     GstActivateMode -> GstPadMode, GST_ACTIVATE_* -> GST_PAD_MODE_*
+    gst_pad_activate_{pull,push}() -> gst_pad_activate_mode()
 
     The GstPadAcceptCapsFunction was removed and replaced with a
     GST_QUERY_ACCEPT_CAPS query.
@@ -329,6 +330,9 @@ CHANGES
     GstSegment structure from the event.
     gst_event_copy_segment() to fill a GstSegment structure.
 
+    gst_event_new_flush_stop() now takes a boolean, which in most cases should
+    be TRUE
+
 * GstQuery
     Boxed types derived from GstMiniObject.
 
@@ -424,6 +428,11 @@ CHANGES
 
 * GstTask
     gst_task_create() -> gst_task_new()
+
+* GstAudio
+    GstBaseAudioSink -> GstAudioBaseSink
+    GstBaseAudioSrc -> GstAudioBaseSrc
+    ...
 
 * GstAdapter
     gst_adapter_peek() is removed, use gst_adapter_map() and gst_adapter_unmap()
@@ -543,12 +552,12 @@ CHANGES
     are now attached via GstControlBinding to properties. There are no GValue
     arguments used anymore when programming control sources.
 
-    gst_controller_new* -> gst_object_set_control_source
-    gst_controller_add_properties -> gst_object_set_control_source
-    gst_controller_set_control_source -> gst_object_set_control_source
-    gst_controller_get_control_source -> gst_object_get_control_source
+    A simple way to attach a ControlSource to a property is:
+    gst_object_add_control_binding (object,
+      gst_direct_control_binding_new (object, property_name, control_source));
 
-    gst_controller_set_property_disabled -> gst_object_set_controlled_property_disabled
+    gst_controller_set_property_disabled ->
+      gst_object_set_control_binding_disabled
 
     gst_object_get_value_arrays has been removed. Loop over the controlled
     properties fetch the value array. Also GstValueArray is gone. The fields of
