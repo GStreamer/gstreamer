@@ -1072,13 +1072,13 @@ no_url_error:
     GST_ELEMENT_ERROR (mssdemux, STREAM, DEMUX,
         (_("Failed to get fragment URL.")),
         ("An error happened when getting fragment URL"));
-    gst_task_stop (stream->download_task);
+    gst_task_pause (stream->download_task);
     return GST_FLOW_ERROR;
   }
 error:
   {
     GST_WARNING_OBJECT (mssdemux, "Error while pushing fragment");
-    gst_task_stop (stream->download_task);
+    gst_task_pause (stream->download_task);
     return GST_FLOW_ERROR;
   }
 }
@@ -1117,13 +1117,13 @@ eos:
         GST_DEBUG_PAD_NAME (stream->pad));
     gst_mss_demux_stream_store_object (stream,
         GST_MINI_OBJECT_CAST (gst_event_new_eos ()));
-    gst_task_stop (stream->download_task);
+    gst_task_pause (stream->download_task);
     return;
   }
 error:
   {
     GST_WARNING_OBJECT (mssdemux, "Error while pushing fragment");
-    gst_task_stop (stream->download_task);
+    gst_task_pause (stream->download_task);
     return;
   }
 }
@@ -1288,19 +1288,19 @@ gst_mss_demux_stream_loop (GstMssDemux * mssdemux)
 eos:
   {
     GST_DEBUG_OBJECT (mssdemux, "EOS on all pads");
-    gst_task_stop (mssdemux->stream_task);
+    gst_task_pause (mssdemux->stream_task);
     return;
   }
 error:
   {
     GST_WARNING_OBJECT (mssdemux, "Error while pushing fragment");
-    gst_task_stop (mssdemux->stream_task);
+    gst_task_pause (mssdemux->stream_task);
     return;
   }
 stop:
   {
-    GST_DEBUG_OBJECT (mssdemux, "Stopping streaming task");
-    gst_task_stop (mssdemux->stream_task);
+    GST_DEBUG_OBJECT (mssdemux, "Pausing streaming task");
+    gst_task_pause (mssdemux->stream_task);
     return;
   }
 }
