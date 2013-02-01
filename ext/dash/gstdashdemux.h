@@ -78,10 +78,19 @@ struct _GstDashDemuxStream
   gboolean stream_end_of_period;
 
   gboolean stream_eos;
-
   gboolean need_header;
-
   gboolean need_segment;
+
+  /* tracks if a stream has enqueued data
+   * after a pad switch.
+   * This is required to prevent pads being
+   * added to the demuxer and having no data
+   * pushed to it before another pad switch
+   * as this might make downstream elements
+   * unhappy and error out if they get
+   * an EOS without receiving any input
+   */
+  gboolean has_data_queued;
 
   GstDataQueue *queue;
 };

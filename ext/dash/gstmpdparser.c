@@ -3130,6 +3130,35 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
 }
 
 gboolean
+gst_mpd_client_get_next_fragment_timestamp (GstMpdClient * client,
+    guint stream_idx, GstClockTime * ts)
+{
+  GstActiveStream *stream;
+  gint segment_idx;
+  GstMediaSegment *currentChunk;
+
+  GST_DEBUG ("Stream index: %i", stream_idx);
+  stream = g_list_nth_data (client->active_streams, stream_idx);
+  g_return_val_if_fail (stream != NULL, 0);
+
+  GST_MPD_CLIENT_LOCK (client);
+  segment_idx = gst_mpd_client_get_segment_index (stream);
+  GST_DEBUG ("Looking for fragment sequence chunk %d", segment_idx);
+
+  currentChunk =
+      gst_mpdparser_get_chunk_by_index (client, stream_idx, segment_idx);
+  if (currentChunk == NULL) {
+    GST_MPD_CLIENT_UNLOCK (client);
+    return FALSE;
+  }
+
+  *ts = currentChunk->start_time;
+  GST_MPD_CLIENT_UNLOCK (client);
+
+  return TRUE;
+}
+
+gboolean
 gst_mpd_client_get_next_fragment (GstMpdClient * client,
     guint indexStream, gboolean * discontinuity, gchar ** uri,
     GstClockTime * duration, GstClockTime * timestamp)
