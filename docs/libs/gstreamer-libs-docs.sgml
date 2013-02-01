@@ -54,6 +54,9 @@
         element properties over time.
       </para>
 
+			<xi:include href="xml/gstargbcontrolbinding.xml" />
+			<xi:include href="xml/gstdirectcontrolbinding.xml" />
+
       <xi:include href="xml/gsttimedvaluecontrolsource.xml" />
       <xi:include href="xml/gstinterpolationcontrolsource.xml" />
       <xi:include href="xml/gstlfocontrolsource.xml" />

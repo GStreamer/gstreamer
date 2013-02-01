@@ -22,10 +22,11 @@
  */
 /**
  * SECTION:gstargbcontrolbinding
- * @short_description: attachment for control source sources to argb properties
+ * @short_description: attachment for control sources to argb properties
  *
  * A value mapping object that attaches multiple control sources to a guint
- * gobject properties representing a color.
+ * gobject properties representing a color. A control value of 0.0 will turn the
+ * color component off and a value of 1.0 will be the color level.
  */
 
 #include <glib-object.h>

@@ -21,9 +21,10 @@
  */
 /**
  * SECTION:gstdirectcontrolbinding
- * @short_description: direct attachment for control source sources
+ * @short_description: direct attachment for control sources
  *
- * A value mapping object that attaches control sources to gobject properties.
+ * A value mapping object that attaches control sources to gobject properties. It
+ * will map the control values [0.0 ... 1.0] to the target property range.
  */
 
 
