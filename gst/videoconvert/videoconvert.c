@@ -49,7 +49,7 @@ VideoConvert *
 videoconvert_convert_new (GstVideoInfo * in_info, GstVideoInfo * out_info)
 {
   VideoConvert *convert;
-  int i, width;
+  int width;
 
   convert = g_malloc0 (sizeof (VideoConvert));
 
@@ -72,27 +72,6 @@ videoconvert_convert_new (GstVideoInfo * in_info, GstVideoInfo * out_info)
   convert->tmpline16 = g_malloc (sizeof (guint16) * (width + 8) * 4);
   convert->errline = g_malloc0 (sizeof (guint16) * width * 4);
 
-  if (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_RGB8P) {
-    /* build poor man's palette, taken from ffmpegcolorspace */
-    static const guint8 pal_value[6] = { 0x00, 0x33, 0x66, 0x99, 0xcc, 0xff };
-    guint32 *palette;
-    gint r, g, b;
-
-    convert->palette = palette = g_new (guint32, 256);
-    i = 0;
-    for (r = 0; r < 6; r++) {
-      for (g = 0; g < 6; g++) {
-        for (b = 0; b < 6; b++) {
-          palette[i++] =
-              (0xffU << 24) | (pal_value[r] << 16) | (pal_value[g] << 8) |
-              pal_value[b];
-        }
-      }
-    }
-    palette[i++] = 0;           /* 100% transparent, i == 6*6*6 */
-    while (i < 256)
-      palette[i++] = 0xff000000;
-  }
   return convert;
 
   /* ERRORS */
@@ -106,7 +85,6 @@ no_convert:
 void
 videoconvert_convert_free (VideoConvert * convert)
 {
-  g_free (convert->palette);
   g_free (convert->tmpline);
   g_free (convert->tmpline16);
   g_free (convert->errline);
@@ -405,6 +383,8 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
   int i, j;
   gint width, height;
   guint in_bits, out_bits;
+  gpointer pal;
+  gsize palsize;
 
   height = convert->height;
   width = convert->width;
@@ -443,8 +423,10 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
       PACK_FRAME (dest, convert->tmpline, j, width);
     }
   }
-  if (GST_VIDEO_FRAME_FORMAT (dest) == GST_VIDEO_FORMAT_RGB8P) {
-    memcpy (GST_VIDEO_FRAME_PLANE_DATA (dest, 1), convert->palette, 256 * 4);
+  if ((pal =
+          gst_video_format_get_palette (GST_VIDEO_FRAME_FORMAT (dest),
+              &palsize))) {
+    memcpy (GST_VIDEO_FRAME_PLANE_DATA (dest, 1), pal, palsize);
   }
 }
 

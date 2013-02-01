@@ -44,8 +44,6 @@ struct _VideoConvert {
   gint out_bits;
   gint cmatrix[4][4];
 
-  guint32 *palette;
-
   ColorSpaceDitherMethod dither;
 
   guint8 *tmpline;
