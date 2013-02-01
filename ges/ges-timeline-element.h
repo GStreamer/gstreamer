@@ -164,6 +164,13 @@ void ges_timeline_element_set_inpoint                (GESTimelineElement *self, 
 void ges_timeline_element_set_duration               (GESTimelineElement *self, GstClockTime duration);
 void ges_timeline_element_set_max_duration           (GESTimelineElement *self, GstClockTime duration);
 void ges_timeline_element_set_priority               (GESTimelineElement *self, guint32 priority);
+
+GstClockTime ges_timeline_element_get_start          (GESTimelineElement *self);
+GstClockTime ges_timeline_element_get_inpoint        (GESTimelineElement *self);
+GstClockTime ges_timeline_element_get_duration       (GESTimelineElement *self);
+GstClockTime ges_timeline_element_get_max_duration   (GESTimelineElement *self);
+guint32 ges_timeline_element_get_priority            (GESTimelineElement *self);
+
 gboolean ges_timeline_element_ripple                 (GESTimelineElement *self, GstClockTime  start);
 gboolean ges_timeline_element_ripple_end             (GESTimelineElement *self, GstClockTime  end);
 gboolean ges_timeline_element_roll_start             (GESTimelineElement *self, GstClockTime  start);

@@ -421,6 +421,76 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
 }
 
 /**
+ * ges_timeline_element_get_start:
+ * @self: a #GESTimelineElement
+ *
+ * Returns: The @start of @self
+ */
+GstClockTime
+ges_timeline_element_get_start (GESTimelineElement * self)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), GST_CLOCK_TIME_NONE);
+
+  return self->start;
+}
+
+/**
+ * ges_timeline_element_get_inpoint:
+ * @self: a #GESTimelineElement
+ *
+ * Returns: The @inpoint of @self
+ */
+GstClockTime
+ges_timeline_element_get_inpoint (GESTimelineElement * self)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), GST_CLOCK_TIME_NONE);
+
+  return self->inpoint;
+}
+
+/**
+ * ges_timeline_element_get_duration:
+ * @self: a #GESTimelineElement
+ *
+ * Returns: The @duration of @self
+ */
+GstClockTime
+ges_timeline_element_get_duration (GESTimelineElement * self)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), GST_CLOCK_TIME_NONE);
+
+  return self->duration;
+}
+
+/**
+ * ges_timeline_element_get_max_duration:
+ * @self: a #GESTimelineElement
+ *
+ * Returns: The @maxduration of @self
+ */
+GstClockTime
+ges_timeline_element_get_max_duration (GESTimelineElement * self)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), GST_CLOCK_TIME_NONE);
+
+  return self->maxduration;
+}
+
+/**
+ * ges_timeline_element_get_priority:
+ * @self: a #GESTimelineElement
+ *
+ * Returns: The @priority of @self
+ */
+guint32
+ges_timeline_element_get_priority (GESTimelineElement * self)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), 0);
+
+  return self->priority;
+}
+
+/**
  * ges_timeline_element_set_priority:
  * @self: a #GESTimelineElement
  * @priority: the priority
