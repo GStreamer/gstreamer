@@ -229,13 +229,17 @@ typedef enum
  *   to 0. This is likely sightly faster but less accurate. When this flag
  *   is not specified, the most significant bits of the source are duplicated
  *   in the least significant bits of the destination.
+ * @GST_VIDEO_PACK_FLAG_INTERLACED: The source is interlaced. The unpacked
+ *   format will be interlaced as well with each line containing
+ *   information from alternating fields.
  *
  * The different flags that can be used when packing and unpacking.
  */
 typedef enum
 {
   GST_VIDEO_PACK_FLAG_NONE           = 0,
-  GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE = 1
+  GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE = (1 << 0),
+  GST_VIDEO_PACK_FLAG_INTERLACED     = (1 << 1)
 } GstVideoPackFlags;
 
 /**
