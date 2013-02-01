@@ -103,7 +103,6 @@ struct _GstDashDemux
   gboolean end_of_manifest;
 
   /* Properties */
-  GstClockTime min_buffering_time;      /* Minimum buffering time accumulated before playback */
   GstClockTime max_buffering_time;      /* Maximum buffering time accumulated during playback */
   gfloat bandwidth_usage;       /* Percentage of the available bandwidth to use       */
   guint64 max_bitrate;          /* max of bitrate supported by target decoder         */
@@ -118,7 +117,6 @@ struct _GstDashDemux
   GStaticRecMutex download_lock;
   gboolean cancelled;
   GMutex *download_timed_lock;
-  GTimeVal next_download;       /* Time of the next download */
 
   /* Manifest update */
   GstClockTime last_manifest_update;

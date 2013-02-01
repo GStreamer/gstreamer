@@ -237,7 +237,6 @@ static gboolean gst_dash_demux_get_next_fragment_set (GstDashDemux * demux);
 
 static void gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose);
 static GstClockTime gst_dash_demux_get_buffering_time (GstDashDemux * demux);
-static float gst_dash_demux_get_buffering_ratio (GstDashDemux * demux);
 static GstCaps *gst_dash_demux_get_input_caps (GstDashDemux * demux,
     GstActiveStream * stream);
 static GstClockTime gst_dash_demux_stream_get_buffering_time (GstDashDemuxStream
@@ -366,7 +365,6 @@ gst_dash_demux_init (GstDashDemux * demux, GstDashDemuxClass * klass)
   demux->downloader = gst_uri_downloader_new ();
 
   /* Properties */
-  demux->min_buffering_time = DEFAULT_MIN_BUFFERING_TIME * GST_SECOND;
   demux->max_buffering_time = DEFAULT_MAX_BUFFERING_TIME * GST_SECOND;
   demux->bandwidth_usage = DEFAULT_BANDWIDTH_USAGE;
   demux->max_bitrate = DEFAULT_MAX_BITRATE;
@@ -393,9 +391,6 @@ gst_dash_demux_set_property (GObject * object, guint prop_id,
   GstDashDemux *demux = GST_DASH_DEMUX (object);
 
   switch (prop_id) {
-    case PROP_MIN_BUFFERING_TIME:
-      demux->min_buffering_time = g_value_get_uint (value) * GST_SECOND;
-      break;
     case PROP_MAX_BUFFERING_TIME:
       demux->max_buffering_time = g_value_get_uint (value) * GST_SECOND;
       break;
@@ -418,10 +413,6 @@ gst_dash_demux_get_property (GObject * object, guint prop_id, GValue * value,
   GstDashDemux *demux = GST_DASH_DEMUX (object);
 
   switch (prop_id) {
-    case PROP_MIN_BUFFERING_TIME:
-      g_value_set_uint (value, demux->min_buffering_time);
-      demux->min_buffering_time *= GST_SECOND;
-      break;
     case PROP_MAX_BUFFERING_TIME:
       g_value_set_uint (value, demux->max_buffering_time);
       demux->max_buffering_time *= GST_SECOND;
@@ -1060,20 +1051,6 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
 
   GST_LOG_OBJECT (demux, "Starting stream loop");
 
-  if (GST_STATE (demux) == GST_STATE_PLAYING) {
-    if (!demux->end_of_manifest
-        && gst_dash_demux_get_buffering_time (demux) <
-        demux->min_buffering_time) {
-      /* Warn we are below our threshold: this will eventually pause 
-       * the pipeline */
-      GST_WARNING
-          ("Below the threshold: this will eventually pause the pipeline");
-      gst_element_post_message (GST_ELEMENT (demux),
-          gst_message_new_buffering (GST_OBJECT (demux),
-              100 * gst_dash_demux_get_buffering_ratio (demux)));
-    }
-  }
-
   best_time = GST_CLOCK_TIME_NONE;
   selected_stream = NULL;
   pad_switch = TRUE;
@@ -1284,16 +1261,6 @@ gst_dash_demux_stream_get_buffering_time (GstDashDemuxStream * stream)
   return (GstClockTime) level.time;
 }
 
-static float
-gst_dash_demux_get_buffering_ratio (GstDashDemux * demux)
-{
-  float buffering_time = gst_dash_demux_get_buffering_time (demux);
-  if (buffering_time >= demux->min_buffering_time) {
-    return 1.0;
-  } else
-    return buffering_time / demux->min_buffering_time;
-}
-
 /* gst_dash_demux_download_loop:
  * 
  * Loop for the "download' task that fetches fragments based on the 
@@ -1325,15 +1292,8 @@ gst_dash_demux_get_buffering_ratio (GstDashDemux * demux)
 void
 gst_dash_demux_download_loop (GstDashDemux * demux)
 {
-  GstClockTime target_buffering_time;
   GstClock *clock = gst_element_get_clock (GST_ELEMENT (demux));
   gint64 update_period = demux->client->mpd_node->minimumUpdatePeriod;
-
-  /* Wait until the next scheduled download */
-  if (g_cond_timed_wait (GST_TASK_GET_COND (demux->download_task),
-          demux->download_timed_lock, &demux->next_download)) {
-    goto quit;
-  }
 
   if (clock && gst_mpd_client_is_live (demux->client)
       && demux->client->mpd_uri != NULL && update_period != -1) {
@@ -1413,71 +1373,43 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
   }
 
 
-  /* Target buffering time MUST at least exceeds mimimum buffering time 
-   * by the duration of a fragment, but SHOULD NOT exceed maximum
-   * buffering time */
   GST_DEBUG_OBJECT (demux, "download loop %i", demux->end_of_manifest);
-  target_buffering_time =
-      demux->min_buffering_time +
-      gst_mpd_client_get_next_fragment_duration (demux->client);
-  if (demux->max_buffering_time > target_buffering_time)
-    target_buffering_time = demux->max_buffering_time;
-  if (!demux->end_of_manifest
-      && gst_dash_demux_get_buffering_time (demux) < target_buffering_time) {
-    if (GST_STATE (demux) != GST_STATE_PLAYING) {
-      /* Signal our buffering status (this will eventually restart the
-       * pipeline when we have reached 100 %) */
-      gst_element_post_message (GST_ELEMENT (demux),
-          gst_message_new_buffering (GST_OBJECT (demux),
-              100 * gst_dash_demux_get_buffering_ratio (demux)));
-    }
 
-    /* try to switch to another set of representations if needed */
-    gst_dash_demux_select_representations (demux,
-        demux->bandwidth_usage * demux->dnl_rate *
-        gst_dash_demux_get_buffering_ratio (demux));
+  /* try to switch to another set of representations if needed */
+  gst_dash_demux_select_representations (demux,
+      demux->bandwidth_usage * demux->dnl_rate);
 
-    /* fetch the next fragment */
-    while (!gst_dash_demux_get_next_fragment_set (demux)) {
-      if (demux->end_of_period) {
-        GST_INFO_OBJECT (demux, "Reached the end of the Period");
-        /* setup video, audio and subtitle streams, starting from the next Period */
-        if (!gst_mpd_client_set_period_index (demux->client,
-                gst_mpd_client_get_period_index (demux->client) + 1)
-            || !gst_dash_demux_setup_all_streams (demux)) {
-          GST_INFO_OBJECT (demux, "Reached the end of the manifest file");
-          demux->end_of_manifest = TRUE;
-          if (GST_STATE (demux) != GST_STATE_PLAYING) {
-            /* Restart the pipeline regardless of the current buffering level */
-            gst_element_post_message (GST_ELEMENT (demux),
-                gst_message_new_buffering (GST_OBJECT (demux), 100));
-          }
-          gst_task_start (demux->stream_task);
-          goto end_of_manifest;
-        }
-        /* start playing from the first segment of the new period */
-        gst_mpd_client_set_segment_index_for_all_streams (demux->client, 0);
-        demux->end_of_period = FALSE;
-      } else if (!demux->cancelled) {
-        demux->client->update_failed_count++;
-        if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
-          GST_WARNING_OBJECT (demux, "Could not fetch the next fragment");
-          goto quit;
-        } else {
-          goto error_downloading;
-        }
-      } else {
-        goto quit;
+  /* fetch the next fragment */
+  while (!gst_dash_demux_get_next_fragment_set (demux)) {
+    if (demux->end_of_period) {
+      GST_INFO_OBJECT (demux, "Reached the end of the Period");
+      /* setup video, audio and subtitle streams, starting from the next Period */
+      if (!gst_mpd_client_set_period_index (demux->client,
+              gst_mpd_client_get_period_index (demux->client) + 1)
+          || !gst_dash_demux_setup_all_streams (demux)) {
+        GST_INFO_OBJECT (demux, "Reached the end of the manifest file");
+        demux->end_of_manifest = TRUE;
+        gst_task_start (demux->stream_task);
+        goto end_of_manifest;
       }
+      /* start playing from the first segment of the new period */
+      gst_mpd_client_set_segment_index_for_all_streams (demux->client, 0);
+      demux->end_of_period = FALSE;
+    } else if (!demux->cancelled) {
+      demux->client->update_failed_count++;
+      if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
+        GST_WARNING_OBJECT (demux, "Could not fetch the next fragment");
+        goto quit;
+      } else {
+        goto error_downloading;
+      }
+    } else {
+      goto quit;
     }
-    GST_INFO_OBJECT (demux, "Internal buffering : %" PRIu64 " s",
-        gst_dash_demux_get_buffering_time (demux) / GST_SECOND);
-    demux->client->update_failed_count = 0;
-  } else {
-    /* schedule the next download in 100 ms */
-    g_get_current_time (&demux->next_download);
-    g_time_val_add (&demux->next_download, 100000);
   }
+  GST_INFO_OBJECT (demux, "Internal buffering : %" PRIu64 " s",
+      gst_dash_demux_get_buffering_time (demux) / GST_SECOND);
+  demux->client->update_failed_count = 0;
 
 quit:
   {
@@ -1518,7 +1450,6 @@ gst_dash_demux_resume_stream_task (GstDashDemux * demux)
 static void
 gst_dash_demux_resume_download_task (GstDashDemux * demux)
 {
-  g_get_current_time (&demux->next_download);
   gst_task_start (demux->download_task);
 }
 
