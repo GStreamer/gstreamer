@@ -71,22 +71,23 @@ static void
 gst_gl_filtersobel_init_resources (GstGLFilter * filter)
 {
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
+  GstGLFuncs *gl = filter->display->gl_vtable;
   int i;
 
   for (i = 0; i < 2; i++) {
-    glGenTextures (1, &filtersobel->midtexture[i]);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, filtersobel->midtexture[i]);
-    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+    gl->GenTextures (1, &filtersobel->midtexture[i]);
+    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, filtersobel->midtexture[i]);
+    gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
         GST_VIDEO_INFO_WIDTH (&filter->out_info),
         GST_VIDEO_INFO_HEIGHT (&filter->out_info),
         0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
         GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
         GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
         GL_CLAMP_TO_EDGE);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
         GL_CLAMP_TO_EDGE);
   }
 }
@@ -95,10 +96,11 @@ static void
 gst_gl_filtersobel_reset_resources (GstGLFilter * filter)
 {
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
+  GstGLFuncs *gl = filter->display->gl_vtable;
   int i;
 
   for (i = 0; i < 2; i++) {
-    glDeleteTextures (1, &filtersobel->midtexture[i]);
+    gl->DeleteTextures (1, &filtersobel->midtexture[i]);
   }
 }
 
@@ -239,6 +241,7 @@ gst_gl_filtersobel_length (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
+  GstGLFuncs *gl = filter->display->gl_vtable;
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
 
   glMatrixMode (GL_PROJECTION);
@@ -246,10 +249,10 @@ gst_gl_filtersobel_length (gint width, gint height, guint texture,
 
   gst_gl_shader_use (filtersobel->len);
 
-  glActiveTexture (GL_TEXTURE1);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->ActiveTexture (GL_TEXTURE1);
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (filtersobel->len, "tex", 1);
   gst_gl_shader_set_uniform_1i (filtersobel->len, "invert",
