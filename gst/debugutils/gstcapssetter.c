@@ -192,17 +192,28 @@ gst_caps_setter_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * cfilter)
 {
   GstCapsSetter *filter = GST_CAPS_SETTER (trans);
-  GstCaps *ret, *filter_caps;
+  GstCaps *ret = NULL, *filter_caps = NULL;
   GstStructure *structure, *merge;
   const gchar *name;
   gint i, j;
 
-  GST_DEBUG_OBJECT (trans, "receiving caps: %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (trans,
+      "receiving caps: %" GST_PTR_FORMAT ", with filter: %" GST_PTR_FORMAT,
+      caps, cfilter);
+
+  /* pass filter caps upstream, or any if no filter */
+  if (direction != GST_PAD_SINK) {
+    if (!cfilter || gst_caps_is_empty (cfilter)) {
+      return gst_caps_new_any ();
+    } else {
+      return gst_caps_copy (cfilter);
+    }
+  }
 
   ret = gst_caps_copy (caps);
 
   /* this function is always called with a simple caps */
-  if (!GST_CAPS_IS_SIMPLE (ret) || direction != GST_PAD_SINK)
+  if (!GST_CAPS_IS_SIMPLE (ret))
     return ret;
 
   structure = gst_caps_get_structure (ret, 0);
