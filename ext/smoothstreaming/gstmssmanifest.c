@@ -141,7 +141,6 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
   GstMssStreamFragment *previous_fragment = NULL;
   guint fragment_number = 0;
   guint64 fragment_time_accum = 0;
-  GError *gerror = NULL;
 
   stream->xmlnode = node;
 
@@ -212,8 +211,8 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
   stream->current_fragment = stream->fragments;
   stream->current_quality = stream->qualities;
 
-  stream->regex_bitrate = g_regex_new ("\\{[Bb]itrate\\}", 0, 0, &gerror);
-  stream->regex_position = g_regex_new ("\\{start[ _]time\\}", 0, 0, &gerror);
+  stream->regex_bitrate = g_regex_new ("\\{[Bb]itrate\\}", 0, 0, NULL);
+  stream->regex_position = g_regex_new ("\\{start[ _]time\\}", 0, 0, NULL);
 }
 
 GstMssManifest *
@@ -284,6 +283,9 @@ gst_mss_stream_get_type (GstMssStream * stream)
   gchar *prop = (gchar *) xmlGetProp (stream->xmlnode, (xmlChar *) "Type");
   GstMssStreamType ret = MSS_STREAM_TYPE_UNKNOWN;
 
+  if (prop == NULL)
+    return MSS_STREAM_TYPE_UNKNOWN;
+
   if (strcmp (prop, "video") == 0) {
     ret = MSS_STREAM_TYPE_VIDEO;
   } else if (strcmp (prop, "audio") == 0) {
@@ -334,6 +336,9 @@ _make_h264_codec_data (GstBuffer * sps, GstBuffer * pps)
   guint8 profile_idc = 0, profile_comp = 0, level_idc = 0;
   guint8 *data;
   gint nl;
+
+  if (GST_BUFFER_SIZE (sps) < 4)
+    return NULL;
 
   sps_size += GST_BUFFER_SIZE (sps) + 2;
   profile_idc = GST_BUFFER_DATA (sps)[1];
@@ -426,8 +431,10 @@ _gst_mss_stream_add_h264_codec_data (GstCaps * caps, const gchar * codecdatastr)
   g_value_reset (&sps_value);
   g_value_reset (&pps_value);
 
-  gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buffer, NULL);
-  gst_buffer_unref (buffer);
+  if (buffer != NULL) {
+    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buffer, NULL);
+    gst_buffer_unref (buffer);
+  }
 }
 
 static GstCaps *
@@ -704,6 +711,10 @@ gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url)
 
   g_free (tmp);
   g_free (start_time_str);
+
+  if (*url == NULL)
+    return GST_FLOW_ERROR;
+
   return GST_FLOW_OK;
 }
 
