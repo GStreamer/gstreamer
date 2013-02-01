@@ -447,6 +447,9 @@ gst_mss_demux_event (GstPad * pad, GstEvent * event)
   gboolean ret = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_mss_demux_reset (mssdemux);
+      break;
     case GST_EVENT_EOS:
       if (mssdemux->manifest_buffer == NULL) {
         GST_WARNING_OBJECT (mssdemux, "Received EOS without a manifest.");
