@@ -2747,7 +2747,7 @@ gst_decode_chain_get_current_group (GstDecodeChain * chain)
     /* group = chain->next_groups->data */
   } else {
     group = gst_decode_group_new (chain->dbin, chain);
-    chain->next_groups = g_list_prepend (chain->next_groups, group);
+    chain->next_groups = g_list_append (chain->next_groups, group);
   }
 
   return group;
