@@ -983,6 +983,10 @@ switch_pads (GstDashDemux * demux)
     GstCaps *caps = NULL;
 
     if (!gst_data_queue_pop (stream->queue, &item)) {
+      if (demux->cancelled) {
+        g_slist_free (oldpads);
+        return;
+      }
       g_assert_not_reached ();
     }
 
