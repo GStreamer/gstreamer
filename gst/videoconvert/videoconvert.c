@@ -138,6 +138,9 @@ videoconvert_convert_convert (VideoConvert * convert,
   convert->convert (convert, dest, src);
 }
 
+#define SCALE    (8)
+#define SCALE_F  ((float) (1 << SCALE))
+
 static void
 videoconvert_convert_matrix (VideoConvert * convert, guint8 * pixels)
 {
@@ -151,11 +154,11 @@ videoconvert_convert_matrix (VideoConvert * convert, guint8 * pixels)
     b = pixels[i * 4 + 3];
 
     y = (convert->cmatrix[0][0] * r + convert->cmatrix[0][1] * g +
-        convert->cmatrix[0][2] * b + convert->cmatrix[0][3]) >> 8;
+        convert->cmatrix[0][2] * b + convert->cmatrix[0][3]) >> SCALE;
     u = (convert->cmatrix[1][0] * r + convert->cmatrix[1][1] * g +
-        convert->cmatrix[1][2] * b + convert->cmatrix[1][3]) >> 8;
+        convert->cmatrix[1][2] * b + convert->cmatrix[1][3]) >> SCALE;
     v = (convert->cmatrix[2][0] * r + convert->cmatrix[2][1] * g +
-        convert->cmatrix[2][2] * b + convert->cmatrix[2][3]) >> 8;
+        convert->cmatrix[2][2] * b + convert->cmatrix[2][3]) >> SCALE;
 
     pixels[i * 4 + 1] = CLAMP (y, 0, 255);
     pixels[i * 4 + 2] = CLAMP (u, 0, 255);
@@ -176,11 +179,11 @@ videoconvert_convert_matrix16 (VideoConvert * convert, guint16 * pixels)
     b = pixels[i * 4 + 3];
 
     y = (convert->cmatrix[0][0] * r + convert->cmatrix[0][1] * g +
-        convert->cmatrix[0][2] * b + convert->cmatrix[0][3]) >> 8;
+        convert->cmatrix[0][2] * b + convert->cmatrix[0][3]) >> SCALE;
     u = (convert->cmatrix[1][0] * r + convert->cmatrix[1][1] * g +
-        convert->cmatrix[1][2] * b + convert->cmatrix[1][3]) >> 8;
+        convert->cmatrix[1][2] * b + convert->cmatrix[1][3]) >> SCALE;
     v = (convert->cmatrix[2][0] * r + convert->cmatrix[2][1] * g +
-        convert->cmatrix[2][2] * b + convert->cmatrix[2][3]) >> 8;
+        convert->cmatrix[2][2] * b + convert->cmatrix[2][3]) >> SCALE;
 
     pixels[i * 4 + 1] = CLAMP (y, 0, 65535);
     pixels[i * 4 + 2] = CLAMP (u, 0, 65535);
@@ -308,8 +311,8 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
 
   color_matrix_offset_components (&dst, offset[0], offset[1], offset[2]);
 
-  /* because we're doing 8-bit matrix coefficients */
-  color_matrix_scale_components (&dst, 256.0, 256.0, 256.0);
+  /* because we're doing fixed point matrix coefficients */
+  color_matrix_scale_components (&dst, SCALE_F, SCALE_F, SCALE_F);
 
   for (i = 0; i < 4; i++)
     for (j = 0; j < 4; j++)
