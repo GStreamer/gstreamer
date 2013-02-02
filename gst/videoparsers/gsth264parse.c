@@ -189,6 +189,7 @@ gst_h264_parse_reset (GstH264Parse * h264parse)
   h264parse->upstream_par_n = -1;
   h264parse->upstream_par_d = -1;
   gst_buffer_replace (&h264parse->codec_data, NULL);
+  gst_buffer_replace (&h264parse->codec_data_in, NULL);
   h264parse->nal_length_size = 4;
   h264parse->packetized = FALSE;
   h264parse->transform = FALSE;
@@ -1140,8 +1141,8 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 
       gst_buffer_unmap (buf, &map);
     } else {
-      if (h264parse->codec_data)
-        buf = gst_buffer_ref (h264parse->codec_data);
+      if (!buf && h264parse->codec_data_in)
+        buf = gst_buffer_ref (h264parse->codec_data_in);
       modified = TRUE;
     }
   }
@@ -1260,6 +1261,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       /* remove any left-over codec-data hanging around */
       s = gst_caps_get_structure (caps, 0);
       gst_structure_remove_field (s, "codec_data");
+      gst_buffer_replace (&h264parse->codec_data, NULL);
     }
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (h264parse), caps);
     gst_caps_unref (caps);
@@ -1791,7 +1793,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
 
     gst_buffer_unmap (codec_data, &map);
 
-    h264parse->codec_data = gst_buffer_ref (codec_data);
+    gst_buffer_replace (&h264parse->codec_data_in, codec_data);
 
     /* if upstream sets codec_data without setting stream-format and alignment, we
      * assume stream-format=avc,alignment=au */
