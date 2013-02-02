@@ -2994,7 +2994,7 @@ error:
 }
 
 static GstCaps *
-gst_uvc_h264_src_getcaps (GstPad * pad, GstObject * parent)
+gst_uvc_h264_src_getcaps (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstUvcH264Src *self = GST_UVC_H264_SRC (parent);
   GstCaps *template = NULL;
@@ -3008,9 +3008,14 @@ gst_uvc_h264_src_getcaps (GstPad * pad, GstObject * parent)
     template = gst_caps_new_empty ();
 
   if (self->v4l2_src) {
+    GstCaps *filter;
     GstPad *v4l_pad = gst_element_get_static_pad (self->v4l2_src, "src");
     GstCaps *v4l_caps = gst_pad_query_caps (v4l_pad, NULL);
     GstCaps *new_caps = gst_uvc_h264_src_transform_caps (self, v4l_caps);
+
+    gst_query_parse_caps (query, &filter);
+    v4l_caps = gst_pad_query_caps (v4l_pad, filter);
+    new_caps = gst_uvc_h264_src_transform_caps (self, v4l_caps);
 
     result = gst_caps_intersect (new_caps, template);
     gst_object_unref (v4l_pad);
@@ -3031,7 +3036,8 @@ gst_uvc_h264_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
-      gst_query_set_caps_result (query, gst_uvc_h264_src_getcaps (pad, parent));
+      gst_query_set_caps_result (query,
+          gst_uvc_h264_src_getcaps (pad, parent, query));
       ret = TRUE;
     default:
       ret = gst_pad_query_default (pad, parent, query);
