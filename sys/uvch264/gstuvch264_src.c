@@ -156,8 +156,15 @@ GST_DEBUG_CATEGORY (uvc_h264_src_debug);
 #define gst_uvc_h264_src_parent_class parent_class
 G_DEFINE_TYPE (GstUvcH264Src, gst_uvc_h264_src, GST_TYPE_BASE_CAMERA_SRC);
 
+#define GST_UVC_H264_SRC_VF_CAPS_STR \
+  GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ";" \
+  "image/jpeg,"                                   \
+  "width = " GST_VIDEO_SIZE_RANGE ","             \
+  "height = " GST_VIDEO_SIZE_RANGE ","            \
+  "framerate = " GST_VIDEO_FPS_RANGE
+
 #define GST_UVC_H264_SRC_VID_CAPS_STR                                   \
-  GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ";"                       \
+  GST_UVC_H264_SRC_VF_CAPS_STR ";"                                      \
   "video/x-h264, "                                                      \
   "width = " GST_VIDEO_SIZE_RANGE ", "                                  \
   "height = " GST_VIDEO_SIZE_RANGE ", "                                 \
@@ -170,7 +177,7 @@ static GstStaticPadTemplate vfsrc_template =
 GST_STATIC_PAD_TEMPLATE (GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME,
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL)));
+    GST_STATIC_CAPS (GST_UVC_H264_SRC_VF_CAPS_STR));
 
 static GstStaticPadTemplate imgsrc_template =
 GST_STATIC_PAD_TEMPLATE (GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME,
