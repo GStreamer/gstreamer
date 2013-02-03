@@ -1699,17 +1699,6 @@ gst_uvc_h264_src_parse_event (GstUvcH264Src * self, GstPad * pad,
           }
         }
       }
-      if (s && gst_structure_has_name (s, "renegotiate")) {
-        GST_DEBUG_OBJECT (self, "Received renegotiate on %s",
-            GST_PAD_NAME (pad));
-        /* TODO: Do not reconstruct pipeline twice if we receive
-           the event on both pads */
-        if (GST_STATE (self) >= GST_STATE_READY) {
-          /* TODO: diff the caps */
-          gst_uvc_h264_src_construct_pipeline (GST_BASE_CAMERA_SRC (self));
-        }
-        return TRUE;
-      }
       break;
     default:
       break;
