@@ -106,7 +106,7 @@ GST_STATIC_PAD_TEMPLATE ("nv12",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) NV21, "
+        "format = (string) NV12, "
         "width = (int) [ 0, MAX ], "
         "height = (int) [ 0, MAX ], " "framerate = (fraction) [ 0/1, MAX ] ")
     );
