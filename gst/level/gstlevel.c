@@ -127,7 +127,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) { S8, " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S32)
-        GST_AUDIO_NE (F32) "," GST_AUDIO_NE (F64) " },"
+        ", " GST_AUDIO_NE (F32) "," GST_AUDIO_NE (F64) " },"
         "layout = (string) interleaved, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
     );
@@ -138,7 +138,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) { S8, " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S32)
-        GST_AUDIO_NE (F32) "," GST_AUDIO_NE (F64) " },"
+        ", " GST_AUDIO_NE (F32) "," GST_AUDIO_NE (F64) " },"
         "layout = (string) interleaved, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
     );
