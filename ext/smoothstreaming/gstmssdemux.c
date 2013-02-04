@@ -238,8 +238,8 @@ gst_mss_demux_stream_free (GstMssDemuxStream * stream)
     if (GST_TASK_STATE (stream->download_task) != GST_TASK_STOPPED) {
       GST_DEBUG_OBJECT (stream->parent, "Leaving streaming task %s:%s",
           GST_DEBUG_PAD_NAME (stream->pad));
-      gst_task_stop (stream->download_task);
       gst_uri_downloader_cancel (stream->downloader);
+      gst_task_stop (stream->download_task);
       g_static_rec_mutex_lock (&stream->download_lock);
       g_static_rec_mutex_unlock (&stream->download_lock);
       GST_LOG_OBJECT (stream->parent, "Waiting for task to finish");
@@ -277,6 +277,14 @@ gst_mss_demux_reset (GstMssDemux * mssdemux)
 {
   GSList *iter;
 
+  for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
+    GstMssDemuxStream *stream = iter->data;
+    if (stream->downloader)
+      gst_uri_downloader_cancel (stream->downloader);
+
+    gst_data_queue_set_flushing (stream->dataqueue, TRUE);
+  }
+
   if (GST_TASK_STATE (mssdemux->stream_task) != GST_TASK_STOPPED) {
     gst_task_stop (mssdemux->stream_task);
     g_static_rec_mutex_lock (&mssdemux->stream_lock);
@@ -304,14 +312,17 @@ gst_mss_demux_reset (GstMssDemux * mssdemux)
 
   mssdemux->n_videos = mssdemux->n_audios = 0;
   g_free (mssdemux->base_url);
-  g_free (mssdemux->manifest_uri);
   mssdemux->base_url = NULL;
+  g_free (mssdemux->manifest_uri);
+  mssdemux->manifest_uri = NULL;
 }
 
 static void
 gst_mss_demux_dispose (GObject * object)
 {
   GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (object);
+
+  gst_mss_demux_reset (mssdemux);
 
   if (mssdemux->stream_task) {
     gst_object_unref (mssdemux->stream_task);
@@ -503,6 +514,7 @@ gst_mss_demux_restart_tasks (GstMssDemux * mssdemux)
   GSList *iter;
   for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
     GstMssDemuxStream *stream = iter->data;
+    gst_uri_downloader_reset (stream->downloader);
     g_static_rec_mutex_unlock (&stream->download_lock);
   }
   g_static_rec_mutex_unlock (&mssdemux->stream_lock);
