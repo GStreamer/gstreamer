@@ -97,11 +97,9 @@ gst_gl_shader_finalize (GObject * object)
 {
   GstGLShader *shader;
   GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
 
   shader = GST_GL_SHADER (object);
   priv = shader->priv;
-  gl = shader->display->gl_vtable;
 
   GST_TRACE ("finalizing shader %u", priv->program_handle);
 
@@ -115,7 +113,7 @@ gst_gl_shader_finalize (GObject * object)
   if (priv->program_handle) {
     GST_TRACE ("finalizing program shader %u", priv->program_handle);
 
-    gl->DeleteObject (priv->program_handle);
+    priv->vtable.DeleteProgram (priv->program_handle);
     /* err = glGetError (); */
     /* GST_WARNING ("error: 0x%x", err);  */
     /* glGetObjectParameteriv(priv->program_handle, GL_OBJECT_DELETE_STATUS_, &status); */
