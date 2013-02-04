@@ -15,5 +15,5 @@ libgstaudioparsers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstaudioparsers_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstaacparse.h gstamrparse.h gstac3parse.h \
-	gstdcaparse.h gstflacparse.h gstmpegaudioparse.h gstsbcparse.c \
+	gstdcaparse.h gstflacparse.h gstmpegaudioparse.h gstsbcparse.h \
 	gstwavpackparse.h
