@@ -399,7 +399,7 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
        * we need an empty label to make space */
       fprintf (out, "%s%s_%s -> %s_%s [labeldistance=\"10\", labelangle=\"0\", "
           "label=\"                                                  \", "
-          "headlabel=\"%s\", taillabel=\"%s\"]\n",
+          "taillabel=\"%s\", headlabel=\"%s\"]\n",
           spc, element_name, pad_name, peer_element_name, peer_pad_name,
           media_src, media_sink);
       g_free (media_src);
