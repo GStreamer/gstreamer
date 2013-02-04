@@ -426,7 +426,9 @@ _callback_opengl (gint width, gint height, guint texture, gpointer stuff)
 static void
 _callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
 {
-  GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (stuff);
+  GstGLFilter *filter = GST_GL_FILTER (stuff);
+  GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
+  GstGLFuncs *gl = filter->display->gl_vtable;
 
   static GLfloat xrot = 0;
   static GLfloat yrot = 0;
