@@ -369,12 +369,20 @@ videoconvert_dither_halftone (VideoConvert * convert, guint16 * pixels, int j)
 
 #define TO_16(x) (((x)<<8) | (x))
 
-#define UNPACK_FRAME(frame,dest,line,width) \
-  frame->info.finfo->unpack_func (frame->info.finfo, GST_VIDEO_PACK_FLAG_NONE, \
-      dest, frame->data, frame->info.stride, 0, line, width)
-#define PACK_FRAME(frame,dest,line,width) \
-  frame->info.finfo->pack_func (frame->info.finfo, GST_VIDEO_PACK_FLAG_NONE, \
-      dest, 0, frame->data, frame->info.stride, frame->info.chroma_site, line, width);
+#define UNPACK_FRAME(frame,dest,line,width)          \
+  frame->info.finfo->unpack_func (frame->info.finfo, \
+      (GST_VIDEO_FRAME_IS_INTERLACED (frame) ?       \
+        GST_VIDEO_PACK_FLAG_INTERLACED :             \
+        GST_VIDEO_PACK_FLAG_NONE),                   \
+      dest, frame->data, frame->info.stride, 0,      \
+      line, width)
+#define PACK_FRAME(frame,dest,line,width)            \
+  frame->info.finfo->pack_func (frame->info.finfo,   \
+      (GST_VIDEO_FRAME_IS_INTERLACED (frame) ?       \
+        GST_VIDEO_PACK_FLAG_INTERLACED :             \
+        GST_VIDEO_PACK_FLAG_NONE),                   \
+      dest, 0, frame->data, frame->info.stride,      \
+      frame->info.chroma_site, line, width);
 
 static void
 videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
