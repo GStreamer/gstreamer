@@ -465,6 +465,16 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
 
 /* Fast paths */
 
+#define GET_LINE_OFFSETS(interlaced,line,l1,l2) \
+    if (interlaced) {                           \
+      l1 = (line & 2 ? line - 1 : line);        \
+      l2 = l1 + 2;                              \
+    } else {                                    \
+      l1 = line;                                \
+      l2 = l1 + 1;                              \
+    }
+
+
 static void
 convert_I420_YUY2 (VideoConvert * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
@@ -472,12 +482,16 @@ convert_I420_YUY2 (VideoConvert * convert, GstVideoFrame * dest,
   int i;
   gint width = convert->width;
   gint height = convert->height;
+  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
+  gint l1, l2;
 
   for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
-    video_convert_orc_convert_I420_YUY2 (FRAME_GET_LINE (dest, i),
-        FRAME_GET_LINE (dest, i + 1),
-        FRAME_GET_Y_LINE (src, i),
-        FRAME_GET_Y_LINE (src, i + 1),
+    GET_LINE_OFFSETS (interlaced, i, l1, l2);
+
+    video_convert_orc_convert_I420_YUY2 (FRAME_GET_LINE (dest, l1),
+        FRAME_GET_LINE (dest, l2),
+        FRAME_GET_Y_LINE (src, l1),
+        FRAME_GET_Y_LINE (src, l2),
         FRAME_GET_U_LINE (src, i >> 1),
         FRAME_GET_V_LINE (src, i >> 1), (width + 1) / 2);
   }
@@ -496,12 +510,16 @@ convert_I420_UYVY (VideoConvert * convert, GstVideoFrame * dest,
   int i;
   gint width = convert->width;
   gint height = convert->height;
+  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
+  gint l1, l2;
 
   for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
-    video_convert_orc_convert_I420_UYVY (FRAME_GET_LINE (dest, i),
-        FRAME_GET_LINE (dest, i + 1),
-        FRAME_GET_Y_LINE (src, i),
-        FRAME_GET_Y_LINE (src, i + 1),
+    GET_LINE_OFFSETS (interlaced, i, l1, l2);
+
+    video_convert_orc_convert_I420_UYVY (FRAME_GET_LINE (dest, l1),
+        FRAME_GET_LINE (dest, l2),
+        FRAME_GET_Y_LINE (src, l1),
+        FRAME_GET_Y_LINE (src, l2),
         FRAME_GET_U_LINE (src, i >> 1),
         FRAME_GET_V_LINE (src, i >> 1), (width + 1) / 2);
   }
@@ -520,12 +538,16 @@ convert_I420_AYUV (VideoConvert * convert, GstVideoFrame * dest,
   int i;
   gint width = convert->width;
   gint height = convert->height;
+  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
+  gint l1, l2;
 
   for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
-    video_convert_orc_convert_I420_AYUV (FRAME_GET_LINE (dest, i),
-        FRAME_GET_LINE (dest, i + 1),
-        FRAME_GET_Y_LINE (src, i),
-        FRAME_GET_Y_LINE (src, i + 1),
+    GET_LINE_OFFSETS (interlaced, i, l1, l2);
+
+    video_convert_orc_convert_I420_AYUV (FRAME_GET_LINE (dest, l1),
+        FRAME_GET_LINE (dest, l2),
+        FRAME_GET_Y_LINE (src, l1),
+        FRAME_GET_Y_LINE (src, l2),
         FRAME_GET_U_LINE (src, i >> 1), FRAME_GET_V_LINE (src, i >> 1), width);
   }
 
@@ -593,17 +615,21 @@ convert_YUY2_I420 (VideoConvert * convert, GstVideoFrame * dest,
   int i, h;
   gint width = convert->width;
   gint height = convert->height;
+  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
+  gint l1, l2;
 
   h = height;
   if (width & 1)
     h--;
 
   for (i = 0; i < h; i += 2) {
-    video_convert_orc_convert_YUY2_I420 (FRAME_GET_Y_LINE (dest, i),
-        FRAME_GET_Y_LINE (dest, i + 1),
+    GET_LINE_OFFSETS (interlaced, i, l1, l2);
+
+    video_convert_orc_convert_YUY2_I420 (FRAME_GET_Y_LINE (dest, l1),
+        FRAME_GET_Y_LINE (dest, l2),
         FRAME_GET_U_LINE (dest, i >> 1),
         FRAME_GET_V_LINE (dest, i >> 1),
-        FRAME_GET_LINE (src, i), FRAME_GET_LINE (src, i + 1), (width + 1) / 2);
+        FRAME_GET_LINE (src, l1), FRAME_GET_LINE (src, l2), (width + 1) / 2);
   }
 
   /* now handle last line */
@@ -668,13 +694,17 @@ convert_UYVY_I420 (VideoConvert * convert, GstVideoFrame * dest,
   int i;
   gint width = convert->width;
   gint height = convert->height;
+  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
+  gint l1, l2;
 
   for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
-    video_convert_orc_convert_UYVY_I420 (FRAME_GET_COMP_LINE (dest, 0, i),
-        FRAME_GET_COMP_LINE (dest, 0, i + 1),
+    GET_LINE_OFFSETS (interlaced, i, l1, l2);
+
+    video_convert_orc_convert_UYVY_I420 (FRAME_GET_COMP_LINE (dest, 0, l1),
+        FRAME_GET_COMP_LINE (dest, 0, l2),
         FRAME_GET_COMP_LINE (dest, 1, i >> 1),
         FRAME_GET_COMP_LINE (dest, 2, i >> 1),
-        FRAME_GET_LINE (src, i), FRAME_GET_LINE (src, i + 1), (width + 1) / 2);
+        FRAME_GET_LINE (src, l1), FRAME_GET_LINE (src, l2), (width + 1) / 2);
   }
 
   /* now handle last line */
@@ -1100,18 +1130,18 @@ typedef struct
 } VideoTransform;
 static const VideoTransform transforms[] = {
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_YUY2,
-      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, FALSE, convert_I420_YUY2},
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, convert_I420_YUY2},
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_UYVY,
-      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, FALSE, convert_I420_UYVY},
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, convert_I420_UYVY},
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_AYUV,
-      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, FALSE, convert_I420_AYUV},
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, convert_I420_AYUV},
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_Y42B,
       GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, FALSE, convert_I420_Y42B},
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_Y444,
       GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, FALSE, convert_I420_Y444},
 
   {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_I420,
-      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, FALSE, convert_YUY2_I420},
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, convert_YUY2_I420},
   {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_UYVY,
       GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, convert_UYVY_YUY2},   /* alias */
   {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_AYUV,
@@ -1122,7 +1152,7 @@ static const VideoTransform transforms[] = {
       GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, convert_YUY2_Y444},
 
   {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_I420,
-      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, FALSE, convert_UYVY_I420},
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, convert_UYVY_I420},
   {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_YUY2,
       GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, convert_UYVY_YUY2},
   {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_AYUV,
