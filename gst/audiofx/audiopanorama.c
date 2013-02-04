@@ -326,19 +326,32 @@ gst_audio_panorama_transform_caps (GstBaseTransform * base,
 {
   GstCaps *res;
   GstStructure *structure;
+  gint i;
 
-  /* transform caps gives one single caps so we can just replace
-   * the channel property with our range. */
+  /* replace the channel property with our range. */
   res = gst_caps_copy (caps);
-  structure = gst_caps_get_structure (res, 0);
-  if (direction == GST_PAD_SRC) {
-    GST_INFO ("allow 1-2 channels");
-    gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
-    gst_structure_remove_field (structure, "channel-mask");
-  } else {
-    GST_INFO ("allow 2 channels");
-    gst_structure_set (structure, "channels", G_TYPE_INT, 2, NULL);
-    gst_structure_remove_field (structure, "channel-mask");
+  for (i = 0; i < gst_caps_get_size (res); i++) {
+    structure = gst_caps_get_structure (res, i);
+    if (direction == GST_PAD_SRC) {
+      GST_INFO ("allow 1-2 channels");
+      gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+      gst_structure_remove_field (structure, "channel-mask");
+    } else {
+      GST_INFO ("allow 2 channels");
+      gst_structure_set (structure, "channels", G_TYPE_INT, 2, NULL);
+      gst_structure_remove_field (structure, "channel-mask");
+    }
+  }
+
+  if (filter) {
+    GstCaps *intersection;
+
+    GST_DEBUG_OBJECT (base, "Using filter caps %" GST_PTR_FORMAT, filter);
+    intersection =
+        gst_caps_intersect_full (filter, res, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (res);
+    res = intersection;
+    GST_DEBUG_OBJECT (base, "Intersection %" GST_PTR_FORMAT, res);
   }
 
   return res;
