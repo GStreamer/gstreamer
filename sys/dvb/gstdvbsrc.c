@@ -944,6 +944,8 @@ gst_dvbsrc_read_device (GstDvbSrc * object, int size, GstBuffer ** buffer)
     if (G_UNLIKELY (ret_val < 0)) {
       if (errno == EBUSY)
         goto stopped;
+      else if (errno == EINTR)
+        continue;
       else
         goto select_error;
     } else if (G_UNLIKELY (ret_val == 0)) {
