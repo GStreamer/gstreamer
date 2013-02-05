@@ -95,7 +95,7 @@ GstStructure *        gst_structure_new                  (const gchar * name,
 
 GstStructure *        gst_structure_new_valist           (const gchar * name,
                                                           const gchar * firstfield,
-                                                          va_list       lovarargs) G_GNUC_MALLOC;
+                                                          va_list       varargs) G_GNUC_MALLOC;
 
 GstStructure *        gst_structure_new_id               (GQuark name_quark,
                                                           GQuark field_quark,
