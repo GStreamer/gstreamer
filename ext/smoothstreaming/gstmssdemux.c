@@ -1140,8 +1140,8 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
 
   after_download = g_get_real_time ();
   if (_buffer) {
-    guint64 bitrate = 8 * GST_BUFFER_SIZE (_buffer) /
-        ((after_download - before_download) / 1000000ULL);
+    guint64 bitrate = (8 * GST_BUFFER_SIZE (_buffer) * 1000000LLU) /
+        (after_download - before_download);
 
     GST_DEBUG_OBJECT (mssdemux, "Measured download bitrate: %s %llu bps",
         GST_PAD_NAME (stream->pad), bitrate);
