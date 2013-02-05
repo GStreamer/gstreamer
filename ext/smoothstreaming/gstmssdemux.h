@@ -27,7 +27,7 @@
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstdataqueue.h>
 #include "gstmssmanifest.h"
-#include "gsturidownloader.h"
+#include <gst/uridownloader/gsturidownloader.h>
 
 G_BEGIN_DECLS
 
