@@ -903,6 +903,8 @@ gst_dash_demux_stop (GstDashDemux * demux)
 {
   GSList *iter;
 
+  GST_DEBUG_OBJECT (demux, "Stopping demux");
+
   if (demux->downloader)
     gst_uri_downloader_cancel (demux->downloader);
 
@@ -1058,16 +1060,23 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
     GstDashDemuxStream *stream = iter->data;
     GstDataQueueItem *item;
 
-    if (stream->stream_eos)
+    GST_DEBUG_OBJECT (demux, "Peeking stream %d", stream->index);
+
+    if (stream->stream_eos) {
+      GST_DEBUG_OBJECT (demux, "Stream %d is eos, skipping", stream->index);
       continue;
+    }
 
     if (stream->stream_end_of_period) {
+      GST_DEBUG_OBJECT (demux, "Stream %d is eop, skipping", stream->index);
       eos = FALSE;
       continue;
     }
     eos = FALSE;
     eop = FALSE;
 
+    GST_DEBUG_OBJECT (demux, "peeking at the queue for stream %d",
+        stream->index);
     if (!gst_data_queue_peek (stream->queue, &item)) {
       /* flushing */
       goto flushing;
@@ -1100,6 +1109,10 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   if (selected_stream) {
     GstDataQueueItem *item;
     GstBuffer *buffer;
+
+    GST_DEBUG_OBJECT (demux, "Selected stream %p %d", selected_stream,
+        selected_stream->index);
+
     if (!gst_data_queue_pop (selected_stream->queue, &item))
       goto end;
 
@@ -1214,6 +1227,8 @@ static void
 gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
 {
   GSList *iter;
+
+  GST_DEBUG_OBJECT (demux, "Resetting demux");
 
   demux->end_of_period = FALSE;
   demux->end_of_manifest = FALSE;
