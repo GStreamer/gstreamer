@@ -117,6 +117,57 @@ GST_START_TEST (basesink_last_sample_disabled)
 
 GST_END_TEST;
 
+GST_START_TEST (basesink_test_gap)
+{
+  GstElement *sink, *pipeline;
+  GstPad *pad;
+  GstBus *bus;
+  GstMessage *msg;
+  GstEvent *ev;
+  GstSegment segment;
+
+  pipeline = gst_pipeline_new ("pipeline");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  g_object_set (sink, "sync", TRUE, NULL);
+
+  pad = gst_element_get_static_pad (sink, "sink");
+
+  fail_unless (gst_bin_add (GST_BIN (pipeline), sink) == TRUE);
+
+  bus = gst_element_get_bus (pipeline);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.stop = 120 * GST_SECOND;
+  ev = gst_event_new_segment (&segment);
+
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  ev = gst_event_new_gap (200 * GST_MSECOND, GST_CLOCK_TIME_NONE);
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  ev = gst_event_new_eos ();
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
+
+  fail_unless (msg != NULL);
+  fail_unless (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_ERROR);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  GST_INFO ("stopped");
+
+  gst_object_unref (pad);
+  gst_object_unref (bus);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_basesrc_suite (void)
 {
@@ -126,6 +177,7 @@ gst_basesrc_suite (void)
   suite_add_tcase (s, tc);
   tcase_add_test (tc, basesink_last_sample_enabled);
   tcase_add_test (tc, basesink_last_sample_disabled);
+  tcase_add_test (tc, basesink_test_gap);
 
   return s;
 }
