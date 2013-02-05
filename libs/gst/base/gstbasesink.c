@@ -1702,13 +1702,14 @@ handle_stepping (GstBaseSink * sink, GstSegment * segment,
 static gboolean
 gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
     GstClockTime * rsstart, GstClockTime * rsstop,
-    GstClockTime * rrstart, GstClockTime * rrstop, gboolean * do_sync,
-    gboolean * stepped, GstStepInfo * step, gboolean * step_end)
+    GstClockTime * rrstart, GstClockTime * rrstop, GstClockTime * rrnext,
+    gboolean * do_sync, gboolean * stepped, GstStepInfo * step,
+    gboolean * step_end)
 {
   GstBaseSinkClass *bclass;
   GstClockTime start, stop;     /* raw start/stop timestamps */
   guint64 cstart, cstop;        /* clipped raw timestamps */
-  guint64 rstart, rstop;        /* clipped timestamps converted to running time */
+  guint64 rstart, rstop, rnext; /* clipped timestamps converted to running time */
   GstClockTime sstart, sstop;   /* clipped timestamps converted to stream time */
   GstFormat format;
   GstBaseSinkPrivate *priv;
@@ -1748,7 +1749,7 @@ again:
           }
         }
 
-        rstart = rstop = priv->eos_rtime;
+        rstart = rstop = rnext = priv->eos_rtime;
         *do_sync = rstart != -1;
         GST_DEBUG_OBJECT (basesink, "sync times for EOS %" GST_TIME_FORMAT,
             GST_TIME_ARGS (rstart));
@@ -1838,6 +1839,11 @@ do_times:
   rstart = gst_segment_to_running_time (segment, format, cstart);
   rstop = gst_segment_to_running_time (segment, format, cstop);
 
+  if (GST_CLOCK_TIME_IS_VALID (stop))
+    rnext = rstop;
+  else
+    rnext = rstart;
+
   if (G_UNLIKELY (step->valid)) {
     if (!(*step_end = handle_stepping (basesink, segment, step, &cstart, &cstop,
                 &rstart, &rstop))) {
@@ -1870,6 +1876,7 @@ eos_done:
   *rsstop = sstop;
   *rrstart = rstart;
   *rrstop = rstop;
+  *rrnext = rnext;
 
   /* buffers and EOS always need syncing and preroll */
   return TRUE;
@@ -1973,8 +1980,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
-              cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
+              priv->cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -2274,7 +2281,7 @@ gst_base_sink_do_sync (GstBaseSink * basesink,
   GstClockTimeDiff jitter = 0;
   gboolean syncable;
   GstClockReturn status = GST_CLOCK_OK;
-  GstClockTime rstart, rstop, sstart, sstop, stime;
+  GstClockTime rstart, rstop, rnext, sstart, sstop, stime;
   gboolean do_sync;
   GstBaseSinkPrivate *priv;
   GstFlowReturn ret;
@@ -2284,7 +2291,7 @@ gst_base_sink_do_sync (GstBaseSink * basesink,
   priv = basesink->priv;
 
 do_step:
-  sstart = sstop = rstart = rstop = GST_CLOCK_TIME_NONE;
+  sstart = sstop = rstart = rstop = rnext = GST_CLOCK_TIME_NONE;
   do_sync = TRUE;
   stepped = FALSE;
 
@@ -2296,7 +2303,8 @@ do_step:
 
   /* get timing information for this object against the render segment */
   syncable = gst_base_sink_get_sync_times (basesink, obj,
-      &sstart, &sstop, &rstart, &rstop, &do_sync, &stepped, current, step_end);
+      &sstart, &sstop, &rstart, &rstop, &rnext, &do_sync, &stepped, current,
+      step_end);
 
   if (G_UNLIKELY (stepped))
     goto step_skipped;
@@ -2311,7 +2319,7 @@ do_step:
   priv->current_rstop = (GST_CLOCK_TIME_IS_VALID (rstop) ? rstop : rstart);
 
   /* save sync time for eos when the previous object needed sync */
-  priv->eos_rtime = (do_sync ? priv->current_rstop : GST_CLOCK_TIME_NONE);
+  priv->eos_rtime = (do_sync ? rnext : GST_CLOCK_TIME_NONE);
 
   /* calculate inter frame spacing */
   if (G_UNLIKELY (priv->prev_rstart != -1 && priv->prev_rstart < rstart)) {
