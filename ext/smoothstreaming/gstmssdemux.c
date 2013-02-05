@@ -959,13 +959,13 @@ gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
     new_bitrate = MIN (mssdemux->connection_speed, new_bitrate);
   }
 
-  GST_DEBUG_OBJECT ("Current suggested bitrate: %llu", new_bitrate);
+  GST_DEBUG_OBJECT (mssdemux, "Current suggested bitrate: %llu", new_bitrate);
 
   gst_mss_demux_stop_tasks (mssdemux, TRUE);
   if (gst_mss_manifest_change_bitrate (mssdemux->manifest, new_bitrate)) {
     GstClockTime newseg_ts = GST_CLOCK_TIME_NONE;
 
-    GST_INFO_OBJECT ("Switching to bitrate %llu", new_bitrate);
+    GST_INFO_OBJECT (mssdemux, "Switching to bitrate %llu", new_bitrate);
 
     GST_DEBUG_OBJECT (mssdemux, "Creating new pad group");
     /* if we changed the bitrate, we need to add new pads */
