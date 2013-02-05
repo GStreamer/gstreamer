@@ -81,6 +81,7 @@ GST_DEBUG_CATEGORY (mssdemux_debug);
 
 #define DEFAULT_CONNECTION_SPEED 0
 #define DEFAULT_MAX_QUEUE_SIZE_BUFFERS 0
+#define DEFAULT_BITRATE_LIMIT 0.8
 
 enum
 {
@@ -88,6 +89,7 @@ enum
 
   PROP_CONNECTION_SPEED,
   PROP_MAX_QUEUE_SIZE_BUFFERS,
+  PROP_BITRATE_LIMIT,
   PROP_LAST
 };
 
@@ -173,6 +175,13 @@ gst_mss_demux_class_init (GstMssDemuxClass * klass)
           "(0 = infinite)", 0, G_MAXUINT, DEFAULT_MAX_QUEUE_SIZE_BUFFERS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_BITRATE_LIMIT,
+      g_param_spec_float ("bitrate-limit",
+          "Bitrate limit in %",
+          "Limit of the available bitrate to use when switching to alternates.",
+          0, 1, DEFAULT_BITRATE_LIMIT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_mss_demux_change_state);
 }
@@ -194,6 +203,7 @@ gst_mss_demux_init (GstMssDemux * mssdemux, GstMssDemuxClass * klass)
   gst_task_set_lock (mssdemux->stream_task, &mssdemux->stream_lock);
 
   mssdemux->data_queue_max_size = DEFAULT_MAX_QUEUE_SIZE_BUFFERS;
+  mssdemux->bitrate_limit = DEFAULT_BITRATE_LIMIT;
 }
 
 static gboolean
@@ -351,6 +361,9 @@ gst_mss_demux_set_property (GObject * object, guint prop_id,
     case PROP_MAX_QUEUE_SIZE_BUFFERS:
       mssdemux->data_queue_max_size = g_value_get_uint (value);
       break;
+    case PROP_BITRATE_LIMIT:
+      mssdemux->bitrate_limit = g_value_get_float (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -369,6 +382,9 @@ gst_mss_demux_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MAX_QUEUE_SIZE_BUFFERS:
       g_value_set_uint (value, mssdemux->data_queue_max_size);
+      break;
+    case PROP_BITRATE_LIMIT:
+      g_value_set_float (value, mssdemux->bitrate_limit);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -894,16 +910,62 @@ gst_mss_demux_reload_manifest (GstMssDemux * mssdemux)
   g_object_unref (downloader);
 }
 
+static guint64
+gst_mss_demux_get_download_bitrate (GstMssDemux * mssdemux)
+{
+  GSList *iter;
+  guint64 total = 0;
+  guint64 count = 0;
+
+  for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
+    GstMssDemuxStream *stream = iter->data;
+
+    total += stream->download_bitrate;
+    count++;
+  }
+
+  return total / count;
+}
+
+static gboolean
+gst_mss_demux_all_streams_have_data (GstMssDemux * mssdemux)
+{
+  GSList *iter;
+
+  for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
+    GstMssDemuxStream *stream = iter->data;
+
+    if (!stream->have_data)
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 static void
 gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
 {
   GSList *oldpads = NULL;
   GSList *iter;
+  guint64 new_bitrate;
+
+  /* TODO lock? */
+
+  if (!gst_mss_demux_all_streams_have_data (mssdemux))
+    return;
+
+  new_bitrate = 0.8 * gst_mss_demux_get_download_bitrate (mssdemux) / 1000;
+  if (mssdemux->connection_speed) {
+    new_bitrate = MIN (mssdemux->connection_speed, new_bitrate);
+  }
+
+  GST_DEBUG_OBJECT ("Current suggested bitrate: %llu", new_bitrate);
 
   gst_mss_demux_stop_tasks (mssdemux, TRUE);
-  if (gst_mss_manifest_change_bitrate (mssdemux->manifest,
-          mssdemux->connection_speed)) {
+  if (gst_mss_manifest_change_bitrate (mssdemux->manifest, new_bitrate)) {
     GstClockTime newseg_ts = GST_CLOCK_TIME_NONE;
+
+    GST_INFO_OBJECT ("Switching to bitrate %llu", new_bitrate);
 
     GST_DEBUG_OBJECT (mssdemux, "Creating new pad group");
     /* if we changed the bitrate, we need to add new pads */
@@ -956,6 +1018,7 @@ gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
       gst_mss_demux_expose_stream (mssdemux, stream);
 
       gst_pad_push_event (oldpad, gst_event_new_eos ());
+      stream->have_data = FALSE;
     }
 
     gst_element_no_more_pads (GST_ELEMENT (mssdemux));
@@ -1018,6 +1081,9 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
   GstFragment *fragment;
   GstBuffer *_buffer;
   GstFlowReturn ret = GST_FLOW_OK;
+  guint64 before_download, after_download;
+
+  before_download = g_get_real_time ();
 
   GST_DEBUG_OBJECT (mssdemux, "Getting url for stream %p", stream);
   ret = gst_mss_stream_get_fragment_url (stream->manifest_stream, &path);
@@ -1072,7 +1138,15 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
   if (buffer)
     *buffer = _buffer;
 
+  after_download = g_get_real_time ();
   if (_buffer) {
+    guint64 bitrate = 8 * GST_BUFFER_SIZE (_buffer) /
+        ((after_download - before_download) / 1000000ULL);
+
+    GST_DEBUG_OBJECT (mssdemux, "Measured download bitrate: %s %llu bps",
+        GST_PAD_NAME (stream->pad), bitrate);
+    stream->download_bitrate = bitrate;
+
     GST_DEBUG_OBJECT (mssdemux,
         "Storing buffer for stream %p - %s. Timestamp: %" GST_TIME_FORMAT
         " Duration: %" GST_TIME_FORMAT,
@@ -1081,6 +1155,11 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
         GST_TIME_ARGS (GST_BUFFER_DURATION (_buffer)));
     gst_mss_demux_stream_store_object (stream, GST_MINI_OBJECT_CAST (_buffer));
   }
+
+
+  GST_OBJECT_LOCK (mssdemux);
+  mssdemux->update_bitrates = TRUE;
+  GST_OBJECT_UNLOCK (mssdemux);
 
   return ret;
 
@@ -1108,7 +1187,6 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
   GstFlowReturn ret;
 
   GST_LOG_OBJECT (mssdemux, "download loop start %p", stream);
-
 
   ret = gst_mss_demux_stream_download_fragment (stream, &buffer);
   switch (ret) {
@@ -1167,8 +1245,7 @@ gst_mss_demux_select_latest_stream (GstMssDemux * mssdemux,
       continue;
     }
 
-    if (gst_data_queue_peek (other->dataqueue, &item)) {
-    } else {
+    if (!gst_data_queue_peek (other->dataqueue, &item)) {
       /* flushing */
       return GST_FLOW_WRONG_STATE;
     }
@@ -1276,6 +1353,7 @@ gst_mss_demux_stream_loop (GstMssDemux * mssdemux)
     stream->next_timestamp =
         GST_BUFFER_TIMESTAMP (object) + GST_BUFFER_DURATION (object);
 
+    stream->have_data = TRUE;
     ret = gst_pad_push (stream->pad, GST_BUFFER_CAST (object));
   } else if (GST_IS_EVENT (object)) {
     if (GST_EVENT_TYPE (object) == GST_EVENT_EOS)

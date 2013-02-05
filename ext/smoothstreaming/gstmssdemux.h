@@ -70,6 +70,9 @@ struct _GstMssDemuxStream {
   GStaticRecMutex download_lock;
 
   gboolean eos;
+  gboolean have_data;
+
+  guint64 download_bitrate;
 };
 
 struct _GstMssDemux {
@@ -97,6 +100,7 @@ struct _GstMssDemux {
   /* properties */
   guint64 connection_speed; /* in bps */
   guint data_queue_max_size;
+  gfloat bitrate_limit;
 };
 
 struct _GstMssDemuxClass {
