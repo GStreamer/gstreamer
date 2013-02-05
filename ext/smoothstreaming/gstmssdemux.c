@@ -954,7 +954,8 @@ gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
   if (!gst_mss_demux_all_streams_have_data (mssdemux))
     return;
 
-  new_bitrate = 0.8 * gst_mss_demux_get_download_bitrate (mssdemux) / 1000;
+  new_bitrate =
+      mssdemux->bitrate_limit * gst_mss_demux_get_download_bitrate (mssdemux);
   if (mssdemux->connection_speed) {
     new_bitrate = MIN (mssdemux->connection_speed, new_bitrate);
   }
