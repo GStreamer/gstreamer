@@ -952,16 +952,6 @@ switch_pads (GstDashDemux * demux)
   GSList *oldpads = NULL;
   GSList *iter;
 
-  /* Remember old pads */
-  for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
-    GstDashDemuxStream *stream = iter->data;
-    GstPad *oldpad = stream->pad;
-    if (oldpad) {
-      oldpads = g_slist_prepend (oldpads, oldpad);
-      GST_DEBUG_OBJECT (demux,
-          "Switching pads (oldpad:%p) %" GST_PTR_FORMAT, oldpad, oldpad);
-    }
-  }
   /* Create and activate new pads */
   for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
     GstDashDemuxStream *stream = iter->data;
@@ -969,11 +959,11 @@ switch_pads (GstDashDemux * demux)
     GstEvent *event;
     const GstStructure *structure;
     GstCaps *caps = NULL;
+    GstPad *oldpad;
 
     if (!gst_data_queue_pop (stream->queue, &item)) {
       if (demux->cancelled) {
-        g_slist_free (oldpads);
-        return;
+        break;
       }
       g_assert_not_reached ();
     }
@@ -988,6 +978,10 @@ switch_pads (GstDashDemux * demux)
     g_assert (caps != NULL);
 
     stream->need_segment = TRUE;
+    oldpad = stream->pad;
+    if (oldpad)
+      oldpads = g_slist_prepend (oldpads, oldpad);
+
     stream->pad = gst_pad_new_from_static_template (&srctemplate, NULL);
     gst_pad_set_event_function (stream->pad,
         GST_DEBUG_FUNCPTR (gst_dash_demux_src_event));
@@ -997,6 +991,9 @@ switch_pads (GstDashDemux * demux)
     gst_pad_set_active (stream->pad, TRUE);
     gst_pad_set_caps (stream->pad, caps);
     gst_element_add_pad (GST_ELEMENT (demux), gst_object_ref (stream->pad));
+    GST_DEBUG_OBJECT (demux,
+        "Switching pads (oldpad:%s:%s) (newpad:%s:%s)",
+        GST_DEBUG_PAD_NAME (oldpad), GST_DEBUG_PAD_NAME (stream->pad));
     GST_INFO_OBJECT (demux, "Adding srcpad %s:%s with caps %" GST_PTR_FORMAT,
         GST_DEBUG_PAD_NAME (stream->pad), caps);
 
@@ -1010,6 +1007,8 @@ switch_pads (GstDashDemux * demux)
   for (iter = oldpads; iter; iter = g_slist_next (iter)) {
     GstPad *pad = iter->data;
 
+    GST_INFO_OBJECT (demux, "Removing old srcpad %s:%s",
+        GST_DEBUG_PAD_NAME (pad));
     gst_pad_push_event (pad, gst_event_new_eos ());
     gst_pad_set_active (pad, FALSE);
     gst_element_remove_pad (GST_ELEMENT (demux), pad);
@@ -1227,8 +1226,11 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
 
   for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
     GstDashDemuxStream *stream = iter->data;
-    if (stream->pad)
+    if (stream->pad) {
+      GST_INFO_OBJECT (demux, "Removing stream pad %s:%s",
+          GST_DEBUG_PAD_NAME (stream->pad));
       gst_element_remove_pad (GST_ELEMENT (demux), stream->pad);
+    }
     gst_dash_demux_stream_free (stream);
   }
   g_slist_free (demux->streams);
