@@ -276,23 +276,15 @@ gst_dash_demux_dispose (GObject * obj)
 {
   GstDashDemux *demux = GST_DASH_DEMUX (obj);
 
+  gst_dash_demux_reset (demux, TRUE);
+
   if (demux->stream_task) {
-    if (GST_TASK_STATE (demux->stream_task) != GST_TASK_STOPPED) {
-      GST_DEBUG_OBJECT (demux, "Leaving streaming task");
-      gst_task_stop (demux->stream_task);
-      gst_task_join (demux->stream_task);
-    }
     gst_object_unref (demux->stream_task);
     g_static_rec_mutex_free (&demux->stream_lock);
     demux->stream_task = NULL;
   }
 
   if (demux->download_task) {
-    if (GST_TASK_STATE (demux->download_task) != GST_TASK_STOPPED) {
-      GST_DEBUG_OBJECT (demux, "Leaving download task");
-      gst_task_stop (demux->download_task);
-      gst_task_join (demux->download_task);
-    }
     gst_object_unref (demux->download_task);
     g_static_rec_mutex_free (&demux->download_lock);
     demux->download_task = NULL;
@@ -302,8 +294,6 @@ gst_dash_demux_dispose (GObject * obj)
     g_object_unref (demux->downloader);
     demux->downloader = NULL;
   }
-
-  gst_dash_demux_reset (demux, TRUE);
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
@@ -438,8 +428,10 @@ gst_dash_demux_change_state (GstElement * element, GstStateChange transition)
   GstDashDemux *demux = GST_DASH_DEMUX (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_dash_demux_reset (demux, FALSE);
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       /* Start the streaming loop in paused only if we already received
@@ -460,27 +452,11 @@ gst_dash_demux_change_state (GstElement * element, GstStateChange transition)
       gst_dash_demux_pause_stream_task (demux);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      demux->cancelled = TRUE;
-      gst_dash_demux_stop (demux);
-      gst_task_join (demux->stream_task);
-      gst_task_join (demux->download_task);
       break;
     default:
       break;
   }
   return ret;
-}
-
-static void
-gst_dash_demux_clear_queues (GstDashDemux * demux)
-{
-  GSList *iter;
-
-  for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
-    GstDashDemuxStream *stream = iter->data;
-
-    gst_data_queue_flush (stream->queue);
-  }
 }
 
 static gboolean
@@ -531,7 +507,6 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
   GstDashDemux *demux;
 
   demux = GST_DASH_DEMUX (gst_pad_get_element_private (pad));
-  GST_WARNING_OBJECT (demux, "Received an event");
 
   switch (event->type) {
     case GST_EVENT_SEEK:
@@ -584,14 +559,11 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
 
         /* Stop the demux */
         demux->cancelled = TRUE;
+        /* Stop the demux, also clears the buffering queue */
         gst_dash_demux_stop (demux);
 
         /* Wait for streaming to finish */
         g_static_rec_mutex_lock (&demux->stream_lock);
-
-        /* Clear the buffering queue */
-        /* FIXME: allow seeking in the buffering queue */
-        gst_dash_demux_clear_queues (demux);
 
         //GST_MPD_CLIENT_LOCK (demux->client);
 
@@ -672,6 +644,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
           stream->need_segment = TRUE;
           gst_data_queue_set_flushing (stream->queue, FALSE);
         }
+        gst_uri_downloader_reset (demux->downloader);
         gst_dash_demux_resume_download_task (demux);
         gst_dash_demux_resume_stream_task (demux);
         g_static_rec_mutex_unlock (&demux->stream_lock);
@@ -754,9 +727,12 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
 static gboolean
 gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstDashDemux *demux = GST_DASH_DEMUX (gst_pad_get_parent (pad));
+  GstDashDemux *demux = GST_DASH_DEMUX (GST_PAD_PARENT (pad));
 
   switch (event->type) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_dash_demux_reset (demux, FALSE);
+      break;
     case GST_EVENT_EOS:{
       gchar *manifest;
       GstQuery *query;
@@ -913,14 +889,12 @@ gst_dash_demux_src_query (GstPad * pad, GstQuery * query)
 static GstFlowReturn
 gst_dash_demux_pad (GstPad * pad, GstBuffer * buf)
 {
-  GstDashDemux *demux = GST_DASH_DEMUX (gst_pad_get_parent (pad));
+  GstDashDemux *demux = GST_DASH_DEMUX (GST_PAD_PARENT (pad));
 
   if (demux->manifest == NULL)
     demux->manifest = buf;
   else
     demux->manifest = gst_buffer_join (demux->manifest, buf);
-
-  gst_object_unref (demux);
 
   return GST_FLOW_OK;
 }
@@ -930,7 +904,9 @@ gst_dash_demux_stop (GstDashDemux * demux)
 {
   GSList *iter;
 
-  gst_uri_downloader_cancel (demux->downloader);
+  if (demux->downloader)
+    gst_uri_downloader_cancel (demux->downloader);
+
   for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
     GstDashDemuxStream *stream = iter->data;
 
@@ -940,10 +916,22 @@ gst_dash_demux_stop (GstDashDemux * demux)
   if (GST_TASK_STATE (demux->download_task) != GST_TASK_STOPPED) {
     GST_TASK_SIGNAL (demux->download_task);
     gst_task_stop (demux->download_task);
+    g_static_rec_mutex_lock (&demux->download_lock);
+    g_static_rec_mutex_unlock (&demux->download_lock);
+    gst_task_join (demux->download_task);
   }
   if (GST_TASK_STATE (demux->stream_task) != GST_TASK_STOPPED) {
     GST_TASK_SIGNAL (demux->stream_task);
     gst_task_stop (demux->stream_task);
+    g_static_rec_mutex_lock (&demux->stream_lock);
+    g_static_rec_mutex_unlock (&demux->stream_lock);
+    gst_task_join (demux->stream_task);
+  }
+
+  for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+    GstDashDemuxStream *stream = iter->data;
+
+    gst_data_queue_flush (stream->queue);
   }
 }
 
@@ -1082,8 +1070,10 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
     eos = FALSE;
     eop = FALSE;
 
-    if (!gst_data_queue_peek (stream->queue, &item))
-      continue;
+    if (!gst_data_queue_peek (stream->queue, &item)) {
+      /* flushing */
+      goto flushing;
+    }
 
     if (G_LIKELY (GST_IS_BUFFER (item->object))) {
       pad_switch = FALSE;
@@ -1170,7 +1160,15 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   }
 
 end:
+  GST_INFO_OBJECT (demux, "Leaving streaming task");
   return;
+
+flushing:
+  {
+    GST_WARNING_OBJECT (demux, "Flushing, leaving streaming task");
+    gst_task_stop (demux->stream_task);
+    return;
+  }
 
 end_of_manifest:
   {
@@ -1190,7 +1188,7 @@ error_pushing:
     GST_ERROR_OBJECT (demux,
         "Error pushing buffer: %s... terminating the demux",
         gst_flow_get_name (ret));
-    gst_dash_demux_stop (demux);
+    gst_task_stop (demux->stream_task);
     return;
   }
 }
@@ -1198,13 +1196,18 @@ error_pushing:
 static void
 gst_dash_demux_stream_free (GstDashDemuxStream * stream)
 {
-  if (stream->input_caps)
+  if (stream->input_caps) {
     gst_caps_unref (stream->input_caps);
-  if (stream->pad)
+    stream->input_caps = NULL;
+  }
+  if (stream->pad) {
     gst_object_unref (stream->pad);
-
-  /* TODO flush the queue */
-  g_object_unref (stream->queue);
+    stream->pad = NULL;
+  }
+  if (stream->queue) {
+    g_object_unref (stream->queue);
+    stream->queue = NULL;
+  }
 
   g_free (stream);
 }
@@ -1216,12 +1219,16 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
 
   demux->end_of_period = FALSE;
   demux->end_of_manifest = FALSE;
-  demux->cancelled = FALSE;
 
-  gst_dash_demux_clear_queues (demux);
+  demux->cancelled = TRUE;
+  gst_dash_demux_stop (demux);
+  if (demux->downloader)
+    gst_uri_downloader_reset (demux->downloader);
 
   for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
     GstDashDemuxStream *stream = iter->data;
+    if (stream->pad)
+      gst_element_remove_pad (GST_ELEMENT (demux), stream->pad);
     gst_dash_demux_stream_free (stream);
   }
   g_slist_free (demux->streams);
@@ -1243,6 +1250,7 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
   demux->last_manifest_update = GST_CLOCK_TIME_NONE;
   demux->position = 0;
   demux->position_shift = 0;
+  demux->cancelled = FALSE;
 }
 
 static GstClockTime
@@ -1432,6 +1440,8 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
       } else {
         goto error_downloading;
       }
+    } else if (demux->cancelled) {
+      goto cancelled;
     } else {
       goto quit;
     }
@@ -1441,13 +1451,18 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
   demux->client->update_failed_count = 0;
 
 quit:
+  return;
+
+cancelled:
   {
+    GST_WARNING_OBJECT (demux, "Cancelled, leaving download task");
+    gst_task_stop (demux->download_task);
     return;
   }
 
 end_of_manifest:
   {
-    GST_INFO_OBJECT (demux, "Stopped download task");
+    GST_INFO_OBJECT (demux, "End of manifest, leaving download task");
     gst_task_stop (demux->download_task);
     return;
   }
@@ -1455,8 +1470,8 @@ end_of_manifest:
 error_downloading:
   {
     GST_ELEMENT_ERROR (demux, RESOURCE, NOT_FOUND,
-        ("Could not fetch the next fragment"), (NULL));
-    gst_dash_demux_stop (demux);
+        ("Could not fetch the next fragment, leaving download task"), (NULL));
+    gst_task_stop (demux->download_task);
     return;
   }
 }
@@ -1775,18 +1790,18 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
       if (download == NULL)
         return FALSE;
 
-      buffer = gst_fragment_get_buffer (download);
-
       active_stream =
           gst_mpdparser_get_active_stream_by_index (demux->client, stream_idx);
       if (active_stream == NULL)        /* TODO unref fragments */
         return FALSE;
 
+      buffer = gst_fragment_get_buffer (download);
+
       if (selected_stream->need_header) {
         /* We need to fetch a new header */
         if ((header =
                 gst_dash_demux_get_next_header (demux, stream_idx)) == NULL) {
-          GST_INFO_OBJECT (demux, "Unable to fetch header");
+          GST_WARNING_OBJECT (demux, "Unable to fetch header");
         } else {
           GstBuffer *header_buffer;
           /* Replace fragment with a new one including the header */

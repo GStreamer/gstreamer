@@ -19,8 +19,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <glib.h>
 #include "gstfragmented.h"
 #include "gstfragment.h"
@@ -43,6 +41,7 @@ struct _GstUriDownloaderPrivate
   GstFragment *download;
   GMutex *lock;
   GCond *cond;
+  gboolean cancelled;
 };
 
 static void gst_uri_downloader_finalize (GObject * object);
@@ -93,7 +92,7 @@ gst_uri_downloader_init (GstUriDownloader * downloader)
   gst_pad_set_event_function (downloader->priv->pad,
       GST_DEBUG_FUNCPTR (gst_uri_downloader_sink_event));
   gst_pad_set_element_private (downloader->priv->pad, downloader);
-  gst_pad_activate_push (downloader->priv->pad, TRUE);
+  gst_pad_set_active (downloader->priv->pad, TRUE);
 
   /* Create a bus to handle error and warning message from the source element */
   downloader->priv->bus = gst_bus_new ();
@@ -150,32 +149,33 @@ gst_uri_downloader_new (void)
 static gboolean
 gst_uri_downloader_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstUriDownloader *downloader =
-      (GstUriDownloader *) (gst_pad_get_element_private (pad));
+  gboolean ret = FALSE;
+  GstUriDownloader *downloader;
+
+  downloader = GST_URI_DOWNLOADER (gst_pad_get_element_private (pad));
 
   switch (event->type) {
     case GST_EVENT_EOS:{
-      GST_OBJECT_LOCK (downloader);
+      g_mutex_lock (downloader->priv->lock);
       GST_DEBUG_OBJECT (downloader, "Got EOS on the fetcher pad");
       if (downloader->priv->download != NULL) {
         /* signal we have fetched the URI */
         downloader->priv->download->completed = TRUE;
-        downloader->priv->download->download_stop_time = g_get_real_time ();
-        GST_OBJECT_UNLOCK (downloader);
+        downloader->priv->download->download_stop_time =
+            gst_util_get_timestamp ();
         GST_DEBUG_OBJECT (downloader, "Signaling chain funtion");
         g_cond_signal (downloader->priv->cond);
-
-      } else {
-        GST_OBJECT_UNLOCK (downloader);
       }
+      g_mutex_unlock (downloader->priv->lock);
+      gst_event_unref (event);
       break;
     }
     default:
+      ret = gst_pad_event_default (pad, event);
       break;
   }
 
-  gst_event_unref (event);
-  return FALSE;
+  return ret;
 }
 
 static GstBusSyncReply
@@ -186,9 +186,17 @@ gst_uri_downloader_bus_handler (GstBus * bus,
 
   if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR ||
       GST_MESSAGE_TYPE (message) == GST_MESSAGE_WARNING) {
+    GError *err = NULL;
+    gchar *dbg_info = NULL;
+
+    gst_message_parse_error (message, &err, &dbg_info);
     GST_WARNING_OBJECT (downloader,
-        "Received error in bus from the source element, "
-        "the download will be cancelled");
+        "Received error: %s from %s, the download will be cancelled",
+        GST_OBJECT_NAME (message->src), err->message);
+    GST_DEBUG ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
+    g_error_free (err);
+    g_free (dbg_info);
+
     /* remove the sync handler to avoid duplicated messages */
     gst_bus_set_sync_handler (downloader->priv->bus, NULL, NULL);
     gst_uri_downloader_cancel (downloader);
@@ -201,29 +209,28 @@ gst_uri_downloader_bus_handler (GstBus * bus,
 static GstFlowReturn
 gst_uri_downloader_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstUriDownloader *downloader =
-      (GstUriDownloader *) gst_pad_get_element_private (pad);
+  GstUriDownloader *downloader;
+
+  downloader = GST_URI_DOWNLOADER (gst_pad_get_element_private (pad));
 
   /* HTML errors (404, 500, etc...) are also pushed through this pad as
    * response but the source element will also post a warning or error message
    * in the bus, which is handled synchronously cancelling the download.
    */
-  GST_OBJECT_LOCK (downloader);
+  g_mutex_lock (downloader->priv->lock);
   if (downloader->priv->download == NULL) {
     /* Download cancelled, quit */
-    GST_OBJECT_UNLOCK (downloader);
     goto done;
   }
 
-  GST_LOG_OBJECT (downloader,
-      "The uri fetcher received a new buffer of size %u",
-      GST_BUFFER_SIZE (buf));
+  GST_LOG_OBJECT (downloader, "The uri fetcher received a new buffer "
+      "of size %u", GST_BUFFER_SIZE (buf));
   if (!gst_fragment_add_buffer (downloader->priv->download, buf))
     GST_WARNING_OBJECT (downloader, "Could not add buffer to fragment");
-  GST_OBJECT_UNLOCK (downloader);
 
 done:
   {
+    g_mutex_unlock (downloader->priv->lock);
     return GST_FLOW_OK;
   }
 }
@@ -250,20 +257,39 @@ gst_uri_downloader_stop (GstUriDownloader * downloader)
 }
 
 void
+gst_uri_downloader_reset (GstUriDownloader * downloader)
+{
+  g_return_if_fail (downloader != NULL);
+
+  g_mutex_lock (downloader->priv->lock);
+  downloader->priv->cancelled = FALSE;
+  g_mutex_unlock (downloader->priv->lock);
+}
+
+void
 gst_uri_downloader_cancel (GstUriDownloader * downloader)
 {
-  GST_OBJECT_LOCK (downloader);
+  g_return_if_fail (downloader != NULL);
+
+  g_mutex_lock (downloader->priv->lock);
   if (downloader->priv->download != NULL) {
     GST_DEBUG_OBJECT (downloader, "Cancelling download");
     g_object_unref (downloader->priv->download);
     downloader->priv->download = NULL;
-    GST_OBJECT_UNLOCK (downloader);
+    downloader->priv->cancelled = TRUE;
     GST_DEBUG_OBJECT (downloader, "Signaling chain funtion");
     g_cond_signal (downloader->priv->cond);
+    g_mutex_unlock (downloader->priv->lock);
   } else {
-    GST_OBJECT_UNLOCK (downloader);
-    GST_DEBUG_OBJECT (downloader,
-        "Trying to cancell a download that was alredy cancelled");
+    gboolean cancelled;
+
+    cancelled = downloader->priv->cancelled;
+    downloader->priv->cancelled = TRUE;
+    g_mutex_unlock (downloader->priv->lock);
+
+    if (cancelled)
+      GST_DEBUG_OBJECT (downloader,
+          "Trying to cancel a download that was already cancelled");
   }
 }
 
@@ -272,23 +298,15 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri)
 {
   GstPad *pad;
 
+  g_return_val_if_fail (downloader != NULL, FALSE);
+
   if (!gst_uri_is_valid (uri))
     return FALSE;
 
-  if (downloader->priv->urisrc == NULL) {
-    GST_DEBUG_OBJECT (downloader, "Creating source element for the URI:%s",
-        uri);
-    downloader->priv->urisrc =
-        gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
-    if (!downloader->priv->urisrc)
-      return FALSE;
-  } else {
-    GST_DEBUG_OBJECT (downloader,
-        "Reusing existing source element for the URI:%s", uri);
-    if (!gst_uri_handler_set_uri (GST_URI_HANDLER (downloader->priv->urisrc),
-            uri))
-      return FALSE;
-  }
+  GST_DEBUG_OBJECT (downloader, "Creating source element for the URI:%s", uri);
+  downloader->priv->urisrc = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
+  if (!downloader->priv->urisrc)
+    return FALSE;
 
   /* add a sync handler for the bus messages to detect errors in the download */
   gst_element_set_bus (GST_ELEMENT (downloader->priv->urisrc),
@@ -330,18 +348,21 @@ gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri)
    *   - the download failed (Error message on the fetcher bus)
    *   - the download was canceled
    */
-  GST_DEBUG_OBJECT (downloader, "Waiting to fetch the URI");
+  GST_DEBUG_OBJECT (downloader, "Waiting to fetch the URI %s", uri);
+  if (downloader->priv->cancelled) {
+    g_object_unref (downloader->priv->download);
+    downloader->priv->download = NULL;
+    goto quit;
+  }
   g_cond_wait (downloader->priv->cond, downloader->priv->lock);
 
-  GST_OBJECT_LOCK (downloader);
   download = downloader->priv->download;
   downloader->priv->download = NULL;
-  GST_OBJECT_UNLOCK (downloader);
 
   if (download != NULL)
-    GST_INFO_OBJECT (downloader, "URI fetched successfully");
+    GST_INFO_OBJECT (downloader, "URI %s fetched successfully", uri);
   else
-    GST_INFO_OBJECT (downloader, "Error fetching URI");
+    GST_INFO_OBJECT (downloader, "Error fetching URI %s", uri);
 
 quit:
   {
