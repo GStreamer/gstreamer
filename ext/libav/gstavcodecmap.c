@@ -1949,6 +1949,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       }
       break;
 
+    case CODEC_ID_S302M:
+      caps = gst_caps_new_empty_simple ("audio/x-smpte-302m");
+      break;
+
     case CODEC_ID_DVD_SUBTITLE:
     case CODEC_ID_DVB_SUBTITLE:
       caps = NULL;
