@@ -83,6 +83,8 @@ GST_DEBUG_CATEGORY (mssdemux_debug);
 #define DEFAULT_MAX_QUEUE_SIZE_BUFFERS 0
 #define DEFAULT_BITRATE_LIMIT 0.8
 
+#define DOWNLOAD_RATE_MAX_HISTORY_LENGTH 5
+
 enum
 {
   PROP_0,
@@ -237,6 +239,9 @@ gst_mss_demux_stream_new (GstMssDemux * mssdemux,
   stream->pad = srcpad;
   stream->manifest_stream = manifeststream;
   stream->parent = mssdemux;
+  gst_download_rate_init (&stream->download_rate);
+  gst_download_rate_set_max_length (&stream->download_rate,
+      DOWNLOAD_RATE_MAX_HISTORY_LENGTH);
 
   return stream;
 }
@@ -244,6 +249,7 @@ gst_mss_demux_stream_new (GstMssDemux * mssdemux,
 static void
 gst_mss_demux_stream_free (GstMssDemuxStream * stream)
 {
+  gst_download_rate_deinit (&stream->download_rate);
   if (stream->download_task) {
     if (GST_TASK_STATE (stream->download_task) != GST_TASK_STOPPED) {
       GST_DEBUG_OBJECT (stream->parent, "Leaving streaming task %s:%s",
@@ -920,7 +926,7 @@ gst_mss_demux_get_download_bitrate (GstMssDemux * mssdemux)
   for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
     GstMssDemuxStream *stream = iter->data;
 
-    total += stream->download_bitrate;
+    total += gst_download_rate_get_current_rate (&stream->download_rate);
     count++;
   }
 
@@ -1146,7 +1152,8 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
 
     GST_DEBUG_OBJECT (mssdemux, "Measured download bitrate: %s %llu bps",
         GST_PAD_NAME (stream->pad), bitrate);
-    stream->download_bitrate = bitrate;
+    gst_download_rate_add_rate (&stream->download_rate,
+        GST_BUFFER_SIZE (_buffer), 1000 * (after_download - before_download));
 
     GST_DEBUG_OBJECT (mssdemux,
         "Storing buffer for stream %p - %s. Timestamp: %" GST_TIME_FORMAT
