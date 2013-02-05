@@ -34,8 +34,7 @@
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstdataqueue.h>
 #include "gstmpdparser.h"
-#include "gstfragmented.h"
-#include "gsturidownloader.h"
+#include <gst/uridownloader/gsturidownloader.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_DASH_DEMUX \

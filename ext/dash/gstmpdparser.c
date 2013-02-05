@@ -29,10 +29,7 @@
 #include <string.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include "gstfragmented.h"
 #include "gstmpdparser.h"
-
-#define GST_CAT_DEFAULT fragmented_debug
 
 /* Property parsing */
 static gchar *gst_mpdparser_get_xml_prop_string (xmlNode * a_node,
