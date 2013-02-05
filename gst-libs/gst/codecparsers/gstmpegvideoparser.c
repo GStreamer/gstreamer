@@ -819,3 +819,53 @@ failed:
   GST_WARNING ("error parsing \"GOP\"");
   return FALSE;
 }
+
+/**
+ * gst_mpeg_video_quant_matrix_get_raster_from_zigzag:
+ * @out_quant: (out): The resulting quantization matrix
+ * @quant: The source quantization matrix
+ *
+ * Converts quantization matrix @quant from zigzag scan order to
+ * raster scan order and store the resulting factors into @out_quant.
+ *
+ * Note: it is an error to pass the same table in both @quant and
+ * @out_quant arguments.
+ *
+ * Since: 1.2
+ */
+void
+gst_mpeg_video_quant_matrix_get_raster_from_zigzag (guint8 out_quant[64],
+    const guint8 quant[64])
+{
+  guint i;
+
+  g_return_if_fail (out_quant != quant);
+
+  for (i = 0; i < 64; i++)
+    out_quant[mpeg_zigzag_8x8[i]] = quant[i];
+}
+
+/**
+ * gst_mpeg_video_quant_matrix_get_zigzag_from_raster:
+ * @out_quant: (out): The resulting quantization matrix
+ * @quant: The source quantization matrix
+ *
+ * Converts quantization matrix @quant from raster scan order to
+ * zigzag scan order and store the resulting factors into @out_quant.
+ *
+ * Note: it is an error to pass the same table in both @quant and
+ * @out_quant arguments.
+ *
+ * Since: 1.2
+ */
+void
+gst_mpeg_video_quant_matrix_get_zigzag_from_raster (guint8 out_quant[64],
+    const guint8 quant[64])
+{
+  guint i;
+
+  g_return_if_fail (out_quant != quant);
+
+  for (i = 0; i < 64; i++)
+    out_quant[i] = quant[mpeg_zigzag_8x8[i]];
+}
