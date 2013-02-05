@@ -654,28 +654,6 @@ gst_video_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   return GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
 }
 
-static void
-fill_palette_RGB8P (guint32 * palette)
-{
-  /* build poor man's palette, taken from ffmpegcolorspace */
-  static const guint8 pal_value[6] = { 0x00, 0x33, 0x66, 0x99, 0xcc, 0xff };
-  gint i, r, g, b;
-
-  i = 0;
-  for (r = 0; r < 6; r++) {
-    for (g = 0; g < 6; g++) {
-      for (b = 0; b < 6; b++) {
-        palette[i++] =
-            (0xffU << 24) | (pal_value[r] << 16) | (pal_value[g] << 8) |
-            pal_value[b];
-      }
-    }
-  }
-  palette[i++] = 0;             /* 100% transparent, i == 6*6*6 */
-  while (i < 256)
-    palette[i++] = 0xff000000;
-}
-
 static gboolean
 gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
@@ -721,18 +699,10 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   g_free (videotestsrc->tmpline2);
   g_free (videotestsrc->tmpline_u8);
   g_free (videotestsrc->tmpline_u16);
-  g_free (videotestsrc->palette);
   videotestsrc->tmpline_u8 = g_malloc (info.width + 8);
   videotestsrc->tmpline = g_malloc ((info.width + 8) * 4);
   videotestsrc->tmpline2 = g_malloc ((info.width + 8) * 4);
   videotestsrc->tmpline_u16 = g_malloc ((info.width + 16) * 8);
-
-  if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_RGB8P) {
-    videotestsrc->palette = g_new (guint32, 256);
-    fill_palette_RGB8P (videotestsrc->palette);
-  } else {
-    videotestsrc->palette = NULL;
-  }
 
   videotestsrc->accum_rtime += videotestsrc->running_time;
   videotestsrc->accum_frames += videotestsrc->n_frames;
@@ -847,6 +817,8 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   GstVideoTestSrc *src;
   GstClockTime next_time;
   GstVideoFrame frame;
+  gpointer pal;
+  gsize palsize;
 
   src = GST_VIDEO_TEST_SRC (psrc);
 
@@ -866,8 +838,9 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 
   src->make_image (src, &frame);
 
-  if (src->palette) {
-    memcpy (GST_VIDEO_FRAME_PLANE_DATA (&frame, 1), src->palette, 256 * 4);
+  if ((pal = gst_video_format_get_palette (GST_VIDEO_FRAME_FORMAT (&frame),
+              &palsize))) {
+    memcpy (GST_VIDEO_FRAME_PLANE_DATA (&frame, 1), pal, palsize);
   }
 
   gst_video_frame_unmap (&frame);
@@ -943,8 +916,6 @@ gst_video_test_src_stop (GstBaseSrc * basesrc)
   src->tmpline_u8 = NULL;
   g_free (src->tmpline_u16);
   src->tmpline_u16 = NULL;
-  g_free (src->palette);
-  src->palette = NULL;
 
   return TRUE;
 }

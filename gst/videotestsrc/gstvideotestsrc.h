@@ -162,7 +162,6 @@ struct _GstVideoTestSrc {
   gint horizontal_speed;
 
   void (*make_image) (GstVideoTestSrc *v, GstVideoFrame *frame);
-  guint32 *palette;
 
   /* temporary AYUV/ARGB scanline */
   guint8 *tmpline_u8;
