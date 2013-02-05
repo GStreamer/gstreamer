@@ -203,6 +203,9 @@ static void gst_video_scale_set_property (GObject * object, guint prop_id,
 static void gst_video_scale_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstFlowReturn do_scale (GstVideoFilter * filter, VSImage dest[4],
+    VSImage src[4]);
+
 #define gst_video_scale_parent_class parent_class
 G_DEFINE_TYPE (GstVideoScale, gst_video_scale, GST_TYPE_VIDEO_FILTER);
 
@@ -1002,7 +1005,7 @@ done:
 
 static void
 gst_video_scale_setup_vs_image (VSImage * image, GstVideoFrame * frame,
-    gint component, gint b_w, gint b_h)
+    gint component, gint b_w, gint b_h, gboolean interlaced, gint field)
 {
   GstVideoFormat format;
   gint width, height;
@@ -1017,6 +1020,11 @@ gst_video_scale_setup_vs_image (VSImage * image, GstVideoFrame * frame,
       component, MAX (1, width - b_w));
   image->height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (frame->info.finfo,
       component, MAX (1, height - b_h));
+
+  if (interlaced) {
+    image->real_height /= 2;
+    image->height /= 2;
+  }
 
   image->border_top = (image->real_height - image->height) / 2;
   image->border_bottom = image->real_height - image->height - image->border_top;
@@ -1035,12 +1043,19 @@ gst_video_scale_setup_vs_image (VSImage * image, GstVideoFrame * frame,
     image->border_right = image->real_width - image->width - image->border_left;
   }
 
-  image->real_pixels = frame->data[component];
-  image->stride = frame->info.stride[component];
+  image->real_pixels = GST_VIDEO_FRAME_PLANE_DATA (frame, component);
+  image->stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, component);
+
+  if (interlaced) {
+    if (field == 1)
+      image->real_pixels += image->stride;
+    image->stride *= 2;
+  }
 
   image->pixels =
       image->real_pixels + image->border_top * image->stride +
       image->border_left * GST_VIDEO_FRAME_COMP_PSTRIDE (frame, component);
+
 }
 
 static const guint8 *
@@ -1111,11 +1126,39 @@ gst_video_scale_transform_frame (GstVideoFilter * filter,
   GstFlowReturn ret = GST_FLOW_OK;
   VSImage dest[4] = { {NULL,}, };
   VSImage src[4] = { {NULL,}, };
+  gint i;
+  gboolean interlaced;
+
+  interlaced = GST_VIDEO_FRAME_IS_INTERLACED (in_frame);
+
+  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (in_frame); i++) {
+    gst_video_scale_setup_vs_image (&src[i], in_frame, i, 0, 0, interlaced, 0);
+    gst_video_scale_setup_vs_image (&dest[i], out_frame, i,
+        videoscale->borders_w, videoscale->borders_h, interlaced, 0);
+  }
+  ret = do_scale (filter, dest, src);
+
+  if (interlaced) {
+    for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (in_frame); i++) {
+      gst_video_scale_setup_vs_image (&src[i], in_frame, i, 0, 0, interlaced,
+          1);
+      gst_video_scale_setup_vs_image (&dest[i], out_frame, i,
+          videoscale->borders_w, videoscale->borders_h, interlaced, 1);
+    }
+    ret = do_scale (filter, dest, src);
+  }
+  return ret;
+}
+
+static GstFlowReturn
+do_scale (GstVideoFilter * filter, VSImage dest[4], VSImage src[4])
+{
+  GstVideoScale *videoscale = GST_VIDEO_SCALE (filter);
+  GstFlowReturn ret = GST_FLOW_OK;
   gint method;
   const guint8 *black;
-  gboolean add_borders;
   GstVideoFormat format;
-  gint i;
+  gboolean add_borders;
 
   GST_OBJECT_LOCK (videoscale);
   method = videoscale->method;
@@ -1131,12 +1174,6 @@ gst_video_scale_transform_frame (GstVideoFilter * filter,
   if (method == GST_VIDEO_SCALE_4TAP &&
       (filter->in_info.width < 4 || filter->in_info.height < 4)) {
     method = GST_VIDEO_SCALE_BILINEAR;
-  }
-
-  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (in_frame); i++) {
-    gst_video_scale_setup_vs_image (&src[i], in_frame, i, 0, 0);
-    gst_video_scale_setup_vs_image (&dest[i], out_frame, i,
-        videoscale->borders_w, videoscale->borders_h);
   }
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, filter,
