@@ -34,6 +34,7 @@
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstdataqueue.h>
 #include "gstmpdparser.h"
+#include "gstdownloadrate.h"
 #include <gst/uridownloader/gsturidownloader.h>
 
 G_BEGIN_DECLS
@@ -93,8 +94,7 @@ struct _GstDashDemuxStream
 
   GstDataQueue *queue;
 
-  /* Download rate */
-  guint64 dnl_rate;
+  GstDownloadRate dnl_rate;
 };
 
 /**

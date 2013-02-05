@@ -184,6 +184,7 @@ enum
 #define DEFAULT_MAX_BITRATE        24000000     /* in bit/s  */
 
 #define DEFAULT_FAILED_COUNT 3
+#define DOWNLOAD_RATE_HISTORY_MAX 3
 
 /* Custom internal event to signal end of period */
 #define GST_EVENT_DASH_EOP GST_EVENT_MAKE_TYPE(81, GST_EVENT_TYPE_DOWNSTREAM | GST_EVENT_TYPE_SERIALIZED)
@@ -711,6 +712,9 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
 
     stream->index = i;
     stream->input_caps = caps;
+    gst_download_rate_init (&stream->dnl_rate);
+    gst_download_rate_set_max_length (&stream->dnl_rate,
+        DOWNLOAD_RATE_HISTORY_MAX);
 
     GST_LOG_OBJECT (demux, "Creating stream %d %" GST_PTR_FORMAT, i, caps);
     demux->streams = g_slist_prepend (demux->streams, stream);
@@ -1207,6 +1211,7 @@ error_pushing:
 static void
 gst_dash_demux_stream_free (GstDashDemuxStream * stream)
 {
+  gst_download_rate_deinit (&stream->dnl_rate);
   if (stream->input_caps) {
     gst_caps_unref (stream->input_caps);
     stream->input_caps = NULL;
@@ -1577,7 +1582,9 @@ gst_dash_demux_select_representations (GstDashDemux * demux)
     if (!rep_list)
       return FALSE;
 
-    bitrate = stream->dnl_rate * demux->bandwidth_usage;
+    bitrate =
+        gst_download_rate_get_current_rate (&stream->dnl_rate) *
+        demux->bandwidth_usage;
     GST_DEBUG_OBJECT (demux, "Trying to change to bitrate: %llu", bitrate);
 
     /* get representation index with current max_bandwidth */
@@ -1859,14 +1866,16 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
   /* Wake the download task up */
   GST_TASK_SIGNAL (demux->download_task);
   if (selected_stream) {
+    guint64 brate;
+
     diff = (GST_TIMEVAL_TO_TIME (now) - GST_TIMEVAL_TO_TIME (start));
-    selected_stream->dnl_rate =
-        (size_buffer * 8) / ((double) diff / GST_SECOND);
+    gst_download_rate_add_rate (&selected_stream->dnl_rate, size_buffer, diff);
+
+    brate = (size_buffer * 8) / ((double) diff / GST_SECOND);
     GST_INFO_OBJECT (demux,
         "Stream: %d Download rate = %" PRIu64 " Kbits/s (%" PRIu64
         " Ko in %.2f s)", selected_stream->index,
-        selected_stream->dnl_rate / 1000, size_buffer / 1024,
-        ((double) diff / GST_SECOND));
+        brate / 1000, size_buffer / 1024, ((double) diff / GST_SECOND));
   }
   return TRUE;
 }

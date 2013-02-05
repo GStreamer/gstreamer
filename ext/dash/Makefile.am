@@ -4,12 +4,14 @@ plugin_LTLIBRARIES = libgstdashdemux.la
 libgstdashdemux_la_SOURCES =			\
 	gstmpdparser.c				\
 	gstdashdemux.c				\
-	gstplugin.c
+	gstplugin.c				\
+	gstdownloadrate.c
 
 # headers we need but don't want installed
 noinst_HEADERS =        \
         gstmpdparser.h	\
-	gstdashdemux.h
+	gstdashdemux.h	\
+	gstdownloadrate.h
 
 # compiler and linker flags used to compile this plugin, set in configure.ac
 libgstdashdemux_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_CFLAGS)
