@@ -92,6 +92,9 @@ struct _GstDashDemuxStream
   gboolean has_data_queued;
 
   GstDataQueue *queue;
+
+  /* Download rate */
+  guint64 dnl_rate;
 };
 
 /**
@@ -137,8 +140,6 @@ struct _GstDashDemux
   GstClockTime position;
   GstClockTime position_shift;
   GstClockTime last_position_shift;
-  /* Download rate */
-  guint64 dnl_rate;
 };
 
 struct _GstDashDemuxClass

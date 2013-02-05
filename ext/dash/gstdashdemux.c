@@ -231,8 +231,7 @@ static void gst_dash_demux_pause_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_download_task (GstDashDemux * demux);
 static gboolean gst_dash_demux_setup_all_streams (GstDashDemux * demux);
-static gboolean gst_dash_demux_select_representations (GstDashDemux * demux,
-    guint64 current_bitrate);
+static gboolean gst_dash_demux_select_representations (GstDashDemux * demux);
 static gboolean gst_dash_demux_get_next_fragment (GstDashDemux * demux);
 
 static void gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose);
@@ -1414,8 +1413,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
 
   /* try to switch to another set of representations if needed */
   if (gst_dash_demux_all_streams_have_data (demux)) {
-    gst_dash_demux_select_representations (demux,
-        demux->bandwidth_usage * demux->dnl_rate);
+    gst_dash_demux_select_representations (demux);
   }
 
   /* fetch the next fragment */
@@ -1526,7 +1524,7 @@ gst_dash_demux_prepare_pad_switch (GstDashDemux * demux)
 
 /* gst_dash_demux_select_representations:
  *
- * Select the most appropriate media representations based on a target 
+ * Select the most appropriate media representations based on current target 
  * bitrate.
  * 
  * FIXME: all representations are selected against the same bitrate, but
@@ -1537,7 +1535,7 @@ gst_dash_demux_prepare_pad_switch (GstDashDemux * demux)
  * Returns TRUE if a new set of representations has been selected
  */
 static gboolean
-gst_dash_demux_select_representations (GstDashDemux * demux, guint64 bitrate)
+gst_dash_demux_select_representations (GstDashDemux * demux)
 {
   GstActiveStream *active_stream = NULL;
   GList *rep_list = NULL;
@@ -1548,8 +1546,10 @@ gst_dash_demux_select_representations (GstDashDemux * demux, guint64 bitrate)
 
   guint i = 0;
 
+
   GST_MPD_CLIENT_LOCK (demux->client);
   for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+    guint64 bitrate;
     stream = iter->data;
     active_stream =
         gst_mpdparser_get_active_stream_by_index (demux->client, stream->index);
@@ -1562,6 +1562,9 @@ gst_dash_demux_select_representations (GstDashDemux * demux, guint64 bitrate)
     if (!rep_list)
       return FALSE;
 
+    bitrate = stream->dnl_rate * demux->bandwidth_usage;
+    GST_DEBUG_OBJECT (demux, "Trying to change to bitrate: %llu", bitrate);
+
     /* get representation index with current max_bandwidth */
     new_index =
         gst_mpdparser_get_rep_idx_with_max_bandwidth (rep_list, bitrate);
@@ -1571,9 +1574,11 @@ gst_dash_demux_select_representations (GstDashDemux * demux, guint64 bitrate)
       new_index = gst_mpdparser_get_rep_idx_with_min_bandwidth (rep_list);
 
     if (new_index != active_stream->representation_idx) {
-      GST_INFO_OBJECT (demux, "Changing representation idx: %d", new_index);
+      GstRepresentationNode *rep = g_list_nth_data (rep_list, new_index);
+      GST_INFO_OBJECT (demux, "Changing representation idx: %d %d %u",
+          stream->index, new_index, rep->bandwidth);
       if (gst_mpd_client_setup_representation (demux->client, active_stream,
-              g_list_nth_data (rep_list, new_index))) {
+              rep)) {
         ret = TRUE;
         GST_INFO_OBJECT (demux, "Switching bitrate to %d",
             active_stream->cur_representation->bandwidth);
@@ -1767,7 +1772,6 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
     }
   }
 
-  g_get_current_time (&start);
   /* Get the fragment corresponding to each stream index */
   if (selected_stream) {
     guint stream_idx = selected_stream->index;
@@ -1776,6 +1780,7 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
     if (gst_mpd_client_get_next_fragment (demux->client,
             stream_idx, &discont, &next_fragment_uri, &duration, &timestamp)) {
 
+      g_get_current_time (&start);
       GST_INFO_OBJECT (demux, "Next fragment for stream #%i", stream_idx);
       GST_INFO_OBJECT (demux,
           "Fetching next fragment %s ts:%" GST_TIME_FORMAT " dur:%"
@@ -1813,6 +1818,7 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
         }
         selected_stream->need_header = FALSE;
       }
+      g_get_current_time (&now);
 
       buffer = gst_buffer_make_metadata_writable (buffer);
 
@@ -1837,11 +1843,15 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
 
   /* Wake the download task up */
   GST_TASK_SIGNAL (demux->download_task);
-  g_get_current_time (&now);
-  diff = (GST_TIMEVAL_TO_TIME (now) - GST_TIMEVAL_TO_TIME (start));
-  demux->dnl_rate = (size_buffer * 8) / ((double) diff / GST_SECOND);
-  GST_INFO_OBJECT (demux,
-      "Download rate = %" PRIu64 " Kbits/s (%" PRIu64 " Ko in %.2f s)",
-      demux->dnl_rate / 1000, size_buffer / 1024, ((double) diff / GST_SECOND));
+  if (selected_stream) {
+    diff = (GST_TIMEVAL_TO_TIME (now) - GST_TIMEVAL_TO_TIME (start));
+    selected_stream->dnl_rate =
+        (size_buffer * 8) / ((double) diff / GST_SECOND);
+    GST_INFO_OBJECT (demux,
+        "Stream: %d Download rate = %" PRIu64 " Kbits/s (%" PRIu64
+        " Ko in %.2f s)", selected_stream->index,
+        selected_stream->dnl_rate / 1000, size_buffer / 1024,
+        ((double) diff / GST_SECOND));
+  }
   return TRUE;
 }
