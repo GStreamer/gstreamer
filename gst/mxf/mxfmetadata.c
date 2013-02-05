@@ -6138,7 +6138,6 @@ mxf_metadata_multiple_descriptor_resolve (MXFMetadataBase * m,
     } else {
       GST_ERROR ("Descriptor %s not found",
           mxf_uuid_to_string (&self->sub_descriptors_uids[i], str));
-      return FALSE;
     }
   }
 
