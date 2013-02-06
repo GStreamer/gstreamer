@@ -2233,6 +2233,9 @@ new_manager_pad (GstElement * manager, GstPad * pad, GstRTSPSrc * src)
   if (stream == NULL)
     goto unknown_stream;
 
+  /* save SSRC */
+  stream->ssrc = ssrc;
+
   /* we'll add it later see below */
   stream->added = TRUE;
 
