@@ -499,6 +499,7 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
   GstPad *otherpad;
   GstCaps *othercaps, *tcaps;
   GstCaps *icaps;
+  const char *mode;
 
   otherpad =
       (pad == interlace->srcpad) ? interlace->sinkpad : interlace->srcpad;
@@ -520,8 +521,13 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
   }
 
   icaps = gst_caps_make_writable (icaps);
+  if (interlace->pattern > GST_INTERLACE_PATTERN_2_2) {
+    mode = "mixed";
+  } else {
+    mode = "interleaved";
+  }
   gst_caps_set_simple (icaps, "interlace-mode", G_TYPE_STRING,
-      pad == interlace->srcpad ? "mixed" : "progressive", NULL);
+      pad == interlace->srcpad ? mode : "progressive", NULL);
 
   gst_caps_unref (tcaps);
 
