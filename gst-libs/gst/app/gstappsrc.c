@@ -1008,14 +1008,15 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
     if (!g_queue_is_empty (priv->queue)) {
       guint buf_size;
 
-      *buf = g_queue_pop_head (priv->queue);
-      buf_size = gst_buffer_get_size (*buf);
-
-      GST_DEBUG_OBJECT (appsrc, "we have buffer %p of size %u", *buf, buf_size);
       if (priv->new_caps) {
         gst_app_src_do_negotiate (bsrc);
         priv->new_caps = FALSE;
       }
+
+      *buf = g_queue_pop_head (priv->queue);
+      buf_size = gst_buffer_get_size (*buf);
+
+      GST_DEBUG_OBJECT (appsrc, "we have buffer %p of size %u", *buf, buf_size);
 
       priv->queued_bytes -= buf_size;
 
