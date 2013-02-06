@@ -1208,6 +1208,12 @@ static const MXFUL mxf_sound_essence_compression_uncompressed =
     0x7F, 0x00, 0x00, 0x00}
 };
 
+/* Also seems to be uncompressed */
+static const MXFUL mxf_sound_essence_compression_s24le =
+    { {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0a, 0x04, 0x02, 0x02, 0x01,
+    0x01, 0x00, 0x00, 0x00}
+};
+
 static const MXFUL mxf_sound_essence_compression_aiff =
     { {0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x07, 0x04, 0x02, 0x02, 0x01,
     0x7E, 0x00, 0x00, 0x00}
@@ -1239,6 +1245,8 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
 
   if (mxf_ul_is_zero (&descriptor->sound_essence_compression) ||
       mxf_ul_is_subclass (&mxf_sound_essence_compression_uncompressed,
+          &descriptor->sound_essence_compression) ||
+      mxf_ul_is_subclass (&mxf_sound_essence_compression_s24le,
           &descriptor->sound_essence_compression)) {
     guint block_align;
     GstAudioFormat audio_format;
