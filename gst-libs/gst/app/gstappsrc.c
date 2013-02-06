@@ -1107,6 +1107,8 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
 
   priv = appsrc->priv;
 
+  g_mutex_lock (&priv->mutex);
+
   GST_OBJECT_LOCK (appsrc);
   GST_DEBUG_OBJECT (appsrc, "setting caps to %" GST_PTR_FORMAT, caps);
   if ((old = priv->caps) != caps) {
@@ -1116,11 +1118,11 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
       priv->caps = NULL;
     if (old)
       gst_caps_unref (old);
-    g_mutex_lock (&priv->mutex);
     priv->new_caps = TRUE;
-    g_mutex_unlock (&priv->mutex);
   }
   GST_OBJECT_UNLOCK (appsrc);
+
+  g_mutex_unlock (&priv->mutex);
 }
 
 /**
