@@ -55,7 +55,7 @@ gst_replace_dispose (GObject * object)
 
   /* clean up as possible.  may be called multiple times */
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (gst_replace_parent_class)->dispose (object);
 }
 
 void
@@ -65,7 +65,7 @@ gst_replace_finalize (GObject * object)
 
   /* clean up object here */
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_replace_parent_class)->finalize (object);
 }
 
 % end

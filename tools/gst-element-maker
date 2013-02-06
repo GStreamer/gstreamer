@@ -168,30 +168,9 @@ cat <<EOF
 
 /* class initialization */
 
-#define DEBUG_INIT(bla) \\
-  GST_DEBUG_CATEGORY_INIT (gst_replace_debug_category, "replace", 0, \\
-      "debug category for replace element");
-
-GST_BOILERPLATE_FULL (GstReplace, gst_replace, GstBaseReplace,
-    GST_TYPE_BASE_REPLACE, DEBUG_INIT);
-
-static void
-gst_replace_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-EOF
-
-for each in $pads
-do
-  grep -A 10000 '^% base-init' $templatedir/$each | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
-done
-
-cat <<EOF
-
-  gst_element_class_set_static_metadata (element_class, "FIXME Long name",
-      "Generic", "FIXME Description", "$REAL_NAME <$EMAIL_ADDRESS>");
-}
+G_DEFINE_TYPE_WITH_CODE (GstReplace, gst_replace, GST_TYPE_BASE_REPLACE,
+  GST_DEBUG_CATEGORY_INIT (gst_replace_debug_category, "replace", 0,
+  "debug category for replace element"));
 
 static void
 gst_replace_class_init (GstReplaceClass * klass)
@@ -200,7 +179,22 @@ EOF
 grep -A 10000 '^% declare-class' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 grep -A 10000 '^% declare-class' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 
-echo
+cat <<EOF
+
+  /* Setting up pads and setting metadata should be moved to
+     base_class_init if you intend to subclass this class. */
+EOF
+for each in $pads
+do
+  grep -A 10000 '^% base-init' $templatedir/$each | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+done
+cat <<EOF
+
+  gst_element_class_set_static_metadata (GST_ELEMENT_CLASS(klass),
+      "FIXME Long name", "Generic", "FIXME Description",
+      "$REAL_NAME <$EMAIL_ADDRESS>");
+
+EOF
 
 grep -A 10000 '^% set-methods' $templatedir/gobject | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 grep -A 10000 '^% set-methods' $templatedir/$class | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
@@ -210,7 +204,7 @@ cat <<EOF
 }
 
 static void
-gst_replace_init (GstReplace * replace, GstReplaceClass * replace_class)
+gst_replace_init (GstReplace *replace)
 {
 EOF
 
@@ -377,12 +371,12 @@ gst-indent $gstreplace.c
 
 echo pkg is $pkg
 
-gcc -Wall -fPIC $CPPFLAGS $(pkg-config --cflags gstreamer-0.10 $pkg) -c -o $gstreplace.o $gstreplace.c
+gcc -Wall -fPIC $CPPFLAGS $(pkg-config --cflags gstreamer-1.0 $pkg) -c -o $gstreplace.o $gstreplace.c
 if test $? -ne 0; then
     exit 1
 fi
 
-gcc -shared -o $gstreplace.so $gstreplace.o $(pkg-config --libs gstreamer-0.10 $pkg)
+gcc -shared -o $gstreplace.so $gstreplace.o $(pkg-config --libs gstreamer-1.0 $pkg)
 if test $? -ne 0; then
     exit 1
 fi
