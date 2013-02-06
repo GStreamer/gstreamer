@@ -90,6 +90,7 @@ struct _GstURIDecodeBin
   gchar *encoding;
 
   gboolean is_stream;
+  gboolean is_adaptive;
   gboolean need_queue;
   guint64 buffer_duration;      /* When buffering, buffer duration (ns) */
   guint buffer_size;            /* When buffering, buffer size (bytes) */
@@ -1215,6 +1216,19 @@ no_ghost:
   }
 }
 
+/* helper function to lookup stuff in lists */
+static gboolean
+array_has_value (const gchar * values[], const gchar * value)
+{
+  gint i;
+
+  for (i = 0; values[i]; i++) {
+    if (g_str_has_prefix (value, values[i]))
+      return TRUE;
+  }
+  return FALSE;
+}
+
 static gboolean
 array_has_uri_value (const gchar * values[], const gchar * value)
 {
@@ -1241,9 +1255,17 @@ static const gchar *queue_uris[] = { "cdda://", NULL };
 /* blacklisted URIs, we know they will always fail. */
 static const gchar *blacklisted_uris[] = { NULL };
 
+/* media types that use adaptive streaming */
+static const gchar *adaptive_media[] = {
+  "application/x-hls", "application/x-smoothstreaming-manifest",
+  "application/dash+xml", NULL
+};
+
 #define IS_STREAM_URI(uri)          (array_has_uri_value (stream_uris, uri))
 #define IS_QUEUE_URI(uri)           (array_has_uri_value (queue_uris, uri))
 #define IS_BLACKLISTED_URI(uri)     (array_has_uri_value (blacklisted_uris, uri))
+#define IS_ADAPTIVE_MEDIA(media)    (array_has_value (adaptive_media, media))
+
 /*
  * Generate and configure a source element.
  */
@@ -1800,7 +1822,7 @@ make_decoder (GstURIDecodeBin * decoder)
   g_object_set (decodebin, "expose-all-streams", decoder->expose_allstreams,
       "connection-speed", decoder->connection_speed / 1000, NULL);
 
-  if (!decoder->is_stream) {
+  if (!decoder->is_stream || decoder->is_adaptive) {
     /* propagate the use-buffering property but only when we are not already
      * doing stream buffering with queue2. FIXME, we might want to do stream
      * buffering with the multiqueue buffering instead of queue2. */
@@ -1864,6 +1886,8 @@ type_found (GstElement * typefind, guint probability,
 
   s = gst_caps_get_structure (caps, 0);
   media_type = gst_structure_get_name (s);
+
+  decoder->is_adaptive = IS_ADAPTIVE_MEDIA (media_type);
 
   /* only enable download buffering if the upstream duration is known */
   if (decoder->download) {
