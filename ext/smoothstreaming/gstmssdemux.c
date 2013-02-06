@@ -954,27 +954,42 @@ gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
   GSList *oldpads = NULL;
   GSList *iter;
   guint64 new_bitrate;
+  gboolean changed = FALSE;
 
   /* TODO lock? */
 
   if (!gst_mss_demux_all_streams_have_data (mssdemux))
     return;
 
-  new_bitrate =
-      mssdemux->bitrate_limit * gst_mss_demux_get_download_bitrate (mssdemux);
-  if (mssdemux->connection_speed) {
-    new_bitrate = MIN (mssdemux->connection_speed, new_bitrate);
+  gst_mss_demux_stop_tasks (mssdemux, TRUE);
+  for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
+    GstMssDemuxStream *stream;
+
+    stream = iter->data;
+
+    new_bitrate =
+        mssdemux->bitrate_limit *
+        gst_download_rate_get_current_rate (&stream->download_rate);
+    if (mssdemux->connection_speed) {
+      new_bitrate = MIN (mssdemux->connection_speed, new_bitrate);
+    }
+
+    GST_DEBUG_OBJECT (mssdemux, "Current stream %s download bitrate %llu",
+        GST_PAD_NAME (stream->pad), new_bitrate);
+
+    if (gst_mss_stream_select_bitrate (stream->manifest_stream, new_bitrate)) {
+      changed = TRUE;
+      GST_INFO_OBJECT (mssdemux, "Stream %s changed bitrate to %llu",
+          GST_PAD_NAME (stream->pad),
+          gst_mss_stream_get_current_bitrate (stream->manifest_stream));
+    }
   }
 
-  GST_DEBUG_OBJECT (mssdemux, "Current suggested bitrate: %llu", new_bitrate);
-
-  gst_mss_demux_stop_tasks (mssdemux, TRUE);
-  if (gst_mss_manifest_change_bitrate (mssdemux->manifest, new_bitrate)) {
+  if (changed) {
     GstClockTime newseg_ts = GST_CLOCK_TIME_NONE;
 
-    GST_INFO_OBJECT (mssdemux, "Switching to bitrate %llu", new_bitrate);
-
-    GST_DEBUG_OBJECT (mssdemux, "Creating new pad group");
+    GST_DEBUG_OBJECT (mssdemux,
+        "Bitrates have changed, creating new pad group");
     /* if we changed the bitrate, we need to add new pads */
     for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
       GstMssDemuxStream *stream = iter->data;

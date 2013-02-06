@@ -52,6 +52,8 @@ void gst_mss_manifest_reload_fragments (GstMssManifest * manifest, GstBuffer * d
 
 GstMssStreamType gst_mss_stream_get_type (GstMssStream *stream);
 GstCaps * gst_mss_stream_get_caps (GstMssStream * stream);
+gboolean gst_mss_stream_select_bitrate (GstMssStream * stream, guint64 bitrate);
+guint64 gst_mss_stream_get_current_bitrate (GstMssStream * stream);
 void gst_mss_stream_set_active (GstMssStream * stream, gboolean active);
 guint64 gst_mss_stream_get_timescale (GstMssStream * stream);
 GstFlowReturn gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url);

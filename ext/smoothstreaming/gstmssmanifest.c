@@ -992,7 +992,7 @@ gst_mss_manifest_reload_fragments (GstMssManifest * manifest, GstBuffer * data)
   xmlFreeDoc (xml);
 }
 
-static gboolean
+gboolean
 gst_mss_stream_select_bitrate (GstMssStream * stream, guint64 bitrate)
 {
   GList *iter = stream->current_quality;
@@ -1029,6 +1029,17 @@ gst_mss_stream_select_bitrate (GstMssStream * stream, guint64 bitrate)
     return FALSE;
   stream->current_quality = iter;
   return TRUE;
+}
+
+guint64
+gst_mss_stream_get_current_bitrate (GstMssStream * stream)
+{
+  GstMssStreamQuality *q;
+  if (stream->current_quality == NULL)
+    return 0;
+
+  q = stream->current_quality->data;
+  return q->bitrate;
 }
 
 /**
