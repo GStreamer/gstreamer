@@ -170,7 +170,6 @@ enum
 {
   PROP_0,
 
-  PROP_MIN_BUFFERING_TIME,
   PROP_MAX_BUFFERING_TIME,
   PROP_BANDWIDTH_USAGE,
   PROP_MAX_BITRATE,
@@ -178,7 +177,6 @@ enum
 };
 
 /* Default values for properties */
-#define DEFAULT_MIN_BUFFERING_TIME        5     /* in seconds */
 #define DEFAULT_MAX_BUFFERING_TIME       30     /* in seconds */
 #define DEFAULT_BANDWIDTH_USAGE         0.8     /* 0 to 1     */
 #define DEFAULT_MAX_BITRATE        24000000     /* in bit/s  */
@@ -310,12 +308,6 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
   gobject_class->set_property = gst_dash_demux_set_property;
   gobject_class->get_property = gst_dash_demux_get_property;
   gobject_class->dispose = gst_dash_demux_dispose;
-
-  g_object_class_install_property (gobject_class, PROP_MIN_BUFFERING_TIME,
-      g_param_spec_uint ("min-buffering-time", "Minimum buffering time",
-          "Minimum number of seconds of buffer accumulated before playback",
-          1, G_MAXUINT, DEFAULT_MIN_BUFFERING_TIME,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MAX_BUFFERING_TIME,
       g_param_spec_uint ("max-buffering-time", "Maximum buffering time",
