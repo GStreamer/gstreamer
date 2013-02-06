@@ -2573,7 +2573,12 @@ no_more_pads_cb (GstElement * element, GstDecodeChain * chain)
   if (!chain->next_groups && chain->active_group) {
     group = chain->active_group;
   } else if (chain->next_groups) {
-    group = chain->next_groups->data;
+    GList *iter;
+    for (iter = chain->next_groups; iter; iter = g_list_next (iter)) {
+      group = iter->data;
+      if (!group->no_more_pads)
+        break;
+    }
   }
   if (!group) {
     GST_ERROR_OBJECT (chain->dbin, "can't find group for element");
@@ -2742,10 +2747,19 @@ gst_decode_chain_get_current_group (GstDecodeChain * chain)
   } else if (!chain->active_group->overrun
       && !chain->active_group->no_more_pads) {
     group = chain->active_group;
-  } else if (chain->next_groups && (group = chain->next_groups->data)
-      && !group->overrun && !group->no_more_pads) {
-    /* group = chain->next_groups->data */
   } else {
+    GList *iter;
+    group = NULL;
+    for (iter = chain->next_groups; iter; iter = g_list_next (iter)) {
+      GstDecodeGroup *next_group = iter->data;
+
+      if (!next_group->overrun && !next_group->no_more_pads) {
+        group = next_group;
+        break;
+      }
+    }
+  }
+  if (!group) {
     group = gst_decode_group_new (chain->dbin, chain);
     chain->next_groups = g_list_append (chain->next_groups, group);
   }
