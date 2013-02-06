@@ -817,7 +817,7 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   GstVideoTestSrc *src;
   GstClockTime next_time;
   GstVideoFrame frame;
-  gpointer pal;
+  gconstpointer pal;
   gsize palsize;
 
   src = GST_VIDEO_TEST_SRC (psrc);

@@ -1032,7 +1032,7 @@ unpack_RGB8P (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-static guint32 std_palette_RGB8P[] = {
+static const guint32 std_palette_RGB8P[] = {
   0xff000000, 0xff000033, 0xff000066, 0xff000099, 0xff0000cc, 0xff0000ff,
   0xff003300, 0xff003333, 0xff003366, 0xff003399, 0xff0033cc, 0xff0033ff,
   0xff006600, 0xff006633, 0xff006666, 0xff006699, 0xff0066cc, 0xff0066ff,
@@ -2328,8 +2328,10 @@ gst_video_format_get_info (GstVideoFormat format)
  *
  * Returns: the default palette of @format or %NULL when @format does not have a
  * palette.
+ *
+ * Since: 1.2
  */
-const gpointer
+gconstpointer
 gst_video_format_get_palette (GstVideoFormat format, gsize * size)
 {
   g_return_val_if_fail (format < G_N_ELEMENTS (formats), NULL);

@@ -391,7 +391,7 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
   int i, j;
   gint width, height;
   guint in_bits, out_bits;
-  gpointer pal;
+  gconstpointer pal;
   gsize palsize;
 
   height = convert->height;
