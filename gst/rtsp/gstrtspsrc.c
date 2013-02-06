@@ -281,6 +281,9 @@ static gboolean gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event);
 #define CMD_RECONNECT	(1 << 5)
 #define CMD_LOOP	(1 << 6)
 
+/* mask for all commands */
+#define CMD_ALL         ((CMD_LOOP << 1) - 1)
+
 #define GST_ELEMENT_PROGRESS(el, type, code, text)      \
 G_STMT_START {                                          \
   gchar *__txt = _gst_element_error_printf text;        \
@@ -6651,7 +6654,7 @@ gst_rtspsrc_stop (GstRTSPSrc * src)
   GST_DEBUG_OBJECT (src, "stopping");
 
   /* also cancels pending task */
-  gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, CMD_CLOSE);
+  gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, CMD_ALL);
 
   GST_OBJECT_LOCK (src);
   if ((task = src->task)) {
