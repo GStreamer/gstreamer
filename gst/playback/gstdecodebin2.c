@@ -455,12 +455,15 @@ static gboolean gst_decode_chain_is_complete (GstDecodeChain * chain);
 static gboolean gst_decode_chain_expose (GstDecodeChain * chain,
     GList ** endpads, gboolean * missing_plugin);
 static gboolean gst_decode_chain_is_drained (GstDecodeChain * chain);
+static gboolean gst_decode_chain_reset_buffering (GstDecodeChain * chain);
 static gboolean gst_decode_group_is_complete (GstDecodeGroup * group);
 static GstPad *gst_decode_group_control_demuxer_pad (GstDecodeGroup * group,
     GstPad * pad);
 static gboolean gst_decode_group_is_drained (GstDecodeGroup * group);
+static gboolean gst_decode_group_reset_buffering (GstDecodeGroup * group);
 
 static gboolean gst_decode_bin_expose (GstDecodeBin * dbin);
+static void gst_decode_bin_reset_buffering (GstDecodeBin * dbin);
 
 #define CHAIN_MUTEX_LOCK(chain) G_STMT_START {				\
     GST_LOG_OBJECT (chain->dbin,					\
@@ -2707,9 +2710,41 @@ are_final_caps (GstDecodeBin * dbin, GstCaps * caps)
   return res;
 }
 
+/* gst_decode_bin_reset_buffering:
+ *
+ * Enables buffering on the last multiqueue of each group only,
+ * disabling the rest
+ *
+ */
+static void
+gst_decode_bin_reset_buffering (GstDecodeBin * dbin)
+{
+  if (!dbin->use_buffering)
+    return;
+
+  GST_DEBUG_OBJECT (dbin, "Reseting multiqueues buffering");
+  CHAIN_MUTEX_LOCK (dbin->decode_chain);
+  gst_decode_chain_reset_buffering (dbin->decode_chain);
+  CHAIN_MUTEX_UNLOCK (dbin->decode_chain);
+}
+
 /****
  * GstDecodeChain functions
  ****/
+
+static gboolean
+gst_decode_chain_reset_buffering (GstDecodeChain * chain)
+{
+  GstDecodeGroup *group;
+
+  group = chain->active_group;
+  GST_LOG_OBJECT (chain->dbin, "Resetting chain %p buffering, active group: %p",
+      chain, group);
+  if (group) {
+    return gst_decode_group_reset_buffering (group);
+  }
+  return FALSE;
+}
 
 /* gst_decode_chain_get_current_group:
  *
@@ -3528,6 +3563,37 @@ out:
   return drained;
 }
 
+static gboolean
+gst_decode_group_reset_buffering (GstDecodeGroup * group)
+{
+  GList *l;
+  gboolean ret = TRUE;
+
+  GST_DEBUG_OBJECT (group->dbin, "Group reset buffering %p %s", group,
+      GST_ELEMENT_NAME (group->multiqueue));
+  for (l = group->children; l; l = l->next) {
+    GstDecodeChain *chain = l->data;
+
+    CHAIN_MUTEX_LOCK (chain);
+    if (!gst_decode_chain_reset_buffering (chain)) {
+      ret = FALSE;
+    }
+    CHAIN_MUTEX_UNLOCK (chain);
+  }
+
+  if (ret) {
+    /* all chains are buffering already, no need to do it here */
+    g_object_set (group->multiqueue, "use-buffering", FALSE, NULL);
+  } else {
+    g_object_set (group->multiqueue, "use-buffering", TRUE, NULL);
+  }
+
+  GST_DEBUG_OBJECT (group->dbin, "Setting %s buffering to %d",
+      GST_ELEMENT_NAME (group->multiqueue), !ret);
+  return TRUE;
+}
+
+
 /* sort_end_pads:
  * GCompareFunc to use with lists of GstPad.
  * Sorts pads by mime type.
@@ -3830,6 +3896,9 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
     g_list_free (endpads);
     return TRUE;
   }
+
+  /* going to expose something, reset buffering */
+  gst_decode_bin_reset_buffering (dbin);
 
   /* Set all already exposed pads to blocked */
   for (tmp = endpads; tmp; tmp = tmp->next) {
