@@ -1,7 +1,14 @@
-gst-vaapi NEWS -- summary of changes.  2013-01-29
+gst-vaapi NEWS -- summary of changes.  2013-02-DD
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
+
+Version 0.5.2 - DD.Feb.2013
+* Add support for video seek/reset (+Sreerenj Balachandran)
+* Improve MPEG-2 decoder robustness when packets are missing
+* Fix build on older Linux distributions with glib < 2.32
+* Fix decoding of MPEG-2 videos with height > 2800 pixels
+* Fix MPEG-2 decoding with explicit quantization matrices set (Cong Zhong)
 
 Version 0.5.1 - 29.Jan.2013
 * Add simple decoder demo that only uses libgstvaapi
