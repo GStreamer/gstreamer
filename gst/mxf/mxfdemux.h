@@ -154,7 +154,7 @@ struct _GstMXFDemux
   GArray *random_index_pack;
 
   /* Metadata */
-  GStaticRWLock metadata_lock;
+  GRWLock metadata_lock;
   gboolean update_metadata;
   gboolean pull_footer_metadata;
 

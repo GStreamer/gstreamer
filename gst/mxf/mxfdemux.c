@@ -211,7 +211,7 @@ gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
 {
   GST_DEBUG_OBJECT (demux, "Resetting metadata");
 
-  g_static_rw_lock_writer_lock (&demux->metadata_lock);
+  g_rw_lock_writer_lock (&demux->metadata_lock);
 
   demux->update_metadata = TRUE;
   demux->metadata_resolved = FALSE;
@@ -225,7 +225,7 @@ gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
   }
   demux->metadata = mxf_metadata_hash_table_new ();
 
-  g_static_rw_lock_writer_unlock (&demux->metadata_lock);
+  g_rw_lock_writer_unlock (&demux->metadata_lock);
 }
 
 static void
@@ -509,14 +509,14 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
   MXFMetadataBase *m = NULL;
   GstStructure *structure;
 
-  g_static_rw_lock_writer_lock (&demux->metadata_lock);
+  g_rw_lock_writer_lock (&demux->metadata_lock);
 
   GST_DEBUG_OBJECT (demux, "Resolve metadata references");
   demux->update_metadata = FALSE;
 
   if (!demux->metadata) {
     GST_ERROR_OBJECT (demux, "No metadata yet");
-    g_static_rw_lock_writer_unlock (&demux->metadata_lock);
+    g_rw_lock_writer_unlock (&demux->metadata_lock);
     return GST_FLOW_ERROR;
   }
 
@@ -551,13 +551,13 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
 
   gst_structure_free (structure);
 
-  g_static_rw_lock_writer_unlock (&demux->metadata_lock);
+  g_rw_lock_writer_unlock (&demux->metadata_lock);
 
   return ret;
 
 error:
   demux->metadata_resolved = FALSE;
-  g_static_rw_lock_writer_unlock (&demux->metadata_lock);
+  g_rw_lock_writer_unlock (&demux->metadata_lock);
 
   return ret;
 }
@@ -910,7 +910,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
   GstFlowReturn ret;
   GList *pads = NULL, *l;
 
-  g_static_rw_lock_writer_lock (&demux->metadata_lock);
+  g_rw_lock_writer_lock (&demux->metadata_lock);
   GST_DEBUG_OBJECT (demux, "Updating tracks");
 
   if ((ret = gst_mxf_demux_update_essence_tracks (demux)) != GST_FLOW_OK) {
@@ -1230,7 +1230,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
     goto error;
   }
 
-  g_static_rw_lock_writer_unlock (&demux->metadata_lock);
+  g_rw_lock_writer_unlock (&demux->metadata_lock);
 
   for (l = pads; l; l = l->next)
     gst_element_add_pad (GST_ELEMENT_CAST (demux), l->data);
@@ -1242,7 +1242,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
   return GST_FLOW_OK;
 
 error:
-  g_static_rw_lock_writer_unlock (&demux->metadata_lock);
+  g_rw_lock_writer_unlock (&demux->metadata_lock);
   return ret;
 }
 
@@ -1320,7 +1320,7 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
     return GST_FLOW_OK;
   }
 
-  g_static_rw_lock_writer_lock (&demux->metadata_lock);
+  g_rw_lock_writer_lock (&demux->metadata_lock);
   demux->update_metadata = TRUE;
 
   if (MXF_IS_METADATA_PREFACE (metadata)) {
@@ -1331,7 +1331,7 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
 
   g_hash_table_replace (demux->metadata,
       &MXF_METADATA_BASE (metadata)->instance_uid, metadata);
-  g_static_rw_lock_writer_unlock (&demux->metadata_lock);
+  g_rw_lock_writer_unlock (&demux->metadata_lock);
 
   return ret;
 }
@@ -1411,7 +1411,7 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
     return GST_FLOW_OK;
   }
 
-  g_static_rw_lock_writer_lock (&demux->metadata_lock);
+  g_rw_lock_writer_lock (&demux->metadata_lock);
 
   demux->update_metadata = TRUE;
   gst_mxf_demux_reset_linked_metadata (demux);
@@ -1419,7 +1419,7 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
   g_hash_table_replace (demux->metadata, &MXF_METADATA_BASE (m)->instance_uid,
       m);
 
-  g_static_rw_lock_writer_unlock (&demux->metadata_lock);
+  g_rw_lock_writer_unlock (&demux->metadata_lock);
 
   return ret;
 }
@@ -3529,11 +3529,11 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
       pos = mxfpad->position;
 
-      g_static_rw_lock_reader_lock (&demux->metadata_lock);
+      g_rw_lock_reader_lock (&demux->metadata_lock);
       if (format == GST_FORMAT_DEFAULT && pos != GST_CLOCK_TIME_NONE) {
         if (!mxfpad->material_track || mxfpad->material_track->edit_rate.n == 0
             || mxfpad->material_track->edit_rate.d == 0) {
-          g_static_rw_lock_reader_unlock (&demux->metadata_lock);
+          g_rw_lock_reader_unlock (&demux->metadata_lock);
           goto error;
         }
 
@@ -3542,7 +3542,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
             mxfpad->material_track->edit_rate.n,
             mxfpad->material_track->edit_rate.d * GST_SECOND);
       }
-      g_static_rw_lock_reader_unlock (&demux->metadata_lock);
+      g_rw_lock_reader_unlock (&demux->metadata_lock);
 
       GST_DEBUG_OBJECT (pad,
           "Returning position %" G_GINT64_FORMAT " in format %s", pos,
@@ -3561,9 +3561,9 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT)
         goto error;
 
-      g_static_rw_lock_reader_lock (&demux->metadata_lock);
+      g_rw_lock_reader_lock (&demux->metadata_lock);
       if (!mxfpad->material_track || !mxfpad->material_track->parent.sequence) {
-        g_static_rw_lock_reader_unlock (&demux->metadata_lock);
+        g_rw_lock_reader_unlock (&demux->metadata_lock);
         goto error;
       }
 
@@ -3574,7 +3574,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       if (duration != -1 && format == GST_FORMAT_TIME) {
         if (mxfpad->material_track->edit_rate.n == 0 ||
             mxfpad->material_track->edit_rate.d == 0) {
-          g_static_rw_lock_reader_unlock (&demux->metadata_lock);
+          g_rw_lock_reader_unlock (&demux->metadata_lock);
           goto error;
         }
 
@@ -3583,7 +3583,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
             GST_SECOND * mxfpad->material_track->edit_rate.d,
             mxfpad->material_track->edit_rate.n);
       }
-      g_static_rw_lock_reader_unlock (&demux->metadata_lock);
+      g_rw_lock_reader_unlock (&demux->metadata_lock);
 
       GST_DEBUG_OBJECT (pad,
           "Returning duration %" G_GINT64_FORMAT " in format %s", duration,
@@ -3831,7 +3831,7 @@ gst_mxf_demux_query (GstElement * element, GstQuery * query)
       if (demux->src->len == 0)
         goto done;
 
-      g_static_rw_lock_reader_lock (&demux->metadata_lock);
+      g_rw_lock_reader_lock (&demux->metadata_lock);
       for (i = 0; i < demux->src->len; i++) {
         GstMXFDemuxPad *pad = g_ptr_array_index (demux->src, i);
         gint64 pdur = -1;
@@ -3850,7 +3850,7 @@ gst_mxf_demux_query (GstElement * element, GstQuery * query)
             pad->material_track->edit_rate.n);
         duration = MAX (duration, pdur);
       }
-      g_static_rw_lock_reader_unlock (&demux->metadata_lock);
+      g_rw_lock_reader_unlock (&demux->metadata_lock);
 
       if (duration == -1) {
         GST_DEBUG_OBJECT (demux, "No duration known (yet)");
@@ -3974,7 +3974,7 @@ gst_mxf_demux_get_property (GObject * object, guint prop_id,
     case PROP_STRUCTURE:{
       GstStructure *s;
 
-      g_static_rw_lock_reader_lock (&demux->metadata_lock);
+      g_rw_lock_reader_lock (&demux->metadata_lock);
       if (demux->preface)
         s = mxf_metadata_base_to_structure (MXF_METADATA_BASE (demux->preface));
       else
@@ -3985,7 +3985,7 @@ gst_mxf_demux_get_property (GObject * object, guint prop_id,
       if (s)
         gst_structure_free (s);
 
-      g_static_rw_lock_reader_unlock (&demux->metadata_lock);
+      g_rw_lock_reader_unlock (&demux->metadata_lock);
       break;
     }
     default:
@@ -4023,7 +4023,7 @@ gst_mxf_demux_finalize (GObject * object)
 
   g_hash_table_destroy (demux->metadata);
 
-  g_static_rw_lock_free (&demux->metadata_lock);
+  g_rw_lock_clear (&demux->metadata_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -4091,7 +4091,7 @@ gst_mxf_demux_init (GstMXFDemux * demux)
   demux->max_drift = 500 * GST_MSECOND;
 
   demux->adapter = gst_adapter_new ();
-  g_static_rw_lock_init (&demux->metadata_lock);
+  g_rw_lock_init (&demux->metadata_lock);
 
   demux->src = g_ptr_array_new ();
   demux->essence_tracks =
