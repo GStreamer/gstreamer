@@ -98,6 +98,7 @@ cat <<-EOF
 #endif
 
 #include <gst/gst.h>
+#include <stdlib.h>
 
 #define GETTEXT_PACKAGE "replace"
 
@@ -537,7 +538,7 @@ generate | sed \
 
 gst-indent $gstreplace.c
 
-gcc -Wall $(pkg-config --cflags gstreamer-0.10) -c -o $gstreplace.o $gstreplace.c
-gcc -o $gstreplace $gstreplace.o $(pkg-config --libs gstreamer-0.10)
+gcc -O2 -Wall $(pkg-config --cflags gstreamer-1.0) -c -o $gstreplace.o $gstreplace.c
+gcc -o $gstreplace $gstreplace.o $(pkg-config --libs gstreamer-1.0)
 
 
