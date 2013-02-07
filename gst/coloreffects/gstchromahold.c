@@ -86,14 +86,14 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define GST_CHROMA_HOLD_LOCK(self) G_STMT_START { \
   GST_LOG_OBJECT (self, "Locking chromahold from thread %p", g_thread_self ()); \
-  g_static_mutex_lock (&self->lock); \
+  g_mutex_lock (&self->lock); \
   GST_LOG_OBJECT (self, "Locked chromahold from thread %p", g_thread_self ()); \
 } G_STMT_END
 
 #define GST_CHROMA_HOLD_UNLOCK(self) G_STMT_START { \
   GST_LOG_OBJECT (self, "Unlocking chromahold from thread %p", \
       g_thread_self ()); \
-  g_static_mutex_unlock (&self->lock); \
+  g_mutex_unlock (&self->lock); \
 } G_STMT_END
 
 static gboolean gst_chroma_hold_start (GstBaseTransform * trans);
@@ -176,7 +176,7 @@ gst_chroma_hold_init (GstChromaHold * self)
   self->target_b = DEFAULT_TARGET_B;
   self->tolerance = DEFAULT_TOLERANCE;
 
-  g_static_mutex_init (&self->lock);
+  g_mutex_init (&self->lock);
 }
 
 static void
@@ -184,7 +184,7 @@ gst_chroma_hold_finalize (GObject * object)
 {
   GstChromaHold *self = GST_CHROMA_HOLD (object);
 
-  g_static_mutex_free (&self->lock);
+  g_mutex_clear (&self->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

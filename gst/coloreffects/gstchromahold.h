@@ -50,7 +50,7 @@ struct _GstChromaHold
   /* <private> */
 
   /* caps */
-  GStaticMutex lock;
+  GMutex lock;
 
   GstVideoFormat format;
   gint width, height;
