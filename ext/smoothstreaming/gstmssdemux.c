@@ -316,7 +316,8 @@ gst_mss_demux_reset (GstMssDemux * mssdemux)
 
   for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
     GstMssDemuxStream *stream = iter->data;
-    gst_element_remove_pad (GST_ELEMENT_CAST (mssdemux), stream->pad);
+    if (stream->pad)
+      gst_element_remove_pad (GST_ELEMENT_CAST (mssdemux), stream->pad);
     gst_mss_demux_stream_free (stream);
   }
   g_slist_free (mssdemux->streams);
@@ -877,6 +878,8 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
     GstMssDemuxStream *stream = iter->data;
     iter = g_slist_next (iter); /* do it ourselves as we want it done in the beginning of the loop */
     if (!gst_mss_demux_expose_stream (mssdemux, stream)) {
+      if (stream->pad)
+        gst_element_remove_pad (GST_ELEMENT_CAST (mssdemux), stream->pad);
       gst_mss_demux_stream_free (stream);
       mssdemux->streams = g_slist_delete_link (mssdemux->streams, current);
     }
@@ -997,7 +1000,8 @@ gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
       GstPad *oldpad = stream->pad;
       GstClockTime ts = GST_CLOCK_TIME_NONE;
 
-      oldpads = g_slist_prepend (oldpads, oldpad);
+      if (oldpad)
+        oldpads = g_slist_prepend (oldpads, oldpad);
 
       /* since we are flushing the queue, get the next un-pushed timestamp to seek
        * and avoid gaps */
@@ -1040,7 +1044,6 @@ gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
       stream->pad = _create_pad (mssdemux, stream->manifest_stream);
       gst_mss_demux_expose_stream (mssdemux, stream);
 
-      gst_pad_push_event (oldpad, gst_event_new_eos ());
       stream->have_data = FALSE;
     }
 
@@ -1049,6 +1052,7 @@ gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
     for (iter = oldpads; iter; iter = g_slist_next (iter)) {
       GstPad *oldpad = iter->data;
 
+      gst_pad_push_event (oldpad, gst_event_new_eos ());
       gst_pad_set_active (oldpad, FALSE);
       gst_element_remove_pad (GST_ELEMENT (mssdemux), oldpad);
       gst_object_unref (oldpad);
