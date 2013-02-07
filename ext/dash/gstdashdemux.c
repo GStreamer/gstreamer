@@ -192,21 +192,6 @@ gst_event_new_dash_eop (void)
   return gst_event_new_custom (GST_EVENT_DASH_EOP, NULL);
 }
 
-/* Custom internal event to indicate a pad switch is needed */
-#define GST_EVENT_DASH_PAD_SWITCH GST_EVENT_MAKE_TYPE(82, GST_EVENT_TYPE_DOWNSTREAM | GST_EVENT_TYPE_SERIALIZED)
-static GstEvent *
-gst_event_new_dash_event_pad_switch (GstCaps * caps)
-{
-  GstStructure *structure;
-
-  g_assert (caps != NULL);
-
-  structure =
-      gst_structure_new ("dash-pad-switch", "caps", GST_TYPE_CAPS, caps, NULL);
-  return gst_event_new_custom (GST_EVENT_DASH_PAD_SWITCH, structure);
-}
-
-
 /* GObject */
 static void gst_dash_demux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -226,7 +211,6 @@ static gboolean gst_dash_demux_src_query (GstPad * pad, GstQuery * query);
 static void gst_dash_demux_stream_loop (GstDashDemux * demux);
 static void gst_dash_demux_download_loop (GstDashDemux * demux);
 static void gst_dash_demux_stop (GstDashDemux * demux);
-static void gst_dash_demux_pause_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_download_task (GstDashDemux * demux);
 static gboolean gst_dash_demux_setup_all_streams (GstDashDemux * demux);
@@ -239,7 +223,7 @@ static GstCaps *gst_dash_demux_get_input_caps (GstDashDemux * demux,
     GstActiveStream * stream);
 static GstClockTime gst_dash_demux_stream_get_buffering_time (GstDashDemuxStream
     * stream);
-static void gst_dash_demux_prepare_pad_switch (GstDashDemux * demux);
+static void gst_dash_demux_create_pads (GstDashDemux * demux);
 
 static void
 _do_init (GType type)
@@ -699,6 +683,8 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
 
     stream->index = i;
     stream->input_caps = caps;
+    stream->need_header = TRUE;
+    stream->has_data_queued = FALSE;
     gst_download_rate_init (&stream->dnl_rate);
     gst_download_rate_set_max_length (&stream->dnl_rate,
         DOWNLOAD_RATE_HISTORY_MAX);
@@ -708,7 +694,8 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
   }
   demux->streams = g_slist_reverse (demux->streams);
 
-  gst_dash_demux_prepare_pad_switch (demux);
+  gst_dash_demux_create_pads (demux);
+
   GST_MPD_CLIENT_UNLOCK (demux->client);
 
   return TRUE;
@@ -928,53 +915,18 @@ gst_dash_demux_stop (GstDashDemux * demux)
   }
 }
 
-/* switch_pads:
- * 
- * Called when switching from one set of representations to another, but
- * only if one of the new representations requires different downstream 
- * elements (see the next function).
- * 
- * This function first creates the new pads, then sends a no-more-pads
- * event (that will tell decodebin to create a new group), then sends
- * EOS on the old pads to trigger the group switch.
- * 
- */
 static void
-switch_pads (GstDashDemux * demux)
+gst_dash_demux_create_pads (GstDashDemux * demux)
 {
-  GSList *oldpads = NULL;
   GSList *iter;
 
   /* Create and activate new pads */
   for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
     GstDashDemuxStream *stream = iter->data;
-    GstDataQueueItem *item;
-    GstEvent *event;
-    const GstStructure *structure;
-    GstCaps *caps = NULL;
-    GstPad *oldpad;
 
-    if (!gst_data_queue_pop (stream->queue, &item)) {
-      if (demux->cancelled) {
-        break;
-      }
-      g_assert_not_reached ();
-    }
-
-    g_assert (GST_IS_EVENT (item->object));
-    g_assert (GST_EVENT_TYPE (item->object) == GST_EVENT_DASH_PAD_SWITCH);
-
-    event = GST_EVENT_CAST (item->object);
-    structure = gst_event_get_structure (event);
-    g_assert (structure != NULL);
-    gst_structure_get (structure, "caps", GST_TYPE_CAPS, &caps, NULL);
-    g_assert (caps != NULL);
+    g_assert (stream->pad == NULL);
 
     stream->need_segment = TRUE;
-    oldpad = stream->pad;
-    if (oldpad)
-      oldpads = g_slist_prepend (oldpads, oldpad);
-
     stream->pad = gst_pad_new_from_static_template (&srctemplate, NULL);
     gst_pad_set_event_function (stream->pad,
         GST_DEBUG_FUNCPTR (gst_dash_demux_src_event));
@@ -982,32 +934,12 @@ switch_pads (GstDashDemux * demux)
         GST_DEBUG_FUNCPTR (gst_dash_demux_src_query));
     gst_pad_set_element_private (stream->pad, demux);
     gst_pad_set_active (stream->pad, TRUE);
-    gst_pad_set_caps (stream->pad, caps);
+    GST_INFO_OBJECT (demux, "Adding srcpad %s:%s",
+        GST_DEBUG_PAD_NAME (stream->pad));
     gst_element_add_pad (GST_ELEMENT (demux), gst_object_ref (stream->pad));
-    GST_DEBUG_OBJECT (demux,
-        "Switching pads (oldpad:%s:%s) (newpad:%s:%s)",
-        GST_DEBUG_PAD_NAME (oldpad), GST_DEBUG_PAD_NAME (stream->pad));
-    GST_INFO_OBJECT (demux, "Adding srcpad %s:%s with caps %" GST_PTR_FORMAT,
-        GST_DEBUG_PAD_NAME (stream->pad), caps);
-
-    gst_caps_unref (caps);
-    item->destroy (item);
   }
-  /* Send 'no-more-pads' to have decodebin create the new group */
-  gst_element_no_more_pads (GST_ELEMENT (demux));
 
-  /* Push out EOS on all old pads to switch to the new group */
-  for (iter = oldpads; iter; iter = g_slist_next (iter)) {
-    GstPad *pad = iter->data;
-
-    GST_INFO_OBJECT (demux, "Removing old srcpad %s:%s",
-        GST_DEBUG_PAD_NAME (pad));
-    gst_pad_push_event (pad, gst_event_new_eos ());
-    gst_pad_set_active (pad, FALSE);
-    gst_element_remove_pad (GST_ELEMENT (demux), pad);
-    gst_object_unref (pad);
-  }
-  g_slist_free (oldpads);
+  gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
 }
 
 /* gst_dash_demux_stream_loop:
@@ -1041,13 +973,11 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   GstDashDemuxStream *selected_stream;
   gboolean eos = TRUE;
   gboolean eop = TRUE;
-  gboolean pad_switch;
 
   GST_LOG_OBJECT (demux, "Starting stream loop");
 
   best_time = GST_CLOCK_TIME_NONE;
   selected_stream = NULL;
-  pad_switch = TRUE;
   for (iter = demux->streams, i = 0; iter; i++, iter = g_slist_next (iter)) {
     GstDashDemuxStream *stream = iter->data;
     GstDataQueueItem *item;
@@ -1075,7 +1005,6 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
     }
 
     if (G_LIKELY (GST_IS_BUFFER (item->object))) {
-      pad_switch = FALSE;
       if (GST_BUFFER_TIMESTAMP (item->object) < best_time) {
         best_time = GST_BUFFER_TIMESTAMP (item->object);
         selected_stream = stream;
@@ -1084,18 +1013,9 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
         break;
       }
     } else {
-      if (GST_EVENT_TYPE (item->object) == GST_EVENT_DASH_PAD_SWITCH) {
-        continue;
-      }
       selected_stream = stream;
-      pad_switch = FALSE;
       break;
     }
-  }
-
-  if (pad_switch) {
-    switch_pads (demux);
-    goto end;
   }
 
   if (selected_stream) {
@@ -1498,31 +1418,6 @@ gst_dash_demux_resume_download_task (GstDashDemux * demux)
   gst_task_start (demux->download_task);
 }
 
-static void
-gst_dash_demux_prepare_pad_switch (GstDashDemux * demux)
-{
-  GSList *iter;
-  GstDashDemuxStream *stream;
-
-  for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
-    GstActiveStream *active_stream;
-    GstCaps *caps;
-    stream = iter->data;
-
-    active_stream =
-        gst_mpdparser_get_active_stream_by_index (demux->client, stream->index);
-    caps = gst_dash_demux_get_input_caps (demux, active_stream);
-
-    GST_DEBUG_OBJECT (demux, "Setting need header for stream %p", stream);
-    stream->need_header = TRUE;
-
-    g_assert (caps != NULL);
-    gst_dash_demux_stream_push_event (stream,
-        gst_event_new_dash_event_pad_switch (caps));
-    stream->has_data_queued = FALSE;
-  }
-}
-
 /* gst_dash_demux_select_representations:
  *
  * Select the most appropriate media representations based on current target 
@@ -1583,8 +1478,13 @@ gst_dash_demux_select_representations (GstDashDemux * demux)
       if (gst_mpd_client_setup_representation (demux->client, active_stream,
               rep)) {
         ret = TRUE;
+        stream->need_header = TRUE;
+        stream->has_data_queued = FALSE;
         GST_INFO_OBJECT (demux, "Switching bitrate to %d",
             active_stream->cur_representation->bandwidth);
+        gst_caps_unref (stream->input_caps);
+        stream->input_caps =
+            gst_dash_demux_get_input_caps (demux, active_stream);
       } else {
         GST_WARNING_OBJECT (demux,
             "Can not switch representation, aborting...");
@@ -1592,8 +1492,6 @@ gst_dash_demux_select_representations (GstDashDemux * demux)
     }
     i++;
   }
-  if (ret)
-    gst_dash_demux_prepare_pad_switch (demux);
   GST_MPD_CLIENT_UNLOCK (demux->client);
   return ret;
 }
