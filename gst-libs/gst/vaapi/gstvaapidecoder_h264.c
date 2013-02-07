@@ -438,11 +438,11 @@ get_max_dec_frame_buffering(GstH264SPS *sps)
         else {
             switch (sps->profile_idc) {
             case 44:  // CAVLC 4:4:4 Intra profile
-            case 86:  // Scalable High profile
-            case 100: // High profile
-            case 110: // High 10 profile
-            case 122: // High 4:2:2 profile
-            case 244: // High 4:4:4 Predictive profile
+            case GST_H264_PROFILE_SCALABLE_HIGH:
+            case GST_H264_PROFILE_HIGH:
+            case GST_H264_PROFILE_HIGH10:
+            case GST_H264_PROFILE_HIGH_422:
+            case GST_H264_PROFILE_HIGH_444:
                 if (sps->constraint_set3_flag)
                     max_dec_frame_buffering = 0;
                 break;
@@ -744,13 +744,13 @@ h264_get_profile(GstH264SPS *sps)
     guint profile = 0;
 
     switch (sps->profile_idc) {
-    case 66:
+    case GST_H264_PROFILE_BASELINE:
         profile = GST_VAAPI_PROFILE_H264_BASELINE;
         break;
-    case 77:
+    case GST_H264_PROFILE_MAIN:
         profile = GST_VAAPI_PROFILE_H264_MAIN;
         break;
-    case 100:
+    case GST_H264_PROFILE_HIGH:
         profile = GST_VAAPI_PROFILE_H264_HIGH;
         break;
     }
