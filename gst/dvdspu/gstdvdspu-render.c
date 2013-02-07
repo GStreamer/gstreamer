@@ -79,6 +79,8 @@ gstspu_blend_comp_buffers (SpuState * state, guint8 * planes[3])
   uv_end = (comp_last_x + 1) / 2;
   left = state->comp_left / 2;
 
+  out_U += left * GST_VIDEO_INFO_COMP_PSTRIDE (&state->info, 1);
+  out_V += left * GST_VIDEO_INFO_COMP_PSTRIDE (&state->info, 2);
   for (x = left; x < uv_end; x++) {
     guint32 tmp;
     /* Each entry in the compositing buffer is 4 summed pixels, so the
