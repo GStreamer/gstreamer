@@ -455,7 +455,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
    * its timestamps. */
   if (ABS (delta - jbuf->skew) > GST_SECOND) {
     GST_WARNING ("delta - skew: %" GST_TIME_FORMAT " too big, reset skew",
-        GST_TIME_ARGS (delta - jbuf->skew));
+        GST_TIME_ARGS (ABS (delta - jbuf->skew)));
     rtp_jitter_buffer_resync (jbuf, time, gstrtptime, ext_rtptime, TRUE);
     send_diff = 0;
     delta = 0;
