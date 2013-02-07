@@ -45,7 +45,7 @@ struct _GstRsvgOverlay
   GstVideoFilter element;
 
   /* < private > */
-  GStaticMutex rsvg_lock;
+  GMutex rsvg_lock;
 
   RsvgHandle *handle;
 

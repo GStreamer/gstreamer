@@ -86,13 +86,13 @@ enum
 
 #define GST_RSVG_LOCK(overlay) G_STMT_START { \
   GST_LOG_OBJECT (overlay, "Locking rsvgoverlay from thread %p", g_thread_self ()); \
-  g_static_mutex_lock (&overlay->rsvg_lock); \
+  g_mutex_lock (&overlay->rsvg_lock); \
   GST_LOG_OBJECT (overlay, "Locked rsvgoverlay from thread %p", g_thread_self ()); \
 } G_STMT_END
 
 #define GST_RSVG_UNLOCK(overlay) G_STMT_START { \
   GST_LOG_OBJECT (overlay, "Unlocking rsvgoverlay from thread %p", g_thread_self ()); \
-  g_static_mutex_unlock (&overlay->rsvg_lock); \
+  g_mutex_unlock (&overlay->rsvg_lock); \
 } G_STMT_END
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
