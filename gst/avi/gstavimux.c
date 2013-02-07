@@ -1932,6 +1932,7 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
     GstAviVideoPad *vidpad = (GstAviVideoPad *) avipad;
 
     if (vidpad->prepend_buffer) {
+      /* Keep a reference to data until we copy the timestamps, then release it */
       GstBuffer *newdata =
           gst_buffer_append (vidpad->prepend_buffer, gst_buffer_ref (data));
       gst_buffer_copy_into (newdata, data, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
@@ -1944,7 +1945,7 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
 
   if (avimux->restart) {
     if ((res = gst_avi_mux_restart_file (avimux)) != GST_FLOW_OK)
-      return res;
+      goto done;
   }
 
   datasize = gst_buffer_get_size (data);
@@ -1954,10 +1955,10 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
       datasize > GST_AVI_MAX_SIZE) {
     if (avimux->enable_large_avi) {
       if ((res = gst_avi_mux_bigfile (avimux, FALSE)) != GST_FLOW_OK)
-        return res;
+        goto done;
     } else {
       if ((res = gst_avi_mux_restart_file (avimux)) != GST_FLOW_OK)
-        return res;
+        goto done;
     }
   }
 
@@ -1974,8 +1975,10 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
     avimux->data_size += total_size;
   }
 
-  if (G_UNLIKELY (avipad->hook))
+  if (G_UNLIKELY (avipad->hook)) {
+    gst_buffer_ref (data);
     avipad->hook (avimux, avipad, data);
+  }
 
   /* the suggested buffer size is the max frame size */
   if (avipad->hdr.bufsize < datasize)
@@ -2007,19 +2010,23 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
   GST_LOG_OBJECT (avimux, "pushing buffers: head, data");
 
   if ((res = gst_pad_push (avimux->srcpad, header)) != GST_FLOW_OK)
-    return res;
+    goto done;
+
+  gst_buffer_ref (data);
   if ((res = gst_pad_push (avimux->srcpad, data)) != GST_FLOW_OK)
-    return res;
+    goto done;
 
   if (pad_bytes) {
     if ((res = gst_avi_mux_send_pad_data (avimux, pad_bytes)) != GST_FLOW_OK)
-      return res;
+      goto done;
   }
 
   /* if any push above fails, we're in trouble with file consistency anyway */
   avimux->total_data += total_size;
   avimux->idx_offset += total_size;
 
+done:
+  gst_buffer_unref (data);
   return res;
 }
 
