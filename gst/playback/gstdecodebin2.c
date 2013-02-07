@@ -157,15 +157,15 @@ struct _GstDecodeBin
 
   GstElement *typefind;         /* this holds the typefind object */
 
-  GMutex *expose_lock;          /* Protects exposal and removal of groups */
+  GMutex expose_lock;           /* Protects exposal and removal of groups */
   GstDecodeChain *decode_chain; /* Top level decode chain */
   guint nbpads;                 /* unique identifier for source pads */
 
-  GMutex *factories_lock;
+  GMutex factories_lock;
   guint32 factories_cookie;     /* Cookie from last time when factories was updated */
   GList *factories;             /* factories we can use for selecting elements */
 
-  GMutex *subtitle_lock;        /* Protects changes to subtitles and encoding */
+  GMutex subtitle_lock;         /* Protects changes to subtitles and encoding */
   GList *subtitles;             /* List of elements with subtitle-encoding,
                                  * protected by above mutex! */
 
@@ -174,7 +174,7 @@ struct _GstDecodeBin
 
   gboolean async_pending;       /* async-start has been emitted */
 
-  GMutex *dyn_lock;             /* lock protecting pad blocking */
+  GMutex dyn_lock;              /* lock protecting pad blocking */
   gboolean shutdown;            /* if we are shutting down */
   GList *blocked_pads;          /* pads that have set to block */
 
@@ -306,7 +306,7 @@ static gboolean check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad);
     GST_LOG_OBJECT (dbin,						\
 		    "expose locking from thread %p",			\
 		    g_thread_self ());					\
-    g_mutex_lock (GST_DECODE_BIN_CAST(dbin)->expose_lock);		\
+    g_mutex_lock (&GST_DECODE_BIN_CAST(dbin)->expose_lock);		\
     GST_LOG_OBJECT (dbin,						\
 		    "expose locked from thread %p",			\
 		    g_thread_self ());					\
@@ -316,14 +316,14 @@ static gboolean check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad);
     GST_LOG_OBJECT (dbin,						\
 		    "expose unlocking from thread %p",			\
 		    g_thread_self ());					\
-    g_mutex_unlock (GST_DECODE_BIN_CAST(dbin)->expose_lock);		\
+    g_mutex_unlock (&GST_DECODE_BIN_CAST(dbin)->expose_lock);		\
 } G_STMT_END
 
 #define DYN_LOCK(dbin) G_STMT_START {			\
     GST_LOG_OBJECT (dbin,						\
 		    "dynlocking from thread %p",			\
 		    g_thread_self ());					\
-    g_mutex_lock (GST_DECODE_BIN_CAST(dbin)->dyn_lock);			\
+    g_mutex_lock (&GST_DECODE_BIN_CAST(dbin)->dyn_lock);			\
     GST_LOG_OBJECT (dbin,						\
 		    "dynlocked from thread %p",				\
 		    g_thread_self ());					\
@@ -333,14 +333,14 @@ static gboolean check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad);
     GST_LOG_OBJECT (dbin,						\
 		    "dynunlocking from thread %p",			\
 		    g_thread_self ());					\
-    g_mutex_unlock (GST_DECODE_BIN_CAST(dbin)->dyn_lock);		\
+    g_mutex_unlock (&GST_DECODE_BIN_CAST(dbin)->dyn_lock);		\
 } G_STMT_END
 
 #define SUBTITLE_LOCK(dbin) G_STMT_START {				\
     GST_LOG_OBJECT (dbin,						\
 		    "subtitle locking from thread %p",			\
 		    g_thread_self ());					\
-    g_mutex_lock (GST_DECODE_BIN_CAST(dbin)->subtitle_lock);		\
+    g_mutex_lock (&GST_DECODE_BIN_CAST(dbin)->subtitle_lock);		\
     GST_LOG_OBJECT (dbin,						\
 		    "subtitle lock from thread %p",			\
 		    g_thread_self ());					\
@@ -350,7 +350,7 @@ static gboolean check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad);
     GST_LOG_OBJECT (dbin,						\
 		    "subtitle unlocking from thread %p",		\
 		    g_thread_self ());					\
-    g_mutex_unlock (GST_DECODE_BIN_CAST(dbin)->subtitle_lock);		\
+    g_mutex_unlock (&GST_DECODE_BIN_CAST(dbin)->subtitle_lock);		\
 } G_STMT_END
 
 struct _GstPendingPad
@@ -397,7 +397,7 @@ struct _GstDecodeChain
   GstDecodeGroup *parent;
   GstDecodeBin *dbin;
 
-  GMutex *lock;                 /* Protects this chain and its groups */
+  GMutex lock;                  /* Protects this chain and its groups */
 
   GstPad *pad;                  /* srcpad that caused creation of this chain */
 
@@ -454,7 +454,7 @@ static gboolean gst_decode_bin_expose (GstDecodeBin * dbin);
     GST_LOG_OBJECT (chain->dbin,					\
 		    "locking chain %p from thread %p",			\
 		    chain, g_thread_self ());				\
-    g_mutex_lock (chain->lock);						\
+    g_mutex_lock (&chain->lock);						\
     GST_LOG_OBJECT (chain->dbin,					\
 		    "locked chain %p from thread %p",			\
 		    chain, g_thread_self ());				\
@@ -464,7 +464,7 @@ static gboolean gst_decode_bin_expose (GstDecodeBin * dbin);
     GST_LOG_OBJECT (chain->dbin,					\
 		    "unlocking chain %p from thread %p",		\
 		    chain, g_thread_self ());				\
-    g_mutex_unlock (chain->lock);					\
+    g_mutex_unlock (&chain->lock);					\
 } G_STMT_END
 
 /* GstDecodePad
@@ -993,7 +993,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   GST_OBJECT_FLAG_SET (decode_bin, GST_BIN_FLAG_NO_RESYNC);
 
   /* first filter out the interesting element factories */
-  decode_bin->factories_lock = g_mutex_new ();
+  g_mutex_init (&decode_bin->factories_lock);
 
   /* we create the typefind element only once */
   decode_bin->typefind = gst_element_factory_make ("typefind", "typefind");
@@ -1032,14 +1032,14 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
         G_CALLBACK (type_found), decode_bin);
   }
 
-  decode_bin->expose_lock = g_mutex_new ();
+  g_mutex_init (&decode_bin->expose_lock);
   decode_bin->decode_chain = NULL;
 
-  decode_bin->dyn_lock = g_mutex_new ();
+  g_mutex_init (&decode_bin->dyn_lock);
   decode_bin->shutdown = FALSE;
   decode_bin->blocked_pads = NULL;
 
-  decode_bin->subtitle_lock = g_mutex_new ();
+  g_mutex_init (&decode_bin->subtitle_lock);
 
   decode_bin->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
   decode_bin->caps = gst_static_caps_get (&default_raw_caps);
@@ -1090,25 +1090,10 @@ gst_decode_bin_finalize (GObject * object)
 
   decode_bin = GST_DECODE_BIN (object);
 
-  if (decode_bin->expose_lock) {
-    g_mutex_free (decode_bin->expose_lock);
-    decode_bin->expose_lock = NULL;
-  }
-
-  if (decode_bin->dyn_lock) {
-    g_mutex_free (decode_bin->dyn_lock);
-    decode_bin->dyn_lock = NULL;
-  }
-
-  if (decode_bin->subtitle_lock) {
-    g_mutex_free (decode_bin->subtitle_lock);
-    decode_bin->subtitle_lock = NULL;
-  }
-
-  if (decode_bin->factories_lock) {
-    g_mutex_free (decode_bin->factories_lock);
-    decode_bin->factories_lock = NULL;
-  }
+  g_mutex_clear (&decode_bin->expose_lock);
+  g_mutex_clear (&decode_bin->dyn_lock);
+  g_mutex_clear (&decode_bin->subtitle_lock);
+  g_mutex_clear (&decode_bin->factories_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1336,12 +1321,12 @@ gst_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
   GST_DEBUG_OBJECT (element, "finding factories");
 
   /* return all compatible factories for caps */
-  g_mutex_lock (dbin->factories_lock);
+  g_mutex_lock (&dbin->factories_lock);
   gst_decode_bin_update_factories_list (dbin);
   list =
       gst_element_factory_list_filter (dbin->factories, caps, GST_PAD_SINK,
       FALSE);
-  g_mutex_unlock (dbin->factories_lock);
+  g_mutex_unlock (&dbin->factories_lock);
 
   result = g_value_array_new (g_list_length (list));
   for (tmp = list; tmp; tmp = tmp->next) {
@@ -2827,7 +2812,7 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
       chain);
   CHAIN_MUTEX_UNLOCK (chain);
   if (!hide) {
-    g_mutex_free (chain->lock);
+    g_mutex_clear (&chain->lock);
     g_slice_free (GstDecodeChain, chain);
   }
 }
@@ -2864,7 +2849,7 @@ gst_decode_chain_new (GstDecodeBin * dbin, GstDecodeGroup * parent,
 
   chain->dbin = dbin;
   chain->parent = parent;
-  chain->lock = g_mutex_new ();
+  g_mutex_init (&chain->lock);
   chain->pad = gst_object_ref (pad);
 
   return chain;

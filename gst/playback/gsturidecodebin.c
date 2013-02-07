@@ -60,9 +60,8 @@ gint _decode_bin_compare_factories_func (gconstpointer p1, gconstpointer p2);
 typedef struct _GstURIDecodeBin GstURIDecodeBin;
 typedef struct _GstURIDecodeBinClass GstURIDecodeBinClass;
 
-#define GST_URI_DECODE_BIN_GET_LOCK(dec) (((GstURIDecodeBin*)(dec))->lock)
-#define GST_URI_DECODE_BIN_LOCK(dec) (g_mutex_lock(GST_URI_DECODE_BIN_GET_LOCK(dec)))
-#define GST_URI_DECODE_BIN_UNLOCK(dec) (g_mutex_unlock(GST_URI_DECODE_BIN_GET_LOCK(dec)))
+#define GST_URI_DECODE_BIN_LOCK(dec) (g_mutex_lock(&((GstURIDecodeBin*)(dec))->lock))
+#define GST_URI_DECODE_BIN_UNLOCK(dec) (g_mutex_unlock(&((GstURIDecodeBin*)(dec))->lock))
 
 typedef struct _GstURIDecodeBinStream
 {
@@ -79,9 +78,9 @@ struct _GstURIDecodeBin
 {
   GstBin parent_instance;
 
-  GMutex *lock;                 /* lock for constructing */
+  GMutex lock;                  /* lock for constructing */
 
-  GMutex *factories_lock;
+  GMutex factories_lock;
   guint32 factories_cookie;
   GList *factories;             /* factories we can use for selecting elements */
 
@@ -310,12 +309,12 @@ gst_uri_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
   GST_DEBUG_OBJECT (element, "finding factories");
 
   /* return all compatible factories for caps */
-  g_mutex_lock (dec->factories_lock);
+  g_mutex_lock (&dec->factories_lock);
   gst_uri_decode_bin_update_factories_list (dec);
   list =
       gst_element_factory_list_filter (dec->factories, caps, GST_PAD_SINK,
       FALSE);
-  g_mutex_unlock (dec->factories_lock);
+  g_mutex_unlock (&dec->factories_lock);
 
   result = g_value_array_new (g_list_length (list));
   for (tmp = list; tmp; tmp = tmp->next) {
@@ -667,9 +666,9 @@ static void
 gst_uri_decode_bin_init (GstURIDecodeBin * dec)
 {
   /* first filter out the interesting element factories */
-  dec->factories_lock = g_mutex_new ();
+  g_mutex_init (&dec->factories_lock);
 
-  dec->lock = g_mutex_new ();
+  g_mutex_init (&dec->lock);
 
   dec->uri = g_strdup (DEFAULT_PROP_URI);
   dec->connection_speed = DEFAULT_CONNECTION_SPEED;
@@ -692,8 +691,8 @@ gst_uri_decode_bin_finalize (GObject * obj)
   GstURIDecodeBin *dec = GST_URI_DECODE_BIN (obj);
 
   remove_decoders (dec, TRUE);
-  g_mutex_free (dec->lock);
-  g_mutex_free (dec->factories_lock);
+  g_mutex_clear (&dec->lock);
+  g_mutex_clear (&dec->factories_lock);
   g_free (dec->uri);
   g_free (dec->encoding);
   if (dec->factories)
