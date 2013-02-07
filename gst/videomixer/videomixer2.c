@@ -1084,6 +1084,7 @@ gst_videomixer2_query_caps (GstPad * pad, GstObject * parent, GstQuery * query)
     }
   }
   gst_query_set_caps_result (query, caps);
+  gst_caps_unref (caps);
 
   return TRUE;
 }
