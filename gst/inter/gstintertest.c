@@ -108,6 +108,7 @@ main (int argc, char *argv[])
   intertest2->main_loop = main_loop;
 
   g_main_loop_run (main_loop);
+  g_main_loop_unref (main_loop);
 
   exit (0);
 }
@@ -201,7 +202,7 @@ gst_inter_test_create_pipeline_vts (GstInterTest * intertest)
     g_print ("pipeline: %s\n", pipe_desc->str);
 
   pipeline = (GstElement *) gst_parse_launch (pipe_desc->str, &error);
-  g_string_free (pipe_desc, FALSE);
+  g_string_free (pipe_desc, TRUE);
 
   if (error) {
     g_print ("pipeline parsing error: %s\n", error->message);
@@ -238,7 +239,7 @@ gst_inter_test_create_pipeline_server (GstInterTest * intertest)
     g_print ("pipeline: %s\n", pipe_desc->str);
 
   pipeline = (GstElement *) gst_parse_launch (pipe_desc->str, &error);
-  g_string_free (pipe_desc, FALSE);
+  g_string_free (pipe_desc, TRUE);
 
   if (error) {
     g_print ("pipeline parsing error: %s\n", error->message);
@@ -359,6 +360,8 @@ gst_inter_test_handle_message (GstBus * bus, GstMessage * message,
 
       gst_message_parse_error (message, &error, &debug);
       gst_inter_test_handle_error (intertest, error, debug);
+      g_error_free (error);
+      g_free (debug);
     }
       break;
     case GST_MESSAGE_WARNING:
@@ -368,6 +371,8 @@ gst_inter_test_handle_message (GstBus * bus, GstMessage * message,
 
       gst_message_parse_warning (message, &error, &debug);
       gst_inter_test_handle_warning (intertest, error, debug);
+      g_error_free (error);
+      g_free (debug);
     }
       break;
     case GST_MESSAGE_INFO:
@@ -377,6 +382,8 @@ gst_inter_test_handle_message (GstBus * bus, GstMessage * message,
 
       gst_message_parse_info (message, &error, &debug);
       gst_inter_test_handle_info (intertest, error, debug);
+      g_error_free (error);
+      g_free (debug);
     }
       break;
     case GST_MESSAGE_TAG:
