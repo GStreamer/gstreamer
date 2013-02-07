@@ -1600,9 +1600,6 @@ no_function:
  *
  * Gets an iterator for the elements in this bin.
  *
- * Each element yielded by the iterator will have its refcount increased, so
- * unref after use.
- *
  * MT safe.  Caller owns returned value.
  *
  * Returns: (transfer full): a #GstIterator of #GstElement, or NULL
@@ -1642,9 +1639,6 @@ iterate_child_recurse (GstIterator * it, const GValue * item)
  *
  * Gets an iterator for the elements in this bin.
  * This iterator recurses into GstBin children.
- *
- * Each element yielded by the iterator will have its refcount increased, so
- * unref after use.
  *
  * MT safe.  Caller owns returned value.
  *
@@ -1702,9 +1696,6 @@ sink_iterator_filter (const GValue * vchild, GValue * vbin)
  *
  * Gets an iterator for all elements in the bin that have the
  * #GST_ELEMENT_FLAG_SINK flag set.
- *
- * Each element yielded by the iterator will have its refcount increased, so
- * unref after use.
  *
  * MT safe.  Caller owns returned value.
  *
@@ -1765,9 +1756,6 @@ src_iterator_filter (const GValue * vchild, GValue * vbin)
  *
  * Gets an iterator for all elements in the bin that have the
  * #GST_ELEMENT_FLAG_SOURCE flag set.
- *
- * Each element yielded by the iterator will have its refcount increased, so
- * unref after use.
  *
  * MT safe.  Caller owns returned value.
  *
@@ -2032,8 +2020,7 @@ find_element (GstElement * element, GstBinSortIterator * bit)
   }
 }
 
-/* get next element in iterator. the returned element has the
- * refcount increased */
+/* get next element in iterator. */
 static GstIteratorResult
 gst_bin_sort_iterator_next (GstBinSortIterator * bit, GValue * result)
 {
@@ -2145,9 +2132,6 @@ gst_bin_sort_iterator_new (GstBin * bin)
  *
  * This function is used internally to perform the state changes
  * of the bin elements and for clock selection.
- *
- * Each element yielded by the iterator will have its refcount increased, so
- * unref after use.
  *
  * MT safe.  Caller owns returned value.
  *
@@ -4033,9 +4017,6 @@ gst_bin_get_by_interface (GstBin * bin, GType iface)
  * interface. You can safely cast all returned elements to the given interface.
  * The function recurses inside child bins. The iterator will yield a series
  * of #GstElement that should be unreffed after use.
- *
- * Each element yielded by the iterator will have its refcount increased, so
- * unref after use.
  *
  * MT safe.  Caller owns returned value.
  *
