@@ -74,6 +74,8 @@ struct _GstMssDemuxStream {
   gboolean have_data;
 
   GstDownloadRate download_rate;
+
+  guint download_error_count;
 };
 
 struct _GstMssDemux {

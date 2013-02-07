@@ -84,6 +84,7 @@ GST_DEBUG_CATEGORY (mssdemux_debug);
 #define DEFAULT_BITRATE_LIMIT 0.8
 
 #define DOWNLOAD_RATE_MAX_HISTORY_LENGTH 5
+#define MAX_DOWNLOAD_ERROR_COUNT 3
 
 enum
 {
@@ -1223,6 +1224,8 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
       break;
   }
 
+  stream->download_error_count = 0;
+
   if (buffer) {
     gst_mss_stream_advance_fragment (stream->manifest_stream);
   }
@@ -1241,7 +1244,11 @@ eos:
 error:
   {
     GST_WARNING_OBJECT (mssdemux, "Error while pushing fragment");
-    gst_task_pause (stream->download_task);
+    if (++stream->download_error_count >= DOWNLOAD_RATE_MAX_HISTORY_LENGTH) {
+      GST_ELEMENT_ERROR (mssdemux, RESOURCE, NOT_FOUND,
+          (_("Couldn't download fragments")),
+          ("fragment downloading has failed too much consecutive times"));
+    }
     return;
   }
 }
