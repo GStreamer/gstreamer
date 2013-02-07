@@ -2792,8 +2792,11 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
 
         gst_event_ref (event);
         res &= gst_element_send_event (child, event);
+
         GST_LOG_OBJECT (child, "After handling %s event: %d",
             GST_EVENT_TYPE_NAME (event), res);
+
+        g_value_reset (&data);
         break;
       }
       case GST_ITERATOR_RESYNC:
