@@ -425,14 +425,6 @@ gst_dash_demux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      /* Start the streaming loop in paused only if we already received
-         the manifest. It might have been stopped if we were in PAUSED
-         state and we filled our queue with enough cached fragments
-       */
-      if (demux->client->mpd_node != NULL)
-        gst_dash_demux_resume_stream_task (demux);
-      break;
     default:
       break;
   }
@@ -440,9 +432,6 @@ gst_dash_demux_change_state (GstElement * element, GstStateChange transition)
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      gst_dash_demux_pause_stream_task (demux);
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     default:
