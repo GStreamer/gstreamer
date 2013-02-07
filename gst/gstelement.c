@@ -1121,8 +1121,7 @@ gst_element_iterate_pad_list (GstElement * element, GList ** padlist)
  * The order of pads returned by the iterator will be the order in which
  * the pads were added to the element.
  *
- * Returns: (transfer full): the #GstIterator of #GstPad. Unref each pad
- *     after use.
+ * Returns: (transfer full): the #GstIterator of #GstPad.
  *
  * MT safe.
  */
@@ -1143,8 +1142,7 @@ gst_element_iterate_pads (GstElement * element)
  * The order of pads returned by the iterator will be the order in which
  * the pads were added to the element.
  *
- * Returns: (transfer full): the #GstIterator of #GstPad. Unref each pad
- *     after use.
+ * Returns: (transfer full): the #GstIterator of #GstPad.
  *
  * MT safe.
  */
@@ -1165,8 +1163,7 @@ gst_element_iterate_src_pads (GstElement * element)
  * The order of pads returned by the iterator will be the order in which
  * the pads were added to the element.
  *
- * Returns: (transfer full): the #GstIterator of #GstPad. Unref each pad
- *     after use.
+ * Returns: (transfer full): the #GstIterator of #GstPad.
  *
  * MT safe.
  */
