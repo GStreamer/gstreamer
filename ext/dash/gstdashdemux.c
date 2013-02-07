@@ -592,10 +592,15 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
             chunk = list->data;
             current_pos = chunk->start_time;
             //current_sequence = chunk->number;
-            GST_WARNING_OBJECT (demux, "%llu <= %llu (%llu)", current_pos,
-                target_pos, chunk->duration);
+            GST_WARNING_OBJECT (demux, "current_pos:%" GST_TIME_FORMAT
+                " <= target_pos:%" GST_TIME_FORMAT " duration:%"
+                GST_TIME_FORMAT, GST_TIME_ARGS (current_pos),
+                GST_TIME_ARGS (target_pos), GST_TIME_ARGS (chunk->duration));
             if (current_pos <= target_pos
                 && target_pos < current_pos + chunk->duration) {
+              GST_DEBUG_OBJECT (demux,
+                  "selecting sequence %d for stream %" GST_PTR_FORMAT,
+                  current_sequence, stream);
               break;
             }
             current_sequence++;
@@ -613,6 +618,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
             GstDashDemuxStream *stream;
 
             stream = iter->data;
+            stream->need_header = TRUE;
             gst_pad_push_event (stream->pad, gst_event_new_flush_stop ());
           }
         }
@@ -918,6 +924,7 @@ gst_dash_demux_stop (GstDashDemux * demux)
     GstDashDemuxStream *stream = iter->data;
 
     gst_data_queue_flush (stream->queue);
+    stream->has_data_queued = FALSE;
   }
 }
 
@@ -1331,6 +1338,8 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
 {
   GstClock *clock = gst_element_get_clock (GST_ELEMENT (demux));
   gint64 update_period = demux->client->mpd_node->minimumUpdatePeriod;
+
+  GST_LOG_OBJECT (demux, "Starting download loop");
 
   if (clock && gst_mpd_client_is_live (demux->client)
       && demux->client->mpd_uri != NULL && update_period != -1) {
