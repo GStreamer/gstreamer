@@ -1487,15 +1487,6 @@ error_downloading:
 }
 
 static void
-gst_dash_demux_pause_stream_task (GstDashDemux * demux)
-{
-  /* Send a signal to the stream task so that it pauses itself */
-  GST_TASK_SIGNAL (demux->stream_task);
-  /* Pause it explicitly (if it was not in the COND) */
-  gst_task_pause (demux->stream_task);
-}
-
-static void
 gst_dash_demux_resume_stream_task (GstDashDemux * demux)
 {
   gst_task_start (demux->stream_task);
