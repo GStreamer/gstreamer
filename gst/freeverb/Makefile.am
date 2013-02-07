@@ -5,8 +5,14 @@ libgstfreeverb_la_SOURCES = gstfreeverb.c
 
 # flags used to compile this plugin
 # add other _CFLAGS and _LIBS as needed
-libgstfreeverb_la_CFLAGS = $(GST_CFLAGS) $(GST_CONTROLLER_CFLAGS) 
-libgstfreeverb_la_LIBADD = $(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) $(GST_LIBS)
+libgstfreeverb_la_CFLAGS = $(GST_CFLAGS) \
+  $(GST_BASE_CFLAGS) \
+  $(GST_PLUGINS_BASE_CFLAGS)
+libgstfreeverb_la_LIBADD = $(GST_LIBS) \
+	$(GST_BASE_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) \
+	-lgstaudio-$(GST_API_VERSION) \
+	$(LIBM)
 libgstfreeverb_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstfreeverb_la_LIBTOOLFLAGS = --tag=disable-static
 

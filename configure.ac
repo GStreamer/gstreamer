@@ -317,7 +317,6 @@ dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" aiff \
  cdxaparse \
  dccp faceoverlay \
- freeverb \
  hdvparse ivfparse jp2kdecimator \
  kate librfb \
  mve mythtv nsf nuvdemux \

@@ -52,10 +52,10 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
-#include <gst/controller/gstcontroller.h>
 
 #include "gstfreeverb.h"
 
@@ -74,41 +74,27 @@ enum
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, 2 ], "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 32; "
-        "audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, 2 ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) true")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) { " GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (S16) "}, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) 1, "
+        "layout = (string) interleaved;"
+        "audio/x-raw, "
+        "format = (string) { " GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (S16) "}, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) 2, "
+        "layout = (string) interleaved, " "channel-mask = (bitmask) 0x3")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) 2, "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 32; "
-        "audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) 2, "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) true")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) { " GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (S16) "}, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) 2, "
+        "layout = (string) interleaved, " "channel-mask = (bitmask) 0x3")
     );
 
-#define _do_init(type) {                                                       \
-  const GInterfaceInfo preset_interface_info = { NULL, NULL, NULL };           \
-  g_type_add_interface_static (type, GST_TYPE_PRESET, &preset_interface_info); \
-                                                                               \
-  GST_DEBUG_CATEGORY_INIT (gst_freeverb_debug, "freeverb", 0,                  \
-      "freeverb element");                                                     \
-}
-
-GST_BOILERPLATE_FULL (GstFreeverb, gst_freeverb, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, _do_init);
+G_DEFINE_TYPE_WITH_CODE (GstFreeverb, gst_freeverb, GST_TYPE_BASE_TRANSFORM,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
 
 static void gst_freeverb_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -118,9 +104,9 @@ static void gst_freeverb_get_property (GObject * object, guint prop_id,
 static void gst_freeverb_finalize (GObject * object);
 
 static gboolean gst_freeverb_get_unit_size (GstBaseTransform * base,
-    GstCaps * caps, guint * size);
+    GstCaps * caps, gsize * size);
 static GstCaps *gst_freeverb_transform_caps (GstBaseTransform * base,
-    GstPadDirection direction, GstCaps * caps);
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_freeverb_set_caps (GstBaseTransform * base,
     GstCaps * incaps, GstCaps * outcaps);
 
@@ -400,27 +386,19 @@ freeverb_revmodel_free (GstFreeverb * filter)
 /* GObject vmethod implementations */
 
 static void
-gst_freeverb_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_static_metadata (element_class, "Stereo positioning",
-      "Filter/Effect/Audio",
-      "Reverberation/room effect", "Stefan Sauer <ensonic@users.sf.net>");
-}
-
-static void
 gst_freeverb_class_init (GstFreeverbClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
 
   g_type_class_add_private (klass, sizeof (GstFreeverbPrivate));
 
+  GST_DEBUG_CATEGORY_INIT (gst_freeverb_debug, "freeverb", 0,
+      "freeverb element");
+
   gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
+
   gobject_class->set_property = gst_freeverb_set_property;
   gobject_class->get_property = gst_freeverb_get_property;
   gobject_class->finalize = gst_freeverb_finalize;
@@ -445,6 +423,16 @@ gst_freeverb_class_init (GstFreeverbClass * klass)
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
           G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_static_metadata (element_class,
+      "Reverberation/room effect", "Filter/Effect/Audio",
+      "Add reverberation to audio streams",
+      "Stefan Sauer <ensonic@users.sf.net>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_freeverb_get_unit_size);
   GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
@@ -456,15 +444,13 @@ gst_freeverb_class_init (GstFreeverbClass * klass)
 }
 
 static void
-gst_freeverb_init (GstFreeverb * filter, GstFreeverbClass * klass)
+gst_freeverb_init (GstFreeverb * filter)
 {
   filter->priv =
       G_TYPE_INSTANCE_GET_PRIVATE (filter, GST_TYPE_FREEVERB,
       GstFreeverbPrivate);
 
-  filter->width = 0;
-  filter->channels = 0;
-  filter->format_float = FALSE;
+  gst_audio_info_init (&filter->info);
   filter->process = NULL;
 
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (filter), TRUE);
@@ -479,33 +465,32 @@ gst_freeverb_finalize (GObject * object)
 
   freeverb_revmodel_free (filter);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_freeverb_parent_class)->finalize (object);
 }
 
 static gboolean
-gst_freeverb_set_process_function (GstFreeverb * filter)
+gst_freeverb_set_process_function (GstFreeverb * filter, GstAudioInfo * info)
 {
   gint channel_index, format_index;
+  const GstAudioFormatInfo *finfo = info->finfo;
 
   /* set processing function */
-  channel_index = filter->channels - 1;
+  channel_index = GST_AUDIO_INFO_CHANNELS (info) - 1;
   if (channel_index > 1 || channel_index < 0) {
     filter->process = NULL;
     return FALSE;
   }
 
-  format_index = (filter->format_float) ? 1 : 0;
+  format_index = GST_AUDIO_FORMAT_INFO_IS_FLOAT (finfo) ? 1 : 0;
 
   filter->process = process_functions[channel_index][format_index];
-
-  g_assert (filter->process);
   return TRUE;
 }
 
 static void
 gst_freeverb_init_rev_model (GstFreeverb * filter)
 {
-  gfloat srfactor = filter->rate / 44100.0f;
+  gfloat srfactor = GST_AUDIO_INFO_RATE (&filter->info) / 44100.0f;
   GstFreeverbPrivate *priv = filter->priv;
 
   freeverb_revmodel_free (filter);
@@ -624,43 +609,54 @@ gst_freeverb_get_property (GObject * object, guint prop_id,
 
 static gboolean
 gst_freeverb_get_unit_size (GstBaseTransform * base, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
-  gint width, channels;
-  GstStructure *structure;
-  gboolean ret;
+  GstAudioInfo info;
 
   g_assert (size);
 
-  /* this works for both float and int */
-  structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_int (structure, "width", &width);
-  ret &= gst_structure_get_int (structure, "channels", &channels);
+  if (!gst_audio_info_from_caps (&info, caps))
+    return FALSE;
 
-  *size = width * channels / 8;
+  *size = GST_AUDIO_INFO_BPF (&info);
 
   GST_INFO_OBJECT (base, "unit size: %u", *size);
 
-  return ret;
+  return TRUE;
 }
 
 static GstCaps *
 gst_freeverb_transform_caps (GstBaseTransform * base,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstCaps *res;
   GstStructure *structure;
+  gint i;
 
-  /* transform caps gives one single caps so we can just replace
-   * the channel property with our range. */
+  /* replace the channel property with our range. */
   res = gst_caps_copy (caps);
-  structure = gst_caps_get_structure (res, 0);
-  if (direction == GST_PAD_SRC) {
-    GST_INFO_OBJECT (base, "allow 1-2 channels");
-    gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
-  } else {
-    GST_INFO_OBJECT (base, "allow 2 channels");
-    gst_structure_set (structure, "channels", G_TYPE_INT, 2, NULL);
+  for (i = 0; i < gst_caps_get_size (res); i++) {
+    structure = gst_caps_get_structure (res, i);
+    if (direction == GST_PAD_SRC) {
+      GST_INFO_OBJECT (base, "[%d] allow 1-2 channels", i);
+      gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+      gst_structure_remove_field (structure, "channel-mask");
+    } else {
+      GST_INFO_OBJECT (base, "[%d] allow 2 channels", i);
+      gst_structure_set (structure, "channels", G_TYPE_INT, 2, NULL);
+    }
+  }
+  GST_DEBUG_OBJECT (base, "transformed %" GST_PTR_FORMAT, res);
+
+  if (filter) {
+    GstCaps *intersection;
+
+    GST_DEBUG_OBJECT (base, "Using filter caps %" GST_PTR_FORMAT, filter);
+    intersection =
+        gst_caps_intersect_full (filter, res, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (res);
+    res = intersection;
+    GST_DEBUG_OBJECT (base, "Intersection %" GST_PTR_FORMAT, res);
   }
 
   return res;
@@ -671,57 +667,28 @@ gst_freeverb_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstFreeverb *filter = GST_FREEVERB (base);
-  const GstStructure *structure;
-  gboolean ret;
-  gint width, rate;
-  const gchar *fmt;
+  GstAudioInfo info;
 
   /*GST_INFO ("incaps are %" GST_PTR_FORMAT, incaps); */
+  if (!gst_audio_info_from_caps (&info, incaps))
+    goto no_format;
 
-  structure = gst_caps_get_structure (incaps, 0);
-  ret = gst_structure_get_int (structure, "channels", &filter->channels);
-  if (!ret)
-    goto no_channels;
+  if (!gst_freeverb_set_process_function (filter, &info))
+    goto no_format;
 
-  ret = gst_structure_get_int (structure, "width", &width);
-  if (!ret)
-    goto no_width;
-  filter->width = width / 8;
-
-  ret = gst_structure_get_int (structure, "rate", &rate);
-  if (!ret)
-    goto no_rate;
-  filter->rate = rate;
-
-  fmt = gst_structure_get_name (structure);
-  if (!strcmp (fmt, "audio/x-raw-int"))
-    filter->format_float = FALSE;
-  else
-    filter->format_float = TRUE;
-
-  GST_DEBUG_OBJECT (filter, "try to process %s input_1 with %d channels", fmt,
-      filter->channels);
-
-  ret = gst_freeverb_set_process_function (filter);
-  if (!ret)
-    GST_WARNING_OBJECT (filter, "can't process input_1 with %d channels",
-        filter->channels);
+  filter->info = info;
 
   gst_freeverb_init_rev_model (filter);
   filter->drained = FALSE;
   GST_INFO_OBJECT (base, "model configured");
 
-  return ret;
+  return TRUE;
 
-no_channels:
-  GST_DEBUG_OBJECT (filter, "no channels in caps");
-  return ret;
-no_width:
-  GST_DEBUG_OBJECT (filter, "no width in caps");
-  return ret;
-no_rate:
-  GST_DEBUG_OBJECT (filter, "no rate in caps");
-  return ret;
+no_format:
+  {
+    GST_DEBUG ("invalid caps");
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -919,38 +886,46 @@ gst_freeverb_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstFreeverb *filter = GST_FREEVERB (base);
-  guint num_samples = GST_BUFFER_SIZE (outbuf) / (2 * filter->width);
+  guint num_samples;
   GstClockTime timestamp;
+  GstMapInfo inmap, outmap;
 
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
   timestamp =
       gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, timestamp);
 
+  gst_buffer_map (inbuf, &inmap, GST_MAP_READ);
+  gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
+  num_samples = outmap.size / (2 * GST_AUDIO_INFO_BPS (&filter->info));
+
   GST_DEBUG_OBJECT (filter, "processing %u samples at %" GST_TIME_FORMAT,
       num_samples, GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    gst_object_sync_values (G_OBJECT (filter), timestamp);
+    gst_object_sync_values (GST_OBJECT (filter), timestamp);
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DISCONT))) {
     filter->drained = FALSE;
   }
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP))) {
     if (filter->drained) {
-      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
-      memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
-      return GST_FLOW_OK;
+      memset (outmap.data, 0, outmap.size);
     }
   } else {
     filter->drained = FALSE;
   }
 
-  filter->drained = filter->process (filter, GST_BUFFER_DATA (inbuf),
-      GST_BUFFER_DATA (outbuf), num_samples);
+  if (!filter->drained) {
+    filter->drained =
+        filter->process (filter, inmap.data, outmap.data, num_samples);
+  }
 
   if (filter->drained) {
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
   }
+
+  gst_buffer_unmap (inbuf, &inmap);
+  gst_buffer_unmap (outbuf, &outmap);
 
   return GST_FLOW_OK;
 }
@@ -959,8 +934,6 @@ gst_freeverb_transform (GstBaseTransform * base, GstBuffer * inbuf,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_controller_init (NULL, NULL);
-
   return gst_element_register (plugin, "freeverb",
       GST_RANK_NONE, GST_TYPE_FREEVERB);
 }
