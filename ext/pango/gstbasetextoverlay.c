@@ -1381,13 +1381,18 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
 
   /* draw shadow text */
   {
-    PangoAttrList *origin_attr, *filtered_attr;
+    PangoAttrList *origin_attr, *filtered_attr, *temp_attr;
 
+    /* Store a ref on the original attributes for later restoration */
     origin_attr =
-        pango_attr_list_copy (pango_layout_get_attributes (overlay->layout));
+        pango_attr_list_ref (pango_layout_get_attributes (overlay->layout));
+    /* Take a copy of the original attributes, because pango_attr_list_filter
+     * modifies the passed list */
+    temp_attr = pango_attr_list_copy (origin_attr);
     filtered_attr =
-        pango_attr_list_filter (origin_attr,
+        pango_attr_list_filter (temp_attr,
         gst_text_overlay_filter_foreground_attr, NULL);
+    pango_attr_list_unref (temp_attr);
 
     cairo_save (cr);
     cairo_translate (cr, overlay->shadow_offset, overlay->shadow_offset);
