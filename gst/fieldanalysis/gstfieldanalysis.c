@@ -101,11 +101,11 @@ enum
 
 static GstStaticPadTemplate sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{YUY2,UYVY,I420,YV12}")));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{YUY2,UYVY,Y42B,I420,YV12}")));
 
 static GstStaticPadTemplate src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{YUY2,UYVY,I420,YV12}")));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{YUY2,UYVY,Y42B,I420,YV12}")));
 
 G_DEFINE_TYPE (GstFieldAnalysis, gst_field_analysis, GST_TYPE_ELEMENT);
 #define parent_class gst_field_analysis_parent_class
