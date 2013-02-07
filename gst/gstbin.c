@@ -2742,8 +2742,8 @@ activate_failure:
 
 /*
  * This function is a utility event handler for seek events.
- * It will send the event to all sinks or sources depending on the
- * event-direction.
+ * It will send the event to all sinks or sources and appropriate
+ * ghost pads depending on the event-direction.
  *
  * Applications are free to override this behaviour and
  * implement their own seek handler, but this will work for
@@ -2772,7 +2772,7 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
     switch (gst_iterator_next (iter, &data)) {
       case GST_ITERATOR_OK:
       {
-        GstElement *child = g_value_get_object (&data);;
+        GstElement *child = g_value_get_object (&data);
 
         gst_event_ref (event);
         res &= gst_element_send_event (child, event);
@@ -2795,6 +2795,45 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
         break;
     }
   }
+  g_value_unset (&data);
+  gst_iterator_free (iter);
+
+  if (GST_EVENT_IS_DOWNSTREAM (event)) {
+    iter = gst_element_iterate_sink_pads (GST_ELEMENT (bin));
+    GST_DEBUG_OBJECT (bin, "Sending %s event to sink pads",
+        GST_EVENT_TYPE_NAME (event));
+  } else {
+    iter = gst_element_iterate_src_pads (GST_ELEMENT (bin));
+    GST_DEBUG_OBJECT (bin, "Sending %s event to src pads",
+        GST_EVENT_TYPE_NAME (event));
+  }
+
+  done = FALSE;
+  while (!done) {
+    switch (gst_iterator_next (iter, &data)) {
+      case GST_ITERATOR_OK:
+      {
+        GstPad *pad = g_value_get_object (&data);
+
+        gst_event_ref (event);
+        res &= gst_pad_send_event (pad, event);
+        GST_LOG_OBJECT (pad, "After handling %s event: %d",
+            GST_EVENT_TYPE_NAME (event), res);
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        res = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_ERROR:
+        g_assert_not_reached ();
+        break;
+    }
+  }
+
   g_value_unset (&data);
   gst_iterator_free (iter);
   gst_event_unref (event);
