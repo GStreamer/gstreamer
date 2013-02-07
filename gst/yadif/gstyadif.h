@@ -35,6 +35,12 @@ G_BEGIN_DECLS
 typedef struct _GstYadif GstYadif;
 typedef struct _GstYadifClass GstYadifClass;
 
+typedef enum {
+  GST_DEINTERLACE_MODE_AUTO,
+  GST_DEINTERLACE_MODE_INTERLACED,
+  GST_DEINTERLACE_MODE_DISABLED
+} GstDeinterlaceMode;
+
 struct _GstYadif
 {
   GstBaseTransform base_yadif;
@@ -42,7 +48,7 @@ struct _GstYadif
   GstPad *sinkpad;
   GstPad *srcpad;
 
-  int mode;
+  GstDeinterlaceMode mode;
 
   GstVideoInfo video_info;
 

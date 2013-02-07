@@ -100,8 +100,11 @@ static GstFlowReturn gst_yadif_transform_ip (GstBaseTransform * trans,
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_MODE
 };
+
+#define DEFAULT_MODE GST_DEINTERLACE_MODE_AUTO
 
 /* pad templates */
 
@@ -120,6 +123,26 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{Y42B,I420,Y444}")
         ",interlace-mode=(string)progressive")
     );
+
+#define GST_TYPE_DEINTERLACE_MODES (gst_deinterlace_modes_get_type ())
+static GType
+gst_deinterlace_modes_get_type (void)
+{
+  static GType deinterlace_modes_type = 0;
+
+  static const GEnumValue modes_types[] = {
+    {GST_DEINTERLACE_MODE_AUTO, "Auto detection", "auto"},
+    {GST_DEINTERLACE_MODE_INTERLACED, "Force deinterlacing", "interlaced"},
+    {GST_DEINTERLACE_MODE_DISABLED, "Run in passthrough mode", "disabled"},
+    {0, NULL, NULL},
+  };
+
+  if (!deinterlace_modes_type) {
+    deinterlace_modes_type =
+        g_enum_register_static ("GstYadifModes", modes_types);
+  }
+  return deinterlace_modes_type;
+}
 
 
 /* class initialization */
@@ -198,6 +221,13 @@ gst_yadif_class_init (GstYadifClass * klass)
     base_transform_class->transform_ip =
         GST_DEBUG_FUNCPTR (gst_yadif_transform_ip);
 
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Deinterlace Mode",
+          "Deinterlace mode",
+          GST_TYPE_DEINTERLACE_MODES,
+          DEFAULT_MODE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
 }
 
 static void
@@ -215,9 +245,12 @@ void
 gst_yadif_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  /* GstYadif *yadif = GST_YADIF (object); */
+  GstYadif *yadif = GST_YADIF (object);
 
   switch (property_id) {
+    case PROP_MODE:
+      yadif->mode = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -228,9 +261,12 @@ void
 gst_yadif_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  /* GstYadif *yadif = GST_YADIF (object); */
+  GstYadif *yadif = GST_YADIF (object);
 
   switch (property_id) {
+    case PROP_MODE:
+      g_value_set_enum (value, yadif->mode);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
