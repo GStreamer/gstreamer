@@ -441,6 +441,8 @@ static GstCaps *qtdemux_generic_caps (GstQTDemux * qtdemux,
 static gboolean qtdemux_parse_samples (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 n);
 static GstFlowReturn qtdemux_expose_streams (GstQTDemux * qtdemux);
+static void gst_qtdemux_stream_free (GstQTDemux * qtdemux,
+    QtDemuxStream * stream);
 
 static void
 gst_qtdemux_class_init (GstQTDemuxClass * klass)
@@ -1717,6 +1719,57 @@ gst_qtdemux_setcaps (GstQTDemux * demux, GstCaps * caps)
   return TRUE;
 }
 
+static void
+gst_qtdemux_reset (GstQTDemux * qtdemux)
+{
+  gint n;
+
+  qtdemux->state = QTDEMUX_STATE_INITIAL;
+  qtdemux->neededbytes = 16;
+  qtdemux->todrop = 0;
+  qtdemux->pullbased = FALSE;
+  qtdemux->posted_redirect = FALSE;
+  qtdemux->offset = 0;
+  qtdemux->first_mdat = -1;
+  qtdemux->header_size = 0;
+  qtdemux->got_moov = FALSE;
+  qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
+  if (qtdemux->mdatbuffer)
+    gst_buffer_unref (qtdemux->mdatbuffer);
+  qtdemux->mdatbuffer = NULL;
+  if (qtdemux->comp_brands)
+    gst_buffer_unref (qtdemux->comp_brands);
+  qtdemux->comp_brands = NULL;
+  if (qtdemux->tag_list)
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (qtdemux->tag_list));
+  qtdemux->tag_list = NULL;
+#if 0
+  if (qtdemux->element_index)
+    gst_object_unref (qtdemux->element_index);
+  qtdemux->element_index = NULL;
+#endif
+  gst_adapter_clear (qtdemux->adapter);
+  for (n = 0; n < qtdemux->n_streams; n++) {
+    gst_qtdemux_stream_free (qtdemux, qtdemux->streams[n]);
+    qtdemux->streams[n] = NULL;
+  }
+  qtdemux->major_brand = 0;
+  qtdemux->n_streams = 0;
+  qtdemux->n_video_streams = 0;
+  qtdemux->n_audio_streams = 0;
+  qtdemux->n_sub_streams = 0;
+  gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
+  qtdemux->requested_seek_time = GST_CLOCK_TIME_NONE;
+  qtdemux->seek_offset = 0;
+  qtdemux->upstream_seekable = FALSE;
+  qtdemux->upstream_size = 0;
+
+  gst_caps_replace (&qtdemux->media_caps, NULL);
+  qtdemux->mss_mode = FALSE;
+  qtdemux->exposed = FALSE;
+  qtdemux->base_timestamp = GST_CLOCK_TIME_NONE;
+}
+
 static gboolean
 gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
     GstEvent * event)
@@ -1829,43 +1882,7 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
     }
     case GST_EVENT_FLUSH_STOP:
     {
-      gint i;
-      GstClockTime dur;
-
-      /* clean up, force EOS if no more info follows */
-      gst_adapter_clear (demux->adapter);
-      demux->offset = 0;
-      demux->neededbytes = 16;
-      demux->state = QTDEMUX_STATE_INITIAL;
-      demux->offset = 0;
-      demux->first_mdat = -1;
-      demux->got_moov = FALSE;
-      demux->mdatoffset = GST_CLOCK_TIME_NONE;
-      demux->mdatbuffer = NULL;
-      demux->base_timestamp = GST_CLOCK_TIME_NONE;
-      /* reset flow return, e.g. following seek */
-      for (i = 0; i < demux->n_streams; i++) {
-        demux->streams[i]->last_ret = GST_FLOW_OK;
-        demux->streams[i]->sent_eos = FALSE;
-        demux->streams[i]->segment_index = -1;
-        demux->streams[i]->time_position = 0;
-        demux->streams[i]->sample_index = -1;
-        demux->streams[i]->stbl_index = -1;
-        while (demux->streams[i]->buffers) {
-          gst_buffer_unref (GST_BUFFER_CAST (demux->streams[i]->buffers->data));
-          demux->streams[i]->buffers =
-              g_slist_delete_link (demux->streams[i]->buffers,
-              demux->streams[i]->buffers);
-        }
-        g_free (demux->streams[i]->samples);
-        demux->streams[i]->samples = NULL;
-        demux->streams[i]->n_samples = 0;
-        g_free (demux->streams[i]->segments);
-        demux->streams[i]->segments = NULL;
-      }
-      dur = demux->segment.duration;
-      gst_segment_init (&demux->segment, GST_FORMAT_TIME);
-      demux->segment.duration = dur;
+      gst_qtdemux_reset (demux);
       break;
     }
     case GST_EVENT_EOS:
@@ -2002,52 +2019,7 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:{
-      gint n;
-
-      qtdemux->state = QTDEMUX_STATE_INITIAL;
-      qtdemux->neededbytes = 16;
-      qtdemux->todrop = 0;
-      qtdemux->pullbased = FALSE;
-      qtdemux->posted_redirect = FALSE;
-      qtdemux->offset = 0;
-      qtdemux->first_mdat = -1;
-      qtdemux->header_size = 0;
-      qtdemux->got_moov = FALSE;
-      qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
-      if (qtdemux->mdatbuffer)
-        gst_buffer_unref (qtdemux->mdatbuffer);
-      qtdemux->mdatbuffer = NULL;
-      if (qtdemux->comp_brands)
-        gst_buffer_unref (qtdemux->comp_brands);
-      qtdemux->comp_brands = NULL;
-      if (qtdemux->tag_list)
-        gst_tag_list_unref (qtdemux->tag_list);
-      qtdemux->tag_list = NULL;
-#if 0
-      if (qtdemux->element_index)
-        gst_object_unref (qtdemux->element_index);
-      qtdemux->element_index = NULL;
-#endif
-      gst_adapter_clear (qtdemux->adapter);
-      for (n = 0; n < qtdemux->n_streams; n++) {
-        gst_qtdemux_stream_free (qtdemux, qtdemux->streams[n]);
-        qtdemux->streams[n] = NULL;
-      }
-      qtdemux->major_brand = 0;
-      qtdemux->n_streams = 0;
-      qtdemux->n_video_streams = 0;
-      qtdemux->n_audio_streams = 0;
-      qtdemux->n_sub_streams = 0;
-      gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
-      qtdemux->requested_seek_time = GST_CLOCK_TIME_NONE;
-      qtdemux->seek_offset = 0;
-      qtdemux->upstream_seekable = FALSE;
-      qtdemux->upstream_size = 0;
-
-      gst_caps_replace (&qtdemux->media_caps, NULL);
-      qtdemux->mss_mode = FALSE;
-      qtdemux->exposed = FALSE;
-      qtdemux->base_timestamp = GST_CLOCK_TIME_NONE;
+      gst_qtdemux_reset (qtdemux);
       break;
     }
     default:
