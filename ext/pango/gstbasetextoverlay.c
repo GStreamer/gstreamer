@@ -1384,7 +1384,7 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
     PangoAttrList *origin_attr, *filtered_attr;
 
     origin_attr =
-        pango_attr_list_ref (pango_layout_get_attributes (overlay->layout));
+        pango_attr_list_copy (pango_layout_get_attributes (overlay->layout));
     filtered_attr =
         pango_attr_list_filter (origin_attr,
         gst_text_overlay_filter_foreground_attr, NULL);
