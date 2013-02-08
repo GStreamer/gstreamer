@@ -93,19 +93,19 @@ GST_START_TEST (test_basic_timeline_edition)
   trackelement = ges_clip_create_track_element (obj, track->type);
   fail_unless (trackelement != NULL);
   fail_unless (ges_clip_add_track_element (obj, trackelement));
-  fail_unless (ges_track_add_object (track, trackelement));
+  fail_unless (ges_track_add_element (track, trackelement));
   assert_equals_uint64 (_DURATION (trackelement), 10);
 
   trackelement1 = ges_clip_create_track_element (obj1, track->type);
   fail_unless (trackelement1 != NULL);
   fail_unless (ges_clip_add_track_element (obj1, trackelement1));
-  fail_unless (ges_track_add_object (track, trackelement1));
+  fail_unless (ges_track_add_element (track, trackelement1));
   assert_equals_uint64 (_DURATION (trackelement1), 10);
 
   trackelement2 = ges_clip_create_track_element (obj2, track->type);
   fail_unless (ges_clip_add_track_element (obj2, trackelement2));
   fail_unless (trackelement2 != NULL);
-  fail_unless (ges_track_add_object (track, trackelement2));
+  fail_unless (ges_track_add_element (track, trackelement2));
   assert_equals_uint64 (_DURATION (trackelement2), 60);
 
   /**

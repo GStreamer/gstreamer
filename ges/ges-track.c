@@ -707,7 +707,7 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
 }
 
 /**
- * ges_track_add_object:
+ * ges_track_add_element:
  * @track: a #GESTrack
  * @object: (transfer full): the #GESTrackElement to add
  *
@@ -720,7 +720,7 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
  * want to accept the object.
  */
 gboolean
-ges_track_add_object (GESTrack * track, GESTrackElement * object)
+ges_track_add_element (GESTrack * track, GESTrackElement * object)
 {
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
@@ -770,7 +770,7 @@ ges_track_add_object (GESTrack * track, GESTrackElement * object)
 }
 
 /**
- * ges_track_get_objects:
+ * ges_track_get_elements:
  * @track: a #GESTrack
  *
  * Gets the #GESTrackElement contained in @track
@@ -779,7 +779,7 @@ ges_track_add_object (GESTrack * track, GESTrackElement * object)
  * #GESTrackElement present in the Track sorted by priority and start.
  */
 GList *
-ges_track_get_objects (GESTrack * track)
+ges_track_get_elements (GESTrack * track)
 {
   GList *ret = NULL;
 
@@ -793,7 +793,7 @@ ges_track_get_objects (GESTrack * track)
 }
 
 /**
- * ges_track_remove_object:
+ * ges_track_remove_element:
  * @track: a #GESTrack
  * @object: the #GESTrackElement to remove
  *
@@ -806,7 +806,7 @@ ges_track_get_objects (GESTrack * track)
  * could not remove the object (like if it didn't belong to the track).
  */
 gboolean
-ges_track_remove_object (GESTrack * track, GESTrackElement * object)
+ges_track_remove_element (GESTrack * track, GESTrackElement * object)
 {
   GSequenceIter *it;
   GESTrackPrivate *priv;

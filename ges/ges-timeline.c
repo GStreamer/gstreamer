@@ -1738,7 +1738,7 @@ add_object_to_track (GESClip * object, GESTrackElement * track_element,
     return;
   }
 
-  if (!ges_track_add_object (track, track_element)) {
+  if (!ges_track_add_element (track, track_element)) {
     GST_WARNING_OBJECT (object, "Failed to add track element to track");
     ges_clip_release_track_element (object, track_element);
     gst_object_unref (track_element);
@@ -1907,7 +1907,7 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESClip * object,
                 (GCompareFunc) custom_find_track))) {
       GST_DEBUG ("Belongs to one of the tracks we control");
 
-      ges_track_remove_object (ges_track_element_get_track (trobj), trobj);
+      ges_track_remove_element (ges_track_element_get_track (trobj), trobj);
       ges_clip_release_track_element (object, trobj);
     }
     /* removing the reference added by _get_track_elements() */

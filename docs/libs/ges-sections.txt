@@ -66,12 +66,12 @@ GESCreateElementForGapFunc
 ges_track_audio_raw_new
 ges_track_video_raw_new
 ges_track_new
-ges_track_add_object
-ges_track_remove_object
+ges_track_add_element
+ges_track_remove_element
 ges_track_set_caps
 ges_track_get_caps
 ges_track_enable_update
-ges_track_get_objects
+ges_track_get_elements
 ges_track_is_updating
 ges_track_set_create_element_for_gap_func
 <SUBSECTION Standard>

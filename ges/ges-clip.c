@@ -1313,7 +1313,7 @@ ges_clip_split (GESClip * object, guint64 position)
       GST_DEBUG_OBJECT (trackelement, "Was not in a track, not adding %p to"
           "any track", new_trackelement);
     else
-      ges_track_add_object (track, new_trackelement);
+      ges_track_add_element (track, new_trackelement);
 
     /* Unlock TrackElement-s as we do not want the container to move
      * syncronously */

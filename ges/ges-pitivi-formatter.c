@@ -945,9 +945,9 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
         ges_track_element_set_active (GES_TRACK_ELEMENT (effect), FALSE);
 
       if (video)
-        ges_track_add_object (priv->trackv, GES_TRACK_ELEMENT (effect));
+        ges_track_add_element (priv->trackv, GES_TRACK_ELEMENT (effect));
       else
-        ges_track_add_object (priv->tracka, GES_TRACK_ELEMENT (effect));
+        ges_track_add_element (priv->tracka, GES_TRACK_ELEMENT (effect));
 
       /* Set effect properties */
       keys = g_hash_table_get_keys (effect_table);

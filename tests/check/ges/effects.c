@@ -74,7 +74,7 @@ GST_START_TEST (test_add_effect_to_clip)
 
   fail_unless (ges_clip_add_track_element (GES_CLIP
           (source), GES_TRACK_ELEMENT (base_effect)));
-  fail_unless (ges_track_add_object (track_video,
+  fail_unless (ges_track_add_element (track_video,
           GES_TRACK_ELEMENT (base_effect)));
 
   assert_equals_int (GES_TRACK_ELEMENT (base_effect)->active, TRUE);
@@ -125,17 +125,17 @@ GST_START_TEST (test_get_effects_from_tl)
 
   fail_unless (ges_clip_add_track_element (GES_CLIP
           (source), GES_TRACK_ELEMENT (base_effect)));
-  fail_unless (ges_track_add_object (track_video,
+  fail_unless (ges_track_add_element (track_video,
           GES_TRACK_ELEMENT (base_effect)));
 
   fail_unless (ges_clip_add_track_element (GES_CLIP
           (source), GES_TRACK_ELEMENT (base_effect1)));
-  fail_unless (ges_track_add_object (track_video,
+  fail_unless (ges_track_add_element (track_video,
           GES_TRACK_ELEMENT (base_effect1)));
 
   fail_unless (ges_clip_add_track_element (GES_CLIP
           (source), GES_TRACK_ELEMENT (base_effect2)));
-  fail_unless (ges_track_add_object (track_video,
+  fail_unless (ges_track_add_element (track_video,
           GES_TRACK_ELEMENT (base_effect2)));
 
   g_object_get (G_OBJECT (source), "height", &clip_height, NULL);
@@ -199,7 +199,7 @@ GST_START_TEST (test_effect_clip)
   tck_effect = ges_effect_new ("identity");
   fail_unless (ges_clip_add_track_element (GES_CLIP
           (effect_clip), GES_TRACK_ELEMENT (tck_effect)));
-  fail_unless (ges_track_add_object (track_video,
+  fail_unless (ges_track_add_element (track_video,
           GES_TRACK_ELEMENT (tck_effect)));
 
   g_object_get (effect_clip, "height", &clip_height, NULL);
@@ -208,7 +208,7 @@ GST_START_TEST (test_effect_clip)
   tck_effect1 = ges_effect_new ("identity");
   fail_unless (ges_clip_add_track_element (GES_CLIP
           (effect_clip), GES_TRACK_ELEMENT (tck_effect1)));
-  fail_unless (ges_track_add_object (track_audio,
+  fail_unless (ges_track_add_element (track_audio,
           GES_TRACK_ELEMENT (tck_effect1)));
 
   g_object_get (effect_clip, "height", &clip_height, NULL);
@@ -268,7 +268,7 @@ GST_START_TEST (test_priorities_clip)
   tck_effect = ges_effect_new ("identity");
   fail_unless (ges_clip_add_track_element (GES_CLIP
           (effect_clip), GES_TRACK_ELEMENT (tck_effect)));
-  fail_unless (ges_track_add_object (track_video,
+  fail_unless (ges_track_add_element (track_video,
           GES_TRACK_ELEMENT (tck_effect)));
 
   g_object_get (effect_clip, "height", &clip_height, NULL);
@@ -277,7 +277,7 @@ GST_START_TEST (test_priorities_clip)
   tck_effect1 = ges_effect_new ("identity");
   fail_unless (ges_clip_add_track_element (GES_CLIP
           (effect_clip), GES_TRACK_ELEMENT (tck_effect1)));
-  fail_unless (ges_track_add_object (track_audio,
+  fail_unless (ges_track_add_element (track_audio,
           GES_TRACK_ELEMENT (tck_effect1)));
 
   fail_unless (ges_clip_set_top_effect_priority (GES_CLIP
@@ -343,7 +343,7 @@ GST_START_TEST (test_base_effect_set_properties)
 
   tck_effect = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
   fail_unless (ges_clip_add_track_element (GES_CLIP (effect_clip), tck_effect));
-  fail_unless (ges_track_add_object (track_video, tck_effect));
+  fail_unless (ges_track_add_element (track_video, tck_effect));
 
   ges_track_element_set_child_properties (tck_effect,
       "GstAgingTV::scratch-lines", 17, "color-aging", FALSE, NULL);
@@ -430,7 +430,7 @@ GST_START_TEST (test_clip_signals)
   tck_effect = ges_effect_new ("agingtv");
   fail_unless (ges_clip_add_track_element (GES_CLIP
           (effect_clip), GES_TRACK_ELEMENT (tck_effect)));
-  fail_unless (ges_track_add_object (track_video,
+  fail_unless (ges_track_add_element (track_video,
           GES_TRACK_ELEMENT (tck_effect)));
   g_signal_connect (tck_effect, "deep-notify", (GCallback) deep_prop_changed_cb,
       tck_effect);

@@ -224,7 +224,7 @@ _test_project (GESProject * project, GESTimeline * timeline)
     GList *trackelements;
     track = GES_TRACK (tmp->data);
 
-    trackelements = ges_track_get_objects (track);
+    trackelements = ges_track_get_elements (track);
     GST_DEBUG_OBJECT (track, "Testing track");
     switch (track->type) {
       case GES_TRACK_TYPE_VIDEO:

@@ -1082,9 +1082,9 @@ app_add_effect_on_selected_clips (App * app, const gchar * bin_desc,
     ges_clip_add_track_element (GES_CLIP (tmp->data), effect);
 
     if (type == GES_TRACK_TYPE_VIDEO)
-      ges_track_add_object (app->video_track, effect);
+      ges_track_add_element (app->video_track, effect);
     else if (type == GES_TRACK_TYPE_AUDIO)
-      ges_track_add_object (app->audio_track, effect);
+      ges_track_add_element (app->audio_track, effect);
 
     g_object_unref (tmp->data);
   }

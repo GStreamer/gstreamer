@@ -254,7 +254,7 @@ GST_START_TEST (test_gap_filling_basic)
   trackelement = ges_clip_create_track_element (object, track->type);
   ges_clip_add_track_element (object, trackelement);
 
-  fail_unless (ges_track_add_object (track, trackelement));
+  fail_unless (ges_track_add_element (track, trackelement));
   fail_unless (trackelement != NULL);
   gnlsrc = ges_track_element_get_gnlobject (trackelement);
   fail_unless (gnlsrc != NULL);
@@ -275,7 +275,7 @@ GST_START_TEST (test_gap_filling_basic)
 
   trackelement1 = ges_clip_create_track_element (object1, track->type);
   ges_clip_add_track_element (object1, trackelement1);
-  fail_unless (ges_track_add_object (track, trackelement1));
+  fail_unless (ges_track_add_element (track, trackelement1));
   fail_unless (trackelement1 != NULL);
   gnlsrc1 = ges_track_element_get_gnlobject (trackelement1);
   fail_unless (gnlsrc1 != NULL);
@@ -302,7 +302,7 @@ GST_START_TEST (test_gap_filling_basic)
   g_object_set (object2, "start", (guint64) 35, "duration", (guint64) 5, NULL);
   trackelement2 = ges_clip_create_track_element (object2, track->type);
   ges_clip_add_track_element (object2, trackelement2);
-  fail_unless (ges_track_add_object (track, trackelement2));
+  fail_unless (ges_track_add_element (track, trackelement2));
   fail_unless (trackelement2 != NULL);
   assert_equals_uint64 (_START (trackelement2), 35);
   assert_equals_uint64 (_DURATION (trackelement2), 5);

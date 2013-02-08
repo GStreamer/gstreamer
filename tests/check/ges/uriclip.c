@@ -57,7 +57,7 @@ asset_created_cb (GObject * source, GAsyncResult * res, gpointer udata)
 
   tracks = ges_timeline_get_tracks (ges_timeline_layer_get_timeline (layer));
   for (tmp = tracks; tmp; tmp = tmp->next) {
-    GList *trackelements = ges_track_get_objects (GES_TRACK (tmp->data));
+    GList *trackelements = ges_track_get_elements (GES_TRACK (tmp->data));
 
     assert_equals_int (g_list_length (trackelements), 1);
     fail_unless (GES_IS_TRACK_FILESOURCE (trackelements->data));
@@ -207,7 +207,7 @@ GST_START_TEST (test_filesource_images)
    * and the timelinobject holds a reference to the object */
   ASSERT_OBJECT_REFCOUNT (trobj, "Video Track Element", 2);
 
-  ges_track_remove_object (v, trobj);
+  ges_track_remove_element (v, trobj);
   ges_clip_release_track_element (clip, trobj);
 
   /* the clip should not create any TrackElement in the audio track */
