@@ -389,6 +389,21 @@ gst_x264_enc_build_tunings_string (GstX264Enc * x264enc)
         x264enc->tunings->str);
 }
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define FORMATS "I420, YV12, Y42B, Y444, NV12, I420_10LE, I422_10LE, Y444_10LE"
+#else
+#define FORMATS "I420, YV12, Y42B, Y444, NV12, I420_10BE, I422_10BE, Y444_10BE"
+#endif
+
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) { " FORMATS " }, "
+        "framerate = (fraction) [0, MAX], "
+        "width = (int) [ 16, MAX ], " "height = (int) [ 16, MAX ]")
+    );
+
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -544,6 +559,20 @@ gst_x264_enc_get_supported_input_caps (void)
       "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
       "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
 
+  GST_DEBUG ("returning %" GST_PTR_FORMAT, caps);
+  return caps;
+}
+
+/* allowed input caps depending on whether libx264 was built for 8 or 10 bits */
+static GstCaps *
+gst_x264_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
+{
+  GstCaps *supported_incaps, *caps;
+
+  supported_incaps = gst_x264_enc_get_supported_input_caps ();
+  caps = gst_video_encoder_proxy_getcaps (enc, supported_incaps, filter);
+  gst_caps_unref (supported_incaps);
+
   return caps;
 }
 
@@ -553,9 +582,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstVideoEncoderClass *gstencoder_class;
-  GstPadTemplate *tmpl;
   const gchar *partitions = NULL;
-  GstCaps *caps;
 
   x264enc_defaults = g_string_new ("");
 
@@ -573,6 +600,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       GST_DEBUG_FUNCPTR (gst_x264_enc_handle_frame);
   gstencoder_class->reset = GST_DEBUG_FUNCPTR (gst_x264_enc_reset);
   gstencoder_class->finish = GST_DEBUG_FUNCPTR (gst_x264_enc_finish);
+  gstencoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_x264_enc_sink_getcaps);
   gstencoder_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_x264_enc_propose_allocation);
 
@@ -808,12 +836,9 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       "Mark Nauwelaerts <mnauw@users.sf.net>");
 
   gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
-
-  caps = gst_x264_enc_get_supported_input_caps ();
-  tmpl = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
-  gst_element_class_add_pad_template (element_class, tmpl);
-  gst_caps_unref (caps);
 }
 
 static void
