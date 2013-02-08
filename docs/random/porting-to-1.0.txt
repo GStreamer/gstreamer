@@ -459,6 +459,10 @@ CHANGES
     GstBaseSrc::get_caps(), GstBaseTransform::transform_caps() and
     GstBaseSink::get_caps() now take a filter GstCaps* parameter to
     filter the caps and allow better negotiation decisions.
+
+* GstBaseSrc
+    When overriding GstBaseTransform::fixate() one should chain up to the parent
+    implementation.
  
 * GstBaseTransform
     GstBaseTransform::transform_caps() now gets the complete caps passed
@@ -625,7 +629,7 @@ CHANGES
  * "decodebin2" has been renamed to "decodebin", with similar API. Note
    that there is no longer a "new-decoded-pad" signal, just use GstElement's
    "pad-added" signal instead (but don't forget to remove the 'gboolean last'
-   argument from your old signal callback functino signature).
+   argument from your old signal callback function signature).
 
  * the names of some "formatted" pad templates has been changed from e.g.
    "src%d" to "src%u" or "src_%u" or similar, since we don't want to see
@@ -650,6 +654,9 @@ CHANGES
  * playbin also proxies the GstColorBalance and GstNavigation interfaces,
    so applications that use this don't need to go fishing for elements
    that may implement those any more, but can just use them unconditionally.
+   
+ * level sendy the per channel values as a GValueArray instead of a GstValueList
+   see gst-plugins-good/test/examples/level/level-example.c
 
  * media type / caps changes:
 
