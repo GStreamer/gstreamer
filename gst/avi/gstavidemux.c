@@ -456,14 +456,14 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstObject * parent,
       if (stream->strh->type == GST_RIFF_FCC_auds) {
         if (stream->is_vbr) {
           /* VBR */
-          pos = gst_util_uint64_scale ((gint64) stream->current_entry *
-              stream->strh->scale, GST_SECOND, (guint64) stream->strh->rate);
+          pos = avi_stream_convert_frames_to_time_unchecked (stream,
+              stream->current_total);
           GST_DEBUG_OBJECT (avi, "VBR convert frame %u, time %"
               GST_TIME_FORMAT, stream->current_entry, GST_TIME_ARGS (pos));
         } else if (stream->strf.auds->av_bps != 0) {
           /* CBR */
-          pos = gst_util_uint64_scale (stream->current_total, GST_SECOND,
-              (guint64) stream->strf.auds->av_bps);
+          pos = avi_stream_convert_bytes_to_time_unchecked (stream,
+              stream->current_total);
           GST_DEBUG_OBJECT (avi,
               "CBR convert bytes %u, time %" GST_TIME_FORMAT,
               stream->current_total, GST_TIME_ARGS (pos));
@@ -5098,7 +5098,18 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
 
         /* increment our positions */
         stream->current_entry++;
-        stream->current_total += size;
+        /* as in pull mode, 'total' is either bytes (CBR) or frames (VBR) */
+        if (stream->strh->type == GST_RIFF_FCC_auds && stream->is_vbr) {
+          gint blockalign = stream->strf.auds->blockalign;
+          if (blockalign > 0)
+            stream->current_total += DIV_ROUND_UP (size, blockalign);
+          else
+            stream->current_total++;
+        } else {
+          stream->current_total += size;
+        }
+        GST_LOG_OBJECT (avi, "current entry %u, total %u",
+            stream->current_entry, stream->current_total);
 
         /* update current position in the segment */
         avi->segment.position = next_ts;
