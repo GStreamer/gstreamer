@@ -293,7 +293,7 @@ GST_START_TEST (test_snapping)
   assert_equals_int (ges_timeline_layer_get_priority (layer), 0);
 
 
-  fail_unless (ges_timeline_layer_add_object (layer, obj));
+  fail_unless (ges_timeline_layer_add_clip (layer, obj));
   fail_unless ((trackelements = ges_clip_get_track_elements (obj)) != NULL);
   fail_unless ((trackelement =
           GES_TRACK_ELEMENT (trackelements->data)) != NULL);
@@ -308,7 +308,7 @@ GST_START_TEST (test_snapping)
    * + layer */
   ASSERT_OBJECT_REFCOUNT (obj, "First clip", 1);
 
-  fail_unless (ges_timeline_layer_add_object (layer, obj1));
+  fail_unless (ges_timeline_layer_add_clip (layer, obj1));
   fail_unless ((trackelements = ges_clip_get_track_elements (obj1)) != NULL);
   fail_unless ((trackelement1 =
           GES_TRACK_ELEMENT (trackelements->data)) != NULL);
@@ -320,7 +320,7 @@ GST_START_TEST (test_snapping)
   ASSERT_OBJECT_REFCOUNT (trackelement1, "First trackelement", 3);
   ASSERT_OBJECT_REFCOUNT (obj1, "First clip", 1);
 
-  fail_unless (ges_timeline_layer_add_object (layer, obj2));
+  fail_unless (ges_timeline_layer_add_clip (layer, obj2));
   fail_unless ((trackelements = ges_clip_get_track_elements (obj2)) != NULL);
   fail_unless ((trackelement2 =
           GES_TRACK_ELEMENT (trackelements->data)) != NULL);
@@ -542,7 +542,7 @@ GST_START_TEST (test_timeline_edition_mode)
   assert_equals_int (ges_timeline_layer_get_priority (layer), 0);
 
 
-  fail_unless (ges_timeline_layer_add_object (layer, obj));
+  fail_unless (ges_timeline_layer_add_clip (layer, obj));
   fail_unless ((trackelements = ges_clip_get_track_elements (obj)) != NULL);
   fail_unless ((trackelement =
           GES_TRACK_ELEMENT (trackelements->data)) != NULL);
@@ -555,7 +555,7 @@ GST_START_TEST (test_timeline_edition_mode)
   fail_unless (layer != layer1);
   assert_equals_int (ges_timeline_layer_get_priority (layer1), 1);
 
-  fail_unless (ges_timeline_layer_add_object (layer1, obj1));
+  fail_unless (ges_timeline_layer_add_clip (layer1, obj1));
   fail_unless ((trackelements = ges_clip_get_track_elements (obj1)) != NULL);
   fail_unless ((trackelement1 =
           GES_TRACK_ELEMENT (trackelements->data)) != NULL);
@@ -563,7 +563,7 @@ GST_START_TEST (test_timeline_edition_mode)
   assert_equals_uint64 (_DURATION (trackelement1), 10);
   g_list_free_full (trackelements, g_object_unref);
 
-  fail_unless (ges_timeline_layer_add_object (layer1, obj2));
+  fail_unless (ges_timeline_layer_add_clip (layer1, obj2));
   fail_unless ((trackelements = ges_clip_get_track_elements (obj2)) != NULL);
   fail_unless ((trackelement2 =
           GES_TRACK_ELEMENT (trackelements->data)) != NULL);

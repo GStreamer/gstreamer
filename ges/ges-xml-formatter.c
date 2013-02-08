@@ -850,7 +850,7 @@ _save_layers (GString * str, GESTimeline * timeline)
     g_free (properties);
     g_free (metas);
 
-    clips = ges_timeline_layer_get_objects (layer);
+    clips = ges_timeline_layer_get_clips (layer);
     for (tmpclip = clips; tmpclip; tmpclip = tmpclip->next) {
       GList *effects, *tmpeffect;
 

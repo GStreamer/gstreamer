@@ -89,7 +89,7 @@ GST_START_TEST (test_text_properties_in_layer)
 
   GST_DEBUG ("removing the source");
 
-  ges_timeline_layer_remove_object (layer, (GESClip *) source);
+  ges_timeline_layer_remove_clip (layer, (GESClip *) source);
 
   GST_DEBUG ("removing the layer");
 

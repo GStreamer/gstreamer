@@ -327,7 +327,7 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
   /* provisionally insert the object */
   priv->objects = g_list_insert (priv->objects, object, position);
 
-  res = ges_timeline_layer_add_object ((GESTimelineLayer *) layer, object);
+  res = ges_timeline_layer_add_clip ((GESTimelineLayer *) layer, object);
 
   /* Add to layer */
   if (G_UNLIKELY (!res)) {

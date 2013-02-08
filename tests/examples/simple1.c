@@ -94,7 +94,7 @@ main (int argc, gchar ** argv)
     g_free (uri);
     g_object_set (src, "in-point", inpoint * GST_SECOND,
         "duration", duration * GST_SECOND, "mute", mute, NULL);
-    ges_timeline_layer_add_object (layer1, GES_CLIP (src));
+    ges_timeline_layer_add_clip (layer1, GES_CLIP (src));
   }
 
   /* Play the pipeline */

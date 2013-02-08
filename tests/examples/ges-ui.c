@@ -1039,7 +1039,7 @@ app_delete_objects (App * app, GList * objects)
   GList *cur;
 
   for (cur = objects; cur; cur = cur->next) {
-    ges_timeline_layer_remove_object (app->layer, GES_CLIP (cur->data));
+    ges_timeline_layer_remove_clip (app->layer, GES_CLIP (cur->data));
     cur->data = NULL;
   }
 
@@ -1055,7 +1055,7 @@ app_move_selected_up (App * app)
   GList *objects, *tmp;
   gint pos;
 
-  objects = ges_timeline_layer_get_objects (app->layer);
+  objects = ges_timeline_layer_get_clips (app->layer);
   pos = g_list_index (objects, app->selected_objects->data);
 
   ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
@@ -1075,7 +1075,7 @@ app_add_effect_on_selected_clips (App * app, const gchar * bin_desc,
 
   /* No crash if the video is playing */
   gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_PAUSED);
-  objects = ges_timeline_layer_get_objects (app->layer);
+  objects = ges_timeline_layer_get_clips (app->layer);
 
   for (tmp = objects; tmp; tmp = tmp->next) {
     effect = GES_TRACK_ELEMENT (ges_effect_new (bin_desc));
@@ -1130,7 +1130,7 @@ app_move_selected_down (App * app)
   GList *objects, *tmp;
   gint pos;
 
-  objects = ges_timeline_layer_get_objects (app->layer);
+  objects = ges_timeline_layer_get_clips (app->layer);
   pos = g_list_index (objects, app->selected_objects->data);
 
   ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),

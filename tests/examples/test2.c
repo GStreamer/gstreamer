@@ -70,7 +70,7 @@ main (int argc, gchar ** argv)
 
     g_object_set (src, "start", offset, "duration", GST_SECOND, NULL);
 
-    ges_timeline_layer_add_object (layer, (GESClip *) src);
+    ges_timeline_layer_add_clip (layer, (GESClip *) src);
   }
 
   /* In order to listen our timeline, let's grab a convenience pipeline to put

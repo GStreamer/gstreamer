@@ -898,7 +898,7 @@ ges_clip_move_to_layer (GESClip * object, GESTimelineLayer * layer)
   if (current_layer == NULL) {
     GST_DEBUG ("Not moving %p, only adding it to %p", object, layer);
 
-    return ges_timeline_layer_add_object (layer, object);
+    return ges_timeline_layer_add_clip (layer, object);
   }
 
   GST_DEBUG_OBJECT (object, "moving to layer %p, priority: %d", layer,
@@ -906,14 +906,14 @@ ges_clip_move_to_layer (GESClip * object, GESTimelineLayer * layer)
 
   object->priv->is_moving = TRUE;
   g_object_ref (object);
-  ret = ges_timeline_layer_remove_object (current_layer, object);
+  ret = ges_timeline_layer_remove_clip (current_layer, object);
 
   if (!ret) {
     g_object_unref (object);
     return FALSE;
   }
 
-  ret = ges_timeline_layer_add_object (layer, object);
+  ret = ges_timeline_layer_add_clip (layer, object);
   object->priv->is_moving = FALSE;
 
   g_object_unref (object);
@@ -1271,7 +1271,7 @@ ges_clip_split (GESClip * object, guint64 position)
   if (object->priv->layer) {
     /* We do not want the timeline to create again TrackElement-s */
     ges_clip_set_moving_from_layer (new_object, TRUE);
-    ges_timeline_layer_add_object (object->priv->layer, new_object);
+    ges_timeline_layer_add_clip (object->priv->layer, new_object);
     ges_clip_set_moving_from_layer (new_object, FALSE);
   }
 

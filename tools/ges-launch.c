@@ -224,7 +224,7 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
 
     /* Since we're using a GESSimpleTimelineLayer, objects will be automatically
      * appended to the end of the layer */
-    ges_timeline_layer_add_object (layer, obj);
+    ges_timeline_layer_add_clip (layer, obj);
   }
 
   return timeline;

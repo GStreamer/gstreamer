@@ -81,7 +81,7 @@ make_timeline (char *path, float duration, char *text)
 
   aduration = (guint64) (duration * GST_SECOND);
   srca = make_source (path, 0, aduration, 1, text);
-  ges_timeline_layer_add_object (layer1, srca);
+  ges_timeline_layer_add_clip (layer1, srca);
 
   return pipeline;
 }

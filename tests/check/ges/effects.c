@@ -79,7 +79,7 @@ GST_START_TEST (test_add_effect_to_clip)
 
   assert_equals_int (GES_TRACK_ELEMENT (base_effect)->active, TRUE);
 
-  ges_timeline_layer_remove_object (layer, (GESClip *) source);
+  ges_timeline_layer_remove_clip (layer, (GESClip *) source);
 
   g_object_unref (timeline);
 }
@@ -154,7 +154,7 @@ GST_START_TEST (test_get_effects_from_tl)
   }
   g_list_free (effects);
 
-  ges_timeline_layer_remove_object (layer, (GESClip *) source);
+  ges_timeline_layer_remove_clip (layer, (GESClip *) source);
 
   g_object_unref (timeline);
 }
@@ -228,7 +228,7 @@ GST_START_TEST (test_effect_clip)
   }
   g_list_free (effects);
 
-  ges_timeline_layer_remove_object (layer, (GESClip *) effect_clip);
+  ges_timeline_layer_remove_clip (layer, (GESClip *) effect_clip);
 
   g_object_unref (timeline);
 }
@@ -304,7 +304,7 @@ GST_START_TEST (test_priorities_clip)
   }
   g_list_free (effects);
 
-  ges_timeline_layer_remove_object (layer, (GESClip *) effect_clip);
+  ges_timeline_layer_remove_clip (layer, (GESClip *) effect_clip);
 
   g_object_unref (timeline);
 }
@@ -375,7 +375,7 @@ GST_START_TEST (test_base_effect_set_properties)
   }
   g_free (pspecs);
 
-  ges_timeline_layer_remove_object (layer, (GESClip *) effect_clip);
+  ges_timeline_layer_remove_clip (layer, (GESClip *) effect_clip);
 
   g_object_unref (timeline);
 }
@@ -444,7 +444,7 @@ GST_START_TEST (test_clip_signals)
   fail_unless (G_VALUE_HOLDS_UINT (&val));
   g_value_unset (&val);
 
-  ges_timeline_layer_remove_object (layer, (GESClip *) effect_clip);
+  ges_timeline_layer_remove_clip (layer, (GESClip *) effect_clip);
 
   g_object_unref (timeline);
 }

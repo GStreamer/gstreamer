@@ -109,8 +109,8 @@ make_timeline (char *path, float duration, char *text, guint32 color,
   aduration = (guint64) (duration * GST_SECOND);
   srca = make_source (path, 0, aduration, 1);
   overlay = make_overlay (text, 0, aduration, 0, color, xpos, ypos);
-  ges_timeline_layer_add_object (layer1, srca);
-  ges_timeline_layer_add_object (layer1, overlay);
+  ges_timeline_layer_add_clip (layer1, srca);
+  ges_timeline_layer_add_clip (layer1, overlay);
 
   return pipeline;
 }

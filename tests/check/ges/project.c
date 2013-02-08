@@ -205,7 +205,7 @@ _test_project (GESProject * project, GESTimeline * timeline)
   assert_equals_string (ges_meta_container_get_string (GES_META_CONTAINER
           (project), "name"), "Example project");
   clips =
-      ges_timeline_layer_get_objects (GES_TIMELINE_LAYER (timeline->layers->
+      ges_timeline_layer_get_clips (GES_TIMELINE_LAYER (timeline->layers->
           data));
   fail_unless (ges_meta_container_get_uint (GES_META_CONTAINER (timeline->
               layers->data), "a", &a_meta));

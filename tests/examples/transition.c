@@ -128,8 +128,8 @@ make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
   tstart = aduration - tduration;
   srca = make_source (patha, 0, aduration, ainpoint, 1);
   srcb = make_source (pathb, tstart, bduration, binpoint, 2);
-  ges_timeline_layer_add_object (layer1, srca);
-  ges_timeline_layer_add_object (layer1, srcb);
+  ges_timeline_layer_add_clip (layer1, srca);
+  ges_timeline_layer_add_clip (layer1, srcb);
   g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, srca);
   g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, srcb);
 
@@ -143,7 +143,7 @@ make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
     g_object_set (tr,
         "start", (guint64) tstart,
         "duration", (guint64) tduration, "in-point", (guint64) 0, NULL);
-    ges_timeline_layer_add_object (layer1, GES_CLIP (tr));
+    ges_timeline_layer_add_clip (layer1, GES_CLIP (tr));
     g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, tr);
   }
 

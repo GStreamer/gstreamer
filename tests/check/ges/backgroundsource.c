@@ -177,7 +177,7 @@ GST_START_TEST (test_test_source_in_layer)
 
   g_object_unref (trobj);
 
-  ges_timeline_layer_remove_object (layer, (GESClip *) source);
+  ges_timeline_layer_remove_clip (layer, (GESClip *) source);
 
   GST_DEBUG ("removing the layer");
 

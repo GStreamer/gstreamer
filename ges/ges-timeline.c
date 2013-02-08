@@ -656,7 +656,7 @@ _destroy_auto_transition_cb (GESAutoTransition * auto_transition,
   GESClip *transition = auto_transition->transition_clip;
   GESTimelineLayer *layer = ges_clip_get_layer (transition);
 
-  ges_timeline_layer_remove_object (layer, transition);
+  ges_timeline_layer_remove_clip (layer, transition);
   g_signal_handlers_disconnect_by_func (auto_transition,
       _destroy_auto_transition_cb, timeline);
 
@@ -2295,7 +2295,7 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   g_signal_emit (timeline, ges_timeline_signals[LAYER_ADDED], 0, layer);
 
   /* add any existing clips to the timeline */
-  objects = ges_timeline_layer_get_objects (layer);
+  objects = ges_timeline_layer_get_clips (layer);
   for (tmp = objects; tmp; tmp = tmp->next) {
     layer_object_added_cb (layer, tmp->data, timeline);
     g_object_unref (tmp->data);
@@ -2332,7 +2332,7 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 
   /* remove objects from any private data structures */
 
-  layer_objects = ges_timeline_layer_get_objects (layer);
+  layer_objects = ges_timeline_layer_get_clips (layer);
   for (tmp = layer_objects; tmp; tmp = tmp->next) {
     layer_object_removed_cb (layer, GES_CLIP (tmp->data), timeline);
     g_object_unref (G_OBJECT (tmp->data));
@@ -2429,7 +2429,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 
   for (tmp = timeline->layers; tmp; tmp = tmp->next) {
     GList *objects, *obj;
-    objects = ges_timeline_layer_get_objects (tmp->data);
+    objects = ges_timeline_layer_get_clips (tmp->data);
 
     for (obj = objects; obj; obj = obj->next) {
       GESClip *object = obj->data;

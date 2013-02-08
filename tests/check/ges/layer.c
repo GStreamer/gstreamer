@@ -82,7 +82,7 @@ GST_START_TEST (test_layer_properties)
 
   /* Add the object to the timeline */
   fail_unless (g_object_is_floating (object));
-  fail_unless (ges_timeline_layer_add_object (layer, GES_CLIP (object)));
+  fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (object)));
   fail_if (g_object_is_floating (object));
   trackelement = ges_clip_find_track_element (object, track, G_TYPE_NONE);
   fail_unless (trackelement != NULL);
@@ -117,7 +117,7 @@ GST_START_TEST (test_layer_properties)
       51, 0, TRUE);
 
   g_object_unref (trackelement);
-  fail_unless (ges_timeline_layer_remove_object (layer, object));
+  fail_unless (ges_timeline_layer_remove_clip (layer, object));
   fail_unless (ges_timeline_remove_track (timeline, track));
   fail_unless (ges_timeline_remove_layer (timeline, layer));
   g_object_unref (timeline);
@@ -180,15 +180,15 @@ GST_START_TEST (test_layer_priorities)
   assert_equals_int (_PRIORITY (object3), LAYER_HEIGHT + 1);
 
   /* Add objects to the timeline */
-  fail_unless (ges_timeline_layer_add_object (layer1, object1));
+  fail_unless (ges_timeline_layer_add_clip (layer1, object1));
   trackelement1 = ges_clip_find_track_element (object1, track, G_TYPE_NONE);
   fail_unless (trackelement1 != NULL);
 
-  fail_unless (ges_timeline_layer_add_object (layer2, object2));
+  fail_unless (ges_timeline_layer_add_clip (layer2, object2));
   trackelement2 = ges_clip_find_track_element (object2, track, G_TYPE_NONE);
   fail_unless (trackelement2 != NULL);
 
-  fail_unless (ges_timeline_layer_add_object (layer3, object3));
+  fail_unless (ges_timeline_layer_add_clip (layer3, object3));
   trackelement3 = ges_clip_find_track_element (object3, track, G_TYPE_NONE);
   fail_unless (trackelement3 != NULL);
 
@@ -236,10 +236,10 @@ GST_START_TEST (test_layer_priorities)
   fail_unless (ges_clip_move_to_layer (object2, layer1));
   fail_unless (ges_clip_move_to_layer (object3, layer1));
 
-  objs = ges_timeline_layer_get_objects (layer1);
+  objs = ges_timeline_layer_get_clips (layer1);
   assert_equals_int (g_list_length (objs), 3);
-  fail_unless (ges_timeline_layer_get_objects (layer2) == NULL);
-  fail_unless (ges_timeline_layer_get_objects (layer3) == NULL);
+  fail_unless (ges_timeline_layer_get_clips (layer2) == NULL);
+  fail_unless (ges_timeline_layer_get_clips (layer3) == NULL);
 
   for (tmp = objs; tmp; tmp = g_list_next (tmp)) {
     g_object_unref (tmp->data);
@@ -327,7 +327,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_DURATION (src1), 1500 - 500);
 
   GST_DEBUG ("Checking that a transition has been added");
-  objects = ges_timeline_layer_get_objects (layer);
+  objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 4);
   assert_is_type (objects->data, GES_TYPE_TEST_CLIP);
 
@@ -357,7 +357,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_START (src1), 500);
   assert_equals_uint64 (_DURATION (src1), 1500 - 500);
 
-  objects = ges_timeline_layer_get_objects (layer);
+  objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 4);
   assert_is_type (objects->data, GES_TYPE_TEST_CLIP);
 
@@ -385,7 +385,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_START (src1), 250);
   assert_equals_uint64 (_DURATION (src1), 1250 - 250);
 
-  objects = ges_timeline_layer_get_objects (layer);
+  objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 2);
   g_list_free_full (objects, gst_object_unref);
 
@@ -403,7 +403,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_START (src1), 500);
   assert_equals_uint64 (_DURATION (src1), 1250 - 500);
 
-  objects = ges_timeline_layer_get_objects (layer);
+  objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 2);
   g_list_free_full (objects, gst_object_unref);
 
@@ -431,11 +431,11 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_START (src1), 500);
   assert_equals_uint64 (_DURATION (src1), 1250 - 500);
 
-  objects = ges_timeline_layer_get_objects (layer);
+  objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 2);
   g_list_free_full (objects, gst_object_unref);
 
-  objects = ges_timeline_layer_get_objects (layer);
+  objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 2);
   g_list_free_full (objects, gst_object_unref);
 
@@ -451,11 +451,11 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_START (src1), 500);
   assert_equals_uint64 (_DURATION (src1), 1250 - 500);
 
-  objects = ges_timeline_layer_get_objects (layer);
+  objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 2);
   g_list_free_full (objects, gst_object_unref);
 
-  objects = ges_timeline_layer_get_objects (layer);
+  objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 2);
   g_list_free_full (objects, gst_object_unref);
 
@@ -470,11 +470,11 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_START (src1), 500);
   assert_equals_uint64 (_DURATION (src1), 1250 - 500);
 
-  objects = ges_timeline_layer_get_objects (layer);
+  objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 2);
   g_list_free_full (objects, gst_object_unref);
 
-  objects = ges_timeline_layer_get_objects (layer);
+  objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 2);
   g_list_free_full (objects, gst_object_unref);
 
@@ -496,7 +496,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_START (src2), 1250);
   assert_equals_uint64 (_DURATION (src2), 1000);
 
-  objects = ges_timeline_layer_get_objects (layer);
+  objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 3);
   g_list_free_full (objects, gst_object_unref);
 
@@ -515,7 +515,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_START (src1), 500);
   assert_equals_uint64 (_DURATION (src1), 1250 - 500);
 
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 7);
   assert_is_type (objects->data, GES_TYPE_TEST_CLIP);
   fail_unless (objects->data == src1);
@@ -571,7 +571,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   /* We check that the transition as actually been freed */
   fail_if (GES_IS_TRANSITION_CLIP (transition));
 
-  objects = ges_timeline_layer_get_objects (layer);
+  objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 3);
   g_list_free_full (objects, gst_object_unref);
 
@@ -590,7 +590,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_START (src2), 1100);
   assert_equals_uint64 (_DURATION (src2), 1000);
 
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 5);
   assert_is_type (objects->data, GES_TYPE_TEST_CLIP);
   fail_unless (current->data == src1);
@@ -630,7 +630,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_START (src2), 1000);
   assert_equals_uint64 (_DURATION (src2), 1000);
 
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   current = objects;
   assert_equals_int (g_list_length (objects), 7);
   assert_is_type (objects->data, GES_TYPE_TEST_CLIP);
@@ -731,7 +731,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_equals_uint64 (_DURATION (src1), 1500 - 500);
 
   GST_DEBUG ("Checking that a transition has been added");
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 4);
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
 
@@ -775,7 +775,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_equals_uint64 (_DURATION (src3), 1500 - 500);
 
   GST_DEBUG ("Checking transitions on first layer");
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 4);
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
 
@@ -794,7 +794,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
 
   GST_DEBUG ("Checking transitions on second layer");
-  current = objects = ges_timeline_layer_get_objects (layer1);
+  current = objects = ges_timeline_layer_get_clips (layer1);
   assert_equals_int (g_list_length (objects), 2);
   fail_unless (current->data == src2);
   fail_unless (current->next->data == src3);
@@ -823,7 +823,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_equals_uint64 (_DURATION (src3), 1500 - 500);
 
   GST_DEBUG ("Checking transitions on first layer");
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 4);
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
 
@@ -842,7 +842,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
 
   GST_DEBUG ("Checking transitions has been added on second layer");
-  current = objects = ges_timeline_layer_get_objects (layer1);
+  current = objects = ges_timeline_layer_get_clips (layer1);
   assert_equals_int (g_list_length (objects), 4);
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
 
@@ -881,7 +881,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_equals_uint64 (_DURATION (src3), 2000 - 1000);
 
   GST_DEBUG ("Checking transitions on first layer");
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 4);
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
 
@@ -900,7 +900,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
 
   GST_DEBUG ("Checking transitions has been removed on second layer");
-  current = objects = ges_timeline_layer_get_objects (layer1);
+  current = objects = ges_timeline_layer_get_clips (layer1);
   assert_equals_int (g_list_length (objects), 2);
   fail_unless (current->data == src2);
   fail_unless (current->next->data == src3);
@@ -929,7 +929,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_equals_uint64 (_DURATION (src3), 2000 - 1000);
 
   GST_DEBUG ("Checking transitions on first layer");
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 7);
   fail_unless (current->data == src);
 
@@ -967,7 +967,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
 
   GST_DEBUG ("Checking second layer");
-  current = objects = ges_timeline_layer_get_objects (layer1);
+  current = objects = ges_timeline_layer_get_clips (layer1);
   assert_equals_int (g_list_length (objects), 1);
   fail_unless (current->data == src2);
   g_list_free_full (objects, gst_object_unref);
@@ -995,7 +995,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_equals_uint64 (_DURATION (src3), 2000 - 1000);
 
   GST_DEBUG ("Checking transitions on first layer");
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 4);
   fail_unless (current->data == src1);
 
@@ -1017,7 +1017,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
 
   GST_DEBUG ("Checking second layer");
-  current = objects = ges_timeline_layer_get_objects (layer1);
+  current = objects = ges_timeline_layer_get_clips (layer1);
   assert_equals_int (g_list_length (objects), 2);
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   assert_is_type (current->next->data, GES_TYPE_TEST_CLIP);
@@ -1046,7 +1046,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_equals_uint64 (_DURATION (src3), 2000 - 1000);
 
   GST_DEBUG ("Checking transitions on first layer");
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 7);
   fail_unless (current->data == src1);
 
@@ -1083,7 +1083,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
 
   GST_DEBUG ("Checking second layer");
-  current = objects = ges_timeline_layer_get_objects (layer1);
+  current = objects = ges_timeline_layer_get_clips (layer1);
   assert_equals_int (g_list_length (objects), 1);
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   g_list_free_full (objects, gst_object_unref);
@@ -1111,7 +1111,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   assert_equals_uint64 (_DURATION (src3), 2000 - 1000);
 
   GST_DEBUG ("Checking transitions on first layer");
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 7);
   fail_unless (current->data == src1);
 
@@ -1148,7 +1148,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
 
   GST_DEBUG ("Checking second layer");
-  current = objects = ges_timeline_layer_get_objects (layer1);
+  current = objects = ges_timeline_layer_get_clips (layer1);
   assert_equals_int (g_list_length (objects), 1);
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   g_list_free_full (objects, gst_object_unref);
@@ -1220,7 +1220,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
   assert_equals_uint64 (_DURATION (src3), 500);
 
   GST_DEBUG ("Checking that no transition has been added");
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 4);
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
   g_list_free_full (objects, gst_object_unref);
@@ -1242,7 +1242,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
    *                         1000____src2_______2000
    *                                            2000_______src3_____2500
    */
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 5);
   current = current->next;
   assert_is_type (current->data, GES_TYPE_TEST_CLIP);
@@ -1263,7 +1263,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
    *                         1000____src2_______2000
    *                                            2000_______src3_____2500
    */
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 8);
   assert_equals_uint64 (_START (src), 0);
   assert_equals_uint64 (_DURATION (src), 1000);
@@ -1323,7 +1323,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
    *                                          !__tr__^
    *                                          2000_______src3_____2500
    */
-  current = objects = ges_timeline_layer_get_objects (layer);
+  current = objects = ges_timeline_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 10);
   assert_equals_uint64 (_START (src), 0);
   assert_equals_uint64 (_DURATION (src), 1000);

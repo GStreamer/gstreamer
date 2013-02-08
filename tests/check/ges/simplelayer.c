@@ -110,7 +110,7 @@ GST_START_TEST (test_gsl_add)
       (GESClip *) NULL);
   fail_unless_equals_int (result, -1);
 
-  fail_unless (ges_timeline_layer_remove_object (layer, GES_CLIP (source)));
+  fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (source)));
   fail_unless (ges_timeline_remove_track (timeline, track));
   fail_unless (ges_timeline_remove_layer (timeline, layer));
   g_object_unref (timeline);
@@ -201,21 +201,21 @@ GST_START_TEST (test_gsl_move_simple)
 
   /* remove source1, source2 should be moved to the beginning */
   g_object_ref (source1);
-  fail_unless (ges_timeline_layer_remove_object (layer, GES_CLIP (source1)));
+  fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (source1)));
   fail_unless_equals_uint64 (_START (source2), 0);
 
   g_object_set (source1, "start", (guint64) 42, NULL);
 
   /* re-add source1... using the normal API, it should be added to the end */
-  fail_unless (ges_timeline_layer_add_object (layer, GES_CLIP (source1)));
+  fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (source1)));
   fail_unless_equals_uint64 (_START (source2), 0);
   fail_unless_equals_uint64 (_START (source1), GST_SECOND);
 
   /* remove source1 ... */
-  fail_unless (ges_timeline_layer_remove_object (layer, GES_CLIP (source1)));
+  fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (source1)));
   fail_unless_equals_uint64 (_START (source2), 0);
   /* ... and source2 */
-  fail_unless (ges_timeline_layer_remove_object (layer, GES_CLIP (source2)));
+  fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (source2)));
 
   fail_unless (ges_timeline_remove_track (timeline, track));
   fail_unless (ges_timeline_remove_layer (timeline, layer));
@@ -463,7 +463,7 @@ GST_START_TEST (test_gsl_with_transitions)
 
   GST_DEBUG ("Removing source1");
 
-  fail_unless (ges_timeline_layer_remove_object (layer, GES_CLIP (source1)));
+  fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (source1)));
 
   /* layer should now be invalid */
 
@@ -473,9 +473,9 @@ GST_START_TEST (test_gsl_with_transitions)
 
   GST_DEBUG ("Removing source2/3/4");
 
-  fail_unless (ges_timeline_layer_remove_object (layer, GES_CLIP (source2)));
-  fail_unless (ges_timeline_layer_remove_object (layer, GES_CLIP (source3)));
-  fail_unless (ges_timeline_layer_remove_object (layer, GES_CLIP (source4)));
+  fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (source2)));
+  fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (source3)));
+  fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (source4)));
 
   g_object_get (G_OBJECT (layer), "valid", &valid, NULL);
   fail_unless (!valid);
@@ -483,11 +483,11 @@ GST_START_TEST (test_gsl_with_transitions)
 
   GST_DEBUG ("Removing transitions");
 
-  fail_unless (ges_timeline_layer_remove_object (layer, GES_CLIP (tr1)));
-  fail_unless (ges_timeline_layer_remove_object (layer, GES_CLIP (tr2)));
-  fail_unless (ges_timeline_layer_remove_object (layer, GES_CLIP (tr3)));
-  fail_unless (ges_timeline_layer_remove_object (layer, GES_CLIP (tr4)));
-  fail_unless (ges_timeline_layer_remove_object (layer, GES_CLIP (tr5)));
+  fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (tr1)));
+  fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (tr2)));
+  fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (tr3)));
+  fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (tr4)));
+  fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (tr5)));
 
   GST_DEBUG ("done removing transition");
 

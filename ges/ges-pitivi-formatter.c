@@ -365,7 +365,7 @@ save_sources (GESPitiviFormatter * formatter, GList * layers,
   for (tmplayer = layers; tmplayer; tmplayer = tmplayer->next) {
     layer = GES_TIMELINE_LAYER (tmplayer->data);
 
-    clips = ges_timeline_layer_get_objects (layer);
+    clips = ges_timeline_layer_get_clips (layer);
     for (tmp = clips; tmp; tmp = tmp->next) {
       SrcMapping *srcmap = g_slice_new0 (SrcMapping);
       GESClip *clip;
@@ -920,7 +920,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
         }
 
         set_properties (G_OBJECT (src), props_table);
-        ges_timeline_layer_add_object (layer, GES_CLIP (src));
+        ges_timeline_layer_add_clip (layer, GES_CLIP (src));
 
         g_signal_connect (src, "track-element-added",
             G_CALLBACK (track_element_added_cb), props_table);

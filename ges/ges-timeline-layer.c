@@ -124,7 +124,7 @@ ges_timeline_layer_dispose (GObject * object)
   GST_DEBUG ("Disposing layer");
 
   while (priv->objects_start)
-    ges_timeline_layer_remove_object (layer,
+    ges_timeline_layer_remove_clip (layer,
         (GESClip *) priv->objects_start->data);
 
   G_OBJECT_CLASS (ges_timeline_layer_parent_class)->dispose (object);
@@ -269,7 +269,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
     ges_extractable_set_asset (GES_EXTRACTABLE (udata->object), asset);
 
     ges_project_add_asset (project, asset);
-    ges_timeline_layer_add_object (udata->layer, udata->object);
+    ges_timeline_layer_add_clip (udata->layer, udata->object);
   }
 
   g_object_unref (asset);
@@ -278,7 +278,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
 
 /* Public methods */
 /**
- * ges_timeline_layer_remove_object:
+ * ges_timeline_layer_remove_clip:
  * @layer: a #GESTimelineLayer
  * @object: the #GESClip to remove
  *
@@ -291,7 +291,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
  * not want to remove the object.
  */
 gboolean
-ges_timeline_layer_remove_object (GESTimelineLayer * layer, GESClip * object)
+ges_timeline_layer_remove_clip (GESTimelineLayer * layer, GESClip * object)
 {
   GESTimelineLayer *current_layer;
 
@@ -404,7 +404,7 @@ ges_timeline_layer_get_priority (GESTimelineLayer * layer)
 }
 
 /**
- * ges_timeline_layer_get_objects:
+ * ges_timeline_layer_get_clips:
  * @layer: a #GESTimelineLayer
  *
  * Get the clips this layer contains.
@@ -415,7 +415,7 @@ ges_timeline_layer_get_priority (GESTimelineLayer * layer)
  */
 
 GList *
-ges_timeline_layer_get_objects (GESTimelineLayer * layer)
+ges_timeline_layer_get_clips (GESTimelineLayer * layer)
 {
   GESTimelineLayerClass *klass;
 
@@ -451,7 +451,7 @@ ges_timeline_layer_is_empty (GESTimelineLayer * layer)
 }
 
 /**
- * ges_timeline_layer_add_object:
+ * ges_timeline_layer_add_clip:
  * @layer: a #GESTimelineLayer
  * @object: (transfer full): the #GESClip to add.
  *
@@ -469,7 +469,7 @@ ges_timeline_layer_is_empty (GESTimelineLayer * layer)
  * if the @layer refuses to add the object.
  */
 gboolean
-ges_timeline_layer_add_object (GESTimelineLayer * layer, GESClip * object)
+ges_timeline_layer_add_clip (GESTimelineLayer * layer, GESClip * object)
 {
   GESAsset *asset;
   GESTimelineLayerPrivate *priv;
@@ -604,7 +604,7 @@ ges_timeline_layer_add_asset (GESTimelineLayer * layer,
     _set_duration0 (GES_TIMELINE_ELEMENT (clip), duration);
   }
 
-  if (!ges_timeline_layer_add_object (layer, clip)) {
+  if (!ges_timeline_layer_add_clip (layer, clip)) {
     gst_object_unref (clip);
 
     return NULL;

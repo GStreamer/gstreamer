@@ -99,7 +99,7 @@ void     ges_timeline_layer_set_timeline  (GESTimelineLayer * layer,
 GESTimeline *
 ges_timeline_layer_get_timeline           (GESTimelineLayer * layer);
 
-gboolean ges_timeline_layer_add_object    (GESTimelineLayer * layer,
+gboolean ges_timeline_layer_add_clip    (GESTimelineLayer * layer,
 
 					   GESClip * object);
 GESClip * ges_timeline_layer_add_asset   (GESTimelineLayer *layer,
@@ -110,7 +110,7 @@ GESClip * ges_timeline_layer_add_asset   (GESTimelineLayer *layer,
                                                        gdouble rate,
                                                        GESTrackType track_types);
 
-gboolean ges_timeline_layer_remove_object (GESTimelineLayer * layer,
+gboolean ges_timeline_layer_remove_clip (GESTimelineLayer * layer,
 					   GESClip * object);
 
 void     ges_timeline_layer_set_priority  (GESTimelineLayer * layer,
@@ -125,7 +125,7 @@ gboolean ges_timeline_layer_get_auto_transition (GESTimelineLayer * layer);
 void ges_timeline_layer_set_auto_transition (GESTimelineLayer * layer,
 					     gboolean auto_transition);
 
-GList*   ges_timeline_layer_get_objects   (GESTimelineLayer * layer);
+GList*   ges_timeline_layer_get_clips   (GESTimelineLayer * layer);
 
 G_END_DECLS
 
