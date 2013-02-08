@@ -135,6 +135,11 @@ gst_control_binding_constructor (GType type, guint n_construct_params,
                 G_PARAM_CONSTRUCT_ONLY)) ==
         (G_PARAM_WRITABLE | GST_PARAM_CONTROLLABLE)) {
       binding->pspec = pspec;
+    } else {
+      GST_WARNING_OBJECT (binding->object,
+          "property '%s' on class '%s' needs to "
+          "be writeable, controlable and not construct_only", binding->name,
+          G_OBJECT_TYPE_NAME (binding->object));
     }
   } else {
     GST_WARNING_OBJECT (binding->object, "class '%s' has no property '%s'",

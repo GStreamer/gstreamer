@@ -24,9 +24,8 @@
  * @short_description: direct attachment for control sources
  *
  * A value mapping object that attaches control sources to gobject properties. It
- * will map the control values [0.0 ... 1.0] to the target property range. 
+ * will map the control values [0.0 ... 1.0] to the target property range.
  */
-
 
 #include <glib-object.h>
 #include <gst/gst.h>

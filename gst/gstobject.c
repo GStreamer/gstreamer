@@ -1162,12 +1162,13 @@ gst_object_set_control_binding_disabled (GstObject * object,
  * @object: the controller object
  * @binding: (transfer full): the #GstControlBinding that should be used
  *
- * Sets the #GstControlBinding. If there already was a #GstControlBinding
- * for this property it will be replaced.
+ * Attach the #GstControlBinding to the object. If there already was a
+ * #GstControlBinding for this property it will be replaced.
+ *
  * The @object will take ownership of the @binding.
  *
- * Returns: %FALSE if the given @binding has not been setup for this object  or
- * %TRUE otherwise.
+ * Returns: %FALSE if the given @binding has not been setup for this object or
+ * has been setup for a non suitable property, %TRUE otherwise.
  */
 gboolean
 gst_object_add_control_binding (GstObject * object, GstControlBinding * binding)
@@ -1176,6 +1177,7 @@ gst_object_add_control_binding (GstObject * object, GstControlBinding * binding)
 
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (GST_IS_CONTROL_BINDING (binding), FALSE);
+  g_return_val_if_fail (binding->pspec, FALSE);
 
   GST_OBJECT_LOCK (object);
   if ((old = gst_object_find_control_binding (object, binding->name))) {
