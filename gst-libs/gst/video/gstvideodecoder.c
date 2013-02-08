@@ -2633,20 +2633,19 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
   frame->dts = GST_BUFFER_DTS (frame->input_buffer);
   frame->duration = GST_BUFFER_DURATION (frame->input_buffer);
 
-  /* For keyframes, PTS = DTS */
+  /* For keyframes, PTS = DTS + constant_offset, usually 0 to 3 frame
+   * durations. */
   /* FIXME upstream can be quite wrong about the keyframe aspect,
    * so we could be going off here as well,
    * maybe let subclass decide if it really is/was a keyframe */
-  if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)) {
-    if (!GST_CLOCK_TIME_IS_VALID (frame->pts)) {
-      frame->pts = frame->dts;
-    } else if (GST_CLOCK_TIME_IS_VALID (frame->dts)) {
-      /* just in case they are not equal as might ideally be,
-       * e.g. quicktime has a (positive) delta approach */
-      priv->pts_delta = frame->pts - frame->dts;
-      GST_DEBUG_OBJECT (decoder, "PTS delta %d ms",
-          (gint) (priv->pts_delta / GST_MSECOND));
-    }
+  if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame) &&
+      GST_CLOCK_TIME_IS_VALID (frame->pts)
+      && GST_CLOCK_TIME_IS_VALID (frame->dts)) {
+    /* just in case they are not equal as might ideally be,
+     * e.g. quicktime has a (positive) delta approach */
+    priv->pts_delta = frame->pts - frame->dts;
+    GST_DEBUG_OBJECT (decoder, "PTS delta %d ms",
+        (gint) (priv->pts_delta / GST_MSECOND));
   }
 
   frame->abidata.ABI.ts = frame->dts;
