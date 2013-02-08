@@ -599,7 +599,7 @@ ges_clip_release_track_element (GESClip * object,
   object->trackelements = g_list_remove (object->trackelements, trackelement);
 
   if (GES_IS_BASE_EFFECT (trackelement)) {
-    /* emit 'object-removed' */
+    /* emit 'clip-removed' */
     object->priv->nb_effects--;
     g_signal_emit (object, ges_clip_signals[EFFECT_REMOVED], 0,
         GES_BASE_EFFECT (trackelement));

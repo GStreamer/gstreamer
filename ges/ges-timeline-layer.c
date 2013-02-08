@@ -169,26 +169,26 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
           "whether the transitions are added", FALSE, G_PARAM_READWRITE));
 
   /**
-   * GESTimelineLayer::object-added:
+   * GESTimelineLayer::clip-added:
    * @layer: the #GESTimelineLayer
    * @object: the #GESClip that was added.
    *
    * Will be emitted after the object was added to the layer.
    */
   ges_timeline_layer_signals[OBJECT_ADDED] =
-      g_signal_new ("object-added", G_TYPE_FROM_CLASS (klass),
+      g_signal_new ("clip-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineLayerClass, object_added),
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_CLIP);
 
   /**
-   * GESTimelineLayer::object-removed:
+   * GESTimelineLayer::clip-removed:
    * @layer: the #GESTimelineLayer
    * @object: the #GESClip that was removed
    *
    * Will be emitted after the object was removed from the layer.
    */
   ges_timeline_layer_signals[OBJECT_REMOVED] =
-      g_signal_new ("object-removed", G_TYPE_FROM_CLASS (klass),
+      g_signal_new ("clip-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineLayerClass,
           object_removed), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
       1, GES_TYPE_CLIP);
@@ -311,7 +311,7 @@ ges_timeline_layer_remove_object (GESTimelineLayer * layer, GESClip * object)
   }
   g_object_unref (current_layer);
 
-  /* emit 'object-removed' */
+  /* emit 'clip-removed' */
   g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_REMOVED], 0, object);
 
   /* inform the object it's no longer in a layer */
@@ -555,7 +555,7 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer, GESClip * object)
    * priority */
   ges_timeline_layer_resync_priorities (layer);
 
-  /* emit 'object-added' */
+  /* emit 'clip-added' */
   g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_ADDED], 0, object);
 
   return TRUE;

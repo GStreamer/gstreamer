@@ -758,9 +758,9 @@ layer_added_cb (GESTimeline * timeline, GESTimelineLayer * layer, App * app)
     return;
   }
 
-  g_signal_connect (app->layer, "object-added",
+  g_signal_connect (app->layer, "clip-added",
       G_CALLBACK (layer_object_added_cb), app);
-  g_signal_connect (app->layer, "object-removed",
+  g_signal_connect (app->layer, "clip-removed",
       G_CALLBACK (layer_object_removed_cb), app);
   g_signal_connect (app->layer, "object-moved",
       G_CALLBACK (layer_object_moved_cb), app);
