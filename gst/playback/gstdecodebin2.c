@@ -3890,8 +3890,13 @@ source_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   if (GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) {
     GST_LOG_OBJECT (pad, "Seeing event '%s'",
         GST_EVENT_TYPE_NAME (GST_PAD_PROBE_INFO_EVENT (info)));
-    if ((GST_EVENT_TYPE (GST_PAD_PROBE_INFO_EVENT (info)) != GST_EVENT_CAPS)
-        && (GST_EVENT_IS_STICKY (GST_PAD_PROBE_INFO_EVENT (info))
+
+    if (GST_EVENT_TYPE (GST_PAD_PROBE_INFO_EVENT (info)) == GST_EVENT_CAPS) {
+      /* manually push event to ghost pad to avoid exposing pads
+       * that don't have the sticky caps event */
+      gst_pad_push_event (GST_PAD_CAST (dpad),
+          gst_event_ref (GST_PAD_PROBE_INFO_EVENT (info)));
+    } else if ((GST_EVENT_IS_STICKY (GST_PAD_PROBE_INFO_EVENT (info))
             || !GST_EVENT_IS_SERIALIZED (GST_PAD_PROBE_INFO_EVENT (info)))) {
       /* do not block on sticky or out of band events otherwise the allocation query
          from demuxer might block the loop thread */
@@ -3912,11 +3917,6 @@ source_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       GST_WARNING_OBJECT (dbin, "Couldn't expose group");
   }
   EXPOSE_UNLOCK (dbin);
-
-  /* If we unblocked due to a caps event, let it go through */
-  if ((GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) &&
-      (GST_EVENT_TYPE (GST_PAD_PROBE_INFO_EVENT (info)) == GST_EVENT_CAPS))
-    return GST_PAD_PROBE_PASS;
 
   return GST_PAD_PROBE_OK;
 }
