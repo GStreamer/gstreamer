@@ -927,38 +927,6 @@ gst_mss_demux_reload_manifest (GstMssDemux * mssdemux)
   g_object_unref (downloader);
 }
 
-static guint64
-gst_mss_demux_get_download_bitrate (GstMssDemux * mssdemux)
-{
-  GSList *iter;
-  guint64 total = 0;
-  guint64 count = 0;
-
-  for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
-    GstMssDemuxStream *stream = iter->data;
-
-    total += gst_download_rate_get_current_rate (&stream->download_rate);
-    count++;
-  }
-
-  return total / count;
-}
-
-static gboolean
-gst_mss_demux_all_streams_have_data (GstMssDemux * mssdemux)
-{
-  GSList *iter;
-
-  for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
-    GstMssDemuxStream *stream = iter->data;
-
-    if (!stream->have_data)
-      return FALSE;
-  }
-
-  return TRUE;
-}
-
 static void
 gst_mss_demux_reconfigure_stream (GstMssDemuxStream * stream)
 {
@@ -989,28 +957,6 @@ gst_mss_demux_reconfigure_stream (GstMssDemuxStream * stream)
         GST_PAD_NAME (stream->pad),
         gst_mss_stream_get_current_bitrate (stream->manifest_stream), caps);
   }
-}
-
-static void
-gst_mss_demux_reconfigure (GstMssDemux * mssdemux)
-{
-  GSList *iter;
-
-  /* TODO lock? */
-
-  if (!gst_mss_demux_all_streams_have_data (mssdemux))
-    return;
-
-  //gst_mss_demux_stop_tasks (mssdemux, TRUE);
-  for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
-    GstMssDemuxStream *stream;
-
-    stream = iter->data;
-
-    gst_mss_demux_reconfigure_stream (stream);
-  }
-
-  //gst_mss_demux_restart_tasks (mssdemux);
 }
 
 static void
@@ -1157,7 +1103,6 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
   GST_LOG_OBJECT (mssdemux, "download loop start %p", stream);
 
   GST_OBJECT_LOCK (mssdemux);
-
   GST_DEBUG_OBJECT (mssdemux,
       "Starting streams reconfiguration due to bitrate changes");
   gst_mss_demux_reconfigure_stream (stream);
