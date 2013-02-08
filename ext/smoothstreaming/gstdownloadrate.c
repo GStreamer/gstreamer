@@ -102,7 +102,10 @@ gst_download_rate_get_current_rate (GstDownloadRate * rate)
 {
   guint ret;
   g_static_mutex_lock (&rate->mutex);
-  ret = rate->total / g_queue_get_length (&rate->queue);
+  if (g_queue_get_length (&rate->queue))
+    ret = rate->total / g_queue_get_length (&rate->queue);
+  else
+    ret = G_MAXUINT;
   g_static_mutex_unlock (&rate->mutex);
 
   return ret;

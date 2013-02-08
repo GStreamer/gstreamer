@@ -55,6 +55,8 @@ typedef struct _GstMssDemuxClass GstMssDemuxClass;
 struct _GstMssDemuxStream {
   GstPad *pad;
 
+  GstCaps *caps;
+
   GstMssDemux *parent;
 
   GstMssStream *manifest_stream;
