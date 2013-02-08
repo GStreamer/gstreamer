@@ -116,7 +116,7 @@ ges_audio_test_source_create_element (GESTrackElement * trksrc)
  * @self: a #GESAudioTestSource
  * @freq: The frequency you want to apply on @self
  *
- * Lets you set the frequency applied on the track object
+ * Lets you set the frequency applied on the track element
  */
 void
 ges_audio_test_source_set_freq (GESAudioTestSource * self, gdouble freq)

@@ -188,7 +188,7 @@ ges_text_overlay_create_element (GESTrackElement * object)
  * @text: the text to render. an internal copy of this text will be
  * made.
  *
- * Sets the text this track object will render.
+ * Sets the text this track element will render.
  *
  */
 void
@@ -209,7 +209,7 @@ ges_text_overlay_set_text (GESTextOverlay * self, const gchar * text)
  * @self: the #GESTextOverlay
  * @font_desc: the pango font description
  *
- * Sets the pango font description of the text this track object
+ * Sets the pango font description of the text this track element
  * will render.
  *
  */

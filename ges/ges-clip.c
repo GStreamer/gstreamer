@@ -120,7 +120,7 @@ struct _GESClipPrivate
 
   /*< private > */
 
-  /* Set to TRUE when the clip is doing updates of track object
+  /* Set to TRUE when the clip is doing updates of track element
    * properties so we don't end up in infinite property update loops
    */
   gboolean ignore_notifies;
@@ -266,30 +266,30 @@ ges_clip_class_init (GESClipClass * klass)
       G_TYPE_NONE, 1, GES_TYPE_BASE_EFFECT);
 
   /**
-   * GESClip::track-object-added:
+   * GESClip::track-element-added:
    * @object: the #GESClip
    * @trackelement: the #GESTrackElement that was added.
    *
-   * Will be emitted after a track object was added to the object.
+   * Will be emitted after a track element was added to the object.
    *
    * Since: 0.10.2
    */
   ges_clip_signals[TRACK_ELEMENT_ADDED] =
-      g_signal_new ("track-object-added", G_TYPE_FROM_CLASS (klass),
+      g_signal_new ("track-element-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_ELEMENT);
 
   /**
-   * GESClip::track-object-removed:
+   * GESClip::track-element-removed:
    * @object: the #GESClip
    * @trackelement: the #GESTrackElement that was removed.
    *
-   * Will be emitted after a track object was removed from @object.
+   * Will be emitted after a track element was removed from @object.
    *
    * Since: 0.10.2
    */
   ges_clip_signals[TRACK_ELEMENT_REMOVED] =
-      g_signal_new ("track-object-removed", G_TYPE_FROM_CLASS (klass),
+      g_signal_new ("track-element-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_ELEMENT);
 
@@ -344,7 +344,7 @@ ges_clip_create_track_element (GESClip * object, GESTrackType type)
 
   g_return_val_if_fail (GES_IS_CLIP (object), NULL);
 
-  GST_DEBUG_OBJECT (object, "Creating track object for %s",
+  GST_DEBUG_OBJECT (object, "Creating track element for %s",
       ges_track_type_name (type));
   if (!(type & object->priv->supportedformats)) {
     GST_DEBUG_OBJECT (object, "We don't support this track type %i", type);
@@ -418,7 +418,7 @@ ges_clip_create_track_elements_func (GESClip * object, GESTrackType type)
       ges_track_type_name (type));
   result = ges_clip_create_track_element (object, type);
   if (!result) {
-    GST_DEBUG ("Did not create track object");
+    GST_DEBUG ("Did not create track element");
     return NULL;
   }
 
@@ -430,7 +430,7 @@ ges_clip_create_track_elements_func (GESClip * object, GESTrackType type)
  * @object: a #GESClip
  * @trobj: the GESTrackElement
  *
- * Add a track object to the timeline object. Should only be called by
+ * Add a track element to the timeline object. Should only be called by
  * subclasses implementing the create_track_elements (plural) vmethod.
  *
  * Takes a reference on @trobj.
@@ -468,7 +468,7 @@ ges_clip_add_track_element (GESClip * object, GESTrackElement * trobj)
   mapping->object = trobj;
   priv->mappings = g_list_append (priv->mappings, mapping);
 
-  GST_DEBUG ("Adding TrackElement to the list of controlled track objects");
+  GST_DEBUG ("Adding TrackElement to the list of controlled track elements");
   /* We steal the initial reference */
 
   GST_DEBUG ("Setting properties on newly created TrackElement");
@@ -609,7 +609,7 @@ ges_clip_release_track_element (GESClip * object,
 
   ges_track_element_set_clip (trackelement, NULL);
 
-  GST_DEBUG ("Removing reference to track object %p", trackelement);
+  GST_DEBUG ("Removing reference to track element %p", trackelement);
 
   if (klass->track_element_released) {
     GST_DEBUG ("Calling track_element_released subclass method");
@@ -925,7 +925,7 @@ ges_clip_move_to_layer (GESClip * object, GESTimelineLayer * layer)
  * ges_clip_find_track_element:
  * @object: a #GESClip
  * @track: a #GESTrack or NULL
- * @type: a #GType indicating the type of track object you are looking
+ * @type: a #GType indicating the type of track element you are looking
  * for or %G_TYPE_NONE if you do not care about the track type.
  *
  * Finds the #GESTrackElement controlled by @object that is used in @track. You
@@ -1321,17 +1321,17 @@ ges_clip_split (GESClip * object, guint64 position)
     ges_track_element_set_locked (new_trackelement, FALSE);
     ges_track_element_set_locked (trackelement, FALSE);
 
-    /* Set 'new' track object timing propeties */
+    /* Set 'new' track element timing propeties */
     _set_start0 (GES_TIMELINE_ELEMENT (new_trackelement), position);
     _set_inpoint0 (GES_TIMELINE_ELEMENT (new_trackelement),
         inpoint + duration - (duration + start - position));
     _set_duration0 (GES_TIMELINE_ELEMENT (new_trackelement),
         duration + start - position);
 
-    /* Set 'old' track object duration */
+    /* Set 'old' track element duration */
     _set_duration0 (GES_TIMELINE_ELEMENT (trackelement), position - start);
 
-    /* And let track objects in the same locking state as before. */
+    /* And let track elements in the same locking state as before. */
     ges_track_element_set_locked (trackelement, locked);
     ges_track_element_set_locked (new_trackelement, locked);
   }
@@ -1604,7 +1604,7 @@ update_height (GESClip * object)
 }
 
 /*
- * PROPERTY NOTIFICATIONS FROM TRACK OBJECTS
+ * PROPERTY NOTIFICATIONS FROM TRACK ELEMENTS
  */
 
 static void

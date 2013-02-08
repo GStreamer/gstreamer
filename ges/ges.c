@@ -81,7 +81,7 @@ ges_init (void)
   GES_TYPE_PITIVI_FORMATTER;
   GES_TYPE_XML_FORMATTER;
 
-  /* Register track objects */
+  /* Register track elements */
   GES_TYPE_EFFECT;
 
   /* Register interfaces */

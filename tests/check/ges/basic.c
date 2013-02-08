@@ -541,7 +541,7 @@ GST_START_TEST (test_ges_timeline_remove_track)
    * 1 added by ourselves above (g_object_ref (t1)) */
   ASSERT_OBJECT_REFCOUNT (t3, "t3", 4);
 
-  /* remove the track and check that the track objects have been released */
+  /* remove the track and check that the track elements have been released */
   fail_unless (ges_timeline_remove_track (timeline, track));
 
   ASSERT_OBJECT_REFCOUNT (t1, "trackelement", 2);

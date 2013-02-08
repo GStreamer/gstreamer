@@ -155,7 +155,7 @@ save_track_elements (xmlTextWriterPtr writer, GList * source_list,
   gchar *bin_desc;
   xmlTextWriterStartElement (writer, BAD_CAST "track-objects");
 
-  GST_DEBUG ("Saving track objects");
+  GST_DEBUG ("Saving track elements");
   for (tmp = source_list; tmp; tmp = tmp->next) {
     SrcMapping *srcmap;
     GESClip *object;
@@ -174,7 +174,7 @@ save_track_elements (xmlTextWriterPtr writer, GList * source_list,
       const gchar *active, *locked;
 
       if (!track) {
-        GST_WARNING ("Track object %p not in a track yet", trackelement);
+        GST_WARNING ("Track element %p not in a track yet", trackelement);
         continue;
       }
 
@@ -806,7 +806,7 @@ track_element_added_cb (GESClip * object,
         || (!g_strcmp0 (media_type, "pitivi.stream.AudioStream")
             && track->type == GES_TRACK_TYPE_AUDIO)) {
 
-      /* We unlock the track objects so we do not move the whole Clip */
+      /* We unlock the track element so we do not move the whole Clip */
       ges_track_element_set_locked (tmp->data, FALSE);
       set_properties (G_OBJECT (tmp->data), props_table);
 
@@ -831,7 +831,7 @@ track_element_added_cb (GESClip * object,
 
       if (GES_IS_EFFECT (tmp->data)
           && (type == track->type)) {
-        /* We lock the track objects so we do not move the whole Clip */
+        /* We lock the track elements so we do not move the whole Clip */
         ges_track_element_set_locked (tmp->data, FALSE);
         g_object_set (tmp->data, "start", start, "duration", duration, NULL);
         if (locked)
@@ -891,7 +891,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
 
     if (g_strcmp0 (fac_ref, (gchar *) "effect")) {
       /* FIXME this is a hack to get a ref to the formatter when receiving
-       * track-object-added */
+       * track-element-added */
       g_hash_table_insert (props_table, (gchar *) "current-formatter", self);
       if (a_avail && (!video)) {
         a_avail = FALSE;
@@ -922,7 +922,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
         set_properties (G_OBJECT (src), props_table);
         ges_timeline_layer_add_object (layer, GES_CLIP (src));
 
-        g_signal_connect (src, "track-object-added",
+        g_signal_connect (src, "track-element-added",
             G_CALLBACK (track_element_added_cb), props_table);
 
         priv->sources_to_load = g_list_prepend (priv->sources_to_load, src);

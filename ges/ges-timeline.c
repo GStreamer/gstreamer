@@ -107,7 +107,7 @@ struct _MoveContext
   guint64 max_trim_pos;
 
   /* fields to force/avoid new context */
-  /* Set to %TRUE when the track is doing updates of track objects
+  /* Set to %TRUE when the track is doing updates of track element
    * properties so we don't end up always needing new move context */
   gboolean ignore_needs_ctx;
   gboolean needs_move_ctx;
@@ -448,7 +448,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
       GES_TYPE_TIMELINE_LAYER);
 
   /**
-   * GESTimeline::track-objects-snapping:
+   * GESTimeline::track-elements-snapping:
    * @timeline: the #GESTimeline
    * @obj1: the first #GESTrackElement that was snapping.
    * @obj2: the second #GESTrackElement that was snapping.
@@ -484,8 +484,8 @@ ges_timeline_class_init (GESTimelineClass * klass)
   /**
    * GESTimeline::select-tracks-for-object:
    * @timeline: the #GESTimeline
-   * @clip: The #GESClip on which @track-object will land
-   * @track-object: The #GESTrackElement for which to choose the tracks it should land into
+   * @clip: The #GESClip on which @track-element will land
+   * @track-element: The #GESTrackElement for which to choose the tracks it should land into
    *
    * Returns: (transfer full) (element-type GESTrack): a #GPtrArray of #GESTrack-s where that object should be added
    *
@@ -1734,13 +1734,13 @@ add_object_to_track (GESClip * object, GESTrackElement * track_element,
 {
   if (!ges_clip_add_track_element (object, track_element)) {
     GST_WARNING_OBJECT (object,
-        "Failed to add track object to timeline object");
+        "Failed to add track element to timeline object");
     gst_object_unref (track_element);
     return;
   }
 
   if (!ges_track_add_object (track, track_element)) {
-    GST_WARNING_OBJECT (object, "Failed to add track object to track");
+    GST_WARNING_OBJECT (object, "Failed to add track element to track");
     ges_clip_release_track_element (object, track_element);
     gst_object_unref (track_element);
     return;
@@ -1895,7 +1895,7 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESClip * object,
 
   GST_DEBUG ("Clip %p removed from layer %p", object, layer);
 
-  /* Go over the object's track objects and figure out which one belongs to
+  /* Go over the object's track element and figure out which one belongs to
    * the list of tracks we control */
 
   trackelements = ges_clip_get_track_elements (object);
@@ -2373,7 +2373,7 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
  * Returns: TRUE if the track was properly added, else FALSE.
  */
 
-/* FIXME: create track objects for timeline objects which have already been
+/* FIXME: create track elements for timeline objects which have already been
  * added to existing layers.
  */
 
@@ -2420,12 +2420,12 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   g_signal_emit (timeline, ges_timeline_signals[TRACK_ADDED], 0, track);
 
   /* ensure that each existing timeline object has the opportunity to create a
-   * track object for this track*/
+   * track element for this track*/
 
   /* We connect to the object for the timeline editing mode management */
-  g_signal_connect (G_OBJECT (track), "track-object-added",
+  g_signal_connect (G_OBJECT (track), "track-element-added",
       G_CALLBACK (track_element_added_cb), timeline);
-  g_signal_connect (G_OBJECT (track), "track-object-removed",
+  g_signal_connect (G_OBJECT (track), "track-element-removed",
       G_CALLBACK (track_element_removed_cb), timeline);
 
   for (tmp = timeline->layers; tmp; tmp = tmp->next) {
@@ -2456,9 +2456,9 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
  * Returns: TRUE if the @track was properly removed, else FALSE.
  */
 
-/* FIXME: release any track objects associated with this layer. currenly this
+/* FIXME: release any track elements associated with this layer. currenly this
  * will not happen if you remove the track before removing *all*
- * clips which have a track object in this track.
+ * clips which have a track element in this track.
  */
 
 gboolean

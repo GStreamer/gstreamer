@@ -195,17 +195,17 @@ GST_START_TEST (test_filesource_images)
   a = ges_track_audio_raw_new ();
   v = ges_track_video_raw_new ();
 
-  /* set the is_image property to true then create a video track object. */
+  /* set the is_image property to true then create a video track element. */
   g_object_set (G_OBJECT (uriclip), "is-image", TRUE, NULL);
 
-  /* the returned track object should be an image source */
+  /* the returned track element should be an image source */
   trobj = ges_clip_create_track_element (clip, v->type);
   ges_clip_add_track_element (clip, trobj);
   fail_unless (GES_IS_IMAGE_SOURCE (trobj));
 
   /* The track holds a reference to the object
    * and the timelinobject holds a reference to the object */
-  ASSERT_OBJECT_REFCOUNT (trobj, "Video Track Object", 2);
+  ASSERT_OBJECT_REFCOUNT (trobj, "Video Track Element", 2);
 
   ges_track_remove_object (v, trobj);
   ges_clip_release_track_element (clip, trobj);

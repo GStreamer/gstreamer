@@ -190,7 +190,7 @@ ges_title_source_create_element (GESTrackElement * object)
  * @text: the text to render. an internal copy of this text will be
  * made.
  * 
- * Sets the text this track object will render.
+ * Sets the text this track element will render.
  */
 
 void

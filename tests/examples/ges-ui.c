@@ -1486,7 +1486,7 @@ quit_item_activate_cb (GtkMenuItem * item, App * app)
 void
 delete_activate_cb (GtkAction * item, App * app)
 {
-  /* get a gslist of selected track objects */
+  /* get a gslist of selected track elements */
   GList *objects = NULL;
 
   objects = app_get_selected_objects (app);

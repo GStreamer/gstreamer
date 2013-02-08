@@ -793,10 +793,10 @@ ges_track_element_set_clip (GESTrackElement * object, GESClip * clipect)
  * ges_track_element_get_clip:
  * @object: a #GESTrackElement
  *
- * Get the #GESClip which is controlling this track object
+ * Get the #GESClip which is controlling this track element
  *
  * Returns: (transfer none): the #GESClip which is controlling
- * this track object
+ * this track element
  */
 GESClip *
 ges_track_element_get_clip (GESTrackElement * object)
@@ -826,9 +826,9 @@ ges_track_element_get_gnlobject (GESTrackElement * object)
  * ges_track_element_get_element:
  * @object: a #GESTrackElement
  *
- * Get the #GstElement this track object is controlling within GNonLin.
+ * Get the #GstElement this track element is controlling within GNonLin.
  *
- * Returns: (transfer none): the #GstElement this track object is controlling
+ * Returns: (transfer none): the #GstElement this track element is controlling
  * within GNonLin.
  */
 GstElement *

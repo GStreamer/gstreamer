@@ -40,12 +40,12 @@ typedef struct _GESClipPrivate GESClipPrivate;
 
 /**
  * GESFillTrackElementFunc:
- * @object: the #GESClip controlling the track object
+ * @object: the #GESClip controlling the track elements
  * @trobject: the #GESTrackElement
  * @gnlobj: the GNonLin object that needs to be filled.
  *
  * A function that will be called when the GNonLin object of a corresponding
- * track object needs to be filled.
+ * track element needs to be filled.
  *
  * The implementer of this function shall add the proper #GstElement to @gnlobj
  * using gst_bin_add().
@@ -61,7 +61,7 @@ typedef gboolean (*GESFillTrackElementFunc) (GESClip *object,
  * @object: a #GESClip
  * @type: a #GESTrackType
  *
- * Creates the 'primary' track object for this @object.
+ * Creates the 'primary' track element for this @object.
  *
  * Subclasses should implement this method if they only provide a
  * single #GESTrackElement per track.
@@ -87,7 +87,7 @@ typedef GESTrackElement *(*GESCreateTrackElementFunc) (GESClip * object,
  * @object: a #GESClip
  * @type: a #GESTrackType
  *
- * Create all track objects this object handles for this type of track.
+ * Create all track elements this object handles for this type of track.
  *
  * Subclasses should implement this method if they potentially need to
  * return more than one #GESTrackElement(s) for a given #GESTrack.

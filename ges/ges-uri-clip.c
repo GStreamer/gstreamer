@@ -411,7 +411,7 @@ ges_uri_clip_create_track_element (GESClip * obj, GESTrackType type)
     /* FIXME : Implement properly ! */
     res = (GESTrackElement *) ges_track_filesource_new (priv->uri);
 
-    /* If mute and track is audio, deactivate the track object */
+    /* If mute and track is audio, deactivate the track element */
     if (type == GES_TRACK_TYPE_AUDIO && priv->mute)
       ges_track_element_set_active (res, FALSE);
   }

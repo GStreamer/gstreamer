@@ -44,7 +44,7 @@ GST_START_TEST (test_transition_basic)
   fail_unless (tr2 != 0);
   fail_unless (tr2->vtype == 1);
 
-  /* Make sure track object is created and vtype is set */
+  /* Make sure track element is created and vtype is set */
   trackelement = ges_clip_create_track_element (GES_CLIP (tr2), track->type);
   ges_clip_add_track_element (GES_CLIP (tr2), trackelement);
 
@@ -132,18 +132,18 @@ GST_START_TEST (test_transition_properties)
   assert_equals_int (ges_video_transition_get_transition_type
       (GES_VIDEO_TRANSITION (trackelement)), 1);
 
-  GST_DEBUG ("Releasing track object");
+  GST_DEBUG ("Releasing track element");
   ges_clip_release_track_element (object, trackelement);
 
   g_object_set (object, "vtype", 1, NULL);
 
-  GST_DEBUG ("creating track object");
+  GST_DEBUG ("creating track element");
   trackelement = ges_clip_create_track_element (object, track->type);
   ges_clip_add_track_element (object, trackelement);
   fail_unless (trackelement != NULL);
   fail_unless (ges_track_element_set_track (trackelement, track));
 
-  /* The new track object should have taken the previously set transition
+  /* The new track element should have taken the previously set transition
    * type (in this case 1) */
   GST_DEBUG ("Setting to vtype:1");
   assert_equals_int (ges_video_transition_get_transition_type

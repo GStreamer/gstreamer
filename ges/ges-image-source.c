@@ -24,7 +24,7 @@
  * image.
  * 
  * Outputs the video stream from a given file as a still frame. The frame
- * chosen will be determined by the in-point property on the track object. For
+ * chosen will be determined by the in-point property on the track element. For
  * image files, do not set the in-point property.
  */
 

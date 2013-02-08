@@ -48,13 +48,13 @@ typedef struct _GESCustomSourceClipPrivate   GESCustomSourceClipPrivate;
 
 /**
  * GESFillTrackElementUserFunc:
- * @object: the #GESClip controlling the track object
+ * @object: the #GESClip controlling the track element
  * @trobject: the #GESTrackElement
  * @gnlobj: the GNonLin object that needs to be filled.
  * @user_data: the gpointer to optional user data
  *
  * A function that will be called when the GNonLin object of a corresponding
- * track object needs to be filled.
+ * track element needs to be filled.
  *
  * The implementer of this function shall add the proper #GstElement to @gnlobj
  * using gst_bin_add().

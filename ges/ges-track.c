@@ -516,30 +516,30 @@ ges_track_class_init (GESTrackClass * klass)
       properties[ARG_TYPE]);
 
   /**
-   * GESTrack::track-object-added:
+   * GESTrack::track-element-added:
    * @object: the #GESTrack
    * @effect: the #GESTrackElement that was added.
    *
-   * Will be emitted after a track object was added to the track.
+   * Will be emitted after a track element was added to the track.
    *
    * Since: 0.10.2
    */
   ges_track_signals[TRACK_ELEMENT_ADDED] =
-      g_signal_new ("track-object-added", G_TYPE_FROM_CLASS (klass),
+      g_signal_new ("track-element-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_ELEMENT);
 
   /**
-   * GESTrack::track-object-removed:
+   * GESTrack::track-element-removed:
    * @object: the #GESTrack
    * @effect: the #GESTrackElement that was removed.
    *
-   * Will be emitted after a track object was removed from the track.
+   * Will be emitted after a track element was removed from the track.
    *
    * Since: 0.10.2
    */
   ges_track_signals[TRACK_ELEMENT_REMOVED] =
-      g_signal_new ("track-object-removed", G_TYPE_FROM_CLASS (klass),
+      g_signal_new ("track-element-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_ELEMENT);
 }

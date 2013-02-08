@@ -121,7 +121,7 @@ ges_test_clip_class_init (GESTestClipClass * klass)
   /**
    * GESTestClip:vpattern:
    *
-   * Video pattern to display in video track objects.
+   * Video pattern to display in video track elements.
    */
   g_object_class_install_property (object_class, PROP_VPATTERN,
       g_param_spec_enum ("vpattern", "VPattern",
@@ -132,7 +132,7 @@ ges_test_clip_class_init (GESTestClipClass * klass)
   /**
    * GESTestClip:freq:
    *
-   * The frequency to generate for audio track objects.
+   * The frequency to generate for audio track elements.
    */
   g_object_class_install_property (object_class, PROP_FREQ,
       g_param_spec_double ("freq", "Audio Frequency",
@@ -142,7 +142,7 @@ ges_test_clip_class_init (GESTestClipClass * klass)
   /**
    * GESTestClip:volume:
    *
-   * The volume for the audio track objects.
+   * The volume for the audio track elements.
    */
   g_object_class_install_property (object_class, PROP_VOLUME,
       g_param_spec_double ("volume", "Audio Volume",
