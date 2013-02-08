@@ -1832,6 +1832,17 @@ gst_value_get_caps (const GValue * value)
   return (GstCaps *) g_value_get_boxed (value);
 }
 
+static gint
+gst_value_compare_caps (const GValue * value1, const GValue * value2)
+{
+  GstCaps *caps1 = GST_CAPS (gst_value_get_caps (value1));
+  GstCaps *caps2 = GST_CAPS (gst_value_get_caps (value2));
+
+  if (gst_caps_is_equal (caps1, caps2))
+    return GST_VALUE_EQUAL;
+  return GST_VALUE_UNORDERED;
+}
+
 static gchar *
 gst_value_serialize_caps (const GValue * value)
 {
@@ -6042,7 +6053,7 @@ _priv_gst_value_initialize (void)
   {
     static GstValueTable gst_value = {
       0,
-      NULL,
+      gst_value_compare_caps,
       gst_value_serialize_caps,
       gst_value_deserialize_caps,
     };
