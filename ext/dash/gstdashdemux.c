@@ -1039,9 +1039,9 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
             i++, iter = g_slist_next (iter)) {
           GstDashDemuxStream *stream = iter->data;
           gst_pad_push_event (stream->pad,
-              gst_event_new_new_segment (TRUE, demux->segment.rate,
+              gst_event_new_new_segment (FALSE, demux->segment.rate,
                   GST_FORMAT_TIME, demux->segment.start, demux->segment.stop,
-                  0));
+                  demux->segment.time));
         }
         selected_stream->need_segment = FALSE;
         demux->position_shift = 0;
