@@ -2574,8 +2574,8 @@ fill_pred_weight_table(GstVaapiDecoderH264 *decoder,
     else
         num_weight_tables = 0;
 
-    slice_param->luma_log2_weight_denom   = w->luma_log2_weight_denom;
-    slice_param->chroma_log2_weight_denom = w->chroma_log2_weight_denom;
+    slice_param->luma_log2_weight_denom   = 0;
+    slice_param->chroma_log2_weight_denom = 0;
     slice_param->luma_weight_l0_flag      = 0;
     slice_param->chroma_weight_l0_flag    = 0;
     slice_param->luma_weight_l1_flag      = 0;
@@ -2583,6 +2583,9 @@ fill_pred_weight_table(GstVaapiDecoderH264 *decoder,
 
     if (num_weight_tables < 1)
         return TRUE;
+
+    slice_param->luma_log2_weight_denom   = w->luma_log2_weight_denom;
+    slice_param->chroma_log2_weight_denom = w->chroma_log2_weight_denom;
 
     slice_param->luma_weight_l0_flag = 1;
     for (i = 0; i <= slice_param->num_ref_idx_l0_active_minus1; i++) {
