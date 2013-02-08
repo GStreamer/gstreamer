@@ -329,7 +329,7 @@ ges_clip_init (GESClip * self)
  * @object: The origin #GESClip
  * @type: The #GESTrackType to create a #GESTrackElement for.
  *
- * Creates a #GESTrackElement for the provided @type. The timeline object
+ * Creates a #GESTrackElement for the provided @type. The clip
  * keep a reference to the newly created trackelement, you therefore need to
  * call @ges_clip_release_track_element when you are done with it.
  *
@@ -430,7 +430,7 @@ ges_clip_create_track_elements_func (GESClip * object, GESTrackType type)
  * @object: a #GESClip
  * @trobj: the GESTrackElement
  *
- * Add a track element to the timeline object. Should only be called by
+ * Add a track element to the clip. Should only be called by
  * subclasses implementing the create_track_elements (plural) vmethod.
  *
  * Takes a reference on @trobj.
@@ -454,7 +454,7 @@ ges_clip_add_track_element (GESClip * object, GESTrackElement * trobj)
   priv = object->priv;
   is_effect = GES_IS_BASE_EFFECT (trobj);
 
-  GST_LOG ("Got a TrackElement : %p , setting the timeline object as its"
+  GST_LOG ("Got a TrackElement : %p , setting the clip as its"
       "creator. Is a BaseEffect %i", trobj, is_effect);
 
   if (!trobj)

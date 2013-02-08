@@ -49,7 +49,7 @@ main (int argc, gchar ** argv)
 
   tracka = ges_track_audio_raw_new ();
 
-  /* We are only going to be doing one layer of timeline objects */
+  /* We are only going to be doing one layer of clips */
   layer = ges_timeline_layer_new ();
 
   /* Add the tracks and the layer to the timeline */

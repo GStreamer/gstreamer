@@ -28,7 +28,7 @@
  * #GESTimeline is the central object for any multimedia timeline.
  *
  * Contains a list of #GESTimelineLayer which users should use to arrange the
- * various timeline objects through time.
+ * various clips through time.
  *
  * The output type is determined by the #GESTrack that are set on
  * the #GESTimeline.
@@ -1733,8 +1733,7 @@ add_object_to_track (GESClip * object, GESTrackElement * track_element,
     GESTrack * track)
 {
   if (!ges_clip_add_track_element (object, track_element)) {
-    GST_WARNING_OBJECT (object,
-        "Failed to add track element to timeline object");
+    GST_WARNING_OBJECT (object, "Failed to add track element to clip");
     gst_object_unref (track_element);
     return;
   }
@@ -2295,7 +2294,7 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   GST_DEBUG ("Done adding layer, emitting 'layer-added' signal");
   g_signal_emit (timeline, ges_timeline_signals[LAYER_ADDED], 0, layer);
 
-  /* add any existing timeline objects to the timeline */
+  /* add any existing clips to the timeline */
   objects = ges_timeline_layer_get_objects (layer);
   for (tmp = objects; tmp; tmp = tmp->next) {
     layer_object_added_cb (layer, tmp->data, timeline);
@@ -2373,7 +2372,7 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
  * Returns: TRUE if the track was properly added, else FALSE.
  */
 
-/* FIXME: create track elements for timeline objects which have already been
+/* FIXME: create track elements for clips which have already been
  * added to existing layers.
  */
 
@@ -2419,7 +2418,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   /* emit 'track-added' */
   g_signal_emit (timeline, ges_timeline_signals[TRACK_ADDED], 0, track);
 
-  /* ensure that each existing timeline object has the opportunity to create a
+  /* ensure that each existing clip has the opportunity to create a
    * track element for this track*/
 
   /* We connect to the object for the timeline editing mode management */

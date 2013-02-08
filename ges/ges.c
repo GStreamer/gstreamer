@@ -69,7 +69,7 @@ ges_init (void)
     return TRUE;
   }
 
-  /* register timeline object classes with the system */
+  /* register clip classes with the system */
 
   GES_TYPE_TEST_CLIP;
   GES_TYPE_URI_CLIP;

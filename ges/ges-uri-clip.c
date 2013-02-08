@@ -175,7 +175,7 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
    */
   g_object_class_install_property (object_class, PROP_IS_IMAGE,
       g_param_spec_boolean ("is-image", "Is still image",
-          "Whether the timeline object represents a still image or not",
+          "Whether the clip represents a still image or not",
           FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /* Redefine the supported formats property so the default value is UNKNOWN
@@ -274,7 +274,7 @@ ges_uri_clip_init (GESUriClip * self)
  * @self: the #GESUriClip on which to mute or unmute the audio track
  * @mute: %TRUE to mute @self audio track, %FALSE to unmute it
  *
- * Sets whether the audio track of this timeline object is muted or not.
+ * Sets whether the audio track of this clip is muted or not.
  *
  */
 void
@@ -319,7 +319,7 @@ filesource_set_max_duration (GESTimelineElement * element,
  * @self: the #GESUriClip
  * @is_image: %TRUE if @self is a still image, %FALSE otherwise
  *
- * Sets whether the timeline object is a still image or not.
+ * Sets whether the clip is a still image or not.
  */
 void
 ges_uri_clip_set_is_image (GESUriClip * self, gboolean is_image)

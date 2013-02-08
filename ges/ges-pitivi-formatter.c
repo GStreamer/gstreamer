@@ -409,7 +409,7 @@ save_clips (xmlTextWriterPtr writer, GList * list)
 
   xmlTextWriterStartElement (writer, BAD_CAST "timeline-objects");
 
-  GST_DEBUG ("Saving timeline objects");
+  GST_DEBUG ("Saving clips");
 
   for (tmp = list; tmp; tmp = tmp->next) {
 
@@ -1057,7 +1057,7 @@ load_pitivi_file_from_uri (GESFormatter * self,
   list_sources (self);
 
   if (!parse_clips (self)) {
-    GST_ERROR ("Couldn't find timeline objects markup in the xptv file");
+    GST_ERROR ("Couldn't find clips markup in the xptv file");
     return FALSE;
   }
 
@@ -1068,7 +1068,7 @@ load_pitivi_file_from_uri (GESFormatter * self,
 
 
 
-  /* If there are no timeline objects to load we should emit
+  /* If there are no clips to load we should emit
    * 'project-loaded' signal.
    */
   if (!g_hash_table_size (priv->clips_table) && GES_FORMATTER (self)->project) {

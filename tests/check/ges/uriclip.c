@@ -210,7 +210,7 @@ GST_START_TEST (test_filesource_images)
   ges_track_remove_object (v, trobj);
   ges_clip_release_track_element (clip, trobj);
 
-  /* the timeline object should not create any TrackElement in the audio track */
+  /* the clip should not create any TrackElement in the audio track */
   trobj = ges_clip_create_track_element (clip, a->type);
   fail_unless (trobj == NULL);
 

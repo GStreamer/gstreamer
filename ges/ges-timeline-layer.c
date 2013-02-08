@@ -162,7 +162,7 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
   /**
    * GESTimelineLayer:auto-transition:
    *
-   * Sets whether transitions are added automagically when timeline objects overlap.
+   * Sets whether transitions are added automagically when clips overlap.
    */
   g_object_class_install_property (object_class, PROP_AUTO_TRANSITION,
       g_param_spec_boolean ("auto-transition", "Auto-Transition",
@@ -407,10 +407,10 @@ ges_timeline_layer_get_priority (GESTimelineLayer * layer)
  * ges_timeline_layer_get_objects:
  * @layer: a #GESTimelineLayer
  *
- * Get the timeline objects this layer contains.
+ * Get the clips this layer contains.
  *
  * Returns: (transfer full) (element-type GESClip): a #GList of
- * timeline objects. The user is responsible for
+ * clips. The user is responsible for
  * unreffing the contained objects and freeing the list.
  */
 

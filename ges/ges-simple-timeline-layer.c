@@ -356,7 +356,7 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
  * @layer: a #GESSimpleTimelineLayer
  * @position: The position in position to get, starting from 0.
  *
- * Gets the timeline object at the given position.
+ * Gets the clip at the given position.
  *
  * Returns: (transfer none): The #GESClip at the given position or NULL if
  * the position is off the end of the layer.

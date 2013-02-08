@@ -248,7 +248,7 @@ find_row_for_object (GtkListStore * model, GtkTreeIter * ret, GESClip * object)
   return FALSE;
 }
 
-/* this callback is registered for every timeline object, and updates the
+/* this callback is registered for every clip, and updates the
  * corresponding duration cell in the model */
 static void
 clip_notify_duration_cb (GESClip * object,

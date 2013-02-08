@@ -140,7 +140,7 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
   if (video)
     trackv = ges_track_video_raw_new ();
 
-  /* We are only going to be doing one layer of timeline objects */
+  /* We are only going to be doing one layer of clips */
   layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
 
   /* Add the tracks and the layer to the timeline */

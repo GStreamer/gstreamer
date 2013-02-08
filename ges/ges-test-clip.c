@@ -179,7 +179,7 @@ ges_test_clip_init (GESTestClip * self)
  * @self: the #GESTestClip on which to mute or unmute the audio track
  * @mute: %TRUE to mute the audio track, %FALSE to unmute it
  *
- * Sets whether the audio track of this timeline object is muted or not.
+ * Sets whether the audio track of this clip is muted or not.
  *
  */
 void

@@ -285,7 +285,7 @@ ges_title_clip_init (GESTitleClip * self)
  * @text: the text to render. an internal copy of this text will be
  * made.
  *
- * Sets the text this timeline object will render.
+ * Sets the text this clip will render.
  *
  */
 void

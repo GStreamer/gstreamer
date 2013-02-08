@@ -174,7 +174,7 @@ GST_START_TEST (test_ges_scenario)
 
 GST_END_TEST;
 
-/* very similar to the above, except we add the timeline object to the layer
+/* very similar to the above, except we add the clip to the layer
  * and then add it to the timeline.
  */
 
