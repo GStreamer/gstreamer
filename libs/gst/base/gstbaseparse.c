@@ -731,7 +731,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->first_frame_offset = -1;
   parse->priv->estimated_duration = -1;
   parse->priv->estimated_drift = 0;
-  parse->priv->next_pts = 0;
+  parse->priv->next_pts = GST_CLOCK_TIME_NONE;
   parse->priv->next_dts = 0;
   parse->priv->syncable = TRUE;
   parse->priv->passthrough = FALSE;
@@ -1034,8 +1034,6 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
       parse->priv->offset = offset;
       parse->priv->sync_offset = offset;
       parse->priv->next_dts = next_dts;
-      if (parse->priv->pts_interpolate)
-        parse->priv->next_pts = next_dts;
       parse->priv->last_pts = GST_CLOCK_TIME_NONE;
       parse->priv->last_dts = GST_CLOCK_TIME_NONE;
       parse->priv->discont = TRUE;
@@ -1983,6 +1981,12 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
       parse->priv->first_frame_offset = 0;
     }
   }
+
+  /* interpolating and no valid pts yet,
+   * start with dts and carry on from there */
+  if (parse->priv->pts_interpolate &&
+      !GST_CLOCK_TIME_IS_VALID (parse->priv->next_pts))
+    parse->priv->next_pts = parse->priv->next_dts;
 
   /* again use default handler to add missing metadata;
    * we may have new information on frame properties */
@@ -4094,8 +4098,6 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
       parse->priv->seen_keyframe = FALSE;
       parse->priv->discont = TRUE;
       parse->priv->next_dts = start_ts;
-      if (parse->priv->pts_interpolate)
-        parse->priv->next_pts = start_ts;
       parse->priv->last_dts = GST_CLOCK_TIME_NONE;
       parse->priv->last_pts = GST_CLOCK_TIME_NONE;
       parse->priv->sync_offset = seekpos;
