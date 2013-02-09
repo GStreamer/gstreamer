@@ -63,7 +63,7 @@ struct _GstShmSink
   gboolean unlock;
   GstClockTimeDiff buffer_time;
 
-  GCond *cond;
+  GCond cond;
 };
 
 struct _GstShmSinkClass

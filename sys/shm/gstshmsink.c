@@ -37,7 +37,6 @@
 #include "gstshmsink.h"
 
 #include <gst/gst.h>
-#include <gst/glib-compat-private.h>
 
 #include <string.h>
 
@@ -104,7 +103,7 @@ static guint signals[LAST_SIGNAL] = { 0 };
 static void
 gst_shm_sink_init (GstShmSink * self)
 {
-  self->cond = g_cond_new ();
+  g_cond_init (&self->cond);
   self->size = DEFAULT_SIZE;
   self->wait_for_connection = DEFAULT_WAIT_FOR_CONNECTION;
   self->perms = DEFAULT_PERMS;
@@ -190,7 +189,7 @@ gst_shm_sink_finalize (GObject * object)
 {
   GstShmSink *self = GST_SHM_SINK (object);
 
-  g_cond_free (self->cond);
+  g_cond_clear (&self->cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -239,13 +238,13 @@ gst_shm_sink_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (object);
       self->wait_for_connection = g_value_get_boolean (value);
       GST_OBJECT_UNLOCK (object);
-      g_cond_broadcast (self->cond);
+      g_cond_broadcast (&self->cond);
       break;
     case PROP_BUFFER_TIME:
       GST_OBJECT_LOCK (object);
       self->buffer_time = g_value_get_int64 (value);
       GST_OBJECT_UNLOCK (object);
-      g_cond_broadcast (self->cond);
+      g_cond_broadcast (&self->cond);
       break;
     default:
       break;
@@ -290,6 +289,7 @@ static gboolean
 gst_shm_sink_start (GstBaseSink * bsink)
 {
   GstShmSink *self = GST_SHM_SINK (bsink);
+  GError *err = NULL;
 
   self->stop = FALSE;
 
@@ -322,7 +322,8 @@ gst_shm_sink_start (GstBaseSink * bsink)
   gst_poll_add_fd (self->poll, &self->serverpollfd);
   gst_poll_fd_ctl_read (self->poll, &self->serverpollfd, TRUE);
 
-  self->pollthread = g_thread_create (pollthread_func, self, TRUE, NULL);
+  self->pollthread =
+      g_thread_try_new ("gst-shmsink-poll-thread", pollthread_func, self, &err);
 
   if (!self->pollthread)
     goto thread_error;
@@ -335,7 +336,9 @@ thread_error:
   self->pipe = NULL;
   gst_poll_free (self->poll);
 
-  GST_ELEMENT_ERROR (self, CORE, THREAD, ("Could not srart thread"), (NULL));
+  GST_ELEMENT_ERROR (self, CORE, THREAD, ("Could not start thread"),
+      ("%s", err->message));
+  g_error_free (err);
   return FALSE;
 }
 
@@ -398,7 +401,7 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   GST_OBJECT_LOCK (self);
   while (self->wait_for_connection && !self->clients) {
-    g_cond_wait (self->cond, GST_OBJECT_GET_LOCK (self));
+    g_cond_wait (&self->cond, GST_OBJECT_GET_LOCK (self));
     if (self->unlock) {
       GST_OBJECT_UNLOCK (self);
       return GST_FLOW_FLUSHING;
@@ -406,7 +409,7 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   }
 
   while (!gst_shm_sink_can_render (self, GST_BUFFER_TIMESTAMP (buf))) {
-    g_cond_wait (self->cond, GST_OBJECT_GET_LOCK (self));
+    g_cond_wait (&self->cond, GST_OBJECT_GET_LOCK (self));
     if (self->unlock) {
       GST_OBJECT_UNLOCK (self);
       return GST_FLOW_FLUSHING;
@@ -423,14 +426,14 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     gchar *shmbuf = NULL;
     while ((block = sp_writer_alloc_block (self->pipe,
                 gst_buffer_get_size (buf))) == NULL) {
-      g_cond_wait (self->cond, GST_OBJECT_GET_LOCK (self));
+      g_cond_wait (&self->cond, GST_OBJECT_GET_LOCK (self));
       if (self->unlock) {
         GST_OBJECT_UNLOCK (self);
         return GST_FLOW_FLUSHING;
       }
     }
     while (self->wait_for_connection && !self->clients) {
-      g_cond_wait (self->cond, GST_OBJECT_GET_LOCK (self));
+      g_cond_wait (&self->cond, GST_OBJECT_GET_LOCK (self));
       if (self->unlock) {
         sp_writer_free_block (block);
         GST_OBJECT_UNLOCK (self);
@@ -615,7 +618,7 @@ pollthread_func (gpointer data)
       goto again;
     }
 
-    g_cond_broadcast (self->cond);
+    g_cond_broadcast (&self->cond);
   }
 
   return NULL;
@@ -631,7 +634,7 @@ gst_shm_sink_event (GstBaseSink * bsink, GstEvent * event)
       GST_OBJECT_LOCK (self);
       while (self->wait_for_connection && sp_writer_pending_writes (self->pipe)
           && !self->unlock)
-        g_cond_wait (self->cond, GST_OBJECT_GET_LOCK (self));
+        g_cond_wait (&self->cond, GST_OBJECT_GET_LOCK (self));
       GST_OBJECT_UNLOCK (self);
       break;
     default:
@@ -651,7 +654,7 @@ gst_shm_sink_unlock (GstBaseSink * bsink)
   self->unlock = TRUE;
   GST_OBJECT_UNLOCK (self);
 
-  g_cond_broadcast (self->cond);
+  g_cond_broadcast (&self->cond);
   return TRUE;
 }
 
