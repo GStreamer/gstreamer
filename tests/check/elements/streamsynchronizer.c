@@ -266,8 +266,7 @@ GST_START_TEST (test_basic)
   pushinfo.pad = mysrcpad;
   pushinfo.to_push = to_push;
   g_mutex_lock (&push_mutex);
-  thread =
-      g_thread_create ((GThreadFunc) my_push_thread, &pushinfo, FALSE, NULL);
+  thread = g_thread_new ("pushthread", (GThreadFunc) my_push_thread, &pushinfo);
   fail_unless (thread != NULL);
 
   g_cond_wait (&push_cond, &push_mutex);
