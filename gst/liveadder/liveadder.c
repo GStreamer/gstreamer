@@ -44,7 +44,6 @@
 
 #include "liveadder.h"
 
-#include <gst/glib-compat-private.h>
 #include <gst/audio/audio.h>
 
 #include <string.h>
@@ -206,7 +205,7 @@ gst_live_adder_init (GstLiveAdder * adder)
 
   adder->padcount = 0;
   adder->func = NULL;
-  adder->not_empty_cond = g_cond_new ();
+  g_cond_init (&adder->not_empty_cond);
 
   adder->next_timestamp = GST_CLOCK_TIME_NONE;
 
@@ -221,7 +220,7 @@ gst_live_adder_finalize (GObject * object)
 {
   GstLiveAdder *adder = GST_LIVE_ADDER (object);
 
-  g_cond_free (adder->not_empty_cond);
+  g_cond_clear (&adder->not_empty_cond);
 
   g_queue_foreach (adder->buffers, (GFunc) gst_mini_object_unref, NULL);
   while (g_queue_pop_head (adder->buffers)) {
@@ -467,7 +466,7 @@ gst_live_adder_flush_start (GstLiveAdder * adder)
   if (adder->clock_id)
     gst_clock_id_unschedule (adder->clock_id);
 
-  g_cond_broadcast (adder->not_empty_cond);
+  g_cond_broadcast (&adder->not_empty_cond);
   GST_OBJECT_UNLOCK (adder);
 }
 
@@ -571,7 +570,7 @@ gst_live_adder_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       if (ret && !padprivate->eos) {
         GST_DEBUG_OBJECT (adder, "queuing EOS");
         padprivate->eos = TRUE;
-        g_cond_broadcast (adder->not_empty_cond);
+        g_cond_broadcast (&adder->not_empty_cond);
       } else if (padprivate->eos) {
         GST_DEBUG_OBJECT (adder, "dropping EOS, we are already EOS");
       } else {
@@ -1126,7 +1125,7 @@ gst_live_live_adder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     skip += mix_duration;
   }
 
-  g_cond_broadcast (adder->not_empty_cond);
+  g_cond_broadcast (&adder->not_empty_cond);
 
   if (skip == GST_BUFFER_DURATION (buffer)) {
     gst_buffer_unref (buffer);
@@ -1216,7 +1215,7 @@ again:
       break;
     if (check_eos_locked (adder))
       goto eos;
-    g_cond_wait (adder->not_empty_cond, GST_OBJECT_GET_LOCK (adder));
+    g_cond_wait (&adder->not_empty_cond, GST_OBJECT_GET_LOCK (adder));
   }
 
   buffer_timestamp = GST_BUFFER_TIMESTAMP (g_queue_peek_head (adder->buffers));

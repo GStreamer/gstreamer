@@ -62,7 +62,7 @@ struct _GstLiveAdder
 
   /* the queue is ordered head to tail */
   GQueue *buffers;
-  GCond *not_empty_cond;
+  GCond not_empty_cond;
 
   GstClockTime next_timestamp;
 
