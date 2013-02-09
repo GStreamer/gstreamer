@@ -23,7 +23,6 @@
 
 #include <string.h>
 
-#include <gst/glib-compat-private.h>
 #include "gstintersurface.h"
 
 static GList *list;
@@ -48,7 +47,7 @@ gst_inter_surface_get (const char *name)
 
   surface = g_malloc0 (sizeof (GstInterSurface));
   surface->name = g_strdup (name);
-  surface->mutex = g_mutex_new ();
+  g_mutex_init (&surface->mutex);
   surface->audio_adapter = gst_adapter_new ();
 
   list = g_list_append (list, surface);

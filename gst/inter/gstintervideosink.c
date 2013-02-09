@@ -206,12 +206,12 @@ gst_inter_video_sink_stop (GstBaseSink * sink)
 {
   GstInterVideoSink *intervideosink = GST_INTER_VIDEO_SINK (sink);
 
-  g_mutex_lock (intervideosink->surface->mutex);
+  g_mutex_lock (&intervideosink->surface->mutex);
   if (intervideosink->surface->video_buffer) {
     gst_buffer_unref (intervideosink->surface->video_buffer);
   }
   intervideosink->surface->video_buffer = NULL;
-  g_mutex_unlock (intervideosink->surface->mutex);
+  g_mutex_unlock (&intervideosink->surface->mutex);
 
   gst_inter_surface_unref (intervideosink->surface);
   intervideosink->surface = NULL;
@@ -224,13 +224,13 @@ gst_inter_video_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstInterVideoSink *intervideosink = GST_INTER_VIDEO_SINK (sink);
 
-  g_mutex_lock (intervideosink->surface->mutex);
+  g_mutex_lock (&intervideosink->surface->mutex);
   if (intervideosink->surface->video_buffer) {
     gst_buffer_unref (intervideosink->surface->video_buffer);
   }
   intervideosink->surface->video_buffer = gst_buffer_ref (buffer);
   intervideosink->surface->video_buffer_count = 0;
-  g_mutex_unlock (intervideosink->surface->mutex);
+  g_mutex_unlock (&intervideosink->surface->mutex);
 
   return GST_FLOW_OK;
 }

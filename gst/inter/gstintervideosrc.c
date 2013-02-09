@@ -256,7 +256,7 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
 
   buffer = NULL;
 
-  g_mutex_lock (intervideosrc->surface->mutex);
+  g_mutex_lock (&intervideosrc->surface->mutex);
   if (intervideosrc->surface->video_buffer) {
     buffer = gst_buffer_ref (intervideosrc->surface->video_buffer);
     intervideosrc->surface->video_buffer_count++;
@@ -265,7 +265,7 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
       intervideosrc->surface->video_buffer = NULL;
     }
   }
-  g_mutex_unlock (intervideosrc->surface->mutex);
+  g_mutex_unlock (&intervideosrc->surface->mutex);
 
   if (buffer == NULL) {
     GstMapInfo map;

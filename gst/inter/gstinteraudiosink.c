@@ -213,9 +213,9 @@ gst_inter_audio_sink_stop (GstBaseSink * sink)
 
   GST_DEBUG ("stop");
 
-  g_mutex_lock (interaudiosink->surface->mutex);
+  g_mutex_lock (&interaudiosink->surface->mutex);
   gst_adapter_clear (interaudiosink->surface->audio_adapter);
-  g_mutex_unlock (interaudiosink->surface->mutex);
+  g_mutex_unlock (&interaudiosink->surface->mutex);
 
   gst_inter_surface_unref (interaudiosink->surface);
   interaudiosink->surface = NULL;
@@ -231,7 +231,7 @@ gst_inter_audio_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
   GST_DEBUG ("render %" G_GSIZE_FORMAT, gst_buffer_get_size (buffer));
 
-  g_mutex_lock (interaudiosink->surface->mutex);
+  g_mutex_lock (&interaudiosink->surface->mutex);
   n = gst_adapter_available (interaudiosink->surface->audio_adapter) / 4;
 #define SIZE 1600
   if (n > (SIZE * 3)) {
@@ -241,7 +241,7 @@ gst_inter_audio_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   }
   gst_adapter_push (interaudiosink->surface->audio_adapter,
       gst_buffer_ref (buffer));
-  g_mutex_unlock (interaudiosink->surface->mutex);
+  g_mutex_unlock (&interaudiosink->surface->mutex);
 
   return GST_FLOW_OK;
 }

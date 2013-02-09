@@ -29,7 +29,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/glib-compat-private.h>
 #include <stdlib.h>
 
 //#define GETTEXT_PACKAGE "intertest"

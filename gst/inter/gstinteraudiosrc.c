@@ -272,7 +272,7 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
 
   buffer = NULL;
 
-  g_mutex_lock (interaudiosrc->surface->mutex);
+  g_mutex_lock (&interaudiosrc->surface->mutex);
   n = gst_adapter_available (interaudiosrc->surface->audio_adapter) / 4;
   if (n > SIZE * 3) {
     GST_WARNING ("flushing %d samples", SIZE / 2);
@@ -285,7 +285,7 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
     buffer = gst_adapter_take_buffer (interaudiosrc->surface->audio_adapter,
         n * 4);
   }
-  g_mutex_unlock (interaudiosrc->surface->mutex);
+  g_mutex_unlock (&interaudiosrc->surface->mutex);
 
   if (n < SIZE) {
     GstBuffer *newbuf = gst_buffer_new_and_alloc ((SIZE - n) * 4);

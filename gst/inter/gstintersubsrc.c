@@ -227,7 +227,7 @@ gst_inter_sub_src_create (GstBaseSrc * src, guint64 offset, guint size,
 
   buffer = NULL;
 
-  g_mutex_lock (intersubsrc->surface->mutex);
+  g_mutex_lock (&intersubsrc->surface->mutex);
   if (intersubsrc->surface->sub_buffer) {
     buffer = gst_buffer_ref (intersubsrc->surface->sub_buffer);
     //intersubsrc->surface->sub_buffer_count++;
@@ -236,7 +236,7 @@ gst_inter_sub_src_create (GstBaseSrc * src, guint64 offset, guint size,
     intersubsrc->surface->sub_buffer = NULL;
     //}
   }
-  g_mutex_unlock (intersubsrc->surface->mutex);
+  g_mutex_unlock (&intersubsrc->surface->mutex);
 
   if (buffer == NULL) {
     GstMapInfo map;

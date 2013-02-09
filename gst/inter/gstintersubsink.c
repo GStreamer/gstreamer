@@ -194,12 +194,12 @@ gst_inter_sub_sink_stop (GstBaseSink * sink)
 {
   GstInterSubSink *intersubsink = GST_INTER_SUB_SINK (sink);
 
-  g_mutex_lock (intersubsink->surface->mutex);
+  g_mutex_lock (&intersubsink->surface->mutex);
   if (intersubsink->surface->sub_buffer) {
     gst_buffer_unref (intersubsink->surface->sub_buffer);
   }
   intersubsink->surface->sub_buffer = NULL;
-  g_mutex_unlock (intersubsink->surface->mutex);
+  g_mutex_unlock (&intersubsink->surface->mutex);
 
   gst_inter_surface_unref (intersubsink->surface);
   intersubsink->surface = NULL;
@@ -212,13 +212,13 @@ gst_inter_sub_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstInterSubSink *intersubsink = GST_INTER_SUB_SINK (sink);
 
-  g_mutex_lock (intersubsink->surface->mutex);
+  g_mutex_lock (&intersubsink->surface->mutex);
   if (intersubsink->surface->sub_buffer) {
     gst_buffer_unref (intersubsink->surface->sub_buffer);
   }
   intersubsink->surface->sub_buffer = gst_buffer_ref (buffer);
   //intersubsink->surface->sub_buffer_count = 0;
-  g_mutex_unlock (intersubsink->surface->mutex);
+  g_mutex_unlock (&intersubsink->surface->mutex);
 
   return GST_FLOW_OK;
 }

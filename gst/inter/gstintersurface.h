@@ -29,7 +29,7 @@ typedef struct _GstInterSurface GstInterSurface;
 
 struct _GstInterSurface
 {
-  GMutex *mutex;
+  GMutex mutex;
   char *name;
 
   /* video */
