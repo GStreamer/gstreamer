@@ -49,6 +49,9 @@
 #include <string.h>
 #include <linux/videodev2.h>
 
+/* for g_atomic_* */
+#include <glib.h>
+
 /* For logging */
 #include <gst/gst.h>
 GST_DEBUG_CATEGORY (fimc_debug);
@@ -86,8 +89,7 @@ struct _Fimc
 
 #define FIMC_PATH "/dev/video4"
 
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-static int fimc_in_use;
+static volatile int fimc_in_use;
 
 void
 fimc_init_debug (void)
@@ -100,14 +102,10 @@ fimc_new (void)
 {
   Fimc *fimc;
 
-  pthread_mutex_lock (&mutex);
-  if (fimc_in_use) {
+  if (!g_atomic_int_compare_and_exchange (&fimc_in_use, FALSE, TRUE)) {
     GST_ERROR ("Rejected because FIMC is already in use");
-    pthread_mutex_unlock (&mutex);
     return NULL;
   }
-  fimc_in_use = 1;
-  pthread_mutex_unlock (&mutex);
 
   fimc = calloc (1, sizeof (Fimc));
 
@@ -148,9 +146,7 @@ fimc_free (Fimc * fimc)
   if (fimc->fd != -1)
     close (fimc->fd);
 
-  pthread_mutex_lock (&mutex);
-  fimc_in_use = 0;
-  pthread_mutex_unlock (&mutex);
+  g_atomic_int_set (&fimc_in_use, FALSE);
   free (fimc);
 }
 
