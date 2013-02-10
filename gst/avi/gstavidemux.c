@@ -1370,9 +1370,13 @@ gst_avi_demux_get_buffer_info (GstAviDemux * avi, GstAviStream * stream,
       if (timestamp)
         *timestamp =
             avi_stream_convert_frames_to_time_unchecked (stream, entry->total);
-      if (ts_end)
+      if (ts_end) {
+        gint size = 1;
+        if (G_LIKELY (entry_n + 1 < stream->idx_n))
+          size = stream->index[entry_n + 1].total - entry->total;
         *ts_end = avi_stream_convert_frames_to_time_unchecked (stream,
-            entry->total + 1);
+            entry->total + size);
+      }
     } else {
       if (timestamp)
         *timestamp =
