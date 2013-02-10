@@ -843,9 +843,9 @@ _create_transitions_on_layer (GESTimeline * timeline, GESTimelineLayer * layer,
   }
 }
 
-/* @tck_obj must be a GESSource */
+/* @track_element must be a GESSource */
 static void
-create_transitions (GESTimeline * timeline, GESTrackElement * tck_obj)
+create_transitions (GESTimeline * timeline, GESTrackElement * track_element)
 {
   GESTrack *track;
   GList *layer_node;
@@ -855,15 +855,15 @@ create_transitions (GESTimeline * timeline, GESTrackElement * tck_obj)
   if (!priv->needs_transitions_update || !priv->updates_enabled)
     return;
 
-  GST_DEBUG_OBJECT (timeline, "Creating transitions around %p", tck_obj);
+  GST_DEBUG_OBJECT (timeline, "Creating transitions around %p", track_element);
 
-  track = ges_track_element_get_track (tck_obj);
+  track = ges_track_element_get_track (track_element);
   layer_node = g_list_find_custom (timeline->layers,
-      GINT_TO_POINTER (_PRIORITY (tck_obj) / LAYER_HEIGHT),
+      GINT_TO_POINTER (_PRIORITY (track_element) / LAYER_HEIGHT),
       (GCompareFunc) find_layer_by_prio);
 
   _create_transitions_on_layer (timeline,
-      layer_node ? layer_node->data : NULL, track, tck_obj,
+      layer_node ? layer_node->data : NULL, track, track_element,
       _find_transition_from_auto_transitions);
 
   GST_DEBUG_OBJECT (timeline, "Done updating transitions");

@@ -56,7 +56,7 @@ enum
   PROP_VTYPE = 5,
 };
 
-static GESTrackElement *ges_tl_transition_create_track_element (GESClip
+static GESTrackElement *_create_track_element (GESClip
     * self, GESTrackType type);
 static void
 ges_transition_clip_track_element_added (GESClip * obj,
@@ -249,7 +249,7 @@ ges_transition_clip_class_init (GESTransitionClipClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
 
-  timobj_class->create_track_element = ges_tl_transition_create_track_element;
+  timobj_class->create_track_element = _create_track_element;
   timobj_class->need_fill_track = FALSE;
   timobj_class->track_element_added = ges_transition_clip_track_element_added;
   timobj_class->track_element_released =
@@ -296,7 +296,7 @@ ges_transition_clip_track_element_added (GESClip * obj,
 }
 
 static GESTrackElement *
-ges_tl_transition_create_track_element (GESClip * obj, GESTrackType type)
+_create_track_element (GESClip * obj, GESTrackType type)
 {
   GESTransitionClip *transition = (GESTransitionClip *) obj;
   GESTrackElement *res = NULL;

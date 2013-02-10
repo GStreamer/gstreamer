@@ -50,8 +50,7 @@ enum
 };
 
 static void ges_effect_clip_finalize (GObject * object);
-static GESTrackElement
-    * ges_tl_parse_launch_effect_create_track_obj (GESClip * self,
+static GESTrackElement *_create_track_element (GESClip * self,
     GESTrackType type);
 
 static void
@@ -141,8 +140,7 @@ ges_effect_clip_class_init (GESEffectClipClass * klass)
           "Bin description of the audio track of the effect",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
-  timobj_class->create_track_element =
-      ges_tl_parse_launch_effect_create_track_obj;
+  timobj_class->create_track_element = _create_track_element;
   timobj_class->need_fill_track = FALSE;
 }
 
@@ -155,7 +153,7 @@ ges_effect_clip_init (GESEffectClip * self)
 }
 
 static GESTrackElement *
-ges_tl_parse_launch_effect_create_track_obj (GESClip * self, GESTrackType type)
+_create_track_element (GESClip * self, GESTrackType type)
 {
   const gchar *bin_description = NULL;
   GESEffectClip *effect = GES_EFFECT_CLIP (self);

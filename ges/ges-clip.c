@@ -1111,16 +1111,16 @@ ges_clip_set_top_effect_priority (GESClip * object,
   gint inc;
   GList *tmp;
   guint current_prio;
-  GESTrackElement *tck_obj;
+  GESTrackElement *track_element;
 
   g_return_val_if_fail (GES_IS_CLIP (object), FALSE);
 
-  tck_obj = GES_TRACK_ELEMENT (effect);
-  current_prio = _PRIORITY (tck_obj);
+  track_element = GES_TRACK_ELEMENT (effect);
+  current_prio = _PRIORITY (track_element);
 
   /*  We don't change the priority */
   if (current_prio == newpriority ||
-      (G_UNLIKELY (ges_track_element_get_clip (tck_obj) != object)))
+      (G_UNLIKELY (ges_track_element_get_clip (track_element) != object)))
     return FALSE;
 
   if (newpriority > (object->priv->nb_effects - 1)) {
@@ -1133,12 +1133,12 @@ ges_clip_set_top_effect_priority (GESClip * object,
     return FALSE;
   }
 
-  if (_PRIORITY (tck_obj) < newpriority)
+  if (_PRIORITY (track_element) < newpriority)
     inc = -1;
   else
     inc = +1;
 
-  _set_priority0 (GES_TIMELINE_ELEMENT (tck_obj), newpriority);
+  _set_priority0 (GES_TIMELINE_ELEMENT (track_element), newpriority);
   for (tmp = object->trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *tmpo = GES_TRACK_ELEMENT (tmp->data);
     guint tck_priority = _PRIORITY (tmpo);

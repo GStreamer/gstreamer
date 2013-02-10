@@ -167,9 +167,9 @@ struct _GESClipClass
   gboolean snaps;
 
   void (*track_element_added)    (GESClip *object,
-                                GESTrackElement *tck_object);
+                                GESTrackElement *track_element);
   void (*track_element_released) (GESClip *object,
-                                GESTrackElement *tck_object);
+                                GESTrackElement *track_element);
 
   /*< private >*/
   /* Padding for API extension */
