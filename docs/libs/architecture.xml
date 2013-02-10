@@ -66,20 +66,28 @@
       <para>The <classname>GESTimeline</classname> is a
       <classname>GstElement</classname>. It can therefore be used in any
       GStreamer pipeline like any other object.</para>
+    </refsect2>
+
+
+    <refsect2>
+      <title>Tracks and Layers</title>
 
       <para>The GESTimeline can contain two types of objects (seen in <xref
       linkend="layer_tracks_diagram" />): <itemizedlist>
           <listitem>
-            <para>Layers - Corresponds to the user-visible layout of
-            non-overlapping objects. A minimalistic timeline would only have
-            one layer. A more complex editing application could use as many as
-            needed.</para>
+            <para>Layers - Corresponds to the user-visible arrangement of clips,
+            and what you primarily interact with as an application developer.
+            A minimalistic timeline would only have one layer,
+            but a more complex editing application could use as many as needed.
+            </para>
           </listitem>
 
           <listitem>
-            <para>Tracks - Corresponds to the output stream formats. A typical
-            GESTimeline would have a audio track and a video track. An audio
-            editor would only require one single audio Track.</para>
+            <para>Tracks - Corresponds to the output streams in GStreamer.
+            A typical GESTimeline, aimed at a video editing application, would
+            have an audio track and a video track.
+            A GESTimeline for an audio editing application would only require
+            an audio track. Multiple layers can be related to each track.</para>
           </listitem>
         </itemizedlist></para>
 
@@ -94,22 +102,10 @@
       </figure>
 
       <para>In order to reduce even more the amount of GStreamer interaction
-      the application developer has to deal with , a convenience GstPipeline
+      the application developer has to deal with, a convenience GstPipeline
       has been made available specifically for Timelines : <link
       linkend="GESTimelinePipeline">GESTimelinePipeline</link>.</para>
     </refsect2>
 
-    <refsect2>
-      <title>Timeline layers</title>
-
-      <para>The layers are the end-user visible part of GES.</para>
-    </refsect2>
-
-    <refsect2>
-      <title>Timeline Tracks</title>
-
-      <para>The tracks are the GStreamer-level components of a Timeline. They
-      are a 1-to-1 relationship to the output streams.</para>
-    </refsect2>
   </refsect1>
 </refentry>
