@@ -46,12 +46,6 @@ else
 CHROMAPRINT_DIR=
 endif
 
-if USE_COG
-COG_DIR=cog
-else
-COG_DIR=
-endif
-
 if USE_CURL
 CURL_DIR=curl
 else
@@ -436,7 +430,6 @@ DIST_SUBDIRS = \
 	cdaudio \
 	celt \
 	chromaprint \
-	cog \
 	curl \
 	dc1394 \
 	dirac \

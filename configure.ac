@@ -324,7 +324,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  sdi stereo tta videofilters \
  videomeasure videosignal vmnc \
  decklink fbdev linsys vcd \
- apexsink cdaudio cog dc1394 dirac directfb \
+ apexsink cdaudio dc1394 dirac directfb \
  gsettings ladspa \
  musepack musicbrainz nas neon ofa openal rsvg sdl sndfile timidity \
  directdraw direct3d9 acm wininet \
@@ -972,16 +972,6 @@ AG_GST_CHECK_FEATURE(CHROMAPRINT, [chromaprint], chromaprint, [
   ])
   AC_SUBST(CHROMAPRINT_CFLAGS)
   AC_SUBST(CHROMAPRINT_LIBS)
-])
-
-dnl *** Cog ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_COG, true)
-AG_GST_CHECK_FEATURE(COG, [Cog plugin], cog, [
-  PKG_CHECK_MODULES(COG, libpng >= 1.2, HAVE_COG="yes", [
-    HAVE_COG="no"
-  ])
-  AC_SUBST(COG_CFLAGS)
-  AC_SUBST(COG_LIBS)
 ])
 
 dnl *** Curl ***
@@ -2316,7 +2306,6 @@ ext/bz2/Makefile
 ext/cdaudio/Makefile
 ext/celt/Makefile
 ext/chromaprint/Makefile
-ext/cog/Makefile
 ext/curl/Makefile
 ext/dc1394/Makefile
 ext/dirac/Makefile
