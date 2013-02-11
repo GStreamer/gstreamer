@@ -81,6 +81,9 @@ _sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 static gboolean
 _sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
+  GST_INFO_OBJECT (pad, "got %s event %p: %" GST_PTR_FORMAT,
+      GST_EVENT_TYPE_NAME (event), event, event);
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
       if (loop) {
@@ -143,19 +146,32 @@ _src_getrange (GstPad * pad, GstObject * parent, guint64 offset, guint length,
 static gboolean
 _src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstFormat fmt;
+  gboolean res = FALSE;
 
-  if (GST_QUERY_TYPE (query) != GST_QUERY_DURATION)
-    return FALSE;
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_DURATION:{
+      GstFormat fmt;
 
-  gst_query_parse_duration (query, &fmt, NULL);
+      gst_query_parse_duration (query, &fmt, NULL);
+      if (fmt != GST_FORMAT_BYTES)
+        break;
 
-  if (fmt != GST_FORMAT_BYTES)
-    return FALSE;
+      gst_query_set_duration (query, fmt, sizeof (mxf_file));
+      res = TRUE;
+      break;
+    }
+    case GST_QUERY_SCHEDULING:{
+      gst_query_set_scheduling (query, GST_SCHEDULING_FLAG_SEEKABLE, 1, -1, 0);
+      gst_query_add_scheduling_mode (query, GST_PAD_MODE_PULL);
+      res = TRUE;
+      break;
+    }
+    default:
+      GST_DEBUG_OBJECT (pad, "unhandled %s query", GST_QUERY_TYPE_NAME (query));
+      break;
+  }
 
-  gst_query_set_duration (query, fmt, sizeof (mxf_file));
-
-  return TRUE;
+  return res;
 }
 
 static GstPad *
@@ -170,6 +186,7 @@ _create_src_pad_pull (void)
 
 GST_START_TEST (test_pull)
 {
+  GstStateChangeReturn sret;
   GstElement *mxfdemux;
   GstPad *sinkpad;
 
@@ -194,7 +211,9 @@ GST_START_TEST (test_pull)
   gst_pad_set_active (mysinkpad, TRUE);
   gst_pad_set_active (mysrcpad, TRUE);
 
-  gst_element_set_state (mxfdemux, GST_STATE_PLAYING);
+  GST_INFO ("Setting to PLAYING");
+  sret = gst_element_set_state (mxfdemux, GST_STATE_PLAYING);
+  fail_unless_equals_int (sret, GST_STATE_CHANGE_SUCCESS);
 
   g_main_loop_run (loop);
   fail_unless (have_eos == TRUE);
