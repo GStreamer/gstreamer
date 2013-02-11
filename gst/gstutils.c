@@ -2718,8 +2718,8 @@ gst_pad_peer_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
  * @filter: (allow-none): suggested #GstCaps, or NULL
  *
  * Gets the capabilities this pad can produce or consume.
- * Note that this method doesn't necessarily return the caps set by
- * gst_pad_set_caps() - use gst_pad_get_current_caps() for that instead.
+ * Note that this method doesn't necessarily return the caps set by sending a
+ * gst_event_new_caps() - use gst_pad_get_current_caps() for that instead.
  * gst_pad_query_caps returns all possible caps a pad can operate with, using
  * the pad's CAPS query function, If the query fails, this function will return
  * @filter, if not #NULL, otherwise ANY.
