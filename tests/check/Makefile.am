@@ -340,6 +340,8 @@ elements_camerabin_LDADD = \
         $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 elements_camerabin_SOURCES = elements/camerabin.c
 
+elements_dtmf_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 elements_dtmf_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstrtp-@GST_API_VERSION@
 
 elements_jifmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(EXIF_CFLAGS) $(AM_CFLAGS)
