@@ -371,7 +371,6 @@ SUBDIRS=\
 	$(CDAUDIO_DIR) \
 	$(CELT_DIR) \
 	$(CHROMAPRINT_DIR) \
-	$(COG_DIR) \
 	$(CURL_DIR) \
 	$(DC1394_DIR) \
 	$(DIRAC_DIR) \

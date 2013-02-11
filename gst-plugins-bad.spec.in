@@ -210,7 +210,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstbayer.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstcamerabin.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstcdxaparse.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstcog.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstcoloreffects.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdataurisrc.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstdccp.so
