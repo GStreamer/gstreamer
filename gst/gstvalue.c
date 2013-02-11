@@ -1845,13 +1845,13 @@ gst_value_serialize_segment_internal (const GValue * value, gboolean escape)
   gchar *t, *res;
   GstStructure *s;
 
-  /* FIXME: serialize segment offset as well ? */
   s = gst_structure_new ("GstSegment",
       "flags", GST_TYPE_SEGMENT_FLAGS, seg->flags,
       "rate", G_TYPE_DOUBLE, seg->rate,
       "applied-rate", G_TYPE_DOUBLE, seg->applied_rate,
       "format", GST_TYPE_FORMAT, seg->format,
       "base", G_TYPE_UINT64, seg->base,
+      "offset", G_TYPE_UINT64, seg->offset,
       "start", G_TYPE_UINT64, seg->start,
       "stop", G_TYPE_UINT64, seg->stop,
       "time", G_TYPE_UINT64, seg->time,
@@ -1892,6 +1892,7 @@ gst_value_deserialize_segment (GValue * dest, const gchar * s)
       "applied-rate", G_TYPE_DOUBLE, &seg.applied_rate,
       "format", GST_TYPE_FORMAT, &seg.format,
       "base", G_TYPE_UINT64, &seg.base,
+      "offset", G_TYPE_UINT64, &seg.offset,
       "start", G_TYPE_UINT64, &seg.start,
       "stop", G_TYPE_UINT64, &seg.stop,
       "time", G_TYPE_UINT64, &seg.time,
