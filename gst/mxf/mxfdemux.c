@@ -225,6 +225,11 @@ gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
   }
   demux->metadata = mxf_metadata_hash_table_new ();
 
+  if (demux->tags) {
+    gst_tag_list_unref (demux->tags);
+    demux->tags = NULL;
+  }
+
   g_rw_lock_writer_unlock (&demux->metadata_lock);
 }
 
