@@ -9,6 +9,8 @@ libgstyadif_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstyadif_la_LIBTOOLFLAGS = --tag=disable-static
 
 
+EXTRA_DIST = yadif_template.c
+
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
 	-:PROJECT libgstyadif -:SHARED libgstyadif \
