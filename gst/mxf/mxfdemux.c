@@ -3760,8 +3760,9 @@ gst_mxf_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         }
       }
 
-      if (!(ret = gst_pad_event_default (pad, parent, event)))
-        GST_WARNING_OBJECT (pad, "failed pushing EOS on streams");
+      /* and one more time for good measure apparently? */
+      gst_pad_event_default (pad, parent, event);
+      ret = (demux->src->len > 0);
       break;
     }
     case GST_EVENT_SEGMENT:{
