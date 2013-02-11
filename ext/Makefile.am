@@ -324,12 +324,6 @@ else
 GME_DIR=
 endif
 
-if USE_SWFDEC
-#SWFDEC_DIR=swfdec
-else
-SWFDEC_DIR=
-endif
-
 if USE_TELETEXTDEC
 TELETEXTDEC_DIR=teletextdec
 else
@@ -415,7 +409,6 @@ SUBDIRS=\
 	$(SPANDSP_DIR) \
 	$(GME_DIR) \
 	$(SPC_DIR) \
-	$(SWFDEC_DIR) \
 	$(TELETEXTDEC_DIR) \
 	$(TIMIDITY_DIR) \
 	$(XVID_DIR) \
@@ -470,7 +463,6 @@ DIST_SUBDIRS = \
 	spandsp \
 	spc \
 	gme \
-	swfdec \
 	teletextdec \
 	timidity \
 	voaacenc \

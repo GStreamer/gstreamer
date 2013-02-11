@@ -71,7 +71,6 @@ qcamsrc
 rfbenc           librfb
 sdlvideosink     libsdl           (http://www.libsdl.org/)
 smoothwave      
-swfdec                            (http://swfdec.sourceforge.net/)
 tarkin                            (http://svn.xiph.org/trunk/tarkin/)
 textoverlay      pango            (http://www.pango.org/)
 dirac                             (http://www.bbc.co.uk/rd/projects/dirac/)

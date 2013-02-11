@@ -43,8 +43,6 @@ libgsm		(for the gsm plugin)
 			http://kbs.cs.tu-berlin.de/~jutta/toast.html
 sdl		(for the sdl sink)
 			http://www.libsdl.org
-swfdec		(for the swfdec (flash) plugin)
-			http://www.schleef.org/swfdec/
 dtsdec		(for DTS audio decoding)
 			http://www.videolan.org/libdca.html
 musepack	(for musepack audio codec/format)

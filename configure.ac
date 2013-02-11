@@ -1863,16 +1863,6 @@ AG_GST_CHECK_FEATURE(GME, [gme decoder], gme, [
   fi
 ])
 
-dnl *** swfdec ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_SWFDEC, true)
-AG_GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
-  PKG_CHECK_MODULES(SWFDEC, swfdec-0.3 >= 0.3.6, HAVE_SWFDEC=yes, [
-    HAVE_SWFDEC=no
-  ])
-  AC_SUBST(SWFDEC_CFLAGS)
-  AC_SUBST(SWFDEC_LIBS)
-])
-
 dnl *** XVID ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVID, true)
 AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
@@ -2089,7 +2079,6 @@ AM_CONDITIONAL(USE_SPANDSP, false)
 AM_CONDITIONAL(USE_SPC, false)
 AM_CONDITIONAL(USE_GME, false)
 AM_CONDITIONAL(USE_GSETTINGS, false)
-AM_CONDITIONAL(USE_SWFDEC, false)
 AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_DVB, false)
 AM_CONDITIONAL(USE_WININET, false)
@@ -2352,7 +2341,6 @@ ext/gme/Makefile
 ext/gsettings/Makefile
 ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml
 ext/spc/Makefile
-ext/swfdec/Makefile
 ext/timidity/Makefile
 ext/xvid/Makefile
 ext/zbar/Makefile
