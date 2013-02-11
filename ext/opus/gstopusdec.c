@@ -155,13 +155,13 @@ gst_opus_dec_reset (GstOpusDec * dec)
 
   dec->pre_skip = 0;
   dec->r128_gain = 0;
+  dec->sample_rate = 0;
+  dec->n_channels = 0;
 }
 
 static void
 gst_opus_dec_init (GstOpusDec * dec)
 {
-  dec->sample_rate = 0;
-  dec->n_channels = 0;
   dec->use_inband_fec = FALSE;
   dec->apply_gain = DEFAULT_APPLY_GAIN;
 
