@@ -925,6 +925,18 @@ gst_omx_video_enc_stop (GstVideoEncoder * encoder)
   return TRUE;
 }
 
+typedef struct
+{
+  GstVideoFormat format;
+  OMX_COLOR_FORMATTYPE type;
+} VideoNegotiationMap;
+
+static void
+video_negotiation_map_free (VideoNegotiationMap * m)
+{
+  g_slice_free (VideoNegotiationMap, m);
+}
+
 static gboolean
 gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state)
@@ -932,8 +944,12 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   GstOMXVideoEnc *self;
   GstOMXVideoEncClass *klass;
   gboolean needs_disable = FALSE;
+  OMX_ERRORTYPE err;
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
+  OMX_VIDEO_PARAM_PORTFORMATTYPE param;
   GstVideoInfo *info = &state->info;
+  GList *negotiation_map = NULL, *l;
+  gint old_index;
 
   self = GST_OMX_VIDEO_ENC (encoder);
   klass = GST_OMX_VIDEO_ENC_GET_CLASS (encoder);
@@ -962,19 +978,87 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
     GST_DEBUG_OBJECT (self, "Encoder drained and disabled");
   }
 
-  switch (info->finfo->format) {
-    case GST_VIDEO_FORMAT_I420:
-      port_def.format.video.eColorFormat = OMX_COLOR_FormatYUV420Planar;
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-      port_def.format.video.eColorFormat = OMX_COLOR_FormatYUV420SemiPlanar;
-      break;
-    default:
-      GST_ERROR_OBJECT (self, "Unsupported format %s",
-          gst_video_format_to_string (info->finfo->format));
-      return FALSE;
-      break;
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = self->in_port->index;
+  param.nIndex = 0;
+  if (info->fps_n == 0) {
+    param.xFramerate = 0;
+  } else {
+    if (!(klass->cdata.hacks & GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER))
+      param.xFramerate = (info->fps_n << 16) / (info->fps_d);
+    else
+      param.xFramerate = (info->fps_n) / (info->fps_d);
   }
+  old_index = -1;
+
+  do {
+    VideoNegotiationMap *m;
+
+    err =
+        gst_omx_component_get_parameter (self->component,
+        OMX_IndexParamVideoPortFormat, &param);
+
+    /* FIXME: Workaround for Bellagio that simply always
+     * returns the same value regardless of nIndex and
+     * never returns OMX_ErrorNoMore
+     */
+    if (old_index == param.nIndex)
+      break;
+
+    if (err == OMX_ErrorNone || err == OMX_ErrorNoMore) {
+      switch (param.eColorFormat) {
+        case OMX_COLOR_FormatYUV420Planar:
+        case OMX_COLOR_FormatYUV420PackedPlanar:
+          m = g_slice_new0 (VideoNegotiationMap);
+          m->format = GST_VIDEO_FORMAT_I420;
+          m->type = param.eColorFormat;
+          negotiation_map = g_list_append (negotiation_map, m);
+          GST_DEBUG_OBJECT (self, "Component supports I420 (%d) at index %d",
+              param.eColorFormat, param.nIndex);
+          break;
+        case OMX_COLOR_FormatYUV420SemiPlanar:
+          m = g_slice_new0 (VideoNegotiationMap);
+          m->format = GST_VIDEO_FORMAT_NV12;
+          m->type = param.eColorFormat;
+          negotiation_map = g_list_append (negotiation_map, m);
+          GST_DEBUG_OBJECT (self, "Component supports NV12 (%d) at index %d",
+              param.eColorFormat, param.nIndex);
+          break;
+        default:
+          break;
+      }
+    }
+    old_index = param.nIndex++;
+  } while (err == OMX_ErrorNone);
+
+  if (!negotiation_map) {
+    /* Fallback */
+    switch (info->finfo->format) {
+      case GST_VIDEO_FORMAT_I420:
+        port_def.format.video.eColorFormat = OMX_COLOR_FormatYUV420Planar;
+        break;
+      case GST_VIDEO_FORMAT_NV12:
+        port_def.format.video.eColorFormat = OMX_COLOR_FormatYUV420SemiPlanar;
+        break;
+      default:
+        GST_ERROR_OBJECT (self, "Unsupported format %s",
+            gst_video_format_to_string (info->finfo->format));
+        return FALSE;
+        break;
+    }
+  } else {
+    for (l = negotiation_map; l; l = l->next) {
+      VideoNegotiationMap *m = l->data;
+
+      if (m->format == info->finfo->format) {
+        port_def.format.video.eColorFormat = m->type;
+        break;
+      }
+    }
+    g_list_free_full (negotiation_map,
+        (GDestroyNotify) video_negotiation_map_free);
+  }
+
   port_def.format.video.nFrameWidth = info->width;
   port_def.format.video.nFrameHeight = info->height;
   if (info->fps_n == 0) {
