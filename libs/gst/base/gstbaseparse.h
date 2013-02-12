@@ -337,6 +337,9 @@ gboolean        gst_base_parse_add_index_entry (GstBaseParse * parse,
                                                 gboolean       key,
                                                 gboolean       force);
 
+void            gst_base_parse_set_ts_at_offset (GstBaseParse *parse,
+                                                 gsize offset);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_PARSE_H__ */

@@ -4300,3 +4300,42 @@ gst_base_parse_change_state (GstElement * element, GstStateChange transition)
 
   return result;
 }
+
+/**
+ * gst_base_parse_set_ts_at_offset:
+ * @parse: a #GstBaseParse
+ * @offset: offset into current buffer
+ *
+ * This function should only be called from a @handle_frame implementation.
+ *
+ * GstBaseParse creates initial timestamps for frames by using the last
+ * timestamp seen in the stream before the frame starts.  In certain
+ * cases, the correct timestamps will occur in the stream after the
+ * start of the frame, but before the start of the actual picture data.
+ * This function can be used to set the timestamps based on the offset
+ * into the frame data that the picture starts.
+ *
+ * Since: 1.2
+ */
+void
+gst_base_parse_set_ts_at_offset (GstBaseParse * parse, gsize offset)
+{
+  GstClockTime pts, dts;
+
+  g_return_if_fail (GST_IS_BASE_PARSE (parse));
+  g_return_if_fail (offset >= 0);
+
+  pts = gst_adapter_prev_pts_at_offset (parse->priv->adapter, offset, NULL);
+  dts = gst_adapter_prev_dts_at_offset (parse->priv->adapter, offset, NULL);
+
+  if (!GST_CLOCK_TIME_IS_VALID (pts) || !GST_CLOCK_TIME_IS_VALID (dts)) {
+    GST_DEBUG_OBJECT (parse,
+        "offset adapter timestamps dts=%" GST_TIME_FORMAT " pts=%"
+        GST_TIME_FORMAT, GST_TIME_ARGS (dts), GST_TIME_ARGS (pts));
+  }
+  if (GST_CLOCK_TIME_IS_VALID (pts) && (parse->priv->prev_pts != pts))
+    parse->priv->prev_pts = parse->priv->next_pts = pts;
+
+  if (GST_CLOCK_TIME_IS_VALID (dts) && (parse->priv->prev_dts != dts))
+    parse->priv->prev_dts = parse->priv->next_dts = dts;
+}
