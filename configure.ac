@@ -1533,7 +1533,7 @@ AG_GST_CHECK_FEATURE(RSVG, [rsvg decoder], rsvg, [
 
 dnl *** eglgles ***
 AC_ARG_WITH([egl-window-system],
-              AS_HELP_STRING([--with-egl-window-system],[EGL window system to use (x11, mali-fb, none)]),
+              AS_HELP_STRING([--with-egl-window-system],[EGL window system to use (x11, mali-fb, rpi, none)]),
               [EGL_WINDOW_SYSTEM="$withval"],
               [EGL_WINDOW_SYSTEM="none"])
 
@@ -1608,6 +1608,18 @@ AG_GST_CHECK_FEATURE(EGLGLES, [eglgles sink], eglgles, [
           LIBS=$old_LIBS
           CFLAGS=$old_CFLAGS
         ])
+      ;;
+    rpi)
+      old_LIBS=$LIBS
+      old_CFLAGS=$CFLAGS
+
+      AC_CHECK_HEADER(bcm_host.h, [
+        HAVE_EGLGLES="yes"
+        EGLGLES_LIBS="-lGLESv2 -lEGL -lbcm_host"
+        AC_DEFINE(USE_EGL_RPI, [1], [Use RPi EGL window system])
+        LIBS=$old_LIBS
+        CFLAGS=$old_CFLAGS
+      ])
       ;;
     *)
       AC_MSG_ERROR([invalid EGL window system specified])

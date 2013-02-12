@@ -144,7 +144,7 @@ platform_destroy_native_window (EGLNativeDisplayType display,
 }
 #endif
 
-#if !defined(USE_EGL_X11) && !defined(USE_EGL_MALI_FB)
+#if !defined(USE_EGL_X11) && !defined(USE_EGL_MALI_FB) && !defined(USE_EGL_RPI)
 /* Dummy functions for creating a native Window */
 EGLNativeWindowType
 platform_create_native_window (gint width, gint height, gpointer * window_data)
@@ -158,6 +158,82 @@ platform_destroy_native_window (EGLNativeDisplayType display,
     EGLNativeWindowType window, gpointer * window_data)
 {
   GST_ERROR ("Can't destroy native window");
+  return TRUE;
+}
+
+#endif
+
+#ifdef USE_EGL_RPI
+#include <bcm_host.h>
+
+typedef struct
+{
+  EGL_DISPMANX_WINDOW_T w;
+} RPIWindowData;
+
+EGLNativeWindowType
+platform_create_native_window (gint width, gint height, gpointer * window_data)
+{
+  DISPMANX_ELEMENT_HANDLE_T dispman_element;
+  DISPMANX_DISPLAY_HANDLE_T dispman_display;
+  DISPMANX_UPDATE_HANDLE_T dispman_update;
+  RPIWindowData *data;
+  VC_RECT_T dst_rect;
+  VC_RECT_T src_rect;
+
+  uint32_t dp_height;
+  uint32_t dp_width;
+
+  int ret;
+
+  ret = graphics_get_display_size (0, &dp_width, &dp_height);
+  if (ret < 0) {
+    GST_ERROR ("Can't open display");
+    return (EGLNativeWindowType) 0;
+  }
+  GST_DEBUG ("Got display size: %dx%d\n", dp_width, dp_height);
+  GST_DEBUG ("Source size: %dx%d\n", width, height);
+
+  dst_rect.x = 0;
+  dst_rect.y = 0;
+  dst_rect.width = dp_width;
+  dst_rect.height = dp_height;
+
+  src_rect.x = 0;
+  src_rect.y = 0;
+  src_rect.width = width << 16;
+  src_rect.height = height << 16;
+
+  dispman_display = vc_dispmanx_display_open (0);
+  dispman_update = vc_dispmanx_update_start (0);
+  dispman_element = vc_dispmanx_element_add (dispman_update,
+      dispman_display, 0, &dst_rect, 0, &src_rect,
+      DISPMANX_PROTECTION_NONE, 0, 0, 0);
+
+  *window_data = data = g_slice_new0 (RPIWindowData);
+  data->w.element = dispman_element;
+  data->w.width = width;
+  data->w.height = height;
+  vc_dispmanx_update_submit_sync (dispman_update);
+
+  return (EGLNativeWindowType) data;
+}
+
+gboolean
+platform_destroy_native_window (EGLNativeDisplayType display,
+    EGLNativeWindowType window, gpointer * window_data)
+{
+  DISPMANX_DISPLAY_HANDLE_T dispman_display;
+  DISPMANX_UPDATE_HANDLE_T dispman_update;
+  RPIWindowData *data = *window_data;
+
+  dispman_display = vc_dispmanx_display_open (0);
+  dispman_update = vc_dispmanx_update_start (0);
+  vc_dispmanx_element_remove (dispman_update, data->w.element);
+  vc_dispmanx_update_submit_sync (dispman_update);
+
+  g_slice_free (RPIWindowData, data);
+  *window_data = NULL;
   return TRUE;
 }
 
