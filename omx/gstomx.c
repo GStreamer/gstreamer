@@ -1304,8 +1304,8 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
     goto done;
   }
 
-  if (comp->state != OMX_StateIdle && comp->state != OMX_StateExecuting) {
-
+  if (comp->state != OMX_StateIdle && comp->state != OMX_StateExecuting
+      && comp->state != OMX_StatePause) {
     GST_DEBUG_OBJECT (comp->parent, "Component is in wrong state: %d",
         comp->state);
     err = OMX_ErrorUndefined;
