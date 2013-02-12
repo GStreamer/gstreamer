@@ -2148,7 +2148,7 @@ done:
   return err;
 }
 
-static GType (*types[]) (void) = {
+static const GType (*types[]) (void) = {
 gst_omx_mpeg2_dec_get_type, gst_omx_mpeg4_video_dec_get_type,
       gst_omx_h264_dec_get_type, gst_omx_h263_dec_get_type,
       gst_omx_wmv_dec_get_type, gst_omx_mpeg4_video_enc_get_type,
