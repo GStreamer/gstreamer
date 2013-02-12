@@ -1869,6 +1869,7 @@ gst_omx_port_wait_enabled_unlocked (GstOMXPort * port, GstClockTime timeout)
   }
 
   /* And now wait until the enable/disable command is finished */
+  /* FIXME: This should be a separate function */
   signalled = TRUE;
   last_error = OMX_ErrorNone;
   gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
