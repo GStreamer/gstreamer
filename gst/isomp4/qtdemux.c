@@ -4881,6 +4881,9 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
         guint32 version;
         int tlen;
 
+        /* codec_data is contained inside these atoms, which all have
+         * the same format. */
+
         GST_DEBUG_OBJECT (qtdemux, "parsing in %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (fourcc));
         version = QT_UINT32 (buffer + 16);
