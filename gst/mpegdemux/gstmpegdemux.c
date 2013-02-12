@@ -110,8 +110,8 @@ static GstStaticPadTemplate video_template =
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("video/mpeg, "
-        "mpegversion = (int) { 1, 2, 4 }, " "systemstream = (boolean) FALSE;"
-        "video/x-h264")
+        "mpegversion = (int) { 1, 2, 4 }, " "systemstream = (boolean) FALSE, "
+        "parsed = (boolean) FALSE; " "video/x-h264")
     );
 
 static GstStaticPadTemplate audio_template =
@@ -376,7 +376,8 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
       name = g_strdup_printf ("video_%02x", id);
       caps = gst_caps_new_simple ("video/mpeg",
           "mpegversion", G_TYPE_INT, mpeg_version,
-          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+          "systemstream", G_TYPE_BOOLEAN, FALSE,
+          "parsed", G_TYPE_BOOLEAN, FALSE, NULL);
       threshold = VIDEO_SEGMENT_THRESHOLD;
       break;
     }
