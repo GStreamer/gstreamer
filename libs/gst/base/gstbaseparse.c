@@ -1930,7 +1930,7 @@ gst_base_parse_handle_buffer (GstBaseParse * parse, GstBuffer * buffer,
   return ret;
 }
 
-/* gst_base_parse_handle_and_push_buffer:
+/* gst_base_parse_handle_and_push_frame:
  * @parse: #GstBaseParse.
  * @klass: #GstBaseParseClass.
  * @frame: (transfer full): a #GstBaseParseFrame
