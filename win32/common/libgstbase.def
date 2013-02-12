@@ -10,7 +10,9 @@ EXPORTS
 	gst_adapter_masked_scan_uint32_peek
 	gst_adapter_new
 	gst_adapter_prev_dts
+	gst_adapter_prev_dts_at_offset
 	gst_adapter_prev_pts
+	gst_adapter_prev_pts_at_offset
 	gst_adapter_push
 	gst_adapter_take
 	gst_adapter_take_buffer
@@ -34,6 +36,7 @@ EXPORTS
 	gst_base_parse_set_passthrough
 	gst_base_parse_set_pts_interpolation
 	gst_base_parse_set_syncable
+	gst_base_parse_set_ts_at_offset
 	gst_base_sink_do_preroll
 	gst_base_sink_get_blocksize
 	gst_base_sink_get_last_sample
