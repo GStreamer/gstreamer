@@ -1727,6 +1727,7 @@ create_elements_and_pads (GstEncodeBin * ebin)
           goto stream_error;
       }
     }
+    gst_element_sync_state_with_parent (muxer);
   } else {
     if (G_UNLIKELY (_create_stream_group (ebin, ebin->profile, NULL,
                 NULL) == NULL))
