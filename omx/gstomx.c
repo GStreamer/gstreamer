@@ -1359,6 +1359,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
     last_error = OMX_ErrorNone;
     gst_omx_component_handle_messages (comp);
     while (signalled && last_error == OMX_ErrorNone && !port->flushed
+        && port->buffers
         && port->buffers->len > g_queue_get_length (&port->pending_buffers)) {
       g_mutex_lock (&comp->messages_lock);
       g_mutex_unlock (&comp->lock);
@@ -2148,12 +2149,15 @@ done:
   return err;
 }
 
-static const GType (*types[]) (void) = {
-gst_omx_mpeg2_dec_get_type, gst_omx_mpeg4_video_dec_get_type,
-      gst_omx_h264_dec_get_type, gst_omx_h263_dec_get_type,
-      gst_omx_wmv_dec_get_type, gst_omx_mpeg4_video_enc_get_type,
-      gst_omx_h264_enc_get_type, gst_omx_h263_enc_get_type,
-      gst_omx_aac_enc_get_type};
+typedef GType (*GGetTypeFunction) (void);
+
+static const GGetTypeFunction types[] = {
+  gst_omx_mpeg2_dec_get_type, gst_omx_mpeg4_video_dec_get_type,
+  gst_omx_h264_dec_get_type, gst_omx_h263_dec_get_type,
+  gst_omx_wmv_dec_get_type, gst_omx_mpeg4_video_enc_get_type,
+  gst_omx_h264_enc_get_type, gst_omx_h263_enc_get_type,
+  gst_omx_aac_enc_get_type
+};
 
 struct TypeOffest
 {
@@ -2161,7 +2165,7 @@ struct TypeOffest
   glong offset;
 };
 
-static struct TypeOffest base_types[] = {
+static const struct TypeOffest base_types[] = {
   {gst_omx_video_dec_get_type, G_STRUCT_OFFSET (GstOMXVideoDecClass, cdata)},
   {gst_omx_video_enc_get_type, G_STRUCT_OFFSET (GstOMXVideoEncClass, cdata)},
   {gst_omx_audio_enc_get_type, G_STRUCT_OFFSET (GstOMXAudioEncClass, cdata)},
