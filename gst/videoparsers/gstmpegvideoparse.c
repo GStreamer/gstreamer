@@ -783,10 +783,6 @@ gst_mpegv_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     GST_BUFFER_DURATION (buffer) = 0;
   }
 
-  if (mpvparse->pic_offset > 4) {
-    gst_base_parse_set_ts_at_offset (parse, mpvparse->pic_offset - 4);
-  }
-
   if (mpvparse->frame_repeat_count
       && GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer))) {
     GST_BUFFER_DURATION (buffer) =
