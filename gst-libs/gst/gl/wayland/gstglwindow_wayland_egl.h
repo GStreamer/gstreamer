@@ -99,9 +99,7 @@ struct _GstGLWindowWaylandEGLClass {
 
 GType gst_gl_window_wayland_egl_get_type     (void);
 
-GstGLWindowWaylandEGL * gst_gl_window_wayland_egl_new  (GstGLAPI gl_api,
-                                                        guintptr external_gl_context,
-                                                        GError ** error);
+GstGLWindowWaylandEGL * gst_gl_window_wayland_egl_new  (void);
 
 G_END_DECLS
 

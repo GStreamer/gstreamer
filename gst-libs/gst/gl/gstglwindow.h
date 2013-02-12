@@ -101,6 +101,8 @@ struct _GstGLWindowClass {
   gpointer (*get_proc_address)   (GstGLWindow *window, const gchar *name);
   gboolean (*activate)           (GstGLWindow *window, gboolean activate);
   void     (*set_window_handle)  (GstGLWindow *window, guintptr id);
+  gboolean (*create_context)     (GstGLWindow *window, GstGLAPI gl_api,
+                                  guintptr external_gl_context, GError ** error);
   gboolean (*share_context)      (GstGLWindow *window, guintptr external_gl_context);
   void     (*draw_unlocked)      (GstGLWindow *window, guint width, guint height);
   void     (*draw)               (GstGLWindow *window, guint width, guint height);
@@ -117,7 +119,7 @@ struct _GstGLWindowClass {
 GQuark gst_gl_window_error_quark (void);
 GType gst_gl_window_get_type     (void);
 
-GstGLWindow * gst_gl_window_new  (GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
+GstGLWindow * gst_gl_window_new  (void);
 
 void     gst_gl_window_set_draw_callback    (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 void     gst_gl_window_set_resize_callback  (GstGLWindow *window, GstGLWindowResizeCB callback, gpointer data);
@@ -137,6 +139,9 @@ void     gst_gl_window_send_message         (GstGLWindow *window, GstGLWindowCB 
 gpointer      gst_gl_window_get_proc_address (GstGLWindow *window, const gchar *name);
 GstGLPlatform gst_gl_window_get_platform     (GstGLWindow *window);
 GstGLAPI      gst_gl_window_get_gl_api       (GstGLWindow *window);
+
+gboolean gst_gl_window_create_context (GstGLWindow *window, GstGLAPI gl_api,
+                                       guintptr external_gl_context, GError ** error);
 
 gpointer gst_gl_window_default_get_proc_address (GstGLWindow *window, const gchar *name);
 

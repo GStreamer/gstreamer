@@ -111,6 +111,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define gst_gl_window_cocoa_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLWindowCocoa, gst_gl_window_cocoa, GST_GL_TYPE_WINDOW, DEBUG_INIT);
 
+gboolean gst_gl_window_cocoa_create_context (GstGLWindow *window, GstGLAPI gl_api,
+    guintptr external_opengl_context, GError **error);
 guintptr gst_gl_window_cocoa_get_gl_context (GstGLWindow * window);
 gboolean gst_gl_window_cocoa_activate (GstGLWindow * window, gboolean activate);
 void gst_gl_window_cocoa_set_window_handle (GstGLWindow * window,
@@ -167,6 +169,8 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstGLWindowCocoaPrivate));
 
+  window_class->create_context =
+      GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_create_context);
   window_class->get_gl_context =
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_get_gl_context);
   window_class->activate = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_activate);
@@ -193,14 +197,25 @@ static void
 gst_gl_window_cocoa_init (GstGLWindowCocoa * window)
 {
   window->priv = GST_GL_WINDOW_COCOA_GET_PRIVATE (window);
+
+  gst_gl_window_set_need_lock (GST_GL_WINDOW (window), FALSE);
 }
 
 /* Must be called in the gl thread */
 GstGLWindowCocoa *
-gst_gl_window_cocoa_new (GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
+gst_gl_window_cocoa_new (void)
 {
   GstGLWindowCocoa *window = g_object_new (GST_GL_TYPE_WINDOW_COCOA, NULL);
-  GstGLWindowCocoaPrivate *priv = window->priv;
+
+  return window;
+}
+
+gboolean
+gst_gl_window_cocoa_create_context (GstGLWindow *window, GstGLAPI gl_api,
+    guintptr external_gl_context, GError **error)
+{
+  GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
+  GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
   NSRect rect;
   NSAutoreleasePool *pool;
 
@@ -211,8 +226,6 @@ gst_gl_window_cocoa_new (GstGLAPI gl_api, guintptr external_gl_context, GError *
   priv->parent = nil;
   priv->thread = nil;
   priv->running = TRUE;
-
-  gst_gl_window_set_need_lock (GST_GL_WINDOW (window), FALSE);
 
   GSRegisterCurrentThread();
   
@@ -230,7 +243,7 @@ gst_gl_window_cocoa_new (GstGLAPI gl_api, guintptr external_gl_context, GError *
   priv->internal_win_id =[[GstGLNSWindow alloc] initWithContentRect:rect styleMask: 
     (NSTitledWindowMask | NSClosableWindowMask |
     NSResizableWindowMask | NSMiniaturizableWindowMask)
-    backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: window];
+    backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: window_cocoa];
 
   GST_DEBUG ("NSWindow id: %lud\n", (gulong) priv->internal_win_id);
 
@@ -244,7 +257,7 @@ gst_gl_window_cocoa_new (GstGLAPI gl_api, guintptr external_gl_context, GError *
   priv->source_id = g_timeout_add_seconds (1, gst_gl_window_cocoa_nsapp_iteration, NULL);
 #endif
 
-  return window;
+  return TRUE;
 }
 
 guintptr

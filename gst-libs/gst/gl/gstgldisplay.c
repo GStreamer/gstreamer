@@ -221,6 +221,8 @@ gst_gl_display_init (GstGLDisplay * display)
 
   display->gl_vtable = g_slice_alloc0 (sizeof (GstGLFuncs));
 
+  display->gl_window = gst_gl_window_new ();
+
   gst_gl_memory_init ();
 }
 
@@ -237,15 +239,16 @@ gst_gl_display_finalize (GObject * object)
     gst_gl_window_set_draw_callback (display->gl_window, NULL, NULL);
     gst_gl_window_set_close_callback (display->gl_window, NULL, NULL);
 
-    GST_INFO ("send quit gl window loop");
+    if (display->context_created) {
+      GST_INFO ("send quit gl window loop");
+      gst_gl_window_quit (display->gl_window,
+          GST_GL_WINDOW_CB (gst_gl_display_thread_destroy_context), display);
 
-    gst_gl_window_quit (display->gl_window,
-        GST_GL_WINDOW_CB (gst_gl_display_thread_destroy_context), display);
+      GST_INFO ("quit sent to gl window loop");
 
-    GST_INFO ("quit sent to gl window loop");
-
-    g_cond_wait (display->priv->cond_destroy_context, display->mutex);
-    GST_INFO ("quit received from gl window");
+      g_cond_wait (display->priv->cond_destroy_context, display->mutex);
+      GST_INFO ("quit received from gl window");
+    }
     gst_gl_display_unlock (display);
   }
 
@@ -438,19 +441,20 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   gst_gl_display_lock (display);
 
   gl = display->gl_vtable;
-
   compiled_api = _compiled_api ();
 
-  display->gl_window =
-      gst_gl_window_new (compiled_api, display->external_gl_context, &error);
+  if (!display->gl_window) {
+    gst_gl_display_set_error (display, "Failed to create opengl window");
+    goto failure;
+  }
 
-  if (!display->gl_window || error) {
+  if (!gst_gl_window_create_context (display->gl_window, compiled_api,
+          display->external_gl_context, &error)) {
     gst_gl_display_set_error (display,
         error ? error->message : "Failed to create gl window");
     goto failure;
   }
-
-  GST_INFO ("gl window created");
+  GST_INFO ("window created context");
 
   display->gl_api = gst_gl_window_get_gl_api (display->gl_window);
   g_assert (display->gl_api != GST_GL_API_NONE
@@ -490,6 +494,7 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
     ret = _create_context_gles2 (display, &gl_major, NULL);
 
   if (!ret || !gl_major) {
+    GST_WARNING ("GL api specific initialization failed");
     goto failure;
   }
 
@@ -1213,7 +1218,7 @@ gst_gl_display_create_context (GstGLDisplay * display,
 
   gst_gl_display_lock (display);
 
-  if (!display->gl_window) {
+  if (!display->context_created) {
     display->external_gl_context = external_gl_context;
 
     display->gl_thread = g_thread_create (

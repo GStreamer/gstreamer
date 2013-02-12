@@ -51,9 +51,8 @@ static void gst_gl_window_wayland_egl_send_message (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data);
 static void gst_gl_window_wayland_egl_destroy_context (GstGLWindowWaylandEGL *
     window_egl);
-static gboolean gst_gl_window_wayland_egl_create_context (GstGLWindowWaylandEGL
-    * window_egl, GstGLAPI gl_api, guintptr external_gl_context,
-    GError ** error);
+static gboolean gst_gl_window_wayland_egl_create_context (GstGLWindow
+    * window, GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
 static GstGLAPI gst_gl_window_wayland_egl_get_gl_api (GstGLWindow * window);
 static gpointer gst_gl_window_wayland_egl_get_proc_address (GstGLWindow *
     window, const gchar * name);
@@ -260,6 +259,8 @@ gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
   GObjectClass *object_class = (GObjectClass *) klass;
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
 
+  window_class->create_context =
+      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_create_context);
   window_class->get_gl_context =
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_gl_context);
   window_class->activate =
@@ -288,8 +289,7 @@ gst_gl_window_wayland_egl_init (GstGLWindowWaylandEGL * window)
 
 /* Must be called in the gl thread */
 GstGLWindowWaylandEGL *
-gst_gl_window_wayland_egl_new (GstGLAPI gl_api, guintptr external_gl_context,
-    GError ** error)
+gst_gl_window_wayland_egl_new (void)
 {
   GstGLWindowWaylandEGL *window;
 
@@ -299,42 +299,7 @@ gst_gl_window_wayland_egl_new (GstGLAPI gl_api, guintptr external_gl_context,
 
   gst_gl_window_set_need_lock (GST_GL_WINDOW (window), FALSE);
 
-  window->display.display = wl_display_connect (NULL);
-  if (!window->display.display) {
-    g_set_error (error, GST_GL_WINDOW_ERROR,
-        GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
-        "Failed to connect to Wayland display server");
-    goto error;
-  }
-
-  window->display.registry = wl_display_get_registry (window->display.display);
-  wl_registry_add_listener (window->display.registry, &registry_listener,
-      &window->display);
-
-  wl_display_dispatch (window->display.display);
-
-  create_surface (window);
-
-  window->display.cursor_surface =
-      wl_compositor_create_surface (window->display.compositor);
-
-  window->wl_source = wayland_event_source_new (window->display.display);
-  window->main_context = g_main_context_new ();
-  window->loop = g_main_loop_new (window->main_context, FALSE);
-
-  g_source_attach (window->wl_source, window->main_context);
-
-  gst_gl_window_wayland_egl_create_context (window, gl_api,
-      external_gl_context, error);
-
   return window;
-
-error:
-  {
-    if (window)
-      g_object_unref (window);
-    return NULL;
-  }
 }
 
 static void
@@ -367,9 +332,47 @@ gst_gl_window_wayland_egl_finalize (GObject * object)
 }
 
 static gboolean
-gst_gl_window_wayland_egl_create_context (GstGLWindowWaylandEGL * window_egl,
+_setup_wayland (GstGLWindowWaylandEGL * window_egl, GError ** error)
+{
+  window_egl->display.display = wl_display_connect (NULL);
+  if (!window_egl->display.display) {
+    g_set_error (error, GST_GL_WINDOW_ERROR,
+        GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
+        "Failed to connect to Wayland display server");
+    goto error;
+  }
+
+  window_egl->display.registry =
+      wl_display_get_registry (window_egl->display.display);
+  wl_registry_add_listener (window_egl->display.registry, &registry_listener,
+      &window_egl->display);
+
+  wl_display_dispatch (window_egl->display.display);
+
+  create_surface (window_egl);
+
+  window_egl->display.cursor_surface =
+      wl_compositor_create_surface (window_egl->display.compositor);
+
+  window_egl->wl_source =
+      wayland_event_source_new (window_egl->display.display);
+  window_egl->main_context = g_main_context_new ();
+  window_egl->loop = g_main_loop_new (window_egl->main_context, FALSE);
+
+  g_source_attach (window_egl->wl_source, window_egl->main_context);
+
+  return TRUE;
+
+error:
+  return FALSE;
+}
+
+gboolean
+gst_gl_window_wayland_egl_create_context (GstGLWindow * window,
     GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
 {
+  GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
+
   EGLint config_attrib[] = {
     EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
     EGL_RED_SIZE, 1,
@@ -389,6 +392,9 @@ gst_gl_window_wayland_egl_create_context (GstGLWindowWaylandEGL * window_egl,
   EGLint majorVersion;
   EGLint minorVersion;
   EGLint numConfigs;
+
+  if (!_setup_wayland (window_egl, error))
+    return FALSE;
 
   window_egl->egl_display =
       eglGetDisplay ((EGLNativeDisplayType) window_egl->display.display);

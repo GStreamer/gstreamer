@@ -66,13 +66,11 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
 }
 
 GstGLWindow *
-gst_gl_window_new (GstGLAPI api, guintptr external_gl_context, GError ** error)
+gst_gl_window_new (void)
 {
   GstGLWindow *window = NULL;
   const gchar *user_choice;
   static volatile gsize _init = 0;
-
-  g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (gst_gl_window_debug, "glwindow", 0,
@@ -85,43 +83,28 @@ gst_gl_window_new (GstGLAPI api, guintptr external_gl_context, GError ** error)
 
 #if GST_GL_HAVE_WINDOW_X11
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
-    window =
-        GST_GL_WINDOW (gst_gl_window_x11_new (api, external_gl_context, error));
+    window = GST_GL_WINDOW (gst_gl_window_x11_new ());
 #endif
 #if GST_GL_HAVE_WINDOW_WIN32
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "win32")))
-    window =
-        GST_GL_WINDOW (gst_gl_window_win32_new (api, external_gl_context,
-            error));
+    window = GST_GL_WINDOW (gst_gl_window_win32_new ());
 #endif
 #if GST_GL_HAVE_WINDOW_COCOA
-  if (!window && (!user_choice || g_strstr_len (user_choice, 5, "cocoa")))
-    window =
-        GST_GL_WINDOW (gst_gl_window_cocoa_new (api, external_gl_context,
-            error));
+  if (!window && (!user_choice || g_strstr_len (user_choice, 5, "cocoa"))) {
+    window = GST_GL_WINDOW (gst_gl_window_cocoa_new ());
+  }
 #endif
 #if GST_GL_HAVE_WINDOW_WAYLAND
   if (!window && (!user_choice || g_strstr_len (user_choice, 7, "wayland")))
-    window =
-        GST_GL_WINDOW (gst_gl_window_wayland_egl_new (api,
-            external_gl_context, error));
+    window = GST_GL_WINDOW (gst_gl_window_wayland_egl_new ());
 #endif
   if (!window) {
-    if (error && !*error) {
-      if (user_choice) {
-        g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_FAILED,
-            "Could not create %s window", user_choice);
-      } else {
-        /* subclass did not set an error yet returned a NULL window */
-        g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_FAILED,
-            "Could not create %s window, Unknown Error",
-            user_choice ? user_choice : "");
-      }
-    }
+    /* subclass returned a NULL window */
+    GST_WARNING ("Could not create window. user specified %s",
+        user_choice ? user_choice : "(null)");
+
     return NULL;
   }
-
-  window->external_gl_context = external_gl_context;
 
   return window;
 }
@@ -340,6 +323,28 @@ gst_gl_window_get_proc_address (GstGLWindow * window, const gchar * name)
   GST_GL_WINDOW_LOCK (window);
 
   ret = window_class->get_proc_address (window, name);
+
+  GST_GL_WINDOW_UNLOCK (window);
+
+  return ret;
+}
+
+
+gboolean
+gst_gl_window_create_context (GstGLWindow * window, GstGLAPI gl_api,
+    guintptr external_gl_context, GError ** error)
+{
+  gboolean ret;
+  GstGLWindowClass *window_class;
+
+  g_return_val_if_fail (GST_GL_IS_WINDOW (window), FALSE);
+  window_class = GST_GL_WINDOW_GET_CLASS (window);
+  g_return_val_if_fail (window_class->create_context != NULL, FALSE);
+
+  GST_GL_WINDOW_LOCK (window);
+
+  ret =
+      window_class->create_context (window, gl_api, external_gl_context, error);
 
   GST_GL_WINDOW_UNLOCK (window);
 

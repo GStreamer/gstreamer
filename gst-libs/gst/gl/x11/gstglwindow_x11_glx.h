@@ -56,9 +56,7 @@ struct _GstGLWindowX11GLXClass {
 
 GType gst_gl_window_x11_glx_get_type     (void);
 
-GstGLWindowX11GLX * gst_gl_window_x11_glx_new  (GstGLAPI gl_api,
-                                                guintptr external_gl_context,
-                                                GError ** error);
+GstGLWindowX11GLX * gst_gl_window_x11_glx_new (void);
 
 G_END_DECLS
 
