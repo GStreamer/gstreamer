@@ -39,7 +39,7 @@ plugin_init (GstPlugin * plugin)
   if (!context) {
     GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING,
         "Failed to initialize MFC decoder context");
-    return FALSE;
+    return TRUE;
   }
   mfc_dec_destroy (context);
 

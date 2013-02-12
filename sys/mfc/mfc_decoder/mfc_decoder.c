@@ -51,6 +51,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <linux/videodev2.h>
 
 /* For logging */
@@ -279,6 +280,7 @@ struct mfc_dec_context* mfc_dec_create(unsigned int codec)
 {
     struct mfc_dec_context *ctx;
     struct v4l2_capability caps;
+    struct stat sb;
 
     pthread_mutex_lock(&mutex);
     if (mfc_in_use) {
@@ -295,10 +297,17 @@ struct mfc_dec_context* mfc_dec_create(unsigned int codec)
         GST_ERROR ("Unable to allocate memory for context");
         return NULL;
     }
+
+    if (stat (MFC_PATH, &sb) < 0) {
+        GST_INFO ("MFC device node doesn't exist, failing quietly");
+        free(ctx);
+        return NULL;
+    }
+
     GST_INFO ("Opening MFC device node at: %s", MFC_PATH);
     ctx->fd = open(MFC_PATH, O_RDWR, 0);
     if (ctx->fd == -1) {
-        GST_ERROR ("Unable to open MFC device node: %d", errno);
+        GST_WARNING ("Unable to open MFC device node: %d", errno);
         free(ctx);
         return NULL;
     }
