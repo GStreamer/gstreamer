@@ -612,9 +612,9 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
         demux->end_of_manifest = FALSE;
         for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
           GstDashDemuxStream *stream = iter->data;
-          stream->need_segment = TRUE;
           gst_data_queue_set_flushing (stream->queue, FALSE);
         }
+        demux->need_segment = TRUE;
         gst_uri_downloader_reset (demux->downloader);
         gst_dash_demux_resume_download_task (demux);
         gst_dash_demux_resume_stream_task (demux);
@@ -926,7 +926,6 @@ gst_dash_demux_create_pads (GstDashDemux * demux)
 
     g_assert (stream->pad == NULL);
 
-    stream->need_segment = TRUE;
     stream->pad = gst_pad_new_from_static_template (&srctemplate, NULL);
     gst_pad_set_event_function (stream->pad,
         GST_DEBUG_FUNCPTR (gst_dash_demux_src_event));
@@ -1033,7 +1032,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       active_stream =
           gst_mpdparser_get_active_stream_by_index (demux->client,
           selected_stream->index);
-      if (selected_stream->need_segment) {
+      if (demux->need_segment) {
         /* And send a newsegment */
         for (iter = demux->streams, i = 0; iter;
             i++, iter = g_slist_next (iter)) {
@@ -1043,7 +1042,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
                   GST_FORMAT_TIME, demux->segment.start, demux->segment.stop,
                   demux->segment.time));
         }
-        selected_stream->need_segment = FALSE;
+        demux->need_segment = FALSE;
         demux->position_shift = 0;
       }
 

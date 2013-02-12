@@ -79,7 +79,6 @@ struct _GstDashDemuxStream
 
   gboolean stream_eos;
   gboolean need_header;
-  gboolean need_segment;
 
   /* tracks if a stream has enqueued data
    * after a pad switch.
@@ -110,6 +109,7 @@ struct _GstDashDemux
   GSList *streams;
 
   GstSegment segment;
+  gboolean need_segment;
 
   GstBuffer *manifest;
   GstUriDownloader *downloader;
