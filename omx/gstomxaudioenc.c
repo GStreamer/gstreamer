@@ -576,6 +576,11 @@ gst_omx_audio_enc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
       return FALSE;
     if (gst_omx_port_set_enabled (self->in_port, FALSE) != OMX_ErrorNone)
       return FALSE;
+    if (gst_omx_port_deallocate_buffers (self->in_port) != OMX_ErrorNone)
+      return FALSE;
+    if (gst_omx_port_wait_enabled (self->in_port,
+            5 * GST_SECOND) != OMX_ErrorNone)
+      return FALSE;
 
     GST_DEBUG_OBJECT (self, "Encoder drained and disabled");
   }
@@ -662,6 +667,11 @@ gst_omx_audio_enc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
   GST_DEBUG_OBJECT (self, "Enabling component");
   if (needs_disable) {
     if (gst_omx_port_set_enabled (self->in_port, TRUE) != OMX_ErrorNone)
+      return FALSE;
+    if (gst_omx_port_allocate_buffers (self->in_port) != OMX_ErrorNone)
+      return FALSE;
+    if (gst_omx_port_wait_enabled (self->in_port,
+            5 * GST_SECOND) != OMX_ErrorNone)
       return FALSE;
     if (gst_omx_port_manual_reconfigure (self->in_port, FALSE) != OMX_ErrorNone)
       return FALSE;

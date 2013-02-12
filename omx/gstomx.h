@@ -192,7 +192,8 @@ struct _GstOMXPort {
   gboolean settings_changed;
   gboolean flushing;
   gboolean flushed; /* TRUE after OMX_CommandFlush was done */
-  gboolean enabled_changed; /* TRUE after OMX_Command{En,Dis}able was done */
+  gboolean enabled_pending;  /* TRUE after OMX_Command{En,Dis}able */
+  gboolean disabled_pending; /* was done until it took effect */
 
   /* Increased whenever the settings of these port change.
    * If settings_cookie != configured_settings_cookie
@@ -304,6 +305,7 @@ OMX_ERRORTYPE     gst_omx_port_deallocate_buffers (GstOMXPort *port);
 OMX_ERRORTYPE     gst_omx_port_reconfigure (GstOMXPort * port);
 
 OMX_ERRORTYPE     gst_omx_port_set_enabled (GstOMXPort * port, gboolean enabled);
+OMX_ERRORTYPE     gst_omx_port_wait_enabled (GstOMXPort * port, GstClockTime timeout);
 gboolean          gst_omx_port_is_enabled (GstOMXPort * port);
 
 OMX_ERRORTYPE     gst_omx_port_manual_reconfigure (GstOMXPort * port, gboolean start);

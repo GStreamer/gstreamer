@@ -1063,6 +1063,11 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
 
       if (gst_omx_port_set_enabled (self->in_port, FALSE) != OMX_ErrorNone)
         return FALSE;
+      if (gst_omx_port_deallocate_buffers (self->in_port) != OMX_ErrorNone)
+        return FALSE;
+      if (gst_omx_port_wait_enabled (self->in_port,
+              5 * GST_SECOND) != OMX_ErrorNone)
+        return FALSE;
     }
     if (self->input_state)
       gst_video_codec_state_unref (self->input_state);
@@ -1105,6 +1110,11 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
 
   if (needs_disable) {
     if (gst_omx_port_set_enabled (self->in_port, TRUE) != OMX_ErrorNone)
+      return FALSE;
+    if (gst_omx_port_allocate_buffers (self->in_port) != OMX_ErrorNone)
+      return FALSE;
+    if (gst_omx_port_wait_enabled (self->in_port,
+            5 * GST_SECOND) != OMX_ErrorNone)
       return FALSE;
     if (gst_omx_port_manual_reconfigure (self->in_port, FALSE) != OMX_ErrorNone)
       return FALSE;
