@@ -309,7 +309,7 @@ split_range (GstRTSPAddressPool * pool, AddrRange * range, gint skip,
   if (skip > 0) {
     /* make a range with the skipped ports */
     temp = g_slice_dup (AddrRange, range);
-    temp->max.port = temp->min.port + skip;
+    temp->max.port = temp->min.port + skip - 1;
     /* and store back in pool */
     priv->addresses = g_list_prepend (priv->addresses, temp);
 
