@@ -79,14 +79,6 @@ gst_g_mutex_free (GMutex *mutex)
   g_mutex_clear (mutex);
   g_slice_free (GMutex, mutex);
 }
-#define g_static_rec_mutex_init gst_g_static_rec_mutex_init
-static inline void
-gst_g_static_rec_mutex_init (GStaticRecMutex *mutex)
-{
-  static const GStaticRecMutex init_mutex = G_STATIC_REC_MUTEX_INIT;
-
-  *mutex = init_mutex;
-}
 #define g_cond_new gst_g_cond_new
 static inline GCond *
 gst_g_cond_new (void)
