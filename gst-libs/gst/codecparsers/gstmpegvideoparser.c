@@ -617,7 +617,7 @@ gst_mpeg_video_parse_picture_extension (GstMpegVideoPictureExt * ext,
 
   size -= offset;
 
-  if (size < 4)
+  if (size < 5)
     return FALSE;
 
   gst_bit_reader_init (&br, &data[offset], size);
