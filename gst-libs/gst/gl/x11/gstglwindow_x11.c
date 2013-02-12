@@ -43,7 +43,7 @@
 #define GST_CAT_DEFAULT gst_gl_window_debug
 
 #define gst_gl_window_x11_parent_class parent_class
-G_DEFINE_TYPE (GstGLWindowX11, gst_gl_window_x11, GST_GL_TYPE_WINDOW);
+G_DEFINE_ABSTRACT_TYPE (GstGLWindowX11, gst_gl_window_x11, GST_GL_TYPE_WINDOW);
 
 enum
 {
@@ -69,6 +69,8 @@ void gst_gl_window_x11_quit (GstGLWindow * window, GstGLWindowCB callback,
     gpointer data);
 void gst_gl_window_x11_send_message (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data);
+gboolean gst_gl_window_x11_create_context (GstGLWindow * window,
+    GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
 
 static gboolean gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11);
 
@@ -187,6 +189,8 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
       g_param_spec_string ("display", "Display", "X Display name", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  window_class->create_context =
+      GST_DEBUG_FUNCPTR (gst_gl_window_x11_create_context);
   window_class->get_gl_context =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_get_gl_context);
   window_class->activate = GST_DEBUG_FUNCPTR (gst_gl_window_x11_activate);
@@ -209,51 +213,23 @@ gst_gl_window_x11_init (GstGLWindowX11 * window)
 
 /* Must be called in the gl thread */
 GstGLWindowX11 *
-gst_gl_window_x11_new (GstGLAPI gl_api, guintptr external_gl_context,
-    GError ** error)
+gst_gl_window_x11_new (void)
 {
   GstGLWindowX11 *window = NULL;
   const gchar *user_choice;
 
   user_choice = g_getenv ("GST_GL_PLATFORM");
 
+  GST_INFO ("Attempting to create x11 window, user platform choice:%s",
+      user_choice ? user_choice : "(null)");
+
 #if GST_GL_HAVE_PLATFORM_GLX
-#if GST_GL_HAVE_PLATFORM_EGL
-  /* try GLX first for Desktop OpenGL */
-  if (gl_api & GST_GL_API_OPENGL || gl_api & GST_GL_API_OPENGL3) {
-    if (!window && (!user_choice
-            || g_strstr_len (user_choice, 3, "glx") != NULL))
-      window =
-          GST_GL_WINDOW_X11 (gst_gl_window_x11_glx_new (gl_api,
-              external_gl_context, error));
-    if (!window && (!user_choice
-            || g_strstr_len (user_choice, 3, "egl") != NULL))
-      window =
-          GST_GL_WINDOW_X11 (gst_gl_window_x11_egl_new (gl_api,
-              external_gl_context, error));
-  } else {                      /* try EGL first for OpenGL|ES */
-    if (!window && (!user_choice
-            || g_strstr_len (user_choice, 3, "egl") != NULL))
-      window =
-          GST_GL_WINDOW_X11 (gst_gl_window_x11_egl_new (gl_api,
-              external_gl_context, error));
-    if (!window && (!user_choice
-            || g_strstr_len (user_choice, 3, "glx") != NULL))
-      window =
-          GST_GL_WINDOW_X11 (gst_gl_window_x11_glx_new (gl_api,
-              external_gl_context, error));
-  }
-#endif /* GST_GL_HAVE_PLATFORM_EGL */
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "glx") != NULL))
-    window =
-        GST_GL_WINDOW_X11 (gst_gl_window_x11_glx_new (gl_api,
-            external_gl_context, error));
+    window = GST_GL_WINDOW_X11 (gst_gl_window_x11_glx_new ());
 #endif /* GST_GL_HAVE_PLATFORM_GLX */
 #ifdef GST_GL_HAVE_PLATFORM_EGL
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "egl") != NULL))
-    window =
-        GST_GL_WINDOW_X11 (gst_gl_window_x11_egl_new (gl_api,
-            external_gl_context, error));
+    window = GST_GL_WINDOW_X11 (gst_gl_window_x11_egl_new ());
 #endif /* GST_GL_HAVE_PLATFORM_EGL */
   if (!window) {
     GST_WARNING ("Failed to create x11 window, user_choice:%s",
@@ -265,16 +241,15 @@ gst_gl_window_x11_new (GstGLAPI gl_api, guintptr external_gl_context,
 }
 
 gboolean
-gst_gl_window_x11_open_device (GstGLWindowX11 * window_x11,
+gst_gl_window_x11_create_context (GstGLWindow * window,
     GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
 {
+  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
   GstGLWindowX11Class *window_class = GST_GL_WINDOW_X11_GET_CLASS (window_x11);
 
   setlocale (LC_NUMERIC, "C");
 
   gst_gl_window_set_need_lock (GST_GL_WINDOW (window_x11), TRUE);
-
-  GST_GL_WINDOW_LOCK (window_x11);
 
   g_cond_init (&window_x11->cond_send_message);
   window_x11->running = TRUE;
@@ -335,12 +310,9 @@ gst_gl_window_x11_open_device (GstGLWindowX11 * window_x11,
     goto failure;
   }
 
-  GST_GL_WINDOW_UNLOCK (window_x11);
-
   return TRUE;
 
 failure:
-  GST_GL_WINDOW_UNLOCK (window_x11);
   return FALSE;
 }
 
@@ -635,13 +607,13 @@ gst_gl_window_x11_run (GstGLWindow * window)
           if (window_x11->running) {
 #if SIZEOF_VOID_P == 8
             GstGLWindowCB custom_cb =
-                (GstGLWindowCB) (((event.xclient.
-                        data.l[0] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[1] & 0xffffffff));
+                (GstGLWindowCB) (((event.xclient.data.
+                        l[0] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[1] & 0xffffffff));
             gpointer custom_data =
-                (gpointer) (((event.xclient.
-                        data.l[2] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[3] & 0xffffffff));
+                (gpointer) (((event.xclient.data.
+                        l[2] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[3] & 0xffffffff));
 #else
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];
@@ -670,13 +642,13 @@ gst_gl_window_x11_run (GstGLWindow * window)
             && event.xclient.message_type == wm_quit_loop) {
 #if SIZEOF_VOID_P == 8
           GstGLWindowCB destroy_cb =
-              (GstGLWindowCB) (((event.xclient.
-                      data.l[0] & 0xffffffff) << 32) | (event.xclient.
-                  data.l[1] & 0xffffffff));
+              (GstGLWindowCB) (((event.xclient.data.
+                      l[0] & 0xffffffff) << 32) | (event.xclient.data.
+                  l[1] & 0xffffffff));
           gpointer destroy_data =
-              (gpointer) (((event.xclient.
-                      data.l[2] & 0xffffffff) << 32) | (event.xclient.
-                  data.l[3] & 0xffffffff));
+              (gpointer) (((event.xclient.data.
+                      l[2] & 0xffffffff) << 32) | (event.xclient.data.
+                  l[3] & 0xffffffff));
 #else
           GstGLWindowCB destroy_cb = (GstGLWindowCB) event.xclient.data.l[0];
           gpointer destroy_data = (gpointer) event.xclient.data.l[1];
@@ -694,13 +666,13 @@ gst_gl_window_x11_run (GstGLWindow * window)
                   &pending_event)) {
 #if SIZEOF_VOID_P == 8
             GstGLWindowCB custom_cb =
-                (GstGLWindowCB) (((event.xclient.
-                        data.l[0] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[1] & 0xffffffff));
+                (GstGLWindowCB) (((event.xclient.data.
+                        l[0] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[1] & 0xffffffff));
             gpointer custom_data =
-                (gpointer) (((event.xclient.
-                        data.l[2] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[3] & 0xffffffff));
+                (gpointer) (((event.xclient.data.
+                        l[2] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[3] & 0xffffffff));
 #else
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];

@@ -144,6 +144,7 @@ struct _GstGLDisplay
   GThread       *gl_thread;
   GstGLWindow   *gl_window;
   gboolean       isAlive;
+  gboolean       context_created;
 
   /* gl API we are using */
   GstGLAPI       gl_api;

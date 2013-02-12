@@ -81,13 +81,9 @@ gst_gl_window_x11_egl_init (GstGLWindowX11EGL * window)
 
 /* Must be called in the gl thread */
 GstGLWindowX11EGL *
-gst_gl_window_x11_egl_new (GstGLAPI gl_api, guintptr external_gl_context,
-    GError ** error)
+gst_gl_window_x11_egl_new (void)
 {
   GstGLWindowX11EGL *window = g_object_new (GST_GL_TYPE_WINDOW_X11_EGL, NULL);
-
-  gst_gl_window_x11_open_device (GST_GL_WINDOW_X11 (window), gl_api,
-      external_gl_context, error);
 
   return window;
 }

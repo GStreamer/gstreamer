@@ -95,13 +95,7 @@ struct _GstGLWindowX11Class {
 
 GType gst_gl_window_x11_get_type     (void);
 
-GstGLWindowX11 * gst_gl_window_x11_new          (GstGLAPI gl_api,
-                                                 guintptr external_gl_context,
-                                                 GError ** error);
-gboolean         gst_gl_window_x11_open_device  (GstGLWindowX11 *window_x11,
-                                                 GstGLAPI gl_api,
-                                                 guintptr external_gl_context,
-                                                 GError ** error);
+GstGLWindowX11 * gst_gl_window_x11_new (void);
 
 G_END_DECLS
 
