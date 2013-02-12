@@ -18,18 +18,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <glib.h>
-#if 0
-#include "libavutil/attributes.h"
-#include "libavutil/cpu.h"
-#include "libavutil/internal.h"
-#include "libavutil/mem.h"
-#include "libavutil/x86/asm.h"
-#include "libavcodec/x86/dsputil_mmx.h"
-#include "libavfilter/yadif.h"
-#endif
+#include "config.h"
 
-//#if HAVE_INLINE_ASM
+#include <glib.h>
+
+#if HAVE_CPU_X86_64
 
 typedef struct xmm_reg
 {
@@ -39,9 +32,7 @@ typedef gint64 x86_reg;
 #define DECLARE_ALIGNED(n,t,v)      t __attribute__ ((aligned (n))) v
 #define DECLARE_ASM_CONST(n,t,v)    static const t __attribute__((used)) __attribute__ ((aligned (n))) v
 
-#define ARCH_X86_64 1
-//#if ARCH_X86_64 && defined(__PIC__)
-#if 1
+#if defined(__PIC__)
 #    define LOCAL_MANGLE(a) #a "(%%rip)"
 #else
 #    define LOCAL_MANGLE(a) #a
@@ -57,6 +48,7 @@ DECLARE_ASM_CONST (16, const xmm_reg, pw_1) = {
 0x0001000100010001ULL, 0x0001000100010001ULL};
 
 
+#define HAVE_SSE2_INLINE 1
 
 #if HAVE_SSSE3_INLINE
 #define COMPILE_TEMPLATE_SSE2 1
@@ -67,12 +59,12 @@ DECLARE_ASM_CONST (16, const xmm_reg, pw_1) = {
 #undef COMPILE_TEMPLATE_SSSE3
 #endif
 
-//#if HAVE_SSE2_INLINE
+#if HAVE_SSE2_INLINE
 #undef RENAME
 #define RENAME(a) a ## _sse2
 #include "yadif_template.c"
 #undef COMPILE_TEMPLATE_SSE2
-//#endif
+#endif
 
 #if HAVE_MMXEXT_INLINE
 #undef RENAME
@@ -80,14 +72,13 @@ DECLARE_ASM_CONST (16, const xmm_reg, pw_1) = {
 #include "yadif_template.c"
 #endif
 
-//#endif /* HAVE_INLINE_ASM */
 
-void filter_line_x86 (guint8 * dst,
+void filter_line_x86_64 (guint8 * dst,
     guint8 * prev, guint8 * cur, guint8 * next,
     int w, int prefs, int mrefs, int parity, int mode);
 
 void
-filter_line_x86 (guint8 * dst,
+filter_line_x86_64 (guint8 * dst,
     guint8 * prev, guint8 * cur, guint8 * next,
     int w, int prefs, int mrefs, int parity, int mode)
 {
@@ -107,3 +98,5 @@ filter_line_x86 (guint8 * dst,
 #endif
   yadif_filter_line_sse2 (dst, prev, cur, next, w, prefs, mrefs, parity, mode);
 }
+
+#endif
