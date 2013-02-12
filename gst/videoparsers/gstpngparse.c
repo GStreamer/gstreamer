@@ -103,6 +103,7 @@ gst_png_parse_handle_frame (GstBaseParse * parse,
   GstByteReader reader;
   GstFlowReturn ret = GST_FLOW_OK;
   guint64 signature;
+  guint width = 0, height = 0;
 
   gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
   gst_byte_reader_init (&reader, map.data, map.size);
@@ -141,7 +142,6 @@ gst_png_parse_handle_frame (GstBaseParse * parse,
   for (;;) {
     guint32 length;
     guint32 code;
-    guint width, height;
 
     if (!gst_byte_reader_get_uint32_be (&reader, &length))
       goto beach;
