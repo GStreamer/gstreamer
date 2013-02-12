@@ -445,12 +445,19 @@ done:
 
 GST_END_TEST;
 
+static SoupServer *server;      /* NULL */
+static SoupServer *ssl_server;  /* NULL */
+
 static Suite *
 souphttpsrc_suite (void)
 {
+  TCase *tc_chain, *tc_internet;
   Suite *s;
 
-  TCase *tc_chain, *tc_internet;
+  /* we don't support exceptions from the proxy, so just unset the environment
+   * variable - in case it's set in the test environment it would otherwise
+   * prevent us from connecting to localhost (like jenkins.qa.ubuntu.com) */
+  g_unsetenv ("http_proxy");
 
   s = suite_create ("souphttpsrc");
   tc_chain = tcase_create ("general");
@@ -472,7 +479,7 @@ souphttpsrc_suite (void)
     tcase_add_test (tc_chain, test_bad_user_digest_auth);
     tcase_add_test (tc_chain, test_bad_password_digest_auth);
 
-    if (soup_ssl_supported)
+    if (ssl_server != NULL)
       tcase_add_test (tc_chain, test_https);
   } else {
     g_print ("Skipping 12 souphttpsrc tests, couldn't start or connect to "
@@ -577,9 +584,6 @@ server_callback (SoupServer * server, SoupMessage * msg,
   GST_DEBUG ("  -> %d %s", msg->status_code, msg->reason_phrase);
 }
 
-static SoupServer *server;      /* NULL */
-static SoupServer *ssl_server;  /* NULL */
-
 static gboolean
 run_server (guint * http_port, guint * https_port)
 {
@@ -623,15 +627,12 @@ run_server (guint * http_port, guint * https_port)
         SOUP_SERVER_SSL_CERT_FILE, ssl_cert_file,
         SOUP_SERVER_SSL_KEY_FILE, ssl_key_file, NULL);
 
-    if (!ssl_server) {
-      GST_DEBUG ("Unable to bind to SSL server port %u", ssl_port);
-      stop_server ();
-      return FALSE;
+    if (ssl_server) {
+      *https_port = soup_server_get_port (ssl_server);
+      GST_INFO ("HTTPS server listening on port %u", *https_port);
+      soup_server_add_handler (ssl_server, NULL, server_callback, NULL, NULL);
+      soup_server_run_async (ssl_server);
     }
-    *https_port = soup_server_get_port (ssl_server);
-    GST_INFO ("HTTPS server listening on port %u", *https_port);
-    soup_server_add_handler (ssl_server, NULL, server_callback, NULL, NULL);
-    soup_server_run_async (ssl_server);
   }
 
   /* check if we can connect to our local http server */
@@ -650,7 +651,11 @@ run_server (guint * http_port, guint * https_port)
       return FALSE;
     }
     g_object_unref (conn);
-    conn = g_socket_client_connect_to_host (client, "127.0.0.1", *http_port,
+
+    if (ssl_server == NULL)
+      goto skip_https_check;
+
+    conn = g_socket_client_connect_to_host (client, "127.0.0.1", *https_port,
         NULL, NULL);
     if (conn == NULL) {
       GST_INFO ("Couldn't connect to https server 127.0.0.1:%u", *https_port);
@@ -659,6 +664,9 @@ run_server (guint * http_port, guint * https_port)
       return FALSE;
     }
     g_object_unref (conn);
+
+  skip_https_check:
+
     g_object_unref (client);
   }
 
