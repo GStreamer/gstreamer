@@ -1060,7 +1060,37 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   }
 
   port_def.format.video.nFrameWidth = info->width;
+  if (port_def.nBufferAlignment)
+    port_def.format.video.nStride =
+        (info->width + port_def.nBufferAlignment - 1) &
+        (~(port_def.nBufferAlignment - 1));
+  else
+    port_def.format.video.nStride = GST_ROUND_UP_4 (info->width);       /* safe (?) default */
   port_def.format.video.nFrameHeight = info->height;
+
+  port_def.format.video.nFrameHeight = info->height;
+  port_def.format.video.nSliceHeight = info->height;
+
+  switch (port_def.format.video.eColorFormat) {
+    case OMX_COLOR_FormatYUV420Planar:
+    case OMX_COLOR_FormatYUV420PackedPlanar:
+      port_def.nBufferSize =
+          (port_def.format.video.nStride * port_def.format.video.nFrameHeight) +
+          2 * ((port_def.format.video.nStride / 2) *
+          ((port_def.format.video.nFrameHeight + 1) / 2));
+      break;
+
+    case OMX_COLOR_FormatYUV420SemiPlanar:
+      port_def.nBufferSize =
+          (port_def.format.video.nStride * port_def.format.video.nFrameHeight) +
+          (port_def.format.video.nStride *
+          ((port_def.format.video.nFrameHeight + 1) / 2));
+      break;
+
+    default:
+      g_assert_not_reached ();
+  }
+
   if (info->fps_n == 0) {
     port_def.format.video.xFramerate = 0;
   } else {
