@@ -554,13 +554,14 @@ static OMX_CALLBACKTYPE callbacks =
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
 GstOMXComponent *
-gst_omx_component_new (GstObject * parent, const GstOMXClassData * cdata)
+gst_omx_component_new (GstObject * parent, const gchar * core_name,
+    const gchar * component_name, const gchar * component_role, guint64 hacks)
 {
   OMX_ERRORTYPE err;
   GstOMXCore *core;
   GstOMXComponent *comp;
 
-  core = gst_omx_core_acquire (cdata->core_name);
+  core = gst_omx_core_acquire (core_name);
   if (!core)
     return NULL;
 
@@ -568,21 +569,21 @@ gst_omx_component_new (GstObject * parent, const GstOMXClassData * cdata)
   comp->core = core;
 
   err =
-      core->get_handle (&comp->handle, (OMX_STRING) cdata->component_name, comp,
+      core->get_handle (&comp->handle, (OMX_STRING) component_name, comp,
       &callbacks);
   if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (parent,
         "Failed to get component handle '%s' from core '%s': 0x%08x",
-        cdata->component_name, cdata->core_name, err);
+        component_name, core_name, err);
     gst_omx_core_release (core);
     g_slice_free (GstOMXComponent, comp);
     return NULL;
   }
   GST_DEBUG_OBJECT (parent,
       "Successfully got component handle %p (%s) from core '%s'", comp->handle,
-      cdata->component_name, cdata->core_name);
+      component_name, core_name);
   comp->parent = gst_object_ref (parent);
-  comp->hacks = cdata->hacks;
+  comp->hacks = hacks;
 
   comp->ports = g_ptr_array_new ();
   comp->n_in_ports = 0;
@@ -597,19 +598,18 @@ gst_omx_component_new (GstObject * parent, const GstOMXClassData * cdata)
   comp->last_error = OMX_ErrorNone;
 
   /* Set component role if any */
-  if (cdata->component_role && !(cdata->hacks & GST_OMX_HACK_NO_COMPONENT_ROLE)) {
+  if (component_role && !(hacks & GST_OMX_HACK_NO_COMPONENT_ROLE)) {
     OMX_PARAM_COMPONENTROLETYPE param;
 
     GST_OMX_INIT_STRUCT (&param);
 
-    g_strlcpy ((gchar *) param.cRole, cdata->component_role,
-        sizeof (param.cRole));
+    g_strlcpy ((gchar *) param.cRole, component_role, sizeof (param.cRole));
     err =
         gst_omx_component_set_parameter (comp,
         OMX_IndexParamStandardComponentRole, &param);
 
     GST_DEBUG_OBJECT (parent, "Setting component role to '%s': %s (0x%08x)",
-        cdata->component_role, gst_omx_error_to_string (err), err);
+        component_role, gst_omx_error_to_string (err), err);
 
     /* If setting the role failed this component is unusable */
     if (err != OMX_ErrorNone) {

@@ -50,7 +50,6 @@ struct _GstOMXAudioEnc
   GstAudioEncoder parent;
 
   /* < protected > */
-  GstOMXCore *core;
   GstOMXComponent *component;
   GstOMXPort *in_port, *out_port;
 

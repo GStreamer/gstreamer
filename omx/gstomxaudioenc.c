@@ -105,7 +105,9 @@ gst_omx_audio_enc_open (GstOMXAudioEnc * self)
   GstOMXAudioEncClass *klass = GST_OMX_AUDIO_ENC_GET_CLASS (self);
 
   self->component =
-      gst_omx_component_new (GST_OBJECT_CAST (self), &klass->cdata);
+      gst_omx_component_new (GST_OBJECT_CAST (self), klass->cdata.core_name,
+      klass->cdata.component_name, klass->cdata.component_role,
+      klass->cdata.hacks);
   self->started = FALSE;
 
   if (!self->component)

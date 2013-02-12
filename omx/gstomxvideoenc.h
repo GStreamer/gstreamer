@@ -53,7 +53,6 @@ struct _GstOMXVideoEnc
 
   GstOMXClassData cdata;
 
-  GstOMXCore *core;
   GstOMXComponent *component;
   GstOMXPort *in_port, *out_port;
 
