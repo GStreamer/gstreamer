@@ -74,6 +74,12 @@ GstRTSPAddressPool *
 
 GstRTSPAddress *  gst_rtsp_stream_get_address      (GstRTSPStream *stream);
 
+GstRTSPAddress *  gst_rtsp_stream_reserve_address  (GstRTSPStream *stream,
+                                                    const gchar * address,
+                                                    guint port,
+                                                    guint n_ports,
+                                                    guint ttl);
+
 gboolean          gst_rtsp_stream_join_bin         (GstRTSPStream *stream,
                                                     GstBin *bin, GstElement *rtpbin,
                                                     GstState state);

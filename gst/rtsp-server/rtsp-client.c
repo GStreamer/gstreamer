@@ -1072,7 +1072,17 @@ configure_client_transport (GstRTSPClient * client, GstRTSPClientState * state,
 
   /* we have a valid transport now, set the destination of the client. */
   if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-    if (ct->destination == NULL || !priv->use_client_settings) {
+    if (ct->destination && priv->use_client_settings) {
+      GstRTSPAddress *addr;
+
+      addr = gst_rtsp_stream_reserve_address (state->stream, ct->destination,
+          ct->port.min, ct->port.max - ct->port.min + 1, ct->ttl);
+
+      if (addr == NULL)
+        goto no_address;
+
+      gst_rtsp_address_free (addr);
+    } else {
       GstRTSPAddress *addr;
 
       addr = gst_rtsp_stream_get_address (state->stream);
@@ -1084,6 +1094,8 @@ configure_client_transport (GstRTSPClient * client, GstRTSPClientState * state,
       ct->port.min = addr->port;
       ct->port.max = addr->port + addr->n_ports - 1;
       ct->ttl = addr->ttl;
+
+      gst_rtsp_address_free (addr);
     }
   } else {
     GstRTSPUrl *url;

@@ -342,6 +342,73 @@ no_address:
   }
 }
 
+/**
+ * gst_rtsp_stream_reserve_address:
+ * @stream: a #GstRTSPStream
+ *
+ * Get a specific multicast address of @stream.
+ *
+ * Returns: the #GstRTSPAddress of @stream or %NULL when no address could be
+ * allocated. gst_rtsp_address_free() after usage.
+ */
+GstRTSPAddress *
+gst_rtsp_stream_reserve_address (GstRTSPStream * stream,
+    const gchar * address, guint port, guint n_ports, guint ttl)
+{
+  GstRTSPStreamPrivate *priv;
+  GstRTSPAddress *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+  g_return_val_if_fail (address != NULL, NULL);
+  g_return_val_if_fail (port > 0, NULL);
+  g_return_val_if_fail (n_ports > 0, NULL);
+  g_return_val_if_fail (ttl > 0, NULL);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if (priv->addr == NULL) {
+    if (priv->pool == NULL)
+      goto no_pool;
+
+    priv->addr = gst_rtsp_address_pool_reserve_address (priv->pool, address,
+        port, n_ports, ttl);
+    if (priv->addr == NULL)
+      goto no_address;
+  } else {
+    if (strcmp (priv->addr->address, address) ||
+        priv->addr->port != port || priv->addr->n_ports != n_ports ||
+        priv->addr->ttl != ttl)
+      goto different_address;
+  }
+  result = gst_rtsp_address_copy (priv->addr);
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+
+  /* ERRORS */
+no_pool:
+  {
+    GST_ERROR_OBJECT (stream, "no address pool specified");
+    g_mutex_unlock (&priv->lock);
+    return NULL;
+  }
+no_address:
+  {
+    GST_ERROR_OBJECT (stream, "failed to acquire address %s from pool",
+        address);
+    g_mutex_unlock (&priv->lock);
+    return NULL;
+  }
+different_address:
+  {
+    GST_ERROR_OBJECT (stream, "address %s is not the same that was already"
+        " reserved", address);
+    g_mutex_unlock (&priv->lock);
+    return NULL;
+  }
+}
+
 /* must be called with lock */
 static gboolean
 alloc_ports (GstRTSPStream * stream)
