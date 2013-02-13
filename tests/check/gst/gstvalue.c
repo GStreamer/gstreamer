@@ -810,16 +810,6 @@ GST_START_TEST (test_value_intersect)
   g_value_unset (&src1);
   g_value_unset (&src2);
   g_value_unset (&dest);
-
-  g_value_init (&src1, GST_TYPE_BITMASK);
-  gst_value_set_bitmask (&src1, 0xf00f);
-  g_value_init (&src2, GST_TYPE_BITMASK);
-  gst_value_set_bitmask (&src2, 0xff00);
-  ret = gst_value_intersect (&dest, &src1, &src2);
-  fail_unless (ret == TRUE);
-  fail_unless_equals_uint64 (0xf000, gst_value_get_bitmask (&dest));
-  g_value_unset (&src1);
-  g_value_unset (&src2);
 }
 
 GST_END_TEST;
@@ -1919,27 +1909,6 @@ GST_START_TEST (test_value_subtract_fraction_list)
 
 GST_END_TEST;
 
-GST_START_TEST (test_value_subtract_bitmask)
-{
-  GValue result = { 0 };
-  GValue src1 = { 0 };
-  GValue src2 = { 0 };
-
-  /* Subtract 1/4 from 1/2 */
-  g_value_init (&src1, GST_TYPE_BITMASK);
-  g_value_init (&src2, GST_TYPE_BITMASK);
-  gst_value_set_bitmask (&src1, 0xffff);
-  gst_value_set_bitmask (&src2, 0xff00);
-  fail_unless (gst_value_subtract (&result, &src1, &src2) == TRUE);
-  fail_unless_equals_uint64 (0x00ff, gst_value_get_bitmask (&result));
-
-  g_value_unset (&src1);
-  g_value_unset (&src2);
-  g_value_unset (&result);
-}
-
-GST_END_TEST;
-
 GST_START_TEST (test_date)
 {
   GstStructure *s;
@@ -2868,7 +2837,6 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_value_subtract_fraction);
   tcase_add_test (tc_chain, test_value_subtract_fraction_range);
   tcase_add_test (tc_chain, test_value_subtract_fraction_list);
-  tcase_add_test (tc_chain, test_value_subtract_bitmask);
   tcase_add_test (tc_chain, test_date);
   tcase_add_test (tc_chain, test_date_time);
   tcase_add_test (tc_chain, test_fraction_range);
