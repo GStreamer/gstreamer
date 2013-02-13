@@ -44,10 +44,10 @@ Formats
   "U16LE" 16-bit unsigned PCM audio
   "U16BE" 16-bit unsigned PCM audio
 
-  "S24_32LE" 24-bit signed PCM audio
-  "S24_32BE" 24-bit signed PCM audio
-  "U24_32LE" 24-bit unsigned PCM audio
-  "U24_32BE" 24-bit unsigned PCM audio
+  "S24_32LE" 24-bit signed PCM audio packed into 32-bit
+  "S24_32BE" 24-bit signed PCM audio packed into 32-bit
+  "U24_32LE" 24-bit unsigned PCM audio packed into 32-bit
+  "U24_32BE" 24-bit unsigned PCM audio packed into 32-bit
 
   "S32LE" 32-bit signed PCM audio
   "S32BE" 32-bit signed PCM audio
@@ -73,5 +73,4 @@ Formats
   "F32BE" 32-bit floating-point audio
   "F64LE" 64-bit floating-point audio
   "F64BE" 64-bit floating-point audio
-
 
