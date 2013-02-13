@@ -58,7 +58,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-wavpack, "
-        "width = (int) 16, "
+        "depth = (int) 16, "
         "channels = (int) 1, "
         "rate = (int) 44100, " "framed = (boolean) TRUE"));
 
