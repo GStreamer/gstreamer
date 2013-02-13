@@ -96,6 +96,14 @@ gboolean               gst_rtsp_address_pool_add_range       (GstRTSPAddressPool
 GstRTSPAddress *       gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,
                                                               GstRTSPAddressFlags flags,
                                                               gint n_ports);
+
+GstRTSPAddress *       gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
+                                                              const gchar *address,
+                                                              guint port,
+                                                              guint n_ports,
+                                                              guint ttl);
+
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_ADDRESS_POOL_H__ */

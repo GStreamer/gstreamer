@@ -272,13 +272,15 @@ invalid:
   }
 }
 
+/* increments the address by count */
+
 static void
-inc_address (GstRTSPAddressPool * pool, Addr * addr)
+inc_address (Addr * addr, guint8 count)
 {
   gint i;
   guint carry;
 
-  carry = 1;
+  carry = count;
   for (i = addr->size - 1; i >= 0 && carry > 0; i--) {
     carry += addr->bytes[i];
     addr->bytes[i] = carry & 0xff;
@@ -286,18 +288,48 @@ inc_address (GstRTSPAddressPool * pool, Addr * addr)
   }
 }
 
+/* tells us the number of addresses between min_addr and max_addr */
+
+static guint
+diff_address (Addr * max_addr, Addr * min_addr)
+{
+  gint i;
+  guint result = 0;
+
+  g_return_val_if_fail (min_addr->size == max_addr->size, 0);
+
+  for (i = 0; i < min_addr->size; i++) {
+    g_return_val_if_fail (result < (1 << 24), result);
+
+    result <<= 8;
+    result += max_addr->bytes[i] - min_addr->bytes[i];
+  }
+
+  return result;
+}
+
+
 static AddrRange *
-split_range (GstRTSPAddressPool * pool, AddrRange * range, gint skip,
-    gint n_ports)
+split_range (GstRTSPAddressPool * pool, AddrRange * range, guint skip_addr,
+    guint skip_port, gint n_ports)
 {
   GstRTSPAddressPoolPrivate *priv = pool->priv;
   AddrRange *temp;
+
+  if (skip_addr) {
+    temp = g_slice_dup (AddrRange, range);
+    memcpy (temp->max.bytes, temp->min.bytes, temp->min.size);
+    inc_address (&temp->max, skip_addr - 1);
+    priv->addresses = g_list_prepend (priv->addresses, temp);
+
+    inc_address (&range->min, skip_addr);
+  }
 
   if (!RANGE_IS_SINGLE (range)) {
     /* min and max are not the same, we have more than one address. */
     temp = g_slice_dup (AddrRange, range);
     /* increment the range min address */
-    inc_address (pool, &temp->min);
+    inc_address (&temp->min, 1);
     /* and store back in pool */
     priv->addresses = g_list_prepend (priv->addresses, temp);
 
@@ -306,15 +338,15 @@ split_range (GstRTSPAddressPool * pool, AddrRange * range, gint skip,
   }
 
   /* range now contains only one single address */
-  if (skip > 0) {
+  if (skip_port > 0) {
     /* make a range with the skipped ports */
     temp = g_slice_dup (AddrRange, range);
-    temp->max.port = temp->min.port + skip - 1;
+    temp->max.port = temp->min.port + skip_port - 1;
     /* and store back in pool */
     priv->addresses = g_list_prepend (priv->addresses, temp);
 
     /* increment range port */
-    range->min.port += skip;
+    range->min.port += skip_port;
   }
   /* range now contains single address with desired port number */
   if (range->max.port - range->min.port + 1 > n_ports) {
@@ -387,7 +419,7 @@ gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,
     /* we found a range, remove from the list */
     priv->addresses = g_list_delete_link (priv->addresses, walk);
     /* now split and exit our loop */
-    result = split_range (pool, range, skip, n_ports);
+    result = split_range (pool, range, 0, skip, n_ports);
     priv->allocated = g_list_prepend (priv->allocated, result);
     break;
   }
@@ -494,4 +526,97 @@ gst_rtsp_address_pool_dump (GstRTSPAddressPool * pool)
   g_print ("allocated:\n");
   g_list_foreach (priv->allocated, (GFunc) dump_range, pool);
   g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_address_pool_reserve_address:
+ * @pool: a #GstRTSPAddressPool
+ * @address: The IP address to reserve
+ * @port: The first port to reserve
+ * @n_ports: The number of ports
+ * @ttl: The requested ttl
+ *
+ * Take a specific address and ports from @pool. @n_ports consecutive
+ * ports will be allocated of which the first one can be found in
+ * @port.
+ *
+ * Returns: a #GstRTSPAddress that should be freed with gst_rtsp_address_free
+ *   after use or %NULL when no address could be acquired.
+ */
+
+GstRTSPAddress *
+gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
+    const gchar * address, guint port, guint n_ports, guint ttl)
+{
+  GstRTSPAddressPoolPrivate *priv;
+  Addr input_addr;
+  GList *walk, *next;
+  AddrRange *result;
+  GstRTSPAddress *addr;
+
+  g_return_val_if_fail (GST_IS_RTSP_ADDRESS_POOL (pool), NULL);
+  g_return_val_if_fail (address != NULL, NULL);
+  g_return_val_if_fail (port > 0, NULL);
+  g_return_val_if_fail (n_ports > 0, NULL);
+
+  priv = pool->priv;
+  result = NULL;
+  addr = NULL;
+
+  if (!fill_address (address, port, &input_addr)) {
+    GST_ERROR_OBJECT (pool, "invalid address %s", address);
+    return NULL;
+  }
+
+  g_mutex_lock (&priv->lock);
+  /* go over available ranges */
+  for (walk = priv->addresses; walk; walk = next) {
+    AddrRange *range;
+    gint skip_port, skip_addr;
+
+    range = walk->data;
+    next = walk->next;
+
+    /* Not the right type of address */
+    if (range->min.size != input_addr.size)
+      continue;
+
+    /* Check that the address is in the interval */
+    if (memcmp (range->min.bytes, input_addr.bytes, input_addr.size) > 0 ||
+        memcmp (range->max.bytes, input_addr.bytes, input_addr.size) < 0)
+      continue;
+
+    /* Make sure the requested ports are inside the range */
+    if (port < range->min.port || port + n_ports - 1 > range->max.port)
+      continue;
+
+    if (ttl != range->ttl)
+      continue;
+
+    skip_addr = diff_address (&input_addr, &range->min);
+    skip_port = port - range->min.port;
+
+    /* we found a range, remove from the list */
+    priv->addresses = g_list_delete_link (priv->addresses, walk);
+    /* now split and exit our loop */
+    result = split_range (pool, range, skip_addr, skip_port, n_ports);
+    priv->allocated = g_list_prepend (priv->allocated, result);
+    break;
+  }
+  g_mutex_unlock (&priv->lock);
+
+  if (result) {
+    addr = g_slice_new0 (GstRTSPAddress);
+    addr->pool = g_object_ref (pool);
+    addr->address = get_address_string (&result->min);
+    addr->n_ports = n_ports;
+    addr->port = result->min.port;
+    addr->ttl = result->ttl;
+    addr->priv = result;
+
+    GST_DEBUG_OBJECT (pool, "reserved address %s:%u ttl %u", addr->address,
+        addr->port, addr->ttl);
+  }
+
+  return addr;
 }

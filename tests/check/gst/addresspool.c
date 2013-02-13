@@ -24,7 +24,7 @@
 GST_START_TEST (test_pool)
 {
   GstRTSPAddressPool *pool;
-  GstRTSPAddress *addr, *addr2;
+  GstRTSPAddress *addr, *addr2, *addr3;
 
   pool = gst_rtsp_address_pool_new ();
 
@@ -81,6 +81,7 @@ GST_START_TEST (test_pool)
       GST_RTSP_ADDRESS_FLAG_IPV6 | GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2);
   fail_unless (addr != NULL);
   fail_unless (addr->port == 5002);
+  fail_unless (!g_ascii_strcasecmp (addr->address, "2001:DB8::1"));
 
   /* Will fail becuse there is only one IPv6 address left */
   addr2 = gst_rtsp_address_pool_acquire_address (pool,
@@ -103,14 +104,80 @@ GST_START_TEST (test_pool)
       GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2);
   fail_unless (addr != NULL);
   fail_unless (addr->port == 5000);
+  fail_unless (!strcmp (addr->address, "233.252.0.0"));
 
   addr2 = gst_rtsp_address_pool_acquire_address (pool,
       GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2);
   fail_unless (addr2 != NULL);
   fail_unless (addr2->port == 5000);
+  fail_unless (!strcmp (addr2->address, "233.252.0.1"));
 
   gst_rtsp_address_free (addr);
   gst_rtsp_address_free (addr2);
+
+  gst_rtsp_address_pool_clear (pool);
+
+
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          "233.252.1.1", "233.252.1.1", 5000, 5001, 1));
+
+  addr = gst_rtsp_address_pool_reserve_address (pool, "233.252.1.1", 5000, 3,
+      1);
+  fail_unless (addr == NULL);
+
+  addr = gst_rtsp_address_pool_reserve_address (pool, "233.252.1.2", 5000, 2,
+      1);
+  fail_unless (addr == NULL);
+
+  addr = gst_rtsp_address_pool_reserve_address (pool, "233.252.1.1", 500, 2, 1);
+  fail_unless (addr == NULL);
+
+  addr = gst_rtsp_address_pool_reserve_address (pool, "233.252.1.1", 5000, 2,
+      2);
+  fail_unless (addr == NULL);
+
+  addr = gst_rtsp_address_pool_reserve_address (pool, "2000::1", 5000, 2, 2);
+  fail_unless (addr == NULL);
+
+  addr = gst_rtsp_address_pool_reserve_address (pool, "1.1", 5000, 2, 2);
+  fail_unless (addr == NULL);
+
+  addr = gst_rtsp_address_pool_reserve_address (pool, "233.252.1.1", 5000, 2,
+      1);
+  fail_unless (addr != NULL);
+  fail_unless (addr->port == 5000);
+  fail_unless (!strcmp (addr->address, "233.252.1.1"));
+
+  gst_rtsp_address_free (addr);
+  gst_rtsp_address_pool_clear (pool);
+
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          "233.252.1.1", "233.252.1.3", 5000, 5001, 1));
+
+  addr = gst_rtsp_address_pool_reserve_address (pool, "233.252.1.1", 5000, 2,
+      1);
+  fail_unless (addr != NULL);
+  fail_unless (addr->port == 5000);
+  fail_unless (!strcmp (addr->address, "233.252.1.1"));
+
+  addr2 = gst_rtsp_address_pool_reserve_address (pool, "233.252.1.3", 5000, 2,
+      1);
+  fail_unless (addr2 != NULL);
+  fail_unless (addr2->port == 5000);
+  fail_unless (!strcmp (addr2->address, "233.252.1.3"));
+
+  addr3 = gst_rtsp_address_pool_acquire_address (pool,
+      GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2);
+  fail_unless (addr3 != NULL);
+  fail_unless (addr3->port == 5000);
+  fail_unless (!strcmp (addr3->address, "233.252.1.2"));
+
+  fail_unless (gst_rtsp_address_pool_acquire_address (pool,
+          GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2) == NULL);
+
+  gst_rtsp_address_free (addr);
+  gst_rtsp_address_free (addr2);
+  gst_rtsp_address_free (addr3);
 
   g_object_unref (pool);
 }
