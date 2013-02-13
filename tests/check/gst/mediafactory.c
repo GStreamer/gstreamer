@@ -128,6 +128,82 @@ GST_START_TEST (test_shared)
 
 GST_END_TEST;
 
+GST_START_TEST (test_addresspool)
+{
+  GstRTSPMediaFactory *factory;
+  GstElement *element;
+  GstRTSPMedia *media;
+  GstRTSPUrl *url;
+  GstRTSPAddressPool *pool, *tmppool;
+  GstRTSPStream *stream;
+  GstRTSPAddress *addr;
+
+  factory = gst_rtsp_media_factory_new ();
+  gst_rtsp_media_factory_set_shared (factory, TRUE);
+  gst_rtsp_url_parse ("rtsp://localhost:8554/test", &url);
+
+  gst_rtsp_media_factory_set_launch (factory,
+      "( videotestsrc ! rtpvrawpay pt=96 name=pay0 "
+      " audiotestsrc ! audioconvert ! rtpL16pay name=pay1 )");
+
+  pool = gst_rtsp_address_pool_new ();
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          "233.252.0.1", "233.252.0.1", 5000, 5001, 3));
+
+  gst_rtsp_media_factory_set_address_pool (factory, pool);
+
+  tmppool = gst_rtsp_media_factory_get_address_pool (factory);
+  fail_unless (pool == tmppool);
+  g_object_unref (tmppool);
+
+  element = gst_rtsp_media_factory_create_element (factory, url);
+  fail_unless (GST_IS_BIN (element));
+  fail_if (GST_IS_PIPELINE (element));
+  gst_object_unref (element);
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+
+  tmppool = gst_rtsp_media_get_address_pool (media);
+  fail_unless (pool == tmppool);
+  g_object_unref (tmppool);
+
+  fail_unless (gst_rtsp_media_n_streams (media) == 2);
+
+  stream = gst_rtsp_media_get_stream (media, 0);
+  fail_unless (stream != NULL);
+
+  tmppool = gst_rtsp_stream_get_address_pool (stream);
+  fail_unless (pool == tmppool);
+  g_object_unref (tmppool);
+
+  addr = gst_rtsp_stream_get_address (stream);
+  fail_unless (addr != NULL);
+  fail_unless (addr->port == 5000);
+  fail_unless (addr->n_ports == 2);
+  fail_unless (addr->ttl == 3);
+  gst_rtsp_address_free (addr);
+
+  stream = gst_rtsp_media_get_stream (media, 1);
+  fail_unless (stream != NULL);
+
+  tmppool = gst_rtsp_stream_get_address_pool (stream);
+  fail_unless (pool == tmppool);
+  g_object_unref (tmppool);
+
+  addr = gst_rtsp_stream_get_address (stream);
+  fail_unless (addr == NULL);
+
+
+  g_object_unref (media);
+
+  g_object_unref (pool);
+  gst_rtsp_url_free (url);
+  g_object_unref (factory);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspmediafactory_suite (void)
 {
@@ -140,6 +216,7 @@ rtspmediafactory_suite (void)
   tcase_add_test (tc, test_launch);
   tcase_add_test (tc, test_launch_construct);
   tcase_add_test (tc, test_shared);
+  tcase_add_test (tc, test_addresspool);
 
   return s;
 }
