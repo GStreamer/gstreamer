@@ -1715,13 +1715,34 @@ AG_GST_CHECK_FEATURE(EGLGLES, [eglgles sink], eglgles, [
       old_LIBS=$LIBS
       old_CFLAGS=$CFLAGS
 
-      AC_CHECK_HEADER(bcm_host.h, [
-        HAVE_EGLGLES="yes"
-        EGLGLES_LIBS="-lGLESv2 -lEGL -lbcm_host"
-        AC_DEFINE(USE_EGL_RPI, [1], [Use RPi EGL window system])
-        LIBS=$old_LIBS
-        CFLAGS=$old_CFLAGS
+      LIBS="$LIBS -lvcos -lvchiq_arm"
+      AC_CHECK_LIB([bcm_host], [bcm_host_init],
+        [
+          LIBS="$LIBS -lbcm_host"
+          AC_CHECK_HEADER(bcm_host.h,
+            [
+              LIBS="$LIBS -lGLESv2"
+              AC_CHECK_LIB([EGL], [eglGetProcAddress],
+                [
+                  LIBS="$LIBS -lEGL"
+                  AC_CHECK_HEADER([EGL/egl.h],
+                    [
+                      AC_CHECK_LIB([GLESv2], [glEnable],
+                        [
+                          AC_CHECK_HEADER([GLES2/gl2.h],
+                            [
+                              HAVE_EGLGLES="yes"
+                              EGLGLES_LIBS="-lGLESv2 -lEGL -lbcm_host -lvcos -lvchiq_arm"
+                              EGLGLES_CFLAGS=""
+                              AC_DEFINE(USE_EGL_RPI, [1], [Use RPi EGL window system])
+                          ])
+                      ])
+                  ])
+              ])
+          ])
       ])
+      LIBS=$old_LIBS
+      CFLAGS=$old_CFLAGS
       ;;
     *)
       AC_MSG_ERROR([invalid EGL window system specified])
