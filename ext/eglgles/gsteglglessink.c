@@ -127,7 +127,6 @@
 
 #ifdef USE_EGL_RPI
 #include <bcm_host.h>
-#include <GLES/gl.h>
 #endif
 
 #include "video_platform_wrapper.h"
@@ -1495,10 +1494,6 @@ static gboolean
 gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
 {
   GST_DEBUG_OBJECT (eglglessink, "Enter EGL initial configuration");
-#ifdef USE_EGL_RPI
-  GST_DEBUG_OBJECT (eglglessink, "Initialize BCM host");
-  bcm_host_init ();
-#endif
 
 #ifndef USE_EGL_RPI
   eglglessink->eglglesctx.display = eglGetDisplay (EGL_DEFAULT_DISPLAY);
@@ -2735,6 +2730,11 @@ eglglessink_plugin_init (GstPlugin * plugin)
   /* debug category for fltering log messages */
   GST_DEBUG_CATEGORY_INIT (gst_eglglessink_debug, "eglglessink",
       0, "Simple EGL/GLES Sink");
+
+#ifdef USE_EGL_RPI
+  GST_DEBUG ("Initialize BCM host");
+  bcm_host_init ();
+#endif
 
   return gst_element_register (plugin, "eglglessink", GST_RANK_PRIMARY,
       GST_TYPE_EGLGLESSINK);
