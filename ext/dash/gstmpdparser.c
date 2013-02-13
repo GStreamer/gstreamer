@@ -110,7 +110,7 @@ static gint convert_to_millisecs (gint decimals, gint pos);
 static int strncmp_ext (const char *s1, const char *s2);
 static GstStreamPeriod *gst_mpdparser_get_stream_period (GstMpdClient * client);
 static gchar *gst_mpdparser_parse_baseURL (GstMpdClient * client,
-    GstActiveStream * stream);
+    GstActiveStream * stream, gchar ** query);
 static gchar *gst_mpdparser_get_segmentURL_for_range (gchar * url,
     GstRange * range);
 static gchar *gst_mpdparser_get_mediaURL (GstActiveStream * stream,
@@ -1850,14 +1850,14 @@ gst_mpdparser_get_segment_base (GstPeriodNode * Period,
     if (Representation && Representation->SegmentList
         && Representation->SegmentList->MultSegBaseType
         && Representation->SegmentList->MultSegBaseType->SegBaseType
-        && Representation->SegmentList->MultSegBaseType->
-        SegBaseType->Initialization) {
+        && Representation->SegmentList->MultSegBaseType->SegBaseType->
+        Initialization) {
       SegmentBase = Representation->SegmentList->MultSegBaseType->SegBaseType;
     } else if (AdaptationSet && AdaptationSet->SegmentList
         && AdaptationSet->SegmentList->MultSegBaseType
         && AdaptationSet->SegmentList->MultSegBaseType->SegBaseType
-        && AdaptationSet->SegmentList->MultSegBaseType->
-        SegBaseType->Initialization) {
+        && AdaptationSet->SegmentList->MultSegBaseType->SegBaseType->
+        Initialization) {
       SegmentBase = AdaptationSet->SegmentList->MultSegBaseType->SegBaseType;
     } else if (Period && Period->SegmentList
         && Period->SegmentList->MultSegBaseType
@@ -2298,6 +2298,10 @@ static void
 gst_mpdparser_free_active_stream (GstActiveStream * active_stream)
 {
   if (active_stream) {
+    g_free (active_stream->baseURL);
+    active_stream->baseURL = NULL;
+    g_free (active_stream->queryURL);
+    active_stream->queryURL = NULL;
     g_list_foreach (active_stream->segments,
         (GFunc) gst_mpdparser_free_media_segment, NULL);
     g_list_free (active_stream->segments);
@@ -2424,7 +2428,8 @@ gst_mpdparser_get_stream_period (GstMpdClient * client)
 
 /* select a stream and extract the baseURL (if present) */
 static gchar *
-gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream)
+gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream,
+    gchar ** query)
 {
   //GstActiveStream *stream;
   GstStreamPeriod *stream_period;
@@ -2484,18 +2489,31 @@ gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream)
   /* get base URI from MPD file URI, if the "http" scheme is missing */
   if (client->mpd_uri != NULL && strncmp (ret, "http://", 7) != 0) {
     gchar *last_sep, *tmp1, *tmp2;
+
+    if (ret[0] == '?') {
+      if (query)
+        *query = g_strdup (ret);
+      g_free (ret);
+      ret = NULL;
+    } else {
+      if (query)
+        *query = NULL;
+    }
+
     last_sep = strrchr (client->mpd_uri, '/');
     if (last_sep) {
       tmp1 = g_strndup (client->mpd_uri, last_sep - client->mpd_uri + 1);
-      tmp2 = ret;
-      GST_DEBUG ("Got base URI from MPD file URI %s", tmp1);
-      ret = g_strconcat (tmp1, tmp2, NULL);
-      g_free (tmp1);
-      g_free (tmp2);
+      if (ret) {
+        tmp2 = ret;
+        ret = g_strconcat (tmp1, tmp2, NULL);
+        g_free (tmp1);
+        g_free (tmp2);
+      } else {
+        ret = tmp1;
+      }
+      GST_WARNING ("Got base URI from MPD file URI %s", ret);
     }
   }
-
-  GST_DEBUG ("selected baseURL with index %d: %s", stream->baseURL_idx, ret);
 
   return ret;
 }
@@ -2897,7 +2915,9 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
   }
 
   g_free (stream->baseURL);
-  stream->baseURL = gst_mpdparser_parse_baseURL (client, stream);
+  g_free (stream->queryURL);
+  stream->baseURL =
+      gst_mpdparser_parse_baseURL (client, stream, &stream->queryURL);
 
   return TRUE;
 }
@@ -3202,11 +3222,11 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
     /* single segment with URL encoded in the baseURL syntax element */
     *uri = g_strdup (stream->baseURL);
   } else if (strncmp (mediaURL, "http://", 7) != 0) {
-    *uri = g_strconcat (stream->baseURL, mediaURL, NULL);
-    g_free (mediaURL);
+    *uri = g_strconcat (stream->baseURL, mediaURL, stream->queryURL, NULL);
   } else {
-    *uri = mediaURL;
+    *uri = g_strconcat (mediaURL, stream->queryURL, NULL);
   }
+  g_free (mediaURL);
   gst_mpd_client_set_segment_index (stream, segment_idx + 1);
   GST_MPD_CLIENT_UNLOCK (client);
 
@@ -3234,8 +3254,8 @@ gst_mpd_client_get_next_header (GstMpdClient * client, const gchar ** uri,
   *uri = NULL;
   if (stream->cur_segment_base && stream->cur_segment_base->Initialization) {
     *uri =
-        gst_mpdparser_get_initializationURL (stream->
-        cur_segment_base->Initialization);
+        gst_mpdparser_get_initializationURL (stream->cur_segment_base->
+        Initialization);
   } else if (stream->cur_seg_template) {
     const gchar *initialization = NULL;
     if (stream->cur_seg_template->initialization) {

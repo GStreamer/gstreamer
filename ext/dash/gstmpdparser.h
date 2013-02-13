@@ -428,6 +428,7 @@ struct _GstActiveStream
 
   guint baseURL_idx;                          /* index of the baseURL used for last request */
   gchar *baseURL;                             /* active baseURL used for last request */
+  gchar *queryURL;                            /* active baseURL used for last request */
   guint max_bandwidth;                        /* max bandwidth allowed for this mimeType */
 
   GstAdaptationSetNode *cur_adapt_set;        /* active adaptation set */
