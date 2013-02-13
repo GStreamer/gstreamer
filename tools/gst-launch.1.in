@@ -406,20 +406,26 @@ samples and a sample rate between 32kHz and 64KHz.
 .SH "ENVIRONMENT VARIABLES"
 .TP
 \fBGST_DEBUG\fR
-Comma-separated list of debug categories and levels, e.g.
-GST_DEBUG=totem:4,typefind:5
+Comma-separated list of debug categories and levels (e.g.
+GST_DEBUG=totem:4,typefind:5). '*' is allowed as a wildcard as part of
+debug category names (e.g. GST_DEBUG=*sink:6,*audio*:6). Since 1.2.0 it is
+also possible to specify the log level by name (1=ERROR, 2=WARN, 3=FIXME,
+4=INFO, 5=DEBUG, 6=LOG, 7=TRACE, 9=MEMDUMP) (e.g. GST_DEBUG=*audio*:LOG)
 .TP
 \fBGST_DEBUG_NO_COLOR\fR
 When this environment variable is set, coloured debug output is disabled.
 .TP
 \fBGST_DEBUG_DUMP_DOT_DIR\fR
-When set to a filesystem path, store dot files of pipeline graphs there.
+When set to a filesystem path, store 'dot' files of pipeline graphs there.
+These can then later be converted into an image using the 'dot' utility from
+the graphviz set of tools, like this: dot foo.dot -Tsvg -o foo.svg (png or jpg
+are also possible as output format)
 .TP
 \fBGST_REGISTRY\fR
 Path of the plugin registry file. Default is
-~/.gstreamer-GST_API_VERSION/registry-CPU.bin where CPU is the machine/cpu type
-GStreamer was compiled for, e.g. 'i486', 'i686', 'x86-64', 'ppc', etc. (check
-the output of "uname -i" and "uname -m" for details).
+~/.cache/gstreamer-GST_API_VERSION/registry-CPU.bin where CPU is the
+machine/cpu type GStreamer was compiled for, e.g. 'i486', 'i686', 'x86-64',
+'ppc', etc. (check the output of "uname -i" and "uname -m" for details).
 .TP
 \fBGST_REGISTRY_UPDATE\fR
 Set to "no" to force GStreamer to assume that no plugins have changed,
