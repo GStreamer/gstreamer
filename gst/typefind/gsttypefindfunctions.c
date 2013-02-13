@@ -1421,7 +1421,8 @@ suggest:
     g_return_if_fail (layer >= 1 && layer <= 3);
 
     gst_type_find_suggest_simple (tf, prob, "audio/mpeg",
-        "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, layer, NULL);
+        "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, layer,
+        "parsed", G_TYPE_BOOLEAN, FALSE, NULL);
   }
 }
 
@@ -2674,7 +2675,7 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
 
     gst_type_find_suggest_simple (tf, probability, "video/mpeg",
         "systemstream", G_TYPE_BOOLEAN, FALSE,
-        "mpegversion", G_TYPE_INT, 1, NULL);
+        "mpegversion", G_TYPE_INT, 1, "parsed", G_TYPE_BOOLEAN, FALSE, NULL);
   }
 }
 
