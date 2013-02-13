@@ -591,10 +591,6 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
           }
           gst_mpd_client_set_segment_index (active_stream, current_sequence);
         }
-        /* Calculate offset in the next fragment */
-        demux->position = gst_mpd_client_get_current_position (demux->client);
-        demux->position_shift = demux->segment.start - demux->position;
-        //GST_MPD_CLIENT_UNLOCK (demux->client);
 
         if (flags & GST_SEEK_FLAG_FLUSH) {
           GST_DEBUG_OBJECT (demux, "Sending flush stop on all pad");
@@ -1043,7 +1039,6 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
                   demux->segment.time));
         }
         demux->need_segment = FALSE;
-        demux->position_shift = 0;
       }
 
       GST_DEBUG_OBJECT (demux,
@@ -1176,8 +1171,6 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
 
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
   demux->last_manifest_update = GST_CLOCK_TIME_NONE;
-  demux->position = 0;
-  demux->position_shift = 0;
   demux->cancelled = FALSE;
 }
 

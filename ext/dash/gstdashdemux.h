@@ -135,11 +135,6 @@ struct _GstDashDemux
 
   /* Manifest update */
   GstClockTime last_manifest_update;
-
-  /* Position in the stream */
-  GstClockTime position;
-  GstClockTime position_shift;
-  GstClockTime last_position_shift;
 };
 
 struct _GstDashDemuxClass
