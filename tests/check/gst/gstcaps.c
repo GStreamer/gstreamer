@@ -322,6 +322,15 @@ GST_START_TEST (test_subset)
   fail_if (gst_caps_is_subset (c2, c1));
   gst_caps_unref (c1);
   gst_caps_unref (c2);
+
+  c1 = gst_caps_from_string ("video/x-h264, parsed=(boolean)true");
+  c2 = gst_caps_from_string
+      ("video/x-h264, stream-format=(string)byte-stream, alignment=(string)nal");
+  fail_if (gst_caps_is_subset (c2, c1));
+  fail_if (gst_caps_is_subset (c1, c2));
+  fail_if (gst_caps_is_equal (c1, c2));
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
 }
 
 GST_END_TEST;

@@ -3138,6 +3138,15 @@ gst_structure_can_intersect (const GstStructure * struct1,
 }
 
 static gboolean
+gst_caps_structure_has_field (GQuark field_id, const GValue * value,
+    gpointer user_data)
+{
+  GstStructure *subset = user_data;
+
+  return gst_structure_id_get_value (subset, field_id) != NULL;
+}
+
+static gboolean
 gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
     gpointer user_data)
 {
@@ -3179,6 +3188,11 @@ gst_structure_is_subset (const GstStructure * subset,
 {
   if ((superset->name != subset->name) ||
       (gst_structure_n_fields (superset) > gst_structure_n_fields (subset)))
+    return FALSE;
+
+  /* The subset must have all fields that are in superset */
+  if (!gst_structure_foreach ((GstStructure *) superset,
+          gst_caps_structure_has_field, (gpointer) subset))
     return FALSE;
 
   return gst_structure_foreach ((GstStructure *) subset,
