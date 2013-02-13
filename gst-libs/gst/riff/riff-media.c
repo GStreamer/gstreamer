@@ -350,14 +350,16 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
     case GST_MAKE_FOURCC ('S', 'E', 'D', 'G'):
       caps = gst_caps_new_simple ("video/mpeg",
-          "mpegversion", G_TYPE_INT, 4, NULL);
+          "mpegversion", G_TYPE_INT, 4,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       if (codec_name)
         *codec_name = g_strdup ("Samsung MPEG-4");
       break;
 
     case GST_MAKE_FOURCC ('M', '4', 'C', 'C'):
       caps = gst_caps_new_simple ("video/mpeg",
-          "mpegversion", G_TYPE_INT, 4, NULL);
+          "mpegversion", G_TYPE_INT, 4,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       if (codec_name)
         *codec_name = g_strdup ("Divio MPEG-4");
       break;
@@ -435,7 +437,8 @@ gst_riff_create_video_caps (guint32 codec_fcc,
     case GST_MAKE_FOURCC ('M', 'P', '4', 'S'):
     case GST_MAKE_FOURCC ('M', '4', 'S', '2'):
       caps = gst_caps_new_simple ("video/mpeg",
-          "mpegversion", G_TYPE_INT, 4, NULL);
+          "mpegversion", G_TYPE_INT, 4,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       if (codec_name)
         *codec_name = g_strdup ("Microsoft ISO MPEG-4 1.1");
       break;
@@ -444,7 +447,8 @@ gst_riff_create_video_caps (guint32 codec_fcc,
     case GST_MAKE_FOURCC ('U', 'M', 'P', '4'):
     case GST_MAKE_FOURCC ('F', 'F', 'D', 'S'):
       caps = gst_caps_new_simple ("video/mpeg",
-          "mpegversion", G_TYPE_INT, 4, NULL);
+          "mpegversion", G_TYPE_INT, 4,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       if (codec_name)
         *codec_name = g_strdup ("FFmpeg MPEG-4");
       break;
@@ -471,7 +475,8 @@ gst_riff_create_video_caps (guint32 codec_fcc,
     case GST_MAKE_FOURCC ('m', 'p', '4', 'v'):
     case GST_MAKE_FOURCC ('R', 'M', 'P', '4'):
       caps = gst_caps_new_simple ("video/mpeg",
-          "mpegversion", G_TYPE_INT, 4, NULL);
+          "mpegversion", G_TYPE_INT, 4,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       if (codec_name)
         *codec_name = g_strdup ("MPEG-4");
       break;
