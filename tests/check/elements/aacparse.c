@@ -26,7 +26,7 @@
 #include <gst/check/gstcheck.h>
 #include "parser.h"
 
-#define SRC_CAPS_CDATA "audio/mpeg, framed=(boolean)false, codec_data=(buffer)1190"
+#define SRC_CAPS_CDATA "audio/mpeg, mpegversion=(int)4, framed=(boolean)false, codec_data=(buffer)1190"
 #define SRC_CAPS_TMPL  "audio/mpeg, framed=(boolean)false, mpegversion=(int){2,4}"
 
 #define SINK_CAPS \
