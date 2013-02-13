@@ -26,8 +26,8 @@
 #include <gst/check/gstcheck.h>
 #include "parser.h"
 
-#define SRC_CAPS_TMPL   "video/x-h263, framed=(boolean)false"
-#define SINK_CAPS_TMPL  "video/x-h263, framed=(boolean)true"
+#define SRC_CAPS_TMPL   "video/x-h263, variant=(string)itu, parsed=(boolean)false"
+#define SINK_CAPS_TMPL  "video/x-h263, parsed=(boolean)true"
 
 GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
