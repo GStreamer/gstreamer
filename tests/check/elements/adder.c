@@ -76,6 +76,56 @@ GST_START_TEST (test_caps)
 
 GST_END_TEST;
 
+/* check that caps set on the property are honoured */
+GST_START_TEST (test_filter_caps)
+{
+  GstElement *pipeline, *src, *adder, *sink;
+  GstStateChangeReturn state_res;
+  GstCaps *filter_caps, *caps;
+  GstPad *pad;
+
+  filter_caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, "F32LE",
+      "layout", G_TYPE_STRING, "interleaved",
+      "rate", G_TYPE_INT, 44100, "channels", G_TYPE_INT, 1, NULL);
+
+  /* build pipeline */
+  pipeline = gst_pipeline_new ("pipeline");
+
+  src = gst_element_factory_make ("audiotestsrc", NULL);
+  g_object_set (src, "wave", 4, NULL);  /* silence */
+  adder = gst_element_factory_make ("adder", NULL);
+  g_object_set (adder, "caps", filter_caps, NULL);
+  sink = gst_element_factory_make ("fakesink", "sink");
+  gst_bin_add_many (GST_BIN (pipeline), src, adder, sink, NULL);
+
+  fail_unless (gst_element_link_many (src, adder, sink, NULL));
+
+  /* prepare playing */
+  state_res = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  fail_unless_equals_int (state_res, GST_STATE_CHANGE_ASYNC);
+
+  /* wait for preroll */
+  state_res = gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+  fail_unless_equals_int (state_res, GST_STATE_CHANGE_SUCCESS);
+
+  /* check caps on fakesink */
+  pad = gst_element_get_static_pad (sink, "sink");
+  caps = gst_pad_get_current_caps (pad);
+  fail_unless (caps != NULL);
+  GST_INFO_OBJECT (pipeline, "received caps: %" GST_PTR_FORMAT, caps);
+  fail_unless (gst_caps_is_equal_fixed (caps, filter_caps));
+  gst_caps_unref (caps);
+  gst_object_unref (pad);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+
+  gst_caps_unref (filter_caps);
+}
+
+GST_END_TEST;
+
 static void
 message_received (GstBus * bus, GstMessage * message, GstPipeline * bin)
 {
@@ -1028,6 +1078,7 @@ adder_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_caps);
+  tcase_add_test (tc_chain, test_filter_caps);
   tcase_add_test (tc_chain, test_event);
   tcase_add_test (tc_chain, test_play_twice);
   tcase_add_test (tc_chain, test_play_twice_then_add_and_play_again);

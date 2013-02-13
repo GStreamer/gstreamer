@@ -112,8 +112,8 @@ static gboolean gst_adder_setcaps (GstAdder * adder, GstPad * pad,
     GstCaps * caps);
 static gboolean gst_adder_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static gboolean gst_adder_sink_query (GstPad * pad, GstObject * parent,
-    GstQuery * query);
+static gboolean gst_adder_sink_query (GstCollectPads * pads,
+    GstCollectData * pad, GstQuery * query, gpointer user_data);
 static gboolean gst_adder_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_adder_sink_event (GstCollectPads * pads,
@@ -218,7 +218,8 @@ gst_adder_sink_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_adder_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
+gst_adder_sink_query (GstCollectPads * pads, GstCollectData * pad,
+    GstQuery * query, gpointer user_data)
 {
   gboolean res = FALSE;
 
@@ -228,16 +229,17 @@ gst_adder_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_adder_sink_getcaps (pad, filter);
+      caps = gst_adder_sink_getcaps (pad->pad, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       res = TRUE;
       break;
     }
     default:
-      res = gst_pad_query_default (pad, parent, query);
+      res = gst_collect_pads_query_default (pads, pad, query, FALSE);
       break;
   }
+
   return res;
 }
 
@@ -868,11 +870,6 @@ gst_adder_class_init (GstAdderClass * klass)
   gobject_class->get_property = gst_adder_get_property;
   gobject_class->dispose = gst_adder_dispose;
 
-  /**
-   * GstAdder:caps:
-   *
-   * Since: 0.10.24
-   */
   g_object_class_install_property (gobject_class, PROP_FILTER_CAPS,
       g_param_spec_boxed ("caps", "Target caps",
           "Set target format for mixing (NULL means ANY). "
@@ -926,6 +923,8 @@ gst_adder_init (GstAdder * adder)
       GST_DEBUG_FUNCPTR (gst_adder_do_clip), adder);
   gst_collect_pads_set_event_function (adder->collect,
       GST_DEBUG_FUNCPTR (gst_adder_sink_event), adder);
+  gst_collect_pads_set_query_function (adder->collect,
+      GST_DEBUG_FUNCPTR (gst_adder_sink_query), adder);
 }
 
 static void
@@ -1024,7 +1023,6 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GST_DEBUG_OBJECT (adder, "request new pad %s", name);
   g_free (name);
 
-  gst_pad_set_query_function (newpad, GST_DEBUG_FUNCPTR (gst_adder_sink_query));
   gst_collect_pads_add_pad (adder->collect, newpad, sizeof (GstCollectData),
       NULL, TRUE);
 
