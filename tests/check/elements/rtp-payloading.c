@@ -699,7 +699,7 @@ GST_START_TEST (rtp_mp4v_list)
 {
   rtp_pipeline_test (rtp_mp4v_list_frame_data, rtp_mp4v_list_frame_data_size,
       rtp_mp4v_list_frame_count,
-      "video/mpeg,mpegversion=4,codec_data=(buffer)000001b001",
+      "video/mpeg,mpegversion=4,systemstream=false,codec_data=(buffer)000001b001",
       "rtpmp4vpay", "rtpmp4vdepay", rtp_mp4v_list_bytes_sent, 0, TRUE);
 }
 
@@ -717,8 +717,8 @@ GST_START_TEST (rtp_mp4g)
 {
   rtp_pipeline_test (rtp_mp4g_frame_data, rtp_mp4g_frame_data_size,
       rtp_mp4g_frame_count,
-      "video/mpeg,mpegversion=4,codec_data=(buffer)000001b001", "rtpmp4gpay",
-      "rtpmp4gdepay", 0, 0, FALSE);
+      "video/mpeg,mpegversion=4,systemstream=false,codec_data=(buffer)000001b001",
+      "rtpmp4gpay", "rtpmp4gdepay", 0, 0, FALSE);
 }
 
 GST_END_TEST;

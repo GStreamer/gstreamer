@@ -65,11 +65,12 @@ static GstStaticPadTemplate gst_rtp_amr_depay_sink_template =
         "encoding-params = (string) \"1\", "
         /* NOTE that all values must be strings in orde to be able to do SDP <->
          * GstCaps mapping. */
-        "octet-align = (string) \"1\", "
-        "crc = (string) { \"0\", \"1\" }, "
-        "robust-sorting = (string) \"0\", " "interleaving = (string) \"0\";"
+        "octet-align = (string) \"1\";"
         /* following options are not needed for a decoder
          *
+         "crc = (string) { \"0\", \"1\" }, "
+         "robust-sorting = (string) \"0\", "
+         "interleaving = (string) \"0\";"
          "mode-set = (int) [ 0, 7 ], "
          "mode-change-period = (int) [ 1, MAX ], "
          "mode-change-neighbor = (boolean) { TRUE, FALSE }, "
@@ -84,11 +85,12 @@ static GstStaticPadTemplate gst_rtp_amr_depay_sink_template =
         "encoding-params = (string) \"1\", "
         /* NOTE that all values must be strings in orde to be able to do SDP <->
          * GstCaps mapping. */
-        "octet-align = (string) \"1\", "
-        "crc = (string) { \"0\", \"1\" }, "
-        "robust-sorting = (string) \"0\", " "interleaving = (string) \"0\""
+        "octet-align = (string) \"1\";"
         /* following options are not needed for a decoder
          *
+         "crc = (string) { \"0\", \"1\" }, "
+         "robust-sorting = (string) \"0\", "
+         "interleaving = (string) \"0\""
          "mode-set = (int) [ 0, 7 ], "
          "mode-change-period = (int) [ 1, MAX ], "
          "mode-change-neighbor = (boolean) { TRUE, FALSE }, "
