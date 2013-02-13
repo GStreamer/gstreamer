@@ -169,6 +169,7 @@ platform_destroy_native_window (EGLNativeDisplayType display,
 typedef struct
 {
   EGL_DISPMANX_WINDOW_T w;
+  DISPMANX_DISPLAY_HANDLE_T d;
 } RPIWindowData;
 
 EGLNativeWindowType
@@ -211,6 +212,7 @@ platform_create_native_window (gint width, gint height, gpointer * window_data)
       DISPMANX_PROTECTION_NONE, 0, 0, 0);
 
   *window_data = data = g_slice_new0 (RPIWindowData);
+  data->d = dispman_display;
   data->w.element = dispman_element;
   data->w.width = width;
   data->w.height = height;
@@ -227,10 +229,11 @@ platform_destroy_native_window (EGLNativeDisplayType display,
   DISPMANX_UPDATE_HANDLE_T dispman_update;
   RPIWindowData *data = *window_data;
 
-  dispman_display = vc_dispmanx_display_open (0);
+  dispman_display = data->d;
   dispman_update = vc_dispmanx_update_start (0);
   vc_dispmanx_element_remove (dispman_update, data->w.element);
   vc_dispmanx_update_submit_sync (dispman_update);
+  vc_dispmanx_display_close (dispman_display);
 
   g_slice_free (RPIWindowData, data);
   *window_data = NULL;
