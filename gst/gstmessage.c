@@ -1314,28 +1314,12 @@ gst_message_parse_structure_change (GstMessage * message,
 void
 gst_message_parse_error (GstMessage * message, GError ** gerror, gchar ** debug)
 {
-  const GValue *error_gvalue;
-  GError *error_val;
-  GstStructure *structure;
-
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR);
 
-  structure = GST_MESSAGE_STRUCTURE (message);
-  error_gvalue = gst_structure_id_get_value (structure, GST_QUARK (GERROR));
-  g_return_if_fail (error_gvalue != NULL);
-  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == G_TYPE_ERROR);
-
-  error_val = (GError *) g_value_get_boxed (error_gvalue);
-  if (error_val)
-    *gerror = g_error_copy (error_val);
-  else
-    *gerror = NULL;
-
-  if (debug)
-    *debug =
-        g_value_dup_string (gst_structure_id_get_value (structure,
-            GST_QUARK (DEBUG)));
+  gst_structure_id_get (GST_MESSAGE_STRUCTURE (message),
+      GST_QUARK (GERROR), G_TYPE_ERROR, gerror,
+      GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
 }
 
 /**
@@ -1354,28 +1338,12 @@ void
 gst_message_parse_warning (GstMessage * message, GError ** gerror,
     gchar ** debug)
 {
-  const GValue *error_gvalue;
-  GError *error_val;
-  GstStructure *structure;
-
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_WARNING);
 
-  structure = GST_MESSAGE_STRUCTURE (message);
-  error_gvalue = gst_structure_id_get_value (structure, GST_QUARK (GERROR));
-  g_return_if_fail (error_gvalue != NULL);
-  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == G_TYPE_ERROR);
-
-  error_val = (GError *) g_value_get_boxed (error_gvalue);
-  if (error_val)
-    *gerror = g_error_copy (error_val);
-  else
-    *gerror = NULL;
-
-  if (debug)
-    *debug =
-        g_value_dup_string (gst_structure_id_get_value (structure,
-            GST_QUARK (DEBUG)));
+  gst_structure_id_get (GST_MESSAGE_STRUCTURE (message),
+      GST_QUARK (GERROR), G_TYPE_ERROR, gerror,
+      GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
 }
 
 /**
@@ -1393,28 +1361,12 @@ gst_message_parse_warning (GstMessage * message, GError ** gerror,
 void
 gst_message_parse_info (GstMessage * message, GError ** gerror, gchar ** debug)
 {
-  const GValue *error_gvalue;
-  GError *error_val;
-  GstStructure *structure;
-
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_INFO);
 
-  structure = GST_MESSAGE_STRUCTURE (message);
-  error_gvalue = gst_structure_id_get_value (structure, GST_QUARK (GERROR));
-  g_return_if_fail (error_gvalue != NULL);
-  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == G_TYPE_ERROR);
-
-  error_val = (GError *) g_value_get_boxed (error_gvalue);
-  if (error_val)
-    *gerror = g_error_copy (error_val);
-  else
-    *gerror = NULL;
-
-  if (debug)
-    *debug =
-        g_value_dup_string (gst_structure_id_get_value (structure,
-            GST_QUARK (DEBUG)));
+  gst_structure_id_get (GST_MESSAGE_STRUCTURE (message),
+      GST_QUARK (GERROR), G_TYPE_ERROR, gerror,
+      GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
 }
 
 /**
