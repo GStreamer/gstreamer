@@ -54,6 +54,8 @@ GST_START_TEST (test_parsing)
     error = NULL;
     debug = NULL;
 
+    gst_message_parse_error (message, NULL, NULL);
+
     gst_message_parse_error (message, &error, &debug);
     fail_if (error == NULL);
     fail_if (debug == NULL);
@@ -82,6 +84,8 @@ GST_START_TEST (test_parsing)
     warning = NULL;
     debug = NULL;
 
+    gst_message_parse_warning (message, NULL, NULL);
+
     gst_message_parse_warning (message, &warning, &debug);
     fail_if (warning == NULL);
     fail_if (debug == NULL);
@@ -96,6 +100,33 @@ GST_START_TEST (test_parsing)
   }
   /* GST_MESSAGE_INFO   */
   {
+    GError *info = NULL;
+    gchar *debug;
+
+    info = g_error_new (domain, 10, "test info");
+    fail_if (info == NULL);
+    message = gst_message_new_info (NULL, info, "info string");
+    fail_if (message == NULL);
+    fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_INFO);
+    fail_unless (GST_MESSAGE_SRC (message) == NULL);
+
+    g_error_free (info);
+    info = NULL;
+    debug = NULL;
+
+    gst_message_parse_info (message, NULL, NULL);
+
+    gst_message_parse_info (message, &info, &debug);
+    fail_if (info == NULL);
+    fail_if (debug == NULL);
+    fail_unless (strcmp (info->message, "test info") == 0);
+    fail_unless (info->domain == domain);
+    fail_unless (info->code == 10);
+    fail_unless (strcmp (debug, "info string") == 0);
+
+    gst_message_unref (message);
+    g_error_free (info);
+    g_free (debug);
   }
   /* GST_MESSAGE_TAG  */
   {
