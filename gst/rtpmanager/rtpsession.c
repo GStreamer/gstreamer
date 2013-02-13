@@ -1333,10 +1333,10 @@ check_collision (RTPSession * sess, RTPSource * source,
       GST_DEBUG ("Collision for SSRC %x", rtp_source_get_ssrc (source));
       on_ssrc_collision (sess, source);
 
+      sess->change_ssrc = TRUE;
+
       rtp_session_schedule_bye_locked (sess, "SSRC Collision",
           arrival->current_time);
-
-      sess->change_ssrc = TRUE;
     }
   }
 
