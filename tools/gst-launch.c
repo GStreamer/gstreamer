@@ -25,36 +25,25 @@
 #  include "config.h"
 #endif
 
-/* FIXME: hack alert */
-#ifdef HAVE_WIN32
-#define DISABLE_FAULT_HANDLER
-#endif
-
+#include <glib.h>
 #include <stdio.h>
 #include <string.h>
 #include <signal.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#ifndef DISABLE_FAULT_HANDLER
+#ifdef G_OS_UNIX
+#include <glib-unix.h>
 #include <sys/wait.h>
 #endif
 #include <locale.h>             /* for LC_ALL */
 #include "tools.h"
 
-/* FIXME: This is just a temporary hack.  We should have a better
- * check for siginfo handling. */
-#ifdef SA_SIGINFO
-#define USE_SIGINFO
-#endif
-
 extern volatile gboolean glib_on_error_halt;
 
-#ifndef DISABLE_FAULT_HANDLER
+#ifdef G_OS_UNIX
 static void fault_restore (void);
 static void fault_spin (void);
-static void sigint_restore (void);
-static gboolean caught_intr = FALSE;
 #endif
 
 /* event_loop return codes */
@@ -77,8 +66,7 @@ static gboolean waiting_eos = FALSE;
 /* convenience macro so we don't have to litter the code with if(!quiet) */
 #define PRINT if(!quiet)g_print
 
-#ifndef DISABLE_FAULT_HANDLER
-#ifndef USE_SIGINFO
+#ifdef G_OS_UNIX
 static void
 fault_handler_sighandler (int signum)
 {
@@ -101,34 +89,6 @@ fault_handler_sighandler (int signum)
 
   fault_spin ();
 }
-
-#else /* USE_SIGINFO */
-
-static void
-fault_handler_sigaction (int signum, siginfo_t * si, void *misc)
-{
-  fault_restore ();
-
-  /* printf is used instead of g_print(), since it's less likely to
-   * deadlock */
-  switch (si->si_signo) {
-    case SIGSEGV:
-      fprintf (stderr, "Caught SIGSEGV accessing address %p\n", si->si_addr);
-      break;
-    case SIGQUIT:
-      if (!quiet)
-        printf ("Caught SIGQUIT\n");
-      break;
-    default:
-      fprintf (stderr, "signo:  %d\n", si->si_signo);
-      fprintf (stderr, "errno:  %d\n", si->si_errno);
-      fprintf (stderr, "code:   %d\n", si->si_code);
-      break;
-  }
-
-  fault_spin ();
-}
-#endif /* USE_SIGINFO */
 
 static void
 fault_spin (void)
@@ -167,17 +127,12 @@ fault_setup (void)
   struct sigaction action;
 
   memset (&action, 0, sizeof (action));
-#ifdef USE_SIGINFO
-  action.sa_sigaction = fault_handler_sigaction;
-  action.sa_flags = SA_SIGINFO;
-#else
   action.sa_handler = fault_handler_sighandler;
-#endif
 
   sigaction (SIGSEGV, &action, NULL);
   sigaction (SIGQUIT, &action, NULL);
 }
-#endif /* DISABLE_FAULT_HANDLER */
+#endif /* G_OS_UNIX */
 
 #if 0
 typedef struct _GstIndexStats
@@ -503,70 +458,27 @@ print_toc_entry (gpointer data, gpointer user_data)
   g_list_foreach (subentries, print_toc_entry, GUINT_TO_POINTER (indent));
 }
 
-#ifndef DISABLE_FAULT_HANDLER
-/* we only use sighandler here because the registers are not important */
-static void
-sigint_handler_sighandler (int signum)
-{
-  PRINT ("Caught interrupt -- ");
-
-  /* If we were waiting for an EOS, we still want to catch
-   * the next signal to shutdown properly (and the following one
-   * will quit the program). */
-  if (waiting_eos) {
-    waiting_eos = FALSE;
-  } else {
-    sigint_restore ();
-  }
-  /* we set a flag that is checked by the mainloop, we cannot do much in the
-   * interrupt handler (no mutex or other blocking stuff) */
-  caught_intr = TRUE;
-}
-
-/* is called every 250 milliseconds (4 times a second), the interrupt handler
- * will set a flag for us. We react to this by posting a message. */
+#ifdef G_OS_UNIX
+/* As the interrupt handler is dispatched from GMainContext as a GSourceFunc
+ * handler, we can react to this by posting a message. */
 static gboolean
-check_intr (GstElement * pipeline)
+intr_handler (gpointer user_data)
 {
-  if (!caught_intr) {
-    return TRUE;
-  } else {
-    caught_intr = FALSE;
-    PRINT ("handling interrupt.\n");
+  GstElement *pipeline = (GstElement *) user_data;
 
-    /* post an application specific message */
-    gst_element_post_message (GST_ELEMENT (pipeline),
-        gst_message_new_application (GST_OBJECT (pipeline),
-            gst_structure_new ("GstLaunchInterrupt",
-                "message", G_TYPE_STRING, "Pipeline interrupted", NULL)));
+  PRINT ("handling interrupt.\n");
 
-    /* remove timeout handler */
-    return FALSE;
-  }
+  /* post an application specific message */
+  gst_element_post_message (GST_ELEMENT (pipeline),
+      gst_message_new_application (GST_OBJECT (pipeline),
+          gst_structure_new ("GstLaunchInterrupt",
+              "message", G_TYPE_STRING, "Pipeline interrupted", NULL)));
+
+  /* remove signal handler */
+  return FALSE;
 }
 
-static void
-sigint_setup (void)
-{
-  struct sigaction action;
-
-  memset (&action, 0, sizeof (action));
-  action.sa_handler = sigint_handler_sighandler;
-
-  sigaction (SIGINT, &action, NULL);
-}
-
-static void
-sigint_restore (void)
-{
-  struct sigaction action;
-
-  memset (&action, 0, sizeof (action));
-  action.sa_handler = SIG_DFL;
-
-  sigaction (SIGINT, &action, NULL);
-}
-#endif /* DISABLE_FAULT_HANDLER */
+#endif /* G_OS_UNIX */
 
 /* returns ELR_ERROR if there was an error
  * or ELR_INTERRUPT if we caught a keyboard interrupt
@@ -574,8 +486,8 @@ sigint_restore (void)
 static EventLoopResult
 event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 {
-#ifndef DISABLE_FAULT_HANDLER
-  gulong timeout_id;
+#ifdef G_OS_UNIX
+  guint signal_watch_id;
 #endif
   GstBus *bus;
   GstMessage *message = NULL;
@@ -584,8 +496,9 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 
-#ifndef DISABLE_FAULT_HANDLER
-  timeout_id = g_timeout_add (250, (GSourceFunc) check_intr, pipeline);
+#ifdef G_OS_UNIX
+  signal_watch_id =
+      g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
 #endif
 
   while (TRUE) {
@@ -856,8 +769,8 @@ exit:
     if (message)
       gst_message_unref (message);
     gst_object_unref (bus);
-#ifndef DISABLE_FAULT_HANDLER
-    g_source_remove (timeout_id);
+#ifdef G_OS_UNIX
+    g_source_remove (signal_watch_id);
 #endif
     return res;
   }
@@ -981,11 +894,9 @@ main (int argc, char *argv[])
 
   gst_tools_print_version ();
 
-#ifndef DISABLE_FAULT_HANDLER
+#ifdef G_OS_UNIX
   if (!no_fault)
     fault_setup ();
-
-  sigint_setup ();
 #endif
 
   /* make a null-terminated version of argv */
