@@ -107,6 +107,8 @@ struct _GstDashDemux
   GstPad *sinkpad;
 
   GSList *streams;
+  GSList *next_periods;
+  GStaticMutex streams_lock;
 
   GstSegment segment;
   gboolean need_segment;
@@ -124,12 +126,12 @@ struct _GstDashDemux
 
   /* Streaming task */
   GstTask *stream_task;
-  GStaticRecMutex stream_lock;
+  GStaticRecMutex stream_task_lock;
   GMutex *stream_timed_lock;
 
   /* Download task */
   GstTask *download_task;
-  GStaticRecMutex download_lock;
+  GStaticRecMutex download_task_lock;
   gboolean cancelled;
   GMutex *download_timed_lock;
 
