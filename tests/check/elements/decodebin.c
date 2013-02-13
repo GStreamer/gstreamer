@@ -213,7 +213,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/mpeg, mpegversion=1, parsed=(bool) { false, true }")
+    GST_STATIC_CAPS ("audio/mpeg, mpegversion=1")
     );
 
 static GType test_mpeg_audio_parse_get_type (void);
