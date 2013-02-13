@@ -43,7 +43,7 @@ static GstBus *bus;
                         "rate = (int) 44100"
 
 #define WAVPACK_CAPS_STRING "audio/x-wavpack, " \
-                            "width = (int) 32, " \
+                            "depth = (int) 32, " \
                             "channels = (int) 1, " \
                             "rate = (int) 44100, " \
                             "framed = (boolean) true"
@@ -52,7 +52,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-wavpack, "
-        "width = (int) 32, "
+        "depth = (int) 32, "
         "channels = (int) 1, "
         "rate = (int) 44100, " "framed = (boolean) true"));
 
