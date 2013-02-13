@@ -41,6 +41,7 @@
 #include "gstjpeg.h"
 #include <gst/video/video.h>
 #include <gst/video/gstvideometa.h>
+#include <gst/base/base.h>
 
 /* experimental */
 /* setting smoothig seems to have no effect in libjepeg
@@ -109,7 +110,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/jpeg, "
         "width = (int) [ 16, 65535 ], "
-        "height = (int) [ 16, 65535 ], " "framerate = (fraction) [ 0/1, MAX ]")
+        "height = (int) [ 16, 65535 ], "
+        "framerate = (fraction) [ 0/1, MAX ], "
+        "sof-marker = (int) { 0, 1, 2, 9 }")
     );
 
 static void
@@ -228,15 +231,38 @@ gst_jpegenc_term_destination (j_compress_ptr cinfo)
 {
   GstBuffer *outbuf;
   GstJpegEnc *jpegenc = (GstJpegEnc *) (cinfo->client_data);
+  gsize memory_size = jpegenc->output_map.size - jpegenc->jdest.free_in_buffer;
+  GstByteReader reader =
+      GST_BYTE_READER_INIT (jpegenc->output_map.data, memory_size);
+  guint16 marker;
+  gint sof_marker = -1;
 
   GST_DEBUG_OBJECT (jpegenc, "gst_jpegenc_chain: term_source");
 
+  /* Find the SOF marker */
+  while (gst_byte_reader_get_uint16_be (&reader, &marker)) {
+    /* SOF marker */
+    if (marker >> 4 == 0x0ffc) {
+      sof_marker = marker & 0x4;
+      break;
+    }
+  }
+
   gst_memory_unmap (jpegenc->output_mem, &jpegenc->output_map);
   /* Trim the buffer size. we will push it in the chain function */
-  gst_memory_resize (jpegenc->output_mem, 0,
-      jpegenc->output_map.size - jpegenc->jdest.free_in_buffer);
+  gst_memory_resize (jpegenc->output_mem, 0, memory_size);
   jpegenc->output_map.data = NULL;
   jpegenc->output_map.size = 0;
+
+  if (jpegenc->sof_marker != sof_marker) {
+    GstVideoCodecState *output;
+    output =
+        gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (jpegenc),
+        gst_caps_new_simple ("image/jpeg", "sof-marker", G_TYPE_INT, sof_marker,
+            NULL), jpegenc->input_state);
+    gst_video_codec_state_unref (output);
+    jpegenc->sof_marker = sof_marker;
+  }
 
   outbuf = gst_buffer_new ();
   gst_buffer_copy_into (outbuf, jpegenc->current_frame->input_buffer,
@@ -295,6 +321,7 @@ gst_jpegenc_reset (GstJpegEnc * enc)
       enc->row[i][j] = NULL;
     }
   }
+  enc->sof_marker = -1;
 }
 
 static void
@@ -316,7 +343,6 @@ gst_jpegenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   GstJpegEnc *enc = GST_JPEGENC (encoder);
   gint i;
   GstVideoInfo *info = &state->info;
-  GstVideoCodecState *output;
 
   if (enc->input_state)
     gst_video_codec_state_unref (enc->input_state);
@@ -354,11 +380,6 @@ gst_jpegenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
     enc->v_samp[i] = enc->v_max_samp / enc->v_samp[i];
   }
   enc->planar = (enc->inc[0] == 1 && enc->inc[1] == 1 && enc->inc[2] == 1);
-
-  output =
-      gst_video_encoder_set_output_state (encoder,
-      gst_caps_new_empty_simple ("image/jpeg"), state);
-  gst_video_codec_state_unref (output);
 
   gst_jpegenc_resync (enc);
 

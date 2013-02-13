@@ -68,6 +68,7 @@ struct _GstJpegEnc
   gint h_max_samp;
   gint v_max_samp;
   gboolean planar;
+  gint sof_marker;
   /* the video buffer */
   gint bufsize;
   /* the jpeg line buffer */
