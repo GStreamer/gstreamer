@@ -42,10 +42,13 @@ with
 <itemizedlist>
   <listitem>
     <para>
-plug-ins in the user's home directory.  These are stored in a directory called
+plug-ins in the user's home directory, or rather the user's "data home"
+directory according to the xdg base dir specification. Usually this will be
+a directory called
 <filename>plugins</filename> inside the
-<filename>.gstreamer-&GST_API_VERSION;</filename> directory in the user's
-home directory.
+<filename>.local/share/.gstreamer-&GST_API_VERSION;</filename> directory in
+the user's home directory by default, though this search path may change if
+the XDG_DATA_HOME environment variable is set.
     </para>
   </listitem>
   <listitem>
