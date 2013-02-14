@@ -993,6 +993,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
 {
   GstIterator *pads;
   GstPadTemplate *templ;
+  GstCaps *templcaps;
   GstPad *foundpad = NULL;
   gboolean done;
   GValue padptr = { 0, };
@@ -1100,21 +1101,13 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
       "Could not find a compatible unlinked always pad to link to %s:%s, now checking request pads",
       GST_DEBUG_PAD_NAME (pad));
 
-  /* requesting is a little crazy, we need a template. Let's get the one in that pad */
-  templ = gst_pad_get_pad_template (pad);
-  if (!templ) {
-    /* that failed, try to create a new one */
-    GstCaps *templcaps;
-
-    GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
-        "Couldn't extract template from pad %s:%s creating a new one",
-        GST_DEBUG_PAD_NAME (pad));
-
-    templcaps = gst_pad_query_caps (pad, NULL);
-    templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
-        GST_PAD_DIRECTION (pad), GST_PAD_ALWAYS, templcaps);
-    gst_caps_unref (templcaps);
-  }
+  /* try to create a new one */
+  /* requesting is a little crazy, we need a template. Let's create one */
+  /* FIXME: why not gst_pad_get_pad_template (pad); */
+  templcaps = gst_pad_query_caps (pad, NULL);
+  templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
+      GST_PAD_DIRECTION (pad), GST_PAD_ALWAYS, templcaps);
+  gst_caps_unref (templcaps);
 
   foundpad = gst_element_request_compatible_pad (element, templ);
   gst_object_unref (templ);
