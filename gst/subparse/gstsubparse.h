@@ -91,7 +91,6 @@ struct _GstSubParse {
 
   /* seek */
   guint64 offset;
-  guint64 next_offset;
   
   /* Segment */
   GstSegment    segment;

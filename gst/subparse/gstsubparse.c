@@ -302,8 +302,6 @@ gst_sub_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_DEBUG_OBJECT (self, "segment after seek: %" GST_SEGMENT_FORMAT,
             &self->segment);
 
-        self->next_offset = 0;
-
         self->need_segment = TRUE;
       } else {
         GST_WARNING_OBJECT (self, "seek to 0 bytes failed");
@@ -1420,8 +1418,7 @@ feed_textbuf (GstSubParse * self, GstBuffer * buf)
      * subtitles which are discontinuous by nature. */
   }
 
-  self->offset = GST_BUFFER_OFFSET (buf) + gst_buffer_get_size (buf);
-  self->next_offset = self->offset;
+  self->offset += gst_buffer_get_size (buf);
 
   gst_adapter_push (self->adapter, buf);
 
@@ -1644,7 +1641,6 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* format detection will init the parser state */
       self->offset = 0;
-      self->next_offset = 0;
       self->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
       self->valid_utf8 = TRUE;
       self->first_buffer = TRUE;
