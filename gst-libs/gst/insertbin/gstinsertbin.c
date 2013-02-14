@@ -36,8 +36,9 @@
  * this callback will be called from, it could be called before the action
  * returns or it could be called later from another thread. The signature of
  * this callback GstInsertBinCallback().
+ *
+ * Since: 1.2
  */
-
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -858,6 +859,8 @@ reject:
  * in the bin.
  *
  * Same as the #GstInsertBin::prepend signal.
+ *
+ * Since: 1.2
  */
 
 void
@@ -881,6 +884,8 @@ gst_insert_bin_prepend (GstInsertBin * self, GstElement * element,
  * in the bin.
  *
  * Same as the #GstInsertBin::append signal.
+ *
+ * Since: 1.2
  */
 
 void
@@ -894,7 +899,7 @@ gst_insert_bin_append (GstInsertBin * self, GstElement * element,
 }
 
 /**
- * gst_insert_bin_insert_before
+ * gst_insert_bin_insert_before:
  * @element: the #GstElement to add
  * @sibling: the #GstElement to add @element before
  * @callback: the callback to call when the element has been added or not, or
@@ -905,6 +910,8 @@ gst_insert_bin_append (GstInsertBin * self, GstElement * element,
  * element in the bin.
  *
  * Same as the #GstInsertBin::insert-before signal.
+ *
+ * Since: 1.2
  */
 void
 gst_insert_bin_insert_before (GstInsertBin * self, GstElement * element,
@@ -929,6 +936,8 @@ gst_insert_bin_insert_before (GstInsertBin * self, GstElement * element,
  * element in the bin.
  *
  * Same as the #GstInsertBin::insert-after signal.
+ *
+ * Since: 1.2
  */
 void
 gst_insert_bin_insert_after (GstInsertBin * self, GstElement * element,
@@ -951,6 +960,8 @@ gst_insert_bin_insert_after (GstInsertBin * self, GstElement * element,
  * This action signal removed the filter like element from the bin.
  *
  * Same as the #GstInsertBin::remove signal.
+ *
+ * Since: 1.2
  */
 
 void
@@ -1017,6 +1028,8 @@ gst_insert_bin_remove (GstInsertBin * self, GstElement * element,
  * Creates a new #GstInsertBin
  *
  * Returns: The new #GstInsertBin
+ *
+ * Since: 1.2
  */
 
 GstElement *
