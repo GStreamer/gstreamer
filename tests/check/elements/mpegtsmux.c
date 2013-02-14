@@ -49,7 +49,7 @@ static GstPad *mysrcpad, *mysinkpad;
                         "rate = (int) 8000, " \
                         "mpegversion = (int) 1"
 #define VIDEO_CAPS_STRING "video/x-h264, " \
-                           "format = (string) byte-stream"
+                           "stream-format = (string) byte-stream"
 
 /* setup and teardown needs some special handling for muxer */
 static GstPad *
