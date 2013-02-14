@@ -67,6 +67,7 @@ typedef enum {
  * GstRTSPAddressPool:
  * @parent: the parent GObject
  *
+ * An address pool, all member are prive
  */
 struct _GstRTSPAddressPool {
   GObject       parent;

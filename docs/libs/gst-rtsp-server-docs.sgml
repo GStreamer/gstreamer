@@ -25,6 +25,7 @@
     <xi:include href="xml/rtsp-server.xml"/>
     <xi:include href="xml/rtsp-session-pool.xml"/>
     <xi:include href="xml/rtsp-session.xml"/>
+    <xi:include href="xml/rtsp-address-pool.xml"/>
   </chapter>
 
   <!-- <chapter> -->

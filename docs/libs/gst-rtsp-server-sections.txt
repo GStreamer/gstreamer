@@ -353,3 +353,25 @@ GST_TYPE_RTSP_STREAM_TRANSPORT
 gst_rtsp_stream_transport_get_type
 </SECTION>
 
+<SECTION>
+<FILE>rtsp-address-pool</FILE>
+<TITLE>GstRTSPAddressPool</TITLE>
+GstRTSPAddressPool
+gst_rtsp_address_pool_new
+gst_rtsp_address_pool_add_range
+gst_rtsp_address_pool_clear
+gst_rtsp_address_pool_dump
+gst_rtsp_address_pool_acquire_address
+gst_rtsp_address_pool_reserve_address
+<SUBSECTION Standard>
+GstRTSPAddressPoolClass
+GstRTSPAddressPoolPrivate
+gst_rtsp_address_get_type
+gst_rtsp_address_pool_get_type
+<SUBSECTION Private>
+GstRTSPAddress
+GstRTSPAddressClass
+GstRTSPAddressFlags
+gst_rtsp_address_copy
+gst_rtsp_address_free
+</SECTION>
