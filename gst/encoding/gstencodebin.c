@@ -494,6 +494,7 @@ gst_encode_bin_init (GstEncodeBin * encode_bin)
   tmpl = gst_static_pad_template_get (&muxer_src_template);
   encode_bin->srcpad = gst_ghost_pad_new_no_target_from_template ("src", tmpl);
   gst_object_unref (tmpl);
+  gst_pad_set_active (encode_bin->srcpad, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (encode_bin), encode_bin->srcpad);
 }
 
