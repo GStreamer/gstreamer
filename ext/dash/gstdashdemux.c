@@ -614,7 +614,11 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
             GstDashDemuxStream *stream;
 
             stream = iter->data;
+            stream->has_data_queued = FALSE;
             stream->need_header = TRUE;
+            stream->download_end_of_period = FALSE;
+            stream->stream_end_of_period = FALSE;
+            stream->stream_eos = FALSE;
             gst_pad_push_event (stream->pad, gst_event_new_flush_stop ());
           }
         }
@@ -628,6 +632,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
         }
         demux->need_segment = TRUE;
         gst_uri_downloader_reset (demux->downloader);
+        GST_DEBUG_OBJECT (demux, "Resuming tasks after seeking");
         gst_dash_demux_resume_download_task (demux);
         gst_dash_demux_resume_stream_task (demux);
         g_static_rec_mutex_unlock (&demux->stream_task_lock);
