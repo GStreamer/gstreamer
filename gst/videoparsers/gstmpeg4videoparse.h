@@ -53,7 +53,6 @@ struct _GstMpeg4VParse {
   gboolean vo_found;
   gboolean config_found;
   gboolean intra_frame;
-  gboolean vop_coded;
   gboolean update_caps;
 
   GstMpeg4VisualObject vo;
