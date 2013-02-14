@@ -26,6 +26,11 @@
 #ifndef __GST_INSERT_BIN_H__
 #define __GST_INSERT_BIN_H__
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "The GStreamer insertbin library is unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
