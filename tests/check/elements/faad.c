@@ -161,6 +161,7 @@ GST_START_TEST (test_adts)
 
   buf = gst_buffer_append (header_buf, buf);
   caps = gst_caps_from_string (AAC_CAPS_STRING);
+  gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "adts", NULL);
   do_test (buf, caps);
   gst_caps_unref (caps);
 }
@@ -181,7 +182,8 @@ GST_START_TEST (test_raw)
   buf = gst_buffer_new_and_alloc (size);
   gst_buffer_fill (buf, 0, raw_data_block, size);
   caps = gst_caps_from_string (AAC_CAPS_STRING);
-  gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_buf, NULL);
+  gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "raw",
+      "codec_data", GST_TYPE_BUFFER, codec_buf, NULL);
   gst_buffer_unref (codec_buf);
 
   do_test (buf, caps);
