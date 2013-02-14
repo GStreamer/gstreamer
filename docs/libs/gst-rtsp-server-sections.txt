@@ -8,6 +8,7 @@ gst_rtsp_mount_points_find_factory
 gst_rtsp_mount_points_add_factory
 gst_rtsp_mount_points_remove_factory
 <SUBSECTION Standard>
+GstRTSPMountPointsPrivate
 GST_RTSP_MOUNT_POINTS_CLASS
 GST_RTSP_MOUNT_POINTS_CAST
 GST_RTSP_MOUNT_POINTS_CLASS_CAST
@@ -52,6 +53,7 @@ GST_TYPE_RTSP_MEDIA_FACTORY
 gst_rtsp_media_factory_get_type
 GST_IS_RTSP_MEDIA_FACTORY_CLASS
 GST_RTSP_MEDIA_FACTORY_GET_CLASS
+GstRTSPMediaFactoryPrivate
 </SECTION>
 
 <SECTION>
@@ -62,6 +64,8 @@ GstRTSPMediaFactoryURIClass
 gst_rtsp_media_factory_uri_new
 gst_rtsp_media_factory_uri_set_uri
 gst_rtsp_media_factory_uri_get_uri
+gst_rtsp_media_factory_get_address_pool
+gst_rtsp_media_factory_set_address_pool
 <SUBSECTION Standard>
 GST_IS_RTSP_MEDIA_FACTORY_URI
 GST_IS_RTSP_MEDIA_FACTORY_URI_CLASS
@@ -72,6 +76,7 @@ GST_RTSP_MEDIA_FACTORY_URI_CLASS_CAST
 GST_RTSP_MEDIA_FACTORY_URI_GET_CLASS
 GST_TYPE_RTSP_MEDIA_FACTORY_URI
 gst_rtsp_media_factory_uri_get_type
+GstRTSPMediaFactoryURIPrivate
 </SECTION>
 
 
@@ -108,6 +113,13 @@ gst_rtsp_media_get_stream
 gst_rtsp_media_seek
 gst_rtsp_media_get_range_string
 gst_rtsp_media_set_state
+
+gst_rtsp_media_get_status
+
+gst_rtsp_media_get_address_pool
+gst_rtsp_media_set_address_pool
+
+gst_rtsp_media_take_pipeline
 <SUBSECTION Standard>
 GST_RTSP_MEDIA_CLASS
 GST_RTSP_MEDIA_CAST
@@ -118,6 +130,7 @@ GST_TYPE_RTSP_MEDIA
 gst_rtsp_media_get_type
 GST_IS_RTSP_MEDIA_CLASS
 GST_RTSP_MEDIA_GET_CLASS
+GstRTSPMediaPrivate
 </SECTION>
 
 <SECTION>
@@ -144,6 +157,8 @@ gst_rtsp_server_io_func
 gst_rtsp_server_create_socket
 gst_rtsp_server_create_source
 gst_rtsp_server_attach
+gst_rtsp_server_get_max_threads
+gst_rtsp_server_set_max_threads
 <SUBSECTION Standard>
 GST_RTSP_SERVER_GET_LOCK
 GST_RTSP_SERVER_LOCK
@@ -157,6 +172,7 @@ GST_TYPE_RTSP_SERVER
 gst_rtsp_server_get_type
 GST_IS_RTSP_SERVER_CLASS
 GST_RTSP_SERVER_GET_CLASS
+GstRTSPServerPrivate
 </SECTION>
 
 <SECTION>
@@ -177,6 +193,7 @@ gst_rtsp_session_pool_remove
 gst_rtsp_session_pool_filter
 gst_rtsp_session_pool_cleanup
 gst_rtsp_session_pool_create_watch
+GstRTSPSessionPoolFilterFunc
 <SUBSECTION Standard>
 GST_RTSP_SESSION_POOL_CLASS
 GST_RTSP_SESSION_POOL_CAST
@@ -187,6 +204,7 @@ GST_TYPE_RTSP_SESSION_POOL
 gst_rtsp_session_pool_get_type
 GST_IS_RTSP_SESSION_POOL_CLASS
 GST_RTSP_SESSION_POOL_GET_CLASS
+GstRTSPSessionPoolPrivate
 </SECTION>
 
 <SECTION>
@@ -206,6 +224,8 @@ gst_rtsp_session_is_expired
 gst_rtsp_session_manage_media
 gst_rtsp_session_release_media
 gst_rtsp_session_get_media
+gst_rtsp_session_get_header
+gst_rtsp_session_filter
 <SUBSECTION Standard>
 GST_RTSP_SESSION_CLASS
 GST_RTSP_SESSION_CAST
@@ -216,6 +236,7 @@ GST_TYPE_RTSP_SESSION
 gst_rtsp_session_get_type
 GST_IS_RTSP_SESSION_CLASS
 GST_RTSP_SESSION_GET_CLASS
+GstRTSPSessionPrivate
 </SECTION>
 
 <SECTION>
@@ -227,6 +248,12 @@ gst_rtsp_session_media_new
 gst_rtsp_session_media_set_state
 gst_rtsp_session_media_get_transport
 gst_rtsp_session_media_alloc_channels
+
+gst_rtsp_session_media_get_media
+gst_rtsp_session_media_get_rtsp_state
+gst_rtsp_session_media_matches_url
+gst_rtsp_session_media_set_rtsp_state
+gst_rtsp_session_media_set_transport
 <SUBSECTION Standard>
 GST_RTSP_SESSION_MEDIA_CAST
 GST_RTSP_SESSION_MEDIA_CLASS_CAST
@@ -237,6 +264,7 @@ GST_RTSP_SESSION_MEDIA_CLASS
 GST_RTSP_SESSION_MEDIA_GET_CLASS
 GST_TYPE_RTSP_SESSION_MEDIA
 gst_rtsp_session_media_get_type
+GstRTSPSessionMediaPrivate
 </SECTION>
 
 <SECTION>
@@ -259,6 +287,7 @@ GST_RTSP_AUTH_CLASS_CAST
 GST_RTSP_AUTH_GET_CLASS
 GST_TYPE_RTSP_AUTH
 gst_rtsp_auth_get_type
+GstRTSPAuthPrivate
 </SECTION>
 
 <SECTION>
@@ -278,6 +307,11 @@ gst_rtsp_client_set_auth
 gst_rtsp_client_get_auth
 gst_rtsp_client_accept
 gst_rtsp_client_create_from_socket
+gst_rtsp_client_attach
+gst_rtsp_client_handle_message
+gst_rtsp_client_set_send_func
+GstRTSPClientSendFunc
+gst_rtsp_client_use_socket
 <SUBSECTION Standard>
 GST_RTSP_CLIENT_CLASS
 GST_RTSP_CLIENT_CAST
@@ -288,6 +322,7 @@ GST_TYPE_RTSP_CLIENT
 gst_rtsp_client_get_type
 GST_IS_RTSP_CLIENT_CLASS
 GST_RTSP_CLIENT_GET_CLASS
+GstRTSPClientPrivate
 </SECTION>
 
 <SECTION>
@@ -318,6 +353,13 @@ gst_rtsp_stream_recv_rtcp
 gst_rtsp_stream_recv_rtp
 gst_rtsp_stream_add_transport
 gst_rtsp_stream_remove_transport
+gst_rtsp_stream_set_address_pool
+gst_rtsp_stream_get_address_pool
+gst_rtsp_stream_get_index
+gst_rtsp_stream_get_server_port
+gst_rtsp_stream_get_ssrc
+gst_rtsp_stream_get_address
+gst_rtsp_stream_reserve_address
 <SUBSECTION Standard>
 GST_RTSP_STREAM_CAST
 GST_RTSP_STREAM_CLASS_CAST
@@ -328,6 +370,7 @@ GST_RTSP_STREAM_CLASS
 GST_RTSP_STREAM_GET_CLASS
 GST_TYPE_RTSP_STREAM
 gst_rtsp_stream_get_type
+GstRTSPStreamPrivate
 </SECTION>
 
 <SECTION>
@@ -341,7 +384,15 @@ gst_rtsp_stream_transport_new
 gst_rtsp_stream_transport_set_callbacks
 gst_rtsp_stream_transport_set_keepalive
 gst_rtsp_stream_transport_set_transport
-<SUBSECTION Standard>
+gst_rtsp_stream_transport_get_stream
+gst_rtsp_stream_transport_get_transport
+gst_rtsp_stream_transport_is_timed_out
+gst_rtsp_stream_transport_keep_alive
+gst_rtsp_stream_transport_send_rtcp
+gst_rtsp_stream_transport_send_rtp
+gst_rtsp_stream_transport_set_active
+gst_rtsp_stream_transport_set_timed_out
+<SUBSECTION Standar>
 GST_RTSP_STREAM_TRANSPORT_CAST
 GST_RTSP_STREAM_TRANSPORT_CLASS_CAST
 GST_IS_RTSP_STREAM_TRANSPORT
@@ -351,6 +402,7 @@ GST_RTSP_STREAM_TRANSPORT_CLASS
 GST_RTSP_STREAM_TRANSPORT_GET_CLASS
 GST_TYPE_RTSP_STREAM_TRANSPORT
 gst_rtsp_stream_transport_get_type
+GstRTSPStreamTransportPrivate
 </SECTION>
 
 <SECTION>
@@ -368,6 +420,14 @@ GstRTSPAddressPoolClass
 GstRTSPAddressPoolPrivate
 gst_rtsp_address_get_type
 gst_rtsp_address_pool_get_type
+GST_IS_RTSP_ADDRESS_POOL
+GST_IS_RTSP_ADDRESS_POOL_CLASS
+GST_RTSP_ADDRESS_POOL
+GST_RTSP_ADDRESS_POOL_CAST
+GST_RTSP_ADDRESS_POOL_CLASS
+GST_RTSP_ADDRESS_POOL_CLASS_CAST
+GST_RTSP_ADDRESS_POOL_GET_CLASS
+GST_TYPE_RTSP_ADDRESS_POOL
 <SUBSECTION Private>
 GstRTSPAddress
 GstRTSPAddressClass
