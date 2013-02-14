@@ -3131,6 +3131,8 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
 
 beach:
   g_value_unset (&item);
+  if (G_IS_VALUE (&item))
+    g_value_unset (&item);
   if (it)
     gst_iterator_free (it);
   gst_object_unref (sinkpad);
