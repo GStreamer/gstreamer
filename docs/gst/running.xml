@@ -31,7 +31,8 @@ variables like <envar>LANG</envar>, <envar>PATH</envar> or <envar>HOME</envar>.
 </para>
 
 <formalpara id="GST_PLUGIN_SYSTEM_PATH">
-  <title><envar>GST_PLUGIN_SYSTEM_PATH</envar></title>
+  <title><envar>GST_PLUGIN_SYSTEM_PATH</envar>,
+         <envar>GST_PLUGIN_SYSTEM_PATH_1_0</envar></title>
 
   <para>
 
@@ -64,6 +65,12 @@ be loaded after the plug-ins in the GST_PLUGIN_PATH variable below.
 The paths are scanned in the given order.  This allows a user to override
 system-installed plug-ins with his own versions.
    </para>
+  <para>
+The GST_PLUGIN_SYSTEM_PATH_1_0 variant is useful if both the old GStreamer 0.10
+version and the new GStreamer 1.0 version need to be pointed to new plugin
+paths. The latter will use the _1_0 variant over the non-versioned one if
+it is set.
+  </para>
 
     <para>
 Setting this variable to an empty string will cause GStreamer not to scan any
@@ -74,14 +81,19 @@ uninstalled (for development purposes) or while running testsuites.
 </formalpara>
 
 <formalpara id="GST_PLUGIN_PATH">
-  <title><envar>GST_PLUGIN_PATH</envar></title>
+  <title><envar>GST_PLUGIN_PATH</envar>, <envar>GST_PLUGIN_PATH_1_0</envar></title>
 
   <para>
 This environment variable can be set to a colon-separated list of paths.
 GStreamer will scan these paths for GStreamer plug-ins.  These plug-ins will
 be loaded in addition to, and before, the plug-ins in the system paths.
   </para>
-
+  <para>
+The GST_PLUGIN_PATH_1_0 variant is useful if both the old GStreamer 0.10
+version and the new GStreamer 1.0 version need to be pointed to new plugin
+paths. The latter will use the _1_0 variant over the non-versioned one if
+it is set.
+  </para>
 </formalpara>
 
 <formalpara id="GST_DEBUG">
@@ -209,6 +221,11 @@ also worth running with <option>*:3</option> to see if there are any
 non-fatal errors or warnings that might be related to the problem at hand.
   </para>
 
+  <para>
+Since GStreamer 1.2 it is also possible to specify debug levels by name,
+e.g. GST_DEBUG=*:WARNING,*audio*:LOG
+  </para>
+
 </formalpara>
 
 <formalpara id="GST_DEBUG_NO_COLOR">
@@ -247,6 +264,30 @@ output into the log in case of large image tags and the like.
 Set this environment variable to a path to turn on all
 #GST_DEBUG_BIN_TO_DOT_FILE or #GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS calls
 and have the dot files in that location.
+  </para>
+  <para>
+This will only work if the application in question makes these calls in
+strategic places (like when the pipeline state changes or an error occurs).
+gst-launch-&GST_API_VERSION; is one such application.
+  </para>
+  <para>
+These .dot files can then be turned into images using the 'dot' utility
+from the graphviz set of tools, like this:
+  <command>dot foo.dot -Tsvg -o foo.svg</command> or
+  <command>dot foo.dot -Tpng -o foo.png</command> or
+  <command>dot foo.dot -Tjpg -o foo.jpg</command>.
+  </para>
+
+</formalpara>
+
+<formalpara id="GST_REGISTRY">
+  <title><envar>GST_REGISTRY</envar>, <envar>GST_REGISTRY_1_0</envar></title>
+
+  <para>
+Set this environment variable to make GStreamer use a different file for the
+plugin cache / registry than the default one. This is useful when operating
+in a separate environment which should not affect the default cache in the
+user's home directory.
   </para>
 
 </formalpara>
