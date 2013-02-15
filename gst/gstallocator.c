@@ -95,6 +95,7 @@ _fallback_mem_copy (GstMemory * mem, gssize offset, gssize size)
   GstMemory *copy;
   GstMapInfo sinfo, dinfo;
   GstAllocationParams params = { 0, mem->align, 0, 0, };
+  GstAllocator *allocator;
 
   if (!gst_memory_map (mem, &sinfo, GST_MAP_READ))
     return NULL;
@@ -103,7 +104,11 @@ _fallback_mem_copy (GstMemory * mem, gssize offset, gssize size)
     size = sinfo.size > offset ? sinfo.size - offset : 0;
 
   /* use the same allocator as the memory we copy  */
-  copy = gst_allocator_alloc (mem->allocator, size, &params);
+  allocator = mem->allocator;
+  if (GST_OBJECT_FLAG_IS_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC))
+    allocator = NULL;
+  copy = gst_allocator_alloc (allocator, size, &params);
+
   if (!gst_memory_map (copy, &dinfo, GST_MAP_WRITE)) {
     GST_CAT_WARNING (GST_CAT_MEMORY, "could not write map memory %p", copy);
     gst_allocator_free (mem->allocator, copy);
