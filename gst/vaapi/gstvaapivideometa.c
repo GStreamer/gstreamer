@@ -46,6 +46,8 @@ struct _GstVaapiVideoMeta {
     GstVaapiSurfaceProxy       *proxy;
     GFunc                       converter;
     guint                       render_flags;
+    GstVaapiRectangle           render_rect;
+    guint                       has_render_rect : 1;
 };
 
 static inline void
@@ -158,6 +160,7 @@ gst_vaapi_video_meta_init(GstVaapiVideoMeta *meta)
     meta->proxy         = NULL;
     meta->converter     = NULL;
     meta->render_flags  = 0;
+    meta->has_render_rect = FALSE;
 }
 
 static inline GstVaapiVideoMeta *
@@ -229,6 +232,10 @@ gst_vaapi_video_meta_copy(GstVaapiVideoMeta *meta)
         gst_vaapi_surface_proxy_ref(meta->proxy) : NULL;
     copy->converter     = meta->converter;
     copy->render_flags  = meta->render_flags;
+
+    copy->has_render_rect = meta->has_render_rect;
+    if (copy->has_render_rect)
+        copy->render_rect = meta->render_rect;
     return copy;
 }
 
@@ -706,6 +713,42 @@ gst_vaapi_video_meta_set_render_flags(GstVaapiVideoMeta *meta, guint flags)
     g_return_if_fail(meta->surface != NULL);
 
     meta->render_flags = flags;
+}
+
+/**
+ * gst_vaapi_video_meta_get_render_rect:
+ * @meta: a #GstVaapiVideoMeta
+ *
+ * Retrieves the render rectangle bound to the @meta
+ *
+ * Return value: render rectangle associated with the video meta.
+ */
+const GstVaapiRectangle *
+gst_vaapi_video_meta_get_render_rect(GstVaapiVideoMeta *meta)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), NULL);
+
+    if (!meta->has_render_rect)
+        return NULL;
+    return &meta->render_rect;
+}
+
+/**
+ * gst_vaapi_video_meta_set_render_rect:
+ * @meta: a #GstVaapiVideoMeta
+ * @rect: a #GstVaapiRectangle
+ *
+ * Sets the render rectangle @rect to the @meta.
+ */
+void
+gst_vaapi_video_meta_set_render_rect(GstVaapiVideoMeta *meta,
+    const GstVaapiRectangle *rect)
+{
+    g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
+
+    meta->has_render_rect = rect != NULL;
+    if (meta->has_render_rect)
+        meta->render_rect = *rect;
 }
 
 #if GST_CHECK_VERSION(1,0,0)

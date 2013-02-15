@@ -136,6 +136,15 @@ void
 gst_vaapi_video_meta_set_render_flags(GstVaapiVideoMeta *meta, guint flags);
 
 G_GNUC_INTERNAL
+const GstVaapiRectangle *
+gst_vaapi_video_meta_get_render_rect(GstVaapiVideoMeta *meta);
+
+G_GNUC_INTERNAL
+void
+gst_vaapi_video_meta_set_render_rect(GstVaapiVideoMeta *meta,
+    const GstVaapiRectangle *rect);
+
+G_GNUC_INTERNAL
 GstVaapiVideoMeta *
 gst_buffer_get_vaapi_video_meta(GstBuffer *buffer);
 
