@@ -540,8 +540,6 @@ dpb_output(
             return TRUE;
         picture = fs->buffers[0];
     }
-
-    /* XXX: update cropping rectangle */
     return gst_vaapi_picture_output(GST_VAAPI_PICTURE_CAST(picture));
 }
 
@@ -2555,6 +2553,16 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     }
     gst_vaapi_picture_replace(&priv->current_picture, picture);
     gst_vaapi_picture_unref(picture);
+
+    /* Update cropping rectangle */
+    if (sps->frame_cropping_flag) {
+        GstVaapiRectangle crop_rect;
+        crop_rect.x = sps->crop_rect_x;
+        crop_rect.y = sps->crop_rect_y;
+        crop_rect.width = sps->crop_rect_width;
+        crop_rect.height = sps->crop_rect_height;
+        gst_vaapi_picture_set_crop_rect(&picture->base, &crop_rect);
+    }
 
     picture->pps = pps;
 
