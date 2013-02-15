@@ -95,12 +95,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) { " GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (S16) "}, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) 1, "
-        "layout = (string) interleaved;"
-        "audio/x-raw, "
-        "format = (string) { " GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (S16) "}, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) 2, "
-        "layout = (string) interleaved, " "channel-mask = (bitmask) 0x3")
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ], "
+        "layout = (string) interleaved")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -109,7 +105,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) { " GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (S16) "}, "
         "rate = (int) [ 1, MAX ], " "channels = (int) 2, "
-        "layout = (string) interleaved, " "channel-mask = (bitmask)0x3")
+        "layout = (string) interleaved")
     );
 
 G_DEFINE_TYPE (GstAudioPanorama, gst_audio_panorama, GST_TYPE_BASE_TRANSFORM);
@@ -335,11 +331,11 @@ gst_audio_panorama_transform_caps (GstBaseTransform * base,
     if (direction == GST_PAD_SRC) {
       GST_INFO_OBJECT (base, "[%d] allow 1-2 channels", i);
       gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
-      gst_structure_remove_field (structure, "channel-mask");
     } else {
       GST_INFO_OBJECT (base, "[%d] allow 2 channels", i);
       gst_structure_set (structure, "channels", G_TYPE_INT, 2, NULL);
     }
+    gst_structure_remove_field (structure, "channel-mask");
   }
   GST_DEBUG_OBJECT (base, "transformed %" GST_PTR_FORMAT, res);
 
