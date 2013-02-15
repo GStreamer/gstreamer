@@ -41,6 +41,7 @@ struct _GstVaapiSurfaceProxy {
     GstClockTime        duration;
     GDestroyNotify      destroy_func;
     gpointer            destroy_data;
+    GstVaapiRectangle   crop_rect;
 };
 
 #define GST_VAAPI_SURFACE_PROXY_FLAGS       GST_VAAPI_MINI_OBJECT_FLAGS
@@ -97,5 +98,17 @@ struct _GstVaapiSurfaceProxy {
 #undef  GST_VAAPI_SURFACE_PROXY_DURATION
 #define GST_VAAPI_SURFACE_PROXY_DURATION(proxy) \
     proxy->duration
+
+/**
+ * GST_VAAPI_SURFACE_PROXY_CROP_RECT:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Macro that evaluates to the video cropping rectangle of the underlying @proxy surface.
+ *
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_SURFACE_PROXY_CROP_RECT
+#define GST_VAAPI_SURFACE_PROXY_CROP_RECT(proxy) \
+    &(proxy)->crop_rect
 
 #endif /* GST_VAAPI_SURFACE_PROXY_PRIV_H */

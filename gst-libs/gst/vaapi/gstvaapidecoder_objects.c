@@ -128,6 +128,11 @@ gst_vaapi_picture_create(
             }
             GST_VAAPI_PICTURE_FLAG_UNSET(picture, GST_VAAPI_PICTURE_FLAG_FF);
         }
+
+        if (parent_picture->has_crop_rect) {
+            picture->has_crop_rect = TRUE;
+            picture->crop_rect = parent_picture->crop_rect;
+        }
     }
     else {
         picture->type = GST_VAAPI_PICTURE_TYPE_NONE;
@@ -308,6 +313,10 @@ gst_vaapi_picture_output(GstVaapiPicture *picture)
         return FALSE;
 
     proxy = gst_vaapi_surface_proxy_ref(picture->proxy);
+
+    if (picture->has_crop_rect)
+        gst_vaapi_surface_proxy_set_crop_rect(proxy, &picture->crop_rect);
+
     gst_video_codec_frame_set_user_data(out_frame,
         proxy, (GDestroyNotify)gst_vaapi_mini_object_unref);
 
@@ -328,6 +337,17 @@ gst_vaapi_picture_output(GstVaapiPicture *picture)
 
     GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_OUTPUT);
     return TRUE;
+}
+
+void
+gst_vaapi_picture_set_crop_rect(GstVaapiPicture *picture,
+    const GstVaapiRectangle *crop_rect)
+{
+    g_return_if_fail(GST_VAAPI_IS_PICTURE(picture));
+
+    picture->has_crop_rect = crop_rect != NULL;
+    if (picture->has_crop_rect)
+        picture->crop_rect = *crop_rect;
 }
 
 /* ------------------------------------------------------------------------- */

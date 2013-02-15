@@ -117,6 +117,13 @@ void
 gst_vaapi_surface_proxy_set_destroy_notify(GstVaapiSurfaceProxy *proxy,
     GDestroyNotify destroy_func, gpointer user_data);
 
+const GstVaapiRectangle *
+gst_vaapi_surface_proxy_get_crop_rect(GstVaapiSurfaceProxy *proxy);
+
+void
+gst_vaapi_surface_proxy_set_crop_rect(GstVaapiSurfaceProxy *proxy,
+    const GstVaapiRectangle *crop_rect);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_SURFACE_PROXY_H */

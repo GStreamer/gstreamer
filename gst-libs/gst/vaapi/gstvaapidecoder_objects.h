@@ -131,6 +131,8 @@ struct _GstVaapiPicture {
     GstClockTime                pts;
     gint32                      poc;
     guint                       structure;
+    GstVaapiRectangle           crop_rect;
+    guint                       has_crop_rect   : 1;
 };
 
 G_GNUC_INTERNAL
@@ -165,6 +167,11 @@ gst_vaapi_picture_decode(GstVaapiPicture *picture);
 G_GNUC_INTERNAL
 gboolean
 gst_vaapi_picture_output(GstVaapiPicture *picture);
+
+G_GNUC_INTERNAL
+void
+gst_vaapi_picture_set_crop_rect(GstVaapiPicture *picture,
+    const GstVaapiRectangle *crop_rect);
 
 static inline gpointer
 gst_vaapi_picture_ref(gpointer ptr)

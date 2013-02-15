@@ -34,6 +34,27 @@
 #include "gstvaapidebug.h"
 
 static void
+set_crop_rect_from_surface(GstVaapiSurfaceProxy *proxy)
+{
+    guint width, height;
+
+    gst_vaapi_surface_get_size(proxy->surface, &width, &height);
+    proxy->crop_rect.x = 0;
+    proxy->crop_rect.y = 0;
+    proxy->crop_rect.width = width;
+    proxy->crop_rect.height = height;
+}
+
+static inline void
+set_crop_rect(GstVaapiSurfaceProxy *proxy, const GstVaapiRectangle *crop_rect)
+{
+    if (crop_rect)
+        proxy->crop_rect = *crop_rect;
+    else
+        set_crop_rect_from_surface(proxy);
+}
+
+static void
 gst_vaapi_surface_proxy_finalize(GstVaapiSurfaceProxy *proxy)
 {
     if (proxy->destroy_func)
@@ -74,6 +95,8 @@ gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool)
     proxy->surface = gst_vaapi_video_pool_get_object(proxy->pool);
     if (!proxy->surface)
         goto error;
+    set_crop_rect_from_surface(proxy);
+
     proxy->timestamp = GST_CLOCK_TIME_NONE;
     proxy->duration = GST_CLOCK_TIME_NONE;
     proxy->destroy_func = NULL;
@@ -237,4 +260,38 @@ gst_vaapi_surface_proxy_set_destroy_notify(GstVaapiSurfaceProxy *proxy,
 
     proxy->destroy_func = destroy_func;
     proxy->destroy_data = user_data;
+}
+
+/**
+ * gst_vaapi_surface_proxy_get_crop_rect:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Returns the #GstVaapiRectangle stored in the @proxy and that
+ * represents the cropping rectangle for the underlying surface to be
+ * used for rendering.
+ *
+ * Return value: the #GstVaapiRectangle
+ */
+const GstVaapiRectangle *
+gst_vaapi_surface_proxy_get_crop_rect(GstVaapiSurfaceProxy *proxy)
+{
+    g_return_val_if_fail(proxy != NULL, NULL);
+
+    return GST_VAAPI_SURFACE_PROXY_CROP_RECT(proxy);
+}
+
+/**
+ * gst_vaapi_surface_proxy_set_crop_rect:
+ * @proxy: #GstVaapiSurfaceProxy
+ * @crop_rect: the #GstVaapiRectangle to be stored in @proxy
+ *
+ * Associates the @crop_rect with the @proxy
+ */
+void
+gst_vaapi_surface_proxy_set_crop_rect(GstVaapiSurfaceProxy *proxy,
+    const GstVaapiRectangle *crop_rect)
+{
+    g_return_if_fail(proxy != NULL);
+
+    set_crop_rect(proxy, crop_rect);
 }
