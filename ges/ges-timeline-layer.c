@@ -46,7 +46,7 @@ G_DEFINE_TYPE_WITH_CODE (GESTimelineLayer, ges_timeline_layer,
 struct _GESTimelineLayerPrivate
 {
   /*< private > */
-  GList *objects_start;         /* The Clips sorted by start and
+  GList *clips_start;           /* The Clips sorted by start and
                                  * priority */
 
   guint32 priority;             /* The priority of the layer within the
@@ -56,7 +56,7 @@ struct _GESTimelineLayerPrivate
 
 typedef struct
 {
-  GESClip *object;
+  GESClip *clip;
   GESTimelineLayer *layer;
 } NewAssetUData;
 
@@ -123,9 +123,8 @@ ges_timeline_layer_dispose (GObject * object)
 
   GST_DEBUG ("Disposing layer");
 
-  while (priv->objects_start)
-    ges_timeline_layer_remove_clip (layer,
-        (GESClip *) priv->objects_start->data);
+  while (priv->clips_start)
+    ges_timeline_layer_remove_clip (layer, (GESClip *) priv->clips_start->data);
 
   G_OBJECT_CLASS (ges_timeline_layer_parent_class)->dispose (object);
 }
@@ -171,9 +170,9 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
   /**
    * GESTimelineLayer::clip-added:
    * @layer: the #GESTimelineLayer
-   * @object: the #GESClip that was added.
+   * @clip: the #GESClip that was added.
    *
-   * Will be emitted after the object was added to the layer.
+   * Will be emitted after the clip was added to the layer.
    */
   ges_timeline_layer_signals[OBJECT_ADDED] =
       g_signal_new ("clip-added", G_TYPE_FROM_CLASS (klass),
@@ -183,9 +182,9 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
   /**
    * GESTimelineLayer::clip-removed:
    * @layer: the #GESTimelineLayer
-   * @object: the #GESClip that was removed
+   * @clip: the #GESClip that was removed
    *
-   * Will be emitted after the object was removed from the layer.
+   * Will be emitted after the clip was removed from the layer.
    */
   ges_timeline_layer_signals[OBJECT_REMOVED] =
       g_signal_new ("clip-removed", G_TYPE_FROM_CLASS (klass),
@@ -217,7 +216,7 @@ static gboolean
 ges_timeline_layer_resync_priorities (GESTimelineLayer * layer)
 {
   GList *tmp;
-  GESTimelineElement *obj;
+  GESTimelineElement *track_element;
 
   GST_DEBUG ("Resync priorities of %p", layer);
 
@@ -225,9 +224,9 @@ ges_timeline_layer_resync_priorities (GESTimelineLayer * layer)
    * Ideally we want to do it from an even higher level, but here will
    * do in the meantime. */
 
-  for (tmp = layer->priv->objects_start; tmp; tmp = tmp->next) {
-    obj = GES_TIMELINE_ELEMENT (tmp->data);
-    _set_priority0 (obj, _PRIORITY (obj));
+  for (tmp = layer->priv->clips_start; tmp; tmp = tmp->next) {
+    track_element = GES_TIMELINE_ELEMENT (tmp->data);
+    _set_priority0 (track_element, _PRIORITY (track_element));
   }
 
   return TRUE;
@@ -241,7 +240,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
   GESAsset *asset = ges_asset_request_finish (res, &error);
 
   GST_DEBUG_OBJECT (udata->layer, "%" GST_PTR_FORMAT " Asset loaded, "
-      "setting its asset", udata->object);
+      "setting its asset", udata->clip);
 
   if (error) {
     GESProject *project = udata->layer->timeline ?
@@ -266,10 +265,10 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
     GESProject *project = udata->layer->timeline ?
         GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE
             (udata->layer->timeline))) : NULL;
-    ges_extractable_set_asset (GES_EXTRACTABLE (udata->object), asset);
+    ges_extractable_set_asset (GES_EXTRACTABLE (udata->clip), asset);
 
     ges_project_add_asset (project, asset);
-    ges_timeline_layer_add_clip (udata->layer, udata->object);
+    ges_timeline_layer_add_clip (udata->layer, udata->clip);
   }
 
   g_object_unref (asset);
@@ -280,27 +279,27 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
 /**
  * ges_timeline_layer_remove_clip:
  * @layer: a #GESTimelineLayer
- * @object: the #GESClip to remove
+ * @clip: the #GESClip to remove
  *
- * Removes the given @object from the @layer and unparents it.
- * Unparenting it means the reference owned by @layer on the @object will be
- * removed. If you wish to use the @object after this function, make sure you
+ * Removes the given @clip from the @layer and unparents it.
+ * Unparenting it means the reference owned by @layer on the @clip will be
+ * removed. If you wish to use the @clip after this function, make sure you
  * call g_object_ref() before removing it from the @layer.
  *
- * Returns: TRUE if the object could be removed, FALSE if the layer does
- * not want to remove the object.
+ * Returns: TRUE if the clip could be removed, FALSE if the layer does
+ * not want to remove the clip.
  */
 gboolean
-ges_timeline_layer_remove_clip (GESTimelineLayer * layer, GESClip * object)
+ges_timeline_layer_remove_clip (GESTimelineLayer * layer, GESClip * clip)
 {
   GESTimelineLayer *current_layer;
 
   g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
-  g_return_val_if_fail (GES_IS_CLIP (object), FALSE);
+  g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
 
-  GST_DEBUG ("layer:%p, object:%p", layer, object);
+  GST_DEBUG ("layer:%p, clip:%p", layer, clip);
 
-  current_layer = ges_clip_get_layer (object);
+  current_layer = ges_clip_get_layer (clip);
   if (G_UNLIKELY (current_layer != layer)) {
     GST_WARNING ("Clip doesn't belong to this layer");
 
@@ -312,17 +311,16 @@ ges_timeline_layer_remove_clip (GESTimelineLayer * layer, GESClip * object)
   g_object_unref (current_layer);
 
   /* emit 'clip-removed' */
-  g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_REMOVED], 0, object);
+  g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_REMOVED], 0, clip);
 
-  /* inform the object it's no longer in a layer */
-  ges_clip_set_layer (object, NULL);
+  /* inform the clip it's no longer in a layer */
+  ges_clip_set_layer (clip, NULL);
 
   /* Remove it from our list of controlled objects */
-  layer->priv->objects_start =
-      g_list_remove (layer->priv->objects_start, object);
+  layer->priv->clips_start = g_list_remove (layer->priv->clips_start, clip);
 
-  /* Remove our reference to the object */
-  g_object_unref (object);
+  /* Remove our reference to the clip */
+  g_object_unref (clip);
 
   return TRUE;
 }
@@ -427,7 +425,7 @@ ges_timeline_layer_get_clips (GESTimelineLayer * layer)
     return klass->get_objects (layer);
   }
 
-  return g_list_sort (g_list_copy_deep (layer->priv->objects_start,
+  return g_list_sort (g_list_copy_deep (layer->priv->clips_start,
           (GCopyFunc) gst_object_ref, NULL),
       (GCompareFunc) element_start_compare);
 }
@@ -436,7 +434,7 @@ ges_timeline_layer_get_clips (GESTimelineLayer * layer)
  * ges_timeline_layer_is_empty:
  * @layer: The #GESTimelineLayer to check
  *
- * Convenience method to check if @layer is empty (doesn't contain any object),
+ * Convenience method to check if @layer is empty (doesn't contain any clip),
  * or not.
  *
  * Returns: %TRUE if @layer is empty, %FALSE if it already contains at least
@@ -447,29 +445,29 @@ ges_timeline_layer_is_empty (GESTimelineLayer * layer)
 {
   g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
 
-  return (layer->priv->objects_start == NULL);
+  return (layer->priv->clips_start == NULL);
 }
 
 /**
  * ges_timeline_layer_add_clip:
  * @layer: a #GESTimelineLayer
- * @object: (transfer full): the #GESClip to add.
+ * @clip: (transfer full): the #GESClip to add.
  *
- * Adds the given object to the layer. Sets the object's parent, and thus
- * takes ownership of the object.
+ * Adds the given clip to the layer. Sets the clip's parent, and thus
+ * takes ownership of the clip.
  *
- * An object can only be added to one layer.
+ * An clip can only be added to one layer.
  *
  * Calling this method will construct and properly set all the media related
- * elements on @object. If you need to know when those objects (actually #GESTrackElement)
- * are constructed, you should connect to the object::track-element-added signal which
+ * elements on @clip. If you need to know when those objects (actually #GESTrackElement)
+ * are constructed, you should connect to the clip::track-element-added signal which
  * is emited right after those elements are ready to be used.
  *
- * Returns: TRUE if the object was properly added to the layer, or FALSE
- * if the @layer refuses to add the object.
+ * Returns: TRUE if the clip was properly added to the layer, or FALSE
+ * if the @layer refuses to add the clip.
  */
 gboolean
-ges_timeline_layer_add_clip (GESTimelineLayer * layer, GESClip * object)
+ges_timeline_layer_add_clip (GESTimelineLayer * layer, GESClip * clip)
 {
   GESAsset *asset;
   GESTimelineLayerPrivate *priv;
@@ -477,42 +475,42 @@ ges_timeline_layer_add_clip (GESTimelineLayer * layer, GESClip * object)
   guint32 maxprio, minprio, prio;
 
   g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
-  g_return_val_if_fail (GES_IS_CLIP (object), FALSE);
+  g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
 
-  GST_DEBUG_OBJECT (layer, "adding object:%p", object);
+  GST_DEBUG_OBJECT (layer, "adding clip:%p", clip);
 
   priv = layer->priv;
-  current_layer = ges_clip_get_layer (object);
+  current_layer = ges_clip_get_layer (clip);
   if (G_UNLIKELY (current_layer)) {
-    GST_WARNING ("Clip %p already belongs to another layer", object);
+    GST_WARNING ("Clip %p already belongs to another layer", clip);
     g_object_unref (current_layer);
 
     return FALSE;
   }
 
-  asset = ges_extractable_get_asset (GES_EXTRACTABLE (object));
+  asset = ges_extractable_get_asset (GES_EXTRACTABLE (clip));
   if (asset == NULL) {
     gchar *id;
     NewAssetUData *mudata = g_slice_new (NewAssetUData);
 
-    mudata->object = object;
+    mudata->clip = clip;
     mudata->layer = layer;
 
     GST_DEBUG_OBJECT (layer, "%" GST_PTR_FORMAT " as no reference to any "
-        "assets creating a asset... trying sync", object);
+        "assets creating a asset... trying sync", clip);
 
-    id = ges_extractable_get_id (GES_EXTRACTABLE (object));
-    asset = ges_asset_request (G_OBJECT_TYPE (object), id, NULL);
+    id = ges_extractable_get_id (GES_EXTRACTABLE (clip));
+    asset = ges_asset_request (G_OBJECT_TYPE (clip), id, NULL);
     if (asset == NULL) {
       GESProject *project = layer->timeline ?
           GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE
               (layer->timeline))) : NULL;
 
-      ges_asset_request_async (G_OBJECT_TYPE (object),
+      ges_asset_request_async (G_OBJECT_TYPE (clip),
           id, NULL, (GAsyncReadyCallback) new_asset_cb, mudata);
 
       if (project)
-        ges_project_add_loading_asset (project, G_OBJECT_TYPE (object), id);
+        ges_project_add_loading_asset (project, G_OBJECT_TYPE (clip), id);
       g_free (id);
 
       GST_LOG_OBJECT (layer, "Object added async");
@@ -520,43 +518,43 @@ ges_timeline_layer_add_clip (GESTimelineLayer * layer, GESClip * object)
     }
     g_free (id);
 
-    ges_extractable_set_asset (GES_EXTRACTABLE (object), asset);
+    ges_extractable_set_asset (GES_EXTRACTABLE (clip), asset);
 
     g_slice_free (NewAssetUData, mudata);
   }
 
 
-  g_object_ref_sink (object);
+  g_object_ref_sink (clip);
 
-  /* Take a reference to the object and store it stored by start/priority */
-  priv->objects_start = g_list_insert_sorted (priv->objects_start, object,
+  /* Take a reference to the clip and store it stored by start/priority */
+  priv->clips_start = g_list_insert_sorted (priv->clips_start, clip,
       (GCompareFunc) element_start_compare);
 
-  /* Inform the object it's now in this layer */
-  ges_clip_set_layer (object, layer);
+  /* Inform the clip it's now in this layer */
+  ges_clip_set_layer (clip, layer);
 
-  GST_DEBUG ("current object priority : %d, layer min/max : %d/%d",
-      _PRIORITY (object), layer->min_gnl_priority, layer->max_gnl_priority);
+  GST_DEBUG ("current clip priority : %d, layer min/max : %d/%d",
+      _PRIORITY (clip), layer->min_gnl_priority, layer->max_gnl_priority);
 
   /* Set the priority. */
   maxprio = layer->max_gnl_priority;
   minprio = layer->min_gnl_priority;
-  prio = _PRIORITY (object);
+  prio = _PRIORITY (clip);
 
   if (minprio + prio > (maxprio)) {
     GST_WARNING_OBJECT (layer,
         "%p is out of the layer space, setting its priority to "
-        "%d, setting it to the maximum priority of the layer: %d", object, prio,
+        "%d, setting it to the maximum priority of the layer: %d", clip, prio,
         maxprio - minprio);
-    _set_priority0 (GES_TIMELINE_ELEMENT (object), LAYER_HEIGHT - 1);
+    _set_priority0 (GES_TIMELINE_ELEMENT (clip), LAYER_HEIGHT - 1);
   }
 
-  /* If the object has an acceptable priority, we just let it with its current
+  /* If the clip has an acceptable priority, we just let it with its current
    * priority */
   ges_timeline_layer_resync_priorities (layer);
 
   /* emit 'clip-added' */
-  g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_ADDED], 0, object);
+  g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_ADDED], 0, clip);
 
   return TRUE;
 }

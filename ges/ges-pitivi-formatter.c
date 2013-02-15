@@ -49,7 +49,7 @@ GST_DEBUG_CATEGORY_STATIC (ges_pitivi_formatter_debug);
 typedef struct SrcMapping
 {
   gchar *id;
-  GESClip *obj;
+  GESClip *clip;
   guint priority;
   GList *track_element_ids;
 } SrcMapping;
@@ -96,7 +96,7 @@ static void
 free_src_map (SrcMapping * srcmap)
 {
   g_free (srcmap->id);
-  g_object_unref (srcmap->obj);
+  g_object_unref (srcmap->clip);
   g_list_foreach (srcmap->track_element_ids, (GFunc) g_free, NULL);
   g_list_free (srcmap->track_element_ids);
   g_slice_free (SrcMapping, srcmap);
@@ -158,15 +158,15 @@ save_track_elements (xmlTextWriterPtr writer, GList * source_list,
   GST_DEBUG ("Saving track elements");
   for (tmp = source_list; tmp; tmp = tmp->next) {
     SrcMapping *srcmap;
-    GESClip *object;
+    GESClip *clip;
     guint i, j;
     guint64 inpoint, duration, start;
 
     srcmap = (SrcMapping *) tmp->data;
-    object = srcmap->obj;
+    clip = srcmap->clip;
 
     /* Save track associated objects */
-    track_elements = ges_clip_get_track_elements (object);
+    track_elements = ges_clip_get_track_elements (clip);
     for (tmp_tck = track_elements; tmp_tck; tmp_tck = tmp_tck->next) {
       xmlChar *cast;
       GESTrackElement *trackelement = GES_TRACK_ELEMENT (tmp_tck->data);
@@ -388,7 +388,7 @@ save_sources (GESPitiviFormatter * formatter, GList * layers,
         srcmap->id =
             g_strdup (g_hash_table_lookup (priv->saving_source_table,
                 uriclip_uri));
-        srcmap->obj = g_object_ref (clip);
+        srcmap->clip = g_object_ref (clip);
         srcmap->priority = ges_timeline_layer_get_priority (layer);
         /* We fill up the track_element_ids in save_track_elements */
         source_list = g_list_append (source_list, srcmap);
@@ -748,7 +748,7 @@ set_properties (GObject * obj, GHashTable * props_table)
 }
 
 static void
-track_element_added_cb (GESClip * object,
+track_element_added_cb (GESClip * clip,
     GESTrackElement * track_element, GHashTable * props_table)
 {
   gchar *media_type = NULL, *lockedstr;
@@ -759,7 +759,7 @@ track_element_added_cb (GESClip * object,
   gint type = 0;
   GESPitiviFormatter *formatter;
 
-  track_elements = ges_clip_get_track_elements (object);
+  track_elements = ges_clip_get_track_elements (clip);
   media_type = (gchar *) g_hash_table_lookup (props_table, "media_type");
   lockedstr = (gchar *) g_hash_table_lookup (props_table, "locked");
 
@@ -773,7 +773,7 @@ track_element_added_cb (GESClip * object,
      * doesn't break everything */
     g_hash_table_steal (props_table, "current-formatter");
 
-    priv->sources_to_load = g_list_remove (priv->sources_to_load, object);
+    priv->sources_to_load = g_list_remove (priv->sources_to_load, clip);
     if (!priv->sources_to_load && GES_FORMATTER (formatter)->project)
       ges_project_set_loaded (GES_FORMATTER (formatter)->project,
           GES_FORMATTER (formatter));
@@ -819,7 +819,7 @@ track_element_added_cb (GESClip * object,
   }
 
   if (has_effect) {
-    track_elements = ges_clip_get_track_elements (object);
+    track_elements = ges_clip_get_track_elements (clip);
 
     /* FIXME make sure this is the way we want to handle that
      * ie: set duration and start as the other trackelement
@@ -841,7 +841,7 @@ track_element_added_cb (GESClip * object,
   }
 
   /* Disconnect the signal */
-  g_signal_handlers_disconnect_by_func (object, track_element_added_cb,
+  g_signal_handlers_disconnect_by_func (clip, track_element_added_cb,
       props_table);
 }
 

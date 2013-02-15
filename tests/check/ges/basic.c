@@ -31,13 +31,13 @@ GST_START_TEST (test_ges_init)
 GST_END_TEST;
 
 static gboolean
-my_fill_track_func (GESClip * object,
-    GESTrackElement * trobject, GstElement * gnlobj, gpointer user_data)
+my_fill_track_func (GESClip * clip,
+    GESTrackElement * track_element, GstElement * gnlobj, gpointer user_data)
 {
   GstElement *src;
 
   GST_DEBUG ("timelineobj:%p, trackelement:%p, gnlobj:%p",
-      object, trobject, gnlobj);
+      clip, track_element, gnlobj);
 
   /* Let's just put a fakesource in for the time being */
   src = gst_element_factory_make ("fakesrc", NULL);
@@ -564,13 +564,13 @@ typedef struct
 } SelectTracksData;
 
 static GPtrArray *
-select_tracks_cb (GESTimeline * timeline, GESClip * tobj,
-    GESTrackElement * trobj, SelectTracksData * st_data)
+select_tracks_cb (GESTimeline * timeline, GESClip * clip,
+    GESTrackElement * track_element, SelectTracksData * st_data)
 {
   GESTrack *track;
 
   GPtrArray *ret = g_ptr_array_new ();
-  track = (tobj == (GESClip *) * st_data->o2) ? *st_data->tr2 : *st_data->tr1;
+  track = (clip == (GESClip *) * st_data->o2) ? *st_data->tr2 : *st_data->tr1;
 
   gst_object_ref (track);
 

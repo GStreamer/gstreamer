@@ -213,12 +213,12 @@ update_play_sensitivity (App * app)
 /* Backend callbacks ********************************************************/
 
 static void
-test_source_notify_volume_changed_cb (GESClip * object, GParamSpec *
+test_source_notify_volume_changed_cb (GESClip * clip, GParamSpec *
     unused G_GNUC_UNUSED, App * app)
 {
   gdouble volume;
 
-  g_object_get (G_OBJECT (object), "volume", &volume, NULL);
+  g_object_get (G_OBJECT (clip), "volume", &volume, NULL);
 
   gtk_range_set_value (GTK_RANGE (app->volume), volume);
 }
@@ -231,18 +231,18 @@ layer_notify_valid_changed_cb (GObject * object, GParamSpec * unused
 }
 
 static gboolean
-find_row_for_object (GtkListStore * model, GtkTreeIter * ret, GESClip * object)
+find_row_for_object (GtkListStore * model, GtkTreeIter * ret, GESClip * clip)
 {
   gtk_tree_model_get_iter_first ((GtkTreeModel *) model, ret);
 
   while (gtk_list_store_iter_is_valid (model, ret)) {
-    GESClip *obj;
-    gtk_tree_model_get ((GtkTreeModel *) model, ret, 2, &obj, -1);
-    if (obj == object) {
-      g_object_unref (obj);
+    GESClip *clip2;
+    gtk_tree_model_get ((GtkTreeModel *) model, ret, 2, &clip2, -1);
+    if (clip2 == clip) {
+      g_object_unref (clip2);
       return TRUE;
     }
-    g_object_unref (obj);
+    g_object_unref (clip2);
     gtk_tree_model_iter_next ((GtkTreeModel *) model, ret);
   }
   return FALSE;
@@ -251,14 +251,14 @@ find_row_for_object (GtkListStore * model, GtkTreeIter * ret, GESClip * object)
 /* this callback is registered for every clip, and updates the
  * corresponding duration cell in the model */
 static void
-clip_notify_duration_cb (GESClip * object,
+clip_notify_duration_cb (GESClip * clip,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
   GtkTreeIter iter;
   guint64 duration = 0;
 
-  g_object_get (object, "duration", &duration, NULL);
-  find_row_for_object (app->model, &iter, object);
+  g_object_get (clip, "duration", &duration, NULL);
+  find_row_for_object (app->model, &iter, clip);
   gtk_list_store_set (app->model, &iter, 1, duration, -1);
 }
 
@@ -266,37 +266,37 @@ clip_notify_duration_cb (GESClip * object,
  * current selection */
 
 static void
-filesource_notify_duration_cb (GESClip * object,
+filesource_notify_duration_cb (GESClip * clip,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
   guint64 duration, max_inpoint;
-  duration = GES_TIMELINE_ELEMENT_DURATION (object);
-  max_inpoint = GES_TIMELINE_ELEMENT_MAX_DURATION (object) - duration;
+  duration = GES_TIMELINE_ELEMENT_DURATION (clip);
+  max_inpoint = GES_TIMELINE_ELEMENT_MAX_DURATION (clip) - duration;
 
   gtk_range_set_value (GTK_RANGE (app->duration), duration);
   gtk_range_set_fill_level (GTK_RANGE (app->in_point), max_inpoint);
 
-  if (max_inpoint < GES_TIMELINE_ELEMENT_INPOINT (object))
-    g_object_set (object, "in-point", max_inpoint, NULL);
+  if (max_inpoint < GES_TIMELINE_ELEMENT_INPOINT (clip))
+    g_object_set (clip, "in-point", max_inpoint, NULL);
 
 }
 
 static void
-filesource_notify_max_duration_cb (GESClip * object,
+filesource_notify_max_duration_cb (GESClip * clip,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
   gtk_range_set_range (GTK_RANGE (app->duration), 0, (gdouble)
-      GES_TIMELINE_ELEMENT_MAX_DURATION (object));
+      GES_TIMELINE_ELEMENT_MAX_DURATION (clip));
   gtk_range_set_range (GTK_RANGE (app->in_point), 0, (gdouble)
-      GES_TIMELINE_ELEMENT_MAX_DURATION (object));
+      GES_TIMELINE_ELEMENT_MAX_DURATION (clip));
 }
 
 static void
-filesource_notify_in_point_cb (GESClip * object,
+filesource_notify_in_point_cb (GESClip * clip,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
   gtk_range_set_value (GTK_RANGE (app->in_point),
-      GES_TIMELINE_ELEMENT_INPOINT (object));
+      GES_TIMELINE_ELEMENT_INPOINT (clip));
 }
 
 static void
@@ -325,66 +325,66 @@ object_count_changed (App * app)
 }
 
 static void
-title_source_text_changed_cb (GESClip * object,
+title_source_text_changed_cb (GESClip * clip,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
   GtkTreeIter iter;
   gchar *text;
 
-  g_object_get (object, "text", &text, NULL);
+  g_object_get (clip, "text", &text, NULL);
   if (text) {
-    find_row_for_object (app->model, &iter, object);
+    find_row_for_object (app->model, &iter, clip);
     gtk_list_store_set (app->model, &iter, 0, text, -1);
   }
 }
 
 static void
-layer_object_added_cb (GESTimelineLayer * layer, GESClip * object, App * app)
+layer_object_added_cb (GESTimelineLayer * layer, GESClip * clip, App * app)
 {
   GtkTreeIter iter;
   gchar *description;
 
-  GST_INFO ("layer object added cb %p %p %p", layer, object, app);
+  GST_INFO ("layer clip added cb %p %p %p", layer, clip, app);
 
   gtk_list_store_append (app->model, &iter);
 
-  if (GES_IS_URI_CLIP (object)) {
-    g_object_get (G_OBJECT (object), "uri", &description, NULL);
-    gtk_list_store_set (app->model, &iter, 0, description, 2, object, -1);
+  if (GES_IS_URI_CLIP (clip)) {
+    g_object_get (G_OBJECT (clip), "uri", &description, NULL);
+    gtk_list_store_set (app->model, &iter, 0, description, 2, clip, -1);
   }
 
-  else if (GES_IS_TITLE_CLIP (object)) {
-    gtk_list_store_set (app->model, &iter, 2, object, -1);
-    g_signal_connect (G_OBJECT (object), "notify::text",
+  else if (GES_IS_TITLE_CLIP (clip)) {
+    gtk_list_store_set (app->model, &iter, 2, clip, -1);
+    g_signal_connect (G_OBJECT (clip), "notify::text",
         G_CALLBACK (title_source_text_changed_cb), app);
-    title_source_text_changed_cb (object, NULL, app);
+    title_source_text_changed_cb (clip, NULL, app);
   }
 
-  else if (GES_IS_TEST_CLIP (object)) {
-    gtk_list_store_set (app->model, &iter, 2, object, 0, "Test Source", -1);
+  else if (GES_IS_TEST_CLIP (clip)) {
+    gtk_list_store_set (app->model, &iter, 2, clip, 0, "Test Source", -1);
   }
 
-  else if (GES_IS_BASE_TRANSITION_CLIP (object)) {
-    gtk_list_store_set (app->model, &iter, 2, object, 0, "Transition", -1);
+  else if (GES_IS_BASE_TRANSITION_CLIP (clip)) {
+    gtk_list_store_set (app->model, &iter, 2, clip, 0, "Transition", -1);
   }
 
-  g_signal_connect (G_OBJECT (object), "notify::duration",
+  g_signal_connect (G_OBJECT (clip), "notify::duration",
       G_CALLBACK (clip_notify_duration_cb), app);
-  clip_notify_duration_cb (object, NULL, app);
+  clip_notify_duration_cb (clip, NULL, app);
 
   app->n_objects++;
   object_count_changed (app);
 }
 
 static void
-layer_object_removed_cb (GESTimelineLayer * layer, GESClip * object, App * app)
+layer_object_removed_cb (GESTimelineLayer * layer, GESClip * clip, App * app)
 {
   GtkTreeIter iter;
 
-  GST_INFO ("layer object removed cb %p %p %p", layer, object, app);
+  GST_INFO ("layer clip removed cb %p %p %p", layer, clip, app);
 
-  if (!find_row_for_object (GTK_LIST_STORE (app->model), &iter, object)) {
-    g_print ("object deleted but we don't own it");
+  if (!find_row_for_object (GTK_LIST_STORE (app->model), &iter, clip)) {
+    g_print ("clip deleted but we don't own it");
     return;
   }
   app->n_objects--;
@@ -394,7 +394,7 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESClip * object, App * app)
 }
 
 static void
-layer_object_moved_cb (GESClip * layer, GESClip * object,
+layer_object_moved_cb (GESClip * layer, GESClip * clip,
     gint old, gint new, App * app)
 {
   GtkTreeIter a, b;
@@ -592,62 +592,64 @@ duration_cell_func (GtkTreeViewColumn * column, GtkCellRenderer * renderer,
 /* UI Initialization ********************************************************/
 
 static void
-connect_to_filesource (GESClip * object, App * app)
+connect_to_filesource (GESClip * clip, App * app)
 {
-  g_signal_connect (G_OBJECT (object), "notify::max-duration",
+  g_signal_connect (G_OBJECT (clip), "notify::max-duration",
       G_CALLBACK (filesource_notify_max_duration_cb), app);
-  filesource_notify_max_duration_cb (object, NULL, app);
+  filesource_notify_max_duration_cb (clip, NULL, app);
 
-  g_signal_connect (G_OBJECT (object), "notify::duration",
+  g_signal_connect (G_OBJECT (clip), "notify::duration",
       G_CALLBACK (filesource_notify_duration_cb), app);
-  filesource_notify_duration_cb (object, NULL, app);
+  filesource_notify_duration_cb (clip, NULL, app);
 
-  g_signal_connect (G_OBJECT (object), "notify::in-point",
+  g_signal_connect (G_OBJECT (clip), "notify::in-point",
       G_CALLBACK (filesource_notify_in_point_cb), app);
-  filesource_notify_in_point_cb (object, NULL, app);
+  filesource_notify_in_point_cb (clip, NULL, app);
 }
 
 static void
-disconnect_from_filesource (GESClip * object, App * app)
+disconnect_from_filesource (GESClip * clip, App * app)
 {
-  g_signal_handlers_disconnect_by_func (G_OBJECT (object),
+  g_signal_handlers_disconnect_by_func (G_OBJECT (clip),
       filesource_notify_duration_cb, app);
 
-  g_signal_handlers_disconnect_by_func (G_OBJECT (object),
+  g_signal_handlers_disconnect_by_func (G_OBJECT (clip),
       filesource_notify_max_duration_cb, app);
 }
 
 static void
-connect_to_title_source (GESClip * object, App * app)
+connect_to_title_source (GESClip * clip, App * app)
 {
-  GESTitleClip *obj;
-  obj = GES_TITLE_CLIP (object);
-  gtk_combo_box_set_active (app->halign, ges_title_clip_get_halignment (obj));
-  gtk_combo_box_set_active (app->valign, ges_title_clip_get_valignment (obj));
-  gtk_entry_set_text (app->text, ges_title_clip_get_text (obj));
+  GESTitleClip *titleclip;
+  titleclip = GES_TITLE_CLIP (clip);
+  gtk_combo_box_set_active (app->halign,
+      ges_title_clip_get_halignment (titleclip));
+  gtk_combo_box_set_active (app->valign,
+      ges_title_clip_get_valignment (titleclip));
+  gtk_entry_set_text (app->text, ges_title_clip_get_text (titleclip));
 }
 
 static void
-disconnect_from_title_source (GESClip * object, App * app)
+disconnect_from_title_source (GESClip * clip, App * app)
 {
 }
 
 static void
-connect_to_test_source (GESClip * object, App * app)
+connect_to_test_source (GESClip * clip, App * app)
 {
   GObjectClass *klass;
   GParamSpecDouble *pspec;
 
-  GESTestClip *obj;
-  obj = GES_TEST_CLIP (object);
+  GESTestClip *testclip;
+  testclip = GES_TEST_CLIP (clip);
   gtk_combo_box_set_active (app->background_type,
-      ges_test_clip_get_vpattern (obj));
+      ges_test_clip_get_vpattern (testclip));
 
-  g_signal_connect (G_OBJECT (object), "notify::volume",
+  g_signal_connect (G_OBJECT (testclip), "notify::volume",
       G_CALLBACK (test_source_notify_volume_changed_cb), app);
-  test_source_notify_volume_changed_cb (object, NULL, app);
+  test_source_notify_volume_changed_cb (clip, NULL, app);
 
-  klass = G_OBJECT_GET_CLASS (G_OBJECT (object));
+  klass = G_OBJECT_GET_CLASS (G_OBJECT (testclip));
 
   pspec = G_PARAM_SPEC_DOUBLE (g_object_class_find_property (klass, "volume"));
   gtk_range_set_range (GTK_RANGE (app->volume), pspec->minimum, pspec->maximum);
@@ -655,49 +657,49 @@ connect_to_test_source (GESClip * object, App * app)
   pspec = G_PARAM_SPEC_DOUBLE (g_object_class_find_property (klass, "freq"));
   gtk_spin_button_set_range (app->frequency, pspec->minimum, pspec->maximum);
   gtk_spin_button_set_value (app->frequency,
-      ges_test_clip_get_frequency (GES_TEST_CLIP (object)));
+      ges_test_clip_get_frequency (GES_TEST_CLIP (clip)));
 }
 
 static void
-disconnect_from_test_source (GESClip * object, App * app)
+disconnect_from_test_source (GESClip * clip, App * app)
 {
-  g_signal_handlers_disconnect_by_func (G_OBJECT (object),
+  g_signal_handlers_disconnect_by_func (G_OBJECT (clip),
       test_source_notify_volume_changed_cb, app);
 }
 
 static void
-connect_to_object (GESClip * object, App * app)
+connect_to_object (GESClip * clip, App * app)
 {
   gchar buf[30];
   guint64 duration;
 
   app->ignore_input = TRUE;
 
-  duration = GES_TIMELINE_ELEMENT_DURATION (object);
+  duration = GES_TIMELINE_ELEMENT_DURATION (clip);
   g_snprintf (buf, sizeof (buf), "%02u:%02u:%02u.%09u",
       GST_TIME_ARGS (duration));
   gtk_entry_set_text (app->seconds, buf);
 
-  if (GES_IS_URI_CLIP (object)) {
-    connect_to_filesource (object, app);
-  } else if (GES_IS_TITLE_CLIP (object)) {
-    connect_to_title_source (object, app);
-  } else if (GES_IS_TEST_CLIP (object)) {
-    connect_to_test_source (object, app);
+  if (GES_IS_URI_CLIP (clip)) {
+    connect_to_filesource (clip, app);
+  } else if (GES_IS_TITLE_CLIP (clip)) {
+    connect_to_title_source (clip, app);
+  } else if (GES_IS_TEST_CLIP (clip)) {
+    connect_to_test_source (clip, app);
   }
 
   app->ignore_input = FALSE;
 }
 
 static void
-disconnect_from_object (GESClip * object, App * app)
+disconnect_from_object (GESClip * clip, App * app)
 {
-  if (GES_IS_URI_CLIP (object)) {
-    disconnect_from_filesource (object, app);
-  } else if (GES_IS_TITLE_CLIP (object)) {
-    disconnect_from_title_source (object, app);
-  } else if (GES_IS_TEST_CLIP (object)) {
-    disconnect_from_test_source (object, app);
+  if (GES_IS_URI_CLIP (clip)) {
+    disconnect_from_filesource (clip, app);
+  } else if (GES_IS_TITLE_CLIP (clip)) {
+    disconnect_from_title_source (clip, app);
+  } else if (GES_IS_TEST_CLIP (clip)) {
+    disconnect_from_test_source (clip, app);
   }
 }
 
@@ -1018,10 +1020,10 @@ selection_foreach (GtkTreeModel * model, GtkTreePath * path, GtkTreeIter
     * iter, gpointer user)
 {
   select_info *info = (select_info *) user;
-  GESClip *obj;
+  GESClip *clip;
 
-  gtk_tree_model_get (model, iter, 2, &obj, -1);
-  info->objects = g_list_append (info->objects, obj);
+  gtk_tree_model_get (model, iter, 2, &clip, -1);
+  info->objects = g_list_append (info->objects, clip);
 
   info->n++;
   return;
@@ -1144,14 +1146,14 @@ app_move_selected_down (App * app)
 static void
 app_add_file (App * app, gchar * uri)
 {
-  GESClip *obj;
+  GESClip *clip;
 
   GST_DEBUG ("adding file %s", uri);
 
-  obj = GES_CLIP (ges_uri_clip_new (uri));
+  clip = GES_CLIP (ges_uri_clip_new (uri));
 
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
-      obj, -1);
+      clip, -1);
 }
 
 static void
@@ -1184,44 +1186,44 @@ app_launch_project (App * app, gchar * uri)
 static void
 app_add_title (App * app)
 {
-  GESClip *obj;
+  GESClip *clip;
 
   GST_DEBUG ("adding title");
 
-  obj = GES_CLIP (ges_title_clip_new ());
-  g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
+  clip = GES_CLIP (ges_title_clip_new ());
+  g_object_set (G_OBJECT (clip), "duration", GST_SECOND, NULL);
 
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
-      obj, -1);
+      clip, -1);
 }
 
 static void
 app_add_test (App * app)
 {
-  GESClip *obj;
+  GESClip *clip;
 
   GST_DEBUG ("adding test");
 
-  obj = GES_CLIP (ges_test_clip_new ());
-  g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
+  clip = GES_CLIP (ges_test_clip_new ());
+  g_object_set (G_OBJECT (clip), "duration", GST_SECOND, NULL);
 
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
-      (app->layer), obj, -1);
+      (app->layer), clip, -1);
 }
 
 static void
 app_add_transition (App * app)
 {
-  GESClip *obj;
+  GESClip *clip;
 
   GST_DEBUG ("adding transition");
 
-  obj = GES_CLIP (ges_transition_clip_new
+  clip = GES_CLIP (ges_transition_clip_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE));
-  g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
+  g_object_set (G_OBJECT (clip), "duration", GST_SECOND, NULL);
 
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
-      (app->layer), obj, -1);
+      (app->layer), clip, -1);
 }
 
 static void

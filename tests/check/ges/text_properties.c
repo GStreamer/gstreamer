@@ -26,7 +26,7 @@ GST_START_TEST (test_text_properties_in_layer)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *a, *v;
-  GESTrackElement *trobj;
+  GESTrackElement *track_element;
   GESTestClip *source;
   gchar *text;
   gint halign, valign;
@@ -49,11 +49,11 @@ GST_START_TEST (test_text_properties_in_layer)
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) layer,
       (GESClip *) source, 0);
 
-  trobj =
+  track_element =
       ges_clip_find_track_element (GES_CLIP (source), v, GES_TYPE_TEXT_OVERLAY);
 
-  fail_unless (trobj != NULL);
-  assert_equals_int (trobj->active, FALSE);
+  fail_unless (track_element != NULL);
+  assert_equals_int (track_element->active, FALSE);
 
   /* specifically test the text property */
   g_object_set (source, "text", (gchar *) "some text", NULL);
@@ -61,7 +61,7 @@ GST_START_TEST (test_text_properties_in_layer)
   assert_equals_string ("some text", text);
   g_free (text);
 
-  assert_equals_int (trobj->active, TRUE);
+  assert_equals_int (track_element->active, TRUE);
 
   /* test the font-desc property */
   g_object_set (source, "font-desc", (gchar *) "sans 72", NULL);
@@ -70,10 +70,10 @@ GST_START_TEST (test_text_properties_in_layer)
   g_free (text);
 
   assert_equals_string ("sans 72",
-      ges_text_overlay_get_font_desc (GES_TEXT_OVERLAY (trobj)));
+      ges_text_overlay_get_font_desc (GES_TEXT_OVERLAY (track_element)));
 
   g_object_set (source, "text", (gchar *) NULL, NULL);
-  assert_equals_int (trobj->active, FALSE);
+  assert_equals_int (track_element->active, FALSE);
 
   /* test halign and valign */
   g_object_set (source, "halignment", (gint)
@@ -82,8 +82,8 @@ GST_START_TEST (test_text_properties_in_layer)
   assert_equals_int (halign, GES_TEXT_HALIGN_LEFT);
   assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
 
-  halign = ges_text_overlay_get_halignment (GES_TEXT_OVERLAY (trobj));
-  valign = ges_text_overlay_get_valignment (GES_TEXT_OVERLAY (trobj));
+  halign = ges_text_overlay_get_halignment (GES_TEXT_OVERLAY (track_element));
+  valign = ges_text_overlay_get_valignment (GES_TEXT_OVERLAY (track_element));
   assert_equals_int (halign, GES_TEXT_HALIGN_LEFT);
   assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
 
@@ -93,7 +93,7 @@ GST_START_TEST (test_text_properties_in_layer)
 
   GST_DEBUG ("removing the layer");
 
-  g_object_unref (trobj);
+  g_object_unref (track_element);
   g_object_unref (timeline);
 }
 

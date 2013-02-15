@@ -118,12 +118,12 @@ ges_track_filesource_dispose (GObject * object)
 }
 
 static GstElement *
-ges_track_filesource_create_gnl_object (GESTrackElement * object)
+ges_track_filesource_create_gnl_object (GESTrackElement * track_element)
 {
   GstElement *gnlobject;
 
   gnlobject = gst_element_factory_make ("gnlurisource", NULL);
-  g_object_set (gnlobject, "uri", ((GESUriSource *) object)->uri, NULL);
+  g_object_set (gnlobject, "uri", ((GESUriSource *) track_element)->uri, NULL);
 
   return gnlobject;
 }

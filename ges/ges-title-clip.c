@@ -67,12 +67,12 @@ enum
 };
 
 static GESTrackElement
-    * ges_title_clip_create_track_element (GESClip * obj, GESTrackType type);
+    * ges_title_clip_create_track_element (GESClip * clip, GESTrackType type);
 
 static void
-ges_title_clip_track_element_added (GESClip * obj,
+ges_title_clip_track_element_added (GESClip * clip,
     GESTrackElement * trackelement);
-static void ges_title_clip_track_element_released (GESClip * obj,
+static void ges_title_clip_track_element_released (GESClip * clip,
     GESTrackElement * trackelement);
 
 static void
@@ -593,44 +593,44 @@ ges_title_clip_get_ypos (GESTitleClip * self)
 }
 
 static void
-ges_title_clip_track_element_released (GESClip * obj,
+ges_title_clip_track_element_released (GESClip * clip,
     GESTrackElement * trackelement)
 {
-  GESTitleClipPrivate *priv = GES_TITLE_CLIP (obj)->priv;
+  GESTitleClipPrivate *priv = GES_TITLE_CLIP (clip)->priv;
 
   /* If this is called, we should be sure the trackelement exists */
   if (GES_IS_TITLE_SOURCE (trackelement)) {
-    GST_DEBUG_OBJECT (obj, "%p released from %p", trackelement, obj);
+    GST_DEBUG_OBJECT (clip, "%p released from %p", trackelement, clip);
     priv->track_titles = g_slist_remove (priv->track_titles, trackelement);
     g_object_unref (trackelement);
   }
 }
 
 static void
-ges_title_clip_track_element_added (GESClip * obj,
+ges_title_clip_track_element_added (GESClip * clip,
     GESTrackElement * trackelement)
 {
-  GESTitleClipPrivate *priv = GES_TITLE_CLIP (obj)->priv;
+  GESTitleClipPrivate *priv = GES_TITLE_CLIP (clip)->priv;
 
   if (GES_IS_TITLE_SOURCE (trackelement)) {
-    GST_DEBUG_OBJECT (obj, "%p added to %p", trackelement, obj);
+    GST_DEBUG_OBJECT (clip, "%p added to %p", trackelement, clip);
     priv->track_titles =
         g_slist_prepend (priv->track_titles, g_object_ref (trackelement));
   }
 }
 
 static GESTrackElement *
-ges_title_clip_create_track_element (GESClip * obj, GESTrackType type)
+ges_title_clip_create_track_element (GESClip * clip, GESTrackType type)
 {
 
-  GESTitleClipPrivate *priv = GES_TITLE_CLIP (obj)->priv;
+  GESTitleClipPrivate *priv = GES_TITLE_CLIP (clip)->priv;
   GESTrackElement *res = NULL;
 
-  GST_DEBUG_OBJECT (obj, "a GESTitleSource");
+  GST_DEBUG_OBJECT (clip, "a GESTitleSource");
 
   if (type == GES_TRACK_TYPE_VIDEO) {
     res = (GESTrackElement *) ges_title_source_new ();
-    GST_DEBUG_OBJECT (obj, "text property");
+    GST_DEBUG_OBJECT (clip, "text property");
     ges_title_source_set_text ((GESTitleSource *) res, priv->text);
     ges_title_source_set_font_desc ((GESTitleSource *) res, priv->font_desc);
     ges_title_source_set_halignment ((GESTitleSource *) res, priv->halign);

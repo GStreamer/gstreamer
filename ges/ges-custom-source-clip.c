@@ -130,11 +130,11 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 }
 
 static gboolean
-ges_custom_source_clip_fill_track_element (GESClip * object,
-    GESTrackElement * trobject, GstElement * gnlobj);
+ges_custom_source_clip_fill_track_element (GESClip * clip,
+    GESTrackElement * track_element, GstElement * gnlobj);
 
 static GESTrackElement *
-ges_custom_source_clip_create_track_element (GESClip * obj, GESTrackType type)
+ges_custom_source_clip_create_track_element (GESClip * clip, GESTrackType type)
 {
   return g_object_new (GES_TYPE_SOURCE, "track-type", type, NULL);
 }
@@ -199,17 +199,18 @@ ges_custom_source_clip_init (GESCustomSourceClip * self)
 }
 
 static gboolean
-ges_custom_source_clip_fill_track_element (GESClip * object,
-    GESTrackElement * trobject, GstElement * gnlobj)
+ges_custom_source_clip_fill_track_element (GESClip * clip,
+    GESTrackElement * track_element, GstElement * gnlobj)
 {
   gboolean res;
   GESCustomSourceClipPrivate *priv;
 
   GST_DEBUG ("Calling callback (timelineobj:%p, trackelement:%p, gnlobj:%p)",
-      object, trobject, gnlobj);
+      clip, track_element, gnlobj);
 
-  priv = GES_CUSTOM_SOURCE_CLIP (object)->priv;
-  res = priv->filltrackelementfunc (object, trobject, gnlobj, priv->user_data);
+  priv = GES_CUSTOM_SOURCE_CLIP (clip)->priv;
+  res = priv->filltrackelementfunc (clip, track_element, gnlobj,
+      priv->user_data);
 
   GST_DEBUG ("Returning res:%d", res);
 

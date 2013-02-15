@@ -24,13 +24,13 @@
 #define LAYER_HEIGHT 1000
 
 static gboolean
-my_fill_track_func (GESClip * object,
-    GESTrackElement * trobject, GstElement * gnlobj, gpointer user_data)
+my_fill_track_func (GESClip * clip,
+    GESTrackElement * track_element, GstElement * gnlobj, gpointer user_data)
 {
   GstElement *src;
 
   GST_DEBUG ("timelineobj:%p, trackelementec:%p, gnlobj:%p",
-      object, trobject, gnlobj);
+      clip, track_element, gnlobj);
 
   /* Let's just put a fakesource in for the time being */
   src = gst_element_factory_make ("fakesrc", NULL);
@@ -48,7 +48,7 @@ GST_START_TEST (test_layer_properties)
   GESTimelineLayer *layer;
   GESTrack *track;
   GESTrackElement *trackelement;
-  GESClip *object;
+  GESClip *clip;
 
   ges_init ();
 
@@ -69,55 +69,55 @@ GST_START_TEST (test_layer_properties)
   fail_unless (track != NULL);
   fail_unless (ges_timeline_add_track (timeline, track));
 
-  object = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
-  fail_unless (object != NULL);
+  clip = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
+  fail_unless (clip != NULL);
 
   /* Set some properties */
-  g_object_set (object, "start", (guint64) 42, "duration", (guint64) 51,
+  g_object_set (clip, "start", (guint64) 42, "duration", (guint64) 51,
       "in-point", (guint64) 12, NULL);
-  assert_equals_uint64 (_START (object), 42);
-  assert_equals_uint64 (_DURATION (object), 51);
-  assert_equals_uint64 (_INPOINT (object), 12);
-  assert_equals_uint64 (_PRIORITY (object), 0);
+  assert_equals_uint64 (_START (clip), 42);
+  assert_equals_uint64 (_DURATION (clip), 51);
+  assert_equals_uint64 (_INPOINT (clip), 12);
+  assert_equals_uint64 (_PRIORITY (clip), 0);
 
-  /* Add the object to the timeline */
-  fail_unless (g_object_is_floating (object));
-  fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (object)));
-  fail_if (g_object_is_floating (object));
-  trackelement = ges_clip_find_track_element (object, track, G_TYPE_NONE);
+  /* Add the clip to the timeline */
+  fail_unless (g_object_is_floating (clip));
+  fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (clip)));
+  fail_if (g_object_is_floating (clip));
+  trackelement = ges_clip_find_track_element (clip, track, G_TYPE_NONE);
   fail_unless (trackelement != NULL);
 
   /* This is not a SimpleLayer, therefore the properties shouldn't have changed */
-  assert_equals_uint64 (_START (object), 42);
-  assert_equals_uint64 (_DURATION (object), 51);
-  assert_equals_uint64 (_INPOINT (object), 12);
-  assert_equals_uint64 (_PRIORITY (object), 0);
+  assert_equals_uint64 (_START (clip), 42);
+  assert_equals_uint64 (_DURATION (clip), 51);
+  assert_equals_uint64 (_INPOINT (clip), 12);
+  assert_equals_uint64 (_PRIORITY (clip), 0);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
       51, 0, TRUE);
 
   /* Change the priority of the layer */
   g_object_set (layer, "priority", 1, NULL);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 1);
-  assert_equals_uint64 (_PRIORITY (object), 0);
+  assert_equals_uint64 (_PRIORITY (clip), 0);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
       51, LAYER_HEIGHT, TRUE);
 
   /* Change it to an insanely high value */
   g_object_set (layer, "priority", 31, NULL);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 31);
-  assert_equals_uint64 (_PRIORITY (object), 0);
+  assert_equals_uint64 (_PRIORITY (clip), 0);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
       51, LAYER_HEIGHT * 31, TRUE);
 
   /* and back to 0 */
   g_object_set (layer, "priority", 0, NULL);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 0);
-  assert_equals_uint64 (_PRIORITY (object), 0);
+  assert_equals_uint64 (_PRIORITY (clip), 0);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
       51, 0, TRUE);
 
   g_object_unref (trackelement);
-  fail_unless (ges_timeline_layer_remove_clip (layer, object));
+  fail_unless (ges_timeline_layer_remove_clip (layer, clip));
   fail_unless (ges_timeline_remove_track (timeline, track));
   fail_unless (ges_timeline_remove_layer (timeline, layer));
   g_object_unref (timeline);
@@ -131,7 +131,7 @@ GST_START_TEST (test_layer_priorities)
   GESTimeline *timeline;
   GESTimelineLayer *layer1, *layer2, *layer3;
   GESTrackElement *trackelement1, *trackelement2, *trackelement3;
-  GESClip *object1, *object2, *object3;
+  GESClip *clip1, *clip2, *clip3;
   GstElement *gnlobj1, *gnlobj2, *gnlobj3;
   guint prio1, prio2, prio3;
   GList *objs, *tmp;
@@ -158,57 +158,57 @@ GST_START_TEST (test_layer_priorities)
   fail_unless (track != NULL);
   fail_unless (ges_timeline_add_track (timeline, track));
 
-  object1 = GES_CLIP (ges_custom_source_clip_new (my_fill_track_func, NULL));
-  ges_clip_set_supported_formats (object1,
+  clip1 = GES_CLIP (ges_custom_source_clip_new (my_fill_track_func, NULL));
+  ges_clip_set_supported_formats (clip1,
       GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO);
-  object2 = GES_CLIP (ges_custom_source_clip_new (my_fill_track_func, NULL));
-  ges_clip_set_supported_formats (object2,
+  clip2 = GES_CLIP (ges_custom_source_clip_new (my_fill_track_func, NULL));
+  ges_clip_set_supported_formats (clip2,
       GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO);
-  object3 = GES_CLIP (ges_custom_source_clip_new (my_fill_track_func, NULL));
-  ges_clip_set_supported_formats (object3,
+  clip3 = GES_CLIP (ges_custom_source_clip_new (my_fill_track_func, NULL));
+  ges_clip_set_supported_formats (clip3,
       GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO);
-  fail_unless (object1 != NULL);
-  fail_unless (object2 != NULL);
-  fail_unless (object3 != NULL);
+  fail_unless (clip1 != NULL);
+  fail_unless (clip2 != NULL);
+  fail_unless (clip3 != NULL);
 
   /* Set priorities on the objects */
-  g_object_set (object1, "priority", 0, NULL);
-  assert_equals_int (_PRIORITY (object1), 0);
-  g_object_set (object2, "priority", 1, NULL);
-  assert_equals_int (_PRIORITY (object2), 1);
-  g_object_set (object3, "priority", LAYER_HEIGHT + 1, NULL);
-  assert_equals_int (_PRIORITY (object3), LAYER_HEIGHT + 1);
+  g_object_set (clip1, "priority", 0, NULL);
+  assert_equals_int (_PRIORITY (clip1), 0);
+  g_object_set (clip2, "priority", 1, NULL);
+  assert_equals_int (_PRIORITY (clip2), 1);
+  g_object_set (clip3, "priority", LAYER_HEIGHT + 1, NULL);
+  assert_equals_int (_PRIORITY (clip3), LAYER_HEIGHT + 1);
 
   /* Add objects to the timeline */
-  fail_unless (ges_timeline_layer_add_clip (layer1, object1));
-  trackelement1 = ges_clip_find_track_element (object1, track, G_TYPE_NONE);
+  fail_unless (ges_timeline_layer_add_clip (layer1, clip1));
+  trackelement1 = ges_clip_find_track_element (clip1, track, G_TYPE_NONE);
   fail_unless (trackelement1 != NULL);
 
-  fail_unless (ges_timeline_layer_add_clip (layer2, object2));
-  trackelement2 = ges_clip_find_track_element (object2, track, G_TYPE_NONE);
+  fail_unless (ges_timeline_layer_add_clip (layer2, clip2));
+  trackelement2 = ges_clip_find_track_element (clip2, track, G_TYPE_NONE);
   fail_unless (trackelement2 != NULL);
 
-  fail_unless (ges_timeline_layer_add_clip (layer3, object3));
-  trackelement3 = ges_clip_find_track_element (object3, track, G_TYPE_NONE);
+  fail_unless (ges_timeline_layer_add_clip (layer3, clip3));
+  trackelement3 = ges_clip_find_track_element (clip3, track, G_TYPE_NONE);
   fail_unless (trackelement3 != NULL);
 
-  assert_equals_int (_PRIORITY (object1), 0);
+  assert_equals_int (_PRIORITY (clip1), 0);
   gnlobj1 = ges_track_element_get_gnlobject (trackelement1);
   fail_unless (gnlobj1 != NULL);
   g_object_get (gnlobj1, "priority", &prio1, NULL);
   assert_equals_int (prio1, 0);
 
-  assert_equals_int (_PRIORITY (object2), 1);
+  assert_equals_int (_PRIORITY (clip2), 1);
   gnlobj2 = ges_track_element_get_gnlobject (trackelement2);
   fail_unless (gnlobj2 != NULL);
   g_object_get (gnlobj2, "priority", &prio2, NULL);
-  /* object2 is on the second layer and has a priority of 1 */
+  /* clip2 is on the second layer and has a priority of 1 */
   assert_equals_int (prio2, LAYER_HEIGHT + 1);
 
-  assert_equals_int (_PRIORITY (object3), LAYER_HEIGHT - 1);
+  assert_equals_int (_PRIORITY (clip3), LAYER_HEIGHT - 1);
   gnlobj3 = ges_track_element_get_gnlobject (trackelement3);
   fail_unless (gnlobj3 != NULL);
-  /* object3 is on the third layer and has a priority of LAYER_HEIGHT + 1
+  /* clip3 is on the third layer and has a priority of LAYER_HEIGHT + 1
    * it priority must have the maximum priority of this layer*/
   g_object_get (gnlobj3, "priority", &prio3, NULL);
   assert_equals_int (prio3, LAYER_HEIGHT * 3 - 1);
@@ -222,9 +222,9 @@ GST_START_TEST (test_layer_priorities)
   assert_equals_int (ges_timeline_layer_get_priority (layer1), 2);
   assert_equals_int (ges_timeline_layer_get_priority (layer2), 0);
   assert_equals_int (ges_timeline_layer_get_priority (layer3), 1);
-  assert_equals_int (_PRIORITY (object1), 0);
-  assert_equals_int (_PRIORITY (object2), 1);
-  assert_equals_int (_PRIORITY (object3), LAYER_HEIGHT - 1);
+  assert_equals_int (_PRIORITY (clip1), 0);
+  assert_equals_int (_PRIORITY (clip2), 1);
+  assert_equals_int (_PRIORITY (clip3), LAYER_HEIGHT - 1);
   g_object_get (gnlobj1, "priority", &prio1, NULL);
   g_object_get (gnlobj2, "priority", &prio2, NULL);
   g_object_get (gnlobj3, "priority", &prio3, NULL);
@@ -233,8 +233,8 @@ GST_START_TEST (test_layer_priorities)
   assert_equals_int (prio3, LAYER_HEIGHT * 2 - 1);
 
   /* And move objects around */
-  fail_unless (ges_clip_move_to_layer (object2, layer1));
-  fail_unless (ges_clip_move_to_layer (object3, layer1));
+  fail_unless (ges_clip_move_to_layer (clip2, layer1));
+  fail_unless (ges_clip_move_to_layer (clip3, layer1));
 
   objs = ges_timeline_layer_get_clips (layer1);
   assert_equals_int (g_list_length (objs), 3);
@@ -247,9 +247,9 @@ GST_START_TEST (test_layer_priorities)
   g_list_free (objs);
 
   /*  Check their priorities (layer1 priority is now 2) */
-  assert_equals_int (_PRIORITY (object1), 0);
-  assert_equals_int (_PRIORITY (object2), 1);
-  assert_equals_int (_PRIORITY (object3), LAYER_HEIGHT - 1);
+  assert_equals_int (_PRIORITY (clip1), 0);
+  assert_equals_int (_PRIORITY (clip2), 1);
+  assert_equals_int (_PRIORITY (clip3), LAYER_HEIGHT - 1);
   g_object_get (gnlobj1, "priority", &prio1, NULL);
   g_object_get (gnlobj2, "priority", &prio2, NULL);
   g_object_get (gnlobj3, "priority", &prio3, NULL);
@@ -263,7 +263,7 @@ GST_START_TEST (test_layer_priorities)
       LAYER_HEIGHT * 2);
   g_object_get (gnlobj3, "priority", &prio3, NULL);
   assert_equals_int (prio3, 2 * LAYER_HEIGHT);
-  assert_equals_int (_PRIORITY (object3), 0);
+  assert_equals_int (_PRIORITY (clip3), 0);
 
   g_object_unref (trackelement1);
   g_object_unref (trackelement2);
@@ -305,12 +305,12 @@ GST_START_TEST (test_single_layer_automatic_transition)
   fail_unless (ges_timeline_layer_get_auto_transition (layer));
 
   GST_DEBUG ("Adding assets to first layer");
-  GST_DEBUG ("Adding object from 0 -- 1000 to first layer");
+  GST_DEBUG ("Adding clip from 0 -- 1000 to first layer");
   src = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 0, 0,
           1000, 1, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src));
 
-  GST_DEBUG ("Adding object from 500 -- 1000 to first layer");
+  GST_DEBUG ("Adding clip from 500 -- 1000 to first layer");
   src1 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 500,
           0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src1));
@@ -479,7 +479,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   g_list_free_full (objects, gst_object_unref);
 
   GST_DEBUG ("Adding asset to first layer");
-  GST_DEBUG ("Adding object from 1250 -- 1000 to first layer");
+  GST_DEBUG ("Adding clip from 1250 -- 1000 to first layer");
   src2 =
       GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 1250, 0,
           1000, 1, GES_TRACK_TYPE_UNKNOWN));
@@ -576,7 +576,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   g_list_free_full (objects, gst_object_unref);
 
   GST_DEBUG
-      ("Set third object start to 1100, 1 new transition should be created");
+      ("Set third clip start to 1100, 1 new transition should be created");
   ges_timeline_element_set_start (src2, 1100);
   /*             600____src___1100
    *        500___________src1________1250
@@ -614,7 +614,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   fail_unless (current->data == src2);
   g_list_free_full (objects, gst_object_unref);
 
-  GST_DEBUG ("Set third object start to 1000, Transition should be updated");
+  GST_DEBUG ("Set third clip start to 1000, Transition should be updated");
   ges_clip_edit (GES_CLIP (src2), NULL, -1,
       GES_EDIT_MODE_NORMAL, GES_EDGE_START, 1000);
   /*             600____src___1100
@@ -709,12 +709,12 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   fail_if (ges_timeline_layer_get_auto_transition (layer1));
 
   GST_DEBUG ("Adding assets to first layer");
-  GST_DEBUG ("Adding object from 0 -- 1000 to first layer");
+  GST_DEBUG ("Adding clip from 0 -- 1000 to first layer");
   src = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 0, 0,
           1000, 1, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src));
 
-  GST_DEBUG ("Adding object from 500 -- 1000 to first layer");
+  GST_DEBUG ("Adding clip from 500 -- 1000 to first layer");
   src1 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 500,
           0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src1));
@@ -749,10 +749,10 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   g_list_free_full (objects, gst_object_unref);
   ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
 
-  GST_DEBUG ("Adding object 2 from 500 -- 1000 to second layer");
+  GST_DEBUG ("Adding clip 2 from 500 -- 1000 to second layer");
   src2 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer1, asset, 0,
           0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
-  GST_DEBUG ("Adding object 3 from 500 -- 1000 to second layer");
+  GST_DEBUG ("Adding clip 3 from 500 -- 1000 to second layer");
   src3 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer1, asset, 500,
           0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
   assert_is_type (src3, GES_TYPE_TEST_CLIP);
@@ -1183,22 +1183,22 @@ GST_START_TEST (test_layer_activate_automatic_transition)
   layer = ges_timeline_append_layer (timeline);
   assert_is_type (layer, GES_TYPE_TIMELINE_LAYER);
 
-  GST_DEBUG ("Adding object from 0 -- 1000 to layer");
+  GST_DEBUG ("Adding clip from 0 -- 1000 to layer");
   src = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 0, 0,
           1000, 1, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src));
 
-  GST_DEBUG ("Adding object from 500 -- 1000 to first layer");
+  GST_DEBUG ("Adding clip from 500 -- 1000 to first layer");
   src1 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 500,
           0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src1));
 
-  GST_DEBUG ("Adding object from 1000 -- 2000 to layer");
+  GST_DEBUG ("Adding clip from 1000 -- 2000 to layer");
   src2 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 1000,
           0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src2));
 
-  GST_DEBUG ("Adding object from 2000 -- 2500 to layer");
+  GST_DEBUG ("Adding clip from 2000 -- 2500 to layer");
   src3 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 2000,
           0, 500, 1, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src3));

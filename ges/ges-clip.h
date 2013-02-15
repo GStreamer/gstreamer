@@ -40,8 +40,8 @@ typedef struct _GESClipPrivate GESClipPrivate;
 
 /**
  * GESFillTrackElementFunc:
- * @object: the #GESClip controlling the track elements
- * @trobject: the #GESTrackElement
+ * @clip: the #GESClip controlling the track elements
+ * @track_element: the #GESTrackElement
  * @gnlobj: the GNonLin object that needs to be filled.
  *
  * A function that will be called when the GNonLin object of a corresponding
@@ -52,16 +52,16 @@ typedef struct _GESClipPrivate GESClipPrivate;
  *
  * Returns: TRUE if the implementer succesfully filled the @gnlobj, else #FALSE.
  */
-typedef gboolean (*GESFillTrackElementFunc) (GESClip *object,
-                                            GESTrackElement *trobject,
+typedef gboolean (*GESFillTrackElementFunc) (GESClip *clip,
+                                            GESTrackElement *track_element,
                                             GstElement *gnlobj);
 
 /**
  * GESCreateTrackElementFunc:
- * @object: a #GESClip
+ * @clip: a #GESClip
  * @type: a #GESTrackType
  *
- * Creates the 'primary' track element for this @object.
+ * Creates the 'primary' track element for this @clip.
  *
  * Subclasses should implement this method if they only provide a
  * single #GESTrackElement per track.
@@ -71,7 +71,7 @@ typedef gboolean (*GESFillTrackElementFunc) (GESClip *object,
  * method instead.
  *
  * The implementer of this function shall return the proper #GESTrackElement
- * that should be controlled by @object for the given @track.
+ * that should be controlled by @clip for the given @track.
  *
  * The returned #GESTrackElement will be automatically added to the list
  * of objects controlled by the #GESClip.
@@ -79,33 +79,33 @@ typedef gboolean (*GESFillTrackElementFunc) (GESClip *object,
  * Returns: the #GESTrackElement to be used, or %NULL if it can't provide one
  * for the given @track.
  */
-typedef GESTrackElement *(*GESCreateTrackElementFunc) (GESClip * object,
+typedef GESTrackElement *(*GESCreateTrackElementFunc) (GESClip * clip,
                                                      GESTrackType type);
 
 /**
  * GESCreateTrackElementsFunc:
- * @object: a #GESClip
+ * @clip: a #GESClip
  * @type: a #GESTrackType
  *
- * Create all track elements this object handles for this type of track.
+ * Create all track elements this clip handles for this type of track.
  *
  * Subclasses should implement this method if they potentially need to
  * return more than one #GESTrackElement(s) for a given #GESTrack.
  *
- * For each object created, the subclass must call
- * ges_clip_add_track_element() with the newly created object
+ * For each clip created, the subclass must call
+ * ges_clip_add_track_element() with the newly created clip
  * and provided @type.
  *
  * Returns: %TRUE on success %FALSE on failure.
  */
 
-typedef GList * (*GESCreateTrackElementsFunc) (GESClip * object, GESTrackType type);
+typedef GList * (*GESCreateTrackElementsFunc) (GESClip * clip, GESTrackType type);
 
 /**
  * GES_CLIP_HEIGHT:
  * @obj: a #GESClip
  *
- * The span of priorities this object occupies.
+ * The span of priorities this clip occupies.
  */
 #define GES_CLIP_HEIGHT(obj) (((GESClip*)obj)->height)
 
@@ -125,8 +125,8 @@ struct _GESClip
 
   /* We don't add those properties to the priv struct for optimization purposes
    * start, inpoint, duration and fullduration are in nanoseconds */
-  guint32 height;               /* the span of priorities this object needs */
-  guint64 fullduration;         /* Full usable duration of the object (-1: no duration) */
+  guint32 height;               /* the span of priorities this clip needs */
+  guint64 fullduration;         /* Full usable duration of the clip (-1: no duration) */
 
   /*< private >*/
   GESClipPrivate *priv;
@@ -166,9 +166,9 @@ struct _GESClipClass
   gboolean need_fill_track;
   gboolean snaps;
 
-  void (*track_element_added)    (GESClip *object,
+  void (*track_element_added)    (GESClip *clip,
                                 GESTrackElement *track_element);
-  void (*track_element_released) (GESClip *object,
+  void (*track_element_released) (GESClip *clip,
                                 GESTrackElement *track_element);
 
   /*< private >*/
@@ -179,37 +179,37 @@ struct _GESClipClass
 GType ges_clip_get_type (void);
 
 /* Setters */
-void ges_clip_set_layer            (GESClip *object,
+void ges_clip_set_layer            (GESClip *clip,
                                                GESTimelineLayer  *layer);
 
 /* TrackElement handling */
-GList* ges_clip_get_track_elements            (GESClip *object);
-GESTrackType ges_clip_get_supported_formats  (GESClip *object);
-GESTrackElement *ges_clip_create_track_element (GESClip *object, GESTrackType type);
-GList * ges_clip_create_track_elements        (GESClip *object, GESTrackType type);
-gboolean ges_clip_release_track_element       (GESClip *object, GESTrackElement    *trackelement);
-void ges_clip_set_supported_formats          (GESClip *object, GESTrackType       supportedformats);
-gboolean ges_clip_add_asset               (GESClip *object, GESAsset       *asset);
-gboolean ges_clip_add_track_element           (GESClip *object, GESTrackElement    *trobj);
-gboolean ges_clip_fill_track_element          (GESClip *object, GESTrackElement    *trackelement, GstElement *gnlobj);
-GESTrackElement *ges_clip_find_track_element   (GESClip *object, GESTrack          *track,    GType      type);
+GList* ges_clip_get_track_elements            (GESClip *clip);
+GESTrackType ges_clip_get_supported_formats  (GESClip *clip);
+GESTrackElement *ges_clip_create_track_element (GESClip *clip, GESTrackType type);
+GList * ges_clip_create_track_elements        (GESClip *clip, GESTrackType type);
+gboolean ges_clip_release_track_element       (GESClip *clip, GESTrackElement    *trackelement);
+void ges_clip_set_supported_formats          (GESClip *clip, GESTrackType       supportedformats);
+gboolean ges_clip_add_asset               (GESClip *clip, GESAsset       *asset);
+gboolean ges_clip_add_track_element           (GESClip *clip, GESTrackElement    *track_element);
+gboolean ges_clip_fill_track_element          (GESClip *clip, GESTrackElement    *trackelement, GstElement *gnlobj);
+GESTrackElement *ges_clip_find_track_element   (GESClip *clip, GESTrack          *track,    GType      type);
 
 /* Layer */
-GESTimelineLayer *ges_clip_get_layer   (GESClip *object);
-gboolean ges_clip_is_moving_from_layer (GESClip *object);
-gboolean ges_clip_move_to_layer        (GESClip *object, GESTimelineLayer  *layer);
-void ges_clip_set_moving_from_layer    (GESClip *object, gboolean is_moving);
+GESTimelineLayer *ges_clip_get_layer   (GESClip *clip);
+gboolean ges_clip_is_moving_from_layer (GESClip *clip);
+gboolean ges_clip_move_to_layer        (GESClip *clip, GESTimelineLayer  *layer);
+void ges_clip_set_moving_from_layer    (GESClip *clip, gboolean is_moving);
 
 /* Effects */
-GList* ges_clip_get_top_effects           (GESClip *object);
-gint   ges_clip_get_top_effect_position   (GESClip *object, GESBaseEffect *effect);
-gboolean ges_clip_set_top_effect_priority (GESClip *object, GESBaseEffect *effect, guint newpriority);
+GList* ges_clip_get_top_effects           (GESClip *clip);
+gint   ges_clip_get_top_effect_position   (GESClip *clip, GESBaseEffect *effect);
+gboolean ges_clip_set_top_effect_priority (GESClip *clip, GESBaseEffect *effect, guint newpriority);
 
 /* Editing */
-GESClip *ges_clip_split  (GESClip *object, guint64  position);
-void ges_clip_objects_set_locked   (GESClip *object, gboolean locked);
+GESClip *ges_clip_split  (GESClip *clip, guint64  position);
+void ges_clip_objects_set_locked   (GESClip *clip, gboolean locked);
 
-gboolean ges_clip_edit             (GESClip *object, GList   *layers,
+gboolean ges_clip_edit             (GESClip *clip, GList   *layers,
                                                gint  new_layer_priority, GESEditMode mode,
                                                GESEdge edge, guint64 position);
 

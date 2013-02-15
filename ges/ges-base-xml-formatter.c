@@ -680,7 +680,7 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
     const gchar * metadatas, GError ** error)
 {
   GESAsset *asset;
-  GESClip *nobj;
+  GESClip *nclip;
   LayerEntry *entry;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
@@ -742,11 +742,11 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
     return;
   }
 
-  nobj = _add_object_to_layer (priv, id, entry->layer,
+  nclip = _add_object_to_layer (priv, id, entry->layer,
       asset, start, inpoint, duration, rate, track_types, metadatas,
       properties);
 
-  if (!nobj)
+  if (!nclip)
     return;
 }
 

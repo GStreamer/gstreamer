@@ -153,20 +153,20 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
    * ready to start using it... by solely working with the layer !*/
 
   for (i = 0; i < nbargs / 3; i++) {
-    GESClip *obj;
+    GESClip *clip;
 
     char *source = argv[i * 3];
     char *arg0 = argv[(i * 3) + 1];
     guint64 duration = str_to_time (argv[(i * 3) + 2]);
 
     if (!g_strcmp0 ("+pattern", source)) {
-      obj = GES_CLIP (ges_test_clip_new_for_nick (arg0));
-      if (!obj) {
+      clip = GES_CLIP (ges_test_clip_new_for_nick (arg0));
+      if (!clip) {
         g_error ("%s is an invalid pattern name!\n", arg0);
         goto build_failure;
       }
 
-      g_object_set (G_OBJECT (obj), "duration", duration, NULL);
+      g_object_set (G_OBJECT (clip), "duration", duration, NULL);
 
       g_printf ("Adding <pattern:%s> duration %" GST_TIME_FORMAT "\n", arg0,
           GST_TIME_ARGS (duration));
@@ -178,14 +178,14 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
         goto build_failure;
       }
 
-      obj = GES_CLIP (ges_transition_clip_new_for_nick (arg0));
+      clip = GES_CLIP (ges_transition_clip_new_for_nick (arg0));
 
-      if (!obj) {
+      if (!clip) {
         g_error ("invalid transition type\n");
         goto build_failure;
       }
 
-      g_object_set (G_OBJECT (obj), "duration", duration, NULL);
+      g_object_set (G_OBJECT (clip), "duration", duration, NULL);
 
       g_printf ("Adding <transition:%s> duration %" GST_TIME_FORMAT "\n", arg0,
           GST_TIME_ARGS (duration));
@@ -193,9 +193,9 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
     }
 
     else if (!g_strcmp0 ("+title", source)) {
-      obj = GES_CLIP (ges_title_clip_new ());
+      clip = GES_CLIP (ges_title_clip_new ());
 
-      g_object_set (obj, "duration", duration, "text", arg0, NULL);
+      g_object_set (clip, "duration", duration, "text", arg0, NULL);
 
       g_printf ("Adding <title:%s> duration %" GST_TIME_FORMAT "\n", arg0,
           GST_TIME_ARGS (duration));
@@ -211,8 +211,8 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
       }
 
       inpoint = str_to_time (argv[i * 3 + 1]);
-      obj = GES_CLIP (ges_uri_clip_new (uri));
-      g_object_set (obj,
+      clip = GES_CLIP (ges_uri_clip_new (uri));
+      g_object_set (clip,
           "in-point", (guint64) inpoint, "duration", (guint64) duration, NULL);
 
       g_printf ("Adding clip %s inpoint:%" GST_TIME_FORMAT " duration:%"
@@ -224,7 +224,7 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
 
     /* Since we're using a GESSimpleTimelineLayer, objects will be automatically
      * appended to the end of the layer */
-    ges_timeline_layer_add_clip (layer, obj);
+    ges_timeline_layer_add_clip (layer, clip);
   }
 
   return timeline;

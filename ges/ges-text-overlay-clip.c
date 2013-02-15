@@ -64,7 +64,7 @@ enum
 };
 
 static GESTrackElement
-    * ges_text_overlay_clip_create_track_element (GESClip * obj,
+    * ges_text_overlay_clip_create_track_element (GESClip * clip,
     GESTrackType type);
 
 static void
@@ -267,7 +267,7 @@ void
 ges_text_overlay_clip_set_text (GESTextOverlayClip * self, const gchar * text)
 {
   GList *tmp, *trackelements;
-  GESClip *object = (GESClip *) self;
+  GESClip *clip = (GESClip *) self;
 
   GST_DEBUG ("self:%p, text:%s", self, text);
 
@@ -276,7 +276,7 @@ ges_text_overlay_clip_set_text (GESTextOverlayClip * self, const gchar * text)
 
   self->priv->text = g_strdup (text);
 
-  trackelements = ges_clip_get_track_elements (object);
+  trackelements = ges_clip_get_track_elements (clip);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
@@ -303,7 +303,7 @@ ges_text_overlay_clip_set_font_desc (GESTextOverlayClip * self,
     const gchar * font_desc)
 {
   GList *tmp, *trackelements;
-  GESClip *object = (GESClip *) self;
+  GESClip *clip = (GESClip *) self;
 
   GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
 
@@ -312,7 +312,7 @@ ges_text_overlay_clip_set_font_desc (GESTextOverlayClip * self,
 
   self->priv->font_desc = g_strdup (font_desc);
 
-  trackelements = ges_clip_get_track_elements (object);
+  trackelements = ges_clip_get_track_elements (clip);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
@@ -340,13 +340,13 @@ ges_text_overlay_clip_set_halign (GESTextOverlayClip * self,
     GESTextHAlign halign)
 {
   GList *tmp, *trackelements;
-  GESClip *object = (GESClip *) self;
+  GESClip *clip = (GESClip *) self;
 
   GST_DEBUG ("self:%p, halign:%d", self, halign);
 
   self->priv->halign = halign;
 
-  trackelements = ges_clip_get_track_elements (object);
+  trackelements = ges_clip_get_track_elements (clip);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
@@ -374,13 +374,13 @@ ges_text_overlay_clip_set_valign (GESTextOverlayClip * self,
     GESTextVAlign valign)
 {
   GList *tmp, *trackelements;
-  GESClip *object = (GESClip *) self;
+  GESClip *clip = (GESClip *) self;
 
   GST_DEBUG ("self:%p, valign:%d", self, valign);
 
   self->priv->valign = valign;
 
-  trackelements = ges_clip_get_track_elements (object);
+  trackelements = ges_clip_get_track_elements (clip);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
@@ -408,13 +408,13 @@ void
 ges_text_overlay_clip_set_color (GESTextOverlayClip * self, guint32 color)
 {
   GList *tmp, *trackelements;
-  GESClip *object = (GESClip *) self;
+  GESClip *clip = (GESClip *) self;
 
   GST_DEBUG ("self:%p, color:%d", self, color);
 
   self->priv->color = color;
 
-  trackelements = ges_clip_get_track_elements (object);
+  trackelements = ges_clip_get_track_elements (clip);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
@@ -441,13 +441,13 @@ void
 ges_text_overlay_clip_set_xpos (GESTextOverlayClip * self, gdouble position)
 {
   GList *tmp, *trackelements;
-  GESClip *object = (GESClip *) self;
+  GESClip *clip = (GESClip *) self;
 
   GST_DEBUG ("self:%p, xpos:%f", self, position);
 
   self->priv->xpos = position;
 
-  trackelements = ges_clip_get_track_elements (object);
+  trackelements = ges_clip_get_track_elements (clip);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
@@ -474,13 +474,13 @@ void
 ges_text_overlay_clip_set_ypos (GESTextOverlayClip * self, gdouble position)
 {
   GList *tmp, *trackelements;
-  GESClip *object = (GESClip *) self;
+  GESClip *clip = (GESClip *) self;
 
   GST_DEBUG ("self:%p, ypos:%f", self, position);
 
   self->priv->ypos = position;
 
-  trackelements = ges_clip_get_track_elements (object);
+  trackelements = ges_clip_get_track_elements (clip);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
@@ -603,10 +603,10 @@ ges_text_overlay_clip_get_ypos (GESTextOverlayClip * self)
 }
 
 static GESTrackElement *
-ges_text_overlay_clip_create_track_element (GESClip * obj, GESTrackType type)
+ges_text_overlay_clip_create_track_element (GESClip * clip, GESTrackType type)
 {
 
-  GESTextOverlayClipPrivate *priv = GES_OVERLAY_TEXT_CLIP (obj)->priv;
+  GESTextOverlayClipPrivate *priv = GES_OVERLAY_TEXT_CLIP (clip)->priv;
   GESTrackElement *res = NULL;
 
   GST_DEBUG ("Creating a GESTrackOverlay");

@@ -66,9 +66,9 @@ enum
 
 
 static GList *ges_uri_clip_create_track_elements (GESClip *
-    obj, GESTrackType type);
+    clip, GESTrackType type);
 static GESTrackElement
-    * ges_uri_clip_create_track_element (GESClip * obj, GESTrackType type);
+    * ges_uri_clip_create_track_element (GESClip * clip, GESTrackType type);
 void ges_uri_clip_set_uri (GESUriClip * self, gchar * uri);
 
 gboolean
@@ -281,14 +281,14 @@ void
 ges_uri_clip_set_mute (GESUriClip * self, gboolean mute)
 {
   GList *tmp, *trackelements;
-  GESClip *object = (GESClip *) self;
+  GESClip *clip = (GESClip *) self;
 
   GST_DEBUG ("self:%p, mute:%d", self, mute);
 
   self->priv->mute = mute;
 
   /* Go over tracked objects, and update 'active' status on all audio objects */
-  trackelements = ges_clip_get_track_elements (object);
+  trackelements = ges_clip_get_track_elements (clip);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
@@ -370,16 +370,16 @@ ges_uri_clip_get_uri (GESUriClip * self)
 }
 
 static GList *
-ges_uri_clip_create_track_elements (GESClip * obj, GESTrackType type)
+ges_uri_clip_create_track_elements (GESClip * clip, GESTrackType type)
 {
   GList *res = NULL;
   const GList *tmp, *stream_assets;
 
-  g_return_val_if_fail (GES_TIMELINE_ELEMENT (obj)->asset, NULL);
+  g_return_val_if_fail (GES_TIMELINE_ELEMENT (clip)->asset, NULL);
 
   stream_assets =
       ges_uri_clip_asset_get_stream_assets (GES_URI_CLIP_ASSET
-      (GES_TIMELINE_ELEMENT (obj)->asset));
+      (GES_TIMELINE_ELEMENT (clip)->asset));
   for (tmp = stream_assets; tmp; tmp = tmp->next) {
     GESTrackElementAsset *asset = GES_TRACK_ELEMENT_ASSET (tmp->data);
 
@@ -391,9 +391,9 @@ ges_uri_clip_create_track_elements (GESClip * obj, GESTrackType type)
 }
 
 static GESTrackElement *
-ges_uri_clip_create_track_element (GESClip * obj, GESTrackType type)
+ges_uri_clip_create_track_element (GESClip * clip, GESTrackType type)
 {
-  GESUriClipPrivate *priv = GES_URI_CLIP (obj)->priv;
+  GESUriClipPrivate *priv = GES_URI_CLIP (clip)->priv;
   GESTrackElement *res;
 
   if (priv->is_image) {

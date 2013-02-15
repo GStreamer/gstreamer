@@ -140,12 +140,12 @@ ges_text_overlay_set_property (GObject * object,
 }
 
 static GstElement *
-ges_text_overlay_create_element (GESTrackElement * object)
+ges_text_overlay_create_element (GESTrackElement * track_element)
 {
   GstElement *ret, *text, *iconv, *oconv;
   GstPad *src_target, *sink_target;
   GstPad *src, *sink;
-  GESTextOverlay *self = GES_TEXT_OVERLAY (object);
+  GESTextOverlay *self = GES_TEXT_OVERLAY (track_element);
 
   text = gst_element_factory_make ("textoverlay", NULL);
   iconv = gst_element_factory_make ("videoconvert", NULL);

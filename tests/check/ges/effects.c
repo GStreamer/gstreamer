@@ -21,9 +21,9 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
-void effect_added_cb (GESClip * obj, GESBaseEffect * trop, gpointer data);
+void effect_added_cb (GESClip * clip, GESBaseEffect * trop, gpointer data);
 void
-deep_prop_changed_cb (GESTrackElement * obj, GstElement * element,
+deep_prop_changed_cb (GESTrackElement * track_element, GstElement * element,
     GParamSpec * spec);
 
 GST_START_TEST (test_effect_basic)
@@ -383,19 +383,19 @@ GST_START_TEST (test_base_effect_set_properties)
 GST_END_TEST;
 
 void
-effect_added_cb (GESClip * obj, GESBaseEffect * trop, gpointer data)
+effect_added_cb (GESClip * clip, GESBaseEffect * trop, gpointer data)
 {
   GST_DEBUG ("Effect added");
-  fail_unless (GES_IS_CLIP (obj));
+  fail_unless (GES_IS_CLIP (clip));
   fail_unless (GES_IS_BASE_EFFECT (trop));
 }
 
 void
-deep_prop_changed_cb (GESTrackElement * obj, GstElement * element,
+deep_prop_changed_cb (GESTrackElement * track_element, GstElement * element,
     GParamSpec * spec)
 {
   GST_DEBUG ("%s property changed", g_param_spec_get_name (spec));
-  fail_unless (GES_IS_TRACK_ELEMENT (obj));
+  fail_unless (GES_IS_TRACK_ELEMENT (track_element));
   fail_unless (GST_IS_ELEMENT (element));
 }
 

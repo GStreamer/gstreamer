@@ -49,7 +49,7 @@ typedef struct _GESCustomSourceClipPrivate   GESCustomSourceClipPrivate;
 /**
  * GESFillTrackElementUserFunc:
  * @object: the #GESClip controlling the track element
- * @trobject: the #GESTrackElement
+ * @track_element: the #GESTrackElement
  * @gnlobj: the GNonLin object that needs to be filled.
  * @user_data: the gpointer to optional user data
  *
@@ -62,7 +62,7 @@ typedef struct _GESCustomSourceClipPrivate   GESCustomSourceClipPrivate;
  * Returns: TRUE if the implementer succesfully filled the @gnlobj, else #FALSE.
  */
 typedef gboolean (*GESFillTrackElementUserFunc) (GESClip * object,
-					     GESTrackElement * trobject,
+					     GESTrackElement * track_element,
 					     GstElement * gnlobj,
 					     gpointer user_data);
 

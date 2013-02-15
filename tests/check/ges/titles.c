@@ -39,26 +39,26 @@ GST_START_TEST (test_title_source_properties)
 {
   GESTrack *track;
   GESTrackElement *trackelement;
-  GESClip *object;
+  GESClip *clip;
 
   ges_init ();
 
   track = ges_track_video_raw_new ();
   fail_unless (track != NULL);
 
-  object = (GESClip *)
+  clip = (GESClip *)
       ges_title_clip_new ();
-  fail_unless (object != NULL);
+  fail_unless (clip != NULL);
 
   /* Set some properties */
-  g_object_set (object, "start", (guint64) 42, "duration", (guint64) 51,
+  g_object_set (clip, "start", (guint64) 42, "duration", (guint64) 51,
       "in-point", (guint64) 12, NULL);
-  assert_equals_uint64 (_START (object), 42);
-  assert_equals_uint64 (_DURATION (object), 51);
-  assert_equals_uint64 (_INPOINT (object), 12);
+  assert_equals_uint64 (_START (clip), 42);
+  assert_equals_uint64 (_DURATION (clip), 51);
+  assert_equals_uint64 (_INPOINT (clip), 12);
 
-  trackelement = ges_clip_create_track_element (object, track->type);
-  ges_clip_add_track_element (object, trackelement);
+  trackelement = ges_clip_create_track_element (clip, track->type);
+  ges_clip_add_track_element (clip, trackelement);
   fail_unless (trackelement != NULL);
   fail_unless (ges_track_element_set_track (trackelement, track));
 
@@ -72,11 +72,11 @@ GST_START_TEST (test_title_source_properties)
       51, 0, TRUE);
 
   /* Change more properties, see if they propagate */
-  g_object_set (object, "start", (guint64) 420, "duration", (guint64) 510,
+  g_object_set (clip, "start", (guint64) 420, "duration", (guint64) 510,
       "in-point", (guint64) 120, NULL);
-  assert_equals_uint64 (_START (object), 420);
-  assert_equals_uint64 (_DURATION (object), 510);
-  assert_equals_uint64 (_INPOINT (object), 120);
+  assert_equals_uint64 (_START (clip), 420);
+  assert_equals_uint64 (_DURATION (clip), 510);
+  assert_equals_uint64 (_INPOINT (clip), 120);
   assert_equals_uint64 (_START (trackelement), 420);
   assert_equals_uint64 (_DURATION (trackelement), 510);
   assert_equals_uint64 (_INPOINT (trackelement), 120);
@@ -85,8 +85,8 @@ GST_START_TEST (test_title_source_properties)
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
       120, 510, 0, TRUE);
 
-  ges_clip_release_track_element (object, trackelement);
-  g_object_unref (object);
+  ges_clip_release_track_element (clip, trackelement);
+  g_object_unref (clip);
 }
 
 GST_END_TEST;
@@ -96,7 +96,7 @@ GST_START_TEST (test_title_source_in_layer)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *a, *v;
-  GESTrackElement *trobj;
+  GESTrackElement *track_element;
   GESTitleClip *source;
   gchar *text;
   gint halign, valign;
@@ -128,12 +128,12 @@ GST_START_TEST (test_title_source_in_layer)
   assert_equals_string ("some text", text);
   g_free (text);
 
-  trobj =
+  track_element =
       ges_clip_find_track_element (GES_CLIP (source), v, GES_TYPE_TITLE_SOURCE);
 
   /* Check the text is still the same */
   assert_equals_string (ges_title_source_get_text (GES_TITLE_SOURCE
-          (trobj)), "some text");
+          (track_element)), "some text");
 
   /* test the font-desc property */
   g_object_set (source, "font-desc", (gchar *) "sans 72", NULL);
@@ -142,7 +142,7 @@ GST_START_TEST (test_title_source_in_layer)
   g_free (text);
 
   assert_equals_string ("sans 72",
-      ges_title_source_get_font_desc (GES_TITLE_SOURCE (trobj)));
+      ges_title_source_get_font_desc (GES_TITLE_SOURCE (track_element)));
 
   /* test halign and valign */
   g_object_set (source, "halignment", (gint)
@@ -152,16 +152,16 @@ GST_START_TEST (test_title_source_in_layer)
   assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
 
   assert_equals_int (ges_title_source_get_halignment
-      (GES_TITLE_SOURCE (trobj)), GES_TEXT_HALIGN_LEFT);
+      (GES_TITLE_SOURCE (track_element)), GES_TEXT_HALIGN_LEFT);
   assert_equals_int (ges_title_source_get_valignment
-      (GES_TITLE_SOURCE (trobj)), GES_TEXT_VALIGN_TOP);
+      (GES_TITLE_SOURCE (track_element)), GES_TEXT_VALIGN_TOP);
 
   /* test color */
   g_object_set (source, "color", (gint) 2147483647, NULL);
   g_object_get (source, "color", &color, NULL);
   assert_equals_int (color, 2147483647);
 
-  color = ges_title_source_get_text_color (GES_TITLE_SOURCE (trobj));
+  color = ges_title_source_get_text_color (GES_TITLE_SOURCE (track_element));
   assert_equals_int (color, 2147483647);
 
   /* test xpos */
@@ -169,7 +169,7 @@ GST_START_TEST (test_title_source_in_layer)
   g_object_get (source, "xpos", &xpos, NULL);
   assert_equals_float (xpos, 0.25);
 
-  xpos = ges_title_source_get_xpos (GES_TITLE_SOURCE (trobj));
+  xpos = ges_title_source_get_xpos (GES_TITLE_SOURCE (track_element));
   assert_equals_float (xpos, 0.25);
 
   /* test ypos */
@@ -177,7 +177,7 @@ GST_START_TEST (test_title_source_in_layer)
   g_object_get (source, "ypos", &ypos, NULL);
   assert_equals_float (ypos, 0.66);
 
-  xpos = ges_title_source_get_xpos (GES_TITLE_SOURCE (trobj));
+  xpos = ges_title_source_get_xpos (GES_TITLE_SOURCE (track_element));
   assert_equals_float (ypos, 0.66);
 
   GST_DEBUG ("removing the source");
@@ -186,7 +186,7 @@ GST_START_TEST (test_title_source_in_layer)
 
   GST_DEBUG ("removing the layer");
 
-  g_object_unref (trobj);
+  g_object_unref (track_element);
   g_object_unref (timeline);
 }
 

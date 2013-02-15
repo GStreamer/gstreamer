@@ -36,7 +36,7 @@ static guint auto_transition_signals[LAST_SIGNAL] = { 0 };
 G_DEFINE_TYPE (GESAutoTransition, ges_auto_transition, G_TYPE_OBJECT);
 
 static void
-neighbour_changed_cb (GESClip * obj, GParamSpec * arg G_GNUC_UNUSED,
+neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
     GESAutoTransition * self)
 {
   gint64 new_duration;
@@ -67,7 +67,7 @@ neighbour_changed_cb (GESClip * obj, GParamSpec * arg G_GNUC_UNUSED,
 }
 
 static void
-_height_changed_cb (GESClip * obj, GParamSpec * arg G_GNUC_UNUSED,
+_height_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
     GESAutoTransition * self)
 {
   /* FIXME This is really not smart and we should properly implement clip
@@ -77,12 +77,12 @@ _height_changed_cb (GESClip * obj, GParamSpec * arg G_GNUC_UNUSED,
 }
 
 static void
-_track_changed_cb (GESTrackElement * obj, GParamSpec * arg G_GNUC_UNUSED,
-    GESAutoTransition * self)
+_track_changed_cb (GESTrackElement * track_element,
+    GParamSpec * arg G_GNUC_UNUSED, GESAutoTransition * self)
 {
-  if (ges_track_element_get_track (obj) == NULL) {
+  if (ges_track_element_get_track (track_element) == NULL) {
     GST_DEBUG_OBJECT (self, "Neighboor %" GST_PTR_FORMAT
-        " removed from track ... auto destructing", obj);
+        " removed from track ... auto destructing", track_element);
 
     g_signal_emit (self, auto_transition_signals[DESTROY_ME], 0);
   }

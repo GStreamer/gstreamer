@@ -114,28 +114,28 @@ GST_START_TEST (test_filesource_properties)
 {
   GESTrack *track;
   GESTrackElement *trackelement;
-  GESClip *object;
+  GESClip *clip;
 
   ges_init ();
 
   track = ges_track_new (GES_TRACK_TYPE_AUDIO, GST_CAPS_ANY);
   fail_unless (track != NULL);
 
-  object = (GESClip *)
+  clip = (GESClip *)
       ges_uri_clip_new ((gchar *)
       "crack:///there/is/no/way/this/exists");
-  fail_unless (object != NULL);
+  fail_unless (clip != NULL);
 
   /* Set some properties */
-  g_object_set (object, "start", (guint64) 42, "duration", (guint64) 51,
+  g_object_set (clip, "start", (guint64) 42, "duration", (guint64) 51,
       "in-point", (guint64) 12, "supported-formats", GES_TRACK_TYPE_AUDIO,
       NULL);
-  assert_equals_uint64 (_START (object), 42);
-  assert_equals_uint64 (_DURATION (object), 51);
-  assert_equals_uint64 (_INPOINT (object), 12);
+  assert_equals_uint64 (_START (clip), 42);
+  assert_equals_uint64 (_DURATION (clip), 51);
+  assert_equals_uint64 (_INPOINT (clip), 12);
 
-  trackelement = ges_clip_create_track_element (object, track->type);
-  ges_clip_add_track_element (object, trackelement);
+  trackelement = ges_clip_create_track_element (clip, track->type);
+  ges_clip_add_track_element (clip, trackelement);
   fail_unless (trackelement != NULL);
   fail_unless (ges_track_element_set_track (trackelement, track));
 
@@ -149,11 +149,11 @@ GST_START_TEST (test_filesource_properties)
       51, 0, TRUE);
 
   /* Change more properties, see if they propagate */
-  g_object_set (object, "start", (guint64) 420, "duration", (guint64) 510,
+  g_object_set (clip, "start", (guint64) 420, "duration", (guint64) 510,
       "in-point", (guint64) 120, NULL);
-  assert_equals_uint64 (_START (object), 420);
-  assert_equals_uint64 (_DURATION (object), 510);
-  assert_equals_uint64 (_INPOINT (object), 120);
+  assert_equals_uint64 (_START (clip), 420);
+  assert_equals_uint64 (_DURATION (clip), 510);
+  assert_equals_uint64 (_INPOINT (clip), 120);
   assert_equals_uint64 (_START (trackelement), 420);
   assert_equals_uint64 (_DURATION (trackelement), 510);
   assert_equals_uint64 (_INPOINT (trackelement), 120);
@@ -163,16 +163,16 @@ GST_START_TEST (test_filesource_properties)
       120, 510, 0, TRUE);
 
   /* Test mute support */
-  g_object_set (object, "mute", TRUE, NULL);
+  g_object_set (clip, "mute", TRUE, NULL);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
       120, 510, 0, FALSE);
-  g_object_set (object, "mute", FALSE, NULL);
+  g_object_set (clip, "mute", FALSE, NULL);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
       120, 510, 0, TRUE);
 
-  ges_clip_release_track_element (object, trackelement);
+  ges_clip_release_track_element (clip, trackelement);
 
-  g_object_unref (object);
+  g_object_unref (clip);
   g_object_unref (track);
 }
 
@@ -180,7 +180,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_filesource_images)
 {
-  GESTrackElement *trobj;
+  GESTrackElement *track_element;
   GESClip *clip;
   GESUriClip *uriclip;
   GESTrack *a, *v;
@@ -199,20 +199,20 @@ GST_START_TEST (test_filesource_images)
   g_object_set (G_OBJECT (uriclip), "is-image", TRUE, NULL);
 
   /* the returned track element should be an image source */
-  trobj = ges_clip_create_track_element (clip, v->type);
-  ges_clip_add_track_element (clip, trobj);
-  fail_unless (GES_IS_IMAGE_SOURCE (trobj));
+  track_element = ges_clip_create_track_element (clip, v->type);
+  ges_clip_add_track_element (clip, track_element);
+  fail_unless (GES_IS_IMAGE_SOURCE (track_element));
 
-  /* The track holds a reference to the object
-   * and the timelinobject holds a reference to the object */
-  ASSERT_OBJECT_REFCOUNT (trobj, "Video Track Element", 2);
+  /* The track holds a reference to the clip
+   * and the timelinobject holds a reference to the clip */
+  ASSERT_OBJECT_REFCOUNT (track_element, "Video Track Element", 2);
 
-  ges_track_remove_element (v, trobj);
-  ges_clip_release_track_element (clip, trobj);
+  ges_track_remove_element (v, track_element);
+  ges_clip_release_track_element (clip, track_element);
 
   /* the clip should not create any TrackElement in the audio track */
-  trobj = ges_clip_create_track_element (clip, a->type);
-  fail_unless (trobj == NULL);
+  track_element = ges_clip_create_track_element (clip, a->type);
+  fail_unless (track_element == NULL);
 
   g_object_unref (a);
   g_object_unref (v);

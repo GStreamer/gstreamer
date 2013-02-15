@@ -92,24 +92,24 @@ static GstElement *ges_track_element_create_gnl_object_func (GESTrackElement *
     object);
 
 static void gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackElement * obj);
+    G_GNUC_UNUSED, GESTrackElement * track_element);
 
 static void gnlobject_media_start_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackElement * obj);
+    G_GNUC_UNUSED, GESTrackElement * track_element);
 
 static void gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackElement * obj);
+    G_GNUC_UNUSED, GESTrackElement * track_element);
 
 static void gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackElement * obj);
+    G_GNUC_UNUSED, GESTrackElement * track_element);
 
 static void gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackElement * obj);
+    G_GNUC_UNUSED, GESTrackElement * track_element);
 
 static void connect_properties_signals (GESTrackElement * object);
 static void connect_signal (gpointer key, gpointer value, gpointer user_data);
 static void gst_element_prop_changed_cb (GstElement * element, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackElement * obj);
+    G_GNUC_UNUSED, GESTrackElement * track_element);
 
 static gboolean _set_start (GESTimelineElement * element, GstClockTime start);
 static gboolean _set_inpoint (GESTimelineElement * element,
@@ -131,20 +131,20 @@ static void
 ges_track_element_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESTrackElement *tobj = GES_TRACK_ELEMENT (object);
+  GESTrackElement *track_element = GES_TRACK_ELEMENT (object);
 
   switch (property_id) {
     case PROP_ACTIVE:
-      g_value_set_boolean (value, ges_track_element_is_active (tobj));
+      g_value_set_boolean (value, ges_track_element_is_active (track_element));
       break;
     case PROP_LOCKED:
-      g_value_set_boolean (value, ges_track_element_is_locked (tobj));
+      g_value_set_boolean (value, ges_track_element_is_locked (track_element));
       break;
     case PROP_TRACK_TYPE:
-      g_value_set_flags (value, tobj->priv->track_type);
+      g_value_set_flags (value, track_element->priv->track_type);
       break;
     case PROP_TRACK:
-      g_value_set_object (value, tobj->priv->track);
+      g_value_set_object (value, track_element->priv->track);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -155,17 +155,18 @@ static void
 ges_track_element_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESTrackElement *tobj = GES_TRACK_ELEMENT (object);
+  GESTrackElement *track_element = GES_TRACK_ELEMENT (object);
 
   switch (property_id) {
     case PROP_ACTIVE:
-      ges_track_element_set_active (tobj, g_value_get_boolean (value));
+      ges_track_element_set_active (track_element, g_value_get_boolean (value));
       break;
     case PROP_LOCKED:
-      ges_track_element_set_locked_internal (tobj, g_value_get_boolean (value));
+      ges_track_element_set_locked_internal (track_element,
+          g_value_get_boolean (value));
       break;
     case PROP_TRACK_TYPE:
-      tobj->priv->track_type = g_value_get_flags (value);
+      track_element->priv->track_type = g_value_get_flags (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -433,26 +434,27 @@ ges_track_element_get_track_type (GESTrackElement * object)
 /* Callbacks from the GNonLin object */
 static void
 gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
-    GESTrackElement * obj)
+    GESTrackElement * track_element)
 {
   guint64 start;
 
   g_object_get (gnlobject, "start", &start, NULL);
 
   GST_DEBUG ("gnlobject start : %" GST_TIME_FORMAT " current : %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (_START (obj)));
+      GST_TIME_FORMAT, GST_TIME_ARGS (start),
+      GST_TIME_ARGS (_START (track_element)));
 
-  if (start != _START (obj)) {
-    _START (obj) = start;
-    g_object_notify (G_OBJECT (obj), "start");
+  if (start != _START (track_element)) {
+    _START (track_element) = start;
+    g_object_notify (G_OBJECT (track_element), "start");
   }
 }
 
 static void
 gst_element_prop_changed_cb (GstElement * element, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackElement * obj)
+    G_GNUC_UNUSED, GESTrackElement * track_element)
 {
-  g_signal_emit (obj, ges_track_element_signals[DEEP_NOTIFY], 0,
+  g_signal_emit (track_element, ges_track_element_signals[DEEP_NOTIFY], 0,
       GST_ELEMENT (element), arg);
 }
 
@@ -484,77 +486,80 @@ connect_properties_signals (GESTrackElement * object)
 /* Callbacks from the GNonLin object */
 static void
 gnlobject_media_start_cb (GstElement * gnlobject,
-    GParamSpec * arg G_GNUC_UNUSED, GESTrackElement * obj)
+    GParamSpec * arg G_GNUC_UNUSED, GESTrackElement * track_element)
 {
   guint64 inpoint;
 
   g_object_get (gnlobject, "media-start", &inpoint, NULL);
 
   GST_DEBUG ("gnlobject in-point : %" GST_TIME_FORMAT " current : %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (inpoint), GST_TIME_ARGS (_INPOINT (obj)));
+      GST_TIME_FORMAT, GST_TIME_ARGS (inpoint),
+      GST_TIME_ARGS (_INPOINT (track_element)));
 
-  if (inpoint != _INPOINT (obj)) {
-    _INPOINT (obj) = inpoint;
-    g_object_notify (G_OBJECT (obj), "in-point");
+  if (inpoint != _INPOINT (track_element)) {
+    _INPOINT (track_element) = inpoint;
+    g_object_notify (G_OBJECT (track_element), "in-point");
   }
 }
 
 static void
 gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
-    GESTrackElement * obj)
+    GESTrackElement * track_element)
 {
   guint32 priority;
 
   g_object_get (gnlobject, "priority", &priority, NULL);
 
-  GST_DEBUG ("gnlobject priority : %d current : %d", priority, _PRIORITY (obj));
+  GST_DEBUG ("gnlobject priority : %d current : %d", priority,
+      _PRIORITY (track_element));
 
-  if (priority != _PRIORITY (obj)) {
-    _PRIORITY (obj) = priority;
-    g_object_notify (G_OBJECT (obj), "priority");
+  if (priority != _PRIORITY (track_element)) {
+    _PRIORITY (track_element) = priority;
+    g_object_notify (G_OBJECT (track_element), "priority");
   }
 }
 
 static void
 gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
-    GESTrackElement * obj)
+    GESTrackElement * track_element)
 {
   guint64 duration;
   GESTrackElementClass *klass;
 
-  klass = GES_TRACK_ELEMENT_GET_CLASS (obj);
+  klass = GES_TRACK_ELEMENT_GET_CLASS (track_element);
 
   g_object_get (gnlobject, "duration", &duration, NULL);
 
   GST_DEBUG_OBJECT (gnlobject, "duration : %" GST_TIME_FORMAT " current : %"
       GST_TIME_FORMAT, GST_TIME_ARGS (duration),
-      GST_TIME_ARGS (_DURATION (obj)));
+      GST_TIME_ARGS (_DURATION (track_element)));
 
-  if (duration != _DURATION (obj)) {
-    _DURATION (obj) = duration;
+  if (duration != _DURATION (track_element)) {
+    _DURATION (track_element) = duration;
     if (klass->duration_changed)
-      klass->duration_changed (obj, duration);
-    g_object_notify (G_OBJECT (obj), "duration");
+      klass->duration_changed (track_element, duration);
+    g_object_notify (G_OBJECT (track_element), "duration");
   }
 }
 
 static void
 gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
-    GESTrackElement * obj)
+    GESTrackElement * track_element)
 {
   gboolean active;
   GESTrackElementClass *klass;
 
-  klass = GES_TRACK_ELEMENT_GET_CLASS (obj);
+  klass = GES_TRACK_ELEMENT_GET_CLASS (track_element);
 
   g_object_get (gnlobject, "active", &active, NULL);
 
-  GST_DEBUG ("gnlobject active : %d current : %d", active, obj->active);
+  GST_DEBUG ("gnlobject active : %d current : %d", active,
+      track_element->active);
 
-  if (active != obj->active) {
-    obj->active = active;
+  if (active != track_element->active) {
+    track_element->active = active;
     if (klass->active_changed)
-      klass->active_changed (obj, active);
+      klass->active_changed (track_element, active);
   }
 }
 

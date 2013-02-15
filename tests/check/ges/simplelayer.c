@@ -22,13 +22,13 @@
 #include <gst/check/gstcheck.h>
 
 static gboolean
-my_fill_track_func (GESClip * object,
-    GESTrackElement * trobject, GstElement * gnlobj, gpointer user_data)
+my_fill_track_func (GESClip * clip,
+    GESTrackElement * track_element, GstElement * gnlobj, gpointer user_data)
 {
   GstElement *src;
 
   GST_DEBUG ("timelineobj:%p, trackelementec:%p, gnlobj:%p",
-      object, trobject, gnlobj);
+      clip, track_element, gnlobj);
 
   /* Let's just put a fakesource in for the time being */
   src = gst_element_factory_make ("fakesrc", NULL);
@@ -41,15 +41,15 @@ my_fill_track_func (GESClip * object,
 }
 
 static gboolean
-arbitrary_fill_track_func (GESClip * object,
-    GESTrackElement * trobject, GstElement * gnlobj, gpointer user_data)
+arbitrary_fill_track_func (GESClip * clip,
+    GESTrackElement * track_element, GstElement * gnlobj, gpointer user_data)
 {
   GstElement *src;
 
   g_assert (user_data);
 
   GST_DEBUG ("element:%s, timelineobj:%p, trackelements:%p, gnlobj:%p,",
-      (const gchar *) user_data, object, trobject, gnlobj);
+      (const gchar *) user_data, clip, track_element, gnlobj);
 
   /* interpret user_data as name of element to create */
   src = gst_element_factory_make (user_data, NULL);
@@ -126,7 +126,7 @@ typedef struct
 
 static void
 object_moved_cb (GESSimpleTimelineLayer * layer,
-    GESClip * object, gint old, gint new, gpointer user)
+    GESClip * clip, gint old, gint new, gpointer user)
 {
   siginfo *info;
   info = (siginfo *) user;

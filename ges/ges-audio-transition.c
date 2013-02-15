@@ -159,7 +159,7 @@ link_element_to_mixer_with_volume (GstBin * bin, GstElement * element,
 }
 
 static GstElement *
-ges_audio_transition_create_element (GESTrackElement * object)
+ges_audio_transition_create_element (GESTrackElement * track_element)
 {
   GESAudioTransition *self;
   GstElement *topbin, *iconva, *iconvb, *oconv;
@@ -169,7 +169,7 @@ ges_audio_transition_create_element (GESTrackElement * object)
   GstPad *sinka_target, *sinkb_target, *src_target, *sinka, *sinkb, *src;
   GstControlSource *acontrol_source, *bcontrol_source;
 
-  self = GES_AUDIO_TRANSITION (object);
+  self = GES_AUDIO_TRANSITION (track_element);
 
 
   GST_LOG ("creating an audio bin");
@@ -228,14 +228,14 @@ ges_audio_transition_create_element (GESTrackElement * object)
 }
 
 static void
-ges_audio_transition_duration_changed (GESTrackElement * object,
+ges_audio_transition_duration_changed (GESTrackElement * track_element,
     guint64 duration)
 {
   GESAudioTransition *self;
-  GstElement *gnlobj = ges_track_element_get_gnlobject (object);
+  GstElement *gnlobj = ges_track_element_get_gnlobject (track_element);
   GstTimedValueControlSource *ta, *tb;
 
-  self = GES_AUDIO_TRANSITION (object);
+  self = GES_AUDIO_TRANSITION (track_element);
 
   GST_LOG ("updating controller: gnlobj (%p)", gnlobj);
 

@@ -89,7 +89,7 @@ _destroy_obj_iters (TrackObjIters * iters)
  */
 struct _MoveContext
 {
-  GESClip *obj;
+  GESClip *clip;
   GESEdge edge;
   GESEditMode mode;
 
@@ -1238,7 +1238,7 @@ ges_timeline_set_moving_context (GESTimeline * timeline, GESTrackElement * obj,
   GESClip *clip = ges_track_element_get_clip (obj);
 
   /* Still in the same mv_ctx */
-  if ((mv_ctx->obj == clip && mv_ctx->mode == mode &&
+  if ((mv_ctx->clip == clip && mv_ctx->mode == mode &&
           mv_ctx->edge == edge && !mv_ctx->needs_move_ctx)) {
 
     GST_DEBUG ("Keeping the same moving mv_ctx");
@@ -1247,13 +1247,13 @@ ges_timeline_set_moving_context (GESTimeline * timeline, GESTrackElement * obj,
 
   GST_DEBUG_OBJECT (clip,
       "Changing context:\nold: obj: %p, mode: %d, edge: %d \n"
-      "new: obj: %p, mode: %d, edge: %d ! Has changed %i", mv_ctx->obj,
+      "new: obj: %p, mode: %d, edge: %d ! Has changed %i", mv_ctx->clip,
       mv_ctx->mode, mv_ctx->edge, clip, mode, edge, mv_ctx->needs_move_ctx);
 
   clean_movecontext (mv_ctx);
   mv_ctx->edge = edge;
   mv_ctx->mode = mode;
-  mv_ctx->obj = clip;
+  mv_ctx->clip = clip;
   mv_ctx->needs_move_ctx = FALSE;
 
   /* We try to find a Source inside the Clip so we can set the
@@ -1729,18 +1729,18 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
 }
 
 static void
-add_object_to_track (GESClip * object, GESTrackElement * track_element,
+add_object_to_track (GESClip * clip, GESTrackElement * track_element,
     GESTrack * track)
 {
-  if (!ges_clip_add_track_element (object, track_element)) {
-    GST_WARNING_OBJECT (object, "Failed to add track element to clip");
+  if (!ges_clip_add_track_element (clip, track_element)) {
+    GST_WARNING_OBJECT (clip, "Failed to add track element to clip");
     gst_object_unref (track_element);
     return;
   }
 
   if (!ges_track_add_element (track, track_element)) {
-    GST_WARNING_OBJECT (object, "Failed to add track element to track");
-    ges_clip_release_track_element (object, track_element);
+    GST_WARNING_OBJECT (clip, "Failed to add track element to track");
+    ges_clip_release_track_element (clip, track_element);
     gst_object_unref (track_element);
     return;
   }
@@ -1768,8 +1768,7 @@ select_tracks_for_object_default (GESTimeline * timeline,
 }
 
 static void
-add_object_to_tracks (GESTimeline * timeline, GESClip * object,
-    GESTrack * track)
+add_object_to_tracks (GESTimeline * timeline, GESClip * clip, GESTrack * track)
 {
   gint i;
   GPtrArray *tracks = NULL;
@@ -1777,9 +1776,9 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * object,
   GList *tmp, *l, *track_elements;
 
   GST_DEBUG_OBJECT (timeline, "Creating %" GST_PTR_FORMAT
-      " trackelements and adding them to our tracks", object);
+      " trackelements and adding them to our tracks", clip);
 
-  types = ges_clip_get_supported_formats (object);
+  types = ges_clip_get_supported_formats (clip);
   if (track) {
     if ((types & track->type) == 0)
       return;
@@ -1792,7 +1791,7 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * object,
     if (((track->type & types) == 0 || (track->type & visited_type)))
       continue;
 
-    track_elements = ges_clip_create_track_elements (object, track->type);
+    track_elements = ges_clip_create_track_elements (clip, track->type);
     for (l = track_elements; l; l = l->next) {
       GESTrack *tmp_track;
       GESTrackElement *track_element = l->data;
@@ -1801,7 +1800,7 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * object,
           "Asking to which track it should be added", track_element);
 
       g_signal_emit (G_OBJECT (timeline),
-          ges_timeline_signals[SELECT_TRACKS_FOR_OBJECT], 0, object,
+          ges_timeline_signals[SELECT_TRACKS_FOR_OBJECT], 0, clip,
           track_element, &tracks);
 
       if (!tracks || tracks->len == 0) {
@@ -1828,7 +1827,7 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * object,
 
         GST_LOG_OBJECT (timeline, "Trying to add %p to track %p",
             track_element_copy, tmp_track);
-        add_object_to_track (object, track_element_copy, tmp_track);
+        add_object_to_track (clip, track_element_copy, tmp_track);
 
         gst_object_unref (tmp_track);
       }
@@ -1853,12 +1852,12 @@ layer_auto_transition_changed_cb (GESTimelineLayer * layer,
 }
 
 static void
-layer_object_added_cb (GESTimelineLayer * layer, GESClip * object,
+layer_object_added_cb (GESTimelineLayer * layer, GESClip * clip,
     GESTimeline * timeline)
 {
-  if (ges_clip_is_moving_from_layer (object)) {
+  if (ges_clip_is_moving_from_layer (clip)) {
     GST_DEBUG ("Clip %p is moving from a layer to another, not doing"
-        " anything on it", object);
+        " anything on it", clip);
     timeline->priv->movecontext.needs_move_ctx = TRUE;
 
     _create_transitions_on_layer (timeline, layer, NULL, NULL,
@@ -1867,8 +1866,8 @@ layer_object_added_cb (GESTimelineLayer * layer, GESClip * object,
     return;
   }
 
-  GST_DEBUG ("New Clip %p added to layer %p", object, layer);
-  add_object_to_tracks (timeline, object, NULL);
+  GST_DEBUG ("New Clip %p added to layer %p", clip, layer);
+  add_object_to_tracks (timeline, clip, NULL);
   GST_DEBUG ("Done");
 }
 
@@ -1881,37 +1880,39 @@ layer_priority_changed_cb (GESTimelineLayer * layer,
 }
 
 static void
-layer_object_removed_cb (GESTimelineLayer * layer, GESClip * object,
+layer_object_removed_cb (GESTimelineLayer * layer, GESClip * clip,
     GESTimeline * timeline)
 {
   GList *trackelements, *tmp;
 
-  if (ges_clip_is_moving_from_layer (object)) {
+  if (ges_clip_is_moving_from_layer (clip)) {
     GST_DEBUG ("Clip %p is moving from a layer to another, not doing"
-        " anything on it", object);
+        " anything on it", clip);
     return;
   }
 
-  GST_DEBUG ("Clip %p removed from layer %p", object, layer);
+  GST_DEBUG ("Clip %p removed from layer %p", clip, layer);
 
-  /* Go over the object's track element and figure out which one belongs to
+  /* Go over the clip's track element and figure out which one belongs to
    * the list of tracks we control */
 
-  trackelements = ges_clip_get_track_elements (object);
+  trackelements = ges_clip_get_track_elements (clip);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
-    GESTrackElement *trobj = (GESTrackElement *) tmp->data;
+    GESTrackElement *track_element = (GESTrackElement *) tmp->data;
 
-    GST_DEBUG_OBJECT (timeline, "Trying to remove TrackElement %p", trobj);
+    GST_DEBUG_OBJECT (timeline, "Trying to remove TrackElement %p",
+        track_element);
     if (G_LIKELY (g_list_find_custom (timeline->priv->priv_tracks,
-                ges_track_element_get_track (trobj),
+                ges_track_element_get_track (track_element),
                 (GCompareFunc) custom_find_track))) {
       GST_DEBUG ("Belongs to one of the tracks we control");
 
-      ges_track_remove_element (ges_track_element_get_track (trobj), trobj);
-      ges_clip_release_track_element (object, trobj);
+      ges_track_remove_element (ges_track_element_get_track (track_element),
+          track_element);
+      ges_clip_release_track_element (clip, track_element);
     }
     /* removing the reference added by _get_track_elements() */
-    g_object_unref (trobj);
+    g_object_unref (track_element);
   }
 
   g_list_free (trackelements);
@@ -2012,39 +2013,39 @@ trackelement_duration_changed_cb (GESTrackElement * child,
 }
 
 static void
-track_element_added_cb (GESTrack * track, GESTrackElement * object,
+track_element_added_cb (GESTrack * track, GESTrackElement * track_element,
     GESTimeline * timeline)
 {
   /* Auto transition should be updated before we receive the signal */
-  g_signal_connect_after (GES_TRACK_ELEMENT (object), "notify::start",
+  g_signal_connect_after (GES_TRACK_ELEMENT (track_element), "notify::start",
       G_CALLBACK (trackelement_start_changed_cb), timeline);
-  g_signal_connect_after (GES_TRACK_ELEMENT (object), "notify::duration",
+  g_signal_connect_after (GES_TRACK_ELEMENT (track_element), "notify::duration",
       G_CALLBACK (trackelement_duration_changed_cb), timeline);
-  g_signal_connect_after (GES_TRACK_ELEMENT (object), "notify::priority",
+  g_signal_connect_after (GES_TRACK_ELEMENT (track_element), "notify::priority",
       G_CALLBACK (trackelement_priority_changed_cb), timeline);
 
-  start_tracking_track_element (timeline, object);
+  start_tracking_track_element (timeline, track_element);
 }
 
 static void
-track_element_removed_cb (GESTrack * track, GESTrackElement * object,
+track_element_removed_cb (GESTrack * track, GESTrackElement * track_element,
     GESTimeline * timeline)
 {
 
-  if (GES_IS_SOURCE (object)) {
+  if (GES_IS_SOURCE (track_element)) {
     /* Make sure to reinitialise the moving context next time */
     timeline->priv->movecontext.needs_move_ctx = TRUE;
   }
 
   /* Disconnect all signal handlers */
-  g_signal_handlers_disconnect_by_func (object, trackelement_start_changed_cb,
-      NULL);
-  g_signal_handlers_disconnect_by_func (object,
+  g_signal_handlers_disconnect_by_func (track_element,
+      trackelement_start_changed_cb, NULL);
+  g_signal_handlers_disconnect_by_func (track_element,
       trackelement_duration_changed_cb, NULL);
-  g_signal_handlers_disconnect_by_func (object,
+  g_signal_handlers_disconnect_by_func (track_element,
       trackelement_priority_changed_cb, NULL);
 
-  stop_tracking_track_element (timeline, object);
+  stop_tracking_track_element (timeline, track_element);
 }
 
 static void
@@ -2432,10 +2433,10 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
     objects = ges_timeline_layer_get_clips (tmp->data);
 
     for (obj = objects; obj; obj = obj->next) {
-      GESClip *object = obj->data;
+      GESClip *clip = obj->data;
 
-      add_object_to_tracks (timeline, object, track);
-      g_object_unref (object);
+      add_object_to_tracks (timeline, clip, track);
+      g_object_unref (clip);
     }
     g_list_free (objects);
   }

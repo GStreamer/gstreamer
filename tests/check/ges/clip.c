@@ -22,13 +22,13 @@
 #include <gst/check/gstcheck.h>
 
 static gboolean
-my_fill_track_func (GESClip * object,
-    GESTrackElement * trobject, GstElement * gnlobj, gpointer user_data)
+my_fill_track_func (GESClip * clip,
+    GESTrackElement * track_element, GstElement * gnlobj, gpointer user_data)
 {
   GstElement *src;
 
   GST_DEBUG ("timelineobj:%p, trackelementec:%p, gnlobj:%p",
-      object, trobject, gnlobj);
+      clip, track_element, gnlobj);
 
   /* Let's just put a fakesource in for the time being */
   src = gst_element_factory_make ("fakesrc", NULL);
@@ -43,25 +43,25 @@ GST_START_TEST (test_object_properties)
 {
   GESTrack *track;
   GESTrackElement *trackelement;
-  GESClip *object;
+  GESClip *clip;
 
   ges_init ();
 
   track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
-  object = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
-  fail_unless (object != NULL);
+  clip = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
+  fail_unless (clip != NULL);
 
   /* Set some properties */
-  g_object_set (object, "start", (guint64) 42, "duration", (guint64) 51,
+  g_object_set (clip, "start", (guint64) 42, "duration", (guint64) 51,
       "in-point", (guint64) 12, NULL);
-  assert_equals_uint64 (_START (object), 42);
-  assert_equals_uint64 (_DURATION (object), 51);
-  assert_equals_uint64 (_INPOINT (object), 12);
+  assert_equals_uint64 (_START (clip), 42);
+  assert_equals_uint64 (_DURATION (clip), 51);
+  assert_equals_uint64 (_INPOINT (clip), 12);
 
-  trackelement = ges_clip_create_track_element (object, track->type);
-  ges_clip_add_track_element (object, trackelement);
+  trackelement = ges_clip_create_track_element (clip, track->type);
+  ges_clip_add_track_element (clip, trackelement);
   fail_unless (trackelement != NULL);
   fail_unless (ges_track_element_set_track (trackelement, track));
 
@@ -75,11 +75,11 @@ GST_START_TEST (test_object_properties)
       51, 0, TRUE);
 
   /* Change more properties, see if they propagate */
-  g_object_set (object, "start", (guint64) 420, "duration", (guint64) 510,
+  g_object_set (clip, "start", (guint64) 420, "duration", (guint64) 510,
       "in-point", (guint64) 120, NULL);
-  assert_equals_uint64 (_START (object), 420);
-  assert_equals_uint64 (_DURATION (object), 510);
-  assert_equals_uint64 (_INPOINT (object), 120);
+  assert_equals_uint64 (_START (clip), 420);
+  assert_equals_uint64 (_DURATION (clip), 510);
+  assert_equals_uint64 (_INPOINT (clip), 120);
   assert_equals_uint64 (_START (trackelement), 420);
   assert_equals_uint64 (_DURATION (trackelement), 510);
   assert_equals_uint64 (_INPOINT (trackelement), 120);
@@ -90,16 +90,16 @@ GST_START_TEST (test_object_properties)
 
 
   /* This time, we move the trackelement to see if the changes move
-   * along to the parent and the gnonlin object */
+   * along to the parent and the gnonlin clip */
   g_object_set (trackelement, "start", (guint64) 400, NULL);
-  assert_equals_uint64 (_START (object), 400);
+  assert_equals_uint64 (_START (clip), 400);
   assert_equals_uint64 (_START (trackelement), 400);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 400, 510,
       120, 510, 0, TRUE);
 
-  ges_clip_release_track_element (object, trackelement);
+  ges_clip_release_track_element (clip, trackelement);
 
-  g_object_unref (object);
+  g_object_unref (clip);
   g_object_unref (track);
 }
 
@@ -109,25 +109,25 @@ GST_START_TEST (test_object_properties_unlocked)
 {
   GESTrack *track;
   GESTrackElement *trackelement;
-  GESClip *object;
+  GESClip *clip;
 
   ges_init ();
 
   track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
-  object = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
-  fail_unless (object != NULL);
+  clip = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
+  fail_unless (clip != NULL);
 
   /* Set some properties */
-  g_object_set (object, "start", (guint64) 42, "duration", (guint64) 51,
+  g_object_set (clip, "start", (guint64) 42, "duration", (guint64) 51,
       "in-point", (guint64) 12, NULL);
-  assert_equals_uint64 (_START (object), 42);
-  assert_equals_uint64 (_DURATION (object), 51);
-  assert_equals_uint64 (_INPOINT (object), 12);
+  assert_equals_uint64 (_START (clip), 42);
+  assert_equals_uint64 (_DURATION (clip), 51);
+  assert_equals_uint64 (_INPOINT (clip), 12);
 
-  trackelement = ges_clip_create_track_element (object, track->type);
-  ges_clip_add_track_element (object, trackelement);
+  trackelement = ges_clip_create_track_element (clip, track->type);
+  ges_clip_add_track_element (clip, trackelement);
   fail_unless (trackelement != NULL);
   fail_unless (ges_track_element_set_track (trackelement, track));
 
@@ -144,33 +144,33 @@ GST_START_TEST (test_object_properties_unlocked)
   ges_track_element_set_locked (trackelement, FALSE);
 
   /* Change more properties, they will be set on the GESClip */
-  g_object_set (object, "start", (guint64) 420, "duration", (guint64) 510,
+  g_object_set (clip, "start", (guint64) 420, "duration", (guint64) 510,
       "in-point", (guint64) 120, NULL);
-  assert_equals_uint64 (_START (object), 420);
-  assert_equals_uint64 (_DURATION (object), 510);
-  assert_equals_uint64 (_INPOINT (object), 120);
+  assert_equals_uint64 (_START (clip), 420);
+  assert_equals_uint64 (_DURATION (clip), 510);
+  assert_equals_uint64 (_INPOINT (clip), 120);
   /* ... but not on the GESTrackElement since it was unlocked... */
   assert_equals_uint64 (_START (trackelement), 42);
   assert_equals_uint64 (_DURATION (trackelement), 51);
   assert_equals_uint64 (_INPOINT (trackelement), 12);
-  /* ... and neither on the GNonLin object */
+  /* ... and neither on the GNonLin clip */
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
       51, 0, TRUE);
 
   /* When unlocked, moving the GESTrackElement won't move the GESClip
    * either */
   /* This time, we move the trackelement to see if the changes move
-   * along to the parent and the gnonlin object */
+   * along to the parent and the gnonlin clip */
   g_object_set (trackelement, "start", (guint64) 400, NULL);
-  assert_equals_uint64 (_START (object), 420);
+  assert_equals_uint64 (_START (clip), 420);
   assert_equals_uint64 (_START (trackelement), 400);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 400, 51, 12,
       51, 0, TRUE);
 
 
-  ges_clip_release_track_element (object, trackelement);
+  ges_clip_release_track_element (clip, trackelement);
 
-  g_object_unref (object);
+  g_object_unref (clip);
   g_object_unref (track);
 }
 
@@ -180,7 +180,7 @@ GST_START_TEST (test_split_object)
 {
   GESTrack *track;
   GESTrackElement *trackelement, *splittrackelement;
-  GESClip *object, *splitobj;
+  GESClip *clip, *splitclip;
   GList *splittrackelements;
 
   ges_init ();
@@ -188,18 +188,18 @@ GST_START_TEST (test_split_object)
   track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
-  object = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
-  fail_unless (object != NULL);
+  clip = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
+  fail_unless (clip != NULL);
 
   /* Set some properties */
-  g_object_set (object, "start", (guint64) 42, "duration", (guint64) 50,
+  g_object_set (clip, "start", (guint64) 42, "duration", (guint64) 50,
       "in-point", (guint64) 12, NULL);
-  assert_equals_uint64 (_START (object), 42);
-  assert_equals_uint64 (_DURATION (object), 50);
-  assert_equals_uint64 (_INPOINT (object), 12);
+  assert_equals_uint64 (_START (clip), 42);
+  assert_equals_uint64 (_DURATION (clip), 50);
+  assert_equals_uint64 (_INPOINT (clip), 12);
 
-  trackelement = ges_clip_create_track_element (object, track->type);
-  ges_clip_add_track_element (object, trackelement);
+  trackelement = ges_clip_create_track_element (clip, track->type);
+  ges_clip_add_track_element (clip, trackelement);
   fail_unless (trackelement != NULL);
   fail_unless (ges_track_element_set_track (trackelement, track));
 
@@ -212,18 +212,18 @@ GST_START_TEST (test_split_object)
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 50, 12,
       50, 0, TRUE);
 
-  splitobj = ges_clip_split (object, 67);
-  fail_unless (GES_IS_CLIP (splitobj));
+  splitclip = ges_clip_split (clip, 67);
+  fail_unless (GES_IS_CLIP (splitclip));
 
-  assert_equals_uint64 (_START (object), 42);
-  assert_equals_uint64 (_DURATION (object), 25);
-  assert_equals_uint64 (_INPOINT (object), 12);
+  assert_equals_uint64 (_START (clip), 42);
+  assert_equals_uint64 (_DURATION (clip), 25);
+  assert_equals_uint64 (_INPOINT (clip), 12);
 
-  assert_equals_uint64 (_START (splitobj), 67);
-  assert_equals_uint64 (_DURATION (splitobj), 25);
-  assert_equals_uint64 (_INPOINT (splitobj), 37);
+  assert_equals_uint64 (_START (splitclip), 67);
+  assert_equals_uint64 (_DURATION (splitclip), 25);
+  assert_equals_uint64 (_INPOINT (splitclip), 37);
 
-  splittrackelements = ges_clip_get_track_elements (splitobj);
+  splittrackelements = ges_clip_get_track_elements (splitclip);
   fail_unless_equals_int (g_list_length (splittrackelements), 1);
 
   splittrackelement = GES_TRACK_ELEMENT (splittrackelements->data);
@@ -233,16 +233,16 @@ GST_START_TEST (test_split_object)
   assert_equals_uint64 (_INPOINT (splittrackelement), 37);
 
   fail_unless (splittrackelement != trackelement);
-  fail_unless (splitobj != object);
+  fail_unless (splitclip != clip);
 
   /* We own the only ref */
-  ASSERT_OBJECT_REFCOUNT (splitobj, "splitobj", 1);
+  ASSERT_OBJECT_REFCOUNT (splitclip, "splitclip", 1);
   /* 1 ref for the Clip, 1 ref for the Track and 1 in splittrackelements */
   ASSERT_OBJECT_REFCOUNT (splittrackelement, "splittrackelement", 3);
 
   g_object_unref (track);
-  g_object_unref (splitobj);
-  g_object_unref (object);
+  g_object_unref (splitclip);
+  g_object_unref (clip);
 
   ASSERT_OBJECT_REFCOUNT (splittrackelement, "splittrackelement", 1);
   g_list_free_full (splittrackelements, g_object_unref);

@@ -110,7 +110,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GstElement * scale)
 }
 
 static GstElement *
-ges_image_source_create_element (GESTrackElement * object)
+ges_image_source_create_element (GESTrackElement * track_element)
 {
   GstElement *bin, *source, *scale, *freeze, *iconv;
   GstPad *src, *target;
@@ -138,7 +138,7 @@ ges_image_source_create_element (GESTrackElement * object)
   gst_element_add_pad (bin, src);
   gst_object_unref (target);
 
-  g_object_set (source, "uri", ((GESImageSource *) object)->uri, NULL);
+  g_object_set (source, "uri", ((GESImageSource *) track_element)->uri, NULL);
 
   g_signal_connect (G_OBJECT (source), "pad-added",
       G_CALLBACK (pad_added_cb), scale);
