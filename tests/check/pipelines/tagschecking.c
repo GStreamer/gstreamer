@@ -271,7 +271,8 @@ test_tags (const gchar * tag_str, const gchar * caps, const gchar * muxer,
 #define H264_CAPS "video/x-h264, width=(int)320, height=(int)240," \
                   " framerate=(fraction)30/1, codec_data=(buffer)" \
                   "01401592ffe10017674d401592540a0fd8088000000300" \
-                  "8000001e478b175001000468ee3c80, stream-format=(string)avc"
+                  "8000001e478b175001000468ee3c80, "\
+                  "stream-format=(string)avc, alignment=(string)au"
 
 #define COMMON_TAGS \
     "taglist,title=test_title,"    \
