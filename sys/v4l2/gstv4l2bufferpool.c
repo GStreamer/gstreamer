@@ -266,10 +266,12 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
       gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-  if (!pool->add_videometa) {
+  if (!pool->add_videometa &&
+      GST_VIDEO_INFO_FORMAT (&obj->info) != GST_VIDEO_FORMAT_ENCODED) {
     gint stride;
 
-    /* we don't have video metadata, see if the strides are compatible */
+    /* we don't have video metadata, and we are not dealing with raw video,
+     * see if the strides are compatible */
     stride = GST_VIDEO_INFO_PLANE_STRIDE (&obj->info, 0);
 
     GST_DEBUG_OBJECT (pool, "no videometadata, checking strides %d and %u",
