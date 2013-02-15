@@ -108,9 +108,6 @@ struct _GstQTPad
   /* store the first timestamp for comparing with other streams and
    * know if there are late streams */
   GstClockTime first_ts;
-  GstClockTime ts_entries[QTMUX_NO_OF_TS + 2];
-  guint ts_n_entries;
-  GstBuffer *buf_entries[QTMUX_NO_OF_TS + 2];
   guint buf_head;
   guint buf_tail;
 
