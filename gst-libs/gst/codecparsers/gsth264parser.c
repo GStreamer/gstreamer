@@ -1437,7 +1437,6 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
 {
   NalReader nr;
   gint width, height;
-  guint8 frame_cropping_flag;
   guint subwc[] = { 1, 2, 2, 1 };
   guint subhc[] = { 1, 2, 1, 1 };
   GstH264VUIParams *vui = NULL;
@@ -1530,8 +1529,8 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
     READ_UINT8 (&nr, sps->mb_adaptive_frame_field_flag, 1);
 
   READ_UINT8 (&nr, sps->direct_8x8_inference_flag, 1);
-  READ_UINT8 (&nr, frame_cropping_flag, 1);
-  if (frame_cropping_flag) {
+  READ_UINT8 (&nr, sps->frame_cropping_flag, 1);
+  if (sps->frame_cropping_flag) {
     READ_UE (&nr, sps->frame_crop_left_offset);
     READ_UE (&nr, sps->frame_crop_right_offset);
     READ_UE (&nr, sps->frame_crop_top_offset);
@@ -1557,19 +1556,31 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
   height = (sps->pic_height_in_map_units_minus1 + 1);
   height *= 16 * (2 - sps->frame_mbs_only_flag);
   GST_LOG ("initial width=%d, height=%d", width, height);
-
-  width -= (sps->frame_crop_left_offset + sps->frame_crop_right_offset)
-      * subwc[sps->chroma_format_idc];
-  height -= (sps->frame_crop_top_offset + sps->frame_crop_bottom_offset
-      * subhc[sps->chroma_format_idc] * (2 - sps->frame_mbs_only_flag));
   if (width < 0 || height < 0) {
     GST_WARNING ("invalid width/height in SPS");
     goto error;
   }
-  GST_LOG ("final width=%u, height=%u", width, height);
+
   sps->width = width;
   sps->height = height;
 
+  if (sps->frame_cropping_flag) {
+    width -= (sps->frame_crop_left_offset + sps->frame_crop_right_offset)
+        * subwc[sps->chroma_format_idc];
+    height -= (sps->frame_crop_top_offset + sps->frame_crop_bottom_offset
+        * subhc[sps->chroma_format_idc] * (2 - sps->frame_mbs_only_flag));
+
+    sps->crop_rect_width = width;
+    sps->crop_rect_height = height;
+    sps->crop_rect_x =
+        sps->frame_crop_left_offset * subwc[sps->chroma_format_idc];
+    sps->crop_rect_y =
+        sps->frame_crop_top_offset * subhc[sps->chroma_format_idc] * (2 -
+        sps->frame_mbs_only_flag);
+
+    GST_LOG ("crop_rectangle x=%u y=%u width=%u, height=%u", sps->crop_rect_x,
+        sps->crop_rect_y, width, height);
+  }
   sps->fps_num = 0;
   sps->fps_den = 1;
 

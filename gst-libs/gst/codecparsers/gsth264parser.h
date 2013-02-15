@@ -467,12 +467,14 @@ struct _GstH264SPS
 
   guint8 vui_parameters_present_flag;
   /* if vui_parameters_present_flag */
- GstH264VUIParams vui_parameters;
+  GstH264VUIParams vui_parameters;
 
   /* calculated values */
   guint8 chroma_array_type;
   guint32 max_frame_num;
   gint width, height;
+  gint crop_rect_width, crop_rect_height;
+  gint crop_rect_x, crop_rect_y;
   gint fps_num, fps_den;
   gboolean valid;
 };
