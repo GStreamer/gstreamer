@@ -23,7 +23,7 @@ clean-local:
 
 dist-clean:
 	cd libav && $(MAKE) distclean
-	rm -rf $(TMP_DIST_DIR)
+	rm -rf libav/$(TMP_DIST_DIR)
 	rm -f Makefile
 	rm -f libav/.version
 	rm -f libav/.config
@@ -37,18 +37,18 @@ maintainerclean: maintainer-clean
 
 dist-local:
 	GIT_DIR=libav/.git git checkout-index --prefix=$(TMP_DIST_DIR)/libav/ -a
-	touch $(TMP_DIST_DIR)/libav/config.mak
+	touch libav/$(TMP_DIST_DIR)/libav/config.mak
 	echo "Patching libav ./configure"
-	sed -e '/Unknown option/ {N;N;s/exit 1//; }' $(TMP_DIST_DIR)/libav/configure > $(TMP_DIST_DIR)/libav/configure.tmp
-	mv $(TMP_DIST_DIR)/libav/configure.tmp $(TMP_DIST_DIR)/libav/configure
-	chmod +x $(TMP_DIST_DIR)/libav/configure
+	sed -e '/Unknown option/ {N;N;s/exit 1//; }' libav/$(TMP_DIST_DIR)/libav/configure > libav/$(TMP_DIST_DIR)/libav/configure.tmp
+	mv libav/$(TMP_DIST_DIR)/libav/configure.tmp libav/$(TMP_DIST_DIR)/libav/configure
+	chmod +x libav/$(TMP_DIST_DIR)/libav/configure
 
 distdir: dist-local
-	cp -r $(TMP_DIST_DIR)/libav ${distdir}
+	cp -r libav/$(TMP_DIST_DIR)/libav ${distdir}
 	cp -f $(top_srcdir)/gst-libs/ext/Makefile.am $(top_srcdir)/gst-libs/ext/Makefile.in ${distdir}
-	rm -rf $(TMP_DIST_DIR)
+	rm -rf libav/$(TMP_DIST_DIR)
 
 dist: dist-local
-	cd $(TMP_DIST_DIR) && tar -czf libav.tar.gz libav
-	mv $(TMP_DIST_DIR)/libav.tar.gz ./
-	rm -rf $(TMP_DIST_DIR)
+	cd libav/$(TMP_DIST_DIR) && tar -czf libav.tar.gz libav
+	mv libav/$(TMP_DIST_DIR)/libav.tar.gz ./
+	rm -rf libav/$(TMP_DIST_DIR)
