@@ -215,7 +215,8 @@ GST_START_TEST (test_encodebin_preset)
   prof = create_ogg_vorbis_profile (1, NULL);
   /* We also set the name as the load_preset call will reset the element name to
    * what is described in the preset... which might not be very smart tbh */
-  g_object_set (oggmuxpreset, "max-delay", 12, "name", "testingoggmux", NULL);
+  g_object_set (oggmuxpreset, "max-delay", (guint64) 12, "name",
+      "testingoggmux", NULL);
 
   /* Give a name someone should never use outside of that test */
   gst_preset_save_preset (oggmuxpreset, "test_encodebin_preset");
