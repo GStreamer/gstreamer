@@ -77,11 +77,7 @@
 #endif
 #include <gst/gstelement.h>
 #include <gst/gst-i18n-plugin.h>
-#ifdef HAVE_LIBSOUP_GNOME
-#include <libsoup/soup-gnome.h>
-#else
 #include <libsoup/soup.h>
-#endif
 #include "gstsouphttpsrc.h"
 
 #include <gst/tag/tag.h>
@@ -1214,9 +1210,7 @@ gst_soup_http_src_start (GstBaseSrc * bsrc)
         soup_session_async_new_with_options (SOUP_SESSION_ASYNC_CONTEXT,
         src->context, SOUP_SESSION_USER_AGENT, src->user_agent,
         SOUP_SESSION_TIMEOUT, src->timeout,
-#ifdef HAVE_LIBSOUP_GNOME
-        SOUP_SESSION_ADD_FEATURE_BY_TYPE, SOUP_TYPE_PROXY_RESOLVER_GNOME,
-#endif
+        SOUP_SESSION_ADD_FEATURE_BY_TYPE, SOUP_TYPE_PROXY_RESOLVER_DEFAULT,
         NULL);
   } else {
     src->session =
