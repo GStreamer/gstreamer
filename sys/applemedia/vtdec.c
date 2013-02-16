@@ -303,7 +303,7 @@ gst_vtdec_negotiate_downstream (GstVTDec * self)
     return TRUE;
 
   caps = gst_video_info_to_caps (&self->vinfo);
-  result = gst_pad_set_caps (self->srcpad, caps);
+  result = gst_pad_push_event (self->srcpad, gst_event_new_caps (caps));
   gst_caps_unref (caps);
 
   return result;
