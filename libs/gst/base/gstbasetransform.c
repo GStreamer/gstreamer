@@ -1574,6 +1574,10 @@ default_prepare_output_buffer (GstBaseTransform * trans,
   incaps = gst_pad_get_current_caps (trans->sinkpad);
   outcaps = gst_pad_get_current_caps (trans->srcpad);
 
+  /* srcpad might be flushing already if we're being shut down */
+  if (outcaps == NULL)
+    goto no_outcaps;
+
   GST_DEBUG_OBJECT (trans, "getting output size for alloc");
   /* copy transform, figure out the output size */
   insize = gst_buffer_get_size (inbuf);
@@ -1602,7 +1606,6 @@ done:
   return GST_FLOW_OK;
 
   /* ERRORS */
-  /* ERRORS */
 activate_failed:
   {
     GST_ELEMENT_ERROR (trans, RESOURCE, SETTINGS,
@@ -1618,6 +1621,12 @@ alloc_failed:
   {
     GST_DEBUG_OBJECT (trans, "could not allocate buffer from pool");
     return ret;
+  }
+no_outcaps:
+  {
+    GST_DEBUG_OBJECT (trans, "no output caps, source pad has been deactivated");
+    gst_caps_unref (incaps);
+    return GST_FLOW_FLUSHING;
   }
 }
 
