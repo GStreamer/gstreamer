@@ -386,7 +386,7 @@ gst_buffer_copy (const GstBuffer * buf)
  * @GST_BUFFER_COPY_META: flag indicating that buffer meta should be
  *   copied
  * @GST_BUFFER_COPY_DEEP: flag indicating that memory should always be
- *   copied instead of reffed.
+ *   copied instead of reffed (Since 1.2)
  *
  * A set of flags that can be provided to the gst_buffer_copy_into()
  * function to specify which items should be copied.
