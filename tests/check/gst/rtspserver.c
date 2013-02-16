@@ -614,7 +614,8 @@ GST_START_TEST (test_setup_non_existing_stream)
 
 GST_END_TEST;
 
-GST_START_TEST (test_play)
+static void
+do_test_play (void)
 {
   GstRTSPConnection *conn;
   GstSDPMessage *sdp_message = NULL;
@@ -625,8 +626,6 @@ GST_START_TEST (test_play)
   gchar *session = NULL;
   GstRTSPTransport *video_transport = NULL;
   GstRTSPTransport *audio_transport = NULL;
-
-  start_server ();
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -661,6 +660,15 @@ GST_START_TEST (test_play)
   gst_rtsp_transport_free (audio_transport);
   gst_sdp_message_free (sdp_message);
   gst_rtsp_connection_free (conn);
+}
+
+
+GST_START_TEST (test_play)
+{
+  start_server ();
+
+  do_test_play ();
+
   stop_server ();
   iterate ();
 }
@@ -723,6 +731,105 @@ GST_START_TEST (test_bind_already_in_use)
 GST_END_TEST;
 
 
+GST_START_TEST (test_play_multithreaded)
+{
+  gst_rtsp_server_set_max_threads (server, -1);
+
+  start_server ();
+
+  do_test_play ();
+
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
+enum
+{
+  BLOCK_ME,
+  BLOCKED,
+  UNBLOCK
+};
+
+
+static void
+media_constructed_block (GstRTSPMediaFactory * factory,
+    GstRTSPMedia * media, gpointer user_data)
+{
+  gint *block_state = user_data;
+
+  g_mutex_lock (&check_mutex);
+
+  *block_state = BLOCKED;
+  g_cond_broadcast (&check_cond);
+
+  while (*block_state != UNBLOCK)
+    g_cond_wait (&check_cond, &check_mutex);
+  g_mutex_unlock (&check_mutex);
+}
+
+
+GST_START_TEST (test_play_multithreaded_block_in_describe)
+{
+  GstRTSPConnection *conn;
+  GstRTSPMountPoints *mounts;
+  GstRTSPMediaFactory *factory;
+  gint block_state = BLOCK_ME;
+  GstRTSPMessage *request;
+  GstRTSPMessage *response;
+  GstRTSPStatusCode code;
+
+  gst_rtsp_server_set_max_threads (server, 1);
+
+  mounts = gst_rtsp_server_get_mount_points (server);
+  fail_unless (mounts != NULL);
+  factory = gst_rtsp_media_factory_new ();
+  gst_rtsp_media_factory_set_launch (factory,
+      "( " VIDEO_PIPELINE "  " AUDIO_PIPELINE " )");
+  g_signal_connect (factory, "media-constructed",
+      G_CALLBACK (media_constructed_block), &block_state);
+  gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT "2", factory);
+  g_object_unref (mounts);
+
+  start_server ();
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT "2");
+  iterate ();
+
+  /* do describe, it will not return now as we've blocked it */
+  request = create_request (conn, GST_RTSP_DESCRIBE, NULL);
+  fail_unless (send_request (conn, request));
+  gst_rtsp_message_free (request);
+
+  g_mutex_lock (&check_mutex);
+  while (block_state != BLOCKED)
+    g_cond_wait (&check_cond, &check_mutex);
+  g_mutex_unlock (&check_mutex);
+
+  /* Do a second connection while the first one is blocked */
+  do_test_play ();
+
+  /* Now unblock the describe */
+  g_mutex_lock (&check_mutex);
+  block_state = UNBLOCK;
+  g_cond_broadcast (&check_cond);
+  g_mutex_unlock (&check_mutex);
+
+  response = read_response (conn);
+  gst_rtsp_message_parse_response (response, &code, NULL, NULL);
+  fail_unless (code == GST_RTSP_STS_OK);
+  gst_rtsp_message_free (response);
+
+
+  gst_rtsp_connection_free (conn);
+  stop_server ();
+  iterate ();
+
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspserver_suite (void)
 {
@@ -740,6 +847,8 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_play);
   tcase_add_test (tc, test_play_without_session);
   tcase_add_test (tc, test_bind_already_in_use);
+  tcase_add_test (tc, test_play_multithreaded);
+  tcase_add_test (tc, test_play_multithreaded_block_in_describe);
 
   return s;
 }
