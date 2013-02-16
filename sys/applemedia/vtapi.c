@@ -21,7 +21,11 @@
 
 #include "dynapi-internal.h"
 
-#define VT_FRAMEWORK_PATH "/System/Library/PrivateFrameworks/" \
+#include <gmodule.h>
+
+#define VT_FRAMEWORK_PATH "/System/Library/Frameworks/" \
+    "VideoToolbox.framework/VideoToolbox"
+#define VT_FRAMEWORK_PATH_OLD "/System/Library/PrivateFrameworks/" \
     "VideoToolbox.framework/VideoToolbox"
 
 G_DEFINE_TYPE (GstVTApi, gst_vt_api, GST_TYPE_DYN_API);
@@ -48,15 +52,11 @@ gst_vt_api_obtain (GError ** error)
     SYM_SPEC (VTCompressionSessionCreate),
     SYM_SPEC (VTCompressionSessionEncodeFrame),
     SYM_SPEC (VTCompressionSessionInvalidate),
-    SYM_SPEC (VTCompressionSessionRelease),
-    SYM_SPEC (VTCompressionSessionRetain),
     SYM_SPEC (VTCompressionSessionSetProperty),
 
     SYM_SPEC (VTDecompressionSessionCreate),
     SYM_SPEC (VTDecompressionSessionDecodeFrame),
     SYM_SPEC (VTDecompressionSessionInvalidate),
-    SYM_SPEC (VTDecompressionSessionRelease),
-    SYM_SPEC (VTDecompressionSessionRetain),
     SYM_SPEC (VTDecompressionSessionWaitForAsynchronousFrames),
 
     SYM_SPEC (kVTCompressionPropertyKey_AllowTemporalCompression),
@@ -82,7 +82,18 @@ gst_vt_api_obtain (GError ** error)
 
     {NULL, 0},
   };
+  GstVTApi *result;
+  GModule *module;
 
-  return _gst_dyn_api_new (gst_vt_api_get_type (), VT_FRAMEWORK_PATH, symbols,
-      error);
+  module = g_module_open (VT_FRAMEWORK_PATH, 0);
+  if (module != NULL) {
+    result = _gst_dyn_api_new (gst_vt_api_get_type (), VT_FRAMEWORK_PATH,
+        symbols, error);
+    g_module_close (module);
+  } else {
+    result = _gst_dyn_api_new (gst_vt_api_get_type (), VT_FRAMEWORK_PATH_OLD,
+        symbols, error);
+  }
+
+  return result;
 }

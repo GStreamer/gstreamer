@@ -361,8 +361,8 @@ gst_vtdec_create_format_description_from_codec_data (GstVTDec * self,
   status =
       self->ctx->cm->
       FigVideoFormatDescriptionCreateWithSampleDescriptionExtensionAtom (NULL,
-      self->details->format_id, self->vinfo.width, self->vinfo.height,
-      'avcC', map.data, map.size, NULL, &fmt_desc);
+      self->details->format_id, self->vinfo.width, self->vinfo.height, 'avcC',
+      map.data, map.size, NULL, &fmt_desc);
 
   gst_buffer_unmap (codec_data, &map);
 
@@ -409,8 +409,10 @@ static void
 gst_vtdec_destroy_session (GstVTDec * self, VTDecompressionSessionRef * session)
 {
   self->ctx->vt->VTDecompressionSessionInvalidate (*session);
-  self->ctx->vt->VTDecompressionSessionRelease (*session);
-  *session = NULL;
+  if (*session != NULL) {
+    CFRelease (*session);
+    *session = NULL;
+  }
 }
 
 static GstFlowReturn

@@ -553,8 +553,10 @@ static void
 gst_vtenc_destroy_session (GstVTEnc * self, VTCompressionSessionRef * session)
 {
   self->ctx->vt->VTCompressionSessionInvalidate (*session);
-  self->ctx->vt->VTCompressionSessionRelease (*session);
-  *session = NULL;
+  if (*session != NULL) {
+    CFRelease (*session);
+    *session = NULL;
+  }
 }
 
 typedef struct
