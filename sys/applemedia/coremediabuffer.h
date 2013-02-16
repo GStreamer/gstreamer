@@ -25,9 +25,10 @@
 #include "coremediactx.h"
 
 G_BEGIN_DECLS
+
 #define GST_CORE_MEDIA_META_API_TYPE (gst_core_media_meta_api_get_type())
 #define gst_buffer_get_core_media_meta(b) \
-  ((GstCoreVideoMeta*)gst_buffer_get_meta((b),GST_CORE_MEDIA_META_API_TYPE))
+  ((GstCoreMediaMeta*)gst_buffer_get_meta((b),GST_CORE_MEDIA_META_API_TYPE))
 
 typedef struct _GstCoreMediaMeta
 {
