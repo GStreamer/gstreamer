@@ -40,6 +40,14 @@ enum
   PROP_BITRATE
 };
 
+typedef struct _GstVTEncFrame GstVTEncFrame;
+
+struct _GstVTEncFrame
+{
+  GstBuffer *buf;
+  GstMapInfo map;
+};
+
 static GstElementClass *parent_class = NULL;
 
 static void gst_vtenc_get_property (GObject * obj, guint prop_id,
@@ -49,10 +57,14 @@ static void gst_vtenc_set_property (GObject * obj, guint prop_id,
 
 static GstStateChangeReturn gst_vtenc_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean gst_vtenc_sink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_vtenc_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_vtenc_sink_setcaps (GstVTEnc * self, GstCaps * caps);
 static void gst_vtenc_clear_cached_caps_downstream (GstVTEnc * self);
-static GstFlowReturn gst_vtenc_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_vtenc_src_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_vtenc_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean gst_vtenc_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static VTCompressionSessionRef gst_vtenc_create_session (GstVTEnc * self);
 static void gst_vtenc_destroy_session (GstVTEnc * self,
@@ -82,6 +94,9 @@ static VTStatus gst_vtenc_enqueue_buffer (void *data, int a2, int a3, int a4,
 static gboolean gst_vtenc_buffer_is_keyframe (GstVTEnc * self,
     CMSampleBufferRef sbuf);
 
+static GstVTEncFrame *gst_vtenc_frame_new (GstBuffer * buf);
+static void gst_vtenc_frame_free (GstVTEncFrame * frame);
+
 static void
 gst_vtenc_base_init (GstVTEncClass * klass)
 {
@@ -94,25 +109,23 @@ gst_vtenc_base_init (GstVTEncClass * klass)
   const int min_fps_d = 1, max_fps_d = 1;
   GstPadTemplate *sink_template, *src_template;
   GstCaps *src_caps;
-  GstElementDetails details;
+  gchar *longname, *description;
 
-  details.longname = g_strdup_printf ("%s encoder", codec_details->name);
-  details.klass = g_strdup_printf ("Codec/Encoder/Video");
-  details.description = g_strdup_printf ("%s encoder", codec_details->name);
+  longname = g_strdup_printf ("%s encoder", codec_details->name);
+  description = g_strdup_printf ("%s encoder", codec_details->name);
 
-  gst_element_class_set_metadata (element_class,
-      details.longname, details.klass, details.description,
-      "Ole André Vadla Ravnås <oravnas@cisco.com>");
+  gst_element_class_set_metadata (element_class, longname,
+      "Codec/Encoder/Video", description,
+      "Ole André Vadla Ravnås <oleavr@soundrop.com>");
 
-  g_free (details.longname);
-  g_free (details.klass);
-  g_free (details.description);
+  g_free (longname);
+  g_free (description);
 
   sink_template = gst_pad_template_new ("sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
-      gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('N', 'V', '1', '2'),
+      gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "NV12",
           "width", GST_TYPE_INT_RANGE, min_width, max_width,
           "height", GST_TYPE_INT_RANGE, min_height, max_height,
           "framerate", GST_TYPE_FRACTION_RANGE,
@@ -173,7 +186,7 @@ gst_vtenc_init (GstVTEnc * self)
   self->sinkpad = gst_pad_new_from_template
       (gst_element_class_get_pad_template (element_klass, "sink"), "sink");
   gst_element_add_pad (element, self->sinkpad);
-  gst_pad_set_setcaps_function (self->sinkpad, gst_vtenc_sink_setcaps);
+  gst_pad_set_event_function (self->sinkpad, gst_vtenc_sink_event);
   gst_pad_set_chain_function (self->sinkpad, gst_vtenc_chain);
 
   self->srcpad = gst_pad_new_from_template
@@ -328,9 +341,32 @@ api_error:
 }
 
 static gboolean
-gst_vtenc_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_vtenc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstVTEnc *self = GST_VTENC_CAST (GST_PAD_PARENT (pad));
+  GstVTEnc *self = GST_VTENC_CAST (parent);
+  gboolean forward = TRUE;
+  gboolean res = TRUE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_vtenc_sink_setcaps (self, caps);
+    }
+    default:
+      break;
+  }
+
+  if (forward)
+    res = gst_pad_event_default (pad, parent, event);
+  return res;
+}
+
+static gboolean
+gst_vtenc_sink_setcaps (GstVTEnc * self, GstCaps * caps)
+{
   GstStructure *structure;
   VTCompressionSessionRef session;
 
@@ -354,6 +390,9 @@ gst_vtenc_sink_setcaps (GstPad * pad, GstCaps * caps)
     CFRelease (self->options);
   self->options = CFDictionaryCreateMutable (NULL, 0,
       &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+
+  /* renegotiate when upstream caps change */
+  gst_pad_mark_reconfigure (self->srcpad);
 
   GST_OBJECT_UNLOCK (self);
 
@@ -394,7 +433,9 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
     CFDictionaryRef atoms;
     CFStringRef avccKey;
     CFDataRef avcc;
-    GstBuffer *codec_data;
+    gpointer codec_data;
+    gsize codec_data_size;
+    GstBuffer *codec_data_buf;
 
     fmt = cm->CMSampleBufferGetFormatDescription (sbuf);
     atoms = cm->CMFormatDescriptionGetExtension (fmt,
@@ -402,18 +443,17 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
     avccKey = CFStringCreateWithCString (NULL, "avcC", kCFStringEncodingUTF8);
     avcc = CFDictionaryGetValue (atoms, avccKey);
     CFRelease (avccKey);
-    codec_data = gst_buffer_new_and_alloc (CFDataGetLength (avcc));
-    CFDataGetBytes (avcc, CFRangeMake (0, CFDataGetLength (avcc)),
-        GST_BUFFER_DATA (codec_data));
+    codec_data_size = CFDataGetLength (avcc);
+    codec_data = g_malloc (codec_data_size);
+    CFDataGetBytes (avcc, CFRangeMake (0, codec_data_size), codec_data);
+    codec_data_buf = gst_buffer_new_wrapped (codec_data, codec_data_size);
 
-    gst_structure_set (s, "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
+    gst_structure_set (s, "codec_data", GST_TYPE_BUFFER, codec_data_buf, NULL);
 
-    gst_buffer_unref (codec_data);
+    gst_buffer_unref (codec_data_buf);
   }
 
-  result = gst_pad_set_caps (self->srcpad, caps);
-
-  gst_caps_unref (caps);
+  result = gst_pad_push_event (self->srcpad, gst_event_new_caps (caps));
 
   self->caps_width = self->negotiated_width;
   self->caps_height = self->negotiated_height;
@@ -431,9 +471,9 @@ gst_vtenc_clear_cached_caps_downstream (GstVTEnc * self)
 }
 
 static GstFlowReturn
-gst_vtenc_chain (GstPad * pad, GstBuffer * buf)
+gst_vtenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstVTEnc *self = GST_VTENC_CAST (GST_PAD_PARENT (pad));
+  GstVTEnc *self = GST_VTENC_CAST (parent);
 
   if (!gst_vtenc_is_negotiated (self))
     goto not_negotiated;
@@ -446,9 +486,9 @@ not_negotiated:
 }
 
 static gboolean
-gst_vtenc_src_event (GstPad * pad, GstEvent * event)
+gst_vtenc_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstVTEnc *self = GST_VTENC_CAST (GST_PAD_PARENT (pad));
+  GstVTEnc *self = GST_VTENC_CAST (parent);
   gboolean ret = TRUE;
   gboolean handled = FALSE;
 
@@ -716,6 +756,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
   GstCVApi *cv = self->ctx->cv;
   GstVTApi *vt = self->ctx->vt;
   CMTime ts, duration;
+  GstCoreMediaMeta *meta;
   CVPixelBufferRef pbuf = NULL;
   VTStatus vt_status;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -728,22 +769,26 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
   duration = self->ctx->cm->CMTimeMake
       (GST_TIME_AS_MSECONDS (GST_BUFFER_DURATION (buf)), 1000);
 
-  if (GST_IS_CORE_MEDIA_BUFFER (buf)) {
-    GstCoreMediaBuffer *cmbuf = GST_CORE_MEDIA_BUFFER_CAST (buf);
-    pbuf = gst_core_media_buffer_get_pixel_buffer (cmbuf);
+  meta = gst_buffer_get_core_media_meta (buf);
+  if (meta != NULL) {
+    pbuf = gst_core_media_buffer_get_pixel_buffer (buf);
   }
 
   if (pbuf == NULL) {
+    GstVTEncFrame *frame;
     CVReturn cv_ret;
 
+    frame = gst_vtenc_frame_new (buf);
     cv_ret = cv->CVPixelBufferCreateWithBytes (NULL,
         self->negotiated_width, self->negotiated_height,
-        kCVPixelFormatType_422YpCbCr8Deprecated, GST_BUFFER_DATA (buf),
+        kCVPixelFormatType_422YpCbCr8Deprecated, frame->map.data,
         self->negotiated_width * 2,
-        (CVPixelBufferReleaseBytesCallback) gst_buffer_unref, buf, NULL, &pbuf);
-    if (cv_ret != kCVReturnSuccess)
+        (CVPixelBufferReleaseBytesCallback) gst_vtenc_frame_free, frame,
+        NULL, &pbuf);
+    if (cv_ret != kCVReturnSuccess) {
+      gst_vtenc_frame_free (frame);
       goto cv_error;
-    gst_buffer_ref (buf);
+    }
   }
 
   GST_OBJECT_LOCK (self);
@@ -771,9 +816,10 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
   gst_buffer_unref (buf);
 
   if (self->cur_outbufs->len > 0) {
-    GstCoreMediaBuffer *cmbuf =
-        GST_CORE_MEDIA_BUFFER_CAST (g_ptr_array_index (self->cur_outbufs, 0));
-    if (!gst_vtenc_negotiate_downstream (self, cmbuf->sample_buf))
+    meta =
+        gst_buffer_get_core_media_meta (g_ptr_array_index (self->cur_outbufs,
+            0));
+    if (!gst_vtenc_negotiate_downstream (self, meta->sample_buf))
       ret = GST_FLOW_NOT_NEGOTIATED;
   }
 
@@ -781,7 +827,6 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
     GstBuffer *buf = g_ptr_array_index (self->cur_outbufs, i);
 
     if (ret == GST_FLOW_OK) {
-      gst_buffer_set_caps (buf, GST_PAD_CAPS (self->srcpad));
       ret = gst_pad_push (self->srcpad, buf);
     } else {
       gst_buffer_unref (buf);
@@ -822,7 +867,8 @@ gst_vtenc_enqueue_buffer (void *data, int a2, int a3, int a4,
   self->expect_keyframe = FALSE;
 
   buf = gst_core_media_buffer_new (self->ctx, sbuf);
-  gst_buffer_copy_metadata (buf, self->cur_inbuf, GST_BUFFER_COPY_TIMESTAMPS);
+  gst_buffer_copy_into (buf, self->cur_inbuf, GST_BUFFER_COPY_TIMESTAMPS,
+      0, -1);
   if (is_keyframe) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
   } else {
@@ -855,6 +901,26 @@ gst_vtenc_buffer_is_keyframe (GstVTEnc * self, CMSampleBufferRef sbuf)
   }
 
   return result;
+}
+
+static GstVTEncFrame *
+gst_vtenc_frame_new (GstBuffer * buf)
+{
+  GstVTEncFrame *frame;
+
+  frame = g_slice_new (GstVTEncFrame);
+  frame->buf = gst_buffer_ref (buf);
+  gst_buffer_map (buf, &frame->map, GST_MAP_READ);
+
+  return frame;
+}
+
+static void
+gst_vtenc_frame_free (GstVTEncFrame * frame)
+{
+  gst_buffer_unmap (frame->buf, &frame->map);
+  gst_buffer_unref (frame->buf);
+  g_slice_free (GstVTEncFrame, frame);
 }
 
 static void
