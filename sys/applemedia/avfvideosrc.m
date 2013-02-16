@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Ole André Vadla Ravnås <oravnas@cisco.com>
+ * Copyright (C) 2010 Ole André Vadla Ravnås <oleavr@soundrop.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -648,7 +648,7 @@ gst_avf_video_src_base_init (gpointer gclass)
   gst_element_class_set_metadata (element_class,
       "Video Source (AVFoundation)", "Source/Video",
       "Reads frames from an iOS AVFoundation device",
-      "Ole André Vadla Ravnås <oravnas@cisco.com>");
+      "Ole André Vadla Ravnås <oleavr@soundrop.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Ole André Vadla Ravnås <oravnas@cisco.com>
+ * Copyright (C) 2010 Ole André Vadla Ravnås <oleavr@soundrop.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -78,7 +78,7 @@ gst_vt_h264_enc_bin_base_init (gpointer gclass)
       "VTH264EncBin",
       "Encoder/Video",
       "VideoToolbox H.264 encoder bin",
-      "Ole André Vadla Ravnås <oravnas@cisco.com>");
+      "Ole André Vadla Ravnås <oleavr@soundrop.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&vth264encbin_sink_template));

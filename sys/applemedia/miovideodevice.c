@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Ole André Vadla Ravnås <oravnas@cisco.com>
+ * Copyright (C) 2009 Ole André Vadla Ravnås <oleavr@soundrop.com>
  *               2009 Knut Inge Hvidsten <knuhvids@cisco.com>
  *
  * This library is free software; you can redistribute it and/or
