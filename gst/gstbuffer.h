@@ -376,13 +376,17 @@ gst_buffer_copy (const GstBuffer * buf)
  * @GST_BUFFER_COPY_NONE: copy nothing
  * @GST_BUFFER_COPY_FLAGS: flag indicating that buffer flags should be copied
  * @GST_BUFFER_COPY_TIMESTAMPS: flag indicating that buffer pts, dts,
- * duration, offset and offset_end should be copied
- * @GST_BUFFER_COPY_MEMORY: flag indicating that buffer memory should be copied
- * and appended to already existing memory
+ *   duration, offset and offset_end should be copied
+ * @GST_BUFFER_COPY_MEMORY: flag indicating that buffer memory should be reffed
+ *   and appended to already existing memory. Unless the memory is marked as
+ *   NO_SHARE, no actual copy of the memory is made but it is simply reffed.
+ *   Add @GST_BUFFER_COPY_DEEP to force a real copy.
  * @GST_BUFFER_COPY_MERGE: flag indicating that buffer memory should be
- * merged
+ *   merged
  * @GST_BUFFER_COPY_META: flag indicating that buffer meta should be
- * copied
+ *   copied
+ * @GST_BUFFER_COPY_DEEP: flag indicating that memory should always be
+ *   copied instead of reffed.
  *
  * A set of flags that can be provided to the gst_buffer_copy_into()
  * function to specify which items should be copied.
@@ -393,7 +397,8 @@ typedef enum {
   GST_BUFFER_COPY_TIMESTAMPS     = (1 << 1),
   GST_BUFFER_COPY_META           = (1 << 2),
   GST_BUFFER_COPY_MEMORY         = (1 << 3),
-  GST_BUFFER_COPY_MERGE          = (1 << 4)
+  GST_BUFFER_COPY_MERGE          = (1 << 4),
+  GST_BUFFER_COPY_DEEP           = (1 << 5)
 } GstBufferCopyFlags;
 
 /**

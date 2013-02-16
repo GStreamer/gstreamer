@@ -402,6 +402,9 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   if (flags & GST_BUFFER_COPY_MEMORY) {
     GstMemory *mem;
     gsize skip, left, len, i, bsize;
+    gboolean deep;
+
+    deep = flags & GST_BUFFER_COPY_DEEP;
 
     len = GST_BUFFER_MEM_LEN (src);
     left = size;
@@ -419,8 +422,9 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
         gsize tocopy;
 
         tocopy = MIN (bsize - skip, left);
-        if (GST_MEMORY_IS_NO_SHARE (mem)) {
-          /* no share, always copy then */
+        if (deep || GST_MEMORY_IS_NO_SHARE (mem)) {
+          /* deep copy or we're not allowed to share this memory
+           * between buffers, always copy then */
           mem = gst_memory_copy (mem, skip, tocopy);
           skip = 0;
         } else if (tocopy < bsize) {
