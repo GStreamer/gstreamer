@@ -68,7 +68,7 @@ all-local: .timestamp.symlinks
 .timestamp.symlinks: $(GENFILES)
 	touch $@
 
-$(gen_source_c): %.c: $(local_codecparsers_srcdir)/%.c %.h
+$(gen_source_c): %.c: $(local_codecparsers_srcdir)/%.c $(gen_source_h)
 	$(LN_S) -f $< $@
 $(gen_source_h): %.h: $(local_codecparsers_srcdir)/%.h
 	$(LN_S) -f $< $@
