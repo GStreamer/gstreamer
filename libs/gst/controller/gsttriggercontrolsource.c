@@ -68,7 +68,7 @@ _interpolate_trigger (GstTimedValueControlSource * self, GSequenceIter * iter,
   if (GST_CLOCK_DIFF (cp->timestamp, timestamp) <= tolerance) {
     found = TRUE;
   } else {
-    if ((iter = g_sequence_iter_next (iter))) {
+    if ((iter = g_sequence_iter_next (iter)) && !g_sequence_iter_is_end (iter)) {
       cp = g_sequence_get (iter);
       if (GST_CLOCK_DIFF (timestamp, cp->timestamp) <= tolerance) {
         found = TRUE;
