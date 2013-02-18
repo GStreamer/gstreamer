@@ -2751,6 +2751,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       if (ret != GST_FLOW_OK)
         goto beach;
       gst_buffer_map (moov, &map, GST_MAP_READ);
+
       if (length != map.size) {
         /* Some files have a 'moov' atom at the end of the file which contains
          * a terminal 'free' atom where the body of the atom is missing.
@@ -2760,13 +2761,14 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
           guint8 *final_data = map.data + (map.size - 8);
           guint32 final_length = QT_UINT32 (final_data);
           guint32 final_fourcc = QT_FOURCC (final_data + 4);
-          gst_buffer_unmap (moov, &map);
+
           if (final_fourcc == FOURCC_free
               && map.size + final_length - 8 == length) {
             /* Ok, we've found that special case. Allocate a new buffer with
              * that free atom actually present. */
             GstBuffer *newmoov = gst_buffer_new_and_alloc (length);
             gst_buffer_copy_into (newmoov, moov, 0, 0, map.size);
+            gst_buffer_unmap (moov, &map);
             gst_buffer_map (newmoov, &map, GST_MAP_WRITE);
             memset (map.data + length - final_length + 8, 0, final_length - 8);
             gst_buffer_unref (moov);
