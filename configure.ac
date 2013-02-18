@@ -405,6 +405,18 @@ case $ac_cv_audioresample_format in
     AC_SUBST(AUDIORESAMPLE_FORMAT_AUTO)
 esac
 
+dnl Check for mmap (needed by allocators library)
+AC_MSG_CHECKING(if mmap is supported)
+AC_TRY_LINK(
+  [#include <fcntl.h>
+   #include <unistd.h>
+   #include <sys/mman.h>],
+  [char * p = (char *)mmap(NULL, 10, PROT_READ, MAP_SHARED, -1, 2);
+   munmap(p,10);],
+  [AC_MSG_RESULT(yes)
+   AC_DEFINE(HAVE_MMAP, 1, [Defined if mmap is supported])],
+  [AC_MSG_RESULT(no)] )
+
 dnl *** plug-ins to include ***
 
 dnl these are all the gst plug-ins, compilable without additional libs
@@ -865,6 +877,7 @@ ext/theora/Makefile
 ext/vorbis/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
+gst-libs/gst/allocators/Makefile
 gst-libs/gst/audio/Makefile
 gst-libs/gst/app/Makefile
 gst-libs/gst/fft/Makefile
@@ -878,6 +891,8 @@ gst-libs/gst/pbutils/gstpluginsbaseversion.h
 gst-libs/gst/video/Makefile
 tools/Makefile
 pkgconfig/Makefile
+pkgconfig/gstreamer-allocators.pc
+pkgconfig/gstreamer-allocators-uninstalled.pc
 pkgconfig/gstreamer-audio.pc
 pkgconfig/gstreamer-audio-uninstalled.pc
 pkgconfig/gstreamer-app.pc

@@ -1,5 +1,6 @@
 ### all of the standard pc files we need to generate
 pcverfiles =  \
+	gstreamer-allocators-@GST_API_VERSION@.pc \
 	gstreamer-audio-@GST_API_VERSION@.pc \
 	gstreamer-app-@GST_API_VERSION@.pc \
 	gstreamer-fft-@GST_API_VERSION@.pc \
@@ -12,6 +13,7 @@ pcverfiles =  \
 	gstreamer-video-@GST_API_VERSION@.pc \
 	gstreamer-plugins-base-@GST_API_VERSION@.pc
 pcverfiles_uninstalled = \
+	gstreamer-allocators-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-audio-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-app-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-fft-@GST_API_VERSION@-uninstalled.pc \
@@ -41,6 +43,7 @@ pkgconfig_DATA = $(pcverfiles)
 
 CLEANFILES = $(pcverfiles) $(pcverfiles_uninstalled)
 pcinfiles = \
+		   gstreamer-allocators.pc.in gstreamer-allocators-uninstalled.pc.in \
            gstreamer-audio.pc.in gstreamer-audio-uninstalled.pc.in \
            gstreamer-app.pc.in gstreamer-app-uninstalled.pc.in \
            gstreamer-fft.pc.in gstreamer-fft-uninstalled.pc.in \
