@@ -1471,6 +1471,17 @@ gst_vaapi_decoder_mpeg2_start_frame(GstVaapiDecoder *base_decoder,
     gst_vaapi_picture_replace(&priv->current_picture, picture);
     gst_vaapi_picture_unref(picture);
 
+    /* Update cropping rectangle */
+    if (seq_display_ext) {
+        GstVaapiRectangle crop_rect;
+        crop_rect.x = 0;
+        crop_rect.y = 0;
+        crop_rect.width = seq_display_ext->display_horizontal_size;
+        crop_rect.height = seq_display_ext->display_vertical_size;
+        if (crop_rect.width <= priv->width && crop_rect.height <= priv->height)
+            gst_vaapi_picture_set_crop_rect(picture, &crop_rect);
+    }
+
     status = ensure_quant_matrix(decoder, picture);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
         GST_ERROR("failed to reset quantizer matrix");
