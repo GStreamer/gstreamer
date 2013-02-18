@@ -67,7 +67,7 @@ GST_DEBUG_CATEGORY_STATIC (rtsp_address_pool_debug);
 
 struct _GstRTSPAddressPoolPrivate
 {
-  GMutex lock;
+  GMutex lock;                  /* protects everything in this struct */
   GList *addresses;
   GList *allocated;
 };

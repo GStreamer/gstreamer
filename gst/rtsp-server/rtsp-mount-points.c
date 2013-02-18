@@ -25,7 +25,7 @@
 struct _GstRTSPMountPointsPrivate
 {
   GMutex lock;
-  GHashTable *mounts;
+  GHashTable *mounts;           /* protected by lock */
 };
 
 G_DEFINE_TYPE (GstRTSPMountPoints, gst_rtsp_mount_points, G_TYPE_OBJECT);

@@ -32,7 +32,7 @@
 
 struct _GstRTSPServerPrivate
 {
-  GMutex lock;
+  GMutex lock;                  /* protects everything in this struct */
 
   /* server information */
   gchar *address;

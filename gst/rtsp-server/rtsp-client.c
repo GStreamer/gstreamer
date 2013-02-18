@@ -27,9 +27,13 @@
 #define GST_RTSP_CLIENT_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_CLIENT, GstRTSPClientPrivate))
 
+/* locking order:
+ * send_lock, lock, tunnels_lock
+ */
+
 struct _GstRTSPClientPrivate
 {
-  GMutex lock;
+  GMutex lock;                  /* protects everything else */
   GMutex send_lock;
   GstRTSPConnection *connection;
   GstRTSPWatch *watch;
@@ -38,9 +42,9 @@ struct _GstRTSPClientPrivate
   gboolean is_ipv6;
   gboolean use_client_settings;
 
-  GstRTSPClientSendFunc send_func;
-  gpointer send_data;
-  GDestroyNotify send_notify;
+  GstRTSPClientSendFunc send_func;      /* protected by send_lock */
+  gpointer send_data;           /* protected by send_lock */
+  GDestroyNotify send_notify;   /* protected by send_lock */
 
   GstRTSPSessionPool *session_pool;
   GstRTSPMountPoints *mount_points;
@@ -54,7 +58,7 @@ struct _GstRTSPClientPrivate
 };
 
 static GMutex tunnels_lock;
-static GHashTable *tunnels;
+static GHashTable *tunnels;     /* protected by tunnels_lock */
 
 #define DEFAULT_SESSION_POOL            NULL
 #define DEFAULT_MOUNT_POINTS            NULL

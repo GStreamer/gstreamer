@@ -27,7 +27,7 @@
 struct _GstRTSPMediaFactoryURIPrivate
 {
   GMutex lock;
-  gchar *uri;
+  gchar *uri;                   /* protected by lock */
   gboolean use_gstpay;
 
   GstCaps *raw_vcaps;

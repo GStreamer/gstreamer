@@ -25,11 +25,11 @@
 
 struct _GstRTSPSessionPrivate
 {
-  GMutex lock;
+  GMutex lock;                  /* protects everything but sessionid and create_time */
   gchar *sessionid;
 
   guint timeout;
-  GTimeVal create_time;
+  GTimeVal create_time;         /* immutable */
   GTimeVal last_access;
   gint expire_count;
 

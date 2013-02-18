@@ -28,7 +28,7 @@
 
 struct _GstRTSPMediaFactoryPrivate
 {
-  GMutex lock;
+  GMutex lock;                  /* protects everything but medias */
   gchar *launch;
   gboolean shared;
   gboolean eos_shutdown;
@@ -38,7 +38,7 @@ struct _GstRTSPMediaFactoryPrivate
   GstRTSPAddressPool *pool;
 
   GMutex medias_lock;
-  GHashTable *medias;
+  GHashTable *medias;           /* protected by medias_lock */
 };
 
 #define DEFAULT_LAUNCH          NULL
@@ -799,9 +799,9 @@ no_launch:
   }
 parse_error:
   {
-    GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
     g_critical ("could not parse launch syntax (%s): %s", priv->launch,
         (error ? error->message : "unknown reason"));
+    GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
     if (error)
       g_error_free (error);
     return NULL;

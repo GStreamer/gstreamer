@@ -24,9 +24,8 @@
 
 struct _GstRTSPSessionPoolPrivate
 {
+  GMutex lock;                  /* protects everything in this struct */
   guint max_sessions;
-
-  GMutex lock;
   GHashTable *sessions;
 };
 

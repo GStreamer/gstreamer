@@ -33,6 +33,7 @@ struct _GstRTSPMediaPrivate
   GMutex lock;
   GCond cond;
 
+  /* protected by lock */
   gboolean shared;
   gboolean reusable;
   GstRTSPLowerTrans protocols;
@@ -43,17 +44,17 @@ struct _GstRTSPMediaPrivate
   GstRTSPAddressPool *pool;
 
   GstElement *element;
-  GRecMutex state_lock;
-  GPtrArray *streams;
-  GList *dynamic;
-  GstRTSPMediaStatus status;
+  GRecMutex state_lock;         /* locking order: state lock, lock */
+  GPtrArray *streams;           /* protected by lock */
+  GList *dynamic;               /* protected by lock */
+  GstRTSPMediaStatus status;    /* protected by lock */
   gint prepare_count;
   gint n_active;
   gboolean adding;
 
   /* the pipeline for the media */
   GstElement *pipeline;
-  GstElement *fakesink;
+  GstElement *fakesink;         /* protected by lock */
   GSource *source;
   guint id;
 
@@ -66,7 +67,7 @@ struct _GstRTSPMediaPrivate
   GstElement *rtpbin;
 
   /* the range of media */
-  GstRTSPTimeRange range;
+  GstRTSPTimeRange range;       /* protected by lock */
   GstClockTime range_start;
   GstClockTime range_stop;
 };

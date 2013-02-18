@@ -26,12 +26,12 @@
 struct _GstRTSPSessionMediaPrivate
 {
   GMutex lock;
-  GstRTSPUrl *url;
-  GstRTSPMedia *media;
-  GstRTSPState state;
-  guint counter;
+  GstRTSPUrl *url;              /* unmutable */
+  GstRTSPMedia *media;          /* unmutable */
+  GstRTSPState state;           /* protected by lock */
+  guint counter;                /* protected by lock */
 
-  GPtrArray *transports;
+  GPtrArray *transports;        /* protected by lock */
 };
 
 enum

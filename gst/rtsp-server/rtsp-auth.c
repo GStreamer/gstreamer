@@ -27,7 +27,7 @@
 struct _GstRTSPAuthPrivate
 {
   GMutex lock;
-  gchar *basic;
+  gchar *basic;                 /* protected by lock */
   GstRTSPMethod methods;
 };
 
