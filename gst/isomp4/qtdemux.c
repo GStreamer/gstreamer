@@ -2767,12 +2767,12 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
             /* Ok, we've found that special case. Allocate a new buffer with
              * that free atom actually present. */
             GstBuffer *newmoov = gst_buffer_new_and_alloc (length);
-            gst_buffer_copy_into (newmoov, moov, 0, 0, map.size);
+            gst_buffer_fill (newmoov, 0, map.data, map.size);
+            gst_buffer_memset (newmoov, map.size, 0, final_length - 8);
             gst_buffer_unmap (moov, &map);
-            gst_buffer_map (newmoov, &map, GST_MAP_WRITE);
-            memset (map.data + length - final_length + 8, 0, final_length - 8);
             gst_buffer_unref (moov);
             moov = newmoov;
+            gst_buffer_map (moov, &map, GST_MAP_READ);
           }
         }
       }
