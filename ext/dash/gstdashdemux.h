@@ -127,13 +127,11 @@ struct _GstDashDemux
   /* Streaming task */
   GstTask *stream_task;
   GStaticRecMutex stream_task_lock;
-  GMutex *stream_timed_lock;
 
   /* Download task */
   GstTask *download_task;
   GStaticRecMutex download_task_lock;
   gboolean cancelled;
-  GMutex *download_timed_lock;
 
   /* Manifest update */
   GstClockTime last_manifest_update;
