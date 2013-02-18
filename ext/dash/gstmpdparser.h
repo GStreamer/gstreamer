@@ -473,7 +473,7 @@ GstClockTime gst_mpd_client_get_next_fragment_duration (GstMpdClient * client);
 GstClockTime gst_mpd_client_get_media_presentation_duration (GstMpdClient *client);
 gboolean gst_mpd_client_get_next_fragment_timestamp (GstMpdClient * client, guint stream_idx, GstClockTime * ts);
 gboolean gst_mpd_client_get_next_fragment (GstMpdClient *client, guint indexStream, gboolean *discontinuity, gchar **uri, GstClockTime *duration, GstClockTime *timestamp);
-gboolean gst_mpd_client_get_next_header (GstMpdClient *client, const gchar **uri, guint stream_idx);
+gboolean gst_mpd_client_get_next_header (GstMpdClient *client, gchar **uri, guint stream_idx);
 gboolean gst_mpd_client_is_live (GstMpdClient * client);
 
 /* Period selection */

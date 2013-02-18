@@ -3236,7 +3236,7 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
 }
 
 gboolean
-gst_mpd_client_get_next_header (GstMpdClient * client, const gchar ** uri,
+gst_mpd_client_get_next_header (GstMpdClient * client, gchar ** uri,
     guint stream_idx)
 {
   GstActiveStream *stream;

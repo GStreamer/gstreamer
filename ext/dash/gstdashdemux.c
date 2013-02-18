@@ -282,6 +282,8 @@ gst_dash_demux_dispose (GObject * obj)
     demux->downloader = NULL;
   }
 
+  g_static_mutex_free (&demux->streams_lock);
+
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
 
@@ -1225,6 +1227,12 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
   if (demux->downloader)
     gst_uri_downloader_reset (demux->downloader);
 
+  if (demux->next_periods) {
+    g_assert (demux->next_periods == demux->streams);
+    demux->next_periods =
+        g_slist_delete_link (demux->next_periods, demux->next_periods);
+  }
+
   for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
     GstDashDemuxStream *stream = iter->data;
     if (stream->pad) {
@@ -1236,6 +1244,13 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
   }
   g_slist_free (demux->streams);
   demux->streams = NULL;
+
+  for (iter = demux->next_periods; iter; iter = g_slist_next (iter)) {
+    GSList *streams = iter->data;
+    g_slist_free_full (streams, (GDestroyNotify) gst_dash_demux_stream_free);
+  }
+  g_slist_free (demux->next_periods);
+  demux->next_periods = NULL;
 
   if (demux->manifest) {
     gst_buffer_unref (demux->manifest);
@@ -1571,7 +1586,7 @@ gst_dash_demux_select_representations (GstDashDemux * demux)
 static GstFragment *
 gst_dash_demux_get_next_header (GstDashDemux * demux, guint stream_idx)
 {
-  const gchar *initializationURL;
+  gchar *initializationURL;
   gchar *next_header_uri;
   GstFragment *fragment;
 
@@ -1583,8 +1598,9 @@ gst_dash_demux_get_next_header (GstDashDemux * demux, guint stream_idx)
     next_header_uri =
         g_strconcat (gst_mpdparser_get_baseURL (demux->client, stream_idx),
         initializationURL, NULL);
+    g_free (initializationURL);
   } else {
-    next_header_uri = g_strdup (initializationURL);
+    next_header_uri = initializationURL;
   }
 
   GST_INFO_OBJECT (demux, "Fetching header %s", next_header_uri);
@@ -1781,10 +1797,13 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
 
       active_stream =
           gst_mpdparser_get_active_stream_by_index (demux->client, stream_idx);
-      if (active_stream == NULL)        /* TODO unref fragments */
+      if (active_stream == NULL) {
+        g_object_unref (download);
         return FALSE;
+      }
 
       buffer = gst_fragment_get_buffer (download);
+      g_object_unref (download);
 
       if (selected_stream->need_header) {
         /* We need to fetch a new header */
@@ -1797,6 +1816,7 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
 
           header_buffer = gst_fragment_get_buffer (header);
           buffer = gst_buffer_join (header_buffer, buffer);
+          g_object_unref (header);
         }
         selected_stream->need_header = FALSE;
       }
