@@ -138,7 +138,7 @@ struct _GstGLDisplay
   GObject        object;
 
   /* thread safe */
-  GMutex        *mutex;
+  GMutex         mutex;
 
   /* gl context */
   GThread       *gl_thread;

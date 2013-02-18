@@ -20,8 +20,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -131,8 +129,8 @@ static const gchar *redisplay_fragment_shader_str_gles2 =
 struct _GstGLDisplayPrivate
 {
   /* conditions */
-  GCond *cond_create_context;
-  GCond *cond_destroy_context;
+  GCond cond_create_context;
+  GCond cond_destroy_context;
 
   /* generic gl code */
   GstGLDisplayThreadFunc generic_callback;
@@ -214,10 +212,10 @@ gst_gl_display_init (GstGLDisplay * display)
   display->priv = GST_GL_DISPLAY_GET_PRIVATE (display);
 
   /* thread safe */
-  display->mutex = g_mutex_new ();
+  g_mutex_init (&display->mutex);
 
-  display->priv->cond_create_context = g_cond_new ();
-  display->priv->cond_destroy_context = g_cond_new ();
+  g_cond_init (&display->priv->cond_create_context);
+  g_cond_init (&display->priv->cond_destroy_context);
 
   display->gl_vtable = g_slice_alloc0 (sizeof (GstGLFuncs));
 
@@ -231,8 +229,7 @@ gst_gl_display_finalize (GObject * object)
 {
   GstGLDisplay *display = GST_GL_DISPLAY (object);
 
-  if (display->mutex && display->gl_window) {
-
+  if (display->gl_window) {
     gst_gl_display_lock (display);
 
     gst_gl_window_set_resize_callback (display->gl_window, NULL, NULL);
@@ -246,7 +243,7 @@ gst_gl_display_finalize (GObject * object)
 
       GST_INFO ("quit sent to gl window loop");
 
-      g_cond_wait (display->priv->cond_destroy_context, display->mutex);
+      g_cond_wait (&display->priv->cond_destroy_context, &display->mutex);
       GST_INFO ("quit received from gl window");
     }
     gst_gl_display_unlock (display);
@@ -259,18 +256,12 @@ gst_gl_display_finalize (GObject * object)
       GST_ERROR ("gl thread returned a not null pointer");
     display->gl_thread = NULL;
   }
-  if (display->mutex) {
-    g_mutex_free (display->mutex);
-    display->mutex = NULL;
-  }
-  if (display->priv->cond_destroy_context) {
-    g_cond_free (display->priv->cond_destroy_context);
-    display->priv->cond_destroy_context = NULL;
-  }
-  if (display->priv->cond_create_context) {
-    g_cond_free (display->priv->cond_create_context);
-    display->priv->cond_create_context = NULL;
-  }
+
+  g_mutex_clear (&display->mutex);
+
+  g_cond_clear (&display->priv->cond_destroy_context);
+  g_cond_clear (&display->priv->cond_create_context);
+
   if (display->priv->clientReshapeCallback)
     display->priv->clientReshapeCallback = NULL;
   if (display->priv->clientDrawCallback)
@@ -506,7 +497,7 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   gst_gl_window_set_close_callback (display->gl_window,
       GST_GL_WINDOW_CB (gst_gl_display_on_close), display);
 
-  g_cond_signal (display->priv->cond_create_context);
+  g_cond_signal (&display->priv->cond_create_context);
 
   display->isAlive = TRUE;
   gst_gl_display_unlock (display);
@@ -523,7 +514,7 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
 
   display->gl_window = NULL;
 
-  g_cond_signal (display->priv->cond_destroy_context);
+  g_cond_signal (&display->priv->cond_destroy_context);
 
   gst_gl_display_unlock (display);
 
@@ -536,7 +527,7 @@ failure:
       display->gl_window = NULL;
     }
 
-    g_cond_signal (display->priv->cond_create_context);
+    g_cond_signal (&display->priv->cond_create_context);
     gst_gl_display_unlock (display);
     return NULL;
   }
@@ -1154,13 +1145,13 @@ gst_gl_display_del_texture_thread (GstGLDisplay * display, GLuint * pTexture)
 void
 gst_gl_display_lock (GstGLDisplay * display)
 {
-  g_mutex_lock (display->mutex);
+  g_mutex_lock (&display->mutex);
 }
 
 void
 gst_gl_display_unlock (GstGLDisplay * display)
 {
-  g_mutex_unlock (display->mutex);
+  g_mutex_unlock (&display->mutex);
 }
 
 /* called in the gl thread */
@@ -1221,11 +1212,10 @@ gst_gl_display_create_context (GstGLDisplay * display,
   if (!display->context_created) {
     display->external_gl_context = external_gl_context;
 
-    display->gl_thread = g_thread_create (
-        (GThreadFunc) gst_gl_display_thread_create_context, display, TRUE,
-        NULL);
+    display->gl_thread = g_thread_new ("gstglcontext",
+        (GThreadFunc) gst_gl_display_thread_create_context, display);
 
-    g_cond_wait (display->priv->cond_create_context, display->mutex);
+    g_cond_wait (&display->priv->cond_create_context, &display->mutex);
 
     GST_INFO ("gl thread created");
   }
