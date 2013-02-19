@@ -916,14 +916,12 @@ struct _ClientContext
 {
   GstRTSPServer *server;
   GMainLoop *loop;
-  GMainContext *context;
   GstRTSPClient *client;
 };
 
 static void
 free_client_context (ClientContext * ctx)
 {
-  g_main_context_unref (ctx->context);
   if (ctx->loop)
     g_main_loop_unref (ctx->loop);
   g_object_unref (ctx->client);
@@ -971,6 +969,7 @@ manage_client (GstRTSPServer * server, GstRTSPClient * client)
 {
   ClientContext *ctx;
   GstRTSPServerPrivate *priv = server->priv;
+  GMainContext *mainctx;
 
   GST_DEBUG_OBJECT (server, "manage client %p", client);
 
@@ -982,14 +981,15 @@ manage_client (GstRTSPServer * server, GstRTSPClient * client)
 
     /* find the context to add the watch */
     if ((source = g_main_current_source ()))
-      ctx->context = g_main_context_ref (g_source_get_context (source));
+      mainctx = g_source_get_context (source);
     else
-      ctx->context = NULL;
+      mainctx = NULL;
   } else {
-    ctx->context = g_main_context_new ();
-    ctx->loop = g_main_loop_new (ctx->context, TRUE);
+    mainctx = g_main_context_new ();
+    ctx->loop = g_main_loop_new (mainctx, TRUE);
+    g_main_context_unref (mainctx);
   }
-  gst_rtsp_client_attach (client, ctx->context);
+  gst_rtsp_client_attach (client, mainctx);
 
   GST_RTSP_SERVER_LOCK (server);
   g_signal_connect (client, "closed", (GCallback) unmanage_client, ctx);
