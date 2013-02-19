@@ -406,16 +406,7 @@ case $ac_cv_audioresample_format in
 esac
 
 dnl Check for mmap (needed by allocators library)
-AC_MSG_CHECKING(if mmap is supported)
-AC_TRY_LINK(
-  [#include <fcntl.h>
-   #include <unistd.h>
-   #include <sys/mman.h>],
-  [char * p = (char *)mmap(NULL, 10, PROT_READ, MAP_SHARED, -1, 2);
-   munmap(p,10);],
-  [AC_MSG_RESULT(yes)
-   AC_DEFINE(HAVE_MMAP, 1, [Defined if mmap is supported])],
-  [AC_MSG_RESULT(no)] )
+AC_CHECK_FUNC([mmap], [AC_DEFINE(HAVE_MMAP, 1, [Defined if mmap is supported])])
 
 dnl *** plug-ins to include ***
 
