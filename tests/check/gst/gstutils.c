@@ -1089,22 +1089,6 @@ GST_START_TEST (test_read_macros)
   guint32 uarray[2];
   guint8 *cpointer;
 
-#define fail_unless_equals_int_hex(a, b)                                \
-G_STMT_START {								\
-  int first = a;							\
-  int second = b;							\
-  fail_unless(first == second,						\
-    "'" #a "' (0x%08x) is not equal to '" #b"' (0x%08x)", first, second);	\
-} G_STMT_END;
-
-#define fail_unless_equals_int64_hex(a, b)                                \
-G_STMT_START {								\
-  gint64 first = a;							\
-  gint64 second = b;							\
-  fail_unless(first == second,						\
-    "'" #a "' (0x%016x) is not equal to '" #b"' (0x%016x)", first, second);	\
-} G_STMT_END;
-
   memcpy (uarray, carray, 8);
   cpointer = carray;
 

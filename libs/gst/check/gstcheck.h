@@ -150,6 +150,38 @@ G_STMT_START {                                                          \
 #define assert_equals_int(a, b) fail_unless_equals_int(a, b)
 
 /**
+ * fail_unless_equals_int_hex:
+ * @a: a #gint value or expression
+ * @b: a #gint value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to in
+ * hexadecimal format. This macro is for use in unit tests.
+ *
+ * Since: 1.2
+ */
+#define fail_unless_equals_int_hex(a, b)                                \
+G_STMT_START {								\
+  int first = a;							\
+  int second = b;							\
+  fail_unless(first == second,						\
+    "'" #a "' (0x%08x) is not equal to '" #b"' (0x%08x)", first, second);\
+} G_STMT_END;
+
+/**
+ * assert_equals_int_hex:
+ * @a: a #gint value or expression
+ * @b: a #gint value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to in
+ * hexadecimal format. This macro is for use in unit tests.
+ *
+ * Since: 1.2
+ */
+#define assert_equals_int_hex(a, b) fail_unless_equals_int_hex(a, b)
+
+/**
  * fail_unless_equals_int64:
  * @a: a #gint64 value or expression
  * @b: a #gint64 value or expression
@@ -178,6 +210,37 @@ G_STMT_START {                                                          \
 #define assert_equals_int64(a, b) fail_unless_equals_int64(a, b)
 
 /**
+ * fail_unless_equals_int64_hex:
+ * @a: a #gint64 value or expression
+ * @b: a #gint64 value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to in
+ * hexadecimal format. This macro is for use in unit tests.
+ *
+ * Since: 1.2
+ */
+#define fail_unless_equals_int64_hex(a, b)                              \
+G_STMT_START {								\
+  gint64 first = a;							\
+  gint64 second = b;							\
+  fail_unless(first == second,						\
+    "'" #a "' (0x%016x) is not equal to '" #b"' (0x%016x)", first, second);\
+} G_STMT_END;
+/**
+ * assert_equals_int64_hex:
+ * @a: a #gint64 value or expression
+ * @b: a #gint64 value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to in
+ * hexadecimal format. This macro is for use in unit tests.
+ *
+ * Since: 1.2
+ */
+#define assert_equals_int64_hex(a,b) fail_unless_equals_int64_hex(a,b)
+
+/**
  * fail_unless_equals_uint64:
  * @a: a #guint64 value or expression
  * @b: a #guint64 value or expression
@@ -204,6 +267,37 @@ G_STMT_START {                                                          \
  * macro is for use in unit tests.
  */
 #define assert_equals_uint64(a, b) fail_unless_equals_uint64(a, b)
+
+/**
+ * fail_unless_equals_uint64_hex:
+ * @a: a #gint64 value or expression
+ * @b: a #gint64 value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to in
+ * hexadecimal format. This macro is for use in unit tests.
+ *
+ * Since: 1.2
+ */
+#define fail_unless_equals_uint64_hex(a, b)                             \
+G_STMT_START {								\
+  guint64 first = a;							\
+  guint64 second = b;							\
+  fail_unless(first == second,						\
+    "'" #a "' (0x%016x) is not equal to '" #b"' (0x%016x)", first, second);\
+} G_STMT_END;
+/**
+ * assert_equals_uint64_hex:
+ * @a: a #guint64 value or expression
+ * @b: a #guint64 value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to in
+ * hexadecimal format. This macro is for use in unit tests.
+ *
+ * Since: 1.2
+ */
+#define assert_equals_uint64_hex(a,b) fail_unless_equals_uint64_hex(a,b)
 
 /**
  * fail_unless_equals_string:
@@ -262,6 +356,37 @@ G_STMT_START {                                                    \
  */
 #define assert_equals_float(a, b) fail_unless_equals_float(a, b)
 
+/**
+ * fail_unless_equals_pointer:
+ * @a: a pointer value or expression
+ * @b: a pointer value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this
+ * is not the case, printing both expressions and the values they
+ * evaluated to. This macro is for use in unit tests.
+ *
+ * Since: 1.2
+ */
+#define fail_unless_equals_pointer(a, b)                          \
+G_STMT_START {                                                    \
+  gpointer first = a;                                             \
+  gpointer second = b;                                            \
+  fail_unless(first == second,                                    \
+    "'" #a "' (%p) is not equal to '" #b "' (%p)", first, second);\
+} G_STMT_END;
+
+/**
+ * assert_equals_pointer:
+ * @a: a pointer value or expression
+ * @b: a pointer value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this
+ * is not the case, printing both expressions and the values they
+ * evaluated to. This macro is for use in unit tests.
+ *
+ * Since: 1.2
+ */
+#define assert_equals_pointer(a, b) fail_unless_equals_pointer(a, b)
 
 /***
  * thread test macros and variables
