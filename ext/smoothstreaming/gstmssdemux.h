@@ -74,6 +74,7 @@ struct _GstMssDemuxStream {
 
   gboolean eos;
   gboolean have_data;
+  gboolean cancelled;
 
   GstDownloadRate download_rate;
 

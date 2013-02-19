@@ -520,6 +520,7 @@ gst_mss_demux_stop_tasks (GstMssDemux * mssdemux, gboolean immediate)
 
     gst_data_queue_set_flushing (stream->dataqueue, TRUE);
 
+    stream->cancelled = TRUE;
     if (immediate)
       gst_uri_downloader_cancel (stream->downloader);
     gst_task_pause (stream->download_task);
@@ -529,6 +530,8 @@ gst_mss_demux_stop_tasks (GstMssDemux * mssdemux, gboolean immediate)
   for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
     GstMssDemuxStream *stream = iter->data;
     g_static_rec_mutex_lock (&stream->download_lock);
+    stream->cancelled = FALSE;
+    stream->download_error_count = 0;
   }
   g_static_rec_mutex_lock (&mssdemux->stream_lock);
 }
@@ -1110,6 +1113,10 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
   GST_OBJECT_UNLOCK (mssdemux);
 
   ret = gst_mss_demux_stream_download_fragment (stream, &buffer);
+
+  if (stream->cancelled)
+    goto cancelled;
+
   switch (ret) {
     case GST_FLOW_OK:
       break;                    /* all is good, let's go */
@@ -1146,6 +1153,12 @@ error:
           (_("Couldn't download fragments")),
           ("fragment downloading has failed too much consecutive times"));
     }
+    return;
+  }
+cancelled:
+  {
+    GST_DEBUG_OBJECT (mssdemux, "Stream %p has been cancelled", stream);
+    gst_task_pause (stream->download_task);
     return;
   }
 }
