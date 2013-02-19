@@ -80,7 +80,7 @@ PATH=$GST/gst-editing-services/tools:$PATH
 
 
 # GStreamer plugins base libraries
-for path in app audio cdda fft interfaces pbutils netbuffer riff rtp rtsp sdp tag utils video 
+for path in allocators app audio cdda fft interfaces pbutils netbuffer riff rtp rtsp sdp tag utils video
 do
   LD_LIBRARY_PATH=$GST/gst-plugins-base/gst-libs/gst/$path/.libs:$LD_LIBRARY_PATH
   DYLD_LIBRARY_PATH=$GST/gst-plugins-base/gst-libs/gst/$path/.libs:$DYLD_LIBRARY_PATH
