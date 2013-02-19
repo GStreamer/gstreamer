@@ -1052,6 +1052,11 @@ gst_dvbsub_overlay_event_text (GstPad * pad, GstObject * parent,
       gst_event_unref (event);
       ret = TRUE;
       break;
+    case GST_EVENT_CAPS:
+      /* don't want to forward the subtitle caps */
+      gst_event_unref (event);
+      ret = TRUE;
+      break;
     default:
       ret = gst_pad_push_event (render->srcpad, event);
       break;
