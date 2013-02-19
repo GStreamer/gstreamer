@@ -226,6 +226,8 @@ gst_dvbsub_overlay_init (GstDVBSubOverlay * render)
   gst_pad_set_query_function (render->srcpad,
       GST_DEBUG_FUNCPTR (gst_dvbsub_overlay_query_src));
 
+  GST_PAD_SET_PROXY_ALLOCATION (render->video_sinkpad);
+
   gst_element_add_pad (GST_ELEMENT (render), render->srcpad);
   gst_element_add_pad (GST_ELEMENT (render), render->video_sinkpad);
   gst_element_add_pad (GST_ELEMENT (render), render->text_sinkpad);
