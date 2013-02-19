@@ -1060,7 +1060,7 @@ gst_video_overlay_rectangle_convert (GstVideoInfo * src, GstBuffer * src_buffer,
         b = CLAMP (b, 0, 255);
 
         /* native endian ARGB */
-        *ddata = ((a << 24) | (r << 16) | (g << 8) | b);
+        *(guint32 *) ddata = ((a << 24) | (r << 16) | (g << 8) | b);
 
         sdata += 4;
         ddata += 4;
@@ -1075,7 +1075,7 @@ gst_video_overlay_rectangle_convert (GstVideoInfo * src, GstBuffer * src_buffer,
     for (k = 0; k < height; k++) {
       for (l = 0; l < width; l++) {
         /* native endian ARGB */
-        argb = *sdata;
+        argb = *(guint32 *) sdata;
         a = argb >> 24;
         r = (argb >> 16) & 0xff;
         g = (argb >> 8) & 0xff;
