@@ -243,10 +243,15 @@ done:
   }
 }
 
+/* Must be called with mutex locked. */
 static void
 gst_uri_downloader_stop (GstUriDownloader * downloader)
 {
   GstPad *pad;
+  GstElement *urisrc;
+
+  if (!downloader->priv->urisrc)
+    return;
 
   GST_DEBUG_OBJECT (downloader, "Stopping source element %s",
       GST_ELEMENT_NAME (downloader->priv->urisrc));
@@ -259,14 +264,23 @@ gst_uri_downloader_stop (GstUriDownloader * downloader)
     gst_pad_unlink (pad, downloader->priv->pad);
     gst_object_unref (pad);
   }
-  /* set the element state to NULL */
-  gst_element_set_state (downloader->priv->urisrc, GST_STATE_NULL);
-  gst_element_get_state (downloader->priv->urisrc, NULL, NULL,
-      GST_CLOCK_TIME_NONE);
-  gst_element_set_bus (downloader->priv->urisrc, NULL);
-  gst_object_unref (downloader->priv->urisrc);
+  urisrc = downloader->priv->urisrc;
   downloader->priv->urisrc = NULL;
 
+  /* unlock so it doesn't block on chain function while changing state */
+  g_mutex_unlock (&downloader->priv->lock);
+
+  GST_DEBUG_OBJECT (downloader, "Stopping source element %s",
+      GST_ELEMENT_NAME (urisrc));
+
+  /* set the element state to NULL */
+  gst_element_set_state (urisrc, GST_STATE_NULL);
+  gst_element_get_state (urisrc, NULL, NULL, GST_CLOCK_TIME_NONE);
+  gst_element_set_bus (urisrc, NULL);
+  gst_object_unref (urisrc);
+
+  /* caller expects the mutex to be locked */
+  g_mutex_lock (&downloader->priv->lock);
   gst_bus_set_flushing (downloader->priv->bus, TRUE);
 }
 
