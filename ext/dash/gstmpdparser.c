@@ -38,6 +38,8 @@ static gchar **gst_mpdparser_get_xml_prop_string_vector_type (xmlNode * a_node,
     const gchar * property);
 static guint gst_mpdparser_get_xml_prop_unsigned_integer (xmlNode * a_node,
     const gchar * property, guint default_val);
+static guint64 gst_mpdparser_get_xml_prop_unsigned_integer_64 (xmlNode * a_node,
+    const gchar * property, guint64 default_val);
 static guint *gst_mpdparser_get_xml_prop_uint_vector_type (xmlNode * a_node,
     const gchar * property, guint * size);
 static gdouble gst_mpdparser_get_xml_prop_double (xmlNode * a_node,
@@ -118,9 +120,9 @@ static gchar *gst_mpdparser_get_mediaURL (GstActiveStream * stream,
 static gchar *gst_mpdparser_get_initializationURL (GstURLType *
     InitializationURL);
 static gchar *gst_mpdparser_build_URL_from_template (const gchar * url_template,
-    const gchar * id, guint number, guint bandwidth, guint time);
+    const gchar * id, guint number, guint bandwidth, guint64 time);
 static gboolean gst_mpd_client_add_media_segment (GstActiveStream * stream,
-    GstSegmentURLNode * url_node, guint number, guint start,
+    GstSegmentURLNode * url_node, guint number, guint64 start,
     GstClockTime start_time, GstClockTime duration);
 static const gchar *gst_mpdparser_mimetype_to_caps (const gchar * mimeType);
 static GstClockTime gst_mpd_client_get_segment_duration (GstMpdClient * client,
@@ -246,6 +248,29 @@ gst_mpdparser_get_xml_prop_unsigned_integer (xmlNode * a_node,
   if (prop_string) {
     if (sscanf ((gchar *) prop_string, "%u", &prop_unsigned_integer)) {
       GST_LOG (" - %s: %u", property, prop_unsigned_integer);
+    } else {
+      GST_WARNING
+          ("failed to parse unsigned integer property %s from xml string %s",
+          property, prop_string);
+    }
+    xmlFree (prop_string);
+  }
+
+  return prop_unsigned_integer;
+}
+
+static guint64
+gst_mpdparser_get_xml_prop_unsigned_integer_64 (xmlNode * a_node,
+    const gchar * property, guint64 default_val)
+{
+  xmlChar *prop_string;
+  guint64 prop_unsigned_integer = default_val;
+
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  if (prop_string) {
+    if (sscanf ((gchar *) prop_string, "%" G_GUINT64_FORMAT,
+            &prop_unsigned_integer)) {
+      GST_LOG (" - %s: %" G_GUINT64_FORMAT, property, prop_unsigned_integer);
     } else {
       GST_WARNING
           ("failed to parse unsigned integer property %s from xml string %s",
@@ -1104,8 +1129,10 @@ gst_mpdparser_parse_s_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_s_node);
 
   GST_LOG ("attributes of S node:");
-  new_s_node->t = gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "t", 0);
-  new_s_node->d = gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "d", 0);
+  new_s_node->t =
+      gst_mpdparser_get_xml_prop_unsigned_integer_64 (a_node, "t", 0);
+  new_s_node->d =
+      gst_mpdparser_get_xml_prop_unsigned_integer_64 (a_node, "d", 0);
   new_s_node->r = gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "r", 0);
 }
 
@@ -1850,14 +1877,14 @@ gst_mpdparser_get_segment_base (GstPeriodNode * Period,
     if (Representation && Representation->SegmentList
         && Representation->SegmentList->MultSegBaseType
         && Representation->SegmentList->MultSegBaseType->SegBaseType
-        && Representation->SegmentList->MultSegBaseType->SegBaseType->
-        Initialization) {
+        && Representation->SegmentList->MultSegBaseType->
+        SegBaseType->Initialization) {
       SegmentBase = Representation->SegmentList->MultSegBaseType->SegBaseType;
     } else if (AdaptationSet && AdaptationSet->SegmentList
         && AdaptationSet->SegmentList->MultSegBaseType
         && AdaptationSet->SegmentList->MultSegBaseType->SegBaseType
-        && AdaptationSet->SegmentList->MultSegBaseType->SegBaseType->
-        Initialization) {
+        && AdaptationSet->SegmentList->MultSegBaseType->
+        SegBaseType->Initialization) {
       SegmentBase = AdaptationSet->SegmentList->MultSegBaseType->SegBaseType;
     } else if (Period && Period->SegmentList
         && Period->SegmentList->MultSegBaseType
@@ -2356,10 +2383,11 @@ gst_mpdparser_get_initializationURL (GstURLType * InitializationURL)
 
 static gchar *
 gst_mpdparser_build_URL_from_template (const gchar * url_template,
-    const gchar * id, guint number, guint bandwidth, guint time)
+    const gchar * id, guint number, guint bandwidth, guint64 time)
 {
   static gchar default_format[] = "%01d";
-  gchar **tokens, *token, *ret, *format;
+  gchar **tokens, *token, *ret;
+  const gchar *format;
   gint i, num_tokens;
   gboolean last_token_par = TRUE;       /* last token was a parameter */
 
@@ -2396,6 +2424,8 @@ gst_mpdparser_build_URL_from_template (const gchar * url_template,
     } else if (!strncmp (token, "Time", 4)) {
       if (strlen (token) > 4) {
         format = token + 4;     /* format tag */
+      } else {
+        format = "%" G_GUINT64_FORMAT;
       }
       tokens[i] = g_strdup_printf (format, time);
       g_free (token);
@@ -2686,7 +2716,7 @@ gst_mpdparser_get_chunk_by_index (GstMpdClient * client, guint indexStream,
 
 static gboolean
 gst_mpd_client_add_media_segment (GstActiveStream * stream,
-    GstSegmentURLNode * url_node, guint number, guint start,
+    GstSegmentURLNode * url_node, guint number, guint64 start,
     GstClockTime start_time, GstClockTime duration)
 {
   GstMediaSegment *media_segment;
@@ -2714,7 +2744,8 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
   GList *rep_list;
   GstClockTime PeriodStart, PeriodEnd, start_time, duration;
   GstMediaSegment *last_media_segment;
-  guint i, start;
+  guint i;
+  guint64 start;
 
   if (stream->cur_adapt_set == NULL) {
     GST_WARNING ("No valid AdaptationSet node in the MPD file, aborting...");
@@ -2792,7 +2823,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
           guint j, timescale;
 
           S = (GstSNode *) list->data;
-          GST_LOG ("Processing S node: d=%d r=%d t=%d", S->d, S->r, S->t);
+          GST_LOG ("Processing S node: d=%llu r=%d t=%llu", S->d, S->r, S->t);
           duration = S->d * GST_SECOND;
           timescale =
               stream->cur_segment_list->MultSegBaseType->SegBaseType->timescale;
@@ -2865,7 +2896,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
           guint j, timescale;
 
           S = (GstSNode *) list->data;
-          GST_LOG ("Processing S node: d=%d r=%d t=%d", S->d, S->r, S->t);
+          GST_LOG ("Processing S node: d=%llu r=%u t=%llu", S->d, S->r, S->t);
           duration = S->d * GST_SECOND;
           timescale =
               stream->cur_seg_template->MultSegBaseType->SegBaseType->timescale;
@@ -2977,6 +3008,8 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client)
       GstPeriodNode *next_period_node = next->data;
       if (next_period_node->start != -1) {
         duration = next_period_node->start * GST_MSECOND - start;
+      } else if (client->mpd_node->type == GST_MPD_FILE_TYPE_DYNAMIC) {
+        /* might be a live file, ignore unspecified duration */
       } else {
         /* Invalid MPD file! */
         goto syntax_error;
@@ -2985,6 +3018,8 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client)
       /* last Period of the Media Presentation */
       duration =
           client->mpd_node->mediaPresentationDuration * GST_MSECOND - start;
+    } else if (client->mpd_node->type == GST_MPD_FILE_TYPE_DYNAMIC) {
+      /* might be a live file, ignore unspecified duration */
     } else {
       /* Invalid MPD file! */
       goto syntax_error;
@@ -3259,8 +3294,8 @@ gst_mpd_client_get_next_header (GstMpdClient * client, gchar ** uri,
   *uri = NULL;
   if (stream->cur_segment_base && stream->cur_segment_base->Initialization) {
     *uri =
-        gst_mpdparser_get_initializationURL (stream->cur_segment_base->
-        Initialization);
+        gst_mpdparser_get_initializationURL (stream->
+        cur_segment_base->Initialization);
   } else if (stream->cur_seg_template) {
     const gchar *initialization = NULL;
     if (stream->cur_seg_template->initialization) {
