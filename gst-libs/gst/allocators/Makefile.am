@@ -3,6 +3,7 @@ lib_LTLIBRARIES = libgstallocators-@GST_API_VERSION@.la
 libgstallocators_@GST_API_VERSION@_includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/allocators
 
 libgstallocators_@GST_API_VERSION@_include_HEADERS = \
+	allocators.h \
 	gstdmabuf.h
 
 noinst_HEADERS =
@@ -11,7 +12,7 @@ libgstallocators_@GST_API_VERSION@_la_SOURCES = \
 	gstdmabuf.c 
 
 libgstallocators_@GST_API_VERSION@_la_LIBADD = $(GST_LIBS) $(LIBM)
-libgstallocators_@GST_API_VERSION@_la_CFLAGS = $(GST_CFLAGS)
+libgstallocators_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstallocators_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 if HAVE_INTROSPECTION
@@ -28,7 +29,9 @@ GstAllocators-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstallocators-@
 		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
-		$(gir_cincludes) \
+		--c-include "gst/allocators/allocators.h" \
+		-I$(top_srcdir)/gst-libs \
+		-I$(top_builddir)/gst-libs \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--library=libgstallocators-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
