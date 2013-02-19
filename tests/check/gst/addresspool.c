@@ -184,6 +184,27 @@ GST_START_TEST (test_pool)
   gst_rtsp_address_free (addr);
   gst_rtsp_address_free (addr2);
   gst_rtsp_address_free (addr3);
+  gst_rtsp_address_pool_clear (pool);
+
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          "233.252.1.1", "233.252.1.1", 5000, 5001, 1));
+  fail_unless (gst_rtsp_address_pool_add_range_unicast (pool,
+          "192.168.1.1", "192.168.1.1", 6000, 6001));
+
+  addr = gst_rtsp_address_pool_acquire_address (pool,
+      GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_MULTICAST, 2);
+  fail_unless (addr != NULL);
+  fail_unless (addr->port == 5000);
+  fail_unless (!strcmp (addr->address, "233.252.1.1"));
+  gst_rtsp_address_free (addr);
+
+  addr = gst_rtsp_address_pool_acquire_address (pool,
+      GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_UNICAST, 2);
+  fail_unless (addr != NULL);
+  fail_unless (addr->port == 6000);
+  fail_unless (!strcmp (addr->address, "192.168.1.1"));
+  gst_rtsp_address_free (addr);
+
 
   g_object_unref (pool);
 }
