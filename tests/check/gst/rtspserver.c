@@ -742,7 +742,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_play_multithreaded)
 {
-  gst_rtsp_server_set_max_threads (server, -1);
+  gst_rtsp_server_set_max_threads (server, 2);
 
   start_server ();
 
@@ -789,7 +789,7 @@ GST_START_TEST (test_play_multithreaded_block_in_describe)
   GstRTSPMessage *response;
   GstRTSPStatusCode code;
 
-  gst_rtsp_server_set_max_threads (server, 1);
+  gst_rtsp_server_set_max_threads (server, 2);
 
   mounts = gst_rtsp_server_get_mount_points (server);
   fail_unless (mounts != NULL);
@@ -873,7 +873,7 @@ GST_START_TEST (test_play_multithreaded_timeout_client)
   GstRTSPMessage *request;
   GstRTSPMessage *response;
 
-  gst_rtsp_server_set_max_threads (server, -1);
+  gst_rtsp_server_set_max_threads (server, 2);
   pool = gst_rtsp_server_get_session_pool (server);
   g_signal_connect (server, "client-connected",
       G_CALLBACK (session_connected_new_session_cb), new_session_timeout_one);
@@ -952,7 +952,7 @@ GST_START_TEST (test_play_multithreaded_timeout_session)
   GstRTSPTransport *audio_transport = NULL;
   GstRTSPSessionPool *pool;
 
-  gst_rtsp_server_set_max_threads (server, -1);
+  gst_rtsp_server_set_max_threads (server, 2);
   pool = gst_rtsp_server_get_session_pool (server);
   g_signal_connect (server, "client-connected",
       G_CALLBACK (session_connected_new_session_cb), new_session_timeout_one);
