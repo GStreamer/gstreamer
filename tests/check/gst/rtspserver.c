@@ -1017,6 +1017,71 @@ GST_END_TEST;
 
 
 
+GST_START_TEST (test_play_disconnect)
+{
+  GstRTSPConnection *conn;
+  GstSDPMessage *sdp_message = NULL;
+  const GstSDPMedia *sdp_media;
+  const gchar *video_control;
+  const gchar *audio_control;
+  GstRTSPRange client_port;
+  gchar *session = NULL;
+  GstRTSPTransport *video_transport = NULL;
+  GstRTSPTransport *audio_transport = NULL;
+  GstRTSPSessionPool *pool;
+
+  pool = gst_rtsp_server_get_session_pool (server);
+  g_signal_connect (server, "client-connected",
+      G_CALLBACK (session_connected_new_session_cb), new_session_timeout_one);
+
+  start_server ();
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
+
+  /* get control strings from DESCRIBE response */
+  fail_unless (gst_sdp_message_medias_len (sdp_message) == 2);
+  sdp_media = gst_sdp_message_get_media (sdp_message, 0);
+  video_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+  sdp_media = gst_sdp_message_get_media (sdp_message, 1);
+  audio_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  get_client_ports (&client_port);
+
+  /* do SETUP for video and audio */
+  fail_unless (do_setup (conn, video_control, &client_port, &session,
+          &video_transport) == GST_RTSP_STS_OK);
+  fail_unless (do_setup (conn, audio_control, &client_port, &session,
+          &audio_transport) == GST_RTSP_STS_OK);
+
+  fail_unless (gst_rtsp_session_pool_get_n_sessions (pool) == 1);
+
+  /* send PLAY request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_PLAY,
+          session) == GST_RTSP_STS_OK);
+
+  gst_rtsp_connection_free (conn);
+
+  sleep (7);
+
+  fail_unless (gst_rtsp_session_pool_get_n_sessions (pool) == 1);
+  fail_unless (gst_rtsp_session_pool_cleanup (pool) == 1);
+
+
+  /* clean up and iterate so the clean-up can finish */
+  g_object_unref (pool);
+  g_free (session);
+  gst_rtsp_transport_free (video_transport);
+  gst_rtsp_transport_free (audio_transport);
+  gst_sdp_message_free (sdp_message);
+
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspserver_suite (void)
 {
@@ -1038,6 +1103,7 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_play_multithreaded_block_in_describe);
   tcase_add_test (tc, test_play_multithreaded_timeout_client);
   tcase_add_test (tc, test_play_multithreaded_timeout_session);
+  tcase_add_test (tc, test_play_disconnect);
 
   return s;
 }
