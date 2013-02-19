@@ -62,6 +62,7 @@ struct _GstRTSPStreamPrivate
 
   /* server ports for sending/receiving */
   GstRTSPRange server_port;
+  GstRTSPAddress *server_addr;
 
   /* multicast addresses */
   GstRTSPAddressPool *pool;
@@ -136,6 +137,8 @@ gst_rtsp_stream_finalize (GObject * obj)
 
   if (priv->addr)
     gst_rtsp_address_free (priv->addr);
+  if (priv->server_addr)
+    gst_rtsp_address_free (priv->server_addr);
   if (priv->pool)
     g_object_unref (priv->pool);
   gst_object_unref (priv->payloader);
@@ -417,11 +420,17 @@ alloc_ports (GstRTSPStream * stream)
   GstStateChangeReturn ret;
   GstElement *udpsrc0, *udpsrc1;
   GstElement *udpsink0, *udpsink1;
+  GSocket *rtp_socket = NULL;
+  GSocket *rtcp_socket;
   gint tmp_rtp, tmp_rtcp;
   guint count;
   gint rtpport, rtcpport;
-  GSocket *socket;
-  const gchar *host;
+  GList *rejected_addresses = NULL;
+  GstRTSPAddress *addr = NULL;
+  GSocketFamily family;
+  GInetAddress *inetaddr = NULL;
+  GSocketAddress *rtp_sockaddr = NULL;
+  GSocketAddress *rtcp_sockaddr = NULL;
 
   udpsrc0 = NULL;
   udpsrc1 = NULL;
@@ -432,74 +441,117 @@ alloc_ports (GstRTSPStream * stream)
   /* Start with random port */
   tmp_rtp = 0;
 
-  if (priv->is_ipv6)
-    host = "udp://[::0]";
-  else
-    host = "udp://0.0.0.0";
+  if (priv->is_ipv6) {
+    family = G_SOCKET_FAMILY_IPV6;
+  } else {
+    family = G_SOCKET_FAMILY_IPV4;
+  }
+
+  rtcp_socket = g_socket_new (family, G_SOCKET_TYPE_DATAGRAM,
+      G_SOCKET_PROTOCOL_UDP, NULL);
+  if (!rtcp_socket)
+    goto no_udp_protocol;
+
+  if (priv->server_addr)
+    gst_rtsp_address_free (priv->server_addr);
 
   /* try to allocate 2 UDP ports, the RTP port should be an even
    * number and the RTCP port should be the next (uneven) port */
 again:
-  udpsrc0 = gst_element_make_from_uri (GST_URI_SRC, host, NULL, NULL);
-  if (udpsrc0 == NULL)
-    goto no_udp_protocol;
-  g_object_set (G_OBJECT (udpsrc0), "port", tmp_rtp, NULL);
 
-  ret = gst_element_set_state (udpsrc0, GST_STATE_PAUSED);
-  if (ret == GST_STATE_CHANGE_FAILURE) {
+  if (rtp_socket == NULL) {
+    rtp_socket = g_socket_new (family, G_SOCKET_TYPE_DATAGRAM,
+        G_SOCKET_PROTOCOL_UDP, NULL);
+    if (!rtp_socket)
+      goto no_udp_protocol;
+  }
+
+  if (priv->pool && gst_rtsp_address_pool_has_unicast_addresses (priv->pool)) {
+    GstRTSPAddressFlags flags;
+
+    if (addr)
+      rejected_addresses = g_list_prepend (rejected_addresses, addr);
+
+    flags = GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_UNICAST;
+    if (priv->is_ipv6)
+      flags |= GST_RTSP_ADDRESS_FLAG_IPV6;
+    else
+      flags |= GST_RTSP_ADDRESS_FLAG_IPV4;
+
+    addr = gst_rtsp_address_pool_acquire_address (priv->pool, flags, 2);
+
+    if (addr == NULL)
+      goto no_ports;
+
+    tmp_rtp = addr->port;
+
+    g_clear_object (&inetaddr);
+    inetaddr = g_inet_address_new_from_string (addr->address);
+  } else {
     if (tmp_rtp != 0) {
       tmp_rtp += 2;
       if (++count > 20)
         goto no_ports;
-
-      gst_element_set_state (udpsrc0, GST_STATE_NULL);
-      gst_object_unref (udpsrc0);
-
-      goto again;
     }
-    goto no_udp_protocol;
+
+    if (inetaddr == NULL)
+      inetaddr = g_inet_address_new_any (family);
   }
 
-  g_object_get (G_OBJECT (udpsrc0), "port", &tmp_rtp, NULL);
+  rtp_sockaddr = g_inet_socket_address_new (inetaddr, tmp_rtp);
+  if (!g_socket_bind (rtp_socket, rtp_sockaddr, FALSE, NULL)) {
+    g_object_unref (rtp_sockaddr);
+    goto again;
+  }
+  g_object_unref (rtp_sockaddr);
+
+  rtp_sockaddr = g_socket_get_local_address (rtp_socket, NULL);
+  if (rtp_sockaddr == NULL || !G_IS_INET_SOCKET_ADDRESS (rtp_sockaddr)) {
+    g_clear_object (&rtp_sockaddr);
+    goto socket_error;
+  }
+
+  tmp_rtp =
+      g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (rtp_sockaddr));
+  g_object_unref (rtp_sockaddr);
 
   /* check if port is even */
   if ((tmp_rtp & 1) != 0) {
     /* port not even, close and allocate another */
-    if (++count > 20)
-      goto no_ports;
-
-    gst_element_set_state (udpsrc0, GST_STATE_NULL);
-    gst_object_unref (udpsrc0);
-
     tmp_rtp++;
+    g_clear_object (&rtp_socket);
     goto again;
   }
-
-  /* allocate port+1 for RTCP now */
-  udpsrc1 = gst_element_make_from_uri (GST_URI_SRC, host, NULL, NULL);
-  if (udpsrc1 == NULL)
-    goto no_udp_rtcp_protocol;
 
   /* set port */
   tmp_rtcp = tmp_rtp + 1;
-  g_object_set (G_OBJECT (udpsrc1), "port", tmp_rtcp, NULL);
 
-  ret = gst_element_set_state (udpsrc1, GST_STATE_PAUSED);
-  /* tmp_rtcp port is busy already : retry to make rtp/rtcp pair */
-  if (ret == GST_STATE_CHANGE_FAILURE) {
-
-    if (++count > 20)
-      goto no_ports;
-
-    gst_element_set_state (udpsrc0, GST_STATE_NULL);
-    gst_object_unref (udpsrc0);
-
-    gst_element_set_state (udpsrc1, GST_STATE_NULL);
-    gst_object_unref (udpsrc1);
-
-    tmp_rtp += 2;
+  rtcp_sockaddr = g_inet_socket_address_new (inetaddr, tmp_rtcp);
+  if (!g_socket_bind (rtcp_socket, rtcp_sockaddr, FALSE, NULL)) {
+    g_object_unref (rtcp_sockaddr);
+    g_clear_object (&rtp_socket);
     goto again;
   }
+  g_object_unref (rtcp_sockaddr);
+
+  g_clear_object (&inetaddr);
+
+  udpsrc0 = gst_element_factory_make ("udpsrc", NULL);
+  udpsrc1 = gst_element_factory_make ("udpsrc", NULL);
+
+  if (udpsrc0 == NULL || udpsrc1 == NULL)
+    goto no_udp_protocol;
+
+  g_object_set (G_OBJECT (udpsrc0), "socket", rtp_socket, NULL);
+  g_object_set (G_OBJECT (udpsrc1), "socket", rtcp_socket, NULL);
+
+  ret = gst_element_set_state (udpsrc0, GST_STATE_PAUSED);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto element_error;
+  ret = gst_element_set_state (udpsrc1, GST_STATE_PAUSED);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto element_error;
+
   /* all fine, do port check */
   g_object_get (G_OBJECT (udpsrc0), "port", &rtpport, NULL);
   g_object_get (G_OBJECT (udpsrc1), "port", &rtcpport, NULL);
@@ -512,10 +564,8 @@ again:
   if (!udpsink0)
     goto no_udp_protocol;
 
-  g_object_get (G_OBJECT (udpsrc0), "used-socket", &socket, NULL);
-  g_object_set (G_OBJECT (udpsink0), "socket", socket, NULL);
-  g_object_unref (socket);
   g_object_set (G_OBJECT (udpsink0), "close-socket", FALSE, NULL);
+  g_object_set (G_OBJECT (udpsink0), "socket", rtp_socket, NULL);
 
   udpsink1 = gst_element_factory_make ("multiudpsink", NULL);
   if (!udpsink1)
@@ -525,10 +575,8 @@ again:
   g_object_set (G_OBJECT (udpsink1), "send-duplicates", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink0), "buffer-size", priv->buffer_size, NULL);
 
-  g_object_get (G_OBJECT (udpsrc1), "used-socket", &socket, NULL);
-  g_object_set (G_OBJECT (udpsink1), "socket", socket, NULL);
-  g_object_unref (socket);
   g_object_set (G_OBJECT (udpsink1), "close-socket", FALSE, NULL);
+  g_object_set (G_OBJECT (udpsink1), "socket", rtcp_socket, NULL);
   g_object_set (G_OBJECT (udpsink1), "sync", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink1), "async", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink0), "auto-multicast", FALSE, NULL);
@@ -545,6 +593,12 @@ again:
   priv->server_port.min = rtpport;
   priv->server_port.max = rtcpport;
 
+  priv->server_addr = addr;
+  g_list_free_full (rejected_addresses, (GDestroyNotify) gst_rtsp_address_free);
+
+  g_object_unref (rtp_socket);
+  g_object_unref (rtcp_socket);
+
   return TRUE;
 
   /* ERRORS */
@@ -556,11 +610,15 @@ no_ports:
   {
     goto cleanup;
   }
-no_udp_rtcp_protocol:
+port_error:
   {
     goto cleanup;
   }
-port_error:
+socket_error:
+  {
+    goto cleanup;
+  }
+element_error:
   {
     goto cleanup;
   }
@@ -582,6 +640,16 @@ cleanup:
       gst_element_set_state (udpsink1, GST_STATE_NULL);
       gst_object_unref (udpsink1);
     }
+    if (inetaddr)
+      g_object_unref (inetaddr);
+    g_list_free_full (rejected_addresses,
+        (GDestroyNotify) gst_rtsp_address_free);
+    if (addr)
+      gst_rtsp_address_free (addr);
+    if (rtp_socket)
+      g_object_unref (rtp_socket);
+    if (rtcp_socket)
+      g_object_unref (rtcp_socket);
     return FALSE;
   }
 }
