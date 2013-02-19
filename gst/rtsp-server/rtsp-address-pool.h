@@ -60,8 +60,27 @@ typedef enum {
   GST_RTSP_ADDRESS_FLAG_NONE      = 0,
   GST_RTSP_ADDRESS_FLAG_IPV4      = (1 << 0),
   GST_RTSP_ADDRESS_FLAG_IPV6      = (1 << 1),
-  GST_RTSP_ADDRESS_FLAG_EVEN_PORT = (1 << 2)
+  GST_RTSP_ADDRESS_FLAG_EVEN_PORT = (1 << 2),
+  GST_RTSP_ADDRESS_FLAG_MULTICAST = (1 << 3),
+  GST_RTSP_ADDRESS_FLAG_UNICAST   = (1 << 4),
 } GstRTSPAddressFlags;
+
+/**
+ * GST_RTSP_ADDRESS_POOL_ANY_IPV4:
+ *
+ * Used with gst_rtsp_address_pool_add_range_unicast() to bind to all
+ * IPv4 addresses
+ */
+
+/**
+ * GST_RTSP_ADDRESS_POOL_ANY_IPV6:
+ *
+ * Used with gst_rtsp_address_pool_add_range_unicast() to bind to all
+ * IPv6 addresses
+ */
+
+#define GST_RTSP_ADDRESS_POOL_ANY_IPV4  "0.0.0.0"
+#define GST_RTSP_ADDRESS_POOL_ANY_IPV6  "::"
 
 /**
  * GstRTSPAddressPool:
@@ -94,6 +113,12 @@ gboolean               gst_rtsp_address_pool_add_range       (GstRTSPAddressPool
                                                               guint16 max_port,
                                                               guint8 ttl);
 
+gboolean               gst_rtsp_address_pool_add_range_unicast (GstRTSPAddressPool * pool,
+                                                              const gchar *min_address,
+                                                              const gchar *max_address,
+                                                              guint16 min_port,
+                                                              guint16 max_port);
+
 GstRTSPAddress *       gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,
                                                               GstRTSPAddressFlags flags,
                                                               gint n_ports);
@@ -104,6 +129,7 @@ GstRTSPAddress *       gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool
                                                               guint n_ports,
                                                               guint ttl);
 
+gboolean               gst_rtsp_address_pool_has_unicast_addresses (GstRTSPAddressPool * pool);
 
 G_END_DECLS
 

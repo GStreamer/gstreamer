@@ -47,10 +47,12 @@ GST_START_TEST (test_pool)
           "233.255.0.0", "233.255.0.0", 5020, 5020, 1));
 
   /* should fail, we can't allocate a block of 256 ports */
-  addr = gst_rtsp_address_pool_acquire_address (pool, 0, 256);
+  addr = gst_rtsp_address_pool_acquire_address (pool,
+      GST_RTSP_ADDRESS_FLAG_MULTICAST, 256);
   fail_unless (addr == NULL);
 
-  addr = gst_rtsp_address_pool_acquire_address (pool, 0, 2);
+  addr = gst_rtsp_address_pool_acquire_address (pool,
+      GST_RTSP_ADDRESS_FLAG_MULTICAST, 2);
   fail_unless (addr != NULL);
 
   addr2 = gst_rtsp_address_copy (addr);
@@ -58,7 +60,8 @@ GST_START_TEST (test_pool)
   gst_rtsp_address_free (addr2);
   gst_rtsp_address_free (addr);
 
-  addr = gst_rtsp_address_pool_acquire_address (pool, 0, 4);
+  addr = gst_rtsp_address_pool_acquire_address (pool,
+      GST_RTSP_ADDRESS_FLAG_MULTICAST, 4);
   fail_unless (addr != NULL);
 
   /* Will fail because pool is NULL */
@@ -78,19 +81,21 @@ GST_START_TEST (test_pool)
           "2001:DB8::1", "2001:DB8::1", 5001, 5003, 1));
 
   addr = gst_rtsp_address_pool_acquire_address (pool,
-      GST_RTSP_ADDRESS_FLAG_IPV6 | GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2);
+      GST_RTSP_ADDRESS_FLAG_IPV6 | GST_RTSP_ADDRESS_FLAG_EVEN_PORT |
+      GST_RTSP_ADDRESS_FLAG_MULTICAST, 2);
   fail_unless (addr != NULL);
   fail_unless (addr->port == 5002);
   fail_unless (!g_ascii_strcasecmp (addr->address, "2001:DB8::1"));
 
   /* Will fail becuse there is only one IPv6 address left */
   addr2 = gst_rtsp_address_pool_acquire_address (pool,
-      GST_RTSP_ADDRESS_FLAG_IPV6, 2);
+      GST_RTSP_ADDRESS_FLAG_IPV6 | GST_RTSP_ADDRESS_FLAG_MULTICAST, 2);
   fail_unless (addr2 == NULL);
 
   /* Will fail because the only IPv6 address left has an odd port */
   addr2 = gst_rtsp_address_pool_acquire_address (pool,
-      GST_RTSP_ADDRESS_FLAG_IPV6 | GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 1);
+      GST_RTSP_ADDRESS_FLAG_IPV6 | GST_RTSP_ADDRESS_FLAG_EVEN_PORT |
+      GST_RTSP_ADDRESS_FLAG_MULTICAST, 1);
   fail_unless (addr2 == NULL);
 
   gst_rtsp_address_free (addr);
@@ -101,13 +106,13 @@ GST_START_TEST (test_pool)
           "233.252.0.0", "233.252.0.255", 5000, 5002, 1));
 
   addr = gst_rtsp_address_pool_acquire_address (pool,
-      GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2);
+      GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_MULTICAST, 2);
   fail_unless (addr != NULL);
   fail_unless (addr->port == 5000);
   fail_unless (!strcmp (addr->address, "233.252.0.0"));
 
   addr2 = gst_rtsp_address_pool_acquire_address (pool,
-      GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2);
+      GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_MULTICAST, 2);
   fail_unless (addr2 != NULL);
   fail_unless (addr2->port == 5000);
   fail_unless (!strcmp (addr2->address, "233.252.0.1"));
@@ -167,13 +172,14 @@ GST_START_TEST (test_pool)
   fail_unless (!strcmp (addr2->address, "233.252.1.3"));
 
   addr3 = gst_rtsp_address_pool_acquire_address (pool,
-      GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2);
+      GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_MULTICAST, 2);
   fail_unless (addr3 != NULL);
   fail_unless (addr3->port == 5000);
   fail_unless (!strcmp (addr3->address, "233.252.1.2"));
 
   fail_unless (gst_rtsp_address_pool_acquire_address (pool,
-          GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2) == NULL);
+          GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_MULTICAST, 2)
+      == NULL);
 
   gst_rtsp_address_free (addr);
   gst_rtsp_address_free (addr2);

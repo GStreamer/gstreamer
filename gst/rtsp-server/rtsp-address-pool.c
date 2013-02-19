@@ -70,6 +70,8 @@ struct _GstRTSPAddressPoolPrivate
   GMutex lock;                  /* protects everything in this struct */
   GList *addresses;
   GList *allocated;
+
+  gboolean has_unicast_addresses;
 };
 
 #define ADDR_IS_IPV4(a)      ((a)->size == 4)
@@ -258,6 +260,9 @@ gst_rtsp_address_pool_add_range (GstRTSPAddressPool * pool,
 
   g_mutex_lock (&priv->lock);
   priv->addresses = g_list_prepend (priv->addresses, range);
+
+  if (ttl == 0)
+    priv->has_unicast_addresses = TRUE;
   g_mutex_unlock (&priv->lock);
 
   return TRUE;
@@ -270,6 +275,33 @@ invalid:
     g_slice_free (AddrRange, range);
     return FALSE;
   }
+}
+
+/**
+ * gst_rtsp_address_pool_add_range_unicast:
+ * @pool: a #GstRTSPAddressPool
+ * @min_address: a minimum address to add
+ * @max_address: a maximum address to add
+ * @min_port: the minimum port
+ * @max_port: the maximum port
+ *
+ * Adds the unicast addresses from @min_addess to @max_address (inclusive)
+ * to @pool. The valid port range for the addresses will be from @min_port to
+ * @max_port inclusive.
+ *
+ * @min_address and @max_address can be set to
+ * #GST_RTSP_ADDRESS_POOL_ANY_IPV4 or #GST_RTSP_ADDRESS_POOL_ANY_IPV6 to bind
+ * to all available IPv4 or IPv6 addresses.
+ *
+ * Returns: %TRUE if the addresses could be added.
+ */
+gboolean
+gst_rtsp_address_pool_add_range_unicast (GstRTSPAddressPool * pool,
+    const gchar * min_address, const gchar * max_address,
+    guint16 min_port, guint16 max_port)
+{
+  return gst_rtsp_address_pool_add_range (pool, min_address, max_address,
+      min_port, max_port, 0);
 }
 
 /* increments the address by count */
@@ -406,6 +438,10 @@ gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,
     if (flags & GST_RTSP_ADDRESS_FLAG_IPV4 && !ADDR_IS_IPV4 (&range->min))
       continue;
     if (flags & GST_RTSP_ADDRESS_FLAG_IPV6 && !ADDR_IS_IPV6 (&range->min))
+      continue;
+    if (flags & GST_RTSP_ADDRESS_FLAG_MULTICAST && range->ttl == 0)
+      continue;
+    if (flags & GST_RTSP_ADDRESS_FLAG_UNICAST && range->ttl != 0)
       continue;
 
     /* check for enough ports */
@@ -623,4 +659,30 @@ gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
   }
 
   return addr;
+}
+
+/**
+ * gst_rtsp_address_pool_has_unicast_addresses:
+ * @pool: a #GstRTSPAddressPool
+ *
+ * Used to know if the pool includes any unicast addresses.
+ *
+ * Returns: %TRUE if the pool includes any unicast addresses, %FALSE otherwise
+ */
+
+gboolean
+gst_rtsp_address_pool_has_unicast_addresses (GstRTSPAddressPool * pool)
+{
+  GstRTSPAddressPoolPrivate *priv;
+  gboolean has_unicast_addresses;
+
+  g_return_val_if_fail (GST_IS_RTSP_ADDRESS_POOL (pool), FALSE);
+
+  priv = pool->priv;
+
+  g_mutex_lock (&priv->lock);
+  has_unicast_addresses = priv->has_unicast_addresses;
+  g_mutex_unlock (&priv->lock);
+
+  return has_unicast_addresses;
 }

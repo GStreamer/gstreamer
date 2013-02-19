@@ -318,7 +318,7 @@ gst_rtsp_stream_get_address (GstRTSPStream * stream)
       goto no_pool;
 
     priv->addr = gst_rtsp_address_pool_acquire_address (priv->pool,
-        GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2);
+        GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_MULTICAST, 2);
     if (priv->addr == NULL)
       goto no_address;
   }
