@@ -2293,6 +2293,8 @@ gst_video_overlay_composition_get_rectangle
 gst_video_overlay_composition_get_seqnum
 gst_video_overlay_composition_copy
 gst_video_overlay_composition_make_writable
+
+GST_VIDEO_OVERLAY_COMPOSITION_BLEND_FORMATS
 gst_video_overlay_composition_blend
 
 <SUBSECTION composition-set-get>

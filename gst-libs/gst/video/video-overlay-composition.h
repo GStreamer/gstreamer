@@ -119,6 +119,19 @@ typedef enum {
   */
 #define GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_YUV      GST_VIDEO_FORMAT_AYUV
 
+/**
+ * GST_VIDEO_OVERLAY_COMPOSITION_BLEND_FORMATS:
+ *
+ * Video formats supported by gst_video_overlay_composition_blend(), for
+ * use in overlay elements' pad template caps.
+ *
+ * Since: 1.2
+ */
+#define GST_VIDEO_OVERLAY_COMPOSITION_BLEND_FORMATS \
+    "{ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR," \
+     " I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444," \
+     " NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }"
+
 GType                        gst_video_overlay_rectangle_get_type (void);
 
 GstVideoOverlayRectangle *   gst_video_overlay_rectangle_new_raw  (GstBuffer * pixels,

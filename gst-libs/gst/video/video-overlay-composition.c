@@ -438,6 +438,10 @@ gst_video_overlay_rectangle_needs_scaling (GstVideoOverlayRectangle * r)
  * contained in @video_buf. The data in @video_buf must be writable and
  * mapped appropriately.
  */
+/* FIXME: formats with more than 8 bit per component which get unpacked into
+ * ARGB64 or AYUV64 (such as v210, v216, UYVP, GRAY16_LE and GRAY16_BE)
+ * are not supported yet by the code in video-blend.c.
+ */
 gboolean
 gst_video_overlay_composition_blend (GstVideoOverlayComposition * comp,
     GstVideoFrame * video_buf)
