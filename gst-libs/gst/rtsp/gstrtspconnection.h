@@ -131,6 +131,9 @@ gboolean           gst_rtsp_connection_is_tunneled    (const GstRTSPConnection *
 const gchar *      gst_rtsp_connection_get_tunnelid   (const GstRTSPConnection *conn);
 GstRTSPResult      gst_rtsp_connection_do_tunnel      (GstRTSPConnection *conn, GstRTSPConnection *conn2);
 
+void               gst_rtsp_connection_set_remember_session_id (GstRTSPConnection *conn, gboolean remember);
+gboolean           gst_rtsp_connection_get_remember_session_id (GstRTSPConnection *conn);
+
 /* async IO */
 
 /**

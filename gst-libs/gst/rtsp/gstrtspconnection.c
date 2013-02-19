@@ -126,6 +126,8 @@ struct _GstRTSPConnection
   gchar *initial_buffer;
   gsize initial_buffer_offset;
 
+  gboolean remember_session_id; /* remember the session id or not */
+
   /* Session state */
   gint cseq;                    /* sequence number */
   gchar session_id[512];        /* session id */
@@ -210,6 +212,8 @@ gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
   newconn->timer = g_timer_new ();
   newconn->timeout = 60;
   newconn->cseq = 1;
+
+  newconn->remember_session_id = TRUE;
 
   newconn->auth_method = GST_RTSP_AUTH_NONE;
   newconn->username = NULL;
@@ -1864,8 +1868,10 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
           }
 
           /* make sure to not overflow */
-          strncpy (conn->session_id, session_id, maxlen);
-          conn->session_id[maxlen] = '\0';
+          if (conn->remember_session_id) {
+            strncpy (conn->session_id, session_id, maxlen);
+            conn->session_id[maxlen] = '\0';
+          }
         }
         res = builder->status;
         goto done;
@@ -2843,6 +2849,41 @@ gst_rtsp_connection_do_tunnel (GstRTSPConnection * conn,
 
   return GST_RTSP_OK;
 }
+
+/**
+ * gst_rtsp_connection_set_remember_session_id:
+ * @conn: a #GstRTSPConnection
+ * @remember: %TRUE if the connection should remember the session id
+ *
+ * Sets if the #GstRTSPConnection should remember the session id from the last
+ * response received and force it onto any further requests.
+ *
+ * The default value is %TRUE
+ */
+
+void
+gst_rtsp_connection_set_remember_session_id (GstRTSPConnection * conn,
+    gboolean remember)
+{
+  conn->remember_session_id = remember;
+  if (!remember)
+    conn->session_id[0] = '\0';
+}
+
+/**
+ * gst_rtsp_connection_get_remember_session_id:
+ * @conn: a #GstRTSPConnection
+ *
+ * Returns: %TRUE if the #GstRTSPConnection remembers the session id in the
+ * last response to set it on any further request.
+ */
+
+gboolean
+gst_rtsp_connection_get_remember_session_id (GstRTSPConnection * conn)
+{
+  return conn->remember_session_id;
+}
+
 
 #define READ_ERR    (G_IO_HUP | G_IO_ERR | G_IO_NVAL)
 #define READ_COND   (G_IO_IN | READ_ERR)
