@@ -11,4 +11,4 @@ Version: @VERSION@
 Libs: -L${libdir}
 Cflags: -I${includedir}
 
-libraries=audio fft riff rtp tag pbutils video
+libraries=allocators app audio fft pbutils riff rtp rtsp sdp tag video
