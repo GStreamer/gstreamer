@@ -57,7 +57,7 @@ GST_DEBUG_CATEGORY_STATIC (dmabuf_debug);
 #define GST_CAT_DEFAULT dmabuf_debug
 
 static GstMemory *
-_dmabuf_alloc (GstAllocator * allocator, gsize size,
+gst_dmabuf_alloc (GstAllocator * allocator, gsize size,
     GstAllocationParams * params)
 {
   g_warning ("Use dmabuf_mem_alloc() to allocate from this allocator");
@@ -66,7 +66,7 @@ _dmabuf_alloc (GstAllocator * allocator, gsize size,
 }
 
 static void
-_dmabuf_free (GstAllocator * allocator, GstMemory * mem)
+gst_dmabuf_free (GstAllocator * allocator, GstMemory * mem)
 {
   GstDmaBufMemory *dbmem = (GstDmaBufMemory *) mem;
 
@@ -80,7 +80,7 @@ _dmabuf_free (GstAllocator * allocator, GstMemory * mem)
 }
 
 static gpointer
-_dmabuf_mem_map (GstDmaBufMemory * mem, gsize maxsize, GstMapFlags flags)
+gst_dmabuf_mem_map (GstDmaBufMemory * mem, gsize maxsize, GstMapFlags flags)
 {
   gint prot;
   gpointer ret = NULL;
@@ -118,7 +118,7 @@ out:
 }
 
 static gboolean
-_dmabuf_mem_unmap (GstDmaBufMemory * mem)
+gst_dmabuf_mem_unmap (GstDmaBufMemory * mem)
 {
   g_mutex_lock (&mem->lock);
 
@@ -134,10 +134,11 @@ _dmabuf_mem_unmap (GstDmaBufMemory * mem)
 }
 
 static GstDmaBufMemory *
-_dmabuf_mem_share (GstDmaBufMemory * mem, gssize offset, gsize size)
+gst_dmabuf_mem_share (GstDmaBufMemory * mem, gssize offset, gsize size)
 {
   GstDmaBufMemory *sub;
   GstMemory *parent;
+
   GST_DEBUG ("%p: share %" G_GSSIZE_FORMAT " %" G_GSIZE_FORMAT, mem, offset,
       size);
 
@@ -158,7 +159,7 @@ _dmabuf_mem_share (GstDmaBufMemory * mem, gssize offset, gsize size)
 }
 
 static GstDmaBufMemory *
-_dmabuf_mem_copy (GstDmaBufMemory * mem, gssize offset, gsize size)
+gst_dmabuf_mem_copy (GstDmaBufMemory * mem, gssize offset, gsize size)
 {
   gint newfd = dup (mem->fd);
 
@@ -196,8 +197,8 @@ dmabuf_mem_allocator_class_init (dmabuf_mem_AllocatorClass * klass)
 
   allocator_class = (GstAllocatorClass *) klass;
 
-  allocator_class->alloc = _dmabuf_alloc;
-  allocator_class->free = _dmabuf_free;
+  allocator_class->alloc = gst_dmabuf_alloc;
+  allocator_class->free = gst_dmabuf_free;
 }
 
 static void
@@ -206,14 +207,14 @@ dmabuf_mem_allocator_init (dmabuf_mem_Allocator * allocator)
   GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
 
   alloc->mem_type = ALLOCATOR_NAME;
-  alloc->mem_map = (GstMemoryMapFunction) _dmabuf_mem_map;
-  alloc->mem_unmap = (GstMemoryUnmapFunction) _dmabuf_mem_unmap;
-  alloc->mem_share = (GstMemoryShareFunction) _dmabuf_mem_share;
-  alloc->mem_copy = (GstMemoryCopyFunction) _dmabuf_mem_copy;
+  alloc->mem_map = (GstMemoryMapFunction) gst_dmabuf_mem_map;
+  alloc->mem_unmap = (GstMemoryUnmapFunction) gst_dmabuf_mem_unmap;
+  alloc->mem_share = (GstMemoryShareFunction) gst_dmabuf_mem_share;
+  alloc->mem_copy = (GstMemoryCopyFunction) gst_dmabuf_mem_copy;
 }
 
 static void
-_dmabuf_mem_init (void)
+gst_dmabuf_mem_init (void)
 {
   GstAllocator *allocator =
       g_object_new (dmabuf_mem_allocator_get_type (), NULL);
@@ -239,7 +240,7 @@ gst_dmabuf_allocator_obtain (void)
   static GOnce dmabuf_allocator_once = G_ONCE_INIT;
   GstAllocator *allocator;
 
-  g_once (&dmabuf_allocator_once, (GThreadFunc) _dmabuf_mem_init, NULL);
+  g_once (&dmabuf_allocator_once, (GThreadFunc) gst_dmabuf_mem_init, NULL);
 
   allocator = gst_allocator_find (ALLOCATOR_NAME);
   if (!allocator)
@@ -249,7 +250,7 @@ gst_dmabuf_allocator_obtain (void)
 
 /**
  * gst_dmabuf_allocator_alloc:
- * @allocator: allocator to be used for this memory
+ * @allocator: (allow-none): allocator to be used for this memory
  * @fd: dmabuf file descriptor
  * @size: memory size
  *
@@ -325,6 +326,8 @@ gst_dmabuf_memory_get_fd (GstMemory * mem)
 gboolean
 gst_is_dmabuf_memory (GstMemory * mem)
 {
+  g_return_val_if_fail (mem != NULL, FALSE);
+
   return g_strcmp0 (mem->allocator->mem_type, ALLOCATOR_NAME) == 0;
 }
 
