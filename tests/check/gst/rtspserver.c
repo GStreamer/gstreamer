@@ -305,11 +305,20 @@ do_request (GstRTSPConnection * conn, GstRTSPMethod method,
   }
   if (session_out) {
     gst_rtsp_message_get_header (response, GST_RTSP_HDR_SESSION, &value, 0);
+
+    value = g_strdup (value);
+
+    /* Remove the timeout */
+    if (value) {
+      char *pos = strchr (value, ';');
+      if (pos)
+        *pos = 0;
+    }
     if (session_in) {
       /* check that we got the same session back */
       fail_unless (!g_strcmp0 (value, session_in));
     }
-    *session_out = g_strdup (value);
+    *session_out = value;
   }
   if (transport_out) {
     gst_rtsp_message_get_header (response, GST_RTSP_HDR_TRANSPORT, &value, 0);
@@ -830,6 +839,184 @@ GST_START_TEST (test_play_multithreaded_block_in_describe)
 
 GST_END_TEST;
 
+
+static void
+new_session_timeout_one (GstRTSPClient * client,
+    GstRTSPSession * session, gpointer user_data)
+{
+  gst_rtsp_session_set_timeout (session, 1);
+
+  g_signal_handlers_disconnect_by_func (client, new_session_timeout_one,
+      user_data);
+}
+
+static void
+session_connected_new_session_cb (GstRTSPServer * server,
+    GstRTSPClient * client, gpointer user_data)
+{
+
+  g_signal_connect (client, "new-session", user_data, NULL);
+}
+
+GST_START_TEST (test_play_multithreaded_timeout_client)
+{
+  GstRTSPConnection *conn;
+  GstSDPMessage *sdp_message = NULL;
+  const GstSDPMedia *sdp_media;
+  const gchar *video_control;
+  const gchar *audio_control;
+  GstRTSPRange client_port;
+  gchar *session = NULL;
+  GstRTSPTransport *video_transport = NULL;
+  GstRTSPTransport *audio_transport = NULL;
+  GstRTSPSessionPool *pool;
+  GstRTSPMessage *request;
+  GstRTSPMessage *response;
+
+  gst_rtsp_server_set_max_threads (server, -1);
+  pool = gst_rtsp_server_get_session_pool (server);
+  g_signal_connect (server, "client-connected",
+      G_CALLBACK (session_connected_new_session_cb), new_session_timeout_one);
+
+  start_server ();
+
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
+
+  /* get control strings from DESCRIBE response */
+  fail_unless (gst_sdp_message_medias_len (sdp_message) == 2);
+  sdp_media = gst_sdp_message_get_media (sdp_message, 0);
+  video_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+  sdp_media = gst_sdp_message_get_media (sdp_message, 1);
+  audio_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  get_client_ports (&client_port);
+
+  /* do SETUP for video and audio */
+  fail_unless (do_setup (conn, video_control, &client_port, &session,
+          &video_transport) == GST_RTSP_STS_OK);
+  fail_unless (do_setup (conn, audio_control, &client_port, &session,
+          &audio_transport) == GST_RTSP_STS_OK);
+
+  fail_unless (gst_rtsp_session_pool_get_n_sessions (pool) == 1);
+
+  /* send PLAY request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_PLAY,
+          session) == GST_RTSP_STS_OK);
+
+  sleep (7);
+
+  fail_unless (gst_rtsp_session_pool_cleanup (pool) == 1);
+
+
+  /* send TEARDOWN request and check that we get 454 Session Not found */
+  request = create_request (conn, GST_RTSP_TEARDOWN, NULL);
+  gst_rtsp_message_add_header (request, GST_RTSP_HDR_SESSION, session);
+  fail_unless (send_request (conn, request));
+  gst_rtsp_message_free (request);
+
+  fail_unless (gst_rtsp_message_new (&response) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_connection_receive (conn, response, NULL) ==
+      GST_RTSP_ESYS);
+  fail_unless (errno == ECONNRESET);
+  gst_rtsp_message_free (response);
+
+  /* clean up and iterate so the clean-up can finish */
+  g_object_unref (pool);
+  g_free (session);
+  gst_rtsp_transport_free (video_transport);
+  gst_rtsp_transport_free (audio_transport);
+  gst_sdp_message_free (sdp_message);
+  gst_rtsp_connection_free (conn);
+
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_play_multithreaded_timeout_session)
+{
+  GstRTSPConnection *conn;
+  GstSDPMessage *sdp_message = NULL;
+  const GstSDPMedia *sdp_media;
+  const gchar *video_control;
+  const gchar *audio_control;
+  GstRTSPRange client_port;
+  gchar *session1 = NULL;
+  gchar *session2 = NULL;
+  GstRTSPTransport *video_transport = NULL;
+  GstRTSPTransport *audio_transport = NULL;
+  GstRTSPSessionPool *pool;
+
+  gst_rtsp_server_set_max_threads (server, -1);
+  pool = gst_rtsp_server_get_session_pool (server);
+  g_signal_connect (server, "client-connected",
+      G_CALLBACK (session_connected_new_session_cb), new_session_timeout_one);
+
+  start_server ();
+
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  gst_rtsp_connection_set_remember_session_id (conn, FALSE);
+
+  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
+
+  /* get control strings from DESCRIBE response */
+  fail_unless (gst_sdp_message_medias_len (sdp_message) == 2);
+  sdp_media = gst_sdp_message_get_media (sdp_message, 0);
+  video_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+  sdp_media = gst_sdp_message_get_media (sdp_message, 1);
+  audio_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  get_client_ports (&client_port);
+
+  /* do SETUP for video and audio */
+  fail_unless (do_setup (conn, video_control, &client_port, &session1,
+          &video_transport) == GST_RTSP_STS_OK);
+  fail_unless (do_setup (conn, audio_control, &client_port, &session2,
+          &audio_transport) == GST_RTSP_STS_OK);
+
+  fail_unless (gst_rtsp_session_pool_get_n_sessions (pool) == 2);
+
+  /* send PLAY request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_PLAY,
+          session1) == GST_RTSP_STS_OK);
+  fail_unless (do_simple_request (conn, GST_RTSP_PLAY,
+          session2) == GST_RTSP_STS_OK);
+
+  sleep (7);
+
+  fail_unless (gst_rtsp_session_pool_cleanup (pool) == 1);
+
+  /* send TEARDOWN request and check that we get 454 Session Not found */
+  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
+          session1) == GST_RTSP_STS_SESSION_NOT_FOUND);
+
+  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
+          session2) == GST_RTSP_STS_OK);
+
+  /* clean up and iterate so the clean-up can finish */
+  g_object_unref (pool);
+  g_free (session1);
+  g_free (session2);
+  gst_rtsp_transport_free (video_transport);
+  gst_rtsp_transport_free (audio_transport);
+  gst_sdp_message_free (sdp_message);
+  gst_rtsp_connection_free (conn);
+
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
+
+
 static Suite *
 rtspserver_suite (void)
 {
@@ -849,6 +1036,8 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_bind_already_in_use);
   tcase_add_test (tc, test_play_multithreaded);
   tcase_add_test (tc, test_play_multithreaded_block_in_describe);
+  tcase_add_test (tc, test_play_multithreaded_timeout_client);
+  tcase_add_test (tc, test_play_multithreaded_timeout_session);
 
   return s;
 }
