@@ -389,6 +389,7 @@ gst_v4l2_io_mode_get_type (void)
       {GST_V4L2_IO_RW, "GST_V4L2_IO_RW", "rw"},
       {GST_V4L2_IO_MMAP, "GST_V4L2_IO_MMAP", "mmap"},
       {GST_V4L2_IO_USERPTR, "GST_V4L2_IO_USERPTR", "userptr"},
+      {GST_V4L2_IO_DMABUF, "GST_V4L2_IO_DMABUF", "dmabuf"},
 
       {0, NULL, NULL}
     };

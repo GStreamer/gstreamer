@@ -571,6 +571,7 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
       break;
     case GST_V4L2_IO_MMAP:
     case GST_V4L2_IO_USERPTR:
+    case GST_V4L2_IO_DMABUF:
       /* in streaming mode, prefer our own pool */
       pool = GST_BUFFER_POOL_CAST (obj->pool);
       size = obj->sizeimage;

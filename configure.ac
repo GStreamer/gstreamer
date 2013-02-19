@@ -582,6 +582,24 @@ if test x$HAVE_GST_V4L2 = xyes; then
   fi
 fi
 
+# Check if v4l2 support dmabuf
+if test x$HAVE_GST_V4L2 = xyes; then
+	AC_CHECK_DECLS(V4L2_MEMORY_DMABUF,,,[
+					#include <sys/types.h>
+					#ifdef __sun /* Solaris */
+					#include <sys/types.h>
+					#include <sys/videodev2.h>
+					#elif __FreeBSD__
+					#include <linux/videodev2.h>
+					#else /* Linux */
+					#include <linux/types.h>
+					#define _LINUX_TIME_H
+					#define __user
+					#include <linux/videodev2.h>
+					#endif
+					])
+fi
+
 dnl Check for X11
 translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
