@@ -521,21 +521,9 @@ again:
   if (!udpsink1)
     goto no_udp_protocol;
 
-  if (g_object_class_find_property (G_OBJECT_GET_CLASS (udpsink0),
-          "send-duplicates")) {
-    g_object_set (G_OBJECT (udpsink0), "send-duplicates", FALSE, NULL);
-    g_object_set (G_OBJECT (udpsink1), "send-duplicates", FALSE, NULL);
-  } else {
-    g_warning
-        ("old multiudpsink version found without send-duplicates property");
-  }
-
-  if (g_object_class_find_property (G_OBJECT_GET_CLASS (udpsink0),
-          "buffer-size")) {
-    g_object_set (G_OBJECT (udpsink0), "buffer-size", priv->buffer_size, NULL);
-  } else {
-    GST_WARNING ("multiudpsink version found without buffer-size property");
-  }
+  g_object_set (G_OBJECT (udpsink0), "send-duplicates", FALSE, NULL);
+  g_object_set (G_OBJECT (udpsink1), "send-duplicates", FALSE, NULL);
+  g_object_set (G_OBJECT (udpsink0), "buffer-size", priv->buffer_size, NULL);
 
   g_object_get (G_OBJECT (udpsrc1), "used-socket", &socket, NULL);
   g_object_set (G_OBJECT (udpsink1), "socket", socket, NULL);
