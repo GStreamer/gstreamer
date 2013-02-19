@@ -26,7 +26,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-/**
+/*
  * GstDmaBufMemory
  * @fd: the file descriptor associated this memory
  * @data: mmapped address
@@ -157,8 +157,8 @@ _dmabuf_mem_copy (GstDmaBufMemory * mem, gssize offset, gsize size)
   gint newfd = dup (mem->fd);
 
   if (newfd == -1) {
-	  GST_WARNING ("Can't duplicate dmabuf file descriptor");
-	  return NULL;
+    GST_WARNING ("Can't duplicate dmabuf file descriptor");
+    return NULL;
   }
 
   GST_DEBUG ("%p: copy %" G_GSSIZE_FORMAT " %" G_GSIZE_FORMAT, mem, offset,
@@ -217,8 +217,11 @@ _dmabuf_mem_init (void)
 }
 
 /**
- * gst_dmabuf_allocator_obtain
- * return a dmabuf allocator or NULL if the allocator isn't found
+ * gst_dmabuf_allocator_obtain:
+ *
+ * Returns a dmabuf allocator.
+ *
+ * Returns: (transfer full): a dmabuf allocator or NULL if the allocator isn't found
  * Use gst_object_unref() to release the allocator after usage.
  */
 GstAllocator *
@@ -226,6 +229,7 @@ gst_dmabuf_allocator_obtain (void)
 {
   static GOnce dmabuf_allocator_once = G_ONCE_INIT;
   GstAllocator *allocator;
+
   g_once (&dmabuf_allocator_once, (GThreadFunc) _dmabuf_mem_init, NULL);
 
   allocator = gst_allocator_find (ALLOCATOR_NAME);
@@ -235,13 +239,16 @@ gst_dmabuf_allocator_obtain (void)
 }
 
 /*
- * gst_dmabuf_allocator_alloc
+ * gst_dmabuf_allocator_alloc:
  * @allocator: allocator to be used for this memory
  * @fd: dmabuf file descriptor
  * @size: memory size
- * return a GstMemory based on @allocator.
+ *
+ * Returns a %GstMemory that wraps a dmabuf file descriptor.
+ *
+ * Returns: (transfer full): a GstMemory based on @allocator.
  * When the buffer will be released dmabuf allocator will close the @fd.
- * The memory is only mmapped on gst_buffer_mmap request.
+ * The memory is only mmapped on gst_buffer_mmap() request.
  */
 GstMemory *
 gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
@@ -249,7 +256,7 @@ gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
   GstDmaBufMemory *mem;
 
   if (!allocator) {
-    allocator = gst_dmabuf_allocator_obtain();
+    allocator = gst_dmabuf_allocator_obtain ();
   }
 
   if (!GST_IS_DMABUF_ALLOCATOR (allocator)) {
@@ -270,13 +277,17 @@ gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
   g_mutex_init (&mem->lock);
 
   GST_DEBUG ("%p: fd: %d size %d", mem, mem->fd, mem->mem.maxsize);
+
   return (GstMemory *) mem;
 }
 
 /**
- * gst_dmabuf_memory_get_fd
+ * gst_dmabuf_memory_get_fd:
  * @mem: the memory to get the file descriptor
- * return the file descriptor associated with the memory
+ *
+ * Returns the file descriptor associated with @mem
+ *
+ * Returns: the file descriptor associated with the memory
  * else return -1
  */
 gint
@@ -290,9 +301,12 @@ gst_dmabuf_memory_get_fd (GstMemory * mem)
 }
 
 /**
- * gst_is_dmabuf_memory
+ * gst_is_dmabuf_memory:
  * @mem: the memory to be check
- * return true is the memory allocator is the dmabuf one
+ *
+ * Check if @mem is dmabuf memory.
+ *
+ * Returns: %TRUE if @mem is dmabuf memory
  */
 gboolean
 gst_is_dmabuf_memory (GstMemory * mem)
@@ -302,24 +316,28 @@ gst_is_dmabuf_memory (GstMemory * mem)
 
 #else
 
-GstAllocator * gst_dmabuf_allocator_obtain(void)
+GstAllocator *
+gst_dmabuf_allocator_obtain (void)
 {
-	return NULL;
+  return NULL;
 }
 
-GstMemory * gst_dmabuf_allocator_alloc(GstAllocator * allocator, gint fd, gsize size)
+GstMemory *
+gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
 {
-	return NULL;
+  return NULL;
 }
 
-gint gst_dmabuf_memory_get_fd(GstMemory * mem)
+gint
+gst_dmabuf_memory_get_fd (GstMemory * mem)
 {
-	return -1;
+  return -1;
 }
 
-gboolean gst_is_dmabuf_memory(GstMemory * mem)
+gboolean
+gst_is_dmabuf_memory (GstMemory * mem)
 {
-	return FALSE;
+  return FALSE;
 }
 
 #endif /* HAVE_MMAP */
