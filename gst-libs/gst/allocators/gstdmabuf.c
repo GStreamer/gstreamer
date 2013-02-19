@@ -1,7 +1,5 @@
-/*
- * gstdmabuf.c
- *
- * Copyright (C) Linaro SA 2013
+/* GStreamer dmabuf allocator
+ * Copyright (C) 2013 Linaro SA
  * Author: Benjamin Gaignard <benjamin.gaignard@linaro.org> for Linaro.
  *
  * This library is free software; you can redistribute it and/or
@@ -27,6 +25,7 @@
  * @short_description: Memory wrapper for Linux dmabuf memory
  * @see_also: #GstMemory
  *
+ * Since: 1.2
  */
 
 #ifdef HAVE_MMAP
@@ -226,10 +225,13 @@ _dmabuf_mem_init (void)
 /**
  * gst_dmabuf_allocator_obtain:
  *
- * Returns a dmabuf allocator.
+ * Return a dmabuf allocator.
  *
- * Returns: (transfer full): a dmabuf allocator or NULL if the allocator isn't found
- * Use gst_object_unref() to release the allocator after usage.
+ * Returns: (transfer full): a dmabuf allocator, or NULL if the allocator
+ *    isn't available. Use gst_object_unref() to release the allocator after
+ *    usage
+ *
+ * Since: 1.2
  */
 GstAllocator *
 gst_dmabuf_allocator_obtain (void)
@@ -245,17 +247,19 @@ gst_dmabuf_allocator_obtain (void)
   return allocator;
 }
 
-/*
+/**
  * gst_dmabuf_allocator_alloc:
  * @allocator: allocator to be used for this memory
  * @fd: dmabuf file descriptor
  * @size: memory size
  *
- * Returns a %GstMemory that wraps a dmabuf file descriptor.
+ * Return a %GstMemory that wraps a dmabuf file descriptor.
  *
  * Returns: (transfer full): a GstMemory based on @allocator.
  * When the buffer will be released dmabuf allocator will close the @fd.
  * The memory is only mmapped on gst_buffer_mmap() request.
+ *
+ * Since: 1.2
  */
 GstMemory *
 gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
@@ -292,10 +296,11 @@ gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
  * gst_dmabuf_memory_get_fd:
  * @mem: the memory to get the file descriptor
  *
- * Returns the file descriptor associated with @mem
+ * Return the file descriptor associated with @mem.
  *
- * Returns: the file descriptor associated with the memory
- * else return -1
+ * Returns: the file descriptor associated with the memory, or -1
+ *
+ * Since: 1.2
  */
 gint
 gst_dmabuf_memory_get_fd (GstMemory * mem)
@@ -313,7 +318,9 @@ gst_dmabuf_memory_get_fd (GstMemory * mem)
  *
  * Check if @mem is dmabuf memory.
  *
- * Returns: %TRUE if @mem is dmabuf memory
+ * Returns: %TRUE if @mem is dmabuf memory, otherwise %FALSE
+ *
+ * Since: 1.2
  */
 gboolean
 gst_is_dmabuf_memory (GstMemory * mem)
@@ -321,7 +328,7 @@ gst_is_dmabuf_memory (GstMemory * mem)
   return g_strcmp0 (mem->allocator->mem_type, ALLOCATOR_NAME) == 0;
 }
 
-#else
+#else /* !HAVE_MMAP */
 
 GstAllocator *
 gst_dmabuf_allocator_obtain (void)
