@@ -1,7 +1,5 @@
-/*
- * gstdmabuf.h
- *
- * Copyright (C) Linaro SA 2013
+/* GStreamer dmabuf allocator
+ * Copyright (C) 2013 Linaro SA
  * Author: Benjamin Gaignard <benjamin.gaignard@linaro.org> for Linaro.
  *
  * This library is free software; you can redistribute it and/or
@@ -19,17 +17,18 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 #ifndef __GST_DMABUF_H__
 #define __GST_DMABUF_H__
 
 #include <gst/gst.h>
 
-GstAllocator * gst_dmabuf_allocator_obtain(void);
+GstAllocator * gst_dmabuf_allocator_obtain (void);
 
-GstMemory * gst_dmabuf_allocator_alloc(GstAllocator * allocator, gint fd, gsize size);
+GstMemory    * gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size);
 
-gint gst_dmabuf_memory_get_fd(GstMemory * mem);
+gint           gst_dmabuf_memory_get_fd (GstMemory * mem);
 
-gboolean gst_is_dmabuf_memory(GstMemory * mem);
+gboolean       gst_is_dmabuf_memory (GstMemory * mem);
 
 #endif /* __GST_DMABUF_H__ */
