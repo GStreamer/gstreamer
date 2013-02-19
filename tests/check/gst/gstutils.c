@@ -1224,10 +1224,86 @@ GST_START_TEST (test_read_macros)
       0x4142434445464748);
   fail_unless_equals_int64_hex (GST_READ_UINT64_LE (uarray),
       0x4847464544434241);
+
+  /* make sure the data argument is not duplicated inside the macro
+   * with possibly unexpected side-effects */
+  cpointer = carray;
+  fail_unless_equals_int (GST_READ_UINT8 (cpointer++), 'A');
+  fail_unless (cpointer == carray + 1);
+
+  cpointer = carray;
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (cpointer++), 0x4142);
+  fail_unless (cpointer == carray + 1);
+
+  cpointer = carray;
+  fail_unless_equals_int_hex (GST_READ_UINT32_BE (cpointer++), 0x41424344);
+  fail_unless (cpointer == carray + 1);
+
+  cpointer = carray;
+  fail_unless_equals_int64_hex (GST_READ_UINT64_BE (cpointer++),
+      0x4142434445464748);
+  fail_unless (cpointer == carray + 1);
 }
 
 GST_END_TEST;
 
+GST_START_TEST (test_write_macros)
+{
+  guint8 carray[8];
+  guint8 *cpointer;
+
+  /* make sure the data argument is not duplicated inside the macro
+   * with possibly unexpected side-effects */
+  memset (carray, 0, sizeof (carray));
+  cpointer = carray;
+  GST_WRITE_UINT8 (cpointer++, 'A');
+  fail_unless_equals_pointer (cpointer, carray + 1);
+  fail_unless_equals_int (carray[0], 'A');
+
+  memset (carray, 0, sizeof (carray));
+  cpointer = carray;
+  GST_WRITE_UINT16_BE (cpointer++, 0x4142);
+  fail_unless_equals_pointer (cpointer, carray + 1);
+  fail_unless_equals_int (carray[0], 'A');
+  fail_unless_equals_int (carray[1], 'B');
+
+  memset (carray, 0, sizeof (carray));
+  cpointer = carray;
+  GST_WRITE_UINT32_BE (cpointer++, 0x41424344);
+  fail_unless_equals_pointer (cpointer, carray + 1);
+  fail_unless_equals_int (carray[0], 'A');
+  fail_unless_equals_int (carray[3], 'D');
+
+  memset (carray, 0, sizeof (carray));
+  cpointer = carray;
+  GST_WRITE_UINT64_BE (cpointer++, 0x4142434445464748);
+  fail_unless_equals_pointer (cpointer, carray + 1);
+  fail_unless_equals_int (carray[0], 'A');
+  fail_unless_equals_int (carray[7], 'H');
+
+  memset (carray, 0, sizeof (carray));
+  cpointer = carray;
+  GST_WRITE_UINT16_LE (cpointer++, 0x4142);
+  fail_unless_equals_pointer (cpointer, carray + 1);
+  fail_unless_equals_int (carray[0], 'B');
+  fail_unless_equals_int (carray[1], 'A');
+
+  memset (carray, 0, sizeof (carray));
+  cpointer = carray;
+  GST_WRITE_UINT32_LE (cpointer++, 0x41424344);
+  fail_unless_equals_pointer (cpointer, carray + 1);
+  fail_unless_equals_int (carray[0], 'D');
+  fail_unless_equals_int (carray[3], 'A');
+
+  memset (carray, 0, sizeof (carray));
+  cpointer = carray;
+  GST_WRITE_UINT64_LE (cpointer++, 0x4142434445464748);
+  fail_unless_equals_pointer (cpointer, carray + 1);
+  fail_unless_equals_int (carray[0], 'H');
+  fail_unless_equals_int (carray[7], 'A');
+}
+
+GST_END_TEST;
 static Suite *
 gst_utils_suite (void)
 {
@@ -1263,6 +1339,7 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_greatest_common_divisor);
 
   tcase_add_test (tc_chain, test_read_macros);
+  tcase_add_test (tc_chain, test_write_macros);
   return s;
 }
 
