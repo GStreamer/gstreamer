@@ -2431,16 +2431,12 @@ static gchar *
 gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream,
     gchar ** query)
 {
-  //GstActiveStream *stream;
   GstStreamPeriod *stream_period;
   GstBaseURL *baseURL;
   GList *list;
   static gchar *baseURL_array[5];
   static gchar empty[] = "";
   gchar *ret = NULL;
-
-  //stream =
-  //    gst_mpdparser_get_active_stream_by_index (client, client->stream_idx);
 
   g_return_val_if_fail (stream != NULL, empty);
   stream_period = gst_mpdparser_get_stream_period (client);
@@ -2486,6 +2482,7 @@ gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream,
   }
 
   ret = g_strjoinv (NULL, baseURL_array);
+
   /* get base URI from MPD file URI, if the "http" scheme is missing */
   if (client->mpd_uri != NULL && strncmp (ret, "http://", 7) != 0) {
     gchar *last_sep, *tmp1, *tmp2;
@@ -2512,6 +2509,14 @@ gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream,
         ret = tmp1;
       }
       GST_WARNING ("Got base URI from MPD file URI %s", ret);
+    }
+  }
+
+  if (ret && *query == NULL) {
+    gchar *params = strchr (ret, '?');
+    if (params) {
+      *query = g_strdup (params);
+      params[0] = '\0';         /* can ignore the rest of the string */
     }
   }
 
