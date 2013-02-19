@@ -22,6 +22,13 @@
 
 #include "gstdmabuf.h"
 
+/**
+ * SECTION:gstdmabuf
+ * @short_description: Memory wrapper for Linux dmabuf memory
+ * @see_also: #GstMemory
+ *
+ */
+
 #ifdef HAVE_MMAP
 #include <sys/mman.h>
 #include <unistd.h>
