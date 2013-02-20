@@ -978,7 +978,8 @@ gst_rtp_session_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_RTP_SESSION_LOCK (rtpsession);
-      rtpsession->priv->wait_send = TRUE;
+      if (rtpsession->send_rtp_src)
+        rtpsession->priv->wait_send = TRUE;
       GST_RTP_SESSION_UNLOCK (rtpsession);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
