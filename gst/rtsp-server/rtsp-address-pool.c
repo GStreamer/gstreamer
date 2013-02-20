@@ -183,13 +183,19 @@ gst_rtsp_address_pool_clear (GstRTSPAddressPool * pool)
 }
 
 static gboolean
-fill_address (const gchar * address, guint16 port, Addr * addr)
+fill_address (const gchar * address, guint16 port, Addr * addr,
+    gboolean is_multicast)
 {
   GInetAddress *inet;
 
   inet = g_inet_address_new_from_string (address);
   if (inet == NULL)
     return FALSE;
+
+  if (is_multicast != g_inet_address_get_is_multicast (inet)) {
+    g_object_unref (inet);
+    return FALSE;
+  }
 
   addr->size = g_inet_address_get_native_size (inet);
   memcpy (addr->bytes, g_inet_address_to_bytes (inet), addr->size);
@@ -243,9 +249,9 @@ gst_rtsp_address_pool_add_range (GstRTSPAddressPool * pool,
 
   range = g_slice_new0 (AddrRange);
 
-  if (!fill_address (min_address, min_port, &range->min))
+  if (!fill_address (min_address, min_port, &range->min, (ttl != 0)))
     goto invalid;
-  if (!fill_address (max_address, max_port, &range->max))
+  if (!fill_address (max_address, max_port, &range->max, (ttl != 0)))
     goto invalid;
 
   if (range->min.size != range->max.size)
@@ -603,7 +609,7 @@ gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
   result = NULL;
   addr = NULL;
 
-  if (!fill_address (address, port, &input_addr)) {
+  if (!fill_address (address, port, &input_addr, (ttl != 0))) {
     GST_ERROR_OBJECT (pool, "invalid address %s", address);
     return NULL;
   }

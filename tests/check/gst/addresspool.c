@@ -78,14 +78,14 @@ GST_START_TEST (test_pool)
    * starting with even port
    */
   fail_unless (gst_rtsp_address_pool_add_range (pool,
-          "2001:DB8::1", "2001:DB8::1", 5001, 5003, 1));
+          "FF11:DB8::1", "FF11:DB8::1", 5001, 5003, 1));
 
   addr = gst_rtsp_address_pool_acquire_address (pool,
       GST_RTSP_ADDRESS_FLAG_IPV6 | GST_RTSP_ADDRESS_FLAG_EVEN_PORT |
       GST_RTSP_ADDRESS_FLAG_MULTICAST, 2);
   fail_unless (addr != NULL);
   fail_unless (addr->port == 5002);
-  fail_unless (!g_ascii_strcasecmp (addr->address, "2001:DB8::1"));
+  fail_unless (!g_ascii_strcasecmp (addr->address, "FF11:DB8::1"));
 
   /* Will fail becuse there is only one IPv6 address left */
   addr2 = gst_rtsp_address_pool_acquire_address (pool,
