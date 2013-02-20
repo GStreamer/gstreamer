@@ -2996,6 +2996,8 @@ gst_mpd_client_setup_media_presentation (GstMpdClient * client)
     } else if (idx == 0 && client->mpd_node->type == GST_MPD_FILE_TYPE_STATIC) {
       /* first period of a static MPD file, start time is 0 */
       start = 0;
+    } else if (client->mpd_node->type == GST_MPD_FILE_TYPE_DYNAMIC) {
+      /* this should be a live stream, let this pass */
     } else {
       /* this is an 'Early Available Period' */
       goto early;
