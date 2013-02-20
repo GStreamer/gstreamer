@@ -452,6 +452,12 @@ gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
     case 44:
       profile = "cavlc-4:4:4-intra";
       break;
+    case 118:
+      profile = "multiview-high";
+      break;
+    case 128:
+      profile = "stereo-high";
+      break;
     default:
       return NULL;
   }
@@ -484,7 +490,7 @@ gst_codec_utils_h264_get_level (const guint8 * sps, guint len)
 
   csf3 = (sps[1] & 0x10) >> 4;
 
-  if (sps[2] == 11 && csf3)
+  if ((sps[2] == 11 && csf3) || sps[2] == 9)
     return "1b";
   else if (sps[2] % 10 == 0)
     return digit_to_string (sps[2] / 10);
