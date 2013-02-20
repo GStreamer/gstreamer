@@ -23,6 +23,8 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/sdp/gstsdpmessage.h>
+#include <gst/rtp/gstrtpbuffer.h>
+#include <gst/rtp/gstrtcpbuffer.h>
 
 #include <stdio.h>
 #include <netinet/in.h>
@@ -91,50 +93,96 @@ get_unused_port (gint type)
   return port;
 }
 
-/* returns TRUE if the given port is not currently bound */
-static gboolean
-port_is_unused (gint port, gint type)
+static void
+get_client_ports_full (GstRTSPRange * range, GSocket ** rtp_socket,
+    GSocket ** rtcp_socket)
 {
-  int sock;
-  struct sockaddr_in addr;
-  gboolean is_bound;
+  GSocket *rtp = NULL;
+  GSocket *rtcp = NULL;
+  gint rtp_port = 0;
+  gint rtcp_port;
+  GInetAddress *anyaddr = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
+  GSocketAddress *sockaddr;
+  gboolean bound;
 
-  /* create socket */
-  fail_unless ((sock = socket (AF_INET, type, 0)) > 0);
+  for (;;) {
+    if (rtp_port != 0)
+      rtp_port += 2;
 
-  /* check if the port is already bound by trying to bind to it (again) */
-  memset (&addr, 0, sizeof addr);
-  addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = INADDR_ANY;
-  addr.sin_port = htons (port);
-  is_bound = (bind (sock, (struct sockaddr *) &addr, sizeof addr) != 0);
+    rtp = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM,
+        G_SOCKET_PROTOCOL_UDP, NULL);
+    fail_unless (rtp != NULL);
 
-  /* close the socket, which will unbind if bound by our call to bind */
-  close (sock);
+    sockaddr = g_inet_socket_address_new (anyaddr, rtp_port);
+    fail_unless (sockaddr != NULL);
+    bound = g_socket_bind (rtp, sockaddr, FALSE, NULL);
+    g_object_unref (sockaddr);
+    if (!bound) {
+      g_object_unref (rtp);
+      continue;
+    }
 
-  return !is_bound;
+    sockaddr = g_socket_get_local_address (rtp, NULL);
+    fail_unless (sockaddr != NULL && G_IS_INET_SOCKET_ADDRESS (sockaddr));
+    rtp_port =
+        g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (sockaddr));
+    g_object_unref (sockaddr);
+
+    if (rtp_port % 2 != 0) {
+      rtp_port += 1;
+      g_object_unref (rtp);
+      continue;
+    }
+
+    rtcp_port = rtp_port + 1;
+
+    rtcp = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM,
+        G_SOCKET_PROTOCOL_UDP, NULL);
+    fail_unless (rtcp != NULL);
+
+    sockaddr = g_inet_socket_address_new (anyaddr, rtcp_port);
+    fail_unless (sockaddr != NULL);
+    bound = g_socket_bind (rtcp, sockaddr, FALSE, NULL);
+    g_object_unref (sockaddr);
+    if (!bound) {
+      g_object_unref (rtp);
+      g_object_unref (rtcp);
+      continue;
+    }
+
+    sockaddr = g_socket_get_local_address (rtcp, NULL);
+    fail_unless (sockaddr != NULL && G_IS_INET_SOCKET_ADDRESS (sockaddr));
+    fail_unless (rtcp_port ==
+        g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (sockaddr)));
+    g_object_unref (sockaddr);
+
+    break;
+  }
+
+  range->min = rtp_port;
+  range->max = rtcp_port;
+  if (rtp_socket)
+    *rtp_socket = rtp;
+  else
+    g_object_unref (rtp);
+  if (rtcp_socket)
+    *rtcp_socket = rtcp;
+  else
+    g_object_unref (rtcp);
+  GST_DEBUG ("client_port=%d-%d", range->min, range->max);
+  g_object_unref (anyaddr);
 }
 
 /* get a free rtp/rtcp client port pair */
 static void
 get_client_ports (GstRTSPRange * range)
 {
-  gint rtp_port;
-  gint rtcp_port;
-
-  /* get a pair of unused ports, where the rtp port is even */
-  do {
-    rtp_port = get_unused_port (SOCK_DGRAM);
-    rtcp_port = rtp_port + 1;
-  } while (rtp_port % 2 != 0 || !port_is_unused (rtcp_port, SOCK_DGRAM));
-  range->min = rtp_port;
-  range->max = rtcp_port;
-  GST_DEBUG ("client_port=%d-%d", range->min, range->max);
+  get_client_ports_full (range, NULL, NULL);
 }
 
 /* start the tested rtsp server */
 static void
-start_server ()
+start_server (void)
 {
   GstRTSPMountPoints *mounts;
   gchar *service;
@@ -146,7 +194,6 @@ start_server ()
 
   gst_rtsp_media_factory_set_launch (factory,
       "( " VIDEO_PIPELINE "  " AUDIO_PIPELINE " )");
-
   gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT, factory);
   g_object_unref (mounts);
 
@@ -624,6 +671,79 @@ GST_START_TEST (test_setup_non_existing_stream)
 GST_END_TEST;
 
 static void
+receive_rtp (GSocket * socket, GSocketAddress ** addr)
+{
+  GstBuffer *buffer = gst_buffer_new_allocate (NULL, 65536, NULL);
+
+  for (;;) {
+    gssize bytes;
+    GstMapInfo map = GST_MAP_INFO_INIT;
+    GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
+
+    gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+    bytes = g_socket_receive_from (socket, addr, (gchar *) map.data,
+        map.maxsize, NULL, NULL);
+    fail_unless (bytes > 0);
+    gst_buffer_unmap (buffer, &map);
+    gst_buffer_set_size (buffer, bytes);
+
+    if (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtpbuffer)) {
+      gst_rtp_buffer_unmap (&rtpbuffer);
+      break;
+    }
+
+    if (addr)
+      g_clear_object (addr);
+  }
+
+  gst_buffer_unref (buffer);
+}
+
+static void
+receive_rtcp (GSocket * socket, GSocketAddress ** addr, GstRTCPType type)
+{
+  GstBuffer *buffer = gst_buffer_new_allocate (NULL, 65536, NULL);
+
+  for (;;) {
+    gssize bytes;
+    GstMapInfo map = GST_MAP_INFO_INIT;
+
+    gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+    bytes = g_socket_receive_from (socket, addr, (gchar *) map.data,
+        map.maxsize, NULL, NULL);
+    fail_unless (bytes > 0);
+    gst_buffer_unmap (buffer, &map);
+    gst_buffer_set_size (buffer, bytes);
+
+    if (gst_rtcp_buffer_validate (buffer)) {
+      GstRTCPBuffer rtcpbuffer = GST_RTCP_BUFFER_INIT;
+      GstRTCPPacket packet;
+
+      if (type) {
+        fail_unless (gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcpbuffer));
+        fail_unless (gst_rtcp_buffer_get_first_packet (&rtcpbuffer, &packet));
+        do {
+          if (gst_rtcp_packet_get_type (&packet) == type) {
+            gst_rtcp_buffer_unmap (&rtcpbuffer);
+            goto done;
+          }
+        } while (gst_rtcp_packet_move_to_next (&packet));
+        gst_rtcp_buffer_unmap (&rtcpbuffer);
+      } else {
+        break;
+      }
+    }
+
+    if (addr)
+      g_clear_object (addr);
+  }
+
+done:
+
+  gst_buffer_unref (buffer);
+}
+
+static void
 do_test_play (void)
 {
   GstRTSPConnection *conn;
@@ -635,6 +755,7 @@ do_test_play (void)
   gchar *session = NULL;
   GstRTSPTransport *video_transport = NULL;
   GstRTSPTransport *audio_transport = NULL;
+  GSocket *rtp_socket, *rtcp_socket;
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -647,7 +768,7 @@ do_test_play (void)
   sdp_media = gst_sdp_message_get_media (sdp_message, 1);
   audio_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
 
-  get_client_ports (&client_port);
+  get_client_ports_full (&client_port, &rtp_socket, &rtcp_socket);
 
   /* do SETUP for video and audio */
   fail_unless (do_setup (conn, video_control, &client_port, &session,
@@ -659,11 +780,21 @@ do_test_play (void)
   fail_unless (do_simple_request (conn, GST_RTSP_PLAY,
           session) == GST_RTSP_STS_OK);
 
+  receive_rtp (rtp_socket, NULL);
+  receive_rtcp (rtcp_socket, NULL, 0);
+
   /* send TEARDOWN request and check that we get 200 OK */
   fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
           session) == GST_RTSP_STS_OK);
 
+  /* FIXME: The rtsp-server always disconnects the transport before
+   * sending the RTCP BYE
+   * receive_rtcp (rtcp_socket, NULL, GST_RTCP_TYPE_BYE);
+   */
+
   /* clean up and iterate so the clean-up can finish */
+  g_object_unref (rtp_socket);
+  g_object_unref (rtcp_socket);
   g_free (session);
   gst_rtsp_transport_free (video_transport);
   gst_rtsp_transport_free (audio_transport);
@@ -1014,7 +1145,6 @@ GST_START_TEST (test_play_multithreaded_timeout_session)
 }
 
 GST_END_TEST;
-
 
 
 GST_START_TEST (test_play_disconnect)
