@@ -174,6 +174,8 @@ gst_au_parse_reset (GstAuParse * auparse)
 
   gst_adapter_clear (auparse->adapter);
 
+  gst_caps_replace (&auparse->src_caps, NULL);
+
   /* gst_segment_init (&auparse->segment, GST_FORMAT_TIME); */
 }
 
