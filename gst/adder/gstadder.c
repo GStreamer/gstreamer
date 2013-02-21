@@ -817,6 +817,16 @@ gst_adder_sink_event (GstCollectPads * pads, GstCollectData * pad,
       gst_event_unref (event);
       event = NULL;
     }
+    case GST_EVENT_FLUSH_START:
+      /* ensure that we'll eventually send a flush-stop, when we have received a
+       * flush-start (e.g. after a flushing seek directly sent to an element) */
+      if (g_atomic_int_compare_and_exchange (&adder->flush_stop_pending,
+              FALSE, TRUE)) {
+        /* discard flush start events, as we forwarded one already when handing the
+         * flushing seek on the sink pad */
+        discard = TRUE;
+      }
+      break;
     case GST_EVENT_FLUSH_STOP:
       /* we received a flush-stop. We will only forward it when
        * flush_stop_pending is set, and we will unset it then.
