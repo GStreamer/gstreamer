@@ -250,6 +250,7 @@ gst_ffmpegviddec_init (GstFFMpegVidDec * ffmpegdec)
 
   /* some ffmpeg data */
   ffmpegdec->context = avcodec_alloc_context3 (klass->in_plugin);
+  ffmpegdec->context->opaque = ffmpegdec;
   ffmpegdec->picture = avcodec_alloc_frame ();
   ffmpegdec->opened = FALSE;
   ffmpegdec->skip_frame = ffmpegdec->lowres = 0;
@@ -1056,8 +1057,6 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   AVPacket packet;
 
   *ret = GST_FLOW_OK;
-
-  ffmpegdec->context->opaque = ffmpegdec;
 
   /* in case we skip frames */
   ffmpegdec->picture->pict_type = -1;
