@@ -1212,6 +1212,109 @@ GST_START_TEST (test_play_disconnect)
 
 GST_END_TEST;
 
+/* Only different with test_play is the specific ports selected */
+
+GST_START_TEST (test_play_specific_server_port)
+{
+  GstRTSPMountPoints *mounts;
+  gchar *service;
+  GstRTSPMediaFactory *factory;
+  GstRTSPAddressPool *pool;
+  GstRTSPConnection *conn;
+  GstSDPMessage *sdp_message = NULL;
+  const GstSDPMedia *sdp_media;
+  const gchar *video_control;
+  GstRTSPRange client_port;
+  gchar *session = NULL;
+  GstRTSPTransport *video_transport = NULL;
+  GSocket *rtp_socket, *rtcp_socket;
+  GSocketAddress *rtp_address, *rtcp_address;
+  guint16 rtp_port, rtcp_port;
+
+  mounts = gst_rtsp_server_get_mount_points (server);
+
+  factory = gst_rtsp_media_factory_new ();
+  pool = gst_rtsp_address_pool_new ();
+  gst_rtsp_address_pool_add_range_unicast (pool, GST_RTSP_ADDRESS_POOL_ANY_IPV4,
+      GST_RTSP_ADDRESS_POOL_ANY_IPV4, 7770, 7780);
+  gst_rtsp_media_factory_set_address_pool (factory, pool);
+  g_object_unref (pool);
+  gst_rtsp_media_factory_set_launch (factory, "( " VIDEO_PIPELINE " )");
+  gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT, factory);
+  g_object_unref (mounts);
+
+  /* set port */
+  test_port = get_unused_port (SOCK_STREAM);
+  service = g_strdup_printf ("%d", test_port);
+  gst_rtsp_server_set_service (server, service);
+  g_free (service);
+
+  /* attach to default main context */
+  source_id = gst_rtsp_server_attach (server, NULL);
+  fail_if (source_id == 0);
+
+  GST_DEBUG ("rtsp server listening on port %d", test_port);
+
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
+
+  /* get control strings from DESCRIBE response */
+  fail_unless (gst_sdp_message_medias_len (sdp_message) == 1);
+  sdp_media = gst_sdp_message_get_media (sdp_message, 0);
+  video_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  get_client_ports_full (&client_port, &rtp_socket, &rtcp_socket);
+
+  /* do SETUP for video */
+  fail_unless (do_setup (conn, video_control, &client_port, &session,
+          &video_transport) == GST_RTSP_STS_OK);
+
+  /* send PLAY request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_PLAY,
+          session) == GST_RTSP_STS_OK);
+
+  receive_rtp (rtp_socket, &rtp_address);
+  receive_rtcp (rtcp_socket, &rtcp_address, 0);
+
+  fail_unless (G_IS_INET_SOCKET_ADDRESS (rtp_address));
+  fail_unless (G_IS_INET_SOCKET_ADDRESS (rtcp_address));
+  rtp_port =
+      g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (rtp_address));
+  rtcp_port =
+      g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (rtcp_address));
+  fail_unless (rtp_port >= 7770 && rtp_port <= 7780 && rtp_port % 2 == 0);
+  fail_unless (rtcp_port >= 7770 && rtcp_port <= 7780 && rtcp_port % 2 == 1);
+  fail_unless (rtp_port + 1 == rtcp_port);
+
+  g_object_unref (rtp_address);
+  g_object_unref (rtcp_address);
+
+  /* send TEARDOWN request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
+          session) == GST_RTSP_STS_OK);
+
+  /* FIXME: The rtsp-server always disconnects the transport before
+   * sending the RTCP BYE
+   * receive_rtcp (rtcp_socket, NULL, GST_RTCP_TYPE_BYE);
+   */
+
+  /* clean up and iterate so the clean-up can finish */
+  g_object_unref (rtp_socket);
+  g_object_unref (rtcp_socket);
+  g_free (session);
+  gst_rtsp_transport_free (video_transport);
+  gst_sdp_message_free (sdp_message);
+  gst_rtsp_connection_free (conn);
+
+
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspserver_suite (void)
 {
@@ -1234,7 +1337,7 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_play_multithreaded_timeout_client);
   tcase_add_test (tc, test_play_multithreaded_timeout_session);
   tcase_add_test (tc, test_play_disconnect);
-
+  tcase_add_test (tc, test_play_specific_server_port);
   return s;
 }
 
