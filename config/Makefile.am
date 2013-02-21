@@ -1,1 +1,1 @@
-EXTRA_DIST = raspberry-pi.conf
+SUBDIRS = rpi
