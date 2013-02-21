@@ -53,6 +53,7 @@ $GST/gst-plugins-base/tools:\
 $GST/gst-player/src:\
 $GST/gst-editor/src:\
 $GST/gstreamer-sharp/tools:\
+$GST/orc/tools:\
 $GST_PREFIX/bin:\
 $PATH"
 
@@ -60,6 +61,10 @@ $PATH"
 LD_LIBRARY_PATH=$GST_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 DYLD_LIBRARY_PATH=$GST_PREFIX/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}
 GI_TYPELIB_PATH=$GST_PREFIX/share/gir-1.0${GI_TYPELIB_PATH:+:$GI_TYPELIB_PATH}
+
+# ORC
+LD_LIBRARY_PATH=$GST/orc/orc/.libs:$LD_LIBRARY_PATH
+DYLD_LIBRARY_PATH=$GST/orc/orc/.libs:$DYLD_LIBRARY_PATH
 
 # GStreamer rtsp server library
 LD_LIBRARY_PATH=$GST/gst-rtsp-server/gst/rtsp-server/.libs:$LD_LIBRARY_PATH
@@ -121,6 +126,7 @@ $GST_PREFIX/lib/pkgconfig\
 :$GST/gst-rtsp-server/pkgconfig\
 :$GST/gst-editing-services/pkgconfig\
 :$GST/gstreamer-sharp/pkgconfig\
+:$GST/orc\
 :$GST/farsight2\
 :$GST/libnice/nice\
 ${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
