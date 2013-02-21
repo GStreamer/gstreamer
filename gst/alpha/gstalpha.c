@@ -191,9 +191,9 @@ gst_alpha_method_get_type (void)
   static GType alpha_method_type = 0;
   static const GEnumValue alpha_method[] = {
     {ALPHA_METHOD_SET, "Set/adjust alpha channel", "set"},
-    {ALPHA_METHOD_GREEN, "Chroma Key green", "green"},
-    {ALPHA_METHOD_BLUE, "Chroma Key blue", "blue"},
-    {ALPHA_METHOD_CUSTOM, "Chroma Key on target_r/g/b", "custom"},
+    {ALPHA_METHOD_GREEN, "Chroma Key on pure green", "green"},
+    {ALPHA_METHOD_BLUE, "Chroma Key on pure blue", "blue"},
+    {ALPHA_METHOD_CUSTOM, "Chroma Key on custom RGB values", "custom"},
     {0, NULL, NULL},
   };
 
@@ -227,15 +227,18 @@ gst_alpha_class_init (GstAlphaClass * klass)
           0.0, 1.0, DEFAULT_ALPHA,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TARGET_R,
-      g_param_spec_uint ("target-r", "Target Red", "The Red target", 0, 255,
+      g_param_spec_uint ("target-r", "Target Red",
+          "The red color value for custom RGB chroma keying", 0, 255,
           DEFAULT_TARGET_R,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TARGET_G,
-      g_param_spec_uint ("target-g", "Target Green", "The Green target", 0, 255,
+      g_param_spec_uint ("target-g", "Target Green",
+          "The green color value for custom RGB chroma keying", 0, 255,
           DEFAULT_TARGET_G,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TARGET_B,
-      g_param_spec_uint ("target-b", "Target Blue", "The Blue target", 0, 255,
+      g_param_spec_uint ("target-b", "Target Blue",
+          "The blue color value for custom RGB chroma keying", 0, 255,
           DEFAULT_TARGET_B,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ANGLE,
@@ -253,7 +256,7 @@ gst_alpha_class_init (GstAlphaClass * klass)
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_WHITE_SENSITIVITY, g_param_spec_uint ("white-sensitivity",
-          "Sensitivity", "Sensitivity to bright colors", 0, 128,
+          "White Sensitivity", "Sensitivity to bright colors", 0, 128,
           DEFAULT_WHITE_SENSITIVITY,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
