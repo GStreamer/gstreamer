@@ -327,20 +327,6 @@ gst_alpha_set_property (GObject * object, guint prop_id,
           && (alpha->prefer_passthrough);
       alpha->method = method;
 
-      switch (alpha->method) {
-        case ALPHA_METHOD_GREEN:
-          alpha->target_r = 0;
-          alpha->target_g = 255;
-          alpha->target_b = 0;
-          break;
-        case ALPHA_METHOD_BLUE:
-          alpha->target_r = 0;
-          alpha->target_g = 0;
-          alpha->target_b = 255;
-          break;
-        default:
-          break;
-      }
       gst_alpha_set_process_function (alpha);
       gst_alpha_init_params (alpha);
       break;
@@ -2300,7 +2286,25 @@ gst_alpha_init_params_full (GstAlpha * alpha,
   gfloat tmp;
   gfloat tmp1, tmp2;
   gfloat y;
+  guint target_r = alpha->target_r;
+  guint target_g = alpha->target_g;
+  guint target_b = alpha->target_b;
   const gint *matrix;
+
+  switch (alpha->method) {
+    case ALPHA_METHOD_GREEN:
+      target_r = 0;
+      target_g = 255;
+      target_b = 0;
+      break;
+    case ALPHA_METHOD_BLUE:
+      target_r = 0;
+      target_g = 0;
+      target_b = 255;
+      break;
+    default:
+      break;
+  }
 
   /* RGB->RGB: convert to SDTV YUV, chroma keying, convert back
    * YUV->RGB: chroma keying, convert to RGB
@@ -2325,20 +2329,18 @@ gst_alpha_init_params_full (GstAlpha * alpha,
         (alpha->out_sdtv) ? cog_rgb_to_ycbcr_matrix_8bit_sdtv :
         cog_rgb_to_ycbcr_matrix_8bit_hdtv;
 
-  y = (matrix[0] * ((gint) alpha->target_r) +
-      matrix[1] * ((gint) alpha->target_g) +
-      matrix[2] * ((gint) alpha->target_b) + matrix[3]) >> 8;
+  y = (matrix[0] * ((gint) target_r) +
+      matrix[1] * ((gint) target_g) +
+      matrix[2] * ((gint) target_b) + matrix[3]) >> 8;
   /* Cb,Cr without offset here because the chroma keying
    * works with them being in range [-128,127]
    */
   tmp1 =
-      (matrix[4] * ((gint) alpha->target_r) +
-      matrix[5] * ((gint) alpha->target_g) +
-      matrix[6] * ((gint) alpha->target_b)) >> 8;
+      (matrix[4] * ((gint) target_r) +
+      matrix[5] * ((gint) target_g) + matrix[6] * ((gint) target_b)) >> 8;
   tmp2 =
-      (matrix[8] * ((gint) alpha->target_r) +
-      matrix[9] * ((gint) alpha->target_g) +
-      matrix[10] * ((gint) alpha->target_b)) >> 8;
+      (matrix[8] * ((gint) target_r) +
+      matrix[9] * ((gint) target_g) + matrix[10] * ((gint) target_b)) >> 8;
 
   kgl = sqrt (tmp1 * tmp1 + tmp2 * tmp2);
   alpha->cb = 127 * (tmp1 / kgl);
