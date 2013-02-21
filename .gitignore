@@ -31,6 +31,10 @@ gst-omx-*.tar*
 *.o
 *~
 *.bak
+*.swp
+*.orig
+*.rej
+tools/listcomponents
 /m4
 Makefile.in
 Makefile
