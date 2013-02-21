@@ -172,7 +172,7 @@ AC_ARG_ENABLE(Bsymbolic,
                LDFLAGS="${SAVED_LDFLAGS}"])
 
 AC_ARG_WITH([omx-target],
-        AS_HELP_STRING([--with-omx-target],[Use this OpenMAX IL target (generic, rpi)]),
+        AS_HELP_STRING([--with-omx-target],[Use this OpenMAX IL target (generic, bellagio, rpi)]),
         [ac_cv_omx_target="$withval"], [ac_cv_omx_target="generic"])
 
 ac_cv_omx_target_struct_packing="none"
@@ -185,11 +185,15 @@ case "${ac_cv_omx_target}" in
     AC_DEFINE(USE_OMX_TARGET_RPI, 1, [Use RPi OpenMAX IL target])
     ac_cv_omx_target_struct_packing=4
     ;;
+  bellagio)
+    AC_DEFINE(USE_OMX_TARGET_BELLAGIO, 1, [Use Bellagio OpenMAX IL target])
+    ;;
   *)
     AC_ERROR([invalid OpenMAX IL target])
     ;;
 esac
 AM_CONDITIONAL(USE_OMX_TARGET_GENERIC, test "x$ac_cv_omx_target" = "xgeneric")
+AM_CONDITIONAL(USE_OMX_TARGET_BELLAGIO, test "x$ac_cv_omx_target" = "xbellagio")
 AM_CONDITIONAL(USE_OMX_TARGET_RPI, test "x$ac_cv_omx_target" = "xrpi")
 
 AC_ARG_WITH([omx-struct-packing],
@@ -310,6 +314,7 @@ common/Makefile
 common/m4/Makefile
 tools/Makefile
 config/Makefile
+config/bellagio/Makefile
 config/rpi/Makefile
 )
 

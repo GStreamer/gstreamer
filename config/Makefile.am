@@ -1,1 +1,1 @@
-SUBDIRS = rpi
+SUBDIRS = bellagio rpi
