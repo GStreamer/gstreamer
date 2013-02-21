@@ -62,7 +62,11 @@ gst_omx_core_acquire (const gchar * filename)
     g_hash_table_insert (core_handles, g_strdup (filename), core);
 
     /* Hack for the Broadcom OpenMAX IL implementation */
+#ifdef USE_OMX_TARGET_RPI
+    {
+#else
     if (g_str_has_suffix (filename, "vc/lib/libopenmaxil.so")) {
+#endif
       gchar *bcm_host_filename;
       gchar *bcm_host_path;
       GModule *bcm_host_module;
@@ -2272,10 +2276,16 @@ gst_omx_error_to_string (OMX_ERRORTYPE err)
   }
 }
 
+#if defined(USE_OMX_TARGET_RPI)
+#define DEFAULT_HACKS (GST_OMX_HACK_NO_EMPTY_EOS_BUFFER | GST_OMX_HACK_NO_COMPONENT_ROLE)
+#else
+#define DEFAULT_HACKS (0)
+#endif
+
 guint64
 gst_omx_parse_hacks (gchar ** hacks)
 {
-  guint64 hacks_flags = 0;
+  guint64 hacks_flags = DEFAULT_HACKS;
 
   if (!hacks)
     return 0;
