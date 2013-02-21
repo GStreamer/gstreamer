@@ -112,6 +112,9 @@
 #  include <config.h>
 #endif
 
+#define EGL_EGLEXT_PROTOTYPES
+#define GL_GLEXT_PROTOTYPES
+
 #include <string.h>
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -120,9 +123,8 @@
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 #include <gst/video/videooverlay.h>
+#include <gst/egl/egl.h>
 
-#define EGL_EGLEXT_PROTOTYPES
-#define GL_GLEXT_PROTOTYPES
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
@@ -411,7 +413,7 @@ static void gst_eglglessink_wipe_eglglesctx (GstEglGlesSink * eglglessink);
 static GstBuffer *gst_eglglessink_allocate_eglimage (GstEglGlesSink *
     eglglessink, GstVideoFormat format, gint width, gint height);
 static GstBufferPool *gst_egl_image_buffer_pool_new (GstEglGlesSink *
-    eglglessink, EGLDisplay display);
+    eglglessink, GstEGLDisplay * display);
 
 #define parent_class gst_eglglessink_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstEglGlesSink, gst_eglglessink, GST_TYPE_VIDEO_SINK,
@@ -475,7 +477,7 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
   /* Init supported format/caps list */
   caps = gst_caps_new_empty ();
 
-  if (eglChooseConfig (eglglessink->eglglesctx.display,
+  if (eglChooseConfig (gst_egl_display_get (eglglessink->eglglesctx.display),
           eglglessink_RGBA8888_attribs, NULL, 1, &cfg_number) != EGL_FALSE) {
     format = g_new0 (GstEglGlesImageFmt, 1);
     format->fmt = GST_EGLGLESSINK_IMAGE_RGBA8888;
@@ -520,7 +522,7 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
         "EGL display doesn't support RGBA8888 config");
   }
 
-  if (eglChooseConfig (eglglessink->eglglesctx.display,
+  if (eglChooseConfig (gst_egl_display_get (eglglessink->eglglesctx.display),
           eglglessink_RGB888_attribs, NULL, 1, &cfg_number) != EGL_FALSE) {
     format = g_new0 (GstEglGlesImageFmt, 1);
     format->fmt = GST_EGLGLESSINK_IMAGE_RGB888;
@@ -536,7 +538,7 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     GST_INFO_OBJECT (eglglessink, "EGL display doesn't support RGB888 config");
   }
 
-  if (eglChooseConfig (eglglessink->eglglesctx.display,
+  if (eglChooseConfig (gst_egl_display_get (eglglessink->eglglesctx.display),
           eglglessink_RGB565_attribs, NULL, 1, &cfg_number) != EGL_FALSE) {
     format = g_new0 (GstEglGlesImageFmt, 1);
     format->fmt = GST_EGLGLESSINK_IMAGE_RGB565;
@@ -577,14 +579,6 @@ egl_init (GstEglGlesSink * eglglessink)
     GST_ERROR_OBJECT (eglglessink, "Display support NONE of our configs");
     goto HANDLE_ERROR;
   }
-
-  eglglessink->eglglesctx.can_map_eglimage =
-      platform_can_map_eglimage (&eglglessink->eglglesctx.eglimage_map,
-      &eglglessink->eglglesctx.eglimage_unmap,
-      &eglglessink->eglglesctx.eglimage_video_map,
-      &eglglessink->eglglesctx.eglimage_video_unmap);
-  GST_DEBUG_OBJECT (eglglessink, "Platform can map EGLImage: %d",
-      eglglessink->eglglesctx.can_map_eglimage);
 
   eglglessink->egl_started = TRUE;
 
@@ -757,14 +751,14 @@ gst_eglglessink_wipe_eglglesctx (GstEglGlesSink * eglglessink)
   gst_eglglessink_context_make_current (eglglessink, FALSE);
 
   if (eglglessink->eglglesctx.surface) {
-    eglDestroySurface (eglglessink->eglglesctx.display,
+    eglDestroySurface (gst_egl_display_get (eglglessink->eglglesctx.display),
         eglglessink->eglglesctx.surface);
     eglglessink->eglglesctx.surface = NULL;
     eglglessink->have_surface = FALSE;
   }
 
   if (eglglessink->eglglesctx.eglcontext) {
-    eglDestroyContext (eglglessink->eglglesctx.display,
+    eglDestroyContext (gst_egl_display_get (eglglessink->eglglesctx.display),
         eglglessink->eglglesctx.eglcontext);
     eglglessink->eglglesctx.eglcontext = NULL;
   }
@@ -836,11 +830,12 @@ gst_eglglessink_stop (GstEglGlesSink * eglglessink)
   }
   eglglessink->last_flow = GST_FLOW_FLUSHING;
 
-  eglglessink->last_memory = NULL;
+  eglglessink->last_buffer = NULL;
 
   if (eglglessink->using_own_window) {
-    platform_destroy_native_window (eglglessink->eglglesctx.display,
-        eglglessink->eglglesctx.used_window, &eglglessink->own_window_data);
+    platform_destroy_native_window (gst_egl_display_get
+        (eglglessink->eglglesctx.display), eglglessink->eglglesctx.used_window,
+        &eglglessink->own_window_data);
     eglglessink->eglglesctx.used_window = 0;
     eglglessink->have_window = FALSE;
   }
@@ -937,7 +932,9 @@ gst_eglglessink_init_egl_exts (GstEglGlesSink * eglglessink)
   const char *eglexts;
   unsigned const char *glexts;
 
-  eglexts = eglQueryString (eglglessink->eglglesctx.display, EGL_EXTENSIONS);
+  eglexts =
+      eglQueryString (gst_egl_display_get (eglglessink->eglglesctx.display),
+      EGL_EXTENSIONS);
   glexts = glGetString (GL_EXTENSIONS);
 
   GST_DEBUG_OBJECT (eglglessink, "Available EGL extensions: %s\n",
@@ -1126,9 +1123,9 @@ gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
   gint width, height;
 
   /* Save surface dims */
-  eglQuerySurface (eglglessink->eglglesctx.display,
+  eglQuerySurface (gst_egl_display_get (eglglessink->eglglesctx.display),
       eglglessink->eglglesctx.surface, EGL_WIDTH, &width);
-  eglQuerySurface (eglglessink->eglglesctx.display,
+  eglQuerySurface (gst_egl_display_get (eglglessink->eglglesctx.display),
       eglglessink->eglglesctx.surface, EGL_HEIGHT, &height);
 
   if (width != eglglessink->eglglesctx.surface_width ||
@@ -1160,7 +1157,7 @@ gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink,
 
     GST_DEBUG_OBJECT (eglglessink, "Attaching context to thread %p",
         g_thread_self ());
-    if (!eglMakeCurrent (eglglessink->eglglesctx.display,
+    if (!eglMakeCurrent (gst_egl_display_get (eglglessink->eglglesctx.display),
             eglglessink->eglglesctx.surface, eglglessink->eglglesctx.surface,
             eglglessink->eglglesctx.eglcontext)) {
       got_egl_error ("eglMakeCurrent");
@@ -1170,8 +1167,8 @@ gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink,
   } else {
     GST_DEBUG_OBJECT (eglglessink, "Detaching context from thread %p",
         g_thread_self ());
-    if (!eglMakeCurrent (eglglessink->eglglesctx.display, EGL_NO_SURFACE,
-            EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
+    if (!eglMakeCurrent (gst_egl_display_get (eglglessink->eglglesctx.display),
+            EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
       got_egl_error ("eglMakeCurrent");
       GST_ERROR_OBJECT (eglglessink, "Couldn't unbind context");
       return FALSE;
@@ -1290,9 +1287,9 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   GST_DEBUG_OBJECT (eglglessink, "Enter EGL surface setup");
 
   eglglessink->eglglesctx.surface =
-      eglCreateWindowSurface (eglglessink->eglglesctx.display,
-      eglglessink->eglglesctx.config, eglglessink->eglglesctx.used_window,
-      NULL);
+      eglCreateWindowSurface (gst_egl_display_get (eglglessink->
+          eglglesctx.display), eglglessink->eglglesctx.config,
+      eglglessink->eglglesctx.used_window, NULL);
 
   if (eglglessink->eglglesctx.surface == EGL_NO_SURFACE) {
     got_egl_error ("eglCreateWindowSurface");
@@ -1301,7 +1298,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   }
 
   eglglessink->eglglesctx.buffer_preserved = FALSE;
-  if (eglQuerySurface (eglglessink->eglglesctx.display,
+  if (eglQuerySurface (gst_egl_display_get (eglglessink->eglglesctx.display),
           eglglessink->eglglesctx.surface, EGL_SWAP_BEHAVIOR, &swap_behavior)) {
     GST_DEBUG_OBJECT (eglglessink, "Buffer swap behavior %x", swap_behavior);
     eglglessink->eglglesctx.buffer_preserved =
@@ -1328,7 +1325,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
         EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
     eglglessink->eglglesctx.pixel_aspect_ratio = EGL_DISPLAY_SCALING;
   } else {
-    eglQuerySurface (eglglessink->eglglesctx.display,
+    eglQuerySurface (gst_egl_display_get (eglglessink->eglglesctx.display),
         eglglessink->eglglesctx.surface, EGL_PIXEL_ASPECT_RATIO, &display_par);
     /* Fix for outbound DAR reporting on some implementations not
      * honoring the 'should return w/h * EGL_DISPLAY_SCALING' spec
@@ -1538,28 +1535,26 @@ HANDLE_ERROR:
 static gboolean
 gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
 {
+  EGLDisplay display;
   GST_DEBUG_OBJECT (eglglessink, "Enter EGL initial configuration");
 
-#ifndef USE_EGL_RPI
-  eglglessink->eglglesctx.display = eglGetDisplay (EGL_DEFAULT_DISPLAY);
-  if (eglglessink->eglglesctx.display == EGL_NO_DISPLAY) {
-    GST_ERROR_OBJECT (eglglessink, "Could not get EGL display connection");
-    goto HANDLE_ERROR;          /* No EGL error is set by eglGetDisplay() */
-  }
-#else
+#ifdef USE_EGL_RPI
+  eglglessink->eglglesctx.display = gst_egl_display_new (display);
   if (!eglMakeCurrent (1, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
     got_egl_error ("eglMakeCurrent");
     GST_ERROR_OBJECT (eglglessink, "Couldn't unbind context");
     return FALSE;
   }
-  eglglessink->eglglesctx.display = eglGetDisplay (EGL_DEFAULT_DISPLAY);
-  if (eglglessink->eglglesctx.display == EGL_NO_DISPLAY) {
+#endif
+
+  display = eglGetDisplay (EGL_DEFAULT_DISPLAY);
+  if (display == EGL_NO_DISPLAY) {
     GST_ERROR_OBJECT (eglglessink, "Could not get EGL display connection");
     goto HANDLE_ERROR;          /* No EGL error is set by eglGetDisplay() */
   }
-#endif
+  eglglessink->eglglesctx.display = gst_egl_display_new (display);
 
-  if (!eglInitialize (eglglessink->eglglesctx.display,
+  if (!eglInitialize (gst_egl_display_get (eglglessink->eglglesctx.display),
           &eglglessink->eglglesctx.egl_major,
           &eglglessink->eglglesctx.egl_minor)) {
     got_egl_error ("eglInitialize");
@@ -1598,7 +1593,7 @@ gst_eglglessink_choose_config (GstEglGlesSink * eglglessink)
   EGLint con_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
   GLint egl_configs;
 
-  if ((eglChooseConfig (eglglessink->eglglesctx.display,
+  if ((eglChooseConfig (gst_egl_display_get (eglglessink->eglglesctx.display),
               eglglessink->selected_fmt->attribs,
               &eglglessink->eglglesctx.config, 1, &egl_configs)) == EGL_FALSE) {
     got_egl_error ("eglChooseConfig");
@@ -1613,7 +1608,7 @@ gst_eglglessink_choose_config (GstEglGlesSink * eglglessink)
   }
 
   eglglessink->eglglesctx.eglcontext =
-      eglCreateContext (eglglessink->eglglesctx.display,
+      eglCreateContext (gst_egl_display_get (eglglessink->eglglesctx.display),
       eglglessink->eglglesctx.config, EGL_NO_CONTEXT, con_attribs);
 
   if (eglglessink->eglglesctx.eglcontext == EGL_NO_CONTEXT) {
@@ -2184,7 +2179,7 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
   if (!buf) {
     GST_DEBUG_OBJECT (eglglessink, "Rendering previous buffer again");
   } else if (buf) {
-    GstMemory *gmem;
+    GstMemory *mem;
 
     crop = gst_buffer_get_video_crop_meta (buf);
 
@@ -2203,15 +2198,18 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
       eglglessink->crop_changed = TRUE;
     }
 
-    if (gst_buffer_n_memory (buf) == 1 &&
-        (gmem = gst_buffer_peek_memory (buf, 0)) &&
-        strcmp (gmem->allocator->mem_type, GST_EGL_IMAGE_MEMORY_NAME) == 0) {
-      GstEGLImageMemory *mem;
-      gint i;
+    if (gst_buffer_n_memory (buf) >= 1 &&
+        (mem = gst_buffer_peek_memory (buf, 0))
+        && gst_is_egl_image_memory (mem)) {
+      guint n, i;
 
-      mem = GST_EGL_IMAGE_MEMORY ((gmem->parent ? gmem->parent : gmem));
+      n = gst_buffer_n_memory (buf);
 
-      for (i = 0; i < mem->n_textures; i++) {
+      for (i = 0; i < n; i++) {
+        mem = gst_buffer_peek_memory (buf, i);
+
+        g_assert (gst_is_egl_image_memory (mem));
+
         if (i == 0)
           glActiveTexture (GL_TEXTURE0);
         else if (i == 1)
@@ -2219,12 +2217,13 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
         else if (i == 2)
           glActiveTexture (GL_TEXTURE2);
 
-        glBindTexture (GL_TEXTURE_2D, mem->texture[i]);
-        glEGLImageTargetTexture2DOES (GL_TEXTURE_2D, mem->image[i]);
+        glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[i]);
+        glEGLImageTargetTexture2DOES (GL_TEXTURE_2D,
+            gst_egl_image_memory_get_image (mem));
         if (got_gl_error ("glEGLImageTargetTexture2DOES"))
           goto HANDLE_ERROR;
       }
-      eglglessink->last_memory = gmem;
+      eglglessink->last_buffer = buf;
       eglglessink->stride[0] = 1;
       eglglessink->stride[1] = 1;
       eglglessink->stride[2] = 1;
@@ -2396,7 +2395,7 @@ gst_eglglessink_render (GstEglGlesSink * eglglessink)
   if (got_gl_error ("glDrawElements"))
     goto HANDLE_ERROR;
 
-  if ((eglSwapBuffers (eglglessink->eglglesctx.display,
+  if ((eglSwapBuffers (gst_egl_display_get (eglglessink->eglglesctx.display),
               eglglessink->eglglesctx.surface))
       == EGL_FALSE) {
     got_egl_error ("eglSwapBuffers");
@@ -2715,7 +2714,7 @@ static gboolean
 gst_eglglessink_close (GstEglGlesSink * eglglessink)
 {
   if (eglglessink->eglglesctx.display) {
-    eglTerminate (eglglessink->eglglesctx.display);
+    gst_egl_display_unref (eglglessink->eglglesctx.display);
     eglglessink->eglglesctx.display = NULL;
   }
 
@@ -2943,18 +2942,6 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink)
 }
 
 /* EGLImage memory, buffer pool, etc */
-
-typedef struct
-{
-  GstAllocator parent;
-
-  GstEglGlesSink *sink;
-} GstEGLImageAllocator;
-
-typedef GstAllocatorClass GstEGLImageAllocatorClass;
-
-#define GST_EGL_IMAGE_ALLOCATOR(a) ((GstEGLImageAllocator*)(a))
-
 typedef struct
 {
   GstVideoBufferPool parent;
@@ -2963,163 +2950,71 @@ typedef struct
   GstAllocator *allocator;
   GstVideoInfo info;
   gboolean add_metavideo;
-  EGLDisplay display;
+  gboolean want_eglimage;
+  GstEGLDisplay *display;
 } GstEGLImageBufferPool;
 
 typedef GstVideoBufferPoolClass GstEGLImageBufferPoolClass;
 
 #define GST_EGL_IMAGE_BUFFER_POOL(p) ((GstEGLImageBufferPool*)(p))
 
-GType gst_egl_image_allocator_get_type (void);
 GType gst_egl_image_buffer_pool_get_type (void);
+
+typedef struct
+{
+  GLuint texture;
+} GstEGLGLESImageData;
+
+static void
+gst_egl_gles_image_data_free (GstEGLGLESImageData * data)
+{
+  glDeleteTextures (1, &data->texture);
+  g_slice_free (GstEGLGLESImageData, data);
+}
 
 static GstBuffer *
 gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
     GstVideoFormat format, gint width, gint height)
 {
+  GstEGLGLESImageData *data = NULL;
   GstBuffer *buffer;
-  GstMemory *gmem;
-  GstEGLImageMemory *mem;
   GstVideoInfo info;
   gint i;
-  gint size, align;
   gint stride[3];
   gsize offset[3];
-  GstVideoMeta *meta;
+  GstMemory *mem[3] = { NULL, NULL, NULL };
+  guint n_mem;
+
+  memset (stride, 0, sizeof (stride));
+  memset (offset, 0, sizeof (offset));
 
   gst_video_info_set_format (&info, format, width, height);
 
-  gmem = (GstMemory *) g_slice_new0 (GstEGLImageMemory);
-  mem = GST_EGL_IMAGE_MEMORY (gmem);
-
   switch (format) {
     case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-      stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_WIDTH (&info) * 3);
-      stride[1] = 0;
-      stride[2] = 0;
-      offset[0] = 0;
-      offset[1] = 0;
-      offset[2] = 0;
-      size = stride[0] * GST_VIDEO_INFO_HEIGHT (&info);
+    case GST_VIDEO_FORMAT_BGR:{
+      gsize size;
+      EGLImageKHR image;
 
-      glGenTextures (1, mem->texture);
-      if (got_gl_error ("glGenTextures"))
-        goto mem_error;
-
-      mem->n_textures = 1;
-
-      glBindTexture (GL_TEXTURE_2D, mem->texture[0]);
-      if (got_gl_error ("glBindTexture"))
-        goto mem_error;
-
-      /* Set 2D resizing params */
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-      /* If these are not set the texture image unit will return
-       * * (R, G, B, A) = black on glTexImage2D for non-POT width/height
-       * * frames. For a deeper explanation take a look at the OpenGL ES
-       * * documentation for glTexParameter */
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      if (got_gl_error ("glTexParameteri"))
-        goto mem_error;
-
-      if (platform_has_custom_eglimage_alloc ()) {
-        if (!platform_alloc_eglimage (eglglessink->eglglesctx.display,
-                eglglessink->eglglesctx.eglcontext, GL_RGB, GL_UNSIGNED_BYTE,
-                GST_VIDEO_INFO_WIDTH (&info), GST_VIDEO_INFO_HEIGHT (&info),
-                mem->texture[0], &mem->image[0], &mem->image_platform_data[0]))
-          goto mem_error;
+      mem[0] =
+          gst_egl_image_allocator_alloc (GST_EGL_IMAGE_BUFFER_POOL
+          (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
+          GST_EGL_IMAGE_MEMORY_TYPE_RGB, GST_VIDEO_INFO_WIDTH (&info),
+          GST_VIDEO_INFO_HEIGHT (&info), &size);
+      if (mem[0]) {
+        stride[0] = size / GST_VIDEO_INFO_HEIGHT (&info);
+        n_mem = 1;
       } else {
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB,
-            GST_VIDEO_INFO_WIDTH (&info),
-            GST_VIDEO_INFO_HEIGHT (&info), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-        if (got_gl_error ("glTexImage2D"))
+        data = g_slice_new0 (GstEGLGLESImageData);
+
+        stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_WIDTH (&info) * 3);
+        size = stride[0] * GST_VIDEO_INFO_HEIGHT (&info);
+
+        glGenTextures (1, &data->texture);
+        if (got_gl_error ("glGenTextures"))
           goto mem_error;
 
-        mem->image[0] =
-            eglCreateImageKHR (eglglessink->eglglesctx.display,
-            eglglessink->eglglesctx.eglcontext, EGL_GL_TEXTURE_2D_KHR,
-            (EGLClientBuffer) (guintptr) mem->texture[0], NULL);
-        if (got_egl_error ("eglCreateImageKHR"))
-          goto mem_error;
-      }
-      break;
-    case GST_VIDEO_FORMAT_RGB16:
-      stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_WIDTH (&info) * 2);
-      stride[1] = 0;
-      stride[2] = 0;
-      offset[0] = 0;
-      offset[1] = 0;
-      offset[2] = 0;
-      size = stride[0] * GST_VIDEO_INFO_HEIGHT (&info);
-
-      glGenTextures (1, mem->texture);
-      if (got_gl_error ("glGenTextures"))
-        goto mem_error;
-
-      mem->n_textures = 1;
-
-      glBindTexture (GL_TEXTURE_2D, mem->texture[0]);
-      if (got_gl_error ("glBindTexture"))
-        goto mem_error;
-
-      /* Set 2D resizing params */
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-      /* If these are not set the texture image unit will return
-       * * (R, G, B, A) = black on glTexImage2D for non-POT width/height
-       * * frames. For a deeper explanation take a look at the OpenGL ES
-       * * documentation for glTexParameter */
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      if (got_gl_error ("glTexParameteri"))
-        goto mem_error;
-
-      if (platform_has_custom_eglimage_alloc ()) {
-        if (!platform_alloc_eglimage (eglglessink->eglglesctx.display,
-                eglglessink->eglglesctx.eglcontext, GL_RGB,
-                GL_UNSIGNED_SHORT_5_6_5, GST_VIDEO_INFO_WIDTH (&info),
-                GST_VIDEO_INFO_HEIGHT (&info), mem->texture[0], &mem->image[0],
-                &mem->image_platform_data[0]))
-          goto mem_error;
-      } else {
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB,
-            GST_VIDEO_INFO_WIDTH (&info),
-            GST_VIDEO_INFO_HEIGHT (&info), 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5,
-            NULL);
-        if (got_gl_error ("glTexImage2D"))
-          goto mem_error;
-
-        mem->image[0] =
-            eglCreateImageKHR (eglglessink->eglglesctx.display,
-            eglglessink->eglglesctx.eglcontext, EGL_GL_TEXTURE_2D_KHR,
-            (EGLClientBuffer) (guintptr) mem->texture[0], NULL);
-        if (got_egl_error ("eglCreateImageKHR"))
-          goto mem_error;
-      }
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (&info, 0));
-      stride[1] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (&info, 1) * 2);
-      stride[2] = 0;
-      offset[0] = 0;
-      offset[1] = stride[0] * GST_VIDEO_INFO_COMP_HEIGHT (&info, 0);
-      offset[2] = 0;
-      size = offset[1] + stride[1] * GST_VIDEO_INFO_COMP_HEIGHT (&info, 1);
-
-      glGenTextures (2, mem->texture);
-      if (got_gl_error ("glGenTextures"))
-        goto mem_error;
-
-      mem->n_textures = 2;
-
-      for (i = 0; i < 2; i++) {
-        glBindTexture (GL_TEXTURE_2D, mem->texture[i]);
+        glBindTexture (GL_TEXTURE_2D, data->texture);
         if (got_gl_error ("glBindTexture"))
           goto mem_error;
 
@@ -3136,23 +3031,151 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
         if (got_gl_error ("glTexParameteri"))
           goto mem_error;
 
-        if (platform_has_custom_eglimage_alloc ()) {
-          if (i == 0) {
-            if (!platform_alloc_eglimage (eglglessink->eglglesctx.display,
-                    eglglessink->eglglesctx.eglcontext, GL_LUMINANCE,
-                    GL_UNSIGNED_BYTE, GST_VIDEO_INFO_COMP_WIDTH (&info, 0),
-                    GST_VIDEO_INFO_COMP_HEIGHT (&info, 0), mem->texture[i],
-                    &mem->image[i], &mem->image_platform_data[i]))
-              goto mem_error;
-          } else {
-            if (!platform_alloc_eglimage (eglglessink->eglglesctx.display,
-                    eglglessink->eglglesctx.eglcontext, GL_LUMINANCE_ALPHA,
-                    GL_UNSIGNED_BYTE, GST_VIDEO_INFO_COMP_WIDTH (&info, 1),
-                    GST_VIDEO_INFO_COMP_HEIGHT (&info, 1), mem->texture[i],
-                    &mem->image[i], &mem->image_platform_data[i]))
-              goto mem_error;
-          }
-        } else {
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB,
+            GST_VIDEO_INFO_WIDTH (&info),
+            GST_VIDEO_INFO_HEIGHT (&info), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        if (got_gl_error ("glTexImage2D"))
+          goto mem_error;
+
+        image =
+            eglCreateImageKHR (gst_egl_display_get (eglglessink->
+                eglglesctx.display), eglglessink->eglglesctx.eglcontext,
+            EGL_GL_TEXTURE_2D_KHR, (EGLClientBuffer) (guintptr) data->texture,
+            NULL);
+        if (got_egl_error ("eglCreateImageKHR"))
+          goto mem_error;
+
+        mem[0] =
+            gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
+            (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
+            image, GST_EGL_IMAGE_MEMORY_TYPE_RGB, size, data,
+            (GDestroyNotify) gst_egl_gles_image_data_free);
+        n_mem = 1;
+      }
+      break;
+    }
+    case GST_VIDEO_FORMAT_RGB16:{
+      EGLImageKHR image;
+      gsize size;
+
+      mem[0] =
+          gst_egl_image_allocator_alloc (GST_EGL_IMAGE_BUFFER_POOL
+          (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
+          GST_EGL_IMAGE_MEMORY_TYPE_RGB, GST_VIDEO_INFO_WIDTH (&info),
+          GST_VIDEO_INFO_HEIGHT (&info), &size);
+      if (mem[0]) {
+        stride[0] = size / GST_VIDEO_INFO_HEIGHT (&info);
+        n_mem = 1;
+      } else {
+        data = g_slice_new0 (GstEGLGLESImageData);
+
+        stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_WIDTH (&info) * 2);
+        size = stride[0] * GST_VIDEO_INFO_HEIGHT (&info);
+
+        glGenTextures (1, &data->texture);
+        if (got_gl_error ("glGenTextures"))
+          goto mem_error;
+
+        glBindTexture (GL_TEXTURE_2D, data->texture);
+        if (got_gl_error ("glBindTexture"))
+          goto mem_error;
+
+        /* Set 2D resizing params */
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        /* If these are not set the texture image unit will return
+         * * (R, G, B, A) = black on glTexImage2D for non-POT width/height
+         * * frames. For a deeper explanation take a look at the OpenGL ES
+         * * documentation for glTexParameter */
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        if (got_gl_error ("glTexParameteri"))
+          goto mem_error;
+
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB,
+            GST_VIDEO_INFO_WIDTH (&info),
+            GST_VIDEO_INFO_HEIGHT (&info), 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5,
+            NULL);
+        if (got_gl_error ("glTexImage2D"))
+          goto mem_error;
+
+        image =
+            eglCreateImageKHR (gst_egl_display_get (eglglessink->
+                eglglesctx.display), eglglessink->eglglesctx.eglcontext,
+            EGL_GL_TEXTURE_2D_KHR, (EGLClientBuffer) (guintptr) data->texture,
+            NULL);
+        if (got_egl_error ("eglCreateImageKHR"))
+          goto mem_error;
+
+        mem[0] =
+            gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
+            (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
+            image, GST_EGL_IMAGE_MEMORY_TYPE_RGB, size, data,
+            (GDestroyNotify) gst_egl_gles_image_data_free);
+        n_mem = 1;
+      }
+      break;
+    }
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:{
+      EGLImageKHR image;
+      gsize size[2];
+
+      mem[0] =
+          gst_egl_image_allocator_alloc (GST_EGL_IMAGE_BUFFER_POOL
+          (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
+          GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
+              0), GST_VIDEO_INFO_COMP_HEIGHT (&info, 0), &size[0]);
+      mem[1] =
+          gst_egl_image_allocator_alloc (GST_EGL_IMAGE_BUFFER_POOL
+          (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
+          GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE_ALPHA,
+          GST_VIDEO_INFO_COMP_WIDTH (&info, 1),
+          GST_VIDEO_INFO_COMP_HEIGHT (&info, 1), &size[1]);
+
+      if (mem[0] && mem[1]) {
+        stride[0] = size[0] / GST_VIDEO_INFO_HEIGHT (&info);
+        offset[1] = size[0];
+        stride[1] = size[1] / GST_VIDEO_INFO_HEIGHT (&info);
+        n_mem = 2;
+      } else {
+        if (mem[0])
+          gst_memory_unref (mem[0]);
+        if (mem[1])
+          gst_memory_unref (mem[1]);
+        mem[0] = mem[1] = NULL;
+
+        stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (&info, 0));
+        stride[1] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (&info, 1) * 2);
+        offset[1] = stride[0] * GST_VIDEO_INFO_COMP_HEIGHT (&info, 0);
+        size[0] = offset[1];
+        size[1] = stride[1] * GST_VIDEO_INFO_COMP_HEIGHT (&info, 1);
+
+        for (i = 0; i < 2; i++) {
+          data = g_slice_new0 (GstEGLGLESImageData);
+
+          glGenTextures (1, &data->texture);
+          if (got_gl_error ("glGenTextures"))
+            goto mem_error;
+
+          glBindTexture (GL_TEXTURE_2D, data->texture);
+          if (got_gl_error ("glBindTexture"))
+            goto mem_error;
+
+          /* Set 2D resizing params */
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+          /* If these are not set the texture image unit will return
+           * * (R, G, B, A) = black on glTexImage2D for non-POT width/height
+           * * frames. For a deeper explanation take a look at the OpenGL ES
+           * * documentation for glTexParameter */
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+          if (got_gl_error ("glTexParameteri"))
+            goto mem_error;
+
           if (i == 0)
             glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
                 GST_VIDEO_INFO_COMP_WIDTH (&info, i),
@@ -3167,36 +3190,158 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
           if (got_gl_error ("glTexImage2D"))
             goto mem_error;
 
-          mem->image[i] =
+          image =
               eglCreateImageKHR (eglglessink->eglglesctx.display,
               eglglessink->eglglesctx.eglcontext, EGL_GL_TEXTURE_2D_KHR,
-              (EGLClientBuffer) (guintptr) mem->texture[i], NULL);
+              (EGLClientBuffer) (guintptr) data->texture, NULL);
           if (got_egl_error ("eglCreateImageKHR"))
             goto mem_error;
+
+          mem[i] =
+              gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
+              (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
+              image,
+              (i ==
+                  0 ? GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE :
+                  GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE_ALPHA), size[i], data,
+              (GDestroyNotify) gst_egl_gles_image_data_free);
         }
+
+        n_mem = 2;
       }
       break;
+    }
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y41B:
-      stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (&info, 0));
-      stride[1] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (&info, 1));
-      stride[2] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (&info, 2));
-      offset[0] = 0;
-      offset[1] = stride[0] * GST_VIDEO_INFO_COMP_HEIGHT (&info, 0);
-      offset[2] = offset[1] + stride[1] * GST_VIDEO_INFO_COMP_HEIGHT (&info, 1);
-      size = offset[2] + stride[2] * GST_VIDEO_INFO_COMP_HEIGHT (&info, 2);
+    case GST_VIDEO_FORMAT_Y41B:{
+      EGLImageKHR image;
+      gsize size[3];
 
-      glGenTextures (3, mem->texture);
-      if (got_gl_error ("glGenTextures"))
-        goto mem_error;
+      mem[0] =
+          gst_egl_image_allocator_alloc (GST_EGL_IMAGE_BUFFER_POOL
+          (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
+          GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
+              0), GST_VIDEO_INFO_COMP_HEIGHT (&info, 0), &size[0]);
+      mem[1] =
+          gst_egl_image_allocator_alloc (GST_EGL_IMAGE_BUFFER_POOL
+          (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
+          GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
+              1), GST_VIDEO_INFO_COMP_HEIGHT (&info, 1), &size[1]);
+      mem[2] =
+          gst_egl_image_allocator_alloc (GST_EGL_IMAGE_BUFFER_POOL
+          (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
+          GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
+              2), GST_VIDEO_INFO_COMP_HEIGHT (&info, 2), &size[2]);
 
-      mem->n_textures = 3;
+      if (mem[0] && mem[1] && mem[2]) {
+        stride[0] = size[0] / GST_VIDEO_INFO_HEIGHT (&info);
+        offset[1] = size[0];
+        stride[1] = size[1] / GST_VIDEO_INFO_HEIGHT (&info);
+        offset[2] = size[1];
+        stride[2] = size[2] / GST_VIDEO_INFO_HEIGHT (&info);
+        n_mem = 3;
+      } else {
+        if (mem[0])
+          gst_memory_unref (mem[0]);
+        if (mem[1])
+          gst_memory_unref (mem[1]);
+        if (mem[2])
+          gst_memory_unref (mem[2]);
+        mem[0] = mem[1] = mem[2] = NULL;
 
-      for (i = 0; i < 3; i++) {
-        glBindTexture (GL_TEXTURE_2D, mem->texture[i]);
+        stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (&info, 0));
+        stride[1] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (&info, 1));
+        stride[2] = GST_ROUND_UP_4 (GST_VIDEO_INFO_COMP_WIDTH (&info, 2));
+        size[0] = stride[0] * GST_VIDEO_INFO_COMP_HEIGHT (&info, 0);
+        size[1] = stride[1] * GST_VIDEO_INFO_COMP_HEIGHT (&info, 1);
+        size[2] = stride[2] * GST_VIDEO_INFO_COMP_HEIGHT (&info, 2);
+        offset[0] = 0;
+        offset[1] = size[0];
+        offset[2] = offset[1] + size[1];
+
+        for (i = 0; i < 3; i++) {
+          data = g_slice_new0 (GstEGLGLESImageData);
+
+          glGenTextures (1, &data->texture);
+          if (got_gl_error ("glGenTextures"))
+            goto mem_error;
+
+          glBindTexture (GL_TEXTURE_2D, data->texture);
+          if (got_gl_error ("glBindTexture"))
+            goto mem_error;
+
+          /* Set 2D resizing params */
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+          /* If these are not set the texture image unit will return
+           * * (R, G, B, A) = black on glTexImage2D for non-POT width/height
+           * * frames. For a deeper explanation take a look at the OpenGL ES
+           * * documentation for glTexParameter */
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+          glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+          if (got_gl_error ("glTexParameteri"))
+            goto mem_error;
+
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
+              GST_VIDEO_INFO_COMP_WIDTH (&info, i),
+              GST_VIDEO_INFO_COMP_HEIGHT (&info, i), 0, GL_LUMINANCE,
+              GL_UNSIGNED_BYTE, NULL);
+
+          if (got_gl_error ("glTexImage2D"))
+            goto mem_error;
+
+          image =
+              eglCreateImageKHR (eglglessink->eglglesctx.display,
+              eglglessink->eglglesctx.eglcontext, EGL_GL_TEXTURE_2D_KHR,
+              (EGLClientBuffer) (guintptr) data->texture, NULL);
+          if (got_egl_error ("eglCreateImageKHR"))
+            goto mem_error;
+
+          mem[i] =
+              gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
+              (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
+              image, GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE, size[i], data,
+              (GDestroyNotify) gst_egl_gles_image_data_free);
+        }
+
+        n_mem = 3;
+      }
+      break;
+    }
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_AYUV:{
+      gsize size;
+      EGLImageKHR image;
+
+      mem[0] =
+          gst_egl_image_allocator_alloc (GST_EGL_IMAGE_BUFFER_POOL
+          (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
+          GST_EGL_IMAGE_MEMORY_TYPE_RGBA, GST_VIDEO_INFO_WIDTH (&info),
+          GST_VIDEO_INFO_HEIGHT (&info), &size);
+      if (mem[0]) {
+        stride[0] = size / GST_VIDEO_INFO_HEIGHT (&info);
+        n_mem = 1;
+      } else {
+        data = g_slice_new0 (GstEGLGLESImageData);
+
+        stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_WIDTH (&info) * 4);
+        size = stride[0] * GST_VIDEO_INFO_HEIGHT (&info);
+
+        glGenTextures (1, &data->texture);
+        if (got_gl_error ("glGenTextures"))
+          goto mem_error;
+
+        glBindTexture (GL_TEXTURE_2D, data->texture);
         if (got_gl_error ("glBindTexture"))
           goto mem_error;
 
@@ -3213,308 +3358,59 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
         if (got_gl_error ("glTexParameteri"))
           goto mem_error;
 
-        if (platform_has_custom_eglimage_alloc ()) {
-          if (!platform_alloc_eglimage (eglglessink->eglglesctx.display,
-                  eglglessink->eglglesctx.eglcontext, GL_LUMINANCE,
-                  GL_UNSIGNED_BYTE, GST_VIDEO_INFO_COMP_WIDTH (&info, i),
-                  GST_VIDEO_INFO_COMP_HEIGHT (&info, i), mem->texture[i],
-                  &mem->image[i], &mem->image_platform_data[i]))
-            goto mem_error;
-        } else {
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
-              GST_VIDEO_INFO_COMP_WIDTH (&info, i),
-              GST_VIDEO_INFO_COMP_HEIGHT (&info, i), 0, GL_LUMINANCE,
-              GL_UNSIGNED_BYTE, NULL);
-          if (got_gl_error ("glTexImage2D"))
-            goto mem_error;
-
-          mem->image[i] =
-              eglCreateImageKHR (eglglessink->eglglesctx.display,
-              eglglessink->eglglesctx.eglcontext, EGL_GL_TEXTURE_2D_KHR,
-              (EGLClientBuffer) (guintptr) mem->texture[i], NULL);
-          if (got_egl_error ("eglCreateImageKHR"))
-            goto mem_error;
-        }
-      }
-      break;
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_AYUV:
-      stride[0] = GST_ROUND_UP_4 (GST_VIDEO_INFO_WIDTH (&info) * 4);
-      stride[1] = 0;
-      stride[2] = 0;
-      offset[0] = 0;
-      offset[1] = 0;
-      offset[2] = 0;
-      size = stride[0] * GST_VIDEO_INFO_HEIGHT (&info);
-
-      glGenTextures (1, mem->texture);
-      if (got_gl_error ("glGenTextures"))
-        goto mem_error;
-
-      mem->n_textures = 1;
-
-      glBindTexture (GL_TEXTURE_2D, mem->texture[0]);
-      if (got_gl_error ("glBindTexture"))
-        goto mem_error;
-
-      /* Set 2D resizing params */
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-      /* If these are not set the texture image unit will return
-       * * (R, G, B, A) = black on glTexImage2D for non-POT width/height
-       * * frames. For a deeper explanation take a look at the OpenGL ES
-       * * documentation for glTexParameter */
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      if (got_gl_error ("glTexParameteri"))
-        goto mem_error;
-
-      if (platform_has_custom_eglimage_alloc ()) {
-        if (!platform_alloc_eglimage (eglglessink->eglglesctx.display,
-                eglglessink->eglglesctx.eglcontext, GL_RGBA,
-                GL_UNSIGNED_BYTE, GST_VIDEO_INFO_WIDTH (&info),
-                GST_VIDEO_INFO_HEIGHT (&info), mem->texture[0],
-                &mem->image[0], &mem->image_platform_data[0]))
-          goto mem_error;
-      } else {
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA,
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB,
             GST_VIDEO_INFO_WIDTH (&info),
             GST_VIDEO_INFO_HEIGHT (&info), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         if (got_gl_error ("glTexImage2D"))
           goto mem_error;
 
-        mem->image[0] =
-            eglCreateImageKHR (eglglessink->eglglesctx.display,
-            eglglessink->eglglesctx.eglcontext, EGL_GL_TEXTURE_2D_KHR,
-            (EGLClientBuffer) (guintptr) mem->texture[0], NULL);
+        image =
+            eglCreateImageKHR (gst_egl_display_get (eglglessink->
+                eglglesctx.display), eglglessink->eglglesctx.eglcontext,
+            EGL_GL_TEXTURE_2D_KHR, (EGLClientBuffer) (guintptr) data->texture,
+            NULL);
         if (got_egl_error ("eglCreateImageKHR"))
           goto mem_error;
+
+        mem[0] =
+            gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
+            (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
+            image, GST_EGL_IMAGE_MEMORY_TYPE_RGBA, size, data,
+            (GDestroyNotify) gst_egl_gles_image_data_free);
+        n_mem = 1;
       }
       break;
+    }
     default:
       g_assert_not_reached ();
       break;
   }
 
-  /* FIXME: Is this ok? */
-  align = 3;
-  gst_memory_init (gmem, 0,
-      gst_object_ref (GST_EGL_IMAGE_BUFFER_POOL (eglglessink->pool)->allocator),
-      NULL, size, align, 0, size);
-
-  g_mutex_init (&mem->lock);
-
-  mem->format = format;
-  mem->width = width;
-  mem->height = height;
-  memcpy (mem->stride, stride, sizeof (offset));
-  memcpy (mem->offset, offset, sizeof (offset));
-
   buffer = gst_buffer_new ();
-  meta =
-      gst_buffer_add_video_meta_full (buffer, 0, format, width, height,
-      mem->n_textures, offset, stride);
+  gst_buffer_add_video_meta_full (buffer, 0, format, width, height,
+      GST_VIDEO_INFO_N_PLANES (&info), offset, stride);
 
-  if (!default_map_video) {
-    default_map_video = meta->map;
-    default_unmap_video = meta->unmap;
-  }
-
-  meta->map = eglglessink->eglglesctx.eglimage_video_map;
-  meta->unmap = eglglessink->eglglesctx.eglimage_video_unmap;
-
-  gst_buffer_append_memory (buffer, gmem);
+  for (i = 0; i < n_mem; i++)
+    gst_buffer_append_memory (buffer, mem[i]);
 
   return buffer;
 
 mem_error:
   {
-    GST_ERROR_OBJECT (eglglessink, "Failed to create memory");
+    GST_ERROR_OBJECT (eglglessink, "Failed to create EGLImage");
 
-    if (mem->image[0])
-      eglDestroyImageKHR (eglglessink->eglglesctx.display, mem->image[0]);
-    if (mem->image[1])
-      eglDestroyImageKHR (eglglessink->eglglesctx.display, mem->image[1]);
-    if (mem->image[2])
-      eglDestroyImageKHR (eglglessink->eglglesctx.display, mem->image[2]);
+    if (data)
+      gst_egl_gles_image_data_free (data);
 
-    glDeleteTextures (mem->n_textures, mem->texture);
-
-    g_slice_free (GstEGLImageMemory, mem);
+    if (mem[0])
+      gst_memory_unref (mem[0]);
+    if (mem[1])
+      gst_memory_unref (mem[1]);
+    if (mem[2])
+      gst_memory_unref (mem[2]);
 
     return NULL;
   }
-}
-
-G_DEFINE_TYPE (GstEGLImageAllocator, gst_egl_image_allocator,
-    GST_TYPE_ALLOCATOR);
-
-static void
-gst_egl_image_allocator_finalize (GObject * object)
-{
-  GstEGLImageAllocator *allocator = GST_EGL_IMAGE_ALLOCATOR (object);
-
-  if (allocator->sink)
-    gst_object_unref (allocator->sink);
-  allocator->sink = NULL;
-
-  G_OBJECT_CLASS (gst_egl_image_allocator_parent_class)->finalize (object);
-}
-
-static void
-gst_egl_image_allocator_free (GstAllocator * gallocator, GstMemory * gmem)
-{
-  GstEGLImageAllocator *allocator = GST_EGL_IMAGE_ALLOCATOR (gallocator);
-  GstEGLImageMemory *mem = GST_EGL_IMAGE_MEMORY (gmem);
-  gint i;
-
-  g_return_if_fail (gallocator == gmem->allocator);
-
-  if (gmem->parent) {
-    gst_memory_unref (gmem->parent);
-    g_slice_free (GstEGLImageMemory, mem);
-    return;
-  }
-
-  g_mutex_lock (&mem->lock);
-  if (platform_has_custom_eglimage_alloc ()) {
-    for (i = 0; i < 3; i++) {
-      if (mem->image[i])
-        platform_free_eglimage (allocator->sink->eglglesctx.display,
-            allocator->sink->eglglesctx.eglcontext, mem->texture[i],
-            &mem->image[i], &mem->image_platform_data[i]);
-    }
-  } else {
-    if (mem->image[0])
-      eglDestroyImageKHR (allocator->sink->eglglesctx.display, mem->image[0]);
-    if (mem->image[1])
-      eglDestroyImageKHR (allocator->sink->eglglesctx.display, mem->image[1]);
-    if (mem->image[2])
-      eglDestroyImageKHR (allocator->sink->eglglesctx.display, mem->image[2]);
-  }
-
-  glDeleteTextures (mem->n_textures, mem->texture);
-  g_mutex_unlock (&mem->lock);
-  g_mutex_clear (&mem->lock);
-
-  gst_object_unref (gmem->allocator);
-
-  g_slice_free (GstEGLImageMemory, mem);
-}
-
-static void
-gst_egl_image_allocator_class_init (GstEGLImageAllocatorClass * klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstAllocatorClass *allocator_class = (GstAllocatorClass *) klass;
-
-  gobject_class->finalize = gst_egl_image_allocator_finalize;
-
-  allocator_class->alloc = NULL;
-  allocator_class->free = gst_egl_image_allocator_free;
-}
-
-static gpointer
-gst_egl_image_allocator_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
-{
-  GstMemory *parent;
-
-  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "Mapping EGLImage to normal memory");
-
-  if ((parent = gmem->parent) == NULL)
-    parent = gmem;
-
-  return GST_EGL_IMAGE_ALLOCATOR (parent->allocator)->sink->
-      eglglesctx.eglimage_map (parent, maxsize, flags);
-}
-
-static void
-gst_egl_image_allocator_unmap (GstMemory * gmem)
-{
-  GstMemory *parent;
-
-  if ((parent = gmem->parent) == NULL)
-    parent = gmem;
-
-  GST_EGL_IMAGE_ALLOCATOR (parent->allocator)->sink->
-      eglglesctx.eglimage_unmap (parent);
-}
-
-static GstMemory *
-gst_egl_image_allocator_copy (GstMemory * mem, gssize offset, gssize size)
-{
-  GstMemory *ret;
-  GstMapInfo mapi, mapo;
-
-  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "Copying EGLImage to normal memory");
-
-  if (size == -1)
-    size = mem->size > offset ? mem->size - offset : 0;
-
-  if (!gst_memory_map (mem, &mapi, GST_MAP_READ))
-    return NULL;
-
-  ret = gst_allocator_alloc (NULL, size, NULL);
-  if (!ret)
-    return NULL;
-
-  gst_memory_map (ret, &mapo, GST_MAP_WRITE);
-  memcpy (mapo.data, mapi.data + offset, size);
-  gst_memory_unmap (ret, &mapo);
-  gst_memory_unmap (mem, &mapi);
-
-  return mem;
-}
-
-static GstMemory *
-gst_egl_image_allocator_share (GstMemory * mem, gssize offset, gssize size)
-{
-  GstMemory *parent, *ret;
-
-  if (offset != 0)
-    return NULL;
-
-  if ((parent = mem->parent) == NULL)
-    parent = mem;
-
-  if (size == -1)
-    size = mem->size;
-  if (size != mem->size)
-    return NULL;
-
-  ret = (GstMemory *) g_slice_new0 (GstEGLImageMemory);
-
-  gst_memory_init (ret, GST_MINI_OBJECT_FLAGS (parent) |
-      GST_MINI_OBJECT_FLAG_LOCK_READONLY,
-      gst_object_ref (mem->allocator), parent, size, 3, 0, size);
-
-  return ret;
-}
-
-static gboolean
-gst_egl_image_allocator_is_span (GstMemory * mem1, GstMemory * mem2,
-    gsize * offset)
-{
-  return FALSE;
-}
-
-static void
-gst_egl_image_allocator_init (GstEGLImageAllocator * allocator)
-{
-  GST_ALLOCATOR (allocator)->mem_type = GST_EGL_IMAGE_MEMORY_NAME;
-  GST_ALLOCATOR (allocator)->mem_map = gst_egl_image_allocator_map;
-  GST_ALLOCATOR (allocator)->mem_unmap = gst_egl_image_allocator_unmap;
-  GST_ALLOCATOR (allocator)->mem_copy = gst_egl_image_allocator_copy;
-  GST_ALLOCATOR (allocator)->mem_share = gst_egl_image_allocator_share;
-  GST_ALLOCATOR (allocator)->mem_is_span = gst_egl_image_allocator_is_span;
 }
 
 G_DEFINE_TYPE (GstEGLImageBufferPool, gst_egl_image_buffer_pool,
@@ -3523,7 +3419,9 @@ G_DEFINE_TYPE (GstEGLImageBufferPool, gst_egl_image_buffer_pool,
 static const gchar **
 gst_egl_image_buffer_pool_get_options (GstBufferPool * bpool)
 {
-  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL };
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META,
+    GST_BUFFER_POOL_OPTION_EGL_IMAGE, NULL
+  };
 
   return options;
 }
@@ -3544,9 +3442,6 @@ gst_egl_image_buffer_pool_set_config (GstBufferPool * bpool,
       (gst_egl_image_buffer_pool_parent_class)->set_config (bpool, config))
     return FALSE;
 
-  if (!pool->sink->eglglesctx.can_map_eglimage)
-    return TRUE;
-
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL)
       || !caps)
     return FALSE;
@@ -3558,8 +3453,11 @@ gst_egl_image_buffer_pool_set_config (GstBufferPool * bpool,
       gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-  pool->allocator = g_object_new (gst_egl_image_allocator_get_type (), NULL);
-  GST_EGL_IMAGE_ALLOCATOR (pool->allocator)->sink = gst_object_ref (pool->sink);
+  pool->want_eglimage =
+      gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_EGL_IMAGE);
+
+  pool->allocator = gst_egl_image_allocator_obtain ();
 
   pool->info = info;
 
@@ -3574,11 +3472,12 @@ gst_egl_image_buffer_pool_alloc_buffer (GstBufferPool * bpool,
 
   *buffer = NULL;
 
-  if (!pool->add_metavideo || !pool->sink->eglglesctx.can_map_eglimage)
+  if (!pool->add_metavideo || (!gst_egl_image_memory_can_map ()
+          && !pool->want_eglimage))
     return
         GST_BUFFER_POOL_CLASS
-        (gst_egl_image_buffer_pool_parent_class)->alloc_buffer (bpool, buffer,
-        params);
+        (gst_egl_image_buffer_pool_parent_class)->alloc_buffer (bpool,
+        buffer, params);
 
   if (!pool->allocator)
     return GST_FLOW_NOT_NEGOTIATED;
@@ -3658,13 +3557,12 @@ gst_egl_image_buffer_pool_acquire_buffer (GstBufferPool * bpool,
     GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
 {
   GstFlowReturn ret;
-  GstMemory *gmem;
   GstEGLImageBufferPool *pool;
 
   ret =
       GST_BUFFER_POOL_CLASS
-      (gst_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool, buffer,
-      params);
+      (gst_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool,
+      buffer, params);
   if (ret != GST_FLOW_OK || !*buffer)
     return ret;
 
@@ -3673,20 +3571,14 @@ gst_egl_image_buffer_pool_acquire_buffer (GstBufferPool * bpool,
   /* XXX: Don't return the memory we just rendered, glEGLImageTargetTexture2DOES()
    * keeps the EGLImage unmappable until the next one is uploaded
    */
-  if (gst_buffer_n_memory (*buffer) == 1 &&
-      (gmem = gst_buffer_peek_memory (*buffer, 0)) &&
-      strcmp (gmem->allocator->mem_type, GST_EGL_IMAGE_MEMORY_NAME) == 0) {
-    if (gmem == pool->sink->last_memory) {
-      GstBuffer *oldbuf = *buffer;
+  if (*buffer && *buffer == pool->sink->last_buffer) {
+    GstBuffer *oldbuf = *buffer;
 
-      ret =
-          GST_BUFFER_POOL_CLASS
-          (gst_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool,
-          buffer, params);
-      gst_buffer_unref (oldbuf);
-      if (ret != GST_FLOW_OK || !*buffer)
-        return ret;
-    }
+    ret =
+        GST_BUFFER_POOL_CLASS
+        (gst_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool,
+        buffer, params);
+    gst_buffer_unref (oldbuf);
   }
 
   return ret;
@@ -3704,6 +3596,10 @@ gst_egl_image_buffer_pool_finalize (GObject * object)
   if (pool->sink)
     gst_object_unref (pool->sink);
   pool->sink = NULL;
+
+  if (pool->display)
+    gst_egl_display_unref (pool->display);
+  pool->display = NULL;
 
   G_OBJECT_CLASS (gst_egl_image_buffer_pool_parent_class)->finalize (object);
 }
@@ -3728,12 +3624,13 @@ gst_egl_image_buffer_pool_init (GstEGLImageBufferPool * pool)
 }
 
 static GstBufferPool *
-gst_egl_image_buffer_pool_new (GstEglGlesSink * eglglessink, EGLDisplay display)
+gst_egl_image_buffer_pool_new (GstEglGlesSink *
+    eglglessink, GstEGLDisplay * display)
 {
   GstEGLImageBufferPool *pool;
 
   pool = g_object_new (gst_egl_image_buffer_pool_get_type (), NULL);
-  pool->display = display;
+  pool->display = gst_egl_display_ref (display);
   pool->sink = gst_object_ref (eglglessink);
 
   return (GstBufferPool *) pool;

@@ -50,6 +50,7 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideosink.h>
 #include <gst/base/gstdataqueue.h>
+#include <gst/egl/egl.h>
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -122,7 +123,7 @@ struct _GstEglGlesRenderContext
 {
   EGLConfig config;
   EGLContext eglcontext;
-  EGLDisplay display;
+  GstEGLDisplay *display;
   EGLNativeWindowType window, used_window;
   EGLSurface surface;
   gboolean buffer_preserved;
@@ -144,12 +145,6 @@ struct _GstEglGlesRenderContext
   coord5 position_array[12];    /* 4 x Frame, 4 x Border1, 4 x Border2 */
   unsigned short index_array[4];
   unsigned int position_buffer, index_buffer;
-
-  gboolean can_map_eglimage;
-  GstMemoryMapFunction eglimage_map;
-  GstMemoryUnmapFunction eglimage_unmap;
-  PlatformMapVideo eglimage_video_map;
-  PlatformUnmapVideo eglimage_video_unmap;
 };
 
 /*
@@ -235,7 +230,7 @@ struct _GstEglGlesSink
   GstFlowReturn last_flow;
   GstMiniObject *dequeued_object;
 
-  GstMemory *last_memory;
+  GstBuffer *last_buffer;
 
   /* Properties */
   gboolean create_window;

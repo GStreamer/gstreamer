@@ -61,9 +61,6 @@
 GST_DEBUG_CATEGORY_STATIC (eglgles_platform_wrapper);
 #define GST_CAT_DEFAULT eglgles_platform_wrapper
 
-PlatformMapVideo default_map_video;
-PlatformUnmapVideo default_unmap_video;
-
 /* XXX: Likely to be removed */
 gboolean
 platform_wrapper_init (void)
@@ -76,7 +73,6 @@ platform_wrapper_init (void)
 
 #ifdef USE_EGL_X11
 #include <X11/Xlib.h>
-#include <gst/video/gstvideopool.h>
 
 typedef struct
 {
@@ -125,45 +121,10 @@ platform_destroy_native_window (EGLNativeDisplayType display,
   *window_data = NULL;
   return TRUE;
 }
-
-gboolean
-platform_can_map_eglimage (GstMemoryMapFunction * map,
-    GstMemoryUnmapFunction * unmap, PlatformMapVideo * video_map,
-    PlatformUnmapVideo * video_unmap)
-{
-  return FALSE;
-}
-
-gboolean
-platform_has_custom_eglimage_alloc (void)
-{
-  return FALSE;
-}
-
-gboolean
-platform_alloc_eglimage (EGLDisplay display, EGLContext context, GLint format,
-    GLint type, gint width, gint height, GLuint tex_id, EGLImageKHR * image,
-    gpointer * image_platform_data)
-{
-  g_assert_not_reached ();
-  return FALSE;
-}
-
-void
-platform_free_eglimage (EGLDisplay display, EGLContext context, GLuint tex_id,
-    EGLImageKHR * image, gpointer * image_platform_data)
-{
-  g_assert_not_reached ();
-}
 #endif
 
 #ifdef USE_EGL_MALI_FB
 #include <EGL/fbdev_window.h>
-#include <mali_egl_image.h>
-#include <ump/ump.h>
-#include <ump/ump_ref_drv.h>
-
-#include <gst/video/video.h>
 
 EGLNativeWindowType
 platform_create_native_window (gint width, gint height, gpointer * window_data)
@@ -185,6 +146,12 @@ platform_destroy_native_window (EGLNativeDisplayType display,
   return TRUE;
 }
 
+/* FIXME: Move to gst-libs/gst/egl */
+#if 0
+#include <mali_egl_image.h>
+#include <ump/ump.h>
+#include <ump/ump_ref_drv.h>
+#include <gst/video/video.h>
 static gpointer
 eglimage_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
 {
@@ -613,62 +580,11 @@ platform_free_eglimage (EGLDisplay display, EGLContext context, GLuint tex_id,
   ump_close ();
   g_slice_free (fbdev_pixmap, *image_platform_data);
 }
-
 #endif
-
-#if !defined(USE_EGL_X11) && !defined(USE_EGL_MALI_FB) && !defined(USE_EGL_RPI)
-#include <gst/video/gstvideopool.h>
-
-/* Dummy functions for creating a native Window */
-EGLNativeWindowType
-platform_create_native_window (gint width, gint height, gpointer * window_data)
-{
-  GST_ERROR ("Can't create native window");
-  return (EGLNativeWindowType) 0;
-}
-
-gboolean
-platform_destroy_native_window (EGLNativeDisplayType display,
-    EGLNativeWindowType window, gpointer * window_data)
-{
-  GST_ERROR ("Can't destroy native window");
-  return TRUE;
-}
-
-gboolean
-platform_can_map_eglimage (GstMemoryMapFunction * map,
-    GstMemoryUnmapFunction * unmap, PlatformMapVideo * video_map,
-    PlatformUnmapVideo * video_unmap)
-{
-  return FALSE;
-}
-
-gboolean
-platform_has_custom_eglimage_alloc (void)
-{
-  return FALSE;
-}
-
-gboolean
-platform_alloc_eglimage (EGLDisplay display, EGLContext context, GLint format,
-    GLint type, gint width, gint height, GLuint tex_id, EGLImageKHR * image,
-    gpointer * image_platform_data)
-{
-  g_assert_not_reached ();
-  return FALSE;
-}
-
-void
-platform_free_eglimage (EGLDisplay display, EGLContext context, GLuint tex_id,
-    EGLImageKHR * image, gpointer * image_platform_data)
-{
-  g_assert_not_reached ();
-}
 #endif
 
 #ifdef USE_EGL_RPI
 #include <bcm_host.h>
-#include <gst/video/gstvideopool.h>
 #include <gst/video/gstvideosink.h>
 
 typedef struct
@@ -754,34 +670,23 @@ platform_destroy_native_window (EGLNativeDisplayType display,
   *window_data = NULL;
   return TRUE;
 }
+#endif
 
-gboolean
-platform_can_map_eglimage (GstMemoryMapFunction * map,
-    GstMemoryUnmapFunction * unmap, PlatformMapVideo * video_map,
-    PlatformUnmapVideo * video_unmap)
+#if !defined(USE_EGL_X11) && !defined(USE_EGL_MALI_FB) && !defined(USE_EGL_RPI)
+/* Dummy functions for creating a native Window */
+EGLNativeWindowType
+platform_create_native_window (gint width, gint height, gpointer * window_data)
 {
-  return FALSE;
+  GST_ERROR ("Can't create native window");
+  return (EGLNativeWindowType) 0;
 }
 
 gboolean
-platform_has_custom_eglimage_alloc (void)
+platform_destroy_native_window (EGLNativeDisplayType display,
+    EGLNativeWindowType window, gpointer * window_data)
 {
-  return FALSE;
-}
-
-gboolean
-platform_alloc_eglimage (EGLDisplay display, EGLContext context, GLint format,
-    GLint type, gint width, gint height, GLuint tex_id, EGLImageKHR * image,
-    gpointer * image_platform_data)
-{
-  g_assert_not_reached ();
-  return FALSE;
-}
-
-void
-platform_free_eglimage (EGLDisplay display, EGLContext context, GLuint tex_id,
-    EGLImageKHR * image, gpointer * image_platform_data)
-{
-  g_assert_not_reached ();
+  GST_ERROR ("Can't destroy native window");
+  return TRUE;
 }
 #endif
+

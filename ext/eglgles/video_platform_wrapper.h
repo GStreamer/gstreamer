@@ -47,60 +47,15 @@
  * tweaking and isolation from the main routines
  */
 
-#ifndef __GST_ANDROID_VIDEO_PLATFORM_WRAPPER__
-#define __GST_ANDROID_VIDEO_PLATFORM_WRAPPER__
+#ifndef __GST_VIDEO_PLATFORM_WRAPPER__
+#define __GST_VIDEO_PLATFORM_WRAPPER__
 
 #include <gst/gst.h>
-#include <gst/video/video.h>
-#include <gst/video/gstvideometa.h>
 #include <EGL/egl.h>
 
 gboolean platform_wrapper_init (void);
 EGLNativeWindowType platform_create_native_window (gint width, gint height, gpointer * window_data);
 gboolean platform_destroy_native_window (EGLNativeDisplayType display,
     EGLNativeWindowType w, gpointer * window_data);
-
-GstBufferPool *platform_create_buffer_pool (EGLDisplay display);
-
-#define GST_EGL_IMAGE_MEMORY_NAME "GstEGLImage"
-typedef struct
-{
-  GstMemory parent;
-  
-  GstVideoFormat format;
-  gint width, height;
-
-  GMutex lock;
-
-  /* Always in order RGB/Y, UV/U, V */
-  EGLImageKHR image[3];
-  gpointer image_platform_data[3];
-  GLuint texture[3];
-  gint stride[3];
-  gsize offset[3];
-  guint n_textures;
-
-  gpointer memory[3];
-  gpointer memory_platform_data[3];
-  gint memory_refcount[3];
-  GstMapFlags memory_flags[3];
-
-  gpointer mapped_memory;
-  gint mapped_memory_refcount;
-  GstMapFlags mapped_memory_flags;
-} GstEGLImageMemory;
-
-#define GST_EGL_IMAGE_MEMORY(m) ((GstEGLImageMemory*)(m))
-
-typedef gboolean (*PlatformMapVideo)    (GstVideoMeta *meta, guint plane, GstMapInfo *info, gpointer *data, gint * stride, GstMapFlags flags);
-typedef gboolean (*PlatformUnmapVideo)  (GstVideoMeta *meta, guint plane, GstMapInfo *info);
-
-extern PlatformMapVideo default_map_video;
-extern PlatformUnmapVideo default_unmap_video;
-
-gboolean platform_can_map_eglimage (GstMemoryMapFunction *map, GstMemoryUnmapFunction *unmap, PlatformMapVideo *video_map, PlatformUnmapVideo *video_unmap);
-gboolean platform_has_custom_eglimage_alloc (void);
-gboolean platform_alloc_eglimage (EGLDisplay display, EGLContext context, GLint format, GLint type, gint width, gint height, GLuint tex_id, EGLImageKHR *image, gpointer *image_platform_data);
-void platform_free_eglimage (EGLDisplay display, EGLContext context, GLuint tex_id, EGLImageKHR *image, gpointer *image_platform_data);
 
 #endif
