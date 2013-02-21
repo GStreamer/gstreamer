@@ -2505,6 +2505,7 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
   gboolean seen_idr = FALSE;
   gboolean seen_sps = FALSE;
   gboolean seen_pps = FALSE;
+  gboolean seen_ssps = FALSE;
   int nut, ref;
   int good = 0;
   int bad = 0;
@@ -2539,18 +2540,25 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
           good++;
         }
       } else if (nut >= 14 && nut <= 33) {
-        /* reserved */
-        /* Theoretically these are good, since if they exist in the
-           stream it merely means that a newer backwards-compatible
-           h.264 stream.  But we should be identifying that separately. */
-        bad++;
+        if (nut == 15) {
+          seen_ssps = TRUE;
+          good++;
+        } else if (seen_ssps && (nut == 14 || nut == 20)) {
+          good++;
+        } else {
+          /* reserved */
+          /* Theoretically these are good, since if they exist in the
+             stream it merely means that a newer backwards-compatible
+             h.264 stream.  But we should be identifying that separately. */
+          bad++;
+        }
       } else {
         /* unspecified, application specific */
         /* don't consider these bad */
       }
 
-      GST_LOG ("good:%d, bad:%d, pps:%d, sps:%d, idr:%d", good, bad, seen_pps,
-          seen_sps, seen_idr);
+      GST_LOG ("good:%d, bad:%d, pps:%d, sps:%d, idr:%d ssps:%d", good, bad,
+          seen_pps, seen_sps, seen_idr, seen_ssps);
 
       if (seen_sps && seen_pps && seen_idr && good >= 10 && bad < 4) {
         gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, H264_VIDEO_CAPS);
@@ -2562,8 +2570,8 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
     data_scan_ctx_advance (tf, &c, 1);
   }
 
-  GST_LOG ("good:%d, bad:%d, pps:%d, sps:%d, idr:%d", good, bad, seen_pps,
-      seen_sps, seen_idr);
+  GST_LOG ("good:%d, bad:%d, pps:%d, sps:%d, idr:%d ssps=%d", good, bad,
+      seen_pps, seen_sps, seen_idr, seen_ssps);
 
   if (good >= 2 && bad == 0) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, H264_VIDEO_CAPS);
