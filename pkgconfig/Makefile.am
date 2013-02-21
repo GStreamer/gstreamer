@@ -1,3 +1,4 @@
+
 ### all of the standard pc files we need to generate
 pcverfiles =  \
 	gstreamer-plugins-bad-@GST_API_VERSION@.pc \
@@ -10,6 +11,11 @@ pcverfiles_uninstalled = \
 	gstreamer-codecparsers-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-insertbin-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-basevideo-@GST_API_VERSION@-uninstalled.pc
+
+if HAVE_EGL
+pcverfiles += gstreamer-egl-@GST_API_VERSION@.pc
+pcverfiles_uninstalled += gstreamer-egl-@GST_API_VERSION@-uninstalled.pc
+endif
 
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
 
@@ -31,7 +37,8 @@ pcinfiles = \
            gstreamer-plugins-bad.pc.in gstreamer-plugins-bad-uninstalled.pc.in \
            gstreamer-codecparsers.pc.in gstreamer-codecparsers-uninstalled.pc.in \
            gstreamer-insertbin.pc.in gstreamer-insertbin-uninstalled.pc.in \
-           gstreamer-basevideo.pc.in gstreamer-basevideo-uninstalled.pc.in
+           gstreamer-basevideo.pc.in gstreamer-basevideo-uninstalled.pc.in \
+           gstreamer-egl.pc.in gstreamer-egl-uninstalled.pc.in
 
 DISTCLEANFILES = $(pcinfiles:.in=)
 EXTRA_DIST = $(pcinfiles)

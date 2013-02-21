@@ -424,6 +424,30 @@ else
   AG_GST_DISABLE_PLUGIN(dccp)
 fi
 
+dnl *** gst-libs/gst/egl ***
+PKG_CHECK_MODULES(EGL, egl, HAVE_EGL="yes", [
+  HAVE_EGL="no"
+  old_LIBS=$LIBS
+  old_CFLAGS=$CFLAGS
+  AC_CHECK_LIB([EGL], [eglGetProcAddress],
+    [
+      AC_CHECK_HEADER([EGL/egl.h],
+        [
+          HAVE_EGL="yes"
+          EGL_LIBS="-lEGL"
+          EGL_CFLAGS=""
+        ]
+      )
+    ]
+  )
+  LIBS=$old_LIBS
+  CFLAGS=$old_CFLAGS
+  ]
+)
+AC_SUBST(EGL_LIBS)
+AC_SUBST(EGL_CFLAGS)
+AM_CONDITIONAL(HAVE_EGL, test x"$HAVE_EGL" = x"yes")
+
 dnl *** sys plug-ins ***
 
 dnl DirectSound
@@ -2274,6 +2298,7 @@ gst/yadif/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/basecamerabinsrc/Makefile
+gst-libs/gst/egl/Makefile
 gst-libs/gst/insertbin/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/signalprocessor/Makefile
@@ -2391,6 +2416,8 @@ pkgconfig/gstreamer-insertbin.pc
 pkgconfig/gstreamer-insertbin-uninstalled.pc
 pkgconfig/gstreamer-basevideo.pc
 pkgconfig/gstreamer-basevideo-uninstalled.pc
+pkgconfig/gstreamer-egl.pc
+pkgconfig/gstreamer-egl-uninstalled.pc
 tools/Makefile
 m4/Makefile
 win32/common/config.h

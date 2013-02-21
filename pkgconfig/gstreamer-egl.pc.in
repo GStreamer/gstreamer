@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/gstreamer-@GST_API_VERSION@
+
+Name: GStreamer EGL
+Description: GStreamer EGL library
+Requires: gstreamer-@GST_API_VERSION@
+Version: @VERSION@
+Libs: -L${libdir} -lgstegl-@GST_API_VERSION@ @EGL_LIBS@
+Cflags: -I${includedir} @EGL_CFLAGS@
+

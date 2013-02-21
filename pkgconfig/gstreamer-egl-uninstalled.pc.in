@@ -1,0 +1,12 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../gst-libs/gst/egl
+includedir=${pcfiledir}/../gst-libs
+
+Name: GStreamer EGL, Uninstalled
+Description: GStreamer EGL Library, uninstalled
+Requires: gstreamer-@GST_API_VERSION@
+Version: @VERSION@
+Libs: -L${libdir} ${libdir}/libgstegl-@GST_API_VERSION@.la @EGL_LIBS@
+Cflags: -I${includedir} @EGL_CFLAGS@
+
