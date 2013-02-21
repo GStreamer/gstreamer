@@ -167,6 +167,27 @@ AC_ARG_ENABLE(Bsymbolic,
                            enable_Bsymbolic=no)
                LDFLAGS="${SAVED_LDFLAGS}"])
 
+AC_ARG_WITH([omx-target],
+        AS_HELP_STRING([--with-omx-target],[Use this OpenMAX IL target (generic, rpi)]),
+        [ac_cv_omx_target="$withval"], [ac_cv_omx_target="generic"])
+
+ac_cv_omx_target_struct_packing="none"
+AC_MSG_NOTICE([Using $ac_cv_omx_target as OpenMAX IL target])
+case "${ac_cv_omx_target}" in
+  generic)
+    AC_DEFINE(USE_OMX_TARGET_GENERIC, 1, [Use generic OpenMAX IL target])
+    ;;
+  rpi)
+    AC_DEFINE(USE_OMX_TARGET_RPI, 1, [Use RPi OpenMAX IL target])
+    ac_cv_omx_target_struct_packing=4
+    ;;
+  *)
+    AC_ERROR([invalid OpenMAX IL target])
+    ;;
+esac
+AM_CONDITIONAL(USE_OMX_TARGET_GENERIC, test "x$ac_cv_omx_target" = "xgeneric")
+AM_CONDITIONAL(USE_OMX_TARGET_RPI, test "x$ac_cv_omx_target" = "xrpi")
+
 
 AC_ARG_WITH([omx-struct-packing],
         AS_HELP_STRING([--with-omx-struct-packing],[Force OpenMAX struct packing, (default is none)]),
@@ -175,6 +196,9 @@ AC_ARG_WITH([omx-struct-packing],
 if test x"$ac_cv_omx_struct_packing" != x"none"; then
   AC_MSG_NOTICE([Using $ac_cv_omx_struct_packing as OpenMAX struct packing])
   AC_DEFINE_UNQUOTED(GST_OMX_STRUCT_PACKING, $ac_cv_omx_struct_packing, [The struct packing used for OpenMAX structures])
+elif test x"$ac_cv_omx_target_struct_packing" != x"none"; then
+  AC_MSG_NOTICE([Using $ac_cv_omx_target_struct_packing as OpenMAX struct packing])
+  AC_DEFINE_UNQUOTED(GST_OMX_STRUCT_PACKING, $ac_cv_omx_target_struct_packing, [The struct packing used for OpenMAX structures])
 fi
 
 dnl *** set variables based on configure arguments ***
