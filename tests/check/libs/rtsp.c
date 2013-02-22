@@ -140,6 +140,7 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (min == GST_CLOCK_TIME_NONE);
   fail_unless (max == GST_CLOCK_TIME_NONE);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("npt=-now", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);
@@ -149,6 +150,7 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (range->min.type == GST_RTSP_TIME_NOW);
   fail_unless (range->max.type == GST_RTSP_TIME_NOW);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("npt=now-now", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);
@@ -158,6 +160,7 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (range->min.type == GST_RTSP_TIME_NOW);
   fail_unless (range->max.type == GST_RTSP_TIME_END);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("npt=now-", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);
@@ -171,6 +174,7 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (min == GST_CLOCK_TIME_NONE);
   fail_unless (max == 34120000000);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("npt=now-34.12", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);
@@ -184,6 +188,7 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (min == 23890000000);
   fail_unless (max == GST_CLOCK_TIME_NONE);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("npt=23.89-now", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);
@@ -197,6 +202,7 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (min == GST_CLOCK_TIME_NONE);
   fail_unless (max == 12090000000);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("npt=-12.09", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);
@@ -210,6 +216,7 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (min == 0);
   fail_unless (max == GST_CLOCK_TIME_NONE);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("npt=0-", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);
@@ -224,6 +231,7 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (min == 1123000000);
   fail_unless (max == GST_CLOCK_TIME_NONE);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("npt=1.123-", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);
@@ -238,6 +246,7 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (min == 10200000000);
   fail_unless (max == 20100000000);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("npt=10.2-20.1", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);
@@ -252,6 +261,7 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (min == 500000000000);
   fail_unless (max == 15001000000);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("npt=500-15.001", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);
@@ -273,6 +283,7 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (min == 72754230000000);
   fail_unless (max == 78300010000000);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("npt=72754.23-78300.01", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);
@@ -305,6 +316,7 @@ GST_START_TEST (test_rtsp_range_smpte)
   fail_unless (min == 0);
   fail_unless (max == GST_CLOCK_TIME_NONE);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("smpte=0:00:00-", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);
@@ -323,6 +335,7 @@ GST_START_TEST (test_rtsp_range_smpte)
   /* 20.89 * GST_SECOND * 1001 / 30003 */
   fail_unless (max == 72729000000000 + 696959970);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("smpte=10:34:23-20:12:09:20.89", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);
@@ -343,6 +356,27 @@ GST_START_TEST (test_rtsp_range_smpte)
   fail_unless (max == 72729000000000 + 835600000);
   str = gst_rtsp_range_to_string (range);
   GST_DEBUG ("%s", str);
+  fail_unless_equals_string ("smpte-25=10:34:23-20:12:09:20.89", str);
+  g_free (str);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("smpte-25=0:00:00:00.01-9:59:59:24.99",
+          &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_SMPTE_25);
+  fail_unless (range->min.type == GST_RTSP_TIME_FRAMES);
+  fail_unless (range->min.seconds == 0);
+  fail_unless (range->min2.frames == 0.01);
+  fail_unless (range->max.type == GST_RTSP_TIME_FRAMES);
+  fail_unless (range->max.seconds == 35999);
+  fail_unless (range->max2.frames == 24.99);
+  fail_unless (gst_rtsp_range_get_times (range, &min, &max));
+  fail_unless (min == 400000);
+  GST_DEBUG ("%" GST_TIME_FORMAT, GST_TIME_ARGS (max));
+  /* 35999 + (24.99/25) */
+  fail_unless (max == 35999999600000);
+  str = gst_rtsp_range_to_string (range);
+  GST_DEBUG ("%s", str);
+  fail_unless_equals_string ("smpte-25=0:00:00:00.01-9:59:59:24.99", str);
   g_free (str);
   gst_rtsp_range_free (range);
 }
@@ -371,6 +405,7 @@ GST_START_TEST (test_rtsp_range_clock)
   fail_unless (range->min.seconds == 44625.0);
   fail_unless (range->max.type == GST_RTSP_TIME_END);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("clock=20001010T122345Z-", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);
@@ -389,6 +424,7 @@ GST_START_TEST (test_rtsp_range_clock)
   fail_unless (range->max2.day == 30);
   fail_unless (range->max.seconds == 72729.89);
   str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string ("clock=19700101T103423Z-30001230T201209.89Z", str);
   GST_DEBUG ("%s", str);
   g_free (str);
   gst_rtsp_range_free (range);

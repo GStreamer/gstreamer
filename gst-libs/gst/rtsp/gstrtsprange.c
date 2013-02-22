@@ -49,7 +49,7 @@
  * Last reviewed on 2007-07-25 (0.10.14)
  */
 
-
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -305,18 +305,52 @@ invalid:
   }
 }
 
+static void
+string_append_dtostr (GString * string, gdouble value, guint precision)
+{
+  gchar dstrbuf[G_ASCII_DTOSTR_BUF_SIZE] = { 0, };
+  gchar *dot;
+  guint len;
+
+  precision++;
+
+  if (value != 0.0)
+    value += 4.9 * pow (10.0, precision * -1.0);
+
+  g_ascii_dtostr (dstrbuf, G_ASCII_DTOSTR_BUF_SIZE, value);
+
+  dot = strchr (dstrbuf, '.');
+
+  if (dot == NULL)
+    goto done;
+
+  for (; *dot != '.' && *dot != '0'; dot++);
+
+  if ((dot - dstrbuf) + precision < G_ASCII_DTOSTR_BUF_SIZE)
+    dot[precision] = 0;
+
+  len = strlen (dstrbuf);
+  while (dstrbuf[len - 1] == '0')
+    dstrbuf[--len] = 0;
+  if (dstrbuf[len - 1] == '.')
+    dstrbuf[--len] = 0;
+
+done:
+
+  g_string_append (string, dstrbuf);
+}
+
 static gboolean
 time_to_string (const GstRTSPTime * t1, const GstRTSPTime2 * t2,
     GString * string)
 {
-  gchar dstrbuf[G_ASCII_DTOSTR_BUF_SIZE] = { 0, };
   gboolean res = TRUE;;
 
   switch (t1->type) {
     case GST_RTSP_TIME_SECONDS:
       /* need to format floating point value strings as in C locale */
-      g_ascii_dtostr (dstrbuf, G_ASCII_DTOSTR_BUF_SIZE, t1->seconds);
-      g_string_append (string, dstrbuf);
+      string_append_dtostr (string, t1->seconds +
+          (t1->seconds ? 0.00000000005 : 0), 9);
       break;
     case GST_RTSP_TIME_NOW:
       g_string_append (string, "now");
@@ -328,23 +362,34 @@ time_to_string (const GstRTSPTime * t1, const GstRTSPTime2 * t2,
       gint64 sec = t1->seconds;
 
       /* need to format floating point value strings as in C locale */
-      g_string_append_printf (string, "%d:%02d:%02d:", (gint) sec / 60 * 60,
-          (gint) sec / 60, (gint) sec % 60);
+      g_string_append_printf (string, "%d:%02d:%02d", (gint) sec / (60 * 60),
+          (gint) (sec % (60 * 60)) / 60, (gint) sec % 60);
 
       if (t2->frames > 0.0) {
-        g_ascii_dtostr (dstrbuf, G_ASCII_DTOSTR_BUF_SIZE, t2->frames);
-        g_string_append (string, dstrbuf);
+        g_string_append_printf (string, ":%s", t2->frames < 10 ? "0" : "");
+        string_append_dtostr (string, t2->frames + 0.005, 2);
       }
       break;
     }
     case GST_RTSP_TIME_UTC:
     {
       gint64 sec = t1->seconds;
+      gint hours, minutes;
+      gdouble seconds;
 
-      g_ascii_dtostr (dstrbuf, G_ASCII_DTOSTR_BUF_SIZE, t1->seconds - sec);
-      g_string_append_printf (string, "%04d%02d%02dT%02d%02d%02d%sZ",
-          t2->year, t2->month, t2->day, (gint) sec / 60 * 60,
-          (gint) sec / 60, (gint) sec % 60, dstrbuf);
+      hours = sec / (60 * 60);
+      sec -= hours * 60 * 60;
+      minutes = sec / 60;
+      sec = ((hours * 60) + minutes) * 60;
+      seconds = t1->seconds - sec;
+      if (seconds)
+        seconds += 0.00000000005;
+
+      g_string_append_printf (string, "%04d%02d%02dT%02d%02d%s",
+          t2->year, t2->month, t2->day, hours, minutes,
+          seconds < 10 ? "0" : "");
+      string_append_dtostr (string, seconds, 9);
+      g_string_append (string, "Z");
       break;
     }
     default:
