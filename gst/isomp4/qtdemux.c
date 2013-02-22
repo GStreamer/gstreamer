@@ -6471,6 +6471,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       || !gst_byte_reader_get_uint24_be (&tkhd, &tkhd_flags))
     goto corrupt_file;
 
+  if ((tkhd_flags & 1) == 0)
+    goto track_disabled;
+
   /* pick between 64 or 32 bits */
   value_size = tkhd_version == 1 ? 8 : 4;
   if (!gst_byte_reader_skip (&tkhd, value_size * 2) ||
@@ -7629,6 +7632,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   return TRUE;
 
 /* ERRORS */
+track_disabled:
+  {
+    GST_INFO_OBJECT (qtdemux, "skip disabled track");
+    g_free (stream);
+    return TRUE;
+  }
 corrupt_file:
   {
     GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
