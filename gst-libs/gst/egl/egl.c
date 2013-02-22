@@ -237,7 +237,8 @@ gst_egl_image_allocator_alloc (GstAllocator * allocator,
 GstMemory *
 gst_egl_image_allocator_wrap (GstAllocator * allocator,
     GstEGLDisplay * display, EGLImageKHR image, GstEGLImageType type,
-    gsize size, gpointer user_data, GDestroyNotify user_data_destroy)
+    GstMemoryFlags flags, gsize size, gpointer user_data,
+    GDestroyNotify user_data_destroy)
 {
   GstEGLImageMemory *mem;
 
@@ -250,7 +251,8 @@ gst_egl_image_allocator_wrap (GstAllocator * allocator,
   }
 
   mem = g_slice_new (GstEGLImageMemory);
-  gst_memory_init (GST_MEMORY_CAST (mem), 0, allocator, NULL, size, 0, 0, size);
+  gst_memory_init (GST_MEMORY_CAST (mem), flags,
+      allocator, NULL, size, 0, 0, size);
 
   mem->display = gst_egl_display_ref (display);
   mem->image = image;

@@ -1540,7 +1540,8 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
 
 #ifdef USE_EGL_RPI
   /* See https://github.com/raspberrypi/firmware/issues/99 */
-  if (!eglMakeCurrent ((EGLDisplay) 1, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
+  if (!eglMakeCurrent ((EGLDisplay) 1, EGL_NO_SURFACE, EGL_NO_SURFACE,
+          EGL_NO_CONTEXT)) {
     got_egl_error ("eglMakeCurrent");
     GST_ERROR_OBJECT (eglglessink, "Couldn't unbind context");
     return FALSE;
@@ -3048,8 +3049,9 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
         mem[0] =
             gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
             (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
-            image, GST_EGL_IMAGE_MEMORY_TYPE_RGB, size, data,
-            (GDestroyNotify) gst_egl_gles_image_data_free);
+            image, GST_EGL_IMAGE_MEMORY_TYPE_RGB,
+            (gst_egl_image_memory_can_map ()? 0 : GST_MEMORY_FLAG_NOT_MAPPABLE),
+            size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
         n_mem = 1;
       }
       break;
@@ -3111,8 +3113,9 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
         mem[0] =
             gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
             (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
-            image, GST_EGL_IMAGE_MEMORY_TYPE_RGB, size, data,
-            (GDestroyNotify) gst_egl_gles_image_data_free);
+            image, GST_EGL_IMAGE_MEMORY_TYPE_RGB,
+            (gst_egl_image_memory_can_map ()? 0 : GST_MEMORY_FLAG_NOT_MAPPABLE),
+            size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
         n_mem = 1;
       }
       break;
@@ -3203,7 +3206,9 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
               image,
               (i ==
                   0 ? GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE :
-                  GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE_ALPHA), size[i], data,
+                  GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE_ALPHA),
+              (gst_egl_image_memory_can_map ()? 0 :
+                  GST_MEMORY_FLAG_NOT_MAPPABLE), size[i], data,
               (GDestroyNotify) gst_egl_gles_image_data_free);
         }
 
@@ -3303,7 +3308,9 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
           mem[i] =
               gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
               (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
-              image, GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE, size[i], data,
+              image, GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE,
+              (gst_egl_image_memory_can_map ()? 0 :
+                  GST_MEMORY_FLAG_NOT_MAPPABLE), size[i], data,
               (GDestroyNotify) gst_egl_gles_image_data_free);
         }
 
@@ -3375,8 +3382,10 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
         mem[0] =
             gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
             (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
-            image, GST_EGL_IMAGE_MEMORY_TYPE_RGBA, size, data,
-            (GDestroyNotify) gst_egl_gles_image_data_free);
+            image, GST_EGL_IMAGE_MEMORY_TYPE_RGBA,
+            (gst_egl_image_memory_can_map ()? 0 : GST_MEMORY_FLAG_NOT_MAPPABLE),
+            size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
+
         n_mem = 1;
       }
       break;

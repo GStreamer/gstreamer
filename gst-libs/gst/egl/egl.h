@@ -54,7 +54,7 @@ GstEGLImageType gst_egl_image_memory_get_type (GstMemory * mem);
 /* Generic EGLImage allocator that doesn't support mapping, copying or anything */
 GstAllocator * gst_egl_image_allocator_obtain (void);
 GstMemory * gst_egl_image_allocator_alloc (GstAllocator * allocator, GstEGLDisplay * display, GstEGLImageType type, gint width, gint height, gsize * size);
-GstMemory * gst_egl_image_allocator_wrap (GstAllocator * allocator, GstEGLDisplay * display, EGLImageKHR image, GstEGLImageType type, gsize size, gpointer user_data, GDestroyNotify user_data_destroy);
+GstMemory * gst_egl_image_allocator_wrap (GstAllocator * allocator, GstEGLDisplay * display, EGLImageKHR image, GstEGLImageType type, GstMemoryFlags flags, gsize size, gpointer user_data, GDestroyNotify user_data_destroy);
 
 /* EGLDisplay wrapper with refcount, connection is closed after last ref is gone */
 GstEGLDisplay * gst_egl_display_new (EGLDisplay display);
