@@ -2676,10 +2676,6 @@ gst_mpd_parse (GstMpdClient * client, const gchar * data, gint size)
       }
       /* free the document */
       xmlFreeDoc (doc);
-      /* cleanup function for the XML library */
-      xmlCleanupParser ();
-      /* dump XML library memory for debugging */
-      xmlMemoryDump ();
     }
     GST_MPD_CLIENT_UNLOCK (client);
 
