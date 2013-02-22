@@ -1539,8 +1539,8 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
   GST_DEBUG_OBJECT (eglglessink, "Enter EGL initial configuration");
 
 #ifdef USE_EGL_RPI
-  eglglessink->eglglesctx.display = gst_egl_display_new (display);
-  if (!eglMakeCurrent (1, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
+  /* See https://github.com/raspberrypi/firmware/issues/99 */
+  if (!eglMakeCurrent ((EGLDisplay) 1, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
     got_egl_error ("eglMakeCurrent");
     GST_ERROR_OBJECT (eglglessink, "Couldn't unbind context");
     return FALSE;
