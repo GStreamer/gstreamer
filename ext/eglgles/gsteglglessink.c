@@ -1495,24 +1495,19 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
 {
   GST_DEBUG_OBJECT (eglglessink, "Enter EGL initial configuration");
 
-#ifndef USE_EGL_RPI
-  eglglessink->eglglesctx.display = eglGetDisplay (EGL_DEFAULT_DISPLAY);
-  if (eglglessink->eglglesctx.display == EGL_NO_DISPLAY) {
-    GST_ERROR_OBJECT (eglglessink, "Could not get EGL display connection");
-    goto HANDLE_ERROR;          /* No EGL error is set by eglGetDisplay() */
-  }
-#else
-  if (!eglMakeCurrent (1, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
+#ifdef USE_EGL_RPI
+  /* See https://github.com/raspberrypi/firmware/issues/99 */
+  if (!eglMakeCurrent ((EGLDisplay) 1, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
     got_egl_error ("eglMakeCurrent");
     GST_ERROR_OBJECT (eglglessink, "Couldn't unbind context");
     return FALSE;
   }
+#endif
   eglglessink->eglglesctx.display = eglGetDisplay (EGL_DEFAULT_DISPLAY);
   if (eglglessink->eglglesctx.display == EGL_NO_DISPLAY) {
     GST_ERROR_OBJECT (eglglessink, "Could not get EGL display connection");
     goto HANDLE_ERROR;          /* No EGL error is set by eglGetDisplay() */
   }
-#endif
 
   if (!eglInitialize (eglglessink->eglglesctx.display,
           &eglglessink->eglglesctx.egl_major,
