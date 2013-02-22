@@ -439,11 +439,17 @@ gst_rtsp_range_free (GstRTSPTimeRange * range)
 static GstClockTime
 get_seconds (const GstRTSPTime * t)
 {
-  gint num, denom;
-  /* don't do direct multiply with GST_SECOND to avoid rounding
-   * errors */
-  gst_util_double_to_fraction (t->seconds, &num, &denom);
-  return gst_util_uint64_scale_int (GST_SECOND, num, denom);
+  if (t->seconds < G_MAXINT) {
+    gint num, denom;
+    /* Don't do direct multiply with GST_SECOND to avoid rounding
+     * errors.
+     * This only works for "small" numbers, because num is limited to 32-bit
+     */
+    gst_util_double_to_fraction (t->seconds, &num, &denom);
+    return gst_util_uint64_scale_int (GST_SECOND, num, denom);
+  } else {
+    return t->seconds * GST_SECOND;
+  }
 }
 
 static GstClockTime
