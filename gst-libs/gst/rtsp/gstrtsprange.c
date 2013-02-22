@@ -591,3 +591,102 @@ gst_rtsp_range_get_times (const GstRTSPTimeRange * range,
 
   return TRUE;
 }
+
+static void
+set_time (GstRTSPTime * time, GstRTSPTime2 * time2, GstRTSPRangeUnit unit,
+    GstClockTime clock_time)
+{
+  memset (time, 0, sizeof (GstRTSPTime));
+  memset (time2, 0, sizeof (GstRTSPTime2));
+
+  if (clock_time == GST_CLOCK_TIME_NONE) {
+    time->type = GST_RTSP_TIME_END;
+    return;
+  }
+
+  switch (unit) {
+    case GST_RTSP_RANGE_SMPTE:
+    case GST_RTSP_RANGE_SMPTE_30_DROP:
+    {
+      time->seconds = (guint64) (clock_time / GST_SECOND);
+      time2->frames = 30003 * (clock_time % GST_SECOND) /
+          (gdouble) (1001 * GST_SECOND);
+      time->type = GST_RTSP_TIME_FRAMES;
+      g_assert (time2->frames < 30);
+      break;
+    }
+    case GST_RTSP_RANGE_SMPTE_25:
+    {
+      time->seconds = (guint64) (clock_time / GST_SECOND);
+      time2->frames = (25 * (clock_time % GST_SECOND)) / (gdouble) GST_SECOND;
+      time->type = GST_RTSP_TIME_FRAMES;
+      g_assert (time2->frames < 25);
+      break;
+    }
+    case GST_RTSP_RANGE_NPT:
+    {
+      time->seconds = (gdouble) clock_time / (gdouble) GST_SECOND;
+      time->type = GST_RTSP_TIME_SECONDS;
+      break;
+    }
+    case GST_RTSP_RANGE_CLOCK:
+    {
+      GDateTime *bt, *datetime;
+      GstClockTime subsecond = clock_time % GST_SECOND;
+
+      bt = g_date_time_new_utc (1900, 1, 1, 0, 0, 0.0);
+      datetime = g_date_time_add_seconds (bt, clock_time / GST_SECOND);
+
+      time2->year = g_date_time_get_year (datetime);
+      time2->month = g_date_time_get_month (datetime);
+      time2->day = g_date_time_get_day_of_month (datetime);
+
+      time->seconds = g_date_time_get_hour (datetime) * 60 * 60;
+      time->seconds += g_date_time_get_minute (datetime) * 60;
+      time->seconds += g_date_time_get_seconds (datetime);
+      time->seconds += (gdouble) subsecond / (gdouble) GST_SECOND;
+      time->type = GST_RTSP_TIME_UTC;
+
+      g_date_time_unref (bt);
+      g_date_time_unref (datetime);
+      break;
+    }
+  }
+
+  if (time->seconds < 0.000000001)
+    time->seconds = 0;
+  if (time2->frames < 0.000000001)
+    time2->frames = 0;
+}
+
+/**
+ * gst_rtsp_range_convert_units:
+ * @range: a #GstRTSPTimeRange
+ * @unit: the unit to convert the range into
+ *
+ * Converts the range in-place between different types of units.
+ * Ranges containing the special value #GST_RTSP_TIME_NOW can not be
+ * converted as these are only valid for #GST_RTSP_RANGE_NPT.
+ *
+ * Returns: %TRUE if the range could be converted
+ */
+
+gboolean
+gst_rtsp_range_convert_units (GstRTSPTimeRange * range, GstRTSPRangeUnit unit)
+{
+  if (range->unit == unit)
+    return TRUE;
+
+  if (range->min.type == GST_RTSP_TIME_NOW ||
+      range->max.type == GST_RTSP_TIME_NOW)
+    return FALSE;
+
+  set_time (&range->min, &range->min2, unit,
+      get_time (range->unit, &range->min, &range->min2));
+  set_time (&range->max, &range->max2, unit,
+      get_time (range->unit, &range->max, &range->max2));
+
+  range->unit = unit;
+
+  return TRUE;
+}

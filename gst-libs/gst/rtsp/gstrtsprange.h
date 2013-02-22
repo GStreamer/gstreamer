@@ -149,6 +149,9 @@ void            gst_rtsp_range_free         (GstRTSPTimeRange *range);
 gboolean        gst_rtsp_range_get_times     (const GstRTSPTimeRange *range,
                                               GstClockTime *min, GstClockTime *max);
 
+gboolean        gst_rtsp_range_convert_units (GstRTSPTimeRange * range,
+                                              GstRTSPRangeUnit unit);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_RANGE_H__ */

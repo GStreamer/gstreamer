@@ -432,6 +432,113 @@ GST_START_TEST (test_rtsp_range_clock)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_rtsp_range_convert)
+{
+  GstRTSPTimeRange *range;
+  gchar *str;
+
+  fail_unless (gst_rtsp_range_parse ("npt=now-100", &range) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_NPT));
+  fail_unless (!gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_CLOCK));
+  fail_unless (!gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_SMPTE));
+  str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string (str, "npt=now-100");
+  g_free (str);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("npt=0-100", &range) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_SMPTE));
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_NPT));
+  str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string (str, "npt=0-100");
+  g_free (str);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("npt=0-100", &range) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_SMPTE_25));
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_NPT));
+  str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string (str, "npt=0-100");
+  g_free (str);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("npt=0-100", &range) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_CLOCK));
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_NPT));
+  str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string (str, "npt=0-100");
+  g_free (str);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("smpte-25=10:07:00-10:07:33:05.01", &range)
+      == GST_RTSP_OK);
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_NPT));
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_SMPTE_25));
+  str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string (str, "smpte-25=10:07:00-10:07:33:05.01");
+  g_free (str);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("smpte=77:07:59-", &range)
+      == GST_RTSP_OK);
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_NPT));
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_SMPTE));
+  str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string (str, "smpte=77:07:59-");
+  g_free (str);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("smpte=10:07:00-10:07:33:05.01", &range)
+      == GST_RTSP_OK);
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_NPT));
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_SMPTE));
+  str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string (str, "smpte=10:07:00-10:07:33:05.01");
+  g_free (str);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("smpte-25=10:07:00-10:07:33:05.01", &range)
+      == GST_RTSP_OK);
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_CLOCK));
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_SMPTE_25));
+  str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string (str, "smpte-25=10:07:00-10:07:33:05.01");
+  g_free (str);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("smpte=10:07:00-10:07:33:05.01", &range)
+      == GST_RTSP_OK);
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_CLOCK));
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_SMPTE));
+  str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string (str, "smpte=10:07:00-10:07:33:05.01");
+  g_free (str);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse
+      ("clock=20001010T120023Z-20320518T152245.12Z", &range)
+      == GST_RTSP_OK);
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_NPT));
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_CLOCK));
+  str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string (str, "clock=20001010T120023Z-20320518T152245.12Z");
+  g_free (str);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse
+      ("clock=20001010T120023Z-20320518T152245.12Z", &range)
+      == GST_RTSP_OK);
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_SMPTE));
+  fail_unless (gst_rtsp_range_convert_units (range, GST_RTSP_RANGE_CLOCK));
+  str = gst_rtsp_range_to_string (range);
+  fail_unless_equals_string (str, "clock=20001010T120023Z-20320518T152245.12Z");
+  g_free (str);
+  gst_rtsp_range_free (range);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtsp_suite (void)
 {
@@ -446,6 +553,7 @@ rtsp_suite (void)
   tcase_add_test (tc_chain, test_rtsp_range_npt);
   tcase_add_test (tc_chain, test_rtsp_range_smpte);
   tcase_add_test (tc_chain, test_rtsp_range_clock);
+  tcase_add_test (tc_chain, test_rtsp_range_convert);
 
   return s;
 }

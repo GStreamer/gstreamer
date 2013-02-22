@@ -1540,14 +1540,16 @@ gst_rtsp_url_get_type
 
 <SECTION>
 <FILE>gstrtsprange</FILE>
-<INCLUDE>gst/rtsp/gstrtsrange.h</INCLUDE>
+<INCLUDE>gst/rtsp/gstrtsprange.h</INCLUDE>
 GstRTSPRangeUnit
 GstRTSPTimeRange
 GstRTSPTime
+GstRTSPTime2
 GstRTSPTimeType
 gst_rtsp_range_parse
 gst_rtsp_range_get_times
 gst_rtsp_range_to_string
+gst_rtsp_range_convert_units
 gst_rtsp_range_free
 </SECTION>
 
