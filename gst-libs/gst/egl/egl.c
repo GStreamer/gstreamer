@@ -61,6 +61,9 @@ gst_egl_image_memory_get_image (GstMemory * mem)
 {
   g_return_val_if_fail (gst_is_egl_image_memory (mem), EGL_NO_IMAGE_KHR);
 
+  if (mem->parent)
+    mem = mem->parent;
+
   return GST_EGL_IMAGE_MEMORY (mem)->image;
 }
 
@@ -68,6 +71,9 @@ GstEGLDisplay *
 gst_egl_image_memory_get_display (GstMemory * mem)
 {
   g_return_val_if_fail (gst_is_egl_image_memory (mem), EGL_NO_IMAGE_KHR);
+
+  if (mem->parent)
+    mem = mem->parent;
 
   return gst_egl_display_ref (GST_EGL_IMAGE_MEMORY (mem)->display);
 }
@@ -77,6 +83,9 @@ gst_egl_image_memory_get_type (GstMemory * mem)
 {
   g_return_val_if_fail (gst_is_egl_image_memory (mem),
       GST_EGL_IMAGE_MEMORY_TYPE_INVALID);
+
+  if (mem->parent)
+    mem = mem->parent;
 
   return GST_EGL_IMAGE_MEMORY (mem)->type;
 }
@@ -97,13 +106,18 @@ gst_egl_image_allocator_free_vfunc (GstAllocator * allocator, GstMemory * mem)
   GstEGLImageMemory *emem = (GstEGLImageMemory *) mem;
   EGLDisplay display;
 
-  display = gst_egl_display_get (emem->display);
-  eglDestroyImageKHR (display, emem->image);
+  g_return_if_fail (gst_is_egl_image_memory (mem));
 
-  if (emem->user_data_destroy)
-    emem->user_data_destroy (emem->user_data);
+  /* Shared memory should not destroy all the data */
+  if (!mem->parent) {
+    display = gst_egl_display_get (emem->display);
+    eglDestroyImageKHR (display, emem->image);
 
-  gst_egl_display_unref (emem->display);
+    if (emem->user_data_destroy)
+      emem->user_data_destroy (emem->user_data);
+
+    gst_egl_display_unref (emem->display);
+  }
 
   g_slice_free (GstEGLImageMemory, emem);
 }
@@ -122,7 +136,30 @@ gst_egl_image_mem_unmap (GstMemory * mem)
 static GstMemory *
 gst_egl_image_mem_share (GstMemory * mem, gssize offset, gssize size)
 {
-  return NULL;
+  GstMemory *sub;
+  GstMemory *parent;
+
+  if (offset != 0)
+    return NULL;
+
+  if (size != -1 && size != mem->size)
+    return NULL;
+
+  /* find the real parent */
+  if ((parent = mem->parent) == NULL)
+    parent = (GstMemory *) mem;
+
+  if (size == -1)
+    size = mem->size - offset;
+
+  sub = (GstMemory *) g_slice_new (GstEGLImageMemory);
+
+  /* the shared memory is always readonly */
+  gst_memory_init (GST_MEMORY_CAST (sub), GST_MINI_OBJECT_FLAGS (parent) |
+      GST_MINI_OBJECT_FLAG_LOCK_READONLY, mem->allocator, parent,
+      mem->maxsize, mem->align, mem->offset + offset, size);
+
+  return sub;
 }
 
 static GstMemory *
@@ -213,8 +250,7 @@ gst_egl_image_allocator_wrap (GstAllocator * allocator,
   }
 
   mem = g_slice_new (GstEGLImageMemory);
-  gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_NO_SHARE, allocator,
-      NULL, size, 0, 0, 0);
+  gst_memory_init (GST_MEMORY_CAST (mem), 0, allocator, NULL, size, 0, 0, size);
 
   mem->display = gst_egl_display_ref (display);
   mem->image = image;
