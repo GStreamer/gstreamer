@@ -40,6 +40,7 @@
 #define IEC61937_HEADER_SIZE      8
 #define IEC61937_PAYLOAD_SIZE_AC3 (1536 * 4)
 #define IEC61937_PAYLOAD_SIZE_EAC3 (6144 * 4)
+#define IEC61937_PAYLOAD_SIZE_AAC (1024 * 4)
 
 static gint
 caps_get_int_field (const GstCaps * caps, const gchar * field)
@@ -121,6 +122,12 @@ gst_audio_iec61937_frame_size (const GstAudioRingBufferSpec * spec)
         frames = 1152;
 
       return frames * 4;
+    }
+
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG2_AAC:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG4_AAC:
+    {
+      return IEC61937_PAYLOAD_SIZE_AAC;
     }
 
     default:
@@ -284,6 +291,41 @@ gst_audio_iec61937_payload (const guint8 * src, guint src_n, guint8 * dst,
       dst[six] = ((guint16) src_n * 8) >> 8;
       dst[seven] = ((guint16) src_n * 8) & 0xff;
 
+      break;
+    }
+
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG2_AAC:
+      /* HACK. disguising MPEG4 AAC as MPEG2 AAC seems to work. */
+      /* TODO: set the right Pc,Pd for MPEG4 in accordance with IEC61937-6 */
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG4_AAC:
+    {
+      int num_rd_blks;
+
+      g_return_val_if_fail (src_n >= 7, FALSE);
+      num_rd_blks = (src[6] & 0x03) + 1;
+
+      /* Pc: bit 13-15 - stream number (0)
+       *     bit 11-12 - reserved (0)
+       *     bit  8-10 - reserved? (0) */
+      dst[four] = 0;
+      /* Pc: bit    7  - error bit (0)
+       *     bit  5-6  - reserved (0)
+       *     bit  0-4  - data type (07 = MPEG2 AAC ADTS
+       *                            19 = MPEG2 AAC ADTS half-rate LSF
+       *                            51 = MPEG2 AAC ADTS quater-rate LSF */
+      if (num_rd_blks == 1)
+        dst[five] = 0x07;
+      else if (num_rd_blks == 2)
+        dst[five] = 0x13;
+      else if (num_rd_blks == 4)
+        dst[five] = 0x33;
+      else
+        g_return_val_if_reached (FALSE);
+
+      /* Pd: bit 15-0  - frame size in bits */
+      tmp = GST_ROUND_UP_2 (src_n) * 8;
+      dst[six] = (guint8) (tmp >> 8);
+      dst[seven] = (guint8) (tmp & 0xff);
       break;
     }
 

@@ -124,7 +124,9 @@ static const gchar *format_type_names[] = {
   "iec958",
   "ac3",
   "eac3",
-  "dts"
+  "dts",
+  "aac mpeg2",
+  "aac mpeg4"
 };
 #endif
 
@@ -262,6 +264,17 @@ gst_audio_ring_buffer_parse_caps (GstAudioRingBufferSpec * spec, GstCaps * caps)
       goto parse_error;
 
     spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG;
+    info.bpf = 4;
+  } else if (g_str_equal (mimetype, "audio/mpeg") &&
+      gst_structure_get_int (structure, "mpegversion", &i) &&
+      (i == 2 || i == 4) &&
+      !g_strcmp0 (gst_structure_get_string (structure, "stream-format"),
+          "adts")) {
+    /* MPEG-2 AAC or MPEG-4 AAC */
+    if (!(gst_structure_get_int (structure, "rate", &info.rate)))
+      goto parse_error;
+    spec->type = (i == 2) ? GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG2_AAC :
+        GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG4_AAC;
     info.bpf = 4;
   } else {
     goto parse_error;
