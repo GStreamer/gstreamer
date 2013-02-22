@@ -859,6 +859,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   GstRTSPTimeRange *range;
   GstRTSPResult res;
   GstRTSPState rtspstate;
+  GstRTSPRangeUnit unit = GST_RTSP_RANGE_NPT;
 
   if (!(session = state->session))
     goto no_session;
@@ -882,6 +883,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
     if (gst_rtsp_range_parse (str, &range) == GST_RTSP_OK) {
       /* we have a range, seek to the position */
       gst_rtsp_media_seek (gst_rtsp_session_media_get_media (media), range);
+      unit = range->unit;
       gst_rtsp_range_free (range);
     }
   }
@@ -943,7 +945,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   /* add the range */
   str =
       gst_rtsp_media_get_range_string (gst_rtsp_session_media_get_media (media),
-      TRUE);
+      TRUE, unit);
   gst_rtsp_message_take_header (state->response, GST_RTSP_HDR_RANGE, str);
 
   send_response (client, session, state->response, FALSE);

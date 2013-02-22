@@ -46,7 +46,7 @@ GST_START_TEST (test_launch)
   fail_unless (stream != NULL);
 
   /* fails, need to be prepared */
-  str = gst_rtsp_media_get_range_string (media, FALSE);
+  str = gst_rtsp_media_get_range_string (media, FALSE, GST_RTSP_RANGE_NPT);
   fail_unless (str == NULL);
 
   fail_unless (gst_rtsp_range_parse ("npt=5.0-", &range) == GST_RTSP_OK);
@@ -55,28 +55,28 @@ GST_START_TEST (test_launch)
 
   fail_unless (gst_rtsp_media_prepare (media));
 
-  str = gst_rtsp_media_get_range_string (media, FALSE);
+  str = gst_rtsp_media_get_range_string (media, FALSE, GST_RTSP_RANGE_NPT);
   fail_unless (g_str_equal (str, "npt=0-"));
   g_free (str);
 
-  str = gst_rtsp_media_get_range_string (media, TRUE);
+  str = gst_rtsp_media_get_range_string (media, TRUE, GST_RTSP_RANGE_NPT);
   fail_unless (g_str_equal (str, "npt=0-"));
   g_free (str);
 
   fail_unless (gst_rtsp_media_seek (media, range));
 
-  str = gst_rtsp_media_get_range_string (media, FALSE);
+  str = gst_rtsp_media_get_range_string (media, FALSE, GST_RTSP_RANGE_NPT);
   fail_unless (g_str_equal (str, "npt=5-"));
   g_free (str);
 
-  str = gst_rtsp_media_get_range_string (media, TRUE);
+  str = gst_rtsp_media_get_range_string (media, TRUE, GST_RTSP_RANGE_NPT);
   fail_unless (g_str_equal (str, "npt=5-"));
   g_free (str);
 
   fail_unless (gst_rtsp_media_unprepare (media));
 
   /* should fail again */
-  str = gst_rtsp_media_get_range_string (media, FALSE);
+  str = gst_rtsp_media_get_range_string (media, FALSE, GST_RTSP_RANGE_NPT);
   fail_unless (str == NULL);
   fail_if (gst_rtsp_media_seek (media, range));
 

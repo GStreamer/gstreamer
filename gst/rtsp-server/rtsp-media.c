@@ -959,6 +959,7 @@ gst_rtsp_media_get_stream (GstRTSPMedia * media, guint idx)
  * gst_rtsp_media_get_range_string:
  * @media: a #GstRTSPMedia
  * @play: for the PLAY request
+ * @unit: the unit to use for the string
  *
  * Get the current range as a string. @media must be prepared with
  * gst_rtsp_media_prepare ().
@@ -966,7 +967,8 @@ gst_rtsp_media_get_stream (GstRTSPMedia * media, guint idx)
  * Returns: The range as a string, g_free() after usage.
  */
 gchar *
-gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play)
+gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play,
+    GstRTSPRangeUnit unit)
 {
   GstRTSPMediaPrivate *priv;
   gchar *result;
@@ -990,6 +992,8 @@ gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play)
   }
   g_mutex_unlock (&priv->lock);
   g_rec_mutex_unlock (&priv->state_lock);
+
+  gst_rtsp_range_convert_units (&range, unit);
 
   result = gst_rtsp_range_to_string (&range);
 

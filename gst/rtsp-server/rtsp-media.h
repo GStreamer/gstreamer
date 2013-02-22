@@ -155,7 +155,9 @@ guint                 gst_rtsp_media_n_streams        (GstRTSPMedia *media);
 GstRTSPStream *       gst_rtsp_media_get_stream       (GstRTSPMedia *media, guint idx);
 
 gboolean              gst_rtsp_media_seek             (GstRTSPMedia *media, GstRTSPTimeRange *range);
-gchar *               gst_rtsp_media_get_range_string (GstRTSPMedia *media, gboolean play);
+gchar *               gst_rtsp_media_get_range_string (GstRTSPMedia *media,
+                                                       gboolean play,
+                                                       GstRTSPRangeUnit unit);
 
 gboolean              gst_rtsp_media_set_state        (GstRTSPMedia *media, GstState state,
                                                        GPtrArray *transports);

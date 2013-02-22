@@ -40,7 +40,7 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
 
   n_streams = gst_rtsp_media_n_streams (media);
 
-  rangestr = gst_rtsp_media_get_range_string (media, FALSE);
+  rangestr = gst_rtsp_media_get_range_string (media, FALSE, GST_RTSP_RANGE_NPT);
   if (rangestr == NULL)
     goto not_prepared;
 

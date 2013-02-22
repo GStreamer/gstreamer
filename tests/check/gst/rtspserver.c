@@ -300,8 +300,9 @@ read_response (GstRTSPConnection * conn)
 static GstRTSPStatusCode
 do_request (GstRTSPConnection * conn, GstRTSPMethod method,
     const gchar * control, const gchar * session_in, const gchar * transport_in,
+    const gchar * range_in,
     gchar ** content_type, gchar ** content_base, gchar ** body,
-    gchar ** session_out, gchar ** transport_out)
+    gchar ** session_out, gchar ** transport_out, gchar ** range_out)
 {
   GstRTSPMessage *request;
   GstRTSPMessage *response;
@@ -317,6 +318,9 @@ do_request (GstRTSPConnection * conn, GstRTSPMethod method,
   }
   if (transport_in) {
     gst_rtsp_message_add_header (request, GST_RTSP_HDR_TRANSPORT, transport_in);
+  }
+  if (range_in) {
+    gst_rtsp_message_add_header (request, GST_RTSP_HDR_RANGE, range_in);
   }
 
   /* send request */
@@ -371,6 +375,10 @@ do_request (GstRTSPConnection * conn, GstRTSPMethod method,
     gst_rtsp_message_get_header (response, GST_RTSP_HDR_TRANSPORT, &value, 0);
     *transport_out = g_strdup (value);
   }
+  if (range_out) {
+    gst_rtsp_message_get_header (response, GST_RTSP_HDR_RANGE, &value, 0);
+    *range_out = g_strdup (value);
+  }
 
   gst_rtsp_message_free (response);
   return code;
@@ -382,7 +390,7 @@ do_simple_request (GstRTSPConnection * conn, GstRTSPMethod method,
     const gchar * session)
 {
   return do_request (conn, method, NULL, session, NULL, NULL, NULL,
-      NULL, NULL, NULL);
+      NULL, NULL, NULL, NULL, NULL);
 }
 
 /* send a DESCRIBE request and receive response. returns a received
@@ -398,8 +406,9 @@ do_describe (GstRTSPConnection * conn, const gchar * mount_point)
   gchar *expected_content_base;
 
   /* send DESCRIBE request */
-  fail_unless (do_request (conn, GST_RTSP_DESCRIBE, NULL, NULL, NULL,
-          &content_type, &content_base, &body, NULL, NULL) == GST_RTSP_STS_OK);
+  fail_unless (do_request (conn, GST_RTSP_DESCRIBE, NULL, NULL, NULL, NULL,
+          &content_type, &content_base, &body, NULL, NULL, NULL) ==
+      GST_RTSP_STS_OK);
 
   /* check response values */
   fail_unless (!g_strcmp0 (content_type, "application/sdp"));
@@ -451,8 +460,8 @@ do_setup (GstRTSPConnection * conn, const gchar * control,
       client_ports->min, client_ports->max);
   code =
       do_request (conn, GST_RTSP_SETUP, control, session_in,
-      transport_string_in, NULL, NULL, NULL, session_out,
-      &transport_string_out);
+      transport_string_in, NULL, NULL, NULL, NULL, session_out,
+      &transport_string_out, NULL);
   g_free (transport_string_in);
 
   if (transport_string_out) {
@@ -744,7 +753,7 @@ done:
 }
 
 static void
-do_test_play (void)
+do_test_play (const gchar * range)
 {
   GstRTSPConnection *conn;
   GstSDPMessage *sdp_message = NULL;
@@ -756,6 +765,7 @@ do_test_play (void)
   GstRTSPTransport *video_transport = NULL;
   GstRTSPTransport *audio_transport = NULL;
   GSocket *rtp_socket, *rtcp_socket;
+  gchar *range_out = NULL;
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -777,8 +787,11 @@ do_test_play (void)
           &audio_transport) == GST_RTSP_STS_OK);
 
   /* send PLAY request and check that we get 200 OK */
-  fail_unless (do_simple_request (conn, GST_RTSP_PLAY,
-          session) == GST_RTSP_STS_OK);
+  fail_unless (do_request (conn, GST_RTSP_PLAY, NULL, session, NULL, range,
+          NULL, NULL, NULL, NULL, NULL, &range_out) == GST_RTSP_STS_OK);
+  if (range)
+    fail_unless_equals_string (range, range_out);
+  g_free (range_out);
 
   receive_rtp (rtp_socket, NULL);
   receive_rtcp (rtcp_socket, NULL, 0);
@@ -807,7 +820,7 @@ GST_START_TEST (test_play)
 {
   start_server ();
 
-  do_test_play ();
+  do_test_play (NULL);
 
   stop_server ();
   iterate ();
@@ -877,7 +890,7 @@ GST_START_TEST (test_play_multithreaded)
 
   start_server ();
 
-  do_test_play ();
+  do_test_play (NULL);
 
   stop_server ();
   iterate ();
@@ -948,7 +961,7 @@ GST_START_TEST (test_play_multithreaded_block_in_describe)
   g_mutex_unlock (&check_mutex);
 
   /* Do a second connection while the first one is blocked */
-  do_test_play ();
+  do_test_play (NULL);
 
   /* Now unblock the describe */
   g_mutex_lock (&check_mutex);
@@ -1315,6 +1328,24 @@ GST_START_TEST (test_play_specific_server_port)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_play_smpte_range)
+{
+  start_server ();
+
+  do_test_play ("npt=5-");
+  do_test_play ("smpte=0:00:00-");
+  do_test_play ("smpte=1:00:00-");
+  do_test_play ("smpte=1:00:03-");
+  do_test_play ("clock=20120321T152256Z-");
+
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
+
 static Suite *
 rtspserver_suite (void)
 {
@@ -1338,6 +1369,7 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_play_multithreaded_timeout_session);
   tcase_add_test (tc, test_play_disconnect);
   tcase_add_test (tc, test_play_specific_server_port);
+  tcase_add_test (tc, test_play_smpte_range);
   return s;
 }
 
