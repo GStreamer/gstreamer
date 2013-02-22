@@ -47,7 +47,7 @@
  * <para>
  * Controlled properties offers a lightweight way to adjust gobject
  * properties over stream-time. It works by using time-stamped value pairs that
- * are queued for element-properties. At run-time the elements continously pull
+ * are queued for element-properties. At run-time the elements continuously pull
  * values changes for the current stream-time.
  *
  * What needs to be changed in a #GstElement?
