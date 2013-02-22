@@ -215,6 +215,8 @@ dmabuf_mem_allocator_init (dmabuf_mem_Allocator * allocator)
   alloc->mem_unmap = (GstMemoryUnmapFunction) gst_dmabuf_mem_unmap;
   alloc->mem_share = (GstMemoryShareFunction) gst_dmabuf_mem_share;
   alloc->mem_copy = (GstMemoryCopyFunction) gst_dmabuf_mem_copy;
+
+  GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
 
 static void
