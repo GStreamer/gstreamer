@@ -489,7 +489,7 @@ get_time (GstRTSPRangeUnit unit, const GstRTSPTime * t1,
       /* convert to GDateTime without the seconds */
       dt = g_date_time_new_utc (t2->year, t2->month, t2->day, 0, 0, 0.0);
       /* get amount of microseconds */
-      span = g_date_time_difference (bt, dt);
+      span = g_date_time_difference (dt, bt);
       g_date_time_unref (bt);
       g_date_time_unref (dt);
       /* add seconds */
