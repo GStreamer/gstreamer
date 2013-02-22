@@ -164,6 +164,13 @@ gst_pulse_fill_format_info (GstAudioRingBufferSpec * spec, pa_format_info ** f,
     format->encoding = PA_ENCODING_DTS_IEC61937;
   } else if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG) {
     format->encoding = PA_ENCODING_MPEG_IEC61937;
+#if PA_CHECK_VERSION(3,99,0)
+  } else if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG2_AAC) {
+    format->encoding = PA_ENCODING_MPEG2_AAC_IEC61937;
+  } else if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG4_AAC) {
+    /* HACK. treat MPEG4 AAC as MPEG2 AAC for the moment */
+    format->encoding = PA_ENCODING_MPEG2_AAC_IEC61937;
+#endif
   } else {
     goto fail;
   }

@@ -61,6 +61,8 @@
     "block-size = (int) { 512, 1024, 2048 }; "
 #define _PULSE_CAPS_MP3 "audio/mpeg, mpegversion = (int) 1, " \
     "mpegaudioversion = (int) [ 1, 2 ], parsed = (boolean) true;"
+#define _PULSE_CAPS_AAC "audio/mpeg, mpegversion = (int) { 2, 4 }, " \
+    "framed = (boolean) true, stream-format = (string) adts;"
 
 #define _PULSE_CAPS_PCM \
   _PULSE_CAPS_LINEAR \

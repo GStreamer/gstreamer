@@ -97,7 +97,8 @@ GType gst_pulsesink_get_type (void);
   _PULSE_CAPS_AC3 \
   _PULSE_CAPS_EAC3 \
   _PULSE_CAPS_DTS \
-  _PULSE_CAPS_MP3
+  _PULSE_CAPS_MP3 \
+  _PULSE_CAPS_AAC
 
 G_END_DECLS
 
