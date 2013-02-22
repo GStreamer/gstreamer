@@ -156,6 +156,9 @@ static GstSegmentListNode *gst_mpdparser_get_segment_list (GstPeriodNode *
     Period, GstAdaptationSetNode * AdaptationSet,
     GstRepresentationNode * Representation);
 
+/* Segments */
+static guint gst_mpd_client_get_segments_counts (GstActiveStream * stream);
+
 /* Memory management */
 static void gst_mpdparser_free_mpd_node (GstMPDNode * mpd_node);
 static void gst_mpdparser_free_prog_info_node (GstProgramInformationNode *
@@ -3189,6 +3192,67 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
 }
 
 gboolean
+gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
+    GstClockTime ts)
+{
+  gint segment_idx = 0;
+  GstMediaSegment *selectedChunk = NULL;
+  GList *iter;
+
+  g_return_val_if_fail (stream != NULL, 0);
+
+  GST_MPD_CLIENT_LOCK (client);
+  for (iter = stream->segments; iter; iter = g_list_next (iter), segment_idx++) {
+    GstMediaSegment *segment = iter->data;
+    GST_DEBUG ("Looking at fragment sequence chunk %d", segment_idx);
+    if (segment->start_time >= ts) {
+      selectedChunk = segment;
+      break;
+    }
+  }
+
+  if (selectedChunk == NULL) {
+    GST_MPD_CLIENT_UNLOCK (client);
+    return FALSE;
+  }
+
+  gst_mpd_client_set_segment_index (stream, segment_idx);
+
+  GST_MPD_CLIENT_UNLOCK (client);
+
+  return TRUE;
+}
+
+gboolean
+gst_mpd_client_get_last_fragment_timestamp (GstMpdClient * client,
+    guint stream_idx, GstClockTime * ts)
+{
+  GstActiveStream *stream;
+  gint segment_idx;
+  GstMediaSegment *currentChunk;
+
+  GST_DEBUG ("Stream index: %i", stream_idx);
+  stream = g_list_nth_data (client->active_streams, stream_idx);
+  g_return_val_if_fail (stream != NULL, 0);
+
+  GST_MPD_CLIENT_LOCK (client);
+  segment_idx = gst_mpd_client_get_segments_counts (stream) - 1;
+  GST_DEBUG ("Looking for fragment sequence chunk %d", segment_idx);
+
+  currentChunk =
+      gst_mpdparser_get_chunk_by_index (client, stream_idx, segment_idx);
+  if (currentChunk == NULL) {
+    GST_MPD_CLIENT_UNLOCK (client);
+    return FALSE;
+  }
+
+  *ts = currentChunk->start_time;
+  GST_MPD_CLIENT_UNLOCK (client);
+
+  return TRUE;
+}
+
+gboolean
 gst_mpd_client_get_next_fragment_timestamp (GstMpdClient * client,
     guint stream_idx, GstClockTime * ts)
 {
@@ -3372,6 +3436,32 @@ gst_mpd_client_get_media_presentation_duration (GstMpdClient * client)
 }
 
 gboolean
+gst_mpd_client_set_period_id (GstMpdClient * client, const gchar * period_id)
+{
+  GstStreamPeriod *next_stream_period;
+  gboolean ret = FALSE;
+  GList *iter;
+
+  g_return_val_if_fail (client != NULL, FALSE);
+  g_return_val_if_fail (client->periods != NULL, FALSE);
+  g_return_val_if_fail (period_id != NULL, FALSE);
+
+  GST_MPD_CLIENT_LOCK (client);
+  for (iter = client->periods; iter; iter = g_list_next (iter)) {
+    next_stream_period = iter->data;
+
+    if (next_stream_period->period->id
+        && strcmp (next_stream_period->period->id, period_id) == 0) {
+      ret = TRUE;
+      break;
+    }
+  }
+  GST_MPD_CLIENT_UNLOCK (client);
+
+  return ret;
+}
+
+gboolean
 gst_mpd_client_set_period_index (GstMpdClient * client, guint period_idx)
 {
   GstStreamPeriod *next_stream_period;
@@ -3402,6 +3492,22 @@ gst_mpd_client_get_period_index (GstMpdClient * client)
   GST_MPD_CLIENT_UNLOCK (client);
 
   return period_idx;
+}
+
+const gchar *
+gst_mpd_client_get_period_id (GstMpdClient * client)
+{
+  GstStreamPeriod *period;
+  gchar *period_id = NULL;
+
+  g_return_val_if_fail (client != NULL, 0);
+  GST_MPD_CLIENT_LOCK (client);
+  period = g_list_nth_data (client->periods, client->period_idx);
+  if (period && period->period)
+    period_id = period->period->id;
+  GST_MPD_CLIENT_UNLOCK (client);
+
+  return period_id;
 }
 
 gboolean
@@ -3452,6 +3558,14 @@ gst_mpd_client_get_segment_index (GstActiveStream * stream)
   g_return_val_if_fail (stream != NULL, 0);
 
   return stream->segment_idx;
+}
+
+static guint
+gst_mpd_client_get_segments_counts (GstActiveStream * stream)
+{
+  g_return_val_if_fail (stream != NULL, 0);
+
+  return g_list_length (stream->segments);
 }
 
 gboolean
