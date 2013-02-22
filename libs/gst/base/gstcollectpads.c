@@ -498,7 +498,7 @@ gst_collect_pads_clip_running_time (GstCollectPads * pads,
   GstClockTime time;
 
   *outbuf = buf;
-  time = GST_BUFFER_TIMESTAMP (buf);
+  time = GST_BUFFER_PTS (buf);
 
   /* invalid left alone and passed */
   if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (time))) {
@@ -510,9 +510,11 @@ gst_collect_pads_clip_running_time (GstCollectPads * pads,
     } else {
       GST_LOG_OBJECT (cdata->pad, "buffer ts %" GST_TIME_FORMAT " -> %"
           GST_TIME_FORMAT " running time",
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_TIME_ARGS (time));
+          GST_TIME_ARGS (GST_BUFFER_PTS (buf)), GST_TIME_ARGS (time));
       *outbuf = gst_buffer_make_writable (buf);
-      GST_BUFFER_TIMESTAMP (*outbuf) = time;
+      GST_BUFFER_PTS (*outbuf) = time;
+      GST_BUFFER_DTS (*outbuf) = gst_segment_to_running_time (&cdata->segment,
+          GST_FORMAT_TIME, GST_BUFFER_DTS (*outbuf));
     }
   }
 
@@ -1405,7 +1407,10 @@ gst_collect_pads_find_best_pad (GstCollectPads * pads,
     buffer = gst_collect_pads_peek (pads, data);
     /* if we have a buffer check if it is better then the current best one */
     if (buffer != NULL) {
-      timestamp = GST_BUFFER_TIMESTAMP (buffer);
+      timestamp = GST_BUFFER_DTS (buffer);
+      if (!GST_CLOCK_TIME_IS_VALID (timestamp)) {
+        timestamp = GST_BUFFER_PTS (buffer);
+      }
       gst_buffer_unref (buffer);
       if (best == NULL || pads->priv->compare_func (pads, data, timestamp,
               best, best_time, pads->priv->compare_user_data) < 0) {
@@ -1569,10 +1574,11 @@ gst_collect_pads_clip_time (GstCollectPads * pads, GstCollectData * data,
 
   if (pads->priv->clip_func) {
     in = gst_buffer_new ();
-    GST_BUFFER_TIMESTAMP (in) = time;
+    GST_BUFFER_PTS (in) = time;
+    GST_BUFFER_DTS (in) = time;
     pads->priv->clip_func (pads, data, in, &out, pads->priv->clip_user_data);
     if (out) {
-      otime = GST_BUFFER_TIMESTAMP (out);
+      otime = GST_BUFFER_PTS (out);
       gst_buffer_unref (out);
     } else {
       /* FIXME should distinguish between ahead or after segment,
@@ -1996,7 +2002,11 @@ gst_collect_pads_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   /* update segment last position if in TIME */
   if (G_LIKELY (data->segment.format == GST_FORMAT_TIME)) {
-    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    GstClockTime timestamp;
+
+    timestamp = GST_BUFFER_DTS (buffer);
+    if (!GST_CLOCK_TIME_IS_VALID (timestamp))
+      timestamp = GST_BUFFER_PTS (buffer);
 
     if (GST_CLOCK_TIME_IS_VALID (timestamp))
       data->segment.position = timestamp;
