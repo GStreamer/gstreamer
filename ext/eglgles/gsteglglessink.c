@@ -830,7 +830,7 @@ gst_eglglessink_stop (GstEglGlesSink * eglglessink)
   }
   eglglessink->last_flow = GST_FLOW_FLUSHING;
 
-  eglglessink->last_buffer = NULL;
+  gst_buffer_replace (&eglglessink->last_buffer, NULL);
 
   if (eglglessink->using_own_window) {
     platform_destroy_native_window (gst_egl_display_get
@@ -2223,7 +2223,7 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
         if (got_gl_error ("glEGLImageTargetTexture2DOES"))
           goto HANDLE_ERROR;
       }
-      eglglessink->last_buffer = buf;
+      gst_buffer_replace (&eglglessink->last_buffer, buf);
       eglglessink->stride[0] = 1;
       eglglessink->stride[1] = 1;
       eglglessink->stride[2] = 1;
