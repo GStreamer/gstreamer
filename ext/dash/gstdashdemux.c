@@ -1137,11 +1137,17 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       }
 
       GST_DEBUG_OBJECT (demux,
+          "Pushing fragment ts: %" GST_TIME_FORMAT " at pad %s",
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+          GST_PAD_NAME (selected_stream->pad));
+#if 0
+      GST_DEBUG_OBJECT (demux,
           "Pushing fragment %p #%d (stream %i) ts:%" GST_TIME_FORMAT " dur:%"
           GST_TIME_FORMAT " at pad: %s:%s", buffer, GST_BUFFER_OFFSET (buffer),
           selected_stream->index, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
           GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
           GST_DEBUG_PAD_NAME (selected_stream->pad));
+#endif
       ret = gst_pad_push (selected_stream->pad, gst_buffer_ref (buffer));
       gst_segment_set_last_stop (&demux->segment, GST_FORMAT_TIME,
           GST_BUFFER_TIMESTAMP (buffer));
