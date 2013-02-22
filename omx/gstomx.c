@@ -82,8 +82,12 @@ gst_omx_core_acquire (const gchar * filename)
       g_free (bcm_host_path);
 
       if (!bcm_host_module) {
-        GST_ERROR ("Failed to load libbcm_host.so");
-        goto error;
+        /* Retry without an absolute path */
+        bcm_host_module = g_module_open ("libbcm_host.so", G_MODULE_BIND_LAZY);
+        if (!bcm_host_module) {
+          GST_ERROR ("Failed to load libbcm_host.so");
+          goto error;
+        }
       }
 
       if (!g_module_symbol (bcm_host_module, "bcm_host_init",
