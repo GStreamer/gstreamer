@@ -50,6 +50,7 @@ void
 gst_download_rate_deinit (GstDownloadRate * rate)
 {
   gst_download_rate_clear (rate);
+  g_static_mutex_free (&rate->mutex);
 }
 
 void
