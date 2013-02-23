@@ -45,7 +45,7 @@ typedef struct _GstAllocator GstAllocator;
  * made when this memory needs to be shared between buffers.
  * @GST_MEMORY_FLAG_ZERO_PREFIXED: the memory prefix is filled with 0 bytes
  * @GST_MEMORY_FLAG_ZERO_PADDED: the memory padding is filled with 0 bytes
- * @GST_MEMORY_FLAG_PHYSICALLY_CONTINOUS: the memory is physically continous. Since 1.2
+ * @GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS: the memory is physically contiguous. Since 1.2
  * @GST_MEMORY_FLAG_NOT_MAPPABLE: the memory can't be mapped via gst_memory_map() without any preconditions. Since 1.2
  * @GST_MEMORY_FLAG_LAST: first flag that can be used for custom purposes
  *
@@ -56,7 +56,7 @@ typedef enum {
   GST_MEMORY_FLAG_NO_SHARE      = (GST_MINI_OBJECT_FLAG_LAST << 0),
   GST_MEMORY_FLAG_ZERO_PREFIXED = (GST_MINI_OBJECT_FLAG_LAST << 1),
   GST_MEMORY_FLAG_ZERO_PADDED   = (GST_MINI_OBJECT_FLAG_LAST << 2),
-  GST_MEMORY_FLAG_PHYSICALLY_CONTINOUS = (GST_MINI_OBJECT_FLAG_LAST << 3),
+  GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS = (GST_MINI_OBJECT_FLAG_LAST << 3),
   GST_MEMORY_FLAG_NOT_MAPPABLE  = (GST_MINI_OBJECT_FLAG_LAST << 4),
 
   GST_MEMORY_FLAG_LAST          = (GST_MINI_OBJECT_FLAG_LAST << 16)
@@ -116,14 +116,14 @@ typedef enum {
 #define GST_MEMORY_IS_ZERO_PADDED(mem)     GST_MEMORY_FLAG_IS_SET(mem,GST_MEMORY_FLAG_ZERO_PADDED)
 
 /**
- * GST_MEMORY_IS_PHYSICALLY_CONTINOUS:
+ * GST_MEMORY_IS_PHYSICALLY_CONTIGUOUS:
  * @mem: a #GstMemory.
  *
- * Check if @mem is physically continous.
+ * Check if @mem is physically contiguous.
  *
  * Since: 1.2
  */
-#define GST_MEMORY_IS_PHYSICALLY_CONTINOUS(mem)     GST_MEMORY_FLAG_IS_SET(mem,GST_MEMORY_FLAG_PHYSICALLY_CONTINOUS)
+#define GST_MEMORY_IS_PHYSICALLY_CONTIGUOUS(mem)     GST_MEMORY_FLAG_IS_SET(mem,GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS)
 
 /**
  * GST_MEMORY_IS_NOT_MAPPABLE:
