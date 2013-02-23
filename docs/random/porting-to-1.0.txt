@@ -675,3 +675,20 @@ CHANGES
 
       video/webm -> audio/webm or video/webm
 
+ * element name changes/replacements:
+
+      playbin2   -> playbin
+      decodebin2 -> decodebin
+      camerabin2 -> camerabin
+
+      ffmpegcolorspace -> videoconvert
+
+      mp3parse         -> mpegaudioparse
+      legacyh264parse  -> h264parse (note: properties gone, use downstream caps)
+      lame             -> lamemp3enc
+      jp2k{enc,dec}    -> openjpeg{enc,dec}
+
+      ffenc_*   -> avenc_*
+      ffdec_*   -> avdec_*
+      ffdemux_* -> avdemux_*
+      ffmux_*   -> avmux_*
