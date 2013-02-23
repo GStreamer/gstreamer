@@ -519,16 +519,30 @@ gst_mfc_dec_fill_outbuf (GstMFCDec * self, GstBuffer * outbuf,
   const guint8 *mfc_outbuf_comps[3] = { NULL, };
   gint i, j, h, w, src_stride, dst_stride;
   guint8 *dst_, *src_;
-  GstMemory *mem;
   GstVideoFrame vframe;
   Fimc *fimc = self->fimc;
   gboolean zerocopy, has_cropping;
 
   memset (&vframe, 0, sizeof (vframe));
 
-  zerocopy = (gst_buffer_n_memory (outbuf) == 1
-      && (mem = gst_buffer_peek_memory (outbuf, 0))
-      && strcmp (mem->allocator->mem_type, "GstEGLImage") == 0);
+  zerocopy = TRUE;
+  /* FIXME: Not 100% correct, we need the memory of each
+   * plane to be contiguous at least */
+  if (GST_VIDEO_INFO_N_PLANES (&state->info) > gst_buffer_n_memory (outbuf)) {
+    zerocopy = FALSE;
+  } else {
+    gint n = gst_buffer_n_memory (outbuf);
+
+    for (i = 0; i < n; i++) {
+      GstMemory *mem = gst_buffer_peek_memory (outbuf, i);
+
+      if (!GST_MEMORY_IS_PHYSICALLY_CONTIGUOUS (mem)) {
+        zerocopy = FALSE;
+        break;
+      }
+    }
+  }
+  
   has_cropping = self->has_cropping && (self->width != self->crop_width
       || self->height != self->crop_height);
 
