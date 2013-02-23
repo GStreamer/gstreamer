@@ -267,7 +267,7 @@ gst_xvimagesink_xwindow_draw_borders (GstXvImageSink * xvimagesink,
 static gboolean
 gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
 {
-  GstXvImageMeta *meta;
+  GstXvImageMemory *mem;
   GstVideoCropMeta *crop;
   GstVideoRectangle result;
   gboolean draw_border = FALSE;
@@ -309,22 +309,22 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
     }
   }
 
-  meta = gst_buffer_get_xvimage_meta (xvimage);
+  mem = (GstXvImageMemory *) gst_buffer_peek_memory (xvimage, 0);
 
   crop = gst_buffer_get_video_crop_meta (xvimage);
 
   if (crop) {
-    src.x = crop->x + meta->x;
-    src.y = crop->y + meta->y;
+    src.x = crop->x + mem->x;
+    src.y = crop->y + mem->y;
     src.w = crop->width;
     src.h = crop->height;
     GST_LOG_OBJECT (xvimagesink,
         "crop %dx%d-%dx%d", crop->x, crop->y, crop->width, crop->height);
   } else {
-    src.x = meta->x;
-    src.y = meta->y;
-    src.w = meta->width;
-    src.h = meta->height;
+    src.x = mem->x;
+    src.y = mem->y;
+    src.w = mem->width;
+    src.h = mem->height;
   }
 
   if (xvimagesink->keep_aspect) {
@@ -356,13 +356,13 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
   if (xvimagesink->xcontext->use_xshm) {
     GST_LOG_OBJECT (xvimagesink,
         "XvShmPutImage with image %dx%d and window %dx%d, from xvimage %"
-        GST_PTR_FORMAT, meta->width, meta->height,
+        GST_PTR_FORMAT, mem->width, mem->height,
         xvimagesink->render_rect.w, xvimagesink->render_rect.h, xvimage);
 
     XvShmPutImage (xvimagesink->xcontext->disp,
         xvimagesink->xcontext->xv_port_id,
         xvimagesink->xwindow->win,
-        xvimagesink->xwindow->gc, meta->xvimage,
+        xvimagesink->xwindow->gc, mem->xvimage,
         src.x, src.y, src.w, src.h,
         result.x, result.y, result.w, result.h, FALSE);
   } else
@@ -371,7 +371,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
     XvPutImage (xvimagesink->xcontext->disp,
         xvimagesink->xcontext->xv_port_id,
         xvimagesink->xwindow->win,
-        xvimagesink->xwindow->gc, meta->xvimage,
+        xvimagesink->xwindow->gc, mem->xvimage,
         src.x, src.y, src.w, src.h, result.x, result.y, result.w, result.h);
   }
 
@@ -1810,14 +1810,15 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
   GstFlowReturn res;
   GstXvImageSink *xvimagesink;
-  GstXvImageMeta *meta;
   GstBuffer *to_put;
+  GstXvImageMemory *mem;
 
   xvimagesink = GST_XVIMAGESINK (vsink);
 
-  meta = gst_buffer_get_xvimage_meta (buf);
-
-  if (meta && meta->sink == xvimagesink) {
+  if (gst_buffer_n_memory (buf) == 1
+      && (mem = (GstXvImageMemory *) gst_buffer_peek_memory (buf, 0))
+      && g_strcmp0 (mem->parent.allocator->mem_type, "xvimage") == 0
+      && mem->sink == xvimagesink) {
     /* If this buffer has been allocated using our buffer management we simply
        put the ximage which is in the PRIVATE pointer */
     GST_LOG_OBJECT (xvimagesink, "buffer %p from our pool, writing directly",

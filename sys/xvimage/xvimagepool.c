@@ -49,39 +49,6 @@ struct _GstXvImageBufferPoolPrivate
   gboolean need_alignment;
 };
 
-static void gst_xvimage_meta_free (GstXvImageMeta * meta, GstBuffer * buffer);
-
-/* xvimage metadata */
-GType
-gst_xvimage_meta_api_get_type (void)
-{
-  static volatile GType type;
-  static const gchar *tags[] =
-      { "memory", "size", "colorspace", "orientation", NULL };
-
-  if (g_once_init_enter (&type)) {
-    GType _type = gst_meta_api_type_register ("GstXvImageMetaAPI", tags);
-    g_once_init_leave (&type, _type);
-  }
-  return type;
-}
-
-const GstMetaInfo *
-gst_xvimage_meta_get_info (void)
-{
-  static const GstMetaInfo *xvimage_meta_info = NULL;
-
-  if (g_once_init_enter (&xvimage_meta_info)) {
-    const GstMetaInfo *meta =
-        gst_meta_register (GST_XVIMAGE_META_API_TYPE, "GstXvImageMeta",
-        sizeof (GstXvImageMeta), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) gst_xvimage_meta_free,
-        (GstMetaTransformFunction) NULL);
-    g_once_init_leave (&xvimage_meta_info, meta);
-  }
-  return xvimage_meta_info;
-}
-
 /* X11 stuff */
 static gboolean error_caught = FALSE;
 
@@ -96,16 +63,174 @@ gst_xvimagesink_handle_xerror (Display * display, XErrorEvent * xevent)
   return 0;
 }
 
-static GstXvImageMeta *
-gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
+static GstMemory *
+gst_xvimage_memory_alloc (GstAllocator * allocator, gsize size,
+    GstAllocationParams * params)
+{
+  return NULL;
+}
+
+static void
+gst_xvimage_memory_free (GstAllocator * allocator, GstMemory * gmem)
+{
+  GstXvImageMemory *mem = (GstXvImageMemory *) gmem;
+  GstXvImageSink *xvimagesink;
+
+  if (gmem->parent)
+    goto sub_mem;
+
+  xvimagesink = mem->sink;
+
+  GST_DEBUG_OBJECT (xvimagesink, "free memory %p", mem);
+
+  /* Hold the object lock to ensure the XContext doesn't disappear */
+  GST_OBJECT_LOCK (xvimagesink);
+  /* We might have some buffers destroyed after changing state to NULL */
+  if (xvimagesink->xcontext == NULL) {
+    GST_DEBUG_OBJECT (xvimagesink, "Destroying XvImage after Xcontext");
+#ifdef HAVE_XSHM
+    /* Need to free the shared memory segment even if the x context
+     * was already cleaned up */
+    if (mem->SHMInfo.shmaddr != ((void *) -1)) {
+      shmdt (mem->SHMInfo.shmaddr);
+    }
+#endif
+    if (mem->xvimage)
+      XFree (mem->xvimage);
+    goto beach;
+  }
+
+  g_mutex_lock (&xvimagesink->x_lock);
+
+#ifdef HAVE_XSHM
+  if (xvimagesink->xcontext->use_xshm) {
+    if (mem->SHMInfo.shmaddr != ((void *) -1)) {
+      GST_DEBUG_OBJECT (xvimagesink, "XServer ShmDetaching from 0x%x id 0x%lx",
+          mem->SHMInfo.shmid, mem->SHMInfo.shmseg);
+      XShmDetach (xvimagesink->xcontext->disp, &mem->SHMInfo);
+      XSync (xvimagesink->xcontext->disp, FALSE);
+      shmdt (mem->SHMInfo.shmaddr);
+      mem->SHMInfo.shmaddr = (void *) -1;
+    }
+    if (mem->xvimage)
+      XFree (mem->xvimage);
+  } else
+#endif /* HAVE_XSHM */
+  {
+    if (mem->xvimage) {
+      g_free (mem->xvimage->data);
+      XFree (mem->xvimage);
+    }
+  }
+
+  XSync (xvimagesink->xcontext->disp, FALSE);
+
+  g_mutex_unlock (&xvimagesink->x_lock);
+
+beach:
+  GST_OBJECT_UNLOCK (xvimagesink);
+
+  gst_object_unref (mem->sink);
+
+sub_mem:
+  g_slice_free (GstXvImageMemory, mem);
+}
+
+static gpointer
+xvimage_memory_map (GstXvImageMemory * mem, gsize maxsize, GstMapFlags flags)
+{
+  return mem->xvimage->data + mem->parent.offset;
+}
+
+static gboolean
+xvimage_memory_unmap (GstXvImageMemory * mem)
+{
+  return TRUE;
+}
+
+static GstXvImageMemory *
+xvimage_memory_share (GstXvImageMemory * mem, gssize offset, gsize size)
+{
+  GstXvImageMemory *sub;
+  GstMemory *parent;
+
+  /* We can only share the complete memory */
+  if (offset != 0)
+    return NULL;
+  if (size != -1 && size != mem->size)
+    return NULL;
+
+  /* find the real parent */
+  if ((parent = mem->parent.parent) == NULL)
+    parent = (GstMemory *) mem;
+
+  if (size == -1)
+    size = mem->parent.size - offset;
+
+  /* the shared memory is always readonly */
+  sub = g_slice_new (GstXvImageMemory);
+
+  gst_memory_init (GST_MEMORY_CAST (sub), GST_MINI_OBJECT_FLAGS (parent) |
+      GST_MINI_OBJECT_FLAG_LOCK_READONLY, g_object_ref (mem->parent.allocator),
+      &mem->parent, mem->parent.maxsize, mem->parent.align,
+      mem->parent.offset + offset, size);
+  sub->sink = mem->sink;
+  sub->xvimage = mem->xvimage;
+  sub->SHMInfo = mem->SHMInfo;
+  sub->x = mem->x;
+  sub->y = mem->y;
+  sub->width = mem->width;
+  sub->height = mem->height;
+
+  return sub;
+}
+
+typedef GstAllocator GstXvImageMemoryAllocator;
+typedef GstAllocatorClass GstXvImageMemoryAllocatorClass;
+
+GType xvimage_memory_allocator_get_type (void);
+G_DEFINE_TYPE (GstXvImageMemoryAllocator, xvimage_memory_allocator,
+    GST_TYPE_ALLOCATOR);
+
+#define GST_XVIMAGE_ALLOCATOR_NAME "xvimage"
+#define GST_TYPE_XVIMAGE_MEMORY_ALLOCATOR   (xvimage_memory_allocator_get_type())
+#define GST_IS_XVIMAGE_MEMORY_ALLOCATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_XVIMAGE_MEMORY_ALLOCATOR))
+
+static void
+xvimage_memory_allocator_class_init (GstXvImageMemoryAllocatorClass * klass)
+{
+  GstAllocatorClass *allocator_class;
+
+  allocator_class = (GstAllocatorClass *) klass;
+
+  allocator_class->alloc = gst_xvimage_memory_alloc;
+  allocator_class->free = gst_xvimage_memory_free;
+}
+
+static void
+xvimage_memory_allocator_init (GstXvImageMemoryAllocator * allocator)
+{
+  GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
+
+  alloc->mem_type = GST_XVIMAGE_ALLOCATOR_NAME;
+  alloc->mem_map = (GstMemoryMapFunction) xvimage_memory_map;
+  alloc->mem_unmap = (GstMemoryUnmapFunction) xvimage_memory_unmap;
+  alloc->mem_share = (GstMemoryShareFunction) xvimage_memory_share;
+  /* fallback copy and is_span */
+
+  GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
+}
+
+static GstMemory *
+xvimage_memory_alloc (GstXvImageBufferPool * xvpool)
 {
   GstXvImageSink *xvimagesink;
   int (*handler) (Display *, XErrorEvent *);
   gboolean success = FALSE;
   GstXContext *xcontext;
-  GstXvImageMeta *meta;
   gint width, height, im_format, align = 15, offset;
   GstXvImageBufferPoolPrivate *priv;
+  GstXvImageMemory *mem;
 
   priv = xvpool->priv;
   xvimagesink = xvpool->sink;
@@ -115,21 +240,20 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
   height = priv->padded_height;
   im_format = priv->im_format;
 
-  meta =
-      (GstXvImageMeta *) gst_buffer_add_meta (buffer, GST_XVIMAGE_META_INFO,
-      NULL);
-#ifdef HAVE_XSHM
-  meta->SHMInfo.shmaddr = ((void *) -1);
-  meta->SHMInfo.shmid = -1;
-#endif
-  meta->x = priv->align.padding_left;
-  meta->y = priv->align.padding_top;
-  meta->width = priv->info.width;
-  meta->height = priv->info.height;
-  meta->sink = gst_object_ref (xvimagesink);
-  meta->im_format = im_format;
+  mem = g_slice_new (GstXvImageMemory);
 
-  GST_DEBUG_OBJECT (xvimagesink, "creating image %p (%dx%d)", buffer,
+#ifdef HAVE_XSHM
+  mem->SHMInfo.shmaddr = ((void *) -1);
+  mem->SHMInfo.shmid = -1;
+#endif
+  mem->x = priv->align.padding_left;
+  mem->y = priv->align.padding_top;
+  mem->width = priv->info.width;
+  mem->height = priv->info.height;
+  mem->sink = gst_object_ref (xvimagesink);
+  mem->im_format = im_format;
+
+  GST_DEBUG_OBJECT (xvimagesink, "creating image %p (%dx%d)", mem,
       width, height);
 
   g_mutex_lock (&xvimagesink->x_lock);
@@ -142,9 +266,9 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
   if (xcontext->use_xshm) {
     int expected_size;
 
-    meta->xvimage = XvShmCreateImage (xcontext->disp,
-        xcontext->xv_port_id, im_format, NULL, width, height, &meta->SHMInfo);
-    if (!meta->xvimage || error_caught) {
+    mem->xvimage = XvShmCreateImage (xcontext->disp,
+        xcontext->xv_port_id, im_format, NULL, width, height, &mem->SHMInfo);
+    if (!mem->xvimage || error_caught) {
       g_mutex_unlock (&xvimagesink->x_lock);
 
       /* Reset error flag */
@@ -165,9 +289,9 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
     }
 
     /* we have to use the returned data_size for our shm size */
-    meta->size = meta->xvimage->data_size;
+    mem->size = mem->xvimage->data_size;
     GST_LOG_OBJECT (xvimagesink, "XShm image size is %" G_GSIZE_FORMAT,
-        meta->size);
+        mem->size);
 
     /* calculate the expected size.  This is only for sanity checking the
      * number we get from X. */
@@ -188,7 +312,7 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
 
         expected_size = offsets[2] + pitches[2] * GST_ROUND_UP_2 (height) / 2;
 
-        for (plane = 0; plane < meta->xvimage->num_planes; plane++) {
+        for (plane = 0; plane < mem->xvimage->num_planes; plane++) {
           GST_DEBUG_OBJECT (xvimagesink,
               "Plane %u has a expected pitch of %d bytes, " "offset of %d",
               plane, pitches[plane], offsets[plane]);
@@ -203,39 +327,39 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
         expected_size = 0;
         break;
     }
-    if (expected_size != 0 && meta->size != expected_size) {
+    if (expected_size != 0 && mem->size != expected_size) {
       GST_WARNING_OBJECT (xvimagesink,
           "unexpected XShm image size (got %" G_GSIZE_FORMAT ", expected %d)",
-          meta->size, expected_size);
+          mem->size, expected_size);
     }
 
     /* Be verbose about our XvImage stride */
     {
       guint plane;
 
-      for (plane = 0; plane < meta->xvimage->num_planes; plane++) {
+      for (plane = 0; plane < mem->xvimage->num_planes; plane++) {
         GST_DEBUG_OBJECT (xvimagesink, "Plane %u has a pitch of %d bytes, "
-            "offset of %d", plane, meta->xvimage->pitches[plane],
-            meta->xvimage->offsets[plane]);
+            "offset of %d", plane, mem->xvimage->pitches[plane],
+            mem->xvimage->offsets[plane]);
       }
     }
 
     /* get shared memory */
-    meta->SHMInfo.shmid =
-        shmget (IPC_PRIVATE, meta->size + align, IPC_CREAT | 0777);
-    if (meta->SHMInfo.shmid == -1)
+    mem->SHMInfo.shmid =
+        shmget (IPC_PRIVATE, mem->size + align, IPC_CREAT | 0777);
+    if (mem->SHMInfo.shmid == -1)
       goto shmget_failed;
 
     /* attach */
-    meta->SHMInfo.shmaddr = shmat (meta->SHMInfo.shmid, NULL, 0);
-    if (meta->SHMInfo.shmaddr == ((void *) -1))
+    mem->SHMInfo.shmaddr = shmat (mem->SHMInfo.shmid, NULL, 0);
+    if (mem->SHMInfo.shmaddr == ((void *) -1))
       goto shmat_failed;
 
     /* now we can set up the image data */
-    meta->xvimage->data = meta->SHMInfo.shmaddr;
-    meta->SHMInfo.readOnly = FALSE;
+    mem->xvimage->data = mem->SHMInfo.shmaddr;
+    mem->SHMInfo.readOnly = FALSE;
 
-    if (XShmAttach (xcontext->disp, &meta->SHMInfo) == 0)
+    if (XShmAttach (xcontext->disp, &mem->SHMInfo) == 0)
       goto xattach_failed;
 
     XSync (xcontext->disp, FALSE);
@@ -243,49 +367,50 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
     /* Delete the shared memory segment as soon as we everyone is attached.
      * This way, it will be deleted as soon as we detach later, and not
      * leaked if we crash. */
-    shmctl (meta->SHMInfo.shmid, IPC_RMID, NULL);
+    shmctl (mem->SHMInfo.shmid, IPC_RMID, NULL);
 
     GST_DEBUG_OBJECT (xvimagesink, "XServer ShmAttached to 0x%x, id 0x%lx",
-        meta->SHMInfo.shmid, meta->SHMInfo.shmseg);
+        mem->SHMInfo.shmid, mem->SHMInfo.shmseg);
   } else
   no_xshm:
 #endif /* HAVE_XSHM */
   {
-    meta->xvimage = XvCreateImage (xcontext->disp,
+    mem->xvimage = XvCreateImage (xcontext->disp,
         xcontext->xv_port_id, im_format, NULL, width, height);
-    if (!meta->xvimage || error_caught)
+    if (!mem->xvimage || error_caught)
       goto create_failed;
 
     /* we have to use the returned data_size for our image size */
-    meta->size = meta->xvimage->data_size;
-    meta->xvimage->data = g_malloc (meta->size + align);
+    mem->size = mem->xvimage->data_size;
+    mem->xvimage->data = g_malloc (mem->size + align);
 
     XSync (xcontext->disp, FALSE);
   }
 
-  if ((offset = ((guintptr) meta->xvimage->data & align)))
+  if ((offset = ((guintptr) mem->xvimage->data & align)))
     offset = (align + 1) - offset;
 
   GST_DEBUG_OBJECT (xvimagesink, "memory %p, align %d, offset %d",
-      meta->xvimage->data, align, offset);
+      mem->xvimage->data, align, offset);
 
   /* Reset error handler */
   error_caught = FALSE;
   XSetErrorHandler (handler);
 
-  gst_buffer_append_memory (buffer,
-      gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, meta->xvimage->data,
-          meta->size + align, offset, meta->size, NULL, NULL));
+  gst_memory_init (GST_MEMORY_CAST (mem), 0, g_object_ref (xvpool->allocator),
+      NULL, mem->size + align, align, offset, mem->size);
 
   g_mutex_unlock (&xvimagesink->x_lock);
 
   success = TRUE;
 
 beach:
-  if (!success)
-    meta = NULL;
+  if (!success) {
+    g_slice_free (GstXvImageMemory, mem);
+    mem = NULL;
+  }
 
-  return meta;
+  return GST_MEMORY_CAST (mem);
 
   /* ERRORS */
 create_failed:
@@ -309,7 +434,7 @@ shmget_failed:
         ("Failed to create output image buffer of %dx%d pixels",
             width, height),
         ("could not get shared memory of %" G_GSIZE_FORMAT " bytes",
-            meta->size));
+            mem->size));
     goto beach;
   }
 shmat_failed:
@@ -319,13 +444,13 @@ shmat_failed:
         ("Failed to create output image buffer of %dx%d pixels",
             width, height), ("Failed to shmat: %s", g_strerror (errno)));
     /* Clean up the shared memory segment */
-    shmctl (meta->SHMInfo.shmid, IPC_RMID, NULL);
+    shmctl (mem->SHMInfo.shmid, IPC_RMID, NULL);
     goto beach;
   }
 xattach_failed:
   {
     /* Clean up the shared memory segment */
-    shmctl (meta->SHMInfo.shmid, IPC_RMID, NULL);
+    shmctl (mem->SHMInfo.shmid, IPC_RMID, NULL);
     g_mutex_unlock (&xvimagesink->x_lock);
 
     GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
@@ -334,65 +459,6 @@ xattach_failed:
     goto beach;
   }
 #endif
-}
-
-static void
-gst_xvimage_meta_free (GstXvImageMeta * meta, GstBuffer * buffer)
-{
-  GstXvImageSink *xvimagesink;
-
-  xvimagesink = meta->sink;
-
-  GST_DEBUG_OBJECT (xvimagesink, "free meta on buffer %p", buffer);
-
-  /* Hold the object lock to ensure the XContext doesn't disappear */
-  GST_OBJECT_LOCK (xvimagesink);
-  /* We might have some buffers destroyed after changing state to NULL */
-  if (xvimagesink->xcontext == NULL) {
-    GST_DEBUG_OBJECT (xvimagesink, "Destroying XvImage after Xcontext");
-#ifdef HAVE_XSHM
-    /* Need to free the shared memory segment even if the x context
-     * was already cleaned up */
-    if (meta->SHMInfo.shmaddr != ((void *) -1)) {
-      shmdt (meta->SHMInfo.shmaddr);
-    }
-#endif
-    if (meta->xvimage)
-      XFree (meta->xvimage);
-    goto beach;
-  }
-
-  g_mutex_lock (&xvimagesink->x_lock);
-
-#ifdef HAVE_XSHM
-  if (xvimagesink->xcontext->use_xshm) {
-    if (meta->SHMInfo.shmaddr != ((void *) -1)) {
-      GST_DEBUG_OBJECT (xvimagesink, "XServer ShmDetaching from 0x%x id 0x%lx",
-          meta->SHMInfo.shmid, meta->SHMInfo.shmseg);
-      XShmDetach (xvimagesink->xcontext->disp, &meta->SHMInfo);
-      XSync (xvimagesink->xcontext->disp, FALSE);
-      shmdt (meta->SHMInfo.shmaddr);
-      meta->SHMInfo.shmaddr = (void *) -1;
-    }
-    if (meta->xvimage)
-      XFree (meta->xvimage);
-  } else
-#endif /* HAVE_XSHM */
-  {
-    if (meta->xvimage) {
-      g_free (meta->xvimage->data);
-      XFree (meta->xvimage);
-    }
-  }
-
-  XSync (xvimagesink->xcontext->disp, FALSE);
-
-  g_mutex_unlock (&xvimagesink->x_lock);
-
-beach:
-  GST_OBJECT_UNLOCK (xvimagesink);
-
-  gst_object_unref (meta->sink);
 }
 
 #ifdef HAVE_XSHM
@@ -625,16 +691,17 @@ xvimage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstXvImageBufferPoolPrivate *priv = xvpool->priv;
   GstVideoInfo *info;
   GstBuffer *xvimage;
-  GstXvImageMeta *meta;
+  GstMemory *mem;
 
   info = &priv->info;
 
   xvimage = gst_buffer_new ();
-  meta = gst_buffer_add_xvimage_meta (xvimage, xvpool);
-  if (meta == NULL) {
+  mem = xvimage_memory_alloc (xvpool);
+  if (mem == NULL) {
     gst_buffer_unref (xvimage);
     goto no_buffer;
   }
+  gst_buffer_append_memory (xvimage, mem);
 
   if (priv->add_metavideo) {
     GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
@@ -665,6 +732,7 @@ gst_xvimage_buffer_pool_new (GstXvImageSink * xvimagesink)
 
   pool = g_object_new (GST_TYPE_XVIMAGE_BUFFER_POOL, NULL);
   pool->sink = gst_object_ref (xvimagesink);
+  pool->allocator = g_object_new (GST_TYPE_XVIMAGE_MEMORY_ALLOCATOR, NULL);
 
   GST_LOG_OBJECT (pool, "new XvImage buffer pool %p", pool);
 
@@ -703,6 +771,7 @@ gst_xvimage_buffer_pool_finalize (GObject * object)
   if (priv->caps)
     gst_caps_unref (priv->caps);
   gst_object_unref (pool->sink);
+  g_object_unref (pool->allocator);
 
   G_OBJECT_CLASS (gst_xvimage_buffer_pool_parent_class)->finalize (object);
 }
