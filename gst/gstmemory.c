@@ -90,6 +90,7 @@ _gst_memory_free (GstMemory * mem)
     gst_memory_unref (mem->parent);
   }
 
+  g_object_unref (mem->allocator);
   gst_allocator_free (mem->allocator, mem);
 }
 
@@ -117,7 +118,7 @@ gst_memory_init (GstMemory * mem, GstMemoryFlags flags,
       (GstMiniObjectCopyFunction) _gst_memory_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_memory_free);
 
-  mem->allocator = allocator;
+  mem->allocator = g_object_ref (allocator);
   if (parent) {
     gst_memory_lock (parent, GST_LOCK_FLAG_EXCLUSIVE);
     gst_memory_ref (parent);
