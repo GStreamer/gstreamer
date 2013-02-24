@@ -20,17 +20,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <unistd.h>
 #include <math.h>
 
 #include <gst/audio/audio.h>
 #include <gst/check/gstcheck.h>
-
-gboolean have_eos = FALSE;
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
@@ -311,6 +305,118 @@ GST_START_TEST (test_int16_panned)
 
 GST_END_TEST;
 
+GST_START_TEST (test_message_on_eos)
+{
+  GstElement *level;
+  GstBuffer *inbuffer, *outbuffer;
+  GstEvent *event;
+  GstBus *bus;
+  GstCaps *caps;
+  GstMessage *message;
+  const GstStructure *structure;
+  int i, j;
+  GstMapInfo map;
+  gint16 *data;
+  const GValue *list, *value;
+  GstClockTime endtime;
+  gdouble dB;
+
+  level = setup_level ();
+  g_object_set (level, "message", TRUE, "interval", GST_SECOND / 5, NULL);
+
+  fail_unless (gst_element_set_state (level,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  /* create a fake 0.1 sec buffer with a half-amplitude block signal */
+  inbuffer = gst_buffer_new_and_alloc (400);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  data = (gint16 *) map.data;
+  for (j = 0; j < 200; ++j) {
+    *data = 16536;
+    ++data;
+  }
+  gst_buffer_unmap (inbuffer, &map);
+  caps = gst_caps_from_string (LEVEL_CAPS_STRING);
+  gst_pad_set_caps (mysrcpad, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* create a bus to get the level message on */
+  bus = gst_bus_new ();
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
+  gst_element_set_bus (level, bus);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  /* ... but it ends up being collected on the global buffer list */
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
+
+  message = gst_bus_poll (bus, GST_MESSAGE_ELEMENT, 0);
+  fail_unless (message == NULL);
+
+  event = gst_event_new_eos ();
+  fail_unless (gst_pad_push_event (mysrcpad, event) == TRUE);
+
+  message = gst_bus_poll (bus, GST_MESSAGE_ELEMENT, 0);
+  fail_if (message == NULL);
+
+  ASSERT_OBJECT_REFCOUNT (message, "message", 1);
+
+  fail_unless (message != NULL);
+  fail_unless (GST_MESSAGE_SRC (message) == GST_OBJECT (level));
+  fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT);
+  structure = gst_message_get_structure (message);
+  fail_if (structure == NULL);
+  fail_unless_equals_string ((char *) gst_structure_get_name (structure),
+      "level");
+  fail_unless (gst_structure_get_clock_time (structure, "endtime", &endtime));
+
+  /* block wave of half amplitude has -5.94 dB for rms, peak and decay */
+  for (i = 0; i < 2; ++i) {
+    const gchar *fields[3] = { "rms", "peak", "decay" };
+    for (j = 0; j < 3; ++j) {
+      GValueArray *arr;
+
+      list = gst_structure_get_value (structure, fields[j]);
+      arr = g_value_get_boxed (list);
+      value = g_value_array_get_nth (arr, i);
+      dB = g_value_get_double (value);
+      GST_DEBUG ("%s is %lf", fields[j], dB);
+      fail_if (dB < -6.0);
+      fail_if (dB > -5.9);
+    }
+  }
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
+
+  /* clean up */
+  /* flush current messages,and future state change messages */
+  gst_bus_set_flushing (bus, TRUE);
+
+  /* message has a ref to the element */
+  ASSERT_OBJECT_REFCOUNT (level, "level", 2);
+  gst_message_unref (message);
+  ASSERT_OBJECT_REFCOUNT (level, "level", 1);
+
+  gst_element_set_bus (level, NULL);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
+  gst_object_unref (bus);
+  gst_buffer_unref (outbuffer);
+  fail_unless (gst_element_set_state (level,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+  ASSERT_OBJECT_REFCOUNT (level, "level", 1);
+  cleanup_level (level);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 level_suite (void)
 {
@@ -320,6 +426,7 @@ level_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_int16);
   tcase_add_test (tc_chain, test_int16_panned);
+  tcase_add_test (tc_chain, test_message_on_eos);
 
   return s;
 }
