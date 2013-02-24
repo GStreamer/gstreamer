@@ -105,10 +105,6 @@
 #include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <string.h>
 #include <math.h>
 #include <gst/gst.h>
@@ -166,6 +162,9 @@ static gboolean gst_level_set_caps (GstBaseTransform * trans, GstCaps * in,
 static gboolean gst_level_start (GstBaseTransform * trans);
 static GstFlowReturn gst_level_transform_ip (GstBaseTransform * trans,
     GstBuffer * in);
+static void gst_level_post_message (GstLevel * filter);
+static gboolean gst_level_sink_event (GstBaseTransform * trans,
+    GstEvent * event);
 
 
 static void
@@ -212,6 +211,7 @@ gst_level_class_init (GstLevelClass * klass)
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_level_set_caps);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_level_start);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_level_transform_ip);
+  trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_level_sink_event);
   trans_class->passthrough_on_same_caps = TRUE;
 }
 
@@ -643,61 +643,86 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   /* do we need to message ? */
   if (filter->num_frames >= filter->interval_frames) {
-    if (filter->message) {
-      GstMessage *m;
-      GstClockTime duration =
-          GST_FRAMES_TO_CLOCK_TIME (filter->num_frames, rate);
-
-      m = gst_level_message_new (filter, filter->message_ts, duration);
-
-      GST_LOG_OBJECT (filter,
-          "message: ts %" GST_TIME_FORMAT ", num_frames %d",
-          GST_TIME_ARGS (filter->message_ts), filter->num_frames);
-
-      for (i = 0; i < channels; ++i) {
-        gdouble RMS;
-        gdouble RMSdB, lastdB, decaydB;
-
-        RMS = sqrt (filter->CS[i] / filter->num_frames);
-        GST_LOG_OBJECT (filter,
-            "message: channel %d, CS %f, num_frames %d, RMS %f",
-            i, filter->CS[i], filter->num_frames, RMS);
-        GST_LOG_OBJECT (filter,
-            "message: last_peak: %f, decay_peak: %f",
-            filter->last_peak[i], filter->decay_peak[i]);
-        /* RMS values are calculated in amplitude, so 20 * log 10 */
-        RMSdB = 20 * log10 (RMS + EPSILON);
-        /* peak values are square sums, ie. power, so 10 * log 10 */
-        lastdB = 10 * log10 (filter->last_peak[i] + EPSILON);
-        decaydB = 10 * log10 (filter->decay_peak[i] + EPSILON);
-
-        if (filter->decay_peak[i] < filter->last_peak[i]) {
-          /* this can happen in certain cases, for example when
-           * the last peak is between decay_peak and decay_peak_base */
-          GST_DEBUG_OBJECT (filter,
-              "message: decay peak dB %f smaller than last peak dB %f, copying",
-              decaydB, lastdB);
-          filter->decay_peak[i] = filter->last_peak[i];
-        }
-        GST_LOG_OBJECT (filter,
-            "message: RMS %f dB, peak %f dB, decay %f dB",
-            RMSdB, lastdB, decaydB);
-
-        gst_level_message_append_channel (m, RMSdB, lastdB, decaydB);
-
-        /* reset cumulative and normal peak */
-        filter->CS[i] = 0.0;
-        filter->last_peak[i] = 0.0;
-      }
-
-      gst_element_post_message (GST_ELEMENT (filter), m);
-    }
-    filter->num_frames = 0;
+    gst_level_post_message (filter);
   }
 
   gst_buffer_unmap (in, &map);
 
   return GST_FLOW_OK;
+}
+
+static void
+gst_level_post_message (GstLevel * filter)
+{
+  guint i;
+  gint channels, rate;
+
+  channels = GST_AUDIO_INFO_CHANNELS (&filter->info);
+  rate = GST_AUDIO_INFO_RATE (&filter->info);
+
+
+  if (filter->message) {
+    GstMessage *m;
+    GstClockTime duration = GST_FRAMES_TO_CLOCK_TIME (filter->num_frames, rate);
+
+    m = gst_level_message_new (filter, filter->message_ts, duration);
+
+    GST_LOG_OBJECT (filter,
+        "message: ts %" GST_TIME_FORMAT ", num_frames %d",
+        GST_TIME_ARGS (filter->message_ts), filter->num_frames);
+
+    for (i = 0; i < channels; ++i) {
+      gdouble RMS;
+      gdouble RMSdB, lastdB, decaydB;
+
+      RMS = sqrt (filter->CS[i] / filter->num_frames);
+      GST_LOG_OBJECT (filter,
+          "message: channel %d, CS %f, num_frames %d, RMS %f",
+          i, filter->CS[i], filter->num_frames, RMS);
+      GST_LOG_OBJECT (filter,
+          "message: last_peak: %f, decay_peak: %f",
+          filter->last_peak[i], filter->decay_peak[i]);
+      /* RMS values are calculated in amplitude, so 20 * log 10 */
+      RMSdB = 20 * log10 (RMS + EPSILON);
+      /* peak values are square sums, ie. power, so 10 * log 10 */
+      lastdB = 10 * log10 (filter->last_peak[i] + EPSILON);
+      decaydB = 10 * log10 (filter->decay_peak[i] + EPSILON);
+
+      if (filter->decay_peak[i] < filter->last_peak[i]) {
+        /* this can happen in certain cases, for example when
+         * the last peak is between decay_peak and decay_peak_base */
+        GST_DEBUG_OBJECT (filter,
+            "message: decay peak dB %f smaller than last peak dB %f, copying",
+            decaydB, lastdB);
+        filter->decay_peak[i] = filter->last_peak[i];
+      }
+      GST_LOG_OBJECT (filter,
+          "message: RMS %f dB, peak %f dB, decay %f dB",
+          RMSdB, lastdB, decaydB);
+
+      gst_level_message_append_channel (m, RMSdB, lastdB, decaydB);
+
+      /* reset cumulative and normal peak */
+      filter->CS[i] = 0.0;
+      filter->last_peak[i] = 0.0;
+    }
+
+    gst_element_post_message (GST_ELEMENT (filter), m);
+  }
+  filter->num_frames = 0;
+}
+
+
+static gboolean
+gst_level_sink_event (GstBaseTransform * trans, GstEvent * event)
+{
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    GstLevel *filter = GST_LEVEL (trans);
+
+    gst_level_post_message (filter);
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 }
 
 static gboolean
