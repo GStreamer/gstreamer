@@ -171,7 +171,7 @@ xvimage_memory_share (GstXvImageMemory * mem, gssize offset, gsize size)
   sub = g_slice_new (GstXvImageMemory);
 
   gst_memory_init (GST_MEMORY_CAST (sub), GST_MINI_OBJECT_FLAGS (parent) |
-      GST_MINI_OBJECT_FLAG_LOCK_READONLY, g_object_ref (mem->parent.allocator),
+      GST_MINI_OBJECT_FLAG_LOCK_READONLY, mem->parent.allocator,
       &mem->parent, mem->parent.maxsize, mem->parent.align,
       mem->parent.offset + offset, size);
   sub->sink = mem->sink;
@@ -397,7 +397,7 @@ xvimage_memory_alloc (GstXvImageBufferPool * xvpool)
   error_caught = FALSE;
   XSetErrorHandler (handler);
 
-  gst_memory_init (GST_MEMORY_CAST (mem), 0, g_object_ref (xvpool->allocator),
+  gst_memory_init (GST_MEMORY_CAST (mem), 0, xvpool->allocator,
       NULL, mem->size + align, align, offset, mem->size);
 
   g_mutex_unlock (&xvimagesink->x_lock);
