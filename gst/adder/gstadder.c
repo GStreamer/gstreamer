@@ -734,6 +734,7 @@ gst_adder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
          * whichever happens first.
          */
         g_atomic_int_set (&adder->flush_stop_pending, TRUE);
+        GST_DEBUG_OBJECT (adder, "mark pending flush stop event");
       }
       GST_DEBUG_OBJECT (adder, "handling seek event: %" GST_PTR_FORMAT, event);
 
@@ -770,7 +771,10 @@ gst_adder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       if (g_atomic_int_compare_and_exchange (&adder->flush_stop_pending,
               TRUE, FALSE)) {
         GST_DEBUG_OBJECT (adder, "pending flush stop");
-        gst_pad_push_event (adder->srcpad, gst_event_new_flush_stop (TRUE));
+        if (!gst_pad_push_event (adder->srcpad,
+                gst_event_new_flush_stop (TRUE))) {
+          GST_WARNING_OBJECT (adder, "Sending flush stop event failed");
+        }
       }
       break;
     }
@@ -818,14 +822,11 @@ gst_adder_sink_event (GstCollectPads * pads, GstCollectData * pad,
       event = NULL;
     }
     case GST_EVENT_FLUSH_START:
-      /* ensure that we'll eventually send a flush-stop, when we have received a
-       * flush-start (e.g. after a flushing seek directly sent to an element) */
-      if (g_atomic_int_compare_and_exchange (&adder->flush_stop_pending,
-              FALSE, TRUE)) {
-        /* discard flush start events, as we forwarded one already when handing the
-         * flushing seek on the sink pad */
-        discard = TRUE;
-      }
+      /* discard flush start events, as we forwarded one already when handing the
+       * flushing seek on the sink pad */
+      g_atomic_int_set (&adder->need_flush_stop, TRUE);
+      discard = TRUE;
+      GST_DEBUG_OBJECT (pad->pad, "eating flush start");
       break;
     case GST_EVENT_FLUSH_STOP:
       /* we received a flush-stop. We will only forward it when
@@ -857,6 +858,13 @@ gst_adder_sink_event (GstCollectPads * pads, GstCollectData * pad,
         /* make sure we push a new segment, to inform about new basetime
          * see FIXME in gst_adder_collected() */
         g_atomic_int_set (&adder->new_segment_pending, TRUE);
+      }
+      if (g_atomic_int_compare_and_exchange (&adder->need_flush_stop,
+              TRUE, FALSE)) {
+        /* ensure that we'll eventually send a flush-stop
+         * (e.g. after a flushing seek directly sent to an upstream element) */
+        g_atomic_int_set (&adder->flush_stop_pending, TRUE);
+        GST_DEBUG_OBJECT (adder, "mark pending flush stop event");
       }
       discard = TRUE;
       break;
@@ -1122,12 +1130,23 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   if (G_UNLIKELY (adder->func == NULL))
     goto not_negotiated;
 
+  if (g_atomic_int_compare_and_exchange (&adder->flush_stop_pending,
+          TRUE, FALSE)) {
+    GST_INFO_OBJECT (adder->srcpad, "send pending flush stop event");
+    if (!gst_pad_push_event (adder->srcpad, gst_event_new_flush_stop (TRUE))) {
+      GST_WARNING_OBJECT (adder->srcpad, "Sending flush stop event failed");
+    }
+  }
+
   if (adder->send_stream_start) {
     gchar s_id[32];
 
+    GST_INFO_OBJECT (adder->srcpad, "send pending stream start event");
     /* stream-start (FIXME: create id based on input ids) */
     g_snprintf (s_id, sizeof (s_id), "adder-%08x", g_random_int ());
-    gst_pad_push_event (adder->srcpad, gst_event_new_stream_start (s_id));
+    if (!gst_pad_push_event (adder->srcpad, gst_event_new_stream_start (s_id))) {
+      GST_WARNING_OBJECT (adder->srcpad, "Sending stream start event failed");
+    }
     adder->send_stream_start = FALSE;
   }
 
@@ -1135,15 +1154,12 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     GstEvent *caps_event;
 
     caps_event = gst_event_new_caps (adder->current_caps);
-    GST_INFO_OBJECT (adder, "caps event %" GST_PTR_FORMAT, caps_event);
-    gst_pad_push_event (adder->srcpad, caps_event);
+    GST_INFO_OBJECT (adder->srcpad, "send pending caps event %" GST_PTR_FORMAT,
+        caps_event);
+    if (!gst_pad_push_event (adder->srcpad, caps_event)) {
+      GST_WARNING_OBJECT (adder->srcpad, "Sending caps event failed");
+    }
     adder->send_caps = FALSE;
-  }
-
-  if (g_atomic_int_compare_and_exchange (&adder->flush_stop_pending,
-          TRUE, FALSE)) {
-    GST_DEBUG_OBJECT (adder, "pending flush stop");
-    gst_pad_push_event (adder->srcpad, gst_event_new_flush_stop (TRUE));
   }
 
   /* get available bytes for reading, this can be 0 which could mean empty
@@ -1267,11 +1283,8 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     }
     adder->offset = gst_util_uint64_scale (adder->segment.position,
         rate, GST_SECOND);
-    GST_INFO_OBJECT (adder, "seg_start %" G_GUINT64_FORMAT ", seg_end %"
-        G_GUINT64_FORMAT, adder->segment.start, adder->segment.stop);
-    GST_INFO_OBJECT (adder, "timestamp %" G_GINT64_FORMAT ",new offset %"
-        G_GINT64_FORMAT, adder->segment.position, adder->offset);
-
+    GST_INFO_OBJECT (adder->srcpad, "sending pending new segment event %"
+        GST_PTR_FORMAT, adder->segment);
     if (event) {
       if (!gst_pad_push_event (adder->srcpad, event)) {
         GST_WARNING_OBJECT (adder->srcpad, "Sending new segment event failed");

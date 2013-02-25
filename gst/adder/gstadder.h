@@ -70,6 +70,7 @@ struct _GstAdder {
   volatile gboolean wait_for_new_segment;
   /* src event handling */
   volatile gboolean flush_stop_pending;
+  volatile gboolean need_flush_stop;
 
   /* current caps */
   GstCaps *current_caps;
