@@ -108,7 +108,7 @@ ensure_image(GstVaapiImage *image)
     for (i = 0; i < num_planes; i++) {
         guchar * const plane = gst_vaapi_image_get_plane(image, i);
         if (plane)
-            memset(plane, 0, height * gst_vaapi_image_get_pitch(image, i));
+            memset(plane, 0, gst_vaapi_image_get_pitch(image, i));
     }
 
     if (!gst_vaapi_image_unmap(image))
