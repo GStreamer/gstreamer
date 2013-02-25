@@ -1623,6 +1623,31 @@ gst_query_set_nth_allocation_pool (GstQuery * query, guint index,
   g_array_index (array, AllocationPool, index) = ap;
 }
 
+/**
+ * gst_query_remove_nth_allocation_pool:
+ * @query: a GST_QUERY_ALLOCATION type query #GstQuery
+ * @index: position in the allocation pool array to remove
+ *
+ * Remove the allocation pool at @index of the allocation pool array.
+ */
+void
+gst_query_remove_nth_allocation_pool (GstQuery * query, guint index)
+{
+  GArray *array;
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+  g_return_if_fail (gst_query_is_writable (query));
+
+  structure = GST_QUERY_STRUCTURE (query);
+  array =
+      ensure_array (structure, GST_QUARK (POOL), sizeof (AllocationPool),
+      (GDestroyNotify) allocation_pool_free);
+  g_return_if_fail (index < array->len);
+
+  g_array_remove_index (array, index);
+}
+
 typedef struct
 {
   GType api;
@@ -1938,6 +1963,31 @@ gst_query_set_nth_allocation_param (GstQuery * query, guint index,
     gst_allocation_params_init (&ap.params);
 
   g_array_index (array, AllocationParam, index) = ap;
+}
+
+/**
+ * gst_query_remove_nth_allocation_param:
+ * @query: a GST_QUERY_ALLOCATION type query #GstQuery
+ * @index: position in the allocation param array to remove
+ *
+ * Remove the allocation param at @index of the allocation param array.
+ */
+void
+gst_query_remove_nth_allocation_param (GstQuery * query, guint index)
+{
+  GArray *array;
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+  g_return_if_fail (gst_query_is_writable (query));
+
+  structure = GST_QUERY_STRUCTURE (query);
+  array =
+      ensure_array (structure, GST_QUARK (ALLOCATOR), sizeof (AllocationParam),
+      (GDestroyNotify) allocation_param_free);
+  g_return_if_fail (index < array->len);
+
+  g_array_remove_index (array, index);
 }
 
 /**

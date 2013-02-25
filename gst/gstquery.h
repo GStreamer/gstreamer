@@ -411,6 +411,7 @@ void            gst_query_set_nth_allocation_pool    (GstQuery *query, guint ind
                                                       GstBufferPool *pool,
                                                       guint size, guint min_buffers,
                                                       guint max_buffers);
+void            gst_query_remove_nth_allocation_pool (GstQuery *query, guint index);
 
 /* allocators */
 void            gst_query_add_allocation_param       (GstQuery *query, GstAllocator *allocator,
@@ -422,6 +423,7 @@ void            gst_query_parse_nth_allocation_param (GstQuery *query, guint ind
 void            gst_query_set_nth_allocation_param   (GstQuery *query, guint index,
                                                       GstAllocator *allocator,
                                                       const GstAllocationParams *params);
+void            gst_query_remove_nth_allocation_param (GstQuery *query, guint index);
 
 /* metadata */
 void            gst_query_add_allocation_meta        (GstQuery *query, GType api, const GstStructure *params);
