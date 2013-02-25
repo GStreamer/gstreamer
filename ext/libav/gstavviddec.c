@@ -106,7 +106,7 @@ struct _GstFFMpegVidDecClass
 #define DEFAULT_SKIPFRAME		0
 #define DEFAULT_DIRECT_RENDERING	TRUE
 #define DEFAULT_DEBUG_MV		FALSE
-#define DEFAULT_MAX_THREADS		0
+#define DEFAULT_MAX_THREADS		1
 
 enum
 {
@@ -470,14 +470,30 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
    * supports it) */
   ffmpegdec->context->debug_mv = ffmpegdec->debug_mv;
 
-  if (ffmpegdec->max_threads == 0) {
-    if (!(oclass->in_plugin->capabilities & CODEC_CAP_AUTO_THREADS))
-      ffmpegdec->context->thread_count = gst_ffmpeg_auto_max_threads ();
-    else
-      ffmpegdec->context->thread_count = 0;
-  } else
-    ffmpegdec->context->thread_count = ffmpegdec->max_threads;
+  {
+    const gchar *env = g_getenv ("GST_AVVIDDEC_MAX_THREADS");
+    int max_threads = ffmpegdec->max_threads;
 
+    if (env != NULL) {
+      if (g_str_equal (env, "auto"))
+        max_threads = 0;
+      else
+        max_threads = MAX (atoi (env), 0);
+
+      if (max_threads != 1) {
+        GST_WARNING_OBJECT (ffmpegdec, "max threads forced to %d, this might "
+            "lead to decoding errors or artefacts", max_threads);
+      }
+    }
+
+    if (max_threads == 0) {
+      if (!(oclass->in_plugin->capabilities & CODEC_CAP_AUTO_THREADS))
+        ffmpegdec->context->thread_count = gst_ffmpeg_auto_max_threads ();
+      else
+        ffmpegdec->context->thread_count = 0;
+    } else
+      ffmpegdec->context->thread_count = max_threads;
+  }
   ffmpegdec->context->thread_type = FF_THREAD_SLICE;
 
   /* open codec - we don't select an output pix_fmt yet,

@@ -476,6 +476,7 @@ gst_ffmpeg_auto_max_threads (void)
     if (n < 1)
       n = 1;
 
+    GST_INFO ("threads: %d", n);
     g_once_init_leave (&n_threads, n);
   }
 
