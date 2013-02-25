@@ -940,6 +940,72 @@ video_negotiation_map_free (VideoNegotiationMap * m)
   g_slice_free (VideoNegotiationMap, m);
 }
 
+static GList *
+gst_omx_video_enc_get_supported_colorformats (GstOMXVideoEnc * self)
+{
+  GstOMXPort *port = self->enc_in_port;
+  GstVideoCodecState *state = self->input_state;
+  GstVideoInfo *info = &state->info;
+  OMX_VIDEO_PARAM_PORTFORMATTYPE param;
+  OMX_ERRORTYPE err;
+  GList *negotiation_map = NULL;
+  gint old_index;
+
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = port->index;
+  param.nIndex = 0;
+  if (info->fps_n == 0)
+    param.xFramerate = 0;
+  else
+    param.xFramerate = (info->fps_n << 16) / (info->fps_d);
+
+  old_index = -1;
+  do {
+    VideoNegotiationMap *m;
+
+    err =
+        gst_omx_component_get_parameter (self->enc,
+        OMX_IndexParamVideoPortFormat, &param);
+
+    /* FIXME: Workaround for Bellagio that simply always
+     * returns the same value regardless of nIndex and
+     * never returns OMX_ErrorNoMore
+     */
+    if (old_index == param.nIndex)
+      break;
+
+    if (err == OMX_ErrorNone || err == OMX_ErrorNoMore) {
+      switch (param.eColorFormat) {
+        case OMX_COLOR_FormatYUV420Planar:
+        case OMX_COLOR_FormatYUV420PackedPlanar:
+          m = g_slice_new (VideoNegotiationMap);
+          m->format = GST_VIDEO_FORMAT_I420;
+          m->type = param.eColorFormat;
+          negotiation_map = g_list_append (negotiation_map, m);
+          GST_DEBUG_OBJECT (self, "Component supports I420 (%d) at index %d",
+              param.eColorFormat, param.nIndex);
+          break;
+        case OMX_COLOR_FormatYUV420SemiPlanar:
+          m = g_slice_new (VideoNegotiationMap);
+          m->format = GST_VIDEO_FORMAT_NV12;
+          m->type = param.eColorFormat;
+          negotiation_map = g_list_append (negotiation_map, m);
+          GST_DEBUG_OBJECT (self, "Component supports NV12 (%d) at index %d",
+              param.eColorFormat, param.nIndex);
+          break;
+        default:
+          GST_DEBUG_OBJECT (self,
+              "Component supports unsupported color format %d at index %d",
+              param.eColorFormat, param.nIndex);
+          break;
+      }
+    }
+    old_index = param.nIndex++;
+  } while (err == OMX_ErrorNone);
+
+  return negotiation_map;
+}
+
 static gboolean
 gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state)
@@ -947,12 +1013,9 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   GstOMXVideoEnc *self;
   GstOMXVideoEncClass *klass;
   gboolean needs_disable = FALSE;
-  OMX_ERRORTYPE err;
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
-  OMX_VIDEO_PARAM_PORTFORMATTYPE param;
   GstVideoInfo *info = &state->info;
   GList *negotiation_map = NULL, *l;
-  gint old_index;
 
   self = GST_OMX_VIDEO_ENC (encoder);
   klass = GST_OMX_VIDEO_ENC_GET_CLASS (encoder);
@@ -990,59 +1053,7 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
     GST_DEBUG_OBJECT (self, "Encoder drained and disabled");
   }
 
-  GST_OMX_INIT_STRUCT (&param);
-  param.nPortIndex = self->enc_in_port->index;
-  param.nIndex = 0;
-  if (info->fps_n == 0) {
-    param.xFramerate = 0;
-  } else {
-    if (!(klass->cdata.hacks & GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER))
-      param.xFramerate = (info->fps_n << 16) / (info->fps_d);
-    else
-      param.xFramerate = (info->fps_n) / (info->fps_d);
-  }
-  old_index = -1;
-
-  do {
-    VideoNegotiationMap *m;
-
-    err =
-        gst_omx_component_get_parameter (self->enc,
-        OMX_IndexParamVideoPortFormat, &param);
-
-    /* FIXME: Workaround for Bellagio that simply always
-     * returns the same value regardless of nIndex and
-     * never returns OMX_ErrorNoMore
-     */
-    if (old_index == param.nIndex)
-      break;
-
-    if (err == OMX_ErrorNone || err == OMX_ErrorNoMore) {
-      switch (param.eColorFormat) {
-        case OMX_COLOR_FormatYUV420Planar:
-        case OMX_COLOR_FormatYUV420PackedPlanar:
-          m = g_slice_new0 (VideoNegotiationMap);
-          m->format = GST_VIDEO_FORMAT_I420;
-          m->type = param.eColorFormat;
-          negotiation_map = g_list_append (negotiation_map, m);
-          GST_DEBUG_OBJECT (self, "Component supports I420 (%d) at index %d",
-              param.eColorFormat, param.nIndex);
-          break;
-        case OMX_COLOR_FormatYUV420SemiPlanar:
-          m = g_slice_new0 (VideoNegotiationMap);
-          m->format = GST_VIDEO_FORMAT_NV12;
-          m->type = param.eColorFormat;
-          negotiation_map = g_list_append (negotiation_map, m);
-          GST_DEBUG_OBJECT (self, "Component supports NV12 (%d) at index %d",
-              param.eColorFormat, param.nIndex);
-          break;
-        default:
-          break;
-      }
-    }
-    old_index = param.nIndex++;
-  } while (err == OMX_ErrorNone);
-
+  negotiation_map = gst_omx_video_enc_get_supported_colorformats (self);
   if (!negotiation_map) {
     /* Fallback */
     switch (info->finfo->format) {
@@ -1646,61 +1657,22 @@ static GstCaps *
 gst_omx_video_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 {
   GstOMXVideoEnc *self = GST_OMX_VIDEO_ENC (encoder);
-  GstOMXVideoEncClass *klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
-  GstOMXPort *port = self->enc_in_port;
-  OMX_VIDEO_PARAM_PORTFORMATTYPE param;
-  OMX_ERRORTYPE err;
+  GList *negotiation_map = NULL, *l;
   GstCaps *comp_supported_caps;
-  gint old_index;
 
   if (!self->enc)
     return gst_video_encoder_proxy_getcaps (encoder, NULL, filter);
 
-  GST_OMX_INIT_STRUCT (&param);
-  param.nPortIndex = port->index;
-  param.nIndex = 0;
-  if (!(klass->cdata.hacks & GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER))
-    param.xFramerate = (25 << 16) / (1);
-  else
-    param.xFramerate = (25) / (1);
-
-  old_index = -1;
+  negotiation_map = gst_omx_video_enc_get_supported_colorformats (self);
   comp_supported_caps = gst_caps_new_empty ();
-  do {
-    err =
-        gst_omx_component_get_parameter (self->enc,
-        OMX_IndexParamVideoPortFormat, &param);
+  for (l = negotiation_map; l; l = l->next) {
+    VideoNegotiationMap *map = l->data;
 
-    /* FIXME: Workaround for Bellagio that simply always
-     * returns the same value regardless of nIndex and
-     * never returns OMX_ErrorNoMore
-     */
-    if (old_index == param.nIndex)
-      break;
-
-    if (err == OMX_ErrorNone || err == OMX_ErrorNoMore) {
-      switch (param.eColorFormat) {
-        case OMX_COLOR_FormatYUV420Planar:
-        case OMX_COLOR_FormatYUV420PackedPlanar:
-          gst_caps_append_structure (comp_supported_caps,
-              gst_structure_new ("video/x-raw",
-                  "format", G_TYPE_STRING, "I420", NULL));
-          GST_DEBUG_OBJECT (self, "Component supports I420 (%d) at index %d",
-              param.eColorFormat, param.nIndex);
-          break;
-        case OMX_COLOR_FormatYUV420SemiPlanar:
-          gst_caps_append_structure (comp_supported_caps,
-              gst_structure_new ("video/x-raw",
-                  "format", G_TYPE_STRING, "NV12", NULL));
-          GST_DEBUG_OBJECT (self, "Component supports NV12 (%d) at index %d",
-              param.eColorFormat, param.nIndex);
-          break;
-        default:
-          break;
-      }
-    }
-    old_index = param.nIndex++;
-  } while (err == OMX_ErrorNone);
+    gst_caps_append_structure (comp_supported_caps,
+        gst_structure_new ("video/x-raw",
+            "format", G_TYPE_STRING,
+            gst_video_format_to_string (map->format), NULL));
+  }
 
   if (!gst_caps_is_empty (comp_supported_caps)) {
     GstCaps *ret =
