@@ -2477,9 +2477,12 @@ gst_eglglessink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstCaps *caps;
   gboolean need_pool;
   guint size;
-  GstAllocationParams params = { 0, };
+  GstAllocator *allocator;
+  GstAllocationParams params;
 
   eglglessink = GST_EGLGLESSINK (bsink);
+
+  gst_allocation_params_init (&params);
 
   gst_query_parse_allocation (query, &caps, &need_pool);
   if (!caps) {
@@ -2541,6 +2544,19 @@ gst_eglglessink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     gst_query_add_allocation_pool (query, pool, size, 2, 0);
     gst_object_unref (pool);
   }
+
+  /* First the default allocator */
+  if (!gst_egl_image_memory_is_mappable ()) {
+    allocator = gst_allocator_find (NULL);
+    gst_query_add_allocation_param (query, allocator, &params);
+    gst_object_unref (allocator);
+  }
+
+  allocator = gst_egl_image_allocator_obtain ();
+  if (!gst_egl_image_memory_is_mappable ())
+    params.flags |= GST_MEMORY_FLAG_NOT_MAPPABLE;
+  gst_query_add_allocation_param (query, allocator, &params);
+  gst_object_unref (allocator);
 
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
   gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
@@ -2949,6 +2965,7 @@ typedef struct
 
   GstEglGlesSink *sink;
   GstAllocator *allocator;
+  GstAllocationParams params;
   GstVideoInfo info;
   gboolean add_metavideo;
   gboolean want_eglimage;
@@ -3050,8 +3067,9 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
             gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
             (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
             image, GST_EGL_IMAGE_MEMORY_TYPE_RGB,
-            (gst_egl_image_memory_can_map ()? 0 : GST_MEMORY_FLAG_NOT_MAPPABLE),
-            size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
+            (gst_egl_image_memory_is_mappable ()? 0 :
+                GST_MEMORY_FLAG_NOT_MAPPABLE), size, data,
+            (GDestroyNotify) gst_egl_gles_image_data_free);
         n_mem = 1;
       }
       break;
@@ -3114,8 +3132,9 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
             gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
             (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
             image, GST_EGL_IMAGE_MEMORY_TYPE_RGB,
-            (gst_egl_image_memory_can_map ()? 0 : GST_MEMORY_FLAG_NOT_MAPPABLE),
-            size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
+            (gst_egl_image_memory_is_mappable ()? 0 :
+                GST_MEMORY_FLAG_NOT_MAPPABLE), size, data,
+            (GDestroyNotify) gst_egl_gles_image_data_free);
         n_mem = 1;
       }
       break;
@@ -3207,7 +3226,7 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
               (i ==
                   0 ? GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE :
                   GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE_ALPHA),
-              (gst_egl_image_memory_can_map ()? 0 :
+              (gst_egl_image_memory_is_mappable ()? 0 :
                   GST_MEMORY_FLAG_NOT_MAPPABLE), size[i], data,
               (GDestroyNotify) gst_egl_gles_image_data_free);
         }
@@ -3309,7 +3328,7 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
               gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
               (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
               image, GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE,
-              (gst_egl_image_memory_can_map ()? 0 :
+              (gst_egl_image_memory_is_mappable ()? 0 :
                   GST_MEMORY_FLAG_NOT_MAPPABLE), size[i], data,
               (GDestroyNotify) gst_egl_gles_image_data_free);
         }
@@ -3383,8 +3402,9 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
             gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
             (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
             image, GST_EGL_IMAGE_MEMORY_TYPE_RGBA,
-            (gst_egl_image_memory_can_map ()? 0 : GST_MEMORY_FLAG_NOT_MAPPABLE),
-            size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
+            (gst_egl_image_memory_is_mappable ()? 0 :
+                GST_MEMORY_FLAG_NOT_MAPPABLE), size, data,
+            (GDestroyNotify) gst_egl_gles_image_data_free);
 
         n_mem = 1;
       }
@@ -3428,8 +3448,7 @@ G_DEFINE_TYPE (GstEGLImageBufferPool, gst_egl_image_buffer_pool,
 static const gchar **
 gst_egl_image_buffer_pool_get_options (GstBufferPool * bpool)
 {
-  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META,
-    GST_BUFFER_POOL_OPTION_EGL_IMAGE, NULL
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL
   };
 
   return options;
@@ -3458,15 +3477,16 @@ gst_egl_image_buffer_pool_set_config (GstBufferPool * bpool,
   if (!gst_video_info_from_caps (&info, caps))
     return FALSE;
 
+  if (!gst_buffer_pool_config_get_allocator (config, &pool->allocator,
+          &pool->params))
+    return FALSE;
+
   pool->add_metavideo =
       gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-  pool->want_eglimage =
-      gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_EGL_IMAGE);
-
-  pool->allocator = gst_egl_image_allocator_obtain ();
+  pool->want_eglimage = (pool->allocator
+      && g_strcmp0 (pool->allocator->mem_type, GST_EGL_IMAGE_MEMORY_TYPE) == 0);
 
   pool->info = info;
 
@@ -3481,8 +3501,7 @@ gst_egl_image_buffer_pool_alloc_buffer (GstBufferPool * bpool,
 
   *buffer = NULL;
 
-  if (!pool->add_metavideo || (!gst_egl_image_memory_can_map ()
-          && !pool->want_eglimage))
+  if (!pool->add_metavideo || !pool->want_eglimage)
     return
         GST_BUFFER_POOL_CLASS
         (gst_egl_image_buffer_pool_parent_class)->alloc_buffer (bpool,
