@@ -940,12 +940,16 @@ theora_enc_handle_frame (GstVideoEncoder * benc, GstVideoCodecFrame * frame)
 
   {
     th_ycbcr_buffer ycbcr;
-    gint res;
+    gint res, keyframe_interval;
     GstVideoFrame vframe;
 
     if (force_keyframe) {
-      theora_enc_reset (enc);
-      theora_enc_reset_ts (enc, running_time, frame->presentation_frame_number);
+      /* if we want a keyframe, temporarily reset the max keyframe interval
+       * to 1, which will cause libtheora to emit one. There is no API to
+       * request a keyframe at the moment. */
+      keyframe_interval = 1;
+      th_encode_ctl (enc->encoder, TH_ENCCTL_SET_KEYFRAME_FREQUENCY_FORCE,
+          &keyframe_interval, sizeof (keyframe_interval));
     }
 
     if (enc->multipass_cache_fd
@@ -976,6 +980,16 @@ theora_enc_handle_frame (GstVideoEncoder * benc, GstVideoCodecFrame * frame)
 
     ret = GST_FLOW_OK;
     while (th_encode_packetout (enc->encoder, 0, &op)) {
+      /* Reset the max keyframe interval to its original state, and reset
+       * the flag so we don't create more keyframes if we loop */
+      if (force_keyframe) {
+        keyframe_interval =
+            enc->keyframe_auto ? enc->keyframe_force : enc->keyframe_freq;
+        th_encode_ctl (enc->encoder, TH_ENCCTL_SET_KEYFRAME_FREQUENCY_FORCE,
+            &keyframe_interval, sizeof (keyframe_interval));
+        force_keyframe = FALSE;
+      }
+
       ret = theora_push_packet (enc, &op);
       if (ret != GST_FLOW_OK)
         goto beach;
