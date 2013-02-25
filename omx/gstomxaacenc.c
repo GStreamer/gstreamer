@@ -221,10 +221,10 @@ gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
   OMX_ERRORTYPE err;
 
   GST_OMX_INIT_STRUCT (&aac_profile);
-  aac_profile.nPortIndex = enc->out_port->index;
+  aac_profile.nPortIndex = enc->enc_out_port->index;
 
   err =
-      gst_omx_component_get_parameter (enc->component, OMX_IndexParamAudioAac,
+      gst_omx_component_get_parameter (enc->enc, OMX_IndexParamAudioAac,
       &aac_profile);
   if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (self,
@@ -306,7 +306,7 @@ gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
   aac_profile.nBitRate = self->bitrate;
 
   err =
-      gst_omx_component_set_parameter (enc->component, OMX_IndexParamAudioAac,
+      gst_omx_component_set_parameter (enc->enc, OMX_IndexParamAudioAac,
       &aac_profile);
   if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (self, "Error setting AAC parameters: %s (0x%08x)",
@@ -399,10 +399,10 @@ gst_omx_aac_enc_get_caps (GstOMXAudioEnc * enc, GstOMXPort * port,
   const gchar *stream_format = NULL, *profile = NULL;
 
   GST_OMX_INIT_STRUCT (&aac_profile);
-  aac_profile.nPortIndex = enc->out_port->index;
+  aac_profile.nPortIndex = enc->enc_out_port->index;
 
   err =
-      gst_omx_component_get_parameter (enc->component, OMX_IndexParamAudioAac,
+      gst_omx_component_get_parameter (enc->enc, OMX_IndexParamAudioAac,
       &aac_profile);
   if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (enc,
