@@ -2587,9 +2587,9 @@ _class_init (gpointer g_class, gpointer data)
   in_port_index =
       g_key_file_get_integer (config, element_name, "in-port-index", &err);
   if (err != NULL) {
-    GST_DEBUG ("No 'in-port-index' set for element '%s', assuming 0: %s",
+    GST_DEBUG ("No 'in-port-index' set for element '%s', auto-detecting: %s",
         element_name, err->message);
-    in_port_index = 0;
+    in_port_index = -1;
     g_error_free (err);
   }
   class_data->in_port_index = in_port_index;
@@ -2598,9 +2598,9 @@ _class_init (gpointer g_class, gpointer data)
   out_port_index =
       g_key_file_get_integer (config, element_name, "out-port-index", &err);
   if (err != NULL) {
-    GST_DEBUG ("No 'out-port-index' set for element '%s', assuming 1: %s",
+    GST_DEBUG ("No 'out-port-index' set for element '%s', auto-detecting: %s",
         element_name, err->message);
-    out_port_index = 1;
+    out_port_index = -1;
     g_error_free (err);
   }
   class_data->out_port_index = out_port_index;

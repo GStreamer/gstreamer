@@ -127,6 +127,7 @@ gst_omx_video_dec_open (GstVideoDecoder * decoder)
 {
   GstOMXVideoDec *self = GST_OMX_VIDEO_DEC (decoder);
   GstOMXVideoDecClass *klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
+  gint in_port_index, out_port_index;
 
   GST_DEBUG_OBJECT (self, "Opening decoder");
 
@@ -143,10 +144,33 @@ gst_omx_video_dec_open (GstVideoDecoder * decoder)
           GST_CLOCK_TIME_NONE) != OMX_StateLoaded)
     return FALSE;
 
-  self->dec_in_port =
-      gst_omx_component_add_port (self->dec, klass->cdata.in_port_index);
-  self->dec_out_port =
-      gst_omx_component_add_port (self->dec, klass->cdata.out_port_index);
+  in_port_index = klass->cdata.in_port_index;
+  out_port_index = klass->cdata.out_port_index;
+
+  if (in_port_index == -1 || out_port_index == -1) {
+    OMX_PORT_PARAM_TYPE param;
+    OMX_ERRORTYPE err;
+
+    GST_OMX_INIT_STRUCT (&param);
+
+    err =
+        gst_omx_component_get_parameter (self->dec, OMX_IndexParamVideoInit,
+        &param);
+    if (err != OMX_ErrorNone) {
+      GST_WARNING_OBJECT (self, "Couldn't get port information: %s (0x%08x)",
+          gst_omx_error_to_string (err), err);
+      /* Fallback */
+      in_port_index = 0;
+      out_port_index = 1;
+    } else {
+      GST_DEBUG_OBJECT (self, "Detected %u ports, starting at %u", param.nPorts,
+          param.nStartPortNumber);
+      in_port_index = param.nStartPortNumber + 0;
+      out_port_index = param.nStartPortNumber + 1;
+    }
+  }
+  self->dec_in_port = gst_omx_component_add_port (self->dec, in_port_index);
+  self->dec_out_port = gst_omx_component_add_port (self->dec, out_port_index);
 
   if (!self->dec_in_port || !self->dec_out_port)
     return FALSE;
@@ -256,8 +280,8 @@ gst_omx_video_dec_change_state (GstElement * element, GstStateChange transition)
     return ret;
 
   ret =
-      GST_ELEMENT_CLASS (gst_omx_video_dec_parent_class)->change_state (element,
-      transition);
+      GST_ELEMENT_CLASS (gst_omx_video_dec_parent_class)->change_state
+      (element, transition);
 
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
@@ -369,8 +393,8 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
 }
 
 static gboolean
-gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self, GstOMXBuffer * inbuf,
-    GstBuffer * outbuf)
+gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
+    GstOMXBuffer * inbuf, GstBuffer * outbuf)
 {
   GstVideoCodecState *state =
       gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
@@ -577,8 +601,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
 
     GST_DEBUG_OBJECT (self,
         "Setting output state: format %s, width %d, height %d",
-        gst_video_format_to_string (format), port_def.format.video.nFrameWidth,
-        port_def.format.video.nFrameHeight);
+        gst_video_format_to_string (format),
+        port_def.format.video.nFrameWidth, port_def.format.video.nFrameHeight);
 
     state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
         format, port_def.format.video.nFrameWidth,
@@ -616,8 +640,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
   }
 
   if (buf) {
-    GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08x %lu", buf->omx_buf->nFlags,
-        buf->omx_buf->nTimeStamp);
+    GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08x %lu",
+        buf->omx_buf->nFlags, buf->omx_buf->nTimeStamp);
 
     GST_VIDEO_DECODER_STREAM_LOCK (self);
     frame = _find_nearest_frame (self, buf);
@@ -653,7 +677,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
 
       flow_ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (self), outbuf);
     } else if (buf->omx_buf->nFilledLen > 0) {
-      if ((flow_ret = gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER
+      if ((flow_ret =
+              gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER
                   (self), frame)) == GST_FLOW_OK) {
         /* FIXME: This currently happens because of a race condition too.
          * We first need to reconfigure the output port and then the input
@@ -741,8 +766,9 @@ flow_error:
           gst_event_new_eos ());
       gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
     } else if (flow_ret == GST_FLOW_NOT_LINKED || flow_ret < GST_FLOW_EOS) {
-      GST_ELEMENT_ERROR (self, STREAM, FAILED, ("Internal data stream error."),
-          ("stream stopped, reason %s", gst_flow_get_name (flow_ret)));
+      GST_ELEMENT_ERROR (self, STREAM, FAILED,
+          ("Internal data stream error."), ("stream stopped, reason %s",
+              gst_flow_get_name (flow_ret)));
 
       gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (self),
           gst_event_new_eos ());
