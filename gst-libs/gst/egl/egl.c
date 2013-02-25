@@ -312,25 +312,3 @@ gst_egl_display_get (GstEGLDisplay * display)
   return display->display;
 }
 
-#if 0
-void
-gst_buffer_pool_config_set_egl_image_supports_multiple_images (GstStructure *
-    config, gboolean supported)
-{
-  g_return_if_fail (config != NULL);
-
-  gst_structure_set (config,
-      "egl-image-supports-multiple-images", G_TYPE_BOOLEAN, supported, NULL);
-}
-
-gboolean
-gst_buffer_pool_config_get_egl_image_supports_multiple_images (GstStructure *
-    config, gboolean * supported)
-{
-  g_return_val_if_fail (config != NULL, FALSE);
-  g_return_val_if_fail (supported != NULL, FALSE);
-
-  return gst_structure_get (config,
-      "egl-image-supports-multiple-images", G_TYPE_BOOLEAN, supported, NULL);
-}
-#endif

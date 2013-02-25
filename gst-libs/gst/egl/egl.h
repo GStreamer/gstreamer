@@ -62,12 +62,4 @@ GstEGLDisplay * gst_egl_display_ref (GstEGLDisplay * display);
 void gst_egl_display_unref (GstEGLDisplay * display);
 EGLDisplay gst_egl_display_get (GstEGLDisplay * display);
 
-#define GST_BUFFER_POOL_OPTION_EGL_IMAGE "GstBufferPoolOptionEGLImage"
-
-#if 0
-/* setting a bufferpool config */
-void             gst_buffer_pool_config_set_egl_image_supports_multiple_images (GstStructure *config, gboolean  supported);
-gboolean         gst_buffer_pool_config_get_egl_image_supports_multiple_images (GstStructure *config, gboolean *supported);
-#endif
-
 #endif /* __GST_EGL_H__ */
