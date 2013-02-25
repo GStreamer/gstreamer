@@ -50,8 +50,8 @@ struct _GstOMXVideoDec
   GstVideoDecoder parent;
 
   /* < protected > */
-  GstOMXComponent *component;
-  GstOMXPort *in_port, *out_port;
+  GstOMXComponent *dec;
+  GstOMXPort *dec_in_port, *dec_out_port;
 
   /* < private > */
   GstVideoCodecState *input_state;
