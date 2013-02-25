@@ -1066,14 +1066,10 @@ gst_omx_component_setup_tunnel (GstOMXComponent * comp1, GstOMXPort * port1,
   OMX_ERRORTYPE err;
 
   g_return_val_if_fail (comp1 != NULL, OMX_ErrorUndefined);
-  g_return_val_if_fail (comp1->state == OMX_StateLoaded
-      || !port1->port_def.bEnabled, OMX_ErrorUndefined);
   g_return_val_if_fail (port1 != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (port1->port_def.eDir == OMX_DirOutput,
       OMX_ErrorUndefined);
   g_return_val_if_fail (comp2 != NULL, OMX_ErrorUndefined);
-  g_return_val_if_fail (comp2->state == OMX_StateLoaded
-      || !port2->port_def.bEnabled, OMX_ErrorUndefined);
   g_return_val_if_fail (port2 != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (port2->port_def.eDir == OMX_DirInput,
       OMX_ErrorUndefined);
@@ -1111,14 +1107,10 @@ gst_omx_component_close_tunnel (GstOMXComponent * comp1, GstOMXPort * port1,
   OMX_ERRORTYPE err;
 
   g_return_val_if_fail (comp1 != NULL, OMX_ErrorUndefined);
-  g_return_val_if_fail (comp1->state == OMX_StateLoaded
-      || !port1->port_def.bEnabled, OMX_ErrorUndefined);
   g_return_val_if_fail (port1 != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (port1->port_def.eDir == OMX_DirOutput,
       OMX_ErrorUndefined);
   g_return_val_if_fail (comp2 != NULL, OMX_ErrorUndefined);
-  g_return_val_if_fail (comp2->state == OMX_StateLoaded
-      || !port2->port_def.bEnabled, OMX_ErrorUndefined);
   g_return_val_if_fail (port2 != NULL, OMX_ErrorUndefined);
   g_return_val_if_fail (port2->port_def.eDir == OMX_DirInput,
       OMX_ErrorUndefined);

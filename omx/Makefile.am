@@ -53,10 +53,13 @@ endif
 libgstomx_la_CFLAGS = \
 	-DGST_USE_UNSTABLE_API=1 \
 	$(OMX_INCLUDEPATH) \
+	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS)
 libgstomx_la_LIBADD = \
+	$(GST_PLUGINS_BAD_LIBS) \
+	-lgstegl-@GST_API_VERSION@ \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstaudio-@GST_API_VERSION@ \
 	-lgstpbutils-@GST_API_VERSION@ \

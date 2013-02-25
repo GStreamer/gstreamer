@@ -48,6 +48,10 @@
 #include <OMX_Core.h>
 #include <OMX_Component.h>
 
+#ifdef USE_OMX_TARGET_RPI
+#include <OMX_Broadcom.h>
+#endif
+
 #ifdef GST_OMX_STRUCT_PACKING
 #pragma pack()
 #endif
