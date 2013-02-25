@@ -1470,6 +1470,8 @@ default_commit (GstAudioRingBuffer * buf, guint64 * sample,
   writeseg = *sample / sps;
   sampleoff = (*sample % sps) * bpf;
 
+  GST_DEBUG_OBJECT (buf, "write %d : %d", in_samples, out_samples);
+
   /* write out all samples */
   while (*toprocess > 0) {
     gint avail;
@@ -1486,14 +1488,13 @@ default_commit (GstAudioRingBuffer * buf, guint64 * sample,
       /* see how far away it is from the write segment */
       diff = writeseg - segdone;
 
-      GST_DEBUG
-          ("pointer at %d, write to %d-%d, diff %d, segtotal %d, segsize %d, base %d",
+      GST_DEBUG_OBJECT (buf,
+          "pointer at %d, write to %d-%d, diff %d, segtotal %d, segsize %d, base %d",
           segdone, writeseg, sampleoff, diff, segtotal, segsize, buf->segbase);
 
       /* segment too far ahead, writer too slow, we need to drop, hopefully UNLIKELY */
       if (G_UNLIKELY (diff < 0)) {
-        /* we need to drop one segment at a time, pretend we wrote a
-         * segment. */
+        /* we need to drop one segment at a time, pretend we wrote a segment. */
         skip = TRUE;
         break;
       }
