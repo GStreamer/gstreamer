@@ -163,12 +163,12 @@ gst_omx_h263_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   }
 
   GST_OMX_INIT_STRUCT (&param);
-  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
+  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
   param.eProfile = profile;
   param.eLevel = level;
 
   err =
-      gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->component,
+      gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->enc,
       OMX_IndexParamVideoProfileLevelCurrent, &param);
   if (err == OMX_ErrorUnsupportedIndex) {
     GST_WARNING_OBJECT (self,
@@ -206,10 +206,10 @@ gst_omx_h263_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   caps = gst_caps_new_empty_simple ("video/x-h263");
 
   GST_OMX_INIT_STRUCT (&param);
-  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
+  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
 
   err =
-      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->component,
+      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->enc,
       OMX_IndexParamVideoProfileLevelCurrent, &param);
   if (err != OMX_ErrorNone && err != OMX_ErrorUnsupportedIndex) {
     gst_caps_unref (caps);
