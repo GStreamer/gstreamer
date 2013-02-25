@@ -42,7 +42,7 @@ typedef struct
 #define GST_EGL_IMAGE_MEMORY(mem) ((GstEGLImageMemory*)(mem))
 
 gboolean
-gst_egl_image_memory_can_map (void)
+gst_egl_image_memory_is_mappable (void)
 {
   return FALSE;
 }

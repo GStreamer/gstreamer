@@ -45,7 +45,7 @@ typedef enum {
 typedef struct _GstEGLDisplay GstEGLDisplay;
 
 /* EGLImage GstMemory handling */
-gboolean gst_egl_image_memory_can_map (void);
+gboolean gst_egl_image_memory_is_mappable (void);
 gboolean gst_is_egl_image_memory (GstMemory * mem);
 EGLImageKHR gst_egl_image_memory_get_image (GstMemory * mem);
 GstEGLDisplay * gst_egl_image_memory_get_display (GstMemory * mem);
