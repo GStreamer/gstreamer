@@ -978,10 +978,13 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
       return FALSE;
     if (gst_omx_port_set_enabled (self->enc_in_port, FALSE) != OMX_ErrorNone)
       return FALSE;
+    if (gst_omx_port_wait_buffers_released (self->enc_in_port,
+            5 * GST_SECOND) != OMX_ErrorNone)
+      return FALSE;
     if (gst_omx_port_deallocate_buffers (self->enc_in_port) != OMX_ErrorNone)
       return FALSE;
     if (gst_omx_port_wait_enabled (self->enc_in_port,
-            5 * GST_SECOND) != OMX_ErrorNone)
+            1 * GST_SECOND) != OMX_ErrorNone)
       return FALSE;
 
     GST_DEBUG_OBJECT (self, "Encoder drained and disabled");

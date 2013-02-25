@@ -306,6 +306,7 @@ gboolean          gst_omx_port_is_flushing (GstOMXPort *port);
 
 OMX_ERRORTYPE     gst_omx_port_allocate_buffers (GstOMXPort *port);
 OMX_ERRORTYPE     gst_omx_port_deallocate_buffers (GstOMXPort *port);
+OMX_ERRORTYPE     gst_omx_port_wait_buffers_released (GstOMXPort * port, GstClockTime timeout);
 
 OMX_ERRORTYPE     gst_omx_port_reconfigure (GstOMXPort * port);
 

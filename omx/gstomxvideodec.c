@@ -1066,10 +1066,13 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
 
       if (gst_omx_port_set_enabled (self->dec_in_port, FALSE) != OMX_ErrorNone)
         return FALSE;
+      if (gst_omx_port_wait_buffers_released (self->dec_in_port,
+              5 * GST_SECOND) != OMX_ErrorNone)
+        return FALSE;
       if (gst_omx_port_deallocate_buffers (self->dec_in_port) != OMX_ErrorNone)
         return FALSE;
       if (gst_omx_port_wait_enabled (self->dec_in_port,
-              5 * GST_SECOND) != OMX_ErrorNone)
+              1 * GST_SECOND) != OMX_ErrorNone)
         return FALSE;
     }
     if (self->input_state)

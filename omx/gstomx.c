@@ -1810,9 +1810,6 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
 {
   GstOMXComponent *comp;
   OMX_ERRORTYPE err = OMX_ErrorNone;
-  gint64 wait_until;
-  gboolean signalled;
-  OMX_ERRORTYPE last_error;
 
   comp = port->comp;
 
@@ -1873,10 +1870,66 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
     goto done;
   }
 
-  wait_until = g_get_monotonic_time () + 5 * G_TIME_SPAN_SECOND;
-  GST_DEBUG_OBJECT (comp->parent, "Waiting 5s for buffers to be released");
+done:
+  gst_omx_component_handle_messages (comp);
 
-  /* First wait until all buffers are released by the port */
+  gst_omx_port_update_port_definition (port, NULL);
+
+  GST_DEBUG_OBJECT (comp->parent, "Set port %u to %s%s: %s (0x%08x)",
+      port->index, (err == OMX_ErrorNone ? "" : "not "),
+      (enabled ? "enabled" : "disabled"), gst_omx_error_to_string (err), err);
+
+  return err;
+
+error:
+  {
+    g_mutex_unlock (&comp->lock);
+    gst_omx_component_set_last_error (comp, err);
+    g_mutex_lock (&comp->lock);
+    goto done;
+  }
+}
+
+static OMX_ERRORTYPE
+gst_omx_port_wait_buffers_released_unlocked (GstOMXPort * port,
+    GstClockTime timeout)
+{
+  GstOMXComponent *comp;
+  OMX_ERRORTYPE err = OMX_ErrorNone;
+  OMX_ERRORTYPE last_error;
+  gint64 wait_until = -1;
+  gboolean signalled;
+
+  comp = port->comp;
+
+  gst_omx_component_handle_messages (comp);
+
+  if ((err = comp->last_error) != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (comp->parent, "Component in error state: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    goto done;
+  }
+
+  GST_DEBUG_OBJECT (comp->parent, "Waiting for port %u to release all buffers",
+      port->index);
+
+  if (timeout != GST_CLOCK_TIME_NONE) {
+    gint64 add = timeout / (GST_SECOND / G_TIME_SPAN_SECOND);
+
+    if (add == 0) {
+      if (port->buffers
+          && port->buffers->len > g_queue_get_length (&port->pending_buffers))
+        err = OMX_ErrorTimeout;
+      goto done;
+    }
+
+    wait_until = g_get_monotonic_time () + add;
+    GST_DEBUG_OBJECT (comp->parent, "Waiting for %" G_GINT64_FORMAT "us", add);
+  } else {
+    GST_DEBUG_OBJECT (comp->parent, "Waiting for signal");
+  }
+
+  /* Wait until all buffers are released by the port */
   signalled = TRUE;
   last_error = OMX_ErrorNone;
   gst_omx_component_handle_messages (comp);
@@ -1887,10 +1940,13 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
     g_mutex_unlock (&comp->lock);
     if (!g_queue_is_empty (&comp->messages)) {
       signalled = TRUE;
-    } else {
+    } else if (timeout != GST_CLOCK_TIME_NONE) {
       signalled =
           g_cond_wait_until (&comp->messages_cond, &comp->messages_lock,
           wait_until);
+    } else {
+      signalled = TRUE;
+      g_cond_wait (&comp->messages_cond, &comp->messages_lock);
     }
     g_mutex_unlock (&comp->messages_lock);
     g_mutex_lock (&comp->lock);
@@ -1917,9 +1973,9 @@ done:
 
   gst_omx_port_update_port_definition (port, NULL);
 
-  GST_DEBUG_OBJECT (comp->parent, "Set port %u to %s%s: %s (0x%08x)",
-      port->index, (err == OMX_ErrorNone ? "" : "not "),
-      (enabled ? "enabled" : "disabled"), gst_omx_error_to_string (err), err);
+  GST_DEBUG_OBJECT (comp->parent,
+      "Waited for port %u to release all buffers: %s (0x%08x)", port->index,
+      gst_omx_error_to_string (err), err);
 
   return err;
 
@@ -1930,6 +1986,21 @@ error:
     g_mutex_lock (&comp->lock);
     goto done;
   }
+}
+
+/* NOTE: Uses comp->lock and comp->messages_lock */
+OMX_ERRORTYPE
+gst_omx_port_wait_buffers_released (GstOMXPort * port, GstClockTime timeout)
+{
+  OMX_ERRORTYPE err;
+
+  g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
+
+  g_mutex_lock (&port->comp->lock);
+  err = gst_omx_port_wait_buffers_released_unlocked (port, timeout);
+  g_mutex_unlock (&port->comp->lock);
+
+  return err;
 }
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
@@ -1998,7 +2069,6 @@ gst_omx_port_wait_enabled_unlocked (GstOMXPort * port, GstClockTime timeout)
   }
 
   /* And now wait until the enable/disable command is finished */
-  /* FIXME: This should be a separate function */
   signalled = TRUE;
   last_error = OMX_ErrorNone;
   gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
@@ -2164,13 +2234,17 @@ gst_omx_port_reconfigure (GstOMXPort * port)
   if (err != OMX_ErrorNone)
     goto done;
 
+  err = gst_omx_port_wait_buffers_released (port, 5 * GST_SECOND);
+  if (err != OMX_ErrorNone)
+    goto done;
+
   if (!port->tunneled) {
     err = gst_omx_port_deallocate_buffers_unlocked (port);
     if (err != OMX_ErrorNone)
       goto done;
   }
 
-  err = gst_omx_port_wait_enabled_unlocked (port, 5 * GST_SECOND);
+  err = gst_omx_port_wait_enabled_unlocked (port, 1 * GST_SECOND);
   if (err != OMX_ErrorNone)
     goto done;
 
