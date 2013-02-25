@@ -1847,7 +1847,9 @@ gst_query_add_allocation_param (GstQuery * query, GstAllocator * allocator,
  * allocator params array of the query's structure.
  *
  * If no memory allocator is specified, the downstream element can handle
- * the default memory allocator.
+ * the default memory allocator. The first memory allocator in the query
+ * should be generic and allow mapping to system memory, all following
+ * allocators should be ordered by preference with the preferred one first.
  *
  * Returns: the allocator array size as a #guint.
  */
