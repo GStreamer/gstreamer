@@ -2234,7 +2234,7 @@ gst_omx_port_reconfigure (GstOMXPort * port)
   if (err != OMX_ErrorNone)
     goto done;
 
-  err = gst_omx_port_wait_buffers_released (port, 5 * GST_SECOND);
+  err = gst_omx_port_wait_buffers_released_unlocked (port, 5 * GST_SECOND);
   if (err != OMX_ErrorNone)
     goto done;
 
