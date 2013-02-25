@@ -23,6 +23,10 @@
 #include <unistd.h>
 #include <math.h>
 
+/* suppress warnings for deprecated API such as GValueArray
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <gst/audio/audio.h>
 #include <gst/check/gstcheck.h>
 
