@@ -1405,7 +1405,7 @@ gst_message_parse_segment_start (GstMessage * message, GstFormat * format,
  * @format: (out): Result location for the format, or NULL
  * @position: (out): Result location for the position, or NULL
  *
- * Extracts the position and format from the segment start message.
+ * Extracts the position and format from the segment done message.
  *
  * MT safe.
  */
