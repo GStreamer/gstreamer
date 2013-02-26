@@ -62,6 +62,7 @@ EXPORTS
 	gst_allocator_get_type
 	gst_allocator_register
 	gst_allocator_set_default
+	gst_allocator_sysmem_get_type
 	gst_atomic_queue_get_type
 	gst_atomic_queue_length
 	gst_atomic_queue_new
@@ -341,7 +342,6 @@ EXPORTS
 	gst_debug_set_threshold_for_name
 	gst_debug_set_threshold_from_string
 	gst_debug_unset_threshold_for_name
-	gst_default_allocator_get_type
 	gst_deinit
 	gst_double_range_get_type
 	gst_element_abort_state
@@ -532,6 +532,7 @@ EXPORTS
 	gst_memory_get_type
 	gst_memory_init
 	gst_memory_is_span
+	gst_memory_is_type
 	gst_memory_make_mapped
 	gst_memory_map
 	gst_memory_new_wrapped
