@@ -405,6 +405,11 @@ CHANGES
     abs_rate was removed from the public fields, it can be trivially calculated
     from the rate field.
 
+    Also segment accumulation was removed from the segment event. This means
+    that now the source/demuxer/parser needs to add the elapsed time of the
+    previous segment themselves (this must be added to segment->base). If this
+    is not done, looped playback wont work.
+
     accum was renamed to base. last_stop was renamed to position.
 
     The segment info now contains all the information needed to convert buffer
