@@ -91,6 +91,8 @@ gst_bin_find_unlinked_pad
 <SUBSECTION>
 GstBinFlags
 
+GST_BIN_IS_NO_RESYNC
+
 GST_BIN_CHILDREN
 GST_BIN_CHILDREN_COOKIE
 GST_BIN_NUMCHILDREN
@@ -590,6 +592,9 @@ gst_pad_set_caps
 gst_buffer_new_and_alloc
 GST_BUFFER_TIMESTAMP
 GST_BUFFER_TIMESTAMP_IS_VALID
+GST_MESSAGE_DURATION
+gst_message_new_duration
+gst_message_parse_duration
 gst_adapter_prev_timestamp
 <SUBSECTION Private>
 </SECTION>
@@ -1321,7 +1326,7 @@ GST_MEMORY_IS_READONLY
 GST_MEMORY_IS_NO_SHARE
 GST_MEMORY_IS_ZERO_PADDED
 GST_MEMORY_IS_ZERO_PREFIXED
-GST_MEMORY_IS_PHYSICALLY_CONTINOUS
+GST_MEMORY_IS_PHYSICALLY_CONTIGUOUS
 GST_MEMORY_IS_NOT_MAPPABLE
 
 GstMemory
@@ -1349,6 +1354,7 @@ gst_memory_resize
 gst_memory_lock
 gst_memory_unlock
 gst_memory_is_writable
+gst_memory_make_writable
 
 gst_memory_make_mapped
 gst_memory_map
