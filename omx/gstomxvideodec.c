@@ -359,6 +359,13 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
       BufferIdentification *id = gst_video_codec_frame_get_user_data (tmp);
       guint64 diff_ticks, diff_frames;
 
+      /* This happens for frames that were just added but
+       * which were not passed to the component yet. Ignore
+       * them here!
+       */
+      if (!id)
+        continue;
+
       if (id->timestamp > best_timestamp)
         break;
 
