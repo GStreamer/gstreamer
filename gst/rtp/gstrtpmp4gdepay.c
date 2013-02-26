@@ -50,7 +50,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "clock-rate = (int) [1, MAX ], "
         "encoding-name = (string) \"MPEG4-GENERIC\", "
         /* required string params */
-        "streamtype = (string) { \"4\", \"5\" }, "      /* 4 = video, 5 = audio */
+        /* "streamtype = (string) { \"4\", \"5\" }, "  Not set by Wowza    4 = video, 5 = audio */
         /* "profile-level-id = (string) [1,MAX], " */
         /* "config = (string) [1,MAX]" */
         "mode = (string) { \"generic\", \"CELP-cbr\", \"CELP-vbr\", \"AAC-lbr\", \"AAC-hbr\" } "
