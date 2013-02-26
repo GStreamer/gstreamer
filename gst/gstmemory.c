@@ -139,6 +139,27 @@ gst_memory_init (GstMemory * mem, GstMemoryFlags flags,
 }
 
 /**
+ * gst_memory_is_type:
+ * @mem: a #GstMemory
+ * @mem_type: a memory type
+ *
+ * Check if @mem if allocated with an allocator for @mem_type.
+ *
+ * Returns: %TRUE if @mem was allocated from an allocator for @mem_type.
+ *
+ * Since: 1.2
+ */
+gboolean
+gst_memory_is_type (GstMemory * mem, const gchar * mem_type)
+{
+  g_return_val_if_fail (mem != NULL, FALSE);
+  g_return_val_if_fail (mem->allocator != NULL, FALSE);
+  g_return_val_if_fail (mem_type != NULL, FALSE);
+
+  return (g_strcmp0 (mem->allocator->mem_type, mem_type) == 0);
+}
+
+/**
  * gst_memory_get_sizes:
  * @mem: a #GstMemory
  * @offset: pointer to offset

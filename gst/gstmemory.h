@@ -287,6 +287,9 @@ void           gst_memory_init         (GstMemory *mem, GstMemoryFlags flags,
                                         GstAllocator *allocator, GstMemory *parent,
                                         gsize maxsize, gsize align,
                                         gsize offset, gsize size);
+
+gboolean       gst_memory_is_type      (GstMemory *mem, const gchar *mem_type);
+
 /* refcounting */
 /**
  * gst_memory_ref:

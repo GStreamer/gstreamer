@@ -1345,6 +1345,8 @@ GstMemoryIsSpanFunction
 
 gst_memory_init
 
+gst_memory_is_type
+
 gst_memory_ref
 gst_memory_unref
 
