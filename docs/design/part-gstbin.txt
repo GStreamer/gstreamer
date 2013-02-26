@@ -95,11 +95,12 @@ returned durations and will then cache the result so that any further query can
 use the cached version. The reason for caching the result is because the
 duration of a stream typically does not change that often.
 
-A GST_MESSAGE_DURATION posted by an element will clear the cached duration value
-so that the bin will query the sinks again. This message is typically posted by
-elements that calculate the duration of the stream based on some average
-bitrate, which might change while playing the stream. The DURATION message is
-posted to the application, which can then fetch the updated DURATION.
+A GST_MESSAGE_DURATION_CHANGED posted by an element will clear the cached
+duration value so that the bin will query the sinks again. This message is
+typically posted by elements that calculate the duration of the stream based
+on some average bitrate, which might change while playing the stream. The
+DURATION_CHANGED message is posted to the application, which can then fetch
+the updated DURATION.
 
 
 Subclassing

@@ -3262,8 +3262,8 @@ bin_do_message_forward (GstBin * bin, GstMessage * message)
  *     result so we can answer it quicker the next time. Any element that
  *     changes its duration marks our cached values invalid.
  *     This message is also posted upwards. This is currently disabled
- *     because too many elements don't post DURATION messages when the
- *     duration changes.
+ *     because too many elements don't post DURATION_CHANGED messages when
+ *     the duration changes.
  *
  * GST_MESSAGE_CLOCK_LOST: This message is posted by an element when it
  *     can no longer provide a clock. The default bin behaviour is to
@@ -3426,7 +3426,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
        * for duration, we will recalculate. */
 #if 0
       GST_OBJECT_LOCK (bin);
-      bin_remove_messages (bin, NULL, GST_MESSAGE_DURATION);
+      bin_remove_messages (bin, NULL, GST_MESSAGE_DURATION_CHANGED);
       GST_OBJECT_UNLOCK (bin);
 #endif
       goto forward;
@@ -3857,7 +3857,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
       for (cached = bin->messages; cached; cached = g_list_next (cached)) {
         GstMessage *message = (GstMessage *) cached->data;
 
-        if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_DURATION &&
+        if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_DURATION_CHANGED &&
             GST_MESSAGE_SRC (message) == GST_OBJECT_CAST (bin)) {
           GstFormat format;
           gint64 duration;

@@ -110,7 +110,7 @@ GST_MESSAGE_SEGMENT_DONE:
   An element or bin completed playback of a segment. This message is only posted
   on the bus if a SEGMENT seek is performed on a pipeline.
 
-GST_MESSAGE_DURATION:
+GST_MESSAGE_DURATION_CHANGED:
 
   An element posts this message when it has detected or updated the stream duration.
 
