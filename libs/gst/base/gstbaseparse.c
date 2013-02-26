@@ -248,6 +248,7 @@ struct _GstBaseParsePrivate
   guint min_frame_size;
   gboolean passthrough;
   gboolean pts_interpolate;
+  gboolean infer_ts;
   gboolean syncable;
   gboolean has_timing_info;
   guint fps_num, fps_den;
@@ -736,6 +737,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->syncable = TRUE;
   parse->priv->passthrough = FALSE;
   parse->priv->pts_interpolate = TRUE;
+  parse->priv->infer_ts = TRUE;
   parse->priv->has_timing_info = FALSE;
   parse->priv->post_min_bitrate = TRUE;
   parse->priv->post_avg_bitrate = TRUE;
@@ -1036,6 +1038,8 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
       parse->priv->next_dts = next_dts;
       parse->priv->last_pts = GST_CLOCK_TIME_NONE;
       parse->priv->last_dts = GST_CLOCK_TIME_NONE;
+      parse->priv->prev_pts = GST_CLOCK_TIME_NONE;
+      parse->priv->prev_dts = GST_CLOCK_TIME_NONE;
       parse->priv->discont = TRUE;
       parse->priv->seen_keyframe = FALSE;
       break;
@@ -1984,8 +1988,7 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
 
   /* interpolating and no valid pts yet,
    * start with dts and carry on from there */
-  if (parse->priv->pts_interpolate &&
-      !GST_CLOCK_TIME_IS_VALID (parse->priv->next_pts))
+  if (parse->priv->infer_ts && !GST_CLOCK_TIME_IS_VALID (parse->priv->next_pts))
     parse->priv->next_pts = parse->priv->next_dts;
 
   /* again use default handler to add missing metadata;
@@ -2729,6 +2732,15 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     if (GST_CLOCK_TIME_IS_VALID (dts) && (parse->priv->prev_dts != dts))
       parse->priv->prev_dts = parse->priv->next_dts = dts;
 
+    /* we can mess with, erm interpolate, timestamps,
+     * and incoming stuff has PTS but no DTS seen so far,
+     * then pick up DTS from PTS and hope for the best ... */
+    if (parse->priv->infer_ts &&
+        !GST_CLOCK_TIME_IS_VALID (dts) &&
+        !GST_CLOCK_TIME_IS_VALID (parse->priv->prev_dts) &&
+        GST_CLOCK_TIME_IS_VALID (pts))
+      parse->priv->next_dts = pts;
+
     /* always pass all available data */
     data = gst_adapter_map (parse->priv->adapter, av);
     /* arrange for actual data to be copied if subclass tries to,
@@ -3447,6 +3459,23 @@ gst_base_parse_set_pts_interpolation (GstBaseParse * parse,
   parse->priv->pts_interpolate = pts_interpolate;
   GST_INFO_OBJECT (parse, "PTS interpolation: %s",
       (pts_interpolate) ? "yes" : "no");
+}
+
+/**
+ * gst_base_parse_set_infer_ts:
+ * @parse: a #GstBaseParse
+ * @infer_ts: %TRUE if parser should infer DTS/PTS from each other
+ *
+ * By default, the base class might try to infer PTS from DTS and vice
+ * versa.  While this is generally correct for audio data, it may not
+ * be otherwise. Sub-classes implementing such formats should disable
+ * timestamp infering.
+ */
+void
+gst_base_parse_set_infer_ts (GstBaseParse * parse, gboolean infer_ts)
+{
+  parse->priv->infer_ts = infer_ts;
+  GST_INFO_OBJECT (parse, "TS infering: %s", (infer_ts) ? "yes" : "no");
 }
 
 /**

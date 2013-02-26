@@ -315,6 +315,9 @@ void            gst_base_parse_set_passthrough (GstBaseParse * parse,
 void            gst_base_parse_set_pts_interpolation (GstBaseParse * parse,
                                                       gboolean pts_interpolate);
 
+void            gst_base_parse_set_infer_ts (GstBaseParse * parse,
+                                             gboolean infer_ts);
+
 void            gst_base_parse_set_frame_rate  (GstBaseParse * parse,
                                                 guint          fps_num,
                                                 guint          fps_den,
