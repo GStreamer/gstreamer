@@ -425,7 +425,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 
         tocopy = MIN (bsize - skip, left);
 
-        if (tocopy < bsize && (!deep || !GST_MEMORY_IS_NO_SHARE (mem))) {
+        if (tocopy < bsize && !deep && !GST_MEMORY_IS_NO_SHARE (mem)) {
           /* we need to clip something */
           mem = gst_memory_share (mem, skip, tocopy);
           skip = 0;
