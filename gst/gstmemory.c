@@ -83,6 +83,8 @@ _gst_memory_copy (GstMemory * mem)
 static void
 _gst_memory_free (GstMemory * mem)
 {
+  GstAllocator *allocator;
+
   GST_CAT_DEBUG (GST_CAT_MEMORY, "free memory %p", mem);
 
   if (mem->parent) {
@@ -90,8 +92,10 @@ _gst_memory_free (GstMemory * mem)
     gst_memory_unref (mem->parent);
   }
 
-  g_object_unref (mem->allocator);
-  gst_allocator_free (mem->allocator, mem);
+  allocator = mem->allocator;
+
+  gst_allocator_free (allocator, mem);
+  gst_object_unref (allocator);
 }
 
 /**
@@ -118,7 +122,7 @@ gst_memory_init (GstMemory * mem, GstMemoryFlags flags,
       (GstMiniObjectCopyFunction) _gst_memory_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_memory_free);
 
-  mem->allocator = g_object_ref (allocator);
+  mem->allocator = gst_object_ref (allocator);
   if (parent) {
     gst_memory_lock (parent, GST_LOCK_FLAG_EXCLUSIVE);
     gst_memory_ref (parent);
