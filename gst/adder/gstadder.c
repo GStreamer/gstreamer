@@ -678,24 +678,34 @@ gst_adder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
     {
       GstSeekFlags flags;
       gdouble rate;
-      GstSeekType curtype, endtype;
-      gint64 cur, end;
+      GstSeekType start_type, stop_type;
+      gint64 start, stop;
+      GstFormat seek_format, dest_format;
       gboolean flush;
 
       /* parse the seek parameters */
-      gst_event_parse_seek (event, &rate, NULL, &flags, &curtype,
-          &cur, &endtype, &end);
+      gst_event_parse_seek (event, &rate, &seek_format, &flags, &start_type,
+          &start, &stop_type, &stop);
 
-      if ((curtype != GST_SEEK_TYPE_NONE) && (curtype != GST_SEEK_TYPE_SET)) {
+      if ((start_type != GST_SEEK_TYPE_NONE)
+          && (start_type != GST_SEEK_TYPE_SET)) {
         result = FALSE;
         GST_DEBUG_OBJECT (adder,
-            "seeking failed, unhandled seek type for start: %d", curtype);
+            "seeking failed, unhandled seek type for start: %d", start_type);
         goto done;
       }
-      if ((endtype != GST_SEEK_TYPE_NONE) && (endtype != GST_SEEK_TYPE_SET)) {
+      if ((stop_type != GST_SEEK_TYPE_NONE) && (stop_type != GST_SEEK_TYPE_SET)) {
         result = FALSE;
         GST_DEBUG_OBJECT (adder,
-            "seeking failed, unhandled seek type for end: %d", endtype);
+            "seeking failed, unhandled seek type for end: %d", stop_type);
+        goto done;
+      }
+
+      dest_format = adder->segment.format;
+      if (seek_format != dest_format) {
+        result = FALSE;
+        GST_DEBUG_OBJECT (adder,
+            "seeking failed, unhandled seek format: %d", seek_format);
         goto done;
       }
 
@@ -727,15 +737,13 @@ gst_adder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
        * segment. After we have the lock, no collect function is running and no
        * new collect function will be called for as long as we're flushing. */
       GST_COLLECT_PADS_STREAM_LOCK (adder->collect);
-      adder->segment.rate = rate;
-      if (curtype == GST_SEEK_TYPE_SET)
-        adder->segment.start = cur;
-      else
-        adder->segment.start = 0;
-      if (endtype == GST_SEEK_TYPE_SET)
-        adder->segment.stop = end;
-      else
-        adder->segment.stop = GST_CLOCK_TIME_NONE;
+      /* clip position and update our segment */
+      if (adder->segment.stop != -1) {
+        adder->segment.position = adder->segment.stop;
+      }
+      gst_segment_do_seek (&adder->segment, rate, seek_format, flags,
+          start_type, start, stop_type, stop, NULL);
+
       if (flush) {
         /* Yes, we need to call _set_flushing again *WHEN* the streaming threads
          * have stopped so that the cookie gets properly updated. */
@@ -744,6 +752,8 @@ gst_adder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_COLLECT_PADS_STREAM_UNLOCK (adder->collect);
       GST_DEBUG_OBJECT (adder, "forwarding seek event: %" GST_PTR_FORMAT,
           event);
+      GST_DEBUG_OBJECT (adder, "updated segment: %" GST_SEGMENT_FORMAT,
+          &adder->segment);
 
       /* we're forwarding seek to all upstream peers and wait for one to reply
        * with a newsegment-event before we send a newsegment-event downstream */
@@ -1260,7 +1270,6 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
      * This basically ignores all newsegments sent by upstream.
      */
     event = gst_event_new_segment (&adder->segment);
-
     if (adder->segment.rate > 0.0) {
       adder->segment.position = adder->segment.start;
     } else {
@@ -1268,8 +1277,9 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     }
     adder->offset = gst_util_uint64_scale (adder->segment.position,
         rate, GST_SECOND);
+
     GST_INFO_OBJECT (adder->srcpad, "sending pending new segment event %"
-        GST_PTR_FORMAT, adder->segment);
+        GST_SEGMENT_FORMAT, &adder->segment);
     if (event) {
       if (!gst_pad_push_event (adder->srcpad, event)) {
         GST_WARNING_OBJECT (adder->srcpad, "Sending new segment event failed");
@@ -1358,7 +1368,6 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      adder->segment.position = 0;
       adder->offset = 0;
       adder->flush_stop_pending = FALSE;
       adder->new_segment_pending = TRUE;
