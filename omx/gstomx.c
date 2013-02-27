@@ -876,7 +876,6 @@ gst_omx_component_add_port (GstOMXComponent * comp, guint32 index)
   g_queue_init (&port->pending_buffers);
   port->flushing = TRUE;
   port->flushed = FALSE;
-  port->settings_changed = FALSE;
   port->enabled_pending = FALSE;
   port->disabled_pending = FALSE;
 
@@ -903,27 +902,6 @@ gst_omx_component_get_port (GstOMXComponent * comp, guint32 index)
       return tmp;
   }
   return NULL;
-}
-
-void
-gst_omx_component_trigger_settings_changed (GstOMXComponent * comp,
-    guint32 port_index)
-{
-  g_return_if_fail (comp != NULL);
-
-  /* Reverse hacks */
-  if (port_index == 1
-      && (comp->hacks & GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_PORT_0_TO_1))
-    port_index = 0;
-
-  if (!(comp->hacks &
-          GST_OMX_HACK_EVENT_PORT_SETTINGS_CHANGED_NDATA_PARAMETER_SWAP)) {
-    EventHandler (comp->handle, comp, OMX_EventPortSettingsChanged, port_index,
-        0, NULL);
-  } else {
-    EventHandler (comp->handle, comp, OMX_EventPortSettingsChanged, 0,
-        port_index, NULL);
-  }
 }
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
@@ -1252,7 +1230,6 @@ retry:
      * the caller about it */
     if (port->settings_cookie != port->configured_settings_cookie) {
       ret = GST_OMX_ACQUIRE_BUFFER_RECONFIGURE;
-      port->settings_changed = TRUE;
       goto done;
     }
   }
@@ -1275,15 +1252,6 @@ retry:
     }
 
     ret = GST_OMX_ACQUIRE_BUFFER_RECONFIGURE;
-    port->settings_changed = TRUE;
-    goto done;
-  }
-
-  if (port->settings_changed) {
-    GST_DEBUG_OBJECT (comp->parent,
-        "Port %u has settings changed, need new caps", port->index);
-    ret = GST_OMX_ACQUIRE_BUFFER_RECONFIGURED;
-    port->settings_changed = FALSE;
     goto done;
   }
 
@@ -2207,7 +2175,7 @@ gst_omx_port_is_enabled (GstOMXPort * port)
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
 OMX_ERRORTYPE
-gst_omx_port_reconfigure (GstOMXPort * port)
+gst_omx_port_mark_reconfigured (GstOMXPort * port)
 {
   GstOMXComponent *comp;
   OMX_ERRORTYPE err = OMX_ErrorNone;
@@ -2217,57 +2185,16 @@ gst_omx_port_reconfigure (GstOMXPort * port)
   comp = port->comp;
 
   g_mutex_lock (&comp->lock);
-  GST_DEBUG_OBJECT (comp->parent, "Reconfiguring port %u", port->index);
+  GST_DEBUG_OBJECT (comp->parent, "Marking port %u is reconfigured",
+      port->index);
 
   gst_omx_component_handle_messages (comp);
-
-  if (!port->settings_changed)
-    goto done;
 
   if ((err = comp->last_error) != OMX_ErrorNone)
     goto done;
 
-  /* Disable and enable the port. This already takes
-   * care of deallocating and allocating buffers.
-   */
-  err = gst_omx_port_set_enabled_unlocked (port, FALSE);
-  if (err != OMX_ErrorNone)
-    goto done;
-
-  err = gst_omx_port_wait_buffers_released_unlocked (port, 5 * GST_SECOND);
-  if (err != OMX_ErrorNone)
-    goto done;
-
-  if (!port->tunneled) {
-    err = gst_omx_port_deallocate_buffers_unlocked (port);
-    if (err != OMX_ErrorNone)
-      goto done;
-  }
-
-  err = gst_omx_port_wait_enabled_unlocked (port, 1 * GST_SECOND);
-  if (err != OMX_ErrorNone)
-    goto done;
-
-  err = gst_omx_port_set_enabled_unlocked (port, TRUE);
-  if (err != OMX_ErrorNone)
-    goto done;
-
-  if (!port->tunneled) {
-    err = gst_omx_port_allocate_buffers_unlocked (port);
-    if (err != OMX_ErrorNone)
-      goto done;
-  }
-
-  err = gst_omx_port_wait_enabled_unlocked (port, 5 * GST_SECOND);
-  if (err != OMX_ErrorNone)
-    goto done;
-
   port->configured_settings_cookie = port->settings_cookie;
 
-  /* If this is an output port, notify all input ports
-   * that might wait for us to reconfigure in
-   * acquire_buffer()
-   */
   if (port->port_def.eDir == OMX_DirOutput) {
     GList *l;
 
@@ -2285,71 +2212,7 @@ gst_omx_port_reconfigure (GstOMXPort * port)
 done:
   gst_omx_port_update_port_definition (port, NULL);
 
-  GST_DEBUG_OBJECT (comp->parent, "Reconfigured port %u: %s (0x%08x)",
-      port->index, gst_omx_error_to_string (err), err);
-
-  g_mutex_unlock (&comp->lock);
-
-  return err;
-}
-
-/* NOTE: Uses comp->lock and comp->messages_lock */
-OMX_ERRORTYPE
-gst_omx_port_manual_reconfigure (GstOMXPort * port, gboolean start)
-{
-  GstOMXComponent *comp;
-  OMX_ERRORTYPE err = OMX_ErrorNone;
-
-  g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
-
-  comp = port->comp;
-
-  g_mutex_lock (&comp->lock);
-
-  GST_DEBUG_OBJECT (comp->parent, "Manual reconfigure of port %u %s",
-      port->index, (start ? "start" : "stsop"));
-
-  gst_omx_component_handle_messages (comp);
-
-  if ((err = comp->last_error) != OMX_ErrorNone)
-    goto done;
-
-  if (start)
-    port->settings_cookie++;
-  else
-    port->configured_settings_cookie = port->settings_cookie;
-
-  if (port->port_def.eDir == OMX_DirOutput) {
-    GList *l;
-
-    if (start) {
-      for (l = comp->pending_reconfigure_outports; l; l = l->next) {
-        if (l->data == (gpointer) port)
-          break;
-      }
-
-      if (!l) {
-        comp->pending_reconfigure_outports =
-            g_list_prepend (comp->pending_reconfigure_outports, port);
-      }
-    } else {
-      for (l = comp->pending_reconfigure_outports; l; l = l->next) {
-        if (l->data == (gpointer) port) {
-          comp->pending_reconfigure_outports =
-              g_list_delete_link (comp->pending_reconfigure_outports, l);
-          break;
-        }
-      }
-      if (!comp->pending_reconfigure_outports)
-        gst_omx_component_send_message (comp, NULL);
-    }
-  }
-
-
-done:
-  gst_omx_port_update_port_definition (port, NULL);
-
-  GST_DEBUG_OBJECT (comp->parent, "Manual reconfigure of port %u: %s (0x%08x)",
+  GST_DEBUG_OBJECT (comp->parent, "Marked port %u as reconfigured: %s (0x%08x)",
       port->index, gst_omx_error_to_string (err), err);
 
   g_mutex_unlock (&comp->lock);

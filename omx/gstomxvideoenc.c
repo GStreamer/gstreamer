@@ -747,15 +747,47 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
   } else if (acq_return == GST_OMX_ACQUIRE_BUFFER_FLUSHING) {
     goto flushing;
   } else if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
-    if (gst_omx_port_reconfigure (self->enc_out_port) != OMX_ErrorNone)
+    OMX_ERRORTYPE err;
+
+    /* Reallocate all buffers */
+    err = gst_omx_port_set_enabled (port, FALSE);
+    if (err != OMX_ErrorNone)
       goto reconfigure_error;
-    /* And restart the loop */
-    return;
+
+    err = gst_omx_port_wait_buffers_released (port, 5 * GST_SECOND);
+    if (err != OMX_ErrorNone)
+      goto reconfigure_error;
+
+    err = gst_omx_port_deallocate_buffers (port);
+    if (err != OMX_ErrorNone)
+      goto reconfigure_error;
+
+    err = gst_omx_port_wait_enabled (port, 1 * GST_SECOND);
+    if (err != OMX_ErrorNone)
+      goto reconfigure_error;
+
+    err = gst_omx_port_set_enabled (port, TRUE);
+    if (err != OMX_ErrorNone)
+      goto reconfigure_error;
+
+    err = gst_omx_port_allocate_buffers (port);
+    if (err != OMX_ErrorNone)
+      goto reconfigure_error;
+
+    err = gst_omx_port_wait_enabled (port, 5 * GST_SECOND);
+    if (err != OMX_ErrorNone)
+      goto reconfigure_error;
+
+    err = gst_omx_port_mark_reconfigured (port);
+    if (err != OMX_ErrorNone)
+      goto reconfigure_error;
+
+    /* Update caps below */
   }
 
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
   if (!gst_pad_has_current_caps (GST_VIDEO_ENCODER_SRC_PAD (self))
-      || acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURED) {
+      || acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
     GstCaps *caps;
     GstVideoCodecState *state;
 
@@ -1068,9 +1100,6 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
     GST_DEBUG_OBJECT (self, "Need to disable and drain encoder");
     gst_omx_video_enc_drain (self, FALSE);
 
-    if (gst_omx_port_manual_reconfigure (self->enc_in_port,
-            TRUE) != OMX_ErrorNone)
-      return FALSE;
     if (gst_omx_port_set_enabled (self->enc_in_port, FALSE) != OMX_ErrorNone)
       return FALSE;
     if (gst_omx_port_wait_buffers_released (self->enc_in_port,
@@ -1178,8 +1207,7 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
     if (gst_omx_port_wait_enabled (self->enc_in_port,
             5 * GST_SECOND) != OMX_ErrorNone)
       return FALSE;
-    if (gst_omx_port_manual_reconfigure (self->enc_in_port,
-            FALSE) != OMX_ErrorNone)
+    if (gst_omx_port_mark_reconfigured (self->enc_in_port) != OMX_ErrorNone)
       return FALSE;
   } else {
     if (gst_omx_component_set_state (self->enc, OMX_StateIdle) != OMX_ErrorNone)
@@ -1434,6 +1462,7 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
 {
   GstOMXAcquireBufferReturn acq_ret = GST_OMX_ACQUIRE_BUFFER_ERROR;
   GstOMXVideoEnc *self;
+  GstOMXPort *port;
   GstOMXBuffer *buf;
 
   self = GST_OMX_VIDEO_ENC (encoder);
@@ -1451,6 +1480,8 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
     return self->downstream_flow_ret;
   }
 
+  port = self->enc_in_port;
+
   while (acq_ret != GST_OMX_ACQUIRE_BUFFER_OK) {
     BufferIdentification *id;
     GstClockTime timestamp, duration;
@@ -1459,7 +1490,7 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
      * _loop() can't call _finish_frame() and we might block forever
      * because no input buffers are released */
     GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
-    acq_ret = gst_omx_port_acquire_buffer (self->enc_in_port, &buf);
+    acq_ret = gst_omx_port_acquire_buffer (port, &buf);
 
     if (acq_ret == GST_OMX_ACQUIRE_BUFFER_ERROR) {
       GST_VIDEO_ENCODER_STREAM_LOCK (self);
@@ -1468,15 +1499,58 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
       GST_VIDEO_ENCODER_STREAM_LOCK (self);
       goto flushing;
     } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
-      if (gst_omx_port_reconfigure (self->enc_in_port) != OMX_ErrorNone) {
+      OMX_ERRORTYPE err;
+
+      /* Reallocate all buffers */
+      err = gst_omx_port_set_enabled (port, FALSE);
+      if (err != OMX_ErrorNone) {
         GST_VIDEO_ENCODER_STREAM_LOCK (self);
         goto reconfigure_error;
       }
+
+      err = gst_omx_port_wait_buffers_released (port, 5 * GST_SECOND);
+      if (err != OMX_ErrorNone) {
+        GST_VIDEO_ENCODER_STREAM_LOCK (self);
+        goto reconfigure_error;
+      }
+
+      err = gst_omx_port_deallocate_buffers (port);
+      if (err != OMX_ErrorNone) {
+        GST_VIDEO_ENCODER_STREAM_LOCK (self);
+        goto reconfigure_error;
+      }
+
+      err = gst_omx_port_wait_enabled (port, 1 * GST_SECOND);
+      if (err != OMX_ErrorNone) {
+        GST_VIDEO_ENCODER_STREAM_LOCK (self);
+        goto reconfigure_error;
+      }
+
+      err = gst_omx_port_set_enabled (port, TRUE);
+      if (err != OMX_ErrorNone) {
+        GST_VIDEO_ENCODER_STREAM_LOCK (self);
+        goto reconfigure_error;
+      }
+
+      err = gst_omx_port_allocate_buffers (port);
+      if (err != OMX_ErrorNone) {
+        GST_VIDEO_ENCODER_STREAM_LOCK (self);
+        goto reconfigure_error;
+      }
+
+      err = gst_omx_port_wait_enabled (port, 5 * GST_SECOND);
+      if (err != OMX_ErrorNone) {
+        GST_VIDEO_ENCODER_STREAM_LOCK (self);
+        goto reconfigure_error;
+      }
+
+      err = gst_omx_port_mark_reconfigured (port);
+      if (err != OMX_ErrorNone) {
+        GST_VIDEO_ENCODER_STREAM_LOCK (self);
+        goto reconfigure_error;
+      }
+
       /* Now get a new buffer and fill it */
-      GST_VIDEO_ENCODER_STREAM_LOCK (self);
-      continue;
-    } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_RECONFIGURED) {
-      /* TODO: Anything to do here? Don't think so */
       GST_VIDEO_ENCODER_STREAM_LOCK (self);
       continue;
     }
@@ -1485,12 +1559,12 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
     g_assert (acq_ret == GST_OMX_ACQUIRE_BUFFER_OK && buf != NULL);
 
     if (buf->omx_buf->nAllocLen - buf->omx_buf->nOffset <= 0) {
-      gst_omx_port_release_buffer (self->enc_in_port, buf);
+      gst_omx_port_release_buffer (port, buf);
       goto full_buffer;
     }
 
     if (self->downstream_flow_ret != GST_FLOW_OK) {
-      gst_omx_port_release_buffer (self->enc_in_port, buf);
+      gst_omx_port_release_buffer (port, buf);
       goto flow_error;
     }
 
@@ -1502,7 +1576,7 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
       OMX_CONFIG_INTRAREFRESHVOPTYPE config;
 
       GST_OMX_INIT_STRUCT (&config);
-      config.nPortIndex = self->enc_out_port->index;
+      config.nPortIndex = port->index;
       config.IntraRefreshVOP = OMX_TRUE;
 
       GST_DEBUG_OBJECT (self, "Forcing a keyframe");
@@ -1517,7 +1591,7 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
     /* Copy the buffer content in chunks of size as requested
      * by the port */
     if (!gst_omx_video_enc_fill_buffer (self, frame->input_buffer, buf)) {
-      gst_omx_port_release_buffer (self->enc_in_port, buf);
+      gst_omx_port_release_buffer (port, buf);
       goto buffer_fill_error;
     }
 
@@ -1542,7 +1616,7 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
         (GDestroyNotify) buffer_identification_free);
 
     self->started = TRUE;
-    gst_omx_port_release_buffer (self->enc_in_port, buf);
+    gst_omx_port_release_buffer (port, buf);
 
     GST_DEBUG_OBJECT (self, "Passed frame to component");
   }
