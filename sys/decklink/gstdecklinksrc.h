@@ -24,10 +24,13 @@
 #include "gstdecklink.h"
 
 G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_decklink_src_debug_category);
+
 #define GST_TYPE_DECKLINK_SRC   (gst_decklink_src_get_type())
 #define GST_DECKLINK_SRC(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DECKLINK_SRC,GstDecklinkSrc))
 #define GST_DECKLINK_SRC_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DECKLINK_SRC,GstDecklinkSrcClass))
+#define GST_DECKLINK_SRC_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_DECKLINK_SRC, GstDecklinkSrcClass))
 #define GST_IS_DECKLINK_SRC(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DECKLINK_SRC))
 #define GST_IS_DECKLINK_SRC_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DECKLINK_SRC))
 
@@ -41,14 +44,12 @@ struct _GstDecklinkSrc
   GstPad *audiosrcpad;
   GstPad *videosrcpad;
 
-  GstCaps *audio_caps;
-
   IDeckLink *decklink;
   IDeckLinkInput *input;
   IDeckLinkConfiguration *config;
 
-  GMutex *mutex;
-  GCond *cond;
+  GMutex mutex;
+  GCond cond;
   int dropped_frames;
   int dropped_frames_old;
   gboolean stop;
@@ -56,11 +57,10 @@ struct _GstDecklinkSrc
   IDeckLinkAudioInputPacket * audio_frame;
 
   GstTask *task;
-  GStaticRecMutex task_mutex;
+  GRecMutex task_mutex;
 
   guint64 num_audio_samples;
 
-  GstCaps *video_caps;
   guint64 frame_num;
   int fps_n;
   int fps_d;
@@ -68,8 +68,9 @@ struct _GstDecklinkSrc
   int height;
   gboolean interlaced;
   BMDDisplayMode bmd_mode;
-  gboolean video_new_segment;
-  gboolean audio_new_segment;
+
+  /* so we send a stream-start, caps, and newsegment events before buffers */
+  gboolean started;
 
   /* properties */
   gboolean copy_data;

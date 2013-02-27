@@ -25,7 +25,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v decklinksrc ! xvimagesink
+ * gst-launch-1.0 -v decklinksrc ! videoconvert ! xvimagesink
  * ]|
  * 
  * </refsect2>
@@ -35,23 +35,15 @@
 #include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <gst/gst.h>
-#include <gst/glib-compat-private.h>
 #include "gstdecklink.h"
 #include "gstdecklinksrc.h"
 #include "capture.h"
 #include <string.h>
-#include <gst/interfaces/propertyprobe.h>
 
 
 GST_DEBUG_CATEGORY (gst_decklink_src_debug_category);
 #define GST_CAT_DEFAULT gst_decklink_src_debug_category
-
-/* prototypes */
 
 typedef struct _VideoFrame VideoFrame;
 struct _VideoFrame
@@ -60,76 +52,19 @@ struct _VideoFrame
   IDeckLinkInput *input;
 };
 
-
 static void gst_decklink_src_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_decklink_src_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
-static void gst_decklink_src_dispose (GObject * object);
 static void gst_decklink_src_finalize (GObject * object);
 
-static GstPad *gst_decklink_src_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
-static void gst_decklink_src_release_pad (GstElement * element, GstPad * pad);
 static GstStateChangeReturn
 gst_decklink_src_change_state (GstElement * element, GstStateChange transition);
-static GstClock *gst_decklink_src_provide_clock (GstElement * element);
-static gboolean gst_decklink_src_set_clock (GstElement * element,
-    GstClock * clock);
-static GstIndex *gst_decklink_src_get_index (GstElement * element);
-static void gst_decklink_src_set_index (GstElement * element, GstIndex * index);
-static gboolean gst_decklink_src_send_event (GstElement * element,
-    GstEvent * event);
-static gboolean gst_decklink_src_query (GstElement * element, GstQuery * query);
 
-static GstCaps *gst_decklink_src_audio_src_getcaps (GstPad * pad);
-static gboolean gst_decklink_src_audio_src_setcaps (GstPad * pad,
-    GstCaps * caps);
-static gboolean gst_decklink_src_audio_src_acceptcaps (GstPad * pad,
-    GstCaps * caps);
-static void gst_decklink_src_audio_src_fixatecaps (GstPad * pad,
-    GstCaps * caps);
-static gboolean gst_decklink_src_audio_src_activate (GstPad * pad);
-static gboolean gst_decklink_src_audio_src_activatepush (GstPad * pad,
-    gboolean active);
-static gboolean gst_decklink_src_audio_src_activatepull (GstPad * pad,
-    gboolean active);
-static GstPadLinkReturn gst_decklink_src_audio_src_link (GstPad * pad,
-    GstPad * peer);
-static GstFlowReturn gst_decklink_src_audio_src_getrange (GstPad * pad,
-    guint64 offset, guint length, GstBuffer ** buffer);
-static gboolean gst_decklink_src_audio_src_event (GstPad * pad,
-    GstEvent * event);
 static gboolean gst_decklink_src_audio_src_query (GstPad * pad,
-    GstQuery * query);
-static GstIterator *gst_decklink_src_audio_src_iterintlink (GstPad * pad);
-
-
-static GstCaps *gst_decklink_src_video_src_getcaps (GstPad * pad);
-static gboolean gst_decklink_src_video_src_setcaps (GstPad * pad,
-    GstCaps * caps);
-static gboolean gst_decklink_src_video_src_acceptcaps (GstPad * pad,
-    GstCaps * caps);
-static void gst_decklink_src_video_src_fixatecaps (GstPad * pad,
-    GstCaps * caps);
-static gboolean gst_decklink_src_video_src_activate (GstPad * pad);
-static gboolean gst_decklink_src_video_src_activatepush (GstPad * pad,
-    gboolean active);
-static gboolean gst_decklink_src_video_src_activatepull (GstPad * pad,
-    gboolean active);
-static GstPadLinkReturn gst_decklink_src_video_src_link (GstPad * pad,
-    GstPad * peer);
-static GstFlowReturn gst_decklink_src_video_src_getrange (GstPad * pad,
-    guint64 offset, guint length, GstBuffer ** buffer);
-static gboolean gst_decklink_src_video_src_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstQuery * query);
 static gboolean gst_decklink_src_video_src_query (GstPad * pad,
-    GstQuery * query);
-static GstIterator *gst_decklink_src_video_src_iterintlink (GstPad * pad);
-
-static void
-gst_decklinksrc_property_probe_interface_init (GstPropertyProbeInterface *
-    iface);
+    GstObject * parent, GstQuery * query);
 
 static void gst_decklink_src_task (void *priv);
 
@@ -147,52 +82,17 @@ enum
   PROP_DEVICE
 };
 
-/* pad templates */
-
 static GstStaticPadTemplate gst_decklink_src_audio_src_template =
 GST_STATIC_PAD_TEMPLATE ("audiosrc",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int,width=16,depth=16,channels=2,rate=48000")
+    GST_STATIC_CAPS ("audio/x-raw, format=S16LE, channels=2, rate=48000")
     );
 
 /* the video source pad template is created on the fly */
 
-/* class initialization */
-
-static void
-gst_decklinksrc_init_interfaces (GType type)
-{
-  static const GInterfaceInfo decklinksrc_propertyprobe_info = {
-    (GInterfaceInitFunc) gst_decklinksrc_property_probe_interface_init,
-    NULL,
-    NULL,
-  };
-
-  GST_DEBUG_CATEGORY_INIT (gst_decklink_src_debug_category, "decklinksrc", 0,
-      "debug category for decklinksrc element");
-
-  g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
-      &decklinksrc_propertyprobe_info);
-}
-
-GST_BOILERPLATE_FULL (GstDecklinkSrc, gst_decklink_src, GstElement,
-    GST_TYPE_ELEMENT, gst_decklinksrc_init_interfaces);
-
-static void
-gst_decklink_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_decklink_src_audio_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("videosrc", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_decklink_mode_get_template_caps ()));
-
-  gst_element_class_set_static_metadata (element_class, "Decklink source",
-      "Source/Video", "DeckLink Source", "David Schleef <ds@entropywave.com>");
-}
+#define parent_class gst_decklink_src_parent_class
+G_DEFINE_TYPE (GstDecklinkSrc, gst_decklink_src, GST_TYPE_ELEMENT);
 
 static void
 gst_decklink_src_class_init (GstDecklinkSrcClass * klass)
@@ -202,84 +102,67 @@ gst_decklink_src_class_init (GstDecklinkSrcClass * klass)
 
   gobject_class->set_property = gst_decklink_src_set_property;
   gobject_class->get_property = gst_decklink_src_get_property;
-  gobject_class->dispose = gst_decklink_src_dispose;
   gobject_class->finalize = gst_decklink_src_finalize;
-  element_class->request_new_pad =
-      GST_DEBUG_FUNCPTR (gst_decklink_src_request_new_pad);
-  element_class->release_pad = GST_DEBUG_FUNCPTR (gst_decklink_src_release_pad);
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_decklink_src_change_state);
-  element_class->provide_clock =
-      GST_DEBUG_FUNCPTR (gst_decklink_src_provide_clock);
-  element_class->set_clock = GST_DEBUG_FUNCPTR (gst_decklink_src_set_clock);
-  element_class->get_index = GST_DEBUG_FUNCPTR (gst_decklink_src_get_index);
-  element_class->set_index = GST_DEBUG_FUNCPTR (gst_decklink_src_set_index);
-  element_class->send_event = GST_DEBUG_FUNCPTR (gst_decklink_src_send_event);
-  element_class->query = GST_DEBUG_FUNCPTR (gst_decklink_src_query);
 
   g_object_class_install_property (gobject_class, PROP_MODE,
-      g_param_spec_enum ("mode", "Mode", "Video Mode to use for capture",
+      g_param_spec_enum ("mode", "Mode", "Video mode to use for capture",
           GST_TYPE_DECKLINK_MODE, GST_DECKLINK_MODE_NTSC,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
   g_object_class_install_property (gobject_class, PROP_CONNECTION,
       g_param_spec_enum ("connection", "Connection",
-          "Video Input Connection to use",
+          "Video input connection to use",
           GST_TYPE_DECKLINK_CONNECTION, GST_DECKLINK_CONNECTION_SDI,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
   g_object_class_install_property (gobject_class, PROP_AUDIO_INPUT,
       g_param_spec_enum ("audio-input", "Audio Input",
-          "Audio Input Connection",
+          "Audio input connection",
           GST_TYPE_DECKLINK_AUDIO_CONNECTION,
           GST_DECKLINK_AUDIO_CONNECTION_AUTO,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  /* FIXME: should be device-number or so, or turned into a string */
+#if 0
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_int ("device", "Device", "Capture device instance to use",
           0, G_MAXINT, 0,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
+#endif
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_decklink_src_audio_src_template));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("videosrc", GST_PAD_SRC, GST_PAD_ALWAYS,
+          gst_decklink_mode_get_template_caps ()));
+
+  gst_element_class_set_static_metadata (element_class, "Decklink source",
+      "Source/Video", "DeckLink Source", "David Schleef <ds@entropywave.com>");
 }
 
 static void
-gst_decklink_src_init (GstDecklinkSrc * decklinksrc,
-    GstDecklinkSrcClass * decklinksrc_class)
+gst_decklink_src_init (GstDecklinkSrc * decklinksrc)
 {
-  g_static_rec_mutex_init (&decklinksrc->task_mutex);
-  decklinksrc->task = gst_task_create (gst_decklink_src_task, decklinksrc);
+  GstDecklinkSrcClass *decklinksrc_class;
+
+  decklinksrc_class = GST_DECKLINK_SRC_GET_CLASS (decklinksrc);
+
+  g_rec_mutex_init (&decklinksrc->task_mutex);
+  decklinksrc->task = gst_task_new (gst_decklink_src_task, decklinksrc, NULL);
   gst_task_set_lock (decklinksrc->task, &decklinksrc->task_mutex);
 
   decklinksrc->audiosrcpad =
       gst_pad_new_from_static_template (&gst_decklink_src_audio_src_template,
       "audiosrc");
-  gst_pad_set_getcaps_function (decklinksrc->audiosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_audio_src_getcaps));
-  gst_pad_set_setcaps_function (decklinksrc->audiosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_audio_src_setcaps));
-  gst_pad_set_acceptcaps_function (decklinksrc->audiosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_audio_src_acceptcaps));
-  gst_pad_set_fixatecaps_function (decklinksrc->audiosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_audio_src_fixatecaps));
-  gst_pad_set_activate_function (decklinksrc->audiosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_audio_src_activate));
-  gst_pad_set_activatepush_function (decklinksrc->audiosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_audio_src_activatepush));
-  gst_pad_set_activatepull_function (decklinksrc->audiosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_audio_src_activatepull));
-  gst_pad_set_link_function (decklinksrc->audiosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_audio_src_link));
-  gst_pad_set_getrange_function (decklinksrc->audiosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_audio_src_getrange));
-  gst_pad_set_event_function (decklinksrc->audiosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_audio_src_event));
   gst_pad_set_query_function (decklinksrc->audiosrcpad,
       GST_DEBUG_FUNCPTR (gst_decklink_src_audio_src_query));
-  gst_pad_set_iterate_internal_links_function (decklinksrc->audiosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_audio_src_iterintlink));
   gst_element_add_pad (GST_ELEMENT (decklinksrc), decklinksrc->audiosrcpad);
 
 
@@ -287,36 +170,15 @@ gst_decklink_src_init (GstDecklinkSrc * decklinksrc,
   decklinksrc->videosrcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template
       (GST_ELEMENT_CLASS (decklinksrc_class), "videosrc"), "videosrc");
-  gst_pad_set_getcaps_function (decklinksrc->videosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_getcaps));
-  gst_pad_set_setcaps_function (decklinksrc->videosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_setcaps));
-  gst_pad_set_acceptcaps_function (decklinksrc->videosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_acceptcaps));
-  gst_pad_set_fixatecaps_function (decklinksrc->videosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_fixatecaps));
-  gst_pad_set_activate_function (decklinksrc->videosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_activate));
-  gst_pad_set_activatepush_function (decklinksrc->videosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_activatepush));
-  gst_pad_set_activatepull_function (decklinksrc->videosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_activatepull));
-  gst_pad_set_link_function (decklinksrc->videosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_link));
-  gst_pad_set_getrange_function (decklinksrc->videosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_getrange));
-  gst_pad_set_event_function (decklinksrc->videosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_event));
   gst_pad_set_query_function (decklinksrc->videosrcpad,
       GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_query));
-  gst_pad_set_iterate_internal_links_function (decklinksrc->videosrcpad,
-      GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_iterintlink));
   gst_element_add_pad (GST_ELEMENT (decklinksrc), decklinksrc->videosrcpad);
 
 
-  decklinksrc->cond = g_cond_new ();
-  decklinksrc->mutex = g_mutex_new ();
+  g_cond_init (&decklinksrc->cond);
+  g_mutex_init (&decklinksrc->mutex);
 
+  /* FIXME: turn this into a property? */
   decklinksrc->copy_data = TRUE;
   decklinksrc->mode = GST_DECKLINK_MODE_NTSC;
   decklinksrc->connection = GST_DECKLINK_CONNECTION_SDI;
@@ -329,22 +191,25 @@ gst_decklink_src_init (GstDecklinkSrc * decklinksrc,
   decklinksrc->frame_num = -1;  /* -1 so will be 0 after incrementing */
 
 #ifdef _MSC_VER
-  decklinksrc->com_init_lock = g_mutex_new ();
-  decklinksrc->com_deinit_lock = g_mutex_new ();
-  decklinksrc->com_initialized = g_cond_new ();
-  decklinksrc->com_uninitialize = g_cond_new ();
-  decklinksrc->com_uninitialized = g_cond_new ();
+  g_mutex_init (&decklinksrc->com_init_lock);
+  g_mutex_init (&decklinksrc->com_deinit_lock);
+  g_cond_init (&decklinksrc->com_initialized);
+  g_cond_init (&decklinksrc->com_uninitialize);
+  g_cond_init (&decklinksrc->com_uninitialized);
 
-  g_mutex_lock (decklinksrc->com_init_lock);
+  g_mutex_lock (&decklinksrc->com_init_lock);
 
   /* create the COM initialization thread */
   g_thread_create ((GThreadFunc) gst_decklink_src_com_thread,
       decklinksrc, FALSE, NULL);
 
   /* wait until the COM thread signals that COM has been initialized */
-  g_cond_wait (decklinksrc->com_initialized, decklinksrc->com_init_lock);
-  g_mutex_unlock (decklinksrc->com_init_lock);
+  g_cond_wait (&decklinksrc->com_initialized, &decklinksrc->com_init_lock);
+  g_mutex_unlock (&decklinksrc->com_init_lock);
 #endif /* _MSC_VER */
+
+  GST_DEBUG_CATEGORY_INIT (gst_decklink_src_debug_category, "decklinksrc", 0,
+      "debug category for decklinksrc element");
 }
 
 void
@@ -353,7 +218,6 @@ gst_decklink_src_set_property (GObject * object, guint property_id,
 {
   GstDecklinkSrc *decklinksrc;
 
-  g_return_if_fail (GST_IS_DECKLINK_SRC (object));
   decklinksrc = GST_DECKLINK_SRC (object);
 
   switch (property_id) {
@@ -383,7 +247,6 @@ gst_decklink_src_get_property (GObject * object, guint property_id,
 {
   GstDecklinkSrc *decklinksrc;
 
-  g_return_if_fail (GST_IS_DECKLINK_SRC (object));
   decklinksrc = GST_DECKLINK_SRC (object);
 
   switch (property_id) {
@@ -446,16 +309,6 @@ gst_decklink_src_com_thread (GstDecklinkSrc * src)
 #endif /* _MSC_VER */
 
 void
-gst_decklink_src_dispose (GObject * object)
-{
-  g_return_if_fail (GST_IS_DECKLINK_SRC (object));
-
-  /* clean up as possible.  may be called multiple times */
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-void
 gst_decklink_src_finalize (GObject * object)
 {
   GstDecklinkSrc *decklinksrc;
@@ -465,51 +318,33 @@ gst_decklink_src_finalize (GObject * object)
 
   /* clean up object here */
 
-  g_cond_free (decklinksrc->cond);
-  g_mutex_free (decklinksrc->mutex);
+  g_cond_clear (&decklinksrc->cond);
+  g_mutex_clear (&decklinksrc->mutex);
   gst_task_set_lock (decklinksrc->task, NULL);
   g_object_unref (decklinksrc->task);
-  if (decklinksrc->audio_caps) {
-    gst_caps_unref (decklinksrc->audio_caps);
-  }
-  if (decklinksrc->video_caps) {
-    gst_caps_unref (decklinksrc->video_caps);
-  }
+
 #ifdef _MSC_VER
   /* signal the COM thread that it should uninitialize COM */
   if (decklinksrc->comInitialized) {
-    g_mutex_lock (decklinksrc->com_deinit_lock);
-    g_cond_signal (decklinksrc->com_uninitialize);
-    g_cond_wait (decklinksrc->com_uninitialized, decklinksrc->com_deinit_lock);
-    g_mutex_unlock (decklinksrc->com_deinit_lock);
+    g_mutex_lock (&decklinksrc->com_deinit_lock);
+    g_cond_signal (&decklinksrc->com_uninitialize);
+    g_cond_wait (&decklinksrc->com_uninitialized, &decklinksrc->com_deinit_lock);
+    g_mutex_unlock (&decklinksrc->com_deinit_lock);
   }
 
-  g_mutex_free (decklinksrc->com_init_lock);
-  g_mutex_free (decklinksrc->com_deinit_lock);
-  g_cond_free (decklinksrc->com_initialized);
-  g_cond_free (decklinksrc->com_uninitialize);
-  g_cond_free (decklinksrc->com_uninitialized);
+  g_mutex_clear (&decklinksrc->com_init_lock);
+  g_mutex_clear (&decklinksrc->com_deinit_lock);
+  g_cond_clear (&decklinksrc->com_initialized);
+  g_cond_clear (&decklinksrc->com_uninitialize);
+  g_cond_clear (&decklinksrc->com_uninitialized);
 #endif /* _MSC_VER */
+
+  g_rec_mutex_clear (&decklinksrc->task_mutex);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-
-
-static GstPad *
-gst_decklink_src_request_new_pad (GstElement * element, GstPadTemplate * templ,
-    const gchar * name)
-{
-
-  return NULL;
-}
-
-static void
-gst_decklink_src_release_pad (GstElement * element, GstPad * pad)
-{
-
-}
-
+/* FIXME: post error messages for the misc. failures */
 static gboolean
 gst_decklink_src_start (GstElement * element)
 {
@@ -630,9 +465,9 @@ gst_decklink_src_start (GstElement * element)
     return FALSE;
   }
 
-  g_static_rec_mutex_lock (&decklinksrc->task_mutex);
+  g_rec_mutex_lock (&decklinksrc->task_mutex);
   gst_task_start (decklinksrc->task);
-  g_static_rec_mutex_unlock (&decklinksrc->task_mutex);
+  g_rec_mutex_unlock (&decklinksrc->task_mutex);
 
   return TRUE;
 }
@@ -641,14 +476,13 @@ static gboolean
 gst_decklink_src_stop (GstElement * element)
 {
   GstDecklinkSrc *decklinksrc = GST_DECKLINK_SRC (element);
-  //int refcount;
 
   gst_task_stop (decklinksrc->task);
 
-  g_mutex_lock (decklinksrc->mutex);
+  g_mutex_lock (&decklinksrc->mutex);
   decklinksrc->stop = TRUE;
-  g_cond_signal (decklinksrc->cond);
-  g_mutex_unlock (decklinksrc->mutex);
+  g_cond_signal (&decklinksrc->cond);
+  g_mutex_unlock (&decklinksrc->mutex);
 
   gst_task_join (decklinksrc->task);
 
@@ -664,9 +498,6 @@ gst_decklink_src_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
   gboolean no_preroll = FALSE;
-
-  g_return_val_if_fail (GST_IS_DECKLINK_SRC (element),
-      GST_STATE_CHANGE_FAILURE);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -706,436 +537,38 @@ out:
   return ret;
 }
 
-static GstClock *
-gst_decklink_src_provide_clock (GstElement * element)
-{
-
-  return NULL;
-}
-
 static gboolean
-gst_decklink_src_set_clock (GstElement * element, GstClock * clock)
+gst_decklink_src_audio_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
+  gboolean res;
 
-  return GST_ELEMENT_CLASS (parent_class)->set_clock (element, clock);
-}
-
-static GstIndex *
-gst_decklink_src_get_index (GstElement * element)
-{
-
-  return NULL;
-}
-
-static void
-gst_decklink_src_set_index (GstElement * element, GstIndex * index)
-{
-
-}
-
-static gboolean
-gst_decklink_src_send_event (GstElement * element, GstEvent * event)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_decklink_src_query (GstElement * element, GstQuery * query)
-{
-  GstDecklinkSrc *decklinksrc = GST_DECKLINK_SRC (element);
-  gboolean ret;
-
-  GST_DEBUG_OBJECT (decklinksrc, "query");
+  GST_DEBUG_OBJECT (pad, "query: %" GST_PTR_FORMAT, query);
 
   switch (GST_QUERY_TYPE (query)) {
+    /* FIXME: report live-ness and latency for audio too */
+    case GST_QUERY_LATENCY:
+      GST_FIXME_OBJECT (parent, "should report live-ness and audio latency");
+      res = gst_pad_query_default (pad, parent, query);
+      break;
     default:
-      ret = GST_ELEMENT_CLASS (parent_class)->query (element, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
-  return ret;
-}
-
-static GstCaps *
-gst_decklink_src_audio_src_getcaps (GstPad * pad)
-{
-  GstDecklinkSrc *decklinksrc;
-  GstCaps *caps;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "getcaps");
-
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
-
-  gst_object_unref (decklinksrc);
-  return caps;
-}
-
-static gboolean
-gst_decklink_src_audio_src_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstDecklinkSrc *decklinksrc;
-  GstCaps *pad_caps;
-  gboolean can_intersect;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  pad_caps = gst_pad_get_caps (pad);
-  can_intersect = gst_caps_can_intersect (pad_caps, caps);
-  gst_caps_unref (pad_caps);
-
-  GST_DEBUG_OBJECT (decklinksrc, "setcaps");
-
-
-  gst_object_unref (decklinksrc);
-  return can_intersect;
-}
-
-static gboolean
-gst_decklink_src_audio_src_acceptcaps (GstPad * pad, GstCaps * caps)
-{
-  GstDecklinkSrc *decklinksrc;
-  GstCaps *pad_caps;
-  gboolean can_intersect;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  pad_caps = gst_pad_get_caps (pad);
-  can_intersect = gst_caps_can_intersect (pad_caps, caps);
-  gst_caps_unref (pad_caps);
-
-  GST_DEBUG_OBJECT (decklinksrc, "acceptcaps");
-
-  gst_object_unref (decklinksrc);
-  return can_intersect;
-}
-
-static void
-gst_decklink_src_audio_src_fixatecaps (GstPad * pad, GstCaps * caps)
-{
-  GstDecklinkSrc *decklinksrc;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "fixatecaps");
-
-
-  gst_object_unref (decklinksrc);
-}
-
-static gboolean
-gst_decklink_src_audio_src_activate (GstPad * pad)
-{
-  GstDecklinkSrc *decklinksrc;
-  gboolean ret;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "activate");
-
-  if (gst_pad_check_pull_range (pad)) {
-    GST_DEBUG_OBJECT (pad, "activating pull");
-    ret = gst_pad_activate_pull (pad, TRUE);
-  } else {
-    GST_DEBUG_OBJECT (pad, "activating push");
-    ret = gst_pad_activate_push (pad, TRUE);
-  }
-
-  gst_object_unref (decklinksrc);
-  return ret;
-}
-
-static gboolean
-gst_decklink_src_audio_src_activatepush (GstPad * pad, gboolean active)
-{
-  GstDecklinkSrc *decklinksrc;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "activatepush");
-
-
-  gst_object_unref (decklinksrc);
-  return TRUE;
-}
-
-static gboolean
-gst_decklink_src_audio_src_activatepull (GstPad * pad, gboolean active)
-{
-  GstDecklinkSrc *decklinksrc;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "activatepull");
-
-  gst_object_unref (decklinksrc);
-  return FALSE;
-}
-
-static GstPadLinkReturn
-gst_decklink_src_audio_src_link (GstPad * pad, GstPad * peer)
-{
-  GstDecklinkSrc *decklinksrc;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "link");
-
-
-  gst_object_unref (decklinksrc);
-  return GST_PAD_LINK_OK;
-}
-
-static GstFlowReturn
-gst_decklink_src_audio_src_getrange (GstPad * pad, guint64 offset, guint length,
-    GstBuffer ** buffer)
-{
-  GstDecklinkSrc *decklinksrc;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "getrange");
-
-
-  gst_object_unref (decklinksrc);
-  return GST_FLOW_OK;
-}
-
-static gboolean
-gst_decklink_src_audio_src_event (GstPad * pad, GstEvent * event)
-{
-  gboolean res;
-  GstDecklinkSrc *decklinksrc;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "event");
-
-  switch (GST_EVENT_TYPE (event)) {
-    default:
-      res = gst_pad_event_default (pad, event);
-      break;
-  }
-
-  gst_object_unref (decklinksrc);
   return res;
 }
 
 static gboolean
-gst_decklink_src_audio_src_query (GstPad * pad, GstQuery * query)
-{
-  gboolean res;
-  GstDecklinkSrc *decklinksrc;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "query");
-
-  switch (GST_QUERY_TYPE (query)) {
-    default:
-      res = gst_pad_query_default (pad, query);
-      break;
-  }
-
-  gst_object_unref (decklinksrc);
-  return res;
-}
-
-static GstIterator *
-gst_decklink_src_audio_src_iterintlink (GstPad * pad)
+gst_decklink_src_video_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   GstDecklinkSrc *decklinksrc;
-  GstIterator *iter;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "iterintlink");
-
-  iter = gst_pad_iterate_internal_links_default (pad);
-
-  gst_object_unref (decklinksrc);
-  return iter;
-}
-
-
-static GstCaps *
-gst_decklink_src_video_src_getcaps (GstPad * pad)
-{
-  GstDecklinkSrc *decklinksrc;
-  GstCaps *caps;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "getcaps");
-
-  caps = gst_decklink_mode_get_caps (decklinksrc->mode);
-
-  gst_object_unref (decklinksrc);
-  return caps;
-}
-
-static gboolean
-gst_decklink_src_video_src_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstDecklinkSrc *decklinksrc;
-  GstCaps *mode_caps;
-  gboolean can_intersect;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "setcaps");
-
-  mode_caps = gst_decklink_mode_get_caps (decklinksrc->mode);
-  can_intersect = gst_caps_can_intersect (mode_caps, caps);
-  gst_caps_unref (mode_caps);
-
-  gst_object_unref (decklinksrc);
-  return can_intersect;
-}
-
-static gboolean
-gst_decklink_src_video_src_acceptcaps (GstPad * pad, GstCaps * caps)
-{
-  GstDecklinkSrc *decklinksrc;
-  GstCaps *mode_caps;
-  gboolean can_intersect;
-
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "acceptcaps");
-
-  mode_caps = gst_decklink_mode_get_caps (decklinksrc->mode);
-  can_intersect = gst_caps_can_intersect (mode_caps, caps);
-  gst_caps_unref (mode_caps);
-
-  gst_object_unref (decklinksrc);
-  return can_intersect;
-}
-
-static void
-gst_decklink_src_video_src_fixatecaps (GstPad * pad, GstCaps * caps)
-{
-  GstDecklinkSrc *decklinksrc;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "fixatecaps");
-
-
-  gst_object_unref (decklinksrc);
-}
-
-static gboolean
-gst_decklink_src_video_src_activate (GstPad * pad)
-{
-  GstDecklinkSrc *decklinksrc;
-  gboolean ret;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "activate");
-
-  if (gst_pad_check_pull_range (pad)) {
-    GST_DEBUG_OBJECT (pad, "activating pull");
-    ret = gst_pad_activate_pull (pad, TRUE);
-  } else {
-    GST_DEBUG_OBJECT (pad, "activating push");
-    ret = gst_pad_activate_push (pad, TRUE);
-  }
-
-  gst_object_unref (decklinksrc);
-  return ret;
-}
-
-static gboolean
-gst_decklink_src_video_src_activatepush (GstPad * pad, gboolean active)
-{
-  GstDecklinkSrc *decklinksrc;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "activatepush");
-
-
-  gst_object_unref (decklinksrc);
-  return TRUE;
-}
-
-static gboolean
-gst_decklink_src_video_src_activatepull (GstPad * pad, gboolean active)
-{
-  GstDecklinkSrc *decklinksrc;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "activatepull");
-
-
-  gst_object_unref (decklinksrc);
-  return FALSE;
-}
-
-static GstPadLinkReturn
-gst_decklink_src_video_src_link (GstPad * pad, GstPad * peer)
-{
-  GstDecklinkSrc *decklinksrc;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "link");
-
-
-  gst_object_unref (decklinksrc);
-  return GST_PAD_LINK_OK;
-}
-
-static GstFlowReturn
-gst_decklink_src_video_src_getrange (GstPad * pad, guint64 offset, guint length,
-    GstBuffer ** buffer)
-{
-  GstDecklinkSrc *decklinksrc;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "getrange");
-
-
-  gst_object_unref (decklinksrc);
-  return GST_FLOW_OK;
-}
-
-static gboolean
-gst_decklink_src_video_src_event (GstPad * pad, GstEvent * event)
-{
-  gboolean res;
-  GstDecklinkSrc *decklinksrc;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "event");
-
-  switch (GST_EVENT_TYPE (event)) {
-    default:
-      res = gst_pad_event_default (pad, event);
-      break;
-  }
-
-  gst_object_unref (decklinksrc);
-  return res;
-}
-
-static gboolean
-gst_decklink_src_video_src_query (GstPad * pad, GstQuery * query)
-{
   gboolean ret = FALSE;
-  GstDecklinkSrc *decklinksrc;
 
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
+  decklinksrc = GST_DECKLINK_SRC (parent);
 
-  GST_DEBUG_OBJECT (decklinksrc, "query");
+  GST_DEBUG_OBJECT (pad, "query: %" GST_PTR_FORMAT, query);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:{
@@ -1170,29 +603,12 @@ gst_decklink_src_video_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      ret = gst_pad_query_default (pad, query);
+      ret = gst_pad_query_default (pad, parent, query);
       break;
   }
 
 done:
-  gst_object_unref (decklinksrc);
   return ret;
-}
-
-static GstIterator *
-gst_decklink_src_video_src_iterintlink (GstPad * pad)
-{
-  GstDecklinkSrc *decklinksrc;
-  GstIterator *iter;
-
-  decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
-
-  GST_DEBUG_OBJECT (decklinksrc, "iterintlink");
-
-  iter = gst_pad_iterate_internal_links_default (pad);
-
-  gst_object_unref (decklinksrc);
-  return iter;
 }
 
 static void
@@ -1206,6 +622,42 @@ video_frame_free (void *data)
 }
 
 static void
+gst_decklink_src_send_initial_events (GstDecklinkSrc * src)
+{
+  GstSegment segment;
+  GstEvent *event;
+  guint32 audio_id, video_id;
+  gchar stream_id[9];
+
+  /* stream-start */
+  audio_id = g_random_int ();
+  video_id = g_random_int ();
+  while (video_id == audio_id)
+    video_id = g_random_int ();
+
+  g_snprintf (stream_id, sizeof (stream_id), "%08x", audio_id);
+  gst_pad_push_event (src->audiosrcpad, gst_event_new_stream_start (stream_id));
+
+  g_snprintf (stream_id, sizeof (stream_id), "%08x", video_id);
+  gst_pad_push_event (src->videosrcpad, gst_event_new_stream_start (stream_id));
+
+  /* segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  event = gst_event_new_segment (&segment);
+  gst_pad_push_event (src->videosrcpad, gst_event_ref (event));
+  gst_pad_push_event (src->audiosrcpad, event);
+
+  /* caps */
+  gst_pad_push_event (src->audiosrcpad,
+      gst_event_new_caps (gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, "S16LE", "channels", G_TYPE_INT, 2,
+          "rate", G_TYPE_INT, 48000, NULL)));
+
+  gst_pad_push_event (src->videosrcpad,
+      gst_event_new_caps (gst_decklink_mode_get_caps (src->mode)));
+}
+
+static void
 gst_decklink_src_task (void *priv)
 {
   GstDecklinkSrc *decklinksrc = GST_DECKLINK_SRC (priv);
@@ -1214,21 +666,23 @@ gst_decklink_src_task (void *priv)
   IDeckLinkVideoInputFrame *video_frame;
   IDeckLinkAudioInputPacket *audio_frame;
   void *data;
+  gsize data_size;
   int n_samples;
   GstFlowReturn ret;
   const GstDecklinkMode *mode;
+  gboolean discont = FALSE;
 
   GST_DEBUG_OBJECT (decklinksrc, "task");
 
-  g_mutex_lock (decklinksrc->mutex);
+  g_mutex_lock (&decklinksrc->mutex);
   while (decklinksrc->video_frame == NULL && !decklinksrc->stop) {
-    g_cond_wait (decklinksrc->cond, decklinksrc->mutex);
+    g_cond_wait (&decklinksrc->cond, &decklinksrc->mutex);
   }
   video_frame = decklinksrc->video_frame;
   audio_frame = decklinksrc->audio_frame;
   decklinksrc->video_frame = NULL;
   decklinksrc->audio_frame = NULL;
-  g_mutex_unlock (decklinksrc->mutex);
+  g_mutex_unlock (&decklinksrc->mutex);
 
   if (decklinksrc->stop) {
     if (video_frame)
@@ -1240,49 +694,41 @@ gst_decklink_src_task (void *priv)
   }
 
   /* warning on dropped frames */
+  /* FIXME: post QoS message */
   if (decklinksrc->dropped_frames - decklinksrc->dropped_frames_old > 0) {
     GST_ELEMENT_WARNING (decklinksrc, RESOURCE, READ,
         ("Dropped %d frame(s), for a total of %d frame(s)",
             decklinksrc->dropped_frames - decklinksrc->dropped_frames_old,
             decklinksrc->dropped_frames), (NULL));
     decklinksrc->dropped_frames_old = decklinksrc->dropped_frames;
+    /* FIXME: discont = TRUE; ? */
   }
 
-  if (!decklinksrc->video_new_segment) {
-    GstEvent *event;
-    gboolean ret;
-
-    event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-        0, GST_CLOCK_TIME_NONE, 0);
-
-    ret = gst_pad_push_event (decklinksrc->videosrcpad, event);
-    if (!ret) {
-      GST_WARNING ("new segment event not handled");
-    }
-
-    decklinksrc->video_new_segment = TRUE;
+  if (!decklinksrc->started) {
+    gst_decklink_src_send_initial_events (decklinksrc);
+    decklinksrc->started = TRUE;
   }
 
   mode = gst_decklink_get_mode (decklinksrc->mode);
 
   video_frame->GetBytes (&data);
-  if (decklinksrc->copy_data) {
-    buffer = gst_buffer_new_and_alloc (mode->width * mode->height * 2);
 
-    memcpy (GST_BUFFER_DATA (buffer), data, mode->width * mode->height * 2);
+  data_size = mode->width * mode->height * 2;
+
+  if (decklinksrc->copy_data) {
+    buffer = gst_buffer_new_and_alloc (data_size);
+
+    gst_buffer_fill (buffer, 0, data, data_size);
 
     video_frame->Release ();
   } else {
     VideoFrame *vf;
 
     vf = (VideoFrame *) g_malloc0 (sizeof (VideoFrame));
-    buffer = gst_buffer_new ();
-    GST_BUFFER_SIZE (buffer) = mode->width * mode->height * 2;
 
-    GST_BUFFER_DATA (buffer) = (guint8 *) data;
+    buffer = gst_buffer_new_wrapped_full ((GstMemoryFlags) 0, data, data_size,
+        0, data_size, vf, (GDestroyNotify) video_frame_free);
 
-    GST_BUFFER_FREE_FUNC (buffer) = video_frame_free;
-    GST_BUFFER_MALLOCDATA (buffer) = (guint8 *) vf;
     vf->frame = video_frame;
     vf->input = decklinksrc->input;
     vf->input->AddRef ();
@@ -1295,94 +741,49 @@ gst_decklink_src_task (void *priv)
       gst_util_uint64_scale_int ((decklinksrc->frame_num + 1) * GST_SECOND,
       mode->fps_d, mode->fps_n) - GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_OFFSET (buffer) = decklinksrc->frame_num;
-  GST_BUFFER_OFFSET_END (buffer) = decklinksrc->frame_num;
-  if (decklinksrc->frame_num == 0) {
-    GstEvent *event;
-    gboolean ret;
+  GST_BUFFER_OFFSET_END (buffer) = decklinksrc->frame_num; /* FIXME: +1? */
 
+  /* FIXME: set video meta */
+
+  if (decklinksrc->frame_num == 0)
+    discont = TRUE;
+
+  if (discont)
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+  else
+    GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
 
-    event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0,
-        GST_CLOCK_TIME_NONE, 0);
-
-    if (gst_pad_is_linked (decklinksrc->videosrcpad)) {
-      gst_event_ref (event);
-      ret = gst_pad_push_event (decklinksrc->videosrcpad, event);
-      if (!ret) {
-        GST_ERROR_OBJECT (decklinksrc, "new segment event ret=%d", ret);
-        gst_event_unref (event);
-        return;
-      }
-    } else {
-      gst_event_unref (event);
-    }
-
-    if (gst_pad_is_linked (decklinksrc->audiosrcpad)) {
-      ret = gst_pad_push_event (decklinksrc->audiosrcpad, event);
-      if (!ret) {
-        GST_ERROR_OBJECT (decklinksrc, "new segment event ret=%d", ret);
-        gst_event_unref (event);
-      }
-    } else {
-      gst_event_unref (event);
-    }
-
-  }
-
-  if (decklinksrc->video_caps == NULL) {
-    decklinksrc->video_caps = gst_decklink_mode_get_caps (decklinksrc->mode);
-  }
-  gst_buffer_set_caps (buffer, decklinksrc->video_caps);
-
+  /* FIXME: proper flow aggregation with audio flow */
   ret = gst_pad_push (decklinksrc->videosrcpad, buffer);
   if (!(ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED ||
-          ret == GST_FLOW_WRONG_STATE)) {
+          ret == GST_FLOW_FLUSHING)) {
     GST_ELEMENT_ERROR (decklinksrc, STREAM, FAILED,
         ("Internal data stream error."),
         ("stream stopped, reason %s", gst_flow_get_name (ret)));
   }
 
   if (gst_pad_is_linked (decklinksrc->audiosrcpad)) {
-    if (!decklinksrc->audio_new_segment) {
-      GstEvent *event;
-      gboolean ret;
-
-      event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-          0, GST_CLOCK_TIME_NONE, 0);
-
-      ret = gst_pad_push_event (decklinksrc->audiosrcpad, event);
-      if (!ret) {
-        GST_WARNING ("new segment event not handled");
-      }
-
-      decklinksrc->audio_new_segment = TRUE;
-    }
-
     n_samples = audio_frame->GetSampleFrameCount ();
     audio_frame->GetBytes (&data);
     audio_buffer = gst_buffer_new_and_alloc (n_samples * 2 * 2);
-    memcpy (GST_BUFFER_DATA (audio_buffer), data, n_samples * 2 * 2);
+    gst_buffer_fill (audio_buffer, 0, data, n_samples * 2 * 2);
 
     GST_BUFFER_TIMESTAMP (audio_buffer) =
         gst_util_uint64_scale_int (decklinksrc->num_audio_samples * GST_SECOND,
         1, 48000);
+    /* FIXME: should be next_timestamp - timestamp for perfect stream */
     GST_BUFFER_DURATION (audio_buffer) =
         gst_util_uint64_scale_int (n_samples * GST_SECOND, 1, 48000);
+    GST_BUFFER_OFFSET (audio_buffer) = decklinksrc->num_audio_samples;
+    GST_BUFFER_OFFSET_END (audio_buffer) =
+        GST_BUFFER_OFFSET (audio_buffer) + n_samples;
+
     decklinksrc->num_audio_samples += n_samples;
 
-    if (decklinksrc->audio_caps == NULL) {
-      decklinksrc->audio_caps = gst_caps_new_simple ("audio/x-raw-int",
-          "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-          "signed", G_TYPE_BOOLEAN, TRUE,
-          "depth", G_TYPE_INT, 16,
-          "width", G_TYPE_INT, 16,
-          "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 48000, NULL);
-    }
-    gst_buffer_set_caps (audio_buffer, decklinksrc->audio_caps);
-
+  /* FIXME: proper flow aggregation with video flow */
     ret = gst_pad_push (decklinksrc->audiosrcpad, audio_buffer);
     if (!(ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED ||
-            ret == GST_FLOW_WRONG_STATE)) {
+            ret == GST_FLOW_FLUSHING)) {
       GST_ELEMENT_ERROR (decklinksrc, STREAM, FAILED,
           ("Internal data stream error."),
           ("stream stopped, reason %s", gst_flow_get_name (ret)));
@@ -1392,31 +793,14 @@ gst_decklink_src_task (void *priv)
     audio_frame->Release ();
 }
 
-
-static const GList *
-gst_decklinksrc_probe_get_properties (GstPropertyProbe * probe)
-{
-  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
-  static GList *list = NULL;
-  static gsize init = 0;
-
-  if (g_once_init_enter (&init)) {
-    list = g_list_append (NULL, g_object_class_find_property (klass, "device"));
-
-    g_once_init_leave (&init, 1);
-  }
-
-  return list;
-}
-
-static gboolean probed = FALSE;
-static int n_devices;
-
+#if 0
+/* former device probe code, redux */
 static void
-gst_decklinksrc_class_probe_devices (GstElementClass * klass)
+gst_decklinksrc_list_devices (void)
 {
   IDeckLinkIterator *iterator;
   IDeckLink *decklink;
+  int n_devices;
 
   n_devices = 0;
   iterator = CreateDeckLinkIteratorInstance ();
@@ -1427,85 +811,6 @@ gst_decklinksrc_class_probe_devices (GstElementClass * klass)
   }
   iterator->Release();
 
-  probed = TRUE;
+  g_print ("%d devices\n", n_devices);
 }
-
-static void
-gst_decklinksrc_probe_probe_property (GstPropertyProbe * probe,
-    guint prop_id, const GParamSpec * pspec)
-{
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (probe);
-
-  switch (prop_id) {
-    case PROP_DEVICE:
-      gst_decklinksrc_class_probe_devices (klass);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
-      break;
-  }
-}
-
-static gboolean
-gst_decklinksrc_probe_needs_probe (GstPropertyProbe * probe,
-    guint prop_id, const GParamSpec * pspec)
-{
-  gboolean ret = FALSE;
-
-  switch (prop_id) {
-    case PROP_DEVICE:
-      ret = !probed;
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
-      break;
-  }
-  return ret;
-}
-
-static GValueArray *
-gst_decklinksrc_class_list_devices (GstElementClass * klass)
-{
-  GValueArray *array;
-  GValue value = { 0 };
-  int i;
-
-  array = g_value_array_new (n_devices);
-  g_value_init (&value, G_TYPE_INT);
-  for (i = 0; i < n_devices; i++) {
-    g_value_set_int (&value, i);
-    g_value_array_append (array, &value);
-  }
-  g_value_unset (&value);
-
-  return array;
-}
-
-static GValueArray *
-gst_decklinksrc_probe_get_values (GstPropertyProbe * probe,
-    guint prop_id, const GParamSpec * pspec)
-{
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (probe);
-  GValueArray *array = NULL;
-
-  switch (prop_id) {
-    case PROP_DEVICE:
-      array = gst_decklinksrc_class_list_devices (klass);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
-      break;
-  }
-
-  return array;
-}
-
-static void
-gst_decklinksrc_property_probe_interface_init (GstPropertyProbeInterface *
-    iface)
-{
-  iface->get_properties = gst_decklinksrc_probe_get_properties;
-  iface->probe_property = gst_decklinksrc_probe_probe_property;
-  iface->needs_probe = gst_decklinksrc_probe_needs_probe;
-  iface->get_values = gst_decklinksrc_probe_get_values;
-}
+#endif
