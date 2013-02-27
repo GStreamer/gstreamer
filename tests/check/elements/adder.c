@@ -1070,6 +1070,104 @@ GST_START_TEST (test_duration_unknown_overrides)
 GST_END_TEST;
 
 
+static gboolean looped = FALSE;
+
+static void
+loop_segment_done (GstBus * bus, GstMessage * message, GstElement * bin)
+{
+  GST_INFO ("bus message from \"%" GST_PTR_FORMAT "\": %" GST_PTR_FORMAT,
+      GST_MESSAGE_SRC (message), message);
+
+  if (looped) {
+    g_main_loop_quit (main_loop);
+  } else {
+    GstEvent *seek_event;
+    gboolean res;
+
+    seek_event = gst_event_new_seek (1.0, GST_FORMAT_TIME,
+        GST_SEEK_FLAG_SEGMENT,
+        GST_SEEK_TYPE_SET, (GstClockTime) 0,
+        GST_SEEK_TYPE_SET, (GstClockTime) 1 * GST_SECOND);
+
+    res = gst_element_send_event (bin, seek_event);
+    fail_unless (res == TRUE, NULL);
+    looped = TRUE;
+  }
+}
+
+GST_START_TEST (test_loop)
+{
+  GstElement *bin, *src1, *src2, *adder, *sink;
+  GstBus *bus;
+  GstEvent *seek_event;
+  GstStateChangeReturn state_res;
+  gboolean res;
+
+  GST_INFO ("preparing test");
+
+  /* build pipeline */
+  bin = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (bin);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  src1 = gst_element_factory_make ("audiotestsrc", "src1");
+  g_object_set (src1, "wave", 4, NULL); /* silence */
+  src2 = gst_element_factory_make ("audiotestsrc", "src2");
+  g_object_set (src2, "wave", 4, NULL); /* silence */
+  adder = gst_element_factory_make ("adder", "adder");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  gst_bin_add_many (GST_BIN (bin), src1, src2, adder, sink, NULL);
+
+  res = gst_element_link (src1, adder);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (src2, adder);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (adder, sink);
+  fail_unless (res == TRUE, NULL);
+
+  seek_event = gst_event_new_seek (1.0, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_FLUSH,
+      GST_SEEK_TYPE_SET, (GstClockTime) 0,
+      GST_SEEK_TYPE_SET, (GstClockTime) 1 * GST_SECOND);
+
+  main_loop = g_main_loop_new (NULL, FALSE);
+  g_signal_connect (bus, "message::segment-done",
+      (GCallback) loop_segment_done, bin);
+  g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::warning", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::eos", (GCallback) message_received, bin);
+
+  GST_INFO ("starting test");
+
+  /* prepare playing */
+  state_res = gst_element_set_state (bin, GST_STATE_PAUSED);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  /* wait for completion */
+  state_res = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  res = gst_element_send_event (bin, seek_event);
+  fail_unless (res == TRUE, NULL);
+
+  /* run pipeline */
+  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  GST_INFO ("running main loop");
+  g_main_loop_run (main_loop);
+
+  state_res = gst_element_set_state (bin, GST_STATE_NULL);
+
+  /* cleanup */
+  g_main_loop_unref (main_loop);
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 adder_suite (void)
 {
@@ -1088,6 +1186,7 @@ adder_suite (void)
   tcase_add_test (tc_chain, test_clip);
   tcase_add_test (tc_chain, test_duration_is_max);
   tcase_add_test (tc_chain, test_duration_unknown_overrides);
+  tcase_add_test (tc_chain, test_loop);
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND
