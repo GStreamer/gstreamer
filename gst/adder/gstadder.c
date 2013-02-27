@@ -49,21 +49,6 @@
 #include <string.h>             /* strcmp */
 #include "gstadderorc.h"
 
-/* highest positive/lowest negative x-bit value we can use for clamping */
-#define MAX_INT_32  ((gint32) (0x7fffffff))
-#define MAX_INT_16  ((gint16) (0x7fff))
-#define MAX_INT_8   ((gint8)  (0x7f))
-#define MAX_UINT_32 ((guint32)(0xffffffff))
-#define MAX_UINT_16 ((guint16)(0xffff))
-#define MAX_UINT_8  ((guint8) (0xff))
-
-#define MIN_INT_32  ((gint32) (0x80000000))
-#define MIN_INT_16  ((gint16) (0x8000))
-#define MIN_INT_8   ((gint8)  (0x80))
-#define MIN_UINT_32 ((guint32)(0x00000000))
-#define MIN_UINT_16 ((guint16)(0x0000))
-#define MIN_UINT_8  ((guint8) (0x00))
-
 enum
 {
   PROP_0,
