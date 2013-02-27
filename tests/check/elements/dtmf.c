@@ -119,6 +119,7 @@ check_buffers_duration (GstClockTime expected_duration)
 
     fail_unless (GST_BUFFER_DURATION_IS_VALID (buf));
     duration += GST_BUFFER_DURATION (buf);
+    gst_buffer_unref (buf);
   }
 
   fail_unless (duration == expected_duration);
