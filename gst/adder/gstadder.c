@@ -817,11 +817,8 @@ gst_adder_sink_event (GstCollectPads * pads, GstCollectData * pad,
       event = NULL;
     }
     case GST_EVENT_FLUSH_START:
-      /* discard flush start events, as we forwarded one already when handing the
-       * flushing seek on the sink pad */
+      /* ensure that we will send a flush stop */
       g_atomic_int_set (&adder->need_flush_stop, TRUE);
-      discard = TRUE;
-      GST_DEBUG_OBJECT (pad->pad, "eating flush start");
       break;
     case GST_EVENT_FLUSH_STOP:
       /* we received a flush-stop. We will only forward it when
