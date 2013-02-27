@@ -152,14 +152,14 @@ gst_decklink_mode_get_structure (GstDecklinkModeEnum e)
 {
   const GstDecklinkMode *mode = &modes[e];
 
-  return gst_structure_new ("video/x-raw-yuv",
-      "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'),
+  return gst_structure_new ("video/x-raw",
+      "format", G_TYPE_STRING, "UYVY",
       "width", G_TYPE_INT, mode->width,
       "height", G_TYPE_INT, mode->height,
       "framerate", GST_TYPE_FRACTION, mode->fps_n, mode->fps_d,
-      "interlaced", G_TYPE_BOOLEAN, mode->interlaced,
+      "interlace-mode", G_TYPE_STRING, mode->interlaced ? "interleaved" : "progressive",
       "pixel-aspect-ratio", GST_TYPE_FRACTION, mode->par_n, mode->par_d,
-      "color-matrix", G_TYPE_STRING, mode->is_hdtv ? "hdtv" : "sdtv",
+      "colorimetry", G_TYPE_STRING, mode->is_hdtv ? "bt709" : "bt601",
       "chroma-site", G_TYPE_STRING, "mpeg2", NULL);
 }
 
@@ -288,8 +288,10 @@ plugin_init (GstPlugin * plugin)
 
   gst_element_register (plugin, "decklinksrc", GST_RANK_NONE,
       gst_decklink_src_get_type ());
+#if 0
   gst_element_register (plugin, "decklinksink", GST_RANK_NONE,
       gst_decklink_sink_get_type ());
+#endif
 
   return TRUE;
 }

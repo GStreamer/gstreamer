@@ -31,44 +31,38 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include <gst/glib-compat-private.h>
-
 #include "gstdecklinksrc.h"
 
 #include "capture.h"
 
 #define GST_CAT_DEFAULT gst_decklink_src_debug_category
 
-IDeckLink *deckLink;
-IDeckLinkInput *deckLinkInput;
-IDeckLinkDisplayModeIterator *displayModeIterator;
-
 static BMDTimecodeFormat g_timecodeFormat = (BMDTimecodeFormat) 0;
 
 DeckLinkCaptureDelegate::DeckLinkCaptureDelegate ():m_refCount (0)
 {
-  m_mutex = g_mutex_new ();
+  g_mutex_init (&m_mutex);
 }
 
 DeckLinkCaptureDelegate::~DeckLinkCaptureDelegate ()
 {
-  g_mutex_free (m_mutex);
+  g_mutex_clear (&m_mutex);
 }
 
 ULONG DeckLinkCaptureDelegate::AddRef (void)
 {
-  g_mutex_lock (m_mutex);
+  g_mutex_lock (&m_mutex);
   m_refCount++;
-  g_mutex_unlock (m_mutex);
+  g_mutex_unlock (&m_mutex);
 
   return (ULONG) m_refCount;
 }
 
 ULONG DeckLinkCaptureDelegate::Release (void)
 {
-  g_mutex_lock (m_mutex);
+  g_mutex_lock (&m_mutex);
   m_refCount--;
-  g_mutex_unlock (m_mutex);
+  g_mutex_unlock (&m_mutex);
 
   if (m_refCount == 0) {
     delete
@@ -106,6 +100,7 @@ HRESULT
     return S_OK;
   }
 
+  /* FIXME: g_timecodeFormat is inited to 0 and never changed? dead code? */
   if (g_timecodeFormat != 0) {
     IDeckLinkTimecode *timecode;
     if (videoFrame->GetTimecode (g_timecodeFormat, &timecode) == S_OK) {
@@ -121,7 +116,7 @@ HRESULT
   if (timecodeString)
     FREE_COM_STRING (timecodeString);
 
-  g_mutex_lock (decklinksrc->mutex);
+  g_mutex_lock (&decklinksrc->mutex);
   if (decklinksrc->video_frame != NULL) {
     decklinksrc->dropped_frames++;
     decklinksrc->video_frame->Release();
@@ -139,8 +134,8 @@ HRESULT
   /* increment regardless whether frame was dropped or not */
   decklinksrc->frame_num++;
 
-  g_cond_signal (decklinksrc->cond);
-  g_mutex_unlock (decklinksrc->mutex);
+  g_cond_signal (&decklinksrc->cond);
+  g_mutex_unlock (&decklinksrc->mutex);
 
   return S_OK;
 }
