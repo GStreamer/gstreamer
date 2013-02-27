@@ -564,53 +564,38 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
     goto component_error;
   } else if (acq_return == GST_OMX_ACQUIRE_BUFFER_FLUSHING) {
     goto flushing;
-  } else if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
-    OMX_ERRORTYPE err;
-
-    /* Reallocate all buffers */
-    err = gst_omx_port_set_enabled (port, FALSE);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    err = gst_omx_port_wait_buffers_released (port, 5 * GST_SECOND);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    err = gst_omx_port_deallocate_buffers (port);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    err = gst_omx_port_wait_enabled (port, 1 * GST_SECOND);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    err = gst_omx_port_set_enabled (port, TRUE);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    err = gst_omx_port_allocate_buffers (port);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    err = gst_omx_port_wait_enabled (port, 5 * GST_SECOND);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    err = gst_omx_port_mark_reconfigured (port);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    /* Update caps below */
   }
 
-  GST_VIDEO_DECODER_STREAM_LOCK (self);
-  if (!gst_pad_has_current_caps (GST_VIDEO_DECODER_SRC_PAD (self))
-      || acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+  if (!gst_pad_has_current_caps (GST_VIDEO_DECODER_SRC_PAD (self)) ||
+      acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+    OMX_ERRORTYPE err;
     GstVideoCodecState *state;
     OMX_PARAM_PORTDEFINITIONTYPE port_def;
     GstVideoFormat format;
 
     GST_DEBUG_OBJECT (self, "Port settings have changed, updating caps");
+
+    /* Reallocate all buffers */
+    if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+      err = gst_omx_port_set_enabled (port, FALSE);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
+      err = gst_omx_port_wait_buffers_released (port, 5 * GST_SECOND);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
+      err = gst_omx_port_deallocate_buffers (port);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
+      err = gst_omx_port_wait_enabled (port, 1 * GST_SECOND);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+    }
+
+    GST_VIDEO_DECODER_STREAM_LOCK (self);
+
 
     gst_omx_port_get_port_definition (port, &port_def);
     g_assert (port_def.format.video.eCompressionFormat ==
@@ -658,13 +643,31 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
 
     gst_video_codec_state_unref (state);
 
+    GST_VIDEO_DECODER_STREAM_UNLOCK (self);
+
+    if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+      err = gst_omx_port_set_enabled (port, TRUE);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
+      err = gst_omx_port_allocate_buffers (port);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
+      err = gst_omx_port_wait_enabled (port, 5 * GST_SECOND);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
+      err = gst_omx_port_mark_reconfigured (port);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+    }
+
     /* Now get a buffer */
     if (acq_return != GST_OMX_ACQUIRE_BUFFER_OK) {
-      GST_VIDEO_DECODER_STREAM_UNLOCK (self);
       return;
     }
   }
-  GST_VIDEO_DECODER_STREAM_UNLOCK (self);
 
   g_assert (acq_return == GST_OMX_ACQUIRE_BUFFER_OK);
 

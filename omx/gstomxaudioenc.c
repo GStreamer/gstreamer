@@ -295,53 +295,38 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
     goto component_error;
   } else if (acq_return == GST_OMX_ACQUIRE_BUFFER_FLUSHING) {
     goto flushing;
-  } else if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
-    OMX_ERRORTYPE err;
-
-    /* Reallocate all buffers */
-    err = gst_omx_port_set_enabled (port, FALSE);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    err = gst_omx_port_wait_buffers_released (port, 5 * GST_SECOND);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    err = gst_omx_port_deallocate_buffers (port);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    err = gst_omx_port_wait_enabled (port, 1 * GST_SECOND);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    err = gst_omx_port_set_enabled (port, TRUE);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    err = gst_omx_port_allocate_buffers (port);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    err = gst_omx_port_wait_enabled (port, 5 * GST_SECOND);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    err = gst_omx_port_mark_reconfigured (port);
-    if (err != OMX_ErrorNone)
-      goto reconfigure_error;
-
-    /* Update caps below */
   }
 
-  GST_AUDIO_ENCODER_STREAM_LOCK (self);
   if (!gst_pad_has_current_caps (GST_AUDIO_ENCODER_SRC_PAD (self))
       || acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
     GstAudioInfo *info =
         gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (self));
     GstCaps *caps;
+    OMX_ERRORTYPE err;
 
     GST_DEBUG_OBJECT (self, "Port settings have changed, updating caps");
+
+    /* Reallocate all buffers */
+    if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+      err = gst_omx_port_set_enabled (port, FALSE);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
+      err = gst_omx_port_wait_buffers_released (port, 5 * GST_SECOND);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
+      err = gst_omx_port_deallocate_buffers (port);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
+      err = gst_omx_port_wait_enabled (port, 1 * GST_SECOND);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
+    }
+
+    GST_AUDIO_ENCODER_STREAM_LOCK (self);
 
     caps = klass->get_caps (self, self->enc_out_port, info);
     if (!caps) {
@@ -362,13 +347,31 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
     }
     gst_caps_unref (caps);
 
+    GST_AUDIO_ENCODER_STREAM_UNLOCK (self);
+
+    if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+      err = gst_omx_port_set_enabled (port, TRUE);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
+      err = gst_omx_port_allocate_buffers (port);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
+      err = gst_omx_port_wait_enabled (port, 5 * GST_SECOND);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
+      err = gst_omx_port_mark_reconfigured (port);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+    }
+
     /* Now get a buffer */
     if (acq_return != GST_OMX_ACQUIRE_BUFFER_OK) {
-      GST_AUDIO_ENCODER_STREAM_UNLOCK (self);
       return;
     }
   }
-  GST_AUDIO_ENCODER_STREAM_UNLOCK (self);
 
   g_assert (acq_return == GST_OMX_ACQUIRE_BUFFER_OK);
 
