@@ -2054,8 +2054,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
-              priv->cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
+              cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -3021,7 +3021,7 @@ gst_base_sink_default_event (GstBaseSink * basesink, GstEvent * event)
       /* the newsegment event is needed to bring the buffer timestamps to the
        * stream time and to drop samples outside of the playback segment. */
       gst_event_copy_segment (event, &basesink->segment);
-      GST_DEBUG_OBJECT (basesink, "configured SEGMENT %" GST_SEGMENT_FORMAT,
+      GST_DEBUG_OBJECT (basesink, "configured segment %" GST_SEGMENT_FORMAT,
           &basesink->segment);
       basesink->have_newsegment = TRUE;
       GST_OBJECT_UNLOCK (basesink);
@@ -3674,7 +3674,6 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
     res = gst_base_sink_default_do_seek (sink, &seeksegment);
   }
 
-
   if (flush) {
     GST_DEBUG_OBJECT (sink, "stop flushing upstream");
     gst_pad_push_event (pad, gst_event_new_flush_stop (TRUE));
@@ -3693,6 +3692,9 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
         "in the correct format. Aborting seek.");
     res = FALSE;
   }
+
+  GST_INFO_OBJECT (sink, "seeking done %d: %" GST_SEGMENT_FORMAT, res,
+      &seeksegment);
 
   /* if successful seek, we update our real segment and push
    * out the new segment. */

@@ -301,6 +301,8 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
   if (stop != -1) {
     if (start > stop) {
       g_return_val_if_fail (start <= stop, FALSE);
+      GST_WARNING ("segment update failed: start(%" G_GUINT64_FORMAT
+          ") > stop(%" G_GUINT64_FORMAT ")", start, stop);
       return FALSE;
     }
   }
@@ -311,6 +313,7 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
   } else {
     /* remember the elapsed time */
     base = gst_segment_to_running_time (segment, format, position);
+    GST_DEBUG ("updated segment.base: %" G_GUINT64_FORMAT, base);
   }
 
   if (update_start && rate > 0.0) {
@@ -360,6 +363,8 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
   segment->stop = stop;
   segment->time = start;
   segment->position = position;
+
+  GST_INFO ("segment updated: %" GST_SEGMENT_FORMAT, segment);
 
   return TRUE;
 }
@@ -469,8 +474,10 @@ gst_segment_to_running_time (const GstSegment * segment, GstFormat format,
   guint64 start, stop;
   gdouble abs_rate;
 
-  if (G_UNLIKELY (position == -1))
+  if (G_UNLIKELY (position == -1)) {
+    GST_WARNING ("invalid position (-1)");
     return -1;
+  }
 
   g_return_val_if_fail (segment != NULL, -1);
   g_return_val_if_fail (segment->format == format, -1);
@@ -481,27 +488,38 @@ gst_segment_to_running_time (const GstSegment * segment, GstFormat format,
     start += segment->offset;
 
   /* before the segment boundary */
-  if (G_UNLIKELY (position < start))
+  if (G_UNLIKELY (position < start)) {
+    GST_WARNING ("position(%" G_GUINT64_FORMAT ") < start(%" G_GUINT64_FORMAT
+        ")", position, start);
     return -1;
+  }
 
   stop = segment->stop;
 
   if (G_LIKELY (segment->rate > 0.0)) {
-    /* outside of the segment boundary stop */
-    if (G_UNLIKELY (stop != -1 && position > stop))
+    /* after of the segment boundary */
+    if (G_UNLIKELY (stop != -1 && position > stop)) {
+      GST_WARNING ("position(%" G_GUINT64_FORMAT ") > stop(%" G_GUINT64_FORMAT
+          ")", position, stop);
       return -1;
+    }
 
     /* bring to uncorrected position in segment */
     result = position - start;
   } else {
     /* cannot continue if no stop position set or outside of
      * the segment. */
-    if (G_UNLIKELY (stop == -1))
+    if (G_UNLIKELY (stop == -1)) {
+      GST_WARNING ("invalid stop (-1)");
       return -1;
+    }
 
     stop -= segment->offset;
-    if (G_UNLIKELY (position > stop))
+    if (G_UNLIKELY (position > stop)) {
+      GST_WARNING ("position(%" G_GUINT64_FORMAT ") > stop(%" G_GUINT64_FORMAT
+          ")", position, stop);
       return -1;
+    }
 
     /* bring to uncorrected position in segment */
     result = stop - position;

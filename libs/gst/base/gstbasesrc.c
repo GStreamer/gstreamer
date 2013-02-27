@@ -1288,6 +1288,8 @@ gst_base_src_do_seek (GstBaseSrc * src, GstSegment * segment)
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
+  GST_INFO_OBJECT (src, "seeking: %" GST_SEGMENT_FORMAT, segment);
+
   if (bclass->do_seek)
     result = bclass->do_seek (src, segment);
 
