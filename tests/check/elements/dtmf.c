@@ -239,7 +239,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "maxptime = (uint) 20, encoding-name = (string) \"TELEPHONE-EVENT\"")
     );
 
-GstElement *rtpdtmfsrc;
+GstElement *dtmfsrc;
 GstPad *sink;
 GstClock *testclock;
 GstBus *bus;
@@ -302,61 +302,64 @@ check_rtp_buffer (GstClockTime ts, GstClockTime duration, gboolean start,
   gst_buffer_unref (buffer);
 }
 
+gint method;
+
 static void
 setup_rtpdtmfsrc (void)
 {
   testclock = gst_test_clock_new ();
   bus = gst_bus_new ();
 
-  rtpdtmfsrc = gst_check_setup_element ("rtpdtmfsrc");
-  sink = gst_check_setup_sink_pad (rtpdtmfsrc, &rtp_dtmf_sink_template);
-  gst_element_set_bus (rtpdtmfsrc, bus);
-  fail_unless (gst_element_set_clock (rtpdtmfsrc, testclock));
+  method = 1;
+  dtmfsrc = gst_check_setup_element ("rtpdtmfsrc");
+  sink = gst_check_setup_sink_pad (dtmfsrc, &rtp_dtmf_sink_template);
+  gst_element_set_bus (dtmfsrc, bus);
+  fail_unless (gst_element_set_clock (dtmfsrc, testclock));
 
   gst_pad_set_active (sink, TRUE);
-  fail_unless (gst_element_set_state (rtpdtmfsrc, GST_STATE_PLAYING) ==
+  fail_unless (gst_element_set_state (dtmfsrc, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS);
 }
 
 static void
-teardown_rtpdtmfsrc (void)
+teardown_dtmfsrc (void)
 {
   gst_object_unref (testclock);
   gst_pad_set_active (sink, FALSE);
-  gst_element_set_bus (rtpdtmfsrc, NULL);
+  gst_element_set_bus (dtmfsrc, NULL);
   gst_object_unref (bus);
-  gst_check_teardown_sink_pad (rtpdtmfsrc);
-  gst_check_teardown_element (rtpdtmfsrc);
+  gst_check_teardown_sink_pad (dtmfsrc);
+  gst_check_teardown_element (dtmfsrc);
 }
 
-GST_START_TEST (test_rtpdtmfsrc_invalid_events)
+GST_START_TEST (test_dtmfsrc_invalid_events)
 {
   GstStructure *s;
 
   /* Missing start */
   s = gst_structure_new ("dtmf-event",
       "type", G_TYPE_INT, 1, "number", G_TYPE_INT, 3,
-      "method", G_TYPE_INT, 1, "volume", G_TYPE_INT, 8, NULL);
+      "method", G_TYPE_INT, method, "volume", G_TYPE_INT, 8, NULL);
   fail_unless (gst_pad_push_event (sink,
           gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, s)) == FALSE);
 
   /* Missing volume */
   s = gst_structure_new ("dtmf-event",
       "type", G_TYPE_INT, 1, "number", G_TYPE_INT, 3,
-      "method", G_TYPE_INT, 1, "start", G_TYPE_BOOLEAN, TRUE, NULL);
+      "method", G_TYPE_INT, method, "start", G_TYPE_BOOLEAN, TRUE, NULL);
   fail_unless (gst_pad_push_event (sink,
           gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, s)) == FALSE);
 
   /* Missing number */
   s = gst_structure_new ("dtmf-event",
-      "type", G_TYPE_INT, 1, "method", G_TYPE_INT, 1,
+      "type", G_TYPE_INT, 1, "method", G_TYPE_INT, method,
       "volume", G_TYPE_INT, 8, "start", G_TYPE_BOOLEAN, TRUE, NULL);
   fail_unless (gst_pad_push_event (sink,
           gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, s)) == FALSE);
 
   /* Missing type */
   s = gst_structure_new ("dtmf-event",
-      "number", G_TYPE_INT, 3, "method", G_TYPE_INT, 1,
+      "number", G_TYPE_INT, 3, "method", G_TYPE_INT, method,
       "volume", G_TYPE_INT, 8, "start", G_TYPE_BOOLEAN, TRUE, NULL);
   fail_unless (gst_pad_push_event (sink,
           gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, s)) == FALSE);
@@ -364,12 +367,12 @@ GST_START_TEST (test_rtpdtmfsrc_invalid_events)
   /* Stop before start */
   s = gst_structure_new ("dtmf-event",
       "type", G_TYPE_INT, 1, "number", G_TYPE_INT, 3,
-      "method", G_TYPE_INT, 1, "volume", G_TYPE_INT, 8,
+      "method", G_TYPE_INT, method, "volume", G_TYPE_INT, 8,
       "start", G_TYPE_BOOLEAN, FALSE, NULL);
   fail_unless (gst_pad_push_event (sink,
           gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, s)) == FALSE);
 
-  gst_element_set_state (rtpdtmfsrc, GST_STATE_NULL);
+  gst_element_set_state (dtmfsrc, GST_STATE_NULL);
 }
 
 GST_END_TEST;
@@ -390,6 +393,7 @@ GST_START_TEST (test_rtpdtmfsrc_min_duration)
   fail_unless (gst_pad_push_event (sink,
           gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
               gst_structure_copy (s))));
+  check_no_dtmf_event_message (bus);
   gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (testclock), NULL);
   fail_unless (buffers == NULL);
   id = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (testclock));
@@ -448,7 +452,107 @@ GST_START_TEST (test_rtpdtmfsrc_min_duration)
   gst_caps_unref (caps);
   gst_caps_unref (expected_caps);
 
-  gst_element_set_state (rtpdtmfsrc, GST_STATE_NULL);
+  gst_element_set_state (dtmfsrc, GST_STATE_NULL);
+
+  check_no_dtmf_event_message (bus);
+}
+
+GST_END_TEST;
+
+static GstStaticPadTemplate audio_dtmfsrc_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) \"" GST_AUDIO_NE (S16) "\", "
+        "rate = (int) 8003, " "channels = (int) 1")
+    );
+static void
+setup_dtmfsrc (void)
+{
+  testclock = gst_test_clock_new ();
+  bus = gst_bus_new ();
+
+  method = 2;
+  dtmfsrc = gst_check_setup_element ("dtmfsrc");
+  sink = gst_check_setup_sink_pad (dtmfsrc, &audio_dtmfsrc_sink_template);
+  gst_element_set_bus (dtmfsrc, bus);
+  fail_unless (gst_element_set_clock (dtmfsrc, testclock));
+
+  gst_pad_set_active (sink, TRUE);
+  fail_unless (gst_element_set_state (dtmfsrc, GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_SUCCESS);
+}
+
+
+GST_START_TEST (test_dtmfsrc_min_duration)
+{
+  GstStructure *s;
+  GstClockID id;
+  GstClockTime timestamp = 0;
+  GstCaps *expected_caps, *caps;
+  guint interval;
+
+  g_object_get (dtmfsrc, "interval", &interval, NULL);
+  fail_unless (interval == 50);
+
+  /* Minimum duration dtmf */
+  gst_test_clock_set_time (GST_TEST_CLOCK (testclock), 0);
+
+  s = gst_structure_new ("dtmf-event",
+      "type", G_TYPE_INT, 1, "number", G_TYPE_INT, 3,
+      "method", G_TYPE_INT, 2, "volume", G_TYPE_INT, 8,
+      "start", G_TYPE_BOOLEAN, TRUE, NULL);
+  fail_unless (gst_pad_push_event (sink,
+          gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+              gst_structure_copy (s))));
+
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (testclock), NULL);
+  id = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (testclock));
+  fail_unless (gst_clock_id_get_time (id) == 0);
+  gst_clock_id_unref (id);
+
+  gst_structure_set_name (s, "dtmf-event-processed");
+  check_message_structure (s);
+
+  s = gst_structure_new ("dtmf-event",
+      "type", G_TYPE_INT, 1, "method", G_TYPE_INT, 2,
+      "start", G_TYPE_BOOLEAN, FALSE, NULL);
+  fail_unless (gst_pad_push_event (sink,
+          gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+              gst_structure_copy (s))));
+
+  for (timestamp = interval * GST_MSECOND;
+      timestamp < (MIN_PULSE_DURATION + MIN_INTER_DIGIT_INTERVAL) *
+      GST_MSECOND; timestamp += GST_MSECOND * interval) {
+    gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (testclock), NULL);
+    gst_test_clock_advance_time (GST_TEST_CLOCK (testclock),
+        interval * GST_MSECOND);
+
+    id = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (testclock));
+    fail_unless (gst_clock_id_get_time (id) == timestamp);
+    gst_clock_id_unref (id);
+  }
+
+  gst_structure_set_name (s, "dtmf-event-processed");
+  check_message_structure (s);
+
+  check_buffers_duration ((MIN_PULSE_DURATION + MIN_INTER_DIGIT_INTERVAL) *
+      GST_MSECOND);
+
+  fail_unless (gst_test_clock_peek_id_count (GST_TEST_CLOCK (testclock)) == 0);
+
+  /* caps check */
+
+  expected_caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
+      "rate", G_TYPE_INT, 8003, "channels", G_TYPE_INT, 1, NULL);
+  caps = gst_pad_get_current_caps (sink);
+  fail_unless (gst_caps_can_intersect (caps, expected_caps));
+  gst_caps_unref (caps);
+  gst_caps_unref (expected_caps);
+
+  gst_element_set_state (dtmfsrc, GST_STATE_NULL);
 
   check_no_dtmf_event_message (bus);
 }
@@ -466,9 +570,15 @@ dtmf_suite (void)
   suite_add_tcase (s, tc);
 
   tc = tcase_create ("rtpdtmfsrc");
-  tcase_add_checked_fixture (tc, setup_rtpdtmfsrc, teardown_rtpdtmfsrc);
-  tcase_add_test (tc, test_rtpdtmfsrc_invalid_events);
+  tcase_add_checked_fixture (tc, setup_rtpdtmfsrc, teardown_dtmfsrc);
+  tcase_add_test (tc, test_dtmfsrc_invalid_events);
   tcase_add_test (tc, test_rtpdtmfsrc_min_duration);
+  suite_add_tcase (s, tc);
+
+  tc = tcase_create ("dtmfsrc");
+  tcase_add_checked_fixture (tc, setup_dtmfsrc, teardown_dtmfsrc);
+  tcase_add_test (tc, test_dtmfsrc_invalid_events);
+  tcase_add_test (tc, test_dtmfsrc_min_duration);
   suite_add_tcase (s, tc);
 
   return s;
