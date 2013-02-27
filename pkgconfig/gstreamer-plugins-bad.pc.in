@@ -2,10 +2,12 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@/gstreamer-@GST_API_VERSION@
+pluginsdir=@libdir@/gstreamer-@GST_API_VERSION@
+
 
 Name: GStreamer Bad Plugin libraries
-Description: Currently includes the photography interface library
-Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@
+Description: Streaming media framework, bad plugins libraries
+Requires: gstreamer-@GST_API_VERSION@
 Version: @VERSION@
-Libs: -L${libdir} -lgstphotography-@GST_API_VERSION@
+Libs: -L${libdir}
 Cflags: -I${includedir}
