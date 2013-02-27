@@ -1014,6 +1014,9 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
     return FALSE;
   }
 
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = self->dec_out_port->index;
+
   for (l = negotiation_map; l; l = l->next) {
     VideoNegotiationMap *m = l->data;
 
@@ -1030,9 +1033,6 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
   g_assert (l != NULL);
   g_list_free_full (negotiation_map,
       (GDestroyNotify) video_negotiation_map_free);
-
-  /* Reset framerate, we only care about the color format here */
-  param.xFramerate = 0;
 
   err =
       gst_omx_component_set_parameter (self->dec,
