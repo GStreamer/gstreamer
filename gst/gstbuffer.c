@@ -225,8 +225,6 @@ _get_merged_memory (GstBuffer * buffer, guint idx, guint length)
         GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy for merge %p", parent);
         result = gst_memory_copy (parent, poffset, size);
       }
-
-      g_return_val_if_fail (result != NULL, NULL);
     } else {
       gsize i, tocopy, left;
       GstMapInfo sinfo, dinfo;
@@ -346,8 +344,10 @@ _priv_gst_buffer_initialize (void)
  * the memory from @src will be appended to @dest.
  *
  * @flags indicate which fields will be copied.
+ *
+ * Returns: %TRUE if the copying succeeded, %FALSE otherwise.
  */
-void
+gboolean
 gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
     GstBufferCopyFlags flags, gsize offset, gsize size)
 {
@@ -355,24 +355,24 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   gsize bufsize;
   gboolean region = FALSE;
 
-  g_return_if_fail (dest != NULL);
-  g_return_if_fail (src != NULL);
+  g_return_val_if_fail (dest != NULL, FALSE);
+  g_return_val_if_fail (src != NULL, FALSE);
 
   /* nothing to copy if the buffers are the same */
   if (G_UNLIKELY (dest == src))
-    return;
+    return TRUE;
 
-  g_return_if_fail (gst_buffer_is_writable (dest));
+  g_return_val_if_fail (gst_buffer_is_writable (dest), FALSE);
 
   bufsize = gst_buffer_get_size (src);
-  g_return_if_fail (bufsize >= offset);
+  g_return_val_if_fail (bufsize >= offset, FALSE);
   if (offset > 0)
     region = TRUE;
   if (size == -1)
     size = bufsize - offset;
   if (size < bufsize)
     region = TRUE;
-  g_return_if_fail (bufsize >= offset + size);
+  g_return_val_if_fail (bufsize >= offset + size, FALSE);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "copy %p to %p, offset %" G_GSIZE_FORMAT
       "-%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT, src, dest, offset, size,
@@ -403,12 +403,13 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 
   if (flags & GST_BUFFER_COPY_MEMORY) {
     GstMemory *mem;
-    gsize skip, left, len, i, bsize;
+    gsize skip, left, len, dest_len, i, bsize;
     gboolean deep;
 
     deep = flags & GST_BUFFER_COPY_DEEP;
 
     len = GST_BUFFER_MEM_LEN (src);
+    dest_len = GST_BUFFER_MEM_LEN (dest);
     left = size;
     skip = offset;
 
@@ -440,15 +441,25 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
           mem = gst_memory_ref (mem);
         }
 
-        g_return_if_fail (mem != NULL);
+        if (!mem) {
+          gst_buffer_remove_memory_range (dest, dest_len, -1);
+          return FALSE;
+        }
 
         _memory_add (dest, -1, mem, TRUE);
         left -= tocopy;
       }
     }
     if (flags & GST_BUFFER_COPY_MERGE) {
+      GstMemory *mem;
+
       len = GST_BUFFER_MEM_LEN (dest);
-      _replace_memory (dest, len, 0, len, _get_merged_memory (dest, 0, len));
+      mem = _get_merged_memory (dest, 0, len);
+      if (!mem) {
+        gst_buffer_remove_memory_range (dest, dest_len, -1);
+        return FALSE;
+      }
+      _replace_memory (dest, len, 0, len, mem);
     }
   }
 
@@ -469,6 +480,8 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       }
     }
   }
+
+  return TRUE;
 }
 
 static GstBuffer *
@@ -482,7 +495,8 @@ _gst_buffer_copy (GstBuffer * buffer)
   copy = gst_buffer_new ();
 
   /* we simply copy everything from our parent */
-  gst_buffer_copy_into (copy, buffer, GST_BUFFER_COPY_ALL, 0, -1);
+  if (!gst_buffer_copy_into (copy, buffer, GST_BUFFER_COPY_ALL, 0, -1))
+    gst_buffer_replace (&copy, NULL);
 
   return copy;
 }
@@ -1267,19 +1281,22 @@ gst_buffer_set_size (GstBuffer * buffer, gssize size)
  *
  * Set the total size of the @length memory blocks starting at @idx in
  * @buffer
+ *
+ * Returns: %TRUE if resizing succeeded, %FALSE otherwise.
  */
-void
+gboolean
 gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
     gssize offset, gssize size)
 {
   guint i, len, end;
   gsize bsize, bufsize, bufoffs, bufmax;
 
-  g_return_if_fail (gst_buffer_is_writable (buffer));
-  g_return_if_fail (size >= -1);
+  g_return_val_if_fail (gst_buffer_is_writable (buffer), FALSE);
+  g_return_val_if_fail (size >= -1, FALSE);
+
   len = GST_BUFFER_MEM_LEN (buffer);
-  g_return_if_fail ((len == 0 && idx == 0 && length == -1) ||
-      (length == -1 && idx < len) || (length + idx <= len));
+  g_return_val_if_fail ((len == 0 && idx == 0 && length == -1) ||
+      (length == -1 && idx < len) || (length + idx <= len), FALSE);
 
   if (length == -1)
     length = len - idx;
@@ -1292,17 +1309,17 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
 
   /* we can't go back further than the current offset or past the end of the
    * buffer */
-  g_return_if_fail ((offset < 0 && bufoffs >= -offset) || (offset >= 0
-          && bufoffs + offset <= bufmax));
+  g_return_val_if_fail ((offset < 0 && bufoffs >= -offset) || (offset >= 0
+          && bufoffs + offset <= bufmax), FALSE);
   if (size == -1) {
-    g_return_if_fail (bufsize >= offset);
+    g_return_val_if_fail (bufsize >= offset, FALSE);
     size = bufsize - offset;
   }
-  g_return_if_fail (bufmax >= bufoffs + offset + size);
+  g_return_val_if_fail (bufmax >= bufoffs + offset + size, FALSE);
 
   /* no change */
   if (offset == 0 && size == bufsize)
-    return;
+    return TRUE;
 
   end = idx + length;
   /* copy and trim */
@@ -1339,7 +1356,8 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
         if (!newmem)
           newmem = gst_memory_copy (mem, offset, left);
 
-        g_return_if_fail (newmem != NULL);
+        if (newmem == NULL)
+          return FALSE;
 
         gst_memory_lock (newmem, GST_LOCK_FLAG_EXCLUSIVE);
         GST_BUFFER_MEM_PTR (buffer, i) = newmem;
@@ -1351,6 +1369,8 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
     offset = noffs;
     size -= left;
   }
+
+  return TRUE;
 }
 
 /**
@@ -1739,7 +1759,8 @@ gst_buffer_copy_region (GstBuffer * buffer, GstBufferCopyFlags flags,
   GST_CAT_LOG (GST_CAT_BUFFER, "new region copy %p of %p %" G_GSIZE_FORMAT
       "-%" G_GSIZE_FORMAT, copy, buffer, offset, size);
 
-  gst_buffer_copy_into (copy, buffer, flags, offset, size);
+  if (!gst_buffer_copy_into (copy, buffer, flags, offset, size))
+    gst_buffer_replace (&copy, NULL);
 
   return copy;
 }

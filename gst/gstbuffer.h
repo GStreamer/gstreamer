@@ -293,7 +293,7 @@ gsize       gst_buffer_memset              (GstBuffer *buffer, gsize offset,
 
 gsize       gst_buffer_get_sizes_range     (GstBuffer *buffer, guint idx, gint length,
                                             gsize *offset, gsize *maxsize);
-void        gst_buffer_resize_range        (GstBuffer *buffer, guint idx, gint length,
+gboolean    gst_buffer_resize_range        (GstBuffer *buffer, guint idx, gint length,
                                             gssize offset, gssize size);
 
 gsize       gst_buffer_get_sizes           (GstBuffer *buffer, gsize *offset, gsize *maxsize);
@@ -419,7 +419,7 @@ typedef enum {
 #define GST_BUFFER_COPY_ALL  ((GstBufferCopyFlags)(GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_MEMORY))
 
 /* copies memory or metadata into newly allocated buffer */
-void            gst_buffer_copy_into            (GstBuffer *dest, GstBuffer *src,
+gboolean        gst_buffer_copy_into            (GstBuffer *dest, GstBuffer *src,
                                                  GstBufferCopyFlags flags,
                                                  gsize offset, gsize size);
 
