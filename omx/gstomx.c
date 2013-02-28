@@ -1588,8 +1588,8 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port,
   gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
       &port->port_def);
 
-  g_return_val_if_fail (n != -1
-      && n < port->port_def.nBufferCountMin, OMX_ErrorBadParameter);
+  g_return_val_if_fail (n == -1 || n >= port->port_def.nBufferCountMin,
+      OMX_ErrorBadParameter);
   if (n == -1)
     n = port->port_def.nBufferCountMin;
 
