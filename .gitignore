@@ -8,6 +8,7 @@
 *.la
 *.lo
 *.pyc
+*.page
 *~
 
 Makefile
