@@ -1560,11 +1560,13 @@ gst_omx_port_is_flushing (GstOMXPort * port)
 
 /* NOTE: Must be called while holding comp->lock, uses comp->messages_lock */
 static OMX_ERRORTYPE
-gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
+gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port,
+    const GList * buffers, const GList * images, guint n)
 {
   GstOMXComponent *comp;
   OMX_ERRORTYPE err = OMX_ErrorNone;
-  gint i, n;
+  gint i;
+  const GList *l;
 
   g_assert (!port->buffers || port->buffers->len == 0);
 
@@ -1586,12 +1588,17 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
   gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
       &port->port_def);
 
+  g_return_val_if_fail (n != -1
+      && n < port->port_def.nBufferCountMin, OMX_ErrorBadParameter);
+  if (n == -1)
+    n = port->port_def.nBufferCountMin;
+
   /* If the configured, actual number of buffers is less than
    * the minimal number of buffers required, use the minimal
    * number of buffers
    */
-  if (port->port_def.nBufferCountActual < port->port_def.nBufferCountMin) {
-    port->port_def.nBufferCountActual = port->port_def.nBufferCountMin;
+  if (port->port_def.nBufferCountActual < n) {
+    port->port_def.nBufferCountActual = n;
     err = gst_omx_component_set_parameter (comp, OMX_IndexParamPortDefinition,
         &port->port_def);
     gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
@@ -1605,7 +1612,6 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
     goto error;
   }
 
-  n = port->port_def.nBufferCountActual;
   GST_DEBUG_OBJECT (comp->parent,
       "Allocating %d buffers of size %u for port %u", n,
       port->port_def.nBufferSize, port->index);
@@ -1613,6 +1619,7 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
   if (!port->buffers)
     port->buffers = g_ptr_array_sized_new (n);
 
+  l = (buffers ? buffers : images);
   for (i = 0; i < n; i++) {
     GstOMXBuffer *buf;
 
@@ -1622,9 +1629,19 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
     buf->settings_cookie = port->settings_cookie;
     g_ptr_array_add (port->buffers, buf);
 
-    err =
-        OMX_AllocateBuffer (comp->handle, &buf->omx_buf, port->index, buf,
-        port->port_def.nBufferSize);
+    if (buffers) {
+      err =
+          OMX_UseBuffer (comp->handle, &buf->omx_buf, port->index, buf,
+          port->port_def.nBufferSize, l->data);
+    } else if (images) {
+      err =
+          OMX_UseEGLImage (comp->handle, &buf->omx_buf, port->index, buf,
+          l->data);
+    } else {
+      err =
+          OMX_AllocateBuffer (comp->handle, &buf->omx_buf, port->index, buf,
+          port->port_def.nBufferSize);
+    }
 
     if (err != OMX_ErrorNone) {
       GST_ERROR_OBJECT (comp->parent,
@@ -1640,6 +1657,8 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
 
     /* In the beginning all buffers are not owned by the component */
     g_queue_push_tail (&port->pending_buffers, buf);
+    if (buffers || images)
+      l = l->next;
   }
 
   gst_omx_component_handle_messages (comp);
@@ -1663,14 +1682,48 @@ error:
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
 OMX_ERRORTYPE
-gst_omx_port_allocate_buffers (GstOMXPort * port)
+gst_omx_port_allocate_buffers (GstOMXPort * port, guint n)
 {
   OMX_ERRORTYPE err;
 
   g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
 
   g_mutex_lock (&port->comp->lock);
-  err = gst_omx_port_allocate_buffers_unlocked (port);
+  err = gst_omx_port_allocate_buffers_unlocked (port, NULL, NULL, n);
+  g_mutex_unlock (&port->comp->lock);
+
+  return err;
+}
+
+/* NOTE: Uses comp->lock and comp->messages_lock */
+OMX_ERRORTYPE
+gst_omx_port_use_buffers (GstOMXPort * port, const GList * buffers)
+{
+  OMX_ERRORTYPE err;
+  guint n;
+
+  g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
+
+  g_mutex_lock (&port->comp->lock);
+  n = g_list_length ((GList *) buffers);
+  err = gst_omx_port_allocate_buffers_unlocked (port, buffers, NULL, n);
+  g_mutex_unlock (&port->comp->lock);
+
+  return err;
+}
+
+/* NOTE: Uses comp->lock and comp->messages_lock */
+OMX_ERRORTYPE
+gst_omx_port_use_eglimages (GstOMXPort * port, const GList * images)
+{
+  OMX_ERRORTYPE err;
+  guint n;
+
+  g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
+
+  g_mutex_lock (&port->comp->lock);
+  n = g_list_length ((GList *) images);
+  err = gst_omx_port_allocate_buffers_unlocked (port, NULL, images, n);
   g_mutex_unlock (&port->comp->lock);
 
   return err;
