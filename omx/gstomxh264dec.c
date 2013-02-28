@@ -93,7 +93,7 @@ gst_omx_h264_dec_set_format (GstOMXVideoDec * dec, GstOMXPort * port,
 
   gst_omx_port_get_port_definition (port, &port_def);
   port_def.format.video.eCompressionFormat = OMX_VIDEO_CodingAVC;
-  ret = gst_omx_port_update_port_definition (port, &port_def);
+  ret = gst_omx_port_update_port_definition (port, &port_def) == OMX_ErrorNone;
 
   return ret;
 }

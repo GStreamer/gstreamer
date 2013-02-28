@@ -1171,11 +1171,13 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
 
   GST_DEBUG_OBJECT (self, "Setting inport port definition");
 
-  if (!gst_omx_port_update_port_definition (self->dec_in_port, &port_def))
+  if (gst_omx_port_update_port_definition (self->dec_in_port,
+          &port_def) != OMX_ErrorNone)
     return FALSE;
 
   GST_DEBUG_OBJECT (self, "Setting outport port definition");
-  if (!gst_omx_port_update_port_definition (self->dec_out_port, NULL))
+  if (gst_omx_port_update_port_definition (self->dec_out_port,
+          NULL) != OMX_ErrorNone)
     return FALSE;
 
   if (klass->set_format) {

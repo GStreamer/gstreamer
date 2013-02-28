@@ -1149,7 +1149,7 @@ gst_omx_port_get_port_definition (GstOMXPort * port,
     port_def->nBufferCountMin = port->min_buffer_count;
 }
 
-gboolean
+OMX_ERRORTYPE
 gst_omx_port_update_port_definition (GstOMXPort * port,
     OMX_PARAM_PORTDEFINITIONTYPE * port_def)
 {
@@ -1173,7 +1173,7 @@ gst_omx_port_update_port_definition (GstOMXPort * port,
   GST_DEBUG_OBJECT (comp->parent, "Updated port %u definition: %s (0x%08x)",
       port->index, gst_omx_error_to_string (err), err);
 
-  return (err == OMX_ErrorNone);
+  return err;
 }
 
 /* NOTE: Uses comp->lock and comp->messages_lock */

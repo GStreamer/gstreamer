@@ -650,11 +650,13 @@ gst_omx_audio_enc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
 
   port_def.format.audio.eEncoding = OMX_AUDIO_CodingPCM;
   GST_DEBUG_OBJECT (self, "Setting inport port definition");
-  if (!gst_omx_port_update_port_definition (self->enc_in_port, &port_def))
+  if (gst_omx_port_update_port_definition (self->enc_in_port,
+          &port_def) != OMX_ErrorNone)
     return FALSE;
 
   GST_DEBUG_OBJECT (self, "Setting outport port definition");
-  if (!gst_omx_port_update_port_definition (self->enc_out_port, NULL))
+  if (gst_omx_port_update_port_definition (self->enc_out_port,
+          NULL) != OMX_ErrorNone)
     return FALSE;
 
   GST_OMX_INIT_STRUCT (&pcm_param);
