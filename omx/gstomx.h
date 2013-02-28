@@ -103,6 +103,11 @@ G_BEGIN_DECLS
  */
 #define GST_OMX_HACK_NO_COMPONENT_ROLE                                G_GUINT64_CONSTANT (0x0000000000000080)
 
+/* If the component reports the minimum number of required
+ * buffers via nBufferCountActual instead of nBufferCountMin.
+ * Happens with Broadcom's OpenMAX implementation.
+ */
+#define GST_OMX_HACK_PORT_ACTUAL_COUNT_IS_MINIMUM                     G_GUINT64_CONSTANT (0x0000000000000100)
 
 typedef struct _GstOMXCore GstOMXCore;
 typedef struct _GstOMXPort GstOMXPort;
@@ -199,6 +204,9 @@ struct _GstOMXPort {
    */
   gint settings_cookie;
   gint configured_settings_cookie;
+
+  /* Only valid if GST_OMX_HACK_PORT_ACTUAL_COUNT_IS_MINIMUM */
+  gint min_buffer_count;
 };
 
 struct _GstOMXComponent {
