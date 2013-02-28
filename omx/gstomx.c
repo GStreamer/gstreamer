@@ -1604,7 +1604,7 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port,
 
   if (port->port_def.nBufferCountActual != n) {
     port->port_def.nBufferCountActual = n;
-    gst_omx_port_update_port_definition (port, &port->port_def);
+    err = gst_omx_port_update_port_definition (port, &port->port_def);
   }
 
   if (err != OMX_ErrorNone) {
