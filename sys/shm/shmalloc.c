@@ -102,13 +102,11 @@ shm_alloc_space_alloc_block (ShmAllocSpace * self, unsigned long size)
     prev_item = item;
   }
 
-  /* Did not find space before an existing block */
-  if (self->blocks && !item) {
-    /* Return NULL if there is no big enough space, otherwise, there is space
-     * at the end */
-    if (self->size - prev_end_offset < size)
-      return NULL;
-  }
+  /* Return NULL if there is no big enough space, otherwise, there is space
+   * at the end */
+  assert (prev_end_offset <= self->size);
+  if (!item && self->size - prev_end_offset < size)
+    return NULL;
 
   block = spalloc_new (ShmAllocBlock);
   memset (block, 0, sizeof (ShmAllocBlock));
