@@ -31,9 +31,9 @@ get_mpeg2enc_element_name (void)
   if ((factory = gst_element_factory_find ("mpeg2enc"))) {
     gst_object_unref (factory);
     return "mpeg2enc";
-  } else if ((factory = gst_element_factory_find ("ffenc_mpeg2video"))) {
+  } else if ((factory = gst_element_factory_find ("avenc_mpeg2video"))) {
     gst_object_unref (factory);
-    return "ffenc_mpeg2video";
+    return "avenc_mpeg2video";
   } else {
     return NULL;
   }
@@ -179,7 +179,7 @@ GST_START_TEST (test_jpeg2000_alaw)
   gchar *pipeline;
   GstElementFactory *factory = NULL;
 
-  if ((factory = gst_element_factory_find ("jp2kenc")) == NULL)
+  if ((factory = gst_element_factory_find ("openjpegenc")) == NULL)
     return;
   gst_object_unref (factory);
   if ((factory = gst_element_factory_find ("alawenc")) == NULL)
@@ -188,7 +188,7 @@ GST_START_TEST (test_jpeg2000_alaw)
 
   pipeline = g_strdup_printf ("videotestsrc num-buffers=250 ! "
       "video/x-raw,framerate=25/1 ! "
-      "jp2kenc ! "
+      "openjpegenc ! "
       "mxfmux name=mux ! "
       "mxfdemux name=demux ! "
       "fakesink  "
@@ -205,25 +205,25 @@ GST_START_TEST (test_dnxhd_mp3)
   gchar *pipeline;
   GstElementFactory *factory = NULL;
 
-  if ((factory = gst_element_factory_find ("ffenc_dnxhd")) == NULL)
+  if ((factory = gst_element_factory_find ("avenc_dnxhd")) == NULL)
     return;
   gst_object_unref (factory);
-  if ((factory = gst_element_factory_find ("lame")) == NULL)
+  if ((factory = gst_element_factory_find ("lamemp3enc")) == NULL)
     return;
   gst_object_unref (factory);
-  if ((factory = gst_element_factory_find ("mp3parse")) == NULL)
+  if ((factory = gst_element_factory_find ("mpegaudioparse")) == NULL)
     return;
   gst_object_unref (factory);
 
   pipeline = g_strdup_printf ("videotestsrc num-buffers=250 ! "
       "video/x-raw,format=(string)Y42B,width=1920,height=1080,framerate=25/1 ! "
-      "ffenc_dnxhd bitrate=36000000 ! "
+      "avenc_dnxhd bitrate=36000000 ! "
       "mxfmux name=mux ! "
       "mxfdemux name=demux ! "
       "fakesink  "
       "audiotestsrc num-buffers=250 ! "
       "audioconvert ! "
-      "audio/x-raw,channels=2 ! " "lame ! " "mp3parse ! " "mux. ");
+      "audio/x-raw,channels=2 ! lamemp3enc ! mpegaudioparse ! mux. ");
 
   run_test (pipeline, 2);
   g_free (pipeline);
