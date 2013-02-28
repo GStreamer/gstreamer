@@ -329,8 +329,8 @@ elements_camerabin_CFLAGS = \
 elements_camerabin_LDADD = \
         $(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_API_VERSION@.la \
         $(top_builddir)/gst-libs/gst/basecamerabinsrc/libgstbasecamerabinsrc-@GST_API_VERSION@.la \
-        -lgstpbutils-$(GST_API_VERSION) \
-        $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
+        $(GST_PLUGINS_BASE_LIBS) -lgstpbutils-$(GST_API_VERSION) \
+        $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 elements_camerabin_SOURCES = elements/camerabin.c
 
 elements_dtmf_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \

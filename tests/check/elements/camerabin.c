@@ -408,10 +408,15 @@ setup_wrappercamerabinsrc_videotestsrc (void)
   main_loop = g_main_loop_new (NULL, TRUE);
 
   camera = gst_check_setup_element ("camerabin");
+  fail_unless (camera != NULL, "failed to create camerabin element");
   fakevideosink = gst_element_factory_make ("fakesink", NULL);
+  fail_unless (fakevideosink != NULL, "failed to create fakesink element");
   src = gst_element_factory_make ("wrappercamerabinsrc", NULL);
+  fail_unless (src != NULL, "failed to create wrappercamerabinsrc element");
   testsrc = gst_element_factory_make ("videotestsrc", NULL);
+  fail_unless (testsrc != NULL, "failed to create videotestsrc element");
   audiosrc = gst_element_factory_make ("audiotestsrc", NULL);
+  fail_unless (audiosrc != NULL, "failed to create audiotestsrc element");
 
   preview_caps = gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
       320, "height", G_TYPE_INT, 240, NULL);
