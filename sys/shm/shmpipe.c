@@ -946,3 +946,12 @@ sp_writer_buf_get_tag (ShmBuffer * buffer)
 {
   return buffer->tag;
 }
+
+size_t
+sp_writer_get_max_buf_size (ShmPipe * self)
+{
+  if (self->shm_area == NULL)
+    return 0;
+
+  return self->shm_area->shm_area_len;
+}

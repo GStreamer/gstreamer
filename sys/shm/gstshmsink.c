@@ -424,6 +424,19 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   if (rv == -1) {
     ShmBlock *block = NULL;
     gchar *shmbuf = NULL;
+
+    if (gst_buffer_get_size (buf) > sp_writer_get_max_buf_size (self->pipe)) {
+      gsize area_size = sp_writer_get_max_buf_size (self->pipe);
+
+      GST_OBJECT_UNLOCK (self);
+      GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT,
+          ("Shared memory area is too small"),
+          ("Shared memory area of size %" G_GSIZE_FORMAT " is smaller than"
+              "buffer of size %" G_GSIZE_FORMAT, area_size,
+              gst_buffer_get_size (buf)));
+      return GST_FLOW_ERROR;
+    }
+
     while ((block = sp_writer_alloc_block (self->pipe,
                 gst_buffer_get_size (buf))) == NULL) {
       g_cond_wait (&self->cond, GST_OBJECT_GET_LOCK (self));

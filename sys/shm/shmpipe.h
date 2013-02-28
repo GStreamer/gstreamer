@@ -95,6 +95,7 @@ void sp_writer_free_block (ShmBlock *block);
 int sp_writer_send_buf (ShmPipe * self, char *buf, size_t size, uint64_t tag);
 char *sp_writer_block_get_buf (ShmBlock *block);
 ShmPipe *sp_writer_block_get_pipe (ShmBlock *block);
+size_t sp_writer_get_max_buf_size (ShmPipe * self);
 
 ShmClient * sp_writer_accept_client (ShmPipe * self);
 void sp_writer_close_client (ShmPipe *self, ShmClient * client);
