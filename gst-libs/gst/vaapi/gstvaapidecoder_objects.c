@@ -114,6 +114,7 @@ gst_vaapi_picture_create (GstVaapiPicture * picture,
             GST_VAAPI_PICTURE_FLAG_REFERENCE |
             GST_VAAPI_PICTURE_FLAG_INTERLACED |
             GST_VAAPI_PICTURE_FLAG_FF | GST_VAAPI_PICTURE_FLAG_TFF |
+            GST_VAAPI_PICTURE_FLAG_ONEFIELD |
             GST_VAAPI_PICTURE_FLAG_RFF | GST_VAAPI_PICTURE_FLAG_MVC));
 
     picture->structure = parent_picture->structure;
@@ -191,6 +192,21 @@ gst_vaapi_picture_new_field (GstVaapiPicture * picture)
       picture->param_size, picture, 0,
       (GST_VAAPI_CREATE_PICTURE_FLAG_CLONE |
           GST_VAAPI_CREATE_PICTURE_FLAG_FIELD));
+  if (!object)
+    return NULL;
+  return GST_VAAPI_PICTURE_CAST (object);
+}
+
+GstVaapiPicture *
+gst_vaapi_picture_new_clone (GstVaapiPicture * picture)
+{
+  GstVaapiDecoder *const decoder = GET_DECODER (picture);
+  GstVaapiCodecObject *object;
+
+  object = gst_vaapi_codec_object_new (gst_vaapi_codec_object_get_class
+      (&picture->parent_instance), GST_VAAPI_CODEC_BASE (decoder), NULL,
+      picture->param_size, picture, 0,
+      GST_VAAPI_CREATE_PICTURE_FLAG_CLONE);
   if (!object)
     return NULL;
   return GST_VAAPI_PICTURE_CAST (object);

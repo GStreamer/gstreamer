@@ -179,6 +179,10 @@ GstVaapiPicture *
 gst_vaapi_picture_new_field (GstVaapiPicture * picture);
 
 G_GNUC_INTERNAL
+GstVaapiPicture *
+gst_vaapi_picture_new_clone (GstVaapiPicture * picture);
+
+G_GNUC_INTERNAL
 void
 gst_vaapi_picture_add_slice (GstVaapiPicture * picture, GstVaapiSlice * slice);
 

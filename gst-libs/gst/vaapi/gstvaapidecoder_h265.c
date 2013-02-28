@@ -244,6 +244,7 @@ gst_vaapi_picture_h265_create (GstVaapiPictureH265 * picture,
   if (!gst_vaapi_picture_create (GST_VAAPI_PICTURE (picture), args))
     return FALSE;
 
+  picture->structure = picture->base.structure;
   picture->poc = G_MAXINT32;
   picture->output_needed = FALSE;
   return TRUE;
