@@ -146,8 +146,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
 enum
 {
   PROP_0,
-  PROP_SIGNAL_LEVEL,
-  PROP_SIGNAL_INTERVAL,
+  PROP_POST_MESSAGES,
+  PROP_MESSAGE,
+  PROP_INTERVAL,
   PROP_PEAK_TTL,
   PROP_PEAK_FALLOFF
 };
@@ -182,11 +183,30 @@ gst_level_class_init (GstLevelClass * klass)
   gobject_class->get_property = gst_level_get_property;
   gobject_class->finalize = gst_level_finalize;
 
-  g_object_class_install_property (gobject_class, PROP_SIGNAL_LEVEL,
+  /**
+   * GstLevel:post-messages
+   *
+   * Post messages on the bus with level information.
+   *
+   * Since: 1.1.0
+   */
+  g_object_class_install_property (gobject_class, PROP_POST_MESSAGES,
+      g_param_spec_boolean ("post-messages", "Post Messages",
+          "Whether to post a 'level' element message on the bus for each "
+          "passed interval", TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /* FIXME(2.0): remove this property */
+  /**
+   * GstLevel:post-messages
+   *
+   * Post messages on the bus with level information.
+   *
+   * Deprecated: use the #GstLevel:post-messages property
+   */
+  g_object_class_install_property (gobject_class, PROP_MESSAGE,
       g_param_spec_boolean ("message", "message",
-          "Post a level message for each passed interval",
+          "Post a 'level' message for each passed interval (deprecated)",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_SIGNAL_INTERVAL,
+  g_object_class_install_property (gobject_class, PROP_INTERVAL,
       g_param_spec_uint64 ("interval", "Interval",
           "Interval of time between message posts (in nanoseconds)",
           1, G_MAXUINT64, GST_SECOND / 10,
@@ -231,7 +251,7 @@ gst_level_init (GstLevel * filter)
   filter->decay_peak_ttl = GST_SECOND / 10 * 3;
   filter->decay_peak_falloff = 10.0;    /* dB falloff (/sec) */
 
-  filter->message = TRUE;
+  filter->post_messages = TRUE;
 
   filter->process = NULL;
 
@@ -267,10 +287,12 @@ gst_level_set_property (GObject * object, guint prop_id,
   GstLevel *filter = GST_LEVEL (object);
 
   switch (prop_id) {
-    case PROP_SIGNAL_LEVEL:
-      filter->message = g_value_get_boolean (value);
+    case PROP_POST_MESSAGES:
+      /* fall-through */
+    case PROP_MESSAGE:
+      filter->post_messages = g_value_get_boolean (value);
       break;
-    case PROP_SIGNAL_INTERVAL:
+    case PROP_INTERVAL:
       filter->interval = g_value_get_uint64 (value);
       if (GST_AUDIO_INFO_RATE (&filter->info)) {
         filter->interval_frames =
@@ -298,10 +320,12 @@ gst_level_get_property (GObject * object, guint prop_id,
   GstLevel *filter = GST_LEVEL (object);
 
   switch (prop_id) {
-    case PROP_SIGNAL_LEVEL:
-      g_value_set_boolean (value, filter->message);
+    case PROP_POST_MESSAGES:
+      /* fall-through */
+    case PROP_MESSAGE:
+      g_value_set_boolean (value, filter->post_messages);
       break;
-    case PROP_SIGNAL_INTERVAL:
+    case PROP_INTERVAL:
       g_value_set_uint64 (value, filter->interval);
       break;
     case PROP_PEAK_TTL:
@@ -664,8 +688,7 @@ gst_level_post_message (GstLevel * filter)
   channels = GST_AUDIO_INFO_CHANNELS (&filter->info);
   rate = GST_AUDIO_INFO_RATE (&filter->info);
 
-
-  if (filter->message) {
+  if (filter->post_messages) {
     GstMessage *m;
     GstClockTime duration = GST_FRAMES_TO_CLOCK_TIME (filter->num_frames, rate);
 

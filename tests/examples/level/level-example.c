@@ -121,7 +121,7 @@ main (int argc, char *argv[])
     g_error ("Failed to link level and fakesink");
 
   /* make sure we'll get messages */
-  g_object_set (G_OBJECT (level), "message", TRUE, NULL);
+  g_object_set (G_OBJECT (level), "post-messages", TRUE, NULL);
   /* run synced and not as fast as we can */
   g_object_set (G_OBJECT (fakesink), "sync", TRUE, NULL);
 

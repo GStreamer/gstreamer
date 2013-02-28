@@ -56,7 +56,7 @@ typedef struct _GstLevelClass GstLevelClass;
 struct _GstLevel {
   GstBaseTransform element;
 
-  gboolean message;             /* whether or not to post messages */
+  gboolean post_messages;       /* whether or not to post messages */
   guint64 interval;             /* how many seconds between emits */
 
   GstAudioInfo info;
