@@ -83,6 +83,7 @@ struct _GstSoupHTTPSrc {
                                 * decide if an out of range request should be
                                 * handled as an error or EOS when the content
                                 * size is unknown */
+  gboolean keep_alive;         /* Use keep-alive sessions */
 
   /* Shoutcast/icecast metadata extraction handling. */
   gboolean iradio_mode;
