@@ -176,13 +176,6 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
 
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_spectrum_setup);
 
-  /**
-   * GstSpectrum:post-messages
-   *
-   * Post messages on the bus with spectrum information.
-   *
-   * Since: 0.10.17
-   */
   g_object_class_install_property (gobject_class, PROP_POST_MESSAGES,
       g_param_spec_boolean ("post-messages", "Post Messages",
           "Whether to post a 'spectrum' element message on the bus for each "
