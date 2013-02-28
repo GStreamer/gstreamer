@@ -33,7 +33,7 @@
 
 /* Include this from the plugin to get the defines */
 
-#include "gst/dtmf/gstdtmfcommon.h"
+#include "../../gst/dtmf/gstdtmfcommon.h"
 
 #define END_BIT (1<<7)
 
