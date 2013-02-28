@@ -190,6 +190,7 @@ gst_shm_sink_finalize (GObject * object)
   GstShmSink *self = GST_SHM_SINK (object);
 
   g_cond_clear (&self->cond);
+  g_free (self->socket_path);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

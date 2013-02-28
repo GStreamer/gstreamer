@@ -156,6 +156,7 @@ gst_shm_src_finalize (GObject * object)
   GstShmSrc *self = GST_SHM_SRC (object);
 
   gst_poll_free (self->poll);
+  g_free (self->socket_path);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
