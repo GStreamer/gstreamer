@@ -428,6 +428,8 @@ docs/version.entities
 tests/Makefile
 tests/check/Makefile
 tests/files/Makefile
+pkgconfig/Makefile
+pkgconfig/gstreamer-plugins-libav-uninstalled.pc
 )
 AC_OUTPUT
 

@@ -1,0 +1,13 @@
+prefix=
+exec_prefix=
+libdir=@abs_top_builddir@/gst-libs/gst
+includedir=@abs_top_builddir@/gst-libs
+pluginsdir=@abs_top_builddir@
+
+Name: GStreamer Libav Plugins, Uninstalled
+Description: Streaming media framework, libav plugins, uninstalled
+Version: @VERSION@
+Requires: gstreamer-@GST_API_VERSION@ gstreamer-plugins-base-@GST_API_VERSION@
+
+Libs:
+Cflags:

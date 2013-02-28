@@ -1,8 +1,8 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
 COMMON_SUBDIRS = ext docs common tests
-SUBDIRS = $(LIBAV_SUBDIRS) $(COMMON_SUBDIRS)
-DIST_SUBDIRS = $(COMMON_SUBDIRS) gst-libs
+SUBDIRS = $(LIBAV_SUBDIRS) $(COMMON_SUBDIRS) pkgconfig
+DIST_SUBDIRS = $(COMMON_SUBDIRS) gst-libs pkgconfig
 
 # include before EXTRA_DIST for win32 assignment
 include $(top_srcdir)/common/win32.mak
