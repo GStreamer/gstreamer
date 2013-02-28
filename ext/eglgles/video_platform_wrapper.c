@@ -165,6 +165,7 @@ platform_destroy_native_window (EGLNativeDisplayType display,
 
 #ifdef USE_EGL_RPI
 #include <bcm_host.h>
+#include <gst/video/gstvideosink.h>
 
 typedef struct
 {
@@ -181,6 +182,7 @@ platform_create_native_window (gint width, gint height, gpointer * window_data)
   RPIWindowData *data;
   VC_RECT_T dst_rect;
   VC_RECT_T src_rect;
+  GstVideoRectangle src, dst, res;
 
   uint32_t dp_height;
   uint32_t dp_width;
@@ -195,10 +197,19 @@ platform_create_native_window (gint width, gint height, gpointer * window_data)
   GST_DEBUG ("Got display size: %dx%d\n", dp_width, dp_height);
   GST_DEBUG ("Source size: %dx%d\n", width, height);
 
-  dst_rect.x = 0;
-  dst_rect.y = 0;
-  dst_rect.width = dp_width;
-  dst_rect.height = dp_height;
+  /* Center width*height frame inside dp_width*dp_height */
+  src.w = width;
+  src.h = height;
+  src.x = src.y = 0;
+  dst.w = dp_width;
+  dst.h = dp_height;
+  dst.x = dst.y = 0;
+  gst_video_sink_center_rect (&src, &dst, &res, TRUE);
+
+  dst_rect.x = res.x;
+  dst_rect.y = res.y;
+  dst_rect.width = res.w;
+  dst_rect.height = res.h;
 
   src_rect.x = 0;
   src_rect.y = 0;
