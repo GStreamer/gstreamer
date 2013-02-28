@@ -1597,7 +1597,7 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port,
    * the minimal number of buffers required, use the minimal
    * number of buffers
    */
-  if (port->port_def.nBufferCountActual < n) {
+  if (port->port_def.nBufferCountActual != n) {
     port->port_def.nBufferCountActual = n;
     err = gst_omx_component_set_parameter (comp, OMX_IndexParamPortDefinition,
         &port->port_def);
