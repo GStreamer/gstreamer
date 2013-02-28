@@ -315,6 +315,8 @@ ges_timeline_layer_remove_clip (GESTimelineLayer * layer, GESClip * clip)
 
   /* inform the clip it's no longer in a layer */
   ges_clip_set_layer (clip, NULL);
+  /* so neither in a timeline */
+  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip), NULL);
 
   /* Remove it from our list of controlled objects */
   layer->priv->clips_start = g_list_remove (layer->priv->clips_start, clip);
@@ -552,6 +554,8 @@ ges_timeline_layer_add_clip (GESTimelineLayer * layer, GESClip * clip)
   /* If the clip has an acceptable priority, we just let it with its current
    * priority */
   ges_timeline_layer_resync_priorities (layer);
+  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip),
+      layer->timeline);
 
   /* emit 'clip-added' */
   g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_ADDED], 0, clip);

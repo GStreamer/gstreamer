@@ -41,6 +41,7 @@ enum
 {
   PROP_0,
   PROP_PARENT,
+  PROP_TIMELINE,
   PROP_START,
   PROP_INPOINT,
   PROP_DURATION,
@@ -65,6 +66,10 @@ _get_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_PARENT:
       g_value_set_object (value, self->parent);
+      break;
+    case PROP_TIMELINE:
+      g_value_set_object (value, self->timeline);
+      break;
     case PROP_START:
       g_value_set_uint64 (value, self->start);
       break;
@@ -94,6 +99,9 @@ _set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_PARENT:
       ges_timeline_element_set_parent (self, g_value_get_object (value));
+      break;
+    case PROP_TIMELINE:
+      ges_timeline_element_set_timeline (self, g_value_get_object (value));
       break;
     case PROP_START:
       ges_timeline_element_set_start (self, g_value_get_uint64 (value));
@@ -144,6 +152,15 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
       g_param_spec_object ("parent", "Parent",
       "The parent container of the object", GES_TYPE_TIMELINE_ELEMENT,
       G_PARAM_READWRITE);
+
+  /**
+   * GESTimelineElement:timeline:
+   *
+   * The timeline in which the object is in
+   */
+  properties[PROP_TIMELINE] =
+      g_param_spec_object ("timeline", "Timeline",
+      "The timeline the object is in", GES_TYPE_TIMELINE, G_PARAM_READWRITE);
 
   /**
    * GESTimelineElement:start:
@@ -241,7 +258,6 @@ ges_timeline_element_set_parent (GESTimelineElement * self,
     goto had_parent;
 
   self->parent = parent;
-  g_object_ref_sink (self);
 
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_PARENT]);
   return TRUE;
@@ -259,7 +275,7 @@ had_parent:
  * @self: a #GESTimelineElement
  *
  * Returns the parent of @self. This function increases the refcount
- * of the parent self so you should gst_object_unref() it after usage.
+ * of the parent object so you should gst_object_unref() it after usage.
  *
  * Returns: (transfer full): parent of @self, this can be %NULL if @self
  *   has no parent. unref after usage.
@@ -272,6 +288,66 @@ ges_timeline_element_get_parent (GESTimelineElement * self)
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
 
   result = self->parent;
+  if (G_LIKELY (result))
+    gst_object_ref (result);
+
+  return result;
+}
+
+/**
+ * ges_timeline_element_set_timeline:
+ * @self: a #GESTimelineElement
+ * @timeline: The #GESTimeline @self is in
+ *
+ * Sets the timeline of @self to @timeline.
+ *
+ * Returns: %TRUE if @timeline could be set or %FALSE when @timeline
+ * already had a timeline.
+ */
+gboolean
+ges_timeline_element_set_timeline (GESTimelineElement * self,
+    GESTimeline * timeline)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (timeline == NULL || GES_IS_TIMELINE (timeline), FALSE);
+
+  GST_DEBUG_OBJECT (self, "set timeline to %" GST_PTR_FORMAT, timeline);
+
+  if (G_UNLIKELY (self->timeline != NULL))
+    goto had_timeline;
+
+  self->timeline = timeline;
+
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_TIMELINE]);
+  return TRUE;
+
+  /* ERROR handling */
+had_timeline:
+  {
+    GST_DEBUG_OBJECT (self, "set timeline failed, object already had a "
+        "timeline");
+    return FALSE;
+  }
+}
+
+/**
+ * ges_timeline_element_get_timeline:
+ * @self: a #GESTimelineElement
+ *
+ * Returns the timeline of @self. This function increases the refcount
+ * of the timeline so you should gst_object_unref() it after usage.
+ *
+ * Returns: (transfer full): timeline of @self, this can be %NULL if @self
+ *   has no timeline. unref after usage.
+ */
+GESTimeline *
+ges_timeline_element_get_timeline (GESTimelineElement * self)
+{
+  GESTimeline *result = NULL;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
+
+  result = self->timeline;
   if (G_LIKELY (result))
     gst_object_ref (result);
 

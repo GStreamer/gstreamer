@@ -367,6 +367,7 @@ remove_object_internal (GESTrack * track, GESTrackElement * object)
   g_signal_handlers_disconnect_by_func (object, sort_track_elements_cb, NULL);
 
   ges_track_element_set_track (object, NULL);
+  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (object), NULL);
 
   g_signal_emit (track, ges_track_signals[TRACK_ELEMENT_REMOVED], 0,
       GES_TRACK_ELEMENT (object));
@@ -752,6 +753,8 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
       g_sequence_insert_sorted (track->priv->trackelements_by_start, object,
           (GCompareDataFunc) element_start_compare, NULL));
 
+  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (object),
+      track->priv->timeline);
   g_signal_emit (track, ges_track_signals[TRACK_ELEMENT_ADDED], 0,
       GES_TRACK_ELEMENT (object));
 
@@ -821,6 +824,7 @@ ges_track_remove_element (GESTrack * track, GESTrackElement * object)
     g_sequence_remove (it);
 
     resort_and_fill_gaps (track);
+    ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (object), NULL);
 
     return TRUE;
   }

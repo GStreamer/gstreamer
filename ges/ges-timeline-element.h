@@ -85,6 +85,14 @@ typedef struct _GESTimelineElementPrivate GESTimelineElementPrivate;
 #define GES_TIMELINE_ELEMENT_PARENT(obj) (((GESTimelineElement*)obj)->parent)
 
 /**
+ * GES_TIMELINE_ELEMENT_TIMELINE:
+ * @obj: a #GESTimelineElement
+ *
+ * The timeline in which the object is.
+ */
+#define GES_TIMELINE_ELEMENT_TIMELINE(obj) (((GESTimelineElement*)obj)->timeline)
+
+/**
  * GESTimelineElementClass:
  * @set_start: method to set the start of a #GESTimelineElement
  * @set_duration: method to set the duration of a #GESTimelineElement
@@ -147,6 +155,7 @@ struct _GESTimelineElement
   GstClockTime duration;
   GstClockTime maxduration;
   guint32 priority;
+  GESTimeline *timeline;
 
   /*< private >*/
   GESTimelineElementPrivate *priv;
@@ -159,6 +168,7 @@ GType ges_timeline_element_get_type (void) G_GNUC_CONST;
 
 GESTimelineElement * ges_timeline_element_get_parent (GESTimelineElement * self);
 gboolean ges_timeline_element_set_parent             (GESTimelineElement *self, GESTimelineElement *parent);
+gboolean ges_timeline_element_set_timeline           (GESTimelineElement *self, GESTimeline *timeline);
 void ges_timeline_element_set_start                  (GESTimelineElement *self, GstClockTime start);
 void ges_timeline_element_set_inpoint                (GESTimelineElement *self, GstClockTime inpoint);
 void ges_timeline_element_set_duration               (GESTimelineElement *self, GstClockTime duration);
@@ -169,6 +179,7 @@ GstClockTime ges_timeline_element_get_start          (GESTimelineElement *self);
 GstClockTime ges_timeline_element_get_inpoint        (GESTimelineElement *self);
 GstClockTime ges_timeline_element_get_duration       (GESTimelineElement *self);
 GstClockTime ges_timeline_element_get_max_duration   (GESTimelineElement *self);
+GESTimeline * ges_timeline_element_get_timeline      (GESTimelineElement *self);
 guint32 ges_timeline_element_get_priority            (GESTimelineElement *self);
 
 gboolean ges_timeline_element_ripple                 (GESTimelineElement *self, GstClockTime  start);
