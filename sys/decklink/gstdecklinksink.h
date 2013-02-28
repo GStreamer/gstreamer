@@ -29,6 +29,7 @@ G_BEGIN_DECLS
 #define GST_TYPE_DECKLINK_SINK   (gst_decklink_sink_get_type())
 #define GST_DECKLINK_SINK(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DECKLINK_SINK,GstDecklinkSink))
 #define GST_DECKLINK_SINK_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DECKLINK_SINK,GstDecklinkSinkClass))
+#define GST_DECKLINK_SINK_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_DECKLINK_SINK, GstDecklinkSinkClass))
 #define GST_IS_DECKLINK_SINK(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DECKLINK_SINK))
 #define GST_IS_DECKLINK_SINK_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DECKLINK_SINK))
 
@@ -57,10 +58,10 @@ struct _GstDecklinkSink
   GstPad *videosinkpad;
   GstPad *audiosinkpad;
 
-  GMutex *mutex;
-  GCond *cond;
-  GMutex *audio_mutex;
-  GCond *audio_cond;
+  GMutex mutex;
+  GCond  cond;
+  GMutex audio_mutex;
+  GCond  audio_cond;
   int queued_frames;
   gboolean stop;
   gboolean video_eos;
@@ -84,11 +85,11 @@ struct _GstDecklinkSink
 
 #ifdef _MSC_VER
   gboolean comInitialized;
-  GMutex   *com_init_lock;
-  GMutex   *com_deinit_lock;
-  GCond    *com_initialized;
-  GCond    *com_uninitialize;
-  GCond    *com_uninitialized;
+  GMutex   com_init_lock;
+  GMutex   com_deinit_lock;
+  GCond    com_initialized;
+  GCond    com_uninitialize;
+  GCond    com_uninitialized;
 #endif /* _MSC_VER */
 };
 
