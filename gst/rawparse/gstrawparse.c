@@ -225,6 +225,7 @@ gst_raw_parse_set_src_caps (GstRawParse * rp)
   }
 
   rp->negotiated = gst_pad_set_caps (rp->srcpad, caps);
+  gst_caps_unref (caps);
 
   return rp->negotiated;
 }
