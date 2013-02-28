@@ -22,8 +22,8 @@ endif
 
 libgstdecklink_la_LIBTOOLFLAGS = --tag=disable-static
 
-#	gstdecklinksink.cpp
 libgstdecklink_la_SOURCES = \
+	gstdecklinksink.cpp \
 	gstdecklinksrc.cpp \
 	gstdecklink.cpp \
 	capture.cpp
