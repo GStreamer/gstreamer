@@ -576,7 +576,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
     GST_DEBUG_OBJECT (self, "Port settings have changed, updating caps");
 
     /* Reallocate all buffers */
-    if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+    if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE
+        && gst_omx_port_is_enabled (port)) {
       err = gst_omx_port_set_enabled (port, FALSE);
       if (err != OMX_ErrorNone)
         goto reconfigure_error;
@@ -595,7 +596,6 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
     }
 
     GST_VIDEO_DECODER_STREAM_LOCK (self);
-
 
     gst_omx_port_get_port_definition (port, &port_def);
     g_assert (port_def.format.video.eCompressionFormat ==
@@ -1175,17 +1175,17 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
           &port_def) != OMX_ErrorNone)
     return FALSE;
 
-  GST_DEBUG_OBJECT (self, "Setting outport port definition");
-  if (gst_omx_port_update_port_definition (self->dec_out_port,
-          NULL) != OMX_ErrorNone)
-    return FALSE;
-
   if (klass->set_format) {
     if (!klass->set_format (self, self->dec_in_port, state)) {
       GST_ERROR_OBJECT (self, "Subclass failed to set the new format");
       return FALSE;
     }
   }
+
+  GST_DEBUG_OBJECT (self, "Updating outport port definition");
+  if (gst_omx_port_update_port_definition (self->dec_out_port,
+          NULL) != OMX_ErrorNone)
+    return FALSE;
 
   gst_buffer_replace (&self->codec_data, state->codec_data);
   self->input_state = gst_video_codec_state_ref (state);
@@ -1213,7 +1213,13 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
     /* Need to allocate buffers to reach Idle state */
     if (gst_omx_port_allocate_buffers (self->dec_in_port, -1) != OMX_ErrorNone)
       return FALSE;
-    if (gst_omx_port_allocate_buffers (self->dec_out_port, -1) != OMX_ErrorNone)
+
+    /* And disable output port */
+    if (gst_omx_port_set_enabled (self->dec_out_port, FALSE) != OMX_ErrorNone)
+      return FALSE;
+
+    if (gst_omx_port_wait_enabled (self->dec_out_port,
+            1 * GST_SECOND) != OMX_ErrorNone)
       return FALSE;
 
     if (gst_omx_component_get_state (self->dec,
