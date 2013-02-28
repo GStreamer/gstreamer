@@ -204,7 +204,7 @@ platform_create_native_window (gint width, gint height, gpointer * window_data)
   dst.w = dp_width;
   dst.h = dp_height;
   dst.x = dst.y = 0;
-  gst_video_sink_center_rect (&src, &dst, &res, TRUE);
+  gst_video_sink_center_rect (src, dst, &res, TRUE);
 
   dst_rect.x = res.x;
   dst_rect.y = res.y;
