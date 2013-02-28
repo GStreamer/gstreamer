@@ -76,6 +76,10 @@ static void
 gst_vaapi_parser_info_h264_finalize(GstVaapiParserInfoH264 *pi)
 {
     switch (pi->nalu.type) {
+    case GST_H264_NAL_SPS:
+    case GST_H264_NAL_SUBSET_SPS:
+        gst_h264_sps_clear(&pi->data.sps);
+        break;
     case GST_H264_NAL_SEI:
         if (pi->data.sei) {
             g_array_unref(pi->data.sei);
@@ -1105,6 +1109,29 @@ parse_sps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 }
 
 static GstVaapiDecoderStatus
+parse_subset_sps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstVaapiParserInfoH264 * const pi = unit->parsed_info;
+    GstH264SPS * const sps = &pi->data.sps;
+    GstH264ParserResult result;
+
+    GST_DEBUG("parse subset SPS");
+
+    /* Variables that don't have inferred values per the H.264
+       standard but that should get a default value anyway */
+    sps->log2_max_pic_order_cnt_lsb_minus4 = 0;
+
+    result = gst_h264_parser_parse_subset_sps(priv->parser, &pi->nalu, sps,
+        TRUE);
+    if (result != GST_H264_PARSER_OK)
+        return get_status(result);
+
+    priv->parser_state |= GST_H264_VIDEO_STATE_GOT_SPS;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
 parse_pps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
@@ -1182,6 +1209,19 @@ decode_sps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     GstH264SPS * const sps = &pi->data.sps;
 
     GST_DEBUG("decode SPS");
+
+    gst_vaapi_parser_info_h264_replace(&priv->sps[sps->id], pi);
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+decode_subset_sps(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
+{
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    GstVaapiParserInfoH264 * const pi = unit->parsed_info;
+    GstH264SPS * const sps = &pi->data.sps;
+
+    GST_DEBUG("decode subset SPS");
 
     gst_vaapi_parser_info_h264_replace(&priv->sps[sps->id], pi);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
@@ -2637,6 +2677,17 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     g_return_val_if_fail(pps != NULL, GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN);
     g_return_val_if_fail(sps != NULL, GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN);
 
+    /* Only decode base stream for MVC */
+    switch (sps->profile_idc) {
+    case GST_H264_PROFILE_MULTIVIEW_HIGH:
+    case GST_H264_PROFILE_STEREO_HIGH:
+        if (1) {
+            GST_DEBUG("drop picture from substream");
+            return GST_VAAPI_DECODER_STATUS_DROP_FRAME;
+        }
+        break;
+    }
+
     status = ensure_context(decoder, sps);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
@@ -2909,9 +2960,13 @@ decode_unit(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     case GST_H264_NAL_SPS:
         status = decode_sps(decoder, unit);
         break;
+    case GST_H264_NAL_SUBSET_SPS:
+        status = decode_subset_sps(decoder, unit);
+        break;
     case GST_H264_NAL_PPS:
         status = decode_pps(decoder, unit);
         break;
+    case GST_H264_NAL_SLICE_EXT:
     case GST_H264_NAL_SLICE_IDR:
         /* fall-through. IDR specifics are handled in init_picture() */
     case GST_H264_NAL_SLICE:
@@ -3140,12 +3195,21 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     case GST_H264_NAL_SPS:
         status = parse_sps(decoder, unit);
         break;
+    case GST_H264_NAL_SUBSET_SPS:
+        status = parse_subset_sps(decoder, unit);
+        break;
     case GST_H264_NAL_PPS:
         status = parse_pps(decoder, unit);
         break;
     case GST_H264_NAL_SEI:
         status = parse_sei(decoder, unit);
         break;
+    case GST_H264_NAL_SLICE_EXT:
+        if (!GST_H264_IS_MVC_NALU(&pi->nalu)) {
+            status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+            break;
+        }
+        /* fall-through */
     case GST_H264_NAL_SLICE_IDR:
     case GST_H264_NAL_SLICE:
         status = parse_slice(decoder, unit);
@@ -3172,10 +3236,17 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_END;
         break;
     case GST_H264_NAL_SPS:
+    case GST_H264_NAL_SUBSET_SPS:
     case GST_H264_NAL_PPS:
     case GST_H264_NAL_SEI:
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
         break;
+    case GST_H264_NAL_SLICE_EXT:
+        if (!GST_H264_IS_MVC_NALU(&pi->nalu)) {
+            flags |= GST_VAAPI_DECODER_UNIT_FLAG_SKIP;
+            break;
+        }
+        /* fall-through */
     case GST_H264_NAL_SLICE_IDR:
     case GST_H264_NAL_SLICE:
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
@@ -3187,6 +3258,11 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     case GST_H264_NAL_SLICE_AUX:
         /* skip SPS extension and auxiliary slice for now */
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_SKIP;
+        break;
+    case GST_H264_NAL_PREFIX_UNIT:
+        /* skip Prefix NAL units for now */
+        flags |= GST_VAAPI_DECODER_UNIT_FLAG_SKIP |
+            GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
         break;
     default:
         if (pi->nalu.type >= 14 && pi->nalu.type <= 18)
