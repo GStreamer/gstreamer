@@ -86,7 +86,8 @@ static GstStaticPadTemplate gst_decklink_src_audio_src_template =
 GST_STATIC_PAD_TEMPLATE ("audiosrc",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, format=S16LE, channels=2, rate=48000")
+    GST_STATIC_CAPS ("audio/x-raw, format=S16LE, channels=2, rate=48000, "
+        "layout=interleaved")
     );
 
 /* the video source pad template is created on the fly */
@@ -651,7 +652,8 @@ gst_decklink_src_send_initial_events (GstDecklinkSrc * src)
   gst_pad_push_event (src->audiosrcpad,
       gst_event_new_caps (gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, "S16LE", "channels", G_TYPE_INT, 2,
-          "rate", G_TYPE_INT, 48000, NULL)));
+          "rate", G_TYPE_INT, 48000, "layout", G_TYPE_STRING, "interleaved",
+          NULL)));
 
   gst_pad_push_event (src->videosrcpad,
       gst_event_new_caps (gst_decklink_mode_get_caps (src->mode)));
