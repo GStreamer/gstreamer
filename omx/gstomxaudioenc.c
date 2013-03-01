@@ -654,11 +654,6 @@ gst_omx_audio_enc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
           &port_def) != OMX_ErrorNone)
     return FALSE;
 
-  GST_DEBUG_OBJECT (self, "Setting outport port definition");
-  if (gst_omx_port_update_port_definition (self->enc_out_port,
-          NULL) != OMX_ErrorNone)
-    return FALSE;
-
   GST_OMX_INIT_STRUCT (&pcm_param);
   pcm_param.nPortIndex = self->enc_in_port->index;
   pcm_param.nChannels = info->channels;
@@ -729,6 +724,11 @@ gst_omx_audio_enc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
     }
   }
 
+  GST_DEBUG_OBJECT (self, "Updating outport port definition");
+  if (gst_omx_port_update_port_definition (self->enc_out_port,
+          NULL) != OMX_ErrorNone)
+    return FALSE;
+
   GST_DEBUG_OBJECT (self, "Enabling component");
   if (needs_disable) {
     if (gst_omx_port_set_enabled (self->enc_in_port, TRUE) != OMX_ErrorNone)
@@ -747,7 +747,13 @@ gst_omx_audio_enc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
     /* Need to allocate buffers to reach Idle state */
     if (gst_omx_port_allocate_buffers (self->enc_in_port, -1) != OMX_ErrorNone)
       return FALSE;
-    if (gst_omx_port_allocate_buffers (self->enc_out_port, -1) != OMX_ErrorNone)
+
+    /* And disable output port */
+    if (gst_omx_port_set_enabled (self->enc_out_port, FALSE) != OMX_ErrorNone)
+      return FALSE;
+
+    if (gst_omx_port_wait_enabled (self->enc_out_port,
+            1 * GST_SECOND) != OMX_ErrorNone)
       return FALSE;
 
     if (gst_omx_component_get_state (self->enc,
