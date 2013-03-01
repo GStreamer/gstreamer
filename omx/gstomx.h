@@ -280,7 +280,6 @@ void              gst_omx_component_free (GstOMXComponent * comp);
 OMX_ERRORTYPE     gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state);
 OMX_STATETYPE     gst_omx_component_get_state (GstOMXComponent * comp, GstClockTime timeout);
 
-void              gst_omx_component_set_last_error (GstOMXComponent * comp, OMX_ERRORTYPE err);
 OMX_ERRORTYPE     gst_omx_component_get_last_error (GstOMXComponent * comp);
 const gchar *     gst_omx_component_get_last_error_string (GstOMXComponent * comp);
 
@@ -296,7 +295,7 @@ OMX_ERRORTYPE     gst_omx_component_setup_tunnel (GstOMXComponent * comp1, GstOM
 OMX_ERRORTYPE     gst_omx_component_close_tunnel (GstOMXComponent * comp1, GstOMXPort * port1, GstOMXComponent * comp2, GstOMXPort * port2);
 
 
-void              gst_omx_port_get_port_definition (GstOMXPort * port, OMX_PARAM_PORTDEFINITIONTYPE * port_def);
+OMX_ERRORTYPE     gst_omx_port_get_port_definition (GstOMXPort * port, OMX_PARAM_PORTDEFINITIONTYPE * port_def);
 OMX_ERRORTYPE     gst_omx_port_update_port_definition (GstOMXPort *port, OMX_PARAM_PORTDEFINITIONTYPE *port_definition);
 
 GstOMXAcquireBufferReturn gst_omx_port_acquire_buffer (GstOMXPort *port, GstOMXBuffer **buf);

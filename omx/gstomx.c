@@ -739,7 +739,6 @@ done:
     GST_ERROR_OBJECT (comp->parent,
         "Error setting state from %d to %d: %s (0x%08x)", old_state, state,
         gst_omx_error_to_string (err), err);
-    gst_omx_component_set_last_error (comp, err);
   }
   return err;
 }
@@ -826,10 +825,6 @@ gst_omx_component_get_state (GstOMXComponent * comp, GstClockTime timeout)
 done:
   g_mutex_unlock (&comp->lock);
 
-  /* If we waited and timed out this component is unusable now */
-  if (!signalled)
-    gst_omx_component_set_last_error (comp, OMX_ErrorTimeout);
-
   GST_DEBUG_OBJECT (comp->parent, "Returning state %d", ret);
 
   return ret;
@@ -907,28 +902,6 @@ gst_omx_component_get_port (GstOMXComponent * comp, guint32 index)
       return tmp;
   }
   return NULL;
-}
-
-/* NOTE: Uses comp->lock and comp->messages_lock */
-void
-gst_omx_component_set_last_error (GstOMXComponent * comp, OMX_ERRORTYPE err)
-{
-  g_return_if_fail (comp != NULL);
-
-  if (err == OMX_ErrorNone)
-    return;
-
-  g_mutex_lock (&comp->lock);
-  GST_ERROR_OBJECT (comp->parent, "Setting last error: %s (0x%08x)",
-      gst_omx_error_to_string (err), err);
-  /* We only set the first error ever from which
-   * we can't recover anymore.
-   */
-  if (comp->last_error == OMX_ErrorNone)
-    comp->last_error = err;
-  g_mutex_unlock (&comp->lock);
-
-  gst_omx_component_send_message (comp, NULL);
 }
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
@@ -1130,23 +1103,26 @@ gst_omx_component_close_tunnel (GstOMXComponent * comp1, GstOMXPort * port1,
   return err;
 }
 
-void
+OMX_ERRORTYPE
 gst_omx_port_get_port_definition (GstOMXPort * port,
     OMX_PARAM_PORTDEFINITIONTYPE * port_def)
 {
   GstOMXComponent *comp;
+  OMX_ERRORTYPE err;
 
-  g_return_if_fail (port != NULL);
+  g_return_val_if_fail (port != NULL, OMX_ErrorBadParameter);
 
   comp = port->comp;
 
   GST_OMX_INIT_STRUCT (port_def);
   port_def->nPortIndex = port->index;
 
-  gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
+  err = gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
       port_def);
   if (comp->hacks & GST_OMX_HACK_PORT_ACTUAL_COUNT_IS_MINIMUM)
     port_def->nBufferCountMin = port->min_buffer_count;
+
+  return err;
 }
 
 OMX_ERRORTYPE
@@ -1375,9 +1351,6 @@ done:
   gst_omx_component_handle_messages (comp);
   g_mutex_unlock (&comp->lock);
 
-  if (err != OMX_ErrorNone)
-    gst_omx_component_set_last_error (comp, err);
-
   return err;
 }
 
@@ -1519,7 +1492,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
               "Failed to pass buffer %p (%p) to port %u: %s (0x%08x)", buf,
               buf->omx_buf->pBuffer, port->index,
               gst_omx_error_to_string (err), err);
-          goto error;
+          goto done;
         }
         GST_DEBUG_OBJECT (comp->parent, "Passed buffer %p (%p) to component",
             buf, buf->omx_buf->pBuffer);
@@ -1536,14 +1509,6 @@ done:
   g_mutex_unlock (&comp->lock);
 
   return err;
-
-error:
-  {
-    g_mutex_unlock (&comp->lock);
-    gst_omx_component_set_last_error (comp, err);
-    g_mutex_lock (&comp->lock);
-    goto done;
-  }
 }
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
@@ -1567,6 +1532,9 @@ gst_omx_port_is_flushing (GstOMXPort * port)
 
   return flushing;
 }
+
+static OMX_ERRORTYPE gst_omx_port_deallocate_buffers_unlocked (GstOMXPort *
+    port);
 
 /* NOTE: Must be called while holding comp->lock, uses comp->messages_lock */
 static OMX_ERRORTYPE
@@ -1611,7 +1579,7 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port,
     GST_ERROR_OBJECT (comp->parent,
         "Failed to configure number of buffers of port %u: %s (0x%08x)",
         port->index, gst_omx_error_to_string (err), err);
-    goto error;
+    goto done;
   }
 
   GST_DEBUG_OBJECT (comp->parent,
@@ -1649,7 +1617,8 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port,
       GST_ERROR_OBJECT (comp->parent,
           "Failed to allocate buffer for port %u: %s (0x%08x)", port->index,
           gst_omx_error_to_string (err), err);
-      goto error;
+      gst_omx_port_deallocate_buffers_unlocked (port);
+      goto done;
     }
 
     GST_DEBUG_OBJECT (comp->parent, "Allocated buffer %p (%p)", buf,
@@ -1672,14 +1641,6 @@ done:
       port->index, gst_omx_error_to_string (err), err);
 
   return err;
-
-error:
-  {
-    g_mutex_unlock (&comp->lock);
-    gst_omx_component_set_last_error (comp, err);
-    g_mutex_lock (&comp->lock);
-    goto done;
-  }
 }
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
@@ -1883,7 +1844,7 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
     GST_ERROR_OBJECT (comp->parent,
         "Failed to send enable/disable command to port %u: %s (0x%08x)",
         port->index, gst_omx_error_to_string (err), err);
-    goto error;
+    goto done;
   }
 
   if ((err = comp->last_error) != OMX_ErrorNone) {
@@ -1902,14 +1863,6 @@ done:
       (enabled ? "enabled" : "disabled"), gst_omx_error_to_string (err), err);
 
   return err;
-
-error:
-  {
-    g_mutex_unlock (&comp->lock);
-    gst_omx_component_set_last_error (comp, err);
-    g_mutex_lock (&comp->lock);
-    goto done;
-  }
 }
 
 static OMX_ERRORTYPE
@@ -1982,12 +1935,12 @@ gst_omx_port_wait_buffers_released_unlocked (GstOMXPort * port,
     GST_ERROR_OBJECT (comp->parent,
         "Got error while waiting for port %u to release all buffers: %s (0x%08x)",
         port->index, gst_omx_error_to_string (err), err);
-    goto error;
+    goto done;
   } else if (!signalled) {
     GST_ERROR_OBJECT (comp->parent,
         "Timeout waiting for port %u to release all buffers", port->index);
     err = OMX_ErrorTimeout;
-    goto error;
+    goto done;
   }
 
 done:
@@ -2000,14 +1953,6 @@ done:
       gst_omx_error_to_string (err), err);
 
   return err;
-
-error:
-  {
-    g_mutex_unlock (&comp->lock);
-    gst_omx_component_set_last_error (comp, err);
-    g_mutex_lock (&comp->lock);
-    goto done;
-  }
 }
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
@@ -2124,7 +2069,7 @@ gst_omx_port_wait_enabled_unlocked (GstOMXPort * port, GstClockTime timeout)
         "Timeout waiting for port %u to be %s", port->index,
         (enabled ? "enabled" : "disabled"));
     err = OMX_ErrorTimeout;
-    goto error;
+    goto done;
   } else if (last_error != OMX_ErrorNone) {
     GST_ERROR_OBJECT (comp->parent,
         "Got error while waiting for port %u to be %s: %s (0x%08x)",
@@ -2161,7 +2106,7 @@ gst_omx_port_wait_enabled_unlocked (GstOMXPort * port, GstClockTime timeout)
               "Failed to pass buffer %p (%p) to port %u: %s (0x%08x)", buf,
               buf->omx_buf->pBuffer, port->index, gst_omx_error_to_string (err),
               err);
-          goto error;
+          goto done;
         }
         GST_DEBUG_OBJECT (comp->parent, "Passed buffer %p (%p) to component",
             buf, buf->omx_buf->pBuffer);
@@ -2179,14 +2124,6 @@ done:
       (enabled ? "enabled" : "disabled"), gst_omx_error_to_string (err), err);
 
   return err;
-
-error:
-  {
-    g_mutex_unlock (&comp->lock);
-    gst_omx_component_set_last_error (comp, err);
-    g_mutex_lock (&comp->lock);
-    goto done;
-  }
 }
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
