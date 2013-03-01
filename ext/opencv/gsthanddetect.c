@@ -50,8 +50,8 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch autovideosrc ! videoconvert ! "video/x-raw, formt=RGB, width=320, height=240" ! \
-   videoscale ! handdetect ! videoconvert ! xvimagesink
+ * gst-launch-1.0 autovideosrc ! videoconvert ! "video/x-raw, formt=RGB, width=320, height=240" ! \
+ * videoscale ! handdetect ! videoconvert ! xvimagesink
  * ]|
  * </refsect2>
  */
@@ -68,9 +68,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_handdetect_debug);
 #define GST_CAT_DEFAULT gst_handdetect_debug
 
 /* define HAAR files */
-#define HAAR_CASCADES_DIR GST_DATADIR "/gstreamer-"GST_API_VERSION"/opencv_haarcascades/"
-#define HAAR_FILE_FIST HAAR_CASCADES_DIR "fist.xml"
-#define HAAR_FILE_PALM HAAR_CASCADES_DIR "palm.xml"
+#define HAAR_FILE_FIST GST_HAAR_CASCADES_DIR G_DIR_SEPARATOR_S "fist.xml"
+#define HAAR_FILE_PALM GST_HAAR_CASCADES_DIR G_DIR_SEPARATOR_S "palm.xml"
 
 /* Filter signals and args */
 enum
@@ -206,6 +205,7 @@ gst_handdetect_class_init (GstHanddetectClass * klass)
           "Location of HAAR cascade file (palm gesture)",
           HAAR_FILE_PALM, G_PARAM_READWRITE)
       );
+  /* FIXME: property name needs fixing */
   g_object_class_install_property (gobject_class,
       PROP_ROI_X,
       g_param_spec_uint ("ROI_X",
@@ -213,6 +213,7 @@ gst_handdetect_class_init (GstHanddetectClass * klass)
           "X of left-top pointer in region of interest \nGestures in the defined region of interest will emit messages",
           0, UINT_MAX, 0, G_PARAM_READWRITE)
       );
+  /* FIXME: property name needs fixing */
   g_object_class_install_property (gobject_class,
       PROP_ROI_Y,
       g_param_spec_uint ("ROI_Y",
@@ -220,6 +221,7 @@ gst_handdetect_class_init (GstHanddetectClass * klass)
           "Y of left-top pointer in region of interest \nGestures in the defined region of interest will emit messages",
           0, UINT_MAX, 0, G_PARAM_READWRITE)
       );
+  /* FIXME: property name needs fixing */
   g_object_class_install_property (gobject_class,
       PROP_ROI_WIDTH,
       g_param_spec_uint ("ROI_WIDTH",
@@ -227,6 +229,7 @@ gst_handdetect_class_init (GstHanddetectClass * klass)
           "WIDTH of left-top pointer in region of interest \nGestures in the defined region of interest will emit messages",
           0, UINT_MAX, 0, G_PARAM_READWRITE)
       );
+  /* FIXME: property name needs fixing */
   g_object_class_install_property (gobject_class,
       PROP_ROI_HEIGHT,
       g_param_spec_uint ("ROI_HEIGHT",
@@ -642,9 +645,7 @@ gboolean
 gst_handdetect_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_handdetect_debug,
-      "handdetect",
-      0,
-      "Performs hand gesture detection (fist and palm), providing detected hand positions via bus messages/navigation events, and dealing with hand events");
+      "handdetect", 0, "opencv hand gesture detection");
   return gst_element_register (plugin, "handdetect", GST_RANK_NONE,
       GST_TYPE_HANDDETECT);
 }

@@ -33,10 +33,6 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
   [AM_DEFAULT_VERBOSITY=1
    AC_SUBST(AM_DEFAULT_VERBOSITY)])
 
-dnl define GST_DATADIR
-AS_AC_EXPAND(DATADIR, $datadir)
-AC_DEFINE_UNQUOTED(GST_DATADIR, "$DATADIR", [data dir])
-
 dnl our libraries and install dirs use GST_API_VERSION in the filename
 dnl to allow side-by-side installation of different API versions
 GST_API_VERSION=1.0
