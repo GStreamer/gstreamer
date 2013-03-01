@@ -92,9 +92,12 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   OMX_ERRORTYPE err;
   const gchar *profile_string, *level_string;
 
-  gst_omx_port_get_port_definition (port, &port_def);
+  gst_omx_port_get_port_definition (GST_OMX_VIDEO_ENC (self)->enc_out_port,
+      &port_def);
   port_def.format.video.eCompressionFormat = OMX_VIDEO_CodingMPEG4;
-  err = gst_omx_port_update_port_definition (port, &port_def);
+  err =
+      gst_omx_port_update_port_definition (GST_OMX_VIDEO_ENC
+      (self)->enc_out_port, &port_def);
   if (err != OMX_ErrorNone)
     return FALSE;
 
