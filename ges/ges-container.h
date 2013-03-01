@@ -58,6 +58,8 @@ typedef struct _GESContainerPrivate GESContainerPrivate;
  * GESContainer:
  * @children: (element-type GES.TimelineElement): A list of TimelineElement
  * controlled by this Container. NOTE: Do not modify.
+ * @height: The span of priorities this container occupies
+ *
  *
  * The #GESContainer base class.
  */
@@ -65,13 +67,13 @@ struct _GESContainer
 {
   GESTimelineElement parent;
 
+  /*< public > */
   /*< readonly >*/
   GList *children;
 
-  /* We don't add those properties to the priv struct for optimization purposes
-   * start, inpoint, duration and fullduration are in nanoseconds */
-  guint32 height;               /* the span of priorities this object needs */
-  guint64 fullduration;         /* Full usable duration of the object (-1: no duration) */
+  /* We don't add those properties to the priv struct for optimization and code
+   * readability purposes */
+  guint32 height;       /* the span of priorities this object needs */
 
   /*< private >*/
   GESContainerPrivate *priv;
@@ -93,11 +95,10 @@ struct _GESContainerClass
   /*< private > */
   GESTimelineElementClass parent_class;
 
+  /*< public > */
   /* signals */
   void (*child_added)             (GESContainer *container, GESTimelineElement *element);
   void (*child_removed)           (GESContainer *container, GESTimelineElement *element);
-
-  /*< public > */
   gboolean (*add_child)           (GESContainer *container, GESTimelineElement *element);
   gboolean (*remove_child)        (GESContainer *container, GESTimelineElement *element);
   void (*get_priorty_range)       (GESContainer *container, guint32 *min_prio, guint32 *max_prio);

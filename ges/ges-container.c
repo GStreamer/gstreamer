@@ -609,43 +609,43 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
 /**
  * ges_container_remove:
  * @container: a #GESContainer
- * @element: the #GESTimelineElement to release
+ * @child: the #GESTimelineElement to release
  *
- * Release the @element from the control of @container.
+ * Release the @child from the control of @container.
  *
- * Returns: %TRUE if the @element was properly released, else %FALSE.
+ * Returns: %TRUE if the @child was properly released, else %FALSE.
  */
 gboolean
-ges_container_remove (GESContainer * container, GESTimelineElement * element)
+ges_container_remove (GESContainer * container, GESTimelineElement * child)
 {
   GESContainerClass *klass;
   GESContainerPrivate *priv;
 
   g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
-  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (child), FALSE);
 
-  GST_DEBUG_OBJECT (container, "removing element: %" GST_PTR_FORMAT, element);
+  GST_DEBUG_OBJECT (container, "removing child: %" GST_PTR_FORMAT, child);
 
   klass = GES_CONTAINER_GET_CLASS (container);
   priv = container->priv;
 
-  if (!(g_hash_table_lookup (priv->mappings, element))) {
+  if (!(g_hash_table_lookup (priv->mappings, child))) {
     GST_WARNING_OBJECT (container, "Element isn't controlled by this "
         "container");
     return FALSE;
   }
 
   if (klass->remove_child) {
-    if (klass->remove_child (container, element) == FALSE)
+    if (klass->remove_child (container, child) == FALSE)
       return FALSE;
   }
 
-  container->children = g_list_remove (container->children, element);
+  container->children = g_list_remove (container->children, child);
   /* Let it live removing from our mappings */
-  g_hash_table_remove (priv->mappings, element);
+  g_hash_table_remove (priv->mappings, child);
 
   g_signal_emit (container, ges_container_signals[CHILD_REMOVED_SIGNAL], 0,
-      element);
+      child);
 
   return TRUE;
 }

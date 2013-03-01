@@ -60,14 +60,13 @@ typedef struct _GESTimelinePrivate GESTimelinePrivate;
 
 /**
  * GESTimeline:
- * @layers: (element-type GES.TimelineLayer): A list of #GESTimelineLayer sorted by priority
- *                                            NOTE: Do not modify.
- * @tracks: (element-type GES.Track): A list of #GESTrack sorted by priority
- *                                    NOTE: Do not modify.
+ * @layers: (element-type GES.TimelineLayer): A list of #GESTimelineLayer sorted by priority NOTE: Do not modify.
+ * @tracks: (element-type GES.Track): A list of #GESTrack sorted by priority NOTE: Do not modify.
  */
 struct _GESTimeline {
   GstBin parent;
 
+  /*< public > */
   /* <readonly> */
   GList *layers;
   GList *tracks;

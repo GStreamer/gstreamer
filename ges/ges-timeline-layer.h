@@ -100,8 +100,7 @@ GESTimeline *
 ges_timeline_layer_get_timeline           (GESTimelineLayer * layer);
 
 gboolean ges_timeline_layer_add_clip    (GESTimelineLayer * layer,
-
-					   GESClip * object);
+					   GESClip * clip);
 GESClip * ges_timeline_layer_add_asset   (GESTimelineLayer *layer,
                                                        GESAsset *asset,
                                                        GstClockTime start,
@@ -111,7 +110,7 @@ GESClip * ges_timeline_layer_add_asset   (GESTimelineLayer *layer,
                                                        GESTrackType track_types);
 
 gboolean ges_timeline_layer_remove_clip (GESTimelineLayer * layer,
-					   GESClip * object);
+					   GESClip * clip);
 
 void     ges_timeline_layer_set_priority  (GESTimelineLayer * layer,
 					   guint priority);

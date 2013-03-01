@@ -42,6 +42,7 @@ struct _GESBaseXmlFormatter
 {
   GESFormatter parent;
 
+  /*< public > */
   /* <private> */
   GESBaseXmlFormatterPrivate *priv;
 

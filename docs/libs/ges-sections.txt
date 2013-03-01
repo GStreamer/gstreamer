@@ -93,14 +93,12 @@ GES_TYPE_TRACK
 <TITLE>GESTrackElement</TITLE>
 GESTrackElement
 GESTrackElementClass
-ges_track_element_set_max_duration
 ges_track_element_set_active
 ges_track_element_set_locked
 ges_track_element_is_locked
 ges_track_element_get_track
 ges_track_element_get_gnlobject
 ges_track_element_get_element
-ges_track_element_get_max_duration
 ges_track_element_is_active
 ges_track_element_lookup_child
 ges_track_element_list_children_properties
@@ -113,7 +111,6 @@ ges_track_element_get_child_properties
 ges_track_element_get_child_property_valist
 ges_track_element_get_child_property_by_pspec
 ges_track_element_edit
-ges_track_element_copy
 <SUBSECTION Standard>
 GESTrackElementPrivate
 ges_track_element_set_track
@@ -397,9 +394,6 @@ ges_clip_set_supported_formats
 ges_clip_get_supported_formats
 ges_clip_split
 ges_clip_edit
-ges_clip_get_max_duration
-ges_clip_objects_set_locked
-ges_clip_set_max_duration
 <SUBSECTION Standard>
 GES_CLIP_HEIGHT
 ges_clip_create_track_elements
@@ -469,12 +463,10 @@ GES_TYPE_SOURCE_CLIP
 <TITLE>GESUriClip</TITLE>
 GESUriClip
 ges_uri_clip_new
-ges_uri_clip_get_max_duration
 ges_uri_clip_get_uri
 ges_uri_clip_is_image
 ges_uri_clip_is_muted
 ges_uri_clip_set_is_image
-ges_uri_clip_set_max_duration
 ges_uri_clip_set_mute
 <SUBSECTION Standard>
 GESUriClipClass

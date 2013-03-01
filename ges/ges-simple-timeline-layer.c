@@ -386,7 +386,6 @@ ges_simple_timeline_layer_nth (GESSimpleTimelineLayer * layer, gint position)
  * Returns: The position of the clip starting from 0, or -1 if the
  * clip was not found.
  */
-
 gint
 ges_simple_timeline_layer_index (GESSimpleTimelineLayer * layer, GESClip * clip)
 {
@@ -406,7 +405,6 @@ ges_simple_timeline_layer_index (GESSimpleTimelineLayer * layer, GESClip * clip)
  *
  * Returns: TRUE if the clip was successfuly moved, else FALSE.
  */
-
 gboolean
 ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer * layer,
     GESClip * clip, gint newposition)

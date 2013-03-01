@@ -82,7 +82,7 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer *layer,
 
 gboolean
 ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer *layer,
-				       GESClip *object, gint newposition);
+				       GESClip *clip, gint newposition);
 
 gboolean
 ges_simple_timeline_layer_is_valid (GESSimpleTimelineLayer *layer);
@@ -93,7 +93,7 @@ ges_simple_timeline_layer_nth (GESSimpleTimelineLayer *layer,
 
 gint
 ges_simple_timeline_layer_index (GESSimpleTimelineLayer *layer,
-				 GESClip *object);
+				 GESClip *clip);
 
 G_END_DECLS
 

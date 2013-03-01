@@ -93,6 +93,42 @@ typedef struct _GESTimelineElementPrivate GESTimelineElementPrivate;
 #define GES_TIMELINE_ELEMENT_TIMELINE(obj) (((GESTimelineElement*)obj)->timeline)
 
 /**
+ * GESTimelineElement:
+ * @parent: The #GESTimelineElement that controls the object
+ * @asset: The #GESAsset from which the object has been extracted
+ * @start: position (in time) of the object
+ * @inpoint: Position in the media from which the object should be used
+ * @duration: duration of the object to be used
+ * @maxduration: The maximum duration the object can have
+ * @priority: priority of the object in the layer (0:top priority)
+ *
+ * Those filed can be accessed from outside but in no case should
+ * be changed from there. Subclasses can write them but should make
+ * sure to properly call g_object_notify.
+ */
+struct _GESTimelineElement
+{
+  GInitiallyUnowned parent_instance;
+
+  /*< public > */
+  /*< read only >*/
+  GESTimelineElement *parent;
+  GESAsset *asset;
+  GstClockTime start;
+  GstClockTime inpoint;
+  GstClockTime duration;
+  GstClockTime maxduration;
+  guint32 priority;
+  GESTimeline *timeline;
+
+  /*< private >*/
+  GESTimelineElementPrivate *priv;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING_LARGE];
+};
+
+/**
  * GESTimelineElementClass:
  * @set_start: method to set the start of a #GESTimelineElement
  * @set_duration: method to set the duration of a #GESTimelineElement
@@ -114,6 +150,7 @@ struct _GESTimelineElementClass
 {
   GInitiallyUnownedClass parent_class;
 
+  /*< public > */
   gboolean (*set_start)        (GESTimelineElement * self, GstClockTime start);
   gboolean (*set_inpoint)      (GESTimelineElement * self, GstClockTime inpoint);
   gboolean (*set_duration)     (GESTimelineElement * self, GstClockTime duration);
@@ -127,39 +164,7 @@ struct _GESTimelineElementClass
   gboolean (*trim)             (GESTimelineElement *self, guint64  start);
   void (*deep_copy)            (GESTimelineElement *self, GESTimelineElement *copy);
 
-  /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING_LARGE];
-};
-
-/**
- * GESTimelineElement:
- * @start: position (in time) of the object
- * @inpoint: Position in the media from which the object should be used
- * @duration: duration of the object to be used
- * @maxduration: The maximum duration the object can have
- * @priority: priority of the object in the layer (0:top priority)
- *
- * Those filed can be accessed from outside but in no case should
- * be changed from there. Subclasses can write them but should make
- * sure to properly call g_object_notify.
- */
-struct _GESTimelineElement
-{
-  GInitiallyUnowned parent_instance;
-
-  /*< read only >*/
-  GESTimelineElement *parent;
-  GESAsset *asset;
-  GstClockTime start;
-  GstClockTime inpoint;
-  GstClockTime duration;
-  GstClockTime maxduration;
-  guint32 priority;
-  GESTimeline *timeline;
-
-  /*< private >*/
-  GESTimelineElementPrivate *priv;
-
+  /*< private > */
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING_LARGE];
 };
@@ -172,7 +177,7 @@ gboolean ges_timeline_element_set_timeline           (GESTimelineElement *self, 
 void ges_timeline_element_set_start                  (GESTimelineElement *self, GstClockTime start);
 void ges_timeline_element_set_inpoint                (GESTimelineElement *self, GstClockTime inpoint);
 void ges_timeline_element_set_duration               (GESTimelineElement *self, GstClockTime duration);
-void ges_timeline_element_set_max_duration           (GESTimelineElement *self, GstClockTime duration);
+void ges_timeline_element_set_max_duration           (GESTimelineElement *self, GstClockTime maxduration);
 void ges_timeline_element_set_priority               (GESTimelineElement *self, guint32 priority);
 
 GstClockTime ges_timeline_element_get_start          (GESTimelineElement *self);
