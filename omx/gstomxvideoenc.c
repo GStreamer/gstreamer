@@ -756,7 +756,8 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
 
     GST_DEBUG_OBJECT (self, "Port settings have changed, updating caps");
 
-    if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+    if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE
+        && gst_omx_port_is_enabled (port)) {
       /* Reallocate all buffers */
       err = gst_omx_port_set_enabled (port, FALSE);
       if (err != OMX_ErrorNone)
@@ -1189,16 +1190,16 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   if (!gst_omx_port_update_port_definition (self->enc_in_port, &port_def))
     return FALSE;
 
-  GST_DEBUG_OBJECT (self, "Setting outport port definition");
-  if (!gst_omx_port_update_port_definition (self->enc_out_port, NULL))
-    return FALSE;
-
   if (klass->set_format) {
     if (!klass->set_format (self, self->enc_in_port, state)) {
       GST_ERROR_OBJECT (self, "Subclass failed to set the new format");
       return FALSE;
     }
   }
+
+  GST_DEBUG_OBJECT (self, "Updating outport port definition");
+  if (!gst_omx_port_update_port_definition (self->enc_out_port, NULL))
+    return FALSE;
 
   GST_DEBUG_OBJECT (self, "Enabling component");
   if (needs_disable) {
@@ -1218,7 +1219,13 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
     /* Need to allocate buffers to reach Idle state */
     if (gst_omx_port_allocate_buffers (self->enc_in_port, -1) != OMX_ErrorNone)
       return FALSE;
-    if (gst_omx_port_allocate_buffers (self->enc_out_port, -1) != OMX_ErrorNone)
+
+    /* And disable output port */
+    if (gst_omx_port_set_enabled (self->enc_out_port, FALSE) != OMX_ErrorNone)
+      return FALSE;
+
+    if (gst_omx_port_wait_enabled (self->enc_out_port,
+            1 * GST_SECOND) != OMX_ErrorNone)
       return FALSE;
 
     if (gst_omx_component_get_state (self->enc,
