@@ -1358,15 +1358,24 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     GstBuffer *buf;
     ogg_packet packet;
     GstPad *thepad;
-    GstCaps *caps;
-    GstStructure *structure;
     GstBuffer *hbuf;
     GstMapInfo map;
+#ifndef GST_DISABLE_DEBUG
+    GstCaps *caps;
+    const gchar *mime_type;
+#endif
 
     pad = (GstOggPadData *) walk->data;
     thepad = pad->collect.pad;
-    caps = gst_pad_get_current_caps (thepad);
-    structure = gst_caps_get_structure (caps, 0);
+#ifndef GST_DISABLE_DEBUG
+    if ((caps = gst_pad_get_current_caps (thepad))) {
+      GstStructure *structure = gst_caps_get_structure (caps, 0);
+      mime_type = gst_structure_get_name (structure);
+      gst_caps_unref (caps);
+    } else {
+      mime_type = "";
+    }
+#endif
 
     walk = walk->next;
 
@@ -1408,8 +1417,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
 
     hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
 
-    GST_LOG_OBJECT (mux, "swapped out page with mime type %s",
-        gst_structure_get_name (structure));
+    GST_LOG_OBJECT (mux, "swapped out page with mime type %s", mime_type);
 
     /* quick hack: put video pages at the front.
      * Ideally, we would have a settable enum for which Ogg
@@ -1418,14 +1426,11 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
      * one's BOS into the first page, followed by an audio stream's BOS, and
      * only then followed by the remaining video and audio streams?) */
     if (pad->map.is_video) {
-      GST_DEBUG_OBJECT (thepad, "putting %s page at the front",
-          gst_structure_get_name (structure));
+      GST_DEBUG_OBJECT (thepad, "putting %s page at the front", mime_type);
       hbufs = g_list_prepend (hbufs, hbuf);
     } else {
       hbufs = g_list_append (hbufs, hbuf);
     }
-
-    gst_caps_unref (caps);
   }
 
   /* The Skeleton BOS goes first - even before the video that went first before */
