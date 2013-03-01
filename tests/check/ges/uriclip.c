@@ -121,10 +121,9 @@ GST_START_TEST (test_filesource_properties)
   track = ges_track_new (GES_TRACK_TYPE_AUDIO, GST_CAPS_ANY);
   fail_unless (track != NULL);
 
-  clip = (GESClip *)
-      ges_uri_clip_new ((gchar *)
+  clip = (GESClip *) ges_uri_clip_new ((gchar *)
       "crack:///there/is/no/way/this/exists");
-  fail_unless (clip != NULL);
+  assert_is_type (clip, GES_TYPE_URI_CLIP);
 
   /* Set some properties */
   g_object_set (clip, "start", (guint64) 42, "duration", (guint64) 51,
@@ -135,9 +134,9 @@ GST_START_TEST (test_filesource_properties)
   assert_equals_uint64 (_INPOINT (clip), 12);
 
   trackelement = ges_clip_create_track_element (clip, track->type);
-  ges_clip_add_track_element (clip, trackelement);
-  fail_unless (trackelement != NULL);
-  fail_unless (ges_track_element_set_track (trackelement, track));
+  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
+  assert_is_type (trackelement, GES_TYPE_TRACK_FILESOURCE);
+  fail_unless (ges_track_add_element (track, trackelement));
 
   /* Check that trackelement has the same properties */
   assert_equals_uint64 (_START (trackelement), 42);
@@ -170,9 +169,9 @@ GST_START_TEST (test_filesource_properties)
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
       120, 510, 0, TRUE);
 
-  ges_clip_release_track_element (clip, trackelement);
+  ges_container_remove (GES_CONTAINER (clip),
+      GES_TIMELINE_ELEMENT (trackelement));
 
-  g_object_unref (clip);
   g_object_unref (track);
 }
 
@@ -200,7 +199,8 @@ GST_START_TEST (test_filesource_images)
 
   /* the returned track element should be an image source */
   track_element = ges_clip_create_track_element (clip, v->type);
-  ges_clip_add_track_element (clip, track_element);
+  ges_container_add (GES_CONTAINER (clip),
+      GES_TIMELINE_ELEMENT (track_element));
   fail_unless (GES_IS_IMAGE_SOURCE (track_element));
 
   /* The track holds a reference to the clip
@@ -208,7 +208,8 @@ GST_START_TEST (test_filesource_images)
   ASSERT_OBJECT_REFCOUNT (track_element, "Video Track Element", 2);
 
   ges_track_remove_element (v, track_element);
-  ges_clip_release_track_element (clip, track_element);
+  ges_container_remove (GES_CONTAINER (clip),
+      GES_TIMELINE_ELEMENT (track_element));
 
   /* the clip should not create any TrackElement in the audio track */
   track_element = ges_clip_create_track_element (clip, a->type);

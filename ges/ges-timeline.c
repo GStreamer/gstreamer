@@ -39,6 +39,7 @@
 
 #include "ges-internal.h"
 #include "ges-project.h"
+#include "ges-container.h"
 #include "ges-timeline.h"
 #include "ges-track.h"
 #include "ges-timeline-layer.h"
@@ -670,7 +671,6 @@ create_transition (GESTimeline * timeline, GESTrackElement * previous,
     GESTrackElement * next, GESClip * transition,
     GESTimelineLayer * layer, guint64 start, guint64 duration)
 {
-  GList *trackelements;
   GESAsset *asset;
   GESAutoTransition *auto_transition;
 
@@ -686,10 +686,9 @@ create_transition (GESTimeline * timeline, GESTrackElement * previous,
   }
 
   /* We know there is only 1 TrackElement */
-  trackelements = ges_clip_get_track_elements (transition);
   auto_transition =
-      ges_auto_transition_new (trackelements->data, previous, next);
-  g_list_free_full (trackelements, gst_object_unref);
+      ges_auto_transition_new (GES_CONTAINER_CHILDREN (transition)->data,
+      previous, next);
 
   g_signal_connect (auto_transition, "destroy-me",
       G_CALLBACK (_destroy_auto_transition_cb), timeline);
@@ -760,7 +759,7 @@ _create_auto_transition_from_transitions (GESTimeline * timeline,
        * TrackElement-s in @track and if it is not the case properly unlink the
        * object to use it */
       return create_transition (timeline, prev, next,
-          ges_track_element_get_clip (maybe_transition), layer,
+          GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (maybe_transition)), layer,
           _START (next), transition_duration);
   }
 
@@ -1070,7 +1069,7 @@ ges_timeline_snap_position (GESTimeline * timeline,
     }
   }
 
-  clip = ges_track_element_get_clip (trackelement);
+  clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (trackelement));
 
   iter = g_sequence_search (priv->starts_ends, &timecode,
       (GCompareDataFunc) compare_uint64, NULL);
@@ -1081,7 +1080,7 @@ ges_timeline_snap_position (GESTimeline * timeline,
   while (!g_sequence_iter_is_end (nxt_iter)) {
     next_tc = g_sequence_get (iter);
     tmp_trackelement = g_hash_table_lookup (timeline->priv->by_object, next_tc);
-    tmp_clip = ges_track_element_get_clip (tmp_trackelement);
+    tmp_clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (tmp_trackelement));
 
     off = timecode > *next_tc ? timecode - *next_tc : *next_tc - timecode;
     if (next_tc != current && off <= snap_distance && clip != tmp_clip) {
@@ -1100,7 +1099,7 @@ ges_timeline_snap_position (GESTimeline * timeline,
   while (!g_sequence_iter_is_begin (prev_iter)) {
     prev_tc = g_sequence_get (prev_iter);
     tmp_trackelement = g_hash_table_lookup (timeline->priv->by_object, prev_tc);
-    tmp_clip = ges_track_element_get_clip (tmp_trackelement);
+    tmp_clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (tmp_trackelement));
 
     off1 = timecode > *prev_tc ? timecode - *prev_tc : *prev_tc - timecode;
     if (prev_tc != current && off1 < off && off1 <= snap_distance &&
@@ -1135,7 +1134,7 @@ add_moving_clip (MoveContext * mv_ctx, GESTrackElement * trackelement)
   GESTimelineLayer *layer;
   guint layer_prio;
 
-  clip = ges_track_element_get_clip (trackelement);
+  clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (trackelement));
 
   /* Avoid recalculating */
   if (!g_hash_table_lookup (mv_ctx->moving_clips, clip)) {
@@ -1235,7 +1234,7 @@ ges_timeline_set_moving_context (GESTimeline * timeline, GESTrackElement * obj,
   /* A TrackElement that could initiate movement for other object */
   GESTrackElement *editor_trackelement = NULL;
   MoveContext *mv_ctx = &timeline->priv->movecontext;
-  GESClip *clip = ges_track_element_get_clip (obj);
+  GESClip *clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (obj));
 
   /* Still in the same mv_ctx */
   if ((mv_ctx->clip == clip && mv_ctx->mode == mode &&
@@ -1261,7 +1260,7 @@ ges_timeline_set_moving_context (GESTimeline * timeline, GESTrackElement * obj,
   if (GES_IS_SOURCE (obj) == FALSE) {
     GList *tmp;
 
-    for (tmp = clip->trackelements; tmp; tmp = tmp->next) {
+    for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
       if (GES_IS_SOURCE (tmp->data)) {
         editor_trackelement = tmp->data;
         break;
@@ -1292,29 +1291,37 @@ ges_timeline_set_moving_context (GESTimeline * timeline, GESTrackElement * obj,
 }
 
 gboolean
-ges_timeline_trim_object_simple (GESTimeline * timeline, GESTrackElement * obj,
-    GList * layers, GESEdge edge, guint64 position, gboolean snapping)
+ges_timeline_trim_object_simple (GESTimeline * timeline,
+    GESTimelineElement * element, GList * layers, GESEdge edge,
+    guint64 position, gboolean snapping)
 {
   guint64 nstart, start, inpoint, duration, max_duration, *snapped, *cur;
   gboolean ret = TRUE;
   gint64 real_dur;
+  GESTrackElement *track_element;
 
-  GST_DEBUG_OBJECT (obj, "Trimming to %" GST_TIME_FORMAT " %s snaping, edge %i",
-      GST_TIME_ARGS (position), snapping ? "Is" : "Not", edge);
+  /* We only work with GESSource-s */
+  if (GES_IS_SOURCE (element) == FALSE)
+    return FALSE;
 
-  start = _START (obj);
-  g_object_get (obj, "max-duration", &max_duration, NULL);
+  track_element = GES_TRACK_ELEMENT (element);
+  GST_DEBUG_OBJECT (track_element, "Trimming to %" GST_TIME_FORMAT
+      " %s snaping, edge %i", GST_TIME_ARGS (position),
+      snapping ? "Is" : "Not", edge);
+
+  start = _START (track_element);
+  g_object_get (track_element, "max-duration", &max_duration, NULL);
 
   switch (edge) {
     case GES_EDGE_START:
-      inpoint = _INPOINT (obj);
-      duration = _DURATION (obj);
+      inpoint = _INPOINT (track_element);
+      duration = _DURATION (track_element);
 
       if (snapping) {
-        cur = g_hash_table_lookup (timeline->priv->by_start, obj);
+        cur = g_hash_table_lookup (timeline->priv->by_start, track_element);
 
-        snapped = ges_timeline_snap_position (timeline, obj, cur, position,
-            TRUE);
+        snapped = ges_timeline_snap_position (timeline, track_element, cur,
+            position, TRUE);
         if (snapped)
           position = *snapped;
       }
@@ -1329,28 +1336,29 @@ ges_timeline_trim_object_simple (GESTimeline * timeline, GESTrackElement * obj,
       real_dur = start + duration - nstart;
       /* FIXME: Why CLAMP (0, real_dur, max_duration) doesn't work? */
       duration = MAX (0, real_dur);
-      duration = MIN (duration, max_duration - _INPOINT (obj));
+      duration = MIN (duration, max_duration - _INPOINT (track_element));
 
       timeline->priv->needs_transitions_update = FALSE;
-      _set_start0 (GES_TIMELINE_ELEMENT (obj), nstart);
-      _set_inpoint0 (GES_TIMELINE_ELEMENT (obj), inpoint);
+      _set_start0 (GES_TIMELINE_ELEMENT (track_element), nstart);
+      _set_inpoint0 (GES_TIMELINE_ELEMENT (track_element), inpoint);
       timeline->priv->needs_transitions_update = TRUE;
 
-      _set_duration0 (GES_TIMELINE_ELEMENT (obj), duration);
+      _set_duration0 (GES_TIMELINE_ELEMENT (track_element), duration);
       break;
     case GES_EDGE_END:
     {
-      cur = g_hash_table_lookup (timeline->priv->by_end, obj);
-      snapped = ges_timeline_snap_position (timeline, obj, cur, position, TRUE);
+      cur = g_hash_table_lookup (timeline->priv->by_end, track_element);
+      snapped = ges_timeline_snap_position (timeline, track_element, cur,
+          position, TRUE);
       if (snapped)
         position = *snapped;
 
       /* Calculate new values */
       real_dur = position - start;
       duration = MAX (0, real_dur);
-      duration = MIN (duration, max_duration - _INPOINT (obj));
+      duration = MIN (duration, max_duration - _INPOINT (track_element));
 
-      _set_duration0 (GES_TIMELINE_ELEMENT (obj), duration);
+      _set_duration0 (GES_TIMELINE_ELEMENT (track_element), duration);
       break;
     }
     default:
@@ -1494,9 +1502,8 @@ timeline_trim_object (GESTimeline * timeline, GESTrackElement * object,
           edge, layers))
     goto end;
 
-  ret =
-      ges_timeline_trim_object_simple (timeline, object, layers, edge, position,
-      TRUE);
+  ret = ges_timeline_trim_object_simple (timeline,
+      GES_TIMELINE_ELEMENT (object), layers, edge, position, TRUE);
 
 end:
   mv_ctx->ignore_needs_ctx = FALSE;
@@ -1539,9 +1546,8 @@ timeline_roll_object (GESTimeline * timeline, GESTrackElement * obj,
       if (snapped)
         position = *snapped;
 
-      ret &=
-          ges_timeline_trim_object_simple (timeline, obj, layers,
-          GES_EDGE_START, position, FALSE);
+      ret &= ges_timeline_trim_object_simple (timeline,
+          GES_TIMELINE_ELEMENT (obj), layers, GES_EDGE_START, position, FALSE);
 
       /* In the case we reached max_duration we just make sure to roll
        * everything to the real new position */
@@ -1549,17 +1555,16 @@ timeline_roll_object (GESTimeline * timeline, GESTrackElement * obj,
 
       /* Send back changes to the neighbourhood */
       for (tmp = mv_ctx->moving_trackelements; tmp; tmp = tmp->next) {
-        GESTrackElement *tmptrackelement = GES_TRACK_ELEMENT (tmp->data);
+        GESTimelineElement *tmpelement = GES_TIMELINE_ELEMENT (tmp->data);
 
-        tmpstart = _START (tmptrackelement);
-        tmpduration = _DURATION (tmptrackelement);
+        tmpstart = _START (tmpelement);
+        tmpduration = _DURATION (tmpelement);
         tmpend = tmpstart + tmpduration;
 
         /* Check that the object should be resized at this position
          * even if an error accurs, we keep doing our job */
         if (tmpend == start) {
-          ret &=
-              ges_timeline_trim_object_simple (timeline, tmptrackelement, NULL,
+          ret &= ges_timeline_trim_object_simple (timeline, tmpelement, NULL,
               GES_EDGE_END, position, FALSE);
           break;
         }
@@ -1578,8 +1583,8 @@ timeline_roll_object (GESTimeline * timeline, GESTrackElement * obj,
       if (snapped)
         position = *snapped;
 
-      ret &= ges_timeline_trim_object_simple (timeline, obj, NULL, GES_EDGE_END,
-          position, FALSE);
+      ret &= ges_timeline_trim_object_simple (timeline,
+          GES_TIMELINE_ELEMENT (obj), NULL, GES_EDGE_END, position, FALSE);
 
       /* In the case we reached max_duration we just make sure to roll
        * everything to the real new position */
@@ -1587,17 +1592,16 @@ timeline_roll_object (GESTimeline * timeline, GESTrackElement * obj,
 
       /* Send back changes to the neighbourhood */
       for (tmp = mv_ctx->moving_trackelements; tmp; tmp = tmp->next) {
-        GESTrackElement *tmptrackelement = GES_TRACK_ELEMENT (tmp->data);
+        GESTimelineElement *tmpelement = GES_TIMELINE_ELEMENT (tmp->data);
 
-        tmpstart = _START (tmptrackelement);
-        tmpduration = _DURATION (tmptrackelement);
+        tmpstart = _START (tmpelement);
+        tmpduration = _DURATION (tmpelement);
         tmpend = tmpstart + tmpduration;
 
         /* Check that the object should be resized at this position
          * even if an error accure, we keep doing our job */
         if (end == tmpstart) {
-          ret &=
-              ges_timeline_trim_object_simple (timeline, tmptrackelement, NULL,
+          ret &= ges_timeline_trim_object_simple (timeline, tmpelement, NULL,
               GES_EDGE_START, position, FALSE);
         }
       }
@@ -1633,30 +1637,41 @@ timeline_move_object (GESTimeline * timeline, GESTrackElement * object,
     return FALSE;
   }
 
-  return ges_timeline_move_object_simple (timeline, object, layers, edge,
-      position);
+  return ges_timeline_move_object_simple (timeline,
+      GES_TIMELINE_ELEMENT (object), layers, edge, position);
 }
 
 gboolean
 ges_timeline_move_object_simple (GESTimeline * timeline,
-    GESTrackElement * object, GList * layers, GESEdge edge, guint64 position)
+    GESTimelineElement * element, GList * layers, GESEdge edge,
+    guint64 position)
 {
   guint64 *snap_end, *snap_st, *cur, off1, off2, end;
+  GESTrackElement *track_element;
 
-  end = position + _DURATION (object);
-  cur = g_hash_table_lookup (timeline->priv->by_end, object);
+  /* We only work with GESSource-s and we check that we are not already moving
+   * element ourself*/
+  if (GES_IS_SOURCE (element) == FALSE ||
+      g_list_find (timeline->priv->movecontext.moving_trackelements, element))
+    return FALSE;
+
+  track_element = GES_TRACK_ELEMENT (element);
+  end = position + _DURATION (track_element);
+  cur = g_hash_table_lookup (timeline->priv->by_end, track_element);
 
   GST_DEBUG_OBJECT (timeline, "Moving to %" GST_TIME_FORMAT " (end %"
       GST_TIME_FORMAT ")", GST_TIME_ARGS (position), GST_TIME_ARGS (end));
 
-  snap_end = ges_timeline_snap_position (timeline, object, cur, end, FALSE);
+  snap_end = ges_timeline_snap_position (timeline, track_element, cur, end,
+      FALSE);
   if (snap_end)
     off1 = end > *snap_end ? end - *snap_end : *snap_end - end;
   else
     off1 = G_MAXUINT64;
 
-  cur = g_hash_table_lookup (timeline->priv->by_start, object);
-  snap_st = ges_timeline_snap_position (timeline, object, cur, position, FALSE);
+  cur = g_hash_table_lookup (timeline->priv->by_start, track_element);
+  snap_st = ges_timeline_snap_position (timeline, track_element, cur, position,
+      FALSE);
   if (snap_st)
     off2 = position > *snap_st ? position - *snap_st : *snap_st - position;
   else
@@ -1665,15 +1680,15 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
   /* In the case we could snap on both sides, we snap on the end */
   if (snap_end && off1 <= off2) {
     position = position + *snap_end - end;
-    ges_timeline_emit_snappig (timeline, object, snap_end);
+    ges_timeline_emit_snappig (timeline, track_element, snap_end);
   } else if (snap_st) {
     position = position + *snap_st - position;
-    ges_timeline_emit_snappig (timeline, object, snap_st);
+    ges_timeline_emit_snappig (timeline, track_element, snap_st);
   } else
-    ges_timeline_emit_snappig (timeline, object, NULL);
+    ges_timeline_emit_snappig (timeline, track_element, NULL);
 
 
-  _set_start0 (GES_TIMELINE_ELEMENT (object), position);
+  _set_start0 (GES_TIMELINE_ELEMENT (track_element), position);
 
   return TRUE;
 }
@@ -1732,7 +1747,8 @@ static void
 add_object_to_track (GESClip * clip, GESTrackElement * track_element,
     GESTrack * track)
 {
-  if (!ges_clip_add_track_element (clip, track_element)) {
+  if (!ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (track_element))) {
     GST_WARNING_OBJECT (clip, "Failed to add track element to clip");
     gst_object_unref (track_element);
     return;
@@ -1740,7 +1756,8 @@ add_object_to_track (GESClip * clip, GESTrackElement * track_element,
 
   if (!ges_track_add_element (track, track_element)) {
     GST_WARNING_OBJECT (clip, "Failed to add track element to track");
-    ges_clip_release_track_element (clip, track_element);
+    ges_container_remove (GES_CONTAINER (clip),
+        GES_TIMELINE_ELEMENT (track_element));
     gst_object_unref (track_element);
     return;
   }
@@ -1896,7 +1913,7 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESClip * clip,
   /* Go over the clip's track element and figure out which one belongs to
    * the list of tracks we control */
 
-  trackelements = ges_clip_get_track_elements (clip);
+  trackelements = ges_container_get_children (GES_CONTAINER (clip));
   for (tmp = trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *track_element = (GESTrackElement *) tmp->data;
 
@@ -1909,13 +1926,12 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESClip * clip,
 
       ges_track_remove_element (ges_track_element_get_track (track_element),
           track_element);
-      ges_clip_release_track_element (clip, track_element);
+      ges_container_remove (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (track_element));
     }
-    /* removing the reference added by _get_track_elements() */
-    g_object_unref (track_element);
   }
 
-  g_list_free (trackelements);
+  g_list_free_full (trackelements, gst_object_unref);
 
   GST_DEBUG ("Done");
 }

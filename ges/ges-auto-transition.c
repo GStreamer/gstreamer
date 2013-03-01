@@ -73,7 +73,8 @@ _height_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
   /* FIXME This is really not smart and we should properly implement clip
    * priority management at the TimelineLayer level */
   _set_priority0 (GES_TIMELINE_ELEMENT (self->next_clip),
-      _PRIORITY (self->previous_clip) + self->previous_clip->height);
+      _PRIORITY (self->previous_clip) +
+      GES_CONTAINER_HEIGHT (self->previous_clip));
 }
 
 static void
@@ -138,9 +139,10 @@ ges_auto_transition_new (GESTrackElement * transition,
   self->next_source = next_source;
   self->transition = transition;
 
-  self->previous_clip = ges_track_element_get_clip (previous_source);
-  self->next_clip = ges_track_element_get_clip (next_source);
-  self->transition_clip = ges_track_element_get_clip (transition);
+  self->previous_clip =
+      GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (previous_source));
+  self->next_clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (next_source));
+  self->transition_clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (transition));
 
   g_signal_connect (previous_source, "notify::start",
       G_CALLBACK (neighbour_changed_cb), self);

@@ -280,25 +280,20 @@ ges_uri_clip_init (GESUriClip * self)
 void
 ges_uri_clip_set_mute (GESUriClip * self, gboolean mute)
 {
-  GList *tmp, *trackelements;
-  GESClip *clip = (GESClip *) self;
+  GList *tmp;
 
   GST_DEBUG ("self:%p, mute:%d", self, mute);
 
   self->priv->mute = mute;
 
   /* Go over tracked objects, and update 'active' status on all audio objects */
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = g_list_next (tmp)) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_AUDIO)
       ges_track_element_set_active (trackelement, !mute);
-
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackelements);
 }
 
 gboolean
@@ -445,12 +440,9 @@ ges_uri_clip_new (gchar * uri)
 void
 ges_uri_clip_set_uri (GESUriClip * self, gchar * uri)
 {
-  GESClip *clip = GES_CLIP (self);
-  GList *trackelements = ges_clip_get_track_elements (clip);
-
-  if (trackelements) {
+  if (GES_CONTAINER_CHILDREN (self)) {
     /* FIXME handle this case properly */
-    GST_WARNING_OBJECT (clip, "Can not change uri when already"
+    GST_WARNING_OBJECT (self, "Can not change uri when already"
         "containing TrackElements");
 
     return;

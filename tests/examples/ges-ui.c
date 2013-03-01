@@ -1081,7 +1081,8 @@ app_add_effect_on_selected_clips (App * app, const gchar * bin_desc,
 
   for (tmp = objects; tmp; tmp = tmp->next) {
     effect = GES_TRACK_ELEMENT (ges_effect_new (bin_desc));
-    ges_clip_add_track_element (GES_CLIP (tmp->data), effect);
+    ges_container_add (GES_CONTAINER (tmp->data),
+        GES_TIMELINE_ELEMENT (effect));
 
     if (type == GES_TRACK_TYPE_VIDEO)
       ges_track_add_element (app->video_track, effect);

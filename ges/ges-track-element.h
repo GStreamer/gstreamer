@@ -122,11 +122,6 @@ GESTrackType ges_track_element_get_track_type  (GESTrackElement * object);
 void ges_track_element_set_track_type          (GESTrackElement * object,
                                                GESTrackType     type);
 
-void ges_track_element_set_clip     (GESTrackElement * object,
-                                               GESClip * clipect);
-GESClip *
-ges_track_element_get_clip          (GESTrackElement* object);
-
 GstElement * ges_track_element_get_gnlobject   (GESTrackElement * object);
 
 GstElement * ges_track_element_get_element     (GESTrackElement * object);

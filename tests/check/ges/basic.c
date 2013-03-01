@@ -56,7 +56,7 @@ GST_START_TEST (test_ges_scenario)
   GESTrack *track;
   GESCustomSourceClip *source;
   GESTrackElement *trackelement;
-  GList *trackelements, *tmp, *layers, *tracks;
+  GList *trackelements, *layers, *tracks;
 
   ges_init ();
   /* This is the simplest scenario ever */
@@ -112,19 +112,14 @@ GST_START_TEST (test_ges_scenario)
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
 
   /* Make sure the associated TrackElement is in the Track */
-  trackelements = ges_clip_get_track_elements (GES_CLIP (source));
+  trackelements = GES_CONTAINER_CHILDREN (source);
   fail_unless (trackelements != NULL);
   trackelement = GES_TRACK_ELEMENT (trackelements->data);
-  /* There are 4 references:
+  /* There are 3 references:
    * 1 by the clip
    * 1 by the track
-   * 1 by the timeline
-   * 1 added by the call to _get_track_elements() above */
-  ASSERT_OBJECT_REFCOUNT (trackelement, "trackelement", 4);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
-  }
-  g_list_free (trackelements);
+   * 1 by the timeline */
+  ASSERT_OBJECT_REFCOUNT (trackelement, "trackelement", 3);
   /* There are 3 references:
    * 1 by the clip
    * 1 by the timeline
@@ -141,7 +136,7 @@ GST_START_TEST (test_ges_scenario)
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
   tmp_layer = ges_clip_get_layer (GES_CLIP (source));
   fail_unless (tmp_layer == NULL);
-  trackelements = ges_clip_get_track_elements (GES_CLIP (source));
+  trackelements = GES_CONTAINER_CHILDREN (source);
   fail_unless (trackelements == NULL);  /* No unreffing then */
   g_object_unref (source);
 
@@ -184,7 +179,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
   GESTimelineLayer *layer, *tmp_layer;
   GESTrack *track;
   GESCustomSourceClip *s1, *s2, *s3;
-  GList *trackelements, *tmp, *layers;
+  GList *trackelements, *layers;
   GESTrackElement *trackelement;
 
   ges_init ();
@@ -248,45 +243,34 @@ GST_START_TEST (test_ges_timeline_add_layer)
   g_list_free (layers);
 
   /* Make sure the associated TrackElements are in the Track */
-  trackelements = ges_clip_get_track_elements (GES_CLIP (s1));
+  trackelements = GES_CONTAINER_CHILDREN (s1);
   fail_unless (trackelements != NULL);
   trackelement = GES_TRACK_ELEMENT (trackelements->data);
-  /* There are 4 references:
+  /* There are 3 references:
    * 1 by the clip
    * 1 by the trackelement
-   * 1 by the timeline
-   * 1 added by the call to _get_track_elements() above */
-  ASSERT_OBJECT_REFCOUNT (trackelement, "trackelement", 4);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
-  }
-  g_list_free (trackelements);
+   * 1 by the timeline */
+  ASSERT_OBJECT_REFCOUNT (trackelement, "trackelement", 3);
   /* There are 3 references:
    * 1 by the clip
    * 1 by the timeline
    * 1 by the trackelement */
   ASSERT_OBJECT_REFCOUNT (trackelement, "trackelement", 3);
 
-  trackelements = ges_clip_get_track_elements (GES_CLIP (s2));
+  trackelements = GES_CONTAINER_CHILDREN (s2);
   trackelement = GES_TRACK_ELEMENT (trackelements->data);
   fail_unless (trackelements != NULL);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
-  }
-  g_list_free (trackelements);
+
   /* There are 3 references:
    * 1 by the clip
    * 1 by the timeline
    * 1 by the trackelement */
   ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (trackelement), "trackelement", 3);
 
-  trackelements = ges_clip_get_track_elements (GES_CLIP (s3));
+  trackelements = GES_CONTAINER_CHILDREN (s3);
   trackelement = GES_TRACK_ELEMENT (trackelements->data);
   fail_unless (trackelements != NULL);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
-  }
-  g_list_free (trackelements);
+
   /* There are 3 references:
    * 1 by the clip
    * 1 by the timeline
@@ -366,44 +350,35 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   fail_unless ((gpointer) GST_ELEMENT_PARENT (track) == (gpointer) timeline);
 
   /* Make sure the associated TrackElements are in the Track */
-  trackelements = ges_clip_get_track_elements (GES_CLIP (s1));
+  trackelements = GES_CONTAINER_CHILDREN (s1);
   fail_unless (trackelements != NULL);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
-    /* Each object has 4 references:
+    /* Each object has 3 references:
      * 1 by the clip
      * 1 by the track
-     * 1 by the timeline
-     * 1 added by _get_track_element() above */
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 4);
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
+     * 1 by the timeline */
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
   }
-  g_list_free (trackelements);
 
-  trackelements = ges_clip_get_track_elements (GES_CLIP (s2));
+  trackelements = GES_CONTAINER_CHILDREN (s2);
   fail_unless (trackelements != NULL);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
-    /* Each object has 4 references:
+    /* Each object has 3 references:
      * 1 by the clip
      * 1 by the track
-     * 1 by the timeline
-     * 1 added by _get_track_element() above */
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 4);
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
+     * 1 by the timeline */
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
   }
-  g_list_free (trackelements);
 
-  trackelements = ges_clip_get_track_elements (GES_CLIP (s3));
+  trackelements = GES_CONTAINER_CHILDREN (s3);
   fail_unless (trackelements != NULL);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
-    /* Each object has 4 references:
+    /* Each object has 3 references:
      * 1 by the clip
      * 1 by the track
-     * 1 by the timeline
-     * 1 added by _get_track_element() above */
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 4);
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
+     * 1 by the timeline */
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
   }
-  g_list_free (trackelements);
 
   /* theoretically this is all we need to do to ensure cleanup */
   g_object_unref (timeline);
@@ -478,67 +453,58 @@ GST_START_TEST (test_ges_timeline_remove_track)
   fail_unless ((gpointer) GST_ELEMENT_PARENT (track) == (gpointer) timeline);
 
   /* Make sure the associated TrackElements are in the Track */
-  trackelements = ges_clip_get_track_elements (GES_CLIP (s1));
+  trackelements = GES_CONTAINER_CHILDREN (s1);
   fail_unless (trackelements != NULL);
   t1 = GES_TRACK_ELEMENT ((trackelements)->data);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
-    /* There are 4 references held:
+    /* There are 3 references held:
      * 1 by the clip
      * 1 by the track
-     * 1 by the timeline
-     * 1 added by the call to _get_track_elements() above */
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 4);
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
+     * 1 by the timeline */
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
   }
   g_object_ref (t1);
-  g_list_free (trackelements);
-  /* There are 4 references held:
-   * 1 by the timelinobject
+  /* There are 3 references held:
+   * 1 by the container
    * 1 by the track
    * 1 by the timeline
    * 1 added by ourselves above (g_object_ref (t1)) */
   ASSERT_OBJECT_REFCOUNT (t1, "trackelement", 4);
 
-  trackelements = ges_clip_get_track_elements (GES_CLIP (s2));
+  trackelements = GES_CONTAINER_CHILDREN (s2);
   fail_unless (trackelements != NULL);
   t2 = GES_TRACK_ELEMENT (trackelements->data);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
-    /* There are 4 references held:
+    /* There are 3 references held:
      * 1 by the clip
      * 1 by the track
-     * 1 by the timeline
-     * 1 added by the call to _get_track_elements() above */
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 4);
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
+     * 1 by the timeline */
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
   }
   g_object_ref (t2);
-  g_list_free (trackelements);
-  /* There are 4 references held:
-   * 1 by the timelinobject
+  /* There are 3 references held:
+   * 1 by the container
    * 1 by the track
    * 1 by the timeline
-   * 1 added by ourselves above (g_object_ref (t1)) */
+   * 1 added by ourselves above (g_object_ref (t2)) */
   ASSERT_OBJECT_REFCOUNT (t2, "t2", 4);
 
-  trackelements = ges_clip_get_track_elements (GES_CLIP (s3));
+  trackelements = GES_CONTAINER_CHILDREN (s3);
   fail_unless (trackelements != NULL);
   t3 = GES_TRACK_ELEMENT (trackelements->data);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
-    /* There are 4 references held:
+    /* There are 3 references held:
      * 1 by the clip
      * 1 by the track
-     * 1 by the timeline
-     * 1 added by the call to _get_track_elements() above */
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 4);
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
+     * 1 by the timeline */
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
   }
   g_object_ref (t3);
-  g_list_free (trackelements);
-  /* There are 4 references held:
-   * 1 by the timelinobject
+  /* There are 3 references held:
+   * 1 by the container
    * 1 by the track
    * 1 by the timeline
-   * 1 added by ourselves above (g_object_ref (t1)) */
+   * 1 added by ourselves above (g_object_ref (t3)) */
   ASSERT_OBJECT_REFCOUNT (t3, "t3", 4);
 
   /* remove the track and check that the track elements have been released */
@@ -659,70 +625,61 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   g_list_free (layers);
 
   /* Make sure the associated TrackElements are in the Track */
-  trackelements = ges_clip_get_track_elements (GES_CLIP (s1));
+  trackelements = GES_CONTAINER_CHILDREN (s1);
   fail_unless (trackelements != NULL);
   t1 = GES_TRACK_ELEMENT ((trackelements)->data);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
-    /* There are 4 references held:
+    /* There are 3 references held:
      * 1 by the clip
      * 1 by the track
-     * 1 by the timeline
-     * 1 added by the call to _get_track_elements() above */
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 4);
+     * 1 by the timeline */
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
     fail_unless (ges_track_element_get_track (tmp->data) == track1);
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
   g_object_ref (t1);
-  g_list_free (trackelements);
-  /* There are 4 references held:
-   * 1 by the timelinobject
+  /* There are 3 references held:
+   * 1 by the container
    * 1 by the track
    * 1 by the timeline
    * 1 added by ourselves above (g_object_ref (t1)) */
   ASSERT_OBJECT_REFCOUNT (t1, "trackelement", 4);
 
-  trackelements = ges_clip_get_track_elements (GES_CLIP (s2));
+  trackelements = GES_CONTAINER_CHILDREN (s2);
   fail_unless (trackelements != NULL);
   t2 = GES_TRACK_ELEMENT (trackelements->data);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
-    /* There are 4 references held:
+    /* There are 3 references held:
      * 1 by the clip
      * 1 by the track
-     * 1 by the timeline
-     * 1 added by the call to _get_track_elements() above */
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 4);
+     * 1 by the timeline */
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
     fail_unless (ges_track_element_get_track (tmp->data) == track2);
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
   g_object_ref (t2);
-  g_list_free (trackelements);
-  /* There are 4 references held:
-   * 1 by the timelinobject
+  /* There are 3 references held:
+   * 1 by the container
    * 1 by the track
    * 1 by the timeline
-   * 1 added by ourselves above (g_object_ref (t1)) */
+   * 1 added by ourselves above (g_object_ref (t2)) */
   ASSERT_OBJECT_REFCOUNT (t2, "t2", 4);
 
-  trackelements = ges_clip_get_track_elements (GES_CLIP (s3));
+  trackelements = GES_CONTAINER_CHILDREN (s3);
   fail_unless (trackelements != NULL);
   t3 = GES_TRACK_ELEMENT (trackelements->data);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
-    /* There are 4 references held:
+    /* There are 3 references held:
      * 1 by the clip
      * 1 by the track
-     * 1 by the timeline
-     * 1 added by the call to _get_track_elements() above */
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 4);
+     * 1 by the timeline */
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
     fail_unless (ges_track_element_get_track (tmp->data) == track1);
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
   g_object_ref (t3);
-  g_list_free (trackelements);
-  /* There are 4 references held:
-   * 1 by the timelinobject
+  /* There are 3 references held:
+   * 1 by the container
    * 1 by the track
    * 1 by the timeline
-   * 1 added by ourselves above (g_object_ref (t1)) */
+   * 1 added by ourselves above (g_object_ref (t3)) */
   ASSERT_OBJECT_REFCOUNT (t3, "t3", 4);
 
   g_object_unref (t1);

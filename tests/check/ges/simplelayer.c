@@ -274,7 +274,8 @@ GST_START_TEST (test_gsl_with_transitions)
   source2 = ges_custom_source_clip_new (arbitrary_fill_track_func,
       (gpointer) ELEMENT);
   g_object_set (source2, "duration", GST_SECOND, "start", (guint64) 42, NULL);
-  GES_CLIP (source2)->height = 4;
+  GES_CONTAINER_HEIGHT (source2) = 4;
+
   fail_unless_equals_uint64 (_DURATION (source2), GST_SECOND);
 
   source3 = ges_custom_source_clip_new (arbitrary_fill_track_func,
@@ -330,7 +331,6 @@ GST_START_TEST (test_gsl_with_transitions)
   /* add objects in sequence */
 
   GST_DEBUG ("Adding source1");
-
   fail_unless (ges_simple_timeline_layer_add_object (gstl,
           GES_CLIP (source1), -1));
   fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);
@@ -338,7 +338,6 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless_equals_uint64 (_PRIORITY (source1), 2);
 
   GST_DEBUG ("Adding tr1");
-
   fail_unless (ges_simple_timeline_layer_add_object (gstl, GES_CLIP (tr1), -1));
   fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);
   fail_unless_equals_uint64 (_START (source1), 0);
@@ -348,7 +347,6 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless_equals_uint64 (_PRIORITY (tr1), 1);
 
   GST_DEBUG ("Adding source2");
-
   fail_unless (ges_simple_timeline_layer_add_object (gstl,
           GES_CLIP (source2), -1));
   fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);

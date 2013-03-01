@@ -257,13 +257,13 @@ GST_START_TEST (test_layer_priorities)
   assert_equals_int (prio2, 2 * LAYER_HEIGHT + 1);
   assert_equals_int (prio3, LAYER_HEIGHT * 3 - 1);
 
-  /* And change TrackElement-s priorities and check that changes are well
+  /* And change TrackElement-s priorities and check that changes are not
    * refected on it containing Clip */
   ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (trackelement3),
       LAYER_HEIGHT * 2);
   g_object_get (gnlobj3, "priority", &prio3, NULL);
   assert_equals_int (prio3, 2 * LAYER_HEIGHT);
-  assert_equals_int (_PRIORITY (clip3), 0);
+  assert_equals_int (_PRIORITY (clip3), LAYER_HEIGHT - 1);
 
   g_object_unref (trackelement1);
   g_object_unref (trackelement2);
@@ -1230,9 +1230,8 @@ GST_START_TEST (test_layer_activate_automatic_transition)
       GES_CLIP (ges_timeline_layer_add_asset (layer,
           transition_asset, 1000, 0, 500, 1, GES_TRACK_TYPE_VIDEO));
   fail_unless (GES_IS_TRANSITION_CLIP (transition));
-  objects = ges_clip_get_track_elements (transition);
+  objects = GES_CONTAINER_CHILDREN (transition);
   assert_equals_int (g_list_length (objects), 1);
-  g_list_free_full (objects, gst_object_unref);
 
   GST_DEBUG ("Checking the transitions");
   /*

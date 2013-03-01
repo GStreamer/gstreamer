@@ -44,6 +44,9 @@ typedef struct _GESTimelineLayerClass GESTimelineLayerClass;
 typedef struct _GESTimelineElementClass GESTimelineElementClass;
 typedef struct _GESTimelineElement GESTimelineElement;
 
+typedef struct _GESContainer GESContainer;
+typedef struct _GESContainerClass GESContainerClass;
+
 typedef struct _GESClip GESClip;
 typedef struct _GESClipClass GESClipClass;
 

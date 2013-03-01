@@ -185,7 +185,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
 
     clip = (GESClip *) tmp->data;
     dur = _DURATION (clip);
-    height = GES_CLIP_HEIGHT (clip);
+    height = GES_CONTAINER_HEIGHT (clip);
 
     if (GES_IS_SOURCE_CLIP (clip)) {
 

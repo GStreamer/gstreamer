@@ -185,7 +185,7 @@ ges_track_element_dispose (GObject * object)
     GstState cstate;
 
     if (priv->track != NULL) {
-      GST_ERROR_OBJECT (object, "Still in %p, this means that you forgot"
+      g_error ("Still in %p, this means that you forgot"
           " to remove it from the GESTrack it is contained in. You always need"
           " to remove a GESTrackElement from its track before dropping the last"
           " reference\n"
@@ -308,9 +308,6 @@ _set_start (GESTimelineElement * element, GstClockTime start)
 {
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
 
-  GST_DEBUG ("object:%p, start:%" GST_TIME_FORMAT,
-      object, GST_TIME_ARGS (start));
-
   if (object->priv->gnlobject != NULL) {
     if (G_UNLIKELY (start == _START (object)))
       return FALSE;
@@ -326,9 +323,6 @@ static gboolean
 _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
 {
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
-
-  GST_DEBUG ("object:%p, inpoint:%" GST_TIME_FORMAT,
-      object, GST_TIME_ARGS (inpoint));
 
   if (object->priv->gnlobject != NULL) {
     if (G_UNLIKELY (inpoint == _INPOINT (object)))
@@ -347,9 +341,6 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
 {
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
   GESTrackElementPrivate *priv = object->priv;
-
-  GST_DEBUG ("object:%p, duration:%" GST_TIME_FORMAT,
-      object, GST_TIME_ARGS (duration));
 
   if (GST_CLOCK_TIME_IS_VALID (_MAXDURATION (element)) &&
       duration > _INPOINT (object) + _MAXDURATION (element))
@@ -440,13 +431,13 @@ gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
 
   g_object_get (gnlobject, "start", &start, NULL);
 
-  GST_DEBUG ("gnlobject start : %" GST_TIME_FORMAT " current : %"
+  GST_DEBUG_OBJECT (gnlobject, "start : %" GST_TIME_FORMAT " current : %"
       GST_TIME_FORMAT, GST_TIME_ARGS (start),
       GST_TIME_ARGS (_START (track_element)));
 
   if (start != _START (track_element)) {
-    _START (track_element) = start;
-    g_object_notify (G_OBJECT (track_element), "start");
+    ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (track_element),
+        start);
   }
 }
 
@@ -492,13 +483,13 @@ gnlobject_media_start_cb (GstElement * gnlobject,
 
   g_object_get (gnlobject, "media-start", &inpoint, NULL);
 
-  GST_DEBUG ("gnlobject in-point : %" GST_TIME_FORMAT " current : %"
+  GST_DEBUG_OBJECT (gnlobject, "in-point : %" GST_TIME_FORMAT " current : %"
       GST_TIME_FORMAT, GST_TIME_ARGS (inpoint),
       GST_TIME_ARGS (_INPOINT (track_element)));
 
   if (inpoint != _INPOINT (track_element)) {
-    _INPOINT (track_element) = inpoint;
-    g_object_notify (G_OBJECT (track_element), "in-point");
+    ges_timeline_element_set_inpoint (GES_TIMELINE_ELEMENT (track_element),
+        inpoint);
   }
 }
 
@@ -514,8 +505,8 @@ gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
       _PRIORITY (track_element));
 
   if (priority != _PRIORITY (track_element)) {
-    _PRIORITY (track_element) = priority;
-    g_object_notify (G_OBJECT (track_element), "priority");
+    ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (track_element),
+        priority);
   }
 }
 
@@ -524,9 +515,6 @@ gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     GESTrackElement * track_element)
 {
   guint64 duration;
-  GESTrackElementClass *klass;
-
-  klass = GES_TRACK_ELEMENT_GET_CLASS (track_element);
 
   g_object_get (gnlobject, "duration", &duration, NULL);
 
@@ -535,10 +523,8 @@ gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
       GST_TIME_ARGS (_DURATION (track_element)));
 
   if (duration != _DURATION (track_element)) {
-    _DURATION (track_element) = duration;
-    if (klass->duration_changed)
-      klass->duration_changed (track_element, duration);
-    g_object_notify (G_OBJECT (track_element), "duration");
+    ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (track_element),
+        duration);
   }
 }
 
@@ -777,38 +763,6 @@ ges_track_element_get_track (GESTrackElement * object)
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
 
   return object->priv->track;
-}
-
-/**
- * ges_track_element_set_clip:
- * @object: The #GESTrackElement to set the parent to
- * @clipect: The #GESClip, parent of @clip or %NULL
- *
- * Set the #GESClip to which @object belongs.
- */
-void
-ges_track_element_set_clip (GESTrackElement * object, GESClip * clipect)
-{
-  GST_DEBUG ("object:%p, clip:%p", object, clipect);
-
-  object->priv->timelineobj = clipect;
-}
-
-/**
- * ges_track_element_get_clip:
- * @object: a #GESTrackElement
- *
- * Get the #GESClip which is controlling this track element
- *
- * Returns: (transfer none): the #GESClip which is controlling
- * this track element
- */
-GESClip *
-ges_track_element_get_clip (GESTrackElement * object)
-{
-  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
-
-  return object->priv->timelineobj;
 }
 
 /**

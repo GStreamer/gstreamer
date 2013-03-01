@@ -266,8 +266,7 @@ ges_text_overlay_clip_init (GESTextOverlayClip * self)
 void
 ges_text_overlay_clip_set_text (GESTextOverlayClip * self, const gchar * text)
 {
-  GList *tmp, *trackelements;
-  GESClip *clip = (GESClip *) self;
+  GList *tmp;
 
   GST_DEBUG ("self:%p, text:%s", self, text);
 
@@ -276,18 +275,14 @@ ges_text_overlay_clip_set_text (GESTextOverlayClip * self, const gchar * text)
 
   self->priv->text = g_strdup (text);
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_VIDEO)
       ges_text_overlay_set_text (GES_TEXT_OVERLAY (trackelement),
           self->priv->text);
-
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackelements);
 }
 
 /**
@@ -302,8 +297,7 @@ void
 ges_text_overlay_clip_set_font_desc (GESTextOverlayClip * self,
     const gchar * font_desc)
 {
-  GList *tmp, *trackelements;
-  GESClip *clip = (GESClip *) self;
+  GList *tmp;
 
   GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
 
@@ -312,18 +306,14 @@ ges_text_overlay_clip_set_font_desc (GESTextOverlayClip * self,
 
   self->priv->font_desc = g_strdup (font_desc);
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_VIDEO)
       ges_text_overlay_set_font_desc (GES_TEXT_OVERLAY
           (trackelement), self->priv->font_desc);
-
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackelements);
 
 }
 
@@ -339,25 +329,20 @@ void
 ges_text_overlay_clip_set_halign (GESTextOverlayClip * self,
     GESTextHAlign halign)
 {
-  GList *tmp, *trackelements;
-  GESClip *clip = (GESClip *) self;
+  GList *tmp;
 
   GST_DEBUG ("self:%p, halign:%d", self, halign);
 
   self->priv->halign = halign;
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_VIDEO)
       ges_text_overlay_set_halignment (GES_TEXT_OVERLAY
           (trackelement), self->priv->halign);
-
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackelements);
 
 }
 
@@ -373,25 +358,20 @@ void
 ges_text_overlay_clip_set_valign (GESTextOverlayClip * self,
     GESTextVAlign valign)
 {
-  GList *tmp, *trackelements;
-  GESClip *clip = (GESClip *) self;
+  GList *tmp;
 
   GST_DEBUG ("self:%p, valign:%d", self, valign);
 
   self->priv->valign = valign;
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_VIDEO)
       ges_text_overlay_set_valignment (GES_TEXT_OVERLAY
           (trackelement), self->priv->valign);
-
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackelements);
 
 }
 
@@ -407,25 +387,20 @@ ges_text_overlay_clip_set_valign (GESTextOverlayClip * self,
 void
 ges_text_overlay_clip_set_color (GESTextOverlayClip * self, guint32 color)
 {
-  GList *tmp, *trackelements;
-  GESClip *clip = (GESClip *) self;
+  GList *tmp;
 
   GST_DEBUG ("self:%p, color:%d", self, color);
 
   self->priv->color = color;
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_VIDEO)
       ges_text_overlay_set_color (GES_TEXT_OVERLAY (trackelement),
           self->priv->color);
-
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackelements);
 }
 
 /**
@@ -440,25 +415,20 @@ ges_text_overlay_clip_set_color (GESTextOverlayClip * self, guint32 color)
 void
 ges_text_overlay_clip_set_xpos (GESTextOverlayClip * self, gdouble position)
 {
-  GList *tmp, *trackelements;
-  GESClip *clip = (GESClip *) self;
+  GList *tmp;
 
   GST_DEBUG ("self:%p, xpos:%f", self, position);
 
   self->priv->xpos = position;
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_VIDEO)
       ges_text_overlay_set_xpos (GES_TEXT_OVERLAY (trackelement),
           self->priv->xpos);
-
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackelements);
 }
 
 /**
@@ -473,25 +443,20 @@ ges_text_overlay_clip_set_xpos (GESTextOverlayClip * self, gdouble position)
 void
 ges_text_overlay_clip_set_ypos (GESTextOverlayClip * self, gdouble position)
 {
-  GList *tmp, *trackelements;
-  GESClip *clip = (GESClip *) self;
+  GList *tmp;
 
   GST_DEBUG ("self:%p, ypos:%f", self, position);
 
   self->priv->ypos = position;
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_VIDEO)
       ges_text_overlay_set_ypos (GES_TEXT_OVERLAY (trackelement),
           self->priv->ypos);
-
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackelements);
 }
 
 /**

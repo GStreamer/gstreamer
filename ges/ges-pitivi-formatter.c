@@ -151,7 +151,7 @@ static void
 save_track_elements (xmlTextWriterPtr writer, GList * source_list,
     GESTrackType type, gint * id)
 {
-  GList *tmp, *track_elements, *tmp_tck;
+  GList *tmp, *tmp_tck;
   gchar *bin_desc;
   xmlTextWriterStartElement (writer, BAD_CAST "track-objects");
 
@@ -166,8 +166,8 @@ save_track_elements (xmlTextWriterPtr writer, GList * source_list,
     clip = srcmap->clip;
 
     /* Save track associated objects */
-    track_elements = ges_clip_get_track_elements (clip);
-    for (tmp_tck = track_elements; tmp_tck; tmp_tck = tmp_tck->next) {
+    for (tmp_tck = GES_CONTAINER_CHILDREN (clip); tmp_tck;
+        tmp_tck = tmp_tck->next) {
       xmlChar *cast;
       GESTrackElement *trackelement = GES_TRACK_ELEMENT (tmp_tck->data);
       GESTrack *track = ges_track_element_get_track (trackelement);
@@ -752,14 +752,13 @@ track_element_added_cb (GESClip * clip,
     GESTrackElement * track_element, GHashTable * props_table)
 {
   gchar *media_type = NULL, *lockedstr;
-  GList *track_elements = NULL, *tmp = NULL;
+  GList *tmp = NULL;
   GESTrack *track;
   gint64 start, duration;
   gboolean has_effect = FALSE, locked = TRUE;
   gint type = 0;
   GESPitiviFormatter *formatter;
 
-  track_elements = ges_clip_get_track_elements (clip);
   media_type = (gchar *) g_hash_table_lookup (props_table, "media_type");
   lockedstr = (gchar *) g_hash_table_lookup (props_table, "locked");
 
@@ -782,8 +781,7 @@ track_element_added_cb (GESClip * clip,
   if (lockedstr && !g_strcmp0 (lockedstr, "(bool)False"))
     locked = FALSE;
 
-  for (tmp = track_elements; tmp; tmp = tmp->next) {
-
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     if (!GES_IS_TRACK_ELEMENT (tmp->data)) {
       /* If we arrive here something massively screwed */
       GST_ERROR ("Not a TrackElement, this is a bug");
@@ -819,13 +817,12 @@ track_element_added_cb (GESClip * clip,
   }
 
   if (has_effect) {
-    track_elements = ges_clip_get_track_elements (clip);
 
     /* FIXME make sure this is the way we want to handle that
      * ie: set duration and start as the other trackelement
      * and no let full control to the user. */
 
-    for (tmp = track_elements; tmp; tmp = tmp->next) {
+    for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
       /* We set the effects start and duration */
       track = ges_track_element_get_track (tmp->data);
 
@@ -939,7 +936,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
       effect_table =
           g_hash_table_lookup (props_table, (gchar *) "effect_props");
 
-      ges_clip_add_track_element (GES_CLIP (src), GES_TRACK_ELEMENT (effect));
+      ges_container_add (GES_CONTAINER (src), GES_TIMELINE_ELEMENT (effect));
 
       if (!g_strcmp0 (active, (gchar *) "(bool)False"))
         ges_track_element_set_active (GES_TRACK_ELEMENT (effect), FALSE);

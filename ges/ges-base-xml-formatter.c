@@ -452,7 +452,7 @@ _add_track_element (GESFormatter * self, GESClip * clip,
   GST_DEBUG_OBJECT (self, "Adding track_element: %" GST_PTR_FORMAT
       " To : %" GST_PTR_FORMAT, trackelement, clip);
 
-  ges_clip_add_track_element (clip, trackelement);
+  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
   ges_track_add_element (track, trackelement);
   gst_structure_foreach (children_properties,
       (GstStructureForeachFunc) _set_child_property, trackelement);

@@ -185,25 +185,20 @@ ges_test_clip_init (GESTestClip * self)
 void
 ges_test_clip_set_mute (GESTestClip * self, gboolean mute)
 {
-  GList *tmp, *trackelements;
-  GESClip *clip = (GESClip *) self;
+  GList *tmp;
 
   GST_DEBUG ("self:%p, mute:%d", self, mute);
 
   self->priv->mute = mute;
 
   /* Go over tracked objects, and update 'active' status on all audio objects */
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
 
     if (ges_track_element_get_track (trackelement)->type ==
         GES_TRACK_TYPE_AUDIO)
       ges_track_element_set_active (trackelement, !mute);
-
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackelements);
 }
 
 /**
@@ -217,21 +212,16 @@ ges_test_clip_set_mute (GESTestClip * self, gboolean mute)
 void
 ges_test_clip_set_vpattern (GESTestClip * self, GESVideoTestPattern vpattern)
 {
-  GList *tmp, *trackelements;
-  GESClip *clip = (GESClip *) self;
+  GList *tmp;
 
   self->priv->vpattern = vpattern;
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
     if (GES_IS_VIDEO_TEST_SOURCE (trackelement))
       ges_video_test_source_set_pattern (
           (GESVideoTestSource *) trackelement, vpattern);
-
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackelements);
 }
 
 /**
@@ -245,21 +235,16 @@ ges_test_clip_set_vpattern (GESTestClip * self, GESVideoTestPattern vpattern)
 void
 ges_test_clip_set_frequency (GESTestClip * self, gdouble freq)
 {
-  GList *tmp, *trackelements;
-  GESClip *clip = (GESClip *) self;
+  GList *tmp;
 
   self->priv->freq = freq;
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
     if (GES_IS_AUDIO_TEST_SOURCE (trackelement))
       ges_audio_test_source_set_freq (
           (GESAudioTestSource *) trackelement, freq);
-
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackelements);
 }
 
 /**
@@ -273,21 +258,16 @@ ges_test_clip_set_frequency (GESTestClip * self, gdouble freq)
 void
 ges_test_clip_set_volume (GESTestClip * self, gdouble volume)
 {
-  GList *tmp, *trackelements;
-  GESClip *clip = (GESClip *) self;
+  GList *tmp;
 
   self->priv->volume = volume;
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
     if (GES_IS_AUDIO_TEST_SOURCE (trackelement))
       ges_audio_test_source_set_volume (
           (GESAudioTestSource *) trackelement, volume);
-
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
   }
-  g_list_free (trackelements);
 }
 
 /**

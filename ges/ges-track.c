@@ -382,10 +382,11 @@ dispose_trackelements_foreach (GESTrackElement * trackelement, GESTrack * track)
 {
   GESClip *clip;
 
-  clip = ges_track_element_get_clip (trackelement);
+  clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (trackelement));
 
+  ges_container_remove (GES_CONTAINER (clip),
+      GES_TIMELINE_ELEMENT (trackelement));
   remove_object_internal (track, trackelement);
-  ges_clip_release_track_element (clip, trackelement);
 }
 
 /* GObject virtual methods */
@@ -818,6 +819,8 @@ ges_track_remove_element (GESTrack * track, GESTrackElement * object)
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
 
   priv = track->priv;
+
+  GST_DEBUG_OBJECT (track, "Removing %" GST_PTR_FORMAT, object);
 
   if (remove_object_internal (track, object) == TRUE) {
     it = g_hash_table_lookup (priv->trackelements_iter, object);

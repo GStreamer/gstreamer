@@ -46,14 +46,14 @@ GST_START_TEST (test_transition_basic)
 
   /* Make sure track element is created and vtype is set */
   trackelement = ges_clip_create_track_element (GES_CLIP (tr2), track->type);
-  ges_clip_add_track_element (GES_CLIP (tr2), trackelement);
+  ges_container_add (GES_CONTAINER (tr2), GES_TIMELINE_ELEMENT (trackelement));
 
   fail_unless (trackelement != NULL);
   fail_unless (ges_video_transition_get_transition_type
       (GES_VIDEO_TRANSITION (trackelement)) == 1);
 
-  fail_unless (ges_clip_release_track_element (GES_CLIP
-          (tr2), trackelement) == TRUE);
+  fail_unless (ges_container_remove (GES_CONTAINER (tr2),
+          GES_TIMELINE_ELEMENT (trackelement)) == TRUE);
 
   g_object_unref (track);
   g_object_unref (tr1);
@@ -86,7 +86,7 @@ GST_START_TEST (test_transition_properties)
   assert_equals_uint64 (_INPOINT (clip), 12);
 
   trackelement = ges_clip_create_track_element (clip, track->type);
-  ges_clip_add_track_element (clip, trackelement);
+  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
   fail_unless (trackelement != NULL);
   fail_unless (ges_track_element_set_track (trackelement, track));
 
@@ -133,13 +133,14 @@ GST_START_TEST (test_transition_properties)
       (GES_VIDEO_TRANSITION (trackelement)), 1);
 
   GST_DEBUG ("Releasing track element");
-  ges_clip_release_track_element (clip, trackelement);
+  ges_container_remove (GES_CONTAINER (clip),
+      GES_TIMELINE_ELEMENT (trackelement));
 
   g_object_set (clip, "vtype", 1, NULL);
 
   GST_DEBUG ("creating track element");
   trackelement = ges_clip_create_track_element (clip, track->type);
-  ges_clip_add_track_element (clip, trackelement);
+  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
   fail_unless (trackelement != NULL);
   fail_unless (ges_track_element_set_track (trackelement, track));
 
@@ -150,7 +151,8 @@ GST_START_TEST (test_transition_properties)
       (GES_VIDEO_TRANSITION (trackelement)), 1);
   assert_equals_int (GES_TRANSITION_CLIP (clip)->vtype, 1);
 
-  ges_clip_release_track_element (clip, trackelement);
+  ges_container_remove (GES_CONTAINER (clip),
+      GES_TIMELINE_ELEMENT (trackelement));
   g_object_unref (clip);
   g_object_unref (track);
 }

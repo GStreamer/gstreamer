@@ -46,11 +46,11 @@ GST_START_TEST (test_test_source_properties)
   track = ges_track_new (GES_TRACK_TYPE_AUDIO, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
-  clip = (GESClip *)
-      ges_test_clip_new ();
+  clip = (GESClip *) ges_test_clip_new ();
   fail_unless (clip != NULL);
 
   /* Set some properties */
+  GST_DEBUG ("Setting start duration and inpoint to %" GST_PTR_FORMAT, clip);
   g_object_set (clip, "start", (guint64) 42, "duration", (guint64) 51,
       "in-point", (guint64) 12, NULL);
   assert_equals_uint64 (_START (clip), 42);
@@ -58,8 +58,11 @@ GST_START_TEST (test_test_source_properties)
   assert_equals_uint64 (_INPOINT (clip), 12);
 
   trackelement = ges_clip_create_track_element (clip, track->type);
-  ges_clip_add_track_element (clip, trackelement);
+  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
   fail_unless (trackelement != NULL);
+  fail_unless (GES_TIMELINE_ELEMENT_PARENT (trackelement) ==
+      GES_TIMELINE_ELEMENT (clip));
+
   fail_unless (ges_track_element_set_track (trackelement, track));
 
   /* Check that trackelement has the same properties */
@@ -93,7 +96,8 @@ GST_START_TEST (test_test_source_properties)
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
       120, 510, 0, TRUE);
 
-  ges_clip_release_track_element (clip, trackelement);
+  ges_container_remove (GES_CONTAINER (clip),
+      GES_TIMELINE_ELEMENT (trackelement));
   g_object_unref (clip);
 }
 
@@ -254,7 +258,7 @@ GST_START_TEST (test_gap_filling_basic)
   assert_equals_uint64 (_DURATION (clip), 5);
 
   trackelement = ges_clip_create_track_element (clip, track->type);
-  ges_clip_add_track_element (clip, trackelement);
+  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
 
   fail_unless (ges_track_add_element (track, trackelement));
   fail_unless (trackelement != NULL);
@@ -276,7 +280,8 @@ GST_START_TEST (test_gap_filling_basic)
   assert_equals_uint64 (_DURATION (clip1), 5);
 
   trackelement1 = ges_clip_create_track_element (clip1, track->type);
-  ges_clip_add_track_element (clip1, trackelement1);
+  ges_container_add (GES_CONTAINER (clip1),
+      GES_TIMELINE_ELEMENT (trackelement1));
   fail_unless (ges_track_add_element (track, trackelement1));
   fail_unless (trackelement1 != NULL);
   gnlsrc1 = ges_track_element_get_gnlobject (trackelement1);
@@ -303,7 +308,8 @@ GST_START_TEST (test_gap_filling_basic)
   fail_unless (clip2 != NULL);
   g_object_set (clip2, "start", (guint64) 35, "duration", (guint64) 5, NULL);
   trackelement2 = ges_clip_create_track_element (clip2, track->type);
-  ges_clip_add_track_element (clip2, trackelement2);
+  ges_container_add (GES_CONTAINER (clip2),
+      GES_TIMELINE_ELEMENT (trackelement2));
   fail_unless (ges_track_add_element (track, trackelement2));
   fail_unless (trackelement2 != NULL);
   assert_equals_uint64 (_START (trackelement2), 35);

@@ -42,75 +42,13 @@ ges_clip_fill_track_element_func (GESClip * clip,
     GESTrackElement * trackelement, GstElement * gnlobj);
 
 GList *ges_clip_create_track_elements_func (GESClip * clip, GESTrackType type);
-
-static gboolean _set_max_duration (GESTimelineElement * element,
-    GstClockTime maxduration);
-
-static void
-track_element_start_changed_cb (GESTrackElement * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESClip * clip);
-static void
-track_element_inpoint_changed_cb (GESTrackElement * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESClip * clip);
-static void
-track_element_duration_changed_cb (GESTrackElement * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESClip * clip);
-static void
-track_element_priority_changed_cb (GESTrackElement * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESClip * clip);
-static void update_height (GESClip * clip);
-
-static gint sort_base_effects (gpointer a, gpointer b, GESClip * clip);
-static void
-get_layer_priorities (GESTimelineLayer * layer, guint32 * layer_min_gnl_prio,
-    guint32 * layer_max_gnl_prio);
-
-static gboolean _set_start (GESTimelineElement * element, GstClockTime start);
-static gboolean _set_inpoint (GESTimelineElement * element,
-    GstClockTime inpoint);
-static gboolean _set_duration (GESTimelineElement * element,
-    GstClockTime duration);
-static gboolean _set_priority (GESTimelineElement * element, guint32 priority);
-
 static gboolean _ripple (GESTimelineElement * element, GstClockTime start);
 static gboolean _ripple_end (GESTimelineElement * element, GstClockTime end);
 static gboolean _roll_start (GESTimelineElement * element, GstClockTime start);
 static gboolean _roll_end (GESTimelineElement * element, GstClockTime end);
 static gboolean _trim (GESTimelineElement * element, GstClockTime start);
 
-G_DEFINE_ABSTRACT_TYPE (GESClip, ges_clip, GES_TYPE_TIMELINE_ELEMENT);
-
-/* Mapping of relationship between a Clip and the TrackElements
- * it controls
- *
- * NOTE : how do we make this public in the future ?
- */
-typedef struct
-{
-  GESTrackElement *track_element;
-  gint64 start_offset;
-  gint64 duration_offset;
-  gint64 inpoint_offset;
-  gint32 priority_offset;
-
-  guint start_notifyid;
-  guint duration_notifyid;
-  guint inpoint_notifyid;
-  guint priority_notifyid;
-
-  /* track mapping ?? */
-} ObjectMapping;
-
-enum
-{
-  EFFECT_ADDED,
-  EFFECT_REMOVED,
-  TRACK_ELEMENT_ADDED,
-  TRACK_ELEMENT_REMOVED,
-  LAST_SIGNAL
-};
-
-static guint ges_clip_signals[LAST_SIGNAL] = { 0 };
+G_DEFINE_ABSTRACT_TYPE (GESClip, ges_clip, GES_TYPE_CONTAINER);
 
 struct _GESClipPrivate
 {
@@ -122,31 +60,103 @@ struct _GESClipPrivate
   /* Set to TRUE when the clip is doing updates of track element
    * properties so we don't end up in infinite property update loops
    */
-  gboolean ignore_notifies;
   gboolean is_moving;
-
-  GList *mappings;
 
   guint nb_effects;
 
-  GESTrackElement *initiated_move;
-
   /* The formats supported by this Clip */
   GESTrackType supportedformats;
-
-  GESAsset *asset;
 };
 
 enum
 {
   PROP_0,
-  PROP_HEIGHT,
   PROP_LAYER,
   PROP_SUPPORTED_FORMATS,
   PROP_LAST
 };
 
 static GParamSpec *properties[PROP_LAST];
+
+/****************************************************
+ *                                                  *
+ *  GESContainer virtual methods implementation     *
+ *                                                  *
+ ****************************************************/
+
+static void
+_get_priorty_range (GESContainer * container, guint32 * min_priority,
+    guint32 * max_priority)
+{
+  GESTimelineLayer *layer = GES_CLIP (container)->priv->layer;
+
+  if (layer) {
+    *min_priority = layer->min_gnl_priority;
+    *max_priority = layer->max_gnl_priority;
+  } else {
+    *min_priority = 0;
+    *max_priority = G_MAXUINT32;
+  }
+}
+
+static gboolean
+_add_child (GESContainer * container, GESTimelineElement * element)
+{
+  GList *tmp;
+  guint max_prio, min_prio;
+  GESClipPrivate *priv = GES_CLIP (container)->priv;
+
+  /* First make sure we work with a sorted list of GESTimelineElement-s */
+  _ges_container_sort_children (container);
+
+  /* If the TrackElement is an effect:
+   *  - We add it on top of the list of TrackEffect
+   *  - We put all TrackObject present in the TimelineObject
+   *    which are not BaseEffect on top of them
+   * FIXME: Let the full control over priorities to the user
+   */
+  _get_priorty_range (container, &min_prio, &max_prio);
+  if (GES_IS_BASE_EFFECT (element)) {
+
+    GST_DEBUG_OBJECT (container, "Adding %ith effect: %" GST_PTR_FORMAT
+        " Priority %i", priv->nb_effects + 1, element,
+        GES_TIMELINE_ELEMENT_PRIORITY (container) + priv->nb_effects);
+
+    tmp = g_list_nth (GES_CONTAINER_CHILDREN (container), priv->nb_effects);
+    for (; tmp; tmp = tmp->next)
+      ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (tmp->data),
+          GES_TIMELINE_ELEMENT_PRIORITY (tmp->data) + 1);
+
+    _set_priority0 (element, min_prio +
+        GES_TIMELINE_ELEMENT_PRIORITY (container) + priv->nb_effects);
+    priv->nb_effects++;
+  } else {
+    /* We add the track element on top of the effect list */
+    _set_priority0 (element, min_prio +
+        GES_TIMELINE_ELEMENT_PRIORITY (container) + priv->nb_effects);
+  }
+
+  /* We set the timing value of the child to ours, we avoid infinite loop
+   * making sure the container ignore notifies from the child */
+  _ges_container_set_ignore_notifies (container, TRUE);
+  _set_start0 (element, GES_TIMELINE_ELEMENT_START (container));
+  _set_inpoint0 (element, GES_TIMELINE_ELEMENT_INPOINT (container));
+  _set_duration0 (element, GES_TIMELINE_ELEMENT_DURATION (container));
+  _ges_container_set_ignore_notifies (container, FALSE);
+
+  return TRUE;
+}
+
+static gboolean
+_remove_child (GESContainer * container, GESTimelineElement * element)
+{
+  if (GES_IS_BASE_EFFECT (element))
+    GES_CLIP (container)->priv->nb_effects--;
+
+  GST_FIXME_OBJECT (container, "We should set other children prios");
+
+  return TRUE;
+}
 
 static void
 ges_clip_get_property (GObject * object, guint property_id,
@@ -155,9 +165,6 @@ ges_clip_get_property (GObject * object, guint property_id,
   GESClip *clip = GES_CLIP (object);
 
   switch (property_id) {
-    case PROP_HEIGHT:
-      g_value_set_uint (value, clip->height);
-      break;
     case PROP_LAYER:
       g_value_set_object (value, clip->priv->layer);
       break;
@@ -188,6 +195,7 @@ static void
 ges_clip_class_init (GESClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GESContainerClass *container_class = GES_CONTAINER_CLASS (klass);
   GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESClipPrivate));
@@ -196,19 +204,6 @@ ges_clip_class_init (GESClipClass * klass)
   object_class->set_property = ges_clip_set_property;
   klass->create_track_elements = ges_clip_create_track_elements_func;
   klass->create_track_element = NULL;
-  klass->track_element_added = NULL;
-  klass->track_element_released = NULL;
-
-  /**
-   * GESClip:height:
-   *
-   * The span of layer priorities which this clip occupies.
-   */
-  properties[PROP_HEIGHT] = g_param_spec_uint ("height", "Height",
-      "The span of priorities this clip occupies", 0, G_MAXUINT, 1,
-      G_PARAM_READABLE);
-  g_object_class_install_property (object_class, PROP_HEIGHT,
-      properties[PROP_HEIGHT]);
 
   /**
    * GESClip:supported-formats:
@@ -236,78 +231,18 @@ ges_clip_class_init (GESClipClass * klass)
   g_object_class_install_property (object_class, PROP_LAYER,
       properties[PROP_LAYER]);
 
-  /**
-   * GESClip::effect-added:
-   * @clip: the #GESClip
-   * @effect: the #GESBaseEffect that was added.
-   *
-   * Will be emitted after an effect was added to the clip.
-   *
-   * Since: 0.10.2
-   */
-  ges_clip_signals[EFFECT_ADDED] =
-      g_signal_new ("effect-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 1, GES_TYPE_BASE_EFFECT);
-
-  /**
-   * GESClip::effect-removed:
-   * @clip: the #GESClip
-   * @effect: the #GESBaseEffect that was added.
-   *
-   * Will be emitted after an effect was remove from the clip.
-   *
-   * Since: 0.10.2
-   */
-  ges_clip_signals[EFFECT_REMOVED] =
-      g_signal_new ("effect-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 1, GES_TYPE_BASE_EFFECT);
-
-  /**
-   * GESClip::track-element-added:
-   * @clip: the #GESClip
-   * @trackelement: the #GESTrackElement that was added.
-   *
-   * Will be emitted after a track element was added to the clip.
-   *
-   * Since: 0.10.2
-   */
-  ges_clip_signals[TRACK_ELEMENT_ADDED] =
-      g_signal_new ("track-element-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 1, GES_TYPE_TRACK_ELEMENT);
-
-  /**
-   * GESClip::track-element-removed:
-   * @clip: the #GESClip
-   * @trackelement: the #GESTrackElement that was removed.
-   *
-   * Will be emitted after a track element was removed from @clip.
-   *
-   * Since: 0.10.2
-   */
-  ges_clip_signals[TRACK_ELEMENT_REMOVED] =
-      g_signal_new ("track-element-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 1, GES_TYPE_TRACK_ELEMENT);
-
-
-  element_class->set_start = _set_start;
-  element_class->set_duration = _set_duration;
-  element_class->set_inpoint = _set_inpoint;
-  element_class->set_priority = _set_priority;
-
   element_class->ripple = _ripple;
   element_class->ripple_end = _ripple_end;
   element_class->roll_start = _roll_start;
   element_class->roll_end = _roll_end;
   element_class->trim = _trim;
-  element_class->set_max_duration = _set_max_duration;
-/* TODO implement the deep_copy Virtual method */
+  /* TODO implement the deep_copy Virtual method */
+
+  container_class->get_priorty_range = _get_priorty_range;
+  container_class->add_child = _add_child;
+  container_class->remove_child = _remove_child;
 
   klass->need_fill_track = TRUE;
-  klass->snaps = FALSE;
 }
 
 static void
@@ -316,8 +251,6 @@ ges_clip_init (GESClip * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_CLIP, GESClipPrivate);
   /* FIXME, check why it was done this way _DURATION (self) = GST_SECOND; */
-  self->height = 1;
-  self->trackelements = NULL;
   self->priv->layer = NULL;
   self->priv->nb_effects = 0;
   self->priv->is_moving = FALSE;
@@ -330,7 +263,7 @@ ges_clip_init (GESClip * self)
  *
  * Creates a #GESTrackElement for the provided @type. The clip
  * keep a reference to the newly created trackelement, you therefore need to
- * call @ges_clip_release_track_element when you are done with it.
+ * call @ges_container_remove when you are done with it.
  *
  * Returns: (transfer none): A #GESTrackElement. Returns NULL if the #GESTrackElement could not
  * be created.
@@ -377,7 +310,9 @@ ges_clip_create_track_element (GESClip * clip, GESTrackType type)
 GList *
 ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
 {
+  GList *result, *tmp;
   GESClipClass *klass;
+  guint max_prio, min_prio;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
 
@@ -390,19 +325,25 @@ ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
 
   GST_DEBUG_OBJECT (clip, "Creating TrackElements for type: %s",
       ges_track_type_name (type));
-  return klass->create_track_elements (clip, type);
-}
+  result = klass->create_track_elements (clip, type);
 
-gboolean
-_set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
-{
-  GList *tmp;
+  _get_priorty_range (GES_CONTAINER (clip), &min_prio, &max_prio);
+  for (tmp = result; tmp; tmp = tmp->next) {
+    GESTimelineElement *elem = tmp->data;
 
-  for (tmp = GES_CLIP (element)->trackelements; tmp; tmp = g_list_next (tmp))
-    ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (tmp->data),
-        maxduration);
+    _set_start0 (elem, GES_TIMELINE_ELEMENT_START (clip));
+    _set_inpoint0 (elem, GES_TIMELINE_ELEMENT_INPOINT (clip));
+    _set_duration0 (elem, GES_TIMELINE_ELEMENT_DURATION (clip));
 
-  return TRUE;
+    if (GST_CLOCK_TIME_IS_VALID (GES_TIMELINE_ELEMENT_MAX_DURATION (clip)))
+      ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (elem),
+          GES_TIMELINE_ELEMENT_MAX_DURATION (clip));
+
+    _set_priority0 (elem, min_prio + GES_TIMELINE_ELEMENT_PRIORITY (clip)
+        + clip->priv->nb_effects);
+  }
+
+  return result;
 }
 
 /*
@@ -422,203 +363,6 @@ ges_clip_create_track_elements_func (GESClip * clip, GESTrackType type)
   }
 
   return g_list_append (NULL, result);
-}
-
-/**
- * ges_clip_add_track_element:
- * @clip: a #GESClip
- * @track_element: the GESTrackElement
- *
- * Add a track element to the clip. Should only be called by
- * subclasses implementing the create_track_elements (plural) vmethod.
- *
- * Takes a reference on @track_element.
- *
- * Returns: %TRUE on success, %FALSE on failure.
- */
-
-gboolean
-ges_clip_add_track_element (GESClip * clip, GESTrackElement * track_element)
-{
-  GList *tmp;
-  gboolean is_effect;
-  ObjectMapping *mapping;
-  guint max_prio, min_prio;
-  GESClipClass *klass;
-  GESClipPrivate *priv;
-
-  g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
-  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (track_element), FALSE);
-
-  priv = clip->priv;
-  is_effect = GES_IS_BASE_EFFECT (track_element);
-
-  GST_LOG ("Got a TrackElement : %p , setting the clip as its"
-      "creator. Is a BaseEffect %i", track_element, is_effect);
-
-  if (!track_element)
-    return FALSE;
-
-  ges_track_element_set_clip (track_element, clip);
-
-  g_object_ref (track_element);
-
-  mapping = g_slice_new0 (ObjectMapping);
-  mapping->track_element = track_element;
-  priv->mappings = g_list_append (priv->mappings, mapping);
-
-  GST_DEBUG ("Adding TrackElement to the list of controlled track elements");
-  /* We steal the initial reference */
-
-  GST_DEBUG ("Setting properties on newly created TrackElement");
-
-  mapping->priority_offset = priv->nb_effects;
-
-  /* If the trackelement is an effect:
-   *  - We add it on top of the list of BaseEffect
-   *  - We put all TrackElement present in the Clip
-   *    which are not BaseEffect on top of them
-   *
-   * FIXME: Let the full control over priorities to the user
-   */
-  if (is_effect) {
-    GST_DEBUG
-        ("Moving non on top effect under other TrackElement-s, nb effects %i",
-        priv->nb_effects);
-    for (tmp = g_list_nth (clip->trackelements, priv->nb_effects); tmp;
-        tmp = tmp->next) {
-      GESTrackElement *tmpo = GES_TRACK_ELEMENT (tmp->data);
-
-      /* We make sure not to move the entire #Clip */
-      ges_track_element_set_locked (tmpo, FALSE);
-      _set_priority0 (GES_TIMELINE_ELEMENT (tmpo), _PRIORITY (tmpo) + 1);
-      ges_track_element_set_locked (tmpo, TRUE);
-    }
-
-    priv->nb_effects++;
-  }
-
-  clip->trackelements =
-      g_list_insert_sorted_with_data (clip->trackelements, track_element,
-      (GCompareDataFunc) sort_base_effects, clip);
-
-  _set_start0 (GES_TIMELINE_ELEMENT (track_element), _START (clip));
-  _set_duration0 (GES_TIMELINE_ELEMENT (track_element), _DURATION (clip));
-  _set_inpoint0 (GES_TIMELINE_ELEMENT (track_element), _INPOINT (clip));
-  ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (track_element),
-      _MAXDURATION (clip));
-
-  klass = GES_CLIP_GET_CLASS (clip);
-  if (klass->track_element_added) {
-    GST_DEBUG ("Calling track_element_added subclass method");
-    klass->track_element_added (clip, track_element);
-  } else {
-    GST_DEBUG ("%s doesn't have any track_element_added vfunc implementation",
-        G_OBJECT_CLASS_NAME (klass));
-  }
-
-  /* Listen to all property changes */
-  mapping->start_notifyid =
-      g_signal_connect (G_OBJECT (track_element), "notify::start",
-      G_CALLBACK (track_element_start_changed_cb), clip);
-  mapping->duration_notifyid =
-      g_signal_connect (G_OBJECT (track_element), "notify::duration",
-      G_CALLBACK (track_element_duration_changed_cb), clip);
-  mapping->inpoint_notifyid =
-      g_signal_connect (G_OBJECT (track_element), "notify::inpoint",
-      G_CALLBACK (track_element_inpoint_changed_cb), clip);
-  mapping->priority_notifyid =
-      g_signal_connect (G_OBJECT (track_element), "notify::priority",
-      G_CALLBACK (track_element_priority_changed_cb), clip);
-
-  get_layer_priorities (priv->layer, &min_prio, &max_prio);
-  _set_priority0 (GES_TIMELINE_ELEMENT (track_element), min_prio +
-      _PRIORITY (clip) + mapping->priority_offset);
-
-  GST_DEBUG ("Returning track_element:%p", track_element);
-  if (!GES_IS_BASE_EFFECT (track_element)) {
-    g_signal_emit (clip, ges_clip_signals[TRACK_ELEMENT_ADDED], 0,
-        GES_TRACK_ELEMENT (track_element));
-  } else {
-    /* emit 'effect-added' */
-    g_signal_emit (clip, ges_clip_signals[EFFECT_ADDED], 0,
-        GES_BASE_EFFECT (track_element));
-  }
-
-  return TRUE;
-}
-
-/**
- * ges_clip_release_track_element:
- * @clip: a #GESClip
- * @trackelement: the #GESTrackElement to release
- *
- * Release the @trackelement from the control of @clip.
- *
- * Returns: %TRUE if the @trackelement was properly released, else %FALSE.
- */
-gboolean
-ges_clip_release_track_element (GESClip * clip, GESTrackElement * trackelement)
-{
-  GList *tmp;
-  ObjectMapping *mapping = NULL;
-  GESClipClass *klass;
-
-  g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
-  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (trackelement), FALSE);
-
-  GST_DEBUG ("clip:%p, trackelement:%p", clip, trackelement);
-  klass = GES_CLIP_GET_CLASS (clip);
-
-  if (!(g_list_find (clip->trackelements, trackelement))) {
-    GST_WARNING ("TrackElement isn't controlled by this clip");
-    return FALSE;
-  }
-
-  for (tmp = clip->priv->mappings; tmp; tmp = tmp->next) {
-    mapping = (ObjectMapping *) tmp->data;
-    if (mapping->track_element == trackelement)
-      break;
-  }
-
-  if (tmp && mapping) {
-
-    /* Disconnect all notify listeners */
-    g_signal_handler_disconnect (trackelement, mapping->start_notifyid);
-    g_signal_handler_disconnect (trackelement, mapping->duration_notifyid);
-    g_signal_handler_disconnect (trackelement, mapping->inpoint_notifyid);
-    g_signal_handler_disconnect (trackelement, mapping->priority_notifyid);
-
-    g_slice_free (ObjectMapping, mapping);
-
-    clip->priv->mappings = g_list_delete_link (clip->priv->mappings, tmp);
-  }
-
-  clip->trackelements = g_list_remove (clip->trackelements, trackelement);
-
-  if (GES_IS_BASE_EFFECT (trackelement)) {
-    /* emit 'clip-removed' */
-    clip->priv->nb_effects--;
-    g_signal_emit (clip, ges_clip_signals[EFFECT_REMOVED], 0,
-        GES_BASE_EFFECT (trackelement));
-  } else
-    g_signal_emit (clip, ges_clip_signals[TRACK_ELEMENT_REMOVED], 0,
-        GES_TRACK_ELEMENT (trackelement));
-
-  ges_track_element_set_clip (trackelement, NULL);
-
-  GST_DEBUG ("Removing reference to track element %p", trackelement);
-
-  if (klass->track_element_released) {
-    GST_DEBUG ("Calling track_element_released subclass method");
-    klass->track_element_released (clip, trackelement);
-  }
-
-  g_object_unref (trackelement);
-
-  /* FIXME : resync properties ? */
-
-  return TRUE;
 }
 
 void
@@ -662,176 +406,6 @@ ges_clip_fill_track_element_func (GESClip * clip,
   GST_WARNING ("No 'fill_track_element' implementation !");
 
   return FALSE;
-}
-
-static ObjectMapping *
-find_object_mapping (GESClip * clip, GESTrackElement * child)
-{
-  GList *tmp;
-
-  for (tmp = clip->priv->mappings; tmp; tmp = tmp->next) {
-    ObjectMapping *map = (ObjectMapping *) tmp->data;
-    if (map->track_element == child)
-      return map;
-  }
-
-  return NULL;
-}
-
-static gboolean
-_set_start (GESTimelineElement * element, GstClockTime start)
-{
-  GList *tmp;
-  GESTrackElement *tr;
-  ObjectMapping *map;
-  gboolean snap = FALSE;
-  GESTimeline *timeline = NULL;
-
-  GESClip *clip = GES_CLIP (element);
-  GESClipPrivate *priv = clip->priv;
-
-  /* If the class has snapping enabled and the clip is in a timeline,
-   * we snap */
-  if (priv->layer && GES_CLIP_GET_CLASS (clip)->snaps)
-    timeline = ges_timeline_layer_get_timeline (clip->priv->layer);
-  snap = timeline && priv->initiated_move == NULL ? TRUE : FALSE;
-
-  clip->priv->ignore_notifies = TRUE;
-
-  for (tmp = clip->trackelements; tmp; tmp = g_list_next (tmp)) {
-    tr = (GESTrackElement *) tmp->data;
-    map = find_object_mapping (clip, tr);
-
-    if (ges_track_element_is_locked (tr) && tr != clip->priv->initiated_move) {
-      gint64 new_start = start - map->start_offset;
-
-      /* Move the child... */
-      if (new_start < 0) {
-        GST_ERROR ("Trying to set start to a negative value %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (-(start + map->start_offset)));
-        continue;
-      }
-
-      /* Make the snapping happen if in a timeline */
-      if (snap)
-        ges_timeline_move_object_simple (timeline, tr, NULL, GES_EDGE_NONE,
-            start);
-      else
-        _set_start0 (GES_TIMELINE_ELEMENT (tr), start);
-    } else {
-      /* ... or update the offset */
-      map->start_offset = start - _START (tr);
-    }
-  }
-
-  clip->priv->ignore_notifies = FALSE;
-
-  return TRUE;
-}
-
-static gboolean
-_set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
-{
-  GList *tmp;
-  GESTrackElement *tr;
-
-  GESClip *clip = GES_CLIP (element);
-
-  for (tmp = clip->trackelements; tmp; tmp = g_list_next (tmp)) {
-    tr = (GESTrackElement *) tmp->data;
-
-    if (ges_track_element_is_locked (tr))
-      /* call set_inpoint on each trackelement */
-      _set_inpoint0 (GES_TIMELINE_ELEMENT (tr), inpoint);
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_set_duration (GESTimelineElement * element, GstClockTime duration)
-{
-  GList *tmp;
-  GESTrackElement *tr;
-  GESTimeline *timeline = NULL;
-  gboolean snap = FALSE;
-
-  GESClip *clip = GES_CLIP (element);
-  GESClipPrivate *priv = clip->priv;
-
-  if (priv->layer && GES_CLIP_GET_CLASS (clip)->snaps)
-    timeline = ges_timeline_layer_get_timeline (clip->priv->layer);
-
-  /* If the class has snapping enabled, the clip is in a timeline,
-   * and we are not following a moved TrackElement, we snap */
-  snap = timeline && priv->initiated_move == NULL ? TRUE : FALSE;
-
-  clip->priv->ignore_notifies = TRUE;
-  for (tmp = clip->trackelements; tmp; tmp = g_list_next (tmp)) {
-    tr = (GESTrackElement *) tmp->data;
-
-    if (ges_track_element_is_locked (tr)) {
-      /* call set_duration on each trackelement
-       * and make the snapping happen if in a timeline */
-      if (G_LIKELY (snap))
-        ges_timeline_trim_object_simple (timeline, tr, NULL, GES_EDGE_END,
-            _START (tr) + duration, TRUE);
-      else
-        _set_duration0 (GES_TIMELINE_ELEMENT (tr), duration);
-    }
-  }
-  clip->priv->ignore_notifies = FALSE;
-
-  return TRUE;
-}
-
-static gboolean
-_set_priority (GESTimelineElement * element, guint32 priority)
-{
-  GList *tmp;
-  GESTrackElement *tr;
-  ObjectMapping *map;
-  GESClipPrivate *priv;
-  guint32 layer_min_gnl_prio, layer_max_gnl_prio;
-
-  GESClip *clip = GES_CLIP (element);
-
-  priv = clip->priv;
-
-  get_layer_priorities (priv->layer, &layer_min_gnl_prio, &layer_max_gnl_prio);
-
-  priv->ignore_notifies = TRUE;
-  for (tmp = clip->trackelements; tmp; tmp = g_list_next (tmp)) {
-    tr = (GESTrackElement *) tmp->data;
-    map = find_object_mapping (clip, tr);
-
-    if (ges_track_element_is_locked (tr)) {
-      guint32 real_tck_prio;
-
-      /* Move the child... */
-      real_tck_prio = layer_min_gnl_prio + priority + map->priority_offset;
-
-      if (real_tck_prio > layer_max_gnl_prio) {
-        GST_WARNING ("%p priority of %i, is outside of the its containing "
-            "layer space. (%d/%d) setting it to the maximum it can be", clip,
-            priority, layer_min_gnl_prio, layer_max_gnl_prio);
-
-        real_tck_prio = layer_max_gnl_prio;
-      }
-
-      _set_priority0 (GES_TIMELINE_ELEMENT (tr), real_tck_prio);
-
-    } else {
-      /* ... or update the offset */
-      map->priority_offset = _PRIORITY (tr) - layer_min_gnl_prio + priority;
-    }
-  }
-
-  clip->trackelements = g_list_sort_with_data (clip->trackelements,
-      (GCompareDataFunc) sort_base_effects, clip);
-  priv->ignore_notifies = FALSE;
-
-  return TRUE;
 }
 
 /**
@@ -946,7 +520,7 @@ ges_clip_find_track_element (GESClip * clip, GESTrack * track, GType type)
   g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
   g_return_val_if_fail (GES_IS_TRACK (track), NULL);
 
-  for (tmp = clip->trackelements; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = g_list_next (tmp)) {
     otmp = (GESTrackElement *) tmp->data;
 
     if (ges_track_element_get_track (otmp) == track) {
@@ -985,58 +559,6 @@ ges_clip_get_layer (GESClip * clip)
 }
 
 /**
- * ges_clip_get_track_elements:
- * @clip: a #GESClip
- *
- * Get the list of #GESTrackElement contained in @clip
- *
- * Returns: (transfer full) (element-type GESTrackElement): The list of
- * trackelement contained in @clip.
- * The user is responsible for unreffing the contained objects
- * and freeing the list.
- */
-GList *
-ges_clip_get_track_elements (GESClip * clip)
-{
-  GList *ret;
-  GList *tmp;
-
-  g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
-
-  ret = g_list_copy (clip->trackelements);
-
-  for (tmp = ret; tmp; tmp = tmp->next) {
-    g_object_ref (tmp->data);
-  }
-
-  return ret;
-}
-
-static gint
-sort_base_effects (gpointer a, gpointer b, GESClip * clip)
-{
-  guint prio_offset_a, prio_offset_b;
-  ObjectMapping *map_a, *map_b;
-  GESTrackElement *track_element_a, *track_element_b;
-
-  track_element_a = GES_TRACK_ELEMENT (a);
-  track_element_b = GES_TRACK_ELEMENT (b);
-
-  map_a = find_object_mapping (clip, track_element_a);
-  map_b = find_object_mapping (clip, track_element_b);
-
-  prio_offset_a = map_a->priority_offset;
-  prio_offset_b = map_b->priority_offset;
-
-  if ((gint) prio_offset_a > (guint) prio_offset_b)
-    return 1;
-  if ((guint) prio_offset_a < (guint) prio_offset_b)
-    return -1;
-
-  return 0;
-}
-
-/**
  * ges_clip_get_top_effects:
  * @clip: The origin #GESClip
  *
@@ -1060,12 +582,12 @@ ges_clip_get_top_effects (GESClip * clip)
   GST_DEBUG_OBJECT (clip, "Getting the %i top effects", clip->priv->nb_effects);
   ret = NULL;
 
-  for (tmp = clip->trackelements, i = 0; i < clip->priv->nb_effects;
-      tmp = tmp->next, i++) {
+  for (tmp = GES_CONTAINER_CHILDREN (clip), i = 0;
+      i < clip->priv->nb_effects; tmp = tmp->next, i++) {
     ret = g_list_append (ret, g_object_ref (tmp->data));
   }
 
-  return ret;
+  return g_list_sort (ret, (GCompareFunc) element_start_compare);
 }
 
 /**
@@ -1082,10 +604,15 @@ ges_clip_get_top_effects (GESClip * clip)
 gint
 ges_clip_get_top_effect_position (GESClip * clip, GESBaseEffect * effect)
 {
-  g_return_val_if_fail (GES_IS_CLIP (clip), -1);
+  guint max_prio, min_prio;
 
-  return find_object_mapping (clip,
-      GES_TRACK_ELEMENT (effect))->priority_offset;
+  g_return_val_if_fail (GES_IS_CLIP (clip), -1);
+  g_return_val_if_fail (GES_IS_BASE_EFFECT (effect), -1);
+
+  _get_priorty_range (GES_CONTAINER (clip), &min_prio, &max_prio);
+
+  return GES_TIMELINE_ELEMENT_PRIORITY (effect) - min_prio +
+      GES_TIMELINE_ELEMENT_PRIORITY (clip);
 }
 
 /**
@@ -1117,7 +644,8 @@ ges_clip_set_top_effect_priority (GESClip * clip,
 
   /*  We don't change the priority */
   if (current_prio == newpriority ||
-      (G_UNLIKELY (ges_track_element_get_clip (track_element) != clip)))
+      (G_UNLIKELY (GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (track_element)) !=
+              clip)))
     return FALSE;
 
   if (newpriority > (clip->priv->nb_effects - 1)) {
@@ -1130,24 +658,28 @@ ges_clip_set_top_effect_priority (GESClip * clip,
     return FALSE;
   }
 
+  _ges_container_sort_children (GES_CONTAINER (clip));
   if (_PRIORITY (track_element) < newpriority)
     inc = -1;
   else
     inc = +1;
 
-  _set_priority0 (GES_TIMELINE_ELEMENT (track_element), newpriority);
-  for (tmp = clip->trackelements; tmp; tmp = tmp->next) {
+  GST_DEBUG_OBJECT (clip, "Setting top effect %" GST_PTR_FORMAT "priority: %i",
+      effect, newpriority);
+
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     GESTrackElement *tmpo = GES_TRACK_ELEMENT (tmp->data);
     guint tck_priority = _PRIORITY (tmpo);
+
+    if (tmpo == track_element)
+      continue;
 
     if ((inc == +1 && tck_priority >= newpriority) ||
         (inc == -1 && tck_priority <= newpriority)) {
       _set_priority0 (GES_TIMELINE_ELEMENT (tmpo), tck_priority + inc);
     }
   }
-
-  clip->trackelements = g_list_sort_with_data (clip->trackelements,
-      (GCompareDataFunc) sort_base_effects, clip);
+  _set_priority0 (GES_TIMELINE_ELEMENT (track_element), newpriority);
 
   return TRUE;
 }
@@ -1183,13 +715,13 @@ ges_clip_edit (GESClip * clip, GList * layers,
 
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
 
-  if (!G_UNLIKELY (clip->trackelements)) {
+  if (!G_UNLIKELY (GES_CONTAINER_CHILDREN (clip))) {
     GST_WARNING_OBJECT (clip, "Trying to edit, but not containing"
         "any TrackElement yet.");
     return FALSE;
   }
 
-  for (tmp = clip->trackelements; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = g_list_next (tmp)) {
     if (ges_track_element_is_locked (tmp->data)
         && GES_IS_SOURCE (tmp->data)) {
       ret &= ges_track_element_edit (tmp->data, layers, mode, edge, position);
@@ -1232,7 +764,6 @@ GESClip *
 ges_clip_split (GESClip * clip, guint64 position)
 {
   GList *tmp;
-  gboolean locked;
   GESClip *new_object;
 
   GstClockTime start, inpoint, duration;
@@ -1254,9 +785,10 @@ ges_clip_split (GESClip * clip, guint64 position)
       GST_TIME_ARGS (position));
 
   /* Create the new Clip */
-  new_object =
-      GES_CLIP (ges_timeline_element_copy (GES_TIMELINE_ELEMENT (clip), FALSE));
+  new_object = GES_CLIP (ges_timeline_element_copy (GES_TIMELINE_ELEMENT (clip),
+          FALSE));
 
+  GST_DEBUG_OBJECT (new_object, "New 'splitted' clip");
   /* Set new timing properties on the Clip */
   _set_start0 (GES_TIMELINE_ELEMENT (new_object), position);
   _set_inpoint0 (GES_TIMELINE_ELEMENT (new_object),
@@ -1275,7 +807,7 @@ ges_clip_split (GESClip * clip, guint64 position)
    * properly in the following loop
    * FIXME: Avoid setting it oureself reworking the API */
   GES_TIMELINE_ELEMENT (clip)->duration = position - _START (clip);
-  for (tmp = clip->trackelements; tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     GESTrack *track;
 
     GESTrackElement *new_trackelement, *trackelement =
@@ -1302,20 +834,12 @@ ges_clip_split (GESClip * clip, guint64 position)
       continue;
     }
 
-    ges_clip_add_track_element (new_object, new_trackelement);
-
     track = ges_track_element_get_track (trackelement);
     if (track == NULL)
       GST_DEBUG_OBJECT (trackelement, "Was not in a track, not adding %p to"
           "any track", new_trackelement);
     else
       ges_track_add_element (track, new_trackelement);
-
-    /* Unlock TrackElement-s as we do not want the container to move
-     * syncronously */
-    locked = ges_track_element_is_locked (trackelement);
-    ges_track_element_set_locked (new_trackelement, FALSE);
-    ges_track_element_set_locked (trackelement, FALSE);
 
     /* Set 'new' track element timing propeties */
     _set_start0 (GES_TIMELINE_ELEMENT (new_trackelement), position);
@@ -1327,9 +851,8 @@ ges_clip_split (GESClip * clip, guint64 position)
     /* Set 'old' track element duration */
     _set_duration0 (GES_TIMELINE_ELEMENT (trackelement), position - start);
 
-    /* And let track elements in the same locking state as before. */
-    ges_track_element_set_locked (trackelement, locked);
-    ges_track_element_set_locked (new_trackelement, locked);
+    ges_container_add (GES_CONTAINER (new_object),
+        GES_TIMELINE_ELEMENT (new_trackelement));
   }
 
   return new_object;
@@ -1370,33 +893,10 @@ ges_clip_get_supported_formats (GESClip * clip)
   return clip->priv->supportedformats;
 }
 
-/**
- * ges_clip_objects_set_locked:
- * @clip: the #GESClip
- * @locked: whether the #GESTrackElement contained in @clip are locked to it.
- *
- * Set the locking status of all the #GESTrackElement contained in @clip to @locked.
- * See the ges_track_element_set_locked documentation for more details.
- *
- * Since: 0.10.XX
- */
-void
-ges_clip_objects_set_locked (GESClip * clip, gboolean locked)
-{
-  GList *tmp;
-
-  g_return_if_fail (GES_IS_CLIP (clip));
-
-  for (tmp = clip->priv->mappings; tmp; tmp = g_list_next (tmp)) {
-    ges_track_element_set_locked (((ObjectMapping *) tmp->data)->track_element,
-        locked);
-  }
-}
-
 gboolean
 _ripple (GESTimelineElement * element, GstClockTime start)
 {
-  GList *tmp, *trackelements;
+  GList *tmp;
   gboolean ret = TRUE;
   GESTimeline *timeline;
   GESClip *clip = GES_CLIP (element);
@@ -1408,8 +908,7 @@ _ripple (GESTimelineElement * element, GstClockTime start)
     return FALSE;
   }
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = g_list_next (tmp)) {
     if (ges_track_element_is_locked (tmp->data)) {
       ret = timeline_ripple_object (timeline, GES_TRACK_ELEMENT (tmp->data),
           NULL, GES_EDGE_NONE, start);
@@ -1418,7 +917,6 @@ _ripple (GESTimelineElement * element, GstClockTime start)
       break;
     }
   }
-  g_list_free_full (trackelements, g_object_unref);
 
   return ret;
 }
@@ -1426,7 +924,7 @@ _ripple (GESTimelineElement * element, GstClockTime start)
 static gboolean
 _ripple_end (GESTimelineElement * element, GstClockTime end)
 {
-  GList *tmp, *trackelements;
+  GList *tmp;
   gboolean ret = TRUE;
   GESTimeline *timeline;
   GESClip *clip = GES_CLIP (element);
@@ -1438,8 +936,7 @@ _ripple_end (GESTimelineElement * element, GstClockTime end)
     return FALSE;
   }
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = g_list_next (tmp)) {
     if (ges_track_element_is_locked (tmp->data)) {
       ret = timeline_ripple_object (timeline, GES_TRACK_ELEMENT (tmp->data),
           NULL, GES_EDGE_END, end);
@@ -1448,7 +945,6 @@ _ripple_end (GESTimelineElement * element, GstClockTime end)
       break;
     }
   }
-  g_list_free_full (trackelements, g_object_unref);
 
   return ret;
 }
@@ -1456,7 +952,7 @@ _ripple_end (GESTimelineElement * element, GstClockTime end)
 gboolean
 _roll_start (GESTimelineElement * element, GstClockTime start)
 {
-  GList *tmp, *trackelements;
+  GList *tmp;
   gboolean ret = TRUE;
   GESTimeline *timeline;
 
@@ -1469,8 +965,7 @@ _roll_start (GESTimelineElement * element, GstClockTime start)
     return FALSE;
   }
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = g_list_next (tmp)) {
     if (ges_track_element_is_locked (tmp->data)) {
       ret = timeline_roll_object (timeline, GES_TRACK_ELEMENT (tmp->data),
           NULL, GES_EDGE_START, start);
@@ -1479,7 +974,6 @@ _roll_start (GESTimelineElement * element, GstClockTime start)
       break;
     }
   }
-  g_list_free_full (trackelements, g_object_unref);
 
   return ret;
 }
@@ -1487,7 +981,7 @@ _roll_start (GESTimelineElement * element, GstClockTime start)
 gboolean
 _roll_end (GESTimelineElement * element, GstClockTime end)
 {
-  GList *tmp, *trackelements;
+  GList *tmp;
   gboolean ret = TRUE;
   GESTimeline *timeline;
 
@@ -1500,8 +994,7 @@ _roll_end (GESTimelineElement * element, GstClockTime end)
   }
 
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = g_list_next (tmp)) {
     if (ges_track_element_is_locked (tmp->data)) {
       ret = timeline_roll_object (timeline, GES_TRACK_ELEMENT (tmp->data),
           NULL, GES_EDGE_END, end);
@@ -1510,7 +1003,6 @@ _roll_end (GESTimelineElement * element, GstClockTime end)
       break;
     }
   }
-  g_list_free_full (trackelements, g_object_unref);
 
   return ret;
 }
@@ -1518,7 +1010,7 @@ _roll_end (GESTimelineElement * element, GstClockTime end)
 gboolean
 _trim (GESTimelineElement * element, GstClockTime start)
 {
-  GList *tmp, *trackelements;
+  GList *tmp;
   gboolean ret = TRUE;
   GESTimeline *timeline;
 
@@ -1531,15 +1023,13 @@ _trim (GESTimelineElement * element, GstClockTime start)
     return FALSE;
   }
 
-  trackelements = ges_clip_get_track_elements (clip);
-  for (tmp = trackelements; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = g_list_next (tmp)) {
     if (ges_track_element_is_locked (tmp->data)) {
       ret = timeline_trim_object (timeline, GES_TRACK_ELEMENT (tmp->data),
           NULL, GES_EDGE_START, start);
       break;
     }
   }
-  g_list_free_full (trackelements, g_object_unref);
 
   return ret;
 }
@@ -1567,185 +1057,6 @@ ges_clip_add_asset (GESClip * clip, GESAsset * asset)
   g_return_val_if_fail (g_type_is_a (ges_asset_get_extractable_type
           (asset), GES_TYPE_TRACK_ELEMENT), FALSE);
 
-  return ges_clip_add_track_element (clip,
-      GES_TRACK_ELEMENT (ges_asset_extract (asset, NULL)));
-}
-
-static void
-update_height (GESClip * clip)
-{
-  GList *tmp;
-  guint32 min_prio = G_MAXUINT32, max_prio = 0;
-
-  /* Go over all childs and check if height has changed */
-  for (tmp = clip->trackelements; tmp; tmp = tmp->next) {
-    guint tck_priority = _PRIORITY (tmp->data);
-
-    if (tck_priority < min_prio)
-      min_prio = tck_priority;
-    if (tck_priority > max_prio)
-      max_prio = tck_priority;
-  }
-
-  /* FIXME : We only grow the height */
-  if (clip->height < (max_prio - min_prio + 1)) {
-    clip->height = max_prio - min_prio + 1;
-    GST_DEBUG ("Updating height %i", clip->height);
-#if GLIB_CHECK_VERSION(2,26,0)
-    g_object_notify_by_pspec (G_OBJECT (clip), properties[PROP_HEIGHT]);
-#else
-    g_object_notify (G_OBJECT (clip), "height");
-#endif
-  }
-}
-
-/*
- * PROPERTY NOTIFICATIONS FROM TRACK ELEMENTS
- */
-
-static void
-track_element_start_changed_cb (GESTrackElement * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESClip * clip)
-{
-  ObjectMapping *map;
-  GESTimelineElement *element = GES_TIMELINE_ELEMENT (clip);
-
-  if (clip->priv->ignore_notifies)
-    return;
-
-  map = find_object_mapping (clip, child);
-  if (G_UNLIKELY (map == NULL))
-    /* something massively screwed up if we get this */
-    return;
-
-  if (!ges_track_element_is_locked (child)) {
-    /* Update the internal start_offset */
-    map->start_offset = _START (element) - _START (child);
-  } else {
-    /* Or update the parent start */
-    clip->priv->initiated_move = child;
-    _set_start0 (element, _START (child) + map->start_offset);
-    clip->priv->initiated_move = NULL;
-  }
-}
-
-static void
-track_element_inpoint_changed_cb (GESTrackElement * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESClip * clip)
-{
-  ObjectMapping *map;
-  GESTimelineElement *element = GES_TIMELINE_ELEMENT (clip);
-
-  if (clip->priv->ignore_notifies)
-    return;
-
-  map = find_object_mapping (GES_CLIP (element), child);
-  if (G_UNLIKELY (map == NULL))
-    /* something massively screwed up if we get this */
-    return;
-
-  if (!ges_track_element_is_locked (child)) {
-    /* Update the internal start_offset */
-    map->inpoint_offset = _INPOINT (element) - _INPOINT (child);
-  } else {
-    /* Or update the parent start */
-    clip->priv->initiated_move = child;
-    _set_inpoint0 (element, _INPOINT (child) + map->inpoint_offset);
-    clip->priv->initiated_move = NULL;
-  }
-
-}
-
-static void
-track_element_duration_changed_cb (GESTrackElement * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESClip * clip)
-{
-  ObjectMapping *map;
-  GESTimelineElement *element = GES_TIMELINE_ELEMENT (clip);
-
-  if (clip->priv->ignore_notifies)
-    return;
-
-  map = find_object_mapping (clip, child);
-  if (G_UNLIKELY (map == NULL))
-    /* something massively screwed up if we get this */
-    return;
-
-  if (!ges_track_element_is_locked (child)) {
-    /* Update the internal start_offset */
-    map->duration_offset = _DURATION (element) - _DURATION (child);
-  } else {
-    /* Or update the parent start */
-    clip->priv->initiated_move = child;
-    _set_duration0 (element, _DURATION (child) + map->duration_offset);
-    clip->priv->initiated_move = NULL;
-  }
-
-}
-
-static void
-track_element_priority_changed_cb (GESTrackElement * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESClip * clip)
-{
-  ObjectMapping *map;
-  GESTimelineElement *element = GES_TIMELINE_ELEMENT (clip);
-  guint32 layer_min_gnl_prio, layer_max_gnl_prio;
-
-  guint tck_priority = _PRIORITY (child);
-
-  GST_DEBUG ("TrackElement %p priority changed to %i", child,
-      _PRIORITY (child));
-
-  if (clip->priv->ignore_notifies)
-    return;
-
-  update_height (clip);
-  map = find_object_mapping (clip, child);
-  get_layer_priorities (clip->priv->layer, &layer_min_gnl_prio,
-      &layer_max_gnl_prio);
-
-  if (G_UNLIKELY (map == NULL))
-    /* something massively screwed up if we get this */
-    return;
-
-  if (!ges_track_element_is_locked (child)) {
-    if (tck_priority < layer_min_gnl_prio || tck_priority > layer_max_gnl_prio) {
-      GST_WARNING ("%p priority of %i, is outside of its containing "
-          "layer space. (%d/%d). This is a bug in the program.", element,
-          tck_priority, layer_min_gnl_prio, layer_max_gnl_prio);
-    }
-
-    /* Update the internal priority_offset */
-    map->priority_offset = tck_priority - (layer_min_gnl_prio +
-        _PRIORITY (element));
-
-  } else if (tck_priority < layer_min_gnl_prio + _PRIORITY (element)) {
-    /* Or update the parent priority, the element priority is always the
-     * highest priority (smaller number) */
-    if (tck_priority < layer_min_gnl_prio || layer_max_gnl_prio < tck_priority) {
-
-      GST_WARNING ("%p priority of %i, is outside of its containing "
-          "layer space. (%d/%d). This is a bug in the program.", element,
-          tck_priority, layer_min_gnl_prio, layer_max_gnl_prio);
-      return;
-    }
-
-    _set_priority0 (element, tck_priority - layer_min_gnl_prio);
-  }
-
-  GST_DEBUG_OBJECT (element, "priority %d child %p priority %d",
-      _PRIORITY (element), child, _PRIORITY (child));
-}
-
-static void
-get_layer_priorities (GESTimelineLayer * layer, guint32 * layer_min_gnl_prio,
-    guint32 * layer_max_gnl_prio)
-{
-  if (layer) {
-    *layer_min_gnl_prio = layer->min_gnl_priority;
-    *layer_max_gnl_prio = layer->max_gnl_priority;
-  } else {
-    *layer_min_gnl_prio = 0;
-    *layer_max_gnl_prio = G_MAXUINT32;
-  }
+  return ges_container_add (GES_CONTAINER (clip),
+      GES_TIMELINE_ELEMENT (ges_asset_extract (asset, NULL)));
 }

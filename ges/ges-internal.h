@@ -63,11 +63,11 @@ G_GNUC_INTERNAL gboolean
 timeline_trim_object           (GESTimeline *timeline, GESTrackElement * object,
                                     GList * layers, GESEdge edge, guint64 position);
 G_GNUC_INTERNAL gboolean
-ges_timeline_trim_object_simple (GESTimeline * timeline, GESTrackElement * obj,
+ges_timeline_trim_object_simple (GESTimeline * timeline, GESTimelineElement * obj,
                                  GList * layers, GESEdge edge, guint64 position, gboolean snapping);
 
 G_GNUC_INTERNAL gboolean
-ges_timeline_move_object_simple (GESTimeline * timeline, GESTrackElement * object,
+ges_timeline_move_object_simple (GESTimeline * timeline, GESTimelineElement * object,
                                  GList * layers, GESEdge edge, guint64 position);
 
 G_GNUC_INTERNAL gboolean
@@ -225,5 +225,12 @@ G_GNUC_INTERNAL void _init_formatter_assets                  (void);
 /* Utilities */
 G_GNUC_INTERNAL gint element_start_compare                (GESTimelineElement * a,
                                                               GESTimelineElement * b);
+/****************************************************
+ *              GESContainer                        *
+ ****************************************************/
+G_GNUC_INTERNAL void _ges_container_sort_children       (GESContainer *container);
+G_GNUC_INTERNAL void _ges_container_set_ignore_notifies (GESContainer *container,
+                                                         gboolean ignore_notifies);
+
 
 #endif /* __GES_INTERNAL_H__ */

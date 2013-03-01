@@ -69,11 +69,10 @@ enum
 static GESTrackElement
     * ges_title_clip_create_track_element (GESClip * clip, GESTrackType type);
 
-static void
-ges_title_clip_track_element_added (GESClip * clip,
-    GESTrackElement * trackelement);
-static void ges_title_clip_track_element_released (GESClip * clip,
-    GESTrackElement * trackelement);
+static void _child_added (GESContainer * container,
+    GESTimelineElement * element);
+static void _child_removed (GESContainer * container,
+    GESTimelineElement * element);
 
 static void
 ges_title_clip_get_property (GObject * object, guint property_id,
@@ -165,6 +164,7 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
+  GESContainerClass *container_class = GES_CONTAINER_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTitleClipPrivate));
 
@@ -216,8 +216,9 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
 
   timobj_class->create_track_element = ges_title_clip_create_track_element;
   timobj_class->need_fill_track = FALSE;
-  timobj_class->track_element_added = ges_title_clip_track_element_added;
-  timobj_class->track_element_released = ges_title_clip_track_element_released;
+
+  container_class->child_added = _child_added;
+  container_class->child_removed = _child_removed;
 
   /**
    * GESTitleClip:color:
@@ -593,29 +594,27 @@ ges_title_clip_get_ypos (GESTitleClip * self)
 }
 
 static void
-ges_title_clip_track_element_released (GESClip * clip,
-    GESTrackElement * trackelement)
+_child_removed (GESContainer * container, GESTimelineElement * element)
 {
-  GESTitleClipPrivate *priv = GES_TITLE_CLIP (clip)->priv;
+  GESTitleClipPrivate *priv = GES_TITLE_CLIP (container)->priv;
 
-  /* If this is called, we should be sure the trackelement exists */
-  if (GES_IS_TITLE_SOURCE (trackelement)) {
-    GST_DEBUG_OBJECT (clip, "%p released from %p", trackelement, clip);
-    priv->track_titles = g_slist_remove (priv->track_titles, trackelement);
-    g_object_unref (trackelement);
+  /* If this is called, we should be sure the element exists */
+  if (GES_IS_TITLE_SOURCE (element)) {
+    GST_DEBUG_OBJECT (container, "%" GST_PTR_FORMAT " removed", element);
+    priv->track_titles = g_slist_remove (priv->track_titles, element);
+    g_object_unref (element);
   }
 }
 
 static void
-ges_title_clip_track_element_added (GESClip * clip,
-    GESTrackElement * trackelement)
+_child_added (GESContainer * container, GESTimelineElement * element)
 {
-  GESTitleClipPrivate *priv = GES_TITLE_CLIP (clip)->priv;
+  GESTitleClipPrivate *priv = GES_TITLE_CLIP (container)->priv;
 
-  if (GES_IS_TITLE_SOURCE (trackelement)) {
-    GST_DEBUG_OBJECT (clip, "%p added to %p", trackelement, clip);
-    priv->track_titles =
-        g_slist_prepend (priv->track_titles, g_object_ref (trackelement));
+  if (GES_IS_TITLE_SOURCE (element)) {
+    GST_DEBUG_OBJECT (container, "%" GST_PTR_FORMAT " added", element);
+    priv->track_titles = g_slist_prepend (priv->track_titles,
+        g_object_ref (element));
   }
 }
 

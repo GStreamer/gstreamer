@@ -62,12 +62,12 @@ print_transition_data (GESClip * tr)
   guint64 start, duration;
   gint priority;
   char *name;
-  GList *trackelements, *tmp;
+  GList *trackelements;
 
   if (!tr)
     return FALSE;
 
-  if (!(trackelements = ges_clip_get_track_elements (tr)))
+  if (!(trackelements = GES_CONTAINER_CHILDREN (tr)))
     return FALSE;
   if (!(trackelement = GES_TRACK_ELEMENT (trackelements->data)))
     return FALSE;
@@ -79,12 +79,6 @@ print_transition_data (GESClip * tr)
   g_print ("gnlobject for %s: %f %f %d\n", name,
       ((gfloat) start) / GST_SECOND,
       ((gfloat) duration) / GST_SECOND, priority);
-
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
-    g_object_unref (GES_TRACK_ELEMENT (tmp->data));
-  }
-
-  g_list_free (trackelements);
 
   return FALSE;
 }

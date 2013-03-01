@@ -58,11 +58,10 @@ enum
 
 static GESTrackElement *_create_track_element (GESClip
     * self, GESTrackType type);
-static void
-ges_transition_clip_track_element_added (GESClip * clip,
-    GESTrackElement * trackelement);
-static void ges_transition_clip_track_element_released (GESClip * clip,
-    GESTrackElement * trackelement);
+static void _child_added (GESContainer * container,
+    GESTimelineElement * element);
+static void _child_removed (GESContainer * container,
+    GESTimelineElement * element);
 
 /* Internal methods */
 static void
@@ -230,6 +229,7 @@ ges_transition_clip_class_init (GESTransitionClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
+  GESContainerClass *container_class = GES_CONTAINER_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTransitionClipPrivate));
 
@@ -248,12 +248,11 @@ ges_transition_clip_class_init (GESTransitionClipClass * klass)
           GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  container_class->child_added = _child_added;
+  container_class->child_removed = _child_removed;
 
   timobj_class->create_track_element = _create_track_element;
   timobj_class->need_fill_track = FALSE;
-  timobj_class->track_element_added = ges_transition_clip_track_element_added;
-  timobj_class->track_element_released =
-      ges_transition_clip_track_element_released;
 }
 
 static void
@@ -268,30 +267,27 @@ ges_transition_clip_init (GESTransitionClip * self)
 }
 
 static void
-ges_transition_clip_track_element_released (GESClip * clip,
-    GESTrackElement * trackelement)
+_child_removed (GESContainer * container, GESTimelineElement * element)
 {
-  GESTransitionClipPrivate *priv = GES_TRANSITION_CLIP (clip)->priv;
+  GESTransitionClipPrivate *priv = GES_TRANSITION_CLIP (container)->priv;
 
   /* If this is called, we should be sure the trackelement exists */
-  if (GES_IS_VIDEO_TRANSITION (trackelement)) {
-    GST_DEBUG ("GESVideoTransition %p released from %p", trackelement, clip);
-    priv->video_transitions =
-        g_slist_remove (priv->video_transitions, trackelement);
-    g_object_unref (trackelement);
+  if (GES_IS_VIDEO_TRANSITION (element)) {
+    GST_DEBUG_OBJECT (container, "%" GST_PTR_FORMAT " removed", element);
+    priv->video_transitions = g_slist_remove (priv->video_transitions, element);
+    g_object_unref (element);
   }
 }
 
 static void
-ges_transition_clip_track_element_added (GESClip * clip,
-    GESTrackElement * trackelement)
+_child_added (GESContainer * container, GESTimelineElement * element)
 {
-  GESTransitionClipPrivate *priv = GES_TRANSITION_CLIP (clip)->priv;
+  GESTransitionClipPrivate *priv = GES_TRANSITION_CLIP (container)->priv;
 
-  if (GES_IS_VIDEO_TRANSITION (trackelement)) {
-    GST_DEBUG ("GESVideoTransition %p added to %p", trackelement, clip);
+  if (GES_IS_VIDEO_TRANSITION (element)) {
+    GST_DEBUG_OBJECT (container, "%" GST_PTR_FORMAT " added", element);
     priv->video_transitions =
-        g_slist_prepend (priv->video_transitions, g_object_ref (trackelement));
+        g_slist_prepend (priv->video_transitions, g_object_ref (element));
   }
 }
 

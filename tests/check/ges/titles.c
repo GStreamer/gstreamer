@@ -58,7 +58,7 @@ GST_START_TEST (test_title_source_properties)
   assert_equals_uint64 (_INPOINT (clip), 12);
 
   trackelement = ges_clip_create_track_element (clip, track->type);
-  ges_clip_add_track_element (clip, trackelement);
+  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
   fail_unless (trackelement != NULL);
   fail_unless (ges_track_element_set_track (trackelement, track));
 
@@ -85,7 +85,8 @@ GST_START_TEST (test_title_source_properties)
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
       120, 510, 0, TRUE);
 
-  ges_clip_release_track_element (clip, trackelement);
+  ges_container_remove (GES_CONTAINER (clip),
+      GES_TIMELINE_ELEMENT (trackelement));
   g_object_unref (clip);
 }
 

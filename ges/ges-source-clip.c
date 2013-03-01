@@ -78,9 +78,6 @@ ges_source_clip_class_init (GESSourceClipClass * klass)
   object_class->get_property = ges_source_clip_get_property;
   object_class->set_property = ges_source_clip_set_property;
   object_class->finalize = ges_source_clip_finalize;
-
-  /* All subclasses should have snapping enabled */
-  GES_CLIP_CLASS (klass)->snaps = TRUE;
 }
 
 static void
