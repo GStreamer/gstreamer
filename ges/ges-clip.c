@@ -159,6 +159,74 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
 }
 
 static void
+add_tlobj_to_list (gpointer key, gpointer tlobj, GList ** list)
+{
+  *list = g_list_prepend (*list, g_object_ref (tlobj));
+}
+
+static GList *
+_ungroup (GESContainer * container, gboolean recursive)
+{
+  GList *tmp, *ret = NULL;
+  GESClip *tmpclip;
+  GESTrackType track_type;
+  GESTrackElement *track_element;
+
+  gboolean first_obj = TRUE;
+  GESClip *clip = GES_CLIP (container);
+  GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
+  GESTimelineLayer *layer = clip->priv->layer;
+  GHashTable *_tracktype_clip = g_hash_table_new (g_int_hash, g_int_equal);
+
+  /* If there is no TrackElement, just return @container in a list */
+  if (GES_CONTAINER_CHILDREN (container) == NULL) {
+    GST_DEBUG ("No TrackElement, simply returning");
+    return g_list_prepend (ret, container);
+  }
+
+  /* We need a copy of the current list of tracks */
+  for (tmp = GES_CONTAINER_CHILDREN (container); tmp; tmp = tmp->next) {
+    track_element = GES_TRACK_ELEMENT (tmp->data);
+    track_type = ges_track_element_get_track_type (track_element);
+
+    tmpclip = g_hash_table_lookup (_tracktype_clip, &track_type);
+    if (tmpclip == NULL) {
+      if (G_UNLIKELY (first_obj == TRUE)) {
+        tmpclip = clip;
+        first_obj = FALSE;
+      } else {
+        tmpclip = GES_CLIP (ges_timeline_element_copy (element, FALSE));
+        if (layer) {
+          /* Add new container to the same layer as @container */
+          ges_clip_set_moving_from_layer (tmpclip, TRUE);
+          ges_timeline_layer_add_clip (layer, tmpclip);
+          ges_clip_set_moving_from_layer (tmpclip, FALSE);
+        }
+      }
+
+      g_hash_table_insert (_tracktype_clip, &track_type, tmpclip);
+      ges_clip_set_supported_formats (tmpclip, track_type);
+    }
+
+    /* Move trackelement to the container it is supposed to land into */
+    if (tmpclip != clip) {
+      ges_container_remove (container, GES_TIMELINE_ELEMENT (track_element));
+      ges_container_add (GES_CONTAINER (tmpclip),
+          GES_TIMELINE_ELEMENT (track_element));
+    }
+  }
+  g_hash_table_foreach (_tracktype_clip, (GHFunc) add_tlobj_to_list, &ret);
+  g_hash_table_unref (_tracktype_clip);
+
+  return ret;
+}
+
+/****************************************************
+ *                                                  *
+ *    GObject virtual methods implementation        *
+ *                                                  *
+ ****************************************************/
+static void
 ges_clip_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
@@ -241,6 +309,7 @@ ges_clip_class_init (GESClipClass * klass)
   container_class->get_priorty_range = _get_priorty_range;
   container_class->add_child = _add_child;
   container_class->remove_child = _remove_child;
+  container_class->ungroup = _ungroup;
 
   klass->need_fill_track = TRUE;
 }

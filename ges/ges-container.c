@@ -389,6 +389,7 @@ ges_container_class_init (GESContainerClass * klass)
   /* No default implementations */
   klass->remove_child = NULL;
   klass->add_child = NULL;
+  klass->ungroup = NULL;
 }
 
 static void
@@ -668,4 +669,37 @@ ges_container_get_children (GESContainer * container)
 
   return g_list_copy_deep (container->children, (GCopyFunc) gst_object_ref,
       NULL);
+}
+
+/**
+ * ges_container_ungroup
+ * @container: (transfer full): The #GESContainer to ungroup
+ * @recursive: Wether to recursively ungroup @container
+ *
+ * Ungroups the #GESTimelineElement contained in this GESContainer,
+ * creating new #GESContainer containing those #GESTimelineElement
+ * properly apropriately.
+ *
+ * Returns: (transfer container) (element-type GESContainer): The list of
+ * #GESContainer resulting from the ungrouping operation
+ * The user is responsible for unreffing the contained objects
+ * and freeing the list.
+ */
+GList *
+ges_container_ungroup (GESContainer * container, gboolean recursive)
+{
+  GESContainerClass *klass;
+
+  g_return_val_if_fail (GES_IS_CONTAINER (container), NULL);
+
+  GST_DEBUG_OBJECT (container, "Ungrouping container %s recursively",
+      recursive ? "" : "not");
+
+  klass = GES_CONTAINER_GET_CLASS (container);
+  if (klass->ungroup == NULL) {
+    GST_INFO_OBJECT (container, "No ungoup virtual method, doint nothing");
+    return NULL;
+  }
+
+  return klass->ungroup (container, recursive);
 }
