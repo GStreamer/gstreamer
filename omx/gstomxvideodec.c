@@ -926,7 +926,6 @@ gst_omx_video_dec_get_supported_colorformats (GstOMXVideoDec * self)
 {
   GstOMXPort *port = self->dec_out_port;
   GstVideoCodecState *state = self->input_state;
-  GstVideoInfo *info = &state->info;
   OMX_VIDEO_PARAM_PORTFORMATTYPE param;
   OMX_ERRORTYPE err;
   GList *negotiation_map = NULL;
@@ -935,10 +934,10 @@ gst_omx_video_dec_get_supported_colorformats (GstOMXVideoDec * self)
   GST_OMX_INIT_STRUCT (&param);
   param.nPortIndex = port->index;
   param.nIndex = 0;
-  if (info->fps_n == 0)
+  if (!state || state->info.fps_n == 0)
     param.xFramerate = 0;
   else
-    param.xFramerate = (info->fps_n << 16) / (info->fps_d);
+    param.xFramerate = (state->info.fps_n << 16) / (state->info.fps_d);
 
   old_index = -1;
   do {
