@@ -85,11 +85,18 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
 {
   GstOMXH264Enc *self = GST_OMX_H264_ENC (enc);
   GstCaps *peercaps;
+  OMX_PARAM_PORTDEFINITIONTYPE port_def;
   OMX_VIDEO_AVCPROFILETYPE profile = OMX_VIDEO_AVCProfileBaseline;
   OMX_VIDEO_AVCLEVELTYPE level = OMX_VIDEO_AVCLevel11;
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   OMX_ERRORTYPE err;
   const gchar *profile_string, *level_string;
+
+  gst_omx_port_get_port_definition (port, &port_def);
+  port_def.format.video.eCompressionFormat = OMX_VIDEO_CodingAVC;
+  err = gst_omx_port_update_port_definition (port, &port_def);
+  if (err != OMX_ErrorNone)
+    return FALSE;
 
   peercaps = gst_pad_peer_query_caps (GST_VIDEO_ENCODER_SRC_PAD (enc),
       gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (enc)));

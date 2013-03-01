@@ -81,11 +81,18 @@ gst_omx_h263_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
 {
   GstOMXH263Enc *self = GST_OMX_H263_ENC (enc);
   GstCaps *peercaps;
+  OMX_PARAM_PORTDEFINITIONTYPE port_def;
   OMX_VIDEO_H263PROFILETYPE profile = OMX_VIDEO_H263ProfileBaseline;
   OMX_VIDEO_H263LEVELTYPE level = OMX_VIDEO_H263Level10;
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   OMX_ERRORTYPE err;
   guint profile_id, level_id;
+
+  gst_omx_port_get_port_definition (port, &port_def);
+  port_def.format.video.eCompressionFormat = OMX_VIDEO_CodingH263;
+  err = gst_omx_port_update_port_definition (port, &port_def);
+  if (err != OMX_ErrorNone)
+    return FALSE;
 
   peercaps = gst_pad_peer_query_caps (GST_VIDEO_ENCODER_SRC_PAD (enc),
       gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (enc)));

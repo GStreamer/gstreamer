@@ -85,11 +85,18 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
 {
   GstOMXMPEG4VideoEnc *self = GST_OMX_MPEG4_VIDEO_ENC (enc);
   GstCaps *peercaps, *intersection;
+  OMX_PARAM_PORTDEFINITIONTYPE port_def;
   OMX_VIDEO_MPEG4PROFILETYPE profile = OMX_VIDEO_MPEG4ProfileSimple;
   OMX_VIDEO_MPEG4LEVELTYPE level = OMX_VIDEO_MPEG4Level1;
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   OMX_ERRORTYPE err;
   const gchar *profile_string, *level_string;
+
+  gst_omx_port_get_port_definition (port, &port_def);
+  port_def.format.video.eCompressionFormat = OMX_VIDEO_CodingMPEG4;
+  err = gst_omx_port_update_port_definition (port, &port_def);
+  if (err != OMX_ErrorNone)
+    return FALSE;
 
   peercaps = gst_pad_peer_query_caps (GST_VIDEO_ENCODER_SRC_PAD (enc), NULL);
   if (peercaps) {
