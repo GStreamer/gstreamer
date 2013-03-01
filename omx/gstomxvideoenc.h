@@ -50,9 +50,6 @@ struct _GstOMXVideoEnc
   GstVideoEncoder parent;
 
   /* < protected > */
-
-  GstOMXClassData cdata;
-
   GstOMXComponent *enc;
   GstOMXPort *enc_in_port, *enc_out_port;
 
