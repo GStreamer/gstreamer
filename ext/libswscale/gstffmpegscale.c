@@ -246,43 +246,14 @@ gst_ffmpegscale_caps_remove_format_info (GstCaps * caps)
 {
   int i;
   GstStructure *structure;
-  GstCaps *rgbcaps;
-  GstCaps *graycaps;
 
   caps = gst_caps_copy (caps);
 
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     structure = gst_caps_get_structure (caps, i);
 
-    gst_structure_set_name (structure, "video/x-raw-yuv");
     gst_structure_remove_field (structure, "format");
-    gst_structure_remove_field (structure, "endianness");
-    gst_structure_remove_field (structure, "depth");
-    gst_structure_remove_field (structure, "bpp");
-    gst_structure_remove_field (structure, "red_mask");
-    gst_structure_remove_field (structure, "green_mask");
-    gst_structure_remove_field (structure, "blue_mask");
-    gst_structure_remove_field (structure, "alpha_mask");
-    gst_structure_remove_field (structure, "palette_data");
   }
-
-  rgbcaps = gst_caps_copy (caps);
-
-  for (i = 0; i < gst_caps_get_size (rgbcaps); i++) {
-    structure = gst_caps_get_structure (rgbcaps, i);
-
-    gst_structure_set_name (structure, "video/x-raw-rgb");
-  }
-  graycaps = gst_caps_copy (caps);
-
-  for (i = 0; i < gst_caps_get_size (graycaps); i++) {
-    structure = gst_caps_get_structure (graycaps, i);
-
-    gst_structure_set_name (structure, "video/x-raw-gray");
-  }
-
-  gst_caps_append (caps, graycaps);
-  gst_caps_append (caps, rgbcaps);
 
   return caps;
 }
