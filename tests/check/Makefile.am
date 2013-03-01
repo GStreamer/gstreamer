@@ -162,7 +162,11 @@ uvch264_dist_data = elements/uvch264demux_data/valid_h264_jpg.mjpg \
 			elements/uvch264demux_data/valid_h264_yuy2.h264 \
 			elements/uvch264demux_data/valid_h264_yuy2.yuy2
 
-
+if USE_SHM
+check_shm=elements/shm
+else
+check_shm=
+endif
 
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
@@ -196,6 +200,7 @@ check_PROGRAMS = \
 	$(check_kate)  \
 	$(check_opus)  \
 	$(check_curl) \
+	$(check_shm) \
 	elements/autoconvert \
 	elements/autovideoconvert \
 	elements/asfmux \
