@@ -392,7 +392,6 @@ ges_clip_release_track_element
 ges_clip_get_track_elements
 ges_clip_set_layer
 ges_clip_set_moving_from_layer
-ges_clip_lock_track_elements
 GESClipPrivate
 GES_IS_CLIP
 GES_IS_CLIP_CLASS
