@@ -1186,7 +1186,8 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   }
 
   GST_DEBUG_OBJECT (self, "Setting inport port definition");
-  if (!gst_omx_port_update_port_definition (self->enc_in_port, &port_def))
+  if (gst_omx_port_update_port_definition (self->enc_in_port,
+          &port_def) != OMX_ErrorNone)
     return FALSE;
 
   if (klass->set_format) {
@@ -1197,7 +1198,8 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   }
 
   GST_DEBUG_OBJECT (self, "Updating outport port definition");
-  if (!gst_omx_port_update_port_definition (self->enc_out_port, NULL))
+  if (gst_omx_port_update_port_definition (self->enc_out_port,
+          NULL) != OMX_ErrorNone)
     return FALSE;
 
   GST_DEBUG_OBJECT (self, "Enabling component");
