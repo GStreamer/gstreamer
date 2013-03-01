@@ -16,9 +16,20 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * SECTION:ges-timeline-element
+ * @short_description: Base Class for all elements that will be in a way or
+ * another inside a GESTimeline.
+ *
+ * The GESTimelineElement base class implements the notion of timing as well
+ * as priority. A GESTimelineElement can have a parent object which will be
+ * responsible for controlling its timing properties.
+ */
+
 #include "ges-timeline-element.h"
 #include "ges-extractable.h"
 #include "ges-meta-container.h"
+#include "ges-internal.h"
 
 static void
 extractable_set_asset (GESExtractable * extractable, GESAsset * asset)
@@ -156,7 +167,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   /**
    * GESTimelineElement:timeline:
    *
-   * The timeline in which the object is in
+   * The timeline in which @element is
    */
   properties[PROP_TIMELINE] =
       g_param_spec_object ("timeline", "Timeline",
@@ -196,12 +207,10 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
    * GESTimelineElement:max-duration:
    *
    * The maximum duration (in nanoseconds) of the #GESTimelineElement.
-   *
-   * Since: 0.10.XX
    */
   properties[PROP_MAX_DURATION] =
       g_param_spec_uint64 ("max-duration", "Maximum duration",
-      "The maximum duration of the object", 0, G_MAXUINT64, G_MAXUINT64,
+      "The maximum duration of the object", 0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
 
   /**
@@ -249,7 +258,8 @@ ges_timeline_element_set_parent (GESTimelineElement * self,
     GESTimelineElement * parent)
 {
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
-  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (parent), FALSE);
+  g_return_val_if_fail (parent == NULL
+      || GES_IS_TIMELINE_ELEMENT (parent), FALSE);
   g_return_val_if_fail (self != parent, FALSE);
 
   GST_DEBUG_OBJECT (self, "set parent (ref and sink)");
@@ -445,13 +455,13 @@ ges_timeline_element_set_max_duration (GESTimelineElement * self,
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   GST_DEBUG_OBJECT (self, "current duration: %" GST_TIME_FORMAT
-      " new duration: %" GST_TIME_FORMAT, GST_TIME_ARGS (maxduration),
-      GST_TIME_ARGS (GES_TIMELINE_ELEMENT_MAX_DURATION (self)));
+      " new duration: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GES_TIMELINE_ELEMENT_MAX_DURATION (self)),
+      GST_TIME_ARGS (maxduration));
 
   if (klass->set_max_duration) {
     if (klass->set_max_duration (self, maxduration) == FALSE)
       return;
-
   }
 
   self->maxduration = maxduration;
@@ -581,6 +591,9 @@ ges_timeline_element_set_priority (GESTimelineElement * self, guint32 priority)
   g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
+
+  GST_DEBUG_OBJECT (self, "current priority: %d new priority: %d",
+      self->priority, priority);
 
   if (klass->set_priority) {
     if (klass->set_priority (self, priority)) {
