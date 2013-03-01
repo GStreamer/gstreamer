@@ -93,6 +93,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstrtsp-%{majorminor}.so.*
 %{_libdir}/libgstsdp-%{majorminor}.so.*
 %{_libdir}/libgstapp-%{majorminor}.so.*
+%{_libdir}/libgstallocators-%{majorminor}.so.*
 
 # base plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstadder.so
@@ -227,6 +228,12 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/fft/fft.h
 %{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtsp.h
 %{_includedir}/gstreamer-%{majorminor}/gst/sdp/sdp.h
+%{_includedir}/gstreamer-%{majorminor}/gst/allocators/allocators.h
+%{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstdmabuf.h
+%{_libdir}/girepository-1.0/GstAllocators-1.0.typelib
+%{_libdir}/libgstallocators-1.0.so
+%{_libdir}/pkgconfig/gstreamer-allocators-1.0.pc
+%{_datadir}/gir-1.0/GstAllocators-1.0.gir
 
 
 %{_libdir}/libgstfft-%{majorminor}.so
