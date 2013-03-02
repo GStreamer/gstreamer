@@ -143,6 +143,7 @@ gst_video_segment_clip_clip_buffer (GstSegmentClip * base, GstBuffer * buffer,
   } else {
     GST_DEBUG_OBJECT (self, "Buffer outside the configured segment");
 
+    gst_buffer_unref (buffer);
     if (segment->rate >= 0) {
       if (segment->stop != -1 && timestamp >= segment->stop)
         return GST_FLOW_EOS;
@@ -150,7 +151,6 @@ gst_video_segment_clip_clip_buffer (GstSegmentClip * base, GstBuffer * buffer,
       if (segment->start != -1 && timestamp + duration <= segment->start)
         return GST_FLOW_EOS;
     }
-    gst_buffer_unref (buffer);
   }
 
 
