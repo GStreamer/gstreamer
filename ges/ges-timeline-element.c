@@ -262,9 +262,9 @@ ges_timeline_element_set_parent (GESTimelineElement * self,
       || GES_IS_TIMELINE_ELEMENT (parent), FALSE);
   g_return_val_if_fail (self != parent, FALSE);
 
-  GST_DEBUG_OBJECT (self, "set parent (ref and sink)");
+  GST_DEBUG_OBJECT (self, "set parent to %" GST_PTR_FORMAT, parent);
 
-  if (G_UNLIKELY (self->parent != NULL))
+  if (self->parent != NULL && parent != NULL)
     goto had_parent;
 
   self->parent = parent;
@@ -275,7 +275,7 @@ ges_timeline_element_set_parent (GESTimelineElement * self,
   /* ERROR handling */
 had_parent:
   {
-    GST_DEBUG_OBJECT (self, "set parent failed, object already had a parent");
+    GST_WARNING_OBJECT (self, "set parent failed, object already had a parent");
     return FALSE;
   }
 }
