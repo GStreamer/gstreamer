@@ -9502,7 +9502,8 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('U', '2', '6', '3'):
       _codec ("H.263");
       /* ffmpeg uses the height/width props, don't know why */
-      caps = gst_caps_new_empty_simple ("video/x-h263");
+      caps = gst_caps_new_simple ("video/x-h263",
+          "variant", G_TYPE_STRING, "itu", NULL);
       break;
     case GST_MAKE_FOURCC ('m', 'p', '4', 'v'):
     case GST_MAKE_FOURCC ('M', 'P', '4', 'V'):
