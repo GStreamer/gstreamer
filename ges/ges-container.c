@@ -390,6 +390,7 @@ ges_container_class_init (GESContainerClass * klass)
   klass->remove_child = NULL;
   klass->add_child = NULL;
   klass->ungroup = NULL;
+  klass->group = NULL;
 }
 
 static void
@@ -672,13 +673,13 @@ ges_container_get_children (GESContainer * container)
 }
 
 /**
- * ges_container_ungroup
+ * ges_container_ungroup:
  * @container: (transfer full): The #GESContainer to ungroup
  * @recursive: Wether to recursively ungroup @container
  *
  * Ungroups the #GESTimelineElement contained in this GESContainer,
  * creating new #GESContainer containing those #GESTimelineElement
- * properly apropriately.
+ * apropriately.
  *
  * Returns: (transfer container) (element-type GESContainer): The list of
  * #GESContainer resulting from the ungrouping operation
@@ -702,4 +703,48 @@ ges_container_ungroup (GESContainer * container, gboolean recursive)
   }
 
   return klass->ungroup (container, recursive);
+}
+
+/**
+ * ges_container_group:
+ * @containers: (transfer none)(element-type GESContainer): The
+ * #GESContainer to group, they must all be in a same #GESTimeline
+ *
+ * Groups the #GESContainer-s provided in @containers. It creates a subclass
+ * of #GESContainer, depending on the containers provided in @containers.
+ * Basically, if all the containers in @containers should be contained in a same
+ * clip (all the #GESTrackElement they contain have the exact same
+ * start/inpoint/duration and are in the same layer), it will create a #GESClip
+ * otherwise a #GESGroup will be created
+ *
+ * Returns: (transfer none): The #GESContainer (subclass) resulting of the
+ * grouping
+ */
+GESContainer *
+ges_container_group (GList * containers)
+{
+  GList *tmp;
+  GESContainer *ret;
+  GESTimeline *timeline;
+  GESTimelineElement *element;
+  GObjectClass *clip_class;
+
+  g_return_val_if_fail (containers, NULL);
+  element = GES_TIMELINE_ELEMENT (containers->data);
+  timeline = ges_timeline_element_get_timeline (element);
+  g_return_val_if_fail (timeline, NULL);
+
+  if (g_list_length (containers) == 1)
+    return containers->data;
+
+  for (tmp = containers; tmp; tmp = tmp->next) {
+    g_return_val_if_fail (GES_IS_CONTAINER (tmp->data), NULL);
+    g_return_val_if_fail (ges_timeline_element_get_timeline
+        (GES_TIMELINE_ELEMENT (tmp->data)) == timeline, NULL);
+  }
+
+  clip_class = g_type_class_peek (GES_TYPE_CLIP);
+  ret = GES_CONTAINER_CLASS (clip_class)->group (containers);
+
+  return ret;
 }

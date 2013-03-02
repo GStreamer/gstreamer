@@ -68,6 +68,12 @@ struct _GESClipPrivate
   GESTrackType supportedformats;
 };
 
+typedef struct _CheckTrack
+{
+  GESTrack *track;
+  GESTrackElement *source;
+} CheckTrack;
+
 enum
 {
   PROP_0,
@@ -221,6 +227,155 @@ _ungroup (GESContainer * container, gboolean recursive)
   return ret;
 }
 
+static GESContainer *
+_group (GList * containers)
+{
+  CheckTrack *tracks = NULL;
+  GESTimeline *timeline = NULL;
+  GESTrackType supported_formats;
+  GESTimelineLayer *layer = NULL;
+  GList *tmp, *tmpclip, *tmpelement;
+  GstClockTime start, inpoint, duration;
+
+  GESAsset *asset = NULL;
+  GESContainer *ret = NULL;
+  guint nb_tracks = 0, i = 0;
+
+  start = inpoint = duration = GST_CLOCK_TIME_NONE;
+
+  /* First check if all the containers are clips, if they
+   * all have the same start/inpoint/duration and are in the same
+   * layer.
+   *
+   * We also need to make sure that all source have been created by the
+   * same asset, keep the information */
+  for (tmp = containers; tmp; tmp = tmp->next) {
+    GESClip *clip;
+    GESTimeline *tmptimeline;
+    GESContainer *tmpcontainer;
+    GESTimelineElement *element;
+
+    tmpcontainer = GES_CONTAINER (tmp->data);
+    element = GES_TIMELINE_ELEMENT (tmp->data);
+    if (GES_IS_CLIP (element) == FALSE) {
+      GST_DEBUG ("Can only work with clips");
+      goto done;
+    }
+    clip = GES_CLIP (tmp->data);
+    tmptimeline = ges_timeline_element_get_timeline (element);
+    if (!timeline) {
+      GList *tmptrack;
+
+      start = _START (tmpcontainer);
+      inpoint = _INPOINT (tmpcontainer);
+      duration = _DURATION (tmpcontainer);
+      timeline = tmptimeline;
+      layer = clip->priv->layer;
+      nb_tracks = g_list_length (GES_TIMELINE_GET_TRACKS (timeline));
+      tracks = g_new0 (CheckTrack, nb_tracks);
+
+      for (tmptrack = GES_TIMELINE_GET_TRACKS (timeline); tmptrack;
+          tmptrack = tmptrack->next) {
+        tracks[i].track = tmptrack->data;
+        i++;
+      }
+    } else {
+      if (start != _START (tmpcontainer) ||
+          inpoint != _INPOINT (tmpcontainer) ||
+          duration != _DURATION (tmpcontainer) || clip->priv->layer != layer) {
+        GST_INFO ("All children must have the same start, inpoint, duration "
+            " and be in the same layer");
+
+        goto done;
+      } else {
+        GList *tmp2;
+
+        for (tmp2 = GES_CONTAINER_CHILDREN (tmp->data); tmp2; tmp2 = tmp2->next) {
+          GESTrackElement *track_element = GES_TRACK_ELEMENT (tmp2->data);
+
+          if (GES_IS_SOURCE (track_element)) {
+            guint i;
+
+            for (i = 0; i < nb_tracks; i++) {
+              if (tracks[i].track ==
+                  ges_track_element_get_track (track_element)) {
+                if (tracks[i].source) {
+                  GST_INFO ("Can not link clips with various source for a "
+                      "same track");
+
+                  goto done;
+                }
+                tracks[i].source = track_element;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+
+  /* Then check that all sources have been created by the same asset,
+   * otherwise we can not group */
+  for (i = 0; i < nb_tracks; i++) {
+    if (tracks[i].source == NULL) {
+      GST_FIXME ("Check what to do here as we might end up having a mess");
+
+      continue;
+    }
+
+    /* FIXME Check what to do if we have source that have no assets */
+    if (!asset) {
+      asset =
+          ges_extractable_get_asset (GES_EXTRACTABLE
+          (ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (tracks
+                      [i].source))));
+      continue;
+    }
+    if (asset !=
+        ges_extractable_get_asset (GES_EXTRACTABLE
+            (ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (tracks
+                        [i].source))))) {
+      GST_INFO ("Can not link clips with source coming from different assets");
+
+      goto done;
+    }
+  }
+
+  /* And now pass all TrackElements to the first clip,
+   * and remove others from the layer (updating the supported formats) */
+  ret = containers->data;
+  supported_formats = GES_CLIP (ret)->priv->supportedformats;
+  for (tmpclip = containers->next; tmpclip; tmpclip = tmpclip->next) {
+    GESClip *cclip = tmpclip->data;
+
+    for (tmpelement = GES_CONTAINER_CHILDREN (cclip); tmpelement;
+        tmpelement = tmpelement->next) {
+      GESTimelineElement *celement = GES_TIMELINE_ELEMENT (tmpelement->data);
+
+      ges_container_remove (GES_CONTAINER (cclip), celement);
+      ges_container_add (ret, celement);
+
+      supported_formats = supported_formats |
+          ges_track_element_get_track_type (GES_TRACK_ELEMENT (celement));
+    }
+
+    ges_timeline_layer_remove_clip (layer, tmpclip->data);
+  }
+
+  ges_clip_set_supported_formats (GES_CLIP (ret), supported_formats);
+
+done:
+  if (tracks)
+    g_free (tracks);
+
+
+  return ret;
+
+}
+
+
 /****************************************************
  *                                                  *
  *    GObject virtual methods implementation        *
@@ -310,6 +465,7 @@ ges_clip_class_init (GESClipClass * klass)
   container_class->add_child = _add_child;
   container_class->remove_child = _remove_child;
   container_class->ungroup = _ungroup;
+  container_class->group = _group;
 
   klass->need_fill_track = TRUE;
 }

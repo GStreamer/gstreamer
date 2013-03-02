@@ -177,13 +177,14 @@ GST_START_TEST (test_split_object)
 
 GST_END_TEST;
 
-GST_START_TEST (test_clip_ungroup)
+GST_START_TEST (test_clip_group_ungroup)
 {
   GESAsset *asset;
   GESTimeline *timeline;
   GESClip *clip, *clip2;
   GList *containers, *tmp;
   GESTimelineLayer *layer;
+  GESContainer *regrouped_clip;
   GESTrack *audio_track, *video_track;
 
   ges_init ();
@@ -224,7 +225,6 @@ GST_START_TEST (test_clip_ungroup)
   assert_equals_uint64 (_INPOINT (clip2), 0);
   assert_equals_uint64 (_DURATION (clip2), 10);
   ASSERT_OBJECT_REFCOUNT (clip2, "1 for the layer + 1 in containers list", 2);
-  g_list_free_full (containers, gst_object_unref);
 
   tmp = ges_track_get_elements (audio_track);
   assert_equals_int (g_list_length (tmp), 1);
@@ -255,6 +255,43 @@ GST_START_TEST (test_clip_ungroup)
   assert_equals_uint64 (_INPOINT (clip2), 0);
   assert_equals_uint64 (_DURATION (clip2), 10);
 
+  regrouped_clip = ges_container_group (containers);
+  fail_unless (regrouped_clip == NULL);
+
+  ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (clip), 0);
+  regrouped_clip = ges_container_group (containers);
+  assert_is_type (regrouped_clip, GES_TYPE_CLIP);
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (regrouped_clip)),
+      2);
+  assert_equals_int (ges_clip_get_supported_formats (GES_CLIP (regrouped_clip)),
+      GES_TRACK_TYPE_VIDEO | GES_TRACK_TYPE_AUDIO);
+  g_list_free_full (containers, gst_object_unref);
+
+  GST_DEBUG ("Check clips in the layer");
+  tmp = ges_timeline_layer_get_clips (layer);
+  assert_equals_int (g_list_length (tmp), 1);
+  g_list_free_full (tmp, gst_object_unref);
+
+  GST_DEBUG ("Check TrackElement in audio track");
+  tmp = ges_track_get_elements (audio_track);
+  assert_equals_int (g_list_length (tmp), 1);
+  assert_equals_int (ges_track_element_get_track_type (tmp->data),
+      GES_TRACK_TYPE_AUDIO);
+  fail_unless (GES_CONTAINER (ges_timeline_element_get_parent (tmp->data)) ==
+      regrouped_clip);
+  g_list_free_full (tmp, gst_object_unref);
+
+  GST_DEBUG ("Check TrackElement in video track");
+  tmp = ges_track_get_elements (video_track);
+  assert_equals_int (g_list_length (tmp), 1);
+  ASSERT_OBJECT_REFCOUNT (tmp->data, "1 for the track + 1 for the container "
+      "+ 1 for the timeline + 1 in tmp list", 4);
+  assert_equals_int (ges_track_element_get_track_type (tmp->data),
+      GES_TRACK_TYPE_VIDEO);
+  fail_unless (GES_CONTAINER (ges_timeline_element_get_parent (tmp->data)) ==
+      regrouped_clip);
+  g_list_free_full (tmp, gst_object_unref);
+
   gst_object_unref (timeline);
 }
 
@@ -270,7 +307,7 @@ ges_suite (void)
 
   tcase_add_test (tc_chain, test_object_properties);
   tcase_add_test (tc_chain, test_split_object);
-  tcase_add_test (tc_chain, test_clip_ungroup);
+  tcase_add_test (tc_chain, test_clip_group_ungroup);
 
   return s;
 }
