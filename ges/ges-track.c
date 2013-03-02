@@ -384,8 +384,9 @@ dispose_trackelements_foreach (GESTrackElement * trackelement, GESTrack * track)
 
   clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (trackelement));
 
-  ges_container_remove (GES_CONTAINER (clip),
-      GES_TIMELINE_ELEMENT (trackelement));
+  if (clip)
+    ges_container_remove (GES_CONTAINER (clip),
+        GES_TIMELINE_ELEMENT (trackelement));
   remove_object_internal (track, trackelement);
 }
 
