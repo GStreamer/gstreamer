@@ -114,6 +114,10 @@
  * the strength of the sharpening filter.
  *
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <string.h>
 
 #include "vs_scanline.h"
