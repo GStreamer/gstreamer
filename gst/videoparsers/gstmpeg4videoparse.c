@@ -275,7 +275,7 @@ gst_mpeg4vparse_process_config (GstMpeg4VParse * mp4vparse,
       mp4vparse->vol.fixed_vop_time_increment);
 
 
-  GST_LOG_OBJECT (mp4vparse, "accepting parsed config size %" G_GSSIZE_FORMAT,
+  GST_LOG_OBJECT (mp4vparse, "accepting parsed config size %" G_GSIZE_FORMAT,
       size);
 
   if (mp4vparse->config != NULL)
