@@ -285,8 +285,7 @@ theora_parse_set_header_on_caps (GstTheoraParse * parse, GstCaps * caps)
     g_value_unset (&value);
   }
 
-  gst_structure_set_value (structure, "streamheader", &array);
-  g_value_unset (&array);
+  gst_structure_take_value (structure, "streamheader", &array);
 }
 
 /* two tasks to do here: set the streamheader on the caps, and use libtheora to

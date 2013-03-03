@@ -667,25 +667,13 @@ theora_set_header_on_caps (GstCaps * caps, GList * buffers)
 
   for (walk = buffers; walk; walk = walk->next) {
     buffer = walk->data;
-
-    /* mark buffer */
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
-
-    /* Copy buffer, because we can't use the original -
-     * it creates a circular refcount with the caps<->buffers */
-    buffer = gst_buffer_copy (buffer);
-
     g_value_init (&value, GST_TYPE_BUFFER);
     gst_value_set_buffer (&value, buffer);
     gst_value_array_append_value (&array, &value);
     g_value_unset (&value);
-
-    /* Unref our copy */
-    gst_buffer_unref (buffer);
   }
 
-  gst_structure_set_value (structure, "streamheader", &array);
-  g_value_unset (&array);
+  gst_structure_take_value (structure, "streamheader", &array);
 
   return caps;
 }
@@ -844,6 +832,7 @@ theora_enc_buffer_from_header_packet (GstTheoraEnc * enc, ogg_packet * packet)
   GST_BUFFER_OFFSET_END (outbuf) = 0;
   GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_HEADER);
 
   GST_DEBUG ("created header packet buffer, %u bytes",
       (guint) gst_buffer_get_size (outbuf));
