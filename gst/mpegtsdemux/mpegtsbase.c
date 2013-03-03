@@ -1491,7 +1491,7 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 static GstFlowReturn
 mpegts_base_scan (MpegTSBase * base)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buf = NULL;
   guint i;
   gboolean done = FALSE;
@@ -1598,6 +1598,7 @@ static void
 mpegts_base_loop (MpegTSBase * base)
 {
   GstFlowReturn ret = GST_FLOW_ERROR;
+
   switch (base->mode) {
     case BASE_MODE_SCANNING:
       /* Find first sync point */

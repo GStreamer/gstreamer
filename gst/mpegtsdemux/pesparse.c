@@ -334,7 +334,7 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
     if (G_UNLIKELY (length < res->extension_field_length + 1))
       goto need_more_data;
 
-    GST_LOG ("extension_field_length : %" G_GSSIZE_FORMAT,
+    GST_LOG ("extension_field_length : %" G_GSIZE_FORMAT,
         res->extension_field_length);
 
     if (res->extension_field_length) {
@@ -359,7 +359,7 @@ stuffing_byte:
   length = origlength - res->header_size;
 
 done_parsing:
-  GST_DEBUG ("origlength:%" G_GSSIZE_FORMAT ", length:%" G_GSSIZE_FORMAT,
+  GST_DEBUG ("origlength:%" G_GSIZE_FORMAT ", length:%" G_GSIZE_FORMAT,
       origlength, length);
 
   res->header_size = origlength - length;
