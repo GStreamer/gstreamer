@@ -753,7 +753,7 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
   GstMapInfo map;
   gboolean result = TRUE;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint framesize;
+  guint framesize = 0;
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
