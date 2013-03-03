@@ -164,9 +164,8 @@ vorbis_parse_set_header_on_caps (GstVorbisParse * parse, GstCaps * caps)
   g_value_init (&value, GST_TYPE_BUFFER);
   gst_value_set_buffer (&value, buf3);
   gst_value_array_append_value (&array, &value);
-  gst_structure_set_value (structure, "streamheader", &array);
+  gst_structure_take_value (structure, "streamheader", &array);
   g_value_unset (&value);
-  g_value_unset (&array);
 }
 
 static void

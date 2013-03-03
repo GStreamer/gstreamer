@@ -569,6 +569,7 @@ gst_vorbis_enc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
   GST_BUFFER_OFFSET_END (outbuf) = 0;
   GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_HEADER);
 
   GST_DEBUG ("created header packet buffer, %" G_GSIZE_FORMAT " bytes",
       gst_buffer_get_size (outbuf));
@@ -638,24 +639,15 @@ _gst_caps_set_buffer_array (GstCaps * caps, const gchar * field,
   va_start (va, buf);
   /* put buffers in a fixed list */
   while (buf) {
-    g_assert (gst_buffer_is_writable (buf));
-
-    /* mark buffer */
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
-
     g_value_init (&value, GST_TYPE_BUFFER);
-    buf = gst_buffer_copy (buf);
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
     gst_value_set_buffer (&value, buf);
-    gst_buffer_unref (buf);
     gst_value_array_append_value (&array, &value);
     g_value_unset (&value);
 
     buf = va_arg (va, GstBuffer *);
   }
 
-  gst_structure_set_value (structure, field, &array);
-  g_value_unset (&array);
+  gst_structure_take_value (structure, field, &array);
 
   return caps;
 }
