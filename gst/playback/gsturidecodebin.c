@@ -2255,8 +2255,7 @@ handle_redirect_message (GstURIDecodeBin * dec, GstMessage * msg)
   value_list_append_structure_list (&new_list, &new_structure, l_good);
   value_list_append_structure_list (&new_list, &new_structure, l_neutral);
   value_list_append_structure_list (&new_list, &new_structure, l_bad);
-  gst_structure_set_value (new_structure, "locations", &new_list);
-  g_value_unset (&new_list);
+  gst_structure_take_value (new_structure, "locations", &new_list);
 
   g_list_free (l_good);
   g_list_free (l_neutral);
