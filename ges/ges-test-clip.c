@@ -363,8 +363,13 @@ ges_test_clip_create_track_element (GESClip * clip, GESTrackType type)
 GESTestClip *
 ges_test_clip_new (void)
 {
-  /* FIXME : Check for validity/existence of URI */
-  return g_object_new (GES_TYPE_TEST_CLIP, NULL);
+  GESTestClip *new_clip;
+  GESAsset *asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+
+  new_clip = GES_TEST_CLIP (ges_asset_extract (asset, NULL));
+  g_object_unref (asset);
+
+  return new_clip;
 }
 
 /**
@@ -389,8 +394,8 @@ ges_test_clip_new_for_nick (gchar * nick)
 
   value = g_enum_get_value_by_nick (klass, nick);
   if (value) {
-    ret = g_object_new (GES_TYPE_TEST_CLIP, "vpattern",
-        (gint) value->value, NULL);
+    ret = ges_test_clip_new ();
+    ges_test_clip_set_vpattern (ret, value->value);
   }
 
   g_type_class_unref (klass);

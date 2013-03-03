@@ -342,7 +342,27 @@ _create_track_element (GESClip * clip, GESTrackType type)
 GESTransitionClip *
 ges_transition_clip_new (GESVideoStandardTransitionType vtype)
 {
-  return g_object_new (GES_TYPE_TRANSITION_CLIP, "vtype", (gint) vtype, NULL);
+  GEnumValue *value;
+  GEnumClass *klass;
+  GESTransitionClip *ret = NULL;
+
+  klass =
+      G_ENUM_CLASS (g_type_class_ref (GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE));
+  if (!klass) {
+    GST_ERROR ("Could not find the StandarTransitionType enum class");
+    return NULL;
+  }
+
+  value = g_enum_get_value (klass, vtype);
+  if (!value) {
+    GST_ERROR ("Could not find enum value for %i", vtype);
+    return NULL;
+  }
+
+  ret = ges_transition_clip_new_for_nick (((gchar *) value->value_nick));
+  g_type_class_unref (klass);
+
+  return ret;
 }
 
 /**
@@ -358,21 +378,15 @@ ges_transition_clip_new (GESVideoStandardTransitionType vtype)
 GESTransitionClip *
 ges_transition_clip_new_for_nick (gchar * nick)
 {
-  GEnumValue *value;
-  GEnumClass *klass;
   GESTransitionClip *ret = NULL;
+  GESAsset *asset = ges_asset_request (GES_TYPE_TRANSITION_CLIP, nick, NULL);
 
-  klass =
-      G_ENUM_CLASS (g_type_class_ref (GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE));
-  if (!klass)
-    return NULL;
+  if (asset != NULL) {
+    ret = GES_TRANSITION_CLIP (ges_asset_extract (asset, NULL));
 
-  value = g_enum_get_value_by_nick (klass, nick);
-  if (value) {
-    ret = g_object_new (GES_TYPE_TRANSITION_CLIP, "vtype",
-        (gint) value->value, NULL);
-  }
+    gst_object_unref (asset);
+  } else
+    GST_WARNING ("No asset found for nick: %s", nick);
 
-  g_type_class_unref (klass);
   return ret;
 }

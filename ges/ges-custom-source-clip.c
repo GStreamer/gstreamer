@@ -82,8 +82,8 @@ extractable_get_parameters_from_id (const gchar * id, guint * n_params)
       GUINT_TO_POINTER (g_ascii_strtoll (func_udata[1], NULL, 10)));
 
   params[2].name = "supported-formats";
-  g_value_init (&params[2].value, G_TYPE_ENUM);
-  g_value_set_enum (&params[2].value, GES_TRACK_TYPE_CUSTOM);
+  g_value_init (&params[2].value, GES_TYPE_TRACK_TYPE);
+  g_value_set_flags (&params[2].value, GES_TRACK_TYPE_CUSTOM);
 
   g_strfreev (func_udata);
 
@@ -232,11 +232,10 @@ ges_custom_source_clip_new (GESFillTrackElementUserFunc func,
     gpointer user_data)
 {
   GESCustomSourceClip *src;
+  GESAsset *asset = ges_asset_custom_source_clip_new (func, user_data);
 
-  src = g_object_new (GES_TYPE_CUSTOM_SOURCE_CLIP, "supported-formats",
-      GES_TRACK_TYPE_CUSTOM, NULL);
-  src->priv->filltrackelementfunc = func;
-  src->priv->user_data = user_data;
+  src = GES_CUSTOM_SOURCE_CLIP (ges_asset_extract (asset, NULL));
+  gst_object_unref (asset);
 
   return src;
 }

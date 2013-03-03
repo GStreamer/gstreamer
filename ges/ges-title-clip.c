@@ -655,6 +655,11 @@ ges_title_clip_create_track_element (GESClip * clip, GESTrackType type)
 GESTitleClip *
 ges_title_clip_new (void)
 {
-  /* FIXME : Check for validity/existence of URI */
-  return g_object_new (GES_TYPE_TITLE_CLIP, NULL);
+  GESTitleClip *new_clip;
+  GESAsset *asset = ges_asset_request (GES_TYPE_TITLE_CLIP, NULL, NULL);
+
+  new_clip = GES_TITLE_CLIP (ges_asset_extract (asset, NULL));
+  g_object_unref (asset);
+
+  return new_clip;
 }

@@ -190,6 +190,7 @@ GESEffectClip *
 ges_effect_clip_new (const gchar * video_bin_description,
     const gchar * audio_bin_description)
 {
+  /*  FIXME Handle GESAsset! */
   return g_object_new (GES_TYPE_EFFECT_CLIP,
       "video-bin-description", video_bin_description,
       "audio-bin-description", audio_bin_description, NULL);
