@@ -402,7 +402,6 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   }
 
   if (flags & GST_BUFFER_COPY_MEMORY) {
-    GstMemory *mem;
     gsize skip, left, len, dest_len, i, bsize;
     gboolean deep;
 
@@ -415,38 +414,41 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 
     /* copy and make regions of the memory */
     for (i = 0; i < len && left > 0; i++) {
-      mem = GST_BUFFER_MEM_PTR (src, i);
+      GstMemory *mem = GST_BUFFER_MEM_PTR (src, i);
+
       bsize = gst_memory_get_sizes (mem, NULL, NULL);
 
       if (bsize <= skip) {
         /* don't copy buffer */
         skip -= bsize;
       } else {
+        GstMemory *newmem = NULL;
         gsize tocopy;
 
         tocopy = MIN (bsize - skip, left);
 
         if (tocopy < bsize && !deep && !GST_MEMORY_IS_NO_SHARE (mem)) {
           /* we need to clip something */
-          mem = gst_memory_share (mem, skip, tocopy);
-          skip = 0;
+          newmem = gst_memory_share (mem, skip, tocopy);
+          if (newmem)
+            skip = 0;
         }
 
-        if (deep || GST_MEMORY_IS_NO_SHARE (mem) || (!mem && tocopy < bsize)) {
+        if (deep || GST_MEMORY_IS_NO_SHARE (mem) || (!newmem && tocopy < bsize)) {
           /* deep copy or we're not allowed to share this memory
            * between buffers, always copy then */
-          mem = gst_memory_copy (mem, skip, tocopy);
+          newmem = gst_memory_copy (mem, skip, tocopy);
           skip = 0;
-        } else {
-          mem = gst_memory_ref (mem);
+        } else if (!newmem) {
+          newmem = gst_memory_ref (mem);
         }
 
-        if (!mem) {
+        if (!newmem) {
           gst_buffer_remove_memory_range (dest, dest_len, -1);
           return FALSE;
         }
 
-        _memory_add (dest, -1, mem, TRUE);
+        _memory_add (dest, -1, newmem, TRUE);
         left -= tocopy;
       }
     }
