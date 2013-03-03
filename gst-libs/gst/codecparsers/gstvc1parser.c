@@ -1674,7 +1674,7 @@ gst_vc1_identify_next_bdu (const guint8 * data, gsize size, GstVC1BDU * bdu)
   g_return_val_if_fail (bdu != NULL, GST_VC1_PARSER_ERROR);
 
   if (size < 4) {
-    GST_DEBUG ("Can't parse, buffer has too small size %" G_GSSIZE_FORMAT,
+    GST_DEBUG ("Can't parse, buffer has too small size %" G_GSIZE_FORMAT,
         size);
     return GST_VC1_PARSER_ERROR;
   }

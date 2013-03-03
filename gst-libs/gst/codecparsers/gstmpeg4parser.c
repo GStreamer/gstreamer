@@ -437,7 +437,7 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
   g_return_val_if_fail (packet != NULL, GST_MPEG4_PARSER_ERROR);
 
   if (size - offset <= 4) {
-    GST_DEBUG ("Can't parse, buffer is to small size %" G_GSSIZE_FORMAT
+    GST_DEBUG ("Can't parse, buffer is to small size %" G_GSIZE_FORMAT
         " at offset %d", size, offset);
     return GST_MPEG4_PARSER_ERROR;
   }
@@ -496,7 +496,7 @@ find_end:
     packet->size = (gsize) off2 - off1 - 3;
   }
 
-  GST_DEBUG ("Complete packet of type %x found at: %d, Size: %" G_GSSIZE_FORMAT,
+  GST_DEBUG ("Complete packet of type %x found at: %d, Size: %" G_GSIZE_FORMAT,
       packet->type, packet->offset, packet->size);
   return GST_MPEG4_PARSER_OK;
 
@@ -528,7 +528,7 @@ gst_h263_parse (GstMpeg4Packet * packet,
   g_return_val_if_fail (packet != NULL, GST_MPEG4_PARSER_ERROR);
 
   if (size - offset < 3) {
-    GST_DEBUG ("Can't parse, buffer is to small size %" G_GSSIZE_FORMAT
+    GST_DEBUG ("Can't parse, buffer is to small size %" G_GSIZE_FORMAT
         " at offset %d", size, offset);
     return GST_MPEG4_PARSER_ERROR;
   }
@@ -555,7 +555,7 @@ gst_h263_parse (GstMpeg4Packet * packet,
 
   packet->size = (gsize) off2 - off1;
 
-  GST_DEBUG ("Complete packet found at: %d, Size: %" G_GSSIZE_FORMAT,
+  GST_DEBUG ("Complete packet found at: %d, Size: %" G_GSIZE_FORMAT,
       packet->offset, packet->size);
 
   return GST_MPEG4_PARSER_OK;
