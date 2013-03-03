@@ -21,7 +21,7 @@
 #define __OPENSLESSINK_H__
 
 #include <gst/gst.h>
-#include <gst/audio/gstaudiobasesink.h>
+#include <gst/audio/audio.h>
 #include "openslesringbuffer.h"
 
 G_BEGIN_DECLS

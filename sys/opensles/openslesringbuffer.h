@@ -21,7 +21,7 @@
 #define __OPENSLESRINGBUFFER_H__
 
 #include <gst/gst.h>
-#include <gst/audio/gstaudioringbuffer.h>
+#include <gst/audio/audio.h>
 
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
