@@ -278,9 +278,7 @@ gst_navigation_query_set_commands (GstQuery * query, gint n_cmds, ...)
   va_end (ap);
 
   structure = gst_query_writable_structure (query);
-  gst_structure_set_value (structure, "commands", &list);
-
-  g_value_unset (&list);
+  gst_structure_take_value (structure, "commands", &list);
 }
 
 /**
@@ -307,9 +305,7 @@ gst_navigation_query_set_commandsv (GstQuery * query, gint n_cmds,
     gst_query_list_add_command (&list, cmds[i]);
   }
   structure = gst_query_writable_structure (query);
-  gst_structure_set_value (structure, "commands", &list);
-
-  g_value_unset (&list);
+  gst_structure_take_value (structure, "commands", &list);
 }
 
 /**
