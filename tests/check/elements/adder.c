@@ -282,6 +282,7 @@ GST_START_TEST (test_event)
   gst_consistency_checker_free (chk_1);
   gst_consistency_checker_free (chk_2);
   gst_consistency_checker_free (chk_3);
+  gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
 }
@@ -417,6 +418,7 @@ GST_START_TEST (test_play_twice)
   g_main_loop_unref (main_loop);
   gst_consistency_checker_free (consist);
   gst_event_ref (play_seek_event);
+  gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
 }
@@ -523,6 +525,7 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
   g_main_loop_unref (main_loop);
   gst_event_ref (play_seek_event);
   gst_consistency_checker_free (consist);
+  gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
 }
@@ -755,6 +758,7 @@ GST_START_TEST (test_add_pad)
 
   /* cleanup */
   g_main_loop_unref (main_loop);
+  gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
 }
@@ -836,6 +840,7 @@ GST_START_TEST (test_remove_pad)
 
   /* cleanup */
   g_main_loop_unref (main_loop);
+  gst_bus_remove_signal_watch (bus);
   gst_object_unref (G_OBJECT (bus));
   gst_object_unref (G_OBJECT (bin));
 }
@@ -953,6 +958,12 @@ GST_START_TEST (test_clip)
   ret = gst_pad_chain (sinkpad, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
   fail_unless (handoff_buffer == NULL);
+
+  gst_object_unref (sinkpad);
+  gst_element_set_state (bin, GST_STATE_NULL);
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+  gst_object_unref (bin);
 }
 
 GST_END_TEST;
@@ -1161,6 +1172,7 @@ GST_START_TEST (test_loop)
 
   /* cleanup */
   g_main_loop_unref (main_loop);
+  gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
 }
