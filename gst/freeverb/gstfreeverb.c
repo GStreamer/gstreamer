@@ -616,7 +616,7 @@ gst_freeverb_get_unit_size (GstBaseTransform * base, GstCaps * caps,
 
   *size = GST_AUDIO_INFO_BPF (&info);
 
-  GST_INFO_OBJECT (base, "unit size: %u", *size);
+  GST_INFO_OBJECT (base, "unit size: %" G_GSIZE_FORMAT, *size);
 
   return TRUE;
 }
