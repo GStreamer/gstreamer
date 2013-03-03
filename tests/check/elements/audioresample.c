@@ -633,6 +633,9 @@ test_pipeline (const gchar * format, gint inrate, gint outrate, gint quality)
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+
   fail_if (messages > 0, "Received imperfect timestamp messages");
   gst_object_unref (pipeline);
 }
@@ -882,6 +885,9 @@ GST_START_TEST (test_timestamp_drift)
   fail_unless (gst_element_set_state (pipeline,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
   g_main_loop_unref (loop);
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+
   gst_object_unref (pipeline);
 
 } GST_END_TEST;
