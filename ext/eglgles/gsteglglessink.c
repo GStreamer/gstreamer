@@ -2512,7 +2512,7 @@ gst_eglglessink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     GstVideoInfo info;
 
     if (!gst_video_info_from_caps (&info, caps)) {
-      GST_ERROR_OBJECT (eglglessink, "allocation query has invalid caps %",
+      GST_ERROR_OBJECT (eglglessink, "allocation query has invalid caps %"
           GST_PTR_FORMAT, caps);
       return FALSE;
     }
