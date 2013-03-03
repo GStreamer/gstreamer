@@ -786,6 +786,7 @@ ges_timeline_element_trim (GESTimelineElement * self, GstClockTime start)
 GESTimelineElement *
 ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
 {
+  GESAsset *asset;
   GParameter *params;
   GParamSpec **specs;
   GESTimelineElementClass *klass;
@@ -818,6 +819,9 @@ ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
   g_free (params);
 
 
+  asset = ges_extractable_get_asset (GES_EXTRACTABLE (self));
+  if (asset)
+    ges_extractable_set_asset (GES_EXTRACTABLE (ret), asset);
   if (deep) {
     if (klass->deep_copy)
       klass->deep_copy (self, ret);
