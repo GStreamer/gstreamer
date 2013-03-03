@@ -2898,7 +2898,7 @@ static GstFlowReturn
 gst_base_sink_default_wait_event (GstBaseSink * basesink, GstEvent * event)
 {
   GstFlowReturn ret;
-  gboolean late, step_end;
+  gboolean late, step_end = FALSE;
 
   ret = gst_base_sink_do_sync (basesink, GST_MINI_OBJECT_CAST (event),
       &late, &step_end);
