@@ -1117,7 +1117,6 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
 
   while (walk) {
     GstBuffer *buf = GST_BUFFER (walk->data);
-    GstBuffer *copy;
     GValue value = { 0 };
 
     walk = walk->next;
@@ -1128,14 +1127,11 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
 
     g_value_init (&value, GST_TYPE_BUFFER);
-    copy = gst_buffer_copy (buf);
-    gst_value_set_buffer (&value, copy);
-    gst_buffer_unref (copy);
+    gst_value_set_buffer (&value, buf);
     gst_value_array_append_value (&array, &value);
     g_value_unset (&value);
   }
-  gst_structure_set_value (structure, "streamheader", &array);
-  g_value_unset (&array);
+  gst_structure_take_value (structure, "streamheader", &array);
 
   return caps;
 }

@@ -147,7 +147,7 @@ static GstFlowReturn gst_ogg_demux_combine_flows (GstOggDemux * ogg,
     GstOggPad * pad, GstFlowReturn ret);
 static void gst_ogg_demux_sync_streams (GstOggDemux * ogg);
 
-GstCaps *gst_ogg_demux_set_header_on_caps (GstOggDemux * ogg,
+static GstCaps *gst_ogg_demux_set_header_on_caps (GstOggDemux * ogg,
     GstCaps * caps, GList * headers);
 static gboolean gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event);
 static gboolean gst_ogg_demux_perform_seek_push (GstOggDemux * ogg,
@@ -2499,7 +2499,7 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
   return TRUE;
 }
 
-GstCaps *
+static GstCaps *
 gst_ogg_demux_set_header_on_caps (GstOggDemux * ogg, GstCaps * caps,
     GList * headers)
 {
@@ -2534,8 +2534,7 @@ gst_ogg_demux_set_header_on_caps (GstOggDemux * ogg, GstCaps * caps,
     headers = headers->next;
   }
 
-  gst_structure_set_value (structure, "streamheader", &array);
-  g_value_unset (&array);
+  gst_structure_take_value (structure, "streamheader", &array);
   GST_LOG_OBJECT (ogg, "here are the newly set caps: %" GST_PTR_FORMAT, caps);
 
   return caps;

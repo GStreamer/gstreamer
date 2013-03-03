@@ -585,11 +585,9 @@ gst_ogg_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
             caps = gst_caps_make_writable (caps);
 
             structure = gst_caps_get_structure (caps, 0);
-            gst_structure_set_value (structure, "streamheader", &array);
+            gst_structure_take_value (structure, "streamheader", &array);
 
             gst_pad_set_caps (ogg->srcpad, caps);
-
-            g_value_unset (&array);
 
             if (ogg->caps)
               gst_caps_unref (ogg->caps);
