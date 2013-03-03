@@ -1037,7 +1037,7 @@ GST_START_TEST (test_caps_negotiation)
   check_peer_caps (mysrcpad, test->expected_sink_caps, "sink");
   check_peer_caps (mysinkpad, test->expected_src_caps, "src");
 
-  gst_object_unref (videorate);
+  cleanup_videorate (videorate);
 }
 
 GST_END_TEST;
