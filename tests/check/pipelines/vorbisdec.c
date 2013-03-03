@@ -79,8 +79,12 @@ GST_START_TEST (test_timestamps)
   loop = g_main_loop_new (NULL, FALSE);
 
   g_main_loop_run (loop);
+  g_main_loop_unref (loop);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
 
   fail_if (messages > 0, "Received imperfect timestamp messages");
   gst_object_unref (pipeline);
@@ -92,7 +96,7 @@ GST_END_TEST;
 static Suite *
 vorbisenc_suite (void)
 {
-  Suite *s = suite_create ("vorbisenc");
+  Suite *s = suite_create ("vorbisdec");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
