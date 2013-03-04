@@ -323,6 +323,7 @@ gst_pngenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   png_write_end (pngenc->png_struct_ptr, NULL);
 
   g_free (row_pointers);
+  gst_video_frame_unmap (&vframe);
 
   png_destroy_info_struct (pngenc->png_struct_ptr, &pngenc->png_info_ptr);
   png_destroy_write_struct (&pngenc->png_struct_ptr, (png_infopp) NULL);
