@@ -3108,8 +3108,14 @@ decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
 {
   guint max_bytes, max_buffers;
   guint64 max_time;
+  gboolean use_buffering;
 
-  if (preroll || dbin->use_buffering) {
+  /* get the current config from the multiqueue */
+  g_object_get (multiqueue, "use-buffering", &use_buffering, NULL);
+
+  GST_DEBUG_OBJECT (multiqueue, "use buffering %d", use_buffering);
+
+  if (preroll || use_buffering) {
     /* takes queue limits, initially we only queue up up to the max bytes limit,
      * with a default of 2MB. we use the same values for buffering mode. */
     if ((max_bytes = dbin->max_size_bytes) == 0)
@@ -3126,10 +3132,15 @@ decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
       max_bytes = AUTO_PLAY_SIZE_BYTES;
     if ((max_buffers = dbin->max_size_buffers) == 0)
       max_buffers = AUTO_PLAY_SIZE_BUFFERS;
-    if ((max_time = dbin->max_size_time) == 0)
+    /* this is a multiqueue with disabled buffering, don't limit max_time */
+    if (dbin->use_buffering)
+      max_time = 0;
+    else if ((max_time = dbin->max_size_time) == 0)
       max_time = AUTO_PLAY_SIZE_TIME;
   }
 
+  GST_DEBUG_OBJECT (multiqueue, "setting limits %u bytes, %u buffers, "
+      "%" G_GUINT64_FORMAT, max_bytes, max_buffers, max_time);
   g_object_set (multiqueue,
       "max-size-bytes", max_bytes, "max-size-time", max_time,
       "max-size-buffers", max_buffers, NULL);
@@ -3587,6 +3598,7 @@ gst_decode_group_reset_buffering (GstDecodeGroup * group)
   } else {
     g_object_set (group->multiqueue, "use-buffering", TRUE, NULL);
   }
+  decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE, FALSE);
 
   GST_DEBUG_OBJECT (group->dbin, "Setting %s buffering to %d",
       GST_ELEMENT_NAME (group->multiqueue), !ret);
