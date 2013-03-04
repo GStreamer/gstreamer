@@ -140,7 +140,7 @@ $GST/gstreamer/plugins\
 :$GST/gst-plugins-bad/sys\
 :$GST/gst-ffmpeg/ext\
 :$GST/gnonlin/gnl\
-:$GST/gst-openmax\
+:$GST/gst-omx/omx/.libs\
 :$GST/gst-plugins-gl/gst\
 :$GST/plugins\
 :$GST/farsight2/gst\
