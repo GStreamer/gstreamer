@@ -1360,23 +1360,11 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     GstPad *thepad;
     GstBuffer *hbuf;
     GstMapInfo map;
-#ifndef GST_DISABLE_DEBUG
     GstCaps *caps;
-    const gchar *mime_type;
-#endif
+    const gchar *mime_type = "";
 
     pad = (GstOggPadData *) walk->data;
     thepad = pad->collect.pad;
-#ifndef GST_DISABLE_DEBUG
-    if ((caps = gst_pad_get_current_caps (thepad))) {
-      GstStructure *structure = gst_caps_get_structure (caps, 0);
-      mime_type = gst_structure_get_name (structure);
-      gst_caps_unref (caps);
-    } else {
-      mime_type = "";
-    }
-#endif
-
     walk = walk->next;
 
     pad->packetno = 0;
@@ -1396,6 +1384,11 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
           GST_DEBUG_PAD_NAME (thepad));
       GST_OBJECT_UNLOCK (thepad);
       continue;
+    }
+
+    if ((caps = gst_pad_get_current_caps (thepad))) {
+      GstStructure *structure = gst_caps_get_structure (caps, 0);
+      mime_type = gst_structure_get_name (structure);
     }
 
     /* create a packet from the buffer */
@@ -1430,6 +1423,10 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
       hbufs = g_list_prepend (hbufs, hbuf);
     } else {
       hbufs = g_list_append (hbufs, hbuf);
+    }
+
+    if (caps) {
+      gst_caps_unref (caps);
     }
   }
 
