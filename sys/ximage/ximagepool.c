@@ -359,8 +359,8 @@ ximage_memory_alloc (GstXImageBufferPool * xpool)
   error_caught = FALSE;
   XSetErrorHandler (handler);
 
-  gst_memory_init (GST_MEMORY_CAST (mem), 0, xpool->allocator,
-      NULL, mem->size + align, align, offset, mem->size);
+  gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_NO_SHARE,
+      xpool->allocator, NULL, mem->size + align, align, offset, mem->size);
 
   g_mutex_unlock (&ximagesink->x_lock);
 
