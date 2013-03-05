@@ -70,10 +70,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_EGLGLESSINK))
 #define GST_IS_EGLGLESSINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EGLGLESSINK))
-#define GST_EGLGLESSINK_IMAGE_NOFMT 0
-#define GST_EGLGLESSINK_IMAGE_RGB888 1
-#define GST_EGLGLESSINK_IMAGE_RGB565 2
-#define GST_EGLGLESSINK_IMAGE_RGBA8888 3
+
 #define GST_EGLGLESSINK_EGL_MIN_VERSION 1
 typedef struct _GstEglGlesSink GstEglGlesSink;
 typedef struct _GstEglGlesSinkClass GstEglGlesSinkClass;
@@ -148,32 +145,14 @@ struct _GstEglGlesRenderContext
 };
 
 /*
- * GstEglGlesImageFmt:
- * @fmt: Internal identifier for the EGL attribs / GST caps pairing
- * @attribs: Pointer to the set of EGL attributes asociated with this format
- * @caps: Pointer to the GST caps asociated with this format
- *
- * This struct holds a pairing between GST caps and the matching EGL attributes
- * associated with a given pixel format
- */
-struct _GstEglGlesImageFmt
-{
-  gint fmt;                     /* Private identifier */
-  const EGLint *attribs;        /* EGL Attributes */
-  GstCaps *caps;                /* Matching caps for the attribs */
-};
-
-/*
  * GstEglGlesSink:
  * @format: Caps' video format field
  * @display_region: Surface region to use as rendering canvas
  * @sinkcaps: Full set of suported caps
  * @current_caps: Current caps
- * @selected_fmt: Pointer to the GST caps/EGL attribs pairing in use
  * @rendering_path: Rendering path (Slow/Fast)
  * @eglglesctx: Pointer to the associated EGL/GLESv2 rendering context
  * @flow_lock: Simple concurrent access ward to the sink's runtime state
- * @supported_fmts: Pointer to the runtime supported format list
  * @have_window: Set if the sink has access to a window to hold it's canvas
  * @using_own_window: Set if the sink created its own window
  * @have_surface: Set if the EGL surface setup has been performed
@@ -207,10 +186,7 @@ struct _GstEglGlesSink
   gfloat stride[3];
   GstBufferPool *pool;
 
-  GstEglGlesImageFmt *selected_fmt;
   GstEglGlesRenderContext eglglesctx;
-
-  GList *supported_fmts;
 
   /* Runtime flags */
   gboolean have_window;
