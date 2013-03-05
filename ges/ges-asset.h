@@ -22,8 +22,6 @@
 #ifndef _GES_ASSET_
 #define _GES_ASSET_
 
-#include "ges-internal-enums.h"
-
 #include <glib-object.h>
 #include <ges/ges-types.h>
 #include <ges/ges-enums.h>
@@ -42,6 +40,13 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_ASSET))
 #define GES_ASSET_GET_CLASS(obj) \
     (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_ASSET, GESAssetClass))
+
+typedef enum
+{
+  GES_ASSET_LOADING_ERROR,
+  GES_ASSET_LOADING_ASYNC,
+  GES_ASSET_LOADING_OK
+} GESAssetLoadingReturn;
 
 typedef struct _GESAssetPrivate GESAssetPrivate;
 
