@@ -493,6 +493,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
   GstMessage *message = NULL;
   EventLoopResult res = ELR_NO_ERROR;
   gboolean buffering = FALSE;
+  gboolean prerolled = target_state != GST_STATE_PAUSED;
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 
@@ -665,19 +666,19 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         if (GST_MESSAGE_SRC (message) != GST_OBJECT_CAST (pipeline))
           break;
 
-        /* ignore when we are buffering since then we mess with the states
-         * ourselves. */
-        if (buffering) {
-          PRINT (_("Prerolled, waiting for buffering to finish...\n"));
-          break;
-        }
-
         gst_message_parse_state_changed (message, &old, &new, &pending);
 
         /* if we reached the final target state, exit */
-        if (target_state == GST_STATE_PAUSED && new == target_state)
+        if (target_state == GST_STATE_PAUSED && new == target_state) {
+          prerolled = TRUE;
+          /* ignore when we are buffering since then we mess with the states
+           * ourselves. */
+          if (buffering) {
+            PRINT (_("Prerolled, waiting for buffering to finish...\n"));
+            break;
+          }
           goto exit;
-
+        }
         /* else not an interesting message */
         break;
       }
@@ -698,7 +699,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           if (target_state == GST_STATE_PLAYING) {
             PRINT (_("Done buffering, setting pipeline to PLAYING ...\n"));
             gst_element_set_state (pipeline, GST_STATE_PLAYING);
-          } else
+          } else if (prerolled)
             goto exit;
         } else {
           /* buffering busy */
