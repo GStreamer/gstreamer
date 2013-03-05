@@ -4,6 +4,8 @@ libgstosxaudio_la_SOURCES = gstosxringbuffer.c   \
                             gstosxaudioelement.c \
                             gstosxaudiosink.c    \
                             gstosxaudiosrc.c     \
+                            gstosxcoreaudiocommon.c     \
+                            gstosxcoreaudio.c     \
                             gstosxaudio.c
 
 libgstosxaudio_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
@@ -21,7 +23,9 @@ noinst_HEADERS = gstosxaudiosink.h	  \
                  gstosxaudioelement.h \
                  gstosxringbuffer.h	  \
                  gstosxaudiosrc.h     \
-                 gstosxcoreaudio.h
+                 gstosxcoreaudiocommon.h     \
+                 gstosxcoreaudio.h \
+                 gstosxcoreaudiohal.c
 
 
 
