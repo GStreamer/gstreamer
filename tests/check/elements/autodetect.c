@@ -29,6 +29,7 @@ GST_START_TEST (test_autovideosink_ghostpad_error_case)
   GstStateChangeReturn state_ret;
   GstElement *pipeline, *src, *filter, *sink;
   GstCaps *caps;
+  GstElement *fakesink;
 
   pipeline = gst_pipeline_new ("pipeline");
   src = gst_element_factory_make ("fakesrc", NULL);
@@ -55,12 +56,21 @@ GST_START_TEST (test_autovideosink_ghostpad_error_case)
     state_ret =
         gst_element_get_state (pipeline, &state, &state, GST_CLOCK_TIME_NONE);
   }
-  fail_unless (state_ret == GST_STATE_CHANGE_FAILURE,
-      "pipeline _set_state() to PAUSED succeeded but should have failed");
+  fakesink = gst_bin_get_by_name (GST_BIN (sink), "fake-video-sink");
+  if (fakesink != NULL) {
+    /* no real video sink available */
+    fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS,
+        "pipeline _set_state() to PAUSED failed");
+    gst_object_unref (fakesink);
+  } else {
+    /* autovideosink contains a real video sink */
+    fail_unless (state_ret == GST_STATE_CHANGE_FAILURE,
+        "pipeline _set_state() to PAUSED succeeded but should have failed");
 
-  /* so, we hit an error and try to shut down the pipeline; this shouldn't
-   * deadlock or block anywhere when autovideosink resets the ghostpad
-   * targets etc. */
+    /* so, we hit an error and try to shut down the pipeline; this shouldn't
+     * deadlock or block anywhere when autovideosink resets the ghostpad
+     * targets etc. */
+  }
   state_ret = gst_element_set_state (pipeline, GST_STATE_NULL);
   fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS,
       "State change on pipeline failed");
