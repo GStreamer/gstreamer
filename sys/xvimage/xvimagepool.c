@@ -397,8 +397,8 @@ xvimage_memory_alloc (GstXvImageBufferPool * xvpool)
   error_caught = FALSE;
   XSetErrorHandler (handler);
 
-  gst_memory_init (GST_MEMORY_CAST (mem), 0, xvpool->allocator,
-      NULL, mem->size + align, align, offset, mem->size);
+  gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_NO_SHARE,
+      xvpool->allocator, NULL, mem->size + align, align, offset, mem->size);
 
   g_mutex_unlock (&xvimagesink->x_lock);
 

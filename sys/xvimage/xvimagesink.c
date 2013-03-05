@@ -1849,7 +1849,7 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
       goto no_buffer;
 
     GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, xvimagesink,
-        "slow copy into bufferpool buffer %p", to_put);
+        "slow copy buffer %p into bufferpool buffer %p", buf, to_put);
 
     if (!gst_video_frame_map (&src, &xvimagesink->info, buf, GST_MAP_READ))
       goto invalid_buffer;
