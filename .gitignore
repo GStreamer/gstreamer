@@ -9,6 +9,7 @@
 *.lo
 *.pyc
 *.page
+*.swp
 *~
 
 Makefile
@@ -36,6 +37,7 @@ log
 /libtool
 /ltmain.sh
 /missing
+/py-compile
 /stamp-h.in
 /stamp-h1
 
@@ -50,6 +52,8 @@ log
 /tests/check/ges/timelineedition
 /tests/check/ges/timelinegroup
 /tests/check/ges/material
+/tests/check/ges/uriclip
+/tests/benchmarks/timeline
 /tests/examples/materials
 
 /tools/ges-launch-1.0
