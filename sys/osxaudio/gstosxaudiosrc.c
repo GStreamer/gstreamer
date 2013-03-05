@@ -60,8 +60,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <CoreAudio/CoreAudio.h>
-#include <CoreAudio/AudioHardware.h>
 #include "gstosxaudiosrc.h"
 #include "gstosxaudioelement.h"
 
@@ -266,9 +264,10 @@ gst_osx_audio_src_create_ringbuffer (GstBaseAudioSrc * src)
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsrc),
       (void *) gst_osx_audio_src_io_proc);
 
-  ringbuffer->element = GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsrc);
-  ringbuffer->is_src = TRUE;
-  ringbuffer->device_id = osxsrc->device_id;
+  ringbuffer->core_audio->element =
+      GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsrc);
+  ringbuffer->core_audio->is_src = TRUE;
+  ringbuffer->core_audio->device_id = osxsrc->device_id;
 
   return GST_RING_BUFFER (ringbuffer);
 }
@@ -286,15 +285,15 @@ gst_osx_audio_src_io_proc (GstOsxRingBuffer * buf,
   gint remaining;
   gint offset = 0;
 
-  status = AudioUnitRender (buf->audiounit, ioActionFlags, inTimeStamp,
-      inBusNumber, inNumberFrames, buf->recBufferList);
+  status = AudioUnitRender (buf->core_audio->audiounit, ioActionFlags,
+      inTimeStamp, inBusNumber, inNumberFrames, buf->core_audio->recBufferList);
 
   if (status) {
     GST_WARNING_OBJECT (buf, "AudioUnitRender returned %d", (int) status);
     return status;
   }
 
-  remaining = buf->recBufferList->mBuffers[0].mDataByteSize;
+  remaining = buf->core_audio->recBufferList->mBuffers[0].mDataByteSize;
 
   while (remaining) {
     if (!gst_ring_buffer_prepare_read (GST_RING_BUFFER (buf),
@@ -307,7 +306,8 @@ gst_osx_audio_src_io_proc (GstOsxRingBuffer * buf,
       len = remaining;
 
     memcpy (writeptr + buf->segoffset,
-        (char *) buf->recBufferList->mBuffers[0].mData + offset, len);
+        (char *) buf->core_audio->recBufferList->mBuffers[0].mData + offset,
+        len);
 
     buf->segoffset += len;
     offset += len;
@@ -334,30 +334,5 @@ gst_osx_audio_src_osxelement_init (gpointer g_iface, gpointer iface_data)
 static void
 gst_osx_audio_src_select_device (GstOsxAudioSrc * osxsrc)
 {
-  OSStatus status;
-  UInt32 propertySize;
-
-  if (osxsrc->device_id == kAudioDeviceUnknown) {
-    /* If no specific device has been selected by the user, then pick the
-     * default device */
-    GST_DEBUG_OBJECT (osxsrc, "Selecting device for OSXAudioSrc");
-    propertySize = sizeof (osxsrc->device_id);
-    status = AudioHardwareGetProperty (kAudioHardwarePropertyDefaultInputDevice,
-        &propertySize, &osxsrc->device_id);
-
-    if (status) {
-      GST_WARNING_OBJECT (osxsrc,
-          "AudioHardwareGetProperty returned %d", (int) status);
-    } else {
-      GST_DEBUG_OBJECT (osxsrc, "AudioHardwareGetProperty returned 0");
-    }
-
-    if (osxsrc->device_id == kAudioDeviceUnknown) {
-      GST_WARNING_OBJECT (osxsrc,
-          "AudioHardwareGetProperty: device_id is kAudioDeviceUnknown");
-    }
-
-    GST_DEBUG_OBJECT (osxsrc, "AudioHardwareGetProperty: device_id is %lu",
-        (long) osxsrc->device_id);
-  }
+  gst_core_audio_select_source_device (&osxsrc->device_id);
 }

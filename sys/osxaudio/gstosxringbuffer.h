@@ -45,12 +45,14 @@
 #ifndef __GST_OSX_RING_BUFFER_H__
 #define __GST_OSX_RING_BUFFER_H__
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <gst/gst.h>
 #include <gst/audio/gstringbuffer.h>
-#include <CoreAudio/CoreAudio.h>
-#include <AudioToolbox/AudioToolbox.h>
+#include <gstosxcoreaudio.h>
 
-#include "gstosxaudioelement.h"
 
 G_BEGIN_DECLS
 
@@ -76,30 +78,10 @@ struct _GstOsxRingBuffer
 {
   GstRingBuffer object;
 
-  gboolean is_src;
-  gboolean is_passthrough;
-  gint stream_idx;
+  GstCoreAudio *core_audio;
 
-  AudioDeviceID device_id;
-  gboolean io_proc_active;
-  gboolean io_proc_needs_deactivation;
   guint buffer_len;
   guint segoffset;
-
-  GstOsxAudioElementInterface *element;
-
-  /* For LPCM in/out */
-  AudioUnit audiounit;
-  AudioBufferList *recBufferList;
-
-  /* For SPDIF out */
-  pid_t hog_pid;
-  gboolean disabled_mixing;
-  AudioStreamID stream_id;
-  gboolean revert_format;
-  AudioStreamBasicDescription stream_format;
-  AudioStreamBasicDescription original_format;
-  AudioDeviceIOProcID procID;
 };
 
 struct _GstOsxRingBufferClass

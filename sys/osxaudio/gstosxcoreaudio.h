@@ -2,29 +2,6 @@
  * GStreamer
  * Copyright (C) 2012 Fluendo S.A. <support@fluendo.com>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
- *
- * Alternatively, the contents of this file may be used under the
- * GNU Lesser General Public License Version 2.1 (the "LGPL"), in
- * which case the following provisions apply instead of the ones
- * mentioned above:
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -40,567 +17,135 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  *
- * The development of this code was made possible due to the involvement of
- * Pioneers of the Inevitable, the creators of the Songbird Music player
- *
  */
+
+#ifndef __GST_CORE_AUDIO_H__
+#define __GST_CORE_AUDIO_H__
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include <gst/gst.h>
+#ifdef HAVE_IOS
+  #include <CoreAudio/CoreAudioTypes.h>
+  #define AudioDeviceID gint
+  #define kAudioDeviceUnknown 0
+#else
+  #include <CoreAudio/CoreAudio.h>
+  #include <AudioToolbox/AudioToolbox.h>
+  #if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_5
+    #include <CoreServices/CoreServices.h>
+    #define AudioComponentFindNext FindNextComponent
+    #define AudioComponentInstanceNew OpenAComponent
+    #define AudioComponentInstanceDispose CloseComponent
+    #define AudioComponent Component
+    #define AudioComponentDescription ComponentDescription
+  #endif
+#endif
+#include <AudioUnit/AudioUnit.h>
+#include "gstosxaudioelement.h"
+
+
+G_BEGIN_DECLS
+
+#define GST_TYPE_CORE_AUDIO \
+  (gst_core_audio_get_type())
+#define GST_CORE_AUDIO(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CORE_AUDIO,GstCoreAudio))
+#define GST_CORE_AUDIO_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CORE_AUDIO,GstCoreAudioClass))
+#define GST_CORE_AUDIO_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_CORE_AUDIO,GstCoreAudioClass))
+#define GST_IS_CORE_AUDIO(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CORE_AUDIO))
+#define GST_IS_CORE_AUDIO_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CORE_AUDIO))
+
+#define CORE_AUDIO_FORMAT_IS_SPDIF(f) ((f).mFormat.mFormatID == 'IAC3' || (f).mFormat.mFormatID == 'iac3' || (f).mFormat.mFormatID == kAudioFormat60958AC3 || (f).mFormat.mFormatID == kAudioFormatAC3)
 
 #define CORE_AUDIO_FORMAT "FormatID: %" GST_FOURCC_FORMAT " rate: %f flags: 0x%x BytesPerPacket: %u FramesPerPacket: %u BytesPerFrame: %u ChannelsPerFrame: %u BitsPerChannel: %u"
 #define CORE_AUDIO_FORMAT_ARGS(f) GST_FOURCC_ARGS((f).mFormatID),(f).mSampleRate,(unsigned)(f).mFormatFlags,(unsigned)(f).mBytesPerPacket,(unsigned)(f).mFramesPerPacket,(unsigned)(f).mBytesPerFrame,(unsigned)(f).mChannelsPerFrame,(unsigned)(f).mBitsPerChannel
 
-#define CORE_AUDIO_FORMAT_IS_SPDIF(f) ((f).mFormat.mFormatID == 'IAC3' || (f).mFormat.mFormatID == 'iac3' || (f).mFormat.mFormatID == kAudioFormat60958AC3 || (f).mFormat.mFormatID == kAudioFormatAC3)
+typedef struct _GstCoreAudio GstCoreAudio;
+typedef struct _GstCoreAudioClass GstCoreAudioClass;
 
-static inline gboolean
-_audio_system_set_runloop (CFRunLoopRef runLoop)
+struct _GstCoreAudio
 {
-  OSStatus status = noErr;
+  GObject object;
 
-  gboolean res = FALSE;
+  GstObject *osxbuf;
+  GstOsxAudioElementInterface *element;
 
-  AudioObjectPropertyAddress runloopAddress = {
-    kAudioHardwarePropertyRunLoop,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-  };
+  gboolean is_src;
+  gboolean is_passthrough;
+  AudioDeviceID device_id;
+  AudioStreamBasicDescription stream_format;
+  gint stream_idx;
+  gboolean io_proc_active;
+  gboolean io_proc_needs_deactivation;
 
-  status = AudioObjectSetPropertyData (kAudioObjectSystemObject,
-      &runloopAddress, 0, NULL, sizeof (CFRunLoopRef), &runLoop);
-  if (status == noErr) {
-    res = TRUE;
-  } else {
-    GST_ERROR ("failed to set runloop to %p: %" GST_FOURCC_FORMAT,
-        runLoop, GST_FOURCC_ARGS (status));
-  }
+  /* For LPCM in/out */
+  AudioUnit audiounit;
+  AudioBufferList *recBufferList;
 
-  return res;
-}
-
-static inline AudioDeviceID
-_audio_system_get_default_output (void)
-{
-  OSStatus status = noErr;
-  UInt32 propertySize = sizeof (AudioDeviceID);
-  AudioDeviceID device_id = kAudioDeviceUnknown;
-
-  AudioObjectPropertyAddress defaultDeviceAddress = {
-    kAudioHardwarePropertyDefaultOutputDevice,
-    kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
-  };
-
-  status = AudioObjectGetPropertyData (kAudioObjectSystemObject,
-      &defaultDeviceAddress, 0, NULL, &propertySize, &device_id);
-  if (status != noErr) {
-    GST_ERROR ("failed getting default output device: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
-  }
-
-  return device_id;
-}
-
-static inline AudioDeviceID *
-_audio_system_get_devices (gint * ndevices)
-{
-  OSStatus status = noErr;
-  UInt32 propertySize = 0;
-  AudioDeviceID *devices = NULL;
-
-  AudioObjectPropertyAddress audioDevicesAddress = {
-    kAudioHardwarePropertyDevices,
-    kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
-  };
-
-  status = AudioObjectGetPropertyDataSize (kAudioObjectSystemObject,
-      &audioDevicesAddress, 0, NULL, &propertySize);
-  if (status != noErr) {
-    GST_WARNING ("failed getting number of devices: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
-    return NULL;
-  }
-
-  *ndevices = propertySize / sizeof (AudioDeviceID);
-
-  devices = (AudioDeviceID *) g_malloc (propertySize);
-  if (devices) {
-    status = AudioObjectGetPropertyData (kAudioObjectSystemObject,
-        &audioDevicesAddress, 0, NULL, &propertySize, devices);
-    if (status != noErr) {
-      GST_WARNING ("failed getting the list of devices: %"
-          GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
-      g_free (devices);
-      *ndevices = 0;
-      return NULL;
-    }
-  }
-  return devices;
-}
-
-static inline gboolean
-_audio_device_is_alive (AudioDeviceID device_id)
-{
-  OSStatus status = noErr;
-  int alive = FALSE;
-  UInt32 propertySize = sizeof (alive);
-
-  AudioObjectPropertyAddress audioDeviceAliveAddress = {
-    kAudioDevicePropertyDeviceIsAlive,
-    kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
-  };
-
-  status = AudioObjectGetPropertyData (device_id,
-      &audioDeviceAliveAddress, 0, NULL, &propertySize, &alive);
-  if (status != noErr) {
-    alive = FALSE;
-  }
-
-  return alive;
-}
-
-static inline guint
-_audio_device_get_latency (AudioDeviceID device_id)
-{
-  OSStatus status = noErr;
-  UInt32 latency = 0;
-  UInt32 propertySize = sizeof (latency);
-
-  AudioObjectPropertyAddress audioDeviceLatencyAddress = {
-    kAudioDevicePropertyLatency,
-    kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
-  };
-
-  status = AudioObjectGetPropertyData (device_id,
-      &audioDeviceLatencyAddress, 0, NULL, &propertySize, &latency);
-  if (status != noErr) {
-    GST_ERROR ("failed to get latency: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
-    latency = -1;
-  }
-
-  return latency;
-}
-
-static inline pid_t
-_audio_device_get_hog (AudioDeviceID device_id)
-{
-  OSStatus status = noErr;
+#ifndef HAVE_IOS
+  /* For SPDIF out */
   pid_t hog_pid;
-  UInt32 propertySize = sizeof (hog_pid);
+  gboolean disabled_mixing;
+  AudioStreamID stream_id;
+  gboolean revert_format;
+  AudioStreamBasicDescription original_format;
+  AudioDeviceIOProcID procID;
+#endif
+};
 
-  AudioObjectPropertyAddress audioDeviceHogModeAddress = {
-    kAudioDevicePropertyHogMode,
-    kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
-  };
-
-  status = AudioObjectGetPropertyData (device_id,
-      &audioDeviceHogModeAddress, 0, NULL, &propertySize, &hog_pid);
-  if (status != noErr) {
-    GST_ERROR ("failed to get hog: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
-    hog_pid = -1;
-  }
-
-  return hog_pid;
-}
-
-static inline gboolean
-_audio_device_set_hog (AudioDeviceID device_id, pid_t hog_pid)
+struct _GstCoreAudioClass
 {
-  OSStatus status = noErr;
-  UInt32 propertySize = sizeof (hog_pid);
-  gboolean res = FALSE;
+  GObjectClass parent_class;
+};
 
-  AudioObjectPropertyAddress audioDeviceHogModeAddress = {
-    kAudioDevicePropertyHogMode,
-    kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
-  };
+GType gst_core_audio_get_type                                (void);
 
-  status = AudioObjectSetPropertyData (device_id,
-      &audioDeviceHogModeAddress, 0, NULL, propertySize, &hog_pid);
+void gst_core_audio_init_debug (void);
 
-  if (status == noErr) {
-    res = TRUE;
-  } else {
-    GST_ERROR ("failed to set hog: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
-  }
+GstCoreAudio * gst_core_audio_new                            (GstObject *osxbuf);
 
-  return res;
-}
+gboolean gst_core_audio_open                                 (GstCoreAudio *core_audio);
 
-static inline gboolean
-_audio_device_set_mixing (AudioDeviceID device_id, gboolean enable_mix)
-{
-  OSStatus status = noErr;
-  UInt32 propertySize = 0, can_mix = enable_mix;
-  Boolean writable = FALSE;
-  gboolean res = FALSE;
+gboolean gst_core_audio_close                                (GstCoreAudio *core_audio);
 
-  AudioObjectPropertyAddress audioDeviceSupportsMixingAddress = {
-    kAudioDevicePropertySupportsMixing,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-  };
+gboolean gst_core_audio_initialize                           (GstCoreAudio *core_audio,
+                                                              AudioStreamBasicDescription format,
+                                                              GstCaps *caps,
+                                                              gboolean is_passthrough);
 
-  if (AudioObjectHasProperty (device_id, &audioDeviceSupportsMixingAddress)) {
-    /* Set mixable to false if we are allowed to */
-    status = AudioObjectIsPropertySettable (device_id,
-        &audioDeviceSupportsMixingAddress, &writable);
-    if (status) {
-      GST_DEBUG ("AudioObjectIsPropertySettable: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
-    }
-    status = AudioObjectGetPropertyDataSize (device_id,
-        &audioDeviceSupportsMixingAddress, 0, NULL, &propertySize);
-    if (status) {
-      GST_DEBUG ("AudioObjectGetPropertyDataSize: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
-    }
-    status = AudioObjectGetPropertyData (device_id,
-        &audioDeviceSupportsMixingAddress, 0, NULL, &propertySize, &can_mix);
-    if (status) {
-      GST_DEBUG ("AudioObjectGetPropertyData: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
-    }
+void gst_core_audio_unitialize                               (GstCoreAudio *core_audio);
 
-    if (status == noErr && writable) {
-      can_mix = enable_mix;
-      status = AudioObjectSetPropertyData (device_id,
-          &audioDeviceSupportsMixingAddress, 0, NULL, propertySize, &can_mix);
-      res = TRUE;
-    }
+gboolean gst_core_audio_start_processing                     (GstCoreAudio *core_audio);
 
-    if (status != noErr) {
-      GST_ERROR ("failed to set mixmode: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
-    }
-  } else {
-    GST_DEBUG ("property not found, mixing coudln't be changed");
-  }
+gboolean gst_core_audio_pause_processing                     (GstCoreAudio *core_audio);
 
-  return res;
-}
+gboolean gst_core_audio_stop_processing                      (GstCoreAudio *core_audio);
 
-static inline gchar *
-_audio_device_get_name (AudioDeviceID device_id)
-{
-  OSStatus status = noErr;
-  UInt32 propertySize = 0;
-  gchar *device_name = NULL;
+gboolean gst_core_audio_get_samples_and_latency              (GstCoreAudio * core_audio,
+                                                              gdouble rate,
+                                                              guint *samples,
+                                                              gdouble *latency);
 
-  AudioObjectPropertyAddress deviceNameAddress = {
-    kAudioDevicePropertyDeviceName,
-    kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
-  };
+void  gst_core_audio_set_volume                              (GstCoreAudio *core_audio,
+                                                              gfloat volume);
 
-  /* Get the length of the device name */
-  status = AudioObjectGetPropertyDataSize (device_id,
-      &deviceNameAddress, 0, NULL, &propertySize);
-  if (status != noErr) {
-    goto beach;
-  }
+gboolean gst_core_audio_audio_device_is_spdif_avail          (AudioDeviceID device_id);
 
-  /* Get the name of the device */
-  device_name = (gchar *) g_malloc (propertySize);
-  status = AudioObjectGetPropertyData (device_id,
-      &deviceNameAddress, 0, NULL, &propertySize, device_name);
-  if (status != noErr) {
-    g_free (device_name);
-    device_name = NULL;
-  }
 
-beach:
-  return device_name;
-}
+gboolean gst_core_audio_select_device                        (AudioDeviceID *device_id);
 
-static inline gboolean
-_audio_device_has_output (AudioDeviceID device_id)
-{
-  OSStatus status = noErr;
-  UInt32 propertySize;
+gboolean gst_core_audio_select_source_device                        (AudioDeviceID *device_id);
 
-  AudioObjectPropertyAddress streamsAddress = {
-    kAudioDevicePropertyStreams,
-    kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
-  };
+AudioChannelLayout * gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id);
 
-  status = AudioObjectGetPropertyDataSize (device_id,
-      &streamsAddress, 0, NULL, &propertySize);
-  if (status != noErr) {
-    return FALSE;
-  }
-  if (propertySize == 0) {
-    return FALSE;
-  }
 
-  return TRUE;
-}
+G_END_DECLS
 
-static inline AudioChannelLayout *
-_audio_device_get_channel_layout (AudioDeviceID device_id)
-{
-  OSStatus status = noErr;
-  UInt32 propertySize = 0;
-  AudioChannelLayout *layout = NULL;
-
-  AudioObjectPropertyAddress channelLayoutAddress = {
-    kAudioDevicePropertyPreferredChannelLayout,
-    kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
-  };
-
-  /* Get the length of the default channel layout structure */
-  status = AudioObjectGetPropertyDataSize (device_id,
-      &channelLayoutAddress, 0, NULL, &propertySize);
-  if (status != noErr) {
-    GST_ERROR ("failed to get prefered layout: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
-    goto beach;
-  }
-
-  /* Get the default channel layout of the device */
-  layout = (AudioChannelLayout *) g_malloc (propertySize);
-  status = AudioObjectGetPropertyData (device_id,
-      &channelLayoutAddress, 0, NULL, &propertySize, layout);
-  if (status != noErr) {
-    GST_ERROR ("failed to get prefered layout: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
-    goto failed;
-  }
-
-  if (layout->mChannelLayoutTag == kAudioChannelLayoutTag_UseChannelBitmap) {
-    /* bitmap defined channellayout */
-    status =
-        AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutForBitmap,
-            sizeof (UInt32), &layout->mChannelBitmap, &propertySize, layout);
-    if (status != noErr) {
-      GST_ERROR ("failed to get layout for bitmap: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
-      goto failed;
-    }
-  } else if (layout->mChannelLayoutTag !=
-      kAudioChannelLayoutTag_UseChannelDescriptions) {
-      /* layouttags defined channellayout */
-      status = AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutForTag,
-          sizeof(AudioChannelLayoutTag), &layout->mChannelLayoutTag,
-          &propertySize, layout);
-    if (status != noErr) {
-      GST_ERROR ("failed to get layout for tag: %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (status));
-      goto failed;
-    }
-  }
-
-beach:
-  return layout;
-
-failed:
-  g_free (layout);
-  return NULL;
-}
-
-static inline AudioStreamID *
-_audio_device_get_streams (AudioDeviceID device_id, gint * nstreams)
-{
-  OSStatus status = noErr;
-  UInt32 propertySize = 0;
-  AudioStreamID *streams = NULL;
-
-  AudioObjectPropertyAddress streamsAddress = {
-    kAudioDevicePropertyStreams,
-    kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
-  };
-
-  status = AudioObjectGetPropertyDataSize (device_id,
-      &streamsAddress, 0, NULL, &propertySize);
-  if (status != noErr) {
-    GST_WARNING ("failed getting number of streams: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
-    return NULL;
-  }
-
-  *nstreams = propertySize / sizeof (AudioStreamID);
-  streams = (AudioStreamID *) g_malloc (propertySize);
-
-  if (streams) {
-    status = AudioObjectGetPropertyData (device_id,
-        &streamsAddress, 0, NULL, &propertySize, streams);
-    if (status != noErr) {
-      GST_WARNING ("failed getting the list of streams: %"
-          GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
-      g_free (streams);
-      *nstreams = 0;
-      return NULL;
-    }
-  }
-
-  return streams;
-}
-
-static inline guint
-_audio_stream_get_latency (AudioStreamID stream_id)
-{
-  OSStatus status = noErr;
-  UInt32 latency;
-  UInt32 propertySize = sizeof (latency);
-
-  AudioObjectPropertyAddress latencyAddress = {
-    kAudioStreamPropertyLatency,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-  };
-
-  status = AudioObjectGetPropertyData (stream_id,
-      &latencyAddress, 0, NULL, &propertySize, &latency);
-  if (status != noErr) {
-    GST_ERROR ("failed to get latency: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
-    latency = -1;
-  }
-
-  return latency;
-}
-
-static inline gboolean
-_audio_stream_get_current_format (AudioStreamID stream_id,
-    AudioStreamBasicDescription * format)
-{
-  OSStatus status = noErr;
-  UInt32 propertySize = sizeof (AudioStreamBasicDescription);
-
-  AudioObjectPropertyAddress formatAddress = {
-    kAudioStreamPropertyPhysicalFormat,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-  };
-
-  status = AudioObjectGetPropertyData (stream_id,
-      &formatAddress, 0, NULL, &propertySize, format);
-  if (status != noErr) {
-    GST_ERROR ("failed to get current format: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static inline gboolean
-_audio_stream_set_current_format (AudioStreamID stream_id,
-    AudioStreamBasicDescription format)
-{
-  OSStatus status = noErr;
-  UInt32 propertySize = sizeof (AudioStreamBasicDescription);
-
-  AudioObjectPropertyAddress formatAddress = {
-    kAudioStreamPropertyPhysicalFormat,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-  };
-
-  status = AudioObjectSetPropertyData (stream_id,
-      &formatAddress, 0, NULL, propertySize, &format);
-  if (status != noErr) {
-    GST_ERROR ("failed to set current format: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (status));
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static inline AudioStreamRangedDescription *
-_audio_stream_get_formats (AudioStreamID stream_id, gint * nformats)
-{
-  OSStatus status = noErr;
-  UInt32 propertySize = 0;
-  AudioStreamRangedDescription *formats = NULL;
-
-  AudioObjectPropertyAddress formatsAddress = {
-    kAudioStreamPropertyAvailablePhysicalFormats,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-  };
-
-  status = AudioObjectGetPropertyDataSize (stream_id,
-      &formatsAddress, 0, NULL, &propertySize);
-  if (status != noErr) {
-    GST_WARNING ("failed getting number of stream formats: %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
-    return NULL;
-  }
-
-  *nformats = propertySize / sizeof (AudioStreamRangedDescription);
-
-  formats = (AudioStreamRangedDescription *) g_malloc (propertySize);
-  if (formats) {
-    status = AudioObjectGetPropertyData (stream_id,
-        &formatsAddress, 0, NULL, &propertySize, formats);
-    if (status != noErr) {
-      GST_WARNING ("failed getting the list of stream formats: %"
-          GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
-      g_free (formats);
-      *nformats = 0;
-      return NULL;
-    }
-  }
-  return formats;
-}
-
-static inline gboolean
-_audio_stream_is_spdif_avail (AudioStreamID stream_id)
-{
-  AudioStreamRangedDescription *formats;
-  gint i, nformats = 0;
-  gboolean res = FALSE;
-
-  formats = _audio_stream_get_formats (stream_id, &nformats);
-  GST_DEBUG ("found %d stream formats", nformats);
-
-  if (formats) {
-    GST_DEBUG ("formats supported on stream ID: %u",
-        (unsigned) stream_id);
-
-    for (i = 0; i < nformats; i++) {
-      GST_DEBUG ("  " CORE_AUDIO_FORMAT,
-          CORE_AUDIO_FORMAT_ARGS (formats[i].mFormat));
-
-      if (CORE_AUDIO_FORMAT_IS_SPDIF (formats[i])) {
-        res = TRUE;
-      }
-    }
-    g_free (formats);
-  }
-
-  return res;
-}
-
-static inline gboolean
-_audio_device_is_spdif_avail (AudioDeviceID device_id)
-{
-  AudioStreamID *streams = NULL;
-  gint i, nstreams = 0;
-  gboolean res = FALSE;
-
-  streams = _audio_device_get_streams (device_id, &nstreams);
-  GST_DEBUG ("found %d streams", nstreams);
-  if (streams) {
-    for (i = 0; i < nstreams; i++) {
-      if (_audio_stream_is_spdif_avail (streams[i])) {
-        res = TRUE;
-      }
-    }
-
-    g_free (streams);
-  }
-
-  return res;
-}
-
+#endif /* __GST_CORE_AUDIO_H__ */
