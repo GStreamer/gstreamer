@@ -16,8 +16,14 @@ libgstosxaudio_la_LIBADD = 			  \
     $(GST_PLUGINS_BASE_LIBS)          \
     $(GST_BASE_LIBS)                  \
     $(GST_LIBS)
-libgstosxaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -Wl,-framework -Wl,CoreAudio -Wl,-framework -Wl,AudioUnit -Wl,-framework -Wl,AudioToolbox -Wl,-framework -Wl,CoreServices
-libgstosxaudio_la_LIBTOOLFLAGS = --tag=disable-static
+
+libgstosxaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -Wl,-framework,CoreAudio  -Wl,-framework,AudioToolbox
+
+if !HAVE_IOS
+libgstosxaudio_la_LDFLAGS += -Wl,-framework,AudioUnit -Wl,-framework,CoreServices
+endif
+
+libgstosxaudio_la_LIBTOOLFLAGS = --tag=disable-static --tag=CC
 
 noinst_HEADERS = gstosxaudiosink.h	  \
                  gstosxaudioelement.h \
@@ -25,7 +31,8 @@ noinst_HEADERS = gstosxaudiosink.h	  \
                  gstosxaudiosrc.h     \
                  gstosxcoreaudiocommon.h     \
                  gstosxcoreaudio.h \
-                 gstosxcoreaudiohal.c
+                 gstosxcoreaudiohal.c \
+                 gstosxcoreaudioremoteio.c
 
 
 

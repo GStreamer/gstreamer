@@ -30,7 +30,11 @@ GST_DEBUG_CATEGORY_STATIC (osx_audio_debug);
 
 G_DEFINE_TYPE (GstCoreAudio, gst_core_audio, G_TYPE_OBJECT);
 
+#ifdef HAVE_IOS
+#include "gstosxcoreaudioremoteio.c"
+#else
 #include "gstosxcoreaudiohal.c"
+#endif
 
 
 static void

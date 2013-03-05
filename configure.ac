@@ -444,9 +444,19 @@ AG_GST_CHECK_FEATURE(SUNAUDIO, [Sun Audio], sunaudio, [
 
 dnl *** OSX Audio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_AUDIO, true)
+have_ios="no"
 AG_GST_CHECK_FEATURE(OSX_AUDIO, [OSX audio], osxaudio, [
-  AC_CHECK_HEADER(CoreAudio/CoreAudio.h, HAVE_OSX_AUDIO="yes", HAVE_OSX_AUDIO="no")
+  AC_CHECK_HEADER(CoreAudio/CoreAudio.h,
+    HAVE_OSX_AUDIO="yes",
+    dnl *** Check for the iOS headers ***
+    [AC_CHECK_HEADER(CoreAudio/CoreAudioTypes.h,
+      [HAVE_OSX_AUDIO="YES";have_ios="yes"], HAVE_OSX_AUDIO="no"
+    )])
 ])
+if test "x$have_ios" = "xyes"; then
+  AC_DEFINE(HAVE_IOS, 1, [building for iOS platofrm])
+fi
+AM_CONDITIONAL(HAVE_IOS, test "x$have_ios" = "xyes")
 
 dnl *** OS X video ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_VIDEO, true)

@@ -210,9 +210,11 @@ gst_osx_audio_sink_class_init (GstOsxAudioSinkClass * klass)
   gobject_class->set_property = gst_osx_audio_sink_set_property;
   gobject_class->get_property = gst_osx_audio_sink_get_property;
 
+#ifndef HAVE_IOS
   g_object_class_install_property (gobject_class, ARG_DEVICE,
       g_param_spec_int ("device", "Device ID", "Device ID of output device",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 
   g_object_class_install_property (gobject_class, ARG_VOLUME,
       g_param_spec_double ("volume", "Volume", "Volume of this stream",
@@ -248,9 +250,11 @@ gst_osx_audio_sink_set_property (GObject * object, guint prop_id,
   GstOsxAudioSink *sink = GST_OSX_AUDIO_SINK (object);
 
   switch (prop_id) {
+#ifndef HAVE_IOS
     case ARG_DEVICE:
       sink->device_id = g_value_get_int (value);
       break;
+#endif
     case ARG_VOLUME:
       sink->volume = g_value_get_double (value);
       gst_osx_audio_sink_set_volume (sink);
@@ -267,9 +271,11 @@ gst_osx_audio_sink_get_property (GObject * object, guint prop_id,
 {
   GstOsxAudioSink *sink = GST_OSX_AUDIO_SINK (object);
   switch (prop_id) {
+#ifndef HAVE_IOS
     case ARG_DEVICE:
       g_value_set_int (value, sink->device_id);
       break;
+#endif
     case ARG_VOLUME:
       g_value_set_double (value, sink->volume);
       break;

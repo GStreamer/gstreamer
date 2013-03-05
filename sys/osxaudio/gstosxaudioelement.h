@@ -49,8 +49,16 @@
 #ifndef __GST_OSX_AUDIO_ELEMENT_H__
 #define __GST_OSX_AUDIO_ELEMENT_H__
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <gst/gst.h>
+#ifdef HAVE_IOS
+#include <CoreAudio/CoreAudioTypes.h>
+#else
 #include <CoreAudio/CoreAudio.h>
+#endif
 #include <AudioUnit/AudioUnit.h>
 
 G_BEGIN_DECLS
