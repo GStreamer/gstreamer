@@ -302,15 +302,15 @@ static const char *frag_NV12_NV21_prog = {
 };
 /* *INDENT-ON* */
 
-  static const EGLint eglglessink_RGBA8888_attribs[] = {
-    EGL_RED_SIZE, 8,
-    EGL_GREEN_SIZE, 8,
-    EGL_BLUE_SIZE, 8,
-    EGL_ALPHA_SIZE, 8,
-    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-    EGL_NONE
-  };
+static const EGLint eglglessink_RGBA8888_attribs[] = {
+  EGL_RED_SIZE, 8,
+  EGL_GREEN_SIZE, 8,
+  EGL_BLUE_SIZE, 8,
+  EGL_ALPHA_SIZE, 8,
+  EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+  EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+  EGL_NONE
+};
 
 /* Input capabilities. */
 static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
@@ -2889,9 +2889,15 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
   gsize offset[3];
   GstMemory *mem[3] = { NULL, NULL, NULL };
   guint n_mem;
+  GstMemoryFlags flags = 0;
 
   memset (stride, 0, sizeof (stride));
   memset (offset, 0, sizeof (offset));
+
+  if (!gst_egl_image_memory_is_mappable ())
+    flags |= GST_MEMORY_FLAG_NOT_MAPPABLE;
+  /* See https://bugzilla.gnome.org/show_bug.cgi?id=695203 */
+  flags |= GST_MEMORY_FLAG_NO_SHARE;
 
   gst_video_info_set_format (&info, format, width, height);
 
@@ -2909,6 +2915,7 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
       if (mem[0]) {
         stride[0] = size / GST_VIDEO_INFO_HEIGHT (&info);
         n_mem = 1;
+        GST_MINI_OBJECT_FLAG_SET (mem[0], GST_MEMORY_FLAG_NO_SHARE);
       } else {
         data = g_slice_new0 (GstEGLGLESImageData);
 
@@ -2954,9 +2961,7 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
             gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
             (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
             image, GST_EGL_IMAGE_MEMORY_TYPE_RGB,
-            (gst_egl_image_memory_is_mappable ()? 0 :
-                GST_MEMORY_FLAG_NOT_MAPPABLE), size, data,
-            (GDestroyNotify) gst_egl_gles_image_data_free);
+            flags, size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
         n_mem = 1;
       }
       break;
@@ -2973,6 +2978,7 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
       if (mem[0]) {
         stride[0] = size / GST_VIDEO_INFO_HEIGHT (&info);
         n_mem = 1;
+        GST_MINI_OBJECT_FLAG_SET (mem[0], GST_MEMORY_FLAG_NO_SHARE);
       } else {
         data = g_slice_new0 (GstEGLGLESImageData);
 
@@ -3019,9 +3025,7 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
             gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
             (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
             image, GST_EGL_IMAGE_MEMORY_TYPE_RGB,
-            (gst_egl_image_memory_is_mappable ()? 0 :
-                GST_MEMORY_FLAG_NOT_MAPPABLE), size, data,
-            (GDestroyNotify) gst_egl_gles_image_data_free);
+            flags, size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
         n_mem = 1;
       }
       break;
@@ -3048,6 +3052,8 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
         offset[1] = size[0];
         stride[1] = size[1] / GST_VIDEO_INFO_HEIGHT (&info);
         n_mem = 2;
+        GST_MINI_OBJECT_FLAG_SET (mem[0], GST_MEMORY_FLAG_NO_SHARE);
+        GST_MINI_OBJECT_FLAG_SET (mem[1], GST_MEMORY_FLAG_NO_SHARE);
       } else {
         if (mem[0])
           gst_memory_unref (mem[0]);
@@ -3113,8 +3119,7 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
               (i ==
                   0 ? GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE :
                   GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE_ALPHA),
-              (gst_egl_image_memory_is_mappable ()? 0 :
-                  GST_MEMORY_FLAG_NOT_MAPPABLE), size[i], data,
+              flags, size[i], data,
               (GDestroyNotify) gst_egl_gles_image_data_free);
         }
 
@@ -3153,6 +3158,9 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
         offset[2] = size[1];
         stride[2] = size[2] / GST_VIDEO_INFO_HEIGHT (&info);
         n_mem = 3;
+        GST_MINI_OBJECT_FLAG_SET (mem[0], GST_MEMORY_FLAG_NO_SHARE);
+        GST_MINI_OBJECT_FLAG_SET (mem[1], GST_MEMORY_FLAG_NO_SHARE);
+        GST_MINI_OBJECT_FLAG_SET (mem[2], GST_MEMORY_FLAG_NO_SHARE);
       } else {
         if (mem[0])
           gst_memory_unref (mem[0]);
@@ -3215,8 +3223,7 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
               gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
               (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
               image, GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE,
-              (gst_egl_image_memory_is_mappable ()? 0 :
-                  GST_MEMORY_FLAG_NOT_MAPPABLE), size[i], data,
+              flags, size[i], data,
               (GDestroyNotify) gst_egl_gles_image_data_free);
         }
 
@@ -3244,6 +3251,7 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
       if (mem[0]) {
         stride[0] = size / GST_VIDEO_INFO_HEIGHT (&info);
         n_mem = 1;
+        GST_MINI_OBJECT_FLAG_SET (mem[0], GST_MEMORY_FLAG_NO_SHARE);
       } else {
         data = g_slice_new0 (GstEGLGLESImageData);
 
@@ -3289,9 +3297,7 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
             gst_egl_image_allocator_wrap (GST_EGL_IMAGE_BUFFER_POOL
             (eglglessink->pool)->allocator, eglglessink->eglglesctx.display,
             image, GST_EGL_IMAGE_MEMORY_TYPE_RGBA,
-            (gst_egl_image_memory_is_mappable ()? 0 :
-                GST_MEMORY_FLAG_NOT_MAPPABLE), size, data,
-            (GDestroyNotify) gst_egl_gles_image_data_free);
+            flags, size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
 
         n_mem = 1;
       }
