@@ -297,7 +297,7 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
-  GST_DEBUG_OBJECT (self, "current start: %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (self, "current start: %" GST_TIME_FORMAT
       " new start: %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
       GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (self)));
 
@@ -331,7 +331,7 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
 
   g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
 
-  GST_DEBUG_OBJECT (self, "current inpoint: %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (self, "current inpoint: %" GST_TIME_FORMAT
       " new inpoint: %" GST_TIME_FORMAT, GST_TIME_ARGS (inpoint),
       GST_TIME_ARGS (GES_TIMELINE_ELEMENT_INPOINT (self)));
 
@@ -368,7 +368,7 @@ ges_timeline_element_set_max_duration (GESTimelineElement * self,
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
-  GST_DEBUG_OBJECT (self, "current duration: %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (self, "current duration: %" GST_TIME_FORMAT
       " new duration: %" GST_TIME_FORMAT, GST_TIME_ARGS (maxduration),
       GST_TIME_ARGS (GES_TIMELINE_ELEMENT_MAX_DURATION (self)));
 
@@ -402,7 +402,7 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
-  GST_DEBUG_OBJECT (self, "current duration: %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (self, "current duration: %" GST_TIME_FORMAT
       " new duration: %" GST_TIME_FORMAT, GST_TIME_ARGS (duration),
       GST_TIME_ARGS (GES_TIMELINE_ELEMENT_DURATION (self)));
 
