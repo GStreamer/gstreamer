@@ -317,7 +317,6 @@ gst_ts_demux_reset (MpegTSBase * base)
 {
   GstTSDemux *demux = (GstTSDemux *) base;
 
-  demux->program_number = -1;
   demux->calculate_update_segment = FALSE;
 
   gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
@@ -342,6 +341,7 @@ gst_ts_demux_init (GstTSDemux * demux)
   /* We are not interested in sections (all handled by mpegtsbase) */
   base->push_section = FALSE;
 
+  demux->program_number = -1;
   gst_ts_demux_reset (base);
 }
 
