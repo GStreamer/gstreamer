@@ -87,6 +87,9 @@ struct _GstVP8Enc
   vp8e_tuning tuning;
   unsigned int cq_level;
   unsigned int max_intra_bitrate_pct;
+  /* Timebase - a value of 0 will use the framerate */
+  unsigned int timebase_n;
+  unsigned int timebase_d;
 
   /* state */
   gboolean inited;
