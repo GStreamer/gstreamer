@@ -3279,7 +3279,7 @@ gst_eglglessink_allocate_eglimage (GstEglGlesSink * eglglessink,
         if (got_gl_error ("glTexParameteri"))
           goto mem_error;
 
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB,
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA,
             GST_VIDEO_INFO_WIDTH (&info),
             GST_VIDEO_INFO_HEIGHT (&info), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         if (got_gl_error ("glTexImage2D"))
