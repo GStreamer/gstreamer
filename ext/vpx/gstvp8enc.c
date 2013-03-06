@@ -394,7 +394,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 #define parent_class gst_vp8_enc_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVP8Enc, gst_vp8_enc, GST_TYPE_VIDEO_ENCODER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL);
-    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL););
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL);
+    );
 
 static void
 gst_vp8_enc_class_init (GstVP8EncClass * klass)
@@ -430,7 +431,6 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
   video_encoder_class->pre_push = gst_vp8_enc_pre_push;
   video_encoder_class->sink_event = gst_vp8_enc_sink_event;
   video_encoder_class->propose_allocation = gst_vp8_enc_propose_allocation;
-
 
   g_object_class_install_property (gobject_class, PROP_RC_END_USAGE,
       g_param_spec_enum ("end-usage", "Rate control mode",
@@ -1509,8 +1509,17 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
 
   encoder->cfg.g_w = GST_VIDEO_INFO_WIDTH (info);
   encoder->cfg.g_h = GST_VIDEO_INFO_HEIGHT (info);
-  encoder->cfg.g_timebase.num = GST_VIDEO_INFO_FPS_D (info);
-  encoder->cfg.g_timebase.den = GST_VIDEO_INFO_FPS_N (info);
+  if (GST_VIDEO_INFO_FPS_D (info) == 0 || GST_VIDEO_INFO_FPS_N (info) == 0) {
+    /* Zero framerate but still need to setup the timebase so we
+     * presume this is RTP - VP8 payload draft states clock rate of 90000
+     * see specification http://tools.ietf.org/html/draft-ietf-payload-vp8-01
+     * section 6.3.1 */
+    encoder->cfg.g_timebase.num = 1;
+    encoder->cfg.g_timebase.den = 90000;
+  } else {
+    encoder->cfg.g_timebase.num = GST_VIDEO_INFO_FPS_D (info);
+    encoder->cfg.g_timebase.den = GST_VIDEO_INFO_FPS_N (info);
+  }
 
   if (encoder->cfg.g_pass == VPX_RC_FIRST_PASS) {
     encoder->first_pass_cache_content = g_byte_array_sized_new (4096);
@@ -1641,10 +1650,15 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
         gst_vpx_error_name (status));
   }
 
-  gst_video_encoder_set_latency (video_encoder, 0,
-      gst_util_uint64_scale (encoder->cfg.g_lag_in_frames,
-          GST_VIDEO_INFO_FPS_D (info) * GST_SECOND,
-          GST_VIDEO_INFO_FPS_N (info)));
+  if (GST_VIDEO_INFO_FPS_D (info) == 0 || GST_VIDEO_INFO_FPS_N (info) == 0) {
+    gst_video_encoder_set_latency (video_encoder, GST_CLOCK_TIME_NONE,
+        GST_CLOCK_TIME_NONE);
+  } else {
+    gst_video_encoder_set_latency (video_encoder, 0,
+        gst_util_uint64_scale (encoder->cfg.g_lag_in_frames,
+            GST_VIDEO_INFO_FPS_D (info) * GST_SECOND,
+            GST_VIDEO_INFO_FPS_N (info)));
+  }
   encoder->inited = TRUE;
 
   /* Store input state */
@@ -1979,12 +1993,18 @@ gst_vp8_enc_pre_push (GstVideoEncoder * video_encoder,
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DECODE_ONLY);
     GST_BUFFER_TIMESTAMP (buf) = GST_BUFFER_TIMESTAMP (frame->output_buffer);
     GST_BUFFER_DURATION (buf) = 0;
-    GST_BUFFER_OFFSET_END (buf) =
-        _to_granulepos (frame->presentation_frame_number + 1,
-        inv_count, encoder->keyframe_distance);
-    GST_BUFFER_OFFSET (buf) =
-        gst_util_uint64_scale (frame->presentation_frame_number + 1,
-        GST_SECOND * GST_VIDEO_INFO_FPS_D (info), GST_VIDEO_INFO_FPS_N (info));
+    if (GST_VIDEO_INFO_FPS_D (info) == 0 || GST_VIDEO_INFO_FPS_N (info) == 0) {
+      GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
+      GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
+    } else {
+      GST_BUFFER_OFFSET_END (buf) =
+          _to_granulepos (frame->presentation_frame_number + 1,
+          inv_count, encoder->keyframe_distance);
+      GST_BUFFER_OFFSET (buf) =
+          gst_util_uint64_scale (frame->presentation_frame_number + 1,
+          GST_SECOND * GST_VIDEO_INFO_FPS_D (info),
+          GST_VIDEO_INFO_FPS_N (info));
+    }
 
     ret = gst_pad_push (GST_VIDEO_ENCODER_SRC_PAD (video_encoder), buf);
 
@@ -2005,12 +2025,17 @@ gst_vp8_enc_pre_push (GstVideoEncoder * video_encoder,
     encoder->keyframe_distance++;
   }
 
-  GST_BUFFER_OFFSET_END (buf) =
-      _to_granulepos (frame->presentation_frame_number + 1, 0,
-      encoder->keyframe_distance);
-  GST_BUFFER_OFFSET (buf) =
-      gst_util_uint64_scale (frame->presentation_frame_number + 1,
-      GST_SECOND * GST_VIDEO_INFO_FPS_D (info), GST_VIDEO_INFO_FPS_N (info));
+  if (GST_VIDEO_INFO_FPS_D (info) == 0 || GST_VIDEO_INFO_FPS_N (info) == 0) {
+    GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
+  } else {
+    GST_BUFFER_OFFSET_END (buf) =
+        _to_granulepos (frame->presentation_frame_number + 1, 0,
+        encoder->keyframe_distance);
+    GST_BUFFER_OFFSET (buf) =
+        gst_util_uint64_scale (frame->presentation_frame_number + 1,
+        GST_SECOND * GST_VIDEO_INFO_FPS_D (info), GST_VIDEO_INFO_FPS_N (info));
+  }
 
   GST_LOG_OBJECT (video_encoder, "src ts: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
