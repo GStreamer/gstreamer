@@ -25,15 +25,14 @@
  * SECTION:gstlfocontrolsource
  * @short_description: LFO control source
  *
- * #GstLFOControlSource is a #GstControlSource, that provides several periodic waveforms
- * as control values. It supports all fundamental, numeric GValue types as property.
+ * #GstLFOControlSource is a #GstControlSource, that provides several periodic
+ * waveforms as control values.
  *
- * To use #GstLFOControlSource get a new instance by calling gst_lfo_control_source_new(),
- * bind it to a #GParamSpec and set the relevant properties or use
- * gst_lfo_control_source_set_waveform.
+ * To use #GstLFOControlSource get a new instance by calling
+ * gst_lfo_control_source_new(), bind it to a #GParamSpec and set the relevant
+ * properties.
  *
  * All functions are MT-safe.
- *
  */
 
 #include <glib-object.h>
@@ -453,6 +452,7 @@ gst_lfo_control_source_init (GstLFOControlSource * self)
   self->priv->waveform = gst_lfo_control_source_set_waveform (self,
       GST_LFO_WAVEFORM_SINE);
   self->priv->frequency = 1.0;
+  self->priv->amplitude = 1.0;
   self->priv->period = GST_SECOND / self->priv->frequency;
   self->priv->timeshift = 0;
 
