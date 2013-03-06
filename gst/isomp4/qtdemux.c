@@ -219,6 +219,8 @@ struct _QtDemuxStream
   gboolean all_keyframe;        /* TRUE when all samples are keyframes (no stss) */
   guint32 min_duration;         /* duration in timescale of first sample, used for figuring out
                                    the framerate, in timescale units */
+  guint32 offset_in_sample;
+  guint32 max_buffer_size;
 
   /* if we use chunks or samples */
   gboolean sampled;
@@ -1089,6 +1091,7 @@ gst_qtdemux_move_stream (GstQTDemux * qtdemux, QtDemuxStream * str,
 
   /* position changed, we have a discont */
   str->sample_index = index;
+  str->offset_in_sample = 0;
   /* Each time we move in the stream we store the position where we are
    * starting from */
   str->from_sample = index;
@@ -1327,6 +1330,7 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment)
 
     stream->time_position = desired_offset;
     stream->sample_index = -1;
+    stream->offset_in_sample = 0;
     stream->segment_index = -1;
     stream->last_ret = GST_FLOW_OK;
     stream->sent_eos = FALSE;
@@ -3303,6 +3307,7 @@ gst_qtdemux_advance_sample (GstQTDemux * qtdemux, QtDemuxStream * stream)
 
   /* move to next sample */
   stream->sample_index++;
+  stream->offset_in_sample = 0;
 
   /* get current segment */
   segment = &stream->segments[stream->segment_index];
@@ -3773,7 +3778,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   guint64 pts = GST_CLOCK_TIME_NONE;
   guint64 duration = 0;
   gboolean keyframe = FALSE;
-  guint size = 0;
+  guint sample_size = 0;
+  guint size;
   gint index;
   gint i;
 
@@ -3830,22 +3836,32 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 
   /* fetch info for the current sample of this stream */
   if (G_UNLIKELY (!gst_qtdemux_prepare_current_sample (qtdemux, stream, &offset,
-              &size, &dts, &pts, &duration, &keyframe)))
+              &sample_size, &dts, &pts, &duration, &keyframe)))
     goto eos_stream;
 
-  GST_LOG_OBJECT (qtdemux,
+  GST_DEBUG_OBJECT (qtdemux,
       "pushing from stream %d, offset %" G_GUINT64_FORMAT
       ", size %d, dts=%" GST_TIME_FORMAT ", pts=%" GST_TIME_FORMAT
-      ", duration %" GST_TIME_FORMAT, index, offset, size,
+      ", duration %" GST_TIME_FORMAT, index, offset, sample_size,
       GST_TIME_ARGS (dts), GST_TIME_ARGS (pts), GST_TIME_ARGS (duration));
 
   /* hmm, empty sample, skip and move to next sample */
-  if (G_UNLIKELY (size <= 0))
+  if (G_UNLIKELY (sample_size <= 0))
     goto next;
 
   /* last pushed sample was out of boundary, goto next sample */
   if (G_UNLIKELY (stream->last_ret == GST_FLOW_EOS))
     goto next;
+
+  if (stream->max_buffer_size == 0 || sample_size <= stream->max_buffer_size) {
+    size = sample_size;
+  } else {
+    GST_DEBUG_OBJECT (qtdemux,
+        "size %d larger than stream max_buffer_size %d, trimming",
+        sample_size, stream->max_buffer_size);
+    size =
+        MIN (sample_size - stream->offset_in_sample, stream->max_buffer_size);
+  }
 
   GST_LOG_OBJECT (qtdemux, "reading %d bytes @ %" G_GUINT64_FORMAT, size,
       offset);
@@ -3855,12 +3871,42 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     buf = gst_buffer_new_allocate (stream->allocator, size, &stream->params);
   }
 
-  ret = gst_qtdemux_pull_atom (qtdemux, offset, size, &buf);
+  ret = gst_qtdemux_pull_atom (qtdemux, offset + stream->offset_in_sample,
+      size, &buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto beach;
 
+  if (size != sample_size) {
+    pts += gst_util_uint64_scale_int (GST_SECOND,
+        stream->offset_in_sample / stream->bytes_per_frame, stream->timescale);
+    dts += gst_util_uint64_scale_int (GST_SECOND,
+        stream->offset_in_sample / stream->bytes_per_frame, stream->timescale);
+    duration = gst_util_uint64_scale_int (GST_SECOND,
+        size / stream->bytes_per_frame, stream->timescale);
+  }
+
   ret = gst_qtdemux_decorate_and_push_buffer (qtdemux, stream, buf,
       dts, pts, duration, keyframe, min_time, offset);
+
+  if (size != sample_size) {
+    QtDemuxSample *sample = &stream->samples[stream->sample_index];
+    QtDemuxSegment *segment = &stream->segments[stream->segment_index];
+
+    GstClockTime time_position = gst_util_uint64_scale (sample->timestamp +
+        stream->offset_in_sample / stream->bytes_per_frame, GST_SECOND,
+        stream->timescale);
+    if (time_position >= segment->media_start) {
+      /* inside the segment, update time_position, looks very familiar to
+       * GStreamer segments, doesn't it? */
+      stream->time_position = (time_position - segment->media_start) +
+          segment->time;
+    } else {
+      /* not yet in segment, time does not yet increment. This means
+       * that we are still prerolling keyframes to the decoder so it can
+       * decode the first sample of the segment. */
+      stream->time_position = segment->time;
+    }
+  }
 
   /* combine flows */
   ret = gst_qtdemux_combine_flows (qtdemux, stream, ret);
@@ -3868,6 +3914,12 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
    * we have no more data for the pad to push */
   if (ret == GST_FLOW_EOS)
     ret = GST_FLOW_OK;
+
+  stream->offset_in_sample += size;
+  if (stream->offset_in_sample >= sample_size) {
+    gst_qtdemux_advance_sample (qtdemux, stream);
+  }
+  goto beach;
 
 next:
   gst_qtdemux_advance_sample (qtdemux, stream);
@@ -4009,8 +4061,10 @@ next_entry_size (GstQTDemux * demux)
   for (i = 0; i < demux->n_streams; i++) {
     stream = demux->streams[i];
 
-    if (stream->sample_index == -1)
+    if (stream->sample_index == -1) {
       stream->sample_index = 0;
+      stream->offset_in_sample = 0;
+    }
 
     if (stream->sample_index >= stream->n_samples) {
       GST_LOG_OBJECT (demux, "stream %d samples exhausted", i);
@@ -4469,6 +4523,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
         ret = gst_qtdemux_combine_flows (demux, stream, ret);
 
         stream->sample_index++;
+        stream->offset_in_sample = 0;
 
         /* update current offset and figure out size of next buffer */
         GST_LOG_OBJECT (demux, "increasing offset %" G_GUINT64_FORMAT " by %u",
@@ -5805,7 +5860,8 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
 
         for (k = stream->stsc_sample_index; k < samples_per_chunk; k++) {
           GST_LOG_OBJECT (qtdemux, "Creating entry %d with offset %"
-              G_GUINT64_FORMAT, (guint) (cur - samples), stream->chunk_offset);
+              G_GUINT64_FORMAT "and size %d",
+              (guint) (cur - samples), stream->chunk_offset, cur->size);
 
           cur->offset = chunk_offset;
           chunk_offset += cur->size;
@@ -6504,6 +6560,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   stream->segment_index = -1;
   stream->time_position = 0;
   stream->sample_index = -1;
+  stream->offset_in_sample = 0;
   stream->last_ret = GST_FLOW_OK;
 
   if (!qtdemux_tree_get_child_by_type_full (trak, FOURCC_tkhd, &tkhd)
@@ -9987,6 +10044,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
   name = gst_structure_get_name (s);
   if (g_str_has_prefix (name, "audio/x-raw")) {
     stream->need_clip = TRUE;
+    stream->max_buffer_size = 4096 * stream->bytes_per_frame;
+    GST_DEBUG ("setting max buffer size to %d", stream->max_buffer_size);
   }
   return caps;
 }
