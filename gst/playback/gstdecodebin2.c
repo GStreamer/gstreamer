@@ -3128,7 +3128,9 @@ decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
   } else {
     /* update runtime limits. At runtime, we try to keep the amount of buffers
      * in the queues as low as possible (but at least 5 buffers). */
-    if ((max_bytes = dbin->max_size_bytes) == 0)
+    if (dbin->use_buffering)
+      max_bytes = 0;
+    else if ((max_bytes = dbin->max_size_bytes) == 0)
       max_bytes = AUTO_PLAY_SIZE_BYTES;
     if ((max_buffers = dbin->max_size_buffers) == 0)
       max_buffers = AUTO_PLAY_SIZE_BUFFERS;
