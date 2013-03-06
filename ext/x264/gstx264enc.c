@@ -312,7 +312,7 @@ static const GFlagsValue tune_types[] = {
   {0x0, "No tuning", "none"},
   {0x1, "Still image", "stillimage"},
   {0x2, "Fast decode", "fastdecode"},
-  {0x4, "Zero latency (requires constant framerate)", "zerolatency"},
+  {0x4, "Zero latency", "zerolatency"},
   {0, NULL, NULL},
 };
 
@@ -1052,17 +1052,27 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   }
 
   /* set up encoder parameters */
-  encoder->x264param.i_fps_num = info->fps_n;
-  encoder->x264param.i_fps_den = info->fps_d;
+  if (info->fps_d == 0 || info->fps_n == 0) {
+    /* No FPS so must use VFR
+     * This raises latency apparently see http://mewiki.project357.com/wiki/X264_Encoding_Suggestions */
+    encoder->x264param.b_vfr_input = TRUE;
+    if (encoder->keyint_max) {  /* NB the default is 250 setup by x264 itself */
+      encoder->x264param.i_keyint_max = encoder->keyint_max;
+    }
+  } else {
+    /* FPS available so set it up */
+    encoder->x264param.i_fps_num = info->fps_n;
+    encoder->x264param.i_fps_den = info->fps_d;
+    encoder->x264param.i_keyint_max =
+        encoder->keyint_max ? encoder->keyint_max : (10 * info->fps_n /
+        info->fps_d);
+  }
   encoder->x264param.i_width = info->width;
   encoder->x264param.i_height = info->height;
   if (info->par_d > 0) {
     encoder->x264param.vui.i_sar_width = info->par_n;
     encoder->x264param.vui.i_sar_height = info->par_d;
   }
-
-  encoder->x264param.i_keyint_max = encoder->keyint_max ? encoder->keyint_max :
-      (10 * info->fps_n / info->fps_d);
 
   if ((((info->height == 576) && ((info->width == 720)
                   || (info->width == 704) || (info->width == 352)))
