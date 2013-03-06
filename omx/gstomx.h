@@ -304,7 +304,7 @@ OMX_ERRORTYPE     gst_omx_port_release_buffer (GstOMXPort *port, GstOMXBuffer *b
 OMX_ERRORTYPE     gst_omx_port_set_flushing (GstOMXPort *port, gboolean flush);
 gboolean          gst_omx_port_is_flushing (GstOMXPort *port);
 
-OMX_ERRORTYPE     gst_omx_port_allocate_buffers (GstOMXPort *port, guint n);
+OMX_ERRORTYPE     gst_omx_port_allocate_buffers (GstOMXPort *port);
 OMX_ERRORTYPE     gst_omx_port_use_buffers (GstOMXPort *port, const GList *buffers);
 OMX_ERRORTYPE     gst_omx_port_use_eglimages (GstOMXPort *port, const GList *images);
 OMX_ERRORTYPE     gst_omx_port_deallocate_buffers (GstOMXPort *port);
