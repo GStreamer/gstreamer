@@ -344,7 +344,7 @@ else
   fi
 
   if test x"$AS" != x; then
-    emblibav_configure_args="$emblibav_configure_args --as=\\\"\\\$AS\\\""
+    emblibav_configure_args="$emblibav_configure_args --as=\\\"\\\$CC\\\""
   fi
 
   if test x"$CC" != x; then
