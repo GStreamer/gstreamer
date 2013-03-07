@@ -1870,7 +1870,7 @@ gst_query_get_n_allocation_params (GstQuery * query)
  * gst_query_parse_nth_allocation_param:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @index: position in the allocator array to read
- * @allocator: (out) (transfer none) (allow-none): variable to hold the result
+ * @allocator: (out) (transfer full) (allow-none): variable to hold the result
  * @params: (out) (allow-none): parameters for the allocator
  *
  * Parse an available query and get the alloctor and its params
