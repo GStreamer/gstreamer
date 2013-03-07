@@ -647,7 +647,7 @@ gst_eglglessink_wipe_eglglesctx (GstEglGlesSink * eglglessink)
     eglglessink->eglglesctx.n_textures = 0;
   }
 
-  for (i = 0; i < 3; i++) {
+  for (i = 0; i < 2; i++) {
     if (eglglessink->eglglesctx.glslprogram[i]) {
       glDetachShader (eglglessink->eglglesctx.glslprogram[i],
           eglglessink->eglglesctx.fragshader[i]);
