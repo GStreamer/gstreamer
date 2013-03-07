@@ -2040,10 +2040,6 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
   gst_buffer_replace (&self->codec_data, state->codec_data);
   self->input_state = gst_video_codec_state_ref (state);
 
-  if (!gst_omx_video_dec_negotiate (self)) {
-    GST_LOG_OBJECT (self, "Negotiation failed, will get output format later");
-  }
-
   GST_DEBUG_OBJECT (self, "Enabling component");
 
   if (needs_disable) {
@@ -2057,6 +2053,9 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
     if (gst_omx_port_mark_reconfigured (self->dec_in_port) != OMX_ErrorNone)
       return FALSE;
   } else {
+    if (!gst_omx_video_dec_negotiate (self))
+      GST_LOG_OBJECT (self, "Negotiation failed, will get output format later");
+
     if (gst_omx_component_set_state (self->dec, OMX_StateIdle) != OMX_ErrorNone)
       return FALSE;
 
