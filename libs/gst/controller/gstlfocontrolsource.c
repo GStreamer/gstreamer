@@ -35,6 +35,8 @@
  * All functions are MT-safe.
  */
 
+#include <float.h>
+
 #include <glib-object.h>
 #include <gst/gst.h>
 #include <gst/gstcontrolsource.h>
@@ -486,8 +488,7 @@ gst_lfo_control_source_set_property (GObject * object, guint prop_id,
     case PROP_FREQUENCY:{
       gdouble frequency = g_value_get_double (value);
 
-      g_return_if_fail (frequency > 0
-          || ((GstClockTime) (GST_SECOND / frequency)) != 0);
+      g_return_if_fail (((GstClockTime) (GST_SECOND / frequency)) != 0);
 
       g_mutex_lock (&self->lock);
       self->priv->frequency = frequency;
@@ -574,7 +575,7 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_FREQUENCY,
       g_param_spec_double ("frequency", "Frequency",
-          "Frequency of the waveform", 0.0, G_MAXDOUBLE, 1.0,
+          "Frequency of the waveform", DBL_MIN, G_MAXDOUBLE, 1.0,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   /**
