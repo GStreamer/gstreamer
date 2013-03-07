@@ -720,7 +720,8 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
   comp->pending_state = state;
 
   /* Reset some things */
-  if (old_state == OMX_StateExecuting && state < old_state) {
+  if ((old_state == OMX_StateExecuting || old_state == OMX_StatePause)
+      && state < old_state) {
     g_list_free (comp->pending_reconfigure_outports);
     comp->pending_reconfigure_outports = NULL;
     /* Notify all inports that are still waiting */
@@ -1346,7 +1347,8 @@ done:
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
 OMX_ERRORTYPE
-gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
+gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
+    gboolean flush)
 {
   GstOMXComponent *comp;
   OMX_ERRORTYPE err = OMX_ErrorNone;
@@ -1374,18 +1376,9 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
     goto done;
   }
 
-  if (comp->state != OMX_StateIdle && comp->state != OMX_StateExecuting
-      && comp->state != OMX_StatePause) {
-    GST_DEBUG_OBJECT (comp->parent, "Component is in wrong state: %d",
-        comp->state);
-    err = OMX_ErrorUndefined;
-
-    goto done;
-  }
-
   port->flushing = flush;
   if (flush) {
-    gint64 wait_until;
+    gint64 wait_until = -1;
     gboolean signalled;
     OMX_ERRORTYPE last_error;
 
@@ -1415,8 +1408,23 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
       goto done;
     }
 
-    wait_until = g_get_monotonic_time () + 5 * G_TIME_SPAN_SECOND;
-    GST_DEBUG_OBJECT (comp->parent, "Waiting for 5s");
+    if (timeout != GST_CLOCK_TIME_NONE) {
+      gint64 add = timeout / (GST_SECOND / G_TIME_SPAN_SECOND);
+
+      if (add == 0) {
+        if (!port->flushed || (port->buffers
+                && port->buffers->len >
+                g_queue_get_length (&port->pending_buffers)))
+          err = OMX_ErrorTimeout;
+        goto done;
+      }
+
+      wait_until = g_get_monotonic_time () + add;
+      GST_DEBUG_OBJECT (comp->parent, "Waiting for %" G_GINT64_FORMAT "us",
+          add);
+    } else {
+      GST_DEBUG_OBJECT (comp->parent, "Waiting for signal");
+    }
 
     /* Retry until timeout or until an error happend or
      * until all buffers were released by the component and
@@ -1429,12 +1437,19 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
         && port->buffers->len > g_queue_get_length (&port->pending_buffers)) {
       g_mutex_lock (&comp->messages_lock);
       g_mutex_unlock (&comp->lock);
-      if (!g_queue_is_empty (&comp->messages))
+
+      if (!g_queue_is_empty (&comp->messages)) {
         signalled = TRUE;
-      else
+      }
+      if (wait_until == -1) {
+        g_cond_wait (&comp->messages_cond, &comp->messages_lock);
+        signalled = TRUE;
+      } else {
         signalled =
             g_cond_wait_until (&comp->messages_cond, &comp->messages_lock,
             wait_until);
+      }
+
       g_mutex_unlock (&comp->messages_lock);
       g_mutex_lock (&comp->lock);
 
@@ -1457,36 +1472,6 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
           port->index);
       err = OMX_ErrorTimeout;
       goto done;
-    }
-  } else {
-    if (port->port_def.eDir == OMX_DirOutput && port->buffers) {
-      GstOMXBuffer *buf;
-
-      /* Enqueue all buffers for the component to fill */
-      while ((buf = g_queue_pop_head (&port->pending_buffers))) {
-        if (!buf)
-          continue;
-
-        g_assert (!buf->used);
-
-        /* Reset all flags, some implementations don't
-         * reset them themselves and the flags are not
-         * valid anymore after the buffer was consumed
-         */
-        buf->omx_buf->nFlags = 0;
-
-        err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
-
-        if (err != OMX_ErrorNone) {
-          GST_ERROR_OBJECT (comp->parent,
-              "Failed to pass buffer %p (%p) to port %u: %s (0x%08x)", buf,
-              buf->omx_buf->pBuffer, port->index,
-              gst_omx_error_to_string (err), err);
-          goto done;
-        }
-        GST_DEBUG_OBJECT (comp->parent, "Passed buffer %p (%p) to component",
-            buf, buf->omx_buf->pBuffer);
-      }
     }
   }
 
@@ -1967,6 +1952,86 @@ gst_omx_port_set_enabled (GstOMXPort * port, gboolean enabled)
   return err;
 }
 
+static OMX_ERRORTYPE
+gst_omx_port_populate_unlocked (GstOMXPort * port)
+{
+  GstOMXComponent *comp;
+  OMX_ERRORTYPE err = OMX_ErrorNone;
+  GstOMXBuffer *buf;
+
+  g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
+
+  comp = port->comp;
+
+  GST_DEBUG_OBJECT (comp->parent, "Populating port %d", port->index);
+
+  gst_omx_component_handle_messages (comp);
+
+  if (port->flushing) {
+    GST_DEBUG_OBJECT (comp->parent, "Port %u is flushing", port->index);
+    err = OMX_ErrorIncorrectStateOperation;
+    goto done;
+  }
+
+  if ((err = comp->last_error) != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (comp->parent, "Component is in error state: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    goto done;
+  }
+
+  if (port->port_def.eDir == OMX_DirOutput && port->buffers && !port->tunneled) {
+    /* Enqueue all buffers for the component to fill */
+    while ((buf = g_queue_pop_head (&port->pending_buffers))) {
+      if (!buf)
+        continue;
+
+      g_assert (!buf->used);
+
+      /* Reset all flags, some implementations don't
+       * reset them themselves and the flags are not
+       * valid anymore after the buffer was consumed
+       */
+      buf->omx_buf->nFlags = 0;
+
+      err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
+
+      if (err != OMX_ErrorNone) {
+        GST_ERROR_OBJECT (comp->parent,
+            "Failed to pass buffer %p (%p) to port %u: %s (0x%08x)", buf,
+            buf->omx_buf->pBuffer, port->index, gst_omx_error_to_string (err),
+            err);
+        goto done;
+      }
+      GST_DEBUG_OBJECT (comp->parent, "Passed buffer %p (%p) to component",
+          buf, buf->omx_buf->pBuffer);
+    }
+  }
+
+done:
+  gst_omx_port_update_port_definition (port, NULL);
+
+  GST_DEBUG_OBJECT (comp->parent, "Populated port %u: %s (0x%08x)",
+      port->index, gst_omx_error_to_string (err), err);
+  gst_omx_component_handle_messages (comp);
+
+  return err;
+}
+
+/* NOTE: Uses comp->lock and comp->messages_lock */
+OMX_ERRORTYPE
+gst_omx_port_populate (GstOMXPort * port)
+{
+  OMX_ERRORTYPE err;
+
+  g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
+
+  g_mutex_lock (&port->comp->lock);
+  err = gst_omx_port_populate_unlocked (port);
+  g_mutex_unlock (&port->comp->lock);
+
+  return err;
+}
+
 /* NOTE: Must be called while holding comp->lock, uses comp->messages_lock */
 static OMX_ERRORTYPE
 gst_omx_port_wait_enabled_unlocked (GstOMXPort * port, GstClockTime timeout)
@@ -2061,39 +2126,6 @@ gst_omx_port_wait_enabled_unlocked (GstOMXPort * port, GstClockTime timeout)
   } else {
     if (enabled)
       port->flushing = FALSE;
-
-    /* If everything went fine and we have an output port we
-     * should provide all newly allocated buffers to the port
-     */
-    if (enabled && port->port_def.eDir == OMX_DirOutput && !port->tunneled) {
-      GstOMXBuffer *buf;
-
-      /* Enqueue all buffers for the component to fill */
-      while ((buf = g_queue_pop_head (&port->pending_buffers))) {
-        if (!buf)
-          continue;
-
-        g_assert (!buf->used);
-
-        /* Reset all flags, some implementations don't
-         * reset them themselves and the flags are not
-         * valid anymore after the buffer was consumed
-         */
-        buf->omx_buf->nFlags = 0;
-
-        err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
-
-        if (err != OMX_ErrorNone) {
-          GST_ERROR_OBJECT (comp->parent,
-              "Failed to pass buffer %p (%p) to port %u: %s (0x%08x)", buf,
-              buf->omx_buf->pBuffer, port->index, gst_omx_error_to_string (err),
-              err);
-          goto done;
-        }
-        GST_DEBUG_OBJECT (comp->parent, "Passed buffer %p (%p) to component",
-            buf, buf->omx_buf->pBuffer);
-      }
-    }
   }
 
   gst_omx_component_handle_messages (comp);

@@ -221,10 +221,6 @@ gst_omx_audio_enc_change_state (GstElement * element, GstStateChange transition)
         ret = GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (self->enc_in_port)
-        gst_omx_port_set_flushing (self->enc_in_port, FALSE);
-      if (self->enc_out_port)
-        gst_omx_port_set_flushing (self->enc_out_port, FALSE);
       self->downstream_flow_ret = GST_FLOW_OK;
 
       self->draining = FALSE;
@@ -234,9 +230,9 @@ gst_omx_audio_enc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (self->enc_in_port)
-        gst_omx_port_set_flushing (self->enc_in_port, TRUE);
+        gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, TRUE);
       if (self->enc_out_port)
-        gst_omx_port_set_flushing (self->enc_out_port, TRUE);
+        gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, TRUE);
 
       g_mutex_lock (&self->drain_lock);
       self->draining = FALSE;
@@ -359,6 +355,10 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
         goto reconfigure_error;
 
       err = gst_omx_port_wait_enabled (port, 5 * GST_SECOND);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
+      err = gst_omx_port_populate (port);
       if (err != OMX_ErrorNone)
         goto reconfigure_error;
 
@@ -577,8 +577,8 @@ gst_omx_audio_enc_stop (GstAudioEncoder * encoder)
 
   GST_DEBUG_OBJECT (self, "Stopping encoder");
 
-  gst_omx_port_set_flushing (self->enc_in_port, TRUE);
-  gst_omx_port_set_flushing (self->enc_out_port, TRUE);
+  gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, TRUE);
+  gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, TRUE);
 
   gst_pad_stop_task (GST_AUDIO_ENCODER_SRC_PAD (encoder));
 
@@ -770,8 +770,13 @@ gst_omx_audio_enc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
   }
 
   /* Unset flushing to allow ports to accept data again */
-  gst_omx_port_set_flushing (self->enc_in_port, FALSE);
-  gst_omx_port_set_flushing (self->enc_out_port, FALSE);
+  gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, FALSE);
+  gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, FALSE);
+
+  /* Populate outport with buffers if we any */
+  if (!needs_disable)
+    if (gst_omx_port_populate (self->enc_out_port) != OMX_ErrorNone)
+      return FALSE;
 
   if (gst_omx_component_get_last_error (self->enc) != OMX_ErrorNone) {
     GST_ERROR_OBJECT (self, "Component in error state: %s (0x%08x)",
@@ -800,8 +805,8 @@ gst_omx_audio_enc_flush (GstAudioEncoder * encoder)
 
   gst_omx_audio_enc_drain (self);
 
-  gst_omx_port_set_flushing (self->enc_in_port, TRUE);
-  gst_omx_port_set_flushing (self->enc_out_port, TRUE);
+  gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, TRUE);
+  gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, TRUE);
 
   /* Wait until the srcpad loop is finished */
   GST_AUDIO_ENCODER_STREAM_UNLOCK (self);
@@ -809,8 +814,9 @@ gst_omx_audio_enc_flush (GstAudioEncoder * encoder)
   GST_PAD_STREAM_UNLOCK (GST_AUDIO_ENCODER_SRC_PAD (self));
   GST_AUDIO_ENCODER_STREAM_LOCK (self);
 
-  gst_omx_port_set_flushing (self->enc_in_port, FALSE);
-  gst_omx_port_set_flushing (self->enc_out_port, FALSE);
+  gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, FALSE);
+  gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, FALSE);
+  gst_omx_port_populate (self->enc_out_port);
 
   /* Start the srcpad loop again */
   self->last_upstream_ts = 0;

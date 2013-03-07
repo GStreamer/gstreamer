@@ -492,10 +492,6 @@ gst_omx_video_enc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (self->enc_in_port)
-        gst_omx_port_set_flushing (self->enc_in_port, FALSE);
-      if (self->enc_out_port)
-        gst_omx_port_set_flushing (self->enc_out_port, FALSE);
       self->downstream_flow_ret = GST_FLOW_OK;
 
       self->draining = FALSE;
@@ -505,9 +501,9 @@ gst_omx_video_enc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (self->enc_in_port)
-        gst_omx_port_set_flushing (self->enc_in_port, TRUE);
+        gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, TRUE);
       if (self->enc_out_port)
-        gst_omx_port_set_flushing (self->enc_out_port, TRUE);
+        gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, TRUE);
 
       g_mutex_lock (&self->drain_lock);
       self->draining = FALSE;
@@ -815,6 +811,10 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
       if (err != OMX_ErrorNone)
         goto reconfigure_error;
 
+      err = gst_omx_port_populate (port);
+      if (err != OMX_ErrorNone)
+        goto reconfigure_error;
+
       err = gst_omx_port_mark_reconfigured (port);
       if (err != OMX_ErrorNone)
         goto reconfigure_error;
@@ -969,8 +969,8 @@ gst_omx_video_enc_stop (GstVideoEncoder * encoder)
 
   GST_DEBUG_OBJECT (self, "Stopping encoder");
 
-  gst_omx_port_set_flushing (self->enc_in_port, TRUE);
-  gst_omx_port_set_flushing (self->enc_out_port, TRUE);
+  gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, TRUE);
+  gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, TRUE);
 
   gst_pad_stop_task (GST_VIDEO_ENCODER_SRC_PAD (encoder));
 
@@ -1243,8 +1243,12 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   }
 
   /* Unset flushing to allow ports to accept data again */
-  gst_omx_port_set_flushing (self->enc_in_port, FALSE);
-  gst_omx_port_set_flushing (self->enc_out_port, FALSE);
+  gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, FALSE);
+  gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, FALSE);
+
+  if (!needs_disable)
+    if (gst_omx_port_populate (self->enc_out_port) != OMX_ErrorNone)
+      return FALSE;
 
   if (gst_omx_component_get_last_error (self->enc) != OMX_ErrorNone) {
     GST_ERROR_OBJECT (self, "Component in error state: %s (0x%08x)",
@@ -1275,8 +1279,8 @@ gst_omx_video_enc_reset (GstVideoEncoder * encoder, gboolean hard)
 
   GST_DEBUG_OBJECT (self, "Resetting encoder");
 
-  gst_omx_port_set_flushing (self->enc_in_port, TRUE);
-  gst_omx_port_set_flushing (self->enc_out_port, TRUE);
+  gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, TRUE);
+  gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, TRUE);
 
   /* Wait until the srcpad loop is finished,
    * unlock GST_VIDEO_ENCODER_STREAM_LOCK to prevent deadlocks
@@ -1286,8 +1290,9 @@ gst_omx_video_enc_reset (GstVideoEncoder * encoder, gboolean hard)
   GST_PAD_STREAM_UNLOCK (GST_VIDEO_ENCODER_SRC_PAD (self));
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
-  gst_omx_port_set_flushing (self->enc_in_port, FALSE);
-  gst_omx_port_set_flushing (self->enc_out_port, FALSE);
+  gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, FALSE);
+  gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, FALSE);
+  gst_omx_port_populate (self->enc_out_port);
 
   /* Start the srcpad loop again */
   self->last_upstream_ts = 0;
