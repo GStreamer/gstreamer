@@ -2672,12 +2672,12 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 }
 
 static inline guint
-get_slice_data_bit_offset(GstH264SliceHdr *slice_hdr)
+get_slice_data_bit_offset(GstH264SliceHdr *slice_hdr, guint nal_header_bytes)
 {
     guint epb_count;
 
     epb_count = slice_hdr->n_emulation_prevention_bytes;
-    return 8 /* nal_unit_type */ + slice_hdr->header_size - epb_count * 8;
+    return 8 * nal_header_bytes + slice_hdr->header_size - epb_count * 8;
 }
 
 static gboolean
@@ -2793,12 +2793,14 @@ fill_RefPicList(GstVaapiDecoderH264 *decoder,
 
 static gboolean
 fill_slice(GstVaapiDecoderH264 *decoder,
-    GstVaapiSlice *slice, GstH264SliceHdr *slice_hdr)
+    GstVaapiSlice *slice, GstVaapiParserInfoH264 *pi)
 {
     VASliceParameterBufferH264 * const slice_param = slice->param;
+    GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
 
     /* Fill in VASliceParameterBufferH264 */
-    slice_param->slice_data_bit_offset          = get_slice_data_bit_offset(slice_hdr);
+    slice_param->slice_data_bit_offset =
+        get_slice_data_bit_offset(slice_hdr, pi->nalu.header_bytes);
     slice_param->first_mb_in_slice              = slice_hdr->first_mb_in_slice;
     slice_param->slice_type                     = slice_hdr->type % 5;
     slice_param->direct_spatial_mv_pred_flag    = slice_hdr->direct_spatial_mv_pred_flag;
@@ -2858,7 +2860,7 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     }
 
-    if (!fill_slice(decoder, slice, slice_hdr)) {
+    if (!fill_slice(decoder, slice, pi)) {
         gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(slice));
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
     }
