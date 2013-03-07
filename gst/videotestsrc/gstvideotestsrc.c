@@ -247,27 +247,23 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
    *
    * Color to use for solid-color pattern and foreground color of other
    * patterns.  Default is white (0xffffffff).
-   *
-   * Since: 0.10.31
-   **/
+   */
   g_object_class_install_property (gobject_class, PROP_FOREGROUND_COLOR,
       g_param_spec_uint ("foreground-color", "Foreground Color",
           "Foreground color to use (big-endian ARGB)", 0, G_MAXUINT32,
           DEFAULT_FOREGROUND_COLOR,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstVideoTestSrc:background-color
    *
    * Color to use for background color of some patterns.  Default is
    * black (0xff000000).
-   *
-   * Since: 0.10.31
-   **/
+   */
   g_object_class_install_property (gobject_class, PROP_BACKGROUND_COLOR,
       g_param_spec_uint ("background-color", "Background Color",
           "Background color to use (big-endian ARGB)", 0, G_MAXUINT32,
           DEFAULT_BACKGROUND_COLOR,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_HORIZONTAL_SPEED,
       g_param_spec_int ("horizontal-speed", "Horizontal Speed",
@@ -836,6 +832,12 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   if (!gst_video_frame_map (&frame, &src->info, buffer, GST_MAP_WRITE))
     goto invalid_frame;
 
+  GST_BUFFER_DTS (buffer) =
+      src->accum_rtime + src->timestamp_offset + src->running_time;
+  GST_BUFFER_PTS (buffer) = GST_BUFFER_DTS (buffer);
+
+  gst_object_sync_values (GST_OBJECT (psrc), GST_BUFFER_DTS (buffer));
+
   src->make_image (src, &frame);
 
   if ((pal = gst_video_format_get_palette (GST_VIDEO_FRAME_FORMAT (&frame),
@@ -844,10 +846,6 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   }
 
   gst_video_frame_unmap (&frame);
-
-  GST_BUFFER_DTS (buffer) =
-      src->accum_rtime + src->timestamp_offset + src->running_time;
-  GST_BUFFER_PTS (buffer) = GST_BUFFER_DTS (buffer);
 
   GST_DEBUG_OBJECT (src, "Timestamp: %" GST_TIME_FORMAT " = accumulated %"
       GST_TIME_FORMAT " + offset: %"
