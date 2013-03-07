@@ -3373,6 +3373,8 @@ gst_egl_image_buffer_pool_set_config (GstBufferPool * bpool,
   if (!gst_buffer_pool_config_get_allocator (config, &pool->allocator,
           &pool->params))
     return FALSE;
+  if (pool->allocator)
+    gst_object_ref (pool->allocator);
 
   pool->add_metavideo =
       gst_buffer_pool_config_has_option (config,
