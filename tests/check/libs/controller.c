@@ -1371,52 +1371,6 @@ GST_START_TEST (controller_lfo_triangle)
 
 GST_END_TEST;
 
-/* test lfo control source with nothing set */
-GST_START_TEST (controller_lfo_none)
-{
-  GstControlSource *cs;
-  GstElement *elem;
-
-  elem = gst_element_factory_make ("testobj", NULL);
-
-  /* new lfo control source */
-  cs = gst_lfo_control_source_new ();
-
-  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
-          gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
-
-  /* now pull in values for some timestamps */
-  gst_object_sync_values (GST_OBJECT (elem), 0 * GST_MSECOND);
-  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
-  gst_object_sync_values (GST_OBJECT (elem), 250 * GST_MSECOND);
-  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
-  gst_object_sync_values (GST_OBJECT (elem), 500 * GST_MSECOND);
-  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
-  gst_object_sync_values (GST_OBJECT (elem), 750 * GST_MSECOND);
-  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
-  gst_object_sync_values (GST_OBJECT (elem), 1000 * GST_MSECOND);
-  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
-  gst_object_sync_values (GST_OBJECT (elem), 1250 * GST_MSECOND);
-  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
-  gst_object_sync_values (GST_OBJECT (elem), 1500 * GST_MSECOND);
-  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
-  gst_object_sync_values (GST_OBJECT (elem), 1750 * GST_MSECOND);
-  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
-  gst_object_sync_values (GST_OBJECT (elem), 2000 * GST_MSECOND);
-  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
-  gst_object_sync_values (GST_OBJECT (elem), 1250 * GST_MSECOND);
-  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
-  gst_object_sync_values (GST_OBJECT (elem), 1500 * GST_MSECOND);
-  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
-  gst_object_sync_values (GST_OBJECT (elem), 1750 * GST_MSECOND);
-  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
-
-  gst_object_unref (cs);
-  gst_object_unref (elem);
-}
-
-GST_END_TEST;
-
 /* test timed value handling in trigger mode */
 GST_START_TEST (controller_trigger_exact)
 {
@@ -1537,7 +1491,6 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_lfo_saw);
   tcase_add_test (tc, controller_lfo_rsaw);
   tcase_add_test (tc, controller_lfo_triangle);
-  tcase_add_test (tc, controller_lfo_none);
   tcase_add_test (tc, controller_trigger_exact);
   tcase_add_test (tc, controller_trigger_tolerance);
 
