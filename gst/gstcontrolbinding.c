@@ -35,7 +35,7 @@
  * - the weak-ref on object is not nice, as is the same as gst_object_parent()
  *   once the object is added to the parent
  *
- * - another option would be do defer what I am doing in _constructor to when
+ * - another option would be to defer what is done in _constructor to when
  *   the parent is set (need to listen to the signal then)
  *   then basically I could
  *   a) remove the obj arg and wait the binding to be added or
