@@ -993,14 +993,17 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
   OMX_ERRORTYPE err;
   GstCaps *comp_supported_caps;
   GList *negotiation_map = NULL, *l;
-  GstCaps *intersection;
+  GstCaps *templ_caps, *intersection;
   GstVideoFormat format;
   GstStructure *s;
   const gchar *format_str;
 
   GST_DEBUG_OBJECT (self, "Trying to negotiate a video format with downstream");
 
-  intersection = gst_pad_get_allowed_caps (GST_VIDEO_DECODER_SRC_PAD (self));
+  templ_caps = gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SRC_PAD (self));
+  intersection =
+      gst_pad_peer_query_caps (GST_VIDEO_DECODER_SRC_PAD (self), templ_caps);
+  gst_caps_unref (templ_caps);
 
   GST_DEBUG_OBJECT (self, "Allowed downstream caps: %" GST_PTR_FORMAT,
       intersection);
