@@ -292,8 +292,7 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
           if (index == OMX_ALL || index == port->index) {
             port->settings_cookie++;
             gst_omx_port_update_port_definition (port, NULL);
-            if (port->port_def.eDir == OMX_DirOutput && !port->tunneled
-                && port->port_def.bEnabled)
+            if (port->port_def.eDir == OMX_DirOutput && !port->tunneled)
               outports = g_list_prepend (outports, port);
           }
         }
