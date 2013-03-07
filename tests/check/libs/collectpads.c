@@ -251,7 +251,7 @@ gst_agregator_plugin_register (void)
 G_STMT_START {                                    \
   g_mutex_lock (&lock);                           \
   while (expected == TRUE && collected == FALSE)  \
-    g_cond_wait (&cond,& lock);                   \
+    g_cond_wait (&cond, &lock);                   \
   fail_unless_equals_int (collected, expected);   \
   g_mutex_unlock (&lock);                         \
 } G_STMT_END;
@@ -284,6 +284,7 @@ static gboolean collected;
 static GstPad *srcpad1, *srcpad2;
 static GstPad *sinkpad1, *sinkpad2;
 static TestData *data1, *data2;
+static GstBuffer *outbuf1, *outbuf2;
 
 static GMutex lock;
 static GCond cond;
@@ -291,6 +292,9 @@ static GCond cond;
 static GstFlowReturn
 collected_cb (GstCollectPads * pads, gpointer user_data)
 {
+  outbuf1 = gst_collect_pads_pop (pads, (GstCollectData *) data1);
+  outbuf2 = gst_collect_pads_pop (pads, (GstCollectData *) data2);
+
   g_mutex_lock (&lock);
   collected = TRUE;
   g_cond_signal (&cond);
@@ -303,7 +307,11 @@ static GstFlowReturn
 handle_buffer_cb (GstCollectPads * pads, GstCollectData * data,
     GstBuffer * buf, gpointer user_data)
 {
-  GST_DEBUG ("Collected a buffer via callback");
+  GST_DEBUG ("collected buffers via callback");
+
+  outbuf1 = gst_collect_pads_pop (pads, (GstCollectData *) data1);
+  outbuf2 = gst_collect_pads_pop (pads, (GstCollectData *) data2);
+
   g_mutex_lock (&lock);
   collected = TRUE;
   g_cond_signal (&cond);
@@ -361,6 +369,8 @@ setup_default (void)
 
   data1 = NULL;
   data2 = NULL;
+  outbuf1 = NULL;
+  outbuf2 = NULL;
   collected = FALSE;
 }
 
@@ -403,7 +413,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_collect)
 {
-  GstBuffer *buf1, *buf2, *tmp;
+  GstBuffer *buf1, *buf2;
   GThread *thread1, *thread2;
 
   data1 = (TestData *) gst_collect_pads_add_pad (collect,
@@ -434,10 +444,8 @@ GST_START_TEST (test_collect)
   /* now both pads have a buffer */
   fail_unless_collected (TRUE);
 
-  tmp = gst_collect_pads_pop (collect, (GstCollectData *) data1);
-  fail_unless (tmp == buf1);
-  tmp = gst_collect_pads_pop (collect, (GstCollectData *) data2);
-  fail_unless (tmp == buf2);
+  fail_unless (outbuf1 == buf1);
+  fail_unless (outbuf2 == buf2);
 
   /* these will return immediately as at this point the threads have been
    * unlocked and are finished */
@@ -455,7 +463,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_collect_eos)
 {
-  GstBuffer *buf1, *tmp;
+  GstBuffer *buf1;
   GThread *thread1, *thread2;
 
   data1 = (TestData *) gst_collect_pads_add_pad (collect,
@@ -484,11 +492,9 @@ GST_START_TEST (test_collect_eos)
   /* now sinkpad1 has a buffer and sinkpad2 has EOS */
   fail_unless_collected (TRUE);
 
-  tmp = gst_collect_pads_pop (collect, (GstCollectData *) data1);
-  fail_unless (tmp == buf1);
+  fail_unless (outbuf1 == buf1);
   /* sinkpad2 has EOS so a NULL buffer is returned */
-  tmp = gst_collect_pads_pop (collect, (GstCollectData *) data2);
-  fail_unless (tmp == NULL);
+  fail_unless (outbuf2 == NULL);
 
   /* these will return immediately as when the data is popped the threads are
    * unlocked and will terminate */
@@ -504,7 +510,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_collect_twice)
 {
-  GstBuffer *buf1, *buf2, *tmp;
+  GstBuffer *buf1, *buf2;
   GThread *thread1, *thread2;
 
   data1 = (TestData *) gst_collect_pads_add_pad (collect,
@@ -537,11 +543,9 @@ GST_START_TEST (test_collect_twice)
   /* one of the pads has a buffer, the other has EOS */
   fail_unless_collected (TRUE);
 
-  tmp = gst_collect_pads_pop (collect, (GstCollectData *) data1);
-  fail_unless (tmp == buf1);
+  fail_unless (outbuf1 == buf1);
   /* there's nothing to pop from the one which received EOS */
-  tmp = gst_collect_pads_pop (collect, (GstCollectData *) data2);
-  fail_unless (tmp == NULL);
+  fail_unless (outbuf2 == NULL);
 
   /* these will return immediately as at this point the threads have been
    * unlocked and are finished */
@@ -576,10 +580,8 @@ GST_START_TEST (test_collect_twice)
   /* now both pads have a buffer */
   fail_unless_collected (TRUE);
 
-  tmp = gst_collect_pads_pop (collect, (GstCollectData *) data1);
-  fail_unless (tmp == buf1);
-  tmp = gst_collect_pads_pop (collect, (GstCollectData *) data2);
-  fail_unless (tmp == buf2);
+  fail_unless (outbuf1 == buf1);
+  fail_unless (outbuf2 == buf2);
 
   /* these will return immediately as at this point the threads have been
    * unlocked and are finished */
@@ -599,7 +601,7 @@ GST_END_TEST;
 /* Test the default collected buffer func */
 GST_START_TEST (test_collect_default)
 {
-  GstBuffer *buf1, *buf2, *tmp;
+  GstBuffer *buf1, *buf2;
   GThread *thread1, *thread2;
 
   data1 = (TestData *) gst_collect_pads_add_pad (collect,
@@ -634,11 +636,9 @@ GST_START_TEST (test_collect_default)
 
   /* The default callback should have popped the buffer with lower timestamp,
    * and this should therefore be NULL: */
-  tmp = gst_collect_pads_pop (collect, (GstCollectData *) data1);
-  fail_unless (tmp == NULL);
+  fail_unless (outbuf1 == NULL);
   /* While this one should still be pending: */
-  tmp = gst_collect_pads_pop (collect, (GstCollectData *) data2);
-  fail_unless (tmp == buf2);
+  fail_unless (outbuf2 == buf2);
 
   /* these will return immediately as at this point the threads have been
    * unlocked and are finished */
