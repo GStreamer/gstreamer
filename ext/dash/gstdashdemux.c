@@ -810,6 +810,7 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
               "mediaPresentationDuration unknown, can not send the duration message");
         }
       }
+      demux->need_segment = TRUE;
       gst_dash_demux_resume_download_task (demux);
       gst_dash_demux_resume_stream_task (demux);
       gst_event_unref (event);
