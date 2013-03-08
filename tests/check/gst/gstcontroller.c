@@ -127,6 +127,7 @@ static void
 gst_test_obj_class_init (GstTestObjClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->set_property = gst_test_obj_set_property;
   gobject_class->get_property = gst_test_obj_get_property;
@@ -171,12 +172,6 @@ gst_test_obj_class_init (GstTestObjClass * klass)
           "construct-only prop",
           "construct-only parameter",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-}
-
-static void
-gst_test_obj_base_init (GstTestObjClass * klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_set_metadata (element_class,
       "test object for unit tests",
@@ -192,7 +187,7 @@ gst_test_obj_get_type (void)
     GType type;
     static const GTypeInfo info = {
       (guint16) sizeof (GstTestObjClass),
-      (GBaseInitFunc) gst_test_obj_base_init,   // base_init
+      NULL,                     // base_init
       NULL,                     // base_finalize
       (GClassInitFunc) gst_test_obj_class_init, // class_init
       NULL,                     // class_finalize
@@ -301,6 +296,11 @@ gst_test_control_source_get_type (void)
 
 /* test control binding */
 
+enum
+{
+  PROP_CS = 1,
+};
+
 #define GST_TYPE_TEST_CONTROL_BINDING            (gst_test_control_binding_get_type ())
 #define GST_TEST_CONTROL_BINDING(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TEST_CONTROL_BINDING, GstTestControlBinding))
 #define GST_TEST_CONTROL_BINDING_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TEST_CONTROL_BINDING, GstTestControlBindingClass))
@@ -338,12 +338,36 @@ gst_test_control_binding_new (GstObject * object, const gchar * property_name,
   return (GstControlBinding *) self;
 }
 
-static GstControlSource *
-gst_test_control_binding_get_control_source (GstTestControlBinding * self)
+static void
+gst_test_control_binding_get_property (GObject * object,
+    guint property_id, GValue * value, GParamSpec * pspec)
 {
-  g_return_val_if_fail (GST_IS_TEST_CONTROL_BINDING (self), NULL);
+  GstTestControlBinding *self = GST_TEST_CONTROL_BINDING (object);
 
-  return self->cs ? gst_object_ref (self->cs) : NULL;
+  switch (property_id) {
+    case PROP_CS:
+      g_value_set_object (value, self->cs);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_test_control_binding_set_property (GObject * object,
+    guint property_id, const GValue * value, GParamSpec * pspec)
+{
+  GstTestControlBinding *self = GST_TEST_CONTROL_BINDING (object);
+
+  switch (property_id) {
+    case PROP_CS:
+      self->cs = g_value_dup_object (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
 }
 
 static void
@@ -363,7 +387,14 @@ gst_test_control_binding_class_init (gpointer klass, gpointer class_data)
 
   gst_test_control_binding_parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->set_property = gst_test_control_binding_set_property;
+  gobject_class->get_property = gst_test_control_binding_get_property;
   gobject_class->finalize = gst_test_control_binding_finalize;
+
+  g_object_class_install_property (gobject_class, PROP_CS,
+      g_param_spec_object ("control-source", "ControlSource",
+          "The control source",
+          GST_TYPE_CONTROL_SOURCE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static GType
@@ -629,9 +660,7 @@ GST_START_TEST (controller_controlsource_refcounts)
   test_cb = gst_object_get_control_binding (GST_OBJECT (elem), "int");
   fail_unless (test_cb != NULL, NULL);
 
-  test_cs =
-      gst_test_control_binding_get_control_source (GST_TEST_CONTROL_BINDING
-      (test_cb));
+  g_object_get (test_cb, "control-source", &test_cs, NULL);
   fail_unless (test_cs != NULL, NULL);
   fail_unless (test_cs == cs);
   fail_unless_equals_int (G_OBJECT (cs)->ref_count, 3);
