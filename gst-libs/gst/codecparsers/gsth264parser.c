@@ -992,7 +992,7 @@ error:
   return FALSE;
 }
 
-static gboolean
+static GstH264ParserResult
 gst_h264_parser_parse_buffering_period (GstH264NalParser * nalparser,
     GstH264BufferingPeriod * per, NalReader * nr)
 {
@@ -1104,7 +1104,7 @@ error:
   return FALSE;
 }
 
-static gboolean
+static GstH264ParserResult
 gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
     GstH264PicTiming * tim, NalReader * nr)
 {
@@ -1957,7 +1957,7 @@ gst_h264_parser_parse_sei (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
   guint32 payloadSize;
   guint8 payload_type_byte, payload_size_byte;
   guint remaining, payload_size;
-  gboolean res;
+  GstH264ParserResult res;
 
   GST_DEBUG ("parsing \"Sei message\"");
 
