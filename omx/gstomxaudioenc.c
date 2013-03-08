@@ -633,6 +633,8 @@ gst_omx_audio_enc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
   if (needs_disable) {
     GST_DEBUG_OBJECT (self, "Need to disable and drain encoder");
     gst_omx_audio_enc_drain (self);
+    gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, TRUE);
+    gst_pad_stop_task (GST_AUDIO_ENCODER_SRC_PAD (encoder));
 
     if (gst_omx_port_set_enabled (self->enc_in_port, FALSE) != OMX_ErrorNone)
       return FALSE;

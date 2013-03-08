@@ -1982,6 +1982,8 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
     GST_DEBUG_OBJECT (self, "Need to disable and drain decoder");
 
     gst_omx_video_dec_drain (self, FALSE);
+    gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, TRUE);
+    gst_pad_stop_task (GST_VIDEO_DECODER_SRC_PAD (decoder));
 
     if (klass->cdata.hacks & GST_OMX_HACK_NO_COMPONENT_RECONFIGURE) {
       GST_VIDEO_DECODER_STREAM_UNLOCK (self);
