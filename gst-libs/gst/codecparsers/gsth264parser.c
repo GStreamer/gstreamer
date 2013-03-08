@@ -1052,6 +1052,30 @@ error:
   return GST_H264_PARSER_ERROR;
 }
 
+/* Parse SEI stereo_video_info() message */
+static GstH264ParserResult
+gst_h264_parser_parse_stereo_video_info (GstH264NalParser * nalparser,
+    GstH264StereoVideoInfo * info, NalReader * nr)
+{
+  GST_DEBUG ("parsing \"Stereo Video info\"");
+
+  READ_UINT8 (nr, info->field_views_flag, 1);
+  if (info->field_views_flag) {
+    READ_UINT8 (nr, info->top_field_is_left_view_flag, 1);
+  } else {
+    READ_UINT8 (nr, info->current_frame_is_left_view_flag, 1);
+    READ_UINT8 (nr, info->next_frame_is_second_view_flag, 1);
+  }
+  READ_UINT8 (nr, info->left_view_self_contained_flag, 1);
+  READ_UINT8 (nr, info->right_view_self_contained_flag, 1);
+
+  return GST_H264_PARSER_OK;
+
+error:
+  GST_WARNING ("error parsing \"Stereo Video info\"");
+  return GST_H264_PARSER_ERROR;
+}
+
 static GstH264ParserResult
 gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
     NalReader * nr, GstH264SEIMessage * sei)
@@ -1096,6 +1120,10 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
     case GST_H264_SEI_RECOVERY_POINT:
       res = gst_h264_parser_parse_recovery_point (nalparser,
           &sei->payload.recovery_point, nr);
+      break;
+    case GST_H264_SEI_STEREO_VIDEO_INFO:
+      res = gst_h264_parser_parse_stereo_video_info (nalparser,
+          &sei->payload.stereo_video_info, nr);
       break;
     default:
       /* Just consume payloadSize bytes, which does not account for
