@@ -2404,18 +2404,21 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   if (stream->samples == NULL)
     goto out_of_memory;
 
-  if (G_UNLIKELY (stream->n_samples == 0)) {
-    if (GST_CLOCK_TIME_IS_VALID (qtdemux->base_timestamp)) {
-      timestamp = qtdemux->base_timestamp;
-    } else
+  if (GST_CLOCK_TIME_IS_VALID (qtdemux->base_timestamp)) {
+    timestamp = gst_util_uint64_scale_int (qtdemux->base_timestamp,
+        stream->timescale, GST_SECOND);
+    qtdemux->base_timestamp = GST_CLOCK_TIME_NONE;
+  } else {
+    if (G_UNLIKELY (stream->n_samples == 0)) {
       /* the timestamp of the first sample is also provided by the tfra entry
        * but we shouldn't rely on it as it is at the end of files */
       timestamp = 0;
-  } else {
-    /* subsequent fragments extend stream */
-    timestamp =
-        stream->samples[stream->n_samples - 1].timestamp +
-        stream->samples[stream->n_samples - 1].duration;
+    } else {
+      /* subsequent fragments extend stream */
+      timestamp =
+          stream->samples[stream->n_samples - 1].timestamp +
+          stream->samples[stream->n_samples - 1].duration;
+    }
   }
   sample = stream->samples + stream->n_samples;
   for (i = 0; i < samples_count; i++) {
@@ -2647,8 +2650,16 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
         &tfdt_data);
     if (tfdt_node) {
       guint64 decode_time = 0;
+      GstClockTime decode_time_ts;
+
       qtdemux_parse_tfdt (qtdemux, &tfdt_data, &decode_time);
-      qtdemux->base_timestamp = decode_time;
+
+      decode_time_ts = gst_util_uint64_scale (decode_time, GST_SECOND,
+          stream->timescale);
+
+      GST_DEBUG_OBJECT (qtdemux, "decode time %" G_GUINT64_FORMAT
+          " (%" GST_TIME_FORMAT ")", decode_time,
+          GST_TIME_ARGS (decode_time_ts));
 
       /* If there is a new segment pending, update the time/position.
        * Don't replace if the pending newsegment is from upstream */
@@ -2656,8 +2667,6 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
         GstSegment segment;
 
         gst_segment_init (&segment, GST_FORMAT_TIME);
-        segment.time = gst_util_uint64_scale (decode_time,
-            GST_SECOND, stream->timescale);
         gst_event_replace (&qtdemux->pending_newsegment,
             gst_event_new_segment (&segment));
         /* ref added when replaced, release the original _new one */
@@ -4391,13 +4400,17 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
 {
   GstQTDemux *demux;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime timestamp;
 
   demux = GST_QTDEMUX (parent);
 
-  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (demux->base_timestamp)))
-    demux->base_timestamp =
-        gst_util_uint64_scale_round (GST_BUFFER_TIMESTAMP (inbuf),
-        demux->timescale, GST_SECOND);
+  timestamp = GST_BUFFER_TIMESTAMP (inbuf);
+
+  if (G_UNLIKELY (GST_CLOCK_TIME_IS_VALID (timestamp))) {
+    demux->base_timestamp = timestamp;
+    GST_DEBUG_OBJECT (demux, "got base_timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
+  }
 
   gst_adapter_push (demux->adapter, inbuf);
 
@@ -4582,16 +4595,9 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
               /* in MSS we need to expose the pads after the first moof as we won't get a moov */
               if (!demux->exposed) {
                 if (!demux->pending_newsegment) {
-                  guint64 start_ts = 0;
-
-                  if (GST_CLOCK_TIME_IS_VALID (demux->base_timestamp))
-                    start_ts = gst_util_uint64_scale (demux->base_timestamp,
-                        GST_SECOND, demux->timescale);
-
-                  demux->segment.start = demux->segment.time =
-                      demux->segment.position = start_ts;
-                  demux->pending_newsegment =
-                      gst_event_new_segment (&demux->segment);
+                  GstSegment segment;
+                  gst_segment_init (&segment, GST_FORMAT_TIME);
+                  demux->pending_newsegment = gst_event_new_segment (&segment);
                 }
                 qtdemux_expose_streams (demux);
               }
