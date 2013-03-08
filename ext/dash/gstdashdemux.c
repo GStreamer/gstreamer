@@ -1089,17 +1089,24 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
     }
 
     if (G_LIKELY (GST_IS_BUFFER (item->object))) {
+      GstBuffer *buffer;
+      GstClockTime timestamp;
+
+      buffer = GST_BUFFER_CAST (item->object);
+      timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
       GST_LOG_OBJECT (demux, "Buffer with time %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (item->object)));
-      if (GST_BUFFER_TIMESTAMP (item->object) < best_time) {
+          GST_TIME_ARGS (timestamp));
+
+      if (timestamp < best_time) {
         GST_DEBUG_OBJECT (demux, "Found new best time: %" GST_TIME_FORMAT " %p",
-            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (item->object)), item->object);
-        best_time = GST_BUFFER_TIMESTAMP (item->object);
+            GST_TIME_ARGS (timestamp), buffer);
+        best_time = timestamp;
         selected_stream = stream;
-      } else if (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (item->object))) {
+      } else if (!GST_CLOCK_TIME_IS_VALID (timestamp)) {
         selected_stream = stream;
         GST_DEBUG_OBJECT (demux, "Buffer without timestamp selected %p",
-            item->object);
+            buffer);
         break;
       }
     } else {
