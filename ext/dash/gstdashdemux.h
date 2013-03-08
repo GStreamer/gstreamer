@@ -112,6 +112,7 @@ struct _GstDashDemux
 
   GstSegment segment;
   gboolean need_segment;
+  GstClockTime timestamp_offset;
 
   GstBuffer *manifest;
   GstUriDownloader *downloader;

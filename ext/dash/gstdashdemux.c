@@ -1119,7 +1119,6 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
 
   if (selected_stream) {
     GstDataQueueItem *item;
-    GstBuffer *buffer;
 
     GST_DEBUG_OBJECT (demux, "Selected stream %p %d", selected_stream,
         selected_stream->index);
@@ -1128,11 +1127,19 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       goto end;
 
     if (G_LIKELY (GST_IS_BUFFER (item->object))) {
+      GstBuffer *buffer;
+      GstClockTime timestamp;
+
       buffer = GST_BUFFER_CAST (item->object);
       active_stream =
           gst_mpdparser_get_active_stream_by_index (demux->client,
           selected_stream->index);
+
+      timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
       if (demux->need_segment) {
+        demux->timestamp_offset = timestamp;
+
         /* And send a newsegment */
         for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
           GstDashDemuxStream *stream = iter->data;
@@ -1143,11 +1150,14 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
         }
         demux->need_segment = FALSE;
       }
+      /* make timestamp start from 0 by subtracting the offset */
+      timestamp -= demux->timestamp_offset;
+
+      GST_BUFFER_TIMESTAMP (buffer) = timestamp;
 
       GST_DEBUG_OBJECT (demux,
           "Pushing fragment ts: %" GST_TIME_FORMAT " at pad %s",
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
-          GST_PAD_NAME (selected_stream->pad));
+          GST_TIME_ARGS (timestamp), GST_PAD_NAME (selected_stream->pad));
 #if 0
       GST_DEBUG_OBJECT (demux,
           "Pushing fragment %p #%d (stream %i) ts:%" GST_TIME_FORMAT " dur:%"
@@ -1157,8 +1167,8 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
           GST_DEBUG_PAD_NAME (selected_stream->pad));
 #endif
       ret = gst_pad_push (selected_stream->pad, gst_buffer_ref (buffer));
-      gst_segment_set_last_stop (&demux->segment, GST_FORMAT_TIME,
-          GST_BUFFER_TIMESTAMP (buffer));
+      gst_segment_set_last_stop (&demux->segment, GST_FORMAT_TIME, timestamp);
+
       item->destroy (item);
       if ((ret != GST_FLOW_OK) && (active_stream
               && active_stream->mimeType == GST_STREAM_VIDEO))
