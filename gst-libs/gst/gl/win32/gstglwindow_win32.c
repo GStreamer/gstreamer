@@ -69,6 +69,8 @@ G_DEFINE_TYPE_WITH_CODE (GstGLWindowWin32, gst_gl_window_win32,
 
 HHOOK hHook;
 
+gboolean gst_gl_window_win32_create_context (GstGLWindow * window,
+    GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
 guintptr gst_gl_window_win32_get_gl_context (GstGLWindow * window);
 gboolean gst_gl_window_win32_activate (GstGLWindow * window, gboolean activate);
 void gst_gl_window_win32_set_window_handle (GstGLWindow * window,
@@ -85,37 +87,12 @@ void gst_gl_window_win32_send_message (GstGLWindow * window,
 static void
 gst_gl_window_win32_class_init (GstGLWindowWin32Class * klass)
 {
-  GstGLWindowClass *window_class;
-  WNDCLASS wc;
-  ATOM atom = 0;
-  HINSTANCE hinstance = GetModuleHandle (NULL);
-
-  window_class = (GstGLWindowClass *) klass;
+  GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstGLWindowWin32Private));
 
-  atom = GetClassInfo (hinstance, "GSTGL", &wc);
-
-  if (atom == 0) {
-    ZeroMemory (&wc, sizeof (WNDCLASS));
-
-    wc.lpfnWndProc = window_proc;
-    wc.cbClsExtra = 0;
-    wc.cbWndExtra = 0;
-    wc.hInstance = hinstance;
-    wc.hIcon = LoadIcon (NULL, IDI_WINLOGO);
-    wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
-    wc.hCursor = LoadCursor (NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH) GetStockObject (BLACK_BRUSH);
-    wc.lpszMenuName = NULL;
-    wc.lpszClassName = "GSTGL";
-
-    atom = RegisterClass (&wc);
-
-    if (atom == 0)
-      GST_WARNING ("Failed to register window class %lud\n", GetLastError ());
-  }
-
+  window_class->create_context =
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_create_context);
   window_class->get_gl_context =
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_get_gl_context);
   window_class->activate = GST_DEBUG_FUNCPTR (gst_gl_window_win32_activate);
@@ -139,25 +116,20 @@ gst_gl_window_win32_init (GstGLWindowWin32 * window)
 
 /* Must be called in the gl thread */
 GstGLWindowWin32 *
-gst_gl_window_win32_new (GstGLAPI gl_api, guintptr external_gl_context,
-    GError ** error)
+gst_gl_window_win32_new (void)
 {
   GstGLWindowWin32 *window = NULL;
   const gchar *user_choice;
 
   user_choice = g_getenv ("GST_GL_PLATFORM");
 
-#if HAVE_WGL
+#if GST_GL_HAVE_PLATFORM_WGL
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "wgl")))
-    window =
-        GST_GL_WINDOW_WIN32 (gst_gl_window_win32_wgl_new (gl_api,
-            external_gl_context, error));
+    window = GST_GL_WINDOW_WIN32 (gst_gl_window_win32_wgl_new ());
 #endif
-#if HAVE_EGL
+#if GST_GL_HAVE_PLATFORM_EGL
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "egl")))
-    window =
-        GST_GL_WINDOW_WIN32 (gst_gl_window_win32_egl_new (gl_api,
-            external_gl_context, error));
+    window = GST_GL_WINDOW_WIN32 (gst_gl_window_win32_egl_new ());
 #endif
   if (!window) {
     GST_WARNING ("Failed to create win32 window, user_choice:%s",
@@ -165,29 +137,60 @@ gst_gl_window_win32_new (GstGLAPI gl_api, guintptr external_gl_context,
     return NULL;
   }
 
-  window->priv->gl_api = gl_api;
-  window->priv->external_gl_context = external_gl_context;
-  window->priv->error = error;
-
   return window;
 }
 
 gboolean
-gst_gl_window_win32_open_device (GstGLWindowWin32 * window_win32,
-    GError ** error)
+gst_gl_window_win32_create_context (GstGLWindow * window, GstGLAPI gl_api,
+    guintptr external_gl_context, GError ** error)
 {
+  GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
+  WNDCLASSEX wc;
+  ATOM atom = 0;
   HINSTANCE hinstance = GetModuleHandle (NULL);
 
   static gint x = 0;
   static gint y = 0;
 
+  GST_LOG ("Attempting to create a win32 window");
+
   x += 20;
   y += 20;
+
+  atom = GetClassInfoEx (hinstance, "GSTGL", &wc);
+
+  if (atom == 0) {
+    ZeroMemory (&wc, sizeof (WNDCLASSEX));
+
+    wc.cbSize = sizeof (WNDCLASSEX);
+    wc.lpfnWndProc = window_proc;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
+    wc.hInstance = hinstance;
+    wc.hIcon = LoadIcon (NULL, IDI_WINLOGO);
+    wc.hIconSm = NULL;
+    wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+    wc.hCursor = LoadCursor (NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH) GetStockObject (BLACK_BRUSH);
+    wc.lpszMenuName = NULL;
+    wc.lpszClassName = "GSTGL";
+
+    atom = RegisterClassEx (&wc);
+
+    if (atom == 0) {
+      GST_WARNING ("Failed to register window class %lud\n", GetLastError ());
+      goto failure;
+    }
+  }
 
   window_win32->internal_win_id = 0;
   window_win32->device = 0;
   window_win32->is_closed = FALSE;
   window_win32->visible = FALSE;
+
+  window_win32->priv->gl_api = gl_api;
+  window_win32->priv->external_gl_context = external_gl_context;
+  window_win32->priv->error = error;
 
   window_win32->internal_win_id = CreateWindowEx (0,
       "GSTGL",
@@ -211,6 +214,7 @@ gst_gl_window_win32_open_device (GstGLWindowWin32 * window_win32,
 
   ShowCursor (TRUE);
 
+  GST_LOG ("Created a win32 window");
   return TRUE;
 
 failure:

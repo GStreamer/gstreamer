@@ -80,13 +80,10 @@ gst_gl_window_win32_egl_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindowWin32EGL *
-gst_gl_window_win32_egl_new (GstGLAPI gl_api, guintptr external_gl_context,
-    GError ** error)
+gst_gl_window_win32_egl_new (void)
 {
   GstGLWindowWin32EGL *window =
       g_object_new (GST_GL_TYPE_WINDOW_WIN32_EGL, NULL);
-
-  gst_gl_window_win32_open_device (GST_GL_WINDOW_WIN32 (window), error);
 
   return window;
 }
