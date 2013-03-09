@@ -49,6 +49,8 @@ static gboolean gst_gl_window_win32_wgl_create_context (GstGLWindowWin32 *
 static void gst_gl_window_win32_wgl_destroy_context (GstGLWindowWin32 *
     window_win32);
 GstGLAPI gst_gl_window_win32_wgl_get_gl_api (GstGLWindow * window);
+static gpointer gst_gl_window_win32_wgl_get_proc_address (GstGLWindow * window,
+    const gchar * name);
 
 static void
 gst_gl_window_win32_wgl_class_init (GstGLWindowWin32WGLClass * klass)
@@ -69,6 +71,8 @@ gst_gl_window_win32_wgl_class_init (GstGLWindowWin32WGLClass * klass)
   window_win32_class->swap_buffers =
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_wgl_swap_buffers);
 
+  window_class->get_proc_address =
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_wgl_get_proc_address);
   window_class->get_gl_api =
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_wgl_get_gl_api);
 }
@@ -205,4 +209,17 @@ GstGLAPI
 gst_gl_window_win32_wgl_get_gl_api (GstGLWindow * window)
 {
   return GST_GL_API_OPENGL;
+}
+
+static gpointer
+gst_gl_window_win32_wgl_get_proc_address (GstGLWindow * window,
+    const gchar * name)
+{
+  gpointer result;
+
+  if (!(result = wglGetProcAddress ((LPCSTR) name))) {
+    result = gst_gl_window_default_get_proc_address (window, name);
+  }
+
+  return result;
 }
