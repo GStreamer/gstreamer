@@ -742,7 +742,8 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
   out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
 
-  GST_TRACE ("initializing texture upload for format:%d", v_format);
+  GST_INFO ("Initializing texture upload for format:%s",
+      gst_video_format_to_string (v_format));
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGBx:
@@ -770,7 +771,7 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
       /* shouldn't we require ARB_shading_language_100? --Filippo */
       if (gl->CreateProgramObject || gl->CreateProgram) {
 
-        GST_INFO ("Context, ARB_fragment_shader supported: yes");
+        GST_INFO ("We have OpenGL shaders");
 
         display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_GLSL;
 
@@ -878,7 +879,8 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
             break;
           default:
             gst_gl_display_set_error (display,
-                "Unsupported upload video format %d", v_format);
+                "Unsupported upload video format %s",
+                gst_video_format_to_string (v_format));
             break;
         }
         /* check if YCBCR MESA is available */
@@ -925,7 +927,7 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
       } else {
         /* colorspace conversion is not possible */
         gst_gl_display_set_error (display,
-            "ARB_fragment_shader supported, GL_ARB_imaging supported, GL_MESA_ycbcr_texture supported, not supported");
+            "Cannot upload YUV formats without OpenGL shaders");
       }
     }
       break;
