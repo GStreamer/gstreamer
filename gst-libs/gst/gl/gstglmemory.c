@@ -86,8 +86,8 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
       width, height);
 
   GST_CAT_DEBUG (GST_CAT_GL_MEMORY,
-      "new GL texture memory:%p format:%u dimensions:%ux%u", mem, v_format,
-      width, height);
+      "new GL texture memory:%p format:%u dimensions:%" G_GSIZE_FORMAT
+      "x%" G_GSIZE_FORMAT, mem, v_format, width, height);
 }
 
 static GstGLMemory *
