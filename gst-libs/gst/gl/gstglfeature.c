@@ -72,7 +72,7 @@ gst_gl_check_extension (const char *name, const gchar * ext)
                        gles_availability,                               \
                        namespaces, extension_names)                     \
   { min_gl_major, min_gl_minor, gles_availability, namespaces,          \
-      extension_names,                                                  \
+    extension_names,                                                    \
     gst_gl_ext_ ## name ## _funcs },
 #undef GST_GL_EXT_FUNCTION
 #define GST_GL_EXT_FUNCTION(ret, name, args)
@@ -88,11 +88,65 @@ static const GstGLFeatureData gst_gl_feature_ext_functions_data[] = {
 #undef GST_GL_EXT_END
 
 gboolean
+_gst_gl_feature_check_for_extension (const GstGLFeatureData * data,
+    const char *driver_prefix, const char *extensions_string,
+    const char **suffix)
+{
+  const char *namespace, *namespace_suffix;
+  unsigned int namespace_len;
+
+  g_return_val_if_fail (suffix != NULL, FALSE);
+
+  for (namespace = data->namespaces; *namespace;
+      namespace += strlen (namespace) + 1) {
+    const char *extension;
+    GString *full_extension_name = g_string_new ("");
+
+    /* If the namespace part contains a ':' then the suffix for
+       the function names is different from the name space */
+    if ((namespace_suffix = strchr (namespace, ':'))) {
+      namespace_len = namespace_suffix - namespace;
+      namespace_suffix++;
+    } else {
+      namespace_len = strlen (namespace);
+      namespace_suffix = namespace;
+    }
+
+    for (extension = data->extension_names; *extension;
+        extension += strlen (extension) + 1) {
+      g_string_assign (full_extension_name, driver_prefix);
+      g_string_append_c (full_extension_name, '_');
+      g_string_append_len (full_extension_name, namespace, namespace_len);
+      g_string_append_c (full_extension_name, '_');
+      g_string_append (full_extension_name, extension);
+
+      if (gst_gl_check_extension (full_extension_name->str, extensions_string)) {
+        GST_TRACE ("found %s in extension string", full_extension_name->str);
+        break;
+      }
+    }
+
+    g_string_free (full_extension_name, TRUE);
+
+    /* If we found an extension with this namespace then use it
+       as the suffix */
+    if (*extension) {
+      *suffix = namespace_suffix;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+gboolean
 _gst_gl_feature_check (GstGLDisplay * display,
     const char *driver_prefix,
     const GstGLFeatureData * data,
     int gl_major, int gl_minor, const char *extensions_string)
 {
+  char *full_function_name = NULL;
+  gboolean in_core = FALSE;
   const char *suffix = NULL;
   int func_num;
   GstGLFuncs *gst_gl = display->gl_vtable;
@@ -104,48 +158,13 @@ _gst_gl_feature_check (GstGLDisplay * display,
               data->min_gl_major, data->min_gl_minor)) ||
       ((display->gl_api & GST_GL_API_GLES2) &&
           (data->gl_availability & GST_GL_API_GLES2))) {
+    in_core = TRUE;
     suffix = "";
   } else {
     /* Otherwise try all of the extensions */
-    const char *namespace, *namespace_suffix;
-    unsigned int namespace_len;
-
-    for (namespace = data->namespaces; *namespace;
-        namespace += strlen (namespace) + 1) {
-      const char *extension;
-      GString *full_extension_name = g_string_new ("");
-
-      /* If the namespace part contains a ':' then the suffix for
-         the function names is different from the name space */
-      if ((namespace_suffix = strchr (namespace, ':'))) {
-        namespace_len = namespace_suffix - namespace;
-        namespace_suffix++;
-      } else {
-        namespace_len = strlen (namespace);
-        namespace_suffix = namespace;
-      }
-
-      for (extension = data->extension_names; *extension;
-          extension += strlen (extension) + 1) {
-        g_string_assign (full_extension_name, driver_prefix);
-        g_string_append_c (full_extension_name, '_');
-        g_string_append_len (full_extension_name, namespace, namespace_len);
-        g_string_append_c (full_extension_name, '_');
-        g_string_append (full_extension_name, extension);
-        if (gst_gl_check_extension (full_extension_name->str,
-                extensions_string))
-          break;
-      }
-
-      g_string_free (full_extension_name, TRUE);
-
-      /* If we found an extension with this namespace then use it
-         as the suffix */
-      if (*extension) {
-        suffix = namespace_suffix;
-        break;
-      }
-    }
+    if (!_gst_gl_feature_check_for_extension (data, driver_prefix,
+            extensions_string, &suffix))
+      goto error;
   }
 
   /* If we couldn't find anything that provides the functions then
@@ -156,20 +175,41 @@ _gst_gl_feature_check (GstGLDisplay * display,
   /* Try to get all of the entry points */
   for (func_num = 0; data->functions[func_num].name; func_num++) {
     void *func;
-    char *full_function_name;
+
+    if (full_function_name)
+      g_free (full_function_name);
 
     full_function_name = g_strconcat ("gl", data->functions[func_num].name,
         suffix, NULL);
+    GST_TRACE ("%s should %sbe in core", full_function_name,
+        in_core ? "" : "not ");
     func =
         gst_gl_window_get_proc_address (display->gl_window, full_function_name);
-    g_free (full_function_name);
 
-    if (func == NULL)
+    if (func == NULL && in_core) {
+      GST_TRACE ("%s was not found in core, trying the extension version",
+          full_function_name);
+      if (!_gst_gl_feature_check_for_extension (data, driver_prefix,
+              extensions_string, &suffix)) {
+        goto error;
+      } else {
+        g_free (full_function_name);
+        full_function_name = g_strconcat ("gl", data->functions[func_num].name,
+            suffix, NULL);
+        func = gst_gl_window_get_proc_address (display->gl_window,
+            full_function_name);
+      }
+    }
+
+    if (func == NULL) {
       goto error;
+    }
 
     /* Set the function pointer in the context */
     *(void **) ((guint8 *) gst_gl +
         data->functions[func_num].pointer_offset) = func;
+
+    g_free (full_function_name);
   }
 
   return TRUE;
@@ -178,9 +218,15 @@ _gst_gl_feature_check (GstGLDisplay * display,
    * then set all of the functions pointers to NULL so we can safely
    * do feature testing by just looking at the function pointers */
 error:
+
   for (func_num = 0; data->functions[func_num].name; func_num++) {
     *(void **) ((guint8 *) gst_gl +
         data->functions[func_num].pointer_offset) = NULL;
+  }
+
+  if (full_function_name) {
+    GST_TRACE ("failed to find function %s", full_function_name);
+    g_free (full_function_name);
   }
 
   return FALSE;
