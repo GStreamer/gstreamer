@@ -1989,6 +1989,10 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
 
     gst_omx_video_dec_drain (self, FALSE);
     gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, TRUE);
+
+    /* Wait until the srcpad loop is finished,
+     * unlock GST_VIDEO_DECODER_STREAM_LOCK to prevent deadlocks
+     * caused by using this lock from inside the loop function */
     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
     gst_pad_stop_task (GST_VIDEO_DECODER_SRC_PAD (decoder));
     GST_VIDEO_DECODER_STREAM_LOCK (self);
