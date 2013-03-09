@@ -42,62 +42,49 @@
 enum
 {
   ARG_0,
-  ARG_DEVICE,
+  ARG_DEVICE
 };
 
-static void gst_fbdevsink_base_init (gpointer g_class);
-static void gst_fbdevsink_class_init (GstFBDEVSinkClass * klass);
+#if 0
 static void gst_fbdevsink_get_times (GstBaseSink * basesink,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
+#endif
 
-static gboolean gst_fbdevsink_setcaps (GstBaseSink * bsink, GstCaps * caps);
-
-static GstFlowReturn gst_fbdevsink_render (GstBaseSink * bsink,
+static GstFlowReturn gst_fbdevsink_show_frame (GstVideoSink * videosink,
     GstBuffer * buff);
+
 static gboolean gst_fbdevsink_start (GstBaseSink * bsink);
 static gboolean gst_fbdevsink_stop (GstBaseSink * bsink);
+
+static GstCaps *gst_fbdevsink_getcaps (GstBaseSink * bsink, GstCaps * filter);
+static gboolean gst_fbdevsink_setcaps (GstBaseSink * bsink, GstCaps * caps);
 
 static void gst_fbdevsink_finalize (GObject * object);
 static void gst_fbdevsink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_fbdevsink_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static GstStateChangeReturn
-gst_fbdevsink_change_state (GstElement * element, GstStateChange transition);
+static GstStateChangeReturn gst_fbdevsink_change_state (GstElement * element,
+    GstStateChange transition);
 
-static GstCaps *gst_fbdevsink_getcaps (GstBaseSink * bsink);
+#define VIDEO_CAPS "{ RGB, BGR, BGRx, xBGR, RGB, RGBx, xRGB, RGB15, RGB16 }"
 
-static GstVideoSinkClass *parent_class = NULL;
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_CAPS))
+    );
 
-#define GST_FBDEV_TEMPLATE_CAPS \
-     GST_VIDEO_CAPS_RGB_15 \
- ";" GST_VIDEO_CAPS_RGB_16 \
- ";" GST_VIDEO_CAPS_BGR \
- ";" GST_VIDEO_CAPS_BGRx \
- ";" GST_VIDEO_CAPS_xBGR \
- ";" GST_VIDEO_CAPS_RGB \
- ";" GST_VIDEO_CAPS_RGBx \
- ";" GST_VIDEO_CAPS_xRGB \
+#define parent_class gst_fbdevsink_parent_class
+G_DEFINE_TYPE (GstFBDEVSink, gst_fbdevsink, GST_TYPE_VIDEO_SINK);
 
 static void
-gst_fbdevsink_base_init (gpointer g_class)
+gst_fbdevsink_init (GstFBDEVSink * fbdevsink)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS (GST_FBDEV_TEMPLATE_CAPS)
-      );
-
-  gst_element_class_set_static_metadata (element_class, "fbdev video sink",
-      "Sink/Video",
-      "A linux framebuffer videosink", "Sean D'Epagnier <sean@depagnier.com>");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
+  /* nothing to do here yet */
 }
 
-
+#if 0
 static void
 gst_fbdevsink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
@@ -119,28 +106,29 @@ gst_fbdevsink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
     }
   }
 }
-
-static uint32_t
-swapendian (uint32_t val)
-{
-  return (val & 0xff) << 24 | (val & 0xff00) << 8
-      | (val & 0xff0000) >> 8 | (val & 0xff000000) >> 24;
-}
+#endif
 
 static GstCaps *
-gst_fbdevsink_getcaps (GstBaseSink * bsink)
+gst_fbdevsink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstFBDEVSink *fbdevsink;
+  GstVideoFormat format;
   GstCaps *caps;
   uint32_t rmask;
   uint32_t gmask;
   uint32_t bmask;
-  int endianness;
+  uint32_t tmask;
+  int endianness, depth, bpp;
 
   fbdevsink = GST_FBDEVSINK (bsink);
 
+  caps = gst_static_pad_template_get_caps (&sink_template);
+
+  /* FIXME: locking */
   if (!fbdevsink->framebuffer)
-    return gst_caps_from_string (GST_FBDEV_TEMPLATE_CAPS);
+    goto done;
+
+  bpp = fbdevsink->varinfo.bits_per_pixel;
 
   rmask = ((1 << fbdevsink->varinfo.red.length) - 1)
       << fbdevsink->varinfo.red.offset;
@@ -148,50 +136,76 @@ gst_fbdevsink_getcaps (GstBaseSink * bsink)
       << fbdevsink->varinfo.green.offset;
   bmask = ((1 << fbdevsink->varinfo.blue.length) - 1)
       << fbdevsink->varinfo.blue.offset;
+  tmask = ((1 << fbdevsink->varinfo.transp.length) - 1)
+      << fbdevsink->varinfo.transp.offset;
 
-  endianness = 0;
+  depth = fbdevsink->varinfo.red.length + fbdevsink->varinfo.green.length
+      + fbdevsink->varinfo.blue.length;
 
   switch (fbdevsink->varinfo.bits_per_pixel) {
     case 32:
-      /* swap endian of masks */
-      rmask = swapendian (rmask);
-      gmask = swapendian (gmask);
-      bmask = swapendian (bmask);
-      endianness = 4321;
+      /* swap endianness of masks */
+      rmask = GUINT32_SWAP_LE_BE (rmask);
+      gmask = GUINT32_SWAP_LE_BE (gmask);
+      bmask = GUINT32_SWAP_LE_BE (bmask);
+      tmask = GUINT32_SWAP_LE_BE (tmask);
+      depth += fbdevsink->varinfo.transp.length;
+      endianness = G_BIG_ENDIAN;
       break;
     case 24:{
       /* swap red and blue masks */
-      uint32_t t = rmask;
-
+      tmask = rmask;
       rmask = bmask;
-      bmask = t;
-      endianness = 4321;
+      bmask = tmask;
+      tmask = 0;
+      endianness = G_BIG_ENDIAN;
       break;
     }
     case 15:
     case 16:
-      endianness = 1234;
+      tmask = 0;
+      endianness = G_LITTLE_ENDIAN;
       break;
     default:
-      /* other bit depths are not supported */
-      g_warning ("unsupported bit depth: %d\n",
-          fbdevsink->varinfo.bits_per_pixel);
-      return NULL;
+      goto unsupported_bpp;
   }
 
-  /* replace all but width, height, and framerate */
-  caps = gst_caps_from_string (GST_VIDEO_CAPS_RGB_15);
-  gst_caps_set_simple (caps,
-      "bpp", G_TYPE_INT, fbdevsink->varinfo.bits_per_pixel,
-      "depth", G_TYPE_INT, fbdevsink->varinfo.red.length +
-      fbdevsink->varinfo.green.length +
-      fbdevsink->varinfo.blue.length +
-      fbdevsink->varinfo.transp.length,
-      "endianness", G_TYPE_INT, endianness,
-      "red_mask", G_TYPE_INT, rmask,
-      "green_mask", G_TYPE_INT, gmask, "blue_mask", G_TYPE_INT, bmask, NULL);
+  format = gst_video_format_from_masks (depth, bpp, endianness, rmask, gmask,
+      bmask, tmask);
+
+  if (format == GST_VIDEO_FORMAT_UNKNOWN)
+    goto unknown_format;
+
+  caps = gst_caps_make_writable (caps);
+  gst_caps_set_simple (caps, "format", G_TYPE_STRING,
+      gst_video_format_to_string (format), NULL);
+
+done:
+
+  if (filter != NULL) {
+    GstCaps *icaps;
+
+    icaps = gst_caps_intersect (caps, filter);
+    gst_caps_unref (caps);
+    caps = icaps;
+  }
 
   return caps;
+
+/* ERRORS */
+unsupported_bpp:
+  {
+    GST_WARNING_OBJECT (bsink, "unsupported bit depth: %d", bpp);
+    return NULL;
+  }
+unknown_format:
+  {
+    GST_WARNING_OBJECT (bsink, "could not map fbdev format to GstVideoFormat: "
+        "depth=%u, bpp=%u, endianness=%u, rmask=0x%08x, gmask=0x%08x, "
+        "bmask=0x%08x, tmask=0x%08x", depth, bpp, endianness, rmask, gmask,
+        bmask, tmask);
+    return NULL;
+  }
 }
 
 static gboolean
@@ -236,24 +250,30 @@ gst_fbdevsink_setcaps (GstBaseSink * bsink, GstCaps * vscapslist)
 
 
 static GstFlowReturn
-gst_fbdevsink_render (GstBaseSink * bsink, GstBuffer * buf)
+gst_fbdevsink_show_frame (GstVideoSink * videosink, GstBuffer * buf)
 {
 
   GstFBDEVSink *fbdevsink;
+  GstMapInfo map;
   int i;
 
-  fbdevsink = GST_FBDEVSINK (bsink);
+  fbdevsink = GST_FBDEVSINK (videosink);
 
   /* optimization could remove this memcpy by allocating the buffer
      in framebuffer memory, but would only work when xres matches
      the video width */
+  if (!gst_buffer_map (buf, &map, GST_MAP_READ))
+    return GST_FLOW_ERROR;
 
-  for (i = 0; i < fbdevsink->lines; i++)
+  for (i = 0; i < fbdevsink->lines; i++) {
     memcpy (fbdevsink->framebuffer
         + (i + fbdevsink->cy) * fbdevsink->fixinfo.line_length
         + fbdevsink->cx * fbdevsink->bytespp,
-        GST_BUFFER_DATA (buf) + i * fbdevsink->width * fbdevsink->bytespp,
+        map.data + i * fbdevsink->width * fbdevsink->bytespp,
         fbdevsink->linelen);
+  }
+
+  gst_buffer_unmap (buf, &map);
 
   return GST_FLOW_OK;
 }
@@ -379,13 +399,13 @@ gst_fbdevsink_class_init (GstFBDEVSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseSinkClass *gstvs_class;
+  GstBaseSinkClass *basesink_class;
+  GstVideoSinkClass *videosink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstvs_class = (GstBaseSinkClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
+  basesink_class = (GstBaseSinkClass *) klass;
+  videosink_class = (GstVideoSinkClass *) klass;
 
   gobject_class->set_property = gst_fbdevsink_set_property;
   gobject_class->get_property = gst_fbdevsink_get_property;
@@ -398,14 +418,22 @@ gst_fbdevsink_class_init (GstFBDEVSinkClass * klass)
       g_param_spec_string ("device", "device",
           "The framebuffer device eg: /dev/fb0", NULL, G_PARAM_READWRITE));
 
-  gstvs_class->set_caps = GST_DEBUG_FUNCPTR (gst_fbdevsink_setcaps);
-  gstvs_class->get_caps = GST_DEBUG_FUNCPTR (gst_fbdevsink_getcaps);
-  gstvs_class->get_times = GST_DEBUG_FUNCPTR (gst_fbdevsink_get_times);
-  gstvs_class->preroll = GST_DEBUG_FUNCPTR (gst_fbdevsink_render);
-  gstvs_class->render = GST_DEBUG_FUNCPTR (gst_fbdevsink_render);
-  gstvs_class->start = GST_DEBUG_FUNCPTR (gst_fbdevsink_start);
-  gstvs_class->stop = GST_DEBUG_FUNCPTR (gst_fbdevsink_stop);
+  basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_fbdevsink_setcaps);
+  basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_fbdevsink_getcaps);
+#if 0
+  basesink_class->get_times = GST_DEBUG_FUNCPTR (gst_fbdevsink_get_times);
+#endif
+  basesink_class->start = GST_DEBUG_FUNCPTR (gst_fbdevsink_start);
+  basesink_class->stop = GST_DEBUG_FUNCPTR (gst_fbdevsink_stop);
 
+  videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_fbdevsink_show_frame);
+
+  gst_element_class_set_static_metadata (gstelement_class, "fbdev video sink",
+      "Sink/Video", "Linux framebuffer videosink",
+      "Sean D'Epagnier <sean@depagnier.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
 }
 
 static void
@@ -418,33 +446,8 @@ gst_fbdevsink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-GType
-gst_fbdevsink_get_type (void)
-{
-  static GType fbdevsink_type = 0;
-
-  if (!fbdevsink_type) {
-    static const GTypeInfo fbdevsink_info = {
-      sizeof (GstFBDEVSinkClass),
-      gst_fbdevsink_base_init,
-      NULL,
-      (GClassInitFunc) gst_fbdevsink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstFBDEVSink),
-      0,
-      NULL
-    };
-
-    fbdevsink_type =
-        g_type_register_static (GST_TYPE_BASE_SINK, "GstFBDEVSink",
-        &fbdevsink_info, 0);
-  }
-  return fbdevsink_type;
-}
-
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     fbdevsink,
-    "linux framebuffer video sink",
+    "Linux framebuffer video sink",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
