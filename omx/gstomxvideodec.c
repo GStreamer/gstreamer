@@ -1021,7 +1021,9 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
 
   if (vinfo->width != port_def->format.video.nFrameWidth ||
       vinfo->height != port_def->format.video.nFrameHeight) {
-    GST_ERROR_OBJECT (self, "Width or height do not match");
+    GST_ERROR_OBJECT (self, "Resolution do not match. port: %dx%d vinfo: %dx%d",
+        port_def->format.video.nFrameWidth, port_def->format.video.nFrameHeight,
+        vinfo->width, vinfo->height);
     goto done;
   }
 
