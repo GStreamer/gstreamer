@@ -25,7 +25,6 @@ GST_PLUGINS_BAD_BUILT_SOURCES := \
 	gst/hls/Android.mk \
 	gst/jp2kdecimator/Android.mk \
 	gst/segmentclip/Android.mk \
-	gst/dtmf/Android.mk \
 	gst/mpeg4videoparse/Android.mk \
 	gst/siren/Android.mk \
 	gst/dataurisrc/Android.mk \
@@ -117,7 +116,6 @@ CONFIGURE_TARGETS += gst-plugins-bad-configure
 -include $(GST_PLUGINS_BAD_TOP)/gst/hls/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/jp2kdecimator/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/segmentclip/Android.mk
--include $(GST_PLUGINS_BAD_TOP)/gst/dtmf/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/mpeg4videoparse/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/siren/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/dataurisrc/Android.mk

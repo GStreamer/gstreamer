@@ -213,7 +213,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstcoloreffects.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdataurisrc.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstdccp.so
-%{_libdir}/gstreamer-%{majorminor}/libgstdtmf.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstfestival.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstfrei0r.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstgaudieffects.so
