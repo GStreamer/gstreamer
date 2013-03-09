@@ -329,6 +329,8 @@ gst_ivtc_fixate_caps (GstBaseTransform * trans,
     gst_caps_set_simple (result, "framerate", GST_TYPE_FRACTION, 24, 1, NULL);
   }
 
+  result = gst_caps_fixate (result);
+
   return result;
 }
 
@@ -392,8 +394,9 @@ gst_ivtc_transform_size (GstBaseTransform * trans,
     GstPadDirection direction,
     GstCaps * caps, gsize size, GstCaps * othercaps, gsize * othersize)
 {
+  *othersize = size;
 
-  return FALSE;
+  return TRUE;
 }
 
 static gboolean
@@ -618,6 +621,9 @@ gst_ivtc_retire_fields (GstIvtc * ivtc, int n_fields)
 {
   int i;
 
+  if (n_fields == 0)
+    return;
+
   for (i = 0; i < n_fields; i++) {
     gst_video_frame_unmap (&ivtc->fields[i].frame);
     gst_buffer_unref (ivtc->fields[i].buffer);
@@ -653,6 +659,12 @@ gst_ivtc_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     }
   }
 
+  while (ivtc->n_fields > 0 &&
+      ivtc->fields[0].ts + GST_MSECOND * 50 < ivtc->current_ts) {
+    GST_DEBUG ("retiring early field");
+    gst_ivtc_retire_fields (ivtc, 1);
+  }
+
   GST_DEBUG ("n_fields %d", ivtc->n_fields);
   if (ivtc->n_fields < 4) {
     return GST_BASE_TRANSFORM_FLOW_DROPPED;
@@ -662,9 +674,11 @@ gst_ivtc_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   while (ivtc->n_fields >= 4) {
     GstBuffer *buf;
     buf = gst_buffer_copy (outbuf);
+    GST_DEBUG ("pushing extra frame");
     ret = gst_pad_push (GST_BASE_TRANSFORM_SRC_PAD (trans), buf);
-    if (ret != GST_FLOW_OK)
+    if (ret != GST_FLOW_OK) {
       return ret;
+    }
 
     gst_ivtc_construct_frame (ivtc, outbuf);
   }
