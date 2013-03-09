@@ -60,7 +60,6 @@ struct _GstTSDemux
 
   /*< private >*/
   MpegTSBaseProgram *program;	/* Current program */
-  guint	current_program_number;
 
   /* segments to be sent */
   GstSegment segment;

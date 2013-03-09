@@ -1135,9 +1135,6 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
     demux->calculate_update_segment = !program->initial_program;
 
     /* FIXME : When do we emit no_more_pads ? */
-
-    /* Inform scanner we have got our program */
-    demux->current_program_number = program->program_number;
   }
 }
 
