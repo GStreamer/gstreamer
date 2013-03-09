@@ -321,7 +321,7 @@ gst_gl_display_set_error (GstGLDisplay * display, const char *format, ...)
 static gboolean
 _create_context_gles2 (GstGLDisplay * display, gint * gl_major, gint * gl_minor)
 {
-  GstGLFuncs *gl;
+  const GstGLFuncs *gl;
   GLenum gl_err = GL_NO_ERROR;
 
   gl = display->gl_vtable;
@@ -359,7 +359,7 @@ gboolean
 _create_context_opengl (GstGLDisplay * display, gint * gl_major,
     gint * gl_minor)
 {
-  GstGLFuncs *gl;
+  const GstGLFuncs *gl;
   guint maj, min;
   GLenum gl_err = GL_NO_ERROR;
   GString *opengl_version = NULL;
@@ -592,7 +592,7 @@ void
 _gen_fbo (GstGLDisplay * display)
 {
   /* a texture must be attached to the FBO */
-  GstGLFuncs *gl = display->gl_vtable;
+  const GstGLFuncs *gl = display->gl_vtable;
   GLuint fake_texture = 0;
 
   GST_TRACE ("creating FBO dimensions:%ux%u", display->priv->gen_fbo_width,
@@ -664,7 +664,7 @@ _gen_fbo (GstGLDisplay * display)
 void
 _use_fbo (GstGLDisplay * display)
 {
-  GstGLFuncs *gl = display->gl_vtable;
+  const GstGLFuncs *gl = display->gl_vtable;
 #if GST_GL_HAVE_GLES2
   GLint viewport_dim[4];
 #endif
@@ -764,7 +764,7 @@ _use_fbo (GstGLDisplay * display)
 void
 _use_fbo_v2 (GstGLDisplay * display)
 {
-  GstGLFuncs *gl = display->gl_vtable;
+  const GstGLFuncs *gl = display->gl_vtable;
   GLint viewport_dim[4];
 
   GST_TRACE ("Binding v2 FBO %u dimensions:%ux%u with texture:%u ",
@@ -805,7 +805,7 @@ _use_fbo_v2 (GstGLDisplay * display)
 void
 _del_fbo (GstGLDisplay * display)
 {
-  GstGLFuncs *gl = display->gl_vtable;
+  const GstGLFuncs *gl = display->gl_vtable;
 
   GST_TRACE ("Deleting FBO %u", display->priv->del_fbo);
 
@@ -823,7 +823,7 @@ _del_fbo (GstGLDisplay * display)
 void
 _gen_shader (GstGLDisplay * display)
 {
-  GstGLFuncs *gl = display->gl_vtable;
+  const GstGLFuncs *gl = display->gl_vtable;
 
   GST_TRACE ("Generating shader %" GST_PTR_FORMAT, display->priv->gen_shader);
 
@@ -884,7 +884,7 @@ _del_shader (GstGLDisplay * display)
 void
 gst_gl_display_on_resize (GstGLDisplay * display, gint width, gint height)
 {
-  GstGLFuncs *gl = display->gl_vtable;
+  const GstGLFuncs *gl = display->gl_vtable;
 
   GST_TRACE ("GL Window resized to %ux%u", width, height);
 
@@ -928,7 +928,7 @@ gst_gl_display_on_resize (GstGLDisplay * display, gint width, gint height)
 void
 gst_gl_display_on_draw (GstGLDisplay * display)
 {
-  GstGLFuncs *gl = display->gl_vtable;
+  const GstGLFuncs *gl = display->gl_vtable;
 
   /* check if texture is ready for being drawn */
   if (!display->priv->redisplay_texture)
@@ -1056,7 +1056,7 @@ void
 gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height)
 {
-  GstGLFuncs *gl = display->gl_vtable;
+  const GstGLFuncs *gl = display->gl_vtable;
 
   GST_TRACE ("Generating texture format:%u dimensions:%ux%u", v_format,
       width, height);
@@ -1075,11 +1075,14 @@ gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
+    {
       gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
           width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       break;
+    }
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
+    {
       switch (display->colorspace_conversion) {
         case GST_GL_DISPLAY_CONVERSION_GLSL:
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
@@ -1102,16 +1105,21 @@ gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
               display->colorspace_conversion);
       }
       break;
+    }
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_AYUV:
+    {
       gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
           width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       break;
+    }
     default:
+    {
       gst_gl_display_set_error (display, "Unsupported upload video format %d",
           v_format);
       break;
+    }
   }
 
   gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
