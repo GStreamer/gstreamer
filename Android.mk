@@ -13,6 +13,7 @@ GST_PLUGINS_GOOD_BUILT_SOURCES = \
 	gst/cutter/Android.mk		\
 	gst/debugutils/Android.mk	\
 	gst/deinterlace/Android.mk	\
+	gst/dtmf/Android.mk         \
 	gst/effectv/Android.mk		\
 	gst/equalizer/Android.mk	\
 	gst/flv/Android.mk		\
@@ -79,6 +80,7 @@ CONFIGURE_TARGETS += gst-plugins-good-configure
 -include $(GST_PLUGINS_GOOD_TOP)/gst/cutter/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/debugutils/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/deinterlace/Android.mk
+-include $(GST_PLUGINS_GOOD_TOP)/gst/dtmf/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/effectv/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/equalizer/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/flv/Android.mk

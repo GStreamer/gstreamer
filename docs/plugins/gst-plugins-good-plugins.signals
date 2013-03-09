@@ -686,8 +686,6 @@ guint64  arg3
 <FLAGS>l</FLAGS>
 GstV4l2Src *gstv4l2src
 gint  arg1
-guint  arg2
-guint  arg3
-guint  arg4
+GstCaps *arg2
 </SIGNAL>
 

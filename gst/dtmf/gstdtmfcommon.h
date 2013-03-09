@@ -1,6 +1,25 @@
+/* GStreamer DTMF plugin
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
 
 #ifndef __GST_RTP_DTMF_COMMON_H__
 #define __GST_RTP_DTMF_COMMON_H__
+
+#include <gst/math-compat.h>
 
 #define MIN_INTER_DIGIT_INTERVAL 100     /* ms */
 #define MIN_PULSE_DURATION       250     /* ms */
@@ -12,10 +31,6 @@
 #define MAX_EVENT                15
 #define MIN_EVENT_STRING         "0"
 #define MAX_EVENT_STRING         "15"
-
-#ifndef M_PI
-#define M_PI           3.14159265358979323846  /* pi */
-#endif
 
 typedef struct
 {

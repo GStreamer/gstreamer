@@ -964,7 +964,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>message</NICK>
-<BLURB>Post a level message for each passed interval.</BLURB>
+<BLURB>Post a 'level' message for each passed interval (deprecated).</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -986,6 +986,16 @@
 <NICK>Peak TTL</NICK>
 <BLURB>Time To Live of decay peak before it falls back (in nanoseconds).</BLURB>
 <DEFAULT>300000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLevel::post-messages</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Post Messages</NICK>
+<BLURB>Whether to post a 'level' element message on the bus for each passed interval.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1114,7 +1124,7 @@
 <RANGE><= 255</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Target Blue</NICK>
-<BLURB>The Blue target.</BLURB>
+<BLURB>The blue color value for custom RGB chroma keying.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1124,7 +1134,7 @@
 <RANGE><= 255</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Target Green</NICK>
-<BLURB>The Green target.</BLURB>
+<BLURB>The green color value for custom RGB chroma keying.</BLURB>
 <DEFAULT>255</DEFAULT>
 </ARG>
 
@@ -1134,7 +1144,7 @@
 <RANGE><= 255</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Target Red</NICK>
-<BLURB>The Red target.</BLURB>
+<BLURB>The red color value for custom RGB chroma keying.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1153,7 +1163,7 @@
 <TYPE>guint</TYPE>
 <RANGE><= 128</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Sensitivity</NICK>
+<NICK>White Sensitivity</NICK>
 <BLURB>Sensitivity to bright colors.</BLURB>
 <DEFAULT>100</DEFAULT>
 </ARG>
@@ -23517,3 +23527,114 @@
 <BLURB>Minimum quantity of frames to send in one packet (-1 for maximum allowed by the mtu).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
+
+<ARG>
+<NAME>GstRTPDTMFSrc::clock-rate</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>clockrate</NICK>
+<BLURB>The clock-rate at which to generate the dtmf packets.</BLURB>
+<DEFAULT>8000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPDTMFSrc::packet-redundancy</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,5]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Packet Redundancy</NICK>
+<BLURB>Number of packets to send to indicate start and stop dtmf events.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPDTMFSrc::pt</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 128</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>payload type</NICK>
+<BLURB>The payload type of the packets.</BLURB>
+<DEFAULT>96</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPDTMFSrc::seqnum</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Sequence number</NICK>
+<BLURB>The RTP sequence number of the last processed packet.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPDTMFSrc::seqnum-offset</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sequence number Offset</NICK>
+<BLURB>Offset to add to all outgoing seqnum (-1 = random).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPDTMFSrc::ssrc</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SSRC</NICK>
+<BLURB>The SSRC of the packets (-1 == random).</BLURB>
+<DEFAULT>4294967295</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPDTMFSrc::timestamp</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Timestamp</NICK>
+<BLURB>The RTP timestamp of the last processed packet.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPDTMFSrc::timestamp-offset</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timestamp Offset</NICK>
+<BLURB>Offset to add to all outgoing timestamps (-1 = random).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpDTMFDepay::max-duration</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum duration</NICK>
+<BLURB>The maxumimum duration (ms) of the outgoing soundpacket. (0 = no limit).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpDTMFDepay::unit-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 1000</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Duration unittime</NICK>
+<BLURB>The smallest unit (ms) the duration must be a multiple of (0 disables it).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDTMFSrc::interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[10,50]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interval between tone packets</NICK>
+<BLURB>Interval in ms between two tone packets.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+

@@ -2,7 +2,7 @@ GObject
   GInitiallyUnowned
     GstObject
       GstAllocator
-        GstDefaultAllocator
+        GstAllocatorSysmem
       GstAudioRingBuffer
         GstAudioSinkRingBuffer
         GstAudioSrcRingBuffer
@@ -60,6 +60,7 @@ GObject
             GstGdkPixbufSink
             GstV4l2Sink
         GstBaseSrc
+          GstDTMFSrc
           GstPushSrc
             GstAudioBaseSrc
               GstAudioSrc
@@ -74,6 +75,7 @@ GObject
             GstUDPSrc
             GstV4l2Src
             GstXImageSrc
+          GstRTPDTMFSrc
           GstSplitFileSrc
         GstBaseTransform
           GstAudioFilter
@@ -180,6 +182,7 @@ GObject
           GstRtpAC3Depay
           GstRtpAMRDepay
           GstRtpCELTDepay
+          GstRtpDTMFDepay
           GstRtpG722Depay
           GstRtpG723Depay
           GstRtpG726Depay

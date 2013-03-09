@@ -209,13 +209,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string){ F32LE, S16LE }, rate=(int)[ 1, 2147483647 ], channels=(int)1, layout=(string)interleaved; audio/x-raw, format=(string){ F32LE, S16LE }, rate=(int)[ 1, 2147483647 ], channels=(int)2, layout=(string)interleaved, channel-mask=(bitmask)0x0000000000000003</details>
+          <details>audio/x-raw, format=(string){ F32LE, S16LE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string){ S32LE, S16LE }, rate=(int)[ 1, 2147483647 ], channels=(int)2, layout=(string)interleaved, channel-mask=(bitmask)0x0000000000000003</details>
+          <details>audio/x-raw, format=(string){ F32LE, S16LE }, rate=(int)[ 1, 2147483647 ], channels=(int)2, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>

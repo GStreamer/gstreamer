@@ -22,6 +22,7 @@ avisubtitle
 capssetter
 deinterlace
 deinterleave
+dtmf
 equalizer
 gdkpixbufsink
 flacparse
