@@ -55,7 +55,8 @@ struct _GstTSDemux
 
   /* the following vars must be protected with the OBJECT_LOCK as they can be
    * accessed from the application thread and the streaming thread */
-  guint program_number;		/* Required program number (ignore:-1) */
+  gint requested_program_number; /* Required program number (ignore:-1) */
+  guint program_number;
   gboolean emit_statistics;
 
   /*< private >*/

@@ -341,6 +341,7 @@ gst_ts_demux_init (GstTSDemux * demux)
   /* We are not interested in sections (all handled by mpegtsbase) */
   base->push_section = FALSE;
 
+  demux->requested_program_number = -1;
   demux->program_number = -1;
   gst_ts_demux_reset (base);
 }
@@ -356,7 +357,7 @@ gst_ts_demux_set_property (GObject * object, guint prop_id,
     case PROP_PROGRAM_NUMBER:
       /* FIXME: do something if program is switched as opposed to set at
        * beginning */
-      demux->program_number = g_value_get_int (value);
+      demux->requested_program_number = g_value_get_int (value);
       break;
     case PROP_EMIT_STATS:
       demux->emit_statistics = g_value_get_boolean (value);
@@ -374,7 +375,7 @@ gst_ts_demux_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PROGRAM_NUMBER:
-      g_value_set_int (value, demux->program_number);
+      g_value_set_int (value, demux->requested_program_number);
       break;
     case PROP_EMIT_STATS:
       g_value_set_boolean (value, demux->emit_statistics);
@@ -1099,11 +1100,12 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
 {
   GstTSDemux *demux = GST_TS_DEMUX (base);
 
-  GST_DEBUG ("Current program %d, new program %d",
-      demux->program_number, program->program_number);
+  GST_DEBUG ("Current program %d, new program %d requested program %d",
+      (gint) demux->program_number, program->program_number,
+      demux->requested_program_number);
 
-  if (demux->program_number == -1 ||
-      demux->program_number == program->program_number) {
+  if (demux->requested_program_number == program->program_number ||
+      (demux->requested_program_number == -1 && demux->program_number == -1)) {
 
     GST_LOG ("program %d started", program->program_number);
     demux->program_number = program->program_number;
