@@ -40,8 +40,13 @@
 # else
 #  include <GL/glu.h>
 #  include <GL/gl.h>
+#  if __WIN32__
+#   include <GL/glext.h>
+#  endif
 # endif
 #endif
+
+#include "glprototypes/gstgl_compat.h"
 
 #include <gst/gst.h>
 
