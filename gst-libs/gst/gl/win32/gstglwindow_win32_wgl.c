@@ -80,13 +80,10 @@ gst_gl_window_win32_wgl_init (GstGLWindowWin32WGL * window)
 
 /* Must be called in the gl thread */
 GstGLWindowWin32WGL *
-gst_gl_window_win32_wgl_new (GstGLAPI gl_api, guintptr external_gl_context,
-    GError ** error)
+gst_gl_window_win32_wgl_new (void)
 {
   GstGLWindowWin32WGL *window =
       g_object_new (GST_GL_TYPE_WINDOW_WIN32_WGL, NULL);
-
-  gst_gl_window_win32_open_device (GST_GL_WINDOW_WIN32 (window), error);
 
   return window;
 }
@@ -110,7 +107,8 @@ gst_gl_window_win32_wgl_create_context (GstGLWindowWin32 * window_win32,
   }
   g_assert (window_wgl->wgl_context);
 
-  GST_LOG ("gl context id: %ld", (gulong) window_wgl->wgl_context);
+  GST_LOG ("gl context id: %" G_GUINTPTR_FORMAT,
+      (guintptr) window_wgl->wgl_context);
 
   return TRUE;
 
@@ -127,7 +125,7 @@ gst_gl_window_win32_wgl_destroy_context (GstGLWindowWin32 * window_win32)
 
   if (window_wgl->wgl_context)
     wglDeleteContext (window_wgl->wgl_context);
-  window_wgl->wgl_context = 0;
+  window_wgl->wgl_context = NULL;
 }
 
 static gboolean

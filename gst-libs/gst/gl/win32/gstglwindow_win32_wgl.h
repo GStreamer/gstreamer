@@ -55,8 +55,7 @@ struct _GstGLWindowWin32WGLClass {
 
 GType gst_gl_window_win32_wgl_get_type     (void);
 
-GstGLWindowWin32WGL * gst_gl_window_win32_wgl_new  (GstGLAPI gl_api,
-                                                    guintptr external_gl_context, GError ** error);
+GstGLWindowWin32WGL * gst_gl_window_win32_wgl_new  (void);
 
 G_END_DECLS
 

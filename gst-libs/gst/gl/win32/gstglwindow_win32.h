@@ -74,9 +74,7 @@ struct _GstGLWindowWin32Class {
 
 GType gst_gl_window_win32_get_type     (void);
 
-GstGLWindowWin32 * gst_gl_window_win32_new          (GstGLAPI gl_api,
-                                                     guintptr external_gl_context, GError ** error);
-gboolean         gst_gl_window_win32_open_device  (GstGLWindowWin32 *window_win32, GError ** error);
+GstGLWindowWin32 * gst_gl_window_win32_new          (void);
 
 G_END_DECLS
 
