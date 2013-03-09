@@ -1987,13 +1987,14 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
 
     gst_omx_video_dec_drain (self, FALSE);
     gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, TRUE);
+    GST_VIDEO_DECODER_STREAM_UNLOCK (self);
     gst_pad_stop_task (GST_VIDEO_DECODER_SRC_PAD (decoder));
+    GST_VIDEO_DECODER_STREAM_LOCK (self);
 
     if (klass->cdata.hacks & GST_OMX_HACK_NO_COMPONENT_RECONFIGURE) {
       GST_VIDEO_DECODER_STREAM_UNLOCK (self);
       gst_omx_video_dec_stop (GST_VIDEO_DECODER (self));
       gst_omx_video_dec_close (GST_VIDEO_DECODER (self));
-
       GST_VIDEO_DECODER_STREAM_LOCK (self);
 
       if (!gst_omx_video_dec_open (GST_VIDEO_DECODER (self)))
