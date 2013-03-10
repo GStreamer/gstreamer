@@ -1324,8 +1324,7 @@ static gboolean
 gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
     GstOMXBuffer * outbuf)
 {
-  GstVideoCodecState *state =
-      gst_video_encoder_get_output_state (GST_VIDEO_ENCODER (self));
+  GstVideoCodecState *state = gst_video_codec_state_ref (self->input_state);
   GstVideoInfo *info = &state->info;
   OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->enc_in_port->port_def;
   gboolean ret = FALSE;
