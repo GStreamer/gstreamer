@@ -4544,6 +4544,10 @@ gst_avi_demux_invert (GstAviStream * stream, GstBuffer * buf)
     return buf;                 /* Ignore non DIB buffers */
   }
 
+  /* raw rgb data is stored topdown, but instead of inverting the buffer, */
+  /* some tools just negate the height field in the header (e.g. ffmpeg) */
+  if (((gint32) stream->strf.vids->height) < 0)
+    return buf;
 
   h = stream->strf.vids->height;
   w = stream->strf.vids->width;
