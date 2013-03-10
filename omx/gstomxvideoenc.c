@@ -1229,13 +1229,22 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
     if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
       return FALSE;
 
-    /* And disable output port */
-    if (gst_omx_port_set_enabled (self->enc_out_port, FALSE) != OMX_ErrorNone)
-      return FALSE;
+    /* If the output port is already configured with the new format we can
+     * allocate buffers here already */
+    if (self->enc_out_port->port_def.format.video.nFrameHeight == info->height
+        && self->enc_out_port->port_def.format.video.nFrameWidth ==
+        info->width) {
+      if (gst_omx_port_allocate_buffers (self->enc_out_port) != OMX_ErrorNone)
+        return FALSE;
+    } else {
+      /* And disable output port */
+      if (gst_omx_port_set_enabled (self->enc_out_port, FALSE) != OMX_ErrorNone)
+        return FALSE;
 
-    if (gst_omx_port_wait_enabled (self->enc_out_port,
-            1 * GST_SECOND) != OMX_ErrorNone)
-      return FALSE;
+      if (gst_omx_port_wait_enabled (self->enc_out_port,
+              1 * GST_SECOND) != OMX_ErrorNone)
+        return FALSE;
+    }
 
     if (gst_omx_component_get_state (self->enc,
             GST_CLOCK_TIME_NONE) != OMX_StateIdle)
@@ -1243,6 +1252,9 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
 
     if (gst_omx_component_set_state (self->enc,
             OMX_StateExecuting) != OMX_ErrorNone)
+      return FALSE;
+
+    if (gst_omx_port_populate (self->enc_out_port) != OMX_ErrorNone)
       return FALSE;
 
     if (gst_omx_component_get_state (self->enc,
@@ -1253,10 +1265,6 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   /* Unset flushing to allow ports to accept data again */
   gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, FALSE);
   gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, FALSE);
-
-  if (!needs_disable)
-    if (gst_omx_port_populate (self->enc_out_port) != OMX_ErrorNone)
-      return FALSE;
 
   if (gst_omx_component_get_last_error (self->enc) != OMX_ErrorNone) {
     GST_ERROR_OBJECT (self, "Component in error state: %s (0x%08x)",
