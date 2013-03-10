@@ -21,6 +21,7 @@
  *
  */
 
+#include <unistd.h>             /* for getpid */
 #include "gstosxaudiosink.h"
 
 static inline gboolean
