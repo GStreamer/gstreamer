@@ -263,8 +263,9 @@ gst_shm_sink_allocator_alloc_locked (GstShmSinkAllocator * self, gsize size,
     GstShmSinkMemory *mymem;
     gsize aoffset, padding;
 
-    GST_LOG_OBJECT (self, "Allocated block %p with %u bytes at %p",
-        block, size, sp_writer_block_get_buf (block));
+    GST_LOG_OBJECT (self,
+        "Allocated block %p with %" G_GSIZE_FORMAT " bytes at %p", block, size,
+        sp_writer_block_get_buf (block));
 
     mymem = g_slice_new0 (GstShmSinkMemory);
     memory = GST_MEMORY_CAST (mymem);
@@ -306,8 +307,9 @@ gst_shm_sink_allocator_alloc (GstAllocator * allocator, gsize size,
 
   if (!memory) {
     memory = gst_allocator_alloc (NULL, size, params);
-    GST_LOG_OBJECT (self, "Not enough shared memory for GstMemory of %u bytes, "
-        "allocating using standard allocator", size);
+    GST_LOG_OBJECT (self,
+        "Not enough shared memory for GstMemory of %" G_GSIZE_FORMAT
+        "bytes, allocating using standard allocator", size);
   }
 
   return memory;
