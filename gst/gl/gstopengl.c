@@ -43,6 +43,8 @@
 #include "config.h"
 #endif
 
+#include <gstglconfig.h>
+
 #include "gstglimagesink.h"
 
 #include "gstglfiltercube.h"
