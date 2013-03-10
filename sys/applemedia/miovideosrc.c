@@ -17,6 +17,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/* FIXME 1.x: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include "miovideosrc.h"
 
 #include "coremediabuffer.h"
