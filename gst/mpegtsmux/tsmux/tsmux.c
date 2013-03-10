@@ -247,17 +247,23 @@ tsmux_free (TsMux * mux)
   g_slice_free (TsMux, mux);
 }
 
+static gint
+tsmux_program_compare (TsMuxProgram * program, gint * needle)
+{
+  return (program->pgm_number - *needle);
+}
+
 /**
  * tsmux_program_new:
  * @mux: a #TsMux
  *
  * Create a new program in the mising session @mux.
- * 
+ *
  * Returns: a new #TsMuxProgram or %NULL when the maximum number of programs has
  * been reached.
  */
 TsMuxProgram *
-tsmux_program_new (TsMux * mux)
+tsmux_program_new (TsMux * mux, gint prog_id)
 {
   TsMuxProgram *program;
 
@@ -273,7 +279,20 @@ tsmux_program_new (TsMux * mux)
   program->last_pmt_ts = -1;
   program->pmt_interval = TSMUX_DEFAULT_PMT_INTERVAL;
 
-  program->pgm_number = mux->next_pgm_no++;
+  if (prog_id == 0) {
+    program->pgm_number = mux->next_pgm_no++;
+    while (g_list_find_custom (mux->programs, &program->pgm_number,
+            (GCompareFunc) tsmux_program_compare) != NULL) {
+      program->pgm_number = mux->next_pgm_no++;
+    }
+  } else {
+    program->pgm_number = prog_id;
+    while (g_list_find_custom (mux->programs, &program->pgm_number,
+            (GCompareFunc) tsmux_program_compare) != NULL) {
+      program->pgm_number++;
+    }
+  }
+
   program->pmt_pid = mux->next_pmt_pid++;
   program->pcr_stream = NULL;
 

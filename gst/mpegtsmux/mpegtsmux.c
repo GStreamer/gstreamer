@@ -738,7 +738,7 @@ mpegtsmux_create_streams (MpegTsMux * mux)
 
     ts_data->prog = mux->programs[ts_data->prog_id];
     if (ts_data->prog == NULL) {
-      ts_data->prog = tsmux_program_new (mux->tsmux);
+      ts_data->prog = tsmux_program_new (mux->tsmux, ts_data->prog_id);
       if (ts_data->prog == NULL)
         goto no_program;
       tsmux_set_pmt_interval (ts_data->prog, mux->pmt_interval);

@@ -183,7 +183,7 @@ guint 		tsmux_get_pat_interval          (TsMux *mux);
 guint16		tsmux_get_new_pid 		(TsMux *mux);
 
 /* pid/program management */
-TsMuxProgram *	tsmux_program_new 		(TsMux *mux);
+TsMuxProgram *	tsmux_program_new 		(TsMux *mux, gint prog_id);
 void 		tsmux_program_free 		(TsMuxProgram *program);
 void 		tsmux_set_pmt_interval          (TsMuxProgram *program, guint interval);
 guint 		tsmux_get_pmt_interval   	(TsMuxProgram *program);
