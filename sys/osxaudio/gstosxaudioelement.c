@@ -46,7 +46,6 @@
  *
  */
 
-#include <gst/gst.h>
 #include "gstosxaudioelement.h"
 
 static void
