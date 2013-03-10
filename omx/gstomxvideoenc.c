@@ -1275,7 +1275,7 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
 
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
-  self->input_state = gst_video_codec_state_ref (self->input_state);
+  self->input_state = gst_video_codec_state_ref (state);
 
   /* Start the srcpad loop again */
   GST_DEBUG_OBJECT (self, "Starting task again");
