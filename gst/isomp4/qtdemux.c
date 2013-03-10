@@ -1829,6 +1829,7 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       GST_DEBUG_OBJECT (demux, "received newsegment %" GST_SEGMENT_FORMAT,
           &segment);
 
+      GST_DEBUG_OBJECT (demux, "new pending_newsegment");
       gst_event_replace (&demux->pending_newsegment, event);
       demux->upstream_newsegment = TRUE;
 
@@ -2654,24 +2655,14 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
 
       qtdemux_parse_tfdt (qtdemux, &tfdt_data, &decode_time);
 
+      /* FIXME, we can use decode_time to interpolate timestamps
+       * in case the input timestamps are missing */
       decode_time_ts = gst_util_uint64_scale (decode_time, GST_SECOND,
           stream->timescale);
 
       GST_DEBUG_OBJECT (qtdemux, "decode time %" G_GUINT64_FORMAT
           " (%" GST_TIME_FORMAT ")", decode_time,
           GST_TIME_ARGS (decode_time_ts));
-
-      /* If there is a new segment pending, update the time/position.
-       * Don't replace if the pending newsegment is from upstream */
-      if (qtdemux->pending_newsegment && !qtdemux->upstream_newsegment) {
-        GstSegment segment;
-
-        gst_segment_init (&segment, GST_FORMAT_TIME);
-        gst_event_replace (&qtdemux->pending_newsegment,
-            gst_event_new_segment (&segment));
-        /* ref added when replaced, release the original _new one */
-        gst_event_unref (qtdemux->pending_newsegment);
-      }
     }
 
     if (G_UNLIKELY (!stream)) {
@@ -4553,12 +4544,12 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
             if (demux->got_moov && demux->fragmented) {
               GST_DEBUG_OBJECT (demux,
                   "Got a second moov, clean up data from old one");
+            } else {
+              /* prepare newsegment to send when streaming actually starts */
+              if (!demux->pending_newsegment)
+                demux->pending_newsegment =
+                    gst_event_new_segment (&demux->segment);
             }
-
-            /* prepare newsegment to send when streaming actually starts */
-            if (!demux->pending_newsegment)
-              demux->pending_newsegment =
-                  gst_event_new_segment (&demux->segment);
 
             qtdemux_parse_moov (demux, data, demux->neededbytes);
             qtdemux_node_dump (demux, demux->moov_node);
@@ -4597,6 +4588,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
                 if (!demux->pending_newsegment) {
                   GstSegment segment;
                   gst_segment_init (&segment, GST_FORMAT_TIME);
+                  GST_DEBUG_OBJECT (demux, "new pending_newsegment");
                   demux->pending_newsegment = gst_event_new_segment (&segment);
                 }
                 qtdemux_expose_streams (demux);
