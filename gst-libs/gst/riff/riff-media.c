@@ -892,9 +892,11 @@ gst_riff_create_video_caps (guint32 codec_fcc,
   }
 
   if (strf != NULL) {
+    /* raw rgb data is stored topdown, but instead of inverting the buffer, */
+    /* some tools just negate the height field in the header (e.g. ffmpeg) */
     gst_caps_set_simple (caps,
         "width", G_TYPE_INT, strf->width,
-        "height", G_TYPE_INT, strf->height, NULL);
+        "height", G_TYPE_INT, ABS ((gint) strf->height), NULL);
   } else {
     gst_caps_set_simple (caps,
         "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
