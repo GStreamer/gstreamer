@@ -294,7 +294,8 @@ gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
   mem->mmap_count = 0;
   g_mutex_init (&mem->lock);
 
-  GST_DEBUG ("%p: fd: %d size %d", mem, mem->fd, mem->mem.maxsize);
+  GST_DEBUG ("%p: fd: %d size %" G_GSIZE_FORMAT, mem, mem->fd,
+      mem->mem.maxsize);
 
   return (GstMemory *) mem;
 }
