@@ -216,8 +216,6 @@ gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
   GstOMXAACEnc *self = GST_OMX_AAC_ENC (enc);
   OMX_AUDIO_PARAM_AACPROFILETYPE aac_profile;
   GstCaps *peercaps;
-  OMX_AUDIO_AACSTREAMFORMATTYPE stream_format = OMX_AUDIO_AACStreamFormatRAW;
-  OMX_AUDIO_AACPROFILETYPE profile = OMX_AUDIO_AACObjectLC;
   OMX_ERRORTYPE err;
 
   GST_OMX_INIT_STRUCT (&aac_profile);
@@ -255,13 +253,13 @@ gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
 
       if (profile_string) {
         if (g_str_equal (profile_string, "main")) {
-          profile = OMX_AUDIO_AACObjectMain;
+          aac_profile.eAACProfile = OMX_AUDIO_AACObjectMain;
         } else if (g_str_equal (profile_string, "lc")) {
-          profile = OMX_AUDIO_AACObjectLC;
+          aac_profile.eAACProfile = OMX_AUDIO_AACObjectLC;
         } else if (g_str_equal (profile_string, "ssr")) {
-          profile = OMX_AUDIO_AACObjectSSR;
+          aac_profile.eAACProfile = OMX_AUDIO_AACObjectSSR;
         } else if (g_str_equal (profile_string, "ltp")) {
-          profile = OMX_AUDIO_AACObjectLTP;
+          aac_profile.eAACProfile = OMX_AUDIO_AACObjectLTP;
         } else {
           GST_ERROR_OBJECT (self, "Unsupported profile '%s'", profile_string);
           gst_caps_unref (peercaps);
@@ -273,19 +271,19 @@ gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
     stream_format_string = gst_structure_get_string (s, "stream-format");
     if (stream_format_string) {
       if (g_str_equal (stream_format_string, "raw")) {
-        stream_format = OMX_AUDIO_AACStreamFormatRAW;
+        aac_profile.eAACStreamFormat = OMX_AUDIO_AACStreamFormatRAW;
       } else if (g_str_equal (stream_format_string, "adts")) {
         if (mpegversion == 2) {
-          stream_format = OMX_AUDIO_AACStreamFormatMP2ADTS;
+          aac_profile.eAACStreamFormat = OMX_AUDIO_AACStreamFormatMP2ADTS;
         } else {
-          stream_format = OMX_AUDIO_AACStreamFormatMP4ADTS;
+          aac_profile.eAACStreamFormat = OMX_AUDIO_AACStreamFormatMP4ADTS;
         }
       } else if (g_str_equal (stream_format_string, "loas")) {
-        stream_format = OMX_AUDIO_AACStreamFormatMP4LOAS;
+        aac_profile.eAACStreamFormat = OMX_AUDIO_AACStreamFormatMP4LOAS;
       } else if (g_str_equal (stream_format_string, "latm")) {
-        stream_format = OMX_AUDIO_AACStreamFormatMP4LATM;
+        aac_profile.eAACStreamFormat = OMX_AUDIO_AACStreamFormatMP4LATM;
       } else if (g_str_equal (stream_format_string, "adif")) {
-        stream_format = OMX_AUDIO_AACStreamFormatADIF;
+        aac_profile.eAACStreamFormat = OMX_AUDIO_AACStreamFormatADIF;
       } else {
         GST_ERROR_OBJECT (self, "Unsupported stream-format '%s'",
             stream_format_string);
@@ -296,9 +294,6 @@ gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
 
     gst_caps_unref (peercaps);
   }
-
-  aac_profile.eAACProfile = profile;
-  aac_profile.eAACStreamFormat = stream_format;
 
   aac_profile.nAACtools = self->aac_tools;
   aac_profile.nAACERtools = self->aac_er_tools;

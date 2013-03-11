@@ -86,8 +86,6 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   GstOMXMPEG4VideoEnc *self = GST_OMX_MPEG4_VIDEO_ENC (enc);
   GstCaps *peercaps, *intersection;
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
-  OMX_VIDEO_MPEG4PROFILETYPE profile = OMX_VIDEO_MPEG4ProfileSimple;
-  OMX_VIDEO_MPEG4LEVELTYPE level = OMX_VIDEO_MPEG4Level1;
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   OMX_ERRORTYPE err;
   const gchar *profile_string, *level_string;
@@ -100,6 +98,18 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
       (self)->enc_out_port, &port_def);
   if (err != OMX_ErrorNone)
     return FALSE;
+
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
+
+  err =
+      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+      OMX_IndexParamVideoProfileLevelCurrent, &param);
+  if (err != OMX_ErrorNone) {
+    GST_WARNING_OBJECT (self,
+        "Getting profile/level not supported by component");
+    return FALSE;
+  }
 
   peercaps = gst_pad_peer_query_caps (GST_VIDEO_ENCODER_SRC_PAD (enc), NULL);
   if (peercaps) {
@@ -120,37 +130,37 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
     profile_string = gst_structure_get_string (s, "profile");
     if (profile_string) {
       if (g_str_equal (profile_string, "simple")) {
-        profile = OMX_VIDEO_MPEG4ProfileSimple;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileSimple;
       } else if (g_str_equal (profile_string, "simple-scalable")) {
-        profile = OMX_VIDEO_MPEG4ProfileSimpleScalable;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileSimpleScalable;
       } else if (g_str_equal (profile_string, "core")) {
-        profile = OMX_VIDEO_MPEG4ProfileCore;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileCore;
       } else if (g_str_equal (profile_string, "main")) {
-        profile = OMX_VIDEO_MPEG4ProfileMain;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileMain;
       } else if (g_str_equal (profile_string, "n-bit")) {
-        profile = OMX_VIDEO_MPEG4ProfileNbit;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileNbit;
       } else if (g_str_equal (profile_string, "scalable")) {
-        profile = OMX_VIDEO_MPEG4ProfileScalableTexture;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileScalableTexture;
       } else if (g_str_equal (profile_string, "simple-face")) {
-        profile = OMX_VIDEO_MPEG4ProfileSimpleFace;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileSimpleFace;
       } else if (g_str_equal (profile_string, "simple-fba")) {
-        profile = OMX_VIDEO_MPEG4ProfileSimpleFBA;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileSimpleFBA;
       } else if (g_str_equal (profile_string, "basic-animated-texture")) {
-        profile = OMX_VIDEO_MPEG4ProfileBasicAnimated;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileBasicAnimated;
       } else if (g_str_equal (profile_string, "hybrid")) {
-        profile = OMX_VIDEO_MPEG4ProfileHybrid;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileHybrid;
       } else if (g_str_equal (profile_string, "advanced-real-time-simple")) {
-        profile = OMX_VIDEO_MPEG4ProfileAdvancedRealTime;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileAdvancedRealTime;
       } else if (g_str_equal (profile_string, "core-scalable")) {
-        profile = OMX_VIDEO_MPEG4ProfileCoreScalable;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileCoreScalable;
       } else if (g_str_equal (profile_string, "advanced-coding-efficiency")) {
-        profile = OMX_VIDEO_MPEG4ProfileAdvancedCoding;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileAdvancedCoding;
       } else if (g_str_equal (profile_string, "advanced-core")) {
-        profile = OMX_VIDEO_MPEG4ProfileAdvancedCore;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileAdvancedCore;
       } else if (g_str_equal (profile_string, "advanced-scalable-texture")) {
-        profile = OMX_VIDEO_MPEG4ProfileAdvancedScalable;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileAdvancedScalable;
       } else if (g_str_equal (profile_string, "advanced-simple")) {
-        profile = OMX_VIDEO_MPEG4ProfileAdvancedSimple;
+        param.eProfile = OMX_VIDEO_MPEG4ProfileAdvancedSimple;
       } else {
         goto unsupported_profile;
       }
@@ -158,21 +168,21 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
     level_string = gst_structure_get_string (s, "level");
     if (level_string) {
       if (g_str_equal (level_string, "0")) {
-        level = OMX_VIDEO_MPEG4Level0;
+        param.eLevel = OMX_VIDEO_MPEG4Level0;
       } else if (g_str_equal (level_string, "0b")) {
-        level = OMX_VIDEO_MPEG4Level0b;
+        param.eLevel = OMX_VIDEO_MPEG4Level0b;
       } else if (g_str_equal (level_string, "1")) {
-        level = OMX_VIDEO_MPEG4Level1;
+        param.eLevel = OMX_VIDEO_MPEG4Level1;
       } else if (g_str_equal (level_string, "2")) {
-        level = OMX_VIDEO_MPEG4Level2;
+        param.eLevel = OMX_VIDEO_MPEG4Level2;
       } else if (g_str_equal (level_string, "3")) {
-        level = OMX_VIDEO_MPEG4Level3;
+        param.eLevel = OMX_VIDEO_MPEG4Level3;
       } else if (g_str_equal (level_string, "4")) {
-        level = OMX_VIDEO_MPEG4Level4;
+        param.eLevel = OMX_VIDEO_MPEG4Level4;
       } else if (g_str_equal (level_string, "4a")) {
-        level = OMX_VIDEO_MPEG4Level4a;
+        param.eLevel = OMX_VIDEO_MPEG4Level4a;
       } else if (g_str_equal (level_string, "5")) {
-        level = OMX_VIDEO_MPEG4Level5;
+        param.eLevel = OMX_VIDEO_MPEG4Level5;
       } else {
         goto unsupported_level;
       }
@@ -180,11 +190,6 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
 
     gst_caps_unref (intersection);
   }
-
-  GST_OMX_INIT_STRUCT (&param);
-  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
-  param.eProfile = profile;
-  param.eLevel = level;
 
   err =
       gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->enc,
@@ -194,8 +199,8 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
         "Setting profile/level not supported by component");
   } else if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (self,
-        "Error setting profile %d and level %d: %s (0x%08x)", profile, level,
-        gst_omx_error_to_string (err), err);
+        "Error setting profile %d and level %d: %s (0x%08x)", param.eProfile,
+        param.eLevel, gst_omx_error_to_string (err), err);
     return FALSE;
   }
 
