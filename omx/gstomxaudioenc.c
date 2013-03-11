@@ -658,12 +658,22 @@ gst_omx_audio_enc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
 
     if (gst_omx_port_set_enabled (self->enc_in_port, FALSE) != OMX_ErrorNone)
       return FALSE;
+    if (gst_omx_port_set_enabled (self->enc_out_port, FALSE) != OMX_ErrorNone)
+      return FALSE;
     if (gst_omx_port_wait_buffers_released (self->enc_in_port,
             5 * GST_SECOND) != OMX_ErrorNone)
       return FALSE;
+    if (gst_omx_port_wait_buffers_released (self->enc_out_port,
+            1 * GST_SECOND) != OMX_ErrorNone)
+      return FALSE;
     if (gst_omx_port_deallocate_buffers (self->enc_in_port) != OMX_ErrorNone)
       return FALSE;
+    if (gst_omx_port_deallocate_buffers (self->enc_out_port) != OMX_ErrorNone)
+      return FALSE;
     if (gst_omx_port_wait_enabled (self->enc_in_port,
+            1 * GST_SECOND) != OMX_ErrorNone)
+      return FALSE;
+    if (gst_omx_port_wait_enabled (self->enc_out_port,
             1 * GST_SECOND) != OMX_ErrorNone)
       return FALSE;
 
@@ -794,11 +804,6 @@ gst_omx_audio_enc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
   /* Unset flushing to allow ports to accept data again */
   gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, FALSE);
   gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, FALSE);
-
-  /* Populate outport with buffers if we any */
-  if (!needs_disable)
-    if (gst_omx_port_populate (self->enc_out_port) != OMX_ErrorNone)
-      return FALSE;
 
   if (gst_omx_component_get_last_error (self->enc) != OMX_ErrorNone) {
     GST_ERROR_OBJECT (self, "Component in error state: %s (0x%08x)",
