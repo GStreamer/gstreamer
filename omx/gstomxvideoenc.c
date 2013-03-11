@@ -734,6 +734,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstOMXAcquireBufferReturn acq_return;
   gboolean is_eos;
+  OMX_ERRORTYPE err;
 
   klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
 
@@ -748,7 +749,6 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
       || acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
     GstCaps *caps;
     GstVideoCodecState *state;
-    OMX_ERRORTYPE err;
 
     GST_DEBUG_OBJECT (self, "Port settings have changed, updating caps");
 
@@ -867,7 +867,9 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
           gst_flow_get_name (flow_ret));
     }
 
-    gst_omx_port_release_buffer (port, buf);
+    err = gst_omx_port_release_buffer (port, buf);
+    if (err != OMX_ErrorNone)
+      goto release_error;
 
     self->downstream_flow_ret = flow_ret;
   } else {
@@ -942,6 +944,18 @@ caps_failed:
     gst_pad_pause_task (GST_VIDEO_ENCODER_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_NOT_NEGOTIATED;
     self->started = FALSE;
+    return;
+  }
+release_error:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
+        ("Failed to relase output buffer to component: %s (0x%08x)",
+            gst_omx_error_to_string (err), err));
+    gst_pad_push_event (GST_VIDEO_ENCODER_SRC_PAD (self), gst_event_new_eos ());
+    gst_pad_pause_task (GST_VIDEO_ENCODER_SRC_PAD (self));
+    self->downstream_flow_ret = GST_FLOW_ERROR;
+    self->started = FALSE;
+    GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
     return;
   }
 }
@@ -1494,6 +1508,7 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
   GstOMXVideoEnc *self;
   GstOMXPort *port;
   GstOMXBuffer *buf;
+  OMX_ERRORTYPE err;
 
   self = GST_OMX_VIDEO_ENC (encoder);
 
@@ -1529,8 +1544,6 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
       GST_VIDEO_ENCODER_STREAM_LOCK (self);
       goto flushing;
     } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
-      OMX_ERRORTYPE err;
-
       /* Reallocate all buffers */
       err = gst_omx_port_set_enabled (port, FALSE);
       if (err != OMX_ErrorNone) {
@@ -1602,7 +1615,6 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
     GST_DEBUG_OBJECT (self, "Handling frame");
 
     if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
-      OMX_ERRORTYPE err;
       OMX_CONFIG_INTRAREFRESHVOPTYPE config;
 
       GST_OMX_INIT_STRUCT (&config);
@@ -1646,14 +1658,16 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
         (GDestroyNotify) buffer_identification_free);
 
     self->started = TRUE;
-    gst_omx_port_release_buffer (port, buf);
+    err = gst_omx_port_release_buffer (port, buf);
+    if (err != OMX_ErrorNone)
+      goto release_error;
 
     GST_DEBUG_OBJECT (self, "Passed frame to component");
   }
 
   gst_video_codec_frame_unref (frame);
 
-  return self->downstream_flow_ret;;
+  return self->downstream_flow_ret;
 
 full_buffer:
   {
@@ -1700,6 +1714,14 @@ buffer_fill_error:
     gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
+release_error:
+  {
+    gst_video_codec_frame_unref (frame);
+    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
+        ("Failed to relase input buffer to component: %s (0x%08x)",
+            gst_omx_error_to_string (err), err));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn
@@ -1718,6 +1740,7 @@ gst_omx_video_enc_drain (GstOMXVideoEnc * self, gboolean at_eos)
   GstOMXVideoEncClass *klass;
   GstOMXBuffer *buf;
   GstOMXAcquireBufferReturn acq_ret;
+  OMX_ERRORTYPE err;
 
   GST_DEBUG_OBJECT (self, "Draining component");
 
@@ -1766,7 +1789,13 @@ gst_omx_video_enc_drain (GstOMXVideoEnc * self, gboolean at_eos)
       GST_SECOND);
   buf->omx_buf->nTickCount = 0;
   buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
-  gst_omx_port_release_buffer (self->enc_in_port, buf);
+  err = gst_omx_port_release_buffer (self->enc_in_port, buf);
+  if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self, "Failed to drain component: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    GST_VIDEO_ENCODER_STREAM_LOCK (self);
+    return GST_FLOW_ERROR;
+  }
   GST_DEBUG_OBJECT (self, "Waiting until component is drained");
   g_cond_wait (&self->drain_cond, &self->drain_lock);
   GST_DEBUG_OBJECT (self, "Drained component");

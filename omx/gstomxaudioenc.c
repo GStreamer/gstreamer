@@ -283,6 +283,7 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstOMXAcquireBufferReturn acq_return;
   gboolean is_eos;
+  OMX_ERRORTYPE err;
 
   klass = GST_OMX_AUDIO_ENC_GET_CLASS (self);
 
@@ -298,7 +299,6 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
     GstAudioInfo *info =
         gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (self));
     GstCaps *caps;
-    OMX_ERRORTYPE err;
 
     GST_DEBUG_OBJECT (self, "Port settings have changed, updating caps");
 
@@ -477,7 +477,9 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
           gst_flow_get_name (flow_ret));
     }
 
-    gst_omx_port_release_buffer (port, buf);
+    err = gst_omx_port_release_buffer (port, buf);
+    if (err != OMX_ErrorNone)
+      goto release_error;
 
     self->downstream_flow_ret = flow_ret;
   } else {
@@ -550,6 +552,18 @@ caps_failed:
     gst_pad_pause_task (GST_AUDIO_ENCODER_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_NOT_NEGOTIATED;
     self->started = FALSE;
+    return;
+  }
+release_error:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
+        ("Failed to relase output buffer to component: %s (0x%08x)",
+            gst_omx_error_to_string (err), err));
+    gst_pad_push_event (GST_AUDIO_ENCODER_SRC_PAD (self), gst_event_new_eos ());
+    gst_pad_pause_task (GST_AUDIO_ENCODER_SRC_PAD (self));
+    self->downstream_flow_ret = GST_FLOW_ERROR;
+    self->started = FALSE;
+    GST_AUDIO_ENCODER_STREAM_UNLOCK (self);
     return;
   }
 }
@@ -844,6 +858,7 @@ gst_omx_audio_enc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
   gsize size;
   guint offset = 0;
   GstClockTime timestamp, duration, timestamp_offset = 0;
+  OMX_ERRORTYPE err;
 
   self = GST_OMX_AUDIO_ENC (encoder);
 
@@ -881,8 +896,6 @@ gst_omx_audio_enc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
       GST_AUDIO_ENCODER_STREAM_LOCK (self);
       goto flushing;
     } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
-      OMX_ERRORTYPE err;
-
       /* Reallocate all buffers */
       err = gst_omx_port_set_enabled (port, FALSE);
       if (err != OMX_ErrorNone) {
@@ -980,7 +993,9 @@ gst_omx_audio_enc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
 
     offset += buf->omx_buf->nFilledLen;
     self->started = TRUE;
-    gst_omx_port_release_buffer (port, buf);
+    err = gst_omx_port_release_buffer (port, buf);
+    if (err != OMX_ErrorNone)
+      goto release_error;
   }
 
   GST_DEBUG_OBJECT (self, "Passed frame to component");
@@ -1014,6 +1029,13 @@ reconfigure_error:
         ("Unable to reconfigure input port"));
     return GST_FLOW_ERROR;
   }
+release_error:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
+        ("Failed to relase input buffer to component: %s (0x%08x)",
+            gst_omx_error_to_string (err), err));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static gboolean
@@ -1021,6 +1043,7 @@ gst_omx_audio_enc_sink_event (GstAudioEncoder * encoder, GstEvent * event)
 {
   GstOMXAudioEnc *self;
   GstOMXAudioEncClass *klass;
+  OMX_ERRORTYPE err;
 
   self = GST_OMX_AUDIO_ENC (encoder);
   klass = GST_OMX_AUDIO_ENC_GET_CLASS (self);
@@ -1067,8 +1090,13 @@ gst_omx_audio_enc_sink_event (GstAudioEncoder * encoder, GstEvent * event)
           GST_SECOND);
       buf->omx_buf->nTickCount = 0;
       buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
-      gst_omx_port_release_buffer (self->enc_in_port, buf);
-      GST_DEBUG_OBJECT (self, "Sent EOS to the component");
+      err = gst_omx_port_release_buffer (self->enc_in_port, buf);
+      if (err != OMX_ErrorNone) {
+        GST_ERROR_OBJECT (self, "Failed to send EOS to component: %s (0x%08x)",
+            gst_omx_error_to_string (err), err);
+      } else {
+        GST_DEBUG_OBJECT (self, "Sent EOS to the component");
+      }
     } else {
       GST_ERROR_OBJECT (self, "Failed to acquire buffer for EOS: %d", acq_ret);
     }
@@ -1087,6 +1115,7 @@ gst_omx_audio_enc_drain (GstOMXAudioEnc * self)
   GstOMXAudioEncClass *klass;
   GstOMXBuffer *buf;
   GstOMXAcquireBufferReturn acq_ret;
+  OMX_ERRORTYPE err;
 
   GST_DEBUG_OBJECT (self, "Draining component");
 
@@ -1133,7 +1162,13 @@ gst_omx_audio_enc_drain (GstOMXAudioEnc * self)
       GST_SECOND);
   buf->omx_buf->nTickCount = 0;
   buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
-  gst_omx_port_release_buffer (self->enc_in_port, buf);
+  err = gst_omx_port_release_buffer (self->enc_in_port, buf);
+  if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self, "Failed to drain component: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    GST_AUDIO_ENCODER_STREAM_LOCK (self);
+    return GST_FLOW_ERROR;
+  }
   GST_DEBUG_OBJECT (self, "Waiting until component is drained");
   g_cond_wait (&self->drain_cond, &self->drain_lock);
   GST_DEBUG_OBJECT (self, "Drained component");

@@ -546,8 +546,9 @@ gst_omx_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
       /* Release back to the port, can be filled again */
       err = gst_omx_port_release_buffer (pool->port, omx_buf);
       if (err != OMX_ErrorNone) {
-        /* TODO: Do something about this */
-        g_assert_not_reached ();
+        GST_ELEMENT_ERROR (pool->element, LIBRARY, SETTINGS, (NULL),
+            ("Failed to relase output buffer to component: %s (0x%08x)",
+                gst_omx_error_to_string (err), err));
       }
     } else {
       /* TODO: Implement.
@@ -1360,6 +1361,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
   GstOMXAcquireBufferReturn acq_return;
   GstClockTimeDiff deadline;
   gboolean is_eos;
+  OMX_ERRORTYPE err;
 
   klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
 
@@ -1372,7 +1374,6 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
 
   if (!gst_pad_has_current_caps (GST_VIDEO_DECODER_SRC_PAD (self)) ||
       acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
-    OMX_ERRORTYPE err;
     GstVideoCodecState *state;
     OMX_PARAM_PORTDEFINITIONTYPE port_def;
     GstVideoFormat format;
@@ -1614,8 +1615,11 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
           gst_flow_get_name (flow_ret));
     }
 
-    if (buf)
-      gst_omx_port_release_buffer (port, buf);
+    if (buf) {
+      err = gst_omx_port_release_buffer (port, buf);
+      if (err != OMX_ErrorNone)
+        goto release_error;
+    }
 
     self->downstream_flow_ret = flow_ret;
   } else {
@@ -1706,6 +1710,18 @@ caps_failed:
     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
     self->downstream_flow_ret = GST_FLOW_NOT_NEGOTIATED;
     self->started = FALSE;
+    return;
+  }
+release_error:
+  {
+    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
+        ("Failed to relase output buffer to component: %s (0x%08x)",
+            gst_omx_error_to_string (err), err));
+    gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (self), gst_event_new_eos ());
+    gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
+    self->downstream_flow_ret = GST_FLOW_ERROR;
+    self->started = FALSE;
+    GST_VIDEO_DECODER_STREAM_UNLOCK (self);
     return;
   }
 }
@@ -2172,6 +2188,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
   GstBuffer *codec_data = NULL;
   guint offset = 0, size;
   GstClockTime timestamp, duration, timestamp_offset = 0;
+  OMX_ERRORTYPE err;
 
   self = GST_OMX_VIDEO_DEC (decoder);
   klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
@@ -2221,8 +2238,6 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
       GST_VIDEO_DECODER_STREAM_LOCK (self);
       goto flushing;
     } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
-      OMX_ERRORTYPE err;
-
       /* Reallocate all buffers */
       err = gst_omx_port_set_enabled (port, FALSE);
       if (err != OMX_ErrorNone) {
@@ -2308,8 +2323,10 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
           buf->omx_buf->nFilledLen);
 
       self->started = TRUE;
-      gst_omx_port_release_buffer (port, buf);
+      err = gst_omx_port_release_buffer (port, buf);
       gst_buffer_replace (&self->codec_data, NULL);
+      if (err != OMX_ErrorNone)
+        goto release_error;
       /* Acquire new buffer for the actual frame */
       continue;
     }
@@ -2362,7 +2379,9 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
 
     offset += buf->omx_buf->nFilledLen;
     self->started = TRUE;
-    gst_omx_port_release_buffer (port, buf);
+    err = gst_omx_port_release_buffer (port, buf);
+    if (err != OMX_ErrorNone)
+      goto release_error;
   }
 
   gst_video_codec_frame_unref (frame);
@@ -2420,6 +2439,14 @@ reconfigure_error:
         ("Unable to reconfigure input port"));
     return GST_FLOW_ERROR;
   }
+release_error:
+  {
+    gst_video_codec_frame_unref (frame);
+    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
+        ("Failed to relase input buffer to component: %s (0x%08x)",
+            gst_omx_error_to_string (err), err));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn
@@ -2438,6 +2465,7 @@ gst_omx_video_dec_drain (GstOMXVideoDec * self, gboolean is_eos)
   GstOMXVideoDecClass *klass;
   GstOMXBuffer *buf;
   GstOMXAcquireBufferReturn acq_ret;
+  OMX_ERRORTYPE err;
 
   GST_DEBUG_OBJECT (self, "Draining component");
 
@@ -2486,7 +2514,14 @@ gst_omx_video_dec_drain (GstOMXVideoDec * self, gboolean is_eos)
       GST_SECOND);
   buf->omx_buf->nTickCount = 0;
   buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
-  gst_omx_port_release_buffer (self->dec_in_port, buf);
+  err = gst_omx_port_release_buffer (self->dec_in_port, buf);
+  if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self, "Failed to drain component: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    GST_VIDEO_DECODER_STREAM_LOCK (self);
+    return GST_FLOW_ERROR;
+  }
+
   GST_DEBUG_OBJECT (self, "Waiting until component is drained");
 
   if (G_UNLIKELY (self->dec->hacks & GST_OMX_HACK_DRAIN_MAY_NOT_RETURN)) {
