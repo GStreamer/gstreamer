@@ -1173,7 +1173,10 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
   port = self->dec_out_port;
 
   pool = gst_video_decoder_get_buffer_pool (GST_VIDEO_DECODER (self));
-  if (pool) {
+  /* FIXME: Enable this once there's a way to request downstream to
+   * release all our buffers, e.g.
+   * http://cgit.freedesktop.org/~wtay/gstreamer/log/?h=release-pool */
+  if (FALSE && pool) {
     GstAllocator *allocator;
 
     config = gst_buffer_pool_get_config (pool);
