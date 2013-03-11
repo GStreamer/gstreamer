@@ -1299,16 +1299,16 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
             OMX_StateExecuting) != OMX_ErrorNone)
       return FALSE;
 
+    if (gst_omx_component_get_state (self->enc,
+            GST_CLOCK_TIME_NONE) != OMX_StateExecuting)
+      return FALSE;
+
     if (have_output_buffers) {
       if (gst_omx_port_populate (self->enc_out_port) != OMX_ErrorNone)
         return FALSE;
       if (gst_omx_port_mark_reconfigured (self->enc_out_port) != OMX_ErrorNone)
         return FALSE;
     }
-
-    if (gst_omx_component_get_state (self->enc,
-            GST_CLOCK_TIME_NONE) != OMX_StateExecuting)
-      return FALSE;
   }
 
   /* Unset flushing to allow ports to accept data again */
