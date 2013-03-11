@@ -2025,12 +2025,22 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
     } else {
       if (gst_omx_port_set_enabled (self->dec_in_port, FALSE) != OMX_ErrorNone)
         return FALSE;
+      if (gst_omx_port_set_enabled (self->dec_out_port, FALSE) != OMX_ErrorNone)
+        return FALSE;
       if (gst_omx_port_wait_buffers_released (self->dec_in_port,
               5 * GST_SECOND) != OMX_ErrorNone)
         return FALSE;
+      if (gst_omx_port_wait_buffers_released (self->dec_out_port,
+              1 * GST_SECOND) != OMX_ErrorNone)
+        return FALSE;
       if (gst_omx_port_deallocate_buffers (self->dec_in_port) != OMX_ErrorNone)
         return FALSE;
+      if (gst_omx_port_deallocate_buffers (self->dec_out_port) != OMX_ErrorNone)
+        return FALSE;
       if (gst_omx_port_wait_enabled (self->dec_in_port,
+              1 * GST_SECOND) != OMX_ErrorNone)
+        return FALSE;
+      if (gst_omx_port_wait_enabled (self->dec_out_port,
               1 * GST_SECOND) != OMX_ErrorNone)
         return FALSE;
     }
@@ -2123,10 +2133,6 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
         gst_omx_component_get_last_error (self->dec));
     return FALSE;
   }
-
-  if (!needs_disable)
-    if (gst_omx_port_populate (self->dec_out_port) != OMX_ErrorNone)
-      return FALSE;
 
   /* Start the srcpad loop again */
   GST_DEBUG_OBJECT (self, "Starting task again");
