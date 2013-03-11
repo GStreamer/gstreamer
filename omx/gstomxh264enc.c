@@ -215,7 +215,9 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   const gchar *profile, *level;
 
-  caps = gst_caps_new_empty_simple ("video/x-h264");
+  caps = gst_caps_new_simple ("video/x-h264",
+      "stream-format", G_TYPE_STRING, "byte-stream",
+      "alignment", G_TYPE_STRING, "au", NULL);
 
   GST_OMX_INIT_STRUCT (&param);
   param.nPortIndex = GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
