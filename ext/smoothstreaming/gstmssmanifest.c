@@ -470,10 +470,10 @@ _gst_mss_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
     if (strcmp (fourcc, "H264") == 0 || strcmp (fourcc, "AVC1") == 0) {
       _gst_mss_stream_add_h264_codec_data (caps, codec_data);
     } else {
-      GValue *value = g_new0 (GValue, 1);
-      g_value_init (value, GST_TYPE_BUFFER);
-      gst_value_deserialize (value, (gchar *) codec_data);
-      gst_structure_take_value (structure, "codec_data", value);
+      GValue value = { 0, };
+      g_value_init (&value, GST_TYPE_BUFFER);
+      gst_value_deserialize (&value, (gchar *) codec_data);
+      gst_structure_take_value (structure, "codec_data", &value);
     }
   }
 
@@ -566,10 +566,10 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
         g_ascii_strtoull (rate, NULL, 10), NULL);
 
   if (codec_data && strlen (codec_data)) {
-    GValue *value = g_new0 (GValue, 1);
-    g_value_init (value, GST_TYPE_BUFFER);
-    gst_value_deserialize (value, (gchar *) codec_data);
-    gst_structure_take_value (structure, "codec_data", value);
+    GValue value = { 0, };
+    g_value_init (&value, GST_TYPE_BUFFER);
+    gst_value_deserialize (&value, (gchar *) codec_data);
+    gst_structure_take_value (structure, "codec_data", &value);
   } else if (strcmp (fourcc, "AACL") == 0 && rate && channels) {
     GstBuffer *buffer =
         _make_aacl_codec_data (g_ascii_strtoull (rate, NULL, 10),
