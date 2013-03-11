@@ -86,8 +86,6 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   GstOMXH264Enc *self = GST_OMX_H264_ENC (enc);
   GstCaps *peercaps;
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
-  OMX_VIDEO_AVCPROFILETYPE profile = OMX_VIDEO_AVCProfileBaseline;
-  OMX_VIDEO_AVCLEVELTYPE level = OMX_VIDEO_AVCLevel11;
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   OMX_ERRORTYPE err;
   const gchar *profile_string, *level_string;
@@ -100,6 +98,18 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
       (self)->enc_out_port, &port_def);
   if (err != OMX_ErrorNone)
     return FALSE;
+
+  GST_OMX_INIT_STRUCT (&param);
+  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
+
+  err =
+      gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+      OMX_IndexParamVideoProfileLevelCurrent, &param);
+  if (err != OMX_ErrorNone) {
+    GST_WARNING_OBJECT (self,
+        "Setting profile/level not supported by component");
+    return TRUE;
+  }
 
   peercaps = gst_pad_peer_query_caps (GST_VIDEO_ENCODER_SRC_PAD (enc),
       gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (enc)));
@@ -116,19 +126,19 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
     profile_string = gst_structure_get_string (s, "profile");
     if (profile_string) {
       if (g_str_equal (profile_string, "baseline")) {
-        profile = OMX_VIDEO_AVCProfileBaseline;
+        param.eProfile = OMX_VIDEO_AVCProfileBaseline;
       } else if (g_str_equal (profile_string, "main")) {
-        profile = OMX_VIDEO_AVCProfileMain;
+        param.eProfile = OMX_VIDEO_AVCProfileMain;
       } else if (g_str_equal (profile_string, "extended")) {
-        profile = OMX_VIDEO_AVCProfileExtended;
+        param.eProfile = OMX_VIDEO_AVCProfileExtended;
       } else if (g_str_equal (profile_string, "high")) {
-        profile = OMX_VIDEO_AVCProfileHigh;
+        param.eProfile = OMX_VIDEO_AVCProfileHigh;
       } else if (g_str_equal (profile_string, "high-10")) {
-        profile = OMX_VIDEO_AVCProfileHigh10;
+        param.eProfile = OMX_VIDEO_AVCProfileHigh10;
       } else if (g_str_equal (profile_string, "high-4:2:2")) {
-        profile = OMX_VIDEO_AVCProfileHigh422;
+        param.eProfile = OMX_VIDEO_AVCProfileHigh422;
       } else if (g_str_equal (profile_string, "high-4:4:4")) {
-        profile = OMX_VIDEO_AVCProfileHigh444;
+        param.eProfile = OMX_VIDEO_AVCProfileHigh444;
       } else {
         goto unsupported_profile;
       }
@@ -136,48 +146,43 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
     level_string = gst_structure_get_string (s, "level");
     if (level_string) {
       if (g_str_equal (level_string, "1")) {
-        level = OMX_VIDEO_AVCLevel1;
+        param.eLevel = OMX_VIDEO_AVCLevel1;
       } else if (g_str_equal (level_string, "1b")) {
-        level = OMX_VIDEO_AVCLevel1b;
+        param.eLevel = OMX_VIDEO_AVCLevel1b;
       } else if (g_str_equal (level_string, "1.1")) {
-        level = OMX_VIDEO_AVCLevel11;
+        param.eLevel = OMX_VIDEO_AVCLevel11;
       } else if (g_str_equal (level_string, "1.2")) {
-        level = OMX_VIDEO_AVCLevel12;
+        param.eLevel = OMX_VIDEO_AVCLevel12;
       } else if (g_str_equal (level_string, "1.3")) {
-        level = OMX_VIDEO_AVCLevel13;
+        param.eLevel = OMX_VIDEO_AVCLevel13;
       } else if (g_str_equal (level_string, "2")) {
-        level = OMX_VIDEO_AVCLevel2;
+        param.eLevel = OMX_VIDEO_AVCLevel2;
       } else if (g_str_equal (level_string, "2.1")) {
-        level = OMX_VIDEO_AVCLevel21;
+        param.eLevel = OMX_VIDEO_AVCLevel21;
       } else if (g_str_equal (level_string, "2.2")) {
-        level = OMX_VIDEO_AVCLevel22;
+        param.eLevel = OMX_VIDEO_AVCLevel22;
       } else if (g_str_equal (level_string, "3")) {
-        level = OMX_VIDEO_AVCLevel3;
+        param.eLevel = OMX_VIDEO_AVCLevel3;
       } else if (g_str_equal (level_string, "3.1")) {
-        level = OMX_VIDEO_AVCLevel31;
+        param.eLevel = OMX_VIDEO_AVCLevel31;
       } else if (g_str_equal (level_string, "3.2")) {
-        level = OMX_VIDEO_AVCLevel32;
+        param.eLevel = OMX_VIDEO_AVCLevel32;
       } else if (g_str_equal (level_string, "4")) {
-        level = OMX_VIDEO_AVCLevel4;
+        param.eLevel = OMX_VIDEO_AVCLevel4;
       } else if (g_str_equal (level_string, "4.1")) {
-        level = OMX_VIDEO_AVCLevel41;
+        param.eLevel = OMX_VIDEO_AVCLevel41;
       } else if (g_str_equal (level_string, "4.2")) {
-        level = OMX_VIDEO_AVCLevel42;
+        param.eLevel = OMX_VIDEO_AVCLevel42;
       } else if (g_str_equal (level_string, "5")) {
-        level = OMX_VIDEO_AVCLevel5;
+        param.eLevel = OMX_VIDEO_AVCLevel5;
       } else if (g_str_equal (level_string, "5.1")) {
-        level = OMX_VIDEO_AVCLevel51;
+        param.eLevel = OMX_VIDEO_AVCLevel51;
       } else {
         goto unsupported_level;
       }
     }
     gst_caps_unref (peercaps);
   }
-
-  GST_OMX_INIT_STRUCT (&param);
-  param.nPortIndex = GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
-  param.eProfile = profile;
-  param.eLevel = level;
 
   err =
       gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->enc,
@@ -187,8 +192,8 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
         "Setting profile/level not supported by component");
   } else if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (self,
-        "Error setting profile %d and level %d: %s (0x%08x)", profile, level,
-        gst_omx_error_to_string (err), err);
+        "Error setting profile %d and level %d: %s (0x%08x)", param.eProfile,
+        param.eLevel, gst_omx_error_to_string (err), err);
     return FALSE;
   }
 
