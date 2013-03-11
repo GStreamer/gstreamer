@@ -587,10 +587,9 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
       1000.0f);
   gl->Enable (GL_DEPTH_TEST);
   gluLookAt (0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-  if (overlay->video_top) {
-    gst_gl_overlay_load_texture (overlay, overlay->pbuftexture, 0);
-    if (overlay->pbuftexture == 0)
-      return;
+  if (!overlay->video_top) {
+    if (overlay->pbuftexture != 0)
+      gst_gl_overlay_load_texture (overlay, overlay->pbuftexture, 0);
     // if (overlay->stretch) {
     //   width = (gfloat) overlay->width;
     //   height = (gfloat) overlay->height;
