@@ -815,6 +815,7 @@ gst_adder_sink_event (GstCollectPads * pads, GstCollectData * pad,
       res = gst_adder_setcaps (adder, pad->pad, caps);
       gst_event_unref (event);
       event = NULL;
+      break;
     }
     case GST_EVENT_FLUSH_START:
       /* ensure that we will send a flush stop */
