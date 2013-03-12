@@ -105,7 +105,7 @@ dnl *** checks for library functions ***
 
 dnl *** checks for dependancy libraries ***
 
-dnl GLib is required (GStreamer is ok with GLib-2.8, but we want at least 2.10)
+dnl GLib is required
 GLIB_REQ=2.32.0
 AC_SUBST([GLIB_REQ])
 AG_GST_GLIB_CHECK([$GLIB_REQ])
