@@ -48,9 +48,9 @@ AM_CXXFLAGS = $(GST_CXXFLAGS) $(GST_CHECK_CFLAGS) \
 	-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
 	-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 LDADD = $(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_API_VERSION@.la \
-	$(GST_BASE_LIBS) -lgstrtp-@GST_API_VERSION@ \
+	$(GST_PLUGINS_BASE_LIBS) -lgstrtp-@GST_API_VERSION@ \
 	-lgstrtsp-@GST_API_VERSION@ -lgstsdp-@GST_API_VERSION@ \
-	$(GIO_LIBS) \
+	$(GST_BASE_LIBS) $(GIO_LIBS) \
 	$(GST_LIBS) $(GST_CHECK_LIBS) $(GST_RTSP_SERVER_LIBS)
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp
