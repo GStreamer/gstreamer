@@ -76,14 +76,18 @@ gst_omx_core_acquire (const gchar * filename)
       bcm_host_filename =
           g_build_filename (bcm_host_path, "libbcm_host.so", NULL);
 
-      bcm_host_module = g_module_open (bcm_host_filename, G_MODULE_BIND_LAZY);
+      bcm_host_module =
+          g_module_open (bcm_host_filename,
+          G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
 
       g_free (bcm_host_filename);
       g_free (bcm_host_path);
 
       if (!bcm_host_module) {
         /* Retry without an absolute path */
-        bcm_host_module = g_module_open ("libbcm_host.so", G_MODULE_BIND_LAZY);
+        bcm_host_module =
+            g_module_open ("libbcm_host.so",
+            G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
         if (!bcm_host_module) {
           GST_ERROR ("Failed to load libbcm_host.so");
           goto error;
