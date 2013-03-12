@@ -84,19 +84,13 @@ enum
 #endif
 
 static GstStaticPadTemplate gst_audio_test_src_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " FORMAT_STR ", "
         "layout = (string) interleaved, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) 1; "
-        "audio/x-raw, "
-        "format = (string) " FORMAT_STR ", "
-        "layout = (string) interleaved, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) 2, " "channel-mask = (bitmask) 0x3")
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2]")
     );
 
 #define gst_audio_test_src_parent_class parent_class
