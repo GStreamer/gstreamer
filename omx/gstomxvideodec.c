@@ -504,6 +504,7 @@ gst_omx_buffer_pool_acquire_buffer (GstBufferPool * bpool,
         return ret;
       if (*buffer == buf)
         break;
+      gst_object_replace ((GstObject **) & (*buffer)->pool, (GstObject *) pool);
       gst_buffer_unref (*buffer);
       *buffer = NULL;
     }
