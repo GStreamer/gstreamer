@@ -1393,6 +1393,16 @@ AG_GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
 ])
 AC_SUBST(LIBMMS_LIBS)
 
+
+dnl *** libsrtp ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SRTP, true)
+AG_GST_CHECK_FEATURE(SRTP, [srtp library], srtp, [
+  HAVE_SRTP="yes"
+  AG_GST_CHECK_LIBHEADER(SRTP, srtp, srtp_init, , srtp/srtp.h,
+    SRTP_LIBS="-lsrtp", HAVE_SRTP="no")
+  AC_SUBST(SRTP_LIBS)
+])
+
 dnl *** linsys ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LINSYS, true)
 AG_GST_CHECK_FEATURE(LINSYS, [Linear Systems SDI plugin], linsys, [
@@ -2172,6 +2182,7 @@ AM_CONDITIONAL(USE_SNDFILE, false)
 AM_CONDITIONAL(USE_SOUNDTOUCH, false)
 AM_CONDITIONAL(USE_SPANDSP, false)
 AM_CONDITIONAL(USE_SPC, false)
+AM_CONDITIONAL(USE_SRTP, false)
 AM_CONDITIONAL(USE_GME, false)
 AM_CONDITIONAL(USE_GSETTINGS, false)
 AM_CONDITIONAL(USE_XVID, false)
@@ -2431,6 +2442,7 @@ ext/sndfile/Makefile
 ext/soundtouch/Makefile
 ext/spandsp/Makefile
 ext/sndio/Makefile
+ext/srtp/Makefile
 ext/teletextdec/Makefile
 ext/gme/Makefile
 ext/gsettings/Makefile
