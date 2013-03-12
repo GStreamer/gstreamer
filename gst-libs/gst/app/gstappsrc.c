@@ -746,6 +746,7 @@ gst_app_src_stop (GstBaseSrc * bsrc)
   priv->flushing = TRUE;
   priv->started = FALSE;
   gst_app_src_flush_queued (appsrc);
+  g_cond_broadcast (&priv->cond);
   g_mutex_unlock (&priv->mutex);
 
   return TRUE;
