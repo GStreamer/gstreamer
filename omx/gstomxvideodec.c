@@ -1530,7 +1530,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
             gst_buffer_pool_acquire_buffer (self->out_port_pool, &outbuf,
             &params);
         if (flow_ret != GST_FLOW_OK) {
-          gst_omx_port_release_buffer (self->dec_out_port, buf);
+          gst_omx_port_release_buffer (port, buf);
           goto invalid_buffer;
         }
         buf = NULL;
@@ -1539,7 +1539,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
             gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
         if (!gst_omx_video_dec_fill_buffer (self, buf, outbuf)) {
           gst_buffer_unref (outbuf);
-          gst_omx_port_release_buffer (self->dec_out_port, buf);
+          gst_omx_port_release_buffer (port, buf);
           goto invalid_buffer;
         }
       }
@@ -1567,7 +1567,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
           flow_ret =
               gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
           frame = NULL;
-          gst_omx_port_release_buffer (self->dec_out_port, buf);
+          gst_omx_port_release_buffer (port, buf);
           goto invalid_buffer;
         }
         flow_ret =
@@ -1587,7 +1587,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
             flow_ret =
                 gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
             frame = NULL;
-            gst_omx_port_release_buffer (self->dec_out_port, buf);
+            gst_omx_port_release_buffer (port, buf);
             goto invalid_buffer;
           }
           flow_ret =
