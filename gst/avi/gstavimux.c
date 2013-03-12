@@ -93,7 +93,7 @@ static GstStaticPadTemplate video_sink_factory =
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { YUY2, I420, GRAY8, BGR, BGRx, BGRA }, "
+        "format = (string) { YUY2, I420, BGR, BGRx, BGRA, GRAY8 }, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
         "framerate = (fraction) [ 0, MAX ]; "
