@@ -961,7 +961,11 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
       gst_video_frame_copy (&outframe, &scope->tempframe);
     } else {
       /* gst_video_frame_clear() or is output frame already cleared */
-      memset (outframe.data, 0, scope->vinfo.size);
+      gint i;
+
+      for (i = 0; i < scope->vinfo.finfo->n_planes; i++) {
+        memset (outframe.data[i], 0, outframe.map[i].size);
+      }
     }
 
     gst_buffer_replace_all_memory (inbuf,
