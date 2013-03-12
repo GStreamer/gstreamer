@@ -996,7 +996,7 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
   if (finish_frames) {
     g_warning ("Too old frames, bug in decoder -- please file a bug");
     for (l = finish_frames; l; l = l->next) {
-      gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), l->data);
+      gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), l->data);
     }
   }
 
