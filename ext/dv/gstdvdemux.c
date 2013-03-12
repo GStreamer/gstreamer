@@ -651,8 +651,10 @@ gst_dvdemux_push_event (GstDVDemux * dvdemux, GstEvent * event)
 
   if (dvdemux->audiosrcpad)
     res |= gst_pad_push_event (dvdemux->audiosrcpad, event);
-  else
+  else {
     gst_event_unref (event);
+    res = TRUE;
+  }
 
   return res;
 }
