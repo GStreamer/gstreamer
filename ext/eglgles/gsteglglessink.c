@@ -3501,6 +3501,7 @@ gst_egl_image_buffer_pool_acquire_buffer (GstBufferPool * bpool,
         GST_BUFFER_POOL_CLASS
         (gst_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool,
         buffer, params);
+    gst_object_replace ((GstObject **) &oldbuf->pool, (GstObject *) pool);
     gst_buffer_unref (oldbuf);
   }
 
