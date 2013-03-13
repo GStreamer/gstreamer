@@ -279,6 +279,13 @@ gst_omx_video_enc_open (GstVideoEncoder * encoder)
           OMX_IndexParamVideoBitrate, &bitrate_param);
 
       if (err == OMX_ErrorNone) {
+#ifdef USE_OMX_TARGET_RPI
+        /* FIXME: Workaround for RPi returning garbage for this parameter */
+        if (bitrate_param.nVersion == 0) {
+          GST_OMX_INIT_STRUCT (&bitrate_param);
+          bitrate_param.nPortIndex = self->enc_out_port->index;
+        }
+#endif
         if (self->control_rate != 0xffffffff)
           bitrate_param.eControlRate = self->control_rate;
         if (self->target_bitrate != 0xffffffff)
