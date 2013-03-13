@@ -410,6 +410,8 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
   if (eglChooseConfig (eglglessink->eglglesctx.display,
           eglglessink_RGBA8888_attribs, NULL, 1, &cfg_number) != EGL_FALSE) {
     gst_caps_append (caps,
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBA));
+    gst_caps_append (caps,
         _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_BGRA));
     gst_caps_append (caps,
         _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_ARGB));
