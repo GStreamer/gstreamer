@@ -123,6 +123,7 @@
 
 /* Object header */
 #include "xvimagesink.h"
+#include "xvimageallocator.h"
 
 /* Debugging category */
 #include <gst/gstinfo.h>
@@ -146,7 +147,8 @@ MotifWmHints, MwmHints;
 
 #define MWM_HINTS_DECORATIONS   (1L << 1)
 
-static void gst_xvimagesink_reset (GstXvImageSink * xvimagesink);
+static gboolean gst_xvimagesink_open (GstXvImageSink * xvimagesink);
+static void gst_xvimagesink_close (GstXvImageSink * xvimagesink);
 static void gst_xvimagesink_xwindow_update_geometry (GstXvImageSink *
     xvimagesink);
 static void gst_xvimagesink_expose (GstVideoOverlay * overlay);
@@ -218,50 +220,6 @@ G_DEFINE_TYPE_WITH_CODE (GstXvImageSink, gst_xvimagesink, GST_TYPE_VIDEO_SINK,
 /* ============================================================= */
 
 
-/* We are called with the x_lock taken */
-static void
-gst_xvimagesink_xwindow_draw_borders (GstXvImageSink * xvimagesink,
-    GstXWindow * xwindow, GstVideoRectangle rect)
-{
-  gint t1, t2;
-
-  g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
-  g_return_if_fail (xwindow != NULL);
-
-  XSetForeground (xvimagesink->xcontext->disp, xwindow->gc,
-      xvimagesink->xcontext->black);
-
-  /* Left border */
-  if (rect.x > xvimagesink->render_rect.x) {
-    XFillRectangle (xvimagesink->xcontext->disp, xwindow->win, xwindow->gc,
-        xvimagesink->render_rect.x, xvimagesink->render_rect.y,
-        rect.x - xvimagesink->render_rect.x, xvimagesink->render_rect.h);
-  }
-
-  /* Right border */
-  t1 = rect.x + rect.w;
-  t2 = xvimagesink->render_rect.x + xvimagesink->render_rect.w;
-  if (t1 < t2) {
-    XFillRectangle (xvimagesink->xcontext->disp, xwindow->win, xwindow->gc,
-        t1, xvimagesink->render_rect.y, t2 - t1, xvimagesink->render_rect.h);
-  }
-
-  /* Top border */
-  if (rect.y > xvimagesink->render_rect.y) {
-    XFillRectangle (xvimagesink->xcontext->disp, xwindow->win, xwindow->gc,
-        xvimagesink->render_rect.x, xvimagesink->render_rect.y,
-        xvimagesink->render_rect.w, rect.y - xvimagesink->render_rect.y);
-  }
-
-  /* Bottom border */
-  t1 = rect.y + rect.h;
-  t2 = xvimagesink->render_rect.y + xvimagesink->render_rect.h;
-  if (t1 < t2) {
-    XFillRectangle (xvimagesink->xcontext->disp, xwindow->win, xwindow->gc,
-        xvimagesink->render_rect.x, t1, xvimagesink->render_rect.w, t2 - t1);
-  }
-}
-
 /* This function puts a GstXvImage on a GstXvImageSink's window. Returns FALSE
  * if no window was available  */
 static gboolean
@@ -272,12 +230,14 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
   GstVideoRectangle result;
   gboolean draw_border = FALSE;
   GstVideoRectangle src, dst;
+  GstVideoRectangle mem_crop;
+  GstXWindow *xwindow;
 
   /* We take the flow_lock. If expose is in there we don't want to run
      concurrently from the data flow thread */
   g_mutex_lock (&xvimagesink->flow_lock);
 
-  if (G_UNLIKELY (xvimagesink->xwindow == NULL)) {
+  if (G_UNLIKELY ((xwindow = xvimagesink->xwindow) == NULL)) {
     g_mutex_unlock (&xvimagesink->flow_lock);
     return FALSE;
   }
@@ -285,7 +245,8 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
   /* Draw borders when displaying the first frame. After this
      draw borders only on expose event or after a size change. */
   if (!xvimagesink->cur_image || xvimagesink->redraw_border) {
-    draw_border = TRUE;
+    draw_border = xvimagesink->draw_borders;
+    xvimagesink->redraw_border = FALSE;
   }
 
   /* Store a reference to the last image we put, lose the previous one */
@@ -310,21 +271,19 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
   }
 
   mem = (GstXvImageMemory *) gst_buffer_peek_memory (xvimage, 0);
+  gst_xvimage_memory_get_crop (mem, &mem_crop);
 
   crop = gst_buffer_get_video_crop_meta (xvimage);
 
   if (crop) {
-    src.x = crop->x + mem->x;
-    src.y = crop->y + mem->y;
+    src.x = crop->x + mem_crop.x;
+    src.y = crop->y + mem_crop.y;
     src.w = crop->width;
     src.h = crop->height;
     GST_LOG_OBJECT (xvimagesink,
         "crop %dx%d-%dx%d", crop->x, crop->y, crop->width, crop->height);
   } else {
-    src.x = mem->x;
-    src.y = mem->y;
-    src.w = mem->width;
-    src.h = mem->height;
+    src = mem_crop;
   }
 
   if (xvimagesink->keep_aspect) {
@@ -335,88 +294,19 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
      * which case the image will be scaled to fit the negotiated size. */
     s.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
     s.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);
-    dst.w = xvimagesink->render_rect.w;
-    dst.h = xvimagesink->render_rect.h;
+    dst.w = xwindow->render_rect.w;
+    dst.h = xwindow->render_rect.h;
 
     gst_video_sink_center_rect (s, dst, &result, TRUE);
-    result.x += xvimagesink->render_rect.x;
-    result.y += xvimagesink->render_rect.y;
+    result.x += xwindow->render_rect.x;
+    result.y += xwindow->render_rect.y;
   } else {
-    memcpy (&result, &xvimagesink->render_rect, sizeof (GstVideoRectangle));
+    memcpy (&result, &xwindow->render_rect, sizeof (GstVideoRectangle));
   }
 
-  g_mutex_lock (&xvimagesink->x_lock);
-
-  if (draw_border && xvimagesink->draw_borders) {
-    gst_xvimagesink_xwindow_draw_borders (xvimagesink, xvimagesink->xwindow,
-        result);
-    xvimagesink->redraw_border = FALSE;
-  }
-#ifdef HAVE_XSHM
-  if (xvimagesink->xcontext->use_xshm) {
-    GST_LOG_OBJECT (xvimagesink,
-        "XvShmPutImage with image %dx%d and window %dx%d, from xvimage %"
-        GST_PTR_FORMAT, mem->width, mem->height,
-        xvimagesink->render_rect.w, xvimagesink->render_rect.h, xvimage);
-
-    XvShmPutImage (xvimagesink->xcontext->disp,
-        xvimagesink->xcontext->xv_port_id,
-        xvimagesink->xwindow->win,
-        xvimagesink->xwindow->gc, mem->xvimage,
-        src.x, src.y, src.w, src.h,
-        result.x, result.y, result.w, result.h, FALSE);
-  } else
-#endif /* HAVE_XSHM */
-  {
-    XvPutImage (xvimagesink->xcontext->disp,
-        xvimagesink->xcontext->xv_port_id,
-        xvimagesink->xwindow->win,
-        xvimagesink->xwindow->gc, mem->xvimage,
-        src.x, src.y, src.w, src.h, result.x, result.y, result.w, result.h);
-  }
-
-  XSync (xvimagesink->xcontext->disp, FALSE);
-
-  g_mutex_unlock (&xvimagesink->x_lock);
+  gst_xvimage_memory_render (mem, &src, xwindow, &result, draw_border);
 
   g_mutex_unlock (&xvimagesink->flow_lock);
-
-  return TRUE;
-}
-
-static gboolean
-gst_xvimagesink_xwindow_decorate (GstXvImageSink * xvimagesink,
-    GstXWindow * window)
-{
-  Atom hints_atom = None;
-  MotifWmHints *hints;
-
-  g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), FALSE);
-  g_return_val_if_fail (window != NULL, FALSE);
-
-  g_mutex_lock (&xvimagesink->x_lock);
-
-  hints_atom = XInternAtom (xvimagesink->xcontext->disp, "_MOTIF_WM_HINTS",
-      True);
-  if (hints_atom == None) {
-    g_mutex_unlock (&xvimagesink->x_lock);
-    return FALSE;
-  }
-
-  hints = g_malloc0 (sizeof (MotifWmHints));
-
-  hints->flags |= MWM_HINTS_DECORATIONS;
-  hints->decorations = 1 << 0;
-
-  XChangeProperty (xvimagesink->xcontext->disp, window->win,
-      hints_atom, hints_atom, 32, PropModeReplace,
-      (guchar *) hints, sizeof (MotifWmHints) / sizeof (long));
-
-  XSync (xvimagesink->xcontext->disp, FALSE);
-
-  g_mutex_unlock (&xvimagesink->x_lock);
-
-  g_free (hints);
 
   return TRUE;
 }
@@ -431,34 +321,24 @@ gst_xvimagesink_xwindow_set_title (GstXvImageSink * xvimagesink,
   }
   if (xwindow) {
     /* we have a window */
-    if (xwindow->internal) {
-      XTextProperty xproperty;
-      const gchar *app_name;
-      const gchar *title = NULL;
-      gchar *title_mem = NULL;
+    const gchar *app_name;
+    const gchar *title = NULL;
+    gchar *title_mem = NULL;
 
-      /* set application name as a title */
-      app_name = g_get_application_name ();
+    /* set application name as a title */
+    app_name = g_get_application_name ();
 
-      if (app_name && xvimagesink->media_title) {
-        title = title_mem = g_strconcat (xvimagesink->media_title, " : ",
-            app_name, NULL);
-      } else if (app_name) {
-        title = app_name;
-      } else if (xvimagesink->media_title) {
-        title = xvimagesink->media_title;
-      }
-
-      if (title) {
-        if ((XStringListToTextProperty (((char **) &title), 1,
-                    &xproperty)) != 0) {
-          XSetWMName (xvimagesink->xcontext->disp, xwindow->win, &xproperty);
-          XFree (xproperty.value);
-        }
-
-        g_free (title_mem);
-      }
+    if (app_name && xvimagesink->media_title) {
+      title = title_mem = g_strconcat (xvimagesink->media_title, " : ",
+          app_name, NULL);
+    } else if (app_name) {
+      title = app_name;
+    } else if (xvimagesink->media_title) {
+      title = xvimagesink->media_title;
     }
+
+    gst_xwindow_set_title (xwindow, title);
+    g_free (title_mem);
   }
 }
 
@@ -469,60 +349,18 @@ gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
     gint width, gint height)
 {
   GstXWindow *xwindow = NULL;
-  XGCValues values;
+  GstXvContext *context;
 
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
 
-  xwindow = g_new0 (GstXWindow, 1);
+  context = xvimagesink->context;
 
-  xvimagesink->render_rect.x = xvimagesink->render_rect.y = 0;
-  xvimagesink->render_rect.w = width;
-  xvimagesink->render_rect.h = height;
-
-  xwindow->width = width;
-  xwindow->height = height;
-  xwindow->internal = TRUE;
-
-  g_mutex_lock (&xvimagesink->x_lock);
-
-  xwindow->win = XCreateSimpleWindow (xvimagesink->xcontext->disp,
-      xvimagesink->xcontext->root,
-      0, 0, width, height, 0, 0, xvimagesink->xcontext->black);
-
-  /* We have to do that to prevent X from redrawing the background on
-   * ConfigureNotify. This takes away flickering of video when resizing. */
-  XSetWindowBackgroundPixmap (xvimagesink->xcontext->disp, xwindow->win, None);
+  xwindow = gst_xvcontext_create_xwindow (context, width, height);
 
   /* set application name as a title */
   gst_xvimagesink_xwindow_set_title (xvimagesink, xwindow, NULL);
 
-  if (xvimagesink->handle_events) {
-    Atom wm_delete;
-
-    XSelectInput (xvimagesink->xcontext->disp, xwindow->win, ExposureMask |
-        StructureNotifyMask | PointerMotionMask | KeyPressMask |
-        KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
-
-    /* Tell the window manager we'd like delete client messages instead of
-     * being killed */
-    wm_delete = XInternAtom (xvimagesink->xcontext->disp,
-        "WM_DELETE_WINDOW", True);
-    if (wm_delete != None) {
-      (void) XSetWMProtocols (xvimagesink->xcontext->disp, xwindow->win,
-          &wm_delete, 1);
-    }
-  }
-
-  xwindow->gc = XCreateGC (xvimagesink->xcontext->disp,
-      xwindow->win, 0, &values);
-
-  XMapRaised (xvimagesink->xcontext->disp, xwindow->win);
-
-  XSync (xvimagesink->xcontext->disp, FALSE);
-
-  g_mutex_unlock (&xvimagesink->x_lock);
-
-  gst_xvimagesink_xwindow_decorate (xvimagesink, xwindow);
+  gst_xwindow_set_event_handling (xwindow, xvimagesink->handle_events);
 
   gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (xvimagesink),
       xwindow->win);
@@ -530,144 +368,32 @@ gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
   return xwindow;
 }
 
-/* This function destroys a GstXWindow */
-static void
-gst_xvimagesink_xwindow_destroy (GstXvImageSink * xvimagesink,
-    GstXWindow * xwindow)
-{
-  g_return_if_fail (xwindow != NULL);
-  g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
-
-  g_mutex_lock (&xvimagesink->x_lock);
-
-  /* If we did not create that window we just free the GC and let it live */
-  if (xwindow->internal)
-    XDestroyWindow (xvimagesink->xcontext->disp, xwindow->win);
-  else
-    XSelectInput (xvimagesink->xcontext->disp, xwindow->win, 0);
-
-  XFreeGC (xvimagesink->xcontext->disp, xwindow->gc);
-
-  XSync (xvimagesink->xcontext->disp, FALSE);
-
-  g_mutex_unlock (&xvimagesink->x_lock);
-
-  g_free (xwindow);
-}
-
 static void
 gst_xvimagesink_xwindow_update_geometry (GstXvImageSink * xvimagesink)
 {
-  XWindowAttributes attr;
-
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
 
   /* Update the window geometry */
-  g_mutex_lock (&xvimagesink->x_lock);
-  if (G_UNLIKELY (xvimagesink->xwindow == NULL)) {
-    g_mutex_unlock (&xvimagesink->x_lock);
-    return;
-  }
-
-  XGetWindowAttributes (xvimagesink->xcontext->disp,
-      xvimagesink->xwindow->win, &attr);
-
-  xvimagesink->xwindow->width = attr.width;
-  xvimagesink->xwindow->height = attr.height;
-
-  if (!xvimagesink->have_render_rect) {
-    xvimagesink->render_rect.x = xvimagesink->render_rect.y = 0;
-    xvimagesink->render_rect.w = attr.width;
-    xvimagesink->render_rect.h = attr.height;
-  }
-
-  g_mutex_unlock (&xvimagesink->x_lock);
-}
-
-static void
-gst_xvimagesink_xwindow_clear (GstXvImageSink * xvimagesink,
-    GstXWindow * xwindow)
-{
-  g_return_if_fail (xwindow != NULL);
-  g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
-
-  g_mutex_lock (&xvimagesink->x_lock);
-
-  XvStopVideo (xvimagesink->xcontext->disp, xvimagesink->xcontext->xv_port_id,
-      xwindow->win);
-
-  XSync (xvimagesink->xcontext->disp, FALSE);
-
-  g_mutex_unlock (&xvimagesink->x_lock);
+  g_mutex_lock (&xvimagesink->flow_lock);
+  if (G_LIKELY (xvimagesink->xwindow))
+    gst_xwindow_update_geometry (xvimagesink->xwindow);
+  g_mutex_unlock (&xvimagesink->flow_lock);
 }
 
 /* This function commits our internal colorbalance settings to our grabbed Xv
-   port. If the xcontext is not initialized yet it simply returns */
+   port. If the context is not initialized yet it simply returns */
 static void
 gst_xvimagesink_update_colorbalance (GstXvImageSink * xvimagesink)
 {
-  GList *channels = NULL;
+  GstXvContext *context;
 
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
 
   /* If we haven't initialized the X context we can't update anything */
-  if (xvimagesink->xcontext == NULL)
+  if ((context = xvimagesink->context) == NULL)
     return;
 
-  /* Don't set the attributes if they haven't been changed, to avoid
-   * rounding errors changing the values */
-  if (!xvimagesink->cb_changed)
-    return;
-
-  /* For each channel of the colorbalance we calculate the correct value
-     doing range conversion and then set the Xv port attribute to match our
-     values. */
-  channels = xvimagesink->xcontext->channels_list;
-
-  while (channels) {
-    if (channels->data && GST_IS_COLOR_BALANCE_CHANNEL (channels->data)) {
-      GstColorBalanceChannel *channel = NULL;
-      Atom prop_atom;
-      gint value = 0;
-      gdouble convert_coef;
-
-      channel = GST_COLOR_BALANCE_CHANNEL (channels->data);
-      g_object_ref (channel);
-
-      /* Our range conversion coef */
-      convert_coef = (channel->max_value - channel->min_value) / 2000.0;
-
-      if (g_ascii_strcasecmp (channel->label, "XV_HUE") == 0) {
-        value = xvimagesink->hue;
-      } else if (g_ascii_strcasecmp (channel->label, "XV_SATURATION") == 0) {
-        value = xvimagesink->saturation;
-      } else if (g_ascii_strcasecmp (channel->label, "XV_CONTRAST") == 0) {
-        value = xvimagesink->contrast;
-      } else if (g_ascii_strcasecmp (channel->label, "XV_BRIGHTNESS") == 0) {
-        value = xvimagesink->brightness;
-      } else {
-        g_warning ("got an unknown channel %s", channel->label);
-        g_object_unref (channel);
-        return;
-      }
-
-      /* Committing to Xv port */
-      g_mutex_lock (&xvimagesink->x_lock);
-      prop_atom =
-          XInternAtom (xvimagesink->xcontext->disp, channel->label, True);
-      if (prop_atom != None) {
-        int xv_value;
-        xv_value =
-            floor (0.5 + (value + 1000) * convert_coef + channel->min_value);
-        XvSetPortAttribute (xvimagesink->xcontext->disp,
-            xvimagesink->xcontext->xv_port_id, prop_atom, xv_value);
-      }
-      g_mutex_unlock (&xvimagesink->x_lock);
-
-      g_object_unref (channel);
-    }
-    channels = g_list_next (channels);
-  }
+  gst_xvcontext_update_colorbalance (context, &xvimagesink->config);
 }
 
 /* This function handles XEvents that might be in the queue. It generates
@@ -689,10 +415,10 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
   /* We get all pointer motion events, only the last position is
      interesting. */
   g_mutex_lock (&xvimagesink->flow_lock);
-  g_mutex_lock (&xvimagesink->x_lock);
-  while (XCheckWindowEvent (xvimagesink->xcontext->disp,
+  g_mutex_lock (&xvimagesink->context->lock);
+  while (XCheckWindowEvent (xvimagesink->context->disp,
           xvimagesink->xwindow->win, PointerMotionMask, &e)) {
-    g_mutex_unlock (&xvimagesink->x_lock);
+    g_mutex_unlock (&xvimagesink->context->lock);
     g_mutex_unlock (&xvimagesink->flow_lock);
 
     switch (e.type) {
@@ -705,11 +431,11 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
         break;
     }
     g_mutex_lock (&xvimagesink->flow_lock);
-    g_mutex_lock (&xvimagesink->x_lock);
+    g_mutex_lock (&xvimagesink->context->lock);
   }
 
   if (pointer_moved) {
-    g_mutex_unlock (&xvimagesink->x_lock);
+    g_mutex_unlock (&xvimagesink->context->lock);
     g_mutex_unlock (&xvimagesink->flow_lock);
 
     GST_DEBUG ("xvimagesink pointer moved over window at %d,%d",
@@ -718,11 +444,11 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
         "mouse-move", 0, e.xbutton.x, e.xbutton.y);
 
     g_mutex_lock (&xvimagesink->flow_lock);
-    g_mutex_lock (&xvimagesink->x_lock);
+    g_mutex_lock (&xvimagesink->context->lock);
   }
 
   /* We get all events on our window to throw them upstream */
-  while (XCheckWindowEvent (xvimagesink->xcontext->disp,
+  while (XCheckWindowEvent (xvimagesink->context->disp,
           xvimagesink->xwindow->win,
           KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask,
           &e)) {
@@ -730,7 +456,7 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
     const char *key_str = NULL;
 
     /* We lock only for the X function call */
-    g_mutex_unlock (&xvimagesink->x_lock);
+    g_mutex_unlock (&xvimagesink->context->lock);
     g_mutex_unlock (&xvimagesink->flow_lock);
 
     switch (e.type) {
@@ -754,15 +480,15 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
       case KeyRelease:
         /* Key pressed/released over our window. We send upstream
            events for interactivity/navigation */
-        g_mutex_lock (&xvimagesink->x_lock);
-        keysym = XkbKeycodeToKeysym (xvimagesink->xcontext->disp,
+        g_mutex_lock (&xvimagesink->context->lock);
+        keysym = XkbKeycodeToKeysym (xvimagesink->context->disp,
             e.xkey.keycode, 0, 0);
         if (keysym != NoSymbol) {
           key_str = XKeysymToString (keysym);
         } else {
           key_str = "unknown";
         }
-        g_mutex_unlock (&xvimagesink->x_lock);
+        g_mutex_unlock (&xvimagesink->context->lock);
         GST_DEBUG_OBJECT (xvimagesink,
             "key %d pressed over window at %d,%d (%s)",
             e.xkey.keycode, e.xkey.x, e.xkey.y, key_str);
@@ -774,20 +500,24 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
             e.type);
     }
     g_mutex_lock (&xvimagesink->flow_lock);
-    g_mutex_lock (&xvimagesink->x_lock);
+    g_mutex_lock (&xvimagesink->context->lock);
   }
 
   /* Handle Expose */
-  while (XCheckWindowEvent (xvimagesink->xcontext->disp,
+  while (XCheckWindowEvent (xvimagesink->context->disp,
           xvimagesink->xwindow->win, ExposureMask | StructureNotifyMask, &e)) {
     switch (e.type) {
       case Expose:
         exposed = TRUE;
         break;
       case ConfigureNotify:
-        g_mutex_unlock (&xvimagesink->x_lock);
+        g_mutex_unlock (&xvimagesink->context->lock);
+        g_mutex_unlock (&xvimagesink->flow_lock);
+
         gst_xvimagesink_xwindow_update_geometry (xvimagesink);
-        g_mutex_lock (&xvimagesink->x_lock);
+
+        g_mutex_lock (&xvimagesink->flow_lock);
+        g_mutex_lock (&xvimagesink->context->lock);
         configured = TRUE;
         break;
       default:
@@ -796,34 +526,34 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
   }
 
   if (xvimagesink->handle_expose && (exposed || configured)) {
-    g_mutex_unlock (&xvimagesink->x_lock);
+    g_mutex_unlock (&xvimagesink->context->lock);
     g_mutex_unlock (&xvimagesink->flow_lock);
 
     gst_xvimagesink_expose (GST_VIDEO_OVERLAY (xvimagesink));
 
     g_mutex_lock (&xvimagesink->flow_lock);
-    g_mutex_lock (&xvimagesink->x_lock);
+    g_mutex_lock (&xvimagesink->context->lock);
   }
 
   /* Handle Display events */
-  while (XPending (xvimagesink->xcontext->disp)) {
-    XNextEvent (xvimagesink->xcontext->disp, &e);
+  while (XPending (xvimagesink->context->disp)) {
+    XNextEvent (xvimagesink->context->disp, &e);
 
     switch (e.type) {
       case ClientMessage:{
         Atom wm_delete;
 
-        wm_delete = XInternAtom (xvimagesink->xcontext->disp,
+        wm_delete = XInternAtom (xvimagesink->context->disp,
             "WM_DELETE_WINDOW", True);
         if (wm_delete != None && wm_delete == (Atom) e.xclient.data.l[0]) {
           /* Handle window deletion by posting an error on the bus */
           GST_ELEMENT_ERROR (xvimagesink, RESOURCE, NOT_FOUND,
               ("Output window was closed"), (NULL));
 
-          g_mutex_unlock (&xvimagesink->x_lock);
-          gst_xvimagesink_xwindow_destroy (xvimagesink, xvimagesink->xwindow);
+          g_mutex_unlock (&xvimagesink->context->lock);
+          gst_xwindow_destroy (xvimagesink->xwindow);
           xvimagesink->xwindow = NULL;
-          g_mutex_lock (&xvimagesink->x_lock);
+          g_mutex_lock (&xvimagesink->context->lock);
         }
         break;
       }
@@ -832,312 +562,8 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
     }
   }
 
-  g_mutex_unlock (&xvimagesink->x_lock);
+  g_mutex_unlock (&xvimagesink->context->lock);
   g_mutex_unlock (&xvimagesink->flow_lock);
-}
-
-static void
-gst_lookup_xv_port_from_adaptor (GstXContext * xcontext,
-    XvAdaptorInfo * adaptors, int adaptor_no)
-{
-  gint j;
-  gint res;
-
-  /* Do we support XvImageMask ? */
-  if (!(adaptors[adaptor_no].type & XvImageMask)) {
-    GST_DEBUG ("XV Adaptor %s has no support for XvImageMask",
-        adaptors[adaptor_no].name);
-    return;
-  }
-
-  /* We found such an adaptor, looking for an available port */
-  for (j = 0; j < adaptors[adaptor_no].num_ports && !xcontext->xv_port_id; j++) {
-    /* We try to grab the port */
-    res = XvGrabPort (xcontext->disp, adaptors[adaptor_no].base_id + j, 0);
-    if (Success == res) {
-      xcontext->xv_port_id = adaptors[adaptor_no].base_id + j;
-      GST_DEBUG ("XV Adaptor %s with %ld ports", adaptors[adaptor_no].name,
-          adaptors[adaptor_no].num_ports);
-    } else {
-      GST_DEBUG ("GrabPort %d for XV Adaptor %s failed: %d", j,
-          adaptors[adaptor_no].name, res);
-    }
-  }
-}
-
-/* This function generates a caps with all supported format by the first
-   Xv grabable port we find. We store each one of the supported formats in a
-   format list and append the format to a newly created caps that we return
-   If this function does not return NULL because of an error, it also grabs
-   the port via XvGrabPort */
-static GstCaps *
-gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
-    GstXContext * xcontext)
-{
-  gint i;
-  XvAdaptorInfo *adaptors;
-  gint nb_formats;
-  XvImageFormatValues *formats = NULL;
-  guint nb_encodings;
-  XvEncodingInfo *encodings = NULL;
-  gulong max_w = G_MAXINT, max_h = G_MAXINT;
-  GstCaps *caps = NULL;
-  GstCaps *rgb_caps = NULL;
-
-  g_return_val_if_fail (xcontext != NULL, NULL);
-
-  /* First let's check that XVideo extension is available */
-  if (!XQueryExtension (xcontext->disp, "XVideo", &i, &i, &i)) {
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS,
-        ("Could not initialise Xv output"),
-        ("XVideo extension is not available"));
-    return NULL;
-  }
-
-  /* Then we get adaptors list */
-  if (Success != XvQueryAdaptors (xcontext->disp, xcontext->root,
-          &xcontext->nb_adaptors, &adaptors)) {
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS,
-        ("Could not initialise Xv output"),
-        ("Failed getting XV adaptors list"));
-    return NULL;
-  }
-
-  xcontext->xv_port_id = 0;
-
-  GST_DEBUG ("Found %u XV adaptor(s)", xcontext->nb_adaptors);
-
-  xcontext->adaptors =
-      (gchar **) g_malloc0 (xcontext->nb_adaptors * sizeof (gchar *));
-
-  /* Now fill up our adaptor name array */
-  for (i = 0; i < xcontext->nb_adaptors; i++) {
-    xcontext->adaptors[i] = g_strdup (adaptors[i].name);
-  }
-
-  if (xvimagesink->adaptor_no != -1 &&
-      xvimagesink->adaptor_no < xcontext->nb_adaptors) {
-    /* Find xv port from user defined adaptor */
-    gst_lookup_xv_port_from_adaptor (xcontext, adaptors,
-        xvimagesink->adaptor_no);
-  }
-
-  if (!xcontext->xv_port_id) {
-    /* Now search for an adaptor that supports XvImageMask */
-    for (i = 0; i < xcontext->nb_adaptors && !xcontext->xv_port_id; i++) {
-      gst_lookup_xv_port_from_adaptor (xcontext, adaptors, i);
-      xvimagesink->adaptor_no = i;
-    }
-  }
-
-  XvFreeAdaptorInfo (adaptors);
-
-  if (!xcontext->xv_port_id) {
-    xvimagesink->adaptor_no = -1;
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, BUSY,
-        ("Could not initialise Xv output"), ("No port available"));
-    return NULL;
-  }
-
-  /* Set XV_AUTOPAINT_COLORKEY and XV_DOUBLE_BUFFER and XV_COLORKEY */
-  {
-    int count, todo = 3;
-    XvAttribute *const attr = XvQueryPortAttributes (xcontext->disp,
-        xcontext->xv_port_id, &count);
-    static const char autopaint[] = "XV_AUTOPAINT_COLORKEY";
-    static const char dbl_buffer[] = "XV_DOUBLE_BUFFER";
-    static const char colorkey[] = "XV_COLORKEY";
-
-    GST_DEBUG_OBJECT (xvimagesink, "Checking %d Xv port attributes", count);
-
-    xvimagesink->have_autopaint_colorkey = FALSE;
-    xvimagesink->have_double_buffer = FALSE;
-    xvimagesink->have_colorkey = FALSE;
-
-    for (i = 0; ((i < count) && todo); i++)
-      if (!strcmp (attr[i].name, autopaint)) {
-        const Atom atom = XInternAtom (xcontext->disp, autopaint, False);
-
-        /* turn on autopaint colorkey */
-        XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom,
-            (xvimagesink->autopaint_colorkey ? 1 : 0));
-        todo--;
-        xvimagesink->have_autopaint_colorkey = TRUE;
-      } else if (!strcmp (attr[i].name, dbl_buffer)) {
-        const Atom atom = XInternAtom (xcontext->disp, dbl_buffer, False);
-
-        XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom,
-            (xvimagesink->double_buffer ? 1 : 0));
-        todo--;
-        xvimagesink->have_double_buffer = TRUE;
-      } else if (!strcmp (attr[i].name, colorkey)) {
-        /* Set the colorkey, default is something that is dark but hopefully
-         * won't randomly appear on the screen elsewhere (ie not black or greys)
-         * can be overridden by setting "colorkey" property
-         */
-        const Atom atom = XInternAtom (xcontext->disp, colorkey, False);
-        guint32 ckey = 0;
-        gboolean set_attr = TRUE;
-        guint cr, cg, cb;
-
-        /* set a colorkey in the right format RGB565/RGB888
-         * We only handle these 2 cases, because they're the only types of
-         * devices we've encountered. If we don't recognise it, leave it alone
-         */
-        cr = (xvimagesink->colorkey >> 16);
-        cg = (xvimagesink->colorkey >> 8) & 0xFF;
-        cb = (xvimagesink->colorkey) & 0xFF;
-        switch (xcontext->depth) {
-          case 16:             /* RGB 565 */
-            cr >>= 3;
-            cg >>= 2;
-            cb >>= 3;
-            ckey = (cr << 11) | (cg << 5) | cb;
-            break;
-          case 24:
-          case 32:             /* RGB 888 / ARGB 8888 */
-            ckey = (cr << 16) | (cg << 8) | cb;
-            break;
-          default:
-            GST_DEBUG_OBJECT (xvimagesink,
-                "Unknown bit depth %d for Xv Colorkey - not adjusting",
-                xcontext->depth);
-            set_attr = FALSE;
-            break;
-        }
-
-        if (set_attr) {
-          ckey = CLAMP (ckey, (guint32) attr[i].min_value,
-              (guint32) attr[i].max_value);
-          GST_LOG_OBJECT (xvimagesink,
-              "Setting color key for display depth %d to 0x%x",
-              xcontext->depth, ckey);
-
-          XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom,
-              (gint) ckey);
-        }
-        todo--;
-        xvimagesink->have_colorkey = TRUE;
-      }
-
-    XFree (attr);
-  }
-
-  /* Get the list of encodings supported by the adapter and look for the
-   * XV_IMAGE encoding so we can determine the maximum width and height
-   * supported */
-  XvQueryEncodings (xcontext->disp, xcontext->xv_port_id, &nb_encodings,
-      &encodings);
-
-  for (i = 0; i < nb_encodings; i++) {
-    GST_LOG_OBJECT (xvimagesink,
-        "Encoding %d, name %s, max wxh %lux%lu rate %d/%d",
-        i, encodings[i].name, encodings[i].width, encodings[i].height,
-        encodings[i].rate.numerator, encodings[i].rate.denominator);
-    if (strcmp (encodings[i].name, "XV_IMAGE") == 0) {
-      max_w = encodings[i].width;
-      max_h = encodings[i].height;
-    }
-  }
-
-  XvFreeEncodingInfo (encodings);
-
-  /* We get all image formats supported by our port */
-  formats = XvListImageFormats (xcontext->disp,
-      xcontext->xv_port_id, &nb_formats);
-  caps = gst_caps_new_empty ();
-  for (i = 0; i < nb_formats; i++) {
-    GstCaps *format_caps = NULL;
-    gboolean is_rgb_format = FALSE;
-    GstVideoFormat vformat;
-
-    /* We set the image format of the xcontext to an existing one. This
-       is just some valid image format for making our xshm calls check before
-       caps negotiation really happens. */
-    xcontext->im_format = formats[i].id;
-
-    switch (formats[i].type) {
-      case XvRGB:
-      {
-        XvImageFormatValues *fmt = &(formats[i]);
-        gint endianness;
-
-        endianness =
-            (fmt->byte_order == LSBFirst ? G_LITTLE_ENDIAN : G_BIG_ENDIAN);
-
-        vformat = gst_video_format_from_masks (fmt->depth, fmt->bits_per_pixel,
-            endianness, fmt->red_mask, fmt->green_mask, fmt->blue_mask, 0);
-        if (vformat == GST_VIDEO_FORMAT_UNKNOWN)
-          break;
-
-        format_caps = gst_caps_new_simple ("video/x-raw",
-            "format", G_TYPE_STRING, gst_video_format_to_string (vformat),
-            "width", GST_TYPE_INT_RANGE, 1, max_w,
-            "height", GST_TYPE_INT_RANGE, 1, max_h,
-            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-
-        is_rgb_format = TRUE;
-        break;
-      }
-      case XvYUV:
-      {
-        vformat = gst_video_format_from_fourcc (formats[i].id);
-        if (vformat == GST_VIDEO_FORMAT_UNKNOWN)
-          break;
-
-        format_caps = gst_caps_new_simple ("video/x-raw",
-            "format", G_TYPE_STRING, gst_video_format_to_string (vformat),
-            "width", GST_TYPE_INT_RANGE, 1, max_w,
-            "height", GST_TYPE_INT_RANGE, 1, max_h,
-            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-        break;
-      }
-      default:
-        vformat = GST_VIDEO_FORMAT_UNKNOWN;
-        g_assert_not_reached ();
-        break;
-    }
-
-    if (format_caps) {
-      GstXvImageFormat *format = NULL;
-
-      format = g_new0 (GstXvImageFormat, 1);
-      if (format) {
-        format->format = formats[i].id;
-        format->vformat = vformat;
-        format->caps = gst_caps_copy (format_caps);
-        xcontext->formats_list = g_list_append (xcontext->formats_list, format);
-      }
-
-      if (is_rgb_format) {
-        if (rgb_caps == NULL)
-          rgb_caps = format_caps;
-        else
-          gst_caps_append (rgb_caps, format_caps);
-      } else
-        gst_caps_append (caps, format_caps);
-    }
-  }
-
-  /* Collected all caps into either the caps or rgb_caps structures.
-   * Append rgb_caps on the end of YUV, so that YUV is always preferred */
-  if (rgb_caps)
-    gst_caps_append (caps, rgb_caps);
-
-  if (formats)
-    XFree (formats);
-
-  GST_DEBUG ("Generated the following caps: %" GST_PTR_FORMAT, caps);
-
-  if (gst_caps_is_empty (caps)) {
-    gst_caps_unref (caps);
-    XvUngrabPort (xcontext->disp, xcontext->xv_port_id, 0);
-    GST_ELEMENT_ERROR (xvimagesink, STREAM, WRONG_TYPE, (NULL),
-        ("No supported format found"));
-    return NULL;
-  }
-
-  return caps;
 }
 
 static gpointer
@@ -1168,7 +594,7 @@ gst_xvimagesink_manage_event_thread (GstXvImageSink * xvimagesink)
   GThread *thread = NULL;
 
   /* don't start the thread too early */
-  if (xvimagesink->xcontext == NULL) {
+  if (xvimagesink->context == NULL) {
     return;
   }
 
@@ -1200,314 +626,6 @@ gst_xvimagesink_manage_event_thread (GstXvImageSink * xvimagesink)
 
 }
 
-
-/* This function calculates the pixel aspect ratio based on the properties
- * in the xcontext structure and stores it there. */
-static void
-gst_xvimagesink_calculate_pixel_aspect_ratio (GstXContext * xcontext)
-{
-  static const gint par[][2] = {
-    {1, 1},                     /* regular screen */
-    {16, 15},                   /* PAL TV */
-    {11, 10},                   /* 525 line Rec.601 video */
-    {54, 59},                   /* 625 line Rec.601 video */
-    {64, 45},                   /* 1280x1024 on 16:9 display */
-    {5, 3},                     /* 1280x1024 on 4:3 display */
-    {4, 3}                      /*  800x600 on 16:9 display */
-  };
-  gint i;
-  gint index;
-  gdouble ratio;
-  gdouble delta;
-
-#define DELTA(idx) (ABS (ratio - ((gdouble) par[idx][0] / par[idx][1])))
-
-  /* first calculate the "real" ratio based on the X values;
-   * which is the "physical" w/h divided by the w/h in pixels of the display */
-  ratio = (gdouble) (xcontext->widthmm * xcontext->height)
-      / (xcontext->heightmm * xcontext->width);
-
-  /* DirectFB's X in 720x576 reports the physical dimensions wrong, so
-   * override here */
-  if (xcontext->width == 720 && xcontext->height == 576) {
-    ratio = 4.0 * 576 / (3.0 * 720);
-  }
-  GST_DEBUG ("calculated pixel aspect ratio: %f", ratio);
-
-  /* now find the one from par[][2] with the lowest delta to the real one */
-  delta = DELTA (0);
-  index = 0;
-
-  for (i = 1; i < sizeof (par) / (sizeof (gint) * 2); ++i) {
-    gdouble this_delta = DELTA (i);
-
-    if (this_delta < delta) {
-      index = i;
-      delta = this_delta;
-    }
-  }
-
-  GST_DEBUG ("Decided on index %d (%d/%d)", index,
-      par[index][0], par[index][1]);
-
-  g_free (xcontext->par);
-  xcontext->par = g_new0 (GValue, 1);
-  g_value_init (xcontext->par, GST_TYPE_FRACTION);
-  gst_value_set_fraction (xcontext->par, par[index][0], par[index][1]);
-  GST_DEBUG ("set xcontext PAR to %d/%d",
-      gst_value_get_fraction_numerator (xcontext->par),
-      gst_value_get_fraction_denominator (xcontext->par));
-}
-
-/* This function gets the X Display and global info about it. Everything is
-   stored in our object and will be cleaned when the object is disposed. Note
-   here that caps for supported format are generated without any window or
-   image creation */
-static GstXContext *
-gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
-{
-  GstXContext *xcontext = NULL;
-  XPixmapFormatValues *px_formats = NULL;
-  gint nb_formats = 0, i, j, N_attr;
-  XvAttribute *xv_attr;
-  Atom prop_atom;
-  const char *channels[4] = { "XV_HUE", "XV_SATURATION",
-    "XV_BRIGHTNESS", "XV_CONTRAST"
-  };
-
-  g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
-
-  xcontext = g_new0 (GstXContext, 1);
-  xcontext->im_format = 0;
-
-  g_mutex_lock (&xvimagesink->x_lock);
-
-  xcontext->disp = XOpenDisplay (xvimagesink->display_name);
-
-  if (!xcontext->disp) {
-    g_mutex_unlock (&xvimagesink->x_lock);
-    g_free (xcontext);
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
-        ("Could not initialise Xv output"), ("Could not open display"));
-    return NULL;
-  }
-
-  xcontext->screen = DefaultScreenOfDisplay (xcontext->disp);
-  xcontext->screen_num = DefaultScreen (xcontext->disp);
-  xcontext->visual = DefaultVisual (xcontext->disp, xcontext->screen_num);
-  xcontext->root = DefaultRootWindow (xcontext->disp);
-  xcontext->white = XWhitePixel (xcontext->disp, xcontext->screen_num);
-  xcontext->black = XBlackPixel (xcontext->disp, xcontext->screen_num);
-  xcontext->depth = DefaultDepthOfScreen (xcontext->screen);
-
-  xcontext->width = DisplayWidth (xcontext->disp, xcontext->screen_num);
-  xcontext->height = DisplayHeight (xcontext->disp, xcontext->screen_num);
-  xcontext->widthmm = DisplayWidthMM (xcontext->disp, xcontext->screen_num);
-  xcontext->heightmm = DisplayHeightMM (xcontext->disp, xcontext->screen_num);
-
-  GST_DEBUG_OBJECT (xvimagesink, "X reports %dx%d pixels and %d mm x %d mm",
-      xcontext->width, xcontext->height, xcontext->widthmm, xcontext->heightmm);
-
-  gst_xvimagesink_calculate_pixel_aspect_ratio (xcontext);
-  /* We get supported pixmap formats at supported depth */
-  px_formats = XListPixmapFormats (xcontext->disp, &nb_formats);
-
-  if (!px_formats) {
-    XCloseDisplay (xcontext->disp);
-    g_mutex_unlock (&xvimagesink->x_lock);
-    g_free (xcontext->par);
-    g_free (xcontext);
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS,
-        ("Could not initialise Xv output"), ("Could not get pixel formats"));
-    return NULL;
-  }
-
-  /* We get bpp value corresponding to our running depth */
-  for (i = 0; i < nb_formats; i++) {
-    if (px_formats[i].depth == xcontext->depth)
-      xcontext->bpp = px_formats[i].bits_per_pixel;
-  }
-
-  XFree (px_formats);
-
-  xcontext->endianness =
-      (ImageByteOrder (xcontext->disp) ==
-      LSBFirst) ? G_LITTLE_ENDIAN : G_BIG_ENDIAN;
-
-  /* our caps system handles 24/32bpp RGB as big-endian. */
-  if ((xcontext->bpp == 24 || xcontext->bpp == 32) &&
-      xcontext->endianness == G_LITTLE_ENDIAN) {
-    xcontext->endianness = G_BIG_ENDIAN;
-    xcontext->visual->red_mask = GUINT32_TO_BE (xcontext->visual->red_mask);
-    xcontext->visual->green_mask = GUINT32_TO_BE (xcontext->visual->green_mask);
-    xcontext->visual->blue_mask = GUINT32_TO_BE (xcontext->visual->blue_mask);
-    if (xcontext->bpp == 24) {
-      xcontext->visual->red_mask >>= 8;
-      xcontext->visual->green_mask >>= 8;
-      xcontext->visual->blue_mask >>= 8;
-    }
-  }
-
-  xcontext->caps = gst_xvimagesink_get_xv_support (xvimagesink, xcontext);
-
-  /* Search for XShm extension support */
-#ifdef HAVE_XSHM
-  if (XShmQueryExtension (xcontext->disp) &&
-      gst_xvimagesink_check_xshm_calls (xvimagesink, xcontext)) {
-    xcontext->use_xshm = TRUE;
-    GST_DEBUG ("xvimagesink is using XShm extension");
-  } else
-#endif /* HAVE_XSHM */
-  {
-    xcontext->use_xshm = FALSE;
-    GST_DEBUG ("xvimagesink is not using XShm extension");
-  }
-
-  if (!xcontext->caps) {
-    XCloseDisplay (xcontext->disp);
-    g_mutex_unlock (&xvimagesink->x_lock);
-    g_free (xcontext->par);
-    g_free (xcontext);
-    /* GST_ELEMENT_ERROR is thrown by gst_xvimagesink_get_xv_support */
-    return NULL;
-  }
-
-  xv_attr = XvQueryPortAttributes (xcontext->disp,
-      xcontext->xv_port_id, &N_attr);
-
-
-  /* Generate the channels list */
-  for (i = 0; i < (sizeof (channels) / sizeof (char *)); i++) {
-    XvAttribute *matching_attr = NULL;
-
-    /* Retrieve the property atom if it exists. If it doesn't exist,
-     * the attribute itself must not either, so we can skip */
-    prop_atom = XInternAtom (xcontext->disp, channels[i], True);
-    if (prop_atom == None)
-      continue;
-
-    if (xv_attr != NULL) {
-      for (j = 0; j < N_attr && matching_attr == NULL; ++j)
-        if (!g_ascii_strcasecmp (channels[i], xv_attr[j].name))
-          matching_attr = xv_attr + j;
-    }
-
-    if (matching_attr) {
-      GstColorBalanceChannel *channel;
-
-      channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
-      channel->label = g_strdup (channels[i]);
-      channel->min_value = matching_attr ? matching_attr->min_value : -1000;
-      channel->max_value = matching_attr ? matching_attr->max_value : 1000;
-
-      xcontext->channels_list = g_list_append (xcontext->channels_list,
-          channel);
-
-      /* If the colorbalance settings have not been touched we get Xv values
-         as defaults and update our internal variables */
-      if (!xvimagesink->cb_changed) {
-        gint val;
-
-        XvGetPortAttribute (xcontext->disp, xcontext->xv_port_id,
-            prop_atom, &val);
-        /* Normalize val to [-1000, 1000] */
-        val = floor (0.5 + -1000 + 2000 * (val - channel->min_value) /
-            (double) (channel->max_value - channel->min_value));
-
-        if (!g_ascii_strcasecmp (channels[i], "XV_HUE"))
-          xvimagesink->hue = val;
-        else if (!g_ascii_strcasecmp (channels[i], "XV_SATURATION"))
-          xvimagesink->saturation = val;
-        else if (!g_ascii_strcasecmp (channels[i], "XV_BRIGHTNESS"))
-          xvimagesink->brightness = val;
-        else if (!g_ascii_strcasecmp (channels[i], "XV_CONTRAST"))
-          xvimagesink->contrast = val;
-      }
-    }
-  }
-
-  if (xv_attr)
-    XFree (xv_attr);
-
-  g_mutex_unlock (&xvimagesink->x_lock);
-
-  return xcontext;
-}
-
-/* This function cleans the X context. Closing the Display, releasing the XV
-   port and unrefing the caps for supported formats. */
-static void
-gst_xvimagesink_xcontext_clear (GstXvImageSink * xvimagesink)
-{
-  GList *formats_list, *channels_list;
-  GstXContext *xcontext;
-  gint i = 0;
-
-  g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
-
-  GST_OBJECT_LOCK (xvimagesink);
-  if (xvimagesink->xcontext == NULL) {
-    GST_OBJECT_UNLOCK (xvimagesink);
-    return;
-  }
-
-  /* Take the XContext from the sink and clean it up */
-  xcontext = xvimagesink->xcontext;
-  xvimagesink->xcontext = NULL;
-
-  GST_OBJECT_UNLOCK (xvimagesink);
-
-
-  formats_list = xcontext->formats_list;
-
-  while (formats_list) {
-    GstXvImageFormat *format = formats_list->data;
-
-    gst_caps_unref (format->caps);
-    g_free (format);
-    formats_list = g_list_next (formats_list);
-  }
-
-  if (xcontext->formats_list)
-    g_list_free (xcontext->formats_list);
-
-  channels_list = xcontext->channels_list;
-
-  while (channels_list) {
-    GstColorBalanceChannel *channel = channels_list->data;
-
-    g_object_unref (channel);
-    channels_list = g_list_next (channels_list);
-  }
-
-  if (xcontext->channels_list)
-    g_list_free (xcontext->channels_list);
-
-  gst_caps_unref (xcontext->caps);
-  if (xcontext->last_caps)
-    gst_caps_replace (&xcontext->last_caps, NULL);
-
-  for (i = 0; i < xcontext->nb_adaptors; i++) {
-    g_free (xcontext->adaptors[i]);
-  }
-
-  g_free (xcontext->adaptors);
-
-  g_free (xcontext->par);
-
-  g_mutex_lock (&xvimagesink->x_lock);
-
-  GST_DEBUG_OBJECT (xvimagesink, "Closing display and freeing X Context");
-
-  XvUngrabPort (xcontext->disp, xcontext->xv_port_id, 0);
-
-  XCloseDisplay (xcontext->disp);
-
-  g_mutex_unlock (&xvimagesink->x_lock);
-
-  g_free (xcontext);
-}
-
 /* Element stuff */
 
 static GstCaps *
@@ -1518,12 +636,12 @@ gst_xvimagesink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 
   xvimagesink = GST_XVIMAGESINK (bsink);
 
-  if (xvimagesink->xcontext) {
+  if (xvimagesink->context) {
     if (filter)
-      return gst_caps_intersect_full (filter, xvimagesink->xcontext->caps,
+      return gst_caps_intersect_full (filter, xvimagesink->context->caps,
           GST_CAPS_INTERSECT_FIRST);
     else
-      return gst_caps_ref (xvimagesink->xcontext->caps);
+      return gst_caps_ref (xvimagesink->context->caps);
   }
 
   caps = gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (xvimagesink));
@@ -1542,6 +660,7 @@ static gboolean
 gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstXvImageSink *xvimagesink;
+  GstXvContext *context;
   GstStructure *structure;
   GstBufferPool *newpool, *oldpool;
   GstVideoInfo info;
@@ -1550,15 +669,15 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   gint display_par_n, display_par_d;    /* display's PAR */
   guint num, den;
   gint size;
-  static GstAllocationParams params = { 0, 15, 0, 0, };
 
   xvimagesink = GST_XVIMAGESINK (bsink);
+  context = xvimagesink->context;
 
   GST_DEBUG_OBJECT (xvimagesink,
       "In setcaps. Possible caps %" GST_PTR_FORMAT ", setting caps %"
-      GST_PTR_FORMAT, xvimagesink->xcontext->caps, caps);
+      GST_PTR_FORMAT, context->caps, caps);
 
-  if (!gst_caps_can_intersect (xvimagesink->xcontext->caps, caps))
+  if (!gst_caps_can_intersect (context->caps, caps))
     goto incompatible_caps;
 
   if (!gst_video_info_from_caps (&info, caps))
@@ -1570,7 +689,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   xvimagesink->video_width = info.width;
   xvimagesink->video_height = info.height;
 
-  im_format = gst_xvimagesink_get_format_from_info (xvimagesink, &info);
+  im_format = gst_xvcontext_get_format_from_info (context, &info);
   if (im_format == -1)
     goto invalid_format;
 
@@ -1654,11 +773,10 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   xvimagesink->redraw_border = TRUE;
 
   /* create a new pool for the new configuration */
-  newpool = gst_xvimage_buffer_pool_new (xvimagesink);
+  newpool = gst_xvimage_buffer_pool_new (xvimagesink->allocator);
 
   structure = gst_buffer_pool_get_config (newpool);
   gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
-  gst_buffer_pool_config_set_allocator (structure, NULL, &params);
   if (!gst_buffer_pool_set_config (newpool, structure))
     goto config_failed;
 
@@ -1715,37 +833,13 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstXvImageSink *xvimagesink;
-  GstXContext *xcontext = NULL;
 
   xvimagesink = GST_XVIMAGESINK (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      /* Initializing the XContext */
-      if (xvimagesink->xcontext == NULL) {
-        xcontext = gst_xvimagesink_xcontext_get (xvimagesink);
-        if (xcontext == NULL) {
-          ret = GST_STATE_CHANGE_FAILURE;
-          goto beach;
-        }
-        GST_OBJECT_LOCK (xvimagesink);
-        if (xcontext)
-          xvimagesink->xcontext = xcontext;
-        GST_OBJECT_UNLOCK (xvimagesink);
-      }
-
-      /* update object's par with calculated one if not set yet */
-      if (!xvimagesink->par) {
-        xvimagesink->par = g_new0 (GValue, 1);
-        gst_value_init_and_copy (xvimagesink->par, xvimagesink->xcontext->par);
-        GST_DEBUG_OBJECT (xvimagesink, "set calculated PAR on object's PAR");
-      }
-      /* call XSynchronize with the current value of synchronous */
-      GST_DEBUG_OBJECT (xvimagesink, "XSynchronize called with %s",
-          xvimagesink->synchronous ? "TRUE" : "FALSE");
-      XSynchronize (xvimagesink->xcontext->disp, xvimagesink->synchronous);
-      gst_xvimagesink_update_colorbalance (xvimagesink);
-      gst_xvimagesink_manage_event_thread (xvimagesink);
+      if (!gst_xvimagesink_open (xvimagesink))
+        goto error;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
@@ -1773,14 +867,17 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
       g_mutex_unlock (&xvimagesink->flow_lock);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_xvimagesink_reset (xvimagesink);
+      gst_xvimagesink_close (xvimagesink);
       break;
     default:
       break;
   }
-
-beach:
   return ret;
+
+error:
+  {
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
 
 static void
@@ -1811,14 +908,12 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   GstFlowReturn res;
   GstXvImageSink *xvimagesink;
   GstBuffer *to_put;
-  GstXvImageMemory *mem;
+  GstMemory *mem;
 
   xvimagesink = GST_XVIMAGESINK (vsink);
 
-  if (gst_buffer_n_memory (buf) == 1
-      && (mem = (GstXvImageMemory *) gst_buffer_peek_memory (buf, 0))
-      && g_strcmp0 (mem->parent.allocator->mem_type, "xvimage") == 0
-      && mem->sink == xvimagesink) {
+  if (gst_buffer_n_memory (buf) == 1 && (mem = gst_buffer_peek_memory (buf, 0))
+      && gst_xvimage_memory_is_from_context (mem, xvimagesink->context)) {
     /* If this buffer has been allocated using our buffer management we simply
        put the ximage which is in the PRIVATE pointer */
     GST_LOG_OBJECT (xvimagesink, "buffer %p from our pool, writing directly",
@@ -1981,7 +1076,7 @@ gst_xvimagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
       goto invalid_caps;
 
     GST_DEBUG_OBJECT (xvimagesink, "create new pool");
-    pool = gst_xvimage_buffer_pool_new (xvimagesink);
+    pool = gst_xvimage_buffer_pool_new (xvimagesink->allocator);
 
     /* the normal size of a frame */
     size = info.size;
@@ -2034,13 +1129,14 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
     GstEvent *event;
     GstVideoRectangle src, dst, result;
     gdouble x, y, xscale = 1.0, yscale = 1.0;
+    GstXWindow *xwindow;
 
     event = gst_event_new_navigation (structure);
 
     /* We take the flow_lock while we look at the window */
     g_mutex_lock (&xvimagesink->flow_lock);
 
-    if (!xvimagesink->xwindow) {
+    if (!(xwindow = xvimagesink->xwindow)) {
       g_mutex_unlock (&xvimagesink->flow_lock);
       return;
     }
@@ -2050,14 +1146,14 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
          that respect pixel aspect ratios */
       src.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
       src.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);
-      dst.w = xvimagesink->render_rect.w;
-      dst.h = xvimagesink->render_rect.h;
+      dst.w = xwindow->render_rect.w;
+      dst.h = xwindow->render_rect.h;
 
       gst_video_sink_center_rect (src, dst, &result, TRUE);
-      result.x += xvimagesink->render_rect.x;
-      result.y += xvimagesink->render_rect.y;
+      result.x += xwindow->render_rect.x;
+      result.y += xwindow->render_rect.y;
     } else {
-      memcpy (&result, &xvimagesink->render_rect, sizeof (GstVideoRectangle));
+      memcpy (&result, &xwindow->render_rect, sizeof (GstVideoRectangle));
     }
 
     g_mutex_unlock (&xvimagesink->flow_lock);
@@ -2098,6 +1194,7 @@ gst_xvimagesink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
   XID xwindow_id = id;
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
   GstXWindow *xwindow = NULL;
+  GstXvContext *context;
 
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
 
@@ -2110,18 +1207,21 @@ gst_xvimagesink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
   }
 
   /* If the element has not initialized the X11 context try to do so */
-  if (!xvimagesink->xcontext &&
-      !(xvimagesink->xcontext = gst_xvimagesink_xcontext_get (xvimagesink))) {
+  if (!xvimagesink->context &&
+      !(xvimagesink->context =
+          gst_xvcontext_new (&xvimagesink->config, NULL))) {
     g_mutex_unlock (&xvimagesink->flow_lock);
     /* we have thrown a GST_ELEMENT_ERROR now */
     return;
   }
 
+  context = xvimagesink->context;
+
   gst_xvimagesink_update_colorbalance (xvimagesink);
 
   /* If a window is there already we destroy it */
   if (xvimagesink->xwindow) {
-    gst_xvimagesink_xwindow_destroy (xvimagesink, xvimagesink->xwindow);
+    gst_xwindow_destroy (xvimagesink->xwindow);
     xvimagesink->xwindow = NULL;
   }
 
@@ -2137,33 +1237,8 @@ gst_xvimagesink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
           GST_VIDEO_SINK_HEIGHT (xvimagesink));
     }
   } else {
-    XWindowAttributes attr;
-
-    xwindow = g_new0 (GstXWindow, 1);
-    xwindow->win = xwindow_id;
-
-    /* Set the event we want to receive and create a GC */
-    g_mutex_lock (&xvimagesink->x_lock);
-
-    XGetWindowAttributes (xvimagesink->xcontext->disp, xwindow->win, &attr);
-
-    xwindow->width = attr.width;
-    xwindow->height = attr.height;
-    xwindow->internal = FALSE;
-    if (!xvimagesink->have_render_rect) {
-      xvimagesink->render_rect.x = xvimagesink->render_rect.y = 0;
-      xvimagesink->render_rect.w = attr.width;
-      xvimagesink->render_rect.h = attr.height;
-    }
-    if (xvimagesink->handle_events) {
-      XSelectInput (xvimagesink->xcontext->disp, xwindow->win, ExposureMask |
-          StructureNotifyMask | PointerMotionMask | KeyPressMask |
-          KeyReleaseMask);
-    }
-
-    xwindow->gc = XCreateGC (xvimagesink->xcontext->disp,
-        xwindow->win, 0, NULL);
-    g_mutex_unlock (&xvimagesink->x_lock);
+    xwindow = gst_xvcontext_create_xwindow_from_xid (context, xwindow_id);
+    gst_xwindow_set_event_handling (xwindow, xvimagesink->handle_events);
   }
 
   if (xwindow)
@@ -2188,33 +1263,10 @@ gst_xvimagesink_set_event_handling (GstVideoOverlay * overlay,
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
 
-  xvimagesink->handle_events = handle_events;
-
   g_mutex_lock (&xvimagesink->flow_lock);
-
-  if (G_UNLIKELY (!xvimagesink->xwindow)) {
-    g_mutex_unlock (&xvimagesink->flow_lock);
-    return;
-  }
-
-  g_mutex_lock (&xvimagesink->x_lock);
-
-  if (handle_events) {
-    if (xvimagesink->xwindow->internal) {
-      XSelectInput (xvimagesink->xcontext->disp, xvimagesink->xwindow->win,
-          ExposureMask | StructureNotifyMask | PointerMotionMask |
-          KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
-    } else {
-      XSelectInput (xvimagesink->xcontext->disp, xvimagesink->xwindow->win,
-          ExposureMask | StructureNotifyMask | PointerMotionMask |
-          KeyPressMask | KeyReleaseMask);
-    }
-  } else {
-    XSelectInput (xvimagesink->xcontext->disp, xvimagesink->xwindow->win, 0);
-  }
-
-  g_mutex_unlock (&xvimagesink->x_lock);
-
+  xvimagesink->handle_events = handle_events;
+  if (G_LIKELY (xvimagesink->xwindow))
+    gst_xwindow_set_event_handling (xvimagesink->xwindow, handle_events);
   g_mutex_unlock (&xvimagesink->flow_lock);
 }
 
@@ -2224,20 +1276,11 @@ gst_xvimagesink_set_render_rectangle (GstVideoOverlay * overlay, gint x, gint y,
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
 
-  /* FIXME: how about some locking? */
-  if (width >= 0 && height >= 0) {
-    xvimagesink->render_rect.x = x;
-    xvimagesink->render_rect.y = y;
-    xvimagesink->render_rect.w = width;
-    xvimagesink->render_rect.h = height;
-    xvimagesink->have_render_rect = TRUE;
-  } else {
-    xvimagesink->render_rect.x = 0;
-    xvimagesink->render_rect.y = 0;
-    xvimagesink->render_rect.w = xvimagesink->xwindow->width;
-    xvimagesink->render_rect.h = xvimagesink->xwindow->height;
-    xvimagesink->have_render_rect = FALSE;
-  }
+  g_mutex_lock (&xvimagesink->flow_lock);
+  if (G_LIKELY (xvimagesink->xwindow))
+    gst_xwindow_set_render_rectangle (xvimagesink->xwindow, x, y, width,
+        height);
+  g_mutex_unlock (&xvimagesink->flow_lock);
 }
 
 static void
@@ -2256,8 +1299,8 @@ gst_xvimagesink_colorbalance_list_channels (GstColorBalance * balance)
 
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
 
-  if (xvimagesink->xcontext)
-    return xvimagesink->xcontext->channels_list;
+  if (xvimagesink->context)
+    return xvimagesink->context->channels_list;
   else
     return NULL;
 }
@@ -2271,20 +1314,20 @@ gst_xvimagesink_colorbalance_set_value (GstColorBalance * balance,
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   g_return_if_fail (channel->label != NULL);
 
-  xvimagesink->cb_changed = TRUE;
+  xvimagesink->config.cb_changed = TRUE;
 
   /* Normalize val to [-1000, 1000] */
   value = floor (0.5 + -1000 + 2000 * (value - channel->min_value) /
       (double) (channel->max_value - channel->min_value));
 
   if (g_ascii_strcasecmp (channel->label, "XV_HUE") == 0) {
-    xvimagesink->hue = value;
+    xvimagesink->config.hue = value;
   } else if (g_ascii_strcasecmp (channel->label, "XV_SATURATION") == 0) {
-    xvimagesink->saturation = value;
+    xvimagesink->config.saturation = value;
   } else if (g_ascii_strcasecmp (channel->label, "XV_CONTRAST") == 0) {
-    xvimagesink->contrast = value;
+    xvimagesink->config.contrast = value;
   } else if (g_ascii_strcasecmp (channel->label, "XV_BRIGHTNESS") == 0) {
-    xvimagesink->brightness = value;
+    xvimagesink->config.brightness = value;
   } else {
     g_warning ("got an unknown channel %s", channel->label);
     return;
@@ -2304,13 +1347,13 @@ gst_xvimagesink_colorbalance_get_value (GstColorBalance * balance,
   g_return_val_if_fail (channel->label != NULL, 0);
 
   if (g_ascii_strcasecmp (channel->label, "XV_HUE") == 0) {
-    value = xvimagesink->hue;
+    value = xvimagesink->config.hue;
   } else if (g_ascii_strcasecmp (channel->label, "XV_SATURATION") == 0) {
-    value = xvimagesink->saturation;
+    value = xvimagesink->config.saturation;
   } else if (g_ascii_strcasecmp (channel->label, "XV_CONTRAST") == 0) {
-    value = xvimagesink->contrast;
+    value = xvimagesink->config.contrast;
   } else if (g_ascii_strcasecmp (channel->label, "XV_BRIGHTNESS") == 0) {
-    value = xvimagesink->brightness;
+    value = xvimagesink->config.brightness;
   } else {
     g_warning ("got an unknown channel %s", channel->label);
   }
@@ -2372,9 +1415,9 @@ gst_xvimagesink_probe_probe_property (GstPropertyProbe * probe,
     case PROP_COLORKEY:
       GST_DEBUG_OBJECT (xvimagesink,
           "probing device list and get capabilities");
-      if (!xvimagesink->xcontext) {
-        GST_DEBUG_OBJECT (xvimagesink, "generating xcontext");
-        xvimagesink->xcontext = gst_xvimagesink_xcontext_get (xvimagesink);
+      if (!xvimagesink->context) {
+        GST_DEBUG_OBJECT (xvimagesink, "generating context");
+        xvimagesink->context = gst_xvimagesink_context_get (xvimagesink);
       }
       break;
     default:
@@ -2395,7 +1438,7 @@ gst_xvimagesink_probe_needs_probe (GstPropertyProbe * probe,
     case PROP_AUTOPAINT_COLORKEY:
     case PROP_DOUBLE_BUFFER:
     case PROP_COLORKEY:
-      if (xvimagesink->xcontext != NULL) {
+      if (xvimagesink->context != NULL) {
         ret = FALSE;
       } else {
         ret = TRUE;
@@ -2416,8 +1459,8 @@ gst_xvimagesink_probe_get_values (GstPropertyProbe * probe,
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (probe);
   GValueArray *array = NULL;
 
-  if (G_UNLIKELY (!xvimagesink->xcontext)) {
-    GST_WARNING_OBJECT (xvimagesink, "we don't have any xcontext, can't "
+  if (G_UNLIKELY (!xvimagesink->context)) {
+    GST_WARNING_OBJECT (xvimagesink, "we don't have any context, can't "
         "get values");
     goto beach;
   }
@@ -2428,10 +1471,10 @@ gst_xvimagesink_probe_get_values (GstPropertyProbe * probe,
       guint i;
       GValue value = { 0 };
 
-      array = g_value_array_new (xvimagesink->xcontext->nb_adaptors);
+      array = g_value_array_new (xvimagesink->context->nb_adaptors);
       g_value_init (&value, G_TYPE_STRING);
 
-      for (i = 0; i < xvimagesink->xcontext->nb_adaptors; i++) {
+      for (i = 0; i < xvimagesink->context->nb_adaptors; i++) {
         gchar *adaptor_id_s = g_strdup_printf ("%u", i);
 
         g_value_set_string (&value, adaptor_id_s);
@@ -2516,34 +1559,34 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_HUE:
-      xvimagesink->hue = g_value_get_int (value);
-      xvimagesink->cb_changed = TRUE;
+      xvimagesink->config.hue = g_value_get_int (value);
+      xvimagesink->config.cb_changed = TRUE;
       gst_xvimagesink_update_colorbalance (xvimagesink);
       break;
     case PROP_CONTRAST:
-      xvimagesink->contrast = g_value_get_int (value);
-      xvimagesink->cb_changed = TRUE;
+      xvimagesink->config.contrast = g_value_get_int (value);
+      xvimagesink->config.cb_changed = TRUE;
       gst_xvimagesink_update_colorbalance (xvimagesink);
       break;
     case PROP_BRIGHTNESS:
-      xvimagesink->brightness = g_value_get_int (value);
-      xvimagesink->cb_changed = TRUE;
+      xvimagesink->config.brightness = g_value_get_int (value);
+      xvimagesink->config.cb_changed = TRUE;
       gst_xvimagesink_update_colorbalance (xvimagesink);
       break;
     case PROP_SATURATION:
-      xvimagesink->saturation = g_value_get_int (value);
-      xvimagesink->cb_changed = TRUE;
+      xvimagesink->config.saturation = g_value_get_int (value);
+      xvimagesink->config.cb_changed = TRUE;
       gst_xvimagesink_update_colorbalance (xvimagesink);
       break;
     case PROP_DISPLAY:
-      xvimagesink->display_name = g_strdup (g_value_get_string (value));
+      g_free (xvimagesink->config.display_name);
+      xvimagesink->config.display_name = g_strdup (g_value_get_string (value));
       break;
     case PROP_SYNCHRONOUS:
       xvimagesink->synchronous = g_value_get_boolean (value);
-      if (xvimagesink->xcontext) {
-        XSynchronize (xvimagesink->xcontext->disp, xvimagesink->synchronous);
-        GST_DEBUG_OBJECT (xvimagesink, "XSynchronize called with %s",
-            xvimagesink->synchronous ? "TRUE" : "FALSE");
+      if (xvimagesink->context) {
+        gst_xvcontext_set_synchronous (xvimagesink->context,
+            xvimagesink->synchronous);
       }
       break;
     case PROP_PIXEL_ASPECT_RATIO:
@@ -2567,7 +1610,7 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
       gst_xvimagesink_manage_event_thread (xvimagesink);
       break;
     case PROP_DEVICE:
-      xvimagesink->adaptor_no = atoi (g_value_get_string (value));
+      xvimagesink->config.adaptor_nr = atoi (g_value_get_string (value));
       break;
     case PROP_HANDLE_EXPOSE:
       xvimagesink->handle_expose = g_value_get_boolean (value);
@@ -2577,10 +1620,10 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
       xvimagesink->double_buffer = g_value_get_boolean (value);
       break;
     case PROP_AUTOPAINT_COLORKEY:
-      xvimagesink->autopaint_colorkey = g_value_get_boolean (value);
+      xvimagesink->config.autopaint_colorkey = g_value_get_boolean (value);
       break;
     case PROP_COLORKEY:
-      xvimagesink->colorkey = g_value_get_int (value);
+      xvimagesink->config.colorkey = g_value_get_int (value);
       break;
     case PROP_DRAW_BORDERS:
       xvimagesink->draw_borders = g_value_get_boolean (value);
@@ -2603,19 +1646,19 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_HUE:
-      g_value_set_int (value, xvimagesink->hue);
+      g_value_set_int (value, xvimagesink->config.hue);
       break;
     case PROP_CONTRAST:
-      g_value_set_int (value, xvimagesink->contrast);
+      g_value_set_int (value, xvimagesink->config.contrast);
       break;
     case PROP_BRIGHTNESS:
-      g_value_set_int (value, xvimagesink->brightness);
+      g_value_set_int (value, xvimagesink->config.brightness);
       break;
     case PROP_SATURATION:
-      g_value_set_int (value, xvimagesink->saturation);
+      g_value_set_int (value, xvimagesink->config.saturation);
       break;
     case PROP_DISPLAY:
-      g_value_set_string (value, xvimagesink->display_name);
+      g_value_set_string (value, xvimagesink->config.display_name);
       break;
     case PROP_SYNCHRONOUS:
       g_value_set_boolean (value, xvimagesink->synchronous);
@@ -2632,16 +1675,17 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DEVICE:
     {
-      char *adaptor_no_s = g_strdup_printf ("%u", xvimagesink->adaptor_no);
+      char *adaptor_nr_s =
+          g_strdup_printf ("%u", xvimagesink->config.adaptor_nr);
 
-      g_value_set_string (value, adaptor_no_s);
-      g_free (adaptor_no_s);
+      g_value_set_string (value, adaptor_nr_s);
+      g_free (adaptor_nr_s);
       break;
     }
     case PROP_DEVICE_NAME:
-      if (xvimagesink->xcontext && xvimagesink->xcontext->adaptors) {
+      if (xvimagesink->context && xvimagesink->context->adaptors) {
         g_value_set_string (value,
-            xvimagesink->xcontext->adaptors[xvimagesink->adaptor_no]);
+            xvimagesink->context->adaptors[xvimagesink->config.adaptor_nr]);
       } else {
         g_value_set_string (value, NULL);
       }
@@ -2653,10 +1697,10 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, xvimagesink->double_buffer);
       break;
     case PROP_AUTOPAINT_COLORKEY:
-      g_value_set_boolean (value, xvimagesink->autopaint_colorkey);
+      g_value_set_boolean (value, xvimagesink->config.autopaint_colorkey);
       break;
     case PROP_COLORKEY:
-      g_value_set_int (value, xvimagesink->colorkey);
+      g_value_set_int (value, xvimagesink->config.colorkey);
       break;
     case PROP_DRAW_BORDERS:
       g_value_set_boolean (value, xvimagesink->draw_borders);
@@ -2679,10 +1723,50 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
   }
 }
 
+static gboolean
+gst_xvimagesink_open (GstXvImageSink * xvimagesink)
+{
+  GstXvContext *context;
+  GError *error = NULL;
+
+  /* Initializing the XvContext */
+  if (!(context = gst_xvcontext_new (&xvimagesink->config, &error)))
+    goto no_context;
+
+  GST_OBJECT_LOCK (xvimagesink);
+  xvimagesink->context = context;
+  /* make an allocator for this context */
+  xvimagesink->allocator = gst_xvimage_allocator_new (context);
+  GST_OBJECT_UNLOCK (xvimagesink);
+
+  /* update object's par with calculated one if not set yet */
+  if (!xvimagesink->par) {
+    xvimagesink->par = g_new0 (GValue, 1);
+    gst_value_init_and_copy (xvimagesink->par, xvimagesink->context->par);
+    GST_DEBUG_OBJECT (xvimagesink, "set calculated PAR on object's PAR");
+  }
+  /* call XSynchronize with the current value of synchronous */
+  gst_xvcontext_set_synchronous (xvimagesink->context,
+      xvimagesink->synchronous);
+  gst_xvimagesink_update_colorbalance (xvimagesink);
+  gst_xvimagesink_manage_event_thread (xvimagesink);
+
+  return TRUE;
+
+no_context:
+  {
+    gst_element_message_full (GST_ELEMENT (xvimagesink), GST_MESSAGE_ERROR,
+        error->domain, error->code, g_strdup ("Could not initialise Xv output"),
+        error->message, __FILE__, GST_FUNCTION, __LINE__);
+    return FALSE;
+  }
+}
+
 static void
-gst_xvimagesink_reset (GstXvImageSink * xvimagesink)
+gst_xvimagesink_close (GstXvImageSink * xvimagesink)
 {
   GThread *thread;
+  GstXvContext *context;
 
   GST_OBJECT_LOCK (xvimagesink);
   xvimagesink->running = FALSE;
@@ -2708,17 +1792,25 @@ gst_xvimagesink_reset (GstXvImageSink * xvimagesink)
   }
 
   if (xvimagesink->xwindow) {
-    gst_xvimagesink_xwindow_clear (xvimagesink, xvimagesink->xwindow);
-    gst_xvimagesink_xwindow_destroy (xvimagesink, xvimagesink->xwindow);
+    gst_xwindow_clear (xvimagesink->xwindow);
+    gst_xwindow_destroy (xvimagesink->xwindow);
     xvimagesink->xwindow = NULL;
   }
   g_mutex_unlock (&xvimagesink->flow_lock);
 
-  xvimagesink->render_rect.x = xvimagesink->render_rect.y =
-      xvimagesink->render_rect.w = xvimagesink->render_rect.h = 0;
-  xvimagesink->have_render_rect = FALSE;
+  if (xvimagesink->allocator) {
+    gst_object_unref (xvimagesink->allocator);
+    xvimagesink->allocator = NULL;
+  }
 
-  gst_xvimagesink_xcontext_clear (xvimagesink);
+  GST_OBJECT_LOCK (xvimagesink);
+  /* grab context and mark it as NULL */
+  context = xvimagesink->context;
+  xvimagesink->context = NULL;
+  GST_OBJECT_UNLOCK (xvimagesink);
+
+  if (context)
+    gst_xvcontext_unref (context);
 }
 
 /* Finalize is called only once, dispose can be called multiple times.
@@ -2731,18 +1823,14 @@ gst_xvimagesink_finalize (GObject * object)
 
   xvimagesink = GST_XVIMAGESINK (object);
 
-  gst_xvimagesink_reset (xvimagesink);
+  gst_xvimagesink_close (xvimagesink);
 
-  if (xvimagesink->display_name) {
-    g_free (xvimagesink->display_name);
-    xvimagesink->display_name = NULL;
-  }
+  gst_xvcontext_config_clear (&xvimagesink->config);
 
   if (xvimagesink->par) {
     g_free (xvimagesink->par);
     xvimagesink->par = NULL;
   }
-  g_mutex_clear (&xvimagesink->x_lock);
   g_mutex_clear (&xvimagesink->flow_lock);
   g_free (xvimagesink->media_title);
 
@@ -2752,40 +1840,38 @@ gst_xvimagesink_finalize (GObject * object)
 static void
 gst_xvimagesink_init (GstXvImageSink * xvimagesink)
 {
-  xvimagesink->display_name = NULL;
-  xvimagesink->adaptor_no = 0;
-  xvimagesink->xcontext = NULL;
+  xvimagesink->config.display_name = NULL;
+  xvimagesink->config.adaptor_nr = 0;
+  xvimagesink->config.autopaint_colorkey = TRUE;
+  xvimagesink->config.double_buffer = TRUE;
+  /* on 16bit displays this becomes r,g,b = 1,2,3
+   * on 24bit displays this becomes r,g,b = 8,8,16
+   * as a port atom value */
+  xvimagesink->config.colorkey = (8 << 16) | (8 << 8) | 16;
+  xvimagesink->config.hue = xvimagesink->config.saturation = 0;
+  xvimagesink->config.contrast = xvimagesink->config.brightness = 0;
+  xvimagesink->config.cb_changed = FALSE;
+
+  xvimagesink->context = NULL;
   xvimagesink->xwindow = NULL;
   xvimagesink->cur_image = NULL;
-
-  xvimagesink->hue = xvimagesink->saturation = 0;
-  xvimagesink->contrast = xvimagesink->brightness = 0;
-  xvimagesink->cb_changed = FALSE;
 
   xvimagesink->fps_n = 0;
   xvimagesink->fps_d = 0;
   xvimagesink->video_width = 0;
   xvimagesink->video_height = 0;
 
-  g_mutex_init (&xvimagesink->x_lock);
   g_mutex_init (&xvimagesink->flow_lock);
 
   xvimagesink->pool = NULL;
 
   xvimagesink->synchronous = FALSE;
-  xvimagesink->double_buffer = TRUE;
   xvimagesink->running = FALSE;
   xvimagesink->keep_aspect = TRUE;
   xvimagesink->handle_events = TRUE;
   xvimagesink->par = NULL;
   xvimagesink->handle_expose = TRUE;
-  xvimagesink->autopaint_colorkey = TRUE;
 
-  /* on 16bit displays this becomes r,g,b = 1,2,3
-   * on 24bit displays this becomes r,g,b = 8,8,16
-   * as a port atom value
-   */
-  xvimagesink->colorkey = (8 << 16) | (8 << 8) | 16;
   xvimagesink->draw_borders = TRUE;
 }
 

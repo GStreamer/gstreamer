@@ -20,62 +20,15 @@
 #ifndef __GST_XVIMAGEPOOL_H__
 #define __GST_XVIMAGEPOOL_H__
 
-#ifdef HAVE_XSHM
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#endif /* HAVE_XSHM */
+#include <gst/gst.h>
 
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-
-#ifdef HAVE_XSHM
-#include <X11/extensions/XShm.h>
-#endif /* HAVE_XSHM */
-
-#include <string.h>
-#include <math.h>
-
+#include "xvimageallocator.h"
 
 G_BEGIN_DECLS
-
-typedef struct _GstXvImageMemory GstXvImageMemory;
 
 typedef struct _GstXvImageBufferPool GstXvImageBufferPool;
 typedef struct _GstXvImageBufferPoolClass GstXvImageBufferPoolClass;
 typedef struct _GstXvImageBufferPoolPrivate GstXvImageBufferPoolPrivate;
-
-#include "xvimagesink.h"
-
-/**
- * GstXvImageMemory:
- * @sink: a reference to the our #GstXvImageSink
- * @xvimage: the XvImage of this buffer
- * @width: the width in pixels of XvImage @xvimage
- * @height: the height in pixels of XvImage @xvimage
- * @im_format: the format of XvImage @xvimage
- * @size: the size in bytes of XvImage @xvimage
- *
- * Subclass of #GstMemory containing additional information about an XvImage.
- */
-struct _GstXvImageMemory
-{
-  GstMemory parent;
-
-  /* Reference to the xvimagesink we belong to */
-  GstXvImageSink *sink;
-
-  XvImage *xvimage;
-
-#ifdef HAVE_XSHM
-  XShmSegmentInfo SHMInfo;
-#endif                          /* HAVE_XSHM */
-
-  gint x, y;
-  gint width, height;
-  gint im_format;
-  size_t size;
-};
 
 /* buffer pool functions */
 #define GST_TYPE_XVIMAGE_BUFFER_POOL      (gst_xvimage_buffer_pool_get_type())
@@ -87,9 +40,6 @@ struct _GstXvImageBufferPool
 {
   GstBufferPool bufferpool;
 
-  GstXvImageSink *sink;
-  GstAllocator *allocator;
-
   GstXvImageBufferPoolPrivate *priv;
 };
 
@@ -100,13 +50,7 @@ struct _GstXvImageBufferPoolClass
 
 GType gst_xvimage_buffer_pool_get_type (void);
 
-GstBufferPool *gst_xvimage_buffer_pool_new (GstXvImageSink * xvimagesink);
-
-gboolean gst_xvimagesink_check_xshm_calls (GstXvImageSink * xvimagesink,
-      GstXContext * xcontext);
-
-gint gst_xvimagesink_get_format_from_info (GstXvImageSink * xvimagesink,
-    GstVideoInfo * info);
+GstBufferPool *    gst_xvimage_buffer_pool_new     (GstXvImageAllocator *allocator);
 
 G_END_DECLS
 

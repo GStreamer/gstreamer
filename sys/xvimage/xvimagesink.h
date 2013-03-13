@@ -22,26 +22,6 @@
 
 #include <gst/video/gstvideosink.h>
 
-#ifdef HAVE_XSHM
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#endif /* HAVE_XSHM */
-
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-
-#ifdef HAVE_XSHM
-#include <X11/extensions/XShm.h>
-#endif /* HAVE_XSHM */
-
-#include <X11/extensions/Xv.h>
-#include <X11/extensions/Xvlib.h>
-
-#include <string.h>
-#include <math.h>
-#include <stdlib.h>
-
 /* Helper functions */
 #include <gst/video/video.h>
 
@@ -56,122 +36,18 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_XVIMAGESINK))
 #define GST_IS_XVIMAGESINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_XVIMAGESINK))
-typedef struct _GstXContext GstXContext;
-typedef struct _GstXWindow GstXWindow;
-typedef struct _GstXvImageFormat GstXvImageFormat;
 
 typedef struct _GstXvImageSink GstXvImageSink;
 typedef struct _GstXvImageSinkClass GstXvImageSinkClass;
 
+#include "xvimageallocator.h"
 #include "xvimagepool.h"
-
-/*
- * GstXContext:
- * @disp: the X11 Display of this context
- * @screen: the default Screen of Display @disp
- * @screen_num: the Screen number of @screen
- * @visual: the default Visual of Screen @screen
- * @root: the root Window of Display @disp
- * @white: the value of a white pixel on Screen @screen
- * @black: the value of a black pixel on Screen @screen
- * @depth: the color depth of Display @disp
- * @bpp: the number of bits per pixel on Display @disp
- * @endianness: the endianness of image bytes on Display @disp
- * @width: the width in pixels of Display @disp
- * @height: the height in pixels of Display @disp
- * @widthmm: the width in millimeters of Display @disp
- * @heightmm: the height in millimeters of Display @disp
- * @par: the pixel aspect ratio calculated from @width, @widthmm and @height,
- * @heightmm ratio
- * @use_xshm: used to known wether of not XShm extension is usable or not even
- * if the Extension is present
- * @xv_port_id: the XVideo port ID
- * @im_format: used to store at least a valid format for XShm calls checks
- * @formats_list: list of supported image formats on @xv_port_id
- * @channels_list: list of #GstColorBalanceChannels
- * @caps: the #GstCaps that Display @disp can accept
- *
- * Structure used to store various informations collected/calculated for a
- * Display.
- */
-struct _GstXContext
-{
-  Display *disp;
-
-  Screen *screen;
-  gint screen_num;
-
-  Visual *visual;
-
-  Window root;
-
-  gulong white, black;
-
-  gint depth;
-  gint bpp;
-  gint endianness;
-
-  gint width, height;
-  gint widthmm, heightmm;
-  GValue *par;                  /* calculated pixel aspect ratio */
-
-  gboolean use_xshm;
-
-  XvPortID xv_port_id;
-  guint nb_adaptors;
-  gchar **adaptors;
-  gint im_format;
-
-  GList *formats_list;
-  GList *channels_list;
-
-  GstCaps *caps;
-
-  /* Optimisation storage for buffer_alloc return */
-  GstCaps *last_caps;
-  gint last_format;
-  gint last_width;
-  gint last_height;
-};
-
-/*
- * GstXWindow:
- * @win: the Window ID of this X11 window
- * @width: the width in pixels of Window @win
- * @height: the height in pixels of Window @win
- * @internal: used to remember if Window @win was created internally or passed
- * through the #GstVideoOverlay interface
- * @gc: the Graphical Context of Window @win
- *
- * Structure used to store informations about a Window.
- */
-struct _GstXWindow
-{
-  Window win;
-  gint width, height;
-  gboolean internal;
-  GC gc;
-};
-
-/**
- * GstXvImageFormat:
- * @format: the image format
- * @caps: generated #GstCaps for this image format
- *
- * Structure storing image format to #GstCaps association.
- */
-struct _GstXvImageFormat
-{
-  gint format;
-  GstVideoFormat vformat;
-  GstCaps *caps;
-};
-
+#include "xvcontext.h"
 
 /**
  * GstXvImageSink:
  * @display_name: the name of the Display we want to render to
- * @xcontext: our instance's #GstXContext
+ * @xvcontext: our instance's #GstXvContext
  * @xwindow: the #GstXWindow we are rendering to
  * @cur_image: a reference to the last #GstXvImage that was put to @xwindow. It
  * is used when Expose events are received to redraw the latest video frame
@@ -183,7 +59,7 @@ struct _GstXvImageFormat
  * mode
  * @flow_lock: used to protect data flow routines from external calls such as
  * events from @event_thread or methods from the #GstVideoOverlay interface
- * @par: used to override calculated pixel aspect ratio from @xcontext
+ * @par: used to override calculated pixel aspect ratio from @xvcontext
  * @pool_lock: used to protect the buffer pool
  * @image_pool: a list of #GstXvImageBuffer that could be reused at next buffer
  * allocation call
@@ -207,10 +83,9 @@ struct _GstXvImageSink
   /* Our element stuff */
   GstVideoSink videosink;
 
-  char *display_name;
-  guint adaptor_no;
-
-  GstXContext *xcontext;
+  GstXvContextConfig config;
+  GstXvContext *context;
+  GstXvImageAllocator *allocator;
   GstXWindow *xwindow;
   GstBuffer *cur_image;
 
@@ -223,7 +98,6 @@ struct _GstXvImageSink
   gint fps_n;
   gint fps_d;
 
-  GMutex x_lock;
   GMutex flow_lock;
 
   /* object-set pixel aspect ratio */
@@ -239,32 +113,13 @@ struct _GstXvImageSink
   gboolean handle_events;
   gboolean handle_expose;
 
-  gint brightness;
-  gint contrast;
-  gint hue;
-  gint saturation;
-  gboolean cb_changed;
-
   /* size of incoming video, used as the size for XvImage */
   guint video_width, video_height;
 
-  /* port attributes */
-  gboolean autopaint_colorkey;
-  gint colorkey;
-
   gboolean draw_borders;
-
-  /* port features */
-  gboolean have_autopaint_colorkey;
-  gboolean have_colorkey;
-  gboolean have_double_buffer;
 
   /* stream metadata */
   gchar *media_title;
-
-  /* target video rectangle */
-  GstVideoRectangle render_rect;
-  gboolean have_render_rect;
 };
 
 struct _GstXvImageSinkClass
