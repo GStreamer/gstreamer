@@ -218,12 +218,15 @@ static GstFlowReturn
 gst_comb_detect_transform_frame (GstVideoFilter * filter,
     GstVideoFrame * inframe, GstVideoFrame * outframe)
 {
+  static int z;
   int k;
   int height;
   int width;
 
 #define GET_LINE(frame,comp,line) (((unsigned char *)(frame)->data[k]) + \
       (line) * GST_VIDEO_FRAME_COMP_STRIDE((frame), (comp)))
+
+  z++;
 
   for (k = 1; k < 3; k++) {
     int i;
@@ -273,10 +276,10 @@ gst_comb_detect_transform_frame (GstVideoFilter * filter,
             thisline[i] = 0;
           }
           if (thisline[i] > 100) {
-            dest[i] = 255;
+            dest[i] = ((i + j + z) & 0x4) ? 235 : 16;
             score++;
           } else {
-            dest[i] = src2[i] / 2;
+            dest[i] = src2[i];
           }
         }
       }
