@@ -539,12 +539,16 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
 
         /* select the requested Period in the Media Presentation */
         target_pos = (GstClockTime) demux->segment.start;
+        GST_DEBUG_OBJECT (demux, "Seeking to target %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (target_pos));
         current_period = 0;
         for (list = g_list_first (demux->client->periods); list;
             list = g_list_next (list)) {
           period = list->data;
           current_pos = period->start;
           current_period = period->number;
+          GST_DEBUG_OBJECT (demux, "Looking at period %u pos %" GST_TIME_FORMAT,
+              current_period, GST_TIME_ARGS (current_pos));
           if (current_pos <= target_pos
               && target_pos < current_pos + period->duration) {
             break;
@@ -571,11 +575,6 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
           gst_dash_demux_expose_streams (demux);
 
           gst_dash_demux_remove_streams (demux, streams);
-        }
-
-        if (list == NULL) {
-          GST_WARNING_OBJECT (demux, "Could not find seeked fragment");
-          return FALSE;
         }
 
         /* Update the current sequence on all streams */
@@ -630,6 +629,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
           GstDashDemuxStream *stream = iter->data;
           gst_data_queue_set_flushing (stream->queue, FALSE);
         }
+        demux->timestamp_offset = 0;
         demux->need_segment = TRUE;
         gst_uri_downloader_reset (demux->downloader);
         GST_DEBUG_OBJECT (demux, "Resuming tasks after seeking");
@@ -810,6 +810,7 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
               "mediaPresentationDuration unknown, can not send the duration message");
         }
       }
+      demux->timestamp_offset = -1;
       demux->need_segment = TRUE;
       gst_dash_demux_resume_download_task (demux);
       gst_dash_demux_resume_stream_task (demux);
@@ -1138,7 +1139,8 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
       if (demux->need_segment) {
-        demux->timestamp_offset = timestamp;
+        if (demux->timestamp_offset == -1)
+          demux->timestamp_offset = timestamp;
 
         /* And send a newsegment */
         for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
