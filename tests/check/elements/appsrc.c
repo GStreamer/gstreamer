@@ -258,7 +258,7 @@ GST_START_TEST (test_appsrc_block_deadlock)
     g_main_loop_unref (data->loop);
     g_free (data);
     i++;
-    g_print ("appsrc deadlock test iteration number %d/%d\n", i, num_iteration);
+    GST_INFO ("appsrc deadlock test iteration number %d/%d", i, num_iteration);
   }
 }
 
