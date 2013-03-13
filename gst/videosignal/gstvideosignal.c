@@ -30,6 +30,10 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean res;
 
+#if 0
+  /* FIXME under no circumstances is anyone allowed to revive the
+   * element formerly known as videodetect without changing the name
+   * first.  XOXO  --ds  */
   res = gst_element_register (plugin, "videoanalyse", GST_RANK_NONE,
       GST_TYPE_VIDEO_ANALYSE);
 
@@ -38,6 +42,7 @@ plugin_init (GstPlugin * plugin)
 
   res &= gst_element_register (plugin, "videomark", GST_RANK_NONE,
       GST_TYPE_VIDEO_MARK);
+#endif
 
   return res;
 }
