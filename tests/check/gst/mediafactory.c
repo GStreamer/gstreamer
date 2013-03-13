@@ -78,11 +78,12 @@ GST_START_TEST (test_launch_construct)
 
   media = gst_rtsp_media_factory_construct (factory, url);
   fail_unless (GST_IS_RTSP_MEDIA (media));
-  g_object_unref (media);
 
   media2 = gst_rtsp_media_factory_construct (factory, url);
   fail_unless (GST_IS_RTSP_MEDIA (media2));
   fail_if (media == media2);
+
+  g_object_unref (media);
   g_object_unref (media2);
 
   gst_rtsp_url_free (url);
