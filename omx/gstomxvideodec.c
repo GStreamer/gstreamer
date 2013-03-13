@@ -1189,8 +1189,15 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
     gst_buffer_pool_config_get_allocator (config, &allocator, NULL);
 
     /* Need at least 2 buffers for anything meaningful */
-    min = MAX (MAX (min, port->port_def.nBufferCountMin), 2);
-    max = min;
+    min = MAX (MAX (min, port->port_def.nBufferCountMin), 4);
+    if (max == 0) {
+      max = min;
+    } else if (max < port->port_def.nBufferCountMin || max < 2) {
+      /* Can't use pool because can't have enough buffers */
+      gst_caps_replace (&caps, NULL);
+    } else {
+      min = max;
+    }
 
     add_videometa = gst_buffer_pool_config_has_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
