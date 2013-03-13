@@ -34,6 +34,7 @@ typedef struct
   GstEGLDisplay *display;
   EGLImageKHR image;
   GstEGLImageType type;
+  GstEGLImageOrientation orientation;
 
   gpointer user_data;
   GDestroyNotify user_data_destroy;
@@ -88,6 +89,29 @@ gst_egl_image_memory_get_type (GstMemory * mem)
     mem = mem->parent;
 
   return GST_EGL_IMAGE_MEMORY (mem)->type;
+}
+
+GstEGLImageOrientation
+gst_egl_image_memory_get_orientation (GstMemory *mem)
+{
+  g_return_val_if_fail (gst_is_egl_image_memory (mem),
+      GST_EGL_IMAGE_MEMORY_TYPE_INVALID);
+
+  if (mem->parent)
+    mem = mem->parent;
+
+  return GST_EGL_IMAGE_MEMORY (mem)->orientation;
+}
+
+void
+gst_egl_image_memory_set_orientation (GstMemory *mem, GstEGLImageOrientation orientation)
+{
+  g_return_if_fail (gst_is_egl_image_memory (mem));
+
+  if (mem->parent)
+    mem = mem->parent;
+
+  GST_EGL_IMAGE_MEMORY (mem)->orientation = orientation;
 }
 
 static GstMemory *
@@ -257,6 +281,7 @@ gst_egl_image_allocator_wrap (GstAllocator * allocator,
   mem->display = gst_egl_display_ref (display);
   mem->image = image;
   mem->type = type;
+  mem->orientation = GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL;
 
   mem->user_data = user_data;
   mem->user_data_destroy = user_data_destroy;

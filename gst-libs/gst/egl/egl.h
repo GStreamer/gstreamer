@@ -42,6 +42,16 @@ typedef enum {
   GST_EGL_IMAGE_MEMORY_TYPE_OTHER = 0xffff
 } GstEGLImageType;
 
+typedef enum {
+  /* GStreamer orientation, top line first in memory, left row first */
+  GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL,
+  /* OpenGL orientation, bottom line first in memory, left row first */
+  GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_FLIP,
+  /* Just for the sake of completeness, nothing uses this probably */
+  GST_EGL_IMAGE_ORIENTATION_X_FLIP_Y_NORMAL,
+  GST_EGL_IMAGE_ORIENTATION_X_FLIP_Y_FLIP
+} GstEGLImageOrientation;
+
 typedef struct _GstEGLDisplay GstEGLDisplay;
 
 /* EGLImage GstMemory handling */
@@ -50,6 +60,8 @@ gboolean gst_is_egl_image_memory (GstMemory * mem);
 EGLImageKHR gst_egl_image_memory_get_image (GstMemory * mem);
 GstEGLDisplay * gst_egl_image_memory_get_display (GstMemory * mem);
 GstEGLImageType gst_egl_image_memory_get_type (GstMemory * mem);
+GstEGLImageOrientation gst_egl_image_memory_get_orientation (GstMemory *mem);
+void gst_egl_image_memory_set_orientation (GstMemory *mem, GstEGLImageOrientation orientation);
 
 /* Generic EGLImage allocator that doesn't support mapping, copying or anything */
 GstAllocator * gst_egl_image_allocator_obtain (void);
