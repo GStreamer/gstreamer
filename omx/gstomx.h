@@ -241,6 +241,9 @@ struct _GstOMXBuffer {
 
   /* Cookie of the settings when this buffer was allocated */
   gint settings_cookie;
+
+  /* TRUE if this is an EGLImage */
+  gboolean eglimage;
 };
 
 struct _GstOMXClassData {
