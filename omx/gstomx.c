@@ -103,7 +103,8 @@ gst_omx_core_acquire (const gchar * filename)
       bcm_host_init ();
     }
 
-    core->module = g_module_open (filename, G_MODULE_BIND_LAZY);
+    core->module =
+        g_module_open (filename, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
     if (!core->module)
       goto load_failed;
 
