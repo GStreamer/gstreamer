@@ -334,10 +334,10 @@ gst_vaapidownload_update_src_caps(GstVaapiDownload *download, GstBuffer *buffer)
         return FALSE;
     }
 
-    out_caps = gst_video_format_to_caps(format);
+    out_caps = gst_video_format_to_caps(download->image_format);
     if (!out_caps) {
         GST_WARNING("failed to create caps from format %s",
-                    gst_video_format_to_string(format));
+                    gst_video_format_to_string(download->image_format));
         return FALSE;
     }
 
