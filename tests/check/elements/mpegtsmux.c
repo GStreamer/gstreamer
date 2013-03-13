@@ -620,13 +620,16 @@ GST_START_TEST (test_force_key_unit_event_upstream)
 
 GST_END_TEST;
 
+static GstFlowReturn expected_flow;
+
 static GstFlowReturn
 flow_test_stat_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  /* the requested status is conveyed in the timestamp */
-  GstFlowReturn ret = (GstFlowReturn) GST_BUFFER_TIMESTAMP (buffer);
   gst_buffer_unref (buffer);
-  return ret;
+
+  GST_INFO ("returning flow %s (%d)", gst_flow_get_name (expected_flow),
+      expected_flow);
+  return expected_flow;
 }
 
 GST_START_TEST (test_propagate_flow_status)
@@ -662,12 +665,15 @@ GST_START_TEST (test_propagate_flow_status)
     inbuffer = gst_buffer_new_and_alloc (1);
     ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
-    /* convey the requested status in the timestamp */
-    GST_BUFFER_TIMESTAMP (inbuffer) = expected[i];
+    expected_flow = expected[i];
+    GST_INFO ("expecting flow %s (%d)", gst_flow_get_name (expected_flow),
+        expected_flow);
+
+    GST_BUFFER_TIMESTAMP (inbuffer) = i * GST_SECOND;
+
     res = gst_pad_push (mysrcpad, inbuffer);
 
-    fail_unless (res == expected[i],
-        "result: %d, expected: %d", res, expected[i]);
+    fail_unless_equals_int (res, expected[i]);
   }
 
   cleanup_tsmux (mux, padname);
@@ -716,7 +722,8 @@ GST_START_TEST (test_multiple_state_change)
       inbuffer = gst_buffer_new_and_alloc (1);
       ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
-      GST_BUFFER_TIMESTAMP (inbuffer) = GST_FLOW_OK;
+      expected_flow = GST_FLOW_OK;
+      GST_BUFFER_PTS (inbuffer) = 0;
       fail_unless (GST_FLOW_OK == gst_pad_push (mysrcpad, inbuffer));
     }
   }
