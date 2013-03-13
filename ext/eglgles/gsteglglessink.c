@@ -898,6 +898,7 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
   ty1 = (eglglessink->crop.y / texture_height);
   ty2 = ((eglglessink->crop.y + eglglessink->crop.h) / texture_height);
 
+  /* X-normal, Y-normal orientation */
   eglglessink->eglglesctx.position_array[0].x = x2;
   eglglessink->eglglesctx.position_array[0].y = y2;
   eglglessink->eglglesctx.position_array[0].z = 0;
@@ -922,74 +923,100 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
   eglglessink->eglglesctx.position_array[3].a = tx1;
   eglglessink->eglglesctx.position_array[3].b = ty2;
 
+  /* X-normal, Y-flip orientation */
+  eglglessink->eglglesctx.position_array[4 + 0].x = x2;
+  eglglessink->eglglesctx.position_array[4 + 0].y = y2;
+  eglglessink->eglglesctx.position_array[4 + 0].z = 0;
+  eglglessink->eglglesctx.position_array[4 + 0].a = tx2;
+  eglglessink->eglglesctx.position_array[4 + 0].b = ty2;
+
+  eglglessink->eglglesctx.position_array[4 + 1].x = x2;
+  eglglessink->eglglesctx.position_array[4 + 1].y = y1;
+  eglglessink->eglglesctx.position_array[4 + 1].z = 0;
+  eglglessink->eglglesctx.position_array[4 + 1].a = tx2;
+  eglglessink->eglglesctx.position_array[4 + 1].b = ty1;
+
+  eglglessink->eglglesctx.position_array[4 + 2].x = x1;
+  eglglessink->eglglesctx.position_array[4 + 2].y = y2;
+  eglglessink->eglglesctx.position_array[4 + 2].z = 0;
+  eglglessink->eglglesctx.position_array[4 + 2].a = tx1;
+  eglglessink->eglglesctx.position_array[4 + 2].b = ty2;
+
+  eglglessink->eglglesctx.position_array[4 + 3].x = x1;
+  eglglessink->eglglesctx.position_array[4 + 3].y = y1;
+  eglglessink->eglglesctx.position_array[4 + 3].z = 0;
+  eglglessink->eglglesctx.position_array[4 + 3].a = tx1;
+  eglglessink->eglglesctx.position_array[4 + 3].b = ty1;
+
+
   if (eglglessink->display_region.x == 0) {
     /* Borders top/bottom */
-
-    eglglessink->eglglesctx.position_array[4 + 0].x = 1;
-    eglglessink->eglglesctx.position_array[4 + 0].y = 1;
-    eglglessink->eglglesctx.position_array[4 + 0].z = 0;
-
-    eglglessink->eglglesctx.position_array[4 + 1].x = x2;
-    eglglessink->eglglesctx.position_array[4 + 1].y = y2;
-    eglglessink->eglglesctx.position_array[4 + 1].z = 0;
-
-    eglglessink->eglglesctx.position_array[4 + 2].x = -1;
-    eglglessink->eglglesctx.position_array[4 + 2].y = 1;
-    eglglessink->eglglesctx.position_array[4 + 2].z = 0;
-
-    eglglessink->eglglesctx.position_array[4 + 3].x = x1;
-    eglglessink->eglglesctx.position_array[4 + 3].y = y2;
-    eglglessink->eglglesctx.position_array[4 + 3].z = 0;
-
-    eglglessink->eglglesctx.position_array[8 + 0].x = 1;
-    eglglessink->eglglesctx.position_array[8 + 0].y = y1;
-    eglglessink->eglglesctx.position_array[8 + 0].z = 0;
-
-    eglglessink->eglglesctx.position_array[8 + 1].x = 1;
-    eglglessink->eglglesctx.position_array[8 + 1].y = -1;
-    eglglessink->eglglesctx.position_array[8 + 1].z = 0;
-
-    eglglessink->eglglesctx.position_array[8 + 2].x = x1;
-    eglglessink->eglglesctx.position_array[8 + 2].y = y1;
-    eglglessink->eglglesctx.position_array[8 + 2].z = 0;
-
-    eglglessink->eglglesctx.position_array[8 + 3].x = -1;
-    eglglessink->eglglesctx.position_array[8 + 3].y = -1;
-    eglglessink->eglglesctx.position_array[8 + 3].z = 0;
-  } else {
-    /* Borders left/right */
-
-    eglglessink->eglglesctx.position_array[4 + 0].x = x1;
-    eglglessink->eglglesctx.position_array[4 + 0].y = 1;
-    eglglessink->eglglesctx.position_array[4 + 0].z = 0;
-
-    eglglessink->eglglesctx.position_array[4 + 1].x = x1;
-    eglglessink->eglglesctx.position_array[4 + 1].y = -1;
-    eglglessink->eglglesctx.position_array[4 + 1].z = 0;
-
-    eglglessink->eglglesctx.position_array[4 + 2].x = -1;
-    eglglessink->eglglesctx.position_array[4 + 2].y = 1;
-    eglglessink->eglglesctx.position_array[4 + 2].z = 0;
-
-    eglglessink->eglglesctx.position_array[4 + 3].x = -1;
-    eglglessink->eglglesctx.position_array[4 + 3].y = -1;
-    eglglessink->eglglesctx.position_array[4 + 3].z = 0;
 
     eglglessink->eglglesctx.position_array[8 + 0].x = 1;
     eglglessink->eglglesctx.position_array[8 + 0].y = 1;
     eglglessink->eglglesctx.position_array[8 + 0].z = 0;
 
-    eglglessink->eglglesctx.position_array[8 + 1].x = 1;
+    eglglessink->eglglesctx.position_array[8 + 1].x = x2;
+    eglglessink->eglglesctx.position_array[8 + 1].y = y2;
+    eglglessink->eglglesctx.position_array[8 + 1].z = 0;
+
+    eglglessink->eglglesctx.position_array[8 + 2].x = -1;
+    eglglessink->eglglesctx.position_array[8 + 2].y = 1;
+    eglglessink->eglglesctx.position_array[8 + 2].z = 0;
+
+    eglglessink->eglglesctx.position_array[8 + 3].x = x1;
+    eglglessink->eglglesctx.position_array[8 + 3].y = y2;
+    eglglessink->eglglesctx.position_array[8 + 3].z = 0;
+
+    eglglessink->eglglesctx.position_array[12 + 0].x = 1;
+    eglglessink->eglglesctx.position_array[12 + 0].y = y1;
+    eglglessink->eglglesctx.position_array[12 + 0].z = 0;
+
+    eglglessink->eglglesctx.position_array[12 + 1].x = 1;
+    eglglessink->eglglesctx.position_array[12 + 1].y = -1;
+    eglglessink->eglglesctx.position_array[12 + 1].z = 0;
+
+    eglglessink->eglglesctx.position_array[12 + 2].x = x1;
+    eglglessink->eglglesctx.position_array[12 + 2].y = y1;
+    eglglessink->eglglesctx.position_array[12 + 2].z = 0;
+
+    eglglessink->eglglesctx.position_array[12 + 3].x = -1;
+    eglglessink->eglglesctx.position_array[12 + 3].y = -1;
+    eglglessink->eglglesctx.position_array[12 + 3].z = 0;
+  } else {
+    /* Borders left/right */
+
+    eglglessink->eglglesctx.position_array[8 + 0].x = x1;
+    eglglessink->eglglesctx.position_array[8 + 0].y = 1;
+    eglglessink->eglglesctx.position_array[8 + 0].z = 0;
+
+    eglglessink->eglglesctx.position_array[8 + 1].x = x1;
     eglglessink->eglglesctx.position_array[8 + 1].y = -1;
     eglglessink->eglglesctx.position_array[8 + 1].z = 0;
 
-    eglglessink->eglglesctx.position_array[8 + 2].x = x2;
-    eglglessink->eglglesctx.position_array[8 + 2].y = y2;
+    eglglessink->eglglesctx.position_array[8 + 2].x = -1;
+    eglglessink->eglglesctx.position_array[8 + 2].y = 1;
     eglglessink->eglglesctx.position_array[8 + 2].z = 0;
 
-    eglglessink->eglglesctx.position_array[8 + 3].x = x2;
+    eglglessink->eglglesctx.position_array[8 + 3].x = -1;
     eglglessink->eglglesctx.position_array[8 + 3].y = -1;
     eglglessink->eglglesctx.position_array[8 + 3].z = 0;
+
+    eglglessink->eglglesctx.position_array[12 + 0].x = 1;
+    eglglessink->eglglesctx.position_array[12 + 0].y = 1;
+    eglglessink->eglglesctx.position_array[12 + 0].z = 0;
+
+    eglglessink->eglglesctx.position_array[12 + 1].x = 1;
+    eglglessink->eglglesctx.position_array[12 + 1].y = -1;
+    eglglessink->eglglesctx.position_array[12 + 1].z = 0;
+
+    eglglessink->eglglesctx.position_array[12 + 2].x = x2;
+    eglglessink->eglglesctx.position_array[12 + 2].y = y2;
+    eglglessink->eglglesctx.position_array[12 + 2].z = 0;
+
+    eglglessink->eglglesctx.position_array[12 + 3].x = x2;
+    eglglessink->eglglesctx.position_array[12 + 3].y = -1;
+    eglglessink->eglglesctx.position_array[12 + 3].z = 0;
   }
 
   eglglessink->eglglesctx.index_array[0] = 0;
@@ -2134,12 +2161,21 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
             gst_egl_image_memory_get_image (mem));
         if (got_gl_error ("glEGLImageTargetTexture2DOES"))
           goto HANDLE_ERROR;
+        eglglessink->orientation = gst_egl_image_memory_get_orientation (mem);
+        if (eglglessink->orientation !=
+            GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL
+            && eglglessink->orientation !=
+            GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_FLIP) {
+          GST_ERROR_OBJECT (eglglessink, "Unsupported EGLImage orientation");
+          return GST_FLOW_ERROR;
+        }
       }
       gst_buffer_replace (&eglglessink->last_buffer, buf);
       eglglessink->stride[0] = 1;
       eglglessink->stride[1] = 1;
       eglglessink->stride[2] = 1;
     } else {
+      eglglessink->orientation = GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL;
       if (!gst_eglglessink_fill_texture (eglglessink, buf))
         goto HANDLE_ERROR;
     }
@@ -2256,7 +2292,7 @@ gst_eglglessink_render (GstEglGlesSink * eglglessink)
     glUseProgram (eglglessink->eglglesctx.glslprogram[1]);
 
     glVertexAttribPointer (eglglessink->eglglesctx.position_loc[1], 3,
-        GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (4 * sizeof (coord5)));
+        GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (8 * sizeof (coord5)));
     if (got_gl_error ("glVertexAttribPointer"))
       goto HANDLE_ERROR;
 
@@ -2267,7 +2303,7 @@ gst_eglglessink_render (GstEglGlesSink * eglglessink)
     GST_DEBUG_OBJECT (eglglessink, "Drawing black border 2");
 
     glVertexAttribPointer (eglglessink->eglglesctx.position_loc[1], 3,
-        GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (8 * sizeof (coord5)));
+        GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (12 * sizeof (coord5)));
     if (got_gl_error ("glVertexAttribPointer"))
       goto HANDLE_ERROR;
 
@@ -2293,15 +2329,31 @@ gst_eglglessink_render (GstEglGlesSink * eglglessink)
       goto HANDLE_ERROR;
   }
 
-  glVertexAttribPointer (eglglessink->eglglesctx.position_loc[0], 3,
-      GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (0 * sizeof (coord5)));
-  if (got_gl_error ("glVertexAttribPointer"))
-    goto HANDLE_ERROR;
+  if (eglglessink->orientation == GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL) {
+    glVertexAttribPointer (eglglessink->eglglesctx.position_loc[0], 3,
+        GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (0 * sizeof (coord5)));
+    if (got_gl_error ("glVertexAttribPointer"))
+      goto HANDLE_ERROR;
 
-  glVertexAttribPointer (eglglessink->eglglesctx.texpos_loc[0], 2,
-      GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (3 * sizeof (gfloat)));
-  if (got_gl_error ("glVertexAttribPointer"))
-    goto HANDLE_ERROR;
+    glVertexAttribPointer (eglglessink->eglglesctx.texpos_loc[0], 2,
+        GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (3 * sizeof (gfloat)));
+    if (got_gl_error ("glVertexAttribPointer"))
+      goto HANDLE_ERROR;
+  } else if (eglglessink->orientation ==
+      GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_FLIP) {
+    glVertexAttribPointer (eglglessink->eglglesctx.position_loc[0], 3, GL_FLOAT,
+        GL_FALSE, sizeof (coord5), (gpointer) (4 * sizeof (coord5)));
+    if (got_gl_error ("glVertexAttribPointer"))
+      goto HANDLE_ERROR;
+
+    glVertexAttribPointer (eglglessink->eglglesctx.texpos_loc[0], 2,
+        GL_FLOAT, GL_FALSE, sizeof (coord5),
+        (gpointer) (4 * sizeof (coord5) + 3 * sizeof (gfloat)));
+    if (got_gl_error ("glVertexAttribPointer"))
+      goto HANDLE_ERROR;
+  } else {
+    g_assert_not_reached ();
+  }
 
   glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
   if (got_gl_error ("glDrawElements"))
@@ -3503,7 +3555,7 @@ gst_egl_image_buffer_pool_acquire_buffer (GstBufferPool * bpool,
         GST_BUFFER_POOL_CLASS
         (gst_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool,
         buffer, params);
-    gst_object_replace ((GstObject **) &oldbuf->pool, (GstObject *) pool);
+    gst_object_replace ((GstObject **) & oldbuf->pool, (GstObject *) pool);
     gst_buffer_unref (oldbuf);
   }
 
