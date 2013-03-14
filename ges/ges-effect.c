@@ -27,6 +27,7 @@
 #include "ges-extractable.h"
 #include "ges-track-element.h"
 #include "ges-base-effect.h"
+#include "ges-effect-asset.h"
 #include "ges-effect.h"
 
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
@@ -86,6 +87,7 @@ extractable_get_id (GESExtractable * self)
 static void
 ges_extractable_interface_init (GESExtractableInterface * iface)
 {
+  iface->asset_type = GES_TYPE_EFFECT_ASSET;
   iface->check_id = (GESExtractableCheckId) extractable_check_id;
   iface->get_parameters_from_id = extractable_get_parameters_from_id;
   iface->get_id = extractable_get_id;
@@ -238,6 +240,15 @@ ges_effect_create_element (GESTrackElement * object)
 GESEffect *
 ges_effect_new (const gchar * bin_description)
 {
-  return g_object_new (GES_TYPE_EFFECT, "bin-description",
+  GESEffect *effect;
+  GESAsset *asset = ges_asset_request (GES_TYPE_EFFECT,
       bin_description, NULL);
+
+  g_return_val_if_fail (asset, NULL);
+
+  effect = GES_EFFECT (ges_asset_extract (asset, NULL));
+
+  gst_object_unref (asset);
+
+  return effect;
 }
