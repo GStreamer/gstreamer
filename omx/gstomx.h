@@ -118,6 +118,8 @@ typedef enum {
   GST_OMX_ACQUIRE_BUFFER_FLUSHING,
   /* The port must be reconfigured */
   GST_OMX_ACQUIRE_BUFFER_RECONFIGURE,
+  /* The port is EOS */
+  GST_OMX_ACQUIRE_BUFFER_EOS,
   /* A fatal error happened */
   GST_OMX_ACQUIRE_BUFFER_ERROR
 } GstOMXAcquireBufferReturn;
@@ -146,6 +148,7 @@ typedef enum {
   GST_OMX_MESSAGE_ERROR,
   GST_OMX_MESSAGE_PORT_ENABLE,
   GST_OMX_MESSAGE_PORT_SETTINGS_CHANGED,
+  GST_OMX_MESSAGE_BUFFER_FLAG,
   GST_OMX_MESSAGE_BUFFER_DONE,
 } GstOMXMessageType;
 
@@ -170,6 +173,10 @@ struct _GstOMXMessage {
       OMX_U32 port;
     } port_settings_changed;
     struct {
+      OMX_U32 port;
+      OMX_U32 flags;
+    } buffer_flag;
+    struct {
       OMX_HANDLETYPE component;
       OMX_PTR app_data;
       OMX_BUFFERHEADERTYPE *buffer;
@@ -191,6 +198,7 @@ struct _GstOMXPort {
   gboolean flushed; /* TRUE after OMX_CommandFlush was done */
   gboolean enabled_pending;  /* TRUE after OMX_Command{En,Dis}able */
   gboolean disabled_pending; /* was done until it took effect */
+  gboolean eos; /* TRUE after a buffer with EOS flag was received */
 
   /* Increased whenever the settings of these port change.
    * If settings_cookie != configured_settings_cookie

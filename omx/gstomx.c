@@ -321,6 +321,23 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
 
         break;
       }
+      case GST_OMX_MESSAGE_BUFFER_FLAG:{
+        GstOMXPort *port = NULL;
+        OMX_U32 index = msg->content.buffer_flag.port;
+        OMX_U32 flags = msg->content.buffer_flag.flags;
+
+        port = gst_omx_component_get_port (comp, index);
+        if (!port)
+          break;
+
+        GST_DEBUG_OBJECT (comp->parent, "Port %u got buffer flags 0x%08x",
+            port->index, flags);
+        if ((flags & OMX_BUFFERFLAG_EOS)
+            && port->port_def.eDir == OMX_DirOutput)
+          port->eos = TRUE;
+
+        break;
+      }
       case GST_OMX_MESSAGE_BUFFER_DONE:{
         GstOMXBuffer *buf = msg->content.buffer_done.buffer->pAppPrivate;
         GstOMXPort *port;
@@ -356,6 +373,10 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
            * the port was flushed */
           GST_DEBUG_OBJECT (comp->parent, "Port %u filled buffer %p (%p)",
               port->index, buf, buf->omx_buf->pBuffer);
+
+          if ((buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS)
+              && port->port_def.eDir == OMX_DirOutput)
+            port->eos = TRUE;
         }
 
         buf->used = FALSE;
@@ -491,8 +512,21 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
       gst_omx_component_send_message (comp, msg);
       break;
     }
+    case OMX_EventBufferFlag:{
+      GstOMXMessage *msg;
+
+      msg = g_slice_new (GstOMXMessage);
+
+      msg->type = GST_OMX_MESSAGE_BUFFER_FLAG;
+      msg->content.buffer_flag.port = nData1;
+      msg->content.buffer_flag.flags = nData2;
+      GST_DEBUG_OBJECT (comp->parent, "Port %u got buffer flags 0x%08x",
+          msg->content.buffer_flag.port, msg->content.buffer_flag.flags);
+
+      gst_omx_component_send_message (comp, msg);
+      break;
+    }
     case OMX_EventPortFormatDetected:
-    case OMX_EventBufferFlag:
     default:
       GST_DEBUG_OBJECT (comp->parent, "Unknown event 0x%08x", eEvent);
       break;
@@ -879,6 +913,7 @@ gst_omx_component_add_port (GstOMXComponent * comp, guint32 index)
   port->flushed = FALSE;
   port->enabled_pending = FALSE;
   port->disabled_pending = FALSE;
+  port->eos = FALSE;
 
   if (port->port_def.eDir == OMX_DirInput)
     comp->n_in_ports++;
@@ -1237,8 +1272,22 @@ retry:
     goto done;
   }
 
+  if (port->port_def.eDir == OMX_DirOutput && port->eos) {
+    if (!g_queue_is_empty (&port->pending_buffers)) {
+      GST_DEBUG_OBJECT (comp->parent,
+          "Output port %u is EOS but has buffers pending", port->index);
+      _buf = g_queue_pop_head (&port->pending_buffers);
+
+      ret = GST_OMX_ACQUIRE_BUFFER_OK;
+      goto done;
+    }
+
+    ret = GST_OMX_ACQUIRE_BUFFER_EOS;
+    goto done;
+  }
+
   /* 
-   * At this point we have no error or flushing port
+   * At this point we have no error or flushing/eos port
    * and a properly configured port.
    *
    */
@@ -1478,6 +1527,9 @@ gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
       err = OMX_ErrorTimeout;
       goto done;
     }
+
+    /* Reset EOS flag */
+    port->eos = FALSE;
   }
 
 done:
