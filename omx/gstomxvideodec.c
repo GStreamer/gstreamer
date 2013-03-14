@@ -486,34 +486,13 @@ gst_omx_buffer_pool_acquire_buffer (GstBufferPool * bpool,
 
   if (pool->port->port_def.eDir == OMX_DirOutput) {
     GstBuffer *buf;
-    GstBufferPoolAcquireParams int_params = *params;
-    GList *free_buffers = NULL;
-
-    int_params.flags |= GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT;
 
     g_return_val_if_fail (pool->current_buffer_index != -1, GST_FLOW_ERROR);
 
     buf = g_ptr_array_index (pool->buffers, pool->current_buffer_index);
     g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
-
-    /* FIXME: Add API to GstBufferPool for this */
-    while ((ret =
-            GST_BUFFER_POOL_CLASS
-            (gst_omx_buffer_pool_parent_class)->acquire_buffer (bpool, buffer,
-                &int_params)) != GST_FLOW_EOS) {
-      if (ret != GST_FLOW_OK) {
-        g_list_free_full (free_buffers, (GDestroyNotify) gst_buffer_unref);
-        return ret;
-      }
-      if (*buffer == buf)
-        break;
-      gst_object_replace ((GstObject **) & (*buffer)->pool, (GstObject *) pool);
-      free_buffers = g_list_prepend (free_buffers, *buffer);
-      *buffer = NULL;
-    }
-    g_list_free_full (free_buffers, (GDestroyNotify) gst_buffer_unref);
-
-    g_return_val_if_fail (*buffer != NULL, GST_FLOW_ERROR);
+    *buffer = buf;
+    ret = GST_FLOW_OK;
 
     /* If it's our own memory we have to set the sizes */
     if (!pool->other_pool) {
@@ -571,11 +550,10 @@ gst_omx_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
        * would ensure that the buffer is always unused when this is called.
        */
       g_assert_not_reached ();
+      GST_BUFFER_POOL_CLASS (gst_omx_buffer_pool_parent_class)->release_buffer
+          (bpool, buffer);
     }
   }
-
-  GST_BUFFER_POOL_CLASS (gst_omx_buffer_pool_parent_class)->release_buffer
-      (bpool, buffer);
 }
 
 static void
