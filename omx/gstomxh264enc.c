@@ -200,13 +200,13 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   return TRUE;
 
 unsupported_profile:
-  gst_caps_unref (peercaps);
   GST_ERROR_OBJECT (self, "Unsupported profile %s", profile_string);
+  gst_caps_unref (peercaps);
   return FALSE;
 
 unsupported_level:
-  gst_caps_unref (peercaps);
   GST_ERROR_OBJECT (self, "Unsupported level %s", level_string);
+  gst_caps_unref (peercaps);
   return FALSE;
 }
 

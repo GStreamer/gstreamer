@@ -207,13 +207,13 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   return TRUE;
 
 unsupported_profile:
-  gst_caps_unref (intersection);
   GST_ERROR_OBJECT (self, "Unsupported profile %s", profile_string);
+  gst_caps_unref (intersection);
   return FALSE;
 
 unsupported_level:
-  gst_caps_unref (intersection);
   GST_ERROR_OBJECT (self, "Unsupported level %s", level_string);
+  gst_caps_unref (intersection);
   return FALSE;
 }
 

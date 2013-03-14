@@ -197,13 +197,13 @@ gst_omx_h263_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   return TRUE;
 
 unsupported_profile:
-  gst_caps_unref (peercaps);
   GST_ERROR_OBJECT (self, "Unsupported profile %u", profile_id);
+  gst_caps_unref (peercaps);
   return FALSE;
 
 unsupported_level:
-  gst_caps_unref (peercaps);
   GST_ERROR_OBJECT (self, "Unsupported level %u", level_id);
+  gst_caps_unref (peercaps);
   return FALSE;
 }
 
