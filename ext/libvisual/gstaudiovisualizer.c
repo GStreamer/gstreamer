@@ -932,6 +932,7 @@ default_decide_allocation (GstAudioVisualizer * scope, GstQuery * query)
   GstAllocationParams params;
   GstStructure *config;
   gboolean update_allocator;
+  gboolean update_pool;
 
   gst_query_parse_allocation (query, &outcaps, NULL);
 
@@ -949,10 +950,12 @@ default_decide_allocation (GstAudioVisualizer * scope, GstQuery * query)
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    update_pool = TRUE;
   } else {
     pool = NULL;
     size = GST_VIDEO_INFO_SIZE (&scope->vinfo);
     min = max = 0;
+    update_pool = FALSE;
   }
 
   if (pool == NULL) {
@@ -974,10 +977,13 @@ default_decide_allocation (GstAudioVisualizer * scope, GstQuery * query)
   if (allocator)
     gst_object_unref (allocator);
 
-  if (pool) {
+  if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  if (pool)
     gst_object_unref (pool);
-  }
 
   return TRUE;
 }
