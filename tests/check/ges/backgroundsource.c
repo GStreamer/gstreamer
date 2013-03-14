@@ -257,6 +257,8 @@ GST_START_TEST (test_gap_filling_basic)
   assert_equals_uint64 (_START (clip), 0);
   assert_equals_uint64 (_DURATION (clip), 5);
 
+  /* TODO Since the timeline is responsible for adding TrackElements to
+   * Tracks, this test should be refactored */
   trackelement = ges_clip_create_track_element (clip, track->type);
   ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
 

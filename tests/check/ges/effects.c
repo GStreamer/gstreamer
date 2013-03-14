@@ -71,7 +71,8 @@ GST_START_TEST (test_add_effect_to_clip)
   fail_unless (GES_IS_EFFECT (effect));
   fail_unless (ges_container_add (GES_CONTAINER (source),
           GES_TIMELINE_ELEMENT (effect)));
-  fail_unless (ges_track_add_element (track_video, GES_TRACK_ELEMENT (effect)));
+  fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect)) !=
+      NULL);
 
   assert_equals_int (GES_TRACK_ELEMENT (effect)->active, TRUE);
 
@@ -120,17 +121,18 @@ GST_START_TEST (test_get_effects_from_tl)
 
   fail_unless (ges_container_add (GES_CONTAINER (source),
           GES_TIMELINE_ELEMENT (effect)));
-  fail_unless (ges_track_add_element (track_video, GES_TRACK_ELEMENT (effect)));
+  fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect)) ==
+      track_video);
 
   fail_unless (ges_container_add (GES_CONTAINER (source),
           GES_TIMELINE_ELEMENT (effect1)));
-  fail_unless (ges_track_add_element (track_video,
-          GES_TRACK_ELEMENT (effect1)));
+  fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect1)) ==
+      track_video);
 
   fail_unless (ges_container_add (GES_CONTAINER (source),
           GES_TIMELINE_ELEMENT (effect2)));
-  fail_unless (ges_track_add_element (track_video,
-          GES_TRACK_ELEMENT (effect2)));
+  fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect2)) ==
+      track_video);
   assert_equals_int (GES_CONTAINER_HEIGHT (source), 4);
 
   effects = ges_clip_get_top_effects (GES_CLIP (source));
@@ -181,26 +183,29 @@ GST_START_TEST (test_effect_clip)
   ges_timeline_add_layer (timeline, layer);
 
   GST_DEBUG ("Create effect");
-  effect_clip = ges_effect_clip_new ("identity", "identity");
+  effect_clip = ges_effect_clip_new ("agingtv", "audiopanorama");
 
   g_object_set (effect_clip, "duration", 25 * GST_SECOND, NULL);
 
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
       (GESClip *) effect_clip, 0);
 
-  effect = ges_effect_new ("identity");
+  effect = ges_effect_new ("agingtv");
   fail_unless (ges_container_add (GES_CONTAINER (effect_clip),
           GES_TIMELINE_ELEMENT (effect)));
-  fail_unless (ges_track_add_element (track_video, GES_TRACK_ELEMENT (effect)));
+  fail_if (ges_track_add_element (track_video, GES_TRACK_ELEMENT (effect)));
+  fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect)) ==
+      track_video);
 
   g_object_get (effect_clip, "height", &clip_height, NULL);
   assert_equals_int (clip_height, 3);
 
-  effect1 = ges_effect_new ("identity");
+  effect1 = ges_effect_new ("audiopanorama");
   fail_unless (ges_container_add (GES_CONTAINER (effect_clip),
           GES_TIMELINE_ELEMENT (effect1)));
-  fail_unless (ges_track_add_element (track_audio,
-          GES_TRACK_ELEMENT (effect1)));
+  fail_if (ges_track_add_element (track_audio, GES_TRACK_ELEMENT (effect1)));
+  fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect1)) ==
+      track_audio);
 
   g_object_get (effect_clip, "height", &clip_height, NULL);
   assert_equals_int (clip_height, 4);
@@ -211,8 +216,8 @@ GST_START_TEST (test_effect_clip)
         GES_BASE_EFFECT (tmp->data));
     fail_unless (priority > effect_prio);
     fail_unless (GES_IS_EFFECT (tmp->data));
-    fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (tmp->
-                data))->type == track_type[i]);
+    fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (tmp->data))->
+        type == track_type[i]);
     effect_prio = priority;
 
     g_object_unref (tmp->data);
@@ -250,7 +255,7 @@ GST_START_TEST (test_priorities_clip)
   ges_timeline_add_layer (timeline, layer);
 
   GST_DEBUG ("Create effect");
-  effect_clip = ges_effect_clip_new ("identity", "identity");
+  effect_clip = ges_effect_clip_new ("agingtv", "audiopanorama");
 
   g_object_set (effect_clip, "duration", 25 * GST_SECOND, NULL);
 
@@ -275,19 +280,22 @@ GST_START_TEST (test_priorities_clip)
   assert_equals_int (_PRIORITY (video_effect), 1);
   assert_equals_int (GES_CONTAINER_HEIGHT (effect_clip), 2);
 
-  effect = ges_effect_new ("identity");
+  effect = ges_effect_new ("agingtv");
   GST_DEBUG ("Adding effect to the effect clip %" GST_PTR_FORMAT, effect);
   fail_unless (ges_container_add (GES_CONTAINER (effect_clip),
           GES_TIMELINE_ELEMENT (effect)));
-  fail_unless (ges_track_add_element (track_video, GES_TRACK_ELEMENT (effect)));
+  fail_if (ges_track_add_element (track_video, GES_TRACK_ELEMENT (effect)));
+  fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect)) ==
+      track_video);
   assert_equals_int (GES_CONTAINER_HEIGHT (effect_clip), 3);
 
-  effect1 = ges_effect_new ("identity");
+  effect1 = ges_effect_new ("audiopanorama");
   GST_DEBUG ("Adding effect1 to the effect clip %" GST_PTR_FORMAT, effect1);
   fail_unless (ges_container_add (GES_CONTAINER (effect_clip),
           GES_TIMELINE_ELEMENT (effect1)));
-  fail_unless (ges_track_add_element (track_audio,
-          GES_TRACK_ELEMENT (effect1)));
+  fail_if (ges_track_add_element (track_audio, GES_TRACK_ELEMENT (effect1)));
+  fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect1)) ==
+      track_audio);
 
   fail_unless (ges_clip_set_top_effect_priority (GES_CLIP (effect_clip),
           GES_BASE_EFFECT (effect1), 0));
@@ -353,7 +361,9 @@ GST_START_TEST (test_effect_set_properties)
   effect = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
   fail_unless (ges_container_add (GES_CONTAINER (effect_clip),
           GES_TIMELINE_ELEMENT (effect)));
-  fail_unless (ges_track_add_element (track_video, effect));
+  fail_if (ges_track_add_element (track_video, effect));
+  fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect)) ==
+      track_video);
 
   ges_track_element_set_child_properties (effect,
       "GstAgingTV::scratch-lines", 17, "color-aging", FALSE, NULL);
@@ -445,7 +455,9 @@ GST_START_TEST (test_clip_signals)
   fail_unless (effect_added);
   g_signal_handlers_disconnect_by_func (effect_clip, effect_added_cb,
       &effect_added);
-  fail_unless (ges_track_add_element (track_video, GES_TRACK_ELEMENT (effect)));
+  fail_if (ges_track_add_element (track_video, GES_TRACK_ELEMENT (effect)));
+  fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect)) ==
+      track_video);
   g_signal_connect (effect, "deep-notify", (GCallback) deep_prop_changed_cb,
       effect);
 

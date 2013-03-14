@@ -1069,8 +1069,7 @@ app_move_selected_up (App * app)
 }
 
 static void
-app_add_effect_on_selected_clips (App * app, const gchar * bin_desc,
-    GESTrackType type)
+app_add_effect_on_selected_clips (App * app, const gchar * bin_desc)
 {
   GList *objects, *tmp;
   GESTrackElement *effect = NULL;
@@ -1083,12 +1082,6 @@ app_add_effect_on_selected_clips (App * app, const gchar * bin_desc,
     effect = GES_TRACK_ELEMENT (ges_effect_new (bin_desc));
     ges_container_add (GES_CONTAINER (tmp->data),
         GES_TIMELINE_ELEMENT (effect));
-
-    if (type == GES_TRACK_TYPE_VIDEO)
-      ges_track_add_element (app->video_track, effect);
-    else if (type == GES_TRACK_TYPE_AUDIO)
-      ges_track_add_element (app->audio_track, effect);
-
     g_object_unref (tmp->data);
   }
 }
@@ -1114,13 +1107,13 @@ on_apply_effect_cb (GtkButton * button, App * app)
 
   effect = gtk_entry_get_text (GTK_ENTRY (app->video_effect_entry));
   if (g_strcmp0 (effect, ""))
-    app_add_effect_on_selected_clips (app, effect, GES_TRACK_TYPE_VIDEO);
+    app_add_effect_on_selected_clips (app, effect);
 
   gtk_entry_set_text (GTK_ENTRY (app->video_effect_entry), "");
 
   effect = gtk_entry_get_text (GTK_ENTRY (app->audio_effect_entry));
   if (g_strcmp0 (effect, ""))
-    app_add_effect_on_selected_clips (app, effect, GES_TRACK_TYPE_AUDIO);
+    app_add_effect_on_selected_clips (app, effect);
 
   gtk_entry_set_text (GTK_ENTRY (app->audio_effect_entry), "");
 

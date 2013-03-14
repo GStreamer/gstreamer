@@ -566,6 +566,8 @@ ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
 
     _set_priority0 (elem, min_prio + GES_TIMELINE_ELEMENT_PRIORITY (clip)
         + clip->priv->nb_effects);
+
+    ges_container_add (GES_CONTAINER (clip), elem);
   }
 
   return result;
@@ -1033,8 +1035,6 @@ ges_clip_split (GESClip * clip, guint64 position)
    * FIXME: Avoid setting it oureself reworking the API */
   GES_TIMELINE_ELEMENT (clip)->duration = position - _START (clip);
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
-    GESTrack *track;
-
     GESTrackElement *new_trackelement, *trackelement =
         GES_TRACK_ELEMENT (tmp->data);
 
@@ -1058,13 +1058,6 @@ ges_clip_split (GESClip * clip, guint64 position)
       GST_WARNING_OBJECT (trackelement, "Could not create a copy");
       continue;
     }
-
-    track = ges_track_element_get_track (trackelement);
-    if (track == NULL)
-      GST_DEBUG_OBJECT (trackelement, "Was not in a track, not adding %p to"
-          "any track", new_trackelement);
-    else
-      ges_track_add_element (track, new_trackelement);
 
     /* Set 'new' track element timing propeties */
     _set_start0 (GES_TIMELINE_ELEMENT (new_trackelement), position);
