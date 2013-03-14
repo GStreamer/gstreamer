@@ -198,6 +198,8 @@ void            gst_xvcontext_set_synchronous           (GstXvContext * xvcontex
                                                          gboolean synchronous);
 void            gst_xvcontext_update_colorbalance       (GstXvContext * xvcontext,
                                                          GstXvContextConfig * config);
+void            gst_xvcontext_set_colorimetry           (GstXvContext * xvcontext,
+                                                         GstVideoColorimetry *colorimetry);
 
 
 typedef struct _GstXWindow GstXWindow;

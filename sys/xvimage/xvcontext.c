@@ -884,6 +884,32 @@ gst_xvcontext_get_format_from_info (GstXvContext * context, GstVideoInfo * info)
   return -1;
 }
 
+void
+gst_xvcontext_set_colorimetry (GstXvContext * context,
+    GstVideoColorimetry * colorimetry)
+{
+  Atom prop_atom;
+  int xv_value;
+
+  switch (colorimetry->matrix) {
+    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
+    case GST_VIDEO_COLOR_MATRIX_BT709:
+      xv_value = 1;
+      break;
+    default:
+      xv_value = 0;
+      break;
+  }
+
+  g_mutex_lock (&context->lock);
+  prop_atom = XInternAtom (context->disp, "XV_ITURBT_709", True);
+  if (prop_atom != None) {
+    XvSetPortAttribute (context->disp,
+        context->xv_port_id, prop_atom, xv_value);
+  }
+  g_mutex_unlock (&context->lock);
+}
+
 GstXWindow *
 gst_xvcontext_create_xwindow (GstXvContext * context, gint width, gint height)
 {

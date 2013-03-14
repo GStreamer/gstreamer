@@ -693,6 +693,8 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   if (im_format == -1)
     goto invalid_format;
 
+  gst_xvcontext_set_colorimetry (context, &info.colorimetry);
+
   size = info.size;
 
   /* get aspect ratio from caps if it's present, and
