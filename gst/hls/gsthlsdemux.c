@@ -700,6 +700,7 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
    * cache the first fragments and then it waits until it has more data in the
    * queue. This task is woken up when we push a new fragment to the queue or
    * when we reached the end of the playlist  */
+  GST_DEBUG_OBJECT (demux, "Enter task");
 
   if (G_UNLIKELY (demux->need_cache)) {
     if (!gst_hls_demux_cache_fragments (demux))
@@ -751,9 +752,13 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
     demux->position_shift = 0;
   }
 
+  GST_DEBUG_OBJECT (demux, "Pushing buffer %p", buf);
+
   ret = gst_pad_push (demux->srcpad, buf);
   if (ret != GST_FLOW_OK)
     goto error_pushing;
+
+  GST_DEBUG_OBJECT (demux, "Pushed buffer");
 
   return;
 
@@ -792,6 +797,7 @@ error_pushing:
 
 pause_task:
   {
+    GST_DEBUG_OBJECT (demux, "Pause task");
     gst_task_pause (demux->stream_task);
     return;
   }
@@ -864,10 +870,13 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
     gst_hls_demux_schedule (demux);
 
     /*  block until the next scheduled update or the signal to quit this thread */
+    GST_DEBUG_OBJECT (demux, "Waiting");
     if (g_cond_timed_wait (GST_TASK_GET_COND (demux->updates_task),
             &demux->updates_timed_lock, &demux->next_update)) {
+      GST_DEBUG_OBJECT (demux, "Unlocked");
       goto quit;
     }
+    GST_DEBUG_OBJECT (demux, "Continue");
 
     if (demux->cancelled)
       goto quit;
@@ -905,6 +914,7 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
 
     /* fetch the next fragment */
     if (g_queue_is_empty (demux->queue)) {
+      GST_DEBUG_OBJECT (demux, "queue empty, get next fragment");
       if (!gst_hls_demux_get_next_fragment (demux, FALSE)) {
         if (demux->cancelled) {
           goto quit;
@@ -1270,6 +1280,7 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean caching)
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 
+  GST_DEBUG_OBJECT (demux, "Pushing fragment in queue");
   g_queue_push_tail (demux->queue, download);
   if (!caching) {
     GST_TASK_SIGNAL (demux->updates_task);
