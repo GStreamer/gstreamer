@@ -319,7 +319,7 @@ gst_avdtp_util_parse_sbc_raw (void *config)
   GValue *list;
   gboolean mono, stereo;
 
-  structure = gst_structure_empty_new ("audio/x-sbc");
+  structure = gst_structure_new_empty ("audio/x-sbc");
   value = g_value_init (g_new0 (GValue, 1), G_TYPE_STRING);
   list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
 
@@ -490,7 +490,7 @@ gst_avdtp_util_parse_mpeg_raw (void *config)
   gboolean valid_layer = FALSE;
   gboolean mono, stereo;
 
-  structure = gst_structure_empty_new ("audio/mpeg");
+  structure = gst_structure_new_empty ("audio/mpeg");
   value = g_new0 (GValue, 1);
   g_value_init (value, G_TYPE_INT);
 

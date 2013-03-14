@@ -42,7 +42,8 @@ enum
   PROP_TRANSPORT
 };
 
-GST_BOILERPLATE (GstAvdtpSrc, gst_avdtp_src, GstBaseSrc, GST_TYPE_BASE_SRC);
+#define parent_class gst_avdtp_src_parent_class
+G_DEFINE_TYPE (GstAvdtpSrc, gst_avdtp_src, GST_TYPE_BASE_SRC);
 
 static GstStaticPadTemplate gst_avdtp_src_template =
     GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
@@ -59,7 +60,7 @@ static void gst_avdtp_src_get_property (GObject * object, guint prop_id,
 static void gst_avdtp_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_avdtp_src_getcaps (GstPad * pad);
+static GstCaps *gst_avdtp_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter);
 static gboolean gst_avdtp_src_start (GstBaseSrc * bsrc);
 static gboolean gst_avdtp_src_stop (GstBaseSrc * bsrc);
 static GstFlowReturn gst_avdtp_src_create (GstBaseSrc * bsrc, guint64 offset,
@@ -68,25 +69,13 @@ static gboolean gst_avdtp_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_avdtp_src_unlock_stop (GstBaseSrc * bsrc);
 
 static void
-gst_avdtp_src_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_avdtp_src_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "Bluetooth AVDTP Source",
-      "Source/Audio/Network/RTP",
-      "Receives audio from an A2DP device",
-      "Arun Raghavan <arun.raghavan@collabora.co.uk>");
-}
-
-static void
 gst_avdtp_src_class_init (GstAvdtpSrcClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseSrcClass *basesrc_class = GST_BASE_SRC_CLASS (klass);
+
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_avdtp_src_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_avdtp_src_set_property);
@@ -97,26 +86,33 @@ gst_avdtp_src_class_init (GstAvdtpSrcClass * klass)
   basesrc_class->create = GST_DEBUG_FUNCPTR (gst_avdtp_src_create);
   basesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_avdtp_src_unlock);
   basesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_avdtp_src_unlock_stop);
+  basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_avdtp_src_getcaps);
 
   g_object_class_install_property (gobject_class, PROP_TRANSPORT,
       g_param_spec_string ("transport",
           "Transport", "Use configured transport", NULL, G_PARAM_READWRITE));
 
+  gst_element_class_set_static_metadata (element_class,
+      "Bluetooth AVDTP Source",
+      "Source/Audio/Network/RTP",
+      "Receives audio from an A2DP device",
+      "Arun Raghavan <arun.raghavan@collabora.co.uk>");
+
   GST_DEBUG_CATEGORY_INIT (avdtpsrc_debug, "avdtpsrc", 0,
       "Bluetooth AVDTP Source");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_avdtp_src_template));
 }
 
 static void
-gst_avdtp_src_init (GstAvdtpSrc * avdtpsrc, GstAvdtpSrcClass * klass)
+gst_avdtp_src_init (GstAvdtpSrc * avdtpsrc)
 {
   avdtpsrc->poll = gst_poll_new (TRUE);
 
   gst_base_src_set_format (GST_BASE_SRC (avdtpsrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (avdtpsrc), TRUE);
   gst_base_src_set_do_timestamp (GST_BASE_SRC (avdtpsrc), TRUE);
-
-  gst_pad_set_getcaps_function (GST_BASE_SRC_PAD (avdtpsrc),
-      GST_DEBUG_FUNCPTR (gst_avdtp_src_getcaps));
 }
 
 static void
@@ -167,10 +163,10 @@ gst_avdtp_src_set_property (GObject * object, guint prop_id,
 }
 
 static GstCaps *
-gst_avdtp_src_getcaps (GstPad * pad)
+gst_avdtp_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
 {
-  GstAvdtpSrc *avdtpsrc = GST_AVDTP_SRC (gst_pad_get_parent_element (pad));
-  GstCaps *ret = NULL;
+  GstAvdtpSrc *avdtpsrc = GST_AVDTP_SRC (bsrc);
+  GstCaps *caps = NULL, *ret = NULL;
 
   if (avdtpsrc->dev_caps) {
     const GValue *value;
@@ -183,7 +179,7 @@ gst_avdtp_src_getcaps (GstPad * pad)
     if (g_str_equal (format, "audio/x-sbc")) {
       /* FIXME: we can return a fixed payload type once we
        * are in PLAYING */
-      ret = gst_caps_new_simple ("application/x-rtp",
+      caps = gst_caps_new_simple ("application/x-rtp",
           "media", G_TYPE_STRING, "audio",
           "payload", GST_TYPE_INT_RANGE, 96, 127,
           "encoding-name", G_TYPE_STRING, "SBC", NULL);
@@ -198,9 +194,16 @@ gst_avdtp_src_getcaps (GstPad * pad)
     }
     rate = g_value_get_int (value);
 
-    gst_caps_set_simple (ret, "clock-rate", G_TYPE_INT, rate, NULL);
+    gst_caps_set_simple (caps, "clock-rate", G_TYPE_INT, rate, NULL);
+
+    if (filter) {
+      ret = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+    } else
+      ret = caps;
   } else {
-    ret = gst_caps_ref (GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad)));
+    GST_DEBUG_OBJECT (avdtpsrc, "device not open, using template caps");
+    ret = GST_BASE_SRC_CLASS (parent_class)->get_caps (bsrc, filter);
   }
 
   return ret;
@@ -282,22 +285,23 @@ gst_avdtp_src_stop (GstBaseSrc * bsrc)
 }
 
 static GstFlowReturn
-gst_avdtp_src_create (GstBaseSrc * bsrc, guint64 offset,
-    guint length, GstBuffer ** outbuf)
+gst_avdtp_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
+    GstBuffer ** outbuf)
 {
   GstAvdtpSrc *avdtpsrc = GST_AVDTP_SRC (bsrc);
   GstBuffer *buf = NULL;
+  GstMapInfo info;
   int ret;
 
   if (g_atomic_int_get (&avdtpsrc->unlocked))
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
 
   /* We don't operate in GST_FORMAT_BYTES, so offset is ignored */
 
   while ((ret = gst_poll_wait (avdtpsrc->poll, GST_CLOCK_TIME_NONE))) {
     if (g_atomic_int_get (&avdtpsrc->unlocked))
       /* We're unlocked, time to gtfo */
-      return GST_FLOW_WRONG_STATE;
+      return GST_FLOW_FLUSHING;
 
     if (ret < 0)
       /* Something went wrong */
@@ -308,8 +312,15 @@ gst_avdtp_src_create (GstBaseSrc * bsrc, guint64 offset,
       break;
   }
 
-  buf = gst_buffer_new_and_alloc (length);
-  ret = read (avdtpsrc->pfd.fd, GST_BUFFER_DATA (buf), length);
+  ret = GST_BASE_SRC_CLASS (parent_class)->alloc (bsrc, offset, length, outbuf);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto alloc_failed;
+
+  buf = *outbuf;
+
+  gst_buffer_map (buf, &info, GST_MAP_WRITE);
+
+  ret = read (avdtpsrc->pfd.fd, info.data, length);
 
   if (ret < 0)
     goto read_error;
@@ -320,21 +331,25 @@ gst_avdtp_src_create (GstBaseSrc * bsrc, guint64 offset,
     goto eof;
   }
 
+  if (ret < length)
+    gst_buffer_set_size (buf, ret);
+
   GST_LOG_OBJECT (avdtpsrc, "Read %d bytes", ret);
 
-  if (ret < (gint) length) {
-    /* Create a subbuffer for as much as we've actually read */
-    *outbuf = gst_buffer_create_sub (buf, 0, ret);
-    gst_buffer_unref (buf);
-  } else
-    *outbuf = buf;
+  gst_buffer_unmap (buf, &info);
+  *outbuf = buf;
 
   return GST_FLOW_OK;
+
+alloc_failed:
+  {
+    GST_DEBUG_OBJECT (bsrc, "alloc failed: %s", gst_flow_get_name (ret));
+    return ret;
+  }
 
 read_error:
   GST_ERROR_OBJECT (avdtpsrc, "Error while reading audio data: %s",
       strerror (errno));
-
 eof:
   gst_buffer_unref (buf);
 

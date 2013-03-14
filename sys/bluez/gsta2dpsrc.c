@@ -33,7 +33,8 @@ enum
   PROP_TRANSPORT
 };
 
-GST_BOILERPLATE (GstA2dpSrc, gst_a2dp_src, GstBin, GST_TYPE_BIN);
+#define parent_class gst_a2dp_src_parent_class
+G_DEFINE_TYPE (GstA2dpSrc, gst_a2dp_src, GST_TYPE_BIN);
 
 static void gst_a2dp_src_finalize (GObject * object);
 static void gst_a2dp_src_get_property (GObject * object, guint prop_id,
@@ -54,24 +55,12 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         "bitpool = (int) [ 2, " TEMPLATE_MAX_BITPOOL_STR " ]"));
 
 static void
-gst_a2dp_src_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_a2dp_src_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "Bluetooth A2DP Source",
-      "Source/Audio/Network",
-      "Receives and depayloads audio from an A2DP device",
-      "Arun Raghavan <arun.raghavan@collabora.co.uk>");
-}
-
-static void
 gst_a2dp_src_class_init (GstA2dpSrcClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_a2dp_src_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_a2dp_src_set_property);
@@ -81,12 +70,21 @@ gst_a2dp_src_class_init (GstA2dpSrcClass * klass)
       g_param_spec_string ("transport",
           "Transport", "Use configured transport", NULL, G_PARAM_READWRITE));
 
+  gst_element_class_set_static_metadata (element_class,
+      "Bluetooth A2DP Source",
+      "Source/Audio/Network",
+      "Receives and depayloads audio from an A2DP device",
+      "Arun Raghavan <arun.raghavan@collabora.co.uk>");
+
   GST_DEBUG_CATEGORY_INIT (a2dpsrc_debug, "a2dpsrc", 0,
       "Bluetooth A2DP Source");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_a2dp_src_template));
 }
 
 static void
-gst_a2dp_src_init (GstA2dpSrc * a2dpsrc, GstA2dpSrcClass * klass)
+gst_a2dp_src_init (GstA2dpSrc * a2dpsrc)
 {
   GstBin *bin = GST_BIN (a2dpsrc);
   GstElement *depay = NULL;
