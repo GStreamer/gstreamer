@@ -309,14 +309,6 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_hls_demux_reset (demux, FALSE);
       break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      /* Start the streaming loop in paused only if we already received
-         the main playlist. It might have been stopped if we were in PAUSED
-         state and we filled our queue with enough cached fragments
-       */
-      if (gst_m3u8_client_get_uri (demux->client)[0] != '\0')
-        gst_task_start (demux->updates_task);
-      break;
     default:
       break;
   }
@@ -324,17 +316,6 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      demux->cancelled = TRUE;
-      gst_uri_downloader_cancel (demux->downloader);
-      gst_task_stop (demux->updates_task);
-      g_mutex_lock (&demux->updates_timed_lock);
-      GST_TASK_SIGNAL (demux->updates_task);
-      g_mutex_unlock (&demux->updates_timed_lock);
-      g_rec_mutex_lock (&demux->updates_lock);
-      g_rec_mutex_unlock (&demux->updates_lock);
-      demux->cancelled = FALSE;
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       demux->cancelled = TRUE;
       gst_hls_demux_stop (demux);
@@ -707,8 +688,7 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
       goto cache_error;
 
     /* we can start now the updates thread (only if on playing) */
-    if (GST_STATE (demux) == GST_STATE_PLAYING)
-      gst_task_start (demux->updates_task);
+    gst_task_start (demux->updates_task);
     GST_INFO_OBJECT (demux, "First fragments cached successfully");
   }
 
