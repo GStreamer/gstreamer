@@ -1708,6 +1708,8 @@ restart:
 
   if (!flushing && self->cur_field_idx < 1) {
     goto need_more;
+  } else if (self->cur_field_idx < 0 && flushing) {
+    self->cur_field_idx++;
   }
 
   if (self->fields == GST_DEINTERLACE_ALL || IS_TELECINE (interlacing_mode))
