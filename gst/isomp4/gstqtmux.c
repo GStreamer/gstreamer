@@ -2154,6 +2154,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   if (G_UNLIKELY (pad->first_ts == GST_CLOCK_TIME_NONE) && last_buf) {
     if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (last_buf))) {
       pad->first_ts = GST_BUFFER_PTS (last_buf);
+      GST_DEBUG ("setting first_ts to %" G_GUINT64_FORMAT, pad->first_ts);
       check_and_subtract_ts (qtmux, &GST_BUFFER_DTS (last_buf), pad->first_ts);
       check_and_subtract_ts (qtmux, &GST_BUFFER_PTS (last_buf), pad->first_ts);
       check_and_subtract_ts (qtmux, &GST_BUFFER_DTS (buf), pad->first_ts);
@@ -2167,6 +2168,15 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
         GST_TIME_FORMAT, GST_PAD_NAME (pad->collect.pad),
         GST_TIME_ARGS (pad->first_ts));
 
+  }
+
+  if (last_buf && buf && GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (buf)) &&
+      GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (last_buf)) &&
+      GST_BUFFER_DTS (buf) < GST_BUFFER_DTS (last_buf)) {
+    GST_ERROR ("decreasing DTS value %" GST_TIME_FORMAT " < %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_DTS (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DTS (last_buf)));
+    GST_BUFFER_DTS (buf) = GST_BUFFER_DTS (last_buf);
   }
 
   duration = GST_BUFFER_DURATION (last_buf);
@@ -2208,7 +2218,12 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     sample_size = gst_buffer_get_size (last_buf);
     if (pad->have_dts) {
       gint64 scaled_dts;
-      pad->last_dts = GST_BUFFER_DTS (last_buf);
+      if (pad->last_buf) {
+        pad->last_dts = GST_BUFFER_DTS (pad->last_buf);
+      } else {
+        pad->last_dts = GST_BUFFER_DTS (last_buf) +
+            GST_BUFFER_DURATION (last_buf);
+      }
       if ((gint64) (pad->last_dts) < 0) {
         scaled_dts = -gst_util_uint64_scale_round (-pad->last_dts,
             atom_trak_get_timescale (pad->trak), GST_SECOND);
