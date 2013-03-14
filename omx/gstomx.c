@@ -1354,7 +1354,7 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
 
   gst_omx_component_handle_messages (comp);
 
-  if (port->port_def.eDir == OMX_DirInput) {
+  if (port->port_def.eDir == OMX_DirOutput) {
     /* Reset all flags, some implementations don't
      * reset them themselves and the flags are not
      * valid anymore after the buffer was consumed
