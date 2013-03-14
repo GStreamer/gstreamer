@@ -178,9 +178,10 @@ gst_audio_ring_buffer_debug_spec_buff (GstAudioRingBufferSpec * spec)
   GST_DEBUG ("acquire ringbuffer: total segments: %d", spec->segtotal);
   GST_DEBUG ("acquire ringbuffer: latency segments: %d", spec->seglatency);
   GST_DEBUG ("acquire ringbuffer: segment size: %d bytes = %d samples",
-      spec->segsize, spec->segsize / bpf);
+      spec->segsize, (bpf != 0) ? (spec->segsize / bpf) : -1);
   GST_DEBUG ("acquire ringbuffer: buffer size: %d bytes = %d samples",
-      spec->segsize * spec->segtotal, spec->segsize * spec->segtotal / bpf);
+      spec->segsize * spec->segtotal,
+      (bpf != 0) ? (spec->segsize * spec->segtotal / bpf) : -1);
 }
 
 /**
