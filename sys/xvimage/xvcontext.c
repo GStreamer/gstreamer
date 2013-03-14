@@ -798,7 +798,9 @@ gst_xvcontext_set_synchronous (GstXvContext * context, gboolean synchronous)
 {
   /* call XSynchronize with the current value of synchronous */
   GST_DEBUG ("XSynchronize called with %s", synchronous ? "TRUE" : "FALSE");
+  g_mutex_lock (&context->lock);
   XSynchronize (context->disp, synchronous);
+  g_mutex_unlock (&context->lock);
 }
 
 void
