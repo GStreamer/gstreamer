@@ -351,17 +351,9 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
           GST_DEBUG_OBJECT (comp->parent, "Port %u emptied buffer %p (%p)",
               port->index, buf, buf->omx_buf->pBuffer);
 
-          /* XXX: Some OMX implementations don't reset nOffset
-           * when the complete buffer is emptied but instead
-           * only reset nFilledLen. We reset nOffset to 0
-           * if nFilledLen == 0, which is safe to do because
-           * the offset *must* be 0 if the buffer is not
-           * filled at all.
-           *
-           * Seen in QCOM's OMX implementation.
-           */
-          if (buf->omx_buf->nFilledLen == 0)
-            buf->omx_buf->nOffset = 0;
+          /* Reset offset and filled length */
+          buf->omx_buf->nOffset = 0;
+          buf->omx_buf->nFilledLen = 0;
 
           /* Reset all flags, some implementations don't
            * reset them themselves and the flags are not
@@ -1360,6 +1352,10 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
      * valid anymore after the buffer was consumed
      */
     buf->omx_buf->nFlags = 0;
+
+    /* Reset offset and filled length */
+    buf->omx_buf->nOffset = 0;
+    buf->omx_buf->nFilledLen = 0;
   }
 
   if ((err = comp->last_error) != OMX_ErrorNone) {
