@@ -273,6 +273,7 @@ struct _GstOMXClassData {
 GKeyFile *        gst_omx_get_configuration (void);
 
 const gchar *     gst_omx_error_to_string (OMX_ERRORTYPE err);
+const gchar *     gst_omx_state_to_string (OMX_STATETYPE state);
 guint64           gst_omx_parse_hacks (gchar ** hacks);
 
 GstOMXCore *      gst_omx_core_acquire (const gchar * filename);

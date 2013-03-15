@@ -218,8 +218,8 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
 
     switch (msg->type) {
       case GST_OMX_MESSAGE_STATE_SET:{
-        GST_INFO_OBJECT (comp->parent, "%s state change to %d finished",
-            comp->name, msg->content.state_set.state);
+        GST_INFO_OBJECT (comp->parent, "%s state change to %s finished",
+            comp->name, gst_omx_state_to_string (msg->content.state_set.state));
         comp->state = msg->content.state_set.state;
         if (comp->state == comp->pending_state)
           comp->pending_state = OMX_StateInvalid;
@@ -425,8 +425,9 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
           msg->type = GST_OMX_MESSAGE_STATE_SET;
           msg->content.state_set.state = nData2;
 
-          GST_DEBUG_OBJECT (comp->parent, "%s state change to %d finished",
-              comp->name, msg->content.state_set.state);
+          GST_DEBUG_OBJECT (comp->parent, "%s state change to %s finished",
+              comp->name,
+              gst_omx_state_to_string (msg->content.state_set.state));
 
           gst_omx_component_send_message (comp, msg);
           break;
@@ -2433,6 +2434,32 @@ gst_omx_error_to_string (OMX_ERRORTYPE err)
         return "Unknown error";
       }
   }
+}
+
+const gchar *
+gst_omx_state_to_string (OMX_STATETYPE state)
+{
+  switch (state) {
+    case OMX_StateInvalid:
+      return "Invalid";
+    case OMX_StateLoaded:
+      return "Loaded";
+    case OMX_StateIdle:
+      return "Idle";
+    case OMX_StateExecuting:
+      return "Executing";
+    case OMX_StatePause:
+      return "Pause";
+    case OMX_StateWaitForResources:
+      return "WaitForResources";
+    default:
+      if (state >= OMX_StateKhronosExtensions)
+        return "KhronosExtensionState";
+      else if (state >= OMX_StateVendorStartUnused)
+        return "CustomVendorState";
+      break;
+  }
+  return "Unknown state";
 }
 
 #if defined(USE_OMX_TARGET_RPI)
