@@ -558,8 +558,12 @@ seek_cb (GtkRange * range, PlaybackApp * app)
   do_seek (app, GST_FORMAT_TIME, real);
 
   if (app->play_scrub) {
-    GST_DEBUG ("do scrub seek, PLAYING");
-    gst_element_set_state (app->pipeline, GST_STATE_PLAYING);
+    if (app->buffering) {
+      GST_DEBUG ("do scrub seek, waiting for buffering");
+    } else {
+      GST_DEBUG ("do scrub seek, PLAYING");
+      gst_element_set_state (app->pipeline, GST_STATE_PLAYING);
+    }
 
     if (app->seek_timeout_id == 0) {
       app->seek_timeout_id =
@@ -673,8 +677,12 @@ stop_seek (GtkRange * range, GdkEventButton * event, PlaybackApp * app)
     }
   } else {
     if (app->state == GST_STATE_PLAYING) {
-      GST_DEBUG ("stop scrub seek, PLAYING");
-      gst_element_set_state (app->pipeline, GST_STATE_PLAYING);
+      if (app->buffering) {
+        GST_DEBUG ("stop scrub seek, waiting for buffering");
+      } else {
+        GST_DEBUG ("stop scrub seek, PLAYING");
+        gst_element_set_state (app->pipeline, GST_STATE_PLAYING);
+      }
     }
   }
 
