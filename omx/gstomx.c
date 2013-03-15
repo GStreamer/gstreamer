@@ -1552,10 +1552,10 @@ gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
       err = OMX_ErrorTimeout;
       goto done;
     }
-
-    /* Reset EOS flag */
-    port->eos = FALSE;
   }
+
+  /* Reset EOS flag */
+  port->eos = FALSE;
 
 done:
   gst_omx_port_update_port_definition (port, NULL);
@@ -2217,8 +2217,11 @@ gst_omx_port_wait_enabled_unlocked (GstOMXPort * port, GstClockTime timeout)
         gst_omx_error_to_string (err), err);
     err = last_error;
   } else {
-    if (enabled)
+    if (enabled) {
       port->flushing = FALSE;
+      /* Reset EOS flag */
+      port->eos = FALSE;
+    }
   }
 
   gst_omx_component_handle_messages (comp);
