@@ -2027,7 +2027,7 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
         return FALSE;
       if (gst_omx_port_deallocate_buffers (self->dec_in_port) != OMX_ErrorNone)
         return FALSE;
-      if (gst_omx_port_deallocate_buffers (self->dec_out_port) != OMX_ErrorNone)
+      if (gst_omx_video_dec_deallocate_output_buffers (self) != OMX_ErrorNone)
         return FALSE;
       if (gst_omx_port_wait_enabled (self->dec_in_port,
               1 * GST_SECOND) != OMX_ErrorNone)
