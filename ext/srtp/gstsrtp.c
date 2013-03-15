@@ -173,7 +173,7 @@ set_crypto_policy_cipher_auth (guint cipher, guint auth,
 {
   switch (cipher) {
     case GST_SRTP_CIPHER_AES_128_ICM:
-      policy->cipher_type = AES_ICM;
+      policy->cipher_type = AES_128_ICM;
       policy->cipher_key_len = 30;
       break;
     case GST_SRTP_CIPHER_NULL:
