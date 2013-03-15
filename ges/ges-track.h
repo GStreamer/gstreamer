@@ -28,22 +28,12 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TRACK ges_track_get_type()
-
-#define GES_TRACK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK, GESTrack))
-
-#define GES_TRACK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK, GESTrackClass))
-
-#define GES_IS_TRACK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK))
-
-#define GES_IS_TRACK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK))
-
-#define GES_TRACK_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK, GESTrackClass))
+#define GES_TYPE_TRACK            ges_track_get_type()
+#define GES_TRACK(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK, GESTrack))
+#define GES_TRACK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK, GESTrackClass))
+#define GES_IS_TRACK(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK))
+#define GES_IS_TRACK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK))
+#define GES_TRACK_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK, GESTrackClass))
 
 typedef struct _GESTrackPrivate GESTrackPrivate;
 
@@ -62,68 +52,50 @@ typedef GstElement* (*GESCreateElementForGapFunc) (GESTrack *track);
 /**
  * GESTrack:
  * @type: a #GESTrackType indicting the basic type of the track.
- *
  */
-
-struct _GESTrack {
+struct _GESTrack
+{
   GstBin parent;
 
   /*< public >*/
   /* READ-ONLY */
-  GESTrackType type;
+  GESTrackType     type;
 
   /*< private >*/
-  GESTrackPrivate * priv;
-
+  GESTrackPrivate* priv;
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING];
+  gpointer         _ges_reserved[GES_PADDING];
 };
 
 /**
  * GESTrackClass:
  */
-
-struct _GESTrackClass {
+struct _GESTrackClass
+{
   /*< private >*/
   GstBinClass parent_class;
 
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING];
+  gpointer    _ges_reserved[GES_PADDING];
 };
 
-GType ges_track_get_type                  (void);
+const GstCaps*     ges_track_get_caps                        (GESTrack *track);
+gboolean           ges_track_is_updating                     (GESTrack *track);
+GList*             ges_track_get_elements                    (GESTrack *track);
+const GESTimeline* ges_track_get_timeline                    (GESTrack *track);
+gboolean           ges_track_enable_update                   (GESTrack *track, gboolean enabled);
+void               ges_track_set_caps                        (GESTrack *track, const GstCaps *caps);
+void               ges_track_set_timeline                    (GESTrack *track, GESTimeline *timeline);
+gboolean           ges_track_add_element                     (GESTrack *track, GESTrackElement *object);
+gboolean           ges_track_remove_element                  (GESTrack *track, GESTrackElement *object);
+void               ges_track_set_create_element_for_gap_func (GESTrack *track, GESCreateElementForGapFunc func);
 
-GESTrack* ges_track_new                   (GESTrackType type, GstCaps * caps);
-
-void    ges_track_set_timeline            (GESTrack * track,
-                                           GESTimeline *timeline);
-
-void    ges_track_set_caps                (GESTrack * track,
-                                           const GstCaps * caps);
-
-const GstCaps * ges_track_get_caps        (GESTrack *track);
-
-const GESTimeline *ges_track_get_timeline (GESTrack *track);
-
-gboolean ges_track_add_element             (GESTrack * track,
-                                           GESTrackElement * object);
-
-gboolean ges_track_remove_element          (GESTrack * track,
-                                           GESTrackElement * object);
-
-GESTrack *ges_track_video_raw_new         (void);
-GESTrack *ges_track_audio_raw_new         (void);
-
-gboolean ges_track_enable_update          (GESTrack * track, gboolean enabled);
-gboolean ges_track_is_updating            (GESTrack * track);
-
-GList* ges_track_get_elements              (GESTrack *track);
-
-void
-ges_track_set_create_element_for_gap_func (GESTrack *track,
-                                           GESCreateElementForGapFunc func);
+/* standard methods */
+GType              ges_track_get_type                        (void);
+GESTrack*          ges_track_video_raw_new                   (void);
+GESTrack*          ges_track_audio_raw_new                   (void);
+GESTrack*          ges_track_new                             (GESTrackType type, GstCaps * caps);
 
 G_END_DECLS
 
 #endif /* _GES_TRACK */
-

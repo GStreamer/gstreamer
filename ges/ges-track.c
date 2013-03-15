@@ -333,7 +333,10 @@ create_element_for_raw_video_gap (GESTrack * track)
       NULL);
 }
 
-/* Remove @object from @track, but keeps it in the sequence this is needed
+/* FIXME: Find out how to avoid doing this "hack" using the GDestroyNotify
+ * function pointer in the trackelements_by_start GSequence
+ *
+ * Remove @object from @track, but keeps it in the sequence this is needed
  * when finalizing as we can not change a GSequence at the same time we are
  * accessing it
  */
