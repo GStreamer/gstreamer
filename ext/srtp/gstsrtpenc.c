@@ -637,8 +637,9 @@ get_rtp_other_pad (GstPad * pad)
     return priv->sinkpad;
   else if (pad == priv->sinkpad)
     return priv->srcpad;
-  else
-    g_assert_not_reached ();
+
+  g_assert_not_reached ();
+  return NULL;
 }
 
 /* Release a sink pad and it's linked source pad
