@@ -6,7 +6,7 @@ GST_TYPE_ELEMENT
 % pads
 sinkpad srcpad
 % pkg-config
-gstreamer-0.10
+gstreamer-1.0
 % includes
 #include <gst/gst.h>
 % prototypes
