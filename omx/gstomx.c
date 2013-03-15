@@ -415,8 +415,8 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
     {
       OMX_COMMANDTYPE cmd = (OMX_COMMANDTYPE) nData1;
 
-      GST_DEBUG_OBJECT (comp->parent, "%s command %d complete", comp->name,
-          cmd);
+      GST_DEBUG_OBJECT (comp->parent, "%s command %s complete (%d)",
+          comp->name, gst_omx_command_to_string (cmd), cmd);
 
       switch (cmd) {
         case OMX_CommandStateSet:{
@@ -2460,6 +2460,30 @@ gst_omx_state_to_string (OMX_STATETYPE state)
       break;
   }
   return "Unknown state";
+}
+
+const gchar *
+gst_omx_command_to_string (OMX_COMMANDTYPE cmd)
+{
+  switch (cmd) {
+    case OMX_CommandStateSet:
+      return "SetState";
+    case OMX_CommandFlush:
+      return "Flush";
+    case OMX_CommandPortDisable:
+      return "DisablePort";
+    case OMX_CommandPortEnable:
+      return "EnablePort";
+    case OMX_CommandMarkBuffer:
+      return "MarkBuffer";
+    default:
+      if (cmd >= OMX_CommandKhronosExtensions)
+        return "KhronosExtensionCommand";
+      else if (cmd >= OMX_CommandVendorStartUnused)
+        return "VendorExtensionCommand";
+      break;
+  }
+  return "Unknown command";
 }
 
 #if defined(USE_OMX_TARGET_RPI)
