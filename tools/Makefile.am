@@ -1,24 +1,27 @@
 
 templatefiles=\
+	element-templates/audiodecoder \
+	element-templates/audioencoder \
 	element-templates/audiofilter \
 	element-templates/audiosink \
 	element-templates/audiosrc \
-	element-templates/baseaudiosink \
-	element-templates/baseaudiosrc \
-	element-templates/basertpdepayload \
-	element-templates/basertppayload \
+	element-templates/baseparse \
 	element-templates/basesink \
 	element-templates/basesrc \
 	element-templates/basetransform \
-	element-templates/cddabasesrc \
 	element-templates/element \
-	element-templates/pushsrc \
-	element-templates/tagdemux \
-	element-templates/videofilter2 \
+	element-templates/sinkpad-audio \
+	element-templates/sinkpad-template \
+	element-templates/sinkpad-template-video \
+	element-templates/srcpad-audio \
+	element-templates/srcpad-template \
+	element-templates/srcpad-template-video \
+	element-templates/videodecoder \
+	element-templates/videoencoder \
+	element-templates/videofilter \
 	element-templates/videosink
 
 templatedeps = \
-	element-templates/base \
 	element-templates/gobject \
 	element-templates/sinkpad \
 	element-templates/sinkpad-simple \
