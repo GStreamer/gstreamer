@@ -2200,6 +2200,11 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
     return GST_FLOW_EOS;
   }
 
+  if (!self->started && !GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)) {
+    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
+    return GST_FLOW_OK;
+  }
+
   timestamp = frame->pts;
   duration = frame->duration;
 
