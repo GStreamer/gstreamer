@@ -415,7 +415,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
     {
       OMX_COMMANDTYPE cmd = (OMX_COMMANDTYPE) nData1;
 
-      GST_DEBUG_OBJECT (comp->parent, "%s command %s complete (%d)",
+      GST_DEBUG_OBJECT (comp->parent, "%s %s command complete (%d)",
           comp->name, gst_omx_command_to_string (cmd), cmd);
 
       switch (cmd) {
@@ -749,8 +749,8 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
   gst_omx_component_handle_messages (comp);
 
   old_state = comp->state;
-  GST_INFO_OBJECT (comp->parent, "Setting %s state from %d to %d", comp->name,
-      old_state, state);
+  GST_INFO_OBJECT (comp->parent, "Setting %s state from %s to %s", comp->name,
+      gst_omx_state_to_string (old_state), gst_omx_state_to_string (state));
 
   if ((err = comp->last_error) != OMX_ErrorNone && state > old_state) {
     GST_ERROR_OBJECT (comp->parent, "Component %s in error state: %s (0x%08x)",
@@ -759,8 +759,8 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
   }
 
   if (old_state == state || comp->pending_state == state) {
-    GST_DEBUG_OBJECT (comp->parent, "Component %s already in state %d",
-        comp->name, state);
+    GST_DEBUG_OBJECT (comp->parent, "Component %s already in state %s",
+        comp->name, gst_omx_state_to_string (state));
     goto done;
   }
 
@@ -877,7 +877,8 @@ gst_omx_component_get_state (GstOMXComponent * comp, GstClockTime timeout)
 done:
   g_mutex_unlock (&comp->lock);
 
-  GST_DEBUG_OBJECT (comp->parent, "%s returning state %d", comp->name, ret);
+  GST_DEBUG_OBJECT (comp->parent, "%s returning state %s", comp->name,
+      gst_omx_state_to_string (ret));
 
   return ret;
 }
@@ -1078,8 +1079,8 @@ gst_omx_component_setup_tunnel (GstOMXComponent * comp1, GstOMXPort * port1,
   g_mutex_lock (&comp1->lock);
   g_mutex_lock (&comp2->lock);
   GST_DEBUG_OBJECT (comp1->parent,
-      "Setup tunnel between %p port %u and %p port %u",
-      comp1, port1->index, comp2, port2->index);
+      "Setup tunnel between %s port %u and %s port %u",
+      comp1->name, port1->index, comp2->name, port2->index);
 
   err = comp1->core->setup_tunnel (comp1->handle, port1->index, comp2->handle,
       port2->index);
@@ -1090,9 +1091,9 @@ gst_omx_component_setup_tunnel (GstOMXComponent * comp1, GstOMXPort * port1,
   }
 
   GST_DEBUG_OBJECT (comp1->parent,
-      "Setup tunnel between %p port %u and %p port %u: %s (0x%08x)",
-      comp1, port1->index,
-      comp2, port2->index, gst_omx_error_to_string (err), err);
+      "Setup tunnel between %s port %u and %s port %u: %s (0x%08x)",
+      comp1->name, port1->index,
+      comp2->name, port2->index, gst_omx_error_to_string (err), err);
 
   g_mutex_unlock (&comp2->lock);
   g_mutex_unlock (&comp1->lock);
@@ -1124,8 +1125,8 @@ gst_omx_component_close_tunnel (GstOMXComponent * comp1, GstOMXPort * port1,
   g_mutex_lock (&comp1->lock);
   g_mutex_lock (&comp2->lock);
   GST_DEBUG_OBJECT (comp1->parent,
-      "Closing tunnel between %p port %u and %p port %u",
-      comp1, port1->index, comp2, port2->index);
+      "Closing tunnel between %s port %u and %s port %u",
+      comp1->name, port1->index, comp2->name, port2->index);
 
   err = comp1->core->setup_tunnel (comp1->handle, port1->index, 0, 0);
   if (err != OMX_ErrorNone) {
@@ -1144,8 +1145,8 @@ gst_omx_component_close_tunnel (GstOMXComponent * comp1, GstOMXPort * port1,
   port2->tunneled = FALSE;
 
   GST_DEBUG_OBJECT (comp1->parent,
-      "Closed tunnel between %p port %u and %p port %u",
-      comp1, port1->index, comp2, port2->index);
+      "Closed tunnel between %s port %u and %s port %u",
+      comp1->name, port1->index, comp2->name, port2->index);
 
   g_mutex_unlock (&comp2->lock);
   g_mutex_unlock (&comp1->lock);
