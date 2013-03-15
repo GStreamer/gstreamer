@@ -396,13 +396,11 @@ ges_clip_set_supported_formats
 ges_clip_get_supported_formats
 ges_clip_split
 ges_clip_edit
-<SUBSECTION Standard>
 GES_CLIP_HEIGHT
 ges_clip_create_track_elements
 ges_clip_create_track_element
 ges_clip_fill_track_element
-ges_clip_is_moving_from_layer
-ges_clip_set_moving_from_layer
+<SUBSECTION Standard>
 GESClipPrivate
 GES_IS_CLIP
 GES_IS_CLIP_CLASS

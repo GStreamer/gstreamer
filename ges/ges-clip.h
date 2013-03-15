@@ -160,9 +160,7 @@ GESTrackElement*  ges_clip_find_track_element     (GESClip *clip, GESTrack *trac
  *                     Layer                        *
  ****************************************************/
 GESTimelineLayer* ges_clip_get_layer              (GESClip *clip);
-gboolean          ges_clip_is_moving_from_layer   (GESClip *clip);
 gboolean          ges_clip_move_to_layer          (GESClip *clip, GESTimelineLayer  *layer);
-void              ges_clip_set_moving_from_layer  (GESClip *clip, gboolean is_moving);
 
 /****************************************************
  *                   Effects                        *
