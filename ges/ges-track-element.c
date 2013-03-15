@@ -185,12 +185,12 @@ ges_track_element_dispose (GObject * object)
     GstState cstate;
 
     if (priv->track != NULL) {
-      g_error ("Still in %p, this means that you forgot"
+      g_error ("%p Still in %p, this means that you forgot"
           " to remove it from the GESTrack it is contained in. You always need"
           " to remove a GESTrackElement from its track before dropping the last"
           " reference\n"
           "This problem may also be caused by a refcounting bug in"
-          " the application or GES itself.", priv->track);
+          " the application or GES itself.", object, priv->track);
       gst_element_get_state (priv->gnlobject, &cstate, NULL, 0);
       if (cstate != GST_STATE_NULL)
         gst_element_set_state (priv->gnlobject, GST_STATE_NULL);

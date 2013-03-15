@@ -510,15 +510,18 @@ GST_START_TEST (test_ges_timeline_remove_track)
   /* remove the track and check that the track elements have been released */
   fail_unless (ges_timeline_remove_track (timeline, track));
 
-  ASSERT_OBJECT_REFCOUNT (t1, "trackelement", 2);
-  ASSERT_OBJECT_REFCOUNT (t2, "trackelement", 2);
-  ASSERT_OBJECT_REFCOUNT (t3, "trackelement", 2);
+  ASSERT_OBJECT_REFCOUNT (t1, "trackelement", 3);
+  ASSERT_OBJECT_REFCOUNT (t2, "trackelement", 3);
+  ASSERT_OBJECT_REFCOUNT (t3, "trackelement", 3);
 
   g_object_unref (t1);
   g_object_unref (t2);
   g_object_unref (t3);
 
   g_object_unref (timeline);
+  ASSERT_OBJECT_REFCOUNT (t1, "trackelement", 0);
+  ASSERT_OBJECT_REFCOUNT (t2, "trackelement", 0);
+  ASSERT_OBJECT_REFCOUNT (t3, "trackelement", 0);
 }
 
 GST_END_TEST;

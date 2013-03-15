@@ -1888,24 +1888,40 @@ clip_track_element_added_cb (GESClip * clip, GESTrackElement * track_element,
 }
 
 static void
+clip_track_element_removed_cb (GESClip * clip, GESTrackElement * track_element,
+    GESTimeline * timeline)
+{
+  GESTrack *track = ges_track_element_get_track (track_element);
+
+  if (track)
+    ges_track_remove_element (track, track_element);
+}
+
+static void
 layer_object_added_cb (GESTimelineLayer * layer, GESClip * clip,
     GESTimeline * timeline)
 {
-  if (ges_clip_is_moving_from_layer (clip)) {
-    GST_DEBUG ("Clip %p is moving from a layer to another, not doing"
-        " anything on it", clip);
-    timeline->priv->movecontext.needs_move_ctx = TRUE;
+  /* We make sure not to be connected twice */
+  g_signal_handlers_disconnect_by_func (clip, clip_track_element_added_cb,
+      timeline);
+  g_signal_handlers_disconnect_by_func (clip, clip_track_element_removed_cb,
+      timeline);
 
+  /* And we connect to the object */
+  g_signal_connect (clip, "child-added",
+      G_CALLBACK (clip_track_element_added_cb), timeline);
+  g_signal_connect (clip, "child-removed",
+      G_CALLBACK (clip_track_element_removed_cb), timeline);
+
+  if (ges_clip_is_moving_from_layer (clip)) {
+    GST_DEBUG ("Clip %p moving from one layer to another, not creating "
+        "TrackElement", clip);
+    timeline->priv->movecontext.needs_move_ctx = TRUE;
     _create_transitions_on_layer (timeline, layer, NULL, NULL,
         _find_transition_from_auto_transitions);
-
     return;
   }
 
-  GST_DEBUG ("New Clip %p added to layer %p", clip, layer);
-  /* Here we connect to the child-added signal, and  */
-  g_signal_connect (clip, "child-added",
-      G_CALLBACK (clip_track_element_added_cb), timeline);
   add_object_to_tracks (timeline, clip, NULL);
   GST_DEBUG ("Done");
 }
@@ -1946,13 +1962,13 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESClip * clip,
                 (GCompareFunc) custom_find_track))) {
       GST_DEBUG ("Belongs to one of the tracks we control");
 
-      ges_track_remove_element (ges_track_element_get_track (track_element),
-          track_element);
       ges_container_remove (GES_CONTAINER (clip),
           GES_TIMELINE_ELEMENT (track_element));
     }
   }
   g_signal_handlers_disconnect_by_func (clip, clip_track_element_added_cb,
+      timeline);
+  g_signal_handlers_disconnect_by_func (clip, clip_track_element_removed_cb,
       timeline);
 
   g_list_free_full (trackelements, gst_object_unref);

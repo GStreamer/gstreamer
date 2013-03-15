@@ -216,9 +216,12 @@ _ungroup (GESContainer * container, gboolean recursive)
 
     /* Move trackelement to the container it is supposed to land into */
     if (tmpclip != clip) {
+      /* We need to bump the refcount to avoid the object to be destroyed */
+      gst_object_ref (track_element);
       ges_container_remove (container, GES_TIMELINE_ELEMENT (track_element));
       ges_container_add (GES_CONTAINER (tmpclip),
           GES_TIMELINE_ELEMENT (track_element));
+      gst_object_unref (track_element);
     }
   }
   g_hash_table_foreach (_tracktype_clip, (GHFunc) add_tlobj_to_list, &ret);
@@ -354,8 +357,11 @@ _group (GList * containers)
         tmpelement = tmpelement->next) {
       GESTimelineElement *celement = GES_TIMELINE_ELEMENT (tmpelement->data);
 
+      /* We need to bump the refcount to avoid the object to be destroyed */
+      gst_object_ref (celement);
       ges_container_remove (GES_CONTAINER (cclip), celement);
       ges_container_add (ret, celement);
+      gst_object_unref (celement);
 
       supported_formats = supported_formats |
           ges_track_element_get_track_type (GES_TRACK_ELEMENT (celement));
