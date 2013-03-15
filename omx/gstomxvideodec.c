@@ -1634,6 +1634,7 @@ eos:
       self->draining = FALSE;
       g_cond_broadcast (&self->drain_cond);
       flow_ret = GST_FLOW_OK;
+      gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
     } else {
       GST_DEBUG_OBJECT (self, "Component signalled EOS");
       flow_ret = GST_FLOW_EOS;
