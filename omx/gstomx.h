@@ -210,6 +210,9 @@ struct _GstOMXPort {
 
 struct _GstOMXComponent {
   GstObject *parent;
+
+  gchar *name; /* for debugging mostly */
+
   OMX_HANDLETYPE handle;
   GstOMXCore *core;
 
