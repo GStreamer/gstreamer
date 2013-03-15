@@ -11,8 +11,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 % base-init
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_replace_sink_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_replace_sink_template);
 % instance-init
 % methods
 % end

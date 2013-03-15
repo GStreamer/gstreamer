@@ -1,21 +1,12 @@
 /* vim: set filetype=c: */
 
 % instance-members
+  GstPad *sinkpad;
 % prototypes
 % pad-template
 /* FIXME: add/remove formats you can handle */
 #define VIDEO_SINK_CAPS \
-    GST_VIDEO_CAPS_RGBA "; " \
-    GST_VIDEO_CAPS_ARGB "; " \
-    GST_VIDEO_CAPS_BGRA "; " \
-    GST_VIDEO_CAPS_ABGR "; " \
-    GST_VIDEO_CAPS_RGBx "; " \
-    GST_VIDEO_CAPS_xRGB "; " \
-    GST_VIDEO_CAPS_BGRx "; " \
-    GST_VIDEO_CAPS_xBGR "; " \
-    GST_VIDEO_CAPS_RGB  "; " \
-    GST_VIDEO_CAPS_BGR  "; " \
-    GST_VIDEO_CAPS_YUV("{ AYUV }")
+    GST_VIDEO_CAPS_MAKE("{ I420, Y444, Y42B, UYVY, RGBA }")
 
 static GstStaticPadTemplate gst_replace_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -25,9 +16,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 % base-init
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_replace_sink_template);
+  gst_element_class_add_pad_template (GST_ELEMENT_CLASS(klass),
+      gst_static_pad_template_get (&gst_replace_sink_template));
 % instance-init
+  replace->sinkpad = gst_pad_new_from_static_template (
+      &gst_replace_sink_template, "sink");
 % methods
 % end
 
