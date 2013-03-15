@@ -2185,7 +2185,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
   GstOMXBuffer *buf;
   GstBuffer *codec_data = NULL;
   guint offset = 0, size;
-  GstClockTime timestamp, duration, timestamp_offset = 0;
+  GstClockTime timestamp, duration;
   OMX_ERRORTYPE err;
 
   self = GST_OMX_VIDEO_DEC (decoder);
@@ -2347,22 +2347,20 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
         buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
         buf->omx_buf->nFilledLen);
 
-    /* Interpolate timestamps if we're passing the buffer
-     * in multiple chunks */
-    if (offset != 0 && duration != GST_CLOCK_TIME_NONE) {
-      timestamp_offset = gst_util_uint64_scale (offset, duration, size);
-    }
-
     if (timestamp != GST_CLOCK_TIME_NONE) {
       buf->omx_buf->nTimeStamp =
-          gst_util_uint64_scale (timestamp + timestamp_offset,
-          OMX_TICKS_PER_SECOND, GST_SECOND);
-      self->last_upstream_ts = timestamp + timestamp_offset;
+          gst_util_uint64_scale (timestamp, OMX_TICKS_PER_SECOND, GST_SECOND);
+      self->last_upstream_ts = timestamp;
+    } else {
+      buf->omx_buf->nTimeStamp = 0;
     }
-    if (duration != GST_CLOCK_TIME_NONE) {
+
+    if (duration != GST_CLOCK_TIME_NONE && offset == 0) {
       buf->omx_buf->nTickCount =
           gst_util_uint64_scale (buf->omx_buf->nFilledLen, duration, size);
       self->last_upstream_ts += duration;
+    } else {
+      buf->omx_buf->nTickCount = 0;
     }
 
     if (offset == 0) {
