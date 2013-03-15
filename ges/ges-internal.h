@@ -232,5 +232,9 @@ G_GNUC_INTERNAL void _ges_container_sort_children       (GESContainer *container
 G_GNUC_INTERNAL void _ges_container_set_ignore_notifies (GESContainer *container,
                                                          gboolean ignore_notifies);
 
+/****************************************************
+ *                  GESClip                         *
+ ****************************************************/
+void              ges_clip_set_layer              (GESClip *clip, GESTimelineLayer  *layer);
 
 #endif /* __GES_INTERNAL_H__ */

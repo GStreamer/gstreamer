@@ -402,7 +402,6 @@ ges_clip_create_track_elements
 ges_clip_create_track_element
 ges_clip_fill_track_element
 ges_clip_is_moving_from_layer
-ges_clip_set_layer
 ges_clip_set_moving_from_layer
 GESClipPrivate
 GES_IS_CLIP

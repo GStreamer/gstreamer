@@ -53,9 +53,8 @@ typedef struct _GESClipPrivate GESClipPrivate;
  *
  * Returns: TRUE if the implementer succesfully filled the @gnlobj, else #FALSE.
  */
-typedef gboolean (*GESFillTrackElementFunc) (GESClip *clip,
-                                            GESTrackElement *track_element,
-                                            GstElement *gnlobj);
+typedef gboolean (*GESFillTrackElementFunc) (GESClip *clip, GESTrackElement *track_element,
+                                             GstElement *gnlobj);
 
 /**
  * GESCreateTrackElementFunc:
@@ -80,8 +79,7 @@ typedef gboolean (*GESFillTrackElementFunc) (GESClip *clip,
  * Returns: the #GESTrackElement to be used, or %NULL if it can't provide one
  * for the given @track.
  */
-typedef GESTrackElement *(*GESCreateTrackElementFunc) (GESClip * clip,
-                                                     GESTrackType type);
+typedef GESTrackElement *(*GESCreateTrackElementFunc) (GESClip * clip, GESTrackType type);
 
 /**
  * GESCreateTrackElementsFunc:
@@ -105,13 +103,13 @@ typedef GList * (*GESCreateTrackElementsFunc) (GESClip * clip, GESTrackType type
  */
 struct _GESClip
 {
-  GESContainer parent;
+  GESContainer    parent;
 
   /*< private >*/
   GESClipPrivate *priv;
 
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING_LARGE];
+  gpointer       _ges_reserved[GES_PADDING_LARGE];
 };
 
 /**
@@ -127,54 +125,60 @@ struct _GESClip
 struct _GESClipClass
 {
   /*< private > */
-  GESContainerClass parent_class;
+  GESContainerClass          parent_class;
 
   /*< public > */
-  GESCreateTrackElementFunc create_track_element;
+  GESCreateTrackElementFunc  create_track_element;
   GESCreateTrackElementsFunc create_track_elements;
-
-  /* FIXME : might need a release_track_element */
-  GESFillTrackElementFunc fill_track_element;
-  gboolean need_fill_track;
+  GESFillTrackElementFunc    fill_track_element;
+  gboolean                   need_fill_track;
 
   /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING_LARGE];
 };
 
+/****************************************************
+ *                  Standard                        *
+ ****************************************************/
 GType ges_clip_get_type (void);
 
-/* Setters */
-void ges_clip_set_layer            (GESClip *clip,
-                                               GESTimelineLayer  *layer);
+/****************************************************
+ *                TrackElement handling             *
+ ****************************************************/
+GESTrackType      ges_clip_get_supported_formats  (GESClip *clip);
+GESTrackElement*  ges_clip_create_track_element   (GESClip *clip, GESTrackType type);
+GList*            ges_clip_create_track_elements  (GESClip *clip, GESTrackType type);
+void              ges_clip_set_supported_formats  (GESClip *clip, GESTrackType       supportedformats);
+gboolean          ges_clip_add_asset              (GESClip *clip, GESAsset *asset);
+gboolean          ges_clip_fill_track_element     (GESClip *clip, GESTrackElement *trackelement,
+                                                   GstElement *gnlobj);
+GESTrackElement*  ges_clip_find_track_element     (GESClip *clip, GESTrack *track,
+                                                   GType type);
 
-/* TrackElement handling */
-GESTrackType ges_clip_get_supported_formats    (GESClip *clip);
-GESTrackElement *ges_clip_create_track_element (GESClip *clip, GESTrackType type);
-GList * ges_clip_create_track_elements         (GESClip *clip, GESTrackType type);
-void ges_clip_set_supported_formats            (GESClip *clip, GESTrackType       supportedformats);
+/****************************************************
+ *                     Layer                        *
+ ****************************************************/
+GESTimelineLayer* ges_clip_get_layer              (GESClip *clip);
+gboolean          ges_clip_is_moving_from_layer   (GESClip *clip);
+gboolean          ges_clip_move_to_layer          (GESClip *clip, GESTimelineLayer  *layer);
+void              ges_clip_set_moving_from_layer  (GESClip *clip, gboolean is_moving);
 
-gboolean ges_clip_add_asset               (GESClip *clip, GESAsset       *asset);
-gboolean ges_clip_fill_track_element          (GESClip *clip, GESTrackElement    *trackelement, GstElement *gnlobj);
-GESTrackElement *ges_clip_find_track_element   (GESClip *clip, GESTrack          *track,    GType      type);
+/****************************************************
+ *                   Effects                        *
+ ****************************************************/
+GList*   ges_clip_get_top_effects           (GESClip *clip);
+gint     ges_clip_get_top_effect_position   (GESClip *clip, GESBaseEffect *effect);
+gboolean ges_clip_set_top_effect_priority   (GESClip *clip, GESBaseEffect *effect,
+                                             guint newpriority);
 
-/* Layer */
-GESTimelineLayer *ges_clip_get_layer   (GESClip *clip);
-gboolean ges_clip_is_moving_from_layer (GESClip *clip);
-gboolean ges_clip_move_to_layer        (GESClip *clip, GESTimelineLayer  *layer);
-void ges_clip_set_moving_from_layer    (GESClip *clip, gboolean is_moving);
-
-/* Effects */
-GList* ges_clip_get_top_effects           (GESClip *clip);
-gint   ges_clip_get_top_effect_position   (GESClip *clip, GESBaseEffect *effect);
-gboolean ges_clip_set_top_effect_priority (GESClip *clip, GESBaseEffect *effect, guint newpriority);
-
-/* Editing */
-GESClip *ges_clip_split  (GESClip *clip, guint64  position);
-
-gboolean ges_clip_edit             (GESClip *clip, GList   *layers,
-                                               gint  new_layer_priority, GESEditMode mode,
-                                               GESEdge edge, guint64 position);
+/****************************************************
+ *                   Editing                        *
+ ****************************************************/
+GESClip* ges_clip_split  (GESClip *clip, guint64  position);
+gboolean ges_clip_edit   (GESClip *clip, GList   *layers,
+                          gint  new_layer_priority, GESEditMode mode,
+                          GESEdge edge, guint64 position);
 
 G_END_DECLS
 #endif /* _GES_CLIP */
