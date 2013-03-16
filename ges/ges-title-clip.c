@@ -602,7 +602,7 @@ _child_removed (GESContainer * container, GESTimelineElement * element)
   if (GES_IS_TITLE_SOURCE (element)) {
     GST_DEBUG_OBJECT (container, "%" GST_PTR_FORMAT " removed", element);
     priv->track_titles = g_slist_remove (priv->track_titles, element);
-    g_object_unref (element);
+    gst_object_unref (element);
   }
 }
 
@@ -614,7 +614,7 @@ _child_added (GESContainer * container, GESTimelineElement * element)
   if (GES_IS_TITLE_SOURCE (element)) {
     GST_DEBUG_OBJECT (container, "%" GST_PTR_FORMAT " added", element);
     priv->track_titles = g_slist_prepend (priv->track_titles,
-        g_object_ref (element));
+        gst_object_ref (element));
   }
 }
 
@@ -659,7 +659,7 @@ ges_title_clip_new (void)
   GESAsset *asset = ges_asset_request (GES_TYPE_TITLE_CLIP, NULL, NULL);
 
   new_clip = GES_TITLE_CLIP (ges_asset_extract (asset, NULL));
-  g_object_unref (asset);
+  gst_object_unref (asset);
 
   return new_clip;
 }

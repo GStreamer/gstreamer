@@ -275,7 +275,7 @@ _child_removed (GESContainer * container, GESTimelineElement * element)
   if (GES_IS_VIDEO_TRANSITION (element)) {
     GST_DEBUG_OBJECT (container, "%" GST_PTR_FORMAT " removed", element);
     priv->video_transitions = g_slist_remove (priv->video_transitions, element);
-    g_object_unref (element);
+    gst_object_unref (element);
   }
 }
 
@@ -287,7 +287,7 @@ _child_added (GESContainer * container, GESTimelineElement * element)
   if (GES_IS_VIDEO_TRANSITION (element)) {
     GST_DEBUG_OBJECT (container, "%" GST_PTR_FORMAT " added", element);
     priv->video_transitions =
-        g_slist_prepend (priv->video_transitions, g_object_ref (element));
+        g_slist_prepend (priv->video_transitions, gst_object_ref (element));
   }
 }
 

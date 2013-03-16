@@ -231,7 +231,7 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
 
 build_failure:
   {
-    g_object_unref (timeline);
+    gst_object_unref (timeline);
     return NULL;
   }
 }
@@ -290,9 +290,9 @@ create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv,
 failure:
   {
     if (timeline)
-      g_object_unref (timeline);
+      gst_object_unref (timeline);
     if (pipeline)
-      g_object_unref (pipeline);
+      gst_object_unref (pipeline);
     return NULL;
   }
 }

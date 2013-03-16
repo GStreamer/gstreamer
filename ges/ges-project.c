@@ -674,7 +674,7 @@ ges_project_list_assets (GESProject * project, GType filter)
   while (g_hash_table_iter_next (&iter, &key, &value)) {
     if (g_type_is_a (ges_asset_get_extractable_type (GES_ASSET (value)),
             filter))
-      ret = g_list_append (ret, g_object_ref (value));
+      ret = g_list_append (ret, gst_object_ref (value));
   }
 
   return ret;

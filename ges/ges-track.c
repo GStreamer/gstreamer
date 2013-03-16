@@ -95,7 +95,7 @@ static void composition_duration_cb (GstElement * composition, GParamSpec * arg
 static void
 add_trackelement_to_list_foreach (GESTrackElement * trackelement, GList ** list)
 {
-  g_object_ref (trackelement);
+  gst_object_ref (trackelement);
   *list = g_list_prepend (*list, trackelement);
 }
 
@@ -375,7 +375,7 @@ remove_object_internal (GESTrack * track, GESTrackElement * object)
   g_signal_emit (track, ges_track_signals[TRACK_ELEMENT_REMOVED], 0,
       GES_TRACK_ELEMENT (object));
 
-  g_object_unref (object);
+  gst_object_unref (object);
 
   return TRUE;
 }
@@ -801,7 +801,7 @@ ges_track_get_elements (GESTrack * track)
  * Removes the object from the track and unparents it.
  * Unparenting it means the reference owned by @track on the @object will be
  * removed. If you wish to use the @object after this function, make sure you
- * call g_object_ref() before removing it from the @track.
+ * call gst_object_ref() before removing it from the @track.
  *
  * Returns: #TRUE if the object was removed, else #FALSE if the track
  * could not remove the object (like if it didn't belong to the track).

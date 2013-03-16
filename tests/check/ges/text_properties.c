@@ -93,8 +93,8 @@ GST_START_TEST (test_text_properties_in_layer)
 
   GST_DEBUG ("removing the layer");
 
-  g_object_unref (track_element);
-  g_object_unref (timeline);
+  gst_object_unref (track_element);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;

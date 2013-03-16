@@ -923,7 +923,7 @@ ges_track_element_lookup_child (GESTrackElement * object,
           g_strcmp0 (G_OBJECT_TYPE_NAME (G_OBJECT (value)), classename) == 0) {
         GST_DEBUG ("The %s property from %s has been found", name, classename);
         if (element)
-          *element = g_object_ref (value);
+          *element = gst_object_ref (value);
 
         *pspec = g_param_spec_ref (key);
         res = TRUE;
@@ -1036,7 +1036,7 @@ ges_track_element_set_child_property_valist (GESTrackElement * object,
 
     g_object_set_property (G_OBJECT (element), pspec->name, &value);
 
-    g_object_unref (element);
+    gst_object_unref (element);
     g_value_unset (&value);
 
     name = va_arg (var_args, gchar *);
@@ -1120,7 +1120,7 @@ ges_track_element_get_child_property_valist (GESTrackElement * object,
 
     g_value_init (&value, pspec->value_type);
     g_object_get_property (G_OBJECT (element), pspec->name, &value);
-    g_object_unref (element);
+    gst_object_unref (element);
 
     G_VALUE_LCOPY (&value, var_args, 0, &error);
     if (error)
@@ -1267,7 +1267,7 @@ ges_track_element_set_child_property (GESTrackElement * object,
 
   g_object_set_property (G_OBJECT (element), pspec->name, value);
 
-  g_object_unref (element);
+  gst_object_unref (element);
   g_param_spec_unref (pspec);
 
   return TRUE;
@@ -1316,7 +1316,7 @@ ges_track_element_get_child_property (GESTrackElement * object,
 
   g_object_get_property (G_OBJECT (element), pspec->name, value);
 
-  g_object_unref (element);
+  gst_object_unref (element);
   g_param_spec_unref (pspec);
 
   return TRUE;

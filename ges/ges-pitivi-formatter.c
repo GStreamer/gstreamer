@@ -96,7 +96,7 @@ static void
 free_src_map (SrcMapping * srcmap)
 {
   g_free (srcmap->id);
-  g_object_unref (srcmap->clip);
+  gst_object_unref (srcmap->clip);
   g_list_foreach (srcmap->track_element_ids, (GFunc) g_free, NULL);
   g_list_free (srcmap->track_element_ids);
   g_slice_free (SrcMapping, srcmap);
@@ -332,7 +332,7 @@ save_tracks (GESTimeline * timeline, xmlTextWriterPtr writer,
     xmlTextWriterEndElement (writer);
   }
 
-  g_list_foreach (tracks, (GFunc) g_object_unref, NULL);
+  g_list_foreach (tracks, (GFunc) gst_object_unref, NULL);
   g_list_free (tracks);
   xmlTextWriterEndElement (writer);
 }
@@ -388,15 +388,15 @@ save_sources (GESPitiviFormatter * formatter, GList * layers,
         srcmap->id =
             g_strdup (g_hash_table_lookup (priv->saving_source_table,
                 uriclip_uri));
-        srcmap->clip = g_object_ref (clip);
+        srcmap->clip = gst_object_ref (clip);
         srcmap->priority = ges_timeline_layer_get_priority (layer);
         /* We fill up the track_element_ids in save_track_elements */
         source_list = g_list_append (source_list, srcmap);
       }
     }
-    g_list_foreach (clips, (GFunc) g_object_unref, NULL);
+    g_list_foreach (clips, (GFunc) gst_object_unref, NULL);
     g_list_free (clips);
-    g_object_unref (G_OBJECT (layer));
+    gst_object_unref (G_OBJECT (layer));
   }
 
   return source_list;
@@ -516,7 +516,7 @@ create_tracks (GESFormatter * self)
         priv->trackv = track;
       }
     }
-    g_list_foreach (tracks, (GFunc) g_object_unref, NULL);
+    g_list_foreach (tracks, (GFunc) gst_object_unref, NULL);
     g_list_free (tracks);
     return TRUE;
   }
@@ -1147,7 +1147,7 @@ ges_pitivi_formatter_init (GESPitiviFormatter * self)
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 
   priv->layers_table =
-      g_hash_table_new_full (g_int_hash, g_str_equal, g_free, g_object_unref);
+      g_hash_table_new_full (g_int_hash, g_str_equal, g_free, gst_object_unref);
 
   priv->sources_table =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free,

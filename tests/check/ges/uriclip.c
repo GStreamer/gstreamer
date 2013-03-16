@@ -90,7 +90,7 @@ GST_START_TEST (test_filesource_basic)
 
   g_main_loop_run (mainloop);
   g_main_loop_unref (mainloop);
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;

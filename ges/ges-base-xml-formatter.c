@@ -152,7 +152,7 @@ done:
     g_free (xmlcontent);
 
   if (file)
-    g_object_unref (file);
+    gst_object_unref (file);
 
   return parsecontext;
 
@@ -197,7 +197,7 @@ _can_load_uri (GESFormatterClass * class, const gchar * uri, GError ** error)
   g_markup_parse_context_free (ctx);
 
 done:
-  g_object_unref (self);
+  gst_object_unref (self);
   return ret;
 }
 
@@ -257,8 +257,8 @@ _save_to_uri (GESFormatter * formatter, GESTimeline * timeline,
         lerror->message);
 
   g_string_free (str, TRUE);
-  g_object_unref (file);
-  g_object_unref (stream);
+  gst_object_unref (file);
+  gst_object_unref (stream);
 
   if (lerror)
     g_propagate_error (error, lerror);
@@ -266,17 +266,17 @@ _save_to_uri (GESFormatter * formatter, GESTimeline * timeline,
   return ret;
 
 serialization_failed:
-  g_object_unref (file);
+  gst_object_unref (file);
 
   g_output_stream_close (stream, NULL, NULL);
-  g_object_unref (stream);
+  gst_object_unref (stream);
   if (lerror)
     g_propagate_error (error, lerror);
 
   return FALSE;
 
 failed_opening_file:
-  g_object_unref (file);
+  gst_object_unref (file);
 
   GST_WARNING_OBJECT (formatter, "Could not open %s because: %s", uri,
       lerror->message);
@@ -396,7 +396,7 @@ _set_child_property (GQuark field_id, const GValue * value,
 
   g_object_set_property (G_OBJECT (element), pspec->name, value);
   g_param_spec_unref (pspec);
-  g_object_unref (element);
+  gst_object_unref (element);
 }
 
 void

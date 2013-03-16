@@ -78,7 +78,7 @@ GST_START_TEST (test_ges_scenario)
 
   layers = ges_timeline_get_layers (timeline);
   fail_unless (g_list_find (layers, layer) != NULL);
-  g_list_foreach (layers, (GFunc) g_object_unref, NULL);
+  g_list_foreach (layers, (GFunc) gst_object_unref, NULL);
   g_list_free (layers);
 
   /* Give the Timeline a Track */
@@ -108,7 +108,7 @@ GST_START_TEST (test_ges_scenario)
   fail_unless (tmp_layer == layer);
   /* The timeline stole our reference */
   ASSERT_OBJECT_REFCOUNT (source, "source", 1);
-  g_object_unref (tmp_layer);
+  gst_object_unref (tmp_layer);
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
 
   /* Make sure the associated TrackElement is in the Track */
@@ -129,7 +129,7 @@ GST_START_TEST (test_ges_scenario)
   GST_DEBUG ("Remove the Clip from the layer");
 
   /* Now remove the clip */
-  g_object_ref (source);
+  gst_object_ref (source);
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
   fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (source)));
   ASSERT_OBJECT_REFCOUNT (source, "source", 1);
@@ -138,33 +138,33 @@ GST_START_TEST (test_ges_scenario)
   fail_unless (tmp_layer == NULL);
   trackelements = GES_CONTAINER_CHILDREN (source);
   fail_unless (trackelements == NULL);  /* No unreffing then */
-  g_object_unref (source);
+  gst_object_unref (source);
 
   GST_DEBUG ("Removing track from the timeline");
   /* Remove the track from the timeline */
-  g_object_ref (track);
+  gst_object_ref (track);
   fail_unless (ges_timeline_remove_track (timeline, track));
   fail_unless (ges_track_get_timeline (track) == NULL);
 
   tracks = ges_timeline_get_tracks (timeline);
   fail_unless (tracks == NULL);
   ASSERT_OBJECT_REFCOUNT (track, "track", 1);
-  g_object_unref (track);
+  gst_object_unref (track);
 
   GST_DEBUG ("Removing layer from the timeline");
   /* Remove the layer from the timeline */
-  g_object_ref (layer);
+  gst_object_ref (layer);
   fail_unless (ges_timeline_remove_layer (timeline, layer));
   fail_unless (layer->timeline == NULL);
 
   layers = ges_timeline_get_layers (timeline);
   fail_unless (layers == NULL);
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
-  g_object_unref (layer);
+  gst_object_unref (layer);
 
   /* Finally clean up our object */
   ASSERT_OBJECT_REFCOUNT (timeline, "timeline", 1);
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -212,7 +212,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
   tmp_layer = ges_clip_get_layer (GES_CLIP (s1));
   fail_unless (tmp_layer == layer);
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 2);
-  g_object_unref (tmp_layer);
+  gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
   s2 = ges_custom_source_clip_new (my_fill_track_func, NULL);
@@ -221,7 +221,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
   tmp_layer = ges_clip_get_layer (GES_CLIP (s2));
   fail_unless (tmp_layer == layer);
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 2);
-  g_object_unref (tmp_layer);
+  gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
   s3 = ges_custom_source_clip_new (my_fill_track_func, NULL);
@@ -230,7 +230,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
   tmp_layer = ges_clip_get_layer (GES_CLIP (s3));
   fail_unless (tmp_layer == layer);
   ASSERT_OBJECT_REFCOUNT (layer, "layer", 2);
-  g_object_unref (tmp_layer);
+  gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Add the layer to the timeline");
   fail_unless (ges_timeline_add_layer (timeline, layer));
@@ -239,7 +239,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
   fail_unless (layer->timeline == timeline);
   layers = ges_timeline_get_layers (timeline);
   fail_unless (g_list_find (layers, layer) != NULL);
-  g_list_foreach (layers, (GFunc) g_object_unref, NULL);
+  g_list_foreach (layers, (GFunc) gst_object_unref, NULL);
   g_list_free (layers);
 
   /* Make sure the associated TrackElements are in the Track */
@@ -278,7 +278,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
   ASSERT_OBJECT_REFCOUNT (trackelement, "trackelement", 3);
 
   /* theoretically this is all we need to do to ensure cleanup */
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -315,7 +315,7 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (s1)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s1));
   fail_unless (tmp_layer == layer);
-  g_object_unref (tmp_layer);
+  gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
   s2 = ges_custom_source_clip_new (my_fill_track_func, NULL);
@@ -323,7 +323,7 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (s2)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s2));
   fail_unless (tmp_layer == layer);
-  g_object_unref (tmp_layer);
+  gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
   s3 = ges_custom_source_clip_new (my_fill_track_func, NULL);
@@ -331,7 +331,7 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (s3)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s3));
   fail_unless (tmp_layer == layer);
-  g_object_unref (tmp_layer);
+  gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Add the layer to the timeline");
   fail_unless (ges_timeline_add_layer (timeline, layer));
@@ -340,7 +340,7 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   fail_unless (layer->timeline == timeline);
   layers = ges_timeline_get_layers (timeline);
   fail_unless (g_list_find (layers, layer) != NULL);
-  g_list_foreach (layers, (GFunc) g_object_unref, NULL);
+  g_list_foreach (layers, (GFunc) gst_object_unref, NULL);
   g_list_free (layers);
 
   GST_DEBUG ("Add the track to the timeline");
@@ -381,7 +381,7 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   }
 
   /* theoretically this is all we need to do to ensure cleanup */
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -417,7 +417,7 @@ GST_START_TEST (test_ges_timeline_remove_track)
   fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (s1)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s1));
   fail_unless (tmp_layer == layer);
-  g_object_unref (tmp_layer);
+  gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
   s2 = ges_custom_source_clip_new (my_fill_track_func, NULL);
@@ -425,7 +425,7 @@ GST_START_TEST (test_ges_timeline_remove_track)
   fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (s2)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s2));
   fail_unless (tmp_layer == layer);
-  g_object_unref (tmp_layer);
+  gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
   s3 = ges_custom_source_clip_new (my_fill_track_func, NULL);
@@ -433,7 +433,7 @@ GST_START_TEST (test_ges_timeline_remove_track)
   fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (s3)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s3));
   fail_unless (tmp_layer == layer);
-  g_object_unref (tmp_layer);
+  gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Add the layer to the timeline");
   fail_unless (ges_timeline_add_layer (timeline, layer));
@@ -443,7 +443,7 @@ GST_START_TEST (test_ges_timeline_remove_track)
 
   layers = ges_timeline_get_layers (timeline);
   fail_unless (g_list_find (layers, layer) != NULL);
-  g_list_foreach (layers, (GFunc) g_object_unref, NULL);
+  g_list_foreach (layers, (GFunc) gst_object_unref, NULL);
   g_list_free (layers);
 
   GST_DEBUG ("Add the track to the timeline");
@@ -463,12 +463,12 @@ GST_START_TEST (test_ges_timeline_remove_track)
      * 1 by the timeline */
     ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
   }
-  g_object_ref (t1);
+  gst_object_ref (t1);
   /* There are 3 references held:
    * 1 by the container
    * 1 by the track
    * 1 by the timeline
-   * 1 added by ourselves above (g_object_ref (t1)) */
+   * 1 added by ourselves above (gst_object_ref (t1)) */
   ASSERT_OBJECT_REFCOUNT (t1, "trackelement", 4);
 
   trackelements = GES_CONTAINER_CHILDREN (s2);
@@ -481,12 +481,12 @@ GST_START_TEST (test_ges_timeline_remove_track)
      * 1 by the timeline */
     ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
   }
-  g_object_ref (t2);
+  gst_object_ref (t2);
   /* There are 3 references held:
    * 1 by the container
    * 1 by the track
    * 1 by the timeline
-   * 1 added by ourselves above (g_object_ref (t2)) */
+   * 1 added by ourselves above (gst_object_ref (t2)) */
   ASSERT_OBJECT_REFCOUNT (t2, "t2", 4);
 
   trackelements = GES_CONTAINER_CHILDREN (s3);
@@ -499,12 +499,12 @@ GST_START_TEST (test_ges_timeline_remove_track)
      * 1 by the timeline */
     ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
   }
-  g_object_ref (t3);
+  gst_object_ref (t3);
   /* There are 3 references held:
    * 1 by the container
    * 1 by the track
    * 1 by the timeline
-   * 1 added by ourselves above (g_object_ref (t3)) */
+   * 1 added by ourselves above (gst_object_ref (t3)) */
   ASSERT_OBJECT_REFCOUNT (t3, "t3", 4);
 
   /* remove the track and check that the track elements have been released */
@@ -514,11 +514,11 @@ GST_START_TEST (test_ges_timeline_remove_track)
   ASSERT_OBJECT_REFCOUNT (t2, "trackelement", 3);
   ASSERT_OBJECT_REFCOUNT (t3, "trackelement", 3);
 
-  g_object_unref (t1);
-  g_object_unref (t2);
-  g_object_unref (t3);
+  gst_object_unref (t1);
+  gst_object_unref (t2);
+  gst_object_unref (t3);
 
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
   ASSERT_OBJECT_REFCOUNT (t1, "trackelement", 0);
   ASSERT_OBJECT_REFCOUNT (t2, "trackelement", 0);
   ASSERT_OBJECT_REFCOUNT (t3, "trackelement", 0);
@@ -598,7 +598,7 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (s1)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s1));
   fail_unless (tmp_layer == layer);
-  g_object_unref (tmp_layer);
+  gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
   s2 = ges_custom_source_clip_new (my_fill_track_func, NULL);
@@ -606,7 +606,7 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (s2)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s2));
   fail_unless (tmp_layer == layer);
-  g_object_unref (tmp_layer);
+  gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
   s3 = ges_custom_source_clip_new (my_fill_track_func, NULL);
@@ -614,7 +614,7 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (s3)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s3));
   fail_unless (tmp_layer == layer);
-  g_object_unref (tmp_layer);
+  gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Add the layer to the timeline");
   fail_unless (ges_timeline_add_layer (timeline, layer));
@@ -624,7 +624,7 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
 
   layers = ges_timeline_get_layers (timeline);
   fail_unless (g_list_find (layers, layer) != NULL);
-  g_list_foreach (layers, (GFunc) g_object_unref, NULL);
+  g_list_foreach (layers, (GFunc) gst_object_unref, NULL);
   g_list_free (layers);
 
   /* Make sure the associated TrackElements are in the Track */
@@ -639,12 +639,12 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
     ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
     fail_unless (ges_track_element_get_track (tmp->data) == track1);
   }
-  g_object_ref (t1);
+  gst_object_ref (t1);
   /* There are 3 references held:
    * 1 by the container
    * 1 by the track
    * 1 by the timeline
-   * 1 added by ourselves above (g_object_ref (t1)) */
+   * 1 added by ourselves above (gst_object_ref (t1)) */
   ASSERT_OBJECT_REFCOUNT (t1, "trackelement", 4);
 
   trackelements = GES_CONTAINER_CHILDREN (s2);
@@ -658,12 +658,12 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
     ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
     fail_unless (ges_track_element_get_track (tmp->data) == track2);
   }
-  g_object_ref (t2);
+  gst_object_ref (t2);
   /* There are 3 references held:
    * 1 by the container
    * 1 by the track
    * 1 by the timeline
-   * 1 added by ourselves above (g_object_ref (t2)) */
+   * 1 added by ourselves above (gst_object_ref (t2)) */
   ASSERT_OBJECT_REFCOUNT (t2, "t2", 4);
 
   trackelements = GES_CONTAINER_CHILDREN (s3);
@@ -677,19 +677,19 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
     ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
     fail_unless (ges_track_element_get_track (tmp->data) == track1);
   }
-  g_object_ref (t3);
+  gst_object_ref (t3);
   /* There are 3 references held:
    * 1 by the container
    * 1 by the track
    * 1 by the timeline
-   * 1 added by ourselves above (g_object_ref (t3)) */
+   * 1 added by ourselves above (gst_object_ref (t3)) */
   ASSERT_OBJECT_REFCOUNT (t3, "t3", 4);
 
-  g_object_unref (t1);
-  g_object_unref (t2);
-  g_object_unref (t3);
+  gst_object_unref (t1);
+  gst_object_unref (t2);
+  gst_object_unref (t3);
 
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;

@@ -30,7 +30,7 @@ GST_START_TEST (test_title_source_basic)
   source = ges_title_clip_new ();
   fail_unless (source != NULL);
 
-  g_object_unref (source);
+  gst_object_unref (source);
 }
 
 GST_END_TEST;
@@ -87,7 +87,7 @@ GST_START_TEST (test_title_source_properties)
 
   ges_container_remove (GES_CONTAINER (clip),
       GES_TIMELINE_ELEMENT (trackelement));
-  g_object_unref (clip);
+  gst_object_unref (clip);
 }
 
 GST_END_TEST;
@@ -187,8 +187,8 @@ GST_START_TEST (test_title_source_in_layer)
 
   GST_DEBUG ("removing the layer");
 
-  g_object_unref (track_element);
-  g_object_unref (timeline);
+  gst_object_unref (track_element);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;

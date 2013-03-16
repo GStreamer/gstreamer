@@ -346,7 +346,7 @@ ges_timeline_pipeline_update_caps (GESTimelinePipeline * self)
       }
     }
 
-    g_object_unref (track);
+    gst_object_unref (track);
   }
 
   if (tracks)
@@ -796,7 +796,7 @@ ges_timeline_pipeline_set_render_settings (GESTimelinePipeline * pipeline,
   /* FIXME : We should figure out if it was added to the pipeline,
    * and if so, remove it. */
   if (pipeline->priv->urisink) {
-    g_object_unref (pipeline->priv->urisink);
+    gst_object_unref (pipeline->priv->urisink);
     pipeline->priv->urisink = NULL;
   }
 
@@ -858,7 +858,7 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
       !(mode & TIMELINE_MODE_PREVIEW)) {
     /* Disable playsink */
     GST_DEBUG ("Disabling playsink");
-    g_object_ref (pipeline->priv->playsink);
+    gst_object_ref (pipeline->priv->playsink);
     gst_bin_remove (GST_BIN_CAST (pipeline), pipeline->priv->playsink);
   }
   if ((pipeline->priv->mode &
@@ -883,8 +883,8 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
 
     /* Disable render bin */
     GST_DEBUG ("Disabling rendering bin");
-    g_object_ref (pipeline->priv->encodebin);
-    g_object_ref (pipeline->priv->urisink);
+    gst_object_ref (pipeline->priv->encodebin);
+    gst_object_ref (pipeline->priv->urisink);
     gst_bin_remove_many (GST_BIN_CAST (pipeline),
         pipeline->priv->encodebin, pipeline->priv->urisink, NULL);
   }

@@ -239,10 +239,10 @@ find_row_for_object (GtkListStore * model, GtkTreeIter * ret, GESClip * clip)
     GESClip *clip2;
     gtk_tree_model_get ((GtkTreeModel *) model, ret, 2, &clip2, -1);
     if (clip2 == clip) {
-      g_object_unref (clip2);
+      gst_object_unref (clip2);
       return TRUE;
     }
-    g_object_unref (clip2);
+    gst_object_unref (clip2);
     gtk_tree_model_iter_next ((GtkTreeModel *) model, ret);
   }
   return FALSE;
@@ -729,7 +729,7 @@ get_video_patterns (void)
   }
 
   g_type_class_unref (enum_class);
-  g_object_unref (tr);
+  gst_object_unref (tr);
 
   return m;
 }
@@ -932,11 +932,11 @@ create_ui (App * app)
 
   /* success */
   gtk_builder_connect_signals (builder, app);
-  g_object_unref (G_OBJECT (builder));
+  gst_object_unref (G_OBJECT (builder));
   return TRUE;
 
 fail:
-  g_object_unref (G_OBJECT (builder));
+  gst_object_unref (G_OBJECT (builder));
   return FALSE;
 }
 
@@ -981,7 +981,7 @@ app_update_selection (App * app)
   /* clear old selection */
   for (cur = app->selected_objects; cur; cur = cur->next) {
     disconnect_from_object (cur->data, app);
-    g_object_unref (cur->data);
+    gst_object_unref (cur->data);
     cur->data = NULL;
   }
   g_list_free (app->selected_objects);
@@ -1064,7 +1064,7 @@ app_move_selected_up (App * app)
       GES_CLIP (app->selected_objects->data), pos - 1);
 
   for (tmp = objects; tmp; tmp = tmp->next) {
-    g_object_unref (tmp->data);
+    gst_object_unref (tmp->data);
   }
 }
 
@@ -1082,7 +1082,7 @@ app_add_effect_on_selected_clips (App * app, const gchar * bin_desc)
     effect = GES_TRACK_ELEMENT (ges_effect_new (bin_desc));
     ges_container_add (GES_CONTAINER (tmp->data),
         GES_TIMELINE_ELEMENT (effect));
-    g_object_unref (tmp->data);
+    gst_object_unref (tmp->data);
   }
 }
 
@@ -1133,7 +1133,7 @@ app_move_selected_down (App * app)
       GES_CLIP (app->selected_objects->data), pos - 1);
 
   for (tmp = objects; tmp; tmp = tmp->next) {
-    g_object_unref (tmp->data);
+    gst_object_unref (tmp->data);
   }
 }
 

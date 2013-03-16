@@ -36,7 +36,7 @@ asset_loaded_cb (GObject * source, GAsyncResult * res, GMainLoop * mainloop)
   GST_DEBUG ("Duration is %" GST_TIME_FORMAT,
       GST_TIME_ARGS (ges_uri_clip_asset_get_duration (mfs)));
 
-  g_object_unref (mfs);
+  gst_object_unref (mfs);
 
   g_main_loop_quit (mainloop);
 }

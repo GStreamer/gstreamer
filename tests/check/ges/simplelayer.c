@@ -113,7 +113,7 @@ GST_START_TEST (test_gsl_add)
   fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (source)));
   fail_unless (ges_timeline_remove_track (timeline, track));
   fail_unless (ges_timeline_remove_layer (timeline, layer));
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -200,7 +200,7 @@ GST_START_TEST (test_gsl_move_simple)
   fail_unless_equals_int (info.old, 0);
 
   /* remove source1, source2 should be moved to the beginning */
-  g_object_ref (source1);
+  gst_object_ref (source1);
   fail_unless (ges_timeline_layer_remove_clip (layer, GES_CLIP (source1)));
   fail_unless_equals_uint64 (_START (source2), 0);
 
@@ -219,7 +219,7 @@ GST_START_TEST (test_gsl_move_simple)
 
   fail_unless (ges_timeline_remove_track (timeline, track));
   fail_unless (ges_timeline_remove_layer (timeline, layer));
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -489,7 +489,7 @@ GST_START_TEST (test_gsl_with_transitions)
 
   GST_DEBUG ("done removing transition");
 
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;

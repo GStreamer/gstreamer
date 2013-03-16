@@ -136,7 +136,7 @@ _free_mapping (ChildMapping * mapping)
   g_signal_handler_disconnect (child, mapping->priority_notifyid);
 
   ges_timeline_element_set_parent (child, NULL);
-  g_object_unref (child);
+  gst_object_unref (child);
   g_slice_free (ChildMapping, mapping);
 }
 
@@ -568,7 +568,7 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   priv->ignore_notifies = FALSE;
 
   mapping = g_slice_new0 (ChildMapping);
-  mapping->child = g_object_ref (child);
+  mapping->child = gst_object_ref (child);
   mapping->start_offset = _START (container) - _START (child);
   mapping->duration_offset = _DURATION (container) - _DURATION (child);
   mapping->inpoint_offset = _INPOINT (container) - _INPOINT (child);

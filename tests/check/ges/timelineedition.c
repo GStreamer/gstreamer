@@ -245,10 +245,10 @@ GST_START_TEST (test_basic_timeline_edition)
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 5);
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
-  g_object_unref (timeline);
-  g_object_unref (clip);
-  g_object_unref (clip1);
-  g_object_unref (clip2);
+  gst_object_unref (timeline);
+  gst_object_unref (clip);
+  gst_object_unref (clip1);
+  gst_object_unref (clip2);
 }
 
 GST_END_TEST;
@@ -481,7 +481,7 @@ GST_START_TEST (test_snapping)
   ASSERT_OBJECT_REFCOUNT (clip1, "Second clip", 1);
   ASSERT_OBJECT_REFCOUNT (clip2, "Third clip", 1);
 
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 
   /* Check we destroyed everything */
   fail_if (G_IS_OBJECT (timeline));
@@ -603,8 +603,8 @@ GST_START_TEST (test_timeline_edition_mode)
   /* clip2 should have moved layer too */
   fail_unless (ges_clip_get_layer (clip2) == layer2);
   /* We got 2 reference to the same clipect, unref them */
-  g_object_unref (layer2);
-  g_object_unref (layer2);
+  gst_object_unref (layer2);
+  gst_object_unref (layer2);
 
   /**
    * Rippling clip1 back to: 20 (getting to the exact same timeline as before
@@ -619,8 +619,8 @@ GST_START_TEST (test_timeline_edition_mode)
   /* clip2 should have moved layer too */
   fail_unless (ges_clip_get_layer (clip2) == layer2);
   /* We got 2 reference to the same clipect, unref them */
-  g_object_unref (layer2);
-  g_object_unref (layer2);
+  gst_object_unref (layer2);
+  gst_object_unref (layer2);
 
   /**
    * Simple move clip to 27 and clip2 to 35
@@ -683,7 +683,7 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement2, 35, 0, 60);
   layer = ges_clip_get_layer (clip);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 2);
-  g_object_unref (layer);
+  gst_object_unref (layer);
 
   /* Roll end clip to 50
    * New timeline:
@@ -704,7 +704,7 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement2, 50, 15, 45);
   layer = ges_clip_get_layer (clip);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 2);
-  g_object_unref (layer);
+  gst_object_unref (layer);
 
   /* Some more intensive roll testing */
   for (i = 0; i < 20; i++) {
@@ -737,7 +737,7 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement2, 35, 0, 60);
   layer = ges_clip_get_layer (clip);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 2);
-  g_object_unref (layer);
+  gst_object_unref (layer);
 
   /* Ripple clip end to 52
    * New timeline:
@@ -760,7 +760,7 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement2, 52, 0, 60)
       layer = ges_clip_get_layer (clip);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 2);
-  g_object_unref (layer);
+  gst_object_unref (layer);
 
 
   /* Little check that we have 4 layers in the timeline */
@@ -771,7 +771,7 @@ GST_START_TEST (test_timeline_edition_mode)
   /*  We have a reference to each layer in layers */
   for (tmp = layers; tmp; tmp = tmp->next)
     ASSERT_OBJECT_REFCOUNT (layer, "Layer", 2);
-  g_list_free_full (layers, g_object_unref);
+  g_list_free_full (layers, gst_object_unref);
 
   /* We have 3 references:
    *  track  + timeline  + clip
@@ -810,10 +810,10 @@ GST_START_TEST (test_timeline_edition_mode)
   assert_equals_int (ges_timeline_layer_get_priority (layer1), 1);
   assert_equals_int (ges_timeline_layer_get_priority (layer), 0);
   fail_unless (ges_clip_get_layer (clip2) == layer);
-  g_object_unref (layer1);
+  gst_object_unref (layer1);
   /* We have 2 references to @layer that we do not need anymore */ ;
-  g_object_unref (layer);
-  g_object_unref (layer);
+  gst_object_unref (layer);
+  gst_object_unref (layer);
 
   /* Trim clip start to 40
    * New timeline:

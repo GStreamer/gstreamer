@@ -271,7 +271,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
     ges_timeline_layer_add_clip (udata->layer, udata->clip);
   }
 
-  g_object_unref (asset);
+  gst_object_unref (asset);
   g_slice_free (NewAssetUData, udata);
 }
 
@@ -284,7 +284,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
  * Removes the given @clip from the @layer and unparents it.
  * Unparenting it means the reference owned by @layer on the @clip will be
  * removed. If you wish to use the @clip after this function, make sure you
- * call g_object_ref() before removing it from the @layer.
+ * call gst_object_ref() before removing it from the @layer.
  *
  * Returns: TRUE if the clip could be removed, FALSE if the layer does
  * not want to remove the clip.
@@ -304,11 +304,11 @@ ges_timeline_layer_remove_clip (GESTimelineLayer * layer, GESClip * clip)
     GST_WARNING ("Clip doesn't belong to this layer");
 
     if (current_layer != NULL)
-      g_object_unref (current_layer);
+      gst_object_unref (current_layer);
 
     return FALSE;
   }
-  g_object_unref (current_layer);
+  gst_object_unref (current_layer);
 
   /* emit 'clip-removed' */
   g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_REMOVED], 0, clip);
@@ -322,7 +322,7 @@ ges_timeline_layer_remove_clip (GESTimelineLayer * layer, GESClip * clip)
   layer->priv->clips_start = g_list_remove (layer->priv->clips_start, clip);
 
   /* Remove our reference to the clip */
-  g_object_unref (clip);
+  gst_object_unref (clip);
 
   return TRUE;
 }
@@ -485,7 +485,7 @@ ges_timeline_layer_add_clip (GESTimelineLayer * layer, GESClip * clip)
   current_layer = ges_clip_get_layer (clip);
   if (G_UNLIKELY (current_layer)) {
     GST_WARNING ("Clip %p already belongs to another layer", clip);
-    g_object_unref (current_layer);
+    gst_object_unref (current_layer);
 
     return FALSE;
   }

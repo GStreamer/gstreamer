@@ -106,7 +106,7 @@ ges_text_overlay_dispose (GObject * object)
   }
 
   if (self->priv->text_el) {
-    g_object_unref (self->priv->text_el);
+    gst_object_unref (self->priv->text_el);
     self->priv->text_el = NULL;
   }
 
@@ -151,7 +151,7 @@ ges_text_overlay_create_element (GESTrackElement * track_element)
   iconv = gst_element_factory_make ("videoconvert", NULL);
   oconv = gst_element_factory_make ("videoconvert", NULL);
   self->priv->text_el = text;
-  g_object_ref (text);
+  gst_object_ref (text);
 
   if (self->priv->text)
     g_object_set (text, "text", (gchar *) self->priv->text, NULL);
@@ -173,8 +173,8 @@ ges_text_overlay_create_element (GESTrackElement * track_element)
 
   src = gst_ghost_pad_new ("src", src_target);
   sink = gst_ghost_pad_new ("video_sink", sink_target);
-  g_object_unref (src_target);
-  g_object_unref (sink_target);
+  gst_object_unref (src_target);
+  gst_object_unref (sink_target);
 
   gst_element_add_pad (ret, src);
   gst_element_add_pad (ret, sink);

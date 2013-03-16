@@ -63,7 +63,7 @@ asset_loaded_cb (GObject * source_object, GAsyncResult * res,
     gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   }
 
-  g_object_unref (mfs);
+  gst_object_unref (mfs);
 }
 
 int

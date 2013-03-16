@@ -144,13 +144,13 @@ _request_id_update (GESAsset * self, gchar ** proposed_new_id, GError * error)
 
         *proposed_new_id = g_file_get_uri (new_file);
 
-        g_object_unref (new_file);
+        gst_object_unref (new_file);
         g_free (basename);
       }
-      g_object_unref (parent);
+      gst_object_unref (parent);
     }
 
-    g_object_unref (file);
+    gst_object_unref (file);
 
     return TRUE;
   }
@@ -168,8 +168,8 @@ _asset_proxied (GESAsset * self, const gchar * new_uri)
   parent = g_file_get_parent (file);
   new_parent = g_file_get_parent (new_file);
   g_hash_table_insert (parent_newparent_table, parent, new_parent);
-  g_object_unref (file);
-  g_object_unref (new_file);
+  gst_object_unref (file);
+  gst_object_unref (new_file);
 }
 
 static void
@@ -206,7 +206,7 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
 
   if (parent_newparent_table == NULL) {
     parent_newparent_table = g_hash_table_new_full (g_file_hash,
-        (GEqualFunc) g_file_equal, g_object_unref, g_object_unref);
+        (GEqualFunc) g_file_equal, gst_object_unref, gst_object_unref);
   }
 }
 
@@ -245,7 +245,7 @@ _create_uri_source_asset (GESUriClipAsset * asset,
 
   priv_tckasset = GES_ASSET_TRACK_FILESOURCE (tck_filesource_asset)->priv;
   priv_tckasset->uri = ges_asset_get_id (GES_ASSET (asset));
-  priv_tckasset->sinfo = g_object_ref (sinfo);
+  priv_tckasset->sinfo = gst_object_ref (sinfo);
   priv_tckasset->parent_asset = asset;
   ges_track_element_asset_set_track_type (GES_TRACK_ELEMENT_ASSET
       (tck_filesource_asset), type);
@@ -300,7 +300,7 @@ ges_uri_clip_asset_set_info (GESUriClipAsset * self, GstDiscovererInfo * info)
     priv->duration = gst_discoverer_info_get_duration (info);
   /* else we keep #GST_CLOCK_TIME_NONE */
 
-  priv->info = g_object_ref (info);
+  priv->info = gst_object_ref (info);
 }
 
 static void
@@ -410,7 +410,7 @@ ges_uri_clip_asset_is_image (GESUriClipAsset * self)
  *        ges_asset_get_id (source), error->message);
  *   }
  *
- *   g_object_unref (mfs);
+ *   gst_object_unref (mfs);
  * }
  *
  * // The request:

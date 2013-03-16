@@ -116,11 +116,11 @@ GST_START_TEST (test_layer_properties)
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
       51, 0, TRUE);
 
-  g_object_unref (trackelement);
+  gst_object_unref (trackelement);
   fail_unless (ges_timeline_layer_remove_clip (layer, clip));
   fail_unless (ges_timeline_remove_track (timeline, track));
   fail_unless (ges_timeline_remove_layer (timeline, layer));
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -242,7 +242,7 @@ GST_START_TEST (test_layer_priorities)
   fail_unless (ges_timeline_layer_get_clips (layer3) == NULL);
 
   for (tmp = objs; tmp; tmp = g_list_next (tmp)) {
-    g_object_unref (tmp->data);
+    gst_object_unref (tmp->data);
   }
   g_list_free (objs);
 
@@ -265,10 +265,10 @@ GST_START_TEST (test_layer_priorities)
   assert_equals_int (prio3, 2 * LAYER_HEIGHT);
   assert_equals_int (_PRIORITY (clip3), LAYER_HEIGHT - 1);
 
-  g_object_unref (trackelement1);
-  g_object_unref (trackelement2);
-  g_object_unref (trackelement3);
-  g_object_unref (timeline);
+  gst_object_unref (trackelement1);
+  gst_object_unref (trackelement2);
+  gst_object_unref (trackelement3);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -667,7 +667,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   fail_unless (current->data == src2);
   g_list_free_full (objects, gst_object_unref);
 
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -1154,7 +1154,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   g_list_free_full (objects, gst_object_unref);
   ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
 
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;

@@ -167,7 +167,7 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
 static void
 add_tlobj_to_list (gpointer key, gpointer tlobj, GList ** list)
 {
-  *list = g_list_prepend (*list, g_object_ref (tlobj));
+  *list = g_list_prepend (*list, gst_object_ref (tlobj));
 }
 
 static GList *
@@ -710,18 +710,18 @@ ges_clip_move_to_layer (GESClip * clip, GESTimelineLayer * layer)
       ges_timeline_layer_get_priority (layer));
 
   clip->priv->is_moving = TRUE;
-  g_object_ref (clip);
+  gst_object_ref (clip);
   ret = ges_timeline_layer_remove_clip (current_layer, clip);
 
   if (!ret) {
-    g_object_unref (clip);
+    gst_object_unref (clip);
     return FALSE;
   }
 
   ret = ges_timeline_layer_add_clip (layer, clip);
   clip->priv->is_moving = FALSE;
 
-  g_object_unref (clip);
+  gst_object_unref (clip);
 
   return ret;
 }
@@ -762,7 +762,7 @@ ges_clip_find_track_element (GESClip * clip, GESTrack * track, GType type)
         continue;
 
       ret = GES_TRACK_ELEMENT (tmp->data);
-      g_object_ref (ret);
+      gst_object_ref (ret);
       break;
     }
   }
@@ -786,7 +786,7 @@ ges_clip_get_layer (GESClip * clip)
   g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
 
   if (clip->priv->layer != NULL)
-    g_object_ref (G_OBJECT (clip->priv->layer));
+    gst_object_ref (G_OBJECT (clip->priv->layer));
 
   return clip->priv->layer;
 }
@@ -817,7 +817,7 @@ ges_clip_get_top_effects (GESClip * clip)
 
   for (tmp = GES_CONTAINER_CHILDREN (clip), i = 0;
       i < clip->priv->nb_effects; tmp = tmp->next, i++) {
-    ret = g_list_append (ret, g_object_ref (tmp->data));
+    ret = g_list_append (ret, gst_object_ref (tmp->data));
   }
 
   return g_list_sort (ret, (GCompareFunc) element_start_compare);

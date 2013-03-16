@@ -509,7 +509,7 @@ ges_asset_cache_set_loaded (GType extractable_type, const gchar * id,
 
     g_list_foreach (entry->results,
         (GFunc) g_simple_async_result_complete_in_idle, NULL);
-    g_list_free_full (entry->results, g_object_unref);
+    g_list_free_full (entry->results, gst_object_unref);
     entry->results = NULL;
     UNLOCK_CACHE;
   }
@@ -820,7 +820,7 @@ done:
  *        ges_asset_get_id (source), error->message);
  *   }
  *
- *   g_object_unref (mfs);
+ *   gst_object_unref (mfs);
  * }
  *
  * // The request:
@@ -982,7 +982,7 @@ ges_asset_request_finish (GAsyncResult * res, GError ** error)
   object = g_async_initable_new_finish (G_ASYNC_INITABLE (source_object),
       res, error);
 
-  g_object_unref (source_object);
+  gst_object_unref (source_object);
 
   return GES_ASSET (object);
 }

@@ -55,9 +55,9 @@ GST_START_TEST (test_transition_basic)
   fail_unless (ges_container_remove (GES_CONTAINER (tr2),
           GES_TIMELINE_ELEMENT (trackelement)) == TRUE);
 
-  g_object_unref (track);
-  g_object_unref (tr1);
-  g_object_unref (tr2);
+  gst_object_unref (track);
+  gst_object_unref (tr1);
+  gst_object_unref (tr2);
 }
 
 GST_END_TEST;
@@ -153,8 +153,8 @@ GST_START_TEST (test_transition_properties)
 
   ges_container_remove (GES_CONTAINER (clip),
       GES_TIMELINE_ELEMENT (trackelement));
-  g_object_unref (clip);
-  g_object_unref (track);
+  gst_object_unref (clip);
+  gst_object_unref (track);
 }
 
 GST_END_TEST;

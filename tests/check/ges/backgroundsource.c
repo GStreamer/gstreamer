@@ -30,7 +30,7 @@ GST_START_TEST (test_test_source_basic)
   source = ges_test_clip_new ();
   fail_unless (source != NULL);
 
-  g_object_unref (source);
+  gst_object_unref (source);
 }
 
 GST_END_TEST;
@@ -98,7 +98,7 @@ GST_START_TEST (test_test_source_properties)
 
   ges_container_remove (GES_CONTAINER (clip),
       GES_TIMELINE_ELEMENT (trackelement));
-  g_object_unref (clip);
+  gst_object_unref (clip);
 }
 
 GST_END_TEST;
@@ -147,7 +147,7 @@ GST_START_TEST (test_test_source_in_layer)
   ptrn = (ges_video_test_source_get_pattern ((GESVideoTestSource *)
           track_element));
   assert_equals_int (ptrn, GES_VIDEO_TEST_PATTERN_WHITE);
-  g_object_unref (track_element);
+  gst_object_unref (track_element);
 
   /* test audio properties as well */
 
@@ -181,13 +181,13 @@ GST_START_TEST (test_test_source_in_layer)
   g_assert (freq == 2000);
   g_assert (volume == 0.5);
 
-  g_object_unref (track_element);
+  gst_object_unref (track_element);
 
   ges_timeline_layer_remove_clip (layer, (GESClip *) source);
 
   GST_DEBUG ("removing the layer");
 
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;

@@ -106,12 +106,12 @@ ges_title_source_dispose (GObject * object)
   }
 
   if (self->priv->text_el) {
-    g_object_unref (self->priv->text_el);
+    gst_object_unref (self->priv->text_el);
     self->priv->text_el = NULL;
   }
 
   if (self->priv->background_el) {
-    g_object_unref (self->priv->background_el);
+    gst_object_unref (self->priv->background_el);
     self->priv->background_el = NULL;
   }
 
@@ -175,8 +175,8 @@ ges_title_source_create_element (GESTrackElement * object)
   src = gst_ghost_pad_new ("src", gst_element_get_static_pad (text, "src"));
   gst_element_add_pad (topbin, src);
 
-  g_object_ref (text);
-  g_object_ref (background);
+  gst_object_ref (text);
+  gst_object_ref (background);
 
   priv->text_el = text;
   priv->background_el = background;

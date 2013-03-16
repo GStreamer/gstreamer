@@ -606,7 +606,7 @@ ges_text_overlay_clip_new (void)
   GESAsset *asset = ges_asset_request (GES_TYPE_OVERLAY_TEXT_CLIP, NULL, NULL);
 
   new_clip = GES_OVERLAY_TEXT_CLIP (ges_asset_extract (asset, NULL));
-  g_object_unref (asset);
+  gst_object_unref (asset);
 
   return new_clip;
 }

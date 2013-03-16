@@ -419,11 +419,11 @@ ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer * layer,
   if (G_UNLIKELY (clip_layer != (GESTimelineLayer *) layer)) {
     GST_WARNING ("Clip doesn't belong to this layer");
     if (clip_layer != NULL)
-      g_object_unref (clip_layer);
+      gst_object_unref (clip_layer);
     return FALSE;
   }
   if (clip_layer != NULL)
-    g_object_unref (clip_layer);
+    gst_object_unref (clip_layer);
 
   /* Find it's current position */
   idx = g_list_index (priv->objects, clip);
@@ -526,7 +526,7 @@ get_objects (GESTimelineLayer * l)
   ret = g_list_copy (layer->priv->objects);
 
   for (tmp = ret; tmp; tmp = tmp->next) {
-    g_object_ref (tmp->data);
+    gst_object_ref (tmp->data);
   }
 
   return ret;

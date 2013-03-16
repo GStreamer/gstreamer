@@ -33,7 +33,7 @@ GST_START_TEST (test_effect_basic)
 
   effect = ges_effect_new ("agingtv");
   fail_unless (effect != NULL);
-  g_object_unref (effect);
+  gst_object_unref (effect);
 }
 
 GST_END_TEST;
@@ -78,7 +78,7 @@ GST_START_TEST (test_add_effect_to_clip)
 
   ges_timeline_layer_remove_clip (layer, (GESClip *) source);
 
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -144,13 +144,13 @@ GST_START_TEST (test_get_effects_from_tl)
     fail_unless (GES_IS_EFFECT (tmp->data));
     effect_prio = priority;
 
-    g_object_unref (tmp->data);
+    gst_object_unref (tmp->data);
   }
   g_list_free (effects);
 
   ges_timeline_layer_remove_clip (layer, (GESClip *) source);
 
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -220,13 +220,13 @@ GST_START_TEST (test_effect_clip)
         type == track_type[i]);
     effect_prio = priority;
 
-    g_object_unref (tmp->data);
+    gst_object_unref (tmp->data);
   }
   g_list_free (effects);
 
   ges_timeline_layer_remove_clip (layer, (GESClip *) effect_clip);
 
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -317,13 +317,13 @@ GST_START_TEST (test_priorities_clip)
     fail_unless (GES_IS_EFFECT (tmp->data));
     effect_prio = priority;
 
-    g_object_unref (tmp->data);
+    gst_object_unref (tmp->data);
   }
   g_list_free (effects);
 
   ges_timeline_layer_remove_clip (layer, (GESClip *) effect_clip);
 
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -397,7 +397,7 @@ GST_START_TEST (test_effect_set_properties)
 
   ges_timeline_layer_remove_clip (layer, (GESClip *) effect_clip);
 
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -472,7 +472,7 @@ GST_START_TEST (test_clip_signals)
 
   ges_timeline_layer_remove_clip (layer, (GESClip *) effect_clip);
 
-  g_object_unref (timeline);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;

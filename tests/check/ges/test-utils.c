@@ -34,9 +34,9 @@ ges_test_get_audio_only_uri (void)
   f_audio_only = g_file_get_child (fdir, "audio_only.ogg");
   uri = g_file_get_uri (f_audio_only);
 
-  g_object_unref (cfile);
-  g_object_unref (fdir);
-  g_object_unref (f_audio_only);
+  gst_object_unref (cfile);
+  gst_object_unref (fdir);
+  gst_object_unref (f_audio_only);
 
   return uri;
 }
@@ -53,9 +53,9 @@ ges_test_get_audio_video_uri (void)
   f_audio_video = g_file_get_child (fdir, "audio_video.ogg");
   uri = g_file_get_uri (f_audio_video);
 
-  g_object_unref (cfile);
-  g_object_unref (fdir);
-  g_object_unref (f_audio_video);
+  gst_object_unref (cfile);
+  gst_object_unref (fdir);
+  gst_object_unref (f_audio_video);
 
   return uri;
 }
@@ -72,9 +72,9 @@ ges_test_file_uri (const gchar * filename)
   f = g_file_get_child (fdir, filename);
   uri = g_file_get_uri (f);
 
-  g_object_unref (cfile);
-  g_object_unref (fdir);
-  g_object_unref (f);
+  gst_object_unref (cfile);
+  gst_object_unref (fdir);
+  gst_object_unref (f);
 
   return uri;
 }

@@ -527,7 +527,7 @@ ges_timeline_init (GESTimeline * self)
   priv->obj_iters = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
       (GDestroyNotify) _destroy_obj_iters);
   priv->starts_ends = g_sequence_new (g_free);
-  priv->tracksources = g_sequence_new (g_object_unref);
+  priv->tracksources = g_sequence_new (gst_object_unref);
 
   priv->auto_transitions =
       g_hash_table_new_full (g_str_hash, g_str_equal, NULL, gst_object_unref);
@@ -978,7 +978,7 @@ start_tracking_track_element (GESTimeline * timeline,
         (GCompareDataFunc) compare_uint64, NULL);
     iters->iter_obj =
         g_sequence_insert_sorted (priv->tracksources,
-        g_object_ref (trackelement), (GCompareDataFunc) element_start_compare,
+        gst_object_ref (trackelement), (GCompareDataFunc) element_start_compare,
         NULL);
     iters->trackelement = trackelement;
 
@@ -1153,7 +1153,7 @@ add_moving_clip (MoveContext * mv_ctx, GESTrackElement * trackelement)
       mv_ctx->min_move_layer = MIN (mv_ctx->min_move_layer, layer_prio);
       mv_ctx->max_layer_prio = MAX (mv_ctx->max_layer_prio, layer_prio);
 
-      g_object_unref (layer);
+      gst_object_unref (layer);
     }
   }
 
@@ -1733,7 +1733,7 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
 
       ret &= ges_clip_move_to_layer (key, new_layer);
 
-      g_object_unref (layer);
+      gst_object_unref (layer);
     }
 
     /* Readjust min_move_layer */
@@ -2355,7 +2355,7 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   objects = ges_timeline_layer_get_clips (layer);
   for (tmp = objects; tmp; tmp = tmp->next) {
     layer_object_added_cb (layer, tmp->data, timeline);
-    g_object_unref (tmp->data);
+    gst_object_unref (tmp->data);
     tmp->data = NULL;
   }
   g_list_free (objects);
@@ -2392,7 +2392,7 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   layer_objects = ges_timeline_layer_get_clips (layer);
   for (tmp = layer_objects; tmp; tmp = tmp->next) {
     layer_object_removed_cb (layer, GES_CLIP (tmp->data), timeline);
-    g_object_unref (G_OBJECT (tmp->data));
+    gst_object_unref (G_OBJECT (tmp->data));
     tmp->data = NULL;
   }
   g_list_free (layer_objects);
@@ -2413,7 +2413,7 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 
   g_signal_emit (timeline, ges_timeline_signals[LAYER_REMOVED], 0, layer);
 
-  g_object_unref (layer);
+  gst_object_unref (layer);
 
   return TRUE;
 }
@@ -2492,7 +2492,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
       GESClip *clip = obj->data;
 
       add_object_to_tracks (timeline, clip, track);
-      g_object_unref (clip);
+      gst_object_unref (clip);
     }
     g_list_free (objects);
   }
@@ -2637,7 +2637,7 @@ ges_timeline_get_layers (GESTimeline * timeline)
   GList *tmp, *res = NULL;
 
   for (tmp = timeline->layers; tmp; tmp = g_list_next (tmp)) {
-    res = g_list_insert_sorted (res, g_object_ref (tmp->data),
+    res = g_list_insert_sorted (res, gst_object_ref (tmp->data),
         (GCompareFunc) sort_layers);
   }
 

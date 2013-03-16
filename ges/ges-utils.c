@@ -52,7 +52,7 @@ ges_timeline_new_audio_video (void)
 
   if (!ges_timeline_add_track (timeline, trackv) ||
       !ges_timeline_add_track (timeline, tracka)) {
-    g_object_unref (timeline);
+    gst_object_unref (timeline);
     timeline = NULL;
   }
 
