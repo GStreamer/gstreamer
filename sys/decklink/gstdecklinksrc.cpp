@@ -858,6 +858,11 @@ gst_decklink_src_task (void *priv)
 
     decklinksrc->num_audio_samples += n_samples;
 
+    if (discont)
+      GST_BUFFER_FLAG_SET (audio_buffer, GST_BUFFER_FLAG_DISCONT);
+    else
+      GST_BUFFER_FLAG_UNSET (audio_buffer, GST_BUFFER_FLAG_DISCONT);
+
     audio_flow = gst_pad_push (decklinksrc->audiosrcpad, audio_buffer);
   } else {
     audio_flow = GST_FLOW_NOT_LINKED;
