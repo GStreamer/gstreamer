@@ -71,13 +71,6 @@ LD_LIBRARY_PATH=$GST/gst-rtsp-server/gst/rtsp-server/.libs:$LD_LIBRARY_PATH
 DYLD_LIBRARY_PATH=$GST/gst-rtsp-server/gst/rtsp-server/.libs:$DYLD_LIBRARY_PATH
 GI_TYPELIB_PATH=$GST/gst-rtsp-server/gst/rtsp-server:$GI_TYPELIB_PATH
 
-# GStreamer ffmpeg libraries
-for path in libavformat libavutil libavcodec libpostproc libavdevice
-do
-   LD_LIBRARY_PATH=$GST/gst-ffmpeg/gst-libs/ext/ffmpeg/$path:$LD_LIBRARY_PATH
-   DYLD_LIBRARY_PATH=$GST/gst-ffmpeg/gst-libs/ext/ffmpeg/$path:$DYLD_LIBRARY_PATH
-done
-
 # GStreamer Editing Services library
 LD_LIBRARY_PATH=$GST/gst-editing-services/ges/.libs:$LD_LIBRARY_PATH
 DYLD_LIBRARY_PATH=$GST/gst-editing-services/ges/.libs:$DYLD_LIBRARY_PATH
