@@ -81,6 +81,7 @@ done
 # GStreamer Editing Services library
 LD_LIBRARY_PATH=$GST/gst-editing-services/ges/.libs:$LD_LIBRARY_PATH
 DYLD_LIBRARY_PATH=$GST/gst-editing-services/ges/.libs:$DYLD_LIBRARY_PATH
+GI_TYPELIB_PATH=$GST/gst-editing-services/ges:$GI_TYPELIB_PATH
 PATH=$GST/gst-editing-services/tools:$PATH
 
 
