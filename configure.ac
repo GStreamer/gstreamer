@@ -323,7 +323,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  patchdetect real \
  sdi stereo tta videofilters \
  videomeasure videosignal vmnc \
- decklink linsys vcd \
+ linsys vcd \
  apexsink cdaudio dc1394 dirac directfb \
  gsettings ladspa \
  musepack musicbrainz nas neon ofa openal rsvg sdl sndfile timidity \
