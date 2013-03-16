@@ -60,7 +60,7 @@ gst_omx_mpeg2_dec_class_init (GstOMXMPEG2DecClass * klass)
   videodec_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_mpeg2_dec_set_format);
 
   videodec_class->cdata.default_sink_template_caps = "video/mpeg, "
-      "mpegversion=(int) 2, "
+      "mpegversion=(int) [1, 2], "
       "systemstream=(boolean) false, " "parsed=(boolean) true";
 
   gst_element_class_set_static_metadata (element_class,
