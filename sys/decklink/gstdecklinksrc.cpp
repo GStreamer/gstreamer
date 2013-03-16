@@ -762,6 +762,7 @@ gst_decklink_src_task (void *priv)
     GST_ELEMENT_ERROR (decklinksrc, STREAM, FAILED,
         ("Internal data stream error."),
         ("stream stopped, reason %s", gst_flow_get_name (ret)));
+      goto pause;
   }
 
   if (gst_pad_is_linked (decklinksrc->audiosrcpad)) {
@@ -789,10 +790,47 @@ gst_decklink_src_task (void *priv)
       GST_ELEMENT_ERROR (decklinksrc, STREAM, FAILED,
           ("Internal data stream error."),
           ("stream stopped, reason %s", gst_flow_get_name (ret)));
+      goto pause;
     }
   }
+
+done:
+
   if (audio_frame)
     audio_frame->Release ();
+
+  return;
+
+pause:
+  {
+    const gchar *reason = gst_flow_get_name (ret);
+    GstEvent *event = NULL;
+
+    GST_DEBUG_OBJECT (decklinksrc, "pausing task, reason %s", reason);
+    gst_task_pause (decklinksrc->task);
+    if (ret == GST_FLOW_EOS) {
+      /* perform EOS logic (very crude, we don't even keep a GstSegment) */
+      event = gst_event_new_eos ();
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
+      event = gst_event_new_eos ();
+      /* for fatal errors we post an error message, post the error
+       * first so the app knows about the error first.
+       * Also don't do this for FLUSHING because it happens
+       * due to flushing and posting an error message because of
+       * that is the wrong thing to do, e.g. when we're doing
+       * a flushing seek. */
+      GST_ELEMENT_ERROR (decklinksrc, STREAM, FAILED,
+          ("Internal data flow error."),
+          ("streaming task paused, reason %s (%d)", reason, ret));
+    }
+    if (event != NULL) {
+      GST_INFO_OBJECT (decklinksrc->videosrcpad, "pushing EOS event");
+      gst_pad_push_event (decklinksrc->videosrcpad, gst_event_ref (event));
+      GST_INFO_OBJECT (decklinksrc->audiosrcpad, "pushing EOS event");
+      gst_pad_push_event (decklinksrc->audiosrcpad, event);
+    }
+    goto done;
+  }
 }
 
 #if 0
