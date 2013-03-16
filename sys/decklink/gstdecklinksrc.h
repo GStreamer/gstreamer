@@ -44,6 +44,11 @@ struct _GstDecklinkSrc
   GstPad *audiosrcpad;
   GstPad *videosrcpad;
 
+  gboolean  pending_eos;    /* ATOMIC */
+
+  gboolean  have_events;    /* ATOMIC */
+  GList    *pending_events; /* OBJECT_LOCK */
+
   IDeckLink *decklink;
   IDeckLinkInput *input;
   IDeckLinkConfiguration *config;

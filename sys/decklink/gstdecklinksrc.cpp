@@ -60,6 +60,8 @@ static void gst_decklink_src_finalize (GObject * object);
 
 static GstStateChangeReturn
 gst_decklink_src_change_state (GstElement * element, GstStateChange transition);
+static gboolean gst_decklink_src_send_event (GstElement * element,
+    GstEvent * event);
 
 static gboolean gst_decklink_src_audio_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
@@ -104,6 +106,8 @@ gst_decklink_src_class_init (GstDecklinkSrcClass * klass)
   gobject_class->set_property = gst_decklink_src_set_property;
   gobject_class->get_property = gst_decklink_src_get_property;
   gobject_class->finalize = gst_decklink_src_finalize;
+
+  element_class->send_event = GST_DEBUG_FUNCPTR (gst_decklink_src_send_event);
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_decklink_src_change_state);
 
@@ -345,6 +349,60 @@ gst_decklink_src_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/* events sent to this element directly, mainly from the application */
+static gboolean
+gst_decklink_src_send_event (GstElement * element, GstEvent * event)
+{
+  GstDecklinkSrc *src;
+  gboolean result = FALSE;
+
+  src = GST_DECKLINK_SRC (element);
+
+  GST_DEBUG_OBJECT (src, "handling event %p %" GST_PTR_FORMAT, event, event);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      g_atomic_int_set (&src->pending_eos, TRUE);
+      GST_INFO_OBJECT (src, "EOS pending");
+      result = TRUE;
+      break;
+      break;
+    case GST_EVENT_TAG:
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    case GST_EVENT_CUSTOM_BOTH:
+      /* Insert TAG, CUSTOM_DOWNSTREAM, CUSTOM_BOTH in the dataflow */
+      GST_OBJECT_LOCK (src);
+      src->pending_events = g_list_append (src->pending_events, event);
+      g_atomic_int_set (&src->have_events, TRUE);
+      GST_OBJECT_UNLOCK (src);
+      event = NULL;
+      result = TRUE;
+      break;
+    case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
+    case GST_EVENT_CUSTOM_BOTH_OOB:
+      /* insert a random custom event into the pipeline */
+      GST_DEBUG_OBJECT (src, "pushing custom OOB event downstream");
+      result = gst_pad_push_event (src->videosrcpad, gst_event_ref (event));
+      result |= gst_pad_push_event (src->audiosrcpad, event);
+      /* we gave away the ref to the event in the push */
+      event = NULL;
+      break;
+    case GST_EVENT_CUSTOM_UPSTREAM:
+      /* drop */
+    case GST_EVENT_SEGMENT:
+      /* sending random SEGMENT downstream can break sync - drop */
+    default:
+      GST_LOG_OBJECT (src, "dropping %s event", GST_EVENT_TYPE_NAME (event));
+      break;
+  }
+
+  /* if we still have a ref to the event, unref it now */
+  if (event)
+    gst_event_unref (event);
+
+  return result;
+}
+
 /* FIXME: post error messages for the misc. failures */
 static gboolean
 gst_decklink_src_start (GstElement * element)
@@ -490,6 +548,12 @@ gst_decklink_src_stop (GstElement * element)
   decklinksrc->input->StopStreams ();
   decklinksrc->input->DisableVideoInput ();
   decklinksrc->input->DisableAudioInput ();
+
+  g_list_free_full (decklinksrc->pending_events,
+      (GDestroyNotify) gst_mini_object_unref);
+  decklinksrc->pending_events = NULL;
+  decklinksrc->have_events = FALSE;
+  decklinksrc->pending_eos = FALSE;
 
   return TRUE;
 }
@@ -711,6 +775,25 @@ gst_decklink_src_task (void *priv)
     decklinksrc->started = TRUE;
   }
 
+  if (g_atomic_int_get (&decklinksrc->have_events)) {
+    GList *l;
+
+    GST_OBJECT_LOCK (decklinksrc);
+    for (l = decklinksrc->pending_events; l != NULL; l = l->next) {
+      GstEvent *event = GST_EVENT (l->data);
+
+      GST_DEBUG_OBJECT (decklinksrc, "pushing %s event",
+          GST_EVENT_TYPE_NAME (event));
+      gst_pad_push_event (decklinksrc->videosrcpad, gst_event_ref (event));
+      gst_pad_push_event (decklinksrc->audiosrcpad, event);
+      l->data = NULL;
+    }
+    g_list_free (decklinksrc->pending_events);
+    decklinksrc->pending_events = NULL;
+    g_atomic_int_set (&decklinksrc->have_events, FALSE);
+    GST_OBJECT_UNLOCK (decklinksrc);
+  }
+
   mode = gst_decklink_get_mode (decklinksrc->mode);
 
   video_frame->GetBytes (&data);
@@ -792,6 +875,12 @@ gst_decklink_src_task (void *priv)
           ("stream stopped, reason %s", gst_flow_get_name (ret)));
       goto pause;
     }
+  }
+
+  if (g_atomic_int_compare_and_exchange (&decklinksrc->pending_eos, TRUE,
+      FALSE)) {
+    GST_INFO_OBJECT (decklinksrc, "EOS pending");
+    ret = GST_FLOW_EOS;
   }
 
 done:
