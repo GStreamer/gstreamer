@@ -137,6 +137,8 @@ gboolean              gst_rtsp_client_get_use_client_settings (GstRTSPClient * c
 void                  gst_rtsp_client_set_auth          (GstRTSPClient *client, GstRTSPAuth *auth);
 GstRTSPAuth *         gst_rtsp_client_get_auth          (GstRTSPClient *client);
 
+GstRTSPUrl *          gst_rtsp_client_get_uri           (GstRTSPClient *client);
+
 void                  gst_rtsp_client_set_send_func     (GstRTSPClient *client,
                                                          GstRTSPClientSendFunc func,
                                                          gpointer user_data,

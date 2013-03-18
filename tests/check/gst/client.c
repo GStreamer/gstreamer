@@ -24,6 +24,27 @@
 static gint cseq;
 
 static gboolean
+test_response_200 (GstRTSPClient * client, GstRTSPMessage * response,
+    gboolean close, gpointer user_data)
+{
+  GstRTSPStatusCode code;
+  const gchar *reason;
+  GstRTSPVersion version;
+
+  fail_unless (gst_rtsp_message_get_type (response) ==
+      GST_RTSP_MESSAGE_RESPONSE);
+
+  fail_unless (gst_rtsp_message_parse_response (response, &code, &reason,
+          &version)
+      == GST_RTSP_OK);
+  fail_unless (code == GST_RTSP_STS_OK);
+  fail_unless (g_str_equal (reason, "OK"));
+  fail_unless (version == GST_RTSP_VERSION_1_0);
+
+  return TRUE;
+}
+
+static gboolean
 test_response_400 (GstRTSPClient * client, GstRTSPMessage * response,
     gboolean close, gpointer user_data)
 {
@@ -84,6 +105,32 @@ test_response_454 (GstRTSPClient * client, GstRTSPMessage * response,
   fail_unless (version == GST_RTSP_VERSION_1_0);
 
   return TRUE;
+}
+
+static GstRTSPClient *
+setup_client (void)
+{
+  GstRTSPClient *client;
+  GstRTSPSessionPool *session_pool;
+  GstRTSPMountPoints *mount_points;
+  GstRTSPMediaFactory *factory;
+
+  client = gst_rtsp_client_new ();
+
+  session_pool = gst_rtsp_session_pool_new ();
+  gst_rtsp_client_set_session_pool (client, session_pool);
+
+  mount_points = gst_rtsp_mount_points_new ();
+  factory = gst_rtsp_media_factory_new ();
+  gst_rtsp_media_factory_set_launch (factory,
+      "videotestsrc ! video/x-raw,width=352,height=288 ! rtpgstpay name=pay0 pt=96");
+  gst_rtsp_mount_points_add_factory (mount_points, "/test", factory);
+  gst_rtsp_client_set_mount_points (client, mount_points);
+
+  g_object_unref (mount_points);
+  g_object_unref (session_pool);
+
+  return client;
 }
 
 GST_START_TEST (test_request)
@@ -195,6 +242,8 @@ GST_START_TEST (test_describe)
   GstRTSPClient *client;
   GstRTSPMessage request = { 0, };
   gchar *str;
+  GstRTSPUrl *uri_client;
+  gchar *uri_str;
 
   client = gst_rtsp_client_new ();
 
@@ -209,6 +258,33 @@ GST_START_TEST (test_describe)
   fail_unless (gst_rtsp_client_handle_message (client,
           &request) == GST_RTSP_OK);
   gst_rtsp_message_unset (&request);
+
+  uri_client = gst_rtsp_client_get_uri (client);
+  fail_unless (uri_client == NULL);
+  gst_rtsp_url_free (uri_client);
+
+
+  g_object_unref (client);
+
+  /* simple DESCRIBE for an existing url */
+  client = setup_client ();
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_DESCRIBE,
+            "rtsp://localhost/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_CSEQ, str);
+  g_free (str);
+
+  gst_rtsp_client_set_send_func (client, test_response_200, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+
+  uri_client = gst_rtsp_client_get_uri (client);
+  fail_unless (uri_client != NULL);
+  uri_str = gst_rtsp_url_get_request_uri (uri_client);
+  gst_rtsp_url_free (uri_client);
+  fail_unless (g_strcmp0 (uri_str, "rtsp://localhost/test") == 0);
+  g_free (uri_str);
 
   g_object_unref (client);
 }
