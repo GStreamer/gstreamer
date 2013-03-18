@@ -156,6 +156,15 @@ dnl Check for external OpenMAX IL headers
 AC_CHECK_HEADER([OMX_Core.h], [HAVE_EXTERNAL_OMX=yes], [HAVE_EXTERNAL_OMX=no], [AC_INCLUDES_DEFAULT])
 AM_CONDITIONAL(HAVE_EXTERNAL_OMX, test "x$HAVE_EXTERNAL_OMX" = "xyes")
 
+AC_CHECK_DECLS([OMX_VIDEO_CodingVP8],
+  [
+    AC_DEFINE(HAVE_VP8, 1, [OpenMAX IL has VP8 support])
+    HAVE_VP8=yes
+  ], [
+    HAVE_VP8=no
+  ], [[#include <OMX_Video.h>]])
+AM_CONDITIONAL(HAVE_VP8, test "x$HAVE_VP8" = "xyes")
+
 dnl Check for -Bsymbolic-functions linker flag used to avoid
 dnl intra-library PLT jumps, if available.
 AC_ARG_ENABLE(Bsymbolic,
