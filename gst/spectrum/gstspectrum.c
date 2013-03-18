@@ -212,13 +212,6 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
           G_MININT, 0, DEFAULT_THRESHOLD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /**
-   * GstSpectrum:multi-channel
-   *
-   * Send separate results for each channel
-   *
-   * Since: 0.10.29
-   */
   g_object_class_install_property (gobject_class, PROP_MULTI_CHANNEL,
       g_param_spec_boolean ("multi-channel", "Multichannel results",
           "Send separate results for each channel",
