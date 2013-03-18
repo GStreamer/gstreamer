@@ -148,7 +148,7 @@ gst_decklink_sink_init (GstDecklinkSink * decklinksink)
 {
   GstDecklinkSinkClass *decklinksink_class;
 
-  decklinksink_class = GST_DECKLINK_SINK_GET_CLASS (decklinksink_class);
+  decklinksink_class = GST_DECKLINK_SINK_GET_CLASS (decklinksink);
 
   decklinksink->videosinkpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template
