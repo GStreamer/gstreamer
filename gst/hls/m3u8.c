@@ -360,6 +360,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
       while (data && parse_attributes (&data, &a, &v)) {
         if (g_str_equal (a, "URI")) {
           gchar *key = g_strdup (v);
+          gchar *keyp = key;
           int len = strlen (key);
 
           /* handle the \"key\" case */
@@ -369,7 +370,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
             key += 1;
 
           self->key = uri_join (self->uri, key);
-          g_free (key);
+          g_free (keyp);
         }
       }
     } else if (g_str_has_prefix (data, "#EXTINF:")) {
