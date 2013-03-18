@@ -67,6 +67,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-types.h				\
 	ges.h					\
 	ges-enums.h				\
+	ges-gerror.h				\
 	ges-custom-source-clip.h		\
 	ges-meta-container.h        \
 	ges-simple-timeline-layer.h		\

@@ -688,7 +688,7 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
 
   entry = g_hash_table_lookup (priv->layers, GINT_TO_POINTER (layer_prio));
   if (entry == NULL) {
-    g_set_error (error, GES_ERROR_DOMAIN, 0,
+    g_set_error (error, GES_FORMATTER_ERROR, GES_FORMATTER_WRONG_INPUT_FILE,
         "We got a Clip in a layer"
         " that does not exist, something is wrong either in the project file or"
         " in %s", g_type_name (G_OBJECT_TYPE (self)));
