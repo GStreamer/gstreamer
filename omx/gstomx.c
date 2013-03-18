@@ -29,7 +29,7 @@
 
 #include "gstomx.h"
 #include "gstomxmjpegdec.h"
-#include "gstomxmpeg2dec.h"
+#include "gstomxmpeg2videodec.h"
 #include "gstomxmpeg4videodec.h"
 #include "gstomxh264dec.h"
 #include "gstomxh263dec.h"
@@ -2323,7 +2323,7 @@ done:
 typedef GType (*GGetTypeFunction) (void);
 
 static const GGetTypeFunction types[] = {
-  gst_omx_mpeg2_dec_get_type, gst_omx_mpeg4_video_dec_get_type,
+  gst_omx_mpeg2_video_dec_get_type, gst_omx_mpeg4_video_dec_get_type,
   gst_omx_h264_dec_get_type, gst_omx_h263_dec_get_type,
   gst_omx_wmv_dec_get_type, gst_omx_mpeg4_video_enc_get_type,
   gst_omx_h264_enc_get_type, gst_omx_h263_enc_get_type,
