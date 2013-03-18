@@ -526,7 +526,7 @@ ges_timeline_layer_add_clip (GESTimelineLayer * layer, GESClip * clip)
   }
 
 
-  g_object_ref_sink (clip);
+  gst_object_ref_sink (clip);
 
   /* Take a reference to the clip and store it stored by start/priority */
   priv->clips_start = g_list_insert_sorted (priv->clips_start, clip,

@@ -115,7 +115,7 @@ ges_project_add_formatter (GESProject * project, GESFormatter * formatter)
   ges_formatter_set_project (formatter, project);
   priv->formatters = g_list_append (priv->formatters, formatter);
 
-  g_object_ref_sink (formatter);
+  gst_object_ref_sink (formatter);
 }
 
 static void

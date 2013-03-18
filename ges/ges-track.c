@@ -746,7 +746,7 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
     return FALSE;
   }
 
-  g_object_ref_sink (object);
+  gst_object_ref_sink (object);
   g_hash_table_insert (track->priv->trackelements_iter, object,
       g_sequence_insert_sorted (track->priv->trackelements_by_start, object,
           (GCompareDataFunc) element_start_compare, NULL));

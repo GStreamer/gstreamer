@@ -2329,7 +2329,7 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
     return FALSE;
   }
 
-  g_object_ref_sink (layer);
+  gst_object_ref_sink (layer);
   timeline->layers = g_list_insert_sorted (timeline->layers, layer,
       (GCompareFunc) sort_layers);
 
