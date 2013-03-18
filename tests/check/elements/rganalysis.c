@@ -320,11 +320,8 @@ poll_eos (GstElement * element)
   gst_object_unref (bus);
 }
 
-/* This also polls for EOS since the TAG message comes right before the end of
- * streams. */
-
 static GstTagList *
-poll_tags (GstElement * element)
+poll_tags_only (GstElement * element)
 {
   GstBus *bus = gst_element_get_bus (element);
   GstTagList *tag_list;
@@ -336,6 +333,17 @@ poll_tags (GstElement * element)
   gst_message_parse_tag (message, &tag_list);
   gst_message_unref (message);
   gst_object_unref (bus);
+
+  return tag_list;
+}
+
+/* This also polls for EOS since the TAG message comes right before the end of
+ * streams. */
+
+static GstTagList *
+poll_tags (GstElement * element)
+{
+  GstTagList *tag_list = poll_tags_only (element);
 
   poll_eos (element);
 
@@ -1243,8 +1251,13 @@ GST_START_TEST (test_forced)
   for (i = 20; i--;)
     push_buffer (test_buffer_const_float_stereo (44100, 512, 0.5, 0.5));
   send_eos_event (element);
+
   /* This fails if a tag message is generated: */
-  poll_eos (element);
+  /* Same values as above */
+  tag_list = poll_tags (element);
+  fail_unless_track_gain (tag_list, 2.21);
+  fail_unless_track_peak (tag_list, 1.0);
+  gst_tag_list_unref (tag_list);
 
   /* Now back to a track without tags. */
   send_flush_events (element);
@@ -1292,8 +1305,15 @@ GST_START_TEST (test_forced_separate)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
             0.5, 0.5));
   send_eos_event (element);
-  /* This fails if a tag message is generated: */
-  poll_eos (element);
+
+  /* Same values as above */
+  tag_list = poll_tags_only (element);
+  fail_unless_track_gain (tag_list, 2.21);
+  gst_tag_list_unref (tag_list);
+
+  tag_list = poll_tags (element);
+  fail_unless_track_peak (tag_list, 1.0);
+  gst_tag_list_unref (tag_list);
 
   /* Now a track without tags. */
   send_flush_events (element);
@@ -1342,7 +1362,12 @@ GST_START_TEST (test_forced_after_data)
   send_tag_event (element, tag_list);
 
   send_eos_event (element);
-  poll_eos (element);
+
+  /* Same values as above */
+  tag_list = poll_tags (element);
+  fail_unless_track_gain (tag_list, 2.21);
+  fail_unless_track_peak (tag_list, 1.0);
+  gst_tag_list_unref (tag_list);
 
   send_flush_events (element);
   send_segment_event (element);
@@ -1388,8 +1413,12 @@ GST_START_TEST (test_forced_album)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
             0.5, 0.5));
   send_eos_event (element);
-  /* This fails if a tag message is generated: */
-  poll_eos (element);
+
+  /* Same values as above */
+  tag_list = poll_tags (element);
+  fail_unless_track_gain (tag_list, 2.21);
+  fail_unless_track_peak (tag_list, 1.0);
+  gst_tag_list_unref (tag_list);
 
   /* Now an album without tags. */
   g_object_set (element, "num-tracks", 2, NULL);
@@ -1452,7 +1481,13 @@ GST_START_TEST (test_forced_album_skip)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 8000, 512, 0.25,
             0.25));
   send_eos_event (element);
-  poll_eos (element);
+
+  /* Same values as above */
+  tag_list = poll_tags (element);
+  fail_unless_track_gain (tag_list, 2.21);
+  fail_unless_track_peak (tag_list, 0.75);
+  gst_tag_list_unref (tag_list);
+
   fail_unless_num_tracks (element, 1);
 
   /* This track has no tags, but needs to be skipped anyways since we
@@ -1521,6 +1556,14 @@ GST_START_TEST (test_forced_album_no_skip)
   for (i = 20; i--;)
     push_buffer (test_buffer_const_float_stereo (8000, 512, 0.0, 0.0));
   send_eos_event (element);
+
+  /* the first batch from the tags */
+  tag_list = poll_tags_only (element);
+  fail_unless_track_peak (tag_list, 0.75);
+  fail_unless_track_gain (tag_list, 2.21);
+  gst_tag_list_unref (tag_list);
+
+  /* the second from the processing */
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.0);
   fail_unless_track_gain (tag_list, SILENCE_GAIN);
@@ -1578,7 +1621,11 @@ GST_START_TEST (test_forced_abort_album_no_skip)
   for (i = 20; i--;)
     push_buffer (test_buffer_const_float_stereo (8000, 512, 0.0, 0.0));
   send_eos_event (element);
-  poll_eos (element);
+
+  tag_list = poll_tags (element);
+  fail_unless_track_peak (tag_list, 0.75);
+  fail_unless_track_gain (tag_list, 2.21);
+  gst_tag_list_unref (tag_list);
 
   cleanup_rganalysis (element);
 }
@@ -1874,13 +1921,13 @@ rganalysis_suite (void)
 
   tcase_add_test (tc_chain, test_gain_album);
 
-  tcase_skip_broken_test (tc_chain, test_forced);
-  tcase_skip_broken_test (tc_chain, test_forced_separate);
-  tcase_skip_broken_test (tc_chain, test_forced_after_data);
-  tcase_skip_broken_test (tc_chain, test_forced_album);
-  tcase_skip_broken_test (tc_chain, test_forced_album_skip);
-  tcase_skip_broken_test (tc_chain, test_forced_album_no_skip);
-  tcase_skip_broken_test (tc_chain, test_forced_abort_album_no_skip);
+  tcase_add_test (tc_chain, test_forced);
+  tcase_add_test (tc_chain, test_forced_separate);
+  tcase_add_test (tc_chain, test_forced_after_data);
+  tcase_add_test (tc_chain, test_forced_album);
+  tcase_add_test (tc_chain, test_forced_album_skip);
+  tcase_add_test (tc_chain, test_forced_album_no_skip);
+  tcase_add_test (tc_chain, test_forced_abort_album_no_skip);
 
   tcase_add_test (tc_chain, test_reference_level);
 
