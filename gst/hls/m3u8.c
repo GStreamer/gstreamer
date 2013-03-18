@@ -276,15 +276,44 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
           GST_WARNING ("uri not set, can't build a valid uri");
           goto next_line;
         }
-        slash = g_utf8_strrchr (self->uri, -1, '/');
-        if (!slash) {
-          GST_WARNING ("Can't build a valid uri");
-          goto next_line;
-        }
+        if (data[0] != '/') {
+          /* data is a relative path */
+          slash = g_utf8_strrchr (self->uri, -1, '/');
+          if (!slash) {
+            GST_WARNING ("Can't build a valid uri");
+            goto next_line;
+          }
 
-        *slash = '\0';
-        data = g_strdup_printf ("%s/%s", self->uri, data);
-        *slash = '/';
+          *slash = '\0';
+          data = g_strdup_printf ("%s/%s", self->uri, data);
+          *slash = '/';
+        } else {
+          /* data is an absolute path */
+          char *scheme, *hostname, *tmp;
+          char *uri = g_strdup (self->uri);
+
+          scheme = uri;
+
+          /* find the : in <scheme>:// */
+          tmp = g_utf8_strchr (uri, -1, ':');
+          if (!tmp) {
+            GST_WARNING ("Can't build a valid uri");
+            g_free (uri);
+            goto next_line;
+          }
+
+          *tmp = '\0';
+
+          /* skip :// */
+          hostname = tmp + 3;
+
+          tmp = g_utf8_strchr (hostname, -1, '/');
+          if (tmp)
+            *tmp = '\0';
+
+          data = g_strdup_printf ("%s://%s%s", scheme, hostname, data);
+          g_free (uri);
+        }
       } else {
         data = g_strdup (data);
       }
