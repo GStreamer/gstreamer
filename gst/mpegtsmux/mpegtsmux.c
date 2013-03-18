@@ -1004,8 +1004,15 @@ check_pending_key_unit_event (GstEvent * pending_event, GstSegment * segment,
   stream_time = gst_segment_to_stream_time (segment,
       GST_FORMAT_TIME, timestamp);
 
-  gst_video_event_parse_upstream_force_key_unit (pending_event,
-      NULL, &all_headers, &count);
+  if (GST_EVENT_TYPE (pending_event) == GST_EVENT_CUSTOM_DOWNSTREAM) {
+    gst_video_event_parse_downstream_force_key_unit (pending_event,
+        NULL, NULL, NULL, &all_headers, &count);
+  } else {
+    g_return_val_if_fail (GST_EVENT_TYPE (pending_event) ==
+        GST_EVENT_CUSTOM_UPSTREAM, NULL);
+    gst_video_event_parse_upstream_force_key_unit (pending_event, NULL,
+        &all_headers, &count);
+  }
 
   event =
       gst_video_event_new_downstream_force_key_unit (timestamp, stream_time,
