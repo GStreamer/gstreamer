@@ -23,6 +23,7 @@
 #include <math.h>
 #include <errno.h>
 #include <glib.h>
+#include <string.h>
 
 #include <gst/glib-compat-private.h>
 #include "gstfragmented.h"
@@ -67,6 +68,7 @@ gst_m3u8_free (GstM3U8 * self)
   g_free (self->uri);
   g_free (self->allowcache);
   g_free (self->codecs);
+  g_free (self->key);
 
   g_list_foreach (self->files, (GFunc) gst_m3u8_media_file_free, NULL);
   g_list_free (self->files);
@@ -351,6 +353,25 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
     } else if (g_str_has_prefix (data, "#EXT-X-ALLOW-CACHE:")) {
       g_free (self->allowcache);
       self->allowcache = g_strdup (data + 19);
+    } else if (g_str_has_prefix (data, "#EXT-X-KEY:")) {
+      gchar *v, *a;
+
+      data = data + 11;
+      while (data && parse_attributes (&data, &a, &v)) {
+        if (g_str_equal (a, "URI")) {
+          gchar *key = g_strdup (v);
+          int len = strlen (key);
+
+          /* handle the \"key\" case */
+          if (key[len - 1] == '"')
+            key[len - 1] = '\0';
+          if (key[0] == '"')
+            key += 1;
+
+          self->key = uri_join (self->uri, key);
+          g_free (key);
+        }
+      }
     } else if (g_str_has_prefix (data, "#EXTINF:")) {
       gdouble fval;
       if (!double_from_string (data + 8, &data, &fval)) {
