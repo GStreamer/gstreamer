@@ -20,13 +20,14 @@
  * SECTION:element-gstcombdetect
  *
  * The combdetect element detects if combing artifacts are present in
- * a raw video stream, and if so, marks them with an annoying and
- * highly visible color.
+ * a raw video stream, and if so, marks them with a zebra stripe
+ * pattern.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! combdetect ! xvimagesink
+ * gst-launch -v filesrc location=file.mov ! decodebin ! combdetect !
+ *     xvimagesink
  * ]|
  * </refsect2>
  */
@@ -70,24 +71,27 @@ enum
 
 /* pad templates */
 
-#define VIDEO_SINK_CAPS \
-    GST_VIDEO_CAPS_MAKE("{ I420, Y444, Y42B }")
+/* Yeah, the max width is hard-coded 2048. */
+#define MAX_WIDTH 2048
+#define VIDEO_CAPS \
+  "video/x-raw, " \
+  "format = (string) { I420, Y444, Y42B }, " \
+  "width = [1, 2048], " \
+  "height = " GST_VIDEO_SIZE_RANGE ", " \
+  "framerate = " GST_VIDEO_FPS_RANGE
 
 static GstStaticPadTemplate gst_comb_detect_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (VIDEO_SINK_CAPS)
+    GST_STATIC_CAPS (VIDEO_CAPS)
     );
-
-#define VIDEO_SRC_CAPS \
-    GST_VIDEO_CAPS_MAKE("{ I420, Y444, Y42B }")
 
 static GstStaticPadTemplate gst_comb_detect_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (VIDEO_SRC_CAPS)
+    GST_STATIC_CAPS (VIDEO_CAPS)
     );
 
 
@@ -239,8 +243,7 @@ gst_comb_detect_transform_frame (GstVideoFilter * filter,
 
   {
     int j;
-#define MAXWIDTH 2048
-    int thisline[MAXWIDTH];
+    int thisline[MAX_WIDTH];
     int score = 0;
 
     height = GST_VIDEO_FRAME_COMP_HEIGHT (outframe, 0);
