@@ -37,6 +37,7 @@ static gboolean gst_m3u8_update (GstM3U8 * m3u8, gchar * data,
 static GstM3U8MediaFile *gst_m3u8_media_file_new (gchar * uri,
     gchar * title, GstClockTime duration, guint sequence);
 static void gst_m3u8_media_file_free (GstM3U8MediaFile * self);
+gchar *uri_join (const gchar * uri, const gchar * path);
 
 static GstM3U8 *
 gst_m3u8_new (void)
@@ -270,53 +271,9 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
         goto next_line;
       }
 
-      if (!gst_uri_is_valid (data)) {
-        gchar *slash;
-        if (!self->uri) {
-          GST_WARNING ("uri not set, can't build a valid uri");
-          goto next_line;
-        }
-        if (data[0] != '/') {
-          /* data is a relative path */
-          slash = g_utf8_strrchr (self->uri, -1, '/');
-          if (!slash) {
-            GST_WARNING ("Can't build a valid uri");
-            goto next_line;
-          }
-
-          *slash = '\0';
-          data = g_strdup_printf ("%s/%s", self->uri, data);
-          *slash = '/';
-        } else {
-          /* data is an absolute path */
-          char *scheme, *hostname, *tmp;
-          char *uri = g_strdup (self->uri);
-
-          scheme = uri;
-
-          /* find the : in <scheme>:// */
-          tmp = g_utf8_strchr (uri, -1, ':');
-          if (!tmp) {
-            GST_WARNING ("Can't build a valid uri");
-            g_free (uri);
-            goto next_line;
-          }
-
-          *tmp = '\0';
-
-          /* skip :// */
-          hostname = tmp + 3;
-
-          tmp = g_utf8_strchr (hostname, -1, '/');
-          if (tmp)
-            *tmp = '\0';
-
-          data = g_strdup_printf ("%s://%s%s", scheme, hostname, data);
-          g_free (uri);
-        }
-      } else {
-        data = g_strdup (data);
-      }
+      data = uri_join (self->uri, data);
+      if (data == NULL)
+        goto next_line;
 
       r = g_utf8_strchr (data, -1, '\r');
       if (r)
@@ -702,4 +659,52 @@ gst_m3u8_client_get_playlist_for_bitrate (GstM3U8Client * client, guint bitrate)
   GST_M3U8_CLIENT_UNLOCK (client);
 
   return current_variant;
+}
+
+gchar *
+uri_join (const gchar * uri1, const gchar * uri2)
+{
+  gchar *uri_copy, *tmp, *ret = NULL;
+
+  if (gst_uri_is_valid (uri2))
+    return g_strdup (uri2);
+
+  uri_copy = g_strdup (uri1);
+  if (uri2[0] != '/') {
+    /* uri2 is a relative uri2 */
+    tmp = g_utf8_strrchr (uri_copy, -1, '/');
+    if (!tmp) {
+      GST_WARNING ("Can't build a valid uri_copy");
+      goto out;
+    }
+
+    *tmp = '\0';
+    ret = g_strdup_printf ("%s/%s", uri_copy, uri2);
+  } else {
+    /* uri2 is an absolute uri2 */
+    char *scheme, *hostname;
+
+    scheme = uri_copy;
+    /* find the : in <scheme>:// */
+    tmp = g_utf8_strchr (uri_copy, -1, ':');
+    if (!tmp) {
+      GST_WARNING ("Can't build a valid uri_copy");
+      goto out;
+    }
+
+    *tmp = '\0';
+
+    /* skip :// */
+    hostname = tmp + 3;
+
+    tmp = g_utf8_strchr (hostname, -1, '/');
+    if (tmp)
+      *tmp = '\0';
+
+    ret = g_strdup_printf ("%s://%s%s", scheme, hostname, uri2);
+  }
+
+out:
+  g_free (uri_copy);
+  return ret;
 }
