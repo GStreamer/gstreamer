@@ -990,8 +990,12 @@ ges_clip_edit (GESClip * clip, GList * layers,
  *
  * The function modifies @clip, and creates another #GESClip so
  * we have two clips at the end, splitted at the time specified by @position.
+ * The newly created clip will be added to the same layer as @clip is in.
+ * This implies that @clip must be in a #GESTimelineLayer for the operation to
+ * be possible.
  *
- * Returns: (transfer floating): The newly created #GESClip resulting from the splitting
+ * Returns: (transfer none): The newly created #GESClip resulting from the
+ * splitting
  */
 GESClip *
 ges_clip_split (GESClip * clip, guint64 position)
@@ -1002,6 +1006,7 @@ ges_clip_split (GESClip * clip, guint64 position)
   GstClockTime start, inpoint, duration;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
+  g_return_val_if_fail (clip->priv->layer, NULL);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (position), NULL);
 
   duration = _DURATION (clip);
@@ -1029,12 +1034,10 @@ ges_clip_split (GESClip * clip, guint64 position)
   _set_duration0 (GES_TIMELINE_ELEMENT (new_object),
       duration + start - position);
 
-  if (clip->priv->layer) {
-    /* We do not want the timeline to create again TrackElement-s */
-    ges_clip_set_moving_from_layer (new_object, TRUE);
-    ges_timeline_layer_add_clip (clip->priv->layer, new_object);
-    ges_clip_set_moving_from_layer (new_object, FALSE);
-  }
+  /* We do not want the timeline to create again TrackElement-s */
+  ges_clip_set_moving_from_layer (new_object, TRUE);
+  ges_timeline_layer_add_clip (clip->priv->layer, new_object);
+  ges_clip_set_moving_from_layer (new_object, FALSE);
 
   /* We first set the new duration and the child mapping will be updated
    * properly in the following loop
@@ -1272,7 +1275,6 @@ _trim (GESTimelineElement * element, GstClockTime start)
  *
  * Returns: %TRUE on success, %FALSE on failure.
  */
-
 gboolean
 ges_clip_add_asset (GESClip * clip, GESAsset * asset)
 {

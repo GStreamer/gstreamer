@@ -41,14 +41,23 @@ my_fill_track_func (GESClip * clip,
 
 GST_START_TEST (test_object_properties)
 {
-  GESTrack *track;
-  GESTrackElement *trackelement;
   GESClip *clip;
+  GESTrack *track;
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GESTrackElement *trackelement;
 
   ges_init ();
 
   track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
+
+  layer = ges_timeline_layer_new ();
+  fail_unless (layer != NULL);
+  timeline = ges_timeline_new ();
+  fail_unless (timeline != NULL);
+  fail_unless (ges_timeline_add_layer (timeline, layer));
+  fail_unless (ges_timeline_add_track (timeline, track));
 
   clip = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
   fail_unless (clip != NULL);
@@ -60,10 +69,13 @@ GST_START_TEST (test_object_properties)
   assert_equals_uint64 (_DURATION (clip), 51);
   assert_equals_uint64 (_INPOINT (clip), 12);
 
-  trackelement = ges_clip_create_track_element (clip, track->type);
-  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
+  ges_timeline_layer_add_clip (layer, GES_CLIP (clip));
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+  trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
-  fail_unless (ges_track_element_set_track (trackelement, track));
+  fail_unless (GES_TIMELINE_ELEMENT_PARENT (trackelement) ==
+      GES_TIMELINE_ELEMENT (clip));
+  fail_unless (ges_track_element_get_track (trackelement) == track);
 
   /* Check that trackelement has the same properties */
   assert_equals_uint64 (_START (trackelement), 42);
@@ -100,8 +112,7 @@ GST_START_TEST (test_object_properties)
   ges_container_remove (GES_CONTAINER (clip),
       GES_TIMELINE_ELEMENT (trackelement));
 
-  g_object_unref (clip);
-  g_object_unref (track);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -109,29 +120,44 @@ GST_END_TEST;
 GST_START_TEST (test_split_object)
 {
   GESTrack *track;
-  GESTrackElement *trackelement, *splittrackelement;
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
   GESClip *clip, *splitclip;
   GList *splittrackelements;
+  GESTrackElement *trackelement, *splittrackelement;
 
   ges_init ();
 
   track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
+  layer = ges_timeline_layer_new ();
+  fail_unless (layer != NULL);
+  timeline = ges_timeline_new ();
+  fail_unless (timeline != NULL);
+  fail_unless (ges_timeline_add_layer (timeline, layer));
+  fail_unless (ges_timeline_add_track (timeline, track));
+  ASSERT_OBJECT_REFCOUNT (timeline, "timeline", 1);
+
   clip = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
   fail_unless (clip != NULL);
+  ASSERT_OBJECT_REFCOUNT (timeline, "timeline", 1);
 
   /* Set some properties */
   g_object_set (clip, "start", (guint64) 42, "duration", (guint64) 50,
       "in-point", (guint64) 12, NULL);
+  ASSERT_OBJECT_REFCOUNT (timeline, "timeline", 1);
   assert_equals_uint64 (_START (clip), 42);
   assert_equals_uint64 (_DURATION (clip), 50);
   assert_equals_uint64 (_INPOINT (clip), 12);
 
-  trackelement = ges_clip_create_track_element (clip, track->type);
-  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
+  ges_timeline_layer_add_clip (layer, GES_CLIP (clip));
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+  trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
-  fail_unless (ges_track_element_set_track (trackelement, track));
+  fail_unless (GES_TIMELINE_ELEMENT_PARENT (trackelement) ==
+      GES_TIMELINE_ELEMENT (clip));
+  fail_unless (ges_track_element_get_track (trackelement) == track);
 
   /* Check that trackelement has the same properties */
   assert_equals_uint64 (_START (trackelement), 42);
@@ -167,12 +193,13 @@ GST_START_TEST (test_split_object)
 
   /* We own the only ref */
   ASSERT_OBJECT_REFCOUNT (splitclip, "splitclip", 1);
-  /* 1 ref for the Clip and 1 ref for the Track */
-  ASSERT_OBJECT_REFCOUNT (splittrackelement, "splittrackelement", 2);
+  /* 1 ref for the Clip, 1 ref for the Track and 1 ref for the timeline */
+  ASSERT_OBJECT_REFCOUNT (splittrackelement, "splittrackelement", 3);
 
-  g_object_unref (track);
-  g_object_unref (splitclip);
-  g_object_unref (clip);
+  g_object_unref (timeline);
+  fail_if (G_IS_OBJECT (splitclip));
+  fail_if (G_IS_OBJECT (clip));
+  fail_if (G_IS_OBJECT (splittrackelement));
 }
 
 GST_END_TEST;
