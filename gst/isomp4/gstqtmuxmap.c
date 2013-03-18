@@ -167,6 +167,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             AAC_CAPS " ; "
             ADPCM_CAPS " ; "
             "audio/x-alaw, " COMMON_AUDIO_CAPS (2, MAX) "; "
+            "audio/x-mulaw, " COMMON_AUDIO_CAPS (2, MAX) "; "
             AMR_CAPS " ; " ALAC_CAPS)
       }
   ,
