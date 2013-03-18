@@ -291,8 +291,12 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         break;
       case V4L2_CID_HFLIP:
       case V4L2_CID_VFLIP:
+#ifndef V4L2_CID_PAN_RESET
       case V4L2_CID_HCENTER:
+#endif
+#ifndef V4L2_CID_TILT_RESET
       case V4L2_CID_VCENTER:
+#endif
 #ifdef V4L2_CID_PAN_RESET
       case V4L2_CID_PAN_RESET:
 #endif
