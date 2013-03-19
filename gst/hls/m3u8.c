@@ -102,6 +102,7 @@ gst_m3u8_media_file_free (GstM3U8MediaFile * self)
 
   g_free (self->title);
   g_free (self->uri);
+  g_free (self->key);
   g_free (self);
 }
 
@@ -297,6 +298,14 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
         file =
             gst_m3u8_media_file_new (data, title, duration,
             self->mediasequence++);
+
+        /* set encryption params */
+        file->key = g_strdup (self->key);
+        if (file->key) {
+          guint8 *iv = file->iv + 12;
+          GST_WRITE_UINT32_BE (iv, file->sequence);
+        }
+
         duration = 0;
         title = NULL;
         self->files = g_list_append (self->files, file);
@@ -531,7 +540,7 @@ gst_m3u8_client_get_current_position (GstM3U8Client * client,
 gboolean
 gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
     gboolean * discontinuity, const gchar ** uri, GstClockTime * duration,
-    GstClockTime * timestamp)
+    GstClockTime * timestamp, const gchar ** key, const guint8 ** iv)
 {
   GList *l;
   GstM3U8MediaFile *file;
@@ -558,6 +567,8 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
 
   *uri = file->uri;
   *duration = file->duration;
+  *key = file->key;
+  *iv = file->iv;
 
   GST_M3U8_CLIENT_UNLOCK (client);
   return TRUE;

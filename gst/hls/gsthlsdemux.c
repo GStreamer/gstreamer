@@ -47,6 +47,8 @@
 
 #include <string.h>
 #include <gst/glib-compat-private.h>
+#include <openssl/aes.h>
+#include <openssl/evp.h>
 #include "gsthlsdemux.h"
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src_%u",
@@ -1209,6 +1211,55 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux)
   return gst_hls_demux_change_playlist (demux, bitrate * demux->bitrate_limit);
 }
 
+static GstFragment *
+gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
+    GstFragment * encrypted_fragment, const gchar * key, const guint8 * iv)
+{
+  GstFragment *key_fragment, *ret;
+  GstBuffer *key_buffer, *encrypted_buffer, *decrypted_buffer;
+  GstMapInfo key_info, encrypted_info, decrypted_info;
+  EVP_CIPHER_CTX aes_ctx;
+  int out_size = 0;
+
+  GST_INFO_OBJECT (demux, "Fetching key %s", key);
+  key_fragment = gst_uri_downloader_fetch_uri (demux->downloader, key);
+  if (key_fragment == NULL)
+    return NULL;
+
+  key_buffer = gst_fragment_get_buffer (key_fragment);
+  encrypted_buffer = gst_fragment_get_buffer (encrypted_fragment);
+  decrypted_buffer =
+      gst_buffer_new_allocate (NULL, gst_buffer_get_size (encrypted_buffer),
+      NULL);
+
+  gst_buffer_map (key_buffer, &key_info, GST_MAP_READ);
+  gst_buffer_map (encrypted_buffer, &encrypted_info, GST_MAP_READ);
+  gst_buffer_map (decrypted_buffer, &decrypted_info, GST_MAP_WRITE);
+
+  EVP_CIPHER_CTX_init (&aes_ctx);
+  EVP_CipherInit_ex (&aes_ctx, EVP_aes_128_cbc (), NULL, key_info.data, iv,
+      AES_DECRYPT);
+  EVP_CipherUpdate (&aes_ctx, decrypted_info.data, &out_size,
+      encrypted_info.data, encrypted_info.size);
+  EVP_CipherFinal_ex (&aes_ctx, decrypted_info.data + out_size, &out_size);
+  EVP_CIPHER_CTX_cleanup (&aes_ctx);
+
+  gst_buffer_unmap (decrypted_buffer, &decrypted_info);
+  gst_buffer_unmap (encrypted_buffer, &encrypted_info);
+  gst_buffer_unmap (key_buffer, &key_info);
+
+  gst_buffer_unref (key_buffer);
+  gst_buffer_unref (encrypted_buffer);
+  g_object_unref (key_fragment);
+  g_object_unref (encrypted_fragment);
+
+  ret = gst_fragment_new ();
+  gst_fragment_add_buffer (ret, decrypted_buffer);
+  ret->completed = TRUE;
+
+  return ret;
+}
+
 static gboolean
 gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean caching)
 {
@@ -1218,9 +1269,11 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean caching)
   GstClockTime timestamp;
   GstBuffer *buf;
   gboolean discont;
+  const gchar *key = NULL;
+  const guint8 *iv = NULL;
 
   if (!gst_m3u8_client_get_next_fragment (demux->client, &discont,
-          &next_fragment_uri, &duration, &timestamp)) {
+          &next_fragment_uri, &duration, &timestamp, &key, &iv)) {
     GST_INFO_OBJECT (demux, "This playlist doesn't contain more fragments");
     demux->end_of_playlist = TRUE;
     gst_task_start (demux->stream_task);
@@ -1232,10 +1285,14 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean caching)
   download = gst_uri_downloader_fetch_uri (demux->downloader,
       next_fragment_uri);
 
+  if (download && key)
+    download = gst_hls_demux_decrypt_fragment (demux, download, key, iv);
+
   if (download == NULL)
     goto error;
 
   buf = gst_fragment_get_buffer (download);
+
   GST_BUFFER_DURATION (buf) = duration;
   GST_BUFFER_PTS (buf) = timestamp;
 
