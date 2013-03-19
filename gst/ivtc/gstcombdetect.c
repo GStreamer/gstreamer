@@ -56,6 +56,8 @@ static void gst_comb_detect_get_property (GObject * object,
 static void gst_comb_detect_dispose (GObject * object);
 static void gst_comb_detect_finalize (GObject * object);
 
+static GstCaps *gst_comb_detect_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_comb_detect_start (GstBaseTransform * trans);
 static gboolean gst_comb_detect_stop (GstBaseTransform * trans);
 static gboolean gst_comb_detect_set_info (GstVideoFilter * filter,
@@ -124,6 +126,8 @@ gst_comb_detect_class_init (GstCombDetectClass * klass)
   gobject_class->get_property = gst_comb_detect_get_property;
   gobject_class->dispose = gst_comb_detect_dispose;
   gobject_class->finalize = gst_comb_detect_finalize;
+  base_transform_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_comb_detect_transform_caps);
   base_transform_class->start = GST_DEBUG_FUNCPTR (gst_comb_detect_start);
   base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_comb_detect_stop);
   video_filter_class->set_info = GST_DEBUG_FUNCPTR (gst_comb_detect_set_info);
@@ -187,6 +191,53 @@ gst_comb_detect_finalize (GObject * object)
   G_OBJECT_CLASS (gst_comb_detect_parent_class)->finalize (object);
 }
 
+static GstCaps *
+gst_comb_detect_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+{
+  GstCaps *othercaps;
+  int i;
+
+  othercaps = gst_caps_copy (caps);
+
+  if (direction == GST_PAD_SRC) {
+    GValue value = G_VALUE_INIT;
+    GValue v = G_VALUE_INIT;
+
+    g_value_init (&value, GST_TYPE_LIST);
+    g_value_init (&v, G_TYPE_STRING);
+
+    g_value_set_string (&v, "interleaved");
+    gst_value_list_append_value (&value, &v);
+    g_value_set_string (&v, "mixed");
+    gst_value_list_append_value (&value, &v);
+    g_value_set_string (&v, "progressive");
+    gst_value_list_append_value (&value, &v);
+
+    for (i = 0; i < gst_caps_get_size (othercaps); i++) {
+      GstStructure *structure = gst_caps_get_structure (othercaps, i);
+      gst_structure_set_value (structure, "interlace-mode", &value);
+    }
+    g_value_reset (&value);
+    g_value_reset (&v);
+  } else {
+    for (i = 0; i < gst_caps_get_size (othercaps); i++) {
+      GstStructure *structure = gst_caps_get_structure (othercaps, i);
+      gst_structure_set (structure, "interlace-mode", G_TYPE_STRING,
+          "progressive", NULL);
+    }
+  }
+
+  if (filter) {
+    GstCaps *intersect;
+
+    intersect = gst_caps_intersect (othercaps, filter);
+    gst_caps_unref (othercaps);
+    othercaps = intersect;
+  }
+
+  return othercaps;
+}
 
 static gboolean
 gst_comb_detect_start (GstBaseTransform * trans)
