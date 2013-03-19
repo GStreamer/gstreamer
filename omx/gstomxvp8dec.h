@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013, Collabota Ltd.
+ * Copyright (C) 2013, Collabora Ltd.
  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
