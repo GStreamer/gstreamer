@@ -139,17 +139,15 @@ gst_comb_detect_class_init (GstCombDetectClass * klass)
 static void
 gst_comb_detect_init (GstCombDetect * combdetect)
 {
-  combdetect->sinkpad =
-      gst_pad_new_from_static_template (&gst_comb_detect_sink_template, "sink");
-  combdetect->srcpad =
-      gst_pad_new_from_static_template (&gst_comb_detect_src_template, "src");
 }
 
 void
 gst_comb_detect_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  /* GstCombDetect *combdetect = GST_COMB_DETECT (object); */
+  GstCombDetect *combdetect = GST_COMB_DETECT (object);
+
+  GST_DEBUG_OBJECT (combdetect, "set_property");
 
   switch (property_id) {
     default:
@@ -162,7 +160,9 @@ void
 gst_comb_detect_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  /* GstCombDetect *combdetect = GST_COMB_DETECT (object); */
+  GstCombDetect *combdetect = GST_COMB_DETECT (object);
+
+  GST_DEBUG_OBJECT (combdetect, "get_property");
 
   switch (property_id) {
     default:
@@ -174,7 +174,9 @@ gst_comb_detect_get_property (GObject * object, guint property_id,
 void
 gst_comb_detect_dispose (GObject * object)
 {
-  /* GstCombDetect *combdetect = GST_COMB_DETECT (object); */
+  GstCombDetect *combdetect = GST_COMB_DETECT (object);
+
+  GST_DEBUG_OBJECT (combdetect, "dispose");
 
   /* clean up as possible.  may be called multiple times */
 
@@ -184,7 +186,9 @@ gst_comb_detect_dispose (GObject * object)
 void
 gst_comb_detect_finalize (GObject * object)
 {
-  /* GstCombDetect *combdetect = GST_COMB_DETECT (object); */
+  GstCombDetect *combdetect = GST_COMB_DETECT (object);
+
+  GST_DEBUG_OBJECT (combdetect, "finalize");
 
   /* clean up object here */
 
@@ -242,7 +246,9 @@ gst_comb_detect_transform_caps (GstBaseTransform * trans,
 static gboolean
 gst_comb_detect_start (GstBaseTransform * trans)
 {
-  /* GstCombDetect *combdetect = GST_COMB_DETECT (trans); */
+  GstCombDetect *combdetect = GST_COMB_DETECT (trans);
+
+  GST_DEBUG_OBJECT (combdetect, "start");
 
   /* initialize processing */
   return TRUE;
@@ -251,7 +257,9 @@ gst_comb_detect_start (GstBaseTransform * trans)
 static gboolean
 gst_comb_detect_stop (GstBaseTransform * trans)
 {
-  /* GstCombDetect *combdetect = GST_COMB_DETECT (trans); */
+  GstCombDetect *combdetect = GST_COMB_DETECT (trans);
+
+  GST_DEBUG_OBJECT (combdetect, "stop");
 
   /* finalize processing */
   return TRUE;

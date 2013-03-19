@@ -70,40 +70,17 @@ static GstCaps *gst_ivtc_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstCaps *gst_ivtc_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
-static gboolean gst_ivtc_accept_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps);
 static gboolean gst_ivtc_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps);
-static gboolean gst_ivtc_query (GstBaseTransform * trans,
-    GstPadDirection direction, GstQuery * query);
-static gboolean gst_ivtc_decide_allocation (GstBaseTransform * trans,
-    GstQuery * query);
-static gboolean gst_ivtc_filter_meta (GstBaseTransform * trans,
-    GstQuery * query, GType api, const GstStructure * params);
-static gboolean gst_ivtc_propose_allocation (GstBaseTransform * trans,
-    GstQuery * decide_query, GstQuery * query);
 static gboolean gst_ivtc_transform_size (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, gsize size, GstCaps * othercaps,
     gsize * othersize);
-static gboolean gst_ivtc_get_unit_size (GstBaseTransform * trans,
-    GstCaps * caps, gsize * size);
 static gboolean gst_ivtc_start (GstBaseTransform * trans);
 static gboolean gst_ivtc_stop (GstBaseTransform * trans);
 static gboolean gst_ivtc_sink_event (GstBaseTransform * trans,
     GstEvent * event);
-static gboolean gst_ivtc_src_event (GstBaseTransform * trans, GstEvent * event);
-static GstFlowReturn gst_ivtc_prepare_output_buffer (GstBaseTransform * trans,
-    GstBuffer * input, GstBuffer ** outbuf);
-static gboolean gst_ivtc_copy_metadata (GstBaseTransform * trans,
-    GstBuffer * input, GstBuffer * outbuf);
-static gboolean gst_ivtc_transform_meta (GstBaseTransform * trans,
-    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
-static void gst_ivtc_before_transform (GstBaseTransform * trans,
-    GstBuffer * buffer);
 static GstFlowReturn gst_ivtc_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static GstFlowReturn gst_ivtc_transform_ip (GstBaseTransform * trans,
-    GstBuffer * buf);
 static void gst_ivtc_flush (GstIvtc * ivtc);
 static void gst_ivtc_retire_fields (GstIvtc * ivtc, int n_fields);
 static void gst_ivtc_construct_frame (GstIvtc * itvc, GstBuffer * outbuf);
@@ -117,20 +94,26 @@ enum
 
 /* pad templates */
 
+#define MAX_WIDTH 2048
+#define VIDEO_CAPS \
+  "video/x-raw, " \
+  "format = (string) { I420, Y444, Y42B }, " \
+  "width = [1, 2048], " \
+  "height = " GST_VIDEO_SIZE_RANGE ", " \
+  "framerate = " GST_VIDEO_FPS_RANGE
+
 static GstStaticPadTemplate gst_ivtc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{Y42B,I420,Y444}")
-        ",interlace-mode=(string){interleaved,mixed,progressive}")
+    GST_STATIC_CAPS (VIDEO_CAPS)
     );
 
 static GstStaticPadTemplate gst_ivtc_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{Y42B,I420,Y444}")
-        ",interlace-mode=(string)progressive")
+    GST_STATIC_CAPS (VIDEO_CAPS)
     );
 
 
@@ -165,65 +148,27 @@ gst_ivtc_class_init (GstIvtcClass * klass)
   base_transform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_ivtc_transform_caps);
   base_transform_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_ivtc_fixate_caps);
-  if (0)
-    base_transform_class->accept_caps =
-        GST_DEBUG_FUNCPTR (gst_ivtc_accept_caps);
   base_transform_class->set_caps = GST_DEBUG_FUNCPTR (gst_ivtc_set_caps);
-  if (0)
-    base_transform_class->query = GST_DEBUG_FUNCPTR (gst_ivtc_query);
-  if (0)
-    base_transform_class->decide_allocation =
-        GST_DEBUG_FUNCPTR (gst_ivtc_decide_allocation);
-  if (0)
-    base_transform_class->filter_meta =
-        GST_DEBUG_FUNCPTR (gst_ivtc_filter_meta);
-  if (0)
-    base_transform_class->propose_allocation =
-        GST_DEBUG_FUNCPTR (gst_ivtc_propose_allocation);
   base_transform_class->transform_size =
       GST_DEBUG_FUNCPTR (gst_ivtc_transform_size);
-  if (0)
-    base_transform_class->get_unit_size =
-        GST_DEBUG_FUNCPTR (gst_ivtc_get_unit_size);
   base_transform_class->start = GST_DEBUG_FUNCPTR (gst_ivtc_start);
   base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_ivtc_stop);
   base_transform_class->sink_event = GST_DEBUG_FUNCPTR (gst_ivtc_sink_event);
-  if (0)
-    base_transform_class->src_event = GST_DEBUG_FUNCPTR (gst_ivtc_src_event);
-  if (0)
-    base_transform_class->prepare_output_buffer =
-        GST_DEBUG_FUNCPTR (gst_ivtc_prepare_output_buffer);
-  if (0)
-    base_transform_class->copy_metadata =
-        GST_DEBUG_FUNCPTR (gst_ivtc_copy_metadata);
-  if (0)
-    base_transform_class->transform_meta =
-        GST_DEBUG_FUNCPTR (gst_ivtc_transform_meta);
-  if (0)
-    base_transform_class->before_transform =
-        GST_DEBUG_FUNCPTR (gst_ivtc_before_transform);
   base_transform_class->transform = GST_DEBUG_FUNCPTR (gst_ivtc_transform);
-  if (0)
-    base_transform_class->transform_ip =
-        GST_DEBUG_FUNCPTR (gst_ivtc_transform_ip);
 }
 
 static void
 gst_ivtc_init (GstIvtc * ivtc)
 {
-
-  ivtc->sinkpad = gst_pad_new_from_static_template (&gst_ivtc_sink_template,
-      "sink");
-
-  ivtc->srcpad = gst_pad_new_from_static_template (&gst_ivtc_src_template,
-      "src");
 }
 
 void
 gst_ivtc_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  /* GstIvtc *ivtc = GST_IVTC (object); */
+  GstIvtc *ivtc = GST_IVTC (object);
+
+  GST_DEBUG_OBJECT (ivtc, "set_property");
 
   switch (property_id) {
     default:
@@ -236,7 +181,9 @@ void
 gst_ivtc_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  /* GstIvtc *ivtc = GST_IVTC (object); */
+  GstIvtc *ivtc = GST_IVTC (object);
+
+  GST_DEBUG_OBJECT (ivtc, "get_property");
 
   switch (property_id) {
     default:
@@ -248,7 +195,9 @@ gst_ivtc_get_property (GObject * object, guint property_id,
 void
 gst_ivtc_dispose (GObject * object)
 {
-  /* GstIvtc *ivtc = GST_IVTC (object); */
+  GstIvtc *ivtc = GST_IVTC (object);
+
+  GST_DEBUG_OBJECT (ivtc, "dispose");
 
   /* clean up as possible.  may be called multiple times */
 
@@ -258,13 +207,14 @@ gst_ivtc_dispose (GObject * object)
 void
 gst_ivtc_finalize (GObject * object)
 {
-  /* GstIvtc *ivtc = GST_IVTC (object); */
+  GstIvtc *ivtc = GST_IVTC (object);
+
+  GST_DEBUG_OBJECT (ivtc, "finalize");
 
   /* clean up object here */
 
   G_OBJECT_CLASS (gst_ivtc_parent_class)->finalize (object);
 }
-
 
 static GstCaps *
 gst_ivtc_transform_caps (GstBaseTransform * trans,
@@ -317,8 +267,8 @@ gst_ivtc_transform_caps (GstBaseTransform * trans,
 }
 
 static GstCaps *
-gst_ivtc_fixate_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+gst_ivtc_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
+    GstCaps * caps, GstCaps * othercaps)
 {
   GstCaps *result;
 
@@ -332,13 +282,6 @@ gst_ivtc_fixate_caps (GstBaseTransform * trans,
   result = gst_caps_fixate (result);
 
   return result;
-}
-
-static gboolean
-gst_ivtc_accept_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps)
-{
-  return TRUE;
 }
 
 static gboolean
@@ -358,57 +301,25 @@ gst_ivtc_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   return TRUE;
 }
 
+/* transform size */
 static gboolean
-gst_ivtc_query (GstBaseTransform * trans, GstPadDirection direction,
-    GstQuery * query)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_ivtc_decide_allocation (GstBaseTransform * trans, GstQuery * query)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_ivtc_filter_meta (GstBaseTransform * trans, GstQuery * query,
-    GType api, const GstStructure * params)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_ivtc_propose_allocation (GstBaseTransform * trans,
-    GstQuery * decide_query, GstQuery * query)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_ivtc_transform_size (GstBaseTransform * trans,
-    GstPadDirection direction,
+gst_ivtc_transform_size (GstBaseTransform * trans, GstPadDirection direction,
     GstCaps * caps, gsize size, GstCaps * othercaps, gsize * othersize)
 {
-  *othersize = size;
+  GstIvtc *ivtc = GST_IVTC (trans);
+
+  GST_DEBUG_OBJECT (ivtc, "transform_size");
 
   return TRUE;
 }
 
-static gboolean
-gst_ivtc_get_unit_size (GstBaseTransform * trans, GstCaps * caps, gsize * size)
-{
-
-  return FALSE;
-}
-
+/* states */
 static gboolean
 gst_ivtc_start (GstBaseTransform * trans)
 {
+  GstIvtc *ivtc = GST_IVTC (trans);
+
+  GST_DEBUG_OBJECT (ivtc, "start");
 
   return TRUE;
 }
@@ -418,15 +329,19 @@ gst_ivtc_stop (GstBaseTransform * trans)
 {
   GstIvtc *ivtc = GST_IVTC (trans);
 
+  GST_DEBUG_OBJECT (ivtc, "stop");
   gst_ivtc_flush (ivtc);
 
   return TRUE;
 }
 
+/* sink and src pad event handlers */
 static gboolean
 gst_ivtc_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstIvtc *ivtc = GST_IVTC (trans);
+
+  GST_DEBUG_OBJECT (ivtc, "sink_event");
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     const GstSegment *seg;
@@ -444,48 +359,11 @@ gst_ivtc_sink_event (GstBaseTransform * trans, GstEvent * event)
       event);
 }
 
-static gboolean
-gst_ivtc_src_event (GstBaseTransform * trans, GstEvent * event)
-{
-
-  return FALSE;
-}
-
-static GstFlowReturn
-gst_ivtc_prepare_output_buffer (GstBaseTransform * trans,
-    GstBuffer * input, GstBuffer ** buf)
-{
-
-  return GST_FLOW_ERROR;
-}
-
-static gboolean
-gst_ivtc_copy_metadata (GstBaseTransform * trans,
-    GstBuffer * input, GstBuffer * outbuf)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_ivtc_transform_meta (GstBaseTransform * trans,
-    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
-{
-
-  return TRUE;
-}
-
-static void
-gst_ivtc_before_transform (GstBaseTransform * trans, GstBuffer * buffer)
-{
-
-
-}
-
 static void
 gst_ivtc_flush (GstIvtc * ivtc)
 {
-  /* FIXME need to send the fields to output */
+  GST_FIXME_OBJECT (ivtc, "not sending flushed fields to srcpad");
+
   gst_ivtc_retire_fields (ivtc, ivtc->n_fields);
 }
 
@@ -641,6 +519,8 @@ gst_ivtc_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   GstIvtc *ivtc = GST_IVTC (trans);
   GstFlowReturn ret;
 
+  GST_DEBUG_OBJECT (ivtc, "transform");
+
   if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_VIDEO_BUFFER_FLAG_TFF)) {
     add_field (ivtc, inbuf, TOP_FIELD, 0);
     if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_VIDEO_BUFFER_FLAG_ONEFIELD)) {
@@ -755,66 +635,11 @@ gst_ivtc_construct_frame (GstIvtc * ivtc, GstBuffer * outbuf)
 
 }
 
-static GstFlowReturn
-gst_ivtc_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
-{
-
-  return GST_FLOW_ERROR;
-}
-
-#if 0
-static int
-get_comb_score (GstVideoFrame * top, GstVideoFrame * bottom)
-{
-  int k;
-  int height;
-  int width;
-  int j;
-#define MAXWIDTH 2048
-  guint8 thisline[MAXWIDTH];
-  guint8 prevline[MAXWIDTH];
-  int score = 0;
-
-
-  height = GST_VIDEO_FRAME_COMP_HEIGHT (top, 0);
-  width = GST_VIDEO_FRAME_COMP_WIDTH (top, 0);
-
-  g_assert (width <= MAXWIDTH);
-  memset (prevline, 0, MAXWIDTH);
-
-  k = 0;
-  for (j = 1; j < height - 1; j++) {
-    guint8 *src1 = GET_LINE_IL (top, bottom, 0, j - 1);
-    guint8 *src2 = GET_LINE_IL (top, bottom, 0, j);
-    guint8 *src3 = GET_LINE_IL (top, bottom, 0, j + 1);
-    int i;
-
-    for (i = 0; i < width; i++) {
-      if (src2[i] < MIN (src1[i], src3[i]) - 5 ||
-          src2[i] > MAX (src1[i], src3[i]) + 5) {
-        thisline[i] = 1;
-      } else {
-        thisline[i] = 0;
-      }
-      if (thisline[i] && (i > 0 && thisline[i - 1]) && prevline[i]) {
-        score++;
-      }
-    }
-
-    memcpy (prevline, thisline, MAXWIDTH);
-  }
-
-  GST_DEBUG ("score %d", score);
-
-  return score;
-}
-#else
 static int
 get_comb_score (GstVideoFrame * top, GstVideoFrame * bottom)
 {
   int j;
-#define MAXWIDTH 2048
-  int thisline[MAXWIDTH];
+  int thisline[MAX_WIDTH];
   int score = 0;
   int height;
   int width;
@@ -856,8 +681,6 @@ get_comb_score (GstVideoFrame * top, GstVideoFrame * bottom)
 
   return score;
 }
-
-#endif
 
 
 
