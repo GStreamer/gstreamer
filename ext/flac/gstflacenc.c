@@ -338,14 +338,6 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
           "parameters, use best", 0, FLAC__MAX_RICE_PARTITION_ORDER,
           flacenc_params[DEFAULT_QUALITY].rice_parameter_search_dist,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-
-  /**
-   * GstFlacEnc:padding
-   *
-   * Write a PADDING block with this length in bytes
-   *
-   * Since: 0.10.16
-   **/
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_PADDING,
       g_param_spec_uint ("padding",
@@ -353,15 +345,6 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
           "Write a PADDING block with this length in bytes", 0, G_MAXUINT,
           DEFAULT_PADDING,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-
-  /**
-   * GstFlacEnc:seekpoints
-   *
-   * Write a SEEKTABLE block with a specific number of seekpoints
-   * or with a specific interval spacing.
-   *
-   * Since: 0.10.18
-   **/
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_SEEKPOINTS,
       g_param_spec_int ("seekpoints",
@@ -1178,8 +1161,7 @@ gst_flac_enc_write_callback (const FLAC__StreamEncoder * encoder,
     ret = gst_pad_push (GST_AUDIO_ENCODER_SRC_PAD (flacenc), outbuf);
   } else {
     /* regular frame data, pass to base class */
-    GST_LOG ("Pushing buffer: ts=%" GST_TIME_FORMAT ", samples=%u, size=%u, "
-        "pos=%" G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+    GST_LOG ("Pushing buffer: samples=%u, size=%u, pos=%" G_GUINT64_FORMAT,
         samples, (guint) bytes, flacenc->offset);
     ret = gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (flacenc),
         outbuf, samples);
@@ -1288,6 +1270,7 @@ gst_flac_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
 
   if (G_UNLIKELY (!buffer)) {
     if (flacenc->eos) {
+      GST_DEBUG_OBJECT (flacenc, "finish encoding");
       FLAC__stream_encoder_finish (flacenc->encoder);
     } else {
       /* can't handle intermittent draining/resyncing */
@@ -1305,6 +1288,8 @@ gst_flac_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
   data = g_malloc (samples * sizeof (FLAC__int32));
 
   samples /= channels;
+  GST_LOG_OBJECT (flacenc, "processing %d samples, %d channels", samples,
+      channels);
   if (width == 8) {
     gint8 *indata = (gint8 *) map.data;
 
