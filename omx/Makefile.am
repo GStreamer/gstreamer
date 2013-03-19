@@ -5,6 +5,11 @@ VP8_C_FILES=gstomxvp8dec.c
 VP8_H_FILES=gstomxvp8dec.h
 endif
 
+if HAVE_THEORA
+THEORA_C_FILES=gstomxtheoradec.c
+THEORA_H_FILES=gstomxtheoradec.h
+endif
+
 libgstomx_la_SOURCES = \
 	gstomx.c \
 	gstomxvideodec.c \
@@ -15,8 +20,9 @@ libgstomx_la_SOURCES = \
 	gstomxmpeg2videodec.c \
 	gstomxh264dec.c \
 	gstomxh263dec.c \
-	$(VP8_C_FILES) \
 	gstomxwmvdec.c \
+	$(VP8_C_FILES) \
+	$(THEORA_C_FILES) \
 	gstomxmpeg4videoenc.c \
 	gstomxh264enc.c \
 	gstomxh263enc.c \
@@ -32,8 +38,9 @@ noinst_HEADERS = \
 	gstomxmpeg4videodec.h \
 	gstomxh264dec.h \
 	gstomxh263dec.h \
-	$(VP8_H_FILES) \
 	gstomxwmvdec.h \
+	$(VP8_H_FILES) \
+	$(THEORA_H_FILES) \
 	gstomxmpeg4videoenc.h \
 	gstomxh264enc.h \
 	gstomxh263enc.h \
@@ -58,7 +65,12 @@ libgstomx_la_LIBADD = \
 	$(GST_LIBS)
 libgstomx_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-EXTRA_DIST = openmax
+EXTRA_DIST = \
+	openmax \
+	gstomxvp8dec.c \
+	gstomxvp8dec.h \
+	gstomxtheoradec.c \
+	gstomxtheoradec.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

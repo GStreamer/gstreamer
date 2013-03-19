@@ -165,6 +165,15 @@ AC_CHECK_DECLS([OMX_VIDEO_CodingVP8],
   ], [[#include <OMX_Video.h>]])
 AM_CONDITIONAL(HAVE_VP8, test "x$HAVE_VP8" = "xyes")
 
+AC_CHECK_DECLS([OMX_VIDEO_CodingTheora],
+  [
+    AC_DEFINE(HAVE_THEORA, 1, [OpenMAX IL has Theora support])
+    HAVE_THEORA=yes
+  ], [
+    HAVE_THEORA=no
+  ], [[#include <OMX_Video.h>]])
+AM_CONDITIONAL(HAVE_THEORA, test "x$HAVE_THEORA" = "xyes")
+
 dnl Check for -Bsymbolic-functions linker flag used to avoid
 dnl intra-library PLT jumps, if available.
 AC_ARG_ENABLE(Bsymbolic,
