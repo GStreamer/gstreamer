@@ -360,6 +360,12 @@ else
 RTMP_DIR =
 endif
 
+if USE_HLS
+HLS_DIR = hls
+else
+HLS_DIR =
+endif
+
 
 SUBDIRS=\
 	$(VOAACENC_DIR) \
@@ -420,7 +426,8 @@ SUBDIRS=\
 	$(TIMIDITY_DIR) \
 	$(XVID_DIR) \
 	$(ZBAR_DIR) \
-	$(RTMP_DIR)
+	$(RTMP_DIR) \
+	$(HLS_DIR)
 
 DIST_SUBDIRS = \
 	assrender \

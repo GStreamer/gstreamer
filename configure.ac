@@ -357,7 +357,6 @@ AG_GST_CHECK_PLUGIN(gaudieffects)
 AG_GST_CHECK_PLUGIN(geometrictransform)
 AG_GST_CHECK_PLUGIN(gdp)
 AG_GST_CHECK_PLUGIN(hdvparse)
-AG_GST_CHECK_PLUGIN(hls)
 AG_GST_CHECK_PLUGIN(id3tag)
 AG_GST_CHECK_PLUGIN(inter)
 AG_GST_CHECK_PLUGIN(interlace)
@@ -2124,6 +2123,12 @@ AG_GST_CHECK_FEATURE(SNDIO, [sndio audio], sndio, [
   fi
 ])
 
+dnl *** hls ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_HLS, true)
+AG_GST_CHECK_FEATURE(HLS, [http live streaming plugin], hls, [
+  AG_GST_PKG_CHECK_MODULES(GNUTLS, gnutls)
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -2303,7 +2308,6 @@ gst/gaudieffects/Makefile
 gst/geometrictransform/Makefile
 gst/gdp/Makefile
 gst/hdvparse/Makefile
-gst/hls/Makefile
 gst/id3tag/Makefile
 gst/inter/Makefile
 gst/interlace/Makefile
@@ -2413,6 +2417,7 @@ ext/faac/Makefile
 ext/faad/Makefile
 ext/flite/Makefile
 ext/gsm/Makefile
+ext/hls/Makefile
 ext/kate/Makefile
 ext/ladspa/Makefile
 ext/lv2/Makefile
