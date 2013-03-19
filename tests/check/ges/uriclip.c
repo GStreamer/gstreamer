@@ -109,34 +109,51 @@ GST_END_TEST;
   assert_equals_int (pact, active);					\
   }
 
+static void
+create_asset (GESUriClipAsset ** asset)
+{
+  *asset = ges_uri_clip_asset_request_sync (av_uri, NULL);
+  g_main_loop_quit (mainloop);
+}
 
 GST_START_TEST (test_filesource_properties)
 {
-  GESTrack *track;
-  GESTrackElement *trackelement;
   GESClip *clip;
+  GESTrack *track;
+  GESTimeline *timeline;
+  GESUriClipAsset *asset;
+  GESTimelineLayer *layer;
+  GESTrackElement *trackelement;
 
   ges_init ();
 
   track = ges_track_new (GES_TRACK_TYPE_AUDIO, GST_CAPS_ANY);
   fail_unless (track != NULL);
 
-  clip = (GESClip *) ges_uri_clip_new ((gchar *)
-      "crack:///there/is/no/way/this/exists");
-  assert_is_type (clip, GES_TYPE_URI_CLIP);
+  layer = ges_timeline_layer_new ();
+  fail_unless (layer != NULL);
+  timeline = ges_timeline_new ();
+  fail_unless (GES_IS_TIMELINE (timeline));
+  fail_unless (ges_timeline_add_layer (timeline, layer));
+  fail_unless (ges_timeline_add_track (timeline, track));
+  ASSERT_OBJECT_REFCOUNT (timeline, "timeline", 1);
 
-  /* Set some properties */
-  g_object_set (clip, "start", (guint64) 42, "duration", (guint64) 51,
-      "in-point", (guint64) 12, "supported-formats", GES_TRACK_TYPE_AUDIO,
-      NULL);
+  mainloop = g_main_loop_new (NULL, FALSE);
+  g_timeout_add (1, (GSourceFunc) create_asset, &asset);
+  g_main_loop_run (mainloop);
+  /* Right away request the asset synchronously */
+
+  fail_unless (GES_IS_ASSET (asset));
+  clip = ges_timeline_layer_add_asset (layer, GES_ASSET (asset),
+      42, 12, 51, 1, GES_TRACK_TYPE_AUDIO);
+  assert_is_type (clip, GES_TYPE_URI_CLIP);
   assert_equals_uint64 (_START (clip), 42);
   assert_equals_uint64 (_DURATION (clip), 51);
   assert_equals_uint64 (_INPOINT (clip), 12);
 
-  trackelement = ges_clip_create_track_element (clip, track->type);
-  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
-  assert_is_type (trackelement, GES_TYPE_TRACK_FILESOURCE);
-  fail_unless (ges_track_add_element (track, trackelement));
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+  trackelement = GES_CONTAINER_CHILDREN (clip)->data;
+  fail_unless (trackelement != NULL);
 
   /* Check that trackelement has the same properties */
   assert_equals_uint64 (_START (trackelement), 42);
@@ -172,7 +189,7 @@ GST_START_TEST (test_filesource_properties)
   ges_container_remove (GES_CONTAINER (clip),
       GES_TIMELINE_ELEMENT (trackelement));
 
-  g_object_unref (track);
+  g_object_unref (timeline);
 }
 
 GST_END_TEST;

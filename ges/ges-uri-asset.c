@@ -198,12 +198,12 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
       properties[PROP_DURATION]);
 
   klass->discoverer = gst_discoverer_new (GST_SECOND, NULL);
+  klass->sync_discoverer = gst_discoverer_new (GST_SECOND, NULL);
   g_signal_connect (klass->discoverer, "discovered",
       G_CALLBACK (discoverer_discovered_cb), NULL);
 
   /* We just start the discoverer and let it live */
   gst_discoverer_start (klass->discoverer);
-
   if (parent_newparent_table == NULL) {
     parent_newparent_table = g_hash_table_new_full (g_file_hash,
         (GEqualFunc) g_file_equal, gst_object_unref, gst_object_unref);
@@ -426,6 +426,56 @@ ges_uri_clip_asset_new (const gchar * uri, GCancellable * cancellable,
 }
 
 /**
+ * ges_uri_clip_asset_new_sync:
+ * @uri: The URI of the file for which to create a #GESUriClipAsset
+ * @error: (allow-none): An error to be set in case something wrong happens or %NULL
+ *
+ * Creates a #GESUriClipAsset for @uri syncronously. You should avoid
+ * to use it in application, and rather create #GESUriClipAsset asynchronously
+ *
+ * Returns: A reference to the requested asset or %NULL if an error happend
+ */
+GESUriClipAsset *
+ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
+{
+  GError *lerror = NULL;
+  GstDiscovererInfo *info;
+  GstDiscoverer *discoverer;
+  GESUriClipAsset *asset;
+
+  asset = GES_URI_CLIP_ASSET (ges_asset_request (GES_TYPE_URI_CLIP, uri,
+          &lerror));
+
+  if (asset)
+    return asset;
+
+  if (lerror && lerror->domain == GES_ASSET_ERROR &&
+      lerror->code == GES_ASSET_WRONG_ID) {
+    g_propagate_error (error, lerror);
+
+    return NULL;
+  }
+
+  asset = g_object_new (GES_TYPE_URI_CLIP_ASSET, "id", uri,
+      "extractable-type", GES_TYPE_URI_CLIP, NULL);
+  discoverer = GES_URI_CLIP_ASSET_GET_CLASS (asset)->sync_discoverer;
+  info = gst_discoverer_discover_uri (discoverer, uri, &lerror);
+  if (info == NULL || lerror != NULL) {
+    gst_object_unref (asset);
+    if (lerror)
+      g_propagate_error (error, lerror);
+
+    return NULL;
+  }
+
+  ges_asset_cache_put (gst_object_ref (asset), NULL);
+  ges_uri_clip_asset_set_info (asset, info);
+  ges_asset_cache_set_loaded (GES_TYPE_URI_CLIP, uri, lerror);
+
+  return asset;
+}
+
+/**
  * ges_uri_clip_asset_set_timeout:
  * @class: The #GESUriClipAssetClass on which to set the discoverer timeout
  * @timeout: The timeout to set
@@ -439,6 +489,7 @@ ges_uri_clip_asset_set_timeout (GESUriClipAssetClass * class,
   g_return_if_fail (GES_IS_URI_CLIP_ASSET_CLASS (class));
 
   g_object_set (class->discoverer, "timeout", timeout, NULL);
+  g_object_set (class->sync_discoverer, "timeout", timeout, NULL);
 }
 
 /**

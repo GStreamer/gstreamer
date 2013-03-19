@@ -696,10 +696,9 @@ ges_asset_get_extractable_type (GESAsset * self)
  * Create a #GESAsset in the most simple cases, you should look at the @extractable_type
  * documentation to see if that constructor can be called for this particular type
  *
- * Note that it won't be possible to instantiate the first %GESAsset with
- * @id depending on the @extractable_type. For example instantiate a
- * #GESAsset that extract #GESUriClip needs to be done async
- * the first time for a specific ID.
+ * As it is recommanded not to instanciate assets for GESUriClip synchronously,
+ * it will not work with this method, but you can instead use the specific
+ * #ges_uri_clip_asset_request_sync method if you really want to.
  *
  * Returns: (transfer full) (allow-none): A reference to the wanted #GESAsset or %NULL
  */

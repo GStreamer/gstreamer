@@ -62,6 +62,7 @@ struct _GESUriClipAssetClass
 
   /* <private> */
   GstDiscoverer *discoverer;
+  GstDiscoverer *sync_discoverer;
 
   gpointer _ges_reserved[GES_PADDING];
 };
@@ -73,6 +74,7 @@ void ges_uri_clip_asset_new                         (const gchar *uri,
                                                        GCancellable *cancellable,
                                                        GAsyncReadyCallback callback,
                                                        gpointer user_data);
+GESUriClipAsset* ges_uri_clip_asset_request_sync    (const gchar *uri, GError **error);
 void ges_uri_clip_asset_set_timeout                 (GESUriClipAssetClass *class,
                                                        GstClockTime timeout);
 const GList * ges_uri_clip_asset_get_stream_assets  (GESUriClipAsset *self);
