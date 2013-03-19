@@ -63,7 +63,8 @@ gst_omx_mpeg4_video_dec_class_init (GstOMXMPEG4VideoDecClass * klass)
 
   videodec_class->cdata.default_sink_template_caps = "video/mpeg, "
       "mpegversion=(int) 4, "
-      "systemstream=(boolean) false, " "parsed=(boolean) true";
+      "systemstream=(boolean) false, "
+      "parsed=(boolean) true, " "width=(int) [1,MAX], " "height=(int) [1,MAX]";
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX MPEG4 Video Decoder",

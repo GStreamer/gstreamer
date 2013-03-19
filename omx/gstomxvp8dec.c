@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2011, Hewlett-Packard Development Company, L.P.
- *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
+ * Copyright (C) 2013, Collabora Ltd.
+ *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -59,7 +59,8 @@ gst_omx_vp8_dec_class_init (GstOMXVP8DecClass * klass)
       GST_DEBUG_FUNCPTR (gst_omx_vp8_dec_is_format_change);
   videodec_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_vp8_dec_set_format);
 
-  videodec_class->cdata.default_sink_template_caps = "video/x-vp8";
+  videodec_class->cdata.default_sink_template_caps = "video/x-vp8, "
+      "width=(int) [1,MAX], " "height=(int) [1,MAX]";
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX VP8 Video Decoder",

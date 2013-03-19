@@ -59,8 +59,8 @@ gst_omx_wmv_dec_class_init (GstOMXWMVDecClass * klass)
       GST_DEBUG_FUNCPTR (gst_omx_wmv_dec_is_format_change);
   videodec_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_wmv_dec_set_format);
 
-  videodec_class->cdata.default_sink_template_caps = "video/x-wmv";
-
+  videodec_class->cdata.default_sink_template_caps = "video/x-wmv, "
+      "width=(int) [1,MAX], " "height=(int) [1,MAX]";
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX WMV Video Decoder",

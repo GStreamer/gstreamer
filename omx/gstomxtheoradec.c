@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2011, Hewlett-Packard Development Company, L.P.
- *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
+ * Copyright (C) 2013, Collabora Ltd.
+ *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -64,15 +64,16 @@ gst_omx_theora_dec_class_init (GstOMXTheoraDecClass * klass)
   videodec_class->set_format =
       GST_DEBUG_FUNCPTR (gst_omx_theora_dec_set_format);
 
-  videodec_class->cdata.default_sink_template_caps = "video/x-theora";
+  videodec_class->cdata.default_sink_template_caps = "video/x-theora, "
+      "width=(int) [1,MAX], " "height=(int) [1,MAX]";
 
   gstvideodec_class->handle_frame = gst_omx_theora_dec_handle_frame;
   gstvideodec_class->stop = gst_omx_theora_dec_stop;
 
   gst_element_class_set_static_metadata (element_class,
-      "OpenMAX THEORA Video Decoder",
+      "OpenMAX Theora Video Decoder",
       "Codec/Decoder/Video",
-      "Decode THEORA video streams",
+      "Decode Theora video streams",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   gst_omx_set_default_role (&videodec_class->cdata, "video_decoder.theora");

@@ -60,7 +60,8 @@ gst_omx_h263_dec_class_init (GstOMXH263DecClass * klass)
   videodec_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_h263_dec_set_format);
 
   videodec_class->cdata.default_sink_template_caps = "video/x-h263, "
-      "parsed=(boolean) true";
+      "variant=(string) itu, "
+      "parsed=(boolean) true, " "width=(int) [1,MAX], " "height=(int) [1,MAX]";
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX H.263 Video Decoder",

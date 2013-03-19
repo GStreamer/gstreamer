@@ -59,7 +59,8 @@ gst_omx_mjpeg_dec_class_init (GstOMXMJPEGDecClass * klass)
       GST_DEBUG_FUNCPTR (gst_omx_mjpeg_dec_is_format_change);
   videodec_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_mjpeg_dec_set_format);
 
-  videodec_class->cdata.default_sink_template_caps = "image/jpeg";
+  videodec_class->cdata.default_sink_template_caps = "image/jpeg, "
+      "width=(int) [1,MAX], " "height=(int) [1,MAX]";
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX MJPEG Video Decoder",
