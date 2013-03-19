@@ -71,7 +71,7 @@ gst_egl_image_memory_get_image (GstMemory * mem)
 GstEGLDisplay *
 gst_egl_image_memory_get_display (GstMemory * mem)
 {
-  g_return_val_if_fail (gst_is_egl_image_memory (mem), EGL_NO_IMAGE_KHR);
+  g_return_val_if_fail (gst_is_egl_image_memory (mem), NULL);
 
   if (mem->parent)
     mem = mem->parent;
@@ -95,7 +95,7 @@ GstEGLImageOrientation
 gst_egl_image_memory_get_orientation (GstMemory *mem)
 {
   g_return_val_if_fail (gst_is_egl_image_memory (mem),
-      GST_EGL_IMAGE_MEMORY_TYPE_INVALID);
+      GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL);
 
   if (mem->parent)
     mem = mem->parent;
@@ -332,7 +332,7 @@ gst_egl_display_unref (GstEGLDisplay * display)
 EGLDisplay
 gst_egl_display_get (GstEGLDisplay * display)
 {
-  g_return_val_if_fail (display != NULL, NULL);
+  g_return_val_if_fail (display != NULL, EGL_NO_DISPLAY);
 
   return display->display;
 }
