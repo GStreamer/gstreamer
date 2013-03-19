@@ -393,7 +393,7 @@ gst_wildmidi_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
           TRUE, 0, wildmidi->o_len);
       break;
     default:
-      res = FALSE;
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
@@ -539,6 +539,7 @@ gst_wildmidi_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
     default:
       break;
   }
+  gst_event_unref (event);
 
   return res;
 }
@@ -789,7 +790,7 @@ eos:
 static gboolean
 gst_wildmidi_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  gboolean res = FALSE;
+  gboolean res;
   GstWildmidi *wildmidi = GST_WILDMIDI (parent);
 
   GST_DEBUG_OBJECT (pad, "%s event received", GST_EVENT_TYPE_NAME (event));
@@ -798,16 +799,15 @@ gst_wildmidi_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_EOS:
       wildmidi->state = GST_WILDMIDI_STATE_PARSE;
       /* now start the parsing task */
-      gst_pad_start_task (wildmidi->sinkpad,
+      res = gst_pad_start_task (wildmidi->sinkpad,
           (GstTaskFunction) gst_wildmidi_loop, wildmidi->sinkpad, NULL);
       /* don't forward the event */
       gst_event_unref (event);
       break;
     default:
-      res = gst_pad_push_event (wildmidi->srcpad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
-
   return res;
 }
 
