@@ -47,8 +47,8 @@
 
 #include <string.h>
 #include <gst/glib-compat-private.h>
-#include <openssl/aes.h>
-#include <openssl/evp.h>
+#include <gnutls/gnutls.h>
+#include <gnutls/crypto.h>
 #include "gsthlsdemux.h"
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src_%u",
@@ -1218,8 +1218,8 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   GstFragment *key_fragment, *ret;
   GstBuffer *key_buffer, *encrypted_buffer, *decrypted_buffer;
   GstMapInfo key_info, encrypted_info, decrypted_info;
-  EVP_CIPHER_CTX aes_ctx;
-  int out_size = 0;
+  gnutls_cipher_hd_t aes_ctx;
+  gnutls_datum_t key_d, iv_d;
 
   GST_INFO_OBJECT (demux, "Fetching key %s", key);
   key_fragment = gst_uri_downloader_fetch_uri (demux->downloader, key);
@@ -1236,13 +1236,15 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   gst_buffer_map (encrypted_buffer, &encrypted_info, GST_MAP_READ);
   gst_buffer_map (decrypted_buffer, &decrypted_info, GST_MAP_WRITE);
 
-  EVP_CIPHER_CTX_init (&aes_ctx);
-  EVP_CipherInit_ex (&aes_ctx, EVP_aes_128_cbc (), NULL, key_info.data, iv,
-      AES_DECRYPT);
-  EVP_CipherUpdate (&aes_ctx, decrypted_info.data, &out_size,
-      encrypted_info.data, encrypted_info.size);
-  EVP_CipherFinal_ex (&aes_ctx, decrypted_info.data + out_size, &out_size);
-  EVP_CIPHER_CTX_cleanup (&aes_ctx);
+  key_d.data = key_info.data;
+  key_d.size = 16;
+  iv_d.data = (unsigned char *) iv;
+  iv_d.size = 16;
+  gnutls_cipher_init (&aes_ctx, gnutls_cipher_get_id ("AES-128-CBC"), &key_d,
+      &iv_d);
+  gnutls_cipher_decrypt2 (aes_ctx, encrypted_info.data, encrypted_info.size,
+      decrypted_info.data, decrypted_info.size);
+  gnutls_cipher_deinit (aes_ctx);
 
   gst_buffer_unmap (decrypted_buffer, &decrypted_info);
   gst_buffer_unmap (encrypted_buffer, &encrypted_info);
