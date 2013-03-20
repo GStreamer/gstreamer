@@ -2716,6 +2716,7 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 
     slice = GST_VAAPI_SLICE_NEW(H264, decoder,
         (map_info.data + unit->offset + pi->nalu.offset), pi->nalu.size);
+    gst_buffer_unmap(buffer, &map_info);
     if (!slice) {
         GST_ERROR("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;

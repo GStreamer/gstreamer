@@ -692,6 +692,7 @@ gst_vaapi_decoder_jpeg_decode(GstVaapiDecoder *base_decoder,
     }
 
     status = decode_buffer(decoder, map_info.data + unit->offset, unit->size);
+    gst_buffer_unmap(buffer, &map_info);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;

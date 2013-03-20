@@ -1211,6 +1211,7 @@ decode_slice(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnit *unit)
 
     slice = GST_VAAPI_SLICE_NEW(MPEG2, decoder,
         (map_info.data + unit->offset), unit->size);
+    gst_buffer_unmap(buffer, &map_info);
     if (!slice) {
         GST_ERROR("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -1499,6 +1500,7 @@ gst_vaapi_decoder_mpeg2_decode(GstVaapiDecoder *base_decoder,
     packet.offset = 4;
 
     status = parse_unit(decoder, unit, &packet);
+    gst_buffer_unmap(buffer, &map_info);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
     return decode_unit(decoder, unit, &packet);

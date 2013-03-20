@@ -972,5 +972,6 @@ gst_vaapi_decoder_decode_codec_data(GstVaapiDecoder *decoder)
         status = klass->decode_codec_data(decoder, buf, buf_size);
     else
         status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+    gst_buffer_unmap(codec_data, &map_info);
     return status;
 }
