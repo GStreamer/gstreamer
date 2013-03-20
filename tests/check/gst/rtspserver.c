@@ -877,7 +877,7 @@ GST_START_TEST (test_bind_already_in_use)
 
   /* cleanup */
   g_object_unref (serv);
-  g_socket_listener_close (G_SOCKET_LISTENER (service));
+  g_socket_service_stop (service);
   g_object_unref (service);
 }
 
