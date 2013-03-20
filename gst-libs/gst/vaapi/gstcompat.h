@@ -1,7 +1,7 @@
 /*
- *  sysdeps.h - System-dependent definitions
+ *  gstcompat.h - Compatibility glue for GStreamer
  *
- *  Copyright (C) 2012-2013 Intel Corporation
+ *  Copyright (C) 2013 Intel Corporation
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License
@@ -19,18 +19,17 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#ifndef SYSDEPS_H
-#define SYSDEPS_H
+#ifndef GST_COMPAT_H
+#define GST_COMPAT_H
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
+#include <gst/gst.h>
+
+/* GstVideoOverlayComposition */
+#include <gst/video/video-overlay-composition.h>
+
+#ifndef HAVE_GST_VIDEO_OVERLAY_HWCAPS
+#define gst_video_overlay_rectangle_get_flags(rect) (0)
+#define gst_video_overlay_rectangle_get_global_alpha(rect) (1.0f)
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "glibcompat.h"
-#include "gstcompat.h"
-
-#endif /* SYSDEPS_H */
+#endif /* GST_COMPAT_H */

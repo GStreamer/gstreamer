@@ -103,6 +103,7 @@ libgstvaapi_source_h =				\
 
 libgstvaapi_source_priv_h =			\
 	glibcompat.h				\
+	gstcompat.h				\
 	gstvaapi_priv.h				\
 	gstvaapicodec_objects.h			\
 	gstvaapicompat.h			\
