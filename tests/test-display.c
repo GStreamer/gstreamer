@@ -89,6 +89,31 @@ print_profile_caps(GstCaps *caps, const gchar *name)
 }
 
 static void
+print_format_caps_yuv(const VAImageFormat *va_format)
+{
+    const guint32 fourcc = va_format->fourcc;
+
+    g_print(" fourcc '%c%c%c%c'",
+            fourcc & 0xff,
+            (fourcc >> 8) & 0xff,
+            (fourcc >> 16) & 0xff,
+            (fourcc >> 24) & 0xff);
+}
+
+static void
+print_format_caps_rgb(const VAImageFormat *va_format)
+{
+    g_print(" %d bits per pixel, %s endian,",
+            va_format->bits_per_pixel,
+            va_format->byte_order == VA_MSB_FIRST ? "big" : "little");
+    g_print(" %s masks", va_format->alpha_mask ? "rgba" : "rgb");
+    g_print(" 0x%08x 0x%08x 0x%08x",
+            va_format->red_mask, va_format->green_mask, va_format->blue_mask);
+    if (va_format->alpha_mask)
+        g_print(" 0x%08x", va_format->alpha_mask);
+}
+
+static void
 print_format_caps(GstCaps *caps, const gchar *name)
 {
     guint i, n_caps = gst_caps_get_size(caps);
@@ -97,40 +122,26 @@ print_format_caps(GstCaps *caps, const gchar *name)
 
     for (i = 0; i < gst_caps_get_size(caps); i++) {
         GstStructure * const structure = gst_caps_get_structure(caps, i);
+        const VAImageFormat *va_format;
+        GstVaapiImageFormat format;
+
         if (!structure)
             g_error("could not get caps structure %d", i);
 
         g_print("  %s:", gst_structure_get_name(structure));
 
-        if (gst_structure_has_name(structure, "video/x-raw-yuv")) {
-            guint32 fourcc;
+        format = gst_vaapi_image_format_from_structure(structure);
+        if (!format)
+            g_error("could not determine format");
 
-            gst_structure_get_fourcc(structure, "format", &fourcc);
+        va_format = gst_vaapi_image_format_get_va_format(format);
+        if (!va_format)
+            g_error("could not determine VA format");
 
-            g_print(" fourcc '%c%c%c%c'",
-                    fourcc & 0xff,
-                    (fourcc >> 8) & 0xff,
-                    (fourcc >> 16) & 0xff,
-                    (fourcc >> 24) & 0xff);
-        }
-        else {
-            gint bpp, endian, rmask, gmask, bmask, amask;
-            gboolean has_alpha;
-
-            gst_structure_get_int(structure, "bpp",         &bpp);
-            gst_structure_get_int(structure, "endianness",  &endian);
-            gst_structure_get_int(structure, "red_mask",    &rmask);
-            gst_structure_get_int(structure, "blue_mask",   &bmask);
-            gst_structure_get_int(structure, "green_mask",  &gmask);
-            has_alpha = gst_structure_get_int(structure, "alpha_mask", &amask);
-
-            g_print(" %d bits per pixel, %s endian,",
-                    bpp, endian == G_BIG_ENDIAN ? "big" : "little");
-            g_print(" %s masks", has_alpha ? "rgba" : "rgb");
-            g_print(" 0x%08x 0x%08x 0x%08x", rmask, gmask, bmask);
-            if (has_alpha)
-                g_print(" 0x%08x", amask);
-        }
+        if (gst_vaapi_image_format_is_yuv(format))
+            print_format_caps_yuv(va_format);
+        else
+            print_format_caps_rgb(va_format);
         g_print("\n");
     }
 }
