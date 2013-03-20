@@ -50,6 +50,18 @@ gst_compat_video_overlay_rectangle_get_pixels_unscaled_raw(
         &width, &height, &stride, flags);
 }
 
+/* GstElement */
+#undef  gst_element_class_set_static_metadata
+#define gst_element_class_set_static_metadata(klass, name, path, desc, author) \
+    gst_compat_element_class_set_static_metadata(klass, name, path, desc, author)
+
+static inline void
+gst_compat_element_class_set_static_metadata(GstElementClass *klass,
+    const gchar *name, const char *path, const gchar *desc, const gchar *author)
+{
+    gst_element_class_set_details_simple(klass, name, path, desc, author);
+}
+
 /* GstTypeFind */
 #undef  GstTypeFindPeekFunction
 #define GstTypeFindPeekFunction         GstCompatTypeFindPeekFunction

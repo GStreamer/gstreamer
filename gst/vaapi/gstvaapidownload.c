@@ -43,14 +43,6 @@
 GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapidownload);
 #define GST_CAT_DEFAULT gst_debug_vaapidownload
 
-/* ElementFactory information */
-static const GstElementDetails gst_vaapidownload_details =
-    GST_ELEMENT_DETAILS(
-        "VA-API colorspace converter",
-        "Filter/Converter/Video",
-        GST_PLUGIN_DESC,
-        "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
-
 /* Default templates */
 static const char gst_vaapidownload_yuv_caps_str[] =
     "video/x-raw-yuv, "
@@ -237,13 +229,11 @@ gst_vaapidownload_class_init(GstVaapiDownloadClass *klass)
     trans_class->transform_size   = gst_vaapidownload_transform_size;
     trans_class->set_caps         = gst_vaapidownload_set_caps;
 
-    gst_element_class_set_details_simple(
-        element_class,
-        gst_vaapidownload_details.longname,
-        gst_vaapidownload_details.klass,
-        gst_vaapidownload_details.description,
-        gst_vaapidownload_details.author
-    );
+    gst_element_class_set_static_metadata(element_class,
+        "VA-API colorspace converter",
+        "Filter/Converter/Video",
+        GST_PLUGIN_DESC,
+        "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
 
     /* sink pad */
     pad_template = gst_static_pad_template_get(&gst_vaapidownload_sink_factory);

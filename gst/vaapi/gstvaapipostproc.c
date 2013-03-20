@@ -43,14 +43,6 @@
 GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapipostproc);
 #define GST_CAT_DEFAULT gst_debug_vaapipostproc
 
-/* ElementFactory information */
-static const GstElementDetails gst_vaapipostproc_details =
-    GST_ELEMENT_DETAILS(
-        "VA-API video postprocessing",
-        "Filter/Converter/Video",
-        GST_PLUGIN_DESC,
-        "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
-
 /* Default templates */
 static const char gst_vaapipostproc_sink_caps_str[] =
     GST_VAAPI_SURFACE_CAPS ", "
@@ -651,13 +643,11 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
 
     element_class->change_state = gst_vaapipostproc_change_state;
 
-    gst_element_class_set_details_simple(
-        element_class,
-        gst_vaapipostproc_details.longname,
-        gst_vaapipostproc_details.klass,
-        gst_vaapipostproc_details.description,
-        gst_vaapipostproc_details.author
-    );
+    gst_element_class_set_static_metadata(element_class,
+        "VA-API video postprocessing",
+        "Filter/Converter/Video",
+        GST_PLUGIN_DESC,
+        "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
 
     /* sink pad */
     pad_template = gst_static_pad_template_get(&gst_vaapipostproc_sink_factory);

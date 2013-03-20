@@ -49,14 +49,6 @@
 GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapidecode);
 #define GST_CAT_DEFAULT gst_debug_vaapidecode
 
-/* ElementFactory information */
-static const GstElementDetails gst_vaapidecode_details =
-    GST_ELEMENT_DETAILS(
-        "VA-API decoder",
-        "Codec/Decoder/Video",
-        GST_PLUGIN_DESC,
-        "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
-
 /* Default templates */
 #define GST_CAPS_CODEC(CODEC) CODEC "; "
 
@@ -563,13 +555,11 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
     vdec_class->handle_frame = GST_DEBUG_FUNCPTR(gst_vaapidecode_handle_frame);
     vdec_class->finish       = GST_DEBUG_FUNCPTR(gst_vaapidecode_finish);
 
-    gst_element_class_set_details_simple(
-        element_class,
-        gst_vaapidecode_details.longname,
-        gst_vaapidecode_details.klass,
-        gst_vaapidecode_details.description,
-        gst_vaapidecode_details.author
-    );
+    gst_element_class_set_static_metadata(element_class,
+        "VA-API decoder",
+        "Codec/Decoder/Video",
+        GST_PLUGIN_DESC,
+        "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
 
     /* sink pad */
     pad_template = gst_static_pad_template_get(&gst_vaapidecode_sink_factory);

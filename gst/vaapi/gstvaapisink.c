@@ -63,14 +63,6 @@
 GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapisink);
 #define GST_CAT_DEFAULT gst_debug_vaapisink
 
-/* ElementFactory information */
-static const GstElementDetails gst_vaapisink_details =
-    GST_ELEMENT_DETAILS(
-        "VA-API sink",
-        "Sink/Video",
-        GST_PLUGIN_DESC,
-        "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
-
 /* Default template */
 static const char gst_vaapisink_sink_caps_str[] =
     "video/x-raw-yuv, "
@@ -1069,13 +1061,11 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     basesink_class->query        = gst_vaapisink_query;
     basesink_class->buffer_alloc = gst_vaapisink_buffer_alloc;
 
-    gst_element_class_set_details_simple(
-        element_class,
-        gst_vaapisink_details.longname,
-        gst_vaapisink_details.klass,
-        gst_vaapisink_details.description,
-        gst_vaapisink_details.author
-    );
+    gst_element_class_set_static_metadata(element_class,
+        "VA-API sink",
+        "Sink/Video",
+        GST_PLUGIN_DESC,
+        "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
 
     pad_template = gst_static_pad_template_get(&gst_vaapisink_sink_factory);
     gst_element_class_add_pad_template(element_class, pad_template);
