@@ -314,6 +314,7 @@ AC_CACHE_CHECK([for H.264 parser],
             [[#include <gst/codecparsers/gsth264parser.h>]],
             [[GstH264SliceHdr slice_hdr;
               GstH264VUIParams vui_params;
+              GstH264Profile profile = GST_H264_PROFILE_HIGH;
               slice_hdr.n_emulation_prevention_bytes = 0;
               vui_params.par_n = 0;
               vui_params.par_d = 0;]])],
