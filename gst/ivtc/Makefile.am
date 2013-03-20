@@ -11,7 +11,7 @@ libgstivtc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstivtc_la_LIBTOOLFLAGS = --tag=disable-static
 
 
-EXTRA_DIST = ivtc_template.c
+EXTRA_DIST =
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
