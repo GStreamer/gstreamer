@@ -88,8 +88,8 @@ INCLUDES = \
 	$(NULL)
 
 GTKDOC_LIBS = \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_MAJORMINOR).la \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_MAJORMINOR).la \
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_API_VERSION).la \
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_API_VERSION).la \
 	$(top_builddir)/gst/vaapi/libgstvaapi.la \
 	$(GLIB_LIBS) \
 	$(GST_LIBS) \

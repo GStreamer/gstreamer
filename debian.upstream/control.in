@@ -1,13 +1,13 @@
-Source: gstreamer@GST_MAJORMINOR@-vaapi
+Source: gstreamer@GST_API_VERSION@-vaapi
 Section: libs
 Priority: optional
 Maintainer: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 Build-Depends: debhelper (>= 5),
 	       cdbs,
 	       libglib2.0-dev (>= @GLIB_VERSION_REQUIRED@),
-	       libgstreamer@GST_MAJORMINOR@-dev (>= @GST_VERSION_REQUIRED@),
-	       libgstreamer-plugins-base@GST_MAJORMINOR@-dev (>= @GST_PLUGINS_BASE_VERSION_REQUIRED@),
-	       libgstreamer-plugins-bad@GST_MAJORMINOR@-dev (>= @GST_PLUGINS_BAD_VERSION_REQUIRED@),
+	       libgstreamer@GST_API_VERSION@-dev (>= @GST_VERSION_REQUIRED@),
+	       libgstreamer-plugins-base@GST_API_VERSION@-dev (>= @GST_PLUGINS_BASE_VERSION_REQUIRED@),
+	       libgstreamer-plugins-bad@GST_API_VERSION@-dev (>= @GST_PLUGINS_BAD_VERSION_REQUIRED@),
 @USE_DRM_TRUE@	       libdrm-dev, libudev-dev,
 @USE_X11_TRUE@	       libx11-dev, libxrandr-dev,
 @USE_GLX_TRUE@	       libgl-dev,
@@ -16,11 +16,11 @@ Build-Depends: debhelper (>= 5),
 Build-Depends-Indep: gtk-doc-tools (>= @GTKDOC_VERSION@)
 Standards-Version: 3.7.2
 
-Package: gstreamer@GST_MAJORMINOR@-vaapi
+Package: gstreamer@GST_API_VERSION@-vaapi
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Suggests: gstreamer@GST_MAJORMINOR@-vaapi-doc
+Suggests: gstreamer@GST_API_VERSION@-vaapi-doc
 Description: VA-API plugins for GStreamer
  This package contains GStreamer plugins for VA-API support:
  - `vaapidecode': decode bitstreams using VA-API
@@ -29,17 +29,17 @@ Description: VA-API plugins for GStreamer
  - `vaapipostproc': postprocess VA surfaces, e.g. deinterlacing
  - `vaapisink': a VA-API based video sink
 
-Package: gstreamer@GST_MAJORMINOR@-vaapi-doc
+Package: gstreamer@GST_API_VERSION@-vaapi-doc
 Architecture: all
 Section: doc
 Recommends: libgstvaapi@GST_VAAPI_MAJOR_VERSION@-dev (= ${source:Version})
 Description: GStreamer VA-API documentation and manuals
  This packages contains documentation for libraries and elements.
 
-Package: gstreamer@GST_MAJORMINOR@-vaapi-dbg
+Package: gstreamer@GST_API_VERSION@-vaapi-dbg
 Section: libdevel
 Architecture: any
-Depends: gstreamer@GST_MAJORMINOR@-vaapi (= ${Source-Version})
+Depends: gstreamer@GST_API_VERSION@-vaapi (= ${Source-Version})
 Description: VA-API plugins for GStreamer
  VA-API support plugins for GStreamer.
  .

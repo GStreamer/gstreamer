@@ -108,14 +108,14 @@ INCLUDES = \
 GTKDOC_LIBS = \
 	$(GLIB_LIBS) \
 	$(GST_LIBS) \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_MAJORMINOR).la
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_API_VERSION).la
 
 GTKDOC_LIBS += \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_MAJORMINOR).la
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_API_VERSION).la
 
 if USE_GLX
 GTKDOC_LIBS += \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_MAJORMINOR).la
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_API_VERSION).la
 endif
 
 $(srcdir)/$(DOC_MODULE).types: $(SCANOBJ_TYPES)

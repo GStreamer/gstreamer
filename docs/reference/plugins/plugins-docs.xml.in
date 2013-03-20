@@ -6,7 +6,7 @@
 ]>
 <book id="index">
   <bookinfo>
-    <title>GStreamer VA-API Plugins @GST_MAJORMINOR@ Plugins Reference Manual</title>
+    <title>GStreamer VA-API Plugins @GST_API_VERSION@ Plugins Reference Manual</title>
   </bookinfo>
 
   <chapter>

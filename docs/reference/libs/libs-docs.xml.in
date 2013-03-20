@@ -3,7 +3,7 @@
                "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
-    <title>GStreamer VA-API Plugins @GST_MAJORMINOR@ Library Reference Manual</title>
+    <title>GStreamer VA-API Plugins @GST_API_VERSION@ Library Reference Manual</title>
   </bookinfo>
 
   <chapter>

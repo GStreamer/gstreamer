@@ -15,36 +15,13 @@ m4_define([gst_vaapi_lt_revision], [0])
 m4_define([gst_vaapi_lt_age],      [0])
 
 # glib version number
-m4_define([glib_major_version], [2])
-m4_define([glib_minor_version], [28])
-m4_define([glib_micro_version], [0])
-m4_define([glib_major_minor_version],
-          [glib_major_version.glib_minor_version])
-m4_define([glib_version],
-          [glib_major_version.glib_minor_version.glib_micro_version])
+m4_define([glib_version], [2.28])
 
-# gst version number
-m4_define([gst_major_version], [0])
-m4_define([gst_minor_version], [10])
-m4_define([gst_micro_version], [36])
-m4_define([gst_major_minor_version],
-          [gst_major_version.gst_minor_version])
-m4_define([gst_version],
-          [gst_major_version.gst_minor_version.gst_micro_version])
-
-# gst plugins-base version number
-m4_define([gst_plugins_base_major_version], [0])
-m4_define([gst_plugins_base_minor_version], [10])
-m4_define([gst_plugins_base_micro_version], [31])
-m4_define([gst_plugins_base_version],
-          [gst_plugins_base_major_version.gst_plugins_base_minor_version.gst_plugins_base_micro_version])
-
-# gst plugins-bad version number
-m4_define([gst_plugins_bad_major_version], [0])
-m4_define([gst_plugins_bad_minor_version], [10])
-m4_define([gst_plugins_bad_micro_version], [22])
-m4_define([gst_plugins_bad_version],
-          [gst_plugins_bad_major_version.gst_plugins_bad_minor_version.gst_plugins_bad_micro_version])
+# gstreamer version number
+m4_define([gst_api_version],            [0.10])
+m4_define([gst_version],                [0.10.36])
+m4_define([gst_plugins_base_version],   [0.10.31])
+m4_define([gst_plugins_bad_version],    [0.10.22])
 
 # Wayland minimum version number
 m4_define([wayland_api_version], [1.0.0])
@@ -64,9 +41,7 @@ m4_define([libva_wld_package_version], [1.1.0])
 
 # gtk-doc version number
 # XXX: introspection annotations require gtk-doc >= 1.12
-m4_define([gtkdoc_major_version], [1])
-m4_define([gtkdoc_minor_version], [9])
-m4_define([gtkdoc_version], [gtkdoc_major_version.gtkdoc_minor_version])
+m4_define([gtkdoc_version], [1.9])
 
 AC_PREREQ([2.58])
 AC_INIT([gst_vaapi], [gst_vaapi_version],
@@ -95,11 +70,11 @@ WAYLAND_API_VERSION=wayland_api_version
 AC_SUBST(WAYLAND_API_VERSION)
 
 dnl Versions for GStreamer and plugins-base
-GST_MAJORMINOR=gst_major_minor_version
+GST_API_VERSION=gst_api_version
 GST_VERSION_REQUIRED=gst_version
 GST_PLUGINS_BASE_VERSION_REQUIRED=gst_plugins_base_version
 GST_PLUGINS_BAD_VERSION_REQUIRED=gst_plugins_bad_version
-AC_SUBST(GST_MAJORMINOR)
+AC_SUBST(GST_API_VERSION)
 AC_SUBST(GST_VERSION_REQUIRED)
 AC_SUBST(GST_PLUGINS_BASE_VERSION_REQUIRED)
 AC_SUBST(GST_PLUGINS_BAD_VERSION_REQUIRED)
@@ -163,8 +138,8 @@ dnl -- GStreamer                                                             --
 dnl ---------------------------------------------------------------------------
 
 dnl GStreamer Core
-PKG_CHECK_MODULES([GST],      [gstreamer-$GST_MAJORMINOR >= gst_version])
-PKG_CHECK_MODULES([GST_BASE], [gstreamer-base-$GST_MAJORMINOR >= gst_version])
+PKG_CHECK_MODULES([GST],      [gstreamer-$GST_API_VERSION >= gst_version])
+PKG_CHECK_MODULES([GST_BASE], [gstreamer-base-$GST_API_VERSION >= gst_version])
 
 AC_CACHE_CHECK([for GstBaseSink::query hook], ac_cv_have_gst_base_sink_query, [
     saved_CPPFLAGS="$CPPFLAGS"
@@ -187,13 +162,13 @@ fi
 
 dnl GStreamer -base plugins
 PKG_CHECK_MODULES([GST_PLUGINS_BASE],
-    [gstreamer-plugins-base-$GST_MAJORMINOR >= gst_plugins_base_version])
+    [gstreamer-plugins-base-$GST_API_VERSION >= gst_plugins_base_version])
 PKG_CHECK_MODULES([GST_INTERFACES],
-    [gstreamer-interfaces-$GST_MAJORMINOR >= gst_plugins_base_version])
+    [gstreamer-interfaces-$GST_API_VERSION >= gst_plugins_base_version])
 
 dnl ... GstVideoOverlayComposition (gstreamer-video)
 PKG_CHECK_MODULES([GST_VIDEO],
-    [gstreamer-video-$GST_MAJORMINOR >= gst_plugins_base_version])
+    [gstreamer-video-$GST_API_VERSION >= gst_plugins_base_version])
 
 AC_CACHE_CHECK([for GstVideoOverlayComposition],
     ac_cv_have_gst_video_overlay_composition, [
@@ -272,11 +247,11 @@ AM_CONDITIONAL([USE_LOCAL_GST_VIDEO_DECODER],
 
 dnl GStreamer -bad plugins
 PKG_CHECK_MODULES([GST_BASEVIDEO],
-    [gstreamer-basevideo-$GST_MAJORMINOR >= gst_plugins_bad_version])
+    [gstreamer-basevideo-$GST_API_VERSION >= gst_plugins_bad_version])
 
 dnl ... bitstream parsers
 PKG_CHECK_MODULES([GST_CODEC_PARSERS],
-    [gstreamer-codecparsers-$GST_MAJORMINOR >= gst_plugins_bad_version])
+    [gstreamer-codecparsers-$GST_API_VERSION >= gst_plugins_bad_version])
 
 dnl ... MPEG-2 parser, with the required extensions
 AC_CACHE_CHECK([for MPEG-2 parser],
@@ -374,9 +349,9 @@ AC_MSG_CHECKING([for GStreamer plugins directory])
 if test -d "$GST_PLUGIN_PATH"; then
     GST_PLUGINS_DIR="$GST_PLUGIN_PATH"
 else
-    GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_MAJORMINOR --variable pluginsdir`
+    GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_API_VERSION --variable pluginsdir`
     if test -z "$GST_PLUGINS_DIR"; then
-        GST_PLUGINS_DIR="\$(libdir)/gstreamer-$GST_MAJORMINOR"
+        GST_PLUGINS_DIR="\$(libdir)/gstreamer-$GST_API_VERSION"
     fi
 fi
 AC_MSG_RESULT([$GST_PLUGINS_DIR])
@@ -604,9 +579,9 @@ AC_CONFIG_FILES([
     debian.upstream/Makefile
     debian.upstream/changelog
     debian.upstream/control
-    debian.upstream/gstreamer$GST_MAJORMINOR-vaapi-doc.install:\
+    debian.upstream/gstreamer$GST_API_VERSION-vaapi-doc.install:\
 debian.upstream/gstreamer-vaapi-doc.install.in
-    debian.upstream/gstreamer$GST_MAJORMINOR-vaapi.install:\
+    debian.upstream/gstreamer$GST_API_VERSION-vaapi.install:\
 debian.upstream/gstreamer-vaapi.install.in
     debian.upstream/libgstvaapi$GST_VAAPI_MAJOR_VERSION.install:\
 debian.upstream/libgstvaapi.install.in
@@ -634,15 +609,15 @@ debian.upstream/libgstvaapi-x11.install.in
     gst/Makefile
     gst/vaapi/Makefile
     pkgconfig/Makefile
-    pkgconfig/gstreamer-vaapi-$GST_MAJORMINOR.pc:\
+    pkgconfig/gstreamer-vaapi-$GST_API_VERSION.pc:\
 pkgconfig/gstreamer-vaapi.pc.in
-    pkgconfig/gstreamer-vaapi-drm-$GST_MAJORMINOR.pc:\
+    pkgconfig/gstreamer-vaapi-drm-$GST_API_VERSION.pc:\
 pkgconfig/gstreamer-vaapi-drm.pc.in
-    pkgconfig/gstreamer-vaapi-glx-$GST_MAJORMINOR.pc:\
+    pkgconfig/gstreamer-vaapi-glx-$GST_API_VERSION.pc:\
 pkgconfig/gstreamer-vaapi-glx.pc.in
-    pkgconfig/gstreamer-vaapi-wayland-$GST_MAJORMINOR.pc:\
+    pkgconfig/gstreamer-vaapi-wayland-$GST_API_VERSION.pc:\
 pkgconfig/gstreamer-vaapi-wayland.pc.in
-    pkgconfig/gstreamer-vaapi-x11-$GST_MAJORMINOR.pc:\
+    pkgconfig/gstreamer-vaapi-x11-$GST_API_VERSION.pc:\
 pkgconfig/gstreamer-vaapi-x11.pc.in
     tests/Makefile
 ])

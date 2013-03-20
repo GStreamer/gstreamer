@@ -24,13 +24,13 @@ TEST_CFLAGS = \
 TEST_LIBS = \
 	$(LIBVA_LIBS)			\
 	$(GST_LIBS)			\
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-@GST_MAJORMINOR@.la
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_API_VERSION).la
 
 if USE_DRM
 TEST_CFLAGS	+= $(LIBVA_DRM_CFLAGS)
 TEST_LIBS	+= \
 	$(LIBVA_DRM_LIBS)		\
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-drm-@GST_MAJORMINOR@.la
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-drm-$(GST_API_VERSION).la
 endif
 
 if USE_X11
@@ -38,7 +38,7 @@ TEST_CFLAGS	+= $(X11_CFLAGS)
 TEST_LIBS	+= \
 	$(LIBVA_X11_LIBS)		\
 	$(X11_LIBS)			\
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-@GST_MAJORMINOR@.la
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_API_VERSION).la
 endif
 
 if USE_GLX
@@ -47,7 +47,7 @@ TEST_LIBS	+= \
 	$(LIBVA_GLX_LIBS)		\
 	$(X11_LIBS)			\
 	$(GL_LIBS)			\
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-@GST_MAJORMINOR@.la
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_API_VERSION).la
 endif
 
 if USE_WAYLAND
@@ -55,7 +55,7 @@ TEST_CFLAGS	+= $(WAYLAND_CFLAGS)
 TEST_LIBS	+= \
 	$(LIBVA_WAYLAND_LIBS)		\
 	$(WAYLAND_LIBS)			\
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-wayland-@GST_MAJORMINOR@.la
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-wayland-$(GST_API_VERSION).la
 endif
 
 test_utils_dec_source_c =	\
