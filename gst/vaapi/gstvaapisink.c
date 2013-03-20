@@ -850,14 +850,18 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
         buffer = gst_vaapi_uploader_get_buffer(sink->uploader);
         if (!buffer)
             return GST_FLOW_UNEXPECTED;
-        if (!gst_vaapi_uploader_process(sink->uploader, src_buffer, buffer))
-            goto error;
         meta = gst_buffer_get_vaapi_video_meta(buffer);
         if (!meta)
             goto error;
     }
     else
         return GST_FLOW_UNEXPECTED;
+
+    if (sink->use_video_raw &&
+        !gst_vaapi_uploader_process(sink->uploader, src_buffer, buffer)) {
+        GST_WARNING("failed to process raw YUV buffer");
+        goto error;
+    }
 
     if (sink->display != gst_vaapi_video_meta_get_display(meta)) {
         g_clear_object(&sink->display);
