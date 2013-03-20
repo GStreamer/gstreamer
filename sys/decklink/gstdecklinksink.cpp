@@ -529,6 +529,7 @@ gst_decklink_sink_videosink_event (GstPad * pad, GstObject * parent,
     }
 #endif
     case GST_EVENT_EOS:
+      /* FIXME: EOS aggregation with audio pad looks wrong */
       decklinksink->video_eos = TRUE;
       decklinksink->video_seqnum = gst_event_get_seqnum (event);
       {
@@ -538,7 +539,7 @@ gst_decklink_sink_videosink_event (GstPad * pad, GstObject * parent,
         gst_message_set_seqnum (message, decklinksink->video_seqnum);
         gst_element_post_message (GST_ELEMENT_CAST (decklinksink), message);
       }
-
+      res = gst_pad_event_default (pad, parent, event);
       break;
     default:
       res = gst_pad_event_default (pad, parent, event);
@@ -571,6 +572,7 @@ gst_decklink_sink_videosink_query (GstPad * pad, GstObject * parent,
       gst_caps_unref (mode_caps);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
+      res = TRUE;
       break;
     }
     default:
@@ -618,8 +620,10 @@ gst_decklink_sink_audiosink_event (GstPad * pad, GstObject * parent,
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
+      /* FIXME: EOS aggregation with video pad looks wrong */
       decklinksink->audio_eos = TRUE;
       decklinksink->audio_seqnum = gst_event_get_seqnum (event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
     default:
       res = gst_pad_event_default (pad, parent, event);
