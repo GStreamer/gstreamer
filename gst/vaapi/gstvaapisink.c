@@ -85,11 +85,37 @@ static GstStaticPadTemplate gst_vaapisink_sink_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapisink_sink_caps_str));
 
-static void
-gst_vaapisink_implements_iface_init(GstImplementsInterfaceClass *iface);
+/* GstImplementsInterface interface */
+static gboolean
+gst_vaapisink_implements_interface_supported(
+    GstImplementsInterface *iface,
+    GType                   type
+)
+{
+    return (type == GST_TYPE_VIDEO_CONTEXT ||
+            type == GST_TYPE_X_OVERLAY);
+}
 
 static void
-gst_vaapisink_video_context_iface_init(GstVideoContextInterface *iface);
+gst_vaapisink_implements_iface_init(GstImplementsInterfaceClass *iface)
+{
+    iface->supported = gst_vaapisink_implements_interface_supported;
+}
+
+/* GstVideoContext interface */
+static void
+gst_vaapisink_set_video_context(GstVideoContext *context, const gchar *type,
+    const GValue *value)
+{
+  GstVaapiSink *sink = GST_VAAPISINK (context);
+  gst_vaapi_set_display (type, value, &sink->display);
+}
+
+static void
+gst_vaapisink_video_context_iface_init(GstVideoContextInterface *iface)
+{
+    iface->set_context = gst_vaapisink_set_video_context;
+}
 
 static void
 gst_vaapisink_xoverlay_iface_init(GstXOverlayClass *iface);
@@ -117,40 +143,6 @@ enum {
 
 #define DEFAULT_DISPLAY_TYPE            GST_VAAPI_DISPLAY_TYPE_ANY
 #define DEFAULT_ROTATION                GST_VAAPI_ROTATION_0
-
-/* GstImplementsInterface interface */
-
-static gboolean
-gst_vaapisink_implements_interface_supported(
-    GstImplementsInterface *iface,
-    GType                   type
-)
-{
-    return (type == GST_TYPE_VIDEO_CONTEXT ||
-            type == GST_TYPE_X_OVERLAY);
-}
-
-static void
-gst_vaapisink_implements_iface_init(GstImplementsInterfaceClass *iface)
-{
-    iface->supported = gst_vaapisink_implements_interface_supported;
-}
-
-/* GstVideoContext interface */
-
-static void
-gst_vaapisink_set_video_context(GstVideoContext *context, const gchar *type,
-    const GValue *value)
-{
-  GstVaapiSink *sink = GST_VAAPISINK (context);
-  gst_vaapi_set_display (type, value, &sink->display);
-}
-
-static void
-gst_vaapisink_video_context_iface_init(GstVideoContextInterface *iface)
-{
-    iface->set_context = gst_vaapisink_set_video_context;
-}
 
 /* GstXOverlay interface */
 

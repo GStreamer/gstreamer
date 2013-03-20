@@ -99,11 +99,36 @@ struct _GstVaapiDownloadClass {
     GstBaseTransformClass parent_class;
 };
 
-static void
-gst_vaapidownload_implements_iface_init(GstImplementsInterfaceClass *iface);
+/* GstImplementsInterface interface */
+static gboolean
+gst_vaapidownload_implements_interface_supported(
+    GstImplementsInterface *iface,
+    GType                   type
+)
+{
+    return (type == GST_TYPE_VIDEO_CONTEXT);
+}
 
 static void
-gst_video_context_interface_init(GstVideoContextInterface *iface);
+gst_vaapidownload_implements_iface_init(GstImplementsInterfaceClass *iface)
+{
+    iface->supported = gst_vaapidownload_implements_interface_supported;
+}
+
+/* GstVideoContext interface */
+static void
+gst_vaapidownload_set_video_context(GstVideoContext *context, const gchar *type,
+    const GValue *value)
+{
+  GstVaapiDownload *download = GST_VAAPIDOWNLOAD (context);
+  gst_vaapi_set_display (type, value, &download->display);
+}
+
+static void
+gst_video_context_interface_init(GstVideoContextInterface *iface)
+{
+    iface->set_context = gst_vaapidownload_set_video_context;
+}
 
 #define GstVideoContextClass GstVideoContextInterface
 G_DEFINE_TYPE_WITH_CODE(
@@ -160,39 +185,6 @@ gst_vaapidownload_query(
     GstPad   *pad,
     GstQuery *query
 );
-
-/* GstImplementsInterface interface */
-
-static gboolean
-gst_vaapidownload_implements_interface_supported(
-    GstImplementsInterface *iface,
-    GType                   type
-)
-{
-    return (type == GST_TYPE_VIDEO_CONTEXT);
-}
-
-static void
-gst_vaapidownload_implements_iface_init(GstImplementsInterfaceClass *iface)
-{
-    iface->supported = gst_vaapidownload_implements_interface_supported;
-}
-
-/* GstVideoContext interface */
-
-static void
-gst_vaapidownload_set_video_context(GstVideoContext *context, const gchar *type,
-    const GValue *value)
-{
-  GstVaapiDownload *download = GST_VAAPIDOWNLOAD (context);
-  gst_vaapi_set_display (type, value, &download->display);
-}
-
-static void
-gst_video_context_interface_init(GstVideoContextInterface *iface)
-{
-    iface->set_context = gst_vaapidownload_set_video_context;
-}
 
 static void
 gst_vaapidownload_destroy(GstVaapiDownload *download)

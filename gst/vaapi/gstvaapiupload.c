@@ -75,11 +75,41 @@ static GstStaticPadTemplate gst_vaapiupload_src_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapiupload_vaapi_caps_str));
 
-static void
-gst_vaapiupload_implements_iface_init(GstImplementsInterfaceClass *iface);
+
+/* GstImplementsInterface interface */
+static gboolean
+gst_vaapiupload_implements_interface_supported(
+    GstImplementsInterface *iface,
+    GType                   type
+)
+{
+    return (type == GST_TYPE_VIDEO_CONTEXT);
+}
 
 static void
-gst_video_context_interface_init(GstVideoContextInterface *iface);
+gst_vaapiupload_implements_iface_init(GstImplementsInterfaceClass *iface)
+{
+    iface->supported = gst_vaapiupload_implements_interface_supported;
+}
+
+/* GstVideoContext interface */
+static void
+gst_vaapiupload_set_video_context(GstVideoContext *context, const gchar *type,
+    const GValue *value)
+{
+    GstVaapiUpload * const upload = GST_VAAPIUPLOAD(context);
+
+    gst_vaapi_set_display(type, value, &upload->display);
+
+    if (upload->uploader)
+        gst_vaapi_uploader_ensure_display(upload->uploader, upload->display);
+}
+
+static void
+gst_video_context_interface_init(GstVideoContextInterface *iface)
+{
+    iface->set_context = gst_vaapiupload_set_video_context;
+}
 
 #define GstVideoContextClass GstVideoContextInterface
 G_DEFINE_TYPE_WITH_CODE(
@@ -148,43 +178,6 @@ gst_vaapiupload_query(
     GstPad   *pad,
     GstQuery *query
 );
-
-/* GstImplementsInterface interface */
-
-static gboolean
-gst_vaapiupload_implements_interface_supported(
-    GstImplementsInterface *iface,
-    GType                   type
-)
-{
-    return (type == GST_TYPE_VIDEO_CONTEXT);
-}
-
-static void
-gst_vaapiupload_implements_iface_init(GstImplementsInterfaceClass *iface)
-{
-    iface->supported = gst_vaapiupload_implements_interface_supported;
-}
-
-/* GstVideoContext interface */
-
-static void
-gst_vaapiupload_set_video_context(GstVideoContext *context, const gchar *type,
-    const GValue *value)
-{
-    GstVaapiUpload * const upload = GST_VAAPIUPLOAD(context);
-
-    gst_vaapi_set_display(type, value, &upload->display);
-
-    if (upload->uploader)
-        gst_vaapi_uploader_ensure_display(upload->uploader, upload->display);
-}
-
-static void
-gst_video_context_interface_init(GstVideoContextInterface *iface)
-{
-    iface->set_context = gst_vaapiupload_set_video_context;
-}
 
 static void
 gst_vaapiupload_destroy(GstVaapiUpload *upload)
