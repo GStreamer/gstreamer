@@ -26,6 +26,10 @@
 # include "config.h"
 #endif
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "glibcompat.h"
 
 /* <gst/video/video-overlay-composition.h> compatibility glue */
