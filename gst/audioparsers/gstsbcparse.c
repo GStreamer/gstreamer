@@ -184,7 +184,8 @@ gst_sbc_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
   GstSbcChannelMode ch_mode = GST_SBC_CHANNEL_MODE_INVALID;
   GstMapInfo map;
   guint rate = 0, n_blocks = 0, n_subbands = 0, bitpool = 0;
-  gsize frame_len;
+  gsize frame_len, next_len;
+  gint i, max_frames;
 
   gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
 
@@ -241,8 +242,31 @@ gst_sbc_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
   GST_BUFFER_OFFSET (frame->buffer) = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_OFFSET_END (frame->buffer) = GST_BUFFER_OFFSET_NONE;
 
+  /* completely arbitrary limit, we only process data we already have,
+   * so we aren't introducing latency here */
+  max_frames = MIN (map.size / frame_len, n_blocks * n_subbands * 5);
+  GST_LOG_OBJECT (sbcparse, "parsing up to %d frames", max_frames);
+
+  for (i = 1; i < max_frames; ++i) {
+    next_len = gst_sbc_parse_header (map.data + (i * frame_len), &rate,
+        &n_blocks, &ch_mode, &alloc_method, &n_subbands, &bitpool);
+
+    if (next_len != frame_len || sbcparse->alloc_method != alloc_method ||
+        sbcparse->ch_mode != ch_mode || sbcparse->rate != rate ||
+        sbcparse->n_blocks != n_blocks || sbcparse->n_subbands != n_subbands ||
+        sbcparse->bitpool != bitpool) {
+      break;
+    }
+  }
+  GST_LOG_OBJECT (sbcparse, "packing %d SBC frames into next output buffer", i);
+
+  /* Note: local n_subbands and n_blocks variables might be tainted if we
+   * bailed out of the loop above because of a header configuration mismatch */
+  gst_base_parse_set_frame_rate (parse, rate,
+      sbcparse->n_subbands * sbcparse->n_blocks * i, 0, 0);
+
   gst_buffer_unmap (frame->buffer, &map);
-  return gst_base_parse_finish_frame (parse, frame, frame_len);
+  return gst_base_parse_finish_frame (parse, frame, i * frame_len);
 
 resync:
   {
