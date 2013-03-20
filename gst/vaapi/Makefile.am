@@ -53,6 +53,7 @@ libgstvaapi_source_c		+= gstvaapivideoconverter_glx.c
 libgstvaapi_source_h		+= gstvaapivideoconverter_glx.h
 endif
 
+if USE_GST_API_1_0p
 libgstvaapi_source_c += \
 	gstvaapivideobufferpool.c \
 	gstvaapivideomemory.c	\
@@ -62,6 +63,21 @@ libgstvaapi_source_h += \
 	gstvaapivideobufferpool.h \
 	gstvaapivideomemory.h	\
 	$(NULL)
+endif
+
+if USE_GST_API_0_10
+libgstvaapi_source_c += \
+	gstvaapidownload.c	\
+	gstvaapipostproc.c	\
+	gstvaapiupload.c	\
+	$(NULL)
+
+libgstvaapi_source_h += \
+	gstvaapidownload.h	\
+	gstvaapipostproc.h	\
+	gstvaapiupload.h	\
+	$(NULL)
+endif
 
 libgstvaapi_la_SOURCES		= $(libgstvaapi_source_c)
 noinst_HEADERS			= $(libgstvaapi_source_h)

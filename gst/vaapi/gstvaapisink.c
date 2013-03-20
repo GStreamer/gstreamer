@@ -70,8 +70,10 @@
 #include "gstvaapisink.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideometa.h"
+#if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideobufferpool.h"
 #include "gstvaapivideomemory.h"
+#endif
 
 #define GST_PLUGIN_NAME "vaapisink"
 #define GST_PLUGIN_DESC "A VA-API based videosink"
@@ -593,6 +595,7 @@ end:
 static gboolean
 gst_vaapisink_ensure_video_buffer_pool(GstVaapiSink *sink, GstCaps *caps)
 {
+#if GST_CHECK_VERSION(1,0,0)
     GstBufferPool *pool;
     GstCaps *pool_caps;
     GstStructure *config;
@@ -648,6 +651,9 @@ error_pool_config:
         g_object_unref(pool);
         return FALSE;
     }
+#else
+    return TRUE;
+#endif
 }
 
 static gboolean
@@ -670,7 +676,9 @@ gst_vaapisink_stop(GstBaseSink *base_sink)
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
 
     gst_buffer_replace(&sink->video_buffer, NULL);
+#if GST_CHECK_VERSION(1,0,0)
     g_clear_object(&sink->video_buffer_pool);
+#endif
     g_clear_object(&sink->window);
     g_clear_object(&sink->display);
     g_clear_object(&sink->uploader);
@@ -679,7 +687,7 @@ gst_vaapisink_stop(GstBaseSink *base_sink)
 }
 
 static GstCaps *
-gst_vaapisink_get_caps(GstBaseSink *base_sink, GstCaps *filter)
+gst_vaapisink_get_caps_impl(GstBaseSink *base_sink)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstCaps *out_caps, *yuv_caps;
@@ -695,6 +703,16 @@ gst_vaapisink_get_caps(GstBaseSink *base_sink, GstCaps *filter)
     }
     return out_caps;
 }
+
+#if GST_CHECK_VERSION(1,0,0)
+static inline GstCaps *
+gst_vaapisink_get_caps(GstBaseSink *base_sink, GstCaps *filter)
+{
+    return gst_vaapisink_get_caps_impl(base_sink);
+}
+#else
+#define gst_vaapisink_get_caps gst_vaapisink_get_caps_impl
+#endif
 
 static gboolean
 gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)

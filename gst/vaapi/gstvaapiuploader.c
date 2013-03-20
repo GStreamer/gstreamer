@@ -449,7 +449,7 @@ gst_vaapi_uploader_get_buffer(GstVaapiUploader *uploader)
         goto error;
     }
 
-#if 0
+#if !GST_CHECK_VERSION(1,0,0)
     GST_BUFFER_DATA(buffer) = gst_vaapi_image_get_plane(image, 0);
     GST_BUFFER_SIZE(buffer) = gst_vaapi_image_get_data_size(image);
 

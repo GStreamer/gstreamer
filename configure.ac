@@ -46,7 +46,7 @@ m4_define([libva_wld_package_version], [1.1.0])
 # XXX: introspection annotations require gtk-doc >= 1.12
 m4_define([gtkdoc_version], [1.9])
 
-AC_PREREQ([2.58])
+AC_PREREQ([2.66])
 AC_INIT([gst_vaapi], [gst_vaapi_version],
     [gwenole.beauchesne@intel.com],
     [gstreamer-vaapi])
@@ -110,6 +110,12 @@ AC_ARG_ENABLE(wayland,
                    [enable Wayland output @<:@default=yes@:>@]),
     [], [enable_wayland="yes"])
 
+AC_ARG_WITH([gstreamer-api],
+    AC_HELP_STRING([--with-gstreamer-api=VERSION],
+                   [build against the specified GStreamer API version
+                    @<:@default=gst_api_version@:>@]),
+    [GST_API_VERSION="$with_gstreamer_api"], [GST_API_VERSION=gst_api_version])
+
 dnl Check for basic libraries
 AC_CHECK_LIB(m, tan)
 
@@ -131,7 +137,6 @@ dnl -- GStreamer                                                             --
 dnl ---------------------------------------------------------------------------
 
 dnl Versions for GStreamer and plugins-base
-GST_API_VERSION=gst_api_version
 case $GST_API_VERSION in
 0.10)
     GST_VERSION_REQUIRED=gst0_version
@@ -151,6 +156,15 @@ AC_SUBST(GST_API_VERSION)
 AC_SUBST(GST_VERSION_REQUIRED)
 AC_SUBST(GST_PLUGINS_BASE_VERSION_REQUIRED)
 AC_SUBST(GST_PLUGINS_BAD_VERSION_REQUIRED)
+
+USE_GST_API_0_10="no"
+USE_GST_API_1_0p="no"
+AS_VERSION_COMPARE([$GST_API_VERSION], [0.10],
+    [], [USE_GST_API_0_10="yes"], [])
+AS_VERSION_COMPARE([$GST_API_VERSION], [1.0],
+    [], [USE_GST_API_1_0p="yes"], [USE_GST_API_1_0p="yes"])
+AM_CONDITIONAL([USE_GST_API_0_10], [test "$USE_GST_API_0_10" = "yes"])
+AM_CONDITIONAL([USE_GST_API_1_0p], [test "$USE_GST_API_1_0p" = "yes"])
 
 dnl GStreamer Core
 PKG_CHECK_MODULES([GST],

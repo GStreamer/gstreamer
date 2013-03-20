@@ -58,11 +58,152 @@ gst_compat_structure_get_fourcc(const GstStructure *structure,
 typedef const guint8 *(*GstCompatTypeFindPeekFunction)(gpointer, gint64, guint);
 typedef void (*GstCompatTypeFindSuggestFunction)(gpointer, guint, GstCaps *);
 
+/* GstQuery */
+#define GST_PAD_QUERY_FUNCTION_ARGS \
+    GstPad *pad, GstObject *parent, GstQuery *query
+#define GST_PAD_QUERY_FUNCTION_CALL(func, pad, parent, query) \
+    (func)(pad, parent, query)
+
+/* GstPlugin */
+#define GST_PLUGIN_DESC_NAME(NAME) NAME
+
+/* Misc helpers */
+#define GST_MAKE_FORMAT_STRING(FORMAT) \
+    "format=(string)" G_STRINGIFY(FORMAT)
+
 /* ------------------------------------------------------------------------ */
 /* --- GStreamer = 0.10                                                 --- */
 /* ------------------------------------------------------------------------ */
 
 #else
+
+/* GstMemory */
+typedef enum {
+    GST_MEMORY_FLAG_READONLY = GST_MINI_OBJECT_FLAG_READONLY
+} GstMemoryFlags;
+
+typedef enum {
+    GST_MAP_READ        = 1 << 0,
+    GST_MAP_WRITE       = 1 << 1
+} GstMapFlags;
+
+typedef struct {
+    GstMapFlags         flags;
+    guint8             *data;
+    gsize               size;
+} GstMapInfo;
+
+/* GstBuffer */
+#undef  gst_buffer_new_wrapped
+#define gst_buffer_new_wrapped(data, size) \
+    gst_compat_buffer_new_wrapped_full(0, data, size, 0, size, data, g_free)
+#undef  gst_buffer_new_wrapped_full
+#define gst_buffer_new_wrapped_full(flags, data, maxsize, ofs, size, ud, udd) \
+    gst_compat_buffer_new_wrapped_full(flags, data, maxsize, ofs, size, ud, udd)
+#undef  gst_buffer_get_size
+#define gst_buffer_get_size(buffer)     gst_compat_buffer_get_size(buffer)
+#undef  gst_buffer_map
+#define gst_buffer_map(buffer, mip, f)  gst_compat_buffer_map(buffer, mip, f)
+#undef  gst_buffer_unmap
+#define gst_buffer_unmap(buffer, mip)   gst_compat_buffer_unmap(buffer, mip)
+#undef  gst_buffer_extract
+#define gst_buffer_extract(buffer, offset, dest, size) \
+    gst_compat_buffer_extract(buffer, offset, dest, size)
+
+static inline GstBuffer *
+gst_compat_buffer_new_wrapped_full(GstMemoryFlags flags, gpointer data,
+    gsize maxsize, gsize offset, gsize size, gpointer user_data,
+    GDestroyNotify notify)
+{
+    GstBuffer *buffer;
+
+    /* XXX: unsupported */
+    g_return_val_if_fail(user_data == NULL, NULL);
+    g_return_val_if_fail(notify == NULL, NULL);
+    g_return_val_if_fail(maxsize >= size, NULL);
+
+    buffer = gst_buffer_new();
+    if (!buffer)
+        return NULL;
+
+    GST_BUFFER_DATA(buffer) = data + offset;
+    GST_BUFFER_SIZE(buffer) = size;
+    return buffer;
+}
+
+static inline gsize
+gst_compat_buffer_get_size(GstBuffer *buffer)
+{
+    return GST_BUFFER_SIZE(buffer);
+}
+
+static inline gboolean
+gst_compat_buffer_map(GstBuffer *buffer, GstMapInfo *mip, GstMapFlags flags)
+{
+    mip->flags = flags;
+    mip->data  = GST_BUFFER_DATA(buffer);
+    mip->size  = GST_BUFFER_SIZE(buffer);
+    return TRUE;
+}
+
+static inline void
+gst_compat_buffer_unmap(GstBuffer *buffer, GstMapInfo *mip)
+{
+}
+
+static inline gsize
+gst_compat_buffer_extract(GstBuffer *buffer, gsize offset, gpointer dest,
+    gsize size)
+{
+    gsize esize;
+
+    if (!buffer || !dest || offset >= GST_BUFFER_SIZE(buffer))
+        return 0;
+
+    esize = MIN(size, GST_BUFFER_SIZE(buffer) - offset);
+    memcpy(dest, GST_BUFFER_DATA(buffer) + offset, esize);
+    return esize;
+}
+
+/* GstAdapter */
+#include <gst/base/gstadapter.h>
+
+#undef  gst_adapter_map
+#define gst_adapter_map(adapter, size)  gst_compat_adapter_map(adapter, size)
+#undef  gst_adapter_unmap
+#define gst_adapter_unmap(adapter)      gst_compat_adapter_unmap(adapter)
+
+static inline gconstpointer
+gst_compat_adapter_map(GstAdapter *adapter, gsize size)
+{
+    return gst_adapter_peek(adapter, size);
+}
+
+static inline void
+gst_compat_adapter_unmap(GstAdapter *adapter)
+{
+}
+
+/* GstCaps */
+#undef  gst_caps_merge
+#define gst_caps_merge(caps1, caps2)    gst_compat_caps_merge(caps1, caps2)
+#undef  gst_caps_merge_structure
+#define gst_caps_merge_structure(caps, structure) \
+    gst_compat_caps_merge_structure(caps, structure)
+
+static inline GstCaps *
+gst_compat_caps_merge(GstCaps *caps1, GstCaps *caps2)
+{
+    (gst_caps_merge)(caps1, caps2);
+    return caps1;
+}
+
+static inline GstCaps *
+gst_compat_caps_merge_structure(GstCaps *caps, GstStructure *structure)
+{
+    (gst_caps_merge_structure)(caps, structure);
+    return caps;
+}
 
 /* GstVideoOverlayComposition */
 #include <gst/video/video-overlay-composition.h>
@@ -90,6 +231,10 @@ gst_compat_video_overlay_rectangle_get_pixels_unscaled_raw(
         &width, &height, &stride, flags);
 }
 
+/* GstPad */
+#undef  GST_FLOW_EOS
+#define GST_FLOW_EOS GST_FLOW_UNEXPECTED
+
 /* GstElement */
 #undef  gst_element_class_set_static_metadata
 #define gst_element_class_set_static_metadata(klass, name, path, desc, author) \
@@ -110,6 +255,19 @@ gst_compat_element_class_set_static_metadata(GstElementClass *klass,
 
 typedef guint8 *(*GstCompatTypeFindPeekFunction)(gpointer, gint64, guint);
 typedef void (*GstCompatTypeFindSuggestFunction)(gpointer, guint, const GstCaps *);
+
+/* GstQuery */
+#define GST_PAD_QUERY_FUNCTION_ARGS \
+    GstPad *pad, GstQuery *query
+#define GST_PAD_QUERY_FUNCTION_CALL(func, pad, parent, query) \
+    (func)(pad, query)
+
+/* GstPlugin */
+#define GST_PLUGIN_DESC_NAME(NAME) G_STRINGIFY(NAME)
+
+/* Misc helpers */
+#define GST_MAKE_FORMAT_STRING(FORMAT) \
+    "format=(fourcc)" G_STRINGIFY(FORMAT)
 
 #endif
 

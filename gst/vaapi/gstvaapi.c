@@ -56,7 +56,7 @@ plugin_init (GstPlugin *plugin)
 
 GST_PLUGIN_DEFINE(
     GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    vaapi,
+    GST_PLUGIN_DESC_NAME(vaapi),
     "VA-API based elements",
     plugin_init,
     PACKAGE_VERSION,

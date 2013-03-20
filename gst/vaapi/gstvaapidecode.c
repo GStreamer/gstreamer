@@ -35,8 +35,10 @@
 #include "gstvaapidecode.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideobuffer.h"
+#if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideobufferpool.h"
 #include "gstvaapivideomemory.h"
+#endif
 
 #include <gst/vaapi/gstvaapidecoder_h264.h>
 #include <gst/vaapi/gstvaapidecoder_jpeg.h>
@@ -327,6 +329,7 @@ error_create_buffer:
         gst_video_codec_frame_unref(out_frame);
         return GST_FLOW_EOS;
     }
+#if GST_CHECK_VERSION(1,0,0)
 error_get_meta:
     {
         GST_ERROR("failed to get vaapi video meta attached to video buffer");
@@ -334,6 +337,7 @@ error_get_meta:
         gst_video_codec_frame_unref(out_frame);
         return GST_FLOW_EOS;
     }
+#endif
 error_commit_buffer:
     {
         GST_DEBUG("video sink rejected the video buffer (error %d)", ret);
@@ -372,6 +376,7 @@ error_flush:
     }
 }
 
+#if GST_CHECK_VERSION(1,0,0)
 static gboolean
 gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
 {
@@ -443,6 +448,7 @@ error_create_pool:
         return FALSE;
     }
 }
+#endif
 
 static inline gboolean
 gst_vaapidecode_ensure_display(GstVaapiDecode *decode)
@@ -665,8 +671,10 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
     vdec_class->handle_frame = GST_DEBUG_FUNCPTR(gst_vaapidecode_handle_frame);
     vdec_class->finish       = GST_DEBUG_FUNCPTR(gst_vaapidecode_finish);
 
+#if GST_CHECK_VERSION(1,0,0)
     vdec_class->decide_allocation =
         GST_DEBUG_FUNCPTR(gst_vaapidecode_decide_allocation);
+#endif
 
     gst_element_class_set_static_metadata(element_class,
         "VA-API decoder",
@@ -757,20 +765,24 @@ gst_vaapidecode_get_caps(GstPad *pad)
 }
 
 static gboolean
-gst_vaapidecode_query (GstPad *pad, GstObject *parent, GstQuery *query) {
-    GstVaapiDecode *decode = GST_VAAPIDECODE (gst_pad_get_parent_element (pad));
+gst_vaapidecode_query(GST_PAD_QUERY_FUNCTION_ARGS)
+{
+    GstVaapiDecode * const decode =
+        GST_VAAPIDECODE(gst_pad_get_parent_element(pad));
     gboolean res;
 
-    GST_DEBUG ("sharing display %p", decode->display);
+    GST_DEBUG("sharing display %p", decode->display);
 
-    if (gst_vaapi_reply_to_query (query, decode->display))
-      res = TRUE;
+    if (gst_vaapi_reply_to_query(query, decode->display))
+        res = TRUE;
     else if (GST_PAD_IS_SINK(pad))
-        res = decode->sinkpad_query(decode->sinkpad, parent, query);
+        res = GST_PAD_QUERY_FUNCTION_CALL(decode->sinkpad_query,
+            decode->sinkpad, parent, query);
     else
-      res = decode->srcpad_query(decode->srcpad, parent, query);
+        res = GST_PAD_QUERY_FUNCTION_CALL(decode->srcpad_query,
+            decode->srcpad, parent, query);
 
-    g_object_unref (decode);
+    g_object_unref(decode);
     return res;
 }
 

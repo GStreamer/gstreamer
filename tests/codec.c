@@ -41,7 +41,7 @@ static const CodecMap g_codec_map[] = {
     { "wmv3",   GST_VAAPI_CODEC_VC1,
       "video/x-wmv, wmvversion=3" },
     { "vc1",    GST_VAAPI_CODEC_VC1,
-      "video/x-wmv, wmvversion=3, format=(string)WVC1" },
+      "video/x-wmv, wmvversion=3, " GST_MAKE_FORMAT_STRING(WVC1) },
     { NULL, }
 };
 

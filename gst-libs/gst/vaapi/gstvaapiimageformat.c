@@ -45,15 +45,27 @@ struct _GstVaapiImageFormatMap {
     VAImageFormat               va_format;
 };
 
+#if GST_CHECK_VERSION(1,0,0)
+# define GST_VIDEO_CAPS_MAKE_YUV(FORMAT) \
+    GST_VIDEO_CAPS_MAKE(#FORMAT)
+# define GST_VIDEO_CAPS_MAKE_RGB(FORMAT) \
+    GST_VIDEO_CAPS_MAKE(#FORMAT)
+#else
+# define GST_VIDEO_CAPS_MAKE_YUV(FORMAT) \
+    GST_VIDEO_CAPS_YUV(#FORMAT)
+# define GST_VIDEO_CAPS_MAKE_RGB(FORMAT) \
+    GST_VIDEO_CAPS_##FORMAT
+#endif
+
 #define DEF(TYPE, FORMAT, CAPS_STR)                                     \
     GST_VAAPI_IMAGE_FORMAT_TYPE_##TYPE,                                 \
     GST_VAAPI_IMAGE_##FORMAT,                                           \
     CAPS_STR
 #define DEF_YUV(FORMAT, FOURCC, ENDIAN, BPP)                            \
-    { DEF(YCBCR, FORMAT, GST_VIDEO_CAPS_MAKE(#FORMAT)),                 \
+    { DEF(YCBCR, FORMAT, GST_VIDEO_CAPS_MAKE_YUV(FORMAT)),              \
         { VA_FOURCC FOURCC, VA_##ENDIAN##_FIRST, BPP, }, }
 #define DEF_RGB(FORMAT, FOURCC, ENDIAN, BPP, DEPTH, R,G,B,A)            \
-    { DEF(RGB, FORMAT, GST_VIDEO_CAPS_MAKE(#FORMAT)),                   \
+    { DEF(RGB, FORMAT, GST_VIDEO_CAPS_MAKE_RGB(FORMAT)),                \
         { VA_FOURCC FOURCC, VA_##ENDIAN##_FIRST, BPP, DEPTH, R,G,B,A }, }
 
 /* Image formats, listed in HW order preference */

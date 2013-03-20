@@ -91,7 +91,7 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
       "video/x-wmv, wmvversion=3", "main"
     },
     { GST_VAAPI_PROFILE_VC1_ADVANCED, VAProfileVC1Advanced,
-      "video/x-wmv, wmvversion=3, format=(string)WVC1", "advanced"
+      "video/x-wmv, wmvversion=3, " GST_MAKE_FORMAT_STRING(WVC1), "advanced"
     },
 #if VA_CHECK_VERSION(0,32,0)
     { GST_VAAPI_PROFILE_JPEG_BASELINE, VAProfileJPEGBaseline,
