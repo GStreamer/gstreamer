@@ -1280,9 +1280,10 @@ gst_qt_mux_send_buffered_data (GstQTMux * qtmux, guint64 * offset)
       gst_buffer_unmap (buf, &map);
       break;
     }
-    GST_LOG_OBJECT (qtmux, "Pushing buffered buffer of size %d",
-        (gint) map.size);
+    GST_LOG_OBJECT (qtmux, "Pushing buffered buffer of size %d", (gint) size);
     gst_buffer_unmap (buf, &map);
+    if (size != bufsize)
+      gst_buffer_set_size (buf, size);
     ret = gst_qt_mux_send_buffer (qtmux, buf, offset, FALSE);
     buf = NULL;
   }
