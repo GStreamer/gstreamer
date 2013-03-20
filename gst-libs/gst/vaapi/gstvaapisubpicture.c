@@ -300,6 +300,7 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
     GstVaapiImage *image;
     GstVaapiImageRaw raw_image;
     GstBuffer *buffer;
+    guint8 *data;
     gfloat global_alpha;
     guint width, height, stride;
     guint hw_flags, flags;
@@ -322,6 +323,7 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
         &width, &height, &stride, to_GstVideoOverlayFormatFlags(flags));
     if (!buffer)
         return NULL;
+    data = GST_BUFFER_DATA(buffer);
 
     image = gst_vaapi_image_new(display, format, width, height);
     if (!image)
@@ -331,7 +333,7 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
     raw_image.width      = width;
     raw_image.height     = height;
     raw_image.num_planes = 1;
-    raw_image.pixels[0]  = GST_BUFFER_DATA(buffer);
+    raw_image.pixels[0]  = data;
     raw_image.stride[0]  = stride;
     if (!gst_vaapi_image_update_from_raw(image, &raw_image, NULL)) {
         GST_WARNING("could not update VA image with subtitle data");

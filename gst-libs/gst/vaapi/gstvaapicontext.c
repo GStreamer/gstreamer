@@ -106,21 +106,6 @@ gst_video_overlay_rectangle_replace(GstVideoOverlayRectangle **old_rect_ptr,
         GST_MINI_OBJECT_CAST(new_rect));
 }
 
-static inline GstBuffer *
-gst_video_overlay_rectangle_get_pixels_raw(GstVideoOverlayRectangle *rect)
-{
-    guint width, height, stride, flags;
-
-    flags = gst_video_overlay_rectangle_get_flags(rect);
-
-    /* Try to retrieve the original buffer that was passed to
-       gst_video_overlay_rectangle_new_argb(). This will only work if
-       there was no previous user that required pixels with non native
-       alpha type */
-    return gst_video_overlay_rectangle_get_pixels_unscaled_argb(rect,
-        &width, &height, &stride, flags);
-}
-
 #define overlay_rectangle_ref(overlay) \
     gst_vaapi_mini_object_ref(GST_VAAPI_MINI_OBJECT(overlay))
 
@@ -156,7 +141,7 @@ overlay_rectangle_new(GstVideoOverlayRectangle *rect, GstVaapiContext *context,
 {
     GstVaapiOverlayRectangle *overlay;
     GstVaapiRectangle *render_rect;
-    guint width, height;
+    guint width, height, flags;
     gint x, y;
 
     overlay = (GstVaapiOverlayRectangle *)
@@ -169,8 +154,9 @@ overlay_rectangle_new(GstVideoOverlayRectangle *rect, GstVaapiContext *context,
     overlay->layer_id   = layer_id;
     overlay->rect       = gst_video_overlay_rectangle_ref(rect);
 
+    flags = gst_video_overlay_rectangle_get_flags(rect);
     gst_buffer_replace(&overlay->rect_buffer,
-        gst_video_overlay_rectangle_get_pixels_raw(rect));
+        gst_video_overlay_rectangle_get_pixels_unscaled_raw(rect, flags));
     if (!overlay->rect_buffer)
         goto error;
 
@@ -253,7 +239,7 @@ static gboolean
 overlay_rectangle_changed_pixels(GstVaapiOverlayRectangle *overlay,
     GstVideoOverlayRectangle *rect)
 {
-    guint width, height, stride, flags;
+    guint flags;
     GstBuffer *buffer;
 
     if (overlay->seq_num == gst_video_overlay_rectangle_get_seqnum(rect))
@@ -262,9 +248,12 @@ overlay_rectangle_changed_pixels(GstVaapiOverlayRectangle *overlay,
     flags = to_GstVideoOverlayFormatFlags(
         gst_vaapi_subpicture_get_flags(overlay->subpicture));
 
-    buffer = gst_video_overlay_rectangle_get_pixels_unscaled_argb(rect,
-        &width, &height, &stride, flags);
-    return GST_BUFFER_DATA(overlay->rect_buffer) != GST_BUFFER_DATA(buffer);
+    buffer = gst_video_overlay_rectangle_get_pixels_unscaled_raw(rect, flags);
+    if (!buffer)
+        return FALSE;
+    if (GST_BUFFER_DATA(overlay->rect_buffer) != GST_BUFFER_DATA(buffer))
+        return FALSE;
+    return TRUE;
 }
 
 static gboolean

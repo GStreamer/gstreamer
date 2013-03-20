@@ -27,9 +27,27 @@
 /* GstVideoOverlayComposition */
 #include <gst/video/video-overlay-composition.h>
 
+#undef  gst_video_overlay_rectangle_get_pixels_unscaled_raw
+#define gst_video_overlay_rectangle_get_pixels_unscaled_raw(rect, flags) \
+    gst_compat_video_overlay_rectangle_get_pixels_unscaled_raw(rect, flags)
+
 #ifndef HAVE_GST_VIDEO_OVERLAY_HWCAPS
 #define gst_video_overlay_rectangle_get_flags(rect) (0)
 #define gst_video_overlay_rectangle_get_global_alpha(rect) (1.0f)
 #endif
+
+static inline GstBuffer *
+gst_compat_video_overlay_rectangle_get_pixels_unscaled_raw(
+    GstVideoOverlayRectangle *rect, GstVideoOverlayFormatFlags flags)
+{
+    guint width, height, stride;
+
+    /* Try to retrieve the original buffer that was passed to
+       gst_video_overlay_rectangle_new_argb(). This will only work if
+       there was no previous user that required pixels with non native
+       alpha type */
+    return gst_video_overlay_rectangle_get_pixels_unscaled_argb(rect,
+        &width, &height, &stride, flags);
+}
 
 #endif /* GST_COMPAT_H */
