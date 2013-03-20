@@ -446,6 +446,7 @@ DIST_SUBDIRS = \
 	flite \
 	gsettings \
 	gsm \
+	hls \
 	ladspa \
 	kate \
 	libmms \
