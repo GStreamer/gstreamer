@@ -73,7 +73,6 @@ struct _GESUriSourceAssetPrivate
   GESUriClipAsset *parent_asset;
 
   const gchar *uri;
-  GESTrackType type;
 };
 
 
@@ -541,9 +540,16 @@ _extract (GESAsset * asset, GError ** error)
     return NULL;
   }
 
-  trackelement =
-      GES_TRACK_ELEMENT (ges_track_filesource_new (g_strdup (priv->uri)));
-  ges_track_element_set_track_type (trackelement, priv->type);
+  if (GST_IS_DISCOVERER_VIDEO_INFO (priv->sinfo) &&
+      gst_discoverer_video_info_is_image ((GstDiscovererVideoInfo *)
+          priv->sinfo))
+    trackelement =
+        GES_TRACK_ELEMENT (ges_image_source_new (g_strdup (priv->uri)));
+  else
+    trackelement =
+        GES_TRACK_ELEMENT (ges_track_filesource_new (g_strdup (priv->uri)));
+  ges_track_element_set_track_type (trackelement,
+      ges_track_element_asset_get_track_type (GES_TRACK_ELEMENT_ASSET (asset)));
 
   return GES_EXTRACTABLE (trackelement);
 }
@@ -567,8 +573,6 @@ ges_uri_source_asset_init (GESUriSourceAsset * self)
   priv->sinfo = NULL;
   priv->parent_asset = NULL;
   priv->uri = NULL;
-  priv->type = GES_TRACK_TYPE_UNKNOWN;
-
 }
 
 /**
