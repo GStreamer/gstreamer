@@ -148,11 +148,8 @@ ensure_allowed_caps(GstVaapiUploader *uploader)
         GstStructure * const structure = gst_caps_get_structure(image_caps, i);
         GstVaapiImage *image;
         GstVaapiImageFormat format;
-        guint32 fourcc;
 
-        if (!gst_structure_get_fourcc(structure, "format", &fourcc))
-            continue;
-        format = gst_vaapi_image_format_from_fourcc(fourcc);
+        format = gst_vaapi_image_format_from_structure(structure);
         if (!format)
             continue;
         image = gst_vaapi_image_new(priv->display, format, WIDTH, HEIGHT);
@@ -320,9 +317,7 @@ gst_vaapi_uploader_ensure_caps(
     GstVaapiUploaderPrivate *priv;
     GstVaapiImage *image;
     GstVaapiImageFormat vaformat;
-    GstVideoFormat vformat;
-    GstStructure *structure;
-    gint width, height;
+    GstVideoInfo vi;
 
     g_return_val_if_fail(GST_VAAPI_IS_UPLOADER(uploader), FALSE);
     g_return_val_if_fail(src_caps != NULL, FALSE);
@@ -335,18 +330,12 @@ gst_vaapi_uploader_ensure_caps(
     priv = uploader->priv;
     priv->direct_rendering = 0;
 
-    structure = gst_caps_get_structure(src_caps, 0);
-    if (!structure)
-        return FALSE;
-    gst_structure_get_int(structure, "width",  &width);
-    gst_structure_get_int(structure, "height", &height);
-
     /* Translate from Gst video format to VA image format */
-    if (!gst_video_format_parse_caps(src_caps, &vformat, NULL, NULL))
+    if (!gst_video_info_from_caps(&vi, src_caps))
         return FALSE;
-    if (!gst_video_format_is_yuv(vformat))
+    if (!GST_VIDEO_INFO_IS_YUV(&vi))
         return FALSE;
-    vaformat = gst_vaapi_image_format_from_video(vformat);
+    vaformat = gst_vaapi_image_format_from_video(GST_VIDEO_INFO_FORMAT(&vi));
     if (!vaformat)
         return FALSE;
 
@@ -355,8 +344,7 @@ gst_vaapi_uploader_ensure_caps(
     if (image) {
         if (gst_vaapi_image_get_format(image) == vaformat &&
             gst_vaapi_image_is_linear(image) &&
-            (gst_vaapi_image_get_data_size(image) ==
-             gst_video_format_get_size(vformat, width, height)))
+            gst_vaapi_image_get_data_size(image) == GST_VIDEO_INFO_SIZE(&vi))
             priv->direct_rendering = 1;
         gst_vaapi_video_pool_put_object(priv->images, image);
     }

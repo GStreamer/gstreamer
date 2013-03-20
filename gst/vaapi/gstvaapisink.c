@@ -627,30 +627,25 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstStructure * const structure = gst_caps_get_structure(caps, 0);
+    GstVideoInfo vi;
     guint win_width, win_height;
-    gint video_width, video_height, video_par_n = 1, video_par_d = 1;
 
 #if USE_DRM
     if (sink->display_type == GST_VAAPI_DISPLAY_TYPE_DRM)
         return TRUE;
 #endif
 
-    if (!structure)
+    if (!gst_video_info_from_caps(&vi, caps))
         return FALSE;
-    if (!gst_structure_get_int(structure, "width",  &video_width))
-        return FALSE;
-    if (!gst_structure_get_int(structure, "height", &video_height))
-        return FALSE;
-    sink->video_width  = video_width;
-    sink->video_height = video_height;
+    sink->video_width  = GST_VIDEO_INFO_WIDTH(&vi);
+    sink->video_height = GST_VIDEO_INFO_HEIGHT(&vi);
+    sink->video_par_n  = GST_VIDEO_INFO_PAR_N(&vi);
+    sink->video_par_d  = GST_VIDEO_INFO_PAR_D(&vi);
+    GST_DEBUG("video pixel-aspect-ratio %d/%d",
+              sink->video_par_n, sink->video_par_d);
 
     if (gst_structure_has_name(structure, "video/x-raw-yuv"))
         sink->use_video_raw = TRUE;
-
-    gst_video_parse_caps_pixel_aspect_ratio(caps, &video_par_n, &video_par_d);
-    sink->video_par_n  = video_par_n;
-    sink->video_par_d  = video_par_d;
-    GST_DEBUG("video pixel-aspect-ratio %d/%d", video_par_n, video_par_d);
 
     gst_caps_replace(&sink->caps, caps);
 
