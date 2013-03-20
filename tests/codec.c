@@ -98,7 +98,7 @@ typedef struct {
     GstTypeFind  type_find;
 } CodecIdentifier;
 
-static guint8 *
+static const guint8 *
 codec_identifier_peek(gpointer data, gint64 offset, guint size)
 {
     CodecIdentifier * const cip = data;
@@ -111,13 +111,13 @@ codec_identifier_peek(gpointer data, gint64 offset, guint size)
 }
 
 static void
-codec_identifier_suggest(gpointer data, guint probability, const GstCaps *caps)
+codec_identifier_suggest(gpointer data, guint probability, GstCaps *caps)
 {
     CodecIdentifier * const cip = data;
 
     if (cip->probability < probability) {
         cip->probability = probability;
-        gst_caps_replace(&cip->caps, (GstCaps *)caps);
+        gst_caps_replace(&cip->caps, caps);
     }
 }
 
@@ -155,8 +155,8 @@ codec_identifier_new(const gchar *filename)
         goto error;
 
     tfp = &cip->type_find;
-    tfp->peek = codec_identifier_peek;
-    tfp->suggest = codec_identifier_suggest;
+    tfp->peek = (GstTypeFindPeekFunction)codec_identifier_peek;
+    tfp->suggest = (GstTypeFindSuggestFunction)codec_identifier_suggest;
     tfp->data = cip;
     return cip;
 

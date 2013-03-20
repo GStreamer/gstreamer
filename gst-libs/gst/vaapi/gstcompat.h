@@ -50,4 +50,13 @@ gst_compat_video_overlay_rectangle_get_pixels_unscaled_raw(
         &width, &height, &stride, flags);
 }
 
+/* GstTypeFind */
+#undef  GstTypeFindPeekFunction
+#define GstTypeFindPeekFunction         GstCompatTypeFindPeekFunction
+#undef  GstTypeFindSuggestFunction
+#define GstTypeFindSuggestFunction      GstCompatTypeFindSuggestFunction
+
+typedef guint8 *(*GstCompatTypeFindPeekFunction)(gpointer, gint64, guint);
+typedef void (*GstCompatTypeFindSuggestFunction)(gpointer, guint, const GstCaps *);
+
 #endif /* GST_COMPAT_H */
