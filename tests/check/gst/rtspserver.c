@@ -670,11 +670,6 @@ GST_START_TEST (test_setup_non_existing_stream)
   gst_rtsp_connection_free (conn);
   stop_server ();
   iterate ();
-
-  /* need to unref the server here, otherwise threads will remain
-   * and teardown won't be run */
-  g_object_unref (server);
-  server = NULL;
 }
 
 GST_END_TEST;
