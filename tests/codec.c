@@ -19,7 +19,7 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "gst/vaapi/sysdeps.h"
 #include <gst/vaapi/gstvaapidisplay.h>
 #include "codec.h"
 

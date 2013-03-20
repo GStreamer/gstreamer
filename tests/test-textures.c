@@ -19,6 +19,7 @@
  *  Boston, MA 02110-1301 USA
 */
 
+#include "gst/vaapi/sysdeps.h"
 #include <gst/vaapi/gstvaapidisplay_glx.h>
 #include <gst/vaapi/gstvaapiwindow_glx.h>
 #include <gst/vaapi/gstvaapisurface.h>

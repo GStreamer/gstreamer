@@ -19,7 +19,7 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "gst/vaapi/sysdeps.h"
 #include <string.h>
 #include <gst/vaapi/gstvaapidecoder_h264.h>
 #include <gst/vaapi/gstvaapidecoder_jpeg.h>

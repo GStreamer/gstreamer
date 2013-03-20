@@ -20,7 +20,7 @@
  *  Boston, MA 02110-1301 USA
 */
 
-#include "config.h"
+#include "gst/vaapi/sysdeps.h"
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapiimage.h>
 #if USE_DRM
