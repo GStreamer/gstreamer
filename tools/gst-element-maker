@@ -387,3 +387,4 @@ if test $? -ne 0; then
     exit 1
 fi
 
+gst-inspect-1.0 ./$gstreplace.so
