@@ -21,10 +21,7 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-#include <string.h>
+#include "gst/vaapi/sysdeps.h"
 #include <gst/video/videocontext.h>
 #if USE_DRM
 # include <gst/vaapi/gstvaapidisplay_drm.h>

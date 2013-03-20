@@ -19,10 +19,7 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
+#include "gst/vaapi/sysdeps.h"
 #include <gst/vaapi/gstvaapivideometa.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #if USE_GLX
