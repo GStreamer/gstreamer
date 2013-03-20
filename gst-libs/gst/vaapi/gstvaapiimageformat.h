@@ -73,6 +73,9 @@ GstVaapiImageFormat
 gst_vaapi_image_format_from_caps(GstCaps *caps);
 
 GstVaapiImageFormat
+gst_vaapi_image_format_from_structure(GstStructure *structure);
+
+GstVaapiImageFormat
 gst_vaapi_image_format_from_fourcc(guint32 fourcc);
 
 GstVaapiImageFormat

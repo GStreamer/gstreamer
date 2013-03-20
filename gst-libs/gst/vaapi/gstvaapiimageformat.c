@@ -171,11 +171,7 @@ gst_vaapi_image_format(const VAImageFormat *va_format)
 GstVaapiImageFormat
 gst_vaapi_image_format_from_caps(GstCaps *caps)
 {
-    const GstVaapiImageFormatMap *m;
     GstStructure *structure;
-    VAImageFormat *va_format, va_formats[2];
-    gint endian, rmask, gmask, bmask, amask = 0;
-    guint32 fourcc;
 
     if (!caps)
         return 0;
@@ -183,6 +179,26 @@ gst_vaapi_image_format_from_caps(GstCaps *caps)
     structure = gst_caps_get_structure(caps, 0);
     if (!structure)
         return 0;
+    return gst_vaapi_image_format_from_structure(structure);
+}
+
+/**
+ * gst_vaapi_image_format_from_structure:
+ * @structure: a #GstStructure
+ *
+ * Converts @structure into the corresponding #GstVaapiImageFormat. If
+ * the image format cannot be represented by #GstVaapiImageFormat,
+ * then zero is returned.
+ *
+ * Return value: the #GstVaapiImageFormat describing the @structure
+ */
+GstVaapiImageFormat
+gst_vaapi_image_format_from_structure(GstStructure *structure)
+{
+    const GstVaapiImageFormatMap *m;
+    VAImageFormat *va_format, va_formats[2];
+    gint endian, rmask, gmask, bmask, amask = 0;
+    guint32 fourcc;
 
     /* Check for YUV format */
     if (gst_structure_get_fourcc(structure, "format", &fourcc))
