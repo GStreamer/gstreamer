@@ -507,7 +507,7 @@ gst_video_scale_set_info (GstVideoFilter * filter, GstCaps * in,
   gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
 
   if (!gst_util_fraction_multiply (in_info->width,
-          in_info->height, out_info->par_n, out_info->par_d, &from_dar_n,
+          in_info->height, in_info->par_n, in_info->par_d, &from_dar_n,
           &from_dar_d)) {
     from_dar_n = from_dar_d = -1;
   }
@@ -525,7 +525,7 @@ gst_video_scale_set_info (GstVideoFilter * filter, GstCaps * in,
 
       if (from_dar_n != -1 && from_dar_d != -1
           && gst_util_fraction_multiply (from_dar_n, from_dar_d,
-              out_info->par_n, out_info->par_d, &n, &d)) {
+              out_info->par_d, out_info->par_n, &n, &d)) {
         to_h = gst_util_uint64_scale_int (out_info->width, d, n);
         if (to_h <= out_info->height) {
           videoscale->borders_h = out_info->height - to_h;
@@ -548,7 +548,8 @@ gst_video_scale_set_info (GstVideoFilter * filter, GstCaps * in,
     g_free (videoscale->tmp_buf);
   videoscale->tmp_buf = g_malloc (out_info->width * sizeof (guint64) * 4);
 
-  if (in_info->width == out_info->width && in_info->height == out_info->height) {
+  if (in_info->width == out_info->width && in_info->height == out_info->height
+      && videoscale->borders_w == 0 && videoscale->borders_h == 0) {
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
   } else {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, filter, "setup videoscaling");
@@ -558,7 +559,7 @@ gst_video_scale_set_info (GstVideoFilter * filter, GstCaps * in,
   GST_DEBUG_OBJECT (videoscale, "from=%dx%d (par=%d/%d dar=%d/%d), size %"
       G_GSIZE_FORMAT " -> to=%dx%d (par=%d/%d dar=%d/%d borders=%d:%d), "
       "size %" G_GSIZE_FORMAT,
-      in_info->width, in_info->height, out_info->par_n, out_info->par_d,
+      in_info->width, in_info->height, in_info->par_n, in_info->par_d,
       from_dar_n, from_dar_d, in_info->size, out_info->width,
       out_info->height, out_info->par_n, out_info->par_d, to_dar_n, to_dar_d,
       videoscale->borders_w, videoscale->borders_h, out_info->size);
