@@ -1060,6 +1060,24 @@ pause:
   }
 }
 
+static void
+free_track (GstMidiTrack * track, GstMidiParse * midiparse)
+{
+  g_slice_free (GstMidiTrack, track);
+}
+
+static void
+gst_midi_parse_reset (GstMidiParse * midiparse)
+{
+  gst_adapter_clear (midiparse->adapter);
+  g_free (midiparse->data);
+  midiparse->data = NULL;
+  g_list_foreach (midiparse->tracks, (GFunc) free_track, midiparse);
+  g_list_free (midiparse->tracks);
+  midiparse->tracks = NULL;
+  midiparse->track_count = 0;
+}
+
 static GstStateChangeReturn
 gst_midi_parse_change_state (GstElement * element, GstStateChange transition)
 {
@@ -1086,9 +1104,7 @@ gst_midi_parse_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_adapter_clear (midiparse->adapter);
-      g_free (midiparse->data);
-      midiparse->data = NULL;
+      gst_midi_parse_reset (midiparse);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
