@@ -1097,6 +1097,8 @@ gst_vaapi_decoder_vc1_decode_codec_data(GstVaapiDecoder *base_decoder,
         if (gst_structure_get_int(structure, "wmvversion", &version))
             format = (version >= 1 && version <= 3) ?
                 GST_MAKE_FOURCC('W','M','V',('0'+version)) : 0;
+        else
+            format = 0;
     }
     if (!format) {
         GST_ERROR("failed to parse profile from codec-data");
