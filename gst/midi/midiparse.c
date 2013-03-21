@@ -21,16 +21,15 @@
 
 /**
  * SECTION:element-midiparse
- * @see_also: timidity, wildmidi
+ * @see_also: fluidsynth
  *
- * This element renders midi-files as audio streams using
- * <ulink url="http://midiparse.sourceforge.net//">MidiParse</ulink>.
- * It offers better sound quality compared to the timidity or wildmidi element.
+ * This element parses midi-files into midi events. You would need a midi
+ * renderer such as fluidsynth to convert the events into raw samples.
  *
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch-1.0 filesrc location=song.mid ! midiparse ! pulsesink
+ * gst-launch-1.0 filesrc location=song.mid ! midiparse ! fluidsynth ! pulsesink
  * ]| This example pipeline will parse the midi and render to raw audio which is
  * played via pulseaudio.
  * </refsect2>
@@ -206,7 +205,7 @@ gst_midi_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
     case GST_QUERY_SEEKING:
       gst_query_set_seeking (query, midiparse->segment.format,
-          TRUE, 0, midiparse->segment.duration);
+          FALSE, 0, midiparse->segment.duration);
       break;
     default:
       res = gst_pad_query_default (pad, parent, query);
@@ -214,26 +213,6 @@ gst_midi_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   }
 
   return res;
-}
-
-static GstEvent *
-gst_midi_parse_get_new_segment_event (GstMidiParse * midiparse,
-    GstFormat format)
-{
-  GstSegment *segment, newseg;
-  GstEvent *event;
-
-  segment = &midiparse->segment;
-  newseg = *segment;
-
-  newseg.format = format;
-  newseg.start = segment->start;
-  newseg.stop = segment->stop;
-  newseg.time = segment->time;
-
-  event = gst_event_new_segment (&newseg);
-
-  return event;
 }
 
 static gboolean
@@ -449,7 +428,7 @@ gst_midi_parse_chunk (GstMidiParse * midiparse, guint8 * data, guint size)
   if (size < length + 8)
     goto short_chunk;
 
-  type = *((guint32 *) data);
+  type = GST_STR_FOURCC (data);
 
   switch (type) {
     case GST_MAKE_FOURCC ('M', 'T', 'h', 'd'):
@@ -504,14 +483,14 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
     size -= consumed;
   }
 
-  outcaps = gst_caps_copy (gst_pad_get_pad_template_caps (midiparse->srcpad));
+  outcaps = gst_pad_get_pad_template_caps (midiparse->srcpad);
   gst_pad_set_caps (midiparse->srcpad, outcaps);
   gst_caps_unref (outcaps);
 
   gst_segment_init (&midiparse->segment, GST_FORMAT_TIME);
 
   gst_pad_push_event (midiparse->srcpad,
-      gst_midi_parse_get_new_segment_event (midiparse, GST_FORMAT_TIME));
+      gst_event_new_segment (&midiparse->segment));
 
   GST_DEBUG_OBJECT (midiparse, "Parsing song done");
 
@@ -628,11 +607,9 @@ handle_next_event (GstMidiParse * midiparse, GstMidiTrack * track)
   GST_LOG_OBJECT (midiparse, "track %p, status 0x%02x", track, status);
 
   if ((status & 0x80) == 0) {
-    if ((track->running_status & 0x80) == 0) {
-      GST_ERROR_OBJECT (midiparse,
-          "Undefined status and invalid running status");
-      return GST_FLOW_ERROR;
-    }
+    if ((track->running_status & 0x80) == 0)
+      goto undefined_status;
+
     event = track->running_status;
   } else {
     event = status;
@@ -685,6 +662,7 @@ handle_next_event (GstMidiParse * midiparse, GstMidiTrack * track)
 
     GST_BUFFER_PTS (outbuf) = gst_util_uint64_scale (track->position,
         1000 * midiparse->tempo, midiparse->division);
+    GST_BUFFER_DTS (outbuf) = GST_BUFFER_PTS (outbuf);
 
     GST_DEBUG_OBJECT (midiparse, "pushing %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)));
@@ -696,6 +674,13 @@ handle_next_event (GstMidiParse * midiparse, GstMidiTrack * track)
     track->running_status = event;
 
   return ret;
+
+  /* ERRORS */
+undefined_status:
+  {
+    GST_ERROR_OBJECT (midiparse, "Undefined status and invalid running status");
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn
@@ -728,7 +713,6 @@ gst_midi_parse_do_play (GstMidiParse * midiparse)
   midiparse->segment.position = next_position;
 
 done:
-
   return res;
 
 eos:
