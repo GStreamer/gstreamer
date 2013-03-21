@@ -74,16 +74,9 @@ typedef struct
 
 } GstMidiTrack;
 
-typedef struct
-{
-  GstFlowReturn (*handle_sysex) (GstMidiParse * parse, GstMidiTrack * track,
-      guint8 event, guint8 * data, guint length, gpointer user_data);
-  GstFlowReturn (*handle_meta) (GstMidiParse * parse, GstMidiTrack * track,
-      guint8 event, guint8 type, guint8 * data,
-      guint length, gpointer user_data);
-  GstFlowReturn (*handle_midi) (GstMidiParse * parse,
-      guint8 event, guint8 * data, guint length, gpointer user_data);
-} GstMidiCallbacks;
+typedef GstFlowReturn (*GstMidiPushFunc) (GstMidiParse * parse,
+    GstMidiTrack * track, guint8 event, guint8 * data, guint length,
+    gpointer user_data);
 
 static void gst_midi_parse_finalize (GObject * object);
 
@@ -376,12 +369,11 @@ parse_varlen (GstMidiParse * midiparse, guint8 * data, guint size,
 }
 
 static GstFlowReturn
-handle_meta_event (GstMidiParse * midiparse, GstMidiTrack * track,
-    guint8 event, GstMidiCallbacks * callback, gpointer user_data)
+handle_meta_event (GstMidiParse * midiparse, GstMidiTrack * track, guint8 event)
 {
-  GstFlowReturn ret;
   guint8 type;
   guint8 *data;
+  gchar *bytes;
   guint size, consumed;
   gint32 length;
 
@@ -408,13 +400,39 @@ handle_meta_event (GstMidiParse * midiparse, GstMidiTrack * track,
   GST_DEBUG_OBJECT (midiparse, "handle meta event type 0x%02x, length %u",
       type, length);
 
-  if (callback->handle_meta)
-    ret = callback->handle_meta (midiparse, track, event, type,
-        data, length, user_data);
-  else
-    ret = GST_FLOW_OK;
+  bytes = g_strndup ((const gchar *) data, length);
 
   switch (type) {
+    case 0x01:
+      GST_DEBUG_OBJECT (midiparse, "Text: %s", bytes);
+      break;
+    case 0x02:
+      GST_DEBUG_OBJECT (midiparse, "Copyright: %s", bytes);
+      break;
+    case 0x03:
+      GST_DEBUG_OBJECT (midiparse, "Track Name: %s", bytes);
+      break;
+    case 0x04:
+      GST_DEBUG_OBJECT (midiparse, "Instrument: %s", bytes);
+      break;
+    case 0x05:
+      GST_DEBUG_OBJECT (midiparse, "Lyric: %s", bytes);
+      break;
+    case 0x06:
+      GST_DEBUG_OBJECT (midiparse, "Marker: %s", bytes);
+      break;
+    case 0x07:
+      GST_DEBUG_OBJECT (midiparse, "Cue point: %s", bytes);
+      break;
+    case 0x08:
+      GST_DEBUG_OBJECT (midiparse, "Patch name: %s", bytes);
+      break;
+    case 0x09:
+      GST_DEBUG_OBJECT (midiparse, "MIDI port: %s", bytes);
+      break;
+    case 0x2f:
+      GST_DEBUG_OBJECT (midiparse, "End of track");
+      break;
     case 0x51:
     {
       guint32 uspqn = (data[0] << 16) | (data[1] << 8) | data[2];
@@ -422,13 +440,28 @@ handle_meta_event (GstMidiParse * midiparse, GstMidiTrack * track,
       GST_DEBUG_OBJECT (midiparse, "tempo %u", midiparse->tempo);
       break;
     }
+    case 0x54:
+      GST_DEBUG_OBJECT (midiparse, "SMPTE offset");
+      break;
+    case 0x58:
+      GST_DEBUG_OBJECT (midiparse, "Time signature");
+      break;
+    case 0x59:
+      GST_DEBUG_OBJECT (midiparse, "Key signature");
+      break;
+    case 0x7f:
+      GST_DEBUG_OBJECT (midiparse, "Proprietary event");
+      break;
     default:
+      GST_DEBUG_OBJECT (midiparse, "unknown event 0x%02x length %d", type,
+          length);
       break;
   }
+  g_free (bytes);
 
   track->offset += consumed + length + 1;
 
-  return ret;
+  return GST_FLOW_OK;
 
   /* ERRORS */
 short_file:
@@ -440,7 +473,7 @@ short_file:
 
 static GstFlowReturn
 handle_sysex_event (GstMidiParse * midiparse, GstMidiTrack * track,
-    guint8 event, GstMidiCallbacks * callback, gpointer user_data)
+    guint8 event, GstMidiPushFunc pushfunc, gpointer user_data)
 {
   GstFlowReturn ret;
   guint8 *data;
@@ -465,9 +498,8 @@ handle_sysex_event (GstMidiParse * midiparse, GstMidiTrack * track,
   GST_DEBUG_OBJECT (midiparse, "handle sysex event 0x%02x, length %u",
       event, length);
 
-  if (callback->handle_sysex)
-    ret = callback->handle_sysex (midiparse, track, event,
-        data, length, user_data);
+  if (pushfunc)
+    ret = pushfunc (midiparse, track, event, data, length, user_data);
   else
     ret = GST_FLOW_OK;
 
@@ -534,7 +566,7 @@ eot:
 
 static GstFlowReturn
 handle_next_event (GstMidiParse * midiparse, GstMidiTrack * track,
-    GstMidiCallbacks * callback, gpointer user_data)
+    GstMidiPushFunc pushfunc, gpointer user_data)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint8 status, event;
@@ -553,13 +585,12 @@ handle_next_event (GstMidiParse * midiparse, GstMidiTrack * track,
     case 0xf0:
       switch (event) {
         case 0xff:
-          ret =
-              handle_meta_event (midiparse, track, event, callback, user_data);
+          ret = handle_meta_event (midiparse, track, event);
           break;
         case 0xf0:
         case 0xf7:
           ret =
-              handle_sysex_event (midiparse, track, event, callback, user_data);
+              handle_sysex_event (midiparse, track, event, pushfunc, user_data);
           break;
         default:
           goto unhandled_event;
@@ -582,14 +613,12 @@ handle_next_event (GstMidiParse * midiparse, GstMidiTrack * track,
   }
   if (length > 0) {
     if (status & 0x80) {
-      if (callback->handle_midi)
-        ret = callback->handle_midi (midiparse, event,
-            data + 1, length, user_data);
+      if (pushfunc)
+        ret = pushfunc (midiparse, track, event, data + 1, length, user_data);
       track->offset += length + 1;
     } else {
-      if (callback->handle_midi)
-        ret = callback->handle_midi (midiparse, event,
-            data, length + 1, user_data);
+      if (pushfunc)
+        ret = pushfunc (midiparse, track, event, data, length + 1, user_data);
       track->offset += length;
     }
   }
@@ -631,7 +660,6 @@ static gboolean
 parse_MTrk (GstMidiParse * midiparse, guint8 * data, guint size)
 {
   GstMidiTrack *track;
-  GstMidiCallbacks cb = { NULL, NULL, NULL };
   GstClockTime duration;
 
   /* ignore excess tracks */
@@ -648,7 +676,7 @@ parse_MTrk (GstMidiParse * midiparse, guint8 * data, guint size)
 
   /* now loop over all events and calculate the duration */
   while (!track->eot) {
-    handle_next_event (midiparse, track, &cb, NULL);
+    handle_next_event (midiparse, track, NULL, NULL);
   }
 
   duration = gst_util_uint64_scale (track->pulse,
@@ -852,7 +880,7 @@ invalid_format:
 }
 
 static GstFlowReturn
-handle_play_midi (GstMidiParse * midiparse,
+play_push_func (GstMidiParse * midiparse, GstMidiTrack * track,
     guint8 event, guint8 * data, guint length, gpointer user_data)
 {
   GstBuffer *outbuf;
@@ -884,7 +912,6 @@ gst_midi_parse_do_play (GstMidiParse * midiparse)
   GList *walk;
   guint64 pulse, next_pulse = G_MAXUINT64;
   GstClockTime position, next_position;
-  GstMidiCallbacks cb = { NULL, NULL, handle_play_midi };
   guint64 tick;
 
   pulse = midiparse->pulse;
@@ -897,7 +924,7 @@ gst_midi_parse_do_play (GstMidiParse * midiparse)
     GstMidiTrack *track = walk->data;
 
     while (!track->eot && track->pulse == pulse) {
-      res = handle_next_event (midiparse, track, &cb, NULL);
+      res = handle_next_event (midiparse, track, play_push_func, NULL);
       if (res != GST_FLOW_OK)
         goto error;
     }
@@ -928,7 +955,7 @@ gst_midi_parse_do_play (GstMidiParse * midiparse)
       break;
 
     midiparse->segment.position = position;
-    res = handle_play_midi (midiparse, 0xf9, NULL, 0, NULL);
+    res = play_push_func (midiparse, NULL, 0xf9, NULL, 0, NULL);
     if (res != GST_FLOW_OK)
       goto error;
   }
