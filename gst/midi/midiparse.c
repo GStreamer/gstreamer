@@ -143,7 +143,7 @@ gst_midi_parse_class_init (GstMidiParseClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_static_metadata (gstelement_class, "MidiParse",
-      "Codec/Decoder/Audio",
+      "Codec/Demuxer/Audio",
       "Midi Parser Element", "Wim Taymans <wim.taymans@gmail.com>");
 
   GST_DEBUG_CATEGORY_INIT (gst_midi_parse_debug, "midiparse",
