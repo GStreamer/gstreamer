@@ -490,18 +490,14 @@ decode_scan(
 }
 
 static GstVaapiDecoderStatus
-decode_buffer(GstVaapiDecoderJpeg *decoder, GstBuffer *buffer)
+decode_buffer(GstVaapiDecoderJpeg *decoder, guchar *buf, guint buf_size)
 {
     GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
     GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
     GstJpegMarkerSegment seg;
     GstJpegScanSegment scan_seg;
-    guchar *buf;
-    guint buf_size, ofs;
+    guint ofs;
     gboolean append_ecs;
-
-    buf      = GST_BUFFER_DATA(buffer);
-    buf_size = GST_BUFFER_SIZE(buffer);
 
     memset(&scan_seg, 0, sizeof(scan_seg));
 
@@ -683,16 +679,17 @@ gst_vaapi_decoder_jpeg_decode(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderStatus status;
     GstBuffer * const buffer =
         GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
+    guchar *buf;
+    guint buf_size;
 
     status = ensure_decoder(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
-    unit->buffer = gst_buffer_create_sub(buffer, unit->offset, unit->size);
-    if (!unit->buffer)
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    buf      = GST_BUFFER_DATA(buffer) + unit->offset;
+    buf_size = unit->size;
 
-    status = decode_buffer(decoder, unit->buffer);
+    status = decode_buffer(decoder, buf, buf_size);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;

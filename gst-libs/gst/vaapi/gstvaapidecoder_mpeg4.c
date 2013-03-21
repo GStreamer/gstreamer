@@ -890,16 +890,12 @@ decode_packet(GstVaapiDecoderMpeg4 *decoder, GstMpeg4Packet packet)
 }
 
 static GstVaapiDecoderStatus
-decode_buffer(GstVaapiDecoderMpeg4 *decoder, GstBuffer *buffer)
+decode_buffer(GstVaapiDecoderMpeg4 *decoder, const guchar *buf, guint buf_size)
 {
     GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
     GstVaapiDecoderStatus status;
     GstMpeg4Packet packet;
-    const guchar *buf;
-    guint buf_size, ofs;
-
-    buf      = GST_BUFFER_DATA(buffer);
-    buf_size = GST_BUFFER_SIZE(buffer);
+    guint ofs;
 
     if (priv->is_svh) {
         status = decode_picture(decoder, buf, buf_size);
@@ -1088,16 +1084,17 @@ gst_vaapi_decoder_mpeg4_decode(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderStatus status;
     GstBuffer * const buffer =
         GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
+    const guchar *buf;
+    guint buf_size;
 
     status = ensure_decoder(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
-    unit->buffer = gst_buffer_create_sub(buffer, unit->offset, unit->size);
-    if (!unit->buffer)
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    buf      = GST_BUFFER_DATA(buffer) + unit->offset;
+    buf_size = unit->size;
 
-    status = decode_buffer(decoder, unit->buffer);
+    status = decode_buffer(decoder, buf, buf_size);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;

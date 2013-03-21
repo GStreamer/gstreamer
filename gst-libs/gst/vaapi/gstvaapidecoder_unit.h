@@ -22,8 +22,6 @@
 #ifndef GST_VAAPI_DECODER_UNIT_H
 #define GST_VAAPI_DECODER_UNIT_H
 
-#include <gst/gstbuffer.h>
-
 G_BEGIN_DECLS
 
 typedef struct _GstVaapiDecoderUnit             GstVaapiDecoderUnit;
@@ -155,7 +153,6 @@ typedef enum {
  * @size: size in bytes of this bitstream unit
  * @offset: relative offset in bytes to bitstream unit within the
  *    associated #GstVideoCodecFrame input_buffer
- * @buffer: (optional) associated buffer or sub-buffer
  * @parsed_info: parser-specific data (this is codec specific)
  * @parsed_info_destroy_notify: function used to release @parsed_info data
  *
@@ -165,7 +162,6 @@ struct _GstVaapiDecoderUnit {
     guint               flags;
     guint               size;
     guint               offset;
-    GstBuffer          *buffer;
     gpointer            parsed_info;
     GDestroyNotify      parsed_info_destroy_notify;
 };
@@ -181,10 +177,6 @@ gst_vaapi_decoder_unit_clear(GstVaapiDecoderUnit *unit);
 G_GNUC_INTERNAL
 GstVaapiDecoderUnit *
 gst_vaapi_decoder_unit_new(void);
-
-G_GNUC_INTERNAL
-void
-gst_vaapi_decoder_unit_set_buffer(GstVaapiDecoderUnit *unit, GstBuffer *buffer);
 
 G_GNUC_INTERNAL
 void

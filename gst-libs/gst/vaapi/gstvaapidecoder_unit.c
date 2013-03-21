@@ -42,7 +42,6 @@ gst_vaapi_decoder_unit_init(GstVaapiDecoderUnit *unit)
     unit->flags = 0;
     unit->size = 0;
     unit->offset = 0;
-    unit->buffer = NULL;
 
     unit->parsed_info = NULL;
     unit->parsed_info_destroy_notify = NULL;
@@ -61,24 +60,7 @@ gst_vaapi_decoder_unit_init(GstVaapiDecoderUnit *unit)
 void
 gst_vaapi_decoder_unit_clear(GstVaapiDecoderUnit *unit)
 {
-    gst_buffer_replace(&unit->buffer, NULL);
     gst_vaapi_decoder_unit_set_parsed_info(unit, NULL, NULL);
-}
-
-/**
- * gst_vaapi_decoder_unit_set_buffer:
- * @unit: a #GstVaapiDecoderUnit
- * @buffer: the new #GstBuffer to set
- *
- * Sets new buffer to the supplied decoder unit. The @unit holds an
- * extra reference to the @buffer if it is not NULL.
- */
-void
-gst_vaapi_decoder_unit_set_buffer(GstVaapiDecoderUnit *unit, GstBuffer *buffer)
-{
-    g_return_if_fail(GST_VAAPI_IS_DECODER_UNIT(unit));
-
-    gst_buffer_replace(&unit->buffer, buffer);
 }
 
 /**
