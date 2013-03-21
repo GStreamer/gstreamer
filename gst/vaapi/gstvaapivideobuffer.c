@@ -28,6 +28,9 @@
 #include "gst/vaapi/sysdeps.h"
 #include <gst/video/gstsurfacebuffer.h>
 #include "gstvaapivideobuffer.h"
+#if USE_GLX
+# include "gstvaapivideoconverter_glx.h"
+#endif
 
 #define GST_VAAPI_TYPE_VIDEO_BUFFER \
     (gst_vaapi_video_buffer_get_type())
@@ -114,19 +117,71 @@ gst_vaapi_video_buffer_init(GstVaapiVideoBuffer *buffer)
 {
 }
 
-GstBuffer *
-gst_vaapi_video_buffer_new(GstVaapiVideoMeta *meta)
+static GFunc
+get_surface_converter(GstVaapiDisplay *display)
+{
+    GFunc func;
+
+    switch (gst_vaapi_display_get_display_type(display)) {
+#if USE_GLX
+    case GST_VAAPI_DISPLAY_TYPE_GLX:
+        func = (GFunc)gst_vaapi_video_converter_glx_new;
+        break;
+#endif
+    default:
+        func = NULL;
+        break;
+    }
+    return func;
+}
+
+static GstBuffer *
+new_vbuffer(GstVaapiVideoMeta *meta)
 {
     GstBuffer *buffer;
 
     g_return_val_if_fail(meta != NULL, NULL);
 
-    buffer = GST_BUFFER_CAST(gst_mini_object_new(GST_TYPE_SURFACE_BUFFER));
-    if (!buffer)
-        return NULL;
+    gst_vaapi_video_meta_set_surface_converter(meta,
+        get_surface_converter(gst_vaapi_video_meta_get_display(meta)));
 
-    gst_buffer_set_vaapi_video_meta(buffer, meta);
+    buffer = GST_BUFFER_CAST(gst_mini_object_new(GST_TYPE_SURFACE_BUFFER));
+    if (buffer)
+        gst_buffer_set_vaapi_video_meta(buffer, meta);
+    gst_vaapi_video_meta_unref(meta);
     return buffer;
+}
+
+GstBuffer *
+gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool)
+{
+    return new_vbuffer(gst_vaapi_video_meta_new_from_pool(pool));
+}
+
+GstBuffer *
+gst_vaapi_video_buffer_new_from_buffer(GstBuffer *buffer)
+{
+    GstVaapiVideoMeta * const meta = gst_buffer_get_vaapi_video_meta(buffer);
+
+    return meta ? new_vbuffer(gst_vaapi_video_meta_ref(meta)) : NULL;
+}
+
+GstBuffer *
+gst_vaapi_video_buffer_new_with_image(GstVaapiImage *image)
+{
+    return new_vbuffer(gst_vaapi_video_meta_new_with_image(image));
+}
+
+GstBuffer *
+gst_vaapi_video_buffer_new_with_surface(GstVaapiSurface *surface)
+{
+    return new_vbuffer(gst_vaapi_video_meta_new_with_surface(surface));
+}
+
+GstBuffer *
+gst_vaapi_video_buffer_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy)
+{
+    return new_vbuffer(gst_vaapi_video_meta_new_with_surface_proxy(proxy));
 }
 
 GstVaapiVideoMeta *

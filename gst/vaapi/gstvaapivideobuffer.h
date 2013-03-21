@@ -31,7 +31,23 @@ typedef struct _GstVaapiVideoBuffer             GstVaapiVideoBuffer;
 
 G_GNUC_INTERNAL
 GstBuffer *
-gst_vaapi_video_buffer_new(GstVaapiVideoMeta *meta);
+gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool);
+
+G_GNUC_INTERNAL
+GstBuffer *
+gst_vaapi_video_buffer_new_from_buffer(GstBuffer *buffer);
+
+G_GNUC_INTERNAL
+GstBuffer *
+gst_vaapi_video_buffer_new_with_image(GstVaapiImage *image);
+
+G_GNUC_INTERNAL
+GstBuffer *
+gst_vaapi_video_buffer_new_with_surface(GstVaapiSurface *surface);
+
+G_GNUC_INTERNAL
+GstBuffer *
+gst_vaapi_video_buffer_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy);
 
 G_GNUC_INTERNAL
 GstVaapiVideoMeta *

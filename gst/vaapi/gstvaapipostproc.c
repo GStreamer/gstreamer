@@ -35,7 +35,7 @@
 
 #include "gstvaapipostproc.h"
 #include "gstvaapipluginutil.h"
-#include "gstvaapipluginbuffer.h"
+#include "gstvaapivideobuffer.h"
 
 #define GST_PLUGIN_NAME "vaapipostproc"
 #define GST_PLUGIN_DESC "A video postprocessing filter"

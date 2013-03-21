@@ -29,7 +29,7 @@
 #include <gst/vaapi/gstvaapivideometa.h>
 
 #include "gstvaapiuploader.h"
-#include "gstvaapipluginbuffer.h"
+#include "gstvaapivideobuffer.h"
 
 #define GST_HELPER_NAME "vaapiupload"
 #define GST_HELPER_DESC "VA-API video uploader"

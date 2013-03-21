@@ -35,7 +35,7 @@
 
 #include "gstvaapidecode.h"
 #include "gstvaapipluginutil.h"
-#include "gstvaapipluginbuffer.h"
+#include "gstvaapivideobuffer.h"
 
 #include <gst/vaapi/gstvaapidecoder_h264.h>
 #include <gst/vaapi/gstvaapidecoder_jpeg.h>

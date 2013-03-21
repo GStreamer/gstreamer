@@ -36,7 +36,7 @@
 
 #include "gstvaapiupload.h"
 #include "gstvaapipluginutil.h"
-#include "gstvaapipluginbuffer.h"
+#include "gstvaapivideobuffer.h"
 
 #define GST_PLUGIN_NAME "vaapiupload"
 #define GST_PLUGIN_DESC "A video to VA flow filter"

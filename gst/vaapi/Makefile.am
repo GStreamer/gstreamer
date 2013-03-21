@@ -33,7 +33,6 @@ libgstvaapi_source_c = \
 	gstvaapi.c		\
 	gstvaapidecode.c	\
 	gstvaapidownload.c	\
-	gstvaapipluginbuffer.c	\
 	gstvaapipluginutil.c	\
 	gstvaapipostproc.c	\
 	gstvaapisink.c		\
@@ -45,7 +44,6 @@ libgstvaapi_source_c = \
 libgstvaapi_source_h = \
 	gstvaapidecode.h	\
 	gstvaapidownload.h	\
-	gstvaapipluginbuffer.h	\
 	gstvaapipluginutil.h	\
 	gstvaapipostproc.h	\
 	gstvaapisink.h		\
