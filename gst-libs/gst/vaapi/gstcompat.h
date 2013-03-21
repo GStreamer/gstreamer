@@ -49,6 +49,15 @@ gst_compat_structure_get_fourcc(const GstStructure *structure,
     return TRUE;
 }
 
+/* GstTypeFind */
+#undef  GstTypeFindPeekFunction
+#define GstTypeFindPeekFunction         GstCompatTypeFindPeekFunction
+#undef  GstTypeFindSuggestFunction
+#define GstTypeFindSuggestFunction      GstCompatTypeFindSuggestFunction
+
+typedef const guint8 *(*GstCompatTypeFindPeekFunction)(gpointer, gint64, guint);
+typedef void (*GstCompatTypeFindSuggestFunction)(gpointer, guint, GstCaps *);
+
 /* ------------------------------------------------------------------------ */
 /* --- GStreamer = 0.10                                                 --- */
 /* ------------------------------------------------------------------------ */

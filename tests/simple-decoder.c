@@ -251,13 +251,12 @@ decoder_thread(gpointer data)
         if (G_UNLIKELY(ofs == app->file_size))
             buffer = NULL;
         else {
-            buffer = gst_buffer_new();
+            const gsize size = MIN(4096, app->file_size - ofs);
+            buffer = gst_buffer_new_wrapped_full(GST_MEMORY_FLAG_READONLY,
+                app->file_data, app->file_size, ofs, size, NULL, NULL);
             if (!buffer)
                 SEND_ERROR("failed to allocate new buffer");
-
-            GST_BUFFER_DATA(buffer) = app->file_data + ofs;
-            GST_BUFFER_SIZE(buffer) = MIN(4096, app->file_size - ofs);
-            ofs += GST_BUFFER_SIZE(buffer);
+            ofs += size;
         }
         if (!gst_vaapi_decoder_put_buffer(app->decoder, buffer))
             SEND_ERROR("failed to push buffer to decoder");

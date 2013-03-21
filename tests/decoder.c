@@ -151,14 +151,13 @@ decoder_put_buffers(GstVaapiDecoder *decoder)
     codec = get_codec_defs(decoder);
     g_return_val_if_fail(codec != NULL, FALSE);
 
-    buffer = gst_buffer_new();
+    codec->get_video_info(&info);
+    buffer = gst_buffer_new_wrapped_full(GST_MEMORY_FLAG_READONLY,
+        (guchar *)info.data, info.data_size, 0, info.data_size, NULL, NULL);
     if (!buffer) {
         GST_ERROR("failed to create encoded data buffer");
         return FALSE;
     }
-
-    codec->get_video_info(&info);
-    gst_buffer_set_data(buffer, (guchar *)info.data, info.data_size);
 
     success = gst_vaapi_decoder_put_buffer(decoder, buffer);
     gst_buffer_unref(buffer);

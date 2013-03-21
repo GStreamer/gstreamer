@@ -53,15 +53,22 @@ static GOptionEntry g_options[] = {
 static void
 upload_subpicture(GstBuffer *buffer, const VideoSubpictureInfo *subinfo)
 {
-    guint32 * const dst = (guint32 *)GST_BUFFER_DATA(buffer);
     const guint32 * const src = subinfo->data;
     guint i, len = subinfo->data_size / 4;
+    GstMapInfo map_info;
+    guint32 *dst;
+
+    if (!gst_buffer_map(buffer, &map_info, GST_MAP_WRITE))
+        return;
+    dst = (guint32 *)map_info.data;
 
     /* Convert from RGBA source to ARGB */
     for (i = 0; i < len; i++) {
         const guint32 rgba = src[i];
         dst[i] = (rgba >> 8) | (rgba << 24);
     }
+
+    gst_buffer_unmap(buffer, &map_info);
 }
 
 int
@@ -120,9 +127,23 @@ main(int argc, char *argv[])
     subrect.height = subinfo.height;
     subrect.width = subinfo.width;
 
+#if GST_CHECK_VERSION(1,0,0)
+    {
+        GstVideoMeta * const vmeta =
+            gst_buffer_add_video_meta(buffer, GST_VIDEO_FRAME_FLAG_NONE,
+                GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB,
+                subinfo.width, subinfo.height);
+        if (!vmeta)
+            g_error("could not create video meta");
+
+        overlay = gst_video_overlay_rectangle_new_raw(buffer,
+            subrect.x, subrect.y, subrect.width, subrect.height, flags);
+    }
+#else
     overlay = gst_video_overlay_rectangle_new_argb(buffer,
         subinfo.width, subinfo.height, subinfo.width * 4,
         subrect.x, subrect.y, subrect.width, subrect.height, flags);
+#endif
     if (!overlay)
         g_error("could not create video overlay");
     gst_buffer_unref(buffer);
