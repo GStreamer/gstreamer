@@ -50,6 +50,7 @@ struct _GstFluidsynth
   GstPad *sinkpad, *srcpad;
   GstSegment segment;
   GstClockTime last_pts;
+  guint64 last_sample;
 
   fluid_settings_t* settings;
   fluid_synth_t* synth;

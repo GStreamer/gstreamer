@@ -234,21 +234,26 @@ gst_fluidsynth_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static GstFlowReturn
-produce_samples (GstFluidsynth * fluidsynth, GstClockTime pts)
+produce_samples (GstFluidsynth * fluidsynth, GstClockTime pts, guint64 sample)
 {
-  GstClockTime out_duration;
-  guint samples;
+  GstClockTime duration, timestamp;
+  guint64 samples, offset;
   GstMapInfo info;
   GstBuffer *outbuf;
 
-  out_duration = pts - fluidsynth->last_pts;
+  samples = sample - fluidsynth->last_sample;
+  duration = pts - fluidsynth->last_pts;
+  offset = fluidsynth->last_sample;
+  timestamp = fluidsynth->last_pts;
 
-  samples =
-      gst_util_uint64_scale_int (out_duration, FLUIDSYNTH_RATE, GST_SECOND);
+  fluidsynth->last_pts = pts;
+  fluidsynth->last_sample = sample;
 
-  GST_DEBUG_OBJECT (fluidsynth,
-      "duration %" GST_TIME_FORMAT ", samples %u",
-      GST_TIME_ARGS (out_duration), samples);
+  if (samples == 0)
+    return GST_FLOW_OK;
+
+  GST_DEBUG_OBJECT (fluidsynth, "duration %" GST_TIME_FORMAT
+      ", samples %u", GST_TIME_ARGS (duration), samples);
 
   outbuf = gst_buffer_new_allocate (NULL, samples * FLUIDSYNTH_BPS, NULL);
 
@@ -257,9 +262,11 @@ produce_samples (GstFluidsynth * fluidsynth, GstClockTime pts)
       info.data, 1, 2);
   gst_buffer_unmap (outbuf, &info);
 
-  GST_BUFFER_DTS (outbuf) = fluidsynth->last_pts;
-  GST_BUFFER_PTS (outbuf) = fluidsynth->last_pts;
-  GST_BUFFER_DURATION (outbuf) = out_duration;
+  GST_BUFFER_DTS (outbuf) = timestamp;
+  GST_BUFFER_PTS (outbuf) = timestamp;
+  GST_BUFFER_DURATION (outbuf) = duration;
+  GST_BUFFER_OFFSET (outbuf) = offset;
+  GST_BUFFER_OFFSET_END (outbuf) = offset + samples;
 
   return gst_pad_push (fluidsynth->srcpad, outbuf);
 }
@@ -343,17 +350,21 @@ gst_fluidsynth_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buffer)
 
   pts = GST_BUFFER_PTS (buffer);
 
-  if (fluidsynth->last_pts == GST_CLOCK_TIME_NONE) {
-    fluidsynth->last_pts = pts;
-  } else if (pts != GST_CLOCK_TIME_NONE && fluidsynth->last_pts < pts) {
-    /* generate samples for the elapsed time */
-    res = produce_samples (fluidsynth, pts);
+  if (pts != GST_CLOCK_TIME_NONE) {
+    guint64 sample =
+        gst_util_uint64_scale_int (pts, FLUIDSYNTH_RATE, GST_SECOND);
+
+    if (fluidsynth->last_pts == GST_CLOCK_TIME_NONE) {
+      fluidsynth->last_pts = pts;
+      fluidsynth->last_sample = sample;
+    } else if (fluidsynth->last_pts < pts) {
+      /* generate samples for the elapsed time */
+      res = produce_samples (fluidsynth, pts, sample);
+    }
   }
 
   if (res == GST_FLOW_OK) {
     handle_buffer (fluidsynth, buffer);
-
-    fluidsynth->last_pts = pts;
   }
   gst_buffer_unref (buffer);
 
