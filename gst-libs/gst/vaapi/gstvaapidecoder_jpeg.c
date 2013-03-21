@@ -681,14 +681,14 @@ gst_vaapi_decoder_jpeg_decode(GstVaapiDecoder *base_decoder,
 {
     GstVaapiDecoderJpeg * const decoder = GST_VAAPI_DECODER_JPEG(base_decoder);
     GstVaapiDecoderStatus status;
+    GstBuffer * const buffer =
+        GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
 
     status = ensure_decoder(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
-    unit->buffer = gst_buffer_create_sub(
-        GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer,
-        unit->offset, unit->size);
+    unit->buffer = gst_buffer_create_sub(buffer, unit->offset, unit->size);
     if (!unit->buffer)
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
 

@@ -1253,14 +1253,15 @@ gst_vaapi_decoder_vc1_decode(GstVaapiDecoder *base_decoder,
 {
     GstVaapiDecoderVC1 * const decoder = GST_VAAPI_DECODER_VC1(base_decoder);
     GstVaapiDecoderStatus status;
+    GstBuffer * const buffer =
+        GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
 
     status = ensure_decoder(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
     status = decode_buffer(decoder,
-        (GST_BUFFER_DATA(GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer) +
-         unit->offset), unit->size);
+        (GST_BUFFER_DATA(buffer) + unit->offset), unit->size);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;

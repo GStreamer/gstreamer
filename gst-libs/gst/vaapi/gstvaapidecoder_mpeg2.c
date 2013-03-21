@@ -1194,6 +1194,8 @@ decode_slice(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnit *unit)
     GstVaapiSlice *slice;
     VASliceParameterBufferMPEG2 *slice_param;
     GstMpegVideoSliceHdr * const slice_hdr = unit->parsed_info;
+    GstBuffer * const buffer =
+        GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
 
     GST_DEBUG("slice %d (%u bytes)", slice_hdr->slice_vertical_position,
               unit->size);
@@ -1202,8 +1204,7 @@ decode_slice(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnit *unit)
         return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
     slice = GST_VAAPI_SLICE_NEW(MPEG2, decoder,
-        (GST_BUFFER_DATA(GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer) +
-         unit->offset), unit->size);
+        (GST_BUFFER_DATA(buffer) + unit->offset), unit->size);
     if (!slice) {
         GST_ERROR("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -1473,14 +1474,14 @@ gst_vaapi_decoder_mpeg2_decode(GstVaapiDecoder *base_decoder,
         GST_VAAPI_DECODER_MPEG2_CAST(base_decoder);
     GstVaapiDecoderStatus status;
     GstMpegVideoPacket packet;
+    GstBuffer * const buffer =
+        GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
 
     status = ensure_decoder(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
-    packet.data =
-        (GST_BUFFER_DATA(GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer) +
-         unit->offset);
+    packet.data = GST_BUFFER_DATA(buffer) + unit->offset;
     packet.size = unit->size;
     packet.type = packet.data[3];
     packet.offset = 4;

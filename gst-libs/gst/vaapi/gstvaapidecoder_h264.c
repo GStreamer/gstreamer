@@ -2698,6 +2698,8 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     GstVaapiPictureH264 * const picture = priv->current_picture;
     GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
     GstVaapiSlice *slice;
+    GstBuffer * const buffer =
+        GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
 
     GST_DEBUG("slice (%u bytes)", pi->nalu.size);
 
@@ -2707,8 +2709,8 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     }
 
     slice = GST_VAAPI_SLICE_NEW(H264, decoder,
-        (GST_BUFFER_DATA(GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer) +
-         unit->offset + pi->nalu.offset), pi->nalu.size);
+        (GST_BUFFER_DATA(buffer) + unit->offset + pi->nalu.offset),
+        pi->nalu.size);
     if (!slice) {
         GST_ERROR("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
