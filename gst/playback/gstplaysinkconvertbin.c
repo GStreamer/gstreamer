@@ -427,8 +427,7 @@ gst_play_sink_convert_bin_acceptcaps (GstPad * pad, GstCaps * caps)
   gboolean ret;
 
   allowed_caps = gst_pad_query_caps (pad, NULL);
-  /* FIXME 0.11: Should be a subset check now */
-  ret = gst_caps_can_intersect (caps, allowed_caps);
+  ret = gst_caps_is_subset (caps, allowed_caps);
   gst_caps_unref (allowed_caps);
 
   return ret;
