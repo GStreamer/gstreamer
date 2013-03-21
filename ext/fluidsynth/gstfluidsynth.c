@@ -275,23 +275,24 @@ static void
 handle_buffer (GstFluidsynth * fluidsynth, GstBuffer * buffer)
 {
   GstMapInfo info;
-  guint8 event, channel;
+  guint8 event;
 
   gst_buffer_map (buffer, &info, GST_MAP_READ);
 
   event = info.data[0];
-  channel = event & 0x0f;
-
-  GST_DEBUG_OBJECT (fluidsynth, "event 0x%02x channel %d", event, channel);
 
   switch (event & 0xf0) {
     case 0xf0:
       switch (event) {
         case 0xff:
+          GST_DEBUG_OBJECT (fluidsynth, "system reset");
           fluid_synth_system_reset (fluidsynth->synth);
           break;
         case 0xf0:
         case 0xf7:
+          GST_DEBUG_OBJECT (fluidsynth, "sysex 0x%02x", event);
+          GST_MEMDUMP_OBJECT (fluidsynth, "bytes ", info.data + 1,
+              info.size - 1);
           fluid_synth_sysex (fluidsynth->synth, (char *) info.data + 1,
               info.size - 1, NULL, NULL, NULL, 0);
 
@@ -303,10 +304,15 @@ handle_buffer (GstFluidsynth * fluidsynth, GstBuffer * buffer)
       break;
     default:
     {
-      guint8 p1, p2;
+      guint8 channel, p1, p2;
+
+      channel = event & 0x0f;
 
       p1 = info.size > 1 ? info.data[1] & 0x7f : 0;
       p2 = info.size > 2 ? info.data[2] & 0x7f : 0;
+
+      GST_DEBUG_OBJECT (fluidsynth, "event 0x%02x channel %d, 0x%02x 0x%02x",
+          event, channel, p1, p2);
 
       switch (event & 0xf0) {
         case 0x80:
