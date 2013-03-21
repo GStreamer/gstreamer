@@ -832,18 +832,6 @@ gst_vaapisink_put_surface(
     return TRUE;
 }
 
-static inline gboolean
-set_composition_from_buffer(GstVaapiSurface *surface, GstBuffer *buffer)
-{
-    GstVideoOverlayComposition * const composition =
-        gst_video_buffer_get_overlay_composition(buffer);
-
-    if (!composition)
-        return FALSE;
-    return gst_vaapi_surface_set_subpictures_from_composition(surface,
-            composition, TRUE);
-}
-
 static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
 {
@@ -893,7 +881,7 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
 
     flags = gst_vaapi_video_meta_get_render_flags(meta);
 
-    if (!set_composition_from_buffer(surface, src_buffer))
+    if (!gst_vaapi_apply_composition(surface, src_buffer))
         GST_WARNING("could not update subtitles");
 
     switch (sink->display_type) {

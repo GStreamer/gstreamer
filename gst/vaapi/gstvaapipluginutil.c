@@ -328,3 +328,15 @@ gst_vaapi_append_surface_caps(GstCaps *out_caps, GstCaps *in_caps)
     }
     return TRUE;
 }
+
+gboolean
+gst_vaapi_apply_composition(GstVaapiSurface *surface, GstBuffer *buffer)
+{
+    GstVideoOverlayComposition * const composition =
+        gst_video_buffer_get_overlay_composition(buffer);
+
+    if (!composition)
+        return FALSE;
+    return gst_vaapi_surface_set_subpictures_from_composition(surface,
+            composition, TRUE);
+}

@@ -25,6 +25,7 @@
 #include <gst/vaapi/gstvaapivideometa.h>
 #include <gst/vaapi/gstvaapitexture.h>
 #include "gstvaapivideoconverter_glx.h"
+#include "gstvaapipluginutil.h"
 
 typedef gboolean (*GstSurfaceUploadFunction)(GstSurfaceConverter *,
     GstSurfaceBuffer *);
@@ -131,8 +132,6 @@ gst_vaapi_video_converter_glx_upload(GstSurfaceConverter *self,
     GstVaapiVideoMeta * const meta = gst_buffer_get_vaapi_video_meta(buffer);
     GstVaapiSurface * const surface = gst_vaapi_video_meta_get_surface(meta);
     GstVaapiDisplay *new_dpy, *old_dpy;
-    GstVideoOverlayComposition * const composition =
-        gst_video_buffer_get_overlay_composition(buffer);
 
     new_dpy = gst_vaapi_object_get_display(GST_VAAPI_OBJECT(surface));
     old_dpy = gst_vaapi_object_get_display(GST_VAAPI_OBJECT(priv->texture));
@@ -145,8 +144,7 @@ gst_vaapi_video_converter_glx_upload(GstSurfaceConverter *self,
             texture, GL_TEXTURE_2D, GL_BGRA);
     }
 
-    if (!gst_vaapi_surface_set_subpictures_from_composition(surface,
-            composition, TRUE))
+    if (!gst_vaapi_apply_composition(surface, buffer))
         GST_WARNING("could not update subtitles");
 
     return gst_vaapi_texture_put_surface(priv->texture, surface,

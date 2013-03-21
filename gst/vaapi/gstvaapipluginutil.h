@@ -25,6 +25,7 @@
 #define GST_VAAPI_PLUGIN_UTIL_H
 
 #include <gst/vaapi/gstvaapidisplay.h>
+#include <gst/vaapi/gstvaapisurface.h>
 
 G_GNUC_INTERNAL
 gboolean
@@ -49,6 +50,10 @@ gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display);
 G_GNUC_INTERNAL
 gboolean
 gst_vaapi_append_surface_caps (GstCaps *out_caps, GstCaps *in_caps);
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_apply_composition(GstVaapiSurface *surface, GstBuffer *buffer);
 
 #ifndef G_PRIMITIVE_SWAP
 #define G_PRIMITIVE_SWAP(type, a, b) do {       \
