@@ -1009,6 +1009,11 @@ gst_ximagesink_getcaps (GstBaseSink * bsink, GstCaps * filter)
       caps = intersection;
     }
 
+    if (gst_caps_is_empty (caps)) {
+      g_mutex_unlock (&ximagesink->x_lock);
+      return caps;
+    }
+
     if (ximagesink->xwindow && ximagesink->xwindow->width) {
       GstStructure *s0, *s1;
 
