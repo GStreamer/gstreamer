@@ -956,3 +956,28 @@ gst_vaapi_decoder_flush(GstVaapiDecoder *decoder)
 
     return do_flush(decoder);
 }
+
+GstVaapiDecoderStatus
+gst_vaapi_decoder_decode_codec_data(GstVaapiDecoder *decoder)
+{
+    GstVaapiDecoderClass * const klass = GST_VAAPI_DECODER_GET_CLASS(decoder);
+    GstBuffer * const codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
+    GstVaapiDecoderStatus status;
+    const guchar *buf;
+    guint buf_size;
+
+    if (!codec_data)
+        return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+    /* FIXME: add a meaningful error code? */
+    if (!klass->decode_codec_data)
+        return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+    buf      = GST_BUFFER_DATA(codec_data);
+    buf_size = GST_BUFFER_SIZE(codec_data);
+    if (!buf || buf_size == 0)
+        return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+    status = klass->decode_codec_data(decoder, buf, buf_size);
+    return status;
+}

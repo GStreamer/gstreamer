@@ -2763,23 +2763,19 @@ decode_unit(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
 }
 
 static GstVaapiDecoderStatus
-decode_codec_data(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
+gst_vaapi_decoder_h264_decode_codec_data(GstVaapiDecoder *base_decoder,
+    const guchar *buf, guint buf_size)
 {
+    GstVaapiDecoderH264 * const decoder =
+        GST_VAAPI_DECODER_H264_CAST(base_decoder);
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstVaapiDecoderStatus status;
     GstVaapiDecoderUnit unit;
     GstVaapiParserInfoH264 pi;
     GstH264ParserResult result;
-    guchar *buf;
-    guint buf_size;
     guint i, ofs, num_sps, num_pps;
 
     unit.parsed_info = &pi;
-
-    buf      = GST_BUFFER_DATA(buffer);
-    buf_size = GST_BUFFER_SIZE(buffer);
-    if (!buf || buf_size == 0)
-        return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
     if (buf_size < 8)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
@@ -2836,7 +2832,6 @@ ensure_decoder(GstVaapiDecoderH264 *decoder)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstVaapiDecoderStatus status;
-    GstBuffer *codec_data;
 
     g_return_val_if_fail(priv->is_constructed,
                          GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED);
@@ -2846,12 +2841,10 @@ ensure_decoder(GstVaapiDecoderH264 *decoder)
         if (!priv->is_opened)
             return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC;
 
-        codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
-        if (codec_data) {
-            status = decode_codec_data(decoder, codec_data);
-            if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-                return status;
-        }
+        status = gst_vaapi_decoder_decode_codec_data(
+            GST_VAAPI_DECODER_CAST(decoder));
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            return status;
     }
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -3091,6 +3084,9 @@ gst_vaapi_decoder_h264_class_init(GstVaapiDecoderH264Class *klass)
     decoder_class->start_frame  = gst_vaapi_decoder_h264_start_frame;
     decoder_class->end_frame    = gst_vaapi_decoder_h264_end_frame;
     decoder_class->flush        = gst_vaapi_decoder_h264_flush;
+
+    decoder_class->decode_codec_data =
+        gst_vaapi_decoder_h264_decode_codec_data;
 }
 
 static void

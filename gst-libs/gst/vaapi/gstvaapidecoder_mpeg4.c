@@ -41,6 +41,9 @@ G_DEFINE_TYPE(GstVaapiDecoderMpeg4,
               gst_vaapi_decoder_mpeg4,
               GST_VAAPI_TYPE_DECODER)
 
+#define GST_VAAPI_DECODER_MPEG4_CAST(decoder) \
+    ((GstVaapiDecoderMpeg4 *)(decoder))
+
 #define GST_VAAPI_DECODER_MPEG4_GET_PRIVATE(obj)                \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
                                  GST_VAAPI_TYPE_DECODER_MPEG4,  \
@@ -921,14 +924,15 @@ decode_buffer(GstVaapiDecoderMpeg4 *decoder, const guchar *buf, guint buf_size)
 }
 
 static GstVaapiDecoderStatus
-decode_codec_data(GstVaapiDecoderMpeg4 *decoder, GstBuffer *buffer)
+gst_vaapi_decoder_mpeg4_decode_codec_data(GstVaapiDecoder *base_decoder,
+    const guchar *_buf, guint _buf_size)
 {
+    GstVaapiDecoderMpeg4 * const decoder =
+        GST_VAAPI_DECODER_MPEG4_CAST(base_decoder);
     GstVaapiDecoderStatus status;
-    guchar *buf, *_buf;
-    guint pos, buf_size, _buf_size;
+    guchar *buf;
+    guint pos, buf_size;
 
-    _buf      = GST_BUFFER_DATA(buffer);
-    _buf_size = GST_BUFFER_SIZE(buffer);
     // add additional 0x000001b2 to enclose the last header
     buf_size = _buf_size + 4;
     buf = malloc(buf_size);
@@ -965,7 +969,6 @@ ensure_decoder(GstVaapiDecoderMpeg4 *decoder)
 {
     GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
     GstVaapiDecoderStatus status;
-    GstBuffer *codec_data;
 
     g_return_val_if_fail(priv->is_constructed,
                          GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED);
@@ -975,12 +978,10 @@ ensure_decoder(GstVaapiDecoderMpeg4 *decoder)
         if (!priv->is_opened)
             return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC;
 
-        codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
-        if (codec_data) {
-            status = decode_codec_data(decoder, codec_data);
-            if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-                return status;
-        }
+        status = gst_vaapi_decoder_decode_codec_data(
+            GST_VAAPI_DECODER_CAST(decoder));
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            return status;
     }
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -1137,6 +1138,9 @@ gst_vaapi_decoder_mpeg4_class_init(GstVaapiDecoderMpeg4Class *klass)
 
     decoder_class->parse        = gst_vaapi_decoder_mpeg4_parse;
     decoder_class->decode       = gst_vaapi_decoder_mpeg4_decode;
+
+    decoder_class->decode_codec_data =
+        gst_vaapi_decoder_mpeg4_decode_codec_data;
 }
 
 static void

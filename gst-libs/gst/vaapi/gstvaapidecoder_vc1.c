@@ -42,6 +42,9 @@ G_DEFINE_TYPE(GstVaapiDecoderVC1,
               gst_vaapi_decoder_vc1,
               GST_VAAPI_TYPE_DECODER)
 
+#define GST_VAAPI_DECODER_VC1_CAST(decoder) \
+    ((GstVaapiDecoderVC1 *)(decoder))
+
 #define GST_VAAPI_DECODER_VC1_GET_PRIVATE(obj)                  \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
                                  GST_VAAPI_TYPE_DECODER_VC1,    \
@@ -1061,8 +1064,11 @@ decode_buffer(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
 }
 
 static GstVaapiDecoderStatus
-decode_codec_data(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
+gst_vaapi_decoder_vc1_decode_codec_data(GstVaapiDecoder *base_decoder,
+    const guchar *buf, guint buf_size)
 {
+    GstVaapiDecoderVC1 * const decoder =
+        GST_VAAPI_DECODER_VC1_CAST(base_decoder);
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
     GstVaapiDecoderStatus status;
@@ -1070,16 +1076,12 @@ decode_codec_data(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
     GstVC1BDU ebdu;
     GstCaps *caps;
     GstStructure *structure;
-    guchar *buf;
-    guint buf_size, ofs;
+    guint ofs;
     gint width, height;
     guint32 format;
     gint version;
 
-    buf      = GST_BUFFER_DATA(buffer);
-    buf_size = GST_BUFFER_SIZE(buffer);
-    if (!buf || buf_size == 0)
-        return GST_VAAPI_DECODER_STATUS_SUCCESS;
+    priv->has_codec_data = TRUE;
 
     width = GST_VAAPI_DECODER_WIDTH(decoder);
     height = GST_VAAPI_DECODER_HEIGHT(decoder);
@@ -1109,7 +1111,7 @@ decode_codec_data(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
         ebdu.size      = buf_size;
         ebdu.sc_offset = 0;
         ebdu.offset    = 0;
-        ebdu.data      = buf;
+        ebdu.data      = (guint8 *)buf;
         return decode_ebdu(decoder, &ebdu);
     }
 
@@ -1149,7 +1151,6 @@ ensure_decoder(GstVaapiDecoderVC1 *decoder)
 {
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
     GstVaapiDecoderStatus status;
-    GstBuffer *codec_data;
 
     g_return_val_if_fail(priv->is_constructed,
                          GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED);
@@ -1159,13 +1160,10 @@ ensure_decoder(GstVaapiDecoderVC1 *decoder)
         if (!priv->is_opened)
             return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC;
 
-        codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
-        if (codec_data) {
-            status = decode_codec_data(decoder, codec_data);
-            if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-                return status;
-            priv->has_codec_data = TRUE;
-        }
+        status = gst_vaapi_decoder_decode_codec_data(
+            GST_VAAPI_DECODER_CAST(decoder));
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            return status;
     }
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -1355,6 +1353,9 @@ gst_vaapi_decoder_vc1_class_init(GstVaapiDecoderVC1Class *klass)
     decoder_class->start_frame  = gst_vaapi_decoder_vc1_start_frame;
     decoder_class->end_frame    = gst_vaapi_decoder_vc1_end_frame;
     decoder_class->flush        = gst_vaapi_decoder_vc1_flush;
+
+    decoder_class->decode_codec_data =
+        gst_vaapi_decoder_vc1_decode_codec_data;
 }
 
 static void

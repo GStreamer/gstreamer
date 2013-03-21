@@ -222,6 +222,10 @@ G_GNUC_INTERNAL
 GstVaapiDecoderStatus
 gst_vaapi_decoder_check_status(GstVaapiDecoder *decoder);
 
+G_GNUC_INTERNAL
+GstVaapiDecoderStatus
+gst_vaapi_decoder_decode_codec_data(GstVaapiDecoder *decoder);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DECODER_PRIV_H */
