@@ -275,6 +275,8 @@ handle_buffer (GstFluidsynth * fluidsynth, GstBuffer * buffer)
   event = info.data[0];
   channel = event & 0x0f;
 
+  GST_DEBUG_OBJECT (fluidsynth, "event 0x%02x channel %d", event, channel);
+
   switch (event & 0xf0) {
     case 0xf0:
       switch (event) {
