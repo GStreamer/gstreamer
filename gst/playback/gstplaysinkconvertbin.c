@@ -398,7 +398,21 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad, GstCaps * filter)
   if (otherpad) {
     peer = gst_pad_get_peer (otherpad);
     if (peer) {
-      GstCaps *peer_caps = gst_pad_query_caps (peer, filter);
+      GstCaps *peer_caps;
+      GstCaps *downstream_filter = NULL;
+
+      /* Add all the caps that we can convert to to the filter caps,
+       * otherwise downstream might just return EMPTY caps because
+       * it doesn't handle the filter caps but we could still convert
+       * to these caps */
+      if (filter) {
+        downstream_filter = gst_caps_copy (filter);
+        downstream_filter =
+            gst_caps_merge (downstream_filter,
+            gst_caps_ref (self->converter_caps));
+      }
+
+      peer_caps = gst_pad_query_caps (peer, downstream_filter);
       gst_object_unref (peer);
       if (self->converter_caps && is_raw_caps (peer_caps, self->audio)) {
         ret = gst_caps_merge (peer_caps, gst_caps_ref (self->converter_caps));
@@ -414,6 +428,13 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad, GstCaps * filter)
   GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
 
   gst_object_unref (self);
+
+  if (filter) {
+    GstCaps *intersection =
+        gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = intersection;
+  }
 
   GST_DEBUG_OBJECT (pad, "Returning caps %" GST_PTR_FORMAT, ret);
 
