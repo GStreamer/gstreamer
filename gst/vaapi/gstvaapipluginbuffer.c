@@ -23,7 +23,7 @@
 #include <gst/vaapi/gstvaapivideometa.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #if USE_GLX
-# include <gst/vaapi/gstvaapivideoconverter_glx.h>
+# include "gstvaapivideoconverter_glx.h"
 #endif
 #include "gstvaapipluginbuffer.h"
 

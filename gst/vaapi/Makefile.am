@@ -29,7 +29,7 @@ libgstvaapi_LIBS += \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-wayland-$(GST_API_VERSION).la
 endif
 
-libgstvaapi_la_SOURCES =	\
+libgstvaapi_source_c = \
 	gstvaapi.c		\
 	gstvaapidecode.c	\
 	gstvaapidownload.c	\
@@ -41,7 +41,7 @@ libgstvaapi_la_SOURCES =	\
 	gstvaapiuploader.c	\
 	$(NULL)
 
-noinst_HEADERS =		\
+libgstvaapi_source_h = \
 	gstvaapidecode.h	\
 	gstvaapidownload.h	\
 	gstvaapipluginbuffer.h	\
@@ -51,6 +51,14 @@ noinst_HEADERS =		\
 	gstvaapiupload.h	\
 	gstvaapiuploader.h	\
 	$(NULL)
+
+if USE_GLX
+libgstvaapi_source_c		+= gstvaapivideoconverter_glx.c
+libgstvaapi_source_h		+= gstvaapivideoconverter_glx.h
+endif
+
+libgstvaapi_la_SOURCES		= $(libgstvaapi_source_c)
+noinst_HEADERS			= $(libgstvaapi_source_h)
 
 libgstvaapi_la_CFLAGS =	\
 	$(libgstvaapi_CFLAGS)	\

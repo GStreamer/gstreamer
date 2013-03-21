@@ -170,14 +170,12 @@ libgstvaapi_glx_source_c =			\
 	gstvaapiutils.c				\
 	gstvaapiutils_glx.c			\
 	gstvaapiutils_x11.c			\
-	gstvaapivideoconverter_glx.c		\
 	gstvaapiwindow_glx.c			\
 	$(NULL)
 
 libgstvaapi_glx_source_h =			\
 	gstvaapidisplay_glx.h			\
 	gstvaapitexture.h			\
-	gstvaapivideoconverter_glx.h		\
 	gstvaapiwindow_glx.h			\
 	$(NULL)
 
