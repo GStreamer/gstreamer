@@ -1936,23 +1936,12 @@ gst_subtitle_overlay_subtitle_sink_chain (GstPad * pad, GstObject * parent,
 static GstCaps *
 gst_subtitle_overlay_subtitle_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
-  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
   GstCaps *ret;
 
-  g_mutex_lock (&self->factories_lock);
-  if (G_UNLIKELY (!gst_subtitle_overlay_update_factory_list (self)))
-    ret = gst_caps_new_empty ();
-  else if (filter)
-    ret =
-        gst_caps_intersect_full (filter, self->factory_caps,
-        GST_CAPS_INTERSECT_FIRST);
+  if (filter)
+    ret = gst_caps_ref (filter);
   else
-    ret = gst_caps_ref (self->factory_caps);
-  g_mutex_unlock (&self->factories_lock);
-
-  GST_DEBUG_OBJECT (pad, "Returning subtitle caps %" GST_PTR_FORMAT, ret);
-
-  gst_object_unref (self);
+    ret = gst_caps_new_any ();
 
   return ret;
 }
@@ -2189,13 +2178,7 @@ gst_subtitle_overlay_subtitle_sink_query (GstPad * pad, GstObject * parent,
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ACCEPT_CAPS:
     {
-      GstCaps *caps, *othercaps;
-
-      gst_query_parse_accept_caps (query, &caps);
-      othercaps = gst_subtitle_overlay_subtitle_sink_getcaps (pad, NULL);
-      ret = gst_caps_is_subset (caps, othercaps);
-      gst_caps_unref (othercaps);
-      gst_query_set_accept_caps_result (query, ret);
+      gst_query_set_accept_caps_result (query, TRUE);
       ret = TRUE;
       break;
     }
