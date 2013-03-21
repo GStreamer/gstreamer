@@ -21,11 +21,11 @@
 
 #include "gst/vaapi/sysdeps.h"
 #include <gst/vaapi/gstvaapivideometa.h>
-#include <gst/vaapi/gstvaapivideobuffer.h>
 #if USE_GLX
 # include "gstvaapivideoconverter_glx.h"
 #endif
 #include "gstvaapipluginbuffer.h"
+#include "gstvaapivideobuffer.h"
 
 static GFunc
 get_surface_converter(GstVaapiDisplay *display)

@@ -26,7 +26,6 @@
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
-#include <gst/vaapi/gstvaapivideobuffer.h>
 
 G_BEGIN_DECLS
 

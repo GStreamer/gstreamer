@@ -28,7 +28,6 @@
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapiimagepool.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
-#include <gst/vaapi/gstvaapivideobuffer.h>
 
 G_BEGIN_DECLS
 

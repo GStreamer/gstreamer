@@ -1,5 +1,5 @@
 /*
- *  gstvaapivideobuffer.c - Gst VA video buffer
+ *  gstvaapivideobuffer.c - Gstreamer/VA video buffer
  *
  *  Copyright (C) 2010-2011 Splitted-Desktop Systems
  *  Copyright (C) 2011-2013 Intel Corporation
@@ -25,11 +25,60 @@
  * @short_description: VA video buffer for GStreamer
  */
 
-#include "sysdeps.h"
+#include "gst/vaapi/sysdeps.h"
+#include <gst/video/gstsurfacebuffer.h>
 #include "gstvaapivideobuffer.h"
 
-#define DEBUG 1
-#include "gstvaapidebug.h"
+#define GST_VAAPI_TYPE_VIDEO_BUFFER \
+    (gst_vaapi_video_buffer_get_type())
+
+#define GST_VAAPI_VIDEO_BUFFER(obj)             \
+    (G_TYPE_CHECK_INSTANCE_CAST((obj),          \
+        GST_VAAPI_TYPE_VIDEO_BUFFER,            \
+        GstVaapiVideoBuffer))
+
+#define GST_VAAPI_VIDEO_BUFFER_CLASS(klass)     \
+    (G_TYPE_CHECK_CLASS_CAST((klass),           \
+        GST_VAAPI_TYPE_VIDEO_BUFFER,            \
+        GstVaapiVideoBufferClass))
+
+#define GST_VAAPI_IS_VIDEO_BUFFER(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_VIDEO_BUFFER))
+
+#define GST_VAAPI_IS_VIDEO_BUFFER_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_VIDEO_BUFFER))
+
+#define GST_VAAPI_VIDEO_BUFFER_GET_CLASS(obj)   \
+    (G_TYPE_INSTANCE_GET_CLASS((obj),           \
+        GST_VAAPI_TYPE_VIDEO_BUFFER,            \
+        GstVaapiVideoBufferClass))
+
+typedef struct _GstVaapiVideoBufferClass        GstVaapiVideoBufferClass;
+
+/**
+ * GstVaapiVideoBuffer:
+ *
+ * A #GstBuffer holding video objects (#GstVaapiSurface and #GstVaapiImage).
+ */
+struct _GstVaapiVideoBuffer {
+    /*< private >*/
+    GstSurfaceBuffer parent_instance;
+
+    GstVaapiVideoMeta *meta;
+};
+
+/**
+ * GstVaapiVideoBufferClass:
+ *
+ * A #GstBuffer holding video objects
+ */
+struct _GstVaapiVideoBufferClass {
+    /*< private >*/
+    GstSurfaceBufferClass parent_class;
+};
+
+GType
+gst_vaapi_video_buffer_get_type(void) G_GNUC_CONST;
 
 G_DEFINE_TYPE(GstVaapiVideoBuffer,
               gst_vaapi_video_buffer,
@@ -65,14 +114,6 @@ gst_vaapi_video_buffer_init(GstVaapiVideoBuffer *buffer)
 {
 }
 
-/**
- * gst_vaapi_video_buffer_new:
- * @meta: a #GstVaapiVideoMeta
- *
- * Creates a #GstBuffer that holds video @meta information.
- *
- * Return value: the newly allocated #GstBuffer, or %NULL or error
- */
 GstBuffer *
 gst_vaapi_video_buffer_new(GstVaapiVideoMeta *meta)
 {
@@ -88,15 +129,6 @@ gst_vaapi_video_buffer_new(GstVaapiVideoMeta *meta)
     return buffer;
 }
 
-/**
- * gst_vaapi_video_buffer_get_meta:
- * @buffer: a #GstVaapiVideoBuffer
- *
- * Returns the #GstVaapiVideoMeta associated to this @buffer.
- *
- * Return value: the #GstVaapiVideoMeta bound to the @buffer, or %NULL
- *   if none was found
- */
 GstVaapiVideoMeta *
 gst_vaapi_video_buffer_get_meta(GstVaapiVideoBuffer *buffer)
 {

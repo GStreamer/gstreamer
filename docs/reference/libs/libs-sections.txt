@@ -172,23 +172,6 @@ GST_VAAPI_IMAGE_POOL_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>gstvaapivideobuffer</FILE>
-<TITLE>GstVaapiVideoBuffer</TITLE>
-GstVaapiVideoBuffer
-GstVaapiVideoBufferClass
-gst_vaapi_video_buffer_new
-gst_vaapi_video_buffer_get_meta
-<SUBSECTION Standard>
-GST_VAAPI_VIDEO_BUFFER
-GST_VAAPI_IS_VIDEO_BUFFER
-GST_VAAPI_TYPE_VIDEO_BUFFER
-gst_vaapi_video_buffer_get_type
-GST_VAAPI_VIDEO_BUFFER_CLASS
-GST_VAAPI_IS_VIDEO_BUFFER_CLASS
-GST_VAAPI_VIDEO_BUFFER_GET_CLASS
-</SECTION>
-
-<SECTION>
 <FILE>gstvaapivideometa</FILE>
 <TITLE>GstVaapiVideoMeta</TITLE>
 gst_vaapi_video_meta_new

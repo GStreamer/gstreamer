@@ -25,6 +25,7 @@
 #define GST_VAAPI_VIDEO_CONVERTER_GLX_H
 
 #include <gst/video/gstsurfaceconverter.h>
+#include "gstvaapivideobuffer.h"
 
 G_BEGIN_DECLS
 
