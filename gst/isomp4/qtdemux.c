@@ -3134,6 +3134,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   stream->segment.start = start;
   stream->segment.stop = stop;
   stream->segment.time = time;
+  stream->segment.position = start;
 
   /* now prepare and send the segment */
   if (stream->pad) {
@@ -3751,6 +3752,11 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
 
   ret = gst_pad_push (stream->pad, buf);
 
+  if (GST_CLOCK_TIME_IS_VALID (pts) && GST_CLOCK_TIME_IS_VALID (duration)) {
+    /* mark position in stream, we'll need this to know when to send GAP event */
+    stream->segment.position = pts + duration;
+  }
+
 exit:
   return ret;
 }
@@ -3800,6 +3806,24 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
           && qtdemux->segment.stop < min_time)) {
     GST_DEBUG_OBJECT (qtdemux, "we reached the end of our segment.");
     goto eos;
+  }
+
+  /* gap events for subtitle streams */
+  for (i = 0; i < qtdemux->n_streams; i++) {
+    stream = qtdemux->streams[i];
+    if (stream->subtype == FOURCC_subp || stream->subtype == FOURCC_text
+        || stream->subtype == FOURCC_sbtl) {
+      /* send one second gap events until the stream catches up */
+      /* gaps can only be sent after segment is activated (segment.stop is no longer -1) */
+      while (GST_CLOCK_TIME_IS_VALID (stream->segment.stop) &&
+          GST_CLOCK_TIME_IS_VALID (stream->segment.position) &&
+          stream->segment.position + GST_SECOND < min_time) {
+        GstEvent *gap =
+            gst_event_new_gap (stream->segment.position, GST_SECOND);
+        gst_pad_push_event (stream->pad, gap);
+        stream->segment.position += GST_SECOND;
+      }
+    }
   }
 
   stream = qtdemux->streams[index];
