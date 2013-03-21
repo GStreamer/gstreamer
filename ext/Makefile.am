@@ -270,6 +270,10 @@ TIMIDITY_DIR=
 endif
 endif
 
+if USE_FLUIDSYNTH
+FLUIDSYNTH_DIR=fluidsynth
+endif
+
 if USE_SCHRO
 SCHRO_DIR=schroedinger
 else
@@ -388,6 +392,7 @@ SUBDIRS=\
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
 	$(FLITE_DIR) \
+	$(FLUIDSYNTH_DIR) \
 	$(GSETTINGS_DIR) \
 	$(GSM_DIR) \
 	$(G729_DIR) \
@@ -444,6 +449,7 @@ DIST_SUBDIRS = \
 	faac \
 	faad \
 	flite \
+	fluidsynth \
 	gsettings \
 	gsm \
 	hls \
