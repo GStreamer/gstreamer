@@ -21,6 +21,8 @@
 #  include <config.h>
 #endif
 
+#include <string.h>
+
 #include "opensles.h"
 #include "openslesringbuffer.h"
 
