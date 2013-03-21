@@ -3597,6 +3597,13 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
+  /* empty buffer can be send to terminate previous entry */
+  if (map.size == 2 && map.data[0] == 0 && map.data[1] == 0) {
+    gst_buffer_unmap (buf, &map);
+    gst_buffer_unref (buf);
+    return NULL;
+  }
+
   if (G_LIKELY (map.size >= 2)) {
     nsize = GST_READ_UINT16_BE (map.data);
     nsize = MIN (nsize, map.size - 2);
@@ -3626,7 +3633,7 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
  * Also checks for additional actions and custom processing that may
  * need to be done first.
  */
-static gboolean
+static GstFlowReturn
 gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GstBuffer * buf,
     guint64 dts, guint64 pts, guint64 duration, gboolean keyframe,
@@ -3687,6 +3694,10 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
 
   if (G_UNLIKELY (stream->need_process))
     buf = gst_qtdemux_process_buffer (qtdemux, stream, buf);
+
+  if (!buf) {
+    goto exit;
+  }
 
   GST_BUFFER_DTS (buf) = dts;
   GST_BUFFER_PTS (buf) = pts;
