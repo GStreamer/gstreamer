@@ -1253,6 +1253,14 @@ AG_GST_CHECK_FEATURE(FLITE, [Flite plugin], flite, [
   AC_SUBST(FLITE_LIBS)
 ])
 
+dnl *** fluidSynth ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_FLUIDSYNTH, true)
+AG_GST_CHECK_FEATURE(FLUIDSYNTH, [fluidsynth], fluidsynth, [
+  PKG_CHECK_MODULES(FLUIDSYNTH, fluidsynth >= 1.0, HAVE_FLUIDSYNTH="yes", [
+    HAVE_FLUIDSYNTH="no"
+  ])
+])
+
 dnl *** gsm ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GSM, true)
 AG_GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
@@ -2074,6 +2082,7 @@ AM_CONDITIONAL(USE_FAAC, false)
 AM_CONDITIONAL(USE_FAAD, false)
 AM_CONDITIONAL(USE_FBDEV, false)
 AM_CONDITIONAL(USE_FLITE, false)
+AM_CONDITIONAL(USE_FLUIDSYNTH, false)
 AM_CONDITIONAL(USE_GSM, false)
 AM_CONDITIONAL(USE_JASPER, false)
 AM_CONDITIONAL(USE_KATE, false)
@@ -2336,6 +2345,7 @@ ext/eglgles/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
 ext/flite/Makefile
+ext/fluidsynth/Makefile
 ext/gsm/Makefile
 ext/jasper/Makefile
 ext/kate/Makefile
