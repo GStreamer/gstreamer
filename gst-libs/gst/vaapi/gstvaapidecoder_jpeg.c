@@ -314,7 +314,7 @@ static GstVaapiDecoderStatus
 decode_picture(
     GstVaapiDecoderJpeg *decoder, 
     guint8               profile,
-    guchar              *buf,
+    const guchar        *buf,
     guint                buf_size
 )
 {
@@ -368,7 +368,7 @@ decode_picture(
 static GstVaapiDecoderStatus
 decode_huffman_table(
     GstVaapiDecoderJpeg *decoder,
-    guchar              *buf,
+    const guchar        *buf,
     guint                buf_size
 )
 {
@@ -385,7 +385,7 @@ decode_huffman_table(
 static GstVaapiDecoderStatus
 decode_quant_table(
     GstVaapiDecoderJpeg *decoder,
-    guchar              *buf,
+    const guchar        *buf,
     guint                buf_size
 )
 {
@@ -402,7 +402,7 @@ decode_quant_table(
 static GstVaapiDecoderStatus
 decode_restart_interval(
     GstVaapiDecoderJpeg *decoder,
-    guchar              *buf,
+    const guchar        *buf,
     guint                buf_size
 )
 {
@@ -418,10 +418,11 @@ decode_restart_interval(
 static GstVaapiDecoderStatus
 decode_scan(
     GstVaapiDecoderJpeg *decoder,
-    guchar              *scan_header,
+    const guchar        *scan_header,
     guint                scan_header_size,
-    guchar              *scan_data,
-    guint                scan_data_size)
+    const guchar        *scan_data,
+    guint                scan_data_size
+)
 {
     GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
     GstVaapiPicture *picture = priv->current_picture;
@@ -490,7 +491,7 @@ decode_scan(
 }
 
 static GstVaapiDecoderStatus
-decode_buffer(GstVaapiDecoderJpeg *decoder, guchar *buf, guint buf_size)
+decode_buffer(GstVaapiDecoderJpeg *decoder, const guchar *buf, guint buf_size)
 {
     GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
     GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
@@ -679,7 +680,7 @@ gst_vaapi_decoder_jpeg_decode(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderStatus status;
     GstBuffer * const buffer =
         GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
-    guchar *buf;
+    const guchar *buf;
     guint buf_size;
 
     status = ensure_decoder(decoder);
