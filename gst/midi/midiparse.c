@@ -412,6 +412,85 @@ parse_MTrk (GstMidiParse * midiparse, guint8 * data, guint size)
   return TRUE;
 }
 
+static gboolean
+find_midi_chunk (GstMidiParse * midiparse, guint8 * data, guint size,
+    guint * offset, guint * length)
+{
+  guint32 type;
+
+  if (size < 8)
+    goto short_chunk;
+
+  type = GST_STR_FOURCC (data);
+
+  if (type == GST_MAKE_FOURCC ('R', 'I', 'F', 'F')) {
+    guint32 riff_len;
+
+    GST_DEBUG_OBJECT (midiparse, "found RIFF");
+
+    if (size < 12)
+      goto short_chunk;
+
+    if (GST_STR_FOURCC (data + 8) != GST_MAKE_FOURCC ('R', 'M', 'I', 'D'))
+      goto invalid_format;
+
+    riff_len = GST_READ_UINT32_LE (data + 4);
+
+    if (size < riff_len)
+      goto short_chunk;
+
+    data += 12;
+    size -= 12;
+    *offset = 12;
+
+    GST_DEBUG_OBJECT (midiparse, "found RIFF RMID of size %u", riff_len);
+
+    while (TRUE) {
+      guint32 chunk_type;
+      guint32 chunk_len;
+
+      if (riff_len < 8)
+        goto short_chunk;
+
+      chunk_type = GST_STR_FOURCC (data);
+      chunk_len = GST_READ_UINT32_LE (data + 4);
+
+      riff_len -= 8;
+      if (riff_len < chunk_len)
+        goto short_chunk;
+
+      data += 8;
+      size -= 8;
+      *offset += 8;
+      riff_len -= chunk_len;
+
+      if (chunk_type == GST_MAKE_FOURCC ('d', 'a', 't', 'a')) {
+        *length = chunk_len;
+        break;
+      }
+
+      data += chunk_len;
+      size -= chunk_len;
+    }
+  } else {
+    *offset = 0;
+    *length = size;
+  }
+  return TRUE;
+
+  /* ERRORS */
+short_chunk:
+  {
+    GST_LOG_OBJECT (midiparse, "not enough data %u < %u", length + 8, size);
+    return FALSE;
+  }
+invalid_format:
+  {
+    GST_ERROR_OBJECT (midiparse, "invalid format");
+    return FALSE;
+  }
+}
+
 static guint
 gst_midi_parse_chunk (GstMidiParse * midiparse, guint8 * data, guint size)
 {
@@ -443,12 +522,13 @@ gst_midi_parse_chunk (GstMidiParse * midiparse, guint8 * data, guint size)
       GST_LOG_OBJECT (midiparse, "ignore chunk");
       break;
   }
+
   return length + 8;
 
   /* ERRORS */
 short_chunk:
   {
-    GST_LOG_OBJECT (midiparse, "not enough data %u < %u", length + 8, size);
+    GST_LOG_OBJECT (midiparse, "not enough data %u < %u", size, length + 8);
     return 0;
   }
 invalid_format:
@@ -463,7 +543,7 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
 {
   GstCaps *outcaps;
   guint8 *data;
-  guint size;
+  guint size, offset, length;
 
   GST_DEBUG_OBJECT (midiparse, "Parsing song");
 
@@ -472,15 +552,18 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
 
   midiparse->tempo = 60;
 
-  while (size) {
+  if (!find_midi_chunk (midiparse, data, size, &offset, &length))
+    goto invalid_format;
+
+  while (length) {
     guint consumed;
 
-    consumed = gst_midi_parse_chunk (midiparse, data, size);
+    consumed = gst_midi_parse_chunk (midiparse, &data[offset], length);
     if (consumed == 0)
       goto short_file;
 
-    data += consumed;
-    size -= consumed;
+    offset += consumed;
+    length -= consumed;
   }
 
   outcaps = gst_pad_get_pad_template_caps (midiparse->srcpad);
@@ -500,6 +583,12 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
 short_file:
   {
     GST_ERROR_OBJECT (midiparse, "not enough data");
+    g_free (data);
+    return GST_FLOW_ERROR;
+  }
+invalid_format:
+  {
+    GST_ERROR_OBJECT (midiparse, "invalid format");
     g_free (data);
     return GST_FLOW_ERROR;
   }
