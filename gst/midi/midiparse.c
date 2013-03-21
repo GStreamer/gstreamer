@@ -880,7 +880,7 @@ handle_play_midi (GstMidiParse * midiparse,
 static GstFlowReturn
 gst_midi_parse_do_play (GstMidiParse * midiparse)
 {
-  GstFlowReturn res = GST_FLOW_OK;
+  GstFlowReturn res;
   GList *walk;
   guint64 pulse, next_pulse = G_MAXUINT64;
   GstClockTime position, next_position;
@@ -899,7 +899,7 @@ gst_midi_parse_do_play (GstMidiParse * midiparse)
     while (!track->eot && track->pulse == pulse) {
       res = handle_next_event (midiparse, track, &cb, NULL);
       if (res != GST_FLOW_OK)
-        goto done;
+        goto error;
     }
 
     if (!track->eot && track->pulse < next_pulse)
@@ -919,8 +919,6 @@ gst_midi_parse_do_play (GstMidiParse * midiparse)
 
   /* send 10ms ticks to advance the downstream element */
   while (TRUE) {
-    guint8 midi_tick = 0xf9;
-
     /* get position of next tick */
     position = ++tick * (10 * GST_MSECOND);
     GST_DEBUG_OBJECT (midiparse, "tick %" G_GUINT64_FORMAT
@@ -930,19 +928,27 @@ gst_midi_parse_do_play (GstMidiParse * midiparse)
       break;
 
     midiparse->segment.position = position;
-    handle_play_midi (midiparse, midi_tick, NULL, 0, NULL);
+    res = handle_play_midi (midiparse, 0xf9, NULL, 0, NULL);
+    if (res != GST_FLOW_OK)
+      goto error;
   }
 
   midiparse->pulse = next_pulse;
   midiparse->segment.position = next_position;
 
-done:
-  return res;
+  return GST_FLOW_OK;
 
+  /* ERRORS */
 eos:
   {
     GST_DEBUG_OBJECT (midiparse, "we are EOS");
     return GST_FLOW_EOS;
+  }
+error:
+  {
+    GST_DEBUG_OBJECT (midiparse, "have flow result %s",
+        gst_flow_get_name (res));
+    return res;
   }
 }
 
