@@ -60,6 +60,8 @@ enum
   /* FILL ME */
 };
 
+#define DEFAULT_TEMPO   500000  /* 120 BPM is the default */
+
 typedef struct
 {
   guint8 *data;
@@ -67,9 +69,21 @@ typedef struct
   guint offset;
 
   guint8 running_status;
-  GstClockTime position;
+  guint64 pulse;
+  gboolean eot;
 
 } GstMidiTrack;
+
+typedef struct
+{
+  GstFlowReturn (*handle_sysex) (GstMidiParse * parse, GstMidiTrack * track,
+      guint8 event, guint8 * data, guint length, gpointer user_data);
+  GstFlowReturn (*handle_meta) (GstMidiParse * parse, GstMidiTrack * track,
+      guint8 event, guint8 type, guint8 * data,
+      guint length, gpointer user_data);
+  GstFlowReturn (*handle_midi) (GstMidiParse * parse,
+      guint8 event, guint8 * data, guint length, gpointer user_data);
+} GstMidiCallbacks;
 
 static void gst_midi_parse_finalize (GObject * object);
 
@@ -360,6 +374,129 @@ parse_varlen (GstMidiParse * midiparse, guint8 * data, guint size,
   return 0;
 }
 
+static GstFlowReturn
+handle_meta_event (GstMidiParse * midiparse, GstMidiTrack * track,
+    guint8 event, GstMidiCallbacks * callback, gpointer user_data)
+{
+  GstFlowReturn ret;
+  guint8 type;
+  guint8 *data;
+  guint size, consumed;
+  gint32 length;
+
+  track->offset += 1;
+
+  data = track->data + track->offset;
+  size = track->size - track->offset;
+
+  if (size < 1)
+    goto short_file;
+
+  type = data[0];
+
+  consumed = parse_varlen (midiparse, data + 1, size - 1, &length);
+  if (consumed == 0)
+    goto short_file;
+
+  data += consumed + 1;
+  size -= consumed + 1;
+
+  if (size < length)
+    goto short_file;
+
+  GST_DEBUG_OBJECT (midiparse, "handle meta event type 0x%02x, length %u",
+      type, length);
+
+  if (callback->handle_meta)
+    ret = callback->handle_meta (midiparse, track, event, type,
+        data, length, user_data);
+  else
+    ret = GST_FLOW_OK;
+
+  switch (type) {
+    case 0x51:
+    {
+      guint32 uspqn = (data[0] << 16) | (data[1] << 8) | data[2];
+      midiparse->tempo = (uspqn ? uspqn : DEFAULT_TEMPO);
+      GST_DEBUG_OBJECT (midiparse, "tempo %u", midiparse->tempo);
+      break;
+    }
+    default:
+      break;
+  }
+
+  track->offset += consumed + length + 1;
+
+  return ret;
+
+  /* ERRORS */
+short_file:
+  {
+    GST_DEBUG_OBJECT (midiparse, "not enough data");
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+handle_sysex_event (GstMidiParse * midiparse, GstMidiTrack * track,
+    guint8 event, GstMidiCallbacks * callback, gpointer user_data)
+{
+  GstFlowReturn ret;
+  guint8 *data;
+  guint size, consumed;
+  gint32 length;
+
+  track->offset += 1;
+
+  data = track->data + track->offset;
+  size = track->size - track->offset;
+
+  consumed = parse_varlen (midiparse, data, size, &length);
+  if (consumed == 0)
+    goto short_file;
+
+  data += consumed;
+  size -= consumed;
+
+  if (size < length)
+    goto short_file;
+
+  GST_DEBUG_OBJECT (midiparse, "handle sysex event 0x%02x, length %u",
+      event, length);
+
+  if (callback->handle_sysex)
+    ret = callback->handle_sysex (midiparse, track, event,
+        data, length, user_data);
+  else
+    ret = GST_FLOW_OK;
+
+  track->offset += consumed + length;
+
+  return ret;
+
+  /* ERRORS */
+short_file:
+  {
+    GST_DEBUG_OBJECT (midiparse, "not enough data");
+    return GST_FLOW_ERROR;
+  }
+}
+
+
+static guint8
+event_from_status (GstMidiParse * midiparse, GstMidiTrack * track,
+    guint8 status)
+{
+  if ((status & 0x80) == 0) {
+    if ((track->running_status & 0x80) == 0)
+      return 0;
+
+    return track->running_status;
+  } else {
+    return status;
+  }
+}
+
 static gboolean
 update_track_position (GstMidiParse * midiparse, GstMidiTrack * track)
 {
@@ -377,11 +514,11 @@ update_track_position (GstMidiParse * midiparse, GstMidiTrack * track)
   if (consumed == 0)
     goto eot;
 
-  track->position += delta_time;
+  track->pulse += delta_time;
   track->offset += consumed;
 
-  GST_LOG_OBJECT (midiparse, "updated track to %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (track->position));
+  GST_LOG_OBJECT (midiparse, "updated track to pulse %" G_GUINT64_FORMAT,
+      track->pulse);
 
   return TRUE;
 
@@ -389,25 +526,136 @@ update_track_position (GstMidiParse * midiparse, GstMidiTrack * track)
 eot:
   {
     GST_DEBUG_OBJECT (midiparse, "track ended");
-    track->position = GST_CLOCK_TIME_NONE;
+    track->eot = TRUE;
     return FALSE;
   }
+}
+
+static GstFlowReturn
+handle_next_event (GstMidiParse * midiparse, GstMidiTrack * track,
+    GstMidiCallbacks * callback, gpointer user_data)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  guint8 status, event;
+  guint length;
+  guint8 *data;
+
+  data = &track->data[track->offset];
+
+  status = data[0];
+  event = event_from_status (midiparse, track, status);
+
+  GST_LOG_OBJECT (midiparse, "track %p, status 0x%02x, event 0x%02x", track,
+      status, event);
+
+  switch (event & 0xf0) {
+    case 0xf0:
+      switch (event) {
+        case 0xff:
+          ret =
+              handle_meta_event (midiparse, track, event, callback, user_data);
+          break;
+        case 0xf0:
+        case 0xf7:
+          ret =
+              handle_sysex_event (midiparse, track, event, callback, user_data);
+          break;
+        default:
+          goto unhandled_event;
+      }
+      length = 0;
+      break;
+    case 0xc0:
+    case 0xd0:
+      length = 1;
+      break;
+    case 0x80:
+    case 0x90:
+    case 0xa0:
+    case 0xb0:
+    case 0xe0:
+      length = 2;
+      break;
+    default:
+      goto undefined_status;
+  }
+  if (length > 0) {
+    if (status & 0x80) {
+      if (callback->handle_midi)
+        ret = callback->handle_midi (midiparse, event,
+            data + 1, length, user_data);
+      track->offset += length + 1;
+    } else {
+      if (callback->handle_midi)
+        ret = callback->handle_midi (midiparse, event,
+            data, length + 1, user_data);
+      track->offset += length;
+    }
+  }
+
+  if (ret == GST_FLOW_OK) {
+    if (event < 0xF8)
+      track->running_status = event;
+
+    update_track_position (midiparse, track);
+  }
+  return ret;
+
+  /* ERRORS */
+undefined_status:
+  {
+    GST_ERROR_OBJECT (midiparse, "Undefined status and invalid running status");
+    return GST_FLOW_ERROR;
+  }
+unhandled_event:
+  {
+    /* we don't know the size so we can't continue parsing */
+    GST_ERROR_OBJECT (midiparse, "unhandled event 0x%08x", event);
+    return GST_FLOW_ERROR;
+  }
+}
+
+static void
+reset_track (GstMidiParse * midiparse, GstMidiTrack * track)
+{
+  GST_DEBUG_OBJECT (midiparse, "reset track");
+  track->offset = 0;
+  track->pulse = 0;
+  track->eot = FALSE;
+  track->running_status = 0xff;
+  update_track_position (midiparse, track);
 }
 
 static gboolean
 parse_MTrk (GstMidiParse * midiparse, guint8 * data, guint size)
 {
   GstMidiTrack *track;
+  GstMidiCallbacks cb = { NULL, NULL, NULL };
+
+  /* ignore excess tracks */
+  if (midiparse->track_count >= midiparse->ntracks)
+    return TRUE;
 
   track = g_slice_new (GstMidiTrack);
   track->data = data;
   track->size = size;
-  track->offset = 0;
-  track->position = 0;
-  track->running_status = 0xff;
-  update_track_position (midiparse, track);
+  reset_track (midiparse, track);
 
   midiparse->tracks = g_list_append (midiparse->tracks, track);
+  midiparse->track_count++;
+
+  /* now loop over all events and calculate the duration */
+  while (!track->eot) {
+    handle_next_event (midiparse, track, &cb, NULL);
+  }
+
+  midiparse->segment.duration = gst_util_uint64_scale (track->pulse,
+      1000 * midiparse->tempo, midiparse->division);
+
+  GST_DEBUG_OBJECT (midiparse, "duration %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (midiparse->segment.duration));
+
+  reset_track (midiparse, track);
 
   return TRUE;
 }
@@ -547,10 +795,13 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
 
   GST_DEBUG_OBJECT (midiparse, "Parsing song");
 
+  gst_segment_init (&midiparse->segment, GST_FORMAT_TIME);
+  midiparse->pulse = 0;
+
   size = gst_adapter_available (midiparse->adapter);
   data = gst_adapter_take (midiparse->adapter, size);
 
-  midiparse->tempo = 60;
+  midiparse->tempo = DEFAULT_TEMPO;
 
   if (!find_midi_chunk (midiparse, data, size, &offset, &length))
     goto invalid_format;
@@ -569,8 +820,6 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
   outcaps = gst_pad_get_pad_template_caps (midiparse->srcpad);
   gst_pad_set_caps (midiparse->srcpad, outcaps);
   gst_caps_unref (outcaps);
-
-  gst_segment_init (&midiparse->segment, GST_FORMAT_TIME);
 
   gst_pad_push_event (midiparse->srcpad,
       gst_event_new_segment (&midiparse->segment));
@@ -595,181 +844,29 @@ invalid_format:
 }
 
 static GstFlowReturn
-handle_meta_event (GstMidiParse * midiparse, GstMidiTrack * track)
+handle_play_midi (GstMidiParse * midiparse,
+    guint8 event, guint8 * data, guint length, gpointer user_data)
 {
-  guint8 type;
-  guint8 *data;
-  guint size, consumed;
-  gint32 length;
+  GstBuffer *outbuf;
+  GstMapInfo info;
+  GstClockTime position;
 
-  track->offset += 1;
+  outbuf = gst_buffer_new_allocate (NULL, length + 1, NULL);
 
-  data = track->data + track->offset;
-  size = track->size - track->offset;
+  gst_buffer_map (outbuf, &info, GST_MAP_WRITE);
+  info.data[0] = event;
+  if (length)
+    memcpy (&info.data[1], data, length);
+  gst_buffer_unmap (outbuf, &info);
 
-  if (size < 1)
-    goto short_file;
+  position = midiparse->segment.position;
+  GST_BUFFER_PTS (outbuf) = position;
+  GST_BUFFER_DTS (outbuf) = position;
 
-  type = data[0];
+  GST_DEBUG_OBJECT (midiparse, "pushing %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (position));
 
-  consumed = parse_varlen (midiparse, data + 1, size - 1, &length);
-  if (consumed == 0)
-    goto short_file;
-
-  data += consumed + 1;
-  size -= consumed + 1;
-
-  GST_DEBUG_OBJECT (midiparse, "handle meta event type 0x%02x, length %u",
-      type, length);
-
-  switch (type) {
-    case 0x51:
-    {
-      guint32 uspqn = (data[0] << 16) | (data[1] << 8) | data[2];
-      midiparse->tempo = (uspqn ? uspqn : 1);
-      GST_DEBUG_OBJECT (midiparse, "tempo %u", midiparse->tempo);
-      break;
-    }
-    default:
-      break;
-  }
-
-  track->offset += consumed + length + 1;
-
-  return GST_FLOW_OK;
-
-  /* ERRORS */
-short_file:
-  {
-    GST_DEBUG_OBJECT (midiparse, "not enough data");
-    return GST_FLOW_ERROR;
-  }
-}
-
-static GstFlowReturn
-handle_sysex_event (GstMidiParse * midiparse, guint8 event,
-    GstMidiTrack * track)
-{
-  guint8 *data;
-  guint size, consumed;
-  gint32 length;
-
-  track->offset += 1;
-
-  data = track->data + track->offset;
-  size = track->size - track->offset;
-
-  consumed = parse_varlen (midiparse, data, size, &length);
-  if (consumed == 0)
-    goto short_file;
-
-  data += consumed;
-  size -= consumed;
-
-  GST_DEBUG_OBJECT (midiparse, "handle sysex event 0x%02x, length %u",
-      event, length);
-
-  track->offset += consumed + length;
-
-  return GST_FLOW_OK;
-
-  /* ERRORS */
-short_file:
-  {
-    GST_DEBUG_OBJECT (midiparse, "not enough data");
-    return GST_FLOW_ERROR;
-  }
-}
-
-static GstFlowReturn
-handle_next_event (GstMidiParse * midiparse, GstMidiTrack * track)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-  guint8 status, event;
-  guint length;
-  guint8 *data;
-
-  data = &track->data[track->offset];
-
-  status = data[0];
-
-  GST_LOG_OBJECT (midiparse, "track %p, status 0x%02x", track, status);
-
-  if ((status & 0x80) == 0) {
-    if ((track->running_status & 0x80) == 0)
-      goto undefined_status;
-
-    event = track->running_status;
-  } else {
-    event = status;
-  }
-
-  switch (event & 0xf0) {
-    case 0xf0:
-      switch (event) {
-        case 0xff:
-          ret = handle_meta_event (midiparse, track);
-          break;
-        case 0xf0:
-        case 0xf7:
-          ret = handle_sysex_event (midiparse, event, track);
-          break;
-        default:
-          GST_ERROR_OBJECT (midiparse, "unhandled event 0x%08x", event);
-          return GST_FLOW_ERROR;
-      }
-      length = 0;
-      break;
-    case 0xc0:
-    case 0xd0:
-      length = 1;
-      break;
-    default:
-      length = 2;
-      break;
-  }
-
-  if (length > 0) {
-    GstBuffer *outbuf;
-    GstMapInfo info;
-
-    outbuf = gst_buffer_new_allocate (NULL, length + 1, NULL);
-
-    gst_buffer_map (outbuf, &info, GST_MAP_WRITE);
-
-    info.data[0] = event;
-
-    if (status & 0x80) {
-      memcpy (&info.data[1], &data[1], length);
-      track->offset += length + 1;
-    } else {
-      info.data[1] = status;
-      memcpy (&info.data[2], &data[1], length - 1);
-      track->offset += length;
-    }
-    gst_buffer_unmap (outbuf, &info);
-
-    GST_BUFFER_PTS (outbuf) = gst_util_uint64_scale (track->position,
-        1000 * midiparse->tempo, midiparse->division);
-    GST_BUFFER_DTS (outbuf) = GST_BUFFER_PTS (outbuf);
-
-    GST_DEBUG_OBJECT (midiparse, "pushing %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)));
-
-    ret = gst_pad_push (midiparse->srcpad, outbuf);
-  }
-
-  if (event < 0xF8)
-    track->running_status = event;
-
-  return ret;
-
-  /* ERRORS */
-undefined_status:
-  {
-    GST_ERROR_OBJECT (midiparse, "Undefined status and invalid running status");
-    return GST_FLOW_ERROR;
-  }
+  return gst_pad_push (midiparse->srcpad, outbuf);
 }
 
 static GstFlowReturn
@@ -777,28 +874,58 @@ gst_midi_parse_do_play (GstMidiParse * midiparse)
 {
   GstFlowReturn res = GST_FLOW_OK;
   GList *walk;
-  guint64 position, next_position = GST_CLOCK_TIME_NONE;
+  guint64 pulse, next_pulse = G_MAXUINT64;
+  GstClockTime position, next_position;
+  GstMidiCallbacks cb = { NULL, NULL, handle_play_midi };
+  guint64 tick;
 
+  pulse = midiparse->pulse;
   position = midiparse->segment.position;
+
+  GST_DEBUG_OBJECT (midiparse, "pulse %" G_GUINT64_FORMAT ", position %"
+      GST_TIME_FORMAT, pulse, GST_TIME_ARGS (position));
 
   for (walk = midiparse->tracks; walk; walk = g_list_next (walk)) {
     GstMidiTrack *track = walk->data;
 
-    while (track->position == position) {
-      res = handle_next_event (midiparse, track);
+    while (!track->eot && track->pulse == pulse) {
+      res = handle_next_event (midiparse, track, &cb, NULL);
       if (res != GST_FLOW_OK)
         goto done;
-
-      update_track_position (midiparse, track);
     }
 
-    if (track->position < next_position)
-      next_position = track->position;
+    if (!track->eot && track->pulse < next_pulse)
+      next_pulse = track->pulse;
   }
 
-  if (next_position == GST_CLOCK_TIME_NONE)
+  if (next_pulse == G_MAXUINT64)
     goto eos;
 
+  tick = position / (10 * GST_MSECOND);
+  GST_DEBUG_OBJECT (midiparse, "current tick %" G_GUINT64_FORMAT, tick);
+
+  next_position = gst_util_uint64_scale (next_pulse,
+      1000 * midiparse->tempo, midiparse->division);
+  GST_DEBUG_OBJECT (midiparse, "next position %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (next_position));
+
+  /* send 10ms ticks to advance the downstream element */
+  while (TRUE) {
+    guint8 midi_tick = 0xf9;
+
+    /* get position of next tick */
+    position = ++tick * (10 * GST_MSECOND);
+    GST_DEBUG_OBJECT (midiparse, "tick %" G_GUINT64_FORMAT
+        ", position %" GST_TIME_FORMAT, tick, GST_TIME_ARGS (position));
+
+    if (position >= next_position)
+      break;
+
+    midiparse->segment.position = position;
+    handle_play_midi (midiparse, midi_tick, NULL, 0, NULL);
+  }
+
+  midiparse->pulse = next_pulse;
   midiparse->segment.position = next_position;
 
 done:

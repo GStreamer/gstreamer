@@ -63,6 +63,7 @@ struct _GstMidiParse
   guint16 division;
 
   GList *tracks;
+  guint  track_count;
 
   guint64 offset;
   GstAdapter *adapter;
@@ -70,6 +71,7 @@ struct _GstMidiParse
   /* output data */
   gboolean discont;
   GstSegment segment;
+  guint64 pulse;
 };
 
 struct _GstMidiParseClass
