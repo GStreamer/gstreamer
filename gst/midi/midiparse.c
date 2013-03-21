@@ -631,6 +631,7 @@ parse_MTrk (GstMidiParse * midiparse, guint8 * data, guint size)
 {
   GstMidiTrack *track;
   GstMidiCallbacks cb = { NULL, NULL, NULL };
+  GstClockTime duration;
 
   /* ignore excess tracks */
   if (midiparse->track_count >= midiparse->ntracks)
@@ -649,11 +650,14 @@ parse_MTrk (GstMidiParse * midiparse, guint8 * data, guint size)
     handle_next_event (midiparse, track, &cb, NULL);
   }
 
-  midiparse->segment.duration = gst_util_uint64_scale (track->pulse,
+  duration = gst_util_uint64_scale (track->pulse,
       1000 * midiparse->tempo, midiparse->division);
 
   GST_DEBUG_OBJECT (midiparse, "duration %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (midiparse->segment.duration));
+      GST_TIME_ARGS (duration));
+
+  if (duration > midiparse->segment.duration)
+    midiparse->segment.duration = duration;
 
   reset_track (midiparse, track);
 
@@ -796,6 +800,7 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
   GST_DEBUG_OBJECT (midiparse, "Parsing song");
 
   gst_segment_init (&midiparse->segment, GST_FORMAT_TIME);
+  midiparse->segment.duration = 0;
   midiparse->pulse = 0;
 
   size = gst_adapter_available (midiparse->adapter);
@@ -816,6 +821,9 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
     offset += consumed;
     length -= consumed;
   }
+
+  GST_DEBUG_OBJECT (midiparse, "song duration %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (midiparse->segment.duration));
 
   outcaps = gst_pad_get_pad_template_caps (midiparse->srcpad);
   gst_pad_set_caps (midiparse->srcpad, outcaps);
