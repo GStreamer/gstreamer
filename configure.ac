@@ -159,6 +159,17 @@ if test "x$HAVE_PTHREAD_H" != "xyes"; then
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/dccp//`
 fi
 
+dnl x11 is optional for librfb and eglglessink
+HAVE_X11=NO
+PKG_CHECK_MODULES(X11, x11, HAVE_X11=yes, HAVE_X11=no)
+AC_SUBST(X11_LIBS)
+AC_SUBST(X11_CFLAGS)
+AC_SUBST(HAVE_X11)
+AM_CONDITIONAL(HAVE_X11, test "x$HAVE_X11" = "xyes")
+if test "x$HAVE_X11" = "xyes"; then
+  AC_DEFINE(HAVE_X11, 1, [Define if you have X11 library])
+fi
+
 dnl check for EGL
 AC_ARG_WITH([egl-window-system],
               AS_HELP_STRING([--with-egl-window-system],[EGL window system to use (x11, mali-fb, rpi, none)]),
@@ -392,17 +403,6 @@ PKG_CHECK_MODULES(GMODULE_EXPORT, gmodule-export-2.0, HAVE_GMODULE_EXPORT=yes, H
 
 dnl Needed by plugins that use g_module_*() API
 PKG_CHECK_MODULES(GMODULE_NO_EXPORT, gmodule-no-export-2.0)
-
-dnl x11 is optional for librfb and eglglessink
-HAVE_X11=NO
-PKG_CHECK_MODULES(X11, x11, HAVE_X11=yes, HAVE_X11=no)
-AC_SUBST(X11_LIBS)
-AC_SUBST(X11_CFLAGS)
-AC_SUBST(HAVE_X11)
-AM_CONDITIONAL(HAVE_X11, test "x$HAVE_X11" = "xyes")
-if test "x$HAVE_X11" = "xyes"; then
-  AC_DEFINE(HAVE_X11, 1, [Define if you have X11 library])
-fi
 
 dnl exif (used on jifmux tests) ****
 PKG_CHECK_MODULES(EXIF, libexif >= 0.6.16, HAVE_EXIF="yes", HAVE_EXIF="no")

@@ -160,7 +160,6 @@ platform_destroy_native_window (EGLNativeDisplayType display,
   GST_ERROR ("Can't destroy native window");
   return TRUE;
 }
-
 #endif
 
 #ifdef USE_EGL_RPI

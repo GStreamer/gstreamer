@@ -49,7 +49,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideosink.h>
-#include <gst/base/gstdataqueue.h>
+#include "gstdataqueue.h"
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -121,9 +121,9 @@ struct _GstEglGlesRenderContext
   EGLNativeWindowType window, used_window;
   EGLSurface surface;
   gboolean buffer_preserved;
-  GLuint fragshader[3]; /* frame, border, frame-platform */
-  GLuint vertshader[3]; /* frame, border, frame-platform */
-  GLuint glslprogram[3]; /* frame, border, frame-platform */
+  GLuint fragshader[2]; /* frame, border */
+  GLuint vertshader[2]; /* frame, border */
+  GLuint glslprogram[2]; /* frame, border */
   GLuint texture[3]; /* RGB/Y, U/UV, V */
   EGLint surface_width;
   EGLint surface_height;
@@ -132,10 +132,10 @@ struct _GstEglGlesRenderContext
   gint n_textures;
 
   /* shader vars */
-  GLuint position_loc[3]; /* frame, border, frame-platform */
-  GLuint texpos_loc[2]; /* frame, frame-platform */
-  GLuint tex_scale_loc[2][3]; /* [frame, frame-platform] RGB/Y, U/UV, V */
-  GLuint tex_loc[2][3]; /* [frame, frame-platform] RGB/Y, U/UV, V */
+  GLuint position_loc[2]; /* frame, border */
+  GLuint texpos_loc[1]; /* frame */
+  GLuint tex_scale_loc[1][3]; /* [frame] RGB/Y, U/UV, V */
+  GLuint tex_loc[1][3]; /* [frame] RGB/Y, U/UV, V */
   coord5 position_array[12];    /* 4 x Frame, 4 x Border1, 4 x Border2 */
   unsigned short index_array[4];
   unsigned int position_buffer, index_buffer;
@@ -176,6 +176,7 @@ struct _GstEglGlesSink
   GstVideoRectangle display_region;
 
   GstVideoRectangle crop;
+  gboolean crop_changed;
   GstCaps *sinkcaps;
   GstCaps *current_caps, *configured_caps;
   GstVideoInfo configured_info;
@@ -195,7 +196,7 @@ struct _GstEglGlesSink
 
   GThread *thread;
   gboolean thread_running;
-  GstDataQueue *queue;
+  EGLGstDataQueue *queue;
   GCond render_cond;
   GMutex render_lock;
   GstFlowReturn last_flow;
