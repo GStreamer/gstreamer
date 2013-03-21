@@ -67,6 +67,7 @@ struct _GstMidiParse
 
   guint64 offset;
   GstAdapter *adapter;
+  guint8 *data;
 
   /* output data */
   gboolean discont;

@@ -190,6 +190,7 @@ gst_midi_parse_finalize (GObject * object)
   midiparse = GST_MIDI_PARSE (object);
 
   g_object_unref (midiparse->adapter);
+  g_free (midiparse->data);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -806,6 +807,7 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
   size = gst_adapter_available (midiparse->adapter);
   data = gst_adapter_take (midiparse->adapter, size);
 
+  midiparse->data = data;
   midiparse->tempo = DEFAULT_TEMPO;
 
   if (!find_midi_chunk (midiparse, data, size, &offset, &length))
@@ -840,13 +842,11 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
 short_file:
   {
     GST_ERROR_OBJECT (midiparse, "not enough data");
-    g_free (data);
     return GST_FLOW_ERROR;
   }
 invalid_format:
   {
     GST_ERROR_OBJECT (midiparse, "invalid format");
-    g_free (data);
     return GST_FLOW_ERROR;
   }
 }
@@ -1087,6 +1087,8 @@ gst_midi_parse_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_adapter_clear (midiparse->adapter);
+      g_free (midiparse->data);
+      midiparse->data = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
