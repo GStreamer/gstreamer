@@ -61,6 +61,7 @@ struct _GstFluidsynth
   int sf;
 
   GstSegment segment;
+  gboolean discont;
   GstClockTime last_pts;
   guint64 last_sample;
 };

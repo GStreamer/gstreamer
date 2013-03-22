@@ -382,6 +382,11 @@ produce_samples (GstFluidsynth * fluidsynth, GstClockTime pts, guint64 sample)
   GST_BUFFER_OFFSET (outbuf) = offset;
   GST_BUFFER_OFFSET_END (outbuf) = offset + samples;
 
+  if (fluidsynth->discont) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    fluidsynth->discont = FALSE;
+  }
+
   return gst_pad_push (fluidsynth->srcpad, outbuf);
 }
 
@@ -470,6 +475,10 @@ gst_fluidsynth_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buffer)
   GstClockTime pts;
 
   fluidsynth = GST_FLUIDSYNTH (parent);
+
+  if (GST_BUFFER_IS_DISCONT (buffer)) {
+    fluidsynth->discont = TRUE;
+  }
 
   pts = GST_BUFFER_PTS (buffer);
 
