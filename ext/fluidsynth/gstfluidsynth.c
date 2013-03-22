@@ -102,6 +102,32 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 #define parent_class gst_fluidsynth_parent_class
 G_DEFINE_TYPE (GstFluidsynth, gst_fluidsynth, GST_TYPE_ELEMENT);
 
+/* fluid_synth log handler */
+static void
+gst_fluid_synth_error_log_function (int level, char *message, void *data)
+{
+  GST_ERROR ("%s", message);
+}
+
+static void
+gst_fluid_synth_warning_log_function (int level, char *message, void *data)
+{
+  GST_WARNING ("%s", message);
+}
+
+static void
+gst_fluid_synth_info_log_function (int level, char *message, void *data)
+{
+  GST_INFO ("%s", message);
+}
+
+static void
+gst_fluid_synth_debug_log_function (int level, char *message, void *data)
+{
+  GST_DEBUG ("%s", message);
+}
+
+
 /* initialize the plugin's class */
 static void
 gst_fluidsynth_class_init (GstFluidsynthClass * klass)
@@ -126,6 +152,23 @@ gst_fluidsynth_class_init (GstFluidsynthClass * klass)
       "Midi Synthesizer Element", "Wim Taymans <wim.taymans@gmail.com>");
 
   gstelement_class->change_state = gst_fluidsynth_change_state;
+
+#ifndef GST_DISABLE_GST_DEBUG
+  fluid_set_log_function (FLUID_PANIC, gst_fluid_synth_error_log_function,
+      NULL);
+  fluid_set_log_function (FLUID_ERR, gst_fluid_synth_warning_log_function,
+      NULL);
+  fluid_set_log_function (FLUID_WARN, gst_fluid_synth_warning_log_function,
+      NULL);
+  fluid_set_log_function (FLUID_INFO, gst_fluid_synth_info_log_function, NULL);
+  fluid_set_log_function (FLUID_DBG, gst_fluid_synth_debug_log_function, NULL);
+#else
+  fluid_set_log_function (FLUID_PANIC, NULL, NULL);
+  fluid_set_log_function (FLUID_ERR, NULL, NULL);
+  fluid_set_log_function (FLUID_WARN, NULL, NULL);
+  fluid_set_log_function (FLUID_INFO, NULL, NULL);
+  fluid_set_log_function (FLUID_DBG, NULL, NULL);
+#endif
 }
 
 /* initialize the new element
