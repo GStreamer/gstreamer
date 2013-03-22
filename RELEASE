@@ -1,7 +1,7 @@
 
-Release notes for GStreamer libav Plugins 1.0.5
+Release notes for GStreamer libav Plugins 1.0.6
 
-The GStreamer team is pleased to announce a new bug-fix release
+The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -38,10 +38,14 @@ contains a set of less supported plugins that haven't passed the
 
 Features of this release
     
-      * Pass CC, LD, AS, AR and NM to the libav configure if set
+      * avviddec: fix H.264 decoding errors in some files by disabling multi-threaded decoding
+      * libav: fix checks for internal libav configure options
+      * libav: Update to 0.8.5 release
 
-There were no bugs fixed in this release
-    
+Bugs fixed in this release
+     
+      * 691723 : libav: fix checks for internal libav configure options
+      * 694230 : quicktime videos have decoding issues in gst-1.x
 
 ==== Download ====
 
@@ -78,6 +82,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Sebastian Dröge
+      * Andoni Morales Alastruey
       * Tim-Philipp Müller
  

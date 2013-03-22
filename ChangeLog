@@ -1,9 +1,47 @@
-=== release 1.0.5 ===
+=== release 1.0.6 ===
 
-2013-01-08  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2013-03-22  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.5
+	  releasing 1.0.6
+
+2013-02-25 10:38:09 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/libav/gstavutils.c:
+	* ext/libav/gstavviddec.c:
+	  avviddec: fix H.264 decoding errors by disabling multi-threaded decoding
+	  Multi-threaded decoding does not work properly with the older libav 0.8
+	  version included in this gst-libav series, so just disable multi-threaded
+	  decoding again entirely for now. (We could also switch from FF_THREAD_SLICE
+	  to FF_THREAD_FRAME, but that may have other side-effects and just disabling
+	  it seems safest for now).
+	  This works properly in git master with more recent libav 0.9.x versions.
+	  Adventurous users may still re-enable this functionality by setting
+	  the GST_AVVIDDEC_MAX_THREADS environment variable to 'auto' or the
+	  max. number of threads desired.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=694230
+
+2013-02-11 15:52:52 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Update to 0.8.5 release
+
+2013-01-14 17:00:17 +0100  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* configure.ac:
+	  libav: fix checks for internal libav configure options
+	  https://bugzilla.gnome.org/show_bug.cgi?id=691723
+
+=== release 1.0.5 ===
+
+2013-01-08 10:56:21 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.0.5
 
 2012-12-31 00:32:41 +0000  Tim-Philipp Müller <tim@centricular.net>
 

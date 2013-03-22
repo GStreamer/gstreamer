@@ -1,4 +1,15 @@
-This is GStreamer Libav Plugins 1.0.5
+This is GStreamer Libav Plugins 1.0.6
+
+Changes since 1.0.5:
+
+      * avviddec: fix H.264 decoding errors in some files by disabling multi-threaded decoding
+      * libav: fix checks for internal libav configure options
+      * libav: Update to 0.8.5 release
+
+Bugs fixed since 1.0.5:
+
+      * 691723 : libav: fix checks for internal libav configure options
+      * 694230 : quicktime videos have decoding issues in gst-1.x
 
 Changes since 1.0.4:
 
