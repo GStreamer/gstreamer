@@ -1,0 +1,3105 @@
+=== release 1.0.0 ===
+
+2013-03-22  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  releasing 1.0.0
+
+2013-03-19 16:40:09 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* omx/gstomxtheoradec.h:
+	* omx/gstomxvp8dec.h:
+	  omx: fix typo in copyright headers
+
+2013-03-19 13:46:33 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/rpi/gstomx.conf:
+	  rpi: Fix commit that added the VC1 decoder
+
+2013-03-19 13:27:35 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/rpi/gstomx.conf:
+	* omx/gstomxh263dec.c:
+	* omx/gstomxh264dec.c:
+	* omx/gstomxmjpegdec.c:
+	* omx/gstomxmpeg2videodec.c:
+	* omx/gstomxmpeg4videodec.c:
+	* omx/gstomxtheoradec.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvp8dec.c:
+	* omx/gstomxwmvdec.c:
+	  omx: Add more constraints to the default sink template caps
+
+2013-03-19 13:10:39 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/rpi/gstomx.conf:
+	  rpi: Add VC1/WMV3 decoder
+	  WMV2 and WMV1 (aka WMV 1-8) are not supported by RPi.
+
+2013-03-19 12:59:20 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/rpi/gstomx.conf:
+	  rpi: Add MJPEG decoder
+
+2013-03-19 12:56:50 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/rpi/gstomx.conf:
+	  rpi: Add VP8 decoder
+
+2013-03-19 12:55:09 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Set ENDOFFRAME flag for the end of frames
+
+2013-03-19 12:28:50 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/rpi/gstomx.conf:
+	  rpi: Add Theora decoder to the config
+
+2013-03-19 09:36:18 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxtheoradec.c:
+	* omx/gstomxtheoradec.h:
+	  omx: Add Theora decoder
+
+2013-03-18 16:43:24 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Remove additional comma
+
+2013-03-18 16:34:21 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/rpi/gstomx.conf:
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxmpeg2dec.c:
+	* omx/gstomxmpeg2dec.h:
+	* omx/gstomxmpeg2videodec.c:
+	* omx/gstomxmpeg2videodec.h:
+	  omx: Rename MPEG2 decoder for consistency everywhere
+
+2013-03-18 16:30:40 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxmjpegdec.c:
+	* omx/gstomxmjpegdec.h:
+	  omx: Add MJPEG decoder support
+
+2013-03-18 16:06:54 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxvp8dec.c:
+	* omx/gstomxvp8dec.h:
+	  omx: Add VP8 decoder support
+
+2013-03-18 15:44:23 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/rpi/gstomx.conf:
+	  rpi: Add h263 decoder and rename MPEG2 decoder for consistency
+
+2013-03-16 13:20:27 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* omx/gstomxmpeg2dec.c:
+	  omxmpeg2dec: mpeg-2 decoder should be able to handle mpeg-1 too
+	  https://bugzilla.gnome.org/show_bug.cgi?id=695879
+
+2013-03-16 10:13:06 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomx.c:
+	  omx: minor stylistic change for consistency with other similar code
+
+2013-03-16 10:00:24 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Clarify that loop task is also paused in EOS
+
+2013-03-16 09:59:01 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenec: Don't forget propagate flow return value upstream
+
+2013-03-15 13:16:39 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: improve debug logging some more
+
+2013-03-15 14:09:45 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Make sure that the first frame we pass to OpenMAX is a sync frame
+
+2013-03-15 11:46:34 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Stop output port task after draining
+
+2013-03-15 10:58:58 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Reset EOS flag in more places
+
+2013-03-15 10:38:43 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Deallocate output buffers with the right function
+
+2013-03-15 01:06:05 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: log commands as strings
+	  Makes logs easier to read.
+
+2013-03-15 00:47:47 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: log states as strings
+
+2013-03-15 00:28:02 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: log component name in debug messages
+	  Useful when we have more different components
+	  active at the same time.
+
+2013-03-15 09:51:42 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Don't interpolate timestamps
+	  We will get exactly one frame per input buffer and assigning
+	  timestamps between frames if more than one OMX buffer is required
+	  per frame easily confuses timestamp tracking in OMX.
+
+2013-03-15 09:32:42 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Give the codec_data the timestamp of the first frame and no duration
+
+2013-03-14 17:31:17 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/rpi/gstomx.conf:
+	  omx: The MPEG4 encoder is not available on RPi and probably never will
+
+2013-03-14 17:26:30 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Reset some more buffer fields as required
+
+2013-03-14 17:01:08 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/rpi/gstomx.conf:
+	* omx/gstomx.c:
+	  omx: The hack to disable usage of EOS buffers is not necessary anymore on RPi
+
+2013-03-14 17:00:12 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Reset the flags for output ports when releasing a buffer, not for input ports
+
+2013-03-14 15:03:02 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh263enc.c:
+	* omx/gstomxh264enc.c:
+	* omx/gstomxmpeg4videoenc.c:
+	  omx: Only unref caps after usage of its fields
+
+2013-03-14 14:51:32 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Simplify bufferpool implementation
+
+2013-03-13 13:23:35 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Improve min/max buffer counts handling
+
+2013-03-14 12:49:42 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Handle the OMX_EventBufferFlag to detect EOS too
+
+2013-03-13 10:29:23 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Mark OpenMAX buffers as EGLImage if they contain one
+	  Needs special handling in some places, e.g. because nFilledLen
+	  will always be 0.
+
+2013-03-13 10:21:49 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Properly check the nVersion field
+
+2013-03-13 09:34:43 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: RPi returns garbage for OMX_IndexParamVideoBitrate, work around that
+
+2013-03-12 20:02:53 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Make sure to always get the right buffer
+
+2013-03-12 19:35:39 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Make sure the buffer is released to the pool if it's not the one we wanted
+
+2013-03-12 19:17:08 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Drop too late frames instead of finishing them
+
+2013-03-12 19:16:46 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omx: Release buffers to the correct port
+
+2013-03-13 09:37:02 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Always load the OpenMAX IL cores with G_MODULE_BIND_LOCAL
+
+2013-03-12 18:20:22 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Lazy-load symbols of libbcm_host.so
+	  It exports eglIntOpenMAXILDoneMarker(), which is also
+	  exported by libopenmaxil.so... but we need the version
+	  from libopenmaxil.so as the other one is just a stub.
+
+2013-03-11 13:59:15 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaacenc.c:
+	* omx/gstomxh263enc.c:
+	* omx/gstomxmpeg4videoenc.c:
+	  omx: Don't set profile/level in other encoders if downstream caps don't specify any
+
+2013-03-11 13:49:38 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh264enc.c:
+	  omxh264enc: If caps specify no profile/level use the component's defaults
+
+2013-03-11 13:45:04 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Always allocate output buffers from the loop function
+
+2013-03-11 13:12:57 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh264enc.c:
+	  omxh264enc: The h264 encoders are supposed to output byte-stream/au
+
+2013-03-11 11:47:42 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Wait until the Executing state is reached before passing buffers to the component
+
+2013-03-11 10:39:25 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Don't provide buffers to downstream
+	  This only works reliable if we have a way to tell downstream to
+	  release all our buffers for reconfiguration.
+
+2013-03-11 10:29:44 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Disable output port when setting a new format
+
+2013-03-11 10:29:30 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Disable output port when setting a new format
+
+2013-03-11 10:22:07 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Disable output port when setting a new format
+	  Based on a patch by Josep Torra <n770galaxy@gmail.com>
+
+2013-03-11 10:04:10 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Catch errors when releasing buffers to a port and handle them
+
+2013-03-10 12:09:23 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Use the correct video codec state when filling an input buffer
+
+2013-03-10 12:05:50 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Store correct input state
+
+2013-03-10 11:27:34 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Allocate output buffers as early as possible
+
+2013-03-10 11:01:57 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Log unknown events
+
+2013-03-09 14:14:40 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Fix deadlock in encoders and add explainatory comments.
+
+2013-03-09 13:27:08 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: fix printf format identifier
+
+2013-03-09 13:07:59 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideodec.c:
+	  omx: Minor changes on debuging info
+
+2013-03-09 13:00:33 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: avoid a deadlock
+
+2013-03-08 15:56:40 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Don't forget to populate output port
+
+2013-03-08 15:11:27 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Flush and stop srcpad when configuring new caps
+
+2013-03-07 17:40:21 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/rpi/gstomx.conf:
+	* omx/gstomx.c:
+	  Revert "omx: use no-component-reconfigure hack on the Raspberry PI"
+	  This reverts commit e123b2089f69a413241f30a2428ea6edd8f231e7.
+	  It's not required anymore after the fix from the last commit.
+
+2013-03-07 17:38:40 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Only negotiate a color format with downstream on the initial caps
+
+2013-03-07 17:29:43 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Make sure the output port is disabled while we allocate buffers
+
+2013-03-07 17:27:05 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Also wait for disabled output ports to be reconfigured
+
+2013-03-07 14:10:12 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omxvideodec: Add buffer pool for sharing OpenMAX memory with downstream
+
+2013-03-07 11:11:58 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Add timeout to the flush operation and move buffer populating to a separate function
+
+2013-03-06 17:33:23 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/rpi/gstomx.conf:
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Remove min buffer count hack for RPi again
+	  It's not necessary anymore
+
+2013-03-06 17:05:51 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Do number of buffers configuration explicitely
+
+2013-03-07 11:24:54 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: fixes reconfiguration
+	  Avoid having fixed fields from previous caps on reconfiguration.
+
+2013-03-07 11:02:39 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* config/rpi/gstomx.conf:
+	* omx/gstomx.c:
+	  omx: use no-component-reconfigure hack on the Raspberry PI
+
+2013-03-07 00:03:28 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 2de221c to 04c7a1e
+
+2013-03-01 15:32:47 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: drop unused data member
+
+2013-03-01 12:23:54 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh263enc.c:
+	* omx/gstomxh264enc.c:
+	* omx/gstomxmpeg4videoenc.c:
+	  omxvideoenc: And set it actually on the right port
+
+2013-03-01 12:18:08 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh263enc.c:
+	* omx/gstomxh264enc.c:
+	* omx/gstomxmpeg4videoenc.c:
+	  omxvideoenc: Set the coding type in the subclasses to the specific codec
+
+2013-03-01 11:49:53 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: gst_omx_port_update_port_definition() returns a OMX_ERRORTYPE, not a gboolean
+
+2013-03-01 11:44:17 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideo{dec,enc}: Don't use the input state if it wasn't set yet
+
+2013-03-01 11:25:04 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Only enable the output port after we know the output format
+
+2013-03-01 11:24:56 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Only enable the output port after we know the output format
+
+2013-02-28 17:02:31 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Only enable the output port after we know the output format
+
+2013-03-01 11:18:18 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Handle errors more gracefully
+
+2013-02-28 15:48:53 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxh263dec.c:
+	* omx/gstomxh264dec.c:
+	* omx/gstomxmpeg2dec.c:
+	* omx/gstomxmpeg4videodec.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxwmvdec.c:
+	  omx: Return the OMX_ERRORTYPE from gst_omx_port_update_port_definition
+
+2013-02-28 15:37:53 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Return port definition update errors
+
+2013-02-28 13:57:43 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/rpi/gstomx.conf:
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Add hack for RPi for the minimum number of buffers required for a port
+	  The value in the port definition is invalid and the initial actual
+	  buffer count should be used.
+
+2013-02-28 13:26:56 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Always tell the component about the right number of buffers that we're going to allocate
+
+2013-02-28 13:07:58 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Invert assertion to let it express what was intended
+
+2013-02-28 11:19:07 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Add API for allocating a specific number of buffers and using EGLImages or buffers allocated elsewhere
+
+2013-02-27 16:55:16 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Refactor code flow a bit if output port settings have changed
+
+2013-02-27 15:49:56 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Clean up port settings change handling
+
+2013-02-27 11:30:14 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: initialize param structure before using it
+
+2013-02-27 10:21:39 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: prevent a NULL pointer access
+
+2013-02-26 17:25:49 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: prevent a NULL pointer access
+
+2013-02-25 13:11:16 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Fix deadlock during reconfiguration
+
+2013-02-25 12:38:27 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Auto-detect the port indizes if possible
+
+2013-02-25 11:42:38 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Refactor querying of component supported caps into its own function
+
+2013-02-25 10:41:12 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Refactor waiting for buffers to be released by the component to a separate function
+
+2013-01-11 17:44:13 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Add methods to set up and close a tunnel between components
+
+2013-02-25 09:15:53 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaacenc.c:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxaudioenc.h:
+	  omxaudioenc: Rename component variable
+
+2013-02-25 09:15:46 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh263enc.c:
+	* omx/gstomxh264enc.c:
+	* omx/gstomxmpeg4videoenc.c:
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: Rename component variable
+
+2013-02-25 09:12:22 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omxvideodec: Rename component variable
+
+2013-02-22 16:27:33 +0100  Josep Torra <n770galaxy@gmail.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: remove duplicated line
+
+2013-02-22 10:42:08 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  Retry loading libbcm_host.so without an absolute path if that failed
+
+2013-02-21 20:32:42 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/bellagio/Makefile.am:
+	  Add missing file from last commit
+
+2013-02-21 11:01:28 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/Makefile.am:
+	* config/bellagio/gstomx.conf:
+	* configure.ac:
+	* omx/Makefile.am:
+	* omx/gstomx.conf:
+	  Add OpenMAX IL target for Bellagio
+	  Not tested since a very long time though.
+
+2013-02-21 10:59:29 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* omx/Makefile.am:
+	  Allow using external OpenMAX IL headers
+
+2013-02-21 10:14:12 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* .gitignore:
+	  Update .gitignore
+
+2013-02-21 10:13:16 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/Makefile.am:
+	* config/raspberry-pi.conf:
+	* config/rpi/Makefile.am:
+	* config/rpi/gstomx.conf:
+	* configure.ac:
+	  Install the RPI config when the RPI target is selected
+
+2013-02-21 10:08:07 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  Set default hacks for the RPI target and always initialize bcm_host
+
+2013-02-21 10:05:37 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Add configure parameter for setting the OpenMAX IL target
+
+2013-02-12 11:55:39 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Add FIXME for the future
+
+2013-02-12 11:49:21 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxaudioenc.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omx: Some minor refactoring and cleanup
+
+2013-02-12 11:45:40 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Don't access the port's buffers array if it wasn't allocated yet
+
+2013-02-12 11:44:40 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Mark an array as const
+
+2013-02-12 11:41:43 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Split enabling/disabling of port into sending the command and waiting for it
+	  This allows to do anything necessary after sending the command to actually let it finish
+
+2013-02-12 11:37:38 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Flushing is also allowed in Paused state
+
+2013-02-12 11:28:36 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Set stride, slice height and buffer size
+
+2013-02-12 11:09:30 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* config/raspberry-pi.conf:
+	  config: Add h264 and mpeg2 encoders to the raspberry pi config
+	  Not completely working yet though.
+
+2013-02-12 11:03:32 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Properly negotiate OMX color format with the component
+
+2013-02-12 10:53:24 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Implement getcaps() vfunc
+
+2013-01-29 21:32:53 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  configure: use 1.0 gstconfig.h to detect disabled subsystems
+	  Update unused configure check for GStreamer core subsystem
+	  features from 0.10 to 1.0.
+
+2013-01-28 20:44:41 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From a942293 to 2de221c
+
+2013-01-24 14:02:36 +0100  Julian Scheel <julian@jusst.de>
+
+	* config/raspberry-pi.conf:
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxmpeg2dec.c:
+	* omx/gstomxmpeg2dec.h:
+	  omx: add mpeg2 video decoder
+	  This adds a decoder class for mpeg2, as well as an extended
+	  configuration for raspberry pi.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692446
+	  Signed-off-by: Julian Scheel <julian@jusst.de>
+
+2013-01-18 16:47:04 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Minimize the time when the messages lock is held
+	  Fixes a deadlock if any OMX functions are called when the
+	  messages are handled.
+	  Thanks to Nicolas Dufresne for noticing.
+
+2013-01-18 15:28:20 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: improve debug message when we can't find the config file
+	  Mention where we looked for the config file.
+
+2013-01-18 12:34:38 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  build: fix autogen.sh with automake 1.13
+	  AM_CONFIG_HEADER -> AC_CONFIG_HEADERS
+
+2013-01-17 18:07:41 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.h:
+	* omx/gstomxvideodec.h:
+	* omx/gstomxvideoenc.h:
+	  omx: Fix includes to properly work with the 1.0 releases
+
+2013-01-15 15:08:28 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From a72faea to a942293
+
+2013-01-15 14:34:45 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Update port definition when changing some port setting
+
+2013-01-14 11:41:57 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	  omx: Rename from libgstopenmax.so to ligstomx.so for consistency
+
+2013-01-11 15:32:22 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomx.c:
+	  omx: Add a method to send message
+
+2013-01-11 15:44:38 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Atomic ops are not required anymore for the reconfiguration
+
+2013-01-11 12:52:10 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Fix some memory leaks and suboptimal locking
+
+2013-01-11 12:34:04 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Don't forget to unmap frame in error cases
+
+2013-01-11 12:29:20 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Fix copying of the video frames to the OMX buffers
+
+2013-01-11 12:24:13 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Fix copying of the video frames from the OMX buffers
+
+2013-01-10 14:44:33 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxrecmutex.c:
+	* omx/gstomxrecmutex.h:
+	  omx: Implement new approach for locking that should solve all deadlocks on RPi
+	  No mutex is locked while calling any OpenMAX functions anymore
+	  and everything from the OpenMAX callbacks is inserted into a message
+	  queue and handled from outside the callbacks.
+	  Also there's only a single mutex and condition variable per component
+	  now for handling anything from OpenMAX callbacks and a single mutex
+	  for keeping our component/port state sane.
+
+2012-12-20 19:30:38 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Set the OMX buffer nFilledLength field properly
+
+2012-12-20 18:48:21 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxrecmutex.c:
+	* omx/gstomxrecmutex.h:
+	  omxrecmutex: Fix another race condition when two threads are trying to lock for recursion at the same time
+
+2012-12-20 18:16:43 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxrecmutex.c:
+	* omx/gstomxrecmutex.h:
+	  omxrecmutex: Fix yet another race condition that resulted in deadlocks
+
+2012-12-20 17:46:36 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomxrecmutex.c:
+	* omx/gstomxrecmutex.h:
+	  omx: Fix another race condition in the recursive mutex
+	  Between lock() and begin_recursion() it was possible for another thread to
+	  try to do a recursive_lock(). This would block because the mutex was already
+	  locked(), but not ready for recursive locking yet. unlock() would never
+	  happen in the original thread because it was waiting for the other thread
+	  to finish first.
+	  Happened on the Raspberry Pi.
+
+2012-12-20 14:45:18 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxrecmutex.c:
+	* omx/gstomxrecmutex.h:
+	  omxrecmutex: Fix a small race condition when unlocking a non-recursive lock
+
+2012-12-20 12:30:05 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Fix ununsed variable compiler warning
+
+2012-12-20 12:27:47 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: No need to start the srcpad task in ::start() already
+	  It will be started properly after the caps are set.
+
+2012-12-20 12:23:49 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: OMX_ErrorNoMore is no error and just means we ended iteration
+
+2012-12-20 12:20:31 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Improve debug output
+
+2012-12-20 12:02:30 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Don't forget to free a GList
+
+2012-12-20 11:56:29 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Map OMX_COLOR_FormatYUV420PackedPlanar to I420 too
+	  This is used on the Raspberry Pi.
+
+2012-12-20 11:55:36 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: During negotiation of the output format make sure we use the correct OpenMAX format
+
+2012-12-20 11:42:17 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: If negotiation fails this could also mean that the component can't do it at this point yet
+
+2012-12-20 11:40:13 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Improve format negotiation a bit
+	  Don't leak caps and make sure to fixate caps.
+
+2012-12-19 13:05:28 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.h:
+	  omx: Also initialize nStep field of the OMX structures
+
+2012-12-19 13:03:37 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.h:
+	  omx: Initialize struct version with the OMX version we compiled with
+
+2012-12-19 12:44:31 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Extract data from the input buffer, not the codec data
+
+2012-12-19 12:19:12 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* tools/listcomponents.c:
+	  omx: Use has_suffix() instead of has_prefix() for the Broadcom hack
+
+2012-12-19 12:08:35 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* Makefile.am:
+	* configure.ac:
+	* tools/Makefile.am:
+	* tools/listcomponents.c:
+	  tools: Add tool to list all components and their roles
+
+2012-12-19 11:31:51 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Add hack to load and initialize libbcm_host.so
+	  Needed on the Raspberry Pi. Patch based on a patch by
+	  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+2012-12-19 11:22:16 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* omx/gstomx.h:
+	  configure: Add configure option to pack OpenMAX structures
+	  This is required to set to 4 for the Raspberry Pi for example.
+
+2012-12-19 11:07:44 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Require GStreamer 1.0.0
+
+2012-04-20 17:13:52 +0300  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* omx/gstomx.h:
+	  omx: Initialize structures to version 1.1.2
+
+2012-12-19 09:51:22 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* Makefile.am:
+	* config/Makefile.am:
+	* config/raspberry-pi.conf:
+	* configure.ac:
+	* omx/gstomx-raspberry.conf:
+	  config: Add raspberry-pi configuration in a different directory
+
+2012-05-20 20:11:59 +0300  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* omx/gstomx-raspberry.conf:
+	  raspberry: Add a gstomx.conf for the Raspberry Pi
+
+2012-12-12 17:45:39 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.h:
+	* omx/gstomxvideoenc.h:
+	  omx: Fix some compilation errors caused by circular includes
+
+2012-11-19 11:29:44 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6bb6951 to a72faea
+
+2012-11-12 15:14:09 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Fix refcount problem with frames being dropped because of decoder bugs
+
+2012-11-12 11:29:48 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxaudioenc.h:
+	* omx/gstomxrecmutex.c:
+	* omx/gstomxrecmutex.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omx: Update to new GLib thread API
+
+2012-10-22 14:34:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Use open/close vfuncs
+
+2012-10-22 14:28:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Handle video meta correctly
+
+2012-06-20 13:11:58 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstbasevideocodec.c:
+	* omx/gstbasevideocodec.h:
+	* omx/gstbasevideodecoder.c:
+	* omx/gstbasevideodecoder.h:
+	* omx/gstbasevideoencoder.c:
+	* omx/gstbasevideoencoder.h:
+	* omx/gstbasevideoutils.c:
+	* omx/gstbasevideoutils.h:
+	* omx/gstomxh263dec.c:
+	* omx/gstomxh263enc.c:
+	* omx/gstomxh264dec.c:
+	* omx/gstomxh264enc.c:
+	* omx/gstomxmpeg4videodec.c:
+	* omx/gstomxmpeg4videoenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	* omx/gstomxwmvdec.c:
+	  omx: Port to video base classes from -base
+
+2012-10-17 17:57:43 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* omx/gstomxaacenc.c:
+	* omx/gstomxh263dec.c:
+	* omx/gstomxh263enc.c:
+	* omx/gstomxh264dec.c:
+	* omx/gstomxh264enc.c:
+	* omx/gstomxmpeg4videodec.c:
+	* omx/gstomxmpeg4videoenc.c:
+	* omx/gstomxwmvdec.c:
+	  omx: gst_element_class_set_details_simple() -> set_static_metadata()
+
+2012-10-06 15:01:11 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6c0b52c to 6bb6951
+
+2012-09-22 16:10:38 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 4f962f7 to 6c0b52c
+
+2012-06-21 20:22:13 +0300  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* omx/gstomx.c:
+	  omx: fix debug statement
+
+2012-06-21 20:21:03 +0300  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* omx/gstomx.c:
+	  omx: use recursive_lock inside set_last_error(), since this function may be called from an event handler
+
+2012-08-22 13:31:59 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 668acee to 4f962f7
+
+2012-08-05 16:42:43 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 94ccf4c to 668acee
+
+2012-08-03 19:32:13 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* omx/gstomx.c:
+	  omx: fix plugin name for new GST_PLUGIN_DEFINE API
+
+2012-07-23 08:47:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 98e386f to 94ccf4c
+
+2012-07-10 09:57:09 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideodecoder.c:
+	  omx: Update for allocation query API changes
+
+2012-06-20 11:09:13 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Fix compilation after gst_pad_start_task() API changes
+
+2012-06-08 15:06:35 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 03a0e57 to 98e386f
+
+2012-06-06 18:20:18 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1fab359 to 03a0e57
+
+2012-06-01 10:30:27 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From f1b5a96 to 1fab359
+
+2012-05-31 13:10:33 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 92b7266 to f1b5a96
+
+2012-05-30 12:47:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From ec1c4a8 to 92b7266
+
+2012-05-30 11:26:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3429ba6 to ec1c4a8
+
+2012-05-13 15:58:10 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From dc70203 to 3429ba6
+
+2012-05-08 16:13:32 +0300  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* omx/gstomx.c:
+	  omx: Fix spelling mistake found by lintian: s/Seperate/Separate/
+
+2012-04-30 23:58:43 +0300  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxrecmutex.c:
+	* omx/gstomxrecmutex.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  Implement a new custom recursive mutex type and fix locking in callbacks so that in-context calls are allowed.
+	  According to the OMX specification, implementations are allowed to call
+	  callbacks in the context of their function calls. However, our callbacks
+	  take locks and this causes deadlocks if the unerlying OMX implementation
+	  uses this kind of in-context calls.
+	  A solution to the problem would be a recursive mutex. However, a normal
+	  recursive mutex does not fix the problem because it is not guaranteed
+	  that the callbacks are called from the same thread. What we see in Broadcom's
+	  implementation for example is:
+	  - OMX_Foo is called
+	  - OMX_Foo waits on a condition
+	  - A callback is executed in a different thread
+	  - When the callback returns, its calling function
+	  signals the condition that OMX_Foo waits on
+	  - OMX_Foo wakes up and returns
+	  The solution I came up with here is to take a second lock inside the callback,
+	  but only if recursion is expected to happen. Therefore, all calls to OMX
+	  functions are guarded by calls to gst_omx_rec_mutex_begin_recursion() / _end_recursion(),
+	  which effectively tells the mutex that at this point we want to allow calls
+	  to _recursive_lock() to succeed, although we are still holding the master lock.
+
+2012-04-20 14:51:34 +0000  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Add hack to disable setting roles to components.
+	  Conflicts:
+	  omx/gstomx.c
+
+2012-04-30 23:20:24 +0000  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Implement no-empty-eos-buffer hack, as in omxvideoenc.
+	  Conflicts:
+	  omx/gstomxvideodec.c
+
+2012-04-30 23:19:55 +0000  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Fix coding style in the drain-may-not-return hack code
+
+2012-04-25 19:03:48 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Fix trivial debug print bug
+
+2012-04-25 19:01:32 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Add hack for Ducati components not returning from drain
+	  This happens on the Galaxy Nexus, and causes the pipeline to hang waiting
+	  endlessly for a drain. The hack replaces the wait with a wait + 500ms timeout.
+
+2012-04-25 16:35:40 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Fix deadlock between ending a flush and the event handler
+	  gst_omx_port_set_flushing() calls OMX_FillThisBuffer at the end of a flush
+	  without releasing the port lock, and this can cause a deadlock with the
+	  EventHandler. This patches fixes this by dropping the lock for the duration of
+	  the fill buffer call.
+
+2012-04-24 15:41:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideodecoder.c:
+	* omx/gstbasevideoencoder.c:
+	  omx: Update video encoder/decoder base classes from gst-plugins-bad
+
+2012-04-16 09:16:10 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Modernize autotools setup a bit
+	  Also we now only create tar.bz2 and tar.xz tarballs.
+
+2012-04-16 09:12:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+
+2012-04-16 08:34:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Use gst_buffer_extract() to copy the input buffer data to the OpenMAX buffer
+
+2012-04-13 17:16:42 -0400  Alessandro Decina <alessandro.decina@collabora.com>
+
+	* omx/Makefile.am:
+	  Fix relative/absolute path glitch
+	  Signed-off-by: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+2012-04-12 15:57:32 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* common:
+	* configure.ac:
+	* omx/Makefile.am:
+	* omx/gstbasevideocodec.c:
+	* omx/gstbasevideocodec.h:
+	* omx/gstbasevideodecoder.c:
+	* omx/gstbasevideodecoder.h:
+	* omx/gstbasevideoencoder.c:
+	* omx/gstbasevideoencoder.h:
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaacenc.c:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxaudioenc.h:
+	* omx/gstomxh263dec.c:
+	* omx/gstomxh263enc.c:
+	* omx/gstomxh264dec.c:
+	* omx/gstomxh264enc.c:
+	* omx/gstomxmpeg4videodec.c:
+	* omx/gstomxmpeg4videoenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	* omx/gstomxwmvdec.c:
+	  Port to Gst 0.11
+
+2012-01-18 16:53:16 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* Android.mk:
+	* omx/Makefile.am:
+	  Enable building with Android's buildsystem
+	  This change adds prelimary buildsystem hooks to
+	  build gst-omx with the Android buildsystem. Like
+	  the rest of GStreamer's Android hooks, the process
+	  relies on the availability of androgenizer. A tool
+	  developed by Collabora to automatically generate
+	  Android.mk files from within the auto* setup.
+	  Androgenizer is currently available at:
+	  http://cgit.collabora.com/git/user/derek/androgenizer.git/
+
+2011-12-13 10:17:41 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideocodec.c:
+	  basevideocodec: Don't use G_TYPE_REGISTER_BOXED() yet
+	  This would require GLib 2.26.
+
+2011-12-14 10:09:34 +0100  Jonas Larsson <Jonas.Larsson@palm.com>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Add hack for encoder components that don't allow empty EOS buffers
+
+2011-12-14 10:07:29 +0100  Jonas Larsson <Jonas.Larsson@palm.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Fix deadlock when using the EOS hack
+
+2011-12-12 14:26:48 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Remove workaround for basevideocodec bug
+
+2011-12-12 14:26:34 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Remove workaround for basevideocodec bug
+
+2011-12-05 17:57:01 +0000  Matej Knopp <matej.knopp@gmail.com>
+
+	* omx/gstbasevideocodec.c:
+	* omx/gstbasevideocodec.h:
+	* omx/gstbasevideodecoder.c:
+	* omx/gstbasevideoencoder.c:
+	  basevideo: Make GstVideoFrame a reference counted boxed object
+	  ...and also clear all existing frames when resetting the decoder or encoder.
+
+2011-12-09 12:17:29 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideoenc.c:
+	  omx: Add hack for encoder components that don't allow empty EOS buffers
+
+2011-12-09 10:21:47 +0100  Dake Gu <Dake.Gu@palm.com>
+
+	* omx/gstomxaacenc.c:
+	  omxaacenc: Generate and set codec_data on the caps for raw AAC
+
+2011-10-31 11:36:06 +0100  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	  basevideoencoder: handle failures in start() and stop()
+
+2011-08-26 10:50:38 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	  basevideoenc: do not try to calculate latency from an unknown framerate
+	  It'll divide by zero, and latency is unknown for an unknown framerate.
+	  Fixes an assert in the schroenc test.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=657419
+
+2011-12-08 11:50:49 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	  basevideoencoder: Only make the header buffer metadata writable, not the buffer
+
+2011-12-08 10:18:36 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	  basevideoencoder: Fix handling of force-keyunit events
+
+2011-12-06 13:28:41 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Don't forward EOS events immediately but let all other events be handled by the base class
+	  Previously this logic was inversed, which did not make any sense at all.
+
+2011-12-06 12:47:25 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxaudioenc.h:
+	  omxaudioenc: Use correct timestamp, duration and filled length for the EOS buffers
+
+2011-12-06 12:47:12 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omxvideodec: Use correct timestamp, duration and filled length for the EOS buffers
+
+2011-12-06 12:46:51 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: Use correct timestamp, duration and filled length for the EOS buffers
+
+2011-12-05 13:18:09 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Improve debugging of buffer handling
+
+2011-12-05 08:12:48 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Drop EOS events in ::finish()
+	  The event will be forwarded downstream from the srcpad
+	  loop function after the last buffer was generated by the
+	  component. Forwarding it after ::finish() will use the
+	  sinkpad streaming thread and does not guarantee that
+	  the encoder is completely drained.
+
+2011-12-01 16:20:36 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Properly drop frames due to QoS
+	  Instead of finishing them they should be passed to drop(), which
+	  will then send QoS messages.
+
+2011-11-29 12:21:32 +0100  Jonas Larsson <jonas@hallerud.se>
+
+	* omx/gstomxh264enc.c:
+	  omxh264enc: Add support for resending headers after a forced-keyframe
+
+2011-11-29 12:12:33 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideocodec.h:
+	* omx/gstbasevideoencoder.c:
+	  basevideoencoder: Pass the all-headers field of the force-key-unit event to the subclass
+
+2011-11-29 12:12:04 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	* omx/gstbasevideoencoder.h:
+	  basevideoencoder: Implement full support for the new force-key-unit event
+	  Including support for the running-time and count fields.
+
+2011-11-29 09:31:11 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	  basevideoencoder: Use new force-keyunit event API from gst-plugins-base
+
+2011-11-29 09:18:19 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	* omx/gstbasevideoencoder.h:
+	  basevideoencoder: Adjusting padding is not required for -bad libraries
+
+2011-11-28 19:48:01 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.h:
+	  basevideoencoder: Move some fields to the private part of the instance struct
+
+2011-11-28 19:36:56 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	  basevideoencoder: Make headers metadata writable before pushing downstream
+	  The timestamp, duration, etc of the headers has to be changed.
+
+2011-11-28 19:35:40 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	* omx/gstbasevideoencoder.h:
+	  basevideoencoder: Push the downstream force-keyframe event after the next keyframe
+	  Even if the corresponding GstVideoFrame doesn't have the is_sync_point
+	  flag set.
+
+2011-11-28 19:29:13 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	* omx/gstbasevideoencoder.h:
+	  basevideoencoder: Don't push an upstream force-keyunit event downstream
+
+2011-11-25 11:48:08 +0100  Jonas Larsson <jonas@hallerud.se>
+
+	* omx/gstbasevideoencoder.c:
+	* omx/gstbasevideoencoder.h:
+	  basevideoencoder: Add initial support for the all-headers field of the force-keyframe event
+	  See bug #607742.
+
+2011-11-25 11:37:39 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* omx/gstbasevideodecoder.c:
+	  basevideodecoder: some more debug logging
+
+2011-11-23 20:03:32 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* omx/gstbasevideodecoder.c:
+	* omx/gstbasevideodecoder.h:
+	  basevideodecoder: add API to drop a frame and post a QoS message on the bus
+	  https://bugzilla.gnome.org/show_bug.cgi?id=640017
+	  API: gst_base_video_decoder_drop_frame()
+
+2011-11-22 23:04:49 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* omx/gstbasevideodecoder.c:
+	  docs: fix comment in gst_base_video_decoder_get_max_decode_time() docs
+
+2011-11-22 19:57:07 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* omx/gstbasevideodecoder.c:
+	  basevideodecoder: fix weird event list handling
+	  Get rid of weird code that copies a list manually, taking
+	  ownership of the elements and then frees the old list. Instead,
+	  just take over the old list entirely. (If the intent was to
+	  reverse the list, one could use g_list_reverse() instead).
+	  Then, push events in the list out from last to first (since they
+	  were prepended as they came in) instead of just pushing out the
+	  last in the list and leaking the others.
+
+2011-11-25 11:31:58 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* omx/Makefile.am:
+	* omx/gstbaseaudiodecoder.c:
+	* omx/gstbaseaudiodecoder.h:
+	* omx/gstbaseaudioencoder.c:
+	* omx/gstbaseaudioencoder.h:
+	* omx/gstbaseaudioutils.c:
+	* omx/gstbaseaudioutils.h:
+	* omx/gstomxaacenc.c:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxaudioenc.h:
+	  omxaudioenc: Use audio base classes from gst-plugins-base instead of having our own copies
+
+2011-11-18 10:00:31 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: First set ports to flushing before waiting for the srcpad streaming thread to finish
+
+2011-11-18 09:59:43 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: First set ports to flushing before waiting for the srcpad streaming thread to finish
+
+2011-11-18 09:58:58 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: First set ports to flushing before waiting for the srcpad streaming thread to finish
+
+2011-11-17 14:38:54 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Only disabling of a port is like flushing, enabling is like unflushing
+
+2011-11-17 13:33:35 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Enabling/disabling a port is also like flushing
+	  The component returns all buffers to us and shouldn't get any
+	  new buffers passed anymore.
+
+2011-11-17 11:26:33 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Signal the drain GCond even if downstream returned an error
+
+2011-11-17 11:26:20 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Signal the drain GCond even if downstream returned an error
+
+2011-11-17 11:25:52 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Signal the drain GCond even if downstream returned an error
+
+2011-11-17 10:34:19 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	  basevideoencoder: Only call ::reset once in READY->PAUSED
+
+2011-11-17 10:19:35 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Shutdown component in PAUSED->READY and deallocate buffers
+
+2011-11-17 10:19:30 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Shutdown component in PAUSED->READY and deallocate buffers
+
+2011-11-17 10:19:10 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Shutdown component in PAUSED->READY and deallocate buffers
+
+2011-11-16 12:02:08 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Set force_keyframe to FALSE after handling it
+	  There's no reason why the base class should forward the event
+	  further downstream if we already handled it and will insert a
+	  keyframe.
+
+2011-11-16 11:21:25 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Always push buffers downstream, even if we didn't find a corresponding GstVideoFrame
+
+2011-11-15 09:47:55 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Fix debug level for flushing in wrong state from ERROR to DEBUG
+	  It's not really an error and doesn't matter at all if flush is called
+	  when the component is not running.
+
+2011-11-15 08:40:07 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh264enc.c:
+	  omxh264enc: Detect bytestream stream format and don't put SPS/PPS into the caps for this format
+
+2011-11-15 08:28:32 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: Add vfunc for handling the output frames
+	  This can be used by subclasses to override the buffer flags
+	  or to handle some frames differently than the default behaviour.
+
+2011-11-14 12:50:26 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Don't release buffers twice if dropping because of QoS
+
+2011-11-14 09:13:06 -0800  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Add XXX to the nOffset reset hack comment for QCOM
+
+2011-11-10 15:18:08 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Make srcpad caps setting threadsafe
+
+2011-11-10 15:17:56 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Make srcpad caps setting threadsafe
+
+2011-11-10 15:17:41 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Make srcpad caps setting threadsafe
+
+2011-11-10 15:10:14 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Make the srcpad task and the sinkpad streaming thread handling threadsafe
+
+2011-11-10 15:03:05 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Always flush the ports and make sure no processing is happening in ::flush
+	  This fixes a race condition that happened when seeking
+	  very often in a short period of time.
+
+2011-11-10 15:02:22 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Always flush the ports and make sure no processing is happening in ::reset
+	  This fixes a race condition that happened when seeking
+	  very often in a short period of time.
+
+2011-11-10 15:01:36 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Fix minor race condition when draining after upstream signalled EOS
+
+2011-11-10 14:56:19 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Improve EOS handling
+	  If downstream return UNEXPECTED we should still signal the
+	  drain cond because nothing will trigger this again later.
+
+2011-11-10 14:56:11 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Improve EOS handling
+	  If downstream return UNEXPECTED we should still signal the
+	  drain cond because nothing will trigger this again later.
+
+2011-11-10 14:54:33 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Improve debugging of EOS and draining
+
+2011-11-10 14:54:17 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Improve debugging of EOS and draining
+
+2011-11-10 14:51:06 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Log if acquiring buffer for EOS failed
+
+2011-11-10 14:42:13 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: The component is not started in READY
+
+2011-11-10 14:39:40 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: No need to signal the drain cond when going from READY to PAUSED
+	  Also the component is not started in READY
+
+2011-11-10 14:40:56 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: No need to signal the drain cond when going from READY to PAUSED
+	  Also the component is not started in READY.
+
+2011-11-09 15:46:02 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Always flush the ports and make sure no processing is happening in ::reset
+	  This fixes a race condition that happened when seeking
+	  very often in a short period of time.
+
+2011-11-09 15:45:20 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Fix minor race condition when draining after upstream signalled EOS
+
+2011-11-09 15:44:11 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Improve EOS handling
+	  If downstream return UNEXPECTED we should still signal the
+	  drain cond because nothing will trigger this again later.
+
+2011-11-09 15:43:32 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Improve debugging of EOS and draining
+
+2011-11-09 15:42:46 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: The component is not started already when going from READY to PAUSED
+
+2011-11-09 15:42:13 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: No need to signal the drain cond when going from READY to PAUSED
+
+2011-11-09 15:41:02 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Always reset buffer flags for output ports, even in flushing/error state
+
+2011-11-09 09:00:57 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Improve debugging in case of QoS-related frame drops
+
+2011-11-08 12:46:31 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Release the video codec stream lock before acquiring an input buffer
+	  Otherwise the srcpad task might block on this lock and
+	  no buffers ever become available again.
+
+2011-11-08 12:45:16 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Release the audio encoder stream lock before acquiring an input buffer
+	  Otherwise the srcpad task might block on this lock and
+	  no buffers ever become available again.
+
+2011-11-08 12:42:58 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Release the video codec stream lock before acquiring an input buffer
+	  Otherwise the srcpad task might block on this lock and
+	  no buffers ever become available again.
+
+2011-11-08 11:07:01 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxaudioenc.h:
+	  omxaudioenc: Don't try to drain the component after EOS
+	  And don't send EOS twice in any case. This most likely
+	  will cause the component to not output it again and
+	  is not necessary anyway.
+
+2011-11-08 11:03:29 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: Don't try to drain the component after EOS
+	  And don't send EOS twice in any case. This most likely
+	  will cause the component to not output it again and
+	  is not necessary anyway.
+
+2011-11-08 10:46:36 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omxvideodec: Don't try to drain the component after EOS
+	  And don't send EOS twice in any case. This most likely
+	  will cause the component to not output it again and
+	  is not necessary anyway.
+
+2011-11-08 09:09:28 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Implement dropping of too late frames via QoS
+
+2011-11-08 08:31:58 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Minor code refactoring
+
+2011-11-08 08:31:43 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Minor code refactoring
+
+2011-11-08 08:31:32 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Make sure to always release buffers back to OMX
+
+2011-11-08 08:24:19 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Also properly release buffers when in error state
+
+2011-11-08 08:22:08 +0100  Jonas Larsson <Jonas.Larsson@palm.com>
+
+	* omx/gstomx.c:
+	  omx: Properly release buffers during flushing
+	  We can't pass them back to OMX_FillThisBuffer() or OMX_EmptyThisBuffer()
+	  but instead of doing nothing we have to put them back into our queue.
+	  Otherwise the buffer is leaked and we will have too few buffers in
+	  the future.
+
+2011-11-07 14:00:47 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Free pending frames after draining component
+
+2011-11-07 14:00:35 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Free pending frames after draining the component
+
+2011-11-07 11:07:01 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Make handling and usage of the base video codec frames threadsafe
+
+2011-11-07 11:05:29 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Fix deadlock between srcpad stream lock and ::reset()
+
+2011-11-07 11:04:27 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideoenc: Make handling and usage of the base video codec frames threadsafe
+
+2011-11-07 10:58:44 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Free all pending frames after draining the component
+
+2011-11-07 10:58:24 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Always free all pending frames when caps changes require reconfiguration
+
+2011-11-04 09:43:48 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Only drain the component a single time and only after processing started
+
+2011-11-04 09:43:32 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Only drain the component a single time and only after processing started
+
+2011-11-04 09:43:12 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Only drain the component a single time and only after processing started
+
+2011-11-04 09:04:16 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Reset buffer flags to 0 after it was consumed by the component or the element
+	  Some implementations don't reset the flags and the standard is not
+	  really clear on the expected behaviour. Let's just always reset the
+	  flags as they're not valid at this point anymore.
+
+2011-11-02 13:50:14 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: Better handling of encoder parameters
+	  Only set them if necessary and allow to use the component
+	  defaults.
+
+2011-11-02 13:22:50 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Make unsupported bitrate/quantizer settings less fatal
+
+2011-11-02 10:39:50 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: If no stride was set for the OMX output port assume GStreamer stride
+	  This is not really correct but there's nothing else we could do.
+
+2011-11-02 10:39:10 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: If no stride was set for the OMX input port assume GStreamer stride
+	  This is not really correct but there's nothing else we could do.
+
+2011-11-01 16:46:09 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxaudioenc.h:
+	  omxaudioenc: Implement draining of the component and use it
+	  This makes sure that all buffers are encoded and pushed downstream
+	  before flushing the ports and losing some buffers.
+
+2011-11-01 16:41:46 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: Implement draining of the component and use it
+	  This makes sure that all buffers are encoded and pushed downstream
+	  before flushing the ports and losing some buffers.
+
+2011-11-01 16:08:59 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omxvideodec: Implement draining of the component and use it
+	  This makes sure that all buffers are decoded and pushed downstream
+	  before flushing the ports and losing some buffers.
+
+2011-10-20 14:32:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Fix deadlock if ::reset is called before finding the corresponding frame of a decoded buffer
+
+2011-11-01 15:10:12 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxaudioenc.h:
+	* omx/gstomxvideoenc.h:
+	  omxaudioenc: Forward downstream flow returns to upstream
+
+2011-11-01 15:10:01 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Forward downstream flow returns to upstream
+
+2011-11-01 13:58:38 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omxvideodec: Forward downstream flow returns to upstream
+
+2011-10-25 14:23:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* README:
+	  omx: Add minimal README file
+
+2011-10-20 15:21:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Fix deadlock caused by calling reset while the loop function does something with the base video codec stream lock
+
+2011-10-20 15:20:47 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Fix deadlock caused by calling reset while the loop function does something with the base video codec stream lock
+
+2011-10-20 14:30:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Move locking at the correct place
+
+2011-10-14 10:27:47 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Remove QCOM hack to reset nOffset in EmptyBufferDone
+	  This is now done in a generic way that does not require any
+	  hacks because it will work without any side effects on any
+	  OMX implementation.
+
+2011-10-14 10:26:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Reset nOffset to 0 in EmptyBufferDone if nFilledLen is 0
+	  Some OMX implementations don't reset nOffset when the complete
+	  buffer is emptied but instead only reset nFilledLen. We reset
+	  nOffset to 0 if nFilledLen == 0, which is safe to do because
+	  the offset *must* be 0 if the buffer is not filled at all.
+	  Seen in QCOM's OMX implementation.
+
+2011-10-04 10:56:33 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: If one parameter/configuration is not supported don't skip the next
+
+2011-10-03 09:12:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh264dec.c:
+	  omxh264dec: Require stream-format=byte-stream
+	  Other stream-formats are unlikely to be supported by OMX components.
+
+2011-09-29 10:37:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omxvideodec: Add API for subclasses to prepare/convert frames
+
+2011-09-27 15:08:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Switch to Idle first and wait before switching to Loaded and deallocating buffers
+	  Allocating buffers before the Idle state is reached can lead to crashes.
+
+2011-09-27 15:08:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Switch to Idle first and wait before switching to Loaded and deallocating buffers
+	  Allocating buffers before the Idle state is reached can lead to crashes.
+
+2011-09-27 15:05:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Switch to Idle first and wait before switching to Loaded and deallocating buffers
+	  Allocating buffers before the Idle state is reached can lead to crashes.
+
+2011-09-27 14:15:06 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	  omxvideodec: New hack for QCOM to recreate the component instead of reconfiguring it on caps changes
+
+2011-09-27 12:13:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Change a g_assert() into a GST_WARNING_OBJECT()
+
+2011-09-26 13:04:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Add hack for Qualcomm's OMX implementation to manually reset nOffset in EmptyBufferDone
+
+2011-09-23 17:02:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Add a check to prevent a zero-sized OMX buffer
+
+2011-09-23 17:02:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Add some more checks for correct OMX buffer sizes
+
+2011-09-23 15:53:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Add some more checks for OMX buffer sizes
+
+2011-09-14 10:15:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: Wait until the Executing state is reached before calling OMX_FillThisBuffer()
+	  This correctly works around the QCOM race condition that happens when calling
+	  FTB after setting the new state and before reaching it.
+
+2011-09-02 14:43:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Negotiate video format with downstream and what the component claims to support
+
+2011-08-25 19:56:58 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	  basevideoencoder: fix element leak
+	  and this concludes an hour of yelling at the bloody test failing,
+	  only to track down the problem not being in the test.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=657368
+
+2011-08-19 09:20:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Release basevideocodec stream lock while waiting for a buffer
+	  This prevents deadlocks if no empty input buffers are available and
+	  releasing input buffers requires the loop function to handle some
+	  output buffers first.
+
+2011-08-19 09:19:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Release basevideocodec stream lock while waiting for a buffer
+	  This prevents deadlocks if no empty input buffers are available and
+	  releasing input buffers requires the loop function to handle some
+	  output buffers first.
+
+2011-08-18 10:24:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideodecoder.c:
+	  basevideodecoder: Fix deadlock
+
+2011-08-18 10:03:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbaseaudiodecoder.c:
+	  baseaudiodecoder: Don't take the stream lock in the seek handler
+	  This will lead to deadlocks
+
+2011-08-18 10:02:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideocodec.c:
+	* omx/gstbasevideocodec.h:
+	* omx/gstbasevideodecoder.c:
+	* omx/gstbasevideoencoder.c:
+	  basevideo: Fix locking, especially if both pads have different streaming threads
+
+2011-08-18 09:42:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideodecoder.c:
+	* omx/gstbasevideoencoder.c:
+	  basevideo: Don't call g_type_class_peek_parent() in class_init
+	  This is already done by the GObject boilerplate macro
+
+2011-08-18 09:40:46 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbaseaudiodecoder.c:
+	  baseaudiodecoder: Don't call g_type_class_peek_parent() in class_init
+	  This is already done by the boilerplate macro
+
+2011-08-18 09:34:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbaseaudiodecoder.c:
+	* omx/gstbaseaudiodecoder.h:
+	  baseaudiodecoder: Fix thread safety issues if both pads have different streaming threads
+
+2011-08-18 09:17:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbaseaudiodecoder.c:
+	  baseaudiodecoder: Delay sending of serialized events to finish_frame()
+
+2011-08-17 14:33:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Always require at least OMX_MIN_PCMPAYLOAD_MSEC per input buffer
+
+2011-08-17 14:28:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbaseaudioencoder.c:
+	* omx/gstbaseaudioencoder.h:
+	  baseaudioencoder: Add support for requesting a minimum and maximum number of samples per frame
+	  This extends the special case of a fixed number of samples per frame
+	  that was supported before already.
+
+2011-08-17 14:17:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Handle inbuf==NULL properly in ::handle_frame()
+
+2011-08-17 13:04:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaacenc.c:
+	  omxaacenc: Implement ::get_num_samples() vfunc
+
+2011-08-17 13:03:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxaudioenc.h:
+	  omxaudioenc: Add vfunc to get the number of samples inside a buffer
+
+2011-08-17 11:34:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Release baseaudioencoder stream lock while waiting for a buffer in ::handle_frame()
+	  This prevents deadlocks if no empty input buffers are available and
+	  releasing input buffers requires the loop function to handle some
+	  output buffers first.
+
+2011-08-17 11:34:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbaseaudioencoder.c:
+	* omx/gstbaseaudioencoder.h:
+	  baseaudioencoder: Fix thread safety issues if both pads have different streaming threads
+
+2011-08-17 09:58:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbaseaudioencoder.c:
+	  baseaudioencoder: Taking the OBJECT lock in reset() is not needed
+
+2011-08-16 11:03:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Remove hack that only applies to the video encoder class
+
+2011-08-16 10:49:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomx.conf:
+	* omx/gstomxaacenc.c:
+	* omx/gstomxaacenc.h:
+	  omxaacenc: Add initial version of OpenMAX AAC encoder element
+
+2011-08-15 15:10:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxaudioenc.h:
+	  omxaudioenc: Add initial version of audio encoder base class
+
+2011-08-15 14:14:11 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbaseaudioencoder.c:
+	  baseaudioencoder: Delay sending of serialized events to finish_frame()
+
+2011-08-15 13:06:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstbaseaudiodecoder.c:
+	* omx/gstbaseaudiodecoder.h:
+	* omx/gstbaseaudioencoder.c:
+	* omx/gstbaseaudioencoder.h:
+	  audio: Integrate audio base classes into the build system and fixup
+
+2011-08-15 12:56:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbaseaudiodecoder.c:
+	* omx/gstbaseaudiodecoder.h:
+	* omx/gstbaseaudioencoder.c:
+	* omx/gstbaseaudioencoder.h:
+	* omx/gstbaseaudioutils.c:
+	* omx/gstbaseaudioutils.h:
+	  audio: Add audio decoder/encoder base classes
+	  Taken from http://cgit.collabora.com/git/user/manauw/gst-plugins-bad.git/log/?h=baseaudio
+
+2011-08-12 12:25:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	  basevideoencoder: Proxy the width/height/framerate/PAR constraints of downstream caps to upstream
+	  This allows to specify constraints on the compressed downstream caps
+	  by muxers or capsfilters, which will then be forwarded to upstream
+	  and allows video converters to fulfill the constraints.
+	  Code based on Mark Nauwelaerts audio encoder base class.
+
+2011-08-12 12:13:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.h:
+	  basevideoencoder: Remove old ::getcaps() comment
+
+2011-08-12 12:06:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	* omx/gstbasevideoencoder.h:
+	  basevideoencoder: Remove ::get_caps() vfunc
+	  Subclasses can set the caps more efficiently and this only
+	  caused additional indirections.
+
+2011-08-10 10:24:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh263enc.c:
+	* omx/gstomxh264enc.c:
+	* omx/gstomxmpeg4videoenc.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Use "video/x-raw-yuv" as sink template caps instead of strict I420 caps
+
+2011-08-10 10:23:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxmpeg4videodec.c:
+	  omxmpeg4videodec: Don't require width/height on sink pad caps
+
+2011-08-10 10:11:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh263dec.c:
+	* omx/gstomxh264dec.c:
+	* omx/gstomxmpeg4videodec.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxwmvdec.c:
+	  omxvideodec: Use "video/x-raw-yuv" as src template caps instead of strict I420 caps
+
+2011-08-10 09:56:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Set the state back to StateLoaded even if an error happened
+
+2011-08-10 09:49:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Don't hold any locks while calling OMX_SendCommand()
+	  It might call into one of the callbacks and lead to deadlocks, e.g.
+	  with the Qualcomm OMX implementation.
+
+2011-08-10 09:32:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Move some code
+
+2011-08-10 09:23:10 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Reset pending reconfigure output ports when changing the state from Executing to any lower state
+
+2011-08-10 09:08:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Fix crash when setting last error after the ports were freed
+
+2011-08-10 09:03:52 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Free component structure
+
+2011-08-10 09:02:52 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Make component destruction safer
+
+2011-08-10 08:53:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Set pAppPrivate of buffers to NULL when deallocating buffers
+	  This prevents usage of freed memory later if the OMX component
+	  has weird behaviour.
+
+2011-08-10 08:52:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Set the state back to StateLoaded even if an error happened
+
+2011-08-10 08:51:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Add some assertions to check if the buffer pAppPrivate is still correct
+
+2011-08-08 13:04:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.h:
+	  omx: Add parenthesis at correct places in the struct init macro
+
+2011-08-08 12:12:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Only prevent setting a higher state if the component is in an error state
+
+2011-08-03 16:02:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideodecoder.c:
+	  basevideodecoder: Use the cached video frame size instead of recalculating it
+
+2011-08-03 15:35:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Improve debugging in param/config getter/setter wrappers
+
+2011-08-03 13:10:33 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Don't abort if the color format is not supported but give a useful error message
+
+2011-08-02 15:14:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh263enc.c:
+	* omx/gstomxh264enc.c:
+	* omx/gstomxmpeg4videoenc.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Don't fail if setting the bitrate or profile is not supported by the component
+	  Also always set/get the profile, even if there are no peer caps.
+
+2011-08-02 15:14:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	  basevideoencoder: Make access to the list of frames threadsafe
+
+2011-08-01 13:22:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Add a hacks flag for the Qualcomm 7x30 OMX_FillThisBuffer() race and make it optional
+
+2011-07-29 13:56:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Add workaround for QCOM 7x30 race condition
+
+2011-07-29 12:06:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxh263enc.c:
+	* omx/gstomxh263enc.h:
+	  omxh263enc: Add H.263 encoder element
+
+2011-07-29 11:26:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxmpeg4videoenc.c:
+	  omxmpeg4videoenc: Add support for setting profile/level via caps
+
+2011-07-28 14:14:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh264enc.c:
+	  omxh264enc: Add support for setting profile/level via caps
+
+2011-07-28 12:58:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Add support for forcing the next frame to be a keyframe
+
+2011-07-28 11:54:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: Add support for setting bitrate/quantization related parameters
+
+2011-07-28 10:23:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Add wrapper functions for OMX_[GS]et{Config,Parameter}
+
+2011-07-28 09:54:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Add macro to initialize OpenMAX structures
+
+2011-07-28 09:08:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Don't output 0-byte buffers
+
+2011-07-25 15:05:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Ensure that the pAppPrivate pointer in OMX buffers is set correctly
+
+2011-07-25 13:19:06 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideo{enc,dec}: Only set/unset flushing state on ports if they were created already
+
+2011-07-25 12:01:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxwmvdec.c:
+	* omx/gstomxwmvdec.h:
+	  omxwmvdec: Add WMV video decoder element
+
+2011-07-25 11:44:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxh263dec.c:
+	* omx/gstomxh263dec.h:
+	  omxh263dec: Add H.263 decoder element
+
+2011-07-25 11:32:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxh264enc.c:
+	* omx/gstomxh264enc.h:
+	  omxh264enc: Add H.264 encoder element
+
+2011-07-25 10:48:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Try harder to deallocate the buffers after errors happened
+
+2011-07-25 10:47:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Try harder to deallocate the buffers after errors happened
+
+2011-07-25 10:46:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Deallocate port buffers before freeing the component
+	  They should be deallocated by the caller before reaching the
+	  Loaded state but to be on the safe side we will make sure
+	  they're really deallocated here.
+
+2011-07-21 11:15:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Add initial support for stride conversion
+
+2011-07-21 10:38:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh264dec.c:
+	* omx/gstomxmpeg4videodec.c:
+	* omx/gstomxmpeg4videoenc.c:
+	  omx: Set default roles for the components if none were set from the config file
+
+2011-07-21 10:36:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Failure to set the component role is fatal
+
+2011-07-21 07:53:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Add support for setting codec_data on the srcpad caps
+
+2011-07-21 07:44:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Free/drop GstVideoFrames that resulted in an empty buffer
+
+2011-07-21 07:44:10 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	  basevideoencoder: Allow finishing of frames with no src_buffer to drop/free the GstVideoFrame
+
+2011-07-21 07:31:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Remove obsolete TODO comment
+
+2011-07-20 11:09:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	  omx: Use libgstopenmax.so for the plugin filename and openmax for the plugin name
+	  Resolves conflicts with gst-openmax.
+
+2011-07-20 08:34:33 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomx.conf:
+	* omx/gstomx.h:
+	* omx/gstomxmpeg4videoenc.c:
+	* omx/gstomxmpeg4videoenc.h:
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: Add video encoder base class and MPEG4 video encoder
+	  Unfortunately requires lots of hacks again to work properly with
+	  Bellagio.
+
+2011-07-20 10:39:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	  basevideoencoder: Only get caps from the subclass if they were not set yet by the subclass
+
+2011-07-20 09:25:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	* omx/gstbasevideoencoder.h:
+	  basevideoencoder: Delay sending of serialized sink events until finish_frame()
+
+2011-07-20 09:09:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	* omx/gstbasevideoencoder.h:
+	  basevideoencoder: Add ::reset vfunc and handle ::reset/::finish the same way as in the decoder
+
+2011-07-19 12:50:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideoencoder.c:
+	  basevideoencoder: Use a temporary GstVideoState until the subclass accepted the caps
+	  Also store the caps in the GstVideoState and assume a PAR of 1/1 instead
+	  of 0/1 if no PAR is specified in the caps.
+
+2011-07-19 12:29:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomxvideodec.c:
+	  omx: Improve debug output a bit
+
+2011-07-19 10:33:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	  omx: Rework port reconfiguration again and only use the Bellagio specific hacks with Bellagio
+	  We only reconfigure ports that need to be reconfigured now instead of
+	  always all ports.
+
+2011-07-19 10:33:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.conf:
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omx: Add infrastructure to enable special hacks for broken OpenMAX implementations
+
+2011-07-18 13:10:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: When acquiring a buffer from an input port always wait until all output ports are reconfigured
+
+2011-07-18 08:41:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Add support for converting between omx and gst rowstrides
+
+2011-07-14 10:34:09 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Provide all buffers to output ports after enabling them
+
+2011-07-14 08:29:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Add support for NV12 / OMX_COLOR_FormatYUV420SemiPlanar
+
+2011-07-14 07:58:41 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omxvideodec: Only flush the component ports after we passed input to them
+
+2011-07-13 21:19:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Only change states downwards if an upper state was reached
+
+2011-07-13 20:37:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omx: Add support for setting the component-role
+
+2011-07-13 20:22:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	  omx: Improve error reporting by formatting the error codes better and also providing their string representation
+
+2011-07-13 14:36:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* Makefile.am:
+	  build: Dist autogen.sh
+
+2011-07-13 14:35:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* omx/gstomx.c:
+	  build: Only require GStreamer >= 0.10.29 and GLib >= 2.16
+
+2011-07-13 14:04:47 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	  build: Dist gstomx.conf
+
+2011-07-13 14:04:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* Makefile.am:
+	  build: Clean _stdint.h on "make distclean"
+
+2011-07-13 14:02:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Fix typo
+
+2011-07-13 13:59:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	  omx: Dist gstomx.h
+
+2011-07-13 12:46:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Set SYNCFRAME flag on the OMX buffers for non-delta units
+
+2011-07-13 12:37:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Free all pending frames when resetting the decoder
+	  Workaround for https://bugzilla.gnome.org/show_bug.cgi?id=654529
+
+2011-07-13 09:59:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Handle output buffers without a corresponding GstVideoFrame more gracefully
+	  This can happen on EOS in some cases and when the input is not
+	  properly framed.
+
+2011-07-13 09:31:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Fix deadlock when finishing old frames that are left over by the decoder
+
+2011-07-12 11:37:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh264dec.c:
+	  omxh264dec: It's called H.264, not H264
+
+2011-07-12 11:36:42 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh264dec.c:
+	* omx/gstomxmpeg4videodec.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omxvideodec: Make sink/src pad template caps configurable
+
+2011-07-12 11:13:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Allow to set a preferred configuration directory with the GST_OMX_CONFIG_DIR environment variable
+
+2011-07-12 10:55:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh264dec.c:
+	* omx/gstomxmpeg4videodec.c:
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Make core/component-name and in/outport index configurable
+
+2011-07-12 10:05:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.conf:
+	* omx/gstomx.h:
+	  omx: Add initial version of configuration system
+	  This now only registers elements that are specified in the
+	  configuration file.
+	  The configuration file is a keyfile in the first XDG configuration
+	  directory with the name gstomx.conf.
+
+2011-07-12 08:53:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxh264dec.c:
+	* omx/gstomxh264dec.h:
+	* omx/gstomxh264videodec.c:
+	* omx/gstomxh264videodec.h:
+	  omxh264dec: Rename from omxh264videodec to omxh264dec
+
+2011-07-12 08:40:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxh264videodec.c:
+	  omxh264videodec: Require alignment=au and stream-format={avc,bytestream}
+
+2011-07-11 12:59:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideodecoder.c:
+	  basevideodecoder: First inform subclass about resetting before resetting/freeing all internal state
+	  The subclass might want to access the old state.
+
+2011-07-11 12:36:42 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideodecoder.c:
+	  basevideodecoder: Track present position on discont before resetting it
+
+2011-07-11 11:52:33 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideodecoder.c:
+	  basevideodecoder: Also protect the list of pending frames from concurrent access when pushing all pendings events
+
+2011-07-11 11:28:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideocodec.c:
+	* omx/gstbasevideocodec.h:
+	* omx/gstbasevideodecoder.c:
+	  basevideocodec: Protect access to the list of pending frames with the object lock
+	  This is required if ::finish_frame() and all buffer output happens
+	  on a different thread than the sinkpad streaming thread.
+
+2011-07-11 09:35:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideodecoder.c:
+	  basevideodecoder: Set the correct lists to NULL after freeing
+
+2011-07-11 08:54:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideodecoder.c:
+	  basevideodecoder: Work with a copy of the GstVideoState in setcaps until the caps are accepted
+	  Also fix a refcount problem with the codec_data.
+
+2011-07-12 08:34:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomxh264videodec.c:
+	* omx/gstomxh264videodec.h:
+	  omxh264videodec: Add h.264 video decoder
+
+2011-07-12 08:29:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxmpeg4videodec.c:
+	  omxmpeg4videodec: Fix debug category name
+
+2011-07-09 11:41:42 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstbasevideocodec.h:
+	* omx/gstbasevideodecoder.c:
+	* omx/gstbasevideoencoder.c:
+	* omx/gstbasevideoutils.c:
+	* omx/gstbasevideoutils.h:
+	  basevideo: Move the utils from the codec header to its own header
+
+2011-07-09 11:32:06 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideocodec.c:
+	* omx/gstbasevideodecoder.c:
+	  basevideo: Use GSlice for allocating GstVideoFrame and don't duplicate code in the decoder base class
+
+2011-07-09 11:05:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Use the destroy notify to free the coder_hook
+
+2011-07-09 10:57:52 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideocodec.c:
+	* omx/gstbasevideocodec.h:
+	* omx/gstbasevideodecoder.c:
+	  basevideo: Add destroy notify for the coder_hook to prevent memory leaks
+	  Fixes bug #654293.
+
+2011-07-09 10:44:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	  basevideo: Fix GType names to not conflict with the public video base classes
+	  It's still not possible to include headers of both in the same file
+	  or compile/link both into the same plugin but that shouldn't be
+	  necessary anyway.
+
+2011-07-08 15:42:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Fix some minor memory leaks
+
+2011-07-08 15:25:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	  omx: Rework port reconfiguration
+	  We always reconfigure all ports now if the settings of one
+	  port changes to prevent lots of race conditions, dropped
+	  frames and similar issues.
+
+2011-07-08 13:16:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omxvideodec: Use the frames storage of the base class instead of implementing our own
+	  They could get out of sync and we could store already destroyed frames.
+
+2011-07-07 12:51:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.h:
+	  omx: Clarify GQueue/GPtrArray element types
+
+2011-07-07 12:23:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	  omx: Add more checks to acquire_buffer() and return the current state additional to the buffer
+	  Also refactor the code flow in the video decoder for this. This makes
+	  the usage of acquire_buffer() easier and more atomic.
+
+2011-07-07 12:22:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Also flush/unflush the input port when changing the state PAUSED<->READY
+
+2011-07-07 12:21:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Don't broadcast port->port_cond after allocating buffers successfully
+	  Allocating buffers must happen while no thread is waiting for the
+	  cond and especially must happen from the thread that would acquire
+	  buffers from the port.
+
+2011-07-07 11:27:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Don't leak the codec_data after sending it
+
+2011-07-07 10:27:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Always check if the component is in an error state before waiting for a condition variable to be signalled
+	  Otherwise we might wait forever because nothing is going to signal
+	  the condition variable anymore.
+
+2011-07-07 10:22:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Always hold port->port_lock before signalling port->port_cond when notifying about errors
+	  Otherwise a port might be in the critical section, has checked the error state
+	  already but waits after port->port_cond is signalled, which will lead
+	  to a deadlock.
+
+2011-07-07 10:07:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Remove reconfiguration test hack
+
+2011-07-06 13:27:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Improve debug output a bit
+
+2011-07-06 13:26:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Always try to deallocate buffers, even if there's a component error
+
+2011-07-06 13:26:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: Use G_USEC_PER_SEC for clarity instead of 1000000
+
+2011-07-06 13:19:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Error out if the GStreamer allocated buffer is smaller than the OpenMAX output buffer
+	  Usually this must never happen but currently it happens during reconfigurations
+	  because of a race condition. Still it's better than crashing.
+
+2011-07-06 10:40:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Don't use port_def.bEnabled to check if the Enable/Disable command is finished
+	  bEnabled should be set immediately after sending the command, it's only
+	  Bellagio that waits until the command is finished before setting it.
+
+2011-07-06 10:30:11 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Remove obsolete FIXME comment
+
+2011-07-06 10:29:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	  omx: Improve error handling and reporting
+
+2011-07-06 08:48:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstomxmpeg4videodec.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omxvideodec: Make the inport and outport index configurable by the subclass
+
+2011-06-28 08:51:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/Makefile.am:
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxmpeg4videodec.c:
+	* omx/gstomxmpeg4videodec.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omx: Add initial version of OpenMAX framework, video decoder base class and MPEG4 video decoder
+	  This currently hardcodes a lot of stuff but works at least.
+	  Also adds a generic framework for handling OpenMAX cores, components
+	  and ports.
+
+2011-06-28 11:47:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideocodec.c:
+	* omx/gstbasevideocodec.h:
+	* omx/gstbasevideodecoder.c:
+	* omx/gstbasevideodecoder.h:
+	  basevideodecoder: Don't reorder serialized src events
+	  And allow to drop EOS by the subclass if ::finish returns
+	  DROPPED.
+	  Fixes bug #653544.
+
+2011-06-27 09:41:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideocodec.c:
+	* omx/gstbasevideocodec.h:
+	* omx/gstbasevideodecoder.c:
+	  basevideo: Add the caps to the GstVideoState and clean up caps/codec_data properly
+
+2011-06-27 09:37:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/gstbasevideocodec.c:
+	* omx/gstbasevideocodec.h:
+	* omx/gstbasevideodecoder.c:
+	* omx/gstbasevideodecoder.h:
+	* omx/gstbasevideoencoder.c:
+	* omx/gstbasevideoencoder.h:
+	* omx/gstbasevideoutils.c:
+	  basevideo: Add video encoder/decoder base classes from gst-plugins-bad
+
+2011-06-21 11:17:35 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* omx/openmax/OMX_Audio.h:
+	* omx/openmax/OMX_Component.h:
+	* omx/openmax/OMX_ComponentExt.h:
+	* omx/openmax/OMX_ContentPipe.h:
+	* omx/openmax/OMX_Core.h:
+	* omx/openmax/OMX_CoreExt.h:
+	* omx/openmax/OMX_IVCommon.h:
+	* omx/openmax/OMX_Image.h:
+	* omx/openmax/OMX_Index.h:
+	* omx/openmax/OMX_IndexExt.h:
+	* omx/openmax/OMX_Other.h:
+	* omx/openmax/OMX_Types.h:
+	* omx/openmax/OMX_Video.h:
+	* omx/openmax/OMX_VideoExt.h:
+	  openmax: Add OpenMAX IL 1.1.2 headers
+

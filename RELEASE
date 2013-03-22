@@ -1,0 +1,102 @@
+
+Release notes for GStreamer OpenMAX IL wrapper plugin 1.0.0
+
+The GStreamer team is proud to announce a new feature release
+in the 1.x stable series of the GStreamer OpenMAX IL
+wrapper plugin.
+
+
+The 1.x series is a stable series targeted at end users.
+It is not API or ABI compatible with the stable 0.10.x series.
+It is, however, parallel installable with the 0.10.x series and
+will not affect an existing 0.10.x installation.
+
+
+
+This module contains a plugin that wraps available OpenMAX IL
+components and makes them available as standard GStreamer
+elements.
+
+
+
+Other modules containing plugins are:
+
+
+gst-plugins-base
+contains a basic set of well-supported plugins
+gst-plugins-good
+contains a set of well-supported plugins under our preferred license
+gst-plugins-ugly
+contains a set of well-supported plugins, but might pose problems for
+    distributors
+gst-plugins-bad
+contains a set of less supported plugins that haven't passed the
+    rigorous quality testing we expect, or are still missing documentation
+    and/or unit tests
+
+
+
+  
+
+Features of this release
+    
+      * Parallel installability with 0.10.x series
+      * Generic support for OpenMAX IL implementations
+      * Special support for features of: Raspberry Pi
+
+Bugs fixed in this release
+     
+      * 692446 : Add mpeg2 support
+
+==== Download ====
+
+You can find source releases of gst-omx in the download
+directory: http://gstreamer.freedesktop.org/src/gst-omx/
+
+The git repository and details how to clone it can be found at
+http://cgit.freedesktop.org/gstreamer/gst-omx/
+
+==== Homepage ====
+
+The project's website is http://gstreamer.freedesktop.org/
+
+==== Support and Bugs ====
+
+We use GNOME's bugzilla for bug reports and feature requests:
+http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+
+Please submit patches via bugzilla as well.
+
+For help and support, please subscribe to and send questions to the
+gstreamer-devel mailing list (see below for details).
+
+There is also a #gstreamer IRC channel on the Freenode IRC network.
+
+==== Developers ====
+
+GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned
+from there (see link above).
+
+Interested developers of the core library, plugins, and applications should
+subscribe to the gstreamer-devel list.
+
+        
+Contributors to this release
+    
+      * Alessandro Decina
+      * Arun Raghavan
+      * Dake Gu
+      * Edward Hervey
+      * George Kiagiadakis
+      * Jonas Larsson
+      * Josep Torra
+      * Julian Scheel
+      * Matej Knopp
+      * Nicolas Dufresne
+      * Olivier Crête
+      * Reynaldo H. Verdejo Pinochet
+      * Sebastian Dröge
+      * Stefan Sauer
+      * Tim-Philipp Müller
+      * Vincent Penquerc'h
+ 

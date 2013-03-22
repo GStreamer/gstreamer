@@ -5,14 +5,16 @@
   xmlns:foaf="http://xmlns.com/foaf/0.1/"
   xmlns:admin="http://webns.net/mvcb/">
 
- <name>GStreamer OpenMAX Plug-ins</name>
- <shortname>gst-plugins-base</shortname>
+ <name>GStreamer OpenMAX IL wrapper plugin</name>
+ <shortname>gst-omx>/shortname>
  <homepage rdf:resource="http://gstreamer.freedesktop.org/modules/gst-omx.html" />
- <created>2011-06-21</created>
+ <created>2005-06-17</created>
  <shortdesc xml:lang="en">
-OpenMAX GStreamer Plug-ins
+a basic collection of elements
  </shortdesc>
  <description xml:lang="en">
+ This plugin wraps available OpenMAX IL components and makes
+ them available as standard GStreamer elements.
 </description>
  <category></category>
  <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-omx" />
@@ -31,18 +33,18 @@ OpenMAX GStreamer Plug-ins
 
  <release>
   <Version>
-   <revision>0.10.0</revision>
-   <branch>0.10</branch>
-   <name>TODO</name>
-   <created>2011-XX-XX</created>
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-omx/gst-omx-0.10.0.tar.bz2" />
-   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-omx/gst-omx-0.10.0.tar.gz" />
+   <revision>1.0.0</revision>
+   <branch>1.0</branch>
+   <name></name>
+   <created>2013-03-22</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-omx/gst-omx-1.0.0.tar.xz" />
   </Version>
  </release>
 
  <maintainer>
   <foaf:Person>
-     <foaf:name>Sebastian Dr&ouml;ge</foaf:name>
+     <foaf:name>Sebastian Dr&ouml;&ge</foaf:name>
+     <foaf:mbox_sha1sum>7c1069ea873ef7751e4eca5f1a42744b0e9a3a0a</foaf:mbox_sha1sum>
   </foaf:Person>
  </maintainer>
 

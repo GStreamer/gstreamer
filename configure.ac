@@ -5,7 +5,7 @@ dnl please read gstreamer/docs/random/autotools before changing this file
 dnl initialize autoconf
 dnl releases only do -Wall, git and prerelease does -Werror too
 dnl use a three digit version number for releases, and four for git/prerelease
-AC_INIT(GStreamer OpenMAX Plug-ins, 0.11.0.1,
+AC_INIT(GStreamer OpenMAX Plug-ins, 1.0.0,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-omx)
 
@@ -238,7 +238,7 @@ AG_GST_SET_PLUGINDIR
 
 dnl set release date/time
 AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
-  ["${srcdir}/gst-plugins-base.doap"],
+  ["${srcdir}/gst-omx.doap"],
   [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
 
 dnl define an ERROR_CFLAGS Makefile variable
