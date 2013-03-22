@@ -2154,8 +2154,10 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       GST_DEBUG ("setting first_ts to %" G_GUINT64_FORMAT, pad->first_ts);
       check_and_subtract_ts (qtmux, &GST_BUFFER_DTS (last_buf), pad->first_ts);
       check_and_subtract_ts (qtmux, &GST_BUFFER_PTS (last_buf), pad->first_ts);
-      check_and_subtract_ts (qtmux, &GST_BUFFER_DTS (buf), pad->first_ts);
-      check_and_subtract_ts (qtmux, &GST_BUFFER_PTS (buf), pad->first_ts);
+      if (buf) {
+        check_and_subtract_ts (qtmux, &GST_BUFFER_DTS (buf), pad->first_ts);
+        check_and_subtract_ts (qtmux, &GST_BUFFER_PTS (buf), pad->first_ts);
+      }
     } else {
       GST_ERROR_OBJECT (qtmux, "First buffer for pad %s has no timestamp, "
           "using 0 as first timestamp", GST_PAD_NAME (pad->collect.pad));
