@@ -1,4 +1,67 @@
-This is GStreamer Good Plugins 1.0.5
+This is GStreamer Good Plugins 1.0.6
+
+Changes since 1.0.5:
+
+      * auparse: fix caps leak
+      * avidemux: push mode: handle some more 0-size buffer cases
+      * deinterlace: fix infinite loop on EOS with non-default methods or fields
+      * dvdemux: don't return FALSE when dropping sink events, fixes flow errors
+      * level: send a last message on EOS 
+      * mp4mux: in faststart mode, don't output up to 4 kB of garbage at the end
+      * osxvideosink: Fix crash in osxvideosink with external window output
+      * osxvideosink: Make GstGLView propagate input events to its parent view
+      * osxvideosink: Make GstNavigation key input events in osxvideosink compatible with x(v)imagesink ones
+      * pulsesink: don't error out if pa_stream_proplist_update() with new tags fails
+      * qtdemux: fix potential crash on short MOOV atom
+      * qtdemux: fix sample leak when processing private qt tags
+      * qtdemux: push mode: only parse moov 1 once
+      * qtdemux: skip disabled tracks
+      * qtmux: set stream language code from tag
+      * rtph264pay: Don't use upstream caps with peer_query_caps()
+      * rtpmp4gdepay: streamtype is not put by all RTSP server, not make it optional
+      * rtpptdemux: forward sticky events and then set caps
+      * rtpsession: Fix wrong code organisation in case of collision
+      * rtspsrc: flush connection when stopping
+      * rtspsrc: only EOS when our source sends BYE
+      * rtspsrc: save the stream SSRC
+      * v4l2: don't check stride for encoded formats
+      * v4l2: fix compilation against newer kernel headers as on FC19
+      * videomixer2: avoid caps leak
+      * videomixer: fix eos timestamp check
+      * ximagesrc: Set the pixel aspect ratio correctly in the caps
+      * build: allow calling autogen.sh from out-of-tree
+      * build: fix build with automake 1.13
+
+Bugs fixed since 1.0.5:
+
+      * 628790 : qtdemux: OSD displays persistent chapters subtitles
+      * 656068 : pulsesink: errors out if pa_stream_proplist_update() fails with old pulseaudio versions
+      * 675453 : rtspsrc: only EOS if BYE came from SSRC of the stream
+      * 678429 : souphttpsrc: should return GST_FLOW_ERROR from create function in case of HTTP error 404 not found
+      * 684924 : rtspsrc: flush connection when going to null state
+      * 684944 : avidemux: " unhandled buffer size " error for cyuv.avi in push mode
+      * 688935 : rtpjitterbuffer not always correctly warns about resetting skew
+      * 689809 : osxvideosink: inconsistent keyboard navigation events
+      * 691484 : osxvideosink: crash when displaying on Qt widget
+      * 691570 : [isomp4/qtdemux] lots of critical warnings on this sample file
+      * 691580 : ximagesrc sets bad pixel-aspect-ratio caps
+      * 691832 : osxvideosink doesn't propagate input events to output window
+      * 692309 : allow autogen.sh to be call out-of-tree
+      * 692786 : CAPS event is forwarded before STREAM_START in rtpptdemux element
+      * 692935 : videomixer: hangs on eos
+      * 692950 :  " rtpjitterbuffer " properties can't be changed after pipeline is started
+      * 693055 : level: 32-bit formats don't work because of typo in format list: S32LEF32LE
+      * 693173 : deinterlace method=greedyl fields=top does not complete
+      * 693307 : videomixer2 leaks caps reference
+      * 693373 : 1.0 branch is still using AM_CONFIG_HEADER
+      * 694010 : qtdemux: crash with partial mp4 / moov atom
+      * 694184 : Wrong code organisation in case of collision in rtpsession
+      * 694275 : auparse: src_caps are leaked
+      * 695629 : rtph264pay: caps negotiation fails if upstream caps is not NULL
+      * 695643 : dvdemux: returns wrong value when it is not processing the sink events
+      * 695644 : deinterlace: going to infinite loop on EOS with method=scalerbob fields=bff
+      * 696355 : qtdemux: sample leak in tag handling
+      * 696358 : qtmux: set language code on streams
 
 Changes since 1.0.4:
 

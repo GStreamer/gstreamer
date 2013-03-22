@@ -1,9 +1,328 @@
-=== release 1.0.5 ===
+=== release 1.0.6 ===
 
-2013-01-08  Tim-Philipp Müller <tim@centricular.net>
+2013-03-22  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.5
+	  releasing 1.0.6
+
+2012-06-22 21:56:52 +0000  Norbert Waschbuesch <nwaschbu@opentv.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  souphttpsrc: error out properly when receiving data along with an error status
+	  When receiving an error code from the http server, such as 404,
+	  data might be sent along with it, like a web page. We don't want
+	  to output that data in this case, and we also want to pass the
+	  FLOW_ERROR return back to the base class, so it can stop properly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=678429
+
+2013-03-22 08:47:17 +0000  Rodolfo Schulz de Lima <rodolfo@rodsoft.org>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: fix sample leak when processing private qt tags
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696355
+
+2013-03-22 02:24:01 +0100  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: set stream language code from tag
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696358
+
+2013-03-19 18:09:31 -0700  Michael Smith <msmith@rdio.com>
+
+	* gst/isomp4/gstqtmux.c:
+	  mp4mux: in faststart mode, don't output up to 4 kB of garbage at the end.
+
+2013-03-18 14:59:35 +0000  Bastien Nocera <hadess@hadess.net>
+
+	* sys/v4l2/v4l2_calls.c:
+	  v4l2: fix compilation against newer kernel headers as on FC19
+
+2013-03-14 14:12:05 +0100  Kishore Arepalli <kishore.arepalli@gmail.com>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: fix infinite loop on EOS with non-default methods or fields
+	  Fixes problem of infinite loop in gst_deinterlace_reset_history.
+	  Last field in the history was never deinterlaced because idx becomes negative.
+	  Happens e.g. with method=scalerbob fields=bottom or
+	  method=greedyl fields=top
+	  https://bugzilla.gnome.org/show_bug.cgi?id=695644
+	  https://bugzilla.gnome.org/show_bug.cgi?id=693173
+
+2013-03-12 09:48:31 +0000  Kishore Arepalli <kishore.arepalli@gmail.com>
+
+	* ext/dv/gstdvdemux.c:
+	  dvdemux: don't return FALSE when dropping sink events
+	  Fixes problem in conjunction with avidemux.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=695643
+
+2013-03-11 14:50:41 +0100  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtp/gstrtph264pay.c:
+	  rtph264pay: Don't use upstream caps with peer_query_caps ()
+	  Calling gst_pad_peer_query_caps () on the src pad with the caps
+	  upstream can produce as a filter from gst_rtp_h264_pay_getcaps ()
+	  is wrong and makes caps negotiation fail if upstream caps are not
+	  NULL.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=695629
+
+2013-02-22 19:06:52 +0100  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: skip disabled tracks
+	  ISO/IEC 14496-12 specifies disabled tracks should be completely
+	  ignored, so just do it.
+	  Avoids deadlock during prerolling for some files.
+	  Also prevents 'chapter' subtitle tracks from showing up.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=693993
+	  https://bugzilla.gnome.org/show_bug.cgi?id=628790
+
+2013-02-26 14:18:20 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtp/gstrtpmp4gdepay.c:
+	  rtpmp4gdepay: streamtype is not put by all RTSP server, not make it optional
+	  Specific case here is Wowza 3.5.0
+
+2013-02-25 09:58:13 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/level.c:
+	  tests: re-add suppression for GValueArray warnings to unit test as well
+
+2013-02-25 00:35:18 +0100  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
+
+	* gst/level/gstlevel.c:
+	  level: put back deprecation warnings
+
+2013-02-24 19:05:07 +0100  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
+
+	* gst/level/gstlevel.c:
+	* tests/check/elements/level.c:
+	  level: send last message on EOS
+
+2013-02-23 14:34:35 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: push mode: handle some more 0-size buffer cases
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=684944
+
+2013-02-13 10:46:54 +0100  Paul HENRYS <visechelle@gmail.com>
+
+	* gst/rtpmanager/rtpsession.c:
+	  rtpsession: Fix wrong code organisation in case of collision
+	  change_ssrc field of RTPSession should be set before calling
+	  rtp_session_schedule_bye_locked () as this function will call reconsider function
+	  that will wake up rtcp_thread which will call rtp_session_on_timeout () that will
+	  check change_ssrc to change the ssrc.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=694184
+
+2013-02-20 15:46:43 +0100  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/auparse/gstauparse.c:
+	  auparse: do not leak src_caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=694275
+
+2013-02-18 16:32:13 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: fix potential crash on short MOOV atom
+	  Don't unmap short MOOV atom buffer twice, which happened
+	  in the case where we don't fix up the MOOV atom.
+	  Fixes crashes when thumbnailing partial mp4 file where
+	  the MOOV atom is still incomplete.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=694010
+
+2013-02-15 16:21:21 +0100  Benjamin Gaignard <benjamin.gaignard@stericsson.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2: don't check stride for encoded formats
+	  Don't try to check the stride for encoded formats. Some drivers output
+	  something != 0 and then we don't want to fail on that.
+
+2013-02-07 22:51:45 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  build: fix build with automake 1.13
+	  AM_CONFIG_HEADER -> AC_CONFIG_HEADERS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=693373
+
+2013-01-29 10:48:17 +0100  Paul HENRYS <visechelle@gmail.com>
+
+	* gst/rtpmanager/gstrtpptdemux.c:
+	  rtpptdemux: forward sticky events and then set caps
+	  When a new src pad is added, first forward the sticky events and then
+	  set the caps on the src pad
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=692786
+
+2013-02-07 14:32:26 +0100  Markovtsev Vadim <v.markovtsev at samsung.com>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  rtpjitterbuffer: improve debug output
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=688935
+
+2013-02-07 11:40:35 +0100  Tim 'mithro' Ansell <gnome at mithis.com>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer2: avoid caps leak
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=693307
+
+2013-02-06 13:52:26 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: only EOS when our source sends BYE
+	  Only EOS when we receive a BYE event from the SSRC of our stream.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=675453
+
+2013-02-06 13:47:51 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: save the stream SSRC
+	  Conflicts:
+	  gst/rtsp/gstrtspsrc.c
+
+2013-02-06 13:18:18 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: flush connection when stopping
+	  When we stop, we can flush all pending commands so that we can stop and
+	  join the task.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=684924
+
+2013-02-03 13:14:50 +0100  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/level/gstlevel.c:
+	  level: Add missing coma between formats
+
+2013-01-31 22:55:18 +1100  Matthew Waters <ystreet00@gmail.com>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: fix eos timestamp check
+	  fixes hang in videotestsrc num-buffers=20 ! videomixer ! fakesink
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=692935
+
+2013-01-18 21:08:12 +0400  Alexey Chernov <achernov@neosphere.com>
+
+	* sys/osxvideo/cocoawindow.h:
+	* sys/osxvideo/cocoawindow.m:
+	  osxvideosink: Make GstNavigation key input events in osxvideosink compatible with x(v)imagesink ones
+
+2013-01-27 12:54:15 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: push mode: only parse moov 1 once
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=691570
+
+2013-01-23 21:35:25 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* sys/ximage/gstximagesrc.c:
+	* sys/ximage/ximageutil.c:
+	* sys/ximage/ximageutil.h:
+	  ximagesrc: Set the pixel aspect ratio correctly in the caps
+
+2013-01-22 18:12:10 +0100  Benjamin Gaignard <benjamin.gaignard@st.com>
+
+	* autogen.sh:
+	  autogen.sh: allow calling from out-of-tree
+	  Signed-off-by: Benjamin Gaignard <benjamin.gaignard@st.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692309
+
+2013-01-19 13:27:48 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: don't error out if pa_stream_proplist_update() with new tags fails
+	  Shouldn't really happen these days, but if it does, it's not really
+	  a problem either.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656068
+
+2013-01-11 19:24:43 +0400  Alexey Chernov <achernov@neosphere.com>
+
+	* sys/osxvideo/cocoawindow.m:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: Fix crash in osxvideosink with external window output
+
+2013-01-16 12:04:59 +0400  Alexey Chernov <achernov@neosphere.com>
+
+	* sys/osxvideo/cocoawindow.m:
+	  osxvideosink: Make GstGLView propagate input events to its parent view
+	  Fixes bug #691832
+
+=== release 1.0.5 ===
+
+2013-01-08 01:19:07 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* po/ja.po:
+	* po/nb.po:
+	* po/sl.po:
+	* win32/common/config.h:
+	  Release 1.0.5
 
 2013-01-04 13:53:45 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
