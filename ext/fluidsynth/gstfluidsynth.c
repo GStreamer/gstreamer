@@ -63,10 +63,22 @@ enum
   LAST_SIGNAL
 };
 
+#define SOUNDFONT_PATH "/usr/share/sounds/sf2/"
+
+#define DEFAULT_SOUNDFONT       NULL
+#define DEFAULT_SYNTH_CHORUS    TRUE
+#define DEFAULT_SYNTH_REVERB    TRUE
+#define DEFAULT_SYNTH_GAIN      0.2
+#define DEFAULT_SYNTH_POLYPHONY 256
+
 enum
 {
   PROP_0,
-  /* FILL ME */
+  PROP_SOUNDFONT,
+  PROP_SYNTH_CHORUS,
+  PROP_SYNTH_REVERB,
+  PROP_SYNTH_GAIN,
+  PROP_SYNTH_POLYPHONY
 };
 
 static void gst_fluidsynth_finalize (GObject * object);
@@ -142,6 +154,31 @@ gst_fluidsynth_class_init (GstFluidsynthClass * klass)
   gobject_class->set_property = gst_fluidsynth_set_property;
   gobject_class->get_property = gst_fluidsynth_get_property;
 
+  g_object_class_install_property (gobject_class, PROP_SOUNDFONT,
+      g_param_spec_string ("soundfont",
+          "Soundfont", "the filename of a soundfont (NULL for default)",
+          DEFAULT_SOUNDFONT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_SYNTH_CHORUS,
+      g_param_spec_boolean ("synth-chorus",
+          "Synth Chorus", "Turn the chorus on or off",
+          DEFAULT_SYNTH_CHORUS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_SYNTH_REVERB,
+      g_param_spec_boolean ("synth-reverb",
+          "Synth Reverb", "Turn the reverb on or off",
+          DEFAULT_SYNTH_REVERB, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_SYNTH_GAIN,
+      g_param_spec_double ("synth-gain",
+          "Synth Gain", "Set the master gain", 0.0, 10.0,
+          DEFAULT_SYNTH_GAIN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_SYNTH_POLYPHONY,
+      g_param_spec_int ("synth-polyphony",
+          "Synth Polyphony", "The number of simultaneous voices", 1, 65535,
+          DEFAULT_SYNTH_POLYPHONY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (gstelement_class,
@@ -187,11 +224,32 @@ gst_fluidsynth_init (GstFluidsynth * filter)
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_use_fixed_caps (filter->srcpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
+
+  filter->soundfont = g_strdup (DEFAULT_SOUNDFONT);
+  filter->synth_chorus = DEFAULT_SYNTH_CHORUS;
+  filter->synth_reverb = DEFAULT_SYNTH_REVERB;
+  filter->synth_gain = DEFAULT_SYNTH_GAIN;
+  filter->synth_polyphony = DEFAULT_SYNTH_POLYPHONY;
+
+  filter->settings = new_fluid_settings ();
+  filter->synth = new_fluid_synth (filter->settings);
+  filter->sf = -1;
+
+  fluid_synth_set_chorus_on (filter->synth, filter->synth_chorus);
+  fluid_synth_set_reverb_on (filter->synth, filter->synth_reverb);
+  fluid_synth_set_gain (filter->synth, filter->synth_gain);
+  fluid_synth_set_polyphony (filter->synth, filter->synth_polyphony);
 }
 
 static void
 gst_fluidsynth_finalize (GObject * object)
 {
+  GstFluidsynth *fluidsynth = GST_FLUIDSYNTH (object);
+
+  delete_fluid_synth (fluidsynth->synth);
+  delete_fluid_settings (fluidsynth->settings);
+  g_free (fluidsynth->soundfont);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -254,6 +312,8 @@ gst_fluidsynth_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           "rate", G_TYPE_INT, FLUIDSYNTH_RATE,
           "channels", G_TYPE_INT, 2,
           "layout", G_TYPE_STRING, "interleaved", NULL);
+
+      fluid_synth_set_sample_rate (fluidsynth->synth, FLUIDSYNTH_RATE);
 
       res = gst_pad_push_event (fluidsynth->srcpad, gst_event_new_caps (caps));
       gst_caps_unref (caps);
@@ -426,30 +486,87 @@ gst_fluidsynth_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buffer)
 static gboolean
 gst_fluidsynth_open (GstFluidsynth * fluidsynth)
 {
-  if (fluidsynth->settings == NULL) {
-    fluidsynth->settings = new_fluid_settings ();
-    fluidsynth->synth = new_fluid_synth (fluidsynth->settings);
-    /* FIXME configure path */
-    fluidsynth->soundfont = fluid_synth_sfload (fluidsynth->synth,
-        "/usr/share/sounds/sf2/FluidR3_GM.sf2", 1);
-    fluid_synth_set_chorus_on (fluidsynth->synth, TRUE);
-    fluid_synth_set_gain (fluidsynth->synth, 0.2);
-    fluid_synth_set_polyphony (fluidsynth->synth, 256);
-    fluid_synth_set_reverb_on (fluidsynth->synth, TRUE);
-    fluid_synth_set_sample_rate (fluidsynth->synth, FLUIDSYNTH_RATE);
-  }
+  GDir *dir;
+  GError *error = NULL;
 
+  if (fluidsynth->sf != -1)
+    return TRUE;
+
+  if (fluidsynth->soundfont) {
+    GST_DEBUG_OBJECT (fluidsynth, "loading soundfont file %s",
+        fluidsynth->soundfont);
+
+    fluidsynth->sf = fluid_synth_sfload (fluidsynth->synth,
+        fluidsynth->soundfont, 1);
+    if (fluidsynth->sf == -1)
+      goto load_failed;
+
+    GST_DEBUG_OBJECT (fluidsynth, "loaded soundfont file %s",
+        fluidsynth->soundfont);
+  } else {
+
+    dir = g_dir_open (SOUNDFONT_PATH, 0, &error);
+    if (dir == NULL)
+      goto open_dir_failed;
+
+    while (TRUE) {
+      const gchar *name;
+      gchar *filename;
+
+      if ((name = g_dir_read_name (dir)) == NULL)
+        break;
+
+      filename = g_build_filename (SOUNDFONT_PATH, name, NULL);
+
+      GST_DEBUG_OBJECT (fluidsynth, "loading soundfont file %s", filename);
+      fluidsynth->sf = fluid_synth_sfload (fluidsynth->synth, filename, 1);
+      if (fluidsynth->sf != -1) {
+        GST_DEBUG_OBJECT (fluidsynth, "loaded soundfont file %s", filename);
+        break;
+      }
+      GST_DEBUG_OBJECT (fluidsynth, "could not load soundfont file %s",
+          filename);
+    }
+    g_dir_close (dir);
+
+    if (fluidsynth->sf == -1)
+      goto no_soundfont;
+  }
   return TRUE;
+
+  /* ERRORS */
+load_failed:
+  {
+    GST_ELEMENT_ERROR (fluidsynth, RESOURCE, OPEN_READ,
+        ("Can't open soundfont %s", fluidsynth->soundfont),
+        ("failed to open soundfont file %s for reading",
+            fluidsynth->soundfont));
+    return FALSE;
+  }
+open_dir_failed:
+  {
+    GST_ELEMENT_ERROR (fluidsynth, RESOURCE, OPEN_READ,
+        ("Can't open directory %s", SOUNDFONT_PATH),
+        ("failed to open directory %s for reading: %s", SOUNDFONT_PATH,
+            error->message));
+    g_error_free (error);
+    return FALSE;
+  }
+no_soundfont:
+  {
+    GST_ELEMENT_ERROR (fluidsynth, RESOURCE, OPEN_READ,
+        ("Can't find soundfont file in directory %s", SOUNDFONT_PATH),
+        ("No usable soundfont files found in %s", SOUNDFONT_PATH));
+    return FALSE;
+  }
 }
 
 static gboolean
 gst_fluidsynth_close (GstFluidsynth * fluidsynth)
 {
-  if (fluidsynth->settings) {
-    fluid_synth_sfunload (fluidsynth->synth, fluidsynth->soundfont, 1);
-    delete_fluid_synth (fluidsynth->synth);
-    delete_fluid_settings (fluidsynth->settings);
-    fluidsynth->settings = NULL;
+  if (fluidsynth->sf) {
+    fluid_synth_sfunload (fluidsynth->synth, fluidsynth->sf, 1);
+    fluidsynth->sf = -1;
   }
   return TRUE;
 }
@@ -501,7 +618,30 @@ static void
 gst_fluidsynth_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GstFluidsynth *fluidsynth = GST_FLUIDSYNTH (object);
+
   switch (prop_id) {
+    case PROP_SOUNDFONT:
+      g_free (fluidsynth->soundfont);
+      fluidsynth->soundfont = g_value_dup_string (value);
+      break;
+    case PROP_SYNTH_CHORUS:
+      fluidsynth->synth_chorus = g_value_get_boolean (value);
+      fluid_synth_set_chorus_on (fluidsynth->synth, fluidsynth->synth_chorus);
+      break;
+    case PROP_SYNTH_REVERB:
+      fluidsynth->synth_reverb = g_value_get_boolean (value);
+      fluid_synth_set_reverb_on (fluidsynth->synth, fluidsynth->synth_reverb);
+      break;
+    case PROP_SYNTH_GAIN:
+      fluidsynth->synth_gain = g_value_get_double (value);
+      fluid_synth_set_gain (fluidsynth->synth, fluidsynth->synth_gain);
+      break;
+    case PROP_SYNTH_POLYPHONY:
+      fluidsynth->synth_polyphony = g_value_get_int (value);
+      fluid_synth_set_polyphony (fluidsynth->synth,
+          fluidsynth->synth_polyphony);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -512,7 +652,24 @@ static void
 gst_fluidsynth_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
+  GstFluidsynth *fluidsynth = GST_FLUIDSYNTH (object);
+
   switch (prop_id) {
+    case PROP_SOUNDFONT:
+      g_value_set_string (value, fluidsynth->soundfont);
+      break;
+    case PROP_SYNTH_CHORUS:
+      g_value_set_boolean (value, fluidsynth->synth_chorus);
+      break;
+    case PROP_SYNTH_REVERB:
+      g_value_set_boolean (value, fluidsynth->synth_reverb);
+      break;
+    case PROP_SYNTH_GAIN:
+      g_value_set_double (value, fluidsynth->synth_gain);
+      break;
+    case PROP_SYNTH_POLYPHONY:
+      g_value_set_int (value, fluidsynth->synth_polyphony);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

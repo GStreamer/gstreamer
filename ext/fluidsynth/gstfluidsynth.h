@@ -48,13 +48,21 @@ struct _GstFluidsynth
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
-  GstSegment segment;
-  GstClockTime last_pts;
-  guint64 last_sample;
+
+  /* properties */
+  gchar *soundfont;
+  gboolean synth_chorus;
+  gboolean synth_reverb;
+  gdouble synth_gain;
+  gint synth_polyphony;
 
   fluid_settings_t* settings;
   fluid_synth_t* synth;
-  int soundfont;
+  int sf;
+
+  GstSegment segment;
+  GstClockTime last_pts;
+  guint64 last_sample;
 };
 
 struct _GstFluidsynthClass
