@@ -2579,7 +2579,10 @@ gst_base_src_loop (GstPad * pad)
   if (gst_pad_check_reconfigure (pad)) {
     if (!gst_base_src_negotiate (src)) {
       gst_pad_mark_reconfigure (pad);
-      goto negotiate_failed;
+      if (GST_PAD_IS_FLUSHING (pad))
+        goto flushing;
+      else
+        goto negotiate_failed;
     }
   }
 
