@@ -1,5 +1,5 @@
 /*
- * gstfluidsynth - fluidsynth plugin for gstreamer
+ * gstfluiddec - fluiddec plugin for gstreamer
  *
  * Copyright 2007 Wouter Paesen <wouter@blue-gate.be>
  * Copyright 2013 Wim Taymans <wim.taymans@gmail.be>
@@ -20,8 +20,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_FLUIDSYNTH_H__
-#define __GST_FLUIDSYNTH_H__
+#ifndef __GST_FLUID_DEC_H__
+#define __GST_FLUID_DEC_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
@@ -29,21 +29,21 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_FLUIDSYNTH \
-  (gst_fluidsynth_get_type())
-#define GST_FLUIDSYNTH(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FLUIDSYNTH,GstFluidsynth))
-#define GST_FLUIDSYNTH_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FLUIDSYNTH,GstFluidsynthClass))
-#define GST_IS_FLUIDSYNTH(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FLUIDSYNTH))
-#define GST_IS_FLUIDSYNTH_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FLUIDSYNTH))
+#define GST_TYPE_FLUID_DEC \
+  (gst_fluid_dec_get_type())
+#define GST_FLUID_DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FLUID_DEC,GstFluidDec))
+#define GST_FLUID_DEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FLUID_DEC,GstFluidDecClass))
+#define GST_IS_FLUID_DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FLUID_DEC))
+#define GST_IS_FLUID_DEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FLUID_DEC))
 
-typedef struct _GstFluidsynth GstFluidsynth;
-typedef struct _GstFluidsynthClass GstFluidsynthClass;
+typedef struct _GstFluidDec GstFluidDec;
+typedef struct _GstFluidDecClass GstFluidDecClass;
 
-struct _GstFluidsynth
+struct _GstFluidDec
 {
   GstElement element;
 
@@ -66,13 +66,13 @@ struct _GstFluidsynth
   guint64 last_sample;
 };
 
-struct _GstFluidsynthClass
+struct _GstFluidDecClass
 {
-    GstElementClass parent_class;
+  GstElementClass parent_class;
 };
 
-GType gst_fluidsynth_get_type (void);
+GType gst_fluid_dec_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_FLUIDSYNTH_H__ */
+#endif /* __GST_FLUID_DEC_H__ */

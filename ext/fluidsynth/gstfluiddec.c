@@ -1,5 +1,5 @@
 /*
- * gstfluidsynth - fluidsynth plugin for gstreamer
+ * gstfluiddec - fluiddec plugin for gstreamer
  *
  * Copyright 2013 Wim Taymans <wim.taymans@gmail.com>
  *
@@ -20,7 +20,7 @@
  */
 
 /**
- * SECTION:element-fluidsynth
+ * SECTION:element-fluiddec
  * @see_also: timidity, wildmidi
  *
  * This element renders midi-events as audio streams using
@@ -30,7 +30,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch-1.0 filesrc location=song.mid ! midiparse ! fluidsynth ! pulsesink
+ * gst-launch-1.0 filesrc location=song.mid ! midiparse ! fluiddec ! pulsesink
  * ]| This example pipeline will parse the midi and render to raw audio which is
  * played via pulseaudio.
  * </refsect2>
@@ -40,8 +40,8 @@
 #  include <config.h>
 #endif
 
-#define FLUIDSYNTH_RATE 44100
-#define FLUIDSYNTH_BPS  (4 * 2)
+#define FLUID_DEC_RATE 44100
+#define FLUID_DEC_BPS  (4 * 2)
 
 #include <gst/gst.h>
 #include <string.h>
@@ -52,10 +52,10 @@
 
 #include <gst/audio/audio.h>
 
-#include "gstfluidsynth.h"
+#include "gstfluiddec.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_fluidsynth_debug);
-#define GST_CAT_DEFAULT gst_fluidsynth_debug
+GST_DEBUG_CATEGORY_STATIC (gst_fluid_dec_debug);
+#define GST_CAT_DEFAULT gst_fluid_dec_debug
 
 enum
 {
@@ -81,20 +81,20 @@ enum
   PROP_SYNTH_POLYPHONY
 };
 
-static void gst_fluidsynth_finalize (GObject * object);
+static void gst_fluid_dec_finalize (GObject * object);
 
-static gboolean gst_fluidsynth_sink_event (GstPad * pad, GstObject * parent,
+static gboolean gst_fluid_dec_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
-static GstStateChangeReturn gst_fluidsynth_change_state (GstElement * element,
+static GstStateChangeReturn gst_fluid_dec_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstFlowReturn gst_fluidsynth_chain (GstPad * sinkpad, GstObject * parent,
+static GstFlowReturn gst_fluid_dec_chain (GstPad * sinkpad, GstObject * parent,
     GstBuffer * buffer);
 
-static void gst_fluidsynth_set_property (GObject * object, guint prop_id,
+static void gst_fluid_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_fluidsynth_get_property (GObject * object, guint prop_id,
+static void gst_fluid_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -108,11 +108,11 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (F32) ", "
-        "rate = (int) " G_STRINGIFY (FLUIDSYNTH_RATE) ", "
+        "rate = (int) " G_STRINGIFY (FLUID_DEC_RATE) ", "
         "channels = (int) 2, " "layout = (string) interleaved"));
 
-#define parent_class gst_fluidsynth_parent_class
-G_DEFINE_TYPE (GstFluidsynth, gst_fluidsynth, GST_TYPE_ELEMENT);
+#define parent_class gst_fluid_dec_parent_class
+G_DEFINE_TYPE (GstFluidDec, gst_fluid_dec, GST_TYPE_ELEMENT);
 
 /* fluid_synth log handler */
 static void
@@ -142,7 +142,7 @@ gst_fluid_synth_debug_log_function (int level, char *message, void *data)
 
 /* initialize the plugin's class */
 static void
-gst_fluidsynth_class_init (GstFluidsynthClass * klass)
+gst_fluid_dec_class_init (GstFluidDecClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -150,9 +150,9 @@ gst_fluidsynth_class_init (GstFluidsynthClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->finalize = gst_fluidsynth_finalize;
-  gobject_class->set_property = gst_fluidsynth_set_property;
-  gobject_class->get_property = gst_fluidsynth_get_property;
+  gobject_class->finalize = gst_fluid_dec_finalize;
+  gobject_class->set_property = gst_fluid_dec_set_property;
+  gobject_class->get_property = gst_fluid_dec_get_property;
 
   g_object_class_install_property (gobject_class, PROP_SOUNDFONT,
       g_param_spec_string ("soundfont",
@@ -188,7 +188,7 @@ gst_fluidsynth_class_init (GstFluidsynthClass * klass)
       "Codec/Decoder/Audio",
       "Midi Synthesizer Element", "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstelement_class->change_state = gst_fluidsynth_change_state;
+  gstelement_class->change_state = gst_fluid_dec_change_state;
 
 #ifndef GST_DISABLE_GST_DEBUG
   fluid_set_log_function (FLUID_PANIC, gst_fluid_synth_error_log_function,
@@ -214,11 +214,11 @@ gst_fluidsynth_class_init (GstFluidsynthClass * klass)
  * initialize structure
  */
 static void
-gst_fluidsynth_init (GstFluidsynth * filter)
+gst_fluid_dec_init (GstFluidDec * filter)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_event_function (filter->sinkpad, gst_fluidsynth_sink_event);
-  gst_pad_set_chain_function (filter->sinkpad, gst_fluidsynth_chain);
+  gst_pad_set_event_function (filter->sinkpad, gst_fluid_dec_sink_event);
+  gst_pad_set_chain_function (filter->sinkpad, gst_fluid_dec_chain);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
@@ -242,20 +242,20 @@ gst_fluidsynth_init (GstFluidsynth * filter)
 }
 
 static void
-gst_fluidsynth_finalize (GObject * object)
+gst_fluid_dec_finalize (GObject * object)
 {
-  GstFluidsynth *fluidsynth = GST_FLUIDSYNTH (object);
+  GstFluidDec *fluiddec = GST_FLUID_DEC (object);
 
-  delete_fluid_synth (fluidsynth->synth);
-  delete_fluid_settings (fluidsynth->settings);
-  g_free (fluidsynth->soundfont);
+  delete_fluid_synth (fluiddec->synth);
+  delete_fluid_settings (fluiddec->settings);
+  g_free (fluiddec->soundfont);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 #if 0
 static GstBuffer *
-gst_fluidsynth_clip_buffer (GstFluidsynth * fluidsynth, GstBuffer * buffer)
+gst_fluid_dec_clip_buffer (GstFluidDec * fluiddec, GstBuffer * buffer)
 {
   guint64 start, stop;
   guint64 new_start, new_stop;
@@ -267,7 +267,7 @@ gst_fluidsynth_clip_buffer (GstFluidsynth * fluidsynth, GstBuffer * buffer)
   start = GST_BUFFER_OFFSET (buffer);
   stop = GST_BUFFER_OFFSET_END (buffer);
 
-  if (!gst_segment_clip (&fluidsynth->segment, GST_FORMAT_DEFAULT,
+  if (!gst_segment_clip (&fluiddec->segment, GST_FORMAT_DEFAULT,
           start, stop, &new_start, &new_stop)) {
     gst_buffer_unref (buffer);
     return NULL;
@@ -285,9 +285,9 @@ gst_fluidsynth_clip_buffer (GstFluidsynth * fluidsynth, GstBuffer * buffer)
   GST_BUFFER_OFFSET (buffer) = new_start;
   GST_BUFFER_OFFSET_END (buffer) = new_stop;
   GST_BUFFER_TIMESTAMP (buffer) =
-      gst_util_uint64_scale_int (new_start, GST_SECOND, FLUIDSYNTH_RATE);
+      gst_util_uint64_scale_int (new_start, GST_SECOND, FLUID_DEC_RATE);
   GST_BUFFER_DURATION (buffer) =
-      gst_util_uint64_scale_int (new_stop, GST_SECOND, FLUIDSYNTH_RATE) -
+      gst_util_uint64_scale_int (new_stop, GST_SECOND, FLUID_DEC_RATE) -
       GST_BUFFER_TIMESTAMP (buffer);
 
   return buffer;
@@ -295,17 +295,17 @@ gst_fluidsynth_clip_buffer (GstFluidsynth * fluidsynth, GstBuffer * buffer)
 #endif
 
 static void
-gst_fluidsynth_reset (GstFluidsynth * fluidsynth)
+gst_fluid_dec_reset (GstFluidDec * fluiddec)
 {
-  fluid_synth_system_reset (fluidsynth->synth);
-  fluidsynth->last_pts = GST_CLOCK_TIME_NONE;
+  fluid_synth_system_reset (fluiddec->synth);
+  fluiddec->last_pts = GST_CLOCK_TIME_NONE;
 }
 
 static gboolean
-gst_fluidsynth_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_fluid_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
-  GstFluidsynth *fluidsynth = GST_FLUIDSYNTH (parent);
+  GstFluidDec *fluiddec = GST_FLUID_DEC (parent);
 
   GST_DEBUG_OBJECT (pad, "%s event received", GST_EVENT_TYPE_NAME (event));
 
@@ -316,24 +316,24 @@ gst_fluidsynth_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       caps = gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
-          "rate", G_TYPE_INT, FLUIDSYNTH_RATE,
+          "rate", G_TYPE_INT, FLUID_DEC_RATE,
           "channels", G_TYPE_INT, 2,
           "layout", G_TYPE_STRING, "interleaved", NULL);
 
-      fluid_synth_set_sample_rate (fluidsynth->synth, FLUIDSYNTH_RATE);
+      fluid_synth_set_sample_rate (fluiddec->synth, FLUID_DEC_RATE);
 
-      res = gst_pad_push_event (fluidsynth->srcpad, gst_event_new_caps (caps));
+      res = gst_pad_push_event (fluiddec->srcpad, gst_event_new_caps (caps));
       gst_caps_unref (caps);
       break;
     }
     case GST_EVENT_SEGMENT:
-      gst_event_copy_segment (event, &fluidsynth->segment);
-      GST_DEBUG_OBJECT (fluidsynth, "configured segment %" GST_SEGMENT_FORMAT,
-          &fluidsynth->segment);
+      gst_event_copy_segment (event, &fluiddec->segment);
+      GST_DEBUG_OBJECT (fluiddec, "configured segment %" GST_SEGMENT_FORMAT,
+          &fluiddec->segment);
       res = gst_pad_event_default (pad, parent, event);
       break;
     case GST_EVENT_FLUSH_STOP:
-      gst_fluidsynth_reset (fluidsynth);
+      gst_fluid_dec_reset (fluiddec);
       res = gst_pad_event_default (pad, parent, event);
       break;
     case GST_EVENT_EOS:
@@ -348,31 +348,31 @@ gst_fluidsynth_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static GstFlowReturn
-produce_samples (GstFluidsynth * fluidsynth, GstClockTime pts, guint64 sample)
+produce_samples (GstFluidDec * fluiddec, GstClockTime pts, guint64 sample)
 {
   GstClockTime duration, timestamp;
   guint64 samples, offset;
   GstMapInfo info;
   GstBuffer *outbuf;
 
-  samples = sample - fluidsynth->last_sample;
-  duration = pts - fluidsynth->last_pts;
-  offset = fluidsynth->last_sample;
-  timestamp = fluidsynth->last_pts;
+  samples = sample - fluiddec->last_sample;
+  duration = pts - fluiddec->last_pts;
+  offset = fluiddec->last_sample;
+  timestamp = fluiddec->last_pts;
 
-  fluidsynth->last_pts = pts;
-  fluidsynth->last_sample = sample;
+  fluiddec->last_pts = pts;
+  fluiddec->last_sample = sample;
 
   if (samples == 0)
     return GST_FLOW_OK;
 
-  GST_DEBUG_OBJECT (fluidsynth, "duration %" GST_TIME_FORMAT
+  GST_DEBUG_OBJECT (fluiddec, "duration %" GST_TIME_FORMAT
       ", samples %u", GST_TIME_ARGS (duration), samples);
 
-  outbuf = gst_buffer_new_allocate (NULL, samples * FLUIDSYNTH_BPS, NULL);
+  outbuf = gst_buffer_new_allocate (NULL, samples * FLUID_DEC_BPS, NULL);
 
   gst_buffer_map (outbuf, &info, GST_MAP_WRITE);
-  fluid_synth_write_float (fluidsynth->synth, samples, info.data, 0, 2,
+  fluid_synth_write_float (fluiddec->synth, samples, info.data, 0, 2,
       info.data, 1, 2);
   gst_buffer_unmap (outbuf, &info);
 
@@ -382,16 +382,16 @@ produce_samples (GstFluidsynth * fluidsynth, GstClockTime pts, guint64 sample)
   GST_BUFFER_OFFSET (outbuf) = offset;
   GST_BUFFER_OFFSET_END (outbuf) = offset + samples;
 
-  if (fluidsynth->discont) {
+  if (fluiddec->discont) {
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-    fluidsynth->discont = FALSE;
+    fluiddec->discont = FALSE;
   }
 
-  return gst_pad_push (fluidsynth->srcpad, outbuf);
+  return gst_pad_push (fluiddec->srcpad, outbuf);
 }
 
 static void
-handle_buffer (GstFluidsynth * fluidsynth, GstBuffer * buffer)
+handle_buffer (GstFluidDec * fluiddec, GstBuffer * buffer)
 {
   GstMapInfo info;
   guint8 event;
@@ -404,23 +404,22 @@ handle_buffer (GstFluidsynth * fluidsynth, GstBuffer * buffer)
     case 0xf0:
       switch (event) {
         case 0xff:
-          GST_DEBUG_OBJECT (fluidsynth, "system reset");
-          fluid_synth_system_reset (fluidsynth->synth);
+          GST_DEBUG_OBJECT (fluiddec, "system reset");
+          fluid_synth_system_reset (fluiddec->synth);
           break;
         case 0xf0:
         case 0xf7:
-          GST_DEBUG_OBJECT (fluidsynth, "sysex 0x%02x", event);
-          GST_MEMDUMP_OBJECT (fluidsynth, "bytes ", info.data + 1,
-              info.size - 1);
-          fluid_synth_sysex (fluidsynth->synth, (char *) info.data + 1,
+          GST_DEBUG_OBJECT (fluiddec, "sysex 0x%02x", event);
+          GST_MEMDUMP_OBJECT (fluiddec, "bytes ", info.data + 1, info.size - 1);
+          fluid_synth_sysex (fluiddec->synth, (char *) info.data + 1,
               info.size - 1, NULL, NULL, NULL, 0);
 
           break;
         case 0xf9:
-          GST_LOG_OBJECT (fluidsynth, "midi tick");
+          GST_LOG_OBJECT (fluiddec, "midi tick");
           break;
         default:
-          GST_WARNING_OBJECT (fluidsynth, "unhandled event 0x%02x", event);
+          GST_WARNING_OBJECT (fluiddec, "unhandled event 0x%02x", event);
           break;
       }
       break;
@@ -433,30 +432,30 @@ handle_buffer (GstFluidsynth * fluidsynth, GstBuffer * buffer)
       p1 = info.size > 1 ? info.data[1] & 0x7f : 0;
       p2 = info.size > 2 ? info.data[2] & 0x7f : 0;
 
-      GST_DEBUG_OBJECT (fluidsynth, "event 0x%02x channel %d, 0x%02x 0x%02x",
+      GST_DEBUG_OBJECT (fluiddec, "event 0x%02x channel %d, 0x%02x 0x%02x",
           event, channel, p1, p2);
 
       switch (event & 0xf0) {
         case 0x80:
-          fluid_synth_noteoff (fluidsynth->synth, channel, p1);
+          fluid_synth_noteoff (fluiddec->synth, channel, p1);
           break;
         case 0x90:
-          fluid_synth_noteon (fluidsynth->synth, channel, p1, p2);
+          fluid_synth_noteon (fluiddec->synth, channel, p1, p2);
           break;
         case 0xA0:
           /* aftertouch */
           break;
         case 0xB0:
-          fluid_synth_cc (fluidsynth->synth, channel, p1, p2);
+          fluid_synth_cc (fluiddec->synth, channel, p1, p2);
           break;
         case 0xC0:
-          fluid_synth_program_change (fluidsynth->synth, channel, p1);
+          fluid_synth_program_change (fluiddec->synth, channel, p1);
           break;
         case 0xD0:
-          fluid_synth_channel_pressure (fluidsynth->synth, channel, p1);
+          fluid_synth_channel_pressure (fluiddec->synth, channel, p1);
           break;
         case 0xE0:
-          fluid_synth_pitch_bend (fluidsynth->synth, channel, (p2 << 7) | p1);
+          fluid_synth_pitch_bend (fluiddec->synth, channel, (p2 << 7) | p1);
           break;
         default:
           break;
@@ -468,35 +467,35 @@ handle_buffer (GstFluidsynth * fluidsynth, GstBuffer * buffer)
 }
 
 static GstFlowReturn
-gst_fluidsynth_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buffer)
+gst_fluid_dec_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buffer)
 {
   GstFlowReturn res = GST_FLOW_OK;
-  GstFluidsynth *fluidsynth;
+  GstFluidDec *fluiddec;
   GstClockTime pts;
 
-  fluidsynth = GST_FLUIDSYNTH (parent);
+  fluiddec = GST_FLUID_DEC (parent);
 
   if (GST_BUFFER_IS_DISCONT (buffer)) {
-    fluidsynth->discont = TRUE;
+    fluiddec->discont = TRUE;
   }
 
   pts = GST_BUFFER_PTS (buffer);
 
   if (pts != GST_CLOCK_TIME_NONE) {
     guint64 sample =
-        gst_util_uint64_scale_int (pts, FLUIDSYNTH_RATE, GST_SECOND);
+        gst_util_uint64_scale_int (pts, FLUID_DEC_RATE, GST_SECOND);
 
-    if (fluidsynth->last_pts == GST_CLOCK_TIME_NONE) {
-      fluidsynth->last_pts = pts;
-      fluidsynth->last_sample = sample;
-    } else if (fluidsynth->last_pts < pts) {
+    if (fluiddec->last_pts == GST_CLOCK_TIME_NONE) {
+      fluiddec->last_pts = pts;
+      fluiddec->last_sample = sample;
+    } else if (fluiddec->last_pts < pts) {
       /* generate samples for the elapsed time */
-      res = produce_samples (fluidsynth, pts, sample);
+      res = produce_samples (fluiddec, pts, sample);
     }
   }
 
   if (res == GST_FLOW_OK) {
-    handle_buffer (fluidsynth, buffer);
+    handle_buffer (fluiddec, buffer);
   }
   gst_buffer_unref (buffer);
 
@@ -504,25 +503,24 @@ gst_fluidsynth_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buffer)
 }
 
 static gboolean
-gst_fluidsynth_open (GstFluidsynth * fluidsynth)
+gst_fluid_dec_open (GstFluidDec * fluiddec)
 {
   GDir *dir;
   GError *error = NULL;
 
-  if (fluidsynth->sf != -1)
+  if (fluiddec->sf != -1)
     return TRUE;
 
-  if (fluidsynth->soundfont) {
-    GST_DEBUG_OBJECT (fluidsynth, "loading soundfont file %s",
-        fluidsynth->soundfont);
+  if (fluiddec->soundfont) {
+    GST_DEBUG_OBJECT (fluiddec, "loading soundfont file %s",
+        fluiddec->soundfont);
 
-    fluidsynth->sf = fluid_synth_sfload (fluidsynth->synth,
-        fluidsynth->soundfont, 1);
-    if (fluidsynth->sf == -1)
+    fluiddec->sf = fluid_synth_sfload (fluiddec->synth, fluiddec->soundfont, 1);
+    if (fluiddec->sf == -1)
       goto load_failed;
 
-    GST_DEBUG_OBJECT (fluidsynth, "loaded soundfont file %s",
-        fluidsynth->soundfont);
+    GST_DEBUG_OBJECT (fluiddec, "loaded soundfont file %s",
+        fluiddec->soundfont);
   } else {
 
     dir = g_dir_open (SOUNDFONT_PATH, 0, &error);
@@ -538,18 +536,17 @@ gst_fluidsynth_open (GstFluidsynth * fluidsynth)
 
       filename = g_build_filename (SOUNDFONT_PATH, name, NULL);
 
-      GST_DEBUG_OBJECT (fluidsynth, "loading soundfont file %s", filename);
-      fluidsynth->sf = fluid_synth_sfload (fluidsynth->synth, filename, 1);
-      if (fluidsynth->sf != -1) {
-        GST_DEBUG_OBJECT (fluidsynth, "loaded soundfont file %s", filename);
+      GST_DEBUG_OBJECT (fluiddec, "loading soundfont file %s", filename);
+      fluiddec->sf = fluid_synth_sfload (fluiddec->synth, filename, 1);
+      if (fluiddec->sf != -1) {
+        GST_DEBUG_OBJECT (fluiddec, "loaded soundfont file %s", filename);
         break;
       }
-      GST_DEBUG_OBJECT (fluidsynth, "could not load soundfont file %s",
-          filename);
+      GST_DEBUG_OBJECT (fluiddec, "could not load soundfont file %s", filename);
     }
     g_dir_close (dir);
 
-    if (fluidsynth->sf == -1)
+    if (fluiddec->sf == -1)
       goto no_soundfont;
   }
   return TRUE;
@@ -557,15 +554,14 @@ gst_fluidsynth_open (GstFluidsynth * fluidsynth)
   /* ERRORS */
 load_failed:
   {
-    GST_ELEMENT_ERROR (fluidsynth, RESOURCE, OPEN_READ,
-        ("Can't open soundfont %s", fluidsynth->soundfont),
-        ("failed to open soundfont file %s for reading",
-            fluidsynth->soundfont));
+    GST_ELEMENT_ERROR (fluiddec, RESOURCE, OPEN_READ,
+        ("Can't open soundfont %s", fluiddec->soundfont),
+        ("failed to open soundfont file %s for reading", fluiddec->soundfont));
     return FALSE;
   }
 open_dir_failed:
   {
-    GST_ELEMENT_ERROR (fluidsynth, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (fluiddec, RESOURCE, OPEN_READ,
         ("Can't open directory %s", SOUNDFONT_PATH),
         ("failed to open directory %s for reading: %s", SOUNDFONT_PATH,
             error->message));
@@ -574,7 +570,7 @@ open_dir_failed:
   }
 no_soundfont:
   {
-    GST_ELEMENT_ERROR (fluidsynth, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (fluiddec, RESOURCE, OPEN_READ,
         ("Can't find soundfont file in directory %s", SOUNDFONT_PATH),
         ("No usable soundfont files found in %s", SOUNDFONT_PATH));
     return FALSE;
@@ -582,28 +578,28 @@ no_soundfont:
 }
 
 static gboolean
-gst_fluidsynth_close (GstFluidsynth * fluidsynth)
+gst_fluid_dec_close (GstFluidDec * fluiddec)
 {
-  if (fluidsynth->sf) {
-    fluid_synth_sfunload (fluidsynth->synth, fluidsynth->sf, 1);
-    fluidsynth->sf = -1;
+  if (fluiddec->sf) {
+    fluid_synth_sfunload (fluiddec->synth, fluiddec->sf, 1);
+    fluiddec->sf = -1;
   }
   return TRUE;
 }
 
 static GstStateChangeReturn
-gst_fluidsynth_change_state (GstElement * element, GstStateChange transition)
+gst_fluid_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstFluidsynth *fluidsynth = GST_FLUIDSYNTH (element);
+  GstFluidDec *fluiddec = GST_FLUID_DEC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_fluidsynth_open (fluidsynth))
+      if (!gst_fluid_dec_open (fluiddec))
         goto open_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_fluidsynth_reset (fluidsynth);
+      gst_fluid_dec_reset (fluiddec);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -619,7 +615,7 @@ gst_fluidsynth_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_fluidsynth_close (fluidsynth);
+      gst_fluid_dec_close (fluiddec);
       break;
     default:
       break;
@@ -630,38 +626,37 @@ gst_fluidsynth_change_state (GstElement * element, GstStateChange transition)
   /* ERRORS */
 open_failed:
   {
-    GST_ERROR_OBJECT (fluidsynth, "could not open");
+    GST_ERROR_OBJECT (fluiddec, "could not open");
     return GST_STATE_CHANGE_FAILURE;
   }
 }
 
 static void
-gst_fluidsynth_set_property (GObject * object, guint prop_id,
+gst_fluid_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstFluidsynth *fluidsynth = GST_FLUIDSYNTH (object);
+  GstFluidDec *fluiddec = GST_FLUID_DEC (object);
 
   switch (prop_id) {
     case PROP_SOUNDFONT:
-      g_free (fluidsynth->soundfont);
-      fluidsynth->soundfont = g_value_dup_string (value);
+      g_free (fluiddec->soundfont);
+      fluiddec->soundfont = g_value_dup_string (value);
       break;
     case PROP_SYNTH_CHORUS:
-      fluidsynth->synth_chorus = g_value_get_boolean (value);
-      fluid_synth_set_chorus_on (fluidsynth->synth, fluidsynth->synth_chorus);
+      fluiddec->synth_chorus = g_value_get_boolean (value);
+      fluid_synth_set_chorus_on (fluiddec->synth, fluiddec->synth_chorus);
       break;
     case PROP_SYNTH_REVERB:
-      fluidsynth->synth_reverb = g_value_get_boolean (value);
-      fluid_synth_set_reverb_on (fluidsynth->synth, fluidsynth->synth_reverb);
+      fluiddec->synth_reverb = g_value_get_boolean (value);
+      fluid_synth_set_reverb_on (fluiddec->synth, fluiddec->synth_reverb);
       break;
     case PROP_SYNTH_GAIN:
-      fluidsynth->synth_gain = g_value_get_double (value);
-      fluid_synth_set_gain (fluidsynth->synth, fluidsynth->synth_gain);
+      fluiddec->synth_gain = g_value_get_double (value);
+      fluid_synth_set_gain (fluiddec->synth, fluiddec->synth_gain);
       break;
     case PROP_SYNTH_POLYPHONY:
-      fluidsynth->synth_polyphony = g_value_get_int (value);
-      fluid_synth_set_polyphony (fluidsynth->synth,
-          fluidsynth->synth_polyphony);
+      fluiddec->synth_polyphony = g_value_get_int (value);
+      fluid_synth_set_polyphony (fluiddec->synth, fluiddec->synth_polyphony);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -670,26 +665,26 @@ gst_fluidsynth_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_fluidsynth_get_property (GObject * object, guint prop_id,
+gst_fluid_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstFluidsynth *fluidsynth = GST_FLUIDSYNTH (object);
+  GstFluidDec *fluiddec = GST_FLUID_DEC (object);
 
   switch (prop_id) {
     case PROP_SOUNDFONT:
-      g_value_set_string (value, fluidsynth->soundfont);
+      g_value_set_string (value, fluiddec->soundfont);
       break;
     case PROP_SYNTH_CHORUS:
-      g_value_set_boolean (value, fluidsynth->synth_chorus);
+      g_value_set_boolean (value, fluiddec->synth_chorus);
       break;
     case PROP_SYNTH_REVERB:
-      g_value_set_boolean (value, fluidsynth->synth_reverb);
+      g_value_set_boolean (value, fluiddec->synth_reverb);
       break;
     case PROP_SYNTH_GAIN:
-      g_value_set_double (value, fluidsynth->synth_gain);
+      g_value_set_double (value, fluiddec->synth_gain);
       break;
     case PROP_SYNTH_POLYPHONY:
-      g_value_set_int (value, fluidsynth->synth_polyphony);
+      g_value_set_int (value, fluiddec->synth_polyphony);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -700,15 +695,15 @@ gst_fluidsynth_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_fluidsynth_debug, "fluidsynth",
-      0, "Fluidsynth plugin");
+  GST_DEBUG_CATEGORY_INIT (gst_fluid_dec_debug, "fluiddec",
+      0, "Fluidsynth MIDI decoder plugin");
 
-  return gst_element_register (plugin, "fluidsynth",
-      GST_RANK_SECONDARY, GST_TYPE_FLUIDSYNTH);
+  return gst_element_register (plugin, "fluiddec",
+      GST_RANK_SECONDARY, GST_TYPE_FLUID_DEC);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    fluidsynth,
-    "Fluidsynth Plugin",
+    fluidsynthmidi,
+    "Fluidsynth MIDI Plugin",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
