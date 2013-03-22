@@ -294,6 +294,13 @@ gst_fluidsynth_clip_buffer (GstFluidsynth * fluidsynth, GstBuffer * buffer)
 }
 #endif
 
+static void
+gst_fluidsynth_reset (GstFluidsynth * fluidsynth)
+{
+  fluid_synth_system_reset (fluidsynth->synth);
+  fluidsynth->last_pts = GST_CLOCK_TIME_NONE;
+}
+
 static gboolean
 gst_fluidsynth_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -323,6 +330,10 @@ gst_fluidsynth_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_copy_segment (event, &fluidsynth->segment);
       GST_DEBUG_OBJECT (fluidsynth, "configured segment %" GST_SEGMENT_FORMAT,
           fluidsynth->segment);
+      res = gst_pad_event_default (pad, parent, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_fluidsynth_reset (fluidsynth);
       res = gst_pad_event_default (pad, parent, event);
       break;
     case GST_EVENT_EOS:
@@ -583,6 +594,7 @@ gst_fluidsynth_change_state (GstElement * element, GstStateChange transition)
         goto open_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_fluidsynth_reset (fluidsynth);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
