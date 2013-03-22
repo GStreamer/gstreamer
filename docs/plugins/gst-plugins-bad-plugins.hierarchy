@@ -110,15 +110,6 @@ GObject
               GstMirror
               GstRotate
               GstSquare
-            GstOpencvVideoFilter
-              GstCvDilateErode
-                GstCvDilate
-                GstCvErode
-              GstCvEqualizeHist
-              GstCvLaplace
-              GstCvSmooth
-              GstCvSobel
-              GstFaceDetect
             GstSmooth
             GstSolarize
             GstZBar
@@ -191,8 +182,7 @@ GObject
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
-        GstEdgeDetect
-        GstFaceBlur
+        GstDecklinkSrc
         GstFestival
         GstFieldAnalysis
         GstGDPDepay
@@ -206,16 +196,13 @@ GObject
         GstMimDec
         GstMimEnc
         GstModPlug
-        GstMotioncells
         GstMpeg2enc
         GstMpegPSDemux
         GstMplex
-        GstOpencvTextOverlay
         GstPcapParse
         GstPitch
         GstPnmdec
         GstPnmenc
-        GstPyramidSegment
         GstRTPBaseDepayload
           GstRTPOpusDepay
           GstRtpDTMFDepay
@@ -237,7 +224,6 @@ GObject
         GstSrtEnc
         GstTagMux
           GstId3Mux
-        GstTemplateMatch
         GstVideoDecoder
           GstSchroDec
         GstVideoEncoder

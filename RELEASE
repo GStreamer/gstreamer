@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.0.5
+Release notes for GStreamer Bad Plugins 1.0.6
 
 
 The GStreamer team is pleased to announce a new bug-fix release
@@ -62,14 +62,50 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * psdemux: tentative port to 1.0; take into account both DTS and PTS
-      * shm: Actually get the permissions on get_property
-      * waylandsink: do not default to fullscreen mode
+      * audiovisualizer: fix improper video frame clear operation
+      * codecparsers: h264: add inferred value for slice_beta_offset_div2
+      * codecparsers: h264: zero-initialize SPS VUI parameters
+      * codecparsers: mpeg2: add helpers to convert quantization matrices
+      * codecparsers: mpeg2: store quantization matrices in zigzag scan order
+      * codecparsers: vc1: fix bitplanes decoding
+      * codecparsers: vc1: fix calculation of ALTPQUANT
+      * codecparsers: vc1: fix parser for DQPROFILE in VOPDQUANT
+      * codecparsers: vc1: fix VOPDQUANT parser for DQUANT == 2
+      * curltlssink: set correct level of SSL for the transfer
+      * decklink: port to 1.0
+      * dvbsrc: handle EINTR from poll
+      * dvdspu: fix rendering of PGS windows with left != 0
+      * eglglessink: port to 1.0
+      * element-maker: update for 1.0
+      * gdppay: fix buffer leak when new caps are same as old caps
+      * interlace: fix negotiation for true interlaced modes
+      * opensles: Port to 1.0
+      * opusdec: clear the state of the decoder
+      * opusenc: fix crash when setting "cbr" property when encoder is not running yet
+      * opuspay: fix timestamps
+      * tsdemux: expose VC1 streams with missing descriptor
 
 Bugs fixed in this release
      
-      * 690097 : resindvd: Handle non-utf8 dvd title string correctly
-      * 690442 : [waylandsink] Should not default to a fullscreen surface
+      * 690949 : DVB playback is at 1 fps after update from 1.0.2 to 1.0.3
+      * 681818 : h264parse: evaluate vui parameters only when they where parsed and set
+      * 690738 : gst-element-maker Generates Incorrect Code
+      * 692010 : curltlssink: incorrect ssl level
+      * 692265 : codecparsers: h264: add inferred value for  slice_beta_offset_div2
+      * 692267 : codecparsers: vc1: fix parser for DQPROFILE in  VOPDQUANT
+      * 692270 : codecparsers: vc1: fix calculation of ALTPQUANT
+      * 692271 : codecparsers: vc1: fix VOPDQUANT parser for DQUANT == 2
+      * 692273 : codecparsers: vc1: fix VOPDQUANT parser
+      * 692312 : codecparsers: vc1: fix bitplanes decoding
+      * 692698 : opusenc: crash when setting " cbr " property
+      * 692859 : make -bad be able to be called " out-of-tree " 
+      * 692929 : [rtpopuspay] - No rtp timestamp
+      * 693000 : codecparsers: mpeg2: fix scan order for in-stream quantization matrices
+      * 693146 : tsdemux: doesn't expose VC1 pad when descriptor is missing
+      * 693212 : dvbsrc: needs to handle EINTR instead of erroring out
+      * 693300 : inter: gstintertest has a number of memory leaks
+      * 693324 : gdppay: leak  when getting caps identical to your current ones
+      * 695655 : audiovisualizer: crash while clearing video frame
 
 ==== Download ====
 
@@ -106,9 +142,18 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Joe Konno
-      * Olivier Crête
+      * Cong Zhong
+      * David Schleef
+      * Greg Rutz
+      * Gwenole Beauchesne
+      * Jan Schmidt
+      * Josep Torra
+      * Julian Scheel
+      * Mark Nauwelaerts
+      * Patricia Muscalu
       * Sebastian Dröge
+      * Tim 'mithro' Ansell
+      * Tim Ansell
       * Tim-Philipp Müller
-      * Youness Alaoui
+      * Wim Taymans
  

@@ -1,0 +1,34 @@
+<plugin>
+  <name>decklink</name>
+  <description>Blackmagic Decklink plugin</description>
+  <filename>../../sys/decklink/.libs/libgstdecklink.so</filename>
+  <basename>libgstdecklink.so</basename>
+  <version>1.0.6</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>decklinksrc</name>
+      <longname>Decklink source</longname>
+      <class>Source/Video</class>
+      <description>DeckLink Source</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <pads>
+        <caps>
+          <name>audiosrc</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, channels=(int)2, rate=(int)48000, layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>videosrc</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)UYVY, width=(int)720, height=(int)486, framerate=(fraction)30000/1001, interlace-mode=(string)interleaved, pixel-aspect-ratio=(fraction)10/11, colorimetry=(string)bt601, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)720, height=(int)486, framerate=(fraction)24000/1001, interlace-mode=(string)interleaved, pixel-aspect-ratio=(fraction)10/11, colorimetry=(string)bt601, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)720, height=(int)576, framerate=(fraction)25/1, interlace-mode=(string)interleaved, pixel-aspect-ratio=(fraction)12/11, colorimetry=(string)bt601, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)720, height=(int)486, framerate=(fraction)30000/1001, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)10/11, colorimetry=(string)bt601, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)720, height=(int)576, framerate=(fraction)25/1, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)12/11, colorimetry=(string)bt601, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)24000/1001, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt709, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)24/1, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt709, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)25/1, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt709, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)30000/1001, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt709, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)30/1, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt709, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)25/1, interlace-mode=(string)interleaved, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt709, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)30000/1001, interlace-mode=(string)interleaved, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt709, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)30/1, interlace-mode=(string)interleaved, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt709, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)50/1, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt709, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)30000/1001, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt709, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)1920, height=(int)1080, framerate=(fraction)60/1, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt709, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)1280, height=(int)720, framerate=(fraction)50/1, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt709, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)1280, height=(int)720, framerate=(fraction)60000/1001, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt709, chroma-site=(string)mpeg2; video/x-raw, format=(string)UYVY, width=(int)1280, height=(int)720, framerate=(fraction)60/1, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, colorimetry=(string)bt709, chroma-site=(string)mpeg2</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

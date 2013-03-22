@@ -26940,7 +26940,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>1.37429e-309</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26950,7 +26950,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>1.37974e-309</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27000,7 +27000,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>1.58992e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27380,7 +27380,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>7.06238e-304</DEFAULT>
+<DEFAULT>1.58658e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27570,7 +27570,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>8.22356e-121</DEFAULT>
+<DEFAULT>9.88131e-324</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27580,7 +27580,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>1.37429e-309</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58479,7 +58479,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Connection</NICK>
-<BLURB>Connection.</BLURB>
+<BLURB>Video input connection to use.</BLURB>
 <DEFAULT>sdi</DEFAULT>
 </ARG>
 
@@ -58489,8 +58489,18 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Mode</NICK>
-<BLURB>Mode.</BLURB>
+<BLURB>Video mode to use for capture.</BLURB>
 <DEFAULT>ntsc</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkSrc::audio-input</NAME>
+<TYPE>GstDecklinkAudioConnection</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Audio Input</NICK>
+<BLURB>Audio input connection.</BLURB>
+<DEFAULT>auto</DEFAULT>
 </ARG>
 
 <ARG>

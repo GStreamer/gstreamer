@@ -1,0 +1,34 @@
+<plugin>
+  <name>mpegpsmux</name>
+  <description>MPEG-PS muxer</description>
+  <filename>../../gst/mpegpsmux/.libs/libgstmpegpsmux.so</filename>
+  <basename>libgstmpegpsmux.so</basename>
+  <version>1.0.6</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>mpegpsmux</name>
+      <longname>MPEG Program Stream Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>Multiplexes media streams into an MPEG Program Stream</description>
+      <author>Lin YANG &lt;oxcsnicho@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false; video/x-dirac; video/x-h264; audio/mpeg, mpegversion=(int){ 1, 2 }; audio/mpeg, mpegversion=(int)4, stream-format=(string){ raw, adts }; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)2, systemstream=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
