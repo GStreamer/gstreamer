@@ -228,17 +228,13 @@ gst_midi_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 static gboolean
 gst_midi_parse_do_seek (GstMidiParse * midiparse, GstSegment * segment)
 {
-  GST_DEBUG_OBJECT (midiparse, "seek to %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (segment->position));
-
   /* if seeking backwards, start from 0 else we just let things run and
    * have it clip downstream */
-  if (segment->position < midiparse->segment.position) {
-    GST_DEBUG_OBJECT (midiparse, "seeking back to 0");
-    segment->position = 0;
-    g_list_foreach (midiparse->tracks, (GFunc) reset_track, midiparse);
-    midiparse->pulse = 0;
-  }
+  GST_DEBUG_OBJECT (midiparse, "seeking back to 0");
+  segment->position = 0;
+  g_list_foreach (midiparse->tracks, (GFunc) reset_track, midiparse);
+  midiparse->pulse = 0;
+
   return TRUE;
 }
 
@@ -304,6 +300,7 @@ gst_midi_parse_perform_seek (GstMidiParse * midiparse, GstEvent * event)
     gst_segment_do_seek (&seeksegment, rate, seek_format, flags,
         start_type, start, stop_type, stop, &update);
   }
+
   /* Else, no seek event passed, so we're just (re)starting the
      current segment. */
   GST_DEBUG_OBJECT (midiparse, "segment configured from %" G_GINT64_FORMAT
@@ -344,9 +341,9 @@ gst_midi_parse_perform_seek (GstMidiParse * midiparse, GstEvent * event)
       stop = seeksegment.duration;
 
     midiparse->segment_pending = TRUE;
+    midiparse->discont = TRUE;
   }
 
-  midiparse->discont = TRUE;
   /* and restart the task in case it got paused explicitly or by
    * the FLUSH_START event we pushed out. */
   tres =
@@ -1277,7 +1274,6 @@ gst_midi_parse_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       midiparse->offset = 0;
       midiparse->state = GST_MIDI_PARSE_STATE_LOAD;
-      midiparse->discont = FALSE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
