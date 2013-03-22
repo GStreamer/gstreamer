@@ -28,8 +28,8 @@ gst_my_filter_init (GstMyFilter * filter)
 [..]
   /* configure event function on the pad before adding
    * the pad to the element */
-  gst_pad_set_event_function (filter->srcpad,
-      gst_my_filter_src_event);
+  gst_pad_set_query_function (filter->srcpad,
+      gst_my_filter_src_query);
 [..]
 }
 
