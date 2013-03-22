@@ -602,10 +602,8 @@ gst_y4m_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     }
       break;
     case GST_EVENT_EOS:
-      res = gst_pad_push_event (y4mdec->srcpad, event);
-      break;
     default:
-      res = gst_pad_push_event (y4mdec->srcpad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
@@ -663,7 +661,7 @@ gst_y4m_dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
     }
       break;
     default:
-      res = gst_pad_push_event (y4mdec->sinkpad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
