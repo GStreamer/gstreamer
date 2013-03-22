@@ -183,7 +183,9 @@ struct _GstQTMux
   AtomsTreeFlavor flavor;
   gboolean fast_start;
   gboolean guess_pts;
+#ifndef GST_REMOVE_DEPRECATED
   gint dts_method;
+#endif
   gchar *fast_start_file_path;
   gchar *moov_recov_file_path;
   guint32 fragment_duration;

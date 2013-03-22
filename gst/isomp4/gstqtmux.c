@@ -143,6 +143,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_qt_mux_debug);
 #define GST_CAT_DEFAULT gst_qt_mux_debug
 
+#ifndef GST_REMOVE_DEPRECATED
 enum
 {
   DTS_METHOD_DD,
@@ -172,6 +173,7 @@ gst_qt_mux_dts_method_get_type (void)
 
 #define GST_TYPE_QT_MUX_DTS_METHOD \
   (gst_qt_mux_dts_method_get_type ())
+#endif
 
 /* QTMux signals and args */
 enum
@@ -190,7 +192,9 @@ enum
   PROP_MOOV_RECOV_FILE,
   PROP_FRAGMENT_DURATION,
   PROP_STREAMABLE,
+#ifndef GST_REMOVE_DEPRECATED
   PROP_DTS_METHOD,
+#endif
   PROP_DO_CTTS,
 };
 
@@ -206,7 +210,9 @@ enum
 #define DEFAULT_MOOV_RECOV_FILE         NULL
 #define DEFAULT_FRAGMENT_DURATION       0
 #define DEFAULT_STREAMABLE              FALSE
+#ifndef GST_REMOVE_DEPRECATED
 #define DEFAULT_DTS_METHOD              DTS_METHOD_REORDER
+#endif
 
 
 static void gst_qt_mux_finalize (GObject * object);
@@ -311,11 +317,14 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
           "Calculate and include presentation/composition time "
           "(in addition to decoding time)", DEFAULT_DO_CTTS,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+#ifndef GST_REMOVE_DEPRECATED
   g_object_class_install_property (gobject_class, PROP_DTS_METHOD,
       g_param_spec_enum ("dts-method", "dts-method",
-          "Method to determine DTS time",
+          "(DEPRECATED) Method to determine DTS time",
           GST_TYPE_QT_MUX_DTS_METHOD, DEFAULT_DTS_METHOD,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+          G_PARAM_DEPRECATED | G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+          G_PARAM_STATIC_STRINGS));
+#endif
   g_object_class_install_property (gobject_class, PROP_FAST_START,
       g_param_spec_boolean ("faststart", "Format file to faststart",
           "If the file should be formatted for faststart (headers first)",
@@ -3276,9 +3285,11 @@ gst_qt_mux_get_property (GObject * object,
     case PROP_DO_CTTS:
       g_value_set_boolean (value, qtmux->guess_pts);
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_DTS_METHOD:
       g_value_set_enum (value, qtmux->dts_method);
       break;
+#endif
     case PROP_FAST_START:
       g_value_set_boolean (value, qtmux->fast_start);
       break;
@@ -3331,9 +3342,11 @@ gst_qt_mux_set_property (GObject * object,
     case PROP_DO_CTTS:
       qtmux->guess_pts = g_value_get_boolean (value);
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_DTS_METHOD:
       qtmux->dts_method = g_value_get_enum (value);
       break;
+#endif
     case PROP_FAST_START:
       qtmux->fast_start = g_value_get_boolean (value);
       break;
