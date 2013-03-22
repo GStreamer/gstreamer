@@ -171,7 +171,7 @@ _check_and_update_parameters (GType * extractable_type, const gchar * id,
         g_type_name (old_type));
 
     if (error && *error == NULL)
-      g_set_error (error, GES_ASSET_ERROR, GES_ASSET_WRONG_ID,
+      g_set_error (error, GES_ERROR, GES_ERROR_ASSET_WRONG_ID,
           "Wrong ID, can not find any extractable_type");
     return NULL;
   }
@@ -182,7 +182,7 @@ _check_and_update_parameters (GType * extractable_type, const gchar * id,
 
     g_free (real_id);
     if (error && *error == NULL)
-      g_set_error (error, GES_ASSET_ERROR, GES_ASSET_WRONG_ID, "Wrong ID");
+      g_set_error (error, GES_ERROR, GES_ERROR_ASSET_WRONG_ID, "Wrong ID");
 
     return NULL;
   }
@@ -224,7 +224,7 @@ async_initable_init_async (GAsyncInitable * initable, gint io_priority,
     case GES_ASSET_LOADING_ERROR:
     {
       if (error == NULL)
-        g_set_error (&error, GES_ASSET_ERROR, GES_ASSET_ERROR_LOADING,
+        g_set_error (&error, GES_ERROR, GES_ERROR_ASSET_LOADING,
             "Could not start loading asset");
 
       /* FIXME Define error code */

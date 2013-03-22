@@ -24,10 +24,8 @@ GESAssetLoadingReturn
 <SECTION>
 <FILE>ges-gerror</FILE>
 <TITLE>GES GErrors</TITLE>
-GES_ASSET_ERROR
-GES_FORMATTER_ERROR
-GESAssetError
-GESFormatterError
+GES_ERROR
+GESError
 </SECTION>
 
 <SECTION>

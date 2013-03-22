@@ -448,8 +448,8 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
   if (asset)
     return asset;
 
-  if (lerror && lerror->domain == GES_ASSET_ERROR &&
-      lerror->code == GES_ASSET_WRONG_ID) {
+  if (lerror && lerror->domain == GES_ERROR &&
+      lerror->code == GES_ERROR_ASSET_WRONG_ID) {
     g_propagate_error (error, lerror);
 
     return NULL;

@@ -28,38 +28,24 @@
 G_BEGIN_DECLS
 
 /**
- * GES_ASSET_ERROR:
+ * GES_ERROR:
  *
- * An error happend using an asset
+ * An error happend in GES
  */
-#define GES_ASSET_ERROR g_quark_from_static_string("GES_ASSET_ERROR")
+#define GES_ERROR g_quark_from_static_string("GES_ERROR")
 
 /**
- * GES_FORMATTER_ERROR:
- *
- * An error happend using a formatter
- */
-#define GES_FORMATTER_ERROR g_quark_from_static_string("GES_FORMATTER_ERROR")
-
-/**
- * GESAssetError:
- * @GES_ASSET_WRONG_ID: The ID passed is malformed
- * @GES_ASSET_ERROR_LOADING: An error happened while loading the asset
+ * GESError:
+ * @GES_ERROR_ASSET_WRONG_ID: The ID passed is malformed
+ * @GES_ERROR_ASSET_LOADING: An error happened while loading the asset
+ * @GES_ERROR_FORMATTER_MALFORMED_INPUT_FILE: The formatted files was malformed
  */
 typedef enum
 {
-  GES_ASSET_WRONG_ID,
-  GES_ASSET_ERROR_LOADING
-} GESAssetError;
-
-/**
- * GESFormatterError:
- * @GES_FORMATTER_WRONG_INPUT_FILE: The formatted files was malformed
- */
-typedef enum
-{
-  GES_FORMATTER_WRONG_INPUT_FILE,
-} GESFormatterError;
+  GES_ERROR_ASSET_WRONG_ID,
+  GES_ERROR_ASSET_LOADING,
+  GES_ERROR_FORMATTER_MALFORMED_INPUT_FILE,
+} GESError;
 
 G_END_DECLS
 #endif /* __GES_ERROR_H__ */
