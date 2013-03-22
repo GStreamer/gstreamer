@@ -45,7 +45,7 @@ plugin_init (GstPlugin * plugin)
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
 
-  ret = gst_element_register (plugin, "midiparse", GST_RANK_MARGINAL,
+  ret = gst_element_register (plugin, "midiparse", GST_RANK_PRIMARY,
       GST_TYPE_MIDI_PARSE);
 
   return ret;
