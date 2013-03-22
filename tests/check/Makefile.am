@@ -53,6 +53,7 @@ LDADD = $(common_ldadd) libtestutils.la
 EXTRA_DIST = \
 	ges/test-project.xges \
 	ges/audio_only.ogg \
+	ges/image.png \
 	ges/audio_video.ogg
 
 COVERAGE_DIRS = \

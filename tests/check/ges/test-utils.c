@@ -61,6 +61,12 @@ ges_test_get_audio_video_uri (void)
 }
 
 gchar *
+ges_test_get_image_uri (void)
+{
+  return ges_test_file_uri ("image.png");
+}
+
+gchar *
 ges_test_file_uri (const gchar * filename)
 {
   gchar *uri;

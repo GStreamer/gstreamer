@@ -26,6 +26,7 @@
 
 gchar * ges_test_get_audio_only_uri (void);
 gchar * ges_test_get_audio_video_uri (void);
+gchar * ges_test_get_image_uri (void);
 gchar * ges_test_file_uri (const gchar *filename);
 
 #define gnl_object_check(gnlobj, start, duration, mstart, mduration, priority, active) { \
