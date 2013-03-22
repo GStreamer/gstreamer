@@ -417,20 +417,10 @@ static void
 track_element_added_cb (GESClip * clip,
     GESTrackElement * track_element, GHashTable * props_table)
 {
-  gchar *media_type = NULL, *lockedstr;
-  GList *tmp = NULL;
-  GESTrack *track;
-  gint64 start, duration;
-  gboolean has_effect = FALSE, locked = TRUE;
-  gint type = 0;
   GESPitiviFormatter *formatter;
-
-  media_type = (gchar *) g_hash_table_lookup (props_table, "media_type");
-  lockedstr = (gchar *) g_hash_table_lookup (props_table, "locked");
 
   formatter = GES_PITIVI_FORMATTER (g_hash_table_lookup (props_table,
           "current-formatter"));
-
   if (formatter) {
     GESPitiviFormatterPrivate *priv = formatter->priv;
 
@@ -442,65 +432,6 @@ track_element_added_cb (GESClip * clip,
     if (!priv->sources_to_load && GES_FORMATTER (formatter)->project)
       ges_project_set_loaded (GES_FORMATTER (formatter)->project,
           GES_FORMATTER (formatter));
-  }
-
-  if (lockedstr && !g_strcmp0 (lockedstr, "(bool)False"))
-    locked = FALSE;
-
-  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
-    if (!GES_IS_TRACK_ELEMENT (tmp->data)) {
-      /* If we arrive here something massively screwed */
-      GST_ERROR ("Not a TrackElement, this is a bug");
-      continue;
-    }
-
-    track = ges_track_element_get_track (tmp->data);
-    if (!track) {
-      GST_WARNING ("TrackElement not in a track yet");
-      continue;
-    }
-
-    if (GES_IS_EFFECT (tmp->data)) {
-      has_effect = TRUE;
-      continue;
-    }
-
-    if ((!g_strcmp0 (media_type, "pitivi.stream.VideoStream")
-            && track->type == GES_TRACK_TYPE_VIDEO)
-        || (!g_strcmp0 (media_type, "pitivi.stream.AudioStream")
-            && track->type == GES_TRACK_TYPE_AUDIO)) {
-
-      /* We unlock the track element so we do not move the whole Clip */
-      ges_track_element_set_locked (tmp->data, FALSE);
-      set_properties (G_OBJECT (tmp->data), props_table);
-
-      if (locked)
-        ges_track_element_set_locked (tmp->data, TRUE);
-
-      type = track->type;
-      g_object_get (tmp->data, "start", &start, "duration", &duration, NULL);
-    }
-  }
-
-  if (has_effect) {
-
-    /* FIXME make sure this is the way we want to handle that
-     * ie: set duration and start as the other trackelement
-     * and no let full control to the user. */
-
-    for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
-      /* We set the effects start and duration */
-      track = ges_track_element_get_track (tmp->data);
-
-      if (GES_IS_EFFECT (tmp->data)
-          && (type == track->type)) {
-        /* We lock the track elements so we do not move the whole Clip */
-        ges_track_element_set_locked (tmp->data, FALSE);
-        g_object_set (tmp->data, "start", start, "duration", duration, NULL);
-        if (locked)
-          ges_track_element_set_locked (tmp->data, TRUE);
-      }
-    }
   }
 
   /* Disconnect the signal */
