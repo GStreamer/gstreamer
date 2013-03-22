@@ -114,8 +114,6 @@ struct _GESTrackElementClass {
 
 GType ges_track_element_get_type               (void);
 
-gboolean ges_track_element_set_track           (GESTrackElement * object,
-              GESTrack * track);
 GESTrack* ges_track_element_get_track          (GESTrackElement * object);
 
 GESTrackType ges_track_element_get_track_type  (GESTrackElement * object);

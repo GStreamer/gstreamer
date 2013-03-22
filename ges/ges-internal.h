@@ -241,4 +241,10 @@ void              ges_clip_set_moving_from_layer  (GESClip *clip, gboolean is_mo
 GESTrackElement*  ges_clip_create_track_element   (GESClip *clip, GESTrackType type);
 GList*            ges_clip_create_track_elements  (GESClip *clip, GESTrackType type);
 
+
+/****************************************************
+ *              GESTrackElement                     *
+ ****************************************************/
+gboolean          ges_track_element_set_track     (GESTrackElement * object, GESTrack * track);
+
 #endif /* __GES_INTERNAL_H__ */
