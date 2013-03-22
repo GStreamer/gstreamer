@@ -82,18 +82,6 @@
  * <link linkend="GstQTMux--streamable">streamable</link> allows foregoing to add
  * index metadata (at the end of file).
  *
- * <link linkend="GstQTMux--dts-method">dts-method</link> allows selecting a
- * method for managing input timestamps (stay tuned for 0.11 to have this
- * automagically settled).  The default delta/duration method should handle nice
- * (aka perfect streams) just fine, but may experience problems otherwise
- * (e.g. input stream with re-ordered B-frames and/or with frame dropping).
- * The re-ordering approach re-assigns incoming timestamps in ascending order
- * to incoming buffers and offers an alternative in such cases.  In cases where
- * that might fail, the remaining method can be tried, which is exact and
- * according to specs, but might experience playback on not so spec-wise players.
- * Note that this latter approach also requires one to enable
- * <link linkend="GstQTMux--presentation-timestamp">presentation-timestamp</link>.
- *
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
