@@ -646,13 +646,37 @@ compare_media (gpointer key, GstRTSPMedia * media1, GstRTSPMedia * media2)
 }
 
 static void
-media_unprepared (GstRTSPMedia * media, GstRTSPMediaFactory * factory)
+media_unprepared (GstRTSPMedia * media, GWeakRef * ref)
 {
-  GstRTSPMediaFactoryPrivate *priv = factory->priv;;
+  GstRTSPMediaFactory *factory = g_weak_ref_get (ref);
+  GstRTSPMediaFactoryPrivate *priv;
+
+  if (!factory)
+    return;
+
+  priv = factory->priv;;
 
   g_mutex_lock (&priv->medias_lock);
   g_hash_table_foreach_remove (priv->medias, (GHRFunc) compare_media, media);
   g_mutex_unlock (&priv->medias_lock);
+
+  g_object_unref (factory);
+}
+
+static GWeakRef *
+weak_ref_new (gpointer obj)
+{
+  GWeakRef *ref = g_slice_new (GWeakRef);
+
+  g_weak_ref_init (ref, obj);
+  return ref;
+}
+
+static void
+weak_ref_free (GWeakRef * ref)
+{
+  g_weak_ref_clear (ref);
+  g_slice_free (GWeakRef, ref);
 }
 
 /**
@@ -733,8 +757,9 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,
       if (!gst_rtsp_media_is_reusable (media)) {
         /* when not reusable, connect to the unprepare signal to remove the item
          * from our cache when it gets unprepared */
-        g_signal_connect_object (media, "unprepared",
-            (GCallback) media_unprepared, factory, 0);
+        g_signal_connect_data (media, "unprepared",
+            (GCallback) media_unprepared, weak_ref_new (factory),
+            (GClosureNotify) weak_ref_free, 0);
       }
     }
   }
