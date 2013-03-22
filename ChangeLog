@@ -1,9 +1,325 @@
-=== release 1.0.5 ===
+=== release 1.0.6 ===
 
-2013-01-08  Tim-Philipp Müller <tim@centricular.net>
+2013-03-22  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.5
+	  releasing 1.0.6
+
+2013-03-22 09:53:58 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  po: update for new translatable string
+
+2013-02-16 23:02:21 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: don't pass NULL outcaps to transform_size on shutdown
+	  gst_pad_get_current_caps() on the source pad might yield NULL caps
+	  if we're being shut down and the source pad has already been
+	  deactivated by the other thread that's changing state. Just bail
+	  out in that case, instead of passing NULL caps to the transform_size
+	  function, which it might not expect.
+	  Fixes spurious warnings in audioresample shutdown unit test.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=693996
+
+2013-02-13 16:52:13 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstmessage.c:
+	* tests/check/gst/gstmessage.c:
+	  message: accept NULL error argument in gst_message_parse_{error,warning,info}
+	  And simplify code a bit while at it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=693704
+
+2013-02-12 00:08:51 +1100  Tim 'mithro' Ansell <mithro@mithis.com>
+
+	* gst/gstvalue.c:
+	  gstvalue: Adding offset to GstSegment serialize/deserialize.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=693587
+
+2013-02-07 12:52:26 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbin.c:
+	  bin: remove old comment
+	  The iterators now return a GValue and not the object directly anymore.
+
+2013-02-07 12:50:08 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbin.c:
+	  bin: reset GValue from iterator after usage
+
+2013-02-04 10:30:32 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstdebugutils.c:
+	  debugutils: fix order of caps on an unnegotiated link
+	  headlabel is the sink_pad (where the link points to) and not the other way around.
+
+2013-02-01 21:59:41 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* docs/libs/gstreamer-libs.types:
+	* gst/gstcontrolbinding.c:
+	* libs/gst/controller/gstargbcontrolbinding.c:
+	* libs/gst/controller/gstdirectcontrolbinding.c:
+	  docs: update the controller docs
+	  Add the control bindings to the docs. Add a little more detail.
+
+2013-02-01 21:57:45 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/random/porting-to-1.0.txt:
+	  porting: a few updates for the porting guide
+
+2013-02-05 17:15:37 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/libs/basesink.c:
+	  tests: add basesink test
+
+2013-02-05 17:19:50 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: handle sync of EOS after item without duration
+	  After a buffer or GAP without duration, an EOS event should be rendered
+	  immediately instead of waiting for the end of the segment.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=692868
+	  Conflicts:
+	  libs/gst/base/gstbasesink.c
+
+2013-02-02 11:55:52 -0800  Nate Bogdanowicz <natezb@gmail.com>
+
+	* gst/gstpipeline.c:
+	  gstpipeline: fix failed assertion caused by seeking pipeline with NULL clock
+	  Under certain GST_STATE_CHANGED_PAUSED_TO_PLAYING transitions, a pipeline with
+	  a NULL clock will fail an assertion due to an unchecked call to gst_object_ref().
+	  This is fixed by simply adding a check and only ref-ing if the clock is not NULL.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=693065
+
+2013-01-30 13:06:44 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* plugins/elements/gstdataqueue.c:
+	  dataqueue: can't pass a GType through GINT_TO_POINTER
+	  Use GSIZE_TO_POINTER instead. sizeof(GType) may be larger
+	  than sizeof(gulong) and sizeof(int), so the casts may
+	  chop off some bits from the GType value on some architectures.
+	  Conflicts:
+	  plugins/elements/gstdataqueue.c
+
+2013-01-29 12:40:52 +0100  Alexander Schrab <alexas@axis.com>
+
+	* tests/check/elements/queue.c:
+	  tests: unit test to trigger the queue/flushing race condition bug for allocation queries
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692691
+
+2013-01-28 11:05:28 +0100  Alexander Schrab <alexas@axis.com>
+
+	* plugins/elements/gstqueue.c:
+	  queue: remove query from queue if queue is flushing
+	  When querying a queue that is flushing we end up adding
+	  a query to the queuearray without taking a reference to
+	  that query (because the normal functionality is to block
+	  until that query is done and discarded from the queue).
+	  This later causes problem if the query is unreffed outside
+	  of the queue before we discard the queue. There is a check
+	  to avoid unreffing any lingering query-objects, but since
+	  the query has been deleted that check fails.
+	  This commit depends on other fixes done to gst_queue_array_find()
+	  and gst_queue_array_drop_element().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692691
+
+2013-01-30 11:55:18 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* plugins/elements/gstqueuearray.c:
+	  queuearray: make _find() find the value if no compare function is provided
+	  Allow NULL as compare function for direct value lookup.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692691
+	  Conflicts:
+	  plugins/elements/gstqueuearray.c
+
+2013-01-29 22:54:21 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/libs/queuearray.c:
+	  tests: one more test for gst_queue_array_drop_element()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692691
+
+2013-01-30 09:11:24 +0100  Alexander Schrab <alexas@axis.com>
+
+	* tests/check/libs/queuearray.c:
+	  tests: add checks for gst_queue_array_find() and _drop_element()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692691
+
+2013-01-28 11:05:28 +0100  Alexander Schrab <alexas@axis.com>
+
+	* plugins/elements/gstqueuearray.c:
+	  queuearray: fix gst_queue_array_find()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692691
+
+2013-01-28 11:05:28 +0100  Alexander Schrab <alexas@axis.com>
+
+	* plugins/elements/gstqueuearray.c:
+	  queuearray: fix gst_queue_array_drop_element()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692691
+
+2013-01-29 09:45:23 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: handle renegotiation correctly
+	  Don't retry to negotiate when we fail to negotiate but instead produce a
+	  NOT_NEGOTIATED error. We only want to retry negotiation if the result from
+	  gst_pad_push() returned NOT_NEGOTIATED.
+
+2013-01-27 06:20:51 -0800  Simon Feltman <sfeltman@src.gnome.org>
+
+	* gst/Makefile.am:
+	  g-i: add built enumtypes headers and sources to gir creation
+	  Add gstenumtypes.h/c for inclusion with g-ir-scanner. This fixes
+	  problems where introspection based bindings think GstState is
+	  typeless due to the GType not being included as an annotation.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=691185
+
+2013-01-24 15:50:17 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-negotiation.xml:
+	  pwg: rename variable
+	  The filter variable was used twice for different things.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=692432
+
+2013-01-17 21:35:48 -0300  Niv Sardi <xaiki@evilgiggle.com>
+
+	* gst/gstpad.c:
+	  gst_pad_check_reconfigure: only remove flag if set.
+	  the code ifed a debug statement, that can't be right. anyway, the way it is,
+	  we don't really need that branch, as we set the flag to unset only if set
+	  (and that can't fail) hence the end result is always to unset the flag.
+	  Signed-off-by: Niv Sardi <xaiki@evilgiggle.com>
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=691985
+
+2013-01-17 21:43:25 -0300  Niv Sardi <xaiki@evilgiggle.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: set NEED_RECONFIGURE flag if negotiate fails
+	  When negotiation fails, mark the pad as needing a reconfigure again so
+	  that it gets picked up again next time.
+	  Signed-off-by: Niv Sardi <xaiki@evilgiggle.com>
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=691986
+
+2013-01-18 16:05:09 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tools/gst-launch.1.in:
+	  tools: minor addition to gst-launch-1.0 man page
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692015
+
+2013-01-18 16:01:11 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tools/gst-launch.1.in:
+	  tools: update gst-launch-1.0 man page for new debug levels
+	  There are more debug levels these days, not only 0-5.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692015
+
+2013-01-16 17:24:42 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* libs/gst/base/gstadapter.c:
+	  docs: add a note to the gst_adapter_take_buffer() docs about buffer flags
+	  https://bugzilla.gnome.org/show_bug.cgi?id=682110
+
+2013-01-16 11:29:47 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/gst/gstabi.c:
+	* tests/check/libs/libsabi.c:
+	  tests: disable ABI checks for architectures where the struct sizes are not up-to-date
+	  https://bugzilla.gnome.org/show_bug.cgi?id=691828
+
+2013-01-15 09:42:20 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstpipeline.c:
+	  pipeline: add allow-none annotation for gst_pipeline_new()'s name property
+
+2013-01-14 20:02:42 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbaseparse.c:
+	  docs: minor GstBaseParse docs fixes
+	  Expose docs for gst_base_parse_finish_frame().
+
+2013-01-14 17:01:22 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gsttypefindhelper.c:
+	  typefind: handle map failure
+
+2013-01-14 17:00:46 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: handle map failure
+
+2013-01-14 17:00:23 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstadapter.c:
+	  adapter: handle map failure
+
+2013-01-10 11:34:14 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstcontrolbinding.h:
+	  controlbinding: hide one unused typedef
+	  This is not used internally.
+
+2013-01-10 11:33:42 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstcontrolbinding.c:
+	* gst/gstcontrolsource.c:
+	  docs: improve api docs for controlsource and -binding
+
+=== release 1.0.5 ===
+
+2013-01-08 00:36:05 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* po/sl.po:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstversion.h:
+	  Release 1.0.5
 
 2013-01-05 16:30:04 +0000  Tim-Philipp Müller <tim@centricular.net>
 

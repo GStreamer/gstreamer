@@ -1,8 +1,8 @@
 
-Release notes for GStreamer 1.0.5
+Release notes for GStreamer 1.0.6
 
 
-The GStreamer team is pleased to announce a new bug-fix release
+The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -38,28 +38,35 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 
 
-
+  
 
 Features of this release
-
-      * add GST_BIN_FLAG_NO_RESYNC flag that disables a resync when
-        an element is added, removed or linked in the bin; this is
-        interesting for complex bins that dynamically add elements
-        to themselves and want to manage the state of those elements
-        without interference from state resync threads (which may
-        cause deadlocks)
-      * add OTHER clock type
+    
+      * bin: reset GValue from iterator after usage, fixing leak
+      * pipeline: fix seeking on pipeline with NULL clock
+      * message: accept NULL error argument in gst_message_parse_{error,warning,info}
+      * basesrc: handle renegotiation correctly
+      * basesink: handle sync of EOS after item without duration
+      * basetransform: avoid warnings from NULL outcaps passed to transform_size in shutdown race
+      * adapter, basesrc, typefind: handle gst_buffer_map failure
+      * queuearray: fix gst_queue_array_drop_element()
+      * queuearray: fix gst_queue_array_find()
+      * queue: remove query from queue if queue is flushing
+      * g-i: make sure enumeration types and flags are introspected and available to bindings
+      * g-i: add allow-none annotation for gst_pipeline_new()'s name property
 
 Bugs fixed in this release
-
-      * 690915 : Replace AM_CONFIG_HEADER with AC_CONFIG_HEADERS in configure.ac
-
-API changes in this release
-
- - API additions:
-
-      * GST_BIN_FLAG_NO_RESYNC
-      * GST_CLOCK_TYPE_OTHER
+     
+      * 684804 : basesink: fails to post EOS message with RTSP stream
+      * 691185 : g-i: GStreamer enums and flags not usable - " expected enumeration type GstFormat, but got Format instead " warning when setting GstFormat property on GStreamer appsrc element
+      * 691985 : gst_pad_check_reconfigure: only remove flag if set.
+      * 691986 : basesrc: set NEED_RECONFIGURE flag if negotiate fails
+      * 692691 : queue: dangling pointer when doing allocation query on a flushing queue
+      * 692868 : basesink: expands GAP event without duration to last to segment end
+      * 693065 : pipeline: criticals when seeking on pipeline with NULL clock
+      * 693587 : Adding offset to GstSegment deserialize/serialize to fix jump on uninitialized value
+      * 693704 : gst_message_parse_{warning,error} annotations wrongly claim allow-none for GError parameter
+      * 693996 : basetransform: audioresample shutdown unit test fails with 'gst_audio_info_from_caps: caps != NULL'  in transform_size
 
 ==== Download ====
 
@@ -96,7 +103,12 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Thijs Vermeir
+      * Alexander Schrab
+      * Nate Bogdanowicz
+      * Niv Sardi
+      * Simon Feltman
+      * Stefan Sauer
+      * Tim 'mithro' Ansell
       * Tim-Philipp Müller
       * Wim Taymans
  
