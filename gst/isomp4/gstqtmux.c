@@ -119,7 +119,7 @@
 #include <gst/base/gstcollectpads.h>
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
-#include <gst/tag/xmpwriter.h>
+#include <gst/tag/tag.h>
 
 #include <sys/types.h>
 #ifdef G_OS_WIN32
@@ -3308,6 +3308,7 @@ gst_qt_mux_sink_event (GstCollectPads * pads, GstCollectData * data,
       GstTagList *list;
       GstTagSetter *setter = GST_TAG_SETTER (qtmux);
       GstTagMergeMode mode;
+      gchar *code;
 
       GST_OBJECT_LOCK (qtmux);
       mode = gst_tag_setter_get_tag_merge_mode (setter);
@@ -3328,6 +3329,21 @@ gst_qt_mux_sink_event (GstCollectPads * pads, GstCollectData * data,
           qtpad->avg_bitrate = avg_bitrate;
         if (max_bitrate > 0 && max_bitrate < G_MAXUINT32)
           qtpad->max_bitrate = max_bitrate;
+      }
+
+      if (gst_tag_list_get_string (list, GST_TAG_LANGUAGE_CODE, &code)) {
+        const char *iso_code = gst_tag_get_language_code_iso_639_2T (code);
+        if (iso_code) {
+          GstQTPad *qtpad = gst_pad_get_element_private (pad);
+          g_assert (qtpad);
+          if (qtpad->trak) {
+            /* https://developer.apple.com/library/mac/#documentation/QuickTime/QTFF/QTFFChap4/qtff4.html */
+            qtpad->trak->mdia.mdhd.language_code =
+                (iso_code[0] - 0x60) * 0x400 + (iso_code[1] - 0x60) * 0x20 +
+                (iso_code[2] - 0x60);
+          }
+        }
+        g_free (code);
       }
 
       gst_event_unref (event);
