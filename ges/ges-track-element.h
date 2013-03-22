@@ -126,11 +126,6 @@ GstElement * ges_track_element_get_gnlobject   (GESTrackElement * object);
 
 GstElement * ges_track_element_get_element     (GESTrackElement * object);
 
-void ges_track_element_set_locked              (GESTrackElement * object,
-                                               gboolean locked);
-
-gboolean ges_track_element_is_locked           (GESTrackElement * object);
-
 gboolean ges_track_element_set_active          (GESTrackElement * object,
                                                gboolean active);
 

@@ -987,8 +987,7 @@ ges_clip_edit (GESClip * clip, GList * layers,
   }
 
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = g_list_next (tmp)) {
-    if (ges_track_element_is_locked (tmp->data)
-        && GES_IS_SOURCE (tmp->data)) {
+    if (GES_IS_SOURCE (tmp->data)) {
       ret &= ges_track_element_edit (tmp->data, layers, mode, edge, position);
       break;
     }
@@ -1155,7 +1154,6 @@ ges_clip_get_supported_formats (GESClip * clip)
 gboolean
 _ripple (GESTimelineElement * element, GstClockTime start)
 {
-  GList *tmp;
   gboolean ret = TRUE;
   GESTimeline *timeline;
   GESClip *clip = GES_CLIP (element);
@@ -1167,14 +1165,12 @@ _ripple (GESTimelineElement * element, GstClockTime start)
     return FALSE;
   }
 
-  for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = g_list_next (tmp)) {
-    if (ges_track_element_is_locked (tmp->data)) {
-      ret = timeline_ripple_object (timeline, GES_TRACK_ELEMENT (tmp->data),
-          NULL, GES_EDGE_NONE, start);
-      /* As we work only with locked objects, the changes will be reflected
-       * to others controlled TrackElements */
-      break;
-    }
+  if (GES_CONTAINER_CHILDREN (element)) {
+    GESTrackElement *track_element =
+        GES_TRACK_ELEMENT (GES_CONTAINER_CHILDREN (element)->data);
+
+    ret = timeline_ripple_object (timeline, track_element, NULL, GES_EDGE_NONE,
+        start);
   }
 
   return ret;
@@ -1183,7 +1179,6 @@ _ripple (GESTimelineElement * element, GstClockTime start)
 static gboolean
 _ripple_end (GESTimelineElement * element, GstClockTime end)
 {
-  GList *tmp;
   gboolean ret = TRUE;
   GESTimeline *timeline;
   GESClip *clip = GES_CLIP (element);
@@ -1195,14 +1190,12 @@ _ripple_end (GESTimelineElement * element, GstClockTime end)
     return FALSE;
   }
 
-  for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = g_list_next (tmp)) {
-    if (ges_track_element_is_locked (tmp->data)) {
-      ret = timeline_ripple_object (timeline, GES_TRACK_ELEMENT (tmp->data),
-          NULL, GES_EDGE_END, end);
-      /* As we work only with locked objects, the changes will be reflected
-       * to others controlled TrackElements */
-      break;
-    }
+  if (GES_CONTAINER_CHILDREN (element)) {
+    GESTrackElement *track_element =
+        GES_TRACK_ELEMENT (GES_CONTAINER_CHILDREN (element)->data);
+
+    ret = timeline_ripple_object (timeline, track_element, NULL, GES_EDGE_END,
+        end);
   }
 
   return ret;
@@ -1211,7 +1204,6 @@ _ripple_end (GESTimelineElement * element, GstClockTime end)
 gboolean
 _roll_start (GESTimelineElement * element, GstClockTime start)
 {
-  GList *tmp;
   gboolean ret = TRUE;
   GESTimeline *timeline;
 
@@ -1224,14 +1216,12 @@ _roll_start (GESTimelineElement * element, GstClockTime start)
     return FALSE;
   }
 
-  for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = g_list_next (tmp)) {
-    if (ges_track_element_is_locked (tmp->data)) {
-      ret = timeline_roll_object (timeline, GES_TRACK_ELEMENT (tmp->data),
-          NULL, GES_EDGE_START, start);
-      /* As we work only with locked objects, the changes will be reflected
-       * to others controlled TrackElements */
-      break;
-    }
+  if (GES_CONTAINER_CHILDREN (element)) {
+    GESTrackElement *track_element =
+        GES_TRACK_ELEMENT (GES_CONTAINER_CHILDREN (element)->data);
+
+    ret = timeline_roll_object (timeline, track_element, NULL, GES_EDGE_START,
+        start);
   }
 
   return ret;
@@ -1240,7 +1230,6 @@ _roll_start (GESTimelineElement * element, GstClockTime start)
 gboolean
 _roll_end (GESTimelineElement * element, GstClockTime end)
 {
-  GList *tmp;
   gboolean ret = TRUE;
   GESTimeline *timeline;
 
@@ -1253,14 +1242,12 @@ _roll_end (GESTimelineElement * element, GstClockTime end)
   }
 
 
-  for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = g_list_next (tmp)) {
-    if (ges_track_element_is_locked (tmp->data)) {
-      ret = timeline_roll_object (timeline, GES_TRACK_ELEMENT (tmp->data),
-          NULL, GES_EDGE_END, end);
-      /* As we work only with locked objects, the changes will be reflected
-       * to others controlled TrackElements */
-      break;
-    }
+  if (GES_CONTAINER_CHILDREN (element)) {
+    GESTrackElement *track_element =
+        GES_TRACK_ELEMENT (GES_CONTAINER_CHILDREN (element)->data);
+
+    ret = timeline_roll_object (timeline, track_element,
+        NULL, GES_EDGE_END, end);
   }
 
   return ret;
@@ -1269,7 +1256,6 @@ _roll_end (GESTimelineElement * element, GstClockTime end)
 gboolean
 _trim (GESTimelineElement * element, GstClockTime start)
 {
-  GList *tmp;
   gboolean ret = TRUE;
   GESTimeline *timeline;
 
@@ -1282,12 +1268,12 @@ _trim (GESTimelineElement * element, GstClockTime start)
     return FALSE;
   }
 
-  for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = g_list_next (tmp)) {
-    if (ges_track_element_is_locked (tmp->data)) {
-      ret = timeline_trim_object (timeline, GES_TRACK_ELEMENT (tmp->data),
-          NULL, GES_EDGE_START, start);
-      break;
-    }
+  if (GES_CONTAINER_CHILDREN (element)) {
+    GESTrackElement *track_element =
+        GES_TRACK_ELEMENT (GES_CONTAINER_CHILDREN (element)->data);
+
+    ret = timeline_trim_object (timeline, track_element, NULL, GES_EDGE_START,
+        start);
   }
 
   return ret;

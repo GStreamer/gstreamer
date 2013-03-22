@@ -1408,18 +1408,12 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackElement * obj,
         new_start = _START (trackelement) + offset;
 
         clip = add_moving_clip (mv_ctx, trackelement);
-
-        if (ges_track_element_is_locked (trackelement) == TRUE) {
-
-          /* Make sure not to move 2 times the same Clip */
-          if (g_list_find (moved_clips, clip) == NULL) {
-            _set_start0 (GES_TIMELINE_ELEMENT (trackelement), new_start);
-            moved_clips = g_list_prepend (moved_clips, clip);
-          }
-
-        } else {
+        /* Make sure not to move 2 times the same Clip */
+        if (g_list_find (moved_clips, clip) == NULL) {
           _set_start0 (GES_TIMELINE_ELEMENT (trackelement), new_start);
+          moved_clips = g_list_prepend (moved_clips, clip);
         }
+
       }
       g_list_free (moved_clips);
       _set_start0 (GES_TIMELINE_ELEMENT (obj), position);
@@ -1444,18 +1438,12 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackElement * obj,
         new_start = _START (trackelement) + offset;
 
         clip = add_moving_clip (mv_ctx, trackelement);
-
-        if (ges_track_element_is_locked (trackelement) == TRUE) {
-
-          /* Make sure not to move 2 times the same Clip */
-          if (g_list_find (moved_clips, clip) == NULL) {
-            _set_start0 (GES_TIMELINE_ELEMENT (trackelement), new_start);
-            moved_clips = g_list_prepend (moved_clips, clip);
-          }
-
-        } else {
+        /* Make sure not to move 2 times the same Clip */
+        if (g_list_find (moved_clips, clip) == NULL) {
           _set_start0 (GES_TIMELINE_ELEMENT (trackelement), new_start);
+          moved_clips = g_list_prepend (moved_clips, clip);
         }
+
       }
 
       g_list_free (moved_clips);

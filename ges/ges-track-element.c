@@ -63,7 +63,6 @@ struct _GESTrackElementPrivate
   GESTrack *track;
 
   gboolean valid;
-
   gboolean locked;              /* If TRUE, then moves in sync with its controlling
                                  * GESClip */
 
@@ -75,7 +74,6 @@ enum
 {
   PROP_0,
   PROP_ACTIVE,
-  PROP_LOCKED,
   PROP_TRACK_TYPE,
   PROP_TRACK,
   PROP_LAST
@@ -123,10 +121,6 @@ static gboolean _set_priority (GESTimelineElement * element, guint32 priority);
 static void _deep_copy (GESTimelineElement * element,
     GESTimelineElement * copy);
 
-static inline void
-ges_track_element_set_locked_internal (GESTrackElement * object,
-    gboolean locked);
-
 static GParamSpec **default_list_children_properties (GESTrackElement * object,
     guint * n_properties);
 
@@ -139,9 +133,6 @@ ges_track_element_get_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_ACTIVE:
       g_value_set_boolean (value, ges_track_element_is_active (track_element));
-      break;
-    case PROP_LOCKED:
-      g_value_set_boolean (value, ges_track_element_is_locked (track_element));
       break;
     case PROP_TRACK_TYPE:
       g_value_set_flags (value, track_element->priv->track_type);
@@ -163,10 +154,6 @@ ges_track_element_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_ACTIVE:
       ges_track_element_set_active (track_element, g_value_get_boolean (value));
-      break;
-    case PROP_LOCKED:
-      ges_track_element_set_locked_internal (track_element,
-          g_value_get_boolean (value));
       break;
     case PROP_TRACK_TYPE:
       track_element->priv->track_type = g_value_get_flags (value);
@@ -241,17 +228,6 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   g_object_class_install_property (object_class, PROP_ACTIVE,
       properties[PROP_ACTIVE]);
 
-  /**
-   * GESTrackElement:locked:
-   *
-   * If %TRUE, then moves in sync with its controlling #GESClip
-   */
-  properties[PROP_LOCKED] =
-      g_param_spec_boolean ("locked", "Locked",
-      "Moves in sync with its controling Clip", TRUE, G_PARAM_READWRITE);
-  g_object_class_install_property (object_class, PROP_LOCKED,
-      properties[PROP_LOCKED]);
-
   properties[PROP_TRACK_TYPE] = g_param_spec_flags ("track-type", "Track Type",
       "The track type of the object", GES_TYPE_TRACK_TYPE,
       GES_TRACK_TYPE_UNKNOWN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
@@ -305,7 +281,6 @@ ges_track_element_init (GESTrackElement * self)
   priv->pending_duration = GST_SECOND;
   priv->pending_priority = 1;
   priv->pending_active = TRUE;
-  priv->locked = TRUE;
   priv->properties_hashtable = NULL;
   priv->bindings_hashtable = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, NULL);
@@ -813,52 +788,6 @@ ges_track_element_get_element (GESTrackElement * object)
 
   return object->priv->element;
 }
-
-static inline void
-ges_track_element_set_locked_internal (GESTrackElement * object,
-    gboolean locked)
-{
-  object->priv->locked = locked;
-}
-
-/**
- * ges_track_element_set_locked:
- * @object: a #GESTrackElement
- * @locked: whether the object is lock to its parent
- *
- * Set the locking status of the @object in relationship to its controlling
- * #GESClip. If @locked is %TRUE, then this object will move synchronously
- * with its controlling #GESClip.
- */
-void
-ges_track_element_set_locked (GESTrackElement * object, gboolean locked)
-{
-  g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
-
-  GST_DEBUG_OBJECT (object, "%s object", locked ? "Locking" : "Unlocking");
-
-  ges_track_element_set_locked_internal (object, locked);
-  g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_LOCKED]);
-
-}
-
-/**
- * ges_track_element_is_locked:
- * @object: a #GESTrackElement
- *
- * Let you know if object us locked or not (moving synchronously).
- *
- * Returns: %TRUE if the object is moving synchronously to its controlling
- * #GESClip, else %FALSE.
- */
-gboolean
-ges_track_element_is_locked (GESTrackElement * object)
-{
-  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
-
-  return object->priv->locked;
-}
-
 
 /**
  * ges_track_element_is_active:
