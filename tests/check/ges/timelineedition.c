@@ -54,27 +54,28 @@ create_custom_clip (void)
 
 GST_START_TEST (test_basic_timeline_edition)
 {
+  GESAsset *asset;
   GESTrack *track;
   GESTimeline *timeline;
+  GESTimelineLayer *layer;
   GESTrackElement *trackelement, *trackelement1, *trackelement2;
   GESClip *clip, *clip1, *clip2;
 
   ges_init ();
 
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
+  track = ges_track_audio_raw_new ();
   fail_unless (track != NULL);
 
   timeline = ges_timeline_new ();
   fail_unless (timeline != NULL);
-
   fail_unless (ges_timeline_add_track (timeline, track));
 
-  clip = create_custom_clip ();
-  clip1 = create_custom_clip ();
-  clip2 = create_custom_clip ();
+  layer = ges_timeline_layer_new ();
+  fail_unless (layer != NULL);
+  fail_unless (ges_timeline_add_layer (timeline, layer));
 
-
-  fail_unless (clip && clip1 && clip2);
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+  fail_unless (GES_IS_ASSET (asset));
 
   /**
    * Our timeline
@@ -83,33 +84,24 @@ GST_START_TEST (test_basic_timeline_edition)
    *          |  clip  |  |  clip1  |     |     clip2  |
    * time     0------- 10 --------20    50---------60
    */
-  g_object_set (clip, "start", (guint64) 0, "duration", (guint64) 10,
-      "in-point", (guint64) 0, NULL);
-  g_object_set (clip1, "start", (guint64) 10, "duration", (guint64) 10,
-      "in-point", (guint64) 0, NULL);
-  g_object_set (clip2, "start", (guint64) 50, "duration", (guint64) 60,
-      "in-point", (guint64) 0, NULL);
+  clip = ges_timeline_layer_add_asset (layer, asset, 0, 0, 10, 1,
+      GES_TRACK_TYPE_UNKNOWN);
+  trackelement = GES_CONTAINER_CHILDREN (clip)->data;
+  fail_unless (GES_IS_TRACK_ELEMENT (trackelement));
 
-  trackelement = ges_clip_create_track_element (clip, track->type);
-  fail_unless (trackelement != NULL);
-  fail_unless (ges_container_add (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (trackelement)));
-  fail_unless (ges_track_add_element (track, trackelement));
-  assert_equals_uint64 (_DURATION (trackelement), 10);
+  clip1 = ges_timeline_layer_add_asset (layer, asset, 10, 0, 10, 1,
+      GES_TRACK_TYPE_UNKNOWN);
+  trackelement1 = GES_CONTAINER_CHILDREN (clip1)->data;
+  fail_unless (GES_IS_TRACK_ELEMENT (trackelement1));
 
-  trackelement1 = ges_clip_create_track_element (clip1, track->type);
-  fail_unless (trackelement1 != NULL);
-  fail_unless (ges_container_add (GES_CONTAINER (clip1),
-          GES_TIMELINE_ELEMENT (trackelement1)));
-  fail_unless (ges_track_add_element (track, trackelement1));
-  assert_equals_uint64 (_DURATION (trackelement1), 10);
+  clip2 = ges_timeline_layer_add_asset (layer, asset, 50, 0, 60, 1,
+      GES_TRACK_TYPE_UNKNOWN);
+  trackelement2 = GES_CONTAINER_CHILDREN (clip2)->data;
+  fail_unless (GES_IS_TRACK_ELEMENT (trackelement2));
 
-  trackelement2 = ges_clip_create_track_element (clip2, track->type);
-  fail_unless (ges_container_add (GES_CONTAINER (clip2),
-          GES_TIMELINE_ELEMENT (trackelement2)));
-  fail_unless (trackelement2 != NULL);
-  fail_unless (ges_track_add_element (track, trackelement2));
-  assert_equals_uint64 (_DURATION (trackelement2), 60);
+  CHECK_OBJECT_PROPS (trackelement, 0, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement1, 10, 0, 10);
+  CHECK_OBJECT_PROPS (trackelement2, 50, 0, 60);
 
   /**
    * Simple rippling clip to: 10
@@ -246,9 +238,6 @@ GST_START_TEST (test_basic_timeline_edition)
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   gst_object_unref (timeline);
-  gst_object_unref (clip);
-  gst_object_unref (clip1);
-  gst_object_unref (clip2);
 }
 
 GST_END_TEST;

@@ -37,14 +37,24 @@ GST_END_TEST;
 
 GST_START_TEST (test_test_source_properties)
 {
-  GESTrack *track;
-  GESTrackElement *trackelement;
   GESClip *clip;
+  GESTrack *track;
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GESTrackElement *trackelement;
 
   ges_init ();
 
   track = ges_track_new (GES_TRACK_TYPE_AUDIO, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
+
+  layer = ges_timeline_layer_new ();
+  fail_unless (layer != NULL);
+
+  timeline = ges_timeline_new ();
+  fail_unless (timeline != NULL);
+  fail_unless (ges_timeline_add_layer (timeline, layer));
+  fail_unless (ges_timeline_add_track (timeline, track));
 
   clip = (GESClip *) ges_test_clip_new ();
   fail_unless (clip != NULL);
@@ -57,13 +67,13 @@ GST_START_TEST (test_test_source_properties)
   assert_equals_uint64 (_DURATION (clip), 51);
   assert_equals_uint64 (_INPOINT (clip), 12);
 
-  trackelement = ges_clip_create_track_element (clip, track->type);
-  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
+  ges_timeline_layer_add_clip (layer, GES_CLIP (clip));
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+  trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
   fail_unless (GES_TIMELINE_ELEMENT_PARENT (trackelement) ==
       GES_TIMELINE_ELEMENT (clip));
-
-  fail_unless (ges_track_element_set_track (trackelement, track));
+  fail_unless (ges_track_element_get_track (trackelement) == track);
 
   /* Check that trackelement has the same properties */
   assert_equals_uint64 (_START (trackelement), 42);
@@ -233,13 +243,15 @@ find_composition (GESTrack * track)
 }
 GST_START_TEST (test_gap_filling_basic)
 {
-  GESTrack *track;
-  GESTrackElement *trackelement, *trackelement1, *trackelement2;
-  /*GESTimelineLayer *layer; */
-  GESClip *clip, *clip1, *clip2;
-  GstElement *gnlsrc, *gnlsrc1, *gap = NULL;
-  GstElement *composition;
   GList *tmp;
+  GESTrack *track;
+  GESTimeline *timeline;
+  GstElement *composition;
+  GESTimelineLayer *layer;
+  GESClip *clip, *clip1, *clip2;
+
+  GstElement *gnlsrc, *gnlsrc1, *gap = NULL;
+  GESTrackElement *trackelement, *trackelement1, *trackelement2;
 
   ges_init ();
 
@@ -249,6 +261,14 @@ GST_START_TEST (test_gap_filling_basic)
   composition = find_composition (track);
   fail_unless (composition != NULL);
 
+  layer = ges_timeline_layer_new ();
+  fail_unless (layer != NULL);
+
+  timeline = ges_timeline_new ();
+  fail_unless (timeline != NULL);
+  fail_unless (ges_timeline_add_layer (timeline, layer));
+  fail_unless (ges_timeline_add_track (timeline, track));
+
   clip = GES_CLIP (ges_test_clip_new ());
   fail_unless (clip != NULL);
 
@@ -257,13 +277,12 @@ GST_START_TEST (test_gap_filling_basic)
   assert_equals_uint64 (_START (clip), 0);
   assert_equals_uint64 (_DURATION (clip), 5);
 
-  /* TODO Since the timeline is responsible for adding TrackElements to
-   * Tracks, this test should be refactored */
-  trackelement = ges_clip_create_track_element (clip, track->type);
-  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
-
-  fail_unless (ges_track_add_element (track, trackelement));
+  ges_timeline_layer_add_clip (layer, GES_CLIP (clip));
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+  trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
+  fail_unless (ges_track_element_get_track (trackelement) == track);
+
   gnlsrc = ges_track_element_get_gnlobject (trackelement);
   fail_unless (gnlsrc != NULL);
 
@@ -281,11 +300,11 @@ GST_START_TEST (test_gap_filling_basic)
   assert_equals_uint64 (_START (clip1), 15);
   assert_equals_uint64 (_DURATION (clip1), 5);
 
-  trackelement1 = ges_clip_create_track_element (clip1, track->type);
-  ges_container_add (GES_CONTAINER (clip1),
-      GES_TIMELINE_ELEMENT (trackelement1));
-  fail_unless (ges_track_add_element (track, trackelement1));
+  ges_timeline_layer_add_clip (layer, GES_CLIP (clip1));
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip1)), 1);
+  trackelement1 = GES_CONTAINER_CHILDREN (clip1)->data;
   fail_unless (trackelement1 != NULL);
+  fail_unless (ges_track_element_get_track (trackelement1) == track);
   gnlsrc1 = ges_track_element_get_gnlobject (trackelement1);
   fail_unless (gnlsrc1 != NULL);
 
@@ -309,16 +328,16 @@ GST_START_TEST (test_gap_filling_basic)
   clip2 = GES_CLIP (ges_test_clip_new ());
   fail_unless (clip2 != NULL);
   g_object_set (clip2, "start", (guint64) 35, "duration", (guint64) 5, NULL);
-  trackelement2 = ges_clip_create_track_element (clip2, track->type);
-  ges_container_add (GES_CONTAINER (clip2),
-      GES_TIMELINE_ELEMENT (trackelement2));
-  fail_unless (ges_track_add_element (track, trackelement2));
+  ges_timeline_layer_add_clip (layer, GES_CLIP (clip2));
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip2)), 1);
+  trackelement2 = GES_CONTAINER_CHILDREN (clip2)->data;
   fail_unless (trackelement2 != NULL);
+  fail_unless (ges_track_element_get_track (trackelement2) == track);
   assert_equals_uint64 (_START (trackelement2), 35);
   assert_equals_uint64 (_DURATION (trackelement2), 5);
   assert_equals_int (g_list_length (GST_BIN_CHILDREN (composition)), 5);
 
-  gst_object_unref (track);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;

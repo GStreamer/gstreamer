@@ -37,14 +37,23 @@ GST_END_TEST;
 
 GST_START_TEST (test_overlay_properties)
 {
-  GESTrack *track;
-  GESTrackElement *trackelement;
   GESClip *clip;
+  GESTrack *track;
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GESTrackElement *trackelement;
 
   ges_init ();
 
   track = ges_track_new (GES_TRACK_TYPE_VIDEO, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
+  layer = ges_timeline_layer_new ();
+  fail_unless (layer != NULL);
+  timeline = ges_timeline_new ();
+  fail_unless (timeline != NULL);
+  fail_unless (ges_timeline_add_layer (timeline, layer));
+  fail_unless (ges_timeline_add_track (timeline, track));
+  ASSERT_OBJECT_REFCOUNT (timeline, "timeline", 1);
 
   clip = (GESClip *) ges_text_overlay_clip_new ();
   fail_unless (clip != NULL);
@@ -56,10 +65,13 @@ GST_START_TEST (test_overlay_properties)
   assert_equals_uint64 (_DURATION (clip), 51);
   assert_equals_uint64 (_INPOINT (clip), 12);
 
-  trackelement = ges_clip_create_track_element (clip, track->type);
-  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
+  ges_timeline_layer_add_clip (layer, GES_CLIP (clip));
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+  trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
-  fail_unless (ges_track_element_set_track (trackelement, track));
+  fail_unless (GES_TIMELINE_ELEMENT_PARENT (trackelement) ==
+      GES_TIMELINE_ELEMENT (clip));
+  fail_unless (ges_track_element_get_track (trackelement) == track);
 
   /* Check that trackelement has the same properties */
   assert_equals_uint64 (_START (trackelement), 42);

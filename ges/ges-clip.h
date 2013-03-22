@@ -147,8 +147,6 @@ GType ges_clip_get_type (void);
  *                TrackElement handling             *
  ****************************************************/
 GESTrackType      ges_clip_get_supported_formats  (GESClip *clip);
-GESTrackElement*  ges_clip_create_track_element   (GESClip *clip, GESTrackType type);
-GList*            ges_clip_create_track_elements  (GESClip *clip, GESTrackType type);
 void              ges_clip_set_supported_formats  (GESClip *clip, GESTrackType       supportedformats);
 gboolean          ges_clip_add_asset              (GESClip *clip, GESAsset *asset);
 gboolean          ges_clip_fill_track_element     (GESClip *clip, GESTrackElement *trackelement,

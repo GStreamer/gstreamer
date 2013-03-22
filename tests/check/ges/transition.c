@@ -27,14 +27,23 @@
 
 GST_START_TEST (test_transition_basic)
 {
+  GESTrack *track;
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
   GESTransitionClip *tr1, *tr2;
   GESTrackElement *trackelement;
-  GESTrack *track;
 
   ges_init ();
 
   track = ges_track_video_raw_new ();
-  fail_unless (track != 0);
+  layer = ges_timeline_layer_new ();
+  timeline = ges_timeline_new ();
+  fail_unless (track != NULL);
+  fail_unless (layer != NULL);
+  fail_unless (timeline != NULL);
+  fail_unless (ges_timeline_add_layer (timeline, layer));
+  fail_unless (ges_timeline_add_track (timeline, track));
+  ASSERT_OBJECT_REFCOUNT (timeline, "timeline", 1);
 
   tr1 = ges_transition_clip_new (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
   fail_unless (tr1 != 0);
@@ -45,37 +54,40 @@ GST_START_TEST (test_transition_basic)
   fail_unless (tr2->vtype == 1);
 
   /* Make sure track element is created and vtype is set */
-  trackelement = ges_clip_create_track_element (GES_CLIP (tr2), track->type);
-  ges_container_add (GES_CONTAINER (tr2), GES_TIMELINE_ELEMENT (trackelement));
-
+  fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (tr2)));
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (tr2)), 1);
+  trackelement = GES_CONTAINER_CHILDREN (tr2)->data;
   fail_unless (trackelement != NULL);
   fail_unless (ges_video_transition_get_transition_type
       (GES_VIDEO_TRANSITION (trackelement)) == 1);
 
-  fail_unless (ges_container_remove (GES_CONTAINER (tr2),
-          GES_TIMELINE_ELEMENT (trackelement)) == TRUE);
-
-  gst_object_unref (track);
-  gst_object_unref (tr1);
-  gst_object_unref (tr2);
+  gst_object_unref (timeline);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_transition_properties)
 {
-  GESTrack *track;
-  GESTrackElement *trackelement;
   GESClip *clip;
+  GESTrack *track;
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GESTrackElement *trackelement;
 
   ges_init ();
 
-  clip =
-      GES_CLIP (ges_transition_clip_new
+  clip = GES_CLIP (ges_transition_clip_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE));
 
   track = ges_track_video_raw_new ();
+  layer = ges_timeline_layer_new ();
+  timeline = ges_timeline_new ();
   fail_unless (track != NULL);
+  fail_unless (layer != NULL);
+  fail_unless (timeline != NULL);
+  fail_unless (ges_timeline_add_layer (timeline, layer));
+  fail_unless (ges_timeline_add_track (timeline, track));
+  ASSERT_OBJECT_REFCOUNT (timeline, "timeline", 1);
 
   /* Set some properties */
   g_object_set (clip, "start", (guint64) 42, "duration", (guint64) 51,
@@ -85,10 +97,10 @@ GST_START_TEST (test_transition_properties)
   assert_equals_uint64 (_DURATION (clip), 51);
   assert_equals_uint64 (_INPOINT (clip), 12);
 
-  trackelement = ges_clip_create_track_element (clip, track->type);
-  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
+  fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (clip)));
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+  trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
-  fail_unless (ges_track_element_set_track (trackelement, track));
 
   /* Check that trackelement has the same properties */
   assert_equals_uint64 (_START (trackelement), 42);
@@ -132,17 +144,17 @@ GST_START_TEST (test_transition_properties)
   assert_equals_int (ges_video_transition_get_transition_type
       (GES_VIDEO_TRANSITION (trackelement)), 1);
 
-  GST_DEBUG ("Releasing track element");
-  ges_container_remove (GES_CONTAINER (clip),
-      GES_TIMELINE_ELEMENT (trackelement));
+  GST_DEBUG ("Removing clip from layer");
+  gst_object_ref (clip);        /* We do not want it to be destroyed */
+  ges_timeline_layer_remove_clip (layer, clip);
 
   g_object_set (clip, "vtype", 1, NULL);
-
-  GST_DEBUG ("creating track element");
-  trackelement = ges_clip_create_track_element (clip, track->type);
-  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
+  GST_DEBUG ("Read it to the layer");
+  fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (clip)));
+  g_object_unref (clip);
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+  trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
-  fail_unless (ges_track_element_set_track (trackelement, track));
 
   /* The new track element should have taken the previously set transition
    * type (in this case 1) */
@@ -151,10 +163,9 @@ GST_START_TEST (test_transition_properties)
       (GES_VIDEO_TRANSITION (trackelement)), 1);
   assert_equals_int (GES_TRANSITION_CLIP (clip)->vtype, 1);
 
-  ges_container_remove (GES_CONTAINER (clip),
-      GES_TIMELINE_ELEMENT (trackelement));
-  gst_object_unref (clip);
-  gst_object_unref (track);
+  gst_object_unref (timeline);
+  fail_if (G_IS_OBJECT (track));
+  fail_if (G_IS_OBJECT (clip));
 }
 
 GST_END_TEST;

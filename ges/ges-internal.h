@@ -238,5 +238,7 @@ G_GNUC_INTERNAL void _ges_container_set_ignore_notifies (GESContainer *container
 void              ges_clip_set_layer              (GESClip *clip, GESTimelineLayer  *layer);
 gboolean          ges_clip_is_moving_from_layer   (GESClip *clip);
 void              ges_clip_set_moving_from_layer  (GESClip *clip, gboolean is_moving);
+GESTrackElement*  ges_clip_create_track_element   (GESClip *clip, GESTrackType type);
+GList*            ges_clip_create_track_elements  (GESClip *clip, GESTrackType type);
 
 #endif /* __GES_INTERNAL_H__ */

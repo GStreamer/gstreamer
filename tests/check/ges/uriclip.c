@@ -46,6 +46,7 @@ asset_created_cb (GObject * source, GAsyncResult * res, gpointer udata)
   GError *error = NULL;
 
   asset = ges_asset_request_finish (res, &error);
+  ASSERT_OBJECT_REFCOUNT (asset, "1 for us one for the cache", 2);
   fail_unless (error == NULL);
   fail_if (asset == NULL);
   fail_if (g_strcmp0 (ges_asset_get_id (asset), av_uri));
