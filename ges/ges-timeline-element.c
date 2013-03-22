@@ -248,7 +248,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
  * @parent: new parent of self
  *
  * Sets the parent of @self to @parent. The object's reference count will
- * be incremented, and any floating reference will be removed (see g_object_ref_sink()).
+ * be incremented, and any floating reference will be removed (see gst_object_ref_sink()).
  *
  * Returns: %TRUE if @parent could be set or %FALSE when @self
  * already had a parent or @self and @parent are the same.

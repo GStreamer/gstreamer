@@ -71,12 +71,12 @@ GstDiscovererInfo *ges_uri_clip_asset_get_info      (const GESUriClipAsset * sel
 GstClockTime ges_uri_clip_asset_get_duration        (GESUriClipAsset *self);
 gboolean ges_uri_clip_asset_is_image                (GESUriClipAsset *self);
 void ges_uri_clip_asset_new                         (const gchar *uri,
-                                                       GCancellable *cancellable,
-                                                       GAsyncReadyCallback callback,
-                                                       gpointer user_data);
+                                                     GCancellable *cancellable,
+                                                     GAsyncReadyCallback callback,
+                                                     gpointer user_data);
 GESUriClipAsset* ges_uri_clip_asset_request_sync    (const gchar *uri, GError **error);
 void ges_uri_clip_asset_set_timeout                 (GESUriClipAssetClass *class,
-                                                       GstClockTime timeout);
+                                                     GstClockTime timeout);
 const GList * ges_uri_clip_asset_get_stream_assets  (GESUriClipAsset *self);
 
 #define GES_TYPE_ASSET_TRACK_FILESOURCE ges_uri_source_asset_get_type()
