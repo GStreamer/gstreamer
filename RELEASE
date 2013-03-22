@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.0.5
+Release notes for GStreamer Base Plugins 1.0.6
 
 
 The GStreamer team is pleased to announce a new bug-fix release
@@ -60,14 +60,29 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * alsasrc: don't output buffers without timestamps or with bogus timestamps
-      * discoverer, decodebin: fix state change re-sync race that might lead to deadlocks
-      * video: fix crashes with and frame sizes of A420 video format
+      * adder: fix setting caps via the "caps" property
+      * alsasink: don't use 100% CPU
+      * appsrc: fix locking order
+      * encodebin: sync muxer state with parent bin so encodebin can be added dynamically to pipeline
+      * libvisual: fix improper video frame clear operation
+      * pango: fix attribute list handling
+      * playbin: fix playsink caps handling so that converters get plugged when needed
+      * playbin: fix subtitleoverlay caps handling to avoid not-negotiated errors when plugins are missing
+      * videoscale: Correct DAR and border calculations
+      * ximagesink: fon't access structures of EMPTY caps
+      * typefinding: fix y4m caps
+      * build: fix build with automake 1.13
 
 Bugs fixed in this release
-
-      * 691244 : unable to play flv file with VP6 alpha video
-
+     
+      * 688476 : Seek in matroska file fails with not-negotiated error when using playsink
+      * 688803 : playbin: converters don't work? not-negotiated error with non-1/1 PAR and ximagesink
+      * 690937 : alsasink: playing video files with gst-launch causes CPU 100%
+      * 691687 : GstImageType documentation is misleading
+      * 693224 : appsrc deadlocks when setting pad caps before pushing buffer
+      * 693372 : 1.0 branch is still using AM_CONFIG_HEADER
+      * 693981 : subparse: fix bogus discontinuity detection if offset not set on buffers
+      * 696019 : videoscale does not preserve DAR with add-borders=TRUE
 
 ==== Download ====
 
@@ -104,7 +119,15 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Nicolas Dufresne
+      * Arnaud Vrac
+      * Greg Rutz
+      * Jan Schmidt
+      * Jan Schole
+      * Olivier Crête
+      * Sebastian Dröge
+      * Stefan Sauer
       * Tim-Philipp Müller
+      * Vincent Penquerc'h
       * Wim Taymans
+      * yanghuolin
  

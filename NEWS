@@ -1,5 +1,31 @@
-This is GStreamer Base Plugins 1.0.5
+This is GStreamer Base Plugins 1.0.6
 
+Changes since 1.0.5:
+
+      * adder: fix setting caps via the "caps" property
+      * alsasink: don't use 100% CPU
+      * appsrc: fix locking order
+      * encodebin: sync muxer state with parent bin so encodebin can be added dynamically to pipeline
+      * libvisual: fix improper video frame clear operation
+      * pango: fix attribute list handling
+      * playbin: fix playsink caps handling so that converters get plugged when needed
+      * playbin: fix subtitleoverlay caps handling to avoid not-negotiated errors when plugins are missing
+      * videoscale: Correct DAR and border calculations
+      * ximagesink: fon't access structures of EMPTY caps
+      * typefinding: fix y4m caps
+      * build: fix build with automake 1.13
+
+Bugs fixed since 1.0.5:
+
+      * 688476 : Seek in matroska file fails with not-negotiated error when using playsink
+      * 688803 : playbin: converters don't work? not-negotiated error with non-1/1 PAR and ximagesink
+      * 690937 : alsasink: playing video files with gst-launch causes CPU 100%
+      * 691687 : GstImageType documentation is misleading
+      * 693224 : appsrc deadlocks when setting pad caps before pushing buffer
+      * 693372 : 1.0 branch is still using AM_CONFIG_HEADER
+      * 693981 : subparse: fix bogus discontinuity detection if offset not set on buffers
+      * 696019 : videoscale does not preserve DAR with add-borders=TRUE 
+      
 Changes since 1.0.4:
 
       * alsasrc: don't output buffers without timestamps or with bogus timestamps
