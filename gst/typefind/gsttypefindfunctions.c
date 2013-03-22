@@ -4742,6 +4742,20 @@ degas_type_find (GstTypeFind * tf, gpointer private)
   }
 }
 
+/*** y4m ***/
+
+static void
+y4m_typefind (GstTypeFind * tf, gpointer private)
+{
+  const guint8 *data;
+
+  data = gst_type_find_peek (tf, 0, 10);
+  if (data != NULL && memcmp (data, "YUV4MPEG2 ", 10) == 0) {
+    gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY,
+        "application/x-yuv4mpeg", "y4mversion", G_TYPE_INT, 2, NULL);
+  }
+}
+
 /*** DVD ISO images (looks like H.264, see #674069) ***/
 static void
 dvdiso_type_find (GstTypeFind * tf, gpointer private)
@@ -5216,8 +5230,8 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER (plugin, "image/vnd.wap.wbmp", GST_RANK_MARGINAL,
       wbmp_typefind, NULL, NULL, NULL, NULL);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-yuv4mpeg",
-      GST_RANK_SECONDARY, "y4m", "YUV4MPEG2 ", 10, GST_TYPE_FIND_LIKELY);
+  TYPE_FIND_REGISTER (plugin, "application/x-yuv4mpeg", GST_RANK_SECONDARY,
+      y4m_typefind, NULL, NULL, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "image/x-icon", GST_RANK_MARGINAL,
       windows_icon_typefind, NULL, NULL, NULL, NULL);
 
