@@ -340,6 +340,9 @@ handle_buffer (GstFluidsynth * fluidsynth, GstBuffer * buffer)
               info.size - 1, NULL, NULL, NULL, 0);
 
           break;
+        case 0xf9:
+          GST_LOG_OBJECT (fluidsynth, "midi tick");
+          break;
         default:
           GST_WARNING_OBJECT (fluidsynth, "unhandled event 0x%02x", event);
           break;
