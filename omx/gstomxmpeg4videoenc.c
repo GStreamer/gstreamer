@@ -294,7 +294,7 @@ gst_omx_mpeg4_video_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
         break;
       default:
         g_assert_not_reached ();
-        break;
+        return NULL;
     }
 
     switch (param.eLevel) {
@@ -324,7 +324,7 @@ gst_omx_mpeg4_video_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
         break;
       default:
         g_assert_not_reached ();
-        break;
+        return NULL;
     }
 
     gst_caps_set_simple (caps,
