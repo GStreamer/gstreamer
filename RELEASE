@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plugins 1.0.5
+Release notes for GStreamer Ugly Plugins 1.0.6
 
 The GStreamer team is pleased to announce a new bug-fix release
 in the 1.x stable series of the
@@ -58,11 +58,11 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * fix build with automake 1.13
-      * mpeg2dec: debug logging printf format fixes
+      * build: allow calling autogen.sh from out-of-tree
 
-There were no bugs fixed in this release
-    
+Bugs fixed in this release
+     
+      * 692857 : make -ugly be able to be called " out-of-tree " 
 
 ==== Download ====
 
@@ -99,6 +99,5 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Thijs Vermeir
-      * Tim-Philipp Müller
+      * Benjamin Gaignard
  

@@ -1,4 +1,12 @@
-This is GStreamer Ugly Plugins 1.0.5
+This is GStreamer Ugly Plugins 1.0.6
+
+Changes since 1.0.5:
+
+      * build: allow calling autogen.sh from out-of-tree
+
+Bugs fixed since 1.0.5:
+
+      * 692857 : make -ugly be able to be called " out-of-tree " 
 
 Changes since 1.0.4:
 
