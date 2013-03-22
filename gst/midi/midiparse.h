@@ -72,6 +72,9 @@ struct _GstMidiParse
   /* output data */
   gboolean discont;
   GstSegment segment;
+  gboolean segment_pending;
+  guint32 seqnum;
+
   guint64 pulse;
 };
 

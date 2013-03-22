@@ -103,6 +103,8 @@ static void gst_midi_parse_set_property (GObject * object, guint prop_id,
 static void gst_midi_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static void reset_track (GstMidiTrack * track, GstMidiParse * midiparse);
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -224,13 +226,161 @@ gst_midi_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
+gst_midi_parse_do_seek (GstMidiParse * midiparse, GstSegment * segment)
+{
+  GST_DEBUG_OBJECT (midiparse, "seek to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (segment->position));
+
+  /* if seeking backwards, start from 0 else we just let things run and
+   * have it clip downstream */
+  if (segment->position < midiparse->segment.position) {
+    GST_DEBUG_OBJECT (midiparse, "seeking back to 0");
+    segment->position = 0;
+    g_list_foreach (midiparse->tracks, (GFunc) reset_track, midiparse);
+    midiparse->pulse = 0;
+  }
+  return TRUE;
+}
+
+static gboolean
+gst_midi_parse_perform_seek (GstMidiParse * midiparse, GstEvent * event)
+{
+  gboolean res = TRUE, tres;
+  gdouble rate;
+  GstFormat seek_format;
+  GstSeekFlags flags;
+  GstSeekType start_type, stop_type;
+  gint64 start, stop;
+  gboolean flush;
+  gboolean update;
+  GstSegment seeksegment;
+  guint32 seqnum;
+  GstEvent *tevent;
+
+  GST_DEBUG_OBJECT (midiparse, "doing seek: %" GST_PTR_FORMAT, event);
+
+  if (event) {
+    gst_event_parse_seek (event, &rate, &seek_format, &flags,
+        &start_type, &start, &stop_type, &stop);
+
+    if (seek_format != GST_FORMAT_TIME)
+      goto invalid_format;
+
+    flush = flags & GST_SEEK_FLAG_FLUSH;
+    seqnum = gst_event_get_seqnum (event);
+  } else {
+    flush = FALSE;
+    /* get next seqnum */
+    seqnum = gst_util_seqnum_next ();
+  }
+
+  /* send flush start */
+  if (flush) {
+    tevent = gst_event_new_flush_start ();
+    gst_event_set_seqnum (tevent, seqnum);
+    gst_pad_push_event (midiparse->srcpad, tevent);
+  } else
+    gst_pad_pause_task (midiparse->srcpad);
+
+  /* grab streaming lock, this should eventually be possible, either
+   * because the task is paused, our streaming thread stopped
+   * or because our peer is flushing. */
+  GST_PAD_STREAM_LOCK (midiparse->sinkpad);
+  if (G_UNLIKELY (midiparse->seqnum == seqnum)) {
+    /* we have seen this event before, issue a warning for now */
+    GST_WARNING_OBJECT (midiparse, "duplicate event found %" G_GUINT32_FORMAT,
+        seqnum);
+  } else {
+    midiparse->seqnum = seqnum;
+    GST_DEBUG_OBJECT (midiparse, "seek with seqnum %" G_GUINT32_FORMAT, seqnum);
+  }
+
+  /* Copy the current segment info into the temp segment that we can actually
+   * attempt the seek with. We only update the real segment if the seek succeeds. */
+  memcpy (&seeksegment, &midiparse->segment, sizeof (GstSegment));
+
+  /* now configure the final seek segment */
+  if (event) {
+    gst_segment_do_seek (&seeksegment, rate, seek_format, flags,
+        start_type, start, stop_type, stop, &update);
+  }
+  /* Else, no seek event passed, so we're just (re)starting the
+     current segment. */
+  GST_DEBUG_OBJECT (midiparse, "segment configured from %" G_GINT64_FORMAT
+      " to %" G_GINT64_FORMAT ", position %" G_GINT64_FORMAT,
+      seeksegment.start, seeksegment.stop, seeksegment.position);
+
+  /* do the seek, segment.position contains the new position. */
+  res = gst_midi_parse_do_seek (midiparse, &seeksegment);
+
+  /* and prepare to continue streaming */
+  if (flush) {
+    tevent = gst_event_new_flush_stop (TRUE);
+    gst_event_set_seqnum (tevent, seqnum);
+    /* send flush stop, peer will accept data and events again. We
+     * are not yet providing data as we still have the STREAM_LOCK. */
+    gst_pad_push_event (midiparse->srcpad, tevent);
+  }
+
+  /* if the seek was successful, we update our real segment and push
+   * out the new segment. */
+  if (res) {
+    GST_OBJECT_LOCK (midiparse);
+    memcpy (&midiparse->segment, &seeksegment, sizeof (GstSegment));
+    GST_OBJECT_UNLOCK (midiparse);
+
+    if (seeksegment.flags & GST_SEGMENT_FLAG_SEGMENT) {
+      GstMessage *message;
+
+      message = gst_message_new_segment_start (GST_OBJECT (midiparse),
+          seeksegment.format, seeksegment.position);
+      gst_message_set_seqnum (message, seqnum);
+
+      gst_element_post_message (GST_ELEMENT (midiparse), message);
+    }
+    /* for deriving a stop position for the playback segment from the seek
+     * segment, we must take the duration when the stop is not set */
+    if ((stop = seeksegment.stop) == -1)
+      stop = seeksegment.duration;
+
+    midiparse->segment_pending = TRUE;
+  }
+
+  midiparse->discont = TRUE;
+  /* and restart the task in case it got paused explicitly or by
+   * the FLUSH_START event we pushed out. */
+  tres =
+      gst_pad_start_task (midiparse->sinkpad,
+      (GstTaskFunction) gst_midi_parse_loop, midiparse->sinkpad, NULL);
+  if (res && !tres)
+    res = FALSE;
+
+  /* and release the lock again so we can continue streaming */
+  GST_PAD_STREAM_UNLOCK (midiparse->sinkpad);
+
+  return res;
+
+  /* ERROR */
+invalid_format:
+  {
+    GST_DEBUG_OBJECT (midiparse, "Unsupported seek format %s",
+        gst_format_get_name (seek_format));
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_midi_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = FALSE;
+  GstMidiParse *midiparse = GST_MIDI_PARSE (parent);
 
   GST_DEBUG_OBJECT (pad, "%s event received", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      res = gst_midi_parse_perform_seek (midiparse, event);
+      break;
     default:
       break;
   }
@@ -238,7 +388,6 @@ gst_midi_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   return res;
 }
-
 
 static gboolean
 gst_midi_parse_activate (GstPad * sinkpad, GstObject * parent)
@@ -646,7 +795,7 @@ unhandled_event:
 }
 
 static void
-reset_track (GstMidiParse * midiparse, GstMidiTrack * track)
+reset_track (GstMidiTrack * track, GstMidiParse * midiparse)
 {
   GST_DEBUG_OBJECT (midiparse, "reset track");
   track->offset = 0;
@@ -669,7 +818,7 @@ parse_MTrk (GstMidiParse * midiparse, guint8 * data, guint size)
   track = g_slice_new (GstMidiTrack);
   track->data = data;
   track->size = size;
-  reset_track (midiparse, track);
+  reset_track (track, midiparse);
 
   midiparse->tracks = g_list_append (midiparse->tracks, track);
   midiparse->track_count++;
@@ -688,7 +837,7 @@ parse_MTrk (GstMidiParse * midiparse, guint8 * data, guint size)
   if (duration > midiparse->segment.duration)
     midiparse->segment.duration = duration;
 
-  reset_track (midiparse, track);
+  reset_track (track, midiparse);
 
   return TRUE;
 }
@@ -859,8 +1008,8 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
   gst_pad_set_caps (midiparse->srcpad, outcaps);
   gst_caps_unref (outcaps);
 
-  gst_pad_push_event (midiparse->srcpad,
-      gst_event_new_segment (&midiparse->segment));
+  midiparse->segment_pending = TRUE;
+  midiparse->discont = TRUE;
 
   GST_DEBUG_OBJECT (midiparse, "Parsing song done");
 
@@ -902,6 +1051,11 @@ play_push_func (GstMidiParse * midiparse, GstMidiTrack * track,
   GST_DEBUG_OBJECT (midiparse, "pushing %" GST_TIME_FORMAT,
       GST_TIME_ARGS (position));
 
+  if (midiparse->discont) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    midiparse->discont = FALSE;
+  }
+
   return gst_pad_push (midiparse->srcpad, outbuf);
 }
 
@@ -916,6 +1070,12 @@ gst_midi_parse_do_play (GstMidiParse * midiparse)
 
   pulse = midiparse->pulse;
   position = midiparse->segment.position;
+
+  if (midiparse->segment_pending) {
+    gst_pad_push_event (midiparse->srcpad,
+        gst_event_new_segment (&midiparse->segment));
+    midiparse->segment_pending = FALSE;
+  }
 
   GST_DEBUG_OBJECT (midiparse, "pulse %" G_GUINT64_FORMAT ", position %"
       GST_TIME_FORMAT, pulse, GST_TIME_ARGS (position));
