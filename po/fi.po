@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-25 13:13+0100\n"
+"POT-Creation-Date: 2013-03-22 09:49+0000\n"
 "PO-Revision-Date: 2010-11-17 23:10+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -865,6 +865,10 @@ msgstr "tyhjää liukuhihnaa ei sallita"
 msgid "Internal clock error."
 msgstr "Sisäinen kellovirhe."
 
+#, fuzzy
+msgid "Failed to map buffer."
+msgstr "Kuvan koodaus epäonnistui."
+
 msgid "Internal data flow error."
 msgstr "Sisäinen tiedon virtausvirhe."
 
@@ -1304,9 +1308,6 @@ msgstr "Vapautetaan liukuhihna...\n"
 
 #~ msgid "Internal GStreamer error: capabilities problem.  File a bug."
 #~ msgstr "Sisäinen GStreamer-virhe: kykyongelma. Tee vikailmoitus."
-
-#~ msgid "Failed to encode image."
-#~ msgstr "Kuvan koodaus epäonnistui."
 
 #~ msgid "There is no element present to handle the stream's mime type %s."
 #~ msgstr ""

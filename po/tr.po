@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-25 13:13+0100\n"
+"POT-Creation-Date: 2013-03-22 09:49+0000\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -874,6 +874,9 @@ msgid "empty pipeline not allowed"
 msgstr "boş boruhattına izin verilmiyor"
 
 msgid "Internal clock error."
+msgstr ""
+
+msgid "Failed to map buffer."
 msgstr ""
 
 msgid "Internal data flow error."

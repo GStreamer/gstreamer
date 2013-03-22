@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-25 13:13+0100\n"
+"POT-Creation-Date: 2013-03-22 09:49+0000\n"
 "PO-Revision-Date: 2005-04-27 14:55+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -857,6 +857,9 @@ msgid "empty pipeline not allowed"
 msgstr "不允許使用沒有內容的管線"
 
 msgid "Internal clock error."
+msgstr ""
+
+msgid "Failed to map buffer."
 msgstr ""
 
 msgid "Internal data flow error."

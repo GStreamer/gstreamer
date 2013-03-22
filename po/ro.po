@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-25 13:13+0100\n"
+"POT-Creation-Date: 2013-03-22 09:49+0000\n"
 "PO-Revision-Date: 2010-08-16 01:10+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -880,6 +880,9 @@ msgstr "linia de asamblare vidă nu este permisă"
 
 msgid "Internal clock error."
 msgstr "Eroare internă de ceas."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Internal data flow error."
 msgstr "Eroare internă de flux al datelor."

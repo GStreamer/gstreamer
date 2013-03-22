@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-25 13:13+0100\n"
+"POT-Creation-Date: 2013-03-22 09:49+0000\n"
 "PO-Revision-Date: 2011-04-26 22:40+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -857,6 +857,9 @@ msgstr "не е позволен празен конвейер"
 
 msgid "Internal clock error."
 msgstr "Вътрешна грешка на часовника."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Internal data flow error."
 msgstr "Вътрешна грешка на потока от данни."

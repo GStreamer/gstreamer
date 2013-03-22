@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-04 12:36+0000\n"
+"POT-Creation-Date: 2013-03-22 09:49+0000\n"
 "PO-Revision-Date: 2013-01-05 10:16+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -854,6 +854,9 @@ msgstr "cevovod brez vsebine ni dovoljen"
 
 msgid "Internal clock error."
 msgstr "Notranja napaka ure."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Internal data flow error."
 msgstr "Notranja napaka toka podatkov."

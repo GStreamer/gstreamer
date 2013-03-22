@@ -106,7 +106,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-25 13:13+0100\n"
+"POT-Creation-Date: 2013-03-22 09:49+0000\n"
 "PO-Revision-Date: 2010-10-25 10:03+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -1011,6 +1011,9 @@ msgstr "pipeline vuota non consentito"
 
 msgid "Internal clock error."
 msgstr "Errore interno di clock."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Internal data flow error."
 msgstr "Errore interno nel flusso di dati."
