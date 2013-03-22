@@ -228,36 +228,51 @@ gst_y4m_dec_change_state (GstElement * element, GstStateChange transition)
 }
 
 static GstClockTime
-gst_y4m_dec_frames_to_timestamp (GstY4mDec * y4mdec, int frame_index)
+gst_y4m_dec_frames_to_timestamp (GstY4mDec * y4mdec, gint64 frame_index)
 {
+  if (frame_index == -1)
+    return -1;
+
   return gst_util_uint64_scale (frame_index, GST_SECOND * y4mdec->info.fps_d,
       y4mdec->info.fps_n);
 }
 
-static int
+static gint64
 gst_y4m_dec_timestamp_to_frames (GstY4mDec * y4mdec, GstClockTime timestamp)
 {
+  if (timestamp == -1)
+    return -1;
+
   return gst_util_uint64_scale (timestamp, y4mdec->info.fps_n,
       GST_SECOND * y4mdec->info.fps_d);
 }
 
-static int
+static gint64
 gst_y4m_dec_bytes_to_frames (GstY4mDec * y4mdec, gint64 bytes)
 {
+  if (bytes == -1)
+    return -1;
+
   if (bytes < y4mdec->header_size)
     return 0;
   return (bytes - y4mdec->header_size) / (y4mdec->info.size + 6);
 }
 
-static gint64
-gst_y4m_dec_frames_to_bytes (GstY4mDec * y4mdec, int frame_index)
+static guint64
+gst_y4m_dec_frames_to_bytes (GstY4mDec * y4mdec, gint64 frame_index)
 {
+  if (frame_index == -1)
+    return -1;
+
   return y4mdec->header_size + (y4mdec->info.size + 6) * frame_index;
 }
 
 static GstClockTime
 gst_y4m_dec_bytes_to_timestamp (GstY4mDec * y4mdec, gint64 bytes)
 {
+  if (bytes == -1)
+    return -1;
+
   return gst_y4m_dec_frames_to_timestamp (y4mdec,
       gst_y4m_dec_bytes_to_frames (y4mdec, bytes));
 }
@@ -615,7 +630,7 @@ gst_y4m_dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstSeekFlags flags;
       GstSeekType start_type, stop_type;
       gint64 start, stop;
-      int framenum;
+      gint64 framenum;
       guint64 byte;
 
       gst_event_parse_seek (event, &rate, &format, &flags, &start_type,
@@ -627,10 +642,18 @@ gst_y4m_dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
 
       framenum = gst_y4m_dec_timestamp_to_frames (y4mdec, start);
-      GST_DEBUG ("seeking to frame %d", framenum);
+      GST_DEBUG ("seeking to frame %" G_GINT64_FORMAT, framenum);
+      if (framenum == -1) {
+        res = FALSE;
+        break;
+      }
 
       byte = gst_y4m_dec_frames_to_bytes (y4mdec, framenum);
-      GST_DEBUG ("offset %d", (int) byte);
+      GST_DEBUG ("offset %" G_GUINT64_FORMAT, (guint64) byte);
+      if (byte == -1) {
+        res = FALSE;
+        break;
+      }
 
       gst_event_unref (event);
       event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
