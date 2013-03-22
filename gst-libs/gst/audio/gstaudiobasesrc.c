@@ -534,6 +534,9 @@ gst_audio_base_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   GstAudioRingBufferSpec *spec;
   gint bpf, rate;
 
+  GST_DEBUG ("release old ringbuffer");
+  gst_audio_ring_buffer_release (src->ringbuffer);
+
   spec = &src->ringbuffer->spec;
 
   spec->buffer_time = src->buffer_time;
@@ -553,10 +556,6 @@ gst_audio_base_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   spec->segtotal = spec->buffer_time / spec->latency_time;
 
   GST_OBJECT_UNLOCK (src);
-
-  GST_DEBUG ("release old ringbuffer");
-
-  gst_audio_ring_buffer_release (src->ringbuffer);
 
   gst_audio_ring_buffer_debug_spec_buff (spec);
 
