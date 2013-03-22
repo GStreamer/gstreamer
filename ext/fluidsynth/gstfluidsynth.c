@@ -329,7 +329,7 @@ gst_fluidsynth_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_SEGMENT:
       gst_event_copy_segment (event, &fluidsynth->segment);
       GST_DEBUG_OBJECT (fluidsynth, "configured segment %" GST_SEGMENT_FORMAT,
-          fluidsynth->segment);
+          &fluidsynth->segment);
       res = gst_pad_event_default (pad, parent, event);
       break;
     case GST_EVENT_FLUSH_STOP:
