@@ -1848,7 +1848,7 @@ typedef struct
 #define OFFS104           { 1, 0, 4, 0 }
 #define OFFS2460          { 2, 4, 6, 0 }
 
-/* subsampling */
+/* subsampling, w_sub, h_sub */
 #define SUB410            { 0, 2, 2, 0 }, { 0, 2, 2, 0 }
 #define SUB411            { 0, 2, 2, 0 }, { 0, 0, 0, 0 }
 #define SUB420            { 0, 1, 1, 0 }, { 0, 1, 1, 0 }
