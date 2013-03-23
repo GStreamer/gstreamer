@@ -1044,6 +1044,7 @@ gst_check_run_suite (Suite * suite, const gchar * name, const gchar * fname)
   SRunner *sr;
   gchar *xmlfilename = NULL;
   gint nf;
+  GTimer *timer;
 
   sr = srunner_create (suite);
 
@@ -1054,8 +1055,12 @@ gst_check_run_suite (Suite * suite, const gchar * name, const gchar * fname)
     srunner_set_xml (sr, xmlfilename);
   }
 
+  timer = g_timer_new ();
   srunner_run_all (sr, CK_NORMAL);
   nf = srunner_ntests_failed (sr);
+  g_print ("Check suite %s ran in %.3fs (tests failed: %d)\n",
+      name, g_timer_elapsed (timer, NULL), nf);
+  g_timer_destroy (timer);
   g_free (xmlfilename);
   srunner_free (sr);
   return nf;
