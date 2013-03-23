@@ -118,6 +118,8 @@ struct _GESContainerClass
 
 
   /*< private >*/
+  guint grouping_priority;
+
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING_LARGE];
 };

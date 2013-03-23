@@ -473,6 +473,7 @@ ges_clip_class_init (GESClipClass * klass)
   container_class->remove_child = _remove_child;
   container_class->ungroup = _ungroup;
   container_class->group = _group;
+  container_class->grouping_priority = G_MAXUINT;
 
   klass->need_fill_track = TRUE;
 }

@@ -139,6 +139,25 @@ _free_mapping (ChildMapping * mapping)
   g_slice_free (ChildMapping, mapping);
 }
 
+static gint
+compare_grouping_prio (GType * a, GType * b)
+{
+  gint ret = 0;
+  GObjectClass *aclass = g_type_class_ref (*a);
+  GObjectClass *bclass = g_type_class_ref (*b);
+
+  if (GES_CONTAINER_CLASS (aclass)->grouping_priority <
+      GES_CONTAINER_CLASS (bclass)->grouping_priority)
+    ret = -1;
+  else if (GES_CONTAINER_CLASS (aclass)->grouping_priority >
+      GES_CONTAINER_CLASS (bclass)->grouping_priority)
+    ret = 1;
+
+  g_type_class_unref (aclass);
+  g_type_class_unref (bclass);
+  return ret;
+}
+
 /*****************************************************
  *                                                   *
  * GESTimelineElement virtual methods implementation *
@@ -390,6 +409,7 @@ ges_container_class_init (GESContainerClass * klass)
   klass->add_child = NULL;
   klass->ungroup = NULL;
   klass->group = NULL;
+  klass->grouping_priority = 0;
 }
 
 static void
@@ -734,10 +754,14 @@ GESContainer *
 ges_container_group (GList * containers)
 {
   GList *tmp;
-  GESContainer *ret;
+  guint n_children;
   GESTimeline *timeline;
+  GType *children_types;
   GESTimelineElement *element;
   GObjectClass *clip_class;
+
+  guint i = 0;
+  GESContainer *ret = NULL;
 
   g_return_val_if_fail (containers, NULL);
   element = GES_TIMELINE_ELEMENT (containers->data);
@@ -753,8 +777,18 @@ ges_container_group (GList * containers)
         (GES_TIMELINE_ELEMENT (tmp->data)) == timeline, NULL);
   }
 
-  clip_class = g_type_class_peek (GES_TYPE_CLIP);
-  ret = GES_CONTAINER_CLASS (clip_class)->group (containers);
+  children_types = g_type_children (GES_TYPE_CONTAINER, &n_children);
+  g_qsort_with_data (children_types, n_children, sizeof (GType),
+      (GCompareDataFunc) compare_grouping_prio, NULL);
 
+  for (i = 0; i < n_children; i++) {
+    clip_class = g_type_class_peek (children_types[i]);
+    ret = GES_CONTAINER_CLASS (clip_class)->group (containers);
+
+    if (ret)
+      break;
+  }
+
+  g_free (children_types);
   return ret;
 }
