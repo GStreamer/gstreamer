@@ -200,13 +200,6 @@ GST_START_TEST (test_basetransform_based)
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
-
-  s = "videotestsrc num-buffers=2 ! "
-      "video/x-raw,format=(string)Y41B,interlace-mode=interlaced ! "
-      "videoconvert ! video/x-raw,format=UYVY ! " "fakesink";
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
 }
 
 GST_END_TEST;

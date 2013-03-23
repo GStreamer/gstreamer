@@ -107,68 +107,6 @@ dither_method_get_type (void)
   return gtype;
 }
 
-static const GValue *
-get_vertsubs1_list (void)
-{
-  static gsize init = 0;
-
-  if (g_once_init_enter (&init)) {
-    int i;
-    static GValue value = G_VALUE_INIT;
-
-    g_value_init (&value, GST_TYPE_LIST);
-
-    for (i = GST_VIDEO_FORMAT_I420; i <= GST_VIDEO_FORMAT_GBR_10LE; i++) {
-      const GstVideoFormatInfo *format_info;
-
-      format_info = gst_video_format_get_info (i);
-      if (format_info->n_components >= 3 && format_info->h_sub[1] == 0) {
-        GValue val = G_VALUE_INIT;
-
-        g_value_init (&val, G_TYPE_STRING);
-        g_value_set_string (&val, format_info->name);
-        gst_value_list_append_value (&value, &val);
-        g_value_unset (&val);
-      }
-    }
-
-    g_once_init_leave (&init, GPOINTER_TO_SIZE (&value));
-  }
-
-  return (GValue *) GSIZE_TO_POINTER (init);
-}
-
-static const GValue *
-get_vertsubs2_list (void)
-{
-  static gsize init = 0;
-
-  if (g_once_init_enter (&init)) {
-    int i;
-    static GValue value = G_VALUE_INIT;
-
-    g_value_init (&value, GST_TYPE_LIST);
-
-    for (i = GST_VIDEO_FORMAT_I420; i <= GST_VIDEO_FORMAT_GBR_10LE; i++) {
-      const GstVideoFormatInfo *format_info;
-
-      format_info = gst_video_format_get_info (i);
-      if (format_info->n_components >= 3 && format_info->h_sub[1] == 1) {
-        GValue val = G_VALUE_INIT;
-
-        g_value_init (&val, G_TYPE_STRING);
-        g_value_set_string (&val, format_info->name);
-        gst_value_list_append_value (&value, &val);
-        g_value_unset (&val);
-      }
-    }
-
-    g_once_init_leave (&init, GPOINTER_TO_SIZE (&value));
-  }
-
-  return (GValue *) GSIZE_TO_POINTER (init);
-}
-
 /* copies the given caps */
 static GstCaps *
 gst_video_convert_caps_remove_format_info (GstCaps * caps)
@@ -181,8 +119,6 @@ gst_video_convert_caps_remove_format_info (GstCaps * caps)
 
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
-    const char *im;
-
     st = gst_caps_get_structure (caps, i);
 
     /* If this is already expressed by the existing caps
@@ -191,47 +127,10 @@ gst_video_convert_caps_remove_format_info (GstCaps * caps)
       continue;
 
     st = gst_structure_copy (st);
-    gst_structure_remove_fields (st, "colorimetry", "chroma-site", NULL);
-    im = gst_structure_get_string (st, "interlace-mode");
-    if (im && strcmp (im, "progressive") != 0) {
-      const GValue *formats;
-      GValue tmpval = G_VALUE_INIT;
-      GValue out = G_VALUE_INIT;
-      gboolean has_sub1;
-      gboolean has_sub2;
+    gst_structure_remove_fields (st, "format",
+        "colorimetry", "chroma-site", NULL);
 
-      formats = gst_structure_get_value (st, "format");
-
-      has_sub1 = gst_value_intersect (&tmpval, get_vertsubs1_list (), formats);
-      if (G_VALUE_TYPE (&tmpval) != 0)
-        g_value_unset (&tmpval);
-      has_sub2 = gst_value_intersect (&tmpval, get_vertsubs2_list (), formats);
-      if (G_VALUE_TYPE (&tmpval) != 0)
-        g_value_unset (&tmpval);
-
-      if (has_sub1 && has_sub2) {
-        gst_value_list_concat (&out, get_vertsubs1_list (),
-            get_vertsubs2_list ());
-      } else if (has_sub1) {
-        g_value_init (&out, GST_TYPE_LIST);
-        g_value_copy (get_vertsubs1_list (), &out);
-      } else if (has_sub2) {
-        g_value_init (&out, GST_TYPE_LIST);
-        g_value_copy (get_vertsubs2_list (), &out);
-      } else {
-        /* fall through */
-      }
-
-      if (G_VALUE_TYPE (&out) != 0) {
-        gst_structure_set_value (st, "format", &out);
-        gst_caps_append_structure (res, st);
-        g_value_unset (&out);
-      }
-    } else {
-      gst_structure_remove_field (st, "format");
-      gst_caps_append_structure (res, st);
-    }
-
+    gst_caps_append_structure (res, st);
   }
 
   return res;
@@ -323,7 +222,6 @@ gst_video_convert_set_info (GstVideoFilter * filter,
 
   if (space->convert) {
     videoconvert_convert_free (space->convert);
-    space->convert = NULL;
   }
 
   /* these must match */
@@ -338,13 +236,6 @@ gst_video_convert_set_info (GstVideoFilter * filter,
   /* if present, these must match too */
   if (in_info->interlace_mode != out_info->interlace_mode)
     goto format_mismatch;
-
-  /* if interlaced, we can't change vertical subsampling */
-  if (GST_VIDEO_INFO_IS_INTERLACED (in_info) &&
-      GST_VIDEO_FORMAT_INFO_H_SUB (in_info->finfo, 1) !=
-      GST_VIDEO_FORMAT_INFO_H_SUB (out_info->finfo, 1)) {
-    goto format_mismatch;
-  }
 
   space->convert = videoconvert_convert_new (in_info, out_info);
   if (space->convert == NULL)
@@ -375,7 +266,6 @@ gst_video_convert_finalize (GObject * obj)
 
   if (space->convert) {
     videoconvert_convert_free (space->convert);
-    space->convert = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
