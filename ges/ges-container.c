@@ -568,6 +568,7 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   priv->ignore_notifies = TRUE;
   if (class->add_child) {
     if (class->add_child (container, child) == FALSE) {
+      priv->ignore_notifies = FALSE;
       GST_WARNING_OBJECT (container, "Erreur adding child %p", child);
       return FALSE;
     }
