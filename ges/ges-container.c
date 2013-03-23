@@ -76,7 +76,7 @@ struct _GESContainerPrivate
   /* Set to TRUE when the container is doing updates of track object
    * properties so we don't end up in infinite property update loops
    */
-  gboolean ignore_notifies;
+  GESChildrenControlMode children_control_mode;
   GHashTable *mappings;
   guint nb_effects;
   GESTimelineElement *initiated_move;
@@ -157,7 +157,7 @@ _set_start (GESTimelineElement * element, GstClockTime start)
   GST_DEBUG_OBJECT (element, "Setting children start, (initiated_move: %"
       GST_PTR_FORMAT ")", container->priv->initiated_move);
 
-  container->priv->ignore_notifies = TRUE;
+  container->priv->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
 
@@ -183,7 +183,7 @@ _set_start (GESTimelineElement * element, GstClockTime start)
       map->start_offset = start - _START (child);
     }
   }
-  container->priv->ignore_notifies = FALSE;
+  priv->children_control_mode = GES_CHILDREN_UPDATE;
 
   return TRUE;
 }
@@ -194,7 +194,7 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
   GList *tmp;
   GESContainer *container = GES_CONTAINER (element);
 
-  container->priv->ignore_notifies = TRUE;
+  container->priv->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
     ChildMapping *map = g_hash_table_lookup (container->priv->mappings, child);
@@ -206,7 +206,7 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
 
     _set_inpoint0 (child, inpoint);
   }
-  container->priv->ignore_notifies = FALSE;
+  container->priv->children_control_mode = GES_CHILDREN_UPDATE;
 
   return TRUE;
 }
@@ -220,7 +220,7 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
   GESContainer *container = GES_CONTAINER (element);
   GESContainerPrivate *priv = container->priv;
 
-  priv->ignore_notifies = TRUE;
+  priv->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
     ChildMapping *map = g_hash_table_lookup (priv->mappings, child);
@@ -236,7 +236,7 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
             NULL, GES_EDGE_END, _START (child) + duration, TRUE) == FALSE)
       _set_duration0 (GES_TIMELINE_ELEMENT (child), duration);
   }
-  priv->ignore_notifies = FALSE;
+  priv->children_control_mode = GES_CHILDREN_UPDATE;
 
   return TRUE;
 }
@@ -267,7 +267,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   GES_CONTAINER_GET_CLASS (element)->get_priorty_range (container, &min_prio,
       &max_prio);
 
-  priv->ignore_notifies = TRUE; /*  */
+  priv->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
     ChildMapping *map = g_hash_table_lookup (priv->mappings, child);
@@ -282,7 +282,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
     }
     _set_priority0 (child, real_tck_prio);
   }
-  priv->ignore_notifies = FALSE;
+  priv->children_control_mode = GES_CHILDREN_UPDATE;
 
   update_height (container);
 
@@ -423,7 +423,7 @@ _child_start_changed_cb (GESTimelineElement * child,
   GESContainerPrivate *priv = container->priv;
   GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
 
-  if (priv->ignore_notifies)
+  if (priv->children_control_mode == GES_CHILDREN_IGNORE_NOTIFIES)
     return;
 
   map = g_hash_table_lookup (priv->mappings, child);
@@ -447,7 +447,7 @@ _child_inpoint_changed_cb (GESTimelineElement * child,
   GESContainerPrivate *priv = container->priv;
   GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
 
-  if (priv->ignore_notifies)
+  if (priv->children_control_mode == GES_CHILDREN_IGNORE_NOTIFIES)
     return;
 
   map = g_hash_table_lookup (priv->mappings, child);
@@ -468,7 +468,7 @@ _child_duration_changed_cb (GESTimelineElement * child,
   GESContainerPrivate *priv = container->priv;
   GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
 
-  if (priv->ignore_notifies)
+  if (priv->children_control_mode == GES_CHILDREN_IGNORE_NOTIFIES)
     return;
 
   map = g_hash_table_lookup (priv->mappings, child);
@@ -491,7 +491,7 @@ _child_priority_changed_cb (GESTimelineElement * child,
   GST_DEBUG_OBJECT (container, "TimelineElement %p priority changed to %i",
       child, _PRIORITY (child));
 
-  if (priv->ignore_notifies)
+  if (priv->children_control_mode == GES_CHILDREN_IGNORE_NOTIFIES)
     return;
 
   update_height (container);
@@ -527,10 +527,10 @@ _ges_container_sort_children_by_end (GESContainer * container)
 }
 
 void
-_ges_container_set_ignore_notifies (GESContainer * container,
-    gboolean ignore_notifies)
+_ges_container_set_children_control_mode (GESContainer * container,
+    GESChildrenControlMode children_control_mode)
 {
-  container->priv->ignore_notifies = ignore_notifies;
+  container->priv->children_control_mode = children_control_mode;
 }
 
 /**********************************************
@@ -565,15 +565,15 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   GST_DEBUG_OBJECT (container, "adding timeline element %" GST_PTR_FORMAT,
       child);
 
-  priv->ignore_notifies = TRUE;
+  priv->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
   if (class->add_child) {
     if (class->add_child (container, child) == FALSE) {
-      priv->ignore_notifies = FALSE;
+      priv->children_control_mode = GES_CHILDREN_UPDATE;
       GST_WARNING_OBJECT (container, "Erreur adding child %p", child);
       return FALSE;
     }
   }
-  priv->ignore_notifies = FALSE;
+  priv->children_control_mode = GES_CHILDREN_UPDATE;
 
   mapping = g_slice_new0 (ChildMapping);
   mapping->child = gst_object_ref (child);

@@ -144,11 +144,12 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 
   /* We set the timing value of the child to ours, we avoid infinite loop
    * making sure the container ignore notifies from the child */
-  _ges_container_set_ignore_notifies (container, TRUE);
+  _ges_container_set_children_control_mode (container,
+      GES_CHILDREN_IGNORE_NOTIFIES);
   _set_start0 (element, GES_TIMELINE_ELEMENT_START (container));
   _set_inpoint0 (element, GES_TIMELINE_ELEMENT_INPOINT (container));
   _set_duration0 (element, GES_TIMELINE_ELEMENT_DURATION (container));
-  _ges_container_set_ignore_notifies (container, FALSE);
+  _ges_container_set_children_control_mode (container, GES_CHILDREN_UPDATE);
 
   return TRUE;
 }

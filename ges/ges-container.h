@@ -38,6 +38,14 @@ G_BEGIN_DECLS
 
 typedef struct _GESContainerPrivate GESContainerPrivate;
 
+/* To be used by sublcasses only */
+typedef enum
+{
+  GES_CHILDREN_UPDATE,
+  GES_CHILDREN_IGNORE_NOTIFIES,
+  GES_CHILDREN_UPDATE_OFFSETS,
+} GESChildrenControlMode;
+
 /**
  * GES_CONTAINER_HEIGHT:
  * @obj: a #GESContainer
@@ -122,6 +130,10 @@ gboolean ges_container_add        (GESContainer *container, GESTimelineElement *
 gboolean ges_container_remove     (GESContainer *container, GESTimelineElement *child);
 GList * ges_container_ungroup     (GESContainer * container, gboolean recursive);
 GESContainer *ges_container_group (GList *containers);
+
+/* To be used by subclasses only */
+void _ges_container_set_children_control_mode (GESContainer * container,
+                                               GESChildrenControlMode children_control_mode);
 
 G_END_DECLS
 #endif /* _GES_CONTAINER */

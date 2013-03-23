@@ -233,8 +233,6 @@ G_GNUC_INTERNAL gint element_end_compare                  (GESTimelineElement * 
  ****************************************************/
 G_GNUC_INTERNAL void _ges_container_sort_children         (GESContainer *container);
 G_GNUC_INTERNAL void _ges_container_sort_children_by_end  (GESContainer *container);
-G_GNUC_INTERNAL void _ges_container_set_ignore_notifies   (GESContainer *container,
-                                                           gboolean ignore_notifies);
 
 /****************************************************
  *                  GESClip                         *
