@@ -2178,7 +2178,18 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     GST_BUFFER_DTS (buf) = GST_BUFFER_DTS (last_buf);
   }
 
-  duration = GST_BUFFER_DURATION (last_buf);
+  /* duration actually means time delta between samples, so we calculate
+   * the duration based on the difference in DTS or PTS, falling back
+   * to DURATION if the other two don't exist, such as with the last
+   * sample before EOS. */
+  if (last_buf && buf && GST_BUFFER_DTS_IS_VALID (buf)
+      && GST_BUFFER_DTS_IS_VALID (last_buf))
+    duration = GST_BUFFER_DTS (buf) - GST_BUFFER_DTS (last_buf);
+  else if (last_buf && buf && GST_BUFFER_PTS_IS_VALID (buf)
+      && GST_BUFFER_PTS_IS_VALID (last_buf))
+    duration = GST_BUFFER_PTS (buf) - GST_BUFFER_PTS (last_buf);
+  else
+    duration = GST_BUFFER_DURATION (last_buf);
 
   /* for computing the avg bitrate */
   if (G_LIKELY (last_buf)) {
