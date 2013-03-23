@@ -324,6 +324,51 @@ GST_START_TEST (test_clip_group_ungroup)
 
 GST_END_TEST;
 
+
+static void
+child_removed_cb (GESClip * clip, GESTimelineElement * effect,
+    gboolean * called)
+{
+  ASSERT_OBJECT_REFCOUNT (effect, "Keeping alive ref + emission ref", 2);
+  *called = TRUE;
+}
+
+GST_START_TEST (test_clip_refcount_remove_child)
+{
+  GESClip *clip;
+  GESTrack *track;
+  gboolean called;
+  GESTrackElement *effect;
+
+  ges_init ();
+
+  clip = GES_CLIP (ges_test_clip_new ());
+  track = ges_track_audio_raw_new ();
+  effect = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
+
+  fail_unless (ges_track_add_element (track, effect));
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect)));
+  ASSERT_OBJECT_REFCOUNT (effect, "1 for the container + 1 for the track", 2);
+
+  fail_unless (ges_track_remove_element (track, effect));
+  ASSERT_OBJECT_REFCOUNT (effect, "1 for the container + 1 for the track", 1);
+
+  g_signal_connect (clip, "child-removed", G_CALLBACK (child_removed_cb),
+      &called);
+  fail_unless (ges_container_remove (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect)));
+  fail_unless (called == TRUE);
+  fail_if (G_IS_OBJECT (effect));
+
+  gst_object_unref (track);
+  gst_object_unref (clip);
+  fail_if (G_IS_OBJECT (track));
+  fail_if (G_IS_OBJECT (clip));
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -335,6 +380,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_object_properties);
   tcase_add_test (tc_chain, test_split_object);
   tcase_add_test (tc_chain, test_clip_group_ungroup);
+  tcase_add_test (tc_chain, test_clip_refcount_remove_child);
 
   return s;
 }

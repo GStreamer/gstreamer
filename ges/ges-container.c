@@ -136,7 +136,6 @@ _free_mapping (ChildMapping * mapping)
   g_signal_handler_disconnect (child, mapping->priority_notifyid);
 
   ges_timeline_element_set_parent (child, NULL);
-  gst_object_unref (child);
   g_slice_free (ChildMapping, mapping);
 }
 
@@ -658,6 +657,7 @@ ges_container_remove (GESContainer * container, GESTimelineElement * child)
 
   g_signal_emit (container, ges_container_signals[CHILD_REMOVED_SIGNAL], 0,
       child);
+  gst_object_unref (child);
 
   return TRUE;
 }
