@@ -605,6 +605,13 @@ ges_clip_set_layer (GESClip * clip, GESTimelineLayer * layer)
   GST_DEBUG ("clip:%p, layer:%p", clip, layer);
 
   clip->priv->layer = layer;
+
+  /* We do not want to notify the setting of layer = NULL when
+   * it is actually the result of a move between layer (as we know
+   * that it will be added to another layer right after, and this
+   * is what imports here.) */
+  if (layer || clip->priv->is_moving == FALSE)
+    g_object_notify_by_pspec (G_OBJECT (clip), properties[PROP_LAYER]);
 }
 
 gboolean
