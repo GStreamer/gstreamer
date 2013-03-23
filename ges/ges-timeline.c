@@ -1954,12 +1954,15 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESClip * clip,
   trackelements = ges_container_get_children (GES_CONTAINER (clip));
   for (tmp = trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *track_element = (GESTrackElement *) tmp->data;
+    GESTrack *track = ges_track_element_get_track (track_element);
 
     GST_DEBUG_OBJECT (timeline, "Trying to remove TrackElement %p",
         track_element);
-    if (G_LIKELY (g_list_find_custom (timeline->priv->priv_tracks,
-                ges_track_element_get_track (track_element),
-                (GCompareFunc) custom_find_track))) {
+
+    /* FIXME Check if we should actually check that we control the
+     * track in the new management of TrackElement context */
+    if (G_LIKELY (g_list_find_custom (timeline->priv->priv_tracks, track,
+                (GCompareFunc) custom_find_track) || track == NULL)) {
       GST_DEBUG ("Belongs to one of the tracks we control");
 
       ges_container_remove (GES_CONTAINER (clip),
