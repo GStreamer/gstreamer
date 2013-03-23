@@ -222,6 +222,7 @@ gst_video_convert_set_info (GstVideoFilter * filter,
 
   if (space->convert) {
     videoconvert_convert_free (space->convert);
+    space->convert = NULL;
   }
 
   /* these must match */
