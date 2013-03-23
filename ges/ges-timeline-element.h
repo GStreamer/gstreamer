@@ -45,6 +45,14 @@ typedef struct _GESTimelineElementPrivate GESTimelineElementPrivate;
 #define GES_TIMELINE_ELEMENT_START(obj) (((GESTimelineElement*)obj)->start)
 
 /**
+ * GES_TIMELINE_ELEMENT_END:
+ * @obj: a #GESTimelineElement
+ *
+ * The end position of the object (in nanoseconds).
+ */
+#define GES_TIMELINE_ELEMENT_END(obj) ((((GESTimelineElement*)obj)->start) + (((GESTimelineElement*)obj)->duration))
+
+/**
  * GES_TIMELINE_ELEMENT_INPOINT:
  * @obj: a #GESTimelineElement
  *
