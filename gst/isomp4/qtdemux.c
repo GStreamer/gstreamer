@@ -3603,17 +3603,15 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  /* empty buffer can be send to terminate previous entry */
-  if (map.size == 2 && map.data[0] == 0 && map.data[1] == 0) {
+  /* empty buffer is sent to terminate previous subtitle */
+  if (map.size <= 2) {
     gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     return NULL;
   }
 
-  if (G_LIKELY (map.size >= 2)) {
-    nsize = GST_READ_UINT16_BE (map.data);
-    nsize = MIN (nsize, map.size - 2);
-  }
+  nsize = GST_READ_UINT16_BE (map.data);
+  nsize = MIN (nsize, map.size - 2);
 
   GST_LOG_OBJECT (qtdemux, "3GPP timed text subtitle: %d/%" G_GSIZE_FORMAT "",
       nsize, map.size);
@@ -3626,8 +3624,9 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
     gst_buffer_unref (buf);
     buf = _gst_buffer_new_wrapped (str, strlen (str), g_free);
   } else {
-    /* may be 0-size subtitle, which is also sent to keep pipeline going */
-    gst_buffer_resize (buf, 2, nsize);
+    /* this should not really happen unless the subtitle is corrupted */
+    gst_buffer_unref (buf);
+    buf = NULL;
   }
 
   /* FIXME ? convert optional subsequent style info to markup */
