@@ -73,10 +73,27 @@ element_start_compare (GESTimelineElement * a, GESTimelineElement * b)
     if (a->duration > b->duration)
       return 1;
     return 0;
-  }
-  if (a->start < b->start)
+  } else if (a->start < b->start)
     return -1;
-  if (a->start > b->start)
-    return 1;
-  return 0;
+
+  return 1;
+}
+
+gint
+element_end_compare (GESTimelineElement * a, GESTimelineElement * b)
+{
+  if (GES_TIMELINE_ELEMENT_END (a) == GES_TIMELINE_ELEMENT_END (b)) {
+    if (a->priority < b->priority)
+      return -1;
+    if (a->priority > b->priority)
+      return 1;
+    if (a->duration < b->duration)
+      return -1;
+    if (a->duration > b->duration)
+      return 1;
+    return 0;
+  } else if (GES_TIMELINE_ELEMENT_END (a) < (GES_TIMELINE_ELEMENT_END (b)))
+    return -1;
+
+  return 1;
 }

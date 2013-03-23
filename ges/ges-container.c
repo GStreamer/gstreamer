@@ -520,6 +520,13 @@ _ges_container_sort_children (GESContainer * container)
 }
 
 void
+_ges_container_sort_children_by_end (GESContainer * container)
+{
+  container->children = g_list_sort (container->children,
+      (GCompareFunc) element_end_compare);
+}
+
+void
 _ges_container_set_ignore_notifies (GESContainer * container,
     gboolean ignore_notifies)
 {
