@@ -1065,7 +1065,7 @@ gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
   bpf = GST_AUDIO_INFO_BPF (&src->info);
 
   /* now move to the time indicated */
-  src->next_sample = gst_util_uint64_scale_int (time, samplerate, GST_SECOND);
+  src->next_sample = gst_util_uint64_scale_round (time, samplerate, GST_SECOND);
   src->next_byte = src->next_sample * bpf;
   if (samplerate == 0)
     src->next_time = 0;
@@ -1091,7 +1091,8 @@ gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
 
   if (GST_CLOCK_TIME_IS_VALID (segment->stop)) {
     time = segment->stop;
-    src->sample_stop = gst_util_uint64_scale_int (time, samplerate, GST_SECOND);
+    src->sample_stop =
+        gst_util_uint64_scale_round (time, samplerate, GST_SECOND);
     src->check_seek_stop = TRUE;
   } else {
     src->check_seek_stop = FALSE;
