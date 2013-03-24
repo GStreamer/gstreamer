@@ -1190,6 +1190,8 @@ gst_audio_test_src_fill (GstBaseSrc * basesrc, guint64 offset,
   GST_LOG_OBJECT (src, "next_sample %" G_GINT64_FORMAT ", ts %" GST_TIME_FORMAT,
       next_sample, GST_TIME_ARGS (next_time));
 
+  gst_buffer_set_size (buffer, bytes);
+
   GST_BUFFER_OFFSET (buffer) = src->next_sample;
   GST_BUFFER_OFFSET_END (buffer) = next_sample;
   if (!src->reverse) {
