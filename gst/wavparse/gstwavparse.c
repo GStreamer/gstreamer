@@ -1296,19 +1296,19 @@ gst_wavparse_create_toc (GstWavParse * wav)
   gst_toc_entry_set_start_stop_times (entry, 0, wav->duration);
   gst_toc_append_entry (toc, entry);
 
-  /* add chapters in cue edition */
+  /* add tracks in cue edition */
   list = g_list_first (wav->cues);
   while (list) {
     cue = list->data;
     prev_subentry = cur_subentry;
-    /* previous chapter stop time = current chapter start time */
+    /* previous track stop time = current track start time */
     if (prev_subentry != NULL) {
       gst_toc_entry_get_start_stop_times (prev_subentry, &start, NULL);
       stop = gst_util_uint64_scale_round (cue->position, GST_SECOND, wav->rate);
       gst_toc_entry_set_start_stop_times (prev_subentry, start, stop);
     }
     id = g_strdup_printf ("%08x", cue->id);
-    cur_subentry = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_CHAPTER, id);
+    cur_subentry = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_TRACK, id);
     g_free (id);
     start = gst_util_uint64_scale_round (cue->position, GST_SECOND, wav->rate);
     stop = wav->duration;
@@ -1317,7 +1317,7 @@ gst_wavparse_create_toc (GstWavParse * wav)
     list = g_list_next (list);
   }
 
-  /* add tags in chapters */
+  /* add tags in tracks */
   list = g_list_first (wav->labls);
   while (list) {
     labl = list->data;
