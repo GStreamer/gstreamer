@@ -40,27 +40,6 @@ my_fill_track_func (GESClip * clip,
   return TRUE;
 }
 
-static gboolean
-arbitrary_fill_track_func (GESClip * clip,
-    GESTrackElement * track_element, GstElement * gnlobj, gpointer user_data)
-{
-  GstElement *src;
-
-  g_assert (user_data);
-
-  GST_DEBUG ("element:%s, timelineobj:%p, trackelements:%p, gnlobj:%p,",
-      (const gchar *) user_data, clip, track_element, gnlobj);
-
-  /* interpret user_data as name of element to create */
-  src = gst_element_factory_make (user_data, NULL);
-
-  /* If this fails... that means that there already was something
-   * in it */
-  fail_unless (gst_bin_add (GST_BIN (gnlobj), src));
-
-  return TRUE;
-}
-
 GST_START_TEST (test_gsl_add)
 {
   GESTimeline *timeline;
@@ -235,7 +214,7 @@ GST_START_TEST (test_gsl_with_transitions)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *track;
-  GESCustomSourceClip *source1, *source2, *source3, *source4;
+  GESTestClip *source1, *source2, *source3, *source4;
   GESTransitionClip *tr1, *tr2, *tr3, *tr4, *tr5;
   GESSimpleTimelineLayer *gstl;
   gboolean valid;
@@ -260,31 +239,23 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless (ges_timeline_add_track (timeline, track));
 
 
-#define ELEMENT "videotestsrc"
-
   /* Create four 1s sources */
-  source1 = ges_custom_source_clip_new (arbitrary_fill_track_func,
-      (gpointer) ELEMENT);
+  source1 = ges_test_clip_new ();
   g_object_set (source1, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);
 
   /* make this source taller than the others, so we can check that
    * gstlrecalculate handles this properly */
 
-  source2 = ges_custom_source_clip_new (arbitrary_fill_track_func,
-      (gpointer) ELEMENT);
+  source2 = ges_test_clip_new ();
   g_object_set (source2, "duration", GST_SECOND, "start", (guint64) 42, NULL);
-  GES_CONTAINER_HEIGHT (source2) = 4;
 
   fail_unless_equals_uint64 (_DURATION (source2), GST_SECOND);
-
-  source3 = ges_custom_source_clip_new (arbitrary_fill_track_func,
-      (gpointer) ELEMENT);
+  source3 = ges_test_clip_new ();
   g_object_set (source3, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (source3), GST_SECOND);
 
-  source4 = ges_custom_source_clip_new (arbitrary_fill_track_func,
-      (gpointer) ELEMENT);
+  source4 = ges_test_clip_new ();
   g_object_set (source4, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (source4), GST_SECOND);
 
@@ -319,11 +290,8 @@ GST_START_TEST (test_gsl_with_transitions)
   /* 1        [1-tr1--]                                   */
   /* 2 [0--source1----][3-tr2--]                          */
   /* 3        [2---source2-----]                          */
-  /* 4        [2---source2-----]                          */
-  /* 5        [2---source2-----]                          */
-  /* 6        [2---source2-----]                          */
-  /* 7                 [4---source3---]                   */
-  /* 8                                [5---source4-----]  */
+  /* 4                 [4---source3---]                   */
+  /* 5                                [5---source4-----]  */
 
 
   gstl = GES_SIMPLE_TIMELINE_LAYER (layer);
@@ -376,7 +344,7 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless_equals_uint64 (_PRIORITY (source2), 3);
   fail_unless_equals_uint64 (_DURATION (source3), GST_SECOND);
   fail_unless_equals_uint64 (_START (source3), SECOND (1.5));
-  fail_unless_equals_uint64 (_PRIORITY (source3), 7);
+  fail_unless_equals_uint64 (_PRIORITY (source3), 4);
 
   /* now add the second transition */
 
@@ -397,7 +365,7 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless_equals_uint64 (_PRIORITY (tr2), 2);
   fail_unless_equals_uint64 (_DURATION (source3), GST_SECOND);
   fail_unless_equals_uint64 (_START (source3), GST_SECOND);
-  fail_unless_equals_uint64 (_PRIORITY (source3), 7);
+  fail_unless_equals_uint64 (_PRIORITY (source3), 4);
 
   /* fourth source */
 
@@ -419,10 +387,10 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless_equals_uint64 (_PRIORITY (tr2), 2);
   fail_unless_equals_uint64 (_DURATION (source3), GST_SECOND);
   fail_unless_equals_uint64 (_START (source3), GST_SECOND);
-  fail_unless_equals_uint64 (_PRIORITY (source3), 7);
+  fail_unless_equals_uint64 (_PRIORITY (source3), 4);
   fail_unless_equals_uint64 (_DURATION (source4), GST_SECOND);
   fail_unless_equals_uint64 (_START (source4), SECOND (2));
-  fail_unless_equals_uint64 (_PRIORITY (source4), 8);
+  fail_unless_equals_uint64 (_PRIORITY (source4), 5);
 
   /* check that any insertion which might result in two adjacent transitions
    * will fail */

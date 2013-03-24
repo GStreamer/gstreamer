@@ -90,6 +90,28 @@ static GParamSpec *properties[PROP_LAST];
  *                                                  *
  ****************************************************/
 
+static guint32
+_compute_height (GESContainer * container)
+{
+  GList *tmp;
+  guint32 min_prio = G_MAXUINT32, max_prio = 0;
+
+  if (container->children == NULL)
+    return 0;
+
+  /* Go over all childs and check if height has changed */
+  for (tmp = container->children; tmp; tmp = tmp->next) {
+    guint tck_priority = _PRIORITY (tmp->data);
+
+    if (tck_priority < min_prio)
+      min_prio = tck_priority;
+    if (tck_priority > max_prio)
+      max_prio = tck_priority;
+  }
+
+  return max_prio - min_prio + 1;
+}
+
 static void
 _get_priorty_range (GESContainer * container, guint32 * min_priority,
     guint32 * max_priority)
@@ -469,6 +491,7 @@ ges_clip_class_init (GESClipClass * klass)
   /* TODO implement the deep_copy Virtual method */
 
   container_class->get_priorty_range = _get_priorty_range;
+  container_class->compute_height = _compute_height;
   container_class->add_child = _add_child;
   container_class->remove_child = _remove_child;
   container_class->ungroup = _ungroup;

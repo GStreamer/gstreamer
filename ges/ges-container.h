@@ -100,6 +100,7 @@ struct _GESContainer
  * @ungroup: Ungroups the #GESTimelineElement contained in this #GESContainer, creating new
  * @group: Groups the #GESContainers together
  * #GESContainer containing those #GESTimelineElement apropriately.
+ * @compute_height: Return the @height of the container
  */
 struct _GESContainerClass
 {
@@ -115,6 +116,7 @@ struct _GESContainerClass
   void (*get_priorty_range)       (GESContainer *container, guint32 *min_prio, guint32 *max_prio);
   GList* (*ungroup)               (GESContainer *container, gboolean recursive);
   GESContainer * (*group)         (GList *containers);
+  guint32 (*compute_height)       (GESContainer *container);
 
 
   /*< private >*/

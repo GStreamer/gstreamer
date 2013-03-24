@@ -92,36 +92,20 @@ enum
 static GParamSpec *properties[PROP_LAST];
 
 /************************
- *                      *
  *   Private  methods   *
- *                      *
  ************************/
 static void
 update_height (GESContainer * container)
 {
-  GList *tmp;
-  guint32 min_prio = G_MAXUINT32, max_prio = 0;
+  guint32 height;
 
-  GST_FIXME_OBJECT (container, "No children, we should reset our height to 0");
-  if (container->children == NULL)
-    return;
+  height = GES_CONTAINER_GET_CLASS (container)->compute_height (container);
 
-  /* Go over all childs and check if height has changed */
-  for (tmp = container->children; tmp; tmp = tmp->next) {
-    guint tck_priority = _PRIORITY (tmp->data);
-
-    if (tck_priority < min_prio)
-      min_prio = tck_priority;
-    if (tck_priority > max_prio)
-      max_prio = tck_priority;
-  }
-
-  if (container->height < (max_prio - min_prio + 1)) {
-    container->height = max_prio - min_prio + 1;
+  if (container->height != height) {
+    container->height = height;
     GST_DEBUG_OBJECT (container, "Updating height %i", container->height);
     g_object_notify (G_OBJECT (container), "height");
-  } else
-    GST_FIXME_OBJECT (container, "We only grow the height!");
+  }
 }
 
 static void
