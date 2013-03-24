@@ -60,6 +60,15 @@
  * chapters and angles, for example, while the current TOC would only contain
  * the chapters for the currently playing title if playback of a specific
  * title was requested.
+ *
+ * Applications and plugins should not rely on TOCs having a certain kind of
+ * structure, but should allow for different alternatives. For example, a
+ * simple CUE sheet embedded in a file may be presented as a flat list of
+ * track entries, or could have a top-level edition node (or some other
+ * alternative type entry) with track entries underneath that node; or even
+ * multiple top-level edition nodes (or some other alternative type entries)
+ * each with track entries underneath, in case the source file has extracted
+ * a track listing from different sources).
  */
 
 #ifdef HAVE_CONFIG_H
