@@ -263,7 +263,8 @@ gst_srtp_enc_class_init (GstSrtpEncClass * klass)
 
   /* Install properties */
   g_object_class_install_property (gobject_class, PROP_MKEY,
-      g_param_spec_boxed ("key", "Key", "Master key",
+      g_param_spec_boxed ("key", "Key", "Master key (of "
+          G_STRINGIFY (SRTP_MASTER_KEY_LEN) " bytes)",
           GST_TYPE_BUFFER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_RTP_CIPHER,

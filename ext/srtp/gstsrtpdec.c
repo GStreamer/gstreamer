@@ -731,6 +731,14 @@ gst_srtp_dec_sink_query (GstPad * pad, GstObject * parent, GstQuery * query,
           gst_structure_set_name (ps, "application/x-srtp");
       }
 
+      if (filter) {
+        GstCaps *tmp;
+
+        tmp = gst_caps_intersect (ret, filter);
+        gst_caps_unref (ret);
+        ret = tmp;
+      }
+
       gst_query_set_caps_result (query, ret);
       return TRUE;
 
@@ -815,6 +823,7 @@ gst_srtp_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
 
   if (!(stream = validate_buffer (filter, buf, &ssrc, is_rtcp))) {
     GST_OBJECT_UNLOCK (filter);
+    GST_WARNING_OBJECT (filter, "Invalid buffer, dropping");
     goto drop_buffer;
   }
 
@@ -879,6 +888,7 @@ unprotect:
         goto drop_buffer;
 
       default:
+        GST_WARNING_OBJECT (filter, "Other error");
         goto drop_buffer;
     }
   }
