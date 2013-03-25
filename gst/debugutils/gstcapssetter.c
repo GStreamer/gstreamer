@@ -204,9 +204,9 @@ gst_caps_setter_transform_caps (GstBaseTransform * trans,
   /* pass filter caps upstream, or any if no filter */
   if (direction != GST_PAD_SINK) {
     if (!cfilter || gst_caps_is_empty (cfilter)) {
-      return gst_caps_new_any ();
+      return gst_caps_ref (GST_CAPS_ANY);
     } else {
-      return gst_caps_copy (cfilter);
+      return gst_caps_ref (cfilter);
     }
   }
 
