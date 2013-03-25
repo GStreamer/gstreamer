@@ -103,6 +103,8 @@ GST_START_TEST (test_static_caps)
   static GstStaticCaps scaps = GST_STATIC_CAPS ("audio/x-raw,rate=44100");
   GstCaps *caps1;
   GstCaps *caps2;
+  static GstStaticCaps sany = GST_STATIC_CAPS_ANY;
+  static GstStaticCaps snone = GST_STATIC_CAPS_NONE;
 
   /* caps creation */
   caps1 = gst_static_caps_get (&scaps);
@@ -118,6 +120,14 @@ GST_START_TEST (test_static_caps)
   /* caps must be equal */
   fail_unless (caps1 == caps2);
 
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+
+  caps1 = gst_static_caps_get (&sany);
+  fail_unless (gst_caps_is_equal (caps1, GST_CAPS_ANY));
+  caps2 = gst_static_caps_get (&snone);
+  fail_unless (gst_caps_is_equal (caps2, GST_CAPS_NONE));
+  fail_if (gst_caps_is_equal (caps1, caps2));
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
 }
