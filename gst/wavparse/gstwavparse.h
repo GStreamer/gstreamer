@@ -69,6 +69,7 @@ struct _GstWavParse {
   GstToc      *toc;
   GList       *cues;
   GList       *labls;
+  GList       *notes;
   GstEvent    *start_segment;
 
   /* WAVE decoding state */

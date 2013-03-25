@@ -139,7 +139,7 @@ typedef struct
    */
   guint32 cue_point_id;
   gchar *text;
-} GstWavParseLabl;
+} GstWavParseLabl, GstWavParseNote;
 
 static void
 gst_wavparse_class_init (GstWavParseClass * klass)
@@ -1219,10 +1219,39 @@ gst_wavparse_labl_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
   /* parse data */
   data += 8;
   labl->cue_point_id = GST_READ_UINT32_LE (data);
-  labl->text = (gchar *) g_new0 (gchar *, size - 4 + 1);
-  memcpy (labl->text, data + 4, size - 4);
+  labl->text = g_memdup (data + 4, size - 4);
 
   wav->labls = g_list_append (wav->labls, labl);
+
+  return TRUE;
+}
+
+/*
+ * gst_wavparse_note_chunk:
+ * @wav GstWavParse object
+ * @data holder for data
+ * @size holder for data size
+ *
+ * Parse note from @data to wav->notes.
+ *
+ * Returns: %TRUE when note chunk is available
+ */
+static gboolean
+gst_wavparse_note_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
+{
+  GstWavParseNote *note;
+
+  if (size < 5)
+    return FALSE;
+
+  note = g_new0 (GstWavParseNote, 1);
+
+  /* parse data */
+  data += 8;
+  note->cue_point_id = GST_READ_UINT32_LE (data);
+  note->text = g_memdup (data + 4, size - 4);
+
+  wav->notes = g_list_append (wav->notes, note);
 
   return TRUE;
 }
@@ -1248,6 +1277,10 @@ gst_wavparse_adtl_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
     switch (ltag) {
       case GST_RIFF_TAG_labl:
         gst_wavparse_labl_chunk (wav, data + offset, size);
+        break;
+      case GST_RIFF_TAG_note:
+        gst_wavparse_note_chunk (wav, data + offset, size);
+        break;
       default:
         break;
     }
@@ -1256,6 +1289,24 @@ gst_wavparse_adtl_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
   }
 
   return TRUE;
+}
+
+static GstTagList *
+gst_wavparse_get_tags_toc_entry (GstToc * toc, gchar * id)
+{
+  GstTagList *tags = NULL;
+  GstTocEntry *entry = NULL;
+
+  entry = gst_toc_find_entry (toc, id);
+  if (entry != NULL) {
+    tags = gst_toc_entry_get_tags (entry);
+    if (tags == NULL) {
+      tags = gst_tag_list_new_empty ();
+      gst_toc_entry_set_tags (entry, tags);
+    }
+  }
+
+  return tags;
 }
 
 /*
@@ -1272,6 +1323,7 @@ gst_wavparse_create_toc (GstWavParse * wav)
   GList *list;
   GstWavParseCue *cue;
   GstWavParseLabl *labl;
+  GstWavParseNote *note;
   GstTagList *tags;
   GstToc *toc;
   GstTocEntry *entry = NULL, *cur_subentry = NULL, *prev_subentry = NULL;
@@ -1322,13 +1374,23 @@ gst_wavparse_create_toc (GstWavParse * wav)
   while (list) {
     labl = list->data;
     id = g_strdup_printf ("%08x", labl->cue_point_id);
-    cur_subentry = gst_toc_find_entry (toc, id);
+    tags = gst_wavparse_get_tags_toc_entry (toc, id);
     g_free (id);
-    if (cur_subentry != NULL) {
-      tags = gst_tag_list_new_empty ();
+    if (tags != NULL) {
       gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, labl->text,
           NULL);
-      gst_toc_entry_set_tags (cur_subentry, tags);
+    }
+    list = g_list_next (list);
+  }
+  list = g_list_first (wav->notes);
+  while (list) {
+    note = list->data;
+    id = g_strdup_printf ("%08x", note->cue_point_id);
+    tags = gst_wavparse_get_tags_toc_entry (toc, id);
+    g_free (id);
+    if (tags != NULL) {
+      gst_tag_list_add (tags, GST_TAG_MERGE_PREPEND, GST_TAG_COMMENT,
+          note->text, NULL);
     }
     list = g_list_next (list);
   }
