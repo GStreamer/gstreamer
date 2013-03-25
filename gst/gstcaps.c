@@ -1807,7 +1807,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
     GST_CAPS_FLAGS (caps) = GST_CAPS_FLAG_ANY;
     return TRUE;
   }
-  if (strcmp ("EMPTY", string) == 0) {
+  if (strcmp ("EMPTY", string) == 0 || strcmp ("NONE", string) == 0) {
     return TRUE;
   }
 
