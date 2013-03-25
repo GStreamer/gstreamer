@@ -46,6 +46,7 @@
 
 /**
  * SECTION:element-srtpdec
+ * @see_also: srtpenc
  *
  * gstrtpdec acts as a decoder that removes security from SRTP and SRTCP
  * packets (encryption and authentication) and out RTP and RTCP. It
@@ -88,11 +89,15 @@
  * has been updated.
  *
  * <refsect2>
- * <title>Example pipeline</title>
+ * <title>Example pipelines</title>
  * |[
- * gst-launch-0.10 udpsrc port=33333 caps="application/x-rtp,mkey=(string)bafbafbaf,..." ! rtpspeexdepay ! speexdec ! alsasink
- * ]| Receive SPEEX SRTP or SRTCP packets through UDP using caps to specify
- * master key and protection. It outs RTP or SRTP packets.
+ * gst-launch-1.0 udpsrc port=5004 caps='application/x-srtp, payload=(int)8, ssrc=(uint)1356955624, srtp-key=(buffer)012345678901234567890123456789012345678901234567890123456789, srtp-cipher=(string)aes-128-icm, srtp-auth=(string)hmac-sha1-80, srtcp-cipher=(string)aes-128-icm, srtcp-auth=(string)hmac-sha1-80' !  srtpdec ! rtppcmadepay ! alawdec ! pulsesink
+ * ]| Receive PCMA SRTP packets through UDP using caps to specify
+ * master key and protection.
+ * |[
+ * gst-launch-1.0 audiotestsrc ! alawenc ! rtppcmapay ! 'application/x-rtp, payload=(int)8, ssrc=(uint)1356955624' ! srtpenc key="012345678901234567890123456789012345678901234567890123456789" ! udpsink port=5004
+ * ]| Send PCMA SRTP packets through UDP, nothing how the SSRC is forced so
+ * that the receiver will recognize it.
  * </refsect2>
  */
 

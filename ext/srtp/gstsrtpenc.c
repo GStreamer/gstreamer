@@ -45,7 +45,8 @@
  */
 
 /**
- * SECTION:element-srtpenc
+ * SECTION:gst-plugin-bad-plugins-srtpenc
+ * @see_also: srtpdec
  *
  * gstrtpenc acts as an encoder that adds security to RTP and RTCP
  * packets in the form of encryption and authentication. It outs SRTP
@@ -90,13 +91,6 @@
  * subsequent packet is dropped, until a new key is set and the stream
  * has been updated.
  *
- * <refsect2>
- * <title>Example pipeline</title>
- * |[
- * gst-launch-0.10 --gst-debug=srtp*:5 audiotestsrc ! speexenc ! rtpspeexpay ! srtpenc key=bafbafbaf ! udpsink port=33333
- * ]| Enc SPEEX RTP packets through srtpenc using default protection
- * and costum master key, and out on UDP port 33333.
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
