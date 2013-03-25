@@ -62,9 +62,10 @@
  *     </para></listitem>
  *     <listitem><para>
  *       If codec processing results in encoded data, subclass should call
- *       @gst_audio_encoder_finish_frame to have encoded data pushed
- *       downstream.  Alternatively, it might also call to indicate dropped
- *       (non-encoded) samples.
+ *       gst_audio_encoder_finish_frame() to have encoded data pushed
+ *       downstream. Alternatively, it might also call
+ *       gst_audio_encoder_finish_frame() (with a NULL buffer and some number of
+ *       dropped samples) to indicate dropped (non-encoded) samples.
  *     </para></listitem>
  *     <listitem><para>
  *       Just prior to actually pushing a buffer downstream,
@@ -140,7 +141,7 @@
  *   </para></listitem>
  *   <listitem><para>
  *      Accept data in @handle_frame and provide encoded results to
- *      @gst_audio_encoder_finish_frame.
+ *      gst_audio_encoder_finish_frame().
  *   </para></listitem>
  * </itemizedlist>
  *
