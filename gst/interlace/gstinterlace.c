@@ -337,13 +337,15 @@ gst_interlace_decorate_buffer (GstInterlace * interlace, GstBuffer * buf,
   /* field duration = src_fps_d / (2 * src_fps_n) */
   if (interlace->src_fps_n == 0) {
     /* If we don't know the fps, we can't generate timestamps/durations */
-    GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DTS (buf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_PTS (buf) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
   } else {
-    GST_BUFFER_TIMESTAMP (buf) = interlace->timebase +
+    GST_BUFFER_DTS (buf) = interlace->timebase +
         gst_util_uint64_scale (GST_SECOND,
         interlace->src_fps_d * interlace->fields_since_timebase,
         interlace->src_fps_n * 2);
+    GST_BUFFER_PTS (buf) = GST_BUFFER_DTS (buf);
     GST_BUFFER_DURATION (buf) =
         gst_util_uint64_scale (GST_SECOND, interlace->src_fps_d * n_fields,
         interlace->src_fps_n * 2);
@@ -654,12 +656,11 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   gint num_fields = 0;
   int current_fields;
   const PulldownFormat *format;
+  GstClockTime timestamp;
 
-  GST_DEBUG ("Received buffer at %u:%02u:%02u:%09u",
-      (guint) (GST_BUFFER_TIMESTAMP (buffer) / (GST_SECOND * 60 * 60)),
-      (guint) ((GST_BUFFER_TIMESTAMP (buffer) / (GST_SECOND * 60)) % 60),
-      (guint) ((GST_BUFFER_TIMESTAMP (buffer) / GST_SECOND) % 60),
-      (guint) (GST_BUFFER_TIMESTAMP (buffer) % GST_SECOND));
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
+  GST_DEBUG ("Received buffer at %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
 
   GST_DEBUG ("duration %" GST_TIME_FORMAT " flags %04x %s %s %s",
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
@@ -687,15 +688,15 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   if (interlace->timebase == GST_CLOCK_TIME_NONE) {
     /* get the initial ts */
-    interlace->timebase = GST_BUFFER_TIMESTAMP (buffer);
+    interlace->timebase = timestamp;
   }
 
   format = &formats[interlace->pattern];
 
   if (interlace->stored_fields == 0
       && interlace->phase_index == interlace->pattern_offset
-      && GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))) {
-    interlace->timebase = GST_BUFFER_TIMESTAMP (buffer);
+      && GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    interlace->timebase = timestamp;
     interlace->fields_since_timebase = 0;
   }
 
