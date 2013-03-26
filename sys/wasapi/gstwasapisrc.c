@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch-0.10 -v wasapisrc ! fakesink
+ * gst-launch-1.0 -v wasapisrc ! fakesink
  * ]| Capture from the default audio device and render to fakesink.
  * </refsect2>
  */
@@ -43,13 +43,10 @@ GST_DEBUG_CATEGORY_STATIC (gst_wasapi_src_debug);
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) 8000, "
-        "channels = (int) 1, "
-        "signed = (boolean) TRUE, "
-        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER)));
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) S16LE, "
+        "layout = (string) interleaved, "
+        "rate = (int) 8000, " "channels = (int) 1"));
 
 static void gst_wasapi_src_dispose (GObject * object);
 static void gst_wasapi_src_finalize (GObject * object);
@@ -65,20 +62,7 @@ static GstFlowReturn gst_wasapi_src_create (GstPushSrc * src, GstBuffer ** buf);
 static GstClockTime gst_wasapi_src_get_time (GstClock * clock,
     gpointer user_data);
 
-GST_BOILERPLATE (GstWasapiSrc, gst_wasapi_src, GstPushSrc, GST_TYPE_PUSH_SRC);
-
-static void
-gst_wasapi_src_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_set_static_metadata (element_class, "WasapiSrc",
-      "Source/Audio",
-      "Stream audio from an audio capture device through WASAPI",
-      "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>");
-}
+G_DEFINE_TYPE (GstWasapiSrc, gst_wasapi_src, GST_TYPE_PUSH_SRC);
 
 static void
 gst_wasapi_src_class_init (GstWasapiSrcClass * klass)
@@ -93,6 +77,13 @@ gst_wasapi_src_class_init (GstWasapiSrcClass * klass)
 
   gstelement_class->provide_clock = gst_wasapi_src_provide_clock;
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_set_static_metadata (gstelement_class, "WasapiSrc",
+      "Source/Audio",
+      "Stream audio from an audio capture device through WASAPI",
+      "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>");
+
   gstbasesrc_class->start = gst_wasapi_src_start;
   gstbasesrc_class->stop = gst_wasapi_src_stop;
   gstbasesrc_class->query = gst_wasapi_src_query;
@@ -104,7 +95,7 @@ gst_wasapi_src_class_init (GstWasapiSrcClass * klass)
 }
 
 static void
-gst_wasapi_src_init (GstWasapiSrc * self, GstWasapiSrcClass * gclass)
+gst_wasapi_src_init (GstWasapiSrc * self)
 {
   GstBaseSrc *basesrc = GST_BASE_SRC (self);
 
@@ -120,14 +111,9 @@ gst_wasapi_src_init (GstWasapiSrc * self, GstWasapiSrcClass * gclass)
   self->start_time = GST_CLOCK_TIME_NONE;
   self->next_time = GST_CLOCK_TIME_NONE;
 
-#if GST_CHECK_VERSION(0, 10, 31) || (GST_CHECK_VERSION(0, 10, 30) && GST_VERSION_NANO > 0)
-  self->clock = gst_audio_clock_new_full ("GstWasapiSrcClock",
+  self->clock = gst_audio_clock_new ("GstWasapiSrcClock",
       gst_wasapi_src_get_time, gst_object_ref (self),
       (GDestroyNotify) gst_object_unref);
-#else
-  self->clock = gst_audio_clock_new ("GstWasapiSrcClock",
-      gst_wasapi_src_get_time, self);
-#endif
 
   CoInitialize (NULL);
 }
@@ -142,17 +128,15 @@ gst_wasapi_src_dispose (GObject * object)
     self->clock = NULL;
   }
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (gst_wasapi_src_parent_class)->dispose (object);
 }
 
 static void
 gst_wasapi_src_finalize (GObject * object)
 {
-  GstWasapiSrc *self = GST_WASAPI_SRC (object);
-
   CoUninitialize ();
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_wasapi_src_parent_class)->finalize (object);
 }
 
 static GstClock *
@@ -196,7 +180,7 @@ gst_wasapi_src_start (GstBaseSrc * src)
           &self->latency))
     goto beach;
 
-  hr = IAudioClient_GetService (client, &IID_IAudioClock, &client_clock);
+  hr = IAudioClient_GetService (client, &IID_IAudioClock, (void**) &client_clock);
   if (hr != S_OK) {
     GST_ERROR_OBJECT (self, "IAudioClient::GetService (IID_IAudioClock) "
         "failed");
@@ -210,7 +194,7 @@ gst_wasapi_src_start (GstBaseSrc * src)
   }
 
   hr = IAudioClient_GetService (client, &IID_IAudioCaptureClient,
-      &capture_client);
+      (void**) &capture_client);
   if (hr != S_OK) {
     GST_ERROR_OBJECT (self, "IAudioClient::GetService "
         "(IID_IAudioCaptureClient) failed");
@@ -298,7 +282,8 @@ gst_wasapi_src_query (GstBaseSrc * src, GstQuery * query)
     }
 
     default:
-      ret = GST_BASE_SRC_CLASS (parent_class)->query (src, query);
+      ret =
+          GST_BASE_SRC_CLASS (gst_wasapi_src_parent_class)->query (src, query);
       break;
   }
 
@@ -317,6 +302,9 @@ gst_wasapi_src_create (GstPushSrc * src, GstBuffer ** buf)
   guint32 nsamples_read = 0, nsamples;
   DWORD flags = 0;
   guint64 devpos;
+  guint i;
+  GstMapInfo minfo;
+  gint16 *dst;
 
   GST_OBJECT_LOCK (self);
   clock = GST_ELEMENT_CLOCK (self);
@@ -347,7 +335,7 @@ gst_wasapi_src_create (GstPushSrc * src, GstBuffer ** buf)
 
   if (flags != 0) {
     GST_WARNING_OBJECT (self, "devpos %" G_GUINT64_FORMAT ": flags=0x%08x",
-        devpos, flags);
+        devpos, (guint) flags);
   }
 
   /* FIXME: Why do we get 1024 sometimes and not a multiple of
@@ -384,26 +372,21 @@ gst_wasapi_src_create (GstPushSrc * src, GstBuffer ** buf)
       timestamp = 0;
   }
 
-  ret = gst_pad_alloc_buffer_and_set_caps (GST_BASE_SRC_PAD (self),
-      devpos,
-      nsamples * sizeof (gint16), GST_PAD_CAPS (GST_BASE_SRC_PAD (self)), buf);
+  *buf = gst_buffer_new_and_alloc (nsamples * sizeof (gint16));
 
-  if (ret == GST_FLOW_OK) {
-    guint i;
-    gint16 *dst;
+  GST_BUFFER_OFFSET_END (*buf) = devpos + self->samples_per_buffer;
+  GST_BUFFER_TIMESTAMP (*buf) = timestamp;
+  GST_BUFFER_DURATION (*buf) = duration;
 
-    GST_BUFFER_OFFSET_END (*buf) = devpos + self->samples_per_buffer;
-    GST_BUFFER_TIMESTAMP (*buf) = timestamp;
-    GST_BUFFER_DURATION (*buf) = duration;
+  gst_buffer_map (*buf, &minfo, GST_MAP_WRITE);
+  dst = (gint16 *) minfo.data;
+  for (i = 0; i < nsamples; i++) {
+    *dst = *samples;
 
-    dst = (gint16 *) GST_BUFFER_DATA (*buf);
-    for (i = 0; i < nsamples; i++) {
-      *dst = *samples;
-
-      samples += 2;
-      dst++;
-    }
+    samples += 2;
+    dst++;
   }
+  gst_buffer_unmap (*buf, &minfo);
 
   hr = IAudioCaptureClient_ReleaseBuffer (self->capture_client, nsamples_read);
   if (hr != S_OK) {

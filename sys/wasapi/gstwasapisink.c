@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch-0.10 -v audiotestsrc samplesperbuffer=160 ! wasapisink
+ * gst-launch-1.0 -v audiotestsrc samplesperbuffer=160 ! wasapisink
  * ]| Generate 20 ms buffers and render to the default audio device.
  * </refsect2>
  */
@@ -42,13 +42,10 @@ GST_DEBUG_CATEGORY_STATIC (gst_wasapi_sink_debug);
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) 8000, "
-        "channels = (int) 1, "
-        "signed = (boolean) TRUE, "
-        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER)));
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) S16LE, "
+        "layout = (string) interleaved, "
+        "rate = (int) 8000, " "channels = (int) 1"));
 
 static void gst_wasapi_sink_dispose (GObject * object);
 static void gst_wasapi_sink_finalize (GObject * object);
@@ -60,30 +57,24 @@ static gboolean gst_wasapi_sink_stop (GstBaseSink * sink);
 static GstFlowReturn gst_wasapi_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
 
-GST_BOILERPLATE (GstWasapiSink, gst_wasapi_sink, GstBaseSink,
-    GST_TYPE_BASE_SINK);
-
-static void
-gst_wasapi_sink_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_static_metadata (element_class, "WasapiSrc",
-      "Sink/Audio",
-      "Stream audio to an audio capture device through WASAPI",
-      "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>");
-}
+G_DEFINE_TYPE (GstWasapiSink, gst_wasapi_sink, GST_TYPE_BASE_SINK);
 
 static void
 gst_wasapi_sink_class_init (GstWasapiSinkClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (klass);
 
   gobject_class->dispose = gst_wasapi_sink_dispose;
   gobject_class->finalize = gst_wasapi_sink_finalize;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_set_static_metadata (gstelement_class, "WasapiSrc",
+      "Sink/Audio",
+      "Stream audio to an audio capture device through WASAPI",
+      "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>");
 
   gstbasesink_class->get_times = gst_wasapi_sink_get_times;
   gstbasesink_class->start = gst_wasapi_sink_start;
@@ -95,7 +86,7 @@ gst_wasapi_sink_class_init (GstWasapiSinkClass * klass)
 }
 
 static void
-gst_wasapi_sink_init (GstWasapiSink * self, GstWasapiSinkClass * gclass)
+gst_wasapi_sink_init (GstWasapiSink * self)
 {
   self->rate = 8000;
   self->buffer_time = 20 * GST_MSECOND;
@@ -117,17 +108,15 @@ gst_wasapi_sink_dispose (GObject * object)
     self->event_handle = NULL;
   }
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (gst_wasapi_sink_parent_class)->dispose (object);
 }
 
 static void
 gst_wasapi_sink_finalize (GObject * object)
 {
-  GstWasapiSink *self = GST_WASAPI_SINK (object);
-
   CoUninitialize ();
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_wasapi_sink_parent_class)->finalize (object);
 }
 
 static void
@@ -171,7 +160,7 @@ gst_wasapi_sink_start (GstBaseSink * sink)
   }
 
   hr = IAudioClient_GetService (client, &IID_IAudioRenderClient,
-      &render_client);
+      (void **) &render_client);
   if (hr != S_OK) {
     GST_ERROR_OBJECT (self, "IAudioClient::GetService "
         "(IID_IAudioRenderClient) failed");
@@ -229,10 +218,22 @@ gst_wasapi_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   GstWasapiSink *self = GST_WASAPI_SINK (sink);
   GstFlowReturn ret = GST_FLOW_OK;
   HRESULT hr;
-  gint16 *src = (gint16 *) GST_BUFFER_DATA (buffer);
+  GstMapInfo minfo;
+  const gint16 *src;
   gint16 *dst = NULL;
-  guint nsamples = GST_BUFFER_SIZE (buffer) / sizeof (gint16);
+  guint nsamples;
   guint i;
+
+  memset (&minfo, 0, sizeof (minfo));
+
+  if (!gst_buffer_map (buffer, &minfo, GST_MAP_READ)) {
+    GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
+        ("Failed to map input buffer"));
+    ret = GST_FLOW_ERROR;
+    goto beach;
+  }
+
+  nsamples = minfo.size / sizeof (gint16);
 
   WaitForSingleObject (self->event_handle, INFINITE);
 
@@ -246,6 +247,7 @@ gst_wasapi_sink_render (GstBaseSink * sink, GstBuffer * buffer)
     goto beach;
   }
 
+  src = (const gint16 *) minfo.data;
   for (i = 0; i < nsamples; i++) {
     dst[0] = *src;
     dst[1] = *src;
@@ -263,5 +265,8 @@ gst_wasapi_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   }
 
 beach:
+  if (minfo.data)
+    gst_buffer_unmap (buffer, &minfo);
+
   return ret;
 }

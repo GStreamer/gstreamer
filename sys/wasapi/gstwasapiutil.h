@@ -21,6 +21,7 @@
 #define __GST_WASAPI_UTIL_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 
 #include <audioclient.h>
 

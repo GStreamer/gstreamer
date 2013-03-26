@@ -22,8 +22,6 @@
 
 #include "gstwasapiutil.h"
 
-#include <gst/base/gstbasesink.h>
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_WASAPI_SINK \

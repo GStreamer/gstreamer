@@ -22,8 +22,6 @@
 
 #include "gstwasapiutil.h"
 
-#include <gst/base/gstpushsrc.h>
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_WASAPI_SRC \
