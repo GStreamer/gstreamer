@@ -56,6 +56,7 @@ struct _GstD3DVideoSink
   GstBufferPool      *fallback_pool;
   GstBuffer          *fallback_buffer;
 
+  GstVideoRectangle  crop_rect;
   GstVideoRectangle  render_rect;
 
   GRecMutex    lock;

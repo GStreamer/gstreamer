@@ -349,6 +349,10 @@ gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (GST_VIDEO_SINK_WIDTH (sink) <= 0 || GST_VIDEO_SINK_HEIGHT (sink) <= 0)
     goto no_display_size;
 
+  memset (&sink->crop_rect, 0, sizeof (sink->crop_rect));
+  sink->crop_rect.w = sink->info.width;
+  sink->crop_rect.h = sink->info.height;
+
   sink->width = video_width;
   sink->height = video_height;
 
@@ -465,6 +469,7 @@ gst_d3dvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   }
 
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
 
   GST_OBJECT_LOCK (sink);
   pool = sink->pool ? gst_object_ref (sink->pool) : NULL;

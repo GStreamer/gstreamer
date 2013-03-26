@@ -1689,8 +1689,7 @@ d3d_stretch_and_copy (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 back_buffer)
 {
   GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
   GstVideoRectangle *render_rect = NULL;
-  RECT *r_ptr = NULL;
-  RECT r;
+  RECT r, s;
   HRESULT hr;
   gboolean ret = FALSE;
 
@@ -1731,14 +1730,17 @@ d3d_stretch_and_copy (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 back_buffer)
     r.top = result.y;
     r.right = result.x + result.w;
     r.bottom = result.y + result.h;
-    r_ptr = &r;
   } else if (render_rect) {
     r.left = 0;
     r.top = 0;
     r.right = render_rect->w;
     r.bottom = render_rect->h;
-    r_ptr = &r;
   }
+
+  s.left = sink->crop_rect.x;
+  s.top = sink->crop_rect.y;
+  s.right = sink->crop_rect.x + sink->crop_rect.w;
+  s.bottom = sink->crop_rect.y + sink->crop_rect.h;
 
   /* TODO: StretchRect returns error if the dest rect is outside
    * the backbuffer area. So we need to calc how much of the src
@@ -1746,9 +1748,9 @@ d3d_stretch_and_copy (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 back_buffer)
    */
 
   hr = IDirect3DDevice9_StretchRect (klass->d3d.device.d3d_device, sink->d3d.surface,   /* Source Surface */
-      NULL,                     /* Source Surface Rect (NULL: Whole) */
+      &s,                       /* Source Surface Rect (NULL: Whole) */
       back_buffer,              /* Dest Surface */
-      r_ptr,                    /* Dest Surface Rect (NULL: Whole) */
+      &r,                       /* Dest Surface Rect (NULL: Whole) */
       klass->d3d.device.filter_type);
 
   if (hr == D3D_OK) {
@@ -1769,6 +1771,7 @@ d3d_render_buffer (GstD3DVideoSink * sink, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstMemory *mem;
   LPDIRECT3DSURFACE9 surface = NULL;
+  GstVideoCropMeta *crop = NULL;
 
   LOCK_SINK (sink);
 
@@ -1789,7 +1792,20 @@ d3d_render_buffer (GstD3DVideoSink * sink, GstBuffer * buf)
       (sink->d3d.window_handle != NULL) ? "Render" : "No Win",
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
-  /* Reize swapchain if needed */
+  crop = gst_buffer_get_video_crop_meta (buf);
+  if (crop) {
+    sink->crop_rect.x = crop->x;
+    sink->crop_rect.y = crop->y;
+    sink->crop_rect.w = crop->width;
+    sink->crop_rect.h = crop->height;
+  } else {
+    sink->crop_rect.x = 0;
+    sink->crop_rect.y = 0;
+    sink->crop_rect.w = sink->info.width;
+    sink->crop_rect.h = sink->info.height;
+  }
+
+  /* Resize swapchain if needed */
   if (!d3d_resize_swap_chain (sink)) {
     ret = GST_FLOW_ERROR;
     goto end;
