@@ -1496,7 +1496,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
     stream_id =
         gst_pad_create_stream_id_printf (stream->pad,
-        GST_ELEMENT_CAST (rmdemux), "%u", stream->id);
+        GST_ELEMENT_CAST (rmdemux), "%03u", stream->id);
     gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
     g_free (stream_id);
 

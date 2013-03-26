@@ -2376,7 +2376,7 @@ gst_asf_demux_activate_stream (GstASFDemux * demux, AsfStream * stream)
 
     stream_id =
         gst_pad_create_stream_id_printf (stream->pad, GST_ELEMENT_CAST (demux),
-        "%u", stream->id);
+        "%03u", stream->id);
     gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
     g_free (stream_id);
     gst_pad_set_caps (stream->pad, stream->caps);
