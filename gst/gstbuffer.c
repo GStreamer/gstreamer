@@ -719,12 +719,12 @@ no_memory:
 /**
  * gst_buffer_new_wrapped_full:
  * @flags: #GstMemoryFlags
- * @data: (array length=size) (element-type guint8): data to wrap
+ * @data: (array length=size) (element-type guint8) (transfer none): data to wrap
  * @maxsize: allocated size of @data
  * @offset: offset in @data
  * @size: size of valid data
- * @user_data: user_data
- * @notify: called with @user_data when the memory is freed
+ * @user_data: (allow-none): user_data
+ * @notify: (allow-none) (scope async) (closure user_data): called with @user_data when the memory is freed
  *
  * Allocate a new buffer that wraps the given memory. @data must point to
  * @maxsize of memory, the wrapped buffer will have the region from @offset and
@@ -754,7 +754,7 @@ gst_buffer_new_wrapped_full (GstMemoryFlags flags, gpointer data,
 
 /**
  * gst_buffer_new_wrapped:
- * @data: (array length=size) (element-type guint8): data to wrap
+ * @data: (array length=size) (element-type guint8) (transfer full): data to wrap
  * @size: allocated size of @data
  *
  * Creates a new buffer that wraps the given @data. The memory will be freed
@@ -1529,7 +1529,7 @@ gst_buffer_unmap (GstBuffer * buffer, GstMapInfo * info)
  * gst_buffer_fill:
  * @buffer: a #GstBuffer.
  * @offset: the offset to fill
- * @src: the source address
+ * @src: (array length=size) (element-type guint8): the source address
  * @size: the size to fill
  *
  * Copy @size bytes from @src to @buffer at @offset.
@@ -1631,7 +1631,7 @@ gst_buffer_extract (GstBuffer * buffer, gsize offset, gpointer dest, gsize size)
  * gst_buffer_memcmp:
  * @buffer: a #GstBuffer.
  * @offset: the offset in @buffer
- * @mem: the memory to compare
+ * @mem: (array length=size) (element-type guint8): the memory to compare
  * @size: the size to compare
  *
  * Compare @size bytes starting from @offset in @buffer with the memory in @mem.
@@ -2050,4 +2050,32 @@ gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
       break;
   }
   return res;
+}
+
+/**
+ * gst_buffer_extract_dup:
+ * @buffer: a #GstBuffer
+ * @offset: the offset to extract
+ * @size: the size to extract
+ * @dest: (array length=dest_size) (element-type guint8) (out): A pointer where
+ *  the destination array will be written.
+ * @dest_size: (out): A location where the size of @dest can be written
+ *
+ * Extracts a copy of at most @size bytes the data at @offset into a #GBytes.
+ * @dest must be freed using g_free() when done.
+ *
+ * Since: 3.2
+ */
+
+void
+gst_buffer_extract_dup (GstBuffer * buffer, gsize offset, gsize size,
+    gpointer * dest, gsize * dest_size)
+{
+  gsize real_size;
+
+  real_size = gst_buffer_get_size (buffer);
+
+  *dest = g_malloc (MIN (real_size - offset, size));
+
+  *dest_size = gst_buffer_extract (buffer, offset, *dest, size);
 }

@@ -599,19 +599,20 @@ _priv_gst_memory_initialize (void)
 /**
  * gst_memory_new_wrapped:
  * @flags: #GstMemoryFlags
- * @data: data to wrap
+ * @data: (array length=size) (element-type guint8) (transfer none): data to
+ *   wrap
  * @maxsize: allocated size of @data
  * @offset: offset in @data
  * @size: size of valid data
- * @user_data: user_data
- * @notify: called with @user_data when the memory is freed
+ * @user_data: (allow-none): user_data
+ * @notify: (allow-none) (scope async) (closure user_data): called with @user_data when the memory is freed
  *
  * Allocate a new memory block that wraps the given @data.
  *
  * The prefix/padding must be filled with 0 if @flags contains
  * #GST_MEMORY_FLAG_ZERO_PREFIXED and #GST_MEMORY_FLAG_ZERO_PADDED respectively.
  *
- * Returns: a new #GstMemory.
+ * Returns: (transfer full): a new #GstMemory.
  */
 GstMemory *
 gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,
