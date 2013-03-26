@@ -258,7 +258,6 @@ gst_directsound_sink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   GstPadTemplate *pad_template;
   GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (bsink);
   GstCaps *caps;
-  gchar *caps_string = NULL;
 
   if (dsoundsink->pDS == NULL) {
     GST_DEBUG_OBJECT (dsoundsink, "device not open, using template caps");
@@ -266,20 +265,23 @@ gst_directsound_sink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   }
 
   if (dsoundsink->cached_caps) {
-    caps_string = gst_caps_to_string (dsoundsink->cached_caps);
-    GST_DEBUG_OBJECT (dsoundsink, "Returning cached caps: %s", caps_string);
-    g_free (caps_string);
-    return gst_caps_ref (dsoundsink->cached_caps);
+    caps = gst_caps_ref (dsoundsink->cached_caps);
+  } else {
+    element_class = GST_ELEMENT_GET_CLASS (dsoundsink);
+    pad_template = gst_element_class_get_pad_template (element_class, "sink");
+    g_return_val_if_fail (pad_template != NULL, NULL);
+
+    caps = gst_directsound_probe_supported_formats (dsoundsink,
+        gst_pad_template_get_caps (pad_template));
+    if (caps)
+      dsoundsink->cached_caps = gst_caps_ref (caps);
   }
 
-  element_class = GST_ELEMENT_GET_CLASS (dsoundsink);
-  pad_template = gst_element_class_get_pad_template (element_class, "sink");
-  g_return_val_if_fail (pad_template != NULL, NULL);
-
-  caps = gst_directsound_probe_supported_formats (dsoundsink,
-      gst_pad_template_get_caps (pad_template));
-  if (caps) {
-    dsoundsink->cached_caps = gst_caps_ref (caps);
+  if (caps && filter) {
+    GstCaps *tmp =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = tmp;
   }
 
   if (caps) {
