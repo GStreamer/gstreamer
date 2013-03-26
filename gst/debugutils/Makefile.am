@@ -24,7 +24,9 @@ libgstdebugutilsbad_la_SOURCES = \
 	gstchopmydata.h \
 	gstcompare.c \
 	gstcompare.h \
-	gstdebugspy.h
+	gstdebugspy.h \
+	gstwatchdog.c \
+	gstwatchdog.h
 
 nodist_libgstdebugutilsbad_la_SOURCES = $(BUILT_SOURCES)
 libgstdebugutilsbad_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
