@@ -220,6 +220,9 @@ gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display)
     gint i;
     gboolean res = FALSE;
 
+    if (GST_QUERY_TYPE(query) != GST_QUERY_CUSTOM)
+        return FALSE;
+
     if (!display)
         return FALSE;
 

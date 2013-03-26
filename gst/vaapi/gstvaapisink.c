@@ -961,9 +961,14 @@ gst_vaapisink_buffer_alloc(
 static gboolean
 gst_vaapisink_query(GstBaseSink *base_sink, GstQuery *query)
 {
-    GstVaapiSink *sink = GST_VAAPISINK(base_sink);
-    GST_DEBUG ("sharing display %p", sink->display);
-    return gst_vaapi_reply_to_query (query, sink->display);
+    GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
+
+    if (gst_vaapi_reply_to_query(query, sink->display)) {
+        GST_DEBUG("sharing display %p", sink->display);
+        return TRUE;
+    }
+    return GST_BASE_SINK_CLASS(gst_vaapisink_parent_class)->query(base_sink,
+        query);
 }
 
 static void
