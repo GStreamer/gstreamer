@@ -29,7 +29,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "sbcdec", GST_RANK_NONE, GST_TYPE_SBC_DEC);
+  gst_element_register (plugin, "sbcdec", GST_RANK_PRIMARY, GST_TYPE_SBC_DEC);
   gst_element_register (plugin, "sbcenc", GST_RANK_NONE, GST_TYPE_SBC_ENC);
   return TRUE;
 }

@@ -1,8 +1,7 @@
 /*  GStreamer SBC audio decoder
- *  BlueZ - Bluetooth protocol stack for Linux
  *
  *  Copyright (C) 2004-2010  Marcel Holtmann <marcel@holtmann.org>
- *
+ *  Copyright (C) 2013       Tim-Philipp Müller <tim centricular net>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -21,7 +20,7 @@
  */
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
+#include <gst/audio/audio.h>
 
 #include <sbc/sbc.h>
 
@@ -42,22 +41,17 @@ typedef struct _GstSbcDec GstSbcDec;
 typedef struct _GstSbcDecClass GstSbcDecClass;
 
 struct _GstSbcDec {
-    GstElement element;
+    GstAudioDecoder audio_decoder;
 
-    GstPad *sinkpad;
-    GstPad *srcpad;
+    /*< private >*/
+    sbc_t           sbc;
 
-    GstAdapter *adapter;
-
-    gboolean send_caps;
-
-    sbc_t sbc;
-    guint64 next_sample;
-    guint64 next_timestamp;
+    gsize           frame_len;
+    gsize           samples_per_frame; /* for all channels */
 };
 
 struct _GstSbcDecClass {
-    GstElementClass parent_class;
+    GstAudioDecoderClass audio_decoder_class;
 };
 
 GType gst_sbc_dec_get_type (void);

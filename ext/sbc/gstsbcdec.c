@@ -1,8 +1,7 @@
 /*  GStreamer SBC audio decoder
- *  BlueZ - Bluetooth protocol stack for Linux
  *
  *  Copyright (C) 2004-2010  Marcel Holtmann <marcel@holtmann.org>
- *
+ *  Copyright (C) 2013       Tim-Philipp Müller <tim centricular net>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -20,15 +19,26 @@
  *
  */
 
+/**
+ * SECTION:element-sbdec
+ *
+ * This element decodes a Bluetooth SBC audio streams to raw integer PCM audio
+ *
+ * <refsect2>
+ * <title>Example pipelines</title>
+ * |[
+ * gst-launch-1.0 -v filesrc location=audio.sbc ! sbcparse ! sbcdec ! audioconvert ! audioresample ! autoaudiosink
+ * ]| Decode a raw SBC file.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include <string.h>
 
-#include "gstsbcutil.h"
 #include "gstsbcdec.h"
-#include <gst/audio/audio.h>
 
 /* FIXME: where does this come from? how is it derived? */
 #define BUF_SIZE 8192
@@ -36,15 +46,14 @@
 GST_DEBUG_CATEGORY_STATIC (sbc_dec_debug);
 #define GST_CAT_DEFAULT sbc_dec_debug
 
-static void gst_sbc_dec_finalize (GObject * obj);
-
-/* FIXME: port to GstAudioDecoder base class */
 #define parent_class gst_sbc_dec_parent_class
-G_DEFINE_TYPE (GstSbcDec, gst_sbc_dec, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstSbcDec, gst_sbc_dec, GST_TYPE_AUDIO_DECODER);
 
 static GstStaticPadTemplate sbc_dec_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-sbc"));
+    GST_STATIC_CAPS ("audio/x-sbc, channels = (int) [ 1, 2 ], "
+        "rate = (int) { 16000, 32000, 44100, 48000 }, "
+        "parsed = (boolean) true"));
 
 static GstStaticPadTemplate sbc_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
@@ -53,215 +62,165 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         "channels = (int) [ 1, 2 ], layout=interleaved"));
 
 static GstFlowReturn
-gst_sbc_dec_flush (GstSbcDec * dec, GstBuffer * outbuf,
-    gint outoffset, gint channels, gint rate)
+gst_sbc_dec_handle_frame (GstAudioDecoder * audio_dec, GstBuffer * buf)
 {
-  GstClockTime outtime, duration;
-
-  /* we will reuse the same caps object */
-  if (dec->send_caps) {
-    GstCaps *caps;
-
-    caps = gst_caps_new_simple ("audio/x-raw",
-        "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
-        "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels,
-        "layout", G_TYPE_STRING, "interleaved", NULL);
-
-    gst_pad_push_event (dec->srcpad, gst_event_new_caps (caps));
-
-    gst_caps_unref (caps);
-  }
-
-  /* calculate duration */
-  outtime = GST_BUFFER_TIMESTAMP (outbuf);
-  if (dec->next_timestamp != (guint64) - 1 && outtime != (guint64) - 1) {
-    duration = dec->next_timestamp - outtime;
-  } else if (outtime != (guint64) - 1) {
-    /* otherwise calculate duration based on outbuf size */
-    duration = gst_util_uint64_scale_int (outoffset / (2 * channels),
-        GST_SECOND, rate) - outtime;
-  } else {
-    duration = GST_CLOCK_TIME_NONE;
-  }
-  GST_BUFFER_DURATION (outbuf) = duration;
-  gst_buffer_resize (outbuf, 0, outoffset);
-
-  return gst_pad_push (dec->srcpad, outbuf);
-
-}
-
-static GstFlowReturn
-sbc_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
-{
-  GstSbcDec *dec = GST_SBC_DEC (parent);
-  GstFlowReturn res = GST_FLOW_OK;
-  const guint8 *indata;
-  guint insize;
-  GstClockTime timestamp;
-  gboolean discont;
+  GstSbcDec *dec = GST_SBC_DEC (audio_dec);
+  GstBuffer *outbuf = NULL;
   GstMapInfo out_map;
-  GstBuffer *outbuf;
-  guint inoffset, outoffset;
-  gint rate, channels;
+  GstMapInfo in_map;
+  gsize output_size;
+  guint num_frames, i;
 
-  discont = GST_BUFFER_IS_DISCONT (buffer);
-  if (discont) {
-    /* reset previous buffer */
-    gst_adapter_clear (dec->adapter);
-    /* we need a new timestamp to lock onto */
-    dec->next_sample = -1;
-  }
+  /* no fancy draining */
+  if (G_UNLIKELY (buf == NULL))
+    return GST_FLOW_OK;
 
-  gst_adapter_push (dec->adapter, buffer);
+  if (G_UNLIKELY (dec->frame_len == 0))
+    return GST_FLOW_NOT_NEGOTIATED;
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    dec->next_timestamp = timestamp;
+  gst_buffer_map (buf, &in_map, GST_MAP_READ);
 
-  insize = gst_adapter_available (dec->adapter);
-  indata = gst_adapter_map (dec->adapter, insize);
+  if (G_UNLIKELY (in_map.size == 0))
+    goto done;
 
-  inoffset = 0;
-  outbuf = NULL;
-  channels = rate = 0;
+  /* we assume all frames are of the same size, this is implied by the
+   * input caps applying to the whole input buffer, and the parser should
+   * also have made sure of that */
+  if (G_UNLIKELY (in_map.size % dec->frame_len != 0))
+    goto mixed_frames;
 
-  while (insize > 0) {
-    gint inconsumed, outlen;
-    gint outsize;
-    size_t outconsumed;
+  num_frames = in_map.size / dec->frame_len;
+  output_size = num_frames * dec->samples_per_frame * sizeof (gint16);
 
-    if (outbuf == NULL) {
-      outbuf = gst_buffer_new_and_alloc (BUF_SIZE);
+  outbuf = gst_audio_decoder_allocate_output_buffer (audio_dec, output_size);
 
-      if (discont) {
-        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-        discont = FALSE;
-      }
+  if (outbuf == NULL)
+    goto no_buffer;
 
-      GST_BUFFER_TIMESTAMP (outbuf) = dec->next_timestamp;
+  gst_buffer_map (outbuf, &out_map, GST_MAP_WRITE);
 
-      gst_buffer_map (outbuf, &out_map, GST_MAP_WRITE);
-      outsize = out_map.size;
-      outoffset = 0;
-    }
+  for (i = 0; i < num_frames; ++i) {
+    gssize ret;
+    gsize written;
 
-    GST_INFO_OBJECT (dec, "inoffset %d/%d, outoffset %d/%d", inoffset,
-        insize, outoffset, outsize);
+    ret = sbc_decode (&dec->sbc, in_map.data + (i * dec->frame_len),
+        dec->frame_len, out_map.data + (i * dec->samples_per_frame * 2),
+        dec->samples_per_frame * 2, &written);
 
-    inconsumed = sbc_decode (&dec->sbc, indata + inoffset, insize,
-        out_map.data + outoffset, outsize, &outconsumed);
-
-    GST_INFO_OBJECT (dec, "consumed %d, produced %d", inconsumed, outconsumed);
-
-    if (inconsumed <= 0) {
-      guint frame_len = sbc_get_frame_length (&dec->sbc);
-      /* skip a frame */
-      if (insize > frame_len) {
-        insize -= frame_len;
-        inoffset += frame_len;
-      } else {
-        insize = 0;
-      }
-      continue;
-    }
-
-    inoffset += inconsumed;
-    if ((gint) insize > inconsumed)
-      insize -= inconsumed;
-    else
-      insize = 0;
-    outoffset += outconsumed;
-    outsize -= outconsumed;
-
-    rate = gst_sbc_parse_rate_from_sbc (dec->sbc.frequency);
-    channels = gst_sbc_get_channel_number (dec->sbc.mode);
-
-    /* calculate timestamp either from the incomming buffers or
-     * from our sample counter */
-    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-      /* lock onto timestamp when we have one */
-      dec->next_sample = gst_util_uint64_scale_int (timestamp,
-          rate, GST_SECOND);
-      timestamp = GST_CLOCK_TIME_NONE;
-    }
-    if (dec->next_sample != (guint64) - 1) {
-      /* calculate the next sample */
-      dec->next_sample += outconsumed / (2 * channels);
-      dec->next_timestamp = gst_util_uint64_scale_int (dec->next_sample,
-          GST_SECOND, rate);
-    }
-
-    /* check for space, push outbuf buffer */
-    outlen = sbc_get_codesize (&dec->sbc);
-    if (outsize < outlen) {
-      gst_buffer_unmap (outbuf, &out_map);
-
-      res = gst_sbc_dec_flush (dec, outbuf, outoffset, channels, rate);
-
-      outbuf = NULL;
-
-      if (res != GST_FLOW_OK)
-        goto done;
+    if (ret <= 0 || written != (dec->samples_per_frame * 2)) {
+      GST_WARNING_OBJECT (dec, "decoding error, ret = %" G_GSSIZE_FORMAT ", "
+          "written = %" G_GSSIZE_FORMAT, ret, written);
+      break;
     }
   }
 
-  if (outbuf) {
-    gst_buffer_unmap (outbuf, &out_map);
+  gst_buffer_unmap (outbuf, &out_map);
 
-    res = gst_sbc_dec_flush (dec, outbuf, outoffset, channels, rate);
-  }
+  if (i > 0)
+    gst_buffer_set_size (outbuf, i * dec->samples_per_frame * 2);
+  else
+    gst_buffer_replace (&outbuf, NULL);
 
 done:
 
-  gst_adapter_unmap (dec->adapter);
-  gst_adapter_flush (dec->adapter, inoffset);
+  gst_buffer_unmap (buf, &in_map);
 
-  return res;
+  return gst_audio_decoder_finish_frame (audio_dec, outbuf, 1);
+
+/* ERRORS */
+mixed_frames:
+  {
+    GST_WARNING_OBJECT (dec, "inconsistent input data/frames, skipping");
+    goto done;
+  }
+no_buffer:
+  {
+    GST_ERROR_OBJECT (dec, "could not allocate output buffer");
+    goto done;
+  }
 }
 
-static GstStateChangeReturn
-gst_sbc_dec_change_state (GstElement * element, GstStateChange transition)
+static gboolean
+gst_sbc_dec_set_format (GstAudioDecoder * audio_dec, GstCaps * caps)
 {
-  GstStateChangeReturn result;
-  GstSbcDec *dec = GST_SBC_DEC (element);
+  GstSbcDec *dec = GST_SBC_DEC (audio_dec);
+  const gchar *channel_mode;
+  GstAudioInfo info;
+  GstStructure *s;
+  gint channels, rate, subbands, blocks, bitpool;
 
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_DEBUG ("Setup subband codec");
-      sbc_init (&dec->sbc, 0);
-      dec->send_caps = TRUE;
-      dec->next_sample = -1;
-      break;
-    default:
-      break;
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (s, "channels", &channels);
+  gst_structure_get_int (s, "rate", &rate);
+
+  /* save input format */
+  channel_mode = gst_structure_get_string (s, "channel-mode");
+  if (channel_mode == NULL ||
+      !gst_structure_get_int (s, "subbands", &subbands) ||
+      !gst_structure_get_int (s, "blocks", &blocks) ||
+      !gst_structure_get_int (s, "bitpool", &bitpool))
+    return FALSE;
+
+  if (strcmp (channel_mode, "mono") == 0) {
+    dec->frame_len = 4 + (subbands * 1) / 2 + (blocks * 1 * bitpool) / 8;
+  } else if (strcmp (channel_mode, "dual") == 0) {
+    dec->frame_len = 4 + (subbands * 2) / 2 + (blocks * 2 * bitpool) / 8;
+  } else if (strcmp (channel_mode, "stereo") == 0) {
+    dec->frame_len = 4 + (subbands * 2) / 2 + (blocks * bitpool) / 8;
+  } else if (strcmp (channel_mode, "joint") == 0) {
+    dec->frame_len = 4 + (subbands * 2) / 2 + (subbands + blocks * bitpool) / 8;
+  } else {
+    return FALSE;
   }
 
-  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  dec->samples_per_frame = channels * blocks * subbands;
 
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      GST_DEBUG ("Finish subband codec");
-      gst_adapter_clear (dec->adapter);
-      sbc_finish (&dec->sbc);
-      dec->send_caps = TRUE;
-      break;
+  GST_INFO_OBJECT (dec, "frame len: %" G_GSIZE_FORMAT ", samples per frame "
+      "%" G_GSIZE_FORMAT, dec->frame_len, dec->samples_per_frame);
 
-    default:
-      break;
-  }
+  /* set up output format */
+  gst_audio_info_init (&info);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16, rate, channels, NULL);
+  gst_audio_decoder_set_output_format (audio_dec, &info);
 
-  return result;
+  return TRUE;
+}
+
+static gboolean
+gst_sbc_dec_start (GstAudioDecoder * dec)
+{
+  GstSbcDec *sbcdec = GST_SBC_DEC (dec);
+
+  GST_INFO_OBJECT (dec, "Setup subband codec");
+  sbc_init (&sbcdec->sbc, 0);
+
+  return TRUE;
+}
+
+static gboolean
+gst_sbc_dec_stop (GstAudioDecoder * dec)
+{
+  GstSbcDec *sbcdec = GST_SBC_DEC (dec);
+
+  GST_INFO_OBJECT (sbcdec, "Finish subband codec");
+  sbc_finish (&sbcdec->sbc);
+  sbcdec->samples_per_frame = 0;
+  sbcdec->frame_len = 0;
+
+  return TRUE;
 }
 
 static void
 gst_sbc_dec_class_init (GstSbcDecClass * klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstAudioDecoderClass *audio_decoder_class = (GstAudioDecoderClass *) klass;
+  GstElementClass *element_class = (GstElementClass *) klass;
 
-  object_class->finalize = gst_sbc_dec_finalize;
-
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_sbc_dec_change_state);
+  audio_decoder_class->start = GST_DEBUG_FUNCPTR (gst_sbc_dec_start);
+  audio_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_sbc_dec_stop);
+  audio_decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_sbc_dec_set_format);
+  audio_decoder_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_sbc_dec_handle_frame);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sbc_dec_sink_factory));
@@ -277,27 +236,8 @@ gst_sbc_dec_class_init (GstSbcDecClass * klass)
 }
 
 static void
-gst_sbc_dec_init (GstSbcDec * self)
+gst_sbc_dec_init (GstSbcDec * dec)
 {
-  self->sinkpad =
-      gst_pad_new_from_static_template (&sbc_dec_sink_factory, "sink");
-  gst_pad_set_chain_function (self->sinkpad, GST_DEBUG_FUNCPTR (sbc_dec_chain));
-  gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
-
-  self->srcpad = gst_pad_new_from_static_template (&sbc_dec_src_factory, "src");
-  gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
-
-  self->adapter = gst_adapter_new ();
-  self->send_caps = TRUE;
-}
-
-static void
-gst_sbc_dec_finalize (GObject * obj)
-{
-  GstSbcDec *self = GST_SBC_DEC (obj);
-
-  g_object_unref (self->adapter);
-  self->adapter = NULL;
-
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
+  dec->samples_per_frame = 0;
+  dec->frame_len = 0;
 }
