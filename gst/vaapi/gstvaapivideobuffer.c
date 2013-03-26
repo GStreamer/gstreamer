@@ -153,6 +153,14 @@ new_vbuffer(GstVaapiVideoMeta *meta)
 }
 
 GstBuffer *
+gst_vaapi_video_buffer_new(GstVaapiVideoMeta *meta)
+{
+    g_return_val_if_fail(meta != NULL, NULL);
+
+    return new_vbuffer(gst_vaapi_video_meta_ref(meta));
+}
+
+GstBuffer *
 gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool)
 {
     return new_vbuffer(gst_vaapi_video_meta_new_from_pool(pool));
@@ -182,12 +190,4 @@ GstBuffer *
 gst_vaapi_video_buffer_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy)
 {
     return new_vbuffer(gst_vaapi_video_meta_new_with_surface_proxy(proxy));
-}
-
-GstVaapiVideoMeta *
-gst_vaapi_video_buffer_get_meta(GstVaapiVideoBuffer *buffer)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer), NULL);
-
-    return buffer->meta;
 }
