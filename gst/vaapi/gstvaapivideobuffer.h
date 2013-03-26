@@ -23,7 +23,7 @@
 #ifndef GST_VAAPI_VIDEO_BUFFER_H
 #define GST_VAAPI_VIDEO_BUFFER_H
 
-#include <gst/vaapi/gstvaapivideometa.h>
+#include "gstvaapivideometa.h"
 
 G_BEGIN_DECLS
 

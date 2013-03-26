@@ -172,34 +172,6 @@ GST_VAAPI_IMAGE_POOL_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>gstvaapivideometa</FILE>
-<TITLE>GstVaapiVideoMeta</TITLE>
-gst_vaapi_video_meta_new
-gst_vaapi_video_meta_new_from_pool
-gst_vaapi_video_meta_new_with_image
-gst_vaapi_video_meta_new_with_surface
-gst_vaapi_video_meta_new_with_surface_proxy
-gst_vaapi_video_meta_ref
-gst_vaapi_video_meta_unref
-gst_vaapi_video_meta_replace
-gst_vaapi_video_meta_get_display
-gst_vaapi_video_meta_get_image
-gst_vaapi_video_meta_set_image
-gst_vaapi_video_meta_set_image_from_pool
-gst_vaapi_video_meta_get_surface
-gst_vaapi_video_meta_set_surface
-gst_vaapi_video_meta_set_surface_from_pool
-gst_vaapi_video_meta_set_surface_converter
-gst_vaapi_video_meta_get_surface_converter
-gst_vaapi_video_meta_get_surface_proxy
-gst_vaapi_video_meta_set_surface_proxy
-gst_vaapi_video_meta_get_render_flags
-gst_vaapi_video_meta_set_render_flags
-<SUBSECTION Standard>
-gst_vaapi_video_meta_get_type
-</SECTION>
-
-<SECTION>
 <FILE>gstvaapitypes</FILE>
 <TITLE>Basic data structures</TITLE>
 GstVaapiID

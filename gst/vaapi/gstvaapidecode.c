@@ -30,7 +30,6 @@
 
 #include "gst/vaapi/sysdeps.h"
 #include <gst/vaapi/gstvaapidisplay.h>
-#include <gst/vaapi/gstvaapivideometa.h>
 #include <gst/video/videocontext.h>
 
 #include "gstvaapidecode.h"

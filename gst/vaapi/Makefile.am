@@ -39,6 +39,7 @@ libgstvaapi_source_c = \
 	gstvaapiupload.c	\
 	gstvaapiuploader.c	\
 	gstvaapivideobuffer.c	\
+	gstvaapivideometa.c	\
 	$(NULL)
 
 libgstvaapi_source_h = \
@@ -50,6 +51,7 @@ libgstvaapi_source_h = \
 	gstvaapiupload.h	\
 	gstvaapiuploader.h	\
 	gstvaapivideobuffer.h	\
+	gstvaapivideometa.h	\
 	$(NULL)
 
 if USE_GLX

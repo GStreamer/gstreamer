@@ -25,15 +25,13 @@
  * @short_description: VA video meta for GStreamer
  */
 
-#include "sysdeps.h"
+#include "gst/vaapi/sysdeps.h"
+#include <gst/vaapi/gstvaapiimagepool.h>
+#include <gst/vaapi/gstvaapisurfacepool.h>
 #include "gstvaapivideometa.h"
-#include "gstvaapiminiobject.h"
-#include "gstvaapiimagepool.h"
-#include "gstvaapisurfacepool.h"
-#include "gstvaapiobject_priv.h"
 
-#define DEBUG 1
-#include "gstvaapidebug.h"
+#define GST_VAAPI_TYPE_VIDEO_META \
+    (gst_vaapi_video_meta_get_type())
 
 #define GST_VAAPI_VIDEO_META(obj) \
     ((GstVaapiVideoMeta *)(obj))
@@ -42,6 +40,7 @@
     (GST_VAAPI_VIDEO_META(obj) != NULL)
 
 struct _GstVaapiVideoMeta {
+    gint                        ref_count;
     GstVaapiDisplay            *display;
     GstVaapiVideoPool          *image_pool;
     GstVaapiImage              *image;
@@ -65,14 +64,14 @@ static inline void
 set_image(GstVaapiVideoMeta *meta, GstVaapiImage *image)
 {
     meta->image = g_object_ref(image);
-    set_display(meta, GST_VAAPI_OBJECT_DISPLAY(image));
+    set_display(meta, gst_vaapi_object_get_display(GST_VAAPI_OBJECT(image)));
 }
 
 static inline void
 set_surface(GstVaapiVideoMeta *meta, GstVaapiSurface *surface)
 {
     meta->surface = g_object_ref(surface);
-    set_display(meta, GST_VAAPI_OBJECT_DISPLAY(surface));
+    set_display(meta, gst_vaapi_object_get_display(GST_VAAPI_OBJECT(surface)));
 }
 
 static void
@@ -101,7 +100,7 @@ gst_vaapi_video_meta_destroy_surface(GstVaapiVideoMeta *meta)
     g_clear_object(&meta->surface_pool);
 }
 
-GType
+static GType
 gst_vaapi_video_meta_get_type(void)
 {
     static gsize g_type;
@@ -127,6 +126,7 @@ gst_vaapi_video_meta_finalize(GstVaapiVideoMeta *meta)
 static void
 gst_vaapi_video_meta_init(GstVaapiVideoMeta *meta)
 {
+    meta->ref_count     = 1;
     meta->display       = NULL;
     meta->image_pool    = NULL;
     meta->image         = NULL;
@@ -137,26 +137,27 @@ gst_vaapi_video_meta_init(GstVaapiVideoMeta *meta)
     meta->render_flags  = 0;
 }
 
-static inline const GstVaapiMiniObjectClass *
-gst_vaapi_video_meta_class(void)
-{
-    static const GstVaapiMiniObjectClass GstVaapiVideoMetaClass = {
-        sizeof(GstVaapiVideoMeta),
-        (GDestroyNotify)gst_vaapi_video_meta_finalize
-    };
-    return &GstVaapiVideoMetaClass;
-}
-
 static inline GstVaapiVideoMeta *
 _gst_vaapi_video_meta_new(void)
 {
     GstVaapiVideoMeta *meta;
 
-    meta = (GstVaapiVideoMeta *)
-        gst_vaapi_mini_object_new(gst_vaapi_video_meta_class());
-    if (meta)
-        gst_vaapi_video_meta_init(meta);
+    meta = g_slice_alloc(sizeof(*meta));
+    if (!meta)
+        return NULL;
+    gst_vaapi_video_meta_init(meta);
     return meta;
+}
+
+static inline void
+_gst_vaapi_video_meta_free(GstVaapiVideoMeta *meta)
+{
+    g_atomic_int_inc(&meta->ref_count);
+
+    gst_vaapi_video_meta_finalize(meta);
+
+    if (G_LIKELY(g_atomic_int_dec_and_test(&meta->ref_count)))
+        g_slice_free1(sizeof(*meta), meta);
 }
 
 /**
@@ -317,8 +318,10 @@ gst_vaapi_video_meta_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy)
 GstVaapiVideoMeta *
 gst_vaapi_video_meta_ref(GstVaapiVideoMeta *meta)
 {
-    return (GstVaapiVideoMeta *)
-        gst_vaapi_mini_object_ref(GST_VAAPI_MINI_OBJECT(meta));
+    g_return_val_if_fail(meta != NULL, NULL);
+
+    g_atomic_int_inc(&meta->ref_count);
+    return meta;
 }
 
 /**
@@ -331,7 +334,11 @@ gst_vaapi_video_meta_ref(GstVaapiVideoMeta *meta)
 void
 gst_vaapi_video_meta_unref(GstVaapiVideoMeta *meta)
 {
-    gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(meta));
+    g_return_if_fail(meta != NULL);
+    g_return_if_fail(meta->ref_count > 0);
+
+    if (g_atomic_int_dec_and_test(&meta->ref_count))
+        _gst_vaapi_video_meta_free(meta);
 }
 
 /**
@@ -347,8 +354,24 @@ void
 gst_vaapi_video_meta_replace(GstVaapiVideoMeta **old_meta_ptr,
     GstVaapiVideoMeta *new_meta)
 {
-    gst_vaapi_mini_object_replace((GstVaapiMiniObject **)(old_meta_ptr),
-        (GstVaapiMiniObject *)(new_meta));
+    GstVaapiVideoMeta *old_meta;
+
+    g_return_if_fail(old_meta_ptr != NULL);
+
+    old_meta = g_atomic_pointer_get((gpointer *)old_meta_ptr);
+
+    if (old_meta == new_meta)
+        return;
+
+    if (new_meta)
+        gst_vaapi_video_meta_ref(new_meta);
+
+    while (!g_atomic_pointer_compare_and_exchange((gpointer *)old_meta_ptr,
+               old_meta, new_meta))
+        old_meta = g_atomic_pointer_get((gpointer *)old_meta_ptr);
+
+    if (old_meta)
+        gst_vaapi_video_meta_unref(old_meta);
 }
 
 /**

@@ -31,7 +31,6 @@
 #include "gst/vaapi/sysdeps.h"
 #include <gst/video/video.h>
 #include <gst/video/videocontext.h>
-#include <gst/vaapi/gstvaapivideometa.h>
 
 #include "gstvaapipostproc.h"
 #include "gstvaapipluginutil.h"

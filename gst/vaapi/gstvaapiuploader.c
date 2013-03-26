@@ -26,7 +26,6 @@
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapiimagepool.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
-#include <gst/vaapi/gstvaapivideometa.h>
 
 #include "gstvaapiuploader.h"
 #include "gstvaapivideobuffer.h"

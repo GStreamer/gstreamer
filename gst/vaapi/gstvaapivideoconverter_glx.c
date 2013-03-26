@@ -22,10 +22,10 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
-#include <gst/vaapi/gstvaapivideometa.h>
 #include <gst/vaapi/gstvaapitexture.h>
 #include "gstvaapivideoconverter_glx.h"
 #include "gstvaapipluginutil.h"
+#include "gstvaapivideometa.h"
 
 typedef gboolean (*GstSurfaceUploadFunction)(GstSurfaceConverter *,
     GstSurfaceBuffer *);

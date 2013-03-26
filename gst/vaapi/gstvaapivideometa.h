@@ -31,85 +31,102 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_VIDEO_META \
-    (gst_vaapi_video_meta_get_type())
-
 typedef struct _GstVaapiVideoMeta               GstVaapiVideoMeta;
 
-GType
-gst_vaapi_video_meta_get_type(void) G_GNUC_CONST;
-
+G_GNUC_INTERNAL
 GstVaapiVideoMeta *
 gst_vaapi_video_meta_new(GstVaapiDisplay *display);
 
+G_GNUC_INTERNAL
 GstVaapiVideoMeta *
 gst_vaapi_video_meta_new_from_pool(GstVaapiVideoPool *pool);
 
+G_GNUC_INTERNAL
 GstVaapiVideoMeta *
 gst_vaapi_video_meta_new_with_image(GstVaapiImage *image);
 
+G_GNUC_INTERNAL
 GstVaapiVideoMeta *
 gst_vaapi_video_meta_new_with_surface(GstVaapiSurface *surface);
 
+G_GNUC_INTERNAL
 GstVaapiVideoMeta *
 gst_vaapi_video_meta_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy);
 
+G_GNUC_INTERNAL
 GstVaapiVideoMeta *
 gst_vaapi_video_meta_ref(GstVaapiVideoMeta *meta);
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_video_meta_unref(GstVaapiVideoMeta *meta);
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_video_meta_replace(GstVaapiVideoMeta **old_meta_ptr,
     GstVaapiVideoMeta *new_meta);
 
+G_GNUC_INTERNAL
 GstVaapiDisplay *
 gst_vaapi_video_meta_get_display(GstVaapiVideoMeta *meta);
 
+G_GNUC_INTERNAL
 GstVaapiImage *
 gst_vaapi_video_meta_get_image(GstVaapiVideoMeta *meta);
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_video_meta_set_image(GstVaapiVideoMeta *meta, GstVaapiImage *image);
 
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_video_meta_set_image_from_pool(GstVaapiVideoMeta *meta,
     GstVaapiVideoPool *pool);
 
+G_GNUC_INTERNAL
 GstVaapiSurface *
 gst_vaapi_video_meta_get_surface(GstVaapiVideoMeta *meta);
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_video_meta_set_surface(GstVaapiVideoMeta *meta,
     GstVaapiSurface *surface);
 
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_video_meta_set_surface_from_pool(GstVaapiVideoMeta *meta,
     GstVaapiVideoPool *pool);
 
+G_GNUC_INTERNAL
 GstVaapiSurfaceProxy *
 gst_vaapi_video_meta_get_surface_proxy(GstVaapiVideoMeta *meta);
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_video_meta_set_surface_proxy(GstVaapiVideoMeta *meta,
     GstVaapiSurfaceProxy *proxy);
 
+G_GNUC_INTERNAL
 GFunc
 gst_vaapi_video_meta_get_surface_converter(GstVaapiVideoMeta *meta);
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_video_meta_set_surface_converter(GstVaapiVideoMeta *meta, GFunc func);
 
+G_GNUC_INTERNAL
 guint
 gst_vaapi_video_meta_get_render_flags(GstVaapiVideoMeta *meta);
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_video_meta_set_render_flags(GstVaapiVideoMeta *meta, guint flags);
 
+G_GNUC_INTERNAL
 GstVaapiVideoMeta *
 gst_buffer_get_vaapi_video_meta(GstBuffer *buffer);
 
+G_GNUC_INTERNAL
 void
 gst_buffer_set_vaapi_video_meta(GstBuffer *buffer, GstVaapiVideoMeta *meta);
 

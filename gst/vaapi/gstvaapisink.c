@@ -34,7 +34,6 @@
 #include <gst/video/video.h>
 #include <gst/video/videocontext.h>
 #include <gst/vaapi/gstvaapivalue.h>
-#include <gst/vaapi/gstvaapivideometa.h>
 #if USE_DRM
 # include <gst/vaapi/gstvaapidisplay_drm.h>
 #endif
@@ -56,6 +55,7 @@
 
 #include "gstvaapisink.h"
 #include "gstvaapipluginutil.h"
+#include "gstvaapivideometa.h"
 
 #define GST_PLUGIN_NAME "vaapisink"
 #define GST_PLUGIN_DESC "A VA-API based videosink"

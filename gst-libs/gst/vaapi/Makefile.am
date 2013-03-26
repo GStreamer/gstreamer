@@ -68,7 +68,6 @@ libgstvaapi_source_c =				\
 	gstvaapisurfaceproxy.c			\
 	gstvaapiutils.c				\
 	gstvaapivalue.c				\
-	gstvaapivideometa.c			\
 	gstvaapivideopool.c			\
 	gstvaapiwindow.c			\
 	$(NULL)
@@ -94,7 +93,6 @@ libgstvaapi_source_h =				\
 	gstvaapisurfaceproxy.h			\
 	gstvaapitypes.h				\
 	gstvaapivalue.h				\
-	gstvaapivideometa.h			\
 	gstvaapivideopool.h			\
 	gstvaapiwindow.h			\
 	$(NULL)

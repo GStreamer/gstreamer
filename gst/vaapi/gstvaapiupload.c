@@ -32,7 +32,6 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/videocontext.h>
-#include <gst/vaapi/gstvaapivideometa.h>
 
 #include "gstvaapiupload.h"
 #include "gstvaapipluginutil.h"
