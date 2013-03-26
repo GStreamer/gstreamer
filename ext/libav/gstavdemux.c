@@ -1002,7 +1002,7 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
 
 
   stream_id =
-      gst_pad_create_stream_id_printf (pad, GST_ELEMENT_CAST (demux), "%u",
+      gst_pad_create_stream_id_printf (pad, GST_ELEMENT_CAST (demux), "%03u",
       avstream->index);
   gst_pad_push_event (pad, gst_event_new_stream_start (stream_id));
   g_free (stream_id);
