@@ -314,10 +314,11 @@ gst_directsound_sink_acceptcaps (GstBaseSink * sink, GstQuery * query)
 
   pad_caps = gst_pad_query_caps (pad, NULL);
   if (pad_caps) {
-    gboolean cret = gst_caps_can_intersect (pad_caps, caps);
+    gboolean cret = gst_caps_is_subset (caps, pad_caps);
     gst_caps_unref (pad_caps);
     if (!cret) {
-      GST_DEBUG_OBJECT (dsink, "Can't intersect caps, not accepting caps");
+      GST_DEBUG_OBJECT (dsink,
+          "Caps are not a subset of the pad caps, not accepting caps");
       goto done;
     }
   }
