@@ -1203,7 +1203,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
       stream_id =
           gst_pad_create_stream_id_printf (GST_PAD_CAST (pad),
-          GST_ELEMENT_CAST (demux), "%u", pad->track_id);
+          GST_ELEMENT_CAST (demux), "%03u", pad->track_id);
       gst_pad_push_event (GST_PAD_CAST (pad),
           gst_event_new_stream_start (stream_id));
       g_free (stream_id);
