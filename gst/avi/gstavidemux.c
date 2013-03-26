@@ -2359,7 +2359,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
 
   gst_pad_set_active (pad, TRUE);
   stream_id =
-      gst_pad_create_stream_id_printf (pad, GST_ELEMENT_CAST (avi), "%u",
+      gst_pad_create_stream_id_printf (pad, GST_ELEMENT_CAST (avi), "%03u",
       avi->num_streams);
   gst_pad_push_event (pad, gst_event_new_stream_start (stream_id));
   g_free (stream_id);

@@ -5359,7 +5359,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     GST_DEBUG_OBJECT (qtdemux, "setting caps %" GST_PTR_FORMAT, stream->caps);
     stream_id =
         gst_pad_create_stream_id_printf (stream->pad,
-        GST_ELEMENT_CAST (qtdemux), "%u", stream->track_id);
+        GST_ELEMENT_CAST (qtdemux), "%03u", stream->track_id);
     gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
     g_free (stream_id);
     gst_pad_set_caps (stream->pad, stream->caps);

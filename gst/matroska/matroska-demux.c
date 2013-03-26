@@ -1370,7 +1370,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
 
   stream_id =
       gst_pad_create_stream_id_printf (context->pad, GST_ELEMENT_CAST (demux),
-      "%u", context->uid);
+      "%03u", context->uid);
   gst_pad_push_event (context->pad, gst_event_new_stream_start (stream_id));
   g_free (stream_id);
   gst_pad_set_caps (context->pad, context->caps);
