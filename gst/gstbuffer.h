@@ -307,7 +307,6 @@ gboolean    gst_buffer_map                 (GstBuffer *buffer, GstMapInfo *info,
 
 void        gst_buffer_unmap               (GstBuffer *buffer, GstMapInfo *info);
 
-
 /* refcounting */
 /**
  * gst_buffer_ref:
