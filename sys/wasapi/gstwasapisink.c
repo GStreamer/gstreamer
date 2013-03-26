@@ -30,6 +30,9 @@
  * ]| Generate 20 ms buffers and render to the default audio device.
  * </refsect2>
  */
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include "gstwasapisink.h"
 

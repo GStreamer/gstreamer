@@ -30,6 +30,9 @@
  * ]| Capture from the default audio device and render to fakesink.
  * </refsect2>
  */
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include "gstwasapisrc.h"
 #include <gst/audio/gstaudioclock.h>

@@ -17,12 +17,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "gstwasapisrc.h"
-#include "gstwasapisink.h"
-
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
+
+#include "gstwasapisrc.h"
+#include "gstwasapisink.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
