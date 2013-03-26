@@ -155,8 +155,6 @@ gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass)
   GST_DEBUG_CATEGORY_INIT (directsoundsink_debug, "directsoundsink", 0,
       "DirectSound sink");
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->finalize = gst_directsound_sink_finalize;
   gobject_class->set_property = gst_directsound_sink_set_property;
   gobject_class->get_property = gst_directsound_sink_get_property;
