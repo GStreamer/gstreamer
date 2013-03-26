@@ -221,6 +221,7 @@ gst_buffer_unmap
 
 gst_buffer_memcmp
 gst_buffer_extract
+gst_buffer_extract_dup
 gst_buffer_fill
 gst_buffer_memset
 

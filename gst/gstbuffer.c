@@ -2013,3 +2013,31 @@ gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
   }
   return res;
 }
+
+/**
+ * gst_buffer_extract_dup:
+ * @buffer: a #GstBuffer
+ * @offset: the offset to extract
+ * @size: the size to extract
+ * @dest: (array length=dest_size) (element-type guint8) (out): A pointer where
+ *  the destination array will be written.
+ * @dest_size: (out): A location where the size of @dest can be written
+ *
+ * Extracts a copy of at most @size bytes the data at @offset into a #GBytes.
+ * @dest must be freed using g_free() when done.
+ *
+ * Since: 3.2
+ */
+
+void
+gst_buffer_extract_dup (GstBuffer * buffer, gsize offset, gsize size,
+    gpointer * dest, gsize * dest_size)
+{
+  gsize real_size;
+
+  real_size = gst_buffer_get_size (buffer);
+
+  *dest = g_malloc (MIN (real_size - offset, size));
+
+  *dest_size = gst_buffer_extract (buffer, offset, *dest, size);
+}

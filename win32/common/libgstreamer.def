@@ -97,6 +97,7 @@ EXPORTS
 	gst_buffer_copy_into
 	gst_buffer_copy_region
 	gst_buffer_extract
+	gst_buffer_extract_dup
 	gst_buffer_fill
 	gst_buffer_find_memory
 	gst_buffer_flags_get_type

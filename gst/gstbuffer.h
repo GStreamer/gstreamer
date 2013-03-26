@@ -306,6 +306,9 @@ gboolean    gst_buffer_map_range           (GstBuffer *buffer, guint idx, gint l
 gboolean    gst_buffer_map                 (GstBuffer *buffer, GstMapInfo *info, GstMapFlags flags);
 
 void        gst_buffer_unmap               (GstBuffer *buffer, GstMapInfo *info);
+void        gst_buffer_extract_dup         (GstBuffer *buffer, gsize offset,
+                                            gsize size, gpointer *dest,
+                                            gsize *dest_size);
 
 /* refcounting */
 /**
