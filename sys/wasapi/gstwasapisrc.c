@@ -180,7 +180,8 @@ gst_wasapi_src_start (GstBaseSrc * src)
           &self->latency))
     goto beach;
 
-  hr = IAudioClient_GetService (client, &IID_IAudioClock, (void**) &client_clock);
+  hr = IAudioClient_GetService (client, &IID_IAudioClock,
+      (void **) &client_clock);
   if (hr != S_OK) {
     GST_ERROR_OBJECT (self, "IAudioClient::GetService (IID_IAudioClock) "
         "failed");
@@ -194,7 +195,7 @@ gst_wasapi_src_start (GstBaseSrc * src)
   }
 
   hr = IAudioClient_GetService (client, &IID_IAudioCaptureClient,
-      (void**) &capture_client);
+      (void **) &capture_client);
   if (hr != S_OK) {
     GST_ERROR_OBJECT (self, "IAudioClient::GetService "
         "(IID_IAudioCaptureClient) failed");

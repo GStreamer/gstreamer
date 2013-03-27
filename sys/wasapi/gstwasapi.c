@@ -21,21 +21,15 @@
 #  include <config.h>
 #endif
 
-#include "gstwasapisrc.h"
 #include "gstwasapisink.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret;
+  gst_element_register (plugin, "wasapisink", GST_RANK_NONE,
+      GST_TYPE_WASAPI_SINK);
 
-  ret = gst_element_register (plugin, "wasapisrc",
-      GST_RANK_NONE, GST_TYPE_WASAPI_SRC);
-  if (!ret)
-    return ret;
-
-  return gst_element_register (plugin, "wasapisink",
-      GST_RANK_NONE, GST_TYPE_WASAPI_SINK);
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

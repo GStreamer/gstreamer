@@ -137,19 +137,13 @@ gst_wasapi_util_hresult_to_string (HRESULT hr)
 
 gboolean
 gst_wasapi_util_get_default_device_client (GstElement * element,
-    gboolean capture,
-    guint rate,
-    GstClockTime buffer_time,
-    GstClockTime period_time,
-    DWORD flags, IAudioClient ** ret_client, GstClockTime * ret_latency)
+    gboolean capture, IAudioClient ** ret_client)
 {
   gboolean res = FALSE;
   HRESULT hr;
   IMMDeviceEnumerator *enumerator = NULL;
   IMMDevice *device = NULL;
   IAudioClient *client = NULL;
-  REFERENCE_TIME latency_rt, def_period, min_period;
-  WAVEFORMATEXTENSIBLE format;
 
   hr = CoCreateInstance (&CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
       &IID_IMMDeviceEnumerator, (void **) &enumerator);
@@ -173,54 +167,8 @@ gst_wasapi_util_get_default_device_client (GstElement * element,
     goto beach;
   }
 
-  hr = IAudioClient_GetDevicePeriod (client, &def_period, &min_period);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (element, "IAudioClient::GetDevicePeriod () failed");
-    goto beach;
-  }
-
-  ZeroMemory (&format, sizeof (format));
-  format.Format.cbSize = sizeof (format) - sizeof (format.Format);
-  format.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-  format.Format.nChannels = 2;
-  format.Format.nSamplesPerSec = rate;
-  format.Format.wBitsPerSample = 16;
-  format.Format.nBlockAlign = format.Format.nChannels
-      * (format.Format.wBitsPerSample / 8);
-  format.Format.nAvgBytesPerSec = format.Format.nSamplesPerSec
-      * format.Format.nBlockAlign;
-  format.Samples.wValidBitsPerSample = 16;
-  format.dwChannelMask = SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT;
-  format.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
-
-  hr = IAudioClient_Initialize (client, AUDCLNT_SHAREMODE_EXCLUSIVE,    /* or AUDCLNT_SHAREMODE_SHARED */
-      flags, buffer_time / 100, /* buffer duration in 100s of ns */
-      period_time / 100,        /* periodicity in 100s of ns */
-      (WAVEFORMATEX *) & format, NULL);
-  if (hr != S_OK) {
-    GST_ELEMENT_ERROR (element, RESOURCE, OPEN_READ, (NULL),
-        ("IAudioClient::Initialize () failed: %s",
-            gst_wasapi_util_hresult_to_string (hr)));
-    goto beach;
-  }
-
-  hr = IAudioClient_GetStreamLatency (client, &latency_rt);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (element, "IAudioClient::GetStreamLatency () failed");
-    goto beach;
-  }
-
-  GST_INFO_OBJECT (element, "default period: %d (%d ms), "
-      "minimum period: %d (%d ms), "
-      "latency: %d (%d ms)",
-      (guint32) def_period, (guint32) def_period / 10000,
-      (guint32) min_period, (guint32) min_period / 10000,
-      (guint32) latency_rt, (guint32) latency_rt / 10000);
-
   IUnknown_AddRef (client);
   *ret_client = client;
-
-  *ret_latency = latency_rt * 100;
 
   res = TRUE;
 
@@ -235,6 +183,47 @@ beach:
     IUnknown_Release (enumerator);
 
   return res;
+}
+
+gboolean
+gst_wasapi_util_get_render_client (GstElement * element, IAudioClient * client,
+    IAudioRenderClient ** ret_render_client)
+{
+  gboolean res = FALSE;
+  HRESULT hr;
+  IAudioRenderClient *render_client = NULL;
+
+  hr = IAudioClient_GetService (client, &IID_IAudioRenderClient,
+      (void **) &render_client);
+  if (hr != S_OK) {
+    GST_ERROR_OBJECT (element, "IAudioClient::GetService "
+        "(IID_IAudioRenderClient) failed");
+    goto beach;
+  }
+
+  *ret_render_client = render_client;
+
+beach:
+  return res;
+}
+
+void
+gst_wasapi_util_audio_info_to_waveformatex (GstAudioInfo * info,
+    WAVEFORMATEXTENSIBLE * format)
+{
+  memset (format, 0, sizeof (*format));
+  format->Format.cbSize = sizeof (*format) - sizeof (format->Format);
+  format->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+  format->Format.nChannels = info->channels;
+  format->Format.nSamplesPerSec = info->rate;
+  format->Format.wBitsPerSample = (info->bpf * 8) / format->Format.nChannels;
+  format->Format.nBlockAlign = info->bpf;
+  format->Format.nAvgBytesPerSec =
+      format->Format.nSamplesPerSec * format->Format.nBlockAlign;
+  format->Samples.wValidBitsPerSample = info->finfo->depth;
+  /* FIXME: Implement something here */
+  format->dwChannelMask = SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT;
+  format->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
 }
 
 #if 0

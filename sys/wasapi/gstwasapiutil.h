@@ -31,12 +31,15 @@ gst_wasapi_util_hresult_to_string (HRESULT hr);
 gboolean
 gst_wasapi_util_get_default_device_client (GstElement * element,
                                            gboolean capture,
-                                           guint rate,
-                                           GstClockTime buffer_time,
-                                           GstClockTime period_time,
-                                           DWORD flags,
-                                           IAudioClient ** ret_client,
-                                           GstClockTime * ret_latency);
+                                           IAudioClient ** ret_client);
+
+gboolean gst_wasapi_util_get_render_client (GstElement * element,
+                                            IAudioClient *client,
+                                            IAudioRenderClient ** ret_render_client);
+
+void
+gst_wasapi_util_audio_info_to_waveformatex (GstAudioInfo *info,
+                                       WAVEFORMATEXTENSIBLE *format);
 
 #endif /* __GST_WASAPI_UTIL_H__ */
 
