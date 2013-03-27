@@ -1,9 +1,6 @@
-/*
- *
- *  BlueZ - Bluetooth protocol stack for Linux
- *
+/*  GStreamer SBC audio encoder
  *  Copyright (C) 2004-2010  Marcel Holtmann <marcel@holtmann.org>
- *
+ *  Copyright (C) 2013       Tim-Philipp Müller <tim centricular net>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -22,7 +19,7 @@
  */
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
+#include <gst/audio/audio.h>
 
 #include <sbc/sbc.h>
 
@@ -43,33 +40,22 @@ typedef struct _GstSbcEnc GstSbcEnc;
 typedef struct _GstSbcEncClass GstSbcEncClass;
 
 struct _GstSbcEnc {
-	GstElement element;
+	GstAudioEncoder audio_encoder;
 
-	GstPad *sinkpad;
-	GstPad *srcpad;
-	GstAdapter *adapter;
+    /*< private >*/
+    gint rate;
+    gint channels;
+    gint blocks;
+    gint subbands;
+    gint bitpool;
 
-	gint rate;
-	gint channels;
-	gint mode;
-	gint blocks;
-	gint allocation;
-	gint subbands;
-	gint bitpool;
-
-	guint codesize;
-	gint frame_length;
-	gint frame_duration;
-
-	sbc_t sbc;
+    sbc_t sbc;
 };
 
 struct _GstSbcEncClass {
-	GstElementClass parent_class;
+    GstAudioEncoderClass audio_encoder_class;
 };
 
-GType gst_sbc_enc_get_type(void);
-
-gboolean gst_sbc_enc_plugin_init(GstPlugin *plugin);
+GType gst_sbc_enc_get_type (void);
 
 G_END_DECLS

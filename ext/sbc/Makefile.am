@@ -3,13 +3,11 @@ plugin_LTLIBRARIES = libgstsbc.la
 
 noinst_HEADERS = \
 	gstsbcdec.h \
-	gstsbcenc.h \
-	gstsbcutil.h
+	gstsbcenc.h
 
 libgstsbc_la_SOURCES = \
 	gstsbcdec.c \
 	gstsbcenc.c \
-	gstsbcutil.c \
 	sbc-plugin.c
 libgstsbc_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
