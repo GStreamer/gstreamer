@@ -233,15 +233,16 @@ CHANGES
     a GstBuffer that can then be retrieved with gst_buffer_peek_memory().
 
     GST_BUFFER_DATA(), GST_BUFFER_MALLOCDATA(), GST_BUFFER_FREE_FUNC() and
-    GST_BUFFER_SIZE() are gone, along with the fields in GstBuffer. Use the
-    memory API to get access to the buffer data. GST_BUFFER_SIZE() can be
-    replaced with gst_buffer_get_size() but if also access to the data is
-    required, gst_buffer_map() can return both the size and data in one go.
+    GST_BUFFER_SIZE() are gone, along with the fields in GstBuffer.
 
     The most common way to access all the data in a buffer is by using
     gst_buffer_map() and gst_buffer_unmap(). These calls require you to specify
     the access mode required to the data and will automatically merge and return
     a writable copy of the data.
+
+    GST_BUFFER_SIZE() can be replaced with gst_buffer_get_size() but if also
+    access to the data is required, gst_buffer_map() can return both the size
+    and data in one go.
 
     The buffer must be writable (gst_buffer_is_writable()) in order to modify
     the fields, metadata or buffer memory. gst_buffer_make_writable() will not
