@@ -285,7 +285,9 @@ gst_watchdog_sink_event (GstBaseTransform * trans, GstEvent * event)
 
   gst_watchdog_feed (watchdog);
 
-  return TRUE;
+  return
+      GST_BASE_TRANSFORM_CLASS (gst_watchdog_parent_class)->sink_event (trans,
+      event);
 }
 
 static gboolean
@@ -297,7 +299,8 @@ gst_watchdog_src_event (GstBaseTransform * trans, GstEvent * event)
 
   gst_watchdog_feed (watchdog);
 
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (gst_watchdog_parent_class)->src_event (trans,
+      event);
 }
 
 static GstFlowReturn
