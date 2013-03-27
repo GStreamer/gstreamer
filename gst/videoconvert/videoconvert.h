@@ -46,7 +46,7 @@ struct _VideoConvert {
 
   ColorSpaceDitherMethod dither;
 
-  guint8 *tmpline;
+  guint8 *tmpline8;
   guint16 *tmpline16;
   guint16 *errline;
 
