@@ -1036,6 +1036,7 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
       parse->priv->offset = offset;
       parse->priv->sync_offset = offset;
       parse->priv->next_dts = next_dts;
+      parse->priv->next_pts = GST_CLOCK_TIME_NONE;
       parse->priv->last_pts = GST_CLOCK_TIME_NONE;
       parse->priv->last_dts = GST_CLOCK_TIME_NONE;
       parse->priv->prev_pts = GST_CLOCK_TIME_NONE;
