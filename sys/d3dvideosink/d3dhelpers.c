@@ -558,8 +558,8 @@ gst_d3dsurface_buffer_pool_set_config (GstBufferPool * bpool,
 }
 
 static GstFlowReturn
-gst_d3dsurface_buffer_pool_alloc (GstBufferPool * bpool, GstBuffer ** buffer,
-    GstBufferPoolAcquireParams * params)
+gst_d3dsurface_buffer_pool_alloc_buffer (GstBufferPool * bpool,
+    GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
 {
   GstD3DSurfaceBufferPool *pool = GST_D3DSURFACE_BUFFER_POOL_CAST (bpool);
   GstD3DVideoSink *sink = pool->sink;
@@ -684,6 +684,23 @@ fallback:
 }
 
 static void
+gst_d3dsurface_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
+{
+  GstMemory *mem = NULL;
+
+  /* Check if something replaced our memory */
+  if (gst_buffer_n_memory (buffer) != 1 ||
+      (mem = gst_buffer_peek_memory (buffer, 0)) == 0 ||
+      !gst_memory_is_type (mem, GST_D3D_SURFACE_MEMORY_NAME)) {
+    gst_buffer_unref (buffer);
+    return;
+  }
+
+  return GST_BUFFER_POOL_CLASS
+      (gst_d3dsurface_buffer_pool_parent_class)->release_buffer (bpool, buffer);
+}
+
+static void
 gst_d3dsurface_buffer_pool_class_init (GstD3DSurfaceBufferPoolClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
@@ -693,7 +710,9 @@ gst_d3dsurface_buffer_pool_class_init (GstD3DSurfaceBufferPoolClass * klass)
 
   gstbufferpool_class->get_options = gst_d3dsurface_buffer_pool_get_options;
   gstbufferpool_class->set_config = gst_d3dsurface_buffer_pool_set_config;
-  gstbufferpool_class->alloc_buffer = gst_d3dsurface_buffer_pool_alloc;
+  gstbufferpool_class->alloc_buffer = gst_d3dsurface_buffer_pool_alloc_buffer;
+  gstbufferpool_class->release_buffer =
+      gst_d3dsurface_buffer_pool_release_buffer;
 }
 
 static void
