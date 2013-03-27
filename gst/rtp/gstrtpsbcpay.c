@@ -157,7 +157,7 @@ gst_rtp_sbc_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps)
 static GstFlowReturn
 gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
 {
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   guint available;
   guint max_payload;
   GstBuffer *outbuf;
