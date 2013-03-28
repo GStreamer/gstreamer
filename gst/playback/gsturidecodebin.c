@@ -1182,14 +1182,6 @@ static const gchar *queue_uris[] = { "cdda://", NULL };
 /* blacklisted URIs, we know they will always fail. */
 static const gchar *blacklisted_uris[] = { NULL };
 
-/* mime types that we don't consider to be media types */
-#if 0
-static const gchar *no_media_mimes[] = {
-  "application/x-executable", "application/x-bzip", "application/x-gzip",
-  "application/zip", "application/x-compress", NULL
-};
-#endif
-
 /* media types we can download */
 static const gchar *download_media[] = {
   "video/quicktime", "video/mj2", "audio/x-m4a", "application/x-3gp",
@@ -1199,7 +1191,6 @@ static const gchar *download_media[] = {
 #define IS_STREAM_URI(uri)          (array_has_uri_value (stream_uris, uri))
 #define IS_QUEUE_URI(uri)           (array_has_uri_value (queue_uris, uri))
 #define IS_BLACKLISTED_URI(uri)     (array_has_uri_value (blacklisted_uris, uri))
-#define IS_NO_MEDIA_MIME(mime)      (array_has_value (no_media_mimes, mime))
 #define IS_DOWNLOAD_MEDIA(media)    (array_has_value (download_media, media))
 
 /*
