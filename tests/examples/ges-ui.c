@@ -1228,7 +1228,7 @@ app_add_audio_track (App * app)
   if (app->audio_tracks)
     return;
 
-  app->audio_track = ges_track_audio_raw_new ();
+  app->audio_track = GES_TRACK (ges_audio_track_new ());
   ges_timeline_add_track (app->timeline, app->audio_track);
 }
 
@@ -1248,7 +1248,7 @@ app_add_video_track (App * app)
   if (app->video_tracks)
     return;
 
-  app->video_track = ges_track_video_raw_new ();
+  app->video_track = GES_TRACK (ges_video_track_new ());
   ges_timeline_add_track (app->timeline, app->video_track);
 }
 
@@ -1322,13 +1322,13 @@ app_new (void)
 
   /* add base audio and video track */
 
-  if (!(a = ges_track_audio_raw_new ()))
+  if (!(a = GES_TRACK (ges_audio_track_new ())))
     goto fail;
 
   if (!(ges_timeline_add_track (ret->timeline, a)))
     goto fail;
 
-  if (!(v = ges_track_video_raw_new ()))
+  if (!(v = GES_TRACK (ges_video_track_new ())))
     goto fail;
 
   if (!(ges_timeline_add_track (ret->timeline, v)))

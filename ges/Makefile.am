@@ -30,6 +30,8 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-overlay-clip.c			\
 	ges-text-overlay-clip.c		\
 	ges-track.c				\
+	ges-audio-track.c \
+	ges-video-track.c \
 	ges-track-element.c			\
 	ges-source.c			\
 	ges-operation.c			\
@@ -89,6 +91,8 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-base-effect.h		\
 	ges-effect.h		\
 	ges-track.h				\
+	ges-audio-track.h \
+	ges-video-track.h \
 	ges-track-element.h			\
 	ges-source.h			\
 	ges-operation.h			\

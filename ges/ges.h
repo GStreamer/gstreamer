@@ -76,6 +76,8 @@
 #include <ges/ges-utils.h>
 #include <ges/ges-meta-container.h>
 #include <ges/ges-gerror.h>
+#include <ges/ges-audio-track.h>
+#include <ges/ges-video-track.h>
 
 G_BEGIN_DECLS
 

@@ -214,8 +214,8 @@ GST_START_TEST (test_filesource_images)
 
   ges_init ();
 
-  a = ges_track_audio_raw_new ();
-  v = ges_track_video_raw_new ();
+  a = GES_TRACK (ges_audio_track_new ());
+  v = GES_TRACK (ges_video_track_new ());
 
   layer = ges_layer_new ();
   fail_unless (layer != NULL);

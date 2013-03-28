@@ -80,8 +80,8 @@ create_timeline (void)
 
   timeline = ges_timeline_new ();
 
-  tracka = ges_track_audio_raw_new ();
-  trackv = ges_track_video_raw_new ();
+  tracka = GES_TRACK (ges_audio_track_new ());
+  trackv = GES_TRACK (ges_video_track_new ());
 
   layer = (GESLayer *) ges_simple_layer_new ();
 

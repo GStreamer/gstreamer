@@ -225,8 +225,8 @@ GST_START_TEST (test_clip_group_ungroup)
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
-  audio_track = ges_track_audio_raw_new ();
-  video_track = ges_track_video_raw_new ();
+  audio_track = GES_TRACK (ges_audio_track_new ());
+  video_track = GES_TRACK (ges_video_track_new ());
 
   fail_unless (ges_timeline_add_track (timeline, audio_track));
   fail_unless (ges_timeline_add_track (timeline, video_track));
@@ -349,7 +349,7 @@ GST_START_TEST (test_clip_refcount_remove_child)
   ges_init ();
 
   clip = GES_CLIP (ges_test_clip_new ());
-  track = ges_track_audio_raw_new ();
+  track = GES_TRACK (ges_audio_track_new ());
   effect = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
 
   fail_unless (ges_track_add_element (track, effect));

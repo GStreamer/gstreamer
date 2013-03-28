@@ -35,7 +35,7 @@ GST_START_TEST (test_transition_basic)
 
   ges_init ();
 
-  track = ges_track_video_raw_new ();
+  track = GES_TRACK (ges_video_track_new ());
   layer = ges_layer_new ();
   timeline = ges_timeline_new ();
   fail_unless (track != NULL);
@@ -79,7 +79,7 @@ GST_START_TEST (test_transition_properties)
   clip = GES_CLIP (ges_transition_clip_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE));
 
-  track = ges_track_video_raw_new ();
+  track = GES_TRACK (ges_video_track_new ());
   layer = ges_layer_new ();
   timeline = ges_timeline_new ();
   fail_unless (track != NULL);

@@ -67,10 +67,10 @@ make_timeline (char *path, float duration, char *text)
   timeline = ges_timeline_new ();
   ges_timeline_pipeline_add_timeline (pipeline, timeline);
 
-  trackv = ges_track_video_raw_new ();
+  trackv = GES_TRACK (ges_video_track_new ());
   ges_timeline_add_track (timeline, trackv);
 
-  tracka = ges_track_audio_raw_new ();
+  tracka = GES_TRACK (ges_audio_track_new ());
   ges_timeline_add_track (timeline, tracka);
 
   layer1 = GES_LAYER (ges_layer_new ());

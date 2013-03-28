@@ -158,7 +158,7 @@ GST_START_TEST (test_layer_priorities)
   fail_unless_equals_int (ges_layer_get_priority (layer2), 1);
   fail_unless_equals_int (ges_layer_get_priority (layer3), 2);
 
-  track = ges_track_video_raw_new ();
+  track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
   fail_unless (ges_timeline_add_track (timeline, track));
 

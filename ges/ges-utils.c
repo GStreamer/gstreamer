@@ -47,8 +47,8 @@ ges_timeline_new_audio_video (void)
   /* This is our main GESTimeline */
   timeline = ges_timeline_new ();
 
-  tracka = ges_track_audio_raw_new ();
-  trackv = ges_track_video_raw_new ();
+  tracka = GES_TRACK (ges_audio_track_new ());
+  trackv = GES_TRACK (ges_video_track_new ());
 
   if (!ges_timeline_add_track (timeline, trackv) ||
       !ges_timeline_add_track (timeline, tracka)) {

@@ -69,8 +69,6 @@ ges_track_type_name
 <TITLE>GESTrack</TITLE>
 GESTrack
 GESCreateElementForGapFunc
-ges_track_audio_raw_new
-ges_track_video_raw_new
 ges_track_new
 ges_track_add_element
 ges_track_remove_element
@@ -79,7 +77,6 @@ ges_track_get_caps
 ges_track_enable_update
 ges_track_get_elements
 ges_track_is_updating
-ges_track_set_create_element_for_gap_func
 <SUBSECTION Standard>
 GESTrackClass
 GESTrackPrivate
@@ -92,6 +89,38 @@ GES_TRACK
 GES_TRACK_CLASS
 GES_TRACK_GET_CLASS
 GES_TYPE_TRACK
+</SECTION>
+
+<SECTION>
+<FILE>ges-audio-track</FILE>
+<TITLE>GESAudioTrack</TITLE>
+GESAudioTrack
+ges_audio_track_new
+<SUBSECTION Standard>
+GESAudioTrackClass
+GESAudioTrackPrivate
+GES_IS_AUDIO_TRACK
+GES_IS_AUDIO_TRACK_CLASS
+GES_AUDIO_TRACK
+GES_AUDIO_TRACK_CLASS
+GES_AUDIO_TRACK_GET_CLASS
+GES_TYPE_AUDIO_TRACK
+</SECTION>
+
+<SECTION>
+<FILE>ges-video-track</FILE>
+<TITLE>GESVideoTrack</TITLE>
+GESVideoTrack
+ges_video_track_new
+<SUBSECTION Standard>
+GESVideoTrackClass
+GESVideoTrackPrivate
+GES_IS_VIDEO_TRACK
+GES_IS_VIDEO_TRACK_CLASS
+GES_VIDEO_TRACK
+GES_VIDEO_TRACK_CLASS
+GES_VIDEO_TRACK_GET_CLASS
+GES_TYPE_VIDEO_TRACK
 </SECTION>
 
 <SECTION>

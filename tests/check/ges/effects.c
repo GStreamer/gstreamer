@@ -50,8 +50,8 @@ GST_START_TEST (test_add_effect_to_clip)
 
   timeline = ges_timeline_new ();
   layer = (GESLayer *) ges_simple_layer_new ();
-  track_audio = ges_track_audio_raw_new ();
-  track_video = ges_track_video_raw_new ();
+  track_audio = GES_TRACK (ges_audio_track_new ());
+  track_video = GES_TRACK (ges_video_track_new ());
 
   ges_timeline_add_track (timeline, track_audio);
   ges_timeline_add_track (timeline, track_video);
@@ -97,7 +97,7 @@ GST_START_TEST (test_get_effects_from_tl)
 
   timeline = ges_timeline_new ();
   layer = (GESLayer *) ges_simple_layer_new ();
-  track_video = ges_track_video_raw_new ();
+  track_video = GES_TRACK (ges_video_track_new ());
 
   ges_timeline_add_track (timeline, track_video);
   ges_timeline_add_layer (timeline, layer);
@@ -175,8 +175,8 @@ GST_START_TEST (test_effect_clip)
 
   timeline = ges_timeline_new ();
   layer = (GESLayer *) ges_simple_layer_new ();
-  track_audio = ges_track_audio_raw_new ();
-  track_video = ges_track_video_raw_new ();
+  track_audio = GES_TRACK (ges_audio_track_new ());
+  track_video = GES_TRACK (ges_video_track_new ());
 
   ges_timeline_add_track (timeline, track_audio);
   ges_timeline_add_track (timeline, track_video);
@@ -245,8 +245,8 @@ GST_START_TEST (test_priorities_clip)
 
   timeline = ges_timeline_new ();
   layer = (GESLayer *) ges_simple_layer_new ();
-  track_audio = ges_track_audio_raw_new ();
-  track_video = ges_track_video_raw_new ();
+  track_audio = GES_TRACK (ges_audio_track_new ());
+  track_video = GES_TRACK (ges_video_track_new ());
 
   ges_timeline_add_track (timeline, track_audio);
   ges_timeline_add_track (timeline, track_video);
@@ -341,7 +341,7 @@ GST_START_TEST (test_effect_set_properties)
 
   timeline = ges_timeline_new ();
   layer = (GESLayer *) ges_simple_layer_new ();
-  track_video = ges_track_video_raw_new ();
+  track_video = GES_TRACK (ges_video_track_new ());
 
   ges_timeline_add_track (timeline, track_video);
   ges_timeline_add_layer (timeline, layer);
@@ -429,7 +429,7 @@ GST_START_TEST (test_clip_signals)
 
   timeline = ges_timeline_new ();
   layer = (GESLayer *) ges_simple_layer_new ();
-  track_video = ges_track_video_raw_new ();
+  track_video = GES_TRACK (ges_video_track_new ());
 
   ges_timeline_add_track (timeline, track_video);
   ges_timeline_add_layer (timeline, layer);

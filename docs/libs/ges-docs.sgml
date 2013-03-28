@@ -111,6 +111,12 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-project.xml"/>
   </chapter>
 
+  <chapter>
+    <title>Tracks</title>
+    <xi:include href="xml/ges-video-track.xml"/>
+    <xi:include href="xml/ges-audio-track.xml"/>
+  </chapter>
+
   <chapter id="ges-hierarchy">
     <title>Object Hierarchy</title>
     <xi:include href="xml/tree_index.sgml"/>

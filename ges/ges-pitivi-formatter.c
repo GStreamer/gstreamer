@@ -184,8 +184,8 @@ create_tracks (GESFormatter * self)
     return TRUE;
   }
 
-  priv->tracka = ges_track_audio_raw_new ();
-  priv->trackv = ges_track_video_raw_new ();
+  priv->tracka = GES_TRACK (ges_audio_track_new ());
+  priv->trackv = GES_TRACK (ges_video_track_new ());
 
   if (!ges_timeline_add_track (self->timeline, priv->trackv)) {
     return FALSE;

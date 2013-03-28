@@ -91,8 +91,6 @@ void               ges_track_set_create_element_for_gap_func (GESTrack *track, G
 
 /* standard methods */
 GType              ges_track_get_type                        (void);
-GESTrack*          ges_track_video_raw_new                   (void);
-GESTrack*          ges_track_audio_raw_new                   (void);
 GESTrack*          ges_track_new                             (GESTrackType type, GstCaps * caps);
 
 G_END_DECLS

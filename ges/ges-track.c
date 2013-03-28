@@ -33,6 +33,8 @@
 #include "ges-track.h"
 #include "ges-track-element.h"
 #include "ges-meta-container.h"
+#include "ges-video-track.h"
+#include "ges-audio-track.h"
 
 G_DEFINE_TYPE_WITH_CODE (GESTrack, ges_track, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER, NULL));
@@ -307,26 +309,6 @@ composition_duration_cb (GstElement * composition,
   }
 }
 
-/* GESCreateElementForGapFunc Gaps filler for raw tracks */
-static GstElement *
-create_element_for_raw_audio_gap (GESTrack * track)
-{
-  GstElement *elem;
-
-  elem = gst_element_factory_make ("audiotestsrc", NULL);
-  g_object_set (elem, "wave", 4, NULL);
-
-  return elem;
-}
-
-static GstElement *
-create_element_for_raw_video_gap (GESTrack * track)
-{
-  return gst_parse_bin_from_description
-      ("videotestsrc pattern=2 name=src ! capsfilter caps=video/x-raw", TRUE,
-      NULL);
-}
-
 /* FIXME: Find out how to avoid doing this "hack" using the GDestroyNotify
  * function pointer in the trackelements_by_start GSequence
  *
@@ -580,74 +562,38 @@ ges_track_new (GESTrackType type, GstCaps * caps)
   GESTrack *track;
   GstCaps *tmpcaps;
 
-  track = g_object_new (GES_TYPE_TRACK, "caps", caps, "track-type", type, NULL);
+  /* TODO Be smarter with well known track types */
   if (type == GES_TRACK_TYPE_VIDEO) {
     tmpcaps = gst_caps_new_empty_simple ("video/x-raw");
 
-    if (gst_caps_is_equal (caps, tmpcaps))
-      ges_track_set_create_element_for_gap_func (track,
-          create_element_for_raw_video_gap);
+    if (gst_caps_is_subset (caps, tmpcaps)) {
+      track = GES_TRACK (ges_video_track_new ());
+      ges_track_set_caps (track, caps);
 
+      gst_caps_unref (tmpcaps);
+      return track;
+    }
     gst_caps_unref (tmpcaps);
   } else if (type == GES_TRACK_TYPE_AUDIO) {
     tmpcaps = gst_caps_new_empty_simple ("audio/x-raw");
 
-    if (gst_caps_is_equal (caps, tmpcaps))
-      ges_track_set_create_element_for_gap_func (track,
-          create_element_for_raw_audio_gap);
+    if (gst_caps_is_subset (caps, tmpcaps)) {
+      track = GES_TRACK (ges_audio_track_new ());
+      ges_track_set_caps (track, caps);
+
+      gst_caps_unref (tmpcaps);
+      return track;
+    }
 
     gst_caps_unref (tmpcaps);
   }
+
+  track = g_object_new (GES_TYPE_TRACK, "caps", caps, "track-type", type, NULL);
   gst_caps_unref (caps);
 
   return track;
 }
 
-/**
- * ges_track_video_raw_new:
- *
- * Creates a new #GESTrack of type #GES_TRACK_TYPE_VIDEO and with generic
- * raw video caps ("video/x-raw");
- *
- * Returns: A new #GESTrack.
- */
-GESTrack *
-ges_track_video_raw_new (void)
-{
-  GESTrack *track;
-  GstCaps *caps = gst_caps_new_empty_simple ("video/x-raw");
-
-  track = ges_track_new (GES_TRACK_TYPE_VIDEO, caps);
-  ges_track_set_create_element_for_gap_func (track,
-      create_element_for_raw_video_gap);
-
-  GST_DEBUG_OBJECT (track, "New raw video track");
-
-  return track;
-}
-
-/**
- * ges_track_audio_raw_new:
- *
- * Creates a new #GESTrack of type #GES_TRACK_TYPE_AUDIO and with generic
- * raw audio caps ("audio/x-raw");
- *
- * Returns: A new #GESTrack.
- */
-GESTrack *
-ges_track_audio_raw_new (void)
-{
-  GESTrack *track;
-  GstCaps *caps = gst_caps_new_empty_simple ("audio/x-raw");
-
-  track = ges_track_new (GES_TRACK_TYPE_AUDIO, caps);
-  ges_track_set_create_element_for_gap_func (track,
-      create_element_for_raw_audio_gap);
-
-  GST_DEBUG_OBJECT (track, "New raw audio track %p",
-      track->priv->create_element_for_gaps);
-  return track;
-}
 
 /**
  * ges_track_set_timeline:
@@ -895,7 +841,7 @@ ges_track_commit (GESTrack * track)
  *
  * Sets the function that should be used to create the GstElement used to fill gaps.
  * To avoid to provide such a function we advice you to use the
- * #ges_track_audio_raw_new and #ges_track_video_raw_new constructor when possible.
+ * #ges_audio_track_new and #ges_video_track_new constructor when possible.
  */
 void
 ges_track_set_create_element_for_gap_func (GESTrack * track,

@@ -63,7 +63,7 @@ GST_START_TEST (test_basic_timeline_edition)
 
   ges_init ();
 
-  track = ges_track_audio_raw_new ();
+  track = GES_TRACK (ges_audio_track_new ());
   fail_unless (track != NULL);
 
   timeline = ges_timeline_new ();

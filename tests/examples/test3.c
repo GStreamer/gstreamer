@@ -46,7 +46,7 @@ main (int argc, gchar ** argv)
   /* This is our main GESTimeline */
   timeline = ges_timeline_new ();
 
-  tracka = ges_track_audio_raw_new ();
+  tracka = GES_TRACK (ges_audio_track_new ());
 
   /* We are only going to be doing one layer of clips */
   layer = (GESLayer *) ges_simple_layer_new ();

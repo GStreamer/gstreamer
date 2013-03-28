@@ -164,4 +164,10 @@ typedef struct _GESProjectClass GESProjectClass;
 typedef struct _GESExtractable GESExtractable;
 typedef struct _GESExtractableInterface GESExtractableInterface;
 
+typedef struct _GESVideoTrackClass GESVideoTrackClass;
+typedef struct _GESVideoTrack GESVideoTrack;
+
+typedef struct _GESAudioTrackClass GESAudioTrackClass;
+typedef struct _GESAudioTrack GESAudioTrack;
+
 #endif /* __GES_TYPES_H__ */
