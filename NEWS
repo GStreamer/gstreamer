@@ -6,9 +6,11 @@ Copyright (C) 2011 Collabora
 Version 0.5.2 - DD.Feb.2013
 * Add support for video seek/reset (+Sreerenj Balachandran)
 * Improve MPEG-2 decoder robustness when packets are missing
+* Fix support for raw YUV buffers in vaapisink
 * Fix build on older Linux distributions with glib < 2.32
 * Fix decoding of MPEG-2 videos with height > 2800 pixels
 * Fix MPEG-2 decoding with explicit quantization matrices set (Cong Zhong)
+* Fix illegal write in vaapiupload for NV12 surfaces (Holger Kaelberer)
 
 Version 0.5.1 - 29.Jan.2013
 * Add simple decoder demo that only uses libgstvaapi
