@@ -493,7 +493,7 @@ get_seconds (const GstRTSPTime * t)
     gst_util_double_to_fraction (t->seconds, &num, &denom);
     return gst_util_uint64_scale_int (GST_SECOND, num, denom);
   } else {
-    return t->seconds * GST_SECOND;
+    return gst_util_gdouble_to_guint64 (t->seconds * GST_SECOND);
   }
 }
 
