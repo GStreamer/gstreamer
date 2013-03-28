@@ -160,16 +160,20 @@ gst_argb_control_binding_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_CS_A:
-      self->cs_a = g_value_dup_object (value);
+      gst_object_replace ((GstObject **) & self->cs_a,
+          g_value_dup_object (value));
       break;
     case PROP_CS_R:
-      self->cs_r = g_value_dup_object (value);
+      gst_object_replace ((GstObject **) & self->cs_r,
+          g_value_dup_object (value));
       break;
     case PROP_CS_G:
-      self->cs_r = g_value_dup_object (value);
+      gst_object_replace ((GstObject **) & self->cs_g,
+          g_value_dup_object (value));
       break;
     case PROP_CS_B:
-      self->cs_g = g_value_dup_object (value);
+      gst_object_replace ((GstObject **) & self->cs_b,
+          g_value_dup_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -207,14 +211,10 @@ gst_argb_control_binding_dispose (GObject * object)
 {
   GstARGBControlBinding *self = GST_ARGB_CONTROL_BINDING (object);
 
-  if (self->cs_a)
-    gst_object_replace ((GstObject **) & self->cs_a, NULL);
-  if (self->cs_r)
-    gst_object_replace ((GstObject **) & self->cs_r, NULL);
-  if (self->cs_g)
-    gst_object_replace ((GstObject **) & self->cs_g, NULL);
-  if (self->cs_b)
-    gst_object_replace ((GstObject **) & self->cs_b, NULL);
+  gst_object_replace ((GstObject **) & self->cs_a, NULL);
+  gst_object_replace ((GstObject **) & self->cs_r, NULL);
+  gst_object_replace ((GstObject **) & self->cs_g, NULL);
+  gst_object_replace ((GstObject **) & self->cs_b, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
