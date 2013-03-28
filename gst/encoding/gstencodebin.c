@@ -199,6 +199,8 @@ struct _GstEncodeBinClass
 
   /* Action Signals */
   GstPad *(*request_pad) (GstEncodeBin * encodebin, GstCaps * caps);
+  GstPad *(*request_profile_pad) (GstEncodeBin * encodebin,
+      const gchar * profilename);
 };
 
 typedef struct _StreamGroup StreamGroup;
@@ -254,6 +256,7 @@ enum
 enum
 {
   SIGNAL_REQUEST_PAD,
+  SIGNAL_REQUEST_PROFILE_PAD,
   LAST_SIGNAL
 };
 
@@ -314,6 +317,8 @@ static StreamGroup *_create_stream_group (GstEncodeBin * ebin,
 static void stream_group_remove (GstEncodeBin * ebin, StreamGroup * sgroup);
 static GstPad *gst_encode_bin_request_pad_signal (GstEncodeBin * encodebin,
     GstCaps * caps);
+static GstPad *gst_encode_bin_request_profile_pad_signal (GstEncodeBin *
+    encodebin, const gchar * profilename);
 
 static inline GstElement *_get_formatter (GstEncodeBin * ebin,
     GstEncodingProfile * sprof);
@@ -402,7 +407,26 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
           request_pad), NULL, NULL, g_cclosure_marshal_generic,
       GST_TYPE_PAD, 1, GST_TYPE_CAPS);
 
+  /**
+   * GstEncodeBin::request-profile-pad
+   * @encodebin: a #GstEncodeBin instance
+   * @profilename: the name of a #GstEncodingProfile
+   *
+   * Use this method to request an unused sink request #GstPad from the profile
+   * @profilename. You must release the pad with
+   * gst_element_release_request_pad() when you are done with it.
+   *
+   * Returns: A compatible #GstPad, or %NULL if no compatible #GstPad could be
+   * created or is available.
+   */
+  gst_encode_bin_signals[SIGNAL_REQUEST_PROFILE_PAD] =
+      g_signal_new ("request-profile-pad", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstEncodeBinClass,
+          request_profile_pad), NULL, NULL, g_cclosure_marshal_generic,
+      GST_TYPE_PAD, 1, G_TYPE_STRING);
+
   klass->request_pad = gst_encode_bin_request_pad_signal;
+  klass->request_profile_pad = gst_encode_bin_request_profile_pad_signal;
 
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&muxer_src_template));
@@ -599,7 +623,8 @@ stream_profile_used_count (GstEncodeBin * ebin, GstEncodingProfile * sprof)
 }
 
 static inline GstEncodingProfile *
-next_unused_stream_profile (GstEncodeBin * ebin, GType ptype, GstCaps * caps)
+next_unused_stream_profile (GstEncodeBin * ebin, GType ptype,
+    const gchar * name, GstCaps * caps)
 {
   GST_DEBUG_OBJECT (ebin, "ptype:%s, caps:%" GST_PTR_FORMAT,
       g_type_name (ptype), caps);
@@ -619,6 +644,32 @@ next_unused_stream_profile (GstEncodeBin * ebin, GType ptype, GstCaps * caps)
   if (GST_IS_ENCODING_CONTAINER_PROFILE (ebin->profile)) {
     const GList *tmp;
 
+    if (name) {
+      /* If we have a name, try to find a profile with the same name */
+      tmp =
+          gst_encoding_container_profile_get_profiles
+          (GST_ENCODING_CONTAINER_PROFILE (ebin->profile));
+
+      for (; tmp; tmp = tmp->next) {
+        GstEncodingProfile *sprof = (GstEncodingProfile *) tmp->data;
+        const gchar *profilename = gst_encoding_profile_get_name (sprof);
+
+        if (profilename && !strcmp (name, profilename)) {
+          guint presence = gst_encoding_profile_get_presence (sprof);
+          GST_DEBUG ("Found profile matching the requested name");
+
+          if (presence == 0
+              || presence > stream_profile_used_count (ebin, sprof))
+            return sprof;
+
+          GST_WARNING ("Matching stream already used");
+          return NULL;
+        }
+      }
+      GST_DEBUG
+          ("No profiles matching requested pad name, carrying on with normal stream matching");
+    }
+
     for (tmp =
         gst_encoding_container_profile_get_profiles
         (GST_ENCODING_CONTAINER_PROFILE (ebin->profile)); tmp;
@@ -626,16 +677,16 @@ next_unused_stream_profile (GstEncodeBin * ebin, GType ptype, GstCaps * caps)
       GstEncodingProfile *sprof = (GstEncodingProfile *) tmp->data;
 
       /* Pick an available Stream profile for which:
-       * * either it is of the compatibly raw type,
+       * * either it is of the compatible raw type,
        * * OR we can pass it through directly without encoding
        */
       if (G_TYPE_FROM_INSTANCE (sprof) == ptype) {
         guint presence = gst_encoding_profile_get_presence (sprof);
         GST_DEBUG ("Found a stream profile with the same type");
-        if ((presence == 0)
+        if (presence == 0
             || (presence > stream_profile_used_count (ebin, sprof)))
           return sprof;
-      } else if ((caps != NULL) && (ptype == G_TYPE_NONE)) {
+      } else if (caps && ptype == G_TYPE_NONE) {
         GstCaps *outcaps;
         gboolean res;
 
@@ -665,7 +716,7 @@ request_pad_for_stream (GstEncodeBin * encodebin, GType ptype,
 
   /* Figure out if we have a unused GstEncodingProfile we can use for
    * these caps */
-  sprof = next_unused_stream_profile (encodebin, ptype, caps);
+  sprof = next_unused_stream_profile (encodebin, ptype, name, caps);
 
   if (G_UNLIKELY (sprof == NULL))
     goto no_stream_profile;
@@ -698,8 +749,8 @@ gst_encode_bin_request_new_pad (GstElement * element,
 
   GST_DEBUG_OBJECT (element, "templ:%s, name:%s", templ->name_template, name);
 
-  /* Identify the stream group */
-  if (caps != NULL) {
+  /* Identify the stream group (if name or caps have been provided) */
+  if (caps != NULL || name != NULL) {
     res = request_pad_for_stream (ebin, G_TYPE_NONE, name, (GstCaps *) caps);
   }
 
@@ -728,6 +779,16 @@ static GstPad *
 gst_encode_bin_request_pad_signal (GstEncodeBin * encodebin, GstCaps * caps)
 {
   GstPad *pad = request_pad_for_stream (encodebin, G_TYPE_NONE, NULL, caps);
+
+  return pad ? GST_PAD_CAST (gst_object_ref (pad)) : NULL;
+}
+
+static GstPad *
+gst_encode_bin_request_profile_pad_signal (GstEncodeBin * encodebin,
+    const gchar * profilename)
+{
+  GstPad *pad =
+      request_pad_for_stream (encodebin, G_TYPE_NONE, profilename, NULL);
 
   return pad ? GST_PAD_CAST (gst_object_ref (pad)) : NULL;
 }
