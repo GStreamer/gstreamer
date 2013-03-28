@@ -69,6 +69,9 @@ GstMemory * gst_egl_image_allocator_alloc (GstAllocator * allocator, GstEGLDispl
 GstMemory * gst_egl_image_allocator_wrap (GstAllocator * allocator, GstEGLDisplay * display, EGLImageKHR image, GstEGLImageType type, GstMemoryFlags flags, gsize size, gpointer user_data, GDestroyNotify user_data_destroy);
 
 /* EGLDisplay wrapper with refcount, connection is closed after last ref is gone */
+#define GST_TYPE_EGL_DISPLAY (gst_egl_display_get_type())
+GType gst_egl_display_get_type(void);
+
 GstEGLDisplay * gst_egl_display_new (EGLDisplay display);
 GstEGLDisplay * gst_egl_display_ref (GstEGLDisplay * display);
 void gst_egl_display_unref (GstEGLDisplay * display);
