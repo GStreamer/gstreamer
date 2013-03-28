@@ -1,6 +1,7 @@
 plugin_LTLIBRARIES = libgstwasapi.la
 
 libgstwasapi_la_SOURCES = gstwasapi.c \
+	gstwasapisrc.c \
 	gstwasapisink.c \
 	gstwasapiutil.c 
 
@@ -11,7 +12,7 @@ libgstwasapi_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
 libgstwasapi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
 libgstwasapi_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
-noinst_HEADERS = \
+noinst_HEADERS = gstwasapisrc.h \
 	gstwasapisink.h \
 	gstwasapiutil.h
 

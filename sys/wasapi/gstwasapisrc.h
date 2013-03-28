@@ -40,28 +40,20 @@ typedef struct _GstWasapiSrcClass GstWasapiSrcClass;
 
 struct _GstWasapiSrc
 {
-  GstPushSrc audio_src;
+  GstAudioSrc parent;
 
-  GstClock * clock;
-
-  guint rate;
-  GstClockTime buffer_time;
-  GstClockTime period_time;
-  GstClockTime latency;
-  guint samples_per_buffer;
+  GstAudioInfo info;
 
   IAudioClient * client;
   IAudioClock * client_clock;
   guint64 client_clock_freq;
   IAudioCaptureClient * capture_client;
-
-  GstClockTime start_time;
-  GstClockTime next_time;
+  HANDLE event_handle;
 };
 
 struct _GstWasapiSrcClass
 {
-  GstPushSrcClass parent_class;
+  GstAudioSrcClass parent_class;
 };
 
 GType gst_wasapi_src_get_type (void);

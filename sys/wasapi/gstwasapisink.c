@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2008 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+ * Copyright (C) 2013 Collabora Ltd.
+ *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -61,7 +63,6 @@ static gint gst_wasapi_sink_write (GstAudioSink * asink,
     gpointer data, guint length);
 static guint gst_wasapi_sink_delay (GstAudioSink * asink);
 static void gst_wasapi_sink_reset (GstAudioSink * asink);
-
 
 G_DEFINE_TYPE (GstWasapiSink, gst_wasapi_sink, GST_TYPE_AUDIO_SINK);
 

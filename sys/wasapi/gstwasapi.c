@@ -22,12 +22,16 @@
 #endif
 
 #include "gstwasapisink.h"
+#include "gstwasapisrc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gst_element_register (plugin, "wasapisink", GST_RANK_NONE,
       GST_TYPE_WASAPI_SINK);
+  gst_element_register (plugin, "wasapisrc", GST_RANK_NONE,
+      GST_TYPE_WASAPI_SRC);
+
 
   return TRUE;
 }

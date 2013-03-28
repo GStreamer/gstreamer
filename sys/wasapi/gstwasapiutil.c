@@ -207,6 +207,50 @@ beach:
   return res;
 }
 
+gboolean
+gst_wasapi_util_get_capture_client (GstElement * element, IAudioClient * client,
+    IAudioCaptureClient ** ret_capture_client)
+{
+  gboolean res = FALSE;
+  HRESULT hr;
+  IAudioCaptureClient *capture_client = NULL;
+
+  hr = IAudioClient_GetService (client, &IID_IAudioCaptureClient,
+      (void **) &capture_client);
+  if (hr != S_OK) {
+    GST_ERROR_OBJECT (element, "IAudioClient::GetService "
+        "(IID_IAudioCaptureClient) failed");
+    goto beach;
+  }
+
+  *ret_capture_client = capture_client;
+
+beach:
+  return res;
+}
+
+gboolean
+gst_wasapi_util_get_clock (GstElement * element, IAudioClient * client,
+    IAudioClock ** ret_clock)
+{
+  gboolean res = FALSE;
+  HRESULT hr;
+  IAudioClock *clock = NULL;
+
+  hr = IAudioClient_GetService (client, &IID_IAudioClock,
+      (void **) &clock);
+  if (hr != S_OK) {
+    GST_ERROR_OBJECT (element, "IAudioClient::GetService "
+        "(IID_IAudioClock) failed");
+    goto beach;
+  }
+
+  *ret_clock = clock;
+
+beach:
+  return res;
+}
+
 void
 gst_wasapi_util_audio_info_to_waveformatex (GstAudioInfo * info,
     WAVEFORMATEXTENSIBLE * format)
