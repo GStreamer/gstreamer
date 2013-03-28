@@ -49,7 +49,7 @@ VideoConvert *
 videoconvert_convert_new (GstVideoInfo * in_info, GstVideoInfo * out_info)
 {
   VideoConvert *convert;
-  int width;
+  int width, lines;
 
   convert = g_malloc0 (sizeof (VideoConvert));
 
@@ -67,9 +67,12 @@ videoconvert_convert_new (GstVideoInfo * in_info, GstVideoInfo * out_info)
   convert->height = GST_VIDEO_INFO_HEIGHT (in_info);
 
   width = convert->width;
+  lines = out_info->finfo->pack_lines;
 
-  convert->tmpline8 = g_malloc (sizeof (guint8) * (width + 8) * 4);
-  convert->tmpline16 = g_malloc (sizeof (guint16) * (width + 8) * 4);
+  convert->lines = lines;
+
+  convert->tmpline8 = g_malloc (lines * sizeof (guint8) * (width + 8) * 4);
+  convert->tmpline16 = g_malloc (lines * sizeof (guint16) * (width + 8) * 4);
   convert->errline = g_malloc0 (sizeof (guint16) * width * 4);
 
   return convert;
@@ -388,8 +391,8 @@ static void
 videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
-  int i, j;
-  gint width, height;
+  int i, j, k;
+  gint width, height, lines;
   guint in_bits, out_bits;
   gconstpointer pal;
   gsize palsize;
@@ -402,35 +405,43 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
   in_bits = convert->in_bits;
   out_bits = convert->out_bits;
 
-  tmpline8 = convert->tmpline8;
-  tmpline16 = convert->tmpline16;
+  lines = convert->lines;
 
-  for (j = 0; j < height; j++) {
-    if (in_bits == 16) {
-      UNPACK_FRAME (src, tmpline16, j, width);
-    } else {
-      UNPACK_FRAME (src, tmpline8, j, width);
+  for (j = 0; j < height; j += lines) {
+    tmpline8 = convert->tmpline8;
+    tmpline16 = convert->tmpline16;
 
-      if (out_bits == 16)
-        for (i = 0; i < width * 4; i++)
-          tmpline16[i] = TO_16 (tmpline8[i]);
+    for (k = 0; k < lines; k++) {
+      if (in_bits == 16) {
+        UNPACK_FRAME (src, tmpline16, j + k, width);
+      } else {
+        UNPACK_FRAME (src, tmpline8, j + k, width);
+
+        if (out_bits == 16)
+          for (i = 0; i < width * 4; i++)
+            tmpline16[i] = TO_16 (tmpline8[i]);
+      }
+
+      if (out_bits == 16 || in_bits == 16) {
+        if (convert->matrix16)
+          convert->matrix16 (convert, tmpline16);
+        if (convert->dither16)
+          convert->dither16 (convert, tmpline16, j);
+      } else {
+        if (convert->matrix)
+          convert->matrix (convert, tmpline8);
+      }
+      tmpline8 += width * 4;
+      tmpline16 += width * 8;
     }
-
-    if (out_bits == 16 || in_bits == 16) {
-      if (convert->matrix16)
-        convert->matrix16 (convert, tmpline16);
-      if (convert->dither16)
-        convert->dither16 (convert, tmpline16, j);
-    } else {
-      if (convert->matrix)
-        convert->matrix (convert, tmpline8);
-    }
+    tmpline8 = convert->tmpline8;
+    tmpline16 = convert->tmpline16;
 
     if (out_bits == 16) {
       PACK_FRAME (dest, tmpline16, j, width);
     } else {
       if (in_bits == 16)
-        for (i = 0; i < width * 4; i++)
+        for (i = 0; i < width * 4 * lines; i++)
           tmpline8[i] = tmpline16[i] >> 8;
 
       PACK_FRAME (dest, tmpline8, j, width);
