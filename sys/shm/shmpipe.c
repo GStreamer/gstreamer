@@ -115,10 +115,11 @@ struct _ShmBuffer
 
   ShmBuffer *next;
 
-  int num_clients;
-  int clients[0];
-
   uint64_t tag;
+
+  int num_clients;
+  /* This must ALWAYS stay last in the struct */
+  int clients[0];
 };
 
 
