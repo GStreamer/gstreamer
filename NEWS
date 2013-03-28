@@ -1,9 +1,9 @@
-gst-vaapi NEWS -- summary of changes.  2013-02-DD
+gst-vaapi NEWS -- summary of changes.  2013-03-28
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
 
-Version 0.5.2 - DD.Feb.2013
+Version 0.5.2 - 28.Mar.2013
 * Add support for video seek/reset (+Sreerenj Balachandran)
 * Improve MPEG-2 decoder robustness when packets are missing
 * Fix support for raw YUV buffers in vaapisink
