@@ -174,6 +174,7 @@ GstDebugCategory *GST_CAT_QOS = NULL;
 GstDebugCategory *_priv_GST_CAT_POLL = NULL;
 GstDebugCategory *GST_CAT_META = NULL;
 GstDebugCategory *GST_CAT_LOCKING = NULL;
+GstDebugCategory *GST_CAT_CONTEXT = NULL;
 
 
 #endif /* !defined(GST_DISABLE_GST_DEBUG) || !defined(GST_REMOVE_DISABLED) */
@@ -413,7 +414,7 @@ _priv_gst_debug_init (void)
   _priv_GST_CAT_POLL = _gst_debug_category_new ("GST_POLL", 0, "poll");
   GST_CAT_META = _gst_debug_category_new ("GST_META", 0, "meta");
   GST_CAT_LOCKING = _gst_debug_category_new ("GST_LOCKING", 0, "locking");
-
+  GST_CAT_CONTEXT = _gst_debug_category_new ("GST_CONTEXT", 0, NULL);
 
   /* print out the valgrind message if we're in valgrind */
   _priv_gst_in_valgrind ();
@@ -715,6 +716,23 @@ gst_debug_print_object (gpointer ptr)
     ret = g_strdup_printf ("%s event at time %"
         GST_TIME_FORMAT ": %s",
         GST_EVENT_TYPE_NAME (event), GST_TIME_ARGS (event->timestamp), s);
+    g_free (s);
+    return ret;
+  }
+  if (GST_IS_CONTEXT (object)) {
+    GstContext *context = GST_CONTEXT_CAST (object);
+    gchar *s, *ret;
+    const GstStructure *structure;
+
+    structure = gst_context_get_structure (context);
+
+    if (structure) {
+      s = gst_info_structure_to_string (structure);
+    } else {
+      s = g_strdup ("(NULL)");
+    }
+
+    ret = g_strdup_printf ("context '%s'", s);
     g_free (s);
     return ret;
   }

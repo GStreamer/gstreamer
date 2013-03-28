@@ -2150,3 +2150,184 @@ gst_message_new_stream_start (GstObject * src)
 
   return message;
 }
+
+/**
+ * gst_message_new_need_context:
+ * @src: (transfer none): The object originating the message.
+ *
+ * This message is posted when an element needs a specific #GstContext.
+ *
+ * Returns: (transfer full): The new need-context message.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_need_context (GstObject * src)
+{
+  GstMessage *message;
+  GstStructure *structure;
+
+  structure = gst_structure_new_id_empty (GST_QUARK (MESSAGE_NEED_CONTEXT));
+  message = gst_message_new_custom (GST_MESSAGE_NEED_CONTEXT, src, structure);
+
+  return message;
+}
+
+static GArray *
+ensure_array (GstStructure * s, GQuark quark, gsize element_size,
+    GDestroyNotify clear_func)
+{
+  GArray *array;
+  const GValue *value;
+
+  value = gst_structure_id_get_value (s, quark);
+  if (value) {
+    array = (GArray *) g_value_get_boxed (value);
+  } else {
+    GValue new_array_val = { 0, };
+
+    array = g_array_new (FALSE, TRUE, element_size);
+    if (clear_func)
+      g_array_set_clear_func (array, clear_func);
+
+    g_value_init (&new_array_val, G_TYPE_ARRAY);
+    g_value_take_boxed (&new_array_val, array);
+
+    gst_structure_id_take_value (s, quark, &new_array_val);
+  }
+  return array;
+}
+
+static void
+free_array_string (gpointer ptr)
+{
+  gchar *str = *(gchar **) ptr;
+  g_free (str);
+}
+
+/**
+ * gst_message_add_context_type:
+ * @message: a GST_MESSAGE_NEED_CONTEXT type message
+ * @context_type: a context type
+ *
+ * Add a new context type to @message.
+ */
+void
+gst_message_add_context_type (GstMessage * message, const gchar * context_type)
+{
+  GstStructure *structure;
+  GArray *array;
+  gchar *copy;
+
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_NEED_CONTEXT);
+  g_return_if_fail (gst_message_is_writable (message));
+
+  structure = GST_MESSAGE_STRUCTURE (message);
+  array = ensure_array (structure, GST_QUARK (CONTEXT_TYPES),
+      sizeof (gchar *), free_array_string);
+
+  copy = g_strdup (context_type);
+  g_array_append_val (array, copy);
+}
+
+/**
+ * gst_message_get_n_context_types:
+ * @message: a GST_MESSAGE_NEED_CONTEXT type message
+ *
+ * Retrieve the number of values currently stored in the
+ * context-types array of the message's structure.
+ *
+ * Returns: the context-types array size as a #guint.
+ */
+guint
+gst_message_get_n_context_types (GstMessage * message)
+{
+  GstStructure *structure;
+  GArray *array;
+
+  g_return_val_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_NEED_CONTEXT,
+      0);
+
+  structure = GST_MESSAGE_STRUCTURE (message);
+  array = ensure_array (structure, GST_QUARK (CONTEXT_TYPES),
+      sizeof (gchar *), free_array_string);
+
+  return array->len;
+}
+
+/**
+ * gst_message_parse_nth_context_type:
+ * @message: a GST_MESSAGE_NEED_CONTEXT type message
+ * @context_type: (out) (allow-none): the context type, or NULL
+ *
+ * Parse a context type from an existing GST_MESSAGE_NEED_CONTEXT message
+ * from @index.
+ *
+ * Returns: a #gboolean indicating if the parsing succeeded.
+ */
+gboolean
+gst_message_parse_nth_context_type (GstMessage * message, guint index,
+    const gchar ** context_type)
+{
+  GstStructure *structure;
+  GArray *array;
+
+  g_return_val_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_NEED_CONTEXT,
+      FALSE);
+
+  structure = GST_MESSAGE_STRUCTURE (message);
+
+  array = ensure_array (structure, GST_QUARK (CONTEXT_TYPES),
+      sizeof (gchar *), free_array_string);
+  g_return_val_if_fail (index < array->len, FALSE);
+
+  if (context_type)
+    *context_type = g_array_index (array, gchar *, index);
+
+  return TRUE;
+}
+
+/**
+ * gst_message_new_have_context:
+ * @src: (transfer none): The object originating the message.
+ * @context: (transfer full): the context
+ *
+ * This message is posted when an element has a new local #GstContext.
+ *
+ * Returns: (transfer full): The new have-context message.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_have_context (GstObject * src, GstContext * context)
+{
+  GstMessage *message;
+  GstStructure *structure;
+
+  structure = gst_structure_new_id (GST_QUARK (MESSAGE_HAVE_CONTEXT),
+      GST_QUARK (CONTEXT), GST_TYPE_CONTEXT, context, NULL);
+  message = gst_message_new_custom (GST_MESSAGE_HAVE_CONTEXT, src, structure);
+  gst_context_unref (context);
+
+  return message;
+}
+
+/**
+ * gst_message_parse_have_context:
+ * @message: A valid #GstMessage of type GST_MESSAGE_HAVE_CONTEXT.
+ * @context: (out) (transfer full): Result location for the context or NULL
+ *
+ * Extract the context from the HAVE_CONTEXT message.
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_have_context (GstMessage * message, GstContext ** context)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_HAVE_CONTEXT);
+
+  if (context)
+    gst_structure_id_get (GST_MESSAGE_STRUCTURE (message),
+        GST_QUARK (CONTEXT), GST_TYPE_CONTEXT, context, NULL);
+}

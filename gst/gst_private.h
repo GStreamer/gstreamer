@@ -116,6 +116,7 @@ G_GNUC_INTERNAL  void  _priv_gst_sample_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_tag_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_value_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_debug_init (void);
+G_GNUC_INTERNAL  void  _priv_gst_context_initialize (void);
 
 /* Private registry functions */
 G_GNUC_INTERNAL
@@ -220,6 +221,7 @@ GST_EXPORT GstDebugCategory *GST_CAT_REGISTRY;
 GST_EXPORT GstDebugCategory *GST_CAT_QOS;
 GST_EXPORT GstDebugCategory *GST_CAT_META;
 GST_EXPORT GstDebugCategory *GST_CAT_LOCKING;
+GST_EXPORT GstDebugCategory *GST_CAT_CONTEXT;
 
 /* Categories that should be completely private to
  * libgstreamer should be done like this: */
@@ -262,6 +264,7 @@ extern GstDebugCategory *_priv_GST_CAT_POLL;
 #define GST_CAT_POLL             NULL
 #define GST_CAT_META             NULL
 #define GST_CAT_LOCKING          NULL
+#define GST_CAT_CONTEXT          NULL
 
 #endif
 

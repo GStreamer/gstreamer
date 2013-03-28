@@ -110,6 +110,7 @@ static GstQueryQuarks query_quarks[] = {
   {GST_QUERY_ACCEPT_CAPS, "accept-caps", 0},
   {GST_QUERY_CAPS, "caps", 0},
   {GST_QUERY_DRAIN, "drain", 0},
+  {GST_QUERY_CONTEXT, "context", 0},
 
   {0, NULL, 0}
 };
@@ -2429,4 +2430,153 @@ gst_query_new_drain (void)
   query = gst_query_new_custom (GST_QUERY_DRAIN, structure);
 
   return query;
+}
+
+/**
+ * gst_query_new_context:
+ *
+ * Constructs a new query object for querying the pipeline-local context.
+ *
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a new #GstQuery
+ */
+GstQuery *
+gst_query_new_context (void)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_new_id_empty (GST_QUARK (QUERY_CONTEXT));
+  query = gst_query_new_custom (GST_QUERY_CONTEXT, structure);
+
+  return query;
+}
+
+/**
+ * gst_query_set_context:
+ * @query: a #GstQuery with query type GST_QUERY_CONTEXT
+ * @context: the requested #GstContext
+ *
+ * Answer a context query by setting the requested context.
+ */
+void
+gst_query_set_context (GstQuery * query, GstContext * context)
+{
+  GstStructure *s;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT);
+
+  s = GST_QUERY_STRUCTURE (query);
+
+  gst_structure_id_set (s,
+      GST_QUARK (CONTEXT), GST_TYPE_CONTEXT, context, NULL);
+}
+
+/**
+ * gst_query_parse_context:
+ * @query: The query to parse
+ * @context: (out): A pointer to store the #GstContext
+ *
+ * Get the context from the context @query. The context remains valid as long as
+ * @query remains valid.
+ */
+void
+gst_query_parse_context (GstQuery * query, GstContext ** context)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT);
+  g_return_if_fail (context != NULL);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  *context = g_value_get_boxed (gst_structure_id_get_value (structure,
+          GST_QUARK (CONTEXT)));
+}
+
+static void
+free_array_string (gpointer ptr)
+{
+  gchar *str = *(gchar **) ptr;
+  g_free (str);
+}
+
+/**
+ * gst_query_add_context_type:
+ * @query: a GST_QUERY_NEED_CONTEXT type query
+ * @context_type: a context type
+ *
+ * Add a new context type to @query.
+ */
+void
+gst_query_add_context_type (GstQuery * query, const gchar * context_type)
+{
+  GstStructure *structure;
+  GArray *array;
+  gchar *copy;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT);
+  g_return_if_fail (gst_query_is_writable (query));
+
+  structure = GST_QUERY_STRUCTURE (query);
+  array = ensure_array (structure, GST_QUARK (CONTEXT_TYPES),
+      sizeof (gchar *), free_array_string);
+
+  copy = g_strdup (context_type);
+  g_array_append_val (array, copy);
+}
+
+/**
+ * gst_query_get_n_context_types:
+ * @query: a GST_QUERY_NEED_CONTEXT type query
+ *
+ * Retrieve the number of values currently stored in the
+ * context-types array of the query's structure.
+ *
+ * Returns: the context-types array size as a #guint.
+ */
+guint
+gst_query_get_n_context_types (GstQuery * query)
+{
+  GstStructure *structure;
+  GArray *array;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT, 0);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  array = ensure_array (structure, GST_QUARK (CONTEXT_TYPES),
+      sizeof (gchar *), free_array_string);
+
+  return array->len;
+}
+
+/**
+ * gst_query_parse_nth_context_type:
+ * @query: a GST_QUERY_NEED_CONTEXT type query
+ * @context_type: (out) (allow-none): the context type, or NULL
+ *
+ * Parse a context type from an existing GST_QUERY_NEED_CONTEXT query
+ * from @index.
+ *
+ * Returns: a #gboolean indicating if the parsing succeeded.
+ */
+gboolean
+gst_query_parse_nth_context_type (GstQuery * query, guint index,
+    const gchar ** context_type)
+{
+  GstStructure *structure;
+  GArray *array;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT, FALSE);
+
+  structure = GST_QUERY_STRUCTURE (query);
+
+  array = ensure_array (structure, GST_QUARK (CONTEXT_TYPES),
+      sizeof (gchar *), free_array_string);
+  g_return_val_if_fail (index < array->len, FALSE);
+
+  if (context_type)
+    *context_type = g_array_index (array, gchar *, index);
+
+  return TRUE;
 }

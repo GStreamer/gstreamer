@@ -593,6 +593,7 @@ struct _GstElement
  * @state_changed: called immediately after a new state was set.
  * @post_message: called when a message is posted on the element. Chain up to
  *                the parent class' handler to have it posted on the bus.
+ * @set_context: set a #GstContext on the element
  *
  * GStreamer element class. Override the vmethods to implement the element
  * functionality.
@@ -649,8 +650,10 @@ struct _GstElementClass
 
   gboolean              (*post_message)         (GstElement *element, GstMessage *message);
 
+  void                  (*set_context)          (GstElement *element, GstContext *context);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE-1];
+  gpointer _gst_reserved[GST_PADDING_LARGE-2];
 };
 
 /* element class pad templates */
@@ -736,6 +739,9 @@ GstClockTime            gst_element_get_start_time      (GstElement *element);
 /* bus */
 void                    gst_element_set_bus             (GstElement * element, GstBus * bus);
 GstBus *                gst_element_get_bus             (GstElement * element);
+
+/* context */
+void                    gst_element_set_context         (GstElement * element, GstContext * context);
 
 /* pad management */
 gboolean                gst_element_add_pad             (GstElement *element, GstPad *pad);

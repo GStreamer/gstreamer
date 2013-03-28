@@ -69,6 +69,7 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/gstchildproxy.xml" />
     <xi:include href="xml/gstclock.xml" />
     <xi:include href="xml/gstconfig.xml" />
+    <xi:include href="xml/gstcontext.xml" />
     <xi:include href="xml/gstcontrolbinding.xml" />
     <xi:include href="xml/gstcontrolsource.xml" />
     <xi:include href="xml/gstdatetime.xml" />

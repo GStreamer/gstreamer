@@ -66,7 +66,8 @@ static const gchar *_quark_strings[] = {
   "GstMessageResetTime",
   "GstMessageToc", "GstEventTocGlobal", "GstEventTocCurrent",
   "GstEventSegmentDone",
-  "GstEventStreamStart", "stream-id"
+  "GstEventStreamStart", "stream-id", "GstEventContext", "GstQueryContext",
+  "GstMessageNeedContext", "GstMessageHaveContext", "context", "context-types"
 };
 
 GQuark _priv_gst_quark_table[GST_QUARK_MAX];

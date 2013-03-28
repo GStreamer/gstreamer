@@ -136,6 +136,8 @@ typedef enum
   GST_MESSAGE_TOC               = (1 << 26),
   GST_MESSAGE_RESET_TIME        = (1 << 27),
   GST_MESSAGE_STREAM_START      = (1 << 28),
+  GST_MESSAGE_NEED_CONTEXT      = (1 << 29),
+  GST_MESSAGE_HAVE_CONTEXT      = (1 << 30),
   GST_MESSAGE_ANY               = ~0
 } GstMessageType;
 
@@ -556,6 +558,16 @@ void            gst_message_parse_reset_time    (GstMessage *message, GstClockTi
 
 /* STREAM_START */
 GstMessage *    gst_message_new_stream_start    (GstObject * src) G_GNUC_MALLOC;
+
+/* NEED_CONTEXT */
+GstMessage *    gst_message_new_need_context    (GstObject * src) G_GNUC_MALLOC;
+void            gst_message_add_context_type    (GstMessage * message, const gchar * context_type);
+guint           gst_message_get_n_context_types (GstMessage * message);
+gboolean        gst_message_parse_nth_context_type (GstMessage * message, guint i, const gchar ** context_type);
+
+/* HAVE_CONTEXT */
+GstMessage *    gst_message_new_have_context    (GstObject * src, GstContext *context) G_GNUC_MALLOC;
+void            gst_message_parse_have_context  (GstMessage *message, GstContext **context);
 
 G_END_DECLS
 

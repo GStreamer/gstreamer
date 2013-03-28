@@ -3011,3 +3011,29 @@ gst_element_get_bus (GstElement * element)
 
   return result;
 }
+
+/**
+ * gst_element_set_context:
+ * @element: a #GstElement to set the bus of.
+ * @context: (transfer none): the #GstContext to set.
+ *
+ * Sets the context of the element. Increases the refcount of the context.
+ *
+ * MT safe.
+ */
+void
+gst_element_set_context (GstElement * element, GstContext * context)
+{
+  GstElementClass *oclass;
+
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CONTEXT, element,
+      "set context %p %" GST_PTR_FORMAT, context,
+      gst_context_get_structure (context));
+
+  if (oclass->set_context)
+    oclass->set_context (element, context);
+}

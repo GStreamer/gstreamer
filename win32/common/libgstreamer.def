@@ -5,6 +5,7 @@ EXPORTS
 	GST_CAT_CALL_TRACE DATA
 	GST_CAT_CAPS DATA
 	GST_CAT_CLOCK DATA
+	GST_CAT_CONTEXT DATA
 	GST_CAT_DEFAULT DATA
 	GST_CAT_ELEMENT_PADS DATA
 	GST_CAT_ERROR_SYSTEM DATA
@@ -269,6 +270,9 @@ EXPORTS
 	gst_clock_single_shot_id_reinit
 	gst_clock_type_get_type
 	gst_clock_unadjust_unlocked
+	gst_context_get_structure
+	gst_context_get_type
+	gst_context_new
 	gst_control_binding_get_g_value_array
 	gst_control_binding_get_type
 	gst_control_binding_get_value
@@ -419,6 +423,7 @@ EXPORTS
 	gst_element_set_base_time
 	gst_element_set_bus
 	gst_element_set_clock
+	gst_element_set_context
 	gst_element_set_locked_state
 	gst_element_set_start_time
 	gst_element_set_state
@@ -436,6 +441,7 @@ EXPORTS
 	gst_event_has_name
 	gst_event_new_buffer_size
 	gst_event_new_caps
+	gst_event_new_context
 	gst_event_new_custom
 	gst_event_new_eos
 	gst_event_new_flush_start
@@ -456,6 +462,7 @@ EXPORTS
 	gst_event_new_toc_select
 	gst_event_parse_buffer_size
 	gst_event_parse_caps
+	gst_event_parse_context
 	gst_event_parse_flush_stop
 	gst_event_parse_gap
 	gst_event_parse_latency
@@ -540,6 +547,8 @@ EXPORTS
 	gst_memory_resize
 	gst_memory_share
 	gst_memory_unmap
+	gst_message_add_context_type
+	gst_message_get_n_context_types
 	gst_message_get_seqnum
 	gst_message_get_stream_status_object
 	gst_message_get_structure
@@ -556,8 +565,10 @@ EXPORTS
 	gst_message_new_element
 	gst_message_new_eos
 	gst_message_new_error
+	gst_message_new_have_context
 	gst_message_new_info
 	gst_message_new_latency
+	gst_message_new_need_context
 	gst_message_new_new_clock
 	gst_message_new_progress
 	gst_message_new_qos
@@ -581,8 +592,10 @@ EXPORTS
 	gst_message_parse_clock_lost
 	gst_message_parse_clock_provide
 	gst_message_parse_error
+	gst_message_parse_have_context
 	gst_message_parse_info
 	gst_message_parse_new_clock
+	gst_message_parse_nth_context_type
 	gst_message_parse_progress
 	gst_message_parse_qos
 	gst_message_parse_qos_stats
@@ -860,12 +873,14 @@ EXPORTS
 	gst_query_add_allocation_param
 	gst_query_add_allocation_pool
 	gst_query_add_buffering_range
+	gst_query_add_context_type
 	gst_query_add_scheduling_mode
 	gst_query_find_allocation_meta
 	gst_query_get_n_allocation_metas
 	gst_query_get_n_allocation_params
 	gst_query_get_n_allocation_pools
 	gst_query_get_n_buffering_ranges
+	gst_query_get_n_context_types
 	gst_query_get_n_scheduling_modes
 	gst_query_get_structure
 	gst_query_get_type
@@ -875,6 +890,7 @@ EXPORTS
 	gst_query_new_allocation
 	gst_query_new_buffering
 	gst_query_new_caps
+	gst_query_new_context
 	gst_query_new_convert
 	gst_query_new_custom
 	gst_query_new_drain
@@ -894,6 +910,7 @@ EXPORTS
 	gst_query_parse_buffering_stats
 	gst_query_parse_caps
 	gst_query_parse_caps_result
+	gst_query_parse_context
 	gst_query_parse_convert
 	gst_query_parse_duration
 	gst_query_parse_latency
@@ -902,6 +919,7 @@ EXPORTS
 	gst_query_parse_nth_allocation_param
 	gst_query_parse_nth_allocation_pool
 	gst_query_parse_nth_buffering_range
+	gst_query_parse_nth_context_type
 	gst_query_parse_nth_format
 	gst_query_parse_nth_scheduling_mode
 	gst_query_parse_position
@@ -917,6 +935,7 @@ EXPORTS
 	gst_query_set_buffering_range
 	gst_query_set_buffering_stats
 	gst_query_set_caps_result
+	gst_query_set_context
 	gst_query_set_convert
 	gst_query_set_duration
 	gst_query_set_formats

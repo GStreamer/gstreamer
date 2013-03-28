@@ -189,6 +189,8 @@ struct _GstBinPrivate
 
   guint32 structure_cookie;
 
+  GstContext *context;
+
 #if 0
   /* cached index */
   GstIndex *index;
@@ -242,6 +244,7 @@ static gboolean gst_bin_send_event (GstElement * element, GstEvent * event);
 static GstBusSyncReply bin_bus_handler (GstBus * bus,
     GstMessage * message, GstBin * bin);
 static gboolean gst_bin_query (GstElement * element, GstQuery * query);
+static void gst_bin_set_context (GstElement * element, GstContext * context);
 
 static gboolean gst_bin_do_latency_func (GstBin * bin);
 
@@ -461,6 +464,7 @@ gst_bin_class_init (GstBinClass * klass)
 
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_bin_send_event);
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_bin_query);
+  gstelement_class->set_context = GST_DEBUG_FUNCPTR (gst_bin_set_context);
 
   klass->add_element = GST_DEBUG_FUNCPTR (gst_bin_add_func);
   klass->remove_element = GST_DEBUG_FUNCPTR (gst_bin_remove_func);
@@ -1139,6 +1143,9 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
    * that is not important right now. When the pipeline goes to PLAYING,
    * a new clock will be selected */
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
+
+  if (bin->priv->context)
+    gst_element_set_context (element, bin->priv->context);
 
 #if 0
   /* set the cached index on the children */
@@ -3935,6 +3942,33 @@ gst_bin_query (GstElement * element, GstQuery * query)
   GST_DEBUG_OBJECT (bin, "query %p result %d", query, res);
 
   return res;
+}
+
+static void
+set_context (const GValue * item, gpointer user_data)
+{
+  GstElement *element = g_value_get_object (item);
+
+  gst_element_set_context (element, user_data);
+}
+
+static void
+gst_bin_set_context (GstElement * element, GstContext * context)
+{
+  GstBin *bin;
+  GstIterator *children;
+
+  g_return_if_fail (GST_IS_BIN (element));
+
+  bin = GST_BIN (element);
+
+  children = gst_bin_iterate_elements (bin);
+  while (gst_iterator_foreach (children, set_context,
+          context) == GST_ITERATOR_RESYNC);
+  gst_iterator_free (children);
+  GST_OBJECT_LOCK (bin);
+  gst_context_replace (&bin->priv->context, context);
+  GST_OBJECT_UNLOCK (bin);
 }
 
 static gint
