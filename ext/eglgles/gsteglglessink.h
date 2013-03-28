@@ -120,7 +120,7 @@ struct _GstEglGlesRenderContext
 {
   EGLConfig config;
   EGLContext eglcontext;
-  GstEGLDisplay *display;
+  GstEGLDisplay *display, *set_display;
   EGLNativeWindowType window, used_window;
   EGLSurface surface;
   gboolean buffer_preserved;

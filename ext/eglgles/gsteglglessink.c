@@ -356,6 +356,8 @@ static void gst_eglglessink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static GstStateChangeReturn gst_eglglessink_change_state (GstElement * element,
     GstStateChange transition);
+static void gst_eglglessink_set_context (GstElement * element,
+    GstContext * context);
 static GstFlowReturn gst_eglglessink_prepare (GstBaseSink * bsink,
     GstBuffer * buf);
 static GstFlowReturn gst_eglglessink_show_frame (GstVideoSink * vsink,
@@ -364,6 +366,8 @@ static gboolean gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps);
 static GstCaps *gst_eglglessink_getcaps (GstBaseSink * bsink, GstCaps * filter);
 static gboolean gst_eglglessink_propose_allocation (GstBaseSink * bsink,
     GstQuery * query);
+static gboolean gst_eglglessink_query (GstBaseSink * bsink, GstQuery * query);
+static gboolean gst_eglglessink_event (GstBaseSink * bsink, GstEvent * event);
 
 /* VideoOverlay interface cruft */
 static void gst_eglglessink_videooverlay_init (GstVideoOverlayInterface *
@@ -1518,6 +1522,7 @@ HANDLE_ERROR:
 static gboolean
 gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
 {
+  GstMessage *msg;
   EGLDisplay display;
   GST_DEBUG_OBJECT (eglglessink, "Enter EGL initial configuration");
 
@@ -1531,12 +1536,33 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
   }
 #endif
 
-  display = eglGetDisplay (EGL_DEFAULT_DISPLAY);
-  if (display == EGL_NO_DISPLAY) {
-    GST_ERROR_OBJECT (eglglessink, "Could not get EGL display connection");
-    goto HANDLE_ERROR;          /* No EGL error is set by eglGetDisplay() */
+  msg = gst_message_new_need_context (GST_OBJECT_CAST (eglglessink));
+  gst_message_add_context_type (msg, GST_EGL_DISPLAY_CONTEXT_TYPE);
+  gst_element_post_message (GST_ELEMENT_CAST (eglglessink), msg);
+
+  GST_OBJECT_LOCK (eglglessink);
+  if (eglglessink->eglglesctx.set_display) {
+    eglglessink->eglglesctx.display =
+        gst_egl_display_ref (eglglessink->eglglesctx.set_display);
+    GST_OBJECT_UNLOCK (eglglessink);
+  } else {
+    GstContext *context;
+
+    GST_OBJECT_UNLOCK (eglglessink);
+
+    display = eglGetDisplay (EGL_DEFAULT_DISPLAY);
+    if (display == EGL_NO_DISPLAY) {
+      GST_ERROR_OBJECT (eglglessink, "Could not get EGL display connection");
+      goto HANDLE_ERROR;        /* No EGL error is set by eglGetDisplay() */
+    }
+    eglglessink->eglglesctx.display = gst_egl_display_new (display);
+
+    context = gst_context_new ();
+    gst_context_set_egl_display (context, eglglessink->eglglesctx.display);
+
+    msg = gst_message_new_have_context (GST_OBJECT (eglglessink), context);
+    gst_element_post_message (GST_ELEMENT_CAST (eglglessink), msg);
   }
-  eglglessink->eglglesctx.display = gst_egl_display_new (display);
 
   if (!eglInitialize (gst_egl_display_get (eglglessink->eglglesctx.display),
           &eglglessink->eglglesctx.egl_major,
@@ -2512,6 +2538,103 @@ gst_eglglessink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 }
 
 static gboolean
+gst_eglglessink_event (GstBaseSink * bsink, GstEvent * event)
+{
+  GstEglGlesSink *eglglessink;
+
+  eglglessink = GST_EGLGLESSINK (bsink);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CONTEXT:{
+      GstContext *context;
+      GstEGLDisplay *display;
+
+      gst_event_parse_context (event, &context);
+
+      if (gst_context_get_egl_display (context, &display)) {
+        GST_OBJECT_LOCK (eglglessink);
+        if (eglglessink->eglglesctx.set_display)
+          gst_egl_display_unref (eglglessink->eglglesctx.set_display);
+        eglglessink->eglglesctx.set_display = display;
+        GST_OBJECT_UNLOCK (eglglessink);
+      }
+
+      return GST_BASE_SINK_CLASS (gst_eglglessink_parent_class)->event (bsink,
+          event);
+      break;
+    }
+    default:
+      return GST_BASE_SINK_CLASS (gst_eglglessink_parent_class)->event (bsink,
+          event);
+      break;
+  }
+}
+
+static gboolean
+gst_eglglessink_query (GstBaseSink * bsink, GstQuery * query)
+{
+  GstEglGlesSink *eglglessink;
+
+  eglglessink = GST_EGLGLESSINK (bsink);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONTEXT:{
+      guint i, n;
+
+      GST_BASE_SINK_CLASS (gst_eglglessink_parent_class)->query (bsink, query);
+
+      n = gst_query_get_n_context_types (query);
+      for (i = 0; i < n; i++) {
+        const gchar *context_type = NULL;
+
+        gst_query_parse_nth_context_type (query, i, &context_type);
+        if (g_strcmp0 (context_type, GST_EGL_DISPLAY_CONTEXT_TYPE) == 0) {
+          GstContext *context, *old_context;
+
+          gst_query_parse_context (query, &old_context);
+          if (old_context)
+            context = gst_context_copy (old_context);
+          else
+            context = gst_context_new ();
+
+          gst_context_set_egl_display (context,
+              eglglessink->eglglesctx.display);
+          gst_query_set_context (query, context);
+          break;
+        }
+      }
+
+      return TRUE;
+      break;
+    }
+    default:
+      return GST_BASE_SINK_CLASS (gst_eglglessink_parent_class)->query (bsink,
+          query);
+      break;
+  }
+}
+
+static void
+gst_eglglessink_set_context (GstElement * element, GstContext * context)
+{
+  GstEglGlesSink *eglglessink;
+  GstStructure *s;
+  GstEGLDisplay *display = NULL;
+
+  eglglessink = GST_EGLGLESSINK (element);
+
+  s = (GstStructure *) gst_context_get_structure (context);
+  if (gst_structure_get (s, GST_EGL_DISPLAY_CONTEXT_TYPE, GST_TYPE_EGL_DISPLAY,
+          &display, NULL)) {
+    GST_OBJECT_LOCK (eglglessink);
+    if (eglglessink->eglglesctx.set_display)
+      gst_egl_display_unref (eglglessink->eglglesctx.set_display);
+    eglglessink->eglglesctx.set_display = display;
+    GST_OBJECT_UNLOCK (eglglessink);
+  }
+}
+
+static gboolean
 gst_eglglessink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
   GstEglGlesSink *eglglessink;
@@ -2914,12 +3037,15 @@ gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
   gobject_class->finalize = gst_eglglessink_finalize;
 
   gstelement_class->change_state = gst_eglglessink_change_state;
+  gstelement_class->set_context = gst_eglglessink_set_context;
 
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_eglglessink_setcaps);
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_eglglessink_getcaps);
   gstbasesink_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_eglglessink_propose_allocation);
   gstbasesink_class->prepare = GST_DEBUG_FUNCPTR (gst_eglglessink_prepare);
+  gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_eglglessink_query);
+  gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_eglglessink_event);
 
   gstvideosink_class->show_frame =
       GST_DEBUG_FUNCPTR (gst_eglglessink_show_frame);

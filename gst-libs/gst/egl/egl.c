@@ -290,6 +290,26 @@ gst_egl_image_allocator_wrap (GstAllocator * allocator,
   return GST_MEMORY_CAST (mem);
 }
 
+void
+gst_context_set_egl_display (GstContext * context, GstEGLDisplay * display)
+{
+  GstStructure *s;
+
+  s = (GstStructure *) gst_context_get_structure (context);
+  gst_structure_set (s, GST_EGL_DISPLAY_CONTEXT_TYPE, GST_TYPE_EGL_DISPLAY,
+      display, NULL);
+}
+
+gboolean
+gst_context_get_egl_display (GstContext * context, GstEGLDisplay ** display)
+{
+  GstStructure *s;
+
+  s = (GstStructure *) gst_context_get_structure (context);
+  return gst_structure_get (s, GST_EGL_DISPLAY_CONTEXT_TYPE,
+      GST_TYPE_EGL_DISPLAY, display, NULL);
+}
+
 struct _GstEGLDisplay
 {
   EGLDisplay display;
