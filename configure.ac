@@ -2085,9 +2085,7 @@ AG_GST_CHECK_FEATURE(VDPAU, [VDPAU], vdpau, [
 dnl *** sbc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SBC, true)
 AG_GST_CHECK_FEATURE(SBC, [SBC bluetooth audio codec], sbc, [
-  AG_GST_PKG_CHECK_MODULES(SBC, [sbc >= 1.0 sbc <= 1.0])
-  AC_MSG_NOTICE([Disabling sbc plugin for now, not working yet])
-  HAVE_SBC=no
+  AG_GST_PKG_CHECK_MODULES(SBC, [sbc >= 1.0])
 ])
 
 dnl *** schroedinger ***
