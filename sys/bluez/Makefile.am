@@ -4,7 +4,6 @@ libgstbluez_la_SOURCES = \
 	bluez-plugin.c \
 	gsta2dpsink.c \
 	gstavdtpsink.c \
-	gsta2dpsrc.c \
 	gstavdtpsrc.c \
 	gstavdtputil.c
 
@@ -27,6 +26,5 @@ noinst_HEADERS = \
 	a2dp-codecs.h \
 	gsta2dpsink.h \
 	gstavdtpsink.h \
-	gsta2dpsrc.h \
 	gstavdtpsrc.h \
 	gstavdtputil.h
