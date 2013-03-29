@@ -550,17 +550,46 @@ test_live_seeking_eos_message_received (GstBus * bus, GstMessage * message,
   }
 }
 
+static GstElement *
+test_live_seeking_try_audiosrc (const gchar * factory_name)
+{
+  GstElement *src;
+  GstStateChangeReturn state_res;
+
+  if (!(src = gst_element_factory_make (factory_name, NULL))) {
+    GST_INFO ("can't make '%s', skipping", factory_name);
+    return NULL;
+  }
+
+  /* Test that the audio source can get to ready, else skip */
+  state_res = gst_element_set_state (src, GST_STATE_READY);
+  gst_element_set_state (src, GST_STATE_NULL);
+
+  if (state_res == GST_STATE_CHANGE_FAILURE) {
+    GST_INFO_OBJECT (src, "can't go to ready, skipping");
+    gst_object_unref (src);
+    return NULL;
+  }
+
+  return src;
+}
 
 /* test failing seeks on live-sources */
 GST_START_TEST (test_live_seeking)
 {
-  GstElement *bin, *src1, *src2, *ac1, *ac2, *adder, *sink;
+  GstElement *bin, *src1 = NULL, *src2, *ac1, *ac2, *adder, *sink;
   GstBus *bus;
   gboolean res;
-  GstStateChangeReturn state_res;
   GstPad *srcpad;
   gint i;
+  GstStateChangeReturn state_res;
   GstStreamConsistency *consist;
+  /* don't use autoaudiosrc, as then we can't set anything here */
+  const gchar *audio_src_factories[] = {
+    "alsasrc",
+    "pulseaudiosrc",
+    NULL,
+  };
 
   GST_INFO ("preparing test");
   main_loop = NULL;
@@ -571,29 +600,20 @@ GST_START_TEST (test_live_seeking)
   bus = gst_element_get_bus (bin);
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
 
-  /* normal audiosources behave differently than audiotestsrc */
-#if 0
-  src1 = gst_element_factory_make ("audiotestsrc", "src1");
-  g_object_set (src1, "wave", 4, "is-live", TRUE, NULL);        /* silence */
-#else
-  src1 = gst_element_factory_make ("alsasrc", "src1");
-  if (!src1) {
-    GST_INFO ("no audiosrc, skipping");
-    goto cleanup;
+  for (i = 0; (i < G_N_ELEMENTS (audio_src_factories) && src1 == NULL); i++) {
+    src1 = test_live_seeking_try_audiosrc (audio_src_factories[i]);
   }
-  /* Test that the audio source can get to paused, else skip */
-  state_res = gst_element_set_state (src1, GST_STATE_PAUSED);
-  (void) gst_element_set_state (src1, GST_STATE_NULL);
-  gst_object_unref (src1);
+  if (!src1) {
+    /* normal audiosources behave differently than audiotestsrc */
+    src1 = gst_element_factory_make ("audiotestsrc", "src1");
+    g_object_set (src1, "wave", 4, "is-live", TRUE, NULL);      /* silence */
+  } else {
+    /* live sources ignore seeks, force eos after 2 sec (4 buffers half second
+     * each)
+     */
+    g_object_set (src1, "num-buffers", 4, "blocksize", 44100, NULL);
+  }
 
-  if (state_res == GST_STATE_CHANGE_FAILURE)
-    goto cleanup;
-  src1 = gst_element_factory_make ("alsasrc", "src1");
-
-  /* live sources ignore seeks, force eos after 2 sec (4 buffers half second
-   * each) - don't use autoaudiosrc, as then we can't set anything here */
-  g_object_set (src1, "num-buffers", 4, "blocksize", 44100, NULL);
-#endif
   ac1 = gst_element_factory_make ("audioconvert", "ac1");
   src2 = gst_element_factory_make ("audiotestsrc", "src2");
   g_object_set (src2, "wave", 4, NULL); /* silence */
@@ -646,12 +666,7 @@ GST_START_TEST (test_live_seeking)
     ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
     res = gst_element_send_event (bin, gst_event_ref (play_seek_event));
-#if 1
     fail_unless (res == TRUE, NULL);
-#else
-    /* adder is picky, if a single seek fails it totally fails */
-    fail_unless (res == FALSE, NULL);
-#endif
 
     GST_INFO ("seeked");
 
@@ -670,7 +685,6 @@ GST_START_TEST (test_live_seeking)
   }
 
   /* cleanup */
-cleanup:
   GST_INFO ("cleaning up");
   if (main_loop)
     g_main_loop_unref (main_loop);
@@ -1192,7 +1206,7 @@ adder_suite (void)
   tcase_add_test (tc_chain, test_event);
   tcase_add_test (tc_chain, test_play_twice);
   tcase_add_test (tc_chain, test_play_twice_then_add_and_play_again);
-  tcase_skip_broken_test (tc_chain, test_live_seeking);
+  tcase_add_test (tc_chain, test_live_seeking);
   tcase_add_test (tc_chain, test_add_pad);
   tcase_add_test (tc_chain, test_remove_pad);
   tcase_add_test (tc_chain, test_clip);
