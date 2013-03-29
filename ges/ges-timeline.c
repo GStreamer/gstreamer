@@ -2031,6 +2031,11 @@ trackelement_priority_changed_cb (GESTrackElement * child,
       GSequence *by_layer_sequence =
           g_hash_table_lookup (priv->by_layer, layer);
 
+      GST_DEBUG_OBJECT (child, "Moved from layer %" GST_PTR_FORMAT
+          "(prio %d) to" " %" GST_PTR_FORMAT " (prio %d)", layer,
+          ges_layer_get_priority (layer), iters->layer,
+          ges_layer_get_priority (iters->layer));
+
       g_sequence_remove (iters->iter_by_layer);
       iters->iter_by_layer =
           g_sequence_insert_sorted (by_layer_sequence, child,

@@ -323,7 +323,7 @@ ges_timeline_element_set_timeline (GESTimelineElement * self,
 
   GST_DEBUG_OBJECT (self, "set timeline to %" GST_PTR_FORMAT, timeline);
 
-  if (G_UNLIKELY (self->timeline != NULL))
+  if (timeline != NULL && G_UNLIKELY (self->timeline != NULL))
     goto had_timeline;
 
   self->timeline = timeline;
