@@ -3,6 +3,8 @@
  * Copyright (C) <2009> Sebastian Dröge <sebastian.droege@collabora.co.uk>
  * Copyright (C) <2011> Hewlett-Packard Development Company, L.P.
  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
+ * Copyright (C) <2013> Collabora Ltd.
+ *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -202,6 +204,10 @@ struct _GstDecodeBinClass
   /* signal fired to select from the proposed list of factories */
     GstAutoplugSelectResult (*autoplug_select) (GstElement * element,
       GstPad * pad, GstCaps * caps, GstElementFactory * factory);
+  /* signal fired when a autoplugged element that is not linked downstream
+   * or exposed wants to query something */
+    gboolean (*autoplug_query) (GstElement * element, GstPad * pad,
+      GstQuery * query);
 
   /* fired when the last group is drained */
   void (*drained) (GstElement * element);
@@ -215,6 +221,7 @@ enum
   SIGNAL_AUTOPLUG_FACTORIES,
   SIGNAL_AUTOPLUG_SELECT,
   SIGNAL_AUTOPLUG_SORT,
+  SIGNAL_AUTOPLUG_QUERY,
   SIGNAL_DRAINED,
   LAST_SIGNAL
 };
@@ -285,6 +292,8 @@ static GValueArray *gst_decode_bin_autoplug_sort (GstElement * element,
     GstPad * pad, GstCaps * caps, GValueArray * factories);
 static GstAutoplugSelectResult gst_decode_bin_autoplug_select (GstElement *
     element, GstPad * pad, GstCaps * caps, GstElementFactory * factory);
+static gboolean gst_decode_bin_autoplug_query (GstElement * element,
+    GstPad * pad, GstQuery * query);
 
 static void gst_decode_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -419,6 +428,9 @@ struct _GstDecodeChain
                                    all new pads will be ignored! */
   GList *pending_pads;          /* Pads that have no fixed caps yet */
 
+  GstDecodePad *current_pad;    /* Current ending pad of the chain that can't
+                                 * be exposed yet but would be the same as endpad
+                                 * once it can be exposed */
   GstDecodePad *endpad;         /* Pad of this chain that could be exposed */
   gboolean deadend;             /* This chain is incomplete and can't be completed,
                                    e.g. no suitable decoder could be found
@@ -489,12 +501,14 @@ G_DEFINE_TYPE (GstDecodePad, gst_decode_pad, GST_TYPE_GHOST_PAD);
 #define GST_TYPE_DECODE_PAD (gst_decode_pad_get_type ())
 #define GST_DECODE_PAD(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DECODE_PAD,GstDecodePad))
 
-static GstDecodePad *gst_decode_pad_new (GstDecodeBin * dbin, GstPad * pad,
+static GstDecodePad *gst_decode_pad_new (GstDecodeBin * dbin,
     GstDecodeChain * chain);
 static void gst_decode_pad_activate (GstDecodePad * dpad,
     GstDecodeChain * chain);
 static void gst_decode_pad_unblock (GstDecodePad * dpad);
 static void gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked);
+static gboolean gst_decode_pad_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static void gst_pending_pad_free (GstPendingPad * ppad);
 static GstPadProbeReturn pad_event_cb (GstPad * pad, GstPadProbeInfo * info,
@@ -548,6 +562,22 @@ _gst_boolean_accumulator (GSignalInvocationHint * ihint,
 
   /* stop emission if FALSE */
   return myboolean;
+}
+
+static gboolean
+_gst_boolean_or_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  gboolean myboolean;
+  gboolean retboolean;
+
+  myboolean = g_value_get_boolean (handler_return);
+  retboolean = g_value_get_boolean (return_accu);
+
+  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
+    g_value_set_boolean (return_accu, myboolean || retboolean);
+
+  return TRUE;
 }
 
 /* we collect the first result */
@@ -759,6 +789,27 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       GST_TYPE_ELEMENT_FACTORY);
 
   /**
+   * GstDecodeBin::autoplug-query:
+   * @bin: The decodebin.
+   * @child: The child element doing the query
+   * @pad: The #GstPad.
+   * @query: The #GstQuery.
+   *
+   * This signal is emitted whenever an autoplugged element that is
+   * not linked downstream yet and not exposed does a query. It can
+   * be used to tell the element about the downstream supported caps
+   * for example.
+   *
+   * Returns: #TRUE if the query was handled, #FALSE otherwise.
+   */
+  gst_decode_bin_signals[SIGNAL_AUTOPLUG_QUERY] =
+      g_signal_new ("autoplug-query", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, autoplug_query),
+      _gst_boolean_or_accumulator, NULL, g_cclosure_marshal_generic,
+      G_TYPE_BOOLEAN, 2, GST_TYPE_PAD,
+      GST_TYPE_QUERY | G_SIGNAL_TYPE_STATIC_SCOPE);
+
+  /**
    * GstDecodeBin::drained
    * @bin: The decodebin
    *
@@ -913,6 +964,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_factories);
   klass->autoplug_sort = GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_sort);
   klass->autoplug_select = GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_select);
+  klass->autoplug_query = GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_query);
 
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&decoder_bin_sink_template));
@@ -1362,6 +1414,14 @@ gst_decode_bin_autoplug_select (GstElement * element, GstPad * pad,
   return GST_AUTOPLUG_SELECT_TRY;
 }
 
+static gboolean
+gst_decode_bin_autoplug_query (GstElement * element, GstPad * pad,
+    GstQuery * query)
+{
+  /* No query handled here */
+  return FALSE;
+}
+
 /********
  * Discovery methods
  *****/
@@ -1429,6 +1489,10 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     GstDecodeGroup *group;
     GstDecodeChain *oldchain = chain;
 
+    if (chain->current_pad)
+      gst_object_unref (chain->current_pad);
+    chain->current_pad = NULL;
+
     /* we are adding a new pad for a demuxer (see is_demuxer_element(),
      * start a new chain for it */
     CHAIN_MUTEX_LOCK (oldchain);
@@ -1450,7 +1514,11 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   if (gst_caps_is_any (caps))
     goto any_caps;
 
-  dpad = gst_decode_pad_new (dbin, pad, chain);
+  if (!chain->current_pad)
+    chain->current_pad = gst_decode_pad_new (dbin, chain);
+
+  dpad = gst_object_ref (chain->current_pad);
+  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), pad);
 
   /* 1. Emit 'autoplug-continue' the result will tell us if this pads needs
    * further autoplugging. Only do this for fixed caps, for unfixed caps
@@ -2798,6 +2866,11 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
     }
   }
 
+  if (!hide && chain->current_pad) {
+    gst_object_unref (chain->current_pad);
+    chain->current_pad = NULL;
+  }
+
   if (chain->pad) {
     gst_object_unref (chain->pad);
     chain->pad = NULL;
@@ -3764,13 +3837,15 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
     g_free (padname);
 
     /* 2. activate and add */
-    if (!dpad->exposed
-        && !gst_element_add_pad (GST_ELEMENT (dbin), GST_PAD_CAST (dpad))) {
-      /* not really fatal, we can try to add the other pads */
-      g_warning ("error adding pad to decodebin");
-      continue;
+    if (!dpad->exposed) {
+      dpad->exposed = TRUE;
+      if (!gst_element_add_pad (GST_ELEMENT (dbin), GST_PAD_CAST (dpad))) {
+        /* not really fatal, we can try to add the other pads */
+        g_warning ("error adding pad to decodebin");
+        dpad->exposed = FALSE;
+        continue;
+      }
     }
-    dpad->exposed = TRUE;
 
     /* 3. emit signal */
     GST_INFO_OBJECT (dpad, "added new decoded pad");
@@ -4035,26 +4110,70 @@ gst_decode_pad_unblock (GstDecodePad * dpad)
   gst_decode_pad_set_blocked (dpad, FALSE);
 }
 
+static gboolean
+gst_decode_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstDecodePad *dpad = GST_DECODE_PAD (parent);
+  gboolean ret = FALSE;
+
+  if (!dpad->exposed && !dpad->chain->deadend) {
+    ret = FALSE;
+    g_signal_emit (G_OBJECT (dpad->dbin),
+        gst_decode_bin_signals[SIGNAL_AUTOPLUG_QUERY], 0, dpad, query, &ret);
+    GST_DEBUG_OBJECT (dpad->dbin, "autoplug-query returned %d", ret);
+    if (ret) {
+      GstCaps *result, *filter;
+      GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD (dpad));
+
+      gst_query_parse_caps (query, &filter);
+      gst_query_parse_caps_result (query, &result);
+      result =
+          gst_caps_merge (gst_caps_ref (result),
+          gst_pad_get_pad_template_caps (target));
+      if (filter) {
+        GstCaps *intersection =
+            gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref (result);
+        result = intersection;
+      }
+      gst_query_set_caps_result (query, result);
+      gst_caps_unref (result);
+
+      gst_object_unref (target);
+    }
+  }
+
+  /* If exposed or nothing handled the query use the default handler */
+  if (!ret)
+    ret = gst_pad_query_default (pad, parent, query);
+
+  return ret;
+}
+
 /*gst_decode_pad_new:
  *
  * Creates a new GstDecodePad for the given pad.
  */
 static GstDecodePad *
-gst_decode_pad_new (GstDecodeBin * dbin, GstPad * pad, GstDecodeChain * chain)
+gst_decode_pad_new (GstDecodeBin * dbin, GstDecodeChain * chain)
 {
   GstDecodePad *dpad;
+  GstProxyPad *ppad;
   GstPadTemplate *pad_tmpl;
 
   GST_DEBUG_OBJECT (dbin, "making new decodepad");
   pad_tmpl = gst_static_pad_template_get (&decoder_bin_src_template);
   dpad =
-      g_object_new (GST_TYPE_DECODE_PAD, "direction", GST_PAD_DIRECTION (pad),
+      g_object_new (GST_TYPE_DECODE_PAD, "direction", GST_PAD_SRC,
       "template", pad_tmpl, NULL);
   gst_ghost_pad_construct (GST_GHOST_PAD_CAST (dpad));
-  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), pad);
   dpad->chain = chain;
   dpad->dbin = dbin;
   gst_object_unref (pad_tmpl);
+
+  ppad = gst_proxy_pad_get_internal (GST_PROXY_PAD (dpad));
+  gst_pad_set_query_function (GST_PAD_CAST (ppad), gst_decode_pad_query);
+  gst_object_unref (ppad);
 
   return dpad;
 }

@@ -137,6 +137,10 @@ struct _GstURIDecodeBinClass
   /* signal fired to select from the proposed list of factories */
     GstAutoplugSelectResult (*autoplug_select) (GstElement * element,
       GstPad * pad, GstCaps * caps, GstElementFactory * factory);
+  /* signal fired when a autoplugged element that is not linked downstream
+   * or exposed wants to query something */
+    gboolean (*autoplug_query) (GstElement * element, GstPad * pad,
+      GstQuery * query);
 
   /* emitted when all data is decoded */
   void (*drained) (GstElement * element);
@@ -159,8 +163,9 @@ enum
   SIGNAL_AUTOPLUG_CONTINUE,
   SIGNAL_AUTOPLUG_FACTORIES,
   SIGNAL_AUTOPLUG_SELECT,
-  SIGNAL_DRAINED,
   SIGNAL_AUTOPLUG_SORT,
+  SIGNAL_AUTOPLUG_QUERY,
+  SIGNAL_DRAINED,
   SIGNAL_SOURCE_SETUP,
   LAST_SIGNAL
 };
@@ -227,6 +232,22 @@ _gst_boolean_accumulator (GSignalInvocationHint * ihint,
 
   /* stop emission if FALSE */
   return myboolean;
+}
+
+static gboolean
+_gst_boolean_or_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  gboolean myboolean;
+  gboolean retboolean;
+
+  myboolean = g_value_get_boolean (handler_return);
+  retboolean = g_value_get_boolean (return_accu);
+
+  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
+    g_value_set_boolean (return_accu, myboolean || retboolean);
+
+  return TRUE;
 }
 
 static gboolean
@@ -348,6 +369,14 @@ gst_uri_decode_bin_autoplug_select (GstElement * element, GstPad * pad,
 
   /* Try factory. */
   return GST_AUTOPLUG_SELECT_TRY;
+}
+
+static gboolean
+gst_uri_decode_bin_autoplug_query (GstElement * element, GstPad * pad,
+    GstQuery * query)
+{
+  /* No query handled here */
+  return FALSE;
 }
 
 static void
@@ -612,6 +641,27 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       GST_TYPE_ELEMENT_FACTORY);
 
   /**
+   * GstDecodeBin::autoplug-query:
+   * @bin: The decodebin.
+   * @child: The child element doing the query
+   * @pad: The #GstPad.
+   * @query: The #GstQuery.
+   *
+   * This signal is emitted whenever an autoplugged element that is
+   * not linked downstream yet and not exposed does a query. It can
+   * be used to tell the element about the downstream supported caps
+   * for example.
+   *
+   * Returns: #TRUE if the query was handled, #FALSE otherwise.
+   */
+  gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_QUERY] =
+      g_signal_new ("autoplug-query", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass, autoplug_query),
+      _gst_boolean_or_accumulator, NULL, g_cclosure_marshal_generic,
+      G_TYPE_BOOLEAN, 2, GST_TYPE_PAD,
+      GST_TYPE_QUERY | G_SIGNAL_TYPE_STATIC_SCOPE);
+
+  /**
    * GstURIDecodeBin::drained:
    *
    * This signal is emitted when the data for the current uri is played.
@@ -660,6 +710,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
   klass->autoplug_sort = GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_sort);
   klass->autoplug_select =
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_select);
+  klass->autoplug_query = GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_query);
 }
 
 static void
@@ -1643,6 +1694,20 @@ proxy_autoplug_select_signal (GstElement * element, GstPad * pad,
   return result;
 }
 
+static gboolean
+proxy_autoplug_query_signal (GstElement * element, GstPad * pad,
+    GstQuery * query, GstURIDecodeBin * dec)
+{
+  gboolean ret = FALSE;
+
+  g_signal_emit (dec,
+      gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_QUERY], 0, pad, query, &ret);
+
+  GST_DEBUG_OBJECT (dec, "autoplug-query returned %d", ret);
+
+  return ret;
+}
+
 static void
 proxy_drained_signal (GstElement * element, GstURIDecodeBin * dec)
 {
@@ -1688,6 +1753,8 @@ make_decoder (GstURIDecodeBin * decoder)
         G_CALLBACK (proxy_autoplug_sort_signal), decoder);
     g_signal_connect (decodebin, "autoplug-select",
         G_CALLBACK (proxy_autoplug_select_signal), decoder);
+    g_signal_connect (decodebin, "autoplug-query",
+        G_CALLBACK (proxy_autoplug_query_signal), decoder);
     g_signal_connect (decodebin, "drained",
         G_CALLBACK (proxy_drained_signal), decoder);
 
