@@ -378,3 +378,92 @@ gst_video_meta_transform_scale_get_quark (void)
   }
   return _value;
 }
+
+
+GType
+gst_video_gl_texture_upload_meta_api_get_type (void)
+{
+  static volatile GType type = 0;
+  static const gchar *tags[] = { "memory", NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type =
+        gst_meta_api_type_register ("GstVideoGLTextureUploadMetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
+static void
+gst_video_gl_texture_upload_meta_free (GstMeta * meta, GstBuffer * buffer)
+{
+  GstVideoGLTextureUploadMeta *vmeta = (GstVideoGLTextureUploadMeta *) meta;
+
+  if (vmeta->destroy_notify)
+    vmeta->destroy_notify (vmeta->user_data);
+}
+
+const GstMetaInfo *
+gst_video_gl_texture_upload_meta_get_info (void)
+{
+  static const GstMetaInfo *info = NULL;
+
+  if (g_once_init_enter (&info)) {
+    const GstMetaInfo *meta =
+        gst_meta_register (GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE,
+        "GstVideoGLTextureUploadMeta",
+        sizeof (GstVideoGLTextureUploadMeta),
+        NULL,
+        gst_video_gl_texture_upload_meta_free,
+        NULL);
+    g_once_init_leave (&info, meta);
+  }
+  return info;
+}
+
+/**
+ * gst_buffer_add_video_meta:
+ * @buffer: a #GstBuffer
+ * @flags: #GstVideoFrameFlags
+ * @format: a #GstVideoFormat
+ * @width: the width
+ * @height: the height
+ *
+ * Attaches GstVideoMeta metadata to @buffer with the given parameters and the
+ * default offsets and strides for @format and @width x @height.
+ *
+ * This function calculates the default offsets and strides and then calls
+ * gst_buffer_add_video_meta_full() with them.
+ *
+ * Returns: the #GstVideoMeta on @buffer.
+ */
+GstVideoGLTextureUploadMeta *
+gst_buffer_add_video_gl_texture_upload_meta (GstBuffer * buffer,
+    GstVideoGLTextureUpload upload, gpointer user_data,
+    GDestroyNotify destroy_notify)
+{
+  GstVideoGLTextureUploadMeta *meta;
+
+  g_return_val_if_fail (buffer != NULL, NULL);
+  g_return_val_if_fail (upload != NULL, NULL);
+
+  meta =
+      (GstVideoGLTextureUploadMeta *) gst_buffer_add_meta (buffer,
+      GST_VIDEO_GL_TEXTURE_UPLOAD_META_INFO, NULL);
+
+  meta->buffer = buffer;
+  meta->upload = upload;
+  meta->user_data = user_data;
+  meta->destroy_notify = destroy_notify;
+
+  return meta;
+}
+
+gboolean
+gst_video_gl_texture_upload_meta_upload (GstVideoGLTextureUploadMeta * meta,
+    guint format, guint texture_id)
+{
+  g_return_val_if_fail (meta != NULL, FALSE);
+
+  return meta->upload (meta, format, texture_id);
+}

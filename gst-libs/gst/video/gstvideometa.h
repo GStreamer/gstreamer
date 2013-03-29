@@ -138,6 +138,43 @@ typedef struct {
   GstVideoInfo *out_info;
 } GstVideoMetaTransform;
 
+#define GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE (gst_video_gl_texture_upload_meta_api_get_type())
+#define GST_VIDEO_GL_TEXTURE_UPLOAD_META_INFO  (gst_video_gl_texture_upload_meta_get_info())
+
+typedef struct _GstVideoGLTextureUploadMeta GstVideoGLTextureUploadMeta;
+typedef gboolean (*GstVideoGLTextureUpload) (GstVideoGLTextureUploadMeta *meta, guint format, guint texture_id);
+
+/**
+ * GstVideoGLTextureUploadMeta:
+ * @meta: parent #GstMeta
+ * @buffer: the buffer of this meta
+ * @upload: the function to upload the buffer to a specific texture ID
+ * @user_data: user data for the implementor of @upload
+ * @destroy_notify: #GDestroyNotify for destroying @user_data
+ *
+ * Extra buffer metadata for uploading a buffer to an OpenGL texture
+ * ID. The caller of gst_video_gl_texture_upload_meta_upload() must
+ * have OpenGL set up and call this from a thread where it is valid
+ * to upload something to an OpenGL texture.
+ */
+
+struct _GstVideoGLTextureUploadMeta {
+  GstMeta       meta;
+
+  GstBuffer *buffer;
+  GstVideoGLTextureUpload upload;
+
+  gpointer      user_data;
+  GDestroyNotify destroy_notify;
+};
+
+#define gst_buffer_get_video_gl_texture_upload_meta(b) ((GstVideoGLTextureUploadMeta*)gst_buffer_get_meta((b),GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE))
+GstVideoGLTextureUploadMeta * gst_buffer_add_video_gl_texture_upload_meta (GstBuffer *buffer, GstVideoGLTextureUpload upload, gpointer user_data, GDestroyNotify destroy_notify);
+gboolean gst_video_gl_texture_upload_meta_upload (GstVideoGLTextureUploadMeta *meta, guint format, guint texture_id);
+
+GType gst_video_gl_texture_upload_meta_api_get_type (void);
+const GstMetaInfo * gst_video_gl_texture_upload_meta_get_info (void);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_META_H__ */
