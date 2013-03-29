@@ -1476,12 +1476,12 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   if (!eglglessink->have_texture) {
     GST_INFO_OBJECT (eglglessink, "Performing initial texture setup");
 
-    glGenTextures (eglglessink->eglglesctx.n_textures,
+    glGenTextures (eglglessink->eglglesctx.n_textures+1,
         eglglessink->eglglesctx.texture);
     if (got_gl_error ("glGenTextures"))
       goto HANDLE_ERROR_LOCKED;
 
-    for (i = 0; i < eglglessink->eglglesctx.n_textures; i++) {
+    for (i = 0; i < eglglessink->eglglesctx.n_textures+1; i++) {
       glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[i]);
       if (got_gl_error ("glBindTexture"))
         goto HANDLE_ERROR;
@@ -2182,11 +2182,11 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
 
     if (upload_meta) {
       glActiveTexture (GL_TEXTURE0);
-      glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
-      if (!gst_video_gl_texture_upload_meta_upload (upload_meta,
-              (eglglessink->configured_info.finfo->format ==
-                  GST_VIDEO_FORMAT_RGBA ? GL_RGBA : GL_RGB),
-              eglglessink->eglglesctx.texture[0]))
+      glBindTexture (GL_TEXTURE_2D,
+          eglglessink->eglglesctx.texture[eglglessink->eglglesctx.n_textures]);
+      if (!gst_video_gl_texture_upload_meta_upload (upload_meta, GL_RGBA,
+              eglglessink->eglglesctx.texture[eglglessink->
+                  eglglesctx.n_textures]))
         goto HANDLE_ERROR;
 
       eglglessink->orientation = GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL;
