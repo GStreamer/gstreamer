@@ -71,8 +71,7 @@ videoconvert_convert_new (GstVideoInfo * in_info, GstVideoInfo * out_info)
 
   convert->lines = lines;
 
-  convert->tmpline8 = g_malloc (lines * sizeof (guint8) * (width + 8) * 4);
-  convert->tmpline16 = g_malloc (lines * sizeof (guint16) * (width + 8) * 4);
+  convert->tmpline = g_malloc (lines * sizeof (guint16) * (width + 8) * 4);
   convert->errline = g_malloc0 (sizeof (guint16) * width * 4);
 
   return convert;
@@ -88,8 +87,7 @@ no_convert:
 void
 videoconvert_convert_free (VideoConvert * convert)
 {
-  g_free (convert->tmpline8);
-  g_free (convert->tmpline16);
+  g_free (convert->tmpline);
   g_free (convert->errline);
 
   g_free (convert);
@@ -332,7 +330,7 @@ static void
 videoconvert_dither_verterr (VideoConvert * convert, guint16 * pixels, int j)
 {
   int i;
-  guint16 *tmpline = convert->tmpline16;
+  guint16 *tmpline = convert->tmpline;
   guint16 *errline = convert->errline;
   unsigned int mask = 0xff;
 
@@ -349,7 +347,7 @@ static void
 videoconvert_dither_halftone (VideoConvert * convert, guint16 * pixels, int j)
 {
   int i;
-  guint16 *tmpline = convert->tmpline16;
+  guint16 *tmpline = convert->tmpline;
   static guint16 halftone[8][8] = {
     {0, 128, 32, 160, 8, 136, 40, 168},
     {192, 64, 224, 96, 200, 72, 232, 104},
@@ -408,8 +406,8 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
   lines = convert->lines;
 
   for (j = 0; j < height; j += lines) {
-    tmpline8 = convert->tmpline8;
-    tmpline16 = convert->tmpline16;
+    tmpline8 = convert->tmpline;
+    tmpline16 = convert->tmpline;
 
     for (k = 0; k < lines; k++) {
       if (in_bits == 16) {
@@ -418,7 +416,7 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
         UNPACK_FRAME (src, tmpline8, j + k, width);
 
         if (out_bits == 16)
-          for (i = 0; i < width * 4; i++)
+          for (i = (width - 1) * 4; i >= 0; i--)
             tmpline16[i] = TO_16 (tmpline8[i]);
       }
 
@@ -427,15 +425,16 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
           convert->matrix16 (convert, tmpline16);
         if (convert->dither16)
           convert->dither16 (convert, tmpline16, j);
+        tmpline8 += width * 8;
+        tmpline16 += width * 4;
       } else {
         if (convert->matrix)
           convert->matrix (convert, tmpline8);
+        tmpline8 += width * 4;
       }
-      tmpline8 += width * 4;
-      tmpline16 += width * 8;
     }
-    tmpline8 = convert->tmpline8;
-    tmpline16 = convert->tmpline16;
+    tmpline8 = convert->tmpline;
+    tmpline16 = convert->tmpline;
 
     if (out_bits == 16) {
       PACK_FRAME (dest, tmpline16, j, width);
@@ -514,8 +513,8 @@ convert_I420_YUY2 (VideoConvert * convert, GstVideoFrame * dest,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline8, height - 1, width);
-    PACK_FRAME (dest, convert->tmpline8, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -542,8 +541,8 @@ convert_I420_UYVY (VideoConvert * convert, GstVideoFrame * dest,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline8, height - 1, width);
-    PACK_FRAME (dest, convert->tmpline8, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -569,8 +568,8 @@ convert_I420_AYUV (VideoConvert * convert, GstVideoFrame * dest,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline8, height - 1, width);
-    PACK_FRAME (dest, convert->tmpline8, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -619,8 +618,8 @@ convert_I420_Y444 (VideoConvert * convert, GstVideoFrame * dest,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline8, height - 1, width);
-    PACK_FRAME (dest, convert->tmpline8, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -650,8 +649,8 @@ convert_YUY2_I420 (VideoConvert * convert, GstVideoFrame * dest,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline8, height - 1, width);
-    PACK_FRAME (dest, convert->tmpline8, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -669,8 +668,8 @@ convert_YUY2_AYUV (VideoConvert * convert, GstVideoFrame * dest,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline8, height - 1, width);
-    PACK_FRAME (dest, convert->tmpline8, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -725,8 +724,8 @@ convert_UYVY_I420 (VideoConvert * convert, GstVideoFrame * dest,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline8, height - 1, width);
-    PACK_FRAME (dest, convert->tmpline8, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -744,8 +743,8 @@ convert_UYVY_AYUV (VideoConvert * convert, GstVideoFrame * dest,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline8, height - 1, width);
-    PACK_FRAME (dest, convert->tmpline8, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -845,8 +844,8 @@ convert_AYUV_Y42B (VideoConvert * convert, GstVideoFrame * dest,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline8, height - 1, width);
-    PACK_FRAME (dest, convert->tmpline8, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -887,8 +886,8 @@ convert_Y42B_I420 (VideoConvert * convert, GstVideoFrame * dest,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline8, height - 1, width);
-    PACK_FRAME (dest, convert->tmpline8, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
@@ -977,8 +976,8 @@ convert_Y444_I420 (VideoConvert * convert, GstVideoFrame * dest,
 
   /* now handle last line */
   if (height & 1) {
-    UNPACK_FRAME (src, convert->tmpline8, height - 1, width);
-    PACK_FRAME (dest, convert->tmpline8, height - 1, width);
+    UNPACK_FRAME (src, convert->tmpline, height - 1, width);
+    PACK_FRAME (dest, convert->tmpline, height - 1, width);
   }
 }
 
