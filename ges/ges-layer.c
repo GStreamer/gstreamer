@@ -472,7 +472,6 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
   GESAsset *asset;
   GESLayerPrivate *priv;
   GESLayer *current_layer;
-  guint32 maxprio, minprio, prio;
 
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
@@ -533,19 +532,15 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
   /* Inform the clip it's now in this layer */
   ges_clip_set_layer (clip, layer);
 
-  GST_DEBUG ("current clip priority : %d, layer min/max : %d/%d",
-      _PRIORITY (clip), layer->min_gnl_priority, layer->max_gnl_priority);
+  GST_DEBUG ("current clip priority : %d, Height: %d", _PRIORITY (clip),
+      LAYER_HEIGHT);
 
   /* Set the priority. */
-  maxprio = layer->max_gnl_priority;
-  minprio = layer->min_gnl_priority;
-  prio = _PRIORITY (clip);
-
-  if (minprio + prio > (maxprio)) {
+  if (_PRIORITY (clip) > LAYER_HEIGHT) {
     GST_WARNING_OBJECT (layer,
         "%p is out of the layer space, setting its priority to "
-        "%d, setting it to the maximum priority of the layer: %d", clip, prio,
-        maxprio - minprio);
+        "%d, setting it to the maximum priority of the layer: %d", clip,
+        _PRIORITY (clip), LAYER_HEIGHT - 1);
     _set_priority0 (GES_TIMELINE_ELEMENT (clip), LAYER_HEIGHT - 1);
   }
 
