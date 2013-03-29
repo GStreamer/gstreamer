@@ -150,7 +150,8 @@ typedef gboolean (*GstVideoGLTextureUpload) (GstVideoGLTextureUploadMeta *meta, 
  * @buffer: the buffer of this meta
  * @upload: the function to upload the buffer to a specific texture ID
  * @user_data: user data for the implementor of @upload
- * @destroy_notify: #GDestroyNotify for destroying @user_data
+ * @user_data_copy: function to copy @user_data
+ * @user_data_free: function to free @user_data
  *
  * Extra buffer metadata for uploading a buffer to an OpenGL texture
  * ID. The caller of gst_video_gl_texture_upload_meta_upload() must

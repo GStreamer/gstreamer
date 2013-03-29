@@ -450,20 +450,17 @@ gst_video_gl_texture_upload_meta_get_info (void)
 }
 
 /**
- * gst_buffer_add_video_meta:
+ * gst_buffer_add_video_gl_texture_upload_meta:
  * @buffer: a #GstBuffer
- * @flags: #GstVideoFrameFlags
- * @format: a #GstVideoFormat
- * @width: the width
- * @height: the height
+ * @upload: the function to upload the buffer to a specific texture ID
+ * @user_data: user data for the implementor of @upload
+ * @user_data_copy: function to copy @user_data
+ * @user_data_free: function to free @user_data
  *
- * Attaches GstVideoMeta metadata to @buffer with the given parameters and the
- * default offsets and strides for @format and @width x @height.
+ * Attaches GstVideoGLTextureUploadMeta metadata to @buffer with the given
+ * parameters.
  *
- * This function calculates the default offsets and strides and then calls
- * gst_buffer_add_video_meta_full() with them.
- *
- * Returns: the #GstVideoMeta on @buffer.
+ * Returns: the #GstVideoGLTextureUploadMeta on @buffer.
  */
 GstVideoGLTextureUploadMeta *
 gst_buffer_add_video_gl_texture_upload_meta (GstBuffer * buffer,
@@ -488,6 +485,16 @@ gst_buffer_add_video_gl_texture_upload_meta (GstBuffer * buffer,
   return meta;
 }
 
+/**
+ * gst_video_gl_texture_upload_meta_upload:
+ * @meta: a #GstVideoGLTextureUploadMeta
+ * @format: the GL format of the texture, e.g. GL_RGBA
+ * @texture_id: the texture ID to upload to
+ *
+ * Uploads the buffer which owns the meta to a specific texture ID.
+ *
+ * Returns: %TRUE if uploading succeeded, %FALSE otherwise.
+ */
 gboolean
 gst_video_gl_texture_upload_meta_upload (GstVideoGLTextureUploadMeta * meta,
     guint format, guint texture_id)
