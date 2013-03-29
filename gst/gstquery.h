@@ -442,12 +442,14 @@ gboolean        gst_query_find_allocation_meta       (GstQuery *query, GType api
  * GstSchedulingFlags:
  * @GST_SCHEDULING_FLAG_SEEKABLE: if seeking is possible
  * @GST_SCHEDULING_FLAG_SEQUENTIAL: if sequential access is recommended
+ * @GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED: if bandwidth is limited and buffering possible
  *
  * The different scheduling flags.
  */
 typedef enum {
-  GST_SCHEDULING_FLAG_SEEKABLE      = (1 << 0),
-  GST_SCHEDULING_FLAG_SEQUENTIAL    = (1 << 1)
+  GST_SCHEDULING_FLAG_SEEKABLE          = (1 << 0),
+  GST_SCHEDULING_FLAG_SEQUENTIAL        = (1 << 1),
+  GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED = (1 << 2)
 } GstSchedulingFlags;
 
 GstQuery *      gst_query_new_scheduling          (void) G_GNUC_MALLOC;

@@ -67,8 +67,9 @@ this with the SCHEDULING query.
  (out) "flags", GST_TYPE_SCHEDULING_FLAGS (default 0)
 
      typedef enum {
-       GST_SCHEDULING_FLAG_SEEKABLE      = (1 << 0),
-       GST_SCHEDULING_FLAG_SEQUENTIAL    = (1 << 1)
+       GST_SCHEDULING_FLAG_SEEKABLE           = (1 << 0),
+       GST_SCHEDULING_FLAG_SEQUENTIAL         = (1 << 1),
+       GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED  = (1 << 2)
      } GstSchedulingFlags;
 
    _SEEKABLE:
@@ -79,6 +80,15 @@ this with the SCHEDULING query.
        - suggest sequential access to the data. If _SEEKABLE is specified,
          seeks are allowed but should be avoided. This is common for network
          streams.
+
+   _BANDWIDTH_LIMITED:
+       - suggest the element supports buffering data for downstream to
+         cope with bandwidth limitations. If this flag is on the
+         downstream element might ask for more data than necessary for
+         normal playback. This use-case is interesting for on-disk
+         buffering scenarios for instance. Seek operations might be
+         slow as well so downstream elements should take this into
+         consideration.
 
  (out) "minsize", G_TYPE_INT (default 1)
        - the suggested minimum size of pull requests

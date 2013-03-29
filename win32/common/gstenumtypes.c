@@ -1461,6 +1461,9 @@ gst_scheduling_flags_get_type (void)
         "seekable"},
     {C_FLAGS (GST_SCHEDULING_FLAG_SEQUENTIAL), "GST_SCHEDULING_FLAG_SEQUENTIAL",
         "sequential"},
+    {C_FLAGS (GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED),
+          "GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED",
+        "bandwidth-limited"},
     {0, NULL, NULL}
   };
 
