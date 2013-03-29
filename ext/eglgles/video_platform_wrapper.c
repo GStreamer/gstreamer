@@ -689,4 +689,3 @@ platform_destroy_native_window (EGLNativeDisplayType display,
   return TRUE;
 }
 #endif
-

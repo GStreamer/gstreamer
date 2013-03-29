@@ -192,7 +192,7 @@ static const char *frag_BLACK_prog = {
       "}"
 };
 
-/* Direct fragments copy */
+/* Direct fragments copy with stride-scaling */
 static const char *frag_COPY_prog = {
   "precision mediump float;"
       "varying vec2 opos;"
@@ -203,6 +203,18 @@ static const char *frag_COPY_prog = {
       "void main(void)"
       "{"
       " vec4 t = texture2D(tex, opos / tex_scale0);"
+      " gl_FragColor = vec4(t.rgb, 1.0);"
+      "}"
+};
+
+/* Direct fragments copy without stride-scaling */
+static const char *frag_COPY_DIRECT_prog = {
+  "precision mediump float;"
+      "varying vec2 opos;"
+      "uniform sampler2D tex;"
+      "void main(void)"
+      "{"
+      " vec4 t = texture2D(tex, opos);"
       " gl_FragColor = vec4(t.rgb, 1.0);"
       "}"
 };
@@ -643,13 +655,13 @@ gst_eglglessink_wipe_eglglesctx (GstEglGlesSink * eglglessink)
   }
 
   if (eglglessink->have_texture) {
-    glDeleteTextures (eglglessink->eglglesctx.n_textures,
+    glDeleteTextures (eglglessink->eglglesctx.n_textures + 1,
         eglglessink->eglglesctx.texture);
     eglglessink->have_texture = FALSE;
     eglglessink->eglglesctx.n_textures = 0;
   }
 
-  for (i = 0; i < 2; i++) {
+  for (i = 0; i < 3; i++) {
     if (eglglessink->eglglesctx.glslprogram[i]) {
       glDetachShader (eglglessink->eglglesctx.glslprogram[i],
           eglglessink->eglglesctx.fragshader[i]);
@@ -1414,6 +1426,34 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
         texnames[i]);
   }
 
+  /* custom rendering shader */
+
+  if (!create_shader_program (eglglessink,
+          &eglglessink->eglglesctx.glslprogram[2],
+          &eglglessink->eglglesctx.vertshader[2],
+          &eglglessink->eglglesctx.fragshader[2], vert_COPY_prog,
+          frag_COPY_DIRECT_prog)) {
+    if (free_frag_prog)
+      g_free (frag_prog);
+    frag_prog = NULL;
+    goto HANDLE_ERROR;
+  }
+  if (free_frag_prog)
+    g_free (frag_prog);
+  frag_prog = NULL;
+
+  eglglessink->eglglesctx.position_loc[2] =
+      glGetAttribLocation (eglglessink->eglglesctx.glslprogram[2], "position");
+  eglglessink->eglglesctx.texpos_loc[1] =
+      glGetAttribLocation (eglglessink->eglglesctx.glslprogram[2], "texpos");
+
+  glEnableVertexAttribArray (eglglessink->eglglesctx.position_loc[2]);
+  if (got_gl_error ("glEnableVertexAttribArray"))
+    goto HANDLE_ERROR;
+
+  eglglessink->eglglesctx.tex_loc[1][0] =
+      glGetUniformLocation (eglglessink->eglglesctx.glslprogram[2], "tex");
+
   if (!eglglessink->eglglesctx.buffer_preserved) {
     /* Build shader program for black borders */
     if (!create_shader_program (eglglessink,
@@ -2119,8 +2159,11 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
     GST_DEBUG_OBJECT (eglglessink, "Rendering previous buffer again");
   } else if (buf) {
     GstMemory *mem;
+    GstVideoGLTextureUploadMeta *upload_meta;
 
     crop = gst_buffer_get_video_crop_meta (buf);
+
+    upload_meta = gst_buffer_get_video_gl_texture_upload_meta (buf);
 
     if (gst_eglglessink_crop_changed (eglglessink, crop)) {
       if (crop) {
@@ -2137,10 +2180,23 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
       eglglessink->crop_changed = TRUE;
     }
 
-    if (gst_buffer_n_memory (buf) >= 1 &&
+    if (upload_meta) {
+      glActiveTexture (GL_TEXTURE0);
+      glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
+      if (!gst_video_gl_texture_upload_meta_upload (upload_meta,
+              (eglglessink->configured_info.finfo->format ==
+                  GST_VIDEO_FORMAT_RGBA ? GL_RGBA : GL_RGB),
+              eglglessink->eglglesctx.texture[0]))
+        goto HANDLE_ERROR;
+
+      eglglessink->orientation = GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL;
+      eglglessink->custom_format = TRUE;
+    } else if (gst_buffer_n_memory (buf) >= 1 &&
         (mem = gst_buffer_peek_memory (buf, 0))
         && gst_is_egl_image_memory (mem)) {
       guint n, i;
+
+      eglglessink->custom_format = FALSE;
 
       n = gst_buffer_n_memory (buf);
 
@@ -2175,6 +2231,8 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
       eglglessink->stride[1] = 1;
       eglglessink->stride[2] = 1;
     } else {
+      eglglessink->custom_format = FALSE;
+
       eglglessink->orientation = GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL;
       if (!gst_eglglessink_fill_texture (eglglessink, buf))
         goto HANDLE_ERROR;
@@ -2314,45 +2372,67 @@ gst_eglglessink_render (GstEglGlesSink * eglglessink)
 
   /* Draw video frame */
   GST_DEBUG_OBJECT (eglglessink, "Drawing video frame");
-  glUseProgram (eglglessink->eglglesctx.glslprogram[0]);
 
-  glUniform2f (eglglessink->eglglesctx.tex_scale_loc[0][0],
-      eglglessink->stride[0], 1);
-  glUniform2f (eglglessink->eglglesctx.tex_scale_loc[0][1],
-      eglglessink->stride[1], 1);
-  glUniform2f (eglglessink->eglglesctx.tex_scale_loc[0][2],
-      eglglessink->stride[2], 1);
+  if (eglglessink->custom_format) {
+    glUseProgram (eglglessink->eglglesctx.glslprogram[2]);
 
-  for (i = 0; i < eglglessink->eglglesctx.n_textures; i++) {
-    glUniform1i (eglglessink->eglglesctx.tex_loc[0][i], i);
+    glUniform1i (eglglessink->eglglesctx.tex_loc[1][0], 0);
     if (got_gl_error ("glUniform1i"))
       goto HANDLE_ERROR;
-  }
 
-  if (eglglessink->orientation == GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL) {
-    glVertexAttribPointer (eglglessink->eglglesctx.position_loc[0], 3,
-        GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (0 * sizeof (coord5)));
+    glVertexAttribPointer (eglglessink->eglglesctx.position_loc[2], 3,
+        GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (0));
     if (got_gl_error ("glVertexAttribPointer"))
       goto HANDLE_ERROR;
 
-    glVertexAttribPointer (eglglessink->eglglesctx.texpos_loc[0], 2,
+    glVertexAttribPointer (eglglessink->eglglesctx.texpos_loc[1], 2,
         GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (3 * sizeof (gfloat)));
     if (got_gl_error ("glVertexAttribPointer"))
       goto HANDLE_ERROR;
-  } else if (eglglessink->orientation ==
-      GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_FLIP) {
-    glVertexAttribPointer (eglglessink->eglglesctx.position_loc[0], 3, GL_FLOAT,
-        GL_FALSE, sizeof (coord5), (gpointer) (4 * sizeof (coord5)));
-    if (got_gl_error ("glVertexAttribPointer"))
-      goto HANDLE_ERROR;
-
-    glVertexAttribPointer (eglglessink->eglglesctx.texpos_loc[0], 2,
-        GL_FLOAT, GL_FALSE, sizeof (coord5),
-        (gpointer) (4 * sizeof (coord5) + 3 * sizeof (gfloat)));
-    if (got_gl_error ("glVertexAttribPointer"))
-      goto HANDLE_ERROR;
   } else {
-    g_assert_not_reached ();
+    glUseProgram (eglglessink->eglglesctx.glslprogram[0]);
+
+    glUniform2f (eglglessink->eglglesctx.tex_scale_loc[0][0],
+        eglglessink->stride[0], 1);
+    glUniform2f (eglglessink->eglglesctx.tex_scale_loc[0][1],
+        eglglessink->stride[1], 1);
+    glUniform2f (eglglessink->eglglesctx.tex_scale_loc[0][2],
+        eglglessink->stride[2], 1);
+
+    for (i = 0; i < eglglessink->eglglesctx.n_textures; i++) {
+      glUniform1i (eglglessink->eglglesctx.tex_loc[0][i], i);
+      if (got_gl_error ("glUniform1i"))
+        goto HANDLE_ERROR;
+    }
+
+    if (eglglessink->orientation == GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL) {
+      glVertexAttribPointer (eglglessink->eglglesctx.position_loc[0], 3,
+          GL_FLOAT, GL_FALSE, sizeof (coord5),
+          (gpointer) (0 * sizeof (coord5)));
+      if (got_gl_error ("glVertexAttribPointer"))
+        goto HANDLE_ERROR;
+
+      glVertexAttribPointer (eglglessink->eglglesctx.texpos_loc[0], 2,
+          GL_FLOAT, GL_FALSE, sizeof (coord5),
+          (gpointer) (3 * sizeof (gfloat)));
+      if (got_gl_error ("glVertexAttribPointer"))
+        goto HANDLE_ERROR;
+    } else if (eglglessink->orientation ==
+        GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_FLIP) {
+      glVertexAttribPointer (eglglessink->eglglesctx.position_loc[0], 3,
+          GL_FLOAT, GL_FALSE, sizeof (coord5),
+          (gpointer) (4 * sizeof (coord5)));
+      if (got_gl_error ("glVertexAttribPointer"))
+        goto HANDLE_ERROR;
+
+      glVertexAttribPointer (eglglessink->eglglesctx.texpos_loc[0], 2,
+          GL_FLOAT, GL_FALSE, sizeof (coord5),
+          (gpointer) (4 * sizeof (coord5) + 3 * sizeof (gfloat)));
+      if (got_gl_error ("glVertexAttribPointer"))
+        goto HANDLE_ERROR;
+    } else {
+      g_assert_not_reached ();
+    }
   }
 
   glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
@@ -2438,6 +2518,7 @@ gst_eglglessink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstBufferPool *pool;
   GstStructure *config;
   GstCaps *caps;
+  GstVideoInfo info;
   gboolean need_pool;
   guint size;
   GstAllocator *allocator;
@@ -2450,6 +2531,11 @@ gst_eglglessink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   gst_query_parse_allocation (query, &caps, &need_pool);
   if (!caps) {
     GST_ERROR_OBJECT (eglglessink, "allocation query without caps");
+    return FALSE;
+  }
+
+  if (!gst_video_info_from_caps (&info, caps)) {
+    GST_ERROR_OBJECT (eglglessink, "allocation query with invalid caps");
     return FALSE;
   }
 
@@ -2523,6 +2609,8 @@ gst_eglglessink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
   gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
+  gst_query_add_allocation_meta (query,
+      GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL);
 
   return TRUE;
 }
