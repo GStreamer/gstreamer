@@ -448,7 +448,7 @@ GST_PLUGIN_DEFINE (
   "My filter plugin",
   plugin_init,
   VERSION,
-  LGPL,
+  "LGPL",
   "GStreamer",
   "http://gstreamer.net/"
 )
