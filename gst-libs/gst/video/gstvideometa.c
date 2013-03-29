@@ -399,8 +399,36 @@ gst_video_gl_texture_upload_meta_free (GstMeta * meta, GstBuffer * buffer)
 {
   GstVideoGLTextureUploadMeta *vmeta = (GstVideoGLTextureUploadMeta *) meta;
 
-  if (vmeta->destroy_notify)
-    vmeta->destroy_notify (vmeta->user_data);
+  if (vmeta->user_data_free)
+    vmeta->user_data_free (vmeta->user_data);
+}
+
+static gboolean
+gst_video_gl_texture_upload_meta_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  GstVideoGLTextureUploadMeta *dmeta, *smeta;
+
+  smeta = (GstVideoGLTextureUploadMeta *) meta;
+
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    GstMetaTransformCopy *copy = data;
+
+    if (!copy->region) {
+      /* only copy if the complete data is copied as well */
+      dmeta =
+          (GstVideoGLTextureUploadMeta *) gst_buffer_add_meta (dest,
+          GST_VIDEO_GL_TEXTURE_UPLOAD_META_INFO, NULL);
+      dmeta->buffer = dest;
+      dmeta->upload = smeta->upload;
+      dmeta->user_data = smeta->user_data;
+      dmeta->user_data_copy = smeta->user_data_copy;
+      dmeta->user_data_free = smeta->user_data_free;
+      if (dmeta->user_data_copy)
+        dmeta->user_data = dmeta->user_data_copy (dmeta->user_data);
+    }
+  }
+  return TRUE;
 }
 
 const GstMetaInfo *
@@ -415,7 +443,7 @@ gst_video_gl_texture_upload_meta_get_info (void)
         sizeof (GstVideoGLTextureUploadMeta),
         NULL,
         gst_video_gl_texture_upload_meta_free,
-        NULL);
+        gst_video_gl_texture_upload_meta_transform);
     g_once_init_leave (&info, meta);
   }
   return info;
@@ -440,7 +468,7 @@ gst_video_gl_texture_upload_meta_get_info (void)
 GstVideoGLTextureUploadMeta *
 gst_buffer_add_video_gl_texture_upload_meta (GstBuffer * buffer,
     GstVideoGLTextureUpload upload, gpointer user_data,
-    GDestroyNotify destroy_notify)
+    GBoxedCopyFunc user_data_copy, GBoxedFreeFunc user_data_free)
 {
   GstVideoGLTextureUploadMeta *meta;
 
@@ -454,7 +482,8 @@ gst_buffer_add_video_gl_texture_upload_meta (GstBuffer * buffer,
   meta->buffer = buffer;
   meta->upload = upload;
   meta->user_data = user_data;
-  meta->destroy_notify = destroy_notify;
+  meta->user_data_copy = user_data_copy;
+  meta->user_data_free = user_data_free;
 
   return meta;
 }

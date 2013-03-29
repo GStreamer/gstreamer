@@ -165,11 +165,12 @@ struct _GstVideoGLTextureUploadMeta {
   GstVideoGLTextureUpload upload;
 
   gpointer      user_data;
-  GDestroyNotify destroy_notify;
+  GBoxedCopyFunc user_data_copy;
+  GBoxedFreeFunc user_data_free;
 };
 
 #define gst_buffer_get_video_gl_texture_upload_meta(b) ((GstVideoGLTextureUploadMeta*)gst_buffer_get_meta((b),GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE))
-GstVideoGLTextureUploadMeta * gst_buffer_add_video_gl_texture_upload_meta (GstBuffer *buffer, GstVideoGLTextureUpload upload, gpointer user_data, GDestroyNotify destroy_notify);
+GstVideoGLTextureUploadMeta * gst_buffer_add_video_gl_texture_upload_meta (GstBuffer *buffer, GstVideoGLTextureUpload upload, gpointer user_data, GBoxedCopyFunc copy_user_data, GBoxedFreeFunc free_user_data);
 gboolean gst_video_gl_texture_upload_meta_upload (GstVideoGLTextureUploadMeta *meta, guint format, guint texture_id);
 
 GType gst_video_gl_texture_upload_meta_api_get_type (void);
