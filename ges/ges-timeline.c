@@ -158,6 +158,8 @@ struct _GESTimelinePrivate
 
   gboolean updates_enabled;
 
+  /* While we are creating and adding the TrackElements for a clip, we need to
+   * ignore the child-added signal */
   GESClip *ignore_track_element_added;
 };
 
