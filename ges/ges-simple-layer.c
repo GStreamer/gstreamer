@@ -165,7 +165,7 @@ gstl_recalculate (GESSimpleLayer * self)
   gboolean valid = TRUE;
   GESSimpleLayerPrivate *priv = self->priv;
 
-  priority = GES_LAYER (self)->min_gnl_priority + 2;
+  priority = GES_LAYER (self)->min_gnl_priority;
 
   GST_DEBUG ("recalculating values");
 

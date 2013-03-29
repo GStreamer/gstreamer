@@ -34,6 +34,11 @@
 GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define GST_CAT_DEFAULT _ges_debug
 
+/*  The first 2 GNL priorities are used for:
+ *    0- The Mixing element
+ *    1- The Gaps
+ */
+#define MIN_GNL_PRIO 2
 #define LAYER_HEIGHT 1000
 
 #define _START(obj) GES_TIMELINE_ELEMENT_START (obj)
@@ -257,6 +262,7 @@ GList*            ges_clip_create_track_elements  (GESClip *clip, GESTrackType t
 /****************************************************
  *              GESTrackElement                     *
  ****************************************************/
-gboolean          ges_track_element_set_track     (GESTrackElement * object, GESTrack * track);
+G_GNUC_INTERNAL gboolean  ges_track_element_set_track           (GESTrackElement * object, GESTrack * track);
+G_GNUC_INTERNAL guint32   _ges_track_element_get_layer_priority (GESTrackElement * element);
 
 #endif /* __GES_INTERNAL_H__ */

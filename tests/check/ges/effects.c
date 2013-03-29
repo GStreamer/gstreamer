@@ -112,7 +112,7 @@ GST_START_TEST (test_get_effects_from_tl)
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (source)), 1);
   video_source = GES_CONTAINER_CHILDREN (source)->data;
   fail_unless (GES_IS_VIDEO_TEST_SOURCE (video_source));
-  assert_equals_int (_PRIORITY (video_source), 2);
+  assert_equals_int (_PRIORITY (video_source), MIN_GNL_PRIO);
 
   GST_DEBUG ("Create effect");
   effect = ges_effect_new ("agingtv");
@@ -128,17 +128,17 @@ GST_START_TEST (test_get_effects_from_tl)
           GES_TIMELINE_ELEMENT (effect)));
   fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect)) ==
       track_video);
-  assert_equals_int (_PRIORITY (effect), 2);
-  assert_equals_int (_PRIORITY (video_source), 3);
+  assert_equals_int (_PRIORITY (effect), MIN_GNL_PRIO + 0);
+  assert_equals_int (_PRIORITY (video_source), MIN_GNL_PRIO + 1);
 
   GST_DEBUG ("Adding effect 1");
   fail_unless (ges_container_add (GES_CONTAINER (source),
           GES_TIMELINE_ELEMENT (effect1)));
   fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect1)) ==
       track_video);
-  assert_equals_int (_PRIORITY (effect), 2);
-  assert_equals_int (_PRIORITY (effect1), 3);
-  assert_equals_int (_PRIORITY (video_source), 4);
+  assert_equals_int (_PRIORITY (effect), MIN_GNL_PRIO);
+  assert_equals_int (_PRIORITY (effect1), MIN_GNL_PRIO + 1);
+  assert_equals_int (_PRIORITY (video_source), MIN_GNL_PRIO + 2);
 
   GST_DEBUG ("Adding effect 2");
   fail_unless (ges_container_add (GES_CONTAINER (source),
@@ -286,8 +286,8 @@ GST_START_TEST (test_priorities_clip)
   fail_unless (GES_IS_EFFECT (video_effect));
 
   /* FIXME This is ridiculus, both effects should have the same priority (0) */
-  assert_equals_int (_PRIORITY (audio_effect), 0);
-  assert_equals_int (_PRIORITY (video_effect), 1);
+  assert_equals_int (_PRIORITY (audio_effect), MIN_GNL_PRIO);
+  assert_equals_int (_PRIORITY (video_effect), MIN_GNL_PRIO + 1);
   assert_equals_int (GES_CONTAINER_HEIGHT (effect_clip), 2);
 
   effect = ges_effect_new ("agingtv");
@@ -307,14 +307,14 @@ GST_START_TEST (test_priorities_clip)
 
   fail_unless (ges_clip_set_top_effect_priority (GES_CLIP (effect_clip),
           GES_BASE_EFFECT (effect1), 0));
-  assert_equals_int (_PRIORITY (effect), 3);
-  assert_equals_int (_PRIORITY (effect1), 0);
+  assert_equals_int (_PRIORITY (effect), 3 + MIN_GNL_PRIO);
+  assert_equals_int (_PRIORITY (effect1), 0 + MIN_GNL_PRIO);
   assert_equals_int (GES_CONTAINER_HEIGHT (effect_clip), 4);
 
   fail_unless (ges_clip_set_top_effect_priority (GES_CLIP (effect_clip),
           GES_BASE_EFFECT (effect1), 3));
-  assert_equals_int (_PRIORITY (effect), 2);
-  assert_equals_int (_PRIORITY (effect1), 3);
+  assert_equals_int (_PRIORITY (effect), 2 + MIN_GNL_PRIO);
+  assert_equals_int (_PRIORITY (effect1), 3 + MIN_GNL_PRIO);
   assert_equals_int (GES_CONTAINER_HEIGHT (effect_clip), 4);
 
   effects = ges_clip_get_top_effects (GES_CLIP (effect_clip));

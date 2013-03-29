@@ -274,7 +274,7 @@ ges_track_element_init (GESTrackElement * self)
   priv->pending_start = 0;
   priv->pending_inpoint = 0;
   priv->pending_duration = GST_SECOND;
-  priv->pending_priority = 1;
+  priv->pending_priority = MIN_GNL_PRIO;
   priv->pending_active = TRUE;
   priv->properties_hashtable = NULL;
   priv->bindings_hashtable = g_hash_table_new_full (g_str_hash, g_str_equal,
@@ -339,6 +339,12 @@ static gboolean
 _set_priority (GESTimelineElement * element, guint32 priority)
 {
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
+
+  if (priority <= MIN_GNL_PRIO) {
+    GST_INFO_OBJECT (element, "Priority (%d) < MIN_GNL_PRIO, setting it to %d",
+        priority, MIN_GNL_PRIO);
+    priority = MIN_GNL_PRIO;
+  }
 
   GST_DEBUG ("object:%p, priority:%" G_GUINT32_FORMAT, object, priority);
 
@@ -661,6 +667,15 @@ ges_track_element_get_bindings_hashtable (GESTrackElement * trackelement)
   GESTrackElementPrivate *priv = GES_TRACK_ELEMENT (trackelement)->priv;
 
   return priv->bindings_hashtable;
+}
+
+guint32
+_ges_track_element_get_layer_priority (GESTrackElement * element)
+{
+  if (_PRIORITY (element) < LAYER_HEIGHT + MIN_GNL_PRIO)
+    return 0;
+
+  return (_PRIORITY (element) - MIN_GNL_PRIO) / LAYER_HEIGHT;
 }
 
 /**

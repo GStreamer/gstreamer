@@ -200,8 +200,8 @@ ges_layer_init (GESLayer * self)
 
   self->priv->priority = 0;
   self->priv->auto_transition = FALSE;
-  self->min_gnl_priority = 0;
-  self->max_gnl_priority = LAYER_HEIGHT;
+  self->min_gnl_priority = MIN_GNL_PRIO;
+  self->max_gnl_priority = LAYER_HEIGHT + MIN_GNL_PRIO;
 }
 
 /**
@@ -343,8 +343,8 @@ ges_layer_set_priority (GESLayer * layer, guint priority)
 
   if (priority != layer->priv->priority) {
     layer->priv->priority = priority;
-    layer->min_gnl_priority = (priority * LAYER_HEIGHT);
-    layer->max_gnl_priority = ((priority + 1) * LAYER_HEIGHT) - 1;
+    layer->min_gnl_priority = (priority * LAYER_HEIGHT) + MIN_GNL_PRIO;
+    layer->max_gnl_priority = ((priority + 1) * LAYER_HEIGHT) + MIN_GNL_PRIO;
 
     ges_layer_resync_priorities (layer);
   }

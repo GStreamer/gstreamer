@@ -148,7 +148,8 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 
     GST_DEBUG_OBJECT (container, "Adding %ith effect: %" GST_PTR_FORMAT
         " Priority %i", priv->nb_effects + 1, element,
-        GES_TIMELINE_ELEMENT_PRIORITY (container) + priv->nb_effects);
+        min_prio + GES_TIMELINE_ELEMENT_PRIORITY (container) +
+        priv->nb_effects);
 
     tmp = g_list_nth (GES_CONTAINER_CHILDREN (container), priv->nb_effects);
     for (; tmp; tmp = tmp->next)
@@ -909,18 +910,20 @@ ges_clip_set_top_effect_priority (GESClip * clip,
   track_element = GES_TRACK_ELEMENT (effect);
   current_prio = _PRIORITY (track_element);
 
+  /* FIXME, do we actually want to change what the user is telling us to do? */
+  newpriority = newpriority + MIN_GNL_PRIO;
   /*  We don't change the priority */
   if (current_prio == newpriority ||
       (G_UNLIKELY (GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (track_element)) !=
               clip)))
     return FALSE;
 
-  if (newpriority > (clip->priv->nb_effects - 1)) {
+  if (newpriority > (clip->priv->nb_effects - 1 + MIN_GNL_PRIO)) {
     GST_DEBUG ("You are trying to make %p not a top effect", effect);
     return FALSE;
   }
 
-  if (current_prio > clip->priv->nb_effects) {
+  if (current_prio > clip->priv->nb_effects + MIN_GNL_PRIO) {
     GST_DEBUG ("%p is not a top effect", effect);
     return FALSE;
   }

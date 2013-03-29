@@ -41,8 +41,8 @@ neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
 {
   gint64 new_duration;
 
-  if (_PRIORITY (self->next_source) / LAYER_HEIGHT !=
-      _PRIORITY (self->previous_source) / LAYER_HEIGHT) {
+  if (_ges_track_element_get_layer_priority (self->next_source) !=
+      _ges_track_element_get_layer_priority (self->previous_source)) {
     GST_DEBUG_OBJECT (self, "Destroy changed layer");
     g_signal_emit (self, auto_transition_signals[DESTROY_ME], 0);
     return;

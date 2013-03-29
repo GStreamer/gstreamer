@@ -143,7 +143,7 @@ gap_new (GESTrack * track, GstClockTime start, GstClockTime duration)
 
 
   g_object_set (gnlsrc, "start", new_gap->start, "duration", new_gap->duration,
-      "priority", 0, NULL);
+      "priority", 1, NULL);
 
   GST_DEBUG_OBJECT (track,
       "Created gap with start %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT,

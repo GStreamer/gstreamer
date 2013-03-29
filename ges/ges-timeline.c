@@ -809,7 +809,7 @@ _create_transitions_on_layer (GESTimeline * timeline, GESLayer * layer,
         start_or_end);
 
     /* Only object that are in that layer and track */
-    if ((_PRIORITY (next) / LAYER_HEIGHT) != layer_prio ||
+    if (_ges_track_element_get_layer_priority (next) != layer_prio ||
         (track && track != ges_track_element_get_track (next)))
       continue;
 
@@ -870,7 +870,7 @@ create_transitions (GESTimeline * timeline, GESTrackElement * track_element)
 
   track = ges_track_element_get_track (track_element);
   layer_node = g_list_find_custom (timeline->layers,
-      GINT_TO_POINTER (_PRIORITY (track_element) / LAYER_HEIGHT),
+      GINT_TO_POINTER (_ges_track_element_get_layer_priority (track_element)),
       (GCompareFunc) find_layer_by_prio);
 
   _create_transitions_on_layer (timeline,
@@ -945,7 +945,7 @@ start_tracking_track_element (GESTimeline * timeline,
   TrackObjIters *iters;
   GESTimelinePrivate *priv = timeline->priv;
 
-  guint layer_prio = _PRIORITY (trackelement) / LAYER_HEIGHT;
+  guint layer_prio = _ges_track_element_get_layer_priority (trackelement);
   GList *layer_node = g_list_find_custom (timeline->layers,
       GINT_TO_POINTER (layer_prio), (GCompareFunc) find_layer_by_prio);
   GESLayer *layer = layer_node ? layer_node->data : NULL;
@@ -2012,7 +2012,7 @@ trackelement_priority_changed_cb (GESTrackElement * child,
   GESTimelinePrivate *priv = timeline->priv;
 
   GList *layer_node = g_list_find_custom (timeline->layers,
-      GINT_TO_POINTER (_PRIORITY (child) / LAYER_HEIGHT),
+      GINT_TO_POINTER (_ges_track_element_get_layer_priority (child)),
       (GCompareFunc) find_layer_by_prio);
   GESLayer *layer = layer_node ? layer_node->data : NULL;
   TrackObjIters *iters = g_hash_table_lookup (priv->obj_iters,

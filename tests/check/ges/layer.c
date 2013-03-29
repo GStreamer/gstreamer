@@ -94,7 +94,7 @@ GST_START_TEST (test_layer_properties)
   assert_equals_uint64 (_PRIORITY (clip), 0);
   ges_timeline_commit (timeline);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
-      51, 0, TRUE);
+      51, MIN_GNL_PRIO, TRUE);
 
   /* Change the priority of the layer */
   g_object_set (layer, "priority", 1, NULL);
@@ -102,7 +102,7 @@ GST_START_TEST (test_layer_properties)
   assert_equals_uint64 (_PRIORITY (clip), 0);
   ges_timeline_commit (timeline);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
-      51, LAYER_HEIGHT, TRUE);
+      51, LAYER_HEIGHT + MIN_GNL_PRIO, TRUE);
 
   /* Change it to an insanely high value */
   g_object_set (layer, "priority", 31, NULL);
@@ -110,7 +110,7 @@ GST_START_TEST (test_layer_properties)
   assert_equals_uint64 (_PRIORITY (clip), 0);
   ges_timeline_commit (timeline);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
-      51, LAYER_HEIGHT * 31, TRUE);
+      51, MIN_GNL_PRIO + LAYER_HEIGHT * 31, TRUE);
 
   /* and back to 0 */
   g_object_set (layer, "priority", 0, NULL);
@@ -118,7 +118,7 @@ GST_START_TEST (test_layer_properties)
   assert_equals_uint64 (_PRIORITY (clip), 0);
   ges_timeline_commit (timeline);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
-      51, 0, TRUE);
+      51, MIN_GNL_PRIO + 0, TRUE);
 
   gst_object_unref (trackelement);
   fail_unless (ges_layer_remove_clip (layer, clip));
@@ -201,14 +201,14 @@ GST_START_TEST (test_layer_priorities)
   gnlobj1 = ges_track_element_get_gnlobject (trackelement1);
   fail_unless (gnlobj1 != NULL);
   g_object_get (gnlobj1, "priority", &prio1, NULL);
-  assert_equals_int (prio1, 0);
+  assert_equals_int (prio1, MIN_GNL_PRIO);
 
   assert_equals_int (_PRIORITY (clip2), 1);
   gnlobj2 = ges_track_element_get_gnlobject (trackelement2);
   fail_unless (gnlobj2 != NULL);
   g_object_get (gnlobj2, "priority", &prio2, NULL);
   /* clip2 is on the second layer and has a priority of 1 */
-  assert_equals_int (prio2, LAYER_HEIGHT + 1);
+  assert_equals_int (prio2, MIN_GNL_PRIO + LAYER_HEIGHT + 1);
 
   assert_equals_int (_PRIORITY (clip3), LAYER_HEIGHT - 1);
   gnlobj3 = ges_track_element_get_gnlobject (trackelement3);
@@ -216,7 +216,7 @@ GST_START_TEST (test_layer_priorities)
   /* clip3 is on the third layer and has a priority of LAYER_HEIGHT + 1
    * it priority must have the maximum priority of this layer*/
   g_object_get (gnlobj3, "priority", &prio3, NULL);
-  assert_equals_int (prio3, LAYER_HEIGHT * 3 - 1);
+  assert_equals_int (prio3, MIN_GNL_PRIO + LAYER_HEIGHT * 3 - 1);
 
   /* Move layers around */
   g_object_set (layer1, "priority", 2, NULL);
@@ -234,9 +234,9 @@ GST_START_TEST (test_layer_priorities)
   g_object_get (gnlobj1, "priority", &prio1, NULL);
   g_object_get (gnlobj2, "priority", &prio2, NULL);
   g_object_get (gnlobj3, "priority", &prio3, NULL);
-  assert_equals_int (prio1, 2 * LAYER_HEIGHT);
-  assert_equals_int (prio2, 1);
-  assert_equals_int (prio3, LAYER_HEIGHT * 2 - 1);
+  assert_equals_int (prio1, 2 * LAYER_HEIGHT + MIN_GNL_PRIO);
+  assert_equals_int (prio2, MIN_GNL_PRIO + 1);
+  assert_equals_int (prio3, LAYER_HEIGHT * 2 - 1 + MIN_GNL_PRIO);
 
   /* And move objects around */
   fail_unless (ges_clip_move_to_layer (clip2, layer1));
@@ -260,9 +260,9 @@ GST_START_TEST (test_layer_priorities)
   g_object_get (gnlobj1, "priority", &prio1, NULL);
   g_object_get (gnlobj2, "priority", &prio2, NULL);
   g_object_get (gnlobj3, "priority", &prio3, NULL);
-  assert_equals_int (prio1, 2 * LAYER_HEIGHT);
-  assert_equals_int (prio2, 2 * LAYER_HEIGHT + 1);
-  assert_equals_int (prio3, LAYER_HEIGHT * 3 - 1);
+  assert_equals_int (prio1, 2 * LAYER_HEIGHT + MIN_GNL_PRIO);
+  assert_equals_int (prio2, 2 * LAYER_HEIGHT + 1 + MIN_GNL_PRIO);
+  assert_equals_int (prio3, LAYER_HEIGHT * 3 - 1 + MIN_GNL_PRIO);
 
   /* And change TrackElement-s priorities and check that changes are not
    * refected on it containing Clip */
