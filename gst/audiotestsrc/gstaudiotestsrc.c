@@ -1059,7 +1059,7 @@ gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
   samplerate = GST_AUDIO_INFO_RATE (&src->info);
   bpf = GST_AUDIO_INFO_BPF (&src->info);
 
-  /* now move to the time indicated, don't see to the sample *after* the time */
+  /* now move to the time indicated, don't seek to the sample *after* the time */
   next_sample = gst_util_uint64_scale_int (time, samplerate, GST_SECOND);
   src->next_byte = next_sample * bpf;
   if (samplerate == 0)
