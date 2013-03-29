@@ -1049,6 +1049,7 @@ gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
   GstAudioTestSrc *src = GST_AUDIO_TEST_SRC (basesrc);
   GstClockTime time;
   gint samplerate, bpf;
+  gint64 next_sample;
 
   GST_DEBUG_OBJECT (src, "seeking %" GST_SEGMENT_FORMAT, segment);
 
@@ -1058,20 +1059,22 @@ gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
   samplerate = GST_AUDIO_INFO_RATE (&src->info);
   bpf = GST_AUDIO_INFO_BPF (&src->info);
 
-  /* now move to the time indicated */
-  src->next_sample = gst_util_uint64_scale_round (time, samplerate, GST_SECOND);
-  src->next_byte = src->next_sample * bpf;
+  /* now move to the time indicated, don't see to the sample *after* the time */
+  next_sample = gst_util_uint64_scale_int (time, samplerate, GST_SECOND);
+  src->next_byte = next_sample * bpf;
   if (samplerate == 0)
     src->next_time = 0;
   else
     src->next_time =
-        gst_util_uint64_scale_int (src->next_sample, GST_SECOND, samplerate);
+        gst_util_uint64_scale_round (next_sample, GST_SECOND, samplerate);
 
   GST_DEBUG_OBJECT (src, "seeking next_sample=%" G_GINT64_FORMAT
-      " next_time=%" GST_TIME_FORMAT, src->next_sample,
+      " next_time=%" GST_TIME_FORMAT, next_sample,
       GST_TIME_ARGS (src->next_time));
 
   g_assert (src->next_time <= time);
+
+  src->next_sample = next_sample;
 
   if (!src->reverse) {
     if (GST_CLOCK_TIME_IS_VALID (segment->start)) {
