@@ -92,7 +92,7 @@ gst_egl_image_memory_get_type (GstMemory * mem)
 }
 
 GstEGLImageOrientation
-gst_egl_image_memory_get_orientation (GstMemory *mem)
+gst_egl_image_memory_get_orientation (GstMemory * mem)
 {
   g_return_val_if_fail (gst_is_egl_image_memory (mem),
       GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL);
@@ -104,7 +104,8 @@ gst_egl_image_memory_get_orientation (GstMemory *mem)
 }
 
 void
-gst_egl_image_memory_set_orientation (GstMemory *mem, GstEGLImageOrientation orientation)
+gst_egl_image_memory_set_orientation (GstMemory * mem,
+    GstEGLImageOrientation orientation)
 {
   g_return_if_fail (gst_is_egl_image_memory (mem));
 
@@ -323,7 +324,7 @@ gst_egl_display_unref (GstEGLDisplay * display)
   g_return_if_fail (display != NULL);
 
   if (g_atomic_int_dec_and_test (&display->refcount)) {
-    if (display != EGL_NO_DISPLAY)
+    if (display->display != EGL_NO_DISPLAY)
       eglTerminate (display->display);
     g_slice_free (GstEGLDisplay, display);
   }
@@ -340,4 +341,3 @@ gst_egl_display_get (GstEGLDisplay * display)
 G_DEFINE_BOXED_TYPE (GstEGLDisplay, gst_egl_display,
     (GBoxedCopyFunc) gst_egl_display_ref,
     (GBoxedFreeFunc) gst_egl_display_unref);
-
