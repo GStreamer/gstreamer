@@ -47,18 +47,18 @@ typedef struct _GstRsvgDecClass GstRsvgDecClass;
 
 struct _GstRsvgDec
 {
-  GstElement  element;
+  GstVideoDecoder  decoder;
 
   GstPad     *sinkpad;
   GstPad     *srcpad;
-
-  gint width, height;
 
   GList *pending_events;
 
   gint fps_n, fps_d;
   GstClockTime first_timestamp;
   guint64 frame_count;
+
+  GstVideoCodecState *input_state;
 
   GstSegment segment;
   gboolean need_newsegment;
@@ -68,7 +68,7 @@ struct _GstRsvgDec
 
 struct _GstRsvgDecClass
 {
-  GstElementClass parent_class;
+  GstVideoDecoderClass parent_class;
 };
 
 GType gst_rsvg_dec_get_type (void);

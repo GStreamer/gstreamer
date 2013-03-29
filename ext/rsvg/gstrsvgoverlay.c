@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) 2010 Olivier Aubert <olivier.aubert@liris.cnrs.fr>
+ * Copyright (C) 2013 Collabora Ltda
+ *  Author: Luciana Fujii Pontello <luciana.fujii@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -66,7 +68,6 @@
 #include <gst/video/video.h>
 
 #include <librsvg/rsvg.h>
-#include <librsvg/rsvg-cairo.h>
 
 enum
 {
@@ -96,9 +97,9 @@ enum
 } G_STMT_END
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define GST_RSVG_VIDEO_CAPS GST_VIDEO_CAPS_BGRA
+#define GST_RSVG_VIDEO_CAPS GST_VIDEO_CAPS_MAKE ("BGRA")
 #else
-#define GST_RSVG_VIDEO_CAPS GST_VIDEO_CAPS_ARGB
+#define GST_RSVG_VIDEO_CAPS GST_VIDEO_CAPS_MAKE ("ARGB")
 #endif
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -120,8 +121,8 @@ static GstStaticPadTemplate data_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/svg+xml; image/svg; text/plain"));
 
-GST_BOILERPLATE (GstRsvgOverlay, gst_rsvg_overlay, GstVideoFilter,
-    GST_TYPE_VIDEO_FILTER);
+#define gst_rsv_overlay_parent_class parent_class
+G_DEFINE_TYPE (GstRsvgOverlay, gst_rsvg_overlay, GST_TYPE_VIDEO_FILTER);
 
 static void gst_rsvg_overlay_finalize (GObject * object);
 
@@ -304,7 +305,8 @@ gst_rsvg_overlay_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstFlowReturn
-gst_rsvg_overlay_data_sink_chain (GstPad * pad, GstBuffer * buffer)
+gst_rsvg_overlay_data_sink_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
   GstRsvgOverlay *overlay = GST_RSVG_OVERLAY (GST_PAD_PARENT (pad));
 
@@ -313,7 +315,8 @@ gst_rsvg_overlay_data_sink_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static gboolean
-gst_rsvg_overlay_data_sink_event (GstPad * pad, GstEvent * event)
+gst_rsvg_overlay_data_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstRsvgOverlay *overlay = GST_RSVG_OVERLAY (GST_PAD_PARENT (pad));
 
@@ -351,20 +354,11 @@ gst_rsvg_overlay_data_sink_event (GstPad * pad, GstEvent * event)
   return TRUE;
 }
 
-static gboolean
-gst_rsvg_overlay_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
-{
-  GstRsvgOverlay *overlay = GST_RSVG_OVERLAY (btrans);
-
-  return G_LIKELY (gst_video_format_parse_caps (incaps,
-          &overlay->caps_format, &overlay->caps_width, &overlay->caps_height));
-}
-
 static GstFlowReturn
-gst_rsvg_overlay_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
+gst_rsvg_overlay_transform_frame_ip (GstVideoFilter * vfilter,
+    GstVideoFrame * frame)
 {
-  GstRsvgOverlay *overlay = GST_RSVG_OVERLAY (btrans);
+  GstRsvgOverlay *overlay = GST_RSVG_OVERLAY (vfilter);
   cairo_surface_t *surface;
   cairo_t *cr;
   double applied_x_offset = (double) overlay->x_offset;
@@ -379,9 +373,9 @@ gst_rsvg_overlay_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   }
 
   surface =
-      cairo_image_surface_create_for_data (GST_BUFFER_DATA (buf),
-      CAIRO_FORMAT_ARGB32, overlay->caps_width, overlay->caps_height,
-      overlay->caps_width * 4);
+      cairo_image_surface_create_for_data (GST_VIDEO_FRAME_PLANE_DATA (frame,
+          0), CAIRO_FORMAT_ARGB32, GST_VIDEO_FRAME_WIDTH (frame),
+      GST_VIDEO_FRAME_HEIGHT (frame), GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0));
   if (G_UNLIKELY (!surface))
     return GST_FLOW_ERROR;
 
@@ -393,16 +387,18 @@ gst_rsvg_overlay_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
 
   /* Compute relative dimensions if absolute dimensions are not set */
   if (!applied_x_offset && overlay->x_relative) {
-    applied_x_offset = overlay->x_relative * overlay->caps_width;
+    applied_x_offset = overlay->x_relative * GST_VIDEO_FRAME_WIDTH (frame);
   }
   if (!applied_y_offset && overlay->y_relative) {
-    applied_y_offset = overlay->y_relative * overlay->caps_height;
+    applied_y_offset = overlay->y_relative * GST_VIDEO_FRAME_HEIGHT (frame);
   }
   if (!applied_width && overlay->width_relative) {
-    applied_width = (int) (overlay->width_relative * overlay->caps_width);
+    applied_width =
+        (int) (overlay->width_relative * GST_VIDEO_FRAME_WIDTH (frame));
   }
   if (!applied_height && overlay->height_relative) {
-    applied_height = (int) (overlay->height_relative * overlay->caps_height);
+    applied_height =
+        (int) (overlay->height_relative * GST_VIDEO_FRAME_HEIGHT (frame));
   }
 
   if (applied_x_offset || applied_y_offset) {
@@ -447,8 +443,11 @@ gst_rsvg_overlay_stop (GstBaseTransform * btrans)
 }
 
 static void
-gst_rsvg_overlay_base_init (gpointer klass)
+gst_rsvg_overlay_class_init (GstRsvgOverlayClass * klass)
 {
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBaseTransformClass *basetransform_class = GST_BASE_TRANSFORM_CLASS (klass);
+  GstVideoFilterClass *videofilter_class = GST_VIDEO_FILTER_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
@@ -462,13 +461,6 @@ gst_rsvg_overlay_base_init (gpointer klass)
       "Filter/Editor/Video",
       "Overlays SVG graphics over a video stream",
       "Olivier Aubert <olivier.aubert@liris.cnrs.fr>");
-}
-
-static void
-gst_rsvg_overlay_class_init (GstRsvgOverlayClass * klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstBaseTransformClass *basetransform_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->set_property = gst_rsvg_overlay_set_property;
   gobject_class->get_property = gst_rsvg_overlay_get_property;
@@ -519,14 +511,13 @@ gst_rsvg_overlay_class_init (GstRsvgOverlayClass * klass)
           "Specify a height relative to the display size.", -G_MAXFLOAT,
           G_MAXFLOAT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  basetransform_class->set_caps = gst_rsvg_overlay_set_caps;
-  basetransform_class->transform_ip = gst_rsvg_overlay_transform_ip;
+  videofilter_class->transform_frame_ip = gst_rsvg_overlay_transform_frame_ip;
   basetransform_class->stop = gst_rsvg_overlay_stop;
   basetransform_class->passthrough_on_same_caps = FALSE;
 }
 
 static void
-gst_rsvg_overlay_init (GstRsvgOverlay * overlay, GstRsvgOverlayClass * klass)
+gst_rsvg_overlay_init (GstRsvgOverlay * overlay)
 {
   overlay->x_offset = 0;
   overlay->y_offset = 0;
@@ -556,5 +547,5 @@ gst_rsvg_overlay_finalize (GObject * object)
 
   g_object_unref (overlay->adapter);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_rsvg_overlay_parent_class)->finalize (object);
 }

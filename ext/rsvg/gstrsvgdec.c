@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2009> Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) <2013> Luciana Fujii <luciana.fujii@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -45,37 +46,42 @@ static GstStaticPadTemplate sink_factory =
     GST_STATIC_CAPS ("image/svg+xml; image/svg"));
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define GST_RSVG_VIDEO_CAPS GST_VIDEO_CAPS_BGRA
+#define GST_RSVG_VIDEO_CAPS GST_VIDEO_CAPS_MAKE ("BGRA")
+#define GST_RSVG_VIDEO_FORMAT GST_VIDEO_FORMAT_BGRA
 #else
-#define GST_RSVG_VIDEO_CAPS GST_VIDEO_CAPS_ARGB
+#define GST_RSVG_VIDEO_CAPS GST_VIDEO_CAPS_MAKE ("ARGB")
+#define GST_RSVG_VIDEO_FORMAT GST_VIDEO_FORMAT_ARGB
 #endif
 
 static GstStaticPadTemplate src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_RSVG_VIDEO_CAPS));
 
-GST_BOILERPLATE (GstRsvgDec, gst_rsvg_dec, GstElement, GST_TYPE_ELEMENT);
+#define gst_rsv_dec_parent_class parent_class
+G_DEFINE_TYPE (GstRsvgDec, gst_rsvg_dec, GST_TYPE_VIDEO_DECODER);
 
-static void gst_rsvg_dec_reset (GstRsvgDec * rsvg);
+static gboolean gst_rsvg_dec_reset (GstVideoDecoder * decoder, gboolean hard);
 
-static GstFlowReturn gst_rsvg_dec_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_rsvg_dec_sink_set_caps (GstPad * pad, GstCaps * caps);
-static gboolean gst_rsvg_dec_sink_event (GstPad * pad, GstEvent * event);
-
-static gboolean gst_rsvg_dec_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_rsvg_dec_src_query (GstPad * pad, GstQuery * query);
-static const GstQueryType *gst_rsvg_dec_src_query_type (GstPad * pad);
-static gboolean gst_rsvg_dec_src_set_caps (GstPad * pad, GstCaps * caps);
-
-static GstStateChangeReturn gst_rsvg_dec_change_state (GstElement * element,
-    GstStateChange transition);
+static gboolean gst_rsvg_dec_stop (GstVideoDecoder * decoder);
+static gboolean gst_rsvg_dec_set_format (GstVideoDecoder * decoder,
+    GstVideoCodecState * state);
+static GstFlowReturn gst_rsvg_dec_parse (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos);
+static GstFlowReturn gst_rsvg_dec_handle_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame);
+static GstFlowReturn gst_rsvg_decode_image (GstRsvgDec * rsvg,
+    GstBuffer * buffer, GstVideoCodecFrame * frame);
 
 static void gst_rsvg_dec_finalize (GObject * object);
 
 static void
-gst_rsvg_dec_base_init (gpointer g_class)
+gst_rsvg_dec_class_init (GstRsvgDecClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (rsvgdec_debug, "rsvgdec", 0, "RSVG decoder");
 
   gst_element_class_set_static_metadata (element_class,
       "SVG image decoder", "Codec/Decoder/Image",
@@ -86,70 +92,46 @@ gst_rsvg_dec_base_init (gpointer g_class)
       gst_static_pad_template_get (&sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
-}
-
-static void
-gst_rsvg_dec_class_init (GstRsvgDecClass * klass)
-{
-  GstElementClass *element_class = (GstElementClass *) klass;
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-
-  GST_DEBUG_CATEGORY_INIT (rsvgdec_debug, "rsvgdec", 0, "RSVG decoder");
 
   gobject_class->finalize = gst_rsvg_dec_finalize;
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_rsvg_dec_change_state);
+  video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_rsvg_dec_stop);
+  video_decoder_class->reset = GST_DEBUG_FUNCPTR (gst_rsvg_dec_reset);
+  video_decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_rsvg_dec_set_format);
+  video_decoder_class->parse = GST_DEBUG_FUNCPTR (gst_rsvg_dec_parse);
+  video_decoder_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_rsvg_dec_handle_frame);
 }
 
 static void
-gst_rsvg_dec_init (GstRsvgDec * rsvg, GstRsvgDecClass * klass)
+dec_reset (GstRsvgDec * rsvg)
 {
-  rsvg->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_setcaps_function (rsvg->sinkpad, gst_rsvg_dec_sink_set_caps);
-  gst_pad_set_event_function (rsvg->sinkpad, gst_rsvg_dec_sink_event);
-  gst_pad_set_chain_function (rsvg->sinkpad, gst_rsvg_dec_chain);
-  gst_element_add_pad (GST_ELEMENT (rsvg), rsvg->sinkpad);
+  rsvg->fps_n = 0;
+  rsvg->fps_d = 1;
+}
 
-  rsvg->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  gst_pad_set_event_function (rsvg->srcpad, gst_rsvg_dec_src_event);
-  gst_pad_set_query_function (rsvg->srcpad, gst_rsvg_dec_src_query);
-  gst_pad_set_query_type_function (rsvg->srcpad, gst_rsvg_dec_src_query_type);
-  gst_pad_set_setcaps_function (rsvg->srcpad, gst_rsvg_dec_src_set_caps);
-  gst_element_add_pad (GST_ELEMENT (rsvg), rsvg->srcpad);
-
-  rsvg->adapter = gst_adapter_new ();
-
-  gst_rsvg_dec_reset (rsvg);
+static void
+gst_rsvg_dec_init (GstRsvgDec * rsvg)
+{
+  GstVideoDecoder *decoder = GST_VIDEO_DECODER (rsvg);
+  gst_video_decoder_set_packetized (decoder, FALSE);
+  dec_reset (rsvg);
 }
 
 static void
 gst_rsvg_dec_finalize (GObject * object)
 {
-  GstRsvgDec *rsvg = GST_RSVG_DEC (object);
-
-  if (rsvg->adapter) {
-    g_object_unref (rsvg->adapter);
-    rsvg->adapter = NULL;
-  }
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_rsvg_dec_parent_class)->finalize (object);
 }
 
-static void
-gst_rsvg_dec_reset (GstRsvgDec * dec)
+
+static gboolean
+gst_rsvg_dec_reset (GstVideoDecoder * decoder, gboolean hard)
 {
-  gst_adapter_clear (dec->adapter);
-  dec->width = dec->height = 0;
-  dec->fps_n = 0;
-  dec->fps_d = 1;
-  dec->first_timestamp = GST_CLOCK_TIME_NONE;
-  dec->frame_count = 0;
+  GstRsvgDec *dec = GST_RSVG_DEC (decoder);
 
-  gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
-  dec->need_newsegment = TRUE;
+  dec_reset (dec);
 
-  g_list_foreach (dec->pending_events, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (dec->pending_events);
-  dec->pending_events = NULL;
+  return TRUE;
 }
 
 #define CAIRO_UNPREMULTIPLY(a,r,g,b) G_STMT_START { \
@@ -183,9 +165,10 @@ gst_rsvg_decode_unpremultiply (guint8 * data, gint width, gint height)
 }
 
 static GstFlowReturn
-gst_rsvg_decode_image (GstRsvgDec * rsvg, const guint8 * data, guint size,
-    GstBuffer ** buffer)
+gst_rsvg_decode_image (GstRsvgDec * rsvg, GstBuffer * buffer,
+    GstVideoCodecFrame * frame)
 {
+  GstVideoDecoder *decoder = GST_VIDEO_DECODER (rsvg);
   GstFlowReturn ret = GST_FLOW_OK;
   cairo_t *cr;
   cairo_surface_t *surface;
@@ -193,10 +176,17 @@ gst_rsvg_decode_image (GstRsvgDec * rsvg, const guint8 * data, guint size,
   GError *error = NULL;
   RsvgDimensionData dimension;
   gdouble scalex, scaley;
+  GstMapInfo minfo;
+  GstVideoFrame vframe;
+  GstVideoCodecState *output_state;
 
   GST_LOG_OBJECT (rsvg, "parsing svg");
 
-  handle = rsvg_handle_new_from_data (data, size, &error);
+  if (!gst_buffer_map (buffer, &minfo, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (rsvg, "Failed to get SVG image");
+    return GST_FLOW_ERROR;
+  }
+  handle = rsvg_handle_new_from_data (minfo.data, minfo.size, &error);
   if (!handle) {
     GST_ERROR_OBJECT (rsvg, "Failed to parse SVG image: %s", error->message);
     g_error_free (error);
@@ -204,82 +194,45 @@ gst_rsvg_decode_image (GstRsvgDec * rsvg, const guint8 * data, guint size,
   }
 
   rsvg_handle_get_dimensions (handle, &dimension);
-  if (rsvg->width != dimension.width || rsvg->height != dimension.height) {
-    GstCaps *caps1, *caps2, *caps3;
-    GstStructure *s;
 
-    GST_LOG_OBJECT (rsvg, "resolution changed, updating caps");
+  output_state = gst_video_decoder_get_output_state (decoder);
+  if ((output_state == NULL)
+      || GST_VIDEO_INFO_WIDTH (&output_state->info) != dimension.width
+      || GST_VIDEO_INFO_HEIGHT (&output_state->info) != dimension.height) {
 
-    caps1 = gst_caps_copy (gst_pad_get_pad_template_caps (rsvg->srcpad));
-    caps2 = gst_pad_peer_get_caps (rsvg->srcpad);
-    if (caps2) {
-      caps3 = gst_caps_intersect (caps1, caps2);
-      gst_caps_unref (caps1);
-      gst_caps_unref (caps2);
-      caps1 = caps3;
-      caps3 = NULL;
-    }
-
-    if (gst_caps_is_empty (caps1)) {
-      GST_ERROR_OBJECT (rsvg, "Unable to negotiate a format");
-      gst_caps_unref (caps1);
-      g_object_unref (handle);
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
-
-    caps2 = gst_caps_copy (gst_pad_get_pad_template_caps (rsvg->srcpad));
-    s = gst_caps_get_structure (caps2, 0);
-    gst_structure_set (s, "width", G_TYPE_INT, dimension.width, "height",
-        G_TYPE_INT, dimension.height, "framerate", GST_TYPE_FRACTION, 0, 1,
-        NULL);
-    caps3 = gst_caps_intersect (caps1, caps2);
-    if (!gst_caps_is_empty (caps3)) {
-      gst_caps_truncate (caps3);
-      gst_pad_set_caps (rsvg->srcpad, caps3);
-      gst_caps_unref (caps1);
-      gst_caps_unref (caps2);
-      gst_caps_unref (caps3);
-      rsvg->width = dimension.width;
-      rsvg->height = dimension.height;
-    } else {
-      gst_caps_unref (caps2);
-      gst_caps_unref (caps3);
-      gst_caps_truncate (caps1);
-
-      s = gst_caps_get_structure (caps1, 0);
-      gst_structure_set (s, "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
-
-      if (!gst_caps_is_fixed (caps1)
-          && (!gst_structure_fixate_field_nearest_int (s, "width",
-                  dimension.width)
-              || !gst_structure_fixate_field_nearest_int (s, "height",
-                  dimension.height))) {
-        g_object_unref (handle);
-        GST_ERROR_OBJECT (rsvg, "Failed to fixate caps");
-        return GST_FLOW_NOT_NEGOTIATED;
-      }
-      gst_pad_set_caps (rsvg->srcpad, caps1);
-      gst_structure_get_int (s, "width", &rsvg->width);
-      gst_structure_get_int (s, "height", &rsvg->height);
-      gst_caps_unref (caps1);
-    }
+    /* Create the output state */
+    gst_video_decoder_set_output_state (decoder, GST_RSVG_VIDEO_FORMAT,
+        dimension.width, dimension.height, rsvg->input_state);
+    if (output_state)
+      gst_video_codec_state_unref (output_state);
+    output_state = gst_video_decoder_get_output_state (decoder);
   }
 
-  if ((ret = gst_pad_alloc_buffer_and_set_caps (rsvg->srcpad,
-              GST_BUFFER_OFFSET_NONE,
-              rsvg->width * rsvg->height * 4,
-              GST_PAD_CAPS (rsvg->srcpad), buffer)) != GST_FLOW_OK) {
+  ret = gst_video_decoder_allocate_output_frame (decoder, frame);
+
+  if (ret != GST_FLOW_OK) {
     g_object_unref (handle);
     GST_ERROR_OBJECT (rsvg, "Buffer allocation failed %s",
         gst_flow_get_name (ret));
     return ret;
   }
 
-  GST_LOG_OBJECT (rsvg, "render image at %d x %d", rsvg->height, rsvg->width);
+  GST_LOG_OBJECT (rsvg, "render image at %d x %d",
+      GST_VIDEO_INFO_HEIGHT (&output_state->info),
+      GST_VIDEO_INFO_WIDTH (&output_state->info));
 
+
+  if (!gst_video_frame_map (&vframe,
+          &gst_video_decoder_get_output_state (decoder)->info,
+          frame->output_buffer, GST_MAP_READWRITE)) {
+    GST_ERROR_OBJECT (rsvg, "Failed to get SVG image");
+    return GST_FLOW_ERROR;
+  }
   surface =
-      cairo_image_surface_create_for_data (GST_BUFFER_DATA (*buffer),
-      CAIRO_FORMAT_ARGB32, rsvg->width, rsvg->height, rsvg->width * 4);
+      cairo_image_surface_create_for_data (GST_VIDEO_FRAME_PLANE_DATA (&vframe,
+          0), CAIRO_FORMAT_ARGB32, GST_VIDEO_FRAME_WIDTH (&vframe),
+      GST_VIDEO_FRAME_HEIGHT (&vframe), GST_VIDEO_FRAME_PLANE_STRIDE (&vframe,
+          0));
 
   cr = cairo_create (surface);
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
@@ -289,11 +242,15 @@ gst_rsvg_decode_image (GstRsvgDec * rsvg, const guint8 * data, guint size,
   cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
 
   scalex = scaley = 1.0;
-  if (rsvg->width != dimension.width) {
-    scalex = ((gdouble) rsvg->width) / ((gdouble) dimension.width);
+  if (GST_VIDEO_INFO_WIDTH (&output_state->info) != dimension.width) {
+    scalex =
+        ((gdouble) GST_VIDEO_INFO_WIDTH (&output_state->info)) /
+        ((gdouble) dimension.width);
   }
-  if (rsvg->height != dimension.height) {
-    scaley = ((gdouble) rsvg->height) / ((gdouble) dimension.height);
+  if (GST_VIDEO_INFO_HEIGHT (&output_state->info) != dimension.height) {
+    scaley =
+        ((gdouble) GST_VIDEO_INFO_HEIGHT (&output_state->info)) /
+        ((gdouble) dimension.height);
   }
   cairo_scale (cr, scalex, scaley);
   rsvg_handle_render_cairo (handle, cr);
@@ -303,273 +260,127 @@ gst_rsvg_decode_image (GstRsvgDec * rsvg, const guint8 * data, guint size,
   cairo_surface_destroy (surface);
 
   /* Now unpremultiply Cairo's ARGB to match GStreamer's */
-  gst_rsvg_decode_unpremultiply (GST_BUFFER_DATA (*buffer), rsvg->width,
-      rsvg->height);
+  gst_rsvg_decode_unpremultiply (GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0),
+      GST_VIDEO_FRAME_WIDTH (&vframe), GST_VIDEO_FRAME_HEIGHT (&vframe));
+
+  gst_video_codec_state_unref (output_state);
+  gst_buffer_unmap (buffer, &minfo);
+  gst_video_frame_unmap (&vframe);
 
   return ret;
+}
+
+
+static gboolean
+gst_rsvg_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
+{
+  GstRsvgDec *rsvg = GST_RSVG_DEC (decoder);
+  GstVideoInfo *info = &state->info;
+
+  if (rsvg->input_state)
+    gst_video_codec_state_unref (rsvg->input_state);
+  rsvg->input_state = gst_video_codec_state_ref (state);
+
+  /* Create the output state */
+  gst_video_decoder_set_output_state (decoder, GST_RSVG_VIDEO_FORMAT,
+      GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info),
+      rsvg->input_state);
+
+  return TRUE;
 }
 
 static GstFlowReturn
-gst_rsvg_dec_chain (GstPad * pad, GstBuffer * buffer)
+gst_rsvg_dec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
+    GstAdapter * adapter, gboolean at_eos)
 {
-  GstRsvgDec *rsvg = GST_RSVG_DEC (GST_PAD_PARENT (pad));
+  GstRsvgDec *rsvg = GST_RSVG_DEC (decoder);
   gboolean completed = FALSE;
   const guint8 *data;
   guint size;
-  gboolean ret = GST_FLOW_OK;
+  guint i;
 
-  /* first_timestamp is used slightly differently where a framerate
-     is given or not.
-     If there is a frame rate, it will be used as a base.
-     If there is not, it will be used to keep track of the timestamp
-     of the first buffer, to be used as the timestamp of the output
-     buffer. When a buffer is output, first timestamp will resync to
-     the next buffer's timestamp. */
-  if (rsvg->first_timestamp == GST_CLOCK_TIME_NONE) {
-    if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
-      rsvg->first_timestamp = GST_BUFFER_TIMESTAMP (buffer);
-    else if (rsvg->fps_n != 0)
-      rsvg->first_timestamp = 0;
-  }
-
-  gst_adapter_push (rsvg->adapter, buffer);
-
-  size = gst_adapter_available (rsvg->adapter);
+  GST_LOG_OBJECT (rsvg, "parse start");
+  size = gst_adapter_available (adapter);
 
   /* "<svg></svg>" */
-  while (size >= 5 + 6 && ret == GST_FLOW_OK) {
-    guint i;
+  if (size < 5 + 6)
+    return GST_VIDEO_DECODER_FLOW_NEED_DATA;
 
-    data = gst_adapter_peek (rsvg->adapter, size);
-    for (i = size - 6; i >= 5; i--) {
-      if (memcmp (data + i, "</svg>", 6) == 0) {
-        completed = TRUE;
-        size = i + 6;
-        break;
+  data = gst_adapter_map (adapter, size);
+  if (data == NULL) {
+    GST_ERROR_OBJECT (rsvg, "Unable to map memory");
+    return GST_FLOW_ERROR;
+  }
+  for (i = 0; i < size - 4; i++) {
+    if (memcmp (data + i, "<svg", 4) == 0) {
+      gst_adapter_flush (adapter, i);
+
+      size = gst_adapter_available (adapter);
+      if (size < 5 + 6)
+        return GST_VIDEO_DECODER_FLOW_NEED_DATA;
+      data = gst_adapter_map (adapter, size);
+      if (data == NULL) {
+        GST_ERROR_OBJECT (rsvg, "Unable to map memory");
+        return GST_FLOW_ERROR;
       }
+      break;
     }
+  }
+  /* If start wasn't found: */
+  if (i == size - 4) {
+    gst_adapter_flush (adapter, size - 4);
+    return GST_VIDEO_DECODER_FLOW_NEED_DATA;
+  }
 
-    if (completed) {
-      GstBuffer *outbuf = NULL;
-
-      GST_LOG_OBJECT (rsvg, "have complete svg of %u bytes", size);
-
-      data = gst_adapter_peek (rsvg->adapter, size);
-
-      ret = gst_rsvg_decode_image (rsvg, data, size, &outbuf);
-      if (ret != GST_FLOW_OK)
-        break;
-
-
-      if (rsvg->first_timestamp != GST_CLOCK_TIME_NONE) {
-        GST_BUFFER_TIMESTAMP (outbuf) = rsvg->first_timestamp;
-        GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
-        if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
-          GstClockTime end =
-              GST_BUFFER_TIMESTAMP_IS_VALID (buffer) ?
-              GST_BUFFER_TIMESTAMP (buffer) : rsvg->first_timestamp;
-          end += GST_BUFFER_DURATION (buffer);
-          GST_BUFFER_DURATION (outbuf) = end - GST_BUFFER_TIMESTAMP (outbuf);
-        }
-        if (rsvg->fps_n == 0) {
-          rsvg->first_timestamp = GST_CLOCK_TIME_NONE;
-        } else {
-          GST_BUFFER_DURATION (outbuf) =
-              gst_util_uint64_scale (rsvg->frame_count, rsvg->fps_d,
-              rsvg->fps_n * GST_SECOND);
-        }
-      } else if (rsvg->fps_n != 0) {
-        GST_BUFFER_TIMESTAMP (outbuf) =
-            rsvg->first_timestamp + gst_util_uint64_scale (rsvg->frame_count,
-            rsvg->fps_d, rsvg->fps_n * GST_SECOND);
-        GST_BUFFER_DURATION (outbuf) =
-            gst_util_uint64_scale (rsvg->frame_count, rsvg->fps_d,
-            rsvg->fps_n * GST_SECOND);
-      } else {
-        GST_BUFFER_TIMESTAMP (outbuf) = rsvg->first_timestamp;
-        GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
-      }
-      rsvg->frame_count++;
-
-      if (rsvg->need_newsegment) {
-        gst_pad_push_event (rsvg->srcpad,
-            gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
-        rsvg->need_newsegment = FALSE;
-      }
-
-      if (rsvg->pending_events) {
-        GList *l;
-
-        for (l = rsvg->pending_events; l; l = l->next)
-          gst_pad_push_event (rsvg->srcpad, l->data);
-        g_list_free (rsvg->pending_events);
-        rsvg->pending_events = NULL;
-      }
-
-      GST_LOG_OBJECT (rsvg, "image rendered okay");
-
-      ret = gst_pad_push (rsvg->srcpad, outbuf);
-      if (ret != GST_FLOW_OK)
-        break;
-
-      gst_adapter_flush (rsvg->adapter, size);
-      size = gst_adapter_available (rsvg->adapter);
-      continue;
-    } else {
+  for (i = size - 6; i >= 5; i--) {
+    if (memcmp (data + i, "</svg>", 6) == 0) {
+      completed = TRUE;
+      size = i + 6;
       break;
     }
   }
 
-  return GST_FLOW_OK;
+  if (completed) {
+
+    GST_LOG_OBJECT (rsvg, "have complete svg of %u bytes", size);
+
+    gst_video_decoder_add_to_frame (decoder, size);
+    return gst_video_decoder_have_frame (decoder);
+  }
+  return GST_VIDEO_DECODER_FLOW_NEED_DATA;
 }
 
-static gboolean
-gst_rsvg_dec_sink_set_caps (GstPad * pad, GstCaps * caps)
+static GstFlowReturn
+gst_rsvg_dec_handle_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame)
 {
-  GstRsvgDec *rsvg = GST_RSVG_DEC (gst_pad_get_parent (pad));
-  gboolean ret = TRUE;
-  GstStructure *s = gst_caps_get_structure (caps, 0);
+  GstRsvgDec *rsvg = GST_RSVG_DEC (decoder);
+  gboolean ret;
 
-  gst_structure_get_fraction (s, "framerate", &rsvg->fps_n, &rsvg->fps_d);
+  ret = gst_rsvg_decode_image (rsvg, frame->input_buffer, frame);
+  switch (ret) {
+    case GST_FLOW_OK:
+      ret = gst_video_decoder_finish_frame (decoder, frame);
+      break;
+    default:
+      gst_video_codec_frame_unref (frame);
+      break;
+  }
 
-  gst_object_unref (rsvg);
-
+  GST_LOG_OBJECT (rsvg, "Handle frame done");
   return ret;
 }
 
 static gboolean
-gst_rsvg_dec_sink_event (GstPad * pad, GstEvent * event)
+gst_rsvg_dec_stop (GstVideoDecoder * decoder)
 {
-  GstRsvgDec *rsvg = GST_RSVG_DEC (gst_pad_get_parent (pad));
-  gboolean res = FALSE;
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:{
-      gdouble rate, arate;
-      gboolean update;
-      gint64 start, stop, position;
-      GstFormat fmt;
-
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &fmt,
-          &start, &stop, &position);
-
-      gst_segment_set_newsegment_full (&rsvg->segment, update, rate, arate,
-          fmt, start, stop, position);
-
-      if (fmt == GST_FORMAT_TIME) {
-        rsvg->need_newsegment = FALSE;
-        res = gst_pad_push_event (rsvg->srcpad, event);
-      } else {
-        gst_event_unref (event);
-        res = TRUE;
-      }
-      break;
-    }
-    case GST_EVENT_EOS:
-    case GST_EVENT_FLUSH_STOP:
-      gst_adapter_clear (rsvg->adapter);
-      /* fall through */
-    case GST_EVENT_FLUSH_START:
-      res = gst_pad_push_event (rsvg->srcpad, event);
-      break;
-    default:
-      if (GST_PAD_CAPS (rsvg->srcpad)) {
-        res = gst_pad_push_event (rsvg->srcpad, event);
-      } else {
-        res = TRUE;
-        rsvg->pending_events = g_list_append (rsvg->pending_events, event);
-      }
-      break;
+  GstRsvgDec *rsvg = GST_RSVG_DEC (decoder);
+  if (rsvg->input_state) {
+    gst_video_codec_state_unref (rsvg->input_state);
+    rsvg->input_state = NULL;
   }
 
-  gst_object_unref (rsvg);
+  gst_rsvg_dec_reset (decoder, TRUE);
 
-  return res;
-}
-
-static gboolean
-gst_rsvg_dec_src_event (GstPad * pad, GstEvent * event)
-{
-  GstRsvgDec *rsvg = GST_RSVG_DEC (gst_pad_get_parent (pad));
-  gboolean res = FALSE;
-
-  switch (GST_EVENT_TYPE (event)) {
-    default:
-      res = gst_pad_push_event (rsvg->sinkpad, event);
-      break;
-  }
-
-  gst_object_unref (rsvg);
-
-  return res;
-}
-
-static const GstQueryType *
-gst_rsvg_dec_src_query_type (GstPad * pad)
-{
-  static const GstQueryType query_types[] = {
-    (GstQueryType) 0
-  };
-
-  return query_types;
-}
-
-static gboolean
-gst_rsvg_dec_src_query (GstPad * pad, GstQuery * query)
-{
-  GstRsvgDec *rsvg = GST_RSVG_DEC (gst_pad_get_parent (pad));
-  gboolean res = TRUE;
-
-  switch (GST_QUERY_TYPE (query)) {
-    default:
-      res = gst_pad_query_default (pad, query);
-      break;
-  }
-
-  gst_object_unref (rsvg);
-
-  return res;
-}
-
-static gboolean
-gst_rsvg_dec_src_set_caps (GstPad * pad, GstCaps * caps)
-{
-  GstRsvgDec *rsvg = GST_RSVG_DEC (gst_pad_get_parent (pad));
-  gboolean ret = TRUE;
-  GstStructure *s = gst_caps_get_structure (caps, 0);
-
-  ret &= gst_structure_get_int (s, "width", &rsvg->width);
-  ret &= gst_structure_get_int (s, "height", &rsvg->height);
-
-  gst_object_unref (rsvg);
-
-  return ret;
-}
-
-static GstStateChangeReturn
-gst_rsvg_dec_change_state (GstElement * element, GstStateChange transition)
-{
-  GstStateChangeReturn res;
-  GstRsvgDec *dec = GST_RSVG_DEC (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    default:
-      break;
-  }
-
-  res = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (res == GST_STATE_CHANGE_FAILURE)
-    return res;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_rsvg_dec_reset (dec);
-      break;
-    default:
-      break;
-  }
-
-  return res;
+  return TRUE;
 }
