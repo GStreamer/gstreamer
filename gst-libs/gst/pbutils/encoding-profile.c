@@ -381,7 +381,7 @@ gst_encoding_profile_set_preset (GstEncodingProfile * profile,
 }
 
 /**
- * gst_encoding_profile_get_preset_name:
+ * gst_encoding_profile_set_preset_name:
  * @profile: a #GstEncodingProfile
  * @preset_name: The name of the preset to use in this @profile.
  *
