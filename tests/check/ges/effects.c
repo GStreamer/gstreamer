@@ -88,6 +88,7 @@ GST_START_TEST (test_get_effects_from_tl)
   GESTimeline *timeline;
   GESLayer *layer;
   GESTrack *track_video;
+  GESTrackElement *video_source;
   GESEffect *effect, *effect1, *effect2;
   GESTestClip *source;
   GList *effects, *tmp = NULL;
@@ -106,9 +107,12 @@ GST_START_TEST (test_get_effects_from_tl)
 
   g_object_set (source, "duration", 10 * GST_SECOND, NULL);
 
-  ges_simple_layer_add_object ((GESSimpleLayer *) (layer),
-      (GESClip *) source, 0);
-
+  GST_DEBUG ("Adding source to layer");
+  ges_layer_add_clip (layer, (GESClip *) source);
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (source)), 1);
+  video_source = GES_CONTAINER_CHILDREN (source)->data;
+  fail_unless (GES_IS_VIDEO_TEST_SOURCE (video_source));
+  assert_equals_int (_PRIORITY (video_source), 2);
 
   GST_DEBUG ("Create effect");
   effect = ges_effect_new ("agingtv");
@@ -119,16 +123,24 @@ GST_START_TEST (test_get_effects_from_tl)
   fail_unless (GES_IS_EFFECT (effect1));
   fail_unless (GES_IS_EFFECT (effect2));
 
+  GST_DEBUG ("Adding effect (0)");
   fail_unless (ges_container_add (GES_CONTAINER (source),
           GES_TIMELINE_ELEMENT (effect)));
   fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect)) ==
       track_video);
+  assert_equals_int (_PRIORITY (effect), 2);
+  assert_equals_int (_PRIORITY (video_source), 3);
 
+  GST_DEBUG ("Adding effect 1");
   fail_unless (ges_container_add (GES_CONTAINER (source),
           GES_TIMELINE_ELEMENT (effect1)));
   fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect1)) ==
       track_video);
+  assert_equals_int (_PRIORITY (effect), 2);
+  assert_equals_int (_PRIORITY (effect1), 3);
+  assert_equals_int (_PRIORITY (video_source), 4);
 
+  GST_DEBUG ("Adding effect 2");
   fail_unless (ges_container_add (GES_CONTAINER (source),
           GES_TIMELINE_ELEMENT (effect2)));
   fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (effect2)) ==
