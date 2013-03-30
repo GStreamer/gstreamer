@@ -1740,6 +1740,7 @@ discarded_type:
     GST_LOG_OBJECT (pad, "Known type, but discarded because not final caps");
     chain->deadend = TRUE;
     chain->endcaps = gst_caps_ref (caps);
+    gst_object_replace ((GstObject **) & chain->current_pad, NULL);
 
     /* Try to expose anything */
     EXPOSE_LOCK (dbin);
@@ -1758,6 +1759,7 @@ unknown_type:
 
     chain->deadend = TRUE;
     chain->endcaps = gst_caps_ref (caps);
+    gst_object_replace ((GstObject **) & chain->current_pad, NULL);
 
     gst_element_post_message (GST_ELEMENT_CAST (dbin),
         gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps));
@@ -2491,6 +2493,7 @@ pad_event_cb (GstPad * pad, GstPadProbeInfo * info, gpointer data)
       GST_DEBUG_OBJECT (dbin, "Received EOS on a non final pad, this stream "
           "ended too early");
       chain->deadend = TRUE;
+      gst_object_replace ((GstObject **) & chain->current_pad, NULL);
       /* we don't set the endcaps because NULL endcaps means early EOS */
       EXPOSE_LOCK (dbin);
       if (gst_decode_chain_is_complete (dbin->decode_chain))
