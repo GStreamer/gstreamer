@@ -1348,7 +1348,7 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         base->packetizer->calculate_offset = TRUE;
         base->packetizer->calculate_skew = FALSE;
       }
-      gst_event_unref (event);
+      res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
       break;
     case GST_EVENT_STREAM_START:
       gst_event_unref (event);

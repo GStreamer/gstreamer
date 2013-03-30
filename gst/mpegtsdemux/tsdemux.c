@@ -580,6 +580,12 @@ push_event (MpegTSBase * base, GstEvent * event)
   GstTSDemux *demux = (GstTSDemux *) base;
   GList *tmp;
 
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
+    GST_DEBUG_OBJECT (base, "Ignoring segment event (recreated later)");
+    gst_event_unref (event);
+    return TRUE;
+  }
+
   if (G_UNLIKELY (demux->program == NULL)) {
     gst_event_unref (event);
     return FALSE;
