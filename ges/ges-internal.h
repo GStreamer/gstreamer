@@ -262,6 +262,7 @@ GList*            ges_clip_create_track_elements  (GESClip *clip, GESTrackType t
 /****************************************************
  *              GESTrackElement                     *
  ****************************************************/
+#define         GNL_OBJECT_TRACK_ELEMENT_QUARK                  (g_quark_from_string ("gnl_object_track_element_quark"))
 G_GNUC_INTERNAL gboolean  ges_track_element_set_track           (GESTrackElement * object, GESTrack * track);
 G_GNUC_INTERNAL guint32   _ges_track_element_get_layer_priority (GESTrackElement * element);
 

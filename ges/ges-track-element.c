@@ -184,6 +184,8 @@ ges_track_element_dispose (GObject * object)
         gst_element_set_state (priv->gnlobject, GST_STATE_NULL);
     }
 
+    g_object_set_qdata (G_OBJECT (priv->gnlobject),
+        GNL_OBJECT_TRACK_ELEMENT_QUARK, NULL);
     gst_object_unref (priv->gnlobject);
     priv->gnlobject = NULL;
   }
@@ -563,6 +565,8 @@ ensure_gnl_object (GESTrackElement * object)
     GST_DEBUG_OBJECT (object, "Got a valid GnlObject, now filling it in");
 
     object->priv->gnlobject = gst_object_ref (gnlobject);
+    g_object_set_qdata (G_OBJECT (gnlobject), GNL_OBJECT_TRACK_ELEMENT_QUARK,
+        object);
 
     if (object->priv->timelineobj)
       res = ges_clip_fill_track_element (object->priv->timelineobj,
