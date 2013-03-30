@@ -3649,6 +3649,7 @@ autoplug_query_cb (GstElement * uridecodebin, GstPad * pad, GstQuery * query,
   GstPad *sinkpad = NULL;
   GValueArray *factories;
   gint i, n;
+  gboolean have_audio_sink = FALSE, have_video_sink = FALSE;
 
   if (GST_QUERY_TYPE (query) != GST_QUERY_CAPS)
     return FALSE;
@@ -3714,6 +3715,7 @@ autoplug_query_cb (GstElement * uridecodebin, GstPad * pad, GstQuery * query,
       }
       gst_object_unref (sinkpad);
     }
+    have_audio_sink = TRUE;
   }
 
   if ((sink = group->video_sink)) {
@@ -3738,6 +3740,7 @@ autoplug_query_cb (GstElement * uridecodebin, GstPad * pad, GstQuery * query,
       }
       gst_object_unref (sinkpad);
     }
+    have_video_sink = TRUE;
   }
 
   factories = autoplug_factories_cb (uridecodebin, pad, NULL, group);
@@ -3749,8 +3752,18 @@ autoplug_query_cb (GstElement * uridecodebin, GstPad * pad, GstQuery * query,
     const GList *l;
     GstCaps *templ_caps;
 
-    if (!gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (factory),
+    if (!gst_element_factory_list_is_type (factory,
             GST_ELEMENT_FACTORY_TYPE_SINK))
+      continue;
+
+    if (have_audio_sink
+        && gst_element_factory_list_is_type (factory,
+            GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO))
+      continue;
+    if (have_video_sink
+        && gst_element_factory_list_is_type (factory,
+            GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO |
+            GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE))
       continue;
 
     templates = gst_element_factory_get_static_pad_templates (factory);
