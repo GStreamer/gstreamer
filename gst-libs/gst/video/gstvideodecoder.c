@@ -967,6 +967,20 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
   priv = decoder->priv;
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:
+    {
+      GstFlowReturn flow_ret = GST_FLOW_OK;
+
+      flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
+      ret = (flow_ret == GST_FLOW_OK);
+
+      /* Forward STREAM_START immediately. Everything is drained after
+       * the STREAM_START event and we can forward this event immediately
+       * now without having buffers out of order.
+       */
+      forward_immediate = TRUE;
+      break;
+    }
     case GST_EVENT_CAPS:
     {
       GstCaps *caps;
