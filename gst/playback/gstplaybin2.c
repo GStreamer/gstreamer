@@ -1,6 +1,8 @@
 /* GStreamer
  * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
  * Copyright (C) <2011> Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) <2013> Collabora Ltd.
+ *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -321,11 +323,13 @@ struct _GstSourceGroup
   gulong autoplug_factories_id;
   gulong autoplug_select_id;
   gulong autoplug_continue_id;
+  gulong autoplug_query_id;
 
   gulong sub_pad_added_id;
   gulong sub_pad_removed_id;
   gulong sub_no_more_pads_id;
   gulong sub_autoplug_continue_id;
+  gulong sub_autoplug_query_id;
 
   gulong block_id;
 
@@ -2523,6 +2527,7 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
         REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
         REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
         REMOVE_SIGNAL (group->suburidecodebin, group->sub_autoplug_continue_id);
+        REMOVE_SIGNAL (group->suburidecodebin, group->sub_autoplug_query_id);
 
         it = gst_element_iterate_src_pads (group->suburidecodebin);
         while (it && !done) {
@@ -3247,6 +3252,12 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
   GstPlayBin *playbin;
   GList *mylist, *tmp;
   GValueArray *result;
+  gboolean unref_caps = FALSE;
+
+  if (!caps) {
+    caps = gst_caps_new_any ();
+    unref_caps = TRUE;
+  }
 
   playbin = group->playbin;
 
@@ -3316,6 +3327,9 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
     g_value_unset (&val);
   }
   gst_plugin_feature_list_free (mylist);
+
+  if (unref_caps)
+    gst_caps_unref (caps);
 
   return result;
 }
@@ -3626,6 +3640,156 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   return GST_AUTOPLUG_SELECT_EXPOSE;
 }
 
+static gboolean
+autoplug_query_cb (GstElement * uridecodebin, GstPad * pad, GstQuery * query,
+    GstSourceGroup * group)
+{
+  GstCaps *filter, *result = NULL;
+  GstElement *sink;
+  GstPad *sinkpad = NULL;
+  GValueArray *factories;
+  gint i, n;
+
+  if (GST_QUERY_TYPE (query) != GST_QUERY_CAPS)
+    return FALSE;
+
+  gst_query_parse_caps (query, &filter);
+  GST_SOURCE_GROUP_LOCK (group);
+
+  if ((sink = group->playbin->text_sink))
+    sinkpad = gst_element_get_static_pad (sink, "sink");
+  if (sinkpad) {
+    GstCaps *sinkcaps;
+
+    /* Ignore errors here, if a custom sink fails to go
+     * to READY things are wrong and will error out later
+     */
+    if (GST_STATE (sink) < GST_STATE_READY)
+      gst_element_set_state (sink, GST_STATE_READY);
+
+    sinkcaps = gst_pad_query_caps (sinkpad, filter);
+    if (!gst_caps_is_any (sinkcaps)) {
+      if (!result)
+        result = sinkcaps;
+      else
+        result = gst_caps_merge (result, sinkcaps);
+    } else {
+      gst_caps_unref (sinkcaps);
+    }
+    gst_object_unref (sinkpad);
+  } else {
+    GstCaps *subcaps = gst_subtitle_overlay_create_factory_caps ();
+    if (!result)
+      result = subcaps;
+    else
+      result = gst_caps_merge (result, subcaps);
+  }
+
+  /* If this is from the subtitle uridecodebin we don't need to
+   * check the audio and video sink */
+  if (group->suburidecodebin
+      && gst_object_has_ancestor (GST_OBJECT_CAST (pad),
+          GST_OBJECT_CAST (group->suburidecodebin)))
+    goto done;
+
+  if ((sink = group->audio_sink)) {
+    sinkpad = gst_element_get_static_pad (sink, "sink");
+    if (sinkpad) {
+      GstCaps *sinkcaps;
+
+      /* Ignore errors here, if a custom sink fails to go
+       * to READY things are wrong and will error out later
+       */
+      if (GST_STATE (sink) < GST_STATE_READY)
+        gst_element_set_state (sink, GST_STATE_READY);
+
+      sinkcaps = gst_pad_query_caps (sinkpad, filter);
+      if (!gst_caps_is_any (sinkcaps)) {
+        if (!result)
+          result = sinkcaps;
+        else
+          result = gst_caps_merge (result, sinkcaps);
+      } else {
+        gst_caps_unref (sinkcaps);
+      }
+      gst_object_unref (sinkpad);
+    }
+  }
+
+  if ((sink = group->video_sink)) {
+    sinkpad = gst_element_get_static_pad (sink, "sink");
+    if (sinkpad) {
+      GstCaps *sinkcaps;
+
+      /* Ignore errors here, if a custom sink fails to go
+       * to READY things are wrong and will error out later
+       */
+      if (GST_STATE (sink) < GST_STATE_READY)
+        gst_element_set_state (sink, GST_STATE_READY);
+
+      sinkcaps = gst_pad_query_caps (sinkpad, filter);
+      if (!gst_caps_is_any (sinkcaps)) {
+        if (!result)
+          result = sinkcaps;
+        else
+          result = gst_caps_merge (result, sinkcaps);
+      } else {
+        gst_caps_unref (sinkcaps);
+      }
+      gst_object_unref (sinkpad);
+    }
+  }
+
+  factories = autoplug_factories_cb (uridecodebin, pad, NULL, group);
+  n = factories->n_values;
+  for (i = 0; i < n; i++) {
+    GValue *v = g_value_array_get_nth (factories, i);
+    GstElementFactory *factory = g_value_get_object (v);
+    const GList *templates;
+    const GList *l;
+    GstCaps *templ_caps;
+
+    if (!gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (factory),
+            GST_ELEMENT_FACTORY_TYPE_SINK))
+      continue;
+
+    templates = gst_element_factory_get_static_pad_templates (factory);
+
+    for (l = templates; l; l = l->next) {
+      templ_caps = gst_static_pad_template_get_caps (l->data);
+
+      if (!gst_caps_is_any (templ_caps)) {
+        if (!result)
+          result = templ_caps;
+        else
+          result = gst_caps_merge (result, templ_caps);
+      } else {
+        gst_caps_unref (templ_caps);
+      }
+    }
+
+  }
+  g_value_array_free (factories);
+
+done:
+  GST_SOURCE_GROUP_UNLOCK (group);
+
+  if (!result)
+    return FALSE;
+
+  if (filter) {
+    GstCaps *intersection =
+        gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (result);
+    result = intersection;
+  }
+
+  gst_query_set_caps_result (query, result);
+  gst_caps_unref (result);
+
+  return TRUE;
+}
+
 static void
 notify_source_cb (GstElement * uridecodebin, GParamSpec * pspec,
     GstSourceGroup * group)
@@ -3758,6 +3922,9 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   group->autoplug_continue_id =
       g_signal_connect (uridecodebin, "autoplug-continue",
       G_CALLBACK (autoplug_continue_cb), group);
+  group->autoplug_query_id =
+      g_signal_connect (uridecodebin, "autoplug-query",
+      G_CALLBACK (autoplug_query_cb), group);
 
   if (group->suburi) {
     /* subtitles */
@@ -3797,6 +3964,10 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
         g_signal_connect (suburidecodebin, "autoplug-continue",
         G_CALLBACK (autoplug_continue_cb), group);
 
+    group->sub_autoplug_query_id =
+        g_signal_connect (suburidecodebin, "autoplug-query",
+        G_CALLBACK (autoplug_query_cb), group);
+
     /* we have 2 pending no-more-pads */
     group->pending = 2;
     group->sub_pending = TRUE;
@@ -3820,6 +3991,7 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_autoplug_continue_id);
+      REMOVE_SIGNAL (group->suburidecodebin, group->sub_autoplug_query_id);
       /* Might already be removed because of an error message */
       if (GST_OBJECT_PARENT (suburidecodebin) == GST_OBJECT_CAST (playbin))
         gst_bin_remove (GST_BIN_CAST (playbin), suburidecodebin);
@@ -3974,6 +4146,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
     REMOVE_SIGNAL (group->uridecodebin, group->autoplug_factories_id);
     REMOVE_SIGNAL (group->uridecodebin, group->autoplug_select_id);
     REMOVE_SIGNAL (group->uridecodebin, group->autoplug_continue_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->autoplug_query_id);
     gst_bin_remove (GST_BIN_CAST (playbin), group->uridecodebin);
   }
 
@@ -3982,6 +4155,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
     REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
     REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
     REMOVE_SIGNAL (group->suburidecodebin, group->sub_autoplug_continue_id);
+    REMOVE_SIGNAL (group->suburidecodebin, group->sub_autoplug_query_id);
 
     /* Might already be removed because of errors */
     if (GST_OBJECT_PARENT (group->suburidecodebin) == GST_OBJECT_CAST (playbin))
