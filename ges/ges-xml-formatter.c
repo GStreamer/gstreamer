@@ -22,6 +22,7 @@
 /* TODO Determine error codes numbers */
 
 #include "ges.h"
+#include <string.h>
 #include <errno.h>
 #include "ges-internal.h"
 
@@ -514,6 +515,54 @@ wrong_type:
 }
 
 static inline void
+_parse_binding (GMarkupParseContext * context, const gchar * element_name,
+    const gchar ** attribute_names, const gchar ** attribute_values,
+    GESXmlFormatter * self, GError ** error)
+{
+  const gchar *type = NULL, *source_type = NULL, *timed_values =
+      NULL, *property_name = NULL, *mode = NULL;
+  gchar **pairs, **tmp;
+  gchar *pair;
+  GSList *list = NULL;
+
+  if (!g_markup_collect_attributes (element_name, attribute_names,
+          attribute_values, error,
+          G_MARKUP_COLLECT_STRING, "type", &type,
+          G_MARKUP_COLLECT_STRING, "source_type", &source_type,
+          G_MARKUP_COLLECT_STRING, "property", &property_name,
+          G_MARKUP_COLLECT_STRING, "mode", &mode,
+          G_MARKUP_COLLECT_STRING, "values", &timed_values,
+          G_MARKUP_COLLECT_INVALID)) {
+    return;
+  }
+
+  pairs = g_strsplit (timed_values, " ", 0);
+  for (tmp = pairs; tmp != NULL; tmp += 1) {
+    gchar **value_pair;
+
+    pair = *tmp;
+    if (pair == NULL)
+      break;
+    if (strlen (pair)) {
+      GstTimedValue *value;
+
+      value = g_slice_new (GstTimedValue);
+      value_pair = g_strsplit (pair, ":", 0);
+      value->timestamp = g_ascii_strtoull (value_pair[0], NULL, 10);
+      value->value = g_ascii_strtod (value_pair[1], NULL);
+      list = g_slist_append (list, value);
+      g_strfreev (value_pair);
+    }
+  }
+
+  g_strfreev (pairs);
+  ges_base_xml_formatter_add_control_binding (GES_BASE_XML_FORMATTER (self),
+      type,
+      source_type,
+      property_name, (gint) g_ascii_strtoll (mode, NULL, 10), list);
+}
+
+static inline void
 _parse_effect (GMarkupParseContext * context, const gchar * element_name,
     const gchar ** attribute_names, const gchar ** attribute_values,
     GESXmlFormatter * self, GError ** error)
@@ -622,6 +671,9 @@ _parse_element_start (GMarkupParseContext * context, const gchar * element_name,
         attribute_values, self, error);
   else if (g_strcmp0 (element_name, "effect") == 0)
     _parse_effect (context, element_name, attribute_names,
+        attribute_values, self, error);
+  else if (g_strcmp0 (element_name, "binding") == 0)
+    _parse_binding (context, element_name, attribute_names,
         attribute_values, self, error);
   else
     GST_LOG_OBJECT (self, "Element %s not handled", element_name);
@@ -767,6 +819,56 @@ _save_tracks (GString * str, GESTimeline * timeline)
   g_list_free_full (tracks, gst_object_unref);
 }
 
+/* TODO : Use this function for every track element with controllable properties */
+static inline void
+_save_keyframes (GString * str, GESTrackElement * trackelement)
+{
+  GHashTable *bindings_hashtable;
+  GHashTableIter iter;
+  gpointer key, value;
+
+  bindings_hashtable = ges_track_element_get_bindings_hashtable (trackelement);
+
+  g_hash_table_iter_init (&iter, bindings_hashtable);
+
+  /* We iterate over the bindings, and save the timed values */
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    if (GST_IS_DIRECT_CONTROL_BINDING ((GstControlBinding *) value)) {
+      GstControlSource *source;
+      GstDirectControlBinding *binding;
+
+      binding = (GstDirectControlBinding *) value;
+
+      g_object_get (binding, "control-source", &source, NULL);
+
+      if (GST_IS_INTERPOLATION_CONTROL_SOURCE (source)) {
+        GList *timed_values, *tmp;
+        GstInterpolationMode mode;
+
+        append_printf_escaped (str,
+            "<binding type='direct' source_type='interpolation' property='%s'",
+            (gchar *) key);
+        g_object_get (source, "mode", &mode, NULL);
+        append_printf_escaped (str, " mode='%d'", mode);
+        append_printf_escaped (str, " values ='");
+        timed_values =
+            gst_timed_value_control_source_get_all
+            (GST_TIMED_VALUE_CONTROL_SOURCE (source));
+        for (tmp = timed_values; tmp; tmp = tmp->next) {
+          GstTimedValue *value;
+
+          value = (GstTimedValue *) tmp->data;
+          append_printf_escaped (str, " %lld:%f ",
+              (long long int) value->timestamp, value->value);
+        }
+        append_printf_escaped (str, "'/>\n");
+      } else
+        GST_DEBUG ("control source not in [interpolation]");
+    } else
+      GST_DEBUG ("Binding type not in [direct]");
+  }
+}
+
 static inline void
 _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
     GESTimeline * timeline)
@@ -822,8 +924,12 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
   }
   g_free (pspecs);
 
-  append_printf_escaped (str, " children-properties='%s'/>\n",
+  append_printf_escaped (str, " children-properties='%s'>\n",
       gst_structure_to_string (structure));
+
+  _save_keyframes (str, trackelement);
+
+  append_printf_escaped (str, "</effect>\n");
   gst_structure_free (structure);
 }
 

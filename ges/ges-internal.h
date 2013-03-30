@@ -89,6 +89,9 @@ ges_asset_cache_put (GESAsset * asset, GSimpleAsyncResult *res);
 G_GNUC_INTERNAL gboolean
 ges_asset_cache_set_loaded(GType extractable_type, const gchar * id, GError *error);
 
+G_GNUC_INTERNAL GHashTable *
+ges_track_element_get_bindings_hashtable(GESTrackElement *element);
+
 GESAsset*
 ges_asset_cache_lookup(GType extractable_type, const gchar * id);
 
@@ -214,6 +217,14 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_track_element    (GESBaseXmlForm
                                                                  GstStructure *properties,
                                                                  const gchar *metadatas,
                                                                  GError **error);
+
+G_GNUC_INTERNAL void ges_base_xml_formatter_add_control_binding(GESBaseXmlFormatter * self,
+								const gchar * binding_type,
+								const gchar * source_type,
+								const gchar * property_name,
+								gint mode,
+								GSList * timed_values);
+
 G_GNUC_INTERNAL void set_property_foreach                       (GQuark field_id,
                                                                  const GValue * value,
                                                                  GObject * object);;

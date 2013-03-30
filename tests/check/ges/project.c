@@ -21,6 +21,8 @@
 #include "test-utils.h"
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
+#include <gst/controller/gstdirectcontrolbinding.h>
+#include <gst/controller/gstinterpolationcontrolsource.h>
 
 static void
 project_loaded_cb (GESProject * project, GESTimeline * timeline,
@@ -270,6 +272,190 @@ _test_project (GESProject * project, GESTimeline * timeline)
   assert_equals_int (g_list_length ((GList *) profiles), 2);
 }
 
+static void
+_add_keyframes (GESTimeline * timeline)
+{
+  GList *tracks;
+  GList *tmp;
+
+  tracks = ges_timeline_get_tracks (timeline);
+  for (tmp = tracks; tmp; tmp = tmp->next) {
+    GESTrack *track;
+    GList *track_elements;
+    GList *tmp_tck;
+
+    track = GES_TRACK (tmp->data);
+    switch (track->type) {
+      case GES_TRACK_TYPE_VIDEO:
+        track_elements = ges_track_get_elements (track);
+
+        for (tmp_tck = track_elements; tmp_tck; tmp_tck = tmp_tck->next) {
+          GESTrackElement *element = GES_TRACK_ELEMENT (tmp_tck->data);
+
+          if (GES_IS_EFFECT (element)) {
+            GstControlSource *source;
+            GstControlBinding *tmp_binding, *binding;
+
+            source = gst_interpolation_control_source_new ();
+
+            /* Check binding creation and replacement */
+            binding =
+                ges_track_element_get_control_binding (element,
+                "scratch-lines");
+            fail_unless (binding == NULL);
+            ges_track_element_set_property_controlling_parameters (element,
+                source, "scratch-lines", "direct");
+            tmp_binding =
+                ges_track_element_get_control_binding (element,
+                "scratch-lines");
+            fail_unless (tmp_binding != NULL);
+            ges_track_element_set_property_controlling_parameters (element,
+                source, "scratch-lines", "direct");
+            binding =
+                ges_track_element_get_control_binding (element,
+                "scratch-lines");
+            fail_unless (binding != tmp_binding);
+
+
+            g_object_set (source, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+            gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE
+                (source), 0 * GST_SECOND, 0.);
+            gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE
+                (source), 5 * GST_SECOND, 0.);
+            gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE
+                (source), 10 * GST_SECOND, 1.);
+          }
+        }
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+static void
+_check_keyframes (GESTimeline * timeline)
+{
+  GList *tracks;
+  GList *tmp;
+
+  tracks = ges_timeline_get_tracks (timeline);
+  for (tmp = tracks; tmp; tmp = tmp->next) {
+    GESTrack *track;
+    GList *track_elements;
+    GList *tmp_tck;
+
+    track = GES_TRACK (tmp->data);
+    switch (track->type) {
+      case GES_TRACK_TYPE_VIDEO:
+        track_elements = ges_track_get_elements (track);
+
+        for (tmp_tck = track_elements; tmp_tck; tmp_tck = tmp_tck->next) {
+          GESTrackElement *element = GES_TRACK_ELEMENT (tmp_tck->data);
+
+          if (GES_IS_EFFECT (element)) {
+            GstControlBinding *binding;
+            GstControlSource *source;
+            GList *timed_values;
+            GstTimedValue *value;
+
+            binding =
+                ges_track_element_get_control_binding (element,
+                "scratch-lines");
+            fail_unless (binding != NULL);
+            g_object_get (binding, "control-source", &source, NULL);
+            fail_unless (source != NULL);
+
+            /* Now check keyframe position */
+            timed_values =
+                gst_timed_value_control_source_get_all
+                (GST_TIMED_VALUE_CONTROL_SOURCE (source));
+            value = timed_values->data;
+            fail_unless (value->value == 0.);
+            fail_unless (value->timestamp == 0 * GST_SECOND);
+            timed_values = timed_values->next;
+            value = timed_values->data;
+            fail_unless (value->value == 0.);
+            fail_unless (value->timestamp == 5 * GST_SECOND);
+            timed_values = timed_values->next;
+            value = timed_values->data;
+            fail_unless (value->value == 1.);
+            fail_unless (value->timestamp == 10 * GST_SECOND);
+          }
+        }
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+GST_START_TEST (test_project_add_keyframes)
+{
+  GMainLoop *mainloop;
+  //GESTimelinePipeline *pipeline;
+  GESProject *project;
+  GESTimeline *timeline;
+  GESAsset *formatter_asset;
+  gboolean saved;
+  gchar *uri = ges_test_file_uri ("test-keyframes.xges");
+
+  project = ges_project_new (uri);
+  mainloop = g_main_loop_new (NULL, FALSE);
+
+  /* Connect the signals */
+  g_signal_connect (project, "loaded", (GCallback) project_loaded_cb, mainloop);
+  g_signal_connect (project, "missing-uri", (GCallback) _set_new_uri, NULL);
+
+  /* Now extract a timeline from it */
+  GST_LOG ("Loading project");
+  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
+
+  g_main_loop_run (mainloop);
+
+  GST_LOG ("Test first loading");
+
+  g_free (uri);
+
+  _add_keyframes (timeline);
+
+  uri = ges_test_file_uri ("test-keyframes-save.xges");
+
+  formatter_asset = ges_asset_request (GES_TYPE_FORMATTER, "ges", NULL);
+  saved =
+      ges_project_save (project, timeline, uri, formatter_asset, TRUE, NULL);
+  fail_unless (saved);
+
+  gst_object_unref (timeline);
+  gst_object_unref (project);
+
+  project = ges_project_new (uri);
+
+  ASSERT_OBJECT_REFCOUNT (project, "Our + cache", 2);
+
+  g_signal_connect (project, "loaded", (GCallback) project_loaded_cb, mainloop);
+
+  GST_LOG ("Loading saved project");
+  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
+  fail_unless (GES_IS_TIMELINE (timeline));
+
+  g_main_loop_run (mainloop);
+
+  _check_keyframes (timeline);
+
+  gst_object_unref (timeline);
+  gst_object_unref (project);
+  g_free (uri);
+
+  g_main_loop_unref (mainloop);
+  g_signal_handlers_disconnect_by_func (project, (GCallback) project_loaded_cb,
+      mainloop);
+  g_signal_handlers_disconnect_by_func (project, (GCallback) asset_added_cb,
+      NULL);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_project_load_xges)
 {
   gboolean saved;
@@ -435,6 +621,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_project_simple);
   tcase_add_test (tc_chain, test_project_add_assets);
   tcase_add_test (tc_chain, test_project_load_xges);
+  tcase_add_test (tc_chain, test_project_add_keyframes);
   /*tcase_add_test (tc_chain, test_load_xges_and_play); */
   tcase_add_test (tc_chain, test_project_unexistant_effect);
 

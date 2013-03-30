@@ -96,6 +96,9 @@ struct _GESBaseXmlFormatterPrivate
 
   /* List of asset waited to be created */
   GList *pending_assets;
+
+  /* current track element */
+  GESTrackElement *current_track_element;
 };
 
 static void
@@ -339,6 +342,7 @@ ges_base_xml_formatter_init (GESBaseXmlFormatter * self)
       g_str_equal, g_free, gst_object_unref);
   priv->layers = g_hash_table_new_full (g_direct_hash,
       g_direct_equal, NULL, (GDestroyNotify) _free_layer_entry);
+  priv->current_track_element = NULL;
 }
 
 static void
@@ -829,6 +833,35 @@ ges_base_xml_formatter_add_track (GESBaseXmlFormatter * self,
 }
 
 void
+ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
+    const gchar * binding_type, const gchar * source_type,
+    const gchar * property_name, gint mode, GSList * timed_values)
+{
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+  GESTrackElement *element;
+
+  element = priv->current_track_element;
+  if (element == NULL) {
+    GST_WARNING ("No current track element to which we can append a binding");
+    return;
+  }
+
+  if (!g_strcmp0 (source_type, "interpolation")) {
+    GstControlSource *source;
+
+    source = gst_interpolation_control_source_new ();
+    ges_track_element_set_property_controlling_parameters (element, source,
+        property_name, binding_type);
+
+    g_object_set (source, "mode", mode, NULL);
+
+    gst_timed_value_control_source_set_from_list (GST_TIMED_VALUE_CONTROL_SOURCE
+        (source), timed_values);
+  } else
+    GST_WARNING ("This interpolation type is not supported\n");
+}
+
+void
 ges_base_xml_formatter_add_track_element (GESBaseXmlFormatter * self,
     GType track_element_type, const gchar * asset_id, const gchar * track_id,
     const gchar * timeline_obj_id, GstStructure * children_properties,
@@ -895,6 +928,7 @@ ges_base_xml_formatter_add_track_element (GESBaseXmlFormatter * self,
 
       pend->effects = g_list_append (pend->effects, peffect);
     }
+    priv->current_track_element = trackelement;
   }
 
   ges_project_add_asset (GES_FORMATTER (self)->project, asset);

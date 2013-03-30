@@ -66,6 +66,9 @@ struct _GESTrackElementPrivate
 
   gboolean locked;              /* If TRUE, then moves in sync with its controlling
                                  * GESClip */
+
+  GHashTable *bindings_hashtable;       /* We need this if we want to be able to serialize
+                                           and deserialize keyframes */
 };
 
 enum
@@ -180,6 +183,9 @@ ges_track_element_dispose (GObject * object)
 
   if (priv->properties_hashtable)
     g_hash_table_destroy (priv->properties_hashtable);
+
+  if (priv->bindings_hashtable)
+    g_hash_table_destroy (priv->bindings_hashtable);
 
   if (priv->gnlobject) {
     GstState cstate;
@@ -301,6 +307,8 @@ ges_track_element_init (GESTrackElement * self)
   priv->pending_active = TRUE;
   priv->locked = TRUE;
   priv->properties_hashtable = NULL;
+  priv->bindings_hashtable = g_hash_table_new_full (g_str_hash, g_str_equal,
+      g_free, NULL);
 }
 
 static gboolean
@@ -746,6 +754,14 @@ ges_track_element_set_track (GESTrackElement * object, GESTrack * track)
 
   g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_TRACK]);
   return ret;
+}
+
+GHashTable *
+ges_track_element_get_bindings_hashtable (GESTrackElement * trackelement)
+{
+  GESTrackElementPrivate *priv = GES_TRACK_ELEMENT (trackelement)->priv;
+
+  return priv->bindings_hashtable;
 }
 
 /**
@@ -1448,4 +1464,100 @@ ges_track_element_edit (GESTrackElement * object,
   }
 
   return TRUE;
+}
+
+
+/**
+ * ges_track_element_set_property_controlling_parameters:
+ * @object: the #GESTrackElement on which to set a control binding
+ * @source: (element-type GstControlSource): the #GstControlSource to set on the binding.
+ * @property_name: The name of the property to control.
+ * @binding_type: The type of binding to create. Only "direct" is available for now.
+ *
+ * Creates a #GstControlBinding and adds it to the #GstElement concerned by the
+ * property. Use the same syntax as #ges_track_element_lookup_child for
+ * the property name.
+ *
+ * Returns: %TRUE if the binding could be created and added, %FALSE if an error
+ * occured
+ *
+ * Since: 1.0.XX
+ */
+gboolean
+ges_track_element_set_property_controlling_parameters (GESTrackElement * object,
+    GstControlSource * source,
+    const gchar * property_name, const gchar * binding_type)
+{
+  GESTrackElementPrivate *priv;
+  GstElement *element;
+  GParamSpec *pspec;
+  GstControlBinding *binding;
+
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
+  priv = GES_TRACK_ELEMENT (object)->priv;
+
+  if (G_UNLIKELY (!(GST_IS_CONTROL_SOURCE (source)))) {
+    GST_WARNING
+        ("You need to provide a non-null control source to build a new control binding");
+    return FALSE;
+  }
+
+  if (!ges_track_element_lookup_child (object, property_name, &element, &pspec)) {
+    GST_WARNING ("You need to provide a valid and controllable property name");
+    return FALSE;
+  }
+
+  /* TODO : update this according to new types of bindings */
+  if (!g_strcmp0 (binding_type, "direct")) {
+    /* First remove existing binding */
+    binding =
+        (GstControlBinding *) g_hash_table_lookup (priv->bindings_hashtable,
+        property_name);
+    if (binding) {
+      GST_LOG ("Removing old binding %p for property %s", binding,
+          property_name);
+      gst_object_remove_control_binding (GST_OBJECT (element), binding);
+    }
+    binding =
+        gst_direct_control_binding_new (GST_OBJECT (element), property_name,
+        source);
+    gst_object_add_control_binding (GST_OBJECT (element), binding);
+    g_hash_table_insert (priv->bindings_hashtable, g_strdup (property_name),
+        binding);
+    return TRUE;
+  }
+
+  GST_WARNING ("Binding type must be in [direct]");
+
+  return FALSE;
+}
+
+/**
+ * ges_track_element_get_control_binding:
+ * @object: the #GESTrackElement in which to lookup the bindings.
+ * @property_name: The property_name to which the binding is associated.
+ *
+ * Looks up the various controlled properties for that #GESTrackElement,
+ * and returns the #GstControlBinding which controls @property_name.
+ *
+ * Returns: the #GstControlBinding associated with @property_name, or %NULL
+ * if that property is not controlled.
+ *
+ * Since: 1.0.XX
+ */
+GstControlBinding *
+ges_track_element_get_control_binding (GESTrackElement * object,
+    const gchar * property_name)
+{
+  GESTrackElementPrivate *priv;
+  GstControlBinding *binding;
+
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), NULL);
+
+  priv = GES_TRACK_ELEMENT (object)->priv;
+
+  binding =
+      (GstControlBinding *) g_hash_table_lookup (priv->bindings_hashtable,
+      property_name);
+  return binding;
 }
