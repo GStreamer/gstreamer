@@ -349,6 +349,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
   GstFluPSDemuxClass *klass = GST_FLUPS_DEMUX_GET_CLASS (demux);
   GstCaps *caps;
   GstClockTime threshold = SEGMENT_THRESHOLD;
+  gchar *stream_id;
 
   name = NULL;
   template = NULL;
@@ -466,6 +467,12 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
 
   /* needed for set_caps to work */
   gst_pad_set_active (stream->pad, TRUE);
+
+  stream_id =
+      gst_pad_create_stream_id_printf (stream->pad, GST_ELEMENT_CAST (demux),
+      "%02x", id);
+  gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
+  g_free (stream_id);
 
   gst_pad_set_caps (stream->pad, caps);
   gst_caps_unref (caps);
