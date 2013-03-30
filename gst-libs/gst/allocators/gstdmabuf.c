@@ -60,17 +60,8 @@ typedef struct
 GST_DEBUG_CATEGORY_STATIC (dmabuf_debug);
 #define GST_CAT_DEFAULT dmabuf_debug
 
-static GstMemory *
-gst_dmabuf_alloc (GstAllocator * allocator, gsize size,
-    GstAllocationParams * params)
-{
-  g_warning ("Use dmabuf_mem_alloc() to allocate from this allocator");
-
-  return NULL;
-}
-
 static void
-gst_dmabuf_free (GstAllocator * allocator, GstMemory * mem)
+gst_dmabuf_allocator_free (GstAllocator * allocator, GstMemory * mem)
 {
   GstDmaBufMemory *dbmem = (GstDmaBufMemory *) mem;
 
@@ -84,8 +75,9 @@ gst_dmabuf_free (GstAllocator * allocator, GstMemory * mem)
 }
 
 static gpointer
-gst_dmabuf_mem_map (GstDmaBufMemory * mem, gsize maxsize, GstMapFlags flags)
+gst_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
 {
+  GstDmaBufMemory *mem = (GstDmaBufMemory *) gmem;
   gint prot;
   gpointer ret = NULL;
 
@@ -121,9 +113,10 @@ out:
   return ret;
 }
 
-static gboolean
-gst_dmabuf_mem_unmap (GstDmaBufMemory * mem)
+static void
+gst_dmabuf_mem_unmap (GstMemory * gmem)
 {
+  GstDmaBufMemory *mem = (GstDmaBufMemory *) gmem;
   g_mutex_lock (&mem->lock);
 
   if (mem->data && !(--mem->mmap_count)) {
@@ -134,12 +127,12 @@ gst_dmabuf_mem_unmap (GstDmaBufMemory * mem)
     GST_DEBUG ("%p: fd %d unmapped", mem, mem->fd);
   }
   g_mutex_unlock (&mem->lock);
-  return TRUE;
 }
 
-static GstDmaBufMemory *
-gst_dmabuf_mem_share (GstDmaBufMemory * mem, gssize offset, gsize size)
+static GstMemory *
+gst_dmabuf_mem_share (GstMemory * gmem, gssize offset, gssize size)
 {
+  GstDmaBufMemory *mem = (GstDmaBufMemory *) gmem;
   GstDmaBufMemory *sub;
   GstMemory *parent;
 
@@ -159,12 +152,13 @@ gst_dmabuf_mem_share (GstDmaBufMemory * mem, gssize offset, gsize size)
       GST_MINI_OBJECT_FLAG_LOCK_READONLY, mem->mem.allocator, parent,
       mem->mem.maxsize, mem->mem.align, mem->mem.offset + offset, size);
 
-  return sub;
+  return GST_MEMORY_CAST (sub);
 }
 
-static GstDmaBufMemory *
-gst_dmabuf_mem_copy (GstDmaBufMemory * mem, gssize offset, gsize size)
+static GstMemory *
+gst_dmabuf_mem_copy (GstMemory * gmem, gssize offset, gssize size)
 {
+  GstDmaBufMemory *mem = (GstDmaBufMemory *) gmem;
   gint newfd = dup (mem->fd);
 
   if (newfd == -1) {
@@ -174,47 +168,47 @@ gst_dmabuf_mem_copy (GstDmaBufMemory * mem, gssize offset, gsize size)
 
   GST_DEBUG ("%p: copy %" G_GSSIZE_FORMAT " %" G_GSIZE_FORMAT, mem, offset,
       size);
-  return (GstDmaBufMemory *) gst_dmabuf_allocator_alloc (mem->mem.allocator,
+  return (GstMemory *) gst_dmabuf_allocator_alloc (mem->mem.allocator,
       newfd, size);
 }
 
 typedef struct
 {
   GstAllocator parent;
-} dmabuf_mem_Allocator;
+} GstDmaBufAllocator;
 
 typedef struct
 {
   GstAllocatorClass parent_class;
-} dmabuf_mem_AllocatorClass;
+} GstDmaBufAllocatorClass;
 
 GType dmabuf_mem_allocator_get_type (void);
-G_DEFINE_TYPE (dmabuf_mem_Allocator, dmabuf_mem_allocator, GST_TYPE_ALLOCATOR);
+G_DEFINE_TYPE (GstDmaBufAllocator, dmabuf_mem_allocator, GST_TYPE_ALLOCATOR);
 
 #define GST_TYPE_DMABUF_ALLOCATOR   (dmabuf_mem_allocator_get_type())
 #define GST_IS_DMABUF_ALLOCATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DMABUF_ALLOCATOR))
 
 static void
-dmabuf_mem_allocator_class_init (dmabuf_mem_AllocatorClass * klass)
+dmabuf_mem_allocator_class_init (GstDmaBufAllocatorClass * klass)
 {
   GstAllocatorClass *allocator_class;
 
   allocator_class = (GstAllocatorClass *) klass;
 
-  allocator_class->alloc = gst_dmabuf_alloc;
-  allocator_class->free = gst_dmabuf_free;
+  allocator_class->alloc = NULL;
+  allocator_class->free = gst_dmabuf_allocator_free;
 }
 
 static void
-dmabuf_mem_allocator_init (dmabuf_mem_Allocator * allocator)
+dmabuf_mem_allocator_init (GstDmaBufAllocator * allocator)
 {
   GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
 
   alloc->mem_type = ALLOCATOR_NAME;
-  alloc->mem_map = (GstMemoryMapFunction) gst_dmabuf_mem_map;
-  alloc->mem_unmap = (GstMemoryUnmapFunction) gst_dmabuf_mem_unmap;
-  alloc->mem_share = (GstMemoryShareFunction) gst_dmabuf_mem_share;
-  alloc->mem_copy = (GstMemoryCopyFunction) gst_dmabuf_mem_copy;
+  alloc->mem_map = gst_dmabuf_mem_map;
+  alloc->mem_unmap = gst_dmabuf_mem_unmap;
+  alloc->mem_share = gst_dmabuf_mem_share;
+  alloc->mem_copy = gst_dmabuf_mem_copy;
 
   GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
