@@ -1,0 +1,81 @@
+Tracing
+=======
+
+This subsystem will provide a mechanism to get structured tracing info from gstreamer
+applications. This can be used for post-run analysis as well as for life
+introspection.
+
+We are going to introduce a GstTracer object. There will be only a single instance
+per process or none if tracing is off.
+Certain GStreamer core function (such as gst_pad_push or gst_element_add_pad) will
+call into the tracer. The tracer will dispatch into loaded tracing plugins.
+Developers will be able to select a list of plugins by setting an environment
+variable, such as GST_TRACE="meminfo,dbus". When then plugins are loaded, they will
+add them to certain hooks. Another env var GST_TRACE_CHANNEL can be used to send
+the tracing to a file or a socket (Do the same for GST_DEBUG_CHANNEL). The syntax
+could be GST_XXX_CHANNEL=file:///path/to/file or GST_XXX_CHANNEL=tcp://<ip>:<port>.
+If no channel is set, the tracing goes to stderr like the debug logging.
+
+TODO(ensonic): we might want to have GST_{DEBUG|TRACE)_FORMAT envars as well. These
+could be raw, ansi-color, binary, ...
+
+Hooks
+-----
+e.g. gst_pad_push() will do add this line:
+GST_TRACER_PUSH_BUFFER (pad, buffer)
+
+If tracing is disable at compile time the macro will evaluate to nothing. Otherwise
+it will become somthing along the lines of:
+if (__tracer) {
+  gst_tracer_push_buffer (pad, buffer);
+}
+
+Plugins can attach to a specific (named) hook or to groups of them. Groups could be:
+all, topology, communication. When a hook such as gst_tracer_push_buffer () is called
+it will take a timstamp and call all attached plugins from all, each group and this
+hook. Hooks will be called from misc threads. The trace plugins should only consume
+the provided data. Most trace plugins will log data to a trace channel.
+
+TODO(ensonic): use GSignal for the hooks?
+
+Plugins
+=======
+
+meminfo
+-------
+- register to the "all" group.
+- call mallinfo() and log memory usage
+
+rusage
+------
+- register to the "all" group.
+- call getrusage() and log ressource usage
+
+dbus
+----
+- provide a dbus iface to announe applications that are traced
+- tracing UIs can use the dbus iface to find the channels where logging and tracing
+  is getting logged to
+
+
+UI
+==
+
+gst-debug-viewer
+----------------
+gst-debug-viewer could be given the tracelog in addition to the debug log.
+Alternatively it would show a dialog that shows all local apps (if the dbus plugin
+is loaded) and read the log streams from the sockets/files that are configured for
+the app.
+
+gst-trace-stats
+---------------
+Such a tool could read a trace and sumarize the content like gst-tracelib did for
+stats in 0.10.
+
+
+Problems / Open items
+=====================
+- when connecting to a running app, we cant easily get the 'current' state if logging
+is using a socket, as past events are not stored
+
