@@ -309,6 +309,9 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
     /* flush resets the running_time */
     base = 0;
   } else {
+    /* make sure the position is inside the segment start/stop */
+    position = CLAMP (position, segment->start, segment->stop);
+
     /* remember the elapsed time */
     base = gst_segment_to_running_time (segment, format, position);
   }
