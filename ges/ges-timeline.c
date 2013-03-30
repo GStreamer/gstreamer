@@ -2206,7 +2206,7 @@ ges_timeline_new_from_uri (const gchar * uri, GError ** error)
   GESProject *project = ges_project_new (uri);
 
   ret = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), error));
-  gst_object_unref (ret);
+  gst_object_unref (project);
 
   return ret;
 }
