@@ -740,6 +740,7 @@ gst/Makefile
 gst/gstconfig.h
 gst/gstversion.h
 gst/parse/Makefile
+gst/printf/Makefile
 libs/Makefile
 libs/gst/Makefile
 libs/gst/base/Makefile

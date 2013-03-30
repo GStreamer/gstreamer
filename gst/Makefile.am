@@ -26,9 +26,14 @@ else
 GST_PLUGIN_SRC = gstplugin.c
 endif
 
-SUBDIRS = $(SUBDIRS_PARSE)
+# FIXME: might not be needed if debug logging is disabled
+SUBDIRS_PRINTF = printf
+GST_PRINTF_LA = printf/libgstprintf.la
 
-DIST_SUBDIRS = parse
+
+SUBDIRS = $(SUBDIRS_PARSE) $(SUBDIRS_PRINTF)
+
+DIST_SUBDIRS = parse printf
 
 # make variables for all generated source and header files to make the
 # distinction clear
@@ -132,6 +137,7 @@ libgstreamer_@GST_API_VERSION@_la_CFLAGS =		\
 
 libgstreamer_@GST_API_VERSION@_la_LIBADD =		\
 	$(GST_PARSE_LA)					\
+	$(GST_PRINTF_LA)				\
 	$(GST_ALL_LIBS)					\
 	$(WIN32_LIBS)					\
 	$(LIBM)
