@@ -705,9 +705,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
 
   /* check stream eos */
   if ((ogg->segment.rate > 0.0 && ogg->segment.stop != GST_CLOCK_TIME_NONE &&
-          current_time > ogg->segment.stop) ||
-      (ogg->segment.rate < 0.0 && ogg->segment.start != GST_CLOCK_TIME_NONE &&
-          current_time < ogg->segment.start)) {
+          current_time >= ogg->segment.stop) ||
+      (ogg->segment.rate < 0.0 && current_time <= ogg->segment.start)) {
     GST_DEBUG_OBJECT (ogg, "marking pad %p EOS", pad);
     pad->is_eos = TRUE;
   }
