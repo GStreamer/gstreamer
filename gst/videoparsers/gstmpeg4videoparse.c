@@ -389,7 +389,7 @@ gst_mpeg4vparse_handle_frame (GstBaseParse * parse,
   gsize size;
   gint off = 0;
   gboolean ret = FALSE;
-  guint framesize;
+  guint framesize = 0;
 
   gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
   data = map.data;
