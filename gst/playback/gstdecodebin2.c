@@ -1433,7 +1433,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
      * start a new chain for it */
     CHAIN_MUTEX_LOCK (oldchain);
     group = gst_decode_chain_get_current_group (chain);
-    if (group) {
+    if (group && !g_list_find (group->children, chain)) {
       chain = gst_decode_chain_new (dbin, group, pad);
       group->children = g_list_prepend (group->children, chain);
     }
