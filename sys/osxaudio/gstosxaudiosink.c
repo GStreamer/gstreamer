@@ -67,7 +67,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio-channels.h>
 #include <gst/audio/gstaudioiec61937.h>
 
 #include "gstosxaudiosink.h"
@@ -94,43 +94,20 @@ enum
 
 #define DEFAULT_VOLUME 1.0
 
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+# define FORMATS "{ S32LE, S24LE, S16LE, U8 }"
+#else
+# define FORMATS "{ S32BE, S24BE, S16BE, U8 }"
+#endif
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "endianness = (int) {" G_STRINGIFY (G_BYTE_ORDER) " }, "
-        "signed = (boolean) { TRUE }, "
-        "width = (int) 32, "
-        "depth = (int) 32, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " FORMATS ", "
+        "layout = (string) interleaved, "
         "rate = (int) [1, MAX], "
         "channels = (int) [1, 9];"
-        "audio/x-raw-int, "
-        "endianness = (int) {" G_STRINGIFY (G_BYTE_ORDER) " }, "
-        "signed = (boolean) { TRUE }, "
-        "width = (int) 32, "
-        "depth = (int) 32, "
-        "rate = (int) [1, MAX], "
-        "channels = (int) [1, 9];"
-        "audio/x-raw-int, "
-        "endianness = (int) {" G_STRINGIFY (G_BYTE_ORDER) " }, "
-        "signed = (boolean) { TRUE }, "
-        "width = (int) 24, "
-        "depth = (int) 24, "
-        "rate = (int) [1, MAX], "
-        "channels = (int) [1, 9];"
-        "audio/x-raw-int, "
-        "endianness = (int) {" G_STRINGIFY (G_BYTE_ORDER) " }, "
-        "signed = (boolean) { TRUE }, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) [1, MAX], "
-        "channels = (int) [1, 9];"
-        "audio/x-raw-int, "
-        "endianness = (int) {" G_STRINGIFY (G_BYTE_ORDER) " }, "
-        "signed = (boolean) { TRUE }, "
-        "width = (int) 8, "
-        "depth = (int) 8, "
-        "rate = (int) [1, MAX], " "channels = (int) [1, MAX];"
         "audio/x-ac3, framed = (boolean) true;"
         "audio/x-dts, framed = (boolean) true")
     );
@@ -140,20 +117,24 @@ static void gst_osx_audio_sink_set_property (GObject * object, guint prop_id,
 static void gst_osx_audio_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_osx_audio_sink_stop (GstBaseSink * base);
-static GstCaps *gst_osx_audio_sink_getcaps (GstBaseSink * base);
-static gboolean gst_osx_audio_sink_acceptcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_osx_audio_sink_query (GstBaseSink * base, GstQuery * query);
 
-static GstBuffer *gst_osx_audio_sink_sink_payload (GstBaseAudioSink * sink,
+static gboolean gst_osx_audio_sink_stop (GstBaseSink * base);
+static GstCaps *gst_osx_audio_sink_getcaps (GstBaseSink * base,
+    GstCaps * filter);
+static gboolean gst_osx_audio_sink_acceptcaps (GstOsxAudioSink * sink,
+    GstCaps * caps);
+
+static GstBuffer *gst_osx_audio_sink_sink_payload (GstAudioBaseSink * sink,
     GstBuffer * buf);
-static GstRingBuffer *gst_osx_audio_sink_create_ringbuffer (GstBaseAudioSink *
-    sink);
+static GstAudioRingBuffer
+    * gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink);
 static void gst_osx_audio_sink_osxelement_init (gpointer g_iface,
     gpointer iface_data);
 static gboolean gst_osx_audio_sink_select_device (GstOsxAudioSink * osxsink);
 static void gst_osx_audio_sink_set_volume (GstOsxAudioSink * sink);
 
-static OSStatus gst_osx_audio_sink_io_proc (GstOsxRingBuffer * buf,
+static OSStatus gst_osx_audio_sink_io_proc (GstOsxAudioRingBuffer * buf,
     AudioUnitRenderActionFlags * ioActionFlags,
     const AudioTimeStamp * inTimeStamp,
     UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList * bufferList);
@@ -175,22 +156,10 @@ gst_osx_audio_sink_do_init (GType type)
       &osxelement_info);
 }
 
-GST_BOILERPLATE_FULL (GstOsxAudioSink, gst_osx_audio_sink, GstBaseAudioSink,
-    GST_TYPE_BASE_AUDIO_SINK, gst_osx_audio_sink_do_init);
-
-static void
-gst_osx_audio_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-
-  gst_element_class_set_static_metadata (element_class, "Audio Sink (OSX)",
-      "Sink/Audio",
-      "Output to a sound card in OS X",
-      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
-}
+#define gst_osx_audio_sink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstOsxAudioSink, gst_osx_audio_sink,
+    GST_TYPE_AUDIO_BASE_SINK,
+    gst_osx_audio_sink_do_init (GST_TYPE_AUDIO_BASE_SINK));
 
 static void
 gst_osx_audio_sink_class_init (GstOsxAudioSinkClass * klass)
@@ -198,12 +167,12 @@ gst_osx_audio_sink_class_init (GstOsxAudioSinkClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
-  GstBaseAudioSinkClass *gstbaseaudiosink_class;
+  GstAudioBaseSinkClass *gstaudiobasesink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
-  gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
+  gstaudiobasesink_class = (GstAudioBaseSinkClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -216,6 +185,8 @@ gst_osx_audio_sink_class_init (GstOsxAudioSinkClass * klass)
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
+  gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_osx_audio_sink_query);
+
   g_object_class_install_property (gobject_class, ARG_VOLUME,
       g_param_spec_double ("volume", "Volume", "Volume of this stream",
           0, 1.0, 1.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -223,14 +194,22 @@ gst_osx_audio_sink_class_init (GstOsxAudioSinkClass * klass)
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_osx_audio_sink_getcaps);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_osx_audio_sink_stop);
 
-  gstbaseaudiosink_class->create_ringbuffer =
+  gstaudiobasesink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_osx_audio_sink_create_ringbuffer);
-  gstbaseaudiosink_class->payload =
+  gstaudiobasesink_class->payload =
       GST_DEBUG_FUNCPTR (gst_osx_audio_sink_sink_payload);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  gst_element_class_set_static_metadata (gstelement_class, "Audio Sink (OSX)",
+      "Sink/Audio",
+      "Output to a sound card in OS X",
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 }
 
 static void
-gst_osx_audio_sink_init (GstOsxAudioSink * sink, GstOsxAudioSinkClass * gclass)
+gst_osx_audio_sink_init (GstOsxAudioSink * sink)
 {
   GST_DEBUG ("Initialising object");
 
@@ -238,9 +217,6 @@ gst_osx_audio_sink_init (GstOsxAudioSink * sink, GstOsxAudioSinkClass * gclass)
   sink->cached_caps = NULL;
 
   sink->volume = DEFAULT_VOLUME;
-
-  gst_pad_set_acceptcaps_function (GST_BASE_SINK (sink)->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_osx_audio_sink_acceptcaps));
 }
 
 static void
@@ -286,6 +262,30 @@ gst_osx_audio_sink_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
+gst_osx_audio_sink_query (GstBaseSink * base, GstQuery * query)
+{
+  GstOsxAudioSink *sink = GST_OSX_AUDIO_SINK (base);
+  gboolean ret = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+      GstCaps *caps = NULL;
+
+      gst_query_parse_accept_caps (query, &caps);
+      ret = gst_osx_audio_sink_acceptcaps (sink, caps);
+      gst_query_set_accept_caps_result (query, ret);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = GST_BASE_SINK_CLASS (parent_class)->query (base, query);
+      break;
+  }
+  return ret;
+}
+
+static gboolean
 gst_osx_audio_sink_stop (GstBaseSink * base)
 {
   GstOsxAudioSink *sink = GST_OSX_AUDIO_SINK (base);
@@ -299,7 +299,7 @@ gst_osx_audio_sink_stop (GstBaseSink * base)
 }
 
 static GstCaps *
-gst_osx_audio_sink_getcaps (GstBaseSink * base)
+gst_osx_audio_sink_getcaps (GstBaseSink * base, GstCaps * filter)
 {
   GstOsxAudioSink *sink = GST_OSX_AUDIO_SINK (base);
   gchar *caps_string = NULL;
@@ -316,23 +316,22 @@ gst_osx_audio_sink_getcaps (GstBaseSink * base)
 }
 
 static gboolean
-gst_osx_audio_sink_acceptcaps (GstPad * pad, GstCaps * caps)
+gst_osx_audio_sink_acceptcaps (GstOsxAudioSink * sink, GstCaps * caps)
 {
-  GstOsxAudioSink *sink = GST_OSX_AUDIO_SINK (gst_pad_get_parent_element (pad));
-  GstOsxRingBuffer *osxbuf;
+  GstOsxAudioRingBuffer *osxbuf = NULL;
   GstCaps *pad_caps;
   GstStructure *st;
   gboolean ret = FALSE;
-  GstRingBufferSpec spec = { 0 };
+  GstAudioRingBufferSpec spec = { 0 };
   gchar *caps_string = NULL;
 
-  osxbuf = GST_OSX_RING_BUFFER (GST_BASE_AUDIO_SINK (sink)->ringbuffer);
+  osxbuf = GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SINK (sink)->ringbuffer);
 
   caps_string = gst_caps_to_string (caps);
   GST_DEBUG_OBJECT (sink, "acceptcaps called with %s", caps_string);
   g_free (caps_string);
 
-  pad_caps = gst_pad_get_caps (pad);
+  pad_caps = gst_pad_query_caps (GST_BASE_SINK_PAD (sink), caps);
   if (pad_caps) {
     gboolean cret = gst_caps_can_intersect (pad_caps, caps);
     gst_caps_unref (pad_caps);
@@ -349,12 +348,12 @@ gst_osx_audio_sink_acceptcaps (GstPad * pad, GstCaps * caps)
   /* parse helper expects this set, so avoid nasty warning
    * will be set properly later on anyway  */
   spec.latency_time = GST_SECOND;
-  if (!gst_ring_buffer_parse_caps (&spec, caps))
+  if (!gst_audio_ring_buffer_parse_caps (&spec, caps))
     goto done;
 
   /* Make sure input is framed and can be payloaded */
   switch (spec.type) {
-    case GST_BUFTYPE_AC3:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3:
     {
       gboolean framed = FALSE;
 
@@ -365,7 +364,7 @@ gst_osx_audio_sink_acceptcaps (GstPad * pad, GstCaps * caps)
         goto done;
       break;
     }
-    case GST_BUFTYPE_DTS:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS:
     {
       gboolean parsed = FALSE;
 
@@ -382,12 +381,11 @@ gst_osx_audio_sink_acceptcaps (GstPad * pad, GstCaps * caps)
   ret = TRUE;
 
 done:
-  gst_object_unref (sink);
   return ret;
 }
 
 static GstBuffer *
-gst_osx_audio_sink_sink_payload (GstBaseAudioSink * sink, GstBuffer * buf)
+gst_osx_audio_sink_sink_payload (GstAudioBaseSink * sink, GstBuffer * buf)
 {
   GstOsxAudioSink *osxsink;
 
@@ -396,36 +394,42 @@ gst_osx_audio_sink_sink_payload (GstBaseAudioSink * sink, GstBuffer * buf)
   if (RINGBUFFER_IS_SPDIF (sink->ringbuffer->spec.type)) {
     gint framesize = gst_audio_iec61937_frame_size (&sink->ringbuffer->spec);
     GstBuffer *out;
+    GstMapInfo inmap, outmap;
+    gboolean res;
 
     if (framesize <= 0)
       return NULL;
 
     out = gst_buffer_new_and_alloc (framesize);
 
+    gst_buffer_map (buf, &inmap, GST_MAP_READ);
+    gst_buffer_map (out, &outmap, GST_MAP_WRITE);
+
     /* FIXME: the endianness needs to be queried and then set */
-    if (!gst_audio_iec61937_payload (GST_BUFFER_DATA (buf),
-            GST_BUFFER_SIZE (buf), GST_BUFFER_DATA (out),
-            GST_BUFFER_SIZE (out), &sink->ringbuffer->spec, G_BYTE_ORDER)) {
+    res = gst_audio_iec61937_payload (inmap.data, inmap.size,
+        outmap.data, outmap.size, &sink->ringbuffer->spec, G_BIG_ENDIAN);
+
+    gst_buffer_unmap (buf, &inmap);
+    gst_buffer_unmap (out, &outmap);
+
+    if (!res) {
       gst_buffer_unref (out);
       return NULL;
     }
 
-    gst_buffer_copy_metadata (out, buf, GST_BUFFER_COPY_ALL);
-
-    /* Fix endianness */
-    swab ((gchar *) GST_BUFFER_DATA (buf),
-        (gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+    gst_buffer_copy_into (out, buf, GST_BUFFER_COPY_METADATA, 0, -1);
     return out;
+
   } else {
     return gst_buffer_ref (buf);
   }
 }
 
-static GstRingBuffer *
-gst_osx_audio_sink_create_ringbuffer (GstBaseAudioSink * sink)
+static GstAudioRingBuffer *
+gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink)
 {
   GstOsxAudioSink *osxsink;
-  GstOsxRingBuffer *ringbuffer;
+  GstOsxAudioRingBuffer *ringbuffer;
 
   osxsink = GST_OSX_AUDIO_SINK (sink);
 
@@ -435,7 +439,7 @@ gst_osx_audio_sink_create_ringbuffer (GstBaseAudioSink * sink)
   }
 
   GST_DEBUG_OBJECT (sink, "Creating ringbuffer");
-  ringbuffer = g_object_new (GST_TYPE_OSX_RING_BUFFER, NULL);
+  ringbuffer = g_object_new (GST_TYPE_OSX_AUDIO_RING_BUFFER, NULL);
   GST_DEBUG_OBJECT (sink, "osx sink %p element %p  ioproc %p", osxsink,
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsink),
       (void *) gst_osx_audio_sink_io_proc);
@@ -447,7 +451,7 @@ gst_osx_audio_sink_create_ringbuffer (GstBaseAudioSink * sink)
   ringbuffer->core_audio->device_id = osxsink->device_id;
   ringbuffer->core_audio->is_src = FALSE;
 
-  return GST_RING_BUFFER (ringbuffer);
+  return GST_AUDIO_RING_BUFFER (ringbuffer);
 }
 
 /* HALOutput AudioUnit will request fairly arbitrarily-sized chunks
@@ -455,7 +459,7 @@ gst_osx_audio_sink_create_ringbuffer (GstBaseAudioSink * sink)
  * the current ringbuffer segment we are, and only advance the segment
  * once we've read the whole thing */
 static OSStatus
-gst_osx_audio_sink_io_proc (GstOsxRingBuffer * buf,
+gst_osx_audio_sink_io_proc (GstOsxAudioRingBuffer * buf,
     AudioUnitRenderActionFlags * ioActionFlags,
     const AudioTimeStamp * inTimeStamp,
     UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList * bufferList)
@@ -468,7 +472,7 @@ gst_osx_audio_sink_io_proc (GstOsxRingBuffer * buf,
   gint offset = 0;
 
   while (remaining) {
-    if (!gst_ring_buffer_prepare_read (GST_RING_BUFFER (buf),
+    if (!gst_audio_ring_buffer_prepare_read (GST_AUDIO_RING_BUFFER (buf),
             &readseg, &readptr, &len))
       return 0;
 
@@ -484,12 +488,12 @@ gst_osx_audio_sink_io_proc (GstOsxRingBuffer * buf,
     offset += len;
     remaining -= len;
 
-    if ((gint) buf->segoffset == GST_RING_BUFFER (buf)->spec.segsize) {
+    if ((gint) buf->segoffset == GST_AUDIO_RING_BUFFER (buf)->spec.segsize) {
       /* clear written samples */
-      gst_ring_buffer_clear (GST_RING_BUFFER (buf), readseg);
+      gst_audio_ring_buffer_clear (GST_AUDIO_RING_BUFFER (buf), readseg);
 
       /* we wrote one segment */
-      gst_ring_buffer_advance (GST_RING_BUFFER (buf), 1);
+      gst_audio_ring_buffer_advance (GST_AUDIO_RING_BUFFER (buf), 1);
 
       buf->segoffset = 0;
     }
@@ -508,9 +512,9 @@ gst_osx_audio_sink_osxelement_init (gpointer g_iface, gpointer iface_data)
 static void
 gst_osx_audio_sink_set_volume (GstOsxAudioSink * sink)
 {
-  GstOsxRingBuffer *osxbuf;
+  GstOsxAudioRingBuffer *osxbuf;
 
-  osxbuf = GST_OSX_RING_BUFFER (GST_BASE_AUDIO_SINK (sink)->ringbuffer);
+  osxbuf = GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SINK (sink)->ringbuffer);
   if (!osxbuf)
     return;
 
@@ -527,17 +531,7 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
   GstPadTemplate *pad_template;
   GstCaps *caps, *in_caps;
 
-  GstAudioChannelPosition pos[9] = {
-    GST_AUDIO_CHANNEL_POSITION_INVALID,
-    GST_AUDIO_CHANNEL_POSITION_INVALID,
-    GST_AUDIO_CHANNEL_POSITION_INVALID,
-    GST_AUDIO_CHANNEL_POSITION_INVALID,
-    GST_AUDIO_CHANNEL_POSITION_INVALID,
-    GST_AUDIO_CHANNEL_POSITION_INVALID,
-    GST_AUDIO_CHANNEL_POSITION_INVALID,
-    GST_AUDIO_CHANNEL_POSITION_INVALID,
-    GST_AUDIO_CHANNEL_POSITION_INVALID
-  };
+  guint64 channel_mask = 0;
 
   /* First collect info about the HW capabilites and preferences */
   spdif_allowed =
@@ -561,31 +555,31 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
     for (i = 0; i < max_channels; i++) {
       switch (layout->mChannelDescriptions[i].mChannelLabel) {
         case kAudioChannelLabel_Left:
-          pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT);
           break;
         case kAudioChannelLabel_Right:
-          pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
           break;
         case kAudioChannelLabel_Center:
-          pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_CENTER);
           break;
         case kAudioChannelLabel_LFEScreen:
-          pos[i] = GST_AUDIO_CHANNEL_POSITION_LFE;
+          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (LFE1);
           break;
         case kAudioChannelLabel_LeftSurround:
-          pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (REAR_LEFT);
           break;
         case kAudioChannelLabel_RightSurround:
-          pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (REAR_RIGHT);
           break;
         case kAudioChannelLabel_RearSurroundLeft:
-          pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
+          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (SIDE_LEFT);
           break;
         case kAudioChannelLabel_RearSurroundRight:
-          pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
+          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (SIDE_RIGHT);
           break;
         case kAudioChannelLabel_CenterSurround:
-          pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
+          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (REAR_CENTER);
           break;
         default:
           GST_WARNING_OBJECT (osxsink, "unrecognized channel: %d",
@@ -619,12 +613,12 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
       if (max_channels > 2 && use_positions) {
         out_s = gst_structure_copy (in_s);
         gst_structure_remove_field (out_s, "channels");
-        gst_structure_set (out_s, "channels", G_TYPE_INT, max_channels, NULL);
-        gst_audio_set_channel_positions (out_s, pos);
+        gst_structure_set (out_s, "channels", G_TYPE_INT, max_channels,
+            "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
         gst_caps_append_structure (caps, out_s);
       }
       out_s = gst_structure_copy (in_s);
-      gst_structure_remove_field (out_s, "channels");
+      gst_structure_remove_fields (out_s, "channels", "channel-mask", NULL);
       gst_structure_set (out_s, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
       gst_caps_append_structure (caps, out_s);
     }

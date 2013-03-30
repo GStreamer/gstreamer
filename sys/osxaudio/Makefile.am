@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgstosxaudio.la
 
-libgstosxaudio_la_SOURCES = gstosxringbuffer.c   \
+libgstosxaudio_la_SOURCES = gstosxaudioringbuffer.c   \
                             gstosxaudioelement.c \
                             gstosxaudiosink.c    \
                             gstosxaudiosrc.c     \
@@ -11,7 +11,6 @@ libgstosxaudio_la_SOURCES = gstosxringbuffer.c   \
 libgstosxaudio_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
     -Wno-deprecated-declarations
 libgstosxaudio_la_LIBADD = 			  \
-    -lgstinterfaces-@GST_API_VERSION@  \
     -lgstaudio-@GST_API_VERSION@       \
     $(GST_PLUGINS_BASE_LIBS)          \
     $(GST_BASE_LIBS)                  \
@@ -27,7 +26,7 @@ libgstosxaudio_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS) --tag=CC
 
 noinst_HEADERS = gstosxaudiosink.h	  \
                  gstosxaudioelement.h \
-                 gstosxringbuffer.h	  \
+                 gstosxaudioringbuffer.h	  \
                  gstosxaudiosrc.h     \
                  gstosxcoreaudiocommon.h     \
                  gstosxcoreaudio.h \

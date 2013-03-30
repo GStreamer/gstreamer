@@ -22,7 +22,11 @@
  */
 
 #include "gstosxcoreaudio.h"
+<<<<<<<
 #include <gst/audio/multichannel.h>
+=======
+#include <gst/audio/audio-channels.h>
+>>>>>>>
 
 typedef struct
 {
