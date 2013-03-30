@@ -53,6 +53,7 @@
         <filename>-lgstaudio-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <xi:include href="xml/gstaudio.xml" />
+      <xi:include href="xml/gstaudiometa.xml" />
       <xi:include href="xml/gstaudiocdsrc.xml" />
       <xi:include href="xml/gstaudioclock.xml" />
       <xi:include href="xml/gstaudiodecoder.xml" />

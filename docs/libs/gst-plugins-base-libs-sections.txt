@@ -179,6 +179,20 @@ _GST_AUDIO_FORMAT_NE
 </SECTION>
 
 <SECTION>
+<FILE>gstaudiometa</FILE>
+<INCLUDE>gst/audio/gstaudiometa.h</INCLUDE>
+GstAudioDownmixMeta
+gst_buffer_add_audio_downmix_meta
+gst_buffer_get_audio_downmix_meta
+gst_buffer_get_audio_downmix_meta_for_channels
+<SUBSECTION Standard>
+GST_AUDIO_DOWNMIX_META_API_TYPE
+GST_AUDIO_DOWNMIX_META_INFO
+gst_audio_downmix_meta_api_get_type
+gst_audio_downmix_meta_get_info
+</SECTION>
+
+<SECTION>
 <FILE>gstaudioclock</FILE>
 <INCLUDE>gst/audio/gstaudioclock.h</INCLUDE>
 GstAudioClock
@@ -2245,6 +2259,8 @@ GstVideoBufferPoolClass
 gst_video_buffer_pool_new
 gst_buffer_pool_config_get_video_alignment
 gst_buffer_pool_config_set_video_alignment
+GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT
+GST_BUFFER_POOL_OPTION_VIDEO_META
 <SUBSECTION Standard>
 GST_TYPE_VIDEO_BUFFER_POOL
 GST_VIDEO_BUFFER_POOL
@@ -2254,11 +2270,11 @@ GstVideoBufferPoolPrivate
 gst_video_buffer_pool_get_type
 </SECTION>
 
-
 <SECTION>
 <FILE>gstvideometa</FILE>
-<INCLUDE>>gst/video/gstvideometa.h</INCLUDE>
+<INCLUDE>gst/video/gstvideometa.h</INCLUDE>
 GstVideoMeta
+GstVideoMetaTransform
 gst_video_meta_map
 gst_video_meta_unmap
 gst_video_meta_get_info
@@ -2269,6 +2285,11 @@ gst_buffer_get_video_meta_id
 GstVideoCropMeta
 gst_buffer_add_video_crop_meta
 gst_buffer_get_video_crop_meta
+GstVideoGLTextureUpload
+GstVideoGLTextureUploadMeta
+gst_buffer_add_video_gl_texture_upload_meta
+gst_buffer_get_video_gl_texture_upload_meta
+gst_video_gl_texture_upload_meta_upload
 <SUBSECTION Standard>
 gst_video_crop_meta_api_get_type
 gst_video_meta_api_get_type
@@ -2279,6 +2300,10 @@ GST_VIDEO_META_INFO
 GST_VIDEO_META_TRANSFORM_IS_SCALE
 gst_video_meta_transform_scale_get_quark
 gst_video_crop_meta_get_info
+GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE
+GST_VIDEO_GL_TEXTURE_UPLOAD_META_INFO
+gst_video_gl_texture_upload_meta_api_get_type
+gst_video_gl_texture_upload_meta_get_info
 </SECTION>
 
 <SECTION>
@@ -2301,7 +2326,7 @@ GST_VIDEO_OVERLAY_COMPOSITION_BLEND_FORMATS
 gst_video_overlay_composition_blend
 
 <SUBSECTION composition-set-get>
-GstVideoOverlayCompositionMeta:
+GstVideoOverlayCompositionMeta
 gst_video_overlay_composition_meta_get_info
 gst_buffer_add_video_overlay_composition_meta
 gst_buffer_get_video_overlay_composition_meta
@@ -2335,6 +2360,8 @@ GST_VIDEO_OVERLAY_COMPOSITION_GET_CLASS
 GST_IS_VIDEO_OVERLAY_COMPOSITION
 GST_IS_VIDEO_VIDEO_OVERLAY_COMPOSITION_CLASS
 GST_VIDEO_OVERLAY_COMPOSITION_CAST
+GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE
+GST_VIDEO_OVERLAY_COMPOSITION_META_INFO
 gst_video_overlay_composition_get_type
 gst_video_overlay_composition_meta_api_get_type
 
