@@ -183,7 +183,7 @@ gst_rtp_sbc_depay_setcaps (GstRTPBaseDepayload * base, GstCaps * caps)
   return TRUE;
 
 bad_caps:
-  GST_WARNING_OBJECT (depay, "Can't support the caps we got: "
+  GST_WARNING_OBJECT (depay, "Can't support the caps we got: %"
       GST_PTR_FORMAT, caps);
   return FALSE;
 }
@@ -202,7 +202,8 @@ gst_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstBuffer * in)
 
   gst_rtp_buffer_map (in, GST_MAP_READ, &rtp);
 
-  GST_LOG_OBJECT (depay, "Got %d bytes", gst_buffer_get_size (in));
+  GST_LOG_OBJECT (depay, "Got %" G_GUINT64_FORMAT " bytes",
+      gst_buffer_get_size (in));
 
   if (gst_rtp_buffer_get_marker (&rtp)) {
     /* Marker isn't supposed to be set */
