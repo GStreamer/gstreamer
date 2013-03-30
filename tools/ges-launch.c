@@ -260,10 +260,11 @@ create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv,
     }
     g_printf ("loaded project successfully\n");
     g_free (uri);
-  } else
+  } else {
     /* Normal timeline creation */
-  if (!(timeline = create_timeline (argc, argv, audio, video)))
-    goto failure;
+    if (!(timeline = create_timeline (argc, argv, audio, video)))
+      goto failure;
+  }
 
   /* save project if path is given. we do this now in case GES crashes or
    * hangs during playback. */
