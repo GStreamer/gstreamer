@@ -22,9 +22,10 @@
  * @short_description: A standard GESTrack for raw audio
  */
 
-#include "ges-audio-track.h"
-
 #define DEFAULT_CAPS "audio/x-raw"
+
+#include "ges-smart-adder.h"
+#include "ges-audio-track.h"
 
 struct _GESAudioTrackPrivate
 {
@@ -77,6 +78,8 @@ ges_audio_track_class_init (GESAudioTrackClass * klass)
   g_type_class_add_private (klass, sizeof (GESAudioTrackPrivate));
 
   object_class->finalize = ges_audio_track_finalize;
+
+  GES_TRACK_CLASS (klass)->get_mixing_element = ges_smart_adder_new;
 }
 
 /****************************************************

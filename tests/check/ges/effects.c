@@ -97,7 +97,7 @@ GST_START_TEST (test_get_effects_from_tl)
   ges_init ();
 
   timeline = ges_timeline_new ();
-  layer = (GESLayer *) ges_simple_layer_new ();
+  layer = (GESLayer *) ges_layer_new ();
   track_video = GES_TRACK (ges_video_track_new ());
 
   ges_timeline_add_track (timeline, track_video);

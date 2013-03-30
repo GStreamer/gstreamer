@@ -61,6 +61,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-timeline-element.c \
 	ges-container.c \
 	ges-effect-asset.c \
+	ges-smart-adder.c \
 	ges-utils.c
 
 libges_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/ges/
@@ -119,6 +120,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-timeline-element.h \
 	ges-container.h \
 	ges-effect-asset.h \
+	ges-smart-adder.h \
 	ges-utils.h
 
 noinst_HEADERS = \

@@ -435,6 +435,42 @@ ges_track_finalize (GObject * object)
 }
 
 static void
+ges_track_constructed (GObject * object)
+{
+  GESTrack *self = GES_TRACK (object);
+
+  if (!gst_bin_add (GST_BIN (self), self->priv->composition))
+    GST_ERROR ("Couldn't add composition to bin !");
+
+  if (GES_TRACK_GET_CLASS (self)->get_mixing_element) {
+    GstElement *gnlobject;
+    GstElement *mixer = GES_TRACK_GET_CLASS (self)->get_mixing_element (self);
+
+    if (mixer == NULL) {
+      GST_WARNING_OBJECT (self, "Got no element fron get_mixing_element");
+
+      return;
+    }
+
+    gnlobject = gst_element_factory_make ("gnloperation", "mixing-operation");
+    if (!gst_bin_add (GST_BIN (gnlobject), mixer)) {
+      GST_WARNING_OBJECT (self, "Could not add the mixer to our composition");
+
+      return;
+    }
+    g_object_set (gnlobject, "expandable", TRUE, NULL);
+
+    if (!gst_bin_add (GST_BIN (self->priv->composition), gnlobject)) {
+      GST_WARNING_OBJECT (self, "Could not add the mixer to our composition");
+
+      return;
+    }
+  } else {
+    GST_INFO_OBJECT (self, "No way to create a main mixer");
+  }
+}
+
+static void
 ges_track_class_init (GESTrackClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -445,6 +481,7 @@ ges_track_class_init (GESTrackClass * klass)
   object_class->set_property = ges_track_set_property;
   object_class->dispose = ges_track_dispose;
   object_class->finalize = ges_track_finalize;
+  object_class->constructed = ges_track_constructed;
 
   /**
    * GESTrack:caps:
@@ -541,35 +578,6 @@ ges_track_init (GESTrack * self)
       (GCallback) pad_added_cb, self);
   g_signal_connect (self->priv->composition, "pad-removed",
       (GCallback) pad_removed_cb, self);
-
-  if (!gst_bin_add (GST_BIN (self), self->priv->composition))
-    GST_ERROR ("Couldn't add composition to bin !");
-
-  if (GES_TRACK_GET_CLASS (self)->get_mixing_element) {
-    GstElement *gnlobject;
-    GstElement *mixer = GES_TRACK_GET_CLASS (self)->get_mixing_element (self);
-
-    if (mixer == NULL) {
-      GST_WARNING_OBJECT (self, "Got no element fron get_mixing_element");
-
-      return;
-    }
-
-    gnlobject = gst_element_factory_make ("gnloperation", "mixing-operation");
-    if (!gst_bin_add (GST_BIN (gnlobject), mixer)) {
-      GST_WARNING_OBJECT (self, "Could not add the mixer to our composition");
-
-      return;
-    }
-    g_object_set (gnlobject, "start", GST_CLOCK_TIME_NONE, "duration",
-        GST_CLOCK_TIME_NONE, "prioirity", 0, NULL);
-
-    if (!gst_bin_add (GST_BIN (self->priv->composition), gnlobject)) {
-      GST_WARNING_OBJECT (self, "Could not add the mixer to our composition");
-
-      return;
-    }
-  }
 }
 
 /**

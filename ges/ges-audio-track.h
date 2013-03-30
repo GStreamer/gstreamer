@@ -39,13 +39,19 @@ typedef struct _GESAudioTrackPrivate GESAudioTrackPrivate;
 struct _GESAudioTrackClass
 {
   GESTrackClass parent_class;
+
+  /* Padding for API extension */
+  gpointer    _ges_reserved[GES_PADDING];
 };
 
 struct _GESAudioTrack
 {
   GESTrack parent_instance;
 
+  /*< private >*/
   GESAudioTrackPrivate *priv;
+  /* Padding for API extension */
+  gpointer         _ges_reserved[GES_PADDING];
 };
 
 GType          ges_audio_track_get_type (void) G_GNUC_CONST;
