@@ -517,6 +517,8 @@ ges_track_class_init (GESTrackClass * klass)
       g_signal_new ("track-element-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_ELEMENT);
+
+  klass->get_mixing_element = NULL;
 }
 
 static void
@@ -542,6 +544,32 @@ ges_track_init (GESTrack * self)
 
   if (!gst_bin_add (GST_BIN (self), self->priv->composition))
     GST_ERROR ("Couldn't add composition to bin !");
+
+  if (GES_TRACK_GET_CLASS (self)->get_mixing_element) {
+    GstElement *gnlobject;
+    GstElement *mixer = GES_TRACK_GET_CLASS (self)->get_mixing_element (self);
+
+    if (mixer == NULL) {
+      GST_WARNING_OBJECT (self, "Got no element fron get_mixing_element");
+
+      return;
+    }
+
+    gnlobject = gst_element_factory_make ("gnloperation", "mixing-operation");
+    if (!gst_bin_add (GST_BIN (gnlobject), mixer)) {
+      GST_WARNING_OBJECT (self, "Could not add the mixer to our composition");
+
+      return;
+    }
+    g_object_set (gnlobject, "start", GST_CLOCK_TIME_NONE, "duration",
+        GST_CLOCK_TIME_NONE, "prioirity", 0, NULL);
+
+    if (!gst_bin_add (GST_BIN (self->priv->composition), gnlobject)) {
+      GST_WARNING_OBJECT (self, "Could not add the mixer to our composition");
+
+      return;
+    }
+  }
 }
 
 /**

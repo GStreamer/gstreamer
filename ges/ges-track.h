@@ -75,6 +75,8 @@ struct _GESTrackClass
   /*< private >*/
   GstBinClass parent_class;
 
+  GstElement * (*get_mixing_element) (GESTrack *track);
+
   /* Padding for API extension */
   gpointer    _ges_reserved[GES_PADDING];
 };
