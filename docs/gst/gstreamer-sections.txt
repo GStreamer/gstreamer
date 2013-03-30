@@ -403,11 +403,15 @@ gst_static_caps_cleanup
 gst_caps_append
 gst_caps_merge
 gst_caps_append_structure
+gst_caps_append_structure_full
 gst_caps_remove_structure
 gst_caps_steal_structure
 gst_caps_merge_structure
+gst_caps_merge_structure_full
 gst_caps_get_size
 gst_caps_get_structure
+gst_caps_get_features
+gst_caps_set_features
 gst_caps_set_value
 gst_caps_set_simple
 gst_caps_set_simple_valist
@@ -420,6 +424,7 @@ gst_caps_is_strictly_equal
 gst_caps_is_always_compatible
 gst_caps_is_subset
 gst_caps_is_subset_structure
+gst_caps_is_subset_structure_full
 gst_caps_can_intersect
 gst_caps_intersect
 gst_caps_intersect_full
@@ -446,6 +451,48 @@ GST_CAPS_CAST
 gst_caps_flags_get_type
 gst_caps_get_type
 gst_caps_intersect_mode_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstcapsfeatures</FILE>
+<TITLE>GstCapsFeatures</TITLE>
+GstCapsFeatures
+gst_caps_features_new
+gst_caps_features_new_empty
+gst_caps_features_new_id
+gst_caps_features_new_id_valist
+gst_caps_features_new_valist
+
+gst_caps_features_copy
+gst_caps_features_free
+
+gst_caps_features_from_string
+gst_caps_features_to_string
+
+gst_caps_features_set_parent_refcount
+
+gst_caps_features_is_equal
+
+gst_caps_features_contains
+gst_caps_features_contains_id
+
+gst_caps_features_get_size
+
+gst_caps_features_get_nth
+gst_caps_features_get_nth_id
+
+gst_caps_features_add
+gst_caps_features_add_id
+gst_caps_features_remove
+gst_caps_features_remove_id
+<SUBSECTION Standard>
+GST_CAPS_FEATURES
+GST_CAPS_FEATURES_CAST
+GST_IS_CAPS_FEATURES
+GST_TYPE_CAPS_FEATURES
+gst_is_caps_features
+<SUBSECTION Private>
+gst_caps_features_get_type
 </SECTION>
 
 <SECTION>
@@ -3136,6 +3183,11 @@ GST_VALUE_HOLDS_DATE_TIME
 GST_VALUE_HOLDS_CAPS
 gst_value_set_caps
 gst_value_get_caps
+
+<SUBSECTION capsfeature>
+GST_VALUE_HOLDS_CAPS_FEATURES
+gst_value_set_caps_features
+gst_value_get_caps_features
 
 <SUBSECTION structure>
 GST_VALUE_HOLDS_STRUCTURE

@@ -562,6 +562,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   _priv_gst_query_initialize ();
   _priv_gst_structure_initialize ();
   _priv_gst_caps_initialize ();
+  _priv_gst_caps_features_initialize ();
   _priv_gst_meta_initialize ();
 
   g_type_class_ref (gst_object_get_type ());

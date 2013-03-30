@@ -65,6 +65,7 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/gstbufferpool.xml" />
     <xi:include href="xml/gstbus.xml" />
     <xi:include href="xml/gstcaps.xml" />
+    <xi:include href="xml/gstcapsfeatures.xml" />
     <xi:include href="xml/gstsample.xml" />
     <xi:include href="xml/gstchildproxy.xml" />
     <xi:include href="xml/gstclock.xml" />

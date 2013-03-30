@@ -326,7 +326,7 @@ gst_structure_set_parent_refcount (GstStructure * structure, gint * refcount)
  *
  * Free-function: gst_structure_free
  *
- * Returns: (transfer none): a new #GstStructure.
+ * Returns: (transfer full): a new #GstStructure.
  */
 GstStructure *
 gst_structure_copy (const GstStructure * structure)
@@ -1781,7 +1781,6 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
 
   g_return_val_if_fail (s != NULL, FALSE);
 
-  g_string_append (s, g_quark_to_string (structure->name));
   len = GST_STRUCTURE_FIELDS (structure)->len;
   for (i = 0; i < len; i++) {
     char *t;
@@ -1839,6 +1838,7 @@ gst_structure_to_string (const GstStructure * structure)
   /* we estimate a minimum size based on the number of fields in order to
    * avoid unnecessary reallocs within GString */
   s = g_string_sized_new (STRUCTURE_ESTIMATED_STRING_LEN (structure));
+  g_string_append (s, g_quark_to_string (structure->name));
   priv_gst_structure_append_to_gstring (structure, s);
   return g_string_free (s, FALSE);
 }
@@ -2236,6 +2236,77 @@ gst_structure_parse_value (gchar * str,
   return ret;
 }
 
+gboolean
+priv_gst_structure_parse_name (gchar * str, gchar ** start, gchar ** end,
+    gchar ** next)
+{
+  char *w;
+  char *r;
+
+  r = str;
+
+  /* skip spaces (FIXME: _isspace treats tabs and newlines as space!) */
+  while (*r && (g_ascii_isspace (*r) || (r[0] == '\\'
+              && g_ascii_isspace (r[1]))))
+    r++;
+
+  *start = r;
+
+  if (G_UNLIKELY (!gst_structure_parse_string (r, &w, &r, TRUE))) {
+    GST_WARNING ("Failed to parse structure string '%s'", str);
+    return FALSE;
+  }
+
+  *end = w;
+  *next = r;
+
+  return TRUE;
+}
+
+gboolean
+priv_gst_structure_parse_fields (gchar * str, gchar ** end,
+    GstStructure * structure)
+{
+  gchar *r;
+  GstStructureField field;
+
+  r = str;
+
+  do {
+    while (*r && (g_ascii_isspace (*r) || (r[0] == '\\'
+                && g_ascii_isspace (r[1]))))
+      r++;
+    if (*r == ';') {
+      /* end of structure, get the next char and finish */
+      r++;
+      break;
+    }
+    if (*r == '\0') {
+      /* accept \0 as end delimiter */
+      break;
+    }
+    if (G_UNLIKELY (*r != ',')) {
+      GST_WARNING ("Failed to find delimiter, r=%s", r);
+      return FALSE;
+    }
+    r++;
+    while (*r && (g_ascii_isspace (*r) || (r[0] == '\\'
+                && g_ascii_isspace (r[1]))))
+      r++;
+
+    memset (&field, 0, sizeof (field));
+    if (G_UNLIKELY (!gst_structure_parse_field (r, &r, &field))) {
+      GST_WARNING ("Failed to parse field, r=%s", r);
+      return FALSE;
+    }
+    gst_structure_set_field (structure, &field);
+  } while (TRUE);
+
+  *end = r;
+
+  return TRUE;
+}
+
 /**
  * gst_structure_from_string:
  * @string: a string representation of a #GstStructure.
@@ -2259,23 +2330,14 @@ gst_structure_from_string (const gchar * string, gchar ** end)
   char *r;
   char save;
   GstStructure *structure = NULL;
-  GstStructureField field;
 
   g_return_val_if_fail (string != NULL, NULL);
 
   copy = g_strdup (string);
   r = copy;
 
-  /* skip spaces (FIXME: _isspace treats tabs and newlines as space!) */
-  while (*r && (g_ascii_isspace (*r) || (r[0] == '\\'
-              && g_ascii_isspace (r[1]))))
-    r++;
-
-  name = r;
-  if (G_UNLIKELY (!gst_structure_parse_string (r, &w, &r, TRUE))) {
-    GST_WARNING ("Failed to parse structure string '%s'", string);
+  if (!priv_gst_structure_parse_name (r, &name, &w, &r))
     goto error;
-  }
 
   save = *w;
   *w = '\0';
@@ -2285,35 +2347,8 @@ gst_structure_from_string (const gchar * string, gchar ** end)
   if (G_UNLIKELY (structure == NULL))
     goto error;
 
-  do {
-    while (*r && (g_ascii_isspace (*r) || (r[0] == '\\'
-                && g_ascii_isspace (r[1]))))
-      r++;
-    if (*r == ';') {
-      /* end of structure, get the next char and finish */
-      r++;
-      break;
-    }
-    if (*r == '\0') {
-      /* accept \0 as end delimiter */
-      break;
-    }
-    if (G_UNLIKELY (*r != ',')) {
-      GST_WARNING ("Failed to find delimiter, r=%s", r);
-      goto error;
-    }
-    r++;
-    while (*r && (g_ascii_isspace (*r) || (r[0] == '\\'
-                && g_ascii_isspace (r[1]))))
-      r++;
-
-    memset (&field, 0, sizeof (field));
-    if (G_UNLIKELY (!gst_structure_parse_field (r, &r, &field))) {
-      GST_WARNING ("Failed to parse field, r=%s", r);
-      goto error;
-    }
-    gst_structure_set_field (structure, &field);
-  } while (TRUE);
+  if (!priv_gst_structure_parse_fields (r, &r, structure))
+    goto error;
 
   if (end)
     *end = (char *) string + (r - copy);

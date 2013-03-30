@@ -982,6 +982,93 @@ GST_START_TEST (test_broken)
 
 GST_END_TEST;
 
+GST_START_TEST (test_features)
+{
+  GstCaps *c1, *c2, *c3;
+  GstStructure *s1, *s2;
+  GstCapsFeatures *f1, *f2;
+  gchar *str1;
+  static GstStaticCaps scaps =
+      GST_STATIC_CAPS
+      ("video/x-raw(memory:EGLImage), width=320, height=[ 240, 260 ]");
+
+  c1 = gst_caps_new_empty ();
+  fail_unless (c1 != NULL);
+  s1 = gst_structure_new ("video/x-raw", "width", G_TYPE_INT, 320, "height",
+      GST_TYPE_INT_RANGE, 240, 260, NULL);
+  fail_unless (s1 != NULL);
+  f1 = gst_caps_features_new ("memory:EGLImage", NULL);
+  fail_unless (f1 != NULL);
+
+  gst_caps_append_structure_full (c1, s1, f1);
+  s2 = gst_caps_get_structure (c1, 0);
+  fail_unless (s1 == s2);
+  f2 = gst_caps_get_features (c1, 0);
+  fail_unless (f1 == f2);
+
+  str1 = gst_caps_to_string (c1);
+  fail_unless (str1 != NULL);
+  c2 = gst_caps_from_string (str1);
+  fail_unless (c2 != NULL);
+  g_free (str1);
+
+  fail_unless (gst_caps_is_equal (c1, c2));
+  fail_unless (gst_caps_is_subset (c1, c2));
+  fail_unless (gst_caps_is_subset (c2, c1));
+  fail_unless (gst_caps_can_intersect (c1, c2));
+
+  gst_caps_unref (c2);
+
+  c2 = gst_caps_new_empty ();
+  fail_unless (c2 != NULL);
+  s2 = gst_structure_new ("video/x-raw", "width", G_TYPE_INT, 320, "height",
+      GST_TYPE_INT_RANGE, 240, 260, NULL);
+  fail_unless (s2 != NULL);
+  f2 = gst_caps_features_new ("memory:VASurface", "meta:VAMeta", NULL);
+  fail_unless (f2 != NULL);
+  gst_caps_append_structure_full (c2, s2, f2);
+
+  fail_if (gst_caps_is_equal (c1, c2));
+  fail_if (gst_caps_is_subset (c1, c2));
+  fail_if (gst_caps_is_subset (c2, c1));
+  fail_if (gst_caps_can_intersect (c1, c2));
+
+  str1 = gst_caps_to_string (c2);
+  fail_unless (str1 != NULL);
+  c3 = gst_caps_from_string (str1);
+  fail_unless (c3 != NULL);
+  g_free (str1);
+
+  fail_unless (gst_caps_is_equal (c2, c3));
+  fail_unless (gst_caps_is_subset (c2, c3));
+  fail_unless (gst_caps_is_subset (c3, c2));
+  fail_unless (gst_caps_can_intersect (c2, c3));
+
+  f1 = gst_caps_get_features (c3, 0);
+  fail_unless (f1 != NULL);
+  fail_if (f1 == f2);
+  gst_caps_features_contains (f1, "memory:VASurface");
+  gst_caps_features_remove (f1, "memory:VASurface");
+  fail_if (gst_caps_is_equal (c2, c3));
+  fail_if (gst_caps_is_subset (c2, c3));
+  fail_if (gst_caps_is_subset (c3, c2));
+  fail_if (gst_caps_can_intersect (c2, c3));
+
+  gst_caps_unref (c3);
+  gst_caps_unref (c2);
+
+  c2 = gst_static_caps_get (&scaps);
+  fail_unless (c2 != NULL);
+  fail_unless (gst_caps_is_equal (c1, c2));
+  fail_unless (gst_caps_is_subset (c1, c2));
+  fail_unless (gst_caps_is_subset (c2, c1));
+  fail_unless (gst_caps_can_intersect (c1, c2));
+
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_caps_suite (void)
@@ -1009,6 +1096,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_intersect_duplication);
   tcase_add_test (tc_chain, test_normalize);
   tcase_add_test (tc_chain, test_broken);
+  tcase_add_test (tc_chain, test_features);
 
   return s;
 }

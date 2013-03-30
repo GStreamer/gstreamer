@@ -23,6 +23,7 @@
 #include <gst/gstconfig.h>
 #include <gst/gstcaps.h>
 #include <gst/gststructure.h>
+#include <gst/gstcapsfeatures.h>
 
 G_BEGIN_DECLS
 
@@ -148,6 +149,14 @@ G_BEGIN_DECLS
  * Checks if the given #GValue contains a #GST_TYPE_STRUCTURE value.
  */
 #define GST_VALUE_HOLDS_STRUCTURE(x)            (G_VALUE_HOLDS((x), GST_TYPE_STRUCTURE))
+
+/**
+ * GST_VALUE_HOLDS_CAPS_FEATURES:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_CAPS_FEATURES value.
+ */
+#define GST_VALUE_HOLDS_CAPS_FEATURES(x)        (G_VALUE_HOLDS((x), GST_TYPE_CAPS_FEATURES))
 
 /**
  * GST_VALUE_HOLDS_BUFFER:
@@ -471,6 +480,12 @@ const GstStructure *
                 gst_value_get_structure         (const GValue   *value);
 void            gst_value_set_structure         (GValue         *value,
                                                  const GstStructure  *structure);
+
+/* caps features */
+const GstCapsFeatures *
+                gst_value_get_caps_features     (const GValue   *value);
+void            gst_value_set_caps_features     (GValue         *value,
+                                                 const GstCapsFeatures  *features);
 
 /* fraction */
 void            gst_value_set_fraction          (GValue         *value,

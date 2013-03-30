@@ -1996,6 +1996,76 @@ gst_value_deserialize_structure (GValue * dest, const gchar * s)
   return FALSE;
 }
 
+/*******************
+ * GstCapsFeatures *
+ *******************/
+
+/**
+ * gst_value_set_caps_features:
+ * @value: a GValue initialized to GST_TYPE_CAPS_FEATURES
+ * @features: the features to set the value to
+ *
+ * Sets the contents of @value to @features.
+ */
+void
+gst_value_set_caps_features (GValue * value, const GstCapsFeatures * features)
+{
+  g_return_if_fail (G_IS_VALUE (value));
+  g_return_if_fail (G_VALUE_TYPE (value) == GST_TYPE_CAPS_FEATURES);
+  g_return_if_fail (features == NULL || GST_IS_CAPS_FEATURES (features));
+
+  g_value_set_boxed (value, features);
+}
+
+/**
+ * gst_value_get_caps_features:
+ * @value: a GValue initialized to GST_TYPE_CAPS_FEATURES
+ *
+ * Gets the contents of @value.
+ *
+ * Returns: (transfer none): the contents of @value
+ */
+const GstCapsFeatures *
+gst_value_get_caps_features (const GValue * value)
+{
+  g_return_val_if_fail (G_IS_VALUE (value), NULL);
+  g_return_val_if_fail (G_VALUE_TYPE (value) == GST_TYPE_CAPS_FEATURES, NULL);
+
+  return (GstCapsFeatures *) g_value_get_boxed (value);
+}
+
+static gchar *
+gst_value_serialize_caps_features (const GValue * value)
+{
+  GstCapsFeatures *features = g_value_get_boxed (value);
+
+  return gst_string_take_and_wrap (gst_caps_features_to_string (features));
+}
+
+static gboolean
+gst_value_deserialize_caps_features (GValue * dest, const gchar * s)
+{
+  GstCapsFeatures *features;
+
+  if (*s != '"') {
+    features = gst_caps_features_from_string (s);
+  } else {
+    gchar *str = gst_string_unwrap (s);
+
+    if (G_UNLIKELY (!str))
+      return FALSE;
+
+    features = gst_caps_features_from_string (str);
+    g_free (str);
+  }
+
+  if (G_LIKELY (features)) {
+    g_value_take_boxed (dest, features);
+    return TRUE;
+  }
+  return FALSE;
+}
+
 /**************
  * GstTagList *
  **************/
@@ -6000,6 +6070,17 @@ _priv_gst_value_initialize (void)
     };
 
     gst_value.type = GST_TYPE_STRUCTURE;
+    gst_value_register (&gst_value);
+  }
+  {
+    static GstValueTable gst_value = {
+      0,
+      NULL,
+      gst_value_serialize_caps_features,
+      gst_value_deserialize_caps_features,
+    };
+
+    gst_value.type = GST_TYPE_CAPS_FEATURES;
     gst_value_register (&gst_value);
   }
   {

@@ -106,6 +106,7 @@ check_PROGRAMS =				\
 	gst/gstmemory				\
 	gst/gstbus				\
 	gst/gstcaps     			\
+	gst/gstcapsfeatures    			\
 	$(CXX_CHECKS)			     	\
 	gst/gstdatetime     			\
 	gst/gstinfo		 		\

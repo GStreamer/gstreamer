@@ -55,6 +55,7 @@ libgstreamer_@GST_API_VERSION@_la_SOURCES = \
 	gstbufferpool.c		\
 	gstbus.c		\
 	gstcaps.c		\
+	gstcapsfeatures.c	\
 	gstchildproxy.c		\
 	gstclock.c		\
 	gstcontext.c \
@@ -151,6 +152,7 @@ gst_headers =			\
 	gstbufferpool.h		\
 	gstbus.h		\
 	gstcaps.h		\
+	gstcapsfeatures.h	\
 	gstchildproxy.h		\
 	gstclock.h		\
 	gstcompat.h		\

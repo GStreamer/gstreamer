@@ -34,6 +34,8 @@ EXPORTS
 	_gst_buffer_list_type DATA
 	_gst_buffer_type DATA
 	_gst_caps_any DATA
+	_gst_caps_features_memory_system_memory DATA
+	_gst_caps_features_type DATA
 	_gst_caps_none DATA
 	_gst_caps_type DATA
 	_gst_debug_category_new
@@ -190,11 +192,34 @@ EXPORTS
 	gst_bus_timed_pop_filtered
 	gst_caps_append
 	gst_caps_append_structure
+	gst_caps_append_structure_full
 	gst_caps_can_intersect
 	gst_caps_copy_nth
+	gst_caps_features_add
+	gst_caps_features_add_id
+	gst_caps_features_contains
+	gst_caps_features_contains_id
+	gst_caps_features_copy
+	gst_caps_features_free
+	gst_caps_features_from_string
+	gst_caps_features_get_nth
+	gst_caps_features_get_nth_id
+	gst_caps_features_get_size
+	gst_caps_features_get_type
+	gst_caps_features_is_equal
+	gst_caps_features_new
+	gst_caps_features_new_empty
+	gst_caps_features_new_id
+	gst_caps_features_new_id_valist
+	gst_caps_features_new_valist
+	gst_caps_features_remove
+	gst_caps_features_remove_id
+	gst_caps_features_set_parent_refcount
+	gst_caps_features_to_string
 	gst_caps_fixate
 	gst_caps_flags_get_type
 	gst_caps_from_string
+	gst_caps_get_features
 	gst_caps_get_size
 	gst_caps_get_structure
 	gst_caps_get_type
@@ -210,8 +235,10 @@ EXPORTS
 	gst_caps_is_strictly_equal
 	gst_caps_is_subset
 	gst_caps_is_subset_structure
+	gst_caps_is_subset_structure_full
 	gst_caps_merge
 	gst_caps_merge_structure
+	gst_caps_merge_structure_full
 	gst_caps_new_any
 	gst_caps_new_empty
 	gst_caps_new_empty_simple
@@ -220,6 +247,7 @@ EXPORTS
 	gst_caps_new_simple
 	gst_caps_normalize
 	gst_caps_remove_structure
+	gst_caps_set_features
 	gst_caps_set_simple
 	gst_caps_set_simple_valist
 	gst_caps_set_value
@@ -516,6 +544,7 @@ EXPORTS
 	gst_init_get_option_group
 	gst_int64_range_get_type
 	gst_int_range_get_type
+	gst_is_caps_features
 	gst_is_initialized
 	gst_iterator_copy
 	gst_iterator_filter
@@ -1277,6 +1306,7 @@ EXPORTS
 	gst_value_fraction_subtract
 	gst_value_get_bitmask
 	gst_value_get_caps
+	gst_value_get_caps_features
 	gst_value_get_double_range_max
 	gst_value_get_double_range_min
 	gst_value_get_fraction_denominator
@@ -1305,6 +1335,7 @@ EXPORTS
 	gst_value_serialize
 	gst_value_set_bitmask
 	gst_value_set_caps
+	gst_value_set_caps_features
 	gst_value_set_double_range
 	gst_value_set_fraction
 	gst_value_set_fraction_range

@@ -121,6 +121,7 @@
 #include "gstquark.h"
 #include "gstsegment.h"
 #include "gstvalue.h"
+#include "gstcapsfeatures.h"
 
 #ifdef HAVE_VALGRIND_VALGRIND_H
 #  include <valgrind/valgrind.h>
@@ -627,6 +628,9 @@ gst_debug_print_object (gpointer ptr)
   }
   if (*(GType *) ptr == GST_TYPE_STRUCTURE) {
     return gst_info_structure_to_string ((const GstStructure *) ptr);
+  }
+  if (*(GType *) ptr == GST_TYPE_STRUCTURE) {
+    return gst_caps_features_to_string ((const GstCapsFeatures *) ptr);
   }
   if (*(GType *) ptr == GST_TYPE_TAG_LIST) {
     /* FIXME: want pretty tag list with long byte dumps removed.. */

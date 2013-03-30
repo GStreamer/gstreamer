@@ -105,6 +105,7 @@ G_GNUC_INTERNAL  void  _priv_gst_buffer_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_buffer_list_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_structure_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_caps_initialize (void);
+G_GNUC_INTERNAL  void  _priv_gst_caps_features_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_event_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_format_initialize (void);
 G_GNUC_INTERNAL  void  _priv_gst_message_initialize (void);
@@ -132,10 +133,19 @@ G_GNUC_INTERNAL  void _priv_gst_element_state_changed (GstElement *element,
 
 /* used in both gststructure.c and gstcaps.c; numbers are completely made up */
 #define STRUCTURE_ESTIMATED_STRING_LEN(s) (16 + gst_structure_n_fields(s) * 22)
+#define FEATURES_ESTIMATED_STRING_LEN(s) (16 + gst_caps_features_get_size(s) * 14)
 
 G_GNUC_INTERNAL
 gboolean  priv_gst_structure_append_to_gstring (const GstStructure * structure,
                                                 GString            * s);
+G_GNUC_INTERNAL
+void priv_gst_caps_features_append_to_gstring (const GstCapsFeatures * features, GString *s);
+
+G_GNUC_INTERNAL
+gboolean priv_gst_structure_parse_name (gchar * str, gchar **start, gchar ** end, gchar ** next);
+G_GNUC_INTERNAL
+gboolean priv_gst_structure_parse_fields (gchar *str, gchar ** end, GstStructure *structure);
+
 /* registry cache backends */
 G_GNUC_INTERNAL
 gboolean		priv_gst_registry_binary_read_cache	(GstRegistry * registry, const char *location);

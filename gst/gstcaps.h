@@ -23,6 +23,7 @@
 #include <gst/gstconfig.h>
 #include <gst/gstminiobject.h>
 #include <gst/gststructure.h>
+#include <gst/gstcapsfeatures.h>
 #include <gst/glib-compat.h>
 
 G_BEGIN_DECLS
@@ -384,16 +385,27 @@ void              gst_caps_append                  (GstCaps       *caps1,
                                                     GstCaps       *caps2);
 void              gst_caps_append_structure        (GstCaps       *caps,
                                                     GstStructure  *structure);
+void              gst_caps_append_structure_full   (GstCaps       *caps,
+                                                    GstStructure  *structure,
+                                                    GstCapsFeatures *features);
 void              gst_caps_remove_structure        (GstCaps       *caps, guint idx);
 GstCaps *         gst_caps_merge                   (GstCaps       *caps1,
                                                     GstCaps       *caps2) G_GNUC_WARN_UNUSED_RESULT;
 GstCaps *         gst_caps_merge_structure         (GstCaps       *caps,
                                                     GstStructure  *structure) G_GNUC_WARN_UNUSED_RESULT;
+GstCaps *         gst_caps_merge_structure_full    (GstCaps       *caps,
+                                                    GstStructure  *structure,
+                                                    GstCapsFeatures *features) G_GNUC_WARN_UNUSED_RESULT;
 guint             gst_caps_get_size                (const GstCaps *caps);
 GstStructure *    gst_caps_get_structure           (const GstCaps *caps,
                                                     guint          index);
 GstStructure *    gst_caps_steal_structure         (GstCaps       *caps,
                                                     guint          index) G_GNUC_WARN_UNUSED_RESULT;
+void              gst_caps_set_features            (GstCaps *caps,
+                                                    guint          index,
+                                                    GstCapsFeatures * features);
+GstCapsFeatures * gst_caps_get_features            (const GstCaps *caps,
+                                                    guint          index);
 GstCaps *         gst_caps_copy_nth                (const GstCaps *caps, guint nth) G_GNUC_WARN_UNUSED_RESULT;
 GstCaps *         gst_caps_truncate                (GstCaps       *caps) G_GNUC_WARN_UNUSED_RESULT;
 void              gst_caps_set_value               (GstCaps       *caps,
@@ -415,6 +427,9 @@ gboolean          gst_caps_is_subset		   (const GstCaps *subset,
 						    const GstCaps *superset);
 gboolean          gst_caps_is_subset_structure     (const GstCaps *caps,
                                                     const GstStructure *structure);
+gboolean          gst_caps_is_subset_structure_full (const GstCaps *caps,
+                                                     const GstStructure *structure,
+                                                     const GstCapsFeatures *features);
 gboolean          gst_caps_is_equal		   (const GstCaps *caps1,
 						    const GstCaps *caps2);
 gboolean          gst_caps_is_equal_fixed          (const GstCaps *caps1,

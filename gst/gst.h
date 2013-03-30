@@ -36,6 +36,7 @@
 #include <gst/gstbufferlist.h>
 #include <gst/gstbufferpool.h>
 #include <gst/gstcaps.h>
+#include <gst/gstcapsfeatures.h>
 #include <gst/gstchildproxy.h>
 #include <gst/gstclock.h>
 #include <gst/gstcontrolsource.h>
