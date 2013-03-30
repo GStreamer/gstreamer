@@ -437,7 +437,7 @@ gst_xvimage_allocator_alloc (GstXvImageAllocator * allocator, gint im_format,
     }
     if (expected_size != 0 && mem->xvimage->data_size != expected_size) {
       GST_WARNING_OBJECT (allocator,
-          "unexpected XShm image size (got %" G_GSIZE_FORMAT ", expected %d)",
+          "unexpected XShm image size (got %d, expected %d)",
           mem->xvimage->data_size, expected_size);
     }
 
