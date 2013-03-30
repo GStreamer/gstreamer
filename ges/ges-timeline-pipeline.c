@@ -28,7 +28,9 @@
  */
 
 #include <gst/gst.h>
+#include <gst/video/videooverlay.h>
 #include <stdio.h>
+
 #include "ges-internal.h"
 #include "ges-timeline-pipeline.h"
 #include "ges-screenshot.h"
@@ -48,7 +50,6 @@ typedef struct
   gulong probe_id;
 } OutputChain;
 
-G_DEFINE_TYPE (GESTimelinePipeline, ges_timeline_pipeline, GST_TYPE_PIPELINE);
 
 struct _GESTimelinePipelinePrivate
 {
@@ -84,6 +85,60 @@ static OutputChain *get_output_chain_for_track (GESTimelinePipeline * self,
     GESTrack * track);
 static OutputChain *new_output_chain_for_track (GESTimelinePipeline * self,
     GESTrack * track);
+
+/****************************************************
+ *    Video Overlay vmethods implementation         *
+ ****************************************************/
+static void
+_overlay_expose (GstVideoOverlay * overlay)
+{
+  GESTimelinePipeline *pipeline = GES_TIMELINE_PIPELINE (overlay);
+
+  gst_video_overlay_expose (GST_VIDEO_OVERLAY (pipeline->priv->playsink));
+}
+
+static void
+_overlay_handle_events (GstVideoOverlay * overlay, gboolean handle_events)
+{
+  GESTimelinePipeline *pipeline = GES_TIMELINE_PIPELINE (overlay);
+
+  gst_video_overlay_handle_events (GST_VIDEO_OVERLAY (pipeline->priv->playsink),
+      handle_events);
+}
+
+static void
+_overlay_set_render_rectangle (GstVideoOverlay * overlay, gint x,
+    gint y, gint width, gint height)
+{
+  GESTimelinePipeline *pipeline = GES_TIMELINE_PIPELINE (overlay);
+
+  gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (pipeline->
+          priv->playsink), x, y, width, height);
+}
+
+static void
+_overlay_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
+{
+  GESTimelinePipeline *pipeline = GES_TIMELINE_PIPELINE (overlay);
+
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (pipeline->priv->
+          playsink), handle);
+}
+
+static void
+video_overlay_init (gpointer g_iface, gpointer g_iface_data)
+{
+  GstVideoOverlayInterface *iface = (GstVideoOverlayInterface *) g_iface;
+
+  iface->expose = _overlay_expose;
+  iface->handle_events = _overlay_handle_events;
+  iface->set_render_rectangle = _overlay_set_render_rectangle;
+  iface->set_window_handle = _overlay_set_window_handle;
+}
+
+G_DEFINE_TYPE_WITH_CODE (GESTimelinePipeline, ges_timeline_pipeline,
+    GST_TYPE_PIPELINE,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY, video_overlay_init));
 
 static void
 ges_timeline_pipeline_get_property (GObject * object, guint property_id,
