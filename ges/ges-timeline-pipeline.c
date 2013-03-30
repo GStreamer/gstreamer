@@ -749,8 +749,9 @@ gboolean
 ges_timeline_pipeline_add_timeline (GESTimelinePipeline * pipeline,
     GESTimeline * timeline)
 {
+  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (pipeline), FALSE);
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
   g_return_val_if_fail (pipeline->priv->timeline == NULL, FALSE);
-  g_return_val_if_fail (timeline != NULL, FALSE);
 
   GST_DEBUG ("pipeline:%p, timeline:%p", timeline, pipeline);
 
