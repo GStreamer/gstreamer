@@ -215,7 +215,8 @@ gst_replace_sink_event (GstBaseTransform * trans, GstEvent * event)
 
   GST_DEBUG_OBJECT (replace, "sink_event");
 
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (gst_replace_parent_class)->sink_event (
+      trans, event);
 }
 
 static gboolean
@@ -225,7 +226,8 @@ gst_replace_src_event (GstBaseTransform * trans, GstEvent * event)
 
   GST_DEBUG_OBJECT (replace, "src_event");
 
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (gst_replace_parent_class)->src_event (
+      trans, event);
 }
 
 static GstFlowReturn
