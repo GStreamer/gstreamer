@@ -13,6 +13,8 @@ libgstprintf_la_SOURCES = 	\
 	vasnprintf.h \
 	printf.c \
 	printf.h \
+	printf-extension.c \
+	printf-extension.h \
 	gst-printf.h
 
 EXTRA_DIST = README

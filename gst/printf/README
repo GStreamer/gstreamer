@@ -50,7 +50,8 @@ __gst_printf namespace for GStreamer. Also #define HAVE_SNPRINTF 0 has
 been changed to #undef HAVE_SNPRINTF, and HAVE_ALLOCA has been changed to
 GLIB_HAVE_ALLOCA_H
 
-We will also add support for our custom printf format specifiers.
+printf-extension.[ch] were added to provide support for custom pointer
+arguments (e.g. caps, events, etc.)
 
 Files have also been indented with gst-indent, so this is basically a
 permanent fork and any patches will have to be merged manually.

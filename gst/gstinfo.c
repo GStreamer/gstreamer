@@ -127,6 +127,10 @@
 
 /* our own printf implementation with custom extensions to %p for caps etc. */
 #include "printf/printf.h"
+#include "printf/printf-extension.h"
+
+static char *gst_info_printf_pointer_extension_func (const char *format,
+    void *ptr);
 
 #endif /* !GST_DISABLE_GST_DEBUG */
 
@@ -222,13 +226,6 @@ dladdr (void *address, Dl_info * dl)
 
 static void gst_debug_reset_threshold (gpointer category, gpointer unused);
 static void gst_debug_reset_all_thresholds (void);
-
-#if 0
-static int _gst_info_printf_extension_ptr (FILE * stream,
-    const struct printf_info *info, const void *const *args);
-static int _gst_info_printf_extension_segment (FILE * stream,
-    const struct printf_info *info, const void *const *args);
-#endif
 
 struct _GstDebugMessage
 {
@@ -328,12 +325,8 @@ _priv_gst_debug_init (void)
   /* get time we started for debugging messages */
   _priv_gst_info_start_time = gst_util_get_timestamp ();
 
-#if 0
-  register_printf_specifier (GST_PTR_FORMAT[0], _gst_info_printf_extension_ptr,
-      NULL);
-  register_printf_specifier (GST_SEGMENT_FORMAT[0],
-      _gst_info_printf_extension_segment, NULL);
-#endif
+  __gst_printf_pointer_extension_set_func
+      (gst_info_printf_pointer_extension_func);
 
   /* do NOT use a single debug function before this line has been run */
   GST_CAT_DEFAULT = _gst_debug_category_new ("default",
@@ -734,7 +727,6 @@ gst_debug_print_object (gpointer ptr)
   return g_strdup_printf ("%p", ptr);
 }
 
-#if 0
 static gchar *
 gst_debug_print_segment (gpointer ptr)
 {
@@ -775,7 +767,31 @@ gst_debug_print_segment (gpointer ptr)
     }
   }
 }
-#endif
+
+static char *
+gst_info_printf_pointer_extension_func (const char *format, void *ptr)
+{
+  char *s = NULL;
+
+  if (format[0] == 'p' && format[1] == '\a') {
+    switch (format[2]) {
+      case 'A':                /* GST_PTR_FORMAT     */
+        s = gst_debug_print_object (ptr);
+        break;
+      case 'B':                /* GST_SEGMENT_FORMAT */
+        s = gst_debug_print_segment (ptr);
+        break;
+      default:
+        /* must have been compiled against a newer version with an extension
+         * we don't known about yet - just ignore and fallback to %p below */
+        break;
+    }
+  }
+  if (s == NULL)
+    s = g_strdup_printf ("%p", ptr);
+
+  return s;
+}
 
 /**
  * gst_debug_construct_term_color:
@@ -1774,48 +1790,6 @@ _gst_debug_register_funcptr (GstDebugFuncPtr func, const gchar * ptrname)
 
   g_mutex_unlock (&__dbg_functions_mutex);
 }
-
-/*** PRINTF EXTENSIONS ********************************************************/
-
-#if 0
-static int
-_gst_info_printf_extension_ptr (FILE * stream, const struct printf_info *info,
-    const void *const *args)
-{
-  char *buffer;
-  int len;
-  void *ptr;
-
-  buffer = NULL;
-  ptr = *(void **) args[0];
-
-  buffer = gst_debug_print_object (ptr);
-  len = fprintf (stream, "%*s", (info->left ? -info->width : info->width),
-      buffer);
-
-  g_free (buffer);
-  return len;
-}
-
-static int
-_gst_info_printf_extension_segment (FILE * stream,
-    const struct printf_info *info, const void *const *args)
-{
-  char *buffer;
-  int len;
-  void *ptr;
-
-  buffer = NULL;
-  ptr = *(void **) args[0];
-
-  buffer = gst_debug_print_segment (ptr);
-  len = fprintf (stream, "%*s", (info->left ? -info->width : info->width),
-      buffer);
-
-  g_free (buffer);
-  return len;
-}
-#endif
 
 static void
 gst_info_dump_mem_line (gchar * linebuf, gsize linebuf_size,
