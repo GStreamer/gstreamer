@@ -266,7 +266,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 
   priv = container->priv;
 
-  GES_CONTAINER_GET_CLASS (element)->get_priorty_range (container, &min_prio,
+  GES_CONTAINER_GET_CLASS (element)->get_priority_range (container, &min_prio,
       &max_prio);
 
   priv->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
@@ -503,7 +503,7 @@ _child_priority_changed_cb (GESTimelineElement * child,
   map = g_hash_table_lookup (priv->mappings, child);
   g_assert (map);
 
-  GES_CONTAINER_GET_CLASS (container)->get_priorty_range (container, &min_prio,
+  GES_CONTAINER_GET_CLASS (container)->get_priority_range (container, &min_prio,
       &max_prio);
 
   map->priority_offset = min_prio + _PRIORITY (container) - _PRIORITY (child);
@@ -583,7 +583,7 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   mapping->start_offset = _START (container) - _START (child);
   mapping->duration_offset = _DURATION (container) - _DURATION (child);
   mapping->inpoint_offset = _INPOINT (container) - _INPOINT (child);
-  GES_CONTAINER_GET_CLASS (container)->get_priorty_range (container,
+  GES_CONTAINER_GET_CLASS (container)->get_priority_range (container,
       &min_prio, &max_prio);
   mapping->priority_offset =
       min_prio + _PRIORITY (container) - _PRIORITY (child);

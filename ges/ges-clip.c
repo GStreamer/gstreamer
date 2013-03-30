@@ -113,7 +113,7 @@ _compute_height (GESContainer * container)
 }
 
 static void
-_get_priorty_range (GESContainer * container, guint32 * min_priority,
+_get_priority_range (GESContainer * container, guint32 * min_priority,
     guint32 * max_priority)
 {
   GESTimelineLayer *layer = GES_CLIP (container)->priv->layer;
@@ -143,7 +143,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
    *    which are not BaseEffect on top of them
    * FIXME: Let the full control over priorities to the user
    */
-  _get_priorty_range (container, &min_prio, &max_prio);
+  _get_priority_range (container, &min_prio, &max_prio);
   if (GES_IS_BASE_EFFECT (element)) {
 
     GST_DEBUG_OBJECT (container, "Adding %ith effect: %" GST_PTR_FORMAT
@@ -490,7 +490,7 @@ ges_clip_class_init (GESClipClass * klass)
   element_class->trim = _trim;
   /* TODO implement the deep_copy Virtual method */
 
-  container_class->get_priorty_range = _get_priorty_range;
+  container_class->get_priority_range = _get_priority_range;
   container_class->compute_height = _compute_height;
   container_class->add_child = _add_child;
   container_class->remove_child = _remove_child;
@@ -583,7 +583,7 @@ ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
       ges_track_type_name (type));
   result = klass->create_track_elements (clip, type);
 
-  _get_priorty_range (GES_CONTAINER (clip), &min_prio, &max_prio);
+  _get_priority_range (GES_CONTAINER (clip), &min_prio, &max_prio);
   for (tmp = result; tmp; tmp = tmp->next) {
     GESTimelineElement *elem = tmp->data;
 
@@ -874,7 +874,7 @@ ges_clip_get_top_effect_position (GESClip * clip, GESBaseEffect * effect)
   g_return_val_if_fail (GES_IS_CLIP (clip), -1);
   g_return_val_if_fail (GES_IS_BASE_EFFECT (effect), -1);
 
-  _get_priorty_range (GES_CONTAINER (clip), &min_prio, &max_prio);
+  _get_priority_range (GES_CONTAINER (clip), &min_prio, &max_prio);
 
   return GES_TIMELINE_ELEMENT_PRIORITY (effect) - min_prio +
       GES_TIMELINE_ELEMENT_PRIORITY (clip);
