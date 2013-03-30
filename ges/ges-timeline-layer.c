@@ -462,7 +462,7 @@ ges_timeline_layer_is_empty (GESTimelineLayer * layer)
  *
  * Calling this method will construct and properly set all the media related
  * elements on @clip. If you need to know when those objects (actually #GESTrackElement)
- * are constructed, you should connect to the clip::track-element-added signal which
+ * are constructed, you should connect to the container::child-added signal which
  * is emited right after those elements are ready to be used.
  *
  * Returns: TRUE if the clip was properly added to the layer, or FALSE

@@ -888,7 +888,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
 
     if (g_strcmp0 (fac_ref, (gchar *) "effect")) {
       /* FIXME this is a hack to get a ref to the formatter when receiving
-       * track-element-added */
+       * child-added */
       g_hash_table_insert (props_table, (gchar *) "current-formatter", self);
       if (a_avail && (!video)) {
         a_avail = FALSE;
@@ -919,7 +919,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
         set_properties (G_OBJECT (src), props_table);
         ges_timeline_layer_add_clip (layer, GES_CLIP (src));
 
-        g_signal_connect (src, "track-element-added",
+        g_signal_connect (src, "child-added",
             G_CALLBACK (track_element_added_cb), props_table);
 
         priv->sources_to_load = g_list_prepend (priv->sources_to_load, src);
