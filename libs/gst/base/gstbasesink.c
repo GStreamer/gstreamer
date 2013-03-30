@@ -3201,7 +3201,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
 {
   GstBaseSinkClass *bclass;
   GstBaseSinkPrivate *priv = basesink->priv;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime start = GST_CLOCK_TIME_NONE, end = GST_CLOCK_TIME_NONE;
   GstSegment *segment;
   GstBuffer *sync_buf;
