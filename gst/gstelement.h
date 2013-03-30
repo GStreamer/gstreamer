@@ -774,7 +774,7 @@ gboolean                gst_element_post_message        (GstElement * element, G
 
 /* error handling */
 /* gcc versions < 3.3 warn about NULL being passed as format to printf */
-#if (defined(GST_USING_PRINTF_EXTENSION) || !defined(__GNUC__) || (__GNUC__ < 3) || (__GNUC__ == 3 && __GNUC_MINOR__ < 3))
+#if (!defined(__GNUC__) || (__GNUC__ < 3) || (__GNUC__ == 3 && __GNUC_MINOR__ < 3))
 gchar *                 _gst_element_error_printf       (const gchar *format, ...);
 #else
 gchar *                 _gst_element_error_printf       (const gchar *format, ...) G_GNUC_PRINTF (1, 2);

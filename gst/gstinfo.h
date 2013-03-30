@@ -229,6 +229,21 @@ struct _GstDebugCategory {
 #endif
 #endif /* ifndef GST_FUNCTION */
 
+/**
+ * GST_PTR_FORMAT:
+ *
+ * printf format type used to debug GStreamer types.
+ * This can only be used on types whose size is >= sizeof(gpointer).
+ */
+#define GST_PTR_FORMAT "p" /* FIXME: add suffix for differentiation */
+
+/**
+ * GST_SEGMENT_FORMAT:
+ *
+ * printf format type used to debug GStreamer segments.
+ * This can only be used on pointers to GstSegment structures.
+ */
+#define GST_SEGMENT_FORMAT "p" /* FIXME: add suffix for differentiation */
 
 typedef struct _GstDebugMessage GstDebugMessage;
 
@@ -256,20 +271,6 @@ typedef void (*GstLogFunction)  (GstDebugCategory * category,
                                  GstDebugMessage  * message,
                                  gpointer           user_data);
 
-#ifdef GST_USING_PRINTF_EXTENSION
-
-/* not using G_GNUC_PRINTF, since gcc will choke on GST_PTR_FORMAT being %P */
-void		    gst_debug_log            (GstDebugCategory * category,
-                                          GstDebugLevel      level,
-                                          const gchar      * file,
-                                          const gchar      * function,
-                                          gint               line,
-                                          GObject          * object,
-                                          const gchar      * format,
-                                          ...) G_GNUC_NO_INSTRUMENT;
-
-#else /* GST_USING_PRINTF_EXTENSION */
-
 void		    gst_debug_log            (GstDebugCategory * category,
                                           GstDebugLevel      level,
                                           const gchar      * file,
@@ -278,8 +279,6 @@ void		    gst_debug_log            (GstDebugCategory * category,
                                           GObject          * object,
                                           const gchar      * format,
                                           ...) G_GNUC_PRINTF (7, 8) G_GNUC_NO_INSTRUMENT;
-
-#endif /* GST_USING_PRINTF_EXTENSION */
 
 void            gst_debug_log_valist     (GstDebugCategory * category,
                                           GstDebugLevel      level,

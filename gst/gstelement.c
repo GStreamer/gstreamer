@@ -97,6 +97,8 @@
 #include "gst-i18n-lib.h"
 #include "glib-compat-private.h"
 
+#include "printf/printf.h"
+
 /* Element signals and args */
 enum
 {
@@ -1745,6 +1747,7 @@ _gst_element_error_printf (const gchar * format, ...)
 {
   va_list args;
   gchar *buffer;
+  int len;
 
   if (format == NULL)
     return NULL;
@@ -1752,8 +1755,14 @@ _gst_element_error_printf (const gchar * format, ...)
     return NULL;
 
   va_start (args, format);
-  buffer = g_strdup_vprintf (format, args);
+
+  len = __gst_vasprintf (&buffer, format, args);
+
   va_end (args);
+
+  if (len < 0)
+    buffer = NULL;
+
   return buffer;
 }
 

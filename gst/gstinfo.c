@@ -98,9 +98,6 @@
 #ifdef HAVE_DLFCN_H
 #  include <dlfcn.h>
 #endif
-#ifdef HAVE_PRINTF_EXTENSION
-#  include <printf.h>
-#endif
 #include <stdio.h>              /* fprintf */
 #include <glib/gstdio.h>
 #include <errno.h>
@@ -127,6 +124,9 @@
 #  include <valgrind/valgrind.h>
 #endif
 #include <glib/gprintf.h>       /* g_sprintf */
+
+/* our own printf implementation with custom extensions to %p for caps etc. */
+#include "printf/printf.h"
 
 #endif /* !GST_DISABLE_GST_DEBUG */
 
@@ -223,18 +223,11 @@ dladdr (void *address, Dl_info * dl)
 static void gst_debug_reset_threshold (gpointer category, gpointer unused);
 static void gst_debug_reset_all_thresholds (void);
 
-#ifdef GST_USING_PRINTF_EXTENSION
+#if 0
 static int _gst_info_printf_extension_ptr (FILE * stream,
     const struct printf_info *info, const void *const *args);
 static int _gst_info_printf_extension_segment (FILE * stream,
     const struct printf_info *info, const void *const *args);
-#ifdef HAVE_REGISTER_PRINTF_SPECIFIER
-static int _gst_info_printf_extension_arginfo (const struct printf_info *info,
-    size_t n, int *argtypes, int *size);
-#else
-static int _gst_info_printf_extension_arginfo (const struct printf_info *info,
-    size_t n, int *argtypes);
-#endif
 #endif
 
 struct _GstDebugMessage
@@ -335,18 +328,11 @@ _priv_gst_debug_init (void)
   /* get time we started for debugging messages */
   _priv_gst_info_start_time = gst_util_get_timestamp ();
 
-#ifdef GST_USING_PRINTF_EXTENSION
-#ifdef HAVE_REGISTER_PRINTF_SPECIFIER
+#if 0
   register_printf_specifier (GST_PTR_FORMAT[0], _gst_info_printf_extension_ptr,
-      _gst_info_printf_extension_arginfo);
+      NULL);
   register_printf_specifier (GST_SEGMENT_FORMAT[0],
-      _gst_info_printf_extension_segment, _gst_info_printf_extension_arginfo);
-#else
-  register_printf_function (GST_PTR_FORMAT[0], _gst_info_printf_extension_ptr,
-      _gst_info_printf_extension_arginfo);
-  register_printf_function (GST_SEGMENT_FORMAT[0],
-      _gst_info_printf_extension_segment, _gst_info_printf_extension_arginfo);
-#endif
+      _gst_info_printf_extension_segment, NULL);
 #endif
 
   /* do NOT use a single debug function before this line has been run */
@@ -547,7 +533,13 @@ const gchar *
 gst_debug_message_get (GstDebugMessage * message)
 {
   if (message->message == NULL) {
-    message->message = g_strdup_vprintf (message->format, message->arguments);
+    int len;
+
+    len = __gst_vasprintf (&message->message, message->format,
+        message->arguments);
+
+    if (len < 0)
+      message->message = NULL;
   }
   return message->message;
 }
@@ -742,8 +734,7 @@ gst_debug_print_object (gpointer ptr)
   return g_strdup_printf ("%p", ptr);
 }
 
-#ifdef GST_USING_PRINTF_EXTENSION
-
+#if 0
 static gchar *
 gst_debug_print_segment (gpointer ptr)
 {
@@ -784,8 +775,7 @@ gst_debug_print_segment (gpointer ptr)
     }
   }
 }
-
-#endif /* GST_USING_PRINTF_EXTENSION */
+#endif
 
 /**
  * gst_debug_construct_term_color:
@@ -1787,7 +1777,7 @@ _gst_debug_register_funcptr (GstDebugFuncPtr func, const gchar * ptrname)
 
 /*** PRINTF EXTENSIONS ********************************************************/
 
-#ifdef GST_USING_PRINTF_EXTENSION
+#if 0
 static int
 _gst_info_printf_extension_ptr (FILE * stream, const struct printf_info *info,
     const void *const *args)
@@ -1825,26 +1815,7 @@ _gst_info_printf_extension_segment (FILE * stream,
   g_free (buffer);
   return len;
 }
-
-#ifdef HAVE_REGISTER_PRINTF_SPECIFIER
-static int
-_gst_info_printf_extension_arginfo (const struct printf_info *info, size_t n,
-    int *argtypes, int *size)
-#else
-static int
-_gst_info_printf_extension_arginfo (const struct printf_info *info, size_t n,
-    int *argtypes)
 #endif
-{
-  if (n > 0) {
-    argtypes[0] = PA_POINTER;
-#ifdef HAVE_REGISTER_PRINTF_SPECIFIER
-    *size = sizeof (gpointer);
-#endif
-  }
-  return 1;
-}
-#endif /* GST_USING_PRINTF_EXTENSION */
 
 static void
 gst_info_dump_mem_line (gchar * linebuf, gsize linebuf_size,
