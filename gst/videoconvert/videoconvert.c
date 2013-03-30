@@ -33,10 +33,10 @@
 
 static void videoconvert_convert_generic (VideoConvert * convert,
     GstVideoFrame * dest, const GstVideoFrame * src);
-static void videoconvert_convert_matrix (VideoConvert * convert,
-    guint8 * pixels);
+static void videoconvert_convert_matrix8 (VideoConvert * convert,
+    gpointer pixels);
 static void videoconvert_convert_matrix16 (VideoConvert * convert,
-    guint16 * pixels);
+    gpointer pixels);
 static gboolean videoconvert_convert_lookup_fastpath (VideoConvert * convert);
 static gboolean videoconvert_convert_compute_matrix (VideoConvert * convert);
 static void videoconvert_dither_verterr (VideoConvert * convert,
@@ -121,16 +121,17 @@ videoconvert_convert_convert (VideoConvert * convert,
 #define SCALE_F  ((float) (1 << SCALE))
 
 static void
-videoconvert_convert_matrix (VideoConvert * convert, guint8 * pixels)
+videoconvert_convert_matrix8 (VideoConvert * convert, gpointer pixels)
 {
   int i;
   int r, g, b;
   int y, u, v;
+  guint8 *p = pixels;
 
   for (i = 0; i < convert->width; i++) {
-    r = pixels[i * 4 + 1];
-    g = pixels[i * 4 + 2];
-    b = pixels[i * 4 + 3];
+    r = p[i * 4 + 1];
+    g = p[i * 4 + 2];
+    b = p[i * 4 + 3];
 
     y = (convert->cmatrix[0][0] * r + convert->cmatrix[0][1] * g +
         convert->cmatrix[0][2] * b + convert->cmatrix[0][3]) >> SCALE;
@@ -139,23 +140,24 @@ videoconvert_convert_matrix (VideoConvert * convert, guint8 * pixels)
     v = (convert->cmatrix[2][0] * r + convert->cmatrix[2][1] * g +
         convert->cmatrix[2][2] * b + convert->cmatrix[2][3]) >> SCALE;
 
-    pixels[i * 4 + 1] = CLAMP (y, 0, 255);
-    pixels[i * 4 + 2] = CLAMP (u, 0, 255);
-    pixels[i * 4 + 3] = CLAMP (v, 0, 255);
+    p[i * 4 + 1] = CLAMP (y, 0, 255);
+    p[i * 4 + 2] = CLAMP (u, 0, 255);
+    p[i * 4 + 3] = CLAMP (v, 0, 255);
   }
 }
 
 static void
-videoconvert_convert_matrix16 (VideoConvert * convert, guint16 * pixels)
+videoconvert_convert_matrix16 (VideoConvert * convert, gpointer pixels)
 {
   int i;
   int r, g, b;
   int y, u, v;
+  guint16 *p = pixels;
 
   for (i = 0; i < convert->width; i++) {
-    r = pixels[i * 4 + 1];
-    g = pixels[i * 4 + 2];
-    b = pixels[i * 4 + 3];
+    r = p[i * 4 + 1];
+    g = p[i * 4 + 2];
+    b = p[i * 4 + 3];
 
     y = (convert->cmatrix[0][0] * r + convert->cmatrix[0][1] * g +
         convert->cmatrix[0][2] * b + convert->cmatrix[0][3]) >> SCALE;
@@ -164,9 +166,9 @@ videoconvert_convert_matrix16 (VideoConvert * convert, guint16 * pixels)
     v = (convert->cmatrix[2][0] * r + convert->cmatrix[2][1] * g +
         convert->cmatrix[2][2] * b + convert->cmatrix[2][3]) >> SCALE;
 
-    pixels[i * 4 + 1] = CLAMP (y, 0, 65535);
-    pixels[i * 4 + 2] = CLAMP (u, 0, 65535);
-    pixels[i * 4 + 3] = CLAMP (v, 0, 65535);
+    p[i * 4 + 1] = CLAMP (y, 0, 65535);
+    p[i * 4 + 2] = CLAMP (u, 0, 65535);
+    p[i * 4 + 3] = CLAMP (v, 0, 65535);
   }
 }
 
@@ -238,13 +240,14 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
       in_info->colorimetry.matrix == out_info->colorimetry.matrix) {
     GST_DEBUG ("using identity color transform");
     convert->matrix = NULL;
-    convert->matrix16 = NULL;
     return TRUE;
   }
 
   /* calculate intermediate format for the matrix. When unpacking, we expand
    * input to 16 when one of the inputs is 16 bits */
   if (convert->in_bits == 16 || convert->out_bits == 16) {
+    convert->matrix = videoconvert_convert_matrix16;
+
     if (GST_VIDEO_FORMAT_INFO_IS_RGB (suinfo))
       suinfo = gst_video_format_get_info (GST_VIDEO_FORMAT_ARGB64);
     else
@@ -254,6 +257,8 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
       duinfo = gst_video_format_get_info (GST_VIDEO_FORMAT_ARGB64);
     else
       duinfo = gst_video_format_get_info (GST_VIDEO_FORMAT_AYUV64);
+  } else {
+    convert->matrix = videoconvert_convert_matrix8;
   }
 
   color_matrix_set_identity (&dst);
@@ -305,9 +310,6 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
       convert->cmatrix[2][1], convert->cmatrix[2][2], convert->cmatrix[2][3]);
   GST_DEBUG ("[%6d %6d %6d %6d]", convert->cmatrix[3][0],
       convert->cmatrix[3][1], convert->cmatrix[3][2], convert->cmatrix[3][3]);
-
-  convert->matrix = videoconvert_convert_matrix;
-  convert->matrix16 = videoconvert_convert_matrix16;
 
   return TRUE;
 
@@ -421,8 +423,8 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
       }
 
       if (out_bits == 16 || in_bits == 16) {
-        if (convert->matrix16)
-          convert->matrix16 (convert, tmpline16);
+        if (convert->matrix)
+          convert->matrix (convert, tmpline16);
         if (convert->dither16)
           convert->dither16 (convert, tmpline16, j);
         tmpline8 += width * 8;

@@ -51,9 +51,8 @@ struct _VideoConvert {
   gpointer tmpline;
   guint16 *errline;
 
-  void (*convert) (VideoConvert *convert, GstVideoFrame *dest, const GstVideoFrame *src);
-  void (*matrix) (VideoConvert *convert, guint8 * pixels);
-  void (*matrix16) (VideoConvert *convert, guint16 * pixels);
+  void (*convert)  (VideoConvert *convert, GstVideoFrame *dest, const GstVideoFrame *src);
+  void (*matrix)   (VideoConvert *convert, gpointer pixels);
   void (*dither16) (VideoConvert *convert, guint16 * pixels, int j);
 };
 
