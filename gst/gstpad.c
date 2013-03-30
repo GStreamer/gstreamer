@@ -2479,7 +2479,6 @@ gst_pad_get_allowed_caps (GstPad * pad)
 {
   GstCaps *mycaps;
   GstCaps *caps;
-  GstCaps *peercaps;
   GstPad *peer;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
@@ -2495,11 +2494,9 @@ gst_pad_get_allowed_caps (GstPad * pad)
   GST_OBJECT_UNLOCK (pad);
   mycaps = gst_pad_query_caps (pad, NULL);
 
-  peercaps = gst_pad_query_caps (peer, NULL);
+  caps = gst_pad_query_caps (peer, mycaps);
   gst_object_unref (peer);
 
-  caps = gst_caps_intersect (mycaps, peercaps);
-  gst_caps_unref (peercaps);
   gst_caps_unref (mycaps);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "allowed caps %" GST_PTR_FORMAT,
