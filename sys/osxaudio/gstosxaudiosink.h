@@ -51,8 +51,8 @@
 #define __GST_OSXAUDIOSINK_H__
 
 #include <gst/gst.h>
-#include <gst/audio/gstbaseaudiosink.h>
-#include "gstosxringbuffer.h"
+#include <gst/audio/gstaudiobasesink.h>
+#include "gstosxaudioringbuffer.h"
 
 G_BEGIN_DECLS
 
@@ -68,7 +68,7 @@ typedef struct _GstOsxAudioSinkClass GstOsxAudioSinkClass;
 
 struct _GstOsxAudioSink
 {
-  GstBaseAudioSink sink;
+  GstAudioBaseSink sink;
 
   AudioDeviceID device_id;
 
@@ -79,7 +79,7 @@ struct _GstOsxAudioSink
 
 struct _GstOsxAudioSinkClass
 {
-  GstBaseAudioSinkClass parent_class;
+  GstAudioBaseSinkClass parent_class;
 };
 
 GType gst_osx_audio_sink_get_type (void);

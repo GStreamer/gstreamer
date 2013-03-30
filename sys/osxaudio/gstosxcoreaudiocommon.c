@@ -222,7 +222,8 @@ gst_core_audio_set_channels_layout (GstCoreAudio * core_audio,
   int layoutSize, element, i;
   AudioUnitScope scope;
   GstStructure *structure;
-  GstAudioChannelPosition *positions;
+  GstAudioChannelPosition *positions = NULL;
+  guint64 channel_mask;
 
   /* Describe channels */
   layoutSize = sizeof (AudioChannelLayout) +
@@ -230,7 +231,11 @@ gst_core_audio_set_channels_layout (GstCoreAudio * core_audio,
   layout = g_malloc (layoutSize);
 
   structure = gst_caps_get_structure (caps, 0);
-  positions = gst_audio_get_channel_positions (structure);
+  if (gst_structure_get (structure, "channel-mask", GST_TYPE_BITMASK,
+          &channel_mask, NULL)) {
+    positions = g_new (GstAudioChannelPosition, channels);
+    gst_audio_channel_positions_from_mask (channels, channel_mask, positions);
+  }
 
   layout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
   layout->mChannelBitmap = 0;   /* Not used */
@@ -377,7 +382,7 @@ gst_audio_channel_position_to_coreaudio_channel_label (GstAudioChannelPosition
   switch (position) {
     case GST_AUDIO_CHANNEL_POSITION_NONE:
       return kAudioChannelLabel_Discrete_0 | channel;
-    case GST_AUDIO_CHANNEL_POSITION_FRONT_MONO:
+    case GST_AUDIO_CHANNEL_POSITION_MONO:
       return kAudioChannelLabel_Mono;
     case GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT:
       return kAudioChannelLabel_Left;
@@ -389,7 +394,7 @@ gst_audio_channel_position_to_coreaudio_channel_label (GstAudioChannelPosition
       return kAudioChannelLabel_LeftSurround;
     case GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT:
       return kAudioChannelLabel_RightSurround;
-    case GST_AUDIO_CHANNEL_POSITION_LFE:
+    case GST_AUDIO_CHANNEL_POSITION_LFE1:
       return kAudioChannelLabel_LFEScreen;
     case GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER:
       return kAudioChannelLabel_Center;

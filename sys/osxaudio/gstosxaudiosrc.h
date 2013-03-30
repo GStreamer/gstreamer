@@ -45,8 +45,8 @@
 #define __GST_OSXAUDIOSRC_H__
 
 #include <gst/gst.h>
-#include <gst/audio/gstbaseaudiosrc.h>
-#include "gstosxringbuffer.h"
+#include <gst/audio/gstaudiobasesrc.h>
+#include "gstosxaudioringbuffer.h"
 
 G_BEGIN_DECLS
 
@@ -62,7 +62,7 @@ typedef struct _GstOsxAudioSrcClass GstOsxAudioSrcClass;
 
 struct _GstOsxAudioSrc
 {
-  GstBaseAudioSrc src;
+  GstAudioBaseSrc src;
 
   AudioDeviceID device_id;
 
@@ -72,7 +72,7 @@ struct _GstOsxAudioSrc
 
 struct _GstOsxAudioSrcClass 
 {
-  GstBaseAudioSrcClass parent_class;
+  GstAudioBaseSrcClass parent_class;
 };
 
 GType gst_osx_audio_src_get_type (void);
