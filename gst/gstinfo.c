@@ -555,25 +555,19 @@ gst_debug_message_get (GstDebugMessage * message)
 #define MAX_BUFFER_DUMP_STRING_LEN  100
 
 /* structure_to_pretty_string:
- * @structure: a #GstStructure
+ * @str: a serialized #GstStructure
  *
- * Converts @structure to a human-readable string representation. Basically
- * the same as gst_structure_to_string(), but if the structure contains large
- * buffers such as images the hex representation of those buffers will be
- * shortened so that the string remains readable.
+ * If the serialized structure contains large buffers such as images the hex
+ * representation of those buffers will be shortened so that the string remains
+ * readable.
  *
- * Returns: a newly-allocated string. g_free() when no longer needed.
+ * Returns: the filtered string
  */
 static gchar *
-structure_to_pretty_string (const GstStructure * s)
+prettify_structure_string (gchar * str)
 {
-  gchar *str, *pos, *end;
+  gchar *pos = str, *end;
 
-  str = gst_structure_to_string (s);
-  if (str == NULL)
-    return NULL;
-
-  pos = str;
   while ((pos = strstr (pos, "(buffer)"))) {
     guint count = 0;
 
@@ -595,10 +589,69 @@ structure_to_pretty_string (const GstStructure * s)
 static inline gchar *
 gst_info_structure_to_string (const GstStructure * s)
 {
-  if (G_UNLIKELY (pretty_tags && s->name == GST_QUARK (TAGLIST)))
-    return structure_to_pretty_string (s);
-  else
-    return gst_structure_to_string (s);
+  if (G_LIKELY (s)) {
+    gchar *str = gst_structure_to_string (s);;
+    if (G_UNLIKELY (pretty_tags && s->name == GST_QUARK (TAGLIST)))
+      return prettify_structure_string (str);
+    else
+      return str;
+  }
+  return NULL;
+}
+
+static inline gchar *
+__gst_buffer_describe (GstBuffer * buffer)
+{
+  return g_strdup_printf ("buffer: %p, pts %" GST_TIME_FORMAT ", dts %"
+      GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", size %" G_GSIZE_FORMAT
+      ", offset %" G_GUINT64_FORMAT ", offset_end %" G_GUINT64_FORMAT
+      ", flags 0x%x", buffer, GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DTS (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
+      gst_buffer_get_size (buffer), GST_BUFFER_OFFSET (buffer),
+      GST_BUFFER_OFFSET_END (buffer), GST_BUFFER_FLAGS (buffer));
+}
+
+static inline gchar *
+__gst_event_describe (GstEvent * event)
+{
+  gchar *s, *ret;
+
+  s = gst_info_structure_to_string (gst_event_get_structure (event));
+  ret = g_strdup_printf ("%s event: %p, time %" GST_TIME_FORMAT
+      ", seq-num %d, %s", GST_EVENT_TYPE_NAME (event), event,
+      GST_TIME_ARGS (GST_EVENT_TIMESTAMP (event)), GST_EVENT_SEQNUM (event),
+      (s ? s : "(NULL)"));
+  g_free (s);
+  return ret;
+}
+
+static inline gchar *
+__gst_message_describe (GstMessage * message)
+{
+  gchar *s, *ret;
+
+  s = gst_info_structure_to_string (gst_message_get_structure (message));
+  ret = g_strdup_printf ("%s message: %p, time %" GST_TIME_FORMAT
+      ", seq-num %d, element '%s', %s", GST_MESSAGE_TYPE_NAME (message),
+      message, GST_TIME_ARGS (GST_MESSAGE_TIMESTAMP (message)),
+      GST_MESSAGE_SEQNUM (message),
+      ((message->src) ? GST_ELEMENT_NAME (message->src) : "(NULL)"),
+      (s ? s : "(NULL)"));
+  g_free (s);
+  return ret;
+}
+
+static inline gchar *
+__gst_query_describe (GstQuery * query)
+{
+  gchar *s, *ret;
+
+  s = gst_info_structure_to_string (gst_query_get_structure (query));
+  ret = g_strdup_printf ("%s query: %p, %s", GST_QUERY_TYPE_NAME (query),
+      query, (s ? s : "(NULL)"));
+  g_free (s);
+  return ret;
 }
 
 static gchar *
@@ -633,25 +686,17 @@ gst_debug_print_object (gpointer ptr)
     return gst_caps_features_to_string ((const GstCapsFeatures *) ptr);
   }
   if (*(GType *) ptr == GST_TYPE_TAG_LIST) {
-    /* FIXME: want pretty tag list with long byte dumps removed.. */
-    return gst_tag_list_to_string ((GstTagList *) ptr);
+    gchar *str = gst_tag_list_to_string ((GstTagList *) ptr);
+    if (G_UNLIKELY (pretty_tags))
+      return prettify_structure_string (str);
+    else
+      return str;
   }
   if (*(GType *) ptr == GST_TYPE_DATE_TIME) {
     return __gst_date_time_serialize ((GstDateTime *) ptr, TRUE);
   }
   if (GST_IS_BUFFER (ptr)) {
-    GstBuffer *buf = (GstBuffer *) ptr;
-    gchar *ret;
-
-    ret =
-        g_strdup_printf ("%p, pts %" GST_TIME_FORMAT ", dts %" GST_TIME_FORMAT
-        ", dur %" GST_TIME_FORMAT ", size %" G_GSIZE_FORMAT ", offset %"
-        G_GUINT64_FORMAT ", offset_end %" G_GUINT64_FORMAT, buf,
-        GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
-        GST_TIME_ARGS (GST_BUFFER_DTS (buf)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), gst_buffer_get_size (buf),
-        GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf));
-    return ret;
+    return __gst_buffer_describe (GST_BUFFER_CAST (ptr));
   }
 #ifdef USE_POISONING
   if (*(guint32 *) ptr == 0xffffffff) {
@@ -668,60 +713,13 @@ gst_debug_print_object (gpointer ptr)
     return g_strdup_printf ("<%s@%p>", G_OBJECT_TYPE_NAME (object), object);
   }
   if (GST_IS_MESSAGE (object)) {
-    GstMessage *msg = GST_MESSAGE_CAST (object);
-    gchar *s, *ret;
-    const GstStructure *structure;
-
-    structure = gst_message_get_structure (msg);
-
-    if (structure) {
-      s = gst_info_structure_to_string (structure);
-    } else {
-      s = g_strdup ("(NULL)");
-    }
-
-    ret = g_strdup_printf ("%s message from element '%s': %s",
-        GST_MESSAGE_TYPE_NAME (msg), (msg->src != NULL) ?
-        GST_ELEMENT_NAME (msg->src) : "(NULL)", s);
-    g_free (s);
-    return ret;
+    return __gst_message_describe (GST_MESSAGE_CAST (object));
   }
   if (GST_IS_QUERY (object)) {
-    GstQuery *query = GST_QUERY_CAST (object);
-    const GstStructure *structure;
-
-    structure = gst_query_get_structure (query);
-
-    if (structure) {
-      return gst_info_structure_to_string (structure);
-    } else {
-      const gchar *query_type_name;
-
-      query_type_name = gst_query_type_get_name (query->type);
-      if (G_LIKELY (query_type_name != NULL)) {
-        return g_strdup_printf ("%s query", query_type_name);
-      } else {
-        return g_strdup_printf ("query of unknown type %d", query->type);
-      }
-    }
+    return __gst_query_describe (GST_QUERY_CAST (object));
   }
   if (GST_IS_EVENT (object)) {
-    GstEvent *event = GST_EVENT_CAST (object);
-    gchar *s, *ret;
-    GstStructure *structure;
-
-    structure = (GstStructure *) gst_event_get_structure (event);
-    if (structure) {
-      s = gst_info_structure_to_string (structure);
-    } else {
-      s = g_strdup ("(NULL)");
-    }
-
-    ret = g_strdup_printf ("%s event at time %"
-        GST_TIME_FORMAT ": %s",
-        GST_EVENT_TYPE_NAME (event), GST_TIME_ARGS (event->timestamp), s);
-    g_free (s);
-    return ret;
+    return __gst_event_describe (GST_EVENT_CAST (object));
   }
   if (GST_IS_CONTEXT (object)) {
     GstContext *context = GST_CONTEXT_CAST (object);
