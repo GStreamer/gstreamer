@@ -1650,6 +1650,13 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
   gboolean ret;
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:
+      GST_AUDIO_DECODER_STREAM_LOCK (dec);
+      gst_audio_decoder_drain (dec);
+      GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+
+      ret = gst_audio_decoder_push_event (dec, event);
+      break;
     case GST_EVENT_SEGMENT:
     {
       GstSegment seg;
