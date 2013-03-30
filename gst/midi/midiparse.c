@@ -845,6 +845,8 @@ find_midi_chunk (GstMidiParse * midiparse, guint8 * data, guint size,
 {
   guint32 type;
 
+  *length = 0;
+
   if (size < 8)
     goto short_chunk;
 
@@ -908,7 +910,7 @@ find_midi_chunk (GstMidiParse * midiparse, guint8 * data, guint size,
   /* ERRORS */
 short_chunk:
   {
-    GST_LOG_OBJECT (midiparse, "not enough data %u < %u", length + 8, size);
+    GST_LOG_OBJECT (midiparse, "not enough data %u < %u", *length + 8, size);
     return FALSE;
   }
 invalid_format:
