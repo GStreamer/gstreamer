@@ -1488,13 +1488,20 @@ gst_audio_decoder_flush_decode (GstAudioDecoder * dec)
   timestamp = GST_CLOCK_TIME_NONE;
   while (priv->queued) {
     GstBuffer *buf = GST_BUFFER_CAST (priv->queued->data);
+    GstClockTime duration;
+
+    duration = GST_BUFFER_DURATION (buf);
 
     /* duration should always be valid for raw audio */
-    g_assert (GST_BUFFER_DURATION_IS_VALID (buf));
+    g_assert (GST_CLOCK_TIME_IS_VALID (duration));
 
     /* interpolate (backward) if needed */
-    if (G_LIKELY (timestamp != -1))
-      timestamp -= GST_BUFFER_DURATION (buf);
+    if (G_LIKELY (timestamp != -1)) {
+      if (timestamp > duration)
+        timestamp -= duration;
+      else
+        timestamp = 0;
+    }
 
     if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
       GST_LOG_OBJECT (dec, "applying reverse interpolated ts %"
