@@ -549,8 +549,11 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       gst_buffer_fill (outbuf, 0, payload, length);
     }
 
-    if (payload_len > 0 && (payload[0] & 0xC0) == 0x0)
+    if (payload_len > 0 && (payload[0] & 0xC0) == 0x0) {
       rtptheoradepay->needs_keyframe = FALSE;
+    } else {
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+    }
 
     payload += length;
     payload_len -= length;
