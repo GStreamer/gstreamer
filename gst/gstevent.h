@@ -372,12 +372,22 @@ typedef enum {
  * @GST_STREAM_FLAG_SPARSE: This stream is a sparse stream (e.g. a subtitle
  *    stream), data may flow only in irregular intervals with large gaps in
  *    between.
+ * @GST_STREAM_FLAG_SELECT: This stream should be selected by default. This
+ *    flag may be used by demuxers to signal that a stream should be selected
+ *    by default in a playback scenario.
+ * @GST_STREAM_FLAG_UNSELECT: This stream should not be selected by default.
+ *    This flag may be used by demuxers to signal that a stream should not
+ *    be selected by default in a playback scenario, but only if explicitly
+ *    selected by the user (e.g. an audio track for the hard of hearing or
+ *    a director's commentary track).
  *
  * Since: 1.2
  */
 typedef enum {
   GST_STREAM_FLAG_NONE,
-  GST_STREAM_FLAG_SPARSE       = (1 << 0)
+  GST_STREAM_FLAG_SPARSE       = (1 << 0),
+  GST_STREAM_FLAG_SELECT       = (1 << 1),
+  GST_STREAM_FLAG_UNSELECT     = (1 << 2)
 } GstStreamFlags;
 
 /**
