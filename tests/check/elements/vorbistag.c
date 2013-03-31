@@ -217,7 +217,7 @@ _create_audio_buffer (void)
   vorbis_bitrate_flushpacket (&vd, &packet);
   buffer = gst_buffer_new_and_alloc (packet.bytes);
   gst_buffer_fill (buffer, 0, packet.packet, packet.bytes);
-  GST_DEBUG ("%p %d", packet.packet, packet.bytes);
+  GST_DEBUG ("%p %ld", packet.packet, packet.bytes);
 
   vorbis_comment_clear (&vc);
   vorbis_block_clear (&vb);
