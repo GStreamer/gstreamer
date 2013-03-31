@@ -1366,6 +1366,11 @@ gst_soup_http_src_query (GstBaseSrc * bsrc, GstQuery * query)
       gst_query_set_uri (query, src->location);
       ret = TRUE;
       break;
+    case GST_QUERY_SCHEDULING:
+      gst_query_set_scheduling (query, GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED, 1,
+          -1, 0);
+      ret = TRUE;
+      break;
     default:
       ret = FALSE;
       break;
