@@ -538,9 +538,11 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
     }
     offset = 0;
     trim = 0;
+    delta_unit = !gst_ogg_stream_packet_is_key_frame (&pad->map, packet);
   } else {
     offset = 0;
     trim = 0;
+    delta_unit = !gst_ogg_stream_packet_is_key_frame (&pad->map, packet);
   }
 
   /* get timing info for the packet */
@@ -576,7 +578,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
           pad->current_granule);
     } else if (ogg->segment.rate > 0.0 && pad->current_granule != -1) {
       pad->current_granule += duration;
-      if (gst_ogg_stream_packet_is_key_frame (&pad->map, packet)) {
+      if (!delta_unit) {
         pad->keyframe_granule = pad->current_granule;
       }
       GST_DEBUG_OBJECT (ogg, "interpolating granule %" G_GUINT64_FORMAT,
