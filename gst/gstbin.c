@@ -189,8 +189,6 @@ struct _GstBinPrivate
 
   guint32 structure_cookie;
 
-  GstContext *context;
-
 #if 0
   /* cached index */
   GstIndex *index;
@@ -1144,8 +1142,8 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
    * a new clock will be selected */
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
 
-  if (bin->priv->context)
-    gst_element_set_context (element, bin->priv->context);
+  if (GST_ELEMENT_CAST (bin)->context)
+    gst_element_set_context (element, GST_ELEMENT_CAST (bin)->context);
 
 #if 0
   /* set the cached index on the children */
@@ -3966,9 +3964,6 @@ gst_bin_set_context (GstElement * element, GstContext * context)
   while (gst_iterator_foreach (children, set_context,
           context) == GST_ITERATOR_RESYNC);
   gst_iterator_free (children);
-  GST_OBJECT_LOCK (bin);
-  gst_context_replace (&bin->priv->context, context);
-  GST_OBJECT_UNLOCK (bin);
 }
 
 static gint

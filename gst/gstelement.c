@@ -132,7 +132,8 @@ static gboolean gst_element_set_clock_func (GstElement * element,
 static void gst_element_set_bus_func (GstElement * element, GstBus * bus);
 static gboolean gst_element_post_message_default (GstElement * element,
     GstMessage * message);
-
+static void gst_element_set_context_func (GstElement * element,
+    GstContext * context);
 
 static gboolean gst_element_default_send_event (GstElement * element,
     GstEvent * event);
@@ -239,6 +240,7 @@ gst_element_class_init (GstElementClass * klass)
   klass->send_event = GST_DEBUG_FUNCPTR (gst_element_default_send_event);
   klass->numpadtemplates = 0;
   klass->post_message = GST_DEBUG_FUNCPTR (gst_element_post_message_default);
+  klass->set_context = GST_DEBUG_FUNCPTR (gst_element_set_context_func);
 
   klass->elementfactory = NULL;
 }
@@ -2902,6 +2904,7 @@ gst_element_dispose (GObject * object)
   bus_p = &element->bus;
   gst_object_replace ((GstObject **) clock_p, NULL);
   gst_object_replace ((GstObject **) bus_p, NULL);
+  gst_context_replace (&element->context, NULL);
   GST_OBJECT_UNLOCK (element);
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "parent class dispose");
@@ -3012,9 +3015,17 @@ gst_element_get_bus (GstElement * element)
   return result;
 }
 
+static void
+gst_element_set_context_func (GstElement * element, GstContext * context)
+{
+  GST_OBJECT_LOCK (element);
+  gst_context_replace (&element->context, context);
+  GST_OBJECT_UNLOCK (element);
+}
+
 /**
  * gst_element_set_context:
- * @element: a #GstElement to set the bus of.
+ * @element: a #GstElement to set the context of.
  * @context: (transfer none): the #GstContext to set.
  *
  * Sets the context of the element. Increases the refcount of the context.
@@ -3036,4 +3047,29 @@ gst_element_set_context (GstElement * element, GstContext * context)
 
   if (oclass->set_context)
     oclass->set_context (element, context);
+}
+
+/**
+ * gst_element_get_context:
+ * @element: a #GstElement to get the context from.
+ *
+ * Gets the current context of the element.
+ *
+ * MT safe.
+ *
+ * Returns: (transfer full): The current context of the element
+ */
+GstContext *
+gst_element_get_context (GstElement * element)
+{
+  GstContext *context = NULL;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+
+  GST_OBJECT_LOCK (element);
+  if (element->context)
+    context = gst_context_ref (element->context);
+  GST_OBJECT_UNLOCK (element);
+
+  return context;
 }
