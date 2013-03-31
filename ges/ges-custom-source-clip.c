@@ -249,7 +249,7 @@ ges_custom_source_clip_new (GESFillTrackElementUserFunc func,
  * Helper constructor to instanciate a new #GESAsset from which you can
  * extract #GESCustomSourceClip-s
  *
- * Returns: The new #GESAsset.
+ * Returns: The new #GESAsset
  */
 GESAsset *
 ges_asset_custom_source_clip_new (GESFillTrackElementUserFunc func,
