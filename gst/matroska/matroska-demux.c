@@ -1109,7 +1109,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
           context->flags &= ~GST_MATROSKA_TRACK_DEFAULT;
 
         GST_DEBUG_OBJECT (demux, "TrackDefault: %d",
-            (context->flags & GST_MATROSKA_TRACK_ENABLED) ? 1 : 0);
+            (context->flags & GST_MATROSKA_TRACK_DEFAULT) ? 1 : 0);
         break;
       }
 
@@ -1126,7 +1126,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
           context->flags &= ~GST_MATROSKA_TRACK_FORCED;
 
         GST_DEBUG_OBJECT (demux, "TrackForced: %d",
-            (context->flags & GST_MATROSKA_TRACK_ENABLED) ? 1 : 0);
+            (context->flags & GST_MATROSKA_TRACK_FORCED) ? 1 : 0);
         break;
       }
 
@@ -1144,7 +1144,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
           context->flags &= ~GST_MATROSKA_TRACK_LACING;
 
         GST_DEBUG_OBJECT (demux, "TrackLacing: %d",
-            (context->flags & GST_MATROSKA_TRACK_ENABLED) ? 1 : 0);
+            (context->flags & GST_MATROSKA_TRACK_LACING) ? 1 : 0);
         break;
       }
 
