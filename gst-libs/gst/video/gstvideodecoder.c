@@ -454,7 +454,7 @@ static gboolean gst_video_decoder_propose_allocation_default (GstVideoDecoder *
     decoder, GstQuery * query);
 static gboolean gst_video_decoder_negotiate_default (GstVideoDecoder * decoder);
 static GstFlowReturn gst_video_decoder_parse_available (GstVideoDecoder * dec,
-    gboolean at_eos);
+    gboolean at_eos, gboolean new_buffer);
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
@@ -901,7 +901,8 @@ gst_video_decoder_push_event (GstVideoDecoder * decoder, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_video_decoder_parse_available (GstVideoDecoder * dec, gboolean at_eos)
+gst_video_decoder_parse_available (GstVideoDecoder * dec, gboolean at_eos,
+    gboolean new_buffer)
 {
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_GET_CLASS (dec);
   GstVideoDecoderPrivate *priv = dec->priv;
@@ -911,7 +912,9 @@ gst_video_decoder_parse_available (GstVideoDecoder * dec, gboolean at_eos)
   available = gst_adapter_available (priv->input_adapter);
   start_size = 0;
 
-  while (ret == GST_FLOW_OK && available && start_size != available) {
+  while (ret == GST_FLOW_OK && ((available && start_size != available)
+          || new_buffer)) {
+    new_buffer = FALSE;
     /* current frame may have been parsed and handled,
      * so we need to set up a new one when asking subclass to parse */
     if (priv->current_frame == NULL)
@@ -939,7 +942,7 @@ gst_video_decoder_drain_out (GstVideoDecoder * dec, gboolean at_eos)
     /* Forward mode, if unpacketized, give the child class
      * a final chance to flush out packets */
     if (!priv->packetized) {
-      ret = gst_video_decoder_parse_available (dec, TRUE);
+      ret = gst_video_decoder_parse_available (dec, TRUE, FALSE);
     }
   } else {
     /* Reverse playback mode */
@@ -1737,7 +1740,7 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
   } else {
     gst_adapter_push (priv->input_adapter, buf);
 
-    ret = gst_video_decoder_parse_available (decoder, at_eos);
+    ret = gst_video_decoder_parse_available (decoder, at_eos, TRUE);
   }
 
   if (ret == GST_VIDEO_DECODER_FLOW_NEED_DATA)
