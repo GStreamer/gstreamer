@@ -1542,9 +1542,17 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
 
   GST_OBJECT_LOCK (eglglessink);
   if (eglglessink->eglglesctx.set_display) {
+    GstContext * context;
+
     eglglessink->eglglesctx.display =
         gst_egl_display_ref (eglglessink->eglglesctx.set_display);
     GST_OBJECT_UNLOCK (eglglessink);
+    context = gst_element_get_context (GST_ELEMENT_CAST (eglglessink));
+    if (!context)
+      context = gst_context_new ();
+    context = gst_context_make_writable (context);
+    gst_context_set_egl_display (context, eglglessink->eglglesctx.display);
+    gst_element_set_context (GST_ELEMENT_CAST (eglglessink), context);
   } else {
     GstContext *context;
 
@@ -1562,6 +1570,13 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
 
     msg = gst_message_new_have_context (GST_OBJECT (eglglessink), context);
     gst_element_post_message (GST_ELEMENT_CAST (eglglessink), msg);
+
+    context = gst_element_get_context (GST_ELEMENT_CAST (eglglessink));
+    if (!context)
+      context = gst_context_new ();
+    context = gst_context_make_writable (context);
+    gst_context_set_egl_display (context, eglglessink->eglglesctx.display);
+    gst_element_set_context (GST_ELEMENT_CAST (eglglessink), context);
   }
 
   if (!eglInitialize (gst_egl_display_get (eglglessink->eglglesctx.display),
@@ -2618,20 +2633,24 @@ static void
 gst_eglglessink_set_context (GstElement * element, GstContext * context)
 {
   GstEglGlesSink *eglglessink;
-  GstStructure *s;
   GstEGLDisplay *display = NULL;
 
   eglglessink = GST_EGLGLESSINK (element);
 
-  s = (GstStructure *) gst_context_get_structure (context);
-  if (gst_structure_get (s, GST_EGL_DISPLAY_CONTEXT_TYPE, GST_TYPE_EGL_DISPLAY,
-          &display, NULL)) {
+  if (gst_context_get_egl_display (context, &display)) {
     GST_OBJECT_LOCK (eglglessink);
     if (eglglessink->eglglesctx.set_display)
       gst_egl_display_unref (eglglessink->eglglesctx.set_display);
     eglglessink->eglglesctx.set_display = display;
     GST_OBJECT_UNLOCK (eglglessink);
   }
+
+  GST_OBJECT_LOCK (eglglessink);
+  context = gst_context_make_writable (context);
+  gst_context_set_egl_display (context, eglglessink->eglglesctx.display);
+  GST_OBJECT_UNLOCK (eglglessink);
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
 static gboolean
