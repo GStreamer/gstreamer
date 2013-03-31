@@ -502,6 +502,7 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstObject * parent,
   GstPad *opad;
   GstFlowReturn ret = GST_FLOW_ERROR;
   GstStream *stream;
+  GstClockTime duration = GST_CLOCK_TIME_NONE;
   GstClockTime timestamp = GST_CLOCK_TIME_NONE;
   GstClockTime timestamp_end = GST_CLOCK_TIME_NONE;
 
@@ -514,9 +515,10 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstObject * parent,
       GST_BUFFER_OFFSET (buffer), GST_BUFFER_OFFSET_END (buffer));
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)
-      && GST_BUFFER_DURATION_IS_VALID (buffer))
-    timestamp_end = timestamp + GST_BUFFER_DURATION (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)
+      && GST_CLOCK_TIME_IS_VALID (duration))
+    timestamp_end = timestamp + duration;
 
   GST_STREAM_SYNCHRONIZER_LOCK (self);
   stream = gst_pad_get_element_private (pad);
@@ -537,7 +539,10 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstObject * parent,
       GST_LOG_OBJECT (pad,
           "Updating position from %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->segment.position), GST_TIME_ARGS (timestamp));
-      stream->segment.position = timestamp;
+      if (stream->segment.rate > 0.0)
+        stream->segment.position = timestamp;
+      else
+        stream->segment.position = timestamp_end;
     }
   }
   GST_STREAM_SYNCHRONIZER_UNLOCK (self);
@@ -554,13 +559,20 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstObject * parent,
 
     GST_STREAM_SYNCHRONIZER_LOCK (self);
     stream = gst_pad_get_element_private (pad);
-    if (stream && stream->segment.format == GST_FORMAT_TIME
-        && GST_CLOCK_TIME_IS_VALID (timestamp_end)) {
-      GST_LOG_OBJECT (pad,
-          "Updating position from %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (stream->segment.position),
-          GST_TIME_ARGS (timestamp_end));
-      stream->segment.position = timestamp_end;
+    if (stream && stream->segment.format == GST_FORMAT_TIME) {
+      GstClockTime position;
+
+      if (stream->segment.rate > 0.0)
+        position = timestamp_end;
+      else
+        position = timestamp;
+
+      if (GST_CLOCK_TIME_IS_VALID (position)) {
+        GST_LOG_OBJECT (pad,
+            "Updating position from %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (stream->segment.position), GST_TIME_ARGS (position));
+        stream->segment.position = position;
+      }
     }
 
     /* Advance EOS streams if necessary. For non-EOS
