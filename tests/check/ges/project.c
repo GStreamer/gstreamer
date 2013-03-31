@@ -303,13 +303,13 @@ _add_keyframes (GESTimeline * timeline)
                 ges_track_element_get_control_binding (element,
                 "scratch-lines");
             fail_unless (binding == NULL);
-            ges_track_element_set_property_controlling_parameters (element,
+            ges_track_element_set_control_source (element,
                 source, "scratch-lines", "direct");
             tmp_binding =
                 ges_track_element_get_control_binding (element,
                 "scratch-lines");
             fail_unless (tmp_binding != NULL);
-            ges_track_element_set_property_controlling_parameters (element,
+            ges_track_element_set_control_source (element,
                 source, "scratch-lines", "direct");
             binding =
                 ges_track_element_get_control_binding (element,
@@ -393,7 +393,6 @@ _check_keyframes (GESTimeline * timeline)
 GST_START_TEST (test_project_add_keyframes)
 {
   GMainLoop *mainloop;
-  //GESTimelinePipeline *pipeline;
   GESProject *project;
   GESTimeline *timeline;
   GESAsset *formatter_asset;

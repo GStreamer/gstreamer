@@ -1468,7 +1468,7 @@ ges_track_element_edit (GESTrackElement * object,
 
 
 /**
- * ges_track_element_set_property_controlling_parameters:
+ * ges_track_element_set_control_source:
  * @object: the #GESTrackElement on which to set a control binding
  * @source: (element-type GstControlSource): the #GstControlSource to set on the binding.
  * @property_name: The name of the property to control.
@@ -1484,7 +1484,7 @@ ges_track_element_edit (GESTrackElement * object,
  * Since: 1.0.XX
  */
 gboolean
-ges_track_element_set_property_controlling_parameters (GESTrackElement * object,
+ges_track_element_set_control_source (GESTrackElement * object,
     GstControlSource * source,
     const gchar * property_name, const gchar * binding_type)
 {

@@ -187,14 +187,14 @@ ges_track_element_edit                        (GESTrackElement * object,
                                               GESEdge edge, guint64 position);
 
 gboolean
-ges_track_element_set_property_controlling_parameters(GESTrackElement *object,
-						      GstControlSource *source,
-						      const gchar *property_name,
-						      const gchar *binding_type);
+ges_track_element_set_control_source          (GESTrackElement *object,
+                                               GstControlSource *source,
+                                               const gchar *property_name,
+                                               const gchar *binding_type);
 
 GstControlBinding *
 ges_track_element_get_control_binding         (GESTrackElement *object,
-					       const gchar *property_name);
+                                               const gchar *property_name);
 
 G_END_DECLS
 #endif /* _GES_TRACK_ELEMENT */

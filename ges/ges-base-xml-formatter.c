@@ -850,7 +850,7 @@ ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
     GstControlSource *source;
 
     source = gst_interpolation_control_source_new ();
-    ges_track_element_set_property_controlling_parameters (element, source,
+    ges_track_element_set_control_source (element, source,
         property_name, binding_type);
 
     g_object_set (source, "mode", mode, NULL);

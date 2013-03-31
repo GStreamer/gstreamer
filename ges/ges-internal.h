@@ -219,11 +219,11 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_track_element    (GESBaseXmlForm
                                                                  GError **error);
 
 G_GNUC_INTERNAL void ges_base_xml_formatter_add_control_binding(GESBaseXmlFormatter * self,
-								const gchar * binding_type,
-								const gchar * source_type,
-								const gchar * property_name,
-								gint mode,
-								GSList * timed_values);
+                const gchar * binding_type,
+                const gchar * source_type,
+                const gchar * property_name,
+                gint mode,
+                GSList * timed_values);
 
 G_GNUC_INTERNAL void set_property_foreach                       (GQuark field_id,
                                                                  const GValue * value,
