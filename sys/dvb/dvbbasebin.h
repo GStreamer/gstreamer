@@ -51,12 +51,17 @@ struct _DvbBaseBin {
   GstElement *buffer_queue;
   GstElement *tsparse;
   CamDevice *hwcam;
+  gboolean trycam;
   GList *pmtlist;
   gboolean pmtlist_changed;
   gchar *filter;
   GHashTable *streams;
   GHashTable *programs;
   gboolean disposed;
+
+  GstTask *task;
+  GstPoll *poll;
+  GRecMutex lock;
 
   /* Cached value */
   gchar *program_numbers;

@@ -99,8 +99,8 @@ static void dvb_base_bin_get_property (GObject * object, guint prop_id,
 static void dvb_base_bin_dispose (GObject * object);
 static void dvb_base_bin_finalize (GObject * object);
 
-static GstPadProbeReturn dvb_base_bin_ts_pad_probe_cb (GstPad * pad,
-    GstPadProbeInfo * info, gpointer user_data);
+static void dvb_base_bin_task (DvbBaseBin * basebin);
+
 static GstStateChangeReturn dvb_base_bin_change_state (GstElement * element,
     GstStateChange transition);
 static void dvb_base_bin_handle_message (GstBin * bin, GstMessage * message);
@@ -308,6 +308,7 @@ dvb_base_bin_reset (DvbBaseBin * dvbbasebin)
     cam_device_free (dvbbasebin->hwcam);
     dvbbasebin->hwcam = NULL;
   }
+  dvbbasebin->trycam = TRUE;
 }
 
 static gint16 initial_pids[] = { 0, 1, 0x10, 0x11, 0x12, 0x14, -1 };
@@ -334,8 +335,6 @@ dvb_base_bin_init (DvbBaseBin * dvbbasebin)
 
   /* Expose tsparse source pad */
   pad = gst_element_get_static_pad (dvbbasebin->tsparse, "src");
-  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
-      dvb_base_bin_ts_pad_probe_cb, dvbbasebin, NULL);
   ghost = gst_ghost_pad_new ("src", pad);
   gst_element_add_pad (GST_ELEMENT (dvbbasebin), ghost);
 
@@ -358,6 +357,12 @@ dvb_base_bin_init (DvbBaseBin * dvbbasebin)
     i++;
   }
   dvb_base_bin_rebuild_filter (dvbbasebin);
+
+  g_rec_mutex_init (&dvbbasebin->lock);
+  dvbbasebin->task =
+      gst_task_new ((GstTaskFunction) dvb_base_bin_task, dvbbasebin, NULL);
+  gst_task_set_lock (dvbbasebin->task, &dvbbasebin->lock);
+  dvbbasebin->poll = gst_poll_new_timer ();
 }
 
 static void
@@ -560,28 +565,6 @@ dvb_base_bin_reset_pmtlist (DvbBaseBin * dvbbasebin)
   dvbbasebin->pmtlist_changed = FALSE;
 }
 
-static GstPadProbeReturn
-dvb_base_bin_ts_pad_probe_cb (GstPad * pad, GstPadProbeInfo * info,
-    gpointer user_data)
-{
-  DvbBaseBin *dvbbasebin = GST_DVB_BASE_BIN (user_data);
-
-  if (dvbbasebin->hwcam) {
-    cam_device_poll (dvbbasebin->hwcam);
-
-    if (dvbbasebin->pmtlist_changed) {
-      if (cam_device_ready (dvbbasebin->hwcam)) {
-        GST_DEBUG_OBJECT (dvbbasebin, "pmt list changed");
-        dvb_base_bin_reset_pmtlist (dvbbasebin);
-      } else {
-        GST_DEBUG_OBJECT (dvbbasebin, "pmt list changed but CAM not ready");
-      }
-    }
-  }
-
-  return GST_PAD_PROBE_OK;
-}
-
 static void
 dvb_base_bin_init_cam (DvbBaseBin * dvbbasebin)
 {
@@ -601,6 +584,8 @@ dvb_base_bin_init_cam (DvbBaseBin * dvbbasebin)
     }
   }
 
+  dvbbasebin->trycam = FALSE;
+
   g_free (ca_file);
 }
 
@@ -615,9 +600,16 @@ dvb_base_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      dvb_base_bin_init_cam (dvbbasebin);
+      gst_poll_set_flushing (dvbbasebin->poll, FALSE);
+      g_rec_mutex_lock (&dvbbasebin->lock);
+      gst_task_start (dvbbasebin->task);
+      g_rec_mutex_unlock (&dvbbasebin->lock);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_poll_set_flushing (dvbbasebin->poll, TRUE);
+      g_rec_mutex_lock (&dvbbasebin->lock);
+      gst_task_stop (dvbbasebin->task);
+      g_rec_mutex_unlock (&dvbbasebin->lock);
       dvb_base_bin_reset (dvbbasebin);
       break;
     default:
@@ -991,4 +983,36 @@ dvb_base_bin_program_destroy (gpointer data)
     gst_structure_free (program->pmt);
 
   g_free (program);
+}
+
+static void
+dvb_base_bin_task (DvbBaseBin * basebin)
+{
+  gint pollres;
+
+  GST_DEBUG_OBJECT (basebin, "In task");
+
+  /* If we haven't tried to open the cam, try now */
+  if (G_UNLIKELY (basebin->trycam))
+    dvb_base_bin_init_cam (basebin);
+
+  /* poll with timeout */
+  pollres = gst_poll_wait (basebin->poll, GST_SECOND / 4);
+
+  if (G_UNLIKELY (pollres == -1)) {
+    gst_task_stop (basebin->task);
+    return;
+  }
+  if (basebin->hwcam) {
+    cam_device_poll (basebin->hwcam);
+
+    if (basebin->pmtlist_changed) {
+      if (cam_device_ready (basebin->hwcam)) {
+        GST_DEBUG_OBJECT (basebin, "pmt list changed");
+        dvb_base_bin_reset_pmtlist (basebin);
+      } else {
+        GST_DEBUG_OBJECT (basebin, "pmt list changed but CAM not ready");
+      }
+    }
+  }
 }
