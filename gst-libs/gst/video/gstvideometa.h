@@ -30,6 +30,8 @@ G_BEGIN_DECLS
 #define GST_VIDEO_META_INFO  (gst_video_meta_get_info())
 typedef struct _GstVideoMeta GstVideoMeta;
 
+#define GST_CAPS_FEATURE_META_GST_VIDEO_META "meta:GstVideoMeta"
+
 #define GST_VIDEO_CROP_META_API_TYPE  (gst_video_crop_meta_api_get_type())
 #define GST_VIDEO_CROP_META_INFO  (gst_video_crop_meta_get_info())
 typedef struct _GstVideoCropMeta GstVideoCropMeta;
@@ -143,6 +145,8 @@ typedef struct {
 
 typedef struct _GstVideoGLTextureUploadMeta GstVideoGLTextureUploadMeta;
 typedef gboolean (*GstVideoGLTextureUpload) (GstVideoGLTextureUploadMeta *meta, guint format, guint texture_id);
+
+#define GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META "meta:GstVideoGLTextureUploadMeta"
 
 /**
  * GstVideoGLTextureUploadMeta:
