@@ -264,7 +264,7 @@ gst_vdp_device_class_init (GstVdpDeviceClass * klass)
 typedef struct
 {
   GHashTable *hash_table;
-  GMutex *mutex;
+  GMutex mutex;
 } GstVdpDeviceCache;
 
 static void
@@ -276,7 +276,7 @@ device_destroyed_cb (gpointer data, GObject * object)
 
   GST_DEBUG ("Removing object from hash table");
 
-  g_mutex_lock (device_cache->mutex);
+  g_mutex_lock (&device_cache->mutex);
 
   g_hash_table_iter_init (&iter, device_cache->hash_table);
   while (g_hash_table_iter_next (&iter, NULL, &device)) {
@@ -286,7 +286,7 @@ device_destroyed_cb (gpointer data, GObject * object)
     }
   }
 
-  g_mutex_unlock (device_cache->mutex);
+  g_mutex_unlock (&device_cache->mutex);
 }
 
 GstVdpDevice *
@@ -301,12 +301,12 @@ gst_vdp_get_device (const gchar * display_name, GError ** error)
   if (g_once_init_enter (&once)) {
     device_cache.hash_table =
         g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
-    device_cache.mutex = g_mutex_new ();
+    g_mutex_init (&device_cache.mutex);
 
     g_once_init_leave (&once, 1);
   }
 
-  g_mutex_lock (device_cache.mutex);
+  g_mutex_lock (&device_cache.mutex);
 
   if (display_name)
     device = g_hash_table_lookup (device_cache.hash_table, display_name);
@@ -328,7 +328,7 @@ gst_vdp_get_device (const gchar * display_name, GError ** error)
   } else
     g_object_ref (device);
 
-  g_mutex_unlock (device_cache.mutex);
+  g_mutex_unlock (&device_cache.mutex);
 
   return device;
 }
