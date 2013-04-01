@@ -863,6 +863,10 @@ gst_caps_set_features (GstCaps * caps, guint index, GstCapsFeatures * features)
   storage = &gst_caps_get_features_unchecked (caps, index);
   old = *storage;
   *storage = features;
+
+  if (features)
+    gst_caps_features_set_parent_refcount (features, &GST_CAPS_REFCOUNT (caps));
+
   if (old)
     gst_caps_features_free (old);
 }
