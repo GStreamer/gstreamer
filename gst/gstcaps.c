@@ -113,10 +113,6 @@ typedef struct _GstCapsImpl
 /* quick way to append a structure without checking the args */
 #define gst_caps_append_structure_unchecked(caps, s, f) G_STMT_START{\
   GstCapsArrayElement __e={s, f};                                      \
-  if (__e.features && gst_caps_features_is_equal (GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY, __e.features)) { \
-    gst_caps_features_free (__e.features); \
-    __e.features = NULL; \
-  } \
   if (gst_structure_set_parent_refcount (__e.structure, &GST_MINI_OBJECT_REFCOUNT(caps)) && \
       (!__e.features || gst_caps_features_set_parent_refcount (__e.features, &GST_MINI_OBJECT_REFCOUNT(caps))))         \
     g_array_append_val (GST_CAPS_ARRAY (caps), __e);                             \
