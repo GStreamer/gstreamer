@@ -60,43 +60,14 @@ static void gst_yadif_finalize (GObject * object);
 
 static GstCaps *gst_yadif_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
-static GstCaps *gst_yadif_fixate_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
-static gboolean gst_yadif_accept_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps);
 static gboolean gst_yadif_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps);
-static gboolean gst_yadif_query (GstBaseTransform * trans,
-    GstPadDirection direction, GstQuery * query);
-static gboolean gst_yadif_decide_allocation (GstBaseTransform * trans,
-    GstQuery * query);
-static gboolean gst_yadif_filter_meta (GstBaseTransform * trans,
-    GstQuery * query, GType api, const GstStructure * params);
-static gboolean gst_yadif_propose_allocation (GstBaseTransform * trans,
-    GstQuery * decide_query, GstQuery * query);
-static gboolean gst_yadif_transform_size (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, gsize size, GstCaps * othercaps,
-    gsize * othersize);
 static gboolean gst_yadif_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
 static gboolean gst_yadif_start (GstBaseTransform * trans);
 static gboolean gst_yadif_stop (GstBaseTransform * trans);
-static gboolean gst_yadif_sink_event (GstBaseTransform * trans,
-    GstEvent * event);
-static gboolean gst_yadif_src_event (GstBaseTransform * trans,
-    GstEvent * event);
-static GstFlowReturn gst_yadif_prepare_output_buffer (GstBaseTransform * trans,
-    GstBuffer * input, GstBuffer ** outbuf);
-static gboolean gst_yadif_copy_metadata (GstBaseTransform * trans,
-    GstBuffer * input, GstBuffer * outbuf);
-static gboolean gst_yadif_transform_meta (GstBaseTransform * trans,
-    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
-static void gst_yadif_before_transform (GstBaseTransform * trans,
-    GstBuffer * buffer);
 static GstFlowReturn gst_yadif_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static GstFlowReturn gst_yadif_transform_ip (GstBaseTransform * trans,
-    GstBuffer * buf);
 
 enum
 {
@@ -175,51 +146,12 @@ gst_yadif_class_init (GstYadifClass * klass)
   gobject_class->finalize = gst_yadif_finalize;
   base_transform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_yadif_transform_caps);
-  if (0)
-    base_transform_class->fixate_caps =
-        GST_DEBUG_FUNCPTR (gst_yadif_fixate_caps);
-  if (0)
-    base_transform_class->accept_caps =
-        GST_DEBUG_FUNCPTR (gst_yadif_accept_caps);
   base_transform_class->set_caps = GST_DEBUG_FUNCPTR (gst_yadif_set_caps);
-  if (0)
-    base_transform_class->query = GST_DEBUG_FUNCPTR (gst_yadif_query);
-  if (0)
-    base_transform_class->decide_allocation =
-        GST_DEBUG_FUNCPTR (gst_yadif_decide_allocation);
-  if (0)
-    base_transform_class->filter_meta =
-        GST_DEBUG_FUNCPTR (gst_yadif_filter_meta);
-  if (0)
-    base_transform_class->propose_allocation =
-        GST_DEBUG_FUNCPTR (gst_yadif_propose_allocation);
-  if (0)
-    base_transform_class->transform_size =
-        GST_DEBUG_FUNCPTR (gst_yadif_transform_size);
   base_transform_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_yadif_get_unit_size);
   base_transform_class->start = GST_DEBUG_FUNCPTR (gst_yadif_start);
   base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_yadif_stop);
-  if (0)
-    base_transform_class->sink_event = GST_DEBUG_FUNCPTR (gst_yadif_sink_event);
-  if (0)
-    base_transform_class->src_event = GST_DEBUG_FUNCPTR (gst_yadif_src_event);
-  if (0)
-    base_transform_class->prepare_output_buffer =
-        GST_DEBUG_FUNCPTR (gst_yadif_prepare_output_buffer);
-  if (0)
-    base_transform_class->copy_metadata =
-        GST_DEBUG_FUNCPTR (gst_yadif_copy_metadata);
-  if (0)
-    base_transform_class->transform_meta =
-        GST_DEBUG_FUNCPTR (gst_yadif_transform_meta);
-  if (0)
-    base_transform_class->before_transform =
-        GST_DEBUG_FUNCPTR (gst_yadif_before_transform);
   base_transform_class->transform = GST_DEBUG_FUNCPTR (gst_yadif_transform);
-  if (0)
-    base_transform_class->transform_ip =
-        GST_DEBUG_FUNCPTR (gst_yadif_transform_ip);
 
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Deinterlace Mode",
@@ -327,21 +259,6 @@ gst_yadif_transform_caps (GstBaseTransform * trans,
   return othercaps;
 }
 
-static GstCaps *
-gst_yadif_fixate_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
-{
-
-  return NULL;
-}
-
-static gboolean
-gst_yadif_accept_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps)
-{
-  return TRUE;
-}
-
 static gboolean
 gst_yadif_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
@@ -351,46 +268,6 @@ gst_yadif_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   gst_video_info_from_caps (&yadif->video_info, incaps);
 
   return TRUE;
-}
-
-static gboolean
-gst_yadif_query (GstBaseTransform * trans, GstPadDirection direction,
-    GstQuery * query)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_yadif_decide_allocation (GstBaseTransform * trans, GstQuery * query)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_yadif_filter_meta (GstBaseTransform * trans, GstQuery * query,
-    GType api, const GstStructure * params)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_yadif_propose_allocation (GstBaseTransform * trans,
-    GstQuery * decide_query, GstQuery * query)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_yadif_transform_size (GstBaseTransform * trans,
-    GstPadDirection direction,
-    GstCaps * caps, gsize size, GstCaps * othercaps, gsize * othersize)
-{
-
-  return FALSE;
 }
 
 static gboolean
@@ -418,50 +295,6 @@ gst_yadif_stop (GstBaseTransform * trans)
 {
 
   return TRUE;
-}
-
-static gboolean
-gst_yadif_sink_event (GstBaseTransform * trans, GstEvent * event)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_yadif_src_event (GstBaseTransform * trans, GstEvent * event)
-{
-
-  return TRUE;
-}
-
-static GstFlowReturn
-gst_yadif_prepare_output_buffer (GstBaseTransform * trans,
-    GstBuffer * input, GstBuffer ** buf)
-{
-
-  return GST_FLOW_ERROR;
-}
-
-static gboolean
-gst_yadif_copy_metadata (GstBaseTransform * trans,
-    GstBuffer * input, GstBuffer * outbuf)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_yadif_transform_meta (GstBaseTransform * trans,
-    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
-{
-
-  return TRUE;
-}
-
-static void
-gst_yadif_before_transform (GstBaseTransform * trans, GstBuffer * buffer)
-{
-
 }
 
 void yadif_filter (GstYadif * yadif, int parity, int tff);
@@ -505,13 +338,6 @@ src_map_failed:
     gst_video_frame_unmap (&yadif->dest_frame);
     return GST_FLOW_ERROR;
   }
-}
-
-static GstFlowReturn
-gst_yadif_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
-{
-
-  return GST_FLOW_OK;
 }
 
 
