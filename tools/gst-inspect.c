@@ -81,8 +81,19 @@ print_caps (const GstCaps * caps, const gchar * pfx)
 
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     GstStructure *structure = gst_caps_get_structure (caps, i);
+    GstCapsFeatures *features = gst_caps_get_features (caps, i);
 
-    n_print ("%s%s\n", pfx, gst_structure_get_name (structure));
+    if (features
+        && !gst_caps_features_is_equal (features,
+            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
+      gchar *features_string = gst_caps_features_to_string (features);
+
+      n_print ("%s%s(%s)\n", pfx, gst_structure_get_name (structure),
+          features_string);
+      g_free (features_string);
+    } else {
+      n_print ("%s%s\n", pfx, gst_structure_get_name (structure));
+    }
     gst_structure_foreach (structure, print_field, (gpointer) pfx);
   }
 }
