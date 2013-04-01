@@ -682,7 +682,7 @@ gst_debug_print_object (gpointer ptr)
   if (*(GType *) ptr == GST_TYPE_STRUCTURE) {
     return gst_info_structure_to_string ((const GstStructure *) ptr);
   }
-  if (*(GType *) ptr == GST_TYPE_STRUCTURE) {
+  if (*(GType *) ptr == GST_TYPE_CAPS_FEATURES) {
     return gst_caps_features_to_string ((const GstCapsFeatures *) ptr);
   }
   if (*(GType *) ptr == GST_TYPE_TAG_LIST) {
