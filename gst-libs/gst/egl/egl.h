@@ -28,6 +28,8 @@
 
 #define GST_EGL_IMAGE_MEMORY_TYPE "EGLImage"
 
+#define GST_CAPS_FEATURE_MEMORY_EGL_IMAGE "memory:EGLImage"
+
 typedef enum
 {
   GST_EGL_IMAGE_MEMORY_TYPE_INVALID = -1,
