@@ -600,7 +600,7 @@ gst_info_structure_to_string (const GstStructure * s)
 }
 
 static inline gchar *
-__gst_buffer_describe (GstBuffer * buffer)
+gst_info_describe_buffer (GstBuffer * buffer)
 {
   return g_strdup_printf ("buffer: %p, pts %" GST_TIME_FORMAT ", dts %"
       GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", size %" G_GSIZE_FORMAT
@@ -613,7 +613,7 @@ __gst_buffer_describe (GstBuffer * buffer)
 }
 
 static inline gchar *
-__gst_event_describe (GstEvent * event)
+gst_info_describe_event (GstEvent * event)
 {
   gchar *s, *ret;
 
@@ -627,7 +627,7 @@ __gst_event_describe (GstEvent * event)
 }
 
 static inline gchar *
-__gst_message_describe (GstMessage * message)
+gst_info_describe_message (GstMessage * message)
 {
   gchar *s, *ret;
 
@@ -643,7 +643,7 @@ __gst_message_describe (GstMessage * message)
 }
 
 static inline gchar *
-__gst_query_describe (GstQuery * query)
+gst_info_describe_query (GstQuery * query)
 {
   gchar *s, *ret;
 
@@ -696,7 +696,7 @@ gst_debug_print_object (gpointer ptr)
     return __gst_date_time_serialize ((GstDateTime *) ptr, TRUE);
   }
   if (GST_IS_BUFFER (ptr)) {
-    return __gst_buffer_describe (GST_BUFFER_CAST (ptr));
+    return gst_info_describe_buffer (GST_BUFFER_CAST (ptr));
   }
 #ifdef USE_POISONING
   if (*(guint32 *) ptr == 0xffffffff) {
@@ -713,13 +713,13 @@ gst_debug_print_object (gpointer ptr)
     return g_strdup_printf ("<%s@%p>", G_OBJECT_TYPE_NAME (object), object);
   }
   if (GST_IS_MESSAGE (object)) {
-    return __gst_message_describe (GST_MESSAGE_CAST (object));
+    return gst_info_describe_message (GST_MESSAGE_CAST (object));
   }
   if (GST_IS_QUERY (object)) {
-    return __gst_query_describe (GST_QUERY_CAST (object));
+    return gst_info_describe_query (GST_QUERY_CAST (object));
   }
   if (GST_IS_EVENT (object)) {
-    return __gst_event_describe (GST_EVENT_CAST (object));
+    return gst_info_describe_event (GST_EVENT_CAST (object));
   }
   if (GST_IS_CONTEXT (object)) {
     GstContext *context = GST_CONTEXT_CAST (object);
