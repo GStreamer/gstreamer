@@ -844,8 +844,12 @@ fi
 dnl *** bluez ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_BLUEZ, true)
 AG_GST_CHECK_FEATURE(BLUEZ, [Bluez], bluez, [
-  dnl FIXME: we should be able to replace this with the GLib DBus stuff
-  PKG_CHECK_MODULES([DBUS], [dbus-1], [HAVE_BLUEZ=yes], [HAVE_BLUEZ=no])
+  PKG_CHECK_MODULES([BLUEZ], [bluez < 5.0], [
+    dnl FIXME: we should be able to replace this with the GLib DBus stuff
+    PKG_CHECK_MODULES([DBUS], [dbus-1], [HAVE_BLUEZ=yes], [HAVE_BLUEZ=no])
+  ], [
+    HAVE_BLUEZ=no
+  ])
 ])
 
 dnl *** OS X videosrc ***
