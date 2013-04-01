@@ -86,11 +86,14 @@ static GstStaticPadTemplate gst_kate_parse_src_factory =
 #define gst_kate_parse_parent_class parent_class
 G_DEFINE_TYPE (GstKateParse, gst_kate_parse, GST_TYPE_ELEMENT);
 
-static GstFlowReturn gst_kate_parse_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_kate_parse_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static GstStateChangeReturn gst_kate_parse_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean gst_kate_parse_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_kate_parse_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_kate_parse_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_kate_parse_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 #if 0
 static gboolean gst_kate_parse_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
@@ -144,7 +147,7 @@ gst_kate_parse_drain_event_queue (GstKateParse * parse)
     GstEvent *event;
 
     event = GST_EVENT_CAST (g_queue_pop_head (parse->event_queue));
-    gst_pad_event_default (parse->sinkpad, event);
+    gst_pad_event_default (parse->sinkpad, NULL, event);
   }
 }
 
@@ -180,19 +183,22 @@ gst_kate_parse_push_headers (GstKateParse * parse)
 
   headers = parse->streamheader;
   while (headers) {
-    guint8 *data;
-    gsize size;
+    GstMapInfo info;
 
     outbuf = GST_BUFFER_CAST (headers->data);
 
-    data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READ);
-    kate_packet_wrap (&packet, size, data);
+    if (!gst_buffer_map (outbuf, &info, GST_MAP_READ)) {
+      GST_WARNING_OBJECT (outbuf, "Failed to map buffer");
+      continue;
+    }
+
+    kate_packet_wrap (&packet, info.size, info.data);
     ret = kate_decode_headerin (&parse->ki, &parse->kc, &packet);
     if (G_UNLIKELY (ret < 0)) {
       GST_WARNING_OBJECT (parse, "Failed to decode header: %s",
           gst_kate_util_get_error_message (ret));
     }
-    gst_buffer_unmap (outbuf, data, size);
+    gst_buffer_unmap (outbuf, &info);
     /* takes ownership of outbuf, which was previously in parse->streamheader */
     outbuf_list = g_list_append (outbuf_list, outbuf);
     headers = headers->next;
@@ -379,7 +385,7 @@ gst_kate_parse_parse_packet (GstKateParse * parse, GstBuffer * buf)
 }
 
 static GstFlowReturn
-gst_kate_parse_chain (GstPad * pad, GstBuffer * buffer)
+gst_kate_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstKateParseClass *klass;
   GstKateParse *parse;
@@ -406,38 +412,35 @@ gst_kate_parse_queue_event (GstKateParse * parse, GstEvent * event)
 }
 
 static gboolean
-gst_kate_parse_sink_event (GstPad * pad, GstEvent * event)
+gst_kate_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret;
   GstKateParse *parse;
 
-  parse = GST_KATE_PARSE (gst_pad_get_parent (pad));
+  parse = GST_KATE_PARSE (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       gst_kate_parse_clear_queue (parse);
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     case GST_EVENT_EOS:
       if (!parse->streamheader_sent) {
         GST_DEBUG_OBJECT (parse, "Got EOS, pushing headers seen so far");
         ret = gst_kate_parse_push_headers (parse);
         if (ret != GST_FLOW_OK)
-          goto done;
+          break;
       }
       gst_kate_parse_drain_queue_prematurely (parse);
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     default:
       if (!parse->streamheader_sent && GST_EVENT_IS_SERIALIZED (event))
         ret = gst_kate_parse_queue_event (parse, event);
       else
-        ret = gst_pad_event_default (pad, event);
+        ret = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-done:
-  gst_object_unref (parse);
 
   return ret;
 }
@@ -493,7 +496,7 @@ gst_kate_parse_convert (GstPad * pad,
 #endif
 
 static gboolean
-gst_kate_parse_src_query (GstPad * pad, GstQuery * query)
+gst_kate_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
 #if 1
   // TODO
@@ -504,7 +507,7 @@ gst_kate_parse_src_query (GstPad * pad, GstQuery * query)
   GstKateParse *parse;
   gboolean res = FALSE;
 
-  parse = GST_KATE_PARSE (GST_PAD_PARENT (pad));
+  parse = GST_KATE_PARSE (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:

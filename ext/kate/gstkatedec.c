@@ -114,7 +114,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/plain; text/x-pango-markup; " GST_KATE_SPU_MIME_TYPE)
+    GST_STATIC_CAPS ("text/x-raw, format={ pango-markup, utf8 }; "
+        GST_KATE_SPU_MIME_TYPE)
     );
 
 #define gst_kate_dec_parent_class parent_class
@@ -125,13 +126,18 @@ static void gst_kate_dec_set_property (GObject * object, guint prop_id,
 static void gst_kate_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_kate_dec_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_kate_dec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 static GstStateChangeReturn gst_kate_dec_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean gst_kate_dec_sink_query (GstPad * pad, GstQuery * query);
-static gboolean gst_kate_dec_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_kate_dec_sink_handle_event (GstPad * pad, GstEvent * event);
-static GstCaps *gst_kate_dec_src_get_caps (GstPad * pad, GstCaps * filter);
+static gboolean gst_kate_dec_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
+static gboolean gst_kate_dec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_kate_dec_sink_handle_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
+static gboolean gst_kate_dec_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 /* initialize the plugin's class */
 static void
@@ -190,8 +196,8 @@ gst_kate_dec_init (GstKateDec * dec)
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   dec->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  gst_pad_set_getcaps_function (dec->srcpad,
-      GST_DEBUG_FUNCPTR (gst_kate_dec_src_get_caps));
+  gst_pad_set_query_function (dec->srcpad,
+      GST_DEBUG_FUNCPTR (gst_kate_dec_src_query));
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   gst_kate_util_decode_base_init (&dec->decoder, TRUE);
@@ -237,9 +243,9 @@ gst_kate_dec_get_property (GObject * object, guint prop_id,
  */
 
 static GstFlowReturn
-gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
+gst_kate_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstKateDec *kd = GST_KATE_DEC (gst_pad_get_parent (pad));
+  GstKateDec *kd = GST_KATE_DEC (parent);
   const kate_event *ev = NULL;
   GstFlowReturn rflow = GST_FLOW_OK;
 
@@ -254,7 +260,6 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
       GST_ELEMENT_CAST (kd), pad, buf, kd->srcpad, kd->srcpad, &kd->src_caps,
       &ev);
   if (G_UNLIKELY (rflow != GST_FLOW_OK)) {
-    gst_object_unref (kd);
     gst_buffer_unref (buf);
     return rflow;
   }
@@ -288,8 +293,14 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
         GST_DEBUG_OBJECT (kd, "kate event: %s, escaped %s", ev->text, escaped);
         buffer = gst_buffer_new_and_alloc (len + 1);
         if (G_LIKELY (buffer)) {
-          const char *mime = plain ? "text/plain" : "text/x-pango-markup";
-          GstCaps *caps = gst_caps_new_empty_simple (mime);
+          GstCaps *caps;
+          if (plain) {
+            caps = gst_caps_new_empty_simple ("text/x-raw");
+          } else {
+            caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING,
+                "pango-markup, utf8", NULL);
+          }
+          gst_pad_push_event (kd->srcpad, gst_event_new_caps (caps));
           gst_caps_unref (caps);
           /* allocate and copy the NULs, but don't include them in passed size */
           gst_buffer_fill (buffer, 0, escaped, len + 1);
@@ -343,7 +354,6 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
   }
 
 not_in_seg:
-  gst_object_unref (kd);
   gst_buffer_unref (buf);
   return rflow;
 }
@@ -365,42 +375,39 @@ gst_kate_dec_change_state (GstElement * element, GstStateChange transition)
 }
 
 gboolean
-gst_kate_dec_sink_query (GstPad * pad, GstQuery * query)
+gst_kate_dec_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstKateDec *kd = GST_KATE_DEC (gst_pad_get_parent (pad));
+  GstKateDec *kd = GST_KATE_DEC (parent);
   gboolean res =
       gst_kate_decoder_base_sink_query (&kd->decoder, GST_ELEMENT_CAST (kd),
-      pad, query);
-  gst_object_unref (kd);
+      pad, parent, query);
   return res;
 }
 
 static gboolean
-gst_kate_dec_sink_event (GstPad * pad, GstEvent * event)
+gst_kate_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstKateDec *kd = (GstKateDec *) (gst_object_get_parent (GST_OBJECT (pad)));
+  GstKateDec *kd = GST_KATE_DEC (parent);
   gboolean res = TRUE;
 
   GST_LOG_OBJECT (pad, "Event on sink pad: %s", GST_EVENT_TYPE_NAME (event));
 
   /* Delay events till we've set caps */
   if (gst_kate_util_decoder_base_queue_event (&kd->decoder, event,
-          &gst_kate_dec_sink_handle_event, pad)) {
-    gst_object_unref (kd);
+          &gst_kate_dec_sink_handle_event, parent, pad)) {
     return TRUE;
   }
 
-  res = gst_kate_dec_sink_handle_event (pad, event);
-
-  gst_object_unref (kd);
+  res = gst_kate_dec_sink_handle_event (pad, parent, event);
 
   return res;
 }
 
 static gboolean
-gst_kate_dec_sink_handle_event (GstPad * pad, GstEvent * event)
+gst_kate_dec_sink_handle_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstKateDec *kd = (GstKateDec *) (gst_object_get_parent (GST_OBJECT (pad)));
+  GstKateDec *kd = GST_KATE_DEC (parent);
   gboolean res = TRUE;
 
   GST_LOG_OBJECT (pad, "Handling event on sink pad: %s",
@@ -409,45 +416,57 @@ gst_kate_dec_sink_handle_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
       gst_kate_util_decoder_base_segment_event (&kd->decoder, event);
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
 
     case GST_EVENT_FLUSH_START:
       gst_kate_util_decoder_base_set_flushing (&kd->decoder, TRUE);
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
 
     case GST_EVENT_FLUSH_STOP:
       gst_kate_util_decoder_base_set_flushing (&kd->decoder, FALSE);
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
 
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-  gst_object_unref (kd);
 
   return res;
 }
 
-static GstCaps *
-gst_kate_dec_src_get_caps (GstPad * pad, GstCaps * filter)
+static gboolean
+gst_kate_dec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstKateDec *kd = (GstKateDec *) (gst_object_get_parent (GST_OBJECT (pad)));
-  GstCaps *caps;
+  GstKateDec *kd = GST_KATE_DEC (parent);
+  gboolean res = TRUE;
 
-  if (kd->src_caps) {
-    GST_DEBUG_OBJECT (kd, "We have src caps %" GST_PTR_FORMAT, kd->src_caps);
-    caps = kd->src_caps;
-  } else {
-    GST_DEBUG_OBJECT (kd, "We have no src caps, using template caps");
-    caps = gst_static_pad_template_get_caps (&src_factory);
+  GST_LOG_OBJECT (pad, "Handling query on src pad: %s",
+      GST_QUERY_TYPE_NAME (query));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:{
+      GstCaps *caps;
+
+      if (kd->src_caps) {
+        GST_DEBUG_OBJECT (kd, "We have src caps %" GST_PTR_FORMAT,
+            kd->src_caps);
+        caps = gst_caps_copy (kd->src_caps);
+      } else {
+        GST_DEBUG_OBJECT (kd, "We have no src caps, using template caps");
+        caps = gst_static_pad_template_get_caps (&src_factory);
+      }
+
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, parent, query);
+      break;
   }
 
-  caps = gst_caps_copy (caps);
-
-  gst_object_unref (kd);
-  return caps;
+  return res;
 }

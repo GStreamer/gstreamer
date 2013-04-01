@@ -266,52 +266,57 @@ gst_kate_tag_parse_packet (GstKateParse * parse, GstBuffer * buffer)
   GstKateTag *kt;
   gchar *encoder = NULL;
   GstBuffer *new_buf;
-  guint8 *data;
-  gsize size;
+  GstMapInfo info;
 
   kt = GST_KATE_TAG (parse);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  if (!gst_buffer_map (buffer, &info, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (buffer, (NULL), ("Failed to map buffer"));
+    return GST_FLOW_ERROR;
+  }
 
   /* rewrite the language and category */
-  if (size >= 64 && data[0] == 0x80) {
+  if (info.size >= 64 && info.data[0] == 0x80) {
     GstBuffer *new_buffer;
 
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &info);
     new_buffer = gst_buffer_copy (buffer);
-    gst_buffer_unref (buffer);
     buffer = new_buffer;
 
-    data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READWRITE);
+    if (!gst_buffer_map (buffer, &info, GST_MAP_READWRITE)) {
+      GST_ERROR_OBJECT (buffer, (NULL),
+          ("Failed to map copied buffer READWRITE"));
+      return GST_FLOW_ERROR;
+    }
     /* language is at offset 32, 16 bytes, zero terminated */
     if (kt->language) {
-      strncpy ((char *) data + 32, kt->language, 15);
-      data[47] = 0;
+      strncpy ((char *) info.data + 32, kt->language, 15);
+      info.data[47] = 0;
     }
     /* category is at offset 48, 16 bytes, zero terminated */
     if (kt->category) {
-      strncpy ((char *) data + 48, kt->category, 15);
-      data[63] = 0;
+      strncpy ((char *) info.data + 48, kt->category, 15);
+      info.data[63] = 0;
     }
     if (kt->original_canvas_width >= 0) {
       guint16 v = encode_canvas_size (kt->original_canvas_width);
-      data[16] = v & 0xff;
-      data[17] = (v >> 8) & 0xff;
+      info.data[16] = v & 0xff;
+      info.data[17] = (v >> 8) & 0xff;
     }
     if (kt->original_canvas_height >= 0) {
       guint16 v = encode_canvas_size (kt->original_canvas_height);
-      data[18] = v & 0xff;
-      data[19] = (v >> 8) & 0xff;
+      info.data[18] = v & 0xff;
+      info.data[19] = (v >> 8) & 0xff;
     }
   }
 
   /*  rewrite the comments packet */
-  if (size >= 9 && data[0] == 0x81) {
+  if (info.size >= 9 && info.data[0] == 0x81) {
     old_tags =
-        gst_tag_list_from_vorbiscomment (data, size,
+        gst_tag_list_from_vorbiscomment (info.data, info.size,
         (const guint8 *) "\201kate\0\0\0\0", 9, &encoder);
     user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (kt));
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &info);
 
     /* build new tag list */
     new_tags = gst_tag_list_merge (user_tags, old_tags,
@@ -332,7 +337,7 @@ gst_kate_tag_parse_packet (GstKateParse * parse, GstBuffer * buffer)
 
     buffer = new_buf;
   } else {
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &info);
   }
 
   return GST_KATE_PARSE_CLASS (parent_class)->parse_packet (parse, buffer);
