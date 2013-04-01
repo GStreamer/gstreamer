@@ -318,13 +318,13 @@ pack_v210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     y4 = s[4 * (i + 4) + 1] >> 6;
     y5 = s[4 * (i + 5) + 1] >> 6;
 
-    u0 = (s[4 * (i + 0) + 2] + s[4 * (i + 1) + 2] + 1) >> 7;
-    u1 = (s[4 * (i + 2) + 2] + s[4 * (i + 3) + 2] + 1) >> 7;
-    u2 = (s[4 * (i + 4) + 2] + s[4 * (i + 5) + 2] + 1) >> 7;
+    u0 = s[4 * (i + 0) + 2] >> 6;
+    u1 = s[4 * (i + 2) + 2] >> 6;
+    u2 = s[4 * (i + 4) + 2] >> 6;
 
-    v0 = (s[4 * (i + 0) + 3] + s[4 * (i + 1) + 3] + 1) >> 7;
-    v1 = (s[4 * (i + 2) + 3] + s[4 * (i + 3) + 3] + 1) >> 7;
-    v2 = (s[4 * (i + 4) + 3] + s[4 * (i + 5) + 3] + 1) >> 7;
+    v0 = s[4 * (i + 0) + 3] >> 6;
+    v1 = s[4 * (i + 2) + 3] >> 6;
+    v2 = s[4 * (i + 4) + 3] >> 6;
 
     a0 = u0 | (y0 << 10) | (v0 << 20);
     a1 = y1 | (u1 << 10) | (y2 << 20);
@@ -402,10 +402,8 @@ pack_Y41B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     destY[i + 2] = s[i * 4 + 9];
     destY[i + 3] = s[i * 4 + 13];
 
-    destU[i >> 2] =
-        (s[i * 4 + 2] + s[i * 4 + 6] + s[i * 4 + 10] + s[i * 4 + 14] + 2) >> 2;
-    destV[i >> 2] =
-        (s[i * 4 + 3] + s[i * 4 + 7] + s[i * 4 + 11] + s[i * 4 + 15] + 2) >> 2;
+    destU[i >> 2] = s[i * 4 + 2];
+    destV[i >> 2] = s[i * 4 + 3];
   }
 
   if (i == width - 3) {
@@ -413,14 +411,14 @@ pack_Y41B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     destY[i + 1] = s[i * 4 + 5];
     destY[i + 2] = s[i * 4 + 9];
 
-    destU[i >> 2] = (s[i * 4 + 2] + s[i * 4 + 6] + s[i * 4 + 10] + 1) / 3;
-    destV[i >> 2] = (s[i * 4 + 3] + s[i * 4 + 7] + s[i * 4 + 11] + 1) / 3;
+    destU[i >> 2] = s[i * 4 + 2];
+    destV[i >> 2] = s[i * 4 + 3];
   } else if (i == width - 2) {
     destY[i] = s[i * 4 + 1];
     destY[i + 1] = s[i * 4 + 5];
 
-    destU[i >> 2] = (s[i * 4 + 2] + s[i * 4 + 6] + 1) >> 1;
-    destV[i >> 2] = (s[i * 4 + 3] + s[i * 4 + 7] + 1) >> 1;
+    destU[i >> 2] = s[i * 4 + 2];
+    destV[i >> 2] = s[i * 4 + 3];
   } else if (i == width - 1) {
     destY[i + 1] = s[i * 4 + 5];
 
@@ -997,8 +995,8 @@ pack_UYVP (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 
     y0 = s[4 * (i + 0) + 1];
     y1 = s[4 * (i + 1) + 1];
-    u0 = (s[4 * (i + 0) + 2] + s[4 * (i + 1) + 2] + 1) >> 1;
-    v0 = (s[4 * (i + 0) + 3] + s[4 * (i + 1) + 3] + 1) >> 1;
+    u0 = s[4 * (i + 0) + 2];
+    v0 = s[4 * (i + 0) + 3];
 
     d[(i / 2) * 5 + 0] = u0 >> 8;
     d[(i / 2) * 5 + 1] = (u0 & 0xc0) | y0 >> 10;
@@ -1151,10 +1149,8 @@ pack_410 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     destY[i + 2] = s[i * 4 + 9];
     destY[i + 3] = s[i * 4 + 13];
     if (y % 4 == 0) {
-      destU[i >> 2] =
-          (s[i * 4 + 2] + s[i * 4 + 6] + s[i * 4 + 10] + s[i * 4 + 14]) >> 2;
-      destV[i >> 2] =
-          (s[i * 4 + 3] + s[i * 4 + 7] + s[i * 4 + 11] + s[i * 4 + 15]) >> 2;
+      destU[i >> 2] = s[i * 4 + 2];
+      destV[i >> 2] = s[i * 4 + 3];
     }
   }
 
@@ -1163,15 +1159,15 @@ pack_410 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     destY[i + 1] = s[i * 4 + 5];
     destY[i + 2] = s[i * 4 + 9];
     if (y % 4 == 0) {
-      destU[i >> 2] = (s[i * 4 + 2] + s[i * 4 + 6] + s[i * 4 + 10]) / 3;
-      destV[i >> 2] = (s[i * 4 + 3] + s[i * 4 + 7] + s[i * 4 + 11]) / 3;
+      destU[i >> 2] = s[i * 4 + 2];
+      destV[i >> 2] = s[i * 4 + 3];
     }
   } else if (i == width - 2) {
     destY[i] = s[i * 4 + 1];
     destY[i + 1] = s[i * 4 + 5];
     if (y % 4 == 0) {
-      destU[i >> 2] = (s[i * 4 + 2] + s[i * 4 + 6]) >> 1;
-      destV[i >> 2] = (s[i * 4 + 3] + s[i * 4 + 7]) >> 1;
+      destU[i >> 2] = s[i * 4 + 2];
+      destV[i >> 2] = s[i * 4 + 3];
     }
   } else if (i == width - 1) {
     destY[i] = s[i * 4 + 1];
@@ -1244,23 +1240,21 @@ pack_IYU1 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     d[(i >> 2) * 6 + 2] = s[i * 4 + 5];
     d[(i >> 2) * 6 + 4] = s[i * 4 + 9];
     d[(i >> 2) * 6 + 5] = s[i * 4 + 13];
-    d[(i >> 2) * 6 + 0] =
-        (s[i * 4 + 2] + s[i * 4 + 6] + s[i * 4 + 10] + s[i * 4 + 14]) >> 2;
-    d[(i >> 2) * 6 + 3] =
-        (s[i * 4 + 3] + s[i * 4 + 7] + s[i * 4 + 11] + s[i * 4 + 15]) >> 2;
+    d[(i >> 2) * 6 + 0] = s[i * 4 + 2];
+    d[(i >> 2) * 6 + 3] = s[i * 4 + 3];
   }
 
   if (i == width - 3) {
     d[(i >> 2) * 6 + 1] = s[i * 4 + 1];
     d[(i >> 2) * 6 + 2] = s[i * 4 + 5];
     d[(i >> 2) * 6 + 4] = s[i * 4 + 9];
-    d[(i >> 2) * 6 + 0] = (s[i * 4 + 2] + s[i * 4 + 6] + s[i * 4 + 10]) / 3;
-    d[(i >> 2) * 6 + 3] = (s[i * 4 + 3] + s[i * 4 + 7] + s[i * 4 + 11]) / 3;
+    d[(i >> 2) * 6 + 0] = s[i * 4 + 2];
+    d[(i >> 2) * 6 + 3] = s[i * 4 + 3];
   } else if (i == width - 2) {
     d[(i >> 2) * 6 + 1] = s[i * 4 + 1];
     d[(i >> 2) * 6 + 2] = s[i * 4 + 5];
-    d[(i >> 2) * 6 + 0] = (s[i * 4 + 2] + s[i * 4 + 6]) >> 1;
-    d[(i >> 2) * 6 + 3] = (s[i * 4 + 3] + s[i * 4 + 7]) >> 1;
+    d[(i >> 2) * 6 + 0] = s[i * 4 + 2];
+    d[(i >> 2) * 6 + 3] = s[i * 4 + 3];
   } else if (i == width - 1) {
     d[(i >> 2) * 6 + 1] = s[i * 4 + 1];
     d[(i >> 2) * 6 + 0] = s[i * 4 + 2];
@@ -1586,10 +1580,10 @@ pack_I420_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   const guint16 *s = src;
 
   for (i = 0; i < width - 1; i += 2) {
-    Y0 = (s[i * 4 + 1]) >> 6;
-    Y1 = (s[i * 4 + 5]) >> 6;
-    U = ((s[i * 4 + 2] + s[i * 4 + 6] + 1) >> 1) >> 6;
-    V = ((s[i * 4 + 3] + s[i * 4 + 7] + 1) >> 1) >> 6;
+    Y0 = s[i * 4 + 1] >> 6;
+    Y1 = s[i * 4 + 5] >> 6;
+    U = s[i * 4 + 2] >> 6;
+    V = s[i * 4 + 3] >> 6;
 
     GST_WRITE_UINT16_LE (destY + i + 0, Y0);
     GST_WRITE_UINT16_LE (destY + i + 1, Y1);
@@ -1655,8 +1649,8 @@ pack_I420_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   for (i = 0; i < width - 1; i += 2) {
     Y0 = s[i * 4 + 1] >> 6;
     Y1 = s[i * 4 + 5] >> 6;
-    U = ((s[i * 4 + 2] + s[i * 4 + 6] + 1) >> 1) >> 6;
-    V = ((s[i * 4 + 3] + s[i * 4 + 7] + 1) >> 1) >> 6;
+    U = s[i * 4 + 2] >> 6;
+    V = s[i * 4 + 3] >> 6;
 
     GST_WRITE_UINT16_BE (destY + i + 0, Y0);
     GST_WRITE_UINT16_BE (destY + i + 1, Y1);
@@ -1718,10 +1712,10 @@ pack_I422_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   const guint16 *s = src;
 
   for (i = 0; i < width - 1; i += 2) {
-    Y0 = (s[i * 4 + 1]) >> 6;
-    Y1 = (s[i * 4 + 5]) >> 6;
-    U = ((s[i * 4 + 2] + s[i * 4 + 6] + 1) >> 1) >> 6;
-    V = ((s[i * 4 + 3] + s[i * 4 + 7] + 1) >> 1) >> 6;
+    Y0 = s[i * 4 + 1] >> 6;
+    Y1 = s[i * 4 + 5] >> 6;
+    U = s[i * 4 + 2] >> 6;
+    V = s[i * 4 + 3] >> 6;
 
     GST_WRITE_UINT16_LE (destY + i + 0, Y0);
     GST_WRITE_UINT16_LE (destY + i + 1, Y1);
@@ -1785,8 +1779,8 @@ pack_I422_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   for (i = 0; i < width - 1; i += 2) {
     Y0 = s[i * 4 + 1] >> 6;
     Y1 = s[i * 4 + 5] >> 6;
-    U = ((s[i * 4 + 2] + s[i * 4 + 6] + 1) >> 1) >> 6;
-    V = ((s[i * 4 + 3] + s[i * 4 + 7] + 1) >> 1) >> 6;
+    U = s[i * 4 + 2] >> 6;
+    V = s[i * 4 + 3] >> 6;
 
     GST_WRITE_UINT16_BE (destY + i + 0, Y0);
     GST_WRITE_UINT16_BE (destY + i + 1, Y1);

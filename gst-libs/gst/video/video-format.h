@@ -231,6 +231,10 @@ typedef enum
  * format @info. The pixels will be unpacked into @dest which each component
  * interleaved. @dest should at least be big enough to hold @width *
  * n_components * size(unpack_format) bytes.
+ *
+ * For subsampled formats, the components will be duplicated in the destination
+ * array. Reconstruction of the missing components can be performed in a
+ * separate step after unpacking.
  */
 typedef void (*GstVideoFormatUnpack)         (const GstVideoFormatInfo *info,
                                               GstVideoPackFlags flags, gpointer dest,
@@ -245,7 +249,7 @@ typedef void (*GstVideoFormatUnpack)         (const GstVideoFormatInfo *info,
  * @sstride: the source array stride
  * @data: pointers to the destination data planes
  * @stride: strides of the destination planes
- * @chroma_site: the chroma siting of the target when subsampled
+ * @chroma_site: the chroma siting of the target when subsampled (not used)
  * @y: the y position in the image to pack to
  * @width: the amount of pixels to pack.
  *
@@ -256,6 +260,9 @@ typedef void (*GstVideoFormatUnpack)         (const GstVideoFormatInfo *info,
  * This function operates on pack_lines lines, meaning that @src should
  * contain at least pack_lines lines with a stride of @sstride and @y
  * should be a multiple of pack_lines.
+ *
+ * Subsampled formats will use the horizontally cosited component in the
+ * destination. Subsampling should be performed before packing.
  */
 typedef void (*GstVideoFormatPack)           (const GstVideoFormatInfo *info,
                                               GstVideoPackFlags flags,

@@ -93,10 +93,8 @@ mergewl d, ay, uv
 x2 splitlw uv, ay, ayuv
 x2 select1wb y, ay
 x2 splitwb vv, uu, uv
-splitwb t1, t2, uu
-avgub u, t1, t2
-splitwb t1, t2, vv
-avgub v, t1, t2
+select0wb u, uu
+select0wb v, vv
 
 .function video_orc_unpack_YUY2
 .dest 8 ayuv guint8
@@ -117,32 +115,28 @@ x2 mergewl ayuv, ayay, uvuv
 .dest 4 yuy2 guint8
 .source 8 ayuv guint8
 .temp 2 yy
-.temp 2 uv1
-.temp 2 uv2
+.temp 2 uv
 .temp 4 ayay
 .temp 4 uvuv
 
 x2 splitlw uvuv, ayay, ayuv
-splitlw uv1, uv2, uvuv
-x2 avgub uv1, uv1, uv2
+select0lw uv, uvuv
 x2 select1wb yy, ayay
-x2 mergebw yuy2, yy, uv1
+x2 mergebw yuy2, yy, uv
 
 
 .function video_orc_pack_UYVY
 .dest 4 yuy2 guint8
 .source 8 ayuv guint8
 .temp 2 yy
-.temp 2 uv1
-.temp 2 uv2
+.temp 2 uv
 .temp 4 ayay
 .temp 4 uvuv
 
 x2 splitlw uvuv, ayay, ayuv
-splitlw uv1, uv2, uvuv
-x2 avgub uv1, uv1, uv2
+select0lw uv, uvuv
 x2 select1wb yy, ayay
-x2 mergebw yuy2, uv1, yy
+x2 mergebw yuy2, uv, yy
 
 
 .function video_orc_unpack_UYVY
@@ -180,17 +174,15 @@ x2 mergewl ayuv, ayay, uvuv
 .dest 4 yuy2 guint8
 .source 8 ayuv guint8
 .temp 2 yy
-.temp 2 uv1
-.temp 2 uv2
+.temp 2 uv
 .temp 4 ayay
 .temp 4 uvuv
 
 x2 splitlw uvuv, ayay, ayuv
-splitlw uv1, uv2, uvuv
-x2 avgub uv1, uv1, uv2
+select0lw uv, uvuv
 x2 select1wb yy, ayay
-swapw uv1, uv1
-x2 mergebw yuy2, yy, uv1
+swapw uv, uv
+x2 mergebw yuy2, yy, uv
 
 
 .function video_orc_unpack_YUV9
@@ -236,13 +228,11 @@ x2 mergewl ayuv, ayay, uvuv
 .source 8 ayuv guint8
 .temp 4 ayay
 .temp 4 uvuv
-.temp 2 uv1
-.temp 2 uv2
+.temp 2 uv
 
 x2 splitlw uvuv, ayay, ayuv
-splitlw uv1, uv2, uvuv
-x2 avgub uv1, uv1, uv2
-splitwb v, u, uv1
+select0lw uv, uvuv
+splitwb v, u, uv
 x2 select1wb y, ayay
 
 
@@ -405,8 +395,7 @@ x2 mergewl d, ay, uvuv
 
 x2 splitlw uvuv, ay, ayuv
 x2 select1wb y, ay
-splitlw uv1, uv2, uvuv
-x2 avgub uv, uv1, uv2
+select0lw uv, uvuv
 
 .function video_orc_unpack_NV21
 .dest 8 d guint8
@@ -429,14 +418,11 @@ x2 mergewl d, ay, uvuv
 .source 8 ayuv guint8
 .temp 4 ay
 .temp 4 uvuv
-.temp 2 uv1
-.temp 2 uv2
 .temp 2 uv
 
 x2 splitlw uvuv, ay, ayuv
 x2 select1wb y, ay
-splitlw uv1, uv2, uvuv
-x2 avgub uv, uv1, uv2
+select0lw uv, uvuv
 swapw vu, uv
 
 
@@ -491,17 +477,13 @@ mergewl d, ay, uv
 .temp 4 uv
 .temp 2 uu
 .temp 2 vv
-.temp 1 t1
-.temp 1 t2
 
 x2 splitlw uv, ay, ayuv
 x2 select1wb y, ay
 x2 select0wb a, ay
 x2 splitwb vv, uu, uv
-splitwb t1, t2, uu
-avgub u, t1, t2
-splitwb t1, t2, vv
-avgub v, t1, t2
+select0wb u, uu
+select0wb v, vv
 
 .function video_orc_resample_bilinear_u32
 .dest 4 d1 guint8
