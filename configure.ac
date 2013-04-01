@@ -846,9 +846,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_BLUEZ, true)
 AG_GST_CHECK_FEATURE(BLUEZ, [Bluez], bluez, [
   dnl FIXME: we should be able to replace this with the GLib DBus stuff
   PKG_CHECK_MODULES([DBUS], [dbus-1], [HAVE_BLUEZ=yes], [HAVE_BLUEZ=no])
-
-  AC_MSG_NOTICE([Disabling bluez plugin for now, does not work yet])
-  HAVE_BLUEZ=no
 ])
 
 dnl *** OS X videosrc ***
