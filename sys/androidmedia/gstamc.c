@@ -26,6 +26,7 @@
 #include "gstamc-constants.h"
 
 #include "gstamcvideodec.h"
+#include "gstamcvideoenc.h"
 #include "gstamcaudiodec.h"
 
 #include <gmodule.h>
@@ -2746,8 +2747,11 @@ register_codecs (GstPlugin * plugin)
       gchar *type_name, *element_name;
       guint rank;
 
-      if (is_video && !codec_info->is_encoder) {
-        type = gst_amc_video_dec_get_type ();
+      if (is_video) {
+        if (codec_info->is_encoder)
+          type = gst_amc_video_enc_get_type ();
+        else
+          type = gst_amc_video_dec_get_type ();
       } else if (is_audio && !codec_info->is_encoder) {
         type = gst_amc_audio_dec_get_type ();
       } else {
