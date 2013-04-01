@@ -470,6 +470,22 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
     "height = " GST_VIDEO_SIZE_RANGE ", "                               \
     "framerate = " GST_VIDEO_FPS_RANGE
 
+/**
+ * GST_VIDEO_CAPS_MAKE_WITH_FEATURES:
+ * @format: string format that describes the pixel layout, as string
+ *     (e.g. "I420", "RGB", "YV12", "YUY2", "AYUV", etc.)
+ * @features: Requires caps features as a string, e.g.
+ *     "memory:SystemMemory".
+ *
+ * Generic caps string for video, for use in pad templates.
+ */
+#define GST_VIDEO_CAPS_MAKE_WITH_FEATURES(features,format)              \
+    "video/x-raw(" features "), "                                       \
+    "format = (string) " format ", "                                    \
+    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
+    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
+    "framerate = " GST_VIDEO_FPS_RANGE
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_FORMAT_H__ */
