@@ -318,7 +318,6 @@ gst_caps_features_copy (const GstCapsFeatures * features)
   guint i, n;
 
   g_return_val_if_fail (features != NULL, NULL);
-  g_return_val_if_fail (features->parent_refcount == NULL, NULL);
 
   copy = gst_caps_features_new_empty ();
   n = gst_caps_features_get_size (features);
