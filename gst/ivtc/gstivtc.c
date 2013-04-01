@@ -72,9 +72,6 @@ static GstCaps *gst_ivtc_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean gst_ivtc_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps);
-static gboolean gst_ivtc_transform_size (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, gsize size, GstCaps * othercaps,
-    gsize * othersize);
 static gboolean gst_ivtc_start (GstBaseTransform * trans);
 static gboolean gst_ivtc_stop (GstBaseTransform * trans);
 static gboolean gst_ivtc_sink_event (GstBaseTransform * trans,
@@ -149,8 +146,6 @@ gst_ivtc_class_init (GstIvtcClass * klass)
       GST_DEBUG_FUNCPTR (gst_ivtc_transform_caps);
   base_transform_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_ivtc_fixate_caps);
   base_transform_class->set_caps = GST_DEBUG_FUNCPTR (gst_ivtc_set_caps);
-  base_transform_class->transform_size =
-      GST_DEBUG_FUNCPTR (gst_ivtc_transform_size);
   base_transform_class->start = GST_DEBUG_FUNCPTR (gst_ivtc_start);
   base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_ivtc_stop);
   base_transform_class->sink_event = GST_DEBUG_FUNCPTR (gst_ivtc_sink_event);
@@ -297,18 +292,6 @@ gst_ivtc_set_caps (GstBaseTransform * trans, GstCaps * incaps,
       ivtc->sink_video_info.fps_d, ivtc->sink_video_info.fps_n * 2);
   GST_DEBUG_OBJECT (trans, "field duration %" GST_TIME_FORMAT,
       GST_TIME_ARGS (ivtc->field_duration));
-
-  return TRUE;
-}
-
-/* transform size */
-static gboolean
-gst_ivtc_transform_size (GstBaseTransform * trans, GstPadDirection direction,
-    GstCaps * caps, gsize size, GstCaps * othercaps, gsize * othersize)
-{
-  GstIvtc *ivtc = GST_IVTC (trans);
-
-  GST_DEBUG_OBJECT (ivtc, "transform_size");
 
   return TRUE;
 }
