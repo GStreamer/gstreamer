@@ -329,7 +329,19 @@ static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ "
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
+            "{ "
+            "RGBA, BGRA, ARGB, ABGR, "
+            "RGBx, BGRx, xRGB, xBGR, "
+            "AYUV, Y444, I420, YV12, "
+            "NV12, NV21, Y42B, Y41B, " "RGB, BGR, RGB16 }") ";"
+            GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
+            "{ "
+            "RGBA, BGRA, ARGB, ABGR, "
+            "RGBx, BGRx, xRGB, xBGR, "
+            "AYUV, Y444, I420, YV12, "
+            "NV12, NV21, Y42B, Y41B, " "RGB, BGR, RGB16 }") ";"
+            GST_VIDEO_CAPS_MAKE ("{ "
             "RGBA, BGRA, ARGB, ABGR, "
             "RGBx, BGRx, xRGB, xBGR, "
             "AYUV, Y444, I420, YV12, "
@@ -430,7 +442,8 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
 {
   gboolean ret = FALSE;
   EGLint cfg_number;
-  GstCaps *caps;
+  GstCaps *caps, *copy1, *copy2;
+  guint i, n;
 
   GST_DEBUG_OBJECT (eglglessink,
       "Building initial list of wanted eglattribs per format");
@@ -478,6 +491,24 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
         _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_Y41B));
     gst_caps_append (caps,
         _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGB16));
+
+    copy1 = gst_caps_copy (caps);
+    copy2 = gst_caps_copy (caps);
+
+    n = gst_caps_get_size (caps);
+    for (i = 0; i < n; i++) {
+      GstCapsFeatures *features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE, NULL);
+      gst_caps_set_features (caps, i, features);
+    }
+
+    n = gst_caps_get_size (copy1);
+    for (i = 0; i < n; i++) {
+      GstCapsFeatures *features = gst_caps_features_new (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
+      gst_caps_set_features (copy1, i, features);
+    }
+
+    gst_caps_append (caps, copy1);
+    gst_caps_append (caps, copy2);
     ret = TRUE;
   } else {
     GST_INFO_OBJECT (eglglessink,
