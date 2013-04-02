@@ -478,6 +478,8 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
  *     "memory:SystemMemory".
  *
  * Generic caps string for video, for use in pad templates.
+ *
+ * Since: 1.2
  */
 #define GST_VIDEO_CAPS_MAKE_WITH_FEATURES(features,format)              \
     "video/x-raw(" features "), "                                       \
