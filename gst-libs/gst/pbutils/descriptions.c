@@ -169,6 +169,7 @@ static const FormatInfo formats[] = {
   {"audio/x-spc", "SNES-SPC700 Sound File Data", FLAG_AUDIO, "spc"},
   {"audio/x-speex", "Speex", FLAG_AUDIO, ""},
   {"audio/x-svx", "Amiga IFF / SVX8 / SV16", FLAG_AUDIO, ""},
+  {"audio/x-true-hd", "Dolby TrueHD", FLAG_AUDIO, ""},
   {"audio/x-tta", N_("Lossless True Audio (TTA)"), FLAG_AUDIO, "tta"},
   {"audio/x-ttafile", N_("Lossless True Audio (TTA)"), FLAG_AUDIO, "tta"},
   {"audio/x-vnd.sony.atrac3", "Sony ATRAC3", FLAG_AUDIO, ""},
