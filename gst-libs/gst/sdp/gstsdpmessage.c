@@ -1341,7 +1341,7 @@ gst_sdp_media_as_text (const GstSDPMedia * media)
 
     if (attr->key) {
       g_string_append_printf (lines, "a=%s", attr->key);
-      if (attr->value)
+      if (attr->value && attr->value[0] != '\0')
         g_string_append_printf (lines, ":%s", attr->value);
       g_string_append_printf (lines, "\r\n");
     }
