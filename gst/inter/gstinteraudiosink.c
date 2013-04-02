@@ -235,9 +235,10 @@ gst_inter_audio_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   n = gst_adapter_available (interaudiosink->surface->audio_adapter) / 4;
 #define SIZE 1600
   if (n > (SIZE * 3)) {
-    GST_WARNING ("flushing 800 samples");
-    gst_adapter_flush (interaudiosink->surface->audio_adapter, (SIZE / 2) * 4);
-    n -= (SIZE / 2);
+    int n_chunks = (n / (SIZE / 2)) - 4;
+    GST_WARNING ("flushing %d samples", n_chunks * 800);
+    gst_adapter_flush (interaudiosink->surface->audio_adapter,
+        n_chunks * (SIZE / 2) * 4);
   }
   gst_adapter_push (interaudiosink->surface->audio_adapter,
       gst_buffer_ref (buffer));
