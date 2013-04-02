@@ -63,8 +63,8 @@ DYLD_LIBRARY_PATH=$GST_PREFIX/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}
 GI_TYPELIB_PATH=$GST_PREFIX/share/gir-1.0${GI_TYPELIB_PATH:+:$GI_TYPELIB_PATH}
 
 # ORC
-LD_LIBRARY_PATH=$GST/orc/orc/.libs:$LD_LIBRARY_PATH
-DYLD_LIBRARY_PATH=$GST/orc/orc/.libs:$DYLD_LIBRARY_PATH
+LD_LIBRARY_PATH=$GST/orc/orc/.libs:$GST/orc/orc-test/.libs:$LD_LIBRARY_PATH
+DYLD_LIBRARY_PATH=$GST/orc/orc/.libs:$GST/orc/orc-test/.libs:$DYLD_LIBRARY_PATH
 
 # GStreamer rtsp server library
 LD_LIBRARY_PATH=$GST/gst-rtsp-server/gst/rtsp-server/.libs:$LD_LIBRARY_PATH
