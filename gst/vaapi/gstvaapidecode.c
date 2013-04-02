@@ -775,9 +775,23 @@ gst_vaapidecode_query(GST_PAD_QUERY_FUNCTION_ARGS)
 
     if (gst_vaapi_reply_to_query(query, decode->display))
         res = TRUE;
-    else if (GST_PAD_IS_SINK(pad))
-        res = GST_PAD_QUERY_FUNCTION_CALL(decode->sinkpad_query,
-            decode->sinkpad, parent, query);
+    else if (GST_PAD_IS_SINK(pad)) {
+        switch (GST_QUERY_TYPE(query)) {
+#if GST_CHECK_VERSION(1,0,0)
+        case GST_QUERY_CAPS: {
+            GstCaps * const caps = gst_vaapidecode_get_caps(pad);
+            gst_query_set_caps_result(query, caps);
+            gst_caps_unref(caps);
+            res = TRUE;
+            break;
+        }
+#endif
+        default:
+            res = GST_PAD_QUERY_FUNCTION_CALL(decode->sinkpad_query,
+                decode->sinkpad, parent, query);
+            break;
+        }
+    }
     else
         res = GST_PAD_QUERY_FUNCTION_CALL(decode->srcpad_query,
             decode->srcpad, parent, query);
