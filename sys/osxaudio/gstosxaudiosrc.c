@@ -79,14 +79,18 @@ enum
   ARG_DEVICE
 };
 
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+# define FORMATS "{ S32LE }"
+#else
+# define FORMATS "{ S32BE }"
+#endif
+
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "endianness = (int) {" G_STRINGIFY (G_BYTE_ORDER) " }, "
-        "signed = (boolean) { TRUE }, "
-        "width = (int) 32, "
-        "depth = (int) 32, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " FORMATS ", "
+        "layout = (string) interleaved, "
         "rate = (int) [1, MAX], " "channels = (int) [1, MAX]")
     );
 
