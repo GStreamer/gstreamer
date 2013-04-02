@@ -102,6 +102,8 @@ gst_mpeg_video_meta_get_info (void)
  * Provided structures must either be %NULL or GSlice-allocated.
  *
  * Returns: (transfer full): a newly created #GstMpegVideoMeta
+ *
+ * Since: 1.2
  */
 GstMpegVideoMeta *
 gst_buffer_add_mpeg_video_meta (GstBuffer * buffer,

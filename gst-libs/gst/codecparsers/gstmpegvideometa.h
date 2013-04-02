@@ -55,6 +55,8 @@ const GstMetaInfo * gst_mpeg_video_meta_get_info (void);
  *
  * The various fields are only valid during the lifetime of the #GstH264Meta.
  * If elements wish to use those for longer, they are required to make a copy.
+ *
+ * Since: 1.2
  */
 struct _GstMpegVideoMeta {
   GstMeta            meta;
