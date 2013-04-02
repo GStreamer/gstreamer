@@ -377,10 +377,6 @@ gst_sdp_message_as_text (const GstSDPMessage * msg)
     g_string_append_printf (lines, "p=%s\r\n",
         gst_sdp_message_get_phone (msg, i));
 
-  if (gst_sdp_message_emails_len (msg) == 0 &&
-      gst_sdp_message_phones_len (msg) == 0)
-    g_string_append_printf (lines, "e=NONE\r\n");
-
   if (msg->connection.nettype && msg->connection.addrtype &&
       msg->connection.address) {
     g_string_append_printf (lines, "c=%s %s %s", msg->connection.nettype,
