@@ -1639,12 +1639,14 @@ gst_event_parse_segment_done (GstEvent * event, GstFormat * format,
 
 /**
  * gst_event_new_context:
- * @msg: (transfer full): the #GstContext
+ * @context: (transfer full): the #GstContext
  *
  * Create a new context event. The purpose of the context event is
  * to pass a pipeline-local context to downstream elements.
  *
  * Returns: (transfer full): a new #GstEvent
+ *
+ * Since: 1.2
  */
 GstEvent *
 gst_event_new_context (GstContext * context)
@@ -1670,6 +1672,8 @@ gst_event_new_context (GstContext * context)
  * @context: (out) (transfer full): a pointer to store the #GstContext in.
  *
  * Parse the context event. Unref @context after usage.
+ *
+ * Since: 1.2
  */
 void
 gst_event_parse_context (GstEvent * event, GstContext ** context)

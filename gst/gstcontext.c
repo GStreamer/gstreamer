@@ -49,6 +49,8 @@
  * later an element is posting a GST_MESSAGE_NEED_CONTEXT message for a specific
  * context that was created by an element before the application should pass it
  * to the complete pipeline.
+ *
+ * Since: 1.2
  */
 
 #include "gst_private.h"
@@ -138,7 +140,7 @@ gst_context_init (GstContext * context)
  *
  * Returns: (transfer full): The new context.
  *
- * MT safe.
+ * Since: 1.2
  */
 GstContext *
 gst_context_new (void)
@@ -169,7 +171,7 @@ gst_context_new (void)
  * still owned by the context, which means that you should not modify it,
  * free it and that the pointer becomes invalid when you free the context.
  *
- * MT safe.
+ * Since: 1.2
  */
 const GstStructure *
 gst_context_get_structure (GstContext * context)

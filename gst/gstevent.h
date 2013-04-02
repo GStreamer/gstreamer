@@ -99,6 +99,8 @@ typedef enum {
  * @GST_EVENT_GAP: Marks a gap in the datastream.
  * @GST_EVENT_TOC: An event which indicates that a new table of contents (TOC)
  *                 was found or updated.
+ * @GST_EVENT_CONTEXT: An event to communicate a #GstContext to other
+ *                 elements (Since 1.2)
  * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements
  *                 that the downstream elements should adjust their processing
  *                 rate.
