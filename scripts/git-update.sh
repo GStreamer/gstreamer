@@ -12,7 +12,10 @@ CORE="\
     gstreamer gst-plugins-base"
 MODULES="\
     gst-plugins-good gst-plugins-ugly gst-plugins-bad \
-    gst-ffmpeg \
+    gst-libav"
+EXTRA_MODULES="\
+    gst-editing-services \
+    gst-rtsp-server \
     gst-python \
     gnonlin"
 
@@ -28,7 +31,7 @@ ERROR_LOG="$tmp/failures.log"
 touch $ERROR_LOG
 ERROR_RETURN=255
 
-for m in $CORE $MODULES; do
+for m in $CORE $MODULES $EXTRA_MODULES; do
   if test -d $m; then
     echo "+ updating $m"
     cd $m
