@@ -77,6 +77,20 @@ GST_START_TEST (test_from_to_string)
   gst_caps_features_free (a);
   gst_caps_features_free (b);
   g_free (str);
+
+  a = gst_caps_features_new_any ();
+  fail_unless (a != NULL);
+  fail_unless (gst_caps_features_is_any (a));
+  str = gst_caps_features_to_string (a);
+  fail_unless (str != NULL);
+  fail_unless_equals_string (str, "ANY");
+  b = gst_caps_features_from_string (str);
+  fail_unless (b != NULL);
+  fail_unless (gst_caps_features_is_equal (a, b));
+  fail_unless (gst_caps_features_is_any (b));
+  gst_caps_features_free (a);
+  gst_caps_features_free (b);
+  g_free (str);
 }
 
 GST_END_TEST;

@@ -55,9 +55,11 @@ struct _GstCapsFeatures
   GType type;
   gint *parent_refcount;
   GArray *array;
+  gboolean is_any;
 };
 
 GType _gst_caps_features_type = 0;
+GstCapsFeatures *_gst_caps_features_any = NULL;
 GstCapsFeatures *_gst_caps_features_memory_system_memory = NULL;
 static GQuark _gst_caps_feature_memory_system_memory = 0;
 
@@ -82,6 +84,7 @@ _priv_gst_caps_features_initialize (void)
   g_value_register_transform_func (_gst_caps_features_type, G_TYPE_STRING,
       gst_caps_features_transform_to_string);
 
+  _gst_caps_features_any = gst_caps_features_new_any ();
   _gst_caps_features_memory_system_memory =
       gst_caps_features_new_id (_gst_caps_feature_memory_system_memory, 0);
 
@@ -148,8 +151,31 @@ gst_caps_features_new_empty (void)
   features->type = _gst_caps_features_type;
   features->parent_refcount = NULL;
   features->array = g_array_new (FALSE, FALSE, sizeof (GQuark));
+  features->is_any = FALSE;
 
   GST_TRACE ("created caps features %p", features);
+
+  return features;
+}
+
+/**
+ * gst_caps_features_new_any:
+ *
+ * Creates a new, ANY #GstCapsFeatures. This will be equal
+ * to any other #GstCapsFeatures but caps with these are
+ * unfixed.
+ *
+ * Free-function: gst_caps_features_free
+ *
+ * Returns: (transfer full): a new, ANY #GstCapsFeatures
+ */
+GstCapsFeatures *
+gst_caps_features_new_any (void)
+{
+  GstCapsFeatures *features;
+
+  features = gst_caps_features_new_empty ();
+  features->is_any = TRUE;
 
   return features;
 }
@@ -388,6 +414,11 @@ priv_gst_caps_features_append_to_gstring (const GstCapsFeatures * features,
 
   g_return_if_fail (features != NULL);
 
+  if (features->array->len == 0 && features->is_any) {
+    g_string_append (s, "ANY");
+    return;
+  }
+
   n = features->array->len;
   for (i = 0; i < n; i++) {
     GQuark *quark = &g_array_index (features->array, GQuark, i);
@@ -421,6 +452,11 @@ gst_caps_features_from_string (const gchar * features)
 
   if (!features || *features == '\0')
     return ret;
+
+  if (strcmp (features, "ANY") == 0) {
+    ret->is_any = TRUE;
+    return ret;
+  }
 
   /* Skip trailing spaces */
   while (*features == ' ')
@@ -582,6 +618,9 @@ gst_caps_features_contains_id (const GstCapsFeatures * features, GQuark feature)
   g_return_val_if_fail (features != NULL, FALSE);
   g_return_val_if_fail (feature != 0, FALSE);
 
+  if (features->is_any)
+    return TRUE;
+
   n = features->array->len;
   if (n == 0)
     return feature == _gst_caps_feature_memory_system_memory;
@@ -612,6 +651,9 @@ gst_caps_features_is_equal (const GstCapsFeatures * features1,
   g_return_val_if_fail (features1 != NULL, FALSE);
   g_return_val_if_fail (features2 != NULL, FALSE);
 
+  if (features1->is_any || features2->is_any)
+    return TRUE;
+
   /* Check for the sysmem==empty case */
   if (features1->array->len == 0 && features2->array->len == 0)
     return TRUE;
@@ -637,6 +679,22 @@ gst_caps_features_is_equal (const GstCapsFeatures * features1,
 }
 
 /**
+ * gst_caps_features_is_any:
+ * @features: a #GstCapsFeatures.
+ *
+ * Returns %TRUE if @features is %GST_CAPS_FEATURES_ANY.
+ *
+ * Returns: %TRUE if @features is %GST_CAPS_FEATURES_ANY.
+ */
+gboolean
+gst_caps_features_is_any (const GstCapsFeatures * features)
+{
+  g_return_val_if_fail (features != NULL, FALSE);
+
+  return features->is_any;
+}
+
+/**
  * gst_caps_features_add:
  * @features: a #GstCapsFeatures.
  * @feature: a feature.
@@ -649,6 +707,7 @@ gst_caps_features_add (GstCapsFeatures * features, const gchar * feature)
   g_return_if_fail (features != NULL);
   g_return_if_fail (IS_MUTABLE (features));
   g_return_if_fail (feature != NULL);
+  g_return_if_fail (!features->is_any);
 
   gst_caps_features_add_id (features, g_quark_from_string (feature));
 }
@@ -666,6 +725,7 @@ gst_caps_features_add_id (GstCapsFeatures * features, GQuark feature)
   g_return_if_fail (features != NULL);
   g_return_if_fail (IS_MUTABLE (features));
   g_return_if_fail (feature != 0);
+  g_return_if_fail (!features->is_any);
 
   if (!gst_caps_feature_name_is_valid (g_quark_to_string (feature))) {
     g_warning ("Invalid caps feature name: %s", g_quark_to_string (feature));

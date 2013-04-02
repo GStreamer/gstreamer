@@ -459,6 +459,7 @@ gst_caps_intersect_mode_get_type
 GstCapsFeatures
 gst_caps_features_new
 gst_caps_features_new_empty
+gst_caps_features_new_any
 gst_caps_features_new_id
 gst_caps_features_new_id_valist
 gst_caps_features_new_valist
@@ -472,6 +473,7 @@ gst_caps_features_to_string
 gst_caps_features_set_parent_refcount
 
 gst_caps_features_is_equal
+gst_caps_features_is_any
 
 gst_caps_features_contains
 gst_caps_features_contains_id

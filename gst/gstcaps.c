@@ -1075,10 +1075,15 @@ gboolean
 gst_caps_is_fixed (const GstCaps * caps)
 {
   GstStructure *structure;
+  GstCapsFeatures *features;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
 
   if (GST_CAPS_LEN (caps) != 1)
+    return FALSE;
+
+  features = gst_caps_get_features (caps, 0);
+  if (features && gst_caps_features_is_any (features))
     return FALSE;
 
   structure = gst_caps_get_structure_unchecked (caps, 0);

@@ -35,6 +35,9 @@ typedef struct _GstCapsFeatures GstCapsFeatures;
 
 #define GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY "memory:SystemMemory"
 
+GST_EXPORT GstCapsFeatures *_gst_caps_features_any;
+#define GST_CAPS_FEATURES_ANY (_gst_caps_features_any)
+
 GST_EXPORT GstCapsFeatures *_gst_caps_features_memory_system_memory;
 #define GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY (_gst_caps_features_memory_system_memory)
 
@@ -42,6 +45,7 @@ GType             gst_caps_features_get_type (void);
 gboolean          gst_is_caps_features (gconstpointer obj);
 
 GstCapsFeatures * gst_caps_features_new_empty (void);
+GstCapsFeatures * gst_caps_features_new_any (void);
 GstCapsFeatures * gst_caps_features_new (const gchar *feature1, ...);
 GstCapsFeatures * gst_caps_features_new_valist (const gchar *feature1, va_list varargs);
 GstCapsFeatures * gst_caps_features_new_id (GQuark feature1, ...);
@@ -62,6 +66,8 @@ GQuark            gst_caps_features_get_nth_id (const GstCapsFeatures * features
 gboolean          gst_caps_features_contains (const GstCapsFeatures * features, const gchar * feature);
 gboolean          gst_caps_features_contains_id (const GstCapsFeatures * features, GQuark feature);
 gboolean          gst_caps_features_is_equal (const GstCapsFeatures * features1, const GstCapsFeatures * features2);
+
+gboolean          gst_caps_features_is_any (const GstCapsFeatures * features);
 
 void              gst_caps_features_add (GstCapsFeatures * features, const gchar * feature);
 void              gst_caps_features_add_id ( GstCapsFeatures * features, GQuark feature);
