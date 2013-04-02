@@ -64,6 +64,11 @@ GstReplace=${Prefix}${Name}
 gst_replace=${prefix}_${name}
 gstreplace=${prefix}$(echo $name | sed -e 's/_//g')
 replace=$(echo $name | sed -e 's/_//g')
+if [ "${prefix}" = gst ] ; then
+  prefixreplace=$replace
+else
+  prefixreplace=$gstreplace
+fi
 
 if [ "$REAL_NAME" = "" ] ; then
   REAL_NAME=FIXME
@@ -169,7 +174,7 @@ cat <<EOF
 /* class initialization */
 
 G_DEFINE_TYPE_WITH_CODE (GstReplace, gst_replace, GST_TYPE_BASE_REPLACE,
-  GST_DEBUG_CATEGORY_INIT (gst_replace_debug_category, "replace", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_replace_debug_category, "prefixreplace", 0,
   "debug category for replace element"));
 
 static void
@@ -235,7 +240,7 @@ plugin_init (GstPlugin * plugin)
 
   /* FIXME Remember to set the rank if it's an element that is meant
      to be autoplugged by decodebin. */
-  return gst_element_register (plugin, "replace", GST_RANK_NONE,
+  return gst_element_register (plugin, "prefixreplace", GST_RANK_NONE,
       GST_TYPE_REPLACE);
 }
 
@@ -359,6 +364,7 @@ generate | sed \
   -e "s/GstReplace/$GstReplace/g" \
   -e "s/gst_replace/$gst_replace/g" \
   -e "s/gstreplace/$gstreplace/g" \
+  -e "s/prefixreplace/$prefixreplace/g" \
   -e "s/replace/$replace/g" >$gstreplace.c
 
 generate_header | sed \
@@ -371,6 +377,7 @@ generate_header | sed \
   -e "s/GstReplace/$GstReplace/g" \
   -e "s/gst_replace/$gst_replace/g" \
   -e "s/gstreplace/$gstreplace/g" \
+  -e "s/prefixreplace/$prefixreplace/g" \
   -e "s/replace/$replace/g" >$gstreplace.h
 
 gst-indent $gstreplace.c
