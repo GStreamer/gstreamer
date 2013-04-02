@@ -97,7 +97,7 @@ static GstFlowReturn gst_replace_handle_frame (GstVideoEncoder *encoder, GstVide
 
   GST_DEBUG_OBJECT(replace, "handle_frame");
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static gboolean gst_replace_reset (GstVideoEncoder *encoder, gboolean hard)
