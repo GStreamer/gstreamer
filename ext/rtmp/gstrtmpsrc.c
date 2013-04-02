@@ -86,6 +86,7 @@ static void gst_rtmp_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_rtmp_src_finalize (GObject * object);
 
+static gboolean gst_rtmp_src_unlock (GstBaseSrc * src);
 static gboolean gst_rtmp_src_stop (GstBaseSrc * src);
 static gboolean gst_rtmp_src_start (GstBaseSrc * src);
 static gboolean gst_rtmp_src_is_seekable (GstBaseSrc * src);
@@ -136,6 +137,7 @@ gst_rtmp_src_class_init (GstRTMPSrcClass * klass)
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rtmp_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rtmp_src_stop);
+  gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_rtmp_src_unlock);
   gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_rtmp_src_is_seekable);
   gstbasesrc_class->prepare_seek_segment =
       GST_DEBUG_FUNCPTR (gst_rtmp_src_prepare_seek_segment);
@@ -586,6 +588,23 @@ gst_rtmp_src_start (GstBaseSrc * basesrc)
 #undef STR2AVAL
 
 static gboolean
+gst_rtmp_src_unlock (GstBaseSrc * basesrc)
+{
+  GstRTMPSrc *rtmpsrc = GST_RTMP_SRC (basesrc);
+
+  GST_DEBUG_OBJECT (rtmpsrc, "unlock");
+
+  /* This closes the socket, which means that any pending socket calls
+   * error out. */
+  if (rtmpsrc->rtmp) {
+    RTMP_Close (rtmpsrc->rtmp);
+  }
+
+  return TRUE;
+}
+
+
+static gboolean
 gst_rtmp_src_stop (GstBaseSrc * basesrc)
 {
   GstRTMPSrc *src;
@@ -593,7 +612,6 @@ gst_rtmp_src_stop (GstBaseSrc * basesrc)
   src = GST_RTMP_SRC (basesrc);
 
   if (src->rtmp) {
-    RTMP_Close (src->rtmp);
     RTMP_Free (src->rtmp);
     src->rtmp = NULL;
   }
