@@ -1959,7 +1959,7 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
         nmedia.num_ports = atoi (slash + 1);
       } else {
         nmedia.port = atoi (str);
-        nmedia.num_ports = -1;
+        nmedia.num_ports = 0;
       }
       READ_STRING (nmedia.proto);
       do {
