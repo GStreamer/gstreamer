@@ -34,6 +34,7 @@ EXPORTS
 	_gst_buffer_list_type DATA
 	_gst_buffer_type DATA
 	_gst_caps_any DATA
+	_gst_caps_features_any DATA
 	_gst_caps_features_memory_system_memory DATA
 	_gst_caps_features_type DATA
 	_gst_caps_none DATA
@@ -206,8 +207,10 @@ EXPORTS
 	gst_caps_features_get_nth_id
 	gst_caps_features_get_size
 	gst_caps_features_get_type
+	gst_caps_features_is_any
 	gst_caps_features_is_equal
 	gst_caps_features_new
+	gst_caps_features_new_any
 	gst_caps_features_new_empty
 	gst_caps_features_new_id
 	gst_caps_features_new_id_valist
