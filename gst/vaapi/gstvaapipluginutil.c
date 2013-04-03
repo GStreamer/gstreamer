@@ -339,7 +339,7 @@ gst_vaapi_apply_composition(GstVaapiSurface *surface, GstBuffer *buffer)
         gst_video_buffer_get_overlay_composition(buffer);
 
     if (!composition)
-        return FALSE;
+        return TRUE;
     return gst_vaapi_surface_set_subpictures_from_composition(surface,
             composition, TRUE);
 }
