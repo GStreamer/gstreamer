@@ -382,7 +382,7 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   pool->copy_threshold = copy_threshold;
 
   if (obj->mode == GST_V4L2_IO_DMABUF)
-	allocator = gst_dmabuf_allocator_obtain ();
+    allocator = gst_dmabuf_allocator_obtain ();
 
   if (pool->allocator)
     gst_object_unref (pool->allocator);
@@ -888,12 +888,16 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
         case GST_V4L2_IO_MMAP:
         {
           GstV4l2Meta *meta;
+          guint index;
 
           meta = GST_V4L2_META_GET (buffer);
           g_assert (meta != NULL);
 
-          if (pool->buffers[meta->vbuffer.index] == NULL) {
-            GST_LOG_OBJECT (pool, "buffer not queued, putting on free list");
+          index = meta->vbuffer.index;
+
+          if (pool->buffers[index] == NULL) {
+            GST_LOG_OBJECT (pool, "buffer %u not queued, putting on free list",
+                index);
             /* playback, put the buffer back in the queue to refill later. */
             GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (bpool,
                 buffer);
@@ -901,7 +905,7 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
             /* the buffer is queued in the device but maybe not played yet. We just
              * leave it there and not make it available for future calls to acquire
              * for now. The buffer will be dequeued and reused later. */
-            GST_LOG_OBJECT (pool, "buffer is queued");
+            GST_LOG_OBJECT (pool, "buffer %u is queued", index);
           }
           break;
         }
