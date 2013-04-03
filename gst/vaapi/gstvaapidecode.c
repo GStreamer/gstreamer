@@ -456,9 +456,18 @@ static gboolean
 gst_vaapidecode_open(GstVideoDecoder *vdec)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
+    GstVaapiDisplay * const old_display = decode->display;
+    gboolean success;
 
-    decode->is_ready = TRUE;
-    return TRUE;
+    /* Let GstVideoContext ask for a proper display to its neighbours */
+    /* Note: steal old display that may be allocated from get_caps()
+       so that to retain a reference to it, thus avoiding extra
+       initialization steps if we turn out to simply re-use the
+       existing (cached) VA display */
+    decode->display = NULL;
+    success = gst_vaapidecode_ensure_display(decode);
+    g_clear_object(&old_display);
+    return success;
 }
 
 static gboolean
@@ -468,7 +477,6 @@ gst_vaapidecode_close(GstVideoDecoder *vdec)
 
     gst_vaapidecode_destroy(decode);
     g_clear_object(&decode->display);
-    decode->is_ready = FALSE;
     return TRUE;
 }
 
@@ -637,9 +645,6 @@ gst_vaapidecode_get_caps(GstPad *pad)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(GST_OBJECT_PARENT(pad));
 
-    if (!decode->is_ready)
-        return gst_static_pad_template_get_caps(&gst_vaapidecode_sink_factory);
-
     if (!gst_vaapidecode_ensure_allowed_caps(decode))
         return gst_caps_new_empty();
 
@@ -675,7 +680,6 @@ gst_vaapidecode_init(GstVaapiDecode *decode)
     decode->allowed_caps        = NULL;
     decode->render_time_base    = 0;
     decode->last_buffer_time    = 0;
-    decode->is_ready            = FALSE;
 
     g_mutex_init(&decode->decoder_mutex);
     g_cond_init(&decode->decoder_ready);
