@@ -610,7 +610,6 @@ static gboolean
 gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
-    GstStructure * const structure = gst_caps_get_structure(caps, 0);
     GstVideoInfo vi;
     guint win_width, win_height;
 
@@ -621,15 +620,13 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 
     if (!gst_video_info_from_caps(&vi, caps))
         return FALSE;
-    sink->video_width  = GST_VIDEO_INFO_WIDTH(&vi);
-    sink->video_height = GST_VIDEO_INFO_HEIGHT(&vi);
-    sink->video_par_n  = GST_VIDEO_INFO_PAR_N(&vi);
-    sink->video_par_d  = GST_VIDEO_INFO_PAR_D(&vi);
+    sink->use_video_raw = GST_VIDEO_INFO_IS_YUV(&vi);
+    sink->video_width   = GST_VIDEO_INFO_WIDTH(&vi);
+    sink->video_height  = GST_VIDEO_INFO_HEIGHT(&vi);
+    sink->video_par_n   = GST_VIDEO_INFO_PAR_N(&vi);
+    sink->video_par_d   = GST_VIDEO_INFO_PAR_D(&vi);
     GST_DEBUG("video pixel-aspect-ratio %d/%d",
               sink->video_par_n, sink->video_par_d);
-
-    if (gst_structure_has_name(structure, "video/x-raw-yuv"))
-        sink->use_video_raw = TRUE;
 
     gst_caps_replace(&sink->caps, caps);
 
@@ -934,14 +931,21 @@ gst_vaapisink_buffer_alloc(
 )
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
-    GstStructure *structure;
+    GstVideoInfo vi;
     GstBuffer *buf;
 
     *pbuf = NULL;
 
-    structure = gst_caps_get_structure(caps, 0);
-    if (!gst_structure_has_name(structure, "video/x-raw-yuv"))
-        return GST_FLOW_OK;
+    if (!sink->use_video_raw) {
+        /* Note: this code path is rarely used but for raw YUV formats
+           from custom pipeline. Otherwise, GstBaseSink::set_caps() is
+           called first, and GstBaseSink::buffer_alloc() is not called
+           in VA surface format mode */
+        if (!gst_video_info_from_caps(&vi, caps))
+            return GST_FLOW_NOT_SUPPORTED;
+        if (!GST_VIDEO_INFO_IS_YUV(&vi))
+            return GST_FLOW_OK;
+    }
 
     if (!gst_vaapi_uploader_ensure_display(sink->uploader, sink->display))
         return GST_FLOW_NOT_SUPPORTED;
