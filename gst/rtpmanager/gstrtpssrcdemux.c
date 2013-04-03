@@ -439,8 +439,6 @@ gst_rtp_ssrc_demux_init (GstRtpSsrcDemux * demux)
   gst_element_add_pad (GST_ELEMENT_CAST (demux), demux->rtcp_sink);
 
   g_rec_mutex_init (&demux->padlock);
-
-  gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
 }
 
 static void
@@ -565,13 +563,6 @@ gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstObject * parent,
   struct ForwardEventData fdata;
 
   demux = GST_RTP_SSRC_DEMUX (parent);
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_STOP:
-      gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
-      break;
-    default:
-      break;
-  }
 
   fdata.demux = demux;
   fdata.pad = pad;
