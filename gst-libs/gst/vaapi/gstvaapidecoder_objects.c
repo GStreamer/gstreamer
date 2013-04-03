@@ -75,10 +75,6 @@ gst_vaapi_picture_destroy(GstVaapiPicture *picture)
         gst_vaapi_surface_proxy_unref(picture->proxy);
         picture->proxy = NULL;
     }
-    else if (picture->surface) {
-        /* Explicitly release any surface that was not bound to a proxy */
-        gst_vaapi_context_put_surface(GET_CONTEXT(picture), picture->surface);
-    }
     picture->surface_id = VA_INVALID_ID;
     picture->surface = NULL;
 
@@ -103,7 +99,6 @@ gst_vaapi_picture_create(
         GstVaapiPicture * const parent_picture = GST_VAAPI_PICTURE(args->data);
 
         picture->proxy   = gst_vaapi_surface_proxy_ref(parent_picture->proxy);
-        picture->surface = gst_vaapi_surface_proxy_get_surface(picture->proxy);
         picture->type    = parent_picture->type;
         picture->pts     = parent_picture->pts;
         picture->poc     = parent_picture->poc;
@@ -137,18 +132,15 @@ gst_vaapi_picture_create(
         picture->type = GST_VAAPI_PICTURE_TYPE_NONE;
         picture->pts  = GST_CLOCK_TIME_NONE;
 
-        picture->surface = gst_vaapi_context_get_surface(GET_CONTEXT(picture));
-        if (!picture->surface)
-            return FALSE;
-
         picture->proxy =
-            gst_vaapi_surface_proxy_new(GET_CONTEXT(picture), picture->surface);
+            gst_vaapi_context_get_surface_proxy(GET_CONTEXT(picture));
         if (!picture->proxy)
             return FALSE;
 
         picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_FF);
     }
+    picture->surface    = gst_vaapi_surface_proxy_get_surface(picture->proxy);
     picture->surface_id = gst_vaapi_surface_get_id(picture->surface);
 
     picture->param_id = VA_INVALID_ID;

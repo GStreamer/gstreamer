@@ -140,6 +140,7 @@ typedef enum {
 typedef struct _GstVaapiSurface                 GstVaapiSurface;
 typedef struct _GstVaapiSurfacePrivate          GstVaapiSurfacePrivate;
 typedef struct _GstVaapiSurfaceClass            GstVaapiSurfaceClass;
+typedef struct _GstVaapiSurfaceProxy            GstVaapiSurfaceProxy;
 
 /**
  * GstVaapiSurface:

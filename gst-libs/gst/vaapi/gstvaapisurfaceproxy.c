@@ -43,6 +43,7 @@ struct _GstVaapiSurfaceProxy {
     /*< private >*/
     GstVaapiMiniObject  parent_instance;
 
+    GstVaapiVideoPool  *pool;
     GstVaapiContext    *context;
     GstVaapiSurface    *surface;
 };
@@ -87,9 +88,35 @@ gst_vaapi_surface_proxy_new(GstVaapiContext *context, GstVaapiSurface *surface)
     if (!proxy)
         return NULL;
 
+    proxy->pool    = NULL;
     proxy->context = g_object_ref(context);
     proxy->surface = g_object_ref(surface);
     return proxy;
+}
+
+GstVaapiSurfaceProxy *
+gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool)
+{
+    GstVaapiSurfaceProxy *proxy;
+
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_POOL(pool), NULL);
+
+    proxy = (GstVaapiSurfaceProxy *)
+        gst_vaapi_mini_object_new(gst_vaapi_surface_proxy_class());
+    if (!proxy)
+        return NULL;
+
+    proxy->pool    = g_object_ref(pool);
+    proxy->context = NULL;
+    proxy->surface = gst_vaapi_video_pool_get_object(proxy->pool);
+    if (!proxy->surface)
+        goto error;
+    g_object_ref(proxy->surface);
+    return proxy;
+
+error:
+    gst_vaapi_surface_proxy_unref(proxy);
+    return NULL;
 }
 
 /**
@@ -272,11 +299,15 @@ gst_vaapi_surface_proxy_set_surface(
     g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
 
     if (proxy->surface) {
-        if (proxy->context)
+        if (proxy->pool)
+            gst_vaapi_video_pool_put_object(proxy->pool, proxy->surface);
+        else if (proxy->context)
             gst_vaapi_context_put_surface(proxy->context, proxy->surface);
         g_object_unref(proxy->surface);
         proxy->surface = NULL;
     }
+
+    g_clear_object(&proxy->pool);
 
     if (surface)
         proxy->surface = g_object_ref(surface);

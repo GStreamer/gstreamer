@@ -143,6 +143,9 @@ gst_vaapi_context_get_size(
     guint           *pheight
 );
 
+GstVaapiSurfaceProxy *
+gst_vaapi_context_get_surface_proxy(GstVaapiContext *context);
+
 GstVaapiSurface *
 gst_vaapi_context_get_surface(GstVaapiContext *context);
 

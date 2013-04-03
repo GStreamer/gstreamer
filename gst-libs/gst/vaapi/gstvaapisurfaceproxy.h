@@ -25,10 +25,9 @@
 
 #include <gst/vaapi/gstvaapicontext.h>
 #include <gst/vaapi/gstvaapisurface.h>
+#include <gst/vaapi/gstvaapisurfacepool.h>
 
 G_BEGIN_DECLS
-
-typedef struct _GstVaapiSurfaceProxy            GstVaapiSurfaceProxy;
 
 /**
  * GST_VAAPI_SURFACE_PROXY_SURFACE:
@@ -41,6 +40,9 @@ typedef struct _GstVaapiSurfaceProxy            GstVaapiSurfaceProxy;
 
 GstVaapiSurfaceProxy *
 gst_vaapi_surface_proxy_new(GstVaapiContext *context, GstVaapiSurface *surface);
+
+GstVaapiSurfaceProxy *
+gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool);
 
 GstVaapiSurfaceProxy *
 gst_vaapi_surface_proxy_ref(GstVaapiSurfaceProxy *proxy);
