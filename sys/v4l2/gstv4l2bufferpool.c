@@ -495,8 +495,9 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
   ret = GST_BUFFER_POOL_CLASS (parent_class)->stop (bpool);
 
   /* then free the remaining buffers */
-  for (n = 0; n < pool->num_queued; n++) {
-    gst_v4l2_buffer_pool_free_buffer (bpool, pool->buffers[n]);
+  for (n = 0; n < pool->num_buffers; n++) {
+    if (pool->buffers[n])
+      gst_v4l2_buffer_pool_free_buffer (bpool, pool->buffers[n]);
   }
   pool->num_queued = 0;
   g_free (pool->buffers);
