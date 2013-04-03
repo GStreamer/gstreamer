@@ -351,9 +351,17 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
 {
     GstFlowReturn ret;
 
+    /* Purge all pending frames we might have already. This helps
+       release VA surfaces as early as possible for _decode_frame() */
+    ret = gst_vaapidecode_push_decoded_frames(vdec);
+    if (ret != GST_FLOW_OK)
+        return ret;
+
     ret = gst_vaapidecode_decode_frame(vdec, frame);
     if (ret != GST_FLOW_OK)
         return ret;
+
+    /* Purge any pending frame thay may have been decoded already */
     return gst_vaapidecode_push_decoded_frames(vdec);
 }
 
