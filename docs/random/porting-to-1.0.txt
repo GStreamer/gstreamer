@@ -681,6 +681,9 @@ CHANGES
 
       video/webm -> audio/webm or video/webm
 
+      text/plain          -> text/x-raw, format=utf8
+      text/x-pango-markup -> text/x-raw, format=pango-markup
+
  * element name changes/replacements:
 
       playbin2   -> playbin
