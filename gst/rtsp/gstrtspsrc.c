@@ -180,6 +180,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_SHORT_HEADER     FALSE
 #define DEFAULT_PROBATION        2
 #define DEFAULT_UDP_RECONNECT    TRUE
+#define DEFAULT_MULTICAST_IFACE  NULL
 
 enum
 {
@@ -208,6 +209,7 @@ enum
   PROP_SHORT_HEADER,
   PROP_PROBATION,
   PROP_UDP_RECONNECT,
+  PROP_MULTICAST_IFACE,
   PROP_LAST
 };
 
@@ -526,6 +528,11 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "Reconnect to the server if RTSP connection is closed when doing UDP",
           DEFAULT_UDP_RECONNECT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MULTICAST_IFACE,
+      g_param_spec_string ("multicast-iface", "Multicast Interface",
+          "The network interface on which to join the multicast group",
+          DEFAULT_MULTICAST_IFACE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
@@ -571,6 +578,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->short_header = DEFAULT_SHORT_HEADER;
   src->probation = DEFAULT_PROBATION;
   src->udp_reconnect = DEFAULT_UDP_RECONNECT;
+  src->multi_iface = g_strdup (DEFAULT_MULTICAST_IFACE);
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -604,6 +612,7 @@ gst_rtspsrc_finalize (GObject * object)
   g_free (rtspsrc->conninfo.url_str);
   g_free (rtspsrc->user_id);
   g_free (rtspsrc->user_pw);
+  g_free (rtspsrc->multi_iface);
 
   if (rtspsrc->sdp) {
     gst_sdp_message_free (rtspsrc->sdp);
@@ -790,6 +799,14 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_UDP_RECONNECT:
       rtspsrc->udp_reconnect = g_value_get_boolean (value);
       break;
+    case PROP_MULTICAST_IFACE:
+      g_free (rtspsrc->multi_iface);
+
+      if (g_value_get_string (value) == NULL)
+        rtspsrc->multi_iface = g_strdup (DEFAULT_MULTICAST_IFACE);
+      else
+        rtspsrc->multi_iface = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -902,6 +919,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_UDP_RECONNECT:
       g_value_set_boolean (value, rtspsrc->udp_reconnect);
+      break;
+    case PROP_MULTICAST_IFACE:
+      g_value_set_string (value, rtspsrc->multi_iface);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2824,6 +2844,10 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
       g_object_set (G_OBJECT (stream->udpsrc[0]), "buffer-size",
           src->udp_buffer_size, NULL);
 
+    if (src->multi_iface != NULL)
+      g_object_set (G_OBJECT (stream->udpsrc[0]), "multicast-iface",
+          src->multi_iface, NULL);
+
     /* change state */
     gst_element_set_state (stream->udpsrc[0], GST_STATE_PAUSED);
   }
@@ -2839,6 +2863,10 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
 
     /* take ownership */
     gst_object_ref_sink (stream->udpsrc[1]);
+
+    if (src->multi_iface != NULL)
+      g_object_set (G_OBJECT (stream->udpsrc[0]), "multicast-iface",
+          src->multi_iface, NULL);
 
     gst_element_set_state (stream->udpsrc[1], GST_STATE_PAUSED);
   }

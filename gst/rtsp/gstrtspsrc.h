@@ -221,6 +221,7 @@ struct _GstRTSPSrc {
   gboolean          short_header;
   guint             probation;
   gboolean          udp_reconnect;
+  gchar            *multi_iface;
 
   /* state */
   GstRTSPState       state;
