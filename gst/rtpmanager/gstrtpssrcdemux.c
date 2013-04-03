@@ -123,8 +123,6 @@ static gboolean gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstObject * parent,
 
 static GstFlowReturn gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buf);
-static gboolean gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad,
-    GstObject * parent, GstEvent * event);
 static GstIterator *gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad *
     pad, GstObject * parent);
 
@@ -193,7 +191,7 @@ add_ssrc_and_ref (GstEvent * event, guint32 ssrc)
   return event;
 }
 
-struct ForwardEventData
+struct ForwardStickyEventData
 {
   GstPad *pad;
   guint32 ssrc;
@@ -202,7 +200,7 @@ struct ForwardEventData
 static gboolean
 forward_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
 {
-  struct ForwardEventData *data = user_data;
+  struct ForwardStickyEventData *data = user_data;
   GstEvent *newevent;
 
   newevent = add_ssrc_and_ref (*event, data->ssrc);
@@ -223,7 +221,7 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
   gchar *padname;
   GstRtpSsrcDemuxPad *demuxpad;
   GstCaps *caps;
-  struct ForwardEventData fdata;
+  struct ForwardStickyEventData fdata;
   GstPad *retpad;
   gulong rtp_block, rtcp_block;
 
@@ -435,8 +433,7 @@ gst_rtp_ssrc_demux_init (GstRtpSsrcDemux * demux)
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "rtcp_sink"), "rtcp_sink");
   gst_pad_set_chain_function (demux->rtcp_sink, gst_rtp_ssrc_demux_rtcp_chain);
-  gst_pad_set_event_function (demux->rtcp_sink,
-      gst_rtp_ssrc_demux_rtcp_sink_event);
+  gst_pad_set_event_function (demux->rtcp_sink, gst_rtp_ssrc_demux_sink_event);
   gst_pad_set_iterate_internal_links_function (demux->rtcp_sink,
       gst_rtp_ssrc_demux_iterate_internal_links_sink);
   gst_element_add_pad (GST_ELEMENT_CAST (demux), demux->rtcp_sink);
@@ -527,95 +524,65 @@ unknown_pad:
   }
 }
 
+struct ForwardEventData
+{
+  GstRtpSsrcDemux *demux;
+  GstEvent *event;
+  gboolean res;
+  GstPad *pad;
+};
+
+static gboolean
+forward_event (GstPad * pad, gpointer user_data)
+{
+  struct ForwardEventData *fdata = user_data;
+  GSList *walk = NULL;
+  GstEvent *newevent = NULL;
+
+  GST_PAD_LOCK (fdata->demux);
+  for (walk = fdata->demux->srcpads; walk; walk = walk->next) {
+    GstRtpSsrcDemuxPad *dpad = (GstRtpSsrcDemuxPad *) walk->data;
+
+    if (pad == dpad->rtp_pad || pad == dpad->rtcp_pad) {
+      newevent = add_ssrc_and_ref (fdata->event, dpad->ssrc);
+      break;
+    }
+  }
+  GST_PAD_UNLOCK (fdata->demux);
+
+  if (newevent)
+    fdata->res &= gst_pad_push_event (pad, newevent);
+
+  return TRUE;
+}
+
+
 static gboolean
 gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
   GstRtpSsrcDemux *demux;
-  gboolean res = FALSE;
+  struct ForwardEventData fdata;
 
   demux = GST_RTP_SSRC_DEMUX (parent);
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
-      /* fallthrough */
-    default:
-    {
-      GSList *walk;
-      GSList *pads = NULL;
-
-      res = TRUE;
-      /* need local snapshot of pads;
-       * should not push downstream while holding lock as that might deadlock
-       * with stuff traveling upstream tyring to get this lock while holding
-       * other (stream)lock */
-      GST_PAD_LOCK (demux);
-      for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
-        GstRtpSsrcDemuxPad *pad = (GstRtpSsrcDemuxPad *) walk->data;
-
-        pad = g_slice_dup (GstRtpSsrcDemuxPad, pad);
-        gst_object_ref (pad->rtp_pad);
-
-        pads = g_slist_prepend (pads, pad);
-      }
-      GST_PAD_UNLOCK (demux);
-
-      for (walk = pads; walk; walk = g_slist_next (walk)) {
-        GstRtpSsrcDemuxPad *dpad = walk->data;
-        GstEvent *newevent;
-
-        newevent = add_ssrc_and_ref (event, dpad->ssrc);
-
-        res &= gst_pad_push_event (dpad->rtp_pad, newevent);
-        gst_object_unref (dpad->rtp_pad);
-        g_slice_free (GstRtpSsrcDemuxPad, dpad);
-      }
-      g_slist_free (pads);
-      gst_event_unref (event);
       break;
-    }
+    default:
+      break;
   }
 
-  return res;
-}
+  fdata.demux = demux;
+  fdata.pad = pad;
+  fdata.event = event;
+  fdata.res = TRUE;
 
-static gboolean
-gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event)
-{
-  GstRtpSsrcDemux *demux;
-  gboolean res = TRUE;
-  GSList *walk;
-  GSList *pads = NULL;
+  gst_pad_forward (pad, forward_event, &fdata);
 
-  demux = GST_RTP_SSRC_DEMUX (parent);
-
-  GST_PAD_LOCK (demux);
-  for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
-    GstRtpSsrcDemuxPad *pad = (GstRtpSsrcDemuxPad *) walk->data;
-
-    pad = g_slice_dup (GstRtpSsrcDemuxPad, pad);
-    gst_object_ref (pad->rtcp_pad);
-
-    pads = g_slist_prepend (pads, pad);
-  }
-  GST_PAD_UNLOCK (demux);
-
-  for (walk = pads; walk; walk = g_slist_next (walk)) {
-    GstRtpSsrcDemuxPad *dpad = walk->data;
-    GstEvent *newevent;
-
-    newevent = add_ssrc_and_ref (event, dpad->ssrc);
-
-    res &= gst_pad_push_event (dpad->rtcp_pad, newevent);
-    gst_object_unref (dpad->rtcp_pad);
-    g_slice_free (GstRtpSsrcDemuxPad, dpad);
-  }
-  g_slist_free (pads);
   gst_event_unref (event);
 
-  return res;
+  return fdata.res;
 }
 
 static GstFlowReturn
