@@ -87,20 +87,12 @@ $(BUILDDIR)/$(MAIN): $(XML) $(CSS) $(EXTRA_SRC)
 	cp ../version.entities $(BUILDDIR) ; \
 	cp $(top_srcdir)/docs/url.entities $(BUILDDIR)
 
-# we should switch to xsltproc
-# docbook2html aka jade can't add the encoding easily to the html meta
-# (but we are lazy and just abuse sed to add it)
-# jw -f docbook -b html -d pwg.dsl -o ../html -V '%use-id-as-filename%' $(MAIN)
-# this is a starting point
-# xsltproc --nonet /usr/share/xml/docbook/stylesheet/nwalsh/html/docbook.xsl pwg.xml
-# 
 html/index.html: $(BUILDDIR)/$(MAIN) $(PNG_BUILT) $(FIG_SRC)
 	@$(MAKE) check-local
 	@echo "*** Generating HTML output ***"
 	@-mkdir -p html
 	@cp -f $(srcdir)/../image-png $(BUILDDIR)/image.entities
-	@cd $(BUILDDIR) && SP_ENCODING="UTF-8" docbook2html -o ../html -V '%use-id-as-filename%' $(MAIN)
-	@$(SED) -i -e 's/\(^CONTENT.*\)\(.>\)/\1;charset=UTF-8\2/' html/*html
+	@cd $(BUILDDIR) && $(XSLTPROC) -o ../html/ --stringparam chunker.output.encoding UTF-8 --stringparam  use.id.as.filename 1 $(XSLTPROC_FLAGS) "http://docbook.sourceforge.net/release/xsl/current/html/chunk.xsl" $(MAIN)
 	@test "x$(CSS)" != "x" && \
           echo "Copying .css files: $(CSS)" && \
           cp $(srcdir)/$(CSS) html
