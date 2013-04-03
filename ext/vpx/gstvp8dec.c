@@ -415,7 +415,13 @@ open_codec (GstVP8Dec * dec, GstVideoCodecFrame * frame)
 
   gst_buffer_unmap (frame->input_buffer, &minfo);
 
-  if (status != VPX_CODEC_OK || !stream_info.is_kf) {
+  if (status != VPX_CODEC_OK) {
+    GST_WARNING_OBJECT (dec, "VPX preprocessing error: %s",
+        gst_vpx_error_name (status));
+    gst_video_decoder_finish_frame (GST_VIDEO_DECODER (dec), frame);
+    return GST_FLOW_CUSTOM_SUCCESS_1;
+  }
+  if (!stream_info.is_kf) {
     GST_WARNING_OBJECT (dec, "No keyframe, skipping");
     gst_video_decoder_finish_frame (GST_VIDEO_DECODER (dec), frame);
     return GST_FLOW_CUSTOM_SUCCESS_1;
