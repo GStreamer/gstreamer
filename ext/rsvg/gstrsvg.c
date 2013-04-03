@@ -29,10 +29,6 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-#ifndef HAVE_RSVG_2_35_0
-  rsvg_init ();
-#endif
-
   return (gst_element_register (plugin, "rsvgoverlay",
           GST_RANK_NONE, GST_TYPE_RSVG_OVERLAY)
       &&

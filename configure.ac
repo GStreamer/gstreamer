@@ -1791,11 +1791,11 @@ AG_GST_CHECK_FEATURE(PVR, [pvrvideosink], pvr, [
 dnl *** rsvg ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_RSVG, true)
 AG_GST_CHECK_FEATURE(RSVG, [rsvg decoder], rsvg, [
-  PKG_CHECK_MODULES(RSVG, librsvg-2.0 >= 2.14 cairo, [
+  PKG_CHECK_MODULES(RSVG, librsvg-2.0 >= 2.36 cairo, [
     HAVE_RSVG="yes"
-    PKG_CHECK_MODULES(RSVG_2_35_0, librsvg-2.0 >= 2.35.0, HAVE_RSVG_2_35_0="yes", HAVE_RSVG_2_35_0="no")
-    if test "x$HAVE_RSVG_2_35_0" = "xyes"; then
-      AC_DEFINE(HAVE_RSVG_2_35_0, [1], [Have RSVG 2.35.0 or newer])
+    PKG_CHECK_MODULES(RSVG_2_36_2, librsvg-2.0 >= 2.36.2, HAVE_RSVG_2_36_2="yes", HAVE_RSVG_2_36_2="no")
+    if test "x$HAVE_RSVG_2_36_2" = "xyes"; then
+      AC_DEFINE(HAVE_RSVG_2_36_2, [1], [Have RSVG 2.36.2 or newer])
     fi
   ], [
     HAVE_RSVG="no"

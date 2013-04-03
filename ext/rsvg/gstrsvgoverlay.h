@@ -21,6 +21,9 @@
 #define __GST_RSVG_OVERLAY_H__
 
 #include <librsvg/rsvg.h>
+#ifndef HAVE_RSVG_2_36_2
+#include <librsvg/rsvg-cairo.h>
+#endif
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
