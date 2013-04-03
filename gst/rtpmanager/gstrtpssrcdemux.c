@@ -220,7 +220,6 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
   GstPadTemplate *templ;
   gchar *padname;
   GstRtpSsrcDemuxPad *demuxpad;
-  GstCaps *caps;
   struct ForwardStickyEventData fdata;
   GstPad *retpad;
   gulong rtp_block, rtcp_block;
@@ -289,15 +288,6 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
   gst_pad_sticky_events_foreach (demux->rtcp_sink, forward_sticky_events,
       &fdata);
 
-  /* copy caps from input */
-  if ((caps = gst_pad_get_current_caps (demux->rtp_sink))) {
-    gst_pad_set_caps (rtp_pad, caps);
-    gst_caps_unref (caps);
-  }
-  if ((caps = gst_pad_get_current_caps (demux->rtcp_sink))) {
-    gst_pad_set_caps (rtcp_pad, caps);
-    gst_caps_unref (caps);
-  }
   gst_element_add_pad (GST_ELEMENT_CAST (demux), rtp_pad);
   gst_element_add_pad (GST_ELEMENT_CAST (demux), rtcp_pad);
 
