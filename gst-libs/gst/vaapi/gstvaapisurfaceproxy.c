@@ -44,15 +44,19 @@ struct _GstVaapiSurfaceProxy {
     GstVaapiMiniObject  parent_instance;
 
     GstVaapiVideoPool  *pool;
-    GstVaapiContext    *context;
     GstVaapiSurface    *surface;
 };
 
 static void
 gst_vaapi_surface_proxy_finalize(GstVaapiSurfaceProxy *proxy)
 {
-    gst_vaapi_surface_proxy_set_surface(proxy, NULL);
-    gst_vaapi_surface_proxy_set_context(proxy, NULL);
+    if (proxy->surface) {
+        if (proxy->pool)
+            gst_vaapi_video_pool_put_object(proxy->pool, proxy->surface);
+        g_object_unref(proxy->surface);
+        proxy->surface = NULL;
+    }
+    g_clear_object(&proxy->pool);
 }
 
 static inline const GstVaapiMiniObjectClass *
@@ -63,35 +67,6 @@ gst_vaapi_surface_proxy_class(void)
         (GDestroyNotify)gst_vaapi_surface_proxy_finalize
     };
     return &GstVaapiSurfaceProxyClass;
-}
-
-/**
- * gst_vaapi_surface_proxy_new:
- * @context: a #GstVaapiContext
- * @surface: a #GstVaapiSurface
- *
- * Creates a new #GstVaapiSurfaceProxy with the specified context and
- * surface.
- *
- * Return value: the newly allocated #GstVaapiSurfaceProxy object
- */
-GstVaapiSurfaceProxy *
-gst_vaapi_surface_proxy_new(GstVaapiContext *context, GstVaapiSurface *surface)
-{
-    GstVaapiSurfaceProxy *proxy;
-
-    g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), NULL);
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), NULL);
-
-    proxy = (GstVaapiSurfaceProxy *)
-        gst_vaapi_mini_object_new(gst_vaapi_surface_proxy_class());
-    if (!proxy)
-        return NULL;
-
-    proxy->pool    = NULL;
-    proxy->context = g_object_ref(context);
-    proxy->surface = g_object_ref(surface);
-    return proxy;
 }
 
 GstVaapiSurfaceProxy *
@@ -107,7 +82,6 @@ gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool)
         return NULL;
 
     proxy->pool    = g_object_ref(pool);
-    proxy->context = NULL;
     proxy->surface = gst_vaapi_video_pool_get_object(proxy->pool);
     if (!proxy->surface)
         goto error;
@@ -210,45 +184,6 @@ gst_vaapi_surface_proxy_set_user_data(GstVaapiSurfaceProxy *proxy,
 }
 
 /**
- * gst_vaapi_surface_proxy_get_context:
- * @proxy: a #GstVaapiSurfaceProxy
- *
- * Returns the #GstVaapiContext stored in the @proxy.
- *
- * Return value: the #GstVaapiContext
- */
-GstVaapiContext *
-gst_vaapi_surface_proxy_get_context(GstVaapiSurfaceProxy *proxy)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
-
-    return proxy->context;
-}
-
-/**
- * gst_vaapi_surface_proxy_set_context:
- * @proxy: a #GstVaapiSurfaceProxy
- * @context: the new #GstVaapiContext to be stored in @proxy
- *
- * Stores a new @context into the @proxy. The proxy releases the
- * previous reference, if any, and then holds a reference to the new
- * @context.
- */
-void
-gst_vaapi_surface_proxy_set_context(
-    GstVaapiSurfaceProxy *proxy,
-    GstVaapiContext      *context
-)
-{
-    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
-
-    g_clear_object(&proxy->context);
-
-    if (context)
-        proxy->context = g_object_ref(context);
-}
-
-/**
  * gst_vaapi_surface_proxy_get_surface:
  * @proxy: a #GstVaapiSurfaceProxy
  *
@@ -279,36 +214,4 @@ gst_vaapi_surface_proxy_get_surface_id(GstVaapiSurfaceProxy *proxy)
     g_return_val_if_fail(proxy->surface != NULL, GST_VAAPI_ID_NONE);
 
     return GST_VAAPI_OBJECT_ID(proxy->surface);
-}
-
-/**
- * gst_vaapi_surface_proxy_set_surface:
- * @proxy: a #GstVaapiSurfaceProxy
- * @surface: the new #GstVaapiSurface to be stored in @proxy
- *
- * Stores a new @surface into the @proxy. The proxy releases the
- * previous reference, if any, and then holds a reference to the new
- * @surface.
- */
-void
-gst_vaapi_surface_proxy_set_surface(
-    GstVaapiSurfaceProxy *proxy,
-    GstVaapiSurface      *surface
-)
-{
-    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
-
-    if (proxy->surface) {
-        if (proxy->pool)
-            gst_vaapi_video_pool_put_object(proxy->pool, proxy->surface);
-        else if (proxy->context)
-            gst_vaapi_context_put_surface(proxy->context, proxy->surface);
-        g_object_unref(proxy->surface);
-        proxy->surface = NULL;
-    }
-
-    g_clear_object(&proxy->pool);
-
-    if (surface)
-        proxy->surface = g_object_ref(surface);
 }

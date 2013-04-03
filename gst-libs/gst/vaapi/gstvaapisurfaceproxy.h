@@ -23,7 +23,6 @@
 #ifndef GST_VAAPI_SURFACE_PROXY_H
 #define GST_VAAPI_SURFACE_PROXY_H
 
-#include <gst/vaapi/gstvaapicontext.h>
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
 
@@ -37,9 +36,6 @@ G_BEGIN_DECLS
  */
 #define GST_VAAPI_SURFACE_PROXY_SURFACE(surface) \
     gst_vaapi_surface_proxy_get_surface(surface)
-
-GstVaapiSurfaceProxy *
-gst_vaapi_surface_proxy_new(GstVaapiContext *context, GstVaapiSurface *surface);
 
 GstVaapiSurfaceProxy *
 gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool);
@@ -61,26 +57,11 @@ void
 gst_vaapi_surface_proxy_set_user_data(GstVaapiSurfaceProxy *proxy,
     gpointer user_data, GDestroyNotify destroy_notify);
 
-GstVaapiContext *
-gst_vaapi_surface_proxy_get_context(GstVaapiSurfaceProxy *proxy);
-
-void
-gst_vaapi_surface_proxy_set_context(
-    GstVaapiSurfaceProxy *proxy,
-    GstVaapiContext      *context
-);
-
 GstVaapiSurface *
 gst_vaapi_surface_proxy_get_surface(GstVaapiSurfaceProxy *proxy);
 
 GstVaapiID
 gst_vaapi_surface_proxy_get_surface_id(GstVaapiSurfaceProxy *proxy);
-
-void
-gst_vaapi_surface_proxy_set_surface(
-    GstVaapiSurfaceProxy *proxy,
-    GstVaapiSurface      *surface
-);
 
 G_END_DECLS
 

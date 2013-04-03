@@ -146,17 +146,8 @@ gst_vaapi_context_get_size(
 GstVaapiSurfaceProxy *
 gst_vaapi_context_get_surface_proxy(GstVaapiContext *context);
 
-GstVaapiSurface *
-gst_vaapi_context_get_surface(GstVaapiContext *context);
-
 guint
 gst_vaapi_context_get_surface_count(GstVaapiContext *context);
-
-void
-gst_vaapi_context_put_surface(GstVaapiContext *context, GstVaapiSurface *surface);
-
-GstVaapiSurface *
-gst_vaapi_context_find_surface_by_id(GstVaapiContext *context, GstVaapiID id);
 
 gboolean
 gst_vaapi_context_apply_composition(
