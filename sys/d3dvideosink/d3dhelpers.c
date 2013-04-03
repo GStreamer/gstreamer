@@ -2362,7 +2362,7 @@ d3d_class_display_device_create (GstD3DVideoSinkClass * klass, UINT adapter)
   /* Check the filter type. */
   if ((caps.StretchRectFilterCaps & D3DPTFILTERCAPS_MINFLINEAR) ==
       D3DPTFILTERCAPS_MINFLINEAR
-      && (caps.StretchRectFilterCaps & D3DPTFILTERCAPS_MAGFLINEAR) ==
+      || (caps.StretchRectFilterCaps & D3DPTFILTERCAPS_MAGFLINEAR) ==
       D3DPTFILTERCAPS_MAGFLINEAR) {
     device->filter_type = D3DTEXF_LINEAR;
   } else {
