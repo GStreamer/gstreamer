@@ -1151,8 +1151,10 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
       if (!klass->render (scope, inbuf, &outframe)) {
         ret = GST_FLOW_ERROR;
       } else {
-        /* run various post processing (shading and geometri transformation */
-        if (scope->shader) {
+        /* run various post processing (shading and geometric transformation) */
+        /* FIXME: SHADER assumes 32bpp */
+        if (scope->shader &&
+            GST_VIDEO_INFO_COMP_PSTRIDE (&scope->vinfo, 0) == 4) {
           scope->shader (scope, &outframe, &scope->tempframe);
         }
       }
