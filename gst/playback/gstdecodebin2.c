@@ -3976,22 +3976,33 @@ source_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GstDecodePad *dpad = user_data;
   GstDecodeChain *chain;
   GstDecodeBin *dbin;
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
 
   if (GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) {
     GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
 
     GST_LOG_OBJECT (pad, "Seeing event '%s'", GST_EVENT_TYPE_NAME (event));
 
-    if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
-      /* manually push event to ghost pad to avoid exposing pads
-       * that don't have the sticky caps event */
-      gst_pad_push_event (GST_PAD_CAST (dpad), gst_event_ref (event));
-    } else if ((GST_EVENT_IS_STICKY (event)
-            || !GST_EVENT_IS_SERIALIZED (event))) {
+    if (!GST_EVENT_IS_SERIALIZED (event)) {
       /* do not block on sticky or out of band events otherwise the allocation query
          from demuxer might block the loop thread */
-      GST_LOG_OBJECT (pad, "Letting event through");
+      GST_LOG_OBJECT (pad, "Letting OOB event through");
       return GST_PAD_PROBE_PASS;
+    }
+
+    if (GST_EVENT_IS_STICKY (event)) {
+      /* manually push sticky events to ghost pad to avoid exposing pads
+       * that don't have the sticky events */
+      gst_pad_push_event (GST_PAD_CAST (dpad), gst_event_ref (event));
+
+      /* let the sticky events pass */
+      ret = GST_PAD_PROBE_PASS;
+
+      /* we only want to try to expose on CAPS events */
+      if (GST_EVENT_TYPE (event) != GST_EVENT_CAPS) {
+        GST_LOG_OBJECT (pad, "Letting sticky non-CAPS event through");
+        goto done;
+      }
     }
   }
   chain = dpad->chain;
@@ -4008,12 +4019,8 @@ source_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   }
   EXPOSE_UNLOCK (dbin);
 
-  /* If we unblocked due to a caps event, let it go through */
-  if ((GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) &&
-      (GST_EVENT_TYPE (GST_PAD_PROBE_INFO_EVENT (info)) == GST_EVENT_CAPS))
-    return GST_PAD_PROBE_PASS;
-
-  return GST_PAD_PROBE_OK;
+done:
+  return ret;
 }
 
 static GstPadProbeReturn
