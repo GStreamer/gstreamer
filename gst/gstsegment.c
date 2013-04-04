@@ -300,9 +300,9 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
   /* we can't have stop before start */
   if (stop != -1) {
     if (start > stop) {
-      g_return_val_if_fail (start <= stop, FALSE);
       GST_WARNING ("segment update failed: start(%" G_GUINT64_FORMAT
           ") > stop(%" G_GUINT64_FORMAT ")", start, stop);
+      g_return_val_if_fail (start <= stop, FALSE);
       return FALSE;
     }
   }
@@ -478,7 +478,7 @@ gst_segment_to_running_time (const GstSegment * segment, GstFormat format,
   gdouble abs_rate;
 
   if (G_UNLIKELY (position == -1)) {
-    GST_WARNING ("invalid position (-1)");
+    GST_DEBUG ("invalid position (-1)");
     return -1;
   }
 
@@ -492,7 +492,7 @@ gst_segment_to_running_time (const GstSegment * segment, GstFormat format,
 
   /* before the segment boundary */
   if (G_UNLIKELY (position < start)) {
-    GST_WARNING ("position(%" G_GUINT64_FORMAT ") < start(%" G_GUINT64_FORMAT
+    GST_DEBUG ("position(%" G_GUINT64_FORMAT ") < start(%" G_GUINT64_FORMAT
         ")", position, start);
     return -1;
   }
@@ -502,7 +502,7 @@ gst_segment_to_running_time (const GstSegment * segment, GstFormat format,
   if (G_LIKELY (segment->rate > 0.0)) {
     /* after of the segment boundary */
     if (G_UNLIKELY (stop != -1 && position > stop)) {
-      GST_WARNING ("position(%" G_GUINT64_FORMAT ") > stop(%" G_GUINT64_FORMAT
+      GST_DEBUG ("position(%" G_GUINT64_FORMAT ") > stop(%" G_GUINT64_FORMAT
           ")", position, stop);
       return -1;
     }
@@ -513,13 +513,13 @@ gst_segment_to_running_time (const GstSegment * segment, GstFormat format,
     /* cannot continue if no stop position set or outside of
      * the segment. */
     if (G_UNLIKELY (stop == -1)) {
-      GST_WARNING ("invalid stop (-1)");
+      GST_DEBUG ("invalid stop (-1)");
       return -1;
     }
 
     stop -= segment->offset;
     if (G_UNLIKELY (position > stop)) {
-      GST_WARNING ("position(%" G_GUINT64_FORMAT ") > stop(%" G_GUINT64_FORMAT
+      GST_DEBUG ("position(%" G_GUINT64_FORMAT ") > stop(%" G_GUINT64_FORMAT
           ")", position, stop);
       return -1;
     }
