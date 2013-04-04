@@ -3171,27 +3171,18 @@ gst_structure_can_intersect (const GstStructure * struct1,
 }
 
 static gboolean
-gst_caps_structure_has_field (GQuark field_id, const GValue * value,
+gst_caps_structure_is_superset_field (GQuark field_id, const GValue * value,
     gpointer user_data)
 {
   GstStructure *subset = user_data;
-
-  return gst_structure_id_get_value (subset, field_id) != NULL;
-}
-
-static gboolean
-gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
-    gpointer user_data)
-{
-  GstStructure *superset = user_data;
   const GValue *other;
   int comparison;
 
-  if (!(other = gst_structure_id_get_value (superset, field_id)))
-    /* field is missing in the superset => is subset */
-    return TRUE;
+  if (!(other = gst_structure_id_get_value (subset, field_id)))
+    /* field is missing in the subset => no subset */
+    return FALSE;
 
-  comparison = gst_value_compare (other, value);
+  comparison = gst_value_compare (value, other);
 
   /* equal values are subset */
   if (comparison == GST_VALUE_EQUAL)
@@ -3201,7 +3192,7 @@ gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
   if (comparison != GST_VALUE_UNORDERED)
     return FALSE;
 
-  return gst_value_is_subset (value, other);
+  return gst_value_is_subset (other, value);
 }
 
 /**
@@ -3223,13 +3214,8 @@ gst_structure_is_subset (const GstStructure * subset,
       (gst_structure_n_fields (superset) > gst_structure_n_fields (subset)))
     return FALSE;
 
-  /* The subset must have all fields that are in superset */
-  if (!gst_structure_foreach ((GstStructure *) superset,
-          gst_caps_structure_has_field, (gpointer) subset))
-    return FALSE;
-
-  return gst_structure_foreach ((GstStructure *) subset,
-      gst_caps_structure_is_subset_field, (gpointer) superset);
+  return gst_structure_foreach ((GstStructure *) superset,
+      gst_caps_structure_is_superset_field, (gpointer) subset);
 }
 
 
