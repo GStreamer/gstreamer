@@ -56,13 +56,13 @@ typedef struct _GstLevelClass GstLevelClass;
 struct _GstLevel {
   GstBaseTransform element;
 
+  /* properties */
   gboolean post_messages;       /* whether or not to post messages */
-  guint64 interval;             /* how many seconds between emits */
+  guint64 interval;             /* how many nanoseconds between emits */
+  gdouble decay_peak_ttl;       /* time to live for peak in nanoseconds */
+  gdouble decay_peak_falloff;   /* falloff in dB/sec */
 
   GstAudioInfo info;
-
-  gdouble decay_peak_ttl;       /* time to live for peak in seconds */
-  gdouble decay_peak_falloff;   /* falloff in dB/sec */
   gint num_frames;              /* frame count (1 sample per channel)
                                  * since last emit */
   gint interval_frames;         /* after how many frame to sent a message */

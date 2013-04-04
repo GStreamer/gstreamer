@@ -607,6 +607,10 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   g_return_val_if_fail (num_int_samples % channels == 0, GST_FLOW_ERROR);
 
+  if (GST_BUFFER_FLAG_IS_SET (in, GST_BUFFER_FLAG_DISCONT)) {
+    filter->message_ts = GST_BUFFER_TIMESTAMP (in);
+    filter->num_frames = 0;
+  }
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (filter->message_ts))) {
     filter->message_ts = GST_BUFFER_TIMESTAMP (in);
   }
@@ -711,12 +715,13 @@ gst_level_post_message (GstLevel * filter)
     m = gst_level_message_new (filter, filter->message_ts, duration);
 
     GST_LOG_OBJECT (filter,
-        "message: ts %" GST_TIME_FORMAT ", num_frames %d",
-        GST_TIME_ARGS (filter->message_ts), filter->num_frames);
+        "message: ts %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
+        ", num_frames %d", GST_TIME_ARGS (filter->message_ts),
+        GST_TIME_ARGS (duration), filter->num_frames);
 
     for (i = 0; i < channels; ++i) {
       gdouble RMS;
-      gdouble RMSdB, lastdB, decaydB;
+      gdouble RMSdB, peakdB, decaydB;
 
       RMS = sqrt (filter->CS[i] / filter->num_frames);
       GST_LOG_OBJECT (filter,
@@ -728,7 +733,7 @@ gst_level_post_message (GstLevel * filter)
       /* RMS values are calculated in amplitude, so 20 * log 10 */
       RMSdB = 20 * log10 (RMS + EPSILON);
       /* peak values are square sums, ie. power, so 10 * log 10 */
-      lastdB = 10 * log10 (filter->last_peak[i] + EPSILON);
+      peakdB = 10 * log10 (filter->last_peak[i] + EPSILON);
       decaydB = 10 * log10 (filter->decay_peak[i] + EPSILON);
 
       if (filter->decay_peak[i] < filter->last_peak[i]) {
@@ -736,21 +741,23 @@ gst_level_post_message (GstLevel * filter)
          * the last peak is between decay_peak and decay_peak_base */
         GST_DEBUG_OBJECT (filter,
             "message: decay peak dB %f smaller than last peak dB %f, copying",
-            decaydB, lastdB);
+            decaydB, peakdB);
         filter->decay_peak[i] = filter->last_peak[i];
       }
       GST_LOG_OBJECT (filter,
           "message: RMS %f dB, peak %f dB, decay %f dB",
-          RMSdB, lastdB, decaydB);
+          RMSdB, peakdB, decaydB);
 
-      gst_level_message_append_channel (m, RMSdB, lastdB, decaydB);
+      gst_level_message_append_channel (m, RMSdB, peakdB, decaydB);
 
       /* reset cumulative and normal peak */
       filter->CS[i] = 0.0;
       filter->last_peak[i] = 0.0;
     }
 
-    gst_element_post_message (GST_ELEMENT (filter), m);
+    if (filter->post_messages)
+      gst_element_post_message (GST_ELEMENT (filter), m);
+
   }
   filter->num_frames = 0;
 }
