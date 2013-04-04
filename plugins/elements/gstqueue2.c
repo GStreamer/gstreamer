@@ -2655,6 +2655,21 @@ gst_queue2_handle_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_event_unref (event);
       }
       break;
+    case GST_EVENT_RECONFIGURE:
+      GST_QUEUE2_MUTEX_LOCK (queue);
+      /* assume downstream is linked now and try to push again */
+      if (queue->srcresult == GST_FLOW_NOT_LINKED) {
+        queue->srcresult = GST_FLOW_OK;
+        queue->sinkresult = GST_FLOW_OK;
+        if (GST_PAD_MODE (pad) == GST_PAD_MODE_PUSH) {
+          gst_pad_start_task (pad, (GstTaskFunction) gst_queue2_loop, pad,
+              NULL);
+        }
+      }
+      GST_QUEUE2_MUTEX_UNLOCK (queue);
+
+      res = gst_pad_push_event (queue->sinkpad, event);
+      break;
     default:
       res = gst_pad_push_event (queue->sinkpad, event);
       break;
