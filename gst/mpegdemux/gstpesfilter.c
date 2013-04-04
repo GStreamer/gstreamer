@@ -101,6 +101,7 @@ static gboolean
 gst_pes_filter_is_sync (guint32 sync)
 {
   return ((sync & 0xfffffffc) == 0x000001bc) ||
+      ((sync & 0xfffffffd) == 0x000001bd) ||
       ((sync & 0xffffffe0) == 0x000001c0) ||
       ((sync & 0xfffffff0) == 0x000001f0) ||
       ((sync & 0xfffffff0) == 0x000001e0);
