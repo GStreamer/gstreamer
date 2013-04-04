@@ -3967,16 +3967,16 @@ source_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GstDecodeBin *dbin;
 
   if (GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) {
-    GST_LOG_OBJECT (pad, "Seeing event '%s'",
-        GST_EVENT_TYPE_NAME (GST_PAD_PROBE_INFO_EVENT (info)));
+    GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
 
-    if (GST_EVENT_TYPE (GST_PAD_PROBE_INFO_EVENT (info)) == GST_EVENT_CAPS) {
+    GST_LOG_OBJECT (pad, "Seeing event '%s'", GST_EVENT_TYPE_NAME (event));
+
+    if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
       /* manually push event to ghost pad to avoid exposing pads
        * that don't have the sticky caps event */
-      gst_pad_push_event (GST_PAD_CAST (dpad),
-          gst_event_ref (GST_PAD_PROBE_INFO_EVENT (info)));
-    } else if ((GST_EVENT_IS_STICKY (GST_PAD_PROBE_INFO_EVENT (info))
-            || !GST_EVENT_IS_SERIALIZED (GST_PAD_PROBE_INFO_EVENT (info)))) {
+      gst_pad_push_event (GST_PAD_CAST (dpad), gst_event_ref (event));
+    } else if ((GST_EVENT_IS_STICKY (event)
+            || !GST_EVENT_IS_SERIALIZED (event))) {
       /* do not block on sticky or out of band events otherwise the allocation query
          from demuxer might block the loop thread */
       GST_LOG_OBJECT (pad, "Letting event through");
