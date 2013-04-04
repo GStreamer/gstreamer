@@ -601,7 +601,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (void)waitForQueueToDrain:(dispatch_queue_t)dispatchQueue
 {
-  dispatch_sync (dispatchQueue, ^{});
+  if (dispatchQueue != dispatch_get_current_queue())
+      dispatch_sync (dispatchQueue, ^{});
 }
 
 @end
