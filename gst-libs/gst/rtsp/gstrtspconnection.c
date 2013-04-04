@@ -105,7 +105,7 @@ typedef enum
 struct _GstRTSPConnection
 {
   /*< private > */
-  /* URL for the connection */
+  /* URL for the remote connection */
   GstRTSPUrl *url;
 
   /* connection state */
@@ -119,7 +119,9 @@ struct _GstRTSPConnection
   gboolean tunneled;
   GstRTSPTunnelState tstate;
 
-  gchar *ip;
+  /* the remote and local ip */
+  gchar *remote_ip;
+  gchar *local_ip;
 
   gint read_ahead;
 
@@ -248,7 +250,7 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
   GstRTSPResult res;
   GSocketAddress *addr;
   GError *err = NULL;
-  gchar *localip;
+  gchar *local_ip;
 
   g_return_val_if_fail (G_IS_SOCKET (socket), GST_RTSP_EINVAL);
   g_return_val_if_fail (ip != NULL, GST_RTSP_EINVAL);
@@ -262,7 +264,7 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
   if (!addr)
     goto getnameinfo_failed;
 
-  localip = g_inet_address_to_string (g_inet_socket_address_get_address
+  local_ip = g_inet_address_to_string (g_inet_socket_address_get_address
       (G_INET_SOCKET_ADDRESS (addr)));
   g_object_unref (addr);
 
@@ -279,7 +281,8 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
   newconn->socket0 = G_SOCKET (g_object_ref (socket));
   newconn->socket1 = G_SOCKET (g_object_ref (socket));
   newconn->write_socket = newconn->read_socket = newconn->socket0;
-  newconn->ip = localip;
+  newconn->remote_ip = g_strdup (ip);
+  newconn->local_ip = local_ip;
   newconn->initial_buffer = g_strdup (initial_buffer);
 
   *conn = newconn;
@@ -296,7 +299,7 @@ getnameinfo_failed:
 newconn_failed:
   {
     GST_ERROR ("failed to make connection");
-    g_free (localip);
+    g_free (local_ip);
     gst_rtsp_url_free (url);
     return res;
   }
@@ -335,6 +338,7 @@ gst_rtsp_connection_accept (GSocket * socket, GstRTSPConnection ** conn,
   if (!addr)
     goto getnameinfo_failed;
 
+  /* get the remote ip address and port */
   ip = g_inet_address_to_string (g_inet_socket_address_get_address
       (G_INET_SOCKET_ADDRESS (addr)));
   port = g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (addr));
@@ -536,7 +540,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
     uri = g_strdup_printf ("%s%s%s", url->abspath, url->query ? "?" : "",
         url->query ? url->query : "");
     hostparam = NULL;
-    ip = conn->ip;
+    ip = conn->remote_ip;
     port = url_port;
   }
 
@@ -590,8 +594,8 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
       /* and resolve the new ip address */
       if (!(ip = do_resolve (value, conn->cancellable)))
         goto not_resolved;
-      g_free (conn->ip);
-      conn->ip = ip;
+      g_free (conn->remote_ip);
+      conn->remote_ip = ip;
     }
   }
 
@@ -662,7 +666,7 @@ wrong_result:
   }
 not_resolved:
   {
-    GST_ERROR ("could not resolve %s", conn->ip);
+    GST_ERROR ("could not resolve %s", conn->remote_ip);
     res = GST_RTSP_ENET;
     goto exit;
   }
@@ -717,8 +721,8 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
     /* get the port from the url */
     gst_rtsp_url_get_port (url, &port);
 
-    g_free (conn->ip);
-    conn->ip = ip;
+    g_free (conn->remote_ip);
+    conn->remote_ip = ip;
   }
 
   /* connect to the host/port */
@@ -2018,9 +2022,11 @@ gen_tunnel_reply (GstRTSPConnection * conn, GstRTSPStatusCode code,
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_PRAGMA, "no-cache");
 
   if (code == GST_RTSP_STS_OK) {
-    if (conn->ip)
+    /* add the local ip address to the tunnel reply, this is where the client
+     * should send the POST request to */
+    if (conn->local_ip)
       gst_rtsp_message_add_header (msg, GST_RTSP_HDR_X_SERVER_IP_ADDRESS,
-          conn->ip);
+          conn->local_ip);
     gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CONTENT_TYPE,
         "application/x-rtsp-tunnelled");
   }
@@ -2186,8 +2192,10 @@ gst_rtsp_connection_close (GstRTSPConnection * conn)
     conn->socket1 = NULL;
   }
 
-  g_free (conn->ip);
-  conn->ip = NULL;
+  g_free (conn->remote_ip);
+  conn->remote_ip = NULL;
+  g_free (conn->local_ip);
+  conn->local_ip = NULL;
 
   conn->read_ahead = 0;
 
@@ -2680,7 +2688,7 @@ gst_rtsp_connection_get_ip (const GstRTSPConnection * conn)
 {
   g_return_val_if_fail (conn != NULL, NULL);
 
-  return conn->ip;
+  return conn->remote_ip;
 }
 
 /**
@@ -2695,8 +2703,8 @@ gst_rtsp_connection_set_ip (GstRTSPConnection * conn, const gchar * ip)
 {
   g_return_if_fail (conn != NULL);
 
-  g_free (conn->ip);
-  conn->ip = g_strdup (ip);
+  g_free (conn->remote_ip);
+  conn->remote_ip = g_strdup (ip);
 }
 
 /**
