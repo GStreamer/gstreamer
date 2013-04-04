@@ -44,6 +44,10 @@ gst_vaapi_video_meta_api_get_type(void) G_GNUC_CONST;
 
 G_GNUC_INTERNAL
 GstVaapiVideoMeta *
+gst_vaapi_video_meta_copy(GstVaapiVideoMeta *meta);
+
+G_GNUC_INTERNAL
+GstVaapiVideoMeta *
 gst_vaapi_video_meta_new(GstVaapiDisplay *display);
 
 G_GNUC_INTERNAL

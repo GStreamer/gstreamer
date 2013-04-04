@@ -138,11 +138,23 @@ gst_vaapi_video_meta_init(GstVaapiVideoMeta *meta)
 }
 
 static inline GstVaapiVideoMeta *
+_gst_vaapi_video_meta_create(void)
+{
+    return g_slice_new(GstVaapiVideoMeta);
+}
+
+static inline void
+_gst_vaapi_video_meta_destroy(GstVaapiVideoMeta *meta)
+{
+    g_slice_free1(sizeof(*meta), meta);
+}
+
+static inline GstVaapiVideoMeta *
 _gst_vaapi_video_meta_new(void)
 {
     GstVaapiVideoMeta *meta;
 
-    meta = g_slice_alloc(sizeof(*meta));
+    meta = _gst_vaapi_video_meta_create();
     if (!meta)
         return NULL;
     gst_vaapi_video_meta_init(meta);
@@ -157,7 +169,44 @@ _gst_vaapi_video_meta_free(GstVaapiVideoMeta *meta)
     gst_vaapi_video_meta_finalize(meta);
 
     if (G_LIKELY(g_atomic_int_dec_and_test(&meta->ref_count)))
-        g_slice_free1(sizeof(*meta), meta);
+        _gst_vaapi_video_meta_destroy(meta);
+}
+
+/**
+ * gst_vaapi_video_meta_copy:
+ * @meta: a #GstVaapiVideoMeta
+ *
+ * Creates a copy of #GstVaapiVideoMeta object @meta. The original
+ * @meta object shall not contain any VA objects created from a
+ * #GstVaapiVideoPool.
+ *
+ * Return value: the newly allocated #GstVaapiVideoMeta, or %NULL on error
+ */
+GstVaapiVideoMeta *
+gst_vaapi_video_meta_copy(GstVaapiVideoMeta *meta)
+{
+    GstVaapiVideoMeta *copy;
+
+    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), NULL);
+
+    if (meta->image_pool || meta->surface_pool)
+        return NULL;
+
+    copy = _gst_vaapi_video_meta_create();
+    if (!copy)
+        return NULL;
+
+    copy->ref_count     = 1;
+    copy->display       = g_object_ref(meta->display);
+    copy->image_pool    = NULL;
+    copy->image         = meta->image ? g_object_ref(meta->image) : NULL;
+    copy->surface_pool  = NULL;
+    copy->surface       = meta->surface ? g_object_ref(meta->surface) : NULL;
+    copy->proxy         = meta->proxy ?
+        gst_vaapi_surface_proxy_ref(meta->proxy) : NULL;
+    copy->converter     = meta->converter;
+    copy->render_flags  = meta->render_flags;
+    return copy;
 }
 
 /**
@@ -681,7 +730,10 @@ gst_vaapi_video_meta_holder_transform(GstBuffer *dst_buffer, GstMeta *meta,
         GST_VAAPI_VIDEO_META_HOLDER(meta);
 
     if (GST_META_TRANSFORM_IS_COPY(type)) {
-        gst_buffer_set_vaapi_video_meta(dst_buffer, src_meta->meta);
+        GstVaapiVideoMeta * const dst_meta =
+            gst_vaapi_video_meta_copy(src_meta->meta);
+        gst_buffer_set_vaapi_video_meta(dst_buffer, dst_meta);
+        gst_vaapi_video_meta_unref(dst_meta);
         return TRUE;
     }
     return FALSE;
