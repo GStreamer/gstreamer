@@ -838,7 +838,7 @@ gst_caps_get_features (const GstCaps * caps, guint index)
 
   features = gst_caps_get_features_unchecked (caps, index);
   if (!features)
-    features = gst_caps_features_copy (GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY);
+    features = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
 
   return features;
 }
