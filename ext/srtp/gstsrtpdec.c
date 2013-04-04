@@ -511,25 +511,33 @@ init_session_stream (GstSrtpDec * filter, guint32 ssrc,
  */
 static GstSrtpDecSsrcStream *
 validate_buffer (GstSrtpDec * filter, GstBuffer * buf, guint32 * ssrc,
-    gboolean is_rtcp)
+    gboolean * is_rtcp)
 {
   GstSrtpDecSsrcStream *stream = NULL;
 
-  if (!is_rtcp) {
+  if (!(*is_rtcp)) {
     GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
 
-    if (!gst_rtp_buffer_map (buf, GST_MAP_READ, &rtpbuf)) {
-      GST_WARNING_OBJECT (filter, "Invalid SRTP packet");
-      return NULL;
+    if (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtpbuf)) {
+      if (gst_rtp_buffer_get_payload_type (&rtpbuf) < 64
+          || gst_rtp_buffer_get_payload_type (&rtpbuf) > 80) {
+        *ssrc = gst_rtp_buffer_get_ssrc (&rtpbuf);
+
+        gst_rtp_buffer_unmap (&rtpbuf);
+        goto have_ssrc;
+      }
+      gst_rtp_buffer_unmap (&rtpbuf);
     }
+  }
 
-    *ssrc = gst_rtp_buffer_get_ssrc (&rtpbuf);
-
-    gst_rtp_buffer_unmap (&rtpbuf);
-  } else if (!rtcp_buffer_get_ssrc (buf, ssrc)) {
+  if (rtcp_buffer_get_ssrc (buf, ssrc)) {
+    *is_rtcp = TRUE;
+  } else {
     GST_WARNING_OBJECT (filter, "No SSRC found in buffer");
     return NULL;
   }
+
+have_ssrc:
 
   stream = find_stream_by_ssrc (filter, *ssrc);
 
@@ -851,7 +859,7 @@ gst_srtp_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
 
   /* Check if this stream exists, if not create a new stream */
 
-  if (!(stream = validate_buffer (filter, buf, &ssrc, is_rtcp))) {
+  if (!(stream = validate_buffer (filter, buf, &ssrc, &is_rtcp))) {
     GST_OBJECT_UNLOCK (filter);
     GST_WARNING_OBJECT (filter, "Invalid buffer, dropping");
     goto drop_buffer;
@@ -931,9 +939,11 @@ unprotect:
 
 push_out:
   /* Push buffer to source pad */
-  otherpad = (GstPad *) gst_pad_get_element_private (pad);
+  if (is_rtcp)
+    otherpad = filter->rtcp_srcpad;
+  else
+    otherpad = filter->rtp_srcpad;
   ret = gst_pad_push (otherpad, buf);
-
 
   return ret;
 
