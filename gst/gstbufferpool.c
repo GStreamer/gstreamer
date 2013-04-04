@@ -412,8 +412,8 @@ do_stop (GstBufferPool * pool)
  * @pool: a #GstBufferPool
  * @active: the new active state
  *
- * Control the active state of @pool. When the pool is active, new calls to
- * gst_buffer_pool_acquire_buffer() will return with GST_FLOW_FLUSHING.
+ * Control the active state of @pool. When the pool is inactive, new calls to
+ * gst_buffer_pool_acquire_buffer() will return with #GST_FLOW_FLUSHING.
  *
  * Activating the bufferpool will preallocate all resources in the pool based on
  * the configuration of the pool.
