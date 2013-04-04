@@ -587,8 +587,8 @@ typedef GstPadProbeReturn   (*GstPadProbeCallback)   (GstPad *pad, GstPadProbeIn
  * returned. When %FALSE is returned, gst_pad_sticky_events_foreach() will return.
  *
  * When @event is set to NULL, the item will be removed from the list of sticky events.
- * When @event has been made writable, the new buffer reference can be assigned
- * to @event. This function is responsible for unreffing the old event when
+ * @event can be replaced by assigning a new reference to it.
+ * This function is responsible for unreffing the old event when
  * removing or modifying.
  *
  * Returns: %TRUE if the iteration should continue
