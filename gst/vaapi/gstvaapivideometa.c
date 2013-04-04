@@ -424,7 +424,6 @@ void
 gst_vaapi_video_meta_set_image(GstVaapiVideoMeta *meta, GstVaapiImage *image)
 {
     g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
-    g_return_if_fail(GST_VAAPI_IS_IMAGE(image));
 
     gst_vaapi_video_meta_destroy_image(meta);
 
@@ -497,7 +496,6 @@ gst_vaapi_video_meta_set_surface(GstVaapiVideoMeta *meta,
     GstVaapiSurface *surface)
 {
     g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
-    g_return_if_fail(GST_VAAPI_IS_SURFACE(surface));
 
     gst_vaapi_video_meta_destroy_surface(meta);
 
@@ -572,7 +570,6 @@ gst_vaapi_video_meta_set_surface_proxy(GstVaapiVideoMeta *meta,
     GstVaapiSurface *surface;
 
     g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
-    g_return_if_fail(proxy != NULL);
 
     gst_vaapi_video_meta_destroy_surface(meta);
 
