@@ -399,20 +399,24 @@ gst_sdp_message_as_text (const GstSDPMessage * msg)
         bandwidth->bandwidth);
   }
 
-  for (i = 0; i < gst_sdp_message_times_len (msg); i++) {
-    const GstSDPTime *times = gst_sdp_message_get_time (msg, i);
+  if (gst_sdp_message_times_len (msg) == 0) {
+    g_string_append_printf (lines, "t=0 0\r\n");
+  } else {
+    for (i = 0; i < gst_sdp_message_times_len (msg); i++) {
+      const GstSDPTime *times = gst_sdp_message_get_time (msg, i);
 
-    g_string_append_printf (lines, "t=%s %s\r\n", times->start, times->stop);
+      g_string_append_printf (lines, "t=%s %s\r\n", times->start, times->stop);
 
-    if (times->repeat != NULL) {
-      guint j;
+      if (times->repeat != NULL) {
+        guint j;
 
-      g_string_append_printf (lines, "r=%s",
-          g_array_index (times->repeat, gchar *, 0));
-      for (j = 1; j < times->repeat->len; j++)
-        g_string_append_printf (lines, " %s",
-            g_array_index (times->repeat, gchar *, j));
-      g_string_append_printf (lines, "\r\n");
+        g_string_append_printf (lines, "r=%s",
+            g_array_index (times->repeat, gchar *, 0));
+        for (j = 1; j < times->repeat->len; j++)
+          g_string_append_printf (lines, " %s",
+              g_array_index (times->repeat, gchar *, j));
+        g_string_append_printf (lines, "\r\n");
+      }
     }
   }
 
