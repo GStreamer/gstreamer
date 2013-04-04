@@ -1657,8 +1657,24 @@ static gboolean
 gst_multi_queue_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstSingleQueue *sq = gst_pad_get_element_private (pad);
+  GstMultiQueue *mq = sq->mqueue;
+  gboolean ret;
 
-  return gst_pad_push_event (sq->sinkpad, event);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_RECONFIGURE:
+      GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+      if (sq->srcresult == GST_FLOW_NOT_LINKED)
+        sq->srcresult = GST_FLOW_OK;
+      GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+
+      ret = gst_pad_push_event (sq->sinkpad, event);
+      break;
+    default:
+      ret = gst_pad_push_event (sq->sinkpad, event);
+      break;
+  }
+
+  return ret;
 }
 
 static gboolean
