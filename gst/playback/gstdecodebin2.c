@@ -3755,6 +3755,14 @@ gst_decode_bin_post_topology_message (GstDecodeBin * dbin)
   gst_element_post_message (GST_ELEMENT (dbin), msg);
 }
 
+static gboolean
+debug_sticky_event (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GST_DEBUG_OBJECT (pad, "sticky event %s", GST_EVENT_TYPE_NAME (*event));
+  return TRUE;
+}
+
+
 /* Must only be called if the toplevel chain is complete and blocked! */
 /* Not MT-safe, call with decodebin expose lock! */
 static gboolean
@@ -3838,6 +3846,9 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
         GST_OBJECT_NAME (dpad), padname);
     gst_object_set_name (GST_OBJECT (dpad), padname);
     g_free (padname);
+
+    gst_pad_sticky_events_foreach (GST_PAD_CAST (dpad), debug_sticky_event,
+        dpad);
 
     /* 2. activate and add */
     if (!dpad->exposed) {
