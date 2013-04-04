@@ -3056,6 +3056,9 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
       GST_DEBUG_OBJECT (pad, "asked to pass item");
       data->pass = TRUE;
       break;
+    case GST_PAD_PROBE_OK:
+      GST_DEBUG_OBJECT (pad, "probe returned OK");
+      break;
     default:
       GST_DEBUG_OBJECT (pad, "probe returned %d", ret);
       break;
