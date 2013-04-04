@@ -4375,14 +4375,20 @@ probe_stopped_unref:
 }
 
 /* must be called with pad object lock */
-static gboolean
-gst_pad_store_sticky_event (GstPad * pad, GstEvent * event)
+static GstFlowReturn
+store_sticky_event (GstPad * pad, GstEvent * event)
 {
   guint i, len;
   GstEventType type;
   GArray *events;
   gboolean res = FALSE;
   const gchar *name = NULL;
+
+  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+    goto flushed;
+
+  if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
+    goto eos;
 
   type = GST_EVENT_TYPE (event);
   if (type & GST_EVENT_TYPE_STICKY_MULTI)
@@ -4435,7 +4441,49 @@ gst_pad_store_sticky_event (GstPad * pad, GstEvent * event)
         break;
     }
   }
-  return res;
+  if (type == GST_EVENT_EOS)
+    GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_EOS);
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+flushed:
+  {
+    GST_DEBUG_OBJECT (pad, "pad is flushing");
+    return GST_FLOW_FLUSHING;
+  }
+eos:
+  {
+    GST_DEBUG_OBJECT (pad, "pad is EOS");
+    return GST_FLOW_EOS;
+  }
+}
+
+/**
+ * gst_pad_store_sticky_event:
+ * @pad: a #GstPad
+ * @event: a #GstEvent
+ *
+ * Store the sticky @event on @pad
+ *
+ * Returns: #GST_FLOW_OK on success, #GST_FLOW_FLUSHING when the pad
+ * was flushing or #GST_FLOW_EOS when the pad was EOS.
+ *
+ * Since: 1.2
+ */
+GstFlowReturn
+gst_pad_store_sticky_event (GstPad * pad, GstEvent * event)
+{
+  GstFlowReturn ret;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+
+  GST_OBJECT_LOCK (pad);
+  ret = store_sticky_event (pad, event);
+  GST_OBJECT_UNLOCK (pad);
+
+  return ret;
 }
 
 /* should be called with pad LOCK */
@@ -4615,21 +4663,17 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   serialized = GST_EVENT_IS_SERIALIZED (event);
 
   if (sticky) {
-    /* can't store on flushing pads */
-    if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
-      goto flushed;
-
-    if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
-      goto eos;
-
     /* srcpad sticky events are stored immediately, the received flag is set
      * to FALSE and will be set to TRUE when we can successfully push the
      * event to the peer pad */
-    if (gst_pad_store_sticky_event (pad, event)) {
-      GST_DEBUG_OBJECT (pad, "event %s updated", GST_EVENT_TYPE_NAME (event));
+    switch (store_sticky_event (pad, event)) {
+      case GST_FLOW_FLUSHING:
+        goto flushed;
+      case GST_FLOW_EOS:
+        goto eos;
+      default:
+        break;
     }
-    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
-      GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_EOS);
   }
   if (GST_PAD_IS_SRC (pad) && (serialized || sticky)) {
     /* all serialized or sticky events on the srcpad trigger push of
@@ -4841,21 +4885,16 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
   if (sticky) {
     if (ret == GST_FLOW_OK) {
       GST_OBJECT_LOCK (pad);
-      /* can't store on flushing pads */
-      if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
-        goto flushing;
-
-      if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
-        goto eos;
-
       /* after the event function accepted the event, we can store the sticky
        * event on the pad */
-      if (gst_pad_store_sticky_event (pad, event)) {
-        GST_DEBUG_OBJECT (pad, "event %s updated", GST_EVENT_TYPE_NAME (event));
+      switch (store_sticky_event (pad, event)) {
+        case GST_FLOW_FLUSHING:
+          goto flushing;
+        case GST_FLOW_EOS:
+          goto eos;
+        default:
+          break;
       }
-      if (event_type == GST_EVENT_EOS)
-        GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_EOS);
-
       GST_OBJECT_UNLOCK (pad);
     }
     gst_event_unref (event);

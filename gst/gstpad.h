@@ -880,6 +880,7 @@ gpointer		gst_pad_get_element_private		(GstPad *pad);
 
 GstPadTemplate*		gst_pad_get_pad_template		(GstPad *pad);
 
+GstFlowReturn           gst_pad_store_sticky_event              (GstPad *pad, GstEvent *event);
 GstEvent*               gst_pad_get_sticky_event                (GstPad *pad, GstEventType event_type,
                                                                  guint idx);
 void                    gst_pad_sticky_events_foreach           (GstPad *pad, GstPadStickyEventsForeachFunction foreach_func, gpointer user_data);

@@ -795,6 +795,7 @@ EXPORTS
 	gst_pad_start_task
 	gst_pad_sticky_events_foreach
 	gst_pad_stop_task
+	gst_pad_store_sticky_event
 	gst_pad_template_flags_get_type
 	gst_pad_template_get_caps
 	gst_pad_template_get_type
