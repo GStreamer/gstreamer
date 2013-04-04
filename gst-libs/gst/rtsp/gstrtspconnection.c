@@ -246,6 +246,9 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
   GstRTSPConnection *newconn = NULL;
   GstRTSPUrl *url;
   GstRTSPResult res;
+  GSocketAddress *addr;
+  GError *err = NULL;
+  gchar *localip;
 
   g_return_val_if_fail (G_IS_SOCKET (socket), GST_RTSP_EINVAL);
   g_return_val_if_fail (ip != NULL, GST_RTSP_EINVAL);
@@ -253,6 +256,15 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
 
   /* set to non-blocking mode so that we can cancel the communication */
   g_socket_set_blocking (socket, FALSE);
+
+  /* get local address */
+  addr = g_socket_get_local_address (socket, &err);
+  if (!addr)
+    goto getnameinfo_failed;
+
+  localip = g_inet_address_to_string (g_inet_socket_address_get_address
+      (G_INET_SOCKET_ADDRESS (addr)));
+  g_object_unref (addr);
 
   /* create a url for the client address */
   url = g_new0 (GstRTSPUrl, 1);
@@ -267,9 +279,7 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
   newconn->socket0 = G_SOCKET (g_object_ref (socket));
   newconn->socket1 = G_SOCKET (g_object_ref (socket));
   newconn->write_socket = newconn->read_socket = newconn->socket0;
-
-  newconn->ip = g_strdup (ip);
-
+  newconn->ip = localip;
   newconn->initial_buffer = g_strdup (initial_buffer);
 
   *conn = newconn;
@@ -277,8 +287,16 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
   return GST_RTSP_OK;
 
   /* ERRORS */
+getnameinfo_failed:
+  {
+    GST_ERROR ("failed to get local address: %s", err->message);
+    g_clear_error (&err);
+    return GST_RTSP_ERROR;
+  }
 newconn_failed:
   {
+    GST_ERROR ("failed to make connection");
+    g_free (localip);
     gst_rtsp_url_free (url);
     return res;
   }
