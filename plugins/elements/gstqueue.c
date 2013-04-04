@@ -1249,7 +1249,24 @@ gst_queue_handle_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       event, GST_EVENT_TYPE (event));
 #endif
 
-  res = gst_pad_push_event (queue->sinkpad, event);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_RECONFIGURE:
+      GST_QUEUE_MUTEX_LOCK (queue);
+      if (queue->srcresult == GST_FLOW_NOT_LINKED) {
+        /* when we got not linked, assume downstream is linked again now and we
+         * can try to start pushing again */
+        queue->srcresult = GST_FLOW_OK;
+        gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad, NULL);
+      }
+      GST_QUEUE_MUTEX_UNLOCK (queue);
+
+      res = gst_pad_push_event (queue->sinkpad, event);
+      break;
+    default:
+      res = gst_pad_event_default (pad, parent, event);
+      break;
+  }
+
 
   return res;
 }
