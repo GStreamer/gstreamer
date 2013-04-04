@@ -416,6 +416,10 @@ gst_ogg_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       res = gst_ogg_demux_perform_seek (ogg, event);
       gst_event_unref (event);
       break;
+    case GST_EVENT_RECONFIGURE:
+      GST_OGG_PAD (pad)->last_ret = GST_FLOW_OK;
+      res = gst_pad_event_default (pad, parent, event);
+      break;
     default:
       res = gst_pad_event_default (pad, parent, event);
       break;
@@ -667,7 +671,13 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
 
   /* don't push the header packets when we are asked to skip them */
   if (!packet->b_o_s || push_headers) {
-    ret = gst_pad_push (GST_PAD_CAST (pad), buf);
+    if (pad->last_ret == GST_FLOW_OK) {
+      ret = gst_pad_push (GST_PAD_CAST (pad), buf);
+    } else {
+      GST_DEBUG_OBJECT (ogg, "not pushing buffer on error pad");
+      ret = pad->last_ret;
+      gst_buffer_unref (buf);
+    }
     buf = NULL;
 
     /* combine flows */
