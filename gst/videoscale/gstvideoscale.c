@@ -231,7 +231,7 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_SHARPNESS,
       g_param_spec_double ("sharpness", "Sharpness",
-          "Sharpness of filter", 0.0, 2.0, DEFAULT_PROP_SHARPNESS,
+          "Sharpness of filter", DBL_MIN, 2.0, DEFAULT_PROP_SHARPNESS,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SHARPEN,
