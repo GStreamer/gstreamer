@@ -1576,7 +1576,9 @@ gst_omx_video_dec_deallocate_output_buffers (GstOMXVideoDec * self)
 
   if (self->out_port_pool) {
     gst_buffer_pool_set_active (self->out_port_pool, FALSE);
+#if 0
     gst_buffer_pool_wait_released (self->out_port_pool);
+#endif
     GST_OMX_BUFFER_POOL (self->out_port_pool)->deactivated = TRUE;
     gst_object_unref (self->out_port_pool);
     self->out_port_pool = NULL;
