@@ -322,11 +322,6 @@ AG_GST_DEFAULT_ELEMENTS
 
 dnl *** plug-ins to include ***
 
-dnl Non ported plugins (non-dependant, then dependant)
-dnl Make sure you have a space before and after all plugins
-GST_PLUGINS_NONPORTED="osx_audio "
-AC_SUBST(GST_PLUGINS_NONPORTED)
-
 dnl these are all the gst plug-ins, compilable without additional libs
 dnl videofilter is at the top because others depend on it
 AG_GST_CHECK_PLUGIN(alpha)
@@ -473,7 +468,7 @@ AG_GST_CHECK_FEATURE(OSX_AUDIO, [OSX audio], osxaudio, [
     HAVE_OSX_AUDIO="yes",
     dnl *** Check for the iOS headers ***
     [AC_CHECK_HEADER(CoreAudio/CoreAudioTypes.h,
-      [HAVE_OSX_AUDIO="YES";have_ios="yes"], HAVE_OSX_AUDIO="no"
+      [HAVE_OSX_AUDIO="YES";have_ios="yes"], [HAVE_OSX_AUDIO="yes";have_ios="no"]
     )])
 ])
 if test "x$have_ios" = "xyes"; then

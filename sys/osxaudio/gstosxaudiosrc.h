@@ -45,6 +45,7 @@
 #define __GST_OSXAUDIOSRC_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <gst/audio/gstaudiobasesrc.h>
 #include "gstosxaudioringbuffer.h"
 
