@@ -51,6 +51,7 @@
 #define __GST_OSXAUDIOSINK_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <gst/audio/gstaudiobasesink.h>
 #include "gstosxaudioringbuffer.h"
 

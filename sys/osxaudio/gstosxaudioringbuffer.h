@@ -50,7 +50,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/audio/gstaudioringbuffer.h>
+#include <gst/audio/audio.h>
 #include <gstosxcoreaudio.h>
 
 

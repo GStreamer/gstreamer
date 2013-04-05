@@ -67,6 +67,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <gst/audio/audio-channels.h>
 #include <gst/audio/gstaudioiec61937.h>
 
