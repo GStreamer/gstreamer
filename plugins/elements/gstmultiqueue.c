@@ -1846,6 +1846,11 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
     if (oq == sq)
       continue;
 
+    if (oq->srcresult == GST_FLOW_NOT_LINKED) {
+      GST_LOG_OBJECT (mq, "Queue %d is not-linked", oq->id);
+      continue;
+    }
+
     GST_LOG_OBJECT (mq, "Checking Queue %d", oq->id);
 
     if (gst_data_queue_is_empty (oq->queue)) {
@@ -1878,8 +1883,13 @@ single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
   GstMultiQueue *mq = sq->mqueue;
   GList *tmp;
 
-  GST_LOG_OBJECT (mq,
-      "Single Queue %d is empty, Checking other single queues", sq->id);
+  if (sq->srcresult == GST_FLOW_NOT_LINKED) {
+    GST_LOG_OBJECT (mq, "Single Queue %d is empty but not-linked", sq->id);
+    return;
+  } else {
+    GST_LOG_OBJECT (mq,
+        "Single Queue %d is empty, Checking other single queues", sq->id);
+  }
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
   for (tmp = mq->queues; tmp; tmp = g_list_next (tmp)) {
