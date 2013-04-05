@@ -193,47 +193,48 @@ gst_directdraw_sink_navigation_send_event (GstNavigation * navigation,
   GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (navigation);
   GstEvent *event;
   GstVideoRectangle src, dst, result;
-  double x, y, old_x, old_y;
+  gdouble x, y, old_x, old_y, xscale = 1.0, yscale=1.0;
   GstPad *pad = NULL;
 
   src.w = GST_VIDEO_SINK_WIDTH (ddrawsink);
   src.h = GST_VIDEO_SINK_HEIGHT (ddrawsink);
   dst.w = ddrawsink->out_width;
   dst.h = ddrawsink->out_height;
-  gst_video_sink_center_rect (src, dst, &result, FALSE);
 
   event = gst_event_new_navigation (structure);
 
-  /* Our coordinates can be wrong here if we centered the video */
+  if (ddrawsink->keep_aspect_ratio) {
+    gst_video_sink_center_rect (src, dst, &result, TRUE);
+  } else {
+    result.x = 0;
+    result.y = 0;
+    result.w = dst.w;
+    result.h = dst.h;
+  }
+
+  /* We calculate scaling using the original video frames geometry to include
+     pixel aspect ratio scaling. */
+  xscale = (gdouble) ddrawsink->video_width / result.w;
+  yscale = (gdouble) ddrawsink->video_height / result.h;
 
   /* Converting pointer coordinates to the non scaled geometry */
   if (gst_structure_get_double (structure, "pointer_x", &old_x)) {
     x = old_x;
-
-    if (x >= result.x && x <= (result.x + result.w)) {
-      x -= result.x;
-      x *= ddrawsink->video_width;
-      x /= result.w;
-    } else {
-      x = 0;
-    }
-    GST_DEBUG_OBJECT (ddrawsink, "translated navigation event x "
-        "coordinate from %f to %f", old_x, x);
-    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
+    x = MIN (x, result.x + result.w);
+    x = MAX (x - result.x, 0);
+    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
+        (gdouble) x * xscale, NULL);
+    GST_DEBUG_OBJECT (ddrawsink,
+        "translated navigation event x coordinate from %f to %f", old_x, x);
   }
   if (gst_structure_get_double (structure, "pointer_y", &old_y)) {
     y = old_y;
-
-    if (y >= result.y && y <= (result.y + result.h)) {
-      y -= result.y;
-      y *= ddrawsink->video_height;
-      y /= result.h;
-    } else {
-      y = 0;
-    }
-    GST_DEBUG_OBJECT (ddrawsink, "translated navigation event y "
-        "coordinate from %f to %f", old_y, y);
-    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
+    y = MIN (y, result.y + result.h);
+    y = MAX (y - result.y, 0);
+    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
+        (gdouble) y * yscale, NULL);
+    GST_DEBUG_OBJECT (ddrawsink,
+        "translated navigation event x coordinate from %f to %f", old_y, y);
   }
 
   pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (ddrawsink));
