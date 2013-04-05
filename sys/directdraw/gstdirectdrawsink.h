@@ -101,6 +101,8 @@ struct _GstDirectDrawSink
   HWND video_window;
   gboolean our_video_window;
   HANDLE window_created_signal;
+  WNDPROC previous_wndproc;
+  LONG_PTR previous_user_data;
   
   /* video properties */
   gint video_width, video_height;

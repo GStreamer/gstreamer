@@ -92,6 +92,7 @@ static gboolean gst_ddrawvideosink_get_format_from_caps (GstDirectDrawSink *
 static void gst_directdraw_sink_center_rect (GstDirectDrawSink * ddrawsink,
     RECT src, RECT dst, RECT * result);
 static const char *DDErrorString (HRESULT hr);
+static long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 /* surfaces management functions */
 static void gst_directdraw_sink_surface_destroy (GstDirectDrawSink * ddrawsink,
@@ -149,6 +150,7 @@ gst_directdraw_sink_set_window_handle (GstXOverlay * overlay,
 
   if (window_handle) {
     HRESULT hres;
+    RECT rect;
 
     /* If we had an internal window, close it first */
     if (ddrawsink->video_window && ddrawsink->our_video_window) {
@@ -160,6 +162,21 @@ gst_directdraw_sink_set_window_handle (GstXOverlay * overlay,
 
     ddrawsink->video_window = (HWND) window_handle;
     ddrawsink->our_video_window = FALSE;
+
+    /* Hook WndProc and user_data */
+    ddrawsink->previous_user_data = (LONG_PTR) SetWindowLongPtr (
+        (HWND) window_handle, GWLP_USERDATA, (LONG_PTR) ddrawsink);
+    ddrawsink->previous_wndproc = (WNDPROC) SetWindowLongPtr (
+        (HWND) window_handle, GWLP_WNDPROC, (LONG_PTR) WndProc);
+    if (!ddrawsink->previous_wndproc)
+      GST_DEBUG_OBJECT (ddrawsink, "Failed to hook previous WndProc");
+
+    /* Get initial window size. If it changes, we will track it from the
+     * WndProc. */
+    GetClientRect ((HWND) window_handle, &rect);
+    ddrawsink->out_width = rect.right - rect.left;
+    ddrawsink->out_height = rect.bottom - rect.top;
+
     if (ddrawsink->setup) {
       /* update the clipper object with the new window */
       hres = IDirectDrawClipper_SetHWnd (ddrawsink->clipper, 0,
@@ -497,6 +514,8 @@ gst_directdraw_sink_init (GstDirectDrawSink * ddrawsink,
   ddrawsink->clipper = NULL;
   ddrawsink->video_window = NULL;
   ddrawsink->our_video_window = TRUE;
+  ddrawsink->previous_wndproc = NULL;
+  ddrawsink->previous_user_data = (LONG_PTR)NULL;
   ddrawsink->last_buffer = NULL;
   ddrawsink->caps = NULL;
   ddrawsink->window_thread = NULL;
@@ -1420,6 +1439,11 @@ gst_directdraw_sink_setup_ddraw (GstDirectDrawSink * ddrawsink)
 static LRESULT FAR PASCAL
 WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+  GstDirectDrawSink *ddrawsink;
+  LRESULT ret;
+
+  ddrawsink = (GstDirectDrawSink *) GetWindowLongPtr (hWnd, GWLP_USERDATA);
+
   switch (message) {
     case WM_CREATE:{
       LPCREATESTRUCT crs = (LPCREATESTRUCT) lParam;
@@ -1542,8 +1566,25 @@ WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       PostQuitMessage (0);
       return 0;
   }
+  if (ddrawsink && ddrawsink->previous_wndproc) {
+    /* If there was a previous custom WndProc, call it */
 
-  return DefWindowProc (hWnd, message, wParam, lParam);
+    /* Temporarily restore the previous user_data */
+    if (ddrawsink->previous_user_data)
+      SetWindowLongPtr ( hWnd, GWLP_USERDATA, ddrawsink->previous_user_data );
+
+    /* Call previous WndProc */
+    ret = CallWindowProc (
+        ddrawsink->previous_wndproc, hWnd, message, wParam, lParam);
+
+    /* Point the user_data back to our ddraw_sink */
+    SetWindowLongPtr ( hWnd, GWLP_USERDATA, (LONG_PTR)ddrawsink );
+  } else {
+    /* if there was no previous custom WndProc, call Window's default one */
+    ret = DefWindowProc (hWnd, message, wParam, lParam);
+  }
+
+  return ret;
 }
 
 static gpointer
