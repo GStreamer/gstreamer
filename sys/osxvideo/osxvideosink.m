@@ -48,6 +48,7 @@ GST_DEBUG_CATEGORY (gst_debug_osx_video_sink);
 #define GST_CAT_DEFAULT gst_debug_osx_video_sink
 
 #ifdef RUN_NS_APP_THREAD
+#include <pthread.h>
 extern  void _CFRunLoopSetCurrent(CFRunLoopRef rl);
 extern pthread_t _CFMainPThread;
 #endif
