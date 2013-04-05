@@ -81,10 +81,10 @@ struct _GstHanddetect
   gchar *profile_fist;
   gchar *profile_palm;
   /* region of interest */
-  uint roi_x;
-  uint roi_y;
-  uint roi_width;
-  uint roi_height;
+  guint roi_x;
+  guint roi_y;
+  guint roi_width;
+  guint roi_height;
 
   /* opencv
    * cvImage - image from video cam,

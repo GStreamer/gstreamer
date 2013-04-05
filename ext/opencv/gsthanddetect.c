@@ -465,11 +465,11 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
       s = gst_structure_new ("hand-gesture",
           "gesture", G_TYPE_STRING, "fist",
           "x", G_TYPE_UINT,
-          (uint) (filter->best_r->x + filter->best_r->width * 0.5), "y",
+          (guint) (filter->best_r->x + filter->best_r->width * 0.5), "y",
           G_TYPE_UINT,
-          (uint) (filter->best_r->y + filter->best_r->height * 0.5), "width",
-          G_TYPE_UINT, (uint) filter->best_r->width, "height", G_TYPE_UINT,
-          (uint) filter->best_r->height, NULL);
+          (guint) (filter->best_r->y + filter->best_r->height * 0.5), "width",
+          G_TYPE_UINT, (guint) filter->best_r->width, "height", G_TYPE_UINT,
+          (guint) filter->best_r->height, NULL);
       /* Init message element */
       m = gst_message_new_element (GST_OBJECT (filter), s);
       /* Send message */
@@ -559,11 +559,11 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
         s = gst_structure_new ("hand-gesture",
             "gesture", G_TYPE_STRING, "palm",
             "x", G_TYPE_UINT,
-            (uint) (filter->best_r->x + filter->best_r->width * 0.5), "y",
+            (guint) (filter->best_r->x + filter->best_r->width * 0.5), "y",
             G_TYPE_UINT,
-            (uint) (filter->best_r->y + filter->best_r->height * 0.5), "width",
-            G_TYPE_UINT, (uint) filter->best_r->width, "height", G_TYPE_UINT,
-            (uint) filter->best_r->height, NULL);
+            (guint) (filter->best_r->y + filter->best_r->height * 0.5), "width",
+            G_TYPE_UINT, (guint) filter->best_r->width, "height", G_TYPE_UINT,
+            (guint) filter->best_r->height, NULL);
         /* Init message element */
         m = gst_message_new_element (GST_OBJECT (filter), s);
         /* Send message */
