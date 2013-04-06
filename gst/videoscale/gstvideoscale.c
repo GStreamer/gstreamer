@@ -231,7 +231,7 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_SHARPNESS,
       g_param_spec_double ("sharpness", "Sharpness",
-          "Sharpness of filter", DBL_MIN, 2.0, DEFAULT_PROP_SHARPNESS,
+          "Sharpness of filter", 0.5, 1.5, DEFAULT_PROP_SHARPNESS,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SHARPEN,
@@ -256,7 +256,7 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_ENVELOPE,
       g_param_spec_double ("envelope", "Envelope",
-          "Size of filter envelope", 0.0, 5.0, DEFAULT_PROP_ENVELOPE,
+          "Size of filter envelope", 1.0, 5.0, DEFAULT_PROP_ENVELOPE,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
