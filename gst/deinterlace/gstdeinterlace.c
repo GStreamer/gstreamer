@@ -1047,6 +1047,8 @@ gst_deinterlace_get_buffer_state (GstDeinterlace * self, GstVideoFrame * frame,
     return;
 
   interlacing_mode = GST_VIDEO_INFO_INTERLACE_MODE (&frame->info);
+  if (self->mode == GST_DEINTERLACE_MODE_INTERLACED)
+    interlacing_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
 
   if (state) {
     if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED) {
