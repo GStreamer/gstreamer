@@ -367,6 +367,7 @@ gst_caps_features_copy (const GstCapsFeatures * features)
   n = gst_caps_features_get_size (features);
   for (i = 0; i < n; i++)
     gst_caps_features_add_id (copy, gst_caps_features_get_nth_id (features, i));
+  copy->is_any = features->is_any;
 
   return copy;
 }
