@@ -83,9 +83,9 @@ print_caps (const GstCaps * caps, const gchar * pfx)
     GstStructure *structure = gst_caps_get_structure (caps, i);
     GstCapsFeatures *features = gst_caps_get_features (caps, i);
 
-    if (features
-        && !gst_caps_features_is_equal (features,
-            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
+    if (features && (gst_caps_features_is_any (features) ||
+            !gst_caps_features_is_equal (features,
+                GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))) {
       gchar *features_string = gst_caps_features_to_string (features);
 
       n_print ("%s%s(%s)\n", pfx, gst_structure_get_name (structure),

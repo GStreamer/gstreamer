@@ -102,7 +102,7 @@ typedef struct _GstCapsImpl
 #define CAPS_IS_EMPTY_SIMPLE(caps)					\
   ((GST_CAPS_ARRAY (caps) == NULL) || (GST_CAPS_LEN (caps) == 0))
 
-#define gst_caps_features_copy_conditional(f) ((f && !gst_caps_features_is_equal (f, GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) ? gst_caps_features_copy (f) : NULL)
+#define gst_caps_features_copy_conditional(f) ((f && (gst_caps_features_is_any (f) || !gst_caps_features_is_equal (f, GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))) ? gst_caps_features_copy (f) : NULL)
 
 /* quick way to get a caps structure at an index without doing a type or array
  * length check */
@@ -2171,9 +2171,9 @@ gst_caps_to_string (const GstCaps * caps)
     features = gst_caps_get_features_unchecked (caps, i);
 
     g_string_append (s, gst_structure_get_name (structure));
-    if (features
-        && !gst_caps_features_is_equal (features,
-            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
+    if (features && (gst_caps_features_is_any (features)
+            || !gst_caps_features_is_equal (features,
+                GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))) {
       g_string_append_c (s, '(');
       priv_gst_caps_features_append_to_gstring (features, s);
       g_string_append_c (s, ')');
