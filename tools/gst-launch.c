@@ -102,7 +102,7 @@ fault_spin (void)
 
   /* FIXME how do we know if we were run by libtool? */
   fprintf (stderr,
-      "Spinning.  Please run 'gdb gst-launch- " GST_API_VERSION " %d' to "
+      "Spinning.  Please run 'gdb gst-launch-" GST_API_VERSION " %d' to "
       "continue debugging, Ctrl-C to quit, or Ctrl-\\ to dump core.\n",
       (gint) getpid ());
   while (spinning)
