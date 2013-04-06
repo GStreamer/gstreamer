@@ -78,11 +78,10 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
-#include "gstvideofilter2.h"
-#include "gstscenechange.h"
+#include <gst/video/gstvideofilter.h>
 #include <string.h>
+#include "gstscenechange.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_scene_change_debug_category);
 #define GST_CAT_DEFAULT gst_scene_change_debug_category
@@ -97,12 +96,11 @@ static void gst_scene_change_get_property (GObject * object,
 static void gst_scene_change_dispose (GObject * object);
 static void gst_scene_change_finalize (GObject * object);
 
-static gboolean gst_scene_change_start (GstBaseTransform * trans);
-static gboolean gst_scene_change_stop (GstBaseTransform * trans);
-static GstFlowReturn
-gst_scene_change_prefilter (GstVideoFilter2 * videofilter2, GstBuffer * buf);
-
-static GstVideoFilter2Functions gst_scene_change_filter_functions[];
+static gboolean gst_scene_change_set_info (GstVideoFilter * filter,
+    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
+    GstVideoInfo * out_info);
+static GstFlowReturn gst_scene_change_transform_frame_ip (GstVideoFilter *
+    filter, GstVideoFrame * frame);
 
 #undef TESTING
 #ifdef TESTING
@@ -114,54 +112,46 @@ enum
   PROP_0
 };
 
-/* pad templates */
-
+#define VIDEO_CAPS \
+    GST_VIDEO_CAPS_MAKE("{ I420, Y42B, Y41B, Y444 }")
 
 /* class initialization */
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_scene_change_debug_category, "scenechange", 0, \
-      "debug category for scenechange element");
-
-GST_BOILERPLATE_FULL (GstSceneChange, gst_scene_change, GstVideoFilter2,
-    GST_TYPE_VIDEO_FILTER2, DEBUG_INIT);
-
-static void
-gst_scene_change_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-
-  gst_element_class_set_static_metadata (element_class, "Scene change detector",
-      "Video/Filter", "Detects scene changes in video",
-      "David Schleef <ds@entropywave.com>");
-}
+G_DEFINE_TYPE_WITH_CODE (GstSceneChange, gst_scene_change,
+    GST_TYPE_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (gst_scene_change_debug_category, "scenechange", 0,
+        "debug category for scenechange element"));
 
 static void
 gst_scene_change_class_init (GstSceneChangeClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstBaseTransformClass *base_transform_class =
-      GST_BASE_TRANSFORM_CLASS (klass);
-  GstVideoFilter2Class *video_filter2_class = GST_VIDEO_FILTER2_CLASS (klass);
+  GstVideoFilterClass *video_filter_class = GST_VIDEO_FILTER_CLASS (klass);
+
+  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          gst_caps_from_string (VIDEO_CAPS)));
+  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          gst_caps_from_string (VIDEO_CAPS)));
+
+  gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
+      "Scene change detector",
+      "Video/Filter", "Detects scene changes in video",
+      "David Schleef <ds@entropywave.com>");
 
   gobject_class->set_property = gst_scene_change_set_property;
   gobject_class->get_property = gst_scene_change_get_property;
   gobject_class->dispose = gst_scene_change_dispose;
   gobject_class->finalize = gst_scene_change_finalize;
-  base_transform_class->start = GST_DEBUG_FUNCPTR (gst_scene_change_start);
-  base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_scene_change_stop);
-  video_filter2_class->prefilter =
-      GST_DEBUG_FUNCPTR (gst_scene_change_prefilter);
-
-  gst_video_filter2_class_add_functions (video_filter2_class,
-      gst_scene_change_filter_functions);
+  video_filter_class->set_info = GST_DEBUG_FUNCPTR (gst_scene_change_set_info);
+  video_filter_class->transform_frame_ip =
+      GST_DEBUG_FUNCPTR (gst_scene_change_transform_frame_ip);
 
 }
 
 static void
-gst_scene_change_init (GstSceneChange * scenechange,
-    GstSceneChangeClass * scenechange_class)
+gst_scene_change_init (GstSceneChange * scenechange)
 {
 }
 
@@ -169,7 +159,9 @@ void
 gst_scene_change_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  g_return_if_fail (GST_IS_SCENE_CHANGE (object));
+  GstSceneChange *scenechange = GST_SCENE_CHANGE (object);
+
+  GST_DEBUG_OBJECT (scenechange, "set_property");
 
   switch (property_id) {
     default:
@@ -182,7 +174,9 @@ void
 gst_scene_change_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  g_return_if_fail (GST_IS_SCENE_CHANGE (object));
+  GstSceneChange *scenechange = GST_SCENE_CHANGE (object);
+
+  GST_DEBUG_OBJECT (scenechange, "get_property");
 
   switch (property_id) {
     default:
@@ -194,104 +188,106 @@ gst_scene_change_get_property (GObject * object, guint property_id,
 void
 gst_scene_change_dispose (GObject * object)
 {
-  g_return_if_fail (GST_IS_SCENE_CHANGE (object));
+  GstSceneChange *scenechange = GST_SCENE_CHANGE (object);
+
+  GST_DEBUG_OBJECT (scenechange, "dispose");
 
   /* clean up as possible.  may be called multiple times */
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (gst_scene_change_parent_class)->dispose (object);
 }
 
 void
 gst_scene_change_finalize (GObject * object)
 {
-  GstSceneChange *scenechange;
+  GstSceneChange *scenechange = GST_SCENE_CHANGE (object);
 
-  g_return_if_fail (GST_IS_SCENE_CHANGE (object));
-  scenechange = GST_SCENE_CHANGE (object);
+  GST_DEBUG_OBJECT (scenechange, "finalize");
 
-  if (scenechange->oldbuf)
-    gst_buffer_unref (scenechange->oldbuf);
+  /* clean up object here */
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_scene_change_parent_class)->finalize (object);
 }
 
-
 static gboolean
-gst_scene_change_start (GstBaseTransform * trans)
+gst_scene_change_set_info (GstVideoFilter * filter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
+  GstSceneChange *scenechange = GST_SCENE_CHANGE (filter);
+
+  GST_DEBUG_OBJECT (scenechange, "set_info");
 
   return TRUE;
 }
 
-static gboolean
-gst_scene_change_stop (GstBaseTransform * trans)
-{
-
-  return TRUE;
-}
-
-static GstFlowReturn
-gst_scene_change_prefilter (GstVideoFilter2 * video_filter2, GstBuffer * buf)
-{
-
-  return GST_FLOW_OK;
-}
 
 static double
-get_frame_score (guint8 * s1, guint8 * s2, int width, int height)
+get_frame_score (GstVideoFrame * f1, GstVideoFrame * f2)
 {
   int i;
   int j;
   int score = 0;
+  int width, height;
+  guint8 *s1;
+  guint8 *s2;
+
+  width = f1->info.width;
+  height = f1->info.height;
 
   for (j = 0; j < height; j++) {
+    s1 = (guint8 *) f1->data[0] + f1->info.stride[0] * j;
+    s2 = (guint8 *) f2->data[0] + f2->info.stride[0] * j;
     for (i = 0; i < width; i++) {
       score += ABS (s1[i] - s2[i]);
     }
-    s1 += width;
-    s2 += width;
   }
 
   return ((double) score) / (width * height);
 }
 
 static GstFlowReturn
-gst_scene_change_filter_ip_I420 (GstVideoFilter2 * videofilter2,
-    GstBuffer * buf, int start, int end)
+gst_scene_change_transform_frame_ip (GstVideoFilter * filter,
+    GstVideoFrame * frame)
 {
-  GstSceneChange *scenechange;
+  GstSceneChange *scenechange = GST_SCENE_CHANGE (filter);
+  GstVideoFrame oldframe;
   double score_min;
   double score_max;
   double threshold;
   double score;
   gboolean change;
+  gboolean ret;
   int i;
-  int width;
-  int height;
 
-  g_return_val_if_fail (GST_IS_SCENE_CHANGE (videofilter2), GST_FLOW_ERROR);
-  scenechange = GST_SCENE_CHANGE (videofilter2);
-
-  width = GST_VIDEO_FILTER2_WIDTH (videofilter2);
-  height = GST_VIDEO_FILTER2_HEIGHT (videofilter2);
+  GST_DEBUG_OBJECT (scenechange, "transform_frame_ip");
 
   if (!scenechange->oldbuf) {
     scenechange->n_diffs = 0;
     memset (scenechange->diffs, 0, sizeof (double) * SC_N_DIFFS);
-    scenechange->oldbuf = gst_buffer_ref (buf);
+    scenechange->oldbuf = gst_buffer_ref (frame->buffer);
     return GST_FLOW_OK;
   }
 
-  score = get_frame_score (GST_BUFFER_DATA (scenechange->oldbuf),
-      GST_BUFFER_DATA (buf), width, height);
+  ret =
+      gst_video_frame_map (&oldframe, &scenechange->oldinfo,
+      scenechange->oldbuf, GST_MAP_READ);
+  if (!ret) {
+    GST_ERROR_OBJECT (scenechange, "failed to map old video frame");
+    return GST_FLOW_ERROR;
+  }
+
+  score = get_frame_score (&oldframe, frame);
+
+  gst_video_frame_unmap (&oldframe);
+
+  gst_buffer_unref (scenechange->oldbuf);
+  scenechange->oldbuf = gst_buffer_ref (frame->buffer);
+  memcpy (&scenechange->oldinfo, &frame->info, sizeof (GstVideoInfo));
 
   memmove (scenechange->diffs, scenechange->diffs + 1,
       sizeof (double) * (SC_N_DIFFS - 1));
   scenechange->diffs[SC_N_DIFFS - 1] = score;
   scenechange->n_diffs++;
-
-  gst_buffer_unref (scenechange->oldbuf);
-  scenechange->oldbuf = gst_buffer_ref (buf);
 
   score_min = scenechange->diffs[0];
   score_max = scenechange->diffs[0];
@@ -328,22 +324,19 @@ gst_scene_change_filter_ip_I420 (GstVideoFilter2 * videofilter2,
   if (change) {
     GstEvent *event;
 
-    GST_DEBUG_OBJECT (scenechange, "%d %g %g %g %d",
+    GST_INFO_OBJECT (scenechange, "%d %g %g %g %d",
         scenechange->n_diffs, score / threshold, score, threshold, change);
 
-    event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-        gst_structure_new ("GstForceKeyUnit", NULL));
+    event =
+        gst_video_event_new_downstream_force_key_unit (GST_BUFFER_PTS
+        (frame->buffer), GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, FALSE,
+        scenechange->count++);
 
     gst_pad_push_event (GST_BASE_TRANSFORM_SRC_PAD (scenechange), event);
   }
 
   return GST_FLOW_OK;
 }
-
-static GstVideoFilter2Functions gst_scene_change_filter_functions[] = {
-  {GST_VIDEO_FORMAT_I420, NULL, gst_scene_change_filter_ip_I420},
-  {GST_VIDEO_FORMAT_UNKNOWN}
-};
 
 
 

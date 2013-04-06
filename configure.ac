@@ -321,7 +321,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  kate librfb \
  mve mythtv nsf nuvdemux \
  patchdetect real \
- sdi stereo tta videofilters \
+ sdi stereo tta \
  videomeasure videosignal vmnc \
  linsys vcd \
  apexsink cdaudio dc1394 dirac directfb \

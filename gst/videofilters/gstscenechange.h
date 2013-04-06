@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2011 FIXME <fixme@example.com>
+ * Copyright (C) 2011 David Schleef <ds@schleef.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,9 +20,8 @@
 #ifndef _GST_SCENE_CHANGE_H_
 #define _GST_SCENE_CHANGE_H_
 
-#include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
-#include "gstvideofilter2.h"
+#include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
 
@@ -39,16 +38,18 @@ typedef struct _GstSceneChangeClass GstSceneChangeClass;
 
 struct _GstSceneChange
 {
-  GstVideoFilter2 base_scenechange;
+  GstVideoFilter base_scenechange;
 
   int n_diffs;
   double diffs[SC_N_DIFFS];
   GstBuffer *oldbuf;
+  GstVideoInfo oldinfo;
+  int count;
 };
 
 struct _GstSceneChangeClass
 {
-  GstVideoFilter2Class base_scenechange_class;
+  GstVideoFilterClass base_scenechange_class;
 };
 
 GType gst_scene_change_get_type (void);

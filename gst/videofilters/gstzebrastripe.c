@@ -47,10 +47,10 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
-#include <math.h>
+#include <gst/video/gstvideofilter.h>
 #include "gstzebrastripe.h"
+#include <math.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_zebra_stripe_debug_category);
 #define GST_CAT_DEFAULT gst_zebra_stripe_debug_category
@@ -62,15 +62,16 @@ static void gst_zebra_stripe_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_zebra_stripe_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
+static void gst_zebra_stripe_dispose (GObject * object);
 static void gst_zebra_stripe_finalize (GObject * object);
-
 static gboolean gst_zebra_stripe_start (GstBaseTransform * trans);
 static gboolean gst_zebra_stripe_stop (GstBaseTransform * trans);
 
-static GstFlowReturn
-gst_zebra_stripe_prefilter (GstVideoFilter2 * videofilter2, GstBuffer * buf);
-
-static GstVideoFilter2Functions gst_zebra_stripe_filter_functions[];
+static gboolean gst_zebra_stripe_set_info (GstVideoFilter * filter,
+    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
+    GstVideoInfo * out_info);
+static GstFlowReturn gst_zebra_stripe_transform_frame_ip (GstVideoFilter *
+    filter, GstVideoFrame * frame);
 
 enum
 {
@@ -80,68 +81,71 @@ enum
 
 #define DEFAULT_THRESHOLD 90
 
+/* pad templates */
+
+#define VIDEO_CAPS GST_VIDEO_CAPS_MAKE( \
+    "{ I420, Y444, Y42B, Y41B, YUY2, UYVY, AYUV }")
+
+
 /* class initialization */
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_zebra_stripe_debug_category, "zebrastripe", 0, \
-      "debug category for zebrastripe element");
-
-GST_BOILERPLATE_FULL (GstZebraStripe, gst_zebra_stripe, GstVideoFilter2,
-    GST_TYPE_VIDEO_FILTER2, DEBUG_INIT);
-
-static void
-gst_zebra_stripe_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_static_metadata (element_class, "Zebra stripe overlay",
-      "Filter/Analysis",
-      "Overlays zebra striping on overexposed areas of video",
-      "David Schleef <ds@entropywave.com>");
-}
+G_DEFINE_TYPE_WITH_CODE (GstZebraStripe, gst_zebra_stripe,
+    GST_TYPE_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (gst_zebra_stripe_debug_category, "zebrastripe", 0,
+        "debug category for zebrastripe element"));
 
 static void
 gst_zebra_stripe_class_init (GstZebraStripeClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstVideoFilter2Class *video_filter2_class = GST_VIDEO_FILTER2_CLASS (klass);
   GstBaseTransformClass *base_transform_class =
       GST_BASE_TRANSFORM_CLASS (klass);
+  GstVideoFilterClass *video_filter_class = GST_VIDEO_FILTER_CLASS (klass);
+
+  /* Setting up pads and setting metadata should be moved to
+     base_class_init if you intend to subclass this class. */
+  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          gst_caps_from_string (VIDEO_CAPS)));
+  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          gst_caps_from_string (VIDEO_CAPS)));
+
+  gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
+      "Zebra stripe overlay",
+      "Filter/Analysis",
+      "Overlays zebra striping on overexposed areas of video",
+      "David Schleef <ds@entropywave.com>");
 
   gobject_class->set_property = gst_zebra_stripe_set_property;
   gobject_class->get_property = gst_zebra_stripe_get_property;
+  gobject_class->dispose = gst_zebra_stripe_dispose;
   gobject_class->finalize = gst_zebra_stripe_finalize;
   base_transform_class->start = GST_DEBUG_FUNCPTR (gst_zebra_stripe_start);
   base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_zebra_stripe_stop);
-
-  video_filter2_class->prefilter =
-      GST_DEBUG_FUNCPTR (gst_zebra_stripe_prefilter);
+  video_filter_class->set_info = GST_DEBUG_FUNCPTR (gst_zebra_stripe_set_info);
+  video_filter_class->transform_frame_ip =
+      GST_DEBUG_FUNCPTR (gst_zebra_stripe_transform_frame_ip);
 
   g_object_class_install_property (gobject_class, PROP_THRESHOLD,
       g_param_spec_int ("threshold", "Threshold",
           "Threshold above which the video is striped", 0, 100,
           DEFAULT_THRESHOLD,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-
-  gst_video_filter2_class_add_functions (video_filter2_class,
-      gst_zebra_stripe_filter_functions);
 }
 
 static void
-gst_zebra_stripe_init (GstZebraStripe * zebrastripe,
-    GstZebraStripeClass * zebrastripe_class)
+gst_zebra_stripe_init (GstZebraStripe * zebrastripe)
 {
-
 }
 
 void
 gst_zebra_stripe_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstZebraStripe *zebrastripe;
+  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (object);
 
-  g_return_if_fail (GST_IS_ZEBRA_STRIPE (object));
-  zebrastripe = GST_ZEBRA_STRIPE (object);
+  GST_DEBUG_OBJECT (zebrastripe, "set_property");
 
   switch (property_id) {
     case PROP_THRESHOLD:
@@ -159,10 +163,9 @@ void
 gst_zebra_stripe_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstZebraStripe *zebrastripe;
+  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (object);
 
-  g_return_if_fail (GST_IS_ZEBRA_STRIPE (object));
-  zebrastripe = GST_ZEBRA_STRIPE (object);
+  GST_DEBUG_OBJECT (zebrastripe, "get_property");
 
   switch (property_id) {
     case PROP_THRESHOLD:
@@ -175,59 +178,78 @@ gst_zebra_stripe_get_property (GObject * object, guint property_id,
 }
 
 void
+gst_zebra_stripe_dispose (GObject * object)
+{
+  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (object);
+
+  GST_DEBUG_OBJECT (zebrastripe, "dispose");
+
+  /* clean up as possible.  may be called multiple times */
+
+  G_OBJECT_CLASS (gst_zebra_stripe_parent_class)->dispose (object);
+}
+
+void
 gst_zebra_stripe_finalize (GObject * object)
 {
-  g_return_if_fail (GST_IS_ZEBRA_STRIPE (object));
+  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (object);
+
+  GST_DEBUG_OBJECT (zebrastripe, "finalize");
 
   /* clean up object here */
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_zebra_stripe_parent_class)->finalize (object);
 }
-
 
 static gboolean
 gst_zebra_stripe_start (GstBaseTransform * trans)
 {
+  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (trans);
 
+  GST_DEBUG_OBJECT (zebrastripe, "start");
+
+  if (GST_BASE_TRANSFORM_CLASS (gst_zebra_stripe_parent_class)->start)
+    return
+        GST_BASE_TRANSFORM_CLASS (gst_zebra_stripe_parent_class)->start (trans);
   return TRUE;
 }
 
 static gboolean
 gst_zebra_stripe_stop (GstBaseTransform * trans)
 {
+  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (trans);
+
+  GST_DEBUG_OBJECT (zebrastripe, "stop");
+
+  if (GST_BASE_TRANSFORM_CLASS (gst_zebra_stripe_parent_class)->stop)
+    return
+        GST_BASE_TRANSFORM_CLASS (gst_zebra_stripe_parent_class)->stop (trans);
+  return TRUE;
+}
+
+static gboolean
+gst_zebra_stripe_set_info (GstVideoFilter * filter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
+{
+  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (filter);
+
+  GST_DEBUG_OBJECT (zebrastripe, "set_info");
 
   return TRUE;
 }
 
 static GstFlowReturn
-gst_zebra_stripe_prefilter (GstVideoFilter2 * videofilter2, GstBuffer * buf)
+gst_zebra_stripe_transform_frame_ip_planarY (GstZebraStripe * zebrastripe,
+    GstVideoFrame * frame)
 {
-  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (videofilter2);
-
-  zebrastripe->t++;
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_zebra_stripe_filter_ip_planarY (GstVideoFilter2 * videofilter2,
-    GstBuffer * buf, int start, int end)
-{
-  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (videofilter2);
-  int width = GST_VIDEO_FILTER2_WIDTH (zebrastripe);
+  int width = frame->info.width;
+  int height = frame->info.height;
   int i, j;
   int threshold = zebrastripe->y_threshold;
   int t = zebrastripe->t;
-  guint8 *ydata;
-  int ystride;
 
-  ydata = GST_BUFFER_DATA (buf);
-  ystride =
-      gst_video_format_get_row_stride (GST_VIDEO_FILTER2_FORMAT (videofilter2),
-      0, width);
-
-  for (j = start; j < end; j++) {
-    guint8 *data = ydata + ystride * j;
+  for (j = 0; j < height; j++) {
+    guint8 *data = (guint8 *) frame->data[0] + frame->info.stride[0] * j;
     for (i = 0; i < width; i++) {
       if (data[i] >= threshold) {
         if ((i + j + t) & 0x4)
@@ -239,27 +261,23 @@ gst_zebra_stripe_filter_ip_planarY (GstVideoFilter2 * videofilter2,
 }
 
 static GstFlowReturn
-gst_zebra_stripe_filter_ip_YxYy (GstVideoFilter2 * videofilter2,
-    GstBuffer * buf, int start, int end)
+gst_zebra_stripe_transform_frame_ip_YUY2 (GstZebraStripe * zebrastripe,
+    GstVideoFrame * frame)
 {
-  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (videofilter2);
-  GstVideoFormat format = GST_VIDEO_FILTER2_FORMAT (zebrastripe);
-  int width = GST_VIDEO_FILTER2_WIDTH (zebrastripe);
+  int width = frame->info.width;
+  int height = frame->info.height;
   int i, j;
   int threshold = zebrastripe->y_threshold;
   int t = zebrastripe->t;
-  guint8 *ydata;
-  int ystride;
+  int offset = 0;
 
-  ydata = GST_BUFFER_DATA (buf);
-  ystride = gst_video_format_get_row_stride (format, 0, width);
-
-  if (format == GST_VIDEO_FORMAT_UYVY) {
-    ydata++;
+  if (frame->info.finfo->format == GST_VIDEO_FORMAT_UYVY) {
+    offset = 1;
   }
 
-  for (j = start; j < end; j++) {
-    guint8 *data = ydata + ystride * j;
+  for (j = 0; j < height; j++) {
+    guint8 *data =
+        (guint8 *) frame->data[0] + frame->info.stride[0] * j + offset;
     for (i = 0; i < width; i++) {
       if (data[2 * i] >= threshold) {
         if ((i + j + t) & 0x4)
@@ -271,29 +289,21 @@ gst_zebra_stripe_filter_ip_YxYy (GstVideoFilter2 * videofilter2,
 }
 
 static GstFlowReturn
-gst_zebra_stripe_filter_ip_AYUV (GstVideoFilter2 * videofilter2,
-    GstBuffer * buf, int start, int end)
+gst_zebra_stripe_transform_frame_ip_AYUV (GstZebraStripe * zebrastripe,
+    GstVideoFrame * frame)
 {
-  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (videofilter2);
-  int width = GST_VIDEO_FILTER2_WIDTH (zebrastripe);
+  int width = frame->info.width;
+  int height = frame->info.height;
   int i, j;
   int threshold = zebrastripe->y_threshold;
   int t = zebrastripe->t;
-  guint8 *ydata;
-  int ystride;
 
-  ydata = GST_BUFFER_DATA (buf);
-  ystride =
-      gst_video_format_get_row_stride (GST_VIDEO_FILTER2_FORMAT (videofilter2),
-      0, width);
-
-  ydata++;
-  for (j = start; j < end; j++) {
-    guint8 *data = ydata + ystride * j;
+  for (j = 0; j < height; j++) {
+    guint8 *data = (guint8 *) frame->data[0] + frame->info.stride[0] * j;
     for (i = 0; i < width; i++) {
-      if (data[4 * i] >= threshold) {
+      if (data[4 * i + 1] >= threshold) {
         if ((i + j + t) & 0x4)
-          data[4 * i] = 16;
+          data[4 * i + 1] = 16;
       }
     }
   }
@@ -301,19 +311,33 @@ gst_zebra_stripe_filter_ip_AYUV (GstVideoFilter2 * videofilter2,
   return GST_FLOW_OK;
 }
 
-static GstVideoFilter2Functions gst_zebra_stripe_filter_functions[] = {
-  {GST_VIDEO_FORMAT_I420, NULL, gst_zebra_stripe_filter_ip_planarY},
-  {GST_VIDEO_FORMAT_YV12, NULL, gst_zebra_stripe_filter_ip_planarY},
-  {GST_VIDEO_FORMAT_Y41B, NULL, gst_zebra_stripe_filter_ip_planarY},
-  {GST_VIDEO_FORMAT_Y42B, NULL, gst_zebra_stripe_filter_ip_planarY},
-  {GST_VIDEO_FORMAT_NV12, NULL, gst_zebra_stripe_filter_ip_planarY},
-  {GST_VIDEO_FORMAT_NV21, NULL, gst_zebra_stripe_filter_ip_planarY},
-  {GST_VIDEO_FORMAT_YUV9, NULL, gst_zebra_stripe_filter_ip_planarY},
-  {GST_VIDEO_FORMAT_YVU9, NULL, gst_zebra_stripe_filter_ip_planarY},
-  {GST_VIDEO_FORMAT_Y444, NULL, gst_zebra_stripe_filter_ip_planarY},
-  {GST_VIDEO_FORMAT_UYVY, NULL, gst_zebra_stripe_filter_ip_YxYy},
-  {GST_VIDEO_FORMAT_YUY2, NULL, gst_zebra_stripe_filter_ip_YxYy},
-  {GST_VIDEO_FORMAT_YVYU, NULL, gst_zebra_stripe_filter_ip_YxYy},
-  {GST_VIDEO_FORMAT_AYUV, NULL, gst_zebra_stripe_filter_ip_AYUV},
-  {GST_VIDEO_FORMAT_UNKNOWN}
-};
+static GstFlowReturn
+gst_zebra_stripe_transform_frame_ip (GstVideoFilter * filter,
+    GstVideoFrame * frame)
+{
+  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (filter);
+
+  GST_DEBUG_OBJECT (zebrastripe, "transform_frame_ip");
+  zebrastripe->t++;
+
+  switch (frame->info.finfo->format) {
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_Y41B:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y42B:
+      gst_zebra_stripe_transform_frame_ip_planarY (zebrastripe, frame);
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+      gst_zebra_stripe_transform_frame_ip_YUY2 (zebrastripe, frame);
+      break;
+    case GST_VIDEO_FORMAT_AYUV:
+      gst_zebra_stripe_transform_frame_ip_AYUV (zebrastripe, frame);
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+
+
+  return GST_FLOW_OK;
+}

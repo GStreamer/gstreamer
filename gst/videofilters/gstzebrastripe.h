@@ -20,8 +20,8 @@
 #ifndef _GST_ZEBRA_STRIPE_H_
 #define _GST_ZEBRA_STRIPE_H_
 
-#include "gstvideofilter2.h"
 #include <gst/video/video.h>
+#include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
 
@@ -36,7 +36,7 @@ typedef struct _GstZebraStripeClass GstZebraStripeClass;
 
 struct _GstZebraStripe
 {
-  GstVideoFilter2 video_filter2;
+  GstVideoFilter base_zebrastripe;
 
   /* properties */
   int threshold;
@@ -44,12 +44,11 @@ struct _GstZebraStripe
   /* state */
   int t;
   int y_threshold;
-
 };
 
 struct _GstZebraStripeClass
 {
-  GstVideoFilter2Class video_filter2_class;
+  GstVideoFilterClass base_zebrastripe_class;
 };
 
 GType gst_zebra_stripe_get_type (void);
