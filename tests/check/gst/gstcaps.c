@@ -1063,9 +1063,22 @@ GST_START_TEST (test_features)
   fail_unless (gst_caps_is_subset (c1, c2));
   fail_unless (gst_caps_is_subset (c2, c1));
   fail_unless (gst_caps_can_intersect (c1, c2));
-
-  gst_caps_unref (c1);
   gst_caps_unref (c2);
+
+  c2 = gst_caps_from_string
+      ("video/x-raw(ANY), width=320, height=[ 240, 260 ]");
+  fail_unless (c2 != NULL);
+  fail_if (gst_caps_is_equal (c1, c2));
+  fail_unless (gst_caps_is_subset (c1, c2));
+  fail_if (gst_caps_is_subset (c2, c1));
+  fail_unless (gst_caps_can_intersect (c1, c2));
+
+  c3 = gst_caps_intersect (c1, c2);
+  fail_unless (gst_caps_is_equal (c3, c1));
+
+  gst_caps_unref (c3);
+  gst_caps_unref (c2);
+  gst_caps_unref (c1);
 }
 
 GST_END_TEST;
