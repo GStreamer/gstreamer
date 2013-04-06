@@ -689,9 +689,9 @@ gst_caps_merge_structure (GstCaps * caps, GstStructure * structure)
 
     /* if structure is a subset of structure1 and the
      * there are no existing features, then skip it */
-    if (gst_structure_is_subset (structure, structure1) &&
-        gst_caps_features_is_equal (features1,
-            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
+    if (gst_caps_features_is_equal (features1,
+            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)
+        && gst_structure_is_subset (structure, structure1)) {
       unique = FALSE;
       break;
     }
@@ -740,8 +740,15 @@ gst_caps_merge_structure_full (GstCaps * caps, GstStructure * structure,
       features1 = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
     /* if structure is a subset of structure1 and the
      * the features are a subset, then skip it */
-    if (gst_structure_is_subset (structure, structure1) &&
-        gst_caps_features_is_equal (features_tmp, features1)) {
+    /* FIXME: We only skip if none of the features are
+     * ANY and are still equal. That way all ANY structures
+     * show up in the caps and no non-ANY structures are
+     * swallowed by ANY structures
+     */
+    if (((!gst_caps_features_is_any (features_tmp)
+                || gst_caps_features_is_any (features1))
+            && gst_caps_features_is_equal (features_tmp, features1))
+        && gst_structure_is_subset (structure, structure1)) {
       unique = FALSE;
       break;
     }
@@ -1178,8 +1185,9 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
       f2 = gst_caps_get_features_unchecked (superset, j);
       if (!f2)
         f2 = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
-      if (gst_structure_is_subset (s1, s2) &&
-          gst_caps_features_is_equal (f1, f2)) {
+      if ((!gst_caps_features_is_any (f1) || gst_caps_features_is_any (f2)) &&
+          gst_caps_features_is_equal (f1, f2)
+          && gst_structure_is_subset (s1, s2)) {
         /* If we found a superset, continue with the next
          * subset structure */
         break;
@@ -1267,8 +1275,9 @@ gst_caps_is_subset_structure_full (const GstCaps * caps,
     f = gst_caps_get_features_unchecked (caps, i);
     if (!f)
       f = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
-    if (gst_structure_is_subset (structure, s) &&
-        gst_caps_features_is_equal (features, f)) {
+    if ((!gst_caps_features_is_any (features) || gst_caps_features_is_any (f))
+        && gst_caps_features_is_equal (features, f)
+        && gst_structure_is_subset (structure, s)) {
       /* If we found a superset return TRUE */
       return TRUE;
     }
@@ -1336,8 +1345,9 @@ gst_caps_is_strictly_equal (const GstCaps * caps1, const GstCaps * caps2)
     if (!f2)
       f2 = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
 
-    if (!gst_structure_is_equal (s1, s2)
-        || !gst_caps_features_is_equal (f1, f2))
+    if (gst_caps_features_is_any (f1) != gst_caps_features_is_any (f2) ||
+        !gst_caps_features_is_equal (f1, f2) ||
+        !gst_structure_is_equal (s1, s2))
       return FALSE;
   }
 
@@ -1417,8 +1427,8 @@ gst_caps_can_intersect (const GstCaps * caps1, const GstCaps * caps2)
       features2 = gst_caps_get_features_unchecked (caps2, k);
       if (!features2)
         features2 = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
-      if (gst_structure_can_intersect (struct1, struct2) &&
-          gst_caps_features_is_equal (features1, features2)) {
+      if (gst_caps_features_is_equal (features1, features2) &&
+          gst_structure_can_intersect (struct1, struct2)) {
         return TRUE;
       }
       /* move down left */
@@ -1495,11 +1505,19 @@ gst_caps_intersect_zig_zag (GstCaps * caps1, GstCaps * caps2)
       features2 = gst_caps_get_features_unchecked (caps2, k);
       if (!features2)
         features2 = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
-      istruct = gst_structure_intersect (struct1, struct2);
-      if (istruct && gst_caps_features_is_equal (features1, features2))
-        dest =
-            gst_caps_merge_structure_full (dest, istruct,
-            gst_caps_features_copy_conditional (features1));
+      if (gst_caps_features_is_equal (features1, features2)) {
+        istruct = gst_structure_intersect (struct1, struct2);
+        if (istruct) {
+          if (gst_caps_features_is_any (features1))
+            dest =
+                gst_caps_merge_structure_full (dest, istruct,
+                gst_caps_features_copy_conditional (features2));
+          else
+            dest =
+                gst_caps_merge_structure_full (dest, istruct,
+                gst_caps_features_copy_conditional (features1));
+        }
+      }
       /* move down left */
       k++;
       if (G_UNLIKELY (j == 0))
@@ -1563,9 +1581,19 @@ gst_caps_intersect_first (GstCaps * caps1, GstCaps * caps2)
       features2 = gst_caps_get_features_unchecked (caps2, j);
       if (!features2)
         features2 = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
-      istruct = gst_structure_intersect (struct1, struct2);
-      if (istruct && gst_caps_features_is_equal (features1, features2))
-        dest = gst_caps_merge_structure (dest, istruct);
+      if (gst_caps_features_is_equal (features1, features2)) {
+        istruct = gst_structure_intersect (struct1, struct2);
+        if (istruct) {
+          if (gst_caps_features_is_any (features1))
+            dest =
+                gst_caps_merge_structure_full (dest, istruct,
+                gst_caps_features_copy_conditional (features2));
+          else
+            dest =
+                gst_caps_merge_structure_full (dest, istruct,
+                gst_caps_features_copy_conditional (features1));
+        }
+      }
     }
   }
 
@@ -1740,6 +1768,10 @@ gst_caps_subtract (GstCaps * minuend, GstCaps * subtrahend)
       min_f = gst_caps_get_features_unchecked (src, j);
       if (!min_f)
         min_f = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
+
+      /* Same reason as above for ANY caps */
+      g_return_val_if_fail (!gst_caps_features_is_any (min_f), NULL);
+
       if (gst_structure_get_name_id (min) == gst_structure_get_name_id (sub) &&
           gst_caps_features_is_equal (min_f, sub_f)) {
         GSList *list;
@@ -2052,6 +2084,7 @@ GstCaps *
 gst_caps_fixate (GstCaps * caps)
 {
   GstStructure *s;
+  GstCapsFeatures *f;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
@@ -2060,6 +2093,13 @@ gst_caps_fixate (GstCaps * caps)
   caps = gst_caps_make_writable (caps);
   s = gst_caps_get_structure (caps, 0);
   gst_structure_fixate (s);
+
+  /* Set features to sysmem if they're still ANY */
+  f = gst_caps_get_features (caps, 0);
+  if (f && gst_caps_features_is_any (f)) {
+    f = gst_caps_features_new_empty ();
+    gst_caps_set_features (caps, 0, f);
+  }
 
   return caps;
 }
