@@ -339,6 +339,16 @@ gst_gdk_pixbuf_sink_handle_buffer (GstBaseSink * basesink, GstBuffer * buf,
   if (do_post) {
     GstStructure *s;
     GstMessage *msg;
+    GstFormat format;
+    GstClockTime timestamp;
+    GstClockTime running_time, stream_time;
+
+    GstSegment *segment = &basesink->segment;
+    format = segment->format;
+
+    timestamp = GST_BUFFER_PTS (buf);
+    running_time = gst_segment_to_running_time (segment, format, timestamp);
+    stream_time = gst_segment_to_stream_time (segment, format, timestamp);
 
     /* it's okay to keep using pixbuf here, we can be sure no one is going to
      * unref or change sink->last_pixbuf before we return from this function.
@@ -346,7 +356,9 @@ gst_gdk_pixbuf_sink_handle_buffer (GstBaseSink * basesink, GstBuffer * buf,
     s = gst_structure_new (msg_name,
         "pixbuf", GDK_TYPE_PIXBUF, pixbuf,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, sink->par_n, sink->par_d,
-        NULL);
+        "timestamp", G_TYPE_UINT64, timestamp,
+        "stream-time", G_TYPE_UINT64, stream_time,
+        "running-time", G_TYPE_UINT64, running_time, NULL);
 
     msg = gst_message_new_element (GST_OBJECT_CAST (sink), s);
     gst_element_post_message (GST_ELEMENT_CAST (sink), msg);
