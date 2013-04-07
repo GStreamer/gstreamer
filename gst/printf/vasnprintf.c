@@ -75,7 +75,7 @@ local_wcslen (const wchar_t * s)
 #endif
 
 #ifndef HAVE_LONG_LONG_FORMAT
-static int
+static inline int
 print_long_long (char *buf,
     int len,
     int width,

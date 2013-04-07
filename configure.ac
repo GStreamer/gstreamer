@@ -618,6 +618,10 @@ fi
 dnl define an ERROR_CFLAGS Makefile variable
 AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [-Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wundef -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wold-style-definition -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return -Wno-multichar -Wnested-externs $NO_WARNINGS])
 
+dnl special warning flags for gst/printf
+AS_COMPILER_FLAG([-Wno-format-nonliteral], [PRINTF_CFLAGS="-Wno-format-nonliteral"])
+AC_SUBST(PRINTF_CFLAGS)
+
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
 
