@@ -29,10 +29,10 @@
 #include <stddef.h>
 
 /* Get intmax_t.  */
-#if HAVE_STDINT_H_WITH_UINTMAX
+#ifdef HAVE_STDINT_H_WITH_UINTMAX
 # include <stdint.h>
 #endif
-#if HAVE_INTTYPES_H_WITH_UINTMAX
+#ifdef HAVE_INTTYPES_H_WITH_UINTMAX
 # include <inttypes.h>
 #endif
 

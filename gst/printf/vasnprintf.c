@@ -378,7 +378,7 @@ vasnprintf (char *resultbuf, size_t * lengthp, const char *format, va_list args)
           char *p;
           unsigned int prefix_count;
           int prefixes[2];
-#if !HAVE_SNPRINTF
+#ifndef HAVE_SNPRINTF
           unsigned int tmp_length;
           char tmpbuf[700];
           char *tmp;
@@ -658,7 +658,7 @@ vasnprintf (char *resultbuf, size_t * lengthp, const char *format, va_list args)
               break;
           }
           *p = dp->conversion;
-#if HAVE_SNPRINTF
+#ifdef HAVE_SNPRINTF
           p[1] = '%';
           p[2] = 'n';
           p[3] = '\0';
@@ -678,7 +678,7 @@ vasnprintf (char *resultbuf, size_t * lengthp, const char *format, va_list args)
               abort ();
             prefixes[prefix_count++] = a.arg[dp->precision_arg_index].a.a_int;
           }
-#if HAVE_SNPRINTF
+#ifdef HAVE_SNPRINTF
           /* Prepare checking whether snprintf returns the count
              via %n.  */
           ENSURE_ALLOCATION (length + 1);
@@ -688,14 +688,14 @@ vasnprintf (char *resultbuf, size_t * lengthp, const char *format, va_list args)
           for (;;) {
             size_t maxlen;
             int count;
-#if HAVE_SNPRINTF
+#ifdef HAVE_SNPRINTF
             int retcount;
 #endif
 
             maxlen = allocated - length;
             count = -1;
 
-#if HAVE_SNPRINTF
+#ifdef HAVE_SNPRINTF
             retcount = 0;
 
 #define SNPRINTF_BUF(arg) \
@@ -845,7 +845,7 @@ vasnprintf (char *resultbuf, size_t * lengthp, const char *format, va_list args)
                     while (digitp != dp->precision_end);
                   }
                 }
-#if HAVE_SNPRINTF
+#ifdef HAVE_SNPRINTF
                 count = print_long_long (result + length, maxlen,
                     width, precision, dp->flags, dp->conversion, arg);
 #else
@@ -937,7 +937,7 @@ vasnprintf (char *resultbuf, size_t * lengthp, const char *format, va_list args)
                 abort ();
             }
 
-#if HAVE_SNPRINTF
+#ifdef HAVE_SNPRINTF
             /* Portability: Not all implementations of snprintf()
                are ISO C 99 compliant.  Determine the number of
                bytes that snprintf() has produced or would have
@@ -972,7 +972,7 @@ vasnprintf (char *resultbuf, size_t * lengthp, const char *format, va_list args)
               errno = EINVAL;
               return NULL;
             }
-#if !HAVE_SNPRINTF
+#ifndef HAVE_SNPRINTF
             if (count >= tmp_length)
               /* tmp_length was incorrectly calculated - fix the
                  code above!  */
@@ -990,11 +990,11 @@ vasnprintf (char *resultbuf, size_t * lengthp, const char *format, va_list args)
                 n = 2 * allocated;
 
               ENSURE_ALLOCATION (n);
-#if HAVE_SNPRINTF
+#ifdef HAVE_SNPRINTF
               continue;
 #endif
             }
-#if HAVE_SNPRINTF
+#ifdef HAVE_SNPRINTF
             /* The snprintf() result did fit.  */
 #else
             /* Append the sprintf() result.  */
