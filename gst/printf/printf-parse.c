@@ -400,6 +400,7 @@ printf_parse (const char *format, char_directives * d, arguments * a)
                 type = TYPE_POINTER_EXT;
                 dp->flags |= FLAG_PTR_EXT;
                 dp->ptr_ext_char = cp[1];
+                cp += 2;
                 /* we do not use dp->conversion='s' on purpose here, so we
                  * can fall back to printing just the pointer with %p if the
                  * serialisation function returned NULL for some reason */
