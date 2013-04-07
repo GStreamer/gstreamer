@@ -260,10 +260,15 @@ vasnprintf (char *resultbuf, size_t * lengthp, const char *format, va_list args)
     errno = EINVAL;
     return NULL;
   }
-#define CLEANUP() \
-  free (d.dir);								\
-  if (a.arg)								\
-    free (a.arg);
+#define CLEANUP()                         \
+  free (d.dir);                           \
+  if (a.arg) {                            \
+    while (a.count--) {                   \
+      if (a.arg[a.count].ext_string)      \
+        free (a.arg[a.count].ext_string); \
+    }                                     \
+    free (a.arg);                         \
+  }
 
   if (printf_fetchargs (args, &a) < 0) {
     CLEANUP ();
