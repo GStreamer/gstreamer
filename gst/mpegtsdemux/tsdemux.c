@@ -954,6 +954,11 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       name = g_strdup_printf ("audio_%04x", bstream->pid);
       caps = gst_caps_new_empty_simple ("audio/x-eac3");
       break;
+    case ST_BD_AUDIO_AC3_TRUE_HD:
+      template = gst_static_pad_template_get (&audio_template);
+      name = g_strdup_printf ("audio_%04x", bstream->pid);
+      caps = gst_caps_new_empty_simple ("audio/x-true-hd");
+      break;
     case ST_PS_AUDIO_DTS:
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
