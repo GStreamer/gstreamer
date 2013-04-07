@@ -387,6 +387,13 @@ printf_parse (const char *format, char_directives * d, arguments * a)
               c = 's';
               break;
 #endif
+              /* Old GST_PTR_FORMAT, handle for binary backwards compatibility */
+            case 'P':
+              type = TYPE_POINTER_EXT;
+              dp->flags |= FLAG_PTR_EXT;
+              dp->ptr_ext_char = 'A';
+              dp->conversion = 'p';
+              break;
             case 'p':
               /* Note: cp points already to the char after the 'p' now */
               if (cp[0] == POINTER_EXT_SIGNIFIER_CHAR && cp[1] != '\0') {
@@ -399,6 +406,13 @@ printf_parse (const char *format, char_directives * d, arguments * a)
               } else {
                 type = TYPE_POINTER;
               }
+              break;
+              /* Old GST_SEGMENT_FORMAT, handle for backwards compatibility */
+            case 'Q':
+              type = TYPE_POINTER_EXT;
+              dp->flags |= FLAG_PTR_EXT;
+              dp->ptr_ext_char = 'B';
+              dp->conversion = 'p';
               break;
             case 'n':
 #ifdef HAVE_LONG_LONG
