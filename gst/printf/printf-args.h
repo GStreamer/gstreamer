@@ -32,6 +32,7 @@
 /* Get va_list.  */
 #include <stdarg.h>
 
+#define POINTER_EXT_SIGNIFIER_CHAR '\a'
 
 /* Argument types */
 typedef enum
@@ -66,6 +67,7 @@ typedef enum
   TYPE_WIDE_STRING,
 #endif
   TYPE_POINTER,
+  TYPE_POINTER_EXT,
   TYPE_COUNT_SCHAR_POINTER,
   TYPE_COUNT_SHORT_POINTER,
   TYPE_COUNT_INT_POINTER,
@@ -120,6 +122,9 @@ typedef struct
 #endif
   }
   a;
+
+  /* string to replace pointer argument with for TYPE_POINTER_EXT */
+  char *ext_string;
 }
 argument;
 

@@ -32,6 +32,8 @@
 #define FLAG_ALT	16	/* # flag */
 #define FLAG_ZERO	32
 
+#define FLAG_PTR_EXT 1024
+
 /* A parsed directive.  */
 typedef struct
 {
@@ -46,6 +48,11 @@ typedef struct
   int precision_arg_index;
   char conversion; /* d i o u x X f e E g G c s p n U % but not C S */
   int arg_index;
+
+  /* extension char in case of TYPE_POINTER_EXT. We need to store this so
+   * we can pass it back to __gst_printf_pointer_extension_serialize()
+   * so it knows which pointer extension it is */
+  char ptr_ext_char;
 }
 char_directive;
 

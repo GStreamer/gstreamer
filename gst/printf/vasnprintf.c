@@ -41,6 +41,7 @@
 #include <limits.h>             /* CHAR_BIT */
 #include <float.h>              /* DBL_MAX_EXP, LDBL_MAX_EXP */
 #include "printf-parse.h"
+#include "printf-extension.h"
 
 #ifdef HAVE_WCHAR_T
 # ifdef HAVE_WCSLEN
@@ -223,6 +224,32 @@ print_long_long (char *buf,
 }
 #endif
 
+static void
+printf_postprocess_args (char_directives * directives, arguments * arguments)
+{
+  int i;
+
+  for (i = 0; i < directives->count; ++i) {
+    char_directive *dp;
+    argument *a;
+
+    dp = &directives->dir[i];
+    a = &arguments->arg[dp->arg_index];
+
+    if (a->type == TYPE_POINTER_EXT) {
+      char fmt[4];
+
+      fmt[0] = 'p';
+      fmt[1] = POINTER_EXT_SIGNIFIER_CHAR;
+      fmt[2] = dp->ptr_ext_char;
+      fmt[3] = '\0';
+
+      a->ext_string =
+          __gst_printf_pointer_extension_serialize (fmt, a->a.a_pointer);
+    }
+  }
+}
+
 char *
 vasnprintf (char *resultbuf, size_t * lengthp, const char *format, va_list args)
 {
@@ -243,6 +270,9 @@ vasnprintf (char *resultbuf, size_t * lengthp, const char *format, va_list args)
     errno = EINVAL;
     return NULL;
   }
+
+  /* collect TYPE_POINTER_EXT argument strings */
+  printf_postprocess_args (&d, &a);
 
   {
     char *buf =
@@ -521,6 +551,10 @@ vasnprintf (char *resultbuf, size_t * lengthp, const char *format, va_list args)
                     )
                     + 1         /* turn floor into ceil */
                     + 2;        /* account for leading 0x */
+
+                /* make sure we always have enough space for a plain %p, so + */
+                if (dp->flags & FLAG_PTR_EXT && a.arg[dp->arg_index].ext_string)
+                  tmp_length += strlen (a.arg[dp->arg_index].ext_string);
                 break;
 
               default:
@@ -879,6 +913,18 @@ vasnprintf (char *resultbuf, size_t * lengthp, const char *format, va_list args)
               case TYPE_POINTER:
               {
                 void *arg = a.arg[dp->arg_index].a.a_pointer;
+                SNPRINTF_BUF (arg);
+              }
+                break;
+              case TYPE_POINTER_EXT:
+              {
+                void *arg = a.arg[dp->arg_index].a.a_pointer;
+
+                if (a.arg[dp->arg_index].ext_string != NULL) {
+                  arg = a.arg[dp->arg_index].ext_string;
+                  *p = 's';
+                }
+
                 SNPRINTF_BUF (arg);
               }
                 break;

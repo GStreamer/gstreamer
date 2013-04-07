@@ -80,8 +80,11 @@ printf_parse (const char *format, char_directives * d, arguments * a)
 	  goto error;							\
 	a->arg = memory;						\
       }									\
-    while (a->count <= n)						\
-      a->arg[a->count++].type = TYPE_NONE;				\
+    while (a->count <= n) {                             \
+      a->arg[a->count].type = TYPE_NONE;                \
+      a->arg[a->count].ext_string = (char *) 0;         \
+      ++a->count;                                       \
+    }                                                   \
     if (a->arg[n].type == TYPE_NONE)					\
       a->arg[n].type = (_type_);					\
     else if (a->arg[n].type != (_type_))				\
@@ -385,7 +388,17 @@ printf_parse (const char *format, char_directives * d, arguments * a)
               break;
 #endif
             case 'p':
-              type = TYPE_POINTER;
+              /* Note: cp points already to the char after the 'p' now */
+              if (cp[0] == POINTER_EXT_SIGNIFIER_CHAR && cp[1] != '\0') {
+                type = TYPE_POINTER_EXT;
+                dp->flags |= FLAG_PTR_EXT;
+                dp->ptr_ext_char = cp[1];
+                /* we do not use dp->conversion='s' on purpose here, so we
+                 * can fall back to printing just the pointer with %p if the
+                 * serialisation function returned NULL for some reason */
+              } else {
+                type = TYPE_POINTER;
+              }
               break;
             case 'n':
 #ifdef HAVE_LONG_LONG

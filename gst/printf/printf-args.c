@@ -105,6 +105,7 @@ printf_fetchargs (va_list args, arguments * a)
         break;
 #endif
       case TYPE_POINTER:
+      case TYPE_POINTER_EXT:
         ap->a.a_pointer = va_arg (args, void *);
         break;
       case TYPE_COUNT_SCHAR_POINTER:
