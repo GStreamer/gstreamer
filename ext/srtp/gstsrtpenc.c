@@ -331,8 +331,8 @@ check_new_stream_locked (GstSrtpEnc * filter, guint32 ssrc)
 
   if (gst_buffer_get_size (filter->key) != SRTP_MASTER_KEY_LEN) {
     GST_ELEMENT_ERROR (filter, LIBRARY, SETTINGS, ("Master key size is wrong"),
-        ("Expected master key of %d bytes, but received %d bytes",
-            SRTP_MASTER_KEY_LEN, gst_buffer_get_size (filter->key)));
+        ("Expected master key of %d bytes, but received %" G_GSIZE_FORMAT
+            " bytes", SRTP_MASTER_KEY_LEN, gst_buffer_get_size (filter->key)));
     return FALSE;
   }
 

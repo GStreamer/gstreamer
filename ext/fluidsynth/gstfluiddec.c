@@ -367,7 +367,7 @@ produce_samples (GstFluidDec * fluiddec, GstClockTime pts, guint64 sample)
     return GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (fluiddec, "duration %" GST_TIME_FORMAT
-      ", samples %u", GST_TIME_ARGS (duration), samples);
+      ", samples %" G_GUINT64_FORMAT, GST_TIME_ARGS (duration), samples);
 
   outbuf = gst_buffer_new_allocate (NULL, samples * FLUID_DEC_BPS, NULL);
 

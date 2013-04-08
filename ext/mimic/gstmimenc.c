@@ -323,8 +323,9 @@ gst_mim_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
     GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DELTA_UNIT);
 
 
-  GST_LOG_OBJECT (mimenc, "incoming buf size %d, encoded size %d",
-      gst_buffer_get_size (in), gst_buffer_get_size (out));
+  GST_LOG_OBJECT (mimenc, "incoming buf size %" G_GSIZE_FORMAT
+      ", encoded size %" G_GSIZE_FORMAT, gst_buffer_get_size (in),
+      gst_buffer_get_size (out));
   ++mimenc->frames;
 
   /* now let's create that tcp header */

@@ -832,8 +832,9 @@ gst_srtp_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
     goto drop_buffer;
   }
 
-  GST_LOG_OBJECT (pad, "Received %s buffer of size %d with SSRC = %u",
-      is_rtcp ? "RTCP" : "RTP", gst_buffer_get_size (buf), ssrc);
+  GST_LOG_OBJECT (pad, "Received %s buffer of size %" G_GSIZE_FORMAT
+      " with SSRC = %u", is_rtcp ? "RTCP" : "RTP", gst_buffer_get_size (buf),
+      ssrc);
 
   /* Change buffer to remove protection */
   buf = gst_buffer_make_writable (buf);
