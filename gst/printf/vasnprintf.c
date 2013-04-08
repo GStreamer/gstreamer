@@ -67,7 +67,7 @@ local_wcslen (const wchar_t * s)
 
 /* For those losing systems which don't have 'alloca' we have to add
    some additional code emulating it.  */
-#ifdef GLIB_HAVE_ALLOCA_H
+#if defined (alloca) || defined (GLIB_HAVE_ALLOCA_H)
 # define freea(p)               /* nothing */
 #else
 # define alloca(n) malloc (n)

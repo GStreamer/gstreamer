@@ -47,8 +47,8 @@ This was imported from GLib's gnulib subdirectory.
 
 g-gnulib.h and _g_gnulib namespace has been changed to gst-printf.h and
 __gst_printf namespace for GStreamer. Also #define HAVE_SNPRINTF 0 has
-been changed to #undef HAVE_SNPRINTF, and HAVE_ALLOCA has been changed to
-GLIB_HAVE_ALLOCA_H
+been changed to #undef HAVE_SNPRINTF, and HAVE_ALLOCA has been replaced
+by an #if defined(alloca) || defined(GLIB_HAVE_ALLOCA_H)
 
 printf-extension.[ch] were added to provide support for custom pointer
 arguments (e.g. caps, events, etc.)
