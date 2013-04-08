@@ -131,7 +131,8 @@ enum
 
 
 static GstStaticCaps gst_video_scale_format_caps =
-GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS) ";"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS));
 
 #define GST_TYPE_VIDEO_SCALE_METHOD (gst_video_scale_method_get_type())
 static GType
@@ -410,7 +411,7 @@ get_formats_filter (GstVideoScaleMethod method)
     case GST_VIDEO_SCALE_4TAP:
     {
       static GstStaticCaps fourtap_filter =
-          GST_STATIC_CAPS ("video/x-raw,"
+          GST_STATIC_CAPS ("video/x-raw(ANY),"
           "format = (string) { RGBx, xRGB, BGRx, xBGR, RGBA, "
           "ARGB, BGRA, ABGR, AYUV, ARGB64, AYUV64, "
           "RGB, BGR, v308, YUY2, YVYU, UYVY, "
@@ -421,7 +422,7 @@ get_formats_filter (GstVideoScaleMethod method)
     case GST_VIDEO_SCALE_LANCZOS:
     {
       static GstStaticCaps lanczos_filter =
-          GST_STATIC_CAPS ("video/x-raw,"
+          GST_STATIC_CAPS ("video/x-raw(ANY),"
           "format = (string) { RGBx, xRGB, BGRx, xBGR, RGBA, "
           "ARGB, BGRA, ABGR, AYUV, ARGB64, AYUV64, "
           "I420, YV12, Y444, Y42B, Y41B }");
@@ -442,6 +443,7 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   GstVideoScaleMethod method;
   GstCaps *ret, *mfilter;
   GstStructure *structure;
+  GstCapsFeatures *features;
   gint i, n;
 
   GST_DEBUG_OBJECT (trans,
@@ -453,6 +455,8 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   GST_OBJECT_UNLOCK (videoscale);
 
   /* filter the supported formats */
+  /* FIXME: Ideally we would still allow passthrough for the color formats
+   * that are unsupported by the selected method */
   if ((mfilter = get_formats_filter (method))) {
     caps = gst_caps_intersect_full (caps, mfilter, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (mfilter);
@@ -464,24 +468,32 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
     structure = gst_caps_get_structure (caps, i);
+    features = gst_caps_get_features (caps, i);
 
     /* If this is already expressed by the existing caps
      * skip this structure */
-    if (i > 0 && gst_caps_is_subset_structure (ret, structure))
+    if (i > 0 && gst_caps_is_subset_structure_full (ret, structure, features))
       continue;
 
     /* make copy */
     structure = gst_structure_copy (structure);
-    gst_structure_set (structure,
-        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
-    /* if pixel aspect ratio, make a range of it */
-    if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
-      gst_structure_set (structure, "pixel-aspect-ratio",
-          GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
+    /* If the features are non-sysmem we can only do passthrough */
+    if (!gst_caps_features_is_any (features)
+        && gst_caps_features_is_equal (features,
+            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
+      gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+
+      /* if pixel aspect ratio, make a range of it */
+      if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
+        gst_structure_set (structure, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
+      }
     }
-    gst_caps_append_structure (ret, structure);
+
+    gst_caps_append_structure_full (ret, structure,
+        gst_caps_features_copy (features));
   }
 
   if (filter) {
