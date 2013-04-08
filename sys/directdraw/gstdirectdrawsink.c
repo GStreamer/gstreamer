@@ -210,11 +210,15 @@ gst_directdraw_sink_navigation_send_event (GstNavigation * navigation,
   GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (navigation);
   GstEvent *event;
   GstVideoRectangle src, dst, result;
+  RECT rect;
   gdouble x, y, old_x, old_y, xscale = 1.0, yscale=1.0;
   GstPad *pad = NULL;
 
   src.w = GST_VIDEO_SINK_WIDTH (ddrawsink);
   src.h = GST_VIDEO_SINK_HEIGHT (ddrawsink);
+  GetClientRect ((HWND) ddrawsink->video_window, &rect);
+  ddrawsink->out_width = rect.right - rect.left;
+  ddrawsink->out_height = rect.bottom - rect.top;
   dst.w = ddrawsink->out_width;
   dst.h = ddrawsink->out_height;
 
