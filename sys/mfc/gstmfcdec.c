@@ -397,7 +397,8 @@ dequeue_error:
 too_small_inbuf:
   {
     GST_ELEMENT_ERROR (self, STREAM, FORMAT, ("Too large input frames"),
-        ("Maximum size %d, got %d", mfc_inbuf_max_size, map.size));
+        ("Maximum size %d, got %" G_GSIZE_FORMAT, mfc_inbuf_max_size,
+            map.size));
     ret = GST_FLOW_ERROR;
     gst_buffer_unmap (inbuf, &map);
     goto done;
@@ -542,7 +543,7 @@ gst_mfc_dec_fill_outbuf (GstMFCDec * self, GstBuffer * outbuf,
       }
     }
   }
-  
+
   has_cropping = self->has_cropping && (self->width != self->crop_width
       || self->height != self->crop_height);
 
@@ -817,7 +818,7 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
     g_assert (mfc_outbuf != NULL);
 
-    GST_DEBUG_OBJECT (self, "Got output buffer with ID %d", timestamp.tv_sec);
+    GST_DEBUG_OBJECT (self, "Got output buffer with ID %ld", timestamp.tv_sec);
 
     frame = NULL;
     if (timestamp.tv_sec != -1)
@@ -847,7 +848,7 @@ gst_mfc_dec_dequeue_output (GstMFCDec * self)
 
       outbuf = frame->output_buffer;
     } else {
-      GST_WARNING_OBJECT (self, "Didn't find a frame for ID %d",
+      GST_WARNING_OBJECT (self, "Didn't find a frame for ID %ld",
           timestamp.tv_sec);
 
       outbuf =

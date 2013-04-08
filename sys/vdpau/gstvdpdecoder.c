@@ -137,7 +137,7 @@ gst_vdp_decoder_init_decoder (GstVdpDecoder * vdp_decoder,
   }
 
   GST_DEBUG_OBJECT (vdp_decoder,
-      "device:%p, profile:%d, width:%d, height:%d, max_references:%d",
+      "device:%u, profile:%d, width:%d, height:%d, max_references:%d",
       device->device, profile, output_state->info.width,
       output_state->info.height, max_references);
 

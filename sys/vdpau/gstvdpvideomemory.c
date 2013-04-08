@@ -152,7 +152,8 @@ release_data (GstVdpVideoMemory * vmem)
 static gpointer
 _vdp_video_mem_map (GstVdpVideoMemory * vmem, gsize maxsize, GstMapFlags flags)
 {
-  GST_DEBUG ("surface:%d, maxsize:%d, flags:%d", vmem->surface, maxsize, flags);
+  GST_DEBUG ("surface:%d, maxsize:%" G_GSIZE_FORMAT ", flags:%d",
+      vmem->surface, maxsize, flags);
 
   if (!ensure_data (vmem))
     return NULL;

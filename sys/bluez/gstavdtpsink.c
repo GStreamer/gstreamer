@@ -283,7 +283,7 @@ gst_avdtp_sink_start (GstBaseSink * basesink)
     return FALSE;
   }
 
-  GST_DEBUG_OBJECT (self, "Got connection caps: " GST_PTR_FORMAT,
+  GST_DEBUG_OBJECT (self, "Got connection caps: %" GST_PTR_FORMAT,
       self->dev_caps);
 
   return TRUE;

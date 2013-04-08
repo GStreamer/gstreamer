@@ -141,7 +141,7 @@ parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename)
 open_fail:
   {
     GST_ELEMENT_ERROR (dvbbasebin, RESOURCE, READ, (NULL),
-        ("Opening channels configuration file failed : %s", filename,
+        ("Opening channels configuration file '%s' failed : %s", filename,
             err->message));
     g_clear_error (&err);
     return NULL;
