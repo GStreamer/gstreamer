@@ -3096,7 +3096,8 @@ gst_parse_bin_from_description_full (const gchar * bin_description,
 GstClockTime
 gst_util_get_timestamp (void)
 {
-#if defined (HAVE_POSIX_TIMERS) && defined(HAVE_MONOTONIC_CLOCK)
+#if defined (HAVE_POSIX_TIMERS) && defined(HAVE_MONOTONIC_CLOCK) &&\
+    defined (HAVE_CLOCK_GETTIME)
   struct timespec now;
 
   clock_gettime (CLOCK_MONOTONIC, &now);

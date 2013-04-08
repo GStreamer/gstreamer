@@ -521,7 +521,7 @@ gst_system_clock_get_internal_time (GstClock * clock)
         GST_SECOND, sysclock->priv->frequency.QuadPart);
   } else
 #endif /* G_OS_WIN32 */
-#if !defined HAVE_POSIX_TIMERS
+#if !defined HAVE_POSIX_TIMERS || !defined HAVE_CLOCK_GETTIME
   {
     GTimeVal timeval;
 
@@ -555,7 +555,7 @@ gst_system_clock_get_resolution (GstClock * clock)
     return GST_SECOND / sysclock->priv->frequency.QuadPart;
   } else
 #endif /* G_OS_WIN32 */
-#ifdef HAVE_POSIX_TIMERS
+#if defined(HAVE_POSIX_TIMERS) && defined(HAVE_CLOCK_GETTIME)
   {
     GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
     clockid_t ptype;
