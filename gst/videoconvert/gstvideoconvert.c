@@ -62,7 +62,8 @@ enum
   PROP_DITHER
 };
 
-#define CSP_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL)
+#define CSP_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ";" \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS_ALL)
 
 static GstStaticPadTemplate gst_video_convert_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -112,6 +113,7 @@ static GstCaps *
 gst_video_convert_caps_remove_format_info (GstCaps * caps)
 {
   GstStructure *st;
+  GstCapsFeatures *f;
   gint i, n;
   GstCaps *res;
 
@@ -120,17 +122,22 @@ gst_video_convert_caps_remove_format_info (GstCaps * caps)
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
     st = gst_caps_get_structure (caps, i);
+    f = gst_caps_get_features (caps, i);
 
     /* If this is already expressed by the existing caps
      * skip this structure */
-    if (i > 0 && gst_caps_is_subset_structure (res, st))
+    if (i > 0 && gst_caps_is_subset_structure_full (res, st, f))
       continue;
 
     st = gst_structure_copy (st);
-    gst_structure_remove_fields (st, "format",
-        "colorimetry", "chroma-site", NULL);
+    /* Only remove format info for the cases when we can actually convert */
+    if (!gst_caps_features_is_any (f)
+        && gst_caps_features_is_equal (f,
+            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
+      gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
+          NULL);
 
-    gst_caps_append_structure (res, st);
+    gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
   }
 
   return res;
