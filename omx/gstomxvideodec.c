@@ -1653,7 +1653,7 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
         goto no_egl;
 
       {
-#define OMX_IndexParamBrcmVideoEGLRenderDiscardMode 0x7f0000dc
+#define OMX_IndexParamBrcmVideoEGLRenderDiscardMode 0x7f0000db
         OMX_CONFIG_PORTBOOLEANTYPE discardMode;
         memset (&discardMode, 0, sizeof (discardMode));
         discardMode.nSize = sizeof (discardMode);
