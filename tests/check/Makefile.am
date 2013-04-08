@@ -151,6 +151,7 @@ check_PROGRAMS = \
 	elements/videocrop \
 	elements/videofilter \
 	elements/wavpackparse \
+	elements/wavparse \
 	elements/y4menc \
 	pipelines/simple-launch-lines \
 	pipelines/effectv \
