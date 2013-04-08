@@ -1378,7 +1378,7 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
 
           if (err != OMX_ErrorNone) {
             GST_INFO_OBJECT (self,
-                "Failed to configure %n output buffers: %s (0x%08x)", min,
+                "Failed to configure %u output buffers: %s (0x%08x)", min,
                 gst_omx_error_to_string (err), err);
             g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
             g_list_free (images);
