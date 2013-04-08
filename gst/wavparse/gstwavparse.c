@@ -160,7 +160,7 @@ gst_wavparse_class_init (GstWavParseClass * klass)
 
   /**
    * GstWavParse:ignore-length
-   * 
+   *
    * This selects whether the length found in a data chunk
    * should be ignored. This may be useful for streamed audio
    * where the length is unknown until the end of streaming,
@@ -2053,27 +2053,27 @@ gst_wavparse_add_src_pad (GstWavParse * wav, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (wav, "adding src pad");
 
-  if (wav->caps) {
-    s = gst_caps_get_structure (wav->caps, 0);
-    if (s && gst_structure_has_name (s, "audio/x-raw") && buf != NULL) {
-      GstTypeFindProbability prob;
-      GstCaps *tf_caps;
+  g_assert (wav->caps != NULL);
 
-      tf_caps = gst_type_find_helper_for_buffer (GST_OBJECT (wav), buf, &prob);
-      if (tf_caps != NULL) {
-        GST_LOG ("typefind caps = %" GST_PTR_FORMAT ", P=%d", tf_caps, prob);
-        if (gst_wavparse_have_dts_caps (tf_caps, prob)) {
-          GST_INFO_OBJECT (wav, "Found DTS marker in file marked as raw PCM");
-          gst_caps_unref (wav->caps);
-          wav->caps = tf_caps;
+  s = gst_caps_get_structure (wav->caps, 0);
+  if (s && gst_structure_has_name (s, "audio/x-raw") && buf != NULL) {
+    GstTypeFindProbability prob;
+    GstCaps *tf_caps;
 
-          gst_tag_list_add (wav->tags, GST_TAG_MERGE_REPLACE,
-              GST_TAG_AUDIO_CODEC, "dts", NULL);
-        } else {
-          GST_DEBUG_OBJECT (wav, "found caps %" GST_PTR_FORMAT " for stream "
-              "marked as raw PCM audio, but ignoring for now", tf_caps);
-          gst_caps_unref (tf_caps);
-        }
+    tf_caps = gst_type_find_helper_for_buffer (GST_OBJECT (wav), buf, &prob);
+    if (tf_caps != NULL) {
+      GST_LOG ("typefind caps = %" GST_PTR_FORMAT ", P=%d", tf_caps, prob);
+      if (gst_wavparse_have_dts_caps (tf_caps, prob)) {
+        GST_INFO_OBJECT (wav, "Found DTS marker in file marked as raw PCM");
+        gst_caps_unref (wav->caps);
+        wav->caps = tf_caps;
+
+        gst_tag_list_add (wav->tags, GST_TAG_MERGE_REPLACE,
+            GST_TAG_AUDIO_CODEC, "dts", NULL);
+      } else {
+        GST_DEBUG_OBJECT (wav, "found caps %" GST_PTR_FORMAT " for stream "
+            "marked as raw PCM audio, but ignoring for now", tf_caps);
+        gst_caps_unref (tf_caps);
       }
     }
   }
@@ -2353,30 +2353,32 @@ pause:
         else if (wav->segment.rate < 0.0)
           wav->segment.position = wav->segment.start;
       }
-      /* add pad before we perform EOS */
-      if (G_UNLIKELY (wav->first)) {
-        wav->first = FALSE;
-        gst_wavparse_add_src_pad (wav, NULL);
-      }
-
-      if (wav->state == GST_WAVPARSE_START)
-        GST_ELEMENT_ERROR (wav, STREAM, WRONG_TYPE,
-            ("No valid input found before end of stream"), (NULL));
-
-      /* perform EOS logic */
-      if (wav->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-        GstClockTime stop;
-
-        if ((stop = wav->segment.stop) == -1)
-          stop = wav->segment.duration;
-
-        gst_element_post_message (GST_ELEMENT_CAST (wav),
-            gst_message_new_segment_done (GST_OBJECT_CAST (wav),
-                wav->segment.format, stop));
-        gst_pad_push_event (wav->srcpad,
-            gst_event_new_segment_done (wav->segment.format, stop));
-      } else {
+      if (wav->state == GST_WAVPARSE_START) {
+        GST_ELEMENT_ERROR (wav, STREAM, WRONG_TYPE, (NULL),
+            ("No valid input found before end of stream"));
         gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
+      } else {
+        /* add pad before we perform EOS */
+        if (G_UNLIKELY (wav->first)) {
+          wav->first = FALSE;
+          gst_wavparse_add_src_pad (wav, NULL);
+        }
+
+        /* perform EOS logic */
+        if (wav->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+          GstClockTime stop;
+
+          if ((stop = wav->segment.stop) == -1)
+            stop = wav->segment.duration;
+
+          gst_element_post_message (GST_ELEMENT_CAST (wav),
+              gst_message_new_segment_done (GST_OBJECT_CAST (wav),
+                  wav->segment.format, stop));
+          gst_pad_push_event (wav->srcpad,
+              gst_event_new_segment_done (wav->segment.format, stop));
+        } else {
+          gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
+        }
       }
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       /* for fatal errors we post an error message, post the error
@@ -2561,18 +2563,19 @@ gst_wavparse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     case GST_EVENT_EOS:
-      /* add pad if needed so EOS is seen downstream */
-      if (G_UNLIKELY (wav->first)) {
-        wav->first = FALSE;
-        gst_wavparse_add_src_pad (wav, NULL);
+      if (wav->state == GST_WAVPARSE_START) {
+        GST_ELEMENT_ERROR (wav, STREAM, WRONG_TYPE, (NULL),
+            ("No valid input found before end of stream"));
       } else {
-        /* stream leftover data in current segment */
-        gst_wavparse_flush_data (wav);
+        /* add pad if needed so EOS is seen downstream */
+        if (G_UNLIKELY (wav->first)) {
+          wav->first = FALSE;
+          gst_wavparse_add_src_pad (wav, NULL);
+        } else {
+          /* stream leftover data in current segment */
+          gst_wavparse_flush_data (wav);
+        }
       }
-
-      if (wav->state == GST_WAVPARSE_START)
-        GST_ELEMENT_ERROR (wav, STREAM, WRONG_TYPE,
-            ("No valid input found before end of stream"), (NULL));
 
       /* fall-through */
     case GST_EVENT_FLUSH_STOP:
