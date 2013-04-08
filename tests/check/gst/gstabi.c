@@ -23,7 +23,11 @@
 #include <gst/check/gstcheck.h>
 
 #ifdef HAVE_CPU_I386
+#ifndef G_OS_WIN32
 #include "struct_i386.h"
+#else
+#include "struct_i386w.h"
+#endif
 #define HAVE_ABI_SIZES TRUE
 #else
 #ifdef __powerpc64__
