@@ -458,6 +458,11 @@ AC_CHECK_FUNCS(clock_gettime, [], [
   AC_CHECK_LIB(rt, clock_gettime, [
     AC_DEFINE(HAVE_CLOCK_GETTIME, 1)
     LIBS="$LIBS -lrt"
+  ], [
+    AC_CHECK_LIB(pthread, clock_gettime, [
+      AC_DEFINE(HAVE_CLOCK_GETTIME, 1)
+      LIBS="$LIBS -lpthread"
+    ])
   ])
 ])
 
