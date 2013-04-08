@@ -147,7 +147,9 @@ AG_GST_CHECK_GST_CONTROLLER($GST_API_VERSION, [$GST_REQ], yes)
 AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
 AG_GST_CHECK_GST_PLUGINS_BASE($GST_API_VERSION, [$GST_REQ], yes)
 AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
-PKG_CHECK_MODULES([GST_PLUGINS_BAD], [gstreamer-plugins-bad-1.0])
+PKG_CHECK_MODULES([GST_EGL], [gstreamer-egl-1.0], [
+  AC_DEFINE(HAVE_GST_EGL, 1, [Have gstreamer-egl])
+])
 
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
