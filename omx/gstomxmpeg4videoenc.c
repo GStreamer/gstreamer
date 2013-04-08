@@ -199,7 +199,7 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
         "Setting profile/level not supported by component");
   } else if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (self,
-        "Error setting profile %d and level %d: %s (0x%08x)", param.eProfile,
+        "Error setting profile %lu and level %lu: %s (0x%08x)", param.eProfile,
         param.eLevel, gst_omx_error_to_string (err), err);
     return FALSE;
   }

@@ -763,8 +763,8 @@ gst_omx_video_dec_open (GstVideoDecoder * decoder)
       in_port_index = 0;
       out_port_index = 1;
     } else {
-      GST_DEBUG_OBJECT (self, "Detected %u ports, starting at %u", param.nPorts,
-          param.nStartPortNumber);
+      GST_DEBUG_OBJECT (self, "Detected %lu ports, starting at %lu",
+          param.nPorts, param.nStartPortNumber);
       in_port_index = param.nStartPortNumber + 0;
       out_port_index = param.nStartPortNumber + 1;
     }
@@ -1095,7 +1095,7 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
 
   if (vinfo->width != port_def->format.video.nFrameWidth ||
       vinfo->height != port_def->format.video.nFrameHeight) {
-    GST_ERROR_OBJECT (self, "Resolution do not match. port: %dx%d vinfo: %dx%d",
+    GST_ERROR_OBJECT (self, "Resolution do not match: port=%lux%lu vinfo=%dx%d",
         port_def->format.video.nFrameWidth, port_def->format.video.nFrameHeight,
         vinfo->width, vinfo->height);
     goto done;
@@ -1796,7 +1796,7 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
   }
 
   GST_DEBUG_OBJECT (self,
-      "Setting output state: format %s, width %d, height %d",
+      "Setting output state: format %s, width %lu, height %lu",
       gst_video_format_to_string (format),
       port_def.format.video.nFrameWidth, port_def.format.video.nFrameHeight);
 
@@ -1925,7 +1925,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       }
 
       GST_DEBUG_OBJECT (self,
-          "Setting output state: format %s, width %d, height %d",
+          "Setting output state: format %s, width %lu, height %lu",
           gst_video_format_to_string (format),
           port_def.format.video.nFrameWidth,
           port_def.format.video.nFrameHeight);
@@ -1966,8 +1966,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
     goto flushing;
   }
 
-  GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08x %lu",
-      buf->omx_buf->nFlags, buf->omx_buf->nTimeStamp);
+  GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08lx %" G_GUINT64_FORMAT,
+      buf->omx_buf->nFlags, (guint64) buf->omx_buf->nTimeStamp);
 
   GST_VIDEO_DECODER_STREAM_LOCK (self);
   frame = _find_nearest_frame (self, buf);
@@ -2334,7 +2334,7 @@ gst_omx_video_dec_get_supported_colorformats (GstOMXVideoDec * self)
           m->format = GST_VIDEO_FORMAT_I420;
           m->type = param.eColorFormat;
           negotiation_map = g_list_append (negotiation_map, m);
-          GST_DEBUG_OBJECT (self, "Component supports I420 (%d) at index %d",
+          GST_DEBUG_OBJECT (self, "Component supports I420 (%d) at index %lu",
               param.eColorFormat, param.nIndex);
           break;
         case OMX_COLOR_FormatYUV420SemiPlanar:
@@ -2342,12 +2342,12 @@ gst_omx_video_dec_get_supported_colorformats (GstOMXVideoDec * self)
           m->format = GST_VIDEO_FORMAT_NV12;
           m->type = param.eColorFormat;
           negotiation_map = g_list_append (negotiation_map, m);
-          GST_DEBUG_OBJECT (self, "Component supports NV12 (%d) at index %d",
+          GST_DEBUG_OBJECT (self, "Component supports NV12 (%d) at index %lu",
               param.eColorFormat, param.nIndex);
           break;
         default:
           GST_DEBUG_OBJECT (self,
-              "Component supports unsupported color format %d at index %d",
+              "Component supports unsupported color format %d at index %lu",
               param.eColorFormat, param.nIndex);
           break;
       }
@@ -2989,7 +2989,7 @@ full_buffer:
   {
     gst_video_codec_frame_unref (frame);
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
-        ("Got OpenMAX buffer with no free space (%p, %u/%u)", buf,
+        ("Got OpenMAX buffer with no free space (%p, %lu/%lu)", buf,
             buf->omx_buf->nOffset, buf->omx_buf->nAllocLen));
     return GST_FLOW_ERROR;
   }
@@ -3005,7 +3005,7 @@ too_large_codec_data:
   {
     gst_video_codec_frame_unref (frame);
     GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
-        ("codec_data larger than supported by OpenMAX port (%u > %u)",
+        ("codec_data larger than supported by OpenMAX port (%lu > %lu)",
             gst_buffer_get_size (codec_data),
             self->dec_in_port->port_def.nBufferSize));
     return GST_FLOW_ERROR;
