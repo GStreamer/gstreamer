@@ -184,7 +184,10 @@ gst_rtsp_url_parse (const gchar * urlstr, GstRTSPUrl ** url)
       res->abspath = g_strndup (p, delim - p);
     p = delim;
   } else {
-    res->abspath = g_strdup ("/");
+    /* IQinVision IQeye 1080p fails if a path '/' is provided
+     * and RTSP does not mandate that a non-zero-length path
+     * must be used */
+    res->abspath = g_strdup ("");
   }
 
   if (p && *p == '?')
