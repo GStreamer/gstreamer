@@ -15,45 +15,53 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-#include <gst/check/gstcheck.h>
-#include <gio/gio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-GST_START_TEST (test_empty_file)
+#include <gst/check/gstcheck.h>
+
+static void
+do_test_empty_file (gboolean can_activate_pull)
 {
+  GstStateChangeReturn ret1, ret2;
   GstElement *pipeline;
-  GstElement *filesrc;
+  GstElement *src;
   GstElement *wavparse;
   GstElement *fakesink;
 
+  /* Pull mode */
   pipeline = gst_pipeline_new ("testpipe");
-  filesrc = gst_element_factory_make ("filesrc", NULL);
-  fail_if (filesrc == NULL);
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_if (src == NULL);
   wavparse = gst_element_factory_make ("wavparse", NULL);
   fail_if (wavparse == NULL);
   fakesink = gst_element_factory_make ("fakesink", NULL);
   fail_if (fakesink == NULL);
 
-  gst_object_ref_sink (filesrc);
-  gst_object_ref_sink (wavparse);
-  gst_object_ref_sink (fakesink);
+  gst_bin_add_many (GST_BIN (pipeline), src, wavparse, fakesink, NULL);
+  g_object_set (src, "num-buffers", 0, "can-activate-pull", can_activate_pull,
+      NULL);
 
-  gst_bin_add_many (GST_BIN (pipeline), filesrc, wavparse, fakesink, NULL);
-  g_object_set (filesrc, "location", "/dev/null", NULL);
+  fail_unless (gst_element_link_many (src, wavparse, fakesink, NULL));
 
-  fail_unless (gst_element_link_many (filesrc, wavparse, fakesink, NULL));
+  ret1 = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  if (ret1 == GST_STATE_CHANGE_ASYNC)
+    ret2 = gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+  else
+    ret2 = ret1;
 
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
-
-  gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+  /* should have gotten an error on the bus, no output to fakesink */
+  fail_unless_equals_int (ret2, GST_STATE_CHANGE_FAILURE);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
-
-  gst_object_unref (filesrc);
-  gst_object_unref (wavparse);
-  gst_object_unref (fakesink);
   gst_object_unref (pipeline);
+}
+
+GST_START_TEST (test_empty_file)
+{
+  do_test_empty_file (TRUE);
+  do_test_empty_file (FALSE);
 }
 
 GST_END_TEST;
