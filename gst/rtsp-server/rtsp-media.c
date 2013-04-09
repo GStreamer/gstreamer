@@ -1232,17 +1232,17 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
     case GST_MESSAGE_STREAM_STATUS:
       break;
     case GST_MESSAGE_ASYNC_DONE:
-      if (!priv->adding) {
+      if (priv->adding) {
         /* when we are dynamically adding pads, the addition of the udpsrc will
          * temporarily produce ASYNC_DONE messages. We have to ignore them and
          * wait for the final ASYNC_DONE after everything prerolled */
+        GST_INFO ("%p: ignoring ASYNC_DONE", media);
+      } else {
         GST_INFO ("%p: got ASYNC_DONE", media);
         collect_media_stats (media);
 
         if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
           gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
-      } else {
-        GST_INFO ("%p: ignoring ASYNC_DONE", media);
       }
       break;
     case GST_MESSAGE_EOS:
