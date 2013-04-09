@@ -1725,7 +1725,13 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
         GST_INFO ("state %s media %p", gst_element_state_get_name (state),
             media);
         priv->target_state = state;
-        gst_element_set_state (priv->pipeline, state);
+        /* when we are buffering, don't update the state yet, this will be done
+         * when buffering finishes */
+        if (priv->buffering) {
+          GST_INFO ("Buffering busy, delay state change");
+        } else {
+          gst_element_set_state (priv->pipeline, state);
+        }
       }
     }
     g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_NEW_STATE], 0, state,
