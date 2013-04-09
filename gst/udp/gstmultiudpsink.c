@@ -506,7 +506,8 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   /* grab lock while iterating and sending to clients, this should be
    * fast as UDP never blocks */
   g_mutex_lock (&sink->client_lock);
-  GST_LOG_OBJECT (bsink, "about to send %" G_GSIZE_FORMAT " bytes", size);
+  GST_LOG_OBJECT (bsink, "about to send %" G_GSIZE_FORMAT " bytes in %u blocks",
+      size, n_mem);
 
   no_clients = 0;
   num = 0;
