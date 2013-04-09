@@ -286,6 +286,8 @@ GST_START_TEST (test_sticky_caps_unlinked)
   fail_unless (event_caps == caps);
   fail_unless_equals_int (g_list_length (buffers), 1);
 
+  gst_check_drop_buffers ();
+
   gst_caps_replace (&caps, NULL);
   gst_caps_replace (&event_caps, NULL);
 
@@ -355,6 +357,8 @@ GST_START_TEST (test_sticky_caps_unlinked_incompatible)
   /* We shouldn't have received any buffers since caps are incompatible */
   fail_unless_equals_int (g_list_length (buffers), 0);
 
+  gst_check_drop_buffers ();
+
   gst_caps_replace (&event_caps, NULL);
 
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
@@ -411,6 +415,8 @@ GST_START_TEST (test_sticky_caps_flushing)
   fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
   fail_unless (event_caps == caps);
   fail_unless_equals_int (g_list_length (buffers), 1);
+
+  gst_check_drop_buffers ();
 
   gst_caps_replace (&caps, NULL);
   gst_caps_replace (&event_caps, NULL);
