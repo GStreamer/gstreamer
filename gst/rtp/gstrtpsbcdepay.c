@@ -137,7 +137,7 @@ gst_rtp_sbc_depay_get_params (GstRtpSbcDepay * depay, const guint8 * data,
 
   length = 4 + ((4 * subbands * channels) / 8);
 
-  if (!(channel_mode & 0x1)) {
+  if (channel_mode == 0 || channel_mode == 1) {
     /* Mono || Dual channel */
     length += ((blocks * channels * bitpool)
         + 4 /* round up */ ) / 8;
