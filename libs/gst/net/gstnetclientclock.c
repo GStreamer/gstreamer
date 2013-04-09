@@ -346,6 +346,7 @@ gst_net_client_clock_start (GstNetClientClock * self)
 {
   GSocketAddress *servaddr;
   GSocketAddress *myaddr;
+  GSocketAddress *anyaddr;
   GInetAddress *inetaddr;
   GSocket *socket;
   GError *error = NULL;
@@ -358,6 +359,16 @@ gst_net_client_clock_start (GstNetClientClock * self)
 
   if (socket == NULL)
     goto no_socket;
+
+  GST_DEBUG_OBJECT (self, "binding socket");
+  inetaddr = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
+  anyaddr = g_inet_socket_address_new (inetaddr, 0);
+  g_socket_bind (socket, anyaddr, TRUE, &error);
+  g_object_unref (anyaddr);
+  g_object_unref (inetaddr);
+
+  if (error != NULL)
+    goto bind_error;
 
   /* check address we're bound to, mostly for debugging purposes */
   myaddr = g_socket_get_local_address (socket, &error);
@@ -401,6 +412,13 @@ no_socket:
   {
     GST_ERROR_OBJECT (self, "socket_new() failed: %s", error->message);
     g_error_free (error);
+    return FALSE;
+  }
+bind_error:
+  {
+    GST_ERROR_OBJECT (self, "bind failed: %s", error->message);
+    g_error_free (error);
+    g_object_unref (socket);
     return FALSE;
   }
 getsockname_error:
