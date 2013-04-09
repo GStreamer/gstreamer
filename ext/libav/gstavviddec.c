@@ -414,8 +414,6 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
     return TRUE;
   }
 
-  gst_caps_replace (&ffmpegdec->last_caps, state->caps);
-
   GST_DEBUG_OBJECT (ffmpegdec, "setcaps called");
 
   GST_OBJECT_LOCK (ffmpegdec);
@@ -434,6 +432,8 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
     /* and reset the defaults that were set when a context is created */
     avcodec_get_context_defaults (ffmpegdec->context);
   }
+
+  gst_caps_replace (&ffmpegdec->last_caps, state->caps);
 
   /* set buffer functions */
   ffmpegdec->context->get_buffer = gst_ffmpegviddec_get_buffer;
