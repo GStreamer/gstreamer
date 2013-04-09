@@ -58,6 +58,9 @@ struct _GstRTSPMediaPrivate
   GSource *source;
   guint id;
 
+  gboolean time_provider;
+  GstNetTimeProvider *nettime;
+
   gboolean is_live;
   gboolean seekable;
   gboolean buffering;
@@ -78,6 +81,7 @@ struct _GstRTSPMediaPrivate
 //#define DEFAULT_PROTOCOLS      GST_RTSP_LOWER_TRANS_UDP_MCAST
 #define DEFAULT_EOS_SHUTDOWN    FALSE
 #define DEFAULT_BUFFER_SIZE     0x80000
+#define DEFAULT_TIME_PROVIDER   FALSE
 
 /* define to dump received RTCP packets */
 #undef DUMP_STATS
@@ -91,6 +95,7 @@ enum
   PROP_EOS_SHUTDOWN,
   PROP_BUFFER_SIZE,
   PROP_ELEMENT,
+  PROP_TIME_PROVIDER,
   PROP_LAST
 };
 
@@ -165,6 +170,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           "The GstBin to use for streaming the media", GST_TYPE_ELEMENT,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_EOS_SHUTDOWN,
+      g_param_spec_boolean ("time-provider", "Time Provider",
+          "Use a NetTimeProvider for clients",
+          DEFAULT_TIME_PROVIDER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_signals[SIGNAL_NEW_STREAM] =
       g_signal_new ("new-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, new_stream), NULL, NULL,
@@ -213,6 +223,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   priv->protocols = DEFAULT_PROTOCOLS;
   priv->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
   priv->buffer_size = DEFAULT_BUFFER_SIZE;
+  priv->time_provider = DEFAULT_TIME_PROVIDER;
 }
 
 static void
@@ -232,6 +243,8 @@ gst_rtsp_media_finalize (GObject * obj)
 
   if (priv->pipeline)
     gst_object_unref (priv->pipeline);
+  if (priv->nettime)
+    gst_object_unref (priv->nettime);
   gst_object_unref (priv->element);
   if (priv->auth)
     g_object_unref (priv->auth);
@@ -269,6 +282,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_BUFFER_SIZE:
       g_value_set_uint (value, gst_rtsp_media_get_buffer_size (media));
       break;
+    case PROP_TIME_PROVIDER:
+      g_value_set_boolean (value, gst_rtsp_media_is_time_provider (media));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -298,6 +314,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_BUFFER_SIZE:
       gst_rtsp_media_set_buffer_size (media, g_value_get_uint (value));
+      break;
+    case PROP_TIME_PROVIDER:
+      gst_rtsp_media_use_time_provider (media, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -413,6 +432,7 @@ gst_rtsp_media_take_pipeline (GstRTSPMedia * media, GstPipeline * pipeline)
 {
   GstRTSPMediaPrivate *priv;
   GstElement *old;
+  GstNetTimeProvider *nettime;
 
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
   g_return_if_fail (GST_IS_PIPELINE (pipeline));
@@ -422,10 +442,15 @@ gst_rtsp_media_take_pipeline (GstRTSPMedia * media, GstPipeline * pipeline)
   g_mutex_lock (&priv->lock);
   old = priv->pipeline;
   priv->pipeline = GST_ELEMENT_CAST (pipeline);
+  nettime = priv->nettime;
+  priv->nettime = NULL;
   g_mutex_unlock (&priv->lock);
 
   if (old)
     gst_object_unref (old);
+
+  if (nettime)
+    gst_object_unref (nettime);
 
   gst_object_ref (priv->element);
   gst_bin_add (GST_BIN_CAST (pipeline), priv->element);
@@ -664,6 +689,53 @@ gst_rtsp_media_get_buffer_size (GstRTSPMedia * media)
 
   g_mutex_unlock (&priv->lock);
   res = priv->buffer_size;
+  g_mutex_unlock (&priv->lock);
+
+  return res;
+}
+
+/**
+ * gst_rtsp_media_use_time_provider:
+ * @media: a #GstRTSPMedia
+ *
+ * Set @media to provide a GstNetTimeProvider.
+ */
+void
+gst_rtsp_media_use_time_provider (GstRTSPMedia * media, gboolean time_provider)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->time_provider = time_provider;
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_is_time_provider:
+ * @media: a #GstRTSPMedia
+ *
+ * Check if @media can provide a #GstNetTimeProvider for its pipeline clock.
+ *
+ * Use gst_rtsp_media_get_time_provider() to get the network clock.
+ *
+ * Returns: %TRUE if @media can provide a #GstNetTimeProvider.
+ */
+gboolean
+gst_rtsp_media_is_time_provider (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  priv = media->priv;
+
+  g_mutex_unlock (&priv->lock);
+  res = priv->time_provider;
   g_mutex_unlock (&priv->lock);
 
   return res;
@@ -1536,6 +1608,10 @@ finish_unprepare (GstRTSPMedia * media)
   gst_bin_remove (GST_BIN (priv->pipeline), priv->rtpbin);
   priv->rtpbin = NULL;
 
+  if (priv->nettime)
+    gst_object_unref (priv->nettime);
+  priv->nettime = NULL;
+
   gst_object_unref (priv->pipeline);
   priv->pipeline = NULL;
 
@@ -1631,6 +1707,88 @@ is_busy:
     g_rec_mutex_unlock (&priv->state_lock);
     return TRUE;
   }
+}
+
+/* should be called with state-lock */
+static GstClock *
+get_clock_unlocked (GstRTSPMedia * media)
+{
+  if (media->priv->status != GST_RTSP_MEDIA_STATUS_PREPARED) {
+    GST_DEBUG_OBJECT (media, "media was not prepared");
+    return NULL;
+  }
+  return gst_pipeline_get_clock (GST_PIPELINE_CAST (media->priv->pipeline));
+}
+
+/**
+ * gst_rtsp_media_get_clock:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the clock that is used by the pipeline in @media.
+ *
+ * @media must be prepared before this method returns a valid clock object.
+ *
+ * Returns: the #GstClock used by @media. unref after usage.
+ */
+GstClock *
+gst_rtsp_media_get_clock (GstRTSPMedia * media)
+{
+  GstClock *clock;
+  GstRTSPMediaPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+
+  priv = media->priv;
+
+  g_rec_mutex_lock (&priv->state_lock);
+  clock = get_clock_unlocked (media);
+  g_rec_mutex_unlock (&priv->state_lock);
+
+  return clock;
+
+}
+
+/**
+ * gst_rtsp_media_get_time_provider:
+ * @media: a #GstRTSPMedia
+ * @address: an address or NULL
+ * @port: a port or 0
+ *
+ * Get the #GstNetTimeProvider for the clock used by @media. The time provider
+ * will listen on @address and @port for client time requests.
+ *
+ * Returns: the #GstNetTimeProvider of @media.
+ */
+GstNetTimeProvider *
+gst_rtsp_media_get_time_provider (GstRTSPMedia * media, const gchar * address,
+    guint16 port)
+{
+  GstRTSPMediaPrivate *priv;
+  GstNetTimeProvider *provider = NULL;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+
+  priv = media->priv;
+
+  g_rec_mutex_lock (&priv->state_lock);
+  if (priv->time_provider) {
+    if ((provider = priv->nettime) == NULL) {
+      GstClock *clock;
+
+      if (priv->time_provider && (clock = get_clock_unlocked (media))) {
+        provider = gst_net_time_provider_new (clock, address, port);
+        gst_object_unref (clock);
+
+        priv->nettime = provider;
+      }
+    }
+  }
+  g_rec_mutex_unlock (&priv->state_lock);
+
+  if (provider)
+    gst_object_ref (provider);
+
+  return provider;
 }
 
 /**

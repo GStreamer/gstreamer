@@ -20,6 +20,7 @@
 #include <gst/gst.h>
 #include <gst/rtsp/gstrtsprange.h>
 #include <gst/rtsp/gstrtspurl.h>
+#include <gst/net/gstnet.h>
 
 #ifndef __GST_RTSP_MEDIA_H__
 #define __GST_RTSP_MEDIA_H__
@@ -139,6 +140,10 @@ GstRTSPAddressPool *  gst_rtsp_media_get_address_pool (GstRTSPMedia *media);
 void                  gst_rtsp_media_set_buffer_size  (GstRTSPMedia *media, guint size);
 guint                 gst_rtsp_media_get_buffer_size  (GstRTSPMedia *media);
 
+void                  gst_rtsp_media_use_time_provider (GstRTSPMedia *media, gboolean time_provider);
+gboolean              gst_rtsp_media_is_time_provider  (GstRTSPMedia *media);
+GstNetTimeProvider *  gst_rtsp_media_get_time_provider (GstRTSPMedia *media,
+                                                        const gchar *address, guint16 port);
 
 /* prepare the media for playback */
 gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media);
@@ -151,6 +156,8 @@ GstRTSPStream *       gst_rtsp_media_create_stream    (GstRTSPMedia *media,
                                                        GstPad *srcpad);
 
 /* dealing with the media */
+GstClock *            gst_rtsp_media_get_clock        (GstRTSPMedia *media);
+
 guint                 gst_rtsp_media_n_streams        (GstRTSPMedia *media);
 GstRTSPStream *       gst_rtsp_media_get_stream       (GstRTSPMedia *media, guint idx);
 

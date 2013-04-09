@@ -158,6 +158,30 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
     gst_caps_unref (caps);
   }
 
+  {
+    GstNetTimeProvider *provider;
+
+    if ((provider =
+            gst_rtsp_media_get_time_provider (media, info->server_ip, 0))) {
+      GstClock *clock;
+      gchar *address, *str;
+      gint port;
+
+      g_object_get (provider, "clock", &clock, "address", &address, "port",
+          &port, NULL);
+
+      str = g_strdup_printf ("GstNetTimeProvider %s %s:%d %" G_GUINT64_FORMAT,
+          g_type_name (G_TYPE_FROM_INSTANCE (clock)), address, port,
+          gst_clock_get_time (clock));
+
+      gst_sdp_message_add_attribute (sdp, "x-gst-clock", str);
+      g_free (str);
+      gst_object_unref (clock);
+      g_free (address);
+      gst_object_unref (provider);
+    }
+  }
+
   return TRUE;
 
   /* ERRORS */
