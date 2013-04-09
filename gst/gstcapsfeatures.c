@@ -79,6 +79,9 @@ gst_caps_features_transform_to_string (const GValue * src_value,
 void
 _priv_gst_caps_features_initialize (void)
 {
+  GST_DEBUG_CATEGORY_INIT (gst_caps_features_debug, "caps-features", 0,
+      "GstCapsFeatures debug");
+
   _gst_caps_features_type = gst_caps_features_get_type ();
   _gst_caps_feature_memory_system_memory =
       g_quark_from_static_string (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
@@ -89,9 +92,6 @@ _priv_gst_caps_features_initialize (void)
   _gst_caps_features_any = gst_caps_features_new_any ();
   _gst_caps_features_memory_system_memory =
       gst_caps_features_new_id (_gst_caps_feature_memory_system_memory, 0);
-
-  GST_DEBUG_CATEGORY_INIT (gst_caps_features_debug, "caps-features", 0,
-      "GstCapsFeatures debug");
 }
 
 gboolean
