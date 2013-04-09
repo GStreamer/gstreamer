@@ -128,8 +128,7 @@ gst_osx_audio_src_do_init (GType type)
 }
 
 G_DEFINE_TYPE_WITH_CODE (GstOsxAudioSrc, gst_osx_audio_src,
-    GST_TYPE_AUDIO_BASE_SRC,
-    gst_osx_audio_src_do_init (GST_TYPE_AUDIO_BASE_SRC));
+    GST_TYPE_AUDIO_BASE_SRC, gst_osx_audio_src_do_init (g_define_type_id));
 
 static void
 gst_osx_audio_src_class_init (GstOsxAudioSrcClass * klass)

@@ -159,8 +159,7 @@ gst_osx_audio_sink_do_init (GType type)
 
 #define gst_osx_audio_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstOsxAudioSink, gst_osx_audio_sink,
-    GST_TYPE_AUDIO_BASE_SINK,
-    gst_osx_audio_sink_do_init (GST_TYPE_AUDIO_BASE_SINK));
+    GST_TYPE_AUDIO_BASE_SINK, gst_osx_audio_sink_do_init (g_define_type_id));
 
 static void
 gst_osx_audio_sink_class_init (GstOsxAudioSinkClass * klass)
@@ -431,6 +430,11 @@ gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink)
 {
   GstOsxAudioSink *osxsink;
   GstOsxAudioRingBuffer *ringbuffer;
+  GstStructure *s;
+  GstCaps *caps;
+  gint channels;
+  guint64 channel_mask;
+  GstAudioChannelPosition positions[9];
 
   osxsink = GST_OSX_AUDIO_SINK (sink);
 
@@ -451,6 +455,14 @@ gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink)
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsink);
   ringbuffer->core_audio->device_id = osxsink->device_id;
   ringbuffer->core_audio->is_src = FALSE;
+
+  caps = osxsink->cached_caps;
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (s, "channels", &channels);
+  gst_structure_get (s, "channel-mask", GST_TYPE_BITMASK, &channel_mask, NULL);
+  gst_audio_channel_positions_from_mask (channels, channel_mask, positions);
+  gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_RING_BUFFER
+      (ringbuffer), positions);
 
   return GST_AUDIO_RING_BUFFER (ringbuffer);
 }
@@ -526,12 +538,11 @@ static gboolean
 gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
 {
   gint i, max_channels = 0;
-  gboolean spdif_allowed, use_positions = FALSE;
+  gboolean spdif_allowed;
   AudioChannelLayout *layout;
   GstElementClass *element_class;
   GstPadTemplate *pad_template;
   GstCaps *caps, *in_caps;
-
   guint64 channel_mask = 0;
 
   /* First collect info about the HW capabilites and preferences */
@@ -543,16 +554,7 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
       (unsigned) osxsink->device_id, spdif_allowed);
 
   if (layout) {
-    max_channels = layout->mNumberChannelDescriptions;
-  } else {
-    GST_WARNING_OBJECT (osxsink, "This driver does not support "
-        "kAudioDevicePropertyPreferredChannelLayout.");
-    max_channels = 2;
-  }
-
-  if (max_channels > 2) {
-    max_channels = MIN (max_channels, 9);
-    use_positions = TRUE;
+    max_channels = MIN (layout->mNumberChannelDescriptions, 9);
     for (i = 0; i < max_channels; i++) {
       switch (layout->mChannelDescriptions[i].mChannelLabel) {
         case kAudioChannelLabel_Left:
@@ -585,11 +587,16 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
         default:
           GST_WARNING_OBJECT (osxsink, "unrecognized channel: %d",
               (int) layout->mChannelDescriptions[i].mChannelLabel);
-          use_positions = FALSE;
           max_channels = 2;
           break;
       }
     }
+  } else {
+    GST_WARNING_OBJECT (osxsink, "This driver does not support "
+        "kAudioDevicePropertyPreferredChannelLayout.");
+    max_channels = 2;
+    channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+        GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
   }
   g_free (layout);
 
@@ -610,19 +617,12 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
       if (spdif_allowed) {
         gst_caps_append_structure (caps, gst_structure_copy (in_s));
       }
-    } else {
-      if (max_channels > 2 && use_positions) {
-        out_s = gst_structure_copy (in_s);
-        gst_structure_remove_field (out_s, "channels");
-        gst_structure_set (out_s, "channels", G_TYPE_INT, max_channels,
-            "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
-        gst_caps_append_structure (caps, out_s);
-      }
-      out_s = gst_structure_copy (in_s);
-      gst_structure_remove_fields (out_s, "channels", "channel-mask", NULL);
-      gst_structure_set (out_s, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
-      gst_caps_append_structure (caps, out_s);
     }
+    out_s = gst_structure_copy (in_s);
+    gst_structure_remove_fields (out_s, "channels", "channel-mask", NULL);
+    gst_structure_set (out_s, "channels", G_TYPE_INT, max_channels,
+        "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
+    gst_caps_append_structure (caps, out_s);
   }
 
   if (osxsink->cached_caps) {
