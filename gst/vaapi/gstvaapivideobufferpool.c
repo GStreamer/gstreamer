@@ -185,10 +185,16 @@ gst_vaapi_video_buffer_pool_alloc_buffer(GstBufferPool *pool,
 
     if (priv->has_video_meta) {
         GstVideoInfo * const vip =
-            &GST_VAAPI_VIDEO_ALLOCATOR_CAST(priv->allocator)->video_info;
+            &GST_VAAPI_VIDEO_ALLOCATOR_CAST(priv->allocator)->image_info;
+        GstVideoMeta *vmeta;
 
-        gst_buffer_add_video_meta(buffer, 0, GST_VIDEO_INFO_FORMAT(vip),
-            GST_VIDEO_INFO_WIDTH(vip), GST_VIDEO_INFO_HEIGHT(vip));
+        vmeta = gst_buffer_add_video_meta_full(buffer, 0,
+            GST_VIDEO_INFO_FORMAT(vip), GST_VIDEO_INFO_WIDTH(vip),
+            GST_VIDEO_INFO_HEIGHT(vip), GST_VIDEO_INFO_N_PLANES(vip),
+            &GST_VIDEO_INFO_PLANE_OFFSET(vip, 0),
+            &GST_VIDEO_INFO_PLANE_STRIDE(vip, 0));
+        vmeta->map = gst_video_meta_map_vaapi_memory;
+        vmeta->unmap = gst_video_meta_unmap_vaapi_memory;
     }
 
     *out_buffer_ptr = buffer;

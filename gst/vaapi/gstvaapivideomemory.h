@@ -52,12 +52,27 @@ struct _GstVaapiVideoMemory {
     GstMemory parent_instance;
 
     /*< private >*/
+    const GstVideoInfo *surface_info;
+    GstVaapiSurface    *surface;
+    const GstVideoInfo *image_info;
+    GstVaapiImage      *image;
     GstVaapiVideoMeta  *meta;
+    gint                map_count;
 };
 
 G_GNUC_INTERNAL
 GstMemory *
 gst_vaapi_video_memory_new(GstAllocator *allocator, GstVaapiVideoMeta *meta);
+
+G_GNUC_INTERNAL
+gboolean
+gst_video_meta_map_vaapi_memory(GstVideoMeta *meta, guint plane,
+    GstMapInfo *info, gpointer *data, gint *stride, GstMapFlags flags);
+
+G_GNUC_INTERNAL
+gboolean
+gst_video_meta_unmap_vaapi_memory(GstVideoMeta *meta, guint plane,
+    GstMapInfo *info);
 
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiVideoAllocator                                           --- */
@@ -89,6 +104,8 @@ struct _GstVaapiVideoAllocator {
 
     /*< private >*/
     GstVideoInfo        video_info;
+    GstVideoInfo        surface_info;
+    GstVideoInfo        image_info;
 };
 
 /**
