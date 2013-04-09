@@ -141,9 +141,14 @@ gst_rtp_gst_pay_flush (GstRtpGSTPay * rtpgstpay, GstClockTime timestamp)
   GstFlowReturn ret;
   guint avail;
   guint frag_offset;
+  GstBufferList *list;
 
   frag_offset = 0;
   avail = gst_adapter_available (rtpgstpay->adapter);
+  if (avail == 0)
+    return GST_FLOW_OK;
+
+  list = gst_buffer_list_new ();
 
   while (avail) {
     guint towrite;
@@ -152,6 +157,7 @@ gst_rtp_gst_pay_flush (GstRtpGSTPay * rtpgstpay, GstClockTime timestamp)
     guint packet_len;
     GstBuffer *outbuf;
     GstRTPBuffer rtp = { NULL };
+    GstBuffer *paybuf;
 
 
     /* this will be the total lenght of the packet */
@@ -163,8 +169,8 @@ gst_rtp_gst_pay_flush (GstRtpGSTPay * rtpgstpay, GstClockTime timestamp)
     /* this is the payload length */
     payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
 
-    /* create buffer to hold the payload */
-    outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
+    /* create buffer to hold the header */
+    outbuf = gst_rtp_buffer_new_allocate (8, 0, 0);
 
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
     payload = gst_rtp_buffer_get_payload (&rtp);
@@ -192,11 +198,6 @@ gst_rtp_gst_pay_flush (GstRtpGSTPay * rtpgstpay, GstClockTime timestamp)
     payload += 8;
     payload_len -= 8;
 
-    GST_DEBUG_OBJECT (rtpgstpay, "copy %u bytes from adapter", payload_len);
-
-    gst_adapter_copy (rtpgstpay->adapter, payload, 0, payload_len);
-    gst_adapter_flush (rtpgstpay->adapter, payload_len);
-
     frag_offset += payload_len;
     avail -= payload_len;
 
@@ -205,27 +206,25 @@ gst_rtp_gst_pay_flush (GstRtpGSTPay * rtpgstpay, GstClockTime timestamp)
 
     gst_rtp_buffer_unmap (&rtp);
 
+    /* create a new buf to hold the payload */
+    GST_DEBUG_OBJECT (rtpgstpay, "take %u bytes from adapter", payload_len);
+    paybuf = gst_adapter_take_buffer (rtpgstpay->adapter, payload_len);
+
+    /* create a new group to hold the rtp header and the payload */
+    gst_buffer_append (outbuf, paybuf);
+
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
-    ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpgstpay), outbuf);
-    if (ret != GST_FLOW_OK)
-      goto push_failed;
+    /* and add to list */
+    gst_buffer_list_insert (list, -1, outbuf);
   }
+  /* push the whole buffer list at once */
+  ret = gst_rtp_base_payload_push_list (GST_RTP_BASE_PAYLOAD (rtpgstpay), list);
+
   rtpgstpay->flags &= 0x70;
   rtpgstpay->etype = 0;
 
-  return GST_FLOW_OK;
-
-  /* ERRORS */
-push_failed:
-  {
-    GST_DEBUG_OBJECT (rtpgstpay, "push failed %d (%s)", ret,
-        gst_flow_get_name (ret));
-    gst_adapter_clear (rtpgstpay->adapter);
-    rtpgstpay->flags &= 0x70;
-    rtpgstpay->etype = 0;
-    return ret;
-  }
+  return ret;
 }
 
 static GstBuffer *
