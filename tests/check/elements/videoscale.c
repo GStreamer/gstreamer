@@ -55,7 +55,9 @@ check_pad_template (GstPadTemplate * tmpl)
   caps = gst_pad_template_get_caps (tmpl);
 
   /* If this fails, we need to update this unit test */
-  fail_unless_equals_int (gst_caps_get_size (caps), 1);
+  fail_unless_equals_int (gst_caps_get_size (caps), 2);
+  /* Remove the ANY caps features structure */
+  caps = gst_caps_truncate (caps);
   s = gst_caps_get_structure (caps, 0);
 
   fail_unless (gst_structure_has_name (s, "video/x-raw"));
