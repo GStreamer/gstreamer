@@ -544,7 +544,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
     case GST_MAKE_FOURCC ('W', 'M', 'V', '3'):
       caps = gst_caps_new_simple ("video/x-wmv",
-          "wmvversion", G_TYPE_INT, 3, NULL);
+          "wmvversion", G_TYPE_INT, 3, "format", G_TYPE_STRING, "WMV3", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Microsoft Windows Media 9");
       break;
