@@ -170,7 +170,9 @@ ximage_memory_share (GstXImageMemory * mem, gssize offset, gsize size)
       mem->parent.offset + offset, size);
   sub->sink = mem->sink;
   sub->ximage = mem->ximage;
+#ifdef HAVE_XSHM
   sub->SHMInfo = mem->SHMInfo;
+#endif
   sub->x = mem->x;
   sub->y = mem->y;
   sub->width = mem->width;
