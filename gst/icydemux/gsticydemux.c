@@ -532,7 +532,12 @@ gst_icydemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   while (size) {
     if (icydemux->remaining) {
       chunk = (size <= icydemux->remaining) ? size : icydemux->remaining;
-      sub = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, chunk);
+      if (offset == 0 && chunk == size) {
+        sub = buf;
+        buf = NULL;
+      } else {
+        sub = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, chunk);
+      }
       offset += chunk;
       icydemux->remaining -= chunk;
       size -= chunk;
@@ -576,7 +581,8 @@ gst_icydemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
 done:
-  gst_buffer_unref (buf);
+  if (buf)
+    gst_buffer_unref (buf);
 
   return ret;
 
