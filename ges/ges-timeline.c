@@ -2502,6 +2502,9 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
     g_list_free (objects);
   }
 
+  /* FIXME Check if we should rollback if we can't sync state */
+  gst_element_sync_state_with_parent (GST_ELEMENT (track));
+
   return TRUE;
 }
 

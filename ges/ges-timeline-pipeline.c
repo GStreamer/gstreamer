@@ -823,6 +823,9 @@ ges_timeline_pipeline_add_timeline (GESTimelinePipeline * pipeline,
   g_signal_connect (timeline, "no-more-pads", (GCallback) no_more_pads_cb,
       pipeline);
 
+  /* FIXME Check if we should rollback if we can't sync state */
+  gst_element_sync_state_with_parent (GST_ELEMENT (timeline));
+
   return TRUE;
 }
 
