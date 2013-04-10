@@ -5540,6 +5540,7 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
     }
   } else if (stream->subtype == FOURCC_soun) {
     if (stream->caps) {
+      stream->caps = gst_caps_make_writable (stream->caps);
       gst_caps_set_simple (stream->caps,
           "rate", G_TYPE_INT, (int) stream->rate,
           "channels", G_TYPE_INT, stream->n_channels, NULL);
