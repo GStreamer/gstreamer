@@ -563,6 +563,12 @@ clear_stream (GstSrtpDecSsrcStream * stream)
   g_slice_free (GstSrtpDecSsrcStream, stream);
 }
 
+static gboolean
+remove_yes (gpointer key, gpointer value, gpointer user_data)
+{
+  return TRUE;
+}
+
 /* Clear the policy list
  */
 static void
@@ -575,10 +581,9 @@ gst_srtp_dec_clear_streams (GstSrtpDec * filter)
   if (!filter->first_session)
     srtp_dealloc (filter->session);
 
-  nb = g_hash_table_size (filter->streams);
-  g_hash_table_destroy (filter->streams);
+  if (filter->streams)
+    nb = g_hash_table_foreach_remove (filter->streams, remove_yes, NULL);
 
-  filter->streams = NULL;
   filter->first_session = TRUE;
 
   GST_OBJECT_UNLOCK (filter);
@@ -940,10 +945,6 @@ gst_srtp_dec_change_state (GstElement * element, GstStateChange transition)
   GST_OBJECT_LOCK (filter);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!filter->first_session)
-        gst_srtp_dec_clear_streams (filter);
-      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       filter->streams = g_hash_table_new_full (g_direct_hash, g_direct_equal,
           NULL, (GDestroyNotify) clear_stream);
@@ -966,6 +967,8 @@ gst_srtp_dec_change_state (GstElement * element, GstStateChange transition)
       gst_srtp_dec_clear_streams (filter);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      g_hash_table_unref (filter->streams);
+      filter->streams = NULL;
       break;
     default:
       break;
