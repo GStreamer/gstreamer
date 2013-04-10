@@ -972,7 +972,6 @@ gst_dash_demux_expose_streams (GstDashDemux * demux)
 
     GST_LOG_OBJECT (demux, "Exposing stream %d %" GST_PTR_FORMAT, stream->index,
         stream->input_caps);
-    g_assert (stream->pad == NULL);
     gst_element_add_pad (GST_ELEMENT (demux), gst_object_ref (stream->pad));
   }
   gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
@@ -989,7 +988,6 @@ gst_dash_demux_remove_streams (GstDashDemux * demux, GSList * streams)
 
     GST_LOG_OBJECT (demux, "Removing stream %d %" GST_PTR_FORMAT, stream->index,
         stream->input_caps);
-    g_assert (stream->pad == NULL);
     gst_pad_push_event (stream->pad, gst_event_ref (eos));
     gst_pad_set_active (stream->pad, FALSE);
     gst_element_remove_pad (GST_ELEMENT (demux), stream->pad);
