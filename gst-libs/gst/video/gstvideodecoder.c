@@ -756,12 +756,20 @@ gst_video_decoder_setcaps (GstVideoDecoder * decoder, GstCaps * caps)
 
   GST_DEBUG_OBJECT (decoder, "setcaps %" GST_PTR_FORMAT, caps);
 
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+
+  if (decoder->priv->input_state) {
+    GST_DEBUG_OBJECT (decoder,
+        "Checking if caps changed old %" GST_PTR_FORMAT " new %" GST_PTR_FORMAT,
+        decoder->priv->input_state->caps, caps);
+    if (gst_caps_is_equal (decoder->priv->input_state->caps, caps))
+      goto caps_not_changed;
+  }
+
   state = _new_input_state (caps);
 
   if (G_UNLIKELY (state == NULL))
     goto parse_fail;
-
-  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
   if (decoder_class->set_format)
     ret = decoder_class->set_format (decoder, state);
@@ -777,11 +785,18 @@ gst_video_decoder_setcaps (GstVideoDecoder * decoder, GstCaps * caps)
 
   return ret;
 
-  /* ERRORS */
+caps_not_changed:
+  {
+    GST_DEBUG_OBJECT (decoder, "Caps did not change - ignore");
+    GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+    return TRUE;
+  }
 
+  /* ERRORS */
 parse_fail:
   {
     GST_WARNING_OBJECT (decoder, "Failed to parse caps");
+    GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
     return FALSE;
   }
 
