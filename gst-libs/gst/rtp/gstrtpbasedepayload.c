@@ -48,6 +48,8 @@ struct _GstRTPBaseDepayloadPrivate
   guint32 next_seqnum;
 
   gboolean negotiated;
+
+  GstCaps *last_caps;
 };
 
 /* Filter signals and args */
@@ -188,7 +190,17 @@ gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
 
   bclass = GST_RTP_BASE_DEPAYLOAD_GET_CLASS (filter);
 
-  GST_DEBUG_OBJECT (filter, "Set caps");
+  GST_DEBUG_OBJECT (filter, "Set caps %" GST_PTR_FORMAT, caps);
+
+  if (priv->last_caps) {
+    if (gst_caps_is_equal (priv->last_caps, caps)) {
+      res = TRUE;
+      goto caps_not_changed;
+    } else {
+      gst_caps_unref (priv->last_caps);
+      priv->last_caps = NULL;
+    }
+  }
 
   caps_struct = gst_caps_get_structure (caps, 0);
 
@@ -232,7 +244,16 @@ gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
 
   priv->negotiated = res;
 
+  if (priv->negotiated)
+    priv->last_caps = gst_caps_ref (caps);
+
   return res;
+
+caps_not_changed:
+  {
+    GST_DEBUG_OBJECT (filter, "Caps did not change");
+    return res;
+  }
 }
 
 static GstFlowReturn
@@ -677,6 +698,7 @@ gst_rtp_base_depayload_change_state (GstElement * element,
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_caps_replace (&priv->last_caps, NULL);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
