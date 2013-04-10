@@ -47,20 +47,49 @@
 #ifndef __GST_EGL_ADAPTATION_H__
 #define __GST_EGL_ADAPTATION_H__
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#define EGL_EGLEXT_PROTOTYPES
+#define GL_GLEXT_PROTOTYPES
+
 #include <gst/gst.h>
 #include <gst/egl/egl.h>
+#include <gst/video/gstvideopool.h>
+
+#ifdef HAVE_IOS
+#include <OpenGLES/ES2/gl.h>
+
+#else
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#endif
 
 #define GST_EGLGLESSINK_EGL_MIN_VERSION 1
+
+static const EGLint eglglessink_RGBA8888_attribs[] = {
+  EGL_RED_SIZE, 8,
+  EGL_GREEN_SIZE, 8,
+  EGL_BLUE_SIZE, 8,
+  EGL_ALPHA_SIZE, 8,
+  EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+  EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+  EGL_NONE
+};
 
 G_BEGIN_DECLS
 
 typedef struct _GstEglAdaptationContext GstEglAdaptationContext;
-typedef struct _GstEglGlesRenderContext GstEglGlesRenderContext;
 typedef struct _GstEglGlesImageFmt GstEglGlesImageFmt;
+
+#ifdef HAVE_IOS
+typedef struct _GstEaglContext GstEaglContext;
+#else
+typedef struct _GstEglGlesRenderContext GstEglGlesRenderContext;
+#endif
 
 typedef struct _coord5
 {
@@ -71,62 +100,10 @@ typedef struct _coord5
   float b;                      /* texpos y */
 } coord5;
 
-/*
- * GstEglGlesRenderContext:
- * @config: Current EGL config
- * @eglcontext: Current EGL context
- * @display: Current EGL display connection
- * @window: Current EGL window asociated with the display connection
- * @used_window: Last seen EGL window asociated with the display connection
- * @surface: EGL surface the sink is rendering into
- * @fragshader: Fragment shader
- * @vertshader: Vertex shader
- * @glslprogram: Compiled and linked GLSL program in use for rendering
- * @texture Texture units in use
- * @surface_width: Pixel width of the surface the sink is rendering into
- * @surface_height: Pixel height of the surface the sink is rendering into
- * @pixel_aspect_ratio: EGL display aspect ratio
- * @egl_minor: EGL version (minor)
- * @egl_major: EGL version (major)
- * @n_textures: Texture units count
- * @position_loc: Index of the position vertex attribute array
- * @texpos_loc: Index of the textpos vertex attribute array
- * @position_array: VBO position array
- * @texpos_array: VBO texpos array
- * @index_array: VBO index array
- * @position_buffer: Position buffer object name
- * @texpos_buffer: Texpos buffer object name
- * @index_buffer: Index buffer object name
- *
- * This struct holds the sink's EGL/GLES rendering context.
- */
-struct _GstEglGlesRenderContext
+typedef struct
 {
-  EGLConfig config;
-  EGLContext eglcontext;
-  GstEGLDisplay *display, *set_display;
-  EGLNativeWindowType window, used_window;
-  EGLSurface surface;
-  gboolean buffer_preserved;
-  GLuint fragshader[3]; /* frame, border, frame-custom */
-  GLuint vertshader[3]; /* frame, border, frame-custom */
-  GLuint glslprogram[3]; /* frame, border, frame-custom */
-  GLuint texture[4]; /* RGB/Y, U/UV, V, custom */
-  EGLint surface_width;
-  EGLint surface_height;
-  EGLint pixel_aspect_ratio;
-  EGLint egl_minor, egl_major;
-  gint n_textures;
-
-  /* shader vars */
-  GLuint position_loc[3]; /* frame, border, frame-custom */
-  GLuint texpos_loc[2]; /* frame, frame-custom */
-  GLuint tex_scale_loc[1][3]; /* [frame] RGB/Y, U/UV, V */
-  GLuint tex_loc[2][3]; /* [frame,frame-custom] RGB/Y, U/UV, V */
-  coord5 position_array[16];    /* 4 x Frame x-normal,y-normal, 4x Frame x-normal,y-flip, 4 x Border1, 4 x Border2 */
-  unsigned short index_array[4];
-  unsigned int position_buffer, index_buffer;
-};
+  GLuint texture;
+} GstEGLGLESImageData;
 
 /*
  * GstEglAdaptationContext:
@@ -139,15 +116,59 @@ struct _GstEglGlesRenderContext
 struct _GstEglAdaptationContext
 {
   GstElement *element;
-  GstEglGlesRenderContext eglglesctx;
+
+#ifdef HAVE_IOS
+  GstEaglContext *eaglctx;
+#else
+  GstEglGlesRenderContext *eglglesctx;
+#endif
+
+  GstEGLDisplay *display, *set_display;
+  EGLNativeWindowType window, used_window;
+
+  GLuint fragshader[3]; /* frame, border, frame-custom */
+  GLuint vertshader[3]; /* frame, border, frame-custom */
+  GLuint glslprogram[3]; /* frame, border, frame-custom */
+  GLuint texture[4]; /* RGB/Y, U/UV, V, custom */
+  /* shader vars */
+  GLuint position_loc[3]; /* frame, border, frame-custom */
+  GLuint texpos_loc[2]; /* frame, frame-custom */
+  GLuint tex_scale_loc[1][3]; /* [frame] RGB/Y, U/UV, V */
+  GLuint tex_loc[2][3]; /* [frame,frame-custom] RGB/Y, U/UV, V */
+  coord5 position_array[16];    /* 4 x Frame x-normal,y-normal, 4x Frame x-normal,y-flip, 4 x Border1, 4 x Border2 */
+  unsigned short index_array[4];
+  unsigned int position_buffer, index_buffer;
+  gint n_textures;
+
+  EGLint surface_width;
+  EGLint surface_height;
+  EGLint pixel_aspect_ratio_n;
+  EGLint pixel_aspect_ratio_d;
 
   gboolean have_vbo;
   gboolean have_texture;
   gboolean have_surface;
+  gboolean buffer_preserved;
 };
 
 GstEglAdaptationContext * gst_egl_adaptation_context_new (GstElement * element);
 void gst_egl_adaptation_context_free (GstEglAdaptationContext * ctx);
+void gst_egl_adaptation_init (GstEglAdaptationContext * ctx);
+void gst_egl_adaptation_deinit (GstEglAdaptationContext * ctx);
+
+gboolean gst_egl_adaptation_create_surface (GstEglAdaptationContext * ctx);
+void gst_egl_adaptation_query_buffer_preserved (GstEglAdaptationContext * ctx);
+void gst_egl_adaptation_query_par (GstEglAdaptationContext * ctx);
+void gst_egl_adaptation_destroy_surface (GstEglAdaptationContext * ctx);
+void gst_egl_adaptation_destroy_context (GstEglAdaptationContext * ctx);
+
+gboolean
+gst_egl_adaptation_create_egl_context (GstEglAdaptationContext * ctx);
+
+/* platform window */
+gboolean gst_egl_adaptation_create_native_window (GstEglAdaptationContext
+* ctx, gint width, gint height, gpointer * own_window_data);
+void gst_egl_adaptation_destroy_native_window (GstEglAdaptationContext * ctx, gpointer * own_window_data);
 
 GstCaps *gst_egl_adaptation_fill_supported_fbuffer_configs (GstEglAdaptationContext * ctx);
 gboolean gst_egl_adaptation_init_egl_display (GstEglAdaptationContext * ctx);
@@ -155,13 +176,21 @@ gboolean gst_egl_adaptation_choose_config (GstEglAdaptationContext * ctx);
 gboolean gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx, GstVideoFormat format);
 void gst_egl_adaptation_init_egl_exts (GstEglAdaptationContext * ctx);
 gboolean gst_egl_adaptation_update_surface_dimensions (GstEglAdaptationContext * ctx);
+gboolean _gst_egl_choose_config (GstEglAdaptationContext * ctx, gboolean try_only, gint * num_configs);
 
 gboolean got_gl_error (const char *wtf);
 gboolean got_egl_error (const char *wtf);
 
-gboolean gst_egl_adaptation_context_make_current (GstEglAdaptationContext *
-    ctx, gboolean bind);
-void gst_egl_adaptation_wipe_eglglesctx (GstEglAdaptationContext * ctx);
+void gst_egl_adaptation_set_window (GstEglAdaptationContext * ctx, guintptr window);
+
+gboolean gst_egl_adaptation_context_make_current (GstEglAdaptationContext * ctx, gboolean bind);
+void gst_egl_adaptation_cleanup (GstEglAdaptationContext * ctx);
+
+GstBuffer *
+gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx, GstAllocator * allocator,
+    GstVideoFormat format, gint width, gint height);
+gboolean
+gst_egl_adaptation_context_swap_buffers (GstEglAdaptationContext * ctx);
 
 G_END_DECLS
 

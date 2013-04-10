@@ -44,20 +44,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/video/video.h>
 #include "gstegladaptation.h"
 
-/* Some EGL implementations are reporting wrong
- * values for the display's EGL_PIXEL_ASPECT_RATIO.
- * They are required by the khronos specs to report
- * this value as w/h * EGL_DISPLAY_SCALING (Which is
- * a constant with value 10000) but at least the
- * Galaxy SIII (Android) is reporting just 1 when
- * w = h. We use these two to bound returned values to
- * sanity.
- */
-#define EGL_SANE_DAR_MIN ((EGL_DISPLAY_SCALING)/10)
-#define EGL_SANE_DAR_MAX ((EGL_DISPLAY_SCALING)*10)
+#include <gst/video/video.h>
+#include <string.h>
 
 /* GLESv2 GLSL Shaders
  *
@@ -65,16 +55,6 @@
  * why most of these shaders deal with Packed/Planar YUV->RGB
  * conversion.
  */
-
-static const EGLint eglglessink_RGBA8888_attribs[] = {
-  EGL_RED_SIZE, 8,
-  EGL_GREEN_SIZE, 8,
-  EGL_BLUE_SIZE, 8,
-  EGL_ALPHA_SIZE, 8,
-  EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-  EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-  EGL_NONE
-};
 
 /* *INDENT-OFF* */
 /* Direct vertex copy */
@@ -242,7 +222,6 @@ GstCaps *
 gst_egl_adaptation_fill_supported_fbuffer_configs (GstEglAdaptationContext *
     ctx)
 {
-  EGLint cfg_number;
   GstCaps *caps = NULL, *copy1, *copy2;
   guint i, n;
 
@@ -250,8 +229,7 @@ gst_egl_adaptation_fill_supported_fbuffer_configs (GstEglAdaptationContext *
       "Building initial list of wanted eglattribs per format");
 
   /* Init supported format/caps list */
-  if (eglChooseConfig (gst_egl_display_get (ctx->eglglesctx.display),
-          eglglessink_RGBA8888_attribs, NULL, 1, &cfg_number) != EGL_FALSE) {
+  if (_gst_egl_choose_config (ctx, TRUE, NULL)) {
 
     caps = gst_caps_new_empty ();
 
@@ -323,53 +301,41 @@ gst_egl_adaptation_fill_supported_fbuffer_configs (GstEglAdaptationContext *
 }
 
 void
-gst_egl_adaptation_wipe_eglglesctx (GstEglAdaptationContext * ctx)
+gst_egl_adaptation_cleanup (GstEglAdaptationContext * ctx)
 {
   gint i;
 
   glUseProgram (0);
 
   if (ctx->have_vbo) {
-    glDeleteBuffers (1, &ctx->eglglesctx.position_buffer);
-    glDeleteBuffers (1, &ctx->eglglesctx.index_buffer);
+    glDeleteBuffers (1, &ctx->position_buffer);
+    glDeleteBuffers (1, &ctx->index_buffer);
     ctx->have_vbo = FALSE;
   }
 
   if (ctx->have_texture) {
-    glDeleteTextures (ctx->eglglesctx.n_textures + 1, ctx->eglglesctx.texture);
+    glDeleteTextures (ctx->n_textures + 1, ctx->texture);
     ctx->have_texture = FALSE;
-    ctx->eglglesctx.n_textures = 0;
+    ctx->n_textures = 0;
   }
 
   for (i = 0; i < 3; i++) {
-    if (ctx->eglglesctx.glslprogram[i]) {
-      glDetachShader (ctx->eglglesctx.glslprogram[i],
-          ctx->eglglesctx.fragshader[i]);
-      glDetachShader (ctx->eglglesctx.glslprogram[i],
-          ctx->eglglesctx.vertshader[i]);
-      glDeleteProgram (ctx->eglglesctx.glslprogram[i]);
-      glDeleteShader (ctx->eglglesctx.fragshader[i]);
-      glDeleteShader (ctx->eglglesctx.vertshader[i]);
-      ctx->eglglesctx.glslprogram[i] = 0;
-      ctx->eglglesctx.fragshader[i] = 0;
-      ctx->eglglesctx.vertshader[i] = 0;
+    if (ctx->glslprogram[i]) {
+      glDetachShader (ctx->glslprogram[i], ctx->fragshader[i]);
+      glDetachShader (ctx->glslprogram[i], ctx->vertshader[i]);
+      glDeleteProgram (ctx->glslprogram[i]);
+      glDeleteShader (ctx->fragshader[i]);
+      glDeleteShader (ctx->vertshader[i]);
+      ctx->glslprogram[i] = 0;
+      ctx->fragshader[i] = 0;
+      ctx->vertshader[i] = 0;
     }
   }
 
   gst_egl_adaptation_context_make_current (ctx, FALSE);
 
-  if (ctx->eglglesctx.surface) {
-    eglDestroySurface (gst_egl_display_get (ctx->eglglesctx.display),
-        ctx->eglglesctx.surface);
-    ctx->eglglesctx.surface = NULL;
-    ctx->have_surface = FALSE;
-  }
-
-  if (ctx->eglglesctx.eglcontext) {
-    eglDestroyContext (gst_egl_display_get (ctx->eglglesctx.display),
-        ctx->eglglesctx.eglcontext);
-    ctx->eglglesctx.eglcontext = NULL;
-  }
+  gst_egl_adaptation_destroy_surface (ctx);
+  gst_egl_adaptation_destroy_context (ctx);
 }
 
 gboolean
@@ -382,106 +348,6 @@ got_gl_error (const char *wtf)
     return TRUE;
   }
   return FALSE;
-}
-
-gboolean
-got_egl_error (const char *wtf)
-{
-  EGLint error;
-
-  if ((error = eglGetError ()) != EGL_SUCCESS) {
-    GST_CAT_DEBUG (GST_CAT_DEFAULT, "EGL ERROR: %s returned 0x%04x", wtf,
-        error);
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-/* Prints available EGL/GLES extensions 
- * If another rendering path is implemented this is the place
- * where you want to check for the availability of its supporting
- * EGL/GLES extensions.
- */
-void
-gst_egl_adaptation_init_egl_exts (GstEglAdaptationContext * ctx)
-{
-  const char *eglexts;
-  unsigned const char *glexts;
-
-  eglexts =
-      eglQueryString (gst_egl_display_get (ctx->eglglesctx.display),
-      EGL_EXTENSIONS);
-  glexts = glGetString (GL_EXTENSIONS);
-
-  GST_DEBUG_OBJECT (ctx->element, "Available EGL extensions: %s\n",
-      GST_STR_NULL (eglexts));
-  GST_DEBUG_OBJECT (ctx->element, "Available GLES extensions: %s\n",
-      GST_STR_NULL ((const char *) glexts));
-
-  return;
-}
-
-/* XXX: Lock eglgles context? */
-gboolean
-gst_egl_adaptation_update_surface_dimensions (GstEglAdaptationContext * ctx)
-{
-  gint width, height;
-
-  /* Save surface dims */
-  eglQuerySurface (gst_egl_display_get (ctx->eglglesctx.display),
-      ctx->eglglesctx.surface, EGL_WIDTH, &width);
-  eglQuerySurface (gst_egl_display_get (ctx->eglglesctx.display),
-      ctx->eglglesctx.surface, EGL_HEIGHT, &height);
-
-  if (width != ctx->eglglesctx.surface_width ||
-      height != ctx->eglglesctx.surface_height) {
-    ctx->eglglesctx.surface_width = width;
-    ctx->eglglesctx.surface_height = height;
-    GST_INFO_OBJECT (ctx->element, "Got surface of %dx%d pixels", width,
-        height);
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-gboolean
-gst_egl_adaptation_context_make_current (GstEglAdaptationContext * ctx,
-    gboolean bind)
-{
-  g_assert (ctx->eglglesctx.display != NULL);
-
-  if (bind && ctx->eglglesctx.surface && ctx->eglglesctx.eglcontext) {
-    EGLContext *cur_ctx = eglGetCurrentContext ();
-
-    if (cur_ctx == ctx->eglglesctx.eglcontext) {
-      GST_DEBUG_OBJECT (ctx->element,
-          "Already attached the context to thread %p", g_thread_self ());
-      return TRUE;
-    }
-
-    GST_DEBUG_OBJECT (ctx->element, "Attaching context to thread %p",
-        g_thread_self ());
-    if (!eglMakeCurrent (gst_egl_display_get (ctx->eglglesctx.display),
-            ctx->eglglesctx.surface, ctx->eglglesctx.surface,
-            ctx->eglglesctx.eglcontext)) {
-      got_egl_error ("eglMakeCurrent");
-      GST_ERROR_OBJECT (ctx->element, "Couldn't bind context");
-      return FALSE;
-    }
-  } else {
-    GST_DEBUG_OBJECT (ctx->element, "Detaching context from thread %p",
-        g_thread_self ());
-    if (!eglMakeCurrent (gst_egl_display_get (ctx->eglglesctx.display),
-            EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
-      got_egl_error ("eglMakeCurrent");
-      GST_ERROR_OBJECT (ctx->element, "Couldn't unbind context");
-      return FALSE;
-    }
-  }
-
-  return TRUE;
 }
 
 static gboolean
@@ -584,36 +450,22 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
     GstVideoFormat format)
 {
   GLboolean ret;
-  EGLint display_par;
   const gchar *texnames[3] = { NULL, };
   gchar *frag_prog = NULL;
   gboolean free_frag_prog = FALSE;
-  EGLint swap_behavior;
   gint i;
 
   GST_DEBUG_OBJECT (ctx->element, "Enter EGL surface setup");
 
-  ctx->eglglesctx.surface =
-      eglCreateWindowSurface (gst_egl_display_get (ctx->eglglesctx.display),
-      ctx->eglglesctx.config, ctx->eglglesctx.used_window, NULL);
-
-  if (ctx->eglglesctx.surface == EGL_NO_SURFACE) {
-    got_egl_error ("eglCreateWindowSurface");
+  if (!gst_egl_adaptation_create_surface (ctx)) {
     GST_ERROR_OBJECT (ctx->element, "Can't create surface");
-    goto HANDLE_EGL_ERROR_LOCKED;
+    goto HANDLE_ERROR_LOCKED;
   }
 
-  ctx->eglglesctx.buffer_preserved = FALSE;
-  if (eglQuerySurface (gst_egl_display_get (ctx->eglglesctx.display),
-          ctx->eglglesctx.surface, EGL_SWAP_BEHAVIOR, &swap_behavior)) {
-    GST_DEBUG_OBJECT (ctx->element, "Buffer swap behavior %x", swap_behavior);
-    ctx->eglglesctx.buffer_preserved = swap_behavior == EGL_BUFFER_PRESERVED;
-  } else {
-    GST_DEBUG_OBJECT (ctx->element, "Can't query buffer swap behavior");
-  }
+  gst_egl_adaptation_query_buffer_preserved (ctx);
 
   if (!gst_egl_adaptation_context_make_current (ctx, TRUE))
-    goto HANDLE_EGL_ERROR_LOCKED;
+    goto HANDLE_ERROR_LOCKED;
 
   gst_egl_adaptation_init_egl_exts (ctx);
 
@@ -626,28 +478,7 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
    * or some other one time check. Right now it's being called once
    * per frame.
    */
-  if (ctx->eglglesctx.egl_major == 1 && ctx->eglglesctx.egl_minor < 2) {
-    GST_DEBUG_OBJECT (ctx->element, "Can't query PAR. Using default: %dx%d",
-        EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
-    ctx->eglglesctx.pixel_aspect_ratio = EGL_DISPLAY_SCALING;
-  } else {
-    eglQuerySurface (gst_egl_display_get (ctx->eglglesctx.display),
-        ctx->eglglesctx.surface, EGL_PIXEL_ASPECT_RATIO, &display_par);
-    /* Fix for outbound DAR reporting on some implementations not
-     * honoring the 'should return w/h * EGL_DISPLAY_SCALING' spec
-     * requirement
-     */
-    if (display_par == EGL_UNKNOWN || display_par < EGL_SANE_DAR_MIN ||
-        display_par > EGL_SANE_DAR_MAX) {
-      GST_DEBUG_OBJECT (ctx->element, "Nonsensical PAR value returned: %d. "
-          "Bad EGL implementation? "
-          "Will use default: %d/%d", ctx->eglglesctx.pixel_aspect_ratio,
-          EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
-      ctx->eglglesctx.pixel_aspect_ratio = EGL_DISPLAY_SCALING;
-    } else {
-      ctx->eglglesctx.pixel_aspect_ratio = display_par;
-    }
-  }
+  gst_egl_adaptation_query_par (ctx);
 
   /* Save surface dims */
   gst_egl_adaptation_update_surface_dimensions (ctx);
@@ -671,7 +502,7 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
     case GST_VIDEO_FORMAT_AYUV:
       frag_prog = (gchar *) frag_AYUV_prog;
       free_frag_prog = FALSE;
-      ctx->eglglesctx.n_textures = 1;
+      ctx->n_textures = 1;
       texnames[0] = "tex";
       break;
     case GST_VIDEO_FORMAT_Y444:
@@ -681,7 +512,7 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
     case GST_VIDEO_FORMAT_Y41B:
       frag_prog = (gchar *) frag_PLANAR_YUV_prog;
       free_frag_prog = FALSE;
-      ctx->eglglesctx.n_textures = 3;
+      ctx->n_textures = 3;
       texnames[0] = "Ytex";
       texnames[1] = "Utex";
       texnames[2] = "Vtex";
@@ -689,14 +520,14 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
     case GST_VIDEO_FORMAT_NV12:
       frag_prog = g_strdup_printf (frag_NV12_NV21_prog, 'r', 'a');
       free_frag_prog = TRUE;
-      ctx->eglglesctx.n_textures = 2;
+      ctx->n_textures = 2;
       texnames[0] = "Ytex";
       texnames[1] = "UVtex";
       break;
     case GST_VIDEO_FORMAT_NV21:
       frag_prog = g_strdup_printf (frag_NV12_NV21_prog, 'a', 'r');
       free_frag_prog = TRUE;
-      ctx->eglglesctx.n_textures = 2;
+      ctx->n_textures = 2;
       texnames[0] = "Ytex";
       texnames[1] = "UVtex";
       break;
@@ -705,21 +536,21 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
     case GST_VIDEO_FORMAT_BGRA:
       frag_prog = g_strdup_printf (frag_REORDER_prog, 'b', 'g', 'r');
       free_frag_prog = TRUE;
-      ctx->eglglesctx.n_textures = 1;
+      ctx->n_textures = 1;
       texnames[0] = "tex";
       break;
     case GST_VIDEO_FORMAT_xRGB:
     case GST_VIDEO_FORMAT_ARGB:
       frag_prog = g_strdup_printf (frag_REORDER_prog, 'g', 'b', 'a');
       free_frag_prog = TRUE;
-      ctx->eglglesctx.n_textures = 1;
+      ctx->n_textures = 1;
       texnames[0] = "tex";
       break;
     case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_ABGR:
       frag_prog = g_strdup_printf (frag_REORDER_prog, 'a', 'b', 'g');
       free_frag_prog = TRUE;
-      ctx->eglglesctx.n_textures = 1;
+      ctx->n_textures = 1;
       texnames[0] = "tex";
       break;
     case GST_VIDEO_FORMAT_RGB:
@@ -728,7 +559,7 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
     case GST_VIDEO_FORMAT_RGB16:
       frag_prog = (gchar *) frag_COPY_prog;
       free_frag_prog = FALSE;
-      ctx->eglglesctx.n_textures = 1;
+      ctx->n_textures = 1;
       texnames[0] = "tex";
       break;
     default:
@@ -737,9 +568,9 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
   }
 
   if (!create_shader_program (ctx,
-          &ctx->eglglesctx.glslprogram[0],
-          &ctx->eglglesctx.vertshader[0],
-          &ctx->eglglesctx.fragshader[0], vert_COPY_prog, frag_prog)) {
+          &ctx->glslprogram[0],
+          &ctx->vertshader[0],
+          &ctx->fragshader[0], vert_COPY_prog, frag_prog)) {
     if (free_frag_prog)
       g_free (frag_prog);
     frag_prog = NULL;
@@ -749,37 +580,34 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
     g_free (frag_prog);
   frag_prog = NULL;
 
-  ctx->eglglesctx.position_loc[0] =
-      glGetAttribLocation (ctx->eglglesctx.glslprogram[0], "position");
-  ctx->eglglesctx.texpos_loc[0] =
-      glGetAttribLocation (ctx->eglglesctx.glslprogram[0], "texpos");
-  ctx->eglglesctx.tex_scale_loc[0][0] =
-      glGetUniformLocation (ctx->eglglesctx.glslprogram[0], "tex_scale0");
-  ctx->eglglesctx.tex_scale_loc[0][1] =
-      glGetUniformLocation (ctx->eglglesctx.glslprogram[0], "tex_scale1");
-  ctx->eglglesctx.tex_scale_loc[0][2] =
-      glGetUniformLocation (ctx->eglglesctx.glslprogram[0], "tex_scale2");
+  ctx->position_loc[0] = glGetAttribLocation (ctx->glslprogram[0], "position");
+  ctx->texpos_loc[0] = glGetAttribLocation (ctx->glslprogram[0], "texpos");
+  ctx->tex_scale_loc[0][0] =
+      glGetUniformLocation (ctx->glslprogram[0], "tex_scale0");
+  ctx->tex_scale_loc[0][1] =
+      glGetUniformLocation (ctx->glslprogram[0], "tex_scale1");
+  ctx->tex_scale_loc[0][2] =
+      glGetUniformLocation (ctx->glslprogram[0], "tex_scale2");
 
-  glEnableVertexAttribArray (ctx->eglglesctx.position_loc[0]);
+  glEnableVertexAttribArray (ctx->position_loc[0]);
   if (got_gl_error ("glEnableVertexAttribArray"))
     goto HANDLE_ERROR;
 
-  glEnableVertexAttribArray (ctx->eglglesctx.texpos_loc[0]);
+  glEnableVertexAttribArray (ctx->texpos_loc[0]);
   if (got_gl_error ("glEnableVertexAttribArray"))
     goto HANDLE_ERROR;
 
-  for (i = 0; i < ctx->eglglesctx.n_textures; i++) {
-    ctx->eglglesctx.tex_loc[0][i] =
-        glGetUniformLocation (ctx->eglglesctx.glslprogram[0], texnames[i]);
+  for (i = 0; i < ctx->n_textures; i++) {
+    ctx->tex_loc[0][i] =
+        glGetUniformLocation (ctx->glslprogram[0], texnames[i]);
   }
 
   /* custom rendering shader */
 
   if (!create_shader_program (ctx,
-          &ctx->eglglesctx.glslprogram[2],
-          &ctx->eglglesctx.vertshader[2],
-          &ctx->eglglesctx.fragshader[2], vert_COPY_prog,
-          frag_COPY_DIRECT_prog)) {
+          &ctx->glslprogram[2],
+          &ctx->vertshader[2],
+          &ctx->fragshader[2], vert_COPY_prog, frag_COPY_DIRECT_prog)) {
     if (free_frag_prog)
       g_free (frag_prog);
     frag_prog = NULL;
@@ -789,31 +617,27 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
     g_free (frag_prog);
   frag_prog = NULL;
 
-  ctx->eglglesctx.position_loc[2] =
-      glGetAttribLocation (ctx->eglglesctx.glslprogram[2], "position");
-  ctx->eglglesctx.texpos_loc[1] =
-      glGetAttribLocation (ctx->eglglesctx.glslprogram[2], "texpos");
+  ctx->position_loc[2] = glGetAttribLocation (ctx->glslprogram[2], "position");
+  ctx->texpos_loc[1] = glGetAttribLocation (ctx->glslprogram[2], "texpos");
 
-  glEnableVertexAttribArray (ctx->eglglesctx.position_loc[2]);
+  glEnableVertexAttribArray (ctx->position_loc[2]);
   if (got_gl_error ("glEnableVertexAttribArray"))
     goto HANDLE_ERROR;
 
-  ctx->eglglesctx.tex_loc[1][0] =
-      glGetUniformLocation (ctx->eglglesctx.glslprogram[2], "tex");
+  ctx->tex_loc[1][0] = glGetUniformLocation (ctx->glslprogram[2], "tex");
 
-  if (!ctx->eglglesctx.buffer_preserved) {
+  if (!ctx->buffer_preserved) {
     /* Build shader program for black borders */
     if (!create_shader_program (ctx,
-            &ctx->eglglesctx.glslprogram[1],
-            &ctx->eglglesctx.vertshader[1],
-            &ctx->eglglesctx.fragshader[1], vert_COPY_prog_no_tex,
-            frag_BLACK_prog))
+            &ctx->glslprogram[1],
+            &ctx->vertshader[1],
+            &ctx->fragshader[1], vert_COPY_prog_no_tex, frag_BLACK_prog))
       goto HANDLE_ERROR;
 
-    ctx->eglglesctx.position_loc[1] =
-        glGetAttribLocation (ctx->eglglesctx.glslprogram[1], "position");
+    ctx->position_loc[1] =
+        glGetAttribLocation (ctx->glslprogram[1], "position");
 
-    glEnableVertexAttribArray (ctx->eglglesctx.position_loc[1]);
+    glEnableVertexAttribArray (ctx->position_loc[1]);
     if (got_gl_error ("glEnableVertexAttribArray"))
       goto HANDLE_ERROR;
   }
@@ -822,12 +646,12 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
   if (!ctx->have_texture) {
     GST_INFO_OBJECT (ctx->element, "Performing initial texture setup");
 
-    glGenTextures (ctx->eglglesctx.n_textures + 1, ctx->eglglesctx.texture);
+    glGenTextures (ctx->n_textures + 1, ctx->texture);
     if (got_gl_error ("glGenTextures"))
       goto HANDLE_ERROR_LOCKED;
 
-    for (i = 0; i < ctx->eglglesctx.n_textures + 1; i++) {
-      glBindTexture (GL_TEXTURE_2D, ctx->eglglesctx.texture[i]);
+    for (i = 0; i < ctx->n_textures + 1; i++) {
+      glBindTexture (GL_TEXTURE_2D, ctx->texture[i]);
       if (got_gl_error ("glBindTexture"))
         goto HANDLE_ERROR;
 
@@ -852,8 +676,6 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
   return TRUE;
 
   /* Errors */
-HANDLE_EGL_ERROR_LOCKED:
-  GST_ERROR_OBJECT (ctx->element, "EGL call returned error %x", eglGetError ());
 HANDLE_ERROR_LOCKED:
 HANDLE_ERROR:
   GST_ERROR_OBJECT (ctx->element, "Couldn't setup EGL surface");
@@ -861,108 +683,13 @@ HANDLE_ERROR:
 }
 
 gboolean
-gst_egl_adaptation_init_egl_display (GstEglAdaptationContext * ctx)
-{
-  GstMessage *msg;
-  EGLDisplay display;
-  GST_DEBUG_OBJECT (ctx->element, "Enter EGL initial configuration");
-
-#ifdef USE_EGL_RPI
-  /* See https://github.com/raspberrypi/firmware/issues/99 */
-  if (!eglMakeCurrent ((EGLDisplay) 1, EGL_NO_SURFACE, EGL_NO_SURFACE,
-          EGL_NO_CONTEXT)) {
-    got_egl_error ("eglMakeCurrent");
-    GST_ERROR_OBJECT (ctx->element, "Couldn't unbind context");
-    return FALSE;
-  }
-#endif
-
-  msg = gst_message_new_need_context (GST_OBJECT_CAST (ctx->element));
-  gst_message_add_context_type (msg, GST_EGL_DISPLAY_CONTEXT_TYPE);
-  gst_element_post_message (GST_ELEMENT_CAST (ctx->element), msg);
-
-  GST_OBJECT_LOCK (ctx->element);
-  if (ctx->eglglesctx.set_display) {
-    GstContext *context;
-
-    ctx->eglglesctx.display = gst_egl_display_ref (ctx->eglglesctx.set_display);
-    GST_OBJECT_UNLOCK (ctx->element);
-    context = gst_element_get_context (GST_ELEMENT_CAST (ctx->element));
-    if (!context)
-      context = gst_context_new ();
-    context = gst_context_make_writable (context);
-    gst_context_set_egl_display (context, ctx->eglglesctx.display);
-    gst_element_set_context (GST_ELEMENT_CAST (ctx->element), context);
-  } else {
-    GstContext *context;
-
-    GST_OBJECT_UNLOCK (ctx->element);
-
-    display = eglGetDisplay (EGL_DEFAULT_DISPLAY);
-    if (display == EGL_NO_DISPLAY) {
-      GST_ERROR_OBJECT (ctx->element, "Could not get EGL display connection");
-      goto HANDLE_ERROR;        /* No EGL error is set by eglGetDisplay() */
-    }
-    ctx->eglglesctx.display = gst_egl_display_new (display);
-
-    context = gst_context_new ();
-    gst_context_set_egl_display (context, ctx->eglglesctx.display);
-
-    msg = gst_message_new_have_context (GST_OBJECT (ctx->element), context);
-    gst_element_post_message (GST_ELEMENT_CAST (ctx->element), msg);
-
-    context = gst_element_get_context (GST_ELEMENT_CAST (ctx->element));
-    if (!context)
-      context = gst_context_new ();
-    context = gst_context_make_writable (context);
-    gst_context_set_egl_display (context, ctx->eglglesctx.display);
-    gst_element_set_context (GST_ELEMENT_CAST (ctx->element), context);
-  }
-
-  if (!eglInitialize (gst_egl_display_get (ctx->eglglesctx.display),
-          &ctx->eglglesctx.egl_major, &ctx->eglglesctx.egl_minor)) {
-    got_egl_error ("eglInitialize");
-    GST_ERROR_OBJECT (ctx->element, "Could not init EGL display connection");
-    goto HANDLE_EGL_ERROR;
-  }
-
-  /* Check against required EGL version
-   * XXX: Need to review the version requirement in terms of the needed API
-   */
-  if (ctx->eglglesctx.egl_major < GST_EGLGLESSINK_EGL_MIN_VERSION) {
-    GST_ERROR_OBJECT (ctx->element, "EGL v%d needed, but you only have v%d.%d",
-        GST_EGLGLESSINK_EGL_MIN_VERSION, ctx->eglglesctx.egl_major,
-        ctx->eglglesctx.egl_minor);
-    goto HANDLE_ERROR;
-  }
-
-  GST_INFO_OBJECT (ctx->element, "System reports supported EGL version v%d.%d",
-      ctx->eglglesctx.egl_major, ctx->eglglesctx.egl_minor);
-
-  eglBindAPI (EGL_OPENGL_ES_API);
-
-  return TRUE;
-
-  /* Errors */
-HANDLE_EGL_ERROR:
-  GST_ERROR_OBJECT (ctx->element, "EGL call returned error %x", eglGetError ());
-HANDLE_ERROR:
-  GST_ERROR_OBJECT (ctx->element, "Couldn't setup window/surface from handle");
-  return FALSE;
-}
-
-gboolean
 gst_egl_adaptation_choose_config (GstEglAdaptationContext * ctx)
 {
-  EGLint con_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
-  GLint egl_configs;
+  gint egl_configs;
 
-  if ((eglChooseConfig (gst_egl_display_get (ctx->eglglesctx.display),
-              eglglessink_RGBA8888_attribs,
-              &ctx->eglglesctx.config, 1, &egl_configs)) == EGL_FALSE) {
-    got_egl_error ("eglChooseConfig");
+  if (!_gst_egl_choose_config (ctx, FALSE, &egl_configs)) {
     GST_ERROR_OBJECT (ctx->element, "eglChooseConfig failed");
-    goto HANDLE_EGL_ERROR;
+    goto HANDLE_ERROR;
   }
 
   if (egl_configs < 1) {
@@ -971,23 +698,14 @@ gst_egl_adaptation_choose_config (GstEglAdaptationContext * ctx)
     goto HANDLE_ERROR;
   }
 
-  ctx->eglglesctx.eglcontext =
-      eglCreateContext (gst_egl_display_get (ctx->eglglesctx.display),
-      ctx->eglglesctx.config, EGL_NO_CONTEXT, con_attribs);
-
-  if (ctx->eglglesctx.eglcontext == EGL_NO_CONTEXT) {
+  if (!gst_egl_adaptation_create_egl_context (ctx)) {
     GST_ERROR_OBJECT (ctx->element, "Error getting context, eglCreateContext");
-    goto HANDLE_EGL_ERROR;
+    goto HANDLE_ERROR;
   }
-
-  GST_DEBUG_OBJECT (ctx->element, "EGL Context: %p",
-      ctx->eglglesctx.eglcontext);
 
   return TRUE;
 
   /* Errors */
-HANDLE_EGL_ERROR:
-  GST_ERROR_OBJECT (ctx->element, "EGL call returned error %x", eglGetError ());
 HANDLE_ERROR:
   GST_ERROR_OBJECT (ctx->element, "Couldn't choose an usable config");
   return FALSE;
@@ -1000,12 +718,14 @@ gst_egl_adaptation_context_new (GstElement * element)
 
   ctx->element = gst_object_ref (element);
 
+  gst_egl_adaptation_init (ctx);
   return ctx;
 }
 
 void
 gst_egl_adaptation_context_free (GstEglAdaptationContext * ctx)
 {
+  gst_egl_adaptation_deinit (ctx);
   gst_object_unref (ctx->element);
   g_free (ctx);
 }

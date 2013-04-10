@@ -52,12 +52,6 @@
 #include <gst/base/gstdataqueue.h>
 #include <gst/egl/egl.h>
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-
-#include "video_platform_wrapper.h"
 #include "gstegladaptation.h"
 
 G_BEGIN_DECLS
@@ -116,7 +110,6 @@ struct _GstEglGlesSink
   gboolean custom_format; /* If it's a single texture that is just copied */
   GstBufferPool *pool;
 
-  GstEglGlesRenderContext *eglglesctx;
   GstEglAdaptationContext *egl_context;
 
   /* Runtime flags */
