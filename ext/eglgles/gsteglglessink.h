@@ -58,6 +58,7 @@
 #include <GLES2/gl2ext.h>
 
 #include "video_platform_wrapper.h"
+#include "gstegladaptation.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_EGLGLESSINK \
@@ -71,78 +72,8 @@ G_BEGIN_DECLS
 #define GST_IS_EGLGLESSINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EGLGLESSINK))
 
-#define GST_EGLGLESSINK_EGL_MIN_VERSION 1
 typedef struct _GstEglGlesSink GstEglGlesSink;
 typedef struct _GstEglGlesSinkClass GstEglGlesSinkClass;
-typedef struct _GstEglGlesRenderContext GstEglGlesRenderContext;
-
-typedef struct _GstEglGlesImageFmt GstEglGlesImageFmt;
-
-typedef struct _coord5
-{
-  float x;
-  float y;
-  float z;
-  float a;                      /* texpos x */
-  float b;                      /* texpos y */
-} coord5;
-
-/*
- * GstEglGlesRenderContext:
- * @config: Current EGL config
- * @eglcontext: Current EGL context
- * @display: Current EGL display connection
- * @window: Current EGL window asociated with the display connection
- * @used_window: Last seen EGL window asociated with the display connection
- * @surface: EGL surface the sink is rendering into
- * @fragshader: Fragment shader
- * @vertshader: Vertex shader
- * @glslprogram: Compiled and linked GLSL program in use for rendering
- * @texture Texture units in use
- * @surface_width: Pixel width of the surface the sink is rendering into
- * @surface_height: Pixel height of the surface the sink is rendering into
- * @pixel_aspect_ratio: EGL display aspect ratio
- * @egl_minor: EGL version (minor)
- * @egl_major: EGL version (major)
- * @n_textures: Texture units count
- * @position_loc: Index of the position vertex attribute array
- * @texpos_loc: Index of the textpos vertex attribute array
- * @position_array: VBO position array
- * @texpos_array: VBO texpos array
- * @index_array: VBO index array
- * @position_buffer: Position buffer object name
- * @texpos_buffer: Texpos buffer object name
- * @index_buffer: Index buffer object name
- *
- * This struct holds the sink's EGL/GLES rendering context.
- */
-struct _GstEglGlesRenderContext
-{
-  EGLConfig config;
-  EGLContext eglcontext;
-  GstEGLDisplay *display, *set_display;
-  EGLNativeWindowType window, used_window;
-  EGLSurface surface;
-  gboolean buffer_preserved;
-  GLuint fragshader[3]; /* frame, border, frame-custom */
-  GLuint vertshader[3]; /* frame, border, frame-custom */
-  GLuint glslprogram[3]; /* frame, border, frame-custom */
-  GLuint texture[4]; /* RGB/Y, U/UV, V, custom */
-  EGLint surface_width;
-  EGLint surface_height;
-  EGLint pixel_aspect_ratio;
-  EGLint egl_minor, egl_major;
-  gint n_textures;
-
-  /* shader vars */
-  GLuint position_loc[3]; /* frame, border, frame-custom */
-  GLuint texpos_loc[2]; /* frame, frame-custom */
-  GLuint tex_scale_loc[1][3]; /* [frame] RGB/Y, U/UV, V */
-  GLuint tex_loc[2][3]; /* [frame,frame-custom] RGB/Y, U/UV, V */
-  coord5 position_array[16];    /* 4 x Frame x-normal,y-normal, 4x Frame x-normal,y-flip, 4 x Border1, 4 x Border2 */
-  unsigned short index_array[4];
-  unsigned int position_buffer, index_buffer;
-};
 
 /*
  * GstEglGlesSink:
@@ -155,9 +86,6 @@ struct _GstEglGlesRenderContext
  * @flow_lock: Simple concurrent access ward to the sink's runtime state
  * @have_window: Set if the sink has access to a window to hold it's canvas
  * @using_own_window: Set if the sink created its own window
- * @have_surface: Set if the EGL surface setup has been performed
- * @have_vbo: Set if the GLES VBO setup has been performed
- * @have_texture: Set if the GLES texture setup has been performed
  * @egl_started: Set if the whole EGL setup has been performed
  * @create_window: Property value holder to allow/forbid internal window creation
  * @force_rendering_slow: Property value holder to force slow rendering path
@@ -188,14 +116,12 @@ struct _GstEglGlesSink
   gboolean custom_format; /* If it's a single texture that is just copied */
   GstBufferPool *pool;
 
-  GstEglGlesRenderContext eglglesctx;
+  GstEglGlesRenderContext *eglglesctx;
+  GstEglAdaptationContext *egl_context;
 
   /* Runtime flags */
   gboolean have_window;
   gboolean using_own_window;
-  gboolean have_surface;;
-  gboolean have_vbo;
-  gboolean have_texture;
   gboolean egl_started;
 
   gpointer own_window_data;

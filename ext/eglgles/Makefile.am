@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgsteglglessink.la
 
-libgsteglglessink_la_SOURCES = gsteglglessink.c video_platform_wrapper.c
+libgsteglglessink_la_SOURCES = gsteglglessink.c gstegladaptation.c video_platform_wrapper.c
 
 libgsteglglessink_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) \
 			      $(GST_PLUGINS_BASE_CFLAGS) \
@@ -17,4 +17,4 @@ libgsteglglessink_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
 libgsteglglessink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgsteglglessink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
-noinst_HEADERS = gsteglglessink.h video_platform_wrapper.h
+noinst_HEADERS = gsteglglessink.h gstegladaptation.h video_platform_wrapper.h
