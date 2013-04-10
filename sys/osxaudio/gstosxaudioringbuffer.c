@@ -173,6 +173,7 @@ gst_osx_audio_ring_buffer_acquire (GstAudioRingBuffer * buf,
   gboolean ret = FALSE, is_passthrough = FALSE;
   GstOsxAudioRingBuffer *osxbuf;
   AudioStreamBasicDescription format;
+  GstOsxAudioSink *osxsink;
 
   osxbuf = GST_OSX_AUDIO_RING_BUFFER (buf);
 
@@ -226,6 +227,9 @@ gst_osx_audio_ring_buffer_acquire (GstAudioRingBuffer * buf,
 
   GST_DEBUG_OBJECT (osxbuf, "Format: " CORE_AUDIO_FORMAT,
       CORE_AUDIO_FORMAT_ARGS (format));
+
+  osxsink = GST_OSX_AUDIO_SINK (GST_OBJECT_PARENT (buf));
+  gst_audio_ring_buffer_set_channel_positions (buf, osxsink->channel_positions);
 
   buf->size = spec->segtotal * spec->segsize;
   buf->memory = g_malloc0 (buf->size);
