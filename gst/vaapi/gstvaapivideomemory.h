@@ -58,6 +58,7 @@ struct _GstVaapiVideoMemory {
     GstVaapiImage      *image;
     GstVaapiVideoMeta  *meta;
     gint                map_count;
+    gboolean            use_direct_rendering;
 };
 
 G_GNUC_INTERNAL
@@ -106,6 +107,7 @@ struct _GstVaapiVideoAllocator {
     GstVideoInfo        video_info;
     GstVideoInfo        surface_info;
     GstVideoInfo        image_info;
+    gboolean            has_direct_rendering;
 };
 
 /**
