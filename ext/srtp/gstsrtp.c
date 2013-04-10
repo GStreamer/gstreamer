@@ -96,6 +96,8 @@ enum_nick_from_value (GType enum_gtype, gint value)
     return NULL;
 
   enum_value = g_enum_get_value (enum_class, value);
+  if (!enum_value)
+    return NULL;
   nick = enum_value->value_nick;
   g_type_class_unref (enum_class);
 
@@ -111,9 +113,11 @@ enum_value_from_nick (GType enum_gtype, const gchar * nick)
   gint value;
 
   if (!enum_gtype)
-    return 0;
+    return -1;
 
   enum_value = g_enum_get_value_by_nick (enum_class, nick);
+  if (!enum_value)
+    return -1;
   value = enum_value->value;
   g_type_class_unref (enum_class);
 
