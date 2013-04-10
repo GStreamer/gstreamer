@@ -900,7 +900,7 @@ unprotect:
 
       case err_status_auth_fail:
       case err_status_cipher_fail:
-        GST_ELEMENT_ERROR (filter, STREAM, DECRYPT,
+        GST_ELEMENT_WARNING (filter, STREAM, DECRYPT,
             ("Error while decryption stream"), (NULL));
         ret = GST_FLOW_ERROR;
         goto drop_buffer;
