@@ -211,12 +211,19 @@ gst_osx_audio_sink_class_init (GstOsxAudioSinkClass * klass)
 static void
 gst_osx_audio_sink_init (GstOsxAudioSink * sink)
 {
+  gint i;
+
   GST_DEBUG ("Initialising object");
 
   sink->device_id = kAudioDeviceUnknown;
   sink->cached_caps = NULL;
 
   sink->volume = DEFAULT_VOLUME;
+
+  sink->channels = 0;
+  for (i = 0; i < GST_OSX_AUDIO_MAX_CHANNEL; i++) {
+    sink->channel_positions[i] = GST_AUDIO_CHANNEL_POSITION_INVALID;
+  }
 }
 
 static void
@@ -430,11 +437,6 @@ gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink)
 {
   GstOsxAudioSink *osxsink;
   GstOsxAudioRingBuffer *ringbuffer;
-  GstStructure *s;
-  GstCaps *caps;
-  gint channels;
-  guint64 channel_mask;
-  GstAudioChannelPosition positions[9];
 
   osxsink = GST_OSX_AUDIO_SINK (sink);
 
@@ -455,14 +457,6 @@ gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink)
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsink);
   ringbuffer->core_audio->device_id = osxsink->device_id;
   ringbuffer->core_audio->is_src = FALSE;
-
-  caps = osxsink->cached_caps;
-  s = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (s, "channels", &channels);
-  gst_structure_get (s, "channel-mask", GST_TYPE_BITMASK, &channel_mask, NULL);
-  gst_audio_channel_positions_from_mask (channels, channel_mask, positions);
-  gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_RING_BUFFER
-      (ringbuffer), positions);
 
   return GST_AUDIO_RING_BUFFER (ringbuffer);
 }
@@ -537,13 +531,14 @@ gst_osx_audio_sink_set_volume (GstOsxAudioSink * sink)
 static gboolean
 gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
 {
-  gint i, max_channels = 0;
+  gint i, channels;
   gboolean spdif_allowed;
   AudioChannelLayout *layout;
   GstElementClass *element_class;
   GstPadTemplate *pad_template;
   GstCaps *caps, *in_caps;
-  guint64 channel_mask = 0;
+  guint64 channel_mask;
+  GstAudioChannelPosition *pos = osxsink->channel_positions;
 
   /* First collect info about the HW capabilites and preferences */
   spdif_allowed =
@@ -554,49 +549,73 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
       (unsigned) osxsink->device_id, spdif_allowed);
 
   if (layout) {
-    max_channels = MIN (layout->mNumberChannelDescriptions, 9);
-    for (i = 0; i < max_channels; i++) {
-      switch (layout->mChannelDescriptions[i].mChannelLabel) {
-        case kAudioChannelLabel_Left:
-          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT);
-          break;
-        case kAudioChannelLabel_Right:
-          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
-          break;
-        case kAudioChannelLabel_Center:
-          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_CENTER);
-          break;
-        case kAudioChannelLabel_LFEScreen:
-          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (LFE1);
-          break;
-        case kAudioChannelLabel_LeftSurround:
-          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (REAR_LEFT);
-          break;
-        case kAudioChannelLabel_RightSurround:
-          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (REAR_RIGHT);
-          break;
-        case kAudioChannelLabel_RearSurroundLeft:
-          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (SIDE_LEFT);
-          break;
-        case kAudioChannelLabel_RearSurroundRight:
-          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (SIDE_RIGHT);
-          break;
-        case kAudioChannelLabel_CenterSurround:
-          channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (REAR_CENTER);
-          break;
-        default:
-          GST_WARNING_OBJECT (osxsink, "unrecognized channel: %d",
-              (int) layout->mChannelDescriptions[i].mChannelLabel);
-          max_channels = 2;
-          break;
-      }
-    }
+    channels = MIN (layout->mNumberChannelDescriptions,
+        GST_OSX_AUDIO_MAX_CHANNEL);
   } else {
     GST_WARNING_OBJECT (osxsink, "This driver does not support "
         "kAudioDevicePropertyPreferredChannelLayout.");
-    max_channels = 2;
-    channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
-        GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
+    channels = 2;
+  }
+
+  switch (channels) {
+    case 0:
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_NONE;
+      break;
+    case 1:
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
+      break;
+    case 2:
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+      pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      break;
+    default:
+      channels = MIN (layout->mNumberChannelDescriptions,
+          GST_OSX_AUDIO_MAX_CHANNEL);
+      for (i = 0; i < channels; i++) {
+        switch (layout->mChannelDescriptions[i].mChannelLabel) {
+          case kAudioChannelLabel_Left:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT);
+            break;
+          case kAudioChannelLabel_Right:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
+            break;
+          case kAudioChannelLabel_Center:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_CENTER);
+            break;
+          case kAudioChannelLabel_LFEScreen:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_LFE1;
+            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (LFE1);
+            break;
+          case kAudioChannelLabel_LeftSurround:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (REAR_LEFT);
+            break;
+          case kAudioChannelLabel_RightSurround:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (REAR_RIGHT);
+            break;
+          case kAudioChannelLabel_RearSurroundLeft:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
+            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (SIDE_LEFT);
+            break;
+          case kAudioChannelLabel_RearSurroundRight:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
+            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (SIDE_RIGHT);
+            break;
+          case kAudioChannelLabel_CenterSurround:
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
+            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (REAR_CENTER);
+            break;
+          default:
+            GST_WARNING_OBJECT (osxsink, "unrecognized channel: %d",
+                (int) layout->mChannelDescriptions[i].mChannelLabel);
+            channels = 2;
+            break;
+        }
+      }
   }
   g_free (layout);
 
@@ -620,7 +639,7 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
     }
     out_s = gst_structure_copy (in_s);
     gst_structure_remove_fields (out_s, "channels", "channel-mask", NULL);
-    gst_structure_set (out_s, "channels", G_TYPE_INT, max_channels,
+    gst_structure_set (out_s, "channels", G_TYPE_INT, channels,
         "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
     gst_caps_append_structure (caps, out_s);
   }
@@ -630,6 +649,7 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
   }
 
   osxsink->cached_caps = caps;
+  osxsink->channels = channels;
 
   return TRUE;
 }

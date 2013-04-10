@@ -64,6 +64,8 @@ G_BEGIN_DECLS
 #define GST_OSX_AUDIO_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSX_AUDIO_SINK,GstOsxAudioSinkClass))
 
+#define GST_OSX_AUDIO_MAX_CHANNEL (9)
+
 typedef struct _GstOsxAudioSink GstOsxAudioSink;
 typedef struct _GstOsxAudioSinkClass GstOsxAudioSinkClass;
 
@@ -76,6 +78,9 @@ struct _GstOsxAudioSink
   AudioUnit audiounit;
   double volume;
   GstCaps *cached_caps;
+
+  guint channels;
+  GstAudioChannelPosition channel_positions[GST_OSX_AUDIO_MAX_CHANNEL];
 };
 
 struct _GstOsxAudioSinkClass
