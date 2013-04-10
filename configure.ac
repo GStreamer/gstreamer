@@ -10,9 +10,11 @@ m4_append([gst_vaapi_version], gst_vaapi_pre_version, [.pre])
 ])
 
 # gstreamer-vaapi library (libtool) version number
-m4_define([gst_vaapi_lt_current],  [1])
-m4_define([gst_vaapi_lt_revision], [0])
-m4_define([gst_vaapi_lt_age],      [0])
+m4_define([gst_vaapi_lt_current],       [2])
+m4_define([gst0_vaapi_lt_current_bias], [0])
+m4_define([gst1_vaapi_lt_current_bias], [2])
+m4_define([gst_vaapi_lt_revision],      [0])
+m4_define([gst_vaapi_lt_age],           [0])
 
 # glib version number
 m4_define([glib_version], [2.28])
@@ -62,9 +64,6 @@ AM_INIT_AUTOMAKE([1.11 tar-ustar no-dist-gzip dist-bzip2])
 
 TODAY="`LC_ALL=C date +'%a, %d %b %Y %X %z'`"
 AC_SUBST(TODAY)
-
-GST_VAAPI_MAJOR_VERSION=gst_vaapi_lt_current
-AC_SUBST(GST_VAAPI_MAJOR_VERSION)
 
 LIBVA_PACKAGE_VERSION=libva_x11_package_version
 AC_SUBST(LIBVA_PACKAGE_VERSION)
@@ -355,8 +354,15 @@ AC_CACHE_CHECK([for JPEG parser],
 AM_CONDITIONAL([USE_LOCAL_CODEC_PARSERS_JPEG],
     [test "$ac_cv_have_gst_jpeg_parser" != "yes"])
 
+case $GST_API_VERSION in
+0.10)   lt_bias=gst0_vaapi_lt_current_bias;;
+1.0)    lt_bias=gst1_vaapi_lt_current_bias;;
+esac
+GST_VAAPI_MAJOR_VERSION=`expr gst_vaapi_lt_current - "$lt_bias"`
+AC_SUBST(GST_VAAPI_MAJOR_VERSION)
+
 dnl GST_VAAPI_LT_LDFLAGS:
-GST_VAAPI_LT_CURRENT=gst_vaapi_lt_current
+GST_VAAPI_LT_CURRENT="$GST_VAAPI_MAJOR_VERSION"
 GST_VAAPI_LT_REV=gst_vaapi_lt_revision
 GST_VAAPI_LT_AGE=gst_vaapi_lt_age
 GST_VAAPI_LT_VERSION="$GST_VAAPI_LT_CURRENT:$GST_VAAPI_LT_REV:$GST_VAAPI_LT_AGE"
