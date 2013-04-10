@@ -54,7 +54,6 @@
 #include <math.h>
 
 #include "gstwavparse.h"
-#include "gst/riff/riff-ids.h"
 #include "gst/riff/riff-media.h"
 #include <gst/base/gsttypefindhelper.h>
 #include <gst/gst-i18n-plugin.h>
@@ -1349,7 +1348,7 @@ gst_wavparse_create_toc (GstWavParse * wav)
   gst_toc_append_entry (toc, entry);
 
   /* add tracks in cue edition */
-  list = g_list_first (wav->cues);
+  list = wav->cues;
   while (list) {
     cue = list->data;
     prev_subentry = cur_subentry;
@@ -1370,7 +1369,7 @@ gst_wavparse_create_toc (GstWavParse * wav)
   }
 
   /* add tags in tracks */
-  list = g_list_first (wav->labls);
+  list = wav->labls;
   while (list) {
     labl = list->data;
     id = g_strdup_printf ("%08x", labl->cue_point_id);
@@ -1382,7 +1381,7 @@ gst_wavparse_create_toc (GstWavParse * wav)
     }
     list = g_list_next (list);
   }
-  list = g_list_first (wav->notes);
+  list = wav->notes;
   while (list) {
     note = list->data;
     id = g_strdup_printf ("%08x", note->cue_point_id);
