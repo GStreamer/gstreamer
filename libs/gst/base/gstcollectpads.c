@@ -55,7 +55,7 @@
  *   </para></listitem>
  *   <listitem><para>
  *     Data can also be dequeued in byte units using the gst_collect_pads_available(),
- *     gst_collect_pads_read() and gst_collect_pads_flush() calls.
+ *     gst_collect_pads_read_buffer() and gst_collect_pads_flush() calls.
  *   </para></listitem>
  *   <listitem><para>
  *     Elements should call gst_collect_pads_start() and gst_collect_pads_stop() in
