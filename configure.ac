@@ -529,6 +529,27 @@ AC_CHECK_LIB(dl, dladdr,
    LIBS="$LIBS -ldl")
 CFLAGS="$save_cflags"
 
+dnl Check printf stuff
+if test "x${GST_DISABLE_GST_DEBUG}" != "xyes"; then
+  AC_TYPE_LONG_LONG_INT
+  AC_TYPE_UNSIGNED_LONG_LONG_INT
+
+  if test x$ac_cv_type_long_long_int$ac_cv_type_unsigned_long_long_int = xyesyes; then
+    AC_DEFINE([HAVE_LONG_LONG], [1], [Define to 1 if the system has the type long long])
+  fi
+
+  dnl /usr/share/aclocal/inttypes_h.m4 - ships with gettext apparently
+  gl_AC_HEADER_INTTYPES_H
+
+  dnl /usr/share/aclocal/stdint_h.m4 - ships with gettext apparently
+  gl_AC_HEADER_STDINT_H
+
+  AC_CHECK_TYPES(ptrdiff_t)
+
+  AC_TYPE_INTMAX_T
+  AC_TYPE_SIZE_T
+fi
+
 dnl *** checks for dependency libraries ***
 
 dnl GLib
