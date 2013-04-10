@@ -88,6 +88,8 @@ gst_audio_ring_buffer_init (GstAudioRingBuffer * ringbuffer)
   ringbuffer->waiting = 0;
   ringbuffer->empty_seg = NULL;
   ringbuffer->flushing = TRUE;
+  ringbuffer->segbase = 0;
+  ringbuffer->segdone = 0;
 }
 
 static void
@@ -682,6 +684,7 @@ gst_audio_ring_buffer_release (GstAudioRingBuffer * buf)
   if (G_UNLIKELY (!res))
     goto release_failed;
 
+  g_atomic_int_set (&buf->segdone, 0);
   g_free (buf->empty_seg);
   buf->empty_seg = NULL;
   gst_caps_replace (&buf->spec.caps, NULL);
