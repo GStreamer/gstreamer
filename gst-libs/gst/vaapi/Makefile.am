@@ -119,9 +119,11 @@ libgstvaapi_source_priv_h =			\
 	sysdeps.h				\
 	$(NULL)
 
+libgstvaapi_jpegdec_source_c = gstvaapidecoder_jpeg.c
+libgstvaapi_jpegdec_source_h = gstvaapidecoder_jpeg.h
 if USE_JPEG_DECODER
-libgstvaapi_source_c += gstvaapidecoder_jpeg.c
-libgstvaapi_source_h += gstvaapidecoder_jpeg.h
+libgstvaapi_source_c += $(libgstvaapi_jpegdec_source_c)
+libgstvaapi_source_h += $(libgstvaapi_jpegdec_source_h)
 endif
 
 libgstvaapi_drm_source_c =			\
@@ -394,6 +396,11 @@ $(PKG_VERSION_FILE): $(NEW_VERSION_FILE)
 
 BUILT_SOURCES	= gstvaapiversion.h
 EXTRA_DIST	= gstvaapiversion.h.in $(PKG_VERSION_FILE)
+
+EXTRA_DIST += \
+	$(libgstvaapi_jpegdec_source_c)	\
+	$(libgstvaapi_jpegdec_source_h)	\
+	$(NULL)
 
 CLEANFILES = \
 	$(OLD_VERSION_FILE)	\

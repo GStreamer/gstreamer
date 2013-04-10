@@ -48,35 +48,46 @@ libgstvaapi_source_h = \
 	gstvaapivideometa.h	\
 	$(NULL)
 
+libgstvaapi_glx_source_c = gstvaapivideoconverter_glx.c
+libgstvaapi_glx_source_h = gstvaapivideoconverter_glx.h
+
 if USE_GLX
-libgstvaapi_source_c		+= gstvaapivideoconverter_glx.c
-libgstvaapi_source_h		+= gstvaapivideoconverter_glx.h
+libgstvaapi_source_c += $(libgstvaapi_glx_source_c)
+libgstvaapi_source_h += $(libgstvaapi_glx_source_h)
 endif
 
-if USE_GST_API_1_0p
-libgstvaapi_source_c += \
+libgstvaapi_1_0p_source_c = \
 	gstvaapivideobufferpool.c \
 	gstvaapivideomemory.c	\
 	$(NULL)
 
-libgstvaapi_source_h += \
+libgstvaapi_1_0p_source_h = \
 	gstvaapivideobufferpool.h \
 	gstvaapivideomemory.h	\
 	$(NULL)
+
+if USE_GST_API_1_0p
+libgstvaapi_source_c += $(libgstvaapi_1_0p_source_c)
+libgstvaapi_source_h += $(libgstvaapi_1_0p_source_h)
 endif
 
 if USE_GST_API_0_10
-libgstvaapi_source_c += \
+libgstvaapi_0_10_source_c = \
 	gstvaapidownload.c	\
 	gstvaapipostproc.c	\
 	gstvaapiupload.c	\
 	$(NULL)
 
-libgstvaapi_source_h += \
+libgstvaapi_0_10_source_h = \
 	gstvaapidownload.h	\
 	gstvaapipostproc.h	\
 	gstvaapiupload.h	\
 	$(NULL)
+endif
+
+if USE_GST_API_0_10
+libgstvaapi_source_c += $(libgstvaapi_0_10_source_c)
+libgstvaapi_source_h += $(libgstvaapi_0_10_source_h)
 endif
 
 libgstvaapi_la_SOURCES		= $(libgstvaapi_source_c)
@@ -103,6 +114,15 @@ libgstvaapi_la_LIBADD =	\
 
 libgstvaapi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvaapi_la_LIBTOOLFLAGS = --tag=disable-static
+
+EXTRA_DIST = \
+	$(libgstvaapi_glx_source_c)	\
+	$(libgstvaapi_glx_source_h)	\
+	$(libgstvaapi_1_0p_source_c)	\
+	$(libgstvaapi_1_0p_source_h)	\
+	$(libgstvaapi_0_10_source_c)	\
+	$(libgstvaapi_0_10_source_h)	\
+	$(NULL)
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = Makefile.in
