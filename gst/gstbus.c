@@ -1204,7 +1204,7 @@ void
 gst_bus_disable_sync_message_emission (GstBus * bus)
 {
   g_return_if_fail (GST_IS_BUS (bus));
-  g_return_if_fail (bus->priv->num_signal_watchers == 0);
+  g_return_if_fail (bus->priv->num_sync_message_emitters > 0);
 
   GST_OBJECT_LOCK (bus);
   bus->priv->num_sync_message_emitters--;
