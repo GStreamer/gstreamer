@@ -228,6 +228,18 @@ gst_watchdog_trigger (gpointer ptr)
   return FALSE;
 }
 
+static gboolean
+gst_watchdog_quit_mainloop (gpointer ptr)
+{
+  GstWatchdog *watchdog = GST_WATCHDOG (ptr);
+
+  GST_DEBUG_OBJECT (watchdog, "watchdog quit");
+
+  g_main_loop_quit (watchdog->main_loop);
+
+  return FALSE;
+}
+
 static void
 gst_watchdog_feed (GstWatchdog * watchdog)
 {
@@ -260,6 +272,7 @@ static gboolean
 gst_watchdog_stop (GstBaseTransform * trans)
 {
   GstWatchdog *watchdog = GST_WATCHDOG (trans);
+  GSource *quit_source;
 
   GST_DEBUG_OBJECT (watchdog, "stop");
 
@@ -268,7 +281,15 @@ gst_watchdog_stop (GstBaseTransform * trans)
     g_source_unref (watchdog->source);
     watchdog->source = NULL;
   }
-  g_main_loop_quit (watchdog->main_loop);
+
+  /* dispatch an idle event that trigger g_main_loop_quit to avoid race
+   * between g_main_loop_run and g_main_loop_quit */
+  quit_source = g_idle_source_new ();
+  g_source_set_callback (quit_source, gst_watchdog_quit_mainloop, watchdog,
+      NULL);
+  g_source_attach (quit_source, watchdog->main_context);
+  g_source_unref (quit_source);
+
   g_thread_join (watchdog->thread);
   g_main_loop_unref (watchdog->main_loop);
   g_main_context_unref (watchdog->main_context);
