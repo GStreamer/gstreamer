@@ -36,6 +36,10 @@ gst_video_meta_transform (GstBuffer * dest, GstMeta * meta,
       dmeta =
           (GstVideoMeta *) gst_buffer_add_meta (dest, GST_VIDEO_META_INFO,
           NULL);
+
+      if (!dmeta)
+        return FALSE;
+
       dmeta->buffer = dest;
 
       GST_DEBUG ("copy video metadata");
@@ -220,6 +224,9 @@ gst_buffer_add_video_meta_full (GstBuffer * buffer,
 
   meta =
       (GstVideoMeta *) gst_buffer_add_meta (buffer, GST_VIDEO_META_INFO, NULL);
+
+  if (!meta)
+    return NULL;
 
   meta->flags = flags;
   meta->format = format;
@@ -419,6 +426,10 @@ gst_video_gl_texture_upload_meta_transform (GstBuffer * dest, GstMeta * meta,
       dmeta =
           (GstVideoGLTextureUploadMeta *) gst_buffer_add_meta (dest,
           GST_VIDEO_GL_TEXTURE_UPLOAD_META_INFO, NULL);
+
+      if (!dmeta)
+        return FALSE;
+
       dmeta->buffer = dest;
       dmeta->upload = smeta->upload;
       dmeta->user_data = smeta->user_data;
@@ -475,6 +486,9 @@ gst_buffer_add_video_gl_texture_upload_meta (GstBuffer * buffer,
   meta =
       (GstVideoGLTextureUploadMeta *) gst_buffer_add_meta (buffer,
       GST_VIDEO_GL_TEXTURE_UPLOAD_META_INFO, NULL);
+
+  if (!meta)
+    return NULL;
 
   meta->buffer = buffer;
   meta->upload = upload;
