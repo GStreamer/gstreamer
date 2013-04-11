@@ -31,7 +31,7 @@
       </listitem>
       <listitem>
         <para>
-          An upstream element can inform downstream that it would like to
+          A downstream element can inform upstream that it would like to
           suggest a new format by sending a RECONFIGURE event upstream. The
           RECONFIGURE event simply instructs an upstream element to restart
           the negotiation phase. Because the element that sent out the
