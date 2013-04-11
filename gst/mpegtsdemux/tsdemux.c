@@ -55,6 +55,9 @@
 
 #define TABLE_ID_UNSET 0xFF
 
+#define CONTINUITY_UNSET 255
+#define MAX_CONTINUITY 15
+
 #define PCR_WRAP_SIZE_128KBPS (((gint64)1490)*(1024*1024))
 /* small PCR for wrap detection */
 #define PCR_SMALL 17775000
@@ -148,6 +151,8 @@ struct _TSDemuxStream
   gboolean need_newsegment;
 
   GstTagList *taglist;
+
+  gint continuity_counter;
 };
 
 #define VIDEO_CAPS \
@@ -1022,6 +1027,7 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
     stream->fixed_dts = 0;
     stream->nb_pts_rollover = 0;
     stream->nb_dts_rollover = 0;
+    stream->continuity_counter = CONTINUITY_UNSET;
   }
   stream->flow_return = GST_FLOW_OK;
 }
@@ -1106,6 +1112,7 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream)
   if (stream->flow_return == GST_FLOW_FLUSHING) {
     stream->flow_return = GST_FLOW_OK;
   }
+  stream->continuity_counter = CONTINUITY_UNSET;
 }
 
 static void
@@ -1324,10 +1331,23 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
   guint8 *data;
   guint size;
 
-  GST_DEBUG ("state:%d", stream->state);
+  GST_DEBUG ("pid: 0x%04x state:%d", stream->stream.pid, stream->state);
 
   size = packet->data_end - packet->payload;
   data = packet->payload;
+
+  if (stream->continuity_counter == CONTINUITY_UNSET) {
+    GST_DEBUG ("CONTINUITY: Initialize to %d", packet->continuity_counter);
+  } else if ((packet->continuity_counter == stream->continuity_counter + 1 ||
+          (stream->continuity_counter == MAX_CONTINUITY &&
+              packet->continuity_counter == 0))) {
+    GST_LOG ("CONTINUITY: Got expected %d", packet->continuity_counter);
+  } else {
+    GST_ERROR ("CONTINUITY: Mismatch packet %d, stream %d",
+        packet->continuity_counter, stream->continuity_counter);
+    stream->state = PENDING_PACKET_DISCONT;
+  }
+  stream->continuity_counter = packet->continuity_counter;
 
   if (stream->state == PENDING_PACKET_EMPTY) {
     if (G_UNLIKELY (!packet->payload_unit_start_indicator)) {
@@ -1367,6 +1387,7 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
         g_free (stream->data);
         stream->data = NULL;
       }
+      stream->continuity_counter = CONTINUITY_UNSET;
       break;
     }
     default:
