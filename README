@@ -13,6 +13,7 @@ License
 gstreamer-vaapi helper libraries and plugin elements are available
 under the terms of the GNU Lesser General Public License v2.1+
 
+
 Overview
 --------
 
@@ -60,6 +61,12 @@ Software requirements
       libgstreamer-plugins-bad0.10-dev (>= 0.10.22.1)
         or with GstVideoContext, GstSurfaceBuffer, codecparsers
 
+  * GStreamer 1.0.x:
+      libglib2.0-dev (>= 2.28)
+      libgstreamer1.0-dev (>= 1.0.0)
+      libgstreamer-plugins-base1.0-dev (>= 1.0.0)
+      libgstreamer-plugins-bad1.0-dev (>= 1.0.0)
+
   * Renderers:
       DRM: libva-dev (>= 1.1.0), libdrm-dev, libudev-dev
       X11: libva-dev (>= 1.0.1)
@@ -90,3 +97,13 @@ Usage
   * Play a raw MPEG-2 interlaced stream
   $ gst-launch-0.10 -v filesrc location=/path/to/mpeg2.bits ! \
       mpegvideoparse ! vaapidecode ! vaapipostproc ! vaapisink
+
+
+Reporting Bugs
+--------------
+
+  Bugs can be reported in the GNOME Bugzilla system at:
+  <https://bugzilla.gnome.org/enter_bug.cgi?product=gstreamer-vaapi>
+
+  From the main page, new bugs can be reported through New -> Other ->
+  gstreamer-vaapi product.
