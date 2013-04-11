@@ -701,3 +701,8 @@ CHANGES
       ffdec_*   -> avdec_*
       ffdemux_* -> avdemux_*
       ffmux_*   -> avmux_*
+
+ * property type changes (very nasty for code using the C g_object_set/get API)
+
+      - playbin2::connection-speed:
+        changed from a plain unsigned integer to an unsigned 64-bit integer
