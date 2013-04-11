@@ -149,7 +149,9 @@ AG_GST_CHECK_GST_PLUGINS_BASE($GST_API_VERSION, [$GST_REQ], yes)
 AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 PKG_CHECK_MODULES([GST_EGL], [gstreamer-egl-1.0], [
   AC_DEFINE(HAVE_GST_EGL, 1, [Have gstreamer-egl])
+  GST_EGL=yes
 ])
+AM_CONDITIONAL(HAVE_GST_EGL, test "x$GST_EGL" = "xyes")
 
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
@@ -361,6 +363,8 @@ tools/Makefile
 config/Makefile
 config/bellagio/Makefile
 config/rpi/Makefile
+examples/Makefile
+examples/egl/Makefile
 )
 
 AC_OUTPUT
