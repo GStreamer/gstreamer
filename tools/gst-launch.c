@@ -484,7 +484,8 @@ intr_handler (gpointer user_data)
  * or ELR_INTERRUPT if we caught a keyboard interrupt
  * or ELR_NO_ERROR otherwise. */
 static EventLoopResult
-event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
+event_loop (GstElement * pipeline, gboolean blocking, gboolean do_progress,
+    GstState target_state)
 {
 #ifdef G_OS_UNIX
   guint signal_watch_id;
@@ -492,7 +493,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
   GstBus *bus;
   GstMessage *message = NULL;
   EventLoopResult res = ELR_NO_ERROR;
-  gboolean buffering = FALSE;
+  gboolean buffering = FALSE, in_progress = FALSE;
   gboolean prerolled = target_state != GST_STATE_PAUSED;
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
@@ -677,6 +678,10 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
             PRINT (_("Prerolled, waiting for buffering to finish...\n"));
             break;
           }
+          if (in_progress) {
+            PRINT (_("Prerolled, waiting for progress to finish...\n"));
+            break;
+          }
           goto exit;
         }
         /* else not an interesting message */
@@ -699,7 +704,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           if (target_state == GST_STATE_PLAYING) {
             PRINT (_("Done buffering, setting pipeline to PLAYING ...\n"));
             gst_element_set_state (pipeline, GST_STATE_PLAYING);
-          } else if (prerolled)
+          } else if (prerolled && !in_progress)
             goto exit;
         } else {
           /* buffering busy */
@@ -745,6 +750,37 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           res = ELR_INTERRUPT;
           goto exit;
         }
+        break;
+      }
+      case GST_MESSAGE_PROGRESS:
+      {
+        GstProgressType type;
+        gchar *code, *text;
+
+        gst_message_parse_progress (message, &type, &code, &text);
+
+        switch (type) {
+          case GST_PROGRESS_TYPE_START:
+          case GST_PROGRESS_TYPE_CONTINUE:
+            if (do_progress) {
+              in_progress = TRUE;
+              blocking = TRUE;
+            }
+            break;
+          case GST_PROGRESS_TYPE_COMPLETE:
+          case GST_PROGRESS_TYPE_CANCELED:
+          case GST_PROGRESS_TYPE_ERROR:
+            in_progress = FALSE;
+            break;
+          default:
+            break;
+        }
+        PRINT (_("Progress: (%s) %s\n"), code, text);
+        g_free (code);
+        g_free (text);
+
+        if (do_progress && !in_progress && !buffering && prerolled)
+          goto exit;
         break;
       }
       case GST_MESSAGE_ELEMENT:{
@@ -976,7 +1012,7 @@ main (int argc, char *argv[])
       case GST_STATE_CHANGE_FAILURE:
         g_printerr (_("ERROR: Pipeline doesn't want to pause.\n"));
         res = -1;
-        event_loop (pipeline, FALSE, GST_STATE_VOID_PENDING);
+        event_loop (pipeline, FALSE, FALSE, GST_STATE_VOID_PENDING);
         goto end;
       case GST_STATE_CHANGE_NO_PREROLL:
         PRINT (_("Pipeline is live and does not need PREROLL ...\n"));
@@ -984,7 +1020,7 @@ main (int argc, char *argv[])
         break;
       case GST_STATE_CHANGE_ASYNC:
         PRINT (_("Pipeline is PREROLLING ...\n"));
-        caught_error = event_loop (pipeline, TRUE, GST_STATE_PAUSED);
+        caught_error = event_loop (pipeline, TRUE, TRUE, GST_STATE_PAUSED);
         if (caught_error) {
           g_printerr (_("ERROR: pipeline doesn't want to preroll.\n"));
           goto end;
@@ -996,7 +1032,7 @@ main (int argc, char *argv[])
         break;
     }
 
-    caught_error = event_loop (pipeline, FALSE, GST_STATE_PLAYING);
+    caught_error = event_loop (pipeline, FALSE, TRUE, GST_STATE_PLAYING);
 
     if (caught_error) {
       g_printerr (_("ERROR: pipeline doesn't want to preroll.\n"));
@@ -1023,7 +1059,7 @@ main (int argc, char *argv[])
       }
 
       tfthen = gst_util_get_timestamp ();
-      caught_error = event_loop (pipeline, TRUE, GST_STATE_PLAYING);
+      caught_error = event_loop (pipeline, TRUE, FALSE, GST_STATE_PLAYING);
       if (eos_on_shutdown && caught_error != ELR_NO_ERROR) {
         gboolean ignore_errors;
 
@@ -1039,7 +1075,7 @@ main (int argc, char *argv[])
         PRINT (_("Waiting for EOS...\n"));
 
         while (TRUE) {
-          caught_error = event_loop (pipeline, TRUE, GST_STATE_PLAYING);
+          caught_error = event_loop (pipeline, TRUE, FALSE, GST_STATE_PLAYING);
 
           if (caught_error == ELR_NO_ERROR) {
             /* we got EOS */
