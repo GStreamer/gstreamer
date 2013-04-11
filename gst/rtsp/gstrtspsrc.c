@@ -89,6 +89,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include <gst/net/gstnet.h>
 #include <gst/sdp/gstsdpmessage.h>
 #include <gst/rtp/gstrtppayloads.h>
 
@@ -237,6 +238,8 @@ static void gst_rtspsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtspsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+
+static GstClock *gst_rtspsrc_provide_clock (GstElement * element);
 
 static void gst_rtspsrc_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -534,6 +537,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           DEFAULT_MULTICAST_IFACE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->send_event = gst_rtspsrc_send_event;
+  gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -618,12 +622,26 @@ gst_rtspsrc_finalize (GObject * object)
     gst_sdp_message_free (rtspsrc->sdp);
     rtspsrc->sdp = NULL;
   }
+  if (rtspsrc->provided_clock)
+    gst_object_unref (rtspsrc->provided_clock);
 
   /* free locks */
   g_rec_mutex_clear (&rtspsrc->stream_rec_lock);
   g_rec_mutex_clear (&rtspsrc->state_rec_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static GstClock *
+gst_rtspsrc_provide_clock (GstElement * element)
+{
+  GstRTSPSrc *src = GST_RTSPSRC (element);
+  GstClock *clock;
+
+  if ((clock = src->provided_clock) != NULL)
+    gst_object_ref (clock);
+
+  return clock;
 }
 
 /* a proxy string of the format [user:passwd@]host[:port] */
@@ -1324,6 +1342,10 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
   if (src->start_segment) {
     gst_event_unref (src->start_segment);
     src->start_segment = NULL;
+  }
+  if (src->provided_clock) {
+    gst_object_unref (src->provided_clock);
+    src->provided_clock = NULL;
   }
 }
 
@@ -5600,6 +5622,66 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
   return TRUE;
 }
 
+/* Parse clock profived by the server with following syntax:
+ *
+ * "GstNetTimeProvider <wrapped-clock> <server-IP:port> <clock-time>"
+ */
+static gboolean
+gst_rtspsrc_parse_gst_clock (GstRTSPSrc * src, const gchar * gstclock)
+{
+  gboolean res = FALSE;
+
+  if (g_str_has_prefix (gstclock, "GstNetTimeProvider ")) {
+    gchar **fields = NULL, **parts = NULL;
+    gchar *remote_ip, *str;
+    gint port;
+    GstClockTime base_time;
+    GstClock *netclock;
+
+    fields = g_strsplit (gstclock, " ", 0);
+
+    /* wrapped clock, not very interesting for now */
+    if (fields[1] == NULL)
+      goto cleanup;
+
+    /* remote IP address and port */
+    if ((str = fields[2]) == NULL)
+      goto cleanup;
+
+    parts = g_strsplit (str, ":", 0);
+
+    if ((remote_ip = parts[0]) == NULL)
+      goto cleanup;
+
+    if ((str = parts[1]) == NULL)
+      goto cleanup;
+
+    port = atoi (str);
+    if (port == 0)
+      goto cleanup;
+
+    /* base-time */
+    if ((str = fields[3]) == NULL)
+      goto cleanup;
+
+    base_time = g_ascii_strtoull (str, NULL, 10);
+
+    netclock =
+        gst_net_client_clock_new ((gchar *) "GstRTSPClock", remote_ip, port,
+        base_time);
+
+    if (src->provided_clock)
+      gst_object_unref (src->provided_clock);
+    src->provided_clock = netclock;
+
+    res = TRUE;
+  cleanup:
+    g_strfreev (fields);
+    g_strfreev (parts);
+  }
+  return res;
+}
+
 /* must be called with the RTSP state lock */
 static GstRTSPResult
 gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
@@ -5632,6 +5714,22 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
 
       /* keep track of the range and configure it in the segment */
       if (gst_rtspsrc_parse_range (src, range, &src->segment))
+        break;
+    }
+  }
+  /* parse clock information. This is GStreamer specific, a server can tell the
+   * client what clock it is using and wrap that in a network clock. The
+   * advantage of that is that we can slave to it. */
+  {
+    const gchar *gstclock;
+
+    for (i = 0;; i++) {
+      gstclock = gst_sdp_message_get_attribute_val_n (sdp, "x-gst-clock", i);
+      if (gstclock == NULL)
+        break;
+
+      /* parse the clock and expose it in the provide_clock method */
+      if (gst_rtspsrc_parse_gst_clock (src, gstclock))
         break;
     }
   }

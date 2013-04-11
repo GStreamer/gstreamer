@@ -233,6 +233,7 @@ struct _GstRTSPSrc {
   GstRTSPTimeRange  *range;
   gchar             *control;
   guint              next_port_num;
+  GstClock          *provided_clock;
 
   /* supported methods */
   gint               methods;
