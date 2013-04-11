@@ -356,6 +356,8 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
 static void
 gst_multiudpsink_init (GstMultiUDPSink * sink)
 {
+  guint max_mem;
+
   g_mutex_init (&sink->client_lock);
   sink->socket = DEFAULT_SOCKET;
   sink->used_socket = DEFAULT_USED_SOCKET;
@@ -371,6 +373,14 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
   sink->multi_iface = g_strdup (DEFAULT_MULTICAST_IFACE);
 
   sink->cancellable = g_cancellable_new ();
+
+  /* allocate OutputVector and MapInfo for use in the render function, buffers can
+   * hold up to a maximum amount of memory so we can create a maximally sized
+   * array for them.  */
+  max_mem = gst_buffer_get_max_memory ();
+
+  sink->vec = g_new (GOutputVector, max_mem);
+  sink->map = g_new (GstMapInfo, max_mem);
 }
 
 static GstUDPClient *
@@ -463,6 +473,9 @@ gst_multiudpsink_finalize (GObject * object)
   g_free (sink->multi_iface);
   sink->multi_iface = NULL;
 
+  g_free (sink->vec);
+  g_free (sink->map);
+
   g_mutex_clear (&sink->client_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -487,8 +500,10 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   if (n_mem == 0)
     goto no_data;
 
-  vec = g_new (GOutputVector, n_mem);
-  map = g_new (GstMapInfo, n_mem);
+  /* allocated on the stack, the max number of memory blocks is limited so this
+   * should not cause stack overflows */
+  vec = sink->vec;
+  map = sink->map;
 
   size = 0;
   for (i = 0; i < n_mem; i++) {
@@ -561,9 +576,6 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
     gst_memory_unmap (map[i].memory, &map[i]);
     gst_memory_unref (map[i].memory);
   }
-
-  g_free (vec);
-  g_free (map);
 
   GST_LOG_OBJECT (sink, "sent %" G_GSIZE_FORMAT " bytes to %d (of %d) clients",
       size, num, no_clients);
