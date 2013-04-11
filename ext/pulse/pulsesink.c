@@ -1889,7 +1889,9 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
       gst_static_pad_template_get (&pad_template));
 }
 
-/* returns the current time of the sink ringbuffer */
+/* Returns the current time of the sink ringbuffer. The timing_info is updated
+ * on every data write/flush and every 100ms (PA_STREAM_AUTO_TIMING_UPDATE).
+ */
 static GstClockTime
 gst_pulsesink_get_time (GstClock * clock, GstAudioBaseSink * sink)
 {
