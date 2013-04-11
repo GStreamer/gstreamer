@@ -884,18 +884,29 @@ print_signal_info (GstElement * element)
 
     for (l = found_signals; l; l = l->next) {
       gchar *indent;
+      const gchar *pmark;
       int indent_len;
 
       query = (GSignalQuery *) l->data;
       indent_len = strlen (query->signal_name) +
           strlen (g_type_name (query->return_type)) + 24;
 
+
+      if (G_TYPE_FUNDAMENTAL (query->return_type) == G_TYPE_POINTER
+          || G_TYPE_IS_BOXED (query->return_type)
+          || G_TYPE_IS_OBJECT (query->return_type)) {
+        pmark = "* ";
+        indent_len += 2;
+      } else {
+        pmark = "";
+      }
+
       indent = g_new0 (gchar, indent_len + 1);
       memset (indent, ' ', indent_len);
 
-      n_print ("  \"%s\" :  %s user_function (%s* object",
-          query->signal_name,
-          g_type_name (query->return_type), g_type_name (type));
+      n_print ("  \"%s\" :  %s %suser_function (%s* object",
+          query->signal_name, g_type_name (query->return_type), pmark,
+          g_type_name (type));
 
       for (j = 0; j < query->n_params; j++) {
         g_print (",\n");
