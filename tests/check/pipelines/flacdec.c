@@ -36,7 +36,7 @@ _get_first_sample (GstSample * sample)
   fail_unless (caps != NULL, "sample without caps");
 
   buf = gst_sample_get_buffer (sample);
-  GST_DEBUG ("buffer with size=%u, caps=%" GST_PTR_FORMAT,
+  GST_DEBUG ("buffer with size=%" G_GSIZE_FORMAT ", caps=%" GST_PTR_FORMAT,
       gst_buffer_get_size (buf), caps);
 
   gst_buffer_map (buf, &map, GST_MAP_READ);

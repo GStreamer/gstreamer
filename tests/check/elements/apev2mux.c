@@ -209,7 +209,7 @@ got_buffer (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  GST_LOG ("got buffer, size=%u, offset=%" G_GINT64_FORMAT, map.size, off);
+  GST_LOG ("size=%" G_GSIZE_FORMAT ", offset=%" G_GINT64_FORMAT, map.size, off);
 
   fail_unless (GST_BUFFER_OFFSET_IS_VALID (buf));
 

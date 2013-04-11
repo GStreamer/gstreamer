@@ -221,7 +221,8 @@ GST_START_TEST (test_rgba32)
   push_caps (create_caps_rgba32 ());
 
   inbuffer = create_buffer_rgba32_3x4 ();
-  GST_DEBUG ("Created buffer of %d bytes", gst_buffer_get_size (inbuffer));
+  GST_DEBUG ("Created buffer of %" G_GSIZE_FORMAT " bytes",
+      gst_buffer_get_size (inbuffer));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* pushing gives away reference */
