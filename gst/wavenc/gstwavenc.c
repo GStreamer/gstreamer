@@ -155,7 +155,9 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 #define gst_wavenc_parent_class parent_class
-G_DEFINE_TYPE (GstWavEnc, gst_wavenc, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE_WITH_CODE (GstWavEnc, gst_wavenc, GST_TYPE_ELEMENT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_TOC_SETTER, NULL)
+    );
 
 static GstFlowReturn gst_wavenc_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
@@ -962,7 +964,12 @@ gst_wavenc_event (GstPad * pad, GstObject * parent, GstEvent * event)
     }
     case GST_EVENT_EOS:{
       GST_DEBUG_OBJECT (wavenc, "got EOS");
+      if (!wavenc->toc) {
+        GST_DEBUG_OBJECT (wavenc, "have no toc, checking toc_setter");
+        wavenc->toc = gst_toc_setter_get_toc (GST_TOC_SETTER (wavenc));
+      }
       if (wavenc->toc) {
+        GST_DEBUG_OBJECT (wavenc, "have toc");
         gst_wavenc_write_toc (wavenc);
       }
 #if 0
@@ -1065,11 +1072,6 @@ gst_wavenc_change_state (GstElement * element, GstStateChange transition)
       /* its true because we haven't writen anything */
       wavenc->finished_properly = TRUE;
       break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (wavenc->toc)
-        gst_toc_unref (wavenc->toc);
-      wavenc->toc = NULL;
-      break;
     default:
       break;
   }
@@ -1086,6 +1088,14 @@ gst_wavenc_change_state (GstElement * element, GstStateChange transition)
             ("Wav stream not finished properly, no EOS received "
                 "before shutdown"));
       }
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      GST_DEBUG_OBJECT (wavenc, "toc: %p", wavenc->toc);
+      if (wavenc->toc) {
+        gst_toc_unref (wavenc->toc);
+        wavenc->toc = NULL;
+      }
+      gst_toc_setter_reset (GST_TOC_SETTER (wavenc));
       break;
     default:
       break;
