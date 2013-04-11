@@ -35,17 +35,6 @@
       <xi:include href="xml/gstmpegvideometa.xml" />
     </chapter>
 
-    <chapter id="video">
-      <title>Base video element classes</title>
-      <xi:include href="xml/gstbasevideocodec.xml" />
-      <xi:include href="xml/gstbasevideodecoder.xml" />
-      <xi:include href="xml/gstbasevideoencoder.xml" />
-      <xi:include href="xml/gstbasevideoutils.xml" />
-      <xi:include href="xml/gstvideocontext.xml" />
-      <xi:include href="xml/gstsurfacebuffer.xml" />
-      <xi:include href="xml/gstsurfaceconverter.xml" />
-    </chapter>
-
     <chapter id="tools">
       <title>Useful elements</title>
       <xi:include href="xml/gstinsertbin.xml" />

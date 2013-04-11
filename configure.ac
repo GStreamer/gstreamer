@@ -2376,7 +2376,6 @@ gst-libs/gst/insertbin/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/signalprocessor/Makefile
 gst-libs/gst/codecparsers/Makefile
-gst-libs/gst/video/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile
 sys/acmenc/Makefile
@@ -2489,8 +2488,6 @@ pkgconfig/gstreamer-codecparsers.pc
 pkgconfig/gstreamer-codecparsers-uninstalled.pc
 pkgconfig/gstreamer-insertbin.pc
 pkgconfig/gstreamer-insertbin-uninstalled.pc
-pkgconfig/gstreamer-basevideo.pc
-pkgconfig/gstreamer-basevideo-uninstalled.pc
 pkgconfig/gstreamer-egl.pc
 pkgconfig/gstreamer-egl-uninstalled.pc
 tools/Makefile
