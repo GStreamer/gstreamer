@@ -108,6 +108,7 @@ EXPORTS
 	gst_buffer_flags_get_type
 	gst_buffer_foreach_meta
 	gst_buffer_get_all_memory
+	gst_buffer_get_max_memory
 	gst_buffer_get_memory
 	gst_buffer_get_memory_range
 	gst_buffer_get_meta

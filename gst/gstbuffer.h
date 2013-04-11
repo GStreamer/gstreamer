@@ -253,6 +253,8 @@ struct _GstBuffer {
 
 GType       gst_buffer_get_type            (void);
 
+guint       gst_buffer_get_max_memory      (void);
+
 /* allocation */
 GstBuffer * gst_buffer_new                 (void);
 GstBuffer * gst_buffer_new_allocate        (GstAllocator * allocator, gsize size,

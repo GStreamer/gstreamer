@@ -331,6 +331,25 @@ _priv_gst_buffer_initialize (void)
 }
 
 /**
+ * gst_buffer_get_max_memory:
+ *
+ * Get the maximum amount of memory blocks that a buffer can hold. This is a
+ * compile time constant that can be queried with the function.
+ *
+ * When more memory blocks are added, existing memory blocks will be merged
+ * together to make room for the new block.
+ *
+ * Returns: the maximum amount of memory blocks that a buffer can hold.
+ *
+ * Since: 1.2.0
+ */
+guint
+gst_buffer_get_max_memory (void)
+{
+  return GST_BUFFER_MEM_MAX;
+}
+
+/**
  * gst_buffer_copy_into:
  * @dest: a destination #GstBuffer
  * @src: a source #GstBuffer
@@ -774,7 +793,8 @@ gst_buffer_new_wrapped (gpointer data, gsize size)
  * gst_buffer_n_memory:
  * @buffer: a #GstBuffer.
  *
- * Get the amount of memory blocks that this buffer has.
+ * Get the amount of memory blocks that this buffer has. This amount is never
+ * larger than what gst_buffer_get_max_memory() returns.
  *
  * Returns: (transfer full): the amount of memory block in this buffer.
  */
@@ -793,6 +813,9 @@ gst_buffer_n_memory (GstBuffer * buffer)
  *
  * Prepend the memory block @mem to @buffer. This function takes
  * ownership of @mem and thus doesn't increase its refcount.
+ *
+ * This function is identical to gst_buffer_insert_memory() with an index of 0.
+ * See gst_buffer_insert_memory() for more details.
  */
 void
 gst_buffer_prepend_memory (GstBuffer * buffer, GstMemory * mem)
@@ -807,6 +830,9 @@ gst_buffer_prepend_memory (GstBuffer * buffer, GstMemory * mem)
  *
  * Append the memory block @mem to @buffer. This function takes
  * ownership of @mem and thus doesn't increase its refcount.
+ *
+ * This function is identical to gst_buffer_insert_memory() with an index of -1.
+ * See gst_buffer_insert_memory() for more details.
  */
 void
 gst_buffer_append_memory (GstBuffer * buffer, GstMemory * mem)
@@ -822,6 +848,10 @@ gst_buffer_append_memory (GstBuffer * buffer, GstMemory * mem)
  *
  * Insert the memory block @mem to @buffer at @idx. This function takes ownership
  * of @mem and thus doesn't increase its refcount.
+ *
+ * Only gst_buffer_get_max_memory() can be added to a buffer. If more memory is
+ * added, existing memory blocks will automatically be merged to make room for
+ * the new memory.
  */
 void
 gst_buffer_insert_memory (GstBuffer * buffer, gint idx, GstMemory * mem)
