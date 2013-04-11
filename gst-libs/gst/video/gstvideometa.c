@@ -36,6 +36,10 @@ gst_video_meta_transform (GstBuffer * dest, GstMeta * meta,
       dmeta =
           (GstVideoMeta *) gst_buffer_add_meta (dest, GST_VIDEO_META_INFO,
           NULL);
+
+      if (!dmeta)
+        return FALSE;
+
       dmeta->buffer = dest;
 
       GST_DEBUG ("copy video metadata");
@@ -220,6 +224,9 @@ gst_buffer_add_video_meta_full (GstBuffer * buffer,
 
   meta =
       (GstVideoMeta *) gst_buffer_add_meta (buffer, GST_VIDEO_META_INFO, NULL);
+
+  if (!meta)
+    return NULL;
 
   meta->flags = flags;
   meta->format = format;
