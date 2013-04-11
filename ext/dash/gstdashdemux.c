@@ -1003,6 +1003,8 @@ gst_dash_demux_advance_period (GstDashDemux * demux)
   GSList *old_period = NULL;
   g_static_mutex_lock (&demux->streams_lock);
 
+  GST_DEBUG_OBJECT (demux, "Advancing period from %p", demux->streams);
+
   if (demux->streams) {
     g_assert (demux->streams == demux->next_periods->data);
 
@@ -1010,6 +1012,8 @@ gst_dash_demux_advance_period (GstDashDemux * demux)
     old_period = demux->streams;
     demux->streams = NULL;
   }
+
+  GST_DEBUG_OBJECT (demux, "Next period %p", demux->next_periods);
 
   if (demux->next_periods) {
     demux->streams = demux->next_periods->data;
@@ -1266,7 +1270,7 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
     gst_uri_downloader_reset (demux->downloader);
 
   if (demux->next_periods) {
-    g_assert (demux->next_periods == demux->streams);
+    g_assert (demux->next_periods->data == demux->streams);
     demux->next_periods =
         g_slist_delete_link (demux->next_periods, demux->next_periods);
   }
