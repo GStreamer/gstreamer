@@ -47,6 +47,9 @@ struct _GstWavEnc {
   GstPad    *srcpad;
 
   GstToc    *toc;
+  GList     *cues;
+  GList     *labls;
+  GList     *notes;
 
   /* useful audio data */
   guint16    format;
