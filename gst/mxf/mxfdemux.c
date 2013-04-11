@@ -46,8 +46,6 @@
  *     to prevent jumpy playback in the beginning due to resynchronization.
  *
  *   - Implement SMPTE D11 essence and the digital cinema/MXF specs
- *
- *   - Implement a muxer ;-)
  */
 
 #ifdef HAVE_CONFIG_H
