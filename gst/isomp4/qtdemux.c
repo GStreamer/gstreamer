@@ -509,7 +509,10 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->got_moov = FALSE;
   qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
   qtdemux->mdatbuffer = NULL;
-  qtdemux->base_timestamp = GST_CLOCK_TIME_NONE;
+  qtdemux->fragment_start = -1;
+  qtdemux->media_caps = NULL;
+  qtdemux->exposed = FALSE;
+  qtdemux->mss_mode = FALSE;
   qtdemux->pending_newsegment = NULL;
   qtdemux->upstream_newsegment = FALSE;
   gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
@@ -1759,6 +1762,21 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
       gst_object_unref (qtdemux->element_index);
     qtdemux->element_index = NULL;
 #endif
+    qtdemux->major_brand = 0;
+    gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
+    if (qtdemux->pending_newsegment)
+      gst_object_unref (qtdemux->pending_newsegment);
+    qtdemux->pending_newsegment = NULL;
+    qtdemux->upstream_newsegment = TRUE;
+    qtdemux->requested_seek_time = GST_CLOCK_TIME_NONE;
+    qtdemux->seek_offset = 0;
+    qtdemux->upstream_seekable = FALSE;
+    qtdemux->upstream_size = 0;
+
+    qtdemux->fragment_start = -1;
+    qtdemux->duration = 0;
+    qtdemux->mfra_offset = 0;
+    qtdemux->moof_offset = 0;
   }
   qtdemux->offset = 0;
   gst_adapter_clear (qtdemux->adapter);
@@ -1786,24 +1804,6 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
       qtdemux->streams[n]->last_ret = GST_FLOW_OK;
       qtdemux->streams[n]->sent_eos = FALSE;
     }
-  }
-
-  if (hard || qtdemux->mss_mode) {
-    qtdemux->major_brand = 0;
-    gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
-    if (qtdemux->pending_newsegment)
-      gst_object_unref (qtdemux->pending_newsegment);
-    qtdemux->pending_newsegment = NULL;
-    qtdemux->upstream_newsegment = TRUE;
-    qtdemux->requested_seek_time = GST_CLOCK_TIME_NONE;
-    qtdemux->seek_offset = 0;
-    qtdemux->upstream_seekable = FALSE;
-    qtdemux->upstream_size = 0;
-
-    qtdemux->base_timestamp = GST_CLOCK_TIME_NONE;
-    qtdemux->duration = 0;
-    qtdemux->mfra_offset = 0;
-    qtdemux->moof_offset = 0;
   }
 }
 
@@ -2410,10 +2410,10 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   if (stream->samples == NULL)
     goto out_of_memory;
 
-  if (GST_CLOCK_TIME_IS_VALID (qtdemux->base_timestamp)) {
-    timestamp = gst_util_uint64_scale_int (qtdemux->base_timestamp,
+  if (qtdemux->fragment_start != -1) {
+    timestamp = gst_util_uint64_scale_int (qtdemux->fragment_start,
         stream->timescale, GST_SECOND);
-    qtdemux->base_timestamp = GST_CLOCK_TIME_NONE;
+    qtdemux->fragment_start = -1;
   } else {
     if (G_UNLIKELY (stream->n_samples == 0)) {
       /* the timestamp of the first sample is also provided by the tfra entry
@@ -2525,7 +2525,7 @@ qtdemux_find_stream (GstQTDemux * qtdemux, guint32 id)
       return stream;
   }
   if (qtdemux->mss_mode) {
-    /* we should have only 1 stream in the end */
+    /* mss should have only 1 stream anyway */
     return qtdemux->streams[0];
   }
 
@@ -4403,8 +4403,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
 
   if (G_UNLIKELY (GST_CLOCK_TIME_IS_VALID (timestamp))) {
-    demux->base_timestamp = timestamp;
-    GST_DEBUG_OBJECT (demux, "got base_timestamp %" GST_TIME_FORMAT,
+    demux->fragment_start = timestamp;
+    GST_DEBUG_OBJECT (demux, "got fragment_start %" GST_TIME_FORMAT,
         GST_TIME_ARGS (timestamp));
   }
 
@@ -4587,17 +4587,15 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
               ret = GST_FLOW_ERROR;
               goto done;
             }
-            if (demux->mss_mode) {
-              /* in MSS we need to expose the pads after the first moof as we won't get a moov */
-              if (!demux->exposed) {
-                if (!demux->pending_newsegment) {
-                  GstSegment segment;
-                  gst_segment_init (&segment, GST_FORMAT_TIME);
-                  GST_DEBUG_OBJECT (demux, "new pending_newsegment");
-                  demux->pending_newsegment = gst_event_new_segment (&segment);
-                }
-                qtdemux_expose_streams (demux);
+            /* in MSS we need to expose the pads after the first moof as we won't get a moov */
+            if (demux->mss_mode && !demux->exposed) {
+              if (!demux->pending_newsegment) {
+                GstSegment segment;
+                gst_segment_init (&segment, GST_FORMAT_TIME);
+                GST_DEBUG_OBJECT (demux, "new pending_newsegment");
+                demux->pending_newsegment = gst_event_new_segment (&segment);
               }
+              qtdemux_expose_streams (demux);
             }
           } else {
             GST_DEBUG_OBJECT (demux, "Discarding [moof]");

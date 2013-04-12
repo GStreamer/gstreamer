@@ -120,7 +120,7 @@ struct _GstQTDemux {
   GstCaps *media_caps;
   gboolean exposed;
   gboolean mss_mode; /* flag to indicate that we're working with a smoothstreaming fragment */
-  GstClockTime base_timestamp;
+  guint64 fragment_start;
 };
 
 struct _GstQTDemuxClass {
