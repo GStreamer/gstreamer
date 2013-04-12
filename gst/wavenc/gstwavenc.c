@@ -651,7 +651,7 @@ gst_wavenc_is_cue_id_unique (guint32 id, GList * list)
 }
 
 static gboolean
-gst_wavenc_parse_cue (guint32 id, GstTocEntry * entry, GstWavEnc * wavenc)
+gst_wavenc_parse_cue (GstWavEnc * wavenc, guint32 id, GstTocEntry * entry)
 {
   gint64 start;
   GstWavEncCue *cue;
@@ -673,7 +673,7 @@ gst_wavenc_parse_cue (guint32 id, GstTocEntry * entry, GstWavEnc * wavenc)
 }
 
 static gboolean
-gst_wavenc_parse_labl (guint32 id, GstTocEntry * entry, GstWavEnc * wavenc)
+gst_wavenc_parse_labl (GstWavEnc * wavenc, guint32 id, GstTocEntry * entry)
 {
   gchar *tag;
   GstTagList *tags;
@@ -682,15 +682,22 @@ gst_wavenc_parse_labl (guint32 id, GstTocEntry * entry, GstWavEnc * wavenc)
   g_return_val_if_fail (entry != NULL, FALSE);
 
   tags = gst_toc_entry_get_tags (entry);
-  if (tags != NULL) {
-    if (!gst_tag_list_get_string (tags, GST_TAG_TITLE, &tag))
-      return FALSE;
+  if (!tags) {
+    GST_INFO_OBJECT (wavenc, "no tags for entry: %d", id);
+    return FALSE;
   }
+  if (!gst_tag_list_get_string (tags, GST_TAG_TITLE, &tag)) {
+    GST_INFO_OBJECT (wavenc, "no title tag for entry: %d", id);
+    return FALSE;
+  }
+
   labl = g_new (GstWavEncLabl, 1);
   memcpy (labl->chunk_id, "labl", 4);
   labl->chunk_data_size = 4 + strlen (tag) + 1;
   labl->cue_point_id = id;
   labl->text = tag;
+
+  GST_DEBUG_OBJECT (wavenc, "got labl: '%s'", tag);
 
   wavenc->labls = g_list_append (wavenc->labls, labl);
 
@@ -698,7 +705,7 @@ gst_wavenc_parse_labl (guint32 id, GstTocEntry * entry, GstWavEnc * wavenc)
 }
 
 static gboolean
-gst_wavenc_parse_note (guint32 id, GstTocEntry * entry, GstWavEnc * wavenc)
+gst_wavenc_parse_note (GstWavEnc * wavenc, guint32 id, GstTocEntry * entry)
 {
   gchar *tag;
   GstTagList *tags;
@@ -706,9 +713,13 @@ gst_wavenc_parse_note (guint32 id, GstTocEntry * entry, GstWavEnc * wavenc)
 
   g_return_val_if_fail (entry != NULL, FALSE);
   tags = gst_toc_entry_get_tags (entry);
-  if (tags != NULL) {
-    if (!gst_tag_list_get_string (tags, GST_TAG_COMMENT, &tag))
-      return FALSE;
+  if (!tags) {
+    GST_INFO_OBJECT (wavenc, "no tags for entry: %d", id);
+    return FALSE;
+  }
+  if (!gst_tag_list_get_string (tags, GST_TAG_COMMENT, &tag)) {
+    GST_INFO_OBJECT (wavenc, "no comment tag for entry: %d", id);
+    return FALSE;
   }
 
   note = g_new (GstWavEncNote, 1);
@@ -716,6 +727,8 @@ gst_wavenc_parse_note (guint32 id, GstTocEntry * entry, GstWavEnc * wavenc)
   note->chunk_data_size = 4 + strlen (tag) + 1;
   note->cue_point_id = id;
   note->text = tag;
+
+  GST_DEBUG_OBJECT (wavenc, "got note: '%s'", tag);
 
   wavenc->notes = g_list_append (wavenc->notes, note);
 
@@ -825,6 +838,7 @@ gst_wavenc_write_toc (GstWavEnc * wavenc)
   }
 
   ncues = g_list_length (list);
+  GST_DEBUG_OBJECT (wavenc, "number of cue entries: %d", ncues);
 
   while (list) {
     guint32 id = 0;
@@ -842,9 +856,9 @@ gst_wavenc_write_toc (GstWavEnc * wavenc)
         id = g_random_int ();
       } while (!gst_wavenc_is_cue_id_unique (id, wavenc->cues));
     }
-    gst_wavenc_parse_cue (id, entry, wavenc);
-    gst_wavenc_parse_labl (id, entry, wavenc);
-    gst_wavenc_parse_note (id, entry, wavenc);
+    gst_wavenc_parse_cue (wavenc, id, entry);
+    gst_wavenc_parse_labl (wavenc, id, entry);
+    gst_wavenc_parse_note (wavenc, id, entry);
     list = g_list_next (list);
   }
 
