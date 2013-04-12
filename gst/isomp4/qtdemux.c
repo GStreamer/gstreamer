@@ -1829,9 +1829,14 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       GST_DEBUG_OBJECT (demux, "received newsegment %" GST_SEGMENT_FORMAT,
           &segment);
 
-      GST_DEBUG_OBJECT (demux, "new pending_newsegment");
-      gst_event_replace (&demux->pending_newsegment, event);
-      demux->upstream_newsegment = TRUE;
+      if (segment.format == GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (demux, "new pending_newsegment");
+        gst_event_replace (&demux->pending_newsegment, event);
+        demux->upstream_newsegment = TRUE;
+      } else {
+        GST_DEBUG_OBJECT (demux, "Not storing upstream newsegment, "
+            "not in time format");
+      }
 
       /* chain will send initial newsegment after pads have been added */
       if (demux->state != QTDEMUX_STATE_MOVIE || !demux->n_streams) {
