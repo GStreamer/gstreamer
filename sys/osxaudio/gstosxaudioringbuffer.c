@@ -178,7 +178,7 @@ gst_osx_audio_ring_buffer_acquire (GstAudioRingBuffer * buf,
 
   if (RINGBUFFER_IS_SPDIF (spec->type)) {
     format.mFormatID = kAudioFormat60958AC3;
-    format.mSampleRate = (double) spec->info.rate;
+    format.mSampleRate = (double) GST_AUDIO_INFO_RATE (&spec->info);
     format.mChannelsPerFrame = 2;
     format.mFormatFlags = kAudioFormatFlagIsSignedInteger |
         kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonMixable;
@@ -194,32 +194,32 @@ gst_osx_audio_ring_buffer_acquire (GstAudioRingBuffer * buf,
     int width, depth;
     /* Fill out the audio description we're going to be using */
     format.mFormatID = kAudioFormatLinearPCM;
-    format.mSampleRate = (double) spec->info.rate;
-    format.mChannelsPerFrame = spec->info.channels;
-    if (spec->type == GST_AUDIO_FORMAT_F32) {
+    format.mSampleRate = (double) GST_AUDIO_INFO_RATE (&spec->info);
+    format.mChannelsPerFrame = GST_AUDIO_INFO_CHANNELS (&spec->info);
+    if (GST_AUDIO_INFO_IS_FLOAT (&spec->info)) {
       format.mFormatFlags = kAudioFormatFlagsNativeFloatPacked;
-      width = depth = spec->info.finfo->width;
+      width = depth = GST_AUDIO_INFO_WIDTH (&spec->info);
     } else {
       format.mFormatFlags = kAudioFormatFlagIsSignedInteger;
-      width = spec->info.finfo->width;
-      depth = spec->info.finfo->depth;
+      width = GST_AUDIO_INFO_WIDTH (&spec->info);
+      depth = GST_AUDIO_INFO_DEPTH (&spec->info);
       if (width == depth) {
         format.mFormatFlags |= kAudioFormatFlagIsPacked;
       } else {
         format.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
       }
-      if (spec->info.finfo->endianness == G_BIG_ENDIAN) {
+      if (GST_AUDIO_INFO_IS_BIG_ENDIAN (&spec->info)) {
         format.mFormatFlags |= kAudioFormatFlagIsBigEndian;
       }
     }
-    format.mBytesPerFrame = spec->info.channels * (width >> 3);
+    format.mBytesPerFrame = GST_AUDIO_INFO_BPF (&spec->info);
     format.mBitsPerChannel = depth;
-    format.mBytesPerPacket = spec->info.channels * (width >> 3);
+    format.mBytesPerPacket = GST_AUDIO_INFO_BPF (&spec->info);
     format.mFramesPerPacket = 1;
     format.mReserved = 0;
     spec->segsize =
-        (spec->latency_time * spec->info.rate / G_USEC_PER_SEC) *
-        spec->info.bpf;
+        (spec->latency_time * GST_AUDIO_INFO_RATE (&spec->info) /
+        G_USEC_PER_SEC) * GST_AUDIO_INFO_BPF (&spec->info);
     spec->segtotal = spec->buffer_time / spec->latency_time;
     is_passthrough = FALSE;
   }
@@ -301,7 +301,7 @@ gst_osx_audio_ring_buffer_delay (GstAudioRingBuffer * buf)
   osxbuf = GST_OSX_AUDIO_RING_BUFFER (buf);
 
   if (!gst_core_audio_get_samples_and_latency (osxbuf->core_audio,
-          GST_AUDIO_RING_BUFFER (buf)->spec.info.rate, &samples, &latency)) {
+          GST_AUDIO_INFO_RATE (&buf->spec.info), &samples, &latency)) {
     return 0;
   }
   GST_DEBUG_OBJECT (buf, "Got latency: %f seconds -> %d samples",
