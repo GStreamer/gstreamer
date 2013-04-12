@@ -70,7 +70,7 @@ static GstStaticPadTemplate gst_jpeg_parse_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/jpeg, parsed = (boolean) false")
+    GST_STATIC_CAPS ("image/jpeg")
     );
 
 GST_DEBUG_CATEGORY_STATIC (jpeg_parse_debug);
