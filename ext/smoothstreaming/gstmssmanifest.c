@@ -92,6 +92,8 @@ struct _GstMssManifest
   GSList *streams;
 };
 
+static GstBuffer *gst_buffer_from_hex_string (const gchar * s);
+
 static gboolean
 node_has_type (xmlNodePtr node, const gchar * name)
 {
@@ -377,8 +379,6 @@ _make_h264_codec_data (GstBuffer * sps, GstBuffer * pps)
 static void
 _gst_mss_stream_add_h264_codec_data (GstCaps * caps, const gchar * codecdatastr)
 {
-  GValue sps_value = { 0, };
-  GValue pps_value = { 0, };
   GstBuffer *sps;
   GstBuffer *pps;
   GstBuffer *buffer;
@@ -401,17 +401,12 @@ _gst_mss_stream_add_h264_codec_data (GstCaps * caps, const gchar * codecdatastr)
     return;                     /* invalid mss codec data */
   }
 
-  g_value_init (&sps_value, GST_TYPE_BUFFER);
   pps_str[0] = '\0';
-  gst_value_deserialize (&sps_value, sps_str);
+  sps = gst_buffer_from_hex_string (sps_str);
   pps_str[0] = '0';
 
-  g_value_init (&pps_value, GST_TYPE_BUFFER);
   pps_str = pps_str + 8;
-  gst_value_deserialize (&pps_value, pps_str);
-
-  sps = gst_value_get_buffer (&sps_value);
-  pps = gst_value_get_buffer (&pps_value);
+  pps = gst_buffer_from_hex_string (pps_str);
 
   nalu.ref_idc = (GST_BUFFER_DATA (sps)[0] & 0x60) >> 5;
   nalu.type = GST_H264_NAL_SPS;
@@ -428,8 +423,8 @@ _gst_mss_stream_add_h264_codec_data (GstCaps * caps, const gchar * codecdatastr)
   }
 
   buffer = _make_h264_codec_data (sps, pps);
-  g_value_reset (&sps_value);
-  g_value_reset (&pps_value);
+  gst_buffer_unref (sps);
+  gst_buffer_unref (pps);
 
   if (buffer != NULL) {
     gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buffer, NULL);
@@ -470,10 +465,10 @@ _gst_mss_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
     if (strcmp (fourcc, "H264") == 0 || strcmp (fourcc, "AVC1") == 0) {
       _gst_mss_stream_add_h264_codec_data (caps, codec_data);
     } else {
-      GValue value = { 0, };
-      g_value_init (&value, GST_TYPE_BUFFER);
-      gst_value_deserialize (&value, (gchar *) codec_data);
-      gst_structure_take_value (structure, "codec_data", &value);
+      GstBuffer *buffer = gst_buffer_from_hex_string ((gchar *) codec_data);
+      gst_structure_set (structure, "codec_data", GST_TYPE_BUFFER, buffer,
+          NULL);
+      gst_buffer_unref (buffer);
     }
   }
 
@@ -566,10 +561,9 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
         g_ascii_strtoull (rate, NULL, 10), NULL);
 
   if (codec_data && strlen (codec_data)) {
-    GValue value = { 0, };
-    g_value_init (&value, GST_TYPE_BUFFER);
-    gst_value_deserialize (&value, (gchar *) codec_data);
-    gst_structure_take_value (structure, "codec_data", &value);
+    GstBuffer *buffer = gst_buffer_from_hex_string ((gchar *) codec_data);
+    gst_structure_set (structure, "codec_data", GST_TYPE_BUFFER, buffer, NULL);
+    gst_buffer_unref (buffer);
   } else if (strcmp (fourcc, "AACL") == 0 && rate && channels) {
     GstBuffer *buffer =
         _make_aacl_codec_data (g_ascii_strtoull (rate, NULL, 10),
@@ -1077,4 +1071,35 @@ gst_mss_manifest_change_bitrate (GstMssManifest * manifest, guint64 bitrate)
   }
 
   return ret;
+}
+
+static GstBuffer *
+gst_buffer_from_hex_string (const gchar * s)
+{
+  GstBuffer *buffer = NULL;
+  gint len;
+  gchar ts[3];
+  guint8 *data;
+  gint i;
+
+  len = strlen (s);
+  if (len & 1)
+    return NULL;
+
+  buffer = gst_buffer_new_and_alloc (len / 2);
+  data = GST_BUFFER_DATA (buffer);
+  for (i = 0; i < len / 2; i++) {
+    if (!isxdigit ((int) s[i * 2]) || !isxdigit ((int) s[i * 2 + 1])) {
+      gst_buffer_unref (buffer);
+      return NULL;
+    }
+
+    ts[0] = s[i * 2 + 0];
+    ts[1] = s[i * 2 + 1];
+    ts[2] = 0;
+
+    data[i] = (guint8) strtoul (ts, NULL, 16);
+  }
+
+  return buffer;
 }
