@@ -64,9 +64,6 @@ typedef void (*GstCompatTypeFindSuggestFunction)(gpointer, guint, GstCaps *);
 #define GST_PAD_QUERY_FUNCTION_CALL(func, pad, parent, query) \
     (func)(pad, parent, query)
 
-/* GstPlugin */
-#define GST_PLUGIN_DESC_NAME(NAME) NAME
-
 /* Misc helpers */
 #define GST_MAKE_FORMAT_STRING(FORMAT) \
     "format=(string)" G_STRINGIFY(FORMAT)
@@ -261,9 +258,6 @@ typedef void (*GstCompatTypeFindSuggestFunction)(gpointer, guint, const GstCaps 
     GstPad *pad, GstQuery *query
 #define GST_PAD_QUERY_FUNCTION_CALL(func, pad, parent, query) \
     (func)(pad, query)
-
-/* GstPlugin */
-#define GST_PLUGIN_DESC_NAME(NAME) G_STRINGIFY(NAME)
 
 /* Misc helpers */
 #define GST_MAKE_FORMAT_STRING(FORMAT) \

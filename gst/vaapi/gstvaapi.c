@@ -29,6 +29,10 @@
 #include "gstvaapipostproc.h"
 #include "gstvaapisink.h"
 
+#define PLUGIN_NAME     "vaapi"
+#define PLUGIN_DESC     "VA-API based elements"
+#define PLUGIN_LICENSE  "LGPL"
+
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
@@ -54,12 +58,14 @@ plugin_init (GstPlugin *plugin)
     return TRUE;
 }
 
-GST_PLUGIN_DEFINE(
-    GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    GST_PLUGIN_DESC_NAME(vaapi),
-    "VA-API based elements",
-    plugin_init,
-    PACKAGE_VERSION,
-    "LGPL",
-    PACKAGE,
-    PACKAGE_BUGREPORT)
+#if GST_CHECK_VERSION(1,0,0)
+/* XXX: use PLUGIN_NAME when GST_PLUGIN_DEFINE is fixed to use
+   G_STRINGIFY() for name argument, instead of plain #name */
+GST_PLUGIN_DEFINE(GST_VERSION_MAJOR, GST_VERSION_MINOR,
+                  vaapi, PLUGIN_DESC, plugin_init,
+                  PACKAGE_VERSION, PLUGIN_LICENSE, PACKAGE, PACKAGE_BUGREPORT)
+#else
+GST_PLUGIN_DEFINE(GST_VERSION_MAJOR, GST_VERSION_MINOR,
+                  PLUGIN_NAME, PLUGIN_DESC, plugin_init,
+                  PACKAGE_VERSION, PLUGIN_LICENSE, PACKAGE, PACKAGE_BUGREPORT)
+#endif
