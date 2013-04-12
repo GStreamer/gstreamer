@@ -218,18 +218,23 @@ gst_vaapisink_video_overlay_set_render_rectangle(
 static void
 gst_vaapisink_video_overlay_expose(GstVideoOverlay *overlay)
 {
+    GstVaapiSink * const sink = GST_VAAPISINK(overlay);
     GstBaseSink * const base_sink = GST_BASE_SINK(overlay);
     GstBuffer *buffer;
 
+    if (sink->use_overlay)
+        buffer = sink->video_buffer ? gst_buffer_ref(sink->video_buffer) : NULL;
+    else {
 #if GST_CHECK_VERSION(1,0,0)
-    GstSample * const sample = gst_base_sink_get_last_sample(base_sink);
-    if (!sample)
-        return;
-    buffer = gst_buffer_ref(gst_sample_get_buffer(sample));
-    gst_sample_unref(sample);
+        GstSample * const sample = gst_base_sink_get_last_sample(base_sink);
+        if (!sample)
+            return;
+        buffer = gst_buffer_ref(gst_sample_get_buffer(sample));
+        gst_sample_unref(sample);
 #else
-    buffer = gst_base_sink_get_last_buffer(base_sink);
+        buffer = gst_base_sink_get_last_buffer(base_sink);
 #endif
+    }
     if (buffer) {
         gst_vaapisink_show_frame(base_sink, buffer);
         gst_buffer_unref(buffer);
