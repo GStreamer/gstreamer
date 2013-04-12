@@ -264,6 +264,9 @@ read_event (GstRtpGSTDepay * rtpgstdepay, guint type,
   s = gst_structure_from_string ((gchar *) & map.data[offset], &end);
   gst_buffer_unmap (buf, &map);
 
+  if (s == NULL)
+    goto parse_failed;
+
   switch (type) {
     case 1:
       etype = GST_EVENT_TAG;
@@ -288,6 +291,11 @@ too_small:
     GST_ELEMENT_WARNING (rtpgstdepay, STREAM, DECODE,
         ("Buffer too small."), (NULL));
     gst_buffer_unmap (buf, &map);
+    return NULL;
+  }
+parse_failed:
+  {
+    GST_WARNING_OBJECT (rtpgstdepay, "could not parse event");
     return NULL;
   }
 unknown_event:
