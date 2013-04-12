@@ -30,8 +30,8 @@
 
 typedef struct
 {
-  GMutex *lock;
-  GCond *cond;
+  GMutex lock;
+  GCond cond;
 } PropertyMutex;
 
 gboolean gst_core_audio_bind_device                       (GstCoreAudio *core_audio);
