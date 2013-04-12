@@ -2513,7 +2513,7 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
       GObjectClass *klass;
       GstState target;
 
-      if (!(src->manager = gst_element_factory_make (manager, NULL))) {
+      if (!(src->manager = gst_element_factory_make (manager, "manager"))) {
         /* fallback */
         if (gst_rtsp_transport_get_manager (transport->trans, &manager, 1) < 0)
           goto no_manager;
@@ -2521,7 +2521,7 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
         if (!manager)
           goto use_no_manager;
 
-        if (!(src->manager = gst_element_factory_make (manager, NULL)))
+        if (!(src->manager = gst_element_factory_make (manager, "manager")))
           goto manager_failed;
       }
 
