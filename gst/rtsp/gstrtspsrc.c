@@ -182,6 +182,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_PROBATION        2
 #define DEFAULT_UDP_RECONNECT    TRUE
 #define DEFAULT_MULTICAST_IFACE  NULL
+#define DEFAULT_NTP_SYNC         FALSE
 
 enum
 {
@@ -211,6 +212,7 @@ enum
   PROP_PROBATION,
   PROP_UDP_RECONNECT,
   PROP_MULTICAST_IFACE,
+  PROP_NTP_SYNC,
   PROP_LAST
 };
 
@@ -536,6 +538,11 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "The network interface on which to join the multicast group",
           DEFAULT_MULTICAST_IFACE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_NTP_SYNC,
+      g_param_spec_boolean ("ntp-sync", "Sync on NTP clock",
+          "Synchronize received streams to the NTP clock", DEFAULT_NTP_SYNC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
   gstelement_class->change_state = gst_rtspsrc_change_state;
@@ -583,6 +590,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->probation = DEFAULT_PROBATION;
   src->udp_reconnect = DEFAULT_UDP_RECONNECT;
   src->multi_iface = g_strdup (DEFAULT_MULTICAST_IFACE);
+  src->ntp_sync = DEFAULT_NTP_SYNC;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -825,6 +833,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       else
         rtspsrc->multi_iface = g_value_dup_string (value);
       break;
+    case PROP_NTP_SYNC:
+      rtspsrc->ntp_sync = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -940,6 +951,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MULTICAST_IFACE:
       g_value_set_string (value, rtspsrc->multi_iface);
+      break;
+    case PROP_NTP_SYNC:
+      g_value_set_boolean (value, rtspsrc->ntp_sync);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2539,6 +2553,11 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
       g_object_set (src->manager, "latency", src->latency, NULL);
 
       klass = G_OBJECT_GET_CLASS (G_OBJECT (src->manager));
+
+      if (g_object_class_find_property (klass, "ntp-sync")) {
+        g_object_set (src->manager, "ntp-sync", src->ntp_sync, NULL);
+      }
+
       if (g_object_class_find_property (klass, "drop-on-latency")) {
         g_object_set (src->manager, "drop-on-latency", src->drop_on_latency,
             NULL);

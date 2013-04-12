@@ -222,6 +222,7 @@ struct _GstRTSPSrc {
   guint             probation;
   gboolean          udp_reconnect;
   gchar            *multi_iface;
+  gboolean          ntp_sync;
 
   /* state */
   GstRTSPState       state;
