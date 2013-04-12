@@ -60,6 +60,8 @@ AC_SUBST(ACLOCAL_AMFLAGS, "-I m4 -I common/m4")
 
 dnl *** check for arguments to configure ***
 
+AG_GST_ARG_DISABLE_FATAL_WARNINGS
+
 AG_GST_ARG_DEBUG
 AG_GST_ARG_PROFILING
 AG_GST_ARG_VALGRIND
@@ -243,7 +245,7 @@ AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
   [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
 
 dnl define an ERROR_CFLAGS Makefile variable
-AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
+AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [
     -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wundef
     -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wformat-nonliteral
     -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return
