@@ -587,8 +587,7 @@ GST_START_TEST (test_live_seeking)
   /* don't use autoaudiosrc, as then we can't set anything here */
   const gchar *audio_src_factories[] = {
     "alsasrc",
-    "pulseaudiosrc",
-    NULL,
+    "pulseaudiosrc"
   };
 
   GST_INFO ("preparing test");
