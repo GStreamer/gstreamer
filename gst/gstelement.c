@@ -97,7 +97,9 @@
 #include "gst-i18n-lib.h"
 #include "glib-compat-private.h"
 
+#ifndef GST_DISABLE_GST_DEBUG
 #include "printf/printf.h"
+#endif
 
 /* Element signals and args */
 enum

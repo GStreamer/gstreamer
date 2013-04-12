@@ -26,10 +26,13 @@ else
 GST_PLUGIN_SRC = gstplugin.c
 endif
 
-# FIXME: might not be needed if debug logging is disabled
+if !GST_DISABLE_GST_DEBUG
 SUBDIRS_PRINTF = printf
 GST_PRINTF_LA = printf/libgstprintf.la
-
+else
+SUBDIRS_PRINTF =
+GST_PRINTF_LA =
+endif
 
 SUBDIRS = $(SUBDIRS_PARSE) $(SUBDIRS_PRINTF)
 

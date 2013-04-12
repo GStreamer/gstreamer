@@ -278,6 +278,11 @@ extern GstDebugCategory *_priv_GST_CAT_POLL;
 
 #endif
 
+#ifdef GST_DISABLE_GST_DEBUG
+/* for _gst_element_error_printf */
+#define __gst_vasprintf __gst_info_fallback_vasprintf
+int __gst_vasprintf (char **result, char const *format, va_list args);
+#endif
 
 /**** objects made opaque until the private bits have been made private ****/
 
