@@ -45,8 +45,6 @@
 #define MSS_PROP_TIMESCALE            "TimeScale"
 #define MSS_PROP_URL                  "Url"
 
-/* TODO check if atoi is successful? */
-
 typedef struct _GstMssStreamFragment
 {
   guint number;
