@@ -567,9 +567,9 @@ _audio_stream_format_listener (AudioObjectID inObjectID,
 
   for (i = 0; i < inNumberAddresses; i++) {
     if (inAddresses[i].mSelector == kAudioStreamPropertyPhysicalFormat) {
-      g_mutex_lock (prop_mutex->lock);
-      g_cond_signal (prop_mutex->cond);
-      g_mutex_unlock (prop_mutex->lock);
+      g_mutex_lock (&prop_mutex->lock);
+      g_cond_signal (&prop_mutex->cond);
+      g_mutex_unlock (&prop_mutex->lock);
       break;
     }
   }
@@ -596,10 +596,10 @@ _audio_stream_change_format (AudioStreamID stream_id,
       CORE_AUDIO_FORMAT_ARGS (format));
 
   /* Condition because SetProperty is asynchronous */
-  prop_mutex.lock = g_mutex_new ();
-  prop_mutex.cond = g_cond_new ();
+  g_mutex_init (&prop_mutex.lock);
+  g_cond_init (&prop_mutex.cond);
 
-  g_mutex_lock (prop_mutex.lock);
+  g_mutex_lock (&prop_mutex.lock);
 
   /* Install the property listener to serialize the operations */
   status = AudioObjectAddPropertyListener (stream_id, &formatAddress,
@@ -624,7 +624,7 @@ _audio_stream_change_format (AudioStreamID stream_id,
     g_get_current_time (&timeout);
     g_time_val_add (&timeout, 250000);
 
-    if (!g_cond_timed_wait (prop_mutex.cond, prop_mutex.lock, &timeout)) {
+    if (!g_cond_wait_until (&prop_mutex.cond, &prop_mutex.lock, timeout.tv_sec)) {
       GST_LOG ("timeout...");
     }
 
@@ -658,9 +658,9 @@ done:
         GST_FOURCC_FORMAT, GST_FOURCC_ARGS (status));
   }
   /* Destroy the lock and condition */
-  g_mutex_unlock (prop_mutex.lock);
-  g_mutex_free (prop_mutex.lock);
-  g_cond_free (prop_mutex.cond);
+  g_mutex_unlock (&prop_mutex.lock);
+  g_mutex_clear (&prop_mutex.lock);
+  g_cond_clear (&prop_mutex.cond);
 
   return ret;
 }
