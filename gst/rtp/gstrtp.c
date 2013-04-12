@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <gst/tag/tag.h>
+
 #include "gstrtpac3depay.h"
 #include "gstrtpac3pay.h"
 #include "gstrtpbvdepay.h"
@@ -97,6 +99,8 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_tag_image_type_get_type ();
+
   if (!gst_rtp_ac3_depay_plugin_init (plugin))
     return FALSE;
 
