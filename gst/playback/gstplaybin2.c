@@ -1212,6 +1212,7 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->selector[PLAYBIN_STREAM_AUDIO].type = GST_PLAY_SINK_TYPE_AUDIO;
   group->selector[PLAYBIN_STREAM_AUDIO].channels = group->audio_channels;
   group->selector[PLAYBIN_STREAM_VIDEO].media_list[0] = "video/";
+  group->selector[PLAYBIN_STREAM_VIDEO].media_list[1] = "image/";
   group->selector[PLAYBIN_STREAM_VIDEO].type = GST_PLAY_SINK_TYPE_VIDEO;
   group->selector[PLAYBIN_STREAM_VIDEO].channels = group->video_channels;
   group->selector[PLAYBIN_STREAM_TEXT].media_list[0] = "text/";
