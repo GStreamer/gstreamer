@@ -71,6 +71,7 @@ gboolean                 gst_rtsp_session_media_matches_url    (GstRTSPSessionMe
                                                                 const GstRTSPUrl *url);
 GstRTSPMedia *           gst_rtsp_session_media_get_media      (GstRTSPSessionMedia *media);
 
+GstClockTime             gst_rtsp_session_media_get_base_time  (GstRTSPSessionMedia *media);
 /* control media */
 gboolean                 gst_rtsp_session_media_set_state      (GstRTSPSessionMedia *media,
                                                                 GstState state);

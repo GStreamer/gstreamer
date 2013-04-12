@@ -1745,7 +1745,44 @@ gst_rtsp_media_get_clock (GstRTSPMedia * media)
   g_rec_mutex_unlock (&priv->state_lock);
 
   return clock;
+}
 
+/**
+ * gst_rtsp_media_get_base_time:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the base_time that is used by the pipeline in @media.
+ *
+ * @media must be prepared before this method returns a valid base_time.
+ *
+ * Returns: the base_time used by @media.
+ */
+GstClockTime
+gst_rtsp_media_get_base_time (GstRTSPMedia * media)
+{
+  GstClockTime result;
+  GstRTSPMediaPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), GST_CLOCK_TIME_NONE);
+
+  priv = media->priv;
+
+  g_rec_mutex_lock (&priv->state_lock);
+  if (media->priv->status != GST_RTSP_MEDIA_STATUS_PREPARED)
+    goto not_prepared;
+
+  result = gst_element_get_base_time (media->priv->pipeline);
+  g_rec_mutex_unlock (&priv->state_lock);
+
+  return result;
+
+  /* ERRORS */
+not_prepared:
+  {
+    g_rec_mutex_unlock (&priv->state_lock);
+    GST_DEBUG_OBJECT (media, "media was not prepared");
+    return GST_CLOCK_TIME_NONE;
+  }
 }
 
 /**

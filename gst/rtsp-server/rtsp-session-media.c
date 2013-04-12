@@ -177,6 +177,22 @@ gst_rtsp_session_media_get_media (GstRTSPSessionMedia * media)
 }
 
 /**
+ * gst_rtsp_session_media_get_base_time:
+ * @media: a #GstRTSPSessionMedia
+ *
+ * Get the base_time of the #GstRTSPMedia in @media
+ *
+ * Returns: the base_time of the media.
+ */
+GstClockTime
+gst_rtsp_session_media_get_base_time (GstRTSPSessionMedia * media)
+{
+  g_return_val_if_fail (GST_IS_RTSP_SESSION_MEDIA (media), GST_CLOCK_TIME_NONE);
+
+  return gst_rtsp_media_get_base_time (media->priv->media);
+}
+
+/**
  * gst_rtsp_session_media_set_transport:
  * @media: a #GstRTSPSessionMedia
  * @stream: a #GstRTSPStream

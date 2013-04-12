@@ -157,6 +157,7 @@ GstRTSPStream *       gst_rtsp_media_create_stream    (GstRTSPMedia *media,
 
 /* dealing with the media */
 GstClock *            gst_rtsp_media_get_clock        (GstRTSPMedia *media);
+GstClockTime          gst_rtsp_media_get_base_time    (GstRTSPMedia *media);
 
 guint                 gst_rtsp_media_n_streams        (GstRTSPMedia *media);
 GstRTSPStream *       gst_rtsp_media_get_stream       (GstRTSPMedia *media, guint idx);
