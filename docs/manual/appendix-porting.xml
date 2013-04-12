@@ -130,13 +130,17 @@
 </chapter>
 <chapter id="chapter-porting-1.0">
   <title>Porting 0.10 applications to 1.0</title>
+
+  <para>This section outlines some of the changes necessary to port
+  applications from &GStreamer;-0.10 to &GStreamer;-1.0. For a
+  comprehensive and up-to-date list, see the separate <ulink
+  type="http"
+  url="http://cgit.freedesktop.org/gstreamer/gstreamer/plain/docs/random/porting-to-1.0.txt">
+  Porting to 1.0</ulink> document.
+  </para>
   <para>
-    This section of the appendix will discuss shortly what changes to
-    applications will be needed to quickly and conveniently port most
-    applications from &GStreamer;-0.10 to &GStreamer;-1.0, with references
-    to the relevant sections in this Application Development Manual
-    where needed. With this list, it should be possible to port simple
-    applications to &GStreamer;-1.0 in less than a day.
+    It should be possible to port simple applications to
+    &GStreamer;-1.0 in less than a day.
   </para>
 
   <sect1 id="section-porting-objects-1.0">
