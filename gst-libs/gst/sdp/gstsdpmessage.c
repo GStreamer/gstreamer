@@ -136,6 +136,29 @@ GstSDPResult gst_sdp_message_add_##method (GstSDPMessage *msg, type val) {   \
   return GST_SDP_OK;                                                    \
 }
 
+static GstSDPMessage *gst_sdp_message_boxed_copy (GstSDPMessage * orig);
+static void gst_sdp_message_boxed_free (GstSDPMessage * msg);
+
+G_DEFINE_BOXED_TYPE (GstSDPMessage, gst_sdp_message, gst_sdp_message_boxed_copy,
+    gst_sdp_message_boxed_free);
+
+static GstSDPMessage *
+gst_sdp_message_boxed_copy (GstSDPMessage * orig)
+{
+  GstSDPMessage *copy;
+
+  if (gst_sdp_message_copy (orig, &copy) == GST_SDP_OK)
+    return copy;
+
+  return NULL;
+}
+
+static void
+gst_sdp_message_boxed_free (GstSDPMessage * msg)
+{
+  gst_sdp_message_free (msg);
+}
+
 static void
 gst_sdp_origin_init (GstSDPOrigin * origin)
 {
@@ -276,6 +299,108 @@ gst_sdp_message_uninit (GstSDPMessage * msg)
   FREE_ARRAY (msg->zones);
   FREE_ARRAY (msg->attributes);
   FREE_ARRAY (msg->medias);
+
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_message_copy:
+ * @msg: a #GstSDPMessage
+ * @copy: (out) (transfer full): pointer to new #GstSDPMessage
+ *
+ * Allocate a new copy of @msg and store the result in @copy. The value in
+ * @copy should be release with gst_sdp_message_free function.
+ *
+ * Returns: a #GstSDPResult
+ */
+GstSDPResult
+gst_sdp_message_copy (const GstSDPMessage * msg, GstSDPMessage ** copy)
+{
+  GstSDPResult ret;
+  GstSDPMessage *cp;
+  guint i, len;
+
+  if (msg == NULL)
+    return GST_SDP_EINVAL;
+
+  ret = gst_sdp_message_new (copy);
+  if (ret != GST_SDP_OK)
+    return ret;
+
+  cp = *copy;
+
+  REPLACE_STRING (cp->version, msg->version);
+  gst_sdp_message_set_origin (cp, msg->origin.username, msg->origin.sess_id,
+      msg->origin.sess_version, msg->origin.nettype, msg->origin.addrtype,
+      msg->origin.addr);
+  REPLACE_STRING (cp->session_name, msg->session_name);
+  REPLACE_STRING (cp->information, msg->information);
+  REPLACE_STRING (cp->uri, msg->uri);
+
+  len = gst_sdp_message_emails_len (msg);
+  for (i = 0; i < len; i++) {
+    gst_sdp_message_add_email (cp, gst_sdp_message_get_email (msg, i));
+  }
+
+  len = gst_sdp_message_phones_len (msg);
+  for (i = 0; i < len; i++) {
+    gst_sdp_message_add_phone (cp, gst_sdp_message_get_phone (msg, i));
+  }
+
+  gst_sdp_message_set_connection (cp, msg->connection.nettype,
+      msg->connection.addrtype, msg->connection.address, msg->connection.ttl,
+      msg->connection.addr_number);
+
+  len = gst_sdp_message_bandwidths_len (msg);
+  for (i = 0; i < len; i++) {
+    const GstSDPBandwidth *bw = gst_sdp_message_get_bandwidth (msg, i);
+    gst_sdp_message_add_bandwidth (cp, bw->bwtype, bw->bandwidth);
+  }
+
+  len = gst_sdp_message_times_len (msg);
+  for (i = 0; i < len; i++) {
+    const gchar **repeat = NULL;
+    const GstSDPTime *time = gst_sdp_message_get_time (msg, i);
+
+    if (time->repeat != NULL) {
+      guint j;
+
+      repeat = g_malloc0 (time->repeat->len * sizeof (gchar *));
+
+      for (j = 0; j < time->repeat->len; j++) {
+        repeat[j] = g_array_index (time->repeat, char *, j);
+      }
+    }
+
+    gst_sdp_message_add_time (cp, time->start, time->stop, repeat);
+
+    g_free (repeat);
+  }
+
+  len = gst_sdp_message_zones_len (msg);
+  for (i = 0; i < len; i++) {
+    const GstSDPZone *zone = gst_sdp_message_get_zone (msg, i);
+    gst_sdp_message_add_zone (cp, zone->time, zone->typed_time);
+  }
+
+  gst_sdp_message_set_key (cp, msg->key.type, msg->key.data);
+
+  len = gst_sdp_message_attributes_len (msg);
+  for (i = 0; i < len; i++) {
+    const GstSDPAttribute *attr = gst_sdp_message_get_attribute (msg, i);
+    gst_sdp_message_add_attribute (cp, attr->key, attr->value);
+  }
+
+  len = gst_sdp_message_medias_len (msg);
+  for (i = 0; i < len; i++) {
+    GstSDPMedia *media_copy;
+    const GstSDPMedia *media = gst_sdp_message_get_media (msg, i);
+
+    if (gst_sdp_media_copy (media, &media_copy) == GST_SDP_OK) {
+      gst_sdp_message_add_media (cp, media_copy);
+      gst_sdp_media_free (media_copy);
+    }
+  }
 
   return GST_SDP_OK;
 }
@@ -1269,6 +1394,69 @@ gst_sdp_media_free (GstSDPMedia * media)
 
   gst_sdp_media_uninit (media);
   g_free (media);
+
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_media_copy:
+ * @media: a #GstSDPMedia
+ * @copy: (out) (transfer full): pointer to new #GstSDPMedia
+ *
+ * Allocate a new copy of @media and store the result in @copy. The value in
+ * @copy should be release with gst_sdp_media_free function.
+ *
+ * Returns: a #GstSDPResult
+ */
+GstSDPResult
+gst_sdp_media_copy (const GstSDPMedia * media, GstSDPMedia ** copy)
+{
+  GstSDPResult ret;
+  GstSDPMedia *cp;
+  guint i, len;
+
+  if (media == NULL)
+    return GST_SDP_EINVAL;
+
+  ret = gst_sdp_media_new (copy);
+  if (ret != GST_SDP_OK)
+    return ret;
+
+  cp = *copy;
+
+  REPLACE_STRING (cp->media, media->media);
+  cp->port = media->port;
+  cp->num_ports = media->num_ports;
+  REPLACE_STRING (cp->proto, media->proto);
+
+  len = gst_sdp_media_formats_len (media);
+  for (i = 0; i < len; i++) {
+    gst_sdp_media_add_format (cp, gst_sdp_media_get_format (media, i));
+  }
+
+  REPLACE_STRING (cp->information, media->information);
+
+  len = gst_sdp_media_connections_len (media);
+  for (i = 0; i < len; i++) {
+    const GstSDPConnection *connection =
+        gst_sdp_media_get_connection (media, i);
+    gst_sdp_media_add_connection (cp, connection->nettype, connection->addrtype,
+        connection->address, connection->ttl, connection->addr_number);
+  }
+
+  len = gst_sdp_media_bandwidths_len (media);
+  for (i = 0; i < len; i++) {
+    const GstSDPBandwidth *bw = gst_sdp_media_get_bandwidth (media, i);
+    gst_sdp_media_add_bandwidth (cp, bw->bwtype, bw->bandwidth);
+  }
+
+  gst_sdp_media_set_key (cp, media->key.type, media->key.data);
+
+  len = gst_sdp_media_attributes_len (media);
+  for (i = 0; i < len; i++) {
+    const GstSDPAttribute *att = gst_sdp_media_get_attribute (media, i);
+    gst_sdp_media_add_attribute (cp, att->key, att->value);
+  }
 
   return GST_SDP_OK;
 }

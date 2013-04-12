@@ -267,11 +267,19 @@ typedef struct {
   GArray           *medias;
 } GstSDPMessage;
 
+
+GType                   gst_sdp_message_get_type            (void);
+
+#define GST_TYPE_SDP_MESSAGE           (gst_sdp_message_get_type())
+#define GST_SDP_MESSAGE_CAST(object)   ((GstSDPMessage *)(object))
+#define GST_SDP_MESSAGE(object)        (GST_SDP_MESSAGE_CAST(object))
+
 /* Session descriptions */
 GstSDPResult            gst_sdp_message_new                 (GstSDPMessage **msg);
 GstSDPResult            gst_sdp_message_init                (GstSDPMessage *msg);
 GstSDPResult            gst_sdp_message_uninit              (GstSDPMessage *msg);
 GstSDPResult            gst_sdp_message_free                (GstSDPMessage *msg);
+GstSDPResult            gst_sdp_message_copy                (const GstSDPMessage *msg, GstSDPMessage **copy);
 
 GstSDPResult            gst_sdp_message_parse_buffer        (const guint8 *data, guint size, GstSDPMessage *msg);
 gchar*                  gst_sdp_message_as_text             (const GstSDPMessage *msg);
@@ -363,6 +371,7 @@ GstSDPResult            gst_sdp_media_new                   (GstSDPMedia **media
 GstSDPResult            gst_sdp_media_init                  (GstSDPMedia *media);
 GstSDPResult            gst_sdp_media_uninit                (GstSDPMedia *media);
 GstSDPResult            gst_sdp_media_free                  (GstSDPMedia *media);
+GstSDPResult            gst_sdp_media_copy                  (const GstSDPMedia *media, GstSDPMedia **copy);
 
 gchar*                  gst_sdp_media_as_text               (const GstSDPMedia *media);
 

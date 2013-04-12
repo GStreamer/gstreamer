@@ -1,0 +1,154 @@
+/* GStreamer unit tests for the SDP support library
+ *
+ * Copyright (C) 2013 Jose Antonio Santos Cadenas <santoscadenas@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <gst/check/gstcheck.h>
+
+/*
+ * test_sdp.c - gst-kurento-plugins
+ *
+ * Copyright (C) 2013 Kurento
+ * Contact: Miguel París Díaz <mparisdiaz@gmail.com>
+ * Contact: José Antonio Santos Cadenas <santoscadenas@kurento.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <gst/check/gstcheck.h>
+#include <gst/sdp/gstsdpmessage.h>
+
+static const gchar *sdp = "v=0\r\n"
+    "o=- 123456 0 IN IP4 127.0.0.1\r\n"
+    "s=TestSessionToCopy\r\n"
+    "c=IN IP4 127.0.0.1\r\n"
+    "t=0 0\r\n"
+    "m=video 3434 RTP/AVP 96 97 99\r\n"
+    "a=rtpmap:96 MP4V-ES/90000\r\n"
+    "a=rtpmap:97 H263-1998/90000\r\n"
+    "a=rtpmap:99 H263/90000\r\n"
+    "a=sendrecv\r\n"
+    "m=video 6565 RTP/AVP 98\r\n"
+    "a=rtpmap:98 VP8/90000\r\n"
+    "a=sendrecv\r\n" "m=audio 4545 RTP/AVP 14\r\n" "a=sendrecv\r\n"
+    "m=audio 1010 TCP 14\r\n";
+
+GST_START_TEST (boxed)
+{
+  GValue value = G_VALUE_INIT;
+  GValue value_copy = G_VALUE_INIT;
+  GstSDPMessage *message, *copy;
+  gchar *message1_str, *message2_str, *copy_str;
+  const gchar *repeat1[] = { "789", "012", NULL };
+
+  gst_sdp_message_new (&message);
+  gst_sdp_message_parse_buffer ((guint8 *) sdp, -1, message);
+
+  gst_sdp_message_add_time (message, "123", "456", repeat1);
+
+  g_value_init (&value, GST_TYPE_SDP_MESSAGE);
+  g_value_init (&value_copy, GST_TYPE_SDP_MESSAGE);
+
+  g_value_set_boxed (&value, message);
+  message1_str = gst_sdp_message_as_text (message);
+  GST_DEBUG ("message1:\n%s", message1_str);
+  gst_sdp_message_free (message);
+
+  message = g_value_get_boxed (&value);
+  message2_str = gst_sdp_message_as_text (message);
+  GST_DEBUG ("message2:\n%s", message2_str);
+
+  fail_if (g_strcmp0 (message1_str, message2_str) != 0);
+
+  g_value_copy (&value, &value_copy);
+  g_value_reset (&value);
+
+  copy = g_value_dup_boxed (&value_copy);
+  g_value_reset (&value_copy);
+
+  copy_str = gst_sdp_message_as_text (copy);
+  GST_DEBUG ("copy:\n%s", copy_str);
+
+  fail_if (g_strcmp0 (message1_str, copy_str));
+
+  g_free (message1_str);
+  g_free (message2_str);
+  g_free (copy_str);
+}
+
+GST_END_TEST
+GST_START_TEST (copy)
+{
+  GstSDPMessage *message, *copy;
+  glong length = -1;
+  gchar *message_str, *copy_str;
+  const gchar *repeat1[] = { "789", "012", NULL };
+  const gchar *repeat2[] = { "987", "210", NULL };
+
+  gst_sdp_message_new (&message);
+  gst_sdp_message_parse_buffer ((guint8 *) sdp, length, message);
+
+  gst_sdp_message_add_time (message, "123", "456", repeat1);
+  gst_sdp_message_add_time (message, "321", "654", repeat2);
+
+  gst_sdp_message_copy (message, &copy);
+
+  message_str = gst_sdp_message_as_text (message);
+  GST_DEBUG ("Original:\n%s", message_str);
+  gst_sdp_message_free (message);
+  copy_str = gst_sdp_message_as_text (copy);
+  gst_sdp_message_free (copy);
+  GST_DEBUG ("Copy:\n%s", copy_str);
+
+  fail_if (g_strcmp0 (copy_str, message_str) != 0);
+  g_free (copy_str);
+  g_free (message_str);
+}
+
+GST_END_TEST
+/*
+ * End of test cases
+ */
+static Suite *
+sdp_suite (void)
+{
+  Suite *s = suite_create ("sdp");
+  TCase *tc_chain = tcase_create ("sdp");
+
+  suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, copy);
+  tcase_add_test (tc_chain, boxed);
+
+  return s;
+}
+
+GST_CHECK_MAIN (sdp);

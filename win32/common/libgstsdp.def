@@ -8,6 +8,7 @@ EXPORTS
 	gst_sdp_media_attributes_len
 	gst_sdp_media_bandwidths_len
 	gst_sdp_media_connections_len
+	gst_sdp_media_copy
 	gst_sdp_media_formats_len
 	gst_sdp_media_free
 	gst_sdp_media_get_attribute
@@ -41,6 +42,7 @@ EXPORTS
 	gst_sdp_message_as_uri
 	gst_sdp_message_attributes_len
 	gst_sdp_message_bandwidths_len
+	gst_sdp_message_copy
 	gst_sdp_message_dump
 	gst_sdp_message_emails_len
 	gst_sdp_message_free
@@ -57,6 +59,7 @@ EXPORTS
 	gst_sdp_message_get_phone
 	gst_sdp_message_get_session_name
 	gst_sdp_message_get_time
+	gst_sdp_message_get_type
 	gst_sdp_message_get_uri
 	gst_sdp_message_get_version
 	gst_sdp_message_get_zone

@@ -109,6 +109,7 @@ check_PROGRAMS = \
 	libs/profile \
 	libs/rtp \
 	libs/rtsp \
+	libs/sdp \
 	libs/tag \
 	libs/video \
 	libs/xmpwriter \
@@ -233,6 +234,13 @@ libs_navigation_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
         $(GST_BASE_LIBS) \
         $(LDADD)
+
+libs_sdp_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+libs_sdp_LDADD = \
+	$(top_builddir)/gst-libs/gst/sdp/libgstsdp-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) $(LDADD)
 
 libs_rtp_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
