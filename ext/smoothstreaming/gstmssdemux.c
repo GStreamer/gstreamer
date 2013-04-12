@@ -994,7 +994,7 @@ gst_mss_demux_stream_store_object (GstMssDemuxStream * stream,
 
 static GstFlowReturn
 gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
-    GstBuffer ** buffer)
+    gboolean * buffer_downloaded)
 {
   GstMssDemux *mssdemux = stream->parent;
   gchar *path;
@@ -1056,8 +1056,8 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
 
   g_object_unref (fragment);
 
-  if (buffer)
-    *buffer = _buffer;
+  if (buffer_downloaded)
+    *buffer_downloaded = _buffer != NULL;
 
   after_download = g_get_real_time ();
   if (_buffer) {
@@ -1100,7 +1100,7 @@ static void
 gst_mss_demux_download_loop (GstMssDemuxStream * stream)
 {
   GstMssDemux *mssdemux = stream->parent;
-  GstBuffer *buffer = NULL;
+  gboolean buffer_downloaded = FALSE;
   GstFlowReturn ret;
 
   GST_LOG_OBJECT (mssdemux, "download loop start %p", stream);
@@ -1112,7 +1112,7 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
   GST_DEBUG_OBJECT (mssdemux, "Finished streams reconfiguration");
   GST_OBJECT_UNLOCK (mssdemux);
 
-  ret = gst_mss_demux_stream_download_fragment (stream, &buffer);
+  ret = gst_mss_demux_stream_download_fragment (stream, &buffer_downloaded);
 
   if (stream->cancelled)
     goto cancelled;
@@ -1130,9 +1130,10 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
 
   stream->download_error_count = 0;
 
-  if (buffer) {
+  if (buffer_downloaded) {
     gst_mss_stream_advance_fragment (stream->manifest_stream);
   }
+
   GST_LOG_OBJECT (mssdemux, "download loop end %p", stream);
   return;
 
