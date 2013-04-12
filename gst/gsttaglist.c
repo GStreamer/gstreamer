@@ -853,11 +853,17 @@ GstTagList *
 gst_tag_list_new_from_string (const gchar * str)
 {
   GstTagList *tag_list;
+  GstStructure *s;
 
   g_return_val_if_fail (str != NULL, NULL);
   g_return_val_if_fail (g_str_has_prefix (str, "taglist"), NULL);
 
-  tag_list = gst_tag_list_new_internal (gst_structure_from_string (str, NULL));
+  s = gst_structure_from_string (str, NULL);
+  if (s == NULL)
+    return NULL;
+
+  tag_list = gst_tag_list_new_internal (s);
+
   return tag_list;
 }
 
