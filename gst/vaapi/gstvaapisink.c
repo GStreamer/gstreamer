@@ -225,7 +225,8 @@ gst_vaapisink_video_overlay_expose(GstVideoOverlay *overlay)
     GstSample * const sample = gst_base_sink_get_last_sample(base_sink);
     if (!sample)
         return;
-    buffer = gst_sample_get_buffer(sample);
+    buffer = gst_buffer_ref(gst_sample_get_buffer(sample));
+    gst_sample_unref(sample);
 #else
     buffer = gst_base_sink_get_last_buffer(base_sink);
 #endif
