@@ -608,7 +608,6 @@ gst_mss_demux_src_event (GstPad * pad, GstEvent * event)
 
         stream->eos = FALSE;
         gst_data_queue_flush (stream->dataqueue);
-        gst_event_ref (newsegment);
         gst_event_replace (&stream->pending_newsegment, newsegment);
       }
       gst_event_unref (newsegment);
