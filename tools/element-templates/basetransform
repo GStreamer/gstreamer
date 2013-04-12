@@ -79,10 +79,32 @@ gst_replace_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
     GstCaps * caps, GstCaps * filter)
 {
   GstReplace *replace = GST_REPLACE (trans);
+  GstCaps *othercaps;
 
   GST_DEBUG_OBJECT (replace, "transform_caps");
 
-  return NULL;
+  othercaps = gst_caps_copy (caps);
+
+  /* Copy other caps and modify as appropriate */
+  /* This works for the simplest cases, where the transform modifies one
+   * or more fields in the caps structure.  It does not work correctly
+   * if passthrough caps are preferred. */
+  if (direction == GST_PAD_SRC) {
+    /* transform caps going upstream */
+  } else {
+    /* transform caps going downstream */
+  }
+
+  if (filter) {
+    GstCaps *intersect;
+
+    intersect = gst_caps_intersect (othercaps, filter);
+    gst_caps_unref (othercaps);
+
+    return intersect;
+  } else {
+    return othercaps;
+  }
 }
 
 static GstCaps *
