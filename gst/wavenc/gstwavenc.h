@@ -46,6 +46,7 @@ struct _GstWavEnc {
   GstPad    *sinkpad;
   GstPad    *srcpad;
 
+  GstTagList *tags;
   GstToc    *toc;
   GList     *cues;
   GList     *labls;
@@ -56,7 +57,10 @@ struct _GstWavEnc {
   guint      width;
   guint      rate;
   guint      channels;
-  guint32    length;
+  
+  /* data sizes */
+  guint32    audio_length;
+  guint32    meta_length;
 
   gboolean   sent_header;
   gboolean   finished_properly;
