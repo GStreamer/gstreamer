@@ -903,7 +903,9 @@ print_signal_info (GstElement * element)
           strlen (g_type_name (query->return_type)) + 24;
 
 
-      if (G_TYPE_FUNDAMENTAL (query->return_type) == G_TYPE_POINTER
+      if (query->return_type == G_TYPE_POINTER) {
+        pmark = "";
+      } else if (G_TYPE_FUNDAMENTAL (query->return_type) == G_TYPE_POINTER
           || G_TYPE_IS_BOXED (query->return_type)
           || G_TYPE_IS_OBJECT (query->return_type)) {
         pmark = "* ";
