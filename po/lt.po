@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -1116,6 +1116,10 @@ msgstr "ĮSPĖJIMAS: iš elemento %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Paruošta, laukiama kol bus sukurtas buferis...\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Paruošta, laukiama kol bus sukurtas buferis...\n"
+
 msgid "buffering..."
 msgstr "kuriamas buferis..."
 
@@ -1134,6 +1138,10 @@ msgstr "Nustatoma būsena į %s, kaip prašė %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Pertraukimas: stabdomas konvejeris...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

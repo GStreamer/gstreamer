@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2011-04-28 09:34+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -1118,6 +1118,10 @@ msgstr "AVERTISSEMENT : de l'élément %s : %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Préparation terminée, attente de la fin de remplissage du tampon...\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Préparation terminée, attente de la fin de remplissage du tampon...\n"
+
 msgid "buffering..."
 msgstr "mise en mémoire tampon..."
 
@@ -1136,6 +1140,10 @@ msgstr "Définition de l'état à %s comme demandé par %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interruption : arrêt du pipeline...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

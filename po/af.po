@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -1112,6 +1112,9 @@ msgstr "FOUT: vanaf element %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr ""
+
 msgid "buffering..."
 msgstr ""
 
@@ -1133,6 +1136,10 @@ msgstr ""
 #, fuzzy
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

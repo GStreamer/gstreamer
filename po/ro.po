@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2010-08-16 01:10+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -1135,6 +1135,10 @@ msgstr "AVERTISMENT: de la elementul %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Preîncărcare, se așteaptă terminarea umplerii memoriei tampon...\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Preîncărcare, se așteaptă terminarea umplerii memoriei tampon...\n"
+
 msgid "buffering..."
 msgstr ""
 
@@ -1153,6 +1157,10 @@ msgstr "Se definește starea la %s după cum a fost cerut de %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Întrerupere: Se oprește linia de asamblare ...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

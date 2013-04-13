@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2011-01-09 19:46+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -1125,6 +1125,10 @@ msgstr "VARNING: från elementet %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Förinläst, väntar på att buffringen ska bli färdig...\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Förinläst, väntar på att buffringen ska bli färdig...\n"
+
 msgid "buffering..."
 msgstr "buffrar..."
 
@@ -1143,6 +1147,10 @@ msgstr "Ställer in tillståndet till %s enligt begäran från %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Avbrott: Stoppar rörledningen ...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

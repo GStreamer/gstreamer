@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2011-12-01 08:17+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -1116,6 +1116,10 @@ msgstr "VAROVÁNÍ: od prvku %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Předvinuto, čeká se na dokončení ukládání do vyrovnávací paměti…\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Předvinuto, čeká se na dokončení ukládání do vyrovnávací paměti…\n"
+
 msgid "buffering..."
 msgstr "ukládá se do vyrovnávací paměti…"
 
@@ -1135,6 +1139,10 @@ msgstr "Nastavuje se stav na %s na základě požadavku od %s…\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Přerušení: Zastavuje se roura…\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

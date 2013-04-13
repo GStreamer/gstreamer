@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2011-09-05 12:49+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -1111,6 +1111,10 @@ msgstr "AVISO: do elemento %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Preparado, agardando a encher o búfer para rematar…\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Preparado, agardando a encher o búfer para rematar…\n"
+
 msgid "buffering..."
 msgstr "almacenando no búfer…"
 
@@ -1131,6 +1135,10 @@ msgstr "Estabelecendo o estado a %s segundo foi solicitado por %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interromper: parando a canalización …\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

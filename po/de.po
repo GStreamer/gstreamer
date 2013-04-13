@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2011-04-27 23:44+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -1135,6 +1135,10 @@ msgstr "WARNUNG: Von Element %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Vorgelaufen, auf Ende des Zwischenspeicherns warten …\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Vorgelaufen, auf Ende des Zwischenspeicherns warten …\n"
+
 msgid "buffering..."
 msgstr "Zwischenspeichern läuft …"
 
@@ -1156,6 +1160,10 @@ msgstr "Status wird auf %s gesetzt wie von %s gewünscht...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrupt: Leitung wird gestoppt ...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

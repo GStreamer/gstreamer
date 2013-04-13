@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -1129,6 +1129,10 @@ msgstr "WARNING: από το στοιχείο %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Προτυλιγμένο, αναμονή για ολοκλήρωση η αποθήκευση ροής…\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Προτυλιγμένο, αναμονή για ολοκλήρωση η αποθήκευση ροής…\n"
+
 msgid "buffering..."
 msgstr "προσωρινή αποθήκευση…"
 
@@ -1147,6 +1151,10 @@ msgstr "Ορισμός κατάστασης σε %s όπως ζητήθηκε α
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Διακοπή: Τερματισμός διασωλήνωσης…\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

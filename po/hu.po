@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2010-11-01 13:39+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -1106,6 +1106,10 @@ msgstr "FIGYELMEZTETÉS: a következő elemtől: %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Előzetesen betöltve, várakozás a pufferelés befejeződésére…\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Előzetesen betöltve, várakozás a pufferelés befejeződésére…\n"
+
 msgid "buffering..."
 msgstr "pufferelés…"
 
@@ -1124,6 +1128,10 @@ msgstr "Állapot beállítása erre: %s, %s kérésének megfelelően…\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Megszakítás: Adatcsatorna leállítása…\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

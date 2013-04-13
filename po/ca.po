@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -1119,6 +1119,11 @@ msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 "S'ha preparat, s'està esperant a que s'òmpliga la memòria intermèdial…\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr ""
+"S'ha preparat, s'està esperant a que s'òmpliga la memòria intermèdial…\n"
+
 msgid "buffering..."
 msgstr "s'està omplint la memòria intermèdia…"
 
@@ -1140,6 +1145,10 @@ msgstr "S'està establint l'estat a %s a petició de %s…\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrupció: S'està aturant el conducte…\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2011-01-08 01:36-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -1128,6 +1128,10 @@ msgstr "AVISO: do elemento %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Preparado, esperando o preenchimento do buffer para finalizar...\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Preparado, esperando o preenchimento do buffer para finalizar...\n"
+
 msgid "buffering..."
 msgstr "preenchendo buffer..."
 
@@ -1149,6 +1153,10 @@ msgstr "Definindo estado de %s como requerido por %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrupção: Parando a fila de processamento...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

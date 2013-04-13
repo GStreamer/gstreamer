@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -1085,6 +1085,10 @@ msgstr "警告：来自组件 %s：%s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Prerolled，等待缓冲完成...\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Prerolled，等待缓冲完成...\n"
+
 msgid "buffering..."
 msgstr "正在缓冲..."
 
@@ -1103,6 +1107,10 @@ msgstr "%2$s 发起请求时状态设置为 %1$s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "中断: 中止管道 ...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

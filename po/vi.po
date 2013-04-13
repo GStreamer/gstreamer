@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2010-10-03 19:09+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -1114,6 +1114,10 @@ msgstr "CẢNH BÁO : từ yếu tố %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Cuộn sẵn, đợi chuyển hoán đệm xong...\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Cuộn sẵn, đợi chuyển hoán đệm xong...\n"
+
 msgid "buffering..."
 msgstr "đang chuyển hoán đệm..."
 
@@ -1132,6 +1136,10 @@ msgstr "Đang đặt tình trạng thành %s như yêu cầu bởi %s....\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Ngắt: đang ngừng chạy đường ống ...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

@@ -106,7 +106,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2010-10-25 10:03+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -1282,6 +1282,10 @@ msgstr "ATTENZIONE: dall'elemento %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Preroll eseguito, in attesa del riempimento buffer per completare...\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Preroll eseguito, in attesa del riempimento buffer per completare...\n"
+
 msgid "buffering..."
 msgstr "riempimento buffer..."
 
@@ -1301,6 +1305,10 @@ msgstr "Impostazione dello stato a %s come richiesto da %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrotto: arresto della pipeline ...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

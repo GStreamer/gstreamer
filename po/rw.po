@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -1283,6 +1283,9 @@ msgstr "Bivuye Ikigize:"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr ""
+
 msgid "buffering..."
 msgstr ""
 
@@ -1300,6 +1303,10 @@ msgid "Setting state to %s as requested by %s...\n"
 msgstr ""
 
 msgid "Interrupt: Stopping pipeline ...\n"
+msgstr ""
+
+#, c-format
+msgid "Progress: (%s) %s\n"
 msgstr ""
 
 #, fuzzy, c-format

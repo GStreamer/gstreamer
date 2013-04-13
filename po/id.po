@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2012-01-28 11:44+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -1107,6 +1107,10 @@ msgstr "PERINGATAN: dari elemen %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Pragulung, menunggu hingga penyangga selesai...\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Pragulung, menunggu hingga penyangga selesai...\n"
+
 msgid "buffering..."
 msgstr "menyangga..."
 
@@ -1125,6 +1129,10 @@ msgstr "Mengatur tingkat ke %s seperti diminta oleh %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interupsi: Menghentikan baris pipa ...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"

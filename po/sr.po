@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-01-15 13:23+0000\n"
+"POT-Creation-Date: 2013-04-13 10:43+0100\n"
 "PO-Revision-Date: 2011-12-05 10:40+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -1118,6 +1118,10 @@ msgstr "УПОЗРЕЊЕ: из елемента %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Предувијено, чекам да заврши смештање у међумеморију…\n"
 
+#, fuzzy
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Предувијено, чекам да заврши смештање у међумеморију…\n"
+
 msgid "buffering..."
 msgstr "смештам у међумеморију..."
 
@@ -1137,6 +1141,10 @@ msgstr "Постављам стање на %s као што је затражи�
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Прекид: Заустављам спојку низа ...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"
