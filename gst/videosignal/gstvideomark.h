@@ -17,39 +17,28 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_VIDEO_MARK_H__
-#define __GST_VIDEO_MARK_H__
+#ifndef _GST_VIDEO_MARK_H_
+#define _GST_VIDEO_MARK_H_
 
-#include <gst/video/gstvideofilter.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VIDEO_MARK \
-  (gst_video_mark_get_type())
-#define GST_VIDEO_MARK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_MARK,GstVideoMark))
-#define GST_VIDEO_MARK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_MARK,GstVideoMarkClass))
-#define GST_IS_VIDEO_MARK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_MARK))
-#define GST_IS_VIDEO_MARK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_MARK))
+#define GST_TYPE_VIDEO_MARK   (gst_video_mark_get_type())
+#define GST_VIDEO_MARK(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_MARK,GstVideoMark))
+#define GST_VIDEO_MARK_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_MARK,GstVideoMarkClass))
+#define GST_IS_VIDEO_MARK(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_MARK))
+#define GST_IS_VIDEO_MARK_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_MARK))
 
 typedef struct _GstVideoMark GstVideoMark;
 typedef struct _GstVideoMarkClass GstVideoMarkClass;
 
-/**
- * GstVideoMark:
- *
- * Opaque datastructure.
- */
-struct _GstVideoMark {
-  GstVideoFilter videofilter;
-  
-  gint width, height;
-  GstVideoFormat format;
+struct _GstVideoMark
+{
+  GstVideoFilter base_videomark;
 
+  /* properties */
   gint pattern_width;
   gint pattern_height;
   gint pattern_count;
@@ -60,12 +49,13 @@ struct _GstVideoMark {
   gint bottom_offset;
 };
 
-struct _GstVideoMarkClass {
-  GstVideoFilterClass parent_class;
+struct _GstVideoMarkClass
+{
+  GstVideoFilterClass base_videomark_class;
 };
 
 GType gst_video_mark_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_VIDEO_MARK_H__ */
+#endif
