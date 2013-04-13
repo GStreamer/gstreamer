@@ -382,7 +382,7 @@ gst_plugin_feature_check_version (GstPluginFeature * feature,
  * Returns: negative value if the rank of p1 > the rank of p2 or the ranks are
  * equal but the name of p1 comes before the name of p2; zero if the rank
  * and names are equal; positive value if the rank of p1 < the rank of p2 or the
- * ranks are equal but the name of p2 comes after the name of p1
+ * ranks are equal but the name of p2 comes before the name of p1
  */
 gint
 gst_plugin_feature_rank_compare_func (gconstpointer p1, gconstpointer p2)
@@ -397,7 +397,7 @@ gst_plugin_feature_rank_compare_func (gconstpointer p1, gconstpointer p2)
   if (diff != 0)
     return diff;
 
-  diff = strcmp (GST_OBJECT_NAME (f2), GST_OBJECT_NAME (f1));
+  diff = strcmp (GST_OBJECT_NAME (f1), GST_OBJECT_NAME (f2));
 
   return diff;
 }
