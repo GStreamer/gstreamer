@@ -327,12 +327,22 @@ gst_poll_suite (void)
   tcase_set_timeout (tc_chain, 60);
 
   suite_add_tcase (s, tc_chain);
+
+#ifndef G_OS_WIN32
   tcase_add_test (tc_chain, test_poll_basic);
   tcase_add_test (tc_chain, test_poll_wait);
   tcase_add_test (tc_chain, test_poll_wait_stop);
   tcase_add_test (tc_chain, test_poll_wait_restart);
   tcase_add_test (tc_chain, test_poll_wait_flush);
   tcase_add_test (tc_chain, test_poll_controllable);
+#else
+  tcase_skip_broken_test (tc_chain, test_poll_basic);
+  tcase_skip_broken_test (tc_chain, test_poll_wait);
+  tcase_skip_broken_test (tc_chain, test_poll_wait_stop);
+  tcase_skip_broken_test (tc_chain, test_poll_wait_restart);
+  tcase_skip_broken_test (tc_chain, test_poll_wait_flush);
+  tcase_skip_broken_test (tc_chain, test_poll_controllable);
+#endif
 
   return s;
 }
