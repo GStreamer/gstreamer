@@ -485,6 +485,99 @@ GST_START_TEST (test_snapping)
 
 GST_END_TEST;
 
+static void
+asset_added_cb (GESProject * project, GESAsset * asset, void *mainloop)
+{
+  GstDiscovererInfo *info;
+
+  info = ges_uri_clip_asset_get_info (GES_URI_CLIP_ASSET (asset));
+  fail_unless (GST_IS_DISCOVERER_INFO (info));
+
+  g_main_loop_quit ((GMainLoop *) mainloop);
+}
+
+static void
+deep_check (GESTimelineElement * element, GstClockTime start,
+    GstClockTime inpoint, GstClockTime duration)
+{
+  GList *track_elements, *tmp;
+  GstClockTime rstart, rinpoint, rduration;
+
+  rstart = ges_timeline_element_get_start (GES_TIMELINE_ELEMENT (element));
+  rinpoint = ges_timeline_element_get_inpoint (GES_TIMELINE_ELEMENT (element));
+  rduration =
+      ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (element));
+
+  assert_equals_uint64 (rstart, start);
+  assert_equals_uint64 (rinpoint, inpoint);
+  assert_equals_uint64 (rduration, duration);
+
+  track_elements = GES_CONTAINER_CHILDREN (element);
+  for (tmp = track_elements; tmp; tmp = tmp->next) {
+    rstart = ges_timeline_element_get_start (GES_TIMELINE_ELEMENT (tmp->data));
+    rinpoint =
+        ges_timeline_element_get_inpoint (GES_TIMELINE_ELEMENT (tmp->data));
+    rduration =
+        ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (tmp->data));
+    assert_equals_uint64 (rstart, start);
+    assert_equals_uint64 (rinpoint, inpoint);
+    assert_equals_uint64 (rduration, duration);
+  }
+}
+
+GST_START_TEST (test_simple_triming)
+{
+  GList *assets;
+  GMainLoop *mainloop;
+  GESClipAsset *asset;
+  GESProject *project;
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GESTimelineElement *element;
+
+  gchar *uri = ges_test_file_uri ("audio_video.ogg");
+
+  ges_init ();
+
+  project = ges_project_new (NULL);
+
+  mainloop = g_main_loop_new (NULL, FALSE);
+
+  g_signal_connect (project, "asset-added", (GCallback) asset_added_cb,
+      mainloop);
+  ges_project_create_asset (project, uri, GES_TYPE_URI_CLIP);
+  g_free (uri);
+
+  g_main_loop_run (mainloop);
+
+  /* the asset is now loaded */
+  timeline = ges_timeline_new_audio_video ();
+  assets = ges_project_list_assets (project, GES_TYPE_CLIP);
+
+  assert_equals_int (g_list_length (assets), 1);
+  asset = assets->data;
+
+  layer = ges_timeline_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  ges_timeline_layer_add_asset (layer, GES_ASSET (asset), 0, 0, 10, 1.0,
+      ges_clip_asset_get_supported_formats (asset));
+
+  element = ges_timeline_layer_get_clips (layer)->data;
+
+  deep_check (element, 0, 0, 10);
+  ges_timeline_enable_update (timeline, FALSE);
+  ges_clip_edit (GES_CLIP (element), NULL, -1, GES_EDIT_MODE_TRIM,
+      GES_EDGE_START, 5);
+  deep_check (element, 5, 5, 5);
+
+  g_main_loop_unref (mainloop);
+  gst_object_unref (timeline);
+  gst_object_unref (project);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_timeline_edition_mode)
 {
   guint i;
@@ -946,6 +1039,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_basic_timeline_edition);
   tcase_add_test (tc_chain, test_snapping);
   tcase_add_test (tc_chain, test_timeline_edition_mode);
+  tcase_add_test (tc_chain, test_simple_triming);
 
   return s;
 }
