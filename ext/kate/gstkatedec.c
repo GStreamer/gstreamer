@@ -203,6 +203,7 @@ gst_kate_dec_init (GstKateDec * dec)
   gst_kate_util_decode_base_init (&dec->decoder, TRUE);
 
   dec->src_caps = NULL;
+  dec->output_format = GST_KATE_FORMAT_UNDEFINED;
   dec->remove_markup = FALSE;
 }
 
@@ -245,6 +246,7 @@ gst_kate_dec_get_property (GObject * object, guint prop_id,
 static GstFlowReturn
 gst_kate_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
+  GstKateFormat format = GST_KATE_FORMAT_UNDEFINED;
   GstKateDec *kd = GST_KATE_DEC (parent);
   const kate_event *ev = NULL;
   GstFlowReturn rflow = GST_FLOW_OK;
@@ -294,15 +296,18 @@ gst_kate_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         buffer = gst_buffer_new_and_alloc (len + 1);
         if (G_LIKELY (buffer)) {
           GstCaps *caps;
-          if (plain) {
+          if (plain)
+            format = GST_KATE_FORMAT_TEXT_UTF8;
+          else
+            format = GST_KATE_FORMAT_TEXT_PANGO_MARKUP;
+          if (format != kd->output_format) {
             caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING,
-                "utf8", NULL);
-          } else {
-            caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING,
-                "pango-markup", NULL);
+                (format == GST_KATE_FORMAT_TEXT_UTF8) ? "utf8" : "pango-markup",
+                NULL);
+            gst_pad_push_event (kd->srcpad, gst_event_new_caps (caps));
+            gst_caps_unref (caps);
+            kd->output_format = format;
           }
-          gst_pad_push_event (kd->srcpad, gst_event_new_caps (caps));
-          gst_caps_unref (caps);
           /* allocate and copy the NULs, but don't include them in passed size */
           gst_buffer_fill (buffer, 0, escaped, len + 1);
           gst_buffer_resize (buffer, 0, len);
@@ -332,13 +337,23 @@ gst_kate_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       rflow = GST_FLOW_ERROR;
     }
 
-    // if there's a background paletted bitmap, construct a DVD SPU for it
+    /* if there's a background paletted bitmap, construct a DVD SPU for it */
     if (ev->bitmap && ev->palette) {
       GstBuffer *buffer = gst_kate_spu_encode_spu (kd, ev);
       if (buffer) {
+        GstCaps *caps;
+
         GST_BUFFER_TIMESTAMP (buffer) = ev->start_time * GST_SECOND;
         GST_BUFFER_DURATION (buffer) =
             (ev->end_time - ev->start_time) * GST_SECOND;
+
+        if (kd->output_format != GST_KATE_FORMAT_SPU) {
+          caps = gst_caps_new_empty_simple (GST_KATE_SPU_MIME_TYPE);
+          gst_pad_push_event (kd->srcpad, gst_event_new_caps (caps));
+          gst_caps_unref (caps);
+          kd->output_format = GST_KATE_FORMAT_SPU;
+        }
+
         rflow = gst_pad_push (kd->srcpad, buffer);
         if (rflow == GST_FLOW_NOT_LINKED) {
           GST_DEBUG_OBJECT (kd, "source pad not linked, ignored");

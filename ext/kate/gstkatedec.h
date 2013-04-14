@@ -74,6 +74,8 @@ struct _GstKateDec
 
   GstCaps *src_caps;
 
+  GstKateFormat output_format;
+
   gboolean remove_markup;
 };
 
