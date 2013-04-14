@@ -49,6 +49,8 @@
 #include <gst/gst.h>
 #include <kate/kate.h>
 
+#include "gstkateutil.h"
+
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
 #define GST_TYPE_KATE_ENC \
@@ -88,6 +90,8 @@ struct _GstKateEnc
   kate_region *delayed_region;
   gchar *language;
   gchar *category;
+
+  GstKateFormat format;
 
   int granule_rate_numerator;
   int granule_rate_denominator;

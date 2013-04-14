@@ -25,7 +25,16 @@
 #include <kate/kate.h>
 #include <gst/gst.h>
 
-G_BEGIN_DECLS enum
+G_BEGIN_DECLS
+
+typedef enum {
+  GST_KATE_FORMAT_UNDEFINED,
+  GST_KATE_FORMAT_SPU,
+  GST_KATE_FORMAT_TEXT_UTF8,
+  GST_KATE_FORMAT_TEXT_PANGO_MARKUP
+} GstKateFormat;
+
+enum
 {
   ARG_DEC_BASE_0,
   ARG_DEC_BASE_LANGUAGE,

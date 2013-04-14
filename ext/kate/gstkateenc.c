@@ -253,6 +253,7 @@ gst_kate_enc_init (GstKateEnc * ke)
   ke->latest_end_time = 0;
   ke->language = NULL;
   ke->category = NULL;
+  ke->format = GST_KATE_FORMAT_UNDEFINED;
   ke->granule_rate_numerator = 1000;
   ke->granule_rate_denominator = 1;
   ke->granule_shift = 32;
@@ -521,13 +522,23 @@ gst_kate_enc_setcaps (GstPad * pad, GstCaps * caps)
   if (ke->category != NULL) {
     GstStructure *s = gst_caps_get_structure (caps, 0);
 
-    if (gst_structure_has_name (s, "text/plain")) {
+    if (gst_structure_has_name (s, "text/x-raw")) {
+      const gchar *format;
+
+      format = gst_structure_get_string (s, "format");
+      if (strcmp (format, "utf8") == 0) {
+        ke->format = GST_KATE_FORMAT_TEXT_UTF8;
+      } else if (strcmp (format, "pango-markup") == 0) {
+        ke->format = GST_KATE_FORMAT_TEXT_PANGO_MARKUP;
+      }
+
       if (strcmp (ke->category, "K-SPU") == 0 ||
           strcmp (ke->category, "spu-subtitles") == 0) {
         GST_ELEMENT_WARNING (ke, LIBRARY, SETTINGS, (NULL),
             ("Category set to '%s', but input is text-based.", ke->category));
       }
     } else if (gst_structure_has_name (s, "subpicture/x-dvd")) {
+      ke->format = GST_KATE_FORMAT_SPU;
       if (strcmp (ke->category, "SUB") == 0 ||
           strcmp (ke->category, "subtitles") == 0) {
         GST_ELEMENT_WARNING (ke, LIBRARY, SETTINGS, (NULL),
@@ -904,8 +915,7 @@ gst_kate_enc_chain_spu (GstKateEnc * ke, GstBuffer * buf)
 }
 
 static GstFlowReturn
-gst_kate_enc_chain_text (GstKateEnc * ke, GstBuffer * buf,
-    const char *mime_type)
+gst_kate_enc_chain_text (GstKateEnc * ke, GstBuffer * buf)
 {
   kate_packet kp = { 0 };
   int ret = 0;
@@ -913,10 +923,12 @@ gst_kate_enc_chain_text (GstKateEnc * ke, GstBuffer * buf,
   GstClockTime start = GST_BUFFER_TIMESTAMP (buf);
   GstClockTime stop = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
 
-  if (!strcmp (mime_type, "text/x-pango-markup")) {
+  if (ke->format == GST_KATE_FORMAT_TEXT_PANGO_MARKUP) {
     ret = kate_encode_set_markup_type (&ke->k, kate_markup_simple);
-  } else {
+  } else if (ke->format == GST_KATE_FORMAT_TEXT_UTF8) {
     ret = kate_encode_set_markup_type (&ke->k, kate_markup_none);
+  } else {
+    return GST_FLOW_ERROR;
   }
 
   if (G_UNLIKELY (ret < 0)) {
@@ -962,50 +974,29 @@ static GstFlowReturn
 gst_kate_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstKateEnc *ke = GST_KATE_ENC (parent);
-  GstFlowReturn rflow = GST_FLOW_OK;
-  GstCaps *caps;
-  const gchar *mime_type = NULL;
+  GstFlowReturn rflow;
 
   GST_DEBUG_OBJECT (ke, "got packet, %zu bytes", gst_buffer_get_size (buf));
 
-  /* get the type of the data we're being sent */
-  caps = gst_pad_get_current_caps (pad);
-  if (G_UNLIKELY (caps == NULL)) {
-    GST_WARNING_OBJECT (ke, "No input caps set");
-    rflow = GST_FLOW_NOT_NEGOTIATED;
-  } else {
-    const GstStructure *structure = gst_caps_get_structure (caps, 0);
-    if (structure)
-      mime_type = gst_structure_get_name (structure);
+  /* first push headers if we haven't done that yet */
+  rflow = gst_kate_enc_flush_headers (ke);
 
-    if (mime_type) {
-      GST_LOG_OBJECT (ke, "Packet has MIME type %s", mime_type);
+  if (G_LIKELY (rflow == GST_FLOW_OK)) {
+    /* flush any packet we had waiting */
+    rflow = gst_kate_enc_flush_waiting (ke, GST_BUFFER_TIMESTAMP (buf));
 
-      /* first push headers if we haven't done that yet */
-      rflow = gst_kate_enc_flush_headers (ke);
-
-      if (G_LIKELY (rflow == GST_FLOW_OK)) {
-        /* flush any packet we had waiting */
-        rflow = gst_kate_enc_flush_waiting (ke, GST_BUFFER_TIMESTAMP (buf));
-
-        if (G_LIKELY (rflow == GST_FLOW_OK)) {
-          if (!strcmp (mime_type, GST_KATE_SPU_MIME_TYPE)) {
-            /* encode a kate_bitmap */
-            rflow = gst_kate_enc_chain_spu (ke, buf);
-          } else {
-            /* encode text */
-            rflow = gst_kate_enc_chain_text (ke, buf, mime_type);
-          }
-        }
+    if (G_LIKELY (rflow == GST_FLOW_OK)) {
+      if (ke->format == GST_KATE_FORMAT_SPU) {
+        /* encode a kate_bitmap */
+        rflow = gst_kate_enc_chain_spu (ke, buf);
+      } else {
+        /* encode text */
+        rflow = gst_kate_enc_chain_text (ke, buf);
       }
-    } else {
-      GST_WARNING_OBJECT (ke, "Packet has no MIME type, ignored");
     }
-    gst_caps_unref (caps);
   }
 
   gst_buffer_unref (buf);
-  GST_LOG_OBJECT (ke, "Leaving chain function");
 
   return rflow;
 }
@@ -1072,6 +1063,7 @@ gst_kate_enc_change_state (GstElement * element, GstStateChange transition)
       ke->initialized = TRUE;
       ke->last_timestamp = 0;
       ke->latest_end_time = 0;
+      ke->format = GST_KATE_FORMAT_UNDEFINED;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
