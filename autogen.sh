@@ -1,5 +1,12 @@
 #!/bin/sh
+#
+# gst-plugins-ugly autogen.sh
+#
 # Run this to generate all the initial makefiles, etc.
+#
+# This file has been generated from common/autogen.sh.in via common/update-autogen
+
+
 test -n "$srcdir" || srcdir=`dirname "$0"`
 test -n "$srcdir" || srcdir=.
 
@@ -8,9 +15,8 @@ cd "$srcdir"
 
 DIE=0
 package=gst-plugins-ugly
-srcfile=ext/mad/gstmad.c
+srcfile=gst-plugins-ugly.doap
 
-echo "$(pwd)"
 # Make sure we have common
 if test ! -f common/gst-autogen.sh;
 then
@@ -37,16 +43,22 @@ fi
 
 # GNU gettext automake support doesn't get along with git.
 # https://bugzilla.gnome.org/show_bug.cgi?id=661128
-touch -t 200001010000 po/$package-0.10.pot
+if test -d po ; then
+  touch -t 200001010000 po/gst-plugins-ugly-1.0.pot
+fi
 
 CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-gtk-doc'
+
+if test "x$package" = "xgstreamer"; then
+  CONFIGURE_DEF_OPT="$CONFIGURE_DEF_OPT --enable-docbook --enable-failing-tests --enable-poisoning"
+fi
 
 autogen_options $@
 
 printf "+ check for build tools"
-if test ! -z "$NOCHECK"; then echo " skipped"; else  echo; fi
-version_check "autoconf" "$AUTOCONF autoconf autoconf270 autoconf269 autoconf268 autoconf267 autoconf266 autoconf265 autoconf264 autoconf263 autoconf262" \
-              "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 62 || DIE=1
+if test ! -z "$NOCHECK"; then echo ": skipped version checks"; else  echo; fi
+version_check "autoconf" "$AUTOCONF autoconf autoconf270 autoconf269 autoconf268 " \
+              "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 68 || DIE=1
 version_check "automake" "$AUTOMAKE automake automake-1.11" \
               "ftp://ftp.gnu.org/pub/gnu/automake/" 1 11 || DIE=1
 version_check "autopoint" "autopoint" \
@@ -64,7 +76,7 @@ autoheader_check || DIE=1
 die_check $DIE
 
 # if no arguments specified then this will be printed
-if test -z "$*"; then
+if test -z "$*" && test -z "$NOCONFIGURE"; then
   echo "+ checking for autogen.sh options"
   echo "  This autogen script will automatically run ./configure as:"
   echo "  ./configure $CONFIGURE_DEF_OPT"
@@ -75,15 +87,16 @@ fi
 toplevel_check $srcfile
 
 # autopoint
-#    older autopoint (< 0.12) has a tendency to complain about mkinstalldirs
-if test -x mkinstalldirs; then rm mkinstalldirs; fi
 #    first remove patch if necessary, then run autopoint, then reapply
 if test -f po/Makefile.in.in;
 then
-  patch -p0 -R < common/gettext.patch
+  patch -p0 -R --forward < common/gettext.patch
 fi
-tool_run "$autopoint --force"
+tool_run "$autopoint" "--force" "patch -p0 < common/gettext.patch"
 patch -p0 < common/gettext.patch
+
+# aclocal
+if test -f acinclude.m4; then rm acinclude.m4; fi
 
 tool_run "$libtoolize" "--copy --force"
 tool_run "$aclocal" "-I m4 -I common/m4 $ACLOCAL_FLAGS"
@@ -93,21 +106,8 @@ tool_run "$autoheader"
 echo timestamp > stamp-h.in 2> /dev/null
 
 tool_run "$autoconf"
-tool_run "$automake" "-a -c"
-
-# if enable exists, add an -enable option for each of the lines in that file
-if test -f enable; then
-  for a in `cat enable`; do
-    CONFIGURE_FILE_OPT="--enable-$a"
-  done
-fi
-
-# if disable exists, add an -disable option for each of the lines in that file
-if test -f disable; then
-  for a in `cat disable`; do
-    CONFIGURE_FILE_OPT="$CONFIGURE_FILE_OPT --disable-$a"
-  done
-fi
+debug "automake: $automake"
+tool_run "$automake" "--add-missing --copy"
 
 test -n "$NOCONFIGURE" && {
   echo "+ skipping configure stage for package $package, as requested."
@@ -118,12 +118,12 @@ test -n "$NOCONFIGURE" && {
 cd "$olddir"
 
 echo "+ running configure ... "
-test ! -z "$CONFIGURE_DEF_OPT" && echo "  $srcdir/configure default flags: $CONFIGURE_DEF_OPT"
-test ! -z "$CONFIGURE_EXT_OPT" && echo "  $srcdir/configure external flags: $CONFIGURE_EXT_OPT"
-test ! -z "$CONFIGURE_FILE_OPT" && echo "  $srcdir/configure enable/disable flags: $CONFIGURE_FILE_OPT"
+test ! -z "$CONFIGURE_DEF_OPT" && echo "  default flags:  $CONFIGURE_DEF_OPT"
+test ! -z "$CONFIGURE_EXT_OPT" && echo "  external flags: $CONFIGURE_EXT_OPT"
 echo
 
-$srcdir/configure $CONFIGURE_DEF_OPT $CONFIGURE_EXT_OPT $CONFIGURE_FILE_OPT || {
+echo "$srcdir/configure" $CONFIGURE_DEF_OPT $CONFIGURE_EXT_OPT
+"$srcdir/configure" $CONFIGURE_DEF_OPT $CONFIGURE_EXT_OPT || {
         echo "  configure failed"
         exit 1
 }
