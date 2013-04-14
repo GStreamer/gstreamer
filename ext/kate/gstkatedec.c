@@ -114,7 +114,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/x-raw, format={ pango-markup, utf8 }; "
+    GST_STATIC_CAPS ("text/x-raw, format = { pango-markup, utf8 }; "
         GST_KATE_SPU_MIME_TYPE)
     );
 
@@ -295,10 +295,11 @@ gst_kate_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         if (G_LIKELY (buffer)) {
           GstCaps *caps;
           if (plain) {
-            caps = gst_caps_new_empty_simple ("text/x-raw");
+            caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING,
+                "utf8", NULL);
           } else {
             caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING,
-                "pango-markup, utf8", NULL);
+                "pango-markup", NULL);
           }
           gst_pad_push_event (kd->srcpad, gst_event_new_caps (caps));
           gst_caps_unref (caps);

@@ -306,10 +306,11 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
               strcmp (decoder->k.ki->category, "spu-subtitles") == 0) {
             *src_caps = gst_caps_new_empty_simple ("subpicture/x-dvd");
           } else if (decoder->k.ki->text_markup_type == kate_markup_none) {
-            *src_caps = gst_caps_new_empty_simple ("text/x-raw");
+            *src_caps = gst_caps_new_simple ("text/x-raw", "format",
+                G_TYPE_STRING, "utf8", NULL);
           } else {
             *src_caps = gst_caps_new_simple ("text/x-raw", "format",
-                G_TYPE_STRING, "pango-markup, utf8", NULL);
+                G_TYPE_STRING, "pango-markup", NULL);
           }
           GST_INFO_OBJECT (srcpad, "Setting caps: %" GST_PTR_FORMAT, *src_caps);
           if (!gst_pad_set_caps (srcpad, *src_caps)) {
