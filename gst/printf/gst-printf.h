@@ -36,18 +36,11 @@
 #define realloc g_realloc
 #define free    g_free
 
-/* If GLib is using the system printf, we can assume C99 behaviour  */
-#ifdef GLIB_USING_SYSTEM_PRINTF
-#define HAVE_C99_SNPRINTF
-#endif
-
-/* Ensure only C99 snprintf gets used */
+/* Don't use snprintf(); we have to use sprintf instead and do our own
+ * length calculations, because glibc doesn't allow passing %n in a format
+ * string if the string is in writable memory (if glibc has been compiled
+ * with _FORTIFY_SOURCE=2 which seems to be the case on some distros/systems) */
 #undef HAVE_SNPRINTF
-#ifdef HAVE_C99_SNPRINTF
-#define HAVE_SNPRINTF 1
-#else
-#undef HAVE_SNPRINTF
-#endif
 
 /* based on glib's config.h.win32.in */
 #ifdef G_OS_WIN32
