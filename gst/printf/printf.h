@@ -22,6 +22,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#if 0
 int __gst_printf    (char const *format,
                      ...);
 
@@ -53,6 +54,7 @@ int __gst_vsnprintf (char       *string,
                      size_t       n,
                      char const *format,
                      va_list      args);
+#endif
 
 int __gst_vasprintf (char       **result,
                      char const *format,
