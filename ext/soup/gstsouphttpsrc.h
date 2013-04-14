@@ -77,6 +77,7 @@ struct _GstSoupHTTPSrc {
   guint64 request_position;    /* Seek to this position. */
 
   /* Shoutcast/icecast metadata extraction handling. */
+  gboolean iradio_mode;
   GstCaps *src_caps;
   gchar *iradio_name;
   gchar *iradio_genre;
