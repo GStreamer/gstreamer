@@ -606,6 +606,7 @@ gst_kate_enc_send_headers (GstKateEnc * ke)
       }
       kate_packet_clear (&kp);
 
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
       headers = g_list_append (headers, buffer);
     } else if (ret > 0) {
       GST_LOG_OBJECT (ke, "Last header encoded");

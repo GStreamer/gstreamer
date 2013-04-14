@@ -200,6 +200,7 @@ gst_kate_parse_push_headers (GstKateParse * parse)
     }
     gst_buffer_unmap (outbuf, &info);
     /* takes ownership of outbuf, which was previously in parse->streamheader */
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_HEADER);
     outbuf_list = g_list_append (outbuf_list, outbuf);
     headers = headers->next;
   }

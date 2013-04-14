@@ -61,17 +61,16 @@ gst_kate_util_set_header_on_caps (GstElement * element, GstCaps * caps,
     GstBuffer *buffer = headers->data;
     g_assert (buffer);
     g_value_init (&value, GST_TYPE_BUFFER);
-    /* as in theoraenc, we need to copy to avoid circular references */
     buffer = gst_buffer_copy (buffer);
-    gst_value_set_buffer (&value, buffer);
-    gst_buffer_unref (buffer);
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
+    gst_value_take_buffer (&value, buffer);
     gst_value_array_append_value (&array, &value);
     g_value_unset (&value);
     headers = headers->next;
   }
 
-  gst_structure_set_value (structure, "streamheader", &array);
-  g_value_unset (&array);
+  gst_structure_take_value (structure, "streamheader", &array);
+
   GST_LOG_OBJECT (element, "here are the newly set caps: %" GST_PTR_FORMAT,
       caps);
 
