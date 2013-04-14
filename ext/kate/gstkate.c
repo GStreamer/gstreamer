@@ -56,6 +56,8 @@
 #include "gstkateenc.h"
 #include "gstkateparse.h"
 #include "gstkatetag.h"
+
+#undef HAVE_TIGER
 #ifdef HAVE_TIGER
 #include "gstkatetiger.h"
 #endif

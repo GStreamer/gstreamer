@@ -257,7 +257,7 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
 
   header_size = gst_buffer_extract (buf, 0, header, 1);
 
-  GST_DEBUG_OBJECT (element, "got kate packet, %u bytes, type %02x",
+  GST_DEBUG_OBJECT (element, "got kate packet, %zu bytes, type %02x",
       gst_buffer_get_size (buf), header_size == 0 ? -1 : header[0]);
 
   is_header = header_size > 0 && (header[0] & 0x80);

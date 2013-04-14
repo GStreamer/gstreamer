@@ -4,9 +4,9 @@ plugin_LTLIBRARIES = libgstkate.la
 
 # sources used to compile this plug-in
 libgstkate_la_SOURCES = gstkate.c gstkatedec.c gstkateenc.c gstkateparse.c gstkatetag.c gstkateutil.c gstkatespu.c
-if USE_TIGER
-libgstkate_la_SOURCES += gstkatetiger.c
-endif
+#if USE_TIGER
+#libgstkate_la_SOURCES += gstkatetiger.c
+#endif
 
 # flags used to compile this plugin
 libgstkate_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(TIGER_CFLAGS) $(KATE_CFLAGS)

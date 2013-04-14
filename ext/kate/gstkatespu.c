@@ -280,7 +280,7 @@ gst_kate_spu_decode_command_sequence (GstKateEnc * ke, GstBuffer * buf,
   guint16 sz;
 
   if (!gst_buffer_map (buf, &info, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (ke, (NULL), ("Failed to map buffer"));
+    GST_ERROR_OBJECT (ke, "Failed to map buffer");
     return GST_FLOW_ERROR;
   }
 
@@ -380,7 +380,7 @@ out_of_range:
   {
     gst_buffer_unmap (buf, &info);
     GST_ELEMENT_ERROR (ke, STREAM, DECODE, (NULL),
-        ("Command sequence offset %u is out of range %u",
+        ("Command sequence offset %u is out of range %zu",
             command_sequence_offset, info.size));
     return GST_FLOW_ERROR;
   }
@@ -481,7 +481,7 @@ gst_kate_spu_decode_spu (GstKateEnc * ke, GstBuffer * buf, kate_region * kr,
   guint16 code;
 
   if (!gst_buffer_map (buf, &info, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (ke, (NULL), ("Failed to map buffer"));
+    GST_ERROR_OBJECT (ke, "Failed to map buffer");
   }
 
   ptr = info.data;
@@ -499,7 +499,7 @@ gst_kate_spu_decode_spu (GstKateEnc * ke, GstBuffer * buf, kate_region * kr,
   CHECK (2);
   packet_size = GST_KATE_UINT16_BE (ptr);
   ADVANCE (2);
-  GST_DEBUG_OBJECT (ke, "packet size %u (GstBuffer size %u)", packet_size,
+  GST_DEBUG_OBJECT (ke, "packet size %d (GstBuffer size %zu)", packet_size,
       info.size);
 
   CHECK (2);

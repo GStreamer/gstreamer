@@ -836,9 +836,8 @@ gst_kate_enc_chain_spu (GstKateEnc * ke, GstBuffer * buf)
       }
     }
 #endif
-    GST_DEBUG_OBJECT (ke, "Encoding %ux%u SPU: (%u bytes) from %f to %f",
-        (guint) kbitmap->width, (guint) kbitmap->height,
-        gst_buffer_get_size (buf), t0, t1);
+    GST_DEBUG_OBJECT (ke, "Encoding %zux%zu SPU: (%zu bytes) from %f to %f",
+        kbitmap->width, kbitmap->height, gst_buffer_get_size (buf), t0, t1);
 
     ret = kate_encode_set_region (&ke->k, kregion);
     if (G_UNLIKELY (ret < 0)) {
@@ -967,7 +966,7 @@ gst_kate_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstCaps *caps;
   const gchar *mime_type = NULL;
 
-  GST_DEBUG_OBJECT (ke, "got packet, %u bytes", gst_buffer_get_size (buf));
+  GST_DEBUG_OBJECT (ke, "got packet, %zu bytes", gst_buffer_get_size (buf));
 
   /* get the type of the data we're being sent */
   caps = gst_pad_get_current_caps (pad);

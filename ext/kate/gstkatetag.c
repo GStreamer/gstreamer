@@ -271,7 +271,7 @@ gst_kate_tag_parse_packet (GstKateParse * parse, GstBuffer * buffer)
   kt = GST_KATE_TAG (parse);
 
   if (!gst_buffer_map (buffer, &info, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (buffer, (NULL), ("Failed to map buffer"));
+    GST_ERROR_OBJECT (parse, "Failed to map buffer");
     return GST_FLOW_ERROR;
   }
 
@@ -284,8 +284,7 @@ gst_kate_tag_parse_packet (GstKateParse * parse, GstBuffer * buffer)
     buffer = new_buffer;
 
     if (!gst_buffer_map (buffer, &info, GST_MAP_READWRITE)) {
-      GST_ERROR_OBJECT (buffer, (NULL),
-          ("Failed to map copied buffer READWRITE"));
+      GST_ERROR_OBJECT (parse, "Failed to map copied buffer READWRITE");
       return GST_FLOW_ERROR;
     }
     /* language is at offset 32, 16 bytes, zero terminated */
