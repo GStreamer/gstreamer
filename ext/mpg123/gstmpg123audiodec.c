@@ -226,9 +226,13 @@ gst_mpg123_audio_dec_start (GstAudioDecoder * dec)
   /* Sets the resync limit to the end of the stream (otherwise mpg123 may give
    * up on decoding prematurely, especially with mp3 web radios) */
   mpg123_param (mpg123_decoder->handle, MPG123_RESYNC_LIMIT, -1, 0);
+#if MPG123_API_VERSION >= 36
+  /* The precise API version where MPG123_AUTO_RESAMPLE appeared is
+   * somewhere between 29 and 36 */
   /* Don't let mpg123 resample output */
   mpg123_param (mpg123_decoder->handle, MPG123_REMOVE_FLAGS,
       MPG123_AUTO_RESAMPLE, 0);
+#endif
   /* Don't let mpg123 print messages to stdout/stderr */
   mpg123_param (mpg123_decoder->handle, MPG123_ADD_FLAGS, MPG123_QUIET, 0);
 
