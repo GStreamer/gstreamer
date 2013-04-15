@@ -65,9 +65,6 @@
 
 #include "gstsdpmessage.h"
 
-/* FIXME, is currently allocated on the stack */
-#define MAX_LINE_LEN    1024 * 16
-
 #define FREE_STRING(field)              g_free (field); (field) = NULL
 #define REPLACE_STRING(field, val)      FREE_STRING(field); (field) = g_strdup (val)
 
@@ -2111,7 +2108,7 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
     }
     case 'b':
     {
-      gchar str2[MAX_LINE_LEN];
+      gchar str2[32];
 
       read_string_del (str, sizeof (str), ':', &p);
       if (*p != '\0')
@@ -2189,11 +2186,12 @@ GstSDPResult
 gst_sdp_message_parse_buffer (const guint8 * data, guint size,
     GstSDPMessage * msg)
 {
-  gchar *p;
+  gchar *p, *s;
   SDPContext c;
   gchar type;
-  gchar buffer[MAX_LINE_LEN];
-  guint idx = 0;
+  gchar *buffer = NULL;
+  guint bufsize = 0;
+  guint len = 0;
 
   g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
   g_return_val_if_fail (data != NULL, GST_SDP_EINVAL);
@@ -2216,13 +2214,18 @@ gst_sdp_message_parse_buffer (const guint8 * data, guint size,
       goto line_done;
     p++;
 
-    idx = 0;
-    while (*p != '\n' && *p != '\r' && *p != '\0') {
-      if (idx < sizeof (buffer) - 1)
-        buffer[idx++] = *p;
+    s = p;
+    while (*p != '\n' && *p != '\r' && *p != '\0')
       p++;
+
+    len = p - s;
+    if (bufsize <= len) {
+      buffer = g_malloc (len + 1);
+      bufsize = len + 1;
     }
-    buffer[idx] = '\0';
+    memcpy (buffer, s, len);
+    buffer[len] = '\0';
+
     gst_sdp_parse_line (&c, type, buffer);
 
   line_done:
@@ -2231,6 +2234,9 @@ gst_sdp_message_parse_buffer (const guint8 * data, guint size,
     if (*p == '\n')
       p++;
   }
+
+  if (buffer)
+    g_free (buffer);
 
   return GST_SDP_OK;
 }
