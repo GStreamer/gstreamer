@@ -311,10 +311,19 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
 static gboolean
 gst_v4l2src_negotiate (GstBaseSrc * basesrc)
 {
+  GstV4l2Src *v4l2src;
+  GstV4l2Object *obj;
   GstCaps *thiscaps;
   GstCaps *caps = NULL;
   GstCaps *peercaps = NULL;
   gboolean result = FALSE;
+
+  v4l2src = GST_V4L2SRC (basesrc);
+  obj = v4l2src->v4l2object;
+
+  /* We don't allow renegotiation, just return TRUE in that case */
+  if (GST_V4L2_IS_ACTIVE (obj))
+    return TRUE;
 
   /* first see what is possible on our source pad */
   thiscaps = gst_pad_query_caps (GST_BASE_SRC_PAD (basesrc), NULL);
