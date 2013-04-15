@@ -989,8 +989,8 @@ gst_sdp_demux_stream_configure_udp (GstSDPDemux * demux, GstSDPStream * stream)
 
     /* configure a timeout on the UDP port. When the timeout message is
      * posted, we assume UDP transport is not possible. */
-    g_object_set (G_OBJECT (stream->udpsrc[0]), "timeout", demux->udp_timeout,
-        NULL);
+    g_object_set (G_OBJECT (stream->udpsrc[0]), "timeout",
+        demux->udp_timeout * 1000, NULL);
 
     /* get output pad of the UDP source. */
     pad = gst_element_get_static_pad (stream->udpsrc[0], "src");
