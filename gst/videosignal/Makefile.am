@@ -3,10 +3,10 @@ plugin_LTLIBRARIES = libgstvideosignal.la
 libgstvideosignal_la_SOURCES = gstvideosignal.c   \
                                gstvideoanalyse.c \
                                gstvideoanalyse.h \
-                               gstvideodetect.c \
-                               gstvideodetect.h \
-                               gstvideomark.c \
-                               gstvideomark.h
+                               gstsimplevideomarkdetect.c \
+                               gstsimplevideomarkdetect.h \
+                               gstsimplevideomark.c \
+                               gstsimplevideomark.h
 
 libgstvideosignal_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 			    $(GST_PLUGINS_BASE_CFLAGS)

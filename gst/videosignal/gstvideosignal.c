@@ -22,8 +22,8 @@
 #endif
 
 #include "gstvideoanalyse.h"
-#include "gstvideodetect.h"
-#include "gstvideomark.h"
+#include "gstsimplevideomarkdetect.h"
+#include "gstsimplevideomark.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -34,14 +34,14 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_VIDEO_ANALYSE);
 
   /* FIXME under no circumstances is anyone allowed to revive the
-   * element formerly known as videodetect without changing the name
+   * element formerly known as simplevideomarkdetect without changing the name
    * first.  XOXO  --ds  */
 
-  res &= gst_element_register (plugin, "videodetect", GST_RANK_NONE,
-      GST_TYPE_VIDEO_DETECT);
+  res &= gst_element_register (plugin, "simplevideomarkdetect", GST_RANK_NONE,
+      GST_TYPE_SIMPLE_VIDEO_MARK_DETECT);
 
-  res &= gst_element_register (plugin, "videomark", GST_RANK_NONE,
-      GST_TYPE_VIDEO_MARK);
+  res &= gst_element_register (plugin, "simplevideomark", GST_RANK_NONE,
+      GST_TYPE_SIMPLE_VIDEO_MARK);
 
   return res;
 }

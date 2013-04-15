@@ -17,26 +17,26 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GST_VIDEO_DETECT_H_
-#define _GST_VIDEO_DETECT_H_
+#ifndef _GST_SIMPLE_VIDEO_MARK_DETECT_H_
+#define _GST_SIMPLE_VIDEO_MARK_DETECT_H_
 
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VIDEO_DETECT   (gst_video_detect_get_type())
-#define GST_VIDEO_DETECT(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_DETECT,GstVideoDetect))
-#define GST_VIDEO_DETECT_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_DETECT,GstVideoDetectClass))
-#define GST_IS_VIDEO_DETECT(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_DETECT))
-#define GST_IS_VIDEO_DETECT_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_DETECT))
+#define GST_TYPE_SIMPLE_VIDEO_MARK_DETECT   (gst_video_detect_get_type())
+#define GST_SIMPLE_VIDEO_MARK_DETECT(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SIMPLE_VIDEO_MARK_DETECT,GstSimpleVideoMarkDetect))
+#define GST_SIMPLE_VIDEO_MARK_DETECT_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SIMPLE_VIDEO_MARK_DETECT,GstSimpleVideoMarkDetectClass))
+#define GST_IS_SIMPLE_VIDEO_MARK_DETECT(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SIMPLE_VIDEO_MARK_DETECT))
+#define GST_IS_SIMPLE_VIDEO_MARK_DETECT_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SIMPLE_VIDEO_MARK_DETECT))
 
-typedef struct _GstVideoDetect GstVideoDetect;
-typedef struct _GstVideoDetectClass GstVideoDetectClass;
+typedef struct _GstSimpleVideoMarkDetect GstSimpleVideoMarkDetect;
+typedef struct _GstSimpleVideoMarkDetectClass GstSimpleVideoMarkDetectClass;
 
-struct _GstVideoDetect
+struct _GstSimpleVideoMarkDetect
 {
-  GstVideoFilter base_videodetect;
+  GstVideoFilter base_simplevideomarkdetect;
 
   gboolean message;
   gint pattern_width;
@@ -51,9 +51,9 @@ struct _GstVideoDetect
   gboolean in_pattern;
 };
 
-struct _GstVideoDetectClass
+struct _GstSimpleVideoMarkDetectClass
 {
-  GstVideoFilterClass base_videodetect_class;
+  GstVideoFilterClass base_simplevideomarkdetect_class;
 };
 
 GType gst_video_detect_get_type (void);

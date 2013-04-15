@@ -17,26 +17,26 @@
  * Boston, MA 02110-1335, USA.
  */
 /**
- * SECTION:element-videomark
+ * SECTION:element-simplevideomark
  * @see_also: #GstVideoDetect
  *
- * This plugin produces #GstVideoMark::pattern-count squares in the bottom left
+ * This plugin produces #GstSimpleVideoMark::pattern-count squares in the bottom left
  * corner of the video frames. The squares have a width and height of 
- * respectively #GstVideoMark:pattern-width and #GstVideoMark:pattern-height.
+ * respectively #GstSimpleVideoMark:pattern-width and #GstSimpleVideoMark:pattern-height.
  * Even squares will be black and odd squares will be white.
  * 
- * After writing the pattern, #GstVideoMark:pattern-data-count squares after the
+ * After writing the pattern, #GstSimpleVideoMark:pattern-data-count squares after the
  * pattern squares are produced as the bitarray given in
- * #GstVideoMark:pattern-data. 1 bits will produce white squares and 0 bits will
+ * #GstSimpleVideoMark:pattern-data. 1 bits will produce white squares and 0 bits will
  * produce black squares.
  * 
- * The element can be enabled with the #GstVideoMark:enabled property. It is
+ * The element can be enabled with the #GstSimpleVideoMark:enabled property. It is
  * mostly used together with the #GstVideoDetect plugin.
  * 
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch videotestsrc ! videomark ! ximagesink
+ * gst-launch videotestsrc ! simplevideomark ! ximagesink
  * ]| Add the default black/white squares at the bottom left of the video frames.
  * </refsect2>
  *
@@ -50,7 +50,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
-#include "gstvideomark.h"
+#include "gstsimplevideomark.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_video_mark_debug_category);
 #define GST_CAT_DEFAULT gst_video_mark_debug_category
@@ -104,12 +104,13 @@ enum
 
 /* class initialization */
 
-G_DEFINE_TYPE_WITH_CODE (GstVideoMark, gst_video_mark, GST_TYPE_VIDEO_FILTER,
-    GST_DEBUG_CATEGORY_INIT (gst_video_mark_debug_category, "videomark", 0,
-        "debug category for videomark element"));
+G_DEFINE_TYPE_WITH_CODE (GstSimpleVideoMark, gst_video_mark,
+    GST_TYPE_VIDEO_FILTER,
+    GST_DEBUG_CATEGORY_INIT (gst_video_mark_debug_category, "simplevideomark",
+        0, "debug category for simplevideomark element"));
 
 static void
-gst_video_mark_class_init (GstVideoMarkClass * klass)
+gst_video_mark_class_init (GstSimpleVideoMarkClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseTransformClass *base_transform_class =
@@ -181,7 +182,7 @@ gst_video_mark_class_init (GstVideoMarkClass * klass)
 }
 
 static void
-gst_video_mark_init (GstVideoMark * videomark)
+gst_video_mark_init (GstSimpleVideoMark * simplevideomark)
 {
 }
 
@@ -189,34 +190,34 @@ void
 gst_video_mark_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVideoMark *videomark = GST_VIDEO_MARK (object);
+  GstSimpleVideoMark *simplevideomark = GST_SIMPLE_VIDEO_MARK (object);
 
-  GST_DEBUG_OBJECT (videomark, "set_property");
+  GST_DEBUG_OBJECT (simplevideomark, "set_property");
 
   switch (property_id) {
     case PROP_PATTERN_WIDTH:
-      videomark->pattern_width = g_value_get_int (value);
+      simplevideomark->pattern_width = g_value_get_int (value);
       break;
     case PROP_PATTERN_HEIGHT:
-      videomark->pattern_height = g_value_get_int (value);
+      simplevideomark->pattern_height = g_value_get_int (value);
       break;
     case PROP_PATTERN_COUNT:
-      videomark->pattern_count = g_value_get_int (value);
+      simplevideomark->pattern_count = g_value_get_int (value);
       break;
     case PROP_PATTERN_DATA_COUNT:
-      videomark->pattern_data_count = g_value_get_int (value);
+      simplevideomark->pattern_data_count = g_value_get_int (value);
       break;
     case PROP_PATTERN_DATA:
-      videomark->pattern_data = g_value_get_uint64 (value);
+      simplevideomark->pattern_data = g_value_get_uint64 (value);
       break;
     case PROP_ENABLED:
-      videomark->enabled = g_value_get_boolean (value);
+      simplevideomark->enabled = g_value_get_boolean (value);
       break;
     case PROP_LEFT_OFFSET:
-      videomark->left_offset = g_value_get_int (value);
+      simplevideomark->left_offset = g_value_get_int (value);
       break;
     case PROP_BOTTOM_OFFSET:
-      videomark->bottom_offset = g_value_get_int (value);
+      simplevideomark->bottom_offset = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -228,34 +229,34 @@ void
 gst_video_mark_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstVideoMark *videomark = GST_VIDEO_MARK (object);
+  GstSimpleVideoMark *simplevideomark = GST_SIMPLE_VIDEO_MARK (object);
 
-  GST_DEBUG_OBJECT (videomark, "get_property");
+  GST_DEBUG_OBJECT (simplevideomark, "get_property");
 
   switch (property_id) {
     case PROP_PATTERN_WIDTH:
-      g_value_set_int (value, videomark->pattern_width);
+      g_value_set_int (value, simplevideomark->pattern_width);
       break;
     case PROP_PATTERN_HEIGHT:
-      g_value_set_int (value, videomark->pattern_height);
+      g_value_set_int (value, simplevideomark->pattern_height);
       break;
     case PROP_PATTERN_COUNT:
-      g_value_set_int (value, videomark->pattern_count);
+      g_value_set_int (value, simplevideomark->pattern_count);
       break;
     case PROP_PATTERN_DATA_COUNT:
-      g_value_set_int (value, videomark->pattern_data_count);
+      g_value_set_int (value, simplevideomark->pattern_data_count);
       break;
     case PROP_PATTERN_DATA:
-      g_value_set_uint64 (value, videomark->pattern_data);
+      g_value_set_uint64 (value, simplevideomark->pattern_data);
       break;
     case PROP_ENABLED:
-      g_value_set_boolean (value, videomark->enabled);
+      g_value_set_boolean (value, simplevideomark->enabled);
       break;
     case PROP_LEFT_OFFSET:
-      g_value_set_int (value, videomark->left_offset);
+      g_value_set_int (value, simplevideomark->left_offset);
       break;
     case PROP_BOTTOM_OFFSET:
-      g_value_set_int (value, videomark->bottom_offset);
+      g_value_set_int (value, simplevideomark->bottom_offset);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -266,9 +267,9 @@ gst_video_mark_get_property (GObject * object, guint property_id,
 void
 gst_video_mark_dispose (GObject * object)
 {
-  GstVideoMark *videomark = GST_VIDEO_MARK (object);
+  GstSimpleVideoMark *simplevideomark = GST_SIMPLE_VIDEO_MARK (object);
 
-  GST_DEBUG_OBJECT (videomark, "dispose");
+  GST_DEBUG_OBJECT (simplevideomark, "dispose");
 
   /* clean up as possible.  may be called multiple times */
 
@@ -278,9 +279,9 @@ gst_video_mark_dispose (GObject * object)
 void
 gst_video_mark_finalize (GObject * object)
 {
-  GstVideoMark *videomark = GST_VIDEO_MARK (object);
+  GstSimpleVideoMark *simplevideomark = GST_SIMPLE_VIDEO_MARK (object);
 
-  GST_DEBUG_OBJECT (videomark, "finalize");
+  GST_DEBUG_OBJECT (simplevideomark, "finalize");
 
   /* clean up object here */
 
@@ -290,9 +291,9 @@ gst_video_mark_finalize (GObject * object)
 static gboolean
 gst_video_mark_start (GstBaseTransform * trans)
 {
-  GstVideoMark *videomark = GST_VIDEO_MARK (trans);
+  GstSimpleVideoMark *simplevideomark = GST_SIMPLE_VIDEO_MARK (trans);
 
-  GST_DEBUG_OBJECT (videomark, "start");
+  GST_DEBUG_OBJECT (simplevideomark, "start");
 
   return TRUE;
 }
@@ -300,9 +301,9 @@ gst_video_mark_start (GstBaseTransform * trans)
 static gboolean
 gst_video_mark_stop (GstBaseTransform * trans)
 {
-  GstVideoMark *videomark = GST_VIDEO_MARK (trans);
+  GstSimpleVideoMark *simplevideomark = GST_SIMPLE_VIDEO_MARK (trans);
 
-  GST_DEBUG_OBJECT (videomark, "stop");
+  GST_DEBUG_OBJECT (simplevideomark, "stop");
 
   return TRUE;
 }
@@ -311,15 +312,15 @@ static gboolean
 gst_video_mark_set_info (GstVideoFilter * filter, GstCaps * incaps,
     GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
-  GstVideoMark *videomark = GST_VIDEO_MARK (filter);
+  GstSimpleVideoMark *simplevideomark = GST_SIMPLE_VIDEO_MARK (filter);
 
-  GST_DEBUG_OBJECT (videomark, "set_info");
+  GST_DEBUG_OBJECT (simplevideomark, "set_info");
 
   return TRUE;
 }
 
 static void
-gst_video_mark_draw_box (GstVideoMark * videomark, guint8 * data,
+gst_video_mark_draw_box (GstSimpleVideoMark * simplevideomark, guint8 * data,
     gint width, gint height, gint row_stride, gint pixel_stride, guint8 color)
 {
   gint i, j;
@@ -333,7 +334,7 @@ gst_video_mark_draw_box (GstVideoMark * videomark, guint8 * data,
 }
 
 static GstFlowReturn
-gst_video_mark_yuv (GstVideoMark * videomark, GstVideoFrame * frame)
+gst_video_mark_yuv (GstSimpleVideoMark * simplevideomark, GstVideoFrame * frame)
 {
   gint i, pw, ph, row_stride, pixel_stride;
   gint width, height, req_width, req_height;
@@ -344,28 +345,28 @@ gst_video_mark_yuv (GstVideoMark * videomark, GstVideoFrame * frame)
   width = frame->info.width;
   height = frame->info.height;
 
-  pw = videomark->pattern_width;
-  ph = videomark->pattern_height;
+  pw = simplevideomark->pattern_width;
+  ph = simplevideomark->pattern_height;
   row_stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
   pixel_stride = GST_VIDEO_FRAME_COMP_PSTRIDE (frame, 0);
 
   req_width =
-      (videomark->pattern_count + videomark->pattern_data_count) * pw +
-      videomark->left_offset;
-  req_height = videomark->bottom_offset + ph;
+      (simplevideomark->pattern_count +
+      simplevideomark->pattern_data_count) * pw + simplevideomark->left_offset;
+  req_height = simplevideomark->bottom_offset + ph;
   if (req_width > width || req_height > height) {
-    GST_ELEMENT_ERROR (videomark, STREAM, WRONG_TYPE, (NULL),
-        ("videomark pattern doesn't fit video, need at least %ix%i (stream has %ix%i)",
+    GST_ELEMENT_ERROR (simplevideomark, STREAM, WRONG_TYPE, (NULL),
+        ("simplevideomark pattern doesn't fit video, need at least %ix%i (stream has %ix%i)",
             req_width, req_height, width, height));
     return GST_FLOW_ERROR;
   }
 
   /* draw the bottom left pixels */
-  for (i = 0; i < videomark->pattern_count; i++) {
+  for (i = 0; i < simplevideomark->pattern_count; i++) {
     d = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
     /* move to start of bottom left */
-    d += row_stride * (height - ph - videomark->bottom_offset) +
-        pixel_stride * videomark->left_offset;
+    d += row_stride * (height - ph - simplevideomark->bottom_offset) +
+        pixel_stride * simplevideomark->left_offset;
     /* move to i-th pattern */
     d += pixel_stride * pw * i;
 
@@ -376,30 +377,31 @@ gst_video_mark_yuv (GstVideoMark * videomark, GstVideoFrame * frame)
       color = 0;
 
     /* draw box of width * height */
-    gst_video_mark_draw_box (videomark, d, pw, ph, row_stride, pixel_stride,
-        color);
+    gst_video_mark_draw_box (simplevideomark, d, pw, ph, row_stride,
+        pixel_stride, color);
   }
 
-  pattern_shift = G_GUINT64_CONSTANT (1) << (videomark->pattern_data_count - 1);
+  pattern_shift =
+      G_GUINT64_CONSTANT (1) << (simplevideomark->pattern_data_count - 1);
 
   /* get the data of the pattern */
-  for (i = 0; i < videomark->pattern_data_count; i++) {
+  for (i = 0; i < simplevideomark->pattern_data_count; i++) {
     d = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
     /* move to start of bottom left, adjust for offsets */
-    d += row_stride * (height - ph - videomark->bottom_offset) +
-        pixel_stride * videomark->left_offset;
+    d += row_stride * (height - ph - simplevideomark->bottom_offset) +
+        pixel_stride * simplevideomark->left_offset;
     /* move after the fixed pattern */
-    d += pixel_stride * videomark->pattern_count * pw;
+    d += pixel_stride * simplevideomark->pattern_count * pw;
     /* move to i-th pattern data */
     d += pixel_stride * pw * i;
 
-    if (videomark->pattern_data & pattern_shift)
+    if (simplevideomark->pattern_data & pattern_shift)
       color = 255;
     else
       color = 0;
 
-    gst_video_mark_draw_box (videomark, d, pw, ph, row_stride, pixel_stride,
-        color);
+    gst_video_mark_draw_box (simplevideomark, d, pw, ph, row_stride,
+        pixel_stride, color);
 
     pattern_shift >>= 1;
   }
@@ -412,12 +414,12 @@ static GstFlowReturn
 gst_video_mark_transform_frame_ip (GstVideoFilter * filter,
     GstVideoFrame * frame)
 {
-  GstVideoMark *videomark = GST_VIDEO_MARK (filter);
+  GstSimpleVideoMark *simplevideomark = GST_SIMPLE_VIDEO_MARK (filter);
 
-  GST_DEBUG_OBJECT (videomark, "transform_frame_ip");
+  GST_DEBUG_OBJECT (simplevideomark, "transform_frame_ip");
 
-  if (videomark->enabled)
-    return gst_video_mark_yuv (videomark, frame);
+  if (simplevideomark->enabled)
+    return gst_video_mark_yuv (simplevideomark, frame);
 
   return GST_FLOW_OK;
 }
