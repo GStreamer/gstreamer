@@ -600,7 +600,7 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
       g_signal_connect (G_OBJECT (child), "notify::duration",
       G_CALLBACK (_child_duration_changed_cb), container);
   mapping->inpoint_notifyid =
-      g_signal_connect (G_OBJECT (child), "notify::inpoint",
+      g_signal_connect (G_OBJECT (child), "notify::in-point",
       G_CALLBACK (_child_inpoint_changed_cb), container);
   mapping->priority_notifyid =
       g_signal_connect (G_OBJECT (child), "notify::priority",
