@@ -1813,7 +1813,7 @@ gst_eglglessink_fill_texture (GstEglGlesSink * eglglessink, GstBuffer * buf)
   h = GST_VIDEO_FRAME_HEIGHT (&vframe);
 
   GST_DEBUG_OBJECT (eglglessink,
-      "Got buffer %p: %dx%d size %d", buf, w, h, gst_buffer_get_size (buf));
+      "Got buffer %p: %dx%d size %" G_GSIZE_FORMAT, buf, w, h, gst_buffer_get_size (buf));
 
   switch (eglglessink->configured_info.finfo->format) {
     case GST_VIDEO_FORMAT_BGR:
@@ -2848,7 +2848,7 @@ gst_eglglessink_configure_caps (GstEglGlesSink * eglglessink, GstCaps * caps)
     eglglessink->have_window = TRUE;
   }
   GST_DEBUG_OBJECT (eglglessink, "Using window handle %p",
-      eglglessink->eglglesctx.window);
+      (gpointer) eglglessink->eglglesctx.window);
   eglglessink->eglglesctx.used_window = eglglessink->eglglesctx.window;
   GST_OBJECT_UNLOCK (eglglessink);
   gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (eglglessink),
