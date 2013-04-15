@@ -103,8 +103,8 @@ setup_katedec (void)
 
   GST_DEBUG ("setup_katedec");
   katedec = gst_check_setup_element ("katedec");
-  mydecsrcpad = gst_check_setup_src_pad (katedec, &srctemplate, NULL);
-  mydecsinkpad = gst_check_setup_sink_pad (katedec, &sinktemplate, NULL);
+  mydecsrcpad = gst_check_setup_src_pad (katedec, &srctemplate);
+  mydecsinkpad = gst_check_setup_sink_pad (katedec, &sinktemplate);
   gst_pad_set_active (mydecsrcpad, TRUE);
   gst_pad_set_active (mydecsinkpad, TRUE);
 
@@ -131,8 +131,8 @@ setup_kateenc (void)
 
   GST_DEBUG ("setup_kateenc");
   kateenc = gst_check_setup_element ("kateenc");
-  myencsrcpad = gst_check_setup_src_pad (kateenc, &srctemplate, NULL);
-  myencsinkpad = gst_check_setup_sink_pad (kateenc, &sinktemplate, NULL);
+  myencsrcpad = gst_check_setup_src_pad (kateenc, &srctemplate);
+  myencsinkpad = gst_check_setup_sink_pad (kateenc, &sinktemplate);
   gst_pad_set_active (myencsrcpad, TRUE);
   gst_pad_set_active (myencsinkpad, TRUE);
 
@@ -159,8 +159,8 @@ setup_kateparse (void)
 
   GST_DEBUG ("setup_kateparse");
   kateparse = gst_check_setup_element ("kateparse");
-  myparsesrcpad = gst_check_setup_src_pad (kateparse, &srctemplate, NULL);
-  myparsesinkpad = gst_check_setup_sink_pad (kateparse, &sinktemplate, NULL);
+  myparsesrcpad = gst_check_setup_src_pad (kateparse, &srctemplate);
+  myparsesinkpad = gst_check_setup_sink_pad (kateparse, &sinktemplate);
   gst_pad_set_active (myparsesrcpad, TRUE);
   gst_pad_set_active (myparsesinkpad, TRUE);
 
@@ -187,8 +187,8 @@ setup_katetag (void)
 
   GST_DEBUG ("setup_katetag");
   katetag = gst_check_setup_element ("katetag");
-  mytagsrcpad = gst_check_setup_src_pad (katetag, &srctemplate, NULL);
-  mytagsinkpad = gst_check_setup_sink_pad (katetag, &sinktemplate, NULL);
+  mytagsrcpad = gst_check_setup_src_pad (katetag, &srctemplate);
+  mytagsinkpad = gst_check_setup_sink_pad (katetag, &sinktemplate);
   gst_pad_set_active (mytagsrcpad, TRUE);
   gst_pad_set_active (mytagsinkpad, TRUE);
 
@@ -212,6 +212,7 @@ static void
 check_buffers (guint expected, gboolean headers_in_caps)
 {
   GstBuffer *outbuffer;
+  GstMapInfo info;
   guint i, num_buffers;
   const int num_headers = 9;
   unsigned char packet_type;
@@ -222,23 +223,24 @@ check_buffers (guint expected, gboolean headers_in_caps)
   for (i = 0; i < num_buffers; ++i) {
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
-    fail_if (GST_BUFFER_SIZE (outbuffer) == 0);
+    fail_if (gst_buffer_get_size (outbuffer) == 0);
 
+    assert_equals_int (gst_buffer_map (outbuffer, &info, GST_MAP_READ), TRUE);
     if (i < num_headers) {
       /* different headers packets */
       packet_type = (0x80 | i);
-      fail_unless (GST_BUFFER_DATA (outbuffer)[0] == packet_type);
+      fail_unless (info.data[0] == packet_type);
       /* headers could be in caps, so would have an extra ref */
     } else if (i == num_buffers - 1) {
       /* eos data packet */
       packet_type = 0x7f;
-      fail_unless (GST_BUFFER_DATA (outbuffer)[0] == packet_type);
+      fail_unless (info.data[0] == packet_type);
     } else {
       /* data packet */
       packet_type = 0;
-      fail_unless (GST_BUFFER_DATA (outbuffer)[0] >= 0
-          && GST_BUFFER_DATA (outbuffer)[0] < 0x7f);
+      fail_unless (info.data[0] >= 0 && info.data[0] < 0x7f);
     }
+    gst_buffer_unmap (outbuffer, &info);
 
     buffers = g_list_remove (buffers, outbuffer);
 
@@ -255,9 +257,8 @@ GST_START_TEST (test_kate_typefind)
   GstBuffer *buf;
   GstCaps *caps = NULL;
 
-  buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = (guint8 *) kate_header_0x80;
-  GST_BUFFER_SIZE (buf) = sizeof (kate_header_0x80);
+  buf = gst_buffer_new_wrapped (g_memdup (kate_header_0x80,
+          sizeof (kate_header_0x80)), sizeof (kate_header_0x80));
   GST_BUFFER_OFFSET (buf) = 0;
 
   caps = gst_type_find_helper_for_buffer (NULL, buf, &prob);
@@ -323,9 +324,8 @@ GST_START_TEST (test_kate_identification_header)
       "could not set to playing");
   bus = gst_bus_new ();
 
-  inbuffer = gst_buffer_new_and_alloc (sizeof (kate_header_0x80));
-  memcpy (GST_BUFFER_DATA (inbuffer), kate_header_0x80,
-      sizeof (kate_header_0x80));
+  inbuffer = gst_buffer_new_wrapped (g_memdup (kate_header_0x80,
+          sizeof (kate_header_0x80)), sizeof (kate_header_0x80));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
@@ -337,9 +337,8 @@ GST_START_TEST (test_kate_identification_header)
   gst_buffer_unref (inbuffer);
   fail_unless (g_list_length (buffers) == 0);
 
-  inbuffer = gst_buffer_new_and_alloc (sizeof (kate_header_0x81));
-  memcpy (GST_BUFFER_DATA (inbuffer), kate_header_0x81,
-      sizeof (kate_header_0x81));
+  inbuffer = gst_buffer_new_wrapped (g_memdup (kate_header_0x81,
+          sizeof (kate_header_0x81)), sizeof (kate_header_0x81));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
@@ -414,10 +413,9 @@ GST_START_TEST (test_kate_encode_empty)
   GST_BUFFER_DURATION (inbuffer) = 5 * GST_SECOND;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
-  caps = gst_caps_from_string ("text/plain");
+  caps = gst_caps_from_string ("text/x-raw");
   fail_unless (caps != NULL);
-  gst_buffer_set_caps (inbuffer, caps);
-  gst_caps_unref (caps);
+  gst_pad_push_event (myencsrcpad, gst_event_new_caps (caps));
 
   gst_element_set_bus (kateenc, bus);
   /* pushing gives away my reference ... */
@@ -445,6 +443,7 @@ GST_START_TEST (test_kate_encode_simple)
   GstBus *bus;
   const gchar *test_string = "";
   GstCaps *caps;
+  GstMapInfo info;
 
   kateenc = setup_kateenc ();
   g_object_set (kateenc, "category", "subtitles", NULL);
@@ -454,17 +453,18 @@ GST_START_TEST (test_kate_encode_simple)
       "could not set to playing");
   bus = gst_bus_new ();
 
-  inbuffer = gst_buffer_new_and_alloc (strlen (test_string) + 1);
-  memcpy (GST_BUFFER_DATA (inbuffer), test_string, strlen (test_string) + 1);
+  inbuffer = gst_buffer_new_wrapped (g_memdup (test_string,
+          strlen (test_string) + 1), strlen (test_string) + 1);
+  gst_buffer_unmap (inbuffer, &info);
+
   GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_OFFSET (inbuffer) =
       1 * GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = 5 * GST_SECOND;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
-  caps = gst_caps_from_string ("text/plain");
+  caps = gst_caps_from_string ("text/x-raw");
   fail_unless (caps != NULL);
-  gst_buffer_set_caps (inbuffer, caps);
-  gst_caps_unref (caps);
+  gst_pad_push_event (myencsrcpad, gst_event_new_caps (caps));
   gst_buffer_ref (inbuffer);
 
   gst_element_set_bus (kateenc, bus);
@@ -507,8 +507,9 @@ GST_START_TEST (test_kate_encode_spu)
       "could not set to playing");
   bus = gst_bus_new ();
 
-  inbuffer = gst_buffer_new_and_alloc (sizeof (kate_spu));
-  memcpy (GST_BUFFER_DATA (inbuffer), kate_spu, sizeof (kate_spu));
+  inbuffer = gst_buffer_new_wrapped (g_memdup (kate_spu, sizeof (kate_spu)),
+      sizeof (kate_spu));
+
   GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_OFFSET (inbuffer) =
       1 * GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = 5 * GST_SECOND;
@@ -516,8 +517,7 @@ GST_START_TEST (test_kate_encode_spu)
 
   caps = gst_caps_from_string ("subpicture/x-dvd");
   fail_unless (caps != NULL);
-  gst_buffer_set_caps (inbuffer, caps);
-  gst_caps_unref (caps);
+  gst_pad_push_event (myencsrcpad, gst_event_new_caps (caps));
   gst_buffer_ref (inbuffer);
 
   gst_element_set_bus (kateenc, bus);
@@ -550,6 +550,7 @@ GST_START_TEST (test_kate_encode_keepalives)
   GstElement *kateenc;
   GstBus *bus;
   guint i, round;
+  GstSegment segment;
   enum
   { n_keepalives = 1000 };
   static const struct
@@ -580,9 +581,11 @@ GST_START_TEST (test_kate_encode_keepalives)
        is less than the keepalive delay */
     for (i = 1; i <= n_keepalives; ++i) {
       gint64 t = i * GST_SECOND;
+      gst_segment_init (&segment, GST_FORMAT_TIME);
+      segment.start = t;
+      segment.position = 0;
       fail_unless (gst_pad_push_event (myencsrcpad,
-              gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, t, -1,
-                  0)) == TRUE);
+              gst_event_new_segment (&segment)) == TRUE);
     }
 
     fail_unless (gst_pad_push_event (myencsrcpad,
@@ -611,43 +614,37 @@ test_kate_send_headers (GstPad * pad)
 {
   GstBuffer *inbuffer;
   GstCaps *caps;
+  GstMapInfo info;
   int i;
 
-  caps = gst_caps_new_simple ("subtitle/x-kate", NULL);
+  caps = gst_caps_new_simple ("subtitle/x-kate", NULL, NULL);
+  gst_pad_push_event (pad, gst_event_new_caps (caps));
 
   /* push headers */
-  inbuffer = gst_buffer_new ();
-  gst_buffer_set_caps (inbuffer, caps);
-  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x80;
-  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x80);
+  inbuffer = gst_buffer_new_wrapped (g_memdup (kate_header_0x80,
+          sizeof (kate_header_0x80)), sizeof (kate_header_0x80));
   GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
   fail_unless_equals_int (gst_pad_push (pad, inbuffer), GST_FLOW_OK);
 
-  inbuffer = gst_buffer_new ();
-  gst_buffer_set_caps (inbuffer, caps);
-  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x81;
-  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x81);
+  inbuffer = gst_buffer_new_wrapped (g_memdup (kate_header_0x81,
+          sizeof (kate_header_0x81)), sizeof (kate_header_0x81));
   GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
   fail_unless_equals_int (gst_pad_push (pad, inbuffer), GST_FLOW_OK);
 
   for (i = 2; i < 8; ++i) {
-    inbuffer = gst_buffer_new_and_alloc (sizeof (kate_header_0x8x));
-    gst_buffer_set_caps (inbuffer, caps);
-    memcpy (GST_BUFFER_DATA (inbuffer), (guint8 *) kate_header_0x8x,
-        sizeof (kate_header_0x8x));
-    GST_BUFFER_DATA (inbuffer)[0] = 0x80 | i;
+    inbuffer = gst_buffer_new_wrapped (g_memdup (kate_header_0x8x,
+            sizeof (kate_header_0x8x)), sizeof (kate_header_0x8x));
+    fail_if (gst_buffer_map (inbuffer, &info, GST_MAP_WRITE) != TRUE);
+    info.data[0] = 0x80 | i;
+    gst_buffer_unmap (inbuffer, &info);
     GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
     fail_unless_equals_int (gst_pad_push (pad, inbuffer), GST_FLOW_OK);
   }
 
-  inbuffer = gst_buffer_new ();
-  gst_buffer_set_caps (inbuffer, caps);
-  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x88;
-  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x88);
+  inbuffer = gst_buffer_new_wrapped (g_memdup (kate_header_0x88,
+          sizeof (kate_header_0x88)), sizeof (kate_header_0x88));
   GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
   fail_unless_equals_int (gst_pad_push (pad, inbuffer), GST_FLOW_OK);
-
-  gst_caps_unref (caps);
 }
 
 GST_START_TEST (test_kate_parse)
@@ -667,9 +664,8 @@ GST_START_TEST (test_kate_parse)
   test_kate_send_headers (myparsesrcpad);
 
   /* push a text packet */
-  inbuffer = gst_buffer_new ();
-  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x00;
-  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x00);
+  inbuffer = gst_buffer_new_wrapped (g_memdup (kate_header_0x00,
+          sizeof (kate_header_0x00)), sizeof (kate_header_0x00));
   GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_OFFSET (inbuffer) =
       1 * GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = 5 * GST_SECOND;
@@ -677,9 +673,8 @@ GST_START_TEST (test_kate_parse)
   fail_unless_equals_int (gst_pad_push (myparsesrcpad, inbuffer), GST_FLOW_OK);
 
   /* push a eos packet */
-  inbuffer = gst_buffer_new ();
-  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x7f;
-  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x7f);
+  inbuffer = gst_buffer_new_wrapped (g_memdup (kate_header_0x7f,
+          sizeof (kate_header_0x7f)), sizeof (kate_header_0x7f));
   GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_OFFSET (inbuffer) =
       6 * GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = 0;
@@ -713,6 +708,7 @@ GST_START_TEST (test_kate_tag_passthrough)
   GstBus *bus;
   GstBuffer *outbuffer;
   GList *list;
+  GstMapInfo info;
 
   katetag = setup_katetag ();
   fail_unless (gst_element_set_state (katetag,
@@ -740,19 +736,21 @@ GST_START_TEST (test_kate_tag_passthrough)
   list = g_list_nth (buffers, 0);
   fail_unless (list != NULL);
   outbuffer = list->data;
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer),
-      sizeof (kate_header_0x80));
-  fail_unless_equals_int (memcmp (GST_BUFFER_DATA (outbuffer), kate_header_0x80,
+  fail_if (gst_buffer_map (outbuffer, &info, GST_MAP_READ) != TRUE);
+  fail_unless_equals_int (info.size, sizeof (kate_header_0x80));
+  fail_unless_equals_int (memcmp (info.data, kate_header_0x80,
           sizeof (kate_header_0x80)), 0);
+  gst_buffer_unmap (outbuffer, &info);
 
   /* check comment header is unchanged */
   list = g_list_nth (buffers, 1);
   fail_unless (list != NULL);
   outbuffer = list->data;
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer),
-      sizeof (kate_header_0x81));
-  fail_unless_equals_int (memcmp (GST_BUFFER_DATA (outbuffer), kate_header_0x81,
+  fail_if (gst_buffer_map (outbuffer, &info, GST_MAP_READ) != TRUE);
+  fail_unless_equals_int (info.size, sizeof (kate_header_0x81));
+  fail_unless_equals_int (memcmp (info.data, kate_header_0x81,
           sizeof (kate_header_0x81)), 0);
+  gst_buffer_unmap (outbuffer, &info);
 
   /* all headers should have been emitted, but no particular packets */
   check_buffers (0, TRUE);
@@ -772,6 +770,7 @@ GST_START_TEST (test_kate_tag)
   GstElement *katetag;
   GstBus *bus;
   GstBuffer *outbuffer;
+  GstMapInfo info;
 
   katetag = setup_katetag ();
   fail_unless (gst_element_set_state (katetag,
@@ -797,10 +796,11 @@ GST_START_TEST (test_kate_tag)
   fail_unless (g_list_length (buffers) >= 1);
   outbuffer = GST_BUFFER (buffers->data);
   fail_if (outbuffer == NULL);
-  fail_if (GST_BUFFER_SIZE (outbuffer) != 64);
-  fail_if (strcmp ((const char *) GST_BUFFER_DATA (outbuffer) + 32, "cy"));
-  fail_if (strcmp ((const char *) GST_BUFFER_DATA (outbuffer) + 48,
-          "subtitles"));
+  assert_equals_int (gst_buffer_map (outbuffer, &info, GST_MAP_READ), TRUE);
+  fail_if (info.size != 64);
+  fail_if (strcmp ((const char *) info.data + 32, "cy"));
+  fail_if (strcmp ((const char *) info.data + 48, "subtitles"));
+  gst_buffer_unmap (outbuffer, &info);
 
   /* all headers should have been emitted, but no particular packets */
   check_buffers (0, TRUE);
