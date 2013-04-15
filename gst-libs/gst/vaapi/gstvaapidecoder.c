@@ -623,7 +623,7 @@ gst_vaapi_decoder_get_codec_state(GstVaapiDecoder *decoder)
 {
     g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
 
-    return gst_video_codec_state_ref(decoder->priv->codec_state);
+    return GST_VAAPI_DECODER_CODEC_STATE(decoder);
 }
 
 /**
