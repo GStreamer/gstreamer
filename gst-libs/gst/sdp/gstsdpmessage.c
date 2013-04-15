@@ -312,6 +312,8 @@ gst_sdp_message_uninit (GstSDPMessage * msg)
  * @copy should be release with gst_sdp_message_free function.
  *
  * Returns: a #GstSDPResult
+ *
+ * Since: 1.2
  */
 GstSDPResult
 gst_sdp_message_copy (const GstSDPMessage * msg, GstSDPMessage ** copy)
@@ -1407,6 +1409,8 @@ gst_sdp_media_free (GstSDPMedia * media)
  * @copy should be release with gst_sdp_media_free function.
  *
  * Returns: a #GstSDPResult
+ *
+ * Since: 1.2
  */
 GstSDPResult
 gst_sdp_media_copy (const GstSDPMedia * media, GstSDPMedia ** copy)
