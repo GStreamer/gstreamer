@@ -448,7 +448,7 @@ fi
 
 dnl *** gst-libs/gst/egl ***
 AC_ARG_WITH([egl-window-system],
-              AS_HELP_STRING([--with-egl-window-system],[EGL window system to use (x11, mali-fb, rpi, none)]),
+              AS_HELP_STRING([--with-egl-window-system],[EGL window system to use (x11, mali-fb, rpi, ios, none)]),
               [EGL_WINDOW_SYSTEM="$withval"],
               [EGL_WINDOW_SYSTEM="auto"])
 
@@ -481,6 +481,12 @@ if test x"$EGL_WINDOW_SYSTEM" = x"auto"; then
       if test x"$HAVE_X11" = x"yes"; then
         EGL_WINDOW_SYSTEM="x11"
       fi
+  fi
+
+  if test x"$EGL_WINDOW_SYSTEM" = x"auto"; then
+    if test x"$HAVE_IOS" = x"yes"; then
+      EGL_WINDOW_SYSTEM="ios"
+    fi
   fi
 
   if test x"$EGL_WINDOW_SYSTEM" = x"auto"; then
@@ -588,6 +594,9 @@ case "$EGL_WINDOW_SYSTEM" in
 
     LIBS=$old_LIBS
     CFLAGS=$old_CFLAGS
+    ;;
+  ios)
+    HAVE_EGLGLES="yes"
     ;;
   *)
     AC_MSG_ERROR([invalid EGL window system specified])
