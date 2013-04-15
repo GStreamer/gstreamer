@@ -2055,6 +2055,23 @@ gst_rtsp_client_get_uri (GstRTSPClient * client)
 }
 
 /**
+ * gst_rtsp_client_get_connection:
+ * @client: a #GstRTSPClient
+ *
+ * Get the #GstRTSPConnection of @client.
+ *
+ * Returns: (transfer none): the #GstRTSPConnection of @client.
+ * The connection object returned remains valid until the client is freed.
+ */
+GstRTSPConnection *
+gst_rtsp_client_get_connection (GstRTSPClient * client)
+{
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
+
+  return client->priv->connection;
+}
+
+/**
  * gst_rtsp_client_set_send_func:
  * @client: a #GstRTSPClient
  * @func: a #GstRTSPClientSendFunc

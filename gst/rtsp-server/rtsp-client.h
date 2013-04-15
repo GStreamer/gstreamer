@@ -138,6 +138,7 @@ void                  gst_rtsp_client_set_auth          (GstRTSPClient *client, 
 GstRTSPAuth *         gst_rtsp_client_get_auth          (GstRTSPClient *client);
 
 GstRTSPUrl *          gst_rtsp_client_get_uri           (GstRTSPClient *client);
+GstRTSPConnection *   gst_rtsp_client_get_connection    (GstRTSPClient *client);
 
 void                  gst_rtsp_client_set_send_func     (GstRTSPClient *client,
                                                          GstRTSPClientSendFunc func,
