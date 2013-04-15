@@ -612,9 +612,9 @@ gst_vaapi_decoder_get_codec(GstVaapiDecoder *decoder)
  * gst_vaapi_decoder_get_codec_state:
  * @decoder: a #GstVaapiDecoder
  *
- * Retrieves the @decoder codec state. The caller owns an extra reference
- * to the #GstVideoCodecState, so gst_video_codec_state_unref() shall be
- * called after usage.
+ * Retrieves the @decoder codec state. The decoder owns the returned
+ * #GstVideoCodecState structure, so use gst_video_codec_state_ref()
+ * whenever necessary.
  *
  * Return value: the #GstVideoCodecState object for @decoder
  */
@@ -630,7 +630,7 @@ gst_vaapi_decoder_get_codec_state(GstVaapiDecoder *decoder)
  * gst_vaapi_decoder_get_caps:
  * @decoder: a #GstVaapiDecoder
  *
- * Retrieves the @decoder caps. The deocder owns the returned caps, so
+ * Retrieves the @decoder caps. The decoder owns the returned caps, so
  * use gst_caps_ref() whenever necessary.
  *
  * Return value: the @decoder caps

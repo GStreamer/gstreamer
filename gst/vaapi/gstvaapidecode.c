@@ -136,13 +136,11 @@ static void
 gst_vaapi_decoder_notify_caps(GObject *obj, GParamSpec *pspec, void *user_data)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(user_data);
-    GstVideoCodecState *codec_state;
 
     g_assert(decode->decoder == GST_VAAPI_DECODER(obj));
 
-    codec_state = gst_vaapi_decoder_get_codec_state(decode->decoder);
-    gst_vaapidecode_update_src_caps(decode, codec_state);
-    gst_video_codec_state_unref(codec_state);
+    gst_vaapidecode_update_src_caps(decode,
+        gst_vaapi_decoder_get_codec_state(decode->decoder));
 }
 
 static inline gboolean
