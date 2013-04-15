@@ -79,6 +79,7 @@ struct _GstVaapiVideoBufferPoolClass {
     GstBufferPoolClass parent_class;
 };
 
+G_GNUC_INTERNAL
 GType
 gst_vaapi_video_buffer_pool_get_type(void) G_GNUC_CONST;
 
