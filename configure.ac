@@ -853,10 +853,8 @@ case "$host" in
     HAVE_APPLE_MEDIA="no"
     ;;
 esac
-HAVE_IOS="no"
-if test "x$HAVE_APPLE_MEDIA" = "xyes"; then
-  AC_CHECK_HEADER(MobileCoreServices/MobileCoreServices.h, HAVE_IOS="yes", HAVE_IOS="no", [-])
-fi
+
+AC_CHECK_HEADER(MobileCoreServices/MobileCoreServices.h, HAVE_IOS="yes", HAVE_IOS="no", [-])
 
 AM_CONDITIONAL(HAVE_IOS, test "x$HAVE_IOS" = "xyes")
 if test "x$HAVE_IOS" = "xyes"; then
