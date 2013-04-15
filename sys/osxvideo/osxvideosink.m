@@ -862,7 +862,7 @@ gst_osx_video_sink_get_type (void)
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   GstBuffer *buf = object->buf;
 
-  if (!destroyed)
+  if (osxvideosink->osxwindow != NULL)
   {
     gst_buffer_map (buf, &info, GST_MAP_READ);
     viewdata = (guint8 *) [osxvideosink->osxwindow->gstview getTextureBuffer];
@@ -880,25 +880,26 @@ gst_osx_video_sink_get_type (void)
 -(void) destroy
 {
   NSAutoreleasePool *pool;
+  GstOSXWindow *osxwindow;
 
   pool = [[NSAutoreleasePool alloc] init];
 
-  destroyed = TRUE;
+  osxwindow = osxvideosink->osxwindow;
+  osxvideosink->osxwindow = NULL;
 
-  if (osxvideosink->osxwindow) {
+  if (osxwindow) {
     if (osxvideosink->superview) {
-      [osxvideosink->osxwindow->gstview removeFromSuperview];
+      [osxwindow->gstview removeFromSuperview];
     }
-    [osxvideosink->osxwindow->gstview release];
-    if (osxvideosink->osxwindow->internal) {
-      if (!osxvideosink->osxwindow->closed) {
-        osxvideosink->osxwindow->closed = TRUE;
-        [osxvideosink->osxwindow->win release];
+    [osxwindow->gstview release];
+    if (osxwindow->internal) {
+      if (!osxwindow->closed) {
+        osxwindow->closed = TRUE;
+        [osxwindow->win release];
       }
     }
 
-    g_free (osxvideosink->osxwindow);
-    osxvideosink->osxwindow = NULL;
+    g_free (osxwindow);
   }
   [pool release];
 }
