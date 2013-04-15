@@ -685,6 +685,7 @@ gst_audio_ring_buffer_release (GstAudioRingBuffer * buf)
     goto release_failed;
 
   g_atomic_int_set (&buf->segdone, 0);
+  buf->segbase = 0;
   g_free (buf->empty_seg);
   buf->empty_seg = NULL;
   gst_caps_replace (&buf->spec.caps, NULL);
