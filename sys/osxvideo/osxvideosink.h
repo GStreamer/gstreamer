@@ -135,8 +135,6 @@ GType gst_osx_video_sink_get_type(void);
 
 @interface GstOSXVideoSinkObject : NSObject
 {
-  BOOL destroyed;
-
   @public
   GstOSXVideoSink *osxvideosink;
 }
