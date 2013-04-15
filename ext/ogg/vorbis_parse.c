@@ -76,7 +76,7 @@
 
 
 void
-parse_vorbis_header_packet (GstOggStream * pad, ogg_packet * packet)
+gst_parse_vorbis_header_packet (GstOggStream * pad, ogg_packet * packet)
 {
   /*
    * on the first (b_o_s) packet, determine the long and short sizes,
@@ -98,7 +98,7 @@ parse_vorbis_header_packet (GstOggStream * pad, ogg_packet * packet)
 }
 
 void
-parse_vorbis_setup_packet (GstOggStream * pad, ogg_packet * op)
+gst_parse_vorbis_setup_packet (GstOggStream * pad, ogg_packet * op)
 {
   /*
    * the code pages, a whole bunch of other fairly useless stuff, AND,

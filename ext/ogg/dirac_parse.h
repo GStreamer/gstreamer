@@ -2,6 +2,8 @@
 #ifndef __DIRAC_PARSE_H__
 #define __DIRAC_PARSE_H__
 
+#include <glib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -166,8 +168,8 @@ struct _DiracSequenceHeader {
   int unused2;
 };  
 
-
-int dirac_sequence_header_parse (DiracSequenceHeader *header,
+G_GNUC_INTERNAL
+int gst_dirac_sequence_header_parse (DiracSequenceHeader *header,
     unsigned char *data, int length);
 
 #ifdef __cplusplus

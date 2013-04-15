@@ -517,7 +517,7 @@ setup_dirac_mapper (GstOggStream * pad, ogg_packet * packet)
   int ret;
   DiracSequenceHeader header;
 
-  ret = dirac_sequence_header_parse (&header, packet->packet + 13,
+  ret = gst_dirac_sequence_header_parse (&header, packet->packet + 13,
       packet->bytes - 13);
   if (ret == 0) {
     GST_DEBUG ("Failed to parse Dirac sequence header");
@@ -785,7 +785,7 @@ setup_vorbis_mapper (GstOggStream * pad, ogg_packet * packet)
   if (pad->granulerate_n == 0)
     return FALSE;
 
-  parse_vorbis_header_packet (pad, packet);
+  gst_parse_vorbis_header_packet (pad, packet);
 
   pad->caps = gst_caps_new_simple ("audio/x-vorbis",
       "rate", G_TYPE_INT, pad->granulerate_n, "channels", G_TYPE_INT, chans,
@@ -801,7 +801,7 @@ is_header_vorbis (GstOggStream * pad, ogg_packet * packet)
     return FALSE;
 
   if (packet->packet[0] == 5) {
-    parse_vorbis_setup_packet (pad, packet);
+    gst_parse_vorbis_setup_packet (pad, packet);
   }
 
   return TRUE;

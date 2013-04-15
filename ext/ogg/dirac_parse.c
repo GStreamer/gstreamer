@@ -21,22 +21,22 @@ static unsigned int schro_unpack_decode_bit (Unpack * unpack);
 static unsigned int schro_unpack_decode_uint (Unpack * unpack);
 
 
-void schro_video_format_set_std_video_format (DiracSequenceHeader * format,
+static void schro_video_format_set_std_video_format (DiracSequenceHeader *
+    format, int index);
+static void schro_video_format_set_std_frame_rate (DiracSequenceHeader * format,
     int index);
-void schro_video_format_set_std_frame_rate (DiracSequenceHeader * format,
-    int index);
-void schro_video_format_set_std_aspect_ratio (DiracSequenceHeader * format,
-    int index);
-void schro_video_format_set_std_signal_range (DiracSequenceHeader * format,
-    int index);
-void schro_video_format_set_std_colour_spec (DiracSequenceHeader * format,
-    int index);
+static void schro_video_format_set_std_aspect_ratio (DiracSequenceHeader *
+    format, int index);
+static void schro_video_format_set_std_signal_range (DiracSequenceHeader *
+    format, int index);
+static void schro_video_format_set_std_colour_spec (DiracSequenceHeader *
+    format, int index);
 
 
 
 
 int
-dirac_sequence_header_parse (DiracSequenceHeader * header,
+gst_dirac_sequence_header_parse (DiracSequenceHeader * header,
     unsigned char *data, int n_bytes)
 {
   int bit;
@@ -165,7 +165,7 @@ dirac_sequence_header_parse (DiracSequenceHeader * header,
 
 /* standard stuff */
 
-static DiracSequenceHeader schro_video_formats[] = {
+static const DiracSequenceHeader schro_video_formats[] = {
   {0, 0, 0, 0,
         0,                      /* custom */
         640, 480, SCHRO_CHROMA_420,
@@ -304,7 +304,7 @@ static DiracSequenceHeader schro_video_formats[] = {
       3, 0, 0},
 };
 
-void
+static void
 schro_video_format_set_std_video_format (DiracSequenceHeader * format,
     int index)
 {
@@ -323,7 +323,7 @@ struct _SchroFrameRate
   int denominator;
 };
 
-static SchroFrameRate schro_frame_rates[] = {
+static const SchroFrameRate schro_frame_rates[] = {
   {0, 0},
   {24000, 1001},
   {24, 1},
@@ -337,7 +337,7 @@ static SchroFrameRate schro_frame_rates[] = {
   {25, 2}
 };
 
-void
+static void
 schro_video_format_set_std_frame_rate (DiracSequenceHeader * format, int index)
 {
   if (index < 1 || index >= ARRAY_SIZE (schro_frame_rates)) {
@@ -365,7 +365,7 @@ static const SchroPixelAspectRatio schro_aspect_ratios[] = {
   {4, 3}
 };
 
-void
+static void
 schro_video_format_set_std_aspect_ratio (DiracSequenceHeader * format,
     int index)
 {
@@ -395,7 +395,7 @@ static const SchroSignalRangeStruct schro_signal_ranges[] = {
   {256, 3504, 2048, 3584}
 };
 
-void
+static void
 schro_video_format_set_std_signal_range (DiracSequenceHeader * format, int i)
 {
   if (i < 1 || i >= ARRAY_SIZE (schro_signal_ranges)) {
@@ -439,7 +439,7 @@ static const SchroColourSpecStruct schro_colour_specs[] = {
       SCHRO_TRANSFER_CHAR_TV_GAMMA}
 };
 
-void
+static void
 schro_video_format_set_std_colour_spec (DiracSequenceHeader * format, int i)
 {
   if (i < 0 || i >= ARRAY_SIZE (schro_colour_specs)) {
