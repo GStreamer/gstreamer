@@ -662,6 +662,10 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   state->sessmedia = media;
 
+  /* we emit the signal before closing the connection */
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_TEARDOWN_REQUEST],
+      0, state);
+
   /* unlink the all TCP callbacks */
   unlink_session_transports (client, session, media);
 
@@ -684,10 +688,6 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
       gst_rtsp_status_as_text (code), state->request);
 
   send_response (client, session, state->response, TRUE);
-
-  /* we emit the signal before closing the connection */
-  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_TEARDOWN_REQUEST],
-      0, state);
 
   return TRUE;
 
