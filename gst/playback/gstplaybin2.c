@@ -1329,7 +1329,7 @@ compare_factories_func (gconstpointer p1, gconstpointer p2)
   if (diff != 0)
     return diff;
 
-  diff = strcmp (GST_OBJECT_NAME (f2), GST_OBJECT_NAME (f1));
+  diff = strcmp (GST_OBJECT_NAME (f1), GST_OBJECT_NAME (f2));
 
   return diff;
 }
