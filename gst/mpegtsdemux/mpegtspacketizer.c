@@ -3658,6 +3658,9 @@ mpegts_packetizer_offset_to_ts (MpegTSPacketizer2 * packetizer, guint64 offset,
 
   pcrtable = get_pcr_table (packetizer, pid);
 
+  if (G_UNLIKELY (pcrtable->last_offset <= pcrtable->first_offset))
+    return GST_CLOCK_TIME_NONE;
+
   /* Convert byte difference into time difference */
   res = PCRTIME_TO_GSTTIME (gst_util_uint64_scale (offset - priv->refoffset,
           pcrtable->last_pcr - pcrtable->first_pcr,
