@@ -82,6 +82,7 @@ CRUFT_FILES = \
 CRUFT_DIRS = \
 	$(top_srcdir)/gst/aacparse \
 	$(top_srcdir)/gst/amrparse \
+	$(top_srcdir)/gst/camerabin \
 	$(top_srcdir)/gst/flacparse \
 	$(top_srcdir)/gst/hls \
 	$(top_srcdir)/gst/imagefreeze \
