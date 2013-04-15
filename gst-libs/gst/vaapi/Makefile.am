@@ -327,6 +327,7 @@ libgstvaapi_glx_@GST_API_VERSION@_la_LIBADD =	\
 	$(GL_LIBS)				\
 	$(LIBVA_GLX_LIBS)			\
 	libgstvaapi-x11-$(GST_API_VERSION).la	\
+	$(DLOPEN_LIBS)				\
 	$(NULL)
 
 libgstvaapi_glx_@GST_API_VERSION@_la_LDFLAGS =	\
