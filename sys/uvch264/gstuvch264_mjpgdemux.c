@@ -434,7 +434,8 @@ _pts_to_timestamp (GstUvcH264MjpgDemux * self, GstBuffer * buf, guint32 pts)
     GST_DEBUG_OBJECT (self, "device frequency: %u", sample.dev_frequency);
     GST_DEBUG_OBJECT (self, "dev_sof: %u", sample.dev_sof);
     GST_DEBUG_OBJECT (self, "dev_stc: %u", sample.dev_stc);
-    GST_DEBUG_OBJECT (self, "host_ts: %lu -- %" GST_TIME_FORMAT,
+    GST_DEBUG_OBJECT (self,
+        "host_ts: %" G_GUINT64_FORMAT " -- %" GST_TIME_FORMAT,
         current_sample->host_ts, GST_TIME_ARGS (current_sample->host_ts));
     GST_DEBUG_OBJECT (self, "host_sof: %u", sample.host_sof);
     GST_DEBUG_OBJECT (self, "PTS: %u", pts);
