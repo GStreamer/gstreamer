@@ -314,7 +314,7 @@ else
       dnl with static linking we can't use the .a archive directly as they would
       dnl be included in the final libgstswscale.a as a file and won't be usable.
       dnl libav*.a must be copied to the final destination too
-      LIBAV_LIBS="-lswscale -lavutil"
+      SWSCALE_LIBS="-lswscale -lavutil"
   else
       dnl libgstswscale.la: libs to statically link to
       SWSCALE_LIBS="$SWSCALE_DEPS"
