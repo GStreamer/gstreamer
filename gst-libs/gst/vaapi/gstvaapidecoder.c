@@ -701,7 +701,10 @@ gst_vaapi_decoder_get_surface(GstVaapiDecoder *decoder,
         frame = pop_frame(decoder);
         while (frame) {
             if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY(frame)) {
-                *out_proxy_ptr = gst_vaapi_surface_proxy_ref(frame->user_data);
+                GstVaapiSurfaceProxy * const proxy = frame->user_data;
+                proxy->timestamp = frame->pts;
+                proxy->duration = frame->duration;
+                *out_proxy_ptr = proxy;
                 gst_video_codec_frame_unref(frame);
                 return GST_VAAPI_DECODER_STATUS_SUCCESS;
             }
