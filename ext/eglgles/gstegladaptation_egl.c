@@ -865,7 +865,7 @@ gst_egl_adaptation_create_native_window (GstEglAdaptationContext * ctx,
       platform_create_native_window (width, height, own_window_data);
   if (window)
     gst_egl_adaptation_set_window (ctx, window);
-  GST_DEBUG_OBJECT (ctx->element, "Using window handle %p", window);
+  GST_DEBUG_OBJECT (ctx->element, "Using window handle %p", (gpointer) window);
   return window != 0;
 }
 
