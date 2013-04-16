@@ -45,11 +45,16 @@ struct _GstVaapiSurfaceProxy {
 
     GstVaapiVideoPool  *pool;
     GstVaapiSurface    *surface;
+    GDestroyNotify      destroy_func;
+    gpointer            destroy_data;
 };
 
 static void
 gst_vaapi_surface_proxy_finalize(GstVaapiSurfaceProxy *proxy)
 {
+    if (proxy->destroy_func)
+        proxy->destroy_func(proxy->destroy_data);
+
     if (proxy->surface) {
         if (proxy->pool)
             gst_vaapi_video_pool_put_object(proxy->pool, proxy->surface);
@@ -85,6 +90,7 @@ gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool)
     proxy->surface = gst_vaapi_video_pool_get_object(proxy->pool);
     if (!proxy->surface)
         goto error;
+    proxy->destroy_func = NULL;
     g_object_ref(proxy->surface);
     return proxy;
 
@@ -145,45 +151,6 @@ gst_vaapi_surface_proxy_replace(GstVaapiSurfaceProxy **old_proxy_ptr,
 }
 
 /**
- * gst_vaapi_surface_proxy_get_user_data:
- * @proxy: a #GstVaapiSurfaceProxy
- *
- * Gets user-provided data set on the object via a previous call to
- * gst_vaapi_surface_proxy_set_user_data().
- *
- * Returns: (transfer none): The previously set user_data
- */
-gpointer
-gst_vaapi_surface_proxy_get_user_data(GstVaapiSurfaceProxy *proxy)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
-
-    return gst_vaapi_mini_object_get_user_data(GST_VAAPI_MINI_OBJECT(proxy));
-}
-
-/**
- * gst_vaapi_surface_proxy_set_user_data:
- * @proxy: a #GstVaapiSurfaceProxy
- * @user_data: user-provided data
- * @destroy_notify: (closure user_data): a #GDestroyNotify
- *
- * Sets @user_data on the object and the #GDestroyNotify that will be
- * called when the data is freed.
- *
- * If some @user_data was previously set, then the former @destroy_notify
- * function will be called before the @user_data is replaced.
- */
-void
-gst_vaapi_surface_proxy_set_user_data(GstVaapiSurfaceProxy *proxy,
-    gpointer user_data, GDestroyNotify destroy_notify)
-{
-    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
-
-    gst_vaapi_mini_object_set_user_data(GST_VAAPI_MINI_OBJECT(proxy),
-        user_data, destroy_notify);
-}
-
-/**
  * gst_vaapi_surface_proxy_get_surface:
  * @proxy: a #GstVaapiSurfaceProxy
  *
@@ -214,4 +181,25 @@ gst_vaapi_surface_proxy_get_surface_id(GstVaapiSurfaceProxy *proxy)
     g_return_val_if_fail(proxy->surface != NULL, GST_VAAPI_ID_NONE);
 
     return GST_VAAPI_OBJECT_ID(proxy->surface);
+}
+
+/**
+ * gst_vaapi_surface_proxy_set_destroy_notify:
+ * @proxy: a @GstVaapiSurfaceProxy
+ * @destroy_func: a #GDestroyNotify function
+ * @user_data: some extra data to pass to the @destroy_func function
+ *
+ * Sets @destroy_func as the function to call when the surface @proxy
+ * was released. At this point, the proxy object is considered
+ * released, i.e. the underlying data storage is no longer valid and
+ * the callback function shall not expect anything from that.
+ */
+void
+gst_vaapi_surface_proxy_set_destroy_notify(GstVaapiSurfaceProxy *proxy,
+    GDestroyNotify destroy_func, gpointer user_data)
+{
+    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
+
+    proxy->destroy_func = destroy_func;
+    proxy->destroy_data = user_data;
 }

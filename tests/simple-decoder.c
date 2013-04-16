@@ -266,8 +266,8 @@ decoder_thread(gpointer data)
         status = gst_vaapi_decoder_get_surface(app->decoder, &proxy);
         switch (status) {
         case GST_VAAPI_DECODER_STATUS_SUCCESS:
-            gst_vaapi_surface_proxy_set_user_data(proxy,
-                app, (GDestroyNotify)decoder_release);
+            gst_vaapi_surface_proxy_set_destroy_notify(proxy,
+                (GDestroyNotify)decoder_release, app);
             rfp = render_frame_new();
             if (!rfp)
                 SEND_ERROR("failed to allocate render frame");

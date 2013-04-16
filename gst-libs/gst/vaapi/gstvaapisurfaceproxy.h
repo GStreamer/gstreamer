@@ -50,18 +50,15 @@ void
 gst_vaapi_surface_proxy_replace(GstVaapiSurfaceProxy **old_proxy_ptr,
     GstVaapiSurfaceProxy *new_proxy);
 
-gpointer
-gst_vaapi_surface_proxy_get_user_data(GstVaapiSurfaceProxy *proxy);
-
-void
-gst_vaapi_surface_proxy_set_user_data(GstVaapiSurfaceProxy *proxy,
-    gpointer user_data, GDestroyNotify destroy_notify);
-
 GstVaapiSurface *
 gst_vaapi_surface_proxy_get_surface(GstVaapiSurfaceProxy *proxy);
 
 GstVaapiID
 gst_vaapi_surface_proxy_get_surface_id(GstVaapiSurfaceProxy *proxy);
+
+void
+gst_vaapi_surface_proxy_set_destroy_notify(GstVaapiSurfaceProxy *proxy,
+    GDestroyNotify destroy_func, gpointer user_data);
 
 G_END_DECLS
 

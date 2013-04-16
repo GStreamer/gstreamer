@@ -284,8 +284,8 @@ gst_vaapidecode_push_decoded_frames(GstVideoDecoder *vdec)
         if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY(out_frame)) {
             proxy = gst_video_codec_frame_get_user_data(out_frame);
 
-            gst_vaapi_surface_proxy_set_user_data(proxy,
-                decode, (GDestroyNotify)gst_vaapidecode_release);
+            gst_vaapi_surface_proxy_set_destroy_notify(proxy,
+                (GDestroyNotify)gst_vaapidecode_release, decode);
 
 #if GST_CHECK_VERSION(1,0,0)
             ret = gst_video_decoder_allocate_output_frame(vdec, out_frame);
