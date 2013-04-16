@@ -444,12 +444,12 @@ gst_amc_video_dec_base_init (gpointer g_class)
   caps = create_sink_caps (codec_info);
   templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
   gst_element_class_add_pad_template (element_class, templ);
-  gst_object_unref (templ);
+  gst_caps_unref (caps);
 
   caps = create_src_caps (codec_info);
   templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
   gst_element_class_add_pad_template (element_class, templ);
-  gst_object_unref (templ);
+  gst_caps_unref (caps);
 
   longname = g_strdup_printf ("Android MediaCodec %s", codec_info->name);
   gst_element_class_set_metadata (element_class,
