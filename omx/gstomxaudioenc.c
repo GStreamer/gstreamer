@@ -781,19 +781,19 @@ gst_omx_audio_enc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
     if (gst_omx_port_mark_reconfigured (self->enc_in_port) != OMX_ErrorNone)
       return FALSE;
   } else {
-    if (gst_omx_component_set_state (self->enc, OMX_StateIdle) != OMX_ErrorNone)
-      return FALSE;
-
-    /* Need to allocate buffers to reach Idle state */
-    if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
-      return FALSE;
-
-    /* And disable output port */
+    /* Disable output port */
     if (gst_omx_port_set_enabled (self->enc_out_port, FALSE) != OMX_ErrorNone)
       return FALSE;
 
     if (gst_omx_port_wait_enabled (self->enc_out_port,
             1 * GST_SECOND) != OMX_ErrorNone)
+      return FALSE;
+
+    if (gst_omx_component_set_state (self->enc, OMX_StateIdle) != OMX_ErrorNone)
+      return FALSE;
+
+    /* Need to allocate buffers to reach Idle state */
+    if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
       return FALSE;
 
     if (gst_omx_component_get_state (self->enc,
