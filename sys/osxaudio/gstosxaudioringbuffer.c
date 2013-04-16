@@ -229,7 +229,10 @@ gst_osx_audio_ring_buffer_acquire (GstAudioRingBuffer * buf,
       CORE_AUDIO_FORMAT_ARGS (format));
 
   osxsink = GST_OSX_AUDIO_SINK (GST_OBJECT_PARENT (buf));
-  gst_audio_ring_buffer_set_channel_positions (buf, osxsink->channel_positions);
+  if (GST_IS_OSX_AUDIO_SINK (osxsink)) {
+    gst_audio_ring_buffer_set_channel_positions (buf,
+        osxsink->channel_positions);
+  }
 
   buf->size = spec->segtotal * spec->segsize;
   buf->memory = g_malloc0 (buf->size);
