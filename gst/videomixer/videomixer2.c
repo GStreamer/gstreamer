@@ -1279,7 +1279,6 @@ gst_videomixer2_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       /* FIXME, needs a custom query handler because we have multiple
        * sinkpads */
       res = FALSE;
-      gst_query_unref (query);
       break;
   }
   return res;
