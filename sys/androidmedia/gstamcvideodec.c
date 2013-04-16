@@ -97,12 +97,41 @@ enum
 
 /* class initialization */
 
-#define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_INIT (gst_amc_video_dec_debug_category, "amcvideodec", 0, \
-      "Android MediaCodec video decoder");
-#define parent_class gst_amc_video_dec_parent_class
-G_DEFINE_TYPE_WITH_CODE (GstAmcVideoDec, gst_amc_video_dec,
-    GST_TYPE_VIDEO_DECODER, DEBUG_INIT);
+static void gst_amc_video_dec_class_init (GstAmcVideoDecClass * klass);
+static void gst_amc_video_dec_init (GstAmcVideoDec * self);
+static void gst_amc_video_dec_base_init (gpointer g_class);
+
+static GstVideoDecoderClass *parent_class = NULL;
+
+GType
+gst_amc_video_dec_get_type (void)
+{
+  static volatile gsize type = 0;
+
+  if (g_once_init_enter (&type)) {
+    GType _type;
+    static const GTypeInfo info = {
+      sizeof (GstAmcVideoDecClass),
+      gst_amc_video_dec_base_init,
+      NULL,
+      (GClassInitFunc) gst_amc_video_dec_class_init,
+      NULL,
+      NULL,
+      sizeof (GstAmcVideoDec),
+      0,
+      (GInstanceInitFunc) gst_amc_video_dec_init,
+      NULL
+    };
+
+    _type = g_type_register_static (GST_TYPE_VIDEO_DECODER, "GstAmcVideoDec",
+        &info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (gst_amc_video_dec_debug_category, "amcvideodec", 0, "Android MediaCodec video decoder");
+
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
 
 static GstCaps *
 create_sink_caps (const GstAmcCodecInfo * codec_info)
@@ -394,36 +423,17 @@ create_src_caps (const GstAmcCodecInfo * codec_info)
 }
 
 static void
-gst_amc_video_dec_class_init (GstAmcVideoDecClass * klass)
+gst_amc_video_dec_base_init (gpointer g_class)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstVideoDecoderClass *videodec_class = GST_VIDEO_DECODER_CLASS (klass);
-  GstAmcVideoDecClass *amcvideodec_class = GST_AMC_VIDEO_DEC_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstAmcVideoDecClass *amcvideodec_class = GST_AMC_VIDEO_DEC_CLASS (g_class);
   const GstAmcCodecInfo *codec_info;
   GstPadTemplate *templ;
   GstCaps *caps;
   gchar *longname;
 
-  gobject_class->finalize = gst_amc_video_dec_finalize;
-
-  element_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_amc_video_dec_change_state);
-
-  videodec_class->start = GST_DEBUG_FUNCPTR (gst_amc_video_dec_start);
-  videodec_class->stop = GST_DEBUG_FUNCPTR (gst_amc_video_dec_stop);
-  videodec_class->open = GST_DEBUG_FUNCPTR (gst_amc_video_dec_open);
-  videodec_class->close = GST_DEBUG_FUNCPTR (gst_amc_video_dec_close);
-  videodec_class->reset = GST_DEBUG_FUNCPTR (gst_amc_video_dec_reset);
-  videodec_class->set_format = GST_DEBUG_FUNCPTR (gst_amc_video_dec_set_format);
-  videodec_class->handle_frame =
-      GST_DEBUG_FUNCPTR (gst_amc_video_dec_handle_frame);
-  videodec_class->finish = GST_DEBUG_FUNCPTR (gst_amc_video_dec_finish);
-  videodec_class->decide_allocation =
-      GST_DEBUG_FUNCPTR (gst_amc_video_dec_decide_allocation);
-
   codec_info =
-      g_type_get_qdata (G_TYPE_FROM_CLASS (klass), gst_amc_codec_info_quark);
+      g_type_get_qdata (G_TYPE_FROM_CLASS (g_class), gst_amc_codec_info_quark);
   /* This happens for the base class and abstract subclasses */
   if (!codec_info)
     return;
@@ -447,6 +457,31 @@ gst_amc_video_dec_class_init (GstAmcVideoDecClass * klass)
       "Codec/Decoder/Video",
       longname, "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
   g_free (longname);
+}
+
+static void
+gst_amc_video_dec_class_init (GstAmcVideoDecClass * klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstVideoDecoderClass *videodec_class = GST_VIDEO_DECODER_CLASS (klass);
+
+  gobject_class->finalize = gst_amc_video_dec_finalize;
+
+  element_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_amc_video_dec_change_state);
+
+  videodec_class->start = GST_DEBUG_FUNCPTR (gst_amc_video_dec_start);
+  videodec_class->stop = GST_DEBUG_FUNCPTR (gst_amc_video_dec_stop);
+  videodec_class->open = GST_DEBUG_FUNCPTR (gst_amc_video_dec_open);
+  videodec_class->close = GST_DEBUG_FUNCPTR (gst_amc_video_dec_close);
+  videodec_class->reset = GST_DEBUG_FUNCPTR (gst_amc_video_dec_reset);
+  videodec_class->set_format = GST_DEBUG_FUNCPTR (gst_amc_video_dec_set_format);
+  videodec_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_amc_video_dec_handle_frame);
+  videodec_class->finish = GST_DEBUG_FUNCPTR (gst_amc_video_dec_finish);
+  videodec_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_amc_video_dec_decide_allocation);
 }
 
 static void
