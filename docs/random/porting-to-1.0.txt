@@ -729,7 +729,7 @@ CHANGES
 
         now becomes
 
-          filesrc ! flacparse ! audioconvert ! pulsesink
+          filesrc ! flacparse ! flacdec ! audioconvert ! pulsesink
 
         but better just use
 
