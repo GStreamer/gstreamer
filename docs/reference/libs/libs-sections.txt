@@ -521,8 +521,11 @@ GST_VAAPI_DECODER_VC1_GET_CLASS
 <SECTION>
 <FILE>gstvaapisurfaceproxy</FILE>
 <TITLE>GstVaapiSurfaceProxy</TITLE>
+gst_vaapi_surface_proxy_get_duration
+gst_vaapi_surface_proxy_get_flags
 gst_vaapi_surface_proxy_get_surface
 gst_vaapi_surface_proxy_get_surface_id
+gst_vaapi_surface_proxy_get_timestamp
 gst_vaapi_surface_proxy_new_from_pool
 gst_vaapi_surface_proxy_ref
 gst_vaapi_surface_proxy_replace

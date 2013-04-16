@@ -113,6 +113,7 @@ libgstvaapi_source_priv_h =			\
 	gstvaapiminiobject.h			\
 	gstvaapiobject_priv.h			\
 	gstvaapisurface_priv.h			\
+	gstvaapisurfaceproxy_priv.h		\
 	gstvaapiutils.h				\
 	gstvaapiversion.h			\
 	gstvaapiworkarounds.h			\

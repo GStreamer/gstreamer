@@ -27,27 +27,10 @@
 
 #include "sysdeps.h"
 #include "gstvaapisurfaceproxy.h"
-#include "gstvaapiobject_priv.h"
-#include "gstvaapiminiobject.h"
+#include "gstvaapisurfaceproxy_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
-
-#define GST_VAAPI_SURFACE_PROXY(obj) \
-    ((GstVaapiSurfaceProxy *)(obj))
-
-#define GST_VAAPI_IS_SURFACE_PROXY(obj) \
-    (GST_VAAPI_SURFACE_PROXY(obj) != NULL)
-
-struct _GstVaapiSurfaceProxy {
-    /*< private >*/
-    GstVaapiMiniObject  parent_instance;
-
-    GstVaapiVideoPool  *pool;
-    GstVaapiSurface    *surface;
-    GDestroyNotify      destroy_func;
-    gpointer            destroy_data;
-};
 
 static void
 gst_vaapi_surface_proxy_finalize(GstVaapiSurfaceProxy *proxy)
@@ -86,10 +69,12 @@ gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool)
     if (!proxy)
         return NULL;
 
-    proxy->pool    = g_object_ref(pool);
+    proxy->pool = g_object_ref(pool);
     proxy->surface = gst_vaapi_video_pool_get_object(proxy->pool);
     if (!proxy->surface)
         goto error;
+    proxy->timestamp = GST_CLOCK_TIME_NONE;
+    proxy->duration = GST_CLOCK_TIME_NONE;
     proxy->destroy_func = NULL;
     g_object_ref(proxy->surface);
     return proxy;
@@ -163,7 +148,24 @@ gst_vaapi_surface_proxy_get_surface(GstVaapiSurfaceProxy *proxy)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
 
-    return proxy->surface;
+    return GST_VAAPI_SURFACE_PROXY_SURFACE(proxy);
+}
+
+/**
+ * gst_vaapi_surface_proxy_get_flags:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Returns the #GstVaapiSurfaceProxyFlags associated with this surface
+ * @proxy.
+ *
+ * Return value: the set of #GstVaapiSurfaceProxyFlags
+ */
+guint
+gst_vaapi_surface_proxy_get_flags(GstVaapiSurfaceProxy *proxy)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), 0);
+    
+    return GST_VAAPI_SURFACE_PROXY_FLAGS(proxy);
 }
 
 /**
@@ -180,7 +182,39 @@ gst_vaapi_surface_proxy_get_surface_id(GstVaapiSurfaceProxy *proxy)
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), GST_VAAPI_ID_NONE);
     g_return_val_if_fail(proxy->surface != NULL, GST_VAAPI_ID_NONE);
 
-    return GST_VAAPI_OBJECT_ID(proxy->surface);
+    return GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy);
+}
+
+/**
+ * gst_vaapi_surface_proxy_get_timestamp:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Returns the presentation timestamp for this surface @proxy.
+ *
+ * Return value: the presentation timestamp
+ */
+GstClockTime
+gst_vaapi_surface_proxy_get_timestamp(GstVaapiSurfaceProxy *proxy)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), 0);
+    
+    return GST_VAAPI_SURFACE_PROXY_TIMESTAMP(proxy);
+}
+
+/**
+ * gst_vaapi_surface_proxy_get_duration:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Returns the presentation duration for this surface @proxy.
+ *
+ * Return value: the presentation duration
+ */
+GstClockTime
+gst_vaapi_surface_proxy_get_duration(GstVaapiSurfaceProxy *proxy)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), 0);
+    
+    return GST_VAAPI_SURFACE_PROXY_DURATION(proxy);
 }
 
 /**
