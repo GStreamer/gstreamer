@@ -29,6 +29,7 @@
 #include "gstvaapicompat.h"
 #include "gstvaapidecoder.h"
 #include "gstvaapidecoder_priv.h"
+#include "gstvaapiparser_frame.h"
 #include "gstvaapisurfaceproxy_priv.h"
 #include "gstvaapiutils.h"
 #include "gstvaapi_priv.h"
@@ -141,7 +142,7 @@ do_parse(GstVaapiDecoder *decoder,
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
     GstVaapiParserState * const ps = &priv->parser_state;
-    GstVaapiDecoderFrame *frame;
+    GstVaapiParserFrame *frame;
     GstVaapiDecoderUnit *unit;
     GstVaapiDecoderStatus status;
 
@@ -151,7 +152,7 @@ do_parse(GstVaapiDecoder *decoder,
     frame = gst_video_codec_frame_get_user_data(base_frame);
     if (!frame) {
         GstVideoCodecState * const codec_state = priv->codec_state;
-        frame = gst_vaapi_decoder_frame_new(codec_state->info.width,
+        frame = gst_vaapi_parser_frame_new(codec_state->info.width,
             codec_state->info.height);
         if (!frame)
             return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -188,7 +189,7 @@ do_parse(GstVaapiDecoder *decoder,
     }
 
 got_unit:
-    gst_vaapi_decoder_frame_append_unit(frame, unit);
+    gst_vaapi_parser_frame_append_unit(frame, unit);
     *got_unit_size_ptr = unit->size;
     *got_frame_ptr = GST_VAAPI_DECODER_UNIT_IS_FRAME_END(unit);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
@@ -214,7 +215,7 @@ do_decode_units(GstVaapiDecoder *decoder, GArray *units)
 }
 
 static GstVaapiDecoderStatus
-do_decode_1(GstVaapiDecoder *decoder, GstVaapiDecoderFrame *frame)
+do_decode_1(GstVaapiDecoder *decoder, GstVaapiParserFrame *frame)
 {
     GstVaapiDecoderClass * const klass = GST_VAAPI_DECODER_GET_CLASS(decoder);
     GstVaapiDecoderStatus status;
@@ -261,14 +262,14 @@ static inline GstVaapiDecoderStatus
 do_decode(GstVaapiDecoder *decoder, GstVideoCodecFrame *base_frame)
 {
     GstVaapiParserState * const ps = &decoder->priv->parser_state;
-    GstVaapiDecoderFrame * const frame = base_frame->user_data;
+    GstVaapiParserFrame * const frame = base_frame->user_data;
     GstVaapiDecoderStatus status;
 
     ps->current_frame = base_frame;
 
-    gst_vaapi_decoder_frame_ref(frame);
+    gst_vaapi_parser_frame_ref(frame);
     status = do_decode_1(decoder, frame);
-    gst_vaapi_decoder_frame_unref(frame);
+    gst_vaapi_parser_frame_unref(frame);
 
     switch ((guint)status) {
     case GST_VAAPI_DECODER_STATUS_DROP_FRAME:

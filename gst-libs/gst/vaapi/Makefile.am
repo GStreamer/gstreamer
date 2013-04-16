@@ -46,7 +46,6 @@ libgstvaapi_source_c =				\
 	gstvaapicontext.c			\
 	gstvaapidecoder.c			\
 	gstvaapidecoder_dpb.c			\
-	gstvaapidecoder_frame.c			\
 	gstvaapidecoder_h264.c			\
 	gstvaapidecoder_mpeg2.c			\
 	gstvaapidecoder_mpeg4.c			\
@@ -61,6 +60,7 @@ libgstvaapi_source_c =				\
 	gstvaapiminiobject.c			\
 	gstvaapiobject.c			\
 	gstvaapiparamspecs.c			\
+	gstvaapiparser_frame.c			\
 	gstvaapiprofile.c			\
 	gstvaapisubpicture.c			\
 	gstvaapisurface.c			\
@@ -105,13 +105,13 @@ libgstvaapi_source_priv_h =			\
 	gstvaapicompat.h			\
 	gstvaapidebug.h				\
 	gstvaapidecoder_dpb.h			\
-	gstvaapidecoder_frame.h			\
 	gstvaapidecoder_objects.h		\
 	gstvaapidecoder_priv.h			\
 	gstvaapidecoder_unit.h			\
 	gstvaapidisplay_priv.h			\
 	gstvaapiminiobject.h			\
 	gstvaapiobject_priv.h			\
+	gstvaapiparser_frame.h			\
 	gstvaapisurface_priv.h			\
 	gstvaapisurfaceproxy_priv.h		\
 	gstvaapiutils.h				\

@@ -1,5 +1,5 @@
 /*
- *  gstvaapidecoder_frame.c - VA decoder frame
+ *  gstvaapiparser_frame.c - VA parser frame
  *
  *  Copyright (C) 2012-2013 Intel Corporation
  *
@@ -20,21 +20,21 @@
  */
 
 /**
- * SECTION:gstvaapidecoder_frame
+ * SECTION:gstvaapiparser_frame
  * @short_description: VA decoder frame
  */
 
 #include "sysdeps.h"
-#include "gstvaapidecoder_frame.h"
+#include "gstvaapiparser_frame.h"
 
 static inline const GstVaapiMiniObjectClass *
-gst_vaapi_decoder_frame_class(void)
+gst_vaapi_parser_frame_class(void)
 {
-    static const GstVaapiMiniObjectClass GstVaapiDecoderFrameClass = {
-        sizeof(GstVaapiDecoderFrame),
-        (GDestroyNotify)gst_vaapi_decoder_frame_free
+    static const GstVaapiMiniObjectClass GstVaapiParserFrameClass = {
+        sizeof(GstVaapiParserFrame),
+        (GDestroyNotify)gst_vaapi_parser_frame_free
     };
-    return &GstVaapiDecoderFrameClass;
+    return &GstVaapiParserFrameClass;
 }
 
 static inline gboolean
@@ -65,22 +65,22 @@ free_units(GArray **units_ptr)
 }
 
 /**
- * gst_vaapi_decoder_frame_new:
+ * gst_vaapi_parser_frame_new:
  * @width: frame width in pixels
  * @height: frame height in pixels
  *
- * Creates a new #GstVaapiDecoderFrame object.
+ * Creates a new #GstVaapiParserFrame object.
  *
- * Returns: The newly allocated #GstVaapiDecoderFrame
+ * Returns: The newly allocated #GstVaapiParserFrame
  */
-GstVaapiDecoderFrame *
-gst_vaapi_decoder_frame_new(guint width, guint height)
+GstVaapiParserFrame *
+gst_vaapi_parser_frame_new(guint width, guint height)
 {
-    GstVaapiDecoderFrame *frame;
+    GstVaapiParserFrame *frame;
     guint num_slices;
 
-    frame = (GstVaapiDecoderFrame *)
-        gst_vaapi_mini_object_new(gst_vaapi_decoder_frame_class());
+    frame = (GstVaapiParserFrame *)
+        gst_vaapi_mini_object_new(gst_vaapi_parser_frame_class());
     if (!frame)
         return NULL;
 
@@ -98,13 +98,13 @@ gst_vaapi_decoder_frame_new(guint width, guint height)
     return frame;
 
 error:
-    gst_vaapi_decoder_frame_unref(frame);
+    gst_vaapi_parser_frame_unref(frame);
     return NULL;
 }
 
 /**
- * gst_vaapi_decoder_frame_free:
- * @frame: a #GstVaapiDecoderFrame
+ * gst_vaapi_parser_frame_free:
+ * @frame: a #GstVaapiParserFrame
  *
  * Deallocates any internal resources bound to the supplied decoder
  * @frame.
@@ -113,7 +113,7 @@ error:
  * sub-classes.
  */
 void
-gst_vaapi_decoder_frame_free(GstVaapiDecoderFrame *frame)
+gst_vaapi_parser_frame_free(GstVaapiParserFrame *frame)
 {
     free_units(&frame->units);
     free_units(&frame->pre_units);
@@ -121,14 +121,14 @@ gst_vaapi_decoder_frame_free(GstVaapiDecoderFrame *frame)
 }
 
 /**
- * gst_vaapi_decoder_frame_append_unit:
- * @frame: a #GstVaapiDecoderFrame
+ * gst_vaapi_parser_frame_append_unit:
+ * @frame: a #GstVaapiParserFrame
  * @unit: a #GstVaapiDecoderUnit
  *
  * Appends unit to the @frame.
  */
 void
-gst_vaapi_decoder_frame_append_unit(GstVaapiDecoderFrame *frame,
+gst_vaapi_parser_frame_append_unit(GstVaapiParserFrame *frame,
     GstVaapiDecoderUnit *unit)
 {
     GArray **unit_array_ptr;

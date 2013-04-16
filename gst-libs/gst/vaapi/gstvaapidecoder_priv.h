@@ -25,7 +25,7 @@
 
 #include <glib.h>
 #include <gst/vaapi/gstvaapidecoder.h>
-#include <gst/vaapi/gstvaapidecoder_frame.h>
+#include <gst/vaapi/gstvaapidecoder_unit.h>
 #include <gst/vaapi/gstvaapicontext.h>
 
 G_BEGIN_DECLS
