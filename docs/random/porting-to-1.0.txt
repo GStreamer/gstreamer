@@ -706,3 +706,35 @@ CHANGES
 
       - playbin2::connection-speed:
         changed from a plain unsigned integer to an unsigned 64-bit integer
+
+ * property default value changes
+
+      - souphttpsrc now by default asks the server to send icecast metadata
+        if available (from internet radio streams usually). This has
+        implications for hand-rolled pipelines, which may require an icydemux
+        element now to parse that metadata (without that the data might be
+        garbled). Since 1.0.7 the "iradio-mode" property has been re-added
+        to allow users to switch off the default behaviour of requesting
+        icecast metadata.
+
+ * decoders now require parsers in front of them
+
+      - in 1.0 many decoders require parsers in front of them in many
+        situation. This is to simplify decoders and move a lot of the
+        "intelligence" into the parser. This makes it easier to write
+        decoders and minimises behavioural differences between different
+        decoders (both for the same format and different formats). So e.g.
+
+          filesrc ! flacdec ! audioconvert ! pulsesink
+
+        now becomes
+
+          filesrc ! flacparse ! audioconvert ! pulsesink
+
+        but better just use
+
+          filesrc ! decodebin ! audioconvert ! pulsesink
+
+        or even
+
+          playbin uri=file:///path/to/foo.flac audio-sink=pulsesink
