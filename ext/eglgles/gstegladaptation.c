@@ -471,12 +471,15 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
     goto HANDLE_ERROR_LOCKED;
   }
 
-  gst_egl_adaptation_query_buffer_preserved (ctx);
-
   if (!gst_egl_adaptation_context_make_current (ctx, TRUE))
     goto HANDLE_ERROR_LOCKED;
 
+  gst_egl_adaptation_query_buffer_preserved (ctx);
+
   gst_egl_adaptation_init_egl_exts (ctx);
+
+  /* Save surface dims */
+  gst_egl_adaptation_update_surface_dimensions (ctx);
 
   /* Save display's pixel aspect ratio
    *
@@ -488,9 +491,6 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
    * per frame.
    */
   gst_egl_adaptation_query_par (ctx);
-
-  /* Save surface dims */
-  gst_egl_adaptation_update_surface_dimensions (ctx);
 
   /* We have a surface! */
   ctx->have_surface = TRUE;
