@@ -466,6 +466,8 @@ gst_amc_video_dec_class_init (GstAmcVideoDecClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *videodec_class = GST_VIDEO_DECODER_CLASS (klass);
 
+  parent_class = g_type_class_peek_parent (klass);
+
   gobject_class->finalize = gst_amc_video_dec_finalize;
 
   element_class->change_state =

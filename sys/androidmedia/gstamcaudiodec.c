@@ -333,6 +333,8 @@ gst_amc_audio_dec_class_init (GstAmcAudioDecClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstAudioDecoderClass *audiodec_class = GST_AUDIO_DECODER_CLASS (klass);
 
+  parent_class = g_type_class_peek_parent (klass);
+
   gobject_class->finalize = gst_amc_audio_dec_finalize;
 
   element_class->change_state =
