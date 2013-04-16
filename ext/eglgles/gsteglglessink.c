@@ -469,8 +469,6 @@ egl_init (GstEglGlesSink * eglglessink)
     goto HANDLE_ERROR;
   }
 
-  gst_egl_adaptation_init_egl_exts (eglglessink->egl_context);
-
   caps =
       gst_egl_adaptation_fill_supported_fbuffer_configs
       (eglglessink->egl_context);
@@ -2117,6 +2115,8 @@ gst_eglglessink_configure_caps (GstEglGlesSink * eglglessink, GstCaps * caps)
       goto HANDLE_ERROR;
     }
   }
+
+  gst_egl_adaptation_init_egl_exts (eglglessink->egl_context);
 
 SUCCEED:
   GST_INFO_OBJECT (eglglessink, "Configured caps successfully");
