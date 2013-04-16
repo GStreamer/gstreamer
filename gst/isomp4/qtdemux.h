@@ -113,6 +113,13 @@ struct _GstQTDemux {
 
   gboolean upstream_seekable;
   gint64 upstream_size;
+
+  /* MSS streams have a single media that is unspecified at the atoms, so
+   * upstream provides it at the caps */
+  GstCaps *media_caps;
+  gboolean exposed;
+  gboolean mss_mode; /* flag to indicate that we're working with a smoothstreaming fragment */
+  GstClockTime base_timestamp;
 };
 
 struct _GstQTDemuxClass {
