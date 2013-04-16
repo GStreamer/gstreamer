@@ -536,8 +536,6 @@ egl_init (GstEglGlesSink * eglglessink)
     goto HANDLE_ERROR;
   }
 
-  gst_eglglessink_init_egl_exts (eglglessink);
-
   if (!gst_eglglessink_fill_supported_fbuffer_configs (eglglessink)) {
     GST_ERROR_OBJECT (eglglessink, "Display support NONE of our configs");
     goto HANDLE_ERROR;
@@ -904,8 +902,6 @@ gst_eglglessink_init_egl_exts (GstEglGlesSink * eglglessink)
       GST_STR_NULL (eglexts));
   GST_DEBUG_OBJECT (eglglessink, "Available GLES extensions: %s\n",
       GST_STR_NULL ((const char *) glexts));
-
-  return;
 }
 
 static gboolean
@@ -1299,6 +1295,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
 
   if (!gst_eglglessink_context_make_current (eglglessink, TRUE))
     goto HANDLE_EGL_ERROR_LOCKED;
+
+  gst_eglglessink_init_egl_exts (eglglessink);
 
   /* Save display's pixel aspect ratio
    *
