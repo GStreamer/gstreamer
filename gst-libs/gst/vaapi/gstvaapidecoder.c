@@ -29,6 +29,7 @@
 #include "gstvaapicompat.h"
 #include "gstvaapidecoder.h"
 #include "gstvaapidecoder_priv.h"
+#include "gstvaapisurfaceproxy_priv.h"
 #include "gstvaapiutils.h"
 #include "gstvaapi_priv.h"
 
@@ -386,12 +387,12 @@ static inline void
 push_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVaapiSurfaceProxy * const proxy = frame->user_data;
 
     GST_DEBUG("queue decoded surface %" GST_VAAPI_ID_FORMAT,
-              GST_VAAPI_ID_ARGS(gst_vaapi_surface_proxy_get_surface_id(
-                                    frame->user_data)));
+              GST_VAAPI_ID_ARGS(GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy)));
 
-    g_queue_push_tail(priv->frames, frame);
+    g_queue_push_tail(priv->frames, gst_video_codec_frame_ref(frame));
 }
 
 static inline GstVideoCodecFrame *
@@ -399,14 +400,15 @@ pop_frame(GstVaapiDecoder *decoder)
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
     GstVideoCodecFrame *frame;
+    GstVaapiSurfaceProxy *proxy;
 
     frame = g_queue_pop_head(priv->frames);
     if (!frame)
         return NULL;
 
+    proxy = frame->user_data;
     GST_DEBUG("dequeue decoded surface %" GST_VAAPI_ID_FORMAT,
-              GST_VAAPI_ID_ARGS(gst_vaapi_surface_proxy_get_surface_id(
-                                    frame->user_data)));
+              GST_VAAPI_ID_ARGS(GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy)));
 
     return frame;
 }
@@ -744,6 +746,20 @@ gst_vaapi_decoder_get_frame(GstVaapiDecoder *decoder,
     out_frame = pop_frame(decoder);
     if (!out_frame)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+
+#if !GST_CHECK_VERSION(1,0,0)
+    if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY(out_frame)) {
+        const guint flags = GST_VAAPI_SURFACE_PROXY_FLAGS(out_frame->user_data);
+        guint out_flags = 0;
+
+        if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_TFF)
+            out_flags |= GST_VIDEO_CODEC_FRAME_FLAG_TFF;
+        if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_RFF)
+            out_flags |= GST_VIDEO_CODEC_FRAME_FLAG_RFF;
+        if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD)
+            out_flags |= GST_VIDEO_CODEC_FRAME_FLAG_ONEFIELD;
+    }
+#endif
 
     *out_frame_ptr = out_frame;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;

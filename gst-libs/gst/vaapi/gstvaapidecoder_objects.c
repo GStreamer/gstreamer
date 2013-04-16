@@ -25,6 +25,7 @@
 #include <gst/vaapi/gstvaapicontext.h>
 #include "gstvaapidecoder_objects.h"
 #include "gstvaapidecoder_priv.h"
+#include "gstvaapisurfaceproxy_priv.h"
 #include "gstvaapicompat.h"
 #include "gstvaapiutils.h"
 
@@ -140,8 +141,8 @@ gst_vaapi_picture_create(
         picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_FF);
     }
-    picture->surface    = gst_vaapi_surface_proxy_get_surface(picture->proxy);
-    picture->surface_id = gst_vaapi_surface_get_id(picture->surface);
+    picture->surface    = GST_VAAPI_SURFACE_PROXY_SURFACE(picture->proxy);
+    picture->surface_id = GST_VAAPI_SURFACE_PROXY_SURFACE_ID(picture->proxy);
 
     picture->param_id = VA_INVALID_ID;
     success = vaapi_create_buffer(
@@ -297,30 +298,31 @@ gst_vaapi_picture_decode(GstVaapiPicture *picture)
 gboolean
 gst_vaapi_picture_output(GstVaapiPicture *picture)
 {
+    GstVideoCodecFrame * const out_frame = picture->frame;
     GstVaapiSurfaceProxy *proxy;
-    GstVideoCodecFrame *out_frame;
+    guint flags = 0;
 
     g_return_val_if_fail(GST_VAAPI_IS_PICTURE(picture), FALSE);
 
     if (!picture->proxy)
         return FALSE;
 
-    out_frame = gst_video_codec_frame_ref(picture->frame);
-
     proxy = gst_vaapi_surface_proxy_ref(picture->proxy);
     gst_video_codec_frame_set_user_data(out_frame,
         proxy, (GDestroyNotify)gst_vaapi_mini_object_unref);
 
     out_frame->pts = picture->pts;
+
     if (GST_VAAPI_PICTURE_IS_SKIPPED(picture))
         GST_VIDEO_CODEC_FRAME_FLAG_SET(out_frame,
             GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
-#if !GST_CHECK_VERSION(1,0,0)
-    /* XXX: replaced with GST_VIDEO_BUFFER_FLAG_TFF */
-    if (GST_VAAPI_PICTURE_IS_TFF(picture))
-        GST_VIDEO_CODEC_FRAME_FLAG_SET(out_frame,
-            GST_VIDEO_CODEC_FRAME_FLAG_TFF);
-#endif
+
+    if (GST_VAAPI_PICTURE_IS_INTERLACED(picture)) {
+        flags |= GST_VAAPI_SURFACE_PROXY_FLAG_INTERLACED;
+        if (GST_VAAPI_PICTURE_IS_TFF(picture))
+            flags |= GST_VAAPI_SURFACE_PROXY_FLAG_TFF;
+    }
+    GST_VAAPI_SURFACE_PROXY_FLAG_SET(proxy, flags);
 
     gst_vaapi_decoder_push_frame(GET_DECODER(picture), out_frame);
 
