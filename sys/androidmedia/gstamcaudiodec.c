@@ -468,7 +468,6 @@ gst_amc_audio_dec_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 gst_amc_audio_dec_set_src_caps (GstAmcAudioDec * self, GstAmcFormat * format)
 {
-  GstCaps *caps;
   gint rate, channels;
   guint32 channel_mask = 0;
   GstAudioChannelPosition to[64];
@@ -503,10 +502,8 @@ gst_amc_audio_dec_set_src_caps (GstAmcAudioDec * self, GstAmcFormat * format)
   gst_audio_info_set_format (&self->info, GST_AUDIO_FORMAT_S16, rate, channels,
       to);
 
-  caps = gst_audio_info_to_caps (&self->info);
-
-  gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (self), caps);
-  gst_caps_unref (caps);
+  if (!gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (self), &self->info))
+    return FALSE;
 
   self->input_caps_changed = FALSE;
 
