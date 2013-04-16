@@ -49,6 +49,8 @@
 
 #include "gstegladaptation.h"
 
+#define GST_CAT_DEFAULT egladaption_debug
+
 struct _GstEaglContext
 {
   EAGLContext *eagl_context;

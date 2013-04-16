@@ -2449,6 +2449,8 @@ eglglessink_plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_eglglessink_debug, "eglglessink",
       0, "Simple EGL/GLES Sink");
 
+  gst_egl_adaption_init ();
+
 #ifdef USE_EGL_RPI
   GST_DEBUG ("Initialize BCM host");
   bcm_host_init ();

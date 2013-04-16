@@ -53,6 +53,8 @@
 #include <GLES2/gl2ext.h>
 #include <gst/egl/egl.h>
 
+#define GST_CAT_DEFAULT egladaption_debug
+
 /* Some EGL implementations are reporting wrong
  * values for the display's EGL_PIXEL_ASPECT_RATIO.
  * They are required by the khronos specs to report

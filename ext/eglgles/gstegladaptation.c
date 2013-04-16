@@ -49,6 +49,9 @@
 #include <gst/video/video.h>
 #include <string.h>
 
+#define GST_CAT_DEFAULT egladaption_debug
+GST_DEBUG_CATEGORY (egladaption_debug);
+
 /* GLESv2 GLSL Shaders
  *
  * OpenGL ES Standard does not mandate YUV support. This is
@@ -207,6 +210,12 @@ static const char *frag_NV12_NV21_prog = {
       "}"
 };
 /* *INDENT-ON* */
+
+void
+gst_egl_adaption_init (void)
+{
+  GST_DEBUG_CATEGORY_INIT (egladaption_debug, "egladaption", 0, "EGL adaption layer");
+}
 
 static GstCaps *
 _gst_video_format_new_template_caps (GstVideoFormat format)
