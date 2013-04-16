@@ -33,7 +33,7 @@ typedef struct _GstDownloadRate GstDownloadRate;
 struct _GstDownloadRate
 {
   GQueue queue;
-  GStaticMutex mutex;
+  GMutex mutex;
 
   gint max_length;
 

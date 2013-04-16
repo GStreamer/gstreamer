@@ -216,17 +216,22 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
 }
 
 GstMssManifest *
-gst_mss_manifest_new (const GstBuffer * data)
+gst_mss_manifest_new (GstBuffer * data)
 {
   GstMssManifest *manifest;
   xmlNodePtr root;
   xmlNodePtr nodeiter;
   gchar *live_str;
+  GstMapInfo mapinfo;
+
+  if (!gst_buffer_map (data, &mapinfo, GST_MAP_READ)) {
+    return NULL;
+  }
 
   manifest = g_malloc0 (sizeof (GstMssManifest));
 
-  manifest->xml = xmlReadMemory ((const gchar *) GST_BUFFER_DATA (data),
-      GST_BUFFER_SIZE (data), "manifest", NULL, 0);
+  manifest->xml = xmlReadMemory ((const gchar *) mapinfo.data,
+      mapinfo.size, "manifest", NULL, 0);
   root = manifest->xmlrootnode = xmlDocGetRootElement (manifest->xml);
 
   live_str = (gchar *) xmlGetProp (root, (xmlChar *) "IsLive");
@@ -244,6 +249,8 @@ gst_mss_manifest_new (const GstBuffer * data)
       _gst_mss_stream_init (stream, nodeiter);
     }
   }
+
+  gst_buffer_unmap (data, &mapinfo);
 
   return manifest;
 }
@@ -336,21 +343,26 @@ _make_h264_codec_data (GstBuffer * sps, GstBuffer * pps)
   guint8 profile_idc = 0, profile_comp = 0, level_idc = 0;
   guint8 *data;
   gint nl;
+  GstMapInfo spsinfo, ppsinfo, codecdatainfo;
 
-  if (GST_BUFFER_SIZE (sps) < 4)
+  if (gst_buffer_get_size (sps) < 4)
     return NULL;
 
-  sps_size += GST_BUFFER_SIZE (sps) + 2;
-  profile_idc = GST_BUFFER_DATA (sps)[1];
-  profile_comp = GST_BUFFER_DATA (sps)[2];
-  level_idc = GST_BUFFER_DATA (sps)[3];
+  gst_buffer_map (sps, &spsinfo, GST_MAP_READ);
+  gst_buffer_map (pps, &ppsinfo, GST_MAP_READ);
+
+  sps_size += spsinfo.size + 2;
+  profile_idc = spsinfo.data[1];
+  profile_comp = spsinfo.data[2];
+  level_idc = spsinfo.data[3];
   num_sps = 1;
 
-  pps_size += GST_BUFFER_SIZE (pps) + 2;
+  pps_size += ppsinfo.size + 2;
   num_pps = 1;
 
   buf = gst_buffer_new_and_alloc (5 + 1 + sps_size + 1 + pps_size);
-  data = GST_BUFFER_DATA (buf);
+  gst_buffer_map (buf, &codecdatainfo, GST_MAP_WRITE);
+  data = codecdatainfo.data;
   nl = 4;
 
   data[0] = 1;                  /* AVC Decoder Configuration Record ver. 1 */
@@ -361,15 +373,19 @@ _make_h264_codec_data (GstBuffer * sps, GstBuffer * pps)
   data[5] = 0xe0 | num_sps;     /* number of SPSs */
 
   data += 6;
-  GST_WRITE_UINT16_BE (data, GST_BUFFER_SIZE (sps));
-  memcpy (data + 2, GST_BUFFER_DATA (sps), GST_BUFFER_SIZE (sps));
-  data += 2 + GST_BUFFER_SIZE (sps);
+  GST_WRITE_UINT16_BE (data, spsinfo.size);
+  memcpy (data + 2, spsinfo.data, spsinfo.size);
+  data += 2 + spsinfo.size;
 
   data[0] = num_pps;
   data++;
-  GST_WRITE_UINT16_BE (data, GST_BUFFER_SIZE (pps));
-  memcpy (data + 2, GST_BUFFER_DATA (pps), GST_BUFFER_SIZE (pps));
-  data += 2 + GST_BUFFER_SIZE (pps);
+  GST_WRITE_UINT16_BE (data, ppsinfo.size);
+  memcpy (data + 2, ppsinfo.data, ppsinfo.size);
+  data += 2 + ppsinfo.size;
+
+  gst_buffer_unmap (sps, &spsinfo);
+  gst_buffer_unmap (pps, &ppsinfo);
+  gst_buffer_unmap (buf, &codecdatainfo);
 
   return buf;
 }
@@ -385,6 +401,7 @@ _gst_mss_stream_add_h264_codec_data (GstCaps * caps, const gchar * codecdatastr)
   GstH264NalUnit nalu;
   GstH264SPS sps_struct;
   GstH264ParserResult parseres;
+  GstMapInfo spsinfo;
 
   /* search for the sps start */
   if (g_str_has_prefix (codecdatastr, "00000001")) {
@@ -406,10 +423,12 @@ _gst_mss_stream_add_h264_codec_data (GstCaps * caps, const gchar * codecdatastr)
   pps_str = pps_str + 8;
   pps = gst_buffer_from_hex_string (pps_str);
 
-  nalu.ref_idc = (GST_BUFFER_DATA (sps)[0] & 0x60) >> 5;
+  gst_buffer_map (sps, &spsinfo, GST_MAP_READ);
+
+  nalu.ref_idc = (spsinfo.data[0] & 0x60) >> 5;
   nalu.type = GST_H264_NAL_SPS;
-  nalu.size = GST_BUFFER_SIZE (sps);
-  nalu.data = GST_BUFFER_DATA (sps);
+  nalu.size = spsinfo.size;
+  nalu.data = spsinfo.data;
   nalu.offset = 0;
   nalu.sc_offset = 0;
   nalu.valid = TRUE;
@@ -421,6 +440,7 @@ _gst_mss_stream_add_h264_codec_data (GstCaps * caps, const gchar * codecdatastr)
   }
 
   buffer = _make_h264_codec_data (sps, pps);
+  gst_buffer_unmap (sps, &spsinfo);
   gst_buffer_unref (sps);
   gst_buffer_unref (pps);
 
@@ -502,6 +522,7 @@ _make_aacl_codec_data (guint64 sampling_rate, guint64 channels)
   guint8 *data;
   guint8 frequency_index;
   guint8 buf_size;
+  GstMapInfo info;
 
   buf_size = 2;
   frequency_index = _frequency_index_from_sampling_rate (sampling_rate);
@@ -509,7 +530,8 @@ _make_aacl_codec_data (guint64 sampling_rate, guint64 channels)
     buf_size += 3;
 
   buf = gst_buffer_new_and_alloc (buf_size);
-  data = GST_BUFFER_DATA (buf);
+  gst_buffer_map (buf, &info, GST_MAP_WRITE);
+  data = info.data;
 
   data[0] = 2 << 3;             /* AAC-LC object type is 2 */
   data[0] += frequency_index >> 1;
@@ -525,6 +547,8 @@ _make_aacl_codec_data (guint64 sampling_rate, guint64 channels)
   }
 
   data[1] += (channels & 0x0F) << 3;
+
+  gst_buffer_unmap (buf, &info);
 
   return buf;
 }
@@ -690,7 +714,7 @@ gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url)
   g_return_val_if_fail (stream->active, GST_FLOW_ERROR);
 
   if (stream->current_fragment == NULL) /* stream is over */
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
 
   fragment = stream->current_fragment->data;
 
@@ -756,11 +780,11 @@ gst_mss_stream_advance_fragment (GstMssStream * stream)
   g_return_val_if_fail (stream->active, GST_FLOW_ERROR);
 
   if (stream->current_fragment == NULL)
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
 
   stream->current_fragment = g_list_next (stream->current_fragment);
   if (stream->current_fragment == NULL)
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   return GST_FLOW_OK;
 }
 
@@ -972,16 +996,21 @@ gst_mss_manifest_reload_fragments (GstMssManifest * manifest, GstBuffer * data)
 {
   xmlDocPtr xml;
   xmlNodePtr root;
+  GstMapInfo info;
 
   g_return_if_fail (manifest->is_live);
 
-  xml = xmlReadMemory ((const gchar *) GST_BUFFER_DATA (data),
-      GST_BUFFER_SIZE (data), "manifest", NULL, 0);
+  gst_buffer_map (data, &info, GST_MAP_READ);
+
+  xml = xmlReadMemory ((const gchar *) info.data,
+      info.size, "manifest", NULL, 0);
   root = xmlDocGetRootElement (xml);
 
   gst_mss_manifest_reload_fragments_from_xml (manifest, root);
 
   xmlFreeDoc (xml);
+
+  gst_buffer_unmap (data, &info);
 }
 
 gboolean
@@ -1079,13 +1108,15 @@ gst_buffer_from_hex_string (const gchar * s)
   gchar ts[3];
   guint8 *data;
   gint i;
+  GstMapInfo info;
 
   len = strlen (s);
   if (len & 1)
     return NULL;
 
   buffer = gst_buffer_new_and_alloc (len / 2);
-  data = GST_BUFFER_DATA (buffer);
+  gst_buffer_map (buffer, &info, GST_MAP_WRITE);
+  data = info.data;
   for (i = 0; i < len / 2; i++) {
     if (!isxdigit ((int) s[i * 2]) || !isxdigit ((int) s[i * 2 + 1])) {
       gst_buffer_unref (buffer);
@@ -1099,5 +1130,6 @@ gst_buffer_from_hex_string (const gchar * s)
     data[i] = (guint8) strtoul (ts, NULL, 16);
   }
 
+  gst_buffer_unmap (buffer, &info);
   return buffer;
 }

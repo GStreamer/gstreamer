@@ -38,7 +38,7 @@ typedef enum _GstMssStreamType {
   MSS_STREAM_TYPE_AUDIO = 2
 } GstMssStreamType;
 
-GstMssManifest * gst_mss_manifest_new (const GstBuffer * data);
+GstMssManifest * gst_mss_manifest_new (GstBuffer * data);
 void gst_mss_manifest_free (GstMssManifest * manifest);
 GSList * gst_mss_manifest_get_streams (GstMssManifest * manifest);
 guint64 gst_mss_manifest_get_timescale (GstMssManifest * manifest);

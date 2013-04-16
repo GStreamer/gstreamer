@@ -70,7 +70,7 @@ struct _GstMssDemuxStream {
 
   /* Downloading task */
   GstTask *download_task;
-  GStaticRecMutex download_lock;
+  GRecMutex download_lock;
 
   gboolean eos;
   gboolean have_data;
@@ -93,6 +93,8 @@ struct _GstMssDemux {
   gchar *base_url;
   gchar *manifest_uri;
 
+  GstSegment segment;
+
   GSList *streams;
   guint n_videos;
   guint n_audios;
@@ -101,7 +103,7 @@ struct _GstMssDemux {
 
   /* Streaming task */
   GstTask *stream_task;
-  GStaticRecMutex stream_lock;
+  GRecMutex stream_lock;
 
   /* properties */
   guint64 connection_speed; /* in bps */
