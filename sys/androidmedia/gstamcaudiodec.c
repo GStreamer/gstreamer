@@ -69,13 +69,41 @@ enum
 
 /* class initialization */
 
-#define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_INIT (gst_amc_audio_dec_debug_category, "amcaudiodec", 0, \
-      "Android MediaCodec audio decoder");
-#define parent_class gst_amc_audio_dec_parent_class
+static void gst_amc_audio_dec_class_init (GstAmcAudioDecClass * klass);
+static void gst_amc_audio_dec_init (GstAmcAudioDec * self);
+static void gst_amc_audio_dec_base_init (gpointer g_class);
 
-G_DEFINE_TYPE_WITH_CODE (GstAmcAudioDec, gst_amc_audio_dec,
-    GST_TYPE_AUDIO_DECODER, DEBUG_INIT);
+static GstAudioDecoderClass *parent_class = NULL;
+
+GType
+gst_amc_audio_dec_get_type (void)
+{
+  static volatile gsize type = 0;
+
+  if (g_once_init_enter (&type)) {
+    GType _type;
+    static const GTypeInfo info = {
+      sizeof (GstAmcAudioDecClass),
+      gst_amc_audio_dec_base_init,
+      NULL,
+      (GClassInitFunc) gst_amc_audio_dec_class_init,
+      NULL,
+      NULL,
+      sizeof (GstAmcAudioDec),
+      0,
+      (GInstanceInitFunc) gst_amc_audio_dec_init,
+      NULL
+    };
+
+    _type = g_type_register_static (GST_TYPE_AUDIO_DECODER, "GstAmcAudioDec",
+        &info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (gst_amc_audio_dec_debug_category, "amcaudiodec", 0, "Android MediaCodec audio decoder");
+
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
 
 static GstCaps *
 create_sink_caps (const GstAmcCodecInfo * codec_info)
@@ -265,33 +293,17 @@ create_src_caps (const GstAmcCodecInfo * codec_info)
 }
 
 static void
-gst_amc_audio_dec_class_init (GstAmcAudioDecClass * klass)
+gst_amc_audio_dec_base_init (gpointer g_class)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstAudioDecoderClass *audiodec_class = GST_AUDIO_DECODER_CLASS (klass);
-  GstAmcAudioDecClass *amcaudiodec_class = GST_AMC_AUDIO_DEC_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstAmcAudioDecClass *amcaudiodec_class = GST_AMC_AUDIO_DEC_CLASS (g_class);
   const GstAmcCodecInfo *codec_info;
   GstPadTemplate *templ;
   GstCaps *caps;
   gchar *longname;
 
-  gobject_class->finalize = gst_amc_audio_dec_finalize;
-
-  element_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_amc_audio_dec_change_state);
-
-  audiodec_class->start = GST_DEBUG_FUNCPTR (gst_amc_audio_dec_start);
-  audiodec_class->stop = GST_DEBUG_FUNCPTR (gst_amc_audio_dec_stop);
-  audiodec_class->open = GST_DEBUG_FUNCPTR (gst_amc_audio_dec_open);
-  audiodec_class->close = GST_DEBUG_FUNCPTR (gst_amc_audio_dec_close);
-  audiodec_class->flush = GST_DEBUG_FUNCPTR (gst_amc_audio_dec_flush);
-  audiodec_class->set_format = GST_DEBUG_FUNCPTR (gst_amc_audio_dec_set_format);
-  audiodec_class->handle_frame =
-      GST_DEBUG_FUNCPTR (gst_amc_audio_dec_handle_frame);
-
   codec_info =
-      g_type_get_qdata (G_TYPE_FROM_CLASS (klass), gst_amc_codec_info_quark);
+      g_type_get_qdata (G_TYPE_FROM_CLASS (g_class), gst_amc_codec_info_quark);
   /* This happens for the base class and abstract subclasses */
   if (!codec_info)
     return;
@@ -315,6 +327,28 @@ gst_amc_audio_dec_class_init (GstAmcAudioDecClass * klass)
       "Codec/Decoder/Audio",
       longname, "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
   g_free (longname);
+}
+
+static void
+gst_amc_audio_dec_class_init (GstAmcAudioDecClass * klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstAudioDecoderClass *audiodec_class = GST_AUDIO_DECODER_CLASS (klass);
+
+  gobject_class->finalize = gst_amc_audio_dec_finalize;
+
+  element_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_amc_audio_dec_change_state);
+
+  audiodec_class->start = GST_DEBUG_FUNCPTR (gst_amc_audio_dec_start);
+  audiodec_class->stop = GST_DEBUG_FUNCPTR (gst_amc_audio_dec_stop);
+  audiodec_class->open = GST_DEBUG_FUNCPTR (gst_amc_audio_dec_open);
+  audiodec_class->close = GST_DEBUG_FUNCPTR (gst_amc_audio_dec_close);
+  audiodec_class->flush = GST_DEBUG_FUNCPTR (gst_amc_audio_dec_flush);
+  audiodec_class->set_format = GST_DEBUG_FUNCPTR (gst_amc_audio_dec_set_format);
+  audiodec_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_amc_audio_dec_handle_frame);
 }
 
 static void
