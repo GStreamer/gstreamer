@@ -57,6 +57,7 @@ GType gst_uri_downloader_get_type (void);
 
 GstUriDownloader * gst_uri_downloader_new (void);
 GstFragment * gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri);
+void gst_uri_downloader_reset (GstUriDownloader *downloader);
 void gst_uri_downloader_cancel (GstUriDownloader *downloader);
 void gst_uri_downloader_free (GstUriDownloader *downloader);
 

@@ -41,6 +41,7 @@ struct _GstUriDownloaderPrivate
   GstFragment *download;
   GMutex lock;
   GCond cond;
+  gboolean cancelled;
 };
 
 static void gst_uri_downloader_finalize (GObject * object);
@@ -264,6 +265,16 @@ gst_uri_downloader_stop (GstUriDownloader * downloader)
 }
 
 void
+gst_uri_downloader_reset (GstUriDownloader * downloader)
+{
+  g_return_if_fail (downloader != NULL);
+
+  GST_OBJECT_LOCK (downloader);
+  downloader->priv->cancelled = FALSE;
+  GST_OBJECT_UNLOCK (downloader);
+}
+
+void
 gst_uri_downloader_cancel (GstUriDownloader * downloader)
 {
   GST_OBJECT_LOCK (downloader);
@@ -271,15 +282,21 @@ gst_uri_downloader_cancel (GstUriDownloader * downloader)
     GST_DEBUG_OBJECT (downloader, "Cancelling download");
     g_object_unref (downloader->priv->download);
     downloader->priv->download = NULL;
+    downloader->priv->cancelled = TRUE;
     GST_OBJECT_UNLOCK (downloader);
     GST_DEBUG_OBJECT (downloader, "Signaling chain funtion");
     g_mutex_lock (&downloader->priv->lock);
     g_cond_signal (&downloader->priv->cond);
     g_mutex_unlock (&downloader->priv->lock);
   } else {
+    gboolean cancelled;
+
+    cancelled = downloader->priv->cancelled;
+    downloader->priv->cancelled = TRUE;
     GST_OBJECT_UNLOCK (downloader);
-    GST_DEBUG_OBJECT (downloader,
-        "Trying to cancell a download that was alredy cancelled");
+    if (cancelled)
+      GST_DEBUG_OBJECT (downloader,
+          "Trying to cancell a download that was alredy cancelled");
   }
 }
 
@@ -319,6 +336,10 @@ gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri)
 
   g_mutex_lock (&downloader->priv->lock);
 
+  if (downloader->priv->cancelled) {
+    goto quit;
+  }
+
   if (!gst_uri_downloader_set_uri (downloader, uri)) {
     goto quit;
   }
@@ -337,8 +358,16 @@ gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri)
    *   - the download failed (Error message on the fetcher bus)
    *   - the download was canceled
    */
-  GST_DEBUG_OBJECT (downloader, "Waiting to fetch the URI");
+  GST_DEBUG_OBJECT (downloader, "Waiting to fetch the URI %s", uri);
   g_cond_wait (&downloader->priv->cond, &downloader->priv->lock);
+
+  if (downloader->priv->cancelled) {
+    if (downloader->priv->download) {
+      g_object_unref (downloader->priv->download);
+      downloader->priv->download = NULL;
+    }
+    goto quit;
+  }
 
   GST_OBJECT_LOCK (downloader);
   download = downloader->priv->download;
