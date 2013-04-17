@@ -1853,6 +1853,8 @@ gst_eglglessink_event (GstBaseSink * bsink, GstEvent * event)
         GST_OBJECT_UNLOCK (eglglessink);
       }
 
+      gst_context_unref (context);
+
       return GST_BASE_SINK_CLASS (gst_eglglessink_parent_class)->event (bsink,
           event);
       break;
@@ -1894,6 +1896,7 @@ gst_eglglessink_query (GstBaseSink * bsink, GstQuery * query)
           gst_context_set_egl_display (context,
               eglglessink->egl_context->display);
           gst_query_set_context (query, context);
+          gst_context_unref (context);
           break;
         }
       }
@@ -1925,11 +1928,12 @@ gst_eglglessink_set_context (GstElement * element, GstContext * context)
   }
 
   GST_OBJECT_LOCK (eglglessink);
-  context = gst_context_make_writable (context);
+  context = gst_context_copy (context);
   gst_context_set_egl_display (context, eglglessink->egl_context->display);
   GST_OBJECT_UNLOCK (eglglessink);
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
+  gst_context_unref (context);
 }
 
 static gboolean
