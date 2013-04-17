@@ -258,10 +258,13 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
 
     /* Deinterlacing disabled, push frame */
     if (!postproc->deinterlace) {
-        gst_vaapi_video_meta_set_render_flags(meta, flags);
-        ret = gst_pad_push(postproc->srcpad, buf);
+        outbuf = gst_buffer_ref(buf);
+        if (!outbuf)
+            goto error_create_buffer;
+        ret = gst_pad_push(postproc->srcpad, outbuf);
         if (ret != GST_FLOW_OK)
             goto error_push_buffer;
+        gst_buffer_unref(buf);
         return GST_FLOW_OK;
     }
 
