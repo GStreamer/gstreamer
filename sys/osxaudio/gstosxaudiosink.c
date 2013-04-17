@@ -537,7 +537,7 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
   GstElementClass *element_class;
   GstPadTemplate *pad_template;
   GstCaps *caps, *in_caps;
-  guint64 channel_mask;
+  guint64 channel_mask = 0;
   GstAudioChannelPosition *pos = osxsink->channel_positions;
 
   /* First collect info about the HW capabilites and preferences */
@@ -567,6 +567,8 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
     case 2:
       pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
       pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT);
+      channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
       break;
     default:
       channels = MIN (layout->mNumberChannelDescriptions,
@@ -612,6 +614,7 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
           default:
             GST_WARNING_OBJECT (osxsink, "unrecognized channel: %d",
                 (int) layout->mChannelDescriptions[i].mChannelLabel);
+            channel_mask = 0;
             channels = 2;
             break;
         }
