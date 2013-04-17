@@ -1058,7 +1058,7 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
 
   if (!(sample = ges_timeline_pipeline_get_thumbnail (self, caps))) {
     gst_caps_unref (caps);
-    return res;
+    return FALSE;
   }
 
   b = gst_sample_get_buffer (sample);
