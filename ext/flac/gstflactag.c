@@ -199,6 +199,8 @@ gst_flac_tag_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   gst_adapter_push (tag->adapter, buffer);
 
+  GST_LOG_OBJECT (pad, "state: %d", tag->state);
+
   /* Initial state, we don't even know if we are dealing with a flac file */
   if (tag->state == GST_FLAC_TAG_STATE_INIT) {
     GstBuffer *id_buffer;
@@ -428,7 +430,7 @@ gst_flac_tag_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
 cleanup:
-
+  GST_LOG_OBJECT (pad, "state: %d, ret: %d", tag->state, ret);
   return ret;
 
   /* ERRORS */

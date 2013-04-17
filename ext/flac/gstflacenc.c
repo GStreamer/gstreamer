@@ -1202,7 +1202,8 @@ gst_flac_enc_sink_event (GstAudioEncoder * enc, GstEvent * event)
 
   flacenc = GST_FLAC_ENC (enc);
 
-  GST_DEBUG ("Received %s event on sinkpad", GST_EVENT_TYPE_NAME (event));
+  GST_DEBUG ("Received %s event on sinkpad, %" GST_PTR_FORMAT,
+      GST_EVENT_TYPE_NAME (event), event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
