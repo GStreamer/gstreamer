@@ -33,6 +33,7 @@ libgstvaapi_source_c = \
 	gstvaapi.c		\
 	gstvaapidecode.c	\
 	gstvaapipluginutil.c	\
+	gstvaapipostproc.c	\
 	gstvaapisink.c		\
 	gstvaapiuploader.c	\
 	gstvaapivideobuffer.c	\
@@ -42,6 +43,7 @@ libgstvaapi_source_c = \
 libgstvaapi_source_h = \
 	gstvaapidecode.h	\
 	gstvaapipluginutil.h	\
+	gstvaapipostproc.h	\
 	gstvaapisink.h		\
 	gstvaapiuploader.h	\
 	gstvaapivideobuffer.h	\
@@ -74,13 +76,11 @@ endif
 if USE_GST_API_0_10
 libgstvaapi_0_10_source_c = \
 	gstvaapidownload.c	\
-	gstvaapipostproc.c	\
 	gstvaapiupload.c	\
 	$(NULL)
 
 libgstvaapi_0_10_source_h = \
 	gstvaapidownload.h	\
-	gstvaapipostproc.h	\
 	gstvaapiupload.h	\
 	$(NULL)
 endif

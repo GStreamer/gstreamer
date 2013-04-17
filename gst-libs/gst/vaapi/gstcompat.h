@@ -58,7 +58,11 @@ gst_compat_structure_get_fourcc(const GstStructure *structure,
 typedef const guint8 *(*GstCompatTypeFindPeekFunction)(gpointer, gint64, guint);
 typedef void (*GstCompatTypeFindSuggestFunction)(gpointer, guint, GstCaps *);
 
-/* GstQuery */
+/* GstPad */
+#define GST_PAD_CHAIN_FUNCTION_ARGS \
+    GstPad *pad, GstObject *parent, GstBuffer *buffer
+#define GST_PAD_EVENT_FUNCTION_ARGS \
+    GstPad *pad, GstObject *parent, GstEvent *event
 #define GST_PAD_QUERY_FUNCTION_ARGS \
     GstPad *pad, GstObject *parent, GstQuery *query
 #define GST_PAD_QUERY_FUNCTION_CALL(func, pad, parent, query) \
@@ -228,9 +232,22 @@ gst_compat_video_overlay_rectangle_get_pixels_unscaled_raw(
         &width, &height, &stride, flags);
 }
 
+typedef enum {
+    GST_VIDEO_BUFFER_FLAG_TFF           = GST_VIDEO_BUFFER_TFF,
+    GST_VIDEO_BUFFER_FLAG_RFF           = GST_VIDEO_BUFFER_RFF,
+    GST_VIDEO_BUFFER_FLAG_ONEFIELD      = GST_VIDEO_BUFFER_ONEFIELD
+} GstVideoBufferFlags;
+
 /* GstPad */
 #undef  GST_FLOW_EOS
 #define GST_FLOW_EOS GST_FLOW_UNEXPECTED
+#undef  GST_FLOW_FLUSHING
+#define GST_FLOW_FLUSHING GST_FLOW_WRONG_STATE
+
+#define GST_PAD_CHAIN_FUNCTION_ARGS \
+    GstPad *pad, GstBuffer *buffer
+#define GST_PAD_EVENT_FUNCTION_ARGS \
+    GstPad *pad, GstEvent *event
 
 /* GstElement */
 #undef  gst_element_class_set_static_metadata

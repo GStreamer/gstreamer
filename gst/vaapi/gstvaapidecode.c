@@ -188,10 +188,11 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, vi->par_n, vi->par_d,
         NULL);
 
-    if (GST_VIDEO_INFO_IS_INTERLACED(vi))
-        gst_caps_set_simple(state->caps, "interlaced", G_TYPE_BOOLEAN,
-            TRUE, NULL);
-
+    if (GST_VIDEO_INFO_IS_INTERLACED(vi)) {
+        GstStructure * const structure =
+            gst_caps_get_structure(state->caps, 0);
+        gst_structure_set_interlaced(structure, TRUE);
+    }
     gst_caps_replace(&decode->srcpad_caps, state->caps);
     return TRUE;
 }
@@ -274,6 +275,7 @@ gst_vaapidecode_push_decoded_frames(GstVideoDecoder *vdec)
     GstVaapiVideoMeta *meta;
     GstVideoCodecFrame *out_frame;
     GstFlowReturn ret;
+    guint flags;
 
     /* Output all decoded frames */
     for (;;) {
@@ -296,6 +298,18 @@ gst_vaapidecode_push_decoded_frames(GstVideoDecoder *vdec)
             if (!meta)
                 goto error_get_meta;
             gst_vaapi_video_meta_set_surface_proxy(meta, proxy);
+
+            flags = gst_vaapi_surface_proxy_get_flags(proxy);
+            if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_INTERLACED) {
+                guint out_flags = GST_VIDEO_BUFFER_FLAG_INTERLACED;
+                if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_TFF)
+                    out_flags |= GST_VIDEO_BUFFER_FLAG_TFF;
+                if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_RFF)
+                    out_flags |= GST_VIDEO_BUFFER_FLAG_RFF;
+                if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD)
+                    out_flags |= GST_VIDEO_BUFFER_FLAG_ONEFIELD;
+                GST_BUFFER_FLAG_SET(out_frame->output_buffer, out_flags);
+            }
 #else
             out_frame->output_buffer =
                 gst_vaapi_video_buffer_new_with_surface_proxy(proxy);
