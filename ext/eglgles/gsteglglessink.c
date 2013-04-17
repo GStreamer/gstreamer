@@ -1513,23 +1513,34 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
     }
 
     if (upload_meta) {
-      glActiveTexture (GL_TEXTURE0);
-      glBindTexture (GL_TEXTURE_2D,
-          eglglessink->egl_context->texture[eglglessink->
-              egl_context->n_textures]);
-      if (!gst_video_gl_texture_upload_meta_upload (upload_meta, GL_RGBA,
-              eglglessink->egl_context->texture[eglglessink->
-                  egl_context->n_textures]))
+      gint i;
+
+      if (upload_meta->n_textures != eglglessink->egl_context->n_textures)
         goto HANDLE_ERROR;
 
-      eglglessink->orientation = GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL;
-      eglglessink->custom_format = TRUE;
+      for (i = 0; i < eglglessink->egl_context->n_textures; i++) {
+        if (i == 0)
+          glActiveTexture (GL_TEXTURE0);
+        else if (i == 1)
+          glActiveTexture (GL_TEXTURE1);
+        else if (i == 2)
+          glActiveTexture (GL_TEXTURE2);
+
+        glBindTexture (GL_TEXTURE_2D, eglglessink->egl_context->texture[i]);
+      }
+
+      if (!gst_video_gl_texture_upload_meta_upload (upload_meta,
+              eglglessink->egl_context->texture))
+        goto HANDLE_ERROR;
+
+      eglglessink->orientation = upload_meta->texture_orientation;
+      eglglessink->stride[0] = 1;
+      eglglessink->stride[1] = 1;
+      eglglessink->stride[2] = 1;
     } else if (gst_buffer_n_memory (buf) >= 1 &&
         (mem = gst_buffer_peek_memory (buf, 0))
         && gst_is_egl_image_memory (mem)) {
       guint n, i;
-
-      eglglessink->custom_format = FALSE;
 
       n = gst_buffer_n_memory (buf);
 
@@ -1552,9 +1563,9 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
           goto HANDLE_ERROR;
         eglglessink->orientation = gst_egl_image_memory_get_orientation (mem);
         if (eglglessink->orientation !=
-            GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL
+            GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL
             && eglglessink->orientation !=
-            GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_FLIP) {
+            GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_FLIP) {
           GST_ERROR_OBJECT (eglglessink, "Unsupported EGLImage orientation");
           return GST_FLOW_ERROR;
         }
@@ -1564,9 +1575,8 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
       eglglessink->stride[1] = 1;
       eglglessink->stride[2] = 1;
     } else {
-      eglglessink->custom_format = FALSE;
-
-      eglglessink->orientation = GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL;
+      eglglessink->orientation =
+          GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL;
       if (!gst_eglglessink_fill_texture (eglglessink, buf))
         goto HANDLE_ERROR;
     }
@@ -1706,66 +1716,46 @@ gst_eglglessink_render (GstEglGlesSink * eglglessink)
   /* Draw video frame */
   GST_DEBUG_OBJECT (eglglessink, "Drawing video frame");
 
-  if (eglglessink->custom_format) {
-    glUseProgram (eglglessink->egl_context->glslprogram[2]);
+  glUseProgram (eglglessink->egl_context->glslprogram[0]);
 
-    glUniform1i (eglglessink->egl_context->tex_loc[1][0], 0);
+  glUniform2f (eglglessink->egl_context->tex_scale_loc[0][0],
+      eglglessink->stride[0], 1);
+  glUniform2f (eglglessink->egl_context->tex_scale_loc[0][1],
+      eglglessink->stride[1], 1);
+  glUniform2f (eglglessink->egl_context->tex_scale_loc[0][2],
+      eglglessink->stride[2], 1);
+
+  for (i = 0; i < eglglessink->egl_context->n_textures; i++) {
+    glUniform1i (eglglessink->egl_context->tex_loc[0][i], i);
     if (got_gl_error ("glUniform1i"))
       goto HANDLE_ERROR;
+  }
 
-    glVertexAttribPointer (eglglessink->egl_context->position_loc[2], 3,
-        GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (0));
+  if (eglglessink->orientation ==
+      GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL) {
+    glVertexAttribPointer (eglglessink->egl_context->position_loc[0], 3,
+        GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (0 * sizeof (coord5)));
     if (got_gl_error ("glVertexAttribPointer"))
       goto HANDLE_ERROR;
 
-    glVertexAttribPointer (eglglessink->egl_context->texpos_loc[1], 2,
+    glVertexAttribPointer (eglglessink->egl_context->texpos_loc[0], 2,
         GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (3 * sizeof (gfloat)));
     if (got_gl_error ("glVertexAttribPointer"))
       goto HANDLE_ERROR;
+  } else if (eglglessink->orientation ==
+      GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_FLIP) {
+    glVertexAttribPointer (eglglessink->egl_context->position_loc[0], 3,
+        GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (4 * sizeof (coord5)));
+    if (got_gl_error ("glVertexAttribPointer"))
+      goto HANDLE_ERROR;
+
+    glVertexAttribPointer (eglglessink->egl_context->texpos_loc[0], 2,
+        GL_FLOAT, GL_FALSE, sizeof (coord5),
+        (gpointer) (4 * sizeof (coord5) + 3 * sizeof (gfloat)));
+    if (got_gl_error ("glVertexAttribPointer"))
+      goto HANDLE_ERROR;
   } else {
-    glUseProgram (eglglessink->egl_context->glslprogram[0]);
-
-    glUniform2f (eglglessink->egl_context->tex_scale_loc[0][0],
-        eglglessink->stride[0], 1);
-    glUniform2f (eglglessink->egl_context->tex_scale_loc[0][1],
-        eglglessink->stride[1], 1);
-    glUniform2f (eglglessink->egl_context->tex_scale_loc[0][2],
-        eglglessink->stride[2], 1);
-
-    for (i = 0; i < eglglessink->egl_context->n_textures; i++) {
-      glUniform1i (eglglessink->egl_context->tex_loc[0][i], i);
-      if (got_gl_error ("glUniform1i"))
-        goto HANDLE_ERROR;
-    }
-
-    if (eglglessink->orientation == GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL) {
-      glVertexAttribPointer (eglglessink->egl_context->position_loc[0], 3,
-          GL_FLOAT, GL_FALSE, sizeof (coord5),
-          (gpointer) (0 * sizeof (coord5)));
-      if (got_gl_error ("glVertexAttribPointer"))
-        goto HANDLE_ERROR;
-
-      glVertexAttribPointer (eglglessink->egl_context->texpos_loc[0], 2,
-          GL_FLOAT, GL_FALSE, sizeof (coord5),
-          (gpointer) (3 * sizeof (gfloat)));
-      if (got_gl_error ("glVertexAttribPointer"))
-        goto HANDLE_ERROR;
-    } else if (eglglessink->orientation ==
-        GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_FLIP) {
-      glVertexAttribPointer (eglglessink->egl_context->position_loc[0], 3,
-          GL_FLOAT, GL_FALSE, sizeof (coord5),
-          (gpointer) (4 * sizeof (coord5)));
-      if (got_gl_error ("glVertexAttribPointer"))
-        goto HANDLE_ERROR;
-
-      glVertexAttribPointer (eglglessink->egl_context->texpos_loc[0], 2,
-          GL_FLOAT, GL_FALSE, sizeof (coord5),
-          (gpointer) (4 * sizeof (coord5) + 3 * sizeof (gfloat)));
-      if (got_gl_error ("glVertexAttribPointer"))
-        goto HANDLE_ERROR;
-    } else {
-      g_assert_not_reached ();
-    }
+    g_assert_not_reached ();
   }
 
   glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);

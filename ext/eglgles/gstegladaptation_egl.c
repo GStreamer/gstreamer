@@ -440,7 +440,7 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
 
       mem[0] =
           gst_egl_image_allocator_alloc (allocator, ctx->display,
-          GST_EGL_IMAGE_MEMORY_TYPE_RGB, GST_VIDEO_INFO_WIDTH (&info),
+          GST_VIDEO_GL_TEXTURE_TYPE_RGB, GST_VIDEO_INFO_WIDTH (&info),
           GST_VIDEO_INFO_HEIGHT (&info), &size);
       if (mem[0]) {
         stride[0] = size / GST_VIDEO_INFO_HEIGHT (&info);
@@ -488,7 +488,7 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
 
         mem[0] =
             gst_egl_image_allocator_wrap (allocator, ctx->display,
-            image, GST_EGL_IMAGE_MEMORY_TYPE_RGB,
+            image, GST_VIDEO_GL_TEXTURE_TYPE_RGB,
             flags, size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
         n_mem = 1;
       }
@@ -500,7 +500,7 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
 
       mem[0] =
           gst_egl_image_allocator_alloc (allocator, ctx->display,
-          GST_EGL_IMAGE_MEMORY_TYPE_RGB, GST_VIDEO_INFO_WIDTH (&info),
+          GST_VIDEO_GL_TEXTURE_TYPE_RGB, GST_VIDEO_INFO_WIDTH (&info),
           GST_VIDEO_INFO_HEIGHT (&info), &size);
       if (mem[0]) {
         stride[0] = size / GST_VIDEO_INFO_HEIGHT (&info);
@@ -549,7 +549,7 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
 
         mem[0] =
             gst_egl_image_allocator_wrap (allocator, ctx->display,
-            image, GST_EGL_IMAGE_MEMORY_TYPE_RGB,
+            image, GST_VIDEO_GL_TEXTURE_TYPE_RGB,
             flags, size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
         n_mem = 1;
       }
@@ -562,11 +562,11 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
 
       mem[0] =
           gst_egl_image_allocator_alloc (allocator, ctx->display,
-          GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
+          GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
               0), GST_VIDEO_INFO_COMP_HEIGHT (&info, 0), &size[0]);
       mem[1] =
           gst_egl_image_allocator_alloc (allocator, ctx->display,
-          GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE_ALPHA,
+          GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA,
           GST_VIDEO_INFO_COMP_WIDTH (&info, 1),
           GST_VIDEO_INFO_COMP_HEIGHT (&info, 1), &size[1]);
 
@@ -639,8 +639,8 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
               gst_egl_image_allocator_wrap (allocator, ctx->display,
               image,
               (i ==
-                  0 ? GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE :
-                  GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE_ALPHA),
+                  0 ? GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE :
+                  GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA),
               flags, size[i], data,
               (GDestroyNotify) gst_egl_gles_image_data_free);
         }
@@ -659,15 +659,15 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
 
       mem[0] =
           gst_egl_image_allocator_alloc (allocator, ctx->display,
-          GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
+          GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
               0), GST_VIDEO_INFO_COMP_HEIGHT (&info, 0), &size[0]);
       mem[1] =
           gst_egl_image_allocator_alloc (allocator, ctx->display,
-          GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
+          GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
               1), GST_VIDEO_INFO_COMP_HEIGHT (&info, 1), &size[1]);
       mem[2] =
           gst_egl_image_allocator_alloc (allocator, ctx->display,
-          GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
+          GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
               2), GST_VIDEO_INFO_COMP_HEIGHT (&info, 2), &size[2]);
 
       if (mem[0] && mem[1] && mem[2]) {
@@ -740,7 +740,7 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
 
           mem[i] =
               gst_egl_image_allocator_wrap (allocator, ctx->display,
-              image, GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE,
+              image, GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE,
               flags, size[i], data,
               (GDestroyNotify) gst_egl_gles_image_data_free);
         }
@@ -763,7 +763,7 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
 
       mem[0] =
           gst_egl_image_allocator_alloc (allocator, ctx->display,
-          GST_EGL_IMAGE_MEMORY_TYPE_RGBA, GST_VIDEO_INFO_WIDTH (&info),
+          GST_VIDEO_GL_TEXTURE_TYPE_RGBA, GST_VIDEO_INFO_WIDTH (&info),
           GST_VIDEO_INFO_HEIGHT (&info), &size);
       if (mem[0]) {
         stride[0] = size / GST_VIDEO_INFO_HEIGHT (&info);
@@ -811,7 +811,7 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
 
         mem[0] =
             gst_egl_image_allocator_wrap (allocator, ctx->display,
-            image, GST_EGL_IMAGE_MEMORY_TYPE_RGBA,
+            image, GST_VIDEO_GL_TEXTURE_TYPE_RGBA,
             flags, size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
 
         n_mem = 1;

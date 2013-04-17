@@ -104,18 +104,6 @@ static const char *frag_COPY_prog = {
       "}"
 };
 
-/* Direct fragments copy without stride-scaling */
-static const char *frag_COPY_DIRECT_prog = {
-  "precision mediump float;"
-      "varying vec2 opos;"
-      "uniform sampler2D tex;"
-      "void main(void)"
-      "{"
-      " vec4 t = texture2D(tex, opos);"
-      " gl_FragColor = vec4(t.rgb, 1.0);"
-      "}"
-};
-
 /* Channel reordering for XYZ <-> ZYX conversion */
 static const char *frag_REORDER_prog = {
   "precision mediump float;"
@@ -323,12 +311,12 @@ gst_egl_adaptation_cleanup (GstEglAdaptationContext * ctx)
   }
 
   if (ctx->have_texture) {
-    glDeleteTextures (ctx->n_textures + 1, ctx->texture);
+    glDeleteTextures (ctx->n_textures, ctx->texture);
     ctx->have_texture = FALSE;
     ctx->n_textures = 0;
   }
 
-  for (i = 0; i < 3; i++) {
+  for (i = 0; i < 2; i++) {
     if (ctx->glslprogram[i]) {
       glDetachShader (ctx->glslprogram[i], ctx->fragshader[i]);
       glDetachShader (ctx->glslprogram[i], ctx->vertshader[i]);
@@ -611,30 +599,6 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
         glGetUniformLocation (ctx->glslprogram[0], texnames[i]);
   }
 
-  /* custom rendering shader */
-
-  if (!create_shader_program (ctx,
-          &ctx->glslprogram[2],
-          &ctx->vertshader[2],
-          &ctx->fragshader[2], vert_COPY_prog, frag_COPY_DIRECT_prog)) {
-    if (free_frag_prog)
-      g_free (frag_prog);
-    frag_prog = NULL;
-    goto HANDLE_ERROR;
-  }
-  if (free_frag_prog)
-    g_free (frag_prog);
-  frag_prog = NULL;
-
-  ctx->position_loc[2] = glGetAttribLocation (ctx->glslprogram[2], "position");
-  ctx->texpos_loc[1] = glGetAttribLocation (ctx->glslprogram[2], "texpos");
-
-  glEnableVertexAttribArray (ctx->position_loc[2]);
-  if (got_gl_error ("glEnableVertexAttribArray"))
-    goto HANDLE_ERROR;
-
-  ctx->tex_loc[1][0] = glGetUniformLocation (ctx->glslprogram[2], "tex");
-
   if (!ctx->buffer_preserved) {
     /* Build shader program for black borders */
     if (!create_shader_program (ctx,
@@ -655,11 +619,11 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
   if (!ctx->have_texture) {
     GST_INFO_OBJECT (ctx->element, "Performing initial texture setup");
 
-    glGenTextures (ctx->n_textures + 1, ctx->texture);
+    glGenTextures (ctx->n_textures, ctx->texture);
     if (got_gl_error ("glGenTextures"))
       goto HANDLE_ERROR_LOCKED;
 
-    for (i = 0; i < ctx->n_textures + 1; i++) {
+    for (i = 0; i < ctx->n_textures; i++) {
       glBindTexture (GL_TEXTURE_2D, ctx->texture[i]);
       if (got_gl_error ("glBindTexture"))
         goto HANDLE_ERROR;

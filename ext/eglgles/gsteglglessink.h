@@ -106,8 +106,7 @@ struct _GstEglGlesSink
   GstCaps *current_caps, *configured_caps;
   GstVideoInfo configured_info;
   gfloat stride[3];
-  GstEGLImageOrientation orientation;
-  gboolean custom_format; /* If it's a single texture that is just copied */
+  GstVideoGLTextureOrientation orientation;
   GstBufferPool *pool;
 
   GstEglAdaptationContext *egl_context;

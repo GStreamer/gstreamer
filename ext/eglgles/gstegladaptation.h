@@ -126,15 +126,15 @@ struct _GstEglAdaptationContext
   GstEGLDisplay *display, *set_display;
   EGLNativeWindowType window, used_window;
 
-  GLuint fragshader[3]; /* frame, border, frame-custom */
-  GLuint vertshader[3]; /* frame, border, frame-custom */
-  GLuint glslprogram[3]; /* frame, border, frame-custom */
-  GLuint texture[4]; /* RGB/Y, U/UV, V, custom */
+  GLuint fragshader[2]; /* frame, border */
+  GLuint vertshader[2]; /* frame, border */
+  GLuint glslprogram[2]; /* frame, border */
+  GLuint texture[3]; /* RGB/Y, U/UV, V */
   /* shader vars */
-  GLuint position_loc[3]; /* frame, border, frame-custom */
-  GLuint texpos_loc[2]; /* frame, frame-custom */
+  GLuint position_loc[2]; /* frame, border */
+  GLuint texpos_loc[1]; /* frame */
   GLuint tex_scale_loc[1][3]; /* [frame] RGB/Y, U/UV, V */
-  GLuint tex_loc[2][3]; /* [frame,frame-custom] RGB/Y, U/UV, V */
+  GLuint tex_loc[1][3]; /* [frame] RGB/Y, U/UV, V */
   coord5 position_array[16];    /* 4 x Frame x-normal,y-normal, 4x Frame x-normal,y-flip, 4 x Border1, 4 x Border2 */
   unsigned short index_array[4];
   unsigned int position_buffer, index_buffer;
