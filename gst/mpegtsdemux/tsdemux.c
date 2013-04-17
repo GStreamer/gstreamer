@@ -704,9 +704,66 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
   GST_LOG ("Attempting to create pad for stream 0x%04x with stream_type %d",
       bstream->pid, bstream->stream_type);
 
+  /* First handle BluRay-specific stream types since there is some overlap
+   * between BluRay and non-BluRay streay type identifiers */
+  desc = mpegts_get_descriptor_from_program (program, DESC_REGISTRATION);
+  if (desc) {
+    if (DESC_REGISTRATION_format_identifier (desc) == DRF_ID_HDMV) {
+      switch (bstream->stream_type) {
+        case ST_BD_AUDIO_AC3:
+        {
+          guint8 *ac3_desc;
+
+          /* ATSC ac3 audio descriptor */
+          ac3_desc =
+              mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
+              DESC_AC3_AUDIO_STREAM);
+          if (ac3_desc && DESC_AC_AUDIO_STREAM_bsid (ac3_desc) != 16) {
+            GST_LOG ("ac3 audio");
+            template = gst_static_pad_template_get (&audio_template);
+            name = g_strdup_printf ("audio_%04x", bstream->pid);
+            caps = gst_caps_new_empty_simple ("audio/x-ac3");
+
+            g_free (ac3_desc);
+          } else {
+            template = gst_static_pad_template_get (&audio_template);
+            name = g_strdup_printf ("audio_%04x", bstream->pid);
+            caps = gst_caps_new_empty_simple ("audio/x-eac3");
+          }
+          break;
+        }
+        case ST_BD_AUDIO_EAC3:
+          template = gst_static_pad_template_get (&audio_template);
+          name = g_strdup_printf ("audio_%04x", bstream->pid);
+          caps = gst_caps_new_empty_simple ("audio/x-eac3");
+          break;
+        case ST_BD_AUDIO_AC3_TRUE_HD:
+          template = gst_static_pad_template_get (&audio_template);
+          name = g_strdup_printf ("audio_%04x", bstream->pid);
+          caps = gst_caps_new_empty_simple ("audio/x-true-hd");
+          break;
+        case ST_BD_AUDIO_LPCM:
+          template = gst_static_pad_template_get (&audio_template);
+          name = g_strdup_printf ("audio_%04x", bstream->pid);
+          caps = gst_caps_new_empty_simple ("audio/x-private-ts-lpcm");
+          break;
+        case ST_BD_PGS_SUBPICTURE:
+          template = gst_static_pad_template_get (&subpicture_template);
+          name = g_strdup_printf ("subpicture_%04x", bstream->pid);
+          caps = gst_caps_new_empty_simple ("subpicture/x-pgs");
+          break;
+      }
+    }
+    g_free (desc);
+  }
+  if (template && name && caps)
+    goto done;
+
+  /* Handle non-BluRay stream types */
   switch (bstream->stream_type) {
     case ST_VIDEO_MPEG1:
     case ST_VIDEO_MPEG2:
+    case ST_PS_VIDEO_MPEG2_DCII:
       GST_LOG ("mpeg video");
       template = gst_static_pad_template_get (&video_template);
       name = g_strdup_printf ("video_%04x", bstream->pid);
@@ -895,39 +952,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
 
       break;
     }
-    case ST_BD_AUDIO_AC3:
-    {
-      /* REGISTRATION DRF_ID_HDMV */
-      desc = mpegts_get_descriptor_from_program (program, DESC_REGISTRATION);
-      if (desc) {
-        if (DESC_REGISTRATION_format_identifier (desc) == DRF_ID_HDMV) {
-          guint8 *ac3_desc;
-
-          /* ATSC ac3 audio descriptor */
-          ac3_desc =
-              mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
-              DESC_AC3_AUDIO_STREAM);
-          if (ac3_desc && DESC_AC_AUDIO_STREAM_bsid (ac3_desc) != 16) {
-            GST_LOG ("ac3 audio");
-            template = gst_static_pad_template_get (&audio_template);
-            name = g_strdup_printf ("audio_%04x", bstream->pid);
-            caps = gst_caps_new_empty_simple ("audio/x-ac3");
-
-            g_free (ac3_desc);
-          } else {
-            template = gst_static_pad_template_get (&audio_template);
-            name = g_strdup_printf ("audio_%04x", bstream->pid);
-            caps = gst_caps_new_empty_simple ("audio/x-eac3");
-          }
-
-        }
-
-        g_free (desc);
-      }
-      if (template)
-        break;
-
-
+    case ST_PS_AUDIO_AC3:
       /* DVB_ENHANCED_AC3 */
       desc = mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
           DESC_DVB_ENHANCED_AC3);
@@ -953,17 +978,6 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       name = g_strdup_printf ("audio_%04x", bstream->pid);
       caps = gst_caps_new_empty_simple ("audio/x-ac3");
       break;
-    }
-    case ST_BD_AUDIO_EAC3:
-      template = gst_static_pad_template_get (&audio_template);
-      name = g_strdup_printf ("audio_%04x", bstream->pid);
-      caps = gst_caps_new_empty_simple ("audio/x-eac3");
-      break;
-    case ST_BD_AUDIO_AC3_TRUE_HD:
-      template = gst_static_pad_template_get (&audio_template);
-      name = g_strdup_printf ("audio_%04x", bstream->pid);
-      caps = gst_caps_new_empty_simple ("audio/x-true-hd");
-      break;
     case ST_PS_AUDIO_DTS:
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
@@ -974,26 +988,18 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       name = g_strdup_printf ("audio_%04x", bstream->pid);
       caps = gst_caps_new_empty_simple ("audio/x-lpcm");
       break;
-    case ST_BD_AUDIO_LPCM:
-      template = gst_static_pad_template_get (&audio_template);
-      name = g_strdup_printf ("audio_%04x", bstream->pid);
-      caps = gst_caps_new_empty_simple ("audio/x-private-ts-lpcm");
-      break;
     case ST_PS_DVD_SUBPICTURE:
       template = gst_static_pad_template_get (&subpicture_template);
       name = g_strdup_printf ("subpicture_%04x", bstream->pid);
       caps = gst_caps_new_empty_simple ("subpicture/x-dvd");
-      break;
-    case ST_BD_PGS_SUBPICTURE:
-      template = gst_static_pad_template_get (&subpicture_template);
-      name = g_strdup_printf ("subpicture_%04x", bstream->pid);
-      caps = gst_caps_new_empty_simple ("subpicture/x-pgs");
       break;
     default:
       GST_WARNING ("Non-media stream (stream_type:0x%x). Not creating pad",
           bstream->stream_type);
       break;
   }
+
+done:
   if (template && name && caps) {
     gchar *stream_id;
 
