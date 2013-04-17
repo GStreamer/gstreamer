@@ -1,8 +1,10 @@
 /*
  * GStreamer
+ *
  * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
  * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  * Copyright (C) 2009-2010 Chris Robinson <chris.kcat@gmail.com>
+ * Copyright (C) 2013 Juan Manuel Borges Caño <juanmabcmail@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,56 +22,70 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 /**
  * SECTION:element-openalsink
+ * @see_also: openalsrc
+ * @short_description: capture raw audio samples through OpenAL
  *
- * This element renders raw audio samples using the OpenAL API
+ * This element plays raw audio samples through OpenAL.
+ *
+ * Unfortunately the capture API doesn't have a format enumeration/check. all you can do is try opening it and see if it works.
  *
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v audiotestsrc ! audioconvert ! volume volume=0.1 ! openalsink
- * ]| will output a sine wave (continuous beep sound) to your sound card (with
- * a very low volume as precaution).
+ * gst-launch audiotestsrc ! audioconvert ! volume volume=0.5 ! openalsink
+ * ]| will play a sine wave (continuous beep sound) through OpenAL.
  * |[
- * gst-launch -v filesrc location=music.ogg ! decodebin ! audioconvert ! audioresample ! openalsink
- * ]| will play an Ogg/Vorbis audio file and output it using OpenAL.
+ * gst-launch filesrc location=stream.wav ! decodebin ! audioconvert ! openalsink
+ * ]| will play a wav audio file through OpenAL.
+ * |[
+ * gst-launch openalsrc ! "audio/x-raw,format=S16LE,rate=44100" ! audioconvert ! volume volume=0.25 ! openalsink
+ * ]| will capture and play audio through OpenAL.
  * </refsect2>
+ */
+
+/*
+ * DEV:
+ * To get better timing/delay information you may also be interested in this:
+ *  http://kcat.strangesoft.net/openal-extensions/SOFT_source_latency.txt
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include "gstopenalsink.h"
+#include <gst/gst.h>
+#include <gst/gsterror.h>
 
-GST_DEBUG_CATEGORY (openalsink_debug);
+GST_DEBUG_CATEGORY_EXTERN (openal_debug);
+#define GST_CAT_DEFAULT openal_debug
+
+#include "gstopenalsink.h"
 
 static void gst_openal_sink_dispose (GObject * object);
 static void gst_openal_sink_finalize (GObject * object);
 
 static void gst_openal_sink_get_property (GObject * object, guint prop_id,
-    GValue * val, GParamSpec * pspec);
+    GValue * value, GParamSpec * pspec);
 static void gst_openal_sink_set_property (GObject * object, guint prop_id,
-    const GValue * val, GParamSpec * pspec);
-
-static GstCaps *gst_openal_sink_getcaps (GstBaseSink * bsink);
-
-static gboolean gst_openal_sink_open (GstAudioSink * asink);
-static gboolean gst_openal_sink_close (GstAudioSink * asink);
-static gboolean gst_openal_sink_prepare (GstAudioSink * asink,
-    GstRingBufferSpec * spec);
-static gboolean gst_openal_sink_unprepare (GstAudioSink * asink);
-static guint gst_openal_sink_write (GstAudioSink * asink, gpointer data,
+    const GValue * value, GParamSpec * pspec);
+static GstCaps *gst_openal_sink_getcaps (GstBaseSink * basesink,
+    GstCaps * filter);
+static gboolean gst_openal_sink_open (GstAudioSink * audiosink);
+static gboolean gst_openal_sink_close (GstAudioSink * audiosink);
+static gboolean gst_openal_sink_prepare (GstAudioSink * audiosink,
+    GstAudioRingBufferSpec * spec);
+static gboolean gst_openal_sink_unprepare (GstAudioSink * audiosink);
+static gint gst_openal_sink_write (GstAudioSink * audiosink, gpointer data,
     guint length);
-static guint gst_openal_sink_delay (GstAudioSink * asink);
-static void gst_openal_sink_reset (GstAudioSink * asink);
+static guint gst_openal_sink_delay (GstAudioSink * audiosink);
+static void gst_openal_sink_reset (GstAudioSink * audiosink);
 
-#define DEFAULT_DEVICE NULL
+#define OPENAL_DEFAULT_DEVICE NULL
+
+#define OPENAL_MIN_RATE 8000
+#define OPENAL_MAX_RATE 192000
 
 enum
 {
@@ -78,60 +94,56 @@ enum
   PROP_DEVICE,
   PROP_DEVICE_NAME,
 
-  PROP_DEVICE_HDL,
-  PROP_CONTEXT_HDL,
-  PROP_SOURCE_ID
+  PROP_USER_DEVICE,
+  PROP_USER_CONTEXT,
+  PROP_USER_SOURCE
 };
 
-static GstStaticPadTemplate openalsink_sink_factory =
+static GstStaticPadTemplate openalsink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-        "width = (int) 32, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ]; "
-        "audio/x-raw-int, "
-        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-        "signed = (boolean) TRUE, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ]; "
-        "audio/x-raw-int, "
-        "signed = (boolean) FALSE, "
-        "width = (int) 8, "
-        "depth = (int) 8, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ]; "
-        "audio/x-mulaw, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
+    GST_STATIC_CAPS ("audio/x-raw, " "format = (string) " GST_AUDIO_NE (F64)
+        ", " "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
+        "audio/x-raw, " "format = (string) " GST_AUDIO_NE (F32) ", "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
+        "audio/x-raw, " "format = (string) " GST_AUDIO_NE (S16) ", "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
+        "audio/x-raw, " "format = (string) " G_STRINGIFY (U8) ", "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
+        /* These caps do not work on my card */
+        // "audio/x-adpcm, " "layout = (string) ima, "
+        // "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
+        // "audio/x-alaw, " "rate = (int) [ 1, MAX ], "
+        // "channels = (int) [ 1, 2 ]; "
+        // "audio/x-mulaw, " "rate = (int) [ 1, MAX ], "
+        // "channels = (int) [ 1, MAX ]"
+    )
     );
 
 static PFNALCSETTHREADCONTEXTPROC palcSetThreadContext;
 static PFNALCGETTHREADCONTEXTPROC palcGetThreadContext;
 
 static inline ALCcontext *
-pushContext (ALCcontext * ctx)
+pushContext (ALCcontext * context)
 {
   ALCcontext *old;
   if (!palcGetThreadContext || !palcSetThreadContext)
     return NULL;
 
   old = palcGetThreadContext ();
-  if (old != ctx)
-    palcSetThreadContext (ctx);
+  if (old != context)
+    palcSetThreadContext (context);
   return old;
 }
 
 static inline void
-popContext (ALCcontext * old, ALCcontext * ctx)
+popContext (ALCcontext * old, ALCcontext * context)
 {
   if (!palcGetThreadContext || !palcSetThreadContext)
     return;
 
-  if (old != ctx)
+  if (old != context)
     palcSetThreadContext (old);
 }
 
@@ -146,8 +158,7 @@ checkALError (const char *fname, unsigned int fline)
 
 #define checkALError() checkALError(__FILE__, __LINE__)
 
-GST_BOILERPLATE (GstOpenALSink, gst_openal_sink, GstAudioSink,
-    GST_TYPE_AUDIO_SINK);
+G_DEFINE_TYPE (GstOpenALSink, gst_openal_sink, GST_TYPE_AUDIO_SINK);
 
 static void
 gst_openal_sink_dispose (GObject * object)
@@ -158,40 +169,21 @@ gst_openal_sink_dispose (GObject * object)
     gst_caps_unref (sink->probed_caps);
   sink->probed_caps = NULL;
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (gst_openal_sink_parent_class)->dispose (object);
 }
 
-/* GObject vmethod implementations */
-static void
-gst_openal_sink_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-  GstPadTemplate *pad_template;
-
-  gst_element_class_set_static_metadata (element_class, "Audio sink (OpenAL)",
-      "Sink/Audio",
-      "Output to a sound device via OpenAL",
-      "Chris Robinson <chris.kcat@gmail.com>");
-
-  pad_template = gst_static_pad_template_get (&openalsink_sink_factory);
-  gst_element_class_add_pad_template (element_class, pad_template);
-}
-
-/* initialize the plugin's class */
 static void
 gst_openal_sink_class_init (GstOpenALSinkClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseSinkClass *gstbasesink_class = (GstBaseSinkClass *) klass;
   GstAudioSinkClass *gstaudiosink_class = (GstAudioSinkClass *) klass;
-  GParamSpec *spec;
 
   if (alcIsExtensionPresent (NULL, "ALC_EXT_thread_local_context")) {
     palcSetThreadContext = alcGetProcAddress (NULL, "alcSetThreadContext");
     palcGetThreadContext = alcGetProcAddress (NULL, "alcGetThreadContext");
   }
-
-  GST_DEBUG_CATEGORY_INIT (openalsink_debug, "openalsink", 0, "OpenAL sink");
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_openal_sink_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_openal_sink_finalize);
@@ -200,27 +192,7 @@ gst_openal_sink_class_init (GstOpenALSinkClass * klass)
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_openal_sink_get_property);
 
-  spec = g_param_spec_string ("device-name", "Device name",
-      "Opened OpenAL device name", "", G_PARAM_READABLE);
-  g_object_class_install_property (gobject_class, PROP_DEVICE_NAME, spec);
-
-  spec = g_param_spec_string ("device", "Device", "OpenAL device string",
-      DEFAULT_DEVICE, G_PARAM_READWRITE);
-  g_object_class_install_property (gobject_class, PROP_DEVICE, spec);
-
-  spec = g_param_spec_pointer ("device-handle", "ALCdevice",
-      "Custom playback device", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  g_object_class_install_property (gobject_class, PROP_DEVICE_HDL, spec);
-
-  spec = g_param_spec_pointer ("context-handle", "ALCcontext",
-      "Custom playback context", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  g_object_class_install_property (gobject_class, PROP_CONTEXT_HDL, spec);
-
-  spec = g_param_spec_uint ("source-id", "Source ID", "Custom playback sID",
-      0, UINT_MAX, 0, G_PARAM_READWRITE);
-  g_object_class_install_property (gobject_class, PROP_SOURCE_ID, spec);
-
-  parent_class = g_type_class_peek_parent (klass);
+  gst_openal_sink_parent_class = g_type_class_peek_parent (klass);
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_openal_sink_getcaps);
 
@@ -231,32 +203,61 @@ gst_openal_sink_class_init (GstOpenALSinkClass * klass)
   gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_openal_sink_write);
   gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_openal_sink_delay);
   gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_openal_sink_reset);
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
+      g_param_spec_string ("device-name", "Device name",
+          "Human-readable name of the opened device", "", G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE,
+      g_param_spec_string ("device", "Device",
+          "Human-readable name of the device", OPENAL_DEFAULT_DEVICE,
+          G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_USER_DEVICE,
+      g_param_spec_pointer ("user-device", "ALCdevice", "User device",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_USER_CONTEXT,
+      g_param_spec_pointer ("user-context", "ALCcontext", "User context",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_USER_SOURCE,
+      g_param_spec_uint ("user-source", "ALsource", "User source", 0, UINT_MAX,
+          0, G_PARAM_READWRITE));
+
+  gst_element_class_set_static_metadata (gstelement_class, "OpenAL Audio Sink",
+      "Sink/Audio", "Output audio through OpenAL",
+      "Juan Manuel Borges Caño <juanmabcmail@gmail.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&openalsink_factory));
+
 }
 
 static void
-gst_openal_sink_init (GstOpenALSink * sink, GstOpenALSinkClass * klass)
+gst_openal_sink_init (GstOpenALSink * sink)
 {
-  GST_DEBUG_OBJECT (sink, "initializing openalsink");
+  GST_DEBUG_OBJECT (sink, "initializing");
 
-  sink->devname = g_strdup (DEFAULT_DEVICE);
+  sink->device_name = g_strdup (OPENAL_DEFAULT_DEVICE);
 
-  sink->custom_dev = NULL;
-  sink->custom_ctx = NULL;
-  sink->custom_sID = 0;
+  sink->user_device = NULL;
+  sink->user_context = NULL;
+  sink->user_source = 0;
 
-  sink->device = NULL;
-  sink->context = NULL;
-  sink->sID = 0;
+  sink->default_device = NULL;
+  sink->default_context = NULL;
+  sink->default_source = 0;
 
-  sink->bID_idx = 0;
-  sink->bID_count = 0;
-  sink->bIDs = NULL;
-  sink->bID_length = 0;
+  sink->buffer_idx = 0;
+  sink->buffer_count = 0;
+  sink->buffers = NULL;
+  sink->buffer_length = 0;
 
   sink->write_reset = AL_FALSE;
   sink->probed_caps = NULL;
 
-  sink->openal_lock = g_mutex_new ();
+  g_mutex_init (&sink->openal_lock);
 }
 
 static void
@@ -264,12 +265,11 @@ gst_openal_sink_finalize (GObject * object)
 {
   GstOpenALSink *sink = GST_OPENAL_SINK (object);
 
-  g_free (sink->devname);
-  sink->devname = NULL;
-  g_mutex_free (sink->openal_lock);
-  sink->openal_lock = NULL;
+  g_free (sink->device_name);
+  sink->device_name = NULL;
+  g_mutex_clear (&sink->openal_lock);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_openal_sink_parent_class)->finalize (object);
 }
 
 static void
@@ -280,23 +280,23 @@ gst_openal_sink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE:
-      g_free (sink->devname);
-      sink->devname = g_value_dup_string (value);
+      g_free (sink->device_name);
+      sink->device_name = g_value_dup_string (value);
       if (sink->probed_caps)
         gst_caps_unref (sink->probed_caps);
       sink->probed_caps = NULL;
       break;
-    case PROP_DEVICE_HDL:
-      if (!sink->device)
-        sink->custom_dev = g_value_get_pointer (value);
+    case PROP_USER_DEVICE:
+      if (!sink->default_device)
+        sink->user_device = g_value_get_pointer (value);
       break;
-    case PROP_CONTEXT_HDL:
-      if (!sink->device)
-        sink->custom_ctx = g_value_get_pointer (value);
+    case PROP_USER_CONTEXT:
+      if (!sink->default_device)
+        sink->user_context = g_value_get_pointer (value);
       break;
-    case PROP_SOURCE_ID:
-      if (!sink->device)
-        sink->custom_sID = g_value_get_uint (value);
+    case PROP_USER_SOURCE:
+      if (!sink->default_device)
+        sink->user_source = g_value_get_uint (value);
       break;
 
     default:
@@ -306,38 +306,38 @@ gst_openal_sink_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_openal_sink_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
+gst_openal_sink_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstOpenALSink *sink = GST_OPENAL_SINK (object);
-  const ALCchar *name = sink->devname;
-  ALCdevice *device = sink->device;
-  ALCcontext *context = sink->context;
-  ALuint sourceID = sink->sID;
+  const ALCchar *device_name = sink->device_name;
+  ALCdevice *device = sink->default_device;
+  ALCcontext *context = sink->default_context;
+  ALuint source = sink->default_source;
 
   switch (prop_id) {
     case PROP_DEVICE_NAME:
-      name = "";
+      device_name = "";
       if (device)
-        name = alcGetString (device, ALC_DEVICE_SPECIFIER);
+        device_name = alcGetString (device, ALC_DEVICE_SPECIFIER);
       /* fall-through */
     case PROP_DEVICE:
-      g_value_set_string (value, name);
+      g_value_set_string (value, device_name);
       break;
-    case PROP_DEVICE_HDL:
+    case PROP_USER_DEVICE:
       if (!device)
-        device = sink->custom_dev;
+        device = sink->user_device;
       g_value_set_pointer (value, device);
       break;
-    case PROP_CONTEXT_HDL:
+    case PROP_USER_CONTEXT:
       if (!context)
-        context = sink->custom_ctx;
+        context = sink->user_context;
       g_value_set_pointer (value, context);
       break;
-    case PROP_SOURCE_ID:
-      if (!sourceID)
-        sourceID = sink->custom_sID;
-      g_value_set_uint (value, sourceID);
+    case PROP_USER_SOURCE:
+      if (!source)
+        source = sink->user_source;
+      g_value_set_uint (value, source);
       break;
 
     default:
@@ -347,200 +347,251 @@ gst_openal_sink_get_property (GObject * object, guint prop_id,
 }
 
 static GstCaps *
-gst_openal_helper_probe_caps (ALCcontext * ctx)
+gst_openal_helper_probe_caps (ALCcontext * context)
 {
   static const struct
   {
     gint count;
-    GstAudioChannelPosition pos[8];
+    GstAudioChannelPosition positions[8];
   } chans[] = {
     {
       1, {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_MONO}}, {
+      GST_AUDIO_CHANNEL_POSITION_MONO}
+    }, {
       2, {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}}, {
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}
+    }, {
       4, {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
             GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
             GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-            GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}}, {
+            GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}
+    }, {
       6, {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
             GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
             GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-            GST_AUDIO_CHANNEL_POSITION_LFE,
+            GST_AUDIO_CHANNEL_POSITION_LFE1,
             GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-            GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}}, {
+            GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}
+    }, {
       7, {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
             GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
             GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-            GST_AUDIO_CHANNEL_POSITION_LFE,
+            GST_AUDIO_CHANNEL_POSITION_LFE1,
             GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
             GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-            GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}}, {
+            GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}
+    }, {
       8, {
-  GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
             GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
             GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-            GST_AUDIO_CHANNEL_POSITION_LFE,
+            GST_AUDIO_CHANNEL_POSITION_LFE1,
             GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
             GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
             GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-            GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}},};
+            GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}
+  },};
   GstStructure *structure;
-  ALCcontext *old;
+  guint64 channel_mask;
   GstCaps *caps;
+  ALCcontext *old;
 
-  old = pushContext (ctx);
+  old = pushContext (context);
 
   caps = gst_caps_new_empty ();
+
   if (alIsExtensionPresent ("AL_EXT_MCFORMATS")) {
     const char *fmt32[] = {
-      "AL_FORMAT_MONO_FLOAT32", "AL_FORMAT_STEREO_FLOAT32",
-      "AL_FORMAT_QUAD32", "AL_FORMAT_51CHN32", "AL_FORMAT_61CHN32",
-      "AL_FORMAT_71CHN32", NULL
+      "AL_FORMAT_MONO_FLOAT32",
+      "AL_FORMAT_STEREO_FLOAT32",
+      "AL_FORMAT_QUAD32",
+      "AL_FORMAT_51CHN32",
+      "AL_FORMAT_61CHN32",
+      "AL_FORMAT_71CHN32",
+      NULL
     }, *fmt16[] = {
-    "AL_FORMAT_MONO16", "AL_FORMAT_STEREO16", "AL_FORMAT_QUAD16",
-          "AL_FORMAT_51CHN16", "AL_FORMAT_61CHN16", "AL_FORMAT_71CHN16", NULL},
-        *fmt8[] = {
-    "AL_FORMAT_MONO8", "AL_FORMAT_STEREO8", "AL_FORMAT_QUAD8",
+    "AL_FORMAT_MONO16",
+          "AL_FORMAT_STEREO16",
+          "AL_FORMAT_QUAD16",
+          "AL_FORMAT_51CHN16",
+          "AL_FORMAT_61CHN16", "AL_FORMAT_71CHN16", NULL}, *fmt8[] = {
+    "AL_FORMAT_MONO8",
+          "AL_FORMAT_STEREO8",
+          "AL_FORMAT_QUAD8",
           "AL_FORMAT_51CHN8", "AL_FORMAT_61CHN8", "AL_FORMAT_71CHN8", NULL};
     int i;
 
     if (alIsExtensionPresent ("AL_EXT_FLOAT32")) {
       for (i = 0; fmt32[i]; i++) {
-        ALenum val = alGetEnumValue (fmt32[i]);
-        if (checkALError () != AL_NO_ERROR || val == 0 || val == -1)
+        ALenum value = alGetEnumValue (fmt32[i]);
+        if (checkALError () != AL_NO_ERROR || value == 0 || value == -1)
           continue;
 
-        structure = gst_structure_new ("audio/x-raw-float",
-            "endianness", G_TYPE_INT, G_BYTE_ORDER,
-            "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE,
-            OPENAL_MAX_RATE, "width", G_TYPE_INT, 32, NULL);
-        gst_structure_set (structure, "channels", G_TYPE_INT,
-            chans[i].count, NULL);
-        if (chans[i].count > 2)
-          gst_audio_set_channel_positions (structure, chans[i].pos);
+        structure =
+            gst_structure_new ("audio/x-raw", "format", G_TYPE_STRING,
+            GST_AUDIO_NE (F32), "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE,
+            OPENAL_MAX_RATE, "channels", G_TYPE_INT, chans[i].count, NULL);
+        if (chans[i].count > 2) {
+          gst_audio_channel_positions_to_mask (chans[i].positions,
+              chans[i].count, FALSE, &channel_mask);
+          gst_structure_set (structure, "channel-mask", GST_TYPE_BITMASK,
+              channel_mask, NULL);
+        }
         gst_caps_append_structure (caps, structure);
       }
     }
+
     for (i = 0; fmt16[i]; i++) {
-      ALenum val = alGetEnumValue (fmt16[i]);
-      if (checkALError () != AL_NO_ERROR || val == 0 || val == -1)
+      ALenum value = alGetEnumValue (fmt16[i]);
+      if (checkALError () != AL_NO_ERROR || value == 0 || value == -1)
         continue;
 
-      structure = gst_structure_new ("audio/x-raw-int",
-          "endianness", G_TYPE_INT, G_BYTE_ORDER,
-          "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE, OPENAL_MAX_RATE,
-          "width", G_TYPE_INT, 16,
-          "depth", G_TYPE_INT, 16, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
-      gst_structure_set (structure, "channels", G_TYPE_INT,
-          chans[i].count, NULL);
-      if (chans[i].count > 2)
-        gst_audio_set_channel_positions (structure, chans[i].pos);
+      structure =
+          gst_structure_new ("audio/x-raw", "format", G_TYPE_STRING,
+          GST_AUDIO_NE (S16), "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE,
+          OPENAL_MAX_RATE, "channels", G_TYPE_INT, chans[i].count, NULL);
+      if (chans[i].count > 2) {
+        gst_audio_channel_positions_to_mask (chans[i].positions, chans[i].count,
+            FALSE, &channel_mask);
+        gst_structure_set (structure, "channel-mask", GST_TYPE_BITMASK,
+            channel_mask, NULL);
+      }
       gst_caps_append_structure (caps, structure);
     }
     for (i = 0; fmt8[i]; i++) {
-      ALenum val = alGetEnumValue (fmt8[i]);
-      if (checkALError () != AL_NO_ERROR || val == 0 || val == -1)
+      ALenum value = alGetEnumValue (fmt8[i]);
+      if (checkALError () != AL_NO_ERROR || value == 0 || value == -1)
         continue;
 
-      structure = gst_structure_new ("audio/x-raw-int",
-          "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE, OPENAL_MAX_RATE,
-          "width", G_TYPE_INT, 8,
-          "depth", G_TYPE_INT, 8, "signed", G_TYPE_BOOLEAN, FALSE, NULL);
-      gst_structure_set (structure, "channels", G_TYPE_INT,
-          chans[i].count, NULL);
-      if (chans[i].count > 2)
-        gst_audio_set_channel_positions (structure, chans[i].pos);
+      structure =
+          gst_structure_new ("audio/x-raw", "format", G_TYPE_STRING,
+          G_STRINGIFY (U8), "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE,
+          OPENAL_MAX_RATE, "channels", G_TYPE_INT, chans[i].count, NULL);
+      if (chans[i].count > 2) {
+        gst_audio_channel_positions_to_mask (chans[i].positions, chans[i].count,
+            FALSE, &channel_mask);
+        gst_structure_set (structure, "channel-mask", GST_TYPE_BITMASK,
+            channel_mask, NULL);
+      }
       gst_caps_append_structure (caps, structure);
     }
   } else {
     if (alIsExtensionPresent ("AL_EXT_FLOAT32")) {
-      structure = gst_structure_new ("audio/x-raw-float",
-          "endianness", G_TYPE_INT, G_BYTE_ORDER,
-          "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE, OPENAL_MAX_RATE,
-          "width", G_TYPE_INT, 32, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+      structure =
+          gst_structure_new ("audio/x-raw", "format", G_TYPE_STRING,
+          GST_AUDIO_NE (F32), "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE,
+          OPENAL_MAX_RATE, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
       gst_caps_append_structure (caps, structure);
     }
 
-    structure = gst_structure_new ("audio/x-raw-int",
-        "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE, OPENAL_MAX_RATE,
-        "width", G_TYPE_INT, 16,
-        "depth", G_TYPE_INT, 16,
-        "signed", G_TYPE_BOOLEAN, TRUE,
-        "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+    structure =
+        gst_structure_new ("audio/x-raw", "format", G_TYPE_STRING,
+        GST_AUDIO_NE (S16), "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE,
+        OPENAL_MAX_RATE, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
     gst_caps_append_structure (caps, structure);
 
-    structure = gst_structure_new ("audio/x-raw-int",
+    structure =
+        gst_structure_new ("audio/x-raw", "format", G_TYPE_STRING,
+        G_STRINGIFY (U8), "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE,
+        OPENAL_MAX_RATE, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+    gst_caps_append_structure (caps, structure);
+  }
+
+  if (alIsExtensionPresent ("AL_EXT_double")) {
+    structure =
+        gst_structure_new ("audio/x-raw", "format", G_TYPE_STRING,
+        GST_AUDIO_NE (F64), "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE,
+        OPENAL_MAX_RATE, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+    gst_caps_append_structure (caps, structure);
+  }
+
+  if (alIsExtensionPresent ("AL_EXT_IMA4")) {
+    structure =
+        gst_structure_new ("audio/x-adpcm", "layout", G_TYPE_STRING, "ima",
         "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE, OPENAL_MAX_RATE,
-        "width", G_TYPE_INT, 8,
-        "depth", G_TYPE_INT, 8,
-        "signed", G_TYPE_BOOLEAN, FALSE,
         "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+    gst_caps_append_structure (caps, structure);
+  }
+
+  if (alIsExtensionPresent ("AL_EXT_ALAW")) {
+    structure =
+        gst_structure_new ("audio/x-alaw", "rate", GST_TYPE_INT_RANGE,
+        OPENAL_MIN_RATE, OPENAL_MAX_RATE, "channels", GST_TYPE_INT_RANGE, 1, 2,
+        NULL);
     gst_caps_append_structure (caps, structure);
   }
 
   if (alIsExtensionPresent ("AL_EXT_MULAW_MCFORMATS")) {
     const char *fmtmulaw[] = {
-      "AL_FORMAT_MONO_MULAW", "AL_FORMAT_STEREO_MULAW",
-      "AL_FORMAT_QUAD_MULAW", "AL_FORMAT_51CHN_MULAW",
-      "AL_FORMAT_61CHN_MULAW", "AL_FORMAT_71CHN_MULAW", NULL
+      "AL_FORMAT_MONO_MULAW",
+      "AL_FORMAT_STEREO_MULAW",
+      "AL_FORMAT_QUAD_MULAW",
+      "AL_FORMAT_51CHN_MULAW",
+      "AL_FORMAT_61CHN_MULAW",
+      "AL_FORMAT_71CHN_MULAW",
+      NULL
     };
     int i;
 
     for (i = 0; fmtmulaw[i]; i++) {
-      ALenum val = alGetEnumValue (fmtmulaw[i]);
-      if (checkALError () != AL_NO_ERROR || val == 0 || val == -1)
+      ALenum value = alGetEnumValue (fmtmulaw[i]);
+      if (checkALError () != AL_NO_ERROR || value == 0 || value == -1)
         continue;
 
-      structure = gst_structure_new ("audio/x-mulaw",
-          "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE, OPENAL_MAX_RATE, NULL);
-      gst_structure_set (structure, "channels", G_TYPE_INT,
+      structure =
+          gst_structure_new ("audio/x-mulaw", "rate", GST_TYPE_INT_RANGE,
+          OPENAL_MIN_RATE, OPENAL_MAX_RATE, "channels", G_TYPE_INT,
           chans[i].count, NULL);
-      if (chans[i].count > 2)
-        gst_audio_set_channel_positions (structure, chans[i].pos);
+      if (chans[i].count > 2) {
+        gst_audio_channel_positions_to_mask (chans[i].positions, chans[i].count,
+            FALSE, &channel_mask);
+        gst_structure_set (structure, "channel-mask", GST_TYPE_BITMASK,
+            channel_mask, NULL);
+      }
       gst_caps_append_structure (caps, structure);
     }
   } else if (alIsExtensionPresent ("AL_EXT_MULAW")) {
-    structure = gst_structure_new ("audio/x-mulaw",
-        "rate", GST_TYPE_INT_RANGE, OPENAL_MIN_RATE, OPENAL_MAX_RATE,
-        "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+    structure =
+        gst_structure_new ("audio/x-mulaw", "rate", GST_TYPE_INT_RANGE,
+        OPENAL_MIN_RATE, OPENAL_MAX_RATE, "channels", GST_TYPE_INT_RANGE, 1, 2,
+        NULL);
     gst_caps_append_structure (caps, structure);
   }
 
-  popContext (old, ctx);
+  popContext (old, context);
+
   return caps;
 }
 
 static GstCaps *
-gst_openal_sink_getcaps (GstBaseSink * bsink)
+gst_openal_sink_getcaps (GstBaseSink * basesink, GstCaps * filter)
 {
-  GstOpenALSink *sink = GST_OPENAL_SINK (bsink);
+  GstOpenALSink *sink = GST_OPENAL_SINK (basesink);
   GstCaps *caps;
 
-  if (sink->device == NULL) {
-    GstPad *pad = GST_BASE_SINK_PAD (bsink);
+  if (sink->default_device == NULL) {
+    GstPad *pad = GST_BASE_SINK_PAD (basesink);
     caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   } else if (sink->probed_caps)
     caps = gst_caps_copy (sink->probed_caps);
   else {
-    if (sink->context)
-      caps = gst_openal_helper_probe_caps (sink->context);
-    else if (sink->custom_ctx)
-      caps = gst_openal_helper_probe_caps (sink->custom_ctx);
+    if (sink->default_context)
+      caps = gst_openal_helper_probe_caps (sink->default_context);
+    else if (sink->user_context)
+      caps = gst_openal_helper_probe_caps (sink->user_context);
     else {
-      ALCcontext *ctx = alcCreateContext (sink->device, NULL);
-      if (ctx) {
-        caps = gst_openal_helper_probe_caps (ctx);
-        alcDestroyContext (ctx);
+      ALCcontext *context = alcCreateContext (sink->default_device, NULL);
+      if (context) {
+        caps = gst_openal_helper_probe_caps (context);
+        alcDestroyContext (context);
       } else {
         GST_ELEMENT_WARNING (sink, RESOURCE, FAILED,
             ("Could not create temporary context."),
-            GST_ALC_ERROR (sink->device));
+            GST_ALC_ERROR (sink->default_device));
         caps = NULL;
       }
     }
@@ -549,30 +600,37 @@ gst_openal_sink_getcaps (GstBaseSink * bsink)
       sink->probed_caps = gst_caps_copy (caps);
   }
 
-  return caps;
+  if (filter) {
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    return intersection;
+  } else {
+    return caps;
+  }
 }
 
 static gboolean
-gst_openal_sink_open (GstAudioSink * asink)
+gst_openal_sink_open (GstAudioSink * audiosink)
 {
-  GstOpenALSink *openal = GST_OPENAL_SINK (asink);
+  GstOpenALSink *sink = GST_OPENAL_SINK (audiosink);
 
-  if (openal->custom_dev) {
-    ALCint val = -1;
-    alcGetIntegerv (openal->custom_dev, ALC_ATTRIBUTES_SIZE, 1, &val);
-    if (val > 0) {
-      if (!openal->custom_ctx ||
-          alcGetContextsDevice (openal->custom_ctx) == openal->custom_dev)
-        openal->device = openal->custom_dev;
+  if (sink->user_device) {
+    ALCint value = -1;
+    alcGetIntegerv (sink->user_device, ALC_ATTRIBUTES_SIZE, 1, &value);
+    if (value > 0) {
+      if (!sink->user_context
+          || alcGetContextsDevice (sink->user_context) == sink->user_device)
+        sink->default_device = sink->user_device;
     }
-  } else if (openal->custom_ctx)
-    openal->device = alcGetContextsDevice (openal->custom_ctx);
+  } else if (sink->user_context)
+    sink->default_device = alcGetContextsDevice (sink->user_context);
   else
-    openal->device = alcOpenDevice (openal->devname);
-  if (!openal->device) {
-    GST_ELEMENT_ERROR (openal, RESOURCE, OPEN_WRITE,
-        ("Could not open audio device for playback."),
-        GST_ALC_ERROR (openal->device));
+    sink->default_device = alcOpenDevice (sink->device_name);
+  if (!sink->default_device) {
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
+        ("Could not open device."), GST_ALC_ERROR (sink->default_device));
     return FALSE;
   }
 
@@ -580,114 +638,180 @@ gst_openal_sink_open (GstAudioSink * asink)
 }
 
 static gboolean
-gst_openal_sink_close (GstAudioSink * asink)
+gst_openal_sink_close (GstAudioSink * audiosink)
 {
-  GstOpenALSink *openal = GST_OPENAL_SINK (asink);
+  GstOpenALSink *sink = GST_OPENAL_SINK (audiosink);
 
-  if (!openal->custom_dev && !openal->custom_ctx) {
-    if (alcCloseDevice (openal->device) == ALC_FALSE) {
-      GST_ELEMENT_ERROR (openal, RESOURCE, CLOSE,
-          ("Could not close audio device."), GST_ALC_ERROR (openal->device));
+  if (!sink->user_device && !sink->user_context) {
+    if (alcCloseDevice (sink->default_device) == ALC_FALSE) {
+      GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
+          ("Could not close device."), GST_ALC_ERROR (sink->default_device));
       return FALSE;
     }
   }
-  openal->device = NULL;
+  sink->default_device = NULL;
 
-  if (openal->probed_caps)
-    gst_caps_unref (openal->probed_caps);
-  openal->probed_caps = NULL;
+  if (sink->probed_caps)
+    gst_caps_unref (sink->probed_caps);
+  sink->probed_caps = NULL;
 
   return TRUE;
 }
 
 static void
-gst_openal_sink_parse_spec (GstOpenALSink * openal,
-    const GstRingBufferSpec * spec)
+gst_openal_sink_parse_spec (GstOpenALSink * sink,
+    const GstAudioRingBufferSpec * spec)
 {
   ALuint format = AL_NONE;
 
-  GST_DEBUG_OBJECT (openal, "Looking up format for type %d, gst-format %d, "
-      "and %d channels", spec->type, spec->format, spec->channels);
+  GST_DEBUG_OBJECT (sink,
+      "looking up format for type %d, gst-format %d, and %d channels",
+      spec->type, GST_AUDIO_INFO_FORMAT (&spec->info),
+      GST_AUDIO_INFO_CHANNELS (&spec->info));
 
   /* Don't need to verify supported formats, since the probed caps will only
    * report what was detected and we shouldn't get anything different */
   switch (spec->type) {
-    case GST_BUFTYPE_LINEAR:
-      switch (spec->format) {
-        case GST_U8:
-          if (spec->channels == 1)
-            format = AL_FORMAT_MONO8;
-          if (spec->channels == 2)
-            format = AL_FORMAT_STEREO8;
-          if (spec->channels == 4)
-            format = AL_FORMAT_QUAD8;
-          if (spec->channels == 6)
-            format = AL_FORMAT_51CHN8;
-          if (spec->channels == 7)
-            format = AL_FORMAT_61CHN8;
-          if (spec->channels == 8)
-            format = AL_FORMAT_71CHN8;
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW:
+      switch (GST_AUDIO_INFO_FORMAT (&spec->info)) {
+        case GST_AUDIO_FORMAT_U8:
+          switch (GST_AUDIO_INFO_CHANNELS (&spec->info)) {
+            case 1:
+              format = AL_FORMAT_MONO8;
+              break;
+            case 2:
+              format = AL_FORMAT_STEREO8;
+              break;
+            case 4:
+              format = AL_FORMAT_QUAD8;
+              break;
+            case 6:
+              format = AL_FORMAT_51CHN8;
+              break;
+            case 7:
+              format = AL_FORMAT_61CHN8;
+              break;
+            case 8:
+              format = AL_FORMAT_71CHN8;
+              break;
+            default:
+              break;
+          }
           break;
 
-        case GST_S16_NE:
-          if (spec->channels == 1)
-            format = AL_FORMAT_MONO16;
-          if (spec->channels == 2)
-            format = AL_FORMAT_STEREO16;
-          if (spec->channels == 4)
-            format = AL_FORMAT_QUAD16;
-          if (spec->channels == 6)
-            format = AL_FORMAT_51CHN16;
-          if (spec->channels == 7)
-            format = AL_FORMAT_61CHN16;
-          if (spec->channels == 8)
-            format = AL_FORMAT_71CHN16;
+        case GST_AUDIO_FORMAT_S16:
+          switch (GST_AUDIO_INFO_CHANNELS (&spec->info)) {
+            case 1:
+              format = AL_FORMAT_MONO16;
+              break;
+            case 2:
+              format = AL_FORMAT_STEREO16;
+              break;
+            case 4:
+              format = AL_FORMAT_QUAD16;
+              break;
+            case 6:
+              format = AL_FORMAT_51CHN16;
+              break;
+            case 7:
+              format = AL_FORMAT_61CHN16;
+              break;
+            case 8:
+              format = AL_FORMAT_71CHN16;
+              break;
+            default:
+              break;
+          }
           break;
 
+        case GST_AUDIO_FORMAT_F32:
+          switch (GST_AUDIO_INFO_CHANNELS (&spec->info)) {
+            case 1:
+              format = AL_FORMAT_MONO_FLOAT32;
+              break;
+            case 2:
+              format = AL_FORMAT_STEREO_FLOAT32;
+              break;
+            case 4:
+              format = AL_FORMAT_QUAD32;
+              break;
+            case 6:
+              format = AL_FORMAT_51CHN32;
+              break;
+            case 7:
+              format = AL_FORMAT_61CHN32;
+              break;
+            case 8:
+              format = AL_FORMAT_71CHN32;
+              break;
+            default:
+              break;
+          }
+          break;
+
+        case GST_AUDIO_FORMAT_F64:
+          switch (GST_AUDIO_INFO_CHANNELS (&spec->info)) {
+            case 1:
+              format = AL_FORMAT_MONO_DOUBLE_EXT;
+              break;
+            case 2:
+              format = AL_FORMAT_STEREO_DOUBLE_EXT;
+              break;
+            default:
+              break;
+          }
+          break;
         default:
           break;
       }
       break;
 
-    case GST_BUFTYPE_FLOAT:
-      switch (spec->format) {
-        case GST_FLOAT32_NE:
-          if (spec->channels == 1)
-            format = AL_FORMAT_MONO_FLOAT32;
-          if (spec->channels == 2)
-            format = AL_FORMAT_STEREO_FLOAT32;
-          if (spec->channels == 4)
-            format = AL_FORMAT_QUAD32;
-          if (spec->channels == 6)
-            format = AL_FORMAT_51CHN32;
-          if (spec->channels == 7)
-            format = AL_FORMAT_61CHN32;
-          if (spec->channels == 8)
-            format = AL_FORMAT_71CHN32;
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_IMA_ADPCM:
+      switch (GST_AUDIO_INFO_CHANNELS (&spec->info)) {
+        case 1:
+          format = AL_FORMAT_MONO_IMA4;
           break;
-
+        case 2:
+          format = AL_FORMAT_STEREO_IMA4;
+          break;
         default:
           break;
       }
       break;
 
-    case GST_BUFTYPE_MU_LAW:
-      switch (spec->format) {
-        case GST_MU_LAW:
-          if (spec->channels == 1)
-            format = AL_FORMAT_MONO_MULAW;
-          if (spec->channels == 2)
-            format = AL_FORMAT_STEREO_MULAW;
-          if (spec->channels == 4)
-            format = AL_FORMAT_QUAD_MULAW;
-          if (spec->channels == 6)
-            format = AL_FORMAT_51CHN_MULAW;
-          if (spec->channels == 7)
-            format = AL_FORMAT_61CHN_MULAW;
-          if (spec->channels == 8)
-            format = AL_FORMAT_71CHN_MULAW;
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_A_LAW:
+      switch (GST_AUDIO_INFO_CHANNELS (&spec->info)) {
+        case 1:
+          format = AL_FORMAT_MONO_ALAW_EXT;
           break;
+        case 2:
+          format = AL_FORMAT_STEREO_ALAW_EXT;
+          break;
+        default:
+          break;
+      }
+      break;
 
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MU_LAW:
+      switch (GST_AUDIO_INFO_CHANNELS (&spec->info)) {
+        case 1:
+          format = AL_FORMAT_MONO_MULAW;
+          break;
+        case 2:
+          format = AL_FORMAT_STEREO_MULAW;
+          break;
+        case 4:
+          format = AL_FORMAT_QUAD_MULAW;
+          break;
+        case 6:
+          format = AL_FORMAT_51CHN_MULAW;
+          break;
+        case 7:
+          format = AL_FORMAT_61CHN_MULAW;
+          break;
+        case 8:
+          format = AL_FORMAT_71CHN_MULAW;
+          break;
         default:
           break;
       }
@@ -697,175 +821,180 @@ gst_openal_sink_parse_spec (GstOpenALSink * openal,
       break;
   }
 
-  openal->bytes_per_sample = spec->bytes_per_sample;
-  openal->srate = spec->rate;
-  openal->bID_count = spec->segtotal;
-  openal->bID_length = spec->segsize;
-  openal->format = format;
+  sink->bytes_per_sample = GST_AUDIO_INFO_BPS (&spec->info);
+  sink->rate = GST_AUDIO_INFO_RATE (&spec->info);
+  sink->channels = GST_AUDIO_INFO_CHANNELS (&spec->info);
+  sink->format = format;
+  sink->buffer_count = spec->segtotal;
+  sink->buffer_length = spec->segsize;
 }
 
 static gboolean
-gst_openal_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
+gst_openal_sink_prepare (GstAudioSink * audiosink,
+    GstAudioRingBufferSpec * spec)
 {
-  GstOpenALSink *openal = GST_OPENAL_SINK (asink);
-  ALCcontext *ctx, *old;
+  GstOpenALSink *sink = GST_OPENAL_SINK (audiosink);
+  ALCcontext *context, *old;
 
-  if (openal->context && !gst_openal_sink_unprepare (asink))
+  if (sink->default_context && !gst_openal_sink_unprepare (audiosink))
     return FALSE;
 
-  if (openal->custom_ctx)
-    ctx = openal->custom_ctx;
+  if (sink->user_context)
+    context = sink->user_context;
   else {
     ALCint attribs[3] = { 0, 0, 0 };
 
     /* Don't try to change the playback frequency of an app's device */
-    if (!openal->custom_dev) {
+    if (!sink->user_device) {
       attribs[0] = ALC_FREQUENCY;
-      attribs[1] = spec->rate;
+      attribs[1] = GST_AUDIO_INFO_RATE (&spec->info);
       attribs[2] = 0;
     }
 
-    ctx = alcCreateContext (openal->device, attribs);
-    if (!ctx) {
-      GST_ELEMENT_ERROR (openal, RESOURCE, FAILED,
-          ("Unable to prepare device."), GST_ALC_ERROR (openal->device));
+    context = alcCreateContext (sink->default_device, attribs);
+    if (!context) {
+      GST_ELEMENT_ERROR (sink, RESOURCE, FAILED,
+          ("Unable to prepare device."), GST_ALC_ERROR (sink->default_device));
       return FALSE;
     }
   }
 
-  old = pushContext (ctx);
+  old = pushContext (context);
 
-  if (openal->custom_sID) {
-    if (!openal->custom_ctx || !alIsSource (openal->custom_sID)) {
-      GST_ELEMENT_ERROR (openal, RESOURCE, NOT_FOUND, (NULL),
-          ("Invalid source ID specified for context"));
+  if (sink->user_source) {
+    if (!sink->user_context || !alIsSource (sink->user_source)) {
+      GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND, (NULL),
+          ("Invalid source specified for context"));
       goto fail;
     }
-    openal->sID = openal->custom_sID;
+    sink->default_source = sink->user_source;
   } else {
-    ALuint sourceID;
+    ALuint source;
 
-    alGenSources (1, &sourceID);
+    alGenSources (1, &source);
     if (checkALError () != AL_NO_ERROR) {
-      GST_ELEMENT_ERROR (openal, RESOURCE, NO_SPACE_LEFT, (NULL),
+      GST_ELEMENT_ERROR (sink, RESOURCE, NO_SPACE_LEFT, (NULL),
           ("Unable to generate source"));
       goto fail;
     }
-    openal->sID = sourceID;
+    sink->default_source = source;
   }
 
-  gst_openal_sink_parse_spec (openal, spec);
-  if (openal->format == AL_NONE) {
-    GST_ELEMENT_ERROR (openal, RESOURCE, SETTINGS, (NULL),
-        ("Unable to get type %d, format %d, and %d channels",
-            spec->type, spec->format, spec->channels));
+  gst_openal_sink_parse_spec (sink, spec);
+  if (sink->format == AL_NONE) {
+    GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
+        ("Unable to get type %d, format %d, and %d channels", spec->type,
+            GST_AUDIO_INFO_FORMAT (&spec->info),
+            GST_AUDIO_INFO_CHANNELS (&spec->info)));
     goto fail;
   }
 
-  openal->bIDs = g_malloc (openal->bID_count * sizeof (*openal->bIDs));
-  if (!openal->bIDs) {
-    GST_ELEMENT_ERROR (openal, RESOURCE, FAILED, ("Out of memory."),
-        ("Unable to allocate buffer IDs"));
+  sink->buffers = g_malloc (sink->buffer_count * sizeof (*sink->buffers));
+  if (!sink->buffers) {
+    GST_ELEMENT_ERROR (sink, RESOURCE, FAILED, ("Out of memory."),
+        ("Unable to allocate buffers"));
     goto fail;
   }
 
-  alGenBuffers (openal->bID_count, openal->bIDs);
+  alGenBuffers (sink->buffer_count, sink->buffers);
   if (checkALError () != AL_NO_ERROR) {
-    GST_ELEMENT_ERROR (openal, RESOURCE, NO_SPACE_LEFT, (NULL),
-        ("Unable to generate %d buffers", openal->bID_count));
+    GST_ELEMENT_ERROR (sink, RESOURCE, NO_SPACE_LEFT, (NULL),
+        ("Unable to generate %d buffers", sink->buffer_count));
     goto fail;
   }
-  openal->bID_idx = 0;
+  sink->buffer_idx = 0;
 
-  popContext (old, ctx);
-  openal->context = ctx;
+  popContext (old, context);
+  sink->default_context = context;
   return TRUE;
 
 fail:
-  if (!openal->custom_sID && openal->sID)
-    alDeleteSources (1, &openal->sID);
-  openal->sID = 0;
+  if (!sink->user_source && sink->default_source)
+    alDeleteSources (1, &sink->default_source);
+  sink->default_source = 0;
 
-  g_free (openal->bIDs);
-  openal->bIDs = NULL;
-  openal->bID_count = 0;
-  openal->bID_length = 0;
+  g_free (sink->buffers);
+  sink->buffers = NULL;
+  sink->buffer_count = 0;
+  sink->buffer_length = 0;
 
-  popContext (old, ctx);
-  if (!openal->custom_ctx)
-    alcDestroyContext (ctx);
+  popContext (old, context);
+  if (!sink->user_context)
+    alcDestroyContext (context);
   return FALSE;
 }
 
 static gboolean
-gst_openal_sink_unprepare (GstAudioSink * asink)
+gst_openal_sink_unprepare (GstAudioSink * audiosink)
 {
-  GstOpenALSink *openal = GST_OPENAL_SINK (asink);
+  GstOpenALSink *sink = GST_OPENAL_SINK (audiosink);
   ALCcontext *old;
 
-  if (!openal->context)
+  if (!sink->default_context)
     return TRUE;
 
-  old = pushContext (openal->context);
+  old = pushContext (sink->default_context);
 
-  alSourceStop (openal->sID);
-  alSourcei (openal->sID, AL_BUFFER, 0);
+  alSourceStop (sink->default_source);
+  alSourcei (sink->default_source, AL_BUFFER, 0);
 
-  if (!openal->custom_sID)
-    alDeleteSources (1, &openal->sID);
-  openal->sID = 0;
+  if (!sink->user_source)
+    alDeleteSources (1, &sink->default_source);
+  sink->default_source = 0;
 
-  alDeleteBuffers (openal->bID_count, openal->bIDs);
-  g_free (openal->bIDs);
-  openal->bIDs = NULL;
-  openal->bID_idx = 0;
-  openal->bID_count = 0;
-  openal->bID_length = 0;
+  alDeleteBuffers (sink->buffer_count, sink->buffers);
+  g_free (sink->buffers);
+  sink->buffers = NULL;
+  sink->buffer_idx = 0;
+  sink->buffer_count = 0;
+  sink->buffer_length = 0;
 
   checkALError ();
-  popContext (old, openal->context);
-  if (!openal->custom_ctx)
-    alcDestroyContext (openal->context);
-  openal->context = NULL;
+  popContext (old, sink->default_context);
+  if (!sink->user_context)
+    alcDestroyContext (sink->default_context);
+  sink->default_context = NULL;
 
   return TRUE;
 }
 
-static guint
-gst_openal_sink_write (GstAudioSink * asink, gpointer data, guint length)
+static gint
+gst_openal_sink_write (GstAudioSink * audiosink, gpointer data, guint length)
 {
-  GstOpenALSink *openal = GST_OPENAL_SINK (asink);
+  GstOpenALSink *sink = GST_OPENAL_SINK (audiosink);
   ALint processed, queued, state;
   ALCcontext *old;
   gulong rest_us;
 
-  g_assert (length == openal->bID_length);
+  g_assert (length == sink->buffer_length);
 
-  old = pushContext (openal->context);
+  old = pushContext (sink->default_context);
 
-  rest_us = (guint64) (openal->bID_length / openal->bytes_per_sample) *
-      G_USEC_PER_SEC / openal->srate / 2;
+  rest_us =
+      (guint64) (sink->buffer_length / sink->bytes_per_sample) *
+      G_USEC_PER_SEC / sink->rate / sink->channels;
   do {
-    alGetSourcei (openal->sID, AL_SOURCE_STATE, &state);
-    alGetSourcei (openal->sID, AL_BUFFERS_QUEUED, &queued);
-    alGetSourcei (openal->sID, AL_BUFFERS_PROCESSED, &processed);
+    alGetSourcei (sink->default_source, AL_SOURCE_STATE, &state);
+    alGetSourcei (sink->default_source, AL_BUFFERS_QUEUED, &queued);
+    alGetSourcei (sink->default_source, AL_BUFFERS_PROCESSED, &processed);
     if (checkALError () != AL_NO_ERROR) {
-      GST_ELEMENT_ERROR (openal, RESOURCE, WRITE, (NULL),
+      GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
           ("Source state error detected"));
       length = 0;
       goto out_nolock;
     }
 
-    if (processed > 0 || queued < openal->bID_count)
+    if (processed > 0 || queued < sink->buffer_count)
       break;
     if (state != AL_PLAYING)
-      alSourcePlay (openal->sID);
+      alSourcePlay (sink->default_source);
     g_usleep (rest_us);
-  } while (1);
+  }
+  while (1);
 
-  GST_OPENAL_SINK_LOCK (openal);
-  if (openal->write_reset != AL_FALSE) {
-    openal->write_reset = AL_FALSE;
+  GST_OPENAL_SINK_LOCK (sink);
+  if (sink->write_reset != AL_FALSE) {
+    sink->write_reset = AL_FALSE;
     length = 0;
     goto out;
   }
@@ -873,84 +1002,93 @@ gst_openal_sink_write (GstAudioSink * asink, gpointer data, guint length)
   queued -= processed;
   while (processed-- > 0) {
     ALuint bid;
-    alSourceUnqueueBuffers (openal->sID, 1, &bid);
+    alSourceUnqueueBuffers (sink->default_source, 1, &bid);
   }
   if (state == AL_STOPPED) {
     /* "Restore" from underruns (not actually needed, but it keeps delay
      * calculations correct while rebuffering) */
-    alSourceRewind (openal->sID);
+    alSourceRewind (sink->default_source);
   }
 
-  alBufferData (openal->bIDs[openal->bID_idx], openal->format,
-      data, openal->bID_length, openal->srate);
-  alSourceQueueBuffers (openal->sID, 1, &openal->bIDs[openal->bID_idx]);
-  openal->bID_idx = (openal->bID_idx + 1) % openal->bID_count;
+  alBufferData (sink->buffers[sink->buffer_idx], sink->format,
+      data, sink->buffer_length, sink->rate);
+  alSourceQueueBuffers (sink->default_source, 1,
+      &sink->buffers[sink->buffer_idx]);
+  sink->buffer_idx = (sink->buffer_idx + 1) % sink->buffer_count;
   queued++;
 
-  if (state != AL_PLAYING && queued == openal->bID_count)
-    alSourcePlay (openal->sID);
+  if (state != AL_PLAYING && queued == sink->buffer_count)
+    alSourcePlay (sink->default_source);
 
-  if (checkALError () != ALC_NO_ERROR) {
-    GST_ELEMENT_ERROR (openal, RESOURCE, WRITE, (NULL),
+  if (checkALError () != AL_NO_ERROR) {
+    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
         ("Source queue error detected"));
     goto out;
   }
 
 out:
-  GST_OPENAL_SINK_UNLOCK (openal);
+  GST_OPENAL_SINK_UNLOCK (sink);
 out_nolock:
-  popContext (old, openal->context);
+  popContext (old, sink->default_context);
   return length;
 }
 
 static guint
-gst_openal_sink_delay (GstAudioSink * asink)
+gst_openal_sink_delay (GstAudioSink * audiosink)
 {
-  GstOpenALSink *openal = GST_OPENAL_SINK (asink);
+  GstOpenALSink *sink = GST_OPENAL_SINK (audiosink);
   ALint queued, state, offset, delay;
   ALCcontext *old;
 
-  if (!openal->context)
+  if (!sink->default_context)
     return 0;
 
-  GST_OPENAL_SINK_LOCK (openal);
-  old = pushContext (openal->context);
+  GST_OPENAL_SINK_LOCK (sink);
+  old = pushContext (sink->default_context);
 
   delay = 0;
-  alGetSourcei (openal->sID, AL_BUFFERS_QUEUED, &queued);
+  alGetSourcei (sink->default_source, AL_BUFFERS_QUEUED, &queued);
   /* Order here is important. If the offset is queried after the state and an
    * underrun occurs in between the two calls, it can end up with a 0 offset
    * in a playing state, incorrectly reporting a len*queued/bps delay. */
-  alGetSourcei (openal->sID, AL_BYTE_OFFSET, &offset);
-  alGetSourcei (openal->sID, AL_SOURCE_STATE, &state);
+  alGetSourcei (sink->default_source, AL_BYTE_OFFSET, &offset);
+  alGetSourcei (sink->default_source, AL_SOURCE_STATE, &state);
 
   /* Note: state=stopped is an underrun, meaning all buffers are processed
    * and there's no delay when writing the next buffer. Pre-buffering is
    * state=initial, which will introduce a delay while writing. */
   if (checkALError () == AL_NO_ERROR && state != AL_STOPPED)
-    delay = ((queued * openal->bID_length) - offset) / openal->bytes_per_sample;
+    delay =
+        ((queued * sink->buffer_length) -
+        offset) / sink->bytes_per_sample / sink->channels / GST_MSECOND;
 
-  popContext (old, openal->context);
-  GST_OPENAL_SINK_UNLOCK (openal);
+  popContext (old, sink->default_context);
+  GST_OPENAL_SINK_UNLOCK (sink);
+
+  if (G_UNLIKELY (delay < 0)) {
+    /* make sure we never return a negative delay */
+    GST_WARNING_OBJECT (openal_debug, "negative delay");
+    delay = 0;
+  }
 
   return delay;
 }
 
 static void
-gst_openal_sink_reset (GstAudioSink * asink)
+gst_openal_sink_reset (GstAudioSink * audiosink)
 {
-  GstOpenALSink *openal = GST_OPENAL_SINK (asink);
+  GstOpenALSink *sink = GST_OPENAL_SINK (audiosink);
   ALCcontext *old;
 
-  GST_OPENAL_SINK_LOCK (openal);
-  old = pushContext (openal->context);
+  GST_OPENAL_SINK_LOCK (sink);
+  old = pushContext (sink->default_context);
 
-  openal->write_reset = AL_TRUE;
-  alSourceStop (openal->sID);
-  alSourceRewind (openal->sID);
-  alSourcei (openal->sID, AL_BUFFER, 0);
+  sink->write_reset = AL_TRUE;
+  alSourceStop (sink->default_source);
+  alSourceRewind (sink->default_source);
+  alSourcei (sink->default_source, AL_BUFFER, 0);
   checkALError ();
 
-  popContext (old, openal->context);
-  GST_OPENAL_SINK_UNLOCK (openal);
+  popContext (old, sink->default_context);
+  GST_OPENAL_SINK_UNLOCK (sink);
 }

@@ -1,5 +1,6 @@
 /*
  * GStreamer
+ *
  * Copyright (C) 2005 Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2008 Victor Lin <bornstub@gmail.com>
@@ -27,6 +28,8 @@
  * which case the following provisions apply instead of the ones
  * mentioned above:
  *
+ * Copyright (C) 2013 Juan Manuel Borges Caño <juanmabcmail@gmail.com>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -47,7 +50,7 @@
 #define __GST_OPENAL_SRC_H__
 
 #include <gst/gst.h>
-#include <gst/audio/gstaudiosrc.h>
+#include <gst/audio/audio.h>
 
 #ifdef _WIN32
 #include <al.h>
@@ -66,36 +69,50 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_OPENAL_SRC \
-  (gst_openal_src_get_type())
+    (gst_openal_src_get_type())
 #define GST_OPENAL_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OPENAL_SRC,GstOpenalSrc))
+    (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_OPENAL_SRC, GstOpenalSrc))
 #define GST_OPENAL_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OPENAL_SRC,GstOpenalSrcClass))
+    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_OPENAL_SRC, GstOpenalSrcClass))
 #define GST_IS_OPENAL_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OPENAL_SRC))
+    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_OPENAL_SRC))
 #define GST_IS_OPENAL_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OPENAL_SRC))
+    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_OPENAL_SRC))
 
-typedef struct _GstOpenalSrc      GstOpenalSrc;
+#if 1
+#define GST_ALC_ERROR(Device)  ("ALC error: %s", alcGetString((Device), alcGetError((Device))))
+#else
+#define GST_ALC_ERROR(Device)  ("ALC error: 0x%x", alcGetError((Device)))
+#endif
+
+typedef struct _GstOpenalSrc GstOpenalSrc;
 typedef struct _GstOpenalSrcClass GstOpenalSrcClass;
 
-struct _GstOpenalSrc {
-	GstAudioSrc element;
-	GstPad *srcpad;
-	gboolean silent;
+struct _GstOpenalSrc
+{
+  GstAudioSrc element;
+  GstPad *srcpad;
+  gboolean silent;
 
-	/* readable name of device */
-	gchar *deviceName;
-	/* name of device to open, default is a NULL pointer to get default device */
-	gchar *device;
-	/* OpenAL device handle */
-	ALCdevice *deviceHandle;
+  /* readable name of device */
+  gchar *default_device_name;
+  /* name of device to open, default is a NULL pointer to get default device */
+  gchar *default_device;
+  /* OpenAL device handle */
+  ALCdevice *device;
 
-        guint bytes_per_sample;
+  guint64 buffer_length;
+
+  ALenum format;
+  ALuint rate;
+  ALuint bytes_per_sample;
+
+  GstCaps *probed_caps;
 };
 
-struct _GstOpenalSrcClass {
-	GstAudioSrcClass parent_class;
+struct _GstOpenalSrcClass
+{
+  GstAudioSrcClass parent_class;
 };
 
 GType gst_openal_src_get_type (void);

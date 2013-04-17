@@ -346,7 +346,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  linsys vcd \
  apexsink cdaudio dc1394 directfb \
  gsettings \
- musepack nas openal sdl sndfile timidity \
+ musepack nas sdl sndfile timidity \
  directdraw direct3d9 acm wininet \
  xvid lv2 teletextdec sndio osx_video quicktime"
 AC_SUBST(GST_PLUGINS_NONPORTED)
