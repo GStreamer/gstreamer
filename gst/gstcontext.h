@@ -145,8 +145,7 @@ gst_context_replace (GstContext **old_context, GstContext *new_context)
 
 GstContext *    gst_context_new (void) G_GNUC_MALLOC;
 
-const GstStructure *
-                gst_context_get_structure       (GstContext *context);
+GstStructure *  gst_context_get_structure       (GstContext *context);
 
 G_END_DECLS
 

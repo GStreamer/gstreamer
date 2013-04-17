@@ -168,12 +168,13 @@ gst_context_new (void)
  * Access the structure of the context.
  *
  * Returns: (transfer none): The structure of the context. The structure is
- * still owned by the context, which means that you should not modify it,
- * free it and that the pointer becomes invalid when you free the context.
+ * still owned by the context, which means that you should not modify it unless
+ * the context is writable, and should not free it and that the pointer becomes
+ * invalid when you free the context.
  *
  * Since: 1.2
  */
-const GstStructure *
+GstStructure *
 gst_context_get_structure (GstContext * context)
 {
   g_return_val_if_fail (GST_IS_CONTEXT (context), NULL);
