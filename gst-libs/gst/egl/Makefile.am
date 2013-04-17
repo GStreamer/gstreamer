@@ -9,10 +9,13 @@ libgstegl_@GST_API_VERSION@include_HEADERS = egl.h
 
 libgstegl_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(EGL_CFLAGS)
 
 libgstegl_@GST_API_VERSION@_la_LIBADD = \
+	$(GST_PLUGINS_BASE_LIBS) \
+	-lgstvideo-@GST_API_VERSION@ \
 	$(GST_LIBS) \
 	$(EGL_LIBS)
 
@@ -41,11 +44,12 @@ GstEGL-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstegl-@GST_API_VERSIO
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
-		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
+		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-video-@GST_API_VERSION@` \
 		--library=libgstegl-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-@GST_API_VERSION@ \
+		--pkg gstreamer-video-@GST_API_VERSION@ \
 		--pkg-export gstreamer-egl-@GST_API_VERSION@ \
 		--add-init-section="gst_init(NULL,NULL);" \
 		-DGST_USE_UNSTABLE_API \

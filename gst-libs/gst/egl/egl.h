@@ -23,38 +23,13 @@
 #define __GST_EGL_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
 #define GST_EGL_IMAGE_MEMORY_TYPE "EGLImage"
 
 #define GST_CAPS_FEATURE_MEMORY_EGL_IMAGE "memory:EGLImage"
-
-typedef enum
-{
-  GST_EGL_IMAGE_MEMORY_TYPE_INVALID = -1,
-  /* GL formats */
-  GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE = 0x0000,
-  GST_EGL_IMAGE_MEMORY_TYPE_LUMINANCE_ALPHA,
-  GST_EGL_IMAGE_MEMORY_TYPE_RGB16,
-  GST_EGL_IMAGE_MEMORY_TYPE_RGB,
-  GST_EGL_IMAGE_MEMORY_TYPE_RGBA,
-  /* YUV formats */
-  /* GST_EGL_IMAGE_MEMORY_TYPE_YUV420P = 0x1000, */
-  /* Other */
-  GST_EGL_IMAGE_MEMORY_TYPE_OTHER = 0xffff
-} GstEGLImageType;
-
-typedef enum
-{
-  /* GStreamer orientation, top line first in memory, left row first */
-  GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL,
-  /* OpenGL orientation, bottom line first in memory, left row first */
-  GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_FLIP,
-  /* Just for the sake of completeness, nothing uses this probably */
-  GST_EGL_IMAGE_ORIENTATION_X_FLIP_Y_NORMAL,
-  GST_EGL_IMAGE_ORIENTATION_X_FLIP_Y_FLIP
-} GstEGLImageOrientation;
 
 typedef struct _GstEGLDisplay GstEGLDisplay;
 
@@ -63,18 +38,18 @@ gboolean gst_egl_image_memory_is_mappable (void);
 gboolean gst_is_egl_image_memory (GstMemory * mem);
 EGLImageKHR gst_egl_image_memory_get_image (GstMemory * mem);
 GstEGLDisplay *gst_egl_image_memory_get_display (GstMemory * mem);
-GstEGLImageType gst_egl_image_memory_get_type (GstMemory * mem);
-GstEGLImageOrientation gst_egl_image_memory_get_orientation (GstMemory * mem);
+GstVideoGLTextureType gst_egl_image_memory_get_type (GstMemory * mem);
+GstVideoGLTextureOrientation gst_egl_image_memory_get_orientation (GstMemory * mem);
 void gst_egl_image_memory_set_orientation (GstMemory * mem,
-    GstEGLImageOrientation orientation);
+    GstVideoGLTextureOrientation orientation);
 
 /* Generic EGLImage allocator that doesn't support mapping, copying or anything */
 GstAllocator *gst_egl_image_allocator_obtain (void);
 GstMemory *gst_egl_image_allocator_alloc (GstAllocator * allocator,
-    GstEGLDisplay * display, GstEGLImageType type, gint width, gint height,
+    GstEGLDisplay * display, GstVideoGLTextureType type, gint width, gint height,
     gsize * size);
 GstMemory *gst_egl_image_allocator_wrap (GstAllocator * allocator,
-    GstEGLDisplay * display, EGLImageKHR image, GstEGLImageType type,
+    GstEGLDisplay * display, EGLImageKHR image, GstVideoGLTextureType type,
     GstMemoryFlags flags, gsize size, gpointer user_data,
     GDestroyNotify user_data_destroy);
 

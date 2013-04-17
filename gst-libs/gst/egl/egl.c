@@ -33,8 +33,8 @@ typedef struct
 
   GstEGLDisplay *display;
   EGLImageKHR image;
-  GstEGLImageType type;
-  GstEGLImageOrientation orientation;
+  GstVideoGLTextureType type;
+  GstVideoGLTextureOrientation orientation;
 
   gpointer user_data;
   GDestroyNotify user_data_destroy;
@@ -79,11 +79,10 @@ gst_egl_image_memory_get_display (GstMemory * mem)
   return gst_egl_display_ref (GST_EGL_IMAGE_MEMORY (mem)->display);
 }
 
-GstEGLImageType
+GstVideoGLTextureType
 gst_egl_image_memory_get_type (GstMemory * mem)
 {
-  g_return_val_if_fail (gst_is_egl_image_memory (mem),
-      GST_EGL_IMAGE_MEMORY_TYPE_INVALID);
+  g_return_val_if_fail (gst_is_egl_image_memory (mem), -1);
 
   if (mem->parent)
     mem = mem->parent;
@@ -91,11 +90,11 @@ gst_egl_image_memory_get_type (GstMemory * mem)
   return GST_EGL_IMAGE_MEMORY (mem)->type;
 }
 
-GstEGLImageOrientation
+GstVideoGLTextureOrientation
 gst_egl_image_memory_get_orientation (GstMemory * mem)
 {
   g_return_val_if_fail (gst_is_egl_image_memory (mem),
-      GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL);
+      GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL);
 
   if (mem->parent)
     mem = mem->parent;
@@ -105,7 +104,7 @@ gst_egl_image_memory_get_orientation (GstMemory * mem)
 
 void
 gst_egl_image_memory_set_orientation (GstMemory * mem,
-    GstEGLImageOrientation orientation)
+    GstVideoGLTextureOrientation orientation)
 {
   g_return_if_fail (gst_is_egl_image_memory (mem));
 
@@ -253,7 +252,7 @@ gst_egl_image_allocator_obtain (void)
 
 GstMemory *
 gst_egl_image_allocator_alloc (GstAllocator * allocator,
-    GstEGLDisplay * display, GstEGLImageType type, gint width, gint height,
+    GstEGLDisplay * display, GstVideoGLTextureType type, gint width, gint height,
     gsize * size)
 {
   return NULL;
@@ -261,7 +260,7 @@ gst_egl_image_allocator_alloc (GstAllocator * allocator,
 
 GstMemory *
 gst_egl_image_allocator_wrap (GstAllocator * allocator,
-    GstEGLDisplay * display, EGLImageKHR image, GstEGLImageType type,
+    GstEGLDisplay * display, EGLImageKHR image, GstVideoGLTextureType type,
     GstMemoryFlags flags, gsize size, gpointer user_data,
     GDestroyNotify user_data_destroy)
 {
@@ -269,7 +268,6 @@ gst_egl_image_allocator_wrap (GstAllocator * allocator,
 
   g_return_val_if_fail (display != NULL, NULL);
   g_return_val_if_fail (image != EGL_NO_IMAGE_KHR, NULL);
-  g_return_val_if_fail (type != GST_EGL_IMAGE_MEMORY_TYPE_INVALID, NULL);
 
   if (!allocator) {
     allocator = gst_egl_image_allocator_obtain ();
@@ -282,7 +280,7 @@ gst_egl_image_allocator_wrap (GstAllocator * allocator,
   mem->display = gst_egl_display_ref (display);
   mem->image = image;
   mem->type = type;
-  mem->orientation = GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_NORMAL;
+  mem->orientation = GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL;
 
   mem->user_data = user_data;
   mem->user_data_destroy = user_data_destroy;
