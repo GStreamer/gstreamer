@@ -61,7 +61,8 @@ REGISTRY_CHECKS =				\
 	gst/gst					\
 	gst/gstbin				\
 	gst/gstchildproxy			\
-	gst/gstcontroller				\
+	gst/gstcontext				\
+	gst/gstcontroller			\
 	gst/gstelement				\
 	gst/gstelementfactory			\
 	gst/gstevent				\
