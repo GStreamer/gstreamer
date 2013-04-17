@@ -762,6 +762,7 @@ gst_vaapi_decoder_get_frame(GstVaapiDecoder *decoder,
             out_flags |= GST_VIDEO_CODEC_FRAME_FLAG_RFF;
         if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD)
             out_flags |= GST_VIDEO_CODEC_FRAME_FLAG_ONEFIELD;
+        GST_VIDEO_CODEC_FRAME_FLAG_SET(out_frame, out_flags);
     }
 #endif
 
