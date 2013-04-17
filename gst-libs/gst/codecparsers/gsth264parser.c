@@ -1721,8 +1721,8 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
     if (sps->scaling_matrix_present_flag) {
       if (!gst_h264_parser_parse_scaling_list (&nr,
               pps->scaling_lists_4x4, pps->scaling_lists_8x8,
-              sps->scaling_lists_4x4[0], sps->scaling_lists_4x4[3],
-              sps->scaling_lists_8x8[0], sps->scaling_lists_8x8[3], n_lists))
+              sps->scaling_lists_4x4[3], sps->scaling_lists_4x4[0],
+              sps->scaling_lists_8x8[3], sps->scaling_lists_8x8[0], n_lists))
         goto error;
     } else {
       if (!gst_h264_parser_parse_scaling_list (&nr,
