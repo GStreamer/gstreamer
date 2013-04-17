@@ -392,7 +392,7 @@ printf_parse (const char *format, char_directives * d, arguments * a)
               type = TYPE_POINTER_EXT;
               dp->flags |= FLAG_PTR_EXT;
               dp->ptr_ext_char = 'A';
-              dp->conversion = 'p';
+              c = 'p';
               break;
             case 'p':
               /* Note: cp points already to the char after the 'p' now */
@@ -413,7 +413,7 @@ printf_parse (const char *format, char_directives * d, arguments * a)
               type = TYPE_POINTER_EXT;
               dp->flags |= FLAG_PTR_EXT;
               dp->ptr_ext_char = 'B';
-              dp->conversion = 'p';
+              c = 'p';
               break;
             case 'n':
 #ifdef HAVE_LONG_LONG

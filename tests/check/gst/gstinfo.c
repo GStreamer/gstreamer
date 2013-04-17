@@ -290,10 +290,18 @@ GST_START_TEST (info_old_printf_extensions)
   fail_unless_equals_int (g_list_length (messages), 1);
   str = (gchar *) messages->data;
   fail_unless (str != NULL);
-  fail_unless (strstr (str, "foo/bar") != NULL);
-  fail_unless (strstr (str, "width = (int) 4096") != NULL);
-  fail_unless (strstr (str, "framerate = (fraction) 50/1") != NULL);
+
+  GST_INFO ("str = '%s'", str);
+
   fail_unless (strstr (str, "time") != NULL);
+  fail_unless (strstr (str, "start=0:00:00.000000000") != NULL);
+  fail_unless (strstr (str, "stop=99:99:99.999999999") != NULL);
+  fail_unless (strstr (str, "applied_rate=1.000000") != NULL);
+
+  fail_unless (strstr (str, " caps are ") != NULL);
+  fail_unless (strstr (str, "foo/bar") != NULL);
+  fail_unless (strstr (str, "width=(int)4096") != NULL);
+  fail_unless (strstr (str, "framerate=(fraction)50/1") != NULL);
   fail_unless (strstr (str, "ARGB") != NULL);
 
   /* clean up */
@@ -323,7 +331,7 @@ gst_info_suite (void)
   tcase_add_test (tc_chain, info_log_handler);
   tcase_add_test (tc_chain, info_dump_mem);
   tcase_add_test (tc_chain, info_fixme);
-  tcase_skip_broken_test (tc_chain, info_old_printf_extensions);
+  tcase_add_test (tc_chain, info_old_printf_extensions);
 #endif
 
   return s;
