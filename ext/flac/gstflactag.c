@@ -74,18 +74,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-flac")
     );
 
-/* signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
-      /* FILL ME */
-};
 
 static void gst_flac_tag_dispose (GObject * object);
 
@@ -172,9 +160,21 @@ gst_flac_tag_init (GstFlacTag * tag)
 static gboolean
 gst_flac_tag_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
+  GstFlacTag *tag;
   gboolean ret;
 
+  tag = GST_FLAC_TAG (parent);
+
+  GST_DEBUG_OBJECT (pad, "Received %s event on sinkpad, %" GST_PTR_FORMAT,
+      GST_EVENT_TYPE_NAME (event), event);
+
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+      /* FIXME: parse and store the caps. Once we parsed and built the headers,
+       * update the "streamheader" field in the caps and send a new caps event
+       */
+      ret = gst_pad_push_event (tag->srcpad, event);
+      break;
     default:
       ret = gst_pad_event_default (pad, parent, event);
       break;
