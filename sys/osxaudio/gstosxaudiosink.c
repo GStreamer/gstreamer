@@ -574,39 +574,30 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
         switch (layout->mChannelDescriptions[i].mChannelLabel) {
           case kAudioChannelLabel_Left:
             pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT);
             break;
           case kAudioChannelLabel_Right:
             pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
             break;
           case kAudioChannelLabel_Center:
             pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
-            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_CENTER);
             break;
           case kAudioChannelLabel_LFEScreen:
             pos[i] = GST_AUDIO_CHANNEL_POSITION_LFE1;
-            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (LFE1);
             break;
           case kAudioChannelLabel_LeftSurround:
             pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (REAR_LEFT);
             break;
           case kAudioChannelLabel_RightSurround:
             pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
-            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (REAR_RIGHT);
             break;
           case kAudioChannelLabel_RearSurroundLeft:
             pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
-            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (SIDE_LEFT);
             break;
           case kAudioChannelLabel_RearSurroundRight:
             pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
-            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (SIDE_RIGHT);
             break;
           case kAudioChannelLabel_CenterSurround:
             pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
-            channel_mask |= GST_AUDIO_CHANNEL_POSITION_MASK (REAR_CENTER);
             break;
           default:
             GST_WARNING_OBJECT (osxsink, "unrecognized channel: %d",
@@ -637,6 +628,7 @@ gst_osx_audio_sink_allowed_caps (GstOsxAudioSink * osxsink)
         gst_caps_append_structure (caps, gst_structure_copy (in_s));
       }
     }
+    gst_audio_channel_positions_to_mask (pos, channels, false, &channel_mask);
     out_s = gst_structure_copy (in_s);
     gst_structure_remove_fields (out_s, "channels", "channel-mask", NULL);
     gst_structure_set (out_s, "channels", G_TYPE_INT, channels,
