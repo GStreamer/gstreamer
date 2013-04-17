@@ -1,9 +1,11 @@
 /*
  * GStreamer
+ *
  * Copyright (C) 2005 Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2009-2010 Chris Robinson <chris.kcat@gmail.com>
- * 
+ * Copyright (C) 2013 Juan Manuel Borges Caño <juanmabcmail@gmail.com>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -24,8 +26,7 @@
 #define __GST_OPENALSINK_H__
 
 #include <gst/gst.h>
-#include <gst/audio/gstaudiosink.h>
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
 
 #ifdef _WIN32
 #include <al.h>
@@ -43,7 +44,8 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_OPENAL_SINK (gst_openal_sink_get_type())
+#define GST_TYPE_OPENAL_SINK \
+    (gst_openal_sink_get_type())
 #define GST_OPENAL_SINK(obj) \
     (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OPENAL_SINK,GstOpenALSink))
 #define GST_OPENAL_SINK_CLASS(klass) \
@@ -52,6 +54,8 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OPENAL_SINK))
 #define GST_IS_OPENAL_SINK_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OPENAL_SINK))
+#define GST_OPENAL_SINK_CAST(obj) \
+    ((GstOpenALSink*)obj)
 
 #if 1
 #define GST_ALC_ERROR(Device)  ("ALC error: %s", alcGetString((Device), alcGetError((Device))))
@@ -62,61 +66,51 @@ G_BEGIN_DECLS
 typedef struct _GstOpenALSink GstOpenALSink;
 typedef struct _GstOpenALSinkClass GstOpenALSinkClass;
 
-#define GST_OPENAL_SINK_CAST(obj)     ((GstOpenALSink*)obj)
-#define GST_OPENAL_SINK_GET_LOCK(obj) (GST_OPENAL_SINK_CAST(obj)->openal_lock)
+#define GST_OPENAL_SINK_GET_LOCK(obj) (&GST_OPENAL_SINK_CAST(obj)->openal_lock)
 #define GST_OPENAL_SINK_LOCK(obj)     (g_mutex_lock(GST_OPENAL_SINK_GET_LOCK(obj)))
 #define GST_OPENAL_SINK_UNLOCK(obj)   (g_mutex_unlock(GST_OPENAL_SINK_GET_LOCK(obj)))
 
-struct _GstOpenALSink {
-    GstAudioSink sink;
+struct _GstOpenALSink
+{
+  GstAudioSink sink;
 
-    gchar *devname;
+  gchar *device_name;
 
-    /* When set, we don't own device */
-    ALCdevice  *custom_dev;
-    /* When set, we don't own device or context */
-    ALCcontext *custom_ctx;
-    /* When set, we don't own sID */
-    ALuint     custom_sID;
+  ALCdevice *default_device;
+  /* When set, device is not owned */
+  ALCdevice *user_device;
 
-    ALCdevice  *device;
-    ALCcontext *context;
-    ALuint     sID;
+  ALCcontext *default_context;
+  /* When set, device or context is not owned */
+  ALCcontext *user_context;
 
-    ALuint bID_idx;
-    ALuint bID_count;
-    ALuint *bIDs;
-    ALuint bID_length;
+  ALuint default_source;
+  /* When set, source is not owned */
+  ALuint user_source;
 
-    ALenum format;
-    ALuint srate;
-    ALuint bytes_per_sample;
+  ALuint buffer_idx;
+  ALuint buffer_count;
+  ALuint *buffers;
+  ALuint buffer_length;
 
-    ALboolean write_reset;
+  ALenum format;
+  ALuint rate;
+  ALuint channels;
+  ALuint bytes_per_sample;
 
-    GstCaps *probed_caps;
+  ALboolean write_reset;
 
-    GMutex *openal_lock;
+  GstCaps *probed_caps;
+
+  GMutex openal_lock;
 };
 
-struct _GstOpenALSinkClass {
-    GstAudioSinkClass parent_class;
+struct _GstOpenALSinkClass
+{
+  GstAudioSinkClass parent_class;
 };
 
-GType gst_openal_sink_get_type(void);
-
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define GST_S16_NE     GST_S16_LE
-#define GST_FLOAT32_NE GST_FLOAT32_LE
-#define GST_FLOAT64_NE GST_FLOAT64_LE
-#else
-#define GST_S16_NE     GST_S16_BE
-#define GST_FLOAT32_NE GST_FLOAT32_BE
-#define GST_FLOAT64_NE GST_FLOAT64_BE
-#endif
-
-#define OPENAL_MIN_RATE    8000
-#define OPENAL_MAX_RATE    192000
+GType gst_openal_sink_get_type (void);
 
 G_END_DECLS
 

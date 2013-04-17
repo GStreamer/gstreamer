@@ -500,7 +500,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  fbdev linsys vcd \
  apexsink cdaudio cog dc1394 dirac directfb \
  gsettings jasper ladspa \
- musepack musicbrainz nas openal rsvg sdl sndfile timidity \
+ musepack musicbrainz nas rsvg sdl sndfile timidity \
  directdraw direct3d9 acm wininet \
  wildmidi xvid lv2 teletextdec sndio uvch264 osx_video quicktime"
 AC_SUBST(GST_PLUGINS_NONPORTED)
