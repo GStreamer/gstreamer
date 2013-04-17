@@ -19,6 +19,8 @@
 
 #include "gstvideometa.h"
 
+#include <string.h>
+
 static gboolean
 gst_video_meta_transform (GstBuffer * dest, GstMeta * meta,
     GstBuffer * buffer, GQuark type, gpointer data)
@@ -430,6 +432,10 @@ gst_video_gl_texture_upload_meta_transform (GstBuffer * dest, GstMeta * meta,
       if (!dmeta)
         return FALSE;
 
+      dmeta->texture_orientation = smeta->texture_orientation;
+      dmeta->n_textures = smeta->n_textures;
+      memcpy (dmeta->texture_type, smeta->texture_type,
+          sizeof (smeta->texture_type[0] * 4));
       dmeta->buffer = dest;
       dmeta->upload = smeta->upload;
       dmeta->user_data = smeta->user_data;
@@ -475,13 +481,16 @@ gst_video_gl_texture_upload_meta_get_info (void)
  */
 GstVideoGLTextureUploadMeta *
 gst_buffer_add_video_gl_texture_upload_meta (GstBuffer * buffer,
-    GstVideoGLTextureUpload upload, gpointer user_data,
-    GBoxedCopyFunc user_data_copy, GBoxedFreeFunc user_data_free)
+    GstVideoGLTextureOrientation texture_orientation, guint n_textures,
+    GstVideoGLTextureType texture_type[4], GstVideoGLTextureUpload upload,
+    gpointer user_data, GBoxedCopyFunc user_data_copy,
+    GBoxedFreeFunc user_data_free)
 {
   GstVideoGLTextureUploadMeta *meta;
 
   g_return_val_if_fail (buffer != NULL, NULL);
   g_return_val_if_fail (upload != NULL, NULL);
+  g_return_val_if_fail (n_textures > 0 && n_textures < 5, NULL);
 
   meta =
       (GstVideoGLTextureUploadMeta *) gst_buffer_add_meta (buffer,
@@ -490,6 +499,9 @@ gst_buffer_add_video_gl_texture_upload_meta (GstBuffer * buffer,
   if (!meta)
     return NULL;
 
+  meta->texture_orientation = texture_orientation;
+  meta->n_textures = n_textures;
+  memcpy (meta->texture_type, texture_type, sizeof (texture_type[0] * 4));
   meta->buffer = buffer;
   meta->upload = upload;
   meta->user_data = user_data;
@@ -502,8 +514,7 @@ gst_buffer_add_video_gl_texture_upload_meta (GstBuffer * buffer,
 /**
  * gst_video_gl_texture_upload_meta_upload:
  * @meta: a #GstVideoGLTextureUploadMeta
- * @format: the GL format of the texture, e.g. GL_RGBA
- * @texture_id: the texture ID to upload to
+ * @texture_id: the texture IDs to upload to
  *
  * Uploads the buffer which owns the meta to a specific texture ID.
  *
@@ -511,9 +522,9 @@ gst_buffer_add_video_gl_texture_upload_meta (GstBuffer * buffer,
  */
 gboolean
 gst_video_gl_texture_upload_meta_upload (GstVideoGLTextureUploadMeta * meta,
-    guint format, guint texture_id)
+    guint texture_id[4])
 {
   g_return_val_if_fail (meta != NULL, FALSE);
 
-  return meta->upload (meta, format, texture_id);
+  return meta->upload (meta, texture_id);
 }
