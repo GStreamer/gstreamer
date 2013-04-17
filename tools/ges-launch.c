@@ -56,7 +56,7 @@ thumbnail_cb (gpointer pipeline)
   filename = g_strdup_printf ("thumbnail%d.jpg", i++);
 
   res = ges_timeline_pipeline_save_thumbnail (p, -1, -1,
-      (gchar *) "image/jpeg", filename);
+      (gchar *) "image/jpeg", filename, NULL);
 
   g_free (filename);
 

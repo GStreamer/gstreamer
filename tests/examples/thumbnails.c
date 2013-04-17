@@ -61,7 +61,7 @@ thumbnail_cb (gpointer user)
   gst_sample_unref (b);
 
   g_assert (ges_timeline_pipeline_save_thumbnail (p, -1, -1, (gchar *)
-          "image/jpeg", (gchar *) TEST_PATH));
+          "image/jpeg", (gchar *) TEST_PATH, NULL));
   g_assert (g_file_test (TEST_PATH, G_FILE_TEST_EXISTS));
   g_unlink (TEST_PATH);
 

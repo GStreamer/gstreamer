@@ -97,7 +97,8 @@ ges_timeline_pipeline_get_thumbnail_rgb24(GESTimelinePipeline *self,
 
 gboolean
 ges_timeline_pipeline_save_thumbnail(GESTimelinePipeline *self,
-    int width, int height, const gchar *format, const gchar *location);
+    int width, int height, const gchar *format, const gchar *location,
+    GError **error);
 
 GstElement *
 ges_timeline_pipeline_preview_get_video_sink (GESTimelinePipeline * self);
