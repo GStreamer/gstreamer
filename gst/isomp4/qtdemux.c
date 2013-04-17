@@ -3898,6 +3898,8 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
       GST_LOG_OBJECT (qtdemux, "marking discont buffer");
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
       stream->discont = FALSE;
+    } else {
+      GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
     }
 
     gst_pad_push (stream->pad, buffer);
@@ -3954,6 +3956,8 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
     GST_LOG_OBJECT (qtdemux, "marking discont buffer");
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
     stream->discont = FALSE;
+  } else {
+    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 
   if (!keyframe)
