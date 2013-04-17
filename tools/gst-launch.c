@@ -480,6 +480,18 @@ intr_handler (gpointer user_data)
 
 #endif /* G_OS_UNIX */
 
+static gboolean
+merge_structures (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  GstStructure *s2 = user_data;
+
+  /* Copy all fields that are not set yet */
+  if (!gst_structure_id_has_field (s2, field_id))
+    gst_structure_id_set_value (s2, field_id, value);
+
+  return TRUE;
+}
+
 /* returns ELR_ERROR if there was an error
  * or ELR_INTERRUPT if we caught a keyboard interrupt
  * or ELR_NO_ERROR otherwise. */
@@ -790,6 +802,36 @@ event_loop (GstElement * pipeline, gboolean blocking, gboolean do_progress,
           desc = gst_missing_plugin_message_get_description (message);
           PRINT (_("Missing element: %s\n"), desc ? desc : "(no description)");
         }
+        break;
+      }
+      case GST_MESSAGE_HAVE_CONTEXT:{
+        GstContext *context1, *context2;
+        gchar *context_str;
+
+        gst_message_parse_have_context (message, &context1);
+
+        context_str =
+            gst_structure_to_string (gst_context_get_structure (context1));
+        PRINT (_("Got context from element '%s': %s\n"),
+            GST_ELEMENT_NAME (GST_MESSAGE_SRC (message)), context_str);
+        g_free (context_str);
+
+        context2 = gst_element_get_context (pipeline);
+        if (context2) {
+          GstStructure *s1, *s2;
+
+          /* Merge structures */
+          context2 = gst_context_make_writable (context2);
+          s1 = gst_context_get_structure (context1);
+          s2 = gst_context_get_structure (context2);
+          gst_structure_foreach (s1, merge_structures, s2);
+          gst_element_set_context (pipeline, context2);
+          gst_context_unref (context2);
+        } else {
+          /* Copy over the context */
+          gst_element_set_context (pipeline, context1);
+        }
+        gst_context_unref (context1);
         break;
       }
       default:
