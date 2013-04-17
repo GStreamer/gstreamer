@@ -1,5 +1,3 @@
 gst_vaapidecode_get_type
-gst_vaapidownload_get_type
 gst_vaapipostproc_get_type
 gst_vaapisink_get_type
-gst_vaapiupload_get_type

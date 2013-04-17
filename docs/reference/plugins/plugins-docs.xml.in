@@ -13,8 +13,6 @@
     <title>gst-plugins-vaapi Plugins</title>
     <xi:include href="xml/gstvaapidecode.xml"/>
     <xi:include href="xml/gstvaapipostproc.xml"/>
-    <xi:include href="xml/gstvaapidownload.xml"/>
-    <xi:include href="xml/gstvaapiupload.xml"/>
     <xi:include href="xml/gstvaapisink.xml"/>
   </chapter>
 
