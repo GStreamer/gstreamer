@@ -232,10 +232,7 @@ gst_vaapipostproc_start(GstVaapiPostproc *postproc)
 static gboolean
 gst_vaapipostproc_stop(GstVaapiPostproc *postproc)
 {
-    if (postproc->display) {
-        g_object_unref(postproc->display);
-        postproc->display = NULL;
-    }
+    g_clear_object(&postproc->display);
     return TRUE;
 }
 
@@ -246,15 +243,13 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
     GstVaapiSurfaceProxy *proxy;
     GstClockTime timestamp;
     GstFlowReturn ret;
-    GstBuffer *outbuf = NULL;
+    GstBuffer *outbuf;
     guint outbuf_flags, flags;
     gboolean tff;
 
     meta = gst_buffer_get_vaapi_video_meta(buf);
     if (!meta)
         goto error_invalid_buffer;
-
-    flags = gst_vaapi_video_meta_get_render_flags(meta);
 
     /* Deinterlacing disabled, push frame */
     if (!postproc->deinterlace) {
@@ -272,8 +267,9 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
     proxy      = gst_vaapi_video_meta_get_surface_proxy(meta);
     tff        = GST_BUFFER_FLAG_IS_SET(buf, GST_VIDEO_BUFFER_FLAG_TFF);
 
-    flags &= ~(GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD|
-               GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD);
+    flags = gst_vaapi_video_meta_get_render_flags(meta) &
+        ~(GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD|
+          GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD);
 
     /* First field */
     outbuf = gst_vaapi_video_buffer_new_with_surface_proxy(proxy);
