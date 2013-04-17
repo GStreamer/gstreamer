@@ -157,6 +157,7 @@ gst_egl_adaptation_init_egl_display (GstEglAdaptationContext * ctx)
     context = gst_context_make_writable (context);
     gst_context_set_egl_display (context, ctx->display);
     gst_element_set_context (GST_ELEMENT_CAST (ctx->element), context);
+    gst_context_unref (context);
   } else {
     GstContext *context;
 
@@ -174,6 +175,7 @@ gst_egl_adaptation_init_egl_display (GstEglAdaptationContext * ctx)
 
     msg = gst_message_new_have_context (GST_OBJECT (ctx->element), context);
     gst_element_post_message (GST_ELEMENT_CAST (ctx->element), msg);
+    context = NULL;
 
     context = gst_element_get_context (GST_ELEMENT_CAST (ctx->element));
     if (!context)
@@ -181,6 +183,7 @@ gst_egl_adaptation_init_egl_display (GstEglAdaptationContext * ctx)
     context = gst_context_make_writable (context);
     gst_context_set_egl_display (context, ctx->display);
     gst_element_set_context (GST_ELEMENT_CAST (ctx->element), context);
+    gst_context_unref (context);
   }
 
   if (!eglInitialize (gst_egl_display_get (ctx->display),
