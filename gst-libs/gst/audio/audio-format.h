@@ -273,9 +273,31 @@ const GstAudioFormatInfo *
 void           gst_audio_format_fill_silence     (const GstAudioFormatInfo *info,
                                                   gpointer dest, gsize length);
 
+/**
+ * GST_AUDIO_RATE_RANGE:
+ *
+ * Maximum range of allowed sample rates, for use in template caps strings.
+ */
 #define GST_AUDIO_RATE_RANGE "(int) [ 1, max ]"
+/**
+ * GST_AUDIO_CHANNELS_RANGE:
+ *
+ * Maximum range of allowed channels, for use in template caps strings.
+ */
 #define GST_AUDIO_CHANNELS_RANGE "(int) [ 1, max ]"
 
+/**
+ * GST_AUDIO_NE:
+ * @s: format string without endianness marker
+ *
+ * Turns audio format string @s into the format string for native endianness.
+ */
+/**
+ * GST_AUDIO_OE:
+ * @s: format string without endianness marker
+ *
+ * Turns audio format string @s into the format string for other endianness.
+ */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 # define GST_AUDIO_NE(s) G_STRINGIFY(s)"LE"
 # define GST_AUDIO_OE(s) G_STRINGIFY(s)"BE"
@@ -284,6 +306,11 @@ void           gst_audio_format_fill_silence     (const GstAudioFormatInfo *info
 # define GST_AUDIO_OE(s) G_STRINGIFY(s)"LE"
 #endif
 
+/**
+ * GST_AUDIO_FORMATS_ALL:
+ *
+ * List of all audio formats, for use in template caps strings.
+ */
 #define GST_AUDIO_FORMATS_ALL " { S8, U8, " \
     "S16LE, S16BE, U16LE, U16BE, " \
     "S24_32LE, S24_32BE, U24_32LE, U24_32BE, " \
