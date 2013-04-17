@@ -325,14 +325,11 @@ gst_osx_audio_sink_getcaps (GstBaseSink * base, GstCaps * filter)
 static gboolean
 gst_osx_audio_sink_acceptcaps (GstOsxAudioSink * sink, GstCaps * caps)
 {
-  GstOsxAudioRingBuffer *osxbuf = NULL;
   GstCaps *pad_caps;
   GstStructure *st;
   gboolean ret = FALSE;
   GstAudioRingBufferSpec spec = { 0 };
   gchar *caps_string = NULL;
-
-  osxbuf = GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SINK (sink)->ringbuffer);
 
   caps_string = gst_caps_to_string (caps);
   GST_DEBUG_OBJECT (sink, "acceptcaps called with %s", caps_string);
