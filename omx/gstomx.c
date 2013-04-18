@@ -346,15 +346,14 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
       case GST_OMX_MESSAGE_BUFFER_DONE:{
         GstOMXBuffer *buf = msg->content.buffer_done.buffer->pAppPrivate;
         GstOMXPort *port;
-        GstOMXComponent *comp;
 
         port = buf->port;
-        comp = port->comp;
 
         if (msg->content.buffer_done.empty) {
           /* Input buffer is empty again and can be used to contain new input */
-          GST_LOG_OBJECT (comp->parent, "%s port %u emptied buffer %p (%p)",
-              comp->name, port->index, buf, buf->omx_buf->pBuffer);
+          GST_LOG_OBJECT (port->comp->parent,
+              "%s port %u emptied buffer %p (%p)", port->comp->name,
+              port->index, buf, buf->omx_buf->pBuffer);
 
           /* Reset offset and filled length */
           buf->omx_buf->nOffset = 0;
@@ -368,8 +367,9 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
         } else {
           /* Output buffer contains output now or
            * the port was flushed */
-          GST_LOG_OBJECT (comp->parent, "%s port %u filled buffer %p (%p)",
-              comp->name, port->index, buf, buf->omx_buf->pBuffer);
+          GST_LOG_OBJECT (port->comp->parent,
+              "%s port %u filled buffer %p (%p)", port->comp->name, port->index,
+              buf, buf->omx_buf->pBuffer);
 
           if ((buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS)
               && port->port_def.eDir == OMX_DirOutput)
@@ -2250,18 +2250,15 @@ gst_omx_port_wait_enabled (GstOMXPort * port, GstClockTime timeout)
 gboolean
 gst_omx_port_is_enabled (GstOMXPort * port)
 {
-  GstOMXComponent *comp;
   gboolean enabled;
 
   g_return_val_if_fail (port != NULL, FALSE);
 
-  comp = port->comp;
-
   gst_omx_port_update_port_definition (port, NULL);
   enabled = ! !port->port_def.bEnabled;
 
-  GST_DEBUG_OBJECT (comp->parent, "%s port %u is enabled: %d", comp->name,
-      port->index, enabled);
+  GST_DEBUG_OBJECT (port->comp->parent, "%s port %u is enabled: %d",
+      port->comp->name, port->index, enabled);
 
   return enabled;
 }
