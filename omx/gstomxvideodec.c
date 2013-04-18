@@ -1936,7 +1936,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
           GST_ERROR_OBJECT (self, "Unsupported color format: %d",
               port_def.format.video.eColorFormat);
           if (buf)
-            gst_omx_port_release_buffer (self->dec_out_port, buf);
+            gst_omx_port_release_buffer (port, buf);
           GST_VIDEO_DECODER_STREAM_UNLOCK (self);
           goto caps_failed;
           break;
@@ -1956,7 +1956,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
 
       if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
         if (buf)
-          gst_omx_port_release_buffer (self->dec_out_port, buf);
+          gst_omx_port_release_buffer (port, buf);
         gst_video_codec_state_unref (state);
         goto caps_failed;
       }
@@ -1978,9 +1978,9 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
    * lock and the videocodec stream lock, if ::reset()
    * is called at the wrong time
    */
-  if (gst_omx_port_is_flushing (self->dec_out_port)) {
+  if (gst_omx_port_is_flushing (port)) {
     GST_DEBUG_OBJECT (self, "Flushing");
-    gst_omx_port_release_buffer (self->dec_out_port, buf);
+    gst_omx_port_release_buffer (port, buf);
     goto flushing;
   }
 
