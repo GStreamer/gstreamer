@@ -1074,7 +1074,8 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
   if (gst_buffer_map (b, &map_info, GST_MAP_READ)) {
     if (!g_file_set_contents (location, (const char *) map_info.data,
             map_info.size, error)) {
-      GST_WARNING ("Could not save thumbnail: %s", err->message);
+      GST_WARNING ("Could not save thumbnail: %s",
+          error ? (*error)->message : "");
       res = FALSE;
     }
   }
