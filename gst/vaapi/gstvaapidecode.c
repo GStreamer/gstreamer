@@ -453,7 +453,7 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
     else
         gst_query_add_allocation_pool(query, pool, size, min, max);
     if (pool)
-        g_object_unref(pool);
+        gst_object_unref(pool);
     return TRUE;
 
     /* ERRORS */
@@ -816,7 +816,7 @@ gst_vaapidecode_query(GST_PAD_QUERY_FUNCTION_ARGS)
         res = GST_PAD_QUERY_FUNCTION_CALL(decode->srcpad_query,
             decode->srcpad, parent, query);
 
-    g_object_unref(decode);
+    gst_object_unref(decode);
     return res;
 }
 

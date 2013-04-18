@@ -654,7 +654,7 @@ error_create_pool:
 error_pool_config:
     {
         GST_ERROR("failed to reset buffer pool config");
-        g_object_unref(pool);
+        gst_object_unref(pool);
         return FALSE;
     }
 #else

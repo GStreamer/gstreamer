@@ -592,7 +592,7 @@ gst_vaapidownload_query(GstPad *pad, GstQuery *query)
     else
         res = gst_pad_query_default(pad, query);
 
-    g_object_unref(download);
+    gst_object_unref(download);
     return res;
 
 }

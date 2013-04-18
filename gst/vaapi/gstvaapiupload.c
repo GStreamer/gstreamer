@@ -233,12 +233,12 @@ gst_vaapiupload_init(GstVaapiUpload *upload)
         gst_vaapiupload_sinkpad_buffer_alloc
     );
     gst_pad_set_query_function(sinkpad, gst_vaapiupload_query);
-    g_object_unref(sinkpad);
+    gst_object_unref(sinkpad);
 
     /* Override query on src pad */
     srcpad = gst_element_get_static_pad(GST_ELEMENT(upload), "src");
     gst_pad_set_query_function(srcpad, gst_vaapiupload_query);
-    g_object_unref(srcpad);
+    gst_object_unref(srcpad);
 }
 
 static inline gboolean
@@ -425,7 +425,7 @@ gst_vaapiupload_sinkpad_buffer_alloc(
         return GST_FLOW_UNEXPECTED;
 
     ret = gst_vaapiupload_buffer_alloc(trans, size, caps, pbuf);
-    g_object_unref(trans);
+    gst_object_unref(trans);
     return ret;
 }
 
@@ -471,6 +471,6 @@ gst_vaapiupload_query(GstPad *pad, GstQuery *query)
   else
     res = gst_pad_query_default (pad, query);
 
-  g_object_unref (upload);
+  gst_object_unref (upload);
   return res;
 }
