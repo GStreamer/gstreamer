@@ -851,6 +851,8 @@ ges_timeline_pipeline_set_render_settings (GESTimelinePipeline * pipeline,
 {
   GError *err = NULL;
 
+  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (pipeline), FALSE);
+
   /* Clear previous URI sink if it existed */
   /* FIXME : We should figure out if it was added to the pipeline,
    * and if so, remove it. */
@@ -898,6 +900,8 @@ gboolean
 ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
     GESPipelineFlags mode)
 {
+  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (pipeline), FALSE);
+
   GST_DEBUG_OBJECT (pipeline, "current mode : %d, mode : %d",
       pipeline->priv->mode, mode);
 
@@ -1014,6 +1018,8 @@ ges_timeline_pipeline_get_thumbnail (GESTimelinePipeline * self, GstCaps * caps)
 {
   GstElement *sink;
 
+  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (self), FALSE);
+
   sink = self->priv->playsink;
 
   if (!sink) {
@@ -1048,6 +1054,8 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
   GstSample *sample;
   GstCaps *caps;
   gboolean res = TRUE;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (self), FALSE);
 
   caps = gst_caps_from_string (format);
 
@@ -1104,6 +1112,8 @@ ges_timeline_pipeline_get_thumbnail_rgb24 (GESTimelinePipeline * self,
   GstSample *ret;
   GstCaps *caps;
 
+  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (self), FALSE);
+
   caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
       "RGB", NULL);
 
@@ -1135,6 +1145,8 @@ ges_timeline_pipeline_preview_get_video_sink (GESTimelinePipeline * self)
 {
   GstElement *sink = NULL;
 
+  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (self), FALSE);
+
   g_object_get (self->priv->playsink, "video-sink", &sink, NULL);
 
   return sink;
@@ -1152,6 +1164,8 @@ void
 ges_timeline_pipeline_preview_set_video_sink (GESTimelinePipeline * self,
     GstElement * sink)
 {
+  g_return_if_fail (GES_IS_TIMELINE_PIPELINE (self));
+
   g_object_set (self->priv->playsink, "video-sink", sink, NULL);
 };
 
@@ -1172,6 +1186,8 @@ ges_timeline_pipeline_preview_get_audio_sink (GESTimelinePipeline * self)
 {
   GstElement *sink = NULL;
 
+  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (self), FALSE);
+
   g_object_get (self->priv->playsink, "audio-sink", &sink, NULL);
 
   return sink;
@@ -1189,5 +1205,7 @@ void
 ges_timeline_pipeline_preview_set_audio_sink (GESTimelinePipeline * self,
     GstElement * sink)
 {
+  g_return_if_fail (GES_IS_TIMELINE_PIPELINE (self));
+
   g_object_set (self->priv->playsink, "audio-sink", sink, NULL);
 };
