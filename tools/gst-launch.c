@@ -818,12 +818,13 @@ event_loop (GstElement * pipeline, gboolean blocking, gboolean do_progress,
 
         context2 = gst_element_get_context (pipeline);
         if (context2) {
-          GstStructure *s1, *s2;
+          const GstStructure *s1;
+          GstStructure *s2;
 
           /* Merge structures */
           context2 = gst_context_make_writable (context2);
           s1 = gst_context_get_structure (context1);
-          s2 = gst_context_get_structure (context2);
+          s2 = gst_context_writable_structure (context2);
           gst_structure_foreach (s1, merge_structures, s2);
           gst_element_set_context (pipeline, context2);
           gst_context_unref (context2);
