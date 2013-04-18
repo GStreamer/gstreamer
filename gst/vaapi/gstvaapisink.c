@@ -776,6 +776,16 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     if (!gst_vaapisink_ensure_display(sink))
         return FALSE;
 
+#if !GST_CHECK_VERSION(1,0,0)
+    if (sink->use_video_raw) {
+        /* Ensure the uploader is set up for upstream allocated buffers */
+        if (!gst_vaapi_uploader_ensure_display(sink->uploader, sink->display))
+            return FALSE;
+        if (!gst_vaapi_uploader_ensure_caps(sink->uploader, caps, NULL))
+            return FALSE;
+    }
+#endif
+
     gst_vaapisink_ensure_rotation(sink, FALSE);
 
     gst_vaapisink_ensure_window_size(sink, &win_width, &win_height);
