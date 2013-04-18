@@ -289,8 +289,8 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
         OMX_U32 index = msg->content.port_settings_changed.port;
         GList *outports = NULL, *l, *k;
 
-        GST_DEBUG_OBJECT (comp->parent, "%s settings changed (port %lu)",
-            comp->name, index);
+        GST_DEBUG_OBJECT (comp->parent, "%s settings changed (port %u)",
+            comp->name, (guint) index);
 
         /* FIXME: This probably can be done better */
 
@@ -335,8 +335,8 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
         if (!port)
           break;
 
-        GST_DEBUG_OBJECT (comp->parent, "%s port %u got buffer flags 0x%08lx",
-            comp->name, port->index, flags);
+        GST_DEBUG_OBJECT (comp->parent, "%s port %u got buffer flags 0x%08x",
+            comp->name, port->index, (guint) flags);
         if ((flags & OMX_BUFFERFLAG_EOS)
             && port->port_def.eDir == OMX_DirOutput)
           port->eos = TRUE;
@@ -440,8 +440,8 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
 
           msg->type = GST_OMX_MESSAGE_FLUSH;
           msg->content.flush.port = nData2;
-          GST_DEBUG_OBJECT (comp->parent, "%s port %lu flushed", comp->name,
-              msg->content.flush.port);
+          GST_DEBUG_OBJECT (comp->parent, "%s port %u flushed", comp->name,
+              (guint) msg->content.flush.port);
 
           gst_omx_component_send_message (comp, msg);
           break;
@@ -453,8 +453,8 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
           msg->type = GST_OMX_MESSAGE_PORT_ENABLE;
           msg->content.port_enable.port = nData2;
           msg->content.port_enable.enable = (cmd == OMX_CommandPortEnable);
-          GST_DEBUG_OBJECT (comp->parent, "%s port %lu %s", comp->name,
-              msg->content.port_enable.port,
+          GST_DEBUG_OBJECT (comp->parent, "%s port %u %s", comp->name,
+              (guint) msg->content.port_enable.port,
               (msg->content.port_enable.enable ? "enabled" : "disabled"));
 
           gst_omx_component_send_message (comp, msg);
@@ -505,8 +505,8 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
 
       msg->type = GST_OMX_MESSAGE_PORT_SETTINGS_CHANGED;
       msg->content.port_settings_changed.port = index;
-      GST_DEBUG_OBJECT (comp->parent, "%s settings changed (port index: %lu)",
-          comp->name, msg->content.port_settings_changed.port);
+      GST_DEBUG_OBJECT (comp->parent, "%s settings changed (port index: %u)",
+          comp->name, (guint) msg->content.port_settings_changed.port);
 
       gst_omx_component_send_message (comp, msg);
       break;
@@ -519,9 +519,9 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
       msg->type = GST_OMX_MESSAGE_BUFFER_FLAG;
       msg->content.buffer_flag.port = nData1;
       msg->content.buffer_flag.flags = nData2;
-      GST_DEBUG_OBJECT (comp->parent, "%s port %lu got buffer flags 0x%08lx",
-          comp->name, msg->content.buffer_flag.port,
-          msg->content.buffer_flag.flags);
+      GST_DEBUG_OBJECT (comp->parent, "%s port %u got buffer flags 0x%08x",
+          comp->name, (guint) msg->content.buffer_flag.port,
+          (guint) msg->content.buffer_flag.flags);
 
       gst_omx_component_send_message (comp, msg);
       break;
@@ -1629,8 +1629,8 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port,
       OMX_ErrorBadParameter);
 
   GST_INFO_OBJECT (comp->parent,
-      "Allocating %d buffers of size %lu for %s port %u", n,
-      port->port_def.nBufferSize, comp->name, port->index);
+      "Allocating %d buffers of size %zu for %s port %u", n,
+      port->port_def.nBufferSize, comp->name, (guint) port->index);
 
   if (!port->buffers)
     port->buffers = g_ptr_array_sized_new (n);

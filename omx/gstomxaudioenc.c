@@ -137,8 +137,8 @@ gst_omx_audio_enc_open (GstOMXAudioEnc * self)
       in_port_index = 0;
       out_port_index = 1;
     } else {
-      GST_DEBUG_OBJECT (self, "Detected %lu ports, starting at %lu",
-          param.nPorts, param.nStartPortNumber);
+      GST_DEBUG_OBJECT (self, "Detected %u ports, starting at %u",
+          (guint) param.nPorts, (guint) param.nStartPortNumber);
       in_port_index = param.nStartPortNumber + 0;
       out_port_index = param.nStartPortNumber + 1;
     }
@@ -381,8 +381,8 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
     goto eos;
   }
 
-  GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08lx %" G_GUINT64_FORMAT,
-      buf->omx_buf->nFlags, (guint64) buf->omx_buf->nTimeStamp);
+  GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08x %" G_GUINT64_FORMAT,
+      (guint) buf->omx_buf->nFlags, (guint64) buf->omx_buf->nTimeStamp);
 
   /* This prevents a deadlock between the srcpad stream
    * lock and the videocodec stream lock, if ::reset()
@@ -1018,8 +1018,8 @@ gst_omx_audio_enc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
 full_buffer:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
-        ("Got OpenMAX buffer with no free space (%p, %lu/%lu)", buf,
-            buf->omx_buf->nOffset, buf->omx_buf->nAllocLen));
+        ("Got OpenMAX buffer with no free space (%p, %u/%u)", buf,
+            (guint) buf->omx_buf->nOffset, (guint) buf->omx_buf->nAllocLen));
     return GST_FLOW_ERROR;
   }
 component_error:
