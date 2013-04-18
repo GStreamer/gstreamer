@@ -200,6 +200,8 @@ struct _QtDemuxStream
   GstCaps *caps;
   guint32 fourcc;
 
+  gboolean new_caps;
+
   /* if the stream has a redirect URI in its headers, we store it here */
   gchar *redirect_uri;
 
@@ -447,6 +449,8 @@ static void gst_qtdemux_stream_free (GstQTDemux * qtdemux,
     QtDemuxStream * stream);
 static void gst_qtdemux_stream_clear (QtDemuxStream * stream);
 static GstFlowReturn qtdemux_prepare_streams (GstQTDemux * qtdemux);
+static void qtdemux_do_allocation (GstQTDemux * qtdemux,
+    QtDemuxStream * stream);
 
 static void
 gst_qtdemux_class_init (GstQTDemuxClass * klass)
@@ -1702,6 +1706,7 @@ gst_qtdemux_setcaps (GstQTDemux * demux, GstCaps * caps)
       if (!stream->caps || !gst_caps_is_equal_fixed (mediacaps, stream->caps)) {
         GST_DEBUG_OBJECT (demux, "We have a new caps %" GST_PTR_FORMAT,
             mediacaps);
+        stream->new_caps = TRUE;
       }
       gst_caps_replace (&stream->caps, (GstCaps *) mediacaps);
       structure = gst_caps_get_structure (mediacaps, 0);
@@ -4047,6 +4052,10 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   }
 
   stream = qtdemux->streams[index];
+  if (stream->new_caps) {
+    gst_qtdemux_configure_stream (qtdemux, stream);
+    qtdemux_do_allocation (qtdemux, stream);
+  }
 
   /* fetch info for the current sample of this stream */
   if (G_UNLIKELY (!gst_qtdemux_prepare_current_sample (qtdemux, stream, &offset,
@@ -4750,6 +4759,10 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
 
         if (G_UNLIKELY (stream == NULL || i == demux->n_streams))
           goto unknown_stream;
+
+        if (stream->new_caps) {
+          gst_qtdemux_configure_stream (demux, stream);
+        }
 
         /* Put data in a buffer, set timestamps, caps, ... */
         outbuf = gst_adapter_take_buffer (demux->adapter, demux->neededbytes);
@@ -5578,7 +5591,7 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
     gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
     g_free (stream_id);
     gst_pad_set_caps (stream->pad, stream->caps);
-
+    stream->new_caps = FALSE;
   }
   return TRUE;
 }
