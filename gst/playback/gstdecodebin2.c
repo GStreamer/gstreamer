@@ -990,7 +990,6 @@ gint
 _decode_bin_compare_factories_func (gconstpointer p1, gconstpointer p2)
 {
   GstPluginFeature *f1, *f2;
-  gint diff;
   gboolean is_parser1, is_parser2;
 
   f1 = (GstPluginFeature *) p1;
@@ -1011,13 +1010,7 @@ _decode_bin_compare_factories_func (gconstpointer p1, gconstpointer p2)
 
   /* And if it's a both a parser we first sort by rank
    * and then by factory name */
-  diff = gst_plugin_feature_get_rank (f2) - gst_plugin_feature_get_rank (f1);
-  if (diff != 0)
-    return diff;
-
-  diff = strcmp (GST_OBJECT_NAME (f1), GST_OBJECT_NAME (f2));
-
-  return diff;
+  return gst_plugin_feature_rank_compare_func (p1, p2);
 }
 
 /* Must be called with factories lock! */
