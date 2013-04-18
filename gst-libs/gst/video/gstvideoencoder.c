@@ -566,7 +566,6 @@ gst_video_encoder_setcaps (GstVideoEncoder * encoder, GstCaps * caps)
   GstVideoEncoderClass *encoder_class;
   GstVideoCodecState *state;
   gboolean ret;
-  gboolean samecaps = FALSE;
 
   encoder_class = GST_VIDEO_ENCODER_GET_CLASS (encoder);
 
@@ -589,29 +588,24 @@ gst_video_encoder_setcaps (GstVideoEncoder * encoder, GstCaps * caps)
   if (G_UNLIKELY (!state))
     goto parse_fail;
 
-  if (encoder->priv->input_state)
-    samecaps =
-        gst_video_info_is_equal (&state->info,
-        &encoder->priv->input_state->info);
-
-  if (!samecaps) {
-    /* arrange draining pending frames */
-    gst_video_encoder_drain (encoder);
-
-    /* and subclass should be ready to configure format at any time around */
-    ret = encoder_class->set_format (encoder, state);
-    if (ret) {
-      if (encoder->priv->input_state)
-        gst_video_codec_state_unref (encoder->priv->input_state);
-      encoder->priv->input_state = state;
-    } else
-      gst_video_codec_state_unref (state);
-  } else {
-    /* no need to stir things up */
-    GST_DEBUG_OBJECT (encoder,
-        "new video format identical to configured format");
+  if (encoder->priv->input_state
+      && gst_video_info_is_equal (&state->info,
+          &encoder->priv->input_state->info)) {
     gst_video_codec_state_unref (state);
-    ret = TRUE;
+    goto caps_not_changed;
+  }
+
+  /* arrange draining pending frames */
+  gst_video_encoder_drain (encoder);
+
+  /* and subclass should be ready to configure format at any time around */
+  ret = encoder_class->set_format (encoder, state);
+  if (ret) {
+    if (encoder->priv->input_state)
+      gst_video_codec_state_unref (encoder->priv->input_state);
+    encoder->priv->input_state = state;
+  } else {
+    gst_video_codec_state_unref (state);
   }
 
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
