@@ -712,12 +712,11 @@ static gboolean
 gst_eglglessink_create_window (GstEglGlesSink * eglglessink, gint width,
     gint height)
 {
-  EGLNativeWindowType window = 0;
   gboolean window_created = FALSE;
 
   if (!eglglessink->create_window) {
     GST_ERROR_OBJECT (eglglessink, "This sink can't create a window by itself");
-    return window;
+    return FALSE;
   } else
     GST_INFO_OBJECT (eglglessink, "Attempting internal window creation");
 
