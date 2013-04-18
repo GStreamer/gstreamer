@@ -186,6 +186,9 @@ enum
 typedef struct _GstAudioEncoderContext
 {
   /* input */
+  /* last negotiated input caps */
+  GstCaps *input_caps;
+  /* last negotiated input info */
   GstAudioInfo info;
 
   /* output */
@@ -478,6 +481,8 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
     if (enc->priv->ctx.allocator)
       gst_object_unref (enc->priv->ctx.allocator);
     enc->priv->ctx.allocator = NULL;
+
+    gst_caps_replace (&enc->priv->ctx.input_caps, NULL);
   }
 
   gst_segment_init (&enc->input_segment, GST_FORMAT_TIME);
@@ -1237,8 +1242,10 @@ gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc, GstCaps * caps)
   GstAudioEncoderClass *klass;
   GstAudioEncoderContext *ctx;
   GstAudioInfo state;
-  gboolean res = TRUE, changed = FALSE;
+  gboolean res = TRUE;
   guint old_rate;
+  GstClockTime old_min_latency;
+  GstClockTime old_max_latency;
 
   klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
 
@@ -1254,6 +1261,16 @@ gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc, GstCaps * caps)
   if (!gst_caps_is_fixed (caps))
     goto refuse_caps;
 
+  if (enc->priv->ctx.input_caps
+      && gst_caps_is_equal (enc->priv->ctx.input_caps, caps))
+    goto same_caps;
+
+  if (!gst_audio_info_from_caps (&state, caps))
+    goto refuse_caps;
+
+  if (enc->priv->ctx.input_caps && audio_info_is_equal (&state, &ctx->info))
+    goto same_caps;
+
   /* adjust ts tracking to new sample rate */
   old_rate = GST_AUDIO_INFO_RATE (&ctx->info);
   if (GST_CLOCK_TIME_IS_VALID (enc->priv->base_ts) && old_rate) {
@@ -1262,63 +1279,57 @@ gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc, GstCaps * caps)
     enc->priv->samples = 0;
   }
 
-  if (!gst_audio_info_from_caps (&state, caps))
-    goto refuse_caps;
+  /* drain any pending old data stuff */
+  gst_audio_encoder_drain (enc);
 
-  changed = !audio_info_is_equal (&state, &ctx->info);
+  /* context defaults */
+  enc->priv->ctx.frame_samples_min = 0;
+  enc->priv->ctx.frame_samples_max = 0;
+  enc->priv->ctx.frame_max = 0;
+  enc->priv->ctx.lookahead = 0;
 
-  if (changed) {
-    GstClockTime old_min_latency;
-    GstClockTime old_max_latency;
+  /* element might report latency */
+  GST_OBJECT_LOCK (enc);
+  old_min_latency = ctx->min_latency;
+  old_max_latency = ctx->max_latency;
+  GST_OBJECT_UNLOCK (enc);
 
-    /* drain any pending old data stuff */
-    gst_audio_encoder_drain (enc);
+  if (klass->set_format)
+    res = klass->set_format (enc, &state);
 
-    /* context defaults */
-    enc->priv->ctx.frame_samples_min = 0;
-    enc->priv->ctx.frame_samples_max = 0;
-    enc->priv->ctx.frame_max = 0;
-    enc->priv->ctx.lookahead = 0;
-
-    /* element might report latency */
-    GST_OBJECT_LOCK (enc);
-    old_min_latency = ctx->min_latency;
-    old_max_latency = ctx->max_latency;
-    GST_OBJECT_UNLOCK (enc);
-
-    if (klass->set_format)
-      res = klass->set_format (enc, &state);
-
-    if (res)
-      ctx->info = state;
-
-    /* invalidate state to ensure no casual carrying on */
-    if (!res) {
-      GST_DEBUG_OBJECT (enc, "subclass did not accept format");
-      gst_audio_info_init (&state);
-      goto exit;
-    }
-
-    /* notify if new latency */
-    GST_OBJECT_LOCK (enc);
-    if ((ctx->min_latency > 0 && ctx->min_latency != old_min_latency) ||
-        (ctx->max_latency > 0 && ctx->max_latency != old_max_latency)) {
-      GST_OBJECT_UNLOCK (enc);
-      /* post latency message on the bus */
-      gst_element_post_message (GST_ELEMENT (enc),
-          gst_message_new_latency (GST_OBJECT (enc)));
-      GST_OBJECT_LOCK (enc);
-    }
-    GST_OBJECT_UNLOCK (enc);
+  if (res) {
+    ctx->info = state;
+    gst_caps_replace (&enc->priv->ctx.input_caps, caps);
   } else {
-    GST_DEBUG_OBJECT (enc, "new audio format identical to configured format");
+    /* invalidate state to ensure no casual carrying on */
+    GST_DEBUG_OBJECT (enc, "subclass did not accept format");
+    gst_audio_info_init (&state);
+    goto exit;
   }
+
+  /* notify if new latency */
+  GST_OBJECT_LOCK (enc);
+  if ((ctx->min_latency > 0 && ctx->min_latency != old_min_latency) ||
+      (ctx->max_latency > 0 && ctx->max_latency != old_max_latency)) {
+    GST_OBJECT_UNLOCK (enc);
+    /* post latency message on the bus */
+    gst_element_post_message (GST_ELEMENT (enc),
+        gst_message_new_latency (GST_OBJECT (enc)));
+    GST_OBJECT_LOCK (enc);
+  }
+  GST_OBJECT_UNLOCK (enc);
 
 exit:
 
   GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
 
   return res;
+
+same_caps:
+  {
+    GST_DEBUG_OBJECT (enc, "new audio format identical to configured format");
+    goto exit;
+  }
 
   /* ERRORS */
 refuse_caps:
