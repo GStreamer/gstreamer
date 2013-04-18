@@ -204,10 +204,14 @@ static GstStateChangeReturn
 gst_dash_demux_change_state (GstElement * element, GstStateChange transition);
 
 /* GstDashDemux */
-static GstFlowReturn gst_dash_demux_pad (GstPad * pad, GstBuffer * buf);
-static gboolean gst_dash_demux_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_dash_demux_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_dash_demux_src_query (GstPad * pad, GstQuery * query);
+static GstFlowReturn gst_dash_demux_pad (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean gst_dash_demux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_dash_demux_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_dash_demux_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static void gst_dash_demux_stream_loop (GstDashDemux * demux);
 static void gst_dash_demux_download_loop (GstDashDemux * demux);
 static void gst_dash_demux_stop (GstDashDemux * demux);
@@ -230,33 +234,10 @@ static GstClockTime gst_dash_demux_stream_get_buffering_time (GstDashDemuxStream
     * stream);
 static GstPad *gst_dash_demux_create_pad (GstDashDemux * demux);
 
-static void
-_do_init (GType type)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_dash_demux_debug, "dashdemux", 0,
-      "dashdemux element");
-}
-
-GST_BOILERPLATE_FULL (GstDashDemux, gst_dash_demux, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
-
-static void
-gst_dash_demux_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_static_pad_template (element_class, &srctemplate);
-
-  gst_element_class_add_static_pad_template (element_class, &sinktemplate);
-
-  gst_element_class_set_details_simple (element_class,
-      "DASH Demuxer",
-      "Codec/Demuxer",
-      "Dynamic Adaptive Streaming over HTTP demuxer",
-      "David Corvoysier <david.corvoysier@orange.com>\n\
-                Hamid Zakari <hamid.zakari@gmail.com>\n\
-                Gianluca Gennari <gennarone@gmail.com>");
-}
+#define gst_dash_demux_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstDashDemux, gst_dash_demux, GST_TYPE_ELEMENT,
+    GST_DEBUG_CATEGORY_INIT (gst_dash_demux_debug, "dashdemux", 0,
+        "dashdemux element"););
 
 static void
 gst_dash_demux_dispose (GObject * obj)
@@ -267,13 +248,13 @@ gst_dash_demux_dispose (GObject * obj)
 
   if (demux->stream_task) {
     gst_object_unref (demux->stream_task);
-    g_static_rec_mutex_free (&demux->stream_task_lock);
+    g_rec_mutex_clear (&demux->stream_task_lock);
     demux->stream_task = NULL;
   }
 
   if (demux->download_task) {
     gst_object_unref (demux->download_task);
-    g_static_rec_mutex_free (&demux->download_task_lock);
+    g_rec_mutex_clear (&demux->download_task_lock);
     demux->download_task = NULL;
   }
 
@@ -282,7 +263,7 @@ gst_dash_demux_dispose (GObject * obj)
     demux->downloader = NULL;
   }
 
-  g_static_mutex_free (&demux->streams_lock);
+  g_mutex_clear (&demux->streams_lock);
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
@@ -321,10 +302,24 @@ gst_dash_demux_class_init (GstDashDemuxClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_dash_demux_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
+  gst_element_class_set_static_metadata (gstelement_class,
+      "DASH Demuxer",
+      "Codec/Demuxer",
+      "Dynamic Adaptive Streaming over HTTP demuxer",
+      "David Corvoysier <david.corvoysier@orange.com>\n\
+                Hamid Zakari <hamid.zakari@gmail.com>\n\
+                Gianluca Gennari <gennarone@gmail.com>");
 }
 
 static void
-gst_dash_demux_init (GstDashDemux * demux, GstDashDemuxClass * klass)
+gst_dash_demux_init (GstDashDemux * demux)
 {
   /* sink pad */
   demux->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
@@ -345,18 +340,19 @@ gst_dash_demux_init (GstDashDemux * demux, GstDashDemuxClass * klass)
   demux->max_bitrate = DEFAULT_MAX_BITRATE;
 
   /* Updates task */
-  g_static_rec_mutex_init (&demux->download_task_lock);
+  g_rec_mutex_init (&demux->download_task_lock);
   demux->download_task =
-      gst_task_create ((GstTaskFunction) gst_dash_demux_download_loop, demux);
+      gst_task_new ((GstTaskFunction) gst_dash_demux_download_loop, demux,
+      NULL);
   gst_task_set_lock (demux->download_task, &demux->download_task_lock);
 
   /* Streaming task */
-  g_static_rec_mutex_init (&demux->stream_task_lock);
+  g_rec_mutex_init (&demux->stream_task_lock);
   demux->stream_task =
-      gst_task_create ((GstTaskFunction) gst_dash_demux_stream_loop, demux);
+      gst_task_new ((GstTaskFunction) gst_dash_demux_stream_loop, demux, NULL);
   gst_task_set_lock (demux->stream_task, &demux->stream_task_lock);
 
-  g_static_mutex_init (&demux->streams_lock);
+  g_mutex_init (&demux->streams_lock);
 }
 
 static void
@@ -466,7 +462,7 @@ gst_dash_demux_stream_push_data (GstDashDemuxStream * stream,
   item->object = GST_MINI_OBJECT_CAST (fragment);
   item->duration = GST_BUFFER_DURATION (fragment);
   item->visible = TRUE;
-  item->size = GST_BUFFER_SIZE (fragment);
+  item->size = gst_buffer_get_size (fragment);
 
   item->destroy = (GDestroyNotify) _data_queue_item_destroy;
 
@@ -474,11 +470,11 @@ gst_dash_demux_stream_push_data (GstDashDemuxStream * stream,
 }
 
 static gboolean
-gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
+gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstDashDemux *demux;
 
-  demux = GST_DASH_DEMUX (gst_pad_get_element_private (pad));
+  demux = GST_DASH_DEMUX (parent);
 
   switch (event->type) {
     case GST_EVENT_SEEK:
@@ -515,11 +511,10 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
           GST_TIME_FORMAT, rate, start_type, GST_TIME_ARGS (start),
           GST_TIME_ARGS (stop));
 
-      gst_segment_set_seek (&demux->segment, rate, format, flags, start_type,
+      gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
           start, stop_type, stop, &update);
 
       if (update) {
-
         if (flags & GST_SEEK_FLAG_FLUSH) {
           GST_DEBUG_OBJECT (demux, "sending flush start");
           for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
@@ -535,7 +530,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
         gst_dash_demux_stop (demux);
 
         /* Wait for streaming to finish */
-        g_static_rec_mutex_lock (&demux->stream_task_lock);
+        g_rec_mutex_lock (&demux->stream_task_lock);
 
         /* select the requested Period in the Media Presentation */
         target_pos = (GstClockTime) demux->segment.start;
@@ -618,7 +613,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
             stream->download_end_of_period = FALSE;
             stream->stream_end_of_period = FALSE;
             stream->stream_eos = FALSE;
-            gst_pad_push_event (stream->pad, gst_event_new_flush_stop ());
+            gst_pad_push_event (stream->pad, gst_event_new_flush_stop (TRUE));
           }
         }
 
@@ -635,7 +630,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
         GST_DEBUG_OBJECT (demux, "Resuming tasks after seeking");
         gst_dash_demux_resume_download_task (demux);
         gst_dash_demux_resume_stream_task (demux);
-        g_static_rec_mutex_unlock (&demux->stream_task_lock);
+        g_rec_mutex_unlock (&demux->stream_task_lock);
       }
 
       return TRUE;
@@ -644,7 +639,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static void
@@ -704,7 +699,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     caps = gst_dash_demux_get_input_caps (demux, active_stream);
     stream->queue =
         gst_data_queue_new ((GstDataQueueCheckFullFunction) _check_queue_full,
-        stream);
+        NULL, NULL, stream);
 
     stream->index = i;
     stream->input_caps = caps;
@@ -717,6 +712,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     GST_LOG_OBJECT (demux, "Creating stream %d %" GST_PTR_FORMAT, i, caps);
     streams = g_slist_prepend (streams, stream);
     stream->pad = gst_dash_demux_create_pad (demux);
+    gst_dash_demux_stream_push_event (stream, gst_event_new_caps (caps));
   }
   streams = g_slist_reverse (streams);
 
@@ -727,9 +723,9 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
 }
 
 static gboolean
-gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
+gst_dash_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstDashDemux *demux = GST_DASH_DEMUX (GST_PAD_PARENT (pad));
+  GstDashDemux *demux = GST_DASH_DEMUX (parent);
 
   switch (event->type) {
     case GST_EVENT_FLUSH_STOP:
@@ -739,6 +735,7 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
       gchar *manifest;
       GstQuery *query;
       gboolean res;
+      GstMapInfo mapinfo;
 
       if (demux->manifest == NULL) {
         GST_WARNING_OBJECT (demux, "Received EOS without a manifest.");
@@ -762,11 +759,12 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
       }
       gst_query_unref (query);
 
-      manifest = (gchar *) GST_BUFFER_DATA (demux->manifest);
+      gst_buffer_map (demux->manifest, &mapinfo, GST_MAP_READ);
+
+      manifest = (gchar *) mapinfo.data;
       if (manifest == NULL) {
         GST_WARNING_OBJECT (demux, "Error validating the manifest.");
-      } else if (!gst_mpd_parse (demux->client, manifest,
-              GST_BUFFER_SIZE (demux->manifest))) {
+      } else if (!gst_mpd_parse (demux->client, manifest, mapinfo.size)) {
         /* In most cases, this will happen if we set a wrong url in the
          * source element and we have received the 404 HTML response instead of
          * the manifest */
@@ -774,6 +772,7 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
             (NULL));
         return FALSE;
       }
+      gst_buffer_unmap (demux->manifest, &mapinfo);
       gst_buffer_unref (demux->manifest);
       demux->manifest = NULL;
 
@@ -803,8 +802,7 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
               "Sending duration message : %" GST_TIME_FORMAT,
               GST_TIME_ARGS (duration));
           gst_element_post_message (GST_ELEMENT (demux),
-              gst_message_new_duration (GST_OBJECT (demux), GST_FORMAT_TIME,
-                  duration));
+              gst_message_new_duration_changed (GST_OBJECT (demux)));
         } else {
           GST_DEBUG_OBJECT (demux,
               "mediaPresentationDuration unknown, can not send the duration message");
@@ -817,7 +815,7 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       return TRUE;
     }
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       /* Swallow newsegments, we'll push our own */
       gst_event_unref (event);
       return TRUE;
@@ -825,11 +823,11 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static gboolean
-gst_dash_demux_src_query (GstPad * pad, GstQuery * query)
+gst_dash_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstDashDemux *dashdemux;
   gboolean ret = FALSE;
@@ -837,7 +835,7 @@ gst_dash_demux_src_query (GstPad * pad, GstQuery * query)
   if (query == NULL)
     return FALSE;
 
-  dashdemux = GST_DASH_DEMUX (gst_pad_get_element_private (pad));
+  dashdemux = GST_DASH_DEMUX (parent);
 
   switch (query->type) {
     case GST_QUERY_DURATION:{
@@ -894,14 +892,14 @@ gst_dash_demux_src_query (GstPad * pad, GstQuery * query)
 }
 
 static GstFlowReturn
-gst_dash_demux_pad (GstPad * pad, GstBuffer * buf)
+gst_dash_demux_pad (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstDashDemux *demux = GST_DASH_DEMUX (GST_PAD_PARENT (pad));
+  GstDashDemux *demux = GST_DASH_DEMUX (parent);
 
   if (demux->manifest == NULL)
     demux->manifest = buf;
   else
-    demux->manifest = gst_buffer_join (demux->manifest, buf);
+    demux->manifest = gst_buffer_append (demux->manifest, buf);
 
   return GST_FLOW_OK;
 }
@@ -925,15 +923,15 @@ gst_dash_demux_stop (GstDashDemux * demux)
   if (GST_TASK_STATE (demux->download_task) != GST_TASK_STOPPED) {
     GST_TASK_SIGNAL (demux->download_task);
     gst_task_stop (demux->download_task);
-    g_static_rec_mutex_lock (&demux->download_task_lock);
-    g_static_rec_mutex_unlock (&demux->download_task_lock);
+    g_rec_mutex_lock (&demux->download_task_lock);
+    g_rec_mutex_unlock (&demux->download_task_lock);
     gst_task_join (demux->download_task);
   }
   if (GST_TASK_STATE (demux->stream_task) != GST_TASK_STOPPED) {
     GST_TASK_SIGNAL (demux->stream_task);
     gst_task_stop (demux->stream_task);
-    g_static_rec_mutex_lock (&demux->stream_task_lock);
-    g_static_rec_mutex_unlock (&demux->stream_task_lock);
+    g_rec_mutex_lock (&demux->stream_task_lock);
+    g_rec_mutex_unlock (&demux->stream_task_lock);
     gst_task_join (demux->stream_task);
   }
 
@@ -1001,7 +999,7 @@ static gboolean
 gst_dash_demux_advance_period (GstDashDemux * demux)
 {
   GSList *old_period = NULL;
-  g_static_mutex_lock (&demux->streams_lock);
+  g_mutex_lock (&demux->streams_lock);
 
   GST_DEBUG_OBJECT (demux, "Advancing period from %p", demux->streams);
 
@@ -1019,14 +1017,14 @@ gst_dash_demux_advance_period (GstDashDemux * demux)
     demux->streams = demux->next_periods->data;
   } else {
     GST_DEBUG_OBJECT (demux, "No next periods, return FALSE");
-    g_static_mutex_unlock (&demux->streams_lock);
+    g_mutex_unlock (&demux->streams_lock);
     return FALSE;
   }
 
   gst_dash_demux_expose_streams (demux);
   gst_dash_demux_remove_streams (demux, old_period);
 
-  g_static_mutex_unlock (&demux->streams_lock);
+  g_mutex_unlock (&demux->streams_lock);
   return TRUE;
 }
 
@@ -1148,9 +1146,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
         for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
           GstDashDemuxStream *stream = iter->data;
           gst_pad_push_event (stream->pad,
-              gst_event_new_new_segment (FALSE, demux->segment.rate,
-                  GST_FORMAT_TIME, demux->segment.start, demux->segment.stop,
-                  demux->segment.time));
+              gst_event_new_segment (&demux->segment));
         }
         demux->need_segment = FALSE;
       }
@@ -1171,7 +1167,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
           GST_DEBUG_PAD_NAME (selected_stream->pad));
 #endif
       ret = gst_pad_push (selected_stream->pad, gst_buffer_ref (buffer));
-      gst_segment_set_last_stop (&demux->segment, GST_FORMAT_TIME, timestamp);
+      demux->segment.position = timestamp;
 
       item->destroy (item);
       if ((ret != GST_FLOW_OK) && (active_stream
@@ -1422,16 +1418,18 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
         if (buffer == NULL) {
           GST_WARNING_OBJECT (demux, "Error validating the manifest.");
         } else {
+          GstMapInfo mapinfo;
           new_client = gst_mpd_client_new ();
           new_client->mpd_uri = g_strdup (demux->client->mpd_uri);
 
-          if (!gst_mpd_parse (new_client,
-                  (gchar *) GST_BUFFER_DATA (buffer),
-                  GST_BUFFER_SIZE (buffer))) {
+          gst_buffer_map (buffer, &mapinfo, GST_MAP_READ);
+
+          if (!gst_mpd_parse (new_client, (gchar *) mapinfo.data, mapinfo.size)) {
             /* In most cases, this will happen if we set a wrong url in the
              * source element and we have received the 404 HTML response instead of
              * the manifest */
             GST_WARNING_OBJECT (demux, "Error parsing the manifest.");
+            gst_buffer_unmap (buffer, &mapinfo);
             gst_buffer_unref (buffer);
           } else {
             const gchar *period_id;
@@ -1441,6 +1439,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
             /* prepare the new manifest and try to transfer the stream position
              * status from the old manifest client  */
 
+            gst_buffer_unmap (buffer, &mapinfo);
             gst_buffer_unref (buffer);
 
             GST_DEBUG_OBJECT (demux, "Updating manifest");
@@ -1509,8 +1508,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
                   "Sending duration message : %" GST_TIME_FORMAT,
                   GST_TIME_ARGS (duration));
               gst_element_post_message (GST_ELEMENT (demux),
-                  gst_message_new_duration (GST_OBJECT (demux), GST_FORMAT_TIME,
-                      duration));
+                  gst_message_new_duration_changed (GST_OBJECT (demux)));
             } else {
               GST_DEBUG_OBJECT (demux,
                   "mediaPresentationDuration unknown, can not send the duration message");
@@ -1669,6 +1667,8 @@ gst_dash_demux_select_representations (GstDashDemux * demux)
         gst_caps_unref (stream->input_caps);
         stream->input_caps =
             gst_dash_demux_get_input_caps (demux, active_stream);
+        gst_dash_demux_stream_push_event (stream,
+            gst_event_new_caps (stream->input_caps));
       } else {
         GST_WARNING_OBJECT (demux,
             "Can not switch representation, aborting...");
@@ -1728,7 +1728,7 @@ gst_dash_demux_get_video_input_caps (GstDashDemux * demux,
   if (mimeType == NULL)
     return NULL;
 
-  caps = gst_caps_new_simple (mimeType, NULL);
+  caps = gst_caps_new_empty_simple (mimeType);
   if (width > 0 && height > 0) {
     gst_caps_set_simple (caps, "width", G_TYPE_INT, width, "height",
         G_TYPE_INT, height, NULL);
@@ -1757,7 +1757,7 @@ gst_dash_demux_get_audio_input_caps (GstDashDemux * demux,
   if (mimeType == NULL)
     return NULL;
 
-  caps = gst_caps_new_simple (mimeType, NULL);
+  caps = gst_caps_new_empty_simple (mimeType);
   if (rate > 0) {
     gst_caps_set_simple (caps, "rate", G_TYPE_INT, rate, NULL);
   }
@@ -1782,7 +1782,7 @@ gst_dash_demux_get_application_input_caps (GstDashDemux * demux,
   if (mimeType == NULL)
     return NULL;
 
-  caps = gst_caps_new_simple (mimeType, NULL);
+  caps = gst_caps_new_empty_simple (mimeType);
 
   return caps;
 }
@@ -1830,10 +1830,10 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
   GstClockTime best_time = GST_CLOCK_TIME_NONE;
   GSList *streams;
 
-  g_static_mutex_lock (&demux->streams_lock);
+  g_mutex_lock (&demux->streams_lock);
   /* TODO add check */
   streams = g_slist_last (demux->next_periods)->data;
-  g_static_mutex_unlock (&demux->streams_lock);
+  g_mutex_unlock (&demux->streams_lock);
 
   for (iter = streams; iter; iter = g_slist_next (iter)) {
     GstDashDemuxStream *stream = iter->data;
@@ -1919,24 +1919,23 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
           /* Replace fragment with a new one including the header */
 
           header_buffer = gst_fragment_get_buffer (header);
-          buffer = gst_buffer_join (header_buffer, buffer);
+          buffer = gst_buffer_append (header_buffer, buffer);
           g_object_unref (header);
         }
         selected_stream->need_header = FALSE;
       }
       g_get_current_time (&now);
 
-      buffer = gst_buffer_make_metadata_writable (buffer);
+      buffer = gst_buffer_make_writable (buffer);
 
       GST_BUFFER_TIMESTAMP (buffer) = timestamp;
       GST_BUFFER_DURATION (buffer) = duration;
       GST_BUFFER_OFFSET (buffer) =
           gst_mpd_client_get_segment_index (active_stream) - 1;
 
-      gst_buffer_set_caps (buffer, selected_stream->input_caps);
       gst_dash_demux_stream_push_data (selected_stream, buffer);
       selected_stream->has_data_queued = TRUE;
-      size_buffer += GST_BUFFER_SIZE (buffer);
+      size_buffer += gst_buffer_get_size (buffer);
     } else {
       GST_WARNING_OBJECT (demux, "Failed to download fragment for stream %p %d",
           selected_stream, selected_stream->index);

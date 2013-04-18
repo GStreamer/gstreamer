@@ -41,7 +41,7 @@ void
 gst_download_rate_init (GstDownloadRate * rate)
 {
   g_queue_init (&rate->queue);
-  g_static_mutex_init (&rate->mutex);
+  g_mutex_init (&rate->mutex);
   rate->total = 0;
   rate->max_length = 0;
 }
@@ -50,25 +50,25 @@ void
 gst_download_rate_deinit (GstDownloadRate * rate)
 {
   gst_download_rate_clear (rate);
-  g_static_mutex_free (&rate->mutex);
+  g_mutex_clear (&rate->mutex);
 }
 
 void
 gst_download_rate_set_max_length (GstDownloadRate * rate, gint max_length)
 {
-  g_static_mutex_lock (&rate->mutex);
+  g_mutex_lock (&rate->mutex);
   rate->max_length = max_length;
   _gst_download_rate_check_remove_rates (rate);
-  g_static_mutex_unlock (&rate->mutex);
+  g_mutex_unlock (&rate->mutex);
 }
 
 gint
 gst_download_rate_get_max_length (GstDownloadRate * rate)
 {
   guint ret;
-  g_static_mutex_lock (&rate->mutex);
+  g_mutex_lock (&rate->mutex);
   ret = rate->max_length;
-  g_static_mutex_unlock (&rate->mutex);
+  g_mutex_unlock (&rate->mutex);
 
   return ret;
 }
@@ -76,17 +76,17 @@ gst_download_rate_get_max_length (GstDownloadRate * rate)
 void
 gst_download_rate_clear (GstDownloadRate * rate)
 {
-  g_static_mutex_lock (&rate->mutex);
+  g_mutex_lock (&rate->mutex);
   g_queue_clear (&rate->queue);
   rate->total = 0;
-  g_static_mutex_unlock (&rate->mutex);
+  g_mutex_unlock (&rate->mutex);
 }
 
 void
 gst_download_rate_add_rate (GstDownloadRate * rate, guint bytes, guint64 time)
 {
   guint64 bitrate;
-  g_static_mutex_lock (&rate->mutex);
+  g_mutex_lock (&rate->mutex);
 
   /* convert from bytes / nanoseconds to bits per second */
   bitrate = G_GUINT64_CONSTANT (8000000000) * bytes / time;
@@ -95,16 +95,19 @@ gst_download_rate_add_rate (GstDownloadRate * rate, guint bytes, guint64 time)
   rate->total += bitrate;
 
   _gst_download_rate_check_remove_rates (rate);
-  g_static_mutex_unlock (&rate->mutex);
+  g_mutex_unlock (&rate->mutex);
 }
 
 guint
 gst_download_rate_get_current_rate (GstDownloadRate * rate)
 {
   guint ret;
-  g_static_mutex_lock (&rate->mutex);
-  ret = rate->total / g_queue_get_length (&rate->queue);
-  g_static_mutex_unlock (&rate->mutex);
+  g_mutex_lock (&rate->mutex);
+  if (g_queue_get_length (&rate->queue))
+    ret = rate->total / g_queue_get_length (&rate->queue);
+  else
+    ret = G_MAXUINT;
+  g_mutex_unlock (&rate->mutex);
 
   return ret;
 }
