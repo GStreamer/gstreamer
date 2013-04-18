@@ -306,7 +306,8 @@ void
 gst_egl_adaptation_destroy_context (GstEglAdaptationContext * ctx)
 {
   if (ctx->eaglctx->eagl_context) {
-    [ctx->eaglctx->eagl_context dealloc];
+    /* Do not release/dealloc as it seems that EAGL expects to do all
+     * the cleanup by itself when a new context replaces the old one */
     ctx->eaglctx->eagl_context = NULL;
   }
 }
