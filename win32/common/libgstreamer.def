@@ -305,6 +305,7 @@ EXPORTS
 	gst_context_get_structure
 	gst_context_get_type
 	gst_context_new
+	gst_context_writable_structure
 	gst_control_binding_get_g_value_array
 	gst_control_binding_get_type
 	gst_control_binding_get_value

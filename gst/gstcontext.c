@@ -168,16 +168,37 @@ gst_context_new (void)
  * Access the structure of the context.
  *
  * Returns: (transfer none): The structure of the context. The structure is
- * still owned by the context, which means that you should not modify it unless
- * the context is writable, and should not free it and that the pointer becomes
- * invalid when you free the context.
+ * still owned by the context, which means that you should not modify it,
+ * free it and that the pointer becomes invalid when you free the context.
+ *
+ * Since: 1.2
+ */
+const GstStructure *
+gst_context_get_structure (GstContext * context)
+{
+  g_return_val_if_fail (GST_IS_CONTEXT (context), NULL);
+
+  return GST_CONTEXT_STRUCTURE (context);
+}
+
+/**
+ * gst_context_writable_structure:
+ * @context: The #GstContext.
+ *
+ * Get a writable version of the structure.
+ *
+ * Returns: The structure of the context. The structure is still
+ * owned by the event, which means that you should not free it and
+ * that the pointer becomes invalid when you free the event.
+ * This function checks if @context is writable.
  *
  * Since: 1.2
  */
 GstStructure *
-gst_context_get_structure (GstContext * context)
+gst_context_writable_structure (GstContext * context)
 {
   g_return_val_if_fail (GST_IS_CONTEXT (context), NULL);
+  g_return_val_if_fail (gst_context_is_writable (context), NULL);
 
   return GST_CONTEXT_STRUCTURE (context);
 }

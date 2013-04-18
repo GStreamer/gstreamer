@@ -25,19 +25,20 @@
 GST_START_TEST (test_basic)
 {
   GstContext *c1, *c2;
-  GstStructure *s1, *s2;
+  GstStructure *s1;
+  const GstStructure *s2;
 
   c1 = gst_context_new ();
   fail_unless (c1 != NULL);
   fail_unless (GST_IS_CONTEXT (c1));
-  s1 = (GstStructure *) gst_context_get_structure (c1);
+  s1 = gst_context_writable_structure (c1);
   fail_unless (s1 != NULL);
   gst_structure_set (s1, "foobar", G_TYPE_INT, 1, NULL);
 
   c2 = gst_context_copy (c1);
   fail_unless (c2 != NULL);
   fail_unless (GST_IS_CONTEXT (c2));
-  s2 = (GstStructure *) gst_context_get_structure (c2);
+  s2 = gst_context_get_structure (c2);
   fail_unless (s2 != NULL);
   fail_unless (gst_structure_is_equal (s1, s2));
 
@@ -79,7 +80,7 @@ gst_context_element_change_state (GstElement * element,
 
   if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
     GstContext *context;
-    GstStructure *s;
+    const GstStructure *s;
     GstMessage *msg;
     gboolean have_foobar = FALSE;
 
@@ -127,13 +128,14 @@ gst_context_element_change_state (GstElement * element,
       return GST_STATE_CHANGE_FAILURE;
 
     if (!have_foobar) {
+      GstStructure *s2;
       context = gst_element_get_context (element);
       if (context)
         context = gst_context_make_writable (context);
       else
         context = gst_context_new ();
-      s = gst_context_get_structure (context);
-      gst_structure_set (s, "foobar", G_TYPE_INT, 123, NULL);
+      s2 = gst_context_writable_structure (context);
+      gst_structure_set (s2, "foobar", G_TYPE_INT, 123, NULL);
       gst_element_set_context (element, context);
       msg =
           gst_message_new_have_context (GST_OBJECT (element),
@@ -171,7 +173,8 @@ GST_START_TEST (test_element_set_before_ready)
   GstBus *bus;
   GstElement *element;
   GstContext *context, *context2;
-  GstStructure *s, *s2;
+  GstStructure *s;
+  const GstStructure *s2;
   GstMessage *msg;
 
   element = g_object_new (gst_context_element_get_type (), NULL);
@@ -185,7 +188,7 @@ GST_START_TEST (test_element_set_before_ready)
   fail_if (gst_bus_pop (bus) != NULL);
 
   context = gst_context_new ();
-  s = gst_context_get_structure (context);
+  s = gst_context_writable_structure (context);
   gst_structure_set (s, "foobar", G_TYPE_INT, 123, NULL);
   gst_element_set_context (element, context);
   fail_unless (gst_element_set_state (element,
@@ -232,7 +235,7 @@ sync_handler (GstBus * bus, GstMessage * message, gpointer user_data)
       context = gst_context_make_writable (context);
     else
       context = gst_context_new ();
-    s = gst_context_get_structure (context);
+    s = gst_context_writable_structure (context);
     gst_structure_set (s, "foobar", G_TYPE_INT, 123, NULL);
     gst_element_set_context (element, context);
     gst_context_unref (context);
@@ -246,7 +249,7 @@ GST_START_TEST (test_element_set_from_need_context)
   GstBus *bus;
   GstElement *element;
   GstContext *context;
-  GstStructure *s;
+  const GstStructure *s;
   GstMessage *msg;
 
   element = g_object_new (gst_context_element_get_type (), NULL);
@@ -288,7 +291,7 @@ GST_START_TEST (test_element_create_self)
   GstBus *bus;
   GstElement *element;
   GstContext *context;
-  GstStructure *s;
+  const GstStructure *s;
   GstMessage *msg;
 
   element = g_object_new (gst_context_element_get_type (), NULL);
