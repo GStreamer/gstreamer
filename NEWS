@@ -1,9 +1,9 @@
-gst-vaapi NEWS -- summary of changes.  2013-04-DD
+gst-vaapi NEWS -- summary of changes.  2013-04-18
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
 
-Version 0.5.3 - DD.Apr.2013
+Version 0.5.3 - 18.Apr.2013
 * Add support for GStreamer 1.0.x API (+Sreerenj Balachandran)
 * Fix build on Fedora 17 (Víctor Manuel Jáquez)
 * Fix vaapidecode heuristics to detect decode timeouts
