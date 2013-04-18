@@ -11,6 +11,7 @@ gstcapsfeatures
 gstchildproxy
 gstclock
 gstcontroller
+gstcontext
 gstcpp
 gstdata
 gstdatetime
