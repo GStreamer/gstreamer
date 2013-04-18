@@ -123,18 +123,13 @@
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 #include <gst/video/videooverlay.h>
-#include <gst/egl/egl.h>
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include "gstegladaptation.h"
 
 #ifdef USE_EGL_RPI
 #include <bcm_host.h>
 #endif
 
-#include "gstegladaptation.h"
 #include "gsteglglessink.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_eglglessink_debug);

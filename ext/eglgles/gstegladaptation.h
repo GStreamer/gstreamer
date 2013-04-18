@@ -51,21 +51,36 @@
 #  include <config.h>
 #endif
 
+#include <gst/gst.h>
+#include <gst/video/gstvideopool.h>
+
+#if defined (USE_EGL_RPI) && defined(__GNUC__)
+#ifndef __VCCOREVER__
+#define __VCCOREVER__ 0x04000000
+#endif
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+#pragma GCC optimize ("gnu89-inline")
+#endif
+
 #define EGL_EGLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
 
-#include <gst/gst.h>
 #include <gst/egl/egl.h>
-#include <gst/video/gstvideopool.h>
 
 #ifdef HAVE_IOS
 #include <OpenGLES/ES2/gl.h>
-
 #else
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#endif
+
+#if defined (USE_EGL_RPI) && defined(__GNUC__)
+#pragma GCC reset_options
+#pragma GCC diagnostic pop
 #endif
 
 #define GST_EGLGLESSINK_EGL_MIN_VERSION 1
