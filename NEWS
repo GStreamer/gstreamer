@@ -5,7 +5,10 @@ Copyright (C) 2011 Collabora
 
 Version 0.5.3 - DD.Apr.2013
 * Add support for GStreamer 1.0.x API (+Sreerenj Balachandran)
+* Fix build on Fedora 17 (Víctor Manuel Jáquez)
+* Fix vaapidecode heuristics to detect decode timeouts
 * Fix fallback to sofware decoding if no hardware decoder is available
+* Fix regression in raw decoding mode whereby PTS or picture flags were lost
 
 Version 0.5.2 - 28.Mar.2013
 * Add support for video seek/reset (+Sreerenj Balachandran)
