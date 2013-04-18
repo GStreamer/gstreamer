@@ -119,7 +119,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_split_object)
 {
-  GESTrack *track;
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESClip *clip, *splitclip;
@@ -128,18 +127,14 @@ GST_START_TEST (test_split_object)
 
   ges_init ();
 
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
-  fail_unless (track != NULL);
-
   layer = ges_timeline_layer_new ();
   fail_unless (layer != NULL);
-  timeline = ges_timeline_new ();
+  timeline = ges_timeline_new_audio_video ();
   fail_unless (timeline != NULL);
   fail_unless (ges_timeline_add_layer (timeline, layer));
-  fail_unless (ges_timeline_add_track (timeline, track));
   ASSERT_OBJECT_REFCOUNT (timeline, "timeline", 1);
 
-  clip = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
+  clip = GES_CLIP (ges_test_clip_new ());
   fail_unless (clip != NULL);
   ASSERT_OBJECT_REFCOUNT (timeline, "timeline", 1);
 
@@ -152,12 +147,11 @@ GST_START_TEST (test_split_object)
   assert_equals_uint64 (_INPOINT (clip), 12);
 
   ges_timeline_layer_add_clip (layer, GES_CLIP (clip));
-  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 2);
   trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
   fail_unless (GES_TIMELINE_ELEMENT_PARENT (trackelement) ==
       GES_TIMELINE_ELEMENT (clip));
-  fail_unless (ges_track_element_get_track (trackelement) == track);
 
   /* Check that trackelement has the same properties */
   assert_equals_uint64 (_START (trackelement), 42);
@@ -180,9 +174,18 @@ GST_START_TEST (test_split_object)
   assert_equals_uint64 (_INPOINT (splitclip), 37);
 
   splittrackelements = GES_CONTAINER_CHILDREN (splitclip);
-  fail_unless_equals_int (g_list_length (splittrackelements), 1);
+  fail_unless_equals_int (g_list_length (splittrackelements), 2);
 
   splittrackelement = GES_TRACK_ELEMENT (splittrackelements->data);
+  fail_unless (GES_IS_TRACK_ELEMENT (splittrackelement));
+  assert_equals_uint64 (_START (splittrackelement), 67);
+  assert_equals_uint64 (_DURATION (splittrackelement), 25);
+  assert_equals_uint64 (_INPOINT (splittrackelement), 37);
+
+  fail_unless (splittrackelement != trackelement);
+  fail_unless (splitclip != clip);
+
+  splittrackelement = GES_TRACK_ELEMENT (splittrackelements->next->data);
   fail_unless (GES_IS_TRACK_ELEMENT (splittrackelement));
   assert_equals_uint64 (_START (splittrackelement), 67);
   assert_equals_uint64 (_DURATION (splittrackelement), 25);
