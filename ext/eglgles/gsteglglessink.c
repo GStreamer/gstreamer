@@ -2444,7 +2444,7 @@ eglglessink_plugin_init (GstPlugin * plugin)
   bcm_host_init ();
 #endif
 
-  return gst_element_register (plugin, "eglglessink", GST_RANK_PRIMARY,
+  return gst_element_register (plugin, "eglglessink", GST_RANK_SECONDARY,
       GST_TYPE_EGLGLESSINK);
 }
 
