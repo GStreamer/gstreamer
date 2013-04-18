@@ -1628,6 +1628,7 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
 
     if (self->eglimage) {
       /* Nothing to do here, we could however fall back to non-EGLImage in theory */
+      port = self->egl_out_port;
       err = OMX_ErrorNone;
       goto enable_port;
     } else {
