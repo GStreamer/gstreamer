@@ -213,9 +213,10 @@ gst_vaapidecode_decode_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
     GstFlowReturn ret;
     gint64 end_time;
 
-    if (!decode->render_time_base)
-        decode->render_time_base = g_get_monotonic_time();
-    end_time = decode->render_time_base;
+    if (decode->render_time_base)
+        end_time = decode->render_time_base;
+    else
+        end_time = g_get_monotonic_time();
     end_time += GST_TIME_AS_USECONDS(decode->last_buffer_time);
     end_time += G_TIME_SPAN_SECOND;
 
@@ -322,8 +323,22 @@ gst_vaapidecode_push_decoded_frame(GstVideoDecoder *vdec)
     if (ret != GST_FLOW_OK)
         goto error_commit_buffer;
 
-    if (GST_CLOCK_TIME_IS_VALID(out_frame->pts))
+    /* Estimate when this frame would no longer be needed for rendering */
+    if (GST_CLOCK_TIME_IS_VALID(out_frame->pts)) {
+        if (!decode->render_time_base)
+            decode->render_time_base = g_get_monotonic_time() -
+                GST_TIME_AS_USECONDS(out_frame->pts);
         decode->last_buffer_time = out_frame->pts;
+        if (GST_CLOCK_TIME_IS_VALID(out_frame->duration))
+            decode->last_buffer_time += out_frame->duration;
+        else
+            decode->last_buffer_time += GST_SECOND;
+    }
+    else {
+        decode->render_time_base = 0;
+        decode->last_buffer_time = 0;
+    }
+
     gst_video_codec_frame_unref(out_frame);
     return GST_FLOW_OK;
 
@@ -351,7 +366,8 @@ error_get_meta:
 #endif
 error_commit_buffer:
     {
-        GST_DEBUG("video sink rejected the video buffer (error %d)", ret);
+        if (ret != GST_FLOW_FLUSHING)
+            GST_ERROR("video sink rejected the video buffer (error %d)", ret);
         gst_video_codec_frame_unref(out_frame);
         return GST_FLOW_EOS;
     }
