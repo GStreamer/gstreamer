@@ -203,18 +203,6 @@ gst_auto_video_sink_factory_filter (GstPluginFeature * feature, gpointer data)
   return TRUE;
 }
 
-static gint
-gst_auto_video_sink_compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
-{
-  gint diff;
-
-  diff = gst_plugin_feature_get_rank (f2) - gst_plugin_feature_get_rank (f1);
-  if (diff != 0)
-    return diff;
-  return strcmp (gst_plugin_feature_get_name (f2),
-      gst_plugin_feature_get_name (f1));
-}
-
 static GstElement *
 gst_auto_video_sink_create_element_with_pretty_name (GstAutoVideoSink * sink,
     GstElementFactory * factory)
@@ -250,7 +238,8 @@ gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
 
   list = gst_registry_feature_filter (gst_registry_get (),
       (GstPluginFeatureFilter) gst_auto_video_sink_factory_filter, FALSE, sink);
-  list = g_list_sort (list, (GCompareFunc) gst_auto_video_sink_compare_ranks);
+  list =
+      g_list_sort (list, (GCompareFunc) gst_plugin_feature_rank_compare_func);
 
   GST_LOG_OBJECT (sink, "Trying to find usable video devices ...");
 

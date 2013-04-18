@@ -198,18 +198,6 @@ gst_auto_audio_src_factory_filter (GstPluginFeature * feature, gpointer data)
   return TRUE;
 }
 
-static gint
-gst_auto_audio_src_compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
-{
-  gint diff;
-
-  diff = gst_plugin_feature_get_rank (f2) - gst_plugin_feature_get_rank (f1);
-  if (diff != 0)
-    return diff;
-  return strcmp (gst_plugin_feature_get_name (f2),
-      gst_plugin_feature_get_name (f1));
-}
-
 static GstElement *
 gst_auto_audio_src_create_element_with_pretty_name (GstAutoAudioSrc * src,
     GstElementFactory * factory)
@@ -245,7 +233,8 @@ gst_auto_audio_src_find_best (GstAutoAudioSrc * src)
 
   list = gst_registry_feature_filter (gst_registry_get (),
       (GstPluginFeatureFilter) gst_auto_audio_src_factory_filter, FALSE, src);
-  list = g_list_sort (list, (GCompareFunc) gst_auto_audio_src_compare_ranks);
+  list =
+      g_list_sort (list, (GCompareFunc) gst_plugin_feature_rank_compare_func);
 
   /* We don't treat sound server sources special. Our policy is that sound
    * server sources that have a rank must not auto-spawn a daemon under any
