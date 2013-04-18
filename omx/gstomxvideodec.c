@@ -1338,7 +1338,7 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
 
       buffers = g_list_append (buffers, buffer);
       gst_egl_image_memory_set_orientation (mem,
-          GST_EGL_IMAGE_ORIENTATION_X_NORMAL_Y_FLIP);
+          GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_FLIP);
       images = g_list_append (images, gst_egl_image_memory_get_image (mem));
       if (!display)
         display = gst_egl_image_memory_get_display (mem);
