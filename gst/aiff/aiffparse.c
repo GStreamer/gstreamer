@@ -70,23 +70,26 @@ GST_DEBUG_CATEGORY (aiffparse_debug);
 
 static void gst_aiff_parse_dispose (GObject * object);
 
-static gboolean gst_aiff_parse_sink_activate (GstPad * sinkpad);
-static gboolean gst_aiff_parse_sink_activate_pull (GstPad * sinkpad,
-    gboolean active);
+static gboolean gst_aiff_parse_sink_activate (GstPad * sinkpad,
+    GstObject * parent);
+static gboolean gst_aiff_parse_sink_activate_mode (GstPad * sinkpad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static gboolean gst_aiff_parse_send_event (GstElement * element,
     GstEvent * event);
 static GstStateChangeReturn gst_aiff_parse_change_state (GstElement * element,
     GstStateChange transition);
 
-static const GstQueryType *gst_aiff_parse_get_query_types (GstPad * pad);
-static gboolean gst_aiff_parse_pad_query (GstPad * pad, GstQuery * query);
+static gboolean gst_aiff_parse_pad_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_aiff_parse_pad_convert (GstPad * pad,
     GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
-static GstFlowReturn gst_aiff_parse_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_aiff_parse_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 static void gst_aiff_parse_loop (GstPad * pad);
-static gboolean gst_aiff_parse_srcpad_event (GstPad * pad, GstEvent * event);
+static gboolean gst_aiff_parse_srcpad_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static GstStaticPadTemplate sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -96,30 +99,15 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate src_template_factory =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS ";"
-        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE ("{ S8, S16BE, S16LE, S24BE, S24LE, "
+            "S32LE, S32BE, F32BE, F64BE }"))
     );
 
-GST_BOILERPLATE (GstAiffParse, gst_aiff_parse, GstElement, GST_TYPE_ELEMENT);
-
-static void
-gst_aiff_parse_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template_factory));
-
-  gst_element_class_set_static_metadata (element_class,
-      "AIFF audio demuxer", "Codec/Demuxer/Audio",
-      "Parse a .aiff file into raw audio",
-      "Pioneers of the Inevitable <songbird@songbirdnest.com>");
-}
+#define gst_aiff_parse_parent_class parent_class
+G_DEFINE_TYPE (GstAiffParse, gst_aiff_parse, GST_TYPE_ELEMENT);
 
 static void
 gst_aiff_parse_class_init (GstAiffParseClass * klass)
@@ -130,9 +118,17 @@ gst_aiff_parse_class_init (GstAiffParseClass * klass)
   gstelement_class = (GstElementClass *) klass;
   object_class = (GObjectClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   object_class->dispose = gst_aiff_parse_dispose;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template_factory));
+
+  gst_element_class_set_static_metadata (gstelement_class,
+      "AIFF audio demuxer", "Codec/Demuxer/Audio",
+      "Parse a .aiff file into raw audio",
+      "Pioneers of the Inevitable <songbird@songbirdnest.com>");
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_aiff_parse_change_state);
@@ -158,10 +154,6 @@ gst_aiff_parse_reset (GstAiffParse * aiff)
   aiff->duration = 0;
   aiff->got_comm = FALSE;
 
-  if (aiff->caps) {
-    gst_caps_unref (aiff->caps);
-    aiff->caps = NULL;
-  }
   if (aiff->seek_event)
     gst_event_unref (aiff->seek_event);
   aiff->seek_event = NULL;
@@ -188,7 +180,7 @@ gst_aiff_parse_dispose (GObject * object)
 }
 
 static void
-gst_aiff_parse_init (GstAiffParse * aiffparse, GstAiffParseClass * g_class)
+gst_aiff_parse_init (GstAiffParse * aiffparse)
 {
   gst_aiff_parse_reset (aiffparse);
 
@@ -197,8 +189,8 @@ gst_aiff_parse_init (GstAiffParse * aiffparse, GstAiffParseClass * g_class)
       gst_pad_new_from_static_template (&sink_template_factory, "sink");
   gst_pad_set_activate_function (aiffparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_aiff_parse_sink_activate));
-  gst_pad_set_activatepull_function (aiffparse->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_aiff_parse_sink_activate_pull));
+  gst_pad_set_activatemode_function (aiffparse->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_aiff_parse_sink_activate_mode));
   gst_pad_set_chain_function (aiffparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_aiff_parse_chain));
   gst_element_add_pad (GST_ELEMENT_CAST (aiffparse), aiffparse->sinkpad);
@@ -207,8 +199,6 @@ gst_aiff_parse_init (GstAiffParse * aiffparse, GstAiffParseClass * g_class)
   aiffparse->srcpad =
       gst_pad_new_from_static_template (&src_template_factory, "src");
   gst_pad_use_fixed_caps (aiffparse->srcpad);
-  gst_pad_set_query_type_function (aiffparse->srcpad,
-      GST_DEBUG_FUNCPTR (gst_aiff_parse_get_query_types));
   gst_pad_set_query_function (aiffparse->srcpad,
       GST_DEBUG_FUNCPTR (gst_aiff_parse_pad_query));
   gst_pad_set_event_function (aiffparse->srcpad,
@@ -219,18 +209,23 @@ gst_aiff_parse_init (GstAiffParse * aiffparse, GstAiffParseClass * g_class)
 static gboolean
 gst_aiff_parse_parse_file_header (GstAiffParse * aiff, GstBuffer * buf)
 {
-  guint8 *data;
   guint32 header, type = 0;
+  GstMapInfo info;
 
-  if (GST_BUFFER_SIZE (buf) < 12) {
-    GST_WARNING_OBJECT (aiff, "Buffer too short");
+  if (!gst_buffer_map (buf, &info, GST_MAP_READ)) {
+    GST_WARNING_OBJECT (aiff, "Could not map buffer");
     goto not_aiff;
   }
 
-  data = GST_BUFFER_DATA (buf);
+  if (info.size < 12) {
+    GST_WARNING_OBJECT (aiff, "Buffer too short");
+    gst_buffer_unmap (buf, &info);
+    goto not_aiff;
+  }
 
-  header = GST_READ_UINT32_LE (data);
-  type = GST_READ_UINT32_LE (data + 8);
+  header = GST_READ_UINT32_LE (info.data);
+  type = GST_READ_UINT32_LE (info.data + 8);
+  gst_buffer_unmap (buf, &info);
 
   if (header != GST_MAKE_FOURCC ('F', 'O', 'R', 'M'))
     goto not_aiff;
@@ -286,14 +281,14 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event)
 {
   gboolean res;
   gdouble rate;
-  GstFormat format, bformat;
+  GstFormat format;
   GstSeekFlags flags;
   GstSeekType cur_type = GST_SEEK_TYPE_NONE, stop_type;
   gint64 cur, stop, upstream_size;
   gboolean flush;
   gboolean update;
   GstSegment seeksegment = { 0, };
-  gint64 last_stop;
+  gint64 position;
 
   if (event) {
     GST_DEBUG_OBJECT (aiff, "doing seek with event");
@@ -313,11 +308,11 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event)
       if (cur_type != GST_SEEK_TYPE_NONE)
         res =
             gst_pad_query_convert (aiff->srcpad, format, cur,
-            &aiff->segment.format, &cur);
+            aiff->segment.format, &cur);
       if (res && stop_type != GST_SEEK_TYPE_NONE)
         res =
             gst_pad_query_convert (aiff->srcpad, format, stop,
-            &aiff->segment.format, &stop);
+            aiff->segment.format, &stop);
       if (!res)
         goto no_format;
 
@@ -336,7 +331,7 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event)
 
   /* now we need to make sure the streaming thread is stopped. We do this by
    * either sending a FLUSH_START event downstream which will cause the
-   * streaming thread to stop with a WRONG_STATE.
+   * streaming thread to stop with a FLUSHING.
    * For a non-flushing seek we simply pause the task, which will happen as soon
    * as it completes one iteration (and thus might block when the sink is
    * blocking in preroll). */
@@ -352,9 +347,9 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event)
   GST_PAD_STREAM_LOCK (aiff->sinkpad);
 
   /* save current position */
-  last_stop = aiff->segment.last_stop;
+  position = aiff->segment.position;
 
-  GST_DEBUG_OBJECT (aiff, "stopped streaming at %" G_GINT64_FORMAT, last_stop);
+  GST_DEBUG_OBJECT (aiff, "stopped streaming at %" G_GINT64_FORMAT, position);
 
   /* copy segment, we need this because we still need the old
    * segment when we close the current segment. */
@@ -364,7 +359,7 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event)
    * right values in the segment to perform the seek */
   if (event) {
     GST_DEBUG_OBJECT (aiff, "configuring seek");
-    gst_segment_set_seek (&seeksegment, rate, format, flags,
+    gst_segment_do_seek (&seeksegment, rate, format, flags,
         cur_type, cur, stop_type, stop, &update);
   }
 
@@ -376,14 +371,14 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event)
   GST_DEBUG_OBJECT (aiff, "cur_type =%d", cur_type);
   if ((cur_type != GST_SEEK_TYPE_NONE)) {
     /* bring offset to bytes, if the bps is 0, we have the segment in BYTES and
-     * we can just copy the last_stop. If not, we use the bps to convert TIME to
+     * we can just copy the position. If not, we use the bps to convert TIME to
      * bytes. */
     if (aiff->bps > 0)
       aiff->offset =
-          gst_util_uint64_scale_ceil (seeksegment.last_stop,
+          gst_util_uint64_scale_ceil (seeksegment.position,
           (guint64) aiff->bps, GST_SECOND);
     else
-      aiff->offset = seeksegment.last_stop;
+      aiff->offset = seeksegment.position;
     GST_LOG_OBJECT (aiff, "offset=%" G_GUINT64_FORMAT, aiff->offset);
     aiff->offset -= (aiff->offset % aiff->bytes_per_sample);
     GST_LOG_OBJECT (aiff, "offset=%" G_GUINT64_FORMAT, aiff->offset);
@@ -412,8 +407,8 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event)
 
   /* make sure filesize is not exceeded due to rounding errors or so,
    * same precaution as in _stream_headers */
-  bformat = GST_FORMAT_BYTES;
-  if (gst_pad_query_peer_duration (aiff->sinkpad, &bformat, &upstream_size))
+  if (gst_pad_peer_query_duration (aiff->sinkpad, GST_FORMAT_BYTES,
+          &upstream_size))
     aiff->end_offset = MIN (aiff->end_offset, upstream_size);
 
   /* this is the range of bytes we will use for playback */
@@ -430,22 +425,7 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event)
   if (flush) {
     /* if we sent a FLUSH_START, we now send a FLUSH_STOP */
     GST_DEBUG_OBJECT (aiff, "sending flush stop");
-    gst_pad_push_event (aiff->srcpad, gst_event_new_flush_stop ());
-  } else if (aiff->segment_running) {
-    /* we are running the current segment and doing a non-flushing seek,
-     * close the segment first based on the previous last_stop. */
-    GST_DEBUG_OBJECT (aiff, "closing running segment %" G_GINT64_FORMAT
-        " to %" G_GINT64_FORMAT, aiff->segment.accum, aiff->segment.last_stop);
-
-    /* queue the segment for sending in the stream thread */
-    if (aiff->close_segment)
-      gst_event_unref (aiff->close_segment);
-    aiff->close_segment = gst_event_new_new_segment (TRUE,
-        aiff->segment.rate, aiff->segment.format,
-        aiff->segment.accum, aiff->segment.last_stop, aiff->segment.accum);
-
-    /* keep track of our last_stop */
-    seeksegment.accum = aiff->segment.last_stop;
+    gst_pad_push_event (aiff->srcpad, gst_event_new_flush_stop (TRUE));
   }
 
   /* now we did the seek and can activate the new segment values */
@@ -455,23 +435,20 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event)
   if (aiff->segment.flags & GST_SEEK_FLAG_SEGMENT) {
     gst_element_post_message (GST_ELEMENT_CAST (aiff),
         gst_message_new_segment_start (GST_OBJECT_CAST (aiff),
-            aiff->segment.format, aiff->segment.last_stop));
+            aiff->segment.format, aiff->segment.position));
   }
 
   /* now create the newsegment */
   GST_DEBUG_OBJECT (aiff, "Creating newsegment from %" G_GINT64_FORMAT
-      " to %" G_GINT64_FORMAT, aiff->segment.last_stop, stop);
+      " to %" G_GINT64_FORMAT, aiff->segment.position, stop);
 
   /* store the newsegment event so it can be sent from the streaming thread. */
   if (aiff->start_segment)
     gst_event_unref (aiff->start_segment);
-  aiff->start_segment =
-      gst_event_new_new_segment (FALSE, aiff->segment.rate,
-      aiff->segment.format, aiff->segment.last_stop, stop,
-      aiff->segment.last_stop);
+  aiff->start_segment = gst_event_new_segment (&aiff->segment);
 
   /* mark discont if we are going to stream from another position. */
-  if (last_stop != aiff->segment.last_stop) {
+  if (position != aiff->segment.position) {
     GST_DEBUG_OBJECT (aiff, "mark DISCONT, we did a seek to another position");
     aiff->discont = TRUE;
   }
@@ -519,9 +496,10 @@ gst_aiff_parse_peek_chunk_info (GstAiffParse * aiff, guint32 * tag,
   if (gst_adapter_available (aiff->adapter) < 8)
     return FALSE;
 
-  data = gst_adapter_peek (aiff->adapter, 8);
+  data = gst_adapter_map (aiff->adapter, 8);
   *tag = GST_READ_UINT32_LE (data);
   *size = GST_READ_UINT32_BE (data + 4);
+  gst_adapter_unmap (aiff->adapter);
 
   GST_DEBUG ("Next chunk size is %d bytes, type %" GST_FOURCC_FORMAT, *size,
       GST_FOURCC_ARGS (*tag));
@@ -567,7 +545,7 @@ gst_aiff_parse_peek_data (GstAiffParse * aiff, guint32 size,
   if (gst_adapter_available (aiff->adapter) < size)
     return FALSE;
 
-  *data = gst_adapter_peek (aiff->adapter, size);
+  *data = gst_adapter_map (aiff->adapter, size);
   return TRUE;
 }
 
@@ -646,31 +624,34 @@ gst_aiff_parse_read_IEEE80 (guint8 * buf)
 static gboolean
 gst_aiff_parse_parse_comm (GstAiffParse * aiff, GstBuffer * buf)
 {
-  guint8 *data;
   int size;
+  GstMapInfo info;
+  guint32 fourcc;
+
+  if (!gst_buffer_map (buf, &info, GST_MAP_READ)) {
+    GST_WARNING_OBJECT (aiff, "Can't map buffer");
+    gst_buffer_unref (buf);
+    return FALSE;
+  }
 
   if (aiff->is_aifc)
     size = 22;
   else
     size = 18;
 
-  if (GST_BUFFER_SIZE (buf) < size) {
-    GST_WARNING_OBJECT (aiff, "COMM chunk too short, cannot parse header");
-    return FALSE;
-  }
+  if (info.size < size)
+    goto too_small;
 
-  data = GST_BUFFER_DATA (buf);
-
-  aiff->channels = GST_READ_UINT16_BE (data);
-  aiff->total_frames = GST_READ_UINT32_BE (data + 2);
-  aiff->depth = GST_READ_UINT16_BE (data + 6);
+  aiff->channels = GST_READ_UINT16_BE (info.data);
+  aiff->total_frames = GST_READ_UINT32_BE (info.data + 2);
+  aiff->depth = GST_READ_UINT16_BE (info.data + 6);
   aiff->width = GST_ROUND_UP_8 (aiff->depth);
-  aiff->rate = (int) gst_aiff_parse_read_IEEE80 (data + 8);
+  aiff->rate = (int) gst_aiff_parse_read_IEEE80 (info.data + 8);
 
   aiff->floating_point = FALSE;
 
   if (aiff->is_aifc) {
-    guint32 fourcc = GST_READ_UINT32_LE (data + 18);
+    fourcc = GST_READ_UINT32_LE (info.data + 18);
 
     /* We only support the 'trivial' uncompressed AIFC, but it can be
      * either big or little endian */
@@ -693,16 +674,32 @@ gst_aiff_parse_parse_comm (GstAiffParse * aiff, GstBuffer * buf)
         aiff->endianness = G_BIG_ENDIAN;
         break;
       default:
-        GST_WARNING_OBJECT (aiff, "Unsupported compression in AIFC "
-            "file: %" GST_FOURCC_FORMAT,
-            GST_FOURCC_ARGS (GST_READ_UINT32_LE (data + 18)));
-        return FALSE;
-
+        goto unknown_compression;
     }
   } else
     aiff->endianness = G_BIG_ENDIAN;
 
+  gst_buffer_unmap (buf, &info);
+  gst_buffer_unref (buf);
+
   return TRUE;
+
+  /* ERRORS */
+too_small:
+  {
+    GST_WARNING_OBJECT (aiff, "COMM chunk too short, cannot parse header");
+    gst_buffer_unmap (buf, &info);
+    gst_buffer_unref (buf);
+    return FALSE;
+  }
+unknown_compression:
+  {
+    GST_WARNING_OBJECT (aiff, "Unsupported compression in AIFC "
+        "file: %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+    gst_buffer_unmap (buf, &info);
+    gst_buffer_unref (buf);
+    return FALSE;
+  }
 }
 
 static GstFlowReturn
@@ -712,19 +709,23 @@ gst_aiff_parse_read_chunk (GstAiffParse * aiff, guint64 * offset, guint32 * tag,
   guint size;
   GstFlowReturn res;
   GstBuffer *buf;
+  GstMapInfo info;
 
   if ((res =
           gst_pad_pull_range (aiff->sinkpad, *offset, 8, &buf)) != GST_FLOW_OK)
     return res;
 
-  *tag = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
-  size = GST_READ_UINT32_BE (GST_BUFFER_DATA (buf) + 4);
+  gst_buffer_map (buf, &info, GST_MAP_READ);
+  *tag = GST_READ_UINT32_LE (info.data);
+  size = GST_READ_UINT32_BE (info.data + 4);
+  gst_buffer_unmap (buf, &info);
+  gst_buffer_unref (buf);
 
   if ((res =
           gst_pad_pull_range (aiff->sinkpad, (*offset) + 8, size,
               &buf)) != GST_FLOW_OK)
     return res;
-  else if (GST_BUFFER_SIZE (buf) < size)
+  else if (gst_buffer_get_size (buf) < size)
     goto too_small;
 
   *data = buf;
@@ -735,11 +736,12 @@ gst_aiff_parse_read_chunk (GstAiffParse * aiff, guint64 * offset, guint32 * tag,
   /* ERRORS */
 too_small:
   {
-    /* short read, we return UNEXPECTED to mark the EOS case */
-    GST_DEBUG_OBJECT (aiff, "not enough data (available=%u, needed=%u)",
-        GST_BUFFER_SIZE (buf), size);
+    /* short read, we return EOS to mark the EOS case */
+    GST_DEBUG_OBJECT (aiff,
+        "not enough data (available=%" G_GSIZE_FORMAT ", needed=%u)",
+        gst_buffer_get_size (buf), size);
     gst_buffer_unref (buf);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 
 }
@@ -747,24 +749,46 @@ too_small:
 static GstCaps *
 gst_aiff_parse_create_caps (GstAiffParse * aiff)
 {
-  GstCaps *caps;
+  GstCaps *caps = NULL;
+  const gchar *format = NULL;
 
   if (aiff->floating_point) {
-    caps = gst_caps_new_simple ("audio/x-raw-float",
-        "width", G_TYPE_INT, aiff->width,
-        "channels", G_TYPE_INT, aiff->channels,
-        "endianness", G_TYPE_INT, aiff->endianness,
-        "rate", G_TYPE_INT, aiff->rate, NULL);
+    if (aiff->endianness == G_BIG_ENDIAN) {
+      if (aiff->width == 32)
+        format = "F32BE";
+      else if (aiff->width == 32)
+        format = "F64BE";
+    }
   } else {
-    caps = gst_caps_new_simple ("audio/x-raw-int",
-        "width", G_TYPE_INT, aiff->width,
-        "depth", G_TYPE_INT, aiff->depth,
+    if (aiff->endianness == G_BIG_ENDIAN) {
+      if (aiff->width == 8)
+        format = "S8";
+      else if (aiff->width == 16)
+        format = "S16BE";
+      else if (aiff->width == 24)
+        format = "S24BE";
+      else if (aiff->width == 32)
+        format = "S32BE";
+    } else {
+      if (aiff->width == 8)
+        format = "S8";
+      else if (aiff->width == 16)
+        format = "S16LE";
+      else if (aiff->width == 24)
+        format = "S24LE";
+      else if (aiff->width == 32)
+        format = "S32LE";
+    }
+  }
+  if (format) {
+    caps = gst_caps_new_simple ("audio/x-raw",
+        "format", G_TYPE_STRING, format,
         "channels", G_TYPE_INT, aiff->channels,
-        "endianness", G_TYPE_INT, aiff->endianness,
-        "rate", G_TYPE_INT, aiff->rate, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+        "rate", G_TYPE_INT, aiff->rate, NULL);
   }
 
   GST_DEBUG_OBJECT (aiff, "Created caps: %" GST_PTR_FORMAT, caps);
+
   return caps;
 }
 
@@ -777,11 +801,9 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
   gboolean gotdata = FALSE;
   gboolean done = FALSE;
   GstEvent **event_p;
-  GstFormat bformat;
   gint64 upstream_size = 0;
 
-  bformat = GST_FORMAT_BYTES;
-  gst_pad_query_peer_duration (aiff->sinkpad, &bformat, &upstream_size);
+  gst_pad_peer_query_duration (aiff->sinkpad, GST_FORMAT_BYTES, &upstream_size);
   GST_DEBUG_OBJECT (aiff, "upstream size %" G_GUINT64_FORMAT, upstream_size);
 
   /* loop headers until we get data */
@@ -790,12 +812,17 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
       if (!gst_aiff_parse_peek_chunk_info (aiff, &tag, &size))
         return GST_FLOW_OK;
     } else {
+      GstMapInfo info;
+
       if ((res =
               gst_pad_pull_range (aiff->sinkpad, aiff->offset, 8,
                   &buf)) != GST_FLOW_OK)
         goto header_read_error;
-      tag = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
-      size = GST_READ_UINT32_BE (GST_BUFFER_DATA (buf) + 4);
+
+      gst_buffer_map (buf, &info, GST_MAP_READ);
+      tag = GST_READ_UINT32_LE (info.data);
+      size = GST_READ_UINT32_BE (info.data + 4);
+      gst_buffer_unmap (buf, &info);
     }
 
     GST_INFO_OBJECT (aiff,
@@ -806,6 +833,8 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
      */
     switch (tag) {
       case GST_MAKE_FOURCC ('C', 'O', 'M', 'M'):{
+        GstCaps *caps;
+
         if (aiff->streaming) {
           if (!gst_aiff_parse_peek_chunk (aiff, &tag, &size))
             return GST_FLOW_OK;
@@ -820,12 +849,8 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
             return res;
         }
 
-        if (!gst_aiff_parse_parse_comm (aiff, buf)) {
-          gst_buffer_unref (buf);
+        if (!gst_aiff_parse_parse_comm (aiff, buf))
           goto parse_header_error;
-        }
-
-        gst_buffer_unref (buf);
 
         /* do sanity checks of header fields */
         if (aiff->channels == 0)
@@ -835,11 +860,12 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
 
         GST_DEBUG_OBJECT (aiff, "creating the caps");
 
-        aiff->caps = gst_aiff_parse_create_caps (aiff);
-        if (!aiff->caps)
+        caps = gst_aiff_parse_create_caps (aiff);
+        if (caps == NULL)
           goto unknown_format;
 
-        gst_pad_set_caps (aiff->srcpad, aiff->caps);
+        gst_pad_push_event (aiff->srcpad, gst_event_new_caps (caps));
+        gst_caps_unref (caps);
 
         aiff->bytes_per_sample = aiff->channels * aiff->width / 8;
         aiff->bps = aiff->bytes_per_sample * aiff->rate;
@@ -851,37 +877,42 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
         break;
       }
       case GST_MAKE_FOURCC ('S', 'S', 'N', 'D'):{
-        GstBuffer *ssndbuf = NULL;
-        const guint8 *ssnddata = NULL;
         guint32 datasize;
 
         GST_DEBUG_OBJECT (aiff, "Got 'SSND' TAG, size : %d", size);
 
         /* Now, read the 8-byte header in the SSND chunk */
         if (aiff->streaming) {
+          const guint8 *ssnddata = NULL;
+
           if (!gst_aiff_parse_peek_data (aiff, 16, &ssnddata))
             return GST_FLOW_OK;
+
+          aiff->ssnd_offset = GST_READ_UINT32_BE (ssnddata + 8);
+          aiff->ssnd_blocksize = GST_READ_UINT32_BE (ssnddata + 12);
+          gst_adapter_unmap (aiff->adapter);
+          gst_adapter_flush (aiff->adapter, 16);
         } else {
+          GstBuffer *ssndbuf = NULL;
+          GstMapInfo info;
+
           gst_buffer_unref (buf);
           if ((res =
                   gst_pad_pull_range (aiff->sinkpad, aiff->offset, 16,
                       &ssndbuf)) != GST_FLOW_OK)
             goto header_read_error;
-          ssnddata = GST_BUFFER_DATA (ssndbuf);
-        }
 
-        aiff->ssnd_offset = GST_READ_UINT32_BE (ssnddata + 8);
-        aiff->ssnd_blocksize = GST_READ_UINT32_BE (ssnddata + 12);
-
-        gotdata = TRUE;
-        if (aiff->streaming) {
-          gst_adapter_flush (aiff->adapter, 16);
-        } else {
+          gst_buffer_map (ssndbuf, &info, GST_MAP_READ);
+          aiff->ssnd_offset = GST_READ_UINT32_BE (info.data + 8);
+          aiff->ssnd_blocksize = GST_READ_UINT32_BE (info.data + 12);
+          gst_buffer_unmap (ssndbuf, &info);
           gst_buffer_unref (ssndbuf);
         }
+
+        gotdata = TRUE;
+
         /* 8 byte chunk header, 8 byte SSND header */
         aiff->offset += 16;
-
         datasize = size - 16;
 
         aiff->datastart = aiff->offset + aiff->ssnd_offset;
@@ -920,7 +951,8 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
             return res;
         }
 
-        GST_LOG_OBJECT (aiff, "ID3 chunk of size %u", GST_BUFFER_SIZE (buf));
+        GST_LOG_OBJECT (aiff, "ID3 chunk of size %" G_GSIZE_FORMAT,
+            gst_buffer_get_size (buf));
 
         tags = gst_tag_list_from_id3v2_tag (buf);
         gst_buffer_unref (buf);
@@ -962,11 +994,11 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
 
   if (gst_aiff_parse_calculate_duration (aiff)) {
     gst_segment_init (&aiff->segment, GST_FORMAT_TIME);
-    gst_segment_set_duration (&aiff->segment, GST_FORMAT_TIME, aiff->duration);
+    aiff->segment.duration = aiff->duration;
   } else {
     /* no bitrate, let downstream peer do the math, we'll feed it bytes. */
     gst_segment_init (&aiff->segment, GST_FORMAT_BYTES);
-    gst_segment_set_duration (&aiff->segment, GST_FORMAT_BYTES, aiff->datasize);
+    aiff->segment.duration = aiff->datasize;
   }
 
   /* now we have all the info to perform a pending seek if any, if no
@@ -1127,7 +1159,7 @@ iterate_adapter:
    * amounts of data regardless of the playback rate */
   desired =
       MIN (gst_guint64_to_gdouble (aiff->dataleft),
-      MAX_BUFFER_SIZE * aiff->segment.abs_rate);
+      MAX_BUFFER_SIZE * ABS (aiff->segment.rate));
 
   if (desired >= aiff->bytes_per_sample && aiff->bytes_per_sample > 0)
     desired -= (desired % aiff->bytes_per_sample);
@@ -1161,12 +1193,11 @@ iterate_adapter:
     aiff->start_segment = NULL;
   }
   if (G_UNLIKELY (aiff->tags != NULL)) {
-    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (aiff), aiff->srcpad,
-        aiff->tags);
+    gst_pad_push_event (aiff->srcpad, gst_event_new_tag (aiff->tags));
     aiff->tags = NULL;
   }
 
-  obtained = GST_BUFFER_SIZE (buf);
+  obtained = gst_buffer_get_size (buf);
 
   /* our positions in bytes */
   pos = aiff->offset - aiff->datastart;
@@ -1185,7 +1216,7 @@ iterate_adapter:
     duration = next_timestamp - timestamp;
 
     /* update current running segment position */
-    gst_segment_set_last_stop (&aiff->segment, GST_FORMAT_TIME, next_timestamp);
+    aiff->segment.position = next_timestamp;
   } else {
     /* no bitrate, all we know is that the first sample has timestamp 0, all
      * other positions and durations have unknown timestamp. */
@@ -1195,7 +1226,7 @@ iterate_adapter:
       timestamp = GST_CLOCK_TIME_NONE;
     duration = GST_CLOCK_TIME_NONE;
     /* update current running segment position with byte offset */
-    gst_segment_set_last_stop (&aiff->segment, GST_FORMAT_BYTES, nextpos);
+    aiff->segment.position = nextpos;
   }
   if (aiff->discont) {
     GST_DEBUG_OBJECT (aiff, "marking DISCONT");
@@ -1205,12 +1236,11 @@ iterate_adapter:
 
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = duration;
-  gst_buffer_set_caps (buf, aiff->caps);
 
   GST_LOG_OBJECT (aiff,
       "Got buffer. timestamp:%" GST_TIME_FORMAT " , duration:%" GST_TIME_FORMAT
-      ", size:%u", GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration),
-      GST_BUFFER_SIZE (buf));
+      ", size:%" G_GUINT64_FORMAT, GST_TIME_ARGS (timestamp),
+      GST_TIME_ARGS (duration), obtained);
 
   if ((res = gst_pad_push (aiff->srcpad, buf)) != GST_FLOW_OK)
     goto push_error;
@@ -1236,12 +1266,12 @@ iterate_adapter:
 found_eos:
   {
     GST_DEBUG_OBJECT (aiff, "found EOS");
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 pull_error:
   {
     /* check if we got EOS */
-    if (res == GST_FLOW_UNEXPECTED)
+    if (res == GST_FLOW_EOS)
       goto found_eos;
 
     GST_WARNING_OBJECT (aiff,
@@ -1303,7 +1333,7 @@ pause:
     aiff->segment_running = FALSE;
     gst_pad_pause_task (pad);
 
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       /* perform EOS logic */
       if (aiff->segment.flags & GST_SEEK_FLAG_SEGMENT) {
         GstClockTime stop;
@@ -1315,11 +1345,11 @@ pause:
             gst_message_new_segment_done (GST_OBJECT_CAST (aiff),
                 aiff->segment.format, stop));
         gst_pad_push_event (aiff->srcpad,
-            gst_evnet_new_segment_done (aiff->segment.format, stop));
+            gst_event_new_segment_done (aiff->segment.format, stop));
       } else {
         gst_pad_push_event (aiff->srcpad, gst_event_new_eos ());
       }
-    } else if (ret < GST_FLOW_UNEXPECTED || ret == GST_FLOW_NOT_LINKED) {
+    } else if (ret < GST_FLOW_EOS || ret == GST_FLOW_NOT_LINKED) {
       /* for fatal errors we post an error message, post the error
        * first so the app knows about the error first. */
       GST_ELEMENT_ERROR (aiff, STREAM, FAILED,
@@ -1332,12 +1362,13 @@ pause:
 }
 
 static GstFlowReturn
-gst_aiff_parse_chain (GstPad * pad, GstBuffer * buf)
+gst_aiff_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret;
-  GstAiffParse *aiff = GST_AIFF_PARSE (GST_PAD_PARENT (pad));
+  GstAiffParse *aiff = GST_AIFF_PARSE (parent);
 
-  GST_LOG_OBJECT (aiff, "adapter_push %u bytes", GST_BUFFER_SIZE (buf));
+  GST_LOG_OBJECT (aiff, "adapter_push %" G_GSIZE_FORMAT " bytes",
+      gst_buffer_get_size (buf));
 
   gst_adapter_push (aiff->adapter, buf);
 
@@ -1459,29 +1490,15 @@ done:
 
 }
 
-static const GstQueryType *
-gst_aiff_parse_get_query_types (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_DURATION,
-    GST_QUERY_CONVERT,
-    GST_QUERY_SEEKING,
-    0
-  };
-
-  return types;
-}
-
 /* handle queries for location and length in requested format */
 static gboolean
-gst_aiff_parse_pad_query (GstPad * pad, GstQuery * query)
+gst_aiff_parse_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = TRUE;
-  GstAiffParse *aiff = GST_AIFF_PARSE (gst_pad_get_parent (pad));
+  GstAiffParse *aiff = GST_AIFF_PARSE (parent);
 
   /* only if we know */
   if (aiff->state != AIFF_PARSE_DATA) {
-    gst_object_unref (aiff);
     return FALSE;
   }
 
@@ -1538,17 +1555,16 @@ gst_aiff_parse_pad_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-  gst_object_unref (aiff);
   return res;
 }
 
 static gboolean
-gst_aiff_parse_srcpad_event (GstPad * pad, GstEvent * event)
+gst_aiff_parse_srcpad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstAiffParse *aiffparse = GST_AIFF_PARSE (gst_pad_get_parent (pad));
+  GstAiffParse *aiffparse = GST_AIFF_PARSE (parent);
   gboolean res = FALSE;
 
   GST_DEBUG_OBJECT (aiffparse, "%s event", GST_EVENT_TYPE_NAME (event));
@@ -1565,48 +1581,74 @@ gst_aiff_parse_srcpad_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (aiffparse->sinkpad, event);
       break;
   }
-  gst_object_unref (aiffparse);
   return res;
 }
 
 static gboolean
-gst_aiff_parse_sink_activate (GstPad * sinkpad)
+gst_aiff_parse_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
-  GstAiffParse *aiff = GST_AIFF_PARSE (gst_pad_get_parent (sinkpad));
+  GstQuery *query;
+  gboolean pull_mode;
+
+  query = gst_query_new_scheduling ();
+
+  if (!gst_pad_peer_query (sinkpad, query)) {
+    gst_query_unref (query);
+    goto activate_push;
+  }
+
+  pull_mode = gst_query_has_scheduling_mode_with_flags (query,
+      GST_PAD_MODE_PULL, GST_SCHEDULING_FLAG_SEEKABLE);
+  gst_query_unref (query);
+
+  if (!pull_mode)
+    goto activate_push;
+
+  GST_DEBUG_OBJECT (sinkpad, "going to pull mode");
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
+
+activate_push:
+  {
+    GST_DEBUG_OBJECT (sinkpad, "going to push (streaming) mode");
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
+  }
+}
+
+
+static gboolean
+gst_aiff_parse_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
+    GstPadMode mode, gboolean active)
+{
   gboolean res;
+  GstAiffParse *aiff = GST_AIFF_PARSE (parent);
 
   if (aiff->adapter)
     g_object_unref (aiff->adapter);
 
-  if (gst_pad_check_pull_range (sinkpad)) {
-    GST_DEBUG ("going to pull mode");
-    aiff->streaming = FALSE;
-    aiff->adapter = NULL;
-    res = gst_pad_activate_pull (sinkpad, TRUE);
-  } else {
-    GST_DEBUG ("going to push (streaming) mode");
-    aiff->streaming = TRUE;
-    aiff->adapter = gst_adapter_new ();
-    res = gst_pad_activate_push (sinkpad, TRUE);
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      aiff->streaming = TRUE;
+      aiff->adapter = gst_adapter_new ();
+      res = TRUE;
+      break;
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        aiff->streaming = FALSE;
+        aiff->adapter = NULL;
+        aiff->segment_running = TRUE;
+        res =
+            gst_pad_start_task (sinkpad, (GstTaskFunction) gst_aiff_parse_loop,
+            sinkpad, NULL);
+      } else {
+        aiff->segment_running = FALSE;
+        res = gst_pad_stop_task (sinkpad);
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
   }
-  gst_object_unref (aiff);
   return res;
-}
-
-
-static gboolean
-gst_aiff_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
-{
-  GstAiffParse *aiff = GST_AIFF_PARSE (GST_OBJECT_PARENT (sinkpad));
-
-  if (active) {
-    aiff->segment_running = TRUE;
-    return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_aiff_parse_loop,
-        sinkpad, NULL);
-  } else {
-    aiff->segment_running = FALSE;
-    return gst_pad_stop_task (sinkpad);
-  }
 };
 
 static GstStateChangeReturn

@@ -44,6 +44,7 @@
 #define __GST_AIFFMUX_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
@@ -74,12 +75,9 @@ struct _GstAiffMux
   GstPad *sinkpad;
   GstPad *srcpad;
 
-  guint width;
-  guint depth;
-  guint channels;
-  guint32 length;
-  gdouble rate;
+  GstAudioInfo info;
 
+  guint32 length;
   gboolean sent_header;
   gboolean overflow;
 };

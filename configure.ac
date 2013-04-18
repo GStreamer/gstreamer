@@ -336,8 +336,7 @@ AG_GST_DEFAULT_ELEMENTS
 dnl *** plug-ins to include ***
 dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
-GST_PLUGINS_NONPORTED=" aiff \
- cdxaparse \
+GST_PLUGINS_NONPORTED=" cdxaparse \
  dccp faceoverlay \
  hdvparse ivfparse jp2kdecimator \
  librfb \
