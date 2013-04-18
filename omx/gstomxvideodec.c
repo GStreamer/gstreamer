@@ -27,7 +27,24 @@
 #include <gst/gst.h>
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
+
+#if defined (USE_OMX_TARGET_RPI) && defined(__GNUC__)
+#ifndef __VCCOREVER__
+#define __VCCOREVER__ 0x04000000
+#endif
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+#pragma GCC optimize ("gnu89-inline")
+#endif
+
 #include <gst/egl/egl.h>
+
+#if defined (USE_OMX_TARGET_RPI) && defined(__GNUC__)
+#pragma GCC reset_options
+#pragma GCC diagnostic pop
+#endif
+
 #include <string.h>
 
 #include "gstomxvideodec.h"
