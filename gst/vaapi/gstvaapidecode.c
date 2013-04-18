@@ -224,6 +224,7 @@ gst_vaapidecode_decode_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
         status = gst_vaapi_decoder_decode(decode->decoder, frame);
         if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE) {
             gboolean was_signalled;
+            GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
             g_mutex_lock(&decode->decoder_mutex);
             was_signalled = g_cond_wait_until(
                 &decode->decoder_ready,
@@ -231,6 +232,7 @@ gst_vaapidecode_decode_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
                 end_time
             );
             g_mutex_unlock(&decode->decoder_mutex);
+            GST_VIDEO_DECODER_STREAM_LOCK(vdec);
             if (was_signalled)
                 continue;
             goto error_decode_timeout;
@@ -267,7 +269,7 @@ error_decode:
 }
 
 static GstFlowReturn
-gst_vaapidecode_push_decoded_frames(GstVideoDecoder *vdec)
+gst_vaapidecode_push_decoded_frame(GstVideoDecoder *vdec)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
     GstVaapiSurfaceProxy *proxy;
@@ -277,55 +279,52 @@ gst_vaapidecode_push_decoded_frames(GstVideoDecoder *vdec)
     GstFlowReturn ret;
     guint flags;
 
-    /* Output all decoded frames */
-    for (;;) {
-        status = gst_vaapi_decoder_get_frame(decode->decoder, &out_frame);
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-            return GST_FLOW_OK;
+    status = gst_vaapi_decoder_get_frame(decode->decoder, &out_frame);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+        return GST_VIDEO_DECODER_FLOW_NEED_DATA;
 
-        if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY(out_frame)) {
-            proxy = gst_video_codec_frame_get_user_data(out_frame);
+    if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY(out_frame)) {
+        proxy = gst_video_codec_frame_get_user_data(out_frame);
 
-            gst_vaapi_surface_proxy_set_destroy_notify(proxy,
-                (GDestroyNotify)gst_vaapidecode_release, decode);
+        gst_vaapi_surface_proxy_set_destroy_notify(proxy,
+            (GDestroyNotify)gst_vaapidecode_release, decode);
 
 #if GST_CHECK_VERSION(1,0,0)
-            ret = gst_video_decoder_allocate_output_frame(vdec, out_frame);
-            if (ret != GST_FLOW_OK)
-                goto error_create_buffer;
-
-            meta = gst_buffer_get_vaapi_video_meta(out_frame->output_buffer);
-            if (!meta)
-                goto error_get_meta;
-            gst_vaapi_video_meta_set_surface_proxy(meta, proxy);
-
-            flags = gst_vaapi_surface_proxy_get_flags(proxy);
-            if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_INTERLACED) {
-                guint out_flags = GST_VIDEO_BUFFER_FLAG_INTERLACED;
-                if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_TFF)
-                    out_flags |= GST_VIDEO_BUFFER_FLAG_TFF;
-                if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_RFF)
-                    out_flags |= GST_VIDEO_BUFFER_FLAG_RFF;
-                if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD)
-                    out_flags |= GST_VIDEO_BUFFER_FLAG_ONEFIELD;
-                GST_BUFFER_FLAG_SET(out_frame->output_buffer, out_flags);
-            }
-#else
-            out_frame->output_buffer =
-                gst_vaapi_video_buffer_new_with_surface_proxy(proxy);
-            if (!out_frame->output_buffer)
-                goto error_create_buffer;
-#endif
-        }
-
-        ret = gst_video_decoder_finish_frame(vdec, out_frame);
+        ret = gst_video_decoder_allocate_output_frame(vdec, out_frame);
         if (ret != GST_FLOW_OK)
-            goto error_commit_buffer;
+            goto error_create_buffer;
 
-        if (GST_CLOCK_TIME_IS_VALID(out_frame->pts))
-            decode->last_buffer_time = out_frame->pts;
-        gst_video_codec_frame_unref(out_frame);
-    };
+        meta = gst_buffer_get_vaapi_video_meta(out_frame->output_buffer);
+        if (!meta)
+            goto error_get_meta;
+        gst_vaapi_video_meta_set_surface_proxy(meta, proxy);
+
+        flags = gst_vaapi_surface_proxy_get_flags(proxy);
+        if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_INTERLACED) {
+            guint out_flags = GST_VIDEO_BUFFER_FLAG_INTERLACED;
+            if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_TFF)
+                out_flags |= GST_VIDEO_BUFFER_FLAG_TFF;
+            if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_RFF)
+                out_flags |= GST_VIDEO_BUFFER_FLAG_RFF;
+            if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD)
+                out_flags |= GST_VIDEO_BUFFER_FLAG_ONEFIELD;
+            GST_BUFFER_FLAG_SET(out_frame->output_buffer, out_flags);
+        }
+#else
+        out_frame->output_buffer =
+            gst_vaapi_video_buffer_new_with_surface_proxy(proxy);
+        if (!out_frame->output_buffer)
+            goto error_create_buffer;
+#endif
+    }
+
+    ret = gst_video_decoder_finish_frame(vdec, out_frame);
+    if (ret != GST_FLOW_OK)
+        goto error_commit_buffer;
+
+    if (GST_CLOCK_TIME_IS_VALID(out_frame->pts))
+        decode->last_buffer_time = out_frame->pts;
+    gst_video_codec_frame_unref(out_frame);
     return GST_FLOW_OK;
 
     /* ERRORS */
@@ -363,18 +362,26 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
 {
     GstFlowReturn ret;
 
-    /* Purge all pending frames we might have already. This helps
-       release VA surfaces as early as possible for _decode_frame() */
-    ret = gst_vaapidecode_push_decoded_frames(vdec);
-    if (ret != GST_FLOW_OK)
-        return ret;
-
+    /* Make sure to release the base class stream lock so that decode
+       loop can call gst_video_decoder_finish_frame() without blocking */
+    GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
     ret = gst_vaapidecode_decode_frame(vdec, frame);
-    if (ret != GST_FLOW_OK)
-        return ret;
+    GST_VIDEO_DECODER_STREAM_LOCK(vdec);
+    return ret;
+}
 
-    /* Purge any pending frame thay may have been decoded already */
-    return gst_vaapidecode_push_decoded_frames(vdec);
+static void
+gst_vaapidecode_decode_loop(GstVaapiDecode *decode)
+{
+    GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
+    GstFlowReturn ret;
+
+    ret = gst_vaapidecode_push_decoded_frame(vdec);
+    if (ret == GST_FLOW_OK || ret == GST_VIDEO_DECODER_FLOW_NEED_DATA)
+        return;
+
+    /* ERRORS */
+    gst_pad_pause_task(decode->srcpad);
 }
 
 static GstFlowReturn
@@ -386,7 +393,17 @@ gst_vaapidecode_finish(GstVideoDecoder *vdec)
     status = gst_vaapi_decoder_flush(decode->decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         goto error_flush;
-    return gst_vaapidecode_push_decoded_frames(vdec);
+
+    /* Make sure the decode loop function has a chance to return, thus
+       possibly unlocking gst_video_decoder_finish_frame() */
+    GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
+    gst_pad_stop_task(decode->srcpad);
+    GST_VIDEO_DECODER_STREAM_LOCK(vdec);
+
+    /* Submit all frames that got decoded so far */
+    while (gst_vaapidecode_push_decoded_frame(vdec) == GST_FLOW_OK)
+        ;
+    return GST_FLOW_OK;
 
     /* ERRORS */
 error_flush:
@@ -527,12 +544,14 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
     );
 
     decode->decoder_caps = gst_caps_ref(caps);
-    return TRUE;
+    return gst_pad_start_task(decode->srcpad,
+        (GstTaskFunction)gst_vaapidecode_decode_loop, decode, NULL);
 }
 
 static void
 gst_vaapidecode_destroy(GstVaapiDecode *decode)
 {
+    gst_pad_stop_task(decode->srcpad);
     g_clear_object(&decode->decoder);
     gst_caps_replace(&decode->decoder_caps, NULL);
     gst_vaapidecode_release(decode);
@@ -566,8 +585,6 @@ static void
 gst_vaapidecode_finalize(GObject *object)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(object);
-
-    gst_vaapidecode_destroy(decode);
 
     gst_caps_replace(&decode->sinkpad_caps, NULL);
     gst_caps_replace(&decode->srcpad_caps,  NULL);

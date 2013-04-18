@@ -249,6 +249,19 @@ typedef enum {
 #define GST_PAD_EVENT_FUNCTION_ARGS \
     GstPad *pad, GstEvent *event
 
+static inline gboolean
+gst_compat_pad_start_task(GstPad *pad, GstTaskFunction func, gpointer user_data,
+    GDestroyNotify notify)
+{
+    g_return_val_if_fail(notify == NULL, FALSE);
+
+    return gst_pad_start_task(pad, func, user_data);
+}
+
+#undef  gst_pad_start_task
+#define gst_pad_start_task(pad, func, user_data, notify) \
+    gst_compat_pad_start_task(pad, func, user_data, notify)
+
 /* GstElement */
 #undef  gst_element_class_set_static_metadata
 #define gst_element_class_set_static_metadata(klass, name, path, desc, author) \
