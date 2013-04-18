@@ -181,7 +181,9 @@ enum
 
 typedef struct _GstAudioDecoderContext
 {
-  /* input */
+  /* last negotiated input caps */
+  GstCaps *input_caps;
+
   /* (output) audio format */
   GstAudioInfo info;
   gboolean output_format_changed;
@@ -490,6 +492,8 @@ gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full)
     if (dec->priv->ctx.allocator)
       gst_object_unref (dec->priv->ctx.allocator);
     dec->priv->ctx.allocator = NULL;
+
+    gst_caps_replace (&dec->priv->ctx.input_caps, NULL);
   }
 
   g_queue_foreach (&dec->priv->frames, (GFunc) gst_buffer_unref, NULL);
@@ -705,6 +709,13 @@ gst_audio_decoder_sink_setcaps (GstAudioDecoder * dec, GstCaps * caps)
   GST_DEBUG_OBJECT (dec, "caps: %" GST_PTR_FORMAT, caps);
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
+
+  if (dec->priv->ctx.input_caps
+      && gst_caps_is_equal (dec->priv->ctx.input_caps, caps)) {
+    GST_DEBUG_OBJECT (dec, "Caps did not change, not setting again");
+    goto done;
+  }
+
   /* NOTE pbutils only needed here */
   /* TODO maybe (only) upstream demuxer/parser etc should handle this ? */
 #if 0
@@ -719,6 +730,10 @@ gst_audio_decoder_sink_setcaps (GstAudioDecoder * dec, GstCaps * caps)
   if (klass->set_format)
     res = klass->set_format (dec, caps);
 
+  if (res)
+    gst_caps_replace (&dec->priv->ctx.input_caps, caps);
+
+done:
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
   return res;
