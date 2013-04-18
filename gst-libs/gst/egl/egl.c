@@ -23,9 +23,25 @@
 #include "config.h"
 #endif
 
+
+#if defined (USE_EGL_RPI) && defined(__GNUC__)
+#ifndef __VCCOREVER__
+#define __VCCOREVER__ 0x04000000
+#endif
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+#pragma GCC optimize ("gnu89-inline")
+#endif
+
 #define EGL_EGLEXT_PROTOTYPES
 
 #include <gst/egl/egl.h>
+
+#if defined (USE_EGL_RPI) && defined(__GNUC__)
+#pragma GCC reset_options
+#pragma GCC diagnostic pop
+#endif
 
 typedef struct
 {
@@ -252,8 +268,8 @@ gst_egl_image_allocator_obtain (void)
 
 GstMemory *
 gst_egl_image_allocator_alloc (GstAllocator * allocator,
-    GstEGLDisplay * display, GstVideoGLTextureType type, gint width, gint height,
-    gsize * size)
+    GstEGLDisplay * display, GstVideoGLTextureType type, gint width,
+    gint height, gsize * size)
 {
   return NULL;
 }
