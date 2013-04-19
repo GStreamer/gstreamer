@@ -47,8 +47,8 @@
  * Applications should catch the GST_MESSAGE_HAVE_CONTEXT messages and remember
  * any content from it unless it has a custom version of a specific context. If
  * later an element is posting a GST_MESSAGE_NEED_CONTEXT message for a specific
- * context that was created by an element before the application should pass it
- * to the complete pipeline.
+ * context that was created by an element before, the application should pass it
+ * to the element or the complete pipeline.
  *
  * Since: 1.2
  */

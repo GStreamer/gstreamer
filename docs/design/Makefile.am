@@ -7,6 +7,7 @@ EXTRA_DIST = \
 	part-buffering.txt \
 	part-caps.txt \
 	part-clocks.txt \
+	part-context.txt \
 	part-conventions.txt \
 	part-dynamic.txt \
 	part-element-sink.txt \
