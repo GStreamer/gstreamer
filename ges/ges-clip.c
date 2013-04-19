@@ -1070,26 +1070,10 @@ ges_clip_split (GESClip * clip, guint64 position)
   ges_timeline_layer_add_clip (clip->priv->layer, new_object);
   ges_clip_set_moving_from_layer (new_object, FALSE);
 
-  /* We first set the new duration and the child mapping will be updated
-   * properly in the following loop
-   * FIXME: Avoid setting it oureself reworking the API */
-  GES_TIMELINE_ELEMENT (clip)->duration = position - _START (clip);
+  _set_duration0 (GES_TIMELINE_ELEMENT (clip), position - _START (clip));
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     GESTrackElement *new_trackelement, *trackelement =
         GES_TRACK_ELEMENT (tmp->data);
-
-    duration = _DURATION (trackelement);
-    start = _START (trackelement);
-    inpoint = _INPOINT (trackelement);
-
-    if (position <= start || position >= (start + duration)) {
-      GST_DEBUG_OBJECT (trackelement,
-          "Outside %" GST_TIME_FORMAT "the boundaries "
-          "not copying it ( start %" GST_TIME_FORMAT ", end %" GST_TIME_FORMAT
-          ")", GST_TIME_ARGS (position), GST_TIME_ARGS (_START (trackelement)),
-          GST_TIME_ARGS (_START (trackelement) + _DURATION (trackelement)));
-      continue;
-    }
 
     new_trackelement =
         GES_TRACK_ELEMENT (ges_timeline_element_copy (GES_TIMELINE_ELEMENT
@@ -1105,9 +1089,6 @@ ges_clip_split (GESClip * clip, guint64 position)
         inpoint + duration - (duration + start - position));
     _set_duration0 (GES_TIMELINE_ELEMENT (new_trackelement),
         duration + start - position);
-
-    /* Set 'old' track element duration */
-    _set_duration0 (GES_TIMELINE_ELEMENT (trackelement), position - start);
 
     ges_container_add (GES_CONTAINER (new_object),
         GES_TIMELINE_ELEMENT (new_trackelement));
