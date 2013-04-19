@@ -95,9 +95,46 @@ structures with names and caps features that are existing in "B".
 Basic Rules
 ~~~~~~~~~~~
 
+Semantics of caps and their usage
+---------------------------------
+A caps can contain multiple structures, in which case any of the
+structures would be acceptable. The structures are in the preferred
+order of the creator of the caps, with the preferred structure being
+first and during negotiation of caps this order should be considered to
+select the most optimal structure.
+
+Each of these structures has a name that specifies the media type, e.g.
+"video/x-theora" to specify Theora video. Additional fields in the
+structure add additional constraints and/or information about the media
+type, like the width and height of a video frame, or the codec profile
+that is used. These fields can be non-fixed (e.g. ranges) for non-fixed
+caps but must be fixed to a fixed value during negotiation.
+If a field is included in the caps returned by a pad via the CAPS query,
+it imposes an additional constraint during negotiation. The caps in the
+end must have this field with a value that is a subset of the non-fixed
+value. Additional fields that are added in the negotiated caps give
+additional information about the media but are treated as optional.
+Information that can change for every buffer and are not relevant during
+negotiation must not be stored inside the caps.
+
+
+For each of the structures in caps it is possible to store caps
+features. The caps features are expressing additional requirements
+for a specific structure, and only structures with the same name _and_
+equal caps features are considered compatible.
+Caps features can be used to require a specific memory representation
+or a specific meta to be set on buffers, for example a pad could require
+for a specific structure that it is passed EGLImage memory or buffers
+with the video meta.
+If not caps features are provided for a structure, it is assumed that
+system memory is required unless later negotiation steps (e.g. the
+ALLOCATION query) detect that something else can be used. The special
+ANY caps features can be used to specify that any caps feature would
+be accepted, for example if the buffer memory is not touched at all.
+
+
 Compatibility of caps
 ---------------------
-
 Pads can be linked when the caps of both caps are compatible. This is
 the case when their intersection is not empty.
 
@@ -107,5 +144,5 @@ pad's caps but pads can introduce additional constraints which would be
 checked in the ACCEPT_CAPS query handler.
 
 Data flow can only happen after pads have decided on a common, fixed
-caps.
+caps and these caps are distributed to both pads with the CAPS event.
 
