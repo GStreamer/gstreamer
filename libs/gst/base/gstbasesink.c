@@ -405,7 +405,7 @@ static GstCaps *gst_base_sink_fixate (GstBaseSink * bsink, GstCaps * caps);
 /* check if an object was too late */
 static gboolean gst_base_sink_is_too_late (GstBaseSink * basesink,
     GstMiniObject * obj, GstClockTime rstart, GstClockTime rstop,
-    GstClockReturn status, GstClockTimeDiff jitter);
+    GstClockReturn status, GstClockTimeDiff jitter, gboolean render);
 
 static void
 gst_base_sink_class_init (GstBaseSinkClass * klass)
@@ -2489,7 +2489,7 @@ again:
 
   /* check if the object should be dropped */
   *late = gst_base_sink_is_too_late (basesink, obj, rstart, rstop,
-      status, jitter);
+      status, jitter, TRUE);
 
 done:
   return GST_FLOW_OK;
@@ -2715,7 +2715,7 @@ gst_base_sink_reset_qos (GstBaseSink * sink)
 static gboolean
 gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
     GstClockTime rstart, GstClockTime rstop,
-    GstClockReturn status, GstClockTimeDiff jitter)
+    GstClockReturn status, GstClockTimeDiff jitter, gboolean render)
 {
   gboolean late;
   guint64 max_lateness;
@@ -2774,7 +2774,7 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
   }
 
 done:
-  if (!late || !GST_CLOCK_TIME_IS_VALID (priv->last_render_time)) {
+  if (render && (!late || !GST_CLOCK_TIME_IS_VALID (priv->last_render_time))) {
     priv->last_render_time = rstart;
     /* the next allowed input timestamp */
     if (priv->throttle_time > 0)
@@ -3281,7 +3281,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     if (!stepped && syncable && do_sync)
       late =
           gst_base_sink_is_too_late (basesink, obj, rstart, rstop,
-          GST_CLOCK_EARLY, 0);
+          GST_CLOCK_EARLY, 0, FALSE);
     if (late)
       goto dropped;
 
