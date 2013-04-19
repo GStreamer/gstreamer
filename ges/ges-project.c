@@ -538,7 +538,7 @@ ges_project_add_loading_asset (GESProject * project, GType extractable_type,
 /**
  * ges_project_create_asset:
  * @project: A #GESProject
- * @id: The id of the asset to create and add to @project
+ * @id: (allow-none): The id of the asset to create and add to @project
  * @extractable_type: The #GType of the asset to create
  *
  * Create and add a #GESAsset to @project. You should connect to the
@@ -555,6 +555,9 @@ ges_project_create_asset (GESProject * project, const gchar * id,
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
   g_return_val_if_fail (g_type_is_a (extractable_type, GES_TYPE_EXTRACTABLE),
       FALSE);
+
+  if (id == NULL)
+    id = g_type_name (extractable_type);
 
   if (g_hash_table_lookup (project->priv->assets, id) ||
       g_hash_table_lookup (project->priv->loading_assets, id) ||
