@@ -819,7 +819,7 @@ gst_adder_sink_event (GstCollectPads * pads, GstCollectData * pad,
     }
     case GST_EVENT_FLUSH_START:
       /* ensure that we will send a flush stop */
-      g_atomic_int_set (&adder->need_flush_stop, TRUE);
+      g_atomic_int_set (&adder->flush_stop_pending, TRUE);
       break;
     case GST_EVENT_FLUSH_STOP:
       /* we received a flush-stop. We will only forward it when
@@ -851,13 +851,6 @@ gst_adder_sink_event (GstCollectPads * pads, GstCollectData * pad,
         /* make sure we push a new segment, to inform about new basetime
          * see FIXME in gst_adder_collected() */
         g_atomic_int_set (&adder->new_segment_pending, TRUE);
-      }
-      if (g_atomic_int_compare_and_exchange (&adder->need_flush_stop,
-              TRUE, FALSE)) {
-        /* ensure that we'll eventually send a flush-stop
-         * (e.g. after a flushing seek directly sent to an upstream element) */
-        g_atomic_int_set (&adder->flush_stop_pending, TRUE);
-        GST_DEBUG_OBJECT (adder, "mark pending flush stop event");
       }
       discard = TRUE;
       break;

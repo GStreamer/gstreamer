@@ -1192,6 +1192,59 @@ GST_START_TEST (test_loop)
 
 GST_END_TEST;
 
+GST_START_TEST (test_flush_start_flush_stop)
+{
+  GstPadTemplate *sink_template;
+  GstPad *tmppad, *sinkpad1, *sinkpad2, *adder_src;
+  GstElement *pipeline, *src1, *src2, *adder, *sink;
+
+  GST_INFO ("preparing test");
+
+  /* build pipeline */
+  pipeline = gst_pipeline_new ("pipeline");
+  src1 = gst_element_factory_make ("audiotestsrc", "src1");
+  g_object_set (src1, "wave", 4, NULL); /* silence */
+  src2 = gst_element_factory_make ("audiotestsrc", "src2");
+  g_object_set (src2, "wave", 4, NULL); /* silence */
+  adder = gst_element_factory_make ("adder", "adder");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  gst_bin_add_many (GST_BIN (pipeline), src1, src2, adder, sink, NULL);
+
+  sink_template =
+      gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (adder),
+      "sink_%u");
+  fail_unless (GST_IS_PAD_TEMPLATE (sink_template));
+  sinkpad1 = gst_element_request_pad (adder, sink_template, NULL, NULL);
+  tmppad = gst_element_get_static_pad (src1, "src");
+  gst_pad_link (tmppad, sinkpad1);
+  gst_object_unref (tmppad);
+
+  sinkpad2 = gst_element_request_pad (adder, sink_template, NULL, NULL);
+  tmppad = gst_element_get_static_pad (src2, "src");
+  gst_pad_link (tmppad, sinkpad2);
+  gst_object_unref (tmppad);
+
+  gst_element_link (adder, sink);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless (gst_element_get_state (pipeline, NULL, NULL,
+          GST_CLOCK_TIME_NONE) == GST_STATE_CHANGE_SUCCESS);
+
+  adder_src = gst_element_get_static_pad (adder, "src");
+  fail_if (GST_PAD_IS_FLUSHING (adder_src));
+  gst_pad_send_event (sinkpad1, gst_event_new_flush_start ());
+  fail_unless (GST_PAD_IS_FLUSHING (adder_src));
+  gst_pad_send_event (sinkpad1, gst_event_new_flush_stop (TRUE));
+  fail_if (GST_PAD_IS_FLUSHING (adder_src));
+  gst_object_unref (adder_src);
+
+  /* cleanup */
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 adder_suite (void)
@@ -1212,6 +1265,7 @@ adder_suite (void)
   tcase_add_test (tc_chain, test_duration_is_max);
   tcase_add_test (tc_chain, test_duration_unknown_overrides);
   tcase_add_test (tc_chain, test_loop);
+  tcase_add_test (tc_chain, test_flush_start_flush_stop);
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND
