@@ -1419,6 +1419,48 @@ gst_query_parse_uri (GstQuery * query, gchar ** uri)
 }
 
 /**
+ * gst_query_set_uri_redirection:
+ * @query: a #GstQuery with query type GST_QUERY_URI
+ * @uri: the URI to set
+ *
+ * Answer a URI query by setting the requested URI redirection.
+ */
+void
+gst_query_set_uri_redirection (GstQuery * query, const gchar * uri)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_URI);
+  g_return_if_fail (gst_query_is_writable (query));
+  g_return_if_fail (gst_uri_is_valid (uri));
+
+  structure = GST_QUERY_STRUCTURE (query);
+  gst_structure_id_set (structure, GST_QUARK (URI_REDIRECTION),
+      G_TYPE_STRING, uri, NULL);
+}
+
+/**
+ * gst_query_parse_uri_redirection:
+ * @query: a #GstQuery
+ * @uri: (out) (transfer full) (allow-none): the storage for the redirect URI
+ *     (may be NULL)
+ *
+ * Parse an URI query, writing the URI into @uri as a newly
+ * allocated string, if the respective parameters are non-NULL.
+ * Free the string with g_free() after usage.
+ */
+void
+gst_query_parse_uri_redirection (GstQuery * query, gchar ** uri)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_URI);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  gst_structure_id_get (structure, GST_QUARK (URI_REDIRECTION), uri, NULL);
+}
+
+/**
  * gst_query_new_allocation:
  * @caps: the negotiated caps
  * @need_pool: return a pool

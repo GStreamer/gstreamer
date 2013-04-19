@@ -397,6 +397,8 @@ gboolean        gst_query_parse_nth_buffering_range (GstQuery *query,
 GstQuery *      gst_query_new_uri                    (void) G_GNUC_MALLOC;
 void            gst_query_parse_uri                  (GstQuery *query, gchar **uri);
 void            gst_query_set_uri                    (GstQuery *query, const gchar *uri);
+void            gst_query_parse_uri_redirection      (GstQuery *query, gchar **uri);
+void            gst_query_set_uri_redirection        (GstQuery *query, const gchar *uri);
 
 /* allocation query */
 GstQuery *      gst_query_new_allocation             (GstCaps *caps, gboolean need_pool) G_GNUC_MALLOC;
