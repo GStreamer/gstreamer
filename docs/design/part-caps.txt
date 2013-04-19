@@ -33,7 +33,8 @@ that makes most sense for the media format by the element or pad
 implementation and afterwards every remaining unfixed fields is set to
 an arbitrary value that would be a subset of the unfixed field value.
 
-EMPTY caps are fixed caps, ANY caps are not fixed.
+EMPTY caps are fixed caps, ANY caps are not fixed. Caps with ANY caps
+features are not fixed.
 
 Subset
 ------

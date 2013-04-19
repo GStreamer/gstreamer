@@ -30,7 +30,12 @@
  * structures with different feature sets to the caps.
  *
  * Empty #GstCapsFeatures are equivalent with the #GstCapsFeatures that only
- * contain #GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY.
+ * contain #GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY. ANY #GstCapsFeatures as
+ * created by gst_caps_features_new_any() are equal to any other #GstCapsFeatures
+ * and can be used to specify that any #GstCapsFeatures would be supported, e.g.
+ * for elements that don't touch buffer memory. #GstCaps with ANY #GstCapsFeatures
+ * are considered non-fixed and during negotiation some #GstCapsFeatures have
+ * to be selected.
  *
  * Examples for caps features would be the requirement of a specific #GstMemory
  * types or the requirement of having a specific #GstMeta on the buffer. Features
