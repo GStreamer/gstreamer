@@ -79,6 +79,19 @@ typedef union
 #endif
 #endif
 
+#ifndef ORC_INTERNAL
+#if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define ORC_INTERNAL __hidden
+#elif defined (__GNUC__)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#else
+#define ORC_INTERNAL
+#endif
+#endif
+
+
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
@@ -190,6 +203,15 @@ video_test_src_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n)
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 28, 118, 105, 100, 101, 111, 95, 116, 101, 115, 116, 95, 115, 114,
+        99, 95, 111, 114, 99, 95, 115, 112, 108, 97, 116, 95, 117, 51, 50, 11,
+        4, 4, 16, 4, 112, 0, 24, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_video_test_src_orc_splat_u32);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_test_src_orc_splat_u32");
       orc_program_set_backup_function (p, _backup_video_test_src_orc_splat_u32);
@@ -198,6 +220,7 @@ video_test_src_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n)
 
       orc_program_append_2 (p, "copyl", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);

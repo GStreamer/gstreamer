@@ -79,6 +79,19 @@ typedef union
 #endif
 #endif
 
+#ifndef ORC_INTERNAL
+#if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define ORC_INTERNAL __hidden
+#elif defined (__GNUC__)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#else
+#define ORC_INTERNAL
+#endif
+#endif
+
+
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
@@ -215,6 +228,15 @@ adder_orc_add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 19, 97, 100, 100, 101, 114, 95, 111, 114, 99, 95, 97, 100, 100,
+        95, 105, 110, 116, 51, 50, 11, 4, 4, 12, 4, 4, 104, 0, 0, 4,
+        2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_adder_orc_add_int32);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "adder_orc_add_int32");
       orc_program_set_backup_function (p, _backup_adder_orc_add_int32);
@@ -223,6 +245,7 @@ adder_orc_add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 
       orc_program_append_2 (p, "addssl", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -317,6 +340,15 @@ adder_orc_add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 19, 97, 100, 100, 101, 114, 95, 111, 114, 99, 95, 97, 100, 100,
+        95, 105, 110, 116, 49, 54, 11, 2, 2, 12, 2, 2, 71, 0, 0, 4,
+        2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_adder_orc_add_int16);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "adder_orc_add_int16");
       orc_program_set_backup_function (p, _backup_adder_orc_add_int16);
@@ -325,6 +357,7 @@ adder_orc_add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1,
 
       orc_program_append_2 (p, "addssw", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -419,6 +452,15 @@ adder_orc_add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 18, 97, 100, 100, 101, 114, 95, 111, 114, 99, 95, 97, 100, 100,
+        95, 105, 110, 116, 56, 11, 1, 1, 12, 1, 1, 34, 0, 0, 4, 2,
+        0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_adder_orc_add_int8);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "adder_orc_add_int8");
       orc_program_set_backup_function (p, _backup_adder_orc_add_int8);
@@ -427,6 +469,7 @@ adder_orc_add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1,
 
       orc_program_append_2 (p, "addssb", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -525,6 +568,15 @@ adder_orc_add_uint32 (guint32 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 20, 97, 100, 100, 101, 114, 95, 111, 114, 99, 95, 97, 100, 100,
+        95, 117, 105, 110, 116, 51, 50, 11, 4, 4, 12, 4, 4, 105, 0, 0,
+        4, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_adder_orc_add_uint32);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "adder_orc_add_uint32");
       orc_program_set_backup_function (p, _backup_adder_orc_add_uint32);
@@ -533,6 +585,7 @@ adder_orc_add_uint32 (guint32 * ORC_RESTRICT d1,
 
       orc_program_append_2 (p, "addusl", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -627,6 +680,15 @@ adder_orc_add_uint16 (guint16 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 20, 97, 100, 100, 101, 114, 95, 111, 114, 99, 95, 97, 100, 100,
+        95, 117, 105, 110, 116, 49, 54, 11, 2, 2, 12, 2, 2, 72, 0, 0,
+        4, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_adder_orc_add_uint16);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "adder_orc_add_uint16");
       orc_program_set_backup_function (p, _backup_adder_orc_add_uint16);
@@ -635,6 +697,7 @@ adder_orc_add_uint16 (guint16 * ORC_RESTRICT d1,
 
       orc_program_append_2 (p, "addusw", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -729,6 +792,15 @@ adder_orc_add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 19, 97, 100, 100, 101, 114, 95, 111, 114, 99, 95, 97, 100, 100,
+        95, 117, 105, 110, 116, 56, 11, 1, 1, 12, 1, 1, 35, 0, 0, 4,
+        2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_adder_orc_add_uint8);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "adder_orc_add_uint8");
       orc_program_set_backup_function (p, _backup_adder_orc_add_uint8);
@@ -737,6 +809,7 @@ adder_orc_add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
       orc_program_append_2 (p, "addusb", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -847,6 +920,15 @@ adder_orc_add_float32 (float *ORC_RESTRICT d1, const float *ORC_RESTRICT s1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 21, 97, 100, 100, 101, 114, 95, 111, 114, 99, 95, 97, 100, 100,
+        95, 102, 108, 111, 97, 116, 51, 50, 11, 4, 4, 12, 4, 4, 200, 0,
+        0, 4, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_adder_orc_add_float32);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "adder_orc_add_float32");
       orc_program_set_backup_function (p, _backup_adder_orc_add_float32);
@@ -855,6 +937,7 @@ adder_orc_add_float32 (float *ORC_RESTRICT d1, const float *ORC_RESTRICT s1,
 
       orc_program_append_2 (p, "addf", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);

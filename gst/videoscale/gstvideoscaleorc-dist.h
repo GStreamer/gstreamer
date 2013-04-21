@@ -67,6 +67,19 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 
 #define ORC_RESTRICT
 #endif
 #endif
+
+#ifndef ORC_INTERNAL
+#if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define ORC_INTERNAL __hidden
+#elif defined (__GNUC__)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#else
+#define ORC_INTERNAL
+#endif
+#endif
+
 void video_scale_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1, const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2, int p1, int n);
 void video_scale_orc_merge_linear_u16 (orc_uint16 * ORC_RESTRICT d1, const orc_uint16 * ORC_RESTRICT s1, const orc_uint16 * ORC_RESTRICT s2, int p1, int p2, int n);
 void video_scale_orc_splat_u16 (orc_uint16 * ORC_RESTRICT d1, int p1, int n);

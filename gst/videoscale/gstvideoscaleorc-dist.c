@@ -79,6 +79,19 @@ typedef union
 #endif
 #endif
 
+#ifndef ORC_INTERNAL
+#if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define ORC_INTERNAL __hidden
+#elif defined (__GNUC__)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#else
+#define ORC_INTERNAL
+#endif
+#endif
+
+
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
@@ -294,6 +307,20 @@ video_scale_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 31, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 109, 101, 114, 103, 101, 95, 108, 105, 110, 101, 97, 114,
+        95,
+        117, 56, 11, 1, 1, 12, 1, 1, 12, 1, 1, 14, 4, 128, 0, 0,
+        0, 16, 1, 20, 2, 20, 2, 20, 1, 20, 1, 43, 34, 4, 150, 32,
+        4, 150, 33, 5, 98, 33, 33, 32, 89, 33, 33, 24, 70, 33, 33, 16,
+        158, 35, 33, 33, 0, 35, 34, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_scale_orc_merge_linear_u8);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_merge_linear_u8");
       orc_program_set_backup_function (p,
@@ -324,6 +351,7 @@ video_scale_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "addb", 0, ORC_VAR_D1, ORC_VAR_T4, ORC_VAR_T3,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -462,6 +490,19 @@ video_scale_orc_merge_linear_u16 (orc_uint16 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 32, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 109, 101, 114, 103, 101, 95, 108, 105, 110, 101, 97, 114,
+        95,
+        117, 49, 54, 11, 2, 2, 12, 2, 2, 12, 2, 2, 14, 4, 16, 0,
+        0, 0, 16, 2, 16, 2, 20, 4, 20, 4, 177, 32, 4, 24, 177, 33,
+        5, 25, 103, 32, 32, 33, 126, 32, 32, 16, 163, 0, 32, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_scale_orc_merge_linear_u16);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_merge_linear_u16");
       orc_program_set_backup_function (p,
@@ -485,6 +526,7 @@ video_scale_orc_merge_linear_u16 (orc_uint16 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "convlw", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -570,6 +612,15 @@ video_scale_orc_splat_u16 (orc_uint16 * ORC_RESTRICT d1, int p1, int n)
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 25, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 115, 112, 108, 97, 116, 95, 117, 49, 54, 11, 2, 2, 16,
+        2, 79, 0, 24, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_video_scale_orc_splat_u16);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_splat_u16");
       orc_program_set_backup_function (p, _backup_video_scale_orc_splat_u16);
@@ -578,6 +629,7 @@ video_scale_orc_splat_u16 (orc_uint16 * ORC_RESTRICT d1, int p1, int n)
 
       orc_program_append_2 (p, "copyw", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -660,6 +712,15 @@ video_scale_orc_splat_u32 (orc_uint32 * ORC_RESTRICT d1, int p1, int n)
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 25, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 115, 112, 108, 97, 116, 95, 117, 51, 50, 11, 4, 4, 16,
+        4, 112, 0, 24, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_video_scale_orc_splat_u32);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_splat_u32");
       orc_program_set_backup_function (p, _backup_video_scale_orc_splat_u32);
@@ -668,6 +729,7 @@ video_scale_orc_splat_u32 (orc_uint32 * ORC_RESTRICT d1, int p1, int n)
 
       orc_program_append_2 (p, "copyl", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -752,6 +814,15 @@ video_scale_orc_splat_u64 (orc_uint64 * ORC_RESTRICT d1, orc_int64 p1, int n)
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 25, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 115, 112, 108, 97, 116, 95, 117, 54, 52, 11, 8, 8, 18,
+        8, 137, 0, 24, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_video_scale_orc_splat_u64);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_splat_u64");
       orc_program_set_backup_function (p, _backup_video_scale_orc_splat_u64);
@@ -760,6 +831,7 @@ video_scale_orc_splat_u64 (orc_uint64 * ORC_RESTRICT d1, orc_int64 p1, int n)
 
       orc_program_append_2 (p, "copyq", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -871,6 +943,18 @@ video_scale_orc_downsample_u8 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 29, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 100, 111, 119, 110, 115, 97, 109, 112, 108, 101, 95, 117,
+        56,
+        11, 1, 1, 12, 2, 2, 20, 1, 20, 1, 199, 32, 33, 4, 39, 0,
+        32, 33, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_scale_orc_downsample_u8);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_downsample_u8");
       orc_program_set_backup_function (p,
@@ -884,6 +968,7 @@ video_scale_orc_downsample_u8 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "avgub", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -990,6 +1075,18 @@ video_scale_orc_downsample_u16 (guint16 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 30, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 100, 111, 119, 110, 115, 97, 109, 112, 108, 101, 95, 117,
+        49,
+        54, 11, 2, 2, 12, 4, 4, 20, 2, 20, 2, 198, 32, 33, 4, 76,
+        0, 32, 33, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_scale_orc_downsample_u16);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_downsample_u16");
       orc_program_set_backup_function (p,
@@ -1003,6 +1100,7 @@ video_scale_orc_downsample_u16 (guint16 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "avguw", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -1115,6 +1213,18 @@ video_scale_orc_downsample_u32 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 30, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 100, 111, 119, 110, 115, 97, 109, 112, 108, 101, 95, 117,
+        51,
+        50, 11, 4, 4, 12, 8, 8, 20, 4, 20, 4, 197, 32, 33, 4, 21,
+        2, 39, 0, 32, 33, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_scale_orc_downsample_u32);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_downsample_u32");
       orc_program_set_backup_function (p,
@@ -1128,6 +1238,7 @@ video_scale_orc_downsample_u32 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "avgub", 2, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -1356,6 +1467,20 @@ video_scale_orc_downsample_yuyv (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 31, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 100, 111, 119, 110, 115, 97, 109, 112, 108, 101, 95, 121,
+        117,
+        121, 118, 11, 4, 4, 12, 8, 8, 20, 4, 20, 4, 20, 2, 20, 2,
+        20, 2, 20, 2, 21, 2, 199, 32, 33, 4, 21, 1, 199, 34, 35, 32,
+        21, 1, 39, 36, 34, 35, 198, 34, 35, 33, 21, 1, 39, 37, 34, 35,
+        21, 1, 196, 0, 36, 37, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_scale_orc_downsample_yuyv);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_downsample_yuyv");
       orc_program_set_backup_function (p,
@@ -1381,6 +1506,7 @@ video_scale_orc_downsample_yuyv (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mergebw", 1, ORC_VAR_D1, ORC_VAR_T5, ORC_VAR_T6,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -1463,6 +1589,18 @@ video_scale_orc_resample_nearest_u8 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 35, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 114, 101, 115, 97, 109, 112, 108, 101, 95, 110, 101, 97,
+        114,
+        101, 115, 116, 95, 117, 56, 11, 1, 1, 12, 1, 1, 16, 4, 16, 4,
+        48, 0, 4, 24, 25, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_scale_orc_resample_nearest_u8);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_resample_nearest_u8");
       orc_program_set_backup_function (p,
@@ -1474,6 +1612,7 @@ video_scale_orc_resample_nearest_u8 (guint8 * ORC_RESTRICT d1,
 
       orc_program_append_2 (p, "ldresnearb", 0, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_P1, ORC_VAR_P2);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -1568,6 +1707,18 @@ video_scale_orc_resample_bilinear_u8 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 36, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 114, 101, 115, 97, 109, 112, 108, 101, 95, 98, 105, 108,
+        105,
+        110, 101, 97, 114, 95, 117, 56, 11, 1, 1, 12, 1, 1, 16, 4, 16,
+        4, 50, 0, 4, 24, 25, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_scale_orc_resample_bilinear_u8);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_resample_bilinear_u8");
       orc_program_set_backup_function (p,
@@ -1579,6 +1730,7 @@ video_scale_orc_resample_bilinear_u8 (guint8 * ORC_RESTRICT d1,
 
       orc_program_append_2 (p, "ldreslinb", 0, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_P1, ORC_VAR_P2);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -1663,6 +1815,18 @@ video_scale_orc_resample_nearest_u32 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 36, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 114, 101, 115, 97, 109, 112, 108, 101, 95, 110, 101, 97,
+        114,
+        101, 115, 116, 95, 117, 51, 50, 11, 4, 4, 12, 4, 4, 16, 4, 16,
+        4, 49, 0, 4, 24, 25, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_scale_orc_resample_nearest_u32);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_resample_nearest_u32");
       orc_program_set_backup_function (p,
@@ -1674,6 +1838,7 @@ video_scale_orc_resample_nearest_u32 (guint8 * ORC_RESTRICT d1,
 
       orc_program_append_2 (p, "ldresnearl", 0, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_P1, ORC_VAR_P2);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -1790,6 +1955,18 @@ video_scale_orc_resample_bilinear_u32 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 37, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 114, 101, 115, 97, 109, 112, 108, 101, 95, 98, 105, 108,
+        105,
+        110, 101, 97, 114, 95, 117, 51, 50, 11, 4, 4, 12, 4, 4, 16, 4,
+        16, 4, 51, 0, 4, 24, 25, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_scale_orc_resample_bilinear_u32);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_resample_bilinear_u32");
       orc_program_set_backup_function (p,
@@ -1801,6 +1978,7 @@ video_scale_orc_resample_bilinear_u32 (guint8 * ORC_RESTRICT d1,
 
       orc_program_append_2 (p, "ldreslinl", 0, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_P1, ORC_VAR_P2);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -2022,6 +2200,22 @@ video_scale_orc_resample_merge_bilinear_u32 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 43, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 114, 101, 115, 97, 109, 112, 108, 101, 95, 109, 101, 114,
+        103,
+        101, 95, 98, 105, 108, 105, 110, 101, 97, 114, 95, 117, 51, 50, 11, 4,
+        4, 11, 4, 4, 12, 4, 4, 12, 4, 4, 16, 4, 16, 4, 16, 4,
+        20, 4, 20, 4, 20, 4, 20, 8, 20, 8, 51, 33, 5, 25, 26, 128,
+        1, 33, 113, 32, 4, 21, 2, 150, 35, 32, 21, 2, 150, 36, 33, 21,
+        2, 98, 36, 36, 35, 21, 2, 89, 36, 36, 24, 21, 2, 158, 34, 36,
+        21, 2, 33, 0, 34, 32, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_scale_orc_resample_merge_bilinear_u32);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_resample_merge_bilinear_u32");
       orc_program_set_backup_function (p,
@@ -2057,6 +2251,7 @@ video_scale_orc_resample_merge_bilinear_u32 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "addb", 2, ORC_VAR_D1, ORC_VAR_T3, ORC_VAR_T1,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -2268,6 +2463,21 @@ video_scale_orc_merge_bicubic_u8 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 32, 118, 105, 100, 101, 111, 95, 115, 99, 97, 108, 101, 95, 111,
+        114, 99, 95, 109, 101, 114, 103, 101, 95, 98, 105, 99, 117, 98, 105, 99,
+        95, 117, 56, 11, 1, 1, 12, 1, 1, 12, 1, 1, 12, 1, 1, 12,
+        1, 1, 14, 4, 32, 0, 0, 0, 14, 4, 6, 0, 0, 0, 16, 4,
+        16, 4, 16, 4, 16, 4, 20, 2, 20, 2, 175, 32, 5, 25, 175, 33,
+        6, 26, 70, 32, 32, 33, 175, 33, 4, 24, 98, 32, 32, 33, 175, 33,
+        7, 27, 98, 32, 32, 33, 70, 32, 32, 16, 94, 32, 32, 17, 160, 0,
+        32, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_video_scale_orc_merge_bicubic_u8);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "video_scale_orc_merge_bicubic_u8");
       orc_program_set_backup_function (p,
@@ -2306,6 +2516,7 @@ video_scale_orc_merge_bicubic_u8 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "convsuswb", 0, ORC_VAR_D1, ORC_VAR_T1,
           ORC_VAR_D1, ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
