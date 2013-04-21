@@ -167,10 +167,10 @@ ges_audio_transition_create_element (GESTrackElement * track_element)
   const gchar *propname = "volume";
   GstElement *mixer = NULL;
   GstPad *sinka_target, *sinkb_target, *src_target, *sinka, *sinkb, *src;
+  guint64 duration;
   GstControlSource *acontrol_source, *bcontrol_source;
 
   self = GES_AUDIO_TRANSITION (track_element);
-
 
   GST_LOG ("creating an audio bin");
 
@@ -210,16 +210,24 @@ ges_audio_transition_create_element (GESTrackElement * track_element)
   gst_object_unref (src_target);
 
   acontrol_source = gst_interpolation_control_source_new ();
-  gst_object_add_control_binding (GST_OBJECT (atarget),
-      gst_direct_control_binding_new (GST_OBJECT (atarget), propname,
-          acontrol_source));
   g_object_set (acontrol_source, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   bcontrol_source = gst_interpolation_control_source_new ();
+  g_object_set (bcontrol_source, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+
+  self->priv->a_control_source = acontrol_source;
+  self->priv->b_control_source = bcontrol_source;
+
+  duration =
+      ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (track_element));
+  ges_audio_transition_duration_changed (track_element, duration);
+
+  gst_object_add_control_binding (GST_OBJECT (atarget),
+      gst_direct_control_binding_new (GST_OBJECT (atarget), propname,
+          acontrol_source));
   gst_object_add_control_binding (GST_OBJECT (btarget),
       gst_direct_control_binding_new (GST_OBJECT (btarget), propname,
           bcontrol_source));
-  g_object_set (acontrol_source, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   self->priv->a_control_source = acontrol_source;
   self->priv->b_control_source = bcontrol_source;
@@ -237,27 +245,27 @@ ges_audio_transition_duration_changed (GESTrackElement * track_element,
 
   self = GES_AUDIO_TRANSITION (track_element);
 
-  GST_LOG ("updating controller: gnlobj (%p)", gnlobj);
+  GST_INFO ("updating controller: gnlobj (%p)", gnlobj);
 
-  if (G_UNLIKELY ((!gnlobj || !self->priv->a_control_source ||
+  if (G_UNLIKELY ((!self->priv->a_control_source ||
               !self->priv->b_control_source)))
     return;
 
-  GST_INFO ("duration: %" G_GUINT64_FORMAT, duration);
-
-  GST_LOG ("setting values on controller");
+  GST_INFO ("setting values on controller");
   ta = GST_TIMED_VALUE_CONTROL_SOURCE (self->priv->a_control_source);
   tb = GST_TIMED_VALUE_CONTROL_SOURCE (self->priv->b_control_source);
 
   gst_timed_value_control_source_unset_all (ta);
-  gst_timed_value_control_source_set (ta, 0, 1.0);
+  gst_timed_value_control_source_unset_all (tb);
+  /* The volume property goes from 0 to 10, so we want to interpolate between
+   * 0 and 0.1 */
+  gst_timed_value_control_source_set (ta, 0, 0.1);
   gst_timed_value_control_source_set (ta, duration, 0.0);
 
-  gst_timed_value_control_source_unset_all (tb);
   gst_timed_value_control_source_set (tb, 0, 0.0);
-  gst_timed_value_control_source_set (tb, duration, 1.0);
+  gst_timed_value_control_source_set (tb, duration, 0.1);
 
-  GST_LOG ("done updating controller");
+  GST_INFO ("done updating controller");
 }
 
 /**
