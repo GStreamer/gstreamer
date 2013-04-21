@@ -1255,6 +1255,7 @@ gen_source_element (GstURIDecodeBin * decoder)
   GParamSpec *pspec;
   GstQuery *query;
   GstSchedulingFlags flags;
+  GError *err = NULL;
 
   if (!decoder->uri)
     goto no_uri;
@@ -1268,7 +1269,7 @@ gen_source_element (GstURIDecodeBin * decoder)
     goto uri_blacklisted;
 
   source =
-      gst_element_make_from_uri (GST_URI_SRC, decoder->uri, "source", NULL);
+      gst_element_make_from_uri (GST_URI_SRC, decoder->uri, "source", &err);
   if (!source)
     goto no_source;
 
@@ -1357,6 +1358,7 @@ invalid_uri:
   {
     GST_ELEMENT_ERROR (decoder, RESOURCE, NOT_FOUND,
         (_("Invalid URI \"%s\"."), decoder->uri), (NULL));
+    g_clear_error (&err);
     return NULL;
   }
 uri_blacklisted:
@@ -1367,23 +1369,29 @@ uri_blacklisted:
   }
 no_source:
   {
-    gchar *prot = gst_uri_get_protocol (decoder->uri);
-
     /* whoops, could not create the source element, dig a little deeper to
      * figure out what might be wrong. */
-    if (prot) {
-      GstMessage *msg;
+    if (err != NULL && err->code == GST_URI_ERROR_UNSUPPORTED_PROTOCOL) {
+      gchar *prot;
 
-      msg =
-          gst_missing_uri_source_message_new (GST_ELEMENT_CAST (decoder), prot);
-      gst_element_post_message (GST_ELEMENT_CAST (decoder), msg);
+      prot = gst_uri_get_protocol (decoder->uri);
+      if (prot == NULL)
+        goto invalid_uri;
+
+      gst_element_post_message (GST_ELEMENT_CAST (decoder),
+          gst_missing_uri_source_message_new (GST_ELEMENT (decoder), prot));
 
       GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN,
           (_("No URI handler implemented for \"%s\"."), prot), (NULL));
-      g_free (prot);
-    } else
-      goto invalid_uri;
 
+      g_free (prot);
+    } else {
+      GST_ELEMENT_ERROR (decoder, RESOURCE, NOT_FOUND,
+          ("%s", (err) ? err->message : "URI was not accepted by any element"),
+          ("No element accepted URI '%s'", decoder->uri));
+    }
+
+    g_clear_error (&err);
     return NULL;
   }
 }
