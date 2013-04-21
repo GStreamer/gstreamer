@@ -31,6 +31,8 @@
 #include <string.h>
 #include <gst/gst.h>
 
+#include <gst/gst-i18n-plugin.h>
+
 #include "parsechannels.h"
 
 GST_DEBUG_CATEGORY_EXTERN (dvb_base_bin_debug);
@@ -43,7 +45,8 @@ GST_DEBUG_CATEGORY_EXTERN (dvb_base_bin_debug);
 
 /* this will do zap style channels.conf only for the moment */
 static GHashTable *
-parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename)
+parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename,
+    GError ** error)
 {
   gchar *contents;
   gchar **lines;
@@ -149,17 +152,21 @@ parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename)
 
 open_fail:
   {
-    GST_ELEMENT_ERROR (dvbbasebin, RESOURCE, READ, (NULL),
-        ("Opening channels configuration file '%s' failed : %s", filename,
-            err->message));
+    if (err->code == G_FILE_ERROR_NOENT) {
+      g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
+          _("Couldn't find DVB channel configuration file"));
+    } else {
+      g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+          _("Couldn't load DVB channel configuration file: %s"), err->message);
+    }
     g_clear_error (&err);
     return NULL;
   }
 
 no_channels:
   {
-    GST_ELEMENT_ERROR (dvbbasebin, RESOURCE, READ, (NULL),
-        ("Channels configuration file doesn't contain any channels"));
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        _("DVB channel configuration file doesn't contain any channels"));
     g_hash_table_unref (res);
     return NULL;
   }
@@ -182,7 +189,8 @@ destroy_channels_hash (GHashTable * channels)
 }
 
 gboolean
-set_properties_for_channel (GstElement * dvbbasebin, const gchar * channel_name)
+set_properties_for_channel (GstElement * dvbbasebin,
+    const gchar * channel_name, GError ** error)
 {
   gboolean ret = FALSE;
   GHashTable *channels, *params;
@@ -195,7 +203,7 @@ set_properties_for_channel (GstElement * dvbbasebin, const gchar * channel_name)
     filename = g_build_filename (g_get_user_config_dir (),
         "gstreamer-" GST_API_VERSION, "dvb-channels.conf", NULL);
   }
-  channels = parse_channels_conf_from_file (dvbbasebin, filename);
+  channels = parse_channels_conf_from_file (dvbbasebin, filename, error);
   g_free (filename);
 
   if (!channels)
@@ -424,9 +432,9 @@ beach:
 
 unknown_channel:
   {
-    GST_ELEMENT_ERROR (dvbbasebin, RESOURCE, READ, (NULL),
-        ("Couldn't find configuration properties for channel \"%s\"",
-            channel_name));
+    /* FIXME: is channel name guaranteed to be ASCII or UTF-8? */
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
+        _("Couldn't find details for DVB channel %s"), channel_name);
     destroy_channels_hash (channels);
     return FALSE;
   }

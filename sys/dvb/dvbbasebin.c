@@ -920,6 +920,7 @@ dvb_base_bin_uri_set_uri (GstURIHandler * handler, const gchar * uri,
     GError ** error)
 {
   DvbBaseBin *dvbbasebin = GST_DVB_BASE_BIN (handler);
+  GError *err = NULL;
   gchar *location;
 
   location = gst_uri_get_location (uri);
@@ -927,7 +928,7 @@ dvb_base_bin_uri_set_uri (GstURIHandler * handler, const gchar * uri,
   if (location == NULL)
     goto no_location;
 
-  if (!set_properties_for_channel (GST_ELEMENT (dvbbasebin), location))
+  if (!set_properties_for_channel (GST_ELEMENT (dvbbasebin), location, &err))
     goto set_properties_failed;
 
   /* FIXME: here is where we parse channels.conf */
@@ -935,18 +936,24 @@ dvb_base_bin_uri_set_uri (GstURIHandler * handler, const gchar * uri,
   g_free (location);
   return TRUE;
 /* ERRORS */
+post_error_and_exit:
+  {
+    gst_element_message_full (GST_ELEMENT (dvbbasebin), GST_MESSAGE_ERROR,
+        err->domain, err->code, g_strdup (err->message), NULL, __FILE__,
+        GST_FUNCTION, __LINE__);
+    g_propagate_error (error, err);
+    return FALSE;
+  }
 no_location:
   {
-    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+    g_set_error (&err, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
         "No details to DVB URI");
-    return FALSE;
+    goto post_error_and_exit;
   }
 set_properties_failed:
   {
-    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
-        "Could not set properties from DVB URI");
     g_free (location);
-    return FALSE;
+    goto post_error_and_exit;
   }
 }
 

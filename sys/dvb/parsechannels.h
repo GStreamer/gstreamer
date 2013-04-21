@@ -24,7 +24,8 @@
 #ifndef PARSE_CHANNELS_H
 #define PARSE_CHANNELS_H
 
-gboolean set_properties_for_channel(GstElement *dvbbasebin, 
-  const gchar* channel_name);
+gboolean set_properties_for_channel (GstElement  * dvbbasebin,
+                                     const gchar * channel_name,
+                                     GError     ** error);
 
 #endif
