@@ -147,11 +147,14 @@ link_element_to_mixer_with_volume (GstBin * bin, GstElement * element,
     GstElement * mixer)
 {
   GstElement *volume = gst_element_factory_make ("volume", NULL);
+  GstElement *resample = gst_element_factory_make ("audioresample", NULL);
 
   gst_bin_add (bin, volume);
+  gst_bin_add (bin, resample);
 
   if (!fast_element_link (element, volume) ||
-      !gst_element_link_pads_full (volume, "src", mixer, "sink_%u",
+      !fast_element_link (volume, resample) ||
+      !gst_element_link_pads_full (resample, "src", mixer, "sink_%u",
           GST_PAD_LINK_CHECK_NOTHING))
     GST_ERROR_OBJECT (bin, "Error linking volume to mixer");
 
