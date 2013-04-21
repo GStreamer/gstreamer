@@ -21,6 +21,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <glib.h>
 #include <glib-object.h>
 #include <stdlib.h>
@@ -55,6 +59,8 @@ parse_channels_conf_from_file (GstElement * dvbbasebin, const gchar * filename)
   int i, parsedchannels = 0;
   GHashTable *res;
   GError *err = NULL;
+
+  GST_INFO_OBJECT (dvbbasebin, "parsing '%s'", filename);
 
   if (!g_file_get_contents (filename, &contents, NULL, &err))
     goto open_fail;
@@ -183,11 +189,8 @@ set_properties_for_channel (GstElement * dvbbasebin, const gchar * channel_name)
 
   filename = g_strdup (g_getenv ("GST_DVB_CHANNELS_CONF"));
   if (filename == NULL) {
-    guint major, minor, micro, nano;
-
-    gst_version (&major, &minor, &micro, &nano);
-    filename = g_strdup_printf ("%s/gstreamer-%d.%d/dvb-channels.conf",
-        g_get_user_config_dir (), major, minor);
+    filename = g_build_filename (g_get_user_config_dir (),
+        "gstreamer-" GST_API_VERSION, "dvb-channels.conf", NULL);
   }
   channels = parse_channels_conf_from_file (dvbbasebin, filename);
   g_free (filename);
