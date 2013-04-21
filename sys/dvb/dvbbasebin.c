@@ -30,7 +30,7 @@
 #include "dvbbasebin.h"
 #include "parsechannels.h"
 
-GST_DEBUG_CATEGORY_STATIC (dvb_base_bin_debug);
+GST_DEBUG_CATEGORY (dvb_base_bin_debug);
 #define GST_CAT_DEFAULT dvb_base_bin_debug
 
 static GstStaticPadTemplate src_template =

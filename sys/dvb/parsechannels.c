@@ -33,6 +33,9 @@
 
 #include "parsechannels.h"
 
+GST_DEBUG_CATEGORY_EXTERN (dvb_base_bin_debug);
+#define GST_CAT_DEFAULT dvb_base_bin_debug
+
 /* TODO:
  * Store the channels hash table around instead of constantly parsing it
  * Detect when the file changed on disk
