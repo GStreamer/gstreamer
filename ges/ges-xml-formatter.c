@@ -854,8 +854,8 @@ _save_keyframes (GString * str, GESTrackElement * trackelement)
           GstTimedValue *value;
 
           value = (GstTimedValue *) tmp->data;
-          append_escaped (str, g_markup_printf_escaped (" %lld:%f ",
-                  (long long int) value->timestamp, value->value));
+          append_escaped (str, g_markup_printf_escaped (" %" G_GUINT64_FORMAT
+                  ":%f ", value->timestamp, value->value));
         }
         append_escaped (str, g_markup_printf_escaped ("'/>\n"));
       } else
