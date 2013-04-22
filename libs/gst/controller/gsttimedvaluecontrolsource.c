@@ -233,7 +233,7 @@ gst_timed_value_control_source_set (GstTimedValueControlSource * self,
 /**
  * gst_timed_value_control_source_set_from_list:
  * @self: the #GstTimedValueControlSource object
- * @timedvalues: (transfer none) (element-type GstController.TimedValue): a list
+ * @timedvalues: (transfer none) (element-type GstTimedValue): a list
  * with #GstTimedValue items
  *
  * Sets multiple timed values at once.
@@ -347,7 +347,7 @@ _append_control_point (GstControlPoint * cp, GQueue * res)
  * Returns a read-only copy of the list of #GstTimedValue for the given property.
  * Free the list after done with it.
  *
- * Returns: (transfer container) (element-type GstController.TimedValue): a copy
+ * Returns: (transfer container) (element-type GstTimedValue): a copy
  * of the list, or %NULL if the property isn't handled by the controller
  */
 GList *
