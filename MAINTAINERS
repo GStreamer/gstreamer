@@ -5,7 +5,8 @@ of people, including, but not limited to:
  Wim Taymans <wim.taymans@gmail.com>
  David Schleef <ds@schleef.org>
  Tim-Philipp Müller <tim centricular net>
+ Sebastian Dröge <slomo circular-chaos org>
 
 Maintainer-related issues should be addressed to:
 
-  gstreamer-devel@lists.sourceforge.net
+  gstreamer-devel@lists.freedesktop.org
