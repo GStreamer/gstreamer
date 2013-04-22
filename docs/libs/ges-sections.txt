@@ -1047,8 +1047,8 @@ ges_uri_clip_asset_is_image
 ges_uri_clip_asset_get_info
 ges_uri_clip_asset_new
 ges_uri_clip_asset_request_sync
-ges_uri_clip_asset_set_timeout
 ges_uri_clip_asset_get_stream_assets
+ges_uri_clip_asset_class_set_timeout
 <SUBSECTION Standard>
 GESUriClipAssetPrivate
 GES_URI_CLIP_ASSET
