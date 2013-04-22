@@ -2247,8 +2247,9 @@ gboolean
 ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
     GESAsset * formatter_asset, gboolean overwrite, GError ** error)
 {
-  gboolean ret, created_proj;
   GESProject *project;
+
+  gboolean ret, created_proj = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
   project =
