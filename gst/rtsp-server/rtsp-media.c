@@ -1410,8 +1410,9 @@ no_more_pads_cb (GstElement * element, GstRTSPMedia * media)
  * gst_rtsp_media_prepare:
  * @media: a #GstRTSPMedia
  *
- * Prepare @media for streaming. This function will create the pipeline and
- * other objects to manage the streaming.
+ * Prepare @media for streaming. This function will create the objects
+ * to manage the streaming. A pipeline must have been set on @media with
+ * gst_rtsp_media_take_pipeline().
  *
  * It will preroll the pipeline and collect vital information about the streams
  * such as the duration.
@@ -1611,9 +1612,6 @@ finish_unprepare (GstRTSPMedia * media)
   if (priv->nettime)
     gst_object_unref (priv->nettime);
   priv->nettime = NULL;
-
-  gst_object_unref (priv->pipeline);
-  priv->pipeline = NULL;
 
   priv->reused = TRUE;
   priv->status = GST_RTSP_MEDIA_STATUS_UNPREPARED;
