@@ -680,6 +680,9 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     avail = gst_adapter_available (rtpjpegdepay->adapter);
     GST_DEBUG_OBJECT (rtpjpegdepay, "marker set, last buffer");
 
+    if (avail < 2)
+      goto invalid_packet;
+
     /* take the last bytes of the jpeg data to see if there is an EOI
      * marker */
     gst_adapter_copy (rtpjpegdepay->adapter, end, avail - 2, 2);
@@ -729,6 +732,14 @@ invalid_dimension:
 no_qtable:
   {
     GST_WARNING_OBJECT (rtpjpegdepay, "no qtable");
+    gst_rtp_buffer_unmap (&rtp);
+    return NULL;
+  }
+invalid_packet:
+  {
+    GST_WARNING_OBJECT (rtpjpegdepay, "invalid packet");
+    gst_adapter_flush (rtpjpegdepay->adapter,
+        gst_adapter_available (rtpjpegdepay->adapter));
     gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
