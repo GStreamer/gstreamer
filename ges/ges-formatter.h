@@ -63,8 +63,8 @@ struct _GESFormatter {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-typedef gboolean (*GESFormatterCanLoadURIMethod) (GESFormatterClass *class, const gchar * uri, GError **error);
-typedef gboolean (*GESFormatterCanSaveURIMethod) (GESFormatterClass *class, const gchar * uri, GError **error);
+typedef gboolean (*GESFormatterCanLoadURIMethod) (GESFormatter *dummy_instance, const gchar * uri, GError **error);
+typedef gboolean (*GESFormatterCanSaveURIMethod) (GESFormatter *dummy_instance, const gchar * uri, GError **error);
 
 /**
  * GESFormatterLoadFromURIMethod:

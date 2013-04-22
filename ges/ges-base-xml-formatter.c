@@ -182,26 +182,22 @@ failed:
  ***********************************************/
 
 static gboolean
-_can_load_uri (GESFormatterClass * class, const gchar * uri, GError ** error)
+_can_load_uri (GESFormatter * dummy_formatter, const gchar * uri,
+    GError ** error)
 {
-  gboolean ret = FALSE;
   GMarkupParseContext *ctx;
+  GESBaseXmlFormatter *self = GES_BASE_XML_FORMATTER (dummy_formatter);
 
   /* we create a temporary object so we can use it as a context */
-  GESBaseXmlFormatter *self = g_object_new (G_OBJECT_CLASS_TYPE (class), NULL);
   _GET_PRIV (self)->check_only = TRUE;
 
 
   ctx = create_parser_context (self, uri, error);
   if (!ctx)
-    goto done;
+    return FALSE;
 
-  ret = TRUE;
   g_markup_parse_context_free (ctx);
-
-done:
-  gst_object_unref (self);
-  return ret;
+  return TRUE;
 }
 
 static gboolean

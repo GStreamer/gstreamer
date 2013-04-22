@@ -99,7 +99,7 @@ list_table_destroyer (gpointer key, gpointer value, void *unused)
 }
 
 static gboolean
-pitivi_can_load_uri (GESFormatterClass * class, const gchar * uri,
+pitivi_can_load_uri (GESFormatter * dummy_instance, const gchar * uri,
     GError ** error)
 {
   xmlDocPtr doc;

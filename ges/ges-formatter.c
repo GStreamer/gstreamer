@@ -46,9 +46,9 @@ struct _GESFormatterPrivate
 };
 
 static void ges_formatter_dispose (GObject * object);
-static gboolean default_can_load_uri (GESFormatterClass * class,
+static gboolean default_can_load_uri (GESFormatter * dummy_instance,
     const gchar * uri, GError ** error);
-static gboolean default_can_save_uri (GESFormatterClass * class,
+static gboolean default_can_save_uri (GESFormatter * dummy_instance,
     const gchar * uri, GError ** error);
 
 /* GESExtractable implementation */
@@ -146,20 +146,21 @@ ges_formatter_dispose (GObject * object)
 }
 
 static gboolean
-default_can_load_uri (GESFormatterClass * class, const gchar * uri,
+default_can_load_uri (GESFormatter * dummy_instance, const gchar * uri,
     GError ** error)
 {
   GST_DEBUG ("%s: no 'can_load_uri' vmethod implementation",
-      g_type_name (G_OBJECT_CLASS_TYPE (class)));
+      G_OBJECT_TYPE_NAME (dummy_instance));
+
   return FALSE;
 }
 
 static gboolean
-default_can_save_uri (GESFormatterClass * class,
+default_can_save_uri (GESFormatter * dummy_instance,
     const gchar * uri, GError ** error)
 {
   GST_DEBUG ("%s: no 'can_save_uri' vmethod implementation",
-      g_type_name (G_OBJECT_CLASS_TYPE (class)));
+      G_OBJECT_TYPE_NAME (dummy_instance));
   return FALSE;
 }
 
@@ -236,6 +237,7 @@ ges_formatter_can_load_uri (const gchar * uri, GError ** error)
   formatter_assets = ges_list_assets (GES_TYPE_FORMATTER);
   for (tmp = formatter_assets; tmp; tmp = tmp->next) {
     GESAsset *asset = GES_ASSET (tmp->data);
+    GESFormatter *dummy_instance;
 
     if (extension
         && g_strcmp0 (extension,
@@ -244,12 +246,16 @@ ges_formatter_can_load_uri (const gchar * uri, GError ** error)
       continue;
 
     class = g_type_class_ref (ges_asset_get_extractable_type (asset));
-    if (class->can_load_uri (class, uri, error)) {
+    dummy_instance =
+        g_object_new (ges_asset_get_extractable_type (asset), NULL);
+    if (class->can_load_uri (dummy_instance, uri, error)) {
       g_type_class_unref (class);
+      gst_object_unref (dummy_instance);
       ret = TRUE;
       break;
     }
     g_type_class_unref (class);
+    gst_object_unref (dummy_instance);
   }
 
   g_list_free (formatter_assets);
@@ -303,8 +309,8 @@ ges_formatter_can_save_uri (const gchar * uri, GError ** error)
  */
 
 gboolean
-ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
-    const gchar * uri, GError ** error)
+ges_formatter_load_from_uri (GESFormatter * formatter,
+    GESTimeline * timeline, const gchar * uri, GError ** error)
 {
   gboolean ret = FALSE;
   GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
@@ -464,16 +470,22 @@ _find_formatter_asset_for_uri (const gchar * uri)
 
   formatter_assets = ges_list_assets (GES_TYPE_FORMATTER);
   for (tmp = formatter_assets; tmp; tmp = tmp->next) {
+    GESFormatter *dummy_instance;
+
     asset = GES_ASSET (tmp->data);
     class = g_type_class_ref (ges_asset_get_extractable_type (asset));
-    if (class->can_load_uri (class, uri, NULL)) {
+    dummy_instance =
+        g_object_new (ges_asset_get_extractable_type (asset), NULL);
+    if (class->can_load_uri (dummy_instance, uri, NULL)) {
       g_type_class_unref (class);
       asset = gst_object_ref (asset);
+      gst_object_unref (dummy_instance);
       break;
     }
 
     asset = NULL;
     g_type_class_unref (class);
+    gst_object_unref (dummy_instance);
   }
 
   g_list_free (formatter_assets);
