@@ -102,12 +102,13 @@ struct _GstRTSPMediaClass {
   gboolean        (*unprepare)       (GstRTSPMedia *media);
 
   /* signals */
-  gboolean        (*new_stream)      (GstRTSPMedia *media, GstRTSPStream * stream);
+  void            (*new_stream)      (GstRTSPMedia *media, GstRTSPStream * stream);
+  void            (*removed_stream)  (GstRTSPMedia *media, GstRTSPStream * stream);
 
-  gboolean        (*prepared)        (GstRTSPMedia *media);
-  gboolean        (*unprepared)      (GstRTSPMedia *media);
+  void            (*prepared)        (GstRTSPMedia *media);
+  void            (*unprepared)      (GstRTSPMedia *media);
 
-  gboolean        (*new_state)       (GstRTSPMedia *media, GstState state);
+  void            (*new_state)       (GstRTSPMedia *media, GstState state);
 };
 
 GType                 gst_rtsp_media_get_type         (void);

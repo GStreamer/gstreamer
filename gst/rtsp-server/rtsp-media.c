@@ -102,6 +102,7 @@ enum
 enum
 {
   SIGNAL_NEW_STREAM,
+  SIGNAL_REMOVED_STREAM,
   SIGNAL_PREPARED,
   SIGNAL_UNPREPARED,
   SIGNAL_NEW_STATE,
@@ -179,6 +180,12 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
       g_signal_new ("new-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, new_stream), NULL, NULL,
       g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_RTSP_STREAM);
+
+  gst_rtsp_media_signals[SIGNAL_REMOVED_STREAM] =
+      g_signal_new ("removed-stream", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaClass, removed_stream),
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_STREAM);
 
   gst_rtsp_media_signals[SIGNAL_PREPARED] =
       g_signal_new ("prepared", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -972,6 +979,30 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
   return stream;
 }
 
+static void
+gst_rtsp_media_remove_stream (GstRTSPMedia * media, GstRTSPStream * stream)
+{
+  GstRTSPMediaPrivate *priv;
+  GstPad *srcpad;
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  /* remove the ghostpad */
+  srcpad = gst_rtsp_stream_get_srcpad (stream);
+  gst_element_remove_pad (priv->element, srcpad);
+  gst_object_unref (srcpad);
+  /* now remove the stream */
+  g_object_ref (stream);
+  g_ptr_array_remove (priv->streams, stream);
+  g_mutex_unlock (&priv->lock);
+
+  g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_REMOVED_STREAM], 0,
+      stream, NULL);
+
+  g_object_unref (stream);
+}
+
 /**
  * gst_rtsp_media_n_streams:
  * @media: a #GstRTSPMedia
@@ -1369,6 +1400,8 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
   /* FIXME, element is likely not a payloader, find the payloader here */
   stream = gst_rtsp_media_create_stream (media, element, pad);
 
+  g_object_set_data (G_OBJECT (pad), "gst-rtsp-dynpad-stream", stream);
+
   GST_INFO ("pad added %s:%s, stream %p", GST_DEBUG_PAD_NAME (pad), stream);
 
   g_rec_mutex_lock (&priv->state_lock);
@@ -1387,13 +1420,30 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
 }
 
 static void
-no_more_pads_cb (GstElement * element, GstRTSPMedia * media)
+pad_removed_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
+  GstRTSPStream *stream;
+
+  stream = g_object_get_data (G_OBJECT (pad), "gst-rtsp-dynpad-stream");
+  if (stream == NULL)
+    return;
+
+  GST_INFO ("pad removed %s:%s, stream %p", GST_DEBUG_PAD_NAME (pad), stream);
+
+  g_rec_mutex_lock (&priv->state_lock);
+  gst_rtsp_stream_leave_bin (stream, GST_BIN (priv->pipeline), priv->rtpbin);
+  g_rec_mutex_unlock (&priv->state_lock);
+
+  gst_rtsp_media_remove_stream (media, stream);
+}
+
+static void
+remove_fakesink (GstRTSPMediaPrivate * priv)
+{
   GstElement *fakesink;
 
   g_mutex_lock (&priv->lock);
-  GST_INFO ("no more pads");
   if ((fakesink = priv->fakesink)) {
     gst_object_ref (fakesink);
     priv->fakesink = NULL;
@@ -1406,11 +1456,21 @@ no_more_pads_cb (GstElement * element, GstRTSPMedia * media)
   }
 }
 
+static void
+no_more_pads_cb (GstElement * element, GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+
+  GST_INFO ("no more pads");
+  remove_fakesink (priv);
+}
+
 typedef struct _DynPaySignalHandlers DynPaySignalHandlers;
 
 struct _DynPaySignalHandlers
 {
   gulong pad_added_handler;
+  gulong pad_removed_handler;
   gulong no_more_pads_handler;
 };
 
@@ -1504,6 +1564,8 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
 
     handlers->pad_added_handler = g_signal_connect (elem, "pad-added",
         (GCallback) pad_added_cb, media);
+    handlers->pad_removed_handler = g_signal_connect (elem, "pad-removed",
+        (GCallback) pad_removed_cb, media);
     handlers->no_more_pads_handler = g_signal_connect (elem, "no-more-pads",
         (GCallback) no_more_pads_cb, media);
 
@@ -1608,6 +1670,7 @@ finish_unprepare (GstRTSPMedia * media)
   GST_DEBUG ("shutting down");
 
   gst_element_set_state (priv->pipeline, GST_STATE_NULL);
+  remove_fakesink (priv);
 
   for (i = 0; i < priv->streams->len; i++) {
     GstRTSPStream *stream;
@@ -1624,10 +1687,13 @@ finish_unprepare (GstRTSPMedia * media)
     GstElement *elem = walk->data;
     DynPaySignalHandlers *handlers;
 
-    handlers = g_object_steal_data (G_OBJECT (elem), "gst-rtsp-dypay-handlers");
+    handlers =
+        g_object_steal_data (G_OBJECT (elem), "gst-rtsp-dynpay-handlers");
     g_assert (handlers != NULL);
 
     g_signal_handler_disconnect (G_OBJECT (elem), handlers->pad_added_handler);
+    g_signal_handler_disconnect (G_OBJECT (elem),
+        handlers->pad_removed_handler);
     g_signal_handler_disconnect (G_OBJECT (elem),
         handlers->no_more_pads_handler);
 
