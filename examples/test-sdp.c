@@ -34,6 +34,12 @@ timeout (GstRTSPServer * server, gboolean ignored)
   return TRUE;
 }
 
+static void
+media_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
+{
+  gst_rtsp_media_set_reusable (media, TRUE);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -70,6 +76,8 @@ main (int argc, char *argv[])
       argv[1]);
   gst_rtsp_media_factory_set_launch (factory, str);
   gst_rtsp_media_factory_set_shared (factory, TRUE);
+  g_signal_connect (factory, "media-configure", (GCallback) media_configure,
+      NULL);
   g_free (str);
 
   /* attach the test factory to the /test url */
