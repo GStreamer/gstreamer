@@ -1122,8 +1122,7 @@ _save_encoding_profiles (GString * str, GESProject * project)
         _save_stream_profiles (str, sprof, profname, i);
       }
     }
-    append_escaped (str,
-        g_markup_printf_escaped ("</encoding-profile>\n", NULL));
+    append_escaped (str, g_markup_printf_escaped ("</encoding-profile>\n"));
   }
 }
 
