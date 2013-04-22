@@ -1220,8 +1220,10 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
   priv->send_src[1] = NULL;
 
   g_object_unref (priv->session);
+  priv->session = NULL;
   if (priv->caps)
     gst_caps_unref (priv->caps);
+  priv->caps = NULL;
 
   priv->is_joined = FALSE;
   g_mutex_unlock (&priv->lock);
