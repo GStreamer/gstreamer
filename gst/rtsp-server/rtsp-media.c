@@ -1604,7 +1604,6 @@ finish_unprepare (GstRTSPMedia * media)
 
     gst_rtsp_stream_leave_bin (stream, GST_BIN (priv->pipeline), priv->rtpbin);
   }
-  g_ptr_array_set_size (priv->streams, 0);
 
   gst_bin_remove (GST_BIN (priv->pipeline), priv->rtpbin);
   priv->rtpbin = NULL;
