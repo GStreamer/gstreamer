@@ -1763,7 +1763,7 @@ test_foreach (const GESMetaContainer * container, const gchar * key,
     GValue * value, gpointer user_data)
 {
   fail_unless ((0 == g_strcmp0 (key, "some-string")) ||
-      (0 == g_strcmp0 (key, "some-int")));
+      (0 == g_strcmp0 (key, "some-int")) || (0 == g_strcmp0 (key, "volume")));
 }
 
 GST_START_TEST (test_layer_meta_foreach)

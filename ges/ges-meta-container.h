@@ -84,6 +84,24 @@ G_BEGIN_DECLS
  */
 #define GES_META_FORMATTER_RANK                       "rank"
 
+/**
+ * GES_META_VOLUME:
+ *
+ * The volume, can be used for audio track or layers
+ *
+ * The volume for a track or a layer, it is register as a float
+ */
+#define GES_META_VOLUME                              "volume"
+
+/**
+ * GES_META_VOLUME_DEFAULT:
+ *
+ * The default volume
+ *
+ * The default volume for a track or a layer as a float
+ */
+#define GES_META_VOLUME_DEFAULT                       1.0
+
 typedef struct _GESMetaContainer          GESMetaContainer;
 typedef struct _GESMetaContainerInterface GESMetaContainerInterface;
 
