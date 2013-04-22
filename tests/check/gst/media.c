@@ -114,6 +114,60 @@ GST_START_TEST (test_media)
 
 GST_END_TEST;
 
+GST_START_TEST (test_media_prepare)
+{
+  GstRTSPMediaFactory *factory;
+  GstRTSPMedia *media;
+  GstRTSPUrl *url;
+
+  /* test non-reusable media first */
+  factory = gst_rtsp_media_factory_new ();
+  fail_if (gst_rtsp_media_factory_is_shared (factory));
+  gst_rtsp_url_parse ("rtsp://localhost:8554/test", &url);
+
+  gst_rtsp_media_factory_set_launch (factory,
+      "( videotestsrc ! rtpvrawpay pt=96 name=pay0 )");
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+  fail_unless (gst_rtsp_media_n_streams (media) == 1);
+
+  fail_unless (gst_rtsp_media_prepare (media));
+  fail_unless (gst_rtsp_media_unprepare (media));
+  fail_unless (gst_rtsp_media_n_streams (media) == 1);
+  fail_if (gst_rtsp_media_prepare (media));
+
+  g_object_unref (media);
+  gst_rtsp_url_free (url);
+  g_object_unref (factory);
+
+  /* test reusable media */
+  factory = gst_rtsp_media_factory_new ();
+  fail_if (gst_rtsp_media_factory_is_shared (factory));
+  gst_rtsp_url_parse ("rtsp://localhost:8554/test", &url);
+
+  gst_rtsp_media_factory_set_launch (factory,
+      "( videotestsrc ! rtpvrawpay pt=96 name=pay0 )");
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+  fail_unless (gst_rtsp_media_n_streams (media) == 1);
+
+  g_object_set (G_OBJECT (media), "reusable", TRUE, NULL);
+
+  fail_unless (gst_rtsp_media_prepare (media));
+  fail_unless (gst_rtsp_media_unprepare (media));
+  fail_unless (gst_rtsp_media_n_streams (media) == 1);
+  fail_unless (gst_rtsp_media_prepare (media));
+  fail_unless (gst_rtsp_media_unprepare (media));
+
+  g_object_unref (media);
+  gst_rtsp_url_free (url);
+  g_object_unref (factory);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspmedia_suite (void)
 {
@@ -124,6 +178,7 @@ rtspmedia_suite (void)
   tcase_set_timeout (tc, 20);
   tcase_add_test (tc, test_launch);
   tcase_add_test (tc, test_media);
+  tcase_add_test (tc, test_media_prepare);
 
   return s;
 }
