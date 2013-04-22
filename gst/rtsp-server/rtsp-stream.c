@@ -194,6 +194,22 @@ gst_rtsp_stream_get_index (GstRTSPStream * stream)
   return stream->priv->idx;
 }
 
+ /**
+ * gst_rtsp_stream_get_srcpad:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the srcpad associated with @stream.
+ *
+ * Return: the srcpad. Unref after usage.
+ */
+GstPad *
+gst_rtsp_stream_get_srcpad (GstRTSPStream * stream)
+{
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+
+  return gst_object_ref (stream->priv->srcpad);
+}
+
 /**
  * gst_rtsp_stream_set_mtu:
  * @stream: a #GstRTSPStream
