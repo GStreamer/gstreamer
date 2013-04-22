@@ -1406,6 +1406,14 @@ no_more_pads_cb (GstElement * element, GstRTSPMedia * media)
   }
 }
 
+typedef struct _DynPaySignalHandlers DynPaySignalHandlers;
+
+struct _DynPaySignalHandlers
+{
+  gulong pad_added_handler;
+  gulong no_more_pads_handler;
+};
+
 /**
  * gst_rtsp_media_prepare:
  * @media: a #GstRTSPMedia
@@ -1490,11 +1498,16 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
 
   for (walk = priv->dynamic; walk; walk = g_list_next (walk)) {
     GstElement *elem = walk->data;
+    DynPaySignalHandlers *handlers = g_slice_new (DynPaySignalHandlers);
 
     GST_INFO ("adding callbacks for dynamic element %p", elem);
 
-    g_signal_connect (elem, "pad-added", (GCallback) pad_added_cb, media);
-    g_signal_connect (elem, "no-more-pads", (GCallback) no_more_pads_cb, media);
+    handlers->pad_added_handler = g_signal_connect (elem, "pad-added",
+        (GCallback) pad_added_cb, media);
+    handlers->no_more_pads_handler = g_signal_connect (elem, "no-more-pads",
+        (GCallback) no_more_pads_cb, media);
+
+    g_object_set_data (G_OBJECT (elem), "gst-rtsp-dynpay-handlers", handlers);
 
     /* we add a fakesink here in order to make the state change async. We remove
      * the fakesink again in the no-more-pads callback. */
@@ -1590,6 +1603,7 @@ finish_unprepare (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
   gint i;
+  GList *walk;
 
   GST_DEBUG ("shutting down");
 
@@ -1603,6 +1617,21 @@ finish_unprepare (GstRTSPMedia * media)
     stream = g_ptr_array_index (priv->streams, i);
 
     gst_rtsp_stream_leave_bin (stream, GST_BIN (priv->pipeline), priv->rtpbin);
+  }
+
+  /* remove the pad signal handlers */
+  for (walk = priv->dynamic; walk; walk = g_list_next (walk)) {
+    GstElement *elem = walk->data;
+    DynPaySignalHandlers *handlers;
+
+    handlers = g_object_steal_data (G_OBJECT (elem), "gst-rtsp-dypay-handlers");
+    g_assert (handlers != NULL);
+
+    g_signal_handler_disconnect (G_OBJECT (elem), handlers->pad_added_handler);
+    g_signal_handler_disconnect (G_OBJECT (elem),
+        handlers->no_more_pads_handler);
+
+    g_slice_free (DynPaySignalHandlers, handlers);
   }
 
   gst_bin_remove (GST_BIN (priv->pipeline), priv->rtpbin);
