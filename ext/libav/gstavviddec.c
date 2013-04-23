@@ -473,6 +473,8 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   {
     const gchar *env = g_getenv ("GST_AVVIDDEC_MAX_THREADS");
     int max_threads = ffmpegdec->max_threads;
+    GstQuery *query;
+    gboolean is_live;
 
     if (env != NULL) {
       if (g_str_equal (env, "auto"))
@@ -493,8 +495,21 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
         ffmpegdec->context->thread_count = 0;
     } else
       ffmpegdec->context->thread_count = max_threads;
+
+    query = gst_query_new_latency ();
+    is_live = FALSE;
+    /* Check if upstream is live. If it isn't we can enable frame based
+     * threading, which is adding latency */
+    if (gst_pad_peer_query (GST_VIDEO_DECODER_SINK_PAD (ffmpegdec), query)) {
+      gst_query_parse_latency (query, &is_live, NULL, NULL);
+    }
+    gst_query_unref (query);
+
+    if (is_live)
+      ffmpegdec->context->thread_type = FF_THREAD_SLICE;
+    else
+      ffmpegdec->context->thread_type = FF_THREAD_SLICE | FF_THREAD_FRAME;
   }
-  ffmpegdec->context->thread_type = FF_THREAD_SLICE;
 
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
@@ -1543,8 +1558,8 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
         linesize_align);
     edge =
-        ffmpegdec->context->
-        flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+        ffmpegdec->
+        context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
     /* increase the size for the padding */
     width += edge << 1;
     height += edge << 1;
