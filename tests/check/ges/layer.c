@@ -307,12 +307,12 @@ GST_START_TEST (test_single_layer_automatic_transition)
   GST_DEBUG ("Adding assets to first layer");
   GST_DEBUG ("Adding clip from 0 -- 1000 to first layer");
   src = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 0, 0,
-          1000, 1, GES_TRACK_TYPE_UNKNOWN));
+          1000, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src));
 
   GST_DEBUG ("Adding clip from 500 -- 1000 to first layer");
   src1 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 500,
-          0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
+          0, 1000, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src1));
 
   /*
@@ -482,7 +482,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   GST_DEBUG ("Adding clip from 1250 -- 1000 to first layer");
   src2 =
       GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 1250, 0,
-          1000, 1, GES_TRACK_TYPE_UNKNOWN));
+          1000, GES_TRACK_TYPE_UNKNOWN));
   assert_is_type (src2, GES_TYPE_TEST_CLIP);
 
   /*             600____src___1100
@@ -711,12 +711,12 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   GST_DEBUG ("Adding assets to first layer");
   GST_DEBUG ("Adding clip from 0 -- 1000 to first layer");
   src = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 0, 0,
-          1000, 1, GES_TRACK_TYPE_UNKNOWN));
+          1000, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src));
 
   GST_DEBUG ("Adding clip from 500 -- 1000 to first layer");
   src1 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 500,
-          0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
+          0, 1000, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src1));
 
   /*
@@ -751,10 +751,10 @@ GST_START_TEST (test_multi_layer_automatic_transition)
 
   GST_DEBUG ("Adding clip 2 from 500 -- 1000 to second layer");
   src2 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer1, asset, 0,
-          0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
+          0, 1000, GES_TRACK_TYPE_UNKNOWN));
   GST_DEBUG ("Adding clip 3 from 500 -- 1000 to second layer");
   src3 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer1, asset, 500,
-          0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
+          0, 1000, GES_TRACK_TYPE_UNKNOWN));
   assert_is_type (src3, GES_TYPE_TEST_CLIP);
 
   /*        500__transition__1000
@@ -1185,22 +1185,22 @@ GST_START_TEST (test_layer_activate_automatic_transition)
 
   GST_DEBUG ("Adding clip from 0 -- 1000 to layer");
   src = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 0, 0,
-          1000, 1, GES_TRACK_TYPE_UNKNOWN));
+          1000, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src));
 
   GST_DEBUG ("Adding clip from 500 -- 1000 to first layer");
   src1 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 500,
-          0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
+          0, 1000, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src1));
 
   GST_DEBUG ("Adding clip from 1000 -- 2000 to layer");
   src2 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 1000,
-          0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
+          0, 1000, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src2));
 
   GST_DEBUG ("Adding clip from 2000 -- 2500 to layer");
   src3 = GES_TIMELINE_ELEMENT (ges_timeline_layer_add_asset (layer, asset, 2000,
-          0, 500, 1, GES_TRACK_TYPE_UNKNOWN));
+          0, 500, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_CLIP (src3));
 
   /*
@@ -1228,7 +1228,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
   GST_DEBUG ("Adding transition from 1000 -- 1500 to layer");
   transition =
       GES_CLIP (ges_timeline_layer_add_asset (layer,
-          transition_asset, 1000, 0, 500, 1, GES_TRACK_TYPE_VIDEO));
+          transition_asset, 1000, 0, 500, GES_TRACK_TYPE_VIDEO));
   fail_unless (GES_IS_TRANSITION_CLIP (transition));
   objects = GES_CONTAINER_CHILDREN (transition);
   assert_equals_int (g_list_length (objects), 1);

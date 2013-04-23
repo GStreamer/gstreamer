@@ -84,17 +84,17 @@ GST_START_TEST (test_basic_timeline_edition)
    *          |  clip  |  |  clip1  |     |     clip2  |
    * time     0------- 10 --------20    50---------60
    */
-  clip = ges_timeline_layer_add_asset (layer, asset, 0, 0, 10, 1,
+  clip = ges_timeline_layer_add_asset (layer, asset, 0, 0, 10,
       GES_TRACK_TYPE_UNKNOWN);
   trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (GES_IS_TRACK_ELEMENT (trackelement));
 
-  clip1 = ges_timeline_layer_add_asset (layer, asset, 10, 0, 10, 1,
+  clip1 = ges_timeline_layer_add_asset (layer, asset, 10, 0, 10,
       GES_TRACK_TYPE_UNKNOWN);
   trackelement1 = GES_CONTAINER_CHILDREN (clip1)->data;
   fail_unless (GES_IS_TRACK_ELEMENT (trackelement1));
 
-  clip2 = ges_timeline_layer_add_asset (layer, asset, 50, 0, 60, 1,
+  clip2 = ges_timeline_layer_add_asset (layer, asset, 50, 0, 60,
       GES_TRACK_TYPE_UNKNOWN);
   trackelement2 = GES_CONTAINER_CHILDREN (clip2)->data;
   fail_unless (GES_IS_TRACK_ELEMENT (trackelement2));
@@ -560,7 +560,7 @@ GST_START_TEST (test_simple_triming)
   layer = ges_timeline_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 
-  ges_timeline_layer_add_asset (layer, GES_ASSET (asset), 0, 0, 10, 1.0,
+  ges_timeline_layer_add_asset (layer, GES_ASSET (asset), 0, 0, 10,
       ges_clip_asset_get_supported_formats (asset));
 
   element = ges_timeline_layer_get_clips (layer)->data;

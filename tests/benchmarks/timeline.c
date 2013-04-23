@@ -44,11 +44,11 @@ main (gint argc, gchar * argv[])
 
   start = gst_util_get_timestamp ();
   clip = GES_CLIP (ges_timeline_layer_add_asset (layer, asset, 0,
-          0, 1000, 1, GES_TRACK_TYPE_UNKNOWN));
+          0, 1000, GES_TRACK_TYPE_UNKNOWN));
 
   for (i = 1; i < NUM_OBJECTS; i++)
     ges_timeline_layer_add_asset (layer, asset, i * 1000, 0,
-        1000, 1, GES_TRACK_TYPE_UNKNOWN);
+        1000, GES_TRACK_TYPE_UNKNOWN);
   end = gst_util_get_timestamp ();
   g_print ("%" GST_TIME_FORMAT " - adding %d clip to the timeline\n",
       GST_TIME_ARGS (end - start), i);

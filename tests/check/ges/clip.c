@@ -231,7 +231,7 @@ GST_START_TEST (test_clip_group_ungroup)
   asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   assert_is_type (asset, GES_TYPE_ASSET);
 
-  clip = ges_timeline_layer_add_asset (layer, asset, 0, 0, 10, 1,
+  clip = ges_timeline_layer_add_asset (layer, asset, 0, 0, 10,
       GES_TRACK_TYPE_UNKNOWN);
   ASSERT_OBJECT_REFCOUNT (clip, "1 layer", 1);
   assert_equals_uint64 (_START (clip), 0);

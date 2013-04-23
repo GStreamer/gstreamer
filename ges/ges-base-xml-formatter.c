@@ -43,7 +43,6 @@ typedef struct PendingEffects
 typedef struct PendingClip
 {
   gchar *id;
-  gdouble rate;
   guint layer_prio;
   GstClockTime start;
   GstClockTime inpoint;
@@ -408,12 +407,12 @@ set_property_foreach (GQuark field_id, const GValue * value, GObject * object)
 static inline GESClip *
 _add_object_to_layer (GESBaseXmlFormatterPrivate * priv, const gchar * id,
     GESTimelineLayer * layer, GESAsset * asset, GstClockTime start,
-    GstClockTime inpoint, GstClockTime duration, gdouble rate,
+    GstClockTime inpoint, GstClockTime duration,
     GESTrackType track_types, const gchar * metadatas,
     GstStructure * properties)
 {
   GESClip *clip = ges_timeline_layer_add_asset (layer,
-      asset, start, inpoint, duration, rate, track_types);
+      asset, start, inpoint, duration, track_types);
 
   if (clip == NULL) {
     GST_WARNING_OBJECT (clip, "Could not add object from asset: %s",
@@ -562,8 +561,8 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
 
     clip =
         _add_object_to_layer (priv, pend->id, pend->layer, asset,
-        pend->start, pend->inpoint, pend->duration, pend->rate,
-        pend->track_types, pend->metadatas, pend->properties);
+        pend->start, pend->inpoint, pend->duration, pend->track_types,
+        pend->metadatas, pend->properties);
 
     if (clip == NULL)
       continue;
@@ -674,7 +673,7 @@ ges_base_xml_formatter_add_asset (GESBaseXmlFormatter * self,
 void
 ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
     const gchar * id, const char *asset_id, GType type, GstClockTime start,
-    GstClockTime inpoint, GstClockTime duration, gdouble rate,
+    GstClockTime inpoint, GstClockTime duration,
     guint layer_prio, GESTrackType track_types, GstStructure * properties,
     const gchar * metadatas, GError ** error)
 {
@@ -696,7 +695,7 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
 
   /* We do not want the properties that are passed to layer-add_asset to be reset */
   if (properties)
-    gst_structure_remove_fields (properties, "supported-formats", "rate",
+    gst_structure_remove_fields (properties, "supported-formats",
         "inpoint", "start", "ducation", NULL);
 
   asset = ges_asset_request (type, asset_id, NULL);
@@ -723,7 +722,6 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
         pclip, asset_id, g_list_length (pendings));
 
     pclip->id = g_strdup (id);
-    pclip->rate = rate;
     pclip->track_types = track_types;
     pclip->duration = duration;
     pclip->inpoint = inpoint;
@@ -742,8 +740,7 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
   }
 
   nclip = _add_object_to_layer (priv, id, entry->layer,
-      asset, start, inpoint, duration, rate, track_types, metadatas,
-      properties);
+      asset, start, inpoint, duration, track_types, metadatas, properties);
 
   if (!nclip)
     return;

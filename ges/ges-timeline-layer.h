@@ -106,7 +106,6 @@ GESClip * ges_timeline_layer_add_asset   (GESTimelineLayer *layer,
                                                        GstClockTime start,
                                                        GstClockTime inpoint,
                                                        GstClockTime duration,
-                                                       gdouble rate,
                                                        GESTrackType track_types);
 
 gboolean ges_timeline_layer_remove_clip (GESTimelineLayer * layer,

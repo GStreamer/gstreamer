@@ -682,7 +682,7 @@ create_transition (GESTimeline * timeline, GESTrackElement * previous,
     /* TODO make it possible to specify a Transition asset in the API */
     asset = ges_asset_request (GES_TYPE_TRANSITION_CLIP, "crossfade", NULL);
     transition =
-        ges_timeline_layer_add_asset (layer, asset, start, 0, duration, 1,
+        ges_timeline_layer_add_asset (layer, asset, start, 0, duration,
         ges_track_element_get_track_type (next));
   } else {
     GST_DEBUG_OBJECT (timeline,

@@ -53,13 +53,13 @@ main (int argc, gchar ** argv)
   src_asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
 
   /* Add sources to our layer */
-  ges_timeline_layer_add_asset (layer, src_asset, 0, 0, GST_SECOND, 1,
+  ges_timeline_layer_add_asset (layer, src_asset, 0, 0, GST_SECOND,
       GES_TRACK_TYPE_UNKNOWN);
   source = ges_timeline_layer_add_asset (layer, src_asset, GST_SECOND, 0,
-      GST_SECOND, 1, GES_TRACK_TYPE_UNKNOWN);
+      GST_SECOND, GES_TRACK_TYPE_UNKNOWN);
   g_object_set (source, "freq", 480.0, "vpattern", 2, NULL);
   ges_timeline_layer_add_asset (layer, src_asset, 2 * GST_SECOND, 0,
-      GST_SECOND, 1, GES_TRACK_TYPE_UNKNOWN);
+      GST_SECOND, GES_TRACK_TYPE_UNKNOWN);
 
 
   /* In order to view our timeline, let's grab a convenience pipeline to put

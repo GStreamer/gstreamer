@@ -424,7 +424,6 @@ _parse_clip (GMarkupParseContext * context,
     const gchar ** attribute_values, GESXmlFormatter * self, GError ** error)
 {
   GType type;
-  gdouble rate = 0;
   GstStructure *props = NULL;
   GESTrackType track_types;
   GstClockTime start, inpoint = 0, duration, layer_prio;
@@ -460,12 +459,6 @@ _parse_clip (GMarkupParseContext * context,
   if (errno)
     goto convertion_failed;
 
-  if (strrate) {
-    rate = g_ascii_strtod (strrate, NULL);
-    if (errno)
-      goto convertion_failed;
-  }
-
   if (strin) {
     inpoint = g_ascii_strtoull (strin, NULL, 10);
     if (errno)
@@ -487,7 +480,7 @@ _parse_clip (GMarkupParseContext * context,
   }
 
   ges_base_xml_formatter_add_clip (GES_BASE_XML_FORMATTER (self),
-      strid, asset_id, type, start, inpoint, duration, rate, layer_prio,
+      strid, asset_id, type, start, inpoint, duration, layer_prio,
       track_types, props, metadatas, error);
   if (props)
     gst_structure_free (props);

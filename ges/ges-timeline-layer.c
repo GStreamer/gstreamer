@@ -570,7 +570,6 @@ ges_timeline_layer_add_clip (GESTimelineLayer * layer, GESClip * clip)
  * @start: The start value to set on the new #GESClip
  * @inpoint: The inpoint value to set on the new #GESClip
  * @duration: The duration value to set on the new #GESClip
- * @rate: The rate value to set on the new #GESClip
  * @track_types: The #GESTrackType to set on the the new #GESClip
  *
  * Creates Clip from asset, adds it to layer and
@@ -581,7 +580,7 @@ ges_timeline_layer_add_clip (GESTimelineLayer * layer, GESClip * clip)
 GESClip *
 ges_timeline_layer_add_asset (GESTimelineLayer * layer,
     GESAsset * asset, GstClockTime start, GstClockTime inpoint,
-    GstClockTime duration, gdouble rate, GESTrackType track_types)
+    GstClockTime duration, GESTrackType track_types)
 {
   GESClip *clip;
 
@@ -591,9 +590,9 @@ ges_timeline_layer_add_asset (GESTimelineLayer * layer,
           (asset), GES_TYPE_CLIP), NULL);
 
   GST_DEBUG_OBJECT (layer, "Adding asset %s with: start: %" GST_TIME_FORMAT
-      " inpoint: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT " rate %f"
+      " inpoint: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
       " track types: %d (%s)", ges_asset_get_id (asset), GST_TIME_ARGS (start),
-      GST_TIME_ARGS (inpoint), GST_TIME_ARGS (duration), rate, track_types,
+      GST_TIME_ARGS (inpoint), GST_TIME_ARGS (duration), track_types,
       ges_track_type_name (track_types));
 
   clip = GES_CLIP (ges_asset_extract (asset, NULL));

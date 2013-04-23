@@ -168,7 +168,6 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self
                                                                  GstClockTime start,
                                                                  GstClockTime inpoint,
                                                                  GstClockTime duration,
-                                                                 gdouble rate,
                                                                  guint layer_prio,
                                                                  GESTrackType track_types,
                                                                  GstStructure *properties,

@@ -53,7 +53,7 @@ asset_created_cb (GObject * source, GAsyncResult * res, gpointer udata)
 
   layer = GES_TIMELINE_LAYER (g_async_result_get_user_data (res));
   tlfs = GES_URI_CLIP (ges_timeline_layer_add_asset (layer,
-          asset, 0, 0, GST_CLOCK_TIME_NONE, 1, GES_TRACK_TYPE_UNKNOWN));
+          asset, 0, 0, GST_CLOCK_TIME_NONE, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_URI_CLIP (tlfs));
   fail_if (g_strcmp0 (ges_uri_clip_get_uri (tlfs), av_uri));
   assert_equals_uint64 (_DURATION (tlfs), GST_SECOND);
@@ -145,7 +145,7 @@ GST_START_TEST (test_filesource_properties)
   asset = GES_URI_CLIP_ASSET (asset_uri.asset);
   fail_unless (GES_IS_ASSET (asset));
   clip = ges_timeline_layer_add_asset (layer, GES_ASSET (asset),
-      42, 12, 51, 1, GES_TRACK_TYPE_AUDIO);
+      42, 12, 51, GES_TRACK_TYPE_AUDIO);
   assert_is_type (clip, GES_TYPE_URI_CLIP);
   assert_equals_uint64 (_START (clip), 42);
   assert_equals_uint64 (_DURATION (clip), 51);
