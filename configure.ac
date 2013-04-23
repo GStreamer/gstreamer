@@ -194,7 +194,7 @@ AC_ARG_ENABLE(Bsymbolic,
 
 AC_ARG_WITH([omx-target],
         AS_HELP_STRING([--with-omx-target],[Use this OpenMAX IL target (generic, bellagio, rpi)]),
-        [ac_cv_omx_target="$withval"], [ac_cv_omx_target="generic"])
+        [ac_cv_omx_target="$withval"], [ac_cv_omx_target="none"])
 
 ac_cv_omx_target_struct_packing="none"
 AC_MSG_NOTICE([Using $ac_cv_omx_target as OpenMAX IL target])
@@ -209,8 +209,8 @@ case "${ac_cv_omx_target}" in
   bellagio)
     AC_DEFINE(USE_OMX_TARGET_BELLAGIO, 1, [Use Bellagio OpenMAX IL target])
     ;;
-  *)
-    AC_ERROR([invalid OpenMAX IL target])
+  none|*)
+    AC_ERROR([invalid OpenMAX IL target, you must specify one of --with-omx-target={generic,rpi,bellagio}])
     ;;
 esac
 AM_CONDITIONAL(USE_OMX_TARGET_GENERIC, test "x$ac_cv_omx_target" = "xgeneric")
