@@ -1168,8 +1168,7 @@ link_failed:
  * @bin: a #GstBin
  * @rtpbin: a rtpbin #GstElement
  *
- * Remove the elements of @stream from @bin. @bin must be set
- * to the NULL state before calling this.
+ * Remove the elements of @stream from @bin.
  *
  * Return: %TRUE on success.
  */
@@ -1202,6 +1201,12 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
   priv->send_rtp_sink = NULL;
 
   for (i = 0; i < 2; i++) {
+    gst_element_set_state (priv->udpsink[i], GST_STATE_NULL);
+    gst_element_set_state (priv->appsink[i], GST_STATE_NULL);
+    gst_element_set_state (priv->appqueue[i], GST_STATE_NULL);
+    gst_element_set_state (priv->tee[i], GST_STATE_NULL);
+    gst_element_set_state (priv->funnel[i], GST_STATE_NULL);
+    gst_element_set_state (priv->appsrc[i], GST_STATE_NULL);
     /* and set udpsrc to NULL now before removing */
     gst_element_set_locked_state (priv->udpsrc[i], FALSE);
     gst_element_set_state (priv->udpsrc[i], GST_STATE_NULL);
