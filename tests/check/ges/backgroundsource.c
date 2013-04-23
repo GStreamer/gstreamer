@@ -40,7 +40,7 @@ GST_START_TEST (test_test_source_properties)
   GESClip *clip;
   GESTrack *track;
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrackElement *trackelement;
 
   ges_init ();
@@ -48,7 +48,7 @@ GST_START_TEST (test_test_source_properties)
   track = ges_track_new (GES_TRACK_TYPE_AUDIO, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   fail_unless (layer != NULL);
 
   timeline = ges_timeline_new ();
@@ -67,7 +67,7 @@ GST_START_TEST (test_test_source_properties)
   assert_equals_uint64 (_DURATION (clip), 51);
   assert_equals_uint64 (_INPOINT (clip), 12);
 
-  ges_timeline_layer_add_clip (layer, GES_CLIP (clip));
+  ges_layer_add_clip (layer, GES_CLIP (clip));
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
   trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
@@ -116,7 +116,7 @@ GST_END_TEST;
 GST_START_TEST (test_test_source_in_layer)
 {
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrack *a, *v;
   GESTrackElement *track_element;
   GESTestClip *source;
@@ -126,7 +126,7 @@ GST_START_TEST (test_test_source_in_layer)
   ges_init ();
 
   timeline = ges_timeline_new ();
-  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  layer = (GESLayer *) ges_simple_layer_new ();
   a = ges_track_audio_raw_new ();
   v = ges_track_video_raw_new ();
 
@@ -140,8 +140,7 @@ GST_START_TEST (test_test_source_in_layer)
 
   g_object_set (source, "duration", (guint64) GST_SECOND, NULL);
 
-  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) layer,
-      (GESClip *) source, 0);
+  ges_simple_layer_add_object ((GESSimpleLayer *) layer, (GESClip *) source, 0);
 
   /* specifically test the vpattern property */
   g_object_set (source, "vpattern", (gint) GES_VIDEO_TEST_PATTERN_WHITE, NULL);
@@ -193,7 +192,7 @@ GST_START_TEST (test_test_source_in_layer)
 
   gst_object_unref (track_element);
 
-  ges_timeline_layer_remove_clip (layer, (GESClip *) source);
+  ges_layer_remove_clip (layer, (GESClip *) source);
 
   GST_DEBUG ("removing the layer");
 
@@ -247,7 +246,7 @@ GST_START_TEST (test_gap_filling_basic)
   GESTrack *track;
   GESTimeline *timeline;
   GstElement *composition;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESClip *clip, *clip1, *clip2;
 
   GstElement *gnlsrc, *gnlsrc1, *gap = NULL;
@@ -261,7 +260,7 @@ GST_START_TEST (test_gap_filling_basic)
   composition = find_composition (track);
   fail_unless (composition != NULL);
 
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   fail_unless (layer != NULL);
 
   timeline = ges_timeline_new ();
@@ -277,7 +276,7 @@ GST_START_TEST (test_gap_filling_basic)
   assert_equals_uint64 (_START (clip), 0);
   assert_equals_uint64 (_DURATION (clip), 5);
 
-  ges_timeline_layer_add_clip (layer, GES_CLIP (clip));
+  ges_layer_add_clip (layer, GES_CLIP (clip));
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
   trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
@@ -300,7 +299,7 @@ GST_START_TEST (test_gap_filling_basic)
   assert_equals_uint64 (_START (clip1), 15);
   assert_equals_uint64 (_DURATION (clip1), 5);
 
-  ges_timeline_layer_add_clip (layer, GES_CLIP (clip1));
+  ges_layer_add_clip (layer, GES_CLIP (clip1));
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip1)), 1);
   trackelement1 = GES_CONTAINER_CHILDREN (clip1)->data;
   fail_unless (trackelement1 != NULL);
@@ -328,7 +327,7 @@ GST_START_TEST (test_gap_filling_basic)
   clip2 = GES_CLIP (ges_test_clip_new ());
   fail_unless (clip2 != NULL);
   g_object_set (clip2, "start", (guint64) 35, "duration", (guint64) 5, NULL);
-  ges_timeline_layer_add_clip (layer, GES_CLIP (clip2));
+  ges_layer_add_clip (layer, GES_CLIP (clip2));
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip2)), 1);
   trackelement2 = GES_CONTAINER_CHILDREN (clip2)->data;
   fail_unless (trackelement2 != NULL);

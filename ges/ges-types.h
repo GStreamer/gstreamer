@@ -32,14 +32,14 @@
 typedef struct _GESCustomSourceClip GESCustomSourceClip;
 typedef struct _GESCustomSourceClipClass GESCustomSourceClipClass;
 
-typedef struct _GESSimpleTimelineLayer GESSimpleTimelineLayer;
-typedef struct _GESSimpleTimelineLayerClass GESSimpleTimelineLayerClass;
+typedef struct _GESSimpleLayer GESSimpleLayer;
+typedef struct _GESSimpleLayerClass GESSimpleLayerClass;
 
 typedef struct _GESTimeline GESTimeline;
 typedef struct _GESTimelineClass GESTimelineClass;
 
-typedef struct _GESTimelineLayer GESTimelineLayer;
-typedef struct _GESTimelineLayerClass GESTimelineLayerClass;
+typedef struct _GESLayer GESLayer;
+typedef struct _GESLayerClass GESLayerClass;
 
 typedef struct _GESTimelineElementClass GESTimelineElementClass;
 typedef struct _GESTimelineElement GESTimelineElement;

@@ -927,7 +927,7 @@ static inline void
 _save_layers (GString * str, GESTimeline * timeline)
 {
   gchar *properties, *metas;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESClip *clip;
   GList *tmplayer, *tmpclip, *clips;
 
@@ -935,9 +935,9 @@ _save_layers (GString * str, GESTimeline * timeline)
 
   for (tmplayer = timeline->layers; tmplayer; tmplayer = tmplayer->next) {
     guint priority;
-    layer = GES_TIMELINE_LAYER (tmplayer->data);
+    layer = GES_LAYER (tmplayer->data);
 
-    priority = ges_timeline_layer_get_priority (layer);
+    priority = ges_layer_get_priority (layer);
     properties = _serialize_properties (G_OBJECT (layer), "priority", NULL);
     metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (layer));
     append_escaped (str,
@@ -947,7 +947,7 @@ _save_layers (GString * str, GESTimeline * timeline)
     g_free (properties);
     g_free (metas);
 
-    clips = ges_timeline_layer_get_clips (layer);
+    clips = ges_layer_get_clips (layer);
     for (tmpclip = clips; tmpclip; tmpclip = tmpclip->next) {
       GList *effects, *tmpeffect;
 

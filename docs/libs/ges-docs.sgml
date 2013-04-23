@@ -36,7 +36,7 @@ platform as well as Windows. It is released under the GNU Library General Public
   <chapter>
     <title>Base Classes</title>
     <xi:include href="xml/ges-timeline.xml"/>
-    <xi:include href="xml/ges-timeline-layer.xml"/>
+    <xi:include href="xml/ges-layer.xml"/>
     <xi:include href="xml/ges-timeline-element.xml"/>
     <xi:include href="xml/ges-container.xml"/>
     <xi:include href="xml/ges-clip.xml"/>
@@ -79,7 +79,7 @@ platform as well as Windows. It is released under the GNU Library General Public
 
   <chapter>
     <title>Simple Timeline interface</title>
-    <xi:include href="xml/ges-simple-timeline-layer.xml"/>
+    <xi:include href="xml/ges-simple-layer.xml"/>
   </chapter>
 
   <chapter>

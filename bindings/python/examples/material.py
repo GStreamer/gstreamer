@@ -6,7 +6,7 @@ class Simple:
     def __init__(self, uri):
         timeline = GES.Timeline()
         trackv = GES.Track.video_raw_new()
-        self.layer = GES.TimelineLayer()
+        self.layer = GES.Layer()
         self.pipeline = GES.TimelinePipeline()
         self.pipeline.add_timeline(timeline)
 

@@ -247,7 +247,7 @@ G_GNUC_INTERNAL void _ges_container_sort_children_by_end  (GESContainer *contain
 /****************************************************
  *                  GESClip                         *
  ****************************************************/
-void              ges_clip_set_layer              (GESClip *clip, GESTimelineLayer  *layer);
+void              ges_clip_set_layer              (GESClip *clip, GESLayer  *layer);
 gboolean          ges_clip_is_moving_from_layer   (GESClip *clip);
 void              ges_clip_set_moving_from_layer  (GESClip *clip, gboolean is_moving);
 GESTrackElement*  ges_clip_create_track_element   (GESClip *clip, GESTrackType type);

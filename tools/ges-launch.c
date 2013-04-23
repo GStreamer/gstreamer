@@ -128,7 +128,7 @@ make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
 static GESTimeline *
 create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
 {
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrack *tracka = NULL, *trackv = NULL;
   GESTimeline *timeline;
   guint i;
@@ -141,7 +141,7 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
     trackv = ges_track_video_raw_new ();
 
   /* We are only going to be doing one layer of clips */
-  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  layer = (GESLayer *) ges_simple_layer_new ();
 
   /* Add the tracks and the layer to the timeline */
   if (!ges_timeline_add_layer (timeline, layer) ||
@@ -222,9 +222,9 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
       g_free (uri);
     }
 
-    /* Since we're using a GESSimpleTimelineLayer, objects will be automatically
+    /* Since we're using a GESSimpleLayer, objects will be automatically
      * appended to the end of the layer */
-    ges_timeline_layer_add_clip (layer, clip);
+    ges_layer_add_clip (layer, clip);
   }
 
   return timeline;

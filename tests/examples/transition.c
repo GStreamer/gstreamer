@@ -89,7 +89,7 @@ make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
 {
   GESTimeline *timeline;
   GESTrack *trackv, *tracka;
-  GESTimelineLayer *layer1;
+  GESLayer *layer1;
   GESClip *srca, *srcb;
   GESTimelinePipeline *pipeline;
   guint64 aduration, bduration, tduration, tstart, ainpoint, binpoint;
@@ -108,7 +108,7 @@ make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
   tracka = ges_track_audio_raw_new ();
   ges_timeline_add_track (timeline, tracka);
 
-  layer1 = GES_TIMELINE_LAYER (ges_timeline_layer_new ());
+  layer1 = GES_LAYER (ges_layer_new ());
   g_object_set (layer1, "priority", (gint32) 0, NULL);
 
   if (!ges_timeline_add_layer (timeline, layer1))
@@ -122,8 +122,8 @@ make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
   tstart = aduration - tduration;
   srca = make_source (patha, 0, aduration, ainpoint, 1);
   srcb = make_source (pathb, tstart, bduration, binpoint, 2);
-  ges_timeline_layer_add_clip (layer1, srca);
-  ges_timeline_layer_add_clip (layer1, srcb);
+  ges_layer_add_clip (layer1, srca);
+  ges_layer_add_clip (layer1, srcb);
   g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, srca);
   g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, srcb);
 
@@ -137,7 +137,7 @@ make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
     g_object_set (tr,
         "start", (guint64) tstart,
         "duration", (guint64) tduration, "in-point", (guint64) 0, NULL);
-    ges_timeline_layer_add_clip (layer1, GES_CLIP (tr));
+    ges_layer_add_clip (layer1, GES_CLIP (tr));
     g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, tr);
   }
 

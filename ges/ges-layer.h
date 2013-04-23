@@ -18,38 +18,38 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TIMELINE_LAYER
-#define _GES_TIMELINE_LAYER
+#ifndef _GES_LAYER
+#define _GES_LAYER
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TIMELINE_LAYER ges_timeline_layer_get_type()
+#define GES_TYPE_LAYER ges_layer_get_type()
 
-#define GES_TIMELINE_LAYER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE_LAYER, GESTimelineLayer))
+#define GES_LAYER(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_LAYER, GESLayer))
 
-#define GES_TIMELINE_LAYER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TIMELINE_LAYER, GESTimelineLayerClass))
+#define GES_LAYER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_LAYER, GESLayerClass))
 
-#define GES_IS_TIMELINE_LAYER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TIMELINE_LAYER))
+#define GES_IS_LAYER(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_LAYER))
 
-#define GES_IS_TIMELINE_LAYER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TIMELINE_LAYER))
+#define GES_IS_LAYER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_LAYER))
 
-#define GES_TIMELINE_LAYER_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_LAYER, GESTimelineLayerClass))
+#define GES_LAYER_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_LAYER, GESLayerClass))
 
-typedef struct _GESTimelineLayerPrivate GESTimelineLayerPrivate;
+typedef struct _GESLayerPrivate GESLayerPrivate;
 
 /**
- * GESTimelineLayer:
+ * GESLayer:
  * @timeline: the #GESTimeline where this layer is being used.
  */
-struct _GESTimelineLayer {
+struct _GESLayer {
   GInitiallyUnowned parent;
 
   /*< public >*/
@@ -59,73 +59,73 @@ struct _GESTimelineLayer {
   /*< protected >*/
   guint32 min_gnl_priority, max_gnl_priority;
 
-  GESTimelineLayerPrivate *priv;
+  GESLayerPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
- * GESTimelineLayerClass:
+ * GESLayerClass:
  * @get_objects: method to get the objects contained in the layer
  *
  * Subclasses can override the @get_objects if they can provide a more
  * efficient way of providing the list of contained #GESClip(s).
  */
-struct _GESTimelineLayerClass {
+struct _GESLayerClass {
   /*< private >*/
   GInitiallyUnownedClass parent_class;
 
   /*< public >*/
   /* virtual methods for subclasses */
-  GList *(*get_objects) (GESTimelineLayer * layer);
+  GList *(*get_objects) (GESLayer * layer);
 
   /*< private >*/
   /* Signals */
-  void	(*object_added)		(GESTimelineLayer * layer, GESClip * object);
-  void	(*object_removed)	(GESTimelineLayer * layer, GESClip * object);
+  void	(*object_added)		(GESLayer * layer, GESClip * object);
+  void	(*object_removed)	(GESLayer * layer, GESClip * object);
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_timeline_layer_get_type (void);
+GType ges_layer_get_type (void);
 
-GESTimelineLayer* ges_timeline_layer_new (void);
+GESLayer* ges_layer_new (void);
 
-void     ges_timeline_layer_set_timeline  (GESTimelineLayer * layer,
+void     ges_layer_set_timeline  (GESLayer * layer,
 					   GESTimeline * timeline);
 
 GESTimeline *
-ges_timeline_layer_get_timeline           (GESTimelineLayer * layer);
+ges_layer_get_timeline           (GESLayer * layer);
 
-gboolean ges_timeline_layer_add_clip    (GESTimelineLayer * layer,
+gboolean ges_layer_add_clip    (GESLayer * layer,
 					   GESClip * clip);
-GESClip * ges_timeline_layer_add_asset   (GESTimelineLayer *layer,
+GESClip * ges_layer_add_asset   (GESLayer *layer,
                                                        GESAsset *asset,
                                                        GstClockTime start,
                                                        GstClockTime inpoint,
                                                        GstClockTime duration,
                                                        GESTrackType track_types);
 
-gboolean ges_timeline_layer_remove_clip (GESTimelineLayer * layer,
+gboolean ges_layer_remove_clip (GESLayer * layer,
 					   GESClip * clip);
 
-void     ges_timeline_layer_set_priority  (GESTimelineLayer * layer,
+void     ges_layer_set_priority  (GESLayer * layer,
 					   guint priority);
 
-gboolean ges_timeline_layer_is_empty      (GESTimelineLayer * layer);
+gboolean ges_layer_is_empty      (GESLayer * layer);
 
-guint   ges_timeline_layer_get_priority  (GESTimelineLayer * layer);
+guint   ges_layer_get_priority  (GESLayer * layer);
 
-gboolean ges_timeline_layer_get_auto_transition (GESTimelineLayer * layer);
+gboolean ges_layer_get_auto_transition (GESLayer * layer);
 
-void ges_timeline_layer_set_auto_transition (GESTimelineLayer * layer,
+void ges_layer_set_auto_transition (GESLayer * layer,
 					     gboolean auto_transition);
 
-GList*   ges_timeline_layer_get_clips   (GESTimelineLayer * layer);
+GList*   ges_layer_get_clips   (GESLayer * layer);
 
 G_END_DECLS
 
-#endif /* _GES_TIMELINE_LAYER */
+#endif /* _GES_LAYER */
 

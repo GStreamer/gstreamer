@@ -20,7 +20,7 @@
 
 /**
  * SECTION:ges-overlay-clip
- * @short_description: Base Class for overlays in a GESTimelineLayer
+ * @short_description: Base Class for overlays in a GESLayer
  *
  * Overlays are objects which modify the underlying layer(s).
  *

@@ -157,8 +157,8 @@ GESTrackElement*  ges_clip_find_track_element     (GESClip *clip, GESTrack *trac
 /****************************************************
  *                     Layer                        *
  ****************************************************/
-GESTimelineLayer* ges_clip_get_layer              (GESClip *clip);
-gboolean          ges_clip_move_to_layer          (GESClip *clip, GESTimelineLayer  *layer);
+GESLayer* ges_clip_get_layer              (GESClip *clip);
+gboolean          ges_clip_move_to_layer          (GESClip *clip, GESLayer  *layer);
 
 /****************************************************
  *                   Effects                        *

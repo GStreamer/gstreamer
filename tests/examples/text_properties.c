@@ -55,7 +55,7 @@ make_timeline (char *path, float duration, char *text)
 {
   GESTimeline *timeline;
   GESTrack *trackv, *tracka;
-  GESTimelineLayer *layer1;
+  GESLayer *layer1;
   GESClip *srca;
   GESTimelinePipeline *pipeline;
   guint64 aduration;
@@ -73,7 +73,7 @@ make_timeline (char *path, float duration, char *text)
   tracka = ges_track_audio_raw_new ();
   ges_timeline_add_track (timeline, tracka);
 
-  layer1 = GES_TIMELINE_LAYER (ges_timeline_layer_new ());
+  layer1 = GES_LAYER (ges_layer_new ());
   g_object_set (layer1, "priority", (gint32) 0, NULL);
 
   if (!ges_timeline_add_layer (timeline, layer1))
@@ -81,7 +81,7 @@ make_timeline (char *path, float duration, char *text)
 
   aduration = (guint64) (duration * GST_SECOND);
   srca = make_source (path, 0, aduration, 1, text);
-  ges_timeline_layer_add_clip (layer1, srca);
+  ges_layer_add_clip (layer1, srca);
 
   return pipeline;
 }

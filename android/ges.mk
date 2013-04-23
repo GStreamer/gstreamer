@@ -11,9 +11,9 @@ LOCAL_SRC_FILES := 				\
 	ges.c					\
 	ges-enums.c				\
 	ges-custom-source-clip.c		\
-	ges-simple-timeline-layer.c		\
+	ges-simple-layer.c		\
 	ges-timeline.c				\
-	ges-timeline-layer.c			\
+	ges-layer.c			\
 	ges-clip.c			\
 	ges-timeline-pipeline.c			\
 	ges-source-clip.c			\

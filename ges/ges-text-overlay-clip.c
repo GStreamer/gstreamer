@@ -20,7 +20,7 @@
 
 /**
  * SECTION:ges-text-overlay-clip
- * @short_description: Render text onto another stream in a GESTimelineLayer
+ * @short_description: Render text onto another stream in a GESLayer
  *
  * Renders text onto the next lower priority stream using textrender.
  */

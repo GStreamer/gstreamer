@@ -27,7 +27,7 @@
  *
  * #GESTimeline is the central object for any multimedia timeline.
  *
- * Contains a list of #GESTimelineLayer which users should use to arrange the
+ * Contains a list of #GESLayer which users should use to arrange the
  * various clips through time.
  *
  * The output type is determined by the #GESTrack that are set on
@@ -42,7 +42,7 @@
 #include "ges-container.h"
 #include "ges-timeline.h"
 #include "ges-track.h"
-#include "ges-timeline-layer.h"
+#include "ges-layer.h"
 #include "ges-auto-transition.h"
 #include "ges.h"
 
@@ -72,7 +72,7 @@ typedef struct TrackObjIters
   GSequenceIter *iter_obj;
   GSequenceIter *iter_by_layer;
 
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrackElement *trackelement;
 } TrackObjIters;
 
@@ -142,7 +142,7 @@ struct _GESTimelinePrivate
 
   GList *priv_tracks;
   /* FIXME: We should definitly offer an API over this,
-   * probably through a ges_timeline_layer_get_track_elements () method */
+   * probably through a ges_layer_get_track_elements () method */
   GHashTable *by_layer;         /* {layer: GSequence of TrackElement by start/priorities} */
 
   /* The set of auto_transitions we control, currently the key is
@@ -291,7 +291,7 @@ ges_timeline_dispose (GObject * object)
   GESTimelinePrivate *priv = tl->priv;
 
   while (tl->layers) {
-    GESTimelineLayer *layer = (GESTimelineLayer *) tl->layers->data;
+    GESLayer *layer = (GESLayer *) tl->layers->data;
     ges_timeline_remove_layer (GES_TIMELINE (object), layer);
   }
 
@@ -429,28 +429,26 @@ ges_timeline_class_init (GESTimelineClass * klass)
   /**
    * GESTimeline::layer-added:
    * @timeline: the #GESTimeline
-   * @layer: the #GESTimelineLayer that was added to the timeline
+   * @layer: the #GESLayer that was added to the timeline
    *
    * Will be emitted after the layer was added to the timeline.
    */
   ges_timeline_signals[LAYER_ADDED] =
       g_signal_new ("layer-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, layer_added), NULL,
-      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
-      GES_TYPE_TIMELINE_LAYER);
+      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_LAYER);
 
   /**
    * GESTimeline::layer-removed:
    * @timeline: the #GESTimeline
-   * @layer: the #GESTimelineLayer that was removed from the timeline
+   * @layer: the #GESLayer that was removed from the timeline
    *
    * Will be emitted after the layer was removed from the timeline.
    */
   ges_timeline_signals[LAYER_REMOVED] =
       g_signal_new ("layer-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, layer_removed),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
-      GES_TYPE_TIMELINE_LAYER);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_LAYER);
 
   /**
    * GESTimeline::track-elements-snapping:
@@ -547,14 +545,14 @@ ges_timeline_init (GESTimeline * self)
 static gint
 sort_layers (gpointer a, gpointer b)
 {
-  GESTimelineLayer *layer_a, *layer_b;
+  GESLayer *layer_a, *layer_b;
   guint prio_a, prio_b;
 
-  layer_a = GES_TIMELINE_LAYER (a);
-  layer_b = GES_TIMELINE_LAYER (b);
+  layer_a = GES_LAYER (a);
+  layer_b = GES_LAYER (b);
 
-  prio_a = ges_timeline_layer_get_priority (layer_a);
-  prio_b = ges_timeline_layer_get_priority (layer_b);
+  prio_a = ges_layer_get_priority (layer_a);
+  prio_b = ges_layer_get_priority (layer_b);
 
   if ((gint) prio_a > (guint) prio_b)
     return 1;
@@ -587,10 +585,9 @@ timeline_update_duration (GESTimeline * timeline)
 }
 
 static gint
-find_layer_by_prio (GESTimelineLayer * a, gpointer pprio)
+find_layer_by_prio (GESLayer * a, gpointer pprio)
 {
-  gint prio = GPOINTER_TO_INT (pprio), lprio =
-      ges_timeline_layer_get_priority (a);
+  gint prio = GPOINTER_TO_INT (pprio), lprio = ges_layer_get_priority (a);
 
   if (lprio < prio)
     return -1;
@@ -659,9 +656,9 @@ _destroy_auto_transition_cb (GESAutoTransition * auto_transition,
 {
   GESTimelinePrivate *priv = timeline->priv;
   GESClip *transition = auto_transition->transition_clip;
-  GESTimelineLayer *layer = ges_clip_get_layer (transition);
+  GESLayer *layer = ges_clip_get_layer (transition);
 
-  ges_timeline_layer_remove_clip (layer, transition);
+  ges_layer_remove_clip (layer, transition);
   g_signal_handlers_disconnect_by_func (auto_transition,
       _destroy_auto_transition_cb, timeline);
 
@@ -673,7 +670,7 @@ _destroy_auto_transition_cb (GESAutoTransition * auto_transition,
 static GESAutoTransition *
 create_transition (GESTimeline * timeline, GESTrackElement * previous,
     GESTrackElement * next, GESClip * transition,
-    GESTimelineLayer * layer, guint64 start, guint64 duration)
+    GESLayer * layer, guint64 start, guint64 duration)
 {
   GESAsset *asset;
   GESAutoTransition *auto_transition;
@@ -682,7 +679,7 @@ create_transition (GESTimeline * timeline, GESTrackElement * previous,
     /* TODO make it possible to specify a Transition asset in the API */
     asset = ges_asset_request (GES_TYPE_TRANSITION_CLIP, "crossfade", NULL);
     transition =
-        ges_timeline_layer_add_asset (layer, asset, start, 0, duration,
+        ges_layer_add_asset (layer, asset, start, 0, duration,
         ges_track_element_get_track_type (next));
   } else {
     GST_DEBUG_OBJECT (timeline,
@@ -704,12 +701,12 @@ create_transition (GESTimeline * timeline, GESTrackElement * previous,
 }
 
 typedef GESAutoTransition *(*GetAutoTransitionFunc) (GESTimeline * timeline,
-    GESTimelineLayer * layer, GESTrack * track, GESTrackElement * previous,
+    GESLayer * layer, GESTrack * track, GESTrackElement * previous,
     GESTrackElement * next, GstClockTime transition_duration);
 
 static GESAutoTransition *
 _find_transition_from_auto_transitions (GESTimeline * timeline,
-    GESTimelineLayer * layer, GESTrack * track, GESTrackElement * prev,
+    GESLayer * layer, GESTrack * track, GESTrackElement * prev,
     GESTrackElement * next, GstClockTime transition_duration)
 {
   GESAutoTransition *auto_transition;
@@ -724,7 +721,7 @@ _find_transition_from_auto_transitions (GESTimeline * timeline,
 
 static GESAutoTransition *
 _create_auto_transition_from_transitions (GESTimeline * timeline,
-    GESTimelineLayer * layer, GESTrack * track, GESTrackElement * prev,
+    GESLayer * layer, GESTrack * track, GESTrackElement * prev,
     GESTrackElement * next, GstClockTime transition_duration)
 {
   GSequenceIter *tmp_iter;
@@ -775,7 +772,7 @@ _create_auto_transition_from_transitions (GESTimeline * timeline,
  * if @ track is specified, we will create the transitions only for that particular
  * track */
 static void
-_create_transitions_on_layer (GESTimeline * timeline, GESTimelineLayer * layer,
+_create_transitions_on_layer (GESTimeline * timeline, GESLayer * layer,
     GESTrack * track, GESTrackElement * initiating_obj,
     GetAutoTransitionFunc get_auto_transition)
 {
@@ -788,10 +785,10 @@ _create_transitions_on_layer (GESTimeline * timeline, GESTimelineLayer * layer,
                                  * "start" but not the "end" in the starts_ends list */
   GESTimelinePrivate *priv = timeline->priv;
 
-  if (!layer || !ges_timeline_layer_get_auto_transition (layer))
+  if (!layer || !ges_layer_get_auto_transition (layer))
     return;
 
-  layer_prio = ges_timeline_layer_get_priority (layer);
+  layer_prio = ges_layer_get_priority (layer);
   for (iter = g_sequence_get_begin_iter (priv->starts_ends);
       iter && !g_sequence_iter_is_end (iter);
       iter = g_sequence_iter_next (iter)) {
@@ -940,7 +937,7 @@ start_tracking_track_element (GESTimeline * timeline,
   guint layer_prio = _PRIORITY (trackelement) / LAYER_HEIGHT;
   GList *layer_node = g_list_find_custom (timeline->layers,
       GINT_TO_POINTER (layer_prio), (GCompareFunc) find_layer_by_prio);
-  GESTimelineLayer *layer = layer_node ? layer_node->data : NULL;
+  GESLayer *layer = layer_node ? layer_node->data : NULL;
 
   iters = g_slice_new0 (TrackObjIters);
 
@@ -1135,7 +1132,7 @@ static inline GESClip *
 add_moving_clip (MoveContext * mv_ctx, GESTrackElement * trackelement)
 {
   GESClip *clip;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   guint layer_prio;
 
   clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (trackelement));
@@ -1151,7 +1148,7 @@ add_moving_clip (MoveContext * mv_ctx, GESTrackElement * trackelement)
 
       g_hash_table_insert (mv_ctx->moving_clips, clip, clip);
 
-      layer_prio = ges_timeline_layer_get_priority (layer);
+      layer_prio = ges_layer_get_priority (layer);
       mv_ctx->min_move_layer = MIN (mv_ctx->min_move_layer, layer_prio);
       mv_ctx->max_layer_prio = MAX (mv_ctx->max_layer_prio, layer_prio);
 
@@ -1697,7 +1694,7 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
   if (offset != 0 && (offset > 0 || mv_ctx->min_move_layer >= -offset)) {
     GHashTableIter iter;
     GESClip *key, *value;
-    GESTimelineLayer *new_layer, *layer;
+    GESLayer *new_layer, *layer;
     guint prio;
 
     mv_ctx->ignore_needs_ctx = TRUE;
@@ -1709,16 +1706,15 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
     while (g_hash_table_iter_next (&iter, (gpointer *) & key,
             (gpointer *) & value)) {
       layer = ges_clip_get_layer (value);
-      prio = ges_timeline_layer_get_priority (layer);
+      prio = ges_layer_get_priority (layer);
 
       /* We know that the layer exists as we created it */
-      new_layer = GES_TIMELINE_LAYER (g_list_nth_data (timeline->layers,
-              prio + offset));
+      new_layer = GES_LAYER (g_list_nth_data (timeline->layers, prio + offset));
 
       if (new_layer == NULL) {
         do {
           new_layer = ges_timeline_append_layer (timeline);
-        } while (ges_timeline_layer_get_priority (new_layer) < prio + offset);
+        } while (ges_layer_get_priority (new_layer) < prio + offset);
       }
 
       ret &= ges_clip_move_to_layer (key, new_layer);
@@ -1784,7 +1780,7 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * clip, GESTrack * track)
 }
 
 static void
-layer_auto_transition_changed_cb (GESTimelineLayer * layer,
+layer_auto_transition_changed_cb (GESLayer * layer,
     GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
 {
   _create_transitions_on_layer (timeline, layer, NULL, NULL,
@@ -1888,8 +1884,7 @@ clip_track_element_removed_cb (GESClip * clip, GESTrackElement * track_element,
 }
 
 static void
-layer_object_added_cb (GESTimelineLayer * layer, GESClip * clip,
-    GESTimeline * timeline)
+layer_object_added_cb (GESLayer * layer, GESClip * clip, GESTimeline * timeline)
 {
   /* We make sure not to be connected twice */
   g_signal_handlers_disconnect_by_func (clip, clip_track_element_added_cb,
@@ -1917,7 +1912,7 @@ layer_object_added_cb (GESTimelineLayer * layer, GESClip * clip,
 }
 
 static void
-layer_priority_changed_cb (GESTimelineLayer * layer,
+layer_priority_changed_cb (GESLayer * layer,
     GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
 {
   timeline->layers = g_list_sort (timeline->layers, (GCompareFunc)
@@ -1925,7 +1920,7 @@ layer_priority_changed_cb (GESTimelineLayer * layer,
 }
 
 static void
-layer_object_removed_cb (GESTimelineLayer * layer, GESClip * clip,
+layer_object_removed_cb (GESLayer * layer, GESClip * clip,
     GESTimeline * timeline)
 {
   GList *trackelements, *tmp;
@@ -2006,7 +2001,7 @@ trackelement_priority_changed_cb (GESTrackElement * child,
   GList *layer_node = g_list_find_custom (timeline->layers,
       GINT_TO_POINTER (_PRIORITY (child) / LAYER_HEIGHT),
       (GCompareFunc) find_layer_by_prio);
-  GESTimelineLayer *layer = layer_node ? layer_node->data : NULL;
+  GESLayer *layer = layer_node ? layer_node->data : NULL;
   TrackObjIters *iters = g_hash_table_lookup (priv->obj_iters,
       child);
 
@@ -2273,21 +2268,21 @@ ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
  * ges_timeline_append_layer:
  * @timeline: a #GESTimeline
  *
- * Append a newly created #GESTimelineLayer to @timeline
+ * Append a newly created #GESLayer to @timeline
  * Note that you do not own any reference to the returned layer.
  *
- * Returns: (transfer none): The newly created #GESTimelineLayer, or the last (empty)
- * #GESTimelineLayer of @timeline.
+ * Returns: (transfer none): The newly created #GESLayer, or the last (empty)
+ * #GESLayer of @timeline.
  */
-GESTimelineLayer *
+GESLayer *
 ges_timeline_append_layer (GESTimeline * timeline)
 {
   guint32 priority;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
 
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   priority = g_list_length (timeline->layers);
-  ges_timeline_layer_set_priority (layer, priority);
+  ges_layer_set_priority (layer, priority);
 
   ges_timeline_add_layer (timeline, layer);
 
@@ -2297,7 +2292,7 @@ ges_timeline_append_layer (GESTimeline * timeline)
 /**
  * ges_timeline_add_layer:
  * @timeline: a #GESTimeline
- * @layer: the #GESTimelineLayer to add
+ * @layer: the #GESLayer to add
  *
  * Add the layer to the timeline. The reference to the @layer will be stolen
  * by the @timeline.
@@ -2305,7 +2300,7 @@ ges_timeline_append_layer (GESTimeline * timeline)
  * Returns: TRUE if the layer was properly added, else FALSE.
  */
 gboolean
-ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
+ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
 {
   GList *objects, *tmp;
 
@@ -2328,7 +2323,7 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
       (GCompareFunc) sort_layers);
 
   /* Inform the layer that it belongs to a new timeline */
-  ges_timeline_layer_set_timeline (layer, timeline);
+  ges_layer_set_timeline (layer, timeline);
 
   g_hash_table_insert (timeline->priv->by_layer, layer, g_sequence_new (NULL));
 
@@ -2346,7 +2341,7 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   g_signal_emit (timeline, ges_timeline_signals[LAYER_ADDED], 0, layer);
 
   /* add any existing clips to the timeline */
-  objects = ges_timeline_layer_get_clips (layer);
+  objects = ges_layer_get_clips (layer);
   for (tmp = objects; tmp; tmp = tmp->next) {
     layer_object_added_cb (layer, tmp->data, timeline);
     gst_object_unref (tmp->data);
@@ -2360,7 +2355,7 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 /**
  * ges_timeline_remove_layer:
  * @timeline: a #GESTimeline
- * @layer: the #GESTimelineLayer to remove
+ * @layer: the #GESLayer to remove
  *
  * Removes the layer from the timeline. The reference that the @timeline holds on
  * the layer will be dropped. If you wish to use the @layer after calling this
@@ -2370,7 +2365,7 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
  */
 
 gboolean
-ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
+ges_timeline_remove_layer (GESTimeline * timeline, GESLayer * layer)
 {
   GList *layer_objects, *tmp;
 
@@ -2383,7 +2378,7 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 
   /* remove objects from any private data structures */
 
-  layer_objects = ges_timeline_layer_get_clips (layer);
+  layer_objects = ges_layer_get_clips (layer);
   for (tmp = layer_objects; tmp; tmp = tmp->next) {
     layer_object_removed_cb (layer, GES_CLIP (tmp->data), timeline);
     gst_object_unref (G_OBJECT (tmp->data));
@@ -2403,7 +2398,7 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 
   g_hash_table_remove (timeline->priv->by_layer, layer);
   timeline->layers = g_list_remove (timeline->layers, layer);
-  ges_timeline_layer_set_timeline (layer, NULL);
+  ges_layer_set_timeline (layer, NULL);
 
   g_signal_emit (timeline, ges_timeline_signals[LAYER_REMOVED], 0, layer);
 
@@ -2480,7 +2475,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 
   for (tmp = timeline->layers; tmp; tmp = tmp->next) {
     GList *objects, *obj;
-    objects = ges_timeline_layer_get_clips (tmp->data);
+    objects = ges_layer_get_clips (tmp->data);
 
     for (obj = objects; obj; obj = obj->next) {
       GESClip *clip = obj->data;
@@ -2622,10 +2617,10 @@ ges_timeline_get_tracks (GESTimeline * timeline)
  * ges_timeline_get_layers:
  * @timeline: a #GESTimeline
  *
- * Get the list of #GESTimelineLayer present in the Timeline.
+ * Get the list of #GESLayer present in the Timeline.
  *
- * Returns: (transfer full) (element-type GESTimelineLayer): the list of
- * #GESTimelineLayer present in the Timeline sorted by priority.
+ * Returns: (transfer full) (element-type GESLayer): the list of
+ * #GESLayer present in the Timeline sorted by priority.
  * The caller should unref each Layer once he is done with them.
  */
 GList *
@@ -2694,7 +2689,7 @@ ges_timeline_enable_update (GESTimeline * timeline, gboolean enabled)
   timeline->priv->updates_enabled = enabled;
 
   for (tmp = timeline->layers; tmp; tmp = tmp->next) {
-    _create_transitions_on_layer (timeline, GES_TIMELINE_LAYER (tmp->data),
+    _create_transitions_on_layer (timeline, GES_LAYER (tmp->data),
         NULL, NULL, _find_transition_from_auto_transitions);
   }
 

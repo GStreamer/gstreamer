@@ -13,9 +13,9 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-enums.c				\
 	ges-custom-source-clip.c		\
 	ges-meta-container.c        \
-	ges-simple-timeline-layer.c		\
+	ges-simple-layer.c		\
 	ges-timeline.c				\
-	ges-timeline-layer.c			\
+	ges-layer.c			\
 	ges-clip.c			\
 	ges-timeline-pipeline.c			\
 	ges-source-clip.c			\
@@ -70,9 +70,9 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-gerror.h				\
 	ges-custom-source-clip.h		\
 	ges-meta-container.h        \
-	ges-simple-timeline-layer.h		\
+	ges-simple-layer.h		\
 	ges-timeline.h				\
-	ges-timeline-layer.h			\
+	ges-layer.h			\
 	ges-clip.h			\
 	ges-timeline-pipeline.h			\
 	ges-source-clip.h			\

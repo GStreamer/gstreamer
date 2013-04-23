@@ -20,7 +20,7 @@
 
 /**
  * SECTION:ges-title-clip
- * @short_description: Render stand-alone titles in  GESTimelineLayer.
+ * @short_description: Render stand-alone titles in  GESLayer.
  *
  * Renders the given text in the specified font, at specified position, and
  * with the specified background pattern.

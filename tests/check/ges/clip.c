@@ -44,7 +44,7 @@ GST_START_TEST (test_object_properties)
   GESClip *clip;
   GESTrack *track;
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrackElement *trackelement;
 
   ges_init ();
@@ -52,7 +52,7 @@ GST_START_TEST (test_object_properties)
   track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   fail_unless (layer != NULL);
   timeline = ges_timeline_new ();
   fail_unless (timeline != NULL);
@@ -69,7 +69,7 @@ GST_START_TEST (test_object_properties)
   assert_equals_uint64 (_DURATION (clip), 51);
   assert_equals_uint64 (_INPOINT (clip), 12);
 
-  ges_timeline_layer_add_clip (layer, GES_CLIP (clip));
+  ges_layer_add_clip (layer, GES_CLIP (clip));
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
   trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
@@ -120,14 +120,14 @@ GST_END_TEST;
 GST_START_TEST (test_split_object)
 {
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESClip *clip, *splitclip;
   GList *splittrackelements;
   GESTrackElement *trackelement, *splittrackelement;
 
   ges_init ();
 
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   fail_unless (layer != NULL);
   timeline = ges_timeline_new_audio_video ();
   fail_unless (timeline != NULL);
@@ -146,7 +146,7 @@ GST_START_TEST (test_split_object)
   assert_equals_uint64 (_DURATION (clip), 50);
   assert_equals_uint64 (_INPOINT (clip), 12);
 
-  ges_timeline_layer_add_clip (layer, GES_CLIP (clip));
+  ges_layer_add_clip (layer, GES_CLIP (clip));
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 2);
   trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
@@ -213,14 +213,14 @@ GST_START_TEST (test_clip_group_ungroup)
   GESTimeline *timeline;
   GESClip *clip, *clip2;
   GList *containers, *tmp;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESContainer *regrouped_clip;
   GESTrack *audio_track, *video_track;
 
   ges_init ();
 
   timeline = ges_timeline_new ();
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   audio_track = ges_track_audio_raw_new ();
   video_track = ges_track_video_raw_new ();
 
@@ -231,8 +231,7 @@ GST_START_TEST (test_clip_group_ungroup)
   asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   assert_is_type (asset, GES_TYPE_ASSET);
 
-  clip = ges_timeline_layer_add_asset (layer, asset, 0, 0, 10,
-      GES_TRACK_TYPE_UNKNOWN);
+  clip = ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_UNKNOWN);
   ASSERT_OBJECT_REFCOUNT (clip, "1 layer", 1);
   assert_equals_uint64 (_START (clip), 0);
   assert_equals_uint64 (_INPOINT (clip), 0);
@@ -298,7 +297,7 @@ GST_START_TEST (test_clip_group_ungroup)
   g_list_free_full (containers, gst_object_unref);
 
   GST_DEBUG ("Check clips in the layer");
-  tmp = ges_timeline_layer_get_clips (layer);
+  tmp = ges_layer_get_clips (layer);
   assert_equals_int (g_list_length (tmp), 1);
   g_list_free_full (tmp, gst_object_unref);
 

@@ -21,7 +21,7 @@
 /**
  * SECTION: ges-transition-clip
  * @short_description: Transition from one clip to another in a
- * #GESTimelineLayer
+ * #GESLayer
  *
  * Creates an object that mixes together the two underlying objects, A and B.
  * The A object is assumed to have a higher prioirity (lower number) than the
@@ -32,9 +32,9 @@
  * property. The default value is "crossfade". For audio, only "crossfade" is
  * supported.
  *
- * #GESSimpleTimelineLayer will automatically manage the priorities of sources
+ * #GESSimpleLayer will automatically manage the priorities of sources
  * and transitions. If you use #GESTransitionClips in another type of
- * #GESTimelineLayer, you will need to manage priorities yourself.
+ * #GESLayer, you will need to manage priorities yourself.
  *
  * The ID of the ExtractableType is the nickname of the vtype property value. Note
  * that this value can be changed after creation and the GESExtractable.asset value

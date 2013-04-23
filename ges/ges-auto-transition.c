@@ -71,7 +71,7 @@ _height_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
     GESAutoTransition * self)
 {
   /* FIXME This is really not smart and we should properly implement clip
-   * priority management at the TimelineLayer level */
+   * priority management at the Layer level */
   _set_priority0 (GES_TIMELINE_ELEMENT (self->next_clip),
       _PRIORITY (self->previous_clip) +
       GES_CONTAINER_HEIGHT (self->previous_clip));
@@ -170,7 +170,7 @@ ges_auto_transition_new (GESTrackElement * transition,
       " between %" GST_PTR_FORMAT " and: %" GST_PTR_FORMAT
       " in layer nb %i, start: %" GST_TIME_FORMAT " duration: %"
       GST_TIME_FORMAT, transition, next_source, previous_source,
-      ges_timeline_layer_get_priority (ges_clip_get_layer
+      ges_layer_get_priority (ges_clip_get_layer
           (self->previous_clip)),
       GST_TIME_ARGS (_START (transition)),
       GST_TIME_ARGS (_DURATION (transition)));

@@ -288,35 +288,35 @@ GES_TYPE_TIMELINE
 
 
 <SECTION>
-<FILE>ges-timeline-layer</FILE>
-<TITLE>GESTimelineLayer</TITLE>
-GESTimelineLayer
-GESTimelineLayerClass
-ges_timeline_layer_add_clip
-ges_timeline_layer_add_asset
-ges_timeline_layer_new
-ges_timeline_layer_remove_clip
-ges_timeline_layer_set_priority
-ges_timeline_layer_get_priority
-ges_timeline_layer_get_clips
-ges_timeline_layer_get_timeline
-ges_timeline_layer_get_auto_transition
-ges_timeline_layer_set_auto_transition
-ges_timeline_layer_is_empty
+<FILE>ges-layer</FILE>
+<TITLE>GESLayer</TITLE>
+GESLayer
+GESLayerClass
+ges_layer_add_clip
+ges_layer_add_asset
+ges_layer_new
+ges_layer_remove_clip
+ges_layer_set_priority
+ges_layer_get_priority
+ges_layer_get_clips
+ges_layer_get_timeline
+ges_layer_get_auto_transition
+ges_layer_set_auto_transition
+ges_layer_is_empty
 
 GES_TIMELINE_GET_LAYERS
 GES_TIMELINE_GET_TRACKS
 
 <SUBSECTION Standard>
-GESTimelineLayerPrivate
-ges_timeline_layer_set_timeline
-ges_timeline_layer_get_type
-GES_IS_TIMELINE_LAYER
-GES_IS_TIMELINE_LAYER_CLASS
-GES_TIMELINE_LAYER
-GES_TIMELINE_LAYER_CLASS
-GES_TIMELINE_LAYER_GET_CLASS
-GES_TYPE_TIMELINE_LAYER
+GESLayerPrivate
+ges_layer_set_timeline
+ges_layer_get_type
+GES_IS_LAYER
+GES_IS_LAYER_CLASS
+GES_LAYER
+GES_LAYER_CLASS
+GES_LAYER_GET_CLASS
+GES_TYPE_LAYER
 </SECTION>
 
 <SECTION>
@@ -605,25 +605,25 @@ GES_TYPE_CUSTOM_SOURCE_CLIP
 </SECTION>
 
 <SECTION>
-<FILE>ges-simple-timeline-layer</FILE>
-<TITLE>GESSimpleTimelineLayer</TITLE>
-GESSimpleTimelineLayer
-ges_simple_timeline_layer_new
-ges_simple_timeline_layer_add_object
-ges_simple_timeline_layer_move_object
-ges_simple_timeline_layer_nth
-ges_simple_timeline_layer_index
-ges_simple_timeline_layer_is_valid
+<FILE>ges-simple-layer</FILE>
+<TITLE>GESSimpleLayer</TITLE>
+GESSimpleLayer
+ges_simple_layer_new
+ges_simple_layer_add_object
+ges_simple_layer_move_object
+ges_simple_layer_nth
+ges_simple_layer_index
+ges_simple_layer_is_valid
 <SUBSECTION Standard>
-GESSimpleTimelineLayerClass
-ges_simple_timeline_layer_get_type
-GESSimpleTimelineLayerPrivate
-GES_IS_SIMPLE_TIMELINE_LAYER
-GES_IS_SIMPLE_TIMELINE_LAYER_CLASS
-GES_SIMPLE_TIMELINE_LAYER
-GES_SIMPLE_TIMELINE_LAYER_CLASS
-GES_SIMPLE_TIMELINE_LAYER_GET_CLASS
-GES_TYPE_SIMPLE_TIMELINE_LAYER
+GESSimpleLayerClass
+ges_simple_layer_get_type
+GESSimpleLayerPrivate
+GES_IS_SIMPLE_LAYER
+GES_IS_SIMPLE_LAYER_CLASS
+GES_SIMPLE_LAYER
+GES_SIMPLE_LAYER_CLASS
+GES_SIMPLE_LAYER_GET_CLASS
+GES_TYPE_SIMPLE_LAYER
 </SECTION>
 
 <SECTION>

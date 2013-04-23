@@ -25,7 +25,7 @@ main (int argc, gchar ** argv)
   GESTimelinePipeline *pipeline;
   GESTimeline *timeline;
   GESTrack *tracka;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GMainLoop *mainloop;
   GstClockTime offset = 0;
   guint i;
@@ -50,7 +50,7 @@ main (int argc, gchar ** argv)
   tracka = ges_track_audio_raw_new ();
 
   /* We are only going to be doing one layer of clips */
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
 
   /* Add the tracks and the layer to the timeline */
   if (!ges_timeline_add_layer (timeline, layer))
@@ -70,7 +70,7 @@ main (int argc, gchar ** argv)
 
     g_object_set (src, "start", offset, "duration", GST_SECOND, NULL);
 
-    ges_timeline_layer_add_clip (layer, (GESClip *) src);
+    ges_layer_add_clip (layer, (GESClip *) src);
   }
 
   /* In order to listen our timeline, let's grab a convenience pipeline to put

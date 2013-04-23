@@ -24,7 +24,7 @@
 GST_START_TEST (test_text_properties_in_layer)
 {
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrack *a, *v;
   GESTrackElement *track_element;
   GESTestClip *source;
@@ -34,7 +34,7 @@ GST_START_TEST (test_text_properties_in_layer)
   ges_init ();
 
   timeline = ges_timeline_new ();
-  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  layer = (GESLayer *) ges_simple_layer_new ();
   a = ges_track_audio_raw_new ();
   v = ges_track_video_raw_new ();
 
@@ -46,8 +46,7 @@ GST_START_TEST (test_text_properties_in_layer)
 
   g_object_set (source, "duration", (guint64) GST_SECOND, NULL);
 
-  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) layer,
-      (GESClip *) source, 0);
+  ges_simple_layer_add_object ((GESSimpleLayer *) layer, (GESClip *) source, 0);
 
   track_element =
       ges_clip_find_track_element (GES_CLIP (source), v, GES_TYPE_TEXT_OVERLAY);
@@ -89,7 +88,7 @@ GST_START_TEST (test_text_properties_in_layer)
 
   GST_DEBUG ("removing the source");
 
-  ges_timeline_layer_remove_clip (layer, (GESClip *) source);
+  ges_layer_remove_clip (layer, (GESClip *) source);
 
   GST_DEBUG ("removing the layer");
 

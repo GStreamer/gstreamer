@@ -19,13 +19,13 @@
 
 /**
  * SECTION: ges-base-effect-clip
- * @short_description: An effect in a GESTimelineLayer
+ * @short_description: An effect in a GESLayer
  *
  * The effect will be applied on the sources that have lower priorities
  * (higher number) between the inpoint and the end of it.
  *
- * In a #GESSimpleTimelineLayer, the priorities will be set for you but if
- * you use another type of #GESTimelineLayer, you will have to handle it
+ * In a #GESSimpleLayer, the priorities will be set for you but if
+ * you use another type of #GESLayer, you will have to handle it
  * yourself.
  */
 

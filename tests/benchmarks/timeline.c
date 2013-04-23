@@ -29,7 +29,7 @@ main (gint argc, gchar * argv[])
   guint i;
   GESAsset *asset;
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESClip *clip;
   GstClockTime start, start_ripple, end, end_ripple, max_rippling_time = 0,
       min_rippling_time = GST_CLOCK_TIME_NONE;
@@ -38,16 +38,16 @@ main (gint argc, gchar * argv[])
   ges_init ();
   asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
 
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   timeline = ges_timeline_new_audio_video ();
   ges_timeline_add_layer (timeline, layer);
 
   start = gst_util_get_timestamp ();
-  clip = GES_CLIP (ges_timeline_layer_add_asset (layer, asset, 0,
+  clip = GES_CLIP (ges_layer_add_asset (layer, asset, 0,
           0, 1000, GES_TRACK_TYPE_UNKNOWN));
 
   for (i = 1; i < NUM_OBJECTS; i++)
-    ges_timeline_layer_add_asset (layer, asset, i * 1000, 0,
+    ges_layer_add_asset (layer, asset, i * 1000, 0,
         1000, GES_TRACK_TYPE_UNKNOWN);
   end = gst_util_get_timestamp ();
   g_print ("%" GST_TIME_FORMAT " - adding %d clip to the timeline\n",
@@ -71,7 +71,7 @@ main (gint argc, gchar * argv[])
 
   min_rippling_time = GST_CLOCK_TIME_NONE;
   max_rippling_time = 0;
-  ges_timeline_layer_set_auto_transition (layer, TRUE);
+  ges_layer_set_auto_transition (layer, TRUE);
   start_ripple = gst_util_get_timestamp ();
   for (i = 1; i < 501; i++) {
     start = gst_util_get_timestamp ();

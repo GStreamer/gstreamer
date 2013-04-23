@@ -38,7 +38,7 @@ typedef struct App
   /* back-end objects */
   GESTimeline *timeline;
   GESTimelinePipeline *pipeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrack *audio_track;
   GESTrack *video_track;
   guint audio_tracks;
@@ -339,7 +339,7 @@ title_source_text_changed_cb (GESClip * clip,
 }
 
 static void
-layer_object_added_cb (GESTimelineLayer * layer, GESClip * clip, App * app)
+layer_object_added_cb (GESLayer * layer, GESClip * clip, App * app)
 {
   GtkTreeIter iter;
   gchar *description;
@@ -377,7 +377,7 @@ layer_object_added_cb (GESTimelineLayer * layer, GESClip * clip, App * app)
 }
 
 static void
-layer_object_removed_cb (GESTimelineLayer * layer, GESClip * clip, App * app)
+layer_object_removed_cb (GESLayer * layer, GESClip * clip, App * app)
 {
   GtkTreeIter iter;
 
@@ -742,11 +742,11 @@ get_video_patterns (void)
 
 
 static void
-layer_added_cb (GESTimeline * timeline, GESTimelineLayer * layer, App * app)
+layer_added_cb (GESTimeline * timeline, GESLayer * layer, App * app)
 {
-  if (!GES_IS_SIMPLE_TIMELINE_LAYER (layer)) {
+  if (!GES_IS_SIMPLE_LAYER (layer)) {
     GST_ERROR ("This timeline contains a layer type other than "
-        "GESSimpleTimelineLayer. Timeline editing disabled");
+        "GESSimpleLayer. Timeline editing disabled");
     return;
   }
 
@@ -1041,7 +1041,7 @@ app_delete_objects (App * app, GList * objects)
   GList *cur;
 
   for (cur = objects; cur; cur = cur->next) {
-    ges_timeline_layer_remove_clip (app->layer, GES_CLIP (cur->data));
+    ges_layer_remove_clip (app->layer, GES_CLIP (cur->data));
     cur->data = NULL;
   }
 
@@ -1057,10 +1057,10 @@ app_move_selected_up (App * app)
   GList *objects, *tmp;
   gint pos;
 
-  objects = ges_timeline_layer_get_clips (app->layer);
+  objects = ges_layer_get_clips (app->layer);
   pos = g_list_index (objects, app->selected_objects->data);
 
-  ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
+  ges_simple_layer_move_object (GES_SIMPLE_LAYER (app->layer),
       GES_CLIP (app->selected_objects->data), pos - 1);
 
   for (tmp = objects; tmp; tmp = tmp->next) {
@@ -1076,7 +1076,7 @@ app_add_effect_on_selected_clips (App * app, const gchar * bin_desc)
 
   /* No crash if the video is playing */
   gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_PAUSED);
-  objects = ges_timeline_layer_get_clips (app->layer);
+  objects = ges_layer_get_clips (app->layer);
 
   for (tmp = objects; tmp; tmp = tmp->next) {
     effect = GES_TRACK_ELEMENT (ges_effect_new (bin_desc));
@@ -1126,10 +1126,10 @@ app_move_selected_down (App * app)
   GList *objects, *tmp;
   gint pos;
 
-  objects = ges_timeline_layer_get_clips (app->layer);
+  objects = ges_layer_get_clips (app->layer);
   pos = g_list_index (objects, app->selected_objects->data);
 
-  ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
+  ges_simple_layer_move_object (GES_SIMPLE_LAYER (app->layer),
       GES_CLIP (app->selected_objects->data), pos - 1);
 
   for (tmp = objects; tmp; tmp = tmp->next) {
@@ -1146,8 +1146,7 @@ app_add_file (App * app, gchar * uri)
 
   clip = GES_CLIP (ges_uri_clip_new (uri));
 
-  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
-      clip, -1);
+  ges_simple_layer_add_object (GES_SIMPLE_LAYER (app->layer), clip, -1);
 }
 
 static void
@@ -1187,8 +1186,7 @@ app_add_title (App * app)
   clip = GES_CLIP (ges_title_clip_new ());
   g_object_set (G_OBJECT (clip), "duration", GST_SECOND, NULL);
 
-  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
-      clip, -1);
+  ges_simple_layer_add_object (GES_SIMPLE_LAYER (app->layer), clip, -1);
 }
 
 static void
@@ -1201,8 +1199,7 @@ app_add_test (App * app)
   clip = GES_CLIP (ges_test_clip_new ());
   g_object_set (G_OBJECT (clip), "duration", GST_SECOND, NULL);
 
-  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
-      (app->layer), clip, -1);
+  ges_simple_layer_add_object (GES_SIMPLE_LAYER (app->layer), clip, -1);
 }
 
 static void
@@ -1216,8 +1213,7 @@ app_add_transition (App * app)
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE));
   g_object_set (G_OBJECT (clip), "duration", GST_SECOND, NULL);
 
-  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
-      (app->layer), clip, -1);
+  ges_simple_layer_add_object (GES_SIMPLE_LAYER (app->layer), clip, -1);
 }
 
 static void
@@ -1338,7 +1334,7 @@ app_new (void)
   if (!(ges_timeline_add_track (ret->timeline, v)))
     goto fail;
 
-  if (!(ret->layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ()))
+  if (!(ret->layer = (GESLayer *) ges_simple_layer_new ()))
     goto fail;
 
   if (!(ges_timeline_add_layer (ret->timeline, ret->layer)))

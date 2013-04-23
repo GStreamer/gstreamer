@@ -1366,9 +1366,9 @@ _deep_copy (GESTimelineElement * element, GESTimelineElement * elementcopy)
 /**
  * ges_track_element_edit:
  * @object: the #GESTrackElement to edit
- * @layers: (element-type GESTimelineLayer): The layers you want the edit to
+ * @layers: (element-type GESLayer): The layers you want the edit to
  *  happen in, %NULL means that the edition is done in all the
- *  #GESTimelineLayers contained in the current timeline.
+ *  #GESLayers contained in the current timeline.
  *      FIXME: This is not implemented yet.
  * @mode: The #GESEditMode in which the editition will happen.
  * @edge: The #GESEdge the edit should happen on.

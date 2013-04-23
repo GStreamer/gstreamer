@@ -29,14 +29,14 @@ GST_START_TEST (test_transition_basic)
 {
   GESTrack *track;
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTransitionClip *tr1, *tr2;
   GESTrackElement *trackelement;
 
   ges_init ();
 
   track = ges_track_video_raw_new ();
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   timeline = ges_timeline_new ();
   fail_unless (track != NULL);
   fail_unless (layer != NULL);
@@ -54,7 +54,7 @@ GST_START_TEST (test_transition_basic)
   fail_unless (tr2->vtype == 1);
 
   /* Make sure track element is created and vtype is set */
-  fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (tr2)));
+  fail_unless (ges_layer_add_clip (layer, GES_CLIP (tr2)));
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (tr2)), 1);
   trackelement = GES_CONTAINER_CHILDREN (tr2)->data;
   fail_unless (trackelement != NULL);
@@ -71,7 +71,7 @@ GST_START_TEST (test_transition_properties)
   GESClip *clip;
   GESTrack *track;
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrackElement *trackelement;
 
   ges_init ();
@@ -80,7 +80,7 @@ GST_START_TEST (test_transition_properties)
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE));
 
   track = ges_track_video_raw_new ();
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   timeline = ges_timeline_new ();
   fail_unless (track != NULL);
   fail_unless (layer != NULL);
@@ -97,7 +97,7 @@ GST_START_TEST (test_transition_properties)
   assert_equals_uint64 (_DURATION (clip), 51);
   assert_equals_uint64 (_INPOINT (clip), 12);
 
-  fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (clip)));
+  fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip)));
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
   trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
@@ -146,11 +146,11 @@ GST_START_TEST (test_transition_properties)
 
   GST_DEBUG ("Removing clip from layer");
   gst_object_ref (clip);        /* We do not want it to be destroyed */
-  ges_timeline_layer_remove_clip (layer, clip);
+  ges_layer_remove_clip (layer, clip);
 
   g_object_set (clip, "vtype", 1, NULL);
   GST_DEBUG ("Read it to the layer");
-  fail_unless (ges_timeline_layer_add_clip (layer, GES_CLIP (clip)));
+  fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip)));
   g_object_unref (clip);
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
   trackelement = GES_CONTAINER_CHILDREN (clip)->data;

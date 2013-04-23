@@ -40,14 +40,14 @@ GST_START_TEST (test_title_source_properties)
   GESClip *clip;
   GESTrack *track;
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrackElement *trackelement;
 
   ges_init ();
 
   track = ges_track_video_raw_new ();
   fail_unless (track != NULL);
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   fail_unless (layer != NULL);
   timeline = ges_timeline_new ();
   fail_unless (timeline != NULL);
@@ -65,7 +65,7 @@ GST_START_TEST (test_title_source_properties)
   assert_equals_uint64 (_DURATION (clip), 51);
   assert_equals_uint64 (_INPOINT (clip), 12);
 
-  ges_timeline_layer_add_clip (layer, GES_CLIP (clip));
+  ges_layer_add_clip (layer, GES_CLIP (clip));
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
   trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
@@ -106,7 +106,7 @@ GST_END_TEST;
 GST_START_TEST (test_title_source_in_layer)
 {
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrack *a, *v;
   GESTrackElement *track_element;
   GESTitleClip *source;
@@ -119,7 +119,7 @@ GST_START_TEST (test_title_source_in_layer)
   ges_init ();
 
   timeline = ges_timeline_new ();
-  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  layer = (GESLayer *) ges_simple_layer_new ();
   a = ges_track_audio_raw_new ();
   v = ges_track_video_raw_new ();
 
@@ -131,8 +131,7 @@ GST_START_TEST (test_title_source_in_layer)
 
   g_object_set (source, "duration", (guint64) GST_SECOND, NULL);
 
-  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) layer,
-      (GESClip *) source, 0);
+  ges_simple_layer_add_object ((GESSimpleLayer *) layer, (GESClip *) source, 0);
 
   /* specifically test the text property */
   g_object_set (source, "text", (gchar *) "some text", NULL);
@@ -194,7 +193,7 @@ GST_START_TEST (test_title_source_in_layer)
 
   GST_DEBUG ("removing the source");
 
-  ges_timeline_layer_remove_clip (layer, (GESClip *) source);
+  ges_layer_remove_clip (layer, (GESClip *) source);
 
   GST_DEBUG ("removing the layer");
 

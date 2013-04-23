@@ -41,7 +41,7 @@ GST_END_TEST;
 GST_START_TEST (test_add_effect_to_clip)
 {
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrack *track_audio, *track_video;
   GESEffect *effect;
   GESTestClip *source;
@@ -49,7 +49,7 @@ GST_START_TEST (test_add_effect_to_clip)
   ges_init ();
 
   timeline = ges_timeline_new ();
-  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  layer = (GESLayer *) ges_simple_layer_new ();
   track_audio = ges_track_audio_raw_new ();
   track_video = ges_track_video_raw_new ();
 
@@ -61,7 +61,7 @@ GST_START_TEST (test_add_effect_to_clip)
 
   g_object_set (source, "duration", 10 * GST_SECOND, NULL);
 
-  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
+  ges_simple_layer_add_object ((GESSimpleLayer *) (layer),
       (GESClip *) source, 0);
 
 
@@ -76,7 +76,7 @@ GST_START_TEST (test_add_effect_to_clip)
 
   assert_equals_int (GES_TRACK_ELEMENT (effect)->active, TRUE);
 
-  ges_timeline_layer_remove_clip (layer, (GESClip *) source);
+  ges_layer_remove_clip (layer, (GESClip *) source);
 
   gst_object_unref (timeline);
 }
@@ -86,7 +86,7 @@ GST_END_TEST;
 GST_START_TEST (test_get_effects_from_tl)
 {
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrack *track_video;
   GESEffect *effect, *effect1, *effect2;
   GESTestClip *source;
@@ -96,7 +96,7 @@ GST_START_TEST (test_get_effects_from_tl)
   ges_init ();
 
   timeline = ges_timeline_new ();
-  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  layer = (GESLayer *) ges_simple_layer_new ();
   track_video = ges_track_video_raw_new ();
 
   ges_timeline_add_track (timeline, track_video);
@@ -106,7 +106,7 @@ GST_START_TEST (test_get_effects_from_tl)
 
   g_object_set (source, "duration", 10 * GST_SECOND, NULL);
 
-  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
+  ges_simple_layer_add_object ((GESSimpleLayer *) (layer),
       (GESClip *) source, 0);
 
 
@@ -148,7 +148,7 @@ GST_START_TEST (test_get_effects_from_tl)
   }
   g_list_free (effects);
 
-  ges_timeline_layer_remove_clip (layer, (GESClip *) source);
+  ges_layer_remove_clip (layer, (GESClip *) source);
 
   gst_object_unref (timeline);
 }
@@ -158,7 +158,7 @@ GST_END_TEST;
 GST_START_TEST (test_effect_clip)
 {
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrack *track_audio, *track_video;
   GESEffectClip *effect_clip;
   GESEffect *effect, *effect1;
@@ -174,7 +174,7 @@ GST_START_TEST (test_effect_clip)
   ges_init ();
 
   timeline = ges_timeline_new ();
-  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  layer = (GESLayer *) ges_simple_layer_new ();
   track_audio = ges_track_audio_raw_new ();
   track_video = ges_track_video_raw_new ();
 
@@ -187,7 +187,7 @@ GST_START_TEST (test_effect_clip)
 
   g_object_set (effect_clip, "duration", 25 * GST_SECOND, NULL);
 
-  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
+  ges_simple_layer_add_object ((GESSimpleLayer *) (layer),
       (GESClip *) effect_clip, 0);
 
   effect = ges_effect_new ("agingtv");
@@ -222,7 +222,7 @@ GST_START_TEST (test_effect_clip)
   }
   g_list_free (effects);
 
-  ges_timeline_layer_remove_clip (layer, (GESClip *) effect_clip);
+  ges_layer_remove_clip (layer, (GESClip *) effect_clip);
 
   gst_object_unref (timeline);
 }
@@ -234,7 +234,7 @@ GST_START_TEST (test_priorities_clip)
   gint i;
   GList *effects, *tmp;
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESEffectClip *effect_clip;
   GESTrack *track_audio, *track_video;
   GESEffect *effect, *effect1, *audio_effect = NULL, *video_effect = NULL;
@@ -244,7 +244,7 @@ GST_START_TEST (test_priorities_clip)
   ges_init ();
 
   timeline = ges_timeline_new ();
-  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  layer = (GESLayer *) ges_simple_layer_new ();
   track_audio = ges_track_audio_raw_new ();
   track_video = ges_track_video_raw_new ();
 
@@ -257,7 +257,7 @@ GST_START_TEST (test_priorities_clip)
 
   g_object_set (effect_clip, "duration", 25 * GST_SECOND, NULL);
 
-  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
+  ges_simple_layer_add_object ((GESSimpleLayer *) (layer),
       (GESClip *) effect_clip, 0);
 
   for (tmp = GES_CONTAINER_CHILDREN (effect_clip); tmp; tmp = tmp->next) {
@@ -317,7 +317,7 @@ GST_START_TEST (test_priorities_clip)
   }
   g_list_free (effects);
 
-  ges_timeline_layer_remove_clip (layer, (GESClip *) effect_clip);
+  ges_layer_remove_clip (layer, (GESClip *) effect_clip);
 
   gst_object_unref (timeline);
 }
@@ -327,7 +327,7 @@ GST_END_TEST;
 GST_START_TEST (test_effect_set_properties)
 {
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrack *track_video;
   GESEffectClip *effect_clip;
   GESTrackElement *effect;
@@ -340,7 +340,7 @@ GST_START_TEST (test_effect_set_properties)
   ges_init ();
 
   timeline = ges_timeline_new ();
-  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  layer = (GESLayer *) ges_simple_layer_new ();
   track_video = ges_track_video_raw_new ();
 
   ges_timeline_add_track (timeline, track_video);
@@ -351,7 +351,7 @@ GST_START_TEST (test_effect_set_properties)
 
   g_object_set (effect_clip, "duration", 25 * GST_SECOND, NULL);
 
-  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
+  ges_simple_layer_add_object ((GESSimpleLayer *) (layer),
       (GESClip *) effect_clip, 0);
 
   effect = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
@@ -390,7 +390,7 @@ GST_START_TEST (test_effect_set_properties)
   }
   g_free (pspecs);
 
-  ges_timeline_layer_remove_clip (layer, (GESClip *) effect_clip);
+  ges_layer_remove_clip (layer, (GESClip *) effect_clip);
 
   gst_object_unref (timeline);
 }
@@ -418,7 +418,7 @@ deep_prop_changed_cb (GESTrackElement * track_element, GstElement * element,
 GST_START_TEST (test_clip_signals)
 {
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrack *track_video;
   GESEffectClip *effect_clip;
   GESEffect *effect;
@@ -428,7 +428,7 @@ GST_START_TEST (test_clip_signals)
   ges_init ();
 
   timeline = ges_timeline_new ();
-  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  layer = (GESLayer *) ges_simple_layer_new ();
   track_video = ges_track_video_raw_new ();
 
   ges_timeline_add_track (timeline, track_video);
@@ -441,7 +441,7 @@ GST_START_TEST (test_clip_signals)
 
   g_object_set (effect_clip, "duration", 25 * GST_SECOND, NULL);
 
-  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
+  ges_simple_layer_add_object ((GESSimpleLayer *) (layer),
       (GESClip *) effect_clip, 0);
 
   effect = ges_effect_new ("agingtv");
@@ -464,7 +464,7 @@ GST_START_TEST (test_clip_signals)
   fail_unless (G_VALUE_HOLDS_UINT (&val));
   g_value_unset (&val);
 
-  ges_timeline_layer_remove_clip (layer, (GESClip *) effect_clip);
+  ges_layer_remove_clip (layer, (GESClip *) effect_clip);
 
   gst_object_unref (timeline);
 }

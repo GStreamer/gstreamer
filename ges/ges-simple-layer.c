@@ -19,12 +19,12 @@
  */
 
 /**
- * SECTION:ges-simple-timeline-layer
- * @short_description: High-level GESTimelineLayer
+ * SECTION:ges-simple-layer
+ * @short_description: High-level GESLayer
  *
- * #GESSimpleTimelineLayer allows using #GESClip(s) with a list-like
+ * #GESSimpleLayer allows using #GESClip(s) with a list-like
  * API. Clients can add any type of GESClip to a
- * GESSimpleTimelineLayer, and the layer will automatically compute the
+ * GESSimpleLayer, and the layer will automatically compute the
  * appropriate start times.
  *
  * Users should be aware that GESBaseTransitionClip objects are considered to
@@ -36,24 +36,19 @@
 #include <ges/ges.h>
 #include "ges-internal.h"
 
-static void
-ges_simple_timeline_layer_object_removed (GESTimelineLayer * layer,
-    GESClip * clip);
+static void ges_simple_layer_object_removed (GESLayer * layer, GESClip * clip);
 
-static void
-ges_simple_timeline_layer_object_added (GESTimelineLayer * layer,
-    GESClip * clip);
+static void ges_simple_layer_object_added (GESLayer * layer, GESClip * clip);
 
 static void
 clip_height_changed_cb (GESClip * clip G_GNUC_UNUSED,
-    GParamSpec * arg G_GNUC_UNUSED, GESSimpleTimelineLayer * layer);
+    GParamSpec * arg G_GNUC_UNUSED, GESSimpleLayer * layer);
 
-static GList *get_objects (GESTimelineLayer * layer);
+static GList *get_objects (GESLayer * layer);
 
-G_DEFINE_TYPE (GESSimpleTimelineLayer, ges_simple_timeline_layer,
-    GES_TYPE_TIMELINE_LAYER);
+G_DEFINE_TYPE (GESSimpleLayer, ges_simple_layer, GES_TYPE_LAYER);
 
-struct _GESSimpleTimelineLayerPrivate
+struct _GESSimpleLayerPrivate
 {
   /* Sorted list of objects */
   GList *objects;
@@ -78,11 +73,11 @@ enum
 static guint gstl_signals[LAST_SIGNAL] = { 0 };
 
 static void
-ges_simple_timeline_layer_get_property (GObject * object,
+ges_simple_layer_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
-  GESSimpleTimelineLayer *self;
-  self = GES_SIMPLE_TIMELINE_LAYER (object);
+  GESSimpleLayer *self;
+  self = GES_SIMPLE_LAYER (object);
 
   switch (property_id) {
     case PROP_VALID:
@@ -94,7 +89,7 @@ ges_simple_timeline_layer_get_property (GObject * object,
 }
 
 static void
-ges_simple_timeline_layer_set_property (GObject * object, guint property_id,
+ges_simple_layer_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -104,23 +99,23 @@ ges_simple_timeline_layer_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_simple_timeline_layer_class_init (GESSimpleTimelineLayerClass * klass)
+ges_simple_layer_class_init (GESSimpleLayerClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTimelineLayerClass *layer_class = GES_TIMELINE_LAYER_CLASS (klass);
+  GESLayerClass *layer_class = GES_LAYER_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESSimpleTimelineLayerPrivate));
+  g_type_class_add_private (klass, sizeof (GESSimpleLayerPrivate));
 
-  object_class->get_property = ges_simple_timeline_layer_get_property;
-  object_class->set_property = ges_simple_timeline_layer_set_property;
+  object_class->get_property = ges_simple_layer_get_property;
+  object_class->set_property = ges_simple_layer_set_property;
 
   /* Be informed when objects are being added/removed from elsewhere */
-  layer_class->object_removed = ges_simple_timeline_layer_object_removed;
-  layer_class->object_added = ges_simple_timeline_layer_object_added;
+  layer_class->object_removed = ges_simple_layer_object_removed;
+  layer_class->object_added = ges_simple_layer_object_added;
   layer_class->get_objects = get_objects;
 
   /**
-   * GESSimpleTimelineLayer:valid:
+   * GESSimpleLayer:valid:
    *
    * FALSE when the arrangement of objects in the layer would cause errors or
    * unexpected output during playback. Do not set the containing pipeline
@@ -131,34 +126,34 @@ ges_simple_timeline_layer_class_init (GESSimpleTimelineLayerClass * klass)
           "Layer is in a valid configuration", FALSE, G_PARAM_READABLE));
 
   /**
-   * GESSimpleTimelineLayer::object-moved:
-   * @layer: the #GESSimpleTimelineLayer
+   * GESSimpleLayer::object-moved:
+   * @layer: the #GESSimpleLayer
    * @object: the #GESClip that was added
    * @old: the previous position of the object
    * @new: the new position of the object
    *
    * Will be emitted when an object is moved with
-   * #ges_simple_timeline_layer_move_object.
+   * #ges_simple_layer_move_object.
    */
   gstl_signals[OBJECT_MOVED] =
       g_signal_new ("object-moved", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESSimpleTimelineLayerClass,
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESSimpleLayerClass,
           object_moved),
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 3,
       GES_TYPE_CLIP, G_TYPE_INT, G_TYPE_INT);
 }
 
 static void
-ges_simple_timeline_layer_init (GESSimpleTimelineLayer * self)
+ges_simple_layer_init (GESSimpleLayer * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_SIMPLE_TIMELINE_LAYER, GESSimpleTimelineLayerPrivate);
+      GES_TYPE_SIMPLE_LAYER, GESSimpleLayerPrivate);
 
   self->priv->objects = NULL;
 }
 
 static void
-gstl_recalculate (GESSimpleTimelineLayer * self)
+gstl_recalculate (GESSimpleLayer * self)
 {
   GList *tmp;
   gint64 pos = 0;
@@ -168,9 +163,9 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
   GESClip *prev_object = NULL;
   GESClip *prev_transition = NULL;
   gboolean valid = TRUE;
-  GESSimpleTimelineLayerPrivate *priv = self->priv;
+  GESSimpleLayerPrivate *priv = self->priv;
 
-  priority = GES_TIMELINE_LAYER (self)->min_gnl_priority + 2;
+  priority = GES_LAYER (self)->min_gnl_priority + 2;
 
   GST_DEBUG ("recalculating values");
 
@@ -268,7 +263,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
   GST_DEBUG ("Finished recalculating: final start pos is: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (pos));
 
-  GES_TIMELINE_LAYER (self)->max_gnl_priority = priority;
+  GES_LAYER (self)->max_gnl_priority = priority;
 
   if (valid != self->priv->valid) {
     self->priv->valid = valid;
@@ -277,8 +272,8 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
 }
 
 /**
- * ges_simple_timeline_layer_add_object:
- * @layer: a #GESSimpleTimelineLayer
+ * ges_simple_layer_add_object:
+ * @layer: a #GESSimpleLayer
  * @object: the #GESClip to add
  * @position: the position at which to add the object
  *
@@ -296,12 +291,12 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
  * Returns: TRUE if the object was successfuly added, else FALSE.
  */
 gboolean
-ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
+ges_simple_layer_add_object (GESSimpleLayer * layer,
     GESClip * clip, gint position)
 {
   gboolean res;
   GList *nth;
-  GESSimpleTimelineLayerPrivate *priv = layer->priv;
+  GESSimpleLayerPrivate *priv = layer->priv;
 
   GST_DEBUG ("layer:%p, clip:%p, position:%d", layer, clip, position);
 
@@ -327,7 +322,7 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
   /* provisionally insert the clip */
   priv->objects = g_list_insert (priv->objects, clip, position);
 
-  res = ges_timeline_layer_add_clip ((GESTimelineLayer *) layer, clip);
+  res = ges_layer_add_clip ((GESLayer *) layer, clip);
 
   /* Add to layer */
   if (G_UNLIKELY (!res)) {
@@ -352,8 +347,8 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
 }
 
 /**
- * ges_simple_timeline_layer_nth:
- * @layer: a #GESSimpleTimelineLayer
+ * ges_simple_layer_nth:
+ * @layer: a #GESSimpleLayer
  * @position: The position in position to get, starting from 0.
  *
  * Gets the clip at the given position.
@@ -363,10 +358,10 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
  */
 
 GESClip *
-ges_simple_timeline_layer_nth (GESSimpleTimelineLayer * layer, gint position)
+ges_simple_layer_nth (GESSimpleLayer * layer, gint position)
 {
   GList *list;
-  GESSimpleTimelineLayerPrivate *priv = layer->priv;
+  GESSimpleLayerPrivate *priv = layer->priv;
 
   list = g_list_nth (priv->objects, position);
 
@@ -377,8 +372,8 @@ ges_simple_timeline_layer_nth (GESSimpleTimelineLayer * layer, gint position)
 }
 
 /**
- * ges_simple_timeline_layer_index:
- * @layer: a #GESSimpleTimelineLayer
+ * ges_simple_layer_index:
+ * @layer: a #GESSimpleLayer
  * @clip: a #GESClip in the layer
  *
  * Gets the position of the given clip within the given layer.
@@ -387,15 +382,15 @@ ges_simple_timeline_layer_nth (GESSimpleTimelineLayer * layer, gint position)
  * clip was not found.
  */
 gint
-ges_simple_timeline_layer_index (GESSimpleTimelineLayer * layer, GESClip * clip)
+ges_simple_layer_index (GESSimpleLayer * layer, GESClip * clip)
 {
-  GESSimpleTimelineLayerPrivate *priv = layer->priv;
+  GESSimpleLayerPrivate *priv = layer->priv;
   return g_list_index (priv->objects, clip);
 }
 
 /**
- * ges_simple_timeline_layer_move_object:
- * @layer: a #GESSimpleTimelineLayer
+ * ges_simple_layer_move_object:
+ * @layer: a #GESSimpleLayer
  * @clip: the #GESClip to move
  * @newposition: the new position at which to move the clip
  *
@@ -406,17 +401,17 @@ ges_simple_timeline_layer_index (GESSimpleTimelineLayer * layer, GESClip * clip)
  * Returns: TRUE if the clip was successfuly moved, else FALSE.
  */
 gboolean
-ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer * layer,
+ges_simple_layer_move_object (GESSimpleLayer * layer,
     GESClip * clip, gint newposition)
 {
   gint idx;
-  GESSimpleTimelineLayerPrivate *priv = layer->priv;
-  GESTimelineLayer *clip_layer;
+  GESSimpleLayerPrivate *priv = layer->priv;
+  GESLayer *clip_layer;
 
   GST_DEBUG ("layer:%p, clip:%p, newposition:%d", layer, clip, newposition);
 
   clip_layer = ges_clip_get_layer (clip);
-  if (G_UNLIKELY (clip_layer != (GESTimelineLayer *) layer)) {
+  if (G_UNLIKELY (clip_layer != (GESLayer *) layer)) {
     GST_WARNING ("Clip doesn't belong to this layer");
     if (clip_layer != NULL)
       gst_object_unref (clip_layer);
@@ -453,22 +448,22 @@ ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer * layer,
 }
 
 /**
- * ges_simple_timeline_layer_new:
+ * ges_simple_layer_new:
  *
- * Creates a new #GESSimpleTimelineLayer.
+ * Creates a new #GESSimpleLayer.
  *
- * Returns: The new #GESSimpleTimelineLayer
+ * Returns: The new #GESSimpleLayer
  */
-GESSimpleTimelineLayer *
-ges_simple_timeline_layer_new (void)
+GESSimpleLayer *
+ges_simple_layer_new (void)
 {
-  return g_object_new (GES_TYPE_SIMPLE_TIMELINE_LAYER, NULL);
+  return g_object_new (GES_TYPE_SIMPLE_LAYER, NULL);
 }
 
 
 /**
- * ges_simple_timeline_layer_is_valid:
- * @layer: a #GESSimpleTimelineLayer
+ * ges_simple_layer_is_valid:
+ * @layer: a #GESSimpleLayer
  *
  * Checks whether the arrangement of objects in the layer would cause errors
  * or unexpected output during playback. Do not set the containing pipeline
@@ -477,16 +472,15 @@ ges_simple_timeline_layer_new (void)
  * Returns: #TRUE if current arrangement of the layer is valid else #FALSE.
  */
 gboolean
-ges_simple_timeline_layer_is_valid (GESSimpleTimelineLayer * layer)
+ges_simple_layer_is_valid (GESSimpleLayer * layer)
 {
   return layer->priv->valid;
 }
 
 static void
-ges_simple_timeline_layer_object_removed (GESTimelineLayer * layer,
-    GESClip * clip)
+ges_simple_layer_object_removed (GESLayer * layer, GESClip * clip)
 {
-  GESSimpleTimelineLayer *sl = (GESSimpleTimelineLayer *) layer;
+  GESSimpleLayer *sl = (GESSimpleLayer *) layer;
 
   /* remove clip from our list */
   sl->priv->objects = g_list_remove (sl->priv->objects, clip);
@@ -494,10 +488,9 @@ ges_simple_timeline_layer_object_removed (GESTimelineLayer * layer,
 }
 
 static void
-ges_simple_timeline_layer_object_added (GESTimelineLayer * layer,
-    GESClip * clip)
+ges_simple_layer_object_added (GESLayer * layer, GESClip * clip)
 {
-  GESSimpleTimelineLayer *sl = (GESSimpleTimelineLayer *) layer;
+  GESSimpleLayer *sl = (GESSimpleLayer *) layer;
 
   if (sl->priv->adding_object == FALSE) {
     /* remove clip from our list */
@@ -510,18 +503,18 @@ ges_simple_timeline_layer_object_added (GESTimelineLayer * layer,
 
 static void
 clip_height_changed_cb (GESClip * clip,
-    GParamSpec * arg G_GNUC_UNUSED, GESSimpleTimelineLayer * layer)
+    GParamSpec * arg G_GNUC_UNUSED, GESSimpleLayer * layer)
 {
   GST_LOG ("layer %p: notify height changed %p", layer, clip);
   gstl_recalculate (layer);
 }
 
 static GList *
-get_objects (GESTimelineLayer * l)
+get_objects (GESLayer * l)
 {
   GList *ret;
   GList *tmp;
-  GESSimpleTimelineLayer *layer = (GESSimpleTimelineLayer *) l;
+  GESSimpleLayer *layer = (GESSimpleLayer *) l;
 
   ret = g_list_copy (layer->priv->objects);
 

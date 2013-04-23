@@ -40,7 +40,7 @@ asset_created_cb (GObject * source, GAsyncResult * res, gpointer udata)
 {
   GList *tracks, *tmp;
   GESAsset *asset;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESUriClip *tlfs;
 
   GError *error = NULL;
@@ -51,8 +51,8 @@ asset_created_cb (GObject * source, GAsyncResult * res, gpointer udata)
   fail_if (asset == NULL);
   fail_if (g_strcmp0 (ges_asset_get_id (asset), av_uri));
 
-  layer = GES_TIMELINE_LAYER (g_async_result_get_user_data (res));
-  tlfs = GES_URI_CLIP (ges_timeline_layer_add_asset (layer,
+  layer = GES_LAYER (g_async_result_get_user_data (res));
+  tlfs = GES_URI_CLIP (ges_layer_add_asset (layer,
           asset, 0, 0, GST_CLOCK_TIME_NONE, GES_TRACK_TYPE_UNKNOWN));
   fail_unless (GES_IS_URI_CLIP (tlfs));
   fail_if (g_strcmp0 (ges_uri_clip_get_uri (tlfs), av_uri));
@@ -63,7 +63,7 @@ asset_created_cb (GObject * source, GAsyncResult * res, gpointer udata)
   fail_unless (ges_clip_get_supported_formats
       (GES_CLIP (tlfs)) & GES_TRACK_TYPE_AUDIO);
 
-  tracks = ges_timeline_get_tracks (ges_timeline_layer_get_timeline (layer));
+  tracks = ges_timeline_get_tracks (ges_layer_get_timeline (layer));
   for (tmp = tracks; tmp; tmp = tmp->next) {
     GList *trackelements = ges_track_get_elements (GES_TRACK (tmp->data));
 
@@ -80,7 +80,7 @@ asset_created_cb (GObject * source, GAsyncResult * res, gpointer udata)
 GST_START_TEST (test_filesource_basic)
 {
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
 
   fail_unless (ges_init ());
 
@@ -89,7 +89,7 @@ GST_START_TEST (test_filesource_basic)
   timeline = ges_timeline_new_audio_video ();
   fail_unless (timeline != NULL);
 
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   fail_unless (layer != NULL);
   fail_unless (ges_timeline_add_layer (timeline, layer));
 
@@ -120,7 +120,7 @@ GST_START_TEST (test_filesource_properties)
   AssetUri asset_uri;
   GESTimeline *timeline;
   GESUriClipAsset *asset;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrackElement *trackelement;
 
   ges_init ();
@@ -128,7 +128,7 @@ GST_START_TEST (test_filesource_properties)
   track = ges_track_new (GES_TRACK_TYPE_AUDIO, GST_CAPS_ANY);
   fail_unless (track != NULL);
 
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   fail_unless (layer != NULL);
   timeline = ges_timeline_new ();
   fail_unless (GES_IS_TIMELINE (timeline));
@@ -144,7 +144,7 @@ GST_START_TEST (test_filesource_properties)
 
   asset = GES_URI_CLIP_ASSET (asset_uri.asset);
   fail_unless (GES_IS_ASSET (asset));
-  clip = ges_timeline_layer_add_asset (layer, GES_ASSET (asset),
+  clip = ges_layer_add_asset (layer, GES_ASSET (asset),
       42, 12, 51, GES_TRACK_TYPE_AUDIO);
   assert_is_type (clip, GES_TYPE_URI_CLIP);
   assert_equals_uint64 (_START (clip), 42);
@@ -205,7 +205,7 @@ GST_START_TEST (test_filesource_images)
   GESUriClip *uriclip;
   AssetUri asset_uri;
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrackElement *track_element;
 
   ges_init ();
@@ -213,7 +213,7 @@ GST_START_TEST (test_filesource_images)
   a = ges_track_audio_raw_new ();
   v = ges_track_video_raw_new ();
 
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   fail_unless (layer != NULL);
   timeline = ges_timeline_new ();
   fail_unless (timeline != NULL);
@@ -242,7 +242,7 @@ GST_START_TEST (test_filesource_images)
 
   /* the returned track element should be an image source */
   /* the clip should not create any TrackElement in the audio track */
-  ges_timeline_layer_add_clip (layer, GES_CLIP (clip));
+  ges_layer_add_clip (layer, GES_CLIP (clip));
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
   track_element = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (track_element != NULL);

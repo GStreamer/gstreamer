@@ -22,7 +22,7 @@
 
 /**
  * SECTION:ges-clip
- * @short_description: Base Class for objects in a GESTimelineLayer
+ * @short_description: Base Class for objects in a GESLayer
  *
  * A #GESClip is a 'natural' object which controls one or more
  * #GESTrackElement(s) in one or more #GESTrack(s).
@@ -53,7 +53,7 @@ G_DEFINE_ABSTRACT_TYPE (GESClip, ges_clip, GES_TYPE_CONTAINER);
 struct _GESClipPrivate
 {
   /*< public > */
-  GESTimelineLayer *layer;
+  GESLayer *layer;
 
   /*< private > */
 
@@ -116,7 +116,7 @@ static void
 _get_priority_range (GESContainer * container, guint32 * min_priority,
     guint32 * max_priority)
 {
-  GESTimelineLayer *layer = GES_CLIP (container)->priv->layer;
+  GESLayer *layer = GES_CLIP (container)->priv->layer;
 
   if (layer) {
     *min_priority = layer->min_gnl_priority;
@@ -204,7 +204,7 @@ _ungroup (GESContainer * container, gboolean recursive)
   gboolean first_obj = TRUE;
   GESClip *clip = GES_CLIP (container);
   GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
-  GESTimelineLayer *layer = clip->priv->layer;
+  GESLayer *layer = clip->priv->layer;
   GHashTable *_tracktype_clip = g_hash_table_new (g_int_hash, g_int_equal);
 
   /* If there is no TrackElement, just return @container in a list */
@@ -228,7 +228,7 @@ _ungroup (GESContainer * container, gboolean recursive)
         if (layer) {
           /* Add new container to the same layer as @container */
           ges_clip_set_moving_from_layer (tmpclip, TRUE);
-          ges_timeline_layer_add_clip (layer, tmpclip);
+          ges_layer_add_clip (layer, tmpclip);
           ges_clip_set_moving_from_layer (tmpclip, FALSE);
         }
       }
@@ -259,7 +259,7 @@ _group (GList * containers)
   CheckTrack *tracks = NULL;
   GESTimeline *timeline = NULL;
   GESTrackType supported_formats;
-  GESTimelineLayer *layer = NULL;
+  GESLayer *layer = NULL;
   GList *tmp, *tmpclip, *tmpelement;
   GstClockTime start, inpoint, duration;
 
@@ -390,7 +390,7 @@ _group (GList * containers)
           ges_track_element_get_track_type (GES_TRACK_ELEMENT (celement));
     }
 
-    ges_timeline_layer_remove_clip (layer, tmpclip->data);
+    ges_layer_remove_clip (layer, tmpclip->data);
   }
 
   ges_clip_set_supported_formats (GES_CLIP (ret), supported_formats);
@@ -475,11 +475,11 @@ ges_clip_class_init (GESClipClass * klass)
   /**
    * GESClip:layer:
    *
-   * The GESTimelineLayer where this clip is being used.
+   * The GESLayer where this clip is being used.
    */
   properties[PROP_LAYER] = g_param_spec_object ("layer", "Layer",
-      "The GESTimelineLayer where this clip is being used.",
-      GES_TYPE_TIMELINE_LAYER, G_PARAM_READABLE);
+      "The GESLayer where this clip is being used.",
+      GES_TYPE_LAYER, G_PARAM_READABLE);
   g_object_class_install_property (object_class, PROP_LAYER,
       properties[PROP_LAYER]);
 
@@ -624,7 +624,7 @@ ges_clip_create_track_elements_func (GESClip * clip, GESTrackType type)
 }
 
 void
-ges_clip_set_layer (GESClip * clip, GESTimelineLayer * layer)
+ges_clip_set_layer (GESClip * clip, GESLayer * layer)
 {
   GST_DEBUG ("clip:%p, layer:%p", clip, layer);
 
@@ -714,7 +714,7 @@ ges_clip_is_moving_from_layer (GESClip * clip)
 /**
  * ges_clip_move_to_layer:
  * @clip: a #GESClip
- * @layer: the new #GESTimelineLayer
+ * @layer: the new #GESLayer
  *
  * Moves @clip to @layer. If @clip is not in any layer, it adds it to
  * @layer, else, it removes it from its current layer, and adds it to @layer.
@@ -722,35 +722,35 @@ ges_clip_is_moving_from_layer (GESClip * clip)
  * Returns: %TRUE if @clip could be moved %FALSE otherwize
  */
 gboolean
-ges_clip_move_to_layer (GESClip * clip, GESTimelineLayer * layer)
+ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
 {
   gboolean ret;
-  GESTimelineLayer *current_layer;
+  GESLayer *current_layer;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
-  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
+  g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
 
   current_layer = clip->priv->layer;
 
   if (current_layer == NULL) {
     GST_DEBUG ("Not moving %p, only adding it to %p", clip, layer);
 
-    return ges_timeline_layer_add_clip (layer, clip);
+    return ges_layer_add_clip (layer, clip);
   }
 
   GST_DEBUG_OBJECT (clip, "moving to layer %p, priority: %d", layer,
-      ges_timeline_layer_get_priority (layer));
+      ges_layer_get_priority (layer));
 
   clip->priv->is_moving = TRUE;
   gst_object_ref (clip);
-  ret = ges_timeline_layer_remove_clip (current_layer, clip);
+  ret = ges_layer_remove_clip (current_layer, clip);
 
   if (!ret) {
     gst_object_unref (clip);
     return FALSE;
   }
 
-  ret = ges_timeline_layer_add_clip (layer, clip);
+  ret = ges_layer_add_clip (layer, clip);
   clip->priv->is_moving = FALSE;
 
   gst_object_unref (clip);
@@ -806,13 +806,13 @@ ges_clip_find_track_element (GESClip * clip, GESTrack * track, GType type)
  * ges_clip_get_layer:
  * @clip: a #GESClip
  *
- * Get the #GESTimelineLayer to which this clip belongs.
+ * Get the #GESLayer to which this clip belongs.
  *
- * Returns: (transfer full): The #GESTimelineLayer where this @clip is being
+ * Returns: (transfer full): The #GESLayer where this @clip is being
  * used, or %NULL if it is not used on any layer. The caller should unref it
  * usage.
  */
-GESTimelineLayer *
+GESLayer *
 ges_clip_get_layer (GESClip * clip)
 {
   g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
@@ -952,9 +952,9 @@ ges_clip_set_top_effect_priority (GESClip * clip,
 /**
  * ges_clip_edit:
  * @clip: the #GESClip to edit
- * @layers: (element-type GESTimelineLayer): The layers you want the edit to
+ * @layers: (element-type GESLayer): The layers you want the edit to
  *  happen in, %NULL means that the edition is done in all the
- *  #GESTimelineLayers contained in the current timeline.
+ *  #GESLayers contained in the current timeline.
  * @new_layer_priority: The priority of the layer @clip should land in.
  *  If the layer you're trying to move the clip to doesn't exist, it will
  *  be created automatically. -1 means no move.
@@ -976,7 +976,7 @@ ges_clip_edit (GESClip * clip, GList * layers,
 {
   GList *tmp;
   gboolean ret = TRUE;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
 
@@ -1005,8 +1005,7 @@ ges_clip_edit (GESClip * clip, GList * layers,
 
       return FALSE;
     }
-    priority_offset = new_layer_priority -
-        ges_timeline_layer_get_priority (layer);
+    priority_offset = new_layer_priority - ges_layer_get_priority (layer);
 
     ret &= timeline_context_to_layer (layer->timeline, priority_offset);
   }
@@ -1022,7 +1021,7 @@ ges_clip_edit (GESClip * clip, GList * layers,
  * The function modifies @clip, and creates another #GESClip so
  * we have two clips at the end, splitted at the time specified by @position.
  * The newly created clip will be added to the same layer as @clip is in.
- * This implies that @clip must be in a #GESTimelineLayer for the operation to
+ * This implies that @clip must be in a #GESLayer for the operation to
  * be possible.
  *
  * Returns: (transfer none): The newly created #GESClip resulting from the
@@ -1067,7 +1066,7 @@ ges_clip_split (GESClip * clip, guint64 position)
 
   /* We do not want the timeline to create again TrackElement-s */
   ges_clip_set_moving_from_layer (new_object, TRUE);
-  ges_timeline_layer_add_clip (clip->priv->layer, new_object);
+  ges_layer_add_clip (clip->priv->layer, new_object);
   ges_clip_set_moving_from_layer (new_object, FALSE);
 
   _set_duration0 (GES_TIMELINE_ELEMENT (clip), position - _START (clip));
@@ -1139,7 +1138,7 @@ _ripple (GESTimelineElement * element, GstClockTime start)
   GESTimeline *timeline;
   GESClip *clip = GES_CLIP (element);
 
-  timeline = ges_timeline_layer_get_timeline (clip->priv->layer);
+  timeline = ges_layer_get_timeline (clip->priv->layer);
 
   if (timeline == NULL) {
     GST_DEBUG ("Not in a timeline yet");
@@ -1164,7 +1163,7 @@ _ripple_end (GESTimelineElement * element, GstClockTime end)
   GESTimeline *timeline;
   GESClip *clip = GES_CLIP (element);
 
-  timeline = ges_timeline_layer_get_timeline (clip->priv->layer);
+  timeline = ges_layer_get_timeline (clip->priv->layer);
 
   if (timeline == NULL) {
     GST_DEBUG ("Not in a timeline yet");
@@ -1190,7 +1189,7 @@ _roll_start (GESTimelineElement * element, GstClockTime start)
 
   GESClip *clip = GES_CLIP (element);
 
-  timeline = ges_timeline_layer_get_timeline (clip->priv->layer);
+  timeline = ges_layer_get_timeline (clip->priv->layer);
 
   if (timeline == NULL) {
     GST_DEBUG ("Not in a timeline yet");
@@ -1216,7 +1215,7 @@ _roll_end (GESTimelineElement * element, GstClockTime end)
 
   GESClip *clip = GES_CLIP (element);
 
-  timeline = ges_timeline_layer_get_timeline (clip->priv->layer);
+  timeline = ges_layer_get_timeline (clip->priv->layer);
   if (timeline == NULL) {
     GST_DEBUG ("Not in a timeline yet");
     return FALSE;
@@ -1242,7 +1241,7 @@ _trim (GESTimelineElement * element, GstClockTime start)
 
   GESClip *clip = GES_CLIP (element);
 
-  timeline = ges_timeline_layer_get_timeline (clip->priv->layer);
+  timeline = ges_layer_get_timeline (clip->priv->layer);
 
   if (timeline == NULL) {
     GST_DEBUG ("Not in a timeline yet");

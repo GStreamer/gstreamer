@@ -49,7 +49,7 @@ typedef struct PendingClip
   GESAsset *asset;
   GstClockTime duration;
   GESTrackType track_types;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
 
   GstStructure *properties;
   gchar *metadatas;
@@ -62,7 +62,7 @@ typedef struct PendingClip
 
 typedef struct LayerEntry
 {
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   gboolean auto_trans;
 } LayerEntry;
 
@@ -366,7 +366,7 @@ ges_base_xml_formatter_class_init (GESBaseXmlFormatterClass * self_class)
 static void
 _set_auto_transition (gpointer prio, LayerEntry * entry, gpointer udata)
 {
-  ges_timeline_layer_set_auto_transition (entry->layer, entry->auto_trans);
+  ges_layer_set_auto_transition (entry->layer, entry->auto_trans);
 }
 
 static void
@@ -406,12 +406,12 @@ set_property_foreach (GQuark field_id, const GValue * value, GObject * object)
 
 static inline GESClip *
 _add_object_to_layer (GESBaseXmlFormatterPrivate * priv, const gchar * id,
-    GESTimelineLayer * layer, GESAsset * asset, GstClockTime start,
+    GESLayer * layer, GESAsset * asset, GstClockTime start,
     GstClockTime inpoint, GstClockTime duration,
     GESTrackType track_types, const gchar * metadatas,
     GstStructure * properties)
 {
-  GESClip *clip = ges_timeline_layer_add_asset (layer,
+  GESClip *clip = ges_layer_add_asset (layer,
       asset, start, inpoint, duration, track_types);
 
   if (clip == NULL) {
@@ -753,7 +753,7 @@ ges_base_xml_formatter_add_layer (GESBaseXmlFormatter * self,
 {
   LayerEntry *entry;
   GESAsset *asset;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   gboolean auto_transition = FALSE;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
@@ -761,7 +761,7 @@ ges_base_xml_formatter_add_layer (GESBaseXmlFormatter * self,
     return;
 
   if (extractable_type == G_TYPE_NONE)
-    layer = ges_timeline_layer_new ();
+    layer = ges_layer_new ();
   else {
     asset = ges_asset_request (extractable_type, NULL, error);
     if (asset == NULL) {
@@ -773,10 +773,10 @@ ges_base_xml_formatter_add_layer (GESBaseXmlFormatter * self,
         return;
       }
     }
-    layer = GES_TIMELINE_LAYER (ges_asset_extract (asset, error));
+    layer = GES_LAYER (ges_asset_extract (asset, error));
   }
 
-  ges_timeline_layer_set_priority (layer, priority);
+  ges_layer_set_priority (layer, priority);
   ges_timeline_add_layer (GES_FORMATTER (self)->timeline, layer);
   if (properties) {
     if (gst_structure_get_boolean (properties, "auto-transition",

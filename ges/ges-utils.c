@@ -26,7 +26,7 @@
 #include "ges-internal.h"
 #include "ges-timeline.h"
 #include "ges-track.h"
-#include "ges-timeline-layer.h"
+#include "ges-layer.h"
 #include "ges.h"
 
 /**

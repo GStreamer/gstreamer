@@ -70,7 +70,7 @@ static guint ges_container_signals[LAST_SIGNAL] = { 0 };
 struct _GESContainerPrivate
 {
   /*< public > */
-  GESTimelineLayer *layer;
+  GESLayer *layer;
 
   /*< private > */
   /* Set to TRUE when the container is doing updates of track object

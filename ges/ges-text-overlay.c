@@ -21,7 +21,7 @@
 /**
  * SECTION:ges-text-overlay
  * @short_description: render text onto another video stream in a
- * #GESTimelineLayer
+ * #GESLayer
  *
  */
 

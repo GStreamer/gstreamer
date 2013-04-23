@@ -20,7 +20,7 @@
 
 /**
  * SECTION:ges-source-clip
- * @short_description: Base Class for sources of a GESTimelineLayer
+ * @short_description: Base Class for sources of a GESLayer
  */
 
 #include "ges-internal.h"

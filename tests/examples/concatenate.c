@@ -71,7 +71,7 @@ main (int argc, char **argv)
 {
   GMainLoop *mainloop = NULL;
   GESTimeline *timeline;
-  GESTimelineLayer *layer = NULL;
+  GESLayer *layer = NULL;
   GstBus *bus = NULL;
   guint i;
 
@@ -86,7 +86,7 @@ main (int argc, char **argv)
 
   timeline = ges_timeline_new_audio_video ();
 
-  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  layer = (GESLayer *) ges_simple_layer_new ();
   if (!ges_timeline_add_layer (timeline, layer))
     return -1;
 

@@ -60,7 +60,7 @@ typedef struct _GESTimelinePrivate GESTimelinePrivate;
 
 /**
  * GESTimeline:
- * @layers: (element-type GES.TimelineLayer): A list of #GESTimelineLayer sorted by priority NOTE: Do not modify.
+ * @layers: (element-type GES.Layer): A list of #GESLayer sorted by priority NOTE: Do not modify.
  * @tracks: (element-type GES.Track): A list of #GESTrack sorted by priority NOTE: Do not modify.
  */
 struct _GESTimeline {
@@ -90,8 +90,8 @@ struct _GESTimelineClass {
 
   void (*track_added)	(GESTimeline *timeline, GESTrack * track);
   void (*track_removed)	(GESTimeline *timeline, GESTrack * track);
-  void (*layer_added)	(GESTimeline *timeline, GESTimelineLayer *layer);
-  void (*layer_removed)	(GESTimeline *timeline, GESTimelineLayer *layer);
+  void (*layer_added)	(GESTimeline *timeline, GESLayer *layer);
+  void (*layer_removed)	(GESTimeline *timeline, GESLayer *layer);
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
@@ -105,9 +105,9 @@ GESTimeline* ges_timeline_new_from_uri (const gchar *uri, GError **error);
 gboolean ges_timeline_load_from_uri (GESTimeline *timeline, const gchar *uri, GError **error);
 gboolean ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
     GESAsset *formatter_asset, gboolean overwrite, GError ** error);
-gboolean ges_timeline_add_layer (GESTimeline *timeline, GESTimelineLayer *layer);
-GESTimelineLayer * ges_timeline_append_layer (GESTimeline * timeline);
-gboolean ges_timeline_remove_layer (GESTimeline *timeline, GESTimelineLayer *layer);
+gboolean ges_timeline_add_layer (GESTimeline *timeline, GESLayer *layer);
+GESLayer * ges_timeline_append_layer (GESTimeline * timeline);
+gboolean ges_timeline_remove_layer (GESTimeline *timeline, GESLayer *layer);
 GList* ges_timeline_get_layers (GESTimeline *timeline);
 
 gboolean ges_timeline_add_track (GESTimeline *timeline, GESTrack *track);

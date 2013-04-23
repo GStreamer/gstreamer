@@ -57,7 +57,7 @@ GST_START_TEST (test_basic_timeline_edition)
   GESAsset *asset;
   GESTrack *track;
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrackElement *trackelement, *trackelement1, *trackelement2;
   GESClip *clip, *clip1, *clip2;
 
@@ -70,7 +70,7 @@ GST_START_TEST (test_basic_timeline_edition)
   fail_unless (timeline != NULL);
   fail_unless (ges_timeline_add_track (timeline, track));
 
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   fail_unless (layer != NULL);
   fail_unless (ges_timeline_add_layer (timeline, layer));
 
@@ -84,18 +84,15 @@ GST_START_TEST (test_basic_timeline_edition)
    *          |  clip  |  |  clip1  |     |     clip2  |
    * time     0------- 10 --------20    50---------60
    */
-  clip = ges_timeline_layer_add_asset (layer, asset, 0, 0, 10,
-      GES_TRACK_TYPE_UNKNOWN);
+  clip = ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_UNKNOWN);
   trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (GES_IS_TRACK_ELEMENT (trackelement));
 
-  clip1 = ges_timeline_layer_add_asset (layer, asset, 10, 0, 10,
-      GES_TRACK_TYPE_UNKNOWN);
+  clip1 = ges_layer_add_asset (layer, asset, 10, 0, 10, GES_TRACK_TYPE_UNKNOWN);
   trackelement1 = GES_CONTAINER_CHILDREN (clip1)->data;
   fail_unless (GES_IS_TRACK_ELEMENT (trackelement1));
 
-  clip2 = ges_timeline_layer_add_asset (layer, asset, 50, 0, 60,
-      GES_TRACK_TYPE_UNKNOWN);
+  clip2 = ges_layer_add_asset (layer, asset, 50, 0, 60, GES_TRACK_TYPE_UNKNOWN);
   trackelement2 = GES_CONTAINER_CHILDREN (clip2)->data;
   fail_unless (GES_IS_TRACK_ELEMENT (trackelement2));
 
@@ -248,7 +245,7 @@ GST_START_TEST (test_snapping)
   GESTimeline *timeline;
   GESTrackElement *trackelement, *trackelement1, *trackelement2;
   GESClip *clip, *clip1, *clip2;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GList *trackelements;
 
   ges_init ();
@@ -282,10 +279,10 @@ GST_START_TEST (test_snapping)
       "in-point", (guint64) 0, NULL);
 
   fail_unless ((layer = ges_timeline_append_layer (timeline)) != NULL);
-  assert_equals_int (ges_timeline_layer_get_priority (layer), 0);
+  assert_equals_int (ges_layer_get_priority (layer), 0);
 
 
-  fail_unless (ges_timeline_layer_add_clip (layer, clip));
+  fail_unless (ges_layer_add_clip (layer, clip));
   fail_unless ((trackelements = GES_CONTAINER_CHILDREN (clip)) != NULL);
   fail_unless ((trackelement =
           GES_TRACK_ELEMENT (trackelements->data)) != NULL);
@@ -299,7 +296,7 @@ GST_START_TEST (test_snapping)
    * + layer */
   ASSERT_OBJECT_REFCOUNT (clip, "First clip", 1);
 
-  fail_unless (ges_timeline_layer_add_clip (layer, clip1));
+  fail_unless (ges_layer_add_clip (layer, clip1));
   fail_unless ((trackelements = GES_CONTAINER_CHILDREN (clip1)) != NULL);
   fail_unless ((trackelement1 =
           GES_TRACK_ELEMENT (trackelements->data)) != NULL);
@@ -310,7 +307,7 @@ GST_START_TEST (test_snapping)
   ASSERT_OBJECT_REFCOUNT (trackelement1, "First trackelement", 3);
   ASSERT_OBJECT_REFCOUNT (clip1, "First clip", 1);
 
-  fail_unless (ges_timeline_layer_add_clip (layer, clip2));
+  fail_unless (ges_layer_add_clip (layer, clip2));
   fail_unless ((trackelements = GES_CONTAINER_CHILDREN (clip2)) != NULL);
   fail_unless ((trackelement2 =
           GES_TRACK_ELEMENT (trackelements->data)) != NULL);
@@ -532,7 +529,7 @@ GST_START_TEST (test_simple_triming)
   GESClipAsset *asset;
   GESProject *project;
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTimelineElement *element;
 
   gchar *uri = ges_test_file_uri ("audio_video.ogg");
@@ -557,13 +554,13 @@ GST_START_TEST (test_simple_triming)
   assert_equals_int (g_list_length (assets), 1);
   asset = assets->data;
 
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 
-  ges_timeline_layer_add_asset (layer, GES_ASSET (asset), 0, 0, 10,
+  ges_layer_add_asset (layer, GES_ASSET (asset), 0, 0, 10,
       ges_clip_asset_get_supported_formats (asset));
 
-  element = ges_timeline_layer_get_clips (layer)->data;
+  element = ges_layer_get_clips (layer)->data;
 
   deep_check (element, 0, 0, 10);
   ges_timeline_enable_update (timeline, FALSE);
@@ -585,7 +582,7 @@ GST_START_TEST (test_timeline_edition_mode)
   GESTimeline *timeline;
   GESTrackElement *trackelement, *trackelement1, *trackelement2;
   GESClip *clip, *clip1, *clip2;
-  GESTimelineLayer *layer, *layer1, *layer2;
+  GESLayer *layer, *layer1, *layer2;
   GList *trackelements, *layers, *tmp;
 
   ges_init ();
@@ -623,10 +620,10 @@ GST_START_TEST (test_timeline_edition_mode)
       "in-point", (guint64) 0, NULL);
 
   fail_unless ((layer = ges_timeline_append_layer (timeline)) != NULL);
-  assert_equals_int (ges_timeline_layer_get_priority (layer), 0);
+  assert_equals_int (ges_layer_get_priority (layer), 0);
 
 
-  fail_unless (ges_timeline_layer_add_clip (layer, clip));
+  fail_unless (ges_layer_add_clip (layer, clip));
   fail_unless ((trackelements = GES_CONTAINER_CHILDREN (clip)) != NULL);
   fail_unless ((trackelement =
           GES_TRACK_ELEMENT (trackelements->data)) != NULL);
@@ -636,16 +633,16 @@ GST_START_TEST (test_timeline_edition_mode)
   /* Add a new layer and add clipects to it */
   fail_unless ((layer1 = ges_timeline_append_layer (timeline)) != NULL);
   fail_unless (layer != layer1);
-  assert_equals_int (ges_timeline_layer_get_priority (layer1), 1);
+  assert_equals_int (ges_layer_get_priority (layer1), 1);
 
-  fail_unless (ges_timeline_layer_add_clip (layer1, clip1));
+  fail_unless (ges_layer_add_clip (layer1, clip1));
   fail_unless ((trackelements = GES_CONTAINER_CHILDREN (clip1)) != NULL);
   fail_unless ((trackelement1 =
           GES_TRACK_ELEMENT (trackelements->data)) != NULL);
   fail_unless (ges_track_element_get_track (trackelement1) == track);
   assert_equals_uint64 (_DURATION (trackelement1), 10);
 
-  fail_unless (ges_timeline_layer_add_clip (layer1, clip2));
+  fail_unless (ges_layer_add_clip (layer1, clip2));
   fail_unless ((trackelements = GES_CONTAINER_CHILDREN (clip2)) != NULL);
   fail_unless ((trackelement2 =
           GES_TRACK_ELEMENT (trackelements->data)) != NULL);
@@ -681,7 +678,7 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement1, 40, 0, 10);
   CHECK_OBJECT_PROPS (trackelement2, 80, 0, 60);
   layer2 = ges_clip_get_layer (clip1);
-  assert_equals_int (ges_timeline_layer_get_priority (layer2), 3);
+  assert_equals_int (ges_layer_get_priority (layer2), 3);
   /* clip2 should have moved layer too */
   fail_unless (ges_clip_get_layer (clip2) == layer2);
   /* We got 2 reference to the same clipect, unref them */
@@ -697,7 +694,7 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
   CHECK_OBJECT_PROPS (trackelement2, 60, 0, 60);
   layer2 = ges_clip_get_layer (clip1);
-  assert_equals_int (ges_timeline_layer_get_priority (layer2), 1);
+  assert_equals_int (ges_layer_get_priority (layer2), 1);
   /* clip2 should have moved layer too */
   fail_unless (ges_clip_get_layer (clip2) == layer2);
   /* We got 2 reference to the same clipect, unref them */
@@ -764,7 +761,7 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
   CHECK_OBJECT_PROPS (trackelement2, 35, 0, 60);
   layer = ges_clip_get_layer (clip);
-  assert_equals_int (ges_timeline_layer_get_priority (layer), 2);
+  assert_equals_int (ges_layer_get_priority (layer), 2);
   gst_object_unref (layer);
 
   /* Roll end clip to 50
@@ -785,7 +782,7 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
   CHECK_OBJECT_PROPS (trackelement2, 50, 15, 45);
   layer = ges_clip_get_layer (clip);
-  assert_equals_int (ges_timeline_layer_get_priority (layer), 2);
+  assert_equals_int (ges_layer_get_priority (layer), 2);
   gst_object_unref (layer);
 
   /* Some more intensive roll testing */
@@ -818,7 +815,7 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
   CHECK_OBJECT_PROPS (trackelement2, 35, 0, 60);
   layer = ges_clip_get_layer (clip);
-  assert_equals_int (ges_timeline_layer_get_priority (layer), 2);
+  assert_equals_int (ges_layer_get_priority (layer), 2);
   gst_object_unref (layer);
 
   /* Ripple clip end to 52
@@ -841,7 +838,7 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
   CHECK_OBJECT_PROPS (trackelement2, 52, 0, 60)
       layer = ges_clip_get_layer (clip);
-  assert_equals_int (ges_timeline_layer_get_priority (layer), 2);
+  assert_equals_int (ges_layer_get_priority (layer), 2);
   gst_object_unref (layer);
 
 
@@ -889,8 +886,8 @@ GST_START_TEST (test_timeline_edition_mode)
   /* Check that movement between layer has been done properly */
   layer1 = ges_clip_get_layer (clip);
   layer = ges_clip_get_layer (clip1);
-  assert_equals_int (ges_timeline_layer_get_priority (layer1), 1);
-  assert_equals_int (ges_timeline_layer_get_priority (layer), 0);
+  assert_equals_int (ges_layer_get_priority (layer1), 1);
+  assert_equals_int (ges_layer_get_priority (layer), 0);
   fail_unless (ges_clip_get_layer (clip2) == layer);
   gst_object_unref (layer1);
   /* We have 2 references to @layer that we do not need anymore */ ;

@@ -50,7 +50,7 @@ typedef struct _GESSourceClipPrivate GESSourceClipPrivate;
 /**
  * GESSourceClip:
  *
- * Base class for sources of a #GESTimelineLayer
+ * Base class for sources of a #GESLayer
  */
 
 struct _GESSourceClip {

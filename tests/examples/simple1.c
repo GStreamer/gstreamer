@@ -29,7 +29,7 @@ main (int argc, gchar ** argv)
   GESTimelinePipeline *pipeline;
   GESTimeline *timeline;
   GESTrack *tracka, *trackv;
-  GESTimelineLayer *layer1, *layer2;
+  GESLayer *layer1, *layer2;
   GESUriClip *src;
   GMainLoop *mainloop;
 
@@ -76,8 +76,8 @@ main (int argc, gchar ** argv)
   tracka = ges_track_audio_raw_new ();
   trackv = ges_track_video_raw_new ();
 
-  layer1 = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
-  layer2 = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  layer1 = (GESLayer *) ges_simple_layer_new ();
+  layer2 = (GESLayer *) ges_simple_layer_new ();
   g_object_set (layer2, "priority", 1, NULL);
 
   if (!ges_timeline_add_layer (timeline, layer1) ||
@@ -94,7 +94,7 @@ main (int argc, gchar ** argv)
     g_free (uri);
     g_object_set (src, "in-point", inpoint * GST_SECOND,
         "duration", duration * GST_SECOND, "mute", mute, NULL);
-    ges_timeline_layer_add_clip (layer1, GES_CLIP (src));
+    ges_layer_add_clip (layer1, GES_CLIP (src));
   }
 
   /* Play the pipeline */

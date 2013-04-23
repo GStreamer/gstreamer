@@ -50,7 +50,7 @@ typedef struct _GESTitleClipPrivate GESTitleClipPrivate;
 /**
  * GESTitleClip:
  *
- * Render stand-alone titles in GESTimelineLayer.
+ * Render stand-alone titles in GESLayer.
  */
 
 struct _GESTitleClip {

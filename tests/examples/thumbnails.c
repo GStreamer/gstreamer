@@ -73,7 +73,7 @@ static GESTimelinePipeline *
 create_timeline (void)
 {
   GESTimelinePipeline *pipeline;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESTrack *tracka, *trackv;
   GESTimeline *timeline;
   GESClip *src;
@@ -83,7 +83,7 @@ create_timeline (void)
   tracka = ges_track_audio_raw_new ();
   trackv = ges_track_video_raw_new ();
 
-  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  layer = (GESLayer *) ges_simple_layer_new ();
 
   /* Add the tracks and the layer to the timeline */
   if (!ges_timeline_add_layer (timeline, layer) ||
@@ -97,8 +97,7 @@ create_timeline (void)
       "vpattern", GES_VIDEO_TEST_PATTERN_SNOW,
       "duration", 10 * GST_SECOND, NULL);
 
-  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) layer,
-      GES_CLIP (src), 0);
+  ges_simple_layer_add_object ((GESSimpleLayer *) layer, GES_CLIP (src), 0);
 
   pipeline = ges_timeline_pipeline_new ();
 

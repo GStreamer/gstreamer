@@ -57,7 +57,7 @@ main (int argc, gchar ** argv)
   GESTimelinePipeline *pipeline;
   GESTimeline *timeline;
   GESTrack *tracka;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GMainLoop *mainloop;
   GstEncodingProfile *profile;
   gchar *container = (gchar *) "application/ogg";
@@ -104,7 +104,7 @@ main (int argc, gchar ** argv)
   tracka = ges_track_audio_raw_new ();
 
   /* We are only going to be doing one layer of clips */
-  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  layer = (GESLayer *) ges_simple_layer_new ();
 
   /* Add the tracks and the layer to the timeline */
   if (!ges_timeline_add_layer (timeline, layer))
@@ -123,9 +123,9 @@ main (int argc, gchar ** argv)
     g_free (uri);
 
     g_object_set (src, "duration", GST_SECOND, NULL);
-    /* Since we're using a GESSimpleTimelineLayer, objects will be automatically
+    /* Since we're using a GESSimpleLayer, objects will be automatically
      * appended to the end of the layer */
-    ges_timeline_layer_add_clip (layer, (GESClip *) src);
+    ges_layer_add_clip (layer, (GESClip *) src);
   }
 
   /* In order to view our timeline, let's grab a convenience pipeline to put

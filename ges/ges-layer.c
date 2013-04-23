@@ -21,7 +21,7 @@
  */
 
 /**
- * SECTION:ges-timeline-layer
+ * SECTION:ges-layer
  * @short_description: Non-overlapping sequence of GESClip
  *
  * Responsible for the ordering of the various contained Clip(s). A
@@ -31,19 +31,19 @@
  */
 
 #include "ges-internal.h"
-#include "ges-timeline-layer.h"
+#include "ges-layer.h"
 #include "ges.h"
 #include "ges-source-clip.h"
 
 static void ges_meta_container_interface_init
     (GESMetaContainerInterface * iface);
 
-G_DEFINE_TYPE_WITH_CODE (GESTimelineLayer, ges_timeline_layer,
+G_DEFINE_TYPE_WITH_CODE (GESLayer, ges_layer,
     G_TYPE_INITIALLY_UNOWNED, G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE, NULL)
     G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER,
         ges_meta_container_interface_init));
 
-struct _GESTimelineLayerPrivate
+struct _GESLayerPrivate
 {
   /*< private > */
   GList *clips_start;           /* The Clips sorted by start and
@@ -57,7 +57,7 @@ struct _GESTimelineLayerPrivate
 typedef struct
 {
   GESClip *clip;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
 } NewAssetUData;
 
 enum
@@ -75,14 +75,14 @@ enum
   LAST_SIGNAL
 };
 
-static guint ges_timeline_layer_signals[LAST_SIGNAL] = { 0 };
+static guint ges_layer_signals[LAST_SIGNAL] = { 0 };
 
 /* GObject standard vmethods */
 static void
-ges_timeline_layer_get_property (GObject * object, guint property_id,
+ges_layer_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESTimelineLayer *layer = GES_TIMELINE_LAYER (object);
+  GESLayer *layer = GES_LAYER (object);
 
   switch (property_id) {
     case PROP_PRIORITY:
@@ -97,18 +97,17 @@ ges_timeline_layer_get_property (GObject * object, guint property_id,
 }
 
 static void
-ges_timeline_layer_set_property (GObject * object, guint property_id,
+ges_layer_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESTimelineLayer *layer = GES_TIMELINE_LAYER (object);
+  GESLayer *layer = GES_LAYER (object);
 
   switch (property_id) {
     case PROP_PRIORITY:
-      ges_timeline_layer_set_priority (layer, g_value_get_uint (value));
+      ges_layer_set_priority (layer, g_value_get_uint (value));
       break;
     case PROP_AUTO_TRANSITION:
-      ges_timeline_layer_set_auto_transition (layer,
-          g_value_get_boolean (value));
+      ges_layer_set_auto_transition (layer, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -116,17 +115,17 @@ ges_timeline_layer_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_timeline_layer_dispose (GObject * object)
+ges_layer_dispose (GObject * object)
 {
-  GESTimelineLayer *layer = GES_TIMELINE_LAYER (object);
-  GESTimelineLayerPrivate *priv = layer->priv;
+  GESLayer *layer = GES_LAYER (object);
+  GESLayerPrivate *priv = layer->priv;
 
   GST_DEBUG ("Disposing layer");
 
   while (priv->clips_start)
-    ges_timeline_layer_remove_clip (layer, (GESClip *) priv->clips_start->data);
+    ges_layer_remove_clip (layer, (GESClip *) priv->clips_start->data);
 
-  G_OBJECT_CLASS (ges_timeline_layer_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_layer_parent_class)->dispose (object);
 }
 
 static void
@@ -136,21 +135,21 @@ ges_meta_container_interface_init (GESMetaContainerInterface * iface)
 }
 
 static void
-ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
+ges_layer_class_init (GESLayerClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTimelineLayerPrivate));
+  g_type_class_add_private (klass, sizeof (GESLayerPrivate));
 
-  object_class->get_property = ges_timeline_layer_get_property;
-  object_class->set_property = ges_timeline_layer_set_property;
-  object_class->dispose = ges_timeline_layer_dispose;
+  object_class->get_property = ges_layer_get_property;
+  object_class->set_property = ges_layer_set_property;
+  object_class->dispose = ges_layer_dispose;
 
   /**
-   * GESTimelineLayer:priority:
+   * GESLayer:priority:
    *
    * The priority of the layer in the #GESTimeline. 0 is the highest
-   * priority. Conceptually, a #GESTimeline is a stack of GESTimelineLayers,
+   * priority. Conceptually, a #GESTimeline is a stack of GESLayers,
    * and the priority of the layer represents its position in the stack. Two
    * layers should not have the same priority within a given GESTimeline.
    */
@@ -159,7 +158,7 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
           "The priority of the layer", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
 
   /**
-   * GESTimelineLayer:auto-transition:
+   * GESLayer:auto-transition:
    *
    * Sets whether transitions are added automagically when clips overlap.
    */
@@ -168,36 +167,36 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
           "whether the transitions are added", FALSE, G_PARAM_READWRITE));
 
   /**
-   * GESTimelineLayer::clip-added:
-   * @layer: the #GESTimelineLayer
+   * GESLayer::clip-added:
+   * @layer: the #GESLayer
    * @clip: the #GESClip that was added.
    *
    * Will be emitted after the clip was added to the layer.
    */
-  ges_timeline_layer_signals[OBJECT_ADDED] =
+  ges_layer_signals[OBJECT_ADDED] =
       g_signal_new ("clip-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineLayerClass, object_added),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESLayerClass, object_added),
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_CLIP);
 
   /**
-   * GESTimelineLayer::clip-removed:
-   * @layer: the #GESTimelineLayer
+   * GESLayer::clip-removed:
+   * @layer: the #GESLayer
    * @clip: the #GESClip that was removed
    *
    * Will be emitted after the clip was removed from the layer.
    */
-  ges_timeline_layer_signals[OBJECT_REMOVED] =
+  ges_layer_signals[OBJECT_REMOVED] =
       g_signal_new ("clip-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineLayerClass,
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESLayerClass,
           object_removed), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
       1, GES_TYPE_CLIP);
 }
 
 static void
-ges_timeline_layer_init (GESTimelineLayer * self)
+ges_layer_init (GESLayer * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TIMELINE_LAYER, GESTimelineLayerPrivate);
+      GES_TYPE_LAYER, GESLayerPrivate);
 
   self->priv->priority = 0;
   self->priv->auto_transition = FALSE;
@@ -206,14 +205,14 @@ ges_timeline_layer_init (GESTimelineLayer * self)
 }
 
 /**
- * ges_timeline_layer_resync_priorities:
- * @layer: a #GESTimelineLayer
+ * ges_layer_resync_priorities:
+ * @layer: a #GESLayer
  *
  * Resyncs the priorities of the objects controlled by @layer.
  * This method
  */
 static gboolean
-ges_timeline_layer_resync_priorities (GESTimelineLayer * layer)
+ges_layer_resync_priorities (GESLayer * layer)
 {
   GList *tmp;
   GESTimelineElement *track_element;
@@ -268,7 +267,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
     ges_extractable_set_asset (GES_EXTRACTABLE (udata->clip), asset);
 
     ges_project_add_asset (project, asset);
-    ges_timeline_layer_add_clip (udata->layer, udata->clip);
+    ges_layer_add_clip (udata->layer, udata->clip);
   }
 
   gst_object_unref (asset);
@@ -277,8 +276,8 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
 
 /* Public methods */
 /**
- * ges_timeline_layer_remove_clip:
- * @layer: a #GESTimelineLayer
+ * ges_layer_remove_clip:
+ * @layer: a #GESLayer
  * @clip: the #GESClip to remove
  *
  * Removes the given @clip from the @layer and unparents it.
@@ -290,11 +289,11 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
  * not want to remove the clip.
  */
 gboolean
-ges_timeline_layer_remove_clip (GESTimelineLayer * layer, GESClip * clip)
+ges_layer_remove_clip (GESLayer * layer, GESClip * clip)
 {
-  GESTimelineLayer *current_layer;
+  GESLayer *current_layer;
 
-  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
+  g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
 
   GST_DEBUG ("layer:%p, clip:%p", layer, clip);
@@ -311,7 +310,7 @@ ges_timeline_layer_remove_clip (GESTimelineLayer * layer, GESClip * clip)
   gst_object_unref (current_layer);
 
   /* emit 'clip-removed' */
-  g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_REMOVED], 0, clip);
+  g_signal_emit (layer, ges_layer_signals[OBJECT_REMOVED], 0, clip);
 
   /* inform the clip it's no longer in a layer */
   ges_clip_set_layer (clip, NULL);
@@ -328,17 +327,17 @@ ges_timeline_layer_remove_clip (GESTimelineLayer * layer, GESClip * clip)
 }
 
 /**
- * ges_timeline_layer_set_priority:
- * @layer: a #GESTimelineLayer
+ * ges_layer_set_priority:
+ * @layer: a #GESLayer
  * @priority: the priority to set
  *
  * Sets the layer to the given @priority. See the documentation of the
  * priority property for more information.
  */
 void
-ges_timeline_layer_set_priority (GESTimelineLayer * layer, guint priority)
+ges_layer_set_priority (GESLayer * layer, guint priority)
 {
-  g_return_if_fail (GES_IS_TIMELINE_LAYER (layer));
+  g_return_if_fail (GES_IS_LAYER (layer));
 
   GST_DEBUG ("layer:%p, priority:%d", layer, priority);
 
@@ -347,13 +346,13 @@ ges_timeline_layer_set_priority (GESTimelineLayer * layer, guint priority)
     layer->min_gnl_priority = (priority * LAYER_HEIGHT);
     layer->max_gnl_priority = ((priority + 1) * LAYER_HEIGHT) - 1;
 
-    ges_timeline_layer_resync_priorities (layer);
+    ges_layer_resync_priorities (layer);
   }
 }
 
 /**
- * ges_timeline_layer_get_auto_transition:
- * @layer: a #GESTimelineLayer
+ * ges_layer_get_auto_transition:
+ * @layer: a #GESLayer
  *
  * Gets whether transitions are automatically added when objects
  * overlap or not.
@@ -361,51 +360,50 @@ ges_timeline_layer_set_priority (GESTimelineLayer * layer, guint priority)
  * Returns: %TRUE if transitions are automatically added, else %FALSE.
  */
 gboolean
-ges_timeline_layer_get_auto_transition (GESTimelineLayer * layer)
+ges_layer_get_auto_transition (GESLayer * layer)
 {
-  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), 0);
+  g_return_val_if_fail (GES_IS_LAYER (layer), 0);
 
   return layer->priv->auto_transition;
 }
 
 /**
- * ges_timeline_layer_set_auto_transition:
- * @layer: a #GESTimelineLayer
+ * ges_layer_set_auto_transition:
+ * @layer: a #GESLayer
  * @auto_transition: whether the auto_transition is active
  *
  * Sets the layer to the given @auto_transition. See the documentation of the
  * property auto_transition for more information.
  */
 void
-ges_timeline_layer_set_auto_transition (GESTimelineLayer * layer,
-    gboolean auto_transition)
+ges_layer_set_auto_transition (GESLayer * layer, gboolean auto_transition)
 {
 
-  g_return_if_fail (GES_IS_TIMELINE_LAYER (layer));
+  g_return_if_fail (GES_IS_LAYER (layer));
 
   layer->priv->auto_transition = auto_transition;
   g_object_notify (G_OBJECT (layer), "auto-transition");
 }
 
 /**
- * ges_timeline_layer_get_priority:
- * @layer: a #GESTimelineLayer
+ * ges_layer_get_priority:
+ * @layer: a #GESLayer
  *
  * Get the priority of @layer within the timeline.
  *
  * Returns: The priority of the @layer within the timeline.
  */
 guint
-ges_timeline_layer_get_priority (GESTimelineLayer * layer)
+ges_layer_get_priority (GESLayer * layer)
 {
-  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), 0);
+  g_return_val_if_fail (GES_IS_LAYER (layer), 0);
 
   return layer->priv->priority;
 }
 
 /**
- * ges_timeline_layer_get_clips:
- * @layer: a #GESTimelineLayer
+ * ges_layer_get_clips:
+ * @layer: a #GESLayer
  *
  * Get the clips this layer contains.
  *
@@ -415,13 +413,13 @@ ges_timeline_layer_get_priority (GESTimelineLayer * layer)
  */
 
 GList *
-ges_timeline_layer_get_clips (GESTimelineLayer * layer)
+ges_layer_get_clips (GESLayer * layer)
 {
-  GESTimelineLayerClass *klass;
+  GESLayerClass *klass;
 
-  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), NULL);
+  g_return_val_if_fail (GES_IS_LAYER (layer), NULL);
 
-  klass = GES_TIMELINE_LAYER_GET_CLASS (layer);
+  klass = GES_LAYER_GET_CLASS (layer);
 
   if (klass->get_objects) {
     return klass->get_objects (layer);
@@ -433,8 +431,8 @@ ges_timeline_layer_get_clips (GESTimelineLayer * layer)
 }
 
 /**
- * ges_timeline_layer_is_empty:
- * @layer: The #GESTimelineLayer to check
+ * ges_layer_is_empty:
+ * @layer: The #GESLayer to check
  *
  * Convenience method to check if @layer is empty (doesn't contain any clip),
  * or not.
@@ -443,16 +441,16 @@ ges_timeline_layer_get_clips (GESTimelineLayer * layer)
  * one #GESClip
  */
 gboolean
-ges_timeline_layer_is_empty (GESTimelineLayer * layer)
+ges_layer_is_empty (GESLayer * layer)
 {
-  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
+  g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
 
   return (layer->priv->clips_start == NULL);
 }
 
 /**
- * ges_timeline_layer_add_clip:
- * @layer: a #GESTimelineLayer
+ * ges_layer_add_clip:
+ * @layer: a #GESLayer
  * @clip: (transfer full): the #GESClip to add.
  *
  * Adds the given clip to the layer. Sets the clip's parent, and thus
@@ -469,14 +467,14 @@ ges_timeline_layer_is_empty (GESTimelineLayer * layer)
  * if the @layer refuses to add the clip.
  */
 gboolean
-ges_timeline_layer_add_clip (GESTimelineLayer * layer, GESClip * clip)
+ges_layer_add_clip (GESLayer * layer, GESClip * clip)
 {
   GESAsset *asset;
-  GESTimelineLayerPrivate *priv;
-  GESTimelineLayer *current_layer;
+  GESLayerPrivate *priv;
+  GESLayer *current_layer;
   guint32 maxprio, minprio, prio;
 
-  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
+  g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
 
   GST_DEBUG_OBJECT (layer, "adding clip:%p", clip);
@@ -553,19 +551,19 @@ ges_timeline_layer_add_clip (GESTimelineLayer * layer, GESClip * clip)
 
   /* If the clip has an acceptable priority, we just let it with its current
    * priority */
-  ges_timeline_layer_resync_priorities (layer);
+  ges_layer_resync_priorities (layer);
   ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip),
       layer->timeline);
 
   /* emit 'clip-added' */
-  g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_ADDED], 0, clip);
+  g_signal_emit (layer, ges_layer_signals[OBJECT_ADDED], 0, clip);
 
   return TRUE;
 }
 
 /**
- * ges_timeline_layer_add_asset:
- * @layer: a #GESTimelineLayer
+ * ges_layer_add_asset:
+ * @layer: a #GESLayer
  * @asset: The asset to add to
  * @start: The start value to set on the new #GESClip
  * @inpoint: The inpoint value to set on the new #GESClip
@@ -578,13 +576,13 @@ ges_timeline_layer_add_clip (GESTimelineLayer * layer, GESClip * clip)
  * Returns: (transfer none): Created #GESClip
  */
 GESClip *
-ges_timeline_layer_add_asset (GESTimelineLayer * layer,
+ges_layer_add_asset (GESLayer * layer,
     GESAsset * asset, GstClockTime start, GstClockTime inpoint,
     GstClockTime duration, GESTrackType track_types)
 {
   GESClip *clip;
 
-  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), NULL);
+  g_return_val_if_fail (GES_IS_LAYER (layer), NULL);
   g_return_val_if_fail (GES_IS_ASSET (asset), NULL);
   g_return_val_if_fail (g_type_is_a (ges_asset_get_extractable_type
           (asset), GES_TYPE_CLIP), NULL);
@@ -605,7 +603,7 @@ ges_timeline_layer_add_asset (GESTimelineLayer * layer,
     _set_duration0 (GES_TIMELINE_ELEMENT (clip), duration);
   }
 
-  if (!ges_timeline_layer_add_clip (layer, clip)) {
+  if (!ges_layer_add_clip (layer, clip)) {
     gst_object_unref (clip);
 
     return NULL;
@@ -615,38 +613,37 @@ ges_timeline_layer_add_asset (GESTimelineLayer * layer,
 }
 
 /**
- * ges_timeline_layer_new:
+ * ges_layer_new:
  *
- * Creates a new #GESTimelineLayer.
+ * Creates a new #GESLayer.
  *
- * Returns: A new #GESTimelineLayer
+ * Returns: A new #GESLayer
  */
-GESTimelineLayer *
-ges_timeline_layer_new (void)
+GESLayer *
+ges_layer_new (void)
 {
-  return g_object_new (GES_TYPE_TIMELINE_LAYER, NULL);
+  return g_object_new (GES_TYPE_LAYER, NULL);
 }
 
 /**
- * ges_timeline_layer_get_timeline:
- * @layer: The #GESTimelineLayer to get the parent #GESTimeline from
+ * ges_layer_get_timeline:
+ * @layer: The #GESLayer to get the parent #GESTimeline from
  *
- * Get the #GESTimeline in which #GESTimelineLayer currently is.
+ * Get the #GESTimeline in which #GESLayer currently is.
  *
- * Returns: (transfer none):  the #GESTimeline in which #GESTimelineLayer
+ * Returns: (transfer none):  the #GESTimeline in which #GESLayer
  * currently is or %NULL if not in any timeline yet.
  */
 GESTimeline *
-ges_timeline_layer_get_timeline (GESTimelineLayer * layer)
+ges_layer_get_timeline (GESLayer * layer)
 {
-  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), NULL);
+  g_return_val_if_fail (GES_IS_LAYER (layer), NULL);
 
   return layer->timeline;
 }
 
 void
-ges_timeline_layer_set_timeline (GESTimelineLayer * layer,
-    GESTimeline * timeline)
+ges_layer_set_timeline (GESLayer * layer, GESTimeline * timeline)
 {
   GST_DEBUG ("layer:%p, timeline:%p", layer, timeline);
 

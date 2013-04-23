@@ -23,7 +23,7 @@
 #include <glib-object.h>
 #include "ges-track-element.h"
 #include "ges-clip.h"
-#include "ges-timeline-layer.h"
+#include "ges-layer.h"
 
 G_BEGIN_DECLS
 
@@ -56,7 +56,7 @@ struct _GESAutoTransition
   GESTrackElement *next_source;
   GESTrackElement *transition;
 
-  GESTimelineLayer *layer;
+  GESLayer *layer;
 
   GESClip *previous_clip;
   GESClip *next_clip;

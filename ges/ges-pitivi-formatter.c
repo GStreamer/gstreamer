@@ -444,7 +444,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
 {
   GHashTable *props_table, *effect_table;
   gchar **prio_array;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (self)->priv;
 
   gchar *fac_ref = NULL, *media_type = NULL, *filename = NULL, *prio_str;
@@ -465,7 +465,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
 
     /* If we do not have any layer with this priority, create it */
     if (!(layer = g_hash_table_lookup (priv->layers_table, &prio))) {
-      layer = ges_timeline_layer_new ();
+      layer = ges_layer_new ();
       g_object_set (layer, "auto-transition", TRUE, "priority", prio, NULL);
       ges_timeline_add_layer (self->timeline, layer);
       g_hash_table_insert (priv->layers_table, g_memdup (&prio,
@@ -514,7 +514,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
         }
 
         set_properties (G_OBJECT (src), props_table);
-        ges_timeline_layer_add_clip (layer, GES_CLIP (src));
+        ges_layer_add_clip (layer, GES_CLIP (src));
 
         g_signal_connect (src, "child-added",
             G_CALLBACK (track_element_added_cb), props_table);
@@ -609,14 +609,14 @@ load_pitivi_file_from_uri (GESFormatter * self,
     GESTimeline * timeline, const gchar * uri, GError ** error)
 {
   xmlDocPtr doc;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (self)->priv;
 
   gboolean ret = TRUE;
   gint *prio = malloc (sizeof (gint));
 
   *prio = 0;
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
   g_object_set (layer, "auto-transition", TRUE, NULL);
 
   g_hash_table_insert (priv->layers_table, prio, layer);

@@ -27,7 +27,7 @@ main (int argc, gchar ** argv)
   GESTimelinePipeline *pipeline;
   GESTimeline *timeline;
   GESClip *source;
-  GESTimelineLayer *layer;
+  GESLayer *layer;
   GMainLoop *mainloop;
 
   /* Initialize GStreamer (this will parse environment variables and commandline
@@ -43,7 +43,7 @@ main (int argc, gchar ** argv)
   timeline = ges_timeline_new_audio_video ();
 
   /* We are only going to be doing one layer of clips */
-  layer = ges_timeline_layer_new ();
+  layer = ges_layer_new ();
 
   /* Add the tracks and the layer to the timeline */
   if (!ges_timeline_add_layer (timeline, layer))
@@ -53,12 +53,12 @@ main (int argc, gchar ** argv)
   src_asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
 
   /* Add sources to our layer */
-  ges_timeline_layer_add_asset (layer, src_asset, 0, 0, GST_SECOND,
+  ges_layer_add_asset (layer, src_asset, 0, 0, GST_SECOND,
       GES_TRACK_TYPE_UNKNOWN);
-  source = ges_timeline_layer_add_asset (layer, src_asset, GST_SECOND, 0,
+  source = ges_layer_add_asset (layer, src_asset, GST_SECOND, 0,
       GST_SECOND, GES_TRACK_TYPE_UNKNOWN);
   g_object_set (source, "freq", 480.0, "vpattern", 2, NULL);
-  ges_timeline_layer_add_asset (layer, src_asset, 2 * GST_SECOND, 0,
+  ges_layer_add_asset (layer, src_asset, 2 * GST_SECOND, 0,
       GST_SECOND, GES_TRACK_TYPE_UNKNOWN);
 
 
