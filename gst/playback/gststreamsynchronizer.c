@@ -251,8 +251,8 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       stream = gst_pad_get_element_private (pad);
       if (stream && stream->stream_start_seqnum != seqnum) {
         stream->is_eos = FALSE;
-        stream->new_stream = TRUE;
         stream->stream_start_seqnum = seqnum;
+        stream->drop_discont = TRUE;
 
         /* Check if this belongs to a stream that is already there,
          * e.g. we got the visualizations for an audio stream */
@@ -270,10 +270,12 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
               "Stream %d belongs to running stream %d, no waiting",
               stream->stream_number, ostream->stream_number);
           stream->wait = FALSE;
+          stream->new_stream = FALSE;
         } else {
           GST_DEBUG_OBJECT (pad, "Stream %d changed", stream->stream_number);
 
           stream->wait = TRUE;
+          stream->new_stream = TRUE;
 
           for (l = self->streams; l; l = l->next) {
             GstStream *ostream = l->data;
@@ -352,7 +354,6 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       if (stream && segment.format == GST_FORMAT_TIME) {
         if (stream->new_stream) {
           stream->new_stream = FALSE;
-          stream->drop_discont = TRUE;
           segment.base = self->group_start_time;
         }
 
