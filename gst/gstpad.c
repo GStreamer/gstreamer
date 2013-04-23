@@ -359,7 +359,7 @@ gst_pad_init (GstPad * pad)
 }
 
 /* called when setting the pad inactive. It removes all sticky events from
- * the pad */
+ * the pad. must be called with object lock */
 static void
 remove_events (GstPad * pad)
 {
@@ -378,6 +378,7 @@ remove_events (GstPad * pad)
   pad->priv->events_cookie++;
 }
 
+/* should be called with object lock */
 static PadEvent *
 find_event_by_type (GstPad * pad, GstEventType type, guint idx)
 {
@@ -404,6 +405,7 @@ found:
   return ev;
 }
 
+/* should be called with OBJECT lock */
 static PadEvent *
 find_event (GstPad * pad, GstEvent * event)
 {
@@ -424,6 +426,7 @@ found:
   return ev;
 }
 
+/* should be called with OBJECT lock */
 static void
 remove_event_by_type (GstPad * pad, GstEventType type)
 {
@@ -457,6 +460,7 @@ remove_event_by_type (GstPad * pad, GstEventType type)
 /* check all events on srcpad against those on sinkpad. All events that are not
  * on sinkpad are marked as received=FALSE and the PENDING_EVENTS is set on the
  * srcpad so that the events will be sent next time */
+/* should be called with srcpad and sinkpad LOCKS */
 static void
 schedule_events (GstPad * srcpad, GstPad * sinkpad)
 {
@@ -603,7 +607,9 @@ gst_pad_dispose (GObject * object)
 
   gst_pad_set_pad_template (pad, NULL);
 
+  GST_OBJECT_LOCK (pad);
   remove_events (pad);
+  GST_OBJECT_UNLOCK (pad);
 
   g_hook_list_clear (&pad->probes);
 
