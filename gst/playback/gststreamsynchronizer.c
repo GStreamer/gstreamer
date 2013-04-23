@@ -241,68 +241,90 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_STREAM_START:
     {
-      GstStream *stream;
+      GstStream *stream, *ostream;
       guint32 seqnum = gst_event_get_seqnum (event);
       GList *l;
       gboolean all_wait = TRUE;
+      gboolean new_stream = TRUE;
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
       stream = gst_pad_get_element_private (pad);
       if (stream && stream->stream_start_seqnum != seqnum) {
-
-        GST_DEBUG_OBJECT (pad, "Stream %d changed", stream->stream_number);
-
         stream->is_eos = FALSE;
-        stream->wait = TRUE;
         stream->new_stream = TRUE;
+        stream->stream_start_seqnum = seqnum;
 
+        /* Check if this belongs to a stream that is already there,
+         * e.g. we got the visualizations for an audio stream */
         for (l = self->streams; l; l = l->next) {
-          GstStream *ostream = l->data;
+          ostream = l->data;
 
-          all_wait = all_wait && ostream->wait;
-          if (!all_wait)
+          if (ostream->stream_start_seqnum == seqnum && !ostream->wait) {
+            new_stream = FALSE;
             break;
+          }
         }
-        if (all_wait) {
-          gint64 position = 0;
 
-          GST_DEBUG_OBJECT (self, "All streams have changed -- unblocking");
+        if (!new_stream) {
+          GST_DEBUG_OBJECT (pad,
+              "Stream %d belongs to running stream %d, no waiting",
+              stream->stream_number, ostream->stream_number);
+          stream->wait = FALSE;
+        } else {
+          GST_DEBUG_OBJECT (pad, "Stream %d changed", stream->stream_number);
+
+          stream->wait = TRUE;
 
           for (l = self->streams; l; l = l->next) {
             GstStream *ostream = l->data;
-            gint64 stop_running_time;
-            gint64 position_running_time;
 
-            ostream->wait = FALSE;
+            all_wait = all_wait && ostream->wait;
+            if (!all_wait)
+              break;
+          }
+          if (all_wait) {
+            gint64 position = 0;
 
-            if (ostream->segment.format == GST_FORMAT_TIME) {
-              stop_running_time =
-                  gst_segment_to_running_time (&ostream->segment,
-                  GST_FORMAT_TIME, ostream->segment.stop);
-              position_running_time =
-                  gst_segment_to_running_time (&ostream->segment,
-                  GST_FORMAT_TIME, ostream->segment.position);
-              position =
-                  MAX (position, MAX (stop_running_time,
-                      position_running_time));
+            GST_DEBUG_OBJECT (self, "All streams have changed -- unblocking");
+
+            for (l = self->streams; l; l = l->next) {
+              GstStream *ostream = l->data;
+              gint64 stop_running_time;
+              gint64 position_running_time;
+
+              ostream->wait = FALSE;
+
+              if (ostream->segment.format == GST_FORMAT_TIME) {
+                stop_running_time =
+                    gst_segment_to_running_time (&ostream->segment,
+                    GST_FORMAT_TIME, ostream->segment.stop);
+                position_running_time =
+                    gst_segment_to_running_time (&ostream->segment,
+                    GST_FORMAT_TIME, ostream->segment.position);
+                position =
+                    MAX (position, MAX (stop_running_time,
+                        position_running_time));
+              }
+            }
+            position = MAX (0, position);
+            self->group_start_time = MAX (self->group_start_time, position);
+
+            GST_DEBUG_OBJECT (self, "New group start time: %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (self->group_start_time));
+
+            for (l = self->streams; l; l = l->next) {
+              GstStream *ostream = l->data;
+              g_cond_broadcast (&ostream->stream_finish_cond);
             }
           }
-          position = MAX (0, position);
-          self->group_start_time = MAX (self->group_start_time, position);
-
-          GST_DEBUG_OBJECT (self, "New group start time: %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (self->group_start_time));
-
-          for (l = self->streams; l; l = l->next) {
-            GstStream *ostream = l->data;
-            g_cond_broadcast (&ostream->stream_finish_cond);
-          }
         }
-      } else
+      } else {
         GST_DEBUG_OBJECT (self, "No stream or STREAM_START from same source");
+      }
+
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
-    }
       break;
+    }
     case GST_EVENT_SEGMENT:{
       GstStream *stream;
       GstSegment segment;
