@@ -426,15 +426,32 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
    * supports it) */
   ffmpegdec->context->debug_mv = ffmpegdec->debug_mv;
 
-  if (ffmpegdec->max_threads == 0) {
-    if (!(oclass->in_plugin->capabilities & CODEC_CAP_AUTO_THREADS))
-      ffmpegdec->context->thread_count = gst_ffmpeg_auto_max_threads ();
-    else
-      ffmpegdec->context->thread_count = 0;
-  } else
-    ffmpegdec->context->thread_count = ffmpegdec->max_threads;
+  {
+    GstQuery *query;
+    gboolean is_live;
 
-  ffmpegdec->context->thread_type = FF_THREAD_SLICE;
+    if (ffmpegdec->max_threads == 0) {
+      if (!(oclass->in_plugin->capabilities & CODEC_CAP_AUTO_THREADS))
+        ffmpegdec->context->thread_count = gst_ffmpeg_auto_max_threads ();
+      else
+        ffmpegdec->context->thread_count = 0;
+    } else
+      ffmpegdec->context->thread_count = ffmpegdec->max_threads;
+
+    query = gst_query_new_latency ();
+    is_live = FALSE;
+    /* Check if upstream is live. If it isn't we can enable frame based
+     * threading, which is adding latency */
+    if (gst_pad_peer_query (GST_VIDEO_DECODER_SINK_PAD (ffmpegdec), query)) {
+      gst_query_parse_latency (query, &is_live, NULL, NULL);
+    }
+    gst_query_unref (query);
+
+    if (is_live)
+      ffmpegdec->context->thread_type = FF_THREAD_SLICE;
+    else
+      ffmpegdec->context->thread_type = FF_THREAD_SLICE | FF_THREAD_FRAME;
+  }
 
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
