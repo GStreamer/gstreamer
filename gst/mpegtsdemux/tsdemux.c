@@ -976,8 +976,8 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
   if (template && name && caps) {
     gchar *stream_id;
 
-    GST_LOG ("stream:%p creating pad with name %s and caps %s", stream, name,
-        gst_caps_to_string (caps));
+    GST_LOG ("stream:%p creating pad with name %s and caps %" GST_PTR_FORMAT,
+        stream, name, caps);
     pad = gst_pad_new_from_template (template, name);
     gst_pad_set_active (pad, TRUE);
     gst_pad_use_fixed_caps (pad);
