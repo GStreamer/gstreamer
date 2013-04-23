@@ -1444,11 +1444,12 @@ remove_fakesink (GstRTSPMediaPrivate * priv)
   GstElement *fakesink;
 
   g_mutex_lock (&priv->lock);
-  if ((fakesink = priv->fakesink)) {
+  if ((fakesink = priv->fakesink))
     gst_object_ref (fakesink);
-    priv->fakesink = NULL;
-    g_mutex_unlock (&priv->lock);
+  priv->fakesink = NULL;
+  g_mutex_unlock (&priv->lock);
 
+  if (fakesink) {
     gst_bin_remove (GST_BIN (priv->pipeline), fakesink);
     gst_element_set_state (fakesink, GST_STATE_NULL);
     gst_object_unref (fakesink);
