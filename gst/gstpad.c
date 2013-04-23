@@ -371,7 +371,19 @@ remove_events (GstPad * pad)
   len = events->len;
   for (i = 0; i < len; i++) {
     PadEvent *ev = &g_array_index (events, PadEvent, i);
-    gst_event_unref (ev->event);
+    GstEvent *event = ev->event;
+
+    ev->event = NULL;
+
+    if (event && GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
+      GST_OBJECT_UNLOCK (pad);
+
+      GST_DEBUG_OBJECT (pad, "notify caps");
+      g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
+
+      GST_OBJECT_LOCK (pad);
+    }
+    gst_event_unref (event);
   }
   GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
   g_array_set_size (events, 0);
