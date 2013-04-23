@@ -68,7 +68,17 @@ struct _GESTrackElementPrivate
 
   GHashTable *bindings_hashtable;       /* We need this if we want to be able to serialize
                                            and deserialize keyframes */
+
+  GList *pending_bindings;
 };
+
+typedef struct
+{
+  GESTrackElement *element;
+  GstControlSource *source;
+  gchar *propname;
+  gchar *binding_type;
+} PendingBinding;
 
 enum
 {
@@ -709,6 +719,12 @@ done:
 }
 
 /* INTERNAL USAGE */
+static void
+_free_pending_binding (PendingBinding * pend)
+{
+  g_slice_free (PendingBinding, pend);
+}
+
 gboolean
 ges_track_element_set_track (GESTrackElement * object, GESTrack * track)
 {
@@ -724,6 +740,24 @@ ges_track_element_set_track (GESTrackElement * object, GESTrack * track)
           "caps", ges_track_get_caps (object->priv->track), NULL);
     } else {
       ret = ensure_gnl_object (object);
+
+      /* if we had pending control bindings, add them and free them */
+      if (ret && object->priv->pending_bindings) {
+        GList *tmp;
+        PendingBinding *pbinding;
+
+        GST_INFO_OBJECT (object, "Asynchronously adding bindings");
+        for (tmp = object->priv->pending_bindings; tmp; tmp = tmp->next) {
+          pbinding = tmp->data;
+          ges_track_element_set_control_source (pbinding->element,
+              pbinding->source, pbinding->propname, pbinding->binding_type);
+          g_free (pbinding->propname);
+          g_free (pbinding->binding_type);
+        }
+        g_list_free_full (object->priv->pending_bindings,
+            (GDestroyNotify) _free_pending_binding);
+        object->priv->pending_bindings = NULL;
+      }
     }
   }
 
@@ -1431,6 +1465,19 @@ ges_track_element_set_control_source (GESTrackElement * object,
     return FALSE;
   }
 
+  if (!priv->track) {
+    PendingBinding *pbinding;
+
+    GST_INFO ("Adding this source to the future bindings");
+    pbinding = g_slice_new0 (PendingBinding);
+    pbinding->element = object;
+    pbinding->source = source;
+    pbinding->propname = g_strdup (property_name);
+    pbinding->binding_type = g_strdup (binding_type);
+    priv->pending_bindings = g_list_append (priv->pending_bindings, pbinding);
+    return TRUE;
+  }
+
   if (!ges_track_element_lookup_child (object, property_name, &element, &pspec)) {
     GST_WARNING ("You need to provide a valid and controllable property name");
     return FALSE;
@@ -1469,7 +1516,7 @@ ges_track_element_set_control_source (GESTrackElement * object,
  * Looks up the various controlled properties for that #GESTrackElement,
  * and returns the #GstControlBinding which controls @property_name.
  *
- * Returns: the #GstControlBinding associated with @property_name, or %NULL
+ * Returns: (transfer none): the #GstControlBinding associated with @property_name, or %NULL
  * if that property is not controlled.
  *
  * Since: 1.0.XX
