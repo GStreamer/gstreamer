@@ -168,6 +168,75 @@ GST_START_TEST (test_media_prepare)
 
 GST_END_TEST;
 
+static void
+on_notify_caps (GstPad * pad, GParamSpec * pspec, GstElement * pay)
+{
+  GstCaps *caps;
+
+  g_object_get (pad, "caps", &caps, NULL);
+
+  GST_DEBUG ("notify %" GST_PTR_FORMAT, caps);
+
+  if (caps) {
+    g_signal_emit_by_name (pay, "pad-added", pad);
+    g_signal_emit_by_name (pay, "no-more-pads", NULL);
+  } else {
+    g_signal_emit_by_name (pay, "pad-removed", pad);
+  }
+}
+
+GST_START_TEST (test_media_dyn_prepare)
+{
+  GstRTSPMedia *media;
+  GstElement *bin, *src, *pay;
+  GstElement *pipeline;
+  GstPad *srcpad;
+
+  bin = gst_bin_new ("bin");
+  fail_if (bin == NULL);
+
+  src = gst_element_factory_make ("videotestsrc", NULL);
+  fail_if (src == NULL);
+
+  pay = gst_element_factory_make ("rtpvrawpay", "dynpay0");
+  fail_if (pay == NULL);
+  g_object_set (pay, "pt", 96, NULL);
+
+  gst_bin_add_many (GST_BIN_CAST (bin), src, pay, NULL);
+  gst_element_link_many (src, pay, NULL);
+
+  media = gst_rtsp_media_new (bin);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+
+  g_object_set (G_OBJECT (media), "reusable", TRUE, NULL);
+
+  pipeline = gst_pipeline_new ("media-pipeline");
+  gst_rtsp_media_take_pipeline (media, GST_PIPELINE_CAST (pipeline));
+
+  gst_rtsp_media_collect_streams (media);
+
+  srcpad = gst_element_get_static_pad (pay, "src");
+
+  g_signal_connect (srcpad, "notify::caps", (GCallback) on_notify_caps, pay);
+
+  fail_unless (gst_rtsp_media_n_streams (media) == 0);
+  fail_unless (gst_rtsp_media_prepare (media));
+  fail_unless (gst_rtsp_media_n_streams (media) == 1);
+  fail_unless (gst_rtsp_media_unprepare (media));
+  fail_unless (gst_rtsp_media_n_streams (media) == 0);
+
+  fail_unless (gst_rtsp_media_n_streams (media) == 0);
+  fail_unless (gst_rtsp_media_prepare (media));
+  fail_unless (gst_rtsp_media_n_streams (media) == 1);
+  fail_unless (gst_rtsp_media_unprepare (media));
+  fail_unless (gst_rtsp_media_n_streams (media) == 0);
+
+  gst_object_unref (srcpad);
+  g_object_unref (media);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspmedia_suite (void)
 {
@@ -179,6 +248,7 @@ rtspmedia_suite (void)
   tcase_add_test (tc, test_launch);
   tcase_add_test (tc, test_media);
   tcase_add_test (tc, test_media_prepare);
+  tcase_add_test (tc, test_media_dyn_prepare);
 
   return s;
 }
