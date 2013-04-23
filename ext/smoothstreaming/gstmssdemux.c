@@ -365,7 +365,7 @@ gst_mss_demux_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (mssdemux);
       mssdemux->connection_speed = g_value_get_uint (value) * 1000;
       mssdemux->update_bitrates = TRUE;
-      GST_DEBUG_OBJECT (mssdemux, "Connection speed set to %llu",
+      GST_DEBUG_OBJECT (mssdemux, "Connection speed set to %" G_GUINT64_FORMAT,
           mssdemux->connection_speed);
       GST_OBJECT_UNLOCK (mssdemux);
       break;
@@ -444,7 +444,7 @@ gst_mss_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         gst_buffer_append (mssdemux->manifest_buffer, buffer);
 
   GST_INFO_OBJECT (mssdemux, "Received manifest buffer, total size is %i bytes",
-      gst_buffer_get_size (mssdemux->manifest_buffer));
+      (gint) gst_buffer_get_size (mssdemux->manifest_buffer));
 
   return GST_FLOW_OK;
 }
@@ -790,7 +790,7 @@ gst_mss_demux_create_streams (GstMssDemux * mssdemux)
 
   /* select initial bitrates */
   GST_OBJECT_LOCK (mssdemux);
-  GST_INFO_OBJECT (mssdemux, "Changing max bitrate to %llu",
+  GST_INFO_OBJECT (mssdemux, "Changing max bitrate to %" G_GUINT64_FORMAT,
       mssdemux->connection_speed);
   gst_mss_manifest_change_bitrate (mssdemux->manifest,
       mssdemux->connection_speed);
@@ -876,7 +876,7 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
   }
 
   GST_INFO_OBJECT (mssdemux, "Received manifest: %i bytes",
-      gst_buffer_get_size (mssdemux->manifest_buffer));
+      (gint) gst_buffer_get_size (mssdemux->manifest_buffer));
 
   mssdemux->manifest = gst_mss_manifest_new (mssdemux->manifest_buffer);
   if (!mssdemux->manifest) {
@@ -949,7 +949,8 @@ gst_mss_demux_reconfigure_stream (GstMssDemuxStream * stream)
     new_bitrate = MIN (mssdemux->connection_speed, new_bitrate);
   }
 
-  GST_DEBUG_OBJECT (mssdemux, "Current stream %s download bitrate %llu",
+  GST_DEBUG_OBJECT (mssdemux,
+      "Current stream %s download bitrate %" G_GUINT64_FORMAT,
       GST_PAD_NAME (stream->pad), new_bitrate);
 
   if (gst_mss_stream_select_bitrate (stream->manifest_stream, new_bitrate)) {
@@ -963,8 +964,8 @@ gst_mss_demux_reconfigure_stream (GstMssDemuxStream * stream)
     gst_caps_unref (caps);
 
     GST_DEBUG_OBJECT (mssdemux,
-        "Stream %s changed bitrate to %llu caps: %" GST_PTR_FORMAT,
-        GST_PAD_NAME (stream->pad),
+        "Stream %s changed bitrate to %" G_GUINT64_FORMAT " caps: %"
+        GST_PTR_FORMAT, GST_PAD_NAME (stream->pad),
         gst_mss_stream_get_current_bitrate (stream->manifest_stream), caps);
 
     capsevent = gst_event_new_caps (stream->caps);
@@ -1074,7 +1075,8 @@ gst_mss_demux_stream_download_fragment (GstMssDemuxStream * stream,
     guint64 bitrate = (8 * gst_buffer_get_size (_buffer) * 1000000LLU) /
         (after_download - before_download);
 
-    GST_DEBUG_OBJECT (mssdemux, "Measured download bitrate: %s %llu bps",
+    GST_DEBUG_OBJECT (mssdemux,
+        "Measured download bitrate: %s %" G_GUINT64_FORMAT " bps",
         GST_PAD_NAME (stream->pad), bitrate);
     gst_download_rate_add_rate (&stream->download_rate,
         gst_buffer_get_size (_buffer),
