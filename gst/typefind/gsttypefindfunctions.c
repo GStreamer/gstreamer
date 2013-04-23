@@ -3279,6 +3279,9 @@ mss_manifest_type_find (GstTypeFind * tf, gpointer unused)
     /* try detecting the charset */
     data = gst_type_find_peek (tf, 0, 2);
 
+    if (data == NULL)
+      return;
+
     /* look for a possible BOM */
     utf16_le = data[0] == 0xFF && data[1] == 0xFE;
     utf16_be = data[0] == 0xFE && data[1] == 0xFF;
