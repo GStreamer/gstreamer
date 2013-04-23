@@ -1989,7 +1989,8 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
 
   /* interpolating and no valid pts yet,
    * start with dts and carry on from there */
-  if (parse->priv->infer_ts && !GST_CLOCK_TIME_IS_VALID (parse->priv->next_pts))
+  if (parse->priv->infer_ts && parse->priv->pts_interpolate
+      && !GST_CLOCK_TIME_IS_VALID (parse->priv->next_pts))
     parse->priv->next_pts = parse->priv->next_dts;
 
   /* again use default handler to add missing metadata;
@@ -2737,6 +2738,7 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
      * and incoming stuff has PTS but no DTS seen so far,
      * then pick up DTS from PTS and hope for the best ... */
     if (parse->priv->infer_ts &&
+        parse->priv->pts_interpolate &&
         !GST_CLOCK_TIME_IS_VALID (dts) &&
         !GST_CLOCK_TIME_IS_VALID (parse->priv->prev_dts) &&
         GST_CLOCK_TIME_IS_VALID (pts))
