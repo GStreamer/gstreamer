@@ -505,10 +505,11 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
     }
     gst_query_unref (query);
 
+    /* Slice based threading is broken in libav 0.8 */
     if (is_live)
-      ffmpegdec->context->thread_type = FF_THREAD_SLICE;
+      ffmpegdec->context->thread_type = 0;      /* FF_THREAD_SLICE */
     else
-      ffmpegdec->context->thread_type = FF_THREAD_SLICE | FF_THREAD_FRAME;
+      ffmpegdec->context->thread_type = /* FF_THREAD_SLICE | */ FF_THREAD_FRAME;
   }
 
   /* open codec - we don't select an output pix_fmt yet,
