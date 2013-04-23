@@ -387,12 +387,6 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
           if (decoder->initialized) {
             gst_pad_push_event (tagpad, gst_event_new_tag (decoder->tags));
             decoder->tags = NULL;
-          } else {
-            /* Only push them as messages for the time being. *
-             * They will be pushed on the pad once the decoder is initialized */
-            gst_element_post_message (element,
-                gst_message_new_tag (GST_OBJECT (element),
-                    gst_tag_list_copy (decoder->tags)));
           }
         }
         break;

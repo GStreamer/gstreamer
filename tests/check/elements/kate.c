@@ -96,6 +96,16 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+static GList *events = NULL;
+
+static gboolean
+collect_events_func (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GST_LOG ("event: %" GST_PTR_FORMAT, event);
+  events = g_list_append (events, gst_event_ref (event));
+  return gst_pad_event_default (pad, parent, event);
+}
+
 static GstElement *
 setup_katedec (void)
 {
@@ -105,6 +115,7 @@ setup_katedec (void)
   katedec = gst_check_setup_element ("katedec");
   mydecsrcpad = gst_check_setup_src_pad (katedec, &srctemplate);
   mydecsinkpad = gst_check_setup_sink_pad (katedec, &sinktemplate);
+  gst_pad_set_event_function (mydecsinkpad, collect_events_func);
   gst_pad_set_active (mydecsrcpad, TRUE);
   gst_pad_set_active (mydecsinkpad, TRUE);
 
@@ -114,8 +125,15 @@ setup_katedec (void)
 static void
 cleanup_katedec (GstElement * katedec)
 {
+  GList *l;
+
   GST_DEBUG ("cleanup_katedec");
   gst_element_set_state (katedec, GST_STATE_NULL);
+
+  for (l = events; l != NULL; l = l->next)
+    gst_event_unref (GST_EVENT (l->data));
+  g_list_free (events);
+  events = NULL;
 
   gst_pad_set_active (mydecsrcpad, FALSE);
   gst_pad_set_active (mydecsinkpad, FALSE);
@@ -313,10 +331,6 @@ GST_START_TEST (test_kate_identification_header)
   GstElement *katedec;
   GstBuffer *inbuffer;
   GstBus *bus;
-  GstMessage *message;
-  GstTagList *tag_list;
-  gchar *language;
-  gchar *title;
 
   katedec = setup_katedec ();
   fail_unless (gst_element_set_state (katedec,
@@ -348,21 +362,38 @@ GST_START_TEST (test_kate_identification_header)
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_unref (inbuffer);
   fail_unless (g_list_length (buffers) == 0);
-  /* there's a tag message waiting */
-  fail_if ((message = gst_bus_pop (bus)) == NULL);
-  gst_message_parse_tag (message, &tag_list);
-  fail_unless_equals_int (gst_tag_list_get_tag_size (tag_list,
-          GST_TAG_LANGUAGE_CODE), 1);
-  fail_unless (gst_tag_list_get_string (tag_list, GST_TAG_LANGUAGE_CODE,
-          &language));
-  fail_unless_equals_string (language, "en");
-  g_free (language);
-  fail_unless_equals_int (gst_tag_list_get_tag_size (tag_list, "title"), 1);
-  fail_unless (gst_tag_list_get_string (tag_list, GST_TAG_TITLE, &title));
-  fail_unless_equals_string (title, "Tiger");
-  g_free (title);
-  gst_tag_list_unref (tag_list);
-  gst_message_unref (message);
+
+  /* there should've been a tag event */
+  {
+    gboolean found_tags = FALSE;
+    GList *l;
+
+    for (l = events; l != NULL; l = l->next) {
+      GstEvent *event = GST_EVENT (l->data);
+
+      if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
+        GstTagList *tags = NULL;
+        gchar *language;
+        gchar *title;
+
+        found_tags = TRUE;
+        gst_event_parse_tag (event, &tags);
+        fail_unless (tags != NULL);
+        fail_unless (gst_tag_list_get_scope (tags) == GST_TAG_SCOPE_STREAM);
+        fail_unless_equals_int (gst_tag_list_get_tag_size (tags,
+                GST_TAG_LANGUAGE_CODE), 1);
+        fail_unless (gst_tag_list_get_string (tags, GST_TAG_LANGUAGE_CODE,
+                &language));
+        fail_unless_equals_string (language, "en");
+        g_free (language);
+        fail_unless_equals_int (gst_tag_list_get_tag_size (tags, "title"), 1);
+        fail_unless (gst_tag_list_get_string (tags, GST_TAG_TITLE, &title));
+        fail_unless_equals_string (title, "Tiger");
+        g_free (title);
+      }
+    }
+    fail_unless (found_tags);
+  }
 
   /* cleanup */
   gst_bus_set_flushing (bus, TRUE);
@@ -413,7 +444,7 @@ GST_START_TEST (test_kate_encode_empty)
   GST_BUFFER_DURATION (inbuffer) = 5 * GST_SECOND;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
-  caps = gst_caps_from_string ("text/x-raw");
+  caps = gst_caps_from_string ("text/x-raw, format=utf8");
   fail_unless (caps != NULL);
   gst_pad_push_event (myencsrcpad, gst_event_new_caps (caps));
 
@@ -443,7 +474,6 @@ GST_START_TEST (test_kate_encode_simple)
   GstBus *bus;
   const gchar *test_string = "";
   GstCaps *caps;
-  GstMapInfo info;
 
   kateenc = setup_kateenc ();
   g_object_set (kateenc, "category", "subtitles", NULL);
@@ -455,21 +485,20 @@ GST_START_TEST (test_kate_encode_simple)
 
   inbuffer = gst_buffer_new_wrapped (g_memdup (test_string,
           strlen (test_string) + 1), strlen (test_string) + 1);
-  gst_buffer_unmap (inbuffer, &info);
 
   GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_OFFSET (inbuffer) =
       1 * GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = 5 * GST_SECOND;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
-  caps = gst_caps_from_string ("text/x-raw");
+  caps = gst_caps_from_string ("text/x-raw, format=utf8");
   fail_unless (caps != NULL);
   gst_pad_push_event (myencsrcpad, gst_event_new_caps (caps));
   gst_buffer_ref (inbuffer);
 
   gst_element_set_bus (kateenc, bus);
   /* pushing gives away my reference ... */
-  fail_unless (gst_pad_push (myencsrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless_equals_int (gst_pad_push (myencsrcpad, inbuffer), GST_FLOW_OK);
   /* ... and nothing ends up on the global buffer list */
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_unref (inbuffer);
@@ -823,7 +852,6 @@ kate_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-#define X if (0)
   tcase_add_test (tc_chain, test_kate_typefind);
   tcase_add_test (tc_chain, test_kate_empty_identification_header);
   tcase_add_test (tc_chain, test_kate_identification_header);
@@ -835,7 +863,6 @@ kate_suite (void)
   tcase_add_test (tc_chain, test_kate_parse);
   tcase_add_test (tc_chain, test_kate_tag_passthrough);
   tcase_add_test (tc_chain, test_kate_tag);
-#undef X
 
   return s;
 }
