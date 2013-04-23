@@ -2822,7 +2822,8 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
           guint j, timescale;
 
           S = (GstSNode *) list->data;
-          GST_LOG ("Processing S node: d=%llu r=%d t=%llu", S->d, S->r, S->t);
+          GST_LOG ("Processing S node: d=%" G_GUINT64_FORMAT " r=%d t=%"
+              G_GUINT64_FORMAT, S->d, S->r, S->t);
           duration = S->d * GST_SECOND;
           timescale =
               stream->cur_segment_list->MultSegBaseType->SegBaseType->timescale;
@@ -2895,7 +2896,8 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
           guint j, timescale;
 
           S = (GstSNode *) list->data;
-          GST_LOG ("Processing S node: d=%llu r=%u t=%llu", S->d, S->r, S->t);
+          GST_LOG ("Processing S node: d=%" G_GUINT64_FORMAT " r=%u t=%"
+              G_GUINT64_FORMAT, S->d, S->r, S->t);
           duration = S->d * GST_SECOND;
           timescale =
               stream->cur_seg_template->MultSegBaseType->SegBaseType->timescale;

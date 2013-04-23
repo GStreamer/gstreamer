@@ -864,7 +864,8 @@ gst_dash_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
       gst_query_parse_seeking (query, &fmt, NULL, &start, &end);
       GST_DEBUG_OBJECT (dashdemux,
-          "Received GST_QUERY_SEEKING with format %d - %i %i", fmt, start, end);
+          "Received GST_QUERY_SEEKING with format %d - %" G_GINT64_FORMAT
+          " %" G_GINT64_FORMAT, fmt, start, end);
       if (fmt == GST_FORMAT_TIME) {
         GstClockTime duration;
 
@@ -1643,7 +1644,8 @@ gst_dash_demux_select_representations (GstDashDemux * demux)
     bitrate =
         gst_download_rate_get_current_rate (&stream->dnl_rate) *
         demux->bandwidth_usage;
-    GST_DEBUG_OBJECT (demux, "Trying to change to bitrate: %llu", bitrate);
+    GST_DEBUG_OBJECT (demux, "Trying to change to bitrate: %" G_GUINT64_FORMAT,
+        bitrate);
 
     /* get representation index with current max_bandwidth */
     new_index =
