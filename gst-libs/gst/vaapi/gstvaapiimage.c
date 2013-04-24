@@ -869,6 +869,25 @@ copy_image_YV12(
     }
 }
 
+/* Copy YUY2 images */
+static void
+copy_image_YUY2(
+    GstVaapiImageRaw        *dst_image,
+    GstVaapiImageRaw        *src_image,
+    const GstVaapiRectangle *rect
+)
+{
+    guchar *dst, *src;
+    guint dst_stride, src_stride;
+
+    /* YUV 4:2:2, full vertical resolution */
+    dst_stride = dst_image->stride[0];
+    dst = dst_image->pixels[0] + rect->y * dst_stride + rect->x * 2;
+    src_stride = src_image->stride[0];
+    src = src_image->pixels[0] + rect->y * src_stride + rect->x * 2;
+    memcpy_pic(dst, dst_stride, src, src_stride, rect->width * 2, rect->height);
+}
+
 /* Copy RGBA images */
 static void
 copy_image_RGBA(
@@ -923,6 +942,10 @@ copy_image(
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_I420:
         copy_image_YV12(dst_image, src_image, rect);
+        break;
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+        copy_image_YUY2(dst_image, src_image, rect);
         break;
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_RGBA:
