@@ -266,8 +266,8 @@ gst_gl_filtershader_load_shader (GstGLFilterShader * filter_shader,
   }
 
   if (!g_file_get_contents (filename, storage, &length, &error)) {
-    GST_ELEMENT_ERROR (filter_shader, RESOURCE, NOT_FOUND, (error->message),
-        (NULL));
+    GST_ELEMENT_ERROR (filter_shader, RESOURCE, NOT_FOUND, ("%s",
+            error->message), (NULL));
     g_error_free (error);
 
     return FALSE;
@@ -292,8 +292,8 @@ gst_gl_filtershader_load_variables (GstGLFilterShader * filter_shader,
     return TRUE;
 
   if (!g_file_get_contents (filename, storage, &length, &error)) {
-    GST_ELEMENT_ERROR (filter_shader, RESOURCE, NOT_FOUND, (error->message),
-        (NULL));
+    GST_ELEMENT_ERROR (filter_shader, RESOURCE, NOT_FOUND, ("%s",
+            error->message), (NULL));
     g_error_free (error);
 
     return FALSE;
