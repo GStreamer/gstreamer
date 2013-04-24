@@ -405,9 +405,9 @@ gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     GST_BUFFER_DURATION (outbuf) = num_packets * 20 * GST_MSECOND;
 
     if (gst_rtp_buffer_get_marker (&rtp)) {
-      /* marker bit marks a discont buffer after a talkspurt. */
+      /* marker bit marks a buffer after a talkspurt. */
       GST_DEBUG_OBJECT (depayload, "marker bit was set");
-      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
     }
 
     GST_DEBUG_OBJECT (depayload, "pushing buffer of size %" G_GSIZE_FORMAT,

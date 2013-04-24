@@ -150,8 +150,8 @@ gst_rtp_mpa_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   marker = gst_rtp_buffer_get_marker (&rtp);
 
   if (marker) {
-    /* mark start of talkspurt with discont */
-    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    /* mark start of talkspurt with RESYNC */
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
   }
   GST_DEBUG_OBJECT (rtpmpadepay,
       "gst_rtp_mpa_depay_chain: pushing buffer of size %" G_GSIZE_FORMAT "",

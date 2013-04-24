@@ -202,7 +202,7 @@ gst_rtp_g729_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   if (marker) {
     /* marker bit starts talkspurt */
-    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
   }
 
   GST_LOG_OBJECT (depayload, "pushing buffer of size %" G_GSIZE_FORMAT,

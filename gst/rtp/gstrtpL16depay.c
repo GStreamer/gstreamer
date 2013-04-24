@@ -231,8 +231,8 @@ gst_rtp_L16_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   marker = gst_rtp_buffer_get_marker (&rtp);
 
   if (marker) {
-    /* mark talk spurt with DISCONT */
-    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    /* mark talk spurt with RESYNC */
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
   }
 
   outbuf = gst_buffer_make_writable (outbuf);
