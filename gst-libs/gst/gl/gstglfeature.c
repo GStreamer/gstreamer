@@ -209,8 +209,9 @@ _gst_gl_feature_check (GstGLDisplay * display,
     *(void **) ((guint8 *) gst_gl +
         data->functions[func_num].pointer_offset) = func;
 
-    g_free (full_function_name);
   }
+
+  g_free (full_function_name);
 
   return TRUE;
 
