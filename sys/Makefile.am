@@ -11,7 +11,7 @@ ANDROID_MEDIA_DIR=
 endif
 
 if USE_APPLE_MEDIA
-APPLE_MEDIA_DIR=applemedia
+APPLE_MEDIA_DIR=applemedia applemedia-nonpublic
 else
 APPLE_MEDIA_DIR=
 endif

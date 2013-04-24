@@ -22,15 +22,11 @@
 #endif
 
 #ifdef HAVE_IOS
-#include "avfvideosrc.h"
+#include "celvideosrc.h"
 #else
-#include "qtkitvideosrc.h"
+#include "miovideosrc.h"
 #include <Foundation/Foundation.h>
 #endif
-#include "vth264decbin.h"
-#include "vth264encbin.h"
-#include "vtenc.h"
-#include "vtdec.h"
 
 #ifndef HAVE_IOS
 static void
@@ -49,24 +45,16 @@ plugin_init (GstPlugin * plugin)
   gboolean res = TRUE;
 
 #ifdef HAVE_IOS
-  res = gst_element_register (plugin, "avfvideosrc", GST_RANK_NONE,
-      GST_TYPE_AVF_VIDEO_SRC);
+  res &= gst_element_register (plugin, "celvideosrc", GST_RANK_NONE,
+      GST_TYPE_CEL_VIDEO_SRC);
 #else
   enable_mt_mode ();
 
-  res = gst_element_register (plugin, "qtkitvideosrc", GST_RANK_PRIMARY,
-      GST_TYPE_QTKIT_VIDEO_SRC);
-#endif
-
 #if 0
-  res &= gst_element_register (plugin, "vth264decbin", GST_RANK_NONE,
-      GST_TYPE_VT_H264_DEC_BIN);
-  res &= gst_element_register (plugin, "vth264encbin", GST_RANK_NONE,
-      GST_TYPE_VT_H264_ENC_BIN);
+  res &= gst_element_register (plugin, "miovideosrc", GST_RANK_NONE,
+      GST_TYPE_MIO_VIDEO_SRC);
 #endif
-
-  gst_vtenc_register_elements (plugin);
-  gst_vtdec_register_elements (plugin);
+#endif
 
   return res;
 }
@@ -74,5 +62,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     applemedia,
-    "Elements for capture and codec access on Apple OS X and iOS",
+    "Elements for capture and codec access on Apple OS X and iOS using private Frameworks",
     plugin_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")

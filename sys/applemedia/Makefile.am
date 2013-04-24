@@ -42,10 +42,7 @@ libgstapplemedia_la_LDFLAGS =			\
 
 noinst_HEADERS =				\
 	qtkitvideosrc.h				\
-	miovideosrc.h				\
-	miovideodevice.h			\
 	avfvideosrc.h				\
-	celvideosrc.h				\
 	vth264decbin.h				\
 	vth264encbin.h				\
 	vtenc.h					\
@@ -57,9 +54,6 @@ noinst_HEADERS =				\
 	coremediactx.h				\
 	cvapi.h					\
 	cmapi.h					\
-	mioapi.h				\
-	mtapi.h					\
-	celapi.h				\
 	vtapi.h					\
 	dynapi.h				\
 	dynapi-internal.h
@@ -67,10 +61,7 @@ noinst_HEADERS =				\
 if HAVE_IOS
 
 libgstapplemedia_la_SOURCES +=			\
-	avfvideosrc.m				\
-	celvideosrc.c				\
-	mtapi.c					\
-	celapi.c
+	avfvideosrc.m
 
 libgstapplemedia_la_LDFLAGS +=			\
 	-Wl,-framework -Wl,CoreMedia		\
@@ -82,8 +73,7 @@ else
 libgstapplemedia_la_SOURCES +=			\
 	qtkitvideosrc.m				\
 	vtenc.c 				\
-	vtdec.c 				\
-	mioapi.c
+	vtdec.c
 
 libgstapplemedia_la_LDFLAGS +=			\
 	-Wl,-framework -Wl,Cocoa		\
