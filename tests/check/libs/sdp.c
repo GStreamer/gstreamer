@@ -96,6 +96,7 @@ GST_START_TEST (boxed)
   g_value_reset (&value_copy);
 
   copy_str = gst_sdp_message_as_text (copy);
+  gst_sdp_message_free (copy);
   GST_DEBUG ("copy:\n%s", copy_str);
 
   fail_if (g_strcmp0 (message1_str, copy_str));
