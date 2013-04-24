@@ -20,8 +20,6 @@
 #ifndef __GST_CORE_MEDIA_CTX_H__
 #define __GST_CORE_MEDIA_CTX_H__
 
-#include "cvapi.h"
-#include "cmapi.h"
 #include "vtapi.h"
 
 #include <glib.h>
@@ -51,8 +49,6 @@ struct _GstCoreMediaCtx
   GObject parent;
 
   /* Common */
-  GstCVApi *cv;
-  GstCMApi *cm;
   GstVTApi *vt;
 };
 
@@ -63,9 +59,7 @@ struct _GstCoreMediaCtxClass
 
 enum _GstCoreMediaApi
 {
-  GST_API_CORE_VIDEO    = (1 << 0),
-  GST_API_CORE_MEDIA    = (1 << 1),
-  GST_API_VIDEO_TOOLBOX = (1 << 2),
+  GST_API_VIDEO_TOOLBOX = (1 << 0),
 };
 
 GType gst_core_media_ctx_get_type (void);

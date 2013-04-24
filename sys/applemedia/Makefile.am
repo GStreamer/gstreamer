@@ -7,8 +7,6 @@ libgstapplemedia_la_SOURCES =			\
 	corevideobuffer.c			\
 	coremediabuffer.c			\
 	coremediactx.c				\
-	cvapi.c					\
-	cmapi.c					\
 	vtapi.c					\
 	dynapi.c
 
@@ -38,6 +36,7 @@ libgstapplemedia_la_LDFLAGS =			\
 	$(GST_BASE_LDFLAGS)			\
 	$(GST_PLUGINS_BASE_LDFLAGS)		\
 	-Wl,-framework -Wl,CoreFoundation	\
+	-Wl,-framework -Wl,CoreMedia		\
 	-Wl,-framework -Wl,CoreVideo
 
 noinst_HEADERS =				\
@@ -52,8 +51,6 @@ noinst_HEADERS =				\
 	corevideobuffer.h			\
 	coremediabuffer.h			\
 	coremediactx.h				\
-	cvapi.h					\
-	cmapi.h					\
 	vtapi.h					\
 	dynapi.h				\
 	dynapi-internal.h

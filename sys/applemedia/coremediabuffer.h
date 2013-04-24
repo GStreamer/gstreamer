@@ -22,7 +22,7 @@
 
 #include <gst/gst.h>
 
-#include "coremediactx.h"
+#include "CoreMedia/CoreMedia.h"
 
 G_BEGIN_DECLS
 
@@ -34,7 +34,6 @@ typedef struct _GstCoreMediaMeta
 {
   GstMeta meta;
 
-  GstCoreMediaCtx * ctx;
   CMSampleBufferRef sample_buf;
   CVImageBufferRef image_buf;
   CVPixelBufferRef pixel_buf;
@@ -42,8 +41,7 @@ typedef struct _GstCoreMediaMeta
 } GstCoreMediaMeta;
 
 
-GstBuffer * gst_core_media_buffer_new      (GstCoreMediaCtx * ctx,
-                                            CMSampleBufferRef sample_buf);
+GstBuffer * gst_core_media_buffer_new      (CMSampleBufferRef sample_buf);
 CVPixelBufferRef gst_core_media_buffer_get_pixel_buffer
                                            (GstBuffer * buf);
 GType gst_core_media_meta_api_get_type (void);

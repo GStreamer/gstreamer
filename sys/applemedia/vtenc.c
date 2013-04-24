@@ -295,8 +295,7 @@ gst_vtenc_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret;
 
   if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
-    self->ctx = gst_core_media_ctx_new (GST_API_CORE_VIDEO | GST_API_CORE_MEDIA
-        | GST_API_VIDEO_TOOLBOX, &error);
+    self->ctx = gst_core_media_ctx_new (GST_API_VIDEO_TOOLBOX, &error);
     if (error != NULL)
       goto api_error;
 
@@ -409,7 +408,6 @@ static gboolean
 gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
 {
   gboolean result;
-  GstCMApi *cm = self->ctx->cm;
   GstCaps *caps;
   GstStructure *s;
 
@@ -437,9 +435,9 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
     gsize codec_data_size;
     GstBuffer *codec_data_buf;
 
-    fmt = cm->CMSampleBufferGetFormatDescription (sbuf);
-    atoms = cm->CMFormatDescriptionGetExtension (fmt,
-        *(cm->kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms));
+    fmt = CMSampleBufferGetFormatDescription (sbuf);
+    atoms = CMFormatDescriptionGetExtension (fmt,
+        kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms);
     avccKey = CFStringCreateWithCString (NULL, "avcC", kCFStringEncodingUTF8);
     avcc = CFDictionaryGetValue (atoms, avccKey);
     CFRelease (avccKey);
@@ -525,7 +523,6 @@ static VTCompressionSessionRef
 gst_vtenc_create_session (GstVTEnc * self)
 {
   VTCompressionSessionRef session = NULL;
-  GstCVApi *cv = self->ctx->cv;
   GstVTApi *vt = self->ctx->vt;
   CFMutableDictionaryRef pb_attrs;
   VTCompressionOutputCallback callback;
@@ -533,11 +530,11 @@ gst_vtenc_create_session (GstVTEnc * self)
 
   pb_attrs = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
-  gst_vtutil_dict_set_i32 (pb_attrs, *(cv->kCVPixelBufferPixelFormatTypeKey),
+  gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferPixelFormatTypeKey,
       kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange);
-  gst_vtutil_dict_set_i32 (pb_attrs, *(cv->kCVPixelBufferWidthKey),
+  gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferWidthKey,
       self->negotiated_width);
-  gst_vtutil_dict_set_i32 (pb_attrs, *(cv->kCVPixelBufferHeightKey),
+  gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferHeightKey,
       self->negotiated_height);
 
   callback.func = gst_vtenc_enqueue_buffer;
@@ -753,7 +750,6 @@ gst_vtenc_session_configure_property_double (GstVTEnc * self,
 static GstFlowReturn
 gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
 {
-  GstCVApi *cv = self->ctx->cv;
   GstVTApi *vt = self->ctx->vt;
   CMTime ts, duration;
   GstCoreMediaMeta *meta;
@@ -764,9 +760,9 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
 
   self->cur_inbuf = buf;
 
-  ts = self->ctx->cm->CMTimeMake
+  ts = CMTimeMake
       (GST_TIME_AS_MSECONDS (GST_BUFFER_TIMESTAMP (buf)), 1000);
-  duration = self->ctx->cm->CMTimeMake
+  duration = CMTimeMake
       (GST_TIME_AS_MSECONDS (GST_BUFFER_DURATION (buf)), 1000);
 
   meta = gst_buffer_get_core_media_meta (buf);
@@ -779,9 +775,9 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
     CVReturn cv_ret;
 
     frame = gst_vtenc_frame_new (buf);
-    cv_ret = cv->CVPixelBufferCreateWithBytes (NULL,
+    cv_ret = CVPixelBufferCreateWithBytes (NULL,
         self->negotiated_width, self->negotiated_height,
-        kCVPixelFormatType_422YpCbCr8Deprecated, frame->map.data,
+        kCVPixelFormatType_422YpCbCr8, frame->map.data,
         self->negotiated_width * 2,
         (CVPixelBufferReleaseBytesCallback) gst_vtenc_frame_free, frame,
         NULL, &pbuf);
@@ -807,11 +803,11 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
   }
 
   self->ctx->vt->VTCompressionSessionCompleteFrames (self->session,
-      *(self->ctx->cm->kCMTimeInvalid));
+      kCMTimeInvalid);
 
   GST_OBJECT_UNLOCK (self);
 
-  cv->CVPixelBufferRelease (pbuf);
+  CVPixelBufferRelease (pbuf);
   self->cur_inbuf = NULL;
   gst_buffer_unref (buf);
 
@@ -866,7 +862,7 @@ gst_vtenc_enqueue_buffer (void *data, int a2, int a3, int a4,
   }
   self->expect_keyframe = FALSE;
 
-  buf = gst_core_media_buffer_new (self->ctx, sbuf);
+  buf = gst_core_media_buffer_new (sbuf);
   gst_buffer_copy_into (buf, self->cur_inbuf, GST_BUFFER_COPY_TIMESTAMPS,
       0, -1);
   if (is_keyframe) {
@@ -889,14 +885,14 @@ gst_vtenc_buffer_is_keyframe (GstVTEnc * self, CMSampleBufferRef sbuf)
   CFArrayRef attachments_for_sample;
 
   attachments_for_sample =
-      self->ctx->cm->CMSampleBufferGetSampleAttachmentsArray (sbuf, 0);
+      CMSampleBufferGetSampleAttachmentsArray (sbuf, 0);
   if (attachments_for_sample != NULL) {
     CFDictionaryRef attachments;
     CFBooleanRef depends_on_others;
 
     attachments = CFArrayGetValueAtIndex (attachments_for_sample, 0);
     depends_on_others = CFDictionaryGetValue (attachments,
-        *(self->ctx->cm->kCMSampleAttachmentKey_DependsOnOthers));
+        kCMSampleAttachmentKey_DependsOnOthers);
     result = (depends_on_others == kCFBooleanFalse);
   }
 

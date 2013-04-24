@@ -41,8 +41,6 @@ struct _GstApiProvider
     G_STRUCT_OFFSET (GstCoreMediaCtx, a_n) }
 
 static const GstApiProvider api_provider[] = {
-  API_PROVIDER (CORE_VIDEO, cv),
-  API_PROVIDER (CORE_MEDIA, cm),
   API_PROVIDER (VIDEO_TOOLBOX, vt),
 };
 

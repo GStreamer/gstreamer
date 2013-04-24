@@ -54,6 +54,11 @@ static gboolean gst_vtdec_sink_event (GstPad * pad, GstObject * parent,
 static CMSampleBufferRef gst_vtdec_sample_buffer_from (GstVTDec * self,
     GstBuffer * buf);
 
+extern OSStatus FigVideoFormatDescriptionCreateWithSampleDescriptionExtensionAtom
+    (CFAllocatorRef allocator, UInt32 formatId, UInt32 width, UInt32 height,
+    UInt32 atomId, const UInt8 * data, CFIndex len, void *unk1,
+    CMFormatDescriptionRef * formatDesc);
+
 static void
 gst_vtdec_base_init (GstVTDecClass * klass)
 {
@@ -143,8 +148,7 @@ gst_vtdec_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret;
 
   if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
-    self->ctx = gst_core_media_ctx_new (GST_API_CORE_VIDEO | GST_API_CORE_MEDIA
-        | GST_API_VIDEO_TOOLBOX, &error);
+    self->ctx = gst_core_media_ctx_new (GST_API_VIDEO_TOOLBOX, &error);
     if (error != NULL)
       goto api_error;
 
@@ -156,7 +160,7 @@ gst_vtdec_change_state (GstElement * element, GstStateChange transition)
   if (transition == GST_STATE_CHANGE_READY_TO_NULL) {
     gst_vtdec_destroy_session (self, &self->session);
 
-    self->ctx->cm->FigFormatDescriptionRelease (self->fmt_desc);
+    CFRelease (self->fmt_desc);
     self->fmt_desc = NULL;
 
     gst_video_info_init (&self->vinfo);
@@ -261,7 +265,9 @@ gst_vtdec_sink_setcaps (GstVTDec * self, GstCaps * caps)
 
   if (fmt_desc != NULL) {
     gst_vtdec_destroy_session (self, &self->session);
-    self->ctx->cm->FigFormatDescriptionRelease (self->fmt_desc);
+    if (self->fmt_desc != NULL) {
+      CFRelease (self->fmt_desc);
+    }
 
     self->fmt_desc = fmt_desc;
     self->session = gst_vtdec_create_session (self, fmt_desc);
@@ -339,7 +345,7 @@ gst_vtdec_create_format_description (GstVTDec * self)
   CMFormatDescriptionRef fmt_desc;
   OSStatus status;
 
-  status = self->ctx->cm->CMVideoFormatDescriptionCreate (NULL,
+  status = CMVideoFormatDescriptionCreate (NULL,
       self->details->format_id, self->vinfo.width, self->vinfo.height,
       NULL, &fmt_desc);
   if (status == noErr)
@@ -359,7 +365,6 @@ gst_vtdec_create_format_description_from_codec_data (GstVTDec * self,
   gst_buffer_map (codec_data, &map, GST_MAP_READ);
 
   status =
-      self->ctx->cm->
       FigVideoFormatDescriptionCreateWithSampleDescriptionExtensionAtom (NULL,
       self->details->format_id, self->vinfo.width, self->vinfo.height, 'avcC',
       map.data, map.size, NULL, &fmt_desc);
@@ -376,21 +381,20 @@ static VTDecompressionSessionRef
 gst_vtdec_create_session (GstVTDec * self, CMFormatDescriptionRef fmt_desc)
 {
   VTDecompressionSessionRef session = NULL;
-  GstCVApi *cv = self->ctx->cv;
   CFMutableDictionaryRef pb_attrs;
   VTDecompressionOutputCallback callback;
   VTStatus status;
 
   pb_attrs = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
-  gst_vtutil_dict_set_i32 (pb_attrs, *(cv->kCVPixelBufferPixelFormatTypeKey),
+  gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferPixelFormatTypeKey,
       kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange);
-  gst_vtutil_dict_set_i32 (pb_attrs, *(cv->kCVPixelBufferWidthKey),
+  gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferWidthKey,
       self->vinfo.width);
-  gst_vtutil_dict_set_i32 (pb_attrs, *(cv->kCVPixelBufferHeightKey),
+  gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferHeightKey,
       self->vinfo.height);
   gst_vtutil_dict_set_i32 (pb_attrs,
-      *(cv->kCVPixelBufferBytesPerRowAlignmentKey), 2 * self->vinfo.width);
+      kCVPixelBufferBytesPerRowAlignmentKey, 2 * self->vinfo.width);
 
   callback.func = gst_vtdec_enqueue_frame;
   callback.data = self;
@@ -439,7 +443,7 @@ gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf)
         "VTDecompressionSessionWaitForAsynchronousFrames returned %d", status);
   }
 
-  self->ctx->cm->FigSampleBufferRelease (sbuf);
+  CFRelease (sbuf);
   self->cur_inbuf = NULL;
   gst_buffer_unref (buf);
 
@@ -472,7 +476,7 @@ gst_vtdec_enqueue_frame (void *data, gsize unk1, VTStatus result, gsize unk2,
   if (result != kVTSuccess)
     goto beach;
 
-  buf = gst_core_video_buffer_new (self->ctx, cvbuf, &self->vinfo);
+  buf = gst_core_video_buffer_new (cvbuf, &self->vinfo);
   gst_buffer_copy_into (buf, self->cur_inbuf, GST_BUFFER_COPY_METADATA, 0, -1);
 
   g_ptr_array_add (self->cur_outbufs, buf);
@@ -484,7 +488,6 @@ beach:
 static CMSampleBufferRef
 gst_vtdec_sample_buffer_from (GstVTDec * self, GstBuffer * buf)
 {
-  GstCMApi *cm = self->ctx->cm;
   OSStatus status;
   CMBlockBufferRef bbuf = NULL;
   CMSampleBufferRef sbuf = NULL;
@@ -494,7 +497,7 @@ gst_vtdec_sample_buffer_from (GstVTDec * self, GstBuffer * buf)
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  status = cm->CMBlockBufferCreateWithMemoryBlock (NULL,
+  status = CMBlockBufferCreateWithMemoryBlock (NULL,
       map.data, (gint64) map.size, kCFAllocatorNull, NULL, 0, (gint64) map.size,
       FALSE, &bbuf);
 
@@ -503,13 +506,13 @@ gst_vtdec_sample_buffer_from (GstVTDec * self, GstBuffer * buf)
   if (status != noErr)
     goto error;
 
-  status = cm->CMSampleBufferCreate (NULL, bbuf, TRUE, 0, 0, self->fmt_desc,
+  status = CMSampleBufferCreate (NULL, bbuf, TRUE, 0, 0, self->fmt_desc,
       1, 0, NULL, 0, NULL, &sbuf);
   if (status != noErr)
     goto error;
 
 beach:
-  cm->FigBlockBufferRelease (bbuf);
+  CFRelease (bbuf);
   return sbuf;
 
 error:

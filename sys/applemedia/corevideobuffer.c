@@ -22,15 +22,12 @@
 static void
 gst_core_video_meta_free (GstCoreVideoMeta * meta, GstBuffer * buf)
 {
-  GstCVApi *cv = meta->ctx->cv;
-
   if (meta->pixbuf != NULL) {
-    cv->CVPixelBufferUnlockBaseAddress (meta->pixbuf,
+    CVPixelBufferUnlockBaseAddress (meta->pixbuf,
         kCVPixelBufferLock_ReadOnly);
   }
 
-  cv->CVBufferRelease (meta->cvbuf);
-  g_object_unref (meta->ctx);
+  CVBufferRelease (meta->cvbuf);
 }
 
 GType
@@ -63,10 +60,9 @@ gst_core_video_meta_get_info (void)
 }
 
 GstBuffer *
-gst_core_video_buffer_new (GstCoreMediaCtx * ctx, CVBufferRef cvbuf,
+gst_core_video_buffer_new (CVBufferRef cvbuf,
     GstVideoInfo * vinfo)
 {
-  GstCVApi *cv = ctx->cv;
   void *data;
   size_t size;
   CVPixelBufferRef pixbuf = NULL;
@@ -76,13 +72,13 @@ gst_core_video_buffer_new (GstCoreMediaCtx * ctx, CVBufferRef cvbuf,
   gsize offset[GST_VIDEO_MAX_PLANES];
   gint stride[GST_VIDEO_MAX_PLANES];
 
-  if (CFGetTypeID (cvbuf) != cv->CVPixelBufferGetTypeID ())
+  if (CFGetTypeID (cvbuf) != CVPixelBufferGetTypeID ())
     /* TODO: Do we need to handle other buffer types? */
     goto error;
 
   pixbuf = (CVPixelBufferRef) cvbuf;
 
-  if (cv->CVPixelBufferLockBaseAddress (pixbuf,
+  if (CVPixelBufferLockBaseAddress (pixbuf,
           kCVPixelBufferLock_ReadOnly) != kCVReturnSuccess) {
     goto error;
   }
@@ -92,22 +88,21 @@ gst_core_video_buffer_new (GstCoreMediaCtx * ctx, CVBufferRef cvbuf,
   /* add the corevideo meta to free the underlying corevideo buffer */
   meta = (GstCoreVideoMeta *) gst_buffer_add_meta (buf,
       gst_core_video_meta_get_info (), NULL);
-  meta->ctx = g_object_ref (ctx);
-  meta->cvbuf = cv->CVBufferRetain (cvbuf);
+  meta->cvbuf = CVBufferRetain (cvbuf);
   meta->pixbuf = pixbuf;
 
   /* set stride, offset and size */
   memset (&offset, 0, sizeof (offset));
   memset (&stride, 0, sizeof (stride));
 
-  data = cv->CVPixelBufferGetBaseAddress (pixbuf);
-  height = cv->CVPixelBufferGetHeight (pixbuf);
-  if (cv->CVPixelBufferIsPlanar (pixbuf)) {
+  data = CVPixelBufferGetBaseAddress (pixbuf);
+  height = CVPixelBufferGetHeight (pixbuf);
+  if (CVPixelBufferIsPlanar (pixbuf)) {
     GstVideoInfo tmp_vinfo;
 
-    n_planes = cv->CVPixelBufferGetPlaneCount (pixbuf);
+    n_planes = CVPixelBufferGetPlaneCount (pixbuf);
     for (i = 0; i < n_planes; ++i)
-      stride[i] = cv->CVPixelBufferGetBytesPerRowOfPlane (pixbuf, i);
+      stride[i] = CVPixelBufferGetBytesPerRowOfPlane (pixbuf, i);
 
     /* FIXME: don't hardcode NV12 */
     gst_video_info_init (&tmp_vinfo);
@@ -117,7 +112,7 @@ gst_core_video_buffer_new (GstCoreMediaCtx * ctx, CVBufferRef cvbuf,
     size = tmp_vinfo.size;
   } else {
     n_planes = 1;
-    size = cv->CVPixelBufferGetBytesPerRow (pixbuf) * height;
+    size = CVPixelBufferGetBytesPerRow (pixbuf) * height;
   }
 
   gst_buffer_append_memory (buf,

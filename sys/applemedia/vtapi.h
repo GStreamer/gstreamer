@@ -20,7 +20,8 @@
 #ifndef __GST_VT_API_H__
 #define __GST_VT_API_H__
 
-#include "cmapi.h"
+#include "dynapi.h"
+#include "CoreMedia/CoreMedia.h"
 
 G_BEGIN_DECLS
 
