@@ -121,6 +121,9 @@ gboolean ges_timeline_is_updating (GESTimeline * timeline);
 
 GstClockTime ges_timeline_get_duration (GESTimeline *timeline);
 
+gboolean ges_timeline_get_auto_transition (GESTimeline * timeline);
+void ges_timeline_set_auto_transition (GESTimeline * timeline, gboolean auto_transition);
+
 G_END_DECLS
 
 #endif /* _GES_TIMELINE */

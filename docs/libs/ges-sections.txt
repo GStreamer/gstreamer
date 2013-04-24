@@ -274,6 +274,8 @@ ges_timeline_get_layers
 ges_timeline_get_track_for_pad
 ges_timeline_get_duration
 ges_timeline_get_project
+ges_timeline_get_auto_transition
+ges_timeline_set_auto_transition
 <SUBSECTION Standard>
 GESTimelinePrivate
 GESTimelineClass

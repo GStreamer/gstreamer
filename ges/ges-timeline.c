@@ -124,6 +124,9 @@ struct _GESTimelinePrivate
   /* The duration of the timeline */
   gint64 duration;
 
+  /* The auto-transition of the timeline */
+  gboolean auto_transition;
+
   /* Timeline edition modes and snapping management */
   guint64 snapping_distance;
 
@@ -177,6 +180,7 @@ enum
 {
   PROP_0,
   PROP_DURATION,
+  PROP_AUTO_TRANSITION,
   PROP_SNAPPING_DISTANCE,
   PROP_UPDATE,
   PROP_LAST
@@ -255,6 +259,9 @@ ges_timeline_get_property (GObject * object, guint property_id,
     case PROP_DURATION:
       g_value_set_uint64 (value, timeline->priv->duration);
       break;
+    case PROP_AUTO_TRANSITION:
+      g_value_set_boolean (value, timeline->priv->auto_transition);
+      break;
     case PROP_SNAPPING_DISTANCE:
       g_value_set_uint64 (value, timeline->priv->snapping_distance);
       break;
@@ -273,6 +280,9 @@ ges_timeline_set_property (GObject * object, guint property_id,
   GESTimeline *timeline = GES_TIMELINE (object);
 
   switch (property_id) {
+    case PROP_AUTO_TRANSITION:
+      ges_timeline_set_auto_transition (timeline, g_value_get_boolean (value));
+      break;
     case PROP_SNAPPING_DISTANCE:
       timeline->priv->snapping_distance = g_value_get_uint64 (value);
       break;
@@ -369,6 +379,15 @@ ges_timeline_class_init (GESTimelineClass * klass)
       properties[PROP_DURATION]);
 
   /**
+   * GESTimeline:auto-transition:
+   *
+   * Sets whether transitions are added automagically when clips overlap.
+   */
+  g_object_class_install_property (object_class, PROP_AUTO_TRANSITION,
+      g_param_spec_boolean ("auto-transition", "Auto-Transition",
+          "whether the transitions are added", FALSE, G_PARAM_READWRITE));
+
+  /** 
    * GESTimeline:snapping-distance:
    *
    * Distance (in nanoseconds) from which a moving object will snap
@@ -512,6 +531,7 @@ ges_timeline_init (GESTimeline * self)
   self->layers = NULL;
   self->tracks = NULL;
   self->priv->duration = 0;
+  self->priv->auto_transition = FALSE;
   priv->snapping_distance = 0;
 
   /* Move context initialization */
@@ -2302,6 +2322,7 @@ ges_timeline_append_layer (GESTimeline * timeline)
 gboolean
 ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
 {
+  gboolean auto_transition;
   GList *objects, *tmp;
 
   GST_DEBUG ("timeline:%p, layer:%p", timeline, layer);
@@ -2316,6 +2337,14 @@ ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
   if (G_UNLIKELY (g_list_find (timeline->layers, (gconstpointer) layer))) {
     GST_WARNING ("Layer is already controlled by this timeline");
     return FALSE;
+  }
+
+  auto_transition = ges_layer_get_auto_transition (layer);
+
+  /* If the user doesn't explicitely set layer auto_transition, then set our */
+  if (!auto_transition) {
+    auto_transition = ges_timeline_get_auto_transition (timeline);
+    ges_layer_set_auto_transition (layer, auto_transition);
   }
 
   gst_object_ref_sink (layer);
@@ -2713,4 +2742,48 @@ ges_timeline_get_duration (GESTimeline * timeline)
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), GST_CLOCK_TIME_NONE);
 
   return timeline->priv->duration;
+}
+
+/**
+ * ges_timeline_get_auto_transition:
+ * @timeline: a #GESTimeline
+ *
+ * Gets whether transitions are automatically added when objects
+ * overlap or not.
+ *
+ * Returns: %TRUE if transitions are automatically added, else %FALSE.
+ */
+gboolean
+ges_timeline_get_auto_transition (GESTimeline * timeline)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), 0);
+
+  return timeline->priv->auto_transition;
+}
+
+/**
+ * ges_timeline_set_auto_transition:
+ * @timeline: a #GESLayer
+ * @auto_transition: whether the auto_transition is active
+ *
+ * Sets the layer to the given @auto_transition. See the documentation of the
+ * property auto_transition for more information.
+ */
+void
+ges_timeline_set_auto_transition (GESTimeline * timeline,
+    gboolean auto_transition)
+{
+  GList *layers;
+  GESLayer *layer;
+
+  g_return_if_fail (GES_IS_TIMELINE (timeline));
+
+  timeline->priv->auto_transition = auto_transition;
+  g_object_notify (G_OBJECT (timeline), "auto-transition");
+
+  layers = timeline->layers;
+  for (; layers; layers = layers->next) {
+    layer = layers->data;
+    ges_layer_set_auto_transition (layer, auto_transition);
+  }
 }
