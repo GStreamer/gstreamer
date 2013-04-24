@@ -352,11 +352,11 @@ gst_sdp_message_copy (const GstSDPMessage * msg, GstSDPMessage ** copy)
     if (time->repeat != NULL) {
       guint j;
 
-      repeat = g_malloc0 (time->repeat->len * sizeof (gchar *));
-
+      repeat = g_malloc0 ((time->repeat->len + 1) * sizeof (gchar *));
       for (j = 0; j < time->repeat->len; j++) {
         repeat[j] = g_array_index (time->repeat, char *, j);
       }
+      repeat[j] = NULL;
     }
 
     gst_sdp_message_add_time (cp, time->start, time->stop, repeat);
