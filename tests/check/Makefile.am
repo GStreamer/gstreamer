@@ -52,6 +52,7 @@ LDADD = $(common_ldadd) libtestutils.la
 
 EXTRA_DIST = \
 	ges/test-project.xges \
+	ges/test-auto-transition.xges \
 	ges/audio_only.ogg \
 	ges/image.png \
 	ges/audio_video.ogg

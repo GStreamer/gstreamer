@@ -521,6 +521,89 @@ GST_START_TEST (test_project_load_xges)
 
 GST_END_TEST;
 
+GST_START_TEST (test_project_auto_transition)
+{
+  GList *layers;
+  GMainLoop *mainloop;
+  GESProject *project;
+  GESTimeline *timeline;
+  GESLayer *layer = NULL;
+  GESAsset *formatter_asset;
+  gboolean saved;
+  gchar *tmpuri, *uri = ges_test_file_uri ("test-auto-transition.xges");
+
+  project = ges_project_new (uri);
+  mainloop = g_main_loop_new (NULL, FALSE);
+  fail_unless (GES_IS_PROJECT (project));
+
+  /* Connect the signals */
+  g_signal_connect (project, "loaded", (GCallback) project_loaded_cb, mainloop);
+  g_signal_connect (project, "missing-uri", (GCallback) _set_new_uri, NULL);
+
+  /* Now extract a timeline from it */
+  GST_LOG ("Loading project");
+  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
+
+  g_main_loop_run (mainloop);
+
+  /* Check timeline and layers auto-transition, must be FALSE */
+  fail_if (ges_timeline_get_auto_transition (timeline));
+  layers = ges_timeline_get_layers (timeline);
+  for (; layers; layers = layers->next) {
+    layer = layers->data;
+    fail_if (ges_layer_get_auto_transition (layer));
+  }
+
+  g_list_free_full (layers, gst_object_unref);
+  g_free (uri);
+
+  /* Set timeline and layers auto-transition to TRUE */
+  ges_timeline_set_auto_transition (timeline, TRUE);
+
+  tmpuri = ges_test_file_uri ("test-auto-transition-save.xges");
+
+  formatter_asset = ges_asset_request (GES_TYPE_FORMATTER, "ges", NULL);
+  saved =
+      ges_project_save (project, timeline, tmpuri, formatter_asset, TRUE, NULL);
+  fail_unless (saved);
+
+  gst_object_unref (timeline);
+  gst_object_unref (project);
+
+  project = ges_project_new (tmpuri);
+
+  ASSERT_OBJECT_REFCOUNT (project, "Our + cache", 2);
+
+  g_signal_connect (project, "loaded", (GCallback) project_loaded_cb, mainloop);
+
+  GST_LOG ("Loading saved project");
+  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
+  fail_unless (GES_IS_TIMELINE (timeline));
+
+  g_main_loop_run (mainloop);
+
+  /* Check timeline and layers auto-transition, must be TRUE  */
+  fail_unless (ges_timeline_get_auto_transition (timeline));
+  layers = ges_timeline_get_layers (timeline);
+  for (; layers; layers = layers->next) {
+    layer = layers->data;
+    fail_unless (ges_layer_get_auto_transition (layer));
+  }
+
+  g_list_free_full (layers, gst_object_unref);
+  gst_object_unref (timeline);
+  gst_object_unref (project);
+  g_free (tmpuri);
+
+  g_main_loop_unref (mainloop);
+  g_signal_handlers_disconnect_by_func (project, (GCallback) project_loaded_cb,
+      mainloop);
+  g_signal_handlers_disconnect_by_func (project, (GCallback) asset_added_cb,
+      NULL);
+}
+
+GST_END_TEST;
+
 /*  FIXME This test does not pass for some bad reason */
 #if 0
 static void
@@ -619,6 +702,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_project_add_assets);
   tcase_add_test (tc_chain, test_project_load_xges);
   tcase_add_test (tc_chain, test_project_add_keyframes);
+  tcase_add_test (tc_chain, test_project_auto_transition);
   /*tcase_add_test (tc_chain, test_load_xges_and_play); */
   tcase_add_test (tc_chain, test_project_unexistant_effect);
 
