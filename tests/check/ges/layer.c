@@ -273,6 +273,67 @@ GST_START_TEST (test_layer_priorities)
 
 GST_END_TEST;
 
+GST_START_TEST (test_timeline_auto_transition)
+{
+  GESAsset *asset;
+  GESTimeline *timeline;
+  GESLayer *layer, *layer1, *layer2;
+
+  ges_init ();
+
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+  fail_unless (GES_IS_ASSET (asset));
+
+  GST_DEBUG ("Create timeline");
+  timeline = ges_timeline_new_audio_video ();
+  assert_is_type (timeline, GES_TYPE_TIMELINE);
+
+  GST_DEBUG ("Create layers");
+  layer = ges_layer_new ();
+  assert_is_type (layer, GES_TYPE_LAYER);
+  layer1 = ges_layer_new ();
+  assert_is_type (layer, GES_TYPE_LAYER);
+  layer2 = ges_layer_new ();
+  assert_is_type (layer, GES_TYPE_LAYER);
+
+  GST_DEBUG ("Set auto-transition to the layers");
+  ges_layer_set_auto_transition (layer, TRUE);
+  ges_layer_set_auto_transition (layer1, TRUE);
+  ges_layer_set_auto_transition (layer2, TRUE);
+
+  GST_DEBUG ("Add layers to the timeline");
+  ges_timeline_add_layer (timeline, layer);
+  ges_timeline_add_layer (timeline, layer1);
+  ges_timeline_add_layer (timeline, layer2);
+
+  GST_DEBUG ("Check that auto-transition was properly set to the layers");
+  fail_unless (ges_layer_get_auto_transition (layer));
+  fail_unless (ges_layer_get_auto_transition (layer1));
+  fail_unless (ges_layer_get_auto_transition (layer2));
+
+  GST_DEBUG ("Set timeline auto-transition property to FALSE");
+  ges_timeline_set_auto_transition (timeline, FALSE);
+
+  GST_DEBUG
+      ("Check that layers auto-transition has the same value as timeline");
+  fail_if (ges_layer_get_auto_transition (layer));
+  fail_if (ges_layer_get_auto_transition (layer1));
+  fail_if (ges_layer_get_auto_transition (layer2));
+
+  GST_DEBUG ("Set timeline auto-transition property to TRUE");
+  ges_timeline_set_auto_transition (timeline, TRUE);
+
+  GST_DEBUG
+      ("Check that layers auto-transition has the same value as timeline");
+  fail_unless (ges_layer_get_auto_transition (layer));
+  fail_unless (ges_layer_get_auto_transition (layer1));
+  fail_unless (ges_layer_get_auto_transition (layer2));
+
+  gst_object_unref (timeline);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_single_layer_automatic_transition)
 {
   GESAsset *asset;
@@ -1729,6 +1790,7 @@ ges_suite (void)
 
   tcase_add_test (tc_chain, test_layer_properties);
   tcase_add_test (tc_chain, test_layer_priorities);
+  tcase_add_test (tc_chain, test_timeline_auto_transition);
   tcase_add_test (tc_chain, test_single_layer_automatic_transition);
   tcase_add_test (tc_chain, test_multi_layer_automatic_transition);
   tcase_add_test (tc_chain, test_layer_activate_automatic_transition);
