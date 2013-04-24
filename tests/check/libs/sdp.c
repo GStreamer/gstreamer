@@ -136,6 +136,64 @@ GST_START_TEST (copy)
 }
 
 GST_END_TEST
+GST_START_TEST (modify)
+{
+  GstSDPMessage *message;
+  glong length = -1;
+  const GstSDPMedia *media;
+  const gchar *old_val;
+  const gchar *result;
+  GstSDPAttribute attr;
+
+  gst_sdp_message_new (&message);
+  gst_sdp_message_parse_buffer ((guint8 *) sdp, length, message);
+
+  /* modify session attribute */
+  fail_unless (gst_sdp_message_add_attribute (message,
+          "test_attr_session", "param1=val1") == GST_SDP_OK);
+
+  old_val = gst_sdp_message_get_attribute_val (message, "test_attr_session");
+
+  fail_unless (old_val != NULL);
+  attr.key = g_strdup ("test_attr_session");
+  attr.value = g_strdup_printf ("%s;param2=val2", old_val);
+
+  fail_unless (gst_sdp_message_replace_attribute (message, 0,
+          &attr) == GST_SDP_OK);
+
+  result = gst_sdp_message_get_attribute_val (message, "test_attr_session");
+  fail_unless (result != NULL);
+  fail_unless (g_strcmp0 (result, "param1=val1;param2=val2") == 0);
+
+
+  /* modify media attribute */
+  media = gst_sdp_message_get_media (message, 0);
+  fail_unless (media != NULL);
+
+  fail_unless (gst_sdp_media_add_attribute ((GstSDPMedia *) media,
+          "test_attr_media", "param3=val3") == GST_SDP_OK);
+
+  old_val =
+      gst_sdp_media_get_attribute_val ((GstSDPMedia *) media,
+      "test_attr_media");
+
+  fail_unless (old_val != NULL);
+  attr.key = g_strdup ("test_attr_media");
+  attr.value = g_strdup ("myparam=myval");
+
+  fail_unless (gst_sdp_media_replace_attribute ((GstSDPMedia *) media,
+          0, &attr) == GST_SDP_OK);
+
+  result =
+      gst_sdp_media_get_attribute_val ((GstSDPMedia *) media,
+      "test_attr_media");
+  fail_unless (result != NULL);
+  fail_unless (g_strcmp0 (result, "myparam=myval") == 0);
+
+  gst_sdp_message_free (message);
+}
+
+GST_END_TEST
 /*
  * End of test cases
  */
@@ -148,6 +206,7 @@ sdp_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, copy);
   tcase_add_test (tc_chain, boxed);
+  tcase_add_test (tc_chain, modify);
 
   return s;
 }
