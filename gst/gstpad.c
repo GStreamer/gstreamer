@@ -4860,15 +4860,15 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
         default:
           break;
       }
-
-      /* now do the probe */
-      PROBE_PUSH (pad,
-          type | GST_PAD_PROBE_TYPE_PUSH |
-          GST_PAD_PROBE_TYPE_BLOCK, event, probe_stopped);
-
-      PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH, event, probe_stopped);
       break;
   }
+
+  /* now do the probe */
+  PROBE_PUSH (pad,
+      type | GST_PAD_PROBE_TYPE_PUSH |
+      GST_PAD_PROBE_TYPE_BLOCK, event, probe_stopped);
+
+  PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH, event, probe_stopped);
 
   if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
     goto no_function;
