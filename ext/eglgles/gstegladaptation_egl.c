@@ -363,7 +363,7 @@ gst_egl_adaptation_query_par (GstEglAdaptationContext * ctx)
         EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
     ctx->pixel_aspect_ratio_n = EGL_DISPLAY_SCALING;
   } else {
-    eglQuerySurface (ctx->display,
+    eglQuerySurface (gst_egl_display_get (ctx->display),
         ctx->eglglesctx->surface, EGL_PIXEL_ASPECT_RATIO, &display_par);
     /* Fix for outbound DAR reporting on some implementations not
      * honoring the 'should return w/h * EGL_DISPLAY_SCALING' spec
@@ -632,7 +632,7 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
             goto mem_error;
 
           image =
-              eglCreateImageKHR (ctx->display,
+              eglCreateImageKHR (gst_egl_display_get (ctx->display),
               ctx->eglglesctx->eglcontext, EGL_GL_TEXTURE_2D_KHR,
               (EGLClientBuffer) (guintptr) data->texture, NULL);
           if (got_egl_error ("eglCreateImageKHR"))
@@ -735,7 +735,7 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
             goto mem_error;
 
           image =
-              eglCreateImageKHR (ctx->display,
+              eglCreateImageKHR (gst_egl_display_get (ctx->display),
               ctx->eglglesctx->eglcontext, EGL_GL_TEXTURE_2D_KHR,
               (EGLClientBuffer) (guintptr) data->texture, NULL);
           if (got_egl_error ("eglCreateImageKHR"))
