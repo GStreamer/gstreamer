@@ -24,8 +24,6 @@
 
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
-#include "../../../gst/playback/gststreamsynchronizer.c"
-
 #undef GST_CAT_DEFAULT
 #include <gst/check/gstcheck.h>
 
@@ -192,7 +190,7 @@ GST_START_TEST (test_basic)
   GstSegment segment;
   guint32 seqnum;
 
-  synchr = g_object_new (GST_TYPE_STREAM_SYNCHRONIZER, NULL);
+  synchr = gst_element_factory_make ("streamsynchronizer", NULL);
 
   /* Get sinkpad/srcpad */
   sinkpad = gst_element_get_request_pad (synchr, "sink_%u");
