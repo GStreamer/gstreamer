@@ -259,7 +259,8 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         for (l = self->streams; l; l = l->next) {
           ostream = l->data;
 
-          if (ostream->stream_start_seqnum == seqnum && !ostream->wait) {
+          if (ostream != stream && ostream->stream_start_seqnum == seqnum
+              && !ostream->wait) {
             new_stream = FALSE;
             break;
           }
