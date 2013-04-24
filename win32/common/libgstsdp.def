@@ -1,5 +1,11 @@
 EXPORTS
 	gst_sdp_address_is_multicast
+	gst_sdp_attribute_clear
+	gst_sdp_attribute_set
+	gst_sdp_bandwidth_clear
+	gst_sdp_bandwidth_set
+	gst_sdp_connection_clear
+	gst_sdp_connection_set
 	gst_sdp_media_add_attribute
 	gst_sdp_media_add_bandwidth
 	gst_sdp_media_add_connection
@@ -24,7 +30,19 @@ EXPORTS
 	gst_sdp_media_get_port
 	gst_sdp_media_get_proto
 	gst_sdp_media_init
+	gst_sdp_media_insert_attribute
+	gst_sdp_media_insert_bandwidth
+	gst_sdp_media_insert_connection
+	gst_sdp_media_insert_format
 	gst_sdp_media_new
+	gst_sdp_media_remove_attribute
+	gst_sdp_media_remove_bandwidth
+	gst_sdp_media_remove_connection
+	gst_sdp_media_remove_format
+	gst_sdp_media_replace_attribute
+	gst_sdp_media_replace_bandwidth
+	gst_sdp_media_replace_connection
+	gst_sdp_media_replace_format
 	gst_sdp_media_set_information
 	gst_sdp_media_set_key
 	gst_sdp_media_set_media
@@ -64,11 +82,29 @@ EXPORTS
 	gst_sdp_message_get_version
 	gst_sdp_message_get_zone
 	gst_sdp_message_init
+	gst_sdp_message_insert_attribute
+	gst_sdp_message_insert_bandwidth
+	gst_sdp_message_insert_email
+	gst_sdp_message_insert_phone
+	gst_sdp_message_insert_time
+	gst_sdp_message_insert_zone
 	gst_sdp_message_medias_len
 	gst_sdp_message_new
 	gst_sdp_message_parse_buffer
 	gst_sdp_message_parse_uri
 	gst_sdp_message_phones_len
+	gst_sdp_message_remove_attribute
+	gst_sdp_message_remove_bandwidth
+	gst_sdp_message_remove_email
+	gst_sdp_message_remove_phone
+	gst_sdp_message_remove_time
+	gst_sdp_message_remove_zone
+	gst_sdp_message_replace_attribute
+	gst_sdp_message_replace_bandwidth
+	gst_sdp_message_replace_email
+	gst_sdp_message_replace_phone
+	gst_sdp_message_replace_time
+	gst_sdp_message_replace_zone
 	gst_sdp_message_set_connection
 	gst_sdp_message_set_information
 	gst_sdp_message_set_key
@@ -79,3 +115,7 @@ EXPORTS
 	gst_sdp_message_times_len
 	gst_sdp_message_uninit
 	gst_sdp_message_zones_len
+	gst_sdp_time_clear
+	gst_sdp_time_set
+	gst_sdp_zone_clear
+	gst_sdp_zone_set
