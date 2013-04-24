@@ -728,14 +728,17 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     gst_gl_display_thread_add (filter->display, gst_gl_filter_start_gl, filter);
   }
 
+  if (!filter->display->isAlive)
+    goto error;
+
   if (filter_class->onInitFBO) {
     if (!filter_class->onInitFBO (filter))
-      goto display_error;
+      goto error;
   }
 
   if (filter_class->set_caps) {
     if (!filter_class->set_caps (filter, incaps, outcaps))
-      goto display_error;
+      goto error;
   }
 
   GST_DEBUG ("set_caps %dx%d", GST_VIDEO_INFO_WIDTH (&filter->out_info),
@@ -754,6 +757,11 @@ display_error:
   {
     GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
         GST_GL_DISPLAY_ERR_MSG (filter->display), (NULL));
+    return FALSE;
+  }
+
+error:
+  {
     return FALSE;
   }
 }
