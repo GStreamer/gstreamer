@@ -302,6 +302,7 @@ gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   GstRTPBuffer rtp = { NULL };
   GstVideoFrame frame;
   gboolean marker;
+  GstBuffer *outbuf = NULL;
 
   rtpvrawdepay = GST_RTP_VRAW_DEPAY (depayload);
 
@@ -529,13 +530,11 @@ gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   if (marker) {
     GST_LOG_OBJECT (depayload, "marker, flushing frame");
-    if (rtpvrawdepay->outbuf) {
-      gst_rtp_base_depayload_push (depayload, rtpvrawdepay->outbuf);
-      rtpvrawdepay->outbuf = NULL;
-    }
+    outbuf = rtpvrawdepay->outbuf;
+    rtpvrawdepay->outbuf = NULL;
     rtpvrawdepay->timestamp = -1;
   }
-  return NULL;
+  return outbuf;
 
   /* ERRORS */
 unknown_sampling:
