@@ -2975,7 +2975,7 @@ gst_sdp_message_parse_buffer (const guint8 * data, guint size,
 
     len = p - s;
     if (bufsize <= len) {
-      buffer = g_malloc (len + 1);
+      buffer = g_realloc (buffer, len + 1);
       bufsize = len + 1;
     }
     memcpy (buffer, s, len);
