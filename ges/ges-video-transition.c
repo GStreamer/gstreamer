@@ -271,7 +271,7 @@ on_caps_set (GstPad * srca_pad, GParamSpec * pspec, GstElement * capsfilt)
 {
   GstCaps *orig_caps;
 
-  orig_caps = gst_pad_query_caps (srca_pad, NULL);
+  orig_caps = gst_pad_get_current_caps (srca_pad);
 
   if (orig_caps) {
     gint width, height;
@@ -288,6 +288,7 @@ on_caps_set (GstPad * srca_pad, GParamSpec * pspec, GstElement * capsfilt)
         gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height, NULL);
     g_object_set (capsfilt, "caps", size_caps, NULL);
+    /* Shouldn't we need a reconfigure event here ? */
   }
 }
 
@@ -416,6 +417,8 @@ ges_video_transition_create_element (GESTrackElement * object)
   /* set up interpolation */
 
   set_interpolation (target, priv, propname);
+  ges_video_transition_duration_changed (object,
+      ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (object)));
 
   priv->topbin = topbin;
   priv->type = priv->pending_type;
@@ -641,14 +644,13 @@ static void
 ges_video_transition_duration_changed (GESTrackElement * object,
     guint64 duration)
 {
-  GstElement *gnlobj = ges_track_element_get_gnlobject (object);
   GESVideoTransition *self = GES_VIDEO_TRANSITION (object);
   GESVideoTransitionPrivate *priv = self->priv;
   GstTimedValueControlSource *ts;
 
   GST_LOG ("updating controller");
 
-  if (G_UNLIKELY (!gnlobj || !priv->control_source))
+  if (G_UNLIKELY (!priv->control_source))
     return;
 
   ts = GST_TIMED_VALUE_CONTROL_SOURCE (priv->control_source);
