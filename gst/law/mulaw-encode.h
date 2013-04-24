@@ -22,9 +22,9 @@
 #define __GST_MULAWENCODE_H__
 
 #include <gst/gst.h>
+#include <gst/audio/gstaudioencoder.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_MULAWENC \
   (gst_mulawenc_get_type())
 #define GST_MULAWENC(obj) \
@@ -35,25 +35,23 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULAWENC))
 #define GST_IS_MULAWENC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULAWENC))
-
 typedef struct _GstMuLawEnc GstMuLawEnc;
 typedef struct _GstMuLawEncClass GstMuLawEncClass;
 
-struct _GstMuLawEnc {
-  GstElement element;
-
-  GstPad *sinkpad,*srcpad;
+struct _GstMuLawEnc
+{
+  GstAudioEncoder element;
 
   gint channels;
   gint rate;
 };
 
-struct _GstMuLawEncClass {
-  GstElementClass parent_class;
+struct _GstMuLawEncClass
+{
+  GstAudioEncoderClass parent_class;
 };
 
-GType gst_mulawenc_get_type(void);
+GType gst_mulawenc_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_STEREO_H__ */

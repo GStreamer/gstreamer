@@ -134,6 +134,7 @@ check_PROGRAMS = \
 	elements/matroskamux \
 	elements/matroskaparse \
 	elements/mpegaudioparse \
+	elements/mulawenc \
 	elements/multifile \
 	elements/qtmux \
 	elements/rganalysis \
