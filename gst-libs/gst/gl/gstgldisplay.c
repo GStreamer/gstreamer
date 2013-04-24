@@ -1225,6 +1225,8 @@ gst_gl_display_create_context (GstGLDisplay * display,
 
     g_cond_wait (&display->priv->cond_create_context, &display->mutex);
 
+    display->context_created = TRUE;
+
     GST_INFO ("gl thread created");
   }
 
