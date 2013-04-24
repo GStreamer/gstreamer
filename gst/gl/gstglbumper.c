@@ -139,7 +139,7 @@ static const gchar *bumper_f_src =
     "  gl_FragColor = vec4(irradiance * textureColor.rgb, textureColor.w);\n"
     "}\n";
 
-#define LOAD_ERROR(msg) { GST_WARNING ("unable to load %s: %s", bumper->location, msg); display->isAlive = FALSE; return; }
+#define LOAD_ERROR(display, msg) { gst_gl_display_set_error (display, "unable to load %s: %s", bumper->location, msg); display->isAlive = FALSE; return; }
 
 //png reading error handler
 static void
@@ -169,32 +169,32 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
   png_byte magic[8];
   gint n_read;
 
-  if (!filter->display)
+  if (!display)
     return;
 
   /* BEGIN load png image file */
 
   if ((fp = fopen (bumper->location, "rb")) == NULL)
-    LOAD_ERROR ("file not found");
+    LOAD_ERROR (display, "file not found");
 
   /* Read magic number */
   n_read = fread (magic, 1, sizeof (magic), fp);
   if (n_read != sizeof (magic)) {
     fclose (fp);
-    LOAD_ERROR ("can't read PNG magic number");
+    LOAD_ERROR (display, "can't read PNG magic number");
   }
 
   /* Check for valid magic number */
   if (png_sig_cmp (magic, 0, sizeof (magic))) {
     fclose (fp);
-    LOAD_ERROR ("not a valid PNG image");
+    LOAD_ERROR (display, "not a valid PNG image");
   }
 
   png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
   if (png_ptr == NULL) {
     fclose (fp);
-    LOAD_ERROR ("failed to initialize the png_struct");
+    LOAD_ERROR (display, "failed to initialize the png_struct");
   }
 
   png_set_error_fn (png_ptr, NULL, NULL, user_warning_fn);
@@ -203,7 +203,8 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
   if (info_ptr == NULL) {
     fclose (fp);
     png_destroy_read_struct (&png_ptr, png_infopp_NULL, png_infopp_NULL);
-    LOAD_ERROR ("failed to initialize the memory for image information");
+    LOAD_ERROR (display,
+        "failed to initialize the memory for image information");
   }
 
   png_init_io (png_ptr, fp);
@@ -218,7 +219,7 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
   if (color_type != PNG_COLOR_TYPE_RGB) {
     fclose (fp);
     png_destroy_read_struct (&png_ptr, png_infopp_NULL, png_infopp_NULL);
-    LOAD_ERROR ("color type is not rgb");
+    LOAD_ERROR (display, "color type is not rgb");
   }
 
   raw_data = (guchar *) malloc (sizeof (guchar) * width * height * 3);
