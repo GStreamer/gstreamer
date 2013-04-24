@@ -313,7 +313,7 @@ gst_gl_display_set_error (GstGLDisplay * display, const char *format, ...)
   display->error_message = g_strdup_vprintf (format, args);
   va_end (args);
 
-  GST_WARNING (display->error_message);
+  GST_WARNING ("%s", display->error_message);
 
   display->isAlive = FALSE;
 }
