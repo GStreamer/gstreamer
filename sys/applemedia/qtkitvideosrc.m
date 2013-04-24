@@ -19,7 +19,7 @@
 
 #include "qtkitvideosrc.h"
 
-#import "bufferfactory.h"
+#import "corevideobuffer.h"
 
 #import <QTKit/QTKit.h>
 
@@ -90,7 +90,6 @@ G_DEFINE_TYPE (GstQTKitVideoSrc, gst_qtkit_video_src, GST_TYPE_PUSH_SRC);
 
   int deviceIndex;
 
-  GstAMBufferFactory *bufferFactory;
   QTCaptureSession *session;
   QTCaptureDeviceInput *input;
   QTCaptureDecompressedVideoOutput *output;
@@ -159,17 +158,8 @@ G_DEFINE_TYPE (GstQTKitVideoSrc, gst_qtkit_video_src, GST_TYPE_PUSH_SRC);
 
 - (BOOL)openDevice
 {
-  GError *gerror;
   NSString *mediaType = QTMediaTypeVideo;
   NSError *error = nil;
-
-  bufferFactory = [[GstAMBufferFactory alloc] initWithError:&gerror];
-  if (bufferFactory == nil) {
-    GST_ELEMENT_ERROR (element, RESOURCE, FAILED, ("API error"),
-        ("%s", gerror->message));
-    g_clear_error (&gerror);
-    goto openFailed;
-  }
 
   if (deviceIndex == -1) {
     device = [QTCaptureDevice defaultInputDeviceWithMediaType:mediaType];
@@ -206,9 +196,6 @@ openFailed:
     [device release];
     device = nil;
 
-    [bufferFactory release];
-    bufferFactory = nil;
-
     return NO;
   }
 }
@@ -228,9 +215,6 @@ openFailed:
 
   [device release];
   device = nil;
-
-  [bufferFactory release];
-  bufferFactory = nil;
 }
 
 - (BOOL)setCaps:(GstCaps *)caps
@@ -450,7 +434,7 @@ openFailed:
   [queueLock unlockWithCondition:
       ([queue count] == 0) ? NO_FRAMES : HAS_FRAME_OR_STOP_REQUEST];
 
-  *buf = [bufferFactory createGstBufferForCoreVideoBuffer:frame];
+  *buf = gst_core_video_buffer_new ((CVBufferRef)frame, NULL);
   CVBufferRelease (frame);
 
   [self timestampBuffer:*buf];

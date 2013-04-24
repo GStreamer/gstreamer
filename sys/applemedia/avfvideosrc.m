@@ -19,10 +19,9 @@
 
 #include "avfvideosrc.h"
 
-#import "bufferfactory.h"
-
 #import <AVFoundation/AVFoundation.h>
 #include <gst/video/video.h>
+#include "coremediabuffer.h"
 
 #define DEFAULT_DEVICE_INDEX  -1
 #define DEFAULT_DO_STATS      FALSE
@@ -82,7 +81,6 @@ static GstPushSrcClass * parent_class;
   gint deviceIndex;
   BOOL doStats;
 
-  GstAMBufferFactory *bufferFactory;
   AVCaptureSession *session;
   AVCaptureDeviceInput *input;
   AVCaptureVideoDataOutput *output;
@@ -176,15 +174,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 - (BOOL)openDevice
 {
   BOOL success = NO, *successPtr = &success;
-  GError *error;
-
-  bufferFactory = [[GstAMBufferFactory alloc] initWithError:&error];
-  if (bufferFactory == nil) {
-    GST_ELEMENT_ERROR (element, RESOURCE, FAILED, ("API error"),
-        ("%s", error->message));
-    g_clear_error (&error);
-    return NO;
-  }
 
   dispatch_async (mainQueue, ^{
     NSString *mediaType = AVMediaTypeVideo;
@@ -239,11 +228,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   });
   [self waitForMainQueueToDrain];
 
-  if (!success) {
-    [bufferFactory release];
-    bufferFactory = nil;
-  }
-
   return success;
 }
 
@@ -268,9 +252,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     device = nil;
   });
   [self waitForMainQueueToDrain];
-
-  [bufferFactory release];
-  bufferFactory = nil;
 }
 
 #define GST_AVF_CAPS_NEW(format, w, h)                    \
@@ -513,7 +494,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   [bufQueueLock unlockWithCondition:
       ([bufQueue count] == 0) ? NO_BUFFERS : HAS_BUFFER_OR_STOP_REQUEST];
 
-  *buf = [bufferFactory createGstBufferForSampleBuffer:sbuf];
+  *buf = gst_core_media_buffer_new (sbuf);
   CFRelease (sbuf);
 
   [self timestampBuffer:*buf];
