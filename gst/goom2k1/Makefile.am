@@ -13,6 +13,10 @@ libgstgoom2k1_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CF
 	-Dgoom_close=goom2k1_close -Dgoom_update=goom2k1_update	\
 	-Dgoom_set_resolution=goom2k1_set_resolution		\
 	-Dgoom_lines=goom2k1_lines				\
+	-DBLACK=GOOM2K1_BLACK -DWHITE=GOOM2K1_WHITE		\
+	-DRED=GOOM2K1_RED -DBLUE=GOOM2K1_BLUE			\
+	-DGREEN=GOOM2K1_GREEN -DYELLOW=GOOM2K1_YELLOW		\
+	-DORANGE=GOOM2K1_ORANGE -DVIOLET=GOOM2K1_VIOLET		\
 	-DzoomFilterFastRGB=zoomFilterFastRGB2k1		\
 	-DpointFilter=pointFilter2k1				\
 	-DzoomFilterDestroy=zoomFilterDestroy2k1		\
