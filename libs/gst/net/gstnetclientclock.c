@@ -350,18 +350,34 @@ gst_net_client_clock_start (GstNetClientClock * self)
   GInetAddress *inetaddr;
   GSocket *socket;
   GError *error = NULL;
+  GSocketFamily family;
 
   g_return_val_if_fail (self->priv->address != NULL, FALSE);
   g_return_val_if_fail (self->priv->servaddr == NULL, FALSE);
 
-  socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM,
+  /* create target address */
+  inetaddr = g_inet_address_new_from_string (self->priv->address);
+  if (inetaddr == NULL)
+    goto bad_address;
+
+  family = g_inet_address_get_family (inetaddr);
+
+  servaddr = g_inet_socket_address_new (inetaddr, self->priv->port);
+  g_object_unref (inetaddr);
+
+  g_assert (servaddr != NULL);
+
+  GST_DEBUG_OBJECT (self, "will communicate with %s:%d", self->priv->address,
+      self->priv->port);
+
+  socket = g_socket_new (family, G_SOCKET_TYPE_DATAGRAM,
       G_SOCKET_PROTOCOL_UDP, &error);
 
   if (socket == NULL)
     goto no_socket;
 
   GST_DEBUG_OBJECT (self, "binding socket");
-  inetaddr = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
+  inetaddr = g_inet_address_new_any (family);
   anyaddr = g_inet_socket_address_new (inetaddr, 0);
   g_socket_bind (socket, anyaddr, TRUE, &error);
   g_object_unref (anyaddr);
@@ -380,20 +396,6 @@ gst_net_client_clock_start (GstNetClientClock * self)
       g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (myaddr)));
 
   g_object_unref (myaddr);
-
-  /* create target address */
-  inetaddr = g_inet_address_new_from_string (self->priv->address);
-
-  if (inetaddr == NULL)
-    goto bad_address;
-
-  servaddr = g_inet_socket_address_new (inetaddr, self->priv->port);
-  g_object_unref (inetaddr);
-
-  g_assert (servaddr != NULL);
-
-  GST_DEBUG_OBJECT (self, "will communicate with %s:%d", self->priv->address,
-      self->priv->port);
 
   self->priv->cancel = g_cancellable_new ();
   self->priv->socket = socket;
@@ -432,7 +434,6 @@ bad_address:
   {
     GST_ERROR_OBJECT (self, "inet_address_new_from_string('%s') failed",
         self->priv->address);
-    g_object_unref (socket);
     return FALSE;
   }
 no_thread:

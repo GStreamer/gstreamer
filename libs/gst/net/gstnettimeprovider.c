@@ -394,7 +394,7 @@ gst_net_time_provider_stop (GstNetTimeProvider * self)
 /**
  * gst_net_time_provider_new:
  * @clock: a #GstClock to export over the network
- * @address: an address to bind on as a dotted quad (xxx.xxx.xxx.xxx), or NULL
+ * @address: an address to bind on as a dotted quad (xxx.xxx.xxx.xxx), IPv6 address, or NULL
  *           to bind to all addresses
  * @port: a port to bind on, or 0 to let the kernel choose
  *
