@@ -1126,6 +1126,76 @@ GST_START_TEST (test_pad_probe_remove)
 
 GST_END_TEST;
 
+static gboolean src_flush_start_probe_called = FALSE;
+static gboolean src_flush_stop_probe_called = FALSE;
+static gboolean sink_flush_start_probe_called = FALSE;
+static gboolean sink_flush_stop_probe_called = FALSE;
+
+static GstPadProbeReturn
+flush_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstEvent *event;
+
+  if (!(GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_EVENT_FLUSH))
+    goto out;
+
+  event = gst_pad_probe_info_get_event (info);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC)
+        src_flush_start_probe_called = TRUE;
+      else
+        sink_flush_start_probe_called = TRUE;
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC)
+        src_flush_stop_probe_called = TRUE;
+      else
+        sink_flush_stop_probe_called = TRUE;
+      break;
+    default:
+      break;
+  }
+
+out:
+  return GST_PAD_PROBE_OK;
+}
+
+GST_START_TEST (test_pad_probe_flush_events)
+{
+  GstPad *src, *sink;
+
+  src = gst_pad_new ("src", GST_PAD_SRC);
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
+  gst_pad_set_chain_function (sink, gst_check_chain_func);
+  gst_pad_set_active (src, TRUE);
+  gst_pad_set_active (sink, TRUE);
+  fail_unless (gst_pad_link (src, sink) == GST_PAD_LINK_OK);
+
+  gst_pad_add_probe (src,
+      GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM |
+      GST_PAD_PROBE_TYPE_EVENT_FLUSH, flush_probe_cb, NULL, NULL);
+  gst_pad_add_probe (sink,
+      GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM |
+      GST_PAD_PROBE_TYPE_EVENT_FLUSH, flush_probe_cb, NULL, NULL);
+
+  gst_pad_push_event (src, gst_event_new_flush_start ());
+  gst_pad_push_event (src, gst_event_new_flush_stop (TRUE));
+
+  /* push a buffer so the events are propagated downstream */
+  gst_pad_push (src, gst_buffer_new ());
+
+  fail_unless (src_flush_start_probe_called);
+  fail_unless (src_flush_stop_probe_called);
+  fail_unless (sink_flush_start_probe_called);
+  fail_unless (sink_flush_stop_probe_called);
+
+  gst_object_unref (src);
+  gst_object_unref (sink);
+}
+
+GST_END_TEST;
+
 static gboolean got_notify;
 
 static void
@@ -1570,6 +1640,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_pad_blocking_with_probe_type_block);
   tcase_add_test (tc_chain, test_pad_blocking_with_probe_type_blocking);
   tcase_add_test (tc_chain, test_pad_probe_remove);
+  tcase_add_test (tc_chain, test_pad_probe_flush_events);
   tcase_add_test (tc_chain, test_queue_src_caps_notify_linked);
   tcase_add_test (tc_chain, test_queue_src_caps_notify_not_linked);
 #if 0
