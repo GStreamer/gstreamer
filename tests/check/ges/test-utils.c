@@ -106,7 +106,13 @@ ges_test_create_pipeline (GESTimeline * timeline)
   return pipeline;
 }
 
-void
+gchar *
+ges_test_file_name (const gchar * filename)
+{
+  return g_strjoin ("/", "file:/", g_get_current_dir (), filename, NULL);
+}
+
+gboolean
 ges_generate_test_file_audio_video (const gchar * filedest,
     const gchar * audio_enc,
     const gchar * video_enc,
@@ -118,19 +124,27 @@ ges_generate_test_file_audio_video (const gchar * filedest,
   GstMessage *message;
   gchar *pipeline_str;
   gboolean done = FALSE;
+  gboolean ret = FALSE;
 
   if (g_file_test (filedest, G_FILE_TEST_EXISTS)) {
     GST_INFO ("The file %s already existed.", filedest);
-    return;
+    return TRUE;
   }
 
   pipeline_str = g_strdup_printf ("audiotestsrc num-buffers=430 wave=%s "
-      "! %s ! %s name=m ! filesink location= %s/%s "
+      "%c %s ! %s name=m ! filesink location= %s/%s "
       "videotestsrc pattern=%s num-buffers=300 ! %s ! m.",
-      audio_wave, audio_enc, mux, g_get_current_dir (),
-      filedest, video_pattern, video_enc);
+      audio_wave,
+      audio_enc ? '!' : ' ',
+      audio_enc ? audio_enc : "",
+      mux, g_get_current_dir (), filedest, video_pattern, video_enc);
 
   pipeline = gst_parse_launch (pipeline_str, &error);
+
+  if (pipeline == NULL)
+    return FALSE;
+
+  g_free (pipeline_str);
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
   gst_bus_add_signal_watch (bus);
@@ -139,13 +153,23 @@ ges_generate_test_file_audio_video (const gchar * filedest,
 
   while (!done) {
     message = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_CLOCK_TIME_NONE);
-    if (GST_MESSAGE_TYPE (message) & GST_MESSAGE_EOS)
+    if (GST_MESSAGE_TYPE (message) & GST_MESSAGE_EOS) {
       done = TRUE;
-    else if (GST_MESSAGE_TYPE (message) & GST_MESSAGE_ERROR) {
+      ret = TRUE;
+    } else if (GST_MESSAGE_TYPE (message) & GST_MESSAGE_ERROR) {
       done = TRUE;
+      ret = FALSE;
       g_print ("Error");
     }
   }
+
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+
+  return ret;
 }
 
 static void

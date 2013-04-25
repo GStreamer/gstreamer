@@ -36,8 +36,10 @@ gchar * ges_test_get_audio_only_uri (void);
 gchar * ges_test_get_audio_video_uri (void);
 gchar * ges_test_get_image_uri (void);
 gchar * ges_test_file_uri (const gchar *filename);
+
 void check_destroyed (GObject *object_to_unref, GObject *first_object, ...) G_GNUC_NULL_TERMINATED;
-void
+gchar * ges_test_file_name (const gchar *filename);
+gboolean
 ges_generate_test_file_audio_video (const gchar * filedest,
     const gchar * audio_enc,
     const gchar * video_enc,

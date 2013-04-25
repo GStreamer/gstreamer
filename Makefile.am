@@ -24,6 +24,10 @@ include $(top_srcdir)/common/coverage/lcov.mak
 check-valgrind:
 	cd tests/check && make check-valgrind
 
+# Test actual high-level functionnality.
+check-integration:
+	cd tests/check && make check-integration
+
 if HAVE_GST_CHECK
 check-torture:
 	cd tests/check && make torture
