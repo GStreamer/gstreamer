@@ -304,7 +304,7 @@ gst_udpsrc_init (GstUDPSrc * udpsrc)
       g_strdup_printf ("udp://%s:%u", UDP_DEFAULT_MULTICAST_GROUP,
       UDP_DEFAULT_PORT);
 
-  udpsrc->host = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
+  udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
   udpsrc->port = UDP_DEFAULT_PORT;
   udpsrc->socket = UDP_DEFAULT_SOCKET;
   udpsrc->multi_iface = g_strdup (UDP_DEFAULT_MULTICAST_IFACE);
@@ -345,8 +345,8 @@ gst_udpsrc_finalize (GObject * object)
   g_free (udpsrc->uri);
   udpsrc->uri = NULL;
 
-  g_free (udpsrc->host);
-  udpsrc->host = NULL;
+  g_free (udpsrc->multi_group);
+  udpsrc->multi_group = NULL;
 
   if (udpsrc->socket)
     g_object_unref (udpsrc->socket);
@@ -576,17 +576,17 @@ skip_error:
 static gboolean
 gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri, GError ** error)
 {
-  gchar *host;
+  gchar *multi_group;
   guint16 port;
 
-  if (!gst_udp_parse_uri (uri, &host, &port))
+  if (!gst_udp_parse_uri (uri, &multi_group, &port))
     goto wrong_uri;
 
   if (port == (guint16) - 1)
     port = UDP_DEFAULT_PORT;
 
-  g_free (src->host);
-  src->host = host;
+  g_free (src->multi_group);
+  src->multi_group = multi_group;
   src->port = port;
 
   g_free (src->uri);
@@ -618,21 +618,23 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_PORT:
       udpsrc->port = g_value_get_int (value);
       g_free (udpsrc->uri);
-      udpsrc->uri = g_strdup_printf ("udp://%s:%u", udpsrc->host, udpsrc->port);
+      udpsrc->uri =
+          g_strdup_printf ("udp://%s:%u", udpsrc->multi_group, udpsrc->port);
       break;
     case PROP_MULTICAST_GROUP:
     case PROP_BIND_ADDRESS:
     {
       const gchar *group;
 
-      g_free (udpsrc->host);
+      g_free (udpsrc->multi_group);
       if ((group = g_value_get_string (value)))
-        udpsrc->host = g_strdup (group);
+        udpsrc->multi_group = g_strdup (group);
       else
-        udpsrc->host = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
+        udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
 
       g_free (udpsrc->uri);
-      udpsrc->uri = g_strdup_printf ("udp://%s:%u", udpsrc->host, udpsrc->port);
+      udpsrc->uri =
+          g_strdup_printf ("udp://%s:%u", udpsrc->multi_group, udpsrc->port);
       break;
     }
     case PROP_MULTICAST_IFACE:
@@ -718,7 +720,7 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MULTICAST_GROUP:
     case PROP_BIND_ADDRESS:
-      g_value_set_string (value, udpsrc->host);
+      g_value_set_string (value, udpsrc->multi_group);
       break;
     case PROP_MULTICAST_IFACE:
       g_value_set_string (value, udpsrc->multi_iface);
@@ -770,17 +772,19 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 
   if (src->socket == NULL) {
     /* need to allocate a socket */
-    GST_DEBUG_OBJECT (src, "allocating socket for %s:%d", src->host, src->port);
+    GST_DEBUG_OBJECT (src, "allocating socket for %s:%d", src->multi_group,
+        src->port);
 
-    addr = g_inet_address_new_from_string (src->host);
+    addr = g_inet_address_new_from_string (src->multi_group);
     if (!addr) {
       GList *results;
 
-      GST_DEBUG_OBJECT (src, "resolving IP address for host %s", src->host);
+      GST_DEBUG_OBJECT (src, "resolving IP address for host %s",
+          src->multi_group);
       resolver = g_resolver_get_default ();
       results =
-          g_resolver_lookup_by_name (resolver, src->host, src->cancellable,
-          &err);
+          g_resolver_lookup_by_name (resolver, src->multi_group,
+          src->cancellable, &err);
       if (!results)
         goto name_resolve;
       addr = G_INET_ADDRESS (g_object_ref (results->data));
@@ -792,7 +796,8 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     {
       gchar *ip = g_inet_address_to_string (addr);
 
-      GST_DEBUG_OBJECT (src, "IP address for host %s is %s", src->host, ip);
+      GST_DEBUG_OBJECT (src, "IP address for host %s is %s", src->multi_group,
+          ip);
       g_free (ip);
     }
 #endif
@@ -921,7 +926,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
       &&
       g_inet_address_get_is_multicast (g_inet_socket_address_get_address
           (src->addr))) {
-    GST_DEBUG_OBJECT (src, "joining multicast group %s", src->host);
+    GST_DEBUG_OBJECT (src, "joining multicast group %s", src->multi_group);
     if (!g_socket_join_multicast_group (src->used_socket,
             g_inet_socket_address_get_address (src->addr),
             FALSE, src->multi_iface, &err))
@@ -1038,7 +1043,7 @@ gst_udpsrc_stop (GstBaseSrc * bsrc)
             (src->addr))) {
       GError *err = NULL;
 
-      GST_DEBUG_OBJECT (src, "leaving multicast group %s", src->host);
+      GST_DEBUG_OBJECT (src, "leaving multicast group %s", src->multi_group);
 
       if (!g_socket_leave_multicast_group (src->used_socket,
               g_inet_socket_address_get_address (src->addr), FALSE,
