@@ -59,3 +59,40 @@ gst_vtutil_dict_set_i32 (CFMutableDictionaryRef dict, CFStringRef key,
   CFDictionarySetValue (dict, key, number);
   CFRelease (number);
 }
+
+void
+gst_vtutil_dict_set_string (CFMutableDictionaryRef dict, CFStringRef key,
+    const gchar * value)
+{
+  CFStringRef string;
+
+  string = CFStringCreateWithCString (NULL, value, kCFStringEncodingASCII);
+  CFDictionarySetValue (dict, key, string);
+  CFRelease (string);
+}
+
+void
+gst_vtutil_dict_set_boolean (CFMutableDictionaryRef dict, CFStringRef key,
+    gboolean value)
+{
+  CFDictionarySetValue (dict, key, value ? kCFBooleanTrue: kCFBooleanFalse);
+}
+
+void
+gst_vtutil_dict_set_data (CFMutableDictionaryRef dict, CFStringRef key,
+    guint8 * value, guint64 length)
+{
+  CFDataRef data;
+
+  data = CFDataCreate (NULL, value, length);
+  CFDictionarySetValue (dict, key, data);
+  CFRelease (data);
+}
+
+void
+gst_vtutil_dict_set_object (CFMutableDictionaryRef dict, CFStringRef key,
+    CFTypeRef *value)
+{
+  CFDictionarySetValue (dict, key, value);
+  CFRelease (value);
+}

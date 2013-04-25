@@ -54,11 +54,6 @@ static gboolean gst_vtdec_sink_event (GstPad * pad, GstObject * parent,
 static CMSampleBufferRef gst_vtdec_sample_buffer_from (GstVTDec * self,
     GstBuffer * buf);
 
-extern OSStatus FigVideoFormatDescriptionCreateWithSampleDescriptionExtensionAtom
-    (CFAllocatorRef allocator, UInt32 formatId, UInt32 width, UInt32 height,
-    UInt32 atomId, const UInt8 * data, CFIndex len, void *unk1,
-    CMFormatDescriptionRef * formatDesc);
-
 static void
 gst_vtdec_base_init (GstVTDecClass * klass)
 {
@@ -359,15 +354,41 @@ gst_vtdec_create_format_description_from_codec_data (GstVTDec * self,
     GstBuffer * codec_data)
 {
   CMFormatDescriptionRef fmt_desc;
-  OSStatus status;
+  CFMutableDictionaryRef extensions, par, atoms;
   GstMapInfo map;
+  OSStatus status;
 
   gst_buffer_map (codec_data, &map, GST_MAP_READ);
 
-  status =
-      FigVideoFormatDescriptionCreateWithSampleDescriptionExtensionAtom (NULL,
-      self->details->format_id, self->vinfo.width, self->vinfo.height, 'avcC',
-      map.data, map.size, NULL, &fmt_desc);
+  /* CVPixelAspectRatio dict */
+  par = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
+      &kCFTypeDictionaryValueCallBacks);
+  gst_vtutil_dict_set_i32 (par, CFSTR ("HorizontalSpacing"),
+      self->vinfo.par_n);
+  gst_vtutil_dict_set_i32 (par, CFSTR ("VerticalSpacing"),
+      self->vinfo.par_d);
+
+  /* SampleDescriptionExtensionAtoms dict */
+  atoms = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
+      &kCFTypeDictionaryValueCallBacks);
+  gst_vtutil_dict_set_data (atoms, CFSTR ("avcC"), map.data, map.size);
+
+  /* Extensions dict */
+  extensions = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
+      &kCFTypeDictionaryValueCallBacks);
+  gst_vtutil_dict_set_string (extensions,
+      CFSTR ("CVImageBufferChromaLocationBottomField"), "left");
+  gst_vtutil_dict_set_string (extensions,
+      CFSTR ("CVImageBufferChromaLocationTopField"), "left");
+  gst_vtutil_dict_set_boolean (extensions, CFSTR("FullRangeVideo"), FALSE);
+  gst_vtutil_dict_set_object (extensions, CFSTR ("CVPixelAspectRatio"),
+      (CFTypeRef *) par);
+  gst_vtutil_dict_set_object (extensions,
+      CFSTR ("SampleDescriptionExtensionAtoms"), (CFTypeRef *) atoms);
+
+  status = CMVideoFormatDescriptionCreate (NULL,
+      self->details->format_id, self->vinfo.width, self->vinfo.height,
+      extensions, &fmt_desc);
 
   gst_buffer_unmap (codec_data, &map);
 

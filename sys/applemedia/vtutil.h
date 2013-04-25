@@ -29,6 +29,14 @@ gchar * gst_vtutil_object_to_string (CFTypeRef obj);
 gchar * gst_vtutil_string_to_utf8 (CFStringRef s);
 void gst_vtutil_dict_set_i32 (CFMutableDictionaryRef dict,
     CFStringRef key, gint32 value);
+void gst_vtutil_dict_set_string (CFMutableDictionaryRef dict,
+    CFStringRef key, const gchar * value);
+void gst_vtutil_dict_set_boolean (CFMutableDictionaryRef dict,
+    CFStringRef key, gboolean value);
+void gst_vtutil_dict_set_data (CFMutableDictionaryRef dict,
+    CFStringRef key, guint8 * value, guint64 length);
+void gst_vtutil_dict_set_object (CFMutableDictionaryRef dict,
+    CFStringRef key, CFTypeRef * value);
 
 G_END_DECLS
 
