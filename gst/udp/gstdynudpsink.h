@@ -27,7 +27,6 @@
 G_BEGIN_DECLS
 
 #include "gstudpnetutils.h"
-#include "gstudp.h"
 
 #define GST_TYPE_DYNUDPSINK             (gst_dynudpsink_get_type())
 #define GST_DYNUDPSINK(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DYNUDPSINK,GstDynUDPSink))

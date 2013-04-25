@@ -28,7 +28,6 @@
 G_BEGIN_DECLS
 
 #include "gstudpnetutils.h"
-#include "gstudp.h"
 
 #define GST_TYPE_UDPSRC \
   (gst_udpsrc_get_type())

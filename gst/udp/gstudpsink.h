@@ -26,7 +26,6 @@
 
 G_BEGIN_DECLS
 
-#include "gstudp.h"
 #include "gstudpnetutils.h"
 
 #define GST_TYPE_UDPSINK                (gst_udpsink_get_type())
