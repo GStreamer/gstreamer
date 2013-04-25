@@ -2446,6 +2446,14 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
    * FIXME: clip_and_push_buf() changes buffer metadata but the buffer
    * might have a refcount > 1 */
   output_buffer = gst_buffer_ref (output_buffer);
+
+  /* Release frame so the buffer is writable when we push it downstream
+   * if possible, i.e. if the subclass does not hold additional references
+   * to the frame
+   */
+  gst_video_decoder_release_frame (decoder, frame);
+  frame = NULL;
+
   if (decoder->output_segment.rate < 0.0) {
     GST_LOG_OBJECT (decoder, "queued frame");
     priv->output_queued = g_list_prepend (priv->output_queued, output_buffer);
@@ -2454,7 +2462,8 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
   }
 
 done:
-  gst_video_decoder_release_frame (decoder, frame);
+  if (frame)
+    gst_video_decoder_release_frame (decoder, frame);
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
   return ret;
 }
