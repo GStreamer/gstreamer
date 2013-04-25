@@ -17,6 +17,30 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-rtpamrdepay
+ * @see_also: rtpamrpay
+ *
+ * Extract AMR audio from RTP packets according to RFC 3267.
+ * For detailed information see: http://www.rfc-editor.org/rfc/rfc3267.txt
+ *
+ * <refsect2>
+ * <title>Example pipeline</title>
+ * |[
+ * gst-launch-1.0 udpsrc caps='application/x-rtp, media=(string)audio, clock-rate=(int)8000, encoding-name=(string)AMR, encoding-params=(string)1, octet-align=(string)1, payload=(int)96' ! rtpamrdepay ! amrnbdec ! pulsesink
+ * ]| This example pipeline will depayload and decode an RTP AMR stream. Refer to
+ * the rtpamrpay example to create the RTP stream.
+ * </refsect2>
+ *
+ * Last reviewed on 2013-04-25 (1.1.0)
+ */
+
+/*
+ * RFC 3267 - Real-Time Transport Protocol (RTP) Payload Format and File
+ * Storage Format for the Adaptive Multi-Rate (AMR) and Adaptive Multi-Rate
+ * Wideband (AMR-WB) Audio Codecs.
+ *
+ */
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -29,13 +53,6 @@
 
 GST_DEBUG_CATEGORY_STATIC (rtpamrdepay_debug);
 #define GST_CAT_DEFAULT (rtpamrdepay_debug)
-
-/* references:
- *
- * RFC 3267 - Real-Time Transport Protocol (RTP) Payload Format and File
- * Storage Format for the Adaptive Multi-Rate (AMR) and Adaptive Multi-Rate
- * Wideband (AMR-WB) Audio Codecs.
- */
 
 /* RtpAMRDepay signals and args */
 enum

@@ -17,6 +17,24 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-rtpL16pay
+ * @see_also: rtpL16depay
+ *
+ * Payload raw audio into RTP packets according to RFC 3551.
+ * For detailed information see: http://www.rfc-editor.org/rfc/rfc3551.txt
+ *
+ * <refsect2>
+ * <title>Example pipeline</title>
+ * |[
+ * gst-launch -v audiotestsrc ! audioconvert ! rtpL16pay ! udpsink
+ * ]| This example pipeline will payload raw audio. Refer to
+ * the rtpL16depay example to depayload and play the RTP stream.
+ * </refsect2>
+ *
+ * Last reviewed on 2013-04-25 (1.1.0)
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif

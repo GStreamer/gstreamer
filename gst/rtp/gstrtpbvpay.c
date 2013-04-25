@@ -17,6 +17,16 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-rtpbvpay
+ * @see_also: rtpbvdepay
+ *
+ * Payload BroadcomVoice audio into RTP packets according to RFC 4298.
+ * For detailed information see: http://www.rfc-editor.org/rfc/rfc4298.txt
+ *
+ * Last reviewed on 2013-04-25 (1.1.0)
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif

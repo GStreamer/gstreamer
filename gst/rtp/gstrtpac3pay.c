@@ -17,6 +17,24 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-rtpac3pay
+ * @see_also: rtpac3depay
+ *
+ * Payload AC3 audio into RTP packets according to RFC 4184.
+ * For detailed information see: http://www.rfc-editor.org/rfc/rfc4184.txt
+ *
+ * <refsect2>
+ * <title>Example pipeline</title>
+ * |[
+ * gst-launch -v audiotestsrc ! avenc_ac3 ! rtpac3pay ! udpsink
+ * ]| This example pipeline will encode and payload AC3 stream. Refer to
+ * the rtpac3depay example to depayload and decode the RTP stream.
+ * </refsect2>
+ *
+ * Last reviewed on 2013-04-25 (1.1.0)
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
