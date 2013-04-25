@@ -87,6 +87,8 @@ gst_tcp_server_sink_class_init (GstTCPServerSinkClass * klass)
   gobject_class->get_property = gst_tcp_server_sink_get_property;
   gobject_class->finalize = gst_tcp_server_sink_finalize;
 
+  /* FIXME 2.0: Rename this to bind-address, host does not make much
+   * sense here */
   g_object_class_install_property (gobject_class, PROP_HOST,
       g_param_spec_string ("host", "host", "The host/IP to listen on",
           TCP_DEFAULT_HOST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
