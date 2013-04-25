@@ -110,6 +110,8 @@ struct _GstVideoMixer2
   BlendFunction blend, overlay;
   FillCheckerFunction fill_checker;
   FillColorFunction fill_color;
+
+  gboolean send_stream_start;
 };
 
 struct _GstVideoMixer2Class

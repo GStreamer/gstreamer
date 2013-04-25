@@ -962,6 +962,17 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
     gst_pad_push_event (mix->srcpad, gst_event_new_flush_stop (TRUE));
   }
 
+  if (mix->send_stream_start) {
+    gchar s_id[32];
+
+    /* stream-start (FIXME: create id based on input ids) */
+    g_snprintf (s_id, sizeof (s_id), "mix-%08x", g_random_int ());
+    if (!gst_pad_push_event (mix->srcpad, gst_event_new_stream_start (s_id))) {
+      GST_WARNING_OBJECT (mix->srcpad, "Sending stream start event failed");
+    }
+    mix->send_stream_start = FALSE;
+  }
+
   GST_VIDEO_MIXER2_LOCK (mix);
 
   if (mix->newseg_pending) {
@@ -1756,6 +1767,7 @@ gst_videomixer2_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      mix->send_stream_start = TRUE;
       GST_LOG_OBJECT (mix, "starting collectpads");
       gst_collect_pads_start (mix->collect);
       break;
