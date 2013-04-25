@@ -7,7 +7,7 @@ libgstudp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_NET_LIBS) 
 libgstudp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstudp_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
-noinst_HEADERS = gstudpsink.h gstudpsrc.h gstudp.h gstmultiudpsink.h gstdynudpsink.h gstudpnetutils.h
+noinst_HEADERS = gstudpsink.h gstudpsrc.h gstmultiudpsink.h gstdynudpsink.h gstudpnetutils.h
 
 EXTRA_DIST = README
 
