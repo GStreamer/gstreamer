@@ -120,7 +120,7 @@ GST_STATIC_PAD_TEMPLATE ("internalsink_%u",
 
 enum
 {
-  /* FILL ME */
+  SIGNAL_HANDLE_REQUEST,
   LAST_SIGNAL
 };
 
@@ -304,7 +304,8 @@ G_STMT_START {                                          \
   g_free (__txt);                                       \
 } G_STMT_END
 
-/*static guint gst_rtspsrc_signals[LAST_SIGNAL] = { 0 }; */
+static guint gst_rtspsrc_signals[LAST_SIGNAL] = { 0 };
+
 #define gst_rtspsrc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstRTSPSrc, gst_rtspsrc, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_rtspsrc_uri_handler_init));
@@ -542,6 +543,21 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       g_param_spec_boolean ("ntp-sync", "Sync on NTP clock",
           "Synchronize received streams to the NTP clock", DEFAULT_NTP_SYNC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRTSPSrc::handle-request:
+   * @rtspsrc: a #GstRTSPSrc
+   * @request: a #GstRTSPMessage
+   * @response: a #GstRTSPMessage
+   *
+   * Handle a server request in @request and prepare @response.
+   *
+   * Since: 1.2
+   */
+  gst_rtspsrc_signals[SIGNAL_HANDLE_REQUEST] =
+      g_signal_new ("handle-request", G_TYPE_FROM_CLASS (klass), 0,
+      0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2,
+      G_TYPE_POINTER, G_TYPE_POINTER);
 
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
@@ -3603,13 +3619,16 @@ gst_rtspsrc_handle_request (GstRTSPSrc * src, GstRTSPConnection * conn,
 
   if (res == GST_RTSP_ENOTIMPL) {
     /* default implementation, send OK */
+    GST_DEBUG_OBJECT (src, "prepare OK reply");
     res =
         gst_rtsp_message_init_response (&response, GST_RTSP_STS_OK, "OK",
         request);
     if (res < 0)
       goto send_error;
 
-    GST_DEBUG_OBJECT (src, "replying with OK");
+    /* let app parse and reply */
+    g_signal_emit (src, gst_rtspsrc_signals[SIGNAL_HANDLE_REQUEST],
+        0, request, response);
 
     if (src->debug)
       gst_rtsp_message_dump (&response);
