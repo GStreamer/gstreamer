@@ -400,10 +400,15 @@ GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^([_]*gst_plug
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl Check for the GStreamer plugins directory
-AC_ARG_VAR([GST_PLUGIN_PATH], [installation path for gstreamer-vaapi plugin elements])
+AC_ARG_VAR([GST_PLUGIN_PATH], [installation path for gstreamer-vaapi plugin elements for GStreamer 0.10])
+AC_ARG_VAR([GST_PLUGIN_PATH_1_0], [installation path for gstreamer-vaapi plugin elements for GStreamer 1.0])
 AC_MSG_CHECKING([for GStreamer plugins directory])
-if test -d "$GST_PLUGIN_PATH"; then
-    GST_PLUGINS_DIR="$GST_PLUGIN_PATH"
+case $GST_API_VERSION in
+0.10)   _gst_plugin_path="$GST_PLUGIN_PATH";;
+1.0)    _gst_plugin_path="$GST_PLUGIN_PATH_1_0";;
+esac
+if test -d "$_gst_plugin_path"; then
+    GST_PLUGINS_DIR="$_gst_plugin_path"
 else
     GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_API_VERSION --variable pluginsdir`
     if test -z "$GST_PLUGINS_DIR"; then
