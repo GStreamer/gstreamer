@@ -54,6 +54,16 @@ static gboolean gst_vtdec_sink_event (GstPad * pad, GstObject * parent,
 static CMSampleBufferRef gst_vtdec_sample_buffer_from (GstVTDec * self,
     GstBuffer * buf);
 
+#ifdef HAVE_IOS
+#define GST_VTDEC_VIDEO_FORMAT_STR "NV12"
+#define GST_VTDEC_VIDEO_FORMAT GST_VIDEO_FORMAT_NV12
+#define GST_VTDEC_CV_VIDEO_FORMAT kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
+#else
+#define GST_VTDEC_VIDEO_FORMAT_STR "UYVY"
+#define GST_VTDEC_VIDEO_FORMAT GST_VIDEO_FORMAT_UYVY
+#define GST_VTDEC_CV_VIDEO_FORMAT kCVPixelFormatType_422YpCbCr8
+#endif
+
 static void
 gst_vtdec_base_init (GstVTDecClass * klass)
 {
@@ -95,7 +105,7 @@ gst_vtdec_base_init (GstVTDecClass * klass)
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
       gst_caps_new_simple ("video/x-raw",
-          "format", G_TYPE_STRING, "NV12",
+          "format", G_TYPE_STRING, GST_VTDEC_VIDEO_FORMAT_STR,
           "width", GST_TYPE_INT_RANGE, min_width, max_width,
           "height", GST_TYPE_INT_RANGE, min_height, max_height,
           "framerate", GST_TYPE_FRACTION_RANGE,
@@ -207,7 +217,7 @@ gst_vtdec_sink_setcaps (GstVTDec * self, GstCaps * caps)
 {
   GstStructure *structure;
   CMFormatDescriptionRef fmt_desc = NULL;
-  GstVideoFormat format = GST_VIDEO_FORMAT_NV12;
+  GstVideoFormat format = GST_VTDEC_VIDEO_FORMAT;
   gint width, height;
   gint fps_n, fps_d;
   gint par_n, par_d;
@@ -409,7 +419,7 @@ gst_vtdec_create_session (GstVTDec * self, CMFormatDescriptionRef fmt_desc)
   pb_attrs = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
   gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferPixelFormatTypeKey,
-      kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange);
+      GST_VTDEC_CV_VIDEO_FORMAT);
   gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferWidthKey,
       self->vinfo.width);
   gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferHeightKey,
