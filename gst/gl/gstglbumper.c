@@ -172,6 +172,11 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
   if (!display)
     return;
 
+  if (!bumper->location) {
+    gst_gl_display_set_error (display, "A filename is required");
+    return;
+  }
+
   /* BEGIN load png image file */
 
   if ((fp = fopen (bumper->location, "rb")) == NULL)
