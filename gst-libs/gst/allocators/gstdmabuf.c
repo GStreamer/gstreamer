@@ -155,23 +155,6 @@ gst_dmabuf_mem_share (GstMemory * gmem, gssize offset, gssize size)
   return GST_MEMORY_CAST (sub);
 }
 
-static GstMemory *
-gst_dmabuf_mem_copy (GstMemory * gmem, gssize offset, gssize size)
-{
-  GstDmaBufMemory *mem = (GstDmaBufMemory *) gmem;
-  gint newfd = dup (mem->fd);
-
-  if (newfd == -1) {
-    GST_WARNING ("Can't duplicate dmabuf file descriptor");
-    return NULL;
-  }
-
-  GST_DEBUG ("%p: copy %" G_GSSIZE_FORMAT " %" G_GSIZE_FORMAT, mem, offset,
-      size);
-  return (GstMemory *) gst_dmabuf_allocator_alloc (mem->mem.allocator,
-      newfd, size);
-}
-
 typedef struct
 {
   GstAllocator parent;
@@ -208,7 +191,7 @@ dmabuf_mem_allocator_init (GstDmaBufAllocator * allocator)
   alloc->mem_map = gst_dmabuf_mem_map;
   alloc->mem_unmap = gst_dmabuf_mem_unmap;
   alloc->mem_share = gst_dmabuf_mem_share;
-  alloc->mem_copy = gst_dmabuf_mem_copy;
+  /* Use the default, fallback copy function */
 
   GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
