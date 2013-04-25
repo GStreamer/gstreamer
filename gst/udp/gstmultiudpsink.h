@@ -56,7 +56,7 @@ typedef struct {
 struct _GstMultiUDPSink {
   GstBaseSink parent;
 
-  GSocket       *used_socket;
+  GSocket       *used_socket, *used_socket_v6;
   GCancellable  *cancellable;
 
   GMutex         client_lock;
@@ -68,7 +68,7 @@ struct _GstMultiUDPSink {
   /* properties */
   guint64        bytes_to_serve;
   guint64        bytes_served;
-  GSocket       *socket;
+  GSocket       *socket, *socket_v6;
   gboolean       close_socket;
 
   gboolean       external_socket;
