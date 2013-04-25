@@ -168,8 +168,8 @@ struct _GstVaapiDecoderPrivate {
     VAContextID         va_context;
     GstVaapiCodec       codec;
     GstVideoCodecState *codec_state;
-    GQueue             *buffers;
-    GQueue             *frames;
+    GAsyncQueue        *buffers;
+    GAsyncQueue        *frames;
     GstVaapiParserState parser_state;
 };
 

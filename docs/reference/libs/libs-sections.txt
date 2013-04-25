@@ -426,6 +426,7 @@ gst_vaapi_decoder_get_codec_state
 gst_vaapi_decoder_put_buffer
 gst_vaapi_decoder_get_surface
 gst_vaapi_decoder_get_frame
+gst_vaapi_decoder_get_frame_with_timeout
 gst_vaapi_decoder_parse
 gst_vaapi_decoder_decode
 <SUBSECTION Standard>

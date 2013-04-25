@@ -152,6 +152,10 @@ gst_vaapi_decoder_get_frame(GstVaapiDecoder *decoder,
     GstVideoCodecFrame **out_frame_ptr);
 
 GstVaapiDecoderStatus
+gst_vaapi_decoder_get_frame_with_timeout(GstVaapiDecoder *decoder,
+    GstVideoCodecFrame **out_frame_ptr, guint64 timeout);
+
+GstVaapiDecoderStatus
 gst_vaapi_decoder_parse(GstVaapiDecoder *decoder,
     GstVideoCodecFrame *frame, GstAdapter *adapter, gboolean at_eos,
     guint *got_unit_size_ptr, gboolean *got_frame_ptr);

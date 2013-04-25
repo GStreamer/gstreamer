@@ -280,7 +280,8 @@ gst_vaapidecode_push_decoded_frame(GstVideoDecoder *vdec)
     GstFlowReturn ret;
     guint flags;
 
-    status = gst_vaapi_decoder_get_frame(decode->decoder, &out_frame);
+    status = gst_vaapi_decoder_get_frame_with_timeout(decode->decoder,
+        &out_frame, 100000);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return GST_VIDEO_DECODER_FLOW_NEED_DATA;
 

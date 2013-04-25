@@ -115,7 +115,7 @@ push_buffer(GstVaapiDecoder *decoder, GstBuffer *buffer)
     GST_DEBUG("queue encoded data buffer %p (%d bytes)",
               buffer, gst_buffer_get_size(buffer));
 
-    g_queue_push_tail(priv->buffers, buffer);
+    g_async_queue_push(priv->buffers, buffer);
     return TRUE;
 }
 
@@ -125,7 +125,7 @@ pop_buffer(GstVaapiDecoder *decoder)
     GstVaapiDecoderPrivate * const priv = decoder->priv;
     GstBuffer *buffer;
 
-    buffer = g_queue_pop_head(priv->buffers);
+    buffer = g_async_queue_try_pop(priv->buffers);
     if (!buffer)
         return NULL;
 
@@ -381,7 +381,7 @@ drop_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
     GST_VIDEO_CODEC_FRAME_FLAG_SET(frame,
         GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
 
-    g_queue_push_tail(priv->frames, gst_video_codec_frame_ref(frame));
+    g_async_queue_push(priv->frames, gst_video_codec_frame_ref(frame));
 }
 
 static inline void
@@ -393,17 +393,20 @@ push_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
     GST_DEBUG("queue decoded surface %" GST_VAAPI_ID_FORMAT,
               GST_VAAPI_ID_ARGS(GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy)));
 
-    g_queue_push_tail(priv->frames, gst_video_codec_frame_ref(frame));
+    g_async_queue_push(priv->frames, gst_video_codec_frame_ref(frame));
 }
 
 static inline GstVideoCodecFrame *
-pop_frame(GstVaapiDecoder *decoder)
+pop_frame(GstVaapiDecoder *decoder, guint64 timeout)
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
     GstVideoCodecFrame *frame;
     GstVaapiSurfaceProxy *proxy;
 
-    frame = g_queue_pop_head(priv->frames);
+    if (G_LIKELY(timeout > 0))
+        frame = g_async_queue_timeout_pop(priv->frames, timeout);
+    else
+        frame = g_async_queue_try_pop(priv->frames);
     if (!frame)
         return NULL;
 
@@ -449,13 +452,6 @@ get_caps(GstVaapiDecoder *decoder)
 }
 
 static void
-clear_queue(GQueue *q, GDestroyNotify destroy)
-{
-    while (!g_queue_is_empty(q))
-        destroy(g_queue_pop_head(q));
-}
-
-static void
 gst_vaapi_decoder_finalize(GObject *object)
 {
     GstVaapiDecoder * const        decoder = GST_VAAPI_DECODER(object);
@@ -467,15 +463,12 @@ gst_vaapi_decoder_finalize(GObject *object)
     parser_state_finalize(&priv->parser_state);
  
     if (priv->buffers) {
-        clear_queue(priv->buffers, (GDestroyNotify)gst_buffer_unref);
-        g_queue_free(priv->buffers);
+        g_async_queue_unref(priv->buffers);
         priv->buffers = NULL;
     }
 
     if (priv->frames) {
-        clear_queue(priv->frames, (GDestroyNotify)
-            gst_video_codec_frame_unref);
-        g_queue_free(priv->frames);
+        g_async_queue_unref(priv->frames);
         priv->frames = NULL;
     }
 
@@ -591,8 +584,10 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
     priv->va_context            = VA_INVALID_ID;
     priv->codec                 = 0;
     priv->codec_state           = codec_state;
-    priv->buffers               = g_queue_new();
-    priv->frames                = g_queue_new();
+
+    priv->buffers = g_async_queue_new_full((GDestroyNotify)gst_buffer_unref);
+    priv->frames  = g_async_queue_new_full((GDestroyNotify)
+        gst_video_codec_frame_unref);
 }
 
 /**
@@ -699,7 +694,7 @@ gst_vaapi_decoder_get_surface(GstVaapiDecoder *decoder,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
 
     do {
-        frame = pop_frame(decoder);
+        frame = pop_frame(decoder, 0);
         while (frame) {
             if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY(frame)) {
                 GstVaapiSurfaceProxy * const proxy = frame->user_data;
@@ -710,7 +705,7 @@ gst_vaapi_decoder_get_surface(GstVaapiDecoder *decoder,
                 return GST_VAAPI_DECODER_STATUS_SUCCESS;
             }
             gst_video_codec_frame_unref(frame);
-            frame = pop_frame(decoder);
+            frame = pop_frame(decoder, 0);
         }
         status = decode_step(decoder);
     } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS);
@@ -734,11 +729,39 @@ gst_vaapi_decoder_get_surface(GstVaapiDecoder *decoder,
  * to the user-data anchor of the output frame. Ownership of the proxy
  * is transferred to the frame.
  *
+ * This is equivalent to gst_vaapi_decoder_get_frame_with_timeout()
+ * with a timeout value of zero.
+ *
  * Return value: a #GstVaapiDecoderStatus
  */
 GstVaapiDecoderStatus
 gst_vaapi_decoder_get_frame(GstVaapiDecoder *decoder,
     GstVideoCodecFrame **out_frame_ptr)
+{
+    return gst_vaapi_decoder_get_frame_with_timeout(decoder, out_frame_ptr, 0);
+}
+
+/**
+ * gst_vaapi_decoder_get_frame_with_timeout:
+ * @decoder: a #GstVaapiDecoder
+ * @out_frame_ptr: the next decoded frame as a #GstVideoCodecFrame
+ * @timeout: the number of microseconds to wait for the frame, at most
+ *
+ * On successful return, *@out_frame_ptr contains the next decoded
+ * frame available as a #GstVideoCodecFrame. The caller owns this
+ * object, so gst_video_codec_frame_unref() shall be called after
+ * usage. Otherwise, @GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA is
+ * returned if no decoded frame is available.
+ *
+ * The actual surface is available as a #GstVaapiSurfaceProxy attached
+ * to the user-data anchor of the output frame. Ownership of the proxy
+ * is transferred to the frame.
+ *
+ * Return value: a #GstVaapiDecoderStatus
+ */
+GstVaapiDecoderStatus
+gst_vaapi_decoder_get_frame_with_timeout(GstVaapiDecoder *decoder,
+    GstVideoCodecFrame **out_frame_ptr, guint64 timeout)
 {
     GstVideoCodecFrame *out_frame;
 
@@ -747,7 +770,7 @@ gst_vaapi_decoder_get_frame(GstVaapiDecoder *decoder,
     g_return_val_if_fail(out_frame_ptr != NULL,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
 
-    out_frame = pop_frame(decoder);
+    out_frame = pop_frame(decoder, timeout);
     if (!out_frame)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
