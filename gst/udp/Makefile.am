@@ -8,8 +8,8 @@ glib_gen_basename = gstudp
 
 include $(top_srcdir)/common/gst-glib-gen.mak
 
-built_sources = gstudp-enumtypes.c gstudp-marshal.c
-built_headers = gstudp-enumtypes.h gstudp-marshal.h
+built_sources = gstudp-enumtypes.c
+built_headers = gstudp-enumtypes.h
 
 BUILT_SOURCES = $(built_sources) $(built_headers)
 
@@ -25,7 +25,7 @@ nodist_libgstudp_la_SOURCES = \
 
 noinst_HEADERS = gstudpsink.h gstudpsrc.h gstudp.h gstmultiudpsink.h gstdynudpsink.h gstudpnetutils.h
 
-EXTRA_DIST = README gstudp-marshal.list
+EXTRA_DIST = README
 
 CLEANFILES = $(BUILT_SOURCES)
 
