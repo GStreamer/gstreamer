@@ -1621,6 +1621,22 @@ gst_video_encoder_allocate_output_frame (GstVideoEncoder *
   return frame->output_buffer ? GST_FLOW_OK : GST_FLOW_ERROR;
 }
 
+static void
+gst_video_encoder_release_frame (GstVideoEncoder * enc,
+    GstVideoCodecFrame * frame)
+{
+  GList *link;
+
+  /* unref once from the list */
+  link = g_list_find (enc->priv->frames, frame);
+  if (link) {
+    gst_video_codec_frame_unref (frame);
+    enc->priv->frames = g_list_delete_link (enc->priv->frames, link);
+  }
+  /* unref because this function takes ownership */
+  gst_video_codec_frame_unref (frame);
+}
+
 /**
  * gst_video_encoder_finish_frame:
  * @encoder: a #GstVideoEncoder
@@ -1648,6 +1664,7 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   GList *l;
   gboolean send_headers = FALSE;
   gboolean discont = (frame->presentation_frame_number == 0);
+  GstBuffer *buffer;
 
   encoder_class = GST_VIDEO_ENCODER_GET_CLASS (encoder);
 
@@ -1837,7 +1854,6 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
     for (tmp = priv->headers; tmp; tmp = tmp->next) {
       GstBuffer *tmpbuf = GST_BUFFER (tmp->data);
 
-      gst_buffer_ref (tmpbuf);
       priv->bytes += gst_buffer_get_size (tmpbuf);
       if (G_UNLIKELY (discont)) {
         GST_LOG_OBJECT (encoder, "marking discont");
@@ -1845,7 +1861,7 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
         discont = FALSE;
       }
 
-      gst_pad_push (encoder->srcpad, tmpbuf);
+      gst_pad_push (encoder->srcpad, gst_buffer_ref (tmpbuf));
     }
     priv->new_headers = FALSE;
   }
@@ -1858,25 +1874,24 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   if (encoder_class->pre_push)
     ret = encoder_class->pre_push (encoder, frame);
 
-  /* A reference always needs to be owned by the frame on the buffer.
-   * For that reason, we use a complete sub-buffer (zero-cost) to push
-   * downstream.
-   * The original buffer will be free-ed only when downstream AND the
-   * current implementation are done with the frame. */
+  /* Get an additional ref to the buffer, which is going to be pushed
+   * downstream, the original ref is owned by the frame */
+  buffer = gst_buffer_ref (frame->output_buffer);
+
+  /* Release frame so the buffer is writable when we push it downstream
+   * if possible, i.e. if the subclass does not hold additional references
+   * to the frame
+   */
+  gst_video_encoder_release_frame (encoder, frame);
+  frame = NULL;
+
   if (ret == GST_FLOW_OK)
-    ret = gst_pad_push (encoder->srcpad, gst_buffer_ref (frame->output_buffer));
+    ret = gst_pad_push (encoder->srcpad, buffer);
 
 done:
   /* handed out */
-
-  /* unref once from the list */
-  l = g_list_find (priv->frames, frame);
-  if (l) {
-    gst_video_codec_frame_unref (frame);
-    priv->frames = g_list_delete_link (priv->frames, l);
-  }
-  /* unref because this function takes ownership */
-  gst_video_codec_frame_unref (frame);
+  if (frame)
+    gst_video_encoder_release_frame (encoder, frame);
 
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
