@@ -162,6 +162,7 @@ enum
   PROP_USED_SOCKET,
   PROP_AUTO_MULTICAST,
   PROP_REUSE,
+  PROP_BIND_ADDRESS,
 
   PROP_LAST
 };
@@ -266,6 +267,17 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_REUSE,
       g_param_spec_boolean ("reuse", "Reuse", "Enable reuse of the port",
           UDP_DEFAULT_REUSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /* FIXME 2.0: multicast-group and bind-address should
+   * be separated, the former only being the multicast group and
+   * the latter always being the address the socket is bound too,
+   * even if a multicast group is given.
+   */
+  g_object_class_install_property (gobject_class, PROP_BIND_ADDRESS,
+      g_param_spec_string ("bind-address", "Bind Address",
+          "Address to bind the socket to. This is equivalent to the "
+          "multicast-group property", UDP_DEFAULT_MULTICAST_GROUP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_template));
@@ -609,6 +621,7 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       udpsrc->uri = g_strdup_printf ("udp://%s:%u", udpsrc->host, udpsrc->port);
       break;
     case PROP_MULTICAST_GROUP:
+    case PROP_BIND_ADDRESS:
     {
       const gchar *group;
 
@@ -704,6 +717,7 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int (value, udpsrc->port);
       break;
     case PROP_MULTICAST_GROUP:
+    case PROP_BIND_ADDRESS:
       g_value_set_string (value, udpsrc->host);
       break;
     case PROP_MULTICAST_IFACE:
