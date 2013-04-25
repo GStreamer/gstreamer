@@ -41,7 +41,6 @@
 
 #include "gsttcp.h"
 #include "gsttcpserversink.h"
-#include "gsttcp-marshal.h"
 
 #define TCP_BACKLOG             5
 

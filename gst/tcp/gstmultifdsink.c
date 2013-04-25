@@ -125,7 +125,6 @@
 #endif
 
 #include "gstmultifdsink.h"
-#include "gsttcp-marshal.h"
 
 #define NOT_IMPLEMENTED 0
 
@@ -241,7 +240,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
       g_signal_new ("add", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstMultiFdSinkClass, add), NULL, NULL,
-      g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
   /**
    * GstMultiFdSink::add-full:
    * @gstmultifdsink:  the multifdsink element to emit this signal on
@@ -261,7 +260,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
       g_signal_new ("add-full", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstMultiFdSinkClass, add_full), NULL, NULL,
-      gst_tcp_marshal_VOID__INT_ENUM_INT_UINT64_INT_UINT64, G_TYPE_NONE, 6,
+      g_cclosure_marshal_generic, G_TYPE_NONE, 6,
       G_TYPE_INT, GST_TYPE_SYNC_METHOD, GST_TYPE_FORMAT, G_TYPE_UINT64,
       GST_TYPE_FORMAT, G_TYPE_UINT64);
   /**
@@ -275,7 +274,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
       g_signal_new ("remove", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstMultiFdSinkClass, remove), NULL, NULL,
-      gst_tcp_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
   /**
    * GstMultiFdSink::remove-flush:
    * @gstmultifdsink: the multifdsink element to emit this signal on
@@ -288,7 +287,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
       g_signal_new ("remove-flush", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstMultiFdSinkClass, remove_flush), NULL, NULL,
-      gst_tcp_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
 
   /**
    * GstMultiFdSink::get-stats:
@@ -310,7 +309,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
       g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstMultiFdSinkClass, get_stats), NULL, NULL,
-      gst_tcp_marshal_BOXED__INT, GST_TYPE_STRUCTURE, 1, G_TYPE_INT);
+      g_cclosure_marshal_generic, GST_TYPE_STRUCTURE, 1, G_TYPE_INT);
 
   /**
    * GstMultiFdSink::client-added:
@@ -323,7 +322,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    */
   gst_multi_fd_sink_signals[SIGNAL_CLIENT_ADDED] =
       g_signal_new ("client-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, gst_tcp_marshal_VOID__INT, G_TYPE_NONE,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
       1, G_TYPE_INT);
   /**
    * GstMultiFdSink::client-removed:
@@ -341,7 +340,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    */
   gst_multi_fd_sink_signals[SIGNAL_CLIENT_REMOVED] =
       g_signal_new ("client-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, gst_tcp_marshal_VOID__INT_ENUM,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 2, G_TYPE_INT, GST_TYPE_CLIENT_STATUS);
   /**
    * GstMultiFdSink::client-fd-removed:
@@ -360,7 +359,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    */
   gst_multi_fd_sink_signals[SIGNAL_CLIENT_FD_REMOVED] =
       g_signal_new ("client-fd-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, gst_tcp_marshal_VOID__INT,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, G_TYPE_INT);
 
   gst_element_class_set_static_metadata (gstelement_class,

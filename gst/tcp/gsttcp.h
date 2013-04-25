@@ -23,7 +23,6 @@
 #ifndef __GST_TCP_HELP_H__
 #define __GST_TCP_HELP_H__
 
-#include "gsttcp-enumtypes.h"
 #include <gst/gst.h>
 
 #define TCP_HIGHEST_PORT        65535

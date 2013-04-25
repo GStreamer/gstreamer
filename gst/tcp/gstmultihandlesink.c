@@ -107,7 +107,6 @@
 #include <gst/gst-i18n-plugin.h>
 
 #include "gstmultihandlesink.h"
-#include "gsttcp-marshal.h"
 
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
@@ -459,7 +458,7 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
       g_signal_new ("clear", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstMultiHandleSinkClass, clear), NULL, NULL,
-      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      g_cclosure_marshal_generic, G_TYPE_NONE, 0);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
