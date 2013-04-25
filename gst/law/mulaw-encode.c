@@ -101,6 +101,7 @@ gst_mulawenc_set_format (GstAudioEncoder * audioenc, GstAudioInfo * info)
   GstCaps *base_caps;
   GstStructure *structure;
   GstMuLawEnc *mulawenc = GST_MULAWENC (audioenc);
+  gboolean ret;
 
   mulawenc->rate = info->rate;
   mulawenc->channels = info->channels;
@@ -119,7 +120,10 @@ gst_mulawenc_set_format (GstAudioEncoder * audioenc, GstAudioInfo * info)
 
   gst_mulawenc_set_tags (mulawenc);
 
-  return gst_audio_encoder_set_output_format (audioenc, base_caps);
+  ret = gst_audio_encoder_set_output_format (audioenc, base_caps);
+  gst_caps_unref (base_caps);
+
+  return ret;
 }
 
 static GstFlowReturn

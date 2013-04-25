@@ -20,19 +20,16 @@
 #endif
 
 #include <gst/check/gstcheck.h>
+#include <string.h>
 
-GList *buffers = NULL;
-
-GstPad *mysrcpad, *mysinkpad;
-GstElement *mulawenc = NULL;
-
+static GstPad *mysrcpad, *mysinkpad;
+static GstElement *mulawenc = NULL;
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-mulaw," "rate = (int) 8000," "channels = (int) 1")
     );
-
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -83,8 +80,6 @@ mulawenc_teardown (void)
 
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
-  gst_object_unref (mysrcpad);
-  gst_object_unref (mysinkpad);
   gst_check_teardown_src_pad (mulawenc);
   gst_check_teardown_sink_pad (mulawenc);
   gst_check_teardown_element (mulawenc);
@@ -119,14 +114,14 @@ check_for_maximum_bitrate (GstPad * pad, GstEvent ** eventp, gpointer user_data)
 GST_START_TEST (test_one_buffer)
 {
   GstBuffer *buffer;
-  int buf_size = 4096;
-  unsigned char *dp;
+  gint buf_size = 4096;
+  guint8 *dp;
 
   fail_unless (gst_element_set_state (mulawenc, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not change state to playing");
 
   buffer = gst_buffer_new ();
-  dp = g_malloc (buf_size);
+  dp = g_malloc0 (buf_size);
   gst_buffer_append_memory (buffer,
       gst_memory_new_wrapped (0, dp, buf_size, 0, buf_size, dp, g_free));
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
@@ -142,15 +137,15 @@ GST_END_TEST;
 GST_START_TEST (test_tags)
 {
   GstBuffer *buffer;
-  int buf_size = 4096;
-  unsigned char *dp;
+  gint buf_size = 4096;
+  guint8 *dp;
   gboolean found_maximum_bitrate = FALSE;
 
   fail_unless (gst_element_set_state (mulawenc, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not change state to playing");
 
   buffer = gst_buffer_new ();
-  dp = g_malloc (buf_size);
+  dp = g_malloc0 (buf_size);
   gst_buffer_append_memory (buffer,
       gst_memory_new_wrapped (0, dp, buf_size, 0, buf_size, dp, g_free));
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
