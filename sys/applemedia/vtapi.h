@@ -50,6 +50,7 @@ enum _VTStatus
 enum _VTFormat
 {
   kVTFormatH264 = 'avc1',
+  kVTFormatMPEG2 = 'mp2v',
   kVTFormatJPEG = 'jpeg'
 };
 

@@ -96,6 +96,9 @@ gst_vtdec_base_init (GstVTDecClass * klass)
   if (codec_details->format_id == kVTFormatH264) {
     gst_structure_set (gst_caps_get_structure (sink_caps, 0),
         "stream-format", G_TYPE_STRING, "avc", NULL);
+  } else if (codec_details->format_id == kVTFormatMPEG2) {
+    gst_structure_set (gst_caps_get_structure (sink_caps, 0),
+        "mpegversion", G_TYPE_INT, 2, NULL);
   }
   sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
       sink_caps);
@@ -587,6 +590,7 @@ gst_vtdec_register (GstPlugin * plugin,
 
 static const GstVTDecoderDetails gst_vtdec_codecs[] = {
   {"H.264", "h264", "video/x-h264", kVTFormatH264},
+  {"MPEG-2", "mpeg2", "video/mpeg", kVTFormatMPEG2},
   {"JPEG", "jpeg", "image/jpeg", kVTFormatJPEG}
 };
 
