@@ -1044,7 +1044,10 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GST_LOG_OBJECT (pad, "Forwarding buffer %p with timestamp %" GST_TIME_FORMAT,
       buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
-  res = gst_pad_push (sel->srcpad, gst_buffer_ref (buf));
+  /* Only make the buffer read-only when necessary */
+  if (sel->sync_streams && sel->cache_buffers)
+    buf = gst_buffer_ref (buf);
+  res = gst_pad_push (sel->srcpad, buf);
   GST_LOG_OBJECT (pad, "Buffer %p forwarded result=%d", buf, res);
 
   GST_INPUT_SELECTOR_LOCK (sel);
@@ -1061,7 +1064,6 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     gst_input_selector_cleanup_old_cached_buffers (sel, pad);
   } else {
     selpad->pushed = TRUE;
-    gst_buffer_unref (buf);
   }
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
