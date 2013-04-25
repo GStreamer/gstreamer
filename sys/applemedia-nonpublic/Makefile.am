@@ -28,6 +28,11 @@ libgstapplemedia_nonpublic_la_CFLAGS =			\
 	$(GST_PLUGINS_BASE_CFLAGS)
 
 
+libgstapplemedia_nonpublic_la_CFLAGS =			\
+	$(GST_CFLAGS)			\
+	$(GST_BASE_CFLAGS)			\
+	$(GST_PLUGINS_BASE_CFLAGS)
+
 libgstapplemedia_nonpublic_la_OBJCFLAGS =			\
 	$(GST_OBJCFLAGS)			\
 	$(GST_BASE_CFLAGS)			\
