@@ -22,9 +22,9 @@
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
+#include <gst/audio/gstaudiodecoder.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_MULAWDEC \
   (gst_mulawdec_get_type())
 #define GST_MULAWDEC(obj) \
@@ -35,24 +35,20 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULAWDEC))
 #define GST_IS_MULAWDEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULAWDEC))
-
 typedef struct _GstMuLawDec GstMuLawDec;
 typedef struct _GstMuLawDecClass GstMuLawDecClass;
 
-struct _GstMuLawDec {
-  GstElement element;
-
-  GstPad *sinkpad,*srcpad;
-
-  GstAudioInfo info;
+struct _GstMuLawDec
+{
+  GstAudioDecoder element;
 };
 
-struct _GstMuLawDecClass {
-  GstElementClass parent_class;
+struct _GstMuLawDecClass
+{
+  GstAudioDecoderClass parent_class;
 };
 
-GType gst_mulawdec_get_type(void);
+GType gst_mulawdec_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_STEREO_H__ */
