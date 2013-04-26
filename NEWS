@@ -1,4 +1,23 @@
-This is GStreamer Good Plugins 1.0.6
+This is GStreamer Good Plugins 1.0.7
+
+Changes since 1.0.6:
+
+      * osxaudio plugin ported to 1.0
+
+Bugs fixed since 1.0.6:
+
+      * 695709 : vp8enc plugin has invalid parameter error when framerate is " 0/1 " 
+      * 697103 : osxaudio: port to 1.0
+      * 677560 : rtpjpegdepay: crash in copy_into_unchecked
+      * 685209 : gst_v4l2_object_get_nearest_size VIDIOC_G_FMT bug
+      * 693005 : capssetter: do not return a copy of sink caps upstream
+      * 693727 : rtpvrawpay/depay negotiation broken
+      * 696052 : qtmux expose mulaw
+      * 696651 : v4l2loopback:gst_buffer_get_meta: assertion `buffer != NULL' failed. " 
+      * 697113 : matroskademux: add TrueHD audio codec support
+      * 697303 : osxvideosink: compiler warning: implicit declaration of function 'pthread_self'
+      * 697984 : souphttpsrc: direct stream dump results in broken audio with internet radio
+      * 698224 : [osxaudio] caps negotiation fails due to invalid channel-mask
 
 Changes since 1.0.5:
 

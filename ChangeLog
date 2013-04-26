@@ -1,9 +1,397 @@
-=== release 1.0.6 ===
+=== release 1.0.7 ===
 
-2013-03-22  Tim-Philipp Müller <tim@centricular.net>
+2013-04-26  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.0.6
+	  releasing 1.0.7
+
+2013-03-06 13:17:54 +0000  Tom Greenwood <tgreenwood@Toms-MacBook-Pro.local>
+
+	* ext/vpx/gstvp8enc.c:
+	  vp8enc: Fix for divide by zero when using 0/1 framerate
+	  https://bugzilla.gnome.org/show_bug.cgi?id=695709
+
+2012-10-01 09:29:21 -0300  Diogo Carbonera Luvizon <diogo.luvizon@ensitec.com.br>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: save the format correctly
+	  If TRY_FMT is not implemented,  gst_v4l2_object_get_nearest_size will
+	  use S_FMT and will change the device's operation mode. To save the
+	  old device mode we need to set the type field or else it will fail
+	  to save the previous format.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=685209
+
+2013-04-22 10:19:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rtp/gstrtpjpegdepay.c:
+	  rtpjpegdepay: Drop frame if it's less than 2 bytes large
+	  https://bugzilla.gnome.org/show_bug.cgi?id=677560
+
+2013-04-18 09:37:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/osxaudio/gstosxaudioringbuffer.h:
+	  osxaudio: Include gstaudioringbuffer.h to fix compilation in 1.0
+
+2013-04-17 10:10:46 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  osxaudio: Fix configure check for osxaudio plugin
+
+2013-04-17 21:05:14 +0200  Philippe Normand <philn@igalia.com>
+
+	* sys/osxaudio/gstosxaudiosink.c:
+	  osxaudiosink: channel-mask configuration fixes
+	  Set channel-mask according to sink's layout in case of stereo layout.
+	  Also initialize and reset the mask when an unrecognized channel is detected.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=698224
+
+2013-04-17 20:24:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/osxaudio/gstosxcoreaudiocommon.h:
+	  osxaudio: Fix merge conflicts
+
+2013-04-17 09:50:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/osxaudio/gstosxaudioringbuffer.c:
+	  osxaudioringbuffer: First check the type, then cast
+
+2013-04-16 22:46:00 +0900  Takashi Nakajima <ted.nakajima@gmail.com>
+
+	* sys/osxaudio/gstosxaudioringbuffer.c:
+	* sys/osxaudio/gstosxaudiosink.h:
+	  osxaudio: use GST_IS_OSX_AUDIO_SINK in ring buffer.
+
+2013-04-10 21:06:16 +0900  Takashi Nakajima <ted.nakajima@gmail.com>
+
+	* sys/osxaudio/gstosxaudioringbuffer.c:
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxaudiosink.h:
+	  osxaudio: call set_channel_positions() in osxaudioringbuffer acquire()
+
+2013-04-12 12:18:04 -0700  Todd Agulnick <todd@agulnick.com>
+
+	* sys/osxaudio/gstosxaudioringbuffer.c:
+	  osxaudio: use GST_AUDIO_INFO_* accessors
+	  Changes include the following:
+	  * Update classname references
+	  * Replace GST_BOILERPLATE_FULL with G_DEFINE_TYPE
+	  * Use new GstAudioInfo struct and methods
+	  * Use new buffer memory allocation scheme
+	  Conflicts:
+	  sys/osxaudio/gstosxaudioringbuffer.c
+
+2013-04-12 11:51:46 -0700  Todd Agulnick <todd@agulnick.com>
+
+	* sys/osxaudio/gstosxcoreaudiocommon.h:
+	* sys/osxaudio/gstosxcoreaudiohal.c:
+	  osxaudio: adjust for changes to glib mutex api.
+
+2013-04-10 01:21:49 +0900  Takashi Nakajima <ted.nakajima@gmail.com>
+
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxaudiosrc.c:
+	  osxaudio: try to fix up according to Sebastian's comments
+
+2013-04-05 10:02:38 +0200  Philippe Normand <philn@igalia.com>
+
+	* configure.ac:
+	* sys/osxaudio/gstosxaudioringbuffer.h:
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxaudiosink.h:
+	* sys/osxaudio/gstosxaudiosrc.h:
+	  osxaudio: build fixes
+	  Enable the osxaudio plugin build in configure.ac and fix some
+	  include directive order issues.
+
+2013-04-02 22:28:09 +0900  ted-n <ted.nakajima@gmail.com>
+
+	* sys/osxaudio/gstosxaudiosrc.c:
+	  osxaudio: fix layout for osxaudiosrc
+
+2013-03-30 22:49:34 +0900  ted-n <ted.nakajima@gmail.com>
+
+	* sys/osxaudio/Makefile.am:
+	* sys/osxaudio/gstosxaudioelement.c:
+	* sys/osxaudio/gstosxaudioringbuffer.c:
+	* sys/osxaudio/gstosxaudioringbuffer.h:
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxaudiosink.h:
+	* sys/osxaudio/gstosxaudiosrc.c:
+	* sys/osxaudio/gstosxaudiosrc.h:
+	* sys/osxaudio/gstosxcoreaudiocommon.c:
+	* sys/osxaudio/gstosxcoreaudiocommon.h:
+	* sys/osxaudio/gstosxringbuffer.c:
+	* sys/osxaudio/gstosxringbuffer.h:
+	  osxaudio: port to v.1.0
+
+2013-03-10 17:17:17 +0000  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/osxaudio/gstosxaudioelement.c:
+	* sys/osxaudio/gstosxcoreaudiocommon.h:
+	  osxaudio: Fixes error: "GST_LEVEL_DEFAULT" redefined
+
+2013-03-10 17:27:30 +0000  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/osxaudio/gstosxcoreaudiohal.c:
+	  osxaudio: fixes implicit declaration of function 'getpid'
+
+2013-03-05 21:22:18 +0100  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* configure.ac:
+	* sys/osxaudio/Makefile.am:
+	* sys/osxaudio/gstosxaudioelement.h:
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxcoreaudio.c:
+	* sys/osxaudio/gstosxcoreaudioremoteio.c:
+	  osxaudio: add support for iOS using the RemoteIO AudioUnit
+	  Conflicts:
+	  sys/osxaudio/Makefile.am
+
+2013-03-05 21:17:52 +0100  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxaudio/Makefile.am:
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxaudiosrc.c:
+	* sys/osxaudio/gstosxcoreaudio.c:
+	* sys/osxaudio/gstosxcoreaudio.h:
+	* sys/osxaudio/gstosxcoreaudiocommon.c:
+	* sys/osxaudio/gstosxcoreaudiocommon.h:
+	* sys/osxaudio/gstosxcoreaudiohal.c:
+	* sys/osxaudio/gstosxringbuffer.c:
+	* sys/osxaudio/gstosxringbuffer.h:
+	  osxaudio: add a façade for the CoreAudio API
+
+2013-04-16 19:29:48 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: Don't unref query, we don't own it
+	  Fixes double-unref bug. Bug found by Youness Alaoui
+
+2012-10-24 12:14:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* ext/aalib/Makefile.am:
+	* ext/cairo/Makefile.am:
+	* ext/dv/Makefile.am:
+	* ext/flac/Makefile.am:
+	* ext/gdk_pixbuf/Makefile.am:
+	* ext/jack/Makefile.am:
+	* ext/jpeg/Makefile.am:
+	* ext/libcaca/Makefile.am:
+	* ext/libpng/Makefile.am:
+	* ext/mikmod/Makefile.am:
+	* ext/pulse/Makefile.am:
+	* ext/raw1394/Makefile.am:
+	* ext/shout2/Makefile.am:
+	* ext/soup/Makefile.am:
+	* ext/speex/Makefile.am:
+	* ext/taglib/Makefile.am:
+	* ext/vpx/Makefile.am:
+	* ext/wavpack/Makefile.am:
+	* gst/alpha/Makefile.am:
+	* gst/apetag/Makefile.am:
+	* gst/audiofx/Makefile.am:
+	* gst/audioparsers/Makefile.am:
+	* gst/auparse/Makefile.am:
+	* gst/autodetect/Makefile.am:
+	* gst/avi/Makefile.am:
+	* gst/cutter/Makefile.am:
+	* gst/debugutils/Makefile.am:
+	* gst/deinterlace/Makefile.am:
+	* gst/effectv/Makefile.am:
+	* gst/equalizer/Makefile.am:
+	* gst/flv/Makefile.am:
+	* gst/flx/Makefile.am:
+	* gst/goom/Makefile.am:
+	* gst/goom2k1/Makefile.am:
+	* gst/icydemux/Makefile.am:
+	* gst/id3demux/Makefile.am:
+	* gst/imagefreeze/Makefile.am:
+	* gst/interleave/Makefile.am:
+	* gst/isomp4/Makefile.am:
+	* gst/law/Makefile.am:
+	* gst/level/Makefile.am:
+	* gst/matroska/Makefile.am:
+	* gst/monoscope/Makefile.am:
+	* gst/multifile/Makefile.am:
+	* gst/multipart/Makefile.am:
+	* gst/replaygain/Makefile.am:
+	* gst/rtp/Makefile.am:
+	* gst/rtpmanager/Makefile.am:
+	* gst/rtsp/Makefile.am:
+	* gst/shapewipe/Makefile.am:
+	* gst/smpte/Makefile.am:
+	* gst/spectrum/Makefile.am:
+	* gst/udp/Makefile.am:
+	* gst/videobox/Makefile.am:
+	* gst/videocrop/Makefile.am:
+	* gst/videofilter/Makefile.am:
+	* gst/videomixer/Makefile.am:
+	* gst/wavenc/Makefile.am:
+	* gst/wavparse/Makefile.am:
+	* gst/y4m/Makefile.am:
+	* sys/directsound/Makefile.am:
+	* sys/oss/Makefile.am:
+	* sys/oss4/Makefile.am:
+	* sys/osxaudio/Makefile.am:
+	* sys/osxvideo/Makefile.am:
+	* sys/sunaudio/Makefile.am:
+	* sys/v4l2/Makefile.am:
+	* sys/waveform/Makefile.am:
+	* sys/ximage/Makefile.am:
+	  gst: Add better support for static plugins
+	  Conflicts:
+	  gst/dtmf/Makefile.am
+	  sys/osxaudio/Makefile.am
+	  sys/v4l2/Makefile.am
+
+2013-03-25 10:12:03 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/debugutils/gstcapssetter.c:
+	  capssetter: Prevent unneeded caps copying and allocation
+
+2013-02-01 14:33:41 +0100  Dirk Van Haerenborgh <vhdirk@gmail.com>
+
+	* gst/debugutils/gstcapssetter.c:
+	  capssetter: Pass any or filter caps upstream
+	  capsetter accepts anything and just forwards different caps,
+	  as such it should return ANY caps on the sinkpad.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=693005
+
+2013-04-14 12:32:06 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/soup/gstsouphttpsrc.c:
+	* ext/soup/gstsouphttpsrc.h:
+	  souphttpsrc: add back "iradio-mode" property to disable sending of icecast request headers
+	  In 1.0 we now always send the icecast request headers by default, which
+	  makes the server send icecasts metadata inserted into the stream if it
+	  supports that. However, there are some use cases where this is not
+	  desirable, like when just saving a radio stream to disk, so add back
+	  the "iradio-mode" property to allow people to disable this.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697984
+
+2013-04-08 17:53:09 -0700  David Schleef <ds@schleef.org>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: check value inside enda to set endianness
+
+2013-04-08 11:38:33 +0200  Alexander Schrab <alexas@axis.com>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: error out if we receive eos before any valid data
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696684
+
+2013-04-07 01:47:56 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: force deinterlacing in "interlaced" mode
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697467
+
+2013-04-05 09:34:23 +0100  Todd Agulnick <todd@agulnick.com>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideo: include pthread.h to fix compiler warning
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697303
+
+2013-04-03 11:09:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2: free all queued buffers
+	  Don't just loop over the first num_queued buffers but loop over
+	  all the buffers and check if they need to be freed. It is possible that
+	  not all buffers are queued and then the entry in our array will be NULL.
+	  Those buffers that are not queued were freed in stop().
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=696651
+
+2012-08-29 17:24:00 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-ids.h:
+	  matroskademux: handle TrueHD audio codec id
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697113
+
+2013-03-18 12:30:50 +0100  Nicola Murino <nicola.murino@gmail.com>
+
+	* gst/isomp4/gstqtmuxmap.c:
+	  qtmux: expose mulaw caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696052
+
+=== release 1.0.6 ===
+
+2013-03-22 13:41:58 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 1.0.6
 
 2012-06-22 21:56:52 +0000  Norbert Waschbuesch <nwaschbu@opentv.com>
 

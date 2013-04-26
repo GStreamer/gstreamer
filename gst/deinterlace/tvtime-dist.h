@@ -67,6 +67,19 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 
 #define ORC_RESTRICT
 #endif
 #endif
+
+#ifndef ORC_INTERNAL
+#if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define ORC_INTERNAL __hidden
+#elif defined (__GNUC__)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#else
+#define ORC_INTERNAL
+#endif
+#endif
+
 void deinterlace_line_vfir (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, const guint8 * ORC_RESTRICT s5, int n);
 void deinterlace_line_linear (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
 void deinterlace_line_linear_blend (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n);
