@@ -162,7 +162,7 @@ gst_vtdec_change_state (GstElement * element, GstStateChange transition)
     if (error != NULL)
       goto api_error;
 
-    self->cur_outbufs = g_ptr_array_new ();
+    self->cur_outbufs = g_queue_new ();
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
@@ -175,8 +175,7 @@ gst_vtdec_change_state (GstElement * element, GstStateChange transition)
 
     gst_video_info_init (&self->vinfo);
 
-    g_ptr_array_free (self->cur_outbufs, TRUE);
-    self->cur_outbufs = NULL;
+    g_queue_free_full (self->cur_outbufs, (GDestroyNotify) gst_buffer_unref);
 
     g_object_unref (self->ctx);
     self->ctx = NULL;
@@ -455,6 +454,12 @@ gst_vtdec_destroy_session (GstVTDec * self, VTDecompressionSessionRef * session)
   }
 }
 
+static gint
+_sort_buffers (GstBuffer *buf1, GstBuffer *buf2, void *data)
+{
+  return GST_BUFFER_PTS(buf1) - GST_BUFFER_PTS(buf2);
+}
+
 static GstFlowReturn
 gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf)
 {
@@ -463,10 +468,10 @@ gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf)
   VTStatus status;
   VTDecodeFrameFlags frame_flags = 0;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint i;
 
   sbuf = gst_vtdec_sample_buffer_from (self, buf);
 
+  self->flush = FALSE;
   status = vt->VTDecompressionSessionDecodeFrame (self->session, sbuf,
       frame_flags, buf, NULL);
   if (status != 0) {
@@ -483,23 +488,33 @@ gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf)
   CFRelease (sbuf);
   gst_buffer_unref (buf);
 
-  if (self->cur_outbufs->len > 0) {
-    if (!gst_vtdec_negotiate_downstream (self))
+  if (self->flush) {
+    if (!gst_vtdec_negotiate_downstream (self)) {
       ret = GST_FLOW_NOT_NEGOTIATED;
-  }
-
-  for (i = 0; i != self->cur_outbufs->len; i++) {
-    GstBuffer *buf = g_ptr_array_index (self->cur_outbufs, i);
-
-    if (ret == GST_FLOW_OK) {
-      ret = gst_pad_push (self->srcpad, buf);
-    } else {
-      gst_buffer_unref (buf);
+      goto error;
     }
-  }
-  g_ptr_array_set_size (self->cur_outbufs, 0);
 
+    g_queue_sort (self->cur_outbufs, (GCompareDataFunc) _sort_buffers, NULL);
+    while (!g_queue_is_empty (self->cur_outbufs)) {
+      buf = g_queue_pop_head (self->cur_outbufs);
+      GST_LOG_OBJECT (self, "Pushing buffer with PTS:%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
+      ret = gst_pad_push (self->srcpad, buf);
+      if (ret != GST_FLOW_OK) {
+        goto error;
+      }
+    }
+  };
+
+exit:
   return ret;
+
+error:
+  {
+    g_queue_free_full (self->cur_outbufs, (GDestroyNotify) gst_buffer_unref);
+    self->cur_outbufs = g_queue_new ();
+    goto exit;
+  }
 }
 
 static void
@@ -521,9 +536,17 @@ gst_vtdec_enqueue_frame (void *data1, void *data2, VTStatus result,
   }
 
   buf = gst_core_video_buffer_new (cvbuf, &self->vinfo);
-  gst_buffer_copy_into (buf, self->cur_inbuf, GST_BUFFER_COPY_METADATA, 0, -1);
+  gst_buffer_copy_into (buf, src_buf, GST_BUFFER_COPY_METADATA, 0, -1);
+  GST_BUFFER_PTS (buf) = pts.value;
+  GST_BUFFER_DURATION (buf) = duration.value;
 
-  g_ptr_array_add (self->cur_outbufs, buf);
+  g_queue_push_head (self->cur_outbufs, buf);
+  if (GST_BUFFER_PTS (src_buf) <= GST_BUFFER_DTS (src_buf)) {
+    GST_LOG_OBJECT (self, "Flushing interal queue of buffers");
+    self->flush = TRUE;
+  } else {
+    GST_LOG_OBJECT (self, "Queuing buffer");
+  }
 
 beach:
   return;
