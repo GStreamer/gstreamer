@@ -349,7 +349,8 @@ gst_monoscope_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   if (GST_BUFFER_TIMESTAMP (inbuf) != GST_CLOCK_TIME_NONE)
     monoscope->next_ts = GST_BUFFER_TIMESTAMP (inbuf);
 
-  GST_LOG_OBJECT (monoscope, "in buffer has %d samples, ts=%" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (monoscope,
+      "in buffer has %" G_GSIZE_FORMAT " samples, ts=%" GST_TIME_FORMAT,
       gst_buffer_get_size (inbuf) / monoscope->bps,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)));
 
