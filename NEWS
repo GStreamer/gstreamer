@@ -1,4 +1,20 @@
-This is GStreamer Base Plugins 1.0.6
+This is GStreamer Base Plugins 1.0.7
+
+Changes since 1.0.6:
+
+      * streamsynchronizer is now a public element, useful in HLS pipelines for example
+
+Bugs fixed since 1.0.6:
+
+      * 682171 : videoscale: assertion failed: (envelope ((x - (xi - 1)) * ex) == 0)
+      * 688240 : streamsynchronizer: make element public
+      * 696540 : Ring buffer released after parsing caps when setting caps
+      * 696899 : oggdemux: non flushing segment seek makes buffers late
+      * 697092 : rtspconnection: The " x-server-ip-address " header with wrong IP address is added to the GET response
+      * 697162 : SDP library is not parsing correctly
+      * 697277 : SDP library does not include timing line if there is not timing information
+      * 697820 : playbin: Enabling visualizations during playback stops the pipeline
+      * 697824 : videometa: gst_buffer_add_meta() can return NULL
 
 Changes since 1.0.5:
 

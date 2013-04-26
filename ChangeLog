@@ -1,9 +1,273 @@
-=== release 1.0.6 ===
+=== release 1.0.7 ===
 
-2013-03-22  Tim-Philipp Müller <tim@centricular.net>
+2013-04-26  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.0.6
+	  releasing 1.0.7
+
+2012-11-21 10:28:31 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplayback.c:
+	* gst/playback/gststreamsynchronizer.c:
+	* gst/playback/gststreamsynchronizer.h:
+	  streamsynchronizer: Make the element public
+	  https://bugzilla.gnome.org/show_bug.cgi?id=688240
+
+2013-03-31 12:55:33 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gststreamsynchronizer.c:
+	  streamsynchronizer: update position for reverse
+	  When doing reverse playback the positino advances from timestamp_end to
+	  timestamp.
+
+2013-04-25 16:13:10 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Try harder to push writable buffers downstream
+	  For this release the corresponding GstVideoCodecFrame before
+	  pushing the buffer. The buffer will now be writable unless
+	  the subclass still holds another reference to the buffer or
+	  the frame.
+
+2013-04-25 16:23:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  videoencoder: Try harder to push writable buffers downstream
+	  For this release the corresponding GstVideoCodecFrame before
+	  pushing the buffer. The buffer will now be writable unless
+	  the subclass still holds another reference to the buffer or
+	  the frame.
+
+2013-04-24 11:10:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gststreamsynchronizer.c:
+	  streamsynchronizer: Fix check for belonging to another stream
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697820
+
+2013-04-24 11:07:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/streamsynchronizer.c:
+	  streamsynchronizer: Create element with gst_element_factory_make()
+	  Otherwise plugin_init() is not called and initialization is missing.
+
+2013-04-23 13:54:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gststreamsynchronizer.c:
+	  streamsynchronizer: Don't consider a stream added for an already running one as "new"
+	  Fixes enabling visualizations after disabling them after they were enabled already.
+
+2013-04-23 13:18:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gststreamsynchronizer.c:
+	  streamsynchronizer: If a stream belongs to an already running stream, don't wait
+	  This fixes enabling visualizations after the audio stream already started.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697820
+
+2013-04-18 09:58:09 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  videoencoder: Simply setcaps function
+
+2013-04-18 09:54:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	  audiodecoder: Ignore caps events if the input caps did not change
+
+2013-04-18 09:54:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudioencoder.c:
+	  audioencoder: Ignore caps events if the input caps did not change
+
+2013-04-10 20:45:37 +0100  Tom Greenwood <tcdgreenwood@hotmail.com>
+
+	* gst-libs/gst/rtp/gstrtpbasedepayload.c:
+	  rtpbasedepayload: Ignore caps events if the caps did not change
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697672
+
+2013-04-15 09:42:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  videoencoder: Ignore caps events if the caps did not change
+
+2013-04-10 19:07:00 +0100  Tom Greenwood <tcdgreenwood@hotmail.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Ignore caps events if the caps did not change
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697672
+
+2013-04-16 14:09:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/app/Makefile.am:
+	  app: Don't use $(GST_PLUGIN_LIBTOOLFLAGS) for real libraries
+
+2012-10-24 12:10:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* ext/alsa/Makefile.am:
+	* ext/cdparanoia/Makefile.am:
+	* ext/libvisual/Makefile.am:
+	* ext/ogg/Makefile.am:
+	* ext/pango/Makefile.am:
+	* ext/theora/Makefile.am:
+	* ext/vorbis/Makefile.am:
+	* gst-libs/gst/app/Makefile.am:
+	* gst/adder/Makefile.am:
+	* gst/app/Makefile.am:
+	* gst/audioconvert/Makefile.am:
+	* gst/audiorate/Makefile.am:
+	* gst/audioresample/Makefile.am:
+	* gst/audiotestsrc/Makefile.am:
+	* gst/encoding/Makefile.am:
+	* gst/gio/Makefile.am:
+	* gst/playback/Makefile.am:
+	* gst/subparse/Makefile.am:
+	* gst/tcp/Makefile.am:
+	* gst/typefind/Makefile.am:
+	* gst/videoconvert/Makefile.am:
+	* gst/videorate/Makefile.am:
+	* gst/videoscale/Makefile.am:
+	* gst/videotestsrc/Makefile.am:
+	* gst/volume/Makefile.am:
+	* sys/ximage/Makefile.am:
+	* sys/xvimage/Makefile.am:
+	  gst: Add better support for static plugins
+
+2013-03-22 13:41:17 +0100  Paul HENRYS <visechelle@gmail.com>
+
+	* gst-libs/gst/audio/gstaudiobasesrc.c:
+	  audiobasesrc: Fix ringbuffer handling when settings caps
+	  ringbuffer was released after setting values to its spec field
+	  in gst_audio_base_src_setcaps(). This led to failure in case
+	  gst_audio_base_src_setcaps() is called more than one time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696540
+
+2013-04-12 11:49:27 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: fix jpeg passthrough to decoder sinks by marking image/* as video stream
+
+2013-04-11 13:25:51 -0400  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/video/gstvideometa.c:
+	  videometa: gst_buffer_add_meta() can return NULL
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697824
+
+2013-04-06 13:00:02 -0700  David Schleef <ds@schleef.org>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: set reasonable limits on properties
+	  Properties sharpen, sharpness, and envelope are only useful
+	  near their default values.  Decrease ranges to avoid brokenness.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=682171
+
+2013-04-05 22:03:56 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: set min value to DBL_MIN to avoid a value of 0.0 that would crash
+
+2013-04-04 16:32:45 +0200  Jose Antonio Santos Cadenas <santoscadenas@gmail.com>
+
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	  sdp: Set session as permanent (t=0 0) if there is no time information
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=697277
+
+2013-04-04 12:32:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtsp: make local_ip and remote_ip variables
+	  Separate local_ip and remote_ip into separate variables for clarity.
+
+2013-04-04 12:16:47 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtsp: calculate the local ip address in accept
+	  Calculate the local IP address in the accept call. We need to place this IP
+	  address in the GET reply in the X-Server-IP-Address header so that the client
+	  knows where to send the POST to in case of tunneled RTSP. Before this patch
+	  it used the client IP address, which would make the client send the POST request
+	  to itself and fail.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=697092
+
+2013-03-30 11:00:35 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: Allow EOS on timestamp equal to stop/start
+	  Changed the check to a current_time equal to the stop will produce
+	  EOS instead of the next one. Also, segment.start can't be NONE, so removing
+	  this check.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=696899
+
+2013-04-02 17:09:48 +0200  Jose Antonio Santos Cadenas <santoscadenas@gmail.com>
+
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	  sdp: Do not assign -1 to an unsigned variable, use 0 instead
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=697162
+
+2013-04-02 17:05:36 +0200  Jose Antonio Santos Cadenas <santoscadenas@gmail.com>
+
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	  sdp: If attribute value is emply do not print colon character
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=697162
+
+2013-04-02 17:03:38 +0200  Jose Antonio Santos Cadenas <santoscadenas@gmail.com>
+
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	  sdp: Do not add email line by default
+	  As specified in rfc4566 email line is optional
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=697162
+
+2013-03-24 00:38:22 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/gstvideoconvert.c:
+	  videoconvert: avoid double free
+	  Set variable to NULL after free so that we don't free twice.
+
+2013-03-25 09:59:45 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video-frame.c:
+	  video: set interlaced flag correctly in frame
+	  We only look at the interlaced buffer flag in mixed mode, in other modes we
+	  always need to set the interlaced flag.
+
+=== release 1.0.6 ===
+
+2013-03-22 12:58:20 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.0.6
 
 2013-02-14 01:35:45 +0100  Arnaud Vrac <avrac@freebox.fr>
 

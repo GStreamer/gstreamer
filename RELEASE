@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Base Plugins 1.0.6
+Release notes for GStreamer Base Plugins 1.0.7
 
 
-The GStreamer team is pleased to announce a new bug-fix release
+The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -60,29 +60,19 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * adder: fix setting caps via the "caps" property
-      * alsasink: don't use 100% CPU
-      * appsrc: fix locking order
-      * encodebin: sync muxer state with parent bin so encodebin can be added dynamically to pipeline
-      * libvisual: fix improper video frame clear operation
-      * pango: fix attribute list handling
-      * playbin: fix playsink caps handling so that converters get plugged when needed
-      * playbin: fix subtitleoverlay caps handling to avoid not-negotiated errors when plugins are missing
-      * videoscale: Correct DAR and border calculations
-      * ximagesink: fon't access structures of EMPTY caps
-      * typefinding: fix y4m caps
-      * build: fix build with automake 1.13
+      * streamsynchronizer is now a public element, useful in HLS pipelines for example
 
 Bugs fixed in this release
      
-      * 688476 : Seek in matroska file fails with not-negotiated error when using playsink
-      * 688803 : playbin: converters don't work? not-negotiated error with non-1/1 PAR and ximagesink
-      * 690937 : alsasink: playing video files with gst-launch causes CPU 100%
-      * 691687 : GstImageType documentation is misleading
-      * 693224 : appsrc deadlocks when setting pad caps before pushing buffer
-      * 693372 : 1.0 branch is still using AM_CONFIG_HEADER
-      * 693981 : subparse: fix bogus discontinuity detection if offset not set on buffers
-      * 696019 : videoscale does not preserve DAR with add-borders=TRUE
+      * 682171 : videoscale: assertion failed: (envelope ((x - (xi - 1)) * ex) == 0)
+      * 688240 : streamsynchronizer: make element public
+      * 696540 : Ring buffer released after parsing caps when setting caps
+      * 696899 : oggdemux: non flushing segment seek makes buffers late
+      * 697092 : rtspconnection: The " x-server-ip-address " header with wrong IP address is added to the GET response
+      * 697162 : SDP library is not parsing correctly
+      * 697277 : SDP library does not include timing line if there is not timing information
+      * 697820 : playbin: Enabling visualizations during playback stops the pipeline
+      * 697824 : videometa: gst_buffer_add_meta() can return NULL
 
 ==== Download ====
 
@@ -119,15 +109,14 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arnaud Vrac
-      * Greg Rutz
-      * Jan Schmidt
-      * Jan Schole
-      * Olivier Crête
+      * David Schleef
+      * Jose Antonio Santos Cadenas
+      * Nicolas Dufresne
+      * Paul HENRYS
       * Sebastian Dröge
       * Stefan Sauer
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
+      * Tom Greenwood
+      * Víctor Manuel Jáquez Leal
       * Wim Taymans
-      * yanghuolin
  
