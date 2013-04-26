@@ -1180,9 +1180,7 @@ gst_sdp_message_add_bandwidth (GstSDPMessage * msg, const gchar * bwtype,
 {
   GstSDPBandwidth bw;
 
-  bw.bwtype = g_strdup (bwtype);
-  bw.bandwidth = bandwidth;
-
+  gst_sdp_bandwidth_set (&bw, bwtype, bandwidth);
   return gst_sdp_message_insert_bandwidth (msg, -1, &bw);
 }
 
