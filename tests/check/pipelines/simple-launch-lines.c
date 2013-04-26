@@ -310,6 +310,20 @@ GST_START_TEST (test_stop_from_app)
 
 GST_END_TEST;
 
+GST_START_TEST (test_typefind_force_sink_caps)
+{
+  const gchar *s;
+
+  s = "fakesrc can-activate-push=true num-buffers=5 ! "
+      "typefind force-caps=foo/x-bar ! fakesink can-activate-push=true";
+  ASSERT_CRITICAL (run_pipeline (setup_pipeline (s), s,
+          GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED |
+          GST_MESSAGE_STREAM_STATUS | GST_MESSAGE_ASYNC_DONE |
+          GST_MESSAGE_STREAM_START, GST_MESSAGE_UNKNOWN));
+}
+
+GST_END_TEST;
+
 static Suite *
 simple_launch_lines_suite (void)
 {
@@ -324,6 +338,8 @@ simple_launch_lines_suite (void)
   tcase_add_test (tc_chain, test_state_change_returns);
   /* tcase_add_test (tc_chain, test_tee); FIXME */
   tcase_add_test (tc_chain, test_stop_from_app);
+  tcase_add_test (tc_chain, test_typefind_force_sink_caps);
+
   return s;
 }
 

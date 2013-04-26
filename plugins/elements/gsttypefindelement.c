@@ -1195,6 +1195,7 @@ gst_type_find_element_activate_sink (GstPad * pad, GstObject * parent)
     GST_DEBUG ("Emiting found caps %" GST_PTR_FORMAT, found_caps);
     g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
         0, probability, found_caps);
+    gst_caps_unref (found_caps);
     typefind->mode = MODE_NORMAL;
     /* the signal above could have made a downstream element activate
      * the pad in pull mode, we check if the pad is already active now and if
