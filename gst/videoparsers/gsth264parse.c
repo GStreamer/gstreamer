@@ -1194,7 +1194,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       }
     }
 
-    if (G_UNLIKELY (modified)) {
+    if (G_UNLIKELY (modified || h264parse->update_caps)) {
       gint fps_num = h264parse->fps_num;
       gint fps_den = h264parse->fps_den;
       gint width, height;
