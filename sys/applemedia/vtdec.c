@@ -46,8 +46,8 @@ static VTDecompressionSessionRef gst_vtdec_create_session (GstVTDec * self,
 static void gst_vtdec_destroy_session (GstVTDec * self,
     VTDecompressionSessionRef * session);
 static GstFlowReturn gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf);
-static void gst_vtdec_enqueue_frame (void *data, gsize unk1, VTStatus result,
-    gsize unk2, CVBufferRef cvbuf);
+static void gst_vtdec_enqueue_frame (void *data1, void *data2, VTStatus result,
+    VTDecodeInfoFlags info, CVBufferRef cvbuf, CMTime pts, CMTime dts);
 static gboolean gst_vtdec_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
@@ -461,13 +461,14 @@ gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf)
   GstVTApi *vt = self->ctx->vt;
   CMSampleBufferRef sbuf;
   VTStatus status;
+  VTDecodeFrameFlags frame_flags = 0;
   GstFlowReturn ret = GST_FLOW_OK;
   guint i;
 
-  self->cur_inbuf = buf;
   sbuf = gst_vtdec_sample_buffer_from (self, buf);
 
-  status = vt->VTDecompressionSessionDecodeFrame (self->session, sbuf, 0, 0, 0);
+  status = vt->VTDecompressionSessionDecodeFrame (self->session, sbuf,
+      frame_flags, buf, NULL);
   if (status != 0) {
     GST_WARNING_OBJECT (self, "VTDecompressionSessionDecodeFrame returned %d",
         status);
@@ -480,7 +481,6 @@ gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf)
   }
 
   CFRelease (sbuf);
-  self->cur_inbuf = NULL;
   gst_buffer_unref (buf);
 
   if (self->cur_outbufs->len > 0) {
@@ -503,10 +503,11 @@ gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf)
 }
 
 static void
-gst_vtdec_enqueue_frame (void *data, gsize unk1, VTStatus result, gsize unk2,
-    CVBufferRef cvbuf)
+gst_vtdec_enqueue_frame (void *data1, void *data2, VTStatus result,
+    VTDecodeInfoFlags info, CVBufferRef cvbuf, CMTime pts, CMTime duration)
 {
-  GstVTDec *self = GST_VTDEC_CAST (data);
+  GstVTDec *self = GST_VTDEC_CAST (data1);
+  GstBuffer *src_buf = GST_BUFFER (data2);
   GstBuffer *buf;
 
   if (result != kVTSuccess)
@@ -528,6 +529,8 @@ gst_vtdec_sample_buffer_from (GstVTDec * self, GstBuffer * buf)
   CMBlockBufferRef bbuf = NULL;
   CMSampleBufferRef sbuf = NULL;
   GstMapInfo map;
+  CMSampleTimingInfo sample_timing;
+  CMSampleTimingInfo time_array[1];
 
   g_assert (self->fmt_desc != NULL);
 
@@ -542,8 +545,13 @@ gst_vtdec_sample_buffer_from (GstVTDec * self, GstBuffer * buf)
   if (status != noErr)
     goto error;
 
+  sample_timing.duration = CMTimeMake (GST_BUFFER_DURATION (buf), 1);
+  sample_timing.presentationTimeStamp = CMTimeMake (GST_BUFFER_PTS (buf), 1);
+  sample_timing.decodeTimeStamp = CMTimeMake (GST_BUFFER_DTS (buf), 1);
+  time_array[0] = sample_timing;
+
   status = CMSampleBufferCreate (NULL, bbuf, TRUE, 0, 0, self->fmt_desc,
-      1, 0, NULL, 0, NULL, &sbuf);
+      1, 1, time_array, 0, NULL, &sbuf);
   if (status != noErr)
     goto error;
 

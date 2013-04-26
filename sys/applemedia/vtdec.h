@@ -67,7 +67,6 @@ struct _GstVTDec
   CMFormatDescriptionRef fmt_desc;
   VTDecompressionSessionRef session;
 
-  GstBuffer * cur_inbuf;
   GPtrArray * cur_outbufs;
 };
 
