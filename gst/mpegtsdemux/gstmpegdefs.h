@@ -28,6 +28,8 @@
 #define __GST_MPEG_DEFS_H__
 
 /*
+ * PES stream_id assignments:
+ *
  * 1011 1100                program_stream_map
  * 1011 1101                private_stream_1
  * 1011 1110                padding_stream
@@ -52,33 +54,65 @@
  * 1111 1111                program_stream_directory
  */
 
-#define ID_PS_END_CODE                          0x000001B9
-#define ID_PS_PACK_START_CODE                   0x000001BA
-#define ID_PS_SYSTEM_HEADER_START_CODE          0x000001BB
-#define ID_PS_PROGRAM_STREAM_MAP                0x000001BC
-#define ID_PRIVATE_STREAM_1                     0x000001BD
-#define ID_PADDING_STREAM                       0x000001BE
-#define ID_PRIVATE_STREAM_2                     0x000001BF
-#define ID_ISO_IEC_MPEG12_AUDIO_STREAM_0        0x000001C0
-#define ID_ISO_IEC_MPEG12_AUDIO_STREAM_32       0x000001DF
-#define ID_ISO_IEC_MPEG12_VIDEO_STREAM_0        0x000001E0
-#define ID_ISO_IEC_MPEG12_VIDEO_STREAM_16       0x000001EF
-#define ID_ECM_STREAM                           0x000001F0
-#define ID_EMM_STREAM                           0x000001F1
-#define ID_DSMCC_STREAM                         0x000001F2
-#define ID_ISO_IEC_13522_STREAM                 0x000001F3
-#define ID_ITU_TREC_H222_TYPE_A_STREAM          0x000001F4
-#define ID_ITU_TREC_H222_TYPE_B_STREAM          0x000001F5
-#define ID_ITU_TREC_H222_TYPE_C_STREAM          0x000001F6
-#define ID_ITU_TREC_H222_TYPE_D_STREAM          0x000001F7
-#define ID_ITU_TREC_H222_TYPE_E_STREAM          0x000001F8
-#define ID_ANCILLARY_STREAM                     0x000001F9
-#define ID_14496_1_SL_PACKETIZED_STREAM         0x000001FA
-#define ID_14496_1_SL_FLEXMUX_STREAM            0x000001FB
-#define ID_METADATA_STREAM                      0x000001FC
-#define ID_EXTENDED_STREAM_ID                   0x000001FD
-#define ID_RESERVED_STREAM_3                    0x000001FE
-#define ID_PROGRAM_STREAM_DIRECTORY             0x000001FF
+#define ID_PS_END_CODE                          0xB9
+#define ID_PS_PACK_START_CODE                   0xBA
+#define ID_PS_SYSTEM_HEADER_START_CODE          0xBB
+#define ID_PS_PROGRAM_STREAM_MAP                0xBC
+#define ID_PRIVATE_STREAM_1                     0xBD
+#define ID_PADDING_STREAM                       0xBE
+#define ID_PRIVATE_STREAM_2                     0xBF
+#define ID_ISO_IEC_MPEG12_AUDIO_STREAM_0        0xC0
+#define ID_ISO_IEC_MPEG12_AUDIO_STREAM_32       0xDF
+#define ID_ISO_IEC_MPEG12_VIDEO_STREAM_0        0xE0
+#define ID_ISO_IEC_MPEG12_VIDEO_STREAM_16       0xEF
+#define ID_ECM_STREAM                           0xF0
+#define ID_EMM_STREAM                           0xF1
+#define ID_DSMCC_STREAM                         0xF2
+#define ID_ISO_IEC_13522_STREAM                 0xF3
+#define ID_ITU_TREC_H222_TYPE_A_STREAM          0xF4
+#define ID_ITU_TREC_H222_TYPE_B_STREAM          0xF5
+#define ID_ITU_TREC_H222_TYPE_C_STREAM          0xF6
+#define ID_ITU_TREC_H222_TYPE_D_STREAM          0xF7
+#define ID_ITU_TREC_H222_TYPE_E_STREAM          0xF8
+#define ID_ANCILLARY_STREAM                     0xF9
+#define ID_14496_1_SL_PACKETIZED_STREAM         0xFA
+#define ID_14496_1_SL_FLEXMUX_STREAM            0xFB
+#define ID_METADATA_STREAM                      0xFC
+#define ID_EXTENDED_STREAM_ID                   0xFD
+#define ID_RESERVED_STREAM_3                    0xFE
+#define ID_PROGRAM_STREAM_DIRECTORY             0xFF
+
+/*
+ * PES stream_id_extension assignments (if stream_id == ID_EXTENDED_STREAM_ID)
+ *
+ *  000 0000             IPMP Control Information stream
+ *  000 0001             IPMP Stream
+ *  000 0010 - 001 0001  ISO/IEC 14496-17 text Streams
+ *  001 0010 - 010 0001  ISO/IEC 23002-3 auxiliary video data Streams
+ *  ... .... - 011 1111  Reserved
+ *
+ *  PRIVATE STREAM RANGES (But known as used)
+ *  101 0101 - 101 1111  VC-1
+ *  110 0000 - 110 1111  Dirac (VC-1)
+ *
+ *  111 0001             AC3 or independent sub-stream 0 of EAC3/DD+
+ *                       DTS or core sub-stream
+ *  111 0010             dependent sub-stream of EAC3/DD+
+ *                       DTS extension sub-stream
+ *                       Secondary EAC3/DD+
+ *                       Secondary DTS-HD LBR
+ *  111 0110             AC3 in MLP/TrueHD
+ *  1xx xxxx    private_stream
+ */
+#define EXT_ID_IPMP_CONTORL_INFORMATION_STREAM  0x00
+#define EXT_ID_IPMP_STREAM			0x01
+
+/* VC-1 */
+#define EXT_ID_VC1_FIRST			0x55
+#define EXT_ID_VC1_LAST 			0x5F
+
+/* BDMV */
+
 
 #define PACKET_VIDEO_START_CODE                 0x000001E0
 #define PACKET_AUDIO_START_CODE                 0x000001C0
@@ -94,20 +128,14 @@
 
 #define MPEG_TS_SYNC_BYTE                       0x00000047
 
-#define PID_PROGRAM_ASSOCIATION_TABLE          0x0000
-#define PID_CONDITIONAL_ACCESS_TABLE           0x0001
-#define PID_RESERVED_FIRST                     0x0002
-#define PID_RESERVED_LAST                      0x0010
-#define PID_NULL_PACKET                        0x1FFF
-
-#define PID_TYPE_UNKNOWN                        0
-#define PID_TYPE_RESERVED                       1
-#define PID_TYPE_PROGRAM_ASSOCIATION            2
-#define PID_TYPE_CONDITIONAL_ACCESS             3
-#define PID_TYPE_PROGRAM_MAP                    4
-#define PID_TYPE_ELEMENTARY                     5
-#define PID_TYPE_NULL_PACKET                    6
-#define PID_TYPE_PRIVATE_SECTION                7
+/* Reserved PIDs */
+#define PID_PAT					0x0000
+#define PID_CAT					0x0001
+#define PID_TSDT				0x0002
+#define PID_IPMP_CIT				0x0003
+#define PID_RESERVED_FIRST                      0x0004
+#define PID_RESERVED_LAST                       0x000F
+#define PID_NULL_PACKET                         0x1FFF
 
 /* Stream type assignments
  * 
@@ -131,7 +159,24 @@
  *   0x0C    ISO/IEC 13818-6 type C
  *   0x0D    ISO/IEC 13818-6 type D
  *   0x0E    ISO/IEC 13818-1 auxiliary
- * 0x0F-0x7F ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved
+ *   0x0F    ISO/IEC 13818-7 Audio with ADTS transport syntax
+ *   0x10    ISO/IEC 14496-2 Visual
+ *   0x11    ISO/IEC 14496-3 Audio with the LATM transport syntax as
+ *           defined in ISO/IEC 14496-3
+ *   0x12    ISO/IEC 14496-1 SL-packetized stream or FlexMux stream
+ *           carried in PES packets
+ *   0x13    ISO/IEC 14496-1 SL-packetized stream or FlexMux stream
+ *           carried in ISO/IEC 14496_sections
+ *   0x14    ISO/IEC 13818-6 Synchronized Download Protocol
+ *   0x15    Metadata carried in PES packets
+ *   0x16    Metadata carried in metadata_sections
+ *   0x17    Metadata carried in ISO/IEC 13818-6 Data Carousel
+ *   0x18    Metadata carried in ISO/IEC 13818-6 Object Carousel
+ *   0x19    Metadata carried in ISO/IEC 13818-6 Synchronized Donwnload Protocol
+ *   0x1A    IPMP stream (ISO/IEC 13818-11, MPEG-2 IPMP)
+ *   0x1B    AVC video stream (ITU-T H.264 | ISO/IEC 14496-10 Video)
+ * 0x1C-0x7E ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved
+ *   0x7F    IPMP stream
  * 0x80-0xFF User Private
  */
 #define ST_RESERVED                     0x00
@@ -144,17 +189,19 @@
 #define ST_MHEG                         0x07
 #define ST_DSMCC                        0x08
 #define ST_H222_1                       0x09
-
 #define ST_DSMCC_A                      0x0a
 #define ST_DSMCC_B                      0x0b
 #define ST_DSMCC_C                      0x0c
 #define ST_DSMCC_D                      0x0d
-
-/* later extensions */
+#define ST_13818_1_AUXILIARY		0x0e
 #define ST_AUDIO_AAC_ADTS               0x0f
 #define ST_VIDEO_MPEG4                  0x10
 #define ST_AUDIO_AAC_LATM               0x11
+
+#define ST_IPMP_MPEG2			0x1a
 #define ST_VIDEO_H264                   0x1b
+
+#define ST_IPMP_STREAM			0x7f
 
 /* Un-official Dirac extension */
 #define ST_VIDEO_DIRAC                  0xd1
@@ -165,6 +212,7 @@
 #define ST_PS_AUDIO_DTS                 0x8a
 #define ST_PS_AUDIO_LPCM                0x8b
 #define ST_PS_DVD_SUBPICTURE            0xff
+
 /* Blu-ray related */
 #define ST_BD_AUDIO_LPCM                0x80
 #define ST_BD_AUDIO_AC3                 0x81
@@ -197,7 +245,6 @@
 #define ST_GST_AUDIO_RAWA52             0x181
 /* Used when we don't yet know which stream type it will be in a PS stream */
 #define ST_GST_VIDEO_MPEG1_OR_2         0x102
-
 
 /* Table IDs */
 /* ITU H.222.0 / IEC 13818-1 */
