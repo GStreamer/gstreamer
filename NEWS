@@ -1,4 +1,8 @@
-This is GStreamer Ugly Plugins 1.0.6
+This is GStreamer Ugly Plugins 1.0.7
+
+Bugs fixed since 1.0.6:
+
+      * 695728 : x264enc plugin has a divide by zero error when framerate is " 0/1 " 
 
 Changes since 1.0.5:
 

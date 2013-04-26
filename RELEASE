@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Ugly Plugins 1.0.6
+Release notes for GStreamer Ugly Plugins 1.0.7
 
-The GStreamer team is pleased to announce a new bug-fix release
+The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -56,13 +56,9 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Features of this release
-    
-      * build: allow calling autogen.sh from out-of-tree
-
 Bugs fixed in this release
      
-      * 692857 : make -ugly be able to be called " out-of-tree " 
+      * 695728 : x264enc plugin has a divide by zero error when framerate is " 0/1 " 
 
 ==== Download ====
 
@@ -99,5 +95,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Benjamin Gaignard
+      * Sebastian Dröge
+      * Tom Greenwood
  
