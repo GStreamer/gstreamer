@@ -510,8 +510,15 @@ gst_vtdec_enqueue_frame (void *data1, void *data2, VTStatus result,
   GstBuffer *src_buf = GST_BUFFER (data2);
   GstBuffer *buf;
 
-  if (result != kVTSuccess)
+  if (result != kVTSuccess) {
+    GST_ERROR_OBJECT (self, "Error decoding frame %d", result);
     goto beach;
+  }
+
+  if (kVTDecodeInfo_FrameDropped & info) {
+    GST_WARNING_OBJECT (self, "Frame dropped");
+    goto beach;
+  }
 
   buf = gst_core_video_buffer_new (cvbuf, &self->vinfo);
   gst_buffer_copy_into (buf, self->cur_inbuf, GST_BUFFER_COPY_METADATA, 0, -1);
