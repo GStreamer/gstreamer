@@ -185,8 +185,9 @@ gst_live_adder_class_init (GstLiveAdderClass * klass)
   gstelement_class->change_state = gst_live_adder_change_state;
 
   g_object_class_install_property (gobject_class, PROP_LATENCY,
-      g_param_spec_uint ("latency", "Buffer latency in ms",
-          "Amount of data to buffer", 0, G_MAXUINT, DEFAULT_LATENCY_MS,
+      g_param_spec_uint ("latency", "Buffering latency",
+          "Amount of data to buffer (in milliseconds)",
+          0, G_MAXUINT, DEFAULT_LATENCY_MS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
