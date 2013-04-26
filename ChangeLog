@@ -1,9 +1,449 @@
-=== release 1.0.6 ===
+=== release 1.0.7 ===
 
-2013-03-22  Tim-Philipp Müller <tim@centricular.net>
+2013-04-26  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.0.6
+	  releasing 1.0.7
+
+2012-10-25 11:31:41 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/videoparsers/gsth264parse.c:
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  videoparsers: preserve upstream fps and par
+	  includes fix-up commit 58441bf2.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=660866
+
+2013-04-18 09:08:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: The quicktime wrapper plugin is not ported yet either
+
+2013-04-18 08:57:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: The osxvideosrc plugin is called osx_video
+
+2013-04-18 07:54:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  osxvideosrc: It's not ported to 1.0 yet
+	  Conflicts:
+	  configure.ac
+
+2013-04-16 16:30:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Print EGL/GLES extensions after we are actually initialized enough
+
+2013-04-16 16:23:46 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  amcaudiodec: Properly set output format instead of just setting caps
+
+2013-04-16 16:17:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  androidmedia: Set parent class in class_init
+
+2013-04-16 16:00:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  androidmedia: Handle refcounts of pad templates correctly
+	  gst_pad_template_new() does not take ownership of caps anymore and
+	  gst_element_class_add_pad_template() does take ownership of the
+	  pad template now.
+
+2013-04-16 15:32:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  amcaudiodec: Use 1.0-style raw audio caps
+
+2013-04-16 15:31:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  androidmedia: Properly set subclasses metadata/pad templates in base_init
+
+2012-11-12 14:56:25 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  amcvideodec: Fix refcount problem with frames being dropped because of decoder bugs
+
+2012-11-12 11:32:44 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcaudiodec.h:
+	* sys/androidmedia/gstamcvideodec.c:
+	* sys/androidmedia/gstamcvideodec.h:
+	  androidmedia: Update to new GLib thread API
+
+2012-10-31 20:00:54 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  androidmedia: Skip Aricent codecs for now
+	  The HTC One X claims to have one (but doesn't) and loading
+	  the library for it hangs forever.
+
+2012-10-22 13:21:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  androidmedia: Remember and use input state
+
+2012-10-18 16:41:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* sys/androidmedia/gstamc.c:
+	* sys/androidmedia/gstamc.h:
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcaudiodec.h:
+	* sys/androidmedia/gstamcvideodec.c:
+	* sys/androidmedia/gstamcvideodec.h:
+	  androidmedia: Port to 1.0
+
+2012-10-24 12:16:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* ext/apexsink/Makefile.am:
+	* ext/assrender/Makefile.am:
+	* ext/audiofile/Makefile.am:
+	* ext/bz2/Makefile.am:
+	* ext/cdaudio/Makefile.am:
+	* ext/celt/Makefile.am:
+	* ext/chromaprint/Makefile.am:
+	* ext/cog/Makefile.am:
+	* ext/curl/Makefile.am:
+	* ext/dc1394/Makefile.am:
+	* ext/dirac/Makefile.am:
+	* ext/directfb/Makefile.am:
+	* ext/dts/Makefile.am:
+	* ext/faac/Makefile.am:
+	* ext/faad/Makefile.am:
+	* ext/flite/Makefile.am:
+	* ext/gme/Makefile.am:
+	* ext/gsettings/Makefile.am:
+	* ext/gsm/Makefile.am:
+	* ext/jasper/Makefile.am:
+	* ext/kate/Makefile.am:
+	* ext/ladspa/Makefile.am:
+	* ext/libfame/Makefile.am:
+	* ext/libmms/Makefile.am:
+	* ext/lv2/Makefile.am:
+	* ext/mimic/Makefile.am:
+	* ext/modplug/Makefile.am:
+	* ext/mpeg2enc/Makefile.am:
+	* ext/mpg123/Makefile.am:
+	* ext/mplex/Makefile.am:
+	* ext/musepack/Makefile.am:
+	* ext/musicbrainz/Makefile.am:
+	* ext/mythtv/Makefile.am:
+	* ext/nas/Makefile.am:
+	* ext/neon/Makefile.am:
+	* ext/ofa/Makefile.am:
+	* ext/openal/Makefile.am:
+	* ext/opencv/Makefile.am:
+	* ext/opus/Makefile.am:
+	* ext/resindvd/Makefile.am:
+	* ext/rsvg/Makefile.am:
+	* ext/rtmp/Makefile.am:
+	* ext/schroedinger/Makefile.am:
+	* ext/sdl/Makefile.am:
+	* ext/snapshot/Makefile.am:
+	* ext/sndfile/Makefile.am:
+	* ext/soundtouch/Makefile.am:
+	* ext/spandsp/Makefile.am:
+	* ext/spc/Makefile.am:
+	* ext/swfdec/Makefile.am:
+	* ext/teletextdec/Makefile.am:
+	* ext/timidity/Makefile.am:
+	* ext/voaacenc/Makefile.am:
+	* ext/voamrwbenc/Makefile.am:
+	* ext/wayland/Makefile.am:
+	* ext/xvid/Makefile.am:
+	* ext/zbar/Makefile.am:
+	* gst/adpcmdec/Makefile.am:
+	* gst/adpcmenc/Makefile.am:
+	* gst/aiff/Makefile.am:
+	* gst/asfmux/Makefile.am:
+	* gst/audiobuffer/Makefile.am:
+	* gst/audiovisualizers/Makefile.am:
+	* gst/autoconvert/Makefile.am:
+	* gst/bayer/Makefile.am:
+	* gst/camerabin2/Makefile.am:
+	* gst/cdxaparse/Makefile.am:
+	* gst/coloreffects/Makefile.am:
+	* gst/dataurisrc/Makefile.am:
+	* gst/dccp/Makefile.am:
+	* gst/debugutils/Makefile.am:
+	* gst/dtmf/Makefile.am:
+	* gst/dvbsuboverlay/Makefile.am:
+	* gst/dvdspu/Makefile.am:
+	* gst/faceoverlay/Makefile.am:
+	* gst/festival/Makefile.am:
+	* gst/fieldanalysis/Makefile.am:
+	* gst/freeverb/Makefile.am:
+	* gst/frei0r/Makefile.am:
+	* gst/games/Makefile.am:
+	* gst/gaudieffects/Makefile.am:
+	* gst/gdp/Makefile.am:
+	* gst/geometrictransform/Makefile.am:
+	* gst/hdvparse/Makefile.am:
+	* gst/hls/Makefile.am:
+	* gst/id3tag/Makefile.am:
+	* gst/inter/Makefile.am:
+	* gst/interlace/Makefile.am:
+	* gst/ivfparse/Makefile.am:
+	* gst/jp2kdecimator/Makefile.am:
+	* gst/jpegformat/Makefile.am:
+	* gst/librfb/Makefile.am:
+	* gst/liveadder/Makefile.am:
+	* gst/mixmatrix/Makefile.am:
+	* gst/mpeg1sys/Makefile.am:
+	* gst/mpegdemux/Makefile.am:
+	* gst/mpegpsmux/Makefile.am:
+	* gst/mpegtsdemux/Makefile.am:
+	* gst/mpegtsmux/Makefile.am:
+	* gst/mve/Makefile.am:
+	* gst/mxf/Makefile.am:
+	* gst/nsf/Makefile.am:
+	* gst/nuvdemux/Makefile.am:
+	* gst/overlay/Makefile.am:
+	* gst/patchdetect/Makefile.am:
+	* gst/pcapparse/Makefile.am:
+	* gst/pnm/Makefile.am:
+	* gst/rawparse/Makefile.am:
+	* gst/real/Makefile.am:
+	* gst/removesilence/Makefile.am:
+	* gst/rtjpeg/Makefile.am:
+	* gst/rtpmux/Makefile.am:
+	* gst/rtpvp8/Makefile.am:
+	* gst/scaletempo/Makefile.am:
+	* gst/sdi/Makefile.am:
+	* gst/sdp/Makefile.am:
+	* gst/segmentclip/Makefile.am:
+	* gst/siren/Makefile.am:
+	* gst/smooth/Makefile.am:
+	* gst/speed/Makefile.am:
+	* gst/stereo/Makefile.am:
+	* gst/subenc/Makefile.am:
+	* gst/tta/Makefile.am:
+	* gst/vbidec/Makefile.am:
+	* gst/videofilters/Makefile.am:
+	* gst/videomeasure/Makefile.am:
+	* gst/videoparsers/Makefile.am:
+	* gst/videosignal/Makefile.am:
+	* gst/vmnc/Makefile.am:
+	* gst/y4m/Makefile.am:
+	* sys/acmenc/Makefile.am:
+	* sys/acmmp3dec/Makefile.am:
+	* sys/androidmedia/Makefile.am:
+	* sys/applemedia/Makefile.am:
+	* sys/avc/Makefile.am:
+	* sys/cdrom/Makefile.am:
+	* sys/d3dvideosink/Makefile.am:
+	* sys/decklink/Makefile.am:
+	* sys/directdraw/Makefile.am:
+	* sys/directsound/Makefile.am:
+	* sys/dshowdecwrapper/Makefile.am:
+	* sys/dvb/Makefile.am:
+	* sys/dxr3/Makefile.am:
+	* sys/fbdev/Makefile.am:
+	* sys/linsys/Makefile.am:
+	* sys/osxvideo/Makefile.am:
+	* sys/pvr2d/Makefile.am:
+	* sys/qcam/Makefile.am:
+	* sys/qtwrapper/Makefile.am:
+	* sys/shm/Makefile.am:
+	* sys/uvch264/Makefile.am:
+	* sys/vcd/Makefile.am:
+	* sys/vdpau/Makefile.am:
+	* sys/vdpau/gstvdp/Makefile.am:
+	* sys/wininet/Makefile.am:
+	* sys/winks/Makefile.am:
+	* sys/winscreencap/Makefile.am:
+	* tools/gst-project-maker:
+	  gst: Add better support for static plugins
+	  Conflicts:
+	  ext/fluidsynth/Makefile.am
+	  ext/openjpeg/Makefile.am
+	  ext/sbc/Makefile.am
+	  ext/srtp/Makefile.am
+	  gst/accurip/Makefile.am
+	  gst/ivtc/Makefile.am
+	  gst/midi/Makefile.am
+	  gst/yadif/Makefile.am
+	  sys/bluez/Makefile.am
+	  sys/d3dvideosink/Makefile.am
+	  sys/directdraw/Makefile.am
+	  sys/directsound/Makefile.am
+	  sys/mfc/Makefile.am
+	  sys/wasapi/Makefile.am
+	  sys/winks/Makefile.am
+
+2013-04-12 17:01:38 +0200  Alexander Olsson <alexo@axis.com>
+
+	* gst/jpegformat/gstjpegparse.c:
+	  jpegparse: accept any jpeg input - parsed, unparsed or unmarked
+	  The src element may not include information about whether
+	  the data is parsed or not. Hence do not require parsed=false.
+	  Fixes multipartdemux ! jpegparse ! ...
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697884
+
+2013-03-30 13:39:49 +0100  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsparse: Ensure segment events are forwarded
+	  We skip them for tsdemux though (recreated later)
+	  Fixes #690949
+
+2013-03-30 13:40:21 +0100  Edward Hervey <edward@collabora.com>
+
+	* sys/dvb/gstdvbsrc.c:
+	  dvbsrc: We output time segments
+	  Fixes #690949
+
+2013-03-30 10:25:24 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegpsdemux: push stream start event
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=696785
+
+2013-03-28 14:36:16 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* sys/shm/shmpipe.c:
+	  shm: Make sure the zero-sized array is always last in the struct
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696681
+
+2013-03-25 10:10:28 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/interlace/gstinterlace.c:
+	  interlaced: set both DTS and PTS
+	  Handle both dts and pts on output buffers.
+
+2013-03-22 19:45:44 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/y4m/gsty4mdec.c:
+	  y4mdec: fix build against -base 1.0.x
+	  The libs in the 1.0 branch don't have single global includes.
+
+2013-03-22 19:40:58 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/rawparse/gstrawparse.c:
+	  rawparse: send segment event in time format also in push mode
+	  When converting the incoming segment from byte to time format,
+	  don't just convert the start/stop/time values, but also change
+	  the segment format to TIME.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696361
+
+2013-03-22 15:49:18 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/y4m/gsty4mdec.c:
+	* gst/y4m/gsty4mdec.h:
+	  y4mdec: Use the correct strides as used by y4m and convert to GStreamer strides if necessary
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696361
+
+2013-03-22 14:52:54 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/y4m/gsty4mdec.c:
+	  y4mdec: Use the default event/query handlers for the default handling
+	  Especially don't forward caps events from the sinkpad to the srcpad.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696282
+
+2013-03-22 14:37:37 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/y4m/gsty4mdec.c:
+	  y4mdec: Properly handle segment and time values of -1
+
+=== release 1.0.6 ===
+
+2013-03-22 14:12:28 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-decklink.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegpsmux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-rtpmux.xml:
+	* docs/plugins/inspect/plugin-rtpvp8.xml:
+	* docs/plugins/inspect/plugin-scaletempo.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* ext/cog/gstcogorc-dist.c:
+	* ext/cog/gstcogorc-dist.h:
+	* gst-plugins-bad.doap:
+	* win32/common/config.h:
+	  Release 1.0.6
 
 2013-03-20 10:49:04 +0000  Tim-Philipp Müller <tim@centricular.net>
 

@@ -79,25 +79,38 @@ typedef union
 #endif
 #endif
 
+#ifndef ORC_INTERNAL
+#if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define ORC_INTERNAL __hidden
+#elif defined (__GNUC__)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#else
+#define ORC_INTERNAL
+#endif
+#endif
+
+
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
 void fieldanalysis_orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
     const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
-    int p2, int n);
+    int p1, int n);
 void fieldanalysis_orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1,
     const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
-    int p2, int n);
+    int p1, int n);
 void fieldanalysis_orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
     const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
     const orc_uint8 * ORC_RESTRICT s3, const orc_uint8 * ORC_RESTRICT s4,
     const orc_uint8 * ORC_RESTRICT s5, const orc_uint8 * ORC_RESTRICT s6,
-    int p2, int n);
+    int p1, int n);
 void fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 *
     ORC_RESTRICT a1, const orc_uint8 * ORC_RESTRICT s1,
     const orc_uint8 * ORC_RESTRICT s2, const orc_uint8 * ORC_RESTRICT s3,
     const orc_uint8 * ORC_RESTRICT s4, const orc_uint8 * ORC_RESTRICT s5,
-    int p2, int n);
+    int p1, int n);
 
 
 /* begin Orc C target preamble */
@@ -149,7 +162,7 @@ void fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 *
 void
 fieldanalysis_orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
     const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
-    int p2, int n)
+    int p1, int n)
 {
   int i;
   const orc_int8 *ORC_RESTRICT ptr4;
@@ -170,7 +183,7 @@ fieldanalysis_orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
   ptr5 = (orc_int8 *) s2;
 
   /* 7: loadpl */
-  var38.i = p2;
+  var38.i = p1;
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -223,7 +236,7 @@ _backup_fieldanalysis_orc_same_parity_sad_planar_yuv (OrcExecutor *
   ptr5 = (orc_int8 *) ex->arrays[5];
 
   /* 7: loadpl */
-  var38.i = ex->params[25];
+  var38.i = ex->params[24];
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -254,7 +267,7 @@ _backup_fieldanalysis_orc_same_parity_sad_planar_yuv (OrcExecutor *
 void
 fieldanalysis_orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
     const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
-    int p2, int n)
+    int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -273,7 +286,7 @@ fieldanalysis_orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
       orc_program_add_accumulator (p, 4, "a1");
-      orc_program_add_parameter (p, 4, "p2");
+      orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 4, "t3");
@@ -289,7 +302,7 @@ fieldanalysis_orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T3, ORC_VAR_T1, ORC_VAR_D1,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "cmpgtsl", 0, ORC_VAR_T4, ORC_VAR_T3, ORC_VAR_P2,
+      orc_program_append_2 (p, "cmpgtsl", 0, ORC_VAR_T4, ORC_VAR_T3, ORC_VAR_P1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "andl", 0, ORC_VAR_T3, ORC_VAR_T3, ORC_VAR_T4,
           ORC_VAR_D1);
@@ -309,7 +322,7 @@ fieldanalysis_orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
   ex->n = n;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->arrays[ORC_VAR_S2] = (void *) s2;
-  ex->params[ORC_VAR_P2] = p2;
+  ex->params[ORC_VAR_P1] = p1;
 
   func = c->exec;
   func (ex);
@@ -323,7 +336,7 @@ fieldanalysis_orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
 void
 fieldanalysis_orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1,
     const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
-    int p2, int n)
+    int p1, int n)
 {
   int i;
   const orc_int8 *ORC_RESTRICT ptr4;
@@ -343,7 +356,7 @@ fieldanalysis_orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1,
   ptr5 = (orc_int8 *) s2;
 
   /* 6: loadpl */
-  var38.i = p2;
+  var38.i = p1;
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -393,7 +406,7 @@ _backup_fieldanalysis_orc_same_parity_ssd_planar_yuv (OrcExecutor *
   ptr5 = (orc_int8 *) ex->arrays[5];
 
   /* 6: loadpl */
-  var38.i = ex->params[25];
+  var38.i = ex->params[24];
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -422,7 +435,7 @@ _backup_fieldanalysis_orc_same_parity_ssd_planar_yuv (OrcExecutor *
 void
 fieldanalysis_orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1,
     const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
-    int p2, int n)
+    int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -441,7 +454,7 @@ fieldanalysis_orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1,
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
       orc_program_add_accumulator (p, 4, "a1");
-      orc_program_add_parameter (p, 4, "p2");
+      orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 4, "t3");
@@ -455,7 +468,7 @@ fieldanalysis_orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mulswl", 0, ORC_VAR_T3, ORC_VAR_T1, ORC_VAR_T1,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "cmpgtsl", 0, ORC_VAR_T4, ORC_VAR_T3, ORC_VAR_P2,
+      orc_program_append_2 (p, "cmpgtsl", 0, ORC_VAR_T4, ORC_VAR_T3, ORC_VAR_P1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "andl", 0, ORC_VAR_T3, ORC_VAR_T3, ORC_VAR_T4,
           ORC_VAR_D1);
@@ -475,7 +488,7 @@ fieldanalysis_orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1,
   ex->n = n;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->arrays[ORC_VAR_S2] = (void *) s2;
-  ex->params[ORC_VAR_P2] = p2;
+  ex->params[ORC_VAR_P1] = p1;
 
   func = c->exec;
   func (ex);
@@ -491,7 +504,7 @@ fieldanalysis_orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
     const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
     const orc_uint8 * ORC_RESTRICT s3, const orc_uint8 * ORC_RESTRICT s4,
     const orc_uint8 * ORC_RESTRICT s5, const orc_uint8 * ORC_RESTRICT s6,
-    int p2, int n)
+    int p1, int n)
 {
   int i;
   const orc_int8 *ORC_RESTRICT ptr4;
@@ -534,7 +547,7 @@ fieldanalysis_orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
   ptr9 = (orc_int8 *) s6;
 
   /* 21: loadpl */
-  var46.i = p2;
+  var46.i = p1;
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -637,7 +650,7 @@ _backup_fieldanalysis_orc_same_parity_3_tap_planar_yuv (OrcExecutor *
   ptr9 = (orc_int8 *) ex->arrays[9];
 
   /* 21: loadpl */
-  var46.i = ex->params[25];
+  var46.i = ex->params[24];
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -698,7 +711,7 @@ fieldanalysis_orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
     const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
     const orc_uint8 * ORC_RESTRICT s3, const orc_uint8 * ORC_RESTRICT s4,
     const orc_uint8 * ORC_RESTRICT s5, const orc_uint8 * ORC_RESTRICT s6,
-    int p2, int n)
+    int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -723,7 +736,7 @@ fieldanalysis_orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
       orc_program_add_source (p, 1, "s6");
       orc_program_add_accumulator (p, 4, "a1");
       orc_program_add_constant (p, 4, 0x00000002, "c1");
-      orc_program_add_parameter (p, 4, "p2");
+      orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 2, "t3");
@@ -763,7 +776,7 @@ fieldanalysis_orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T7, ORC_VAR_T1, ORC_VAR_D1,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "cmpgtsl", 0, ORC_VAR_T8, ORC_VAR_T7, ORC_VAR_P2,
+      orc_program_append_2 (p, "cmpgtsl", 0, ORC_VAR_T8, ORC_VAR_T7, ORC_VAR_P1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "andl", 0, ORC_VAR_T7, ORC_VAR_T7, ORC_VAR_T8,
           ORC_VAR_D1);
@@ -787,7 +800,7 @@ fieldanalysis_orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
   ex->arrays[ORC_VAR_S4] = (void *) s4;
   ex->arrays[ORC_VAR_S5] = (void *) s5;
   ex->arrays[ORC_VAR_S6] = (void *) s6;
-  ex->params[ORC_VAR_P2] = p2;
+  ex->params[ORC_VAR_P1] = p1;
 
   func = c->exec;
   func (ex);
@@ -802,7 +815,7 @@ void
 fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
     const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
     const orc_uint8 * ORC_RESTRICT s3, const orc_uint8 * ORC_RESTRICT s4,
-    const orc_uint8 * ORC_RESTRICT s5, int p2, int n)
+    const orc_uint8 * ORC_RESTRICT s5, int p1, int n)
 {
   int i;
   const orc_int8 *ORC_RESTRICT ptr4;
@@ -847,7 +860,7 @@ fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
   /* 13: loadpw */
   var45.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
   /* 21: loadpl */
-  var46.i = p2;
+  var46.i = p1;
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -948,7 +961,7 @@ _backup_fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (OrcExecutor *
   /* 13: loadpw */
   var45.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
   /* 21: loadpl */
-  var46.i = ex->params[25];
+  var46.i = ex->params[24];
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -1004,7 +1017,7 @@ void
 fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
     const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
     const orc_uint8 * ORC_RESTRICT s3, const orc_uint8 * ORC_RESTRICT s4,
-    const orc_uint8 * ORC_RESTRICT s5, int p2, int n)
+    const orc_uint8 * ORC_RESTRICT s5, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -1029,7 +1042,7 @@ fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
       orc_program_add_accumulator (p, 4, "a1");
       orc_program_add_constant (p, 4, 0x00000002, "c1");
       orc_program_add_constant (p, 4, 0x00000003, "c2");
-      orc_program_add_parameter (p, 4, "p2");
+      orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 2, "t3");
@@ -1066,7 +1079,7 @@ fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T6, ORC_VAR_T1, ORC_VAR_D1,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "cmpgtsl", 0, ORC_VAR_T7, ORC_VAR_T6, ORC_VAR_P2,
+      orc_program_append_2 (p, "cmpgtsl", 0, ORC_VAR_T7, ORC_VAR_T6, ORC_VAR_P1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "andl", 0, ORC_VAR_T6, ORC_VAR_T6, ORC_VAR_T7,
           ORC_VAR_D1);
@@ -1089,7 +1102,7 @@ fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
   ex->arrays[ORC_VAR_S3] = (void *) s3;
   ex->arrays[ORC_VAR_S4] = (void *) s4;
   ex->arrays[ORC_VAR_S5] = (void *) s5;
-  ex->params[ORC_VAR_P2] = p2;
+  ex->params[ORC_VAR_P1] = p1;
 
   func = c->exec;
   func (ex);

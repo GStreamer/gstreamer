@@ -1,4 +1,16 @@
-This is GStreamer Bad Plugins 1.0.6
+This is GStreamer Bad Plugins 1.0.7
+
+Changes since 1.0.6:
+
+      * androidmedia plugin is ported to 1.0
+
+Bugs fixed since 1.0.6:
+
+      * 690949 : DVB playback is at 1 fps after update from 1.0.2 to 1.0.3
+      * 696361 : rawparse: tcpserversrc ! videoparse ! videoflip causes criticals
+      * 696681 : shm: clients array must be last in ShmBuffer struct
+      * 696785 : mpeg file missing a streamid
+      * 697884 : multipartdemux and jpegparse do not link
 
 Changes since 1.0.5:
 
