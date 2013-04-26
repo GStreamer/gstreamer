@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 1.0.6
+Release notes for GStreamer 1.0.7
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -42,31 +42,14 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * bin: reset GValue from iterator after usage, fixing leak
-      * pipeline: fix seeking on pipeline with NULL clock
-      * message: accept NULL error argument in gst_message_parse_{error,warning,info}
-      * basesrc: handle renegotiation correctly
-      * basesink: handle sync of EOS after item without duration
-      * basetransform: avoid warnings from NULL outcaps passed to transform_size in shutdown race
-      * adapter, basesrc, typefind: handle gst_buffer_map failure
-      * queuearray: fix gst_queue_array_drop_element()
-      * queuearray: fix gst_queue_array_find()
-      * queue: remove query from queue if queue is flushing
-      * g-i: make sure enumeration types and flags are introspected and available to bindings
-      * g-i: add allow-none annotation for gst_pipeline_new()'s name property
+      * Add better support for static plugins
 
 Bugs fixed in this release
      
-      * 684804 : basesink: fails to post EOS message with RTSP stream
-      * 691185 : g-i: GStreamer enums and flags not usable - " expected enumeration type GstFormat, but got Format instead " warning when setting GstFormat property on GStreamer appsrc element
-      * 691985 : gst_pad_check_reconfigure: only remove flag if set.
-      * 691986 : basesrc: set NEED_RECONFIGURE flag if negotiate fails
-      * 692691 : queue: dangling pointer when doing allocation query on a flushing queue
-      * 692868 : basesink: expands GAP event without duration to last to segment end
-      * 693065 : pipeline: criticals when seeking on pipeline with NULL clock
-      * 693587 : Adding offset to GstSegment deserialize/serialize to fix jump on uninitialized value
-      * 693704 : gst_message_parse_{warning,error} annotations wrongly claim allow-none for GError parameter
-      * 693996 : basetransform: audioresample shutdown unit test fails with 'gst_audio_info_from_caps: caps != NULL'  in transform_size
+      * 667305 : build: Add --enable-static-plugins configure argument
+      * 696357 : Basesrc may send not-neg error when flushed
+      * 696435 : gst_static_caps_get(GST_STATIC_CAPS_NONE) doesn't work properly
+      * 697791 : gst-inspect: shows action signal return pointers as pointers
 
 ==== Download ====
 
@@ -103,12 +86,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alexander Schrab
-      * Nate Bogdanowicz
-      * Niv Sardi
-      * Simon Feltman
-      * Stefan Sauer
-      * Tim 'mithro' Ansell
+      * Jose Antonio Santos Cadenas
+      * Nicolas Dufresne
+      * Sebastian Dröge
+      * Thibault Saunier
       * Tim-Philipp Müller
       * Wim Taymans
  

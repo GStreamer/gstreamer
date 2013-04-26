@@ -1,9 +1,121 @@
-=== release 1.0.6 ===
+=== release 1.0.7 ===
 
-2013-03-22  Tim-Philipp Müller <tim@centricular.net>
+2013-04-26  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.0.6
+	  releasing 1.0.7
+
+2013-04-25 16:38:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Try to not push read-only buffers
+	  We should only increase the refcount before pushing if we're
+	  really going to use the buffer afterwards.
+
+2013-04-22 18:08:43 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* libs/gst/controller/gsttimedvaluecontrolsource.c:
+	  controller: Fix element-type annotations
+
+2012-10-24 11:58:35 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* gst/gstplugin.h:
+	* plugins/elements/Makefile.am:
+	  gst: Add better support for static plugins
+	  API: GST_PLUGIN_STATIC_DECLARE()
+	  API: GST_PLUGIN_STATIC_REGISTER()
+	  Based on a patch by Håvard Graff <havard.graff@tandberg.com>.
+	  This now allows GST_PLUGIN_DEFINE() to create a static plugin if
+	  GST_PLUGIN_BUILD_STATIC is defined. The resulting plugin can be
+	  statically linked or dynamically linked during compilation but
+	  can't be dynamically loaded during runtime.
+	  Also adds GST_PLUGIN_STATIC_DECLARE() and GST_PLUGIN_STATIC_REGISTER(),
+	  which allows to register a static linked plugin easily.
+	  It is still required to manually register every single statically linked
+	  plugin from inside the application as this can't be automated in a portable
+	  way.
+	  A new configure parameter --enable-static-plugins was added that allows
+	  to build all plugins we build here as static plugins.
+	  Fixes bug #667305.
+
+2013-03-25 09:16:05 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/gst/gstcaps.c:
+	  caps: Add unit test for GST_CAPS_{ANY,NONE} and GST_STATIC_CAPS_{ANY,NONE}
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696435
+
+2013-03-25 09:19:24 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstcaps.c:
+	  caps: Fix gst_static_caps_get(GST_STATIC_CAPS_NONE)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696435
+
+2013-03-21 21:00:54 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Don't send error if negotiate fails because we are flushing
+	  Negotiation may be aborted by a flush from another thread that need to
+	  stop the task (i.e. seek). Check that case and silently pause the task.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696357
+
+2013-04-12 16:13:15 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gsttaglist.c:
+	  taglist: avoid triggering an assertion
+	  When deserialization of the structure fails, return a NULL taglist instead of
+	  asserting.
+
+2013-04-13 12:00:12 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tools/gst-inspect.c:
+	  gst-inspect: only add a '*' for non-'gpointer' pointers
+	  Spotted by Jose Antonio Santos Cadena.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697791
+
+2013-04-11 14:54:32 +0200  Jose Antonio Santos Cadenas <santoscadenas@gmail.com>
+
+	* tools/gst-inspect.c:
+	  gst-inspect: add pointer mark to signal and action return types that are pointers
+	  When the return type of a signal or action is a pointer, it
+	  should have an asterisk to mark it as such.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697791
+
+2013-04-09 10:17:45 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* libs/gst/net/gstnetclientclock.c:
+	  netclientclock: bind socket before querying local address
+	  Fails on windows otherwise.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697608
+
+2013-04-04 16:39:23 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbufferpool.c:
+	  bufferpool: fix docs
+
+2013-03-30 11:06:59 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/gstsegment.c:
+	  segment: Fix seeking when position is slightly outside the segment
+	  Very often, when the end of a segment is detected by demuxer, the position
+	  is slightly outside the segment boundaries. Currently, if that is the case
+	  the base will be set to NONE instead of normal accumulation. This would
+	  break non-flushing seeks in oggdemux and most likely other demuxers.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=696899
+
+=== release 1.0.6 ===
+
+2013-03-22 12:33:48 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.0.6
 
 2013-03-22 09:53:58 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
