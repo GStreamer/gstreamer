@@ -447,6 +447,7 @@ GST_START_TEST (test_kate_encode_empty)
   caps = gst_caps_from_string ("text/x-raw, format=utf8");
   fail_unless (caps != NULL);
   gst_pad_push_event (myencsrcpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
 
   gst_element_set_bus (kateenc, bus);
   /* pushing gives away my reference ... */
@@ -494,6 +495,7 @@ GST_START_TEST (test_kate_encode_simple)
   caps = gst_caps_from_string ("text/x-raw, format=utf8");
   fail_unless (caps != NULL);
   gst_pad_push_event (myencsrcpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
   gst_buffer_ref (inbuffer);
 
   gst_element_set_bus (kateenc, bus);
@@ -516,7 +518,7 @@ GST_START_TEST (test_kate_encode_simple)
   gst_element_set_bus (kateenc, NULL);
   gst_object_unref (GST_OBJECT (bus));
   cleanup_kateenc (kateenc);
-  g_list_free (buffers);
+  gst_check_drop_buffers ();
 }
 
 GST_END_TEST;
@@ -547,6 +549,7 @@ GST_START_TEST (test_kate_encode_spu)
   caps = gst_caps_from_string ("subpicture/x-dvd");
   fail_unless (caps != NULL);
   gst_pad_push_event (myencsrcpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
   gst_buffer_ref (inbuffer);
 
   gst_element_set_bus (kateenc, bus);
@@ -569,7 +572,7 @@ GST_START_TEST (test_kate_encode_spu)
   gst_element_set_bus (kateenc, NULL);
   gst_object_unref (GST_OBJECT (bus));
   cleanup_kateenc (kateenc);
-  g_list_free (buffers);
+  gst_check_drop_buffers ();
 }
 
 GST_END_TEST;
@@ -632,7 +635,7 @@ GST_START_TEST (test_kate_encode_keepalives)
     gst_element_set_bus (kateenc, NULL);
     gst_object_unref (GST_OBJECT (bus));
     cleanup_kateenc (kateenc);
-    g_list_free (buffers);
+    gst_check_drop_buffers ();
   }
 }
 
@@ -648,6 +651,7 @@ test_kate_send_headers (GstPad * pad)
 
   caps = gst_caps_new_simple ("subtitle/x-kate", NULL, NULL);
   gst_pad_push_event (pad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
 
   /* push headers */
   inbuffer = gst_buffer_new_wrapped (g_memdup (kate_header_0x80,
@@ -726,7 +730,8 @@ GST_START_TEST (test_kate_parse)
   gst_element_set_bus (kateparse, NULL);
   gst_object_unref (GST_OBJECT (bus));
   cleanup_kateparse (kateparse);
-  g_list_free (buffers);
+  g_list_foreach (buffers, (GFunc) gst_buffer_unref, NULL);
+  gst_check_drop_buffers ();
 }
 
 GST_END_TEST;
@@ -789,7 +794,7 @@ GST_START_TEST (test_kate_tag_passthrough)
   gst_element_set_bus (katetag, NULL);
   gst_object_unref (GST_OBJECT (bus));
   cleanup_katetag (katetag);
-  g_list_free (buffers);
+  gst_check_drop_buffers ();
 }
 
 GST_END_TEST;
@@ -839,7 +844,7 @@ GST_START_TEST (test_kate_tag)
   gst_element_set_bus (katetag, NULL);
   gst_object_unref (GST_OBJECT (bus));
   cleanup_katetag (katetag);
-  g_list_free (buffers);
+  gst_check_drop_buffers ();
 }
 
 GST_END_TEST;
