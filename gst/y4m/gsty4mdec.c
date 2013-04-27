@@ -719,6 +719,7 @@ gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
       gst_video_frame_unmap (&iframe);
       gst_video_frame_unmap (&oframe);
+      gst_buffer_copy_into (outbuf, buffer, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
       gst_buffer_unref (buffer);
       buffer = outbuf;
     }
