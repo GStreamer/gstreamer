@@ -61,13 +61,18 @@ ges_video_test_source_init (GESVideoTestSource * self)
 static GstElement *
 ges_video_test_source_create_element (GESTrackElement * self)
 {
-  GstElement *ret;
   gint pattern;
+  GstElement *ret;
+  gchar *bin_desc;
+
 
   pattern = ((GESVideoTestSource *) self)->priv->pattern;
-
-  ret = gst_element_factory_make ("videotestsrc", NULL);
-  g_object_set (ret, "pattern", (gint) pattern, NULL);
+  bin_desc =
+      g_strdup_printf
+      ("videotestsrc pattern=%i name=testsrc ! capsfilter caps=video/x-raw",
+      pattern);
+  ret = gst_parse_bin_from_description (bin_desc, TRUE, NULL);
+  g_free (bin_desc);
 
   return ret;
 }
@@ -89,7 +94,8 @@ ges_video_test_source_set_pattern (GESVideoTestSource
   self->priv->pattern = pattern;
 
   if (element)
-    g_object_set (element, "pattern", (gint) pattern, NULL);
+    gst_child_proxy_set (GST_CHILD_PROXY (element), "testsrc::pattern",
+        (gint) pattern, NULL);
 }
 
 /**
