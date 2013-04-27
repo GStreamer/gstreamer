@@ -39,6 +39,9 @@
 
 G_DEFINE_TYPE (GESTestClip, ges_test_clip, GES_TYPE_SOURCE_CLIP);
 
+#define DEFAULT_VOLUME 1.0
+#define DEFAULT_VPATTERN GES_VIDEO_TEST_PATTERN_SMPTE
+
 struct _GESTestClipPrivate
 {
   gboolean mute;
@@ -127,7 +130,7 @@ ges_test_clip_class_init (GESTestClipClass * klass)
       g_param_spec_enum ("vpattern", "VPattern",
           "Which video pattern to display. See videotestsrc element",
           GES_VIDEO_TEST_PATTERN_TYPE,
-          GES_VIDEO_TEST_PATTERN_BLACK, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_VPATTERN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * GESTestClip:freq:
@@ -147,7 +150,7 @@ ges_test_clip_class_init (GESTestClipClass * klass)
   g_object_class_install_property (object_class, PROP_VOLUME,
       g_param_spec_double ("volume", "Audio Volume",
           "The volume of the test audio signal.",
-          0, 1, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, 1, DEFAULT_VOLUME, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
 
   /**

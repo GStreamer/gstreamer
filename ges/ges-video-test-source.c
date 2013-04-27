@@ -29,6 +29,8 @@
 
 G_DEFINE_TYPE (GESVideoTestSource, ges_video_test_source, GES_TYPE_SOURCE);
 
+#define DEFAULT_VPATTERN GES_VIDEO_TEST_PATTERN_SMPTE
+
 struct _GESVideoTestSourcePrivate
 {
   GESVideoTestPattern pattern;
@@ -53,7 +55,7 @@ ges_video_test_source_init (GESVideoTestSource * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_VIDEO_TEST_SOURCE, GESVideoTestSourcePrivate);
 
-  self->priv->pattern = GES_VIDEO_TEST_PATTERN_BLACK;
+  self->priv->pattern = DEFAULT_VPATTERN;
 }
 
 static GstElement *

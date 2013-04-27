@@ -21,6 +21,8 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
+#define DEFAULT_VOLUME 1.0
+
 GST_START_TEST (test_test_source_basic)
 {
   GESTestClip *source;
@@ -164,22 +166,20 @@ GST_START_TEST (test_test_source_in_layer)
       a, GES_TYPE_AUDIO_TEST_SOURCE);
   g_assert (GES_IS_AUDIO_TEST_SOURCE (track_element));
   assert_equals_float (ges_test_clip_get_frequency (source), 440);
-  assert_equals_float (ges_test_clip_get_volume (source), 0);
+  assert_equals_float (ges_test_clip_get_volume (source), DEFAULT_VOLUME);
 
   g_object_get (source, "freq", &freq, "volume", &volume, NULL);
   assert_equals_float (freq, 440);
-  assert_equals_float (volume, 0);
+  assert_equals_float (volume, DEFAULT_VOLUME);
 
 
   freq = ges_audio_test_source_get_freq (GES_AUDIO_TEST_SOURCE (track_element));
   volume =
       ges_audio_test_source_get_volume (GES_AUDIO_TEST_SOURCE (track_element));
   g_assert (freq == 440);
-  g_assert (volume == 0);
-
+  g_assert (volume == DEFAULT_VOLUME);
 
   g_object_set (source, "freq", (gdouble) 2000, "volume", (gdouble) 0.5, NULL);
-
   g_object_get (source, "freq", &freq, "volume", &volume, NULL);
   assert_equals_float (freq, 2000);
   assert_equals_float (volume, 0.5);

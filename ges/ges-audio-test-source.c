@@ -32,6 +32,7 @@
 #include "ges-audio-test-source.h"
 
 G_DEFINE_TYPE (GESAudioTestSource, ges_audio_test_source, GES_TYPE_SOURCE);
+#define DEFAULT_VOLUME 1.0
 
 struct _GESAudioTestSourcePrivate
 {
@@ -74,7 +75,7 @@ ges_audio_test_source_init (GESAudioTestSource * self)
       GES_TYPE_AUDIO_TEST_SOURCE, GESAudioTestSourcePrivate);
 
   self->priv->freq = 440;
-  self->priv->volume = 0;
+  self->priv->volume = DEFAULT_VOLUME;
 }
 
 static void
