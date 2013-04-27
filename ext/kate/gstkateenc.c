@@ -136,7 +136,7 @@ static void gst_kate_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_kate_enc_dispose (GObject * object);
 
-static gboolean gst_kate_enc_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_kate_enc_setcaps (GstKateEnc * ke, GstCaps * caps);
 static GstFlowReturn gst_kate_enc_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
 static GstStateChangeReturn gst_kate_enc_change_state (GstElement * element,
@@ -504,12 +504,8 @@ gst_kate_enc_set_metadata (GstKateEnc * ke)
 }
 
 static gboolean
-gst_kate_enc_setcaps (GstPad * pad, GstCaps * caps)
+gst_kate_enc_setcaps (GstKateEnc * ke, GstCaps * caps)
 {
-  GstKateEnc *ke;
-
-  ke = GST_KATE_ENC (GST_PAD_PARENT (pad));
-
   GST_LOG_OBJECT (ke, "input caps: %" GST_PTR_FORMAT, caps);
 
   /* One day we could try to automatically set the category based on the
@@ -1222,7 +1218,7 @@ gst_kate_enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      ret = gst_kate_enc_setcaps (pad, caps);
+      ret = gst_kate_enc_setcaps (ke, caps);
       gst_event_unref (event);
       break;
     }

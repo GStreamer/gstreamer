@@ -391,7 +391,7 @@ gst_kate_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstKateParseClass *klass;
   GstKateParse *parse;
 
-  parse = GST_KATE_PARSE (GST_PAD_PARENT (pad));
+  parse = GST_KATE_PARSE (parent);
   klass = GST_KATE_PARSE_CLASS (G_OBJECT_GET_CLASS (parse));
 
   g_assert (klass->parse_packet != NULL);
