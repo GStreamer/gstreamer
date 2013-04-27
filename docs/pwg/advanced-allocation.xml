@@ -41,12 +41,22 @@
       never be changed after the object is created, however, the offset
       and size can be changed.
     </para>
-    <para>
-      <classname>GstMemory</classname> objects are created by a
-      <classname>GstAllocator</classname> object. To implement support
-      for a new kind of memory type, you must implement a new allocator
-      object.
-    </para>
+    <sect2 id="section-allocation-allocator" xreflabel="GstAllocator">
+      <title>GstAllocator</title>
+      <para>
+        <classname>GstMemory</classname> objects are created by a
+        <classname>GstAllocator</classname> object. Most allocators implement the
+        default <function>gst_allocator_alloc()</function> method but some allocator
+        might implement a different method, for example when additional parameters
+        are needed to allocate the specific memory.
+      </para>
+      <para>
+        Different allocators exist for, for example, system memory, shared memory
+        and memory backed by a DMAbuf file descriptor. To implement support for a
+        new kind of memory type, you must implement a new allocator object as shown
+        below.
+      </para>
+    </sect2>
     <sect2 id="section-allocation-memory-ex" xreflabel="GstMemory-ex">
       <title>GstMemory API example</title>
       <para>
@@ -88,7 +98,7 @@
       </programlisting>
     </sect2>
 
-    <sect2 id="section-allocation-allocator" xreflabel="GstAllocator">
+    <sect2 id="section-allocation-allocator-ex" xreflabel="GstAllocator-ex">
       <title>Implementing a GstAllocator</title>
       <para>
         WRITEME
@@ -209,13 +219,8 @@
     <title>GstMeta</title>
     <para>
       With the <classname>GstMeta</classname> system you can add arbitrary
-      structures of on buffers. These structures describe extra properties
+      structures on buffers. These structures describe extra properties
       of the buffer such as cropping, stride, region of interest etc.
-    </para>
-    <para>
-      Metadata is also used to store, for example, the X image that is
-      backing up the memory of the buffer. This makes it easier for elements
-      to locate the X image from the buffer.
     </para>
     <para>
       The metadata system separates API specification (what the metadata
