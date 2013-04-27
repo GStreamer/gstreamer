@@ -27,6 +27,9 @@
  * These macros and functions are for internal use of the unit tests found
  * inside the 'check' directories of various GStreamer packages.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "gstcheck.h"
 
@@ -115,6 +118,8 @@ print_plugins (void)
 void
 gst_check_init (int *argc, char **argv[])
 {
+  guint timeout_multiplier = 1;
+
   gst_init (argc, argv);
 
   GST_DEBUG_CATEGORY_INIT (check_debug, "check", 0, "check regression tests");
@@ -136,6 +141,28 @@ gst_check_init (int *argc, char **argv[])
       gst_check_log_critical_func, NULL);
 
   print_plugins ();
+
+#ifdef TARGET_CPU
+  GST_INFO ("target CPU: %s", TARGET_CPU);
+#endif
+
+#ifdef HAVE_CPU_ARM
+  timeout_multiplier = 10;
+#endif
+
+  if (timeout_multiplier > 1) {
+    const gchar *tmult = g_getenv ("CK_TIMEOUT_MULTIPLIER");
+
+    if (tmult == NULL) {
+      gchar num_str[32];
+
+      g_snprintf (num_str, sizeof (num_str), "%d", timeout_multiplier);
+      GST_INFO ("slow CPU, setting CK_TIMEOUT_MULTIPLIER to %s", num_str);
+      g_setenv ("CK_TIMEOUT_MULTIPLIER", num_str, TRUE);
+    } else {
+      GST_INFO ("CK_TIMEOUT_MULTIPLIER already set to '%s'", tmult);
+    }
+  }
 }
 
 /* message checking */
