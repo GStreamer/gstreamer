@@ -923,9 +923,9 @@ copy_image(
 
     if (rect) {
         if (rect->x >= src_image->width ||
-            rect->x + src_image->width > src_image->width ||
+            rect->x + rect->width > src_image->width ||
             rect->y >= src_image->height ||
-            rect->y + src_image->height > src_image->height)
+            rect->y + rect->height > src_image->height)
             return FALSE;
     }
     else {
