@@ -115,6 +115,17 @@
 #if GLIB_CHECK_VERSION (2, 35, 7)
 #include <gio/gnetworking.h>
 #else
+
+/* nicked from gnetworking.h */
+#ifdef G_OS_WIN32
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501
+#endif
+#include <winsock2.h>
+#undef interface
+#include <ws2tcpip.h>           /* for socklen_t */
+#endif /* G_OS_WIN32 */
+
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
