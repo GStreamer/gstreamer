@@ -281,6 +281,7 @@ gst_kate_tag_parse_packet (GstKateParse * parse, GstBuffer * buffer)
 
     gst_buffer_unmap (buffer, &info);
     new_buffer = gst_buffer_copy (buffer);
+    gst_buffer_unref (buffer);
     buffer = new_buffer;
 
     if (!gst_buffer_map (buffer, &info, GST_MAP_READWRITE)) {
