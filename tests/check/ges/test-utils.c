@@ -104,7 +104,48 @@ ges_test_create_pipeline (GESTimeline * timeline)
       gst_element_factory_make ("fakesink", "test-videofakesink"), NULL);
 
   return pipeline;
+}
 
+void
+ges_generate_test_file_audio_video (const gchar * filedest,
+    const gchar * audio_enc,
+    const gchar * video_enc,
+    const gchar * mux, const gchar * video_pattern, const gchar * audio_wave)
+{
+  GError *error = NULL;
+  GstElement *pipeline;
+  GstBus *bus;
+  GstMessage *message;
+  gchar *pipeline_str;
+  gboolean done = FALSE;
+
+  if (g_file_test (filedest, G_FILE_TEST_EXISTS)) {
+    GST_INFO ("The file %s already existed.", filedest);
+    return;
+  }
+
+  pipeline_str = g_strdup_printf ("audiotestsrc num-buffers=430 wave=%s "
+      "! %s ! %s name=m ! filesink location= %s/%s "
+      "videotestsrc pattern=%s num-buffers=300 ! %s ! m.",
+      audio_wave, audio_enc, mux, g_get_current_dir (),
+      filedest, video_pattern, video_enc);
+
+  pipeline = gst_parse_launch (pipeline_str, &error);
+
+  bus = gst_element_get_bus (GST_ELEMENT (pipeline));
+  gst_bus_add_signal_watch (bus);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  while (!done) {
+    message = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_CLOCK_TIME_NONE);
+    if (GST_MESSAGE_TYPE (message) & GST_MESSAGE_EOS)
+      done = TRUE;
+    else if (GST_MESSAGE_TYPE (message) & GST_MESSAGE_ERROR) {
+      done = TRUE;
+      g_print ("Error");
+    }
+  }
 }
 
 static void

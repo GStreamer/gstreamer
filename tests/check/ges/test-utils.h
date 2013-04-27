@@ -37,6 +37,11 @@ gchar * ges_test_get_audio_video_uri (void);
 gchar * ges_test_get_image_uri (void);
 gchar * ges_test_file_uri (const gchar *filename);
 void check_destroyed (GObject *object_to_unref, GObject *first_object, ...) G_GNUC_NULL_TERMINATED;
+void
+ges_generate_test_file_audio_video (const gchar * filedest,
+    const gchar * audio_enc,
+    const gchar * video_enc,
+    const gchar * mux, const gchar * video_pattern, const gchar * audio_wave);
 
 #define gnl_object_check(gnlobj, start, duration, mstart, mduration, priority, active) { \
   guint64 pstart, pdur, inpoint, pprio, pact;			\
