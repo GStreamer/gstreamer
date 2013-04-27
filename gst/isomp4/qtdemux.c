@@ -9689,6 +9689,10 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("VP3");
       caps = gst_caps_new_empty_simple ("video/x-vp3");
       break;
+    case GST_MAKE_FOURCC ('V', 'P', '6', 'F'):
+      _codec ("VP6 Flash");
+      caps = gst_caps_new_empty_simple ("video/x-vp6-flash");
+      break;
     case GST_MAKE_FOURCC ('X', 'i', 'T', 'h'):
       _codec ("Theora");
       caps = gst_caps_new_empty_simple ("video/x-theora");
