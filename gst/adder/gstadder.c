@@ -728,7 +728,9 @@ gst_adder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
          * forwarding the seek upstream or from gst_adder_collected,
          * whichever happens first.
          */
-        g_atomic_int_set (&adder->flush_stop_pending, TRUE);
+        GST_COLLECT_PADS_STREAM_LOCK (adder->collect);
+        adder->flush_stop_pending = TRUE;
+        GST_COLLECT_PADS_STREAM_UNLOCK (adder->collect);
         GST_DEBUG_OBJECT (adder, "mark pending flush stop event");
       }
       GST_DEBUG_OBJECT (adder, "handling seek event: %" GST_PTR_FORMAT, event);
@@ -819,20 +821,27 @@ gst_adder_sink_event (GstCollectPads * pads, GstCollectData * pad,
     }
     case GST_EVENT_FLUSH_START:
       /* ensure that we will send a flush stop */
-      g_atomic_int_set (&adder->flush_stop_pending, TRUE);
+      GST_COLLECT_PADS_STREAM_LOCK (adder->collect);
+      adder->flush_stop_pending = TRUE;
+      res = gst_collect_pads_event_default (pads, pad, event, discard);
+      event = NULL;
+      GST_COLLECT_PADS_STREAM_UNLOCK (adder->collect);
       break;
     case GST_EVENT_FLUSH_STOP:
       /* we received a flush-stop. We will only forward it when
        * flush_stop_pending is set, and we will unset it then.
        */
-      if (g_atomic_int_compare_and_exchange (&adder->flush_stop_pending,
-              TRUE, FALSE)) {
-        g_atomic_int_set (&adder->new_segment_pending, TRUE);
+      GST_COLLECT_PADS_STREAM_LOCK (adder->collect);
+      if (adder->flush_stop_pending) {
         GST_DEBUG_OBJECT (pad->pad, "forwarding flush stop");
+        res = gst_collect_pads_event_default (pads, pad, event, discard);
+        adder->flush_stop_pending = FALSE;
+        event = NULL;
       } else {
         discard = TRUE;
         GST_DEBUG_OBJECT (pad->pad, "eating flush stop");
       }
+      GST_COLLECT_PADS_STREAM_UNLOCK (adder->collect);
       /* Clear pending tags */
       if (adder->pending_events) {
         g_list_foreach (adder->pending_events, (GFunc) gst_event_unref, NULL);
@@ -1116,12 +1125,13 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   if (G_UNLIKELY (adder->func == NULL))
     goto not_negotiated;
 
-  if (g_atomic_int_compare_and_exchange (&adder->flush_stop_pending,
-          TRUE, FALSE)) {
+  if (adder->flush_stop_pending == TRUE) {
     GST_INFO_OBJECT (adder->srcpad, "send pending flush stop event");
     if (!gst_pad_push_event (adder->srcpad, gst_event_new_flush_stop (TRUE))) {
       GST_WARNING_OBJECT (adder->srcpad, "Sending flush stop event failed");
     }
+
+    adder->flush_stop_pending = FALSE;
   }
 
   if (adder->send_stream_start) {
