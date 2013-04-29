@@ -700,7 +700,7 @@ gst_type_find_element_setcaps (GstTypeFindElement * typefind, GstCaps * caps)
     gsize avail;
 
     GST_DEBUG_OBJECT (typefind, "Skipping typefinding, using caps from "
-        "upstream buffer: %" GST_PTR_FORMAT, caps);
+        "upstream: %" GST_PTR_FORMAT, caps);
     typefind->mode = MODE_NORMAL;
 
     gst_type_find_element_send_cached_events (typefind);
@@ -966,14 +966,6 @@ gst_type_find_element_activate_src_mode (GstPad * pad, GstObject * parent,
        * activation might happen from the streaming thread. */
       gst_pad_pause_task (typefind->sink);
       res = gst_pad_activate_mode (typefind->sink, mode, active);
-      if (active && res && typefind->caps) {
-        GstCaps *caps;
-        GST_OBJECT_LOCK (typefind);
-        caps = gst_caps_ref (typefind->caps);
-        GST_OBJECT_UNLOCK (typefind);
-        res = gst_pad_set_caps (typefind->src, caps);
-        gst_caps_unref (caps);
-      }
       break;
     default:
       res = TRUE;
