@@ -285,6 +285,20 @@ enum
   PLAYBIN_STREAM_LAST
 };
 
+static void avelements_list_free (GList * list);
+static GList *avelements_list_create (GstPlayBin * playbin,
+    gboolean isaudioelement);
+
+/* The GstAudioVideoElement structure holding the audio/video decoder
+ * and the audio/video sink factories together with field indicating
+ * the number of common caps features */
+typedef struct
+{
+  GstElementFactory *dec;       /* audio:video decoder */
+  GstElementFactory *sink;      /* audio:video sink */
+  guint n_comm_cf;              /* number of common caps features */
+} GstAVElement;
+
 /* a structure to hold the objects for decoding a uri and the subtitle uri
  */
 struct _GstSourceGroup
@@ -426,6 +440,9 @@ struct _GstPlayBin
   GstElement *audio_sink;       /* configured audio sink, or NULL      */
   GstElement *video_sink;       /* configured video sink, or NULL      */
   GstElement *text_sink;        /* configured text sink, or NULL       */
+
+  GList *aelements;             /* a list of GstAVElements for audio stream */
+  GList *velements;             /* a list of GstAVElements for video stream */
 
   struct
   {
@@ -1335,6 +1352,7 @@ gst_play_bin_update_elements_list (GstPlayBin * playbin)
   guint cookie;
 
   cookie = gst_registry_get_feature_list_cookie (gst_registry_get ());
+
   if (!playbin->elements || playbin->elements_cookie != cookie) {
     if (playbin->elements)
       gst_plugin_feature_list_free (playbin->elements);
@@ -1346,8 +1364,22 @@ gst_play_bin_update_elements_list (GstPlayBin * playbin)
         (GST_ELEMENT_FACTORY_TYPE_AUDIOVIDEO_SINKS, GST_RANK_MARGINAL);
     playbin->elements = g_list_concat (res, tmp);
     playbin->elements = g_list_sort (playbin->elements, compare_factories_func);
-    playbin->elements_cookie = cookie;
   }
+
+  if (!playbin->aelements || playbin->elements_cookie != cookie) {
+    if (playbin->aelements)
+      avelements_list_free (playbin->aelements);
+    playbin->aelements = avelements_list_create (playbin, TRUE);
+  }
+
+  if (!playbin->velements || playbin->elements_cookie != cookie) {
+    if (playbin->velements)
+      avelements_list_free (playbin->velements);
+    playbin->velements = avelements_list_create (playbin, FALSE);
+
+  }
+
+  playbin->elements_cookie = cookie;
 }
 
 static void
@@ -1420,6 +1452,12 @@ gst_play_bin_finalize (GObject * object)
 
   if (playbin->elements)
     gst_plugin_feature_list_free (playbin->elements);
+
+  if (playbin->aelements)
+    avelements_list_free (playbin->aelements);
+
+  if (playbin->velements)
+    avelements_list_free (playbin->velements);
 
   g_rec_mutex_clear (&playbin->lock);
   g_mutex_clear (&playbin->dyn_lock);
@@ -3235,6 +3273,240 @@ _factory_can_sink_caps (GstElementFactory * factory, GstCaps * caps)
   return FALSE;
 }
 
+static void
+avelements_list_free (GList * list)
+{
+  GList *l;
+  GstAVElement *elm;
+
+  for (l = list; l; l = l->next) {
+    elm = (GstAVElement *) l->data;
+    if (elm->dec)
+      gst_object_unref (elm->dec);
+    if (elm->sink)
+      gst_object_unref (elm->sink);
+    g_slice_free (GstAVElement, elm);
+  }
+  g_list_free (list);
+}
+
+static gint
+avelement_compare (gconstpointer p1, gconstpointer p2)
+{
+  GstAVElement *v1, *v2;
+  GstPluginFeature *fd1, *fd2, *fs1, *fs2;
+  gint diff, v1_rank, v2_rank;
+
+  v1 = (GstAVElement *) p1;
+  v2 = (GstAVElement *) p2;
+
+  fs1 = (GstPluginFeature *) v1->sink;
+  fs2 = (GstPluginFeature *) v2->sink;
+  fd1 = (GstPluginFeature *) v1->dec;
+  fd2 = (GstPluginFeature *) v2->dec;
+
+  v1_rank =
+      gst_plugin_feature_get_rank (fd1) + gst_plugin_feature_get_rank (fs1);
+  v2_rank =
+      gst_plugin_feature_get_rank (fd2) + gst_plugin_feature_get_rank (fs2);
+
+  /* comparison based on the rank */
+  diff = v2_rank - v1_rank;
+  if (diff != 0)
+    return diff;
+
+  /* comparison based on number of common caps features */
+  diff = v2->n_comm_cf - v1->n_comm_cf;
+  if (diff != 0)
+    return diff;
+
+  /* comparison based on the name of sink elements */
+  diff = strcmp (GST_OBJECT_NAME (fs1), GST_OBJECT_NAME (fs2));
+  if (diff != 0)
+    return diff;
+
+  /* comparison based on the name of decoder elements */
+  return strcmp (GST_OBJECT_NAME (fd1), GST_OBJECT_NAME (fd2));
+}
+
+/* unref the caps after usage */
+static GstCaps *
+get_template_caps (GstElementFactory * factory, GstPadDirection direction)
+{
+  const GList *templates;
+  GstStaticPadTemplate *templ = NULL;
+  GList *walk;
+
+  templates = gst_element_factory_get_static_pad_templates (factory);
+  for (walk = (GList *) templates; walk; walk = g_list_next (walk)) {
+    templ = walk->data;
+    if (templ->direction == direction)
+      break;
+  }
+  if (templ)
+    return gst_static_caps_get (&templ->static_caps);
+  else
+    return NULL;
+}
+
+static gboolean
+is_included (GList * list, GstCapsFeatures * cf)
+{
+  for (; list; list = list->next) {
+    if (gst_caps_features_is_equal ((GstCapsFeatures *) list->data, cf))
+      return TRUE;
+  }
+  return FALSE;
+}
+
+/* compute the number of common caps features */
+static guint
+get_n_common_capsfeatures (GstElementFactory * dec, GstElementFactory * sink)
+{
+  GstCaps *d_tmpl_caps, *s_tmpl_caps;
+  GstCapsFeatures *d_features, *s_features;
+  GstStructure *d_struct, *s_struct;
+  GList *cf_list = NULL;
+  guint d_caps_size, s_caps_size;
+  guint i, j, n_common_cf = 0;
+
+  d_tmpl_caps = get_template_caps (dec, GST_PAD_SRC);
+  s_tmpl_caps = get_template_caps (sink, GST_PAD_SINK);
+
+  if (!d_tmpl_caps || !s_tmpl_caps) {
+    GST_ERROR ("Failed to get template caps from decoder or sink");
+    return 0;
+  }
+
+  d_caps_size = gst_caps_get_size (d_tmpl_caps);
+  s_caps_size = gst_caps_get_size (s_tmpl_caps);
+
+  for (i = 0; i < d_caps_size; i++) {
+    d_features = gst_caps_get_features ((const GstCaps *) d_tmpl_caps, i);
+    d_struct = gst_caps_get_structure ((const GstCaps *) d_tmpl_caps, i);
+    for (j = 0; j < s_caps_size; j++) {
+      s_features = gst_caps_get_features ((const GstCaps *) s_tmpl_caps, j);
+      s_struct = gst_caps_get_structure ((const GstCaps *) s_tmpl_caps, j);
+      if (gst_structure_can_intersect (d_struct, s_struct) &&
+          gst_caps_features_is_equal (d_features, s_features) &&
+          !is_included (cf_list, s_features)) {
+        cf_list = g_list_prepend (cf_list, s_features);
+        n_common_cf++;
+      }
+    }
+  }
+  if (cf_list)
+    g_list_free (cf_list);
+
+  gst_caps_unref (d_tmpl_caps);
+  gst_caps_unref (s_tmpl_caps);
+
+  return n_common_cf;
+}
+
+static GList *
+avelements_list_create (GstPlayBin * playbin, gboolean isaudioelement)
+{
+  GstElementFactory *d_factory, *s_factory;
+  GList *dec_list, *sink_list, *dl, *sl;
+  GList *ave_list = NULL;
+  GstAVElement *ave;
+  guint n_common_cf = 0;
+
+  if (isaudioelement) {
+    sink_list = gst_element_factory_list_get_elements
+        (GST_ELEMENT_FACTORY_TYPE_SINK |
+        GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO, GST_RANK_MARGINAL);
+    dec_list =
+        gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_DECODER
+        | GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO, GST_RANK_MARGINAL);
+  } else {
+    sink_list = gst_element_factory_list_get_elements
+        (GST_ELEMENT_FACTORY_TYPE_SINK |
+        GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO |
+        GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE, GST_RANK_MARGINAL);
+
+    dec_list =
+        gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_DECODER
+        | GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO |
+        GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE, GST_RANK_MARGINAL);
+  }
+
+  /* create a list of audio/video elements. Each element in the list
+   * is holding an audio/video decoder and an auido/video sink in which
+   * the decoders srcpad template caps and sink element's sinkpad template
+   * caps are compatible */
+  dl = dec_list;
+  sl = sink_list;
+
+  for (; dl; dl = dl->next) {
+    d_factory = (GstElementFactory *) dl->data;
+    for (; sl; sl = sl->next) {
+      s_factory = (GstElementFactory *) sl->data;
+
+      n_common_cf = get_n_common_capsfeatures (d_factory, s_factory);
+      if (n_common_cf < 1)
+        continue;
+
+      ave = g_slice_new (GstAVElement);
+      ave->dec = gst_object_ref (d_factory);
+      ave->sink = gst_object_ref (s_factory);
+      ave->n_comm_cf = n_common_cf;
+      ave_list = g_list_prepend (ave_list, ave);
+    }
+    sl = sink_list;
+  }
+
+  gst_plugin_feature_list_free (dec_list);
+  gst_plugin_feature_list_free (sink_list);
+
+  ave_list = g_list_sort (ave_list, (GCompareFunc) avelement_compare);
+
+  return ave_list;
+}
+
+static GList *
+create_decoders_list (GList * factory_list, GList * avelements)
+{
+  GList *dec_list = NULL, *tmp;
+  GstElementFactory *factory;
+  GstAVElement *ave;
+  guint dl_length, dl_count = 0;
+
+  if (!factory_list || !avelements)
+    return NULL;
+
+  dl_length = g_list_length (factory_list);
+  tmp = factory_list;
+
+  for (; tmp; tmp = tmp->next) {
+    factory = (GstElementFactory *) tmp->data;
+    /* if there are parsers, add them first */
+    if (!gst_element_factory_list_is_type (factory,
+            GST_ELEMENT_FACTORY_TYPE_DECODER)) {
+      dec_list = g_list_prepend (dec_list, factory);
+      dl_count++;
+    }
+  }
+
+  for (; avelements; avelements = avelements->next) {
+    ave = (GstAVElement *) avelements->data;
+
+    if (g_list_find (factory_list, ave->dec)
+        && !g_list_find (dec_list, ave->dec)) {
+      dec_list = g_list_prepend (dec_list, ave->dec);
+
+      /* to avoid unnecessary comparisons since the avelements list might be big */
+      if (++dl_count == dl_length)
+        break;
+    }
+  }
+
+  dec_list = g_list_reverse (dec_list);
+
+  return dec_list;
+}
+
 /* Called when we must provide a list of factories to plug to @pad with @caps.
  * We first check if we have a sink that can handle the format and if we do, we
  * return NULL, to expose the pad. If we have no sink (or the sink does not
@@ -3244,9 +3516,11 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
     GstCaps * caps, GstSourceGroup * group)
 {
   GstPlayBin *playbin;
-  GList *mylist, *tmp;
+  GList *factory_list, *tmp;
   GValueArray *result;
   gboolean unref_caps = FALSE;
+  gboolean isaudiodeclist = FALSE;
+  gboolean isvideodeclist = FALSE;
 
   if (!caps) {
     caps = gst_caps_new_any ();
@@ -3261,16 +3535,48 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
   /* filter out the elements based on the caps. */
   g_mutex_lock (&playbin->elements_lock);
   gst_play_bin_update_elements_list (playbin);
-  mylist =
+  factory_list =
       gst_element_factory_list_filter (playbin->elements, caps, GST_PAD_SINK,
       FALSE);
   g_mutex_unlock (&playbin->elements_lock);
 
-  GST_DEBUG_OBJECT (playbin, "found factories %p", mylist);
-  GST_PLUGIN_FEATURE_LIST_DEBUG (mylist);
+  GST_DEBUG_OBJECT (playbin, "found factories %p", factory_list);
+  GST_PLUGIN_FEATURE_LIST_DEBUG (factory_list);
+
+  /* check whether the caps are asking for a list of audio/video decoders */
+  tmp = factory_list;
+  if (!gst_caps_is_any (caps)) {
+    for (; tmp; tmp = tmp->next) {
+      GstElementFactory *factory = (GstElementFactory *) tmp->data;
+
+      isvideodeclist = gst_element_factory_list_is_type (factory,
+          GST_ELEMENT_FACTORY_TYPE_DECODER |
+          GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO |
+          GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE);
+      isaudiodeclist = gst_element_factory_list_is_type (factory,
+          GST_ELEMENT_FACTORY_TYPE_DECODER |
+          GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO);
+
+      if (isaudiodeclist || isvideodeclist)
+        break;
+    }
+  }
+
+  if (isaudiodeclist || isvideodeclist) {
+    GList **ave_list;
+    if (isaudiodeclist)
+      ave_list = &playbin->aelements;
+    else
+      ave_list = &playbin->velements;
+
+    g_mutex_lock (&playbin->elements_lock);
+    /* sort factory_list based on the GstAVElement list priority */
+    factory_list = create_decoders_list (factory_list, *ave_list);
+    g_mutex_unlock (&playbin->elements_lock);
+  }
 
   /* 2 additional elements for the already set audio/video sinks */
-  result = g_value_array_new (g_list_length (mylist) + 2);
+  result = g_value_array_new (g_list_length (factory_list) + 2);
 
   /* Check if we already have an audio/video sink and if this is the case
    * put it as the first element of the array */
@@ -3300,7 +3606,7 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
     }
   }
 
-  for (tmp = mylist; tmp; tmp = tmp->next) {
+  for (tmp = factory_list; tmp; tmp = tmp->next) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY_CAST (tmp->data);
     GValue val = { 0, };
 
@@ -3320,7 +3626,7 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
     g_value_array_append (result, &val);
     g_value_unset (&val);
   }
-  gst_plugin_feature_list_free (mylist);
+  gst_plugin_feature_list_free (factory_list);
 
   if (unref_caps)
     gst_caps_unref (caps);
@@ -3454,6 +3760,7 @@ sink_accepts_caps (GstElement * sink, GstCaps * caps)
   return TRUE;
 }
 
+
 static GstStaticCaps raw_audio_caps = GST_STATIC_CAPS ("audio/x-raw");
 static GstStaticCaps raw_video_caps = GST_STATIC_CAPS ("video/x-raw");
 
@@ -3470,6 +3777,8 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   const gchar *klass;
   GstPlaySinkType type;
   GstElement **sinkp;
+  GstAVElement *ave = NULL;
+  GList *ave_list = NULL, *tmp = NULL;
 
   playbin = group->playbin;
 
@@ -3490,62 +3799,106 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
         GST_ELEMENT_FACTORY_TYPE_DECODER |
         GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO);
 
-    /* If it is a decoder and we have a fixed sink for the media
-     * type it outputs, check that the decoder is compatible with this sink */
-    if ((isvideodec && group->video_sink) || (isaudiodec && group->audio_sink)) {
-      gboolean compatible = TRUE;
-      GstPad *sinkpad;
-      GstCaps *caps;
-      GstElement *sink;
+    if (!isvideodec && !isaudiodec)
+      return GST_AUTOPLUG_SELECT_TRY;
 
-      if (isaudiodec)
-        sink = group->audio_sink;
-      else
-        sink = group->video_sink;
+    g_mutex_lock (&playbin->elements_lock);
 
-      if ((sinkpad = gst_element_get_static_pad (sink, "sink"))) {
-        GstPlayFlags flags = gst_play_bin_get_flags (playbin);
-        GstCaps *raw_caps =
-            (isaudiodec) ? gst_static_caps_get (&raw_audio_caps) :
-            gst_static_caps_get (&raw_video_caps);
+    if (isaudiodec) {
+      ave_list = playbin->aelements;
+      sinkp = &group->audio_sink;
+    } else {
+      ave_list = playbin->velements;
+      sinkp = &group->video_sink;
+    }
 
-        caps = gst_pad_query_caps (sinkpad, NULL);
+    /* if it is a decoder and we don't have a fixed sink, then find out 
+     * the matching audio/video sink from GstAVElements list */
+    for (tmp = ave_list; tmp; tmp = tmp->next) {
+      ave = (GstAVElement *) tmp->data;
+      if (ave->dec != factory)
+        continue;
 
-        /* If the sink supports raw audio/video, we first check
-         * if the decoder could output any raw audio/video format
-         * and assume it is compatible with the sink then. We don't
-         * do a complete compatibility check here if converters
-         * are plugged between the decoder and the sink because
-         * the converters will convert between raw formats and
-         * even if the decoder format is not supported by the decoder
-         * a converter will convert it.
-         *
-         * We assume here that the converters can convert between
-         * any raw format.
-         */
-        if ((isaudiodec && !(flags & GST_PLAY_FLAG_NATIVE_AUDIO)
-                && gst_caps_can_intersect (caps, raw_caps)) || (!isaudiodec
-                && !(flags & GST_PLAY_FLAG_NATIVE_VIDEO)
-                && gst_caps_can_intersect (caps, raw_caps))) {
-          compatible = gst_element_factory_can_src_any_caps (factory, raw_caps)
-              || gst_element_factory_can_src_any_caps (factory, caps);
-        } else {
-          compatible = gst_element_factory_can_src_any_caps (factory, caps);
+      if (((isaudiodec && !group->audio_sink) ||
+              (isvideodec && !group->video_sink)) && ave_list) {
+
+        GST_SOURCE_GROUP_LOCK (group);
+        if (ave && ave->sink) {
+          if ((*sinkp = gst_element_factory_create (ave->sink, NULL)) == NULL)
+            GST_WARNING_OBJECT (playbin, "Could not create an element from %s",
+                gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (*sinkp)));
+          gst_object_ref_sink (*sinkp);
         }
-
-        gst_object_unref (sinkpad);
-        gst_caps_unref (caps);
+        GST_SOURCE_GROUP_UNLOCK (group);
       }
 
-      if (compatible)
-        return GST_AUTOPLUG_SELECT_TRY;
+      /* If it is a decoder and we have a fixed sink for the media
+       * type it outputs, check that the decoder is compatible with this sink */
+      if ((isaudiodec && group->audio_sink) || (isvideodec
+              && group->video_sink)) {
+        gboolean compatible = TRUE;
+        GstPad *sinkpad;
+        GstCaps *caps;
+        GstElement *sink;
 
-      GST_DEBUG_OBJECT (playbin, "%s not compatible with the fixed sink",
-          GST_OBJECT_NAME (factory));
+        sink = *sinkp;
 
-      return GST_AUTOPLUG_SELECT_SKIP;
-    } else
-      return GST_AUTOPLUG_SELECT_TRY;
+        if ((sinkpad = gst_element_get_static_pad (sink, "sink"))) {
+          GstPlayFlags flags = gst_play_bin_get_flags (playbin);
+          GstCaps *raw_caps =
+              (isaudiodec) ? gst_static_caps_get (&raw_audio_caps) :
+              gst_static_caps_get (&raw_video_caps);
+
+          caps = gst_pad_query_caps (sinkpad, NULL);
+
+          /* If the sink supports raw audio/video, we first check
+           * if the decoder could output any raw audio/video format
+           * and assume it is compatible with the sink then. We don't
+           * do a complete compatibility check here if converters
+           * are plugged between the decoder and the sink because
+           * the converters will convert between raw formats and
+           * even if the decoder format is not supported by the decoder
+           * a converter will convert it.
+           *
+           * We assume here that the converters can convert between
+           * any raw format.
+           */
+          if ((isaudiodec && !(flags & GST_PLAY_FLAG_NATIVE_AUDIO)
+                  && gst_caps_can_intersect (caps, raw_caps)) || (!isaudiodec
+                  && !(flags & GST_PLAY_FLAG_NATIVE_VIDEO)
+                  && gst_caps_can_intersect (caps, raw_caps))) {
+            compatible =
+                gst_element_factory_can_src_any_caps (factory, raw_caps)
+                || gst_element_factory_can_src_any_caps (factory, caps);
+          } else {
+            compatible = gst_element_factory_can_src_any_caps (factory, caps);
+          }
+
+          gst_object_unref (sinkpad);
+          gst_caps_unref (caps);
+        }
+
+        if (compatible)
+          break;
+
+        GST_DEBUG_OBJECT (playbin, "%s not compatible with the fixed sink",
+            GST_OBJECT_NAME (factory));
+
+        if ((isaudiodec && group->audio_sink != playbin->audio_sink) ||
+            (isvideodec && group->video_sink != playbin->video_sink)) {
+          GST_SOURCE_GROUP_LOCK (group);
+          gst_element_set_state (*sinkp, GST_STATE_NULL);
+          gst_object_unref (*sinkp);
+          *sinkp = NULL;
+          GST_SOURCE_GROUP_UNLOCK (group);
+        } else {
+          g_mutex_unlock (&playbin->elements_lock);
+          return GST_AUTOPLUG_SELECT_SKIP;
+        }
+      }
+    }
+    g_mutex_unlock (&playbin->elements_lock);
+    return GST_AUTOPLUG_SELECT_TRY;
   }
 
   /* it's a sink, see if an instance of it actually works */
