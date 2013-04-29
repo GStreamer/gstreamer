@@ -548,6 +548,7 @@ stop_typefinding (GstTypeFindElement * typefind)
   GST_DEBUG_OBJECT (typefind, "stopping typefinding%s",
       push_cached_buffers ? " and pushing cached events and buffers" : "");
 
+  typefind->mode = MODE_NORMAL;
   if (push_cached_buffers)
     gst_type_find_element_send_cached_events (typefind);
 
@@ -563,8 +564,6 @@ stop_typefinding (GstTypeFindElement * typefind)
     gst_buffer_unref (buffer);
   } else {
     GstPad *peer = gst_pad_get_peer (typefind->src);
-
-    typefind->mode = MODE_NORMAL;
 
     /* make sure the user gets a meaningful error message in this case,
      * which is not a core bug or bug of any kind (as the default error
