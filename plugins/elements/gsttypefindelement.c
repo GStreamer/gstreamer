@@ -543,13 +543,15 @@ stop_typefinding (GstTypeFindElement * typefind)
 
   gst_element_get_state (GST_ELEMENT (typefind), &state, NULL, 0);
 
-  GST_OBJECT_LOCK (typefind);
-
   push_cached_buffers = (state >= GST_STATE_PAUSED && typefind->caps);
 
   GST_DEBUG_OBJECT (typefind, "stopping typefinding%s",
-      push_cached_buffers ? " and pushing cached buffers" : "");
+      push_cached_buffers ? " and pushing cached events and buffers" : "");
 
+  if (push_cached_buffers)
+    gst_type_find_element_send_cached_events (typefind);
+
+  GST_OBJECT_LOCK (typefind);
   avail = gst_adapter_available (typefind->adapter);
   if (avail == 0)
     goto no_data;
@@ -579,7 +581,6 @@ stop_typefinding (GstTypeFindElement * typefind)
       typefind->mode = MODE_ERROR;      /* make the chain function error out */
       gst_buffer_unref (buffer);
     } else {
-      gst_type_find_element_send_cached_events (typefind);
       gst_pad_push (typefind->src, buffer);
     }
     if (peer)
