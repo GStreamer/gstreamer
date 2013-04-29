@@ -8,7 +8,15 @@ noinst_HEADERS = gstgoom.h filters.h goom_core.h goom_tools.h graphic.h lines.h
 libgstgoom2k1_la_SOURCES = gstgoom.c goom_core.c $(GOOM_FILTER_FILES) graphic.c lines.c
 
 libgstgoom2k1_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GOOM_FILTER_CFLAGS) \
-	-Dgst_goom_get_type=gst_goom2k1_get_type
+	-Dgst_goom_get_type=gst_goom2k1_get_type		\
+	-Dgoom_init=goom2k1_init				\
+	-Dgoom_close=goom2k1_close -Dgoom_update=goom2k1_update	\
+	-Dgoom_set_resolution=goom2k1_set_resolution		\
+	-Dgoom_lines=goom2k1_lines				\
+	-DzoomFilterFastRGB=zoomFilterFastRGB2k1		\
+	-DpointFilter=pointFilter2k1				\
+	-DzoomFilterDestroy=zoomFilterDestroy2k1		\
+	-DzoomFilterNew=zoomFilterNew2k1
 
 libgstgoom2k1_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
 libgstgoom2k1_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
