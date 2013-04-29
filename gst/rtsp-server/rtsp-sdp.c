@@ -20,6 +20,48 @@
 
 #include "rtsp-sdp.h"
 
+static gboolean
+get_info_from_tags (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GstSDPMedia * media = (GstSDPMedia *) user_data;
+
+  if (GST_EVENT_TYPE (*event) == GST_EVENT_TAG) {
+    GstTagList *tags;
+    guint bitrate = 0;
+
+    gst_event_parse_tag (*event, &tags);
+
+    if (gst_tag_list_get_scope (tags) != GST_TAG_SCOPE_STREAM)
+      return TRUE;
+
+    if (!gst_tag_list_get_uint (tags, GST_TAG_MAXIMUM_BITRATE,
+          &bitrate) || bitrate == 0)
+      if (!gst_tag_list_get_uint (tags, GST_TAG_BITRATE, &bitrate) ||
+          bitrate == 0)
+        return TRUE;
+
+    /* set bandwidth (kbits/s) */
+    gst_sdp_media_add_bandwidth (media, GST_SDP_BWTYPE_AS, bitrate/1000);
+
+    return FALSE;
+
+  }
+
+  return TRUE;
+}
+
+static void
+update_sdp_from_tags (GstRTSPStream * stream, GstSDPMedia * stream_media)
+{
+  GstPad *src_pad;
+
+  src_pad = gst_rtsp_stream_get_srcpad (stream);
+
+  gst_pad_sticky_events_foreach (src_pad, get_info_from_tags, stream_media);
+
+  gst_object_unref (src_pad);
+}
+
 /**
  * gst_rtsp_sdp_from_media:
  * @sdp: a #GstSDPMessage
@@ -153,6 +195,9 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
     } else {
       g_string_free (fmtp, TRUE);
     }
+
+    update_sdp_from_tags (stream, smedia);
+
     gst_sdp_message_add_media (sdp, smedia);
     gst_sdp_media_free (smedia);
     gst_caps_unref (caps);

@@ -108,7 +108,7 @@ test_response_454 (GstRTSPClient * client, GstRTSPMessage * response,
 }
 
 static GstRTSPClient *
-setup_client (void)
+setup_client (const gchar * launch_line)
 {
   GstRTSPClient *client;
   GstRTSPSessionPool *session_pool;
@@ -122,8 +122,12 @@ setup_client (void)
 
   mount_points = gst_rtsp_mount_points_new ();
   factory = gst_rtsp_media_factory_new ();
-  gst_rtsp_media_factory_set_launch (factory,
-      "videotestsrc ! video/x-raw,width=352,height=288 ! rtpgstpay name=pay0 pt=96");
+  if (launch_line == NULL)
+    gst_rtsp_media_factory_set_launch (factory,
+        "videotestsrc ! video/x-raw,width=352,height=288 ! rtpgstpay name=pay0 pt=96");
+  else
+    gst_rtsp_media_factory_set_launch (factory, launch_line);
+
   gst_rtsp_mount_points_add_factory (mount_points, "/test", factory);
   gst_rtsp_client_set_mount_points (client, mount_points);
 
@@ -267,7 +271,7 @@ GST_START_TEST (test_describe)
   g_object_unref (client);
 
   /* simple DESCRIBE for an existing url */
-  client = setup_client ();
+  client = setup_client (NULL);
   fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_DESCRIBE,
             "rtsp://localhost/test") == GST_RTSP_OK);
   str = g_strdup_printf ("%d", cseq);
@@ -612,6 +616,138 @@ GST_START_TEST (test_client_multicast_transport_specific)
 
 GST_END_TEST;
 
+static gboolean
+test_response_sdp (GstRTSPClient * client, GstRTSPMessage * response,
+    gboolean close, gpointer user_data)
+{
+  guint8 *data;
+  guint size;
+  GstSDPMessage *sdp_msg;
+  const GstSDPMedia *sdp_media;
+  const GstSDPBandwidth *bw;
+  gint bandwidth_val = GPOINTER_TO_INT (user_data);
+
+  fail_unless (gst_rtsp_message_get_body (response, &data, &size)
+      == GST_RTSP_OK);
+  gst_sdp_message_new (&sdp_msg);
+  fail_unless (gst_sdp_message_parse_buffer (data, size, sdp_msg)
+      == GST_SDP_OK);
+
+  /* session description */
+  /* v= */
+  fail_unless (gst_sdp_message_get_version (sdp_msg) != NULL);
+  /* o= */
+  fail_unless (gst_sdp_message_get_origin (sdp_msg) != NULL);
+  /* s= */
+  fail_unless (gst_sdp_message_get_session_name (sdp_msg) != NULL);
+  /* t=0 0 */
+  fail_unless (gst_sdp_message_times_len (sdp_msg) == 0);
+
+  /* verify number of medias */
+  fail_unless (gst_sdp_message_medias_len (sdp_msg) == 1);
+
+  /* media description */
+  sdp_media = gst_sdp_message_get_media (sdp_msg, 0);
+  fail_unless (sdp_media != NULL);
+
+  /* m= */
+  fail_unless (gst_sdp_media_get_media (sdp_media) != NULL);
+
+  /* media bandwidth */
+  if (bandwidth_val) {
+     fail_unless (gst_sdp_media_bandwidths_len (sdp_media) == 1);
+     bw = gst_sdp_media_get_bandwidth (sdp_media, 0);
+     fail_unless (bw != NULL);
+     fail_unless (g_strcmp0 (bw->bwtype, "AS") == 0);
+     fail_unless (bw->bandwidth == bandwidth_val);
+  } else {
+     fail_unless (gst_sdp_media_bandwidths_len (sdp_media) == 0);
+  }
+
+  gst_sdp_message_free (sdp_msg);
+
+  return TRUE;
+}
+
+static void
+test_client_sdp (const gchar * launch_line, guint * bandwidth_val)
+{
+  GstRTSPClient *client;
+  GstRTSPMessage request = { 0, };
+  gchar *str;
+
+  /* simple DESCRIBE for an existing url */
+  client = setup_client (launch_line);
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_DESCRIBE,
+            "rtsp://localhost/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_CSEQ, str);
+  g_free (str);
+
+  gst_rtsp_client_set_send_func (client, test_response_sdp, (gpointer) bandwidth_val, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+
+  g_object_unref (client);
+
+}
+
+GST_START_TEST (test_client_sdp_with_max_bitrate_tag)
+{
+  test_client_sdp ("videotestsrc "
+      "! taginject tags=\"maximum-bitrate=(uint)50000000\" "
+      "! video/x-raw,width=352,height=288 ! rtpgstpay name=pay0 pt=96", GUINT_TO_POINTER (50000));
+
+
+  /* max-bitrate=0: no bandwidth line */
+  test_client_sdp ("videotestsrc "
+      "! taginject tags=\"maximum-bitrate=(uint)0\" "
+      "! video/x-raw,width=352,height=288 ! rtpgstpay name=pay0 pt=96", GUINT_TO_POINTER (0));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_client_sdp_with_bitrate_tag)
+{
+  test_client_sdp ("videotestsrc "
+      "! taginject tags=\"bitrate=(uint)7000000\" "
+      "! video/x-raw,width=352,height=288 ! rtpgstpay name=pay0 pt=96", GUINT_TO_POINTER (7000));
+
+  /* bitrate=0: no bandwdith line */
+  test_client_sdp ("videotestsrc "
+      "! taginject tags=\"bitrate=(uint)0\" "
+      "! video/x-raw,width=352,height=288 ! rtpgstpay name=pay0 pt=96", GUINT_TO_POINTER (0));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_client_sdp_with_max_bitrate_and_bitrate_tags)
+{
+  test_client_sdp ("videotestsrc "
+      "! taginject tags=\"bitrate=(uint)7000000,maximum-bitrate=(uint)50000000\" "
+      "! video/x-raw,width=352,height=288 ! rtpgstpay name=pay0 pt=96", GUINT_TO_POINTER (50000));
+
+  /* max-bitrate is zero: fallback to bitrate */
+  test_client_sdp ("videotestsrc "
+      "! taginject tags=\"bitrate=(uint)7000000,maximum-bitrate=(uint)0\" "
+      "! video/x-raw,width=352,height=288 ! rtpgstpay name=pay0 pt=96", GUINT_TO_POINTER (7000));
+
+  /* max-bitrate=bitrate=0o: no bandwidth line */
+  test_client_sdp ("videotestsrc "
+      "! taginject tags=\"bitrate=(uint)0,maximum-bitrate=(uint)0\" "
+      "! video/x-raw,width=352,height=288 ! rtpgstpay name=pay0 pt=96", GUINT_TO_POINTER (0));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_client_sdp_with_no_bitrate_tags)
+{
+  test_client_sdp ("videotestsrc "
+      "! video/x-raw,width=352,height=288 ! rtpgstpay name=pay0 pt=96", NULL);
+}
+
+GST_END_TEST;
 
 static Suite *
 rtspclient_suite (void)
@@ -629,6 +765,10 @@ rtspclient_suite (void)
   tcase_add_test (tc, test_client_multicast_ignore_transport_specific);
   tcase_add_test (tc, test_client_multicast_invalid_transport_specific);
   tcase_add_test (tc, test_client_multicast_transport_specific);
+  tcase_add_test (tc, test_client_sdp_with_max_bitrate_tag);
+  tcase_add_test (tc, test_client_sdp_with_bitrate_tag);
+  tcase_add_test (tc, test_client_sdp_with_max_bitrate_and_bitrate_tags);
+  tcase_add_test (tc, test_client_sdp_with_no_bitrate_tags);
 
   return s;
 }
