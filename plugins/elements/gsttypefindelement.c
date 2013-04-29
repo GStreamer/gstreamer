@@ -644,13 +644,22 @@ gst_type_find_element_sink_event (GstPad * pad, GstObject * parent,
           res = gst_pad_push_event (typefind->src, event);
           break;
         default:
-          GST_DEBUG_OBJECT (typefind, "Saving %s event to send later",
-              GST_EVENT_TYPE_NAME (event));
-          GST_OBJECT_LOCK (typefind);
-          typefind->cached_events =
-              g_list_append (typefind->cached_events, event);
-          GST_OBJECT_UNLOCK (typefind);
-          res = TRUE;
+          /* Forward events that would happen before the caps event
+           * directly instead of storing them. There's no reason not
+           * to send them directly and we should only store events
+           * for later sending that would need to come after the caps
+           * event */
+          if (GST_EVENT_TYPE (event) < GST_EVENT_CAPS) {
+            res = gst_pad_push_event (typefind->src, event);
+          } else {
+            GST_DEBUG_OBJECT (typefind, "Saving %s event to send later",
+                GST_EVENT_TYPE_NAME (event));
+            GST_OBJECT_LOCK (typefind);
+            typefind->cached_events =
+                g_list_append (typefind->cached_events, event);
+            GST_OBJECT_UNLOCK (typefind);
+            res = TRUE;
+          }
           break;
       }
       break;
