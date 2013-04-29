@@ -1,0 +1,404 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C67B40CD172EBEA3008359CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CC172EBEA3008359CC /* UIKit.framework */; };
+		C67B40CF172EBEA3008359CC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CE172EBEA3008359CC /* Foundation.framework */; };
+		C67B40D1172EBEA3008359CC /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D0172EBEA3008359CC /* CoreGraphics.framework */; };
+		C67B40D3172EBEA3008359CC /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D2172EBEA3008359CC /* GStreamer.framework */; };
+		C67B40D9172EBEA3008359CC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C67B40D7172EBEA3008359CC /* InfoPlist.strings */; };
+		C67B40DB172EBEA3008359CC /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C67B40DA172EBEA3008359CC /* main.m */; };
+		C67B40DF172EBEA3008359CC /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C67B40DE172EBEA3008359CC /* AppDelegate.m */; };
+		C67B40E1172EBEA3008359CC /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = C67B40E0172EBEA3008359CC /* Default.png */; };
+		C67B40E3172EBEA3008359CC /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C67B40E2172EBEA3008359CC /* Default@2x.png */; };
+		C67B40E5172EBEA3008359CC /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C67B40E4172EBEA3008359CC /* Default-568h@2x.png */; };
+		C67B40E8172EBEA3008359CC /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C67B40E6172EBEA3008359CC /* MainStoryboard_iPhone.storyboard */; };
+		C67B40EB172EBEA3008359CC /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C67B40E9172EBEA3008359CC /* MainStoryboard_iPad.storyboard */; };
+		C67B40EE172EBEA3008359CC /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67B40ED172EBEA3008359CC /* ViewController.m */; };
+		C67B40F0172EBEA3008359CC /* gst_ios_backend.c in Sources */ = {isa = PBXBuildFile; fileRef = C67B40EF172EBEA3008359CC /* gst_ios_backend.c */; };
+		C67B40F3172EBEA3008359CC /* gst_ios_plugins.c in Sources */ = {isa = PBXBuildFile; fileRef = C67B40F2172EBEA3008359CC /* gst_ios_plugins.c */; };
+		C67B40FA172EC27D008359CC /* GStreamerBackend.m in Sources */ = {isa = PBXBuildFile; fileRef = C67B40F9172EC27D008359CC /* GStreamerBackend.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		C67B40C9172EBEA3008359CC /* Tutorial 1.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tutorial 1.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C67B40CC172EBEA3008359CC /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		C67B40CE172EBEA3008359CC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		C67B40D0172EBEA3008359CC /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = Library/Frameworks/CoreGraphics.framework; sourceTree = DEVELOPER_DIR; };
+		C67B40D2172EBEA3008359CC /* GStreamer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GStreamer.framework; path = Library/Frameworks/GStreamer.framework; sourceTree = SDKROOT; };
+		C67B40D6172EBEA3008359CC /* Tutorial 1-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tutorial 1-Info.plist"; sourceTree = "<group>"; };
+		C67B40D8172EBEA3008359CC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		C67B40DA172EBEA3008359CC /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		C67B40DC172EBEA3008359CC /* Tutorial 1-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tutorial 1-Prefix.pch"; sourceTree = "<group>"; };
+		C67B40DD172EBEA3008359CC /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		C67B40DE172EBEA3008359CC /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		C67B40E0172EBEA3008359CC /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
+		C67B40E2172EBEA3008359CC /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
+		C67B40E4172EBEA3008359CC /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		C67B40E7172EBEA3008359CC /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		C67B40EA172EBEA3008359CC /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		C67B40EC172EBEA3008359CC /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		C67B40ED172EBEA3008359CC /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		C67B40EF172EBEA3008359CC /* gst_ios_backend.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gst_ios_backend.c; sourceTree = "<group>"; };
+		C67B40F1172EBEA3008359CC /* gst_ios_backend.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gst_ios_backend.h; sourceTree = "<group>"; };
+		C67B40F2172EBEA3008359CC /* gst_ios_plugins.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gst_ios_plugins.c; sourceTree = "<group>"; };
+		C67B40F4172EBEA4008359CC /* gst_ios_plugins.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gst_ios_plugins.h; sourceTree = "<group>"; };
+		C67B40F8172EC27D008359CC /* GStreamerBackend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackend.h; sourceTree = "<group>"; };
+		C67B40F9172EC27D008359CC /* GStreamerBackend.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GStreamerBackend.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C67B40C6172EBEA3008359CC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C67B40CD172EBEA3008359CC /* UIKit.framework in Frameworks */,
+				C67B40CF172EBEA3008359CC /* Foundation.framework in Frameworks */,
+				C67B40D1172EBEA3008359CC /* CoreGraphics.framework in Frameworks */,
+				C67B40D3172EBEA3008359CC /* GStreamer.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C67B40BE172EBDF1008359CC = {
+			isa = PBXGroup;
+			children = (
+				C67B40D4172EBEA3008359CC /* Tutorial 1 */,
+				C67B40CB172EBEA3008359CC /* Frameworks */,
+				C67B40CA172EBEA3008359CC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C67B40CA172EBEA3008359CC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C67B40C9172EBEA3008359CC /* Tutorial 1.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C67B40CB172EBEA3008359CC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C67B40CC172EBEA3008359CC /* UIKit.framework */,
+				C67B40CE172EBEA3008359CC /* Foundation.framework */,
+				C67B40D0172EBEA3008359CC /* CoreGraphics.framework */,
+				C67B40D2172EBEA3008359CC /* GStreamer.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		C67B40D4172EBEA3008359CC /* Tutorial 1 */ = {
+			isa = PBXGroup;
+			children = (
+				C67B40F8172EC27D008359CC /* GStreamerBackend.h */,
+				C67B40F9172EC27D008359CC /* GStreamerBackend.m */,
+				C67B40DD172EBEA3008359CC /* AppDelegate.h */,
+				C67B40DE172EBEA3008359CC /* AppDelegate.m */,
+				C67B40E6172EBEA3008359CC /* MainStoryboard_iPhone.storyboard */,
+				C67B40E9172EBEA3008359CC /* MainStoryboard_iPad.storyboard */,
+				C67B40EC172EBEA3008359CC /* ViewController.h */,
+				C67B40ED172EBEA3008359CC /* ViewController.m */,
+				C67B40D5172EBEA3008359CC /* Supporting Files */,
+			);
+			path = "Tutorial 1";
+			sourceTree = SOURCE_ROOT;
+		};
+		C67B40D5172EBEA3008359CC /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				C67B40D6172EBEA3008359CC /* Tutorial 1-Info.plist */,
+				C67B40D7172EBEA3008359CC /* InfoPlist.strings */,
+				C67B40DA172EBEA3008359CC /* main.m */,
+				C67B40DC172EBEA3008359CC /* Tutorial 1-Prefix.pch */,
+				C67B40E0172EBEA3008359CC /* Default.png */,
+				C67B40E2172EBEA3008359CC /* Default@2x.png */,
+				C67B40E4172EBEA3008359CC /* Default-568h@2x.png */,
+				C67B40EF172EBEA3008359CC /* gst_ios_backend.c */,
+				C67B40F1172EBEA3008359CC /* gst_ios_backend.h */,
+				C67B40F2172EBEA3008359CC /* gst_ios_plugins.c */,
+				C67B40F4172EBEA4008359CC /* gst_ios_plugins.h */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C67B40C8172EBEA3008359CC /* Tutorial 1 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C67B40F7172EBEA4008359CC /* Build configuration list for PBXNativeTarget "Tutorial 1" */;
+			buildPhases = (
+				C67B40C5172EBEA3008359CC /* Sources */,
+				C67B40C6172EBEA3008359CC /* Frameworks */,
+				C67B40C7172EBEA3008359CC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Tutorial 1";
+			productName = "Tutorial 1";
+			productReference = C67B40C9172EBEA3008359CC /* Tutorial 1.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C67B40BF172EBDF1008359CC /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+			};
+			buildConfigurationList = C67B40C2172EBDF1008359CC /* Build configuration list for PBXProject "GStreamer iOS Tutorials" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = C67B40BE172EBDF1008359CC;
+			productRefGroup = C67B40CA172EBEA3008359CC /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C67B40C8172EBEA3008359CC /* Tutorial 1 */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C67B40C7172EBEA3008359CC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C67B40D9172EBEA3008359CC /* InfoPlist.strings in Resources */,
+				C67B40E1172EBEA3008359CC /* Default.png in Resources */,
+				C67B40E3172EBEA3008359CC /* Default@2x.png in Resources */,
+				C67B40E5172EBEA3008359CC /* Default-568h@2x.png in Resources */,
+				C67B40E8172EBEA3008359CC /* MainStoryboard_iPhone.storyboard in Resources */,
+				C67B40EB172EBEA3008359CC /* MainStoryboard_iPad.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C67B40C5172EBEA3008359CC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C67B40DB172EBEA3008359CC /* main.m in Sources */,
+				C67B40DF172EBEA3008359CC /* AppDelegate.m in Sources */,
+				C67B40EE172EBEA3008359CC /* ViewController.m in Sources */,
+				C67B40F0172EBEA3008359CC /* gst_ios_backend.c in Sources */,
+				C67B40F3172EBEA3008359CC /* gst_ios_plugins.c in Sources */,
+				C67B40FA172EC27D008359CC /* GStreamerBackend.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		C67B40D7172EBEA3008359CC /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C67B40D8172EBEA3008359CC /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		C67B40E6172EBEA3008359CC /* MainStoryboard_iPhone.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C67B40E7172EBEA3008359CC /* en */,
+			);
+			name = MainStoryboard_iPhone.storyboard;
+			sourceTree = "<group>";
+		};
+		C67B40E9172EBEA3008359CC /* MainStoryboard_iPad.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C67B40EA172EBEA3008359CC /* en */,
+			);
+			name = MainStoryboard_iPad.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		C67B40C3172EBDF1008359CC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		C67B40C4172EBDF1008359CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		C67B40F5172EBEA4008359CC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = armv7;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"~/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tutorial 1/Tutorial 1-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				INFOPLIST_FILE = "Tutorial 1/Tutorial 1-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-lstdc++",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		C67B40F6172EBEA4008359CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = armv7;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"~/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tutorial 1/Tutorial 1-Prefix.pch";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				INFOPLIST_FILE = "Tutorial 1/Tutorial 1-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-lstdc++",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C67B40C2172EBDF1008359CC /* Build configuration list for PBXProject "GStreamer iOS Tutorials" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C67B40C3172EBDF1008359CC /* Debug */,
+				C67B40C4172EBDF1008359CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C67B40F7172EBEA4008359CC /* Build configuration list for PBXNativeTarget "Tutorial 1" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C67B40F5172EBEA4008359CC /* Debug */,
+				C67B40F6172EBEA4008359CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C67B40BF172EBDF1008359CC /* Project object */;
+}
