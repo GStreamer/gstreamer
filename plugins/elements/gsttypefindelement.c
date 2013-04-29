@@ -623,6 +623,19 @@ gst_type_find_element_sink_event (GstPad * pad, GstObject * parent,
           gst_event_unref (event);
           break;
         }
+        case GST_EVENT_GAP:
+        {
+          GST_FIXME_OBJECT (typefind,
+              "GAP events during typefinding not handled properly");
+
+          /* FIXME: These would need to be inserted in the stream at
+           * the right position between buffers, but we combine all
+           * buffers with a GstAdapter. Drop the GAP event for now,
+           * which will only cause an implicit GAP between buffers.
+           */
+          gst_event_unref (event);
+          res = TRUE;
+        }
         case GST_EVENT_EOS:
         {
           GST_INFO_OBJECT (typefind, "Got EOS and no type found yet");
