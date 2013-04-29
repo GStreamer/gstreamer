@@ -716,12 +716,10 @@ gst_type_find_element_setcaps (GstTypeFindElement * typefind, GstCaps * caps)
       GST_TYPE_FIND_MAXIMUM, caps);
 
   /* Shortcircuit typefinding if we get caps */
-  if (typefind->mode == MODE_TYPEFIND) {
-    GST_DEBUG_OBJECT (typefind, "Skipping typefinding, using caps from "
-        "upstream: %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (typefind, "Skipping typefinding, using caps from "
+      "upstream: %" GST_PTR_FORMAT, caps);
 
-    stop_typefinding (typefind);
-  }
+  stop_typefinding (typefind);
 
   return TRUE;
 }
