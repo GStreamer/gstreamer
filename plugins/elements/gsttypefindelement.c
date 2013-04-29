@@ -613,10 +613,7 @@ gst_type_find_element_sink_event (GstPad * pad, GstObject * parent,
         {
           GstCaps *caps;
 
-          /* first pass the caps event downstream */
-          res = gst_pad_push_event (typefind->src, gst_event_ref (event));
-
-          /* then parse and push out our data */
+          /* Parse and push out our caps and data */
           gst_event_parse_caps (event, &caps);
           res = gst_type_find_element_setcaps (typefind, caps);
 
