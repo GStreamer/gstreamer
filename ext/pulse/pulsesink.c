@@ -531,6 +531,11 @@ gst_pulseringbuffer_open_device (GstAudioRingBuffer * buf)
     pa_threaded_mainloop_wait (mainloop);
   }
 
+  if (pa_context_get_server_protocol_version (pbuf->context) < 22) {
+    /* We need PulseAudio >= 1.0 on the server side for the extended API */
+    goto bad_server_version;
+  }
+
   GST_LOG_OBJECT (psink, "opened the device");
 
   pa_threaded_mainloop_unlock (mainloop);
@@ -557,6 +562,12 @@ connect_failed:
   {
     GST_ELEMENT_ERROR (psink, RESOURCE, FAILED, ("Failed to connect: %s",
             pa_strerror (pa_context_errno (pctx->context))), (NULL));
+    goto unlock_and_fail;
+  }
+bad_server_version:
+  {
+    GST_ELEMENT_ERROR (psink, RESOURCE, FAILED, ("PulseAudio server version "
+            "is too old."), (NULL));
     goto unlock_and_fail;
   }
 }
