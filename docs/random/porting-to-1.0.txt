@@ -752,5 +752,6 @@ CHANGES
    pkg-config invocations or Makefile.am/Makefile to -1.0.
 
    While both versions can co-exist without problems on the same system, it
-   is not possible to use both versions at the same time in the same
-   application.
+   is not possible to use both versions at the same time in a single running
+   process. In most cases this would also not be the desired behaviour.
+
