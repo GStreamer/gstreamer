@@ -719,34 +719,13 @@ gst_type_find_element_setcaps (GstTypeFindElement * typefind, GstCaps * caps)
 
   /* Shortcircuit typefinding if we get caps */
   if (typefind->mode == MODE_TYPEFIND) {
-    GstBuffer *buffer;
-    gsize avail;
-
     GST_DEBUG_OBJECT (typefind, "Skipping typefinding, using caps from "
         "upstream: %" GST_PTR_FORMAT, caps);
-    typefind->mode = MODE_NORMAL;
 
-    gst_type_find_element_send_cached_events (typefind);
-    GST_OBJECT_LOCK (typefind);
-    avail = gst_adapter_available (typefind->adapter);
-    if (avail == 0)
-      goto no_data;
-
-    buffer = gst_adapter_take_buffer (typefind->adapter, avail);
-    GST_OBJECT_UNLOCK (typefind);
-
-    GST_DEBUG_OBJECT (typefind, "Pushing buffer: %" G_GSIZE_FORMAT, avail);
-    gst_pad_push (typefind->src, buffer);
+    stop_typefinding (typefind);
   }
 
   return TRUE;
-
-no_data:
-  {
-    GST_DEBUG_OBJECT (typefind, "no data to push");
-    GST_OBJECT_UNLOCK (typefind);
-    return TRUE;
-  }
 }
 
 static gchar *
