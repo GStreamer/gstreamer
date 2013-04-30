@@ -1582,6 +1582,7 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
 {
   GstX264Enc *encoder = GST_X264_ENC (video_enc);
   GstVideoInfo *info = &state->info;
+  GstCaps *template_caps;
   GstCaps *allowed_caps = NULL;
   gboolean level_ok = TRUE;
 
@@ -1613,9 +1614,16 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
   encoder->peer_intra_profile = FALSE;
   encoder->peer_level = NULL;
 
+  template_caps = gst_static_pad_template_get_caps (&src_factory);
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
 
-  if (allowed_caps) {
+  /* Output byte-stream if downstream has ANY caps, it's what people expect,
+   * and it makes more sense too */
+  if (allowed_caps == template_caps) {
+    GST_INFO_OBJECT (encoder,
+        "downstream has ANY caps, outputting byte-stream");
+    encoder->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_BYTE_STREAM;
+  } else if (allowed_caps) {
     GstStructure *s;
     const gchar *profile;
     const gchar *level;
@@ -1705,6 +1713,8 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
 
     gst_caps_unref (allowed_caps);
   }
+
+  gst_caps_unref (template_caps);
 
   if (!level_ok)
     return FALSE;
