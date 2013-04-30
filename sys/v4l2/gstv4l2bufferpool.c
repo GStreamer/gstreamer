@@ -196,11 +196,12 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
       if (obj->mode == GST_V4L2_IO_DMABUF) {
         struct v4l2_exportbuffer expbuf;
 
+        memset (&expbuf, 0, sizeof (struct v4l2_exportbuffer));
         expbuf.type = meta->vbuffer.type;
         expbuf.index = meta->vbuffer.index;
         expbuf.flags = O_CLOEXEC;
         if (v4l2_ioctl (pool->video_fd, VIDIOC_EXPBUF, &expbuf) < 0)
-          goto mmap_failed;
+          goto expbuf_failed;
 
         meta->vbuffer.memory = V4L2_MEMORY_DMABUF;
         gst_buffer_append_memory (newbuf,
@@ -267,6 +268,17 @@ mmap_failed:
     errno = errnosave;
     return GST_FLOW_ERROR;
   }
+#if HAVE_DECL_V4L2_MEMORY_DMABUF
+expbuf_failed:
+  {
+    gint errnosave = errno;
+
+    GST_WARNING ("Failed EXPBUF: %s", g_strerror (errnosave));
+    gst_buffer_unref (newbuf);
+    errno = errnosave;
+    return GST_FLOW_ERROR;
+  }
+#endif
 }
 
 static gboolean
