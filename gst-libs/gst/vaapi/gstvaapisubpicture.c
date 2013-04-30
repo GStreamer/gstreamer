@@ -30,37 +30,41 @@
 #include "gstvaapicompat.h"
 #include "gstvaapiutils.h"
 #include "gstvaapisubpicture.h"
-#include "gstvaapi_priv.h"
+#include "gstvaapiobject_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiSubpicture, gst_vaapi_subpicture, GST_VAAPI_TYPE_OBJECT)
+typedef struct _GstVaapiSubpictureClass         GstVaapiSubpictureClass;
 
-#define GST_VAAPI_SUBPICTURE_GET_PRIVATE(obj)                   \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_SUBPICTURE,	\
-                                 GstVaapiSubpicturePrivate))
+/**
+ * GstVaapiSubpicture:
+ *
+ * A VA subpicture wrapper
+ */
+struct _GstVaapiSubpicture {
+    /*< private >*/
+    GstVaapiObject parent_instance;
 
-struct _GstVaapiSubpicturePrivate {
     GstVaapiImage      *image;
     guint               flags;
     gfloat              global_alpha;
 };
 
-enum {
-    PROP_0,
-
-    PROP_FLAGS,
-    PROP_GLOBAL_ALPHA,
-    PROP_IMAGE
+/**
+ * GstVaapiSubpictureClass:
+ *
+ * A VA subpicture wrapper class
+ */
+struct _GstVaapiSubpictureClass {
+    /*< private >*/
+    GstVaapiObjectClass parent_class;
 };
 
 static void
 gst_vaapi_subpicture_destroy(GstVaapiSubpicture *subpicture)
 {
     GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(subpicture);
-    GstVaapiSubpicturePrivate * const priv = subpicture->priv;
     VASubpictureID subpicture_id;
     VAStatus status;
 
@@ -82,25 +86,21 @@ gst_vaapi_subpicture_destroy(GstVaapiSubpicture *subpicture)
         }
         GST_VAAPI_OBJECT_ID(subpicture) = VA_INVALID_ID;
     }
-
-    g_clear_object(&priv->image);
+    gst_vaapi_object_replace(&subpicture->image, NULL);
 }
 
 static gboolean
-gst_vaapi_subpicture_create(GstVaapiSubpicture *subpicture)
+gst_vaapi_subpicture_create(GstVaapiSubpicture *subpicture,
+    GstVaapiImage *image)
 {
     GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(subpicture);
-    GstVaapiSubpicturePrivate * const priv = subpicture->priv;
     VASubpictureID subpicture_id;
     VAStatus status;
-
-    if (!priv->image)
-        return FALSE;
 
     GST_VAAPI_DISPLAY_LOCK(display);
     status = vaCreateSubpicture(
         GST_VAAPI_DISPLAY_VADISPLAY(display),
-        GST_VAAPI_OBJECT_ID(priv->image),
+        GST_VAAPI_OBJECT_ID(image),
         &subpicture_id
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
@@ -110,134 +110,12 @@ gst_vaapi_subpicture_create(GstVaapiSubpicture *subpicture)
     GST_DEBUG("subpicture %" GST_VAAPI_ID_FORMAT,
               GST_VAAPI_ID_ARGS(subpicture_id));
     GST_VAAPI_OBJECT_ID(subpicture) = subpicture_id;
+    subpicture->image = gst_vaapi_object_ref(image);
     return TRUE;
 }
 
-static void
-gst_vaapi_subpicture_finalize(GObject *object)
-{
-    gst_vaapi_subpicture_destroy(GST_VAAPI_SUBPICTURE(object));
-
-    G_OBJECT_CLASS(gst_vaapi_subpicture_parent_class)->finalize(object);
-}
-
-static void
-gst_vaapi_subpicture_set_property(
-    GObject      *object,
-    guint         prop_id,
-    const GValue *value,
-    GParamSpec   *pspec
-)
-{
-    GstVaapiSubpicture * const subpicture = GST_VAAPI_SUBPICTURE(object);
-
-    switch (prop_id) {
-    case PROP_FLAGS:
-        subpicture->priv->flags = g_value_get_uint(value);
-        break;
-    case PROP_GLOBAL_ALPHA:
-        gst_vaapi_subpicture_set_global_alpha(subpicture,
-            g_value_get_float(value));
-        break;
-    case PROP_IMAGE:
-        gst_vaapi_subpicture_set_image(subpicture, g_value_get_object(value));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_subpicture_get_property(
-    GObject    *object,
-    guint       prop_id,
-    GValue     *value,
-    GParamSpec *pspec
-)
-{
-    GstVaapiSubpicture * const subpicture = GST_VAAPI_SUBPICTURE(object);
-
-    switch (prop_id) {
-    case PROP_FLAGS:
-        g_value_set_uint(value, subpicture->priv->flags);
-        break;
-    case PROP_GLOBAL_ALPHA:
-        g_value_set_float(value,
-            gst_vaapi_subpicture_get_global_alpha(subpicture));
-        break;
-    case PROP_IMAGE:
-        g_value_set_object(value, gst_vaapi_subpicture_get_image(subpicture));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_subpicture_class_init(GstVaapiSubpictureClass *klass)
-{
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
-
-    g_type_class_add_private(klass, sizeof(GstVaapiSubpicturePrivate));
-
-    object_class->finalize     = gst_vaapi_subpicture_finalize;
-    object_class->set_property = gst_vaapi_subpicture_set_property;
-    object_class->get_property = gst_vaapi_subpicture_get_property;
-
-    /**
-     * GstVaapiSubpicture:flags:
-     *
-     * The #GstVaapiSubpictureFlags this subpicture requires.
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_FLAGS,
-         g_param_spec_uint("flags",
-                           "Flags",
-                           "The GstVaapiSubpictureFlags this subpicture requires",
-                           0, G_MAXUINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    /**
-     * GstVaapiSubpicture:global-alpha:
-     *
-     * The global-alpha value associated with this subpicture.
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_GLOBAL_ALPHA,
-         g_param_spec_float("global-alpha",
-                            "Global Alpha",
-                            "The global-alpha value associated with this subpicture",
-                            0.0f, 1.0f, 1.0f,
-                            G_PARAM_READWRITE));
-
-    /**
-     * GstVaapiSubpicture:image:
-     *
-     * The #GstVaapiImage this subpicture is bound to.
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_IMAGE,
-         g_param_spec_object("image",
-                             "Image",
-                             "The GstVaapiImage this subpicture is bound to",
-                             GST_VAAPI_TYPE_IMAGE,
-                             G_PARAM_READWRITE));
-}
-
-static void
-gst_vaapi_subpicture_init(GstVaapiSubpicture *subpicture)
-{
-    GstVaapiSubpicturePrivate *priv = GST_VAAPI_SUBPICTURE_GET_PRIVATE(subpicture);
-
-    subpicture->priv    = priv;
-    priv->image         = NULL;
-    priv->global_alpha  = 1.0f;
-}
+#define gst_vaapi_subpicture_finalize gst_vaapi_subpicture_destroy
+GST_VAAPI_OBJECT_DEFINE_CLASS(GstVaapiSubpicture, gst_vaapi_subpicture)
 
 /**
  * gst_vaapi_subpicture_new:
@@ -252,6 +130,7 @@ gst_vaapi_subpicture_init(GstVaapiSubpicture *subpicture)
 GstVaapiSubpicture *
 gst_vaapi_subpicture_new(GstVaapiImage *image, guint flags)
 {
+    GstVaapiSubpicture *subpicture;
     GstVaapiDisplay *display;
     GstVaapiImageFormat format;
     guint va_flags;
@@ -268,13 +147,18 @@ gst_vaapi_subpicture_new(GstVaapiImage *image, guint flags)
     if (flags & ~va_flags)
         return NULL;
 
-    return g_object_new(GST_VAAPI_TYPE_SUBPICTURE,
-                        "display",      GST_VAAPI_OBJECT_DISPLAY(image),
-                        "id",           GST_VAAPI_ID(VA_INVALID_ID),
-                        "flags",        flags,
-                        "global-alpha", 1.0f,
-                        "image",        image,
-                        NULL);
+    subpicture = gst_vaapi_object_new(gst_vaapi_subpicture_class(), display);
+    if (!subpicture)
+        return NULL;
+
+    subpicture->global_alpha = 1.0f;
+    if (!gst_vaapi_subpicture_set_image(subpicture, image))
+        goto error;
+    return subpicture;
+
+error:
+    gst_vaapi_object_unref(subpicture);
+    return NULL;
 }
 
 /**
@@ -358,12 +242,12 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
     raw_image.stride[0]  = stride;
     if (!gst_vaapi_image_update_from_raw(image, &raw_image, NULL)) {
         GST_WARNING("could not update VA image with subtitle data");
-        g_object_unref(image);
+        gst_vaapi_object_unref(image);
         return NULL;
     }
 
     subpicture = gst_vaapi_subpicture_new(image, flags);
-    g_object_unref(image);
+    gst_vaapi_object_unref(image);
 #if GST_CHECK_VERSION(1,0,0)
     gst_video_meta_unmap(vmeta, 0, &map_info);
 #endif
@@ -407,7 +291,7 @@ gst_vaapi_subpicture_get_flags(GstVaapiSubpicture *subpicture)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), 0);
 
-    return subpicture->priv->flags;
+    return subpicture->flags;
 }
 
 /**
@@ -423,7 +307,7 @@ gst_vaapi_subpicture_get_image(GstVaapiSubpicture *subpicture)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), NULL);
 
-    return subpicture->priv->image;
+    return subpicture->image;
 }
 
 /**
@@ -433,20 +317,18 @@ gst_vaapi_subpicture_get_image(GstVaapiSubpicture *subpicture)
  *
  * Binds a new #GstVaapiImage to the @subpicture. The reference to the
  * previous image is released and a new one is acquired on @image.
+ *
+ * Return value: %TRUE on success
  */
-void
-gst_vaapi_subpicture_set_image(
-    GstVaapiSubpicture *subpicture,
-    GstVaapiImage      *image
-)
+gboolean
+gst_vaapi_subpicture_set_image(GstVaapiSubpicture *subpicture,
+    GstVaapiImage *image)
 {
-    g_return_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture));
-    g_return_if_fail(GST_VAAPI_IS_IMAGE(image));
+    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), FALSE);
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
 
     gst_vaapi_subpicture_destroy(subpicture);
-
-    subpicture->priv->image = g_object_ref(image);
-    gst_vaapi_subpicture_create(subpicture);
+    return gst_vaapi_subpicture_create(subpicture, image);
 }
 
 /**
@@ -462,7 +344,7 @@ gst_vaapi_subpicture_get_global_alpha(GstVaapiSubpicture *subpicture)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), 1.0);
 
-    return subpicture->priv->global_alpha;
+    return subpicture->global_alpha;
 }
 
 /**
@@ -480,18 +362,15 @@ gboolean
 gst_vaapi_subpicture_set_global_alpha(GstVaapiSubpicture *subpicture,
     gfloat global_alpha)
 {
-    GstVaapiSubpicturePrivate *priv;
     GstVaapiDisplay *display;
     VAStatus status;
 
     g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), FALSE);
 
-    priv = subpicture->priv;
-
-    if (!(priv->flags & GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA))
+    if (!(subpicture->flags & GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA))
         return FALSE;
 
-    if (priv->global_alpha == global_alpha)
+    if (subpicture->global_alpha == global_alpha)
         return TRUE;
 
     display = GST_VAAPI_OBJECT_DISPLAY(subpicture);
@@ -506,6 +385,6 @@ gst_vaapi_subpicture_set_global_alpha(GstVaapiSubpicture *subpicture,
     if (!vaapi_check_status(status, "vaSetSubpictureGlobalAlpha()"))
         return FALSE;
 
-    priv->global_alpha = global_alpha;
+    subpicture->global_alpha = global_alpha;
     return TRUE;
 }

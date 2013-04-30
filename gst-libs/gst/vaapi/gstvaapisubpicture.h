@@ -30,33 +30,13 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_SUBPICTURE \
-    (gst_vaapi_subpicture_get_type())
-
-#define GST_VAAPI_SUBPICTURE(obj)                               \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
-                                GST_VAAPI_TYPE_SUBPICTURE,      \
-                                GstVaapiSubpicture))
-
-#define GST_VAAPI_SUBPICTURE_CLASS(klass)                       \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
-                             GST_VAAPI_TYPE_SUBPICTURE,         \
-                             GstVaapiSubpictureClass))
+#define GST_VAAPI_SUBPICTURE(obj) \
+    ((GstVaapiSubpicture *)(obj))
 
 #define GST_VAAPI_IS_SUBPICTURE(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_SUBPICTURE))
-
-#define GST_VAAPI_IS_SUBPICTURE_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_SUBPICTURE))
-
-#define GST_VAAPI_SUBPICTURE_GET_CLASS(obj)                     \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
-                               GST_VAAPI_TYPE_SUBPICTURE,       \
-                               GstVaapiSubpictureClass))
+    ((obj) != NULL)
 
 typedef struct _GstVaapiSubpicture              GstVaapiSubpicture;
-typedef struct _GstVaapiSubpicturePrivate       GstVaapiSubpicturePrivate;
-typedef struct _GstVaapiSubpictureClass         GstVaapiSubpictureClass;
 
 /**
  * GstVaapiSubpictureFlags:
@@ -72,31 +52,6 @@ typedef enum {
     GST_VAAPI_SUBPICTURE_FLAG_PREMULTIPLIED_ALPHA    = (1 << 0),
     GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA           = (1 << 1),
 } GstVaapiSubpictureFlags;
-
-/**
- * GstVaapiSubpicture:
- *
- * A VA subpicture wrapper
- */
-struct _GstVaapiSubpicture {
-    /*< private >*/
-    GstVaapiObject parent_instance;
-
-    GstVaapiSubpicturePrivate *priv;
-};
-
-/**
- * GstVaapiSubpictureClass:
- *
- * A VA subpicture wrapper class
- */
-struct _GstVaapiSubpictureClass {
-    /*< private >*/
-    GstVaapiObjectClass parent_class;
-};
-
-GType
-gst_vaapi_subpicture_get_type(void) G_GNUC_CONST;
 
 GstVaapiSubpicture *
 gst_vaapi_subpicture_new(GstVaapiImage *image, guint flags);
@@ -116,11 +71,9 @@ gst_vaapi_subpicture_get_flags(GstVaapiSubpicture *subpicture);
 GstVaapiImage *
 gst_vaapi_subpicture_get_image(GstVaapiSubpicture *subpicture);
 
-void
-gst_vaapi_subpicture_set_image(
-    GstVaapiSubpicture *subpicture,
-    GstVaapiImage      *image
-);
+gboolean
+gst_vaapi_subpicture_set_image(GstVaapiSubpicture *subpicture,
+    GstVaapiImage *image);
 
 gfloat
 gst_vaapi_subpicture_get_global_alpha(GstVaapiSubpicture *subpicture);

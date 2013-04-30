@@ -30,29 +30,11 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_IMAGE \
-    (gst_vaapi_image_get_type())
-
-#define GST_VAAPI_IMAGE(obj)                            \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_VAAPI_TYPE_IMAGE,   \
-                                GstVaapiImage))
-
-#define GST_VAAPI_IMAGE_CLASS(klass)                    \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_VAAPI_TYPE_IMAGE,      \
-                             GstVaapiImageClass))
+#define GST_VAAPI_IMAGE(obj) \
+    ((GstVaapiImage *)(obj))
 
 #define GST_VAAPI_IS_IMAGE(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_IMAGE))
-
-#define GST_VAAPI_IS_IMAGE_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_IMAGE))
-
-#define GST_VAAPI_IMAGE_GET_CLASS(obj)                  \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_VAAPI_TYPE_IMAGE,    \
-                               GstVaapiImageClass))
+    ((obj) != NULL)
 
 /**
  * GST_VAAPI_IMAGE_FORMAT:
@@ -79,31 +61,7 @@ G_BEGIN_DECLS
 #define GST_VAAPI_IMAGE_HEIGHT(image)   gst_vaapi_image_get_height(image)
 
 typedef struct _GstVaapiImage                   GstVaapiImage;
-typedef struct _GstVaapiImagePrivate            GstVaapiImagePrivate;
-typedef struct _GstVaapiImageClass              GstVaapiImageClass;
 typedef struct _GstVaapiImageRaw                GstVaapiImageRaw;
-
-/**
- * GstVaapiImage:
- *
- * A VA image wrapper
- */
-struct _GstVaapiImage {
-    /*< private >*/
-    GstVaapiObject parent_instance;
-
-    GstVaapiImagePrivate *priv;
-};
-
-/**
- * GstVaapiImageClass:
- *
- * A VA image wrapper class
- */
-struct _GstVaapiImageClass {
-    /*< private >*/
-    GstVaapiObjectClass parent_class;
-};
 
 /**
  * GstVaapiImageRaw:
@@ -119,9 +77,6 @@ struct _GstVaapiImageRaw {
     guchar             *pixels[3];
     guint               stride[3];
 };
-
-GType
-gst_vaapi_image_get_type(void) G_GNUC_CONST;
 
 GstVaapiImage *
 gst_vaapi_image_new(

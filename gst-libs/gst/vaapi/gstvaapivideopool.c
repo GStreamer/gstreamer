@@ -27,6 +27,7 @@
 
 #include "sysdeps.h"
 #include "gstvaapivideopool.h"
+#include "gstvaapiobject.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -75,13 +76,13 @@ gst_vaapi_video_pool_clear(GstVaapiVideoPool *pool)
 
     for (list = priv->used_objects; list; list = next) {
         next = list->next;
-        g_object_unref(list->data);
+        gst_vaapi_object_unref(list->data);
         g_list_free_1(list);
     }
     priv->used_objects = NULL;
 
     while ((object = g_queue_pop_head(&priv->free_objects)))
-        g_object_unref(object);
+        gst_vaapi_object_unref(object);
 }
 
 static void
@@ -313,7 +314,7 @@ gst_vaapi_video_pool_get_object(GstVaapiVideoPool *pool)
 
     ++priv->used_count;
     priv->used_objects = g_list_prepend(priv->used_objects, object);
-    return g_object_ref(object);
+    return gst_vaapi_object_ref(object);
 }
 
 /**
@@ -333,14 +334,14 @@ gst_vaapi_video_pool_put_object(GstVaapiVideoPool *pool, gpointer object)
     GList *elem;
 
     g_return_if_fail(GST_VAAPI_IS_VIDEO_POOL(pool));
-    g_return_if_fail(G_IS_OBJECT(object));
+    g_return_if_fail(GST_VAAPI_IS_OBJECT(object));
 
     priv = pool->priv;
     elem = g_list_find(priv->used_objects, object);
     if (!elem)
         return;
 
-    g_object_unref(object);
+    gst_vaapi_object_unref(object);
     --priv->used_count;
     priv->used_objects = g_list_delete_link(priv->used_objects, elem);
     g_queue_push_tail(&priv->free_objects, object);
@@ -361,9 +362,9 @@ gboolean
 gst_vaapi_video_pool_add_object(GstVaapiVideoPool *pool, gpointer object)
 {
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_POOL(pool), FALSE);
-    g_return_val_if_fail(G_IS_OBJECT(object), FALSE);
+    g_return_val_if_fail(GST_VAAPI_IS_OBJECT(object), FALSE);
 
-    g_queue_push_tail(&pool->priv->free_objects, g_object_ref(object));
+    g_queue_push_tail(&pool->priv->free_objects, gst_vaapi_object_ref(object));
     return TRUE;
 }
 

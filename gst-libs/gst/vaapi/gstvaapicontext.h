@@ -31,34 +31,14 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_CONTEXT \
-    (gst_vaapi_context_get_type())
-
-#define GST_VAAPI_CONTEXT(obj)                          \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_VAAPI_TYPE_CONTEXT, \
-                                GstVaapiContext))
-
-#define GST_VAAPI_CONTEXT_CLASS(klass)                  \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_VAAPI_TYPE_CONTEXT,    \
-                             GstVaapiContextClass))
+#define GST_VAAPI_CONTEXT(obj) \
+    ((GstVaapiContext *)(obj))
 
 #define GST_VAAPI_IS_CONTEXT(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_CONTEXT))
-
-#define GST_VAAPI_IS_CONTEXT_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_CONTEXT))
-
-#define GST_VAAPI_CONTEXT_GET_CLASS(obj)                \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_VAAPI_TYPE_CONTEXT,  \
-                               GstVaapiContextClass))
+    ((obj) != NULL)
 
 typedef struct _GstVaapiContext                 GstVaapiContext;
 typedef struct _GstVaapiContextInfo             GstVaapiContextInfo;
-typedef struct _GstVaapiContextPrivate          GstVaapiContextPrivate;
-typedef struct _GstVaapiContextClass            GstVaapiContextClass;
 
 /**
  * GstVaapiContextInfo:
@@ -75,31 +55,6 @@ struct _GstVaapiContextInfo {
     guint               ref_frames;
 };
 
-/**
- * GstVaapiContext:
- *
- * A VA context wrapper.
- */
-struct _GstVaapiContext {
-    /*< private >*/
-    GstVaapiObject parent_instance;
-
-    GstVaapiContextPrivate *priv;
-};
-
-/**
- * GstVaapiContextClass:
- *
- * A VA context wrapper class.
- */
-struct _GstVaapiContextClass {
-    /*< private >*/
-    GstVaapiObjectClass parent_class;
-};
-
-GType
-gst_vaapi_context_get_type(void) G_GNUC_CONST;
-
 GstVaapiContext *
 gst_vaapi_context_new(
     GstVaapiDisplay    *display,
@@ -110,7 +65,8 @@ gst_vaapi_context_new(
 );
 
 GstVaapiContext *
-gst_vaapi_context_new_full(GstVaapiDisplay *display, GstVaapiContextInfo *cip);
+gst_vaapi_context_new_full(GstVaapiDisplay *display,
+    const GstVaapiContextInfo *cip);
 
 gboolean
 gst_vaapi_context_reset(
@@ -122,7 +78,8 @@ gst_vaapi_context_reset(
 );
 
 gboolean
-gst_vaapi_context_reset_full(GstVaapiContext *context, GstVaapiContextInfo *cip);
+gst_vaapi_context_reset_full(GstVaapiContext *context,
+    const GstVaapiContextInfo *new_cip);
 
 GstVaapiID
 gst_vaapi_context_get_id(GstVaapiContext *context);

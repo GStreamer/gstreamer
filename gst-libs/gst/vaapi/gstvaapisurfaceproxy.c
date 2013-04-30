@@ -41,7 +41,7 @@ gst_vaapi_surface_proxy_finalize(GstVaapiSurfaceProxy *proxy)
     if (proxy->surface) {
         if (proxy->pool)
             gst_vaapi_video_pool_put_object(proxy->pool, proxy->surface);
-        g_object_unref(proxy->surface);
+        gst_vaapi_object_unref(proxy->surface);
         proxy->surface = NULL;
     }
     g_clear_object(&proxy->pool);
@@ -76,7 +76,7 @@ gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool)
     proxy->timestamp = GST_CLOCK_TIME_NONE;
     proxy->duration = GST_CLOCK_TIME_NONE;
     proxy->destroy_func = NULL;
-    g_object_ref(proxy->surface);
+    gst_vaapi_object_ref(proxy->surface);
     return proxy;
 
 error:

@@ -29,25 +29,46 @@
 #include <assert.h>
 #include "gstvaapicompat.h"
 #include "gstvaapicontext.h"
+#include "gstvaapiobject_priv.h"
 #include "gstvaapisurface.h"
 #include "gstvaapisurface_priv.h"
 #include "gstvaapisurfacepool.h"
 #include "gstvaapisurfaceproxy.h"
 #include "gstvaapiimage.h"
 #include "gstvaapisubpicture.h"
-#include "gstvaapiminiobject.h"
 #include "gstvaapiutils.h"
-#include "gstvaapi_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiContext, gst_vaapi_context, GST_VAAPI_TYPE_OBJECT)
+typedef struct _GstVaapiContextClass            GstVaapiContextClass;
 
-#define GST_VAAPI_CONTEXT_GET_PRIVATE(obj)                      \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_CONTEXT,	\
-                                 GstVaapiContextPrivate))
+/**
+ * GstVaapiContext:
+ *
+ * A VA context wrapper.
+ */
+struct _GstVaapiContext {
+    /*< private >*/
+    GstVaapiObject      parent_instance;
+
+    GstVaapiContextInfo info;
+    VAConfigID          config_id;
+    GPtrArray          *surfaces;
+    GstVaapiVideoPool  *surfaces_pool;
+    GPtrArray          *overlays[2];
+    guint               overlay_id;
+};
+
+/**
+ * GstVaapiContextClass:
+ *
+ * A VA context wrapper class.
+ */
+struct _GstVaapiContextClass {
+    /*< private >*/
+    GstVaapiObjectClass parent_class;
+};
 
 typedef struct _GstVaapiOverlayRectangle GstVaapiOverlayRectangle;
 struct _GstVaapiOverlayRectangle {
@@ -59,31 +80,6 @@ struct _GstVaapiOverlayRectangle {
     GstBuffer          *rect_buffer;
     GstVideoOverlayRectangle *rect;
     guint               is_associated   : 1;
-};
-
-/* XXX: optimize for the effective number of reference frames */
-struct _GstVaapiContextPrivate {
-    VAConfigID          config_id;
-    GPtrArray          *surfaces;
-    GstVaapiVideoPool  *surfaces_pool;
-    GPtrArray          *overlays[2];
-    guint               overlay_id;
-    GstVaapiProfile     profile;
-    GstVaapiEntrypoint  entrypoint;
-    guint               width;
-    guint               height;
-    guint               ref_frames;
-    guint               is_constructed  : 1;
-};
-
-enum {
-    PROP_0,
-
-    PROP_PROFILE,
-    PROP_ENTRYPOINT,
-    PROP_WIDTH,
-    PROP_HEIGHT,
-    PROP_REF_FRAMES
 };
 
 static guint
@@ -188,7 +184,7 @@ overlay_rectangle_finalize(GstVaapiOverlayRectangle *overlay)
 
     if (overlay->subpicture) {
         overlay_rectangle_deassociate(overlay);
-        g_object_unref(overlay->subpicture);
+        gst_vaapi_object_unref(overlay->subpicture);
         overlay->subpicture = NULL;
     }
 }
@@ -197,7 +193,7 @@ static gboolean
 overlay_rectangle_associate(GstVaapiOverlayRectangle *overlay)
 {
     GstVaapiSubpicture * const subpicture = overlay->subpicture;
-    GPtrArray * const surfaces = overlay->context->priv->surfaces;
+    GPtrArray * const surfaces = overlay->context->surfaces;
     guint i, n_associated;
 
     if (overlay->is_associated)
@@ -219,7 +215,7 @@ static gboolean
 overlay_rectangle_deassociate(GstVaapiOverlayRectangle *overlay)
 {
     GstVaapiSubpicture * const subpicture = overlay->subpicture;
-    GPtrArray * const surfaces = overlay->context->priv->surfaces;
+    GPtrArray * const surfaces = overlay->context->surfaces;
     guint i, n_associated;
 
     if (!overlay->is_associated)
@@ -388,11 +384,9 @@ overlay_reassociate(GPtrArray *overlays)
 static void
 gst_vaapi_context_clear_overlay(GstVaapiContext *context)
 {
-    GstVaapiContextPrivate * const priv = context->priv;
-
-    overlay_clear(priv->overlays[0]);
-    overlay_clear(priv->overlays[1]);
-    priv->overlay_id = 0;
+    overlay_clear(context->overlays[0]);
+    overlay_clear(context->overlays[1]);
+    context->overlay_id = 0;
 }
 
 static inline void
@@ -407,30 +401,26 @@ unref_surface_cb(gpointer data, gpointer user_data)
     GstVaapiSurface * const surface = GST_VAAPI_SURFACE(data);
 
     gst_vaapi_surface_set_parent_context(surface, NULL);
-    g_object_unref(surface);
+    gst_vaapi_object_unref(surface);
 }
 
 static void
 gst_vaapi_context_destroy_surfaces(GstVaapiContext *context)
 {
-    GstVaapiContextPrivate * const priv = context->priv;
-
     gst_vaapi_context_destroy_overlay(context);
 
-    if (priv->surfaces) {
-        g_ptr_array_foreach(priv->surfaces, unref_surface_cb, NULL);
-        g_ptr_array_free(priv->surfaces, TRUE);
-        priv->surfaces = NULL;
+    if (context->surfaces) {
+        g_ptr_array_foreach(context->surfaces, unref_surface_cb, NULL);
+        g_ptr_array_free(context->surfaces, TRUE);
+        context->surfaces = NULL;
     }
-
-    g_clear_object(&priv->surfaces_pool);
+    g_clear_object(&context->surfaces_pool);
 }
 
 static void
 gst_vaapi_context_destroy(GstVaapiContext *context)
 {
     GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(context);
-    GstVaapiContextPrivate * const priv = context->priv;
     VAContextID context_id;
     VAStatus status;
 
@@ -450,26 +440,24 @@ gst_vaapi_context_destroy(GstVaapiContext *context)
         GST_VAAPI_OBJECT_ID(context) = VA_INVALID_ID;
     }
 
-    if (priv->config_id != VA_INVALID_ID) {
+    if (context->config_id != VA_INVALID_ID) {
         GST_VAAPI_DISPLAY_LOCK(display);
         status = vaDestroyConfig(
             GST_VAAPI_DISPLAY_VADISPLAY(display),
-            priv->config_id
+            context->config_id
         );
         GST_VAAPI_DISPLAY_UNLOCK(display);
         if (!vaapi_check_status(status, "vaDestroyConfig()"))
             g_warning("failed to destroy config %" GST_VAAPI_ID_FORMAT,
-                      GST_VAAPI_ID_ARGS(priv->config_id));
-        priv->config_id = VA_INVALID_ID;
+                      GST_VAAPI_ID_ARGS(context->config_id));
+        context->config_id = VA_INVALID_ID;
     }
 }
 
 static gboolean
 gst_vaapi_context_create_overlay(GstVaapiContext *context)
 {
-    GstVaapiContextPrivate * const priv = context->priv;
-
-    if (!priv->overlays[0] || !priv->overlays[1])
+    if (!context->overlays[0] || !context->overlays[1])
         return FALSE;
 
     gst_vaapi_context_clear_overlay(context);
@@ -479,7 +467,7 @@ gst_vaapi_context_create_overlay(GstVaapiContext *context)
 static gboolean
 gst_vaapi_context_create_surfaces(GstVaapiContext *context)
 {
-    GstVaapiContextPrivate * const priv = context->priv;
+    const GstVaapiContextInfo * const cip = &context->info;
     GstCaps *caps;
     GstVaapiSurface *surface;
     guint i, num_surfaces;
@@ -490,45 +478,45 @@ gst_vaapi_context_create_surfaces(GstVaapiContext *context)
     if (!gst_vaapi_context_create_overlay(context))
         return FALSE;
 
-    if (!priv->surfaces) {
-        priv->surfaces = g_ptr_array_new();
-        if (!priv->surfaces)
+    if (!context->surfaces) {
+        context->surfaces = g_ptr_array_new();
+        if (!context->surfaces)
             return FALSE;
     }
 
-    if (!priv->surfaces_pool) {
+    if (!context->surfaces_pool) {
         caps = gst_caps_new_simple(
             GST_VAAPI_SURFACE_CAPS_NAME,
             "type", G_TYPE_STRING, "vaapi",
-            "width",  G_TYPE_INT, priv->width,
-            "height", G_TYPE_INT, priv->height,
+            "width",  G_TYPE_INT, cip->width,
+            "height", G_TYPE_INT, cip->height,
             NULL
         );
         if (!caps)
             return FALSE;
-        priv->surfaces_pool = gst_vaapi_surface_pool_new(
+        context->surfaces_pool = gst_vaapi_surface_pool_new(
             GST_VAAPI_OBJECT_DISPLAY(context),
             caps
         );
         gst_caps_unref(caps);
-        if (!priv->surfaces_pool)
+        if (!context->surfaces_pool)
             return FALSE;
     }
 
-    num_surfaces = priv->ref_frames + SCRATCH_SURFACES_COUNT;
-    gst_vaapi_video_pool_set_capacity(priv->surfaces_pool, num_surfaces);
+    num_surfaces = cip->ref_frames + SCRATCH_SURFACES_COUNT;
+    gst_vaapi_video_pool_set_capacity(context->surfaces_pool, num_surfaces);
 
-    for (i = priv->surfaces->len; i < num_surfaces; i++) {
+    for (i = context->surfaces->len; i < num_surfaces; i++) {
         surface = gst_vaapi_surface_new(
             GST_VAAPI_OBJECT_DISPLAY(context),
             GST_VAAPI_CHROMA_TYPE_YUV420,
-            priv->width, priv->height
+            cip->width, cip->height
         );
         if (!surface)
             return FALSE;
         gst_vaapi_surface_set_parent_context(surface, context);
-        g_ptr_array_add(priv->surfaces, surface);
-        if (!gst_vaapi_video_pool_add_object(priv->surfaces_pool, surface))
+        g_ptr_array_add(context->surfaces, surface);
+        if (!gst_vaapi_video_pool_add_object(context->surfaces_pool, surface))
             return FALSE;
     }
     return TRUE;
@@ -537,8 +525,8 @@ gst_vaapi_context_create_surfaces(GstVaapiContext *context)
 static gboolean
 gst_vaapi_context_create(GstVaapiContext *context)
 {
+    const GstVaapiContextInfo * const cip = &context->info;
     GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(context);
-    GstVaapiContextPrivate * const priv = context->priv;
     VAProfile va_profile;
     VAEntrypoint va_entrypoint;
     VAConfigAttrib attrib;
@@ -549,31 +537,32 @@ gst_vaapi_context_create(GstVaapiContext *context)
     gboolean success = FALSE;
     guint i;
 
-    if (!priv->surfaces && !gst_vaapi_context_create_surfaces(context))
+    if (!context->surfaces && !gst_vaapi_context_create_surfaces(context))
         goto end;
 
     surfaces = g_array_sized_new(
         FALSE,
         FALSE,
         sizeof(VASurfaceID),
-        priv->surfaces->len
+        context->surfaces->len
     );
     if (!surfaces)
         goto end;
 
-    for (i = 0; i < priv->surfaces->len; i++) {
-        GstVaapiSurface * const surface = g_ptr_array_index(priv->surfaces, i);
+    for (i = 0; i < context->surfaces->len; i++) {
+        GstVaapiSurface * const surface =
+            g_ptr_array_index(context->surfaces, i);
         if (!surface)
             goto end;
         surface_id = GST_VAAPI_OBJECT_ID(surface);
         g_array_append_val(surfaces, surface_id);
     }
-    assert(surfaces->len == priv->surfaces->len);
+    assert(surfaces->len == context->surfaces->len);
 
-    if (!priv->profile || !priv->entrypoint)
+    if (!cip->profile || !cip->entrypoint)
         goto end;
-    va_profile    = gst_vaapi_profile_get_va_profile(priv->profile);
-    va_entrypoint = gst_vaapi_entrypoint_get_va_entrypoint(priv->entrypoint);
+    va_profile    = gst_vaapi_profile_get_va_profile(cip->profile);
+    va_entrypoint = gst_vaapi_entrypoint_get_va_entrypoint(cip->entrypoint);
 
     GST_VAAPI_DISPLAY_LOCK(display);
     attrib.type = VAConfigAttribRTFormat;
@@ -595,7 +584,7 @@ gst_vaapi_context_create(GstVaapiContext *context)
         va_profile,
         va_entrypoint,
         &attrib, 1,
-        &priv->config_id
+        &context->config_id
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
     if (!vaapi_check_status(status, "vaCreateConfig()"))
@@ -604,8 +593,8 @@ gst_vaapi_context_create(GstVaapiContext *context)
     GST_VAAPI_DISPLAY_LOCK(display);
     status = vaCreateContext(
         GST_VAAPI_DISPLAY_VADISPLAY(display),
-        priv->config_id,
-        priv->width, priv->height,
+        context->config_id,
+        cip->width, cip->height,
         VA_PROGRESSIVE,
         (VASurfaceID *)surfaces->data, surfaces->len,
         &context_id
@@ -623,160 +612,25 @@ end:
     return success;
 }
 
-static void
-gst_vaapi_context_finalize(GObject *object)
+static inline void
+gst_vaapi_context_init(GstVaapiContext *context, const GstVaapiContextInfo *cip)
 {
-    GstVaapiContext * const context = GST_VAAPI_CONTEXT(object);
-    GstVaapiContextPrivate * const priv = context->priv;
+    context->info        = *cip;
+    context->config_id   = VA_INVALID_ID;
+    context->overlays[0] = overlay_new();
+    context->overlays[1] = overlay_new();
+}
 
-    overlay_destroy(&priv->overlays[0]);
-    overlay_destroy(&priv->overlays[1]);
+static void
+gst_vaapi_context_finalize(GstVaapiContext *context)
+{
+    overlay_destroy(&context->overlays[0]);
+    overlay_destroy(&context->overlays[1]);
     gst_vaapi_context_destroy(context);
     gst_vaapi_context_destroy_surfaces(context);
-
-    G_OBJECT_CLASS(gst_vaapi_context_parent_class)->finalize(object);
 }
 
-static void
-gst_vaapi_context_set_property(
-    GObject      *object,
-    guint         prop_id,
-    const GValue *value,
-    GParamSpec   *pspec
-)
-{
-    GstVaapiContext        * const context = GST_VAAPI_CONTEXT(object);
-    GstVaapiContextPrivate * const priv    = context->priv;
-
-    switch (prop_id) {
-    case PROP_PROFILE:
-        gst_vaapi_context_set_profile(context, g_value_get_uint(value));
-        break;
-    case PROP_ENTRYPOINT:
-        priv->entrypoint = g_value_get_uint(value);
-        break;
-    case PROP_WIDTH:
-        priv->width = g_value_get_uint(value);
-        break;
-    case PROP_HEIGHT:
-        priv->height = g_value_get_uint(value);
-        break;
-    case PROP_REF_FRAMES:
-        priv->ref_frames = g_value_get_uint(value);
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_context_get_property(
-    GObject    *object,
-    guint       prop_id,
-    GValue     *value,
-    GParamSpec *pspec
-)
-{
-    GstVaapiContext        * const context = GST_VAAPI_CONTEXT(object);
-    GstVaapiContextPrivate * const priv    = context->priv;
-
-    switch (prop_id) {
-    case PROP_PROFILE:
-        g_value_set_uint(value, gst_vaapi_context_get_profile(context));
-        break;
-    case PROP_ENTRYPOINT:
-        g_value_set_uint(value, gst_vaapi_context_get_entrypoint(context));
-        break;
-    case PROP_WIDTH:
-        g_value_set_uint(value, priv->width);
-        break;
-    case PROP_HEIGHT:
-        g_value_set_uint(value, priv->height);
-        break;
-    case PROP_REF_FRAMES:
-        g_value_set_uint(value, priv->ref_frames);
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_context_class_init(GstVaapiContextClass *klass)
-{
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
-
-    g_type_class_add_private(klass, sizeof(GstVaapiContextPrivate));
-
-    object_class->finalize     = gst_vaapi_context_finalize;
-    object_class->set_property = gst_vaapi_context_set_property;
-    object_class->get_property = gst_vaapi_context_get_property;
-
-    g_object_class_install_property
-        (object_class,
-         PROP_PROFILE,
-         g_param_spec_uint("profile",
-                           "Profile",
-                           "The profile used for decoding",
-                           0, G_MAXUINT32, 0,
-                           G_PARAM_READWRITE));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_ENTRYPOINT,
-         g_param_spec_uint("entrypoint",
-                           "Entrypoint",
-                           "The decoder entrypoint",
-                           0, G_MAXUINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_WIDTH,
-         g_param_spec_uint("width",
-                           "Width",
-                           "The width of decoded surfaces",
-                           0, G_MAXINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_HEIGHT,
-         g_param_spec_uint("height",
-                           "Height",
-                           "The height of the decoded surfaces",
-                           0, G_MAXINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_REF_FRAMES,
-         g_param_spec_uint("ref-frames",
-                           "Reference Frames",
-                           "The number of reference frames",
-                           0, G_MAXINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-}
-
-static void
-gst_vaapi_context_init(GstVaapiContext *context)
-{
-    GstVaapiContextPrivate *priv = GST_VAAPI_CONTEXT_GET_PRIVATE(context);
-
-    context->priv       = priv;
-    priv->config_id     = VA_INVALID_ID;
-    priv->surfaces      = NULL;
-    priv->surfaces_pool = NULL;
-    priv->overlays[0]   = overlay_new();
-    priv->overlays[1]   = overlay_new();
-    priv->profile       = 0;
-    priv->entrypoint    = 0;
-    priv->width         = 0;
-    priv->height        = 0;
-    priv->ref_frames    = 0;
-}
+GST_VAAPI_OBJECT_DEFINE_CLASS(GstVaapiContext, gst_vaapi_context)
 
 /**
  * gst_vaapi_context_new:
@@ -822,32 +676,28 @@ gst_vaapi_context_new(
  * Return value: the newly allocated #GstVaapiContext object
  */
 GstVaapiContext *
-gst_vaapi_context_new_full(GstVaapiDisplay *display, GstVaapiContextInfo *cip)
+gst_vaapi_context_new_full(GstVaapiDisplay *display,
+    const GstVaapiContextInfo *cip)
 {
     GstVaapiContext *context;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
     g_return_val_if_fail(cip->profile, NULL);
     g_return_val_if_fail(cip->entrypoint, NULL);
     g_return_val_if_fail(cip->width > 0, NULL);
     g_return_val_if_fail(cip->height > 0, NULL);
 
-    context = g_object_new(
-        GST_VAAPI_TYPE_CONTEXT,
-        "display",      display,
-        "id",           GST_VAAPI_ID(VA_INVALID_ID),
-        "profile",      cip->profile,
-        "entrypoint",   cip->entrypoint,
-        "width",        cip->width,
-        "height",       cip->height,
-        "ref-frames",   cip->ref_frames,
-        NULL
-    );
-    if (!context->priv->is_constructed) {
-        g_object_unref(context);
+    context = gst_vaapi_object_new(gst_vaapi_context_class(), display);
+    if (!context)
         return NULL;
-    }
+
+    gst_vaapi_context_init(context, cip);
+    if (!gst_vaapi_context_create(context))
+        goto error;
     return context;
+
+error:
+    gst_vaapi_object_unref(context);
+    return NULL;
 }
 
 /**
@@ -872,14 +722,13 @@ gst_vaapi_context_reset(
     unsigned int        height
 )
 {
-    GstVaapiContextPrivate * const priv = context->priv;
     GstVaapiContextInfo info;
 
     info.profile    = profile;
     info.entrypoint = entrypoint;
     info.width      = width;
     info.height     = height;
-    info.ref_frames = priv->ref_frames;
+    info.ref_frames = context->info.ref_frames;
 
     return gst_vaapi_context_reset_full(context, &info);
 }
@@ -887,32 +736,35 @@ gst_vaapi_context_reset(
 /**
  * gst_vaapi_context_reset_full:
  * @context: a #GstVaapiContext
- * @cip: a pointer to the new #GstVaapiContextInfo details
+ * @new_cip: a pointer to the new #GstVaapiContextInfo details
  *
- * Resets @context to the configuration specified by @cip, thus
+ * Resets @context to the configuration specified by @new_cip, thus
  * including profile, entry-point, encoded size and maximum number of
  * reference frames reported by the bitstream.
  *
  * Return value: %TRUE on success
  */
 gboolean
-gst_vaapi_context_reset_full(GstVaapiContext *context, GstVaapiContextInfo *cip)
+gst_vaapi_context_reset_full(GstVaapiContext *context,
+    const GstVaapiContextInfo *new_cip)
 {
-    GstVaapiContextPrivate * const priv = context->priv;
+    GstVaapiContextInfo * const cip = &context->info;
     gboolean size_changed, codec_changed;
 
-    size_changed = priv->width != cip->width || priv->height != cip->height;
+    size_changed = cip->width != new_cip->width ||
+        cip->height != new_cip->height;
     if (size_changed) {
         gst_vaapi_context_destroy_surfaces(context);
-        priv->width  = cip->width;
-        priv->height = cip->height;
+        cip->width  = new_cip->width;
+        cip->height = new_cip->height;
     }
 
-    codec_changed = priv->profile != cip->profile || priv->entrypoint != cip->entrypoint;
+    codec_changed = cip->profile != new_cip->profile ||
+        cip->entrypoint != new_cip->entrypoint;
     if (codec_changed) {
         gst_vaapi_context_destroy(context);
-        priv->profile    = cip->profile;
-        priv->entrypoint = cip->entrypoint;
+        cip->profile    = new_cip->profile;
+        cip->entrypoint = new_cip->entrypoint;
     }
 
     if (size_changed && !gst_vaapi_context_create_surfaces(context))
@@ -921,7 +773,6 @@ gst_vaapi_context_reset_full(GstVaapiContext *context, GstVaapiContextInfo *cip)
     if (codec_changed && !gst_vaapi_context_create(context))
         return FALSE;
 
-    priv->is_constructed = TRUE;
     return TRUE;
 }
 
@@ -954,7 +805,7 @@ gst_vaapi_context_get_profile(GstVaapiContext *context)
 {
     g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), 0);
 
-    return context->priv->profile;
+    return context->info.profile;
 }
 
 /**
@@ -977,9 +828,9 @@ gst_vaapi_context_set_profile(GstVaapiContext *context, GstVaapiProfile profile)
 
     return gst_vaapi_context_reset(context,
                                    profile,
-                                   context->priv->entrypoint,
-                                   context->priv->width,
-                                   context->priv->height);
+                                   context->info.entrypoint,
+                                   context->info.width,
+                                   context->info.height);
 }
 
 /**
@@ -995,7 +846,7 @@ gst_vaapi_context_get_entrypoint(GstVaapiContext *context)
 {
     g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), 0);
 
-    return context->priv->entrypoint;
+    return context->info.entrypoint;
 }
 
 /**
@@ -1016,10 +867,10 @@ gst_vaapi_context_get_size(
     g_return_if_fail(GST_VAAPI_IS_CONTEXT(context));
 
     if (pwidth)
-        *pwidth = context->priv->width;
+        *pwidth = context->info.width;
 
     if (pheight)
-        *pheight = context->priv->height;
+        *pheight = context->info.height;
 }
 
 /**
@@ -1043,7 +894,7 @@ gst_vaapi_context_get_surface_proxy(GstVaapiContext *context)
     g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), NULL);
 
     return gst_vaapi_surface_proxy_new_from_pool(
-        GST_VAAPI_SURFACE_POOL(context->priv->surfaces_pool));
+        GST_VAAPI_SURFACE_POOL(context->surfaces_pool));
 }
 
 /**
@@ -1059,7 +910,7 @@ gst_vaapi_context_get_surface_count(GstVaapiContext *context)
 {
     g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), 0);
 
-    return gst_vaapi_video_pool_get_size(context->priv->surfaces_pool);
+    return gst_vaapi_video_pool_get_size(context->surfaces_pool);
 }
 
 /**
@@ -1081,16 +932,13 @@ gst_vaapi_context_apply_composition(
     GstVideoOverlayComposition *composition
 )
 {
-    GstVaapiContextPrivate *priv;
     GPtrArray *curr_overlay, *next_overlay;
     guint i, n_rectangles;
     gboolean reassociate = FALSE;
 
     g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), FALSE);
 
-    priv = context->priv;
-
-    if (!priv->surfaces)
+    if (!context->surfaces)
         return FALSE;
 
     if (!composition) {
@@ -1098,8 +946,8 @@ gst_vaapi_context_apply_composition(
         return TRUE;
     }
 
-    curr_overlay = priv->overlays[priv->overlay_id];
-    next_overlay = priv->overlays[priv->overlay_id ^ 1];
+    curr_overlay = context->overlays[context->overlay_id];
+    next_overlay = context->overlays[context->overlay_id ^ 1];
     overlay_clear(next_overlay);
 
     n_rectangles = gst_video_overlay_composition_n_rectangles(composition);
@@ -1126,7 +974,7 @@ gst_vaapi_context_apply_composition(
     }
 
     overlay_clear(curr_overlay);
-    priv->overlay_id ^= 1;
+    context->overlay_id ^= 1;
 
     if (reassociate && !overlay_reassociate(next_overlay))
         return FALSE;

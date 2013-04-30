@@ -472,7 +472,7 @@ gst_vaapi_decoder_finalize(GObject *object)
         priv->frames = NULL;
     }
 
-    g_clear_object(&priv->context);
+    gst_vaapi_object_replace(&priv->context, NULL);
     priv->va_context = VA_INVALID_ID;
 
     g_clear_object(&priv->display);

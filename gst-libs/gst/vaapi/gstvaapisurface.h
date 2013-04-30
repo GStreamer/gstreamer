@@ -112,59 +112,14 @@ typedef enum {
     GST_VAAPI_COLOR_STANDARD_ITUR_BT_709        = 1 << 3,
 } GstVaapiSurfaceRenderFlags;
 
-#define GST_VAAPI_TYPE_SURFACE \
-    (gst_vaapi_surface_get_type())
-
-#define GST_VAAPI_SURFACE(obj)                          \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_VAAPI_TYPE_SURFACE, \
-                                GstVaapiSurface))
-
-#define GST_VAAPI_SURFACE_CLASS(klass)                  \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_VAAPI_TYPE_SURFACE,    \
-                             GstVaapiSurfaceClass))
+#define GST_VAAPI_SURFACE(obj) \
+    ((GstVaapiSurface *)(obj))
 
 #define GST_VAAPI_IS_SURFACE(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_SURFACE))
-
-#define GST_VAAPI_IS_SURFACE_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_SURFACE))
-
-#define GST_VAAPI_SURFACE_GET_CLASS(obj)                \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_VAAPI_TYPE_SURFACE,  \
-                               GstVaapiSurfaceClass))
+    ((obj) != NULL)
 
 typedef struct _GstVaapiSurface                 GstVaapiSurface;
-typedef struct _GstVaapiSurfacePrivate          GstVaapiSurfacePrivate;
-typedef struct _GstVaapiSurfaceClass            GstVaapiSurfaceClass;
 typedef struct _GstVaapiSurfaceProxy            GstVaapiSurfaceProxy;
-
-/**
- * GstVaapiSurface:
- *
- * A VA surface wrapper.
- */
-struct _GstVaapiSurface {
-    /*< private >*/
-    GstVaapiObject parent_instance;
-
-    GstVaapiSurfacePrivate *priv;
-};
-
-/**
- * GstVaapiSurfaceClass:
- *
- * A VA surface wrapper class.
- */
-struct _GstVaapiSurfaceClass {
-    /*< private >*/
-    GstVaapiObjectClass parent_class;
-};
-
-GType
-gst_vaapi_surface_get_type(void) G_GNUC_CONST;
 
 GstVaapiSurface *
 gst_vaapi_surface_new(

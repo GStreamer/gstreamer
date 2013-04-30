@@ -30,21 +30,24 @@
 #include "gstvaapiutils.h"
 #include "gstvaapisurface.h"
 #include "gstvaapisurface_priv.h"
+#include "gstvaapiobject_priv.h"
 #include "gstvaapicontext.h"
 #include "gstvaapiimage.h"
-#include "gstvaapi_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiSurface, gst_vaapi_surface, GST_VAAPI_TYPE_OBJECT)
+typedef struct _GstVaapiSurfaceClass            GstVaapiSurfaceClass;
 
-#define GST_VAAPI_SURFACE_GET_PRIVATE(obj)                      \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_SURFACE,	\
-                                 GstVaapiSurfacePrivate))
+/**
+ * GstVaapiSurface:
+ *
+ * A VA surface wrapper.
+ */
+struct _GstVaapiSurface {
+    /*< private >*/
+    GstVaapiObject      parent_instance;
 
-struct _GstVaapiSurfacePrivate {
     guint               width;
     guint               height;
     GstVaapiChromaType  chroma_type;
@@ -52,13 +55,14 @@ struct _GstVaapiSurfacePrivate {
     GstVaapiContext    *parent_context;
 };
 
-enum {
-    PROP_0,
-
-    PROP_WIDTH,
-    PROP_HEIGHT,
-    PROP_CHROMA_TYPE,
-    PROP_PARENT_CONTEXT
+/**
+ * GstVaapiSurfaceClass:
+ *
+ * A VA surface wrapper class.
+ */
+struct _GstVaapiSurfaceClass {
+    /*< private >*/
+    GstVaapiObjectClass parent_class;
 };
 
 static gboolean
@@ -79,18 +83,17 @@ static void
 destroy_subpicture_cb(gpointer subpicture, gpointer surface)
 {
     _gst_vaapi_surface_deassociate_subpicture(surface, subpicture);
-    g_object_unref(subpicture);
+    gst_vaapi_object_unref(subpicture);
 }
 
 static void
 gst_vaapi_surface_destroy_subpictures(GstVaapiSurface *surface)
 {
-    GstVaapiSurfacePrivate * const priv = surface->priv;
-
-    if (priv->subpictures) {
-        g_ptr_array_foreach(priv->subpictures, destroy_subpicture_cb, surface);
-        g_ptr_array_free(priv->subpictures, TRUE);
-        priv->subpictures = NULL;
+    if (surface->subpictures) {
+        g_ptr_array_foreach(surface->subpictures, destroy_subpicture_cb,
+            surface);
+        g_ptr_array_free(surface->subpictures, TRUE);
+        surface->subpictures = NULL;
     }
 }
 
@@ -122,15 +125,15 @@ gst_vaapi_surface_destroy(GstVaapiSurface *surface)
 }
 
 static gboolean
-gst_vaapi_surface_create(GstVaapiSurface *surface)
+gst_vaapi_surface_create(GstVaapiSurface *surface,
+    GstVaapiChromaType chroma_type, guint width, guint height)
 {
     GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(surface);
-    GstVaapiSurfacePrivate * const priv = surface->priv;
     VASurfaceID surface_id;
     VAStatus status;
     guint format;
 
-    switch (priv->chroma_type) {
+    switch (chroma_type) {
     case GST_VAAPI_CHROMA_TYPE_YUV420:
         format = VA_RT_FORMAT_YUV420;
         break;
@@ -141,168 +144,31 @@ gst_vaapi_surface_create(GstVaapiSurface *surface)
         format = VA_RT_FORMAT_YUV444;
         break;
     default:
-        GST_DEBUG("unsupported chroma-type %u\n", priv->chroma_type);
+        GST_DEBUG("unsupported chroma-type %u\n", chroma_type);
         return FALSE;
     }
 
     GST_VAAPI_DISPLAY_LOCK(display);
     status = vaCreateSurfaces(
         GST_VAAPI_DISPLAY_VADISPLAY(display),
-        priv->width,
-        priv->height,
-        format,
+        width, height, format,
         1, &surface_id
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
     if (!vaapi_check_status(status, "vaCreateSurfaces()"))
         return FALSE;
 
+    surface->chroma_type = chroma_type;
+    surface->width = width;
+    surface->height = height;
+
     GST_DEBUG("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(surface_id));
     GST_VAAPI_OBJECT_ID(surface) = surface_id;
     return TRUE;
 }
 
-static void
-gst_vaapi_surface_finalize(GObject *object)
-{
-    gst_vaapi_surface_destroy(GST_VAAPI_SURFACE(object));
-
-    G_OBJECT_CLASS(gst_vaapi_surface_parent_class)->finalize(object);
-}
-
-static void
-gst_vaapi_surface_set_property(
-    GObject      *object,
-    guint         prop_id,
-    const GValue *value,
-    GParamSpec   *pspec
-)
-{
-    GstVaapiSurface        * const surface = GST_VAAPI_SURFACE(object);
-    GstVaapiSurfacePrivate * const priv    = surface->priv;
-
-    switch (prop_id) {
-    case PROP_WIDTH:
-        priv->width = g_value_get_uint(value);
-        break;
-    case PROP_HEIGHT:
-        priv->height = g_value_get_uint(value);
-        break;
-    case PROP_CHROMA_TYPE:
-        priv->chroma_type = g_value_get_uint(value);
-        break;
-    case PROP_PARENT_CONTEXT:
-        gst_vaapi_surface_set_parent_context(surface, g_value_get_object(value));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_surface_get_property(
-    GObject    *object,
-    guint       prop_id,
-    GValue     *value,
-    GParamSpec *pspec
-)
-{
-    GstVaapiSurface * const surface = GST_VAAPI_SURFACE(object);
-
-    switch (prop_id) {
-    case PROP_WIDTH:
-        g_value_set_uint(value, gst_vaapi_surface_get_width(surface));
-        break;
-    case PROP_HEIGHT:
-        g_value_set_uint(value, gst_vaapi_surface_get_height(surface));
-        break;
-    case PROP_CHROMA_TYPE:
-        g_value_set_uint(value, gst_vaapi_surface_get_chroma_type(surface));
-        break;
-    case PROP_PARENT_CONTEXT:
-        g_value_set_object(value, gst_vaapi_surface_get_parent_context(surface));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_surface_constructed(GObject *object)
-{
-    GstVaapiSurface * const surface = GST_VAAPI_SURFACE(object);
-    GObjectClass *parent_class;
-
-    gst_vaapi_surface_create(surface);
-
-    parent_class = G_OBJECT_CLASS(gst_vaapi_surface_parent_class);
-    if (parent_class->constructed)
-        parent_class->constructed(object);
-}
-
-static void
-gst_vaapi_surface_class_init(GstVaapiSurfaceClass *klass)
-{
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
-
-    g_type_class_add_private(klass, sizeof(GstVaapiSurfacePrivate));
-
-    object_class->finalize     = gst_vaapi_surface_finalize;
-    object_class->set_property = gst_vaapi_surface_set_property;
-    object_class->get_property = gst_vaapi_surface_get_property;
-    object_class->constructed  = gst_vaapi_surface_constructed;
-
-    g_object_class_install_property
-        (object_class,
-         PROP_WIDTH,
-         g_param_spec_uint("width",
-                           "Width",
-                           "The width of the surface",
-                           0, G_MAXINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_HEIGHT,
-         g_param_spec_uint("height",
-                           "Height",
-                           "The height of the surface",
-                           0, G_MAXINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_CHROMA_TYPE,
-         g_param_spec_uint("chroma-type",
-                           "Chroma type",
-                           "The chroma type of the surface",
-                           0, G_MAXUINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_PARENT_CONTEXT,
-         g_param_spec_object("parent-context",
-                             "Parent Context",
-                             "The parent context, if any",
-                             GST_VAAPI_TYPE_CONTEXT,
-                             G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-}
-
-static void
-gst_vaapi_surface_init(GstVaapiSurface *surface)
-{
-    GstVaapiSurfacePrivate *priv = GST_VAAPI_SURFACE_GET_PRIVATE(surface);
-
-    surface->priv        = priv;
-    priv->width          = 0;
-    priv->height         = 0;
-    priv->chroma_type    = 0;
-    priv->subpictures    = NULL;
-    priv->parent_context = NULL;
-}
+#define gst_vaapi_surface_finalize gst_vaapi_surface_destroy
+GST_VAAPI_OBJECT_DEFINE_CLASS(GstVaapiSurface, gst_vaapi_surface)
 
 /**
  * gst_vaapi_surface_new:
@@ -324,15 +190,21 @@ gst_vaapi_surface_new(
     guint               height
 )
 {
+    GstVaapiSurface *surface;
+
     GST_DEBUG("size %ux%u, chroma type 0x%x", width, height, chroma_type);
 
-    return g_object_new(GST_VAAPI_TYPE_SURFACE,
-                        "display",      display,
-                        "id",           GST_VAAPI_ID(VA_INVALID_ID),
-                        "width",        width,
-                        "height",       height,
-                        "chroma-type",  chroma_type,
-                        NULL);
+    surface = gst_vaapi_object_new(gst_vaapi_surface_class(), display);
+    if (!surface)
+        return NULL;
+
+    if (!gst_vaapi_surface_create(surface, chroma_type, width, height))
+        goto error;
+    return surface;
+
+error:
+    gst_vaapi_object_unref(surface);
+    return NULL;
 }
 
 /**
@@ -364,7 +236,7 @@ gst_vaapi_surface_get_chroma_type(GstVaapiSurface *surface)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), 0);
 
-    return surface->priv->chroma_type;
+    return surface->chroma_type;
 }
 
 /**
@@ -380,7 +252,7 @@ gst_vaapi_surface_get_width(GstVaapiSurface *surface)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), 0);
 
-    return surface->priv->width;
+    return surface->width;
 }
 
 /**
@@ -396,7 +268,7 @@ gst_vaapi_surface_get_height(GstVaapiSurface *surface)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), 0);
 
-    return surface->priv->height;
+    return surface->height;
 }
 
 /**
@@ -438,16 +310,9 @@ gst_vaapi_surface_set_parent_context(
     GstVaapiContext *context
 )
 {
-    GstVaapiSurfacePrivate *priv;
-
     g_return_if_fail(GST_VAAPI_IS_SURFACE(surface));
 
-    priv = surface->priv;
-
-    g_clear_object(&priv->parent_context);
-
-    if (context)
-        priv->parent_context = g_object_ref(context);
+    gst_vaapi_object_replace(&surface->parent_context, context);
 }
 
 /**
@@ -465,7 +330,7 @@ gst_vaapi_surface_get_parent_context(GstVaapiSurface *surface)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), NULL);
 
-    return surface->priv->parent_context;
+    return surface->parent_context;
 }
 
 /**
@@ -487,7 +352,7 @@ gst_vaapi_surface_get_parent_context(GstVaapiSurface *surface)
  * unreferenced when it's no longer needed. The image and image buffer
  * data structures will be destroyed. However, the surface contents
  * will remain unchanged until destroyed through the last call to
- * g_object_unref().
+ * gst_vaapi_object_unref().
  *
  * Return value: the newly allocated #GstVaapiImage object, or %NULL
  *   on failure
@@ -546,7 +411,7 @@ gst_vaapi_surface_get_image(GstVaapiSurface *surface, GstVaapiImage *image)
         return FALSE;
 
     gst_vaapi_image_get_size(image, &width, &height);
-    if (width != surface->priv->width || height != surface->priv->height)
+    if (width != surface->width || height != surface->height)
         return FALSE;
 
     image_id = GST_VAAPI_OBJECT_ID(image);
@@ -593,7 +458,7 @@ gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image)
         return FALSE;
 
     gst_vaapi_image_get_size(image, &width, &height);
-    if (width != surface->priv->width || height != surface->priv->height)
+    if (width != surface->width || height != surface->height)
         return FALSE;
 
     image_id = GST_VAAPI_OBJECT_ID(image);
@@ -646,15 +511,16 @@ gst_vaapi_surface_associate_subpicture(
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
     g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), FALSE);
 
-    if (!surface->priv->subpictures) {
-        surface->priv->subpictures = g_ptr_array_new();
-        if (!surface->priv->subpictures)
+    if (!surface->subpictures) {
+        surface->subpictures = g_ptr_array_new();
+        if (!surface->subpictures)
             return FALSE;
     }
 
-    if (g_ptr_array_remove_fast(surface->priv->subpictures, subpicture)) {
-        success = _gst_vaapi_surface_deassociate_subpicture(surface, subpicture);
-        g_object_unref(subpicture);
+    if (g_ptr_array_remove_fast(surface->subpictures, subpicture)) {
+        success = _gst_vaapi_surface_deassociate_subpicture(surface,
+            subpicture);
+        gst_vaapi_object_unref(subpicture);
         if (!success)
             return FALSE;
     }
@@ -668,7 +534,7 @@ gst_vaapi_surface_associate_subpicture(
     if (!success)
         return FALSE;
 
-    g_ptr_array_add(surface->priv->subpictures, g_object_ref(subpicture));
+    g_ptr_array_add(surface->subpictures, gst_vaapi_object_ref(subpicture));
     return TRUE;
 }
 
@@ -712,8 +578,8 @@ _gst_vaapi_surface_associate_subpicture(
         dst_rect                = &dst_rect_default;
         dst_rect_default.x      = 0;
         dst_rect_default.y      = 0;
-        dst_rect_default.width  = surface->priv->width;
-        dst_rect_default.height = surface->priv->height;
+        dst_rect_default.width  = surface->width;
+        dst_rect_default.height = surface->height;
     }
 
     GST_VAAPI_DISPLAY_LOCK(display);
@@ -752,11 +618,11 @@ gst_vaapi_surface_deassociate_subpicture(
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
     g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), FALSE);
 
-    if (!surface->priv->subpictures)
+    if (!surface->subpictures)
         return TRUE;
 
     /* First, check subpicture was really associated with this surface */
-    if (!g_ptr_array_remove_fast(surface->priv->subpictures, subpicture)) {
+    if (!g_ptr_array_remove_fast(surface->subpictures, subpicture)) {
         GST_DEBUG("subpicture %" GST_VAAPI_ID_FORMAT " was not bound to "
                   "surface %" GST_VAAPI_ID_FORMAT,
                   GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(subpicture)),
@@ -765,7 +631,7 @@ gst_vaapi_surface_deassociate_subpicture(
     }
 
     success = _gst_vaapi_surface_deassociate_subpicture(surface, subpicture);
-    g_object_unref(subpicture);
+    gst_vaapi_object_unref(subpicture);
     return success;
 }
 
@@ -894,11 +760,9 @@ gst_vaapi_surface_set_subpictures_from_composition(
 
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
 
-    if (propagate_context) {
-        GstVaapiContext * const context = surface->priv->parent_context;
-        if (context)
-            return gst_vaapi_context_apply_composition(context, composition);
-    }
+    if (propagate_context && surface->parent_context)
+        return gst_vaapi_context_apply_composition(surface->parent_context,
+            composition);
 
     display = GST_VAAPI_OBJECT_DISPLAY(surface);
     if (!display)
@@ -929,10 +793,10 @@ gst_vaapi_surface_set_subpictures_from_composition(
         if (!gst_vaapi_surface_associate_subpicture (surface, subpicture,
                     NULL, &sub_rect)) {
             GST_WARNING ("could not render overlay rectangle %p", rect);
-            g_object_unref (subpicture);
+            gst_vaapi_object_unref (subpicture);
             return FALSE;
         }
-        g_object_unref (subpicture);
+        gst_vaapi_object_unref (subpicture);
     }
     return TRUE;
 }

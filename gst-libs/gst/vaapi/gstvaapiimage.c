@@ -30,19 +30,22 @@
 #include "gstvaapicompat.h"
 #include "gstvaapiutils.h"
 #include "gstvaapiimage.h"
-#include "gstvaapi_priv.h"
+#include "gstvaapiobject_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiImage, gst_vaapi_image, GST_VAAPI_TYPE_OBJECT)
+typedef struct _GstVaapiImageClass              GstVaapiImageClass;
 
-#define GST_VAAPI_IMAGE_GET_PRIVATE(obj)                \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                 \
-                                 GST_VAAPI_TYPE_IMAGE,	\
-                                 GstVaapiImagePrivate))
+/**
+ * GstVaapiImage:
+ *
+ * A VA image wrapper
+ */
+struct _GstVaapiImage {
+    /*< private >*/
+    GstVaapiObject      parent_instance;
 
-struct _GstVaapiImagePrivate {
     VAImage             internal_image;
     VAImage             image;
     guchar             *image_data;
@@ -50,18 +53,17 @@ struct _GstVaapiImagePrivate {
     GstVaapiImageFormat format;
     guint               width;
     guint               height;
-    guint               create_image    : 1;
-    guint               is_constructed  : 1;
     guint               is_linear       : 1;
 };
 
-enum {
-    PROP_0,
-
-    PROP_IMAGE,
-    PROP_FORMAT,
-    PROP_WIDTH,
-    PROP_HEIGHT
+/**
+ * GstVaapiImageClass:
+ *
+ * A VA image wrapper class
+ */
+struct _GstVaapiImageClass {
+    /*< private >*/
+    GstVaapiObjectClass parent_class;
 };
 
 #define SWAP_UINT(a, b) do { \
@@ -82,35 +84,6 @@ _gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image);
 /*
  * VAImage wrapper
  */
-
-#define VAAPI_TYPE_IMAGE vaapi_image_get_type()
-
-static gpointer
-vaapi_image_copy(gpointer va_image)
-{
-    return g_slice_dup(VAImage, va_image);
-}
-
-static void
-vaapi_image_free(gpointer va_image)
-{
-    if (G_LIKELY(va_image))
-        g_slice_free(VAImage, va_image);
-}
-
-static GType
-vaapi_image_get_type(void)
-{
-    static GType type = 0;
-
-    if (G_UNLIKELY(type == 0))
-        type = g_boxed_type_register_static(
-            "VAImage",
-            vaapi_image_copy,
-            vaapi_image_free
-        );
-    return type;
-}
 
 static gboolean
 vaapi_image_is_linear(const VAImage *va_image)
@@ -173,7 +146,6 @@ static gboolean
 _gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format)
 {
     GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(image);
-    GstVaapiImagePrivate * const priv = image->priv;
     const VAImageFormat *va_format;
     VAStatus status;
 
@@ -188,30 +160,29 @@ _gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format)
     status = vaCreateImage(
         GST_VAAPI_DISPLAY_VADISPLAY(display),
         (VAImageFormat *)va_format,
-        priv->width,
-        priv->height,
-        &priv->internal_image
+        image->width,
+        image->height,
+        &image->internal_image
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
     if (status != VA_STATUS_SUCCESS ||
-        priv->internal_image.format.fourcc != va_format->fourcc)
+        image->internal_image.format.fourcc != va_format->fourcc)
         return FALSE;
 
-    priv->internal_format = format;
+    image->internal_format = format;
     return TRUE;
 }
 
 static gboolean
-gst_vaapi_image_create(GstVaapiImage *image)
+gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format,
+    guint width, guint height)
 {
-    GstVaapiImagePrivate * const priv = image->priv;
-    GstVaapiImageFormat format = priv->format;
     const VAImageFormat *va_format;
     VAImageID image_id;
 
-    if (!priv->create_image)
-        return (priv->image.image_id != VA_INVALID_ID &&
-                priv->image.buf      != VA_INVALID_ID);
+    image->format = format;
+    image->width  = width;
+    image->height = height;
 
     if (!_gst_vaapi_image_create(image, format)) {
         switch (format) {
@@ -228,25 +199,25 @@ gst_vaapi_image_create(GstVaapiImage *image)
         if (!format || !_gst_vaapi_image_create(image, format))
             return FALSE;
     }
-    priv->image = priv->internal_image;
-    image_id    = priv->image.image_id;
+    image->image = image->internal_image;
+    image_id     = image->image.image_id;
 
-    if (priv->format != priv->internal_format) {
-        switch (priv->format) {
+    if (image->format != image->internal_format) {
+        switch (image->format) {
         case GST_VAAPI_IMAGE_YV12:
         case GST_VAAPI_IMAGE_I420:
-            va_format = gst_vaapi_image_format_get_va_format(priv->format);
+            va_format = gst_vaapi_image_format_get_va_format(image->format);
             if (!va_format)
                 return FALSE;
-            priv->image.format = *va_format;
-            SWAP_UINT(priv->image.offsets[1], priv->image.offsets[2]);
-            SWAP_UINT(priv->image.pitches[1], priv->image.pitches[2]);
+            image->image.format = *va_format;
+            SWAP_UINT(image->image.offsets[1], image->image.offsets[2]);
+            SWAP_UINT(image->image.pitches[1], image->image.pitches[2]);
             break;
         default:
             break;
         }
     }
-    priv->is_linear = vaapi_image_is_linear(&priv->image);
+    image->is_linear = vaapi_image_is_linear(&image->image);
 
     GST_DEBUG("image %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(image_id));
     GST_VAAPI_OBJECT_ID(image) = image_id;
@@ -254,168 +225,28 @@ gst_vaapi_image_create(GstVaapiImage *image)
 }
 
 static void
-gst_vaapi_image_finalize(GObject *object)
+gst_vaapi_image_init(GstVaapiImage *image)
 {
-    gst_vaapi_image_destroy(GST_VAAPI_IMAGE(object));
-
-    G_OBJECT_CLASS(gst_vaapi_image_parent_class)->finalize(object);
-}
-
-static void
-gst_vaapi_image_set_property(
-    GObject      *object,
-    guint         prop_id,
-    const GValue *value,
-    GParamSpec   *pspec
-)
-{
-    GstVaapiImage        * const image = GST_VAAPI_IMAGE(object);
-    GstVaapiImagePrivate * const priv  = image->priv;
-
-    switch (prop_id) {
-    case PROP_IMAGE: {
-        const VAImage * const va_image = g_value_get_boxed(value);
-        if (va_image)
-            _gst_vaapi_image_set_image(image, va_image);
-        break;
-    }
-    case PROP_FORMAT:
-        if (priv->create_image)
-            priv->format = g_value_get_uint(value);
-        break;
-    case PROP_WIDTH:
-        if (priv->create_image)
-            priv->width = g_value_get_uint(value);
-        break;
-    case PROP_HEIGHT:
-        if (priv->create_image)
-            priv->height = g_value_get_uint(value);
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_image_get_property(
-    GObject    *object,
-    guint       prop_id,
-    GValue     *value,
-    GParamSpec *pspec
-)
-{
-    GstVaapiImage * const image = GST_VAAPI_IMAGE(object);
-
-    switch (prop_id) {
-    case PROP_IMAGE:
-        g_value_set_boxed(value, &image->priv->image);
-        break;
-    case PROP_FORMAT:
-        g_value_set_uint(value, gst_vaapi_image_get_format(image));
-        break;
-    case PROP_WIDTH:
-        g_value_set_uint(value, gst_vaapi_image_get_width(image));
-        break;
-    case PROP_HEIGHT:
-        g_value_set_uint(value, gst_vaapi_image_get_height(image));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_image_constructed(GObject *object)
-{
-    GstVaapiImage * const image = GST_VAAPI_IMAGE(object);
-    GObjectClass *parent_class;
-
-    image->priv->is_constructed = gst_vaapi_image_create(image);
-
-    parent_class = G_OBJECT_CLASS(gst_vaapi_image_parent_class);
-    if (parent_class->constructed)
-        parent_class->constructed(object);
+    image->internal_image.image_id = VA_INVALID_ID;
+    image->internal_image.buf = VA_INVALID_ID;
+    image->image.image_id = VA_INVALID_ID;
+    image->image.buf = VA_INVALID_ID;
 }
 
 static void
 gst_vaapi_image_class_init(GstVaapiImageClass *klass)
 {
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
+    GstVaapiObjectClass * const object_class =
+        GST_VAAPI_OBJECT_CLASS(klass);
 
-    g_type_class_add_private(klass, sizeof(GstVaapiImagePrivate));
-
-    object_class->finalize     = gst_vaapi_image_finalize;
-    object_class->set_property = gst_vaapi_image_set_property;
-    object_class->get_property = gst_vaapi_image_get_property;
-    object_class->constructed  = gst_vaapi_image_constructed;
-
-    g_object_class_install_property
-        (object_class,
-         PROP_IMAGE,
-         g_param_spec_boxed("image",
-                            "Image",
-                            "The underlying VA image",
-                            VAAPI_TYPE_IMAGE,
-                            G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_WIDTH,
-         g_param_spec_uint("width",
-                           "width",
-                           "The image width",
-                           0, G_MAXUINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_HEIGHT,
-         g_param_spec_uint("height",
-                           "heighr",
-                           "The image height",
-                           0, G_MAXUINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    /**
-     * GstVaapiImage:format:
-     *
-     * The #GstVaapiImageFormat of the image
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_FORMAT,
-         g_param_spec_uint("format",
-                           "Format",
-                           "The underlying image format",
-                           0, G_MAXUINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+    object_class->init = (GstVaapiObjectInitFunc)gst_vaapi_image_init;
 }
 
-static void
-gst_vaapi_image_init(GstVaapiImage *image)
-{
-    GstVaapiImagePrivate *priv = GST_VAAPI_IMAGE_GET_PRIVATE(image);
-
-    image->priv                   = priv;
-    priv->image_data              = NULL;
-    priv->width                   = 0;
-    priv->height                  = 0;
-    priv->internal_format         = 0;
-    priv->format                  = 0;
-    priv->create_image            = TRUE;
-    priv->is_constructed          = FALSE;
-    priv->is_linear               = FALSE;
-
-    memset(&priv->internal_image, 0, sizeof(priv->internal_image));
-    priv->internal_image.image_id = VA_INVALID_ID;
-    priv->internal_image.buf      = VA_INVALID_ID;
-
-    memset(&priv->image, 0, sizeof(priv->image));
-    priv->image.image_id          = VA_INVALID_ID;
-    priv->image.buf               = VA_INVALID_ID;
-}
+#define gst_vaapi_image_finalize gst_vaapi_image_destroy
+GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE(
+    GstVaapiImage,
+    gst_vaapi_image,
+    gst_vaapi_image_class_init(&g_class))
 
 /**
  * gst_vaapi_image_new:
@@ -439,30 +270,23 @@ gst_vaapi_image_new(
 {
     GstVaapiImage *image;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
     g_return_val_if_fail(width > 0, NULL);
     g_return_val_if_fail(height > 0, NULL);
 
     GST_DEBUG("format %" GST_FOURCC_FORMAT ", size %ux%u",
               GST_FOURCC_ARGS(format), width, height);
 
-    image = g_object_new(
-        GST_VAAPI_TYPE_IMAGE,
-        "display", display,
-        "id",      GST_VAAPI_ID(VA_INVALID_ID),
-        "format",  format,
-        "width",   width,
-        "height",  height,
-        NULL
-    );
+    image = gst_vaapi_object_new(gst_vaapi_image_class(), display);
     if (!image)
         return NULL;
 
-    if (!image->priv->is_constructed) {
-        g_object_unref(image);
-        return NULL;
-    }
+    if (!gst_vaapi_image_create(image, format, width, height))
+        goto error;
     return image;
+
+error:
+    gst_vaapi_object_unref(image);
+    return NULL;
 }
 
 /**
@@ -482,7 +306,6 @@ gst_vaapi_image_new_with_image(GstVaapiDisplay *display, VAImage *va_image)
 {
     GstVaapiImage *image;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
     g_return_val_if_fail(va_image, NULL);
     g_return_val_if_fail(va_image->image_id != VA_INVALID_ID, NULL);
     g_return_val_if_fail(va_image->buf != VA_INVALID_ID, NULL);
@@ -492,21 +315,17 @@ gst_vaapi_image_new_with_image(GstVaapiDisplay *display, VAImage *va_image)
               GST_FOURCC_ARGS(va_image->format.fourcc),
               va_image->width, va_image->height);
 
-    image = g_object_new(
-        GST_VAAPI_TYPE_IMAGE,
-        "display", display,
-        "id",      GST_VAAPI_ID(va_image->image_id),
-        "image",   va_image,
-        NULL
-    );
+    image = gst_vaapi_object_new(gst_vaapi_image_class(), display);
     if (!image)
         return NULL;
 
-    if (!image->priv->is_constructed) {
-        g_object_unref(image);
-        return NULL;
-    }
+    if (!_gst_vaapi_image_set_image(image, va_image))
+        goto error;
     return image;
+
+error:
+    gst_vaapi_object_unref(image);
+    return NULL;
 }
 
 /**
@@ -521,7 +340,6 @@ GstVaapiID
 gst_vaapi_image_get_id(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), VA_INVALID_ID);
-    g_return_val_if_fail(image->priv->is_constructed, VA_INVALID_ID);
 
     return GST_VAAPI_OBJECT_ID(image);
 }
@@ -539,10 +357,9 @@ gboolean
 gst_vaapi_image_get_image(GstVaapiImage *image, VAImage *va_image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     if (va_image)
-        *va_image = image->priv->image;
+        *va_image = image->image;
 
     return TRUE;
 }
@@ -564,29 +381,26 @@ gst_vaapi_image_get_image(GstVaapiImage *image, VAImage *va_image)
 gboolean
 _gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image)
 {
-    GstVaapiImagePrivate * const priv = image->priv;
     GstVaapiImageFormat format;
     VAImage alt_va_image;
     const VAImageFormat *alt_va_format;
-
-    if (!va_image)
-        return FALSE;
 
     format = gst_vaapi_image_format(&va_image->format);
     if (!format)
         return FALSE;
 
-    priv->create_image    = FALSE;
-    priv->internal_image  = *va_image;
-    priv->internal_format = format;
-    priv->is_linear       = vaapi_image_is_linear(va_image);
-    priv->image           = *va_image;
-    priv->format          = format;
-    priv->width           = va_image->width;
-    priv->height          = va_image->height;
+    image->internal_image  = *va_image;
+    image->internal_format = format;
+    image->is_linear       = vaapi_image_is_linear(va_image);
+    image->image           = *va_image;
+    image->format          = format;
+    image->width           = va_image->width;
+    image->height          = va_image->height;
+
+    GST_VAAPI_OBJECT_ID(image) = va_image->image_id;
 
     /* Try to linearize image */
-    if (!priv->is_linear) {
+    if (!image->is_linear) {
         switch (format) {
         case GST_VAAPI_IMAGE_I420:
             format = GST_VAAPI_IMAGE_YV12;
@@ -605,9 +419,9 @@ _gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image)
             SWAP_UINT(alt_va_image.offsets[1], alt_va_image.offsets[2]);
             SWAP_UINT(alt_va_image.pitches[1], alt_va_image.pitches[2]);
             if (vaapi_image_is_linear(&alt_va_image)) {
-                priv->image     = alt_va_image;
-                priv->format    = format;
-                priv->is_linear = TRUE;
+                image->image     = alt_va_image;
+                image->format    = format;
+                image->is_linear = TRUE;
                 GST_DEBUG("linearized image to %" GST_FOURCC_FORMAT " format",
                           GST_FOURCC_ARGS(format));
             }
@@ -628,9 +442,8 @@ GstVaapiImageFormat
 gst_vaapi_image_get_format(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
-    g_return_val_if_fail(image->priv->is_constructed, 0);
 
-    return image->priv->format;
+    return image->format;
 }
 
 /**
@@ -645,9 +458,8 @@ guint
 gst_vaapi_image_get_width(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
-    g_return_val_if_fail(image->priv->is_constructed, 0);
 
-    return image->priv->width;
+    return image->width;
 }
 
 /**
@@ -662,9 +474,8 @@ guint
 gst_vaapi_image_get_height(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
-    g_return_val_if_fail(image->priv->is_constructed, 0);
 
-    return image->priv->height;
+    return image->height;
 }
 
 /**
@@ -679,13 +490,12 @@ void
 gst_vaapi_image_get_size(GstVaapiImage *image, guint *pwidth, guint *pheight)
 {
     g_return_if_fail(GST_VAAPI_IS_IMAGE(image));
-    g_return_if_fail(image->priv->is_constructed);
 
     if (pwidth)
-        *pwidth = image->priv->width;
+        *pwidth = image->width;
 
     if (pheight)
-        *pheight = image->priv->height;
+        *pheight = image->height;
 }
 
 /**
@@ -702,9 +512,8 @@ gboolean
 gst_vaapi_image_is_linear(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
-    return image->priv->is_linear;
+    return image->is_linear;
 }
 
 /**
@@ -718,14 +527,13 @@ gst_vaapi_image_is_linear(GstVaapiImage *image)
 static inline gboolean
 _gst_vaapi_image_is_mapped(GstVaapiImage *image)
 {
-    return image->priv->image_data != NULL;
+    return image->image_data != NULL;
 }
 
 gboolean
 gst_vaapi_image_is_mapped(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     return _gst_vaapi_image_is_mapped(image);
 }
@@ -743,7 +551,6 @@ gboolean
 gst_vaapi_image_map(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     return _gst_vaapi_image_map(image, NULL);
 }
@@ -751,7 +558,6 @@ gst_vaapi_image_map(GstVaapiImage *image)
 gboolean
 _gst_vaapi_image_map(GstVaapiImage *image, GstVaapiImageRaw *raw_image)
 {
-    GstVaapiImagePrivate * const priv = image->priv;
     GstVaapiDisplay *display;
     VAStatus status;
     guint i;
@@ -766,8 +572,8 @@ _gst_vaapi_image_map(GstVaapiImage *image, GstVaapiImageRaw *raw_image)
     GST_VAAPI_DISPLAY_LOCK(display);
     status = vaMapBuffer(
         GST_VAAPI_DISPLAY_VADISPLAY(display),
-        priv->image.buf,
-        (void **)&priv->image_data
+        image->image.buf,
+        (void **)&image->image_data
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
     if (!vaapi_check_status(status, "vaMapBuffer()"))
@@ -775,13 +581,13 @@ _gst_vaapi_image_map(GstVaapiImage *image, GstVaapiImageRaw *raw_image)
 
 map_success:
     if (raw_image) {
-        const VAImage * const va_image = &priv->image;
-        raw_image->format     = priv->format;
+        const VAImage * const va_image = &image->image;
+        raw_image->format     = image->format;
         raw_image->width      = va_image->width;
         raw_image->height     = va_image->height;
         raw_image->num_planes = va_image->num_planes;
         for (i = 0; i < raw_image->num_planes; i++) {
-            raw_image->pixels[i] = (guchar *)priv->image_data +
+            raw_image->pixels[i] = (guchar *)image->image_data +
                 va_image->offsets[i];
             raw_image->stride[i] = va_image->pitches[i];
         }
@@ -802,7 +608,6 @@ gboolean
 gst_vaapi_image_unmap(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     return _gst_vaapi_image_unmap(image);
 }
@@ -823,13 +628,13 @@ _gst_vaapi_image_unmap(GstVaapiImage *image)
     GST_VAAPI_DISPLAY_LOCK(display);
     status = vaUnmapBuffer(
         GST_VAAPI_DISPLAY_VADISPLAY(display),
-        image->priv->image.buf
+        image->image.buf
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
     if (!vaapi_check_status(status, "vaUnmapBuffer()"))
         return FALSE;
 
-    image->priv->image_data = NULL;
+    image->image_data = NULL;
     return TRUE;
 }
 
@@ -846,10 +651,9 @@ guint
 gst_vaapi_image_get_plane_count(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
     g_return_val_if_fail(_gst_vaapi_image_is_mapped(image), 0);
 
-    return image->priv->image.num_planes;
+    return image->image.num_planes;
 }
 
 /**
@@ -866,11 +670,10 @@ guchar *
 gst_vaapi_image_get_plane(GstVaapiImage *image, guint plane)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), NULL);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
     g_return_val_if_fail(_gst_vaapi_image_is_mapped(image), NULL);
-    g_return_val_if_fail(plane < image->priv->image.num_planes, NULL);
+    g_return_val_if_fail(plane < image->image.num_planes, NULL);
 
-    return image->priv->image_data + image->priv->image.offsets[plane];
+    return image->image_data + image->image.offsets[plane];
 }
 
 /**
@@ -887,11 +690,10 @@ guint
 gst_vaapi_image_get_pitch(GstVaapiImage *image, guint plane)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
     g_return_val_if_fail(_gst_vaapi_image_is_mapped(image), 0);
-    g_return_val_if_fail(plane < image->priv->image.num_planes, 0);
+    g_return_val_if_fail(plane < image->image.num_planes, 0);
 
-    return image->priv->image.pitches[plane];
+    return image->image.pitches[plane];
 }
 
 /**
@@ -908,9 +710,8 @@ guint
 gst_vaapi_image_get_data_size(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
-    return image->priv->image.data_size;
+    return image->image.data_size;
 }
 
 #if GST_CHECK_VERSION(1,0,0)
@@ -1175,21 +976,17 @@ gst_vaapi_image_get_buffer(
     GstVaapiRectangle *rect
 )
 {
-    GstVaapiImagePrivate *priv;
     GstVaapiImageRaw dst_image, src_image;
     gboolean success;
 
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
     g_return_val_if_fail(GST_IS_BUFFER(buffer), FALSE);
-
-    priv = image->priv;
 
     if (!init_image_from_buffer(&dst_image, buffer))
         return FALSE;
-    if (dst_image.format != priv->format)
+    if (dst_image.format != image->format)
         return FALSE;
-    if (dst_image.width != priv->width || dst_image.height != priv->height)
+    if (dst_image.width != image->width || dst_image.height != image->height)
         return FALSE;
 
     if (!_gst_vaapi_image_map(image, &src_image))
@@ -1226,7 +1023,6 @@ gst_vaapi_image_get_raw(
     gboolean success;
 
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     if (!_gst_vaapi_image_map(image, &src_image))
         return FALSE;
@@ -1258,21 +1054,17 @@ gst_vaapi_image_update_from_buffer(
     GstVaapiRectangle *rect
 )
 {
-    GstVaapiImagePrivate *priv;
     GstVaapiImageRaw dst_image, src_image;
     gboolean success;
 
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
     g_return_val_if_fail(GST_IS_BUFFER(buffer), FALSE);
-
-    priv = image->priv;
 
     if (!init_image_from_buffer(&src_image, buffer))
         return FALSE;
-    if (src_image.format != priv->format)
+    if (src_image.format != image->format)
         return FALSE;
-    if (src_image.width != priv->width || src_image.height != priv->height)
+    if (src_image.width != image->width || src_image.height != image->height)
         return FALSE;
 
     if (!_gst_vaapi_image_map(image, &dst_image))
@@ -1310,7 +1102,6 @@ gst_vaapi_image_update_from_raw(
     gboolean success;
 
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     if (!_gst_vaapi_image_map(image, &dst_image))
         return FALSE;
