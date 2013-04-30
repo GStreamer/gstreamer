@@ -39,13 +39,22 @@ typedef struct _GstVaapiMiniObjectClass GstVaapiMiniObjectClass;
     ((GstVaapiMiniObject *)(object))
 
 /**
+ * GST_VAAPI_MINI_OBJECT_CLASS:
+ * @klass: a #GstVaapiMiniObjectClass
+ *
+ * Casts the @klass to a #GstVaapiMiniObjectClass
+ */
+#define GST_VAAPI_MINI_OBJECT_CLASS(klass) \
+    ((GstVaapiMiniObjectClass *)(klass))
+
+/**
  * GST_VAAPI_MINI_OBJECT_GET_CLASS:
  * @object: a #GstVaapiMiniObject
  *
  * Retrieves the #GstVaapiMiniObjectClass associated with the @object
  */
 #define GST_VAAPI_MINI_OBJECT_GET_CLASS(object) \
-    gst_vaapi_mini_object_get_class(GST_VAAPI_MINI_OBJECT(object))
+    (GST_VAAPI_MINI_OBJECT(object)->object_class)
 
 /**
  * GST_VAAPI_MINI_OBJECT_FLAGS:
@@ -88,17 +97,20 @@ typedef struct _GstVaapiMiniObjectClass GstVaapiMiniObjectClass;
 
 /**
  * GstVaapiMiniObject:
+ * @object_class: the #GstVaapiMiniObjectClass
+ * @ref_count: the object reference count that should be manipulated
+ *   through gst_vaapi_mini_object_ref() et al. helpers
  * @flags: set of flags that should be manipulated through
  *   GST_VAAPI_MINI_OBJECT_FLAG_*() functions
- * @user_data: user-provided data from gst_vaapi_mini_object_set_user_data()
  *
  * A #GstVaapiMiniObject represents a minimal reference counted data
  * structure that can hold a set of flags and user-provided data.
  */
 struct _GstVaapiMiniObject {
     /*< private >*/
+    gconstpointer       object_class;
+    volatile gint       ref_count;
     guint               flags;
-    gpointer            user_data;
 };
 
 /**
@@ -115,10 +127,6 @@ struct _GstVaapiMiniObjectClass {
     guint               size;
     GDestroyNotify      finalize;
 };
-
-G_GNUC_INTERNAL
-const GstVaapiMiniObjectClass *
-gst_vaapi_mini_object_get_class(GstVaapiMiniObject *object) G_GNUC_CONST;
 
 G_GNUC_INTERNAL
 GstVaapiMiniObject *
@@ -140,15 +148,6 @@ G_GNUC_INTERNAL
 void
 gst_vaapi_mini_object_replace(GstVaapiMiniObject **old_object_ptr,
     GstVaapiMiniObject *new_object);
-
-G_GNUC_INTERNAL
-gpointer
-gst_vaapi_mini_object_get_user_data(GstVaapiMiniObject *object);
-
-G_GNUC_INTERNAL
-void
-gst_vaapi_mini_object_set_user_data(GstVaapiMiniObject *object,
-    gpointer user_data, GDestroyNotify destroy_notify);
 
 G_END_DECLS
 

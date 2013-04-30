@@ -57,6 +57,7 @@ typedef struct _GstVaapiPictureH264             GstVaapiPictureH264;
     ((GstVaapiParserInfoH264 *)(obj))
 
 struct _GstVaapiParserInfoH264 {
+    GstVaapiMiniObject  parent_instance;
     GstH264NalUnit      nalu;
     union {
         GstH264SPS      sps;

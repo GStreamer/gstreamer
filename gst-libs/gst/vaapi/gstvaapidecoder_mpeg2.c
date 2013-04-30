@@ -258,6 +258,7 @@ struct _GstMpegVideoSliceHdr {
 
 typedef struct _GstVaapiParserInfoMpeg2 GstVaapiParserInfoMpeg2;
 struct _GstVaapiParserInfoMpeg2 {
+    GstVaapiMiniObject  parent_instance;
     GstMpegVideoPacket  packet;
     guint8              extension_type; /* for Extension packets */
     union {

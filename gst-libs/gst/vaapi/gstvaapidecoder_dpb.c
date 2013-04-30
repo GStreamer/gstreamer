@@ -29,8 +29,7 @@
     ((GstVaapiDpbClass *)(klass))
 
 #define GST_VAAPI_DPB_GET_CLASS(obj) \
-    GST_VAAPI_DPB_CLASS(gst_vaapi_mini_object_get_class( \
-                            GST_VAAPI_MINI_OBJECT(obj)))
+    GST_VAAPI_DPB_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
 
 /**
  * GstVaapiDpb:

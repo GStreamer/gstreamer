@@ -22,51 +22,18 @@
 #include <string.h>
 #include "gstvaapiminiobject.h"
 
-typedef struct _GstVaapiMiniObjectBase GstVaapiMiniObjectBase;
-struct _GstVaapiMiniObjectBase {
-    gconstpointer       object_class;
-    gint                ref_count;
-    GDestroyNotify      user_data_destroy_notify;
-};
-
-static inline GstVaapiMiniObjectBase *
-object2base(GstVaapiMiniObject *object)
-{
-    return GSIZE_TO_POINTER(GPOINTER_TO_SIZE(object) -
-        sizeof(GstVaapiMiniObjectBase));
-}
-
-static inline GstVaapiMiniObject *
-base2object(GstVaapiMiniObjectBase *base_object)
-{
-    return GSIZE_TO_POINTER(GPOINTER_TO_SIZE(base_object) +
-        sizeof(GstVaapiMiniObjectBase));
-}
-
 static void
 gst_vaapi_mini_object_free(GstVaapiMiniObject *object)
 {
-    GstVaapiMiniObjectBase * const base_object = object2base(object);
-    const GstVaapiMiniObjectClass * const klass = base_object->object_class;
+    const GstVaapiMiniObjectClass * const klass = object->object_class;
 
-    g_atomic_int_inc(&base_object->ref_count);
+    g_atomic_int_inc(&object->ref_count);
 
     if (klass->finalize)
         klass->finalize(object);
 
-    if (G_LIKELY(g_atomic_int_dec_and_test(&base_object->ref_count))) {
-        if (object->user_data && base_object->user_data_destroy_notify)
-            base_object->user_data_destroy_notify(object->user_data);
-        g_slice_free1(sizeof(*base_object) + klass->size, base_object);
-    }
-}
-
-const GstVaapiMiniObjectClass *
-gst_vaapi_mini_object_get_class(GstVaapiMiniObject *object)
-{
-    g_return_val_if_fail(object != NULL, NULL);
-
-    return object2base(object)->object_class;
+    if (G_LIKELY(g_atomic_int_dec_and_test(&object->ref_count)))
+        g_slice_free1(klass->size, object);
 }
 
 /**
@@ -87,28 +54,23 @@ GstVaapiMiniObject *
 gst_vaapi_mini_object_new(const GstVaapiMiniObjectClass *object_class)
 {
     GstVaapiMiniObject *object;
-    GstVaapiMiniObjectBase *base_object;
 
     static const GstVaapiMiniObjectClass default_object_class = {
         .size = sizeof(GstVaapiMiniObject),
     };
 
-    if (!object_class)
+    if (G_UNLIKELY(!object_class))
         object_class = &default_object_class;
 
     g_return_val_if_fail(object_class->size >= sizeof(*object), NULL);
 
-    base_object = g_slice_alloc(sizeof(*base_object) + object_class->size);
-    if (!base_object)
+    object = g_slice_alloc(object_class->size);
+    if (!object)
         return NULL;
 
-    object = base2object(base_object);
+    object->object_class = object_class;
+    object->ref_count = 1;
     object->flags = 0;
-    object->user_data = 0;
-
-    base_object->object_class = object_class;
-    base_object->ref_count = 1;
-    base_object->user_data_destroy_notify = NULL;
     return object;
 }
 
@@ -132,7 +94,7 @@ gst_vaapi_mini_object_new0(const GstVaapiMiniObjectClass *object_class)
     if (!object)
         return NULL;
 
-    object_class = object2base(object)->object_class;
+    object_class = object->object_class;
 
     sub_size = object_class->size - sizeof(*object);
     if (sub_size > 0)
@@ -153,7 +115,7 @@ gst_vaapi_mini_object_ref(GstVaapiMiniObject *object)
 {
     g_return_val_if_fail(object != NULL, NULL);
 
-    g_atomic_int_inc(&object2base(object)->ref_count);
+    g_atomic_int_inc(&object->ref_count);
     return object;
 }
 
@@ -168,9 +130,9 @@ void
 gst_vaapi_mini_object_unref(GstVaapiMiniObject *object)
 {
     g_return_if_fail(object != NULL);
-    g_return_if_fail(object2base(object)->ref_count > 0);
+    g_return_if_fail(object->ref_count > 0);
 
-    if (g_atomic_int_dec_and_test(&object2base(object)->ref_count))
+    if (g_atomic_int_dec_and_test(&object->ref_count))
         gst_vaapi_mini_object_free(object);
 }
 
@@ -205,49 +167,4 @@ gst_vaapi_mini_object_replace(GstVaapiMiniObject **old_object_ptr,
 
     if (old_object)
         gst_vaapi_mini_object_unref(old_object);
-}
-
-/**
- * gst_vaapi_mini_object_get_user_data:
- * @object: a #GstVaapiMiniObject
- *
- * Gets user-provided data set on the object via a previous call to
- * gst_vaapi_mini_object_set_user_data().
- *
- * Returns: (transfer none): The previously set user_data
- */
-gpointer
-gst_vaapi_mini_object_get_user_data(GstVaapiMiniObject *object)
-{
-    g_return_val_if_fail(object != NULL, NULL);
-
-    return object->user_data;
-}
-
-/**
- * gst_vaapi_mini_object_set_user_data:
- * @object: a #GstVaapiMiniObject
- * @user_data: user-provided data
- * @destroy_notify: (closure user_data): a #GDestroyNotify
- *
- * Sets @user_data on the object and the #GDestroyNotify that will be
- * called when the data is freed.
- *
- * If some @user_data was previously set, then the former @destroy_notify
- * function will be called before the @user_data is replaced.
- */
-void
-gst_vaapi_mini_object_set_user_data(GstVaapiMiniObject *object,
-    gpointer user_data, GDestroyNotify destroy_notify)
-{
-    GstVaapiMiniObjectBase *base_object;
-
-    g_return_if_fail(object != NULL);
-
-    base_object = object2base(object);
-    if (object->user_data && base_object->user_data_destroy_notify)
-        base_object->user_data_destroy_notify(object->user_data);
-
-    object->user_data = user_data;
-    base_object->user_data_destroy_notify = destroy_notify;
 }

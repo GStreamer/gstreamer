@@ -42,7 +42,7 @@ const GstVaapiCodecObjectClass *
 gst_vaapi_codec_object_get_class(GstVaapiCodecObject *object)
 {
     return (const GstVaapiCodecObjectClass *)
-        gst_vaapi_mini_object_get_class(GST_VAAPI_MINI_OBJECT(object));
+        GST_VAAPI_MINI_OBJECT_GET_CLASS(object);
 }
 
 static gboolean
