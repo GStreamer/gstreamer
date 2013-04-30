@@ -285,6 +285,8 @@ resync:
   while (tmp) {
     GstPad *srcpad = (GstPad *) tmp->data;
 
+    /* Ensure srcpad doesn't get destroyed while we query peer */
+    gst_object_ref (srcpad);
     STREAMS_UNLOCK (stream_splitter);
     if (res) {
       GstCaps *peercaps = gst_pad_peer_query_caps (srcpad, filter);
@@ -294,6 +296,7 @@ resync:
       res = gst_pad_peer_query_caps (srcpad, filter);
     }
     STREAMS_LOCK (stream_splitter);
+    gst_object_unref (srcpad);
 
     if (G_UNLIKELY (cookie != stream_splitter->cookie)) {
       if (res)
