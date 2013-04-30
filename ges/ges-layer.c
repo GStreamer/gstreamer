@@ -359,6 +359,8 @@ ges_layer_set_priority (GESLayer * layer, guint priority)
 
     ges_layer_resync_priorities (layer);
   }
+
+  g_object_notify (G_OBJECT (layer), "priority");
 }
 
 /**
