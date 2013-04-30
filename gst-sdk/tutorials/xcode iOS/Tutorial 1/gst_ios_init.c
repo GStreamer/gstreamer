@@ -1,7 +1,4 @@
-
-
-#include <gst/gst.h>
-#include "gst_ios_plugins.h"
+#include "gst_ios_init.h"
 
 #if defined(GST_IOS_PLUGIN_COREELEMENTS) || defined(GST_IOS_PLUGINS_CORE)
 GST_PLUGIN_STATIC_DECLARE(coreelements);
@@ -497,8 +494,10 @@ GST_PLUGIN_STATIC_DECLARE(sdp);
 #endif
 
 void
-gst_backend_register_plugins (void)
+gst_backend_init (void)
 {
+    gst_init (NULL, NULL);
+
 #if defined(GST_IOS_PLUGIN_COREELEMENTS) || defined(GST_IOS_PLUGINS_CORE)
     GST_PLUGIN_STATIC_REGISTER(coreelements);
 #endif

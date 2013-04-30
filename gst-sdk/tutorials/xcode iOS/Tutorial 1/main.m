@@ -1,7 +1,7 @@
 #import <UIKit/UIKit.h>
 
 #import "AppDelegate.h"
-#include "gst_ios_backend.h"
+#include "gst_ios_init.h"
 
 int main(int argc, char *argv[])
 {
