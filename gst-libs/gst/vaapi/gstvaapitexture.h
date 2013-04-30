@@ -31,58 +31,7 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_TEXTURE \
-    (gst_vaapi_texture_get_type())
-
-#define GST_VAAPI_TEXTURE(obj)                          \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_VAAPI_TYPE_TEXTURE, \
-                                GstVaapiTexture))
-
-#define GST_VAAPI_TEXTURE_CLASS(klass)                  \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_VAAPI_TYPE_TEXTURE,    \
-                             GstVaapiTextureClass))
-
-#define GST_VAAPI_IS_TEXTURE(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_TEXTURE))
-
-#define GST_VAAPI_IS_TEXTURE_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_TEXTURE))
-
-#define GST_VAAPI_TEXTURE_GET_CLASS(obj)                \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_VAAPI_TYPE_TEXTURE,  \
-                               GstVaapiTextureClass))
-
 typedef struct _GstVaapiTexture                 GstVaapiTexture;
-typedef struct _GstVaapiTexturePrivate          GstVaapiTexturePrivate;
-typedef struct _GstVaapiTextureClass            GstVaapiTextureClass;
-
-/**
- * GstVaapiTexture:
- *
- * Base class for system-dependent textures.
- */
-struct _GstVaapiTexture {
-    /*< private >*/
-    GstVaapiObject parent_instance;
-
-    GstVaapiTexturePrivate *priv;
-};
-
-/**
- * GstVaapiTextureClass:
- *
- * Base class for system-dependent textures.
- */
-struct _GstVaapiTextureClass {
-    /*< private >*/
-    GstVaapiObjectClass parent_class;
-};
-
-GType
-gst_vaapi_texture_get_type(void) G_GNUC_CONST;
 
 GstVaapiTexture *
 gst_vaapi_texture_new(
@@ -96,10 +45,20 @@ gst_vaapi_texture_new(
 GstVaapiTexture *
 gst_vaapi_texture_new_with_texture(
     GstVaapiDisplay *display,
-    GLuint           texture,
+    GLuint           texture_id,
     GLenum           target,
     GLenum           format
 );
+
+GstVaapiTexture *
+gst_vaapi_texture_ref(GstVaapiTexture *texture);
+
+void
+gst_vaapi_texture_unref(GstVaapiTexture *texture);
+
+void
+gst_vaapi_texture_replace(GstVaapiTexture **old_texture_ptr,
+    GstVaapiTexture *new_texture);
 
 GLuint
 gst_vaapi_texture_get_id(GstVaapiTexture *texture);

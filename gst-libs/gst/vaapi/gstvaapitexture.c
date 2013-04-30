@@ -31,20 +31,23 @@
 #include "gstvaapiutils.h"
 #include "gstvaapiutils_glx.h"
 #include "gstvaapidisplay_glx.h"
-#include "gstvaapi_priv.h"
 #include "gstvaapidisplay_x11_priv.h"
+#include "gstvaapiobject_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiTexture, gst_vaapi_texture, GST_VAAPI_TYPE_OBJECT)
+typedef struct _GstVaapiTextureClass            GstVaapiTextureClass;
 
-#define GST_VAAPI_TEXTURE_GET_PRIVATE(obj)                      \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_TEXTURE,        \
-                                 GstVaapiTexturePrivate))
+/**
+ * GstVaapiTexture:
+ *
+ * Base object for system-dependent textures.
+ */
+struct _GstVaapiTexture {
+    /*< private >*/
+    GstVaapiObject parent_instance;
 
-struct _GstVaapiTexturePrivate {
     GLenum               target;
     GLenum               format;
     guint                width;
@@ -54,54 +57,51 @@ struct _GstVaapiTexturePrivate {
     GLPixmapObject      *pixo;
     GLFramebufferObject *fbo;
     guint                foreign_texture : 1;
-    guint                is_constructed  : 1;
 };
 
-enum {
-    PROP_0,
-
-    PROP_TARGET,
-    PROP_FORMAT,
-    PROP_WIDTH,
-    PROP_HEIGHT
+/**
+ * GstVaapiTextureClass:
+ *
+ * Base class for system-dependent textures.
+ */
+struct _GstVaapiTextureClass {
+    GstVaapiObjectClass parent_class;
 };
 
 static void
 _gst_vaapi_texture_destroy_objects(GstVaapiTexture *texture)
 {
-    GstVaapiTexturePrivate * const priv = texture->priv;
-
 #if USE_VAAPI_GLX
     GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
-    if (priv->gl_surface) {
+    if (texture->gl_surface) {
         vaDestroySurfaceGLX(
             GST_VAAPI_OBJECT_VADISPLAY(texture),
-            priv->gl_surface
+            texture->gl_surface
         );
-        priv->gl_surface = NULL;
+        texture->gl_surface = NULL;
     }
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
 #else
     GLContextState old_cs;
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
-    if (priv->gl_context)
-        gl_set_current_context(priv->gl_context, &old_cs);
+    if (texture->gl_context)
+        gl_set_current_context(texture->gl_context, &old_cs);
 
-    if (priv->fbo) {
-        gl_destroy_framebuffer_object(priv->fbo);
-        priv->fbo = NULL;
+    if (texture->fbo) {
+        gl_destroy_framebuffer_object(texture->fbo);
+        texture->fbo = NULL;
     }
 
-    if (priv->pixo) {
-        gl_destroy_pixmap_object(priv->pixo);
-        priv->pixo = NULL;
+    if (texture->pixo) {
+        gl_destroy_pixmap_object(texture->pixo);
+        texture->pixo = NULL;
     }
 
-    if (priv->gl_context) {
+    if (texture->gl_context) {
         gl_set_current_context(&old_cs, NULL);
-        gl_destroy_context(priv->gl_context);
-        priv->gl_context = NULL;
+        gl_destroy_context(texture->gl_context);
+        texture->gl_context = NULL;
     }
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
 #endif
@@ -110,13 +110,12 @@ _gst_vaapi_texture_destroy_objects(GstVaapiTexture *texture)
 static void
 gst_vaapi_texture_destroy(GstVaapiTexture *texture)
 {
-    GstVaapiTexturePrivate * const priv = texture->priv;
     const GLuint texture_id = GST_VAAPI_OBJECT_ID(texture);
 
     _gst_vaapi_texture_destroy_objects(texture);
 
     if (texture_id) {
-        if (!priv->foreign_texture)
+        if (!texture->foreign_texture)
             glDeleteTextures(1, &texture_id);
         GST_VAAPI_OBJECT_ID(texture) = 0;
     }
@@ -125,7 +124,6 @@ gst_vaapi_texture_destroy(GstVaapiTexture *texture)
 static gboolean
 _gst_vaapi_texture_create_objects(GstVaapiTexture *texture, GLuint texture_id)
 {
-    GstVaapiTexturePrivate * const priv = texture->priv;
     gboolean success = FALSE;
 
 #if USE_VAAPI_GLX
@@ -134,9 +132,9 @@ _gst_vaapi_texture_create_objects(GstVaapiTexture *texture, GLuint texture_id)
     GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
     status = vaCreateSurfaceGLX(
         GST_VAAPI_OBJECT_VADISPLAY(texture),
-        priv->target,
+        texture->target,
         texture_id,
-        &priv->gl_surface
+        &texture->gl_surface
     );
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
     success = vaapi_check_status(status, "vaCreateSurfaceGLX()");
@@ -145,29 +143,30 @@ _gst_vaapi_texture_create_objects(GstVaapiTexture *texture, GLuint texture_id)
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
     gl_get_current_context(&old_cs);
-    priv->gl_context = gl_create_context(
+    texture->gl_context = gl_create_context(
         GST_VAAPI_OBJECT_XDISPLAY(texture),
         GST_VAAPI_OBJECT_XSCREEN(texture),
         &old_cs
     );
-    if (!priv->gl_context || !gl_set_current_context(priv->gl_context, NULL))
+    if (!texture->gl_context ||
+        !gl_set_current_context(texture->gl_context, NULL))
         goto end;
 
-    priv->pixo = gl_create_pixmap_object(
+    texture->pixo = gl_create_pixmap_object(
         GST_VAAPI_OBJECT_XDISPLAY(texture),
-        priv->width,
-        priv->height
+        texture->width,
+        texture->height
     );
-    if (!priv->pixo)
+    if (!texture->pixo)
         goto end;
 
-    priv->fbo = gl_create_framebuffer_object(
-        priv->target,
+    texture->fbo = gl_create_framebuffer_object(
+        texture->target,
         texture_id,
-        priv->width,
-        priv->height
+        texture->width,
+        texture->height
     );
-    if (priv->fbo)
+    if (texture->fbo)
         success = TRUE;
 end:
     gl_set_current_context(&old_cs, NULL);
@@ -179,18 +178,17 @@ end:
 static gboolean
 gst_vaapi_texture_create(GstVaapiTexture *texture)
 {
-    GstVaapiTexturePrivate * const priv = texture->priv;
     GLuint texture_id;
 
-    if (priv->foreign_texture)
+    if (texture->foreign_texture)
         texture_id = GST_VAAPI_OBJECT_ID(texture);
     else {
         GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
         texture_id = gl_create_texture(
-            priv->target,
-            priv->format,
-            priv->width,
-            priv->height
+            texture->target,
+            texture->format,
+            texture->width,
+            texture->height
         );
         GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
         if (!texture_id)
@@ -202,151 +200,20 @@ gst_vaapi_texture_create(GstVaapiTexture *texture)
 }
 
 static void
-gst_vaapi_texture_finalize(GObject *object)
+gst_vaapi_texture_init(GstVaapiTexture *texture, GLuint texture_id,
+    GLenum target, GLenum format, guint width, guint height)
 {
-    gst_vaapi_texture_destroy(GST_VAAPI_TEXTURE(object));
+    GST_VAAPI_OBJECT_ID(texture) = texture_id;
+    texture->foreign_texture = texture_id != GL_NONE;
 
-    G_OBJECT_CLASS(gst_vaapi_texture_parent_class)->finalize(object);
+    texture->target = target;
+    texture->format = format;
+    texture->width  = width;
+    texture->height = height;
 }
 
-static void
-gst_vaapi_texture_constructed(GObject *object)
-{
-    GstVaapiTexture * const texture = GST_VAAPI_TEXTURE(object);
-    GObjectClass *parent_class;
-
-    texture->priv->foreign_texture = GST_VAAPI_OBJECT_ID(texture) != 0;
-    texture->priv->is_constructed  = gst_vaapi_texture_create(texture);
-
-    parent_class = G_OBJECT_CLASS(gst_vaapi_texture_parent_class);
-    if (parent_class->constructed)
-        parent_class->constructed(object);
-}
-
-static void
-gst_vaapi_texture_set_property(
-    GObject      *object,
-    guint         prop_id,
-    const GValue *value,
-    GParamSpec   *pspec
-)
-{
-    GstVaapiTexture * const texture = GST_VAAPI_TEXTURE(object);
-
-    switch (prop_id) {
-    case PROP_TARGET:
-        texture->priv->target = g_value_get_uint(value);
-        break;
-    case PROP_FORMAT:
-        texture->priv->format = g_value_get_uint(value);
-        break;
-    case PROP_WIDTH:
-        texture->priv->width = g_value_get_uint(value);
-        break;
-    case PROP_HEIGHT:
-        texture->priv->height = g_value_get_uint(value);
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_texture_get_property(
-    GObject    *object,
-    guint       prop_id,
-    GValue     *value,
-    GParamSpec *pspec
-)
-{
-    GstVaapiTexture * const texture = GST_VAAPI_TEXTURE(object);
-
-    switch (prop_id) {
-    case PROP_TARGET:
-        g_value_set_uint(value, gst_vaapi_texture_get_target(texture));
-        break;
-    case PROP_FORMAT:
-        g_value_set_uint(value, gst_vaapi_texture_get_format(texture));
-        break;
-    case PROP_WIDTH:
-        g_value_set_uint(value, gst_vaapi_texture_get_width(texture));
-        break;
-    case PROP_HEIGHT:
-        g_value_set_uint(value, gst_vaapi_texture_get_height(texture));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_texture_class_init(GstVaapiTextureClass *klass)
-{
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
-
-    g_type_class_add_private(klass, sizeof(GstVaapiTexturePrivate));
-
-    object_class->finalize     = gst_vaapi_texture_finalize;
-    object_class->set_property = gst_vaapi_texture_set_property;
-    object_class->get_property = gst_vaapi_texture_get_property;
-    object_class->constructed  = gst_vaapi_texture_constructed;
-
-    g_object_class_install_property
-        (object_class,
-         PROP_TARGET,
-         g_param_spec_uint("target",
-                           "Target",
-                           "The texture target",
-                           0, G_MAXUINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_FORMAT,
-         g_param_spec_uint("format",
-                           "Format",
-                           "The texture format",
-                           0, G_MAXUINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_WIDTH,
-         g_param_spec_uint("width",
-                           "width",
-                           "The texture width",
-                           0, G_MAXUINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_HEIGHT,
-         g_param_spec_uint("height",
-                           "height",
-                           "The texture height",
-                           0, G_MAXUINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-}
-
-static void
-gst_vaapi_texture_init(GstVaapiTexture *texture)
-{
-    GstVaapiTexturePrivate *priv = GST_VAAPI_TEXTURE_GET_PRIVATE(texture);
-
-    texture->priv               = priv;
-    priv->target                = GL_NONE;
-    priv->format                = GL_NONE;
-    priv->width                 = 0;
-    priv->height                = 0;
-    priv->gl_context            = NULL;
-    priv->gl_surface            = NULL;
-    priv->pixo                  = NULL;
-    priv->fbo                   = NULL;
-    priv->foreign_texture       = FALSE;
-    priv->is_constructed        = FALSE;
-}
+#define gst_vaapi_texture_finalize gst_vaapi_texture_destroy
+GST_VAAPI_OBJECT_DEFINE_CLASS(GstVaapiTexture, gst_vaapi_texture)
 
 /**
  * gst_vaapi_texture_new:
@@ -376,29 +243,39 @@ gst_vaapi_texture_new(
     guint            height
 )
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    GstVaapiTexture *texture;
 
-    return g_object_new(GST_VAAPI_TYPE_TEXTURE,
-                        "display", display,
-                        "id",      GST_VAAPI_ID(0),
-                        "target",  target,
-                        "format",  format,
-                        "width",   width,
-                        "height",  height,
-                        NULL);
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(target != GL_NONE, NULL);
+    g_return_val_if_fail(format != GL_NONE, NULL);
+    g_return_val_if_fail(width > 0, NULL);
+    g_return_val_if_fail(height > 0, NULL);
+
+    texture = gst_vaapi_object_new(gst_vaapi_texture_class(), display);
+    if (!texture)
+        return NULL;
+
+    gst_vaapi_texture_init(texture, GL_NONE, target, format, width, height);
+    if (!gst_vaapi_texture_create(texture))
+        goto error;
+    return texture;
+
+error:
+    gst_vaapi_object_unref(texture);
+    return NULL;
 }
 
 /**
  * gst_vaapi_texture_new_with_texture:
  * @display: a #GstVaapiDisplay
- * @texture: the foreign GL texture name to use
+ * @texture_id: the foreign GL texture name to use
  * @target: the target to which the texture is bound
  * @format: the format of the pixel data
  *
  * Creates a texture from an existing GL texture, with the specified
  * @target and @format. Note that only GL_TEXTURE_2D @target and
  * GL_RGBA or GL_BGRA formats are supported at this time. The
- * dimensions will be retrieved from the @texture.
+ * dimensions will be retrieved from the @texture_id.
  *
  * The application shall maintain the live GL context itself. That is,
  * gst_vaapi_window_glx_make_current() must be called beforehand, or
@@ -410,20 +287,23 @@ gst_vaapi_texture_new(
 GstVaapiTexture *
 gst_vaapi_texture_new_with_texture(
     GstVaapiDisplay *display,
-    GLuint           texture,
+    GLuint           texture_id,
     GLenum           target,
     GLenum           format
 )
 {
+    GstVaapiTexture *texture;
     guint width, height, border_width;
     GLTextureState ts;
     gboolean success;
 
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(target != GL_NONE, NULL);
+    g_return_val_if_fail(format != GL_NONE, NULL);
 
     /* Check texture dimensions */
     GST_VAAPI_DISPLAY_LOCK(display);
-    success = gl_bind_texture(&ts, target, texture);
+    success = gl_bind_texture(&ts, target, texture_id);
     if (success) {
         if (!gl_get_texture_param(target, GL_TEXTURE_WIDTH,  &width)  ||
             !gl_get_texture_param(target, GL_TEXTURE_HEIGHT, &height) ||
@@ -437,17 +317,64 @@ gst_vaapi_texture_new_with_texture(
 
     width  -= 2 * border_width;
     height -= 2 * border_width;
-    if (width == 0 || height == 0)
+    g_return_val_if_fail(width > 0, NULL);
+    g_return_val_if_fail(height > 0, NULL);
+
+    texture = gst_vaapi_object_new(gst_vaapi_texture_class(), display);
+    if (!texture)
         return NULL;
 
-    return g_object_new(GST_VAAPI_TYPE_TEXTURE,
-                        "display", display,
-                        "id",      GST_VAAPI_ID(texture),
-                        "target",  target,
-                        "format",  format,
-                        "width",   width,
-                        "height",  height,
-                        NULL);
+    gst_vaapi_texture_init(texture, texture_id, target, format, width, height);
+    if (!gst_vaapi_texture_create(texture))
+        goto error;
+    return texture;
+
+error:
+    gst_vaapi_object_unref(texture);
+    return NULL;
+}
+
+/**
+ * gst_vaapi_texture_ref:
+ * @texture: a #GstVaapiTexture
+ *
+ * Atomically increases the reference count of the given @texture by one.
+ *
+ * Returns: The same @texture argument
+ */
+GstVaapiTexture *
+gst_vaapi_texture_ref(GstVaapiTexture *texture)
+{
+    return gst_vaapi_object_ref(texture);
+}
+
+/**
+ * gst_vaapi_texture_unref:
+ * @texture: a #GstVaapiTexture
+ *
+ * Atomically decreases the reference count of the @texture by one. If
+ * the reference count reaches zero, the texture will be free'd.
+ */
+void
+gst_vaapi_texture_unref(GstVaapiTexture *texture)
+{
+    gst_vaapi_object_unref(texture);
+}
+
+/**
+ * gst_vaapi_texture_replace:
+ * @old_texture_ptr: a pointer to a #GstVaapiTexture
+ * @new_texture: a #GstVaapiTexture
+ *
+ * Atomically replaces the texture texture held in @old_texture_ptr
+ * with @new_texture. This means that @old_texture_ptr shall reference
+ * a valid texture. However, @new_texture can be NULL.
+ */
+void
+gst_vaapi_texture_replace(GstVaapiTexture **old_texture_ptr,
+    GstVaapiTexture *new_texture)
+{
+    gst_vaapi_object_replace(old_texture_ptr, new_texture);
 }
 
 /**
@@ -461,7 +388,7 @@ gst_vaapi_texture_new_with_texture(
 GLuint
 gst_vaapi_texture_get_id(GstVaapiTexture *texture)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_TEXTURE(texture), 0);
+    g_return_val_if_fail(texture != NULL, 0);
 
     return GST_VAAPI_OBJECT_ID(texture);
 }
@@ -477,10 +404,9 @@ gst_vaapi_texture_get_id(GstVaapiTexture *texture)
 GLenum
 gst_vaapi_texture_get_target(GstVaapiTexture *texture)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_TEXTURE(texture), GL_NONE);
-    g_return_val_if_fail(texture->priv->is_constructed, GL_NONE);
+    g_return_val_if_fail(texture != NULL, GL_NONE);
 
-    return texture->priv->target;
+    return texture->target;
 }
 
 /**
@@ -494,10 +420,9 @@ gst_vaapi_texture_get_target(GstVaapiTexture *texture)
 GLenum
 gst_vaapi_texture_get_format(GstVaapiTexture *texture)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_TEXTURE(texture), GL_NONE);
-    g_return_val_if_fail(texture->priv->is_constructed, GL_NONE);
+    g_return_val_if_fail(texture != NULL, GL_NONE);
 
-    return texture->priv->format;
+    return texture->format;
 }
 
 /**
@@ -511,10 +436,9 @@ gst_vaapi_texture_get_format(GstVaapiTexture *texture)
 guint
 gst_vaapi_texture_get_width(GstVaapiTexture *texture)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_TEXTURE(texture), 0);
-    g_return_val_if_fail(texture->priv->is_constructed, 0);
+    g_return_val_if_fail(texture != NULL, 0);
 
-    return texture->priv->width;
+    return texture->width;
 }
 
 /**
@@ -528,10 +452,9 @@ gst_vaapi_texture_get_width(GstVaapiTexture *texture)
 guint
 gst_vaapi_texture_get_height(GstVaapiTexture *texture)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_TEXTURE(texture), 0);
-    g_return_val_if_fail(texture->priv->is_constructed, 0);
+    g_return_val_if_fail(texture != NULL, 0);
 
-    return texture->priv->height;
+    return texture->height;
 }
 
 /**
@@ -549,14 +472,13 @@ gst_vaapi_texture_get_size(
     guint           *pheight
 )
 {
-    g_return_if_fail(GST_VAAPI_IS_TEXTURE(texture));
-    g_return_if_fail(texture->priv->is_constructed);
+    g_return_if_fail(texture != NULL);
 
     if (pwidth)
-        *pwidth = texture->priv->width;
+        *pwidth = texture->width;
 
     if (pheight)
-        *pheight = texture->priv->height;
+        *pheight = texture->height;
 }
 
 /**
@@ -578,14 +500,13 @@ _gst_vaapi_texture_put_surface(
     guint            flags
 )
 {
-    GstVaapiTexturePrivate * const priv = texture->priv;
     VAStatus status;
 
 #if USE_VAAPI_GLX
     GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
     status = vaCopySurfaceGLX(
         GST_VAAPI_OBJECT_VADISPLAY(texture),
-        priv->gl_surface,
+        texture->gl_surface,
         GST_VAAPI_OBJECT_ID(surface),
         from_GstVaapiSurfaceRenderFlags(flags)
     );
@@ -603,9 +524,9 @@ _gst_vaapi_texture_put_surface(
     status = vaPutSurface(
         GST_VAAPI_OBJECT_VADISPLAY(texture),
         GST_VAAPI_OBJECT_ID(surface),
-        priv->pixo->pixmap,
+        texture->pixo->pixmap,
         0, 0, surface_width, surface_height,
-        0, 0, priv->width, priv->height,
+        0, 0, texture->width, texture->height,
         NULL, 0,
         from_GstVaapiSurfaceRenderFlags(flags)
     );
@@ -614,13 +535,13 @@ _gst_vaapi_texture_put_surface(
         return FALSE;
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
-    if (priv->gl_context) {
-        success = gl_set_current_context(priv->gl_context, &old_cs);
+    if (texture->gl_context) {
+        success = gl_set_current_context(texture->gl_context, &old_cs);
         if (!success)
             goto end;
     }
 
-    success = gl_bind_framebuffer_object(priv->fbo);
+    success = gl_bind_framebuffer_object(texture->fbo);
     if (!success) {
         GST_DEBUG("could not bind FBO");
         goto out_reset_context;
@@ -634,7 +555,7 @@ _gst_vaapi_texture_put_surface(
         goto out_unbind_fbo;
     }
 
-    success = gl_bind_pixmap_object(priv->pixo);
+    success = gl_bind_pixmap_object(texture->pixo);
     if (!success) {
         GST_DEBUG("could not bind GLX pixmap");
         goto out_unbind_fbo;
@@ -643,24 +564,24 @@ _gst_vaapi_texture_put_surface(
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
     {
-        glTexCoord2f(0.0f, 0.0f); glVertex2i(0,           0           );
-        glTexCoord2f(0.0f, 1.0f); glVertex2i(0,           priv->height);
-        glTexCoord2f(1.0f, 1.0f); glVertex2i(priv->width, priv->height);
-        glTexCoord2f(1.0f, 0.0f); glVertex2i(priv->width, 0           );
+        glTexCoord2f(0.0f, 0.0f); glVertex2i(0,              0              );
+        glTexCoord2f(0.0f, 1.0f); glVertex2i(0,              texture->height);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(texture->width, texture->height);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i(texture->width, 0              );
     }
     glEnd();
 
-    success = gl_unbind_pixmap_object(priv->pixo);
+    success = gl_unbind_pixmap_object(texture->pixo);
     if (!success) {
         GST_DEBUG("could not release GLX pixmap");
         goto out_unbind_fbo;
     }
 
 out_unbind_fbo:
-    if (!gl_unbind_framebuffer_object(priv->fbo))
+    if (!gl_unbind_framebuffer_object(texture->fbo))
         success = FALSE;
 out_reset_context:
-    if (priv->gl_context && !gl_set_current_context(&old_cs, NULL))
+    if (texture->gl_context && !gl_set_current_context(&old_cs, NULL))
         success = FALSE;
 end:
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
@@ -676,8 +597,7 @@ gst_vaapi_texture_put_surface(
     guint            flags
 )
 {
-    g_return_val_if_fail(GST_VAAPI_IS_TEXTURE(texture), FALSE);
-    g_return_val_if_fail(texture->priv->is_constructed, FALSE);
+    g_return_val_if_fail(texture != NULL, FALSE);
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
 
     return _gst_vaapi_texture_put_surface(texture, surface, flags);
