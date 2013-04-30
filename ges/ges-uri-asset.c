@@ -425,14 +425,14 @@ ges_uri_clip_asset_new (const gchar * uri, GCancellable * cancellable,
 }
 
 /**
- * ges_uri_clip_asset_new_sync:
+ * ges_uri_clip_asset_request_sync:
  * @uri: The URI of the file for which to create a #GESUriClipAsset
  * @error: (allow-none): An error to be set in case something wrong happens or %NULL
  *
  * Creates a #GESUriClipAsset for @uri syncronously. You should avoid
  * to use it in application, and rather create #GESUriClipAsset asynchronously
  *
- * Returns: A reference to the requested asset or %NULL if an error happend
+ * Returns: (transfer none): A reference to the requested asset or %NULL if an error happend
  */
 GESUriClipAsset *
 ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
