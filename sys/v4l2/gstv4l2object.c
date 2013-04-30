@@ -2530,7 +2530,7 @@ gst_v4l2_object_copy (GstV4l2Object * v4l2object, GstBuffer * dest,
 {
   const GstVideoFormatInfo *finfo = v4l2object->info.finfo;
 
-  if (finfo && (finfo->format != GST_VIDEO_FORMAT_UNKNOWN ||
+  if (finfo && (finfo->format != GST_VIDEO_FORMAT_UNKNOWN &&
           finfo->format != GST_VIDEO_FORMAT_ENCODED)) {
     GstVideoFrame src_frame, dest_frame;
 
