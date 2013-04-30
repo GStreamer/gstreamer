@@ -20,6 +20,7 @@ libgstvaapi_includedir = \
 	$(includedir)/gstreamer-$(GST_API_VERSION)/gst/vaapi
 
 libgstvaapi_cflags =				\
+	-DGST_VAAPI_CORE			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	-I$(top_builddir)/gst-libs		\

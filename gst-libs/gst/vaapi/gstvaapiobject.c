@@ -27,169 +27,117 @@
 
 #include "sysdeps.h"
 #include "gstvaapiobject.h"
-#include "gstvaapi_priv.h"
-#include "gstvaapiparamspecs.h"
-#include "gstvaapivalue.h"
+#include "gstvaapiobject_priv.h"
+#include "gstvaapiminiobject.h"
+#include "gstvaapidisplay_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiObject, gst_vaapi_object, G_TYPE_OBJECT)
-
-enum {
-    PROP_0,
-
-    PROP_DISPLAY,
-    PROP_ID
-};
-
-enum {
-    DESTROY,
-
-    LAST_SIGNAL
-};
-
-static guint object_signals[LAST_SIGNAL] = { 0, };
+/* Ensure those symbols are actually defined in the resulting libraries */
+#undef gst_vaapi_object_ref
+#undef gst_vaapi_object_unref
+#undef gst_vaapi_object_replace
 
 static void
-gst_vaapi_object_dispose(GObject *object)
+gst_vaapi_object_finalize(GstVaapiObject *object)
 {
-    GstVaapiObjectPrivate * const priv = GST_VAAPI_OBJECT(object)->priv;
+    const GstVaapiObjectClass * const klass =
+        GST_VAAPI_OBJECT_GET_CLASS(object);
 
-    if (!priv->is_destroying) {
-        priv->is_destroying = TRUE;
-        g_signal_emit(object, object_signals[DESTROY], 0);
-        priv->is_destroying = FALSE;
-    }
-
-    G_OBJECT_CLASS(gst_vaapi_object_parent_class)->dispose(object);
+    if (klass->finalize)
+        klass->finalize(object);
+    g_clear_object(&object->display);
 }
 
-static void
-gst_vaapi_object_finalize(GObject *object)
+void
+gst_vaapi_object_class_init(GstVaapiObjectClass *klass, guint size)
 {
-    GstVaapiObjectPrivate * const priv = GST_VAAPI_OBJECT(object)->priv;
+    GstVaapiMiniObjectClass * const object_class =
+        GST_VAAPI_MINI_OBJECT_CLASS(klass);
 
-    priv->id = GST_VAAPI_ID_NONE;
-
-    g_clear_object(&priv->display);
-
-    G_OBJECT_CLASS(gst_vaapi_object_parent_class)->finalize(object);
+    object_class->size = size;
+    object_class->finalize = (GDestroyNotify)gst_vaapi_object_finalize;
 }
 
-static void
-gst_vaapi_object_set_property(
-    GObject      *gobject,
-    guint         prop_id,
-    const GValue *value,
-    GParamSpec   *pspec
-)
+/**
+ * gst_vaapi_object_new:
+ * @object_class: The object class
+ *
+ * Creates a new #GstVaapiObject. If @object_class is NULL, then the
+ * size of the allocated object is the same as sizeof(GstVaapiObject).
+ * If @object_class is not NULL, typically when a sub-class is implemented,
+ * that pointer shall reference a statically allocated descriptor.
+ *
+ * This function zero-initializes the derived object data. Also note
+ * that this is an internal function that shall not be used outside of
+ * libgstvaapi libraries.
+ *
+ * Returns: The newly allocated #GstVaapiObject
+ */
+gpointer
+gst_vaapi_object_new(const GstVaapiObjectClass *klass, GstVaapiDisplay *display)
 {
-    GstVaapiObject * const object = GST_VAAPI_OBJECT(gobject);
+    const GstVaapiMiniObjectClass * const object_class =
+        GST_VAAPI_MINI_OBJECT_CLASS(klass);
+    GstVaapiObject *object;
+    guint sub_size;
 
-    switch (prop_id) {
-    case PROP_DISPLAY:
-        object->priv->display = g_object_ref(g_value_get_object(value));
-        break;
-    case PROP_ID:
-        object->priv->id = gst_vaapi_value_get_id(value);
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(gobject, prop_id, pspec);
-        break;
-    }
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+
+    object = (GstVaapiObject *)gst_vaapi_mini_object_new(object_class);
+    if (!object)
+        return NULL;
+
+    object->display     = g_object_ref(display);
+    object->object_id   = VA_INVALID_ID;
+
+    sub_size = object_class->size - sizeof(*object);
+    if (sub_size > 0)
+        memset(((guchar *)object) + sizeof(*object), 0, sub_size);
+    return object;
 }
 
-static void
-gst_vaapi_object_get_property(
-    GObject    *gobject,
-    guint       prop_id,
-    GValue     *value,
-    GParamSpec *pspec
-)
+/**
+ * gst_vaapi_object_ref:
+ * @object: a #GstVaapiObject
+ *
+ * Atomically increases the reference count of the given @object by one.
+ *
+ * Returns: The same @object argument
+ */
+gpointer
+gst_vaapi_object_ref(gpointer object)
 {
-    GstVaapiObject * const object = GST_VAAPI_OBJECT(gobject);
-
-    switch (prop_id) {
-    case PROP_DISPLAY:
-        g_value_set_object(value, gst_vaapi_object_get_display(object));
-        break;
-    case PROP_ID:
-        gst_vaapi_value_set_id(value, gst_vaapi_object_get_id(object));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(gobject, prop_id, pspec);
-        break;
-    }
+    return gst_vaapi_object_ref_internal(object);
 }
 
-static void
-gst_vaapi_object_class_init(GstVaapiObjectClass *klass)
+/**
+ * gst_vaapi_object_unref:
+ * @object: a #GstVaapiObject
+ *
+ * Atomically decreases the reference count of the @object by one. If
+ * the reference count reaches zero, the object will be free'd.
+ */
+void
+gst_vaapi_object_unref(gpointer object)
 {
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
-
-    g_type_class_add_private(klass, sizeof(GstVaapiObjectPrivate));
-
-    object_class->dispose      = gst_vaapi_object_dispose;
-    object_class->finalize     = gst_vaapi_object_finalize;
-    object_class->set_property = gst_vaapi_object_set_property;
-    object_class->get_property = gst_vaapi_object_get_property;
-
-    /**
-     * GstVaapiObject:display:
-     *
-     * The #GstVaapiDisplay this object is bound to.
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_DISPLAY,
-         g_param_spec_object("display",
-                             "Display",
-                             "The GstVaapiDisplay this object is bound to",
-                             GST_VAAPI_TYPE_DISPLAY,
-                             G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    /**
-     * GstVaapiObject:id:
-     *
-     * The #GstVaapiID contained in this object.
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_ID,
-         gst_vaapi_param_spec_id("id",
-                                 "ID",
-                                 "The GstVaapiID contained in this object",
-                                 GST_VAAPI_ID_NONE,
-                                 G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    /**
-     * GstVaapiObject::destroy:
-     * @object: the object which received the signal
-     *
-     * The ::destroy signal is emitted when an object is destroyed,
-     * when the user released the last reference to @object.
-     */
-    object_signals[DESTROY] = g_signal_new(
-        "destroy",
-        G_TYPE_FROM_CLASS(object_class),
-        G_SIGNAL_RUN_CLEANUP | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
-        G_STRUCT_OFFSET(GstVaapiObjectClass, destroy),
-        NULL, NULL,
-        g_cclosure_marshal_VOID__VOID,
-        G_TYPE_NONE, 0
-    );
+    gst_vaapi_object_unref_internal(object);
 }
 
-static void
-gst_vaapi_object_init(GstVaapiObject *object)
+/**
+ * gst_vaapi_object_replace:
+ * @old_object_ptr: a pointer to a #GstVaapiObject
+ * @new_object: a #GstVaapiObject
+ *
+ * Atomically replaces the object object held in @old_object_ptr with
+ * @new_object. This means that @old_object_ptr shall reference a
+ * valid object. However, @new_object can be NULL.
+ */
+void
+gst_vaapi_object_replace(gpointer old_object_ptr, gpointer new_object)
 {
-    GstVaapiObjectPrivate *priv = GST_VAAPI_OBJECT_GET_PRIVATE(object);
-
-    object->priv        = priv;
-    priv->display       = NULL;
-    priv->id            = GST_VAAPI_ID_NONE;
-    priv->is_destroying = FALSE;
+    gst_vaapi_object_replace_internal(old_object_ptr, new_object);
 }
 
 /**
@@ -205,7 +153,7 @@ gst_vaapi_object_get_display(GstVaapiObject *object)
 {
     g_return_val_if_fail(GST_VAAPI_IS_OBJECT(object), NULL);
 
-    return object->priv->display;
+    return GST_VAAPI_OBJECT_DISPLAY(object);
 }
 
 /**
@@ -253,5 +201,5 @@ gst_vaapi_object_get_id(GstVaapiObject *object)
 {
     g_return_val_if_fail(GST_VAAPI_IS_OBJECT(object), GST_VAAPI_ID_NONE);
 
-    return object->priv->id;
+    return GST_VAAPI_OBJECT_ID(object);
 }

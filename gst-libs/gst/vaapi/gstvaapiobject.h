@@ -28,62 +28,22 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_OBJECT \
-    (gst_vaapi_object_get_type())
-
-#define GST_VAAPI_OBJECT(obj)                           \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_VAAPI_TYPE_OBJECT,  \
-                                GstVaapiObject))
-
-#define GST_VAAPI_OBJECT_CLASS(klass)                   \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_VAAPI_TYPE_OBJECT,     \
-                             GstVaapiObjectClass))
+#define GST_VAAPI_OBJECT(obj) \
+    ((GstVaapiObject *)(obj))
 
 #define GST_VAAPI_IS_OBJECT(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_OBJECT))
-
-#define GST_VAAPI_IS_OBJECT_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_OBJECT))
-
-#define GST_VAAPI_OBJECT_GET_CLASS(obj)                 \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_VAAPI_TYPE_OBJECT,   \
-                               GstVaapiObjectClass))
+    ((obj) != NULL)
 
 typedef struct _GstVaapiObject                  GstVaapiObject;
-typedef struct _GstVaapiObjectPrivate           GstVaapiObjectPrivate;
-typedef struct _GstVaapiObjectClass             GstVaapiObjectClass;
 
-/**
- * GstVaapiObject:
- *
- * VA object base.
- */
-struct _GstVaapiObject {
-    /*< private >*/
-    GObject parent_instance;
+gpointer
+gst_vaapi_object_ref(gpointer object);
 
-    GstVaapiObjectPrivate *priv;
-};
+void
+gst_vaapi_object_unref(gpointer object);
 
-/**
- * GstVaapiObjectClass:
- * @destroy: signal class handler for #GstVaapiObject::destroy
- *
- * VA object base class.
- */
-struct _GstVaapiObjectClass {
-    /*< private >*/
-    GObjectClass parent_class;
-
-    /*< public >*/
-    void (*destroy)(GstVaapiObject *oject);
-};
-
-GType
-gst_vaapi_object_get_type(void) G_GNUC_CONST;
+void
+gst_vaapi_object_replace(gpointer old_object_ptr, gpointer new_object);
 
 GstVaapiDisplay *
 gst_vaapi_object_get_display(GstVaapiObject *object);
