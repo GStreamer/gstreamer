@@ -19,3 +19,5 @@ obj
 gst-build
 project.properties
 gst_sdk
+.DS_Store
+xcuserdata
