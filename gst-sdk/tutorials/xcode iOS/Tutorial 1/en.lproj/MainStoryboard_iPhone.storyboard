@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="2.0" toolsVersion="3084" systemVersion="12D78" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="2">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="2.0" toolsVersion="3084" systemVersion="11G63" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="2">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="2083"/>
     </dependencies>
@@ -14,7 +14,7 @@
                         <subviews>
                             <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Cit-jt-jhM">
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="21" id="QOZ-r7-amB"/>
+                                    <constraint firstAttribute="height" constant="21" id="dt5-5x-Dso"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="24"/>
                                 <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
@@ -23,9 +23,9 @@
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="Cit-jt-jhM" firstAttribute="top" secondItem="3" secondAttribute="top" constant="263" id="4aQ-Yk-6n3"/>
-                            <constraint firstAttribute="trailing" secondItem="Cit-jt-jhM" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="kZg-fb-QOX"/>
-                            <constraint firstItem="Cit-jt-jhM" firstAttribute="leading" secondItem="3" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="uhb-94-82P"/>
+                            <constraint firstItem="Cit-jt-jhM" firstAttribute="centerY" secondItem="3" secondAttribute="centerY" type="default" id="YA8-1j-h9C"/>
+                            <constraint firstItem="Cit-jt-jhM" firstAttribute="leading" secondItem="3" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="jqu-jH-Hiu"/>
+                            <constraint firstAttribute="trailing" secondItem="Cit-jt-jhM" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="opu-rY-WAR"/>
                         </constraints>
                     </view>
                     <connections>
