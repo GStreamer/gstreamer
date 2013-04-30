@@ -31,81 +31,24 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_WINDOW \
-    (gst_vaapi_window_get_type())
-
-#define GST_VAAPI_WINDOW(obj)                           \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_VAAPI_TYPE_WINDOW,  \
-                                GstVaapiWindow))
-
-#define GST_VAAPI_WINDOW_CLASS(klass)                   \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_VAAPI_TYPE_WINDOW,     \
-                             GstVaapiWindowClass))
+#define GST_VAAPI_WINDOW(obj) \
+    ((GstVaapiWindow *)(obj))
 
 #define GST_VAAPI_IS_WINDOW(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_WINDOW))
-
-#define GST_VAAPI_IS_WINDOW_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_WINDOW))
-
-#define GST_VAAPI_WINDOW_GET_CLASS(obj)                 \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_VAAPI_TYPE_WINDOW,   \
-                               GstVaapiWindowClass))
+    ((obj) != NULL)
 
 typedef struct _GstVaapiWindow                  GstVaapiWindow;
-typedef struct _GstVaapiWindowPrivate           GstVaapiWindowPrivate;
 typedef struct _GstVaapiWindowClass             GstVaapiWindowClass;
 
-/**
- * GstVaapiWindow:
- *
- * Base class for system-dependent windows.
- */
-struct _GstVaapiWindow {
-    /*< private >*/
-    GstVaapiObject parent_instance;
+GstVaapiWindow *
+gst_vaapi_window_ref(GstVaapiWindow *window);
 
-    GstVaapiWindowPrivate *priv;
-};
+void
+gst_vaapi_window_unref(GstVaapiWindow *window);
 
-/**
- * GstVaapiWindowClass:
- * @create: virtual function to create a window with width and height
- * @destroy: virtual function to destroy a window
- * @show: virtual function to show (map) a window
- * @hide: virtual function to hide (unmap) a window
- * @set_fullscreen: virtual function to change window fullscreen state
- * @resize: virtual function to resize a window
- * @render: virtual function to render a #GstVaapiSurface into a window
- *
- * Base class for system-dependent windows.
- */
-struct _GstVaapiWindowClass {
-    /*< private >*/
-    GstVaapiObjectClass parent_class;
-
-    /*< public >*/
-    gboolean    (*create) (GstVaapiWindow *window, guint *width, guint *height);
-    void        (*destroy)(GstVaapiWindow *window);
-    gboolean    (*show)   (GstVaapiWindow *window);
-    gboolean    (*hide)   (GstVaapiWindow *window);
-    gboolean    (*get_geometry)  (GstVaapiWindow *window,
-                                  gint *px, gint *py,
-                                  guint *pwidth, guint *pheight);
-    gboolean    (*set_fullscreen)(GstVaapiWindow *window, gboolean fullscreen);
-    gboolean    (*resize) (GstVaapiWindow *window, guint width, guint height);
-    gboolean    (*render) (GstVaapiWindow *window,
-                           GstVaapiSurface *surface,
-                           const GstVaapiRectangle *src_rect,
-                           const GstVaapiRectangle *dst_rect,
-                           guint flags);
-};
-
-GType
-gst_vaapi_window_get_type(void) G_GNUC_CONST;
+void
+gst_vaapi_window_replace(GstVaapiWindow **old_window_ptr,
+    GstVaapiWindow *new_window);
 
 GstVaapiDisplay *
 gst_vaapi_window_get_display(GstVaapiWindow *window);

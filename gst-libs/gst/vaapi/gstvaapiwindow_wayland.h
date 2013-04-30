@@ -28,58 +28,7 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_WINDOW_WAYLAND \
-    (gst_vaapi_window_wayland_get_type())
-
-#define GST_VAAPI_WINDOW_WAYLAND(obj)                           \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
-                                GST_VAAPI_TYPE_WINDOW_WAYLAND,  \
-                                GstVaapiWindowWayland))
-
-#define GST_VAAPI_WINDOW_WAYLAND_CLASS(klass)                   \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
-                             GST_VAAPI_TYPE_WINDOW_WAYLAND,     \
-                             GstVaapiWindowWaylandClass))
-
-#define GST_VAAPI_IS_WINDOW_WAYLAND(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_WINDOW_WAYLAND))
-
-#define GST_VAAPI_IS_WINDOW_WAYLAND_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_WINDOW_WAYLAND))
-
-#define GST_VAAPI_WINDOW_WAYLAND_GET_CLASS(obj)                 \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
-                               GST_VAAPI_TYPE_WINDOW_WAYLAND,   \
-                               GstVaapiWindowWaylandClass))
-
 typedef struct _GstVaapiWindowWayland           GstVaapiWindowWayland;
-typedef struct _GstVaapiWindowWaylandPrivate    GstVaapiWindowWaylandPrivate;
-typedef struct _GstVaapiWindowWaylandClass      GstVaapiWindowWaylandClass;
-
-/**
- * GstVaapiWindowWayland:
- *
- * A Wayland window abstraction.
- */
-struct _GstVaapiWindowWayland {
-    /*< private >*/
-    GstVaapiWindow parent_instance;
-
-    GstVaapiWindowWaylandPrivate *priv;
-};
-
-/**
- * GstVaapiWindowWaylandClass:
- *
- * An Wayland #Window wrapper class.
- */
-struct _GstVaapiWindowWaylandClass {
-    /*< private >*/
-    GstVaapiWindowClass parent_class;
-};
-
-GType
-gst_vaapi_window_wayland_get_type(void) G_GNUC_CONST;
 
 GstVaapiWindow *
 gst_vaapi_window_wayland_new(GstVaapiDisplay *display, guint width, guint height);

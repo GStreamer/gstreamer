@@ -26,13 +26,32 @@
 
 #include "sysdeps.h"
 #include "gstvaapiwindow_drm.h"
+#include "gstvaapiwindow_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiWindowDRM,
-              gst_vaapi_window_drm,
-              GST_VAAPI_TYPE_WINDOW)
+typedef struct _GstVaapiWindowDRMClass          GstVaapiWindowDRMClass;
+
+/**
+ * GstVaapiWindowDRM:
+ *
+ * A dummy DRM window abstraction.
+ */
+struct _GstVaapiWindowDRM {
+    /*< private >*/
+    GstVaapiWindow parent_instance;
+};
+
+/**
+ * GstVaapiWindowDRMClass:
+ *
+ * A dummy DRM window abstraction class.
+ */
+struct _GstVaapiWindowDRMClass {
+    /*< private >*/
+    GstVaapiWindowClass parent_instance;
+};
 
 static gboolean
 gst_vaapi_window_drm_show(GstVaapiWindow *window)
@@ -54,11 +73,6 @@ gst_vaapi_window_drm_create(
 )
 {
     return TRUE;
-}
-
-static void
-gst_vaapi_window_drm_destroy(GstVaapiWindow * window)
-{
 }
 
 static gboolean
@@ -83,43 +97,28 @@ gst_vaapi_window_drm_render(
     return TRUE;
 }
 
-static void
-gst_vaapi_window_drm_finalize(GObject *object)
+void
+gst_vaapi_window_drm_class_init(GstVaapiWindowDRMClass *klass)
 {
-    G_OBJECT_CLASS(gst_vaapi_window_drm_parent_class)->finalize(object);
+    GstVaapiWindowClass * const window_class =
+        GST_VAAPI_WINDOW_CLASS(klass);
+
+    window_class->create         = gst_vaapi_window_drm_create;
+    window_class->show           = gst_vaapi_window_drm_show;
+    window_class->hide           = gst_vaapi_window_drm_hide;
+    window_class->resize         = gst_vaapi_window_drm_resize;
+    window_class->render         = gst_vaapi_window_drm_render;
 }
 
 static void
-gst_vaapi_window_drm_constructed(GObject *object)
-{
-    GObjectClass *parent_class;
-
-    parent_class = G_OBJECT_CLASS(gst_vaapi_window_drm_parent_class);
-    if (parent_class->constructed)
-        parent_class->constructed(object);
-}
-
-static void
-gst_vaapi_window_drm_class_init(GstVaapiWindowDRMClass * klass)
-{
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
-    GstVaapiWindowClass * const window_class = GST_VAAPI_WINDOW_CLASS(klass);
-
-    object_class->finalize      = gst_vaapi_window_drm_finalize;
-    object_class->constructed   = gst_vaapi_window_drm_constructed;
-
-    window_class->create        = gst_vaapi_window_drm_create;
-    window_class->destroy       = gst_vaapi_window_drm_destroy;
-    window_class->show          = gst_vaapi_window_drm_show;
-    window_class->hide          = gst_vaapi_window_drm_hide;
-    window_class->render        = gst_vaapi_window_drm_render;
-    window_class->resize        = gst_vaapi_window_drm_resize;
-}
-
-static void
-gst_vaapi_window_drm_init(GstVaapiWindowDRM * window)
+gst_vaapi_window_drm_finalize(GstVaapiWindowDRM *window)
 {
 }
+
+GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE(
+    GstVaapiWindowDRM,
+    gst_vaapi_window_drm,
+    gst_vaapi_window_drm_class_init(&g_class))
 
 /**
  * gst_vaapi_window_drm_new:
@@ -148,14 +147,6 @@ gst_vaapi_window_drm_new(
 {
     GST_DEBUG("new window, size %ux%u", width, height);
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
-    g_return_val_if_fail(width  > 0, NULL);
-    g_return_val_if_fail(height > 0, NULL);
-
-    return g_object_new(GST_VAAPI_TYPE_WINDOW_DRM,
-                        "display", display,
-                        "id",      GST_VAAPI_ID(0),
-                        "width",   width,
-                        "height",  height,
-                        NULL);
+    return gst_vaapi_window_new(GST_VAAPI_WINDOW_CLASS(
+            gst_vaapi_window_drm_class()), display, width, height);
 }

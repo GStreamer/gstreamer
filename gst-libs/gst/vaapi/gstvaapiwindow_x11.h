@@ -29,29 +29,11 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_WINDOW_X11 \
-    (gst_vaapi_window_x11_get_type())
-
-#define GST_VAAPI_WINDOW_X11(obj)                               \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
-                                GST_VAAPI_TYPE_WINDOW_X11,      \
-                                GstVaapiWindowX11))
-
-#define GST_VAAPI_WINDOW_X11_CLASS(klass)                       \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
-                             GST_VAAPI_TYPE_WINDOW_X11,         \
-                             GstVaapiWindowX11Class))
+#define GST_VAAPI_WINDOW_X11(obj) \
+    ((GstVaapiWindowX11 *)(obj))
 
 #define GST_VAAPI_IS_WINDOW_X11(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_WINDOW_X11))
-
-#define GST_VAAPI_IS_WINDOW_X11_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_WINDOW_X11))
-
-#define GST_VAAPI_WINDOW_X11_GET_CLASS(obj)                     \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
-                               GST_VAAPI_TYPE_WINDOW_X11,       \
-                               GstVaapiWindowX11Class))
+    ((obj) != NULL)
 
 /**
  * GST_VAAPI_WINDOW_XWINDOW:
@@ -63,40 +45,6 @@ G_BEGIN_DECLS
     gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(window))
 
 typedef struct _GstVaapiWindowX11               GstVaapiWindowX11;
-typedef struct _GstVaapiWindowX11Private        GstVaapiWindowX11Private;
-typedef struct _GstVaapiWindowX11Class          GstVaapiWindowX11Class;
-
-/**
- * GstVaapiWindowX11:
- *
- * An X11 #Window wrapper.
- */
-struct _GstVaapiWindowX11 {
-    /*< private >*/
-    GstVaapiWindow parent_instance;
-
-    GstVaapiWindowX11Private *priv;
-};
-
-/**
- * GstVaapiWindowX11Class:
- * @get_visual: virtual function to get the desired visual used to
- *   create the window
- * @get_colormap: virtual function to get the desired colormap used to
- *   create the window
- *
- * An X11 #Window wrapper class.
- */
-struct _GstVaapiWindowX11Class {
-    /*< private >*/
-    GstVaapiWindowClass parent_class;
-
-    Visual *  (*get_visual)     (GstVaapiWindow *window);
-    Colormap  (*get_colormap)   (GstVaapiWindow *window);
-};
-
-GType
-gst_vaapi_window_x11_get_type(void) G_GNUC_CONST;
 
 GstVaapiWindow *
 gst_vaapi_window_x11_new(GstVaapiDisplay *display, guint width, guint height);

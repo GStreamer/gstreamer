@@ -117,6 +117,7 @@ libgstvaapi_source_priv_h =			\
 	gstvaapisurfaceproxy_priv.h		\
 	gstvaapiutils.h				\
 	gstvaapiversion.h			\
+	gstvaapiwindow_priv.h			\
 	gstvaapiworkarounds.h			\
 	sysdeps.h				\
 	$(NULL)
@@ -162,6 +163,7 @@ libgstvaapi_x11_source_priv_h =			\
 	gstvaapidisplay_x11_priv.h		\
 	gstvaapiutils.h				\
 	gstvaapiutils_x11.h			\
+	gstvaapiwindow_x11_priv.h		\
 	$(NULL)
 
 libgstvaapi_glx_source_c =			\

@@ -30,58 +30,10 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_WINDOW_GLX \
-    (gst_vaapi_window_glx_get_type())
-
-#define GST_VAAPI_WINDOW_GLX(obj)                               \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
-                                GST_VAAPI_TYPE_WINDOW_GLX,      \
-                                GstVaapiWindowGLX))
-
-#define GST_VAAPI_WINDOW_GLX_CLASS(klass)                       \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
-                             GST_VAAPI_TYPE_WINDOW_GLX,         \
-                             GstVaapiWindowGLXClass))
-
-#define GST_VAAPI_IS_WINDOW_GLX(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_WINDOW_GLX))
-
-#define GST_VAAPI_IS_WINDOW_GLX_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_WINDOW_GLX))
-
-#define GST_VAAPI_WINDOW_GLX_GET_CLASS(obj)                     \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
-                               GST_VAAPI_TYPE_WINDOW_GLX,       \
-                               GstVaapiWindowGLXClass))
+#define GST_VAAPI_WINDOW_GLX(obj) \
+    ((GstVaapiWindowGLX *)(obj))
 
 typedef struct _GstVaapiWindowGLX               GstVaapiWindowGLX;
-typedef struct _GstVaapiWindowGLXPrivate        GstVaapiWindowGLXPrivate;
-typedef struct _GstVaapiWindowGLXClass          GstVaapiWindowGLXClass;
-
-/**
- * GstVaapiWindowGLX:
- *
- * An X11 #Window suitable for GLX rendering.
- */
-struct _GstVaapiWindowGLX {
-    /*< private >*/
-    GstVaapiWindowX11 parent_instance;
-
-    GstVaapiWindowGLXPrivate *priv;
-};
-
-/**
- * GstVaapiWindowGLXClass:
- *
- * An X11 #Window suitable for GLX rendering.
- */
-struct _GstVaapiWindowGLXClass {
-    /*< private >*/
-    GstVaapiWindowX11Class parent_class;
-};
-
-GType
-gst_vaapi_window_glx_get_type(void) G_GNUC_CONST;
 
 GstVaapiWindow *
 gst_vaapi_window_glx_new(GstVaapiDisplay *display, guint width, guint height);
