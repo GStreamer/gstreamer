@@ -142,6 +142,9 @@ create_parser_context (GESBaseXmlFormatter * self, const gchar * uri,
   if (!g_file_load_contents (file, NULL, &xmlcontent, &xmlsize, NULL, &err))
     goto failed;
 
+  if (g_strcmp0 (xmlcontent, "") == 0)
+    goto failed;
+
   parsecontext = g_markup_parse_context_new (&self_class->content_parser,
       G_MARKUP_TREAT_CDATA_AS_TEXT, self, NULL);
 
