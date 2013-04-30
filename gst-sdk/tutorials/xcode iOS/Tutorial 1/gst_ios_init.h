@@ -20,6 +20,6 @@
 //#define GST_IOS_PLUGINS_CODECS
 //#define GST_IOS_PLUGINS_NET
 
-void gst_backend_init ();
+void gst_ios_init ();
 
 #endif

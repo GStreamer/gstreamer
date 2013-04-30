@@ -494,7 +494,7 @@ GST_PLUGIN_STATIC_DECLARE(sdp);
 #endif
 
 void
-gst_backend_init (void)
+gst_ios_init (void)
 {
     gst_init (NULL, NULL);
 

@@ -6,7 +6,7 @@
 int main(int argc, char *argv[])
 {
     @autoreleasepool {
-        gst_backend_init();
+        gst_ios_init();
         return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
     }
 }
