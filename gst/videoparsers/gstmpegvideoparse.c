@@ -826,8 +826,6 @@ gst_mpegv_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   GstMpegvParse *mpvparse = GST_MPEGVIDEO_PARSE (parse);
   GstBuffer *buffer = frame->buffer;
 
-  gst_mpegv_parse_update_src_caps (mpvparse);
-
   if (G_UNLIKELY (mpvparse->pichdr.pic_type == GST_MPEG_VIDEO_PICTURE_TYPE_I))
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   else
@@ -854,8 +852,10 @@ gst_mpegv_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   if (G_UNLIKELY (mpvparse->drop && !mpvparse->config)) {
     GST_DEBUG_OBJECT (mpvparse, "dropping frame as no config yet");
     return GST_BASE_PARSE_FLOW_DROPPED;
-  } else
-    return GST_FLOW_OK;
+  }
+
+  gst_mpegv_parse_update_src_caps (mpvparse);
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
