@@ -1073,6 +1073,9 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
       gst_adapter_push (rtph264pay->adapter, buffer);
     }
     size = gst_adapter_available (rtph264pay->adapter);
+    /* Nothing to do here if the adapter is empty, e.g. on EOS */
+    if (size == 0)
+      return GST_FLOW_OK;
     data = gst_adapter_map (rtph264pay->adapter, size);
     GST_DEBUG_OBJECT (basepayload,
         "got %" G_GSIZE_FORMAT " bytes (%" G_GSIZE_FORMAT ")", size,
