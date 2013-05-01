@@ -304,7 +304,7 @@ gst_mpeg_video_parse_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
     seqhdr->bitrate = 0;
   } else {
     /* Value in header is in units of 400 bps */
-    seqhdr->bitrate *= 400;
+    seqhdr->bitrate = seqhdr->bitrate_value * 400;
   }
 
   READ_UINT8 (&br, bits, 1);
@@ -486,6 +486,7 @@ gst_mpeg_video_finalise_mpeg2_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
     /* Extend width and height to 14 bits by adding the extension bits */
     seqhdr->width |= (seqext->horiz_size_ext << 12);
     seqhdr->height |= (seqext->vert_size_ext << 12);
+    seqhdr->bitrate += (seqext->bitrate_ext << 18) * 400;
   }
 
   w = seqhdr->width;
