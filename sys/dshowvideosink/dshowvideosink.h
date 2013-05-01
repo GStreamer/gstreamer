@@ -21,6 +21,7 @@
 #define __DSHOWVIDEOSINK_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <gst/video/gstvideosink.h>
 
 #include "dshowvideofakesrc.h"
@@ -43,8 +44,8 @@ G_BEGIN_DECLS
 typedef struct _GstDshowVideoSink GstDshowVideoSink;
 typedef struct _GstDshowVideoSinkClass GstDshowVideoSinkClass;
 
-#define GST_DSHOWVIDEOSINK_GRAPH_LOCK(sink)	g_mutex_lock (GST_DSHOWVIDEOSINK (sink)->graph_lock)
-#define GST_DSHOWVIDEOSINK_GRAPH_UNLOCK(clock) g_mutex_unlock (GST_DSHOWVIDEOSINK (sink)->graph_lock)
+#define GST_DSHOWVIDEOSINK_GRAPH_LOCK(sink)	g_mutex_lock (&GST_DSHOWVIDEOSINK (sink)->graph_lock)
+#define GST_DSHOWVIDEOSINK_GRAPH_UNLOCK(clock) g_mutex_unlock (&GST_DSHOWVIDEOSINK (sink)->graph_lock)
 
 /* Renderer-specific support classes */
 class RendererSupport
@@ -106,14 +107,14 @@ struct _GstDshowVideoSink
   WNDPROC prevWndProc;
 
   /* Lock for transitions */
-  GMutex *graph_lock;
+  GMutex graph_lock;
 
   gboolean comInitialized;
-  GMutex   *com_init_lock;
-  GMutex   *com_deinit_lock;
-  GCond    *com_initialized;
-  GCond    *com_uninitialize;
-  GCond    *com_uninitialized;
+  GMutex   com_init_lock;
+  GMutex   com_deinit_lock;
+  GCond    com_initialized;
+  GCond    com_uninitialize;
+  GCond    com_uninitialized;
 };
 
 struct _GstDshowVideoSinkClass

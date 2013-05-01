@@ -25,8 +25,9 @@
 #include "dshowvideosink.h"
 #include "dshowvideofakesrc.h"
 
-#include <gst/interfaces/xoverlay.h>
-#include <gst/interfaces/navigation.h>
+#include <gst/video/video.h>
+#include <gst/video/videooverlay.h>
+#include <gst/video/navigation.h>
 
 #include "windows.h"
 
@@ -48,17 +49,24 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (
-        "video/x-raw-yuv,"
+        "video/x-raw,"
         "width = (int) [ 1, MAX ],"
         "height = (int) [ 1, MAX ],"
         "framerate = (fraction) [ 0, MAX ]," 
-        "format = {(fourcc)YUY2, (fourcc)UYVY, (fourcc) YUVY, (fourcc)YV12 }")
+        "format = {(string)YUY2, (string)UYVY, (string)YV12 }")
     );
 
 static void gst_dshowvideosink_init_interfaces (GType type);
 
-GST_BOILERPLATE_FULL (GstDshowVideoSink, gst_dshowvideosink, GstVideoSink,
-    GST_TYPE_VIDEO_SINK, gst_dshowvideosink_init_interfaces);
+static void gst_dshowvideosink_videooverlay_init (GstVideoOverlayInterface *iface);
+static void
+gst_dshowvideosink_navigation_interface_init (GstNavigationInterface * iface);
+
+#define gst_dshowvideosink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstDshowVideoSink, gst_dshowvideosink,
+                         GST_TYPE_VIDEO_SINK,
+                         G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY, gst_dshowvideosink_videooverlay_init);
+                         G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION, gst_dshowvideosink_navigation_interface_init))
 
 enum
 {
@@ -84,7 +92,7 @@ static gboolean gst_dshowvideosink_stop (GstBaseSink * bsink);
 static gboolean gst_dshowvideosink_unlock (GstBaseSink * bsink);
 static gboolean gst_dshowvideosink_unlock_stop (GstBaseSink * bsink);
 static gboolean gst_dshowvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps);
-static GstCaps *gst_dshowvideosink_get_caps (GstBaseSink * bsink);
+static GstCaps *gst_dshowvideosink_get_caps (GstBaseSink * bsink, GstCaps * filter);
 static GstFlowReturn gst_dshowvideosink_show_frame (GstVideoSink *sink, GstBuffer *buffer);
 static void gst_dshowvideosink_set_window_for_renderer (GstDshowVideoSink *sink);
 
@@ -95,22 +103,9 @@ static void gst_dshowvideosink_com_thread (GstDshowVideoSink * sink);
  * different stride to GStreamer's implicit values. 
  */
 
-static gboolean
-gst_dshowvideosink_interface_supported (GstImplementsInterface * iface,
-    GType type)
-{
-  g_assert (type == GST_TYPE_X_OVERLAY || type == GST_TYPE_NAVIGATION);
-  return TRUE;
-}
-
 static void
-gst_dshowvideosink_interface_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = gst_dshowvideosink_interface_supported;
-}
+gst_dshowvideosink_set_window_handle (GstVideoOverlay * overlay, guintptr window_id)
 
-static void
-gst_dshowvideosink_set_window_handle (GstXOverlay * overlay, guintptr window_id)
 {
   GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (overlay);
   HWND previous_window = sink->window_id;
@@ -146,7 +141,7 @@ gst_dshowvideosink_set_window_handle (GstXOverlay * overlay, guintptr window_id)
 }
 
 static void
-gst_dshowvideosink_expose (GstXOverlay * overlay)
+gst_dshowvideosink_expose (GstVideoOverlay * overlay)
 {
   GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (overlay);
 
@@ -156,7 +151,7 @@ gst_dshowvideosink_expose (GstXOverlay * overlay)
 }
 
 static void
-gst_dshowvideosink_xoverlay_interface_init (GstXOverlayClass * iface)
+gst_dshowvideosink_videooverlay_init (GstVideoOverlayInterface * iface)
 {
   iface->set_window_handle = gst_dshowvideosink_set_window_handle;
   iface->expose = gst_dshowvideosink_expose;
@@ -172,6 +167,8 @@ gst_dshowvideosink_navigation_send_event (GstNavigation * navigation,
 
   event = gst_event_new_navigation (structure);
 
+  /* FXIME: handle aspect ratio. */
+
   pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (sink));
 
   if (GST_IS_PAD (pad) && GST_IS_EVENT (event)) {
@@ -184,50 +181,11 @@ gst_dshowvideosink_navigation_send_event (GstNavigation * navigation,
 static void
 gst_dshowvideosink_navigation_interface_init (GstNavigationInterface * iface)
 {
+  /* FIXME: navigation interface partially implemented.
+   * Need to call gst_navigation_send_mouse_event and
+   * gst_navigation_send_key_event like in directdrawsink.
+   */
   iface->send_event = gst_dshowvideosink_navigation_send_event;
-}
-
-static void
-gst_dshowvideosink_init_interfaces (GType type)
-{
-  static const GInterfaceInfo iface_info = {
-    (GInterfaceInitFunc) gst_dshowvideosink_interface_init,
-    NULL,
-    NULL,
-  };
-
-  static const GInterfaceInfo xoverlay_info = {
-    (GInterfaceInitFunc) gst_dshowvideosink_xoverlay_interface_init,
-    NULL,
-    NULL,
-  };
-
-  static const GInterfaceInfo navigation_info = {
-    (GInterfaceInitFunc) gst_dshowvideosink_navigation_interface_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
-      &iface_info);
-  g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &xoverlay_info);
-  g_type_add_interface_static (type, GST_TYPE_NAVIGATION, &navigation_info);
-
-  GST_DEBUG_CATEGORY_INIT (dshowvideosink_debug, "dshowvideosink", 0, \
-      "DirectShow video sink");
-}
-static void
-gst_dshowvideosink_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-
-  gst_element_class_set_static_metadata (element_class, "DirectShow video sink",
-      "Sink/Video", "Display data using a DirectShow video renderer",
-      "Pioneers of the Inevitable <songbird@songbirdnest.com>, " \
-      "FLUENDO S.A. <support@fluendo.com>");
 }
 
 static void
@@ -246,6 +204,14 @@ gst_dshowvideosink_class_init (GstDshowVideoSinkClass * klass)
   o_class->finalize = gst_dshowvideosink_finalize;
   o_class->set_property = gst_dshowvideosink_set_property;
   o_class->get_property = gst_dshowvideosink_get_property;
+
+  gst_element_class_set_static_metadata (e_class, "DirectShow video sink",
+      "Sink/Video", "Display data using a DirectShow video renderer",
+      "Pioneers of the Inevitable <songbird@songbirdnest.com>, " \
+      "FLUENDO S.A. <support@fluendo.com>");
+
+  gst_element_class_add_pad_template (e_class,
+      gst_static_pad_template_get (&sink_template));
 
   e_class->change_state = GST_DEBUG_FUNCPTR (gst_dshowvideosink_change_state);
 
@@ -297,26 +263,25 @@ gst_dshowvideosink_clear (GstDshowVideoSink *sink)
 }
 
 static void
-gst_dshowvideosink_init (GstDshowVideoSink * sink, GstDshowVideoSinkClass * klass)
+gst_dshowvideosink_init (GstDshowVideoSink * sink)
 {
   gst_dshowvideosink_clear (sink);
 
-  sink->graph_lock = g_mutex_new();
-  sink->com_init_lock = g_mutex_new();
-  sink->com_deinit_lock = g_mutex_new();
-  sink->com_initialized = g_cond_new();
-  sink->com_uninitialize = g_cond_new();
-  sink->com_uninitialized = g_cond_new();
+  g_mutex_init (&sink->graph_lock);
+  g_mutex_init (&sink->com_init_lock);
+  g_mutex_init (&sink->com_deinit_lock);
+  g_cond_init (&sink->com_initialized);
+  g_cond_init (&sink->com_uninitialize);
+  g_cond_init (&sink->com_uninitialized);
 
-  g_mutex_lock (sink->com_init_lock);
+  g_mutex_lock (&sink->com_init_lock);
 
   /* create the COM initialization thread */
-  g_thread_create ((GThreadFunc)gst_dshowvideosink_com_thread,
-      sink, FALSE, NULL);
+  g_thread_new ("gstdshowvideosinkcomthread", (GThreadFunc)gst_dshowvideosink_com_thread, sink);
 
   /* wait until the COM thread signals that COM has been initialized */
-  g_cond_wait (sink->com_initialized, sink->com_init_lock);
-  g_mutex_unlock (sink->com_init_lock);
+  g_cond_wait (&sink->com_initialized, &sink->com_init_lock);
+  g_mutex_unlock (&sink->com_init_lock);
 }
 
 static void
@@ -329,19 +294,19 @@ gst_dshowvideosink_finalize (GObject * gobject)
 
   /* signal the COM thread that it sould uninitialize COM */
   if (sink->comInitialized) {
-    g_mutex_lock (sink->com_deinit_lock);
-    g_cond_signal (sink->com_uninitialize);
-    g_cond_wait (sink->com_uninitialized, sink->com_deinit_lock);
-    g_mutex_unlock (sink->com_deinit_lock);
+    g_mutex_lock (&sink->com_deinit_lock);
+    g_cond_signal (&sink->com_uninitialize);
+    g_cond_wait (&sink->com_uninitialized, &sink->com_deinit_lock);
+    g_mutex_unlock (&sink->com_deinit_lock);
   }
 
-  g_mutex_free (sink->com_init_lock);
-  g_mutex_free (sink->com_deinit_lock);
-  g_cond_free (sink->com_initialized);
-  g_cond_free (sink->com_uninitialize);
-  g_cond_free (sink->com_uninitialized);
+  g_mutex_clear (&sink->com_init_lock);
+  g_mutex_clear (&sink->com_deinit_lock);
+  g_cond_clear (&sink->com_initialized);
+  g_cond_clear (&sink->com_uninitialize);
+  g_cond_clear (&sink->com_uninitialized);
 
-  g_mutex_free (sink->graph_lock);
+  g_mutex_clear (&sink->graph_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -400,7 +365,7 @@ gst_dshowvideosink_com_thread (GstDshowVideoSink * sink)
 {
   HRESULT res;
 
-  g_mutex_lock (sink->com_init_lock);
+  g_mutex_lock (&sink->com_init_lock);
 
   /* Initialize COM with a MTA for this process. This thread will
    * be the first one to enter the apartement and the last one to leave
@@ -417,27 +382,28 @@ gst_dshowvideosink_com_thread (GstDshowVideoSink * sink)
   sink->comInitialized = TRUE;
 
   /* Signal other threads waiting on this condition that COM was initialized */
-  g_cond_signal (sink->com_initialized);
+  g_cond_signal (&sink->com_initialized);
 
-  g_mutex_unlock (sink->com_init_lock);
+  g_mutex_unlock (&sink->com_init_lock);
 
   /* Wait until the unitialize condition is met to leave the COM apartement */
-  g_mutex_lock (sink->com_deinit_lock);
-  g_cond_wait (sink->com_uninitialize, sink->com_deinit_lock);
+  g_mutex_lock (&sink->com_deinit_lock);
+  g_cond_wait (&sink->com_uninitialize, &sink->com_deinit_lock);
 
   CoUninitialize ();
   GST_INFO_OBJECT (sink, "COM unintialized succesfully");
   sink->comInitialized = FALSE;
-  g_cond_signal (sink->com_uninitialized);
-  g_mutex_unlock (sink->com_deinit_lock);
+  g_cond_signal (&sink->com_uninitialized);
+  g_mutex_unlock (&sink->com_deinit_lock);
 }
 
 static GstCaps *
-gst_dshowvideosink_get_caps (GstBaseSink * basesink)
+gst_dshowvideosink_get_caps (GstBaseSink * basesink, GstCaps * filter)
 {
   GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (basesink);
+  GstCaps *ret = NULL;
 
-  return NULL;
+  return ret;
 }
 
 static void dump_available_media_types (IPin *pin)
@@ -717,7 +683,7 @@ gst_dshowvideosink_window_thread (GstDshowVideoSink * sink)
   sink->window_id = video_window;
 
   /* signal application we created a window */
-  gst_x_overlay_got_window_handle (GST_X_OVERLAY (sink),
+  gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (sink),
       (gulong)video_window);
 
   /* Set the renderer's clipping window */
@@ -759,8 +725,9 @@ gst_dshowvideosink_create_default_window (GstDshowVideoSink * sink)
   if (sink->window_created_signal == NULL)
     goto failed;
 
-  sink->window_thread = g_thread_create (
-      (GThreadFunc) gst_dshowvideosink_window_thread, sink, TRUE, NULL);
+  sink -> window_thread = g_thread_new ("windowthread",
+                                        (GThreadFunc) gst_dshowvideosink_window_thread,
+                                        sink);
 
   /* wait maximum 10 seconds for window to be created */
   if (WaitForSingleObject (sink->window_created_signal,
@@ -813,7 +780,7 @@ gst_dshowvideosink_prepare_window (GstDshowVideoSink *sink)
 
   /* Give the app a last chance to supply a window id */
   if (!sink->window_id) {
-    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (sink));
+    gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (sink));
   }
 
   /* If the app supplied one, use it. Otherwise, go ahead
@@ -1732,17 +1699,14 @@ video_media_type_to_caps (AM_MEDIA_TYPE *mediatype)
 
   /* TODO: Add  RGB types. */
   if (IsEqualGUID (mediatype->subtype, MEDIASUBTYPE_YUY2))
-    caps = gst_caps_new_simple ("video/x-raw-yuv", 
-            "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'), NULL);
+    caps = gst_caps_new_simple ("video/x-raw",
+            "format", GST_TYPE_VIDEO_FORMAT, GST_VIDEO_FORMAT_YUY2, NULL);
   else if (IsEqualGUID (mediatype->subtype, MEDIASUBTYPE_UYVY))
-    caps = gst_caps_new_simple ("video/x-raw-yuv", 
-            "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'), NULL);
-  else if (IsEqualGUID (mediatype->subtype, MEDIASUBTYPE_YUYV))
-    caps = gst_caps_new_simple ("video/x-raw-yuv", 
-            "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('Y', 'U', 'Y', 'V'), NULL);
+    caps = gst_caps_new_simple ("video/x-raw",
+            "format", GST_TYPE_VIDEO_FORMAT, GST_VIDEO_FORMAT_UYVY, NULL);
   else if (IsEqualGUID (mediatype->subtype, MEDIASUBTYPE_YV12))
-    caps = gst_caps_new_simple ("video/x-raw-yuv", 
-            "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('Y', 'V', '1', '2'), NULL);
+    caps = gst_caps_new_simple ("video/x-raw",
+            "format", GST_TYPE_VIDEO_FORMAT, GST_VIDEO_FORMAT_YV12, NULL);
 
   if (!caps) {
     GST_DEBUG ("No subtype known; cannot continue");
@@ -1811,55 +1775,47 @@ static gboolean
 gst_caps_to_directshow_media_type (GstDshowVideoSink * sink, GstCaps *caps,
     AM_MEDIA_TYPE *mediatype)
 {
-  GstStructure *s = gst_caps_get_structure (caps, 0);
-  const gchar *name = gst_structure_get_name (s);
+  GstVideoInfo info;
+  int width, height;
+  int bpp;
 
-  gchar *capsstring = gst_caps_to_string (caps);
-  GST_DEBUG_OBJECT (sink, "Converting caps \"%s\" to AM_MEDIA_TYPE", capsstring);
-  g_free (capsstring);
-
+  gst_video_info_init (&info);
+  if (!gst_video_info_from_caps (&info, caps))
+  {
+    GST_WARNING_OBJECT (sink, "Couldn't parse caps");
+      return FALSE;
+  }
   memset (mediatype, 0, sizeof (AM_MEDIA_TYPE));
 
-  if (!strcmp (name, "video/x-raw-yuv")) {
+  if (GST_VIDEO_FORMAT_INFO_IS_YUV (info.finfo))
+  {
     guint32 fourcc;
-    int width, height;
-    int bpp;
-
-    if (!gst_structure_get_fourcc (s, "format", &fourcc)) {
-      GST_WARNING_OBJECT (sink, "Failed to convert caps, no fourcc");
-      return FALSE;
-    }
-
-    if (!gst_structure_get_int (s, "width", &width)) {
-      GST_WARNING_OBJECT (sink, "Failed to convert caps, no width");
-      return FALSE;
-    }
-    if (!gst_structure_get_int (s, "height", &height)) {
-      GST_WARNING_OBJECT (sink, "Failed to convert caps, no height");
-      return FALSE;
-    }
-
+    GST_VIDEO_SINK_WIDTH (sink) = info.width;
+    GST_VIDEO_SINK_HEIGHT (sink) = info.height;
+    width = info.width;
+    height = info.height;
     mediatype->majortype = MEDIATYPE_Video;
-    switch (fourcc) {
-      case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-        mediatype->subtype = MEDIASUBTYPE_YUY2;
-        bpp = 16;
-        break;
-      case GST_MAKE_FOURCC ('Y', 'U', 'Y', 'V'):
-        mediatype->subtype = MEDIASUBTYPE_YUYV;
-        bpp = 16;
-        break;
-      case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
-        mediatype->subtype = MEDIASUBTYPE_UYVY;
-        bpp = 16;
-        break;
-      case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
-        mediatype->subtype = MEDIASUBTYPE_YV12;
-        bpp = 12;
-        break;
-      default:
-        GST_WARNING_OBJECT (sink, "Failed to convert caps, not a known fourcc");
-        return FALSE;
+
+    switch (GST_VIDEO_INFO_FORMAT (&info))
+    {
+        case GST_VIDEO_FORMAT_YUY2:
+          mediatype->subtype = MEDIASUBTYPE_YUY2;
+          fourcc = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
+          bpp = 16;
+          break;
+        case GST_VIDEO_FORMAT_UYVY:
+          mediatype->subtype = MEDIASUBTYPE_UYVY;
+          fourcc = GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y');
+          bpp = 16;
+          break;
+        case GST_VIDEO_FORMAT_YV12:
+          mediatype->subtype = MEDIASUBTYPE_YV12;
+          fourcc = GST_MAKE_FOURCC ('Y', 'V', '1', '2');
+          bpp = 12;
+          break;
+        default:
+          GST_WARNING_OBJECT (sink, "Couldn't parse caps");
+          return FALSE;
     }
 
     mediatype->bFixedSizeSamples = TRUE; /* Always true for raw video */
@@ -1886,8 +1842,9 @@ gst_caps_to_directshow_media_type (GstDshowVideoSink * sink, GstCaps *caps,
 
       vi->rcTarget.top = 0;
       vi->rcTarget.left = 0;
-      if (sink->keep_aspect_ratio &&
-          gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_n, &par_d)) {
+      if (sink->keep_aspect_ratio) {
+        par_n = GST_VIDEO_INFO_PAR_N (&info);
+        par_d = GST_VIDEO_INFO_PAR_D (&info);
         /* To handle non-square pixels, we set the target rectangle to a 
          * different size than the source rectangle.
          * There might be a better way, but this seems to work. */
