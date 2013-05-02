@@ -79,7 +79,10 @@ libgstrtp_la_SOURCES = \
 	gstrtpvrawpay.c 
 
 libgstrtp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
-	$(GST_CFLAGS) -Dvp8_norm=gst_rtpvp8_vp8_norm
+	$(GST_CFLAGS) -Dvp8_norm=gst_rtpvp8_vp8_norm \
+	-Dvp8dx_start_decode=gst_rtpvp8_vp8dx_start_decode \
+	-Dvp8dx_bool_decoder_fill=gst_rtpvp8_vp8dx_bool_decoder_fill
+
 libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	-lgstaudio-@GST_API_VERSION@ \
 	-lgstvideo-@GST_API_VERSION@ \
