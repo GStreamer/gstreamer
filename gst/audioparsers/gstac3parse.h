@@ -57,11 +57,12 @@ struct _GstAc3Parse {
   GstBaseParse baseparse;
 
   /*< private >*/
-  gint          sample_rate;
-  gint          channels;
-  gint          blocks;
-  gboolean      eac;
-  volatile gint align;
+  gint                  sample_rate;
+  gint                  channels;
+  gint                  blocks;
+  gboolean              eac;
+  volatile gint         align;
+  GstPadChainFunction   baseparse_chainfunc;
 };
 
 /**
