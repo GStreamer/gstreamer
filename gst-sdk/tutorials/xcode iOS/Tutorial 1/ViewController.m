@@ -17,7 +17,7 @@
 	// Do any additional setup after loading the view, typically from a nib.
     gst_backend = [[GStreamerBackend alloc] init];
     
-    label.text = [NSString stringWithFormat:@"Hello %@", [gst_backend getGStreamerVersion], nil];
+    label.text = [NSString stringWithFormat:@"Welcome to %@!", [gst_backend getGStreamerVersion], nil];
 }
 
 - (void)didReceiveMemoryWarning
