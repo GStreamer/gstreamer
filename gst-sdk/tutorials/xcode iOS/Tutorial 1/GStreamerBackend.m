@@ -4,7 +4,6 @@
 
 @implementation GStreamerBackend
 
-
 -(NSString*) getGStreamerVersion
 {
     char *str = gst_version_string();
