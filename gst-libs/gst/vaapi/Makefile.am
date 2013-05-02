@@ -60,7 +60,6 @@ libgstvaapi_source_c =				\
 	gstvaapiimagepool.c			\
 	gstvaapiminiobject.c			\
 	gstvaapiobject.c			\
-	gstvaapiparamspecs.c			\
 	gstvaapiparser_frame.c			\
 	gstvaapiprofile.c			\
 	gstvaapisubpicture.c			\
@@ -86,7 +85,6 @@ libgstvaapi_source_h =				\
 	gstvaapiimageformat.h			\
 	gstvaapiimagepool.h			\
 	gstvaapiobject.h			\
-	gstvaapiparamspecs.h			\
 	gstvaapiprofile.h			\
 	gstvaapisubpicture.h			\
 	gstvaapisurface.h			\
@@ -101,7 +99,6 @@ libgstvaapi_source_h =				\
 libgstvaapi_source_priv_h =			\
 	glibcompat.h				\
 	gstcompat.h				\
-	gstvaapi_priv.h				\
 	gstvaapicodec_objects.h			\
 	gstvaapicompat.h			\
 	gstvaapidebug.h				\

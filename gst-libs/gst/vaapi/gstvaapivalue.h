@@ -29,23 +29,6 @@
 G_BEGIN_DECLS
 
 /**
- * GST_VAAPI_TYPE_ID:
- *
- * A #GValue type that represents a VA identifier.
- *
- * Return value: the #GType of GstVaapiID
- */
-#define GST_VAAPI_TYPE_ID gst_vaapi_id_get_type()
-
-/**
- * GST_VAAPI_VALUE_HOLDS_ID:
- * @x: the #GValue to check
- *
- * Checks if the given #GValue contains a #GstVaapiID value.
- */
-#define GST_VAAPI_VALUE_HOLDS_ID(x) (G_VALUE_HOLDS((x), GST_VAAPI_TYPE_ID))
-
-/**
  * GST_VAAPI_TYPE_RENDER_MODE:
  *
  * A #GstVaapiRenderMode type that represents the VA display backend
@@ -63,15 +46,6 @@ G_BEGIN_DECLS
  * Return value: the #GType of GstVaapiRotation
  */
 #define GST_VAAPI_TYPE_ROTATION gst_vaapi_rotation_get_type()
-
-GType
-gst_vaapi_id_get_type(void) G_GNUC_CONST;
-
-GstVaapiID
-gst_vaapi_value_get_id(const GValue *value);
-
-void
-gst_vaapi_value_set_id(GValue *value, GstVaapiID id);
 
 GType
 gst_vaapi_render_mode_get_type(void) G_GNUC_CONST;
