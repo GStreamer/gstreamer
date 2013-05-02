@@ -96,8 +96,15 @@ gst_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
     goto out;
   }
 
-  if (mem->fd != -1)
+  if (mem->fd != -1) {
     mem->data = mmap (0, maxsize, prot, MAP_SHARED, mem->fd, 0);
+    if (mem->data == MAP_FAILED) {
+      mem->data = NULL;
+      GST_ERROR ("%p: fd %d: mmap failed: %s", mem, mem->fd,
+          g_strerror(errno));
+      goto out;
+    }
+  }
 
   GST_DEBUG ("%p: fd %d: mapped %p", mem, mem->fd, mem->data);
 
