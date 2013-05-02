@@ -24,8 +24,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <string.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -2599,7 +2597,7 @@ gst_mpd_client_new (void)
   GstMpdClient *client;
 
   client = g_new0 (GstMpdClient, 1);
-  client->lock = g_mutex_new ();
+  g_mutex_init (&client->lock);
 
   return client;
 }
@@ -2631,8 +2629,7 @@ gst_mpd_client_free (GstMpdClient * client)
 
   gst_active_streams_free (client);
 
-  if (client->lock)
-    g_mutex_free (client->lock);
+  g_mutex_clear (&client->lock);
 
   g_free (client->mpd_uri);
 

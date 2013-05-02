@@ -61,8 +61,8 @@ typedef struct _GstSegmentBaseType        GstSegmentBaseType;
 typedef struct _GstURLType                GstURLType;
 typedef struct _GstMultSegmentBaseType    GstMultSegmentBaseType;
 
-#define GST_MPD_CLIENT_LOCK(c) g_mutex_lock (c->lock);
-#define GST_MPD_CLIENT_UNLOCK(c) g_mutex_unlock (c->lock);
+#define GST_MPD_CLIENT_LOCK(c) g_mutex_lock (&c->lock);
+#define GST_MPD_CLIENT_UNLOCK(c) g_mutex_unlock (&c->lock);
 
 typedef enum
 {
@@ -453,7 +453,7 @@ struct _GstMpdClient
 
   guint update_failed_count;
   gchar *mpd_uri;                             /* manifest file URI */
-  GMutex *lock;
+  GMutex lock;
 };
 
 /* Basic initialization/deinitialization functions */
