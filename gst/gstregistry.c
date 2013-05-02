@@ -185,6 +185,8 @@ static gboolean _gst_enable_registry_fork = DEFAULT_FORK;
 extern GSList *_priv_gst_preload_plugins;
 
 #ifndef GST_DISABLE_REGISTRY
+/* Set to TRUE to disable registry, behaves similar to GST_DISABLE_REGISTRY */
+gboolean _priv_gst_disable_registry = FALSE;
 /*set to TRUE when registry needn't to be updated */
 gboolean _priv_gst_disable_registry_update = FALSE;
 extern GList *_priv_gst_plugin_paths;
@@ -1838,14 +1840,19 @@ gst_update_registry (void)
   gboolean res;
 
 #ifndef GST_DISABLE_REGISTRY
-  GError *err = NULL;
+  if (!_priv_gst_disable_registry) {
+    GError *err = NULL;
 
-  res = ensure_current_registry (&err);
-  if (err) {
-    GST_WARNING ("registry update failed: %s", err->message);
-    g_error_free (err);
+    res = ensure_current_registry (&err);
+    if (err) {
+      GST_WARNING ("registry update failed: %s", err->message);
+      g_error_free (err);
+    } else {
+      GST_LOG ("registry update succeeded");
+    }
   } else {
-    GST_LOG ("registry update succeeded");
+    GST_INFO ("registry update disabled by environment");
+    res = TRUE;
   }
 
 #else
