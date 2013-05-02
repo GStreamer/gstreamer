@@ -68,7 +68,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-dts"));
+    GST_STATIC_CAPS ("audio/x-dts; " "audio/x-private1-dts"));
 
 static void gst_dca_parse_finalize (GObject * object);
 
@@ -78,6 +78,8 @@ static GstFlowReturn gst_dca_parse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize);
 static GstCaps *gst_dca_parse_get_sink_caps (GstBaseParse * parse,
     GstCaps * filter);
+static gboolean gst_dca_parse_set_sink_caps (GstBaseParse * parse,
+    GstCaps * caps);
 
 #define gst_dca_parse_parent_class parent_class
 G_DEFINE_TYPE (GstDcaParse, gst_dca_parse, GST_TYPE_BASE_PARSE);
@@ -98,6 +100,7 @@ gst_dca_parse_class_init (GstDcaParseClass * klass)
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_dca_parse_stop);
   parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_dca_parse_handle_frame);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_dca_parse_get_sink_caps);
+  parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_dca_parse_set_sink_caps);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
@@ -127,6 +130,8 @@ gst_dca_parse_init (GstDcaParse * dcaparse)
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (dcaparse),
       DCA_MIN_FRAMESIZE);
   gst_dca_parse_reset (dcaparse);
+  dcaparse->baseparse_chainfunc =
+      GST_BASE_PARSE_SINK_PAD (GST_BASE_PARSE (dcaparse))->chainfunc;
 }
 
 static void
@@ -440,6 +445,28 @@ cleanup:
   return ret;
 }
 
+/*
+ * MPEG-PS private1 streams add a 2 bytes "Audio Substream Headers" for each
+ * buffer (not each frame) with the offset of the next frame's start.
+ * These 2 bytes can be dropped safely as they do not include any timing
+ * information, only the offset to the start of the next frame.
+ * See gstac3parse.c for a more detailed description.
+ * */
+
+static GstFlowReturn
+gst_dca_parse_chain_priv (GstPad * pad, GstObject *parent, GstBuffer * buffer)
+{
+  GstBuffer *newbuf;
+  GstFlowReturn ret;
+  GstDcaParse *dcaparse = GST_DCA_PARSE (parent);
+
+  newbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL,
+      2, gst_buffer_get_size (buffer) - 2);
+  ret = dcaparse->baseparse_chainfunc (pad, parent, newbuf);
+  gst_buffer_unref (buffer);
+  return ret;
+}
+
 static GstCaps *
 gst_dca_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
 {
@@ -484,4 +511,19 @@ gst_dca_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
   }
 
   return res;
+}
+
+static gboolean
+gst_dca_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
+{
+  GstStructure *s;
+  GstDcaParse *dcaparse = GST_DCA_PARSE (parse);
+
+  s = gst_caps_get_structure (caps, 0);
+  if (gst_structure_has_name (s, "audio/x-private1-dts")) {
+    gst_pad_set_chain_function (parse->sinkpad, gst_dca_parse_chain_priv);
+  } else {
+    gst_pad_set_chain_function (parse->sinkpad, dcaparse->baseparse_chainfunc);
+  }
+  return TRUE;
 }

@@ -51,14 +51,16 @@ struct _GstDcaParse {
   GstBaseParse baseparse;
 
   /*< private >*/
-  gint         rate;
-  gint         channels;
-  gint         depth;
-  gint         endianness;
-  gint         block_size;
-  gint         frame_size;
+  gint                  rate;
+  gint                  channels;
+  gint                  depth;
+  gint                  endianness;
+  gint                  block_size;
+  gint                  frame_size;
 
-  guint32      last_sync;
+  guint32               last_sync;
+
+  GstPadChainFunction   baseparse_chainfunc;
 };
 
 /**
