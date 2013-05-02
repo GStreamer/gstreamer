@@ -7,7 +7,10 @@
  * Java Bindings
  */
 jstring gst_native_get_gstreamer_info (JNIEnv* env, jobject thiz) {
-  return (*env)->NewStringUTF(env, gst_version_string());
+  char *version_utf8 = gst_version_string();
+  jstring *version_jstring = (*env)->NewStringUTF(env, version_utf8);
+  g_free (version_utf8);
+  return version_jstring;
 }
 
 static JNINativeMethod native_methods[] = {
