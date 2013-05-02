@@ -55,6 +55,7 @@ struct _GstV4l2BufferPool
   GstAllocationParams params;
   guint size;
   gboolean add_videometa;
+  gboolean can_alloc;        /* if extra buffers can be allocated */
 
   guint num_buffers;         /* number of buffers we use */
   guint num_allocated;       /* number of buffers allocated by the driver */

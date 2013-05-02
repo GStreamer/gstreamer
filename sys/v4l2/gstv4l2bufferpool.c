@@ -157,6 +157,28 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
     case GST_V4L2_IO_MMAP:
     case GST_V4L2_IO_DMABUF:
     {
+#ifdef VIDIOC_CREATE_BUFS
+      if (pool->num_allocated == pool->num_buffers) {
+        struct v4l2_create_buffers create_bufs;
+
+        memset (&create_bufs, 0, sizeof (struct v4l2_create_buffers));
+        create_bufs.count = 1;
+        create_bufs.memory = V4L2_MEMORY_MMAP;
+        create_bufs.format.type = obj->type;
+
+        if (v4l2_ioctl (pool->video_fd, VIDIOC_G_FMT, &create_bufs.format) < 0)
+          goto g_fmt_failed;
+
+        if (v4l2_ioctl (pool->video_fd, VIDIOC_CREATE_BUFS, &create_bufs) < 0)
+          goto create_bufs_failed;
+
+        GST_LOG_OBJECT (pool, "created buffer with index: %u",
+            create_bufs.index);
+        pool->num_buffers++;
+        pool->buffers = g_renew (GstBuffer *, pool->buffers, pool->num_buffers);
+        pool->buffers[pool->num_buffers - 1] = NULL;
+      }
+#endif
       newbuf = gst_buffer_new ();
       meta = GST_V4L2_META_ADD (newbuf);
 
@@ -250,6 +272,24 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
   return GST_FLOW_OK;
 
   /* ERRORS */
+#ifdef VIDIOC_CREATE_BUFS
+g_fmt_failed:
+  {
+    gint errnosave = errno;
+
+    GST_WARNING ("Failed G_FMT: %s", g_strerror (errnosave));
+    errno = errnosave;
+    return GST_FLOW_ERROR;
+  }
+create_bufs_failed:
+  {
+    gint errnosave = errno;
+
+    GST_WARNING ("Failed CREATE_BUFS: %s", g_strerror (errnosave));
+    errno = errnosave;
+    return GST_FLOW_ERROR;
+  }
+#endif
 querybuf_failed:
   {
     gint errnosave = errno;
@@ -793,6 +833,17 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
           /* start copying buffers when we are running low on buffers */
           if (pool->num_queued < pool->copy_threshold) {
             GstBuffer *copy;
+#ifdef VIDIOC_CREATE_BUFS
+            if (pool->can_alloc) {
+              if (GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (bpool,
+                      &copy, params) == GST_FLOW_OK) {
+                gst_v4l2_buffer_pool_release_buffer (bpool, copy);
+                break;
+              } else {
+                pool->can_alloc = FALSE;
+              }
+            }
+#endif
 
             /* copy the memory */
             copy = gst_buffer_copy (*buffer);
@@ -989,6 +1040,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   pool = (GstV4l2BufferPool *) g_object_new (GST_TYPE_V4L2_BUFFER_POOL, NULL);
   pool->video_fd = fd;
   pool->obj = obj;
+  pool->can_alloc = TRUE;
 
   s = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
   gst_buffer_pool_config_set_params (s, caps, obj->sizeimage, 2, 0);
