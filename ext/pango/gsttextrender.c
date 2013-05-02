@@ -391,6 +391,7 @@ gst_text_render_fixate_caps (GstTextRender * render, GstCaps * caps)
           DEFAULT_RENDER_WIDTH));
   gst_structure_fixate_field_nearest_int (s, "height",
       MAX (render->image_height + render->ypad, DEFAULT_RENDER_HEIGHT));
+  caps = gst_caps_fixate (caps);
   GST_DEBUG ("Fixated to    %" GST_PTR_FORMAT, caps);
 
   return caps;
