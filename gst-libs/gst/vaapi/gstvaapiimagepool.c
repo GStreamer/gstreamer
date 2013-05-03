@@ -50,16 +50,14 @@ static gboolean
 gst_vaapi_image_pool_set_caps(GstVaapiVideoPool *base_pool, GstCaps *caps)
 {
     GstVaapiImagePool * const pool = GST_VAAPI_IMAGE_POOL(base_pool);
-    GstStructure *structure;
-    gint width, height;
+    GstVideoInfo vi;
 
-    structure = gst_caps_get_structure(caps, 0);
-    gst_structure_get_int(structure, "width", &width);
-    gst_structure_get_int(structure, "height", &height);
+    if (!gst_video_info_from_caps(&vi, caps))
+        return FALSE;
 
-    pool->format        = gst_vaapi_image_format_from_caps(caps);
-    pool->width         = width;
-    pool->height        = height;
+    pool->format = gst_vaapi_image_format_from_video(GST_VIDEO_INFO_FORMAT(&vi));
+    pool->width  = GST_VIDEO_INFO_WIDTH(&vi);
+    pool->height = GST_VIDEO_INFO_HEIGHT(&vi);
     return TRUE;
 }
 
