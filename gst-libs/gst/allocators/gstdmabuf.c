@@ -101,7 +101,7 @@ gst_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
     if (mem->data == MAP_FAILED) {
       mem->data = NULL;
       GST_ERROR ("%p: fd %d: mmap failed: %s", mem, mem->fd,
-          g_strerror(errno));
+          g_strerror (errno));
       goto out;
     }
   }
