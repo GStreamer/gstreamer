@@ -61,6 +61,7 @@
 /* we need a different type name here */
 #define GstVorbisDec GstIVorbisDec
 #define GstVorbisDecClass GstIVorbisDecClass
+#define gst_vorbis_dec_get_type gst_ivorbis_dec_get_type
 
 #endif /* TREMOR */
 
