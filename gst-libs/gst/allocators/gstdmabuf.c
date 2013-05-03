@@ -153,11 +153,14 @@ gst_dmabuf_mem_share (GstMemory * gmem, gssize offset, gssize size)
   if (size == -1)
     size = mem->mem.size - offset;
 
-  sub = g_slice_new (GstDmaBufMemory);
+  sub = g_slice_new0 (GstDmaBufMemory);
   /* the shared memory is always readonly */
   gst_memory_init (GST_MEMORY_CAST (sub), GST_MINI_OBJECT_FLAGS (parent) |
       GST_MINI_OBJECT_FLAG_LOCK_READONLY, mem->mem.allocator, parent,
       mem->mem.maxsize, mem->mem.align, mem->mem.offset + offset, size);
+
+  sub->fd = dup (mem->fd);
+  g_mutex_init (&sub->lock);
 
   return GST_MEMORY_CAST (sub);
 }
@@ -268,14 +271,11 @@ gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
 
   GST_DEBUG ("alloc from allocator %p", allocator);
 
-  mem = g_slice_new (GstDmaBufMemory);
+  mem = g_slice_new0 (GstDmaBufMemory);
 
   gst_memory_init (GST_MEMORY_CAST (mem), 0, allocator, NULL, size, 0, 0, 0);
 
   mem->fd = fd;
-  mem->data = NULL;
-  mem->mmapping_flags = 0;
-  mem->mmap_count = 0;
   g_mutex_init (&mem->lock);
 
   GST_DEBUG ("%p: fd: %d size %" G_GSIZE_FORMAT, mem, mem->fd,
