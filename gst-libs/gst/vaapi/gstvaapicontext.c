@@ -34,6 +34,7 @@
 #include "gstvaapisurface_priv.h"
 #include "gstvaapisurfacepool.h"
 #include "gstvaapisurfaceproxy.h"
+#include "gstvaapivideopool_priv.h"
 #include "gstvaapiimage.h"
 #include "gstvaapisubpicture.h"
 #include "gstvaapiutils.h"
@@ -414,7 +415,7 @@ gst_vaapi_context_destroy_surfaces(GstVaapiContext *context)
         g_ptr_array_free(context->surfaces, TRUE);
         context->surfaces = NULL;
     }
-    g_clear_object(&context->surfaces_pool);
+    gst_vaapi_video_pool_replace(&context->surfaces_pool, NULL);
 }
 
 static void

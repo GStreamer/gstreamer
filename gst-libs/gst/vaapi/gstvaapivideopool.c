@@ -27,207 +27,92 @@
 
 #include "sysdeps.h"
 #include "gstvaapivideopool.h"
+#include "gstvaapivideopool_priv.h"
 #include "gstvaapiobject.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiVideoPool, gst_vaapi_video_pool, G_TYPE_OBJECT)
+/* Ensure those symbols are actually defined in the resulting libraries */
+#undef gst_vaapi_video_pool_ref
+#undef gst_vaapi_video_pool_unref
+#undef gst_vaapi_video_pool_replace
 
-#define GST_VAAPI_VIDEO_POOL_GET_PRIVATE(obj)                   \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_VIDEO_POOL,	\
-                                 GstVaapiVideoPoolPrivate))
+#define GST_VAAPI_VIDEO_POOL_GET_CLASS(obj) \
+    gst_vaapi_video_pool_get_class(GST_VAAPI_VIDEO_POOL(obj))
 
-struct _GstVaapiVideoPoolPrivate {
-    GstVaapiDisplay    *display;
-    GQueue              free_objects;
-    GList              *used_objects;
-    GstCaps            *caps;
-    guint               used_count;
-    guint               capacity;
-};
-
-enum {
-    PROP_0,
-
-    PROP_DISPLAY,
-    PROP_CAPS,
-    PROP_CAPACITY
-};
-
-static void
-gst_vaapi_video_pool_set_caps(GstVaapiVideoPool *pool, GstCaps *caps);
+static inline const GstVaapiVideoPoolClass *
+gst_vaapi_video_pool_get_class(GstVaapiVideoPool *pool)
+{
+    return GST_VAAPI_VIDEO_POOL_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(pool));
+}
 
 static inline gpointer
 gst_vaapi_video_pool_alloc_object(GstVaapiVideoPool *pool)
 {
-    GstVaapiVideoPoolClass * const klass = GST_VAAPI_VIDEO_POOL_GET_CLASS(pool);
-
-    return klass->alloc_object(pool, pool->priv->display);
+    return GST_VAAPI_VIDEO_POOL_GET_CLASS(pool)->alloc_object(pool);
 }
 
-static void
-gst_vaapi_video_pool_clear(GstVaapiVideoPool *pool)
+void
+gst_vaapi_video_pool_init(GstVaapiVideoPool *pool, GstVaapiDisplay *display)
 {
-    GstVaapiVideoPoolPrivate * const priv = pool->priv;
-    gpointer object;
-    GList *list, *next;
+    pool->display       = g_object_ref(display);
+    pool->used_objects  = NULL;
+    pool->used_count    = 0;
+    pool->capacity      = 0;
 
-    for (list = priv->used_objects; list; list = next) {
-        next = list->next;
-        gst_vaapi_object_unref(list->data);
-        g_list_free_1(list);
-    }
-    priv->used_objects = NULL;
-
-    while ((object = g_queue_pop_head(&priv->free_objects)))
-        gst_vaapi_object_unref(object);
+    g_queue_init(&pool->free_objects);
 }
 
-static void
-gst_vaapi_video_pool_destroy(GstVaapiVideoPool *pool)
+void
+gst_vaapi_video_pool_finalize(GstVaapiVideoPool *pool)
 {
-    GstVaapiVideoPoolPrivate * const priv = pool->priv;
-
-    gst_vaapi_video_pool_clear(pool);
-
-    if (priv->caps) {
-        gst_caps_unref(priv->caps);
-        priv->caps = NULL;
-    }
-
-    g_clear_object(&priv->display);
+    g_list_free_full(pool->used_objects, gst_vaapi_object_unref);
+    g_queue_free_full(&pool->free_objects, gst_vaapi_object_unref);
+    g_clear_object(&pool->display);
 }
 
-static void
-gst_vaapi_video_pool_finalize(GObject *object)
+/**
+ * gst_vaapi_video_pool_ref:
+ * @pool: a #GstVaapiVideoPool
+ *
+ * Atomically increases the reference count of the given @pool by one.
+ *
+ * Returns: The same @pool argument
+ */
+GstVaapiVideoPool *
+gst_vaapi_video_pool_ref(GstVaapiVideoPool *pool)
 {
-    gst_vaapi_video_pool_destroy(GST_VAAPI_VIDEO_POOL(object));
-
-    G_OBJECT_CLASS(gst_vaapi_video_pool_parent_class)->finalize(object);
+    return gst_vaapi_video_pool_ref_internal(pool);
 }
 
-static void
-gst_vaapi_video_pool_set_property(
-    GObject      *object,
-    guint         prop_id,
-    const GValue *value,
-    GParamSpec   *pspec
-)
+/**
+ * gst_vaapi_video_pool_unref:
+ * @pool: a #GstVaapiVideoPool
+ *
+ * Atomically decreases the reference count of the @pool by one. If
+ * the reference count reaches zero, the pool will be free'd.
+ */
+void
+gst_vaapi_video_pool_unref(GstVaapiVideoPool *pool)
 {
-    GstVaapiVideoPool * const pool = GST_VAAPI_VIDEO_POOL(object);
-
-    switch (prop_id) {
-    case PROP_DISPLAY:
-        pool->priv->display = g_object_ref(g_value_get_object(value));
-        break;
-    case PROP_CAPS:
-        gst_vaapi_video_pool_set_caps(pool, g_value_get_pointer(value));
-        break;
-    case PROP_CAPACITY:
-        gst_vaapi_video_pool_set_capacity(pool, g_value_get_uint(value));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
+    gst_vaapi_video_pool_unref_internal(pool);
 }
 
-static void
-gst_vaapi_video_pool_get_property(
-    GObject    *object,
-    guint       prop_id,
-    GValue     *value,
-    GParamSpec *pspec
-)
+/**
+ * gst_vaapi_video_pool_replace:
+ * @old_pool_ptr: a pointer to a #GstVaapiVideoPool
+ * @new_pool: a #GstVaapiVideoPool
+ *
+ * Atomically replaces the pool pool held in @old_pool_ptr with
+ * @new_pool. This means that @old_pool_ptr shall reference a valid
+ * pool. However, @new_pool can be NULL.
+ */
+void
+gst_vaapi_video_pool_replace(GstVaapiVideoPool **old_pool_ptr,
+    GstVaapiVideoPool *new_pool)
 {
-    GstVaapiVideoPool * const pool = GST_VAAPI_VIDEO_POOL(object);
-
-    switch (prop_id) {
-    case PROP_DISPLAY:
-        g_value_set_object(value, gst_vaapi_video_pool_get_display(pool));
-        break;
-    case PROP_CAPS:
-        g_value_set_pointer(value, gst_vaapi_video_pool_get_caps(pool));
-        break;
-    case PROP_CAPACITY:
-        g_value_set_uint(value, gst_vaapi_video_pool_get_capacity(pool));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_video_pool_class_init(GstVaapiVideoPoolClass *klass)
-{
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
-
-    g_type_class_add_private(klass, sizeof(GstVaapiVideoPoolPrivate));
-
-    object_class->finalize      = gst_vaapi_video_pool_finalize;
-    object_class->set_property  = gst_vaapi_video_pool_set_property;
-    object_class->get_property  = gst_vaapi_video_pool_get_property;
-
-    /**
-     * GstVaapiVideoPool:display:
-     *
-     * The #GstVaapiDisplay this pool is bound to.
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_DISPLAY,
-         g_param_spec_object("display",
-                             "Display",
-                             "The GstVaapiDisplay this pool is bound to",
-                             GST_VAAPI_TYPE_DISPLAY,
-                             G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    /**
-     * GstVaapiVidePool:caps:
-     *
-     * The video object capabilities represented as a #GstCaps. This
-     * shall hold at least the "width" and "height" properties.
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_CAPS,
-         g_param_spec_pointer("caps",
-                              "caps",
-                              "The video object capabilities",
-                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    /**
-     * GstVaapiVidePool:capacity:
-     *
-     * The maximum number of objects in the pool. Or zero, the pool
-     * will allocate as many objects as possible.
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_CAPACITY,
-         g_param_spec_uint("capacity",
-                           "capacity",
-                           "The maximum number of objects in the pool",
-                           0, G_MAXUINT32, 0,
-                           G_PARAM_READWRITE));
-}
-
-static void
-gst_vaapi_video_pool_init(GstVaapiVideoPool *pool)
-{
-    GstVaapiVideoPoolPrivate *priv = GST_VAAPI_VIDEO_POOL_GET_PRIVATE(pool);
-
-    pool->priv          = priv;
-    priv->display       = NULL;
-    priv->used_objects  = NULL;
-    priv->caps          = NULL;
-    priv->used_count    = 0;
-    priv->capacity      = 0;
-
-    g_queue_init(&priv->free_objects);
+    gst_vaapi_video_pool_replace_internal(old_pool_ptr, new_pool);
 }
 
 /**
@@ -244,42 +129,7 @@ gst_vaapi_video_pool_get_display(GstVaapiVideoPool *pool)
 {
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_POOL(pool), NULL);
 
-    return pool->priv->display;
-}
-
-/**
- * gst_vaapi_video_pool_get_caps:
- * @pool: a #GstVaapiVideoPool
- *
- * Retrieves the #GstCaps the @pool was created with. The @pool owns
- * the returned object and it shall not be unref'ed.
- *
- * Return value: the #GstCaps the @pool was created with
- */
-GstCaps *
-gst_vaapi_video_pool_get_caps(GstVaapiVideoPool *pool)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_POOL(pool), NULL);
-
-    return pool->priv->caps;
-}
-
-/*
- * gst_vaapi_video_pool_set_caps:
- * @pool: a #GstVaapiVideoPool
- * @caps: a #GstCaps
- *
- * Binds new @caps to the @pool and notify the sub-classes.
- */
-void
-gst_vaapi_video_pool_set_caps(GstVaapiVideoPool *pool, GstCaps *caps)
-{
-    GstVaapiVideoPoolClass * const klass = GST_VAAPI_VIDEO_POOL_GET_CLASS(pool);
-
-    pool->priv->caps = gst_caps_ref(caps);
-
-    if (klass->set_caps)
-        klass->set_caps(pool, caps);
+    return pool->display;
 }
 
 /**
@@ -296,24 +146,22 @@ gst_vaapi_video_pool_set_caps(GstVaapiVideoPool *pool, GstCaps *caps)
 gpointer
 gst_vaapi_video_pool_get_object(GstVaapiVideoPool *pool)
 {
-    GstVaapiVideoPoolPrivate *priv;
     gpointer object;
 
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_POOL(pool), NULL);
 
-    priv = pool->priv;
-    if (priv->capacity && priv->used_count >= priv->capacity)
+    if (pool->capacity && pool->used_count >= pool->capacity)
         return NULL;
 
-    object = g_queue_pop_head(&priv->free_objects);
+    object = g_queue_pop_head(&pool->free_objects);
     if (!object) {
         object = gst_vaapi_video_pool_alloc_object(pool);
         if (!object)
             return NULL;
     }
 
-    ++priv->used_count;
-    priv->used_objects = g_list_prepend(priv->used_objects, object);
+    ++pool->used_count;
+    pool->used_objects = g_list_prepend(pool->used_objects, object);
     return gst_vaapi_object_ref(object);
 }
 
@@ -330,21 +178,19 @@ gst_vaapi_video_pool_get_object(GstVaapiVideoPool *pool)
 void
 gst_vaapi_video_pool_put_object(GstVaapiVideoPool *pool, gpointer object)
 {
-    GstVaapiVideoPoolPrivate *priv;
     GList *elem;
 
     g_return_if_fail(GST_VAAPI_IS_VIDEO_POOL(pool));
     g_return_if_fail(GST_VAAPI_IS_OBJECT(object));
 
-    priv = pool->priv;
-    elem = g_list_find(priv->used_objects, object);
+    elem = g_list_find(pool->used_objects, object);
     if (!elem)
         return;
 
     gst_vaapi_object_unref(object);
-    --priv->used_count;
-    priv->used_objects = g_list_delete_link(priv->used_objects, elem);
-    g_queue_push_tail(&priv->free_objects, object);
+    --pool->used_count;
+    pool->used_objects = g_list_delete_link(pool->used_objects, elem);
+    g_queue_push_tail(&pool->free_objects, object);
 }
 
 /**
@@ -364,7 +210,7 @@ gst_vaapi_video_pool_add_object(GstVaapiVideoPool *pool, gpointer object)
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_POOL(pool), FALSE);
     g_return_val_if_fail(GST_VAAPI_IS_OBJECT(object), FALSE);
 
-    g_queue_push_tail(&pool->priv->free_objects, gst_vaapi_object_ref(object));
+    g_queue_push_tail(&pool->free_objects, gst_vaapi_object_ref(object));
     return TRUE;
 }
 
@@ -407,7 +253,7 @@ gst_vaapi_video_pool_get_size(GstVaapiVideoPool *pool)
 {
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_POOL(pool), 0);
 
-    return g_queue_get_length(&pool->priv->free_objects);
+    return g_queue_get_length(&pool->free_objects);
 }
 
 /**
@@ -429,18 +275,18 @@ gst_vaapi_video_pool_reserve(GstVaapiVideoPool *pool, guint n)
 
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_POOL(pool), 0);
 
-    num_allocated = gst_vaapi_video_pool_get_size(pool) + pool->priv->used_count;
+    num_allocated = gst_vaapi_video_pool_get_size(pool) + pool->used_count;
     if (n < num_allocated)
         return TRUE;
 
-    if ((n -= num_allocated) > pool->priv->capacity)
-        n = pool->priv->capacity;
+    if ((n -= num_allocated) > pool->capacity)
+        n = pool->capacity;
 
     for (i = num_allocated; i < n; i++) {
         gpointer const object = gst_vaapi_video_pool_alloc_object(pool);
         if (!object)
             return FALSE;
-        g_queue_push_tail(&pool->priv->free_objects, object);
+        g_queue_push_tail(&pool->free_objects, object);
     }
     return TRUE;
 }
@@ -459,7 +305,7 @@ gst_vaapi_video_pool_get_capacity(GstVaapiVideoPool *pool)
 {
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_POOL(pool), 0);
 
-    return pool->priv->capacity;
+    return pool->capacity;
 }
 
 /**
@@ -474,5 +320,5 @@ gst_vaapi_video_pool_set_capacity(GstVaapiVideoPool *pool, guint capacity)
 {
     g_return_if_fail(GST_VAAPI_IS_VIDEO_POOL(pool));
 
-    pool->priv->capacity = capacity;
+    pool->capacity = capacity;
 }

@@ -117,6 +117,7 @@ libgstvaapi_source_priv_h =			\
 	gstvaapisurfaceproxy_priv.h		\
 	gstvaapiutils.h				\
 	gstvaapiversion.h			\
+	gstvaapivideopool_priv.h		\
 	gstvaapiwindow_priv.h			\
 	gstvaapiworkarounds.h			\
 	sysdeps.h				\

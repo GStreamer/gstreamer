@@ -28,58 +28,13 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_IMAGE_POOL \
-    (gst_vaapi_image_pool_get_type())
-
-#define GST_VAAPI_IMAGE_POOL(obj)                               \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
-                                GST_VAAPI_TYPE_IMAGE_POOL,      \
-                                GstVaapiImagePool))
-
-#define GST_VAAPI_IMAGE_POOL_CLASS(klass)                       \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
-                             GST_VAAPI_TYPE_IMAGE_POOL,         \
-                             GstVaapiImagePoolClass))
+#define GST_VAAPI_IMAGE_POOL(obj) \
+    ((GstVaapiImagePool *)(obj))
 
 #define GST_VAAPI_IS_IMAGE_POOL(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_IMAGE_POOL))
-
-#define GST_VAAPI_IS_IMAGE_POOL_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_IMAGE_POOL))
-
-#define GST_VAAPI_IMAGE_POOL_GET_CLASS(obj)                     \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
-                               GST_VAAPI_TYPE_IMAGE_POOL,       \
-                               GstVaapiImagePoolClass))
+    ((obj) != NULL)
 
 typedef struct _GstVaapiImagePool               GstVaapiImagePool;
-typedef struct _GstVaapiImagePoolPrivate        GstVaapiImagePoolPrivate;
-typedef struct _GstVaapiImagePoolClass          GstVaapiImagePoolClass;
-
-/**
- * GstVaapiImagePool:
- *
- * A pool of lazily allocated #GstVaapiImage objects.
- */
-struct _GstVaapiImagePool {
-    /*< private >*/
-    GstVaapiVideoPool parent_instance;
-
-    GstVaapiImagePoolPrivate *priv;
-};
-
-/**
- * GstVaapiImagePoolClass:
- *
- * A pool of lazily allocated #GstVaapiImage objects.
- */
-struct _GstVaapiImagePoolClass {
-    /*< private >*/
-    GstVaapiVideoPoolClass parent_class;
-};
-
-GType
-gst_vaapi_image_pool_get_type(void) G_GNUC_CONST;
 
 GstVaapiVideoPool *
 gst_vaapi_image_pool_new(GstVaapiDisplay *display, GstCaps *caps);

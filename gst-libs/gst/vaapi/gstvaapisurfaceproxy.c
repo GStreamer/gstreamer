@@ -28,6 +28,7 @@
 #include "sysdeps.h"
 #include "gstvaapisurfaceproxy.h"
 #include "gstvaapisurfaceproxy_priv.h"
+#include "gstvaapivideopool_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -44,7 +45,7 @@ gst_vaapi_surface_proxy_finalize(GstVaapiSurfaceProxy *proxy)
         gst_vaapi_object_unref(proxy->surface);
         proxy->surface = NULL;
     }
-    g_clear_object(&proxy->pool);
+    gst_vaapi_video_pool_replace(&proxy->pool, NULL);
 }
 
 static inline const GstVaapiMiniObjectClass *
@@ -69,7 +70,7 @@ gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool)
     if (!proxy)
         return NULL;
 
-    proxy->pool = g_object_ref(pool);
+    proxy->pool = gst_vaapi_video_pool_ref(pool);
     proxy->surface = gst_vaapi_video_pool_get_object(proxy->pool);
     if (!proxy->surface)
         goto error;

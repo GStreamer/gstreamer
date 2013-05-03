@@ -29,71 +29,26 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_VIDEO_POOL \
-    (gst_vaapi_video_pool_get_type())
-
-#define GST_VAAPI_VIDEO_POOL(obj)                               \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
-                                GST_VAAPI_TYPE_VIDEO_POOL,      \
-                                GstVaapiVideoPool))
-
-#define GST_VAAPI_VIDEO_POOL_CLASS(klass)                       \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
-                             GST_VAAPI_TYPE_VIDEO_POOL,         \
-                             GstVaapiVideoPoolClass))
+#define GST_VAAPI_VIDEO_POOL(obj) \
+    ((GstVaapiVideoPool *)(obj))
 
 #define GST_VAAPI_IS_VIDEO_POOL(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_VIDEO_POOL))
-
-#define GST_VAAPI_IS_VIDEO_POOL_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_VIDEO_POOL))
-
-#define GST_VAAPI_VIDEO_POOL_GET_CLASS(obj)                     \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
-                               GST_VAAPI_TYPE_VIDEO_POOL,       \
-                               GstVaapiVideoPoolClass))
+    ((obj) != NULL)
 
 typedef struct _GstVaapiVideoPool               GstVaapiVideoPool;
-typedef struct _GstVaapiVideoPoolPrivate        GstVaapiVideoPoolPrivate;
-typedef struct _GstVaapiVideoPoolClass          GstVaapiVideoPoolClass;
 
-/**
- * GstVaapiVideoPool:
- *
- * A pool of lazily allocated video objects. e.g. surfaces, images.
- */
-struct _GstVaapiVideoPool {
-    /*< private >*/
-    GObject parent_instance;
+GstVaapiVideoPool *
+gst_vaapi_video_pool_ref(GstVaapiVideoPool *pool);
 
-    GstVaapiVideoPoolPrivate *priv;
-};
+void
+gst_vaapi_video_pool_unref(GstVaapiVideoPool *pool);
 
-/**
- * GstVaapiVideoPoolClass:
- * @set_caps: virtual function for notifying the subclass of the
- *   negotiated caps
- * @alloc_object: virtual function for allocating a video pool object
- *
- * A pool base class used to hold video objects. e.g. surfaces, images.
- */
-struct _GstVaapiVideoPoolClass {
-    /*< private >*/
-    GObjectClass parent_class;
-
-    /*< public >*/
-    void     (*set_caps)    (GstVaapiVideoPool *pool, GstCaps *caps);
-    gpointer (*alloc_object)(GstVaapiVideoPool *pool, GstVaapiDisplay *display);
-};
-
-GType
-gst_vaapi_video_pool_get_type(void) G_GNUC_CONST;
+void
+gst_vaapi_video_pool_replace(GstVaapiVideoPool **old_pool_ptr,
+    GstVaapiVideoPool *new_pool);
 
 GstVaapiDisplay *
 gst_vaapi_video_pool_get_display(GstVaapiVideoPool *pool);
-
-GstCaps *
-gst_vaapi_video_pool_get_caps(GstVaapiVideoPool *pool);
 
 gpointer
 gst_vaapi_video_pool_get_object(GstVaapiVideoPool *pool);

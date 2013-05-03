@@ -27,30 +27,29 @@
 
 #include "sysdeps.h"
 #include "gstvaapisurfacepool.h"
+#include "gstvaapivideopool_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(
-    GstVaapiSurfacePool,
-    gst_vaapi_surface_pool,
-    GST_VAAPI_TYPE_VIDEO_POOL)
+/**
+ * GstVaapiSurfacePool:
+ *
+ * A pool of lazily allocated #GstVaapiSurface objects.
+ */
+struct _GstVaapiSurfacePool {
+    /*< private >*/
+    GstVaapiVideoPool   parent_instance;
 
-#define GST_VAAPI_SURFACE_POOL_GET_PRIVATE(obj)                 \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_SURFACE_POOL,	\
-                                 GstVaapiSurfacePoolPrivate))
-
-struct _GstVaapiSurfacePoolPrivate {
     GstVaapiChromaType  chroma_type;
     guint               width;
     guint               height;
 };
 
-static void
-gst_vaapi_surface_pool_set_caps(GstVaapiVideoPool *pool, GstCaps *caps)
+static gboolean
+gst_vaapi_surface_pool_set_caps(GstVaapiVideoPool *base_pool, GstCaps *caps)
 {
-    GstVaapiSurfacePoolPrivate *priv = GST_VAAPI_SURFACE_POOL(pool)->priv;
+    GstVaapiSurfacePool * const pool = GST_VAAPI_SURFACE_POOL(base_pool);
     GstStructure *structure;
     gint width, height;
 
@@ -58,54 +57,31 @@ gst_vaapi_surface_pool_set_caps(GstVaapiVideoPool *pool, GstCaps *caps)
     gst_structure_get_int(structure, "width", &width);
     gst_structure_get_int(structure, "height", &height);
 
-    priv->chroma_type   = GST_VAAPI_CHROMA_TYPE_YUV420;
-    priv->width         = width;
-    priv->height        = height;
+    pool->chroma_type   = GST_VAAPI_CHROMA_TYPE_YUV420;
+    pool->width         = width;
+    pool->height        = height;
+    return TRUE;
 }
 
-gpointer
-gst_vaapi_surface_pool_alloc_object(
-    GstVaapiVideoPool *pool,
-    GstVaapiDisplay   *display
-)
+static gpointer
+gst_vaapi_surface_pool_alloc_object(GstVaapiVideoPool *base_pool)
 {
-    GstVaapiSurfacePoolPrivate *priv = GST_VAAPI_SURFACE_POOL(pool)->priv;
+    GstVaapiSurfacePool * const pool = GST_VAAPI_SURFACE_POOL(base_pool);
 
-    return gst_vaapi_surface_new(display,
-                                 priv->chroma_type,
-                                 priv->width,
-                                 priv->height);
+    return gst_vaapi_surface_new(base_pool->display,
+        pool->chroma_type, pool->width, pool->height);
 }
 
-static void
-gst_vaapi_surface_pool_finalize(GObject *object)
+static inline const GstVaapiMiniObjectClass *
+gst_vaapi_surface_pool_class(void)
 {
-    G_OBJECT_CLASS(gst_vaapi_surface_pool_parent_class)->finalize(object);
-}
+    static const GstVaapiVideoPoolClass GstVaapiSurfacePoolClass = {
+        { sizeof(GstVaapiSurfacePool),
+          (GDestroyNotify)gst_vaapi_video_pool_finalize },
 
-static void
-gst_vaapi_surface_pool_class_init(GstVaapiSurfacePoolClass *klass)
-{
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
-    GstVaapiVideoPoolClass * const pool_class = GST_VAAPI_VIDEO_POOL_CLASS(klass);
-
-    g_type_class_add_private(klass, sizeof(GstVaapiSurfacePoolPrivate));
-
-    object_class->finalize      = gst_vaapi_surface_pool_finalize;
-
-    pool_class->set_caps        = gst_vaapi_surface_pool_set_caps;
-    pool_class->alloc_object    = gst_vaapi_surface_pool_alloc_object;
-}
-
-static void
-gst_vaapi_surface_pool_init(GstVaapiSurfacePool *pool)
-{
-    GstVaapiSurfacePoolPrivate *priv = GST_VAAPI_SURFACE_POOL_GET_PRIVATE(pool);
-
-    pool->priv          = priv;
-    priv->chroma_type   = 0;
-    priv->width         = 0;
-    priv->height        = 0;
+        .alloc_object   = gst_vaapi_surface_pool_alloc_object
+    };
+    return GST_VAAPI_MINI_OBJECT_CLASS(&GstVaapiSurfacePoolClass);
 }
 
 /**
@@ -121,8 +97,22 @@ gst_vaapi_surface_pool_init(GstVaapiSurfacePool *pool)
 GstVaapiVideoPool *
 gst_vaapi_surface_pool_new(GstVaapiDisplay *display, GstCaps *caps)
 {
-    return g_object_new(GST_VAAPI_TYPE_SURFACE_POOL,
-                        "display", display,
-                        "caps",    caps,
-                        NULL);
+    GstVaapiVideoPool *pool;
+
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
+
+    pool = (GstVaapiVideoPool *)
+        gst_vaapi_mini_object_new(gst_vaapi_surface_pool_class());
+    if (!pool)
+        return NULL;
+
+    gst_vaapi_video_pool_init(pool, display);
+    if (!gst_vaapi_surface_pool_set_caps(pool, caps))
+        goto error;
+    return pool;
+
+error:
+    gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(pool));
+    return NULL;
 }
