@@ -308,8 +308,6 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 
   rtpgstpay = GST_RTP_GST_PAY (payload);
 
-  ret = GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (payload, event);
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
       etype = 1;
@@ -349,6 +347,8 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
     /* flush the adapter immediately */
     gst_rtp_gst_pay_flush (rtpgstpay, GST_CLOCK_TIME_NONE);
   }
+
+  ret = GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (payload, event);
 
   return ret;
 }
