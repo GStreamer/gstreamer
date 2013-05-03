@@ -173,7 +173,7 @@ copy_samples_16 (vorbis_sample_t * _out, vorbis_sample_t ** _in, guint samples,
 }
 
 CopySampleFunc
-get_copy_sample_func (gint channels)
+gst_vorbis_get_copy_sample_func (gint channels)
 {
   CopySampleFunc f = NULL;
 
