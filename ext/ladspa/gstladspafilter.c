@@ -152,8 +152,7 @@ gst_ladspa_filter_type_prepare_output_buffer (GstBaseTransform * base,
 }
 
 static gboolean
-gst_ladspa_filter_type_setup (GstAudioFilter * audio,
-    const GstAudioInfo * info)
+gst_ladspa_filter_type_setup (GstAudioFilter * audio, const GstAudioInfo * info)
 {
   GstLADSPAFilter *ladspa = GST_LADSPA_FILTER (audio);
 
@@ -169,8 +168,7 @@ gst_ladspa_filter_type_cleanup (GstBaseTransform * base)
 }
 
 static GstFlowReturn
-gst_ladspa_filter_type_transform_ip (GstBaseTransform * base,
-    GstBuffer * buf)
+gst_ladspa_filter_type_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
   GstLADSPAFilter *ladspa = GST_LADSPA_FILTER (base);
   GstMapInfo map;
@@ -192,6 +190,8 @@ gst_ladspa_filter_type_transform (GstBaseTransform * base,
   GstLADSPAFilter *ladspa = GST_LADSPA_FILTER (base);
   GstMapInfo inmap, outmap;
   guint samples;
+
+  gst_object_sync_values (GST_OBJECT (ladspa), GST_BUFFER_TIMESTAMP (inbuf));
 
   gst_buffer_map (inbuf, &inmap, GST_MAP_READ);
   gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
@@ -225,8 +225,7 @@ gst_ladspa_filter_type_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_ladspa_filter_type_init (GstLADSPAFilter * ladspa,
-    LADSPA_Descriptor * desc)
+gst_ladspa_filter_type_init (GstLADSPAFilter * ladspa, LADSPA_Descriptor * desc)
 {
   GstBaseTransform *base = GST_BASE_TRANSFORM (ladspa);
   GstLADSPAFilterClass *ladspa_class = GST_LADSPA_FILTER_GET_CLASS (ladspa);
@@ -237,8 +236,8 @@ gst_ladspa_filter_type_init (GstLADSPAFilter * ladspa,
   gst_base_transform_set_in_place (base,
       ladspa_class->ladspa.count.audio.in ==
       ladspa_class->ladspa.count.audio.out
-      && !LADSPA_IS_INPLACE_BROKEN (ladspa_class->ladspa.descriptor->
-          Properties));
+      && !LADSPA_IS_INPLACE_BROKEN (ladspa_class->ladspa.
+          descriptor->Properties));
 
 }
 
@@ -304,13 +303,10 @@ gst_ladspa_filter_type_class_init (GstLADSPAFilterClass * ladspa_class,
 
   GST_DEBUG ("LADSPA filter class %p", ladspa_class);
 
-  gst_ladspa_filter_type_parent_class =
-      g_type_class_peek_parent (ladspa_class);
+  gst_ladspa_filter_type_parent_class = g_type_class_peek_parent (ladspa_class);
 
-  object_class->dispose =
-      GST_DEBUG_FUNCPTR (gst_ladspa_filter_type_dispose);
-  object_class->finalize =
-      GST_DEBUG_FUNCPTR (gst_ladspa_filter_type_finalize);
+  object_class->dispose = GST_DEBUG_FUNCPTR (gst_ladspa_filter_type_dispose);
+  object_class->finalize = GST_DEBUG_FUNCPTR (gst_ladspa_filter_type_finalize);
   object_class->set_property =
       GST_DEBUG_FUNCPTR (gst_ladspa_filter_type_set_property);
   object_class->get_property =
@@ -322,8 +318,7 @@ gst_ladspa_filter_type_class_init (GstLADSPAFilterClass * ladspa_class,
       GST_DEBUG_FUNCPTR (gst_ladspa_filter_type_transform_caps);
   base_class->prepare_output_buffer =
       GST_DEBUG_FUNCPTR (gst_ladspa_filter_type_prepare_output_buffer);
-  base_class->transform =
-      GST_DEBUG_FUNCPTR (gst_ladspa_filter_type_transform);
+  base_class->transform = GST_DEBUG_FUNCPTR (gst_ladspa_filter_type_transform);
   base_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_ladspa_filter_type_transform_ip);
 

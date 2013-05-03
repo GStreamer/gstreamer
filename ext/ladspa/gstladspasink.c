@@ -138,6 +138,8 @@ gst_ladspa_sink_type_render (GstBaseSink * base, GstBuffer * buf)
   if (ladspa->num_buffers_left != -1)
     ladspa->num_buffers_left--;
 
+  gst_object_sync_values (GST_OBJECT (ladspa), GST_BUFFER_TIMESTAMP (buf));
+
   gst_buffer_map (buf, &info, GST_MAP_READ);
   gst_ladspa_transform (&ladspa->ladspa, NULL,
       info.size / sizeof (LADSPA_Data) / ladspa->ladspa.klass->count.audio.in,
@@ -302,12 +304,10 @@ gst_ladspa_sink_type_class_init (GstLADSPASinkClass * ladspa_class,
   GstBaseSinkClass *base_class = base_class =
       GST_BASE_SINK_CLASS (ladspa_class);
 
-  gst_ladspa_sink_type_parent_class =
-      g_type_class_peek_parent (ladspa_class);
+  gst_ladspa_sink_type_parent_class = g_type_class_peek_parent (ladspa_class);
 
   object_class->dispose = GST_DEBUG_FUNCPTR (gst_ladspa_sink_type_dispose);
-  object_class->finalize =
-      GST_DEBUG_FUNCPTR (gst_ladspa_sink_type_finalize);
+  object_class->finalize = GST_DEBUG_FUNCPTR (gst_ladspa_sink_type_finalize);
   object_class->set_property =
       GST_DEBUG_FUNCPTR (gst_ladspa_sink_type_set_property);
   object_class->get_property =
