@@ -1424,7 +1424,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
     {
       gint version = (codec_id - GST_RIFF_WAVE_FORMAT_WMAV1) + 1;
 
-      channels_max = 6;
+      channels_max = 8;
       block_align = TRUE;
 
       caps = gst_caps_new_simple ("audio/x-wma",
