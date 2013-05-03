@@ -1423,11 +1423,10 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
 
   mimetype = gst_structure_get_name (structure);
 
-  if (g_str_equal (mimetype, "video/x-raw")) {
-    /* raw caps, parse into video info */
-    if (!gst_video_info_from_caps (info, caps))
-      goto invalid_format;
+  if (!gst_video_info_from_caps (info, caps))
+    goto invalid_format;
 
+  if (g_str_equal (mimetype, "video/x-raw")) {
     switch (GST_VIDEO_INFO_FORMAT (info)) {
       case GST_VIDEO_FORMAT_I420:
         fourcc = V4L2_PIX_FMT_YUV420;
@@ -1490,9 +1489,6 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
     }
   } else {
     gboolean dimensions = TRUE;
-
-    /* no video caps, construct videoinfo ourselves */
-    gst_video_info_init (info);
 
     if (g_str_equal (mimetype, "video/mpegts")) {
       fourcc = V4L2_PIX_FMT_MPEG;
