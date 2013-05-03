@@ -1,5 +1,6 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2013 Juan Manuel Borges Caño <juanmabcmail@gmail.com>
  *
  * gstladspa.h: Header for LADSPA plugin
  *
@@ -19,58 +20,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef __GST_LADSPA_H__
 #define __GST_LADSPA_H__
 
-
-#include <ladspa.h>
-
 #include <gst/gst.h>
-
-#include <gst/signalprocessor/gstsignalprocessor.h>
-
 
 G_BEGIN_DECLS
 
-
-typedef struct _ladspa_control_info {
-  gchar *name;
-  gchar *param_name;
-  gfloat lowerbound, upperbound;
-  gfloat def;
-  gboolean lower, upper, samplerate;
-  gboolean toggled, logarithmic, integer, writable;
-} ladspa_control_info;
-
-
-typedef struct _GstLADSPA GstLADSPA;
-typedef struct _GstLADSPAClass GstLADSPAClass;
-
-
-struct _GstLADSPA {
-  GstSignalProcessor parent;
-
-  LADSPA_Descriptor *descriptor;
-  LADSPA_Handle *handle;
-
-  gboolean activated;
-  gboolean inplace_broken;
-};
-
-struct _GstLADSPAClass {
-  GstSignalProcessorClass parent_class;
-
-  LADSPA_Descriptor *descriptor;
-
-  gint *audio_in_portnums;
-  gint *audio_out_portnums;
-  gint *control_in_portnums;
-  gint *control_out_portnums;
-};
-
+extern GQuark descriptor_quark;
 
 G_END_DECLS
-
 
 #endif /* __GST_LADSPA_H__ */
