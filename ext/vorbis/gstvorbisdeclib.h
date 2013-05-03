@@ -62,6 +62,7 @@
 #define GstVorbisDec GstIVorbisDec
 #define GstVorbisDecClass GstIVorbisDecClass
 #define gst_vorbis_dec_get_type gst_ivorbis_dec_get_type
+#define gst_vorbis_get_copy_sample_func gst_ivorbis_get_copy_sample_func
 
 #endif /* TREMOR */
 
@@ -187,6 +188,6 @@ gst_ogg_packet_from_wrapper (ogg_packet_wrapper * packet)
 typedef void (*CopySampleFunc)(vorbis_sample_t *out, vorbis_sample_t **in,
                            guint samples, gint channels);
 
-CopySampleFunc get_copy_sample_func (gint channels);
+CopySampleFunc gst_vorbis_get_copy_sample_func (gint channels);
 
 #endif /* __GST_VORBIS_DEC_LIB_H__ */

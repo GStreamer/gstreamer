@@ -200,7 +200,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
   vd->info = info;
   /* select a copy_samples function, this way we can have specialized versions
    * for mono/stereo and avoid the depth switch in tremor case */
-  vd->copy_samples = get_copy_sample_func (info.channels);
+  vd->copy_samples = gst_vorbis_get_copy_sample_func (info.channels);
 
   return GST_FLOW_OK;
 }
