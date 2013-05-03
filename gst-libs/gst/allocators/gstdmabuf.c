@@ -52,6 +52,7 @@ typedef struct
   gpointer data;
   gint mmapping_flags;
   gint mmap_count;
+  gsize mmap_size;
   GMutex lock;
 } GstDmaBufMemory;
 
@@ -90,7 +91,7 @@ gst_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
   if (mem->data) {
     /* only return address if mapping flags are a subset
      * of the previous flags */
-    if (mem->mmapping_flags & prot)
+    if ((mem->mmapping_flags & prot) && (mem->mmap_size >= maxsize))
       ret = mem->data;
 
     goto out;
@@ -110,7 +111,7 @@ gst_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
 
   if (mem->data) {
     mem->mmapping_flags = prot;
-    mem->mem.size = maxsize;
+    mem->mmap_size = maxsize;
     mem->mmap_count++;
     ret = mem->data;
   }
@@ -127,9 +128,9 @@ gst_dmabuf_mem_unmap (GstMemory * gmem)
   g_mutex_lock (&mem->lock);
 
   if (mem->data && !(--mem->mmap_count)) {
-    munmap ((void *) mem->data, mem->mem.size);
+    munmap ((void *) mem->data, mem->mmap_size);
     mem->data = NULL;
-    mem->mem.size = 0;
+    mem->mmap_size = 0;
     mem->mmapping_flags = 0;
     GST_DEBUG ("%p: fd %d unmapped", mem, mem->fd);
   }
@@ -151,7 +152,7 @@ gst_dmabuf_mem_share (GstMemory * gmem, gssize offset, gssize size)
     parent = (GstMemory *) mem;
 
   if (size == -1)
-    size = mem->mem.size - offset;
+    size = gmem->maxsize - offset;
 
   sub = g_slice_new0 (GstDmaBufMemory);
   /* the shared memory is always readonly */
