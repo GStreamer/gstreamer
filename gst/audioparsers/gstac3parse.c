@@ -692,14 +692,21 @@ cleanup:
 static GstFlowReturn
 gst_ac3_parse_chain_priv (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstBuffer *newbuf;
-  GstFlowReturn ret;
   GstAc3Parse *ac3parse = GST_AC3_PARSE (parent);
+  GstFlowReturn ret;
+  GstBuffer *newbuf;
+  gsize size;
 
-  newbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL,
-      2, gst_buffer_get_size (buffer) - 2);
-  ret = ac3parse->baseparse_chainfunc (pad, parent, newbuf);
-  gst_buffer_unref (buffer);
+  size = gst_buffer_get_size (buffer);
+  if (size >= 2) {
+    newbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 2, size - 2);
+    gst_buffer_unref (buffer);
+    ret = ac3parse->baseparse_chainfunc (pad, parent, newbuf);
+  } else {
+    gst_buffer_unref (buffer);
+    ret = GST_FLOW_OK;
+  }
+
   return ret;
 }
 
