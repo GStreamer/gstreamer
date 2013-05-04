@@ -990,6 +990,16 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
     src->request_position = new_position;
   src->read_position = new_position;
 
+  if (src->content_size != 0 && new_position > src->content_size) {
+    GST_DEBUG_OBJECT (src, "Got position previous estimated content size "
+        "(%" G_GINT64_FORMAT " > %" G_GINT64_FORMAT ")", new_position,
+        src->content_size);
+    src->content_size = new_position;
+    basesrc->segment.duration = src->content_size;
+    gst_element_post_message (GST_ELEMENT (src),
+        gst_message_new_duration_changed (GST_OBJECT (src)));
+  }
+
   src->ret = GST_FLOW_OK;
   g_main_loop_quit (src->loop);
   gst_soup_http_src_session_pause_message (src);
@@ -1138,11 +1148,7 @@ gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   src = GST_SOUP_HTTP_SRC (psrc);
 
   if (src->msg && (src->request_position != src->read_position)) {
-    if (src->content_size != 0 && src->request_position >= src->content_size) {
-      GST_WARNING_OBJECT (src, "Seeking behind the end of file -- EOS");
-      return GST_FLOW_EOS;
-    } else if (src->session_io_status ==
-        GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE) {
+    if (src->session_io_status == GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE) {
       gst_soup_http_src_add_range_header (src, src->request_position);
     } else {
       GST_DEBUG_OBJECT (src, "Seek from position %" G_GUINT64_FORMAT
@@ -1347,7 +1353,8 @@ gst_soup_http_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
   }
 
   if (src->content_size != 0 && segment->start >= src->content_size) {
-    GST_WARNING_OBJECT (src, "Seeking behind end of file, will go to EOS soon");
+    GST_WARNING_OBJECT (src,
+        "Potentially seeking behind end of file, might EOS immediately");
   }
 
   /* Wait for create() to handle the jump in offset. */
