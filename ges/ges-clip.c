@@ -196,12 +196,12 @@ add_tlobj_to_list (gpointer key, gpointer tlobj, GList ** list)
 static GList *
 _ungroup (GESContainer * container, gboolean recursive)
 {
-  GList *tmp, *ret = NULL;
   GESClip *tmpclip;
   GESTrackType track_type;
   GESTrackElement *track_element;
 
   gboolean first_obj = TRUE;
+  GList *tmp, *children, *ret = NULL;
   GESClip *clip = GES_CLIP (container);
   GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
   GESLayer *layer = clip->priv->layer;
@@ -214,7 +214,8 @@ _ungroup (GESContainer * container, gboolean recursive)
   }
 
   /* We need a copy of the current list of tracks */
-  for (tmp = GES_CONTAINER_CHILDREN (container); tmp; tmp = tmp->next) {
+  children = ges_container_get_children (container);
+  for (tmp = children; tmp; tmp = tmp->next) {
     track_element = GES_TRACK_ELEMENT (tmp->data);
     track_type = ges_track_element_get_track_type (track_element);
 
@@ -247,6 +248,7 @@ _ungroup (GESContainer * container, gboolean recursive)
       gst_object_unref (track_element);
     }
   }
+  g_list_free_full (children, gst_object_unref);
   g_hash_table_foreach (_tracktype_clip, (GHFunc) add_tlobj_to_list, &ret);
   g_hash_table_unref (_tracktype_clip);
 
