@@ -641,7 +641,9 @@ gst_videomixer2_reset (GstVideoMixer2 * mix)
   }
 
   mix->newseg_pending = TRUE;
+  GST_COLLECT_PADS_STREAM_LOCK (mix->collect);
   mix->flush_stop_pending = FALSE;
+  GST_COLLECT_PADS_STREAM_UNLOCK (mix->collect);
 }
 
 /*  1 == OK
@@ -957,9 +959,10 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
   if (GST_VIDEO_INFO_FORMAT (&mix->info) == GST_VIDEO_FORMAT_UNKNOWN)
     return GST_FLOW_NOT_NEGOTIATED;
 
-  if (g_atomic_int_compare_and_exchange (&mix->flush_stop_pending, TRUE, FALSE)) {
+  if (mix->flush_stop_pending == TRUE) {
     GST_DEBUG_OBJECT (mix, "pending flush stop");
     gst_pad_push_event (mix->srcpad, gst_event_new_flush_stop (TRUE));
+    mix->flush_stop_pending = FALSE;
   }
 
   if (mix->send_stream_start) {
@@ -1684,7 +1687,7 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
     GstEvent * event, GstVideoMixer2 * mix)
 {
   GstVideoMixer2Pad *pad = GST_VIDEO_MIXER2_PAD (cdata->pad);
-  gboolean ret = TRUE;
+  gboolean ret = TRUE, discard = FALSE;
 
   GST_DEBUG_OBJECT (pad, "Got %s event on pad %s:%s",
       GST_EVENT_TYPE_NAME (event), GST_DEBUG_PAD_NAME (pad));
@@ -1709,9 +1712,28 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
       g_assert (seg.format == GST_FORMAT_TIME);
       break;
     }
+    case GST_EVENT_FLUSH_START:
+      GST_COLLECT_PADS_STREAM_LOCK (mix->collect);
+      mix->flush_stop_pending = TRUE;
+      ret = gst_collect_pads_event_default (pads, cdata, event, discard);
+      event = NULL;
+      GST_COLLECT_PADS_STREAM_UNLOCK (mix->collect);
+      break;
     case GST_EVENT_FLUSH_STOP:
+      GST_COLLECT_PADS_STREAM_LOCK (mix->collect);
       mix->newseg_pending = TRUE;
-      mix->flush_stop_pending = FALSE;
+      if (mix->flush_stop_pending) {
+        GST_DEBUG_OBJECT (pad, "forwarding flush stop");
+        ret = gst_collect_pads_event_default (pads, cdata, event, discard);
+        mix->flush_stop_pending = FALSE;
+        event = NULL;
+      } else {
+        discard = TRUE;
+        GST_DEBUG_OBJECT (pad, "eating flush stop");
+      }
+      GST_COLLECT_PADS_STREAM_UNLOCK (mix->collect);
+
+      /* FIXME Should we reset in case we were not awaiting a flush stop? */
       gst_videomixer2_reset_qos (mix);
       gst_buffer_replace (&pad->mixcol->buffer, NULL);
       pad->mixcol->start_time = -1;
@@ -1727,7 +1749,7 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
   }
 
   if (event != NULL)
-    return gst_collect_pads_event_default (pads, cdata, event, FALSE);
+    return gst_collect_pads_event_default (pads, cdata, event, discard);
 
   return ret;
 }
