@@ -1406,13 +1406,6 @@ gst_videomixer2_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_videomixer2_reset_qos (mix);
 
       result = gst_videomixer2_push_sink_event (mix, event);
-
-      if (g_atomic_int_compare_and_exchange (&mix->flush_stop_pending, TRUE,
-              FALSE)) {
-        GST_DEBUG_OBJECT (mix, "pending flush stop");
-        gst_pad_push_event (mix->srcpad, gst_event_new_flush_stop (TRUE));
-      }
-
       break;
     }
     case GST_EVENT_NAVIGATION:
