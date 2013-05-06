@@ -85,6 +85,7 @@ gst_omx_audio_enc_class_init (GstOMXAudioEncClass * klass)
   audio_encoder_class->sink_event =
       GST_DEBUG_FUNCPTR (gst_omx_audio_enc_sink_event);
 
+  klass->cdata.type = GST_OMX_COMPONENT_TYPE_FILTER;
   klass->cdata.default_sink_template_caps = "audio/x-raw, "
       "rate = (int) [ 1, MAX ], "
       "channels = (int) [ 1, " G_STRINGIFY (OMX_AUDIO_MAXCHANNELS) " ], "

@@ -2616,52 +2616,57 @@ _class_init (gpointer g_class, gpointer data)
 
   /* Add pad templates */
   err = NULL;
-  if (!(template_caps =
-          g_key_file_get_string (config, element_name, "sink-template-caps",
-              &err))) {
-    GST_DEBUG
-        ("No sink template caps specified for element '%s', using default '%s'",
-        element_name, class_data->default_sink_template_caps);
-    caps = gst_caps_from_string (class_data->default_sink_template_caps);
-    g_assert (caps != NULL);
-    g_error_free (err);
-  } else {
-    caps = gst_caps_from_string (template_caps);
-    if (!caps) {
+  if (class_data->type != GST_OMX_COMPONENT_TYPE_SOURCE) {
+    if (!(template_caps =
+            g_key_file_get_string (config, element_name, "sink-template-caps",
+                &err))) {
       GST_DEBUG
-          ("Could not parse sink template caps '%s' for element '%s', using default '%s'",
-          template_caps, element_name, class_data->default_sink_template_caps);
+          ("No sink template caps specified for element '%s', using default '%s'",
+          element_name, class_data->default_sink_template_caps);
       caps = gst_caps_from_string (class_data->default_sink_template_caps);
       g_assert (caps != NULL);
+      g_error_free (err);
+    } else {
+      caps = gst_caps_from_string (template_caps);
+      if (!caps) {
+        GST_DEBUG
+            ("Could not parse sink template caps '%s' for element '%s', using default '%s'",
+            template_caps, element_name,
+            class_data->default_sink_template_caps);
+        caps = gst_caps_from_string (class_data->default_sink_template_caps);
+        g_assert (caps != NULL);
+      }
     }
+    templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
+    g_free (template_caps);
+    gst_element_class_add_pad_template (element_class, templ);
   }
-  templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
-  g_free (template_caps);
-  gst_element_class_add_pad_template (element_class, templ);
 
   err = NULL;
-  if (!(template_caps =
-          g_key_file_get_string (config, element_name, "src-template-caps",
-              &err))) {
-    GST_DEBUG
-        ("No src template caps specified for element '%s', using default '%s'",
-        element_name, class_data->default_src_template_caps);
-    caps = gst_caps_from_string (class_data->default_src_template_caps);
-    g_assert (caps != NULL);
-    g_error_free (err);
-  } else {
-    caps = gst_caps_from_string (template_caps);
-    if (!caps) {
+  if (class_data->type != GST_OMX_COMPONENT_TYPE_SINK) {
+    if (!(template_caps =
+            g_key_file_get_string (config, element_name, "src-template-caps",
+                &err))) {
       GST_DEBUG
-          ("Could not parse src template caps '%s' for element '%s', using default '%s'",
-          template_caps, element_name, class_data->default_src_template_caps);
+          ("No src template caps specified for element '%s', using default '%s'",
+          element_name, class_data->default_src_template_caps);
       caps = gst_caps_from_string (class_data->default_src_template_caps);
       g_assert (caps != NULL);
+      g_error_free (err);
+    } else {
+      caps = gst_caps_from_string (template_caps);
+      if (!caps) {
+        GST_DEBUG
+            ("Could not parse src template caps '%s' for element '%s', using default '%s'",
+            template_caps, element_name, class_data->default_src_template_caps);
+        caps = gst_caps_from_string (class_data->default_src_template_caps);
+        g_assert (caps != NULL);
+      }
     }
+    templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
+    g_free (template_caps);
+    gst_element_class_add_pad_template (element_class, templ);
   }
-  templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
-  g_free (template_caps);
-  gst_element_class_add_pad_template (element_class, templ);
 
   if ((hacks =
           g_key_file_get_string_list (config, element_name, "hacks", NULL,

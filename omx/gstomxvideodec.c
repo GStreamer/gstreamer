@@ -727,6 +727,7 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
   video_decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_omx_video_dec_decide_allocation);
 
+  klass->cdata.type = GST_OMX_COMPONENT_TYPE_FILTER;
   klass->cdata.default_src_template_caps = "video/x-raw, "
       "width = " GST_VIDEO_SIZE_RANGE ", "
       "height = " GST_VIDEO_SIZE_RANGE ", " "framerate = " GST_VIDEO_FPS_RANGE;
