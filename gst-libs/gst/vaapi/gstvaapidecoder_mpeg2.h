@@ -27,58 +27,7 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_DECODER_MPEG2 \
-    (gst_vaapi_decoder_mpeg2_get_type())
-
-#define GST_VAAPI_DECODER_MPEG2(obj)                            \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
-                                GST_VAAPI_TYPE_DECODER_MPEG2,   \
-                                GstVaapiDecoderMpeg2))
-
-#define GST_VAAPI_DECODER_MPEG2_CLASS(klass)                    \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
-                             GST_VAAPI_TYPE_DECODER_MPEG2,      \
-                             GstVaapiDecoderMpeg2Class))
-
-#define GST_VAAPI_IS_DECODER_MPEG2(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_DECODER_MPEG2))
-
-#define GST_VAAPI_IS_DECODER_MPEG2_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_DECODER_MPEG2))
-
-#define GST_VAAPI_DECODER_MPEG2_GET_CLASS(obj)                  \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
-                               GST_VAAPI_TYPE_DECODER_MPEG2,    \
-                               GstVaapiDecoderMpeg2Class))
-
 typedef struct _GstVaapiDecoderMpeg2            GstVaapiDecoderMpeg2;
-typedef struct _GstVaapiDecoderMpeg2Private     GstVaapiDecoderMpeg2Private;
-typedef struct _GstVaapiDecoderMpeg2Class       GstVaapiDecoderMpeg2Class;
-
-/**
- * GstVaapiDecoderMpeg2:
- *
- * A decoder based on Mpeg2.
- */
-struct _GstVaapiDecoderMpeg2 {
-    /*< private >*/
-    GstVaapiDecoder parent_instance;
-
-    GstVaapiDecoderMpeg2Private *priv;
-};
-
-/**
- * GstVaapiDecoderMpeg2Class:
- *
- * A decoder class based on Mpeg2.
- */
-struct _GstVaapiDecoderMpeg2Class {
-    /*< private >*/
-    GstVaapiDecoderClass parent_class;
-};
-
-GType
-gst_vaapi_decoder_mpeg2_get_type(void) G_GNUC_CONST;
 
 GstVaapiDecoder *
 gst_vaapi_decoder_mpeg2_new(GstVaapiDisplay *display, GstCaps *caps);

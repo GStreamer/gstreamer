@@ -33,9 +33,9 @@
 #include "gstvaapidebug.h"
 
 #define GET_DECODER(obj)    GST_VAAPI_DECODER_CAST((obj)->parent_instance.codec)
-#define GET_CONTEXT(obj)    GET_DECODER(obj)->priv->context
-#define GET_VA_DISPLAY(obj) GET_DECODER(obj)->priv->va_display
-#define GET_VA_CONTEXT(obj) GET_DECODER(obj)->priv->va_context
+#define GET_CONTEXT(obj)    GET_DECODER(obj)->context
+#define GET_VA_DISPLAY(obj) GET_DECODER(obj)->va_display
+#define GET_VA_CONTEXT(obj) GET_DECODER(obj)->va_context
 
 /* ------------------------------------------------------------------------- */
 /* --- Pictures                                                          --- */

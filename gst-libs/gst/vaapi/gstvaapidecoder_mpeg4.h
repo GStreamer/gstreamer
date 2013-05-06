@@ -27,58 +27,7 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_DECODER_MPEG4 \
-    (gst_vaapi_decoder_mpeg4_get_type())
-
-#define GST_VAAPI_DECODER_MPEG4(obj)                            \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
-                                GST_VAAPI_TYPE_DECODER_MPEG4,   \
-                                GstVaapiDecoderMpeg4))
-
-#define GST_VAAPI_DECODER_MPEG4_CLASS(klass)                    \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
-                             GST_VAAPI_TYPE_DECODER_MPEG4,      \
-                             GstVaapiDecoderMpeg4Class))
-
-#define GST_VAAPI_IS_DECODER_MPEG4(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_DECODER_MPEG4))
-
-#define GST_VAAPI_IS_DECODER_MPEG4_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_DECODER_MPEG4))
-
-#define GST_VAAPI_DECODER_MPEG4_GET_CLASS(obj)                  \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
-                               GST_VAAPI_TYPE_DECODER_MPEG4,    \
-                               GstVaapiDecoderMpeg4Class))
-
 typedef struct _GstVaapiDecoderMpeg4            GstVaapiDecoderMpeg4;
-typedef struct _GstVaapiDecoderMpeg4Private     GstVaapiDecoderMpeg4Private;
-typedef struct _GstVaapiDecoderMpeg4Class       GstVaapiDecoderMpeg4Class;
-
-/**
- * GstVaapiDecoderMpeg4:
- *
- * A decoder based on Mpeg4.
- */
-struct _GstVaapiDecoderMpeg4 {
-    /*< private >*/
-    GstVaapiDecoder parent_instance;
-
-    GstVaapiDecoderMpeg4Private *priv;
-};
-
-/**
- * GstVaapiDecoderMpeg4Class:
- *
- * A decoder class based on Mpeg4.
- */
-struct _GstVaapiDecoderMpeg4Class {
-    /*< private >*/
-    GstVaapiDecoderClass parent_class;
-};
-
-GType
-gst_vaapi_decoder_mpeg4_get_type(void) G_GNUC_CONST;
 
 GstVaapiDecoder *
 gst_vaapi_decoder_mpeg4_new(GstVaapiDisplay *display, GstCaps *caps);

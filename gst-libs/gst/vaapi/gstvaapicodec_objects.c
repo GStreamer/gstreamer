@@ -96,8 +96,8 @@ gst_vaapi_codec_object_new(const GstVaapiCodecObjectClass *object_class,
 }
 
 #define GET_DECODER(obj)    GST_VAAPI_DECODER_CAST((obj)->parent_instance.codec)
-#define GET_VA_DISPLAY(obj) GET_DECODER(obj)->priv->va_display
-#define GET_VA_CONTEXT(obj) GET_DECODER(obj)->priv->va_context
+#define GET_VA_DISPLAY(obj) GET_DECODER(obj)->va_display
+#define GET_VA_CONTEXT(obj) GET_DECODER(obj)->va_context
 
 /* ------------------------------------------------------------------------- */
 /* --- Inverse Quantization Matrices                                     --- */

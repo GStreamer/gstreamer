@@ -26,58 +26,7 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_DECODER_JPEG \
-    (gst_vaapi_decoder_jpeg_get_type())
-
-#define GST_VAAPI_DECODER_JPEG(obj)                             \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
-                                GST_VAAPI_TYPE_DECODER_JPEG,    \
-                                GstVaapiDecoderJpeg))
-
-#define GST_VAAPI_DECODER_JPEG_CLASS(klass)                     \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
-                             GST_VAAPI_TYPE_DECODER_JPEG,       \
-                             GstVaapiDecoderJpegClass))
-
-#define GST_VAAPI_IS_DECODER_JPEG(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_DECODER_JPEG))
-
-#define GST_VAAPI_IS_DECODER_JPEG_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_DECODER_JPEG))
-
-#define GST_VAAPI_DECODER_JPEG_GET_CLASS(obj)                   \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
-                               GST_VAAPI_TYPE_DECODER_JPEG,     \
-                               GstVaapiDecoderJpegClass))
-
 typedef struct _GstVaapiDecoderJpeg             GstVaapiDecoderJpeg;
-typedef struct _GstVaapiDecoderJpegPrivate      GstVaapiDecoderJpegPrivate;
-typedef struct _GstVaapiDecoderJpegClass        GstVaapiDecoderJpegClass;
-
-/**
- * GstVaapiDecoderJpeg:
- *
- * A decoder based on Jpeg.
- */
-struct _GstVaapiDecoderJpeg {
-    /*< private >*/
-    GstVaapiDecoder parent_instance;
-
-    GstVaapiDecoderJpegPrivate *priv;
-};
-
-/**
- * GstVaapiDecoderJpegClass:
- *
- * A decoder class based on Jpeg.
- */
-struct _GstVaapiDecoderJpegClass {
-    /*< private >*/
-    GstVaapiDecoderClass parent_class;
-};
-
-GType
-gst_vaapi_decoder_jpeg_get_type(void) G_GNUC_CONST;
 
 GstVaapiDecoder *
 gst_vaapi_decoder_jpeg_new(GstVaapiDisplay *display, GstCaps *caps);

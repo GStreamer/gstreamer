@@ -37,14 +37,11 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiDecoderJpeg,
-              gst_vaapi_decoder_jpeg,
-              GST_VAAPI_TYPE_DECODER)
+#define GST_VAAPI_DECODER_JPEG_CAST(decoder) \
+    ((GstVaapiDecoderJpeg *)(decoder))
 
-#define GST_VAAPI_DECODER_JPEG_GET_PRIVATE(obj)                 \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_DECODER_JPEG,   \
-                                 GstVaapiDecoderJpegPrivate))
+typedef struct _GstVaapiDecoderJpegPrivate      GstVaapiDecoderJpegPrivate;
+typedef struct _GstVaapiDecoderJpegClass        GstVaapiDecoderJpegClass;
 
 struct _GstVaapiDecoderJpegPrivate {
     GstVaapiProfile             profile;
@@ -59,7 +56,27 @@ struct _GstVaapiDecoderJpegPrivate {
     guint                       mcu_restart;
     guint                       is_opened       : 1;
     guint                       profile_changed : 1;
-    guint                       is_constructed  : 1;
+};
+
+/**
+ * GstVaapiDecoderJpeg:
+ *
+ * A decoder based on Jpeg.
+ */
+struct _GstVaapiDecoderJpeg {
+    /*< private >*/
+    GstVaapiDecoder             parent_instance;
+    GstVaapiDecoderJpegPrivate  priv;
+};
+
+/**
+ * GstVaapiDecoderJpegClass:
+ *
+ * A decoder class based on Jpeg.
+ */
+struct _GstVaapiDecoderJpegClass {
+    /*< private >*/
+    GstVaapiDecoderClass parent_class;
 };
 
 typedef struct _GstJpegScanSegment GstJpegScanSegment;
@@ -74,7 +91,7 @@ struct _GstJpegScanSegment {
 static void
 gst_vaapi_decoder_jpeg_close(GstVaapiDecoderJpeg *decoder)
 {
-    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
 
     gst_vaapi_picture_replace(&priv->current_picture, NULL);
 
@@ -95,23 +112,30 @@ gst_vaapi_decoder_jpeg_open(GstVaapiDecoderJpeg *decoder)
 }
 
 static void
-gst_vaapi_decoder_jpeg_destroy(GstVaapiDecoderJpeg *decoder)
+gst_vaapi_decoder_jpeg_destroy(GstVaapiDecoder *base_decoder)
 {
+    GstVaapiDecoderJpeg * const decoder =
+        GST_VAAPI_DECODER_JPEG_CAST(base_decoder);
+
     gst_vaapi_decoder_jpeg_close(decoder);
 }
 
 static gboolean
-gst_vaapi_decoder_jpeg_create(GstVaapiDecoderJpeg *decoder)
+gst_vaapi_decoder_jpeg_create(GstVaapiDecoder *base_decoder)
 {
-    if (!GST_VAAPI_DECODER_CODEC(decoder))
-        return FALSE;
+    GstVaapiDecoderJpeg * const decoder =
+        GST_VAAPI_DECODER_JPEG_CAST(base_decoder);
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
+
+    priv->profile               = GST_VAAPI_PROFILE_JPEG_BASELINE;
+    priv->profile_changed       = TRUE;
     return TRUE;
 }
 
 static GstVaapiDecoderStatus
 ensure_context(GstVaapiDecoderJpeg *decoder)
 {
-    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
     GstVaapiProfile profiles[2];
     GstVaapiEntrypoint entrypoint = GST_VAAPI_ENTRYPOINT_VLD;
     guint i, n_profiles = 0;
@@ -157,7 +181,7 @@ ensure_context(GstVaapiDecoderJpeg *decoder)
 static gboolean
 decode_current_picture(GstVaapiDecoderJpeg *decoder)
 {
-    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
     GstVaapiPicture * const picture = priv->current_picture;
     gboolean success = TRUE;
 
@@ -209,7 +233,7 @@ fill_quantization_table(
     GstVaapiPicture     *picture
 )
 {
-    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
     VAIQMatrixBufferJPEGBaseline *iq_matrix;
     guint i, j, num_tables;
 
@@ -246,7 +270,7 @@ fill_huffman_table(
     GstVaapiPicture     *picture
 )
 {
-    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
     GstJpegHuffmanTables * const huf_tables = &priv->huf_tables;
     VAHuffmanTableBufferJPEGBaseline *huffman_table;
     guint i, num_tables;
@@ -318,7 +342,7 @@ decode_picture(
     guint                buf_size
 )
 {
-    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
     GstJpegFrameHdr * const frame_hdr = &priv->frame_hdr;
     GstVaapiPicture *picture;
     GstVaapiDecoderStatus status;
@@ -372,7 +396,7 @@ decode_huffman_table(
     guint                buf_size
 )
 {
-    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
 
     if (!gst_jpeg_parse_huffman_table(&priv->huf_tables, buf, buf_size, 0)) {
         GST_DEBUG("failed to parse Huffman table");
@@ -389,7 +413,7 @@ decode_quant_table(
     guint                buf_size
 )
 {
-    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
 
     if (!gst_jpeg_parse_quant_table(&priv->quant_tables, buf, buf_size, 0)) {
         GST_DEBUG("failed to parse quantization table");
@@ -406,7 +430,7 @@ decode_restart_interval(
     guint                buf_size
 )
 {
-    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
 
     if (!gst_jpeg_parse_restart_interval(&priv->mcu_restart, buf, buf_size, 0)) {
         GST_DEBUG("failed to parse restart interval");
@@ -424,7 +448,7 @@ decode_scan(
     guint                scan_data_size
 )
 {
-    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
     GstVaapiPicture *picture = priv->current_picture;
     VASliceParameterBufferJPEGBaseline *slice_param;
     GstVaapiSlice *gst_slice;
@@ -493,7 +517,7 @@ decode_scan(
 static GstVaapiDecoderStatus
 decode_buffer(GstVaapiDecoderJpeg *decoder, const guchar *buf, guint buf_size)
 {
-    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
     GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
     GstJpegMarkerSegment seg;
     GstJpegScanSegment scan_seg;
@@ -609,10 +633,7 @@ end:
 static GstVaapiDecoderStatus
 ensure_decoder(GstVaapiDecoderJpeg *decoder)
 {
-    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
-
-    g_return_val_if_fail(priv->is_constructed,
-                         GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED);
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
 
     if (!priv->is_opened) {
         priv->is_opened = gst_vaapi_decoder_jpeg_open(decoder);
@@ -633,7 +654,8 @@ static GstVaapiDecoderStatus
 gst_vaapi_decoder_jpeg_parse(GstVaapiDecoder *base_decoder,
     GstAdapter *adapter, gboolean at_eos, GstVaapiDecoderUnit *unit)
 {
-    GstVaapiDecoderJpeg * const decoder = GST_VAAPI_DECODER_JPEG(base_decoder);
+    GstVaapiDecoderJpeg * const decoder =
+        GST_VAAPI_DECODER_JPEG_CAST(base_decoder);
     GstVaapiDecoderStatus status;
     guint size, buf_size, flags = 0;
     gint ofs;
@@ -676,7 +698,8 @@ static GstVaapiDecoderStatus
 gst_vaapi_decoder_jpeg_decode(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderUnit *unit)
 {
-    GstVaapiDecoderJpeg * const decoder = GST_VAAPI_DECODER_JPEG(base_decoder);
+    GstVaapiDecoderJpeg * const decoder =
+        GST_VAAPI_DECODER_JPEG_CAST(base_decoder);
     GstVaapiDecoderStatus status;
     GstBuffer * const buffer =
         GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
@@ -699,64 +722,32 @@ gst_vaapi_decoder_jpeg_decode(GstVaapiDecoder *base_decoder,
 }
 
 static void
-gst_vaapi_decoder_jpeg_finalize(GObject *object)
-{
-    GstVaapiDecoderJpeg * const decoder = GST_VAAPI_DECODER_JPEG(object);
-
-    gst_vaapi_decoder_jpeg_destroy(decoder);
-
-    G_OBJECT_CLASS(gst_vaapi_decoder_jpeg_parent_class)->finalize(object);
-}
-
-static void
-gst_vaapi_decoder_jpeg_constructed(GObject *object)
-{
-    GstVaapiDecoderJpeg * const decoder = GST_VAAPI_DECODER_JPEG(object);
-    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
-    GObjectClass *parent_class;
-
-    parent_class = G_OBJECT_CLASS(gst_vaapi_decoder_jpeg_parent_class);
-    if (parent_class->constructed)
-        parent_class->constructed(object);
-
-    priv->is_constructed = gst_vaapi_decoder_jpeg_create(decoder);
-}
-
-static void
 gst_vaapi_decoder_jpeg_class_init(GstVaapiDecoderJpegClass *klass)
 {
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
+    GstVaapiMiniObjectClass * const object_class =
+        GST_VAAPI_MINI_OBJECT_CLASS(klass);
     GstVaapiDecoderClass * const decoder_class = GST_VAAPI_DECODER_CLASS(klass);
 
-    g_type_class_add_private(klass, sizeof(GstVaapiDecoderJpegPrivate));
+    object_class->size          = sizeof(GstVaapiDecoderJpeg);
+    object_class->finalize      = (GDestroyNotify)gst_vaapi_decoder_finalize;
 
-    object_class->finalize      = gst_vaapi_decoder_jpeg_finalize;
-    object_class->constructed   = gst_vaapi_decoder_jpeg_constructed;
-
+    decoder_class->create       = gst_vaapi_decoder_jpeg_create;
+    decoder_class->destroy      = gst_vaapi_decoder_jpeg_destroy;
     decoder_class->parse        = gst_vaapi_decoder_jpeg_parse;
     decoder_class->decode       = gst_vaapi_decoder_jpeg_decode;
 }
 
-static void
-gst_vaapi_decoder_jpeg_init(GstVaapiDecoderJpeg *decoder)
+static inline const GstVaapiDecoderClass *
+gst_vaapi_decoder_jpeg_class(void)
 {
-    GstVaapiDecoderJpegPrivate *priv;
+    static GstVaapiDecoderJpegClass g_class;
+    static gsize g_class_init = FALSE;
 
-    priv                        = GST_VAAPI_DECODER_JPEG_GET_PRIVATE(decoder);
-    decoder->priv               = priv;
-    priv->profile               = GST_VAAPI_PROFILE_JPEG_BASELINE;
-    priv->width                 = 0;
-    priv->height                = 0;
-    priv->current_picture       = NULL;
-    priv->has_huf_table         = FALSE;
-    priv->has_quant_table       = FALSE;
-    priv->mcu_restart           = 0;
-    priv->is_opened             = FALSE;
-    priv->profile_changed       = TRUE;
-    priv->is_constructed        = FALSE;
-    memset(&priv->frame_hdr, 0, sizeof(priv->frame_hdr));
-    memset(&priv->huf_tables, 0, sizeof(priv->huf_tables));
-    memset(&priv->quant_tables, 0, sizeof(priv->quant_tables));
+    if (g_once_init_enter(&g_class_init)) {
+        gst_vaapi_decoder_jpeg_class_init(&g_class);
+        g_once_init_leave(&g_class_init, TRUE);
+    }
+    return GST_VAAPI_DECODER_CLASS(&g_class);
 }
 
 /**
@@ -772,20 +763,5 @@ gst_vaapi_decoder_jpeg_init(GstVaapiDecoderJpeg *decoder)
 GstVaapiDecoder *
 gst_vaapi_decoder_jpeg_new(GstVaapiDisplay *display, GstCaps *caps)
 {
-    GstVaapiDecoderJpeg *decoder;
-
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
-    g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
-
-    decoder = g_object_new(
-        GST_VAAPI_TYPE_DECODER_JPEG,
-        "display",      display,
-        "caps",         caps,
-        NULL
-    );
-    if (!decoder->priv->is_constructed) {
-        g_object_unref(decoder);
-        return NULL;
-    }
-    return GST_VAAPI_DECODER_CAST(decoder);
+    return gst_vaapi_decoder_new(gst_vaapi_decoder_jpeg_class(), display, caps);
 }

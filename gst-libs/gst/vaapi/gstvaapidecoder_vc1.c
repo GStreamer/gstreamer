@@ -38,18 +38,17 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiDecoderVC1,
-              gst_vaapi_decoder_vc1,
-              GST_VAAPI_TYPE_DECODER)
-
 #define GST_VAAPI_DECODER_VC1_CAST(decoder) \
     ((GstVaapiDecoderVC1 *)(decoder))
 
-#define GST_VAAPI_DECODER_VC1_GET_PRIVATE(obj)                  \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_DECODER_VC1,    \
-                                 GstVaapiDecoderVC1Private))
+typedef struct _GstVaapiDecoderVC1Private       GstVaapiDecoderVC1Private;
+typedef struct _GstVaapiDecoderVC1Class         GstVaapiDecoderVC1Class;
 
+/**
+ * GstVaapiDecoderVC1:
+ *
+ * A decoder based on VC1.
+ */
 struct _GstVaapiDecoderVC1Private {
     GstVaapiProfile             profile;
     guint                       width;
@@ -64,7 +63,6 @@ struct _GstVaapiDecoderVC1Private {
     gint32                      next_poc;
     guint8                     *rbdu_buffer;
     guint                       rbdu_buffer_size;
-    guint                       is_constructed          : 1;
     guint                       is_opened               : 1;
     guint                       is_first_field          : 1;
     guint                       has_codec_data          : 1;
@@ -73,6 +71,27 @@ struct _GstVaapiDecoderVC1Private {
     guint                       profile_changed         : 1;
     guint                       closed_entry            : 1;
     guint                       broken_link             : 1;
+};
+
+/**
+ * GstVaapiDecoderVC1:
+ *
+ * A decoder based on VC1.
+ */
+struct _GstVaapiDecoderVC1 {
+    /*< private >*/
+    GstVaapiDecoder             parent_instance;
+    GstVaapiDecoderVC1Private   priv;
+};
+
+/**
+ * GstVaapiDecoderVC1Class:
+ *
+ * A decoder class based on VC1.
+ */
+struct _GstVaapiDecoderVC1Class {
+    /*< private >*/
+    GstVaapiDecoderClass parent_class;
 };
 
 static GstVaapiDecoderStatus
@@ -100,7 +119,7 @@ get_status(GstVC1ParserResult result)
 static void
 gst_vaapi_decoder_vc1_close(GstVaapiDecoderVC1 *decoder)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
 
     gst_vaapi_picture_replace(&priv->last_non_b_picture, NULL);
     gst_vaapi_picture_replace(&priv->current_picture, NULL);
@@ -115,7 +134,7 @@ gst_vaapi_decoder_vc1_close(GstVaapiDecoderVC1 *decoder)
 static gboolean
 gst_vaapi_decoder_vc1_open(GstVaapiDecoderVC1 *decoder)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
 
     gst_vaapi_decoder_vc1_close(decoder);
 
@@ -130,9 +149,11 @@ gst_vaapi_decoder_vc1_open(GstVaapiDecoderVC1 *decoder)
 }
 
 static void
-gst_vaapi_decoder_vc1_destroy(GstVaapiDecoderVC1 *decoder)
+gst_vaapi_decoder_vc1_destroy(GstVaapiDecoder *base_decoder)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1 * const decoder =
+        GST_VAAPI_DECODER_VC1_CAST(base_decoder);
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
 
     gst_vaapi_decoder_vc1_close(decoder);
 
@@ -144,17 +165,20 @@ gst_vaapi_decoder_vc1_destroy(GstVaapiDecoderVC1 *decoder)
 }
 
 static gboolean
-gst_vaapi_decoder_vc1_create(GstVaapiDecoderVC1 *decoder)
+gst_vaapi_decoder_vc1_create(GstVaapiDecoder *base_decoder)
 {
-    if (!GST_VAAPI_DECODER_CODEC(decoder))
-        return FALSE;
+    GstVaapiDecoderVC1 * const decoder =
+        GST_VAAPI_DECODER_VC1_CAST(base_decoder);
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
+
+    priv->profile = (GstVaapiProfile)0;
     return TRUE;
 }
 
 static GstVaapiDecoderStatus
 ensure_context(GstVaapiDecoderVC1 *decoder)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVaapiProfile profiles[2];
     GstVaapiEntrypoint entrypoint = GST_VAAPI_ENTRYPOINT_VLD;
     guint i, n_profiles = 0;
@@ -206,7 +230,7 @@ ensure_context(GstVaapiDecoderVC1 *decoder)
 static GstVaapiDecoderStatus
 decode_current_picture(GstVaapiDecoderVC1 *decoder)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVaapiPicture * const picture = priv->current_picture;
 
     if (!picture)
@@ -231,7 +255,7 @@ static GstVaapiDecoderStatus
 decode_sequence(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 {
     GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
     GstVC1AdvancedSeqHdr * const adv_hdr = &seq_hdr->advanced;
     GstVC1SeqStructC * const structc = &seq_hdr->struct_c;
@@ -347,7 +371,7 @@ decode_sequence(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 static GstVaapiDecoderStatus
 decode_sequence_end(GstVaapiDecoderVC1 *decoder)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVaapiDecoderStatus status;
 
     status = decode_current_picture(decoder);
@@ -361,7 +385,7 @@ decode_sequence_end(GstVaapiDecoderVC1 *decoder)
 static GstVaapiDecoderStatus
 decode_entry_point(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
     GstVC1EntryPointHdr * const entrypoint_hdr = &priv->entrypoint_hdr;
     GstVC1ParserResult result;
@@ -503,7 +527,7 @@ get_MVMODE2(GstVC1FrameHdr *frame_hdr)
 static inline int
 has_MVTYPEMB_bitplane(GstVaapiDecoderVC1 *decoder)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
     GstVC1FrameHdr * const frame_hdr = &priv->frame_hdr;
     guint mvmode, mvmode2;
@@ -531,7 +555,7 @@ has_MVTYPEMB_bitplane(GstVaapiDecoderVC1 *decoder)
 static inline int
 has_SKIPMB_bitplane(GstVaapiDecoderVC1 *decoder)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
     GstVC1FrameHdr * const frame_hdr = &priv->frame_hdr;
 
@@ -552,7 +576,7 @@ has_SKIPMB_bitplane(GstVaapiDecoderVC1 *decoder)
 static inline int
 has_DIRECTMB_bitplane(GstVaapiDecoderVC1 *decoder)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
     GstVC1FrameHdr * const frame_hdr = &priv->frame_hdr;
 
@@ -572,7 +596,7 @@ has_DIRECTMB_bitplane(GstVaapiDecoderVC1 *decoder)
 static inline int
 has_ACPRED_bitplane(GstVaapiDecoderVC1 *decoder)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
     GstVC1FrameHdr * const frame_hdr = &priv->frame_hdr;
     GstVC1PicAdvanced * const pic = &frame_hdr->pic.advanced;
@@ -588,7 +612,7 @@ has_ACPRED_bitplane(GstVaapiDecoderVC1 *decoder)
 static inline int
 has_OVERFLAGS_bitplane(GstVaapiDecoderVC1 *decoder)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
     GstVC1EntryPointHdr * const entrypoint_hdr = &priv->entrypoint_hdr;
     GstVC1FrameHdr * const frame_hdr = &priv->frame_hdr;
@@ -623,7 +647,7 @@ pack_bitplanes(GstVaapiBitPlane *bitplane, guint n, const guint8 *bitplanes[3], 
 static gboolean
 fill_picture_structc(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     VAPictureParameterBufferVC1 * const pic_param = picture->param;
     GstVC1SeqStructC * const structc = &priv->seq_hdr.struct_c;
     GstVC1FrameHdr * const frame_hdr = &priv->frame_hdr;
@@ -666,7 +690,7 @@ fill_picture_structc(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 static gboolean
 fill_picture_advanced(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     VAPictureParameterBufferVC1 * const pic_param = picture->param;
     GstVC1AdvancedSeqHdr * const adv_hdr = &priv->seq_hdr.advanced;
     GstVC1EntryPointHdr * const entrypoint_hdr = &priv->entrypoint_hdr;
@@ -733,7 +757,7 @@ fill_picture_advanced(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 static gboolean
 fill_picture(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     VAPictureParameterBufferVC1 * const pic_param = picture->param;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
     GstVC1FrameHdr * const frame_hdr = &priv->frame_hdr;
@@ -852,7 +876,7 @@ static GstVaapiDecoderStatus
 decode_slice_chunk(GstVaapiDecoderVC1 *decoder, GstVC1BDU *ebdu,
     guint slice_addr, guint header_size)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVaapiPicture * const picture = priv->current_picture;
     GstVaapiSlice *slice;
     VASliceParameterBufferVC1 *slice_param;
@@ -877,7 +901,7 @@ decode_slice_chunk(GstVaapiDecoderVC1 *decoder, GstVC1BDU *ebdu,
 static GstVaapiDecoderStatus
 decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVC1FrameHdr * const frame_hdr = &priv->frame_hdr;
     GstVC1ParserResult result;
     GstVaapiPicture * const picture = priv->current_picture;
@@ -939,7 +963,7 @@ decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 static GstVaapiDecoderStatus
 decode_slice(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVC1SliceHdr slice_hdr;
     GstVC1ParserResult result;
 
@@ -961,7 +985,7 @@ decode_slice(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 static gboolean
 decode_rbdu(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     guint8 *rbdu_buffer;
     guint i, j, rbdu_buffer_size;
 
@@ -1045,7 +1069,7 @@ decode_ebdu(GstVaapiDecoderVC1 *decoder, GstVC1BDU *ebdu)
 static GstVaapiDecoderStatus
 decode_buffer(GstVaapiDecoderVC1 *decoder, guchar *buf, guint buf_size)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVC1BDU ebdu;
 
     if (priv->has_codec_data) {
@@ -1069,7 +1093,7 @@ gst_vaapi_decoder_vc1_decode_codec_data(GstVaapiDecoder *base_decoder,
 {
     GstVaapiDecoderVC1 * const decoder =
         GST_VAAPI_DECODER_VC1_CAST(base_decoder);
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
     GstVaapiDecoderStatus status;
     GstVC1ParserResult result;
@@ -1151,11 +1175,8 @@ gst_vaapi_decoder_vc1_decode_codec_data(GstVaapiDecoder *base_decoder,
 static GstVaapiDecoderStatus
 ensure_decoder(GstVaapiDecoderVC1 *decoder)
 {
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVaapiDecoderStatus status;
-
-    g_return_val_if_fail(priv->is_constructed,
-                         GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED);
 
     if (!priv->is_opened) {
         priv->is_opened = gst_vaapi_decoder_vc1_open(decoder);
@@ -1181,8 +1202,9 @@ static GstVaapiDecoderStatus
 gst_vaapi_decoder_vc1_parse(GstVaapiDecoder *base_decoder,
     GstAdapter *adapter, gboolean at_eos, GstVaapiDecoderUnit *unit)
 {
-    GstVaapiDecoderVC1 * const decoder = GST_VAAPI_DECODER_VC1(base_decoder);
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1 * const decoder =
+        GST_VAAPI_DECODER_VC1_CAST(base_decoder);
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVaapiDecoderStatus status;
     guint8 bdu_type;
     guint size, buf_size, flags = 0;
@@ -1251,7 +1273,8 @@ static GstVaapiDecoderStatus
 gst_vaapi_decoder_vc1_decode(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderUnit *unit)
 {
-    GstVaapiDecoderVC1 * const decoder = GST_VAAPI_DECODER_VC1(base_decoder);
+    GstVaapiDecoderVC1 * const decoder =
+        GST_VAAPI_DECODER_VC1_CAST(base_decoder);
     GstVaapiDecoderStatus status;
     GstBuffer * const buffer =
         GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
@@ -1277,8 +1300,9 @@ static GstVaapiDecoderStatus
 gst_vaapi_decoder_vc1_start_frame(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderUnit *unit)
 {
-    GstVaapiDecoderVC1 * const decoder = GST_VAAPI_DECODER_VC1(base_decoder);
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1 * const decoder =
+        GST_VAAPI_DECODER_VC1_CAST(base_decoder);
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
     GstVaapiDecoderStatus status;
     GstVaapiPicture *picture;
 
@@ -1306,7 +1330,8 @@ gst_vaapi_decoder_vc1_start_frame(GstVaapiDecoder *base_decoder,
 static GstVaapiDecoderStatus
 gst_vaapi_decoder_vc1_end_frame(GstVaapiDecoder *base_decoder)
 {
-    GstVaapiDecoderVC1 * const decoder = GST_VAAPI_DECODER_VC1(base_decoder);
+    GstVaapiDecoderVC1 * const decoder =
+        GST_VAAPI_DECODER_VC1_CAST(base_decoder);
 
     return decode_current_picture(decoder);
 }
@@ -1314,48 +1339,26 @@ gst_vaapi_decoder_vc1_end_frame(GstVaapiDecoder *base_decoder)
 static GstVaapiDecoderStatus
 gst_vaapi_decoder_vc1_flush(GstVaapiDecoder *base_decoder)
 {
-    GstVaapiDecoderVC1 * const decoder = GST_VAAPI_DECODER_VC1(base_decoder);
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
+    GstVaapiDecoderVC1 * const decoder =
+        GST_VAAPI_DECODER_VC1_CAST(base_decoder);
+    GstVaapiDecoderVC1Private * const priv = &decoder->priv;
 
     gst_vaapi_dpb_flush(priv->dpb);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 static void
-gst_vaapi_decoder_vc1_finalize(GObject *object)
-{
-    GstVaapiDecoderVC1 * const decoder = GST_VAAPI_DECODER_VC1(object);
-
-    gst_vaapi_decoder_vc1_destroy(decoder);
-
-    G_OBJECT_CLASS(gst_vaapi_decoder_vc1_parent_class)->finalize(object);
-}
-
-static void
-gst_vaapi_decoder_vc1_constructed(GObject *object)
-{
-    GstVaapiDecoderVC1 * const decoder = GST_VAAPI_DECODER_VC1(object);
-    GstVaapiDecoderVC1Private * const priv = decoder->priv;
-    GObjectClass *parent_class;
-
-    parent_class = G_OBJECT_CLASS(gst_vaapi_decoder_vc1_parent_class);
-    if (parent_class->constructed)
-        parent_class->constructed(object);
-
-    priv->is_constructed = gst_vaapi_decoder_vc1_create(decoder);
-}
-
-static void
 gst_vaapi_decoder_vc1_class_init(GstVaapiDecoderVC1Class *klass)
 {
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
+    GstVaapiMiniObjectClass * const object_class =
+        GST_VAAPI_MINI_OBJECT_CLASS(klass);
     GstVaapiDecoderClass * const decoder_class = GST_VAAPI_DECODER_CLASS(klass);
 
-    g_type_class_add_private(klass, sizeof(GstVaapiDecoderVC1Private));
+    object_class->size          = sizeof(GstVaapiDecoderVC1);
+    object_class->finalize      = (GDestroyNotify)gst_vaapi_decoder_finalize;
 
-    object_class->finalize      = gst_vaapi_decoder_vc1_finalize;
-    object_class->constructed   = gst_vaapi_decoder_vc1_constructed;
-
+    decoder_class->create       = gst_vaapi_decoder_vc1_create;
+    decoder_class->destroy      = gst_vaapi_decoder_vc1_destroy;
     decoder_class->parse        = gst_vaapi_decoder_vc1_parse;
     decoder_class->decode       = gst_vaapi_decoder_vc1_decode;
     decoder_class->start_frame  = gst_vaapi_decoder_vc1_start_frame;
@@ -1366,27 +1369,17 @@ gst_vaapi_decoder_vc1_class_init(GstVaapiDecoderVC1Class *klass)
         gst_vaapi_decoder_vc1_decode_codec_data;
 }
 
-static void
-gst_vaapi_decoder_vc1_init(GstVaapiDecoderVC1 *decoder)
+static inline const GstVaapiDecoderClass *
+gst_vaapi_decoder_vc1_class(void)
 {
-    GstVaapiDecoderVC1Private *priv;
+    static GstVaapiDecoderVC1Class g_class;
+    static gsize g_class_init = FALSE;
 
-    priv                        = GST_VAAPI_DECODER_VC1_GET_PRIVATE(decoder);
-    decoder->priv               = priv;
-    priv->width                 = 0;
-    priv->height                = 0;
-    priv->profile               = (GstVaapiProfile)0;
-    priv->current_picture       = NULL;
-    priv->rbdu_buffer           = NULL;
-    priv->rbdu_buffer_size      = 0;
-    priv->is_constructed        = FALSE;
-    priv->is_opened             = FALSE;
-    priv->is_first_field        = FALSE;
-    priv->has_entrypoint        = FALSE;
-    priv->size_changed          = FALSE;
-    priv->profile_changed       = FALSE;
-    priv->closed_entry          = FALSE;
-    priv->broken_link           = FALSE;
+    if (g_once_init_enter(&g_class_init)) {
+        gst_vaapi_decoder_vc1_class_init(&g_class);
+        g_once_init_leave(&g_class_init, TRUE);
+    }
+    return GST_VAAPI_DECODER_CLASS(&g_class);
 }
 
 /**
@@ -1402,20 +1395,5 @@ gst_vaapi_decoder_vc1_init(GstVaapiDecoderVC1 *decoder)
 GstVaapiDecoder *
 gst_vaapi_decoder_vc1_new(GstVaapiDisplay *display, GstCaps *caps)
 {
-    GstVaapiDecoderVC1 *decoder;
-
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
-    g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
-
-    decoder = g_object_new(
-        GST_VAAPI_TYPE_DECODER_VC1,
-        "display",      display,
-        "caps",         caps,
-        NULL
-    );
-    if (!decoder->priv->is_constructed) {
-        g_object_unref(decoder);
-        return NULL;
-    }
-    return GST_VAAPI_DECODER_CAST(decoder);
+    return gst_vaapi_decoder_new(gst_vaapi_decoder_vc1_class(), display, caps);
 }

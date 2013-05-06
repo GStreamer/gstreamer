@@ -26,58 +26,7 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_DECODER_H264 \
-    (gst_vaapi_decoder_h264_get_type())
-
-#define GST_VAAPI_DECODER_H264(obj)                            \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                         \
-                                GST_VAAPI_TYPE_DECODER_H264,   \
-                                GstVaapiDecoderH264))
-
-#define GST_VAAPI_DECODER_H264_CLASS(klass)                    \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                          \
-                             GST_VAAPI_TYPE_DECODER_H264,      \
-                             GstVaapiDecoderH264Class))
-
-#define GST_VAAPI_IS_DECODER_H264(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_DECODER_H264))
-
-#define GST_VAAPI_IS_DECODER_H264_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_DECODER_H264))
-
-#define GST_VAAPI_DECODER_H264_GET_CLASS(obj)                  \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                          \
-                               GST_VAAPI_TYPE_DECODER_H264,    \
-                               GstVaapiDecoderH264Class))
-
 typedef struct _GstVaapiDecoderH264             GstVaapiDecoderH264;
-typedef struct _GstVaapiDecoderH264Private      GstVaapiDecoderH264Private;
-typedef struct _GstVaapiDecoderH264Class        GstVaapiDecoderH264Class;
-
-/**
- * GstVaapiDecoderH264:
- *
- * A decoder based on H264.
- */
-struct _GstVaapiDecoderH264 {
-    /*< private >*/
-    GstVaapiDecoder parent_instance;
-
-    GstVaapiDecoderH264Private *priv;
-};
-
-/**
- * GstVaapiDecoderH264Class:
- *
- * A decoder class based on H264.
- */
-struct _GstVaapiDecoderH264Class {
-    /*< private >*/
-    GstVaapiDecoderClass parent_class;
-};
-
-GType
-gst_vaapi_decoder_h264_get_type(void) G_GNUC_CONST;
 
 GstVaapiDecoder *
 gst_vaapi_decoder_h264_new(GstVaapiDisplay *display, GstCaps *caps);

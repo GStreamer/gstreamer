@@ -27,10 +27,24 @@
 #include <gst/vaapi/gstvaapidecoder.h>
 #include <gst/vaapi/gstvaapidecoder_unit.h>
 #include <gst/vaapi/gstvaapicontext.h>
+#include "gstvaapiminiobject.h"
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_DECODER_CAST(decoder) ((GstVaapiDecoder *)(decoder))
+#define GST_VAAPI_DECODER_CAST(decoder) \
+    ((GstVaapiDecoder *)(decoder))
+
+#define GST_VAAPI_DECODER_CLASS(klass) \
+    ((GstVaapiDecoderClass *)(klass))
+
+#define GST_VAAPI_IS_DECODER_CLASS(klass) \
+    ((klass) != NULL))
+
+#define GST_VAAPI_DECODER_GET_CLASS(obj) \
+    GST_VAAPI_DECODER_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
+
+typedef struct _GstVaapiDecoderClass            GstVaapiDecoderClass;
+        struct _GstVaapiDecoderUnit;
 
 /**
  * GST_VAAPI_PARSER_STATE:
@@ -41,7 +55,7 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_PARSER_STATE
 #define GST_VAAPI_PARSER_STATE(decoder) \
-    (&GST_VAAPI_DECODER_CAST(decoder)->priv->parser_state)
+    (&GST_VAAPI_DECODER_CAST(decoder)->parser_state)
 
 /**
  * GST_VAAPI_DECODER_DISPLAY:
@@ -52,7 +66,7 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_DECODER_DISPLAY
 #define GST_VAAPI_DECODER_DISPLAY(decoder) \
-    GST_VAAPI_DECODER_CAST(decoder)->priv->display
+    GST_VAAPI_DECODER_CAST(decoder)->display
 
 /**
  * GST_VAAPI_DECODER_CONTEXT:
@@ -63,7 +77,7 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_DECODER_CONTEXT
 #define GST_VAAPI_DECODER_CONTEXT(decoder) \
-    GST_VAAPI_DECODER_CAST(decoder)->priv->context
+    GST_VAAPI_DECODER_CAST(decoder)->context
 
 /**
  * GST_VAAPI_DECODER_CODEC:
@@ -74,7 +88,7 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_DECODER_CODEC
 #define GST_VAAPI_DECODER_CODEC(decoder) \
-    GST_VAAPI_DECODER_CAST(decoder)->priv->codec
+    GST_VAAPI_DECODER_CAST(decoder)->codec
 
 /**
  * GST_VAAPI_DECODER_CODEC_STATE:
@@ -86,7 +100,7 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_DECODER_CODEC_STATE
 #define GST_VAAPI_DECODER_CODEC_STATE(decoder) \
-    GST_VAAPI_DECODER_CAST(decoder)->priv->codec_state
+    GST_VAAPI_DECODER_CAST(decoder)->codec_state
 
 /**
  * GST_VAAPI_DECODER_CODEC_DATA:
@@ -161,7 +175,16 @@ struct _GstVaapiParserState {
     guint               at_eos                  : 1;
 };
 
-struct _GstVaapiDecoderPrivate {
+/**
+ * GstVaapiDecoder:
+ *
+ * A VA decoder base instance.
+ */
+struct _GstVaapiDecoder {
+    /*< private >*/
+    GstVaapiMiniObject  parent_instance;
+
+    gpointer            user_data;
     GstVaapiDisplay    *display;
     VADisplay           va_display;
     GstVaapiContext    *context;
@@ -171,7 +194,42 @@ struct _GstVaapiDecoderPrivate {
     GAsyncQueue        *buffers;
     GAsyncQueue        *frames;
     GstVaapiParserState parser_state;
+    GstVaapiDecoderStateChangedFunc codec_state_changed_func;
+    gpointer            codec_state_changed_data;
 };
+
+/**
+ * GstVaapiDecoderClass:
+ *
+ * A VA decoder base class.
+ */
+struct _GstVaapiDecoderClass {
+    /*< private >*/
+    GstVaapiMiniObjectClass parent_class;
+
+    gboolean              (*create)(GstVaapiDecoder *decoder);
+    void                  (*destroy)(GstVaapiDecoder *decoder);
+    GstVaapiDecoderStatus (*parse)(GstVaapiDecoder *decoder,
+        GstAdapter *adapter, gboolean at_eos,
+        struct _GstVaapiDecoderUnit *unit);
+    GstVaapiDecoderStatus (*decode)(GstVaapiDecoder *decoder,
+        struct _GstVaapiDecoderUnit *unit);
+    GstVaapiDecoderStatus (*start_frame)(GstVaapiDecoder *decoder,
+        struct _GstVaapiDecoderUnit *unit);
+    GstVaapiDecoderStatus (*end_frame)(GstVaapiDecoder *decoder);
+    GstVaapiDecoderStatus (*flush)(GstVaapiDecoder *decoder);
+    GstVaapiDecoderStatus (*decode_codec_data)(GstVaapiDecoder *decoder,
+        const guchar *buf, guint buf_size);
+};
+
+G_GNUC_INTERNAL
+GstVaapiDecoder *
+gst_vaapi_decoder_new(const GstVaapiDecoderClass *klass,
+    GstVaapiDisplay *display, GstCaps *caps);
+
+G_GNUC_INTERNAL
+void
+gst_vaapi_decoder_finalize(GstVaapiDecoder *decoder);
 
 G_GNUC_INTERNAL
 void

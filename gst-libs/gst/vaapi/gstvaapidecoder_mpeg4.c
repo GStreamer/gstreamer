@@ -37,17 +37,11 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiDecoderMpeg4,
-              gst_vaapi_decoder_mpeg4,
-              GST_VAAPI_TYPE_DECODER)
-
 #define GST_VAAPI_DECODER_MPEG4_CAST(decoder) \
     ((GstVaapiDecoderMpeg4 *)(decoder))
 
-#define GST_VAAPI_DECODER_MPEG4_GET_PRIVATE(obj)                \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_DECODER_MPEG4,  \
-                                 GstVaapiDecoderMpeg4Private))
+typedef struct _GstVaapiDecoderMpeg4Private     GstVaapiDecoderMpeg4Private;
+typedef struct _GstVaapiDecoderMpeg4Class       GstVaapiDecoderMpeg4Class;
 
 struct _GstVaapiDecoderMpeg4Private {
     GstVaapiProfile                 profile;
@@ -89,7 +83,6 @@ struct _GstVaapiDecoderMpeg4Private {
     GstClockTime                    trd;
     // temporal_reference of previous frame of svh
     guint8                          prev_t_ref;
-    guint                           is_constructed          : 1;
     guint                           is_opened               : 1;
     guint                           is_first_field          : 1;
     guint                           size_changed            : 1;
@@ -101,10 +94,32 @@ struct _GstVaapiDecoderMpeg4Private {
     guint                           is_svh                  : 1;
 };
 
+/**
+ * GstVaapiDecoderMpeg4:
+ *
+ * A decoder based on Mpeg4.
+ */
+struct _GstVaapiDecoderMpeg4 {
+    /*< private >*/
+    GstVaapiDecoder             parent_instance;
+    GstVaapiDecoderMpeg4Private priv;
+};
+
+/**
+ * GstVaapiDecoderMpeg4Class:
+ *
+ * A decoder class based on Mpeg4.
+ */
+typedef struct _GstVaapiDecoderMpeg4Class GstVaapiDecoderMpeg4Class;
+struct _GstVaapiDecoderMpeg4Class {
+    /*< private >*/
+    GstVaapiDecoderClass parent_class;
+};
+
 static void
 gst_vaapi_decoder_mpeg4_close(GstVaapiDecoderMpeg4 *decoder)
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
 
     gst_vaapi_picture_replace(&priv->curr_picture, NULL);
     gst_vaapi_picture_replace(&priv->next_picture, NULL);
@@ -115,7 +130,7 @@ static gboolean
 gst_vaapi_decoder_mpeg4_open(GstVaapiDecoderMpeg4 *decoder)
 {
     GstVaapiDecoder *const base_decoder = GST_VAAPI_DECODER(decoder);
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstCaps *caps = NULL;
     GstStructure *structure = NULL;
 
@@ -137,16 +152,28 @@ gst_vaapi_decoder_mpeg4_open(GstVaapiDecoderMpeg4 *decoder)
 }
 
 static void
-gst_vaapi_decoder_mpeg4_destroy(GstVaapiDecoderMpeg4 *decoder)
+gst_vaapi_decoder_mpeg4_destroy(GstVaapiDecoder *base_decoder)
 {
+    GstVaapiDecoderMpeg4 * const decoder =
+        GST_VAAPI_DECODER_MPEG4_CAST(base_decoder);
+
     gst_vaapi_decoder_mpeg4_close(decoder);
 }
 
 static gboolean
-gst_vaapi_decoder_mpeg4_create(GstVaapiDecoderMpeg4 *decoder)
+gst_vaapi_decoder_mpeg4_create(GstVaapiDecoder *base_decoder)
 {
-    if (!GST_VAAPI_DECODER_CODEC(decoder))
-        return FALSE;
+    GstVaapiDecoderMpeg4 * const decoder =
+        GST_VAAPI_DECODER_MPEG4_CAST(base_decoder);
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
+
+    priv->profile               = GST_VAAPI_PROFILE_MPEG4_SIMPLE;
+    priv->seq_pts               = GST_CLOCK_TIME_NONE;
+    priv->gop_pts               = GST_CLOCK_TIME_NONE;
+    priv->max_pts               = GST_CLOCK_TIME_NONE;
+    priv->calculate_pts_diff    = TRUE;
+    priv->size_changed          = TRUE;
+    priv->profile_changed       = TRUE;
     return TRUE;
 }
 
@@ -159,7 +186,7 @@ copy_quant_matrix(guint8 dst[64], const guint8 src[64])
 static GstVaapiDecoderStatus
 ensure_context(GstVaapiDecoderMpeg4 *decoder)
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstVaapiProfile profiles[2];
     GstVaapiEntrypoint entrypoint = GST_VAAPI_ENTRYPOINT_VLD;
     guint i, n_profiles = 0;
@@ -211,7 +238,7 @@ ensure_context(GstVaapiDecoderMpeg4 *decoder)
 static GstVaapiDecoderStatus
 ensure_quant_matrix(GstVaapiDecoderMpeg4 *decoder, GstVaapiPicture *picture)
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     VAIQMatrixBufferMPEG4 *iq_matrix;
 
     if (!priv->vol_hdr.load_intra_quant_mat && !priv->vol_hdr.load_non_intra_quant_mat) {
@@ -260,7 +287,7 @@ render_picture(GstVaapiDecoderMpeg4 *decoder, GstVaapiPicture *picture)
 static GstVaapiDecoderStatus
 decode_current_picture(GstVaapiDecoderMpeg4 *decoder)
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstVaapiPicture * const picture = priv->curr_picture;
     GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_SUCCESS;
 
@@ -280,7 +307,7 @@ decode_current_picture(GstVaapiDecoderMpeg4 *decoder)
 static GstVaapiDecoderStatus
 decode_sequence(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstMpeg4VisualObjectSequence * const vos_hdr = &priv->vos_hdr;
     GstVaapiProfile profile;
 
@@ -315,7 +342,7 @@ decode_sequence(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size
 static GstVaapiDecoderStatus
 decode_sequence_end(GstVaapiDecoderMpeg4 *decoder)
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstVaapiDecoderStatus status;
 
     if (priv->curr_picture) {
@@ -338,7 +365,7 @@ decode_sequence_end(GstVaapiDecoderMpeg4 *decoder)
 static GstVaapiDecoderStatus
 decode_visual_object(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstMpeg4VisualObject * vo_hdr = &priv->vo_hdr;
     GstMpeg4VideoSignalType * signal_type = &priv->signal_type;
 
@@ -355,7 +382,7 @@ static GstVaapiDecoderStatus
 decode_video_object_layer(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
 {
     GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstMpeg4VisualObject * vo_hdr = &priv->vo_hdr;
     GstMpeg4VideoObjectLayer * vol_hdr = &priv->vol_hdr;
 
@@ -384,7 +411,7 @@ decode_video_object_layer(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guin
 static GstVaapiDecoderStatus
 decode_gop(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstMpeg4GroupOfVOP gop;
     GstClockTime gop_time;
 
@@ -427,7 +454,7 @@ calculate_pts_diff(GstVaapiDecoderMpeg4 *decoder,
                       GstMpeg4VideoObjectLayer *vol_hdr,
                       GstMpeg4VideoObjectPlane *vop_hdr)
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstClockTime frame_timestamp;
 
     frame_timestamp = GST_VAAPI_DECODER_CODEC_FRAME(decoder)->pts;
@@ -473,7 +500,7 @@ static GstVaapiDecoderStatus
 decode_picture(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
 {
     GstMpeg4ParseResult parser_result = GST_MPEG4_PARSER_OK;
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstMpeg4VideoObjectPlane * const vop_hdr = &priv->vop_hdr;
     GstMpeg4VideoObjectLayer * const vol_hdr = &priv->vol_hdr;
     GstMpeg4SpriteTrajectory * const sprite_trajectory = &priv->sprite_trajectory;
@@ -643,7 +670,7 @@ get_vop_coding_type(GstVaapiPicture *picture)
 static gboolean
 fill_picture(GstVaapiDecoderMpeg4 *decoder, GstVaapiPicture *picture)
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     VAPictureParameterBufferMPEG4 * const pic_param = picture->param;
     GstMpeg4VideoObjectPlane * const vop_hdr = &priv->vop_hdr;
 
@@ -742,7 +769,7 @@ decode_slice(
     gboolean              has_packet_header
 )
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstVaapiPicture * const picture = priv->curr_picture;
     GstVaapiSlice *slice;
     VASliceParameterBufferMPEG4 *slice_param;
@@ -786,7 +813,7 @@ decode_slice(
 static GstVaapiDecoderStatus
 decode_packet(GstVaapiDecoderMpeg4 *decoder, GstMpeg4Packet packet)
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstMpeg4Packet *tos = &packet;
     GstVaapiDecoderStatus status;
 
@@ -895,7 +922,7 @@ decode_packet(GstVaapiDecoderMpeg4 *decoder, GstMpeg4Packet packet)
 static GstVaapiDecoderStatus
 decode_buffer(GstVaapiDecoderMpeg4 *decoder, const guchar *buf, guint buf_size)
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstVaapiDecoderStatus status;
     GstMpeg4Packet packet;
     guint ofs;
@@ -967,11 +994,8 @@ gst_vaapi_decoder_mpeg4_decode_codec_data(GstVaapiDecoder *base_decoder,
 static GstVaapiDecoderStatus
 ensure_decoder(GstVaapiDecoderMpeg4 *decoder)
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstVaapiDecoderStatus status;
-
-    g_return_val_if_fail(priv->is_constructed,
-                         GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED);
 
     if (!priv->is_opened) {
         priv->is_opened = gst_vaapi_decoder_mpeg4_open(decoder);
@@ -991,8 +1015,8 @@ gst_vaapi_decoder_mpeg4_parse(GstVaapiDecoder *base_decoder,
     GstAdapter *adapter, gboolean at_eos, GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderMpeg4 * const decoder =
-        GST_VAAPI_DECODER_MPEG4(base_decoder);
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+        GST_VAAPI_DECODER_MPEG4_CAST(base_decoder);
+    GstVaapiDecoderMpeg4Private * const priv = &decoder->priv;
     GstVaapiDecoderStatus status;
     GstMpeg4Packet packet;
     GstMpeg4ParseResult result;
@@ -1081,7 +1105,7 @@ gst_vaapi_decoder_mpeg4_decode(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderUnit *unit)
 {
     GstVaapiDecoderMpeg4 * const decoder =
-        GST_VAAPI_DECODER_MPEG4(base_decoder);
+        GST_VAAPI_DECODER_MPEG4_CAST(base_decoder);
     GstVaapiDecoderStatus status;
     GstBuffer * const buffer =
         GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
@@ -1104,40 +1128,17 @@ gst_vaapi_decoder_mpeg4_decode(GstVaapiDecoder *base_decoder,
 }
 
 static void
-gst_vaapi_decoder_mpeg4_finalize(GObject *object)
-{
-    GstVaapiDecoderMpeg4 * const decoder = GST_VAAPI_DECODER_MPEG4(object);
-
-    gst_vaapi_decoder_mpeg4_destroy(decoder);
-
-    G_OBJECT_CLASS(gst_vaapi_decoder_mpeg4_parent_class)->finalize(object);
-}
-
-static void
-gst_vaapi_decoder_mpeg4_constructed(GObject *object)
-{
-    GstVaapiDecoderMpeg4 * const decoder = GST_VAAPI_DECODER_MPEG4(object);
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
-    GObjectClass *parent_class;
-
-    parent_class = G_OBJECT_CLASS(gst_vaapi_decoder_mpeg4_parent_class);
-    if (parent_class->constructed)
-        parent_class->constructed(object);
-
-    priv->is_constructed = gst_vaapi_decoder_mpeg4_create(decoder);
-}
-
-static void
 gst_vaapi_decoder_mpeg4_class_init(GstVaapiDecoderMpeg4Class *klass)
 {
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
+    GstVaapiMiniObjectClass * const object_class =
+        GST_VAAPI_MINI_OBJECT_CLASS(klass);
     GstVaapiDecoderClass * const decoder_class = GST_VAAPI_DECODER_CLASS(klass);
 
-    g_type_class_add_private(klass, sizeof(GstVaapiDecoderMpeg4Private));
+    object_class->size          = sizeof(GstVaapiDecoderMpeg4);
+    object_class->finalize      = (GDestroyNotify)gst_vaapi_decoder_finalize;
 
-    object_class->finalize      = gst_vaapi_decoder_mpeg4_finalize;
-    object_class->constructed   = gst_vaapi_decoder_mpeg4_constructed;
-
+    decoder_class->create       = gst_vaapi_decoder_mpeg4_create;
+    decoder_class->destroy      = gst_vaapi_decoder_mpeg4_destroy;
     decoder_class->parse        = gst_vaapi_decoder_mpeg4_parse;
     decoder_class->decode       = gst_vaapi_decoder_mpeg4_decode;
 
@@ -1145,38 +1146,17 @@ gst_vaapi_decoder_mpeg4_class_init(GstVaapiDecoderMpeg4Class *klass)
         gst_vaapi_decoder_mpeg4_decode_codec_data;
 }
 
-static void
-gst_vaapi_decoder_mpeg4_init(GstVaapiDecoderMpeg4 *decoder)
+static inline const GstVaapiDecoderClass *
+gst_vaapi_decoder_mpeg4_class(void)
 {
-    GstVaapiDecoderMpeg4Private *priv;
+    static GstVaapiDecoderMpeg4Class g_class;
+    static gsize g_class_init = FALSE;
 
-    priv                        = GST_VAAPI_DECODER_MPEG4_GET_PRIVATE(decoder);
-    decoder->priv               = priv;
-    priv->width                 = 0;
-    priv->height                = 0;
-    priv->fps_n                 = 0;
-    priv->fps_d                 = 0;
-    priv->profile               = GST_VAAPI_PROFILE_MPEG4_SIMPLE;
-    priv->curr_picture          = NULL;
-    priv->next_picture          = NULL;
-    priv->prev_picture          = NULL;
-    priv->seq_pts               = GST_CLOCK_TIME_NONE;
-    priv->gop_pts               = GST_CLOCK_TIME_NONE;
-    priv->max_pts               = GST_CLOCK_TIME_NONE;
-    priv->pts_diff              = 0;
-    priv->calculate_pts_diff    = TRUE;
-    priv->is_constructed        = FALSE;
-    priv->is_opened             = FALSE;
-    priv->is_first_field        = FALSE;
-    priv->size_changed          = TRUE;
-    priv->profile_changed       = TRUE;
-    priv->progressive_sequence  = FALSE;
-    priv->closed_gop            = FALSE;
-    priv->broken_link           = FALSE;
-    priv->last_non_b_scale_time = 0;
-    priv->non_b_scale_time      = 0;
-    priv->trb                   = 0;
-    priv->trd                   = 0;
+    if (g_once_init_enter(&g_class_init)) {
+        gst_vaapi_decoder_mpeg4_class_init(&g_class);
+        g_once_init_leave(&g_class_init, TRUE);
+    }
+    return GST_VAAPI_DECODER_CLASS(&g_class);
 }
 
 /**
@@ -1192,20 +1172,6 @@ gst_vaapi_decoder_mpeg4_init(GstVaapiDecoderMpeg4 *decoder)
 GstVaapiDecoder *
 gst_vaapi_decoder_mpeg4_new(GstVaapiDisplay *display, GstCaps *caps)
 {
-    GstVaapiDecoderMpeg4 *decoder;
-
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
-    g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
-
-    decoder = g_object_new(
-        GST_VAAPI_TYPE_DECODER_MPEG4,
-        "display",      display,
-        "caps",         caps,
-        NULL
-    );
-    if (!decoder->priv->is_constructed) {
-        g_object_unref(decoder);
-        return NULL;
-    }
-    return GST_VAAPI_DECODER_CAST(decoder);
+    return gst_vaapi_decoder_new(gst_vaapi_decoder_mpeg4_class(),
+        display, caps);
 }

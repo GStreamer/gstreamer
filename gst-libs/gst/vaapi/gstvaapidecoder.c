@@ -32,23 +32,9 @@
 #include "gstvaapiparser_frame.h"
 #include "gstvaapisurfaceproxy_priv.h"
 #include "gstvaapiutils.h"
-#include "gstvaapi_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
-
-G_DEFINE_TYPE(GstVaapiDecoder, gst_vaapi_decoder, G_TYPE_OBJECT)
-
-enum {
-    PROP_0,
-
-    PROP_DISPLAY,
-    PROP_CAPS,
-
-    N_PROPERTIES
-};
-
-static GParamSpec *g_properties[N_PROPERTIES] = { NULL, };
 
 static void
 drop_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame);
@@ -77,6 +63,8 @@ parser_state_finalize(GstVaapiParserState *ps)
 static gboolean
 parser_state_init(GstVaapiParserState *ps)
 {
+    memset(ps, 0, sizeof(*ps));
+
     ps->input_adapter = gst_adapter_new();
     if (!ps->input_adapter)
         return FALSE;
@@ -103,8 +91,6 @@ reset:
 static gboolean
 push_buffer(GstVaapiDecoder *decoder, GstBuffer *buffer)
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-
     if (!buffer) {
         buffer = gst_buffer_new();
         if (!buffer)
@@ -115,17 +101,16 @@ push_buffer(GstVaapiDecoder *decoder, GstBuffer *buffer)
     GST_DEBUG("queue encoded data buffer %p (%d bytes)",
               buffer, gst_buffer_get_size(buffer));
 
-    g_async_queue_push(priv->buffers, buffer);
+    g_async_queue_push(decoder->buffers, buffer);
     return TRUE;
 }
 
 static GstBuffer *
 pop_buffer(GstVaapiDecoder *decoder)
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
     GstBuffer *buffer;
 
-    buffer = g_async_queue_try_pop(priv->buffers);
+    buffer = g_async_queue_try_pop(decoder->buffers);
     if (!buffer)
         return NULL;
 
@@ -140,8 +125,7 @@ do_parse(GstVaapiDecoder *decoder,
     GstVideoCodecFrame *base_frame, GstAdapter *adapter, gboolean at_eos,
     guint *got_unit_size_ptr, gboolean *got_frame_ptr)
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-    GstVaapiParserState * const ps = &priv->parser_state;
+    GstVaapiParserState * const ps = &decoder->parser_state;
     GstVaapiParserFrame *frame;
     GstVaapiDecoderUnit *unit;
     GstVaapiDecoderStatus status;
@@ -151,7 +135,7 @@ do_parse(GstVaapiDecoder *decoder,
 
     frame = gst_video_codec_frame_get_user_data(base_frame);
     if (!frame) {
-        GstVideoCodecState * const codec_state = priv->codec_state;
+        GstVideoCodecState * const codec_state = decoder->codec_state;
         frame = gst_vaapi_parser_frame_new(codec_state->info.width,
             codec_state->info.height);
         if (!frame)
@@ -261,7 +245,7 @@ do_decode_1(GstVaapiDecoder *decoder, GstVaapiParserFrame *frame)
 static inline GstVaapiDecoderStatus
 do_decode(GstVaapiDecoder *decoder, GstVideoCodecFrame *base_frame)
 {
-    GstVaapiParserState * const ps = &decoder->priv->parser_state;
+    GstVaapiParserState * const ps = &decoder->parser_state;
     GstVaapiParserFrame * const frame = base_frame->user_data;
     GstVaapiDecoderStatus status;
 
@@ -293,8 +277,7 @@ do_flush(GstVaapiDecoder *decoder)
 static GstVaapiDecoderStatus
 decode_step(GstVaapiDecoder *decoder)
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-    GstVaapiParserState * const ps = &priv->parser_state;
+    GstVaapiParserState * const ps = &decoder->parser_state;
     GstVaapiDecoderStatus status;
     GstBuffer *buffer;
     gboolean got_frame;
@@ -370,8 +353,6 @@ decode_step(GstVaapiDecoder *decoder)
 static void
 drop_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-
     GST_DEBUG("drop frame %d", frame->system_frame_number);
 
     /* no surface proxy */
@@ -381,32 +362,30 @@ drop_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
     GST_VIDEO_CODEC_FRAME_FLAG_SET(frame,
         GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
 
-    g_async_queue_push(priv->frames, gst_video_codec_frame_ref(frame));
+    g_async_queue_push(decoder->frames, gst_video_codec_frame_ref(frame));
 }
 
 static inline void
 push_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
     GstVaapiSurfaceProxy * const proxy = frame->user_data;
 
     GST_DEBUG("queue decoded surface %" GST_VAAPI_ID_FORMAT,
               GST_VAAPI_ID_ARGS(GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy)));
 
-    g_async_queue_push(priv->frames, gst_video_codec_frame_ref(frame));
+    g_async_queue_push(decoder->frames, gst_video_codec_frame_ref(frame));
 }
 
 static inline GstVideoCodecFrame *
 pop_frame(GstVaapiDecoder *decoder, guint64 timeout)
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
     GstVideoCodecFrame *frame;
     GstVaapiSurfaceProxy *proxy;
 
     if (G_LIKELY(timeout > 0))
-        frame = g_async_queue_timeout_pop(priv->frames, timeout);
+        frame = g_async_queue_timeout_pop(decoder->frames, timeout);
     else
-        frame = g_async_queue_try_pop(priv->frames);
+        frame = g_async_queue_try_pop(decoder->frames);
     if (!frame)
         return NULL;
 
@@ -417,25 +396,24 @@ pop_frame(GstVaapiDecoder *decoder, guint64 timeout)
     return frame;
 }
 
-static void
+static gboolean
 set_caps(GstVaapiDecoder *decoder, const GstCaps *caps)
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-    GstVideoCodecState * const codec_state = priv->codec_state;
+    GstVideoCodecState * const codec_state = decoder->codec_state;
     GstStructure * const structure = gst_caps_get_structure(caps, 0);
     GstVaapiProfile profile;
     const GValue *v_codec_data;
 
     profile = gst_vaapi_profile_from_caps(caps);
     if (!profile)
-        return;
+        return FALSE;
 
-    priv->codec = gst_vaapi_profile_get_codec(profile);
-    if (!priv->codec)
-        return;
+    decoder->codec = gst_vaapi_profile_get_codec(profile);
+    if (!decoder->codec)
+        return FALSE;
 
     if (!gst_video_info_from_caps(&codec_state->info, caps))
-        return;
+        return FALSE;
 
     codec_state->caps = gst_caps_copy(caps);
 
@@ -443,6 +421,7 @@ set_caps(GstVaapiDecoder *decoder, const GstCaps *caps)
     if (v_codec_data)
         gst_buffer_replace(&codec_state->codec_data,
             gst_value_get_buffer(v_codec_data));
+    return TRUE;
 }
 
 static inline GstCaps *
@@ -452,142 +431,181 @@ get_caps(GstVaapiDecoder *decoder)
 }
 
 static void
-gst_vaapi_decoder_finalize(GObject *object)
+notify_codec_state_changed(GstVaapiDecoder *decoder)
 {
-    GstVaapiDecoder * const        decoder = GST_VAAPI_DECODER(object);
-    GstVaapiDecoderPrivate * const priv    = decoder->priv;
+    if (decoder->codec_state_changed_func)
+        decoder->codec_state_changed_func(decoder, decoder->codec_state,
+            decoder->codec_state_changed_data);
+}
 
-    gst_video_codec_state_unref(priv->codec_state);
-    priv->codec_state = NULL;
+void
+gst_vaapi_decoder_finalize(GstVaapiDecoder *decoder)
+{
+    const GstVaapiDecoderClass * const klass =
+        GST_VAAPI_DECODER_GET_CLASS(decoder);
 
-    parser_state_finalize(&priv->parser_state);
+    if (klass->destroy)
+        klass->destroy(decoder);
+
+    gst_video_codec_state_unref(decoder->codec_state);
+    decoder->codec_state = NULL;
+
+    parser_state_finalize(&decoder->parser_state);
  
-    if (priv->buffers) {
-        g_async_queue_unref(priv->buffers);
-        priv->buffers = NULL;
+    if (decoder->buffers) {
+        g_async_queue_unref(decoder->buffers);
+        decoder->buffers = NULL;
     }
 
-    if (priv->frames) {
-        g_async_queue_unref(priv->frames);
-        priv->frames = NULL;
+    if (decoder->frames) {
+        g_async_queue_unref(decoder->frames);
+        decoder->frames = NULL;
     }
 
-    gst_vaapi_object_replace(&priv->context, NULL);
-    priv->va_context = VA_INVALID_ID;
+    gst_vaapi_object_replace(&decoder->context, NULL);
+    decoder->va_context = VA_INVALID_ID;
 
-    g_clear_object(&priv->display);
-    priv->va_display = NULL;
-
-    G_OBJECT_CLASS(gst_vaapi_decoder_parent_class)->finalize(object);
+    g_clear_object(&decoder->display);
+    decoder->va_display = NULL;
 }
 
-static void
-gst_vaapi_decoder_set_property(
-    GObject      *object,
-    guint         prop_id,
-    const GValue *value,
-    GParamSpec   *pspec
-)
+static gboolean
+gst_vaapi_decoder_init(GstVaapiDecoder *decoder, GstVaapiDisplay *display,
+    GstCaps *caps)
 {
-    GstVaapiDecoder * const        decoder = GST_VAAPI_DECODER(object);
-    GstVaapiDecoderPrivate * const priv    = decoder->priv;
-
-    switch (prop_id) {
-    case PROP_DISPLAY:
-        priv->display = g_object_ref(g_value_get_object(value));
-        if (priv->display)
-            priv->va_display = gst_vaapi_display_get_display(priv->display);
-        else
-            priv->va_display = NULL;
-        break;
-    case PROP_CAPS:
-        set_caps(decoder, g_value_get_pointer(value));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_decoder_get_property(
-    GObject    *object,
-    guint       prop_id,
-    GValue     *value,
-    GParamSpec *pspec
-)
-{
-    GstVaapiDecoder * const decoder = GST_VAAPI_DECODER_CAST(object);
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-
-    switch (prop_id) {
-    case PROP_DISPLAY:
-        g_value_set_object(value, priv->display);
-        break;
-    case PROP_CAPS:
-        gst_value_set_caps(value, get_caps(decoder));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_decoder_class_init(GstVaapiDecoderClass *klass)
-{
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
-
-    g_type_class_add_private(klass, sizeof(GstVaapiDecoderPrivate));
-
-    object_class->finalize     = gst_vaapi_decoder_finalize;
-    object_class->set_property = gst_vaapi_decoder_set_property;
-    object_class->get_property = gst_vaapi_decoder_get_property;
-
-    /**
-     * GstVaapiDecoder:display:
-     *
-     * The #GstVaapiDisplay this decoder is bound to.
-     */
-    g_properties[PROP_DISPLAY] =
-         g_param_spec_object("display",
-                             "Display",
-                             "The GstVaapiDisplay this decoder is bound to",
-                             GST_VAAPI_TYPE_DISPLAY,
-                             G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY);
-
-    g_properties[PROP_CAPS] =
-         g_param_spec_pointer("caps",
-                              "Decoder caps",
-                              "The decoder caps",
-                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY);
-
-    g_object_class_install_properties(object_class, N_PROPERTIES, g_properties);
-}
-
-static void
-gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
-{
-    GstVaapiDecoderPrivate *priv = GST_VAAPI_DECODER_GET_PRIVATE(decoder);
+    const GstVaapiDecoderClass * const klass =
+        GST_VAAPI_DECODER_GET_CLASS(decoder);
     GstVideoCodecState *codec_state;
+    guint sub_size;
 
-    parser_state_init(&priv->parser_state);
+    parser_state_init(&decoder->parser_state);
 
     codec_state = g_slice_new0(GstVideoCodecState);
     codec_state->ref_count = 1;
     gst_video_info_init(&codec_state->info);
 
-    decoder->priv               = priv;
-    priv->display               = NULL;
-    priv->va_display            = NULL;
-    priv->context               = NULL;
-    priv->va_context            = VA_INVALID_ID;
-    priv->codec                 = 0;
-    priv->codec_state           = codec_state;
+    decoder->user_data   = NULL;
+    decoder->display     = g_object_ref(display);
+    decoder->va_display  = GST_VAAPI_DISPLAY_VADISPLAY(display);
+    decoder->context     = NULL;
+    decoder->va_context  = VA_INVALID_ID;
+    decoder->codec       = 0;
+    decoder->codec_state = codec_state;
+    decoder->codec_state_changed_func = NULL;
+    decoder->codec_state_changed_data = NULL;
 
-    priv->buffers = g_async_queue_new_full((GDestroyNotify)gst_buffer_unref);
-    priv->frames  = g_async_queue_new_full((GDestroyNotify)
+    decoder->buffers = g_async_queue_new_full((GDestroyNotify)gst_buffer_unref);
+    decoder->frames  = g_async_queue_new_full((GDestroyNotify)
         gst_video_codec_frame_unref);
+
+    if (!set_caps(decoder, caps))
+        return FALSE;
+
+    sub_size = GST_VAAPI_MINI_OBJECT_CLASS(klass)->size - sizeof(*decoder);
+    if (sub_size > 0)
+        memset(((guchar *)decoder) + sizeof(*decoder), 0, sub_size);
+
+    if (klass->create && !klass->create(decoder))
+        return FALSE;
+    return TRUE;
+}
+
+GstVaapiDecoder *
+gst_vaapi_decoder_new(const GstVaapiDecoderClass *klass,
+    GstVaapiDisplay *display, GstCaps *caps)
+{
+    GstVaapiDecoder *decoder;
+
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
+
+    decoder = (GstVaapiDecoder *)
+        gst_vaapi_mini_object_new(GST_VAAPI_MINI_OBJECT_CLASS(klass));
+    if (!decoder)
+        return NULL;
+
+    if (!gst_vaapi_decoder_init(decoder, display, caps))
+        goto error;
+    return decoder;
+
+error:
+    gst_vaapi_decoder_unref(decoder);
+    return NULL;
+}
+
+/**
+ * gst_vaapi_decoder_ref:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Atomically increases the reference count of the given @decoder by one.
+ *
+ * Returns: The same @decoder argument
+ */
+GstVaapiDecoder *
+gst_vaapi_decoder_ref(GstVaapiDecoder *decoder)
+{
+    return gst_vaapi_object_ref(decoder);
+}
+
+/**
+ * gst_vaapi_decoder_unref:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Atomically decreases the reference count of the @decoder by one. If
+ * the reference count reaches zero, the decoder will be free'd.
+ */
+void
+gst_vaapi_decoder_unref(GstVaapiDecoder *decoder)
+{
+    gst_vaapi_object_unref(decoder);
+}
+
+/**
+ * gst_vaapi_decoder_replace:
+ * @old_decoder_ptr: a pointer to a #GstVaapiDecoder
+ * @new_decoder: a #GstVaapiDecoder
+ *
+ * Atomically replaces the decoder decoder held in @old_decoder_ptr
+ * with @new_decoder. This means that @old_decoder_ptr shall reference
+ * a valid decoder. However, @new_decoder can be NULL.
+ */
+void
+gst_vaapi_decoder_replace(GstVaapiDecoder **old_decoder_ptr,
+    GstVaapiDecoder *new_decoder)
+{
+    gst_vaapi_object_replace(old_decoder_ptr, new_decoder);
+}
+
+/**
+ * gst_vaapi_decoder_get_user_data:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Retrieves the user-defined data associated with the @decoder, if any.
+ *
+ * Return value: the user-defined data associated with the @decoder
+ */
+gpointer
+gst_vaapi_decoder_get_user_data(GstVaapiDecoder *decoder)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
+
+    return decoder->user_data;
+}
+
+/**
+ * gst_vaapi_decoder_set_user_data:
+ * @decoder: a #GstVaapiDecoder
+ * @user_data: the pointer to user-defined data
+ *
+ * Associates user-defined @user_data to the @decoder. Retrieve the
+ * attached value with gst_vaapi_decoder_get_user_data() function.
+ */
+void
+gst_vaapi_decoder_set_user_data(GstVaapiDecoder *decoder, gpointer user_data)
+{
+    g_return_if_fail(GST_VAAPI_IS_DECODER(decoder));
+
+    decoder->user_data = user_data;
 }
 
 /**
@@ -603,7 +621,7 @@ gst_vaapi_decoder_get_codec(GstVaapiDecoder *decoder)
 {
     g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), (GstVaapiCodec)0);
 
-    return decoder->priv->codec;
+    return decoder->codec;
 }
 
 /**
@@ -622,6 +640,25 @@ gst_vaapi_decoder_get_codec_state(GstVaapiDecoder *decoder)
     g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
 
     return GST_VAAPI_DECODER_CODEC_STATE(decoder);
+}
+
+/**
+ * gst_vaapi_decoder_set_codec_state_changed_func:
+ * @decoder: a #GstVaapiDecoder
+ * @func: the function to call when codec state changed
+ * @user_data: a pointer to user-defined data
+ *
+ * Sets @func as the function to call whenever the @decoder codec
+ * state changes.
+ */
+void
+gst_vaapi_decoder_set_codec_state_changed_func(GstVaapiDecoder *decoder,
+    GstVaapiDecoderStateChangedFunc func, gpointer user_data)
+{
+    g_return_if_fail(GST_VAAPI_IS_DECODER(decoder));
+
+    decoder->codec_state_changed_func = func;
+    decoder->codec_state_changed_data = user_data;
 }
 
 /**
@@ -800,7 +837,7 @@ gst_vaapi_decoder_set_picture_size(
     guint               height
 )
 {
-    GstVideoCodecState * const codec_state = decoder->priv->codec_state;
+    GstVideoCodecState * const codec_state = decoder->codec_state;
     gboolean size_changed = FALSE;
 
     if (codec_state->info.width != width) {
@@ -820,7 +857,7 @@ gst_vaapi_decoder_set_picture_size(
     }
 
     if (size_changed)
-        g_object_notify_by_pspec(G_OBJECT(decoder), g_properties[PROP_CAPS]);
+        notify_codec_state_changed(decoder);
 }
 
 void
@@ -830,7 +867,7 @@ gst_vaapi_decoder_set_framerate(
     guint               fps_d
 )
 {
-    GstVideoCodecState * const codec_state = decoder->priv->codec_state;
+    GstVideoCodecState * const codec_state = decoder->codec_state;
 
     if (!fps_n || !fps_d)
         return;
@@ -841,7 +878,7 @@ gst_vaapi_decoder_set_framerate(
         codec_state->info.fps_d = fps_d;
         gst_caps_set_simple(codec_state->caps,
             "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
-        g_object_notify_by_pspec(G_OBJECT(decoder), g_properties[PROP_CAPS]);
+        notify_codec_state_changed(decoder);
     }
 }
 
@@ -852,7 +889,7 @@ gst_vaapi_decoder_set_pixel_aspect_ratio(
     guint               par_d
 )
 {
-    GstVideoCodecState * const codec_state = decoder->priv->codec_state;
+    GstVideoCodecState * const codec_state = decoder->codec_state;
 
     if (!par_n || !par_d)
         return;
@@ -863,7 +900,7 @@ gst_vaapi_decoder_set_pixel_aspect_ratio(
         codec_state->info.par_d = par_d;
         gst_caps_set_simple(codec_state->caps,
             "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
-        g_object_notify_by_pspec(G_OBJECT(decoder), g_properties[PROP_CAPS]);
+        notify_codec_state_changed(decoder);
     }
 }
 
@@ -882,7 +919,7 @@ void
 gst_vaapi_decoder_set_interlace_mode(GstVaapiDecoder *decoder,
     GstVideoInterlaceMode mode)
 {
-    GstVideoCodecState * const codec_state = decoder->priv->codec_state;
+    GstVideoCodecState * const codec_state = decoder->codec_state;
 
     if (codec_state->info.interlace_mode != mode) {
         GST_DEBUG("interlace mode changed to %s",
@@ -890,7 +927,7 @@ gst_vaapi_decoder_set_interlace_mode(GstVaapiDecoder *decoder,
         codec_state->info.interlace_mode = mode;
         gst_caps_set_simple(codec_state->caps, "interlaced",
             G_TYPE_BOOLEAN, mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE, NULL);
-        g_object_notify_by_pspec(G_OBJECT(decoder), g_properties[PROP_CAPS]);
+        notify_codec_state_changed(decoder);
     }
 }
 
@@ -909,20 +946,18 @@ gst_vaapi_decoder_ensure_context(
     GstVaapiContextInfo *cip
 )
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-
     gst_vaapi_decoder_set_picture_size(decoder, cip->width, cip->height);
 
-    if (priv->context) {
-        if (!gst_vaapi_context_reset_full(priv->context, cip))
+    if (decoder->context) {
+        if (!gst_vaapi_context_reset_full(decoder->context, cip))
             return FALSE;
     }
     else {
-        priv->context = gst_vaapi_context_new_full(priv->display, cip);
-        if (!priv->context)
+        decoder->context = gst_vaapi_context_new_full(decoder->display, cip);
+        if (!decoder->context)
             return FALSE;
     }
-    priv->va_context = gst_vaapi_context_get_id(priv->context);
+    decoder->va_context = gst_vaapi_context_get_id(decoder->context);
     return TRUE;
 }
 
@@ -936,9 +971,8 @@ gst_vaapi_decoder_push_frame(GstVaapiDecoder *decoder,
 GstVaapiDecoderStatus
 gst_vaapi_decoder_check_status(GstVaapiDecoder *decoder)
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-
-    if (priv->context && gst_vaapi_context_get_surface_count(priv->context) < 1)
+    if (decoder->context &&
+        gst_vaapi_context_get_surface_count(decoder->context) < 1)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }

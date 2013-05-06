@@ -31,34 +31,15 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_DECODER \
-    (gst_vaapi_decoder_get_type())
-
-#define GST_VAAPI_DECODER(obj)                          \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_VAAPI_TYPE_DECODER, \
-                                GstVaapiDecoder))
-
-#define GST_VAAPI_DECODER_CLASS(klass)                  \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_VAAPI_TYPE_DECODER,    \
-                             GstVaapiDecoderClass))
+#define GST_VAAPI_DECODER(obj) \
+    ((GstVaapiDecoder *)(obj))
 
 #define GST_VAAPI_IS_DECODER(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_DECODER))
-
-#define GST_VAAPI_IS_DECODER_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_DECODER))
-
-#define GST_VAAPI_DECODER_GET_CLASS(obj)                \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_VAAPI_TYPE_DECODER,  \
-                               GstVaapiDecoderClass))
+    ((obj) != NULL)
 
 typedef struct _GstVaapiDecoder                 GstVaapiDecoder;
-typedef struct _GstVaapiDecoderPrivate          GstVaapiDecoderPrivate;
-typedef struct _GstVaapiDecoderClass            GstVaapiDecoderClass;
-        struct _GstVaapiDecoderUnit;
+typedef void (*GstVaapiDecoderStateChangedFunc)(GstVaapiDecoder *decoder,
+    const GstVideoCodecState *codec_state, gpointer user_data);
 
 /**
  * GstVaapiDecoderStatus:
@@ -94,48 +75,31 @@ typedef enum {
     GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN = -1
 } GstVaapiDecoderStatus;
 
-/**
- * GstVaapiDecoder:
- *
- * A VA decoder base instance.
- */
-struct _GstVaapiDecoder {
-    /*< private >*/
-    GObject parent_instance;
+GstVaapiDecoder *
+gst_vaapi_decoder_ref(GstVaapiDecoder *decoder);
 
-    GstVaapiDecoderPrivate *priv;
-};
+void
+gst_vaapi_decoder_unref(GstVaapiDecoder *decoder);
 
-/**
- * GstVaapiDecoderClass:
- *
- * A VA decoder base class.
- */
-struct _GstVaapiDecoderClass {
-    /*< private >*/
-    GObjectClass parent_class;
+void
+gst_vaapi_decoder_replace(GstVaapiDecoder **old_decoder_ptr,
+    GstVaapiDecoder *new_decoder);
 
-    GstVaapiDecoderStatus (*parse)(GstVaapiDecoder *decoder,
-        GstAdapter *adapter, gboolean at_eos,
-        struct _GstVaapiDecoderUnit *unit);
-    GstVaapiDecoderStatus (*decode)(GstVaapiDecoder *decoder,
-        struct _GstVaapiDecoderUnit *unit);
-    GstVaapiDecoderStatus (*start_frame)(GstVaapiDecoder *decoder,
-        struct _GstVaapiDecoderUnit *unit);
-    GstVaapiDecoderStatus (*end_frame)(GstVaapiDecoder *decoder);
-    GstVaapiDecoderStatus (*flush)(GstVaapiDecoder *decoder);
-    GstVaapiDecoderStatus (*decode_codec_data)(GstVaapiDecoder *decoder,
-        const guchar *buf, guint buf_size);
-};
+gpointer
+gst_vaapi_decoder_get_user_data(GstVaapiDecoder *decoder);
 
-GType
-gst_vaapi_decoder_get_type(void) G_GNUC_CONST;
+void
+gst_vaapi_decoder_set_user_data(GstVaapiDecoder *decoder, gpointer user_data);
 
 GstVaapiCodec
 gst_vaapi_decoder_get_codec(GstVaapiDecoder *decoder);
 
 GstVideoCodecState *
 gst_vaapi_decoder_get_codec_state(GstVaapiDecoder *decoder);
+
+void
+gst_vaapi_decoder_set_codec_state_changed_func(GstVaapiDecoder *decoder,
+    GstVaapiDecoderStateChangedFunc func, gpointer user_data);
 
 GstCaps *
 gst_vaapi_decoder_get_caps(GstVaapiDecoder *decoder);
