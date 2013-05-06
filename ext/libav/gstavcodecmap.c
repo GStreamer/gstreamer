@@ -1096,7 +1096,14 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           "wmaversion", G_TYPE_INT, 3, NULL);
       break;
     }
-
+    case AV_CODEC_ID_WMALOSSLESS:
+    {
+      /* libav only supports a depth of 16 at the moment */
+      caps =
+          gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-wma",
+          "wmaversion", G_TYPE_INT, 4, "depth", G_TYPE_INT, 16, NULL);
+      break;
+    }
     case CODEC_ID_WMAVOICE:
     {
       caps =
