@@ -1043,8 +1043,8 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux, gboolean * popped)
     }
 
     /* we should have a buffer now, see if it is the best pad to
-     * pull on */
-    if (pad->buffer) {
+     * pull on. Our best pad can't be eos */
+    if (pad->buffer && !pad->eos) {
       if (gst_ogg_mux_compare_pads (ogg_mux, bestpad, pad) > 0) {
         GST_LOG_OBJECT (data->pad,
             "new best pad, with buffer %" GST_PTR_FORMAT, pad->buffer);
