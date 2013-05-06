@@ -10,6 +10,10 @@
 
 @implementation ViewController
 
+/*
+ * Methods from UIViewController
+ */
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -26,15 +30,21 @@
     // Dispose of any resources that can be recreated.
 }
 
+/* Called when the Play button is pressed */
 -(IBAction) play:(id)sender
 {
     [gst_backend play];
 }
 
+/* Called when the Pause button is pressed */
 -(IBAction) pause:(id)sender
 {
     [gst_backend pause];
 }
+
+/*
+ * Methods from GstreamerBackendDelegate
+ */
 
 -(void) gstreamerInitialized
 {

@@ -2,6 +2,9 @@
 
 #include <gst/gst.h>
 
+GST_DEBUG_CATEGORY_STATIC (debug_category);
+#define GST_CAT_DEFAULT debug_category
+
 @interface GStreamerBackend()
 -(void)setUIMessage:(gchar*) message;
 -(void)app_function;
@@ -9,18 +12,25 @@
 @end
 
 @implementation GStreamerBackend {
-    id delegate;           /* Class that we use to interact with the user interface */
+    id ui_delegate;        /* Class that we use to interact with the user interface */
     GstElement *pipeline;  /* The running pipeline */
     GMainContext *context; /* GLib context used to run the main loop */
     GMainLoop *main_loop;  /* GLib main loop */
     gboolean initialized;  /* To avoid informing the UI multiple times about the initialization */
 }
 
+/*
+ * Interface methods
+ */
+
 -(id) init:(id) uiDelegate
 {
     if (self = [super init])
     {
-        self->delegate = uiDelegate;
+        self->ui_delegate = uiDelegate;
+
+        GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-2", 0, "iOS tutorial 2");
+        gst_debug_set_threshold_for_name("tutorial-2", GST_LEVEL_DEBUG);
 
         /* Start the bus monitoring task */
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -34,18 +44,38 @@
 -(void) dealloc
 {
     if (pipeline) {
+        GST_DEBUG("Setting the pipeline to NULL");
         gst_element_set_state(pipeline, GST_STATE_NULL);
         gst_object_unref(pipeline);
         pipeline = NULL;
     }
 }
 
+-(void) play
+{
+    if(gst_element_set_state(pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+        [self setUIMessage:"Failed to set pipeline to playing"];
+    }
+}
+
+-(void) pause
+{
+    if(gst_element_set_state(pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE) {
+        [self setUIMessage:"Failed to set pipeline to paused"];
+    }
+}
+
+/*
+ * Private methods
+ */
+
+/* Change the message on the UI through the UI delegate */
 -(void)setUIMessage:(gchar*) message
 {
     NSString *string = [NSString stringWithUTF8String:message];
-    if(delegate && [delegate respondsToSelector:@selector(gstreamerSetUIMessage:)])
+    if(ui_delegate && [ui_delegate respondsToSelector:@selector(gstreamerSetUIMessage:)])
     {
-        [delegate gstreamerSetUIMessage:string];
+        [ui_delegate gstreamerSetUIMessage:string];
     }
 }
 
@@ -84,15 +114,15 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
 {
     if (!initialized && main_loop) {
         GST_DEBUG ("Initialization complete, notifying application.");
-        if (delegate && [delegate respondsToSelector:@selector(gstreamerInitialized)])
+        if (ui_delegate && [ui_delegate respondsToSelector:@selector(gstreamerInitialized)])
         {
-            [delegate gstreamerInitialized];
+            [ui_delegate gstreamerInitialized];
         }
         initialized = TRUE;
     }
 }
 
-/* Main method for the native code. This is executed on its own thread. */
+/* Main method for the bus monitoring code */
 -(void) app_function
 {
     GstBus *bus;
@@ -141,26 +171,6 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     gst_object_unref (pipeline);
     
     return;
-}
-
--(void) play
-{
-    if(gst_element_set_state(pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-        [self setUIMessage:"Failed to set pipeline to playing"];
-    }
-}
-
--(void) pause
-{
-    if(gst_element_set_state(pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE) {
-        [self setUIMessage:"Failed to set pipeline to paused"];
-    }
-}
-
--(void) stop
-{
-    if(pipeline)
-        gst_element_set_state(pipeline, GST_STATE_NULL);
 }
 
 @end
