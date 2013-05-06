@@ -4083,9 +4083,11 @@ source_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       return GST_PAD_PROBE_PASS;
     }
 
-    if (GST_EVENT_IS_STICKY (event)) {
+    if (GST_EVENT_IS_STICKY (event) && GST_EVENT_TYPE (event) != GST_EVENT_EOS) {
       /* manually push sticky events to ghost pad to avoid exposing pads
-       * that don't have the sticky events */
+       * that don't have the sticky events. Handle EOS separately as we
+       * want to block the pad on it if we didn't get any buffers before
+       * EOS and expose the pad then. */
       gst_pad_push_event (GST_PAD_CAST (dpad), gst_event_ref (event));
 
       /* let the sticky events pass */
