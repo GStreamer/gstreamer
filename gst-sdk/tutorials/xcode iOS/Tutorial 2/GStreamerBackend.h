@@ -3,12 +3,7 @@
 
 @interface GStreamerBackend : NSObject
 
-@property (nonatomic,assign) id delegate;
-
--(NSString*) getGStreamerVersion;
-
--(BOOL) initializePipeline;
-
+-(id) init:(id) uiDelegate;
 -(void) play;
 -(void) pause;
 -(void) stop;

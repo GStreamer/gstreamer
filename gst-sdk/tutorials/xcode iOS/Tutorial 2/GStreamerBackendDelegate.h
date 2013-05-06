@@ -3,7 +3,7 @@
 @protocol GStreamerBackendDelegate <NSObject>
 
 @optional
--(void) gstreamerError:(NSString *)message from:(id)sender;
--(void) gstreamerEosFrom:(id)sender;
+-(void) gstreamerInitialized;
+-(void) gstreamerSetUIMessage:(NSString *)message;
 
 @end

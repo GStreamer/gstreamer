@@ -13,14 +13,11 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view, typically from a nib.
     
-    gst_backend = [[GStreamerBackend alloc] init];
-    
-    if (![gst_backend initializePipeline]) {
-        
-    }
-    gst_backend.delegate = self;
+    play_button.enabled = FALSE;
+    pause_button.enabled = FALSE;
+
+    gst_backend = [[GStreamerBackend alloc] init:self];
 }
 
 - (void)didReceiveMemoryWarning
@@ -39,28 +36,19 @@
     [gst_backend pause];
 }
 
--(void) gstreamerError:(NSString *)message from:(id)sender
+-(void) gstreamerInitialized
 {
-    NSLog(@"Error %@", message, nil);
-    
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"GStreamer error"
-                                                    message:message
-                                                   delegate:nil
-                                          cancelButtonTitle:@"OK"
-                                          otherButtonTitles:nil];
     dispatch_async(dispatch_get_main_queue(), ^{
-        /* make sure it runs from the main thread */
-        [alert show];
+        play_button.enabled = TRUE;
+        pause_button.enabled = TRUE;
+        message_label.text = @"Ready";
     });
 }
 
--(void) gstreamerEosFrom:(id)sender
+-(void) gstreamerSetUIMessage:(NSString *)message
 {
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"EOS" message:@"End of stream" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
-    
     dispatch_async(dispatch_get_main_queue(), ^{
-        /* make sure it runs from the main thread */
-        [alert show];
+        message_label.text = message;
     });
 }
 
