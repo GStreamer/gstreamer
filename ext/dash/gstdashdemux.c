@@ -381,8 +381,7 @@ gst_dash_demux_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_MAX_BUFFERING_TIME:
-      g_value_set_uint (value, demux->max_buffering_time);
-      demux->max_buffering_time *= GST_SECOND;
+      g_value_set_uint (value, demux->max_buffering_time / GST_SECOND);
       break;
     case PROP_BANDWIDTH_USAGE:
       g_value_set_float (value, demux->bandwidth_usage);
