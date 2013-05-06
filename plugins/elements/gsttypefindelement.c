@@ -979,6 +979,19 @@ gst_type_find_element_loop (GstPad * pad)
 
   typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
 
+  if (typefind->need_stream_start) {
+    gchar *stream_id;
+
+    stream_id = gst_pad_create_stream_id (typefind->src,
+        GST_ELEMENT_CAST (typefind), NULL);
+
+    GST_DEBUG_OBJECT (typefind, "Pushing STREAM_START");
+    gst_pad_push_event (typefind->src, gst_event_new_stream_start (stream_id));
+
+    typefind->need_stream_start = FALSE;
+    g_free (stream_id);
+  }
+
   if (typefind->mode == MODE_TYPEFIND) {
     GstPad *peer;
     GstCaps *found_caps = NULL;
@@ -1043,21 +1056,6 @@ gst_type_find_element_loop (GstPad * pad)
     gst_caps_unref (found_caps);
   } else if (typefind->mode == MODE_NORMAL) {
     GstBuffer *outbuf = NULL;
-
-    if (typefind->need_stream_start) {
-      gchar *stream_id;
-
-      stream_id =
-          gst_pad_create_stream_id (typefind->src, GST_ELEMENT_CAST (typefind),
-          NULL);
-
-      GST_DEBUG_OBJECT (typefind, "Pushing STREAM_START");
-      gst_pad_push_event (typefind->src,
-          gst_event_new_stream_start (stream_id));
-
-      typefind->need_stream_start = FALSE;
-      g_free (stream_id);
-    }
 
     if (typefind->need_segment) {
       typefind->need_segment = FALSE;
