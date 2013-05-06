@@ -130,17 +130,17 @@ G_DEFINE_TYPE_WITH_CODE(
 
 static gboolean
 gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
-    GstVideoCodecState *ref_state);
+    const GstVideoCodecState *ref_state);
 
 static void
-gst_vaapi_decoder_notify_caps(GObject *obj, GParamSpec *pspec, void *user_data)
+gst_vaapi_decoder_state_changed(GstVaapiDecoder *decoder,
+    const GstVideoCodecState *codec_state, gpointer user_data)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(user_data);
 
-    g_assert(decode->decoder == GST_VAAPI_DECODER(obj));
+    g_assert(decode->decoder == decoder);
 
-    gst_vaapidecode_update_src_caps(decode,
-        gst_vaapi_decoder_get_codec_state(decode->decoder));
+    gst_vaapidecode_update_src_caps(decode, codec_state);
 }
 
 static inline gboolean
@@ -152,7 +152,7 @@ gst_vaapidecode_update_sink_caps(GstVaapiDecode *decode, GstCaps *caps)
 
 static gboolean
 gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
-    GstVideoCodecState *ref_state)
+    const GstVideoCodecState *ref_state)
 {
     GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
     GstVideoCodecState *state;
@@ -160,7 +160,8 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
 
     state = gst_video_decoder_set_output_state(vdec,
         GST_VIDEO_INFO_FORMAT(&ref_state->info),
-        ref_state->info.width, ref_state->info.height, ref_state);
+        ref_state->info.width, ref_state->info.height,
+        (GstVideoCodecState *)ref_state);
     if (!state)
         return FALSE;
 
@@ -553,12 +554,8 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
     if (!decode->decoder)
         return FALSE;
 
-    g_signal_connect(
-        G_OBJECT(decode->decoder),
-        "notify::caps",
-        G_CALLBACK(gst_vaapi_decoder_notify_caps),
-        decode
-    );
+    gst_vaapi_decoder_set_codec_state_changed_func(decode->decoder,
+        gst_vaapi_decoder_state_changed, decode);
 
     decode->decoder_caps = gst_caps_ref(caps);
     return gst_pad_start_task(decode->srcpad,
@@ -569,7 +566,7 @@ static void
 gst_vaapidecode_destroy(GstVaapiDecode *decode)
 {
     gst_pad_stop_task(decode->srcpad);
-    g_clear_object(&decode->decoder);
+    gst_vaapi_decoder_replace(&decode->decoder, NULL);
     gst_caps_replace(&decode->decoder_caps, NULL);
     gst_vaapidecode_release(decode);
 }
@@ -607,7 +604,7 @@ gst_vaapidecode_finalize(GObject *object)
     gst_caps_replace(&decode->srcpad_caps,  NULL);
     gst_caps_replace(&decode->allowed_caps, NULL);
 
-    g_clear_object(&decode->display);
+    gst_vaapi_display_replace(&decode->display, NULL);
 
     g_cond_clear(&decode->decoder_ready);
     g_mutex_clear(&decode->decoder_mutex);
@@ -629,7 +626,8 @@ gst_vaapidecode_open(GstVideoDecoder *vdec)
        existing (cached) VA display */
     decode->display = NULL;
     success = gst_vaapidecode_ensure_display(decode);
-    g_clear_object(&old_display);
+    if (old_display)
+        gst_vaapi_display_unref(old_display);
     return success;
 }
 
@@ -639,7 +637,7 @@ gst_vaapidecode_close(GstVideoDecoder *vdec)
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
 
     gst_vaapidecode_destroy(decode);
-    g_clear_object(&decode->display);
+    gst_vaapi_display_replace(&decode->display, NULL);
     return TRUE;
 }
 

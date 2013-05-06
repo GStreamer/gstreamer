@@ -253,8 +253,8 @@ static void
 gst_vaapisink_destroy(GstVaapiSink *sink)
 {
     gst_buffer_replace(&sink->video_buffer, NULL);
-    g_clear_object(&sink->texture);
-    g_clear_object(&sink->display);
+    gst_vaapi_texture_replace(&sink->texture, NULL);
+    gst_vaapi_display_replace(&sink->display, NULL);
     g_clear_object(&sink->uploader);
 
     gst_caps_replace(&sink->caps, NULL);
@@ -540,7 +540,7 @@ gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id)
         gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window)) == xid)
         return TRUE;
 
-    g_clear_object(&sink->window);
+    gst_vaapi_window_replace(&sink->window, NULL);
 
     switch (sink->display_type) {
 #if USE_GLX
@@ -685,8 +685,8 @@ gst_vaapisink_stop(GstBaseSink *base_sink)
 #if GST_CHECK_VERSION(1,0,0)
     g_clear_object(&sink->video_buffer_pool);
 #endif
-    g_clear_object(&sink->window);
-    g_clear_object(&sink->display);
+    gst_vaapi_window_replace(&sink->window, NULL);
+    gst_vaapi_display_replace(&sink->display, NULL);
     g_clear_object(&sink->uploader);
 
     return TRUE;
@@ -982,10 +982,9 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
     }
 #endif
 
-    if (sink->display != gst_vaapi_video_meta_get_display(meta)) {
-        g_clear_object(&sink->display);
-        sink->display = g_object_ref(gst_vaapi_video_meta_get_display(meta));
-    }
+    if (sink->display != gst_vaapi_video_meta_get_display(meta))
+        gst_vaapi_display_replace(&sink->display,
+            gst_vaapi_video_meta_get_display(meta));
 
     if (!sink->window)
         goto error;

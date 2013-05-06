@@ -207,7 +207,7 @@ gst_vaapipostproc_destroy(GstVaapiPostproc *postproc)
 {
     gst_caps_replace(&postproc->postproc_caps, NULL);
 
-    g_clear_object(&postproc->display);
+    gst_vaapi_display_replace(&postproc->display, NULL);
 }
 
 static gboolean
@@ -232,7 +232,7 @@ gst_vaapipostproc_start(GstVaapiPostproc *postproc)
 static gboolean
 gst_vaapipostproc_stop(GstVaapiPostproc *postproc)
 {
-    g_clear_object(&postproc->display);
+    gst_vaapi_display_replace(&postproc->display, NULL);
     return TRUE;
 }
 

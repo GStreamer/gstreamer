@@ -56,7 +56,7 @@ gst_vaapi_video_buffer_pool_finalize(GObject *object)
 
     G_OBJECT_CLASS(gst_vaapi_video_buffer_pool_parent_class)->finalize(object);
 
-    g_clear_object(&priv->display);
+    gst_vaapi_display_replace(&priv->display, NULL);
     g_clear_object(&priv->allocator);
 }
 
@@ -69,7 +69,7 @@ gst_vaapi_video_buffer_pool_set_property(GObject *object, guint prop_id,
 
     switch (prop_id) {
     case PROP_DISPLAY:
-        priv->display = g_object_ref(g_value_get_object(value));
+        priv->display = gst_vaapi_display_ref(g_value_get_pointer(value));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -86,7 +86,7 @@ gst_vaapi_video_buffer_pool_get_property(GObject *object, guint prop_id,
 
     switch (prop_id) {
     case PROP_DISPLAY:
-        g_value_set_object(value, priv->display);
+        g_value_set_pointer(value, priv->display);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -265,10 +265,9 @@ gst_vaapi_video_buffer_pool_class_init(GstVaapiVideoBufferPoolClass *klass)
     g_object_class_install_property
         (object_class,
          PROP_DISPLAY,
-         g_param_spec_object("display",
+         g_param_spec_pointer("display",
                              "Display",
                              "The GstVaapiDisplay to use for this video pool",
-                             GST_VAAPI_TYPE_DISPLAY,
                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 }
 

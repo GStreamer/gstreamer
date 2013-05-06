@@ -73,9 +73,9 @@ gst_vaapi_uploader_destroy(GstVaapiUploader *uploader)
     gst_caps_replace(&priv->image_caps, NULL);
     gst_caps_replace(&priv->allowed_caps, NULL);
 
-    g_clear_object(&priv->images);
-    g_clear_object(&priv->surfaces);
-    g_clear_object(&priv->display);
+    gst_vaapi_video_pool_replace(&priv->images, NULL);
+    gst_vaapi_video_pool_replace(&priv->surfaces, NULL);
+    gst_vaapi_display_replace(&priv->display, NULL);
 }
 
 static gboolean
@@ -83,12 +83,7 @@ ensure_display(GstVaapiUploader *uploader, GstVaapiDisplay *display)
 {
     GstVaapiUploaderPrivate * const priv = uploader->priv;
 
-    if (priv->display == display)
-        return TRUE;
-
-    g_clear_object(&priv->display);
-    if (display)
-        priv->display = g_object_ref(display);
+    gst_vaapi_display_replace(&priv->display, display);
     return TRUE;
 }
 
@@ -156,7 +151,7 @@ ensure_allowed_caps(GstVaapiUploader *uploader)
             continue;
         if (ensure_image(image) && gst_vaapi_surface_put_image(surface, image))
             gst_caps_append_structure(out_caps, gst_structure_copy(structure));
-        gst_object_unref(image);
+        gst_vaapi_object_unref(image);
     }
 
     gst_caps_replace(&priv->allowed_caps, out_caps);
@@ -167,7 +162,7 @@ end:
     if (image_caps)
         gst_caps_unref(image_caps);
     if (surface)
-        gst_object_unref(surface);
+        gst_vaapi_object_unref(surface);
     return success;
 }
 
@@ -184,7 +179,7 @@ ensure_image_pool(GstVaapiUploader *uploader, GstCaps *caps)
     if (width != priv->image_width || height != priv->image_height) {
         priv->image_width  = width;
         priv->image_height = height;
-        g_clear_object(&priv->images);
+        gst_vaapi_video_pool_replace(&priv->images, NULL);
         priv->images = gst_vaapi_image_pool_new(priv->display, caps);
         if (!priv->images)
             return FALSE;
@@ -206,7 +201,7 @@ ensure_surface_pool(GstVaapiUploader *uploader, GstCaps *caps)
     if (width != priv->surface_width || height != priv->surface_height) {
         priv->surface_width  = width;
         priv->surface_height = height;
-        g_clear_object(&priv->surfaces);
+        gst_vaapi_video_pool_replace(&priv->surfaces, NULL);
         priv->surfaces = gst_vaapi_surface_pool_new(priv->display, caps);
         if (!priv->surfaces)
             return FALSE;
@@ -230,7 +225,7 @@ gst_vaapi_uploader_set_property(GObject *object, guint prop_id,
 
     switch (prop_id) {
     case PROP_DISPLAY:
-        ensure_display(uploader, g_value_get_object(value));
+        ensure_display(uploader, g_value_get_pointer(value));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -246,7 +241,7 @@ gst_vaapi_uploader_get_property(GObject *object, guint prop_id,
 
     switch (prop_id) {
     case PROP_DISPLAY:
-        g_value_set_object(value, uploader->priv->display);
+        g_value_set_pointer(value, uploader->priv->display);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -271,11 +266,10 @@ gst_vaapi_uploader_class_init(GstVaapiUploaderClass *klass)
     g_object_class_install_property(
         object_class,
         PROP_DISPLAY,
-        g_param_spec_object(
+        g_param_spec_pointer(
             "display",
             "Display",
             "The GstVaapiDisplay this object is bound to",
-            GST_VAAPI_TYPE_DISPLAY,
             G_PARAM_READWRITE));
 }
 

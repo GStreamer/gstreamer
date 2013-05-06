@@ -217,8 +217,8 @@ gst_vaapi_video_memory_new(GstAllocator *base_allocator,
 static void
 gst_vaapi_video_memory_free(GstVaapiVideoMemory *mem)
 {
-    g_clear_object(&mem->surface);
-    g_clear_object(&mem->image);
+    gst_vaapi_object_replace(&mem->surface, NULL);
+    gst_vaapi_object_replace(&mem->image, NULL);
     gst_vaapi_video_meta_unref(mem->meta);
     g_slice_free(GstVaapiVideoMemory, mem);
 }
@@ -398,8 +398,8 @@ gst_vaapi_video_allocator_new(GstVaapiDisplay *display, GstCaps *caps)
                      GST_VIDEO_INFO_FORMAT_STRING(&allocator->surface_info),
                      allocator->has_direct_rendering ? "yes" : "no");
         } while (0);
-        g_clear_object(&surface);
-        g_clear_object(&image);
+        gst_vaapi_object_unref(surface);
+        gst_vaapi_object_unref(image);
     }
 
     allocator->image_info = *vip;
@@ -419,7 +419,7 @@ gst_vaapi_video_allocator_new(GstVaapiDisplay *display, GstCaps *caps)
             gst_video_info_update_from_image(&allocator->image_info, image);
             gst_vaapi_image_unmap(image);
         } while (0);
-        g_clear_object(&image);
+        gst_vaapi_object_unref(image);
     }
     return GST_ALLOCATOR_CAST(allocator);
 }

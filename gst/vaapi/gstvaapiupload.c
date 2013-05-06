@@ -174,7 +174,7 @@ static void
 gst_vaapiupload_destroy(GstVaapiUpload *upload)
 {
     g_clear_object(&upload->uploader);
-    g_clear_object(&upload->display);
+    gst_vaapi_display_replace(&upload->display, NULL);
 }
 
 static void
@@ -279,8 +279,7 @@ gst_vaapiupload_stop(GstBaseTransform *trans)
 {
     GstVaapiUpload * const upload = GST_VAAPIUPLOAD(trans);
 
-    g_clear_object(&upload->display);
-
+    gst_vaapi_display_replace(&upload->display, NULL);
     return TRUE;
 }
 

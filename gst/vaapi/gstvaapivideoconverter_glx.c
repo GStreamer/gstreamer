@@ -64,7 +64,7 @@ gst_vaapi_video_converter_glx_dispose(GObject *object)
     GstVaapiVideoConverterGLXPrivate * const priv =
         GST_VAAPI_VIDEO_CONVERTER_GLX(object)->priv;
 
-    g_clear_object(&priv->texture);
+    gst_vaapi_texture_replace(&priv->texture, NULL);
 
     G_OBJECT_CLASS(gst_vaapi_video_converter_glx_parent_class)->dispose(object);
 }
@@ -144,7 +144,7 @@ gst_vaapi_video_converter_glx_upload(GstSurfaceConverter *self,
     if (old_dpy != new_dpy) {
         const guint texture = gst_vaapi_texture_get_id(priv->texture);
 
-        g_clear_object(&priv->texture);
+        gst_vaapi_texture_replace(&priv->texture, NULL);
         priv->texture = gst_vaapi_texture_new_with_texture(new_dpy,
             texture, GL_TEXTURE_2D, GL_BGRA);
     }

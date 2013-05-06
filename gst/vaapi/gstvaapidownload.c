@@ -196,8 +196,8 @@ gst_vaapidownload_destroy(GstVaapiDownload *download)
         download->allowed_caps = NULL;
     }
 
-    g_clear_object(&download->images);
-    g_clear_object(&download->display);
+    gst_vaapi_video_pool_replace(&download->images, NULL);
+    gst_vaapi_display_replace(&download->display, NULL);
 }
 
 static void
@@ -289,8 +289,7 @@ gst_vaapidownload_stop(GstBaseTransform *trans)
 {
     GstVaapiDownload * const download = GST_VAAPIDOWNLOAD(trans);
 
-    g_clear_object(&download->display);
-
+    gst_vaapi_display_replace(&download->display, NULL);
     return TRUE;
 }
 
@@ -304,7 +303,7 @@ get_surface_format(GstVaapiSurface *surface)
     image = gst_vaapi_surface_derive_image(surface);
     if (image) {
         format = gst_vaapi_image_get_format(image);
-        g_object_unref(image);
+        gst_vaapi_object_unref(image);
     }
     return format;
 }
@@ -499,7 +498,7 @@ gst_vaapidownload_ensure_image_pool(GstVaapiDownload *download, GstCaps *caps)
         download->image_format = format;
         download->image_width  = width;
         download->image_height = height;
-        g_clear_object(&download->images);
+        gst_vaapi_video_pool_replace(&download->images, NULL);
         download->images = gst_vaapi_image_pool_new(download->display, caps);
         if (!download->images)
             return FALSE;

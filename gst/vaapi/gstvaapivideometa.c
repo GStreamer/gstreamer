@@ -48,26 +48,23 @@ struct _GstVaapiVideoMeta {
     guint                       render_flags;
 };
 
-static void
+static inline void
 set_display(GstVaapiVideoMeta *meta, GstVaapiDisplay *display)
 {
-    g_clear_object(&meta->display);
-
-    if (display)
-        meta->display = g_object_ref(display);
+    gst_vaapi_display_replace(&meta->display, display);
 }
 
 static inline void
 set_image(GstVaapiVideoMeta *meta, GstVaapiImage *image)
 {
-    meta->image = g_object_ref(image);
+    meta->image = gst_vaapi_object_ref(image);
     set_display(meta, gst_vaapi_object_get_display(GST_VAAPI_OBJECT(image)));
 }
 
 static inline void
 set_surface(GstVaapiVideoMeta *meta, GstVaapiSurface *surface)
 {
-    meta->surface = g_object_ref(surface);
+    meta->surface = gst_vaapi_object_ref(surface);
     set_display(meta, gst_vaapi_object_get_display(GST_VAAPI_OBJECT(surface)));
 }
 
@@ -77,10 +74,10 @@ gst_vaapi_video_meta_destroy_image(GstVaapiVideoMeta *meta)
     if (meta->image) {
         if (meta->image_pool)
             gst_vaapi_video_pool_put_object(meta->image_pool, meta->image);
-        g_object_unref(meta->image);
+        gst_vaapi_object_unref(meta->image);
         meta->image = NULL;
     }
-    g_clear_object(&meta->image_pool);
+    gst_vaapi_video_pool_replace(&meta->image_pool, NULL);
 }
 
 static void
@@ -91,10 +88,10 @@ gst_vaapi_video_meta_destroy_surface(GstVaapiVideoMeta *meta)
     if (meta->surface) {
         if (meta->surface_pool)
             gst_vaapi_video_pool_put_object(meta->surface_pool, meta->surface);
-        g_object_unref(meta->surface);
+        gst_vaapi_object_unref(meta->surface);
         meta->surface = NULL;
     }
-    g_clear_object(&meta->surface_pool);
+    gst_vaapi_video_pool_replace(&meta->surface_pool, NULL);
 }
 
 #if !GST_CHECK_VERSION(1,0,0)
@@ -120,7 +117,7 @@ gst_vaapi_video_meta_finalize(GstVaapiVideoMeta *meta)
 {
     gst_vaapi_video_meta_destroy_image(meta);
     gst_vaapi_video_meta_destroy_surface(meta);
-    g_clear_object(&meta->display);
+    gst_vaapi_display_replace(&meta->display, NULL);
 }
 
 static void
@@ -197,11 +194,11 @@ gst_vaapi_video_meta_copy(GstVaapiVideoMeta *meta)
         return NULL;
 
     copy->ref_count     = 1;
-    copy->display       = g_object_ref(meta->display);
+    copy->display       = gst_vaapi_display_ref(meta->display);
     copy->image_pool    = NULL;
-    copy->image         = meta->image ? g_object_ref(meta->image) : NULL;
+    copy->image         = meta->image ? gst_vaapi_object_ref(meta->image) : NULL;
     copy->surface_pool  = NULL;
-    copy->surface       = meta->surface ? g_object_ref(meta->surface) : NULL;
+    copy->surface       = meta->surface ? gst_vaapi_object_ref(meta->surface) : NULL;
     copy->proxy         = meta->proxy ?
         gst_vaapi_surface_proxy_ref(meta->proxy) : NULL;
     copy->converter     = meta->converter;
@@ -447,7 +444,7 @@ gst_vaapi_video_meta_get_display(GstVaapiVideoMeta *meta)
  *
  * Retrieves the #GstVaapiImage bound to the @meta. The @meta owns
  * the #GstVaapiImage so the caller is responsible for calling
- * g_object_ref() when needed.
+ * gst_vaapi_object_ref() when needed.
  *
  * Return value: the #GstVaapiImage bound to the @meta, or %NULL if
  *   there is none
@@ -507,7 +504,7 @@ gst_vaapi_video_meta_set_image_from_pool(GstVaapiVideoMeta *meta,
         if (!image)
             return FALSE;
         set_image(meta, image);
-        meta->image_pool = g_object_ref(pool);
+        meta->image_pool = gst_vaapi_video_pool_ref(pool);
     }
     return TRUE;
 }
@@ -518,7 +515,7 @@ gst_vaapi_video_meta_set_image_from_pool(GstVaapiVideoMeta *meta,
  *
  * Retrieves the #GstVaapiSurface bound to the @meta. The @meta
  * owns the #GstVaapiSurface so the caller is responsible for calling
- * g_object_ref() when needed.
+ * gst_vaapi_object_ref() when needed.
  *
  * Return value: the #GstVaapiSurface bound to the @meta, or %NULL if
  *   there is none
@@ -579,7 +576,7 @@ gst_vaapi_video_meta_set_surface_from_pool(GstVaapiVideoMeta *meta,
         if (!surface)
             return FALSE;
         set_surface(meta, surface);
-        meta->surface_pool = g_object_ref(pool);
+        meta->surface_pool = gst_vaapi_video_pool_ref(pool);
     }
     return TRUE;
 }
@@ -590,7 +587,7 @@ gst_vaapi_video_meta_set_surface_from_pool(GstVaapiVideoMeta *meta,
  *
  * Retrieves the #GstVaapiSurfaceProxy bound to the @meta. The @meta
  * owns the #GstVaapiSurfaceProxy so the caller is responsible for calling
- * g_object_ref() when needed.
+ * gst_surface_proxy_ref() when needed.
  *
  * Return value: the #GstVaapiSurfaceProxy bound to the @meta, or
  *   %NULL if there is none

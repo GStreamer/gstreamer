@@ -127,7 +127,7 @@ gst_vaapi_ensure_display(
                 display_type = m->type;
                 break;
             }
-            g_object_unref(display);
+            gst_vaapi_display_unref(display);
             display = NULL;
         }
 
@@ -154,8 +154,8 @@ gst_vaapi_set_display(
         dpy = gst_vaapi_display_new_with_display(g_value_get_pointer(value));
     }
     else if (!strcmp(type, "gst-vaapi-display")) {
-        g_return_if_fail(G_VALUE_HOLDS_OBJECT(value));
-        dpy = g_value_dup_object(value);
+        g_return_if_fail(G_VALUE_HOLDS_POINTER(value));
+        dpy = gst_vaapi_display_ref(g_value_get_pointer(value));
     }
 #if USE_DRM
     else if (!strcmp(type, "drm-device")) {
@@ -205,9 +205,8 @@ gst_vaapi_set_display(
 #endif
 
     if (dpy) {
-        if (*display)
-            g_object_unref(*display);
-        *display = dpy;
+        gst_vaapi_display_replace(display, dpy);
+        gst_vaapi_display_unref(dpy);
     }
 }
 
@@ -237,7 +236,7 @@ gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display)
 
         res = TRUE;
         if (!strcmp(type, "gst-vaapi-display")) {
-            gst_video_context_query_set_object(query, type, G_OBJECT(display));
+            gst_video_context_query_set_pointer(query, type, display);
         }
         else if (!strcmp(type, "vaapi-display")) {
             VADisplay vadpy = gst_vaapi_display_get_display(display);
