@@ -3206,6 +3206,7 @@ gst-libs/gst/interfaces/Makefile
 gst-libs/gst/codecparsers/Makefile
 gst-libs/gst/mpegts/Makefile
 gst-libs/gst/uridownloader/Makefile
+gst-libs/gst/wayland/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile
 sys/acmenc/Makefile
