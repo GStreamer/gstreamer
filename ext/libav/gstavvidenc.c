@@ -367,7 +367,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   /* fetch pix_fmt, fps, par, width, height... */
   gst_ffmpeg_videoinfo_to_context (&state->info, ffmpegenc->context);
 
-  if ((oclass->in_plugin->id == CODEC_ID_MPEG4)
+  if ((oclass->in_plugin->id == AV_CODEC_ID_MPEG4)
       && (ffmpegenc->context->time_base.den > 65535)) {
     /* MPEG4 Standards do not support time_base denominator greater than
      * (1<<16) - 1 . We therefore scale them down.
@@ -856,10 +856,11 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
       goto next;
 
     /* no quasi codecs, please */
-    if (in_plugin->id == CODEC_ID_RAWVIDEO ||
-        in_plugin->id == CODEC_ID_V210 ||
-        in_plugin->id == CODEC_ID_V210X ||
-        in_plugin->id == CODEC_ID_R210 || in_plugin->id == CODEC_ID_ZLIB) {
+    if (in_plugin->id == AV_CODEC_ID_RAWVIDEO ||
+        in_plugin->id == AV_CODEC_ID_V210 ||
+        in_plugin->id == AV_CODEC_ID_V210X ||
+        in_plugin->id == AV_CODEC_ID_R210
+        || in_plugin->id == AV_CODEC_ID_ZLIB) {
       goto next;
     }
 

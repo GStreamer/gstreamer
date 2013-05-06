@@ -302,7 +302,7 @@ struct _GParamSpecData
   /* if TRUE, try to get the default from lavc and ignore the paramspec default */
   gboolean lavc_default;
 
-  /* these lists are arrays terminated by CODEC_ID_NONE entry:
+  /* these lists are arrays terminated by AV_CODEC_ID_NONE entry:
    * property applies to a codec if it's not in the exclude_list
    * and in exclude_list (or the latter is NULL) */
   gint *include_list;
@@ -346,22 +346,22 @@ G_STMT_START {                                                          \
 /* some typical include and exclude lists; modify and/or add where needed */
 
 static gint mpeg[] = {
-  CODEC_ID_MPEG4,
-  CODEC_ID_MSMPEG4V1,
-  CODEC_ID_MSMPEG4V2,
-  CODEC_ID_MSMPEG4V3,
-  CODEC_ID_MPEG1VIDEO,
-  CODEC_ID_MPEG2VIDEO,
-  CODEC_ID_H263P,
-  CODEC_ID_FLV1,
-  CODEC_ID_H263,
-  CODEC_ID_NONE
+  AV_CODEC_ID_MPEG4,
+  AV_CODEC_ID_MSMPEG4V1,
+  AV_CODEC_ID_MSMPEG4V2,
+  AV_CODEC_ID_MSMPEG4V3,
+  AV_CODEC_ID_MPEG1VIDEO,
+  AV_CODEC_ID_MPEG2VIDEO,
+  AV_CODEC_ID_H263P,
+  AV_CODEC_ID_FLV1,
+  AV_CODEC_ID_H263,
+  AV_CODEC_ID_NONE
 };
 
 static gint huffyuv[] = {
-  CODEC_ID_HUFFYUV,
-  CODEC_ID_FFVHUFF,
-  CODEC_ID_NONE
+  AV_CODEC_ID_HUFFYUV,
+  AV_CODEC_ID_FFVHUFF,
+  AV_CODEC_ID_NONE
 };
 
 /* Properties should be added here for registration into the config store.
@@ -707,7 +707,7 @@ gst_ffmpeg_cfg_codec_has_pspec (enum CodecID codec_id, GParamSpec * pspec)
 
   /* check if excluded first */
   if ((codec = qdata->exclude_list)) {
-    for (; *codec != CODEC_ID_NONE; ++codec) {
+    for (; *codec != AV_CODEC_ID_NONE; ++codec) {
       if (*codec == codec_id)
         return FALSE;
     }
@@ -715,7 +715,7 @@ gst_ffmpeg_cfg_codec_has_pspec (enum CodecID codec_id, GParamSpec * pspec)
 
   /* no include list means it is accepted */
   if ((codec = qdata->include_list)) {
-    for (; *codec != CODEC_ID_NONE; ++codec) {
+    for (; *codec != AV_CODEC_ID_NONE; ++codec) {
       if (*codec == codec_id)
         ret = TRUE;
     }

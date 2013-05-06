@@ -1383,7 +1383,7 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
   srcpad = stream->pad;
 
   rawvideo = (avstream->codec->codec_type == AVMEDIA_TYPE_VIDEO &&
-      avstream->codec->codec_id == CODEC_ID_RAWVIDEO);
+      avstream->codec->codec_id == AV_CODEC_ID_RAWVIDEO);
 
   if (rawvideo)
     outsize = gst_ffmpeg_avpicture_get_size (avstream->codec->pix_fmt,

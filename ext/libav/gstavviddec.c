@@ -312,10 +312,10 @@ gst_ffmpegviddec_open (GstFFMpegVidDec * ffmpegdec)
       oclass->in_plugin->name, oclass->in_plugin->id);
 
   switch (oclass->in_plugin->id) {
-    case CODEC_ID_RV10:
-    case CODEC_ID_RV30:
-    case CODEC_ID_RV20:
-    case CODEC_ID_RV40:
+    case AV_CODEC_ID_RV10:
+    case AV_CODEC_ID_RV30:
+    case AV_CODEC_ID_RV20:
+    case AV_CODEC_ID_RV40:
       ffmpegdec->is_realvideo = TRUE;
       break;
     default:
@@ -375,8 +375,8 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
 
   GST_OBJECT_LOCK (ffmpegdec);
   /* stupid check for VC1 */
-  if ((oclass->in_plugin->id == CODEC_ID_WMV3) ||
-      (oclass->in_plugin->id == CODEC_ID_VC1))
+  if ((oclass->in_plugin->id == AV_CODEC_ID_WMV3) ||
+      (oclass->in_plugin->id == AV_CODEC_ID_VC1))
     oclass->in_plugin->id = gst_ffmpeg_caps_to_codecid (state->caps, NULL);
 
   /* close old session */
@@ -1669,12 +1669,12 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
       goto next;
 
     /* no quasi-codecs, please */
-    if (in_plugin->id == CODEC_ID_RAWVIDEO ||
-        in_plugin->id == CODEC_ID_V210 ||
-        in_plugin->id == CODEC_ID_V210X ||
-        in_plugin->id == CODEC_ID_R210 ||
-        (in_plugin->id >= CODEC_ID_PCM_S16LE &&
-            in_plugin->id <= CODEC_ID_PCM_BLURAY)) {
+    if (in_plugin->id == AV_CODEC_ID_RAWVIDEO ||
+        in_plugin->id == AV_CODEC_ID_V210 ||
+        in_plugin->id == AV_CODEC_ID_V210X ||
+        in_plugin->id == AV_CODEC_ID_R210 ||
+        (in_plugin->id >= AV_CODEC_ID_PCM_S16LE &&
+            in_plugin->id <= AV_CODEC_ID_PCM_BLURAY)) {
       goto next;
     }
 
@@ -1745,20 +1745,20 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
      * msmpeg4v3 same, as it outperforms divxdec for divx3 playback.
      * VC1/WMV3 are not working and thus unpreferred for now. */
     switch (in_plugin->id) {
-      case CODEC_ID_MPEG4:
-      case CODEC_ID_MSMPEG4V3:
-      case CODEC_ID_H264:
-      case CODEC_ID_RV10:
-      case CODEC_ID_RV20:
-      case CODEC_ID_RV30:
-      case CODEC_ID_RV40:
+      case AV_CODEC_ID_MPEG4:
+      case AV_CODEC_ID_MSMPEG4V3:
+      case AV_CODEC_ID_H264:
+      case AV_CODEC_ID_RV10:
+      case AV_CODEC_ID_RV20:
+      case AV_CODEC_ID_RV30:
+      case AV_CODEC_ID_RV40:
         rank = GST_RANK_PRIMARY;
         break;
         /* DVVIDEO: we have a good dv decoder, fast on both ppc as well as x86.
          * They say libdv's quality is better though. leave as secondary.
          * note: if you change this, see the code in gstdv.c in good/ext/dv.
          */
-      case CODEC_ID_DVVIDEO:
+      case AV_CODEC_ID_DVVIDEO:
         rank = GST_RANK_SECONDARY;
         break;
       default:

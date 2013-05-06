@@ -670,8 +670,8 @@ gst_ffmpegaudenc_register (GstPlugin * plugin)
       goto next;
 
     /* no quasi codecs, please */
-    if ((in_plugin->id >= CODEC_ID_PCM_S16LE &&
-            in_plugin->id <= CODEC_ID_PCM_BLURAY)) {
+    if ((in_plugin->id >= AV_CODEC_ID_PCM_S16LE &&
+            in_plugin->id <= AV_CODEC_ID_PCM_BLURAY)) {
       goto next;
     }
 
@@ -727,7 +727,7 @@ gst_ffmpegaudenc_register (GstPlugin * plugin)
 
     switch (in_plugin->id) {
         /* avenc_aac: see https://bugzilla.gnome.org/show_bug.cgi?id=691617 */
-      case CODEC_ID_AAC:
+      case AV_CODEC_ID_AAC:
         rank = GST_RANK_NONE;
         break;
       default:

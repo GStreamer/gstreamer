@@ -442,7 +442,7 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
   st = avformat_new_stream (ffmpegmux->context, NULL);
   st->id = collect_pad->padnum;
   st->codec->codec_type = type;
-  st->codec->codec_id = CODEC_ID_NONE;  /* this is a check afterwards */
+  st->codec->codec_id = AV_CODEC_ID_NONE;       /* this is a check afterwards */
   st->codec->bit_rate = bitrate;
   st->codec->frame_size = framesize;
   /* we fill in codec during capsnego */
@@ -479,7 +479,7 @@ gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps)
 
   /* for the format-specific guesses, we'll go to
    * our famous codec mapper */
-  if (gst_ffmpeg_caps_to_codecid (caps, st->codec) == CODEC_ID_NONE)
+  if (gst_ffmpeg_caps_to_codecid (caps, st->codec) == AV_CODEC_ID_NONE)
     goto not_accepted;
 
   /* copy over the aspect ratios, ffmpeg expects the stream aspect to match the
@@ -558,7 +558,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       AVStream *st = ffmpegmux->context->streams[collect_pad->padnum];
 
       /* check whether the pad has successfully completed capsnego */
-      if (st->codec->codec_id == CODEC_ID_NONE) {
+      if (st->codec->codec_id == AV_CODEC_ID_NONE) {
         GST_ELEMENT_ERROR (ffmpegmux, CORE, NEGOTIATION, (NULL),
             ("no caps set on stream %d (%s)", collect_pad->padnum,
                 (st->codec->codec_type == AVMEDIA_TYPE_VIDEO) ?
@@ -568,12 +568,12 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       /* set framerate for audio */
       if (st->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
         switch (st->codec->codec_id) {
-          case CODEC_ID_PCM_S16LE:
-          case CODEC_ID_PCM_S16BE:
-          case CODEC_ID_PCM_U16LE:
-          case CODEC_ID_PCM_U16BE:
-          case CODEC_ID_PCM_S8:
-          case CODEC_ID_PCM_U8:
+          case AV_CODEC_ID_PCM_S16LE:
+          case AV_CODEC_ID_PCM_S16BE:
+          case AV_CODEC_ID_PCM_U16LE:
+          case AV_CODEC_ID_PCM_U16BE:
+          case AV_CODEC_ID_PCM_S8:
+          case AV_CODEC_ID_PCM_U8:
             st->codec->frame_size = 1;
             break;
           default:
@@ -825,7 +825,7 @@ gst_ffmpegmux_get_id_caps (enum CodecID *id_list)
   gint i;
 
   caps = gst_caps_new_empty ();
-  for (i = 0; id_list[i] != CODEC_ID_NONE; i++) {
+  for (i = 0; id_list[i] != AV_CODEC_ID_NONE; i++) {
     if ((t = gst_ffmpeg_codecid_to_caps (id_list[i], NULL, TRUE)))
       gst_caps_append (caps, t);
   }

@@ -695,8 +695,8 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
    *  libavcodec/svq1.c:svq1_decode_frame writes to the given buffer.
    *  libavcodec/svq3.c:svq3_decode_slice_header too.
    * ffmpeg devs know about it and will fix it (they said). */
-  if (oclass->in_plugin->id == CODEC_ID_SVQ1 ||
-      oclass->in_plugin->id == CODEC_ID_SVQ3) {
+  if (oclass->in_plugin->id == AV_CODEC_ID_SVQ1 ||
+      oclass->in_plugin->id == AV_CODEC_ID_SVQ3) {
     inbuf = gst_buffer_make_writable (inbuf);
   }
 
@@ -801,8 +801,8 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
     }
 
     /* no quasi-codecs, please */
-    if (in_plugin->id >= CODEC_ID_PCM_S16LE &&
-        in_plugin->id <= CODEC_ID_PCM_BLURAY) {
+    if (in_plugin->id >= AV_CODEC_ID_PCM_S16LE &&
+        in_plugin->id <= AV_CODEC_ID_PCM_BLURAY) {
       goto next;
     }
 
@@ -858,17 +858,17 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
      * msmpeg4v3 same, as it outperforms divxdec for divx3 playback.
      * VC1/WMV3 are not working and thus unpreferred for now. */
     switch (in_plugin->id) {
-      case CODEC_ID_RA_144:
-      case CODEC_ID_RA_288:
-      case CODEC_ID_COOK:
+      case AV_CODEC_ID_RA_144:
+      case AV_CODEC_ID_RA_288:
+      case AV_CODEC_ID_COOK:
         rank = GST_RANK_PRIMARY;
         break;
         /* SIPR: decoder should have a higher rank than realaudiodec.
          */
-      case CODEC_ID_SIPR:
+      case AV_CODEC_ID_SIPR:
         rank = GST_RANK_SECONDARY;
         break;
-      case CODEC_ID_MP3:
+      case AV_CODEC_ID_MP3:
         rank = GST_RANK_NONE;
         break;
       default:
