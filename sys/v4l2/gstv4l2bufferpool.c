@@ -582,6 +582,19 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
   g_free (pool->buffers);
   pool->buffers = NULL;
 
+  if (pool->num_buffers > 0) {
+    struct v4l2_requestbuffers breq;
+    memset (&breq, 0, sizeof (struct v4l2_requestbuffers));
+    breq.type = obj->type;
+    breq.count = 0;
+    breq.memory = V4L2_MEMORY_MMAP;
+    if (v4l2_ioctl (pool->video_fd, VIDIOC_REQBUFS, &breq) < 0) {
+      GST_ERROR_OBJECT (pool, "error releasing buffers: %s",
+          g_strerror (errno));
+    }
+    pool->num_buffers = 0;
+  }
+
   return ret;
 
   /* ERRORS */
