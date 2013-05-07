@@ -24,11 +24,7 @@ DOC_SOURCE_DIR = $(top_srcdir)/gst-libs/gst/vaapi
 SCANGOBJ_OPTIONS = --type-init-func="g_type_init()"
 
 # List files used by scanobj
-SCANOBJ_TYPES  = $(srcdir)/$(DOC_MODULE).core.types
-SCANOBJ_TYPES += $(srcdir)/$(DOC_MODULE).x11.types
-if USE_GLX
-SCANOBJ_TYPES += $(srcdir)/$(DOC_MODULE).glx.types
-endif
+SCANOBJ_TYPES =
 
 # Extra options to supply to gtkdoc-scan.
 # e.g. SCAN_OPTIONS=--deprecated-guards="GTK_DISABLE_DEPRECATED"
@@ -54,7 +50,7 @@ FIXXREF_OPTIONS = \
 # e.g. HFILE_GLOB=$(top_srcdir)/gtk/*.h
 # e.g. CFILE_GLOB=$(top_srcdir)/gtk/*.c
 HFILE_GLOB = $(top_srcdir)/gst-libs/gst/vaapi/*.h
-CFILE_GLOB = $(top_srcdir)/gst-libs/gst/vaapi/*.c $(srcdir)/$(DOC_MODULE).types
+CFILE_GLOB = $(top_srcdir)/gst-libs/gst/vaapi/*.c
 
 # Header files to ignore when scanning.
 # e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h
@@ -118,9 +114,6 @@ GTKDOC_LIBS += \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_API_VERSION).la
 endif
 
-$(srcdir)/$(DOC_MODULE).types: $(SCANOBJ_TYPES)
-	cat $(SCANOBJ_TYPES) > $@
-
 # This includes the standard gtk-doc make rules, copied by gtkdocize.
 include $(top_srcdir)/gtk-doc.make
 
@@ -128,13 +121,7 @@ include $(top_srcdir)/gtk-doc.make
 # e.g. EXTRA_DIST += version.xml.in
 EXTRA_DIST += \
 	libs-docs.xml.in \
-	libs.core.types \
-	libs.x11.types \
-	libs.glx.types \
 	$(NULL)
-
-DISTCLEANFILES = $(srcdir)/$(DOC_MODULE).types
-BUILT_SOURCES  = $(srcdir)/$(DOC_MODULE).types
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = Makefile.in lib-docs.xml

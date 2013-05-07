@@ -2,23 +2,17 @@
 <FILE>gstvaapisurfacepool</FILE>
 <TITLE>GstVaapiSurfacePool</TITLE>
 GstVaapiSurfacePool
-GstVaapiSurfacePoolClass
 gst_vaapi_surface_pool_new
 <SUBSECTION Standard>
 GST_VAAPI_SURFACE_POOL
 GST_VAAPI_IS_SURFACE_POOL
-GST_VAAPI_TYPE_SURFACE_POOL
 gst_vaapi_surface_pool_get_type
-GST_VAAPI_SURFACE_POOL_CLASS
-GST_VAAPI_IS_SURFACE_POOL_CLASS
-GST_VAAPI_SURFACE_POOL_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapivideopool</FILE>
 <TITLE>GstVaapiVideoPool</TITLE>
 GstVaapiVideoPool
-GstVaapiVideoPoolClass
 gst_vaapi_video_pool_get_display
 gst_vaapi_video_pool_get_object
 gst_vaapi_video_pool_put_object
@@ -31,18 +25,12 @@ gst_vaapi_video_pool_reserve
 <SUBSECTION Standard>
 GST_VAAPI_VIDEO_POOL
 GST_VAAPI_IS_VIDEO_POOL
-GST_VAAPI_TYPE_VIDEO_POOL
-gst_vaapi_video_pool_get_type
-GST_VAAPI_VIDEO_POOL_CLASS
-GST_VAAPI_IS_VIDEO_POOL_CLASS
-GST_VAAPI_VIDEO_POOL_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapidisplay_x11</FILE>
 <TITLE>GstVaapiDisplayX11</TITLE>
 GstVaapiDisplayX11
-GstVaapiDisplayX11Class
 gst_vaapi_display_x11_new
 gst_vaapi_display_x11_new_with_display
 gst_vaapi_display_x11_get_display
@@ -50,18 +38,12 @@ gst_vaapi_display_x11_get_screen
 <SUBSECTION Standard>
 GST_VAAPI_DISPLAY_X11
 GST_VAAPI_IS_DISPLAY_X11
-GST_VAAPI_TYPE_DISPLAY_X11
-gst_vaapi_display_x11_get_type
-GST_VAAPI_DISPLAY_X11_CLASS
-GST_VAAPI_IS_DISPLAY_X11_CLASS
-GST_VAAPI_DISPLAY_X11_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapiwindow_x11</FILE>
 <TITLE>GstVaapiWindowX11</TITLE>
 GstVaapiWindowX11
-GstVaapiWindowX11Class
 GST_VAAPI_WINDOW_XWINDOW
 gst_vaapi_window_x11_new
 gst_vaapi_window_x11_new_with_xid
@@ -70,35 +52,23 @@ gst_vaapi_window_x11_is_foreign_xid
 <SUBSECTION Standard>
 GST_VAAPI_WINDOW_X11
 GST_VAAPI_IS_WINDOW_X11
-GST_VAAPI_TYPE_WINDOW_X11
-gst_vaapi_window_x11_get_type
-GST_VAAPI_WINDOW_X11_CLASS
-GST_VAAPI_IS_WINDOW_X11_CLASS
-GST_VAAPI_WINDOW_X11_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapidisplay_glx</FILE>
 <TITLE>GstVaapiDisplayGLX</TITLE>
 GstVaapiDisplayGLX
-GstVaapiDisplayGLXClass
 gst_vaapi_display_glx_new
 gst_vaapi_display_glx_new_with_display
 <SUBSECTION Standard>
 GST_VAAPI_DISPLAY_GLX
 GST_VAAPI_IS_DISPLAY_GLX
-GST_VAAPI_TYPE_DISPLAY_GLX
-gst_vaapi_display_glx_get_type
-GST_VAAPI_DISPLAY_GLX_CLASS
-GST_VAAPI_IS_DISPLAY_GLX_CLASS
-GST_VAAPI_DISPLAY_GLX_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapiwindow_glx</FILE>
 <TITLE>GstVaapiWindowGLX</TITLE>
 GstVaapiWindowGLX
-GstVaapiWindowGLXClass
 gst_vaapi_window_glx_new
 gst_vaapi_window_glx_new_with_xid
 gst_vaapi_window_glx_get_context
@@ -108,19 +78,12 @@ gst_vaapi_window_glx_swap_buffers
 gst_vaapi_window_glx_put_texture
 <SUBSECTION Standard>
 GST_VAAPI_WINDOW_GLX
-GST_VAAPI_IS_WINDOW_GLX
-GST_VAAPI_TYPE_WINDOW_GLX
-gst_vaapi_window_glx_get_type
-GST_VAAPI_WINDOW_GLX_CLASS
-GST_VAAPI_IS_WINDOW_GLX_CLASS
-GST_VAAPI_WINDOW_GLX_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapidisplay</FILE>
 <TITLE>GstVaapiDisplay</TITLE>
 GstVaapiDisplay
-GstVaapiDisplayClass
 gst_vaapi_display_new_with_display
 gst_vaapi_display_lock
 gst_vaapi_display_unlock
@@ -147,27 +110,16 @@ gst_vaapi_display_set_render_mode
 <SUBSECTION Standard>
 GST_VAAPI_DISPLAY
 GST_VAAPI_IS_DISPLAY
-GST_VAAPI_TYPE_DISPLAY
-gst_vaapi_display_get_type
-GST_VAAPI_DISPLAY_CLASS
-GST_VAAPI_IS_DISPLAY_CLASS
-GST_VAAPI_DISPLAY_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapiimagepool</FILE>
 <TITLE>GstVaapiImagePool</TITLE>
 GstVaapiImagePool
-GstVaapiImagePoolClass
 gst_vaapi_image_pool_new
 <SUBSECTION Standard>
 GST_VAAPI_IMAGE_POOL
 GST_VAAPI_IS_IMAGE_POOL
-GST_VAAPI_TYPE_IMAGE_POOL
-gst_vaapi_image_pool_get_type
-GST_VAAPI_IMAGE_POOL_CLASS
-GST_VAAPI_IS_IMAGE_POOL_CLASS
-GST_VAAPI_IMAGE_POOL_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -176,32 +128,14 @@ GST_VAAPI_IMAGE_POOL_GET_CLASS
 GstVaapiID
 GST_VAAPI_ID_FORMAT
 GST_VAAPI_ID_ARGS
-GST_VAAPI_ID
-GST_VAAPI_ID_NONE
 GstVaapiPoint
 GstVaapiRectangle
-</SECTION>
-
-<SECTION>
-<FILE>gstvaapivalue</FILE>
-<TITLE></TITLE>
-GST_VAAPI_TYPE_ID
-gst_vaapi_value_get_id
-gst_vaapi_value_set_id
-</SECTION>
-
-<SECTION>
-<FILE>gstvaapiparamspecs</FILE>
-<TITLE></TITLE>
-GstVaapiParamSpecID
-gst_vaapi_param_spec_id
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapiwindow</FILE>
 <TITLE>GstVaapiWindow</TITLE>
 GstVaapiWindow
-GstVaapiWindowClass
 gst_vaapi_window_get_display
 gst_vaapi_window_show
 gst_vaapi_window_hide
@@ -217,18 +151,12 @@ gst_vaapi_window_put_surface
 <SUBSECTION Standard>
 GST_VAAPI_WINDOW
 GST_VAAPI_IS_WINDOW
-GST_VAAPI_TYPE_WINDOW
-gst_vaapi_window_get_type
-GST_VAAPI_WINDOW_CLASS
-GST_VAAPI_IS_WINDOW_CLASS
-GST_VAAPI_WINDOW_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapiobject</FILE>
 <TITLE>GstVaapiObject</TITLE>
 GstVaapiObject
-GstVaapiObjectClass
 gst_vaapi_object_get_display
 gst_vaapi_object_lock_display
 gst_vaapi_object_unlock_display
@@ -236,11 +164,6 @@ gst_vaapi_object_get_id
 <SUBSECTION Standard>
 GST_VAAPI_OBJECT
 GST_VAAPI_IS_OBJECT
-GST_VAAPI_TYPE_OBJECT
-gst_vaapi_object_get_type
-GST_VAAPI_OBJECT_CLASS
-GST_VAAPI_IS_OBJECT_CLASS
-GST_VAAPI_OBJECT_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -250,7 +173,6 @@ GST_VAAPI_IMAGE_WIDTH
 GST_VAAPI_IMAGE_HEIGHT
 <TITLE>GstVaapiImage</TITLE>
 GstVaapiImage
-GstVaapiImageClass
 gst_vaapi_image_new
 gst_vaapi_image_new_with_image
 gst_vaapi_image_get_id
@@ -273,11 +195,6 @@ gst_vaapi_image_update_from_buffer
 <SUBSECTION Standard>
 GST_VAAPI_IMAGE
 GST_VAAPI_IS_IMAGE
-GST_VAAPI_TYPE_IMAGE
-gst_vaapi_image_get_type
-GST_VAAPI_IMAGE_CLASS
-GST_VAAPI_IS_IMAGE_CLASS
-GST_VAAPI_IMAGE_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -287,7 +204,6 @@ GstVaapiSurfaceStatus
 GstVaapiSurfaceRenderFlags
 <TITLE>GstVaapiSurface</TITLE>
 GstVaapiSurface
-GstVaapiSurfaceClass
 gst_vaapi_surface_new
 gst_vaapi_surface_get_id
 gst_vaapi_surface_get_chroma_type
@@ -304,18 +220,12 @@ gst_vaapi_surface_query_status
 <SUBSECTION Standard>
 GST_VAAPI_SURFACE
 GST_VAAPI_IS_SURFACE
-GST_VAAPI_TYPE_SURFACE
-gst_vaapi_surface_get_type
-GST_VAAPI_SURFACE_CLASS
-GST_VAAPI_IS_SURFACE_CLASS
-GST_VAAPI_SURFACE_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapisubpicture</FILE>
 <TITLE>GstVaapiSubpicture</TITLE>
 GstVaapiSubpicture
-GstVaapiSubpictureClass
 gst_vaapi_subpicture_new
 gst_vaapi_subpicture_new_from_overlay_rectangle
 gst_vaapi_subpicture_get_id
@@ -327,11 +237,6 @@ gst_vaapi_subpicture_set_image
 <SUBSECTION Standard>
 GST_VAAPI_SUBPICTURE
 GST_VAAPI_IS_SUBPICTURE
-GST_VAAPI_TYPE_SUBPICTURE
-gst_vaapi_subpicture_get_type
-GST_VAAPI_SUBPICTURE_CLASS
-GST_VAAPI_IS_SUBPICTURE_CLASS
-GST_VAAPI_SUBPICTURE_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -368,7 +273,6 @@ gst_vaapi_entrypoint_get_va_entrypoint
 <FILE>gstvaapitexture</FILE>
 <TITLE>GstVaapiTexture</TITLE>
 GstVaapiTexture
-GstVaapiTextureClass
 gst_vaapi_texture_new
 gst_vaapi_texture_new_with_texture
 gst_vaapi_texture_get_id
@@ -378,21 +282,12 @@ gst_vaapi_texture_get_width
 gst_vaapi_texture_get_height
 gst_vaapi_texture_get_size
 gst_vaapi_texture_put_surface
-<SUBSECTION Standard>
-GST_VAAPI_TEXTURE
-GST_VAAPI_IS_TEXTURE
-GST_VAAPI_TYPE_TEXTURE
-gst_vaapi_texture_get_type
-GST_VAAPI_TEXTURE_CLASS
-GST_VAAPI_IS_TEXTURE_CLASS
-GST_VAAPI_TEXTURE_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapicontext</FILE>
 <TITLE>GstVaapiContext</TITLE>
 GstVaapiContext
-GstVaapiContextClass
 gst_vaapi_context_new
 gst_vaapi_context_reset
 gst_vaapi_context_get_id
@@ -406,11 +301,6 @@ gst_vaapi_context_apply_composition
 <SUBSECTION Standard>
 GST_VAAPI_CONTEXT
 GST_VAAPI_IS_CONTEXT
-GST_VAAPI_TYPE_CONTEXT
-gst_vaapi_context_get_type
-GST_VAAPI_CONTEXT_CLASS
-GST_VAAPI_IS_CONTEXT_CLASS
-GST_VAAPI_CONTEXT_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -418,7 +308,6 @@ GST_VAAPI_CONTEXT_GET_CLASS
 GstVaapiDecoderStatus
 <TITLE>GstVaapiDecoder</TITLE>
 GstVaapiDecoder
-GstVaapiDecoderClass
 gst_vaapi_decoder_get_caps
 gst_vaapi_decoder_get_codec
 gst_vaapi_decoder_get_codec_state
@@ -431,91 +320,41 @@ gst_vaapi_decoder_decode
 <SUBSECTION Standard>
 GST_VAAPI_DECODER
 GST_VAAPI_IS_DECODER
-GST_VAAPI_TYPE_DECODER
-gst_vaapi_decoder_get_type
-GST_VAAPI_DECODER_CLASS
-GST_VAAPI_IS_DECODER_CLASS
-GST_VAAPI_DECODER_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapidecoder_jpeg</FILE>
 <TITLE>GstVaapiDecoderJpeg</TITLE>
 GstVaapiDecoderJpeg
-GstVaapiDecoderJpegClass
 gst_vaapi_decoder_jpeg_new
-<SUBSECTION Standard>
-GST_VAAPI_DECODER_JPEG
-GST_VAAPI_IS_DECODER_JPEG
-GST_VAAPI_TYPE_DECODER_JPEG
-gst_vaapi_decoder_jpeg_get_type
-GST_VAAPI_DECODER_JPEG_CLASS
-GST_VAAPI_IS_DECODER_JPEG_CLASS
-GST_VAAPI_DECODER_JPEG_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapidecoder_mpeg2</FILE>
 <TITLE>GstVaapiDecoderMpeg2</TITLE>
 GstVaapiDecoderMpeg2
-GstVaapiDecoderMpeg2Class
 gst_vaapi_decoder_mpeg2_new
-<SUBSECTION Standard>
-GST_VAAPI_DECODER_MPEG2
-GST_VAAPI_IS_DECODER_MPEG2
-GST_VAAPI_TYPE_DECODER_MPEG2
-gst_vaapi_decoder_mpeg2_get_type
-GST_VAAPI_DECODER_MPEG2_CLASS
-GST_VAAPI_IS_DECODER_MPEG2_CLASS
-GST_VAAPI_DECODER_MPEG2_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapidecoder_mpeg4</FILE>
 <TITLE>GstVaapiDecoderMpeg4</TITLE>
 GstVaapiDecoderMpeg4
-GstVaapiDecoderMpeg4Class
 gst_vaapi_decoder_mpeg4_new
-<SUBSECTION Standard>
-GST_VAAPI_DECODER_MPEG4
-GST_VAAPI_IS_DECODER_MPEG4
-GST_VAAPI_TYPE_DECODER_MPEG4
-gst_vaapi_decoder_mpeg4_get_type
-GST_VAAPI_DECODER_MPEG4_CLASS
-GST_VAAPI_IS_DECODER_MPEG4_CLASS
-GST_VAAPI_DECODER_MPEG4_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapidecoder_h264</FILE>
 <TITLE>GstVaapiDecoderH264</TITLE>
 GstVaapiDecoderH264
-GstVaapiDecoderH264Class
 gst_vaapi_decoder_h264_new
-<SUBSECTION Standard>
-GST_VAAPI_DECODER_H264
-GST_VAAPI_IS_DECODER_H264
-GST_VAAPI_TYPE_DECODER_H264
-gst_vaapi_decoder_h264_get_type
-GST_VAAPI_DECODER_H264_CLASS
-GST_VAAPI_IS_DECODER_H264_CLASS
-GST_VAAPI_DECODER_H264_GET_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>gstvaapidecoder_vc1</FILE>
 <TITLE>GstVaapiDecoderVC1</TITLE>
 GstVaapiDecoderVC1
-GstVaapiDecoderVC1Class
 gst_vaapi_decoder_vc1_new
-<SUBSECTION Standard>
-GST_VAAPI_DECODER_VC1
-GST_VAAPI_IS_DECODER_VC1
-GST_VAAPI_TYPE_DECODER_VC1
-gst_vaapi_decoder_vc1_get_type
-GST_VAAPI_DECODER_VC1_CLASS
-GST_VAAPI_IS_DECODER_VC1_CLASS
-GST_VAAPI_DECODER_VC1_GET_CLASS
 </SECTION>
 
 <SECTION>
