@@ -167,7 +167,7 @@ video_output_create_display(const gchar *display_name)
                 if (display) {
                     if (gst_vaapi_display_get_display(display))
                         break;
-                    g_object_unref(display);
+                    gst_vaapi_display_unref(display);
                     display = NULL;
                 }
             }

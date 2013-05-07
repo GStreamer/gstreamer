@@ -43,7 +43,7 @@ image_generate(
         image_draw_rectangle(image, w/2, h/2, w/2, h/2, 0xff000000))
         return image;
 
-    g_object_unref(image);
+    gst_vaapi_object_unref(image);
     return NULL;
 }
 
@@ -355,6 +355,6 @@ image_upload(GstVaapiImage *image, GstVaapiSurface *surface)
         g_error("could not associate subpicture to surface");
 
     /* The surface holds a reference to the subpicture. This is safe */
-    g_object_unref(subpicture);
+    gst_vaapi_object_unref(subpicture);
     return TRUE;
 }

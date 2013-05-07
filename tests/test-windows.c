@@ -83,7 +83,7 @@ create_test_surface(GstVaapiDisplay *display, guint width, guint height)
     if (!gst_vaapi_surface_sync(surface))
         g_error("could not complete image upload");
 
-    g_object_unref(image);
+    gst_vaapi_object_unref(image);
     return surface;
 }
 
@@ -125,11 +125,11 @@ main(int argc, char *argv[])
             g_error("could not render surface");
 
         pause();
-        g_object_unref(window);
+        gst_vaapi_window_unref(window);
     }
 
-    g_object_unref(surface);
-    g_object_unref(display);
+    gst_vaapi_object_unref(surface);
+    gst_vaapi_display_unref(display);
 #endif
 
 #if USE_X11
@@ -155,7 +155,7 @@ main(int argc, char *argv[])
             g_error("could not render surface");
 
         pause();
-        g_object_unref(window);
+        gst_vaapi_window_unref(window);
     }
 
     g_print("#\n");
@@ -192,13 +192,13 @@ main(int argc, char *argv[])
             g_error("could not render surface");
 
         pause();
-        g_object_unref(window);
+        gst_vaapi_window_unref(window);
         XUnmapWindow(dpy, win);
         XDestroyWindow(dpy, win);
     }
 
-    g_object_unref(surface);
-    g_object_unref(display);
+    gst_vaapi_object_unref(surface);
+    gst_vaapi_display_unref(display);
 #endif
 
 #if USE_WAYLAND
@@ -224,11 +224,11 @@ main(int argc, char *argv[])
             g_error("could not render surface");
 
         pause();
-        g_object_unref(window);
+        gst_vaapi_window_unref(window);
     }
 
-    g_object_unref(surface);
-    g_object_unref(display);
+    gst_vaapi_object_unref(surface);
+    gst_vaapi_display_unref(display);
 #endif
 
     gst_deinit();

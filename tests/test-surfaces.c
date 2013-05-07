@@ -26,12 +26,6 @@
 
 #define MAX_SURFACES 4
 
-static void
-gst_vaapi_object_destroy_cb(gpointer object, gpointer user_data)
-{
-    g_print("destroying GstVaapiObject %p\n", object);
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -58,14 +52,11 @@ main(int argc, char *argv[])
     if (!surface)
         g_error("could not create Gst/VA surface");
 
-    /* This also tests for the GstVaapiParamSpecID */
-    g_object_get(G_OBJECT(surface), "id", &surface_id, NULL);
-    if (surface_id != gst_vaapi_surface_get_id(surface))
-        g_error("could not retrieve the native surface ID");
+    surface_id = gst_vaapi_surface_get_id(surface);
     g_print("created surface %" GST_VAAPI_ID_FORMAT "\n",
             GST_VAAPI_ID_ARGS(surface_id));
 
-    g_object_unref(surface);
+    gst_vaapi_object_unref(surface);
 
     caps = gst_caps_new_simple(
         GST_VAAPI_SURFACE_CAPS_NAME,
@@ -91,7 +82,7 @@ main(int argc, char *argv[])
     }
 
     /* Check the pool doesn't return the last free'd surface */
-    surface = g_object_ref(surfaces[1]);
+    surface = gst_vaapi_object_ref(surfaces[1]);
 
     for (i = 0; i < 2; i++)
         gst_vaapi_video_pool_put_object(pool, surfaces[i]);
@@ -114,20 +105,11 @@ main(int argc, char *argv[])
         surfaces[i] = NULL;
     }
 
-    g_signal_connect(
-        G_OBJECT(surface),
-        "destroy",
-        G_CALLBACK(gst_vaapi_object_destroy_cb), NULL
-    );
-
     /* Unref in random order to check objects are correctly refcounted */
-    g_print("unref display\n");
-    g_object_unref(display);
+    gst_vaapi_display_unref(display);
     gst_caps_unref(caps);
-    g_print("unref pool\n");
-    g_object_unref(pool);
-    g_print("unref surface\n");
-    g_object_unref(surface);
+    gst_vaapi_video_pool_unref(pool);
+    gst_vaapi_object_unref(surface);
     video_output_exit();
     return 0;
 }

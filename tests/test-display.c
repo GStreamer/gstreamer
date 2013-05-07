@@ -179,17 +179,6 @@ free_property_cb(gpointer data, gpointer user_data)
     gst_vaapi_display_property_free(data);
 }
 
-static inline GParamSpec *
-get_display_property(GstVaapiDisplay *display, const gchar *name)
-{
-    GObjectClass *klass;
-
-    klass = G_OBJECT_CLASS(GST_VAAPI_DISPLAY_GET_CLASS(display));
-    if (!klass)
-        return NULL;
-    return g_object_class_find_property(klass, name);
-}
-
 static void
 dump_properties(GstVaapiDisplay *display)
 {
@@ -212,25 +201,21 @@ dump_properties(GstVaapiDisplay *display)
         return;
 
     for (i = 0; g_properties[i] != NULL; i++) {
-        GParamSpec *pspec = get_display_property(display, g_properties[i]);
+        const gchar * const name = g_properties[i];
 
-        if (!pspec) {
-            GST_ERROR("failed to find GstVaapiDisplay property '%s'",
-                      g_properties[i]);
-            goto end;
-        }
-
-        if (!gst_vaapi_display_has_property(display, pspec->name))
+        if (!gst_vaapi_display_has_property(display, name))
             continue;
             
-        prop = gst_vaapi_display_property_new(pspec->name);
+        prop = gst_vaapi_display_property_new(name);
         if (!prop) {
             GST_ERROR("failed to allocate GstVaapiDisplayProperty");
             goto end;
         }
 
-        g_value_init(&prop->value, pspec->value_type);
-        g_object_get_property(G_OBJECT(display), pspec->name, &prop->value);
+        if (!gst_vaapi_display_get_property(display, name, &prop->value)) {
+            GST_ERROR("failed to get property '%s'", name);
+            goto end;
+        }
         g_ptr_array_add(properties, prop);
     }
 
@@ -301,7 +286,7 @@ main(int argc, char *argv[])
             g_error("could not create Gst/VA display");
 
         dump_info(display);
-        g_object_unref(display);
+        gst_vaapi_display_unref(display);
     }
     g_print("\n");
 
@@ -320,7 +305,7 @@ main(int argc, char *argv[])
             g_error("could not create Gst/VA display");
 
         dump_info(display);
-        g_object_unref(display);
+        gst_vaapi_display_unref(display);
         close(drm_device);
     }
     g_print("\n");
@@ -345,7 +330,7 @@ main(int argc, char *argv[])
             g_error("could not create Gst/VA display");
 
         dump_info(display);
-        g_object_unref(display);
+        gst_vaapi_display_unref(display);
         close(drm_device);
     }
     g_print("\n");
@@ -367,7 +352,7 @@ main(int argc, char *argv[])
         g_print("Pixel aspect ratio: %u/%u\n", par_n, par_d);
 
         dump_info(display);
-        g_object_unref(display);
+        gst_vaapi_display_unref(display);
     }
     g_print("\n");
 
@@ -386,7 +371,7 @@ main(int argc, char *argv[])
             g_error("could not create Gst/VA display");
 
         dump_info(display);
-        g_object_unref(display);
+        gst_vaapi_display_unref(display);
         XCloseDisplay(x11_display);
     }
     g_print("\n");
@@ -411,7 +396,7 @@ main(int argc, char *argv[])
             g_error("could not create Gst/VA display");
 
         dump_info(display);
-        g_object_unref(display);
+        gst_vaapi_display_unref(display);
         XCloseDisplay(x11_display);
     }
     g_print("\n");
@@ -433,7 +418,7 @@ main(int argc, char *argv[])
         g_print("Pixel aspect ratio: %u/%u\n", par_n, par_d);
 
         dump_info(display);
-        g_object_unref(display);
+        gst_vaapi_display_unref(display);
     }
     g_print("\n");
 
@@ -452,7 +437,7 @@ main(int argc, char *argv[])
             g_error("could not create Gst/VA display");
 
         dump_info(display);
-        g_object_unref(display);
+        gst_vaapi_display_unref(display);
         XCloseDisplay(x11_display);
     }
     g_print("\n");
@@ -478,7 +463,7 @@ main(int argc, char *argv[])
             g_error("could not create Gst/VA display");
 
         dump_info(display);
-        g_object_unref(display);
+        gst_vaapi_display_unref(display);
         XCloseDisplay(x11_display);
     }
     g_print("\n");
@@ -501,7 +486,7 @@ main(int argc, char *argv[])
         g_print("Pixel aspect ratio: %u/%u\n", par_n, par_d);
 
         dump_info(display);
-        g_object_unref(display);
+        gst_vaapi_display_unref(display);
     }
     g_print("\n");
 #endif

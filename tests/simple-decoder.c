@@ -331,16 +331,13 @@ app_set_framerate(App *app, guint fps_n, guint fps_d)
 }
 
 static void
-handle_decoder_caps(GObject *obj, GParamSpec *pspec, void *user_data)
+handle_decoder_state_changes(GstVaapiDecoder *decoder,
+    const GstVideoCodecState *codec_state, gpointer user_data)
 {
     App * const app = user_data;
-    GstVideoCodecState *codec_state;
 
-    g_assert(app->decoder == GST_VAAPI_DECODER(obj));
-
-    codec_state = gst_vaapi_decoder_get_codec_state(app->decoder);
+    g_assert(app->decoder == decoder);
     app_set_framerate(app, codec_state->info.fps_n, codec_state->info.fps_d);
-    gst_video_codec_state_unref(codec_state);
 }
 
 static gboolean
@@ -383,8 +380,8 @@ start_decoder(App *app)
     if (!app->decoder)
         return FALSE;
 
-    g_signal_connect(G_OBJECT(app->decoder), "notify::caps",
-        G_CALLBACK(handle_decoder_caps), app);
+    gst_vaapi_decoder_set_codec_state_changed_func(app->decoder,
+        handle_decoder_state_changes, app);
 
     g_timer_start(app->timer);
 
@@ -538,9 +535,9 @@ app_free(App *app)
     }
     g_free(app->file_name);
 
-    g_clear_object(&app->decoder);
-    g_clear_object(&app->window);
-    g_clear_object(&app->display);
+    gst_vaapi_decoder_replace(&app->decoder, NULL);
+    gst_vaapi_window_replace(&app->window, NULL);
+    gst_vaapi_display_replace(&app->display, NULL);
 
     if (app->decoder_queue) {
         g_async_queue_unref(app->decoder_queue);

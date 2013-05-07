@@ -182,12 +182,12 @@ main(int argc, char *argv[])
     gst_vaapi_window_glx_swap_buffers(glx_window);
     pause();
 
-    g_object_unref(textures[0]);
-    g_object_unref(textures[1]);
+    gst_vaapi_texture_unref(textures[0]);
+    gst_vaapi_texture_unref(textures[1]);
     glDeleteTextures(1, &texture_id);
 
-    g_object_unref(window);
-    g_object_unref(display);
+    gst_vaapi_window_unref(window);
+    gst_vaapi_display_unref(display);
     gst_deinit();
     return 0;
 }

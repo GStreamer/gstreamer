@@ -171,9 +171,9 @@ main(int argc, char *argv[])
     pause();
 
     gst_video_overlay_composition_unref(compo);
-    g_object_unref(decoder);
-    g_object_unref(window);
-    g_object_unref(display);
+    gst_vaapi_decoder_unref(decoder);
+    gst_vaapi_window_unref(window);
+    gst_vaapi_display_unref(display);
     g_free(g_codec_str);
     video_output_exit();
     return 0;

@@ -62,18 +62,16 @@ find_codec_defs(const gchar *codec_str)
     return NULL;
 }
 
-#define CODEC_DEFS_KEY "codec-defs"
-
 static inline const CodecDefs *
 get_codec_defs(GstVaapiDecoder *decoder)
 {
-    return g_object_get_data(G_OBJECT(decoder), CODEC_DEFS_KEY);
+    return gst_vaapi_decoder_get_user_data(decoder);
 }
 
 static inline void
 set_codec_defs(GstVaapiDecoder *decoder, const CodecDefs *c)
 {
-    g_object_set_data(G_OBJECT(decoder), CODEC_DEFS_KEY, (gpointer)c);
+    gst_vaapi_decoder_set_user_data(decoder, (gpointer)c);
 }
 
 GstVaapiDecoder *

@@ -68,7 +68,7 @@ main(int argc, char *argv[])
     if (CHECK_DISPLAY_CACHE)
         display2 = video_output_create_display(NULL);
     else
-        display2 = g_object_ref(display);
+        display2 = gst_vaapi_display_ref(display);
     if (!display2)
         g_error("could not create second VA display");
 
@@ -97,10 +97,10 @@ main(int argc, char *argv[])
 
     pause();
 
-    g_object_unref(decoder);
-    g_object_unref(window);
-    g_object_unref(display);
-    g_object_unref(display2);
+    gst_vaapi_decoder_unref(decoder);
+    gst_vaapi_window_unref(window);
+    gst_vaapi_display_unref(display);
+    gst_vaapi_display_unref(display2);
     g_free(g_codec_str);
     video_output_exit();
     return 0;
