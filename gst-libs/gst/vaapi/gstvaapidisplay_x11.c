@@ -139,8 +139,11 @@ set_synchronous(GstVaapiDisplayX11 *display, gboolean synchronous)
 
     if (priv->synchronous != synchronous) {
         priv->synchronous = synchronous;
-        if (priv->x11_display)
+        if (priv->x11_display) {
+            GST_VAAPI_DISPLAY_LOCK(display);
             XSynchronize(priv->x11_display, synchronous);
+            GST_VAAPI_DISPLAY_UNLOCK(display);
+        }
     }
 }
 
