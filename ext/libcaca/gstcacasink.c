@@ -71,7 +71,8 @@ enum
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGB, RGBx, RGB16, RGB15 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+        ("{ RGB, BGR, RGBx, xRGB, BGRx, xBGR, RGB16, RGB15 }"))
     );
 
 static gboolean gst_cacasink_setcaps (GstBaseSink * pad, GstCaps * caps);
@@ -180,19 +181,17 @@ gst_cacasink_setcaps (GstBaseSink * basesink, GstCaps * caps)
   if (!gst_video_info_from_caps (&info, caps))
     goto caps_error;
 
-
   switch (GST_VIDEO_INFO_FORMAT (&info)) {
     case GST_VIDEO_FORMAT_RGB:
-      bpp = 24;
-      red_mask = 0xff0000;
-      green_mask = 0x00ff00;
-      blue_mask = 0x0000ff;
-      break;
+    case GST_VIDEO_FORMAT_BGR:
     case GST_VIDEO_FORMAT_RGBx:
-      bpp = 32;
-      red_mask = 0xff000000;
-      green_mask = 0x00ff0000;
-      blue_mask = 0x0000ff00;
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xBGR:
+      bpp = 8 * info.finfo->pixel_stride[0];
+      red_mask = 0xff << (8 * info.finfo->poffset[GST_VIDEO_COMP_R]);
+      green_mask = 0xff << (8 * info.finfo->poffset[GST_VIDEO_COMP_G]);
+      blue_mask = 0xff << (8 * info.finfo->poffset[GST_VIDEO_COMP_B]);
       break;
     case GST_VIDEO_FORMAT_RGB16:
       bpp = 16;
