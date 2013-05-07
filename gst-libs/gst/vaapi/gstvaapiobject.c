@@ -199,7 +199,7 @@ gst_vaapi_object_unlock_display(GstVaapiObject *object)
 GstVaapiID
 gst_vaapi_object_get_id(GstVaapiObject *object)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_OBJECT(object), GST_VAAPI_ID_NONE);
+    g_return_val_if_fail(GST_VAAPI_IS_OBJECT(object), 0);
 
     return GST_VAAPI_OBJECT_ID(object);
 }

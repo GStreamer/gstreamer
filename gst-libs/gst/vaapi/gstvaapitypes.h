@@ -33,37 +33,7 @@ G_BEGIN_DECLS
  * An integer large enough to hold a generic VA id or a pointer
  * wherever necessary.
  */
-#if defined(GLIB_SIZEOF_VOID_P)
-# define GST_VAAPI_TYPE_ID_SIZE GLIB_SIZEOF_VOID_P
-#elif G_MAXULONG == 0xffffffff
-# define GST_VAAPI_TYPE_ID_SIZE 4
-#elif G_MAXULONG == 0xffffffffffffffffull
-# define GST_VAAPI_TYPE_ID_SIZE 8
-#else
-# error "could not determine size of GstVaapiID"
-#endif
-#if GST_VAAPI_TYPE_ID_SIZE == 4
-typedef guint32 GstVaapiID;
-#elif GST_VAAPI_TYPE_ID_SIZE == 8
-typedef guint64 GstVaapiID;
-#else
-# error "unsupported value for GST_VAAPI_TYPE_ID_SIZE"
-#endif
-
-/**
- * GST_VAAPI_ID:
- * @id: an arbitrary integer value
- *
- * Macro that creates a #GstVaapiID from @id.
- */
-#define GST_VAAPI_ID(id) ((GstVaapiID)(id))
-
-/**
- * GST_VAAPI_ID_NONE:
- *
- * Macro that evaluates to the default #GstVaapiID value.
- */
-#define GST_VAAPI_ID_NONE GST_VAAPI_ID(0)
+typedef gsize GstVaapiID;
 
 /**
  * GST_VAAPI_ID_FORMAT:
@@ -85,7 +55,7 @@ typedef guint64 GstVaapiID;
  * Can be used together with #GST_VAAPI_ID_FORMAT to properly output
  * an integer value in a printf()-style text message.
  */
-#define GST_VAAPI_ID_ARGS(id) GUINT_TO_POINTER(id)
+#define GST_VAAPI_ID_ARGS(id) GSIZE_TO_POINTER(id)
 
 /**
  * GstVaapiPoint:
