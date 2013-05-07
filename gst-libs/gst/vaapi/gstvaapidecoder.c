@@ -911,6 +911,8 @@ gst_vaapi_decoder_ensure_context(
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
 
+    gst_vaapi_decoder_set_picture_size(decoder, cip->width, cip->height);
+
     if (priv->context) {
         if (!gst_vaapi_context_reset_full(priv->context, cip))
             return FALSE;
