@@ -224,7 +224,6 @@ static GstStateChangeReturn
 gst_alsasrc_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstAudioBaseSrc *src = GST_AUDIO_BASE_SRC (element);
   GstAlsaSrc *alsa = GST_ALSA_SRC (element);
   GstClock *clk;
 
@@ -238,15 +237,20 @@ gst_alsasrc_change_state (GstElement * element, GstStateChange transition)
       break;
 
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      clk = src->clock;
       alsa->driver_timestamps = FALSE;
-      if (GST_IS_SYSTEM_CLOCK (clk)) {
-        gint clocktype;
-        g_object_get (clk, "clock-type", &clocktype, NULL);
-        if (clocktype == GST_CLOCK_TYPE_MONOTONIC) {
-          GST_INFO ("Using driver timestamps !");
-          alsa->driver_timestamps = TRUE;
+
+      clk = gst_element_get_clock (element);
+      if (clk != NULL) {
+        if (GST_IS_SYSTEM_CLOCK (clk)) {
+          gint clocktype;
+          g_object_get (clk, "clock-type", &clocktype, NULL);
+          if (clocktype == GST_CLOCK_TYPE_MONOTONIC) {
+            GST_INFO ("Using driver timestamps !");
+            alsa->driver_timestamps = TRUE;
+          }	  
         }
+
+        gst_object_unref (clk);
       }
       break;
   }

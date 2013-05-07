@@ -869,7 +869,7 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   if (!(clock = GST_ELEMENT_CLOCK (src)))
     goto no_sync;
 
-  if (clock != src->clock) {
+  if (!GST_CLOCK_TIME_IS_VALID (rb_timestamp) && clock != src->clock) {
     /* we are slaved, check how to handle this */
     switch (src->priv->slave_method) {
       case GST_AUDIO_BASE_SRC_SLAVE_RESAMPLE:
