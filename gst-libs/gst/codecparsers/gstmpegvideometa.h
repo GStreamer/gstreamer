@@ -53,7 +53,7 @@ const GstMetaInfo * gst_mpeg_video_meta_get_info (void);
  * Can be used by elements (mainly decoders) to avoid having to parse
  * Mpeg video 1/2 packets if it can be done upstream.
  *
- * The various fields are only valid during the lifetime of the #GstH264Meta.
+ * The various fields are only valid during the lifetime of the #GstMpegVideoMeta.
  * If elements wish to use those for longer, they are required to make a copy.
  *
  * Since: 1.2
