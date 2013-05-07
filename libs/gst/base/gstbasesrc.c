@@ -1660,6 +1660,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
 
     /* for deriving a stop position for the playback segment from the seek
      * segment, we must take the duration when the stop is not set */
+    /* FIXME: This is never used below */
     if ((stop = seeksegment.stop) == -1)
       stop = seeksegment.duration;
 
