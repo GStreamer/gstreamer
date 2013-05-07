@@ -1,100 +1,64 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="2.0" toolsVersion="3084" systemVersion="11G63" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="2">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="2.0" toolsVersion="3084" systemVersion="11G63" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="z7O-8l-Zeo">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="2083"/>
     </dependencies>
     <scenes>
         <!--View Controller-->
-        <scene sceneID="4">
+        <scene sceneID="P93-nn-HBJ">
             <objects>
-                <viewController id="2" customClass="ViewController" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="5">
+                <viewController id="z7O-8l-Zeo" customClass="ViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="CqS-Gu-I1O">
                         <rect key="frame" x="0.0" y="20" width="768" height="1004"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="nMR-rP-TAZ" userLabel="Content">
-                                <subviews>
-                                    <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Initializing..." textAlignment="center" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="688" translatesAutoresizingMaskIntoConstraints="NO" id="UBA-ZM-cSe" userLabel="Message">
-                                        <fontDescription key="fontDescription" type="system" pointSize="24"/>
-                                        <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="elU-wp-Qp2" userLabel="Play">
-                                        <constraints>
-                                            <constraint firstAttribute="height" constant="100" type="user" id="4hh-98-fyR"/>
-                                            <constraint firstAttribute="width" constant="400" type="user" id="uTI-bm-bpQ"/>
-                                        </constraints>
-                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="32"/>
-                                        <state key="normal" title="Play">
-                                            <color key="titleColor" red="0.19607843459999999" green="0.30980393290000002" blue="0.52156865600000002" alpha="1" colorSpace="calibratedRGB"/>
-                                            <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                        </state>
-                                        <state key="disabled">
-                                            <color key="titleColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
-                                        </state>
-                                        <state key="highlighted">
-                                            <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                        </state>
-                                        <connections>
-                                            <action selector="play:" destination="2" eventType="touchUpInside" id="Rji-r8-PDd"/>
-                                        </connections>
-                                    </button>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="w2M-v5-UAa" userLabel="Pause">
-                                        <constraints>
-                                            <constraint firstAttribute="height" constant="100" type="user" id="L6h-G1-RwS"/>
-                                            <constraint firstAttribute="width" constant="400" type="user" id="S8q-2J-07k"/>
-                                        </constraints>
-                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="32"/>
-                                        <state key="normal" title="Pause">
-                                            <color key="titleColor" red="0.19607843459999999" green="0.30980393290000002" blue="0.52156865600000002" alpha="1" colorSpace="calibratedRGB"/>
-                                            <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                        </state>
-                                        <state key="disabled">
-                                            <color key="titleColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
-                                        </state>
-                                        <state key="highlighted">
-                                            <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                        </state>
-                                        <connections>
-                                            <action selector="pause:" destination="2" eventType="touchUpInside" id="zwv-tc-xE7"/>
-                                        </connections>
-                                    </button>
-                                </subviews>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Initializing..." textAlignment="center" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="728" translatesAutoresizingMaskIntoConstraints="NO" id="iLX-h1-Ko5" userLabel="Message">
                                 <constraints>
-                                    <constraint firstItem="elU-wp-Qp2" firstAttribute="top" secondItem="UBA-ZM-cSe" secondAttribute="bottom" constant="8" symbolic="YES" type="user" id="18h-11-jhy"/>
-                                    <constraint firstItem="w2M-v5-UAa" firstAttribute="top" secondItem="elU-wp-Qp2" secondAttribute="bottom" constant="8" symbolic="YES" type="user" id="6GJ-37-EcB"/>
-                                    <constraint firstAttribute="centerX" secondItem="w2M-v5-UAa" secondAttribute="centerX" type="user" id="7jU-ts-TJx"/>
-                                    <constraint firstAttribute="trailing" secondItem="UBA-ZM-cSe" secondAttribute="trailing" constant="20" symbolic="YES" type="user" id="EkQ-sA-oVc"/>
-                                    <constraint firstAttribute="centerX" secondItem="elU-wp-Qp2" secondAttribute="centerX" type="user" id="EuX-Nw-e9K"/>
-                                    <constraint firstAttribute="bottom" secondItem="w2M-v5-UAa" secondAttribute="bottom" constant="20" symbolic="YES" type="default" id="LCr-Rv-UZs"/>
-                                    <constraint firstItem="UBA-ZM-cSe" firstAttribute="top" secondItem="nMR-rP-TAZ" secondAttribute="top" constant="20" symbolic="YES" type="user" id="nNG-sn-bRM"/>
-                                    <constraint firstItem="UBA-ZM-cSe" firstAttribute="leading" secondItem="nMR-rP-TAZ" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="pJE-Vl-N8j"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="50" type="user" id="7Z8-1b-Y41"/>
                                 </constraints>
-                            </view>
+                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MUi-CE-Ydy">
+                                <items>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="onU-hf-FS4"/>
+                                    <barButtonItem systemItem="play" id="UlF-Ga-2VX">
+                                        <connections>
+                                            <action selector="play:" destination="z7O-8l-Zeo" id="5xC-uv-9lM"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem systemItem="pause" id="J3O-8j-Tkt">
+                                        <connections>
+                                            <action selector="pause:" destination="z7O-8l-Zeo" id="BYM-2X-Tel"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="urI-U7-ALw"/>
+                                </items>
+                            </toolbar>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="nMR-rP-TAZ" firstAttribute="leading" secondItem="5" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="E7n-88-e9Y"/>
-                            <constraint firstAttribute="centerX" secondItem="nMR-rP-TAZ" secondAttribute="centerX" type="user" id="SAT-T4-FL2"/>
-                            <constraint firstAttribute="centerY" secondItem="nMR-rP-TAZ" secondAttribute="centerY" type="user" id="SfA-hs-2KS"/>
-                            <constraint firstItem="nMR-rP-TAZ" firstAttribute="top" secondItem="5" secondAttribute="top" priority="1" constant="20" symbolic="YES" type="user" id="XdK-Aa-fKA"/>
+                            <constraint firstItem="iLX-h1-Ko5" firstAttribute="bottom" secondItem="MUi-CE-Ydy" secondAttribute="top" constant="8" symbolic="YES" type="user" id="FXP-eH-VSK"/>
+                            <constraint firstItem="MUi-CE-Ydy" firstAttribute="leading" secondItem="CqS-Gu-I1O" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="OM9-gE-OVP"/>
+                            <constraint firstAttribute="trailing" secondItem="iLX-h1-Ko5" secondAttribute="trailing" constant="20" symbolic="YES" type="user" id="Xdr-12-E1r"/>
+                            <constraint firstItem="iLX-h1-Ko5" firstAttribute="leading" secondItem="CqS-Gu-I1O" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="bT2-TE-X7Q"/>
+                            <constraint firstItem="MUi-CE-Ydy" firstAttribute="trailing" secondItem="CqS-Gu-I1O" secondAttribute="trailing" constant="20" symbolic="YES" type="user" id="iRT-XF-W0f"/>
+                            <constraint firstItem="MUi-CE-Ydy" firstAttribute="bottom" secondItem="CqS-Gu-I1O" secondAttribute="bottom" constant="20" symbolic="YES" type="user" id="w6K-xy-EJe"/>
                         </constraints>
                     </view>
+                    <simulatedStatusBarMetrics key="simulatedStatusBarMetrics" statusBarStyle="blackTranslucent"/>
                     <connections>
-                        <outlet property="message_label" destination="UBA-ZM-cSe" id="o2e-1J-nKs"/>
-                        <outlet property="pause_button" destination="w2M-v5-UAa" id="PKY-tN-Lod"/>
-                        <outlet property="play_button" destination="elU-wp-Qp2" id="C54-Xz-aIt"/>
+                        <outlet property="message_label" destination="iLX-h1-Ko5" id="Q0Y-3J-zis"/>
+                        <outlet property="pause_button" destination="J3O-8j-Tkt" id="Dls-sg-FPm"/>
+                        <outlet property="play_button" destination="UlF-Ga-2VX" id="243-yq-GEe"/>
                     </connections>
                 </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="3" sceneMemberID="firstResponder"/>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="iRS-GG-bR6" sceneMemberID="firstResponder"/>
             </objects>
         </scene>
     </scenes>
     <classes>
-        <class className="NSLayoutConstraint" superclassName="NSObject">
-            <source key="sourceIdentifier" type="project" relativePath="./Classes/NSLayoutConstraint.h"/>
-        </class>
         <class className="ViewController" superclassName="UIViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/ViewController.h"/>
             <relationships>
@@ -102,8 +66,8 @@
                 <relationship kind="action" name="play:"/>
                 <relationship kind="outlet" name="label" candidateClass="UILabel"/>
                 <relationship kind="outlet" name="message_label" candidateClass="UILabel"/>
-                <relationship kind="outlet" name="pause_button" candidateClass="UIButton"/>
-                <relationship kind="outlet" name="play_button" candidateClass="UIButton"/>
+                <relationship kind="outlet" name="pause_button" candidateClass="UIBarButtonItem"/>
+                <relationship kind="outlet" name="play_button" candidateClass="UIBarButtonItem"/>
             </relationships>
         </class>
     </classes>

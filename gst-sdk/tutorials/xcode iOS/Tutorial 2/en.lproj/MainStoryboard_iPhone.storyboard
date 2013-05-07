@@ -12,81 +12,46 @@
                         <rect key="frame" x="0.0" y="20" width="320" height="548"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="pac-D3-jCF" userLabel="Content">
-                                <subviews>
-                                    <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Initializing..." textAlignment="center" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="240" translatesAutoresizingMaskIntoConstraints="NO" id="8wd-E5-Owx" userLabel="Message">
-                                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
-                                        <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <button opaque="NO" contentMode="scaleToFill" enabled="NO" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="uVI-yQ-geg" userLabel="Play">
-                                        <constraints>
-                                            <constraint firstAttribute="height" constant="100" type="user" id="D1U-D7-pGb"/>
-                                            <constraint firstAttribute="width" constant="200" type="user" id="H9m-EA-1Y9"/>
-                                        </constraints>
-                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="24"/>
-                                        <state key="normal" title="Play">
-                                            <color key="titleColor" red="0.19607843459999999" green="0.30980393290000002" blue="0.52156865600000002" alpha="1" colorSpace="calibratedRGB"/>
-                                            <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                        </state>
-                                        <state key="disabled">
-                                            <color key="titleColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
-                                        </state>
-                                        <state key="highlighted">
-                                            <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                        </state>
-                                        <connections>
-                                            <action selector="play:" destination="kYn-Hr-MJq" eventType="touchUpInside" id="lem-QX-Nov"/>
-                                        </connections>
-                                    </button>
-                                    <button opaque="NO" contentMode="scaleToFill" enabled="NO" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="w5n-dd-01i" userLabel="Pause">
-                                        <constraints>
-                                            <constraint firstAttribute="height" constant="100" type="user" id="heT-S6-HPW"/>
-                                            <constraint firstAttribute="width" constant="200" type="user" id="zY8-bB-SYS"/>
-                                        </constraints>
-                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="24"/>
-                                        <state key="normal" title="Pause">
-                                            <color key="titleColor" red="0.19607843459999999" green="0.30980393290000002" blue="0.52156865600000002" alpha="1" colorSpace="calibratedRGB"/>
-                                            <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                        </state>
-                                        <state key="disabled">
-                                            <color key="titleColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
-                                        </state>
-                                        <state key="highlighted">
-                                            <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                        </state>
-                                        <connections>
-                                            <action selector="pause:" destination="kYn-Hr-MJq" eventType="touchUpInside" id="eZ6-M4-XBq"/>
-                                        </connections>
-                                    </button>
-                                </subviews>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Initializing..." textAlignment="center" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="280" translatesAutoresizingMaskIntoConstraints="NO" id="8wd-E5-Owx" userLabel="Message">
                                 <constraints>
-                                    <constraint firstAttribute="centerX" secondItem="uVI-yQ-geg" secondAttribute="centerX" type="user" id="2Wc-AU-tx5"/>
-                                    <constraint firstItem="8wd-E5-Owx" firstAttribute="leading" secondItem="pac-D3-jCF" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="3rd-sw-9RW"/>
-                                    <constraint firstAttribute="centerX" secondItem="w5n-dd-01i" secondAttribute="centerX" type="user" id="3se-ej-QVc"/>
-                                    <constraint firstAttribute="trailing" secondItem="8wd-E5-Owx" secondAttribute="trailing" constant="20" symbolic="YES" type="user" id="FyO-Cv-ZON"/>
-                                    <constraint firstItem="uVI-yQ-geg" firstAttribute="top" secondItem="8wd-E5-Owx" secondAttribute="bottom" constant="8" symbolic="YES" type="user" id="Lte-nX-y3p"/>
-                                    <constraint firstItem="w5n-dd-01i" firstAttribute="top" secondItem="uVI-yQ-geg" secondAttribute="bottom" constant="8" symbolic="YES" type="user" id="Tqh-LF-05e"/>
-                                    <constraint firstItem="8wd-E5-Owx" firstAttribute="top" secondItem="pac-D3-jCF" secondAttribute="top" constant="20" symbolic="YES" type="user" id="dXW-gd-gnP"/>
-                                    <constraint firstAttribute="bottom" secondItem="w5n-dd-01i" secondAttribute="bottom" constant="20" symbolic="YES" type="default" id="dbq-X8-9Im"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="50" type="user" id="WIW-Im-XnF"/>
                                 </constraints>
-                            </view>
+                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="o22-1p-nvT">
+                                <items>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="BPU-1t-gy3"/>
+                                    <barButtonItem systemItem="play" id="6LZ-7a-xKf">
+                                        <connections>
+                                            <action selector="play:" destination="kYn-Hr-MJq" id="hIx-MW-CFA"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem systemItem="pause" id="bfY-YY-jiu">
+                                        <connections>
+                                            <action selector="pause:" destination="kYn-Hr-MJq" id="dQ5-mO-cMh"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="hSc-4x-myS"/>
+                                </items>
+                            </toolbar>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="pac-D3-jCF" firstAttribute="top" secondItem="JOS-rK-Hts" secondAttribute="top" priority="1" constant="20" symbolic="YES" type="user" id="77r-Ci-q9w"/>
-                            <constraint firstItem="pac-D3-jCF" firstAttribute="top" secondItem="JOS-rK-Hts" secondAttribute="top" priority="1" constant="20" symbolic="YES" type="user" id="MGJ-u0-MAG"/>
-                            <constraint firstAttribute="centerX" secondItem="pac-D3-jCF" secondAttribute="centerX" type="user" id="Y2t-0q-fAJ"/>
-                            <constraint firstItem="pac-D3-jCF" firstAttribute="leading" secondItem="JOS-rK-Hts" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="dPX-1l-W4G"/>
-                            <constraint firstAttribute="centerY" secondItem="pac-D3-jCF" secondAttribute="centerY" type="user" id="pxX-Qj-nAV"/>
+                            <constraint firstItem="8wd-E5-Owx" firstAttribute="bottom" secondItem="o22-1p-nvT" secondAttribute="top" constant="8" symbolic="YES" type="user" id="CHF-CI-6CL"/>
+                            <constraint firstAttribute="trailing" secondItem="8wd-E5-Owx" secondAttribute="trailing" constant="20" symbolic="YES" type="user" id="WDw-jT-tbz"/>
+                            <constraint firstItem="o22-1p-nvT" firstAttribute="leading" secondItem="JOS-rK-Hts" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="Zvb-2h-v7A"/>
+                            <constraint firstItem="o22-1p-nvT" firstAttribute="bottom" secondItem="JOS-rK-Hts" secondAttribute="bottom" constant="20" symbolic="YES" type="user" id="l3D-e3-Z7R"/>
+                            <constraint firstItem="8wd-E5-Owx" firstAttribute="leading" secondItem="JOS-rK-Hts" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="lwj-ty-IXl"/>
+                            <constraint firstItem="o22-1p-nvT" firstAttribute="trailing" secondItem="JOS-rK-Hts" secondAttribute="trailing" constant="20" symbolic="YES" type="user" id="mL0-QH-ra6"/>
                         </constraints>
                     </view>
                     <simulatedStatusBarMetrics key="simulatedStatusBarMetrics"/>
                     <connections>
                         <outlet property="message_label" destination="8wd-E5-Owx" id="7Xw-cg-3hH"/>
-                        <outlet property="pause_button" destination="w5n-dd-01i" id="lHm-u3-mcA"/>
-                        <outlet property="play_button" destination="uVI-yQ-geg" id="vI5-ma-lhA"/>
+                        <outlet property="pause_button" destination="bfY-YY-jiu" id="GBf-vm-mbR"/>
+                        <outlet property="play_button" destination="6LZ-7a-xKf" id="Tk2-4w-9Px"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="25z-hu-OZW" sceneMemberID="firstResponder"/>

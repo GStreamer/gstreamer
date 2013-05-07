@@ -3,8 +3,8 @@
 
 @interface ViewController : UIViewController <GStreamerBackendDelegate> {
     IBOutlet UILabel *message_label;
-    IBOutlet UIButton *play_button;
-    IBOutlet UIButton *pause_button;
+    IBOutlet UIBarButtonItem *play_button;
+    IBOutlet UIBarButtonItem *pause_button;
 }
 
 -(IBAction) play:(id)sender;
