@@ -1405,6 +1405,8 @@ gst_jpeg_dec_start (GstVideoDecoder * bdec)
   dec->parse_entropy_len = 0;
   dec->parse_resync = FALSE;
 
+  gst_video_decoder_set_packetized (dec, FALSE);
+
   return TRUE;
 }
 
