@@ -23,16 +23,18 @@
 #define GST_VAAPI_DISPLAY_WAYLAND_PRIV_H
 
 #include <gst/vaapi/gstvaapidisplay_wayland.h>
+#include "gstvaapidisplay_priv.h"
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(obj)                      \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                                 \
-                                 GST_VAAPI_TYPE_DISPLAY_WAYLAND,        \
-                                 GstVaapiDisplayWaylandPrivate))
-
 #define GST_VAAPI_DISPLAY_WAYLAND_CAST(display) \
     ((GstVaapiDisplayWayland *)(display))
+
+#define GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display) \
+    (&GST_VAAPI_DISPLAY_WAYLAND_CAST(display)->priv)
+
+typedef struct _GstVaapiDisplayWaylandPrivate   GstVaapiDisplayWaylandPrivate;
+typedef struct _GstVaapiDisplayWaylandClass     GstVaapiDisplayWaylandClass;
 
 /**
  * GST_VAAPI_DISPLAY_WL_DISPLAY:
@@ -43,7 +45,7 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_DISPLAY_WL_DISPLAY
 #define GST_VAAPI_DISPLAY_WL_DISPLAY(display) \
-    GST_VAAPI_DISPLAY_WAYLAND_CAST(display)->priv->wl_display
+    GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display)->wl_display
 
 struct _GstVaapiDisplayWaylandPrivate {
     gchar                      *display_name;
@@ -57,7 +59,29 @@ struct _GstVaapiDisplayWaylandPrivate {
     guint                       phys_width;
     guint                       phys_height;
     gint                        event_fd;
-    guint                       create_display  : 1;
+    guint                       use_foreign_display : 1;
+};
+
+/**
+ * GstVaapiDisplayWayland:
+ *
+ * VA/Wayland display wrapper.
+ */
+struct _GstVaapiDisplayWayland {
+    /*< private >*/
+    GstVaapiDisplay parent_instance;
+
+    GstVaapiDisplayWaylandPrivate priv;
+};
+
+/**
+ * GstVaapiDisplayWaylandClass:
+ *
+ * VA/Wayland display wrapper clas.
+ */
+struct _GstVaapiDisplayWaylandClass {
+    /*< private >*/
+    GstVaapiDisplayClass parent_class;
 };
 
 G_END_DECLS

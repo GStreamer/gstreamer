@@ -33,17 +33,6 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiDisplayWayland,
-              gst_vaapi_display_wayland,
-              GST_VAAPI_TYPE_DISPLAY)
-
-enum {
-    PROP_0,
-
-    PROP_DISPLAY_NAME,
-    PROP_WL_DISPLAY
-};
-
 #define NAME_PREFIX "WLD:"
 #define NAME_PREFIX_LENGTH 4
 
@@ -98,18 +87,13 @@ compare_display_name(gconstpointer a, gconstpointer b, gpointer user_data)
     return TRUE;
 }
 
-static void
-gst_vaapi_display_wayland_finalize(GObject *object)
-{
-    G_OBJECT_CLASS(gst_vaapi_display_wayland_parent_class)->finalize(object);
-}
-
 /* Reconstruct a display name without our prefix */
 static const gchar *
-get_display_name(gpointer ptr)
+get_display_name(GstVaapiDisplayWayland *display)
 {
-    GstVaapiDisplayWayland * const display = GST_VAAPI_DISPLAY_WAYLAND(ptr);
-    const gchar *display_name = display->priv->display_name;
+    GstVaapiDisplayWaylandPrivate * const priv =
+        GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display);
+    const gchar *display_name = priv->display_name;
 
     if (!display_name)
         return NULL;
@@ -127,10 +111,11 @@ get_display_name(gpointer ptr)
 }
 
 /* Mangle display name with our prefix */
-static void
-set_display_name(GstVaapiDisplayWayland *display, const gchar *display_name)
+static gboolean
+set_display_name(GstVaapiDisplay *display, const gchar *display_name)
 {
-    GstVaapiDisplayWaylandPrivate * const priv = display->priv;
+    GstVaapiDisplayWaylandPrivate * const priv =
+        GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display);
 
     g_free(priv->display_name);
 
@@ -140,87 +125,7 @@ set_display_name(GstVaapiDisplayWayland *display, const gchar *display_name)
             display_name = "";
     }
     priv->display_name = g_strdup_printf("%s%s", NAME_PREFIX, display_name);
-}
-
-static void
-gst_vaapi_display_wayland_set_property(
-    GObject      *object,
-    guint         prop_id,
-    const GValue *value,
-    GParamSpec   *pspec
-)
-{
-    GstVaapiDisplayWayland * const display = GST_VAAPI_DISPLAY_WAYLAND(object);
-
-    switch (prop_id) {
-    case PROP_DISPLAY_NAME:
-        set_display_name(display, g_value_get_string(value));
-        break;
-    case PROP_WL_DISPLAY:
-        display->priv->wl_display = g_value_get_pointer(value);
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-static void
-gst_vaapi_display_wayland_get_property(
-    GObject    *object,
-    guint       prop_id,
-    GValue     *value,
-    GParamSpec *pspec
-)
-{
-    GstVaapiDisplayWayland * const display = GST_VAAPI_DISPLAY_WAYLAND(object);
-
-    switch (prop_id) {
-    case PROP_DISPLAY_NAME:
-        g_value_set_string(value, get_display_name(display));
-        break;
-    case PROP_WL_DISPLAY:
-        g_value_set_pointer(value, gst_vaapi_display_wayland_get_display(display));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_display_wayland_constructed(GObject *object)
-{
-    GstVaapiDisplayWayland * const display = GST_VAAPI_DISPLAY_WAYLAND(object);
-    GstVaapiDisplayWaylandPrivate * const priv = display->priv;
-    GstVaapiDisplayCache * const cache = gst_vaapi_display_get_cache();
-    const GstVaapiDisplayInfo *info;
-    GObjectClass *parent_class;
-
-    priv->create_display = priv->wl_display == NULL;
-
-    /* Don't create Wayland display if there is one in the cache already */
-    if (priv->create_display) {
-        info = gst_vaapi_display_cache_lookup_by_name(
-            cache,
-            priv->display_name,
-            compare_display_name, NULL
-        );
-        if (info) {
-            priv->wl_display     = info->native_display;
-            priv->create_display = FALSE;
-        }
-    }
-
-    /* Reset display-name if the user provided his own Wayland display */
-    if (!priv->create_display) {
-        /* XXX: how to get socket/display name? */
-        GST_WARNING("wayland: get display name");
-        set_display_name(display, NULL);
-    }
-
-    parent_class = G_OBJECT_CLASS(gst_vaapi_display_wayland_parent_class);
-    if (parent_class->constructed)
-        parent_class->constructed(object);
+    return priv->display_name != NULL;
 }
 
 static void
@@ -280,16 +185,10 @@ static const struct wl_registry_listener registry_listener = {
 };
 
 static gboolean
-gst_vaapi_display_wayland_open_display(GstVaapiDisplay * display)
+gst_vaapi_display_wayland_setup(GstVaapiDisplay *display)
 {
     GstVaapiDisplayWaylandPrivate * const priv =
-        GST_VAAPI_DISPLAY_WAYLAND(display)->priv;
-
-    if (priv->create_display) {
-        priv->wl_display = wl_display_connect(get_display_name(display));
-        if (!priv->wl_display)
-            return FALSE;
-    }
+        GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display);
 
     wl_display_set_user_data(priv->wl_display, priv);
     priv->registry = wl_display_get_registry(priv->wl_display);
@@ -317,11 +216,58 @@ gst_vaapi_display_wayland_open_display(GstVaapiDisplay * display)
     return TRUE;
 }
 
+static gboolean
+gst_vaapi_display_wayland_bind_display(GstVaapiDisplay *display,
+    gpointer native_display)
+{
+    GstVaapiDisplayWaylandPrivate * const priv =
+        GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display);
+
+    priv->wl_display = native_display;
+    priv->use_foreign_display = TRUE;
+    
+    /* XXX: how to get socket/display name? */
+    GST_WARNING("wayland: get display name");
+    set_display_name(display, NULL);
+
+    return gst_vaapi_display_wayland_setup(display);
+}
+
+static gboolean
+gst_vaapi_display_wayland_open_display(GstVaapiDisplay *display,
+    const gchar *name)
+{
+    GstVaapiDisplayWaylandPrivate * const priv =
+        GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display);
+    GstVaapiDisplayCache *cache;
+    const GstVaapiDisplayInfo *info;
+
+    cache = gst_vaapi_display_get_cache();
+    g_return_val_if_fail(cache != NULL, FALSE);
+
+    if (!set_display_name(display, name))
+        return FALSE;
+
+    info = gst_vaapi_display_cache_lookup_by_name(cache, priv->display_name,
+        compare_display_name, NULL);
+    if (info) {
+        priv->wl_display = info->native_display;
+        priv->use_foreign_display = TRUE;
+    }
+    else {
+        priv->wl_display = wl_display_connect(name);
+        if (!priv->wl_display)
+            return FALSE;
+        priv->use_foreign_display = FALSE;
+    }
+    return gst_vaapi_display_wayland_setup(display);
+}
+
 static void
 gst_vaapi_display_wayland_close_display(GstVaapiDisplay * display)
 {
     GstVaapiDisplayWaylandPrivate * const priv =
-        GST_VAAPI_DISPLAY_WAYLAND(display)->priv;
+        GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display);
 
     if (priv->compositor) {
         wl_compositor_destroy(priv->compositor);
@@ -329,7 +275,7 @@ gst_vaapi_display_wayland_close_display(GstVaapiDisplay * display)
     }
 
     if (priv->wl_display) {
-        if (priv->create_display)
+        if (!priv->use_foreign_display)
             wl_display_disconnect(priv->wl_display);
         priv->wl_display = NULL;
     }
@@ -347,7 +293,7 @@ gst_vaapi_display_wayland_get_display_info(
 )
 {
     GstVaapiDisplayWaylandPrivate * const priv =
-        GST_VAAPI_DISPLAY_WAYLAND(display)->priv;
+        GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display);
     GstVaapiDisplayCache *cache;
     const GstVaapiDisplayInfo *cached_info;
 
@@ -355,8 +301,8 @@ gst_vaapi_display_wayland_get_display_info(
     cache = gst_vaapi_display_get_cache();
     if (!cache)
         return FALSE;
-    cached_info =
-        gst_vaapi_display_cache_lookup_by_native_display(cache, priv->wl_display);
+    cached_info = gst_vaapi_display_cache_lookup_by_native_display(cache,
+        priv->wl_display);
     if (cached_info) {
         *info = *cached_info;
         return TRUE;
@@ -382,7 +328,7 @@ gst_vaapi_display_wayland_get_size(
 )
 {
     GstVaapiDisplayWaylandPrivate * const priv =
-        GST_VAAPI_DISPLAY_WAYLAND(display)->priv;
+        GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display);
 
     if (!priv->output)
         return;
@@ -402,7 +348,7 @@ gst_vaapi_display_wayland_get_size_mm(
 )
 {
     GstVaapiDisplayWaylandPrivate * const priv =
-        GST_VAAPI_DISPLAY_WAYLAND(display)->priv;
+        GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display);
 
     if (!priv->output)
         return;
@@ -415,72 +361,44 @@ gst_vaapi_display_wayland_get_size_mm(
 }
 
 static void
+gst_vaapi_display_wayland_init(GstVaapiDisplay *display)
+{
+    GstVaapiDisplayWaylandPrivate * const priv =
+        GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display);
+
+    priv->event_fd = -1;
+}
+
+static void
 gst_vaapi_display_wayland_class_init(GstVaapiDisplayWaylandClass * klass)
 {
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
+    GstVaapiMiniObjectClass * const object_class =
+        GST_VAAPI_MINI_OBJECT_CLASS(klass);
     GstVaapiDisplayClass * const dpy_class = GST_VAAPI_DISPLAY_CLASS(klass);
 
-    g_type_class_add_private(klass, sizeof(GstVaapiDisplayWaylandPrivate));
+    gst_vaapi_display_class_init(&klass->parent_class);
 
-    object_class->finalize      = gst_vaapi_display_wayland_finalize;
-    object_class->set_property  = gst_vaapi_display_wayland_set_property;
-    object_class->get_property  = gst_vaapi_display_wayland_get_property;
-    object_class->constructed   = gst_vaapi_display_wayland_constructed;
-
+    object_class->size          = sizeof(GstVaapiDisplayWayland);
+    dpy_class->init             = gst_vaapi_display_wayland_init;
+    dpy_class->bind_display     = gst_vaapi_display_wayland_bind_display;
     dpy_class->open_display     = gst_vaapi_display_wayland_open_display;
     dpy_class->close_display    = gst_vaapi_display_wayland_close_display;
     dpy_class->get_display      = gst_vaapi_display_wayland_get_display_info;
     dpy_class->get_size         = gst_vaapi_display_wayland_get_size;
     dpy_class->get_size_mm      = gst_vaapi_display_wayland_get_size_mm;
-
-    /**
-     * GstVaapiDisplayWayland:wayland-display:
-     *
-     * The Wayland #wl_display that was created by
-     * gst_vaapi_display_wayland_new() or that was bound from
-     * gst_vaapi_display_wayland_new_with_display().
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_WL_DISPLAY,
-         g_param_spec_pointer("wl-display",
-                              "Wayland display",
-                              "Wayland display",
-                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    /**
-     * GstVaapiDisplayWayland:display-name:
-     *
-     * The Wayland display name.
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_DISPLAY_NAME,
-         g_param_spec_string("display-name",
-                             "Wayland display name",
-                             "Wayland display name",
-                             NULL,
-                             G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 }
 
-static void
-gst_vaapi_display_wayland_init(GstVaapiDisplayWayland *display)
+static inline const GstVaapiDisplayClass *
+gst_vaapi_display_wayland_class(void)
 {
-    GstVaapiDisplayWaylandPrivate * const priv =
-        GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display);
+    static GstVaapiDisplayWaylandClass g_class;
+    static gsize g_class_init = FALSE;
 
-    display->priv        = priv;
-    priv->create_display = TRUE;
-    priv->display_name   = NULL;
-    priv->wl_display     = NULL;
-    priv->compositor     = NULL;
-    priv->shell          = NULL;
-    priv->output         = NULL;
-    priv->width          = 0;
-    priv->height         = 0;
-    priv->phys_width     = 0;
-    priv->phys_height    = 0;
-    priv->event_fd       = -1;
+    if (g_once_init_enter(&g_class_init)) {
+        gst_vaapi_display_wayland_class_init(&g_class);
+        g_once_init_leave(&g_class_init, TRUE);
+    }
+    return GST_VAAPI_DISPLAY_CLASS(&g_class);
 }
 
 /**
@@ -496,9 +414,8 @@ gst_vaapi_display_wayland_init(GstVaapiDisplayWayland *display)
 GstVaapiDisplay *
 gst_vaapi_display_wayland_new(const gchar *display_name)
 {
-    return g_object_new(GST_VAAPI_TYPE_DISPLAY_WAYLAND,
-                        "display-name", display_name,
-                        NULL);
+    return gst_vaapi_display_new(gst_vaapi_display_wayland_class(),
+        GST_VAAPI_DISPLAY_INIT_FROM_DISPLAY_NAME, (gpointer)display_name);
 }
 
 /**
@@ -517,9 +434,8 @@ gst_vaapi_display_wayland_new_with_display(struct wl_display *wl_display)
 {
     g_return_val_if_fail(wl_display, NULL);
 
-    return g_object_new(GST_VAAPI_TYPE_DISPLAY_WAYLAND,
-                        "wl-display", wl_display,
-                        NULL);
+    return gst_vaapi_display_new(gst_vaapi_display_wayland_class(),
+        GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY, wl_display);
 }
 
 /**
@@ -537,5 +453,5 @@ gst_vaapi_display_wayland_get_display(GstVaapiDisplayWayland *display)
 {
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_WAYLAND(display), NULL);
 
-    return display->priv->wl_display;
+    return GST_VAAPI_DISPLAY_WL_DISPLAY(display);
 }

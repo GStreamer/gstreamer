@@ -47,7 +47,7 @@ gst_vaapi_object_finalize(GstVaapiObject *object)
 
     if (klass->finalize)
         klass->finalize(object);
-    g_clear_object(&object->display);
+    gst_vaapi_display_replace(&object->display, NULL);
 }
 
 void
@@ -89,7 +89,7 @@ gst_vaapi_object_new(const GstVaapiObjectClass *klass, GstVaapiDisplay *display)
     if (!object)
         return NULL;
 
-    object->display     = g_object_ref(display);
+    object->display     = gst_vaapi_display_ref(display);
     object->object_id   = VA_INVALID_ID;
 
     sub_size = object_class->size - sizeof(*object);

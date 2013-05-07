@@ -56,7 +56,7 @@ gst_vaapi_video_pool_alloc_object(GstVaapiVideoPool *pool)
 void
 gst_vaapi_video_pool_init(GstVaapiVideoPool *pool, GstVaapiDisplay *display)
 {
-    pool->display       = g_object_ref(display);
+    pool->display       = gst_vaapi_display_ref(display);
     pool->used_objects  = NULL;
     pool->used_count    = 0;
     pool->capacity      = 0;
@@ -69,7 +69,7 @@ gst_vaapi_video_pool_finalize(GstVaapiVideoPool *pool)
 {
     g_list_free_full(pool->used_objects, gst_vaapi_object_unref);
     g_queue_free_full(&pool->free_objects, gst_vaapi_object_unref);
-    g_clear_object(&pool->display);
+    gst_vaapi_display_replace(&pool->display, NULL);
 }
 
 /**

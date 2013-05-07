@@ -26,59 +26,13 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_DISPLAY_DRM \
-    (gst_vaapi_display_drm_get_type())
-
-#define GST_VAAPI_DISPLAY_DRM(obj)                              \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
-                                GST_VAAPI_TYPE_DISPLAY_DRM,     \
-                                GstVaapiDisplayDRM))
-
-#define GST_VAAPI_DISPLAY_DRM_CLASS(klass)                      \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
-                             GST_VAAPI_TYPE_DISPLAY_DRM,        \
-                             GstVaapiDisplayDRMClass))
+#define GST_VAAPI_DISPLAY_DRM(obj) \
+    ((GstVaapiDisplayDRM *)(obj))
 
 #define GST_VAAPI_IS_DISPLAY_DRM(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_DISPLAY_DRM))
-
-#define GST_VAAPI_IS_DISPLAY_DRM_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_DISPLAY_DRM))
-
-#define GST_VAAPI_DISPLAY_DRM_GET_CLASS(obj)                    \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
-                               GST_VAAPI_TYPE_DISPLAY_DRM,      \
-                               GstVaapiDisplayDRMClass))
+    ((obj) != NULL)
 
 typedef struct _GstVaapiDisplayDRM              GstVaapiDisplayDRM;
-typedef struct _GstVaapiDisplayDRMPrivate       GstVaapiDisplayDRMPrivate;
-typedef struct _GstVaapiDisplayDRMClass         GstVaapiDisplayDRMClass;
-
-/**
- * GstVaapiDisplayDRM:
- *
- * VA/DRM display wrapper.
- */
-struct _GstVaapiDisplayDRM {
-    /*< private >*/
-    GstVaapiDisplay parent_instance;
-
-    GstVaapiDisplayDRMPrivate *priv;
-};
-
-
-/**
- * GstVaapiDisplayDRMClass:
- *
- * VA/DRM display wrapper clas.
- */
-struct _GstVaapiDisplayDRMClass {
-    /*< private >*/
-    GstVaapiDisplayClass parent_class;
-};
-
-GType
-gst_vaapi_display_drm_get_type(void) G_GNUC_CONST;
 
 GstVaapiDisplay *
 gst_vaapi_display_drm_new(const gchar *device_path);

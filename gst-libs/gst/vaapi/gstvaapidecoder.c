@@ -465,7 +465,7 @@ gst_vaapi_decoder_finalize(GstVaapiDecoder *decoder)
     gst_vaapi_object_replace(&decoder->context, NULL);
     decoder->va_context = VA_INVALID_ID;
 
-    g_clear_object(&decoder->display);
+    gst_vaapi_display_replace(&decoder->display, NULL);
     decoder->va_display = NULL;
 }
 
@@ -485,7 +485,7 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder, GstVaapiDisplay *display,
     gst_video_info_init(&codec_state->info);
 
     decoder->user_data   = NULL;
-    decoder->display     = g_object_ref(display);
+    decoder->display     = gst_vaapi_display_ref(display);
     decoder->va_display  = GST_VAAPI_DISPLAY_VADISPLAY(display);
     decoder->context     = NULL;
     decoder->va_context  = VA_INVALID_ID;

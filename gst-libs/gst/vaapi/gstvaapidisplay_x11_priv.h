@@ -25,15 +25,18 @@
 
 #include <gst/vaapi/gstvaapiutils_x11.h>
 #include <gst/vaapi/gstvaapidisplay_x11.h>
+#include "gstvaapidisplay_priv.h"
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_DISPLAY_X11_GET_PRIVATE(obj)                  \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_DISPLAY_X11,	\
-                                 GstVaapiDisplayX11Private))
+#define GST_VAAPI_DISPLAY_X11_CAST(display) \
+    ((GstVaapiDisplayX11 *)(display))
 
-#define GST_VAAPI_DISPLAY_X11_CAST(display) ((GstVaapiDisplayX11 *)(display))
+#define GST_VAAPI_DISPLAY_X11_PRIVATE(display) \
+    (&GST_VAAPI_DISPLAY_X11_CAST(display)->priv)
+
+typedef struct _GstVaapiDisplayX11Private       GstVaapiDisplayX11Private;
+typedef struct _GstVaapiDisplayX11Class         GstVaapiDisplayX11Class;
 
 /**
  * GST_VAAPI_DISPLAY_XDISPLAY:
@@ -43,7 +46,7 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_DISPLAY_XDISPLAY
 #define GST_VAAPI_DISPLAY_XDISPLAY(display) \
-    GST_VAAPI_DISPLAY_X11_CAST(display)->priv->x11_display
+    GST_VAAPI_DISPLAY_X11_PRIVATE(display)->x11_display
 
 /**
  * GST_VAAPI_DISPLAY_XSCREEN:
@@ -53,16 +56,41 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_DISPLAY_XSCREEN
 #define GST_VAAPI_DISPLAY_XSCREEN(display) \
-    GST_VAAPI_DISPLAY_X11_CAST(display)->priv->x11_screen
+    GST_VAAPI_DISPLAY_X11_PRIVATE(display)->x11_screen
 
 struct _GstVaapiDisplayX11Private {
-    gchar      *display_name;
-    Display    *x11_display;
-    int         x11_screen;
-    guint       create_display  : 1;
-    guint       synchronous     : 1;
-    guint       use_xrandr      : 1;
+    gchar              *display_name;
+    Display            *x11_display;
+    int                 x11_screen;
+    guint               use_foreign_display     : 1; // Foreign native_display?
+    guint               use_xrandr              : 1;
+    guint               synchronous             : 1;
 };
+
+/**
+ * GstVaapiDisplayX11:
+ *
+ * VA/X11 display wrapper.
+ */
+struct _GstVaapiDisplayX11 {
+    /*< private >*/
+    GstVaapiDisplay parent_instance;
+
+    GstVaapiDisplayX11Private priv;
+};
+
+/**
+ * GstVaapiDisplayX11Class:
+ *
+ * VA/X11 display wrapper clas.
+ */
+struct _GstVaapiDisplayX11Class {
+    /*< private >*/
+    GstVaapiDisplayClass parent_class;
+};
+
+void
+gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass);
 
 G_END_DECLS
 

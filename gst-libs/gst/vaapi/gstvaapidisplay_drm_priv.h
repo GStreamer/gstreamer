@@ -26,12 +26,14 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_DISPLAY_DRM_GET_PRIVATE(obj)                  \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_DISPLAY_DRM,	\
-                                 GstVaapiDisplayDRMPrivate))
+#define GST_VAAPI_DISPLAY_DRM_CAST(display) \
+    ((GstVaapiDisplayDRM *)(display))
 
-#define GST_VAAPI_DISPLAY_DRM_CAST(display) ((GstVaapiDisplayDRM *)(display))
+#define GST_VAAPI_DISPLAY_DRM_PRIVATE(display) \
+    (&GST_VAAPI_DISPLAY_DRM_CAST(display)->priv)
+
+typedef struct _GstVaapiDisplayDRMPrivate       GstVaapiDisplayDRMPrivate;
+typedef struct _GstVaapiDisplayDRMClass         GstVaapiDisplayDRMClass;
 
 /**
  * GST_VAAPI_DISPLAY_DRM_DEVICE:
@@ -41,13 +43,35 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_DISPLAY_DRM_DEVICE
 #define GST_VAAPI_DISPLAY_DRM_DEVICE(display) \
-    GST_VAAPI_DISPLAY_DRM_CAST(display)->priv->drm_device
+    GST_VAAPI_DISPLAY_DRM_PRIVATE(display)->drm_device
 
 struct _GstVaapiDisplayDRMPrivate {
-    gchar      *device_path_default;
-    gchar      *device_path;
-    gint        drm_device;
-    guint       create_display  : 1;
+    gchar              *device_path_default;
+    gchar              *device_path;
+    gint                drm_device;
+    guint               use_foreign_display     : 1; // Foreign native_display?
+};
+
+/**
+ * GstVaapiDisplayDRM:
+ *
+ * VA/DRM display wrapper.
+ */
+struct _GstVaapiDisplayDRM {
+    /*< private >*/
+    GstVaapiDisplay parent_instance;
+
+    GstVaapiDisplayDRMPrivate priv;
+};
+
+/**
+ * GstVaapiDisplayDRMClass:
+ *
+ * VA/DRM display wrapper clas.
+ */
+struct _GstVaapiDisplayDRMClass {
+    /*< private >*/
+    GstVaapiDisplayClass parent_class;
 };
 
 G_END_DECLS

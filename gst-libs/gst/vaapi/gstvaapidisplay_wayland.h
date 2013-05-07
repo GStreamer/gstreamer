@@ -27,58 +27,13 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_DISPLAY_WAYLAND \
-    (gst_vaapi_display_wayland_get_type())
-
-#define GST_VAAPI_DISPLAY_WAYLAND(obj)                          \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
-                                GST_VAAPI_TYPE_DISPLAY_WAYLAND, \
-                                GstVaapiDisplayWayland))
-
-#define GST_VAAPI_DISPLAY_WAYLAND_CLASS(klass)                  \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
-                             GST_VAAPI_TYPE_DISPLAY_WAYLAND,    \
-                             GstVaapiDisplayWaylandClass))
+#define GST_VAAPI_DISPLAY_WAYLAND(obj) \
+    ((GstVaapiDisplayWayland *)(obj))
 
 #define GST_VAAPI_IS_DISPLAY_WAYLAND(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_DISPLAY_WAYLAND))
-
-#define GST_VAAPI_IS_DISPLAY_WAYLAND_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_DISPLAY_WAYLAND))
-
-#define GST_VAAPI_DISPLAY_WAYLAND_GET_CLASS(obj)                \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
-                               GST_VAAPI_TYPE_DISPLAY_WAYLAND,  \
-                               GstVaapiDisplayWaylandClass))
+    ((obj) != NULL)
 
 typedef struct _GstVaapiDisplayWayland          GstVaapiDisplayWayland;
-typedef struct _GstVaapiDisplayWaylandPrivate   GstVaapiDisplayWaylandPrivate;
-typedef struct _GstVaapiDisplayWaylandClass     GstVaapiDisplayWaylandClass;
-
-/**
- * GstVaapiDisplayWayland:
- *
- * VA/Wayland display wrapper.
- */
-struct _GstVaapiDisplayWayland {
-    /*< private >*/
-    GstVaapiDisplay parent_instance;
-
-    GstVaapiDisplayWaylandPrivate *priv;
-};
-
-/**
- * GstVaapiDisplayWaylandClass:
- *
- * VA/Wayland display wrapper clas.
- */
-struct _GstVaapiDisplayWaylandClass {
-    /*< private >*/
-    GstVaapiDisplayClass parent_class;
-};
-
-GType
-gst_vaapi_display_wayland_get_type(void) G_GNUC_CONST;
 
 GstVaapiDisplay *
 gst_vaapi_display_wayland_new(const gchar *display_name);

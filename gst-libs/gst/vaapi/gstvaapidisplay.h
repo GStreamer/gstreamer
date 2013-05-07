@@ -31,34 +31,14 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_DISPLAY \
-    (gst_vaapi_display_get_type())
-
-#define GST_VAAPI_DISPLAY(obj)                          \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_VAAPI_TYPE_DISPLAY, \
-                                GstVaapiDisplay))
-
-#define GST_VAAPI_DISPLAY_CLASS(klass)                  \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_VAAPI_TYPE_DISPLAY,    \
-                             GstVaapiDisplayClass))
+#define GST_VAAPI_DISPLAY(obj) \
+    ((GstVaapiDisplay *)(obj))
 
 #define GST_VAAPI_IS_DISPLAY(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_DISPLAY))
-
-#define GST_VAAPI_IS_DISPLAY_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_DISPLAY))
-
-#define GST_VAAPI_DISPLAY_GET_CLASS(obj)                \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_VAAPI_TYPE_DISPLAY,  \
-                               GstVaapiDisplayClass))
+    ((obj) != NULL)
 
 typedef struct _GstVaapiDisplayInfo             GstVaapiDisplayInfo;
 typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
-typedef struct _GstVaapiDisplayPrivate          GstVaapiDisplayPrivate;
-typedef struct _GstVaapiDisplayClass            GstVaapiDisplayClass;
 
 /**
  * GstVaapiDisplayType:
@@ -111,56 +91,18 @@ struct _GstVaapiDisplayInfo {
 #define GST_VAAPI_DISPLAY_PROP_BRIGHTNESS       "brightness"
 #define GST_VAAPI_DISPLAY_PROP_CONTRAST         "contrast"
 
-/**
- * GstVaapiDisplay:
- *
- * Base class for VA displays.
- */
-struct _GstVaapiDisplay {
-    /*< private >*/
-    GObject parent_instance;
-
-    GstVaapiDisplayPrivate *priv;
-};
-
-/**
- * GstVaapiDisplayClass:
- * @open_display: virtual function to open a display
- * @close_display: virtual function to close a display
- * @lock: (optional) virtual function to lock a display
- * @unlock: (optional) virtual function to unlock a display
- * @sync: (optional) virtual function to sync a display
- * @flush: (optional) virtual function to flush pending requests of a display
- * @get_display: virtual function to retrieve the #GstVaapiDisplayInfo
- * @get_size: virtual function to retrieve the display dimensions, in pixels
- * @get_size_mm: virtual function to retrieve the display dimensions, in millimeters
- *
- * Base class for VA displays.
- */
-struct _GstVaapiDisplayClass {
-    /*< private >*/
-    GObjectClass parent_class;
-
-    /*< public >*/
-    gboolean   (*open_display)  (GstVaapiDisplay *display);
-    void       (*close_display) (GstVaapiDisplay *display);
-    void       (*lock)          (GstVaapiDisplay *display);
-    void       (*unlock)        (GstVaapiDisplay *display);
-    void       (*sync)          (GstVaapiDisplay *display);
-    void       (*flush)         (GstVaapiDisplay *display);
-    gboolean   (*get_display)   (GstVaapiDisplay *display,
-                                 GstVaapiDisplayInfo *info);
-    void       (*get_size)      (GstVaapiDisplay *display,
-                                 guint *pwidth, guint *pheight);
-    void       (*get_size_mm)   (GstVaapiDisplay *display,
-                                 guint *pwidth, guint *pheight);
-};
-
-GType
-gst_vaapi_display_get_type(void) G_GNUC_CONST;
-
 GstVaapiDisplay *
 gst_vaapi_display_new_with_display(VADisplay va_display);
+
+GstVaapiDisplay *
+gst_vaapi_display_ref(GstVaapiDisplay *display);
+
+void
+gst_vaapi_display_unref(GstVaapiDisplay *display);
+
+void
+gst_vaapi_display_replace(GstVaapiDisplay **old_display_ptr,
+    GstVaapiDisplay *new_display);
 
 void
 gst_vaapi_display_lock(GstVaapiDisplay *display);
@@ -237,6 +179,14 @@ gst_vaapi_display_has_subpicture_format(
 
 gboolean
 gst_vaapi_display_has_property(GstVaapiDisplay *display, const gchar *name);
+
+gboolean
+gst_vaapi_display_get_property(GstVaapiDisplay *display, const gchar *name,
+    GValue *out_value);
+
+gboolean
+gst_vaapi_display_set_property(GstVaapiDisplay *display, const gchar *name,
+    const GValue *value);
 
 gboolean
 gst_vaapi_display_get_render_mode(

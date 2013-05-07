@@ -25,15 +25,45 @@
 
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapidisplaycache.h>
+#include "gstvaapiminiobject.h"
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_DISPLAY_GET_PRIVATE(obj)                      \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_DISPLAY,	\
-                                 GstVaapiDisplayPrivate))
+#define GST_VAAPI_DISPLAY_CAST(display) \
+    ((GstVaapiDisplay *)(display))
 
-#define GST_VAAPI_DISPLAY_CAST(display) ((GstVaapiDisplay *)(display))
+#define GST_VAAPI_DISPLAY_GET_PRIVATE(display) \
+    (&GST_VAAPI_DISPLAY_CAST(display)->priv)
+
+#define GST_VAAPI_DISPLAY_CLASS(klass) \
+    ((GstVaapiDisplayClass *)(klass))
+
+#define GST_VAAPI_IS_DISPLAY_CLASS(klass) \
+    ((klass) != NULL)
+
+#define GST_VAAPI_DISPLAY_GET_CLASS(obj) \
+    GST_VAAPI_DISPLAY_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
+
+typedef struct _GstVaapiDisplayPrivate          GstVaapiDisplayPrivate;
+typedef struct _GstVaapiDisplayClass            GstVaapiDisplayClass;
+typedef enum _GstVaapiDisplayInitType           GstVaapiDisplayInitType;
+
+typedef void     (*GstVaapiDisplayInitFunc)    (GstVaapiDisplay *display);
+typedef gboolean (*GstVaapiDisplayBindFunc)    (GstVaapiDisplay *display,
+    gpointer native_dpy);
+typedef gboolean (*GstVaapiDisplayOpenFunc)    (GstVaapiDisplay *display,
+    const gchar *name);
+typedef void     (*GstVaapiDisplayCloseFunc)   (GstVaapiDisplay *display);
+typedef void     (*GstVaapiDisplayLockFunc)    (GstVaapiDisplay *display);
+typedef void     (*GstVaapiDisplayUnlockFunc)  (GstVaapiDisplay *display);
+typedef void     (*GstVaapiDisplaySyncFunc)    (GstVaapiDisplay *display);
+typedef void     (*GstVaapiDisplayFlushFunc)   (GstVaapiDisplay *display);
+typedef gboolean (*GstVaapiDisplayGetInfoFunc) (GstVaapiDisplay *display,
+    GstVaapiDisplayInfo *info);
+typedef void     (*GstVaapiDisplayGetSizeFunc) (GstVaapiDisplay *display,
+    guint *pwidth, guint *pheight);
+typedef void     (*GstVaapiDisplayGetSizeMFunc)(GstVaapiDisplay *display,
+    guint *pwidth, guint *pheight);
 
 /**
  * GST_VAAPI_DISPLAY_VADISPLAY:
@@ -44,7 +74,7 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_DISPLAY_VADISPLAY
 #define GST_VAAPI_DISPLAY_VADISPLAY(display_) \
-    GST_VAAPI_DISPLAY_CAST(display_)->priv->display
+    GST_VAAPI_DISPLAY_GET_PRIVATE(display_)->display
 
 /**
  * GST_VAAPI_DISPLAY_LOCK:
@@ -66,11 +96,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_DISPLAY_UNLOCK(display) \
     gst_vaapi_display_unlock(GST_VAAPI_DISPLAY_CAST(display))
 
-/**
- * GstVaapiDisplayPrivate:
- *
- * Base class for VA displays.
- */
 struct _GstVaapiDisplayPrivate {
     GstVaapiDisplay    *parent;
     GRecMutex           mutex;
@@ -87,11 +112,94 @@ struct _GstVaapiDisplayPrivate {
     GArray             *image_formats;
     GArray             *subpicture_formats;
     GArray             *properties;
-    guint               create_display  : 1;
+    guint               use_foreign_display     : 1;
 };
+
+/**
+ * GstVaapiDisplay:
+ *
+ * Base class for VA displays.
+ */
+struct _GstVaapiDisplay {
+    /*< private >*/
+    GstVaapiMiniObject parent_instance;
+
+    GstVaapiDisplayPrivate priv;
+};
+
+/**
+ * GstVaapiDisplayClass:
+ * @open_display: virtual function to open a display
+ * @close_display: virtual function to close a display
+ * @lock: (optional) virtual function to lock a display
+ * @unlock: (optional) virtual function to unlock a display
+ * @sync: (optional) virtual function to sync a display
+ * @flush: (optional) virtual function to flush pending requests of a display
+ * @get_display: virtual function to retrieve the #GstVaapiDisplayInfo
+ * @get_size: virtual function to retrieve the display dimensions, in pixels
+ * @get_size_mm: virtual function to retrieve the display dimensions, in millimeters
+ *
+ * Base class for VA displays.
+ */
+struct _GstVaapiDisplayClass {
+    /*< private >*/
+    GstVaapiMiniObjectClass parent_class;
+
+    /*< public >*/
+    GstVaapiDisplayInitFunc     init;
+    GstVaapiDisplayBindFunc     bind_display;
+    GstVaapiDisplayOpenFunc     open_display;
+    GstVaapiDisplayCloseFunc    close_display;
+    GstVaapiDisplayLockFunc     lock;
+    GstVaapiDisplayUnlockFunc   unlock;
+    GstVaapiDisplaySyncFunc     sync;
+    GstVaapiDisplayFlushFunc    flush;
+    GstVaapiDisplayGetInfoFunc  get_display;
+    GstVaapiDisplayGetSizeFunc  get_size;
+    GstVaapiDisplayGetSizeMFunc get_size_mm;
+};
+
+/* Initialization types */
+enum _GstVaapiDisplayInitType {
+    GST_VAAPI_DISPLAY_INIT_FROM_DISPLAY_NAME = 1,
+    GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY,
+    GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY
+};
+
+void
+gst_vaapi_display_class_init(GstVaapiDisplayClass *klass);
+
+GstVaapiDisplay *
+gst_vaapi_display_new(const GstVaapiDisplayClass *klass,
+    GstVaapiDisplayInitType init_type, gpointer init_value);
 
 GstVaapiDisplayCache *
 gst_vaapi_display_get_cache(void);
+
+/* Inline reference counting for core libgstvaapi library */
+#ifdef GST_VAAPI_CORE
+#define gst_vaapi_display_ref_internal(display) \
+    ((gpointer)gst_vaapi_mini_object_ref(GST_VAAPI_MINI_OBJECT(display)))
+
+#define gst_vaapi_display_unref_internal(display) \
+    gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(display))
+
+#define gst_vaapi_display_replace_internal(old_display_ptr, new_display) \
+    gst_vaapi_mini_object_replace((GstVaapiMiniObject **)(old_display_ptr), \
+        GST_VAAPI_MINI_OBJECT(new_display))
+
+#undef  gst_vaapi_display_ref
+#define gst_vaapi_display_ref(display) \
+    gst_vaapi_display_ref_internal((display))
+
+#undef  gst_vaapi_display_unref
+#define gst_vaapi_display_unref(display) \
+    gst_vaapi_display_unref_internal((display))
+
+#undef  gst_vaapi_display_replace
+#define gst_vaapi_display_replace(old_display_ptr, new_display) \
+    gst_vaapi_display_replace_internal((old_display_ptr), (new_display))
+#endif
 
 G_END_DECLS
 

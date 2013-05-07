@@ -24,10 +24,42 @@
 
 #include <gst/vaapi/gstvaapiutils_glx.h>
 #include <gst/vaapi/gstvaapidisplay_glx.h>
+#include "gstvaapidisplay_x11_priv.h"
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_DISPLAY_GLX_CAST(display) ((GstVaapiDisplayGLX *)(display))
+#define GST_VAAPI_DISPLAY_GLX_CAST(display) \
+    ((GstVaapiDisplayGLX *)(display))
+
+#define GST_VAAPI_DISPLAY_GLX_CLASS(klass) \
+    ((GstVaapiDisplayGLXClass *)(klass))
+
+#define GST_VAAPI_DISPLAY_GLX_GET_CLASS(obj) \
+    GST_VAAPI_DISPLAY_GLX_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
+
+typedef struct _GstVaapiDisplayGLXClass         GstVaapiDisplayGLXClass;
+
+/**
+ * GstVaapiDisplayGLX:
+ *
+ * VA/GLX display wrapper.
+ */
+struct _GstVaapiDisplayGLX {
+    /*< private >*/
+    GstVaapiDisplayX11 parent_instance;
+};
+
+/**
+ * GstVaapiDisplayGLXClass:
+ *
+ * VA/GLX display wrapper clas.
+ */
+struct _GstVaapiDisplayGLXClass {
+    /*< private >*/
+    GstVaapiDisplayX11Class parent_class;
+
+    GstVaapiDisplayGetInfoFunc  parent_get_display;
+};
 
 G_END_DECLS
 
