@@ -98,8 +98,7 @@ gst_vtdec_base_init (GstVTDecClass * klass)
         "stream-format", G_TYPE_STRING, "avc", NULL);
   } else if (codec_details->format_id == kVTFormatMPEG2) {
     gst_structure_set (gst_caps_get_structure (sink_caps, 0),
-        "mpegversion", GST_TYPE_INT_RANGE, 1, 2, NULL);
-    gst_structure_set (gst_caps_get_structure (sink_caps, 0),
+        "mpegversion", GST_TYPE_INT_RANGE, 1, 2,
         "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
   }
   sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
