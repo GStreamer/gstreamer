@@ -10,7 +10,8 @@
     description of the properties of a stream. This can include video size,
     audio samplerate, codecs used and so on. Tags are handled using the
     &GStreamer; tagging system. Stream-info can be retrieved from a
-    <classname>GstPad</classname>.
+    <classname>GstPad</classname> by getting the current (negotiated)
+    <classname>GstCaps</classname> for that pad.
   </para>
 
   <sect1 id="section-tags-read">
@@ -59,7 +60,7 @@ print_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
   for (i = 0; i &lt; num; ++i) {
     const GValue *val;
 
-    /* Note: when looking for specific tags, use the g_tag_list_get_xyz() API,
+    /* Note: when looking for specific tags, use the gst_tag_list_get_xyz() API,
      * we only use the GValue approach here because it is more generic */
     val = gst_tag_list_get_value_index (list, tag, i);
     if (G_VALUE_HOLDS_STRING (val)) {
