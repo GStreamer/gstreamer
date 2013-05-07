@@ -3285,7 +3285,32 @@ avelements_free (gpointer avelement)
 }
 
 static gint
-avelement_compare (gconstpointer p1, gconstpointer p2, gpointer user_data)
+avelement_compare_decoder (gconstpointer p1, gconstpointer p2,
+    gpointer user_data)
+{
+  GstAVElement *v1, *v2;
+
+  v1 = (GstAVElement *) p1;
+  v2 = (GstAVElement *) p2;
+
+  return strcmp (GST_OBJECT_NAME (v1->dec), GST_OBJECT_NAME (v2->dec));
+}
+
+static gint
+avelement_lookup_decoder (gconstpointer p1, gconstpointer p2,
+    gpointer user_data)
+{
+  GstAVElement *v1;
+  GstElementFactory *f2;
+
+  v1 = (GstAVElement *) p1;
+  f2 = (GstElementFactory *) p2;
+
+  return strcmp (GST_OBJECT_NAME (v1->dec), GST_OBJECT_NAME (f2));
+}
+
+static gint
+avelement_compare (gconstpointer p1, gconstpointer p2)
 {
   GstAVElement *v1, *v2;
   GstPluginFeature *fd1, *fd2, *fs1, *fs2;
@@ -3452,7 +3477,7 @@ avelements_create (GstPlayBin * playbin, gboolean isaudioelement)
     }
     sl = sink_list;
   }
-  g_sequence_sort (ave_seq, (GCompareDataFunc) avelement_compare, NULL);
+  g_sequence_sort (ave_seq, (GCompareDataFunc) avelement_compare_decoder, NULL);
 
   gst_plugin_feature_list_free (dec_list);
   gst_plugin_feature_list_free (sink_list);
@@ -3460,45 +3485,82 @@ avelements_create (GstPlayBin * playbin, gboolean isaudioelement)
   return ave_seq;
 }
 
+static gboolean
+avelement_iter_is_equal (GSequenceIter * iter, GstElementFactory * factory)
+{
+  GstAVElement *ave;
+
+  if (!iter)
+    return FALSE;
+
+  ave = g_sequence_get (iter);
+  if (!ave)
+    return FALSE;
+
+  return strcmp (GST_OBJECT_NAME (ave->dec), GST_OBJECT_NAME (factory)) == 0;
+}
+
 static GList *
 create_decoders_list (GList * factory_list, GSequence * avelements)
 {
   GList *dec_list = NULL, *tmp;
-  GSequenceIter *seq_iter = NULL;
-  GstElementFactory *factory;
-  GstAVElement *ave;
-  guint dl_length, dl_count = 0;
+  GList *ave_list = NULL;
+  GstAVElement *ave, *best_ave;
 
   g_return_val_if_fail (factory_list != NULL, NULL);
   g_return_val_if_fail (avelements != NULL, NULL);
 
-  dl_length = g_list_length (factory_list);
-  tmp = factory_list;
+  for (tmp = factory_list; tmp; tmp = tmp->next) {
+    GstElementFactory *factory = (GstElementFactory *) tmp->data;
 
-  for (; tmp; tmp = tmp->next) {
-    factory = (GstElementFactory *) tmp->data;
     /* if there are parsers or sink elements, add them first */
     if (!gst_element_factory_list_is_type (factory,
             GST_ELEMENT_FACTORY_TYPE_DECODER)) {
       dec_list = g_list_prepend (dec_list, factory);
-      dl_count++;
+    } else {
+      GSequenceIter *seq_iter;
+
+      seq_iter =
+          g_sequence_lookup (avelements, factory,
+          (GCompareDataFunc) avelement_lookup_decoder, NULL);
+      if (!seq_iter) {
+        dec_list = g_list_prepend (dec_list, factory);
+        continue;
+      }
+
+      /* Go to first iter with that decoder */
+      do {
+        GSequenceIter *tmp_seq_iter;
+
+        tmp_seq_iter = g_sequence_iter_prev (seq_iter);
+        if (!avelement_iter_is_equal (tmp_seq_iter, factory))
+          break;
+        seq_iter = tmp_seq_iter;
+      } while (TRUE);
+
+      /* Get the best ranked GstAVElement for that factory */
+      best_ave = NULL;
+      while (!g_sequence_iter_is_end (seq_iter)
+          && avelement_iter_is_equal (seq_iter, factory)) {
+        ave = g_sequence_get (seq_iter);
+
+        if (!best_ave || avelement_compare (ave, best_ave) < 0)
+          best_ave = ave;
+
+        seq_iter = g_sequence_iter_next (seq_iter);
+      }
+      ave_list = g_list_prepend (ave_list, best_ave);
     }
   }
 
-  seq_iter = g_sequence_get_begin_iter (avelements);
-  while (!g_sequence_iter_is_end (seq_iter)) {
-    ave = (GstAVElement *) g_sequence_get (seq_iter);
-
-    if (g_list_find (factory_list, ave->dec)
-        && !g_list_find (dec_list, ave->dec)) {
-      dec_list = g_list_prepend (dec_list, ave->dec);
-
-      /* to avoid unnecessary comparisons since the avelements list might be big */
-      if (++dl_count == dl_length)
-        break;
-    }
-    seq_iter = g_sequence_iter_next (seq_iter);
+  /* Sort all GstAVElements by their relative ranks and insert
+   * into the decoders list */
+  ave_list = g_list_sort (ave_list, (GCompareFunc) avelement_compare);
+  for (tmp = ave_list; tmp; tmp = tmp->next) {
+    ave = (GstAVElement *) tmp->data;
+    dec_list = g_list_prepend (dec_list, ave->dec);
   }
+  g_list_free (ave_list);
 
   dec_list = g_list_reverse (dec_list);
 
@@ -3775,6 +3837,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   const gchar *klass;
   GstPlaySinkType type;
   GstElement **sinkp;
+  GList *ave_list = NULL, *l;
   GstAVElement *ave = NULL;
   GSequence *ave_seq = NULL;
   GSequenceIter *seq_iter;
@@ -3811,23 +3874,46 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
       sinkp = &group->video_sink;
     }
 
+    seq_iter =
+        g_sequence_lookup (ave_seq, factory,
+        (GCompareDataFunc) avelement_lookup_decoder, NULL);
+    if (seq_iter) {
+      /* Go to first iter with that decoder */
+      do {
+        GSequenceIter *tmp_seq_iter;
+
+        tmp_seq_iter = g_sequence_iter_prev (seq_iter);
+        if (!avelement_iter_is_equal (tmp_seq_iter, factory))
+          break;
+        seq_iter = tmp_seq_iter;
+      } while (TRUE);
+
+      while (!g_sequence_iter_is_end (seq_iter)
+          && avelement_iter_is_equal (seq_iter, factory)) {
+        ave = g_sequence_get (seq_iter);
+        ave_list = g_list_prepend (ave_list, ave);
+        seq_iter = g_sequence_iter_next (seq_iter);
+      }
+
+      /* Sort all GstAVElements by their relative ranks and insert
+       * into the decoders list */
+      ave_list = g_list_sort (ave_list, (GCompareFunc) avelement_compare);
+    } else {
+      ave_list = g_list_prepend (ave_list, NULL);
+    }
+
     /* if it is a decoder and we don't have a fixed sink, then find out 
      * the matching audio/video sink from GstAVElements list */
-    seq_iter = g_sequence_get_begin_iter (ave_seq);
-    while (!g_sequence_iter_is_end (seq_iter)) {
-      ave = (GstAVElement *) g_sequence_get (seq_iter);
-      if (ave->dec != factory) {
-        seq_iter = g_sequence_iter_next (seq_iter);
-        continue;
-      }
+    for (l = ave_list; l; l = l->next) {
+      ave = (GstAVElement *) l->data;
 
       if (((isaudiodec && !group->audio_sink) ||
               (isvideodec && !group->video_sink))) {
-
         GST_SOURCE_GROUP_LOCK (group);
         if (ave && ave->sink) {
           if ((*sinkp = gst_element_factory_create (ave->sink, NULL)) == NULL)
-            GST_WARNING_OBJECT (playbin, "Could not create an element from %s",
+            GST_WARNING_OBJECT (playbin,
+                "Could not create an element from %s",
                 gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (*sinkp)));
           gst_object_ref_sink (*sinkp);
         }
@@ -3886,6 +3972,8 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
         GST_DEBUG_OBJECT (playbin, "%s not compatible with the fixed sink",
             GST_OBJECT_NAME (factory));
 
+        /* If it is not compatible, either continue with the next possible
+         * sink or if we have a fixed sink, skip the decoder */
         if ((isaudiodec && group->audio_sink != playbin->audio_sink) ||
             (isvideodec && group->video_sink != playbin->video_sink)) {
           GST_SOURCE_GROUP_LOCK (group);
@@ -3898,8 +3986,8 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
           return GST_AUTOPLUG_SELECT_SKIP;
         }
       }
-      seq_iter = g_sequence_iter_next (seq_iter);
     }
+    g_list_free (ave_list);
     g_mutex_unlock (&playbin->elements_lock);
     return GST_AUTOPLUG_SELECT_TRY;
   }
