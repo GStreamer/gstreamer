@@ -2,6 +2,9 @@
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) 2012 Collabora Ltd.
  *	Author : Edward Hervey <edward@collabora.com>
+ * Copyright (C) 2013 Collabora Ltd.
+ *	Author : Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ *	         Olivier Crete <olivier.crete@collabora.com>
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,6 +32,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <gst/base/gstbytereader.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
@@ -46,6 +50,8 @@ static gboolean gst_pngdec_start (GstVideoDecoder * decoder);
 static gboolean gst_pngdec_stop (GstVideoDecoder * decoder);
 static gboolean gst_pngdec_set_format (GstVideoDecoder * Decoder,
     GstVideoCodecState * state);
+static GstFlowReturn gst_pngdec_parse (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos);
 static GstFlowReturn gst_pngdec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_pngdec_decide_allocation (GstVideoDecoder * decoder,
@@ -88,6 +94,7 @@ gst_pngdec_class_init (GstPngDecClass * klass)
   vdec_class->stop = gst_pngdec_stop;
   vdec_class->reset = gst_pngdec_reset;
   vdec_class->set_format = gst_pngdec_set_format;
+  vdec_class->parse = gst_pngdec_parse;
   vdec_class->handle_frame = gst_pngdec_handle_frame;
   vdec_class->decide_allocation = gst_pngdec_decide_allocation;
 
@@ -148,10 +155,16 @@ static gboolean
 gst_pngdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 {
   GstPngDec *pngdec = (GstPngDec *) decoder;
+  GstVideoInfo *info = &state->info;
 
   if (pngdec->input_state)
     gst_video_codec_state_unref (pngdec->input_state);
   pngdec->input_state = gst_video_codec_state_ref (state);
+
+  if (GST_VIDEO_INFO_FPS_N (info) != 1 && GST_VIDEO_INFO_FPS_D (info) != 1)
+    gst_video_decoder_set_packetized (decoder, TRUE);
+  else
+    gst_video_decoder_set_packetized (decoder, FALSE);
 
   /* We'll set format later on */
 
@@ -392,6 +405,98 @@ beach:
   return ret;
 }
 
+/* Based on pngparse */
+#define PNG_SIGNATURE G_GUINT64_CONSTANT (0x89504E470D0A1A0A)
+
+static GstFlowReturn
+gst_pngdec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
+    GstAdapter * adapter, gboolean at_eos)
+{
+  gsize toadd = 0;
+  GstByteReader reader;
+  gconstpointer data;
+  guint64 signature;
+  gsize size;
+
+  /* FIXME : The overhead of using scan_uint32 is massive */
+
+  size = gst_adapter_available (adapter);
+  GST_DEBUG ("Parsing PNG image data (%" G_GSIZE_FORMAT " bytes)", size);
+
+  if (size < 8)
+    goto need_more_data;
+
+  data = gst_adapter_map (adapter, size);
+  gst_byte_reader_init (&reader, data, size);
+
+  if (!gst_byte_reader_peek_uint64_be (&reader, &signature))
+    goto need_more_data;
+
+  if (signature != PNG_SIGNATURE) {
+    for (;;) {
+      guint offset;
+
+      offset = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
+          0x89504E47, 0, gst_byte_reader_get_remaining (&reader));
+
+      if (offset == -1) {
+        gst_adapter_flush (adapter,
+            gst_byte_reader_get_remaining (&reader) - 4);
+        goto need_more_data;
+      }
+
+      if (!gst_byte_reader_skip (&reader, offset))
+        goto need_more_data;
+
+      if (!gst_byte_reader_peek_uint64_be (&reader, &signature))
+        goto need_more_data;
+
+      if (signature == PNG_SIGNATURE) {
+        /* We're skipping, go out, we'll be back */
+        gst_adapter_flush (adapter, gst_byte_reader_get_pos (&reader));
+        goto need_more_data;
+      }
+      if (!gst_byte_reader_skip (&reader, 4))
+        goto need_more_data;
+    }
+  }
+
+  if (!gst_byte_reader_skip (&reader, 8))
+    goto need_more_data;
+
+  for (;;) {
+    guint32 length;
+    guint32 code;
+
+    if (!gst_byte_reader_get_uint32_be (&reader, &length))
+      goto need_more_data;
+    if (!gst_byte_reader_get_uint32_le (&reader, &code))
+      goto need_more_data;
+
+    if (!gst_byte_reader_skip (&reader, length + 4))
+      goto need_more_data;
+
+    if (code == GST_MAKE_FOURCC ('I', 'E', 'N', 'D')) {
+      /* Have complete frame */
+      toadd = gst_byte_reader_get_pos (&reader);
+      GST_DEBUG_OBJECT (decoder, "Have complete frame of size %" G_GSIZE_FORMAT,
+          toadd);
+      goto have_full_frame;
+    }
+  }
+
+  g_assert_not_reached ();
+  return GST_FLOW_ERROR;
+
+need_more_data:
+  return GST_VIDEO_DECODER_FLOW_NEED_DATA;
+
+have_full_frame:
+  if (toadd)
+    gst_video_decoder_add_to_frame (decoder, toadd);
+  return gst_video_decoder_have_frame (decoder);
+}
+
 static gboolean
 gst_pngdec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
 {
@@ -497,6 +602,7 @@ gst_pngdec_start (GstVideoDecoder * decoder)
 {
   GstPngDec *pngdec = (GstPngDec *) decoder;
 
+  gst_video_decoder_set_packetized (GST_VIDEO_DECODER (pngdec), FALSE);
   gst_pngdec_libpng_init (pngdec);
 
   return TRUE;
