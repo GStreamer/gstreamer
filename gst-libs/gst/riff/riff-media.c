@@ -1212,6 +1212,19 @@ gst_riff_create_audio_caps (guint16 codec_id,
       break;
 
     case GST_RIFF_WAVE_FORMAT_ADPCM:
+      if (strf != NULL) {
+        /* Many encoding tools create a wrong bitrate information in the header,
+         * so either we calculate the bitrate or mark it as invalid as this
+         * would probably confuse timing */
+        strf->av_bps = 0;
+        if (strf->channels != 0 && strf->rate != 0 && strf->blockalign != 0) {
+          int spb = ((strf->blockalign - strf->channels * 7) / 2) * 2;
+          strf->av_bps =
+              gst_util_uint64_scale_int (strf->rate, strf->blockalign, spb);
+          GST_DEBUG ("fixing av_bps to calculated value %d of MS ADPCM",
+              strf->av_bps);
+        }
+      }
       caps = gst_caps_new_simple ("audio/x-adpcm",
           "layout", G_TYPE_STRING, "microsoft", NULL);
       if (codec_name)
@@ -1320,7 +1333,19 @@ gst_riff_create_audio_caps (guint16 codec_id,
       goto unknown;
 
     case GST_RIFF_WAVE_FORMAT_DVI_ADPCM:
-      rate_max = 48000;
+      if (strf != NULL) {
+        /* Many encoding tools create a wrong bitrate information in the
+         * header, so either we calculate the bitrate or mark it as invalid
+         * as this would probably confuse timing */
+        strf->av_bps = 0;
+        if (strf->channels != 0 && strf->rate != 0 && strf->blockalign != 0) {
+          int spb = ((strf->blockalign - strf->channels * 4) / 2) * 2;
+          strf->av_bps =
+              gst_util_uint64_scale_int (strf->rate, strf->blockalign, spb);
+          GST_DEBUG ("fixing av_bps to calculated value %d of IMA DVI ADPCM",
+              strf->av_bps);
+        }
+      }
       caps = gst_caps_new_simple ("audio/x-adpcm",
           "layout", G_TYPE_STRING, "dvi", NULL);
       if (codec_name)
