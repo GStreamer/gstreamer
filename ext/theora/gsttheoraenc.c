@@ -633,7 +633,8 @@ theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet)
     goto done;
   }
 
-  gst_buffer_fill (frame->output_buffer, 0, packet->packet, packet->bytes);
+  if (packet->bytes > 0)
+    gst_buffer_fill (frame->output_buffer, 0, packet->packet, packet->bytes);
 
   /* the second most significant bit of the first data byte is cleared
    * for keyframes */
