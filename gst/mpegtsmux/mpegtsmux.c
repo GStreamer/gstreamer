@@ -1018,9 +1018,9 @@ mpegtsmux_clip_inc_running_time (GstCollectPads * pads,
   if (pad_data->prepare_func) {
     MpegTsMux *mux = (MpegTsMux *) user_data;
 
-    buf = pad_data->prepare_func (buf, pad_data, mux);
-    if (buf)
-      gst_buffer_replace (outbuf, buf);
+    *outbuf = pad_data->prepare_func (buf, pad_data, mux);
+    g_assert (*outbuf);
+    gst_buffer_unref (buf);
   }
 
   return GST_FLOW_OK;
