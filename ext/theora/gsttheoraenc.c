@@ -786,22 +786,11 @@ theora_enc_write_multipass_cache (GstTheoraEnc * enc, gboolean begin,
   gsize bytes_written = 0;
   gchar *buf;
 
-  if (begin)
+  if (begin) {
     stat = g_io_channel_seek_position (enc->multipass_cache_fd, 0, G_SEEK_SET,
         &err);
-  if (stat != G_IO_STATUS_ERROR) {
-    do {
-      bytes_read =
-          th_encode_ctl (enc->encoder, TH_ENCCTL_2PASS_OUT, &buf, sizeof (buf));
-      if (bytes_read > 0)
-        g_io_channel_write_chars (enc->multipass_cache_fd, buf, bytes_read,
-            &bytes_written, NULL);
-    } while (bytes_read > 0 && bytes_written > 0);
 
-  }
-
-  if (stat == G_IO_STATUS_ERROR || bytes_read < 0) {
-    if (begin) {
+    if (stat == G_IO_STATUS_ERROR) {
       if (eos)
         GST_ELEMENT_WARNING (enc, RESOURCE, WRITE, (NULL),
             ("Failed to seek to beginning of multipass cache file: %s",
@@ -810,15 +799,34 @@ theora_enc_write_multipass_cache (GstTheoraEnc * enc, gboolean begin,
         GST_ELEMENT_ERROR (enc, RESOURCE, WRITE, (NULL),
             ("Failed to seek to beginning of multipass cache file: %s",
                 err->message));
+      g_error_free (err);
+      return FALSE;
+    }
+  }
+
+
+  do {
+    bytes_read =
+        th_encode_ctl (enc->encoder, TH_ENCCTL_2PASS_OUT, &buf, sizeof (buf));
+    if (bytes_read > 0)
+      g_io_channel_write_chars (enc->multipass_cache_fd, buf, bytes_read,
+          &bytes_written, &err);
+  } while (bytes_read > 0 && bytes_written > 0 && !err);
+
+  if (bytes_read < 0 || err) {
+    if (bytes_read < 0) {
+      GST_ELEMENT_ERROR (enc, RESOURCE, WRITE, (NULL),
+          ("Failed to read multipass cache data: %d", bytes_read));
     } else {
       GST_ELEMENT_ERROR (enc, RESOURCE, WRITE, (NULL),
-          ("Failed to write multipass cache file"));
+          ("Failed to write multipass cache file: %s", err->message));
     }
     if (err)
       g_error_free (err);
 
     return FALSE;
   }
+
   return TRUE;
 }
 
