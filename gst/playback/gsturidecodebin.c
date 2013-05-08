@@ -1807,6 +1807,7 @@ type_found (GstElement * typefind, guint probability,
   g_object_set (queue, "use-buffering", TRUE, NULL);
   g_object_set (queue, "ring-buffer-max-size", decoder->ring_buffer_max_size,
       NULL);
+  decoder->queue = queue;
 
   GST_DEBUG_OBJECT (decoder, "check media-type %s, %d", media_type,
       decoder->download);
