@@ -75,6 +75,8 @@ struct _GstVdpVideoMemory
 
 #define GST_VDP_VIDEO_MEMORY_ALLOCATOR   "VdpVideoMemory"
 
+#define GST_CAPS_FEATURE_MEMORY_VDPAU    "memory:VdpVideoSurface"
+
 void gst_vdp_video_memory_init (void);
 
 GstMemory *

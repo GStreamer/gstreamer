@@ -342,9 +342,13 @@ gst_vdp_decoder_class_init (GstVdpDecoderClass * klass)
   video_decoder_class->decide_allocation = gst_vdp_decoder_decide_allocation;
 
   GST_FIXME ("Actually create srcpad template from hw capabilities");
-  src_caps = gst_caps_from_string ("video/x-raw,format={ YV12 }");
-  src_template = gst_pad_template_new (GST_VIDEO_DECODER_SRC_NAME,
-      GST_PAD_SRC, GST_PAD_ALWAYS, src_caps);
+  src_caps =
+      gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+      (GST_CAPS_FEATURE_MEMORY_VDPAU,
+          "{ YV12 }") ";" GST_VIDEO_CAPS_MAKE ("{ YV12 }"));
+  src_template =
+      gst_pad_template_new (GST_VIDEO_DECODER_SRC_NAME, GST_PAD_SRC,
+      GST_PAD_ALWAYS, src_caps);
 
   gst_element_class_add_pad_template (element_class, src_template);
 
