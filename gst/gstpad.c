@@ -4401,6 +4401,7 @@ store_sticky_event (GstPad * pad, GstEvent * event)
   GArray *events;
   gboolean res = FALSE;
   const gchar *name = NULL;
+  gboolean insert = TRUE;
 
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushed;
@@ -4429,14 +4430,22 @@ store_sticky_event (GstPad * pad, GstEvent * event)
       /* overwrite */
       if ((res = gst_event_replace (&ev->event, event)))
         ev->received = FALSE;
+
+      insert = FALSE;
+      break;
+    }
+
+    if (type < GST_EVENT_TYPE (ev->event)) {
+      g_warning (G_STRLOC ":%s:<%s:%s> Sticky event misordering detected",
+          G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
       break;
     }
   }
-  if (i == len) {
+  if (insert) {
     PadEvent ev;
     ev.event = gst_event_ref (event);
     ev.received = FALSE;
-    g_array_append_val (events, ev);
+    g_array_insert_val (events, i, ev);
     res = TRUE;
   }
 
