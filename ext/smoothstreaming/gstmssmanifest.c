@@ -472,12 +472,14 @@ _gst_mss_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  if (max_width)
+  if (max_width) {
     gst_structure_set (structure, "width", G_TYPE_INT,
-        g_ascii_strtoull (max_width, NULL, 10), NULL);
-  if (max_height)
+        (int) g_ascii_strtoull (max_width, NULL, 10), NULL);
+  }
+  if (max_height) {
     gst_structure_set (structure, "height", G_TYPE_INT,
-        g_ascii_strtoull (max_height, NULL, 10), NULL);
+        (int) g_ascii_strtoull (max_height, NULL, 10), NULL);
+  }
 
   if (codec_data && strlen (codec_data)) {
     if (strcmp (fourcc, "H264") == 0 || strcmp (fourcc, "AVC1") == 0) {
@@ -574,13 +576,14 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
     goto end;
 
   structure = gst_caps_get_structure (caps, 0);
-
-  if (channels)
+  if (channels) {
     gst_structure_set (structure, "channels", G_TYPE_INT,
-        g_ascii_strtoull (channels, NULL, 10), NULL);
-  if (rate)
+        (int) g_ascii_strtoull (channels, NULL, 10), NULL);
+  }
+  if (rate) {
     gst_structure_set (structure, "rate", G_TYPE_INT,
-        g_ascii_strtoull (rate, NULL, 10), NULL);
+        (int) g_ascii_strtoull (rate, NULL, 10), NULL);
+  }
 
   if (codec_data && strlen (codec_data)) {
     GstBuffer *buffer = gst_buffer_from_hex_string ((gchar *) codec_data);
