@@ -1173,6 +1173,16 @@ AG_GST_CHECK_FEATURE(CURL, [Curl plugin], curl, [
   AC_SUBST(CURL_LIBS)
 ])
 
+dnl **** DASH ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_DASH, true)
+AG_GST_CHECK_FEATURE(DASH, [DASH plug-in], dash, [
+  PKG_CHECK_MODULES(LIBXML2, libxml-2.0 >= 2.4, [HAVE_LIBXML2="yes"
+    HAVE_DASH="yes"], [HAVE_LIBXML2="no"
+    HAVE_DASH="no"])
+  AC_SUBST(LIBXML2_CFLAGS)
+  AC_SUBST(LIBXML2_LIBS)
+])
+
 dnl *** dc1394  ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DC1394, true)
 AG_GST_CHECK_FEATURE(DC1394, [libdc1394], dc1394, [
@@ -2200,6 +2210,7 @@ AM_CONDITIONAL(USE_CDAUDIO, false)
 AM_CONDITIONAL(USE_CELT, false)
 AM_CONDITIONAL(USE_CHROMAPRINT, false)
 AM_CONDITIONAL(USE_CURL, false)
+AM_CONDITIONAL(USE_DASH, false)
 AM_CONDITIONAL(USE_DC1394, false)
 AM_CONDITIONAL(USE_DECKLINK, false)
 AM_CONDITIONAL(DECKLINK_OSX, false)
@@ -2467,6 +2478,7 @@ ext/cdaudio/Makefile
 ext/celt/Makefile
 ext/chromaprint/Makefile
 ext/curl/Makefile
+ext/dash/Makefile
 ext/dc1394/Makefile
 ext/dirac/Makefile
 ext/directfb/Makefile

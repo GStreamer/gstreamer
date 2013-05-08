@@ -52,6 +52,12 @@ else
 CURL_DIR=
 endif
 
+if USE_DASH
+DASH_DIR=dash
+else
+DASH_DIR=
+endif
+
 if USE_DC1394
 DC1394_DIR=dc1394
 else
@@ -394,6 +400,7 @@ SUBDIRS=\
 	$(CELT_DIR) \
 	$(CHROMAPRINT_DIR) \
 	$(CURL_DIR) \
+	$(DASH_DIR) \
 	$(DC1394_DIR) \
 	$(DIRAC_DIR) \
 	$(DIRECTFB_DIR) \
