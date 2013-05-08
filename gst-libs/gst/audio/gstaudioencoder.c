@@ -2560,7 +2560,31 @@ gst_audio_encoder_negotiate_default (GstAudioEncoder * enc)
 
   GST_DEBUG_OBJECT (enc, "Setting srcpad caps %" GST_PTR_FORMAT, caps);
 
-  res = gst_pad_set_caps (enc->srcpad, caps);
+  if (enc->priv->pending_events) {
+    GList *pending_events, *l;
+    gboolean set_caps = FALSE;
+
+    pending_events = enc->priv->pending_events;
+    enc->priv->pending_events = NULL;
+
+    GST_DEBUG_OBJECT (enc, "Pushing pending events");
+    for (l = pending_events; l; l = l->next) {
+      GstEvent *event = GST_EVENT (l->data);
+
+      if (GST_EVENT_TYPE (event) > GST_EVENT_CAPS && !set_caps) {
+        res = gst_pad_set_caps (enc->srcpad, caps);
+        set_caps = TRUE;
+      }
+      gst_audio_encoder_push_event (enc, l->data);
+    }
+    g_list_free (pending_events);
+    if (!set_caps) {
+      res = gst_pad_set_caps (enc->srcpad, caps);
+    }
+  } else {
+    res = gst_pad_set_caps (enc->srcpad, caps);
+  }
+
   if (!res)
     goto done;
   enc->priv->ctx.output_caps_changed = FALSE;

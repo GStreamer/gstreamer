@@ -534,6 +534,29 @@ gst_audio_decoder_finalize (GObject * object)
 }
 
 static gboolean
+gst_audio_decoder_push_event (GstAudioDecoder * dec, GstEvent * event)
+{
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEGMENT:{
+      GstSegment seg;
+
+      GST_AUDIO_DECODER_STREAM_LOCK (dec);
+      gst_event_copy_segment (event, &seg);
+
+      GST_DEBUG_OBJECT (dec, "starting segment %" GST_SEGMENT_FORMAT, &seg);
+
+      dec->output_segment = seg;
+      GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return gst_pad_push_event (dec->srcpad, event);
+}
+
+static gboolean
 gst_audio_decoder_negotiate_default (GstAudioDecoder * dec)
 {
   GstAudioDecoderClass *klass;
@@ -552,7 +575,30 @@ gst_audio_decoder_negotiate_default (GstAudioDecoder * dec)
 
   GST_DEBUG_OBJECT (dec, "setting src caps %" GST_PTR_FORMAT, caps);
 
-  res = gst_pad_set_caps (dec->srcpad, caps);
+  if (dec->priv->pending_events) {
+    GList *pending_events, *l;
+    gboolean set_caps = FALSE;
+
+    pending_events = dec->priv->pending_events;
+    dec->priv->pending_events = NULL;
+
+    GST_DEBUG_OBJECT (dec, "Pushing pending events");
+    for (l = pending_events; l; l = l->next) {
+      GstEvent *event = GST_EVENT (l->data);
+
+      if (GST_EVENT_TYPE (event) > GST_EVENT_CAPS && !set_caps) {
+        res = gst_pad_set_caps (dec->srcpad, caps);
+        set_caps = TRUE;
+      }
+      gst_audio_decoder_push_event (dec, l->data);
+    }
+    g_list_free (pending_events);
+    if (!set_caps) {
+      res = gst_pad_set_caps (dec->srcpad, caps);
+    }
+  } else {
+    res = gst_pad_set_caps (dec->srcpad, caps);
+  }
 
   if (!res)
     goto done;
@@ -915,29 +961,6 @@ again:
   }
 
   return ret;
-}
-
-static gboolean
-gst_audio_decoder_push_event (GstAudioDecoder * dec, GstEvent * event)
-{
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEGMENT:{
-      GstSegment seg;
-
-      GST_AUDIO_DECODER_STREAM_LOCK (dec);
-      gst_event_copy_segment (event, &seg);
-
-      GST_DEBUG_OBJECT (dec, "starting segment %" GST_SEGMENT_FORMAT, &seg);
-
-      dec->output_segment = seg;
-      GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
-      break;
-    }
-    default:
-      break;
-  }
-
-  return gst_pad_push_event (dec->srcpad, event);
 }
 
 static void
