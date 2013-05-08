@@ -4436,8 +4436,11 @@ store_sticky_event (GstPad * pad, GstEvent * event)
     }
 
     if (type < GST_EVENT_TYPE (ev->event)) {
-      g_warning (G_STRLOC ":%s:<%s:%s> Sticky event misordering detected",
-          G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
+      /* STREAM_START, CAPS and SEGMENT must be delivered in this order. By
+       * storing the sticky ordered we can check that this is respected. */
+      if (G_UNLIKELY (GST_EVENT_TYPE (ev->event) <= GST_EVENT_SEGMENT))
+        g_warning (G_STRLOC ":%s:<%s:%s> Sticky event misordering detected",
+            G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
       break;
     }
   }
