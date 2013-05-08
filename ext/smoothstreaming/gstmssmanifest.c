@@ -313,7 +313,7 @@ _gst_mss_stream_video_caps_from_fourcc (gchar * fourcc)
         "avc", NULL);
   } else if (strcmp (fourcc, "WVC1") == 0) {
     return gst_caps_new_simple ("video/x-wmv", "wmvversion", G_TYPE_INT, 3,
-        NULL);
+        "format", G_TYPE_STRING, "WVC1", NULL);
   }
   return NULL;
 }
