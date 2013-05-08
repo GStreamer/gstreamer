@@ -1576,7 +1576,7 @@ gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
   g_return_val_if_fail (gst_buffer_is_writable (buffer), 0);
-  g_return_val_if_fail (src != NULL, 0);
+  g_return_val_if_fail (src != NULL || size == 0, 0);
 
   GST_CAT_LOG (GST_CAT_BUFFER,
       "buffer %p, offset %" G_GSIZE_FORMAT ", size %" G_GSIZE_FORMAT, buffer,
