@@ -36,15 +36,22 @@
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="hSc-4x-myS"/>
                                 </items>
                             </toolbar>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="EZT-e2-iX7" userLabel="Video" customClass="EaglUIView">
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
+                            <constraint firstItem="EZT-e2-iX7" firstAttribute="top" secondItem="JOS-rK-Hts" secondAttribute="top" constant="20" symbolic="YES" type="user" id="3UH-b4-lHN"/>
                             <constraint firstItem="8wd-E5-Owx" firstAttribute="bottom" secondItem="o22-1p-nvT" secondAttribute="top" constant="8" symbolic="YES" type="user" id="CHF-CI-6CL"/>
+                            <constraint firstItem="8wd-E5-Owx" firstAttribute="top" secondItem="EZT-e2-iX7" secondAttribute="bottom" constant="8" symbolic="YES" type="user" id="V6c-5k-eSb"/>
                             <constraint firstAttribute="trailing" secondItem="8wd-E5-Owx" secondAttribute="trailing" constant="20" symbolic="YES" type="user" id="WDw-jT-tbz"/>
                             <constraint firstItem="o22-1p-nvT" firstAttribute="leading" secondItem="JOS-rK-Hts" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="Zvb-2h-v7A"/>
                             <constraint firstItem="o22-1p-nvT" firstAttribute="bottom" secondItem="JOS-rK-Hts" secondAttribute="bottom" constant="20" symbolic="YES" type="user" id="l3D-e3-Z7R"/>
                             <constraint firstItem="8wd-E5-Owx" firstAttribute="leading" secondItem="JOS-rK-Hts" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="lwj-ty-IXl"/>
                             <constraint firstItem="o22-1p-nvT" firstAttribute="trailing" secondItem="JOS-rK-Hts" secondAttribute="trailing" constant="20" symbolic="YES" type="user" id="mL0-QH-ra6"/>
+                            <constraint firstItem="EZT-e2-iX7" firstAttribute="leading" secondItem="JOS-rK-Hts" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="onN-nz-NjL"/>
+                            <constraint firstAttribute="trailing" secondItem="EZT-e2-iX7" secondAttribute="trailing" constant="20" symbolic="YES" type="user" id="sLo-Ka-Lf5"/>
                         </constraints>
                     </view>
                     <simulatedStatusBarMetrics key="simulatedStatusBarMetrics"/>
@@ -52,12 +59,30 @@
                         <outlet property="message_label" destination="8wd-E5-Owx" id="7Xw-cg-3hH"/>
                         <outlet property="pause_button" destination="bfY-YY-jiu" id="GBf-vm-mbR"/>
                         <outlet property="play_button" destination="6LZ-7a-xKf" id="Tk2-4w-9Px"/>
+                        <outlet property="video_view" destination="EZT-e2-iX7" id="Ep9-eG-Grh"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="25z-hu-OZW" sceneMemberID="firstResponder"/>
             </objects>
         </scene>
     </scenes>
+    <classes>
+        <class className="EaglUIView" superclassName="UIView">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/EaglUIView.h"/>
+        </class>
+        <class className="ViewController" superclassName="UIViewController">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/ViewController.h"/>
+            <relationships>
+                <relationship kind="action" name="pause:"/>
+                <relationship kind="action" name="play:"/>
+                <relationship kind="outlet" name="label" candidateClass="UILabel"/>
+                <relationship kind="outlet" name="message_label" candidateClass="UILabel"/>
+                <relationship kind="outlet" name="pause_button" candidateClass="UIBarButtonItem"/>
+                <relationship kind="outlet" name="play_button" candidateClass="UIBarButtonItem"/>
+                <relationship kind="outlet" name="video_view" candidateClass="UIView"/>
+            </relationships>
+        </class>
+    </classes>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
         <simulatedStatusBarMetrics key="statusBar"/>
         <simulatedOrientationMetrics key="orientation"/>

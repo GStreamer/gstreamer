@@ -5,6 +5,7 @@
     IBOutlet UILabel *message_label;
     IBOutlet UIBarButtonItem *play_button;
     IBOutlet UIBarButtonItem *pause_button;
+    IBOutlet UIView *video_view;
 }
 
 -(IBAction) play:(id)sender;

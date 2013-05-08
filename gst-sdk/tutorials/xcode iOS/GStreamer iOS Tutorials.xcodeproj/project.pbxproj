@@ -63,6 +63,7 @@
 		C6B6129517396231003FC410 /* appicon-3-iPad@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C6B6129117396231003FC410 /* appicon-3-iPad@2x.png */; };
 		C6B6129617396231003FC410 /* appicon-3-iPhone.png in Resources */ = {isa = PBXBuildFile; fileRef = C6B6129217396231003FC410 /* appicon-3-iPhone.png */; };
 		C6B6129717396231003FC410 /* appicon-3-iPhone@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C6B6129317396231003FC410 /* appicon-3-iPhone@2x.png */; };
+		C6EB857C173A4D9500C3953D /* EaglUIVIew.m in Sources */ = {isa = PBXBuildFile; fileRef = C6EB857B173A4D9500C3953D /* EaglUIVIew.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -138,6 +139,8 @@
 		C6B6129117396231003FC410 /* appicon-3-iPad@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-3-iPad@2x.png"; sourceTree = "<group>"; };
 		C6B6129217396231003FC410 /* appicon-3-iPhone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-3-iPhone.png"; sourceTree = "<group>"; };
 		C6B6129317396231003FC410 /* appicon-3-iPhone@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-3-iPhone@2x.png"; sourceTree = "<group>"; };
+		C6EB857A173A4D9500C3953D /* EaglUIVIew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EaglUIVIew.h; sourceTree = "<group>"; };
+		C6EB857B173A4D9500C3953D /* EaglUIVIew.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EaglUIVIew.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -301,6 +304,8 @@
 		C6B6126417395CF2003FC410 /* Tutorial 3 */ = {
 			isa = PBXGroup;
 			children = (
+				C6EB857A173A4D9500C3953D /* EaglUIVIew.h */,
+				C6EB857B173A4D9500C3953D /* EaglUIVIew.m */,
 				C6B6128F17396231003FC410 /* Images */,
 				C6B6128817395D4F003FC410 /* GStreamerBackend.h */,
 				C6B6128917395D4F003FC410 /* GStreamerBackend.m */,
@@ -511,6 +516,7 @@
 				C6B6127E17395CF2003FC410 /* ViewController.m in Sources */,
 				C6B6128B17395D4F003FC410 /* GStreamerBackend.m in Sources */,
 				C6B6128E17395EE2003FC410 /* gst_ios_init.c in Sources */,
+				C6EB857C173A4D9500C3953D /* EaglUIVIew.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1037,6 +1043,7 @@
 				C6B6128717395CF2003FC410 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

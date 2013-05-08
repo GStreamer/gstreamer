@@ -21,7 +21,7 @@
     play_button.enabled = FALSE;
     pause_button.enabled = FALSE;
 
-    gst_backend = [[GStreamerBackend alloc] init:self];
+    gst_backend = [[GStreamerBackend alloc] init:self videoView:video_view];
 }
 
 - (void)didReceiveMemoryWarning

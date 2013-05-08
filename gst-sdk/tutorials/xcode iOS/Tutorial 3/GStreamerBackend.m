@@ -1,6 +1,7 @@
 #import "GStreamerBackend.h"
 
 #include <gst/gst.h>
+#include <gst/interfaces/xoverlay.h>
 
 GST_DEBUG_CATEGORY_STATIC (debug_category);
 #define GST_CAT_DEFAULT debug_category
@@ -14,20 +15,23 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 @implementation GStreamerBackend {
     id ui_delegate;        /* Class that we use to interact with the user interface */
     GstElement *pipeline;  /* The running pipeline */
+    GstElement *video_sink;/* The video sink element which receives XOverlay commands */
     GMainContext *context; /* GLib context used to run the main loop */
     GMainLoop *main_loop;  /* GLib main loop */
     gboolean initialized;  /* To avoid informing the UI multiple times about the initialization */
+    UIView *ui_video_view; /* UIView that holds the video */
 }
 
 /*
  * Interface methods
  */
 
--(id) init:(id) uiDelegate
+-(id) init:(id) uiDelegate videoView:(UIView *)video_view
 {
     if (self = [super init])
     {
         self->ui_delegate = uiDelegate;
+        self->ui_video_view = video_view;
 
         GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-2", 0, "iOS tutorial 2");
         gst_debug_set_threshold_for_name("tutorial-2", GST_LEVEL_DEBUG);
@@ -136,7 +140,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     g_main_context_push_thread_default(context);
     
     /* Build pipeline */
-    pipeline = gst_parse_launch("audiotestsrc ! audioconvert ! audioresample ! autoaudiosink", &error);
+    pipeline = gst_parse_launch("videotestsrc ! warptv ! ffmpegcolorspace ! autovideosink", &error);
     if (error) {
         gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
         g_clear_error (&error);
@@ -144,7 +148,17 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
         g_free (message);
         return;
     }
+
+    /* Set the pipeline to READY, so it can already accept a window handle */
+    gst_element_set_state(pipeline, GST_STATE_READY);
     
+    video_sink = gst_bin_get_by_interface(GST_BIN(pipeline), GST_TYPE_X_OVERLAY);
+    if (!video_sink) {
+        GST_ERROR ("Could not retrieve video sink");
+        return;
+    }
+    gst_x_overlay_set_window_handle(GST_X_OVERLAY(video_sink), (guintptr) (id) ui_video_view);
+
     /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
     bus = gst_element_get_bus (pipeline);
     bus_source = gst_bus_create_watch (bus);
