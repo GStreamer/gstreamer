@@ -1608,6 +1608,17 @@ gst_videomixer2_src_setcaps (GstPad * pad, GstVideoMixer2 * mix, GstCaps * caps)
   }
   GST_VIDEO_MIXER2_UNLOCK (mix);
 
+  if (mix->send_stream_start) {
+    gchar s_id[32];
+
+    /* stream-start (FIXME: create id based on input ids) */
+    g_snprintf (s_id, sizeof (s_id), "mix-%08x", g_random_int ());
+    if (!gst_pad_push_event (mix->srcpad, gst_event_new_stream_start (s_id))) {
+      GST_WARNING_OBJECT (mix->srcpad, "Sending stream start event failed");
+    }
+    mix->send_stream_start = FALSE;
+  }
+
   ret = gst_pad_set_caps (pad, caps);
 done:
 
