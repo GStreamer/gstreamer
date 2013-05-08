@@ -711,11 +711,12 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
             gst_video_rate_notify_drop (videorate);
         }
         /* clean up for the new one; _chain will resume from the new start */
-        videorate->base_ts = 0;
-        videorate->out_frame_count = 0;
         gst_video_rate_swap_prev (videorate, NULL, 0);
-        videorate->next_ts = GST_CLOCK_TIME_NONE;
       }
+
+      videorate->base_ts = 0;
+      videorate->out_frame_count = 0;
+      videorate->next_ts = GST_CLOCK_TIME_NONE;
 
       /* We just want to update the accumulated stream_time  */
       gst_segment_copy_into (segment, &videorate->segment);
