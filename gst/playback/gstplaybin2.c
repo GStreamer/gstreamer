@@ -3536,7 +3536,7 @@ create_decoders_list (GList * factory_list, GSequence * avelements)
         if (!avelement_iter_is_equal (tmp_seq_iter, factory))
           break;
         seq_iter = tmp_seq_iter;
-      } while (TRUE);
+      } while (!g_sequence_iter_is_begin (seq_iter));
 
       /* Get the best ranked GstAVElement for that factory */
       best_ave = NULL;
@@ -3886,7 +3886,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
         if (!avelement_iter_is_equal (tmp_seq_iter, factory))
           break;
         seq_iter = tmp_seq_iter;
-      } while (TRUE);
+      } while (!g_sequence_iter_is_begin (seq_iter));
 
       while (!g_sequence_iter_is_end (seq_iter)
           && avelement_iter_is_equal (seq_iter, factory)) {
