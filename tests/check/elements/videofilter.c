@@ -88,11 +88,11 @@ check_filter_caps (const gchar * name, GstCaps * caps, gint size,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
+  gst_pad_set_caps (mysrcpad, caps);
+
   /* ensure segment (format) properly setup */
   gst_segment_init (&segment, GST_FORMAT_TIME);
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
-
-  gst_pad_set_caps (mysrcpad, caps);
 
   for (i = 0; i < num_buffers; ++i) {
     inbuffer = gst_buffer_new_and_alloc (size);
