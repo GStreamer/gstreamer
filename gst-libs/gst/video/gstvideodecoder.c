@@ -2973,6 +2973,7 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
   GstAllocator *allocator;
   GstAllocationParams params;
   gboolean ret = TRUE;
+  GstVideoCodecFrame *frame;
 
   g_return_val_if_fail (GST_VIDEO_INFO_WIDTH (&state->info) != 0, FALSE);
   g_return_val_if_fail (GST_VIDEO_INFO_HEIGHT (&state->info) != 0, FALSE);
@@ -2988,7 +2989,32 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (decoder, "setting caps %" GST_PTR_FORMAT, state->caps);
 
-  ret = gst_pad_set_caps (decoder->srcpad, state->caps);
+  /* Push all pending pre-caps events of the oldest frame before
+   * setting caps */
+  frame = decoder->priv->frames ? decoder->priv->frames->data : NULL;
+  if (frame && frame->events) {
+    GList *l;
+    gboolean set_caps = FALSE;
+
+    ret = FALSE;
+    for (l = g_list_last (frame->events); l; l = l->prev) {
+      GstEvent *event = GST_EVENT (l->data);
+
+      if (GST_EVENT_TYPE (event) > GST_EVENT_CAPS && !set_caps) {
+        ret = gst_pad_set_caps (decoder->srcpad, state->caps);
+        set_caps = TRUE;
+      }
+      gst_video_decoder_push_event (decoder, event);
+    }
+    g_list_free (frame->events);
+    frame->events = NULL;
+    if (!set_caps) {
+      ret = gst_pad_set_caps (decoder->srcpad, state->caps);
+    }
+  } else {
+    ret = gst_pad_set_caps (decoder->srcpad, state->caps);
+  }
+
   if (!ret)
     goto done;
   decoder->priv->output_state_changed = FALSE;

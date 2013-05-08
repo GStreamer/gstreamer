@@ -1451,6 +1451,7 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
   GstVideoCodecState *state = encoder->priv->output_state;
   GstVideoInfo *info = &state->info;
   GstQuery *query = NULL;
+  GstVideoCodecFrame *frame;
 
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
@@ -1477,7 +1478,32 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
     encoder->priv->output_state_changed = FALSE;
   }
 
-  ret = gst_pad_set_caps (encoder->srcpad, state->caps);
+  /* Push all pending pre-caps events of the oldest frame before
+   * setting caps */
+  frame = encoder->priv->frames ? encoder->priv->frames->data : NULL;
+  if (frame && frame->events) {
+    GList *l;
+    gboolean set_caps = FALSE;
+
+    ret = FALSE;
+    for (l = g_list_last (frame->events); l; l = l->prev) {
+      GstEvent *event = GST_EVENT (l->data);
+
+      if (GST_EVENT_TYPE (event) > GST_EVENT_CAPS && !set_caps) {
+        ret = gst_pad_set_caps (encoder->srcpad, state->caps);
+        set_caps = TRUE;
+      }
+      gst_video_encoder_push_event (encoder, event);
+    }
+    g_list_free (frame->events);
+    frame->events = NULL;
+    if (!set_caps) {
+      ret = gst_pad_set_caps (encoder->srcpad, state->caps);
+    }
+  } else {
+    ret = gst_pad_set_caps (encoder->srcpad, state->caps);
+  }
+
   if (!ret)
     goto done;
 
