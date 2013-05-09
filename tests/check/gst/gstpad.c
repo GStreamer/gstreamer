@@ -21,6 +21,8 @@
 
 #include <gst/check/gstcheck.h>
 
+static GstSegment dummy_segment;
+
 GST_START_TEST (test_link)
 {
   GstPad *src, *sink;
@@ -226,7 +228,12 @@ sticky_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstCaps *caps;
 
-  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_CAPS);
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_CAPS
+      || GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START
+      || GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT);
+
+  if (GST_EVENT_TYPE (event) != GST_EVENT_CAPS)
+    return TRUE;
 
   /* Ensure we get here just once: */
   fail_unless (event_caps == NULL);
@@ -268,13 +275,20 @@ GST_START_TEST (test_sticky_caps_unlinked)
   gst_object_unref (src_template);
   gst_object_unref (sink_template);
 
+  gst_pad_set_active (src, TRUE);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_stream_start ("test")) == TRUE);
+
   caps = gst_caps_from_string ("foo/bar, dummy=(int)1");
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
   event = gst_event_new_caps (caps);
-  gst_pad_set_active (src, TRUE);
   fail_unless (gst_pad_push_event (src, event) == TRUE);
   fail_unless (event_caps == NULL);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
 
   /* Linking and activating will not forward the sticky event yet... */
   fail_unless (GST_PAD_LINK_SUCCESSFUL (gst_pad_link (src, sink)));
@@ -332,16 +346,23 @@ GST_START_TEST (test_sticky_caps_unlinked_incompatible)
   gst_object_unref (src_template);
   gst_object_unref (sink_template);
 
+  gst_pad_set_active (src, TRUE);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_stream_start ("test")) == TRUE);
+
   failcaps = gst_caps_from_string ("pony/express, failure=(boolean)true");
   ASSERT_CAPS_REFCOUNT (failcaps, "caps", 1);
 
   event = gst_event_new_caps (failcaps);
   gst_caps_unref (failcaps);
-  gst_pad_set_active (src, TRUE);
   /* The pad isn't linked yet, and anything matches the source pad template
    * (which is ANY) */
   fail_unless (gst_pad_push_event (src, event) == TRUE);
   fail_unless (event_caps == NULL);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
 
   /* Linking and activating will not forward the sticky event yet... */
   fail_unless (GST_PAD_LINK_SUCCESSFUL (gst_pad_link (src, sink)));
@@ -401,11 +422,17 @@ GST_START_TEST (test_sticky_caps_flushing)
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
   event = gst_event_new_caps (caps);
+
   gst_pad_set_active (src, TRUE);
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_stream_start ("test")) == TRUE);
   /* The caps event gets accepted by the source pad (and stored) */
   fail_unless (gst_pad_push_event (src, event) == TRUE);
   /* But wasn't forwarded since the sink pad is flushing (not activated) */
   fail_unless (event_caps == NULL);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
 
   /* Activating will not forward the sticky event yet... */
   gst_pad_set_active (sink, TRUE);
@@ -499,9 +526,13 @@ GST_START_TEST (test_push_unlinked)
   gst_buffer_unref (buffer);
 
   gst_pad_set_active (src, TRUE);
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_stream_start ("test")) == TRUE);
   GST_DEBUG ("push caps event inactive");
   gst_pad_set_caps (src, caps);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
 
   /* pushing on an unlinked pad will drop the buffer */
   GST_DEBUG ("push buffer unlinked");
@@ -569,15 +600,22 @@ GST_START_TEST (test_push_linked)
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
   gst_pad_set_active (src, TRUE);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_stream_start ("test")) == TRUE);
+
   gst_pad_set_caps (src, caps);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
+
   gst_pad_set_active (sink, TRUE);
-  gst_pad_set_caps (sink, caps);
   /* one for me and one for each set_caps */
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   plr = gst_pad_link (src, sink);
   fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   buffer = gst_buffer_new ();
 
@@ -660,16 +698,19 @@ GST_START_TEST (test_push_linked_flushing)
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
   gst_pad_set_active (src, TRUE);
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_stream_start ("test")) == TRUE);
   gst_pad_set_caps (src, caps);
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
   /* need to activate to make it accept the caps */
   gst_pad_set_active (sink, TRUE);
-  gst_pad_set_caps (sink, caps);
   /* one for me and one for each set_caps */
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   plr = gst_pad_link (src, sink);
   fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   /* not activating the pads here, which keeps them flushing */
   gst_pad_set_active (src, FALSE);
@@ -686,13 +727,18 @@ GST_START_TEST (test_push_linked_flushing)
   gst_pad_set_active (src, TRUE);
   gst_pad_set_active (sink, FALSE);
 
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_stream_start ("test")) == TRUE);
+  gst_pad_set_caps (src, caps);
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
   /* adding a probe that returns FALSE will drop the buffer without trying
    * to chain */
   id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER, _probe_handler,
       GINT_TO_POINTER (0), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
-  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_FLUSHING);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
   fail_unless_equals_int (g_list_length (buffers), 0);
   gst_buffer_unref (buffer);
@@ -711,7 +757,7 @@ GST_START_TEST (test_push_linked_flushing)
   gst_pad_remove_probe (src, id);
 
   /* cleanup */
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   gst_pad_link (src, sink);
   gst_object_unref (src);
@@ -770,9 +816,16 @@ GST_START_TEST (test_push_buffer_list_compat)
   caps = gst_caps_from_string ("foo/bar");
 
   gst_pad_set_active (src, TRUE);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_stream_start ("test")) == TRUE);
+
   gst_pad_set_caps (src, caps);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
+
   gst_pad_set_active (sink, TRUE);
-  gst_pad_set_caps (sink, caps);
 
   plr = gst_pad_link (src, sink);
   fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
@@ -1005,6 +1058,12 @@ GST_START_TEST (test_block_async)
   fail_unless (pad != NULL);
 
   gst_pad_set_active (pad, TRUE);
+
+  fail_unless (gst_pad_push_event (pad,
+          gst_event_new_stream_start ("test")) == TRUE);
+  fail_unless (gst_pad_push_event (pad,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
+
   id = gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK, block_async_cb, &data,
       NULL);
 
@@ -1041,6 +1100,12 @@ test_pad_blocking_with_type (GstPadProbeType type)
   fail_unless (pad != NULL);
 
   gst_pad_set_active (pad, TRUE);
+
+  fail_unless (gst_pad_push_event (pad,
+          gst_event_new_stream_start ("test")) == TRUE);
+  fail_unless (gst_pad_push_event (pad,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
+
   id = gst_pad_add_probe (pad, type, block_async_cb_return_ok, NULL, NULL);
 
 
@@ -1170,6 +1235,12 @@ GST_START_TEST (test_pad_probe_flush_events)
   gst_pad_set_chain_function (sink, gst_check_chain_func);
   gst_pad_set_active (src, TRUE);
   gst_pad_set_active (sink, TRUE);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_stream_start ("test")) == TRUE);
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
+
   fail_unless (gst_pad_link (src, sink) == GST_PAD_LINK_OK);
 
   gst_pad_add_probe (src,
@@ -1181,6 +1252,9 @@ GST_START_TEST (test_pad_probe_flush_events)
 
   gst_pad_push_event (src, gst_event_new_flush_start ());
   gst_pad_push_event (src, gst_event_new_flush_stop (TRUE));
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
 
   /* push a buffer so the events are propagated downstream */
   gst_pad_push (src, gst_buffer_new ());
@@ -1356,6 +1430,11 @@ GST_START_TEST (test_block_async_full_destroy)
   fail_unless (pad != NULL);
   gst_pad_set_active (pad, TRUE);
 
+  fail_unless (gst_pad_push_event (pad,
+          gst_event_new_stream_start ("test")) == TRUE);
+  fail_unless (gst_pad_push_event (pad,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
+
   id = gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK, block_async_full_cb,
       &state, block_async_full_destroy);
   fail_unless (state == 0);
@@ -1384,6 +1463,11 @@ GST_START_TEST (test_block_async_full_destroy_dispose)
   pad = gst_pad_new ("src", GST_PAD_SRC);
   fail_unless (pad != NULL);
   gst_pad_set_active (pad, TRUE);
+
+  fail_unless (gst_pad_push_event (pad,
+          gst_event_new_stream_start ("test")) == TRUE);
+  fail_unless (gst_pad_push_event (pad,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
 
   (void) gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK, block_async_full_cb,
       &state, block_async_full_destroy);
@@ -1495,6 +1579,11 @@ GST_START_TEST (test_block_async_replace_callback_no_flush)
   fail_unless (pad != NULL);
   gst_pad_set_active (pad, TRUE);
 
+  fail_unless (gst_pad_push_event (pad,
+          gst_event_new_stream_start ("test")) == TRUE);
+  fail_unless (gst_pad_push_event (pad,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
+
   GST_DEBUG ("adding probe");
   id = gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK,
       block_async_first_no_flush, bool_user_data, NULL);
@@ -1550,6 +1639,13 @@ test_sticky_events_handler (GstPad * pad, GstObject * parent, GstEvent * event)
   return TRUE;
 }
 
+static GstFlowReturn
+test_sticky_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+{
+  gst_buffer_unref (buffer);
+  return GST_FLOW_OK;
+}
+
 GST_START_TEST (test_sticky_events)
 {
   GstPad *srcpad, *sinkpad;
@@ -1566,7 +1662,8 @@ GST_START_TEST (test_sticky_events)
   fail_unless (gst_pad_get_stream_id (srcpad) == NULL);
 
   /* push an event, it should be sticky on the srcpad */
-  gst_pad_push_event (srcpad, gst_event_new_stream_start ("test"));
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_stream_start ("test")) == TRUE);
 
   /* let's see if it stuck */
   id = gst_pad_get_stream_id (srcpad);
@@ -1587,6 +1684,7 @@ GST_START_TEST (test_sticky_events)
   fail_unless (sinkpad != NULL);
   sticky_count = 0;
   gst_pad_set_event_function (sinkpad, test_sticky_events_handler);
+  gst_pad_set_chain_function (sinkpad, test_sticky_chain);
   fail_unless (sticky_count == 0);
   gst_pad_set_active (sinkpad, TRUE);
 
@@ -1601,8 +1699,13 @@ GST_START_TEST (test_sticky_events)
   gst_pad_push_event (srcpad, gst_event_new_caps (caps));
   gst_caps_unref (caps);
 
-  /* should have triggered 2 events */
-  fail_unless (sticky_count == 3);
+  /* should have triggered 2 events, the segment event is still pending */
+  fail_unless_equals_int (sticky_count, 2);
+
+  fail_unless (gst_pad_push (srcpad, gst_buffer_new ()) == GST_FLOW_OK);
+
+  /* should have triggered 3 events */
+  fail_unless_equals_int (sticky_count, 3);
 
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
@@ -1618,6 +1721,8 @@ gst_pad_suite (void)
 
   /* turn off timeout */
   tcase_set_timeout (tc_chain, 60);
+
+  gst_segment_init (&dummy_segment, GST_FORMAT_BYTES);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_link);

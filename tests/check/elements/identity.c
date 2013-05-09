@@ -46,12 +46,10 @@ event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
     have_eos = TRUE;
-    gst_event_unref (event);
-    return TRUE;
   }
 
   gst_event_unref (event);
-  return FALSE;
+  return TRUE;
 }
 
 static GstElement *
@@ -87,11 +85,16 @@ GST_START_TEST (test_one_buffer)
 {
   GstElement *identity;
   GstBuffer *buffer;
+  GstSegment segment;
 
   identity = setup_identity ();
   fail_unless (gst_element_set_state (identity,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+  gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment));
 
   buffer = gst_buffer_new_and_alloc (4);
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);

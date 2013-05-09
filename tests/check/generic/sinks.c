@@ -919,6 +919,7 @@ GST_START_TEST (test_fake_eos)
   GstPad *sinkpad;
   GstFlowReturn res;
   GThread *thread;
+  GstSegment segment;
 
   pipeline = gst_pipeline_new ("pipeline");
 
@@ -931,6 +932,10 @@ GST_START_TEST (test_fake_eos)
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC, "no ASYNC state return");
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
+  gst_pad_send_event (sinkpad, gst_event_new_segment (&segment));
 
   /* push buffer of 100 seconds, since it has a timestamp of 0, it should be
    * rendered immediately and the chain function should return immediately */
@@ -1072,6 +1077,8 @@ GST_START_TEST (test_async_done)
   gst_element_set_bus (sink, bus);
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) async_done_func, sink,
       NULL);
+
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
 
   /* make newsegment, this sets the position to 10sec when the buffer prerolls */
   GST_DEBUG ("sending segment");

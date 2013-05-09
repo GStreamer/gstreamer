@@ -420,6 +420,9 @@ run_output_order_test (gint n_linked)
   gint i;
   const gint NPADS = 5;
   const gint NBUFFERS = 1000;
+  GstSegment segment;
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
 
   g_mutex_init (&mutex);
   g_cond_init (&cond);
@@ -455,6 +458,9 @@ run_output_order_test (gint n_linked)
     fail_unless (gst_pad_link (inputpads[i], mq_sinkpad) == GST_PAD_LINK_OK);
 
     gst_pad_set_active (inputpads[i], TRUE);
+
+    gst_pad_push_event (inputpads[i], gst_event_new_stream_start ("test"));
+    gst_pad_push_event (inputpads[i], gst_event_new_segment (&segment));
 
     mq_srcpad = mq_sinkpad_to_srcpad (mq, mq_sinkpad);
 
@@ -596,6 +602,8 @@ GST_START_TEST (test_sparse_stream)
       "extra-size-bytes", (guint) 0,
       "extra-size-buffers", (guint) 0, "extra-size-time", (guint64) 0, NULL);
 
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
   /* Construct 2 dummy output pads. */
   for (i = 0; i < 2; i++) {
     GstPad *mq_srcpad, *mq_sinkpad;
@@ -611,6 +619,9 @@ GST_START_TEST (test_sparse_stream)
     fail_unless (gst_pad_link (inputpads[i], mq_sinkpad) == GST_PAD_LINK_OK);
 
     gst_pad_set_active (inputpads[i], TRUE);
+
+    gst_pad_push_event (inputpads[i], gst_event_new_stream_start ("test"));
+    gst_pad_push_event (inputpads[i], gst_event_new_segment (&segment));
 
     mq_srcpad = mq_sinkpad_to_srcpad (mq, mq_sinkpad);
 
@@ -643,12 +654,6 @@ GST_START_TEST (test_sparse_stream)
   eos_seen = 0;
 
   gst_element_set_state (pipe, GST_STATE_PLAYING);
-
-  /* Push 2 new segment events */
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  event = gst_event_new_segment (&segment);
-  gst_pad_push_event (inputpads[0], gst_event_ref (event));
-  gst_pad_push_event (inputpads[1], event);
 
   for (i = 0; i < NBUFFERS; i++) {
     GstBuffer *buf;

@@ -56,8 +56,8 @@ probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   count++;
   g_object_set_data (G_OBJECT (pad), count_type, GINT_TO_POINTER (count));
 
-  /* drop everything */
-  return GST_PAD_PROBE_DROP;
+  /* drop every buffer */
+  return GST_IS_BUFFER (obj) ? GST_PAD_PROBE_DROP : GST_PAD_PROBE_PASS;
 }
 
 /* Create and link output pad: selector:src%d ! output_pad */
@@ -217,6 +217,7 @@ push_newsegment_events (GList * input_pads)
   for (l = input_pads; l; l = l->next) {
     GstPad *pad = l->data;
 
+    gst_pad_push_event (pad, gst_event_new_stream_start ("test"));
     gst_pad_push_event (pad, gst_event_new_segment (&seg));
   }
 }
@@ -227,12 +228,10 @@ push_switched_buffers (GList * input_pads,
     GstElement * elem, GList * peer_pads, gint num_buffers)
 {
   GstBuffer *buf = NULL;
-  GstCaps *caps = NULL;
   GList *l = peer_pads;
   GstPad *selpad = NULL;
 
   /* setup dummy buffer */
-  caps = gst_caps_from_string ("application/x-unknown");
   buf = gst_buffer_new_and_alloc (1);
 
   while (l != NULL) {
@@ -250,7 +249,6 @@ push_switched_buffers (GList * input_pads,
 
   /* cleanup buffer */
   gst_buffer_unref (buf);
-  gst_caps_unref (caps);
 }
 
 /* Create output-selector with given number of src pads and switch

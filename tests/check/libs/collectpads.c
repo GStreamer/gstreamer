@@ -45,6 +45,7 @@ struct _GstAggregator
   GstPad *srcpad;
   GstPad *sinkpad[2];
   gint padcount;
+  gboolean first;
 };
 struct _GstAggregatorClass
 {
@@ -78,6 +79,16 @@ gst_agregator_collected (GstCollectPads * pads, gpointer user_data)
   inbuf = gst_collect_pads_take_buffer (pads, collect_data, outsize);
   if (!inbuf)
     goto eos;
+
+  if (aggregator->first) {
+    GstSegment segment;
+
+    gst_segment_init (&segment, GST_FORMAT_BYTES);
+    gst_pad_push_event (aggregator->srcpad,
+        gst_event_new_stream_start ("test"));
+    gst_pad_push_event (aggregator->srcpad, gst_event_new_segment (&segment));
+    aggregator->first = FALSE;
+  }
 
   /* just forward the first buffer */
   GST_DEBUG_OBJECT (aggregator, "forward buffer %p", inbuf);
@@ -226,6 +237,8 @@ gst_aggregator_init (GstAggregator * agregator)
   agregator->collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (agregator->collect,
       GST_DEBUG_FUNCPTR (gst_agregator_collected), agregator);
+
+  agregator->first = TRUE;
 }
 
 static gboolean
@@ -326,12 +339,16 @@ push_buffer (gpointer user_data)
   GstFlowReturn flow;
   GstCaps *caps;
   TestData *test_data = (TestData *) user_data;
+  GstSegment segment;
 
   gst_pad_push_event (test_data->pad, gst_event_new_stream_start ("test"));
 
   caps = gst_caps_new_empty_simple ("foo/x-bar");
   gst_pad_push_event (test_data->pad, gst_event_new_caps (caps));
   gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  gst_pad_push_event (test_data->pad, gst_event_new_segment (&segment));
 
   flow = gst_pad_push (test_data->pad, test_data->buffer);
   fail_unless (flow == GST_FLOW_OK, "got flow %s instead of OK",

@@ -36,6 +36,10 @@ struct TestData
 static void
 setup_test_objects (struct TestData *td, GstPadChainFunction chain_func)
 {
+  GstSegment segment;
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+
   td->mycaps = gst_caps_new_empty_simple ("test/test");
 
   td->funnel = gst_element_factory_make ("funnel", NULL);
@@ -57,15 +61,19 @@ setup_test_objects (struct TestData *td, GstPadChainFunction chain_func)
   td->mysink = gst_pad_new ("sink", GST_PAD_SINK);
   gst_pad_set_chain_function (td->mysink, chain_func);
   gst_pad_set_active (td->mysink, TRUE);
-  gst_pad_set_caps (td->mysink, td->mycaps);
 
   td->mysrc1 = gst_pad_new ("src1", GST_PAD_SRC);
   gst_pad_set_active (td->mysrc1, TRUE);
+
+  gst_pad_push_event (td->mysrc1, gst_event_new_stream_start ("test"));
   gst_pad_set_caps (td->mysrc1, td->mycaps);
+  gst_pad_push_event (td->mysrc1, gst_event_new_segment (&segment));
 
   td->mysrc2 = gst_pad_new ("src2", GST_PAD_SRC);
   gst_pad_set_active (td->mysrc2, TRUE);
+  gst_pad_push_event (td->mysrc2, gst_event_new_stream_start ("test"));
   gst_pad_set_caps (td->mysrc2, td->mycaps);
+  gst_pad_push_event (td->mysrc2, gst_event_new_segment (&segment));
 
   fail_unless (GST_PAD_LINK_SUCCESSFUL (gst_pad_link (td->funnelsrc,
               td->mysink)));
@@ -164,6 +172,7 @@ eos_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 GST_START_TEST (test_funnel_eos)
 {
   struct TestData td;
+  GstSegment segment;
 
   setup_test_objects (&td, chain_ok);
 
@@ -195,6 +204,10 @@ GST_START_TEST (test_funnel_eos)
 
   fail_unless (gst_pad_push_event (td.mysrc1, gst_event_new_flush_start ()));
   fail_unless (gst_pad_push_event (td.mysrc1, gst_event_new_flush_stop (TRUE)));
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (td.mysrc1, gst_event_new_segment (&segment));
+  gst_pad_push_event (td.mysrc2, gst_event_new_segment (&segment));
 
   fail_unless (gst_pad_push (td.mysrc1, gst_buffer_new ()) == GST_FLOW_OK);
   fail_unless (gst_pad_push (td.mysrc2, gst_buffer_new ()) == GST_FLOW_EOS);
@@ -236,11 +249,6 @@ funnel_suite (void)
 {
   Suite *s = suite_create ("funnel");
   TCase *tc_chain;
-  GLogLevelFlags fatal_mask;
-
-  fatal_mask = g_log_set_always_fatal (G_LOG_FATAL_MASK);
-  fatal_mask |= G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL;
-  g_log_set_always_fatal (fatal_mask);
 
   tc_chain = tcase_create ("funnel simple");
   tcase_add_test (tc_chain, test_funnel_simple);

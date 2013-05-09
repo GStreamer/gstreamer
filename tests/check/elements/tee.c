@@ -460,6 +460,7 @@ GST_START_TEST (test_flow_aggregation)
   GstPad *teesink, *teesrc1, *teesrc2;
   GstElement *tee;
   GstBuffer *buffer;
+  GstSegment segment;
   GstCaps *caps;
 
   caps = gst_caps_new_empty_simple ("test/test");
@@ -477,19 +478,20 @@ GST_START_TEST (test_flow_aggregation)
   mysink1 = gst_pad_new ("mysink1", GST_PAD_SINK);
   gst_pad_set_chain_function (mysink1, _fake_chain);
   gst_pad_set_active (mysink1, TRUE);
-  gst_pad_set_caps (mysink1, caps);
 
   GST_DEBUG ("Creating mysink2");
   mysink2 = gst_pad_new ("mysink2", GST_PAD_SINK);
   gst_pad_set_chain_function (mysink2, _fake_chain);
   gst_pad_set_active (mysink2, TRUE);
-  gst_pad_set_caps (mysink2, caps);
 
   GST_DEBUG ("Creating mysrc");
   mysrc = gst_pad_new ("mysrc", GST_PAD_SRC);
   gst_pad_set_active (mysrc, TRUE);
-  gst_pad_set_caps (mysrc, caps);
 
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (mysrc, gst_event_new_stream_start ("test"));
+  gst_pad_set_caps (mysrc, caps);
+  gst_pad_push_event (mysrc, gst_event_new_segment (&segment));
 
   fail_unless (gst_pad_link (mysrc, teesink) == GST_PAD_LINK_OK);
   fail_unless (gst_pad_link (teesrc1, mysink1) == GST_PAD_LINK_OK);
@@ -516,7 +518,6 @@ GST_START_TEST (test_flow_aggregation)
   GST_DEBUG ("Trying to push with mysink2 disabled");
   gst_pad_set_active (mysink1, FALSE);
   gst_pad_set_active (mysink2, TRUE);
-  gst_pad_set_caps (mysink2, caps);
   fail_unless (gst_pad_push (mysrc,
           gst_buffer_ref (buffer)) == GST_FLOW_FLUSHING);
 
@@ -528,9 +529,7 @@ GST_START_TEST (test_flow_aggregation)
   /* Test if everything still works in normal state */
   GST_DEBUG ("Reactivate both pads and try pushing");
   gst_pad_set_active (mysink1, TRUE);
-  gst_pad_set_caps (mysink1, caps);
   gst_pad_set_active (mysink2, TRUE);
-  gst_pad_set_caps (mysink2, caps);
   fail_unless (gst_pad_push (mysrc, gst_buffer_ref (buffer)) == GST_FLOW_OK);
 
   /* One unlinked pad must return OK, two unlinked pads must return NOT_LINKED */

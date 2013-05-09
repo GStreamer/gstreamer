@@ -223,6 +223,7 @@ GST_START_TEST (test_non_leaky_overrun)
   GstBuffer *buffer2;
   GstBuffer *buffer3;
   GstBuffer *buffer;
+  GstSegment segment;
 
   g_signal_connect (queue, "overrun",
       G_CALLBACK (queue_overrun_link_and_activate), NULL);
@@ -239,7 +240,9 @@ GST_START_TEST (test_non_leaky_overrun)
   UNDERRUN_WAIT ();
   UNDERRUN_UNLOCK ();
 
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
   gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+  gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment));
 
   fail_unless (underrun_count == 1);
   fail_unless (overrun_count == 0);
@@ -316,6 +319,7 @@ GST_START_TEST (test_leaky_upstream)
   GstBuffer *buffer2;
   GstBuffer *buffer3;
   GstBuffer *buffer;
+  GstSegment segment;
 
   g_signal_connect (queue, "overrun", G_CALLBACK (queue_overrun), NULL);
   g_object_set (G_OBJECT (queue), "max-size-buffers", 2, "leaky", 1, NULL);
@@ -331,7 +335,9 @@ GST_START_TEST (test_leaky_upstream)
   UNDERRUN_WAIT ();
   UNDERRUN_UNLOCK ();
 
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
   gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+  gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment));
 
   fail_unless (overrun_count == 0);
   fail_unless (underrun_count == 1);
@@ -402,6 +408,7 @@ GST_START_TEST (test_leaky_downstream)
   GstBuffer *buffer2;
   GstBuffer *buffer3;
   GstBuffer *buffer;
+  GstSegment segment;
 
   g_signal_connect (queue, "overrun", G_CALLBACK (queue_overrun), NULL);
   g_object_set (G_OBJECT (queue), "max-size-buffers", 2, "leaky", 2, NULL);
@@ -417,7 +424,9 @@ GST_START_TEST (test_leaky_downstream)
   UNDERRUN_WAIT ();
   UNDERRUN_UNLOCK ();
 
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
   gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+  gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment));
 
   fail_unless (overrun_count == 0);
   fail_unless (underrun_count == 1);
@@ -483,6 +492,7 @@ GST_START_TEST (test_time_level)
 {
   GstBuffer *buffer = NULL;
   GstClockTime time;
+  GstSegment segment;
 
   g_signal_connect (queue, "overrun",
       G_CALLBACK (queue_overrun_link_and_activate), NULL);
@@ -500,7 +510,9 @@ GST_START_TEST (test_time_level)
   UNDERRUN_WAIT ();
   UNDERRUN_UNLOCK ();
 
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
   gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+  gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment));
 
   /* push buffer without duration */
   buffer = gst_buffer_new_and_alloc (4);

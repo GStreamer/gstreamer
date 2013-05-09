@@ -143,6 +143,9 @@ GST_START_TEST (test_seeking)
   gst_query_unref (seeking_query);
 #endif
 
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_stream_start ("test")));
+
   gst_segment_init (&segment, GST_FORMAT_BYTES);
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 

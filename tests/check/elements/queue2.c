@@ -225,6 +225,7 @@ GST_START_TEST (test_filled_read)
   GstBuffer *buffer;
   GstPad *sinkpad, *srcpad;
   GThread *thread;
+  GstSegment segment;
 
   queue2 = gst_element_factory_make ("queue2", NULL);
   sinkpad = gst_element_get_static_pad (queue2, "sink");
@@ -237,6 +238,10 @@ GST_START_TEST (test_filled_read)
 
   gst_pad_activate_mode (srcpad, GST_PAD_MODE_PULL, TRUE);
   gst_element_set_state (queue2, GST_STATE_PLAYING);
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
+  gst_pad_send_event (sinkpad, gst_event_new_segment (&segment));
 
   /* fill up the buffer */
   buffer = gst_buffer_new_and_alloc (4 * 1024);

@@ -98,6 +98,8 @@ GST_START_TEST (test_clipping)
   ret = gst_element_set_state (sink, GST_STATE_PAUSED);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC);
 
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
+
   /* send segment */
   {
     GstEvent *event;
@@ -261,6 +263,8 @@ GST_START_TEST (test_preroll_sync)
   /* make pipeline and element ready to accept data */
   ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC);
+
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
 
   /* send segment */
   {
@@ -475,6 +479,8 @@ GST_START_TEST (test_eos)
     fail_unless (eret == TRUE);
   }
 
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
+
   /* send segment, this should now work again */
   {
     GstEvent *event;
@@ -539,6 +545,8 @@ GST_START_TEST (test_eos2)
   /* make pipeline and element ready to accept data */
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC);
+
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
 
   /* send segment, this should work */
   {
@@ -644,6 +652,8 @@ GST_START_TEST (test_position)
   /* do position query, this should fail, we have nothing received yet */
   qret = gst_element_query_position (sink, GST_FORMAT_TIME, &qcur);
   fail_unless (qret == FALSE);
+
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
 
   /* send segment, this should work */
   {
