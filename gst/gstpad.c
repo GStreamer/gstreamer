@@ -3286,6 +3286,12 @@ typedef struct
    * that pushing the EOS event failed
    */
   gboolean was_eos;
+
+  /* If called for an event this is
+   * the event that would be pushed
+   * next. Don't forward sticky events
+   * that would come after that */
+  GstEvent *event;
 } PushStickyData;
 
 /* should be called with pad LOCK */
@@ -3301,8 +3307,17 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
     return TRUE;
   }
 
-  data->ret = gst_pad_push_event_unchecked (pad, gst_event_ref (event),
-      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
+  /* If we're called because of an sticky event, only forward
+   * events that would come before this new event and the
+   * event itself */
+  if (data->event && GST_EVENT_IS_STICKY (data->event) &&
+      GST_EVENT_TYPE (data->event) <= GST_EVENT_SEGMENT &&
+      GST_EVENT_TYPE (data->event) < GST_EVENT_TYPE (event)) {
+    data->ret = GST_FLOW_CUSTOM_SUCCESS_1;
+  } else {
+    data->ret = gst_pad_push_event_unchecked (pad, gst_event_ref (event),
+        GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
+  }
 
   switch (data->ret) {
     case GST_FLOW_OK:
@@ -3313,6 +3328,13 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
     case GST_FLOW_CUSTOM_SUCCESS:
       /* we can't assume the event is received when it was dropped */
       GST_DEBUG_OBJECT (pad, "event %s was dropped, mark pending",
+          GST_EVENT_TYPE_NAME (event));
+      GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
+      data->ret = GST_FLOW_OK;
+      break;
+    case GST_FLOW_CUSTOM_SUCCESS_1:
+      /* event was ignored and should be sent later */
+      GST_DEBUG_OBJECT (pad, "event %s was ignored, mark pending",
           GST_EVENT_TYPE_NAME (event));
       GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
       data->ret = GST_FLOW_OK;
@@ -3341,9 +3363,9 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
 /* check sticky events and push them when needed. should be called
  * with pad LOCK */
 static inline GstFlowReturn
-check_sticky (GstPad * pad)
+check_sticky (GstPad * pad, GstEvent * event)
 {
-  PushStickyData data = { GST_FLOW_OK, FALSE };
+  PushStickyData data = { GST_FLOW_OK, FALSE, event };
 
   if (G_UNLIKELY (GST_PAD_HAS_PENDING_EVENTS (pad))) {
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
@@ -3550,7 +3572,7 @@ gst_pad_peer_query (GstPad * pad, GstQuery * query)
   if (GST_PAD_IS_SRC (pad) && serialized) {
     /* all serialized queries on the srcpad trigger push of
      * sticky events */
-    if (!check_sticky (pad) == GST_FLOW_OK)
+    if (!check_sticky (pad, NULL) == GST_FLOW_OK)
       goto sticky_failed;
   }
 
@@ -3866,14 +3888,14 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
   if (G_UNLIKELY (GST_PAD_MODE (pad) != GST_PAD_MODE_PUSH))
     goto wrong_mode;
 
-  if (G_UNLIKELY ((ret = check_sticky (pad))) != GST_FLOW_OK)
+  if (G_UNLIKELY ((ret = check_sticky (pad, NULL))) != GST_FLOW_OK)
     goto events_error;
 
   /* do block probes */
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_BLOCK, data, probe_stopped);
 
   /* recheck sticky events because the probe might have cause a relink */
-  if (G_UNLIKELY ((ret = check_sticky (pad))) != GST_FLOW_OK)
+  if (G_UNLIKELY ((ret = check_sticky (pad, NULL))) != GST_FLOW_OK)
     goto events_error;
 
   /* do post-blocking probes */
@@ -4047,7 +4069,7 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
   if (G_UNLIKELY (GST_PAD_MODE (pad) != GST_PAD_MODE_PULL))
     goto wrong_mode;
 
-  if (G_UNLIKELY ((ret = check_sticky (pad))) != GST_FLOW_OK)
+  if (G_UNLIKELY ((ret = check_sticky (pad, NULL))) != GST_FLOW_OK)
     goto events_error;
 
   res_buf = *buffer;
@@ -4059,7 +4081,7 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
       res_buf, offset, size, probe_stopped);
 
   /* recheck sticky events because the probe might have cause a relink */
-  if (G_UNLIKELY ((ret = check_sticky (pad))) != GST_FLOW_OK)
+  if (G_UNLIKELY ((ret = check_sticky (pad, NULL))) != GST_FLOW_OK)
     goto events_error;
 
   ACQUIRE_PARENT (pad, parent, no_parent);
@@ -4713,7 +4735,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   if (GST_PAD_IS_SRC (pad) && (serialized || sticky)) {
     /* all serialized or sticky events on the srcpad trigger push of
      * sticky events */
-    res = (check_sticky (pad) == GST_FLOW_OK);
+    res = (check_sticky (pad, event) == GST_FLOW_OK);
   }
   if (!sticky) {
     GstFlowReturn ret;
