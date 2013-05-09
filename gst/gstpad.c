@@ -5219,7 +5219,7 @@ static gboolean
 foreach_dispatch_function (GstPad * pad, PadEvent * ev, gpointer user_data)
 {
   ForeachDispatch *data = user_data;
-  gboolean ret;
+  gboolean ret = TRUE;
 
   if (ev->event) {
     GST_OBJECT_UNLOCK (pad);
