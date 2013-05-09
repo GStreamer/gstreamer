@@ -85,6 +85,7 @@ static GstFlowReturn gst_capsfilter_prepare_buf (GstBaseTransform * trans,
     GstBuffer * input, GstBuffer ** buf);
 static gboolean gst_capsfilter_sink_event (GstBaseTransform * trans,
     GstEvent * event);
+static gboolean gst_capsfilter_stop (GstBaseTransform * trans);
 
 static void
 gst_capsfilter_class_init (GstCapsFilterClass * klass)
@@ -124,6 +125,7 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
   trans_class->prepare_output_buffer =
       GST_DEBUG_FUNCPTR (gst_capsfilter_prepare_buf);
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_capsfilter_sink_event);
+  trans_class->stop = GST_DEBUG_FUNCPTR (gst_capsfilter_stop);
 }
 
 static void
@@ -196,7 +198,8 @@ gst_capsfilter_dispose (GObject * object)
   GstCapsFilter *filter = GST_CAPSFILTER (object);
 
   gst_caps_replace (&filter->filter_caps, NULL);
-  gst_event_replace (&filter->pending_segment, NULL);
+  g_list_free_full (filter->pending_events, (GDestroyNotify) gst_event_unref);
+  filter->pending_events = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -294,13 +297,11 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
     /* No caps. See if the output pad only supports fixed caps */
     GstCapsFilter *filter = GST_CAPSFILTER (trans);
     GstCaps *out_caps;
-    GstEvent *pending_segment = filter->pending_segment;
+    GList *pending_events = filter->pending_events;
 
     GST_LOG_OBJECT (trans, "Input pad does not have caps");
 
-    filter->pending_segment = NULL;
-    g_return_val_if_fail (pending_segment != NULL || trans->have_segment,
-        GST_FLOW_ERROR);
+    filter->pending_events = NULL;
 
     out_caps = gst_pad_get_current_caps (trans->srcpad);
     if (out_caps == NULL) {
@@ -318,9 +319,14 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
         if (!gst_pad_set_caps (trans->srcpad, out_caps))
           ret = GST_FLOW_NOT_NEGOTIATED;
 
-      if (pending_segment)
-        GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans,
-            pending_segment);
+      if (pending_events) {
+        GList *l;
+
+        for (l = g_list_last (pending_events); l; l = l->prev) {
+          GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, l->data);
+        }
+        g_list_free (pending_events);
+      }
 
       gst_caps_unref (out_caps);
     } else {
@@ -335,7 +341,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
           ("Output caps are unfixed: %s", caps_str));
 
       g_free (caps_str);
-      gst_event_unref (pending_segment);
+      g_list_free_full (pending_events, (GDestroyNotify) pending_events);
 
       ret = GST_FLOW_ERROR;
     }
@@ -348,15 +354,53 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
 static gboolean
 gst_capsfilter_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
-  if (GST_EVENT_TYPE (event) != GST_EVENT_SEGMENT)
+  GstCapsFilter *filter = GST_CAPSFILTER (trans);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+    GList *l;
+
+    for (l = filter->pending_events; l;) {
+      if (GST_EVENT_TYPE (l->data) == GST_EVENT_SEGMENT) {
+        gst_event_unref (l->data);
+        l = g_list_delete_link (l, l);
+      } else {
+        l = l->next;
+      }
+    }
+  }
+
+  if (!GST_EVENT_IS_STICKY (event) || GST_EVENT_TYPE (event) < GST_EVENT_CAPS)
     goto done;
 
-  if (!gst_pad_has_current_caps (trans->sinkpad)) {
-    GST_LOG_OBJECT (trans, "Got segment without caps, queue segment event");
-    gst_event_replace (&GST_CAPSFILTER (trans)->pending_segment, event);
+  /* If we get EOS before any buffers, just push all pending events */
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    GList *l;
+
+    for (l = g_list_last (filter->pending_events); l; l = l->prev) {
+      GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, l->data);
+    }
+    g_list_free (filter->pending_events);
+    filter->pending_events = NULL;
+  } else if (!gst_pad_has_current_caps (trans->sinkpad)) {
+    GST_LOG_OBJECT (trans, "Got %s event before caps, queueing",
+        GST_EVENT_TYPE_NAME (event));
+
+    filter->pending_events = g_list_prepend (filter->pending_events, event);
+
     return TRUE;
   }
 
 done:
   return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
+}
+
+static gboolean
+gst_capsfilter_stop (GstBaseTransform * trans)
+{
+  GstCapsFilter *filter = GST_CAPSFILTER (trans);
+
+  g_list_free_full (filter->pending_events, (GDestroyNotify) gst_event_unref);
+  filter->pending_events = NULL;
+
+  return TRUE;
 }

@@ -53,7 +53,7 @@ struct _GstCapsFilter {
   GstBaseTransform trans;
 
   GstCaps *filter_caps;
-  GstEvent *pending_segment;
+  GList *pending_events;
 };
 
 struct _GstCapsFilterClass {
