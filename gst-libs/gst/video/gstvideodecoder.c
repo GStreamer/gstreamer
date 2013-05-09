@@ -341,6 +341,8 @@ struct _GstVideoDecoderPrivate
   GstVideoCodecFrame *current_frame;
   /* events that should apply to the current frame */
   GList *current_frame_events;
+  /* events that should be pushed before the next frame */
+  GList *pending_events;
 
   /* relative offset of input data */
   guint64 input_offset;
@@ -877,6 +879,8 @@ gst_video_decoder_flush (GstVideoDecoder * dec, gboolean hard)
     g_list_free_full (priv->current_frame_events,
         (GDestroyNotify) gst_event_unref);
     priv->current_frame_events = NULL;
+    g_list_free_full (priv->pending_events, (GDestroyNotify) gst_event_unref);
+    priv->pending_events = NULL;
   }
   /* and get (re)set for the sequel */
   gst_video_decoder_reset (dec, FALSE);
@@ -2007,7 +2011,7 @@ gst_video_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 not_negotiated:
   {
     GST_ELEMENT_ERROR (decoder, CORE, NEGOTIATION, (NULL),
-        ("encoder not initialized"));
+        ("decoder not initialized"));
     gst_buffer_unref (buf);
     return GST_FLOW_NOT_NEGOTIATED;
   }
@@ -2050,6 +2054,9 @@ gst_video_decoder_change_state (GstElement * element, GstStateChange transition)
       g_list_free_full (decoder->priv->current_frame_events,
           (GDestroyNotify) gst_event_unref);
       decoder->priv->current_frame_events = NULL;
+      g_list_free_full (decoder->priv->pending_events,
+          (GDestroyNotify) gst_event_unref);
+      decoder->priv->pending_events = NULL;
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -2156,11 +2163,27 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
       break;
   }
 
-  for (l = g_list_last (events); l; l = g_list_previous (l)) {
-    GST_LOG_OBJECT (decoder, "pushing %s event", GST_EVENT_TYPE_NAME (l->data));
-    gst_video_decoder_push_event (decoder, l->data);
+  if (dropping || !decoder->priv->output_state) {
+    /* Push before the next frame that is not dropped */
+    decoder->priv->pending_events =
+        g_list_concat (decoder->priv->pending_events, events);
+  } else {
+    for (l = g_list_last (decoder->priv->pending_events); l;
+        l = g_list_previous (l)) {
+      GST_LOG_OBJECT (decoder, "pushing %s event",
+          GST_EVENT_TYPE_NAME (l->data));
+      gst_video_decoder_push_event (decoder, l->data);
+    }
+    g_list_free (decoder->priv->pending_events);
+    decoder->priv->pending_events = NULL;
+
+    for (l = g_list_last (events); l; l = g_list_previous (l)) {
+      GST_LOG_OBJECT (decoder, "pushing %s event",
+          GST_EVENT_TYPE_NAME (l->data));
+      gst_video_decoder_push_event (decoder, l->data);
+    }
+    g_list_free (events);
   }
-  g_list_free (events);
 
   /* Check if the data should not be displayed. For example altref/invisible
    * frame in vp8. In this case we should not update the timestamps. */
@@ -2992,22 +3015,32 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
   /* Push all pending pre-caps events of the oldest frame before
    * setting caps */
   frame = decoder->priv->frames ? decoder->priv->frames->data : NULL;
-  if (frame && frame->events) {
-    GList *l;
+  if (frame || decoder->priv->current_frame_events) {
+    GList **events, *l;
     gboolean set_caps = FALSE;
 
+    if (frame) {
+      events = &frame->events;
+      frame->events = NULL;
+    } else {
+      events = &decoder->priv->current_frame_events;
+    }
+
     ret = FALSE;
-    for (l = g_list_last (frame->events); l; l = l->prev) {
+    for (l = g_list_last (*events); l;) {
       GstEvent *event = GST_EVENT (l->data);
+      GList *tmp;
 
       if (GST_EVENT_TYPE (event) > GST_EVENT_CAPS && !set_caps) {
         ret = gst_pad_set_caps (decoder->srcpad, state->caps);
         set_caps = TRUE;
+        break;
       }
       gst_video_decoder_push_event (decoder, event);
+      tmp = l;
+      l = l->prev;
+      *events = g_list_delete_link (*events, tmp);
     }
-    g_list_free (frame->events);
-    frame->events = NULL;
     if (!set_caps) {
       ret = gst_pad_set_caps (decoder->srcpad, state->caps);
     }
