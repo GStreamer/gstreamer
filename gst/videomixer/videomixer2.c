@@ -1703,11 +1703,10 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
       break;
     }
     case GST_EVENT_SEGMENT:{
-      gst_event_copy_segment (event, &mix->segment);
+      GstSegment seg;
+      gst_event_copy_segment (event, &seg);
 
-      mix->newseg_pending = TRUE;
-
-      g_assert (mix->segment.format == GST_FORMAT_TIME);
+      g_assert (seg.format == GST_FORMAT_TIME);
       break;
     }
     case GST_EVENT_FLUSH_STOP:
