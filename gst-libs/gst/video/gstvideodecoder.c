@@ -3021,7 +3021,6 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
 
     if (frame) {
       events = &frame->events;
-      frame->events = NULL;
     } else {
       events = &decoder->priv->current_frame_events;
     }
