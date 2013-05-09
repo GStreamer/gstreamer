@@ -80,7 +80,7 @@ setup_vp8dec (const gchar * src_caps_str)
   sinkpad = gst_check_setup_sink_pad (bin, &sinktemplate);
   gst_pad_set_active (srcpad, TRUE);
   gst_pad_set_active (sinkpad, TRUE);
-  fail_unless (gst_pad_set_caps (srcpad, srccaps));
+  gst_check_setup_events (srcpad, bin, srccaps, GST_FORMAT_TIME);
 
   bus = gst_bus_new ();
   gst_element_set_bus (bin, bus);
