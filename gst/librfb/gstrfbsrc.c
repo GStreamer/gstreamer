@@ -60,19 +60,15 @@ GST_DEBUG_CATEGORY (rfbdecoder_debug);
 #define GST_CAT_DEFAULT rfbsrc_debug
 
 static GstStaticPadTemplate gst_rfb_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, "
-        "bpp = (int) [1, 255], "
-        "depth = (int) [1, 255], "
-        "endianness = (int) [1234, 4321], "
-        "red_mask = (int) [min, max], "
-        "green_mask = (int) [min, max], "
-        "blue_mask = (int) [min, max], "
-        "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], " "framerate = (fraction) 0/1")
-    );
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB")
+        "; " GST_VIDEO_CAPS_MAKE ("BGR")
+        "; " GST_VIDEO_CAPS_MAKE ("RGBx")
+        "; " GST_VIDEO_CAPS_MAKE ("BGRx")
+        "; " GST_VIDEO_CAPS_MAKE ("xRGB")
+        "; " GST_VIDEO_CAPS_MAKE ("xBGR")));
 
 static void gst_rfb_src_finalize (GObject * object);
 static void gst_rfb_src_set_property (GObject * object, guint prop_id,
@@ -80,36 +76,24 @@ static void gst_rfb_src_set_property (GObject * object, guint prop_id,
 static void gst_rfb_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstCaps *gst_rfb_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 static gboolean gst_rfb_src_start (GstBaseSrc * bsrc);
 static gboolean gst_rfb_src_stop (GstBaseSrc * bsrc);
 static gboolean gst_rfb_src_event (GstBaseSrc * bsrc, GstEvent * event);
 static GstFlowReturn gst_rfb_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
 
-GST_BOILERPLATE (GstRfbSrc, gst_rfb_src, GstPushSrc, GST_TYPE_PUSH_SRC);
-
-static void
-gst_rfb_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rfb_src_template));
-
-  gst_element_class_set_static_metadata (element_class, "Rfb source",
-      "Source/Video",
-      "Creates a rfb video stream",
-      "David A. Schleef <ds@schleef.org>, "
-      "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>, "
-      "Thijs Vermeir <thijsvermeir@gmail.com>");
-}
+#define gst_rfb_src_parent_class parent_class
+G_DEFINE_TYPE (GstRfbSrc, gst_rfb_src, GST_TYPE_PUSH_SRC);
 
 static void
 gst_rfb_src_class_init (GstRfbSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseSrcClass *gstbasesrc_class;
+  GstElementClass *gstelement_class;
   GstPushSrcClass *gstpushsrc_class;
+
 
   GST_DEBUG_CATEGORY_INIT (rfbsrc_debug, "rfbsrc", 0, "rfb src element");
   GST_DEBUG_CATEGORY_INIT (rfbdecoder_debug, "rfbdecoder", 0, "rfb decoder");
@@ -166,14 +150,27 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
       g_param_spec_boolean ("view-only", "Only view the desktop",
           "only view the desktop", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  gstbasesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_rfb_src_fixate);
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rfb_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rfb_src_stop);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_rfb_src_event);
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_rfb_src_create);
+
+  gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rfb_src_template));
+
+  gst_element_class_set_static_metadata (gstelement_class, "Rfb source",
+      "Source/Video",
+      "Creates a rfb video stream",
+      "David A. Schleef <ds@schleef.org>, "
+      "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>, "
+      "Thijs Vermeir <thijsvermeir@gmail.com>");
 }
 
 static void
-gst_rfb_src_init (GstRfbSrc * src, GstRfbSrcClass * klass)
+gst_rfb_src_init (GstRfbSrc * src)
 {
   GstBaseSrc *bsrc = GST_BASE_SRC (src);
 
@@ -189,6 +186,8 @@ gst_rfb_src_init (GstRfbSrc * src, GstRfbSrcClass * klass)
   src->incremental_update = TRUE;
 
   src->view_only = FALSE;
+
+  src->pool = NULL;
 
   src->decoder = rfb_decoder_new ();
 
@@ -209,6 +208,10 @@ gst_rfb_src_finalize (GObject * object)
   GstRfbSrc *src = GST_RFB_SRC (object);
 
   g_free (src->host);
+  if (src->pool) {
+    gst_object_unref (src->pool);
+    src->pool = NULL;
+  }
   if (src->decoder) {
     rfb_decoder_free (src->decoder);
     g_free (src->decoder);
@@ -354,12 +357,90 @@ gst_rfb_src_get_property (GObject * object, guint prop_id,
   }
 }
 
+static GstCaps *
+gst_rfb_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
+{
+  GstRfbSrc *src = GST_RFB_SRC (bsrc);
+  RfbDecoder *decoder;
+  GstStructure *structure;
+  guint i;
+
+  decoder = src->decoder;
+
+  GST_DEBUG_OBJECT (src, "fixating caps %" GST_PTR_FORMAT, caps);
+
+  caps = gst_caps_make_writable (caps);
+
+  for (i = 0; i < gst_caps_get_size (caps); ++i) {
+    structure = gst_caps_get_structure (caps, i);
+
+    gst_structure_fixate_field_nearest_int (structure,
+        "width", decoder->rect_width);
+    gst_structure_fixate_field_nearest_int (structure,
+        "height", decoder->rect_height);
+    gst_structure_fixate_field (structure, "format");
+  }
+
+  GST_DEBUG_OBJECT (src, "fixated caps %" GST_PTR_FORMAT, caps);
+
+  caps = GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
+
+  return caps;
+}
+
+static void
+gst_rfb_negotiate_pool (GstRfbSrc * src, GstCaps * caps)
+{
+  GstQuery *query;
+  GstBufferPool *pool = NULL;
+  guint size, min, max;
+  GstStructure *config;
+
+  /* find a pool for the negotiated caps now */
+  query = gst_query_new_allocation (caps, TRUE);
+
+  if (!gst_pad_peer_query (GST_BASE_SRC_PAD (src), query)) {
+    /* not a problem, we use the defaults of query */
+    GST_DEBUG_OBJECT (src, "could not get downstream ALLOCATION hints");
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    /* we got configuration from our peer, parse them */
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+  } else {
+    GST_DEBUG_OBJECT (src, "didn't get downstream pool hints");
+    size = GST_BASE_SRC (src)->blocksize;
+    min = max = 0;
+  }
+
+  if (pool == NULL) {
+    /* we did not get a pool, make one ourselves then */
+    pool = gst_video_buffer_pool_new ();
+  }
+
+  if (src->pool)
+    gst_object_unref (src->pool);
+  src->pool = pool;
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  gst_buffer_pool_set_config (pool, config);
+  // and activate
+  gst_buffer_pool_set_active (pool, TRUE);
+
+  gst_query_unref (query);
+}
+
 static gboolean
 gst_rfb_src_start (GstBaseSrc * bsrc)
 {
   GstRfbSrc *src = GST_RFB_SRC (bsrc);
   RfbDecoder *decoder;
   GstCaps *caps;
+  GstVideoInfo vinfo;
+  GstVideoFormat vformat;
   guint32 red_mask, green_mask, blue_mask;
 
   decoder = src->decoder;
@@ -398,23 +479,25 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
   GST_DEBUG_OBJECT (src, "setting caps width to %d and height to %d",
       decoder->rect_width, decoder->rect_height);
 
-  caps =
-      gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc)));
-
   red_mask = decoder->red_max << decoder->red_shift;
   green_mask = decoder->green_max << decoder->green_shift;
   blue_mask = decoder->blue_max << decoder->blue_shift;
 
-  gst_caps_set_simple (caps, "width", G_TYPE_INT, decoder->rect_width,
-      "height", G_TYPE_INT, decoder->rect_height,
-      "bpp", G_TYPE_INT, decoder->bpp,
-      "depth", G_TYPE_INT, decoder->depth,
-      "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-      "red_mask", G_TYPE_INT, GST_READ_UINT32_BE (&red_mask),
-      "green_mask", G_TYPE_INT, GST_READ_UINT32_BE (&green_mask),
-      "blue_mask", G_TYPE_INT, GST_READ_UINT32_BE (&blue_mask), NULL);
+  vformat = gst_video_format_from_masks (decoder->depth, decoder->bpp,
+      decoder->big_endian ? G_BIG_ENDIAN : G_LITTLE_ENDIAN,
+      red_mask, green_mask, blue_mask, 0);
+
+  gst_video_info_init (&vinfo);
+
+  gst_video_info_set_format (&vinfo, vformat, decoder->rect_width,
+      decoder->rect_height);
+
+  caps = gst_video_info_to_caps (&vinfo);
 
   gst_pad_set_caps (GST_BASE_SRC_PAD (bsrc), caps);
+
+  gst_rfb_negotiate_pool (src, caps);
+
   gst_caps_unref (caps);
 
   return TRUE;
@@ -445,7 +528,7 @@ gst_rfb_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstRfbSrc *src = GST_RFB_SRC (psrc);
   RfbDecoder *decoder = src->decoder;
-  gulong newsize;
+  GstMapInfo info;
   GstFlowReturn ret;
 
   rfb_decoder_send_update_request (decoder, src->incremental_update,
@@ -456,22 +539,22 @@ gst_rfb_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     rfb_decoder_iterate (decoder);
   }
 
-  newsize = GST_BASE_SRC (psrc)->blocksize;
-
   /* Create the buffer. */
-  ret = gst_pad_alloc_buffer (GST_BASE_SRC_PAD (GST_BASE_SRC (psrc)),
-      GST_BUFFER_OFFSET_NONE, newsize,
-      GST_PAD_CAPS (GST_BASE_SRC_PAD (GST_BASE_SRC (psrc))), outbuf);
+  ret = gst_buffer_pool_acquire_buffer (src->pool, outbuf, NULL);
 
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
     return GST_FLOW_ERROR;
   }
 
-  memcpy (GST_BUFFER_DATA (*outbuf), decoder->frame, newsize);
-  GST_BUFFER_SIZE (*outbuf) = newsize;
-  GST_BUFFER_TIMESTAMP (*outbuf) =
+  gst_buffer_map (*outbuf, &info, GST_MAP_WRITE);
+
+  memcpy (info.data, decoder->frame, info.size);
+
+  GST_BUFFER_PTS (*outbuf) =
       gst_clock_get_time (GST_ELEMENT_CLOCK (src)) -
       GST_ELEMENT_CAST (src)->base_time;
+
+  gst_buffer_unmap (*outbuf, &info);
 
   return GST_FLOW_OK;
 }
@@ -482,7 +565,7 @@ gst_rfb_src_event (GstBaseSrc * bsrc, GstEvent * event)
   GstRfbSrc *src = GST_RFB_SRC (bsrc);
   gdouble x, y;
   gint button;
-  GstStructure *structure;
+  const GstStructure *structure;
   const gchar *event_type;
   gboolean key_event, key_press;
 
@@ -495,7 +578,7 @@ gst_rfb_src_event (GstBaseSrc * bsrc, GstEvent * event)
       if (src->view_only)
         break;
 
-      structure = event->structure;
+      structure = gst_event_get_structure (event);
       event_type = gst_structure_get_string (structure, "event");
 
       if (strcmp (event_type, "key-press") == 0) {
