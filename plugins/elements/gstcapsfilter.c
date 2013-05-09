@@ -341,7 +341,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
           ("Output caps are unfixed: %s", caps_str));
 
       g_free (caps_str);
-      g_list_free_full (pending_events, (GDestroyNotify) pending_events);
+      g_list_free_full (pending_events, (GDestroyNotify) gst_event_unref);
 
       ret = GST_FLOW_ERROR;
     }
