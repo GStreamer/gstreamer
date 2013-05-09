@@ -141,6 +141,8 @@ gst_caps_src_create (GstPushSrc * psrc, GstBuffer ** p_buf)
   }
 
   if (src->nbuffers == 0) {
+    gst_pad_push_event (GST_BASE_SRC_PAD (psrc),
+        gst_event_new_stream_start ("test"));
     gst_pad_set_caps (GST_BASE_SRC_PAD (psrc), src->caps);
   }
 
@@ -448,6 +450,15 @@ gst_codec_demuxer_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstCodecDemuxer *demux = (GstCodecDemuxer *) parent;
   GstFlowReturn ret0 = GST_FLOW_OK, ret1 = GST_FLOW_OK;
 
+  if (demux->newseg_event) {
+    if (demux->srcpad0)
+      gst_pad_push_event (demux->srcpad0, gst_event_ref (demux->newseg_event));
+    if (demux->srcpad1)
+      gst_pad_push_event (demux->srcpad1, gst_event_ref (demux->newseg_event));
+    gst_event_unref (demux->newseg_event);
+    demux->newseg_event = NULL;
+  }
+
   if (demux->srcpad0) {
     GstBuffer *outbuf = gst_buffer_new ();
 
@@ -515,11 +526,11 @@ gst_codec_demuxer_setup_pad (GstCodecDemuxer * demux, GstPad ** pad,
     } else {
       caps = gst_caps_new_empty_simple ("audio/x-compressed");
     }
+
+    gst_pad_push_event (*pad, gst_event_new_stream_start ("test"));
+
     gst_pad_set_caps (*pad, caps);
     gst_caps_unref (caps);
-
-    if (demux->newseg_event)
-      gst_pad_push_event (*pad, gst_event_ref (demux->newseg_event));
   }
 }
 
