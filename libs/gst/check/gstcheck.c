@@ -718,3 +718,32 @@ _gst_check_run_test_func (const gchar * func_name)
   g_strfreev (funcs);
   return res;
 }
+
+/**
+ * gst_check_setup_events:
+ * @srcpad: The src #GstPad to push on
+ * @element: The #GstElement use to create the stream id
+ * @caps: (allow-none): #GstCaps in case caps event must be sent
+ * @format: The #GstFormat of the default segment to send
+ *
+ * Push stream-start, caps and segment event, which concist of the minimum required
+ * events to allow streaming. Caps is optional to allow raw src testing.
+ */
+void
+gst_check_setup_events (GstPad * srcpad, GstElement * element,
+    GstCaps * caps, GstFormat format)
+{
+  gchar *stream_id;
+  GstSegment segment;
+
+  stream_id = gst_pad_create_stream_id (srcpad, element, NULL);
+  gst_segment_init (&segment, format);
+
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_stream_start (stream_id)));
+  if (caps)
+    fail_unless (gst_pad_push_event (srcpad, gst_event_new_caps (caps)));
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&segment)));
+
+  g_free (stream_id);
+}
