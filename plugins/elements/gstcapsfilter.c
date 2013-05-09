@@ -315,19 +315,26 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
       GST_DEBUG_OBJECT (trans, "Have fixed output caps %"
           GST_PTR_FORMAT " to apply to srcpad", out_caps);
 
-      if (!gst_pad_has_current_caps (trans->srcpad))
-        if (!gst_pad_set_caps (trans->srcpad, out_caps))
+      if (!gst_pad_has_current_caps (trans->srcpad)) {
+        if (gst_pad_set_caps (trans->srcpad, out_caps)) {
+          if (pending_events) {
+            GList *l;
+
+            for (l = g_list_last (pending_events); l; l = l->prev) {
+              GST_LOG_OBJECT (trans, "Forwarding %s event",
+                  GST_EVENT_TYPE_NAME (l->data));
+              GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans,
+                  l->data);
+            }
+            g_list_free (pending_events);
+            pending_events = NULL;
+          }
+        } else {
           ret = GST_FLOW_NOT_NEGOTIATED;
-
-      if (pending_events) {
-        GList *l;
-
-        for (l = g_list_last (pending_events); l; l = l->prev) {
-          GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, l->data);
         }
-        g_list_free (pending_events);
       }
 
+      g_list_free_full (pending_events, (GDestroyNotify) gst_event_unref);
       gst_caps_unref (out_caps);
     } else {
       gchar *caps_str = gst_caps_to_string (out_caps);
@@ -369,7 +376,7 @@ gst_capsfilter_sink_event (GstBaseTransform * trans, GstEvent * event)
     }
   }
 
-  if (!GST_EVENT_IS_STICKY (event) || GST_EVENT_TYPE (event) < GST_EVENT_CAPS)
+  if (!GST_EVENT_IS_STICKY (event) || GST_EVENT_TYPE (event) <= GST_EVENT_CAPS)
     goto done;
 
   /* If we get EOS before any buffers, just push all pending events */
@@ -377,6 +384,8 @@ gst_capsfilter_sink_event (GstBaseTransform * trans, GstEvent * event)
     GList *l;
 
     for (l = g_list_last (filter->pending_events); l; l = l->prev) {
+      GST_LOG_OBJECT (trans, "Forwarding %s event",
+          GST_EVENT_TYPE_NAME (l->data));
       GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, l->data);
     }
     g_list_free (filter->pending_events);
@@ -391,6 +400,8 @@ gst_capsfilter_sink_event (GstBaseTransform * trans, GstEvent * event)
   }
 
 done:
+
+  GST_LOG_OBJECT (trans, "Forwarding %s event", GST_EVENT_TYPE_NAME (event));
   return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 }
 
