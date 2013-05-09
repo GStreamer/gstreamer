@@ -2889,10 +2889,6 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
       g_object_set (G_OBJECT (stream->udpsrc[0]), "multicast-iface",
           src->multi_iface, NULL);
 
-    if (src->udp_buffer_size != 0)
-      g_object_set (G_OBJECT (stream->udpsrc[0]), "buffer-size",
-          src->udp_buffer_size, NULL);
-
     /* change state */
     gst_element_set_state (stream->udpsrc[0], GST_STATE_PAUSED);
   }
