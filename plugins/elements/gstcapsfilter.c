@@ -83,6 +83,8 @@ static GstFlowReturn gst_capsfilter_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 static GstFlowReturn gst_capsfilter_prepare_buf (GstBaseTransform * trans,
     GstBuffer * input, GstBuffer ** buf);
+static gboolean gst_capsfilter_sink_event (GstBaseTransform * trans,
+    GstEvent * event);
 
 static void
 gst_capsfilter_class_init (GstCapsFilterClass * klass)
@@ -121,6 +123,7 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
   trans_class->accept_caps = GST_DEBUG_FUNCPTR (gst_capsfilter_accept_caps);
   trans_class->prepare_output_buffer =
       GST_DEBUG_FUNCPTR (gst_capsfilter_prepare_buf);
+  trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_capsfilter_sink_event);
 }
 
 static void
@@ -193,6 +196,7 @@ gst_capsfilter_dispose (GObject * object)
   GstCapsFilter *filter = GST_CAPSFILTER (object);
 
   gst_caps_replace (&filter->filter_caps, NULL);
+  gst_event_replace (&filter->pending_segment, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -268,11 +272,11 @@ gst_capsfilter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   return GST_FLOW_OK;
 }
 
-/* Output buffer preparation... if the buffer has no caps, and
- * our allowed output caps is fixed, then give the caps to the
- * buffer.
- * This ensures that outgoing buffers have caps if we can, so
- * that pipelines like:
+/* Ouput buffer preparation ... if the buffer has no caps, and our allowed
+ * output caps is fixed, then send the caps downstream, making sure caps are
+ * sent before segment event.
+ *
+ * This ensures that caps event is sent if we can, so that pipelines like:
  *   gst-launch filesrc location=rawsamples.raw !
  *       audio/x-raw,format=S16LE,rate=48000,channels=2 ! alsasink
  * will work.
@@ -287,10 +291,16 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
   *buf = input;
 
   if (!gst_pad_has_current_caps (trans->sinkpad)) {
-    /* Buffer has no caps. See if the output pad only supports fixed caps */
+    /* No caps. See if the output pad only supports fixed caps */
+    GstCapsFilter *filter = GST_CAPSFILTER (trans);
     GstCaps *out_caps;
+    GstEvent *pending_segment = filter->pending_segment;
 
     GST_LOG_OBJECT (trans, "Input pad does not have caps");
+
+    filter->pending_segment = NULL;
+    g_return_val_if_fail (pending_segment != NULL || trans->have_segment,
+        GST_FLOW_ERROR);
 
     out_caps = gst_pad_get_current_caps (trans->srcpad);
     if (out_caps == NULL) {
@@ -307,6 +317,11 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
       if (!gst_pad_has_current_caps (trans->srcpad))
         if (!gst_pad_set_caps (trans->srcpad, out_caps))
           ret = GST_FLOW_NOT_NEGOTIATED;
+
+      if (pending_segment)
+        GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans,
+            pending_segment);
+
       gst_caps_unref (out_caps);
     } else {
       gchar *caps_str = gst_caps_to_string (out_caps);
@@ -315,13 +330,33 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
           GST_PTR_FORMAT, out_caps);
       gst_caps_unref (out_caps);
 
-      ret = GST_FLOW_ERROR;
       GST_ELEMENT_ERROR (trans, STREAM, FORMAT,
           ("Filter caps do not completely specify the output format"),
           ("Output caps are unfixed: %s", caps_str));
+
       g_free (caps_str);
+      gst_event_unref (pending_segment);
+
+      ret = GST_FLOW_ERROR;
     }
   }
 
   return ret;
+}
+
+/* Queue the segment event if there was no caps event */
+static gboolean
+gst_capsfilter_sink_event (GstBaseTransform * trans, GstEvent * event)
+{
+  if (GST_EVENT_TYPE (event) != GST_EVENT_SEGMENT)
+    goto done;
+
+  if (!gst_pad_has_current_caps (trans->sinkpad)) {
+    GST_LOG_OBJECT (trans, "Got segment without caps, queue segment event");
+    gst_event_replace (&GST_CAPSFILTER (trans)->pending_segment, event);
+    return TRUE;
+  }
+
+done:
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 }
