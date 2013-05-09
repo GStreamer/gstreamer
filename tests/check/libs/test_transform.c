@@ -183,6 +183,8 @@ gst_test_trans_new (void)
   gst_element_set_state (res->trans, GST_STATE_PAUSED);
   gst_pad_set_active (res->srcpad, TRUE);
 
+  gst_pad_push_event (res->srcpad, gst_event_new_stream_start ("test"));
+
   return res;
 }
 
@@ -232,4 +234,20 @@ gst_test_trans_pop (TestTransData * data)
     ret = NULL;
   }
   return ret;
+}
+
+static gboolean
+gst_test_trans_setcaps (TestTransData * data, GstCaps * caps)
+{
+  return gst_pad_set_caps (data->srcpad, caps);
+}
+
+static gboolean
+gst_test_trans_push_segment (TestTransData * data)
+{
+  GstSegment segment;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  return gst_pad_push_event (data->srcpad, gst_event_new_segment (&segment));
 }
