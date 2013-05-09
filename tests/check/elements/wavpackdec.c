@@ -82,6 +82,11 @@ setup_wavpackdec (void)
   mysinkpad = gst_check_setup_sink_pad (wavpackdec, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
+  gst_check_setup_events (mysrcpad, wavpackdec, NULL, GST_FORMAT_TIME);
+
+  fail_unless (gst_element_set_state (wavpackdec,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   return wavpackdec;
 }
@@ -108,10 +113,6 @@ GST_START_TEST (test_decode_frame)
   GstMapInfo map;
 
   wavpackdec = setup_wavpackdec ();
-
-  fail_unless (gst_element_set_state (wavpackdec,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
   bus = gst_bus_new ();
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (test_frame));
@@ -162,10 +163,6 @@ GST_START_TEST (test_decode_frame_with_broken_header)
   GstMessage *message;
 
   wavpackdec = setup_wavpackdec ();
-
-  fail_unless (gst_element_set_state (wavpackdec,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
   bus = gst_bus_new ();
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (test_frame));
@@ -199,10 +196,6 @@ GST_START_TEST (test_decode_frame_with_incomplete_frame)
   GstMessage *message;
 
   wavpackdec = setup_wavpackdec ();
-
-  fail_unless (gst_element_set_state (wavpackdec,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
   bus = gst_bus_new ();
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (test_frame) - 2);
