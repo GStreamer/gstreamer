@@ -5174,11 +5174,13 @@ foreach_dispatch_function (GstPad * pad, PadEvent * ev, gpointer user_data)
   ForeachDispatch *data = user_data;
   gboolean ret;
 
-  GST_OBJECT_UNLOCK (pad);
+  if (ev->event) {
+    GST_OBJECT_UNLOCK (pad);
 
-  ret = data->func (pad, &ev->event, data->user_data);
+    ret = data->func (pad, &ev->event, data->user_data);
 
-  GST_OBJECT_LOCK (pad);
+    GST_OBJECT_LOCK (pad);
+  }
 
   return ret;
 }
