@@ -24,6 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
+#include <gst/video/gstvideopool.h>
 #include <librfb/rfb.h>
 
 G_BEGIN_DECLS
@@ -58,6 +59,8 @@ struct _GstRfbSrc
   gboolean view_only;
 
   guint button_mask;
+
+  GstBufferPool *pool;
 
   /* protocol version */
   guint version_major;

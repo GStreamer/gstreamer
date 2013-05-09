@@ -492,7 +492,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  dccp faceoverlay \
  freeverb \
  hdvparse ivfparse jp2kdecimator \
- kate librfb \
+ kate \
  mve mxf mythtv nsf nuvdemux \
  patchdetect real \
  sdi stereo tta videofilters \
@@ -582,7 +582,7 @@ if test "x$HAVE_CPU_I386" != "xyes" && test "x$HAVE_CPU_X86_64" != "xyes"; then
 fi
 
 dnl disable gst plugins we might not be able to build on this
-dnl platform: librfb (ugly but minimally invasive)
+dnl platform: (ugly but minimally invasive)
 dnl FIXME: maybe move to sys, or make work with winsock2
 AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
 AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
