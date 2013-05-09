@@ -79,6 +79,7 @@ setup_wavpackparse (void)
   mysinkpad = gst_check_setup_sink_pad (wavpackparse, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
+  gst_check_setup_events (mysrcpad, wavpackparse, NULL, GST_FORMAT_BYTES);
 
   return wavpackparse;
 }
