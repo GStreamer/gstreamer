@@ -86,9 +86,10 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 /* takes over reference for outcaps */
 static GstElement *
-setup_spectrum (void)
+setup_spectrum (const gchar * caps_str)
 {
   GstElement *spectrum;
+  GstCaps *caps;
 
   GST_DEBUG ("setup_spectrum");
   spectrum = gst_check_setup_element ("spectrum");
@@ -96,6 +97,10 @@ setup_spectrum (void)
   mysinkpad = gst_check_setup_sink_pad (spectrum, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
+
+  caps = gst_caps_from_string (caps_str);
+  gst_check_setup_events (mysrcpad, spectrum, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
 
   return spectrum;
 }
@@ -122,7 +127,6 @@ GST_START_TEST (test_int16)
   GstElement *spectrum;
   GstBuffer *inbuffer, *outbuffer;
   GstBus *bus;
-  GstCaps *caps;
   GstMessage *message;
   const GstStructure *structure;
   int i, j;
@@ -132,7 +136,7 @@ GST_START_TEST (test_int16)
   GstClockTime endtime;
   gfloat level;
 
-  spectrum = setup_spectrum ();
+  spectrum = setup_spectrum (SPECT_CAPS_STRING_S16);
   g_object_set (spectrum, "post-messages", TRUE, "interval", GST_SECOND / 100,
       "bands", SPECT_BANDS, "threshold", -80, NULL);
 
@@ -155,10 +159,6 @@ GST_START_TEST (test_int16)
     ++data;
   }
   gst_buffer_unmap (inbuffer, &map);
-
-  caps = gst_caps_from_string (SPECT_CAPS_STRING_S16);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
-  gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* create a bus to get the spectrum message on */
@@ -227,7 +227,6 @@ GST_START_TEST (test_int32)
   GstElement *spectrum;
   GstBuffer *inbuffer, *outbuffer;
   GstBus *bus;
-  GstCaps *caps;
   GstMessage *message;
   const GstStructure *structure;
   int i, j;
@@ -237,7 +236,7 @@ GST_START_TEST (test_int32)
   GstClockTime endtime;
   gfloat level;
 
-  spectrum = setup_spectrum ();
+  spectrum = setup_spectrum (SPECT_CAPS_STRING_S32);
   g_object_set (spectrum, "post-messages", TRUE, "interval", GST_SECOND / 100,
       "bands", SPECT_BANDS, "threshold", -80, NULL);
 
@@ -260,10 +259,6 @@ GST_START_TEST (test_int32)
     ++data;
   }
   gst_buffer_unmap (inbuffer, &map);
-
-  caps = gst_caps_from_string (SPECT_CAPS_STRING_S32);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
-  gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* create a bus to get the spectrum message on */
@@ -332,7 +327,6 @@ GST_START_TEST (test_float32)
   GstElement *spectrum;
   GstBuffer *inbuffer, *outbuffer;
   GstBus *bus;
-  GstCaps *caps;
   GstMessage *message;
   const GstStructure *structure;
   int i, j;
@@ -342,7 +336,7 @@ GST_START_TEST (test_float32)
   GstClockTime endtime;
   gfloat level;
 
-  spectrum = setup_spectrum ();
+  spectrum = setup_spectrum (SPECT_CAPS_STRING_F32);
   g_object_set (spectrum, "post-messages", TRUE, "interval", GST_SECOND / 100,
       "bands", SPECT_BANDS, "threshold", -80, NULL);
 
@@ -365,10 +359,6 @@ GST_START_TEST (test_float32)
     ++data;
   }
   gst_buffer_unmap (inbuffer, &map);
-
-  caps = gst_caps_from_string (SPECT_CAPS_STRING_F32);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
-  gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* create a bus to get the spectrum message on */
@@ -437,7 +427,6 @@ GST_START_TEST (test_float64)
   GstElement *spectrum;
   GstBuffer *inbuffer, *outbuffer;
   GstBus *bus;
-  GstCaps *caps;
   GstMessage *message;
   const GstStructure *structure;
   int i, j;
@@ -447,7 +436,7 @@ GST_START_TEST (test_float64)
   GstClockTime endtime;
   gfloat level;
 
-  spectrum = setup_spectrum ();
+  spectrum = setup_spectrum (SPECT_CAPS_STRING_F64);
   g_object_set (spectrum, "post-messages", TRUE, "interval", GST_SECOND / 100,
       "bands", SPECT_BANDS, "threshold", -80, NULL);
 
@@ -470,10 +459,6 @@ GST_START_TEST (test_float64)
     ++data;
   }
   gst_buffer_unmap (inbuffer, &map);
-
-  caps = gst_caps_from_string (SPECT_CAPS_STRING_F64);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
-  gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* create a bus to get the spectrum message on */
