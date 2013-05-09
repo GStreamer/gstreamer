@@ -2167,14 +2167,9 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
   if (GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (frame))
     return;
 
-  /* If the frame is to be dropped, we should not update the timestamps
-   * either */
-  if (dropping)
-    return;
-
   /* If the frame is meant to be output but we don't have an output_buffer
    * we have a problem :) */
-  if (G_UNLIKELY (frame->output_buffer == NULL))
+  if (G_UNLIKELY ((frame->output_buffer == NULL) && !dropping))
     goto no_output_buffer;
 
   if (GST_CLOCK_TIME_IS_VALID (frame->pts)) {
