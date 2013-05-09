@@ -3314,7 +3314,7 @@ avelement_compare (gconstpointer p1, gconstpointer p2)
 {
   GstAVElement *v1, *v2;
   GstPluginFeature *fd1, *fd2, *fs1, *fs2;
-  gint diff, v1_rank, v2_rank;
+  gint64 diff, v1_rank, v2_rank;
 
   v1 = (GstAVElement *) p1;
   v2 = (GstAVElement *) p2;
@@ -3325,14 +3325,16 @@ avelement_compare (gconstpointer p1, gconstpointer p2)
   fd2 = (GstPluginFeature *) v2->dec;
 
   v1_rank =
-      gst_plugin_feature_get_rank (fd1) + gst_plugin_feature_get_rank (fs1);
+      gst_plugin_feature_get_rank (fd1) * gst_plugin_feature_get_rank (fs1);
   v2_rank =
-      gst_plugin_feature_get_rank (fd2) + gst_plugin_feature_get_rank (fs2);
+      gst_plugin_feature_get_rank (fd2) * gst_plugin_feature_get_rank (fs2);
 
   /* comparison based on the rank */
   diff = v2_rank - v1_rank;
-  if (diff != 0)
-    return diff;
+  if (diff < 0)
+    return -1;
+  else if (diff > 0)
+    return 1;
 
   /* comparison based on number of common caps features */
   diff = v2->n_comm_cf - v1->n_comm_cf;
