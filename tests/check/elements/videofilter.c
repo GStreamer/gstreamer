@@ -88,7 +88,7 @@ check_filter_caps (const gchar * name, GstCaps * caps, gint size,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, filter, caps, GST_FORMAT_TIME);
 
   /* ensure segment (format) properly setup */
   gst_segment_init (&segment, GST_FORMAT_TIME);
