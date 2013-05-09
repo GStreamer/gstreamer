@@ -4565,6 +4565,19 @@ gst_pad_store_sticky_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
+static gboolean
+sticky_changed (GstPad * pad, PadEvent * ev, gpointer user_data)
+{
+  PushStickyData *data = user_data;
+
+  /* Forward all sticky events before our current one that are pending */
+  if (ev->event != data->event
+      && GST_EVENT_TYPE (ev->event) < GST_EVENT_TYPE (data->event))
+    return push_sticky (pad, ev, data);
+
+  return TRUE;
+}
+
 /* should be called with pad LOCK */
 static GstFlowReturn
 gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
@@ -4627,6 +4640,18 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
 
   /* send probes after modifying the events above */
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH, event, probe_stopped);
+
+  /* recheck sticky events because the probe might have cause a relink */
+  if (GST_PAD_HAS_PENDING_EVENTS (pad) && GST_PAD_IS_SRC (pad)
+      && (GST_EVENT_IS_SERIALIZED (event)
+          || GST_EVENT_IS_STICKY (event))) {
+    PushStickyData data = { GST_FLOW_OK, FALSE, event };
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
+
+    /* Push all sticky events before our current one
+     * that have changed */
+    events_foreach (pad, sticky_changed, &data);
+  }
 
   /* now check the peer pad */
   peerpad = GST_PAD_PEER (pad);
