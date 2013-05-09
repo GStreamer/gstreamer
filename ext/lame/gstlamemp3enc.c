@@ -653,6 +653,7 @@ gst_lamemp3enc_finish_frames (GstLameMP3Enc * lame)
     guint rate, version, layer, size;
     GstBuffer *mp3_buf;
     const guint8 *data;
+    guint samples_per_frame;
 
     data = gst_adapter_map (lame->adapter, 4);
     header = GST_READ_UINT32_BE (data);
@@ -677,11 +678,18 @@ gst_lamemp3enc_finish_frames (GstLameMP3Enc * lame)
       break;
     }
 
+    /* Account for the internal resampling, finish frame really wants to
+     * know about the number of incoming samples
+     */
+    samples_per_frame = (version == 1) ? 1152 : 576;
+    samples_per_frame *= lame->samplerate;
+    samples_per_frame /= lame->out_samplerate;
+
     /* should be ok now */
     mp3_buf = gst_adapter_take_buffer (lame->adapter, size);
     /* number of samples for MPEG-1, layer 3 */
     result = gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (lame),
-        mp3_buf, version == 1 ? 1152 : 576);
+        mp3_buf, samples_per_frame);
   }
 
 exit:
