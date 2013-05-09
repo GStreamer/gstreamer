@@ -195,7 +195,7 @@ GST_START_TEST (test_jpegenc_different_caps)
   caps = gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
       800, "height", G_TYPE_INT, 600, "framerate",
       GST_TYPE_FRACTION, 1, 1, "format", G_TYPE_STRING, "I420", NULL);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, jpegenc, caps, GST_FORMAT_TIME);
   fail_unless ((buffer = create_video_buffer (caps)) != NULL);
   gst_caps_unref (caps);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
