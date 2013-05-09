@@ -913,6 +913,12 @@ gst_queue_leak_downstream (GstQueue * queue)
 
     GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
         "queue is full, leaking item %p on downstream end", leak);
+    if (GST_IS_EVENT (leak) && GST_EVENT_IS_STICKY (leak)) {
+      GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
+          "Storing sticky event %s on srcpad", GST_EVENT_TYPE_NAME (leak));
+      gst_pad_store_sticky_event (queue->srcpad, GST_EVENT_CAST (leak));
+    }
+
     if (!GST_IS_QUERY (leak))
       gst_mini_object_unref (leak);
 
