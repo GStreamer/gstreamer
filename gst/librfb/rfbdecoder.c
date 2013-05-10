@@ -3,9 +3,7 @@
 #endif
 
 #include "rfb.h"
-
-#include "vncauth.h"
-
+#include "d3des.h"
 #include <gst/gst.h>
 
 #include <stdlib.h>
@@ -424,7 +422,10 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
         decoder->state = rfb_decoder_state_send_client_initialisation;
       }
       break;
-    case SECURITY_VNC:
+    case SECURITY_VNC:{
+      unsigned char key[8], *challenge;
+      gsize password_len;
+
       /*
        * VNC authentication is to be used and protocol data is to be sent unencrypted. The
        * server sends a random 16-byte challenge
@@ -437,14 +438,29 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
         return FALSE;
       }
 
-      rfb_decoder_read (decoder, 16);
-      vncEncryptBytes ((unsigned char *) decoder->data, decoder->password);
-      rfb_decoder_send (decoder, decoder->data, 16);
+      /* key is 8 bytes and made up of password (padded with 0s if needed) */
+      memset (key, 0, 8);
+      password_len = strlen (decoder->password);
+      memcpy (key, decoder->password, MIN (password_len, 8));
 
-      GST_DEBUG ("Encrypted challenge send to server");
+      /* read challenge */
+      challenge = rfb_decoder_read (decoder, 16);
+      if (challenge == NULL)
+        return FALSE;
+
+      /* encrypt 16 challenge bytes in place using key */
+      deskey (key, EN0);
+      des (challenge, challenge);
+      des (challenge + 8, challenge + 8);
+
+      /* .. and send back to server */
+      rfb_decoder_send (decoder, challenge, 16);
+
+      GST_DEBUG ("Encrypted challenge sent to server");
 
       decoder->state = rfb_decoder_state_security_result;
       break;
+    }
     default:
       GST_WARNING ("Security type is not known");
       return FALSE;

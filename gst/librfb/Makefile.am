@@ -13,8 +13,7 @@ libgstrfbsrc_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 librfb_la_SOURCES = \
 	rfbbuffer.c \
 	rfbdecoder.c \
-	d3des.c \
-	vncauth.c
+	d3des.c
 librfb_la_CFLAGS = $(GST_CFLAGS) $(GIO_CFLAGS) -I$(srcdir)/..
 librfb_la_LIBADD = $(GST_LIBS) $(GIO_LIBS)
 
@@ -25,8 +24,7 @@ noinst_HEADERS = \
 	rfbcontext.h \
 	rfbutil.h \
 	gstrfbsrc.h \
-	d3des.h \
-	vncauth.h
+	d3des.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
