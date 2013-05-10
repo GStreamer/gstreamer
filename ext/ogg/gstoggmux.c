@@ -1544,8 +1544,12 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     if (!gst_caps_is_fixed (caps))
       caps = gst_caps_fixate (caps);
     if (caps) {
+      GstSegment segment;
+
       caps = gst_ogg_mux_set_header_on_caps (caps, hbufs);
       gst_pad_set_caps (mux->srcpad, caps);
+      gst_segment_init (&segment, GST_FORMAT_TIME);
+      gst_pad_push_event (mux->srcpad, gst_event_new_segment (&segment));
       gst_caps_unref (caps);
     }
   }
@@ -1931,16 +1935,11 @@ all_pads_eos (GstCollectPads * pads)
 static void
 gst_ogg_mux_send_start_events (GstOggMux * ogg_mux, GstCollectPads * pads)
 {
-  GstSegment segment;
   gchar s_id[32];
 
   /* stream-start (FIXME: create id based on input ids) */
   g_snprintf (s_id, sizeof (s_id), "oggmux-%08x", g_random_int ());
   gst_pad_push_event (ogg_mux->srcpad, gst_event_new_stream_start (s_id));
-
-  /* segment */
-  gst_segment_init (&segment, GST_FORMAT_BYTES);
-  gst_pad_push_event (ogg_mux->srcpad, gst_event_new_segment (&segment));
 
   /* we'll send caps later, need to collect all headers first */
 }
