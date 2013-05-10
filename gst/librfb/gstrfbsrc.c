@@ -201,7 +201,6 @@ gst_rfb_src_finalize (GObject * object)
   }
   if (src->decoder) {
     rfb_decoder_free (src->decoder);
-    g_free (src->decoder);
     src->decoder = NULL;
   }
 
@@ -434,7 +433,6 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
   if (!rfb_decoder_connect_tcp (decoder, src->host, src->port)) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not connect to host %s on port %d", src->host, src->port));
-    rfb_decoder_free (decoder);
     return FALSE;
   }
 

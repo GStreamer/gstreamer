@@ -88,6 +88,8 @@ rfb_decoder_free (RfbDecoder * decoder)
 
   if (decoder->data)
     g_free (decoder->data);
+
+  g_free (decoder);
 }
 
 gboolean
