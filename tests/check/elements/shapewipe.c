@@ -76,7 +76,7 @@ on_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
 GST_START_TEST (test_general)
 {
-  GstElement *shapewipe;
+  GstElement *shapewipe, *videosrc, *masksrc, *sink, *bin;
   GstPad *p;
   GstCaps *caps;
   GstBuffer *mask, *input;
@@ -84,28 +84,33 @@ GST_START_TEST (test_general)
   guint8 *data;
   GstMapInfo map;
 
+  bin = gst_bin_new ("myshapewipe");
+  videosrc = gst_bin_new ("myvideosrc");
+  masksrc = gst_bin_new ("mymasksrc");
+  sink = gst_bin_new ("mysink");
+  shapewipe = gst_element_factory_make ("shapewipe", NULL);
+  fail_unless (shapewipe != NULL);
+  gst_bin_add_many (GST_BIN (bin), videosrc, masksrc, shapewipe, sink, NULL);
+
   myvideosrcpad =
       gst_pad_new_from_static_template (&videosrctemplate, "videosrc");
+  gst_element_add_pad (videosrc, myvideosrcpad);
   gst_pad_set_active (myvideosrcpad, TRUE);
   caps = gst_caps_from_string (SHAPEWIPE_VIDEO_CAPS_STRING);
-  gst_pad_set_caps (myvideosrcpad, caps);
+  gst_check_setup_events (myvideosrcpad, videosrc, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   mymasksrcpad = gst_pad_new_from_static_template (&masksrctemplate, "masksrc");
+  gst_element_add_pad (masksrc, mymasksrcpad);
   gst_pad_set_active (mymasksrcpad, TRUE);
   caps = gst_caps_from_string (SHAPEWIPE_MASK_CAPS_STRING);
-  gst_pad_set_caps (mymasksrcpad, caps);
+  gst_check_setup_events (mymasksrcpad, masksrc, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   mysinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
+  gst_element_add_pad (sink, mysinkpad);
   gst_pad_set_chain_function (mysinkpad, on_chain);
   gst_pad_set_active (mysinkpad, TRUE);
-  caps = gst_caps_from_string (SHAPEWIPE_VIDEO_CAPS_STRING);
-  gst_pad_set_caps (mysinkpad, caps);
-  gst_caps_unref (caps);
-
-  shapewipe = gst_element_factory_make ("shapewipe", NULL);
-  fail_unless (shapewipe != NULL);
 
   p = gst_element_get_static_pad (shapewipe, "video_sink");
   fail_unless (gst_pad_link (myvideosrcpad, p) == GST_PAD_LINK_OK);
@@ -117,13 +122,10 @@ GST_START_TEST (test_general)
   fail_unless (gst_pad_link (p, mysinkpad) == GST_PAD_LINK_OK);
   gst_object_unref (p);
 
-  fail_unless (gst_element_set_state (shapewipe,
+  fail_unless (gst_element_set_state (bin,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
 
   mask = gst_buffer_new_and_alloc (400 * 400);
-  caps = gst_caps_from_string (SHAPEWIPE_MASK_CAPS_STRING);
-  gst_pad_set_caps (mymasksrcpad, caps);
-  gst_caps_unref (caps);
   gst_buffer_map (mask, &map, GST_MAP_WRITE);
   data = map.data;
   for (i = 0; i < 400; i++) {
@@ -144,9 +146,6 @@ GST_START_TEST (test_general)
   fail_unless (gst_pad_push (mymasksrcpad, mask) == GST_FLOW_OK);
 
   input = gst_buffer_new_and_alloc (400 * 400 * 4);
-  caps = gst_caps_from_string (SHAPEWIPE_VIDEO_CAPS_STRING);
-  gst_pad_set_caps (myvideosrcpad, caps);
-  gst_caps_unref (caps);
   gst_buffer_map (input, &map, GST_MAP_WRITE);
   data = map.data;
   for (i = 0; i < 400; i++) {
@@ -284,7 +283,7 @@ GST_START_TEST (test_general)
 
   gst_buffer_unref (input);
 
-  fail_unless (gst_element_set_state (shapewipe,
+  fail_unless (gst_element_set_state (bin,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
 
   p = gst_element_get_static_pad (shapewipe, "video_sink");
@@ -297,10 +296,7 @@ GST_START_TEST (test_general)
   fail_unless (gst_pad_unlink (p, mysinkpad));
   gst_object_unref (p);
 
-  gst_object_unref (myvideosrcpad);
-  gst_object_unref (mymasksrcpad);
-  gst_object_unref (mysinkpad);
-  gst_object_unref (shapewipe);
+  gst_object_unref (bin);
 }
 
 GST_END_TEST;
