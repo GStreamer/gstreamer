@@ -43,22 +43,25 @@ static GstPad *mysrcpad, *mysinkpad;
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, MAX ]"
 
-static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (CONVERT_CAPS_TEMPLATE_STRING)
-    );
-static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (CONVERT_CAPS_TEMPLATE_STRING)
-    );
-
 /* takes over reference for outcaps */
 static GstElement *
 setup_audioconvert (GstCaps * outcaps)
 {
+  GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (CONVERT_CAPS_TEMPLATE_STRING)
+      );
+  GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+      GST_PAD_SRC,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (CONVERT_CAPS_TEMPLATE_STRING)
+      );
   GstElement *audioconvert;
+  gchar *caps_str;
+
+  caps_str = gst_caps_to_string (outcaps);
+  sinktemplate.static_caps.string = caps_str;
 
   GST_DEBUG ("setup_audioconvert with caps %" GST_PTR_FORMAT, outcaps);
   audioconvert = gst_check_setup_element ("audioconvert");
@@ -73,11 +76,7 @@ setup_audioconvert (GstCaps * outcaps)
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
-  gst_pad_set_caps (mysinkpad, outcaps);
-  gst_caps_unref (outcaps);
-  outcaps = gst_pad_get_current_caps (mysinkpad);
-  fail_unless (gst_caps_is_fixed (outcaps));
-  gst_caps_unref (outcaps);
+  g_free (caps_str);
 
   return audioconvert;
 }
@@ -420,7 +419,7 @@ verify_convert (const gchar * which, void *in, int inlength,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  gst_pad_set_caps (mysrcpad, incaps);
+  gst_check_setup_events (mysrcpad, audioconvert, incaps, GST_FORMAT_TIME);
 
   GST_DEBUG ("Creating buffer of %d bytes", inlength);
   inbuffer = gst_buffer_new_and_alloc (inlength);
@@ -1447,15 +1446,18 @@ GST_END_TEST;
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, MAX ]"
 
-static GstStaticPadTemplate simple_sinktemplate =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (SIMPLE_CAPS_TEMPLATE_STRING)
-    );
-
 GST_START_TEST (test_preserve_width)
 {
+  GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (SIMPLE_CAPS_TEMPLATE_STRING)
+      );
+  GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+      GST_PAD_SRC,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (CONVERT_CAPS_TEMPLATE_STRING)
+      );
   static const struct _test_formats
   {
     int width;
@@ -1474,7 +1476,7 @@ GST_START_TEST (test_preserve_width)
 
   audioconvert = gst_check_setup_element ("audioconvert");
   mysrcpad = gst_check_setup_src_pad (audioconvert, &srctemplate);
-  mysinkpad = gst_check_setup_sink_pad (audioconvert, &simple_sinktemplate);
+  mysinkpad = gst_check_setup_sink_pad (audioconvert, &sinktemplate);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);

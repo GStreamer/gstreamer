@@ -89,7 +89,7 @@ GST_START_TEST (test_no_clients)
 
   caps = gst_caps_from_string ("application/x-gst-check");
   buffer = gst_buffer_new_and_alloc (4);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, sink, caps, GST_FORMAT_BYTES);
   gst_caps_unref (caps);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
 
@@ -121,7 +121,7 @@ GST_START_TEST (test_add_client)
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
   buffer = gst_buffer_new_and_alloc (4);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, sink, caps, GST_FORMAT_BYTES);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
   gst_buffer_fill (buffer, 0, "dead", 4);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
@@ -273,7 +273,7 @@ GST_START_TEST (test_streamheader)
   gst_multifdsink_create_streamheader ("babe", "deadbeef", &hbuf1, &hbuf2,
       &caps);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, sink, caps, GST_FORMAT_BYTES);
   /* one is ours, two from set_caps */
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
@@ -365,7 +365,7 @@ GST_START_TEST (test_change_streamheader)
   gst_multifdsink_create_streamheader ("first", "header", &hbuf1, &hbuf2,
       &caps);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, sink, caps, GST_FORMAT_BYTES);
   /* one is ours, two from set_caps */
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
@@ -411,7 +411,7 @@ GST_START_TEST (test_change_streamheader)
 
   gst_multifdsink_create_streamheader ("second", "header", &hbuf1, &hbuf2,
       &caps);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, sink, caps, GST_FORMAT_BYTES);
   /* one to hold for the test and one to give away */
   ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 2);
   ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 2);
@@ -501,7 +501,7 @@ GST_START_TEST (test_burst_client_bytes)
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
 
   caps = gst_caps_from_string ("application/x-gst-check");
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, sink, caps, GST_FORMAT_BYTES);
   GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
 
   /* push buffers in, 9 * 16 bytes = 144 bytes */
@@ -590,7 +590,7 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
 
   caps = gst_caps_from_string ("application/x-gst-check");
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, sink, caps, GST_FORMAT_BYTES);
   GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
 
   /* push buffers in, 9 * 16 bytes = 144 bytes */
@@ -681,7 +681,7 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
 
   caps = gst_caps_from_string ("application/x-gst-check");
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, sink, caps, GST_FORMAT_BYTES);
   GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
 
   /* push buffers in, 9 * 16 bytes = 144 bytes */
@@ -767,7 +767,7 @@ GST_START_TEST (test_client_next_keyframe)
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
 
   caps = gst_caps_from_string ("application/x-gst-check");
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, sink, caps, GST_FORMAT_BYTES);
   GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
 
   /* now add our client */

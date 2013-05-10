@@ -35,11 +35,16 @@ static GstElement *
 setup_appsink (void)
 {
   GstElement *appsink;
+  GstCaps *caps;
 
   GST_DEBUG ("setup_appsink");
   appsink = gst_check_setup_element ("appsink");
   mysrcpad = gst_check_setup_src_pad (appsink, &srctemplate);
   gst_pad_set_active (mysrcpad, TRUE);
+
+  caps = gst_caps_new_empty_simple ("application/x-gst-check");
+  gst_check_setup_events (mysrcpad, appsink, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
 
   return appsink;
 }
@@ -81,16 +86,12 @@ GST_START_TEST (test_non_clients)
 {
   GstElement *sink;
   GstBuffer *buffer;
-  GstCaps *caps;
 
   sink = setup_appsink ();
 
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
 
-  caps = gst_caps_from_string ("application/x-gst-check");
   buffer = gst_buffer_new_and_alloc (4);
-  gst_pad_set_caps (mysrcpad, caps);
-  gst_caps_unref (caps);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
 
   GST_DEBUG ("cleaning up appsink");
@@ -105,7 +106,6 @@ GST_START_TEST (test_handoff_callback)
 {
   GstElement *sink;
   GstBuffer *buffer;
-  GstCaps *caps;
   gint testdata;
   GstAppSinkCallbacks callbacks = { NULL };
 
@@ -120,10 +120,7 @@ GST_START_TEST (test_handoff_callback)
 
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
 
-  caps = gst_caps_from_string ("application/x-gst-check");
   buffer = gst_buffer_new_and_alloc (4);
-  gst_pad_set_caps (mysrcpad, caps);
-  gst_caps_unref (caps);
   /* Pushing a buffer should run our callback */
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
 
@@ -196,22 +193,17 @@ GST_START_TEST (test_notify1)
 
 GST_END_TEST;
 
-static GstBufferList *mylist;
-static GstCaps *mycaps;
-
-static gint values[] = { 1, 2, 4 };
+static const gint values[] = { 1, 2, 4 };
 
 static GstBufferList *
 create_buffer_list (void)
 {
   guint len;
   GstBuffer *buffer;
+  GstBufferList *mylist;
 
   mylist = gst_buffer_list_new ();
   fail_if (mylist == NULL);
-
-  mycaps = gst_caps_from_string ("application/x-gst-check");
-  fail_if (mycaps == NULL);
 
   len = gst_buffer_list_length (mylist);
   fail_if (len != 0);
@@ -227,9 +219,6 @@ create_buffer_list (void)
   buffer = gst_buffer_new_and_alloc (sizeof (gint));
   gst_buffer_fill (buffer, 0, &values[2], sizeof (gint));
   gst_buffer_list_add (mylist, buffer);
-
-  gst_pad_set_caps (mysrcpad, mycaps);
-  gst_caps_unref (mycaps);
 
   return mylist;
 }

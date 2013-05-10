@@ -93,12 +93,18 @@ static GstElement *
 setup_vorbistag (void)
 {
   GstElement *vorbistag;
+  GstCaps *caps;
 
   GST_DEBUG ("setup_vorbistag");
   vorbistag = gst_check_setup_element ("vorbistag");
   mysrcpad = gst_check_setup_src_pad (vorbistag, &srctemplate);
   mysinkpad = gst_check_setup_sink_pad (vorbistag, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
+
+  caps = gst_caps_new_empty_simple ("audio/x-vorbis");
+  gst_check_setup_events (mysrcpad, vorbistag, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
   gst_pad_set_active (mysinkpad, TRUE);
 
   return vorbistag;

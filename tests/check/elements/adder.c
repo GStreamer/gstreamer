@@ -914,13 +914,7 @@ GST_START_TEST (test_clip)
   sinkpad = gst_element_get_request_pad (adder, "sink_%u");
   fail_if (sinkpad == NULL, NULL);
 
-  /* send segment to adder */
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  segment.start = GST_SECOND;
-  segment.stop = 2 * GST_SECOND;
-  segment.time = 0;
-  event = gst_event_new_segment (&segment);
-  gst_pad_send_event (sinkpad, event);
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
 
   caps = gst_caps_new_simple ("audio/x-raw",
 #if G_BYTE_ORDER == G_BIG_ENDIAN
@@ -933,6 +927,14 @@ GST_START_TEST (test_clip)
 
   gst_pad_set_caps (sinkpad, caps);
   gst_caps_unref (caps);
+
+  /* send segment to adder */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = GST_SECOND;
+  segment.stop = 2 * GST_SECOND;
+  segment.time = 0;
+  event = gst_event_new_segment (&segment);
+  gst_pad_send_event (sinkpad, event);
 
   /* should be clipped and ok */
   buffer = gst_buffer_new_and_alloc (44100);

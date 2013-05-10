@@ -68,6 +68,21 @@ static GstStaticPadTemplate video_srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (VIDEO_CAPS_TEMPLATE_STRING)
     );
 
+static void
+gst_check_setup_events_textoverlay (GstPad * srcpad, GstElement * element,
+    GstCaps * caps, GstFormat format, const gchar * stream_id)
+{
+  GstSegment segment;
+
+  gst_segment_init (&segment, format);
+
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_stream_start (stream_id)));
+  if (caps)
+    fail_unless (gst_pad_push_event (srcpad, gst_event_new_caps (caps)));
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&segment)));
+}
+
 /* much like gst_check_setup_src_pad(), but with possibility to give a hint
  * which sink template of the element to use, if there are multiple ones */
 static GstPad *
@@ -279,7 +294,8 @@ GST_START_TEST (test_video_passthrough)
       "could not set to playing");
 
   incaps = create_video_caps (VIDEO_CAPS_STRING);
-  gst_pad_set_caps (myvideosrcpad, incaps);
+  gst_check_setup_events_textoverlay (myvideosrcpad, textoverlay, incaps,
+      GST_FORMAT_TIME, "video");
   inbuffer = create_black_buffer (incaps);
   gst_caps_unref (incaps);
 
@@ -422,7 +438,8 @@ GST_START_TEST (test_video_render_static_text)
       "could not set to playing");
 
   incaps = create_video_caps (VIDEO_CAPS_STRING);
-  gst_pad_set_caps (myvideosrcpad, incaps);
+  gst_check_setup_events_textoverlay (myvideosrcpad, textoverlay, incaps,
+      GST_FORMAT_TIME, "video");
   inbuffer = create_black_buffer (incaps);
   gst_caps_unref (incaps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -512,7 +529,8 @@ GST_START_TEST (test_video_waits_for_text)
 
   caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING, "utf8",
       NULL);
-  gst_pad_set_caps (mytextsrcpad, caps);
+  gst_check_setup_events_textoverlay (mytextsrcpad, textoverlay, caps,
+      GST_FORMAT_TIME, "text");
   gst_caps_unref (caps);
 
   tbuf = create_text_buffer ("XLX", 1 * GST_SECOND, 5 * GST_SECOND);
@@ -527,7 +545,8 @@ GST_START_TEST (test_video_waits_for_text)
   fail_unless_equals_int (g_list_length (buffers), 0);
 
   incaps = create_video_caps (VIDEO_CAPS_STRING);
-  gst_pad_set_caps (myvideosrcpad, incaps);
+  gst_check_setup_events_textoverlay (myvideosrcpad, textoverlay, incaps,
+      GST_FORMAT_TIME, "video");
   inbuffer = create_black_buffer (incaps);
   gst_caps_unref (incaps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -646,7 +665,8 @@ test_render_continuity_push_video_buffers_thread (gpointer data)
   GstCaps *vcaps;
 
   vcaps = create_video_caps (VIDEO_CAPS_STRING);
-  gst_pad_set_caps (myvideosrcpad, vcaps);
+  gst_check_setup_events_textoverlay (myvideosrcpad, data, vcaps,
+      GST_FORMAT_TIME, "video");
 
   do {
     GstBuffer *vbuf;
@@ -684,13 +704,14 @@ GST_START_TEST (test_render_continuity)
       "could not set to playing");
 
   thread = g_thread_try_new ("gst-check",
-      test_render_continuity_push_video_buffers_thread, NULL, NULL);
+      test_render_continuity_push_video_buffers_thread, textoverlay, NULL);
   fail_unless (thread != NULL);
   g_thread_unref (thread);
 
   caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING, "utf8",
       NULL);
-  gst_pad_set_caps (mytextsrcpad, caps);
+  gst_check_setup_events_textoverlay (mytextsrcpad, textoverlay, caps,
+      GST_FORMAT_TIME, "text");
   gst_caps_unref (caps);
 
   tbuf = create_text_buffer ("XLX", 2 * GST_SECOND, GST_SECOND);

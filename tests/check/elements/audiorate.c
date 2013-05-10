@@ -419,6 +419,9 @@ GST_START_TEST (test_large_discont)
   sinkpad = gst_check_setup_sink_pad (audiorate, &sinktemplate);
 
   gst_pad_set_active (srcpad, TRUE);
+
+  gst_check_setup_events (srcpad, audiorate, caps, GST_FORMAT_TIME);
+
   gst_pad_set_active (sinkpad, TRUE);
 
   fail_unless (gst_element_set_state (audiorate,
@@ -426,7 +429,6 @@ GST_START_TEST (test_large_discont)
       "failed to set audiorate playing");
 
   buf = gst_buffer_new_and_alloc (4);
-  gst_pad_set_caps (srcpad, caps);
   GST_BUFFER_TIMESTAMP (buf) = 0;
   gst_pad_push (srcpad, buf);
 

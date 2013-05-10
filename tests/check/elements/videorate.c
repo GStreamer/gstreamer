@@ -165,7 +165,7 @@ GST_START_TEST (test_one)
   inbuffer = gst_buffer_new_and_alloc (4);
   gst_buffer_memset (inbuffer, 0, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -207,7 +207,7 @@ GST_START_TEST (test_more)
   GST_BUFFER_OFFSET_END (first) = g_rand_int (rand);
   gst_buffer_memset (first, 0, 1, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   gst_buffer_ref (first);
@@ -325,7 +325,7 @@ GST_START_TEST (test_wrong_order_from_zero)
   GST_BUFFER_TIMESTAMP (first) = GST_SECOND;
   gst_buffer_memset (first, 0, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   gst_buffer_ref (first);
@@ -408,7 +408,7 @@ GST_START_TEST (test_wrong_order)
   GST_BUFFER_TIMESTAMP (first) = 0;
   gst_buffer_memset (first, 0, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   gst_buffer_ref (first);
@@ -506,7 +506,7 @@ GST_START_TEST (test_no_framerate)
   inbuffer = gst_buffer_new_and_alloc (4);
   gst_buffer_memset (inbuffer, 0, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_NO_FRAMERATE_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -539,24 +539,18 @@ GST_START_TEST (test_changing_size)
   GstBuffer *fourth;
   GstBuffer *fifth;
   GstBuffer *outbuf;
-  GstEvent *newsegment;
   GstCaps *caps, *caps_newsize;
-  GstSegment segment;
 
   videorate = setup_videorate ();
   fail_unless (gst_element_set_state (videorate,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  newsegment = gst_event_new_segment (&segment);
-  fail_unless (gst_pad_push_event (mysrcpad, newsegment) == TRUE);
-
   first = gst_buffer_new_and_alloc (4);
   gst_buffer_memset (first, 0, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   GST_BUFFER_TIMESTAMP (first) = 0;
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
 
   GST_DEBUG ("pushing first buffer");
   fail_unless (gst_pad_push (mysrcpad, first) == GST_FLOW_OK);
@@ -631,7 +625,7 @@ GST_START_TEST (test_non_ok_flow)
   buf = gst_buffer_new_and_alloc (4);
   gst_buffer_memset (buf, 0, 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (buf, "inbuffer", 1);
 
