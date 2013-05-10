@@ -147,16 +147,18 @@ setup_element (const gchar * factory, GstStaticPadTemplate * sink_template,
 {
   GstElement *element;
   GstBus *bus;
+  gchar *caps_str = NULL;
 
   element = gst_check_setup_element (factory);
   srcpad = gst_check_setup_src_pad (element, src_template);
+  if (sink_caps) {
+    caps_str = gst_caps_to_string (sink_caps);
+    sink_template->static_caps.string = caps_str;
+  }
   sinkpad = gst_check_setup_sink_pad (element, sink_template);
   gst_pad_set_active (srcpad, TRUE);
+  gst_check_setup_events (srcpad, element, src_caps, GST_FORMAT_BYTES);
   gst_pad_set_active (sinkpad, TRUE);
-  if (src_caps)
-    fail_unless (gst_pad_set_caps (srcpad, src_caps));
-  if (sink_caps)
-    fail_unless (gst_pad_set_caps (sinkpad, sink_caps));
 
   bus = gst_bus_new ();
   gst_element_set_bus (element, bus);
@@ -167,6 +169,7 @@ setup_element (const gchar * factory, GstStaticPadTemplate * sink_template,
 
   ts_counter = offset_counter = buffer_counter = 0;
   buffers = NULL;
+  g_free (caps_str);
   return element;
 }
 
