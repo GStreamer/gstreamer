@@ -486,6 +486,7 @@ gst_shape_wipe_mask_sink_getcaps (GstShapeWipe * self, GstPad * pad,
   if (gst_caps_is_empty (ret))
     goto done;
 
+  ret = gst_caps_make_writable (ret);
   n = gst_caps_get_size (ret);
   tmp = gst_caps_new_empty ();
   for (i = 0; i < n; i++) {
