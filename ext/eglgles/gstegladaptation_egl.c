@@ -168,7 +168,7 @@ gst_egl_adaptation_init_egl_display (GstEglAdaptationContext * ctx)
       GST_ERROR_OBJECT (ctx->element, "Could not get EGL display connection");
       goto HANDLE_ERROR;        /* No EGL error is set by eglGetDisplay() */
     }
-    ctx->display = gst_egl_display_new (display);
+    ctx->display = gst_egl_display_new (display, (GDestroyNotify) eglTerminate);
 
     context = gst_context_new ();
     gst_context_set_egl_display (context, ctx->display);

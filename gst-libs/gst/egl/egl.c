@@ -328,16 +328,18 @@ struct _GstEGLDisplay
 {
   EGLDisplay display;
   volatile gint refcount;
+  GDestroyNotify destroy_notify;
 };
 
 GstEGLDisplay *
-gst_egl_display_new (EGLDisplay display)
+gst_egl_display_new (EGLDisplay display, GDestroyNotify destroy_notify)
 {
   GstEGLDisplay *gdisplay;
 
   gdisplay = g_slice_new (GstEGLDisplay);
   gdisplay->display = display;
   gdisplay->refcount = 1;
+  gdisplay->destroy_notify = destroy_notify;
 
   return gdisplay;
 }
@@ -358,8 +360,8 @@ gst_egl_display_unref (GstEGLDisplay * display)
   g_return_if_fail (display != NULL);
 
   if (g_atomic_int_dec_and_test (&display->refcount)) {
-    if (display->display != EGL_NO_DISPLAY)
-      eglTerminate (display->display);
+    if (display->destroy_notify)
+      display->destroy_notify (display->display);
     g_slice_free (GstEGLDisplay, display);
   }
 }
