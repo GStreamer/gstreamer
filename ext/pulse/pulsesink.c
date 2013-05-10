@@ -1900,6 +1900,19 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
       gst_static_pad_template_get (&pad_template));
 }
 
+static void
+free_device_info (GstPulseDeviceInfo * device_info)
+{
+  GList *l;
+
+  g_free (device_info->description);
+
+  for (l = g_list_first (device_info->formats); l; l = g_list_next (l))
+    pa_format_info_free ((pa_format_info *) l->data);
+
+  g_list_free (device_info->formats);
+}
+
 /* Returns the current time of the sink ringbuffer. The timing_info is updated
  * on every data write/flush and every 100ms (PA_STREAM_AUTO_TIMING_UPDATE).
  */
@@ -1954,33 +1967,18 @@ static void
 gst_pulsesink_sink_info_cb (pa_context * c, const pa_sink_info * i, int eol,
     void *userdata)
 {
-  GstPulseRingBuffer *pbuf;
-  GstPulseSink *psink;
-  GList *l;
+  GstPulseDeviceInfo *device_info = (GstPulseDeviceInfo *) userdata;
   guint8 j;
-
-  pbuf = GST_PULSERING_BUFFER_CAST (userdata);
-  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
   if (!i)
     goto done;
 
-  g_free (psink->device_description);
-  psink->device_description = g_strdup (i->description);
+  device_info->description = g_strdup (i->description);
 
-  g_mutex_lock (&psink->sink_formats_lock);
-
-  for (l = g_list_first (psink->sink_formats); l; l = g_list_next (l))
-    pa_format_info_free ((pa_format_info *) l->data);
-
-  g_list_free (psink->sink_formats);
-  psink->sink_formats = NULL;
-
+  device_info->formats = NULL;
   for (j = 0; j < i->n_formats; j++)
-    psink->sink_formats = g_list_prepend (psink->sink_formats,
+    device_info->formats = g_list_prepend (device_info->formats,
         pa_format_info_copy (i->formats[j]));
-
-  g_mutex_unlock (&psink->sink_formats_lock);
 
 done:
   pa_threaded_mainloop_signal (mainloop, 0);
@@ -1990,6 +1988,7 @@ static gboolean
 gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
 {
   GstPulseRingBuffer *pbuf = NULL;
+  GstPulseDeviceInfo device_info = { NULL, NULL };
   GstCaps *pad_caps;
   GstStructure *st;
   gboolean ret = FALSE;
@@ -2063,7 +2062,7 @@ gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
     GList *i;
 
     if (!(o = pa_context_get_sink_info_by_name (pbuf->context, psink->device,
-                gst_pulsesink_sink_info_cb, pbuf)))
+                gst_pulsesink_sink_info_cb, &device_info)))
       goto info_failed;
 
     while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
@@ -2072,14 +2071,12 @@ gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
         goto out;
     }
 
-    g_mutex_lock (&psink->sink_formats_lock);
-    for (i = g_list_first (psink->sink_formats); i; i = g_list_next (i)) {
+    for (i = g_list_first (device_info.formats); i; i = g_list_next (i)) {
       if (pa_format_info_is_compatible ((pa_format_info *) i->data, format)) {
         ret = TRUE;
         break;
       }
     }
-    g_mutex_unlock (&psink->sink_formats_lock);
   } else {
     /* We're in READY, let's connect a stream to see if the format is
      * accpeted by whatever sink we're routed to */
@@ -2110,6 +2107,7 @@ out:
     pa_operation_unref (o);
 
   if (stream) {
+    free_device_info (&device_info);
     pa_stream_set_state_callback (stream, NULL, NULL);
     pa_stream_disconnect (stream);
     pa_stream_unref (stream);
@@ -2138,11 +2136,10 @@ gst_pulsesink_init (GstPulseSink * pulsesink)
 {
   pulsesink->server = NULL;
   pulsesink->device = NULL;
-  pulsesink->device_description = NULL;
+  pulsesink->device_info.description = NULL;
   pulsesink->client_name = gst_pulse_client_name ();
 
-  g_mutex_init (&pulsesink->sink_formats_lock);
-  pulsesink->sink_formats = NULL;
+  pulsesink->device_info.formats = NULL;
 
   pulsesink->volume = DEFAULT_VOLUME;
   pulsesink->volume_set = FALSE;
@@ -2176,18 +2173,12 @@ static void
 gst_pulsesink_finalize (GObject * object)
 {
   GstPulseSink *pulsesink = GST_PULSESINK_CAST (object);
-  GList *i;
 
   g_free (pulsesink->server);
   g_free (pulsesink->device);
-  g_free (pulsesink->device_description);
   g_free (pulsesink->client_name);
 
-  for (i = g_list_first (pulsesink->sink_formats); i; i = g_list_next (i))
-    pa_format_info_free ((pa_format_info *) i->data);
-
-  g_list_free (pulsesink->sink_formats);
-  g_mutex_clear (&pulsesink->sink_formats_lock);
+  free_device_info (&pulsesink->device_info);
 
   if (pulsesink->properties)
     gst_structure_free (pulsesink->properties);
@@ -2521,8 +2512,9 @@ gst_pulsesink_device_description (GstPulseSink * psink)
   if (pbuf == NULL)
     goto no_buffer;
 
+  free_device_info (&psink->device_info);
   if (!(o = pa_context_get_sink_info_by_name (pbuf->context,
-              psink->device, gst_pulsesink_sink_info_cb, pbuf)))
+              psink->device, gst_pulsesink_sink_info_cb, &psink->device_info)))
     goto info_failed;
 
   while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
@@ -2535,7 +2527,7 @@ unlock:
   if (o)
     pa_operation_unref (o);
 
-  t = g_strdup (psink->device_description);
+  t = g_strdup (psink->device_info.description);
   pa_threaded_mainloop_unlock (mainloop);
 
   return t;

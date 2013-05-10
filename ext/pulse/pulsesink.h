@@ -55,12 +55,17 @@ G_BEGIN_DECLS
 typedef struct _GstPulseSink GstPulseSink;
 typedef struct _GstPulseSinkClass GstPulseSinkClass;
 
+typedef struct _GstPulseDeviceInfo {
+  gchar *description;
+  GList *formats;
+} GstPulseDeviceInfo;
+
 struct _GstPulseSink
 {
   GstAudioBaseSink sink;
 
   gchar *server, *device, *stream_name, *client_name;
-  gchar *device_description;
+  GstPulseDeviceInfo device_info;
 
   GstPulseProbe *probe;
 
@@ -78,8 +83,6 @@ struct _GstPulseSink
   GstStructure *properties;
   pa_proplist *proplist;
 
-  GMutex sink_formats_lock;
-  GList *sink_formats;
   volatile gint format_lost;
   GstClockTime format_lost_time;
 };
