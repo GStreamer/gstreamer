@@ -3670,6 +3670,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
   if (G_UNLIKELY (GST_PAD_MODE (pad) != GST_PAD_MODE_PUSH))
     goto wrong_mode;
 
+#ifndef G_DISABLE_ASSERT
   if (!find_event_by_type (pad, GST_EVENT_STREAM_START, 0)) {
     g_warning (G_STRLOC
         ":%s:<%s:%s> Got data flow before stream-start event",
@@ -3680,6 +3681,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
         ":%s:<%s:%s> Got data flow before segment event",
         G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
   }
+#endif
 
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_BLOCK, data, probe_stopped);
 
@@ -3899,6 +3901,7 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
   if (G_UNLIKELY (GST_PAD_MODE (pad) != GST_PAD_MODE_PUSH))
     goto wrong_mode;
 
+#ifndef G_DISABLE_ASSERT
   if (!find_event_by_type (pad, GST_EVENT_STREAM_START, 0)) {
     g_warning (G_STRLOC
         ":%s:<%s:%s> Got data flow before stream-start event",
@@ -3909,6 +3912,7 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
         ":%s:<%s:%s> Got data flow before segment event",
         G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
   }
+#endif
 
   if (G_UNLIKELY ((ret = check_sticky (pad, NULL))) != GST_FLOW_OK)
     goto events_error;
