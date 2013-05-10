@@ -34,10 +34,6 @@
 #include <X11/Xlib.h>
 #endif
 
-#ifdef G_OS_WIN32
-#include <winsock2.h>
-#endif
-
 enum
 {
   ARG_0,
@@ -191,15 +187,6 @@ gst_rfb_src_init (GstRfbSrc * src)
 
   src->decoder = rfb_decoder_new ();
 
-#ifdef G_OS_WIN32
-  {
-    WSADATA wsa_data;
-
-    if (WSAStartup (MAKEWORD (2, 2), &wsa_data) != 0) {
-      GST_ERROR_OBJECT (src, "WSAStartup failed: 0x%08x", WSAGetLastError ());
-    }
-  }
-#endif
 }
 
 static void
@@ -217,9 +204,6 @@ gst_rfb_src_finalize (GObject * object)
     g_free (src->decoder);
     src->decoder = NULL;
   }
-#ifdef G_OS_WIN32
-  WSACleanup ();
-#endif
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -508,7 +492,10 @@ gst_rfb_src_stop (GstBaseSrc * bsrc)
 {
   GstRfbSrc *src = GST_RFB_SRC (bsrc);
 
-  src->decoder->fd = -1;
+  if (src->decoder->socket) {
+    g_object_unref (src->decoder->socket);
+    src->decoder->socket = NULL;
+  }
 
   if (src->decoder->frame) {
     g_free (src->decoder->frame);
