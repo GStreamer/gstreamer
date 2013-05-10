@@ -424,6 +424,7 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
       break;
     case SECURITY_VNC:{
       unsigned char key[8], *challenge;
+      DESContext des_ctx;
       gsize password_len;
 
       /*
@@ -449,9 +450,10 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
         return FALSE;
 
       /* encrypt 16 challenge bytes in place using key */
-      deskey (key, EN0);
-      des (challenge, challenge);
-      des (challenge + 8, challenge + 8);
+      memset (&des_ctx, 0, sizeof (DESContext));
+      deskey (&des_ctx, key, EN0);
+      des (&des_ctx, challenge, challenge);
+      des (&des_ctx, challenge + 8, challenge + 8);
 
       /* .. and send back to server */
       rfb_decoder_send (decoder, challenge, 16);
