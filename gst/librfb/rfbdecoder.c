@@ -2,22 +2,14 @@
 #include "config.h"
 #endif
 
-#include "gst/gst.h"
-
-#include <rfb.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
-#ifndef G_OS_WIN32
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#else
-#include <winsock2.h>
-#endif
-#include <errno.h>
+#include "rfb.h"
 
 #include "vncauth.h"
+
+#include <gst/gst.h>
+
+#include <stdlib.h>
+#include <string.h>
 
 #define RFB_GET_UINT32(ptr) GST_READ_UINT32_BE(ptr)
 #define RFB_GET_UINT16(ptr) GST_READ_UINT16_BE(ptr)
@@ -30,13 +22,6 @@
 GST_DEBUG_CATEGORY_EXTERN (rfbdecoder_debug);
 #define GST_CAT_DEFAULT rfbdecoder_debug
 
-#if 0
-struct _RfbSocketPrivate
-{
-  gint fd;
-  sockaddr sa;
-}
-#endif
 
 static gboolean rfb_decoder_state_wait_for_protocol_version (RfbDecoder *
     decoder);
@@ -68,7 +53,8 @@ rfb_decoder_new (void)
 {
   RfbDecoder *decoder = g_new0 (RfbDecoder, 1);
 
-  decoder->fd = -1;
+  decoder->socket = NULL;
+  decoder->cancellable = g_cancellable_new ();
 
   decoder->password = NULL;
 
@@ -91,49 +77,102 @@ rfb_decoder_free (RfbDecoder * decoder)
 {
   g_return_if_fail (decoder != NULL);
 
-  if (decoder->fd >= 0)
-    close (decoder->fd);
+  if (decoder->cancellable) {
+    g_cancellable_cancel (decoder->cancellable);
+    g_object_unref (decoder->cancellable);
+    decoder->cancellable = NULL;
+  }
+
+  if (decoder->socket) {
+    g_object_unref (decoder->socket);
+    decoder->socket = NULL;
+  }
 
   if (decoder->data)
     g_free (decoder->data);
 }
 
 gboolean
-rfb_decoder_connect_tcp (RfbDecoder * decoder, gchar * addr, guint port)
+rfb_decoder_connect_tcp (RfbDecoder * decoder, gchar * host, guint port)
 {
-  struct sockaddr_in sa;
+  GError *err = NULL;
+  GInetAddress *addr;
+  GSocketAddress *saddr;
+  GResolver *resolver;
 
   GST_DEBUG ("connecting to the rfb server");
 
   g_return_val_if_fail (decoder != NULL, FALSE);
-  g_return_val_if_fail (decoder->fd == -1, FALSE);
-  g_return_val_if_fail (addr != NULL, FALSE);
+  g_return_val_if_fail (decoder->socket == NULL, FALSE);
+  g_return_val_if_fail (host != NULL, FALSE);
 
-  decoder->fd = socket (PF_INET, SOCK_STREAM, 0);
-  if (decoder->fd == -1) {
-    GST_WARNING ("creating socket failed");
-    return FALSE;
+  /* look up name if we need to */
+  addr = g_inet_address_new_from_string (host);
+  if (!addr) {
+    GList *results;
+
+    resolver = g_resolver_get_default ();
+
+    results =
+        g_resolver_lookup_by_name (resolver, host, decoder->cancellable, &err);
+    if (!results)
+      goto name_resolve;
+    addr = G_INET_ADDRESS (g_object_ref (results->data));
+
+    g_resolver_free_addresses (results);
+    g_object_unref (resolver);
   }
 
-  sa.sin_family = AF_INET;
-  sa.sin_port = htons (port);
-#ifndef G_OS_WIN32
-  inet_pton (AF_INET, addr, &sa.sin_addr);
-#else
-  sa.sin_addr.s_addr = inet_addr (addr);
-#endif
-  if (connect (decoder->fd, (struct sockaddr *) &sa,
-          sizeof (struct sockaddr)) == -1) {
-    close (decoder->fd);
-    decoder->fd = -1;
-    GST_WARNING ("connection failed");
-    return FALSE;
-  }
-  //rfb_decoder_use_file_descriptor (decoder, fd);
+  saddr = g_inet_socket_address_new (addr, port);
+
+  decoder->socket =
+      g_socket_new (g_socket_address_get_family (saddr), G_SOCKET_TYPE_STREAM,
+      G_SOCKET_PROTOCOL_TCP, &err);
+
+  if (!decoder->socket)
+    goto no_socket;
+
+  GST_DEBUG ("opened receiving client socket");
+
+  if (!g_socket_connect (decoder->socket, saddr, decoder->cancellable, &err))
+    goto connect_failed;
+
+  g_object_unref (saddr);
 
   decoder->disconnected = FALSE;
 
   return TRUE;
+
+no_socket:
+  {
+    GST_ERROR ("Failed to create socket: %s", err->message);
+    g_clear_error (&err);
+    g_object_unref (saddr);
+    return FALSE;
+  }
+name_resolve:
+  {
+    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+      GST_DEBUG ("Cancelled name resolval");
+    } else {
+      GST_ERROR ("Failed to resolve host '%s': %s", host, err->message);
+    }
+    g_clear_error (&err);
+    g_object_unref (resolver);
+    return FALSE;
+  }
+connect_failed:
+  {
+    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+      GST_DEBUG ("Cancelled connecting");
+    } else {
+      GST_ERROR ("Failed to connect to host '%s:%d': %s", host, port,
+          err->message);
+    }
+    g_clear_error (&err);
+    g_object_unref (saddr);
+    return FALSE;
+  }
 }
 
 /**
@@ -148,7 +187,7 @@ gboolean
 rfb_decoder_iterate (RfbDecoder * decoder)
 {
   g_return_val_if_fail (decoder != NULL, FALSE);
-  g_return_val_if_fail (decoder->fd != -1, FALSE);
+  g_return_val_if_fail (decoder->socket != NULL, FALSE);
 
   if (decoder->state == NULL) {
     GST_DEBUG ("First iteration: set state to -> wait for protocol version");
@@ -163,9 +202,10 @@ static guint8 *
 rfb_decoder_read (RfbDecoder * decoder, guint32 len)
 {
   guint32 total = 0;
-  guint32 now = 0;
+  gssize now = 0;
+  GError *err = NULL;
 
-  g_return_val_if_fail (decoder->fd > 0, NULL);
+  g_return_val_if_fail (decoder->socket != NULL, NULL);
   g_return_val_if_fail (len > 0, NULL);
 
   if (G_UNLIKELY (len > decoder->data_len)) {
@@ -176,29 +216,58 @@ rfb_decoder_read (RfbDecoder * decoder, guint32 len)
   }
 
   while (total < len) {
-#ifndef G_OS_WIN32
-    now = recv (decoder->fd, decoder->data + total, len - total, 0);
-#else
-    now = recv (decoder->fd, (char *) decoder->data + total, len - total, 0);
-#endif
-    if (now <= 0) {
-      decoder->disconnected = TRUE;
-      GST_WARNING ("rfb read error on socket");
-      return NULL;
-    }
+    now = g_socket_receive (decoder->socket, (gchar *) decoder->data + total,
+        len - total, decoder->cancellable, &err);
+
+    if (now < 0)
+      goto recv_error;
+
     total += now;
   }
   return decoder->data;
+
+recv_error:
+  {
+    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+      GST_DEBUG ("Read on socket cancelled");
+    } else {
+      GST_ERROR ("Read error on socket: %s", err->message);
+    }
+    g_clear_error (&err);
+    decoder->disconnected = TRUE;
+    return NULL;
+  }
 }
 
 static gint
 rfb_decoder_send (RfbDecoder * decoder, guint8 * buffer, guint len)
 {
-  g_return_val_if_fail (decoder->fd != 0, FALSE);
-  g_return_val_if_fail (buffer != NULL, FALSE);
-  g_return_val_if_fail (len > 0, FALSE);
+  gssize now = 0;
+  GError *err = NULL;
 
-  return write (decoder->fd, buffer, len);
+  g_return_val_if_fail (decoder->socket != NULL, 0);
+  g_return_val_if_fail (buffer != NULL, 0);
+  g_return_val_if_fail (len > 0, 0);
+
+  now = g_socket_send (decoder->socket, (gchar *) buffer, len,
+      decoder->cancellable, &err);
+
+  if (now < 0)
+    goto send_error;
+
+done:
+  return now;
+
+send_error:
+  {
+    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+      GST_DEBUG ("Send on socket cancelled");
+    } else {
+      GST_ERROR ("Send error on socket: %s", err->message);
+    }
+    g_clear_error (&err);
+    goto done;
+  }
 }
 
 void
@@ -208,7 +277,7 @@ rfb_decoder_send_update_request (RfbDecoder * decoder,
   guint8 data[10];
 
   g_return_if_fail (decoder != NULL);
-  g_return_if_fail (decoder->fd != -1);
+  g_return_if_fail (decoder->socket != NULL);
 
   data[0] = 3;
   data[1] = incremental;
@@ -234,7 +303,7 @@ rfb_decoder_send_key_event (RfbDecoder * decoder, guint key, gboolean down_flag)
   guint8 data[8];
 
   g_return_if_fail (decoder != NULL);
-  g_return_if_fail (decoder->fd != -1);
+  g_return_if_fail (decoder->socket != NULL);
 
   data[0] = 4;
   data[1] = down_flag;
@@ -251,7 +320,7 @@ rfb_decoder_send_pointer_event (RfbDecoder * decoder,
   guint8 data[6];
 
   g_return_if_fail (decoder != NULL);
-  g_return_if_fail (decoder->fd != -1);
+  g_return_if_fail (decoder->socket != NULL);
 
   data[0] = 5;
   data[1] = button_mask;
@@ -653,7 +722,7 @@ rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
       break;
   }
   decoder->n_rects--;
-  if (decoder->n_rects == 0 || decoder->disconnected == TRUE) {
+  if (decoder->n_rects == 0 || decoder->disconnected) {
     decoder->state = NULL;
   } else {
     decoder->state = rfb_decoder_state_framebuffer_update_rectangle;

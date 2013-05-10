@@ -15,8 +15,8 @@ librfb_la_SOURCES = \
 	rfbdecoder.c \
 	d3des.c \
 	vncauth.c
-librfb_la_CFLAGS = $(GST_CFLAGS) -I$(srcdir)/..
-librfb_la_LIBADD = $(GLIB_LIBS)
+librfb_la_CFLAGS = $(GST_CFLAGS) $(GIO_CFLAGS) -I$(srcdir)/..
+librfb_la_LIBADD = $(GST_LIBS) $(GIO_LIBS)
 
 noinst_HEADERS = \
 	rfb.h \

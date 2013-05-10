@@ -1,6 +1,8 @@
 #ifndef _LIBRFB_DECODER_H_
 #define _LIBRFB_DECODER_H_
 
+#include <gio/gio.h>
+
 #include <glib.h>
 
 G_BEGIN_DECLS enum
@@ -38,7 +40,8 @@ struct _RfbDecoder
 
   gpointer buffer_handler_data;
 
-  gint fd;
+  GSocket *socket;
+  GCancellable *cancellable;
 
   guint8 *data;
   guint32 data_len;
@@ -105,9 +108,8 @@ typedef struct _RfbRect
 
 RfbDecoder *rfb_decoder_new (void);
 void rfb_decoder_free (RfbDecoder * decoder);
-void rfb_decoder_use_file_descriptor (RfbDecoder * decoder, gint fd);
 gboolean rfb_decoder_connect_tcp (RfbDecoder * decoder,
-    gchar * addr, guint port);
+    gchar * host, guint port);
 gboolean rfb_decoder_iterate (RfbDecoder * decoder);
 void rfb_decoder_send_update_request (RfbDecoder * decoder,
     gboolean incremental, gint x, gint y, gint width, gint height);
