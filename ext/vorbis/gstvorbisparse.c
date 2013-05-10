@@ -456,7 +456,7 @@ vorbis_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   parse = GST_VORBIS_PARSE (parent);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_FLUSH_STOP:
       vorbis_parse_clear_queue (parse);
       parse->prev_granulepos = -1;
       parse->prev_blocksize = -1;
@@ -467,7 +467,8 @@ vorbis_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       ret = gst_pad_event_default (pad, parent, event);
       break;
     default:
-      if (!parse->streamheader_sent && GST_EVENT_IS_SERIALIZED (event))
+      if (!parse->streamheader_sent && GST_EVENT_IS_SERIALIZED (event)
+          && GST_EVENT_TYPE (event) > GST_EVENT_CAPS)
         ret = vorbis_parse_queue_event (parse, event);
       else
         ret = gst_pad_event_default (pad, parent, event);
