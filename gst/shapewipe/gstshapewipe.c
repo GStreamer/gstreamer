@@ -832,7 +832,6 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstObject * parent,
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *mask = NULL, *outbuf = NULL;
   GstClockTime timestamp;
-  gboolean new_outbuf = FALSE;
   GstVideoFrame inframe, outframe, maskframe;
 
   if (G_UNLIKELY (GST_VIDEO_INFO_FORMAT (&self->vinfo) ==
@@ -867,20 +866,10 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstObject * parent,
   if (!gst_shape_wipe_do_qos (self, GST_BUFFER_TIMESTAMP (buffer)))
     goto qos;
 
-  /* Try to blend inplace, if it's not possible
-   * get a new buffer from downstream. */
-  if (!gst_buffer_is_writable (buffer)) {
-    outbuf = gst_buffer_new_allocate (NULL, gst_buffer_get_size (buffer), NULL);
-    gst_buffer_copy_into (outbuf, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
-    new_outbuf = TRUE;
-  } else {
-    outbuf = buffer;
-  }
-
-  gst_video_frame_map (&inframe, &self->vinfo, buffer,
-      new_outbuf ? GST_MAP_READ : GST_MAP_READWRITE);
-  gst_video_frame_map (&outframe, &self->vinfo, outbuf,
-      new_outbuf ? GST_MAP_WRITE : GST_MAP_READWRITE);
+  /* Will blend inplace if buffer is writable */
+  outbuf = gst_buffer_make_writable (buffer);
+  gst_video_frame_map (&outframe, &self->vinfo, outbuf, GST_MAP_READWRITE);
+  gst_video_frame_map (&inframe, &self->vinfo, outbuf, GST_MAP_READ);
 
   gst_video_frame_map (&maskframe, &self->minfo, mask, GST_MAP_READ);
 
@@ -911,8 +900,6 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstObject * parent,
   gst_video_frame_unmap (&maskframe);
 
   gst_buffer_unref (mask);
-  if (new_outbuf)
-    gst_buffer_unref (buffer);
 
   ret = gst_pad_push (self->srcpad, outbuf);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
@@ -942,8 +929,9 @@ qos:
   }
 push_failed:
   {
-    GST_ERROR_OBJECT (self, "Pushing buffer downstream failed: %s",
-        gst_flow_get_name (ret));
+    if (ret != GST_FLOW_FLUSHING)
+      GST_ERROR_OBJECT (self, "Pushing buffer downstream failed: %s",
+          gst_flow_get_name (ret));
     return ret;
   }
 }
