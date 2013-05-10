@@ -1,11 +1,3 @@
-//
-//  AppDelegate.m
-//  Tutorial 4
-//
-//  Created by Xavi Artigas on 5/9/13.
-//
-//
-
 #import "AppDelegate.h"
 
 @implementation AppDelegate
