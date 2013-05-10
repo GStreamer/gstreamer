@@ -83,8 +83,6 @@ gst_ssa_parse_init (GstSsaParse * parse)
       GST_DEBUG_FUNCPTR (gst_ssa_parse_src_event));
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
   gst_pad_use_fixed_caps (parse->srcpad);
-  gst_pad_set_caps (parse->srcpad,
-      gst_static_pad_template_get_caps (&src_templ));
 
   parse->ini = NULL;
   parse->framed = FALSE;
