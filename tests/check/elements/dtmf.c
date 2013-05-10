@@ -172,7 +172,7 @@ GST_START_TEST (test_rtpdtmfdepay)
       "encoding-name", G_TYPE_STRING, "TELEPHONE-EVENT",
       "media", G_TYPE_STRING, "audio",
       "clock-rate", G_TYPE_INT, 1000, "payload", G_TYPE_INT, 99, NULL);
-  fail_unless (gst_pad_set_caps (src, caps_in));
+  gst_check_setup_events (src, dtmfdepay, caps_in, GST_FORMAT_TIME);
   gst_caps_unref (caps_in);
 
   caps_out = gst_pad_get_current_caps (sink);

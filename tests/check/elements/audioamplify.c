@@ -106,7 +106,7 @@ GST_START_TEST (test_passthrough)
       "could not set to playing");
 
   caps = gst_caps_from_string (AMPLIFY_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, amplify, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer =
@@ -150,7 +150,7 @@ GST_START_TEST (test_zero)
       "could not set to playing");
 
   caps = gst_caps_from_string (AMPLIFY_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, amplify, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer =
@@ -194,7 +194,7 @@ GST_START_TEST (test_050_clip)
       "could not set to playing");
 
   caps = gst_caps_from_string (AMPLIFY_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, amplify, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer =
@@ -238,7 +238,7 @@ GST_START_TEST (test_200_clip)
       "could not set to playing");
 
   caps = gst_caps_from_string (AMPLIFY_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, amplify, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer =
@@ -283,7 +283,7 @@ GST_START_TEST (test_050_wrap_negative)
       "could not set to playing");
 
   caps = gst_caps_from_string (AMPLIFY_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, amplify, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer =
@@ -328,7 +328,7 @@ GST_START_TEST (test_200_wrap_negative)
       "could not set to playing");
 
   caps = gst_caps_from_string (AMPLIFY_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, amplify, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer =
@@ -373,7 +373,7 @@ GST_START_TEST (test_050_wrap_positive)
       "could not set to playing");
 
   caps = gst_caps_from_string (AMPLIFY_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, amplify, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer =
@@ -418,7 +418,7 @@ GST_START_TEST (test_200_wrap_positive)
       "could not set to playing");
 
   caps = gst_caps_from_string (AMPLIFY_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, amplify, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer =

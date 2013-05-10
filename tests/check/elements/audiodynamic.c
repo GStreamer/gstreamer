@@ -110,7 +110,7 @@ GST_START_TEST (test_passthrough)
       NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 12) == 0);
   caps = gst_caps_from_string (DYNAMIC_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, dynamic, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -154,7 +154,7 @@ GST_START_TEST (test_compress_hard_50_50)
   gst_buffer_fill (inbuffer, 0, in, 16);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 16) == 0);
   caps = gst_caps_from_string (DYNAMIC_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, dynamic, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -202,7 +202,7 @@ GST_START_TEST (test_compress_soft_50_50)
   gst_buffer_fill (inbuffer, 0, in, 16);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 16) == 0);
   caps = gst_caps_from_string (DYNAMIC_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, dynamic, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -250,7 +250,7 @@ GST_START_TEST (test_compress_hard_100_50)
   gst_buffer_fill (inbuffer, 0, in, 16);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 16) == 0);
   caps = gst_caps_from_string (DYNAMIC_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, dynamic, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -299,7 +299,7 @@ GST_START_TEST (test_expand_hard_50_200)
   gst_buffer_fill (inbuffer, 0, in, 16);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 16) == 0);
   caps = gst_caps_from_string (DYNAMIC_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, dynamic, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -347,7 +347,7 @@ GST_START_TEST (test_expand_soft_50_200)
   gst_buffer_fill (inbuffer, 0, in, 16);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 16) == 0);
   caps = gst_caps_from_string (DYNAMIC_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, dynamic, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -395,7 +395,7 @@ GST_START_TEST (test_expand_hard_0_200)
   gst_buffer_fill (inbuffer, 0, in, 16);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 16) == 0);
   caps = gst_caps_from_string (DYNAMIC_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, dynamic, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 

@@ -95,13 +95,6 @@ create_caps_rgba32 (void)
   return caps;
 }
 
-static void
-push_caps (GstCaps * caps)
-{
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
-  gst_caps_unref (caps);
-}
-
 static GstBuffer *
 create_buffer_rgb24_3x4 (void)
 {
@@ -167,7 +160,7 @@ GST_START_TEST (test_rgb24)
   fail_unless_equals_int (gst_element_set_state (alphacolor, GST_STATE_PLAYING),
       GST_STATE_CHANGE_SUCCESS);
 
-  push_caps (create_caps_rgb24 ());
+  gst_check_setup_events (mysrcpad, alphacolor, incaps, GST_FORMAT_TIME);
 
   inbuffer = create_buffer_rgb24_3x4 ();
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -218,7 +211,7 @@ GST_START_TEST (test_rgba32)
   fail_unless_equals_int (gst_element_set_state (alphacolor, GST_STATE_PLAYING),
       GST_STATE_CHANGE_SUCCESS);
 
-  push_caps (create_caps_rgba32 ());
+  gst_check_setup_events (mysrcpad, alphacolor, incaps, GST_FORMAT_TIME);
 
   inbuffer = create_buffer_rgba32_3x4 ();
   GST_DEBUG ("Created buffer of %" G_GSIZE_FORMAT " bytes",

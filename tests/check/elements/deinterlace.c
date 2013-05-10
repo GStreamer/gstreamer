@@ -276,8 +276,13 @@ static void
 deinterlace_set_caps_and_check (GstCaps * input, gboolean must_deinterlace)
 {
   GstCaps *othercaps = NULL;
+  GstSegment segment;
 
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
   fail_unless (gst_pad_set_caps (sinkpad, input));
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  gst_pad_send_event (sinkpad, gst_event_new_segment (&segment));
+
   g_object_get (srcpad, "caps", &othercaps, NULL);
 
   if (must_deinterlace) {

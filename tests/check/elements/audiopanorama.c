@@ -146,7 +146,7 @@ GST_START_TEST (test_mono_middle)
       "could not set to playing");
 
   caps = gst_caps_from_string (PANORAMA_MONO_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, panorama, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer =
@@ -187,7 +187,7 @@ GST_START_TEST (test_mono_left)
       "could not set to playing");
 
   caps = gst_caps_from_string (PANORAMA_MONO_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, panorama, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer =
@@ -229,7 +229,7 @@ GST_START_TEST (test_mono_right)
       "could not set to playing");
 
   caps = gst_caps_from_string (PANORAMA_MONO_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, panorama, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer =
@@ -269,7 +269,7 @@ GST_START_TEST (test_stereo_middle)
       "could not set to playing");
 
   caps = gst_caps_from_string (PANORAMA_STEREO_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, panorama, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer =
@@ -310,7 +310,7 @@ GST_START_TEST (test_stereo_left)
       "could not set to playing");
 
   caps = gst_caps_from_string (PANORAMA_STEREO_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, panorama, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer =
@@ -352,7 +352,7 @@ GST_START_TEST (test_stereo_right)
       "could not set to playing");
 
   caps = gst_caps_from_string (PANORAMA_STEREO_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, panorama, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer =
@@ -397,7 +397,7 @@ GST_START_TEST (test_mono_middle_simple)
       gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, in, sizeof (in), 0,
       sizeof (in), NULL, NULL);
   caps = gst_caps_from_string (PANORAMA_MONO_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, panorama, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -439,7 +439,7 @@ GST_START_TEST (test_mono_left_simple)
       sizeof (in), NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 4) == 0);
   caps = gst_caps_from_string (PANORAMA_MONO_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, panorama, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -481,7 +481,7 @@ GST_START_TEST (test_mono_right_simple)
       sizeof (in), NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 4) == 0);
   caps = gst_caps_from_string (PANORAMA_MONO_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, panorama, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -520,7 +520,7 @@ GST_START_TEST (test_stereo_middle_simple)
       gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, in, sizeof (in), 0,
       sizeof (in), NULL, NULL);
   caps = gst_caps_from_string (PANORAMA_STEREO_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, panorama, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -562,7 +562,7 @@ GST_START_TEST (test_stereo_left_simple)
       sizeof (in), NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 8) == 0);
   caps = gst_caps_from_string (PANORAMA_STEREO_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, panorama, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -604,7 +604,7 @@ GST_START_TEST (test_stereo_right_simple)
       sizeof (in), NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 8) == 0);
   caps = gst_caps_from_string (PANORAMA_STEREO_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, panorama, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -652,7 +652,7 @@ GST_START_TEST (test_wrong_caps)
 
   caps = gst_caps_from_string (PANORAMA_WRONG_CAPS_STRING);
   /* this actually succeeds, because the caps event is sticky */
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, panorama, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   /* pushing gives an error because it can't negotiate with wrong caps */

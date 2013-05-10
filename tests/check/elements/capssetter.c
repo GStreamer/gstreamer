@@ -90,7 +90,7 @@ push_and_test (GstCaps * prop_caps, gboolean join, gboolean replace,
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
   gst_buffer_fill (buffer, 0, "data", 4);
 
-  gst_pad_set_caps (mysrcpad, in_caps);
+  gst_check_setup_events (mysrcpad, capssetter, in_caps, GST_FORMAT_TIME);
   gst_caps_unref (in_caps);
 
   /* pushing gives away my reference ... */

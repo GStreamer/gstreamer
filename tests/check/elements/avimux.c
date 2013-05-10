@@ -161,7 +161,6 @@ check_avimux_pad (GstStaticPadTemplate * srctemplate,
   guint8 data5[4] = "strf";
   guint8 data6[4] = "LIST";
   guint8 data7[4] = "movi";
-  GstSegment segment;
 
   avimux = setup_avimux (srctemplate, sinkname);
   fail_unless (gst_element_set_state (avimux,
@@ -170,12 +169,8 @@ check_avimux_pad (GstStaticPadTemplate * srctemplate,
 
   inbuffer = gst_buffer_new_and_alloc (1);
   caps = gst_caps_from_string (src_caps_string);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, avimux, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
-
-  /* ensure segment (format) properly setup */
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);

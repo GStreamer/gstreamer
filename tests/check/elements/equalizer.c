@@ -114,7 +114,7 @@ GST_START_TEST (test_equalizer_5bands_passthrough)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (EQUALIZER_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, equalizer, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -178,7 +178,7 @@ GST_START_TEST (test_equalizer_5bands_minus_24)
   rms_in = sqrt (rms_in / 1024);
 
   caps = gst_caps_from_string (EQUALIZER_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, equalizer, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -246,7 +246,7 @@ GST_START_TEST (test_equalizer_5bands_plus_12)
   rms_in = sqrt (rms_in / 1024);
 
   caps = gst_caps_from_string (EQUALIZER_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, equalizer, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 

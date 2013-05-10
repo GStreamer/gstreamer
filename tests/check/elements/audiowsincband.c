@@ -133,7 +133,7 @@ GST_START_TEST (test_32_bp_0hz)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, audiowsincband, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -211,7 +211,7 @@ GST_START_TEST (test_32_bp_11025hz)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, audiowsincband, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -286,7 +286,7 @@ GST_START_TEST (test_32_bp_22050hz)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, audiowsincband, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -358,7 +358,7 @@ GST_START_TEST (test_32_br_0hz)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, audiowsincband, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -435,7 +435,7 @@ GST_START_TEST (test_32_br_11025hz)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, audiowsincband, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -510,7 +510,7 @@ GST_START_TEST (test_32_br_22050hz)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, audiowsincband, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -580,7 +580,7 @@ GST_START_TEST (test_32_small_buffer)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, audiowsincband, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -644,7 +644,7 @@ GST_START_TEST (test_64_bp_0hz)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, audiowsincband, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -720,7 +720,7 @@ GST_START_TEST (test_64_bp_11025hz)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, audiowsincband, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -795,7 +795,7 @@ GST_START_TEST (test_64_bp_22050hz)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, audiowsincband, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -867,7 +867,7 @@ GST_START_TEST (test_64_br_0hz)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, audiowsincband, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -944,7 +944,7 @@ GST_START_TEST (test_64_br_11025hz)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, audiowsincband, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -1019,7 +1019,7 @@ GST_START_TEST (test_64_br_22050hz)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, audiowsincband, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -1089,7 +1089,7 @@ GST_START_TEST (test_64_small_buffer)
   gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, audiowsincband, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 

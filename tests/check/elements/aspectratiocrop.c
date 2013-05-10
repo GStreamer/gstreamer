@@ -69,8 +69,7 @@ check_aspectratiocrop (const gchar * in_string, const gchar * out_string,
   src_pad = gst_pad_new (NULL, GST_PAD_SRC);
   gst_pad_set_active (src_pad, TRUE);
   GST_DEBUG ("setting caps %s %" GST_PTR_FORMAT, in_string, incaps);
-  fail_unless (gst_pad_set_caps (src_pad, incaps),
-      "Couldn't set input caps %" GST_PTR_FORMAT, incaps);
+  gst_check_setup_events (src_pad, element, incaps, GST_FORMAT_TIME);
 
   pad_peer = gst_element_get_static_pad (element, "sink");
   fail_if (pad_peer == NULL);
