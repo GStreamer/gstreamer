@@ -2026,6 +2026,7 @@ gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
   if (pbuf == NULL)
     goto done;
 
+  GST_OBJECT_LOCK (pbuf);
   pa_threaded_mainloop_lock (mainloop);
 
   if (pbuf->context == NULL)
@@ -2114,6 +2115,7 @@ out:
   }
 
   pa_threaded_mainloop_unlock (mainloop);
+  GST_OBJECT_UNLOCK (pbuf);
 
   gst_caps_replace (&spec.caps, NULL);
   gst_object_unref (pbuf);
