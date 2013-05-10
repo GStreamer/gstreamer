@@ -1543,16 +1543,21 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
   if (caps) {
     if (!gst_caps_is_fixed (caps))
       caps = gst_caps_fixate (caps);
-    if (caps) {
-      GstSegment segment;
-
-      caps = gst_ogg_mux_set_header_on_caps (caps, hbufs);
-      gst_pad_set_caps (mux->srcpad, caps);
-      gst_segment_init (&segment, GST_FORMAT_TIME);
-      gst_pad_push_event (mux->srcpad, gst_event_new_segment (&segment));
-      gst_caps_unref (caps);
-    }
   }
+  if (!caps)
+    caps = gst_caps_new_empty_simple ("application/ogg");
+
+  caps = gst_ogg_mux_set_header_on_caps (caps, hbufs);
+  gst_pad_set_caps (mux->srcpad, caps);
+  gst_caps_unref (caps);
+
+  /* Send segment event */
+  {
+    GstSegment segment;
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    gst_pad_push_event (mux->srcpad, gst_event_new_segment (&segment));
+  }
+
   /* and send the buffers */
   while (hbufs != NULL) {
     GstBuffer *buf = GST_BUFFER (hbufs->data);
