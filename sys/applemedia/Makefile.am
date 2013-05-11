@@ -73,12 +73,14 @@ noinst_HEADERS =				\
 	atdec.h 				\
 	dynapi.h				\
 	dynapi-internal.h                       \
-	iosassetsrc.h
+	iosassetsrc.h				\
+	iosavassetsrc.h
 
 if HAVE_IOS
 
 libgstapplemedia_la_SOURCES +=			\
-	iosassetsrc.m
+	iosassetsrc.m				\
+	iosavassetsrc.m
 
 libgstapplemedia_la_LDFLAGS +=			\
 	-Wl,-framework -Wl,Foundation		\
