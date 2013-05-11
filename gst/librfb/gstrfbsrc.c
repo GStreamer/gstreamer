@@ -431,13 +431,31 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
   GST_DEBUG_OBJECT (src, "connecting to host %s on port %d",
       src->host, src->port);
   if (!rfb_decoder_connect_tcp (decoder, src->host, src->port)) {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("Could not connect to host %s on port %d", src->host, src->port));
+    if (decoder->error != NULL) {
+      GST_ELEMENT_ERROR (src, RESOURCE, READ,
+          ("Could not connect to VNC server %s on port %d: %s", src->host,
+              src->port, decoder->error->message), (NULL));
+    } else {
+      GST_ELEMENT_ERROR (src, RESOURCE, READ,
+          ("Could not connect to VNC server %s on port %d", src->host,
+              src->port), (NULL));
+    }
     return FALSE;
   }
 
   while (!decoder->inited) {
-    rfb_decoder_iterate (decoder);
+    if (!rfb_decoder_iterate (decoder)) {
+      if (decoder->error != NULL) {
+        GST_ELEMENT_ERROR (src, RESOURCE, READ,
+            ("Failed to setup VNC connection to host %s on port %d: %s",
+                src->host, src->port, decoder->error->message), (NULL));
+      } else {
+        GST_ELEMENT_ERROR (src, RESOURCE, READ,
+            ("Failed to setup VNC connection to host %s on port %d", src->host,
+                src->port), (NULL));
+      }
+      return FALSE;
+    }
   }
 
   decoder->rect_width =
@@ -521,7 +539,17 @@ gst_rfb_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
       decoder->rect_height);
 
   while (decoder->state != NULL) {
-    rfb_decoder_iterate (decoder);
+    if (!rfb_decoder_iterate (decoder)) {
+      if (decoder->error != NULL) {
+        GST_ELEMENT_ERROR (src, RESOURCE, READ,
+            ("Error on VNC connection to host %s on port %d: %s",
+                src->host, src->port, decoder->error->message), (NULL));
+      } else {
+        GST_ELEMENT_ERROR (src, RESOURCE, READ,
+            ("Error on setup VNC connection to host %s on port %d", src->host,
+                src->port), (NULL));
+      }
+    }
   }
 
   /* Create the buffer. */

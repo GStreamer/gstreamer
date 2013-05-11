@@ -66,6 +66,7 @@ rfb_decoder_new (void)
   decoder->disconnected = FALSE;
   decoder->data = NULL;
   decoder->data_len = 0;
+  decoder->error = NULL;
 
   return decoder;
 }
@@ -85,6 +86,8 @@ rfb_decoder_free (RfbDecoder * decoder)
     g_object_unref (decoder->socket);
     decoder->socket = NULL;
   }
+
+  g_clear_error (&decoder->error);
 
   if (decoder->data)
     g_free (decoder->data);
@@ -145,8 +148,11 @@ rfb_decoder_connect_tcp (RfbDecoder * decoder, gchar * host, guint port)
 
 no_socket:
   {
-    GST_ERROR ("Failed to create socket: %s", err->message);
-    g_clear_error (&err);
+    GST_WARNING ("Failed to create socket: %s", err->message);
+    if (decoder->error == NULL)
+      decoder->error = err;
+    else
+      g_clear_error (&err);
     g_object_unref (saddr);
     return FALSE;
   }
@@ -155,7 +161,11 @@ name_resolve:
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
       GST_DEBUG ("Cancelled name resolval");
     } else {
-      GST_ERROR ("Failed to resolve host '%s': %s", host, err->message);
+      GST_WARNING ("Failed to resolve host '%s': %s", host, err->message);
+      if (decoder->error == NULL) {
+        decoder->error = err;
+        err = NULL;
+      }
     }
     g_clear_error (&err);
     g_object_unref (resolver);
@@ -166,8 +176,12 @@ connect_failed:
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
       GST_DEBUG ("Cancelled connecting");
     } else {
-      GST_ERROR ("Failed to connect to host '%s:%d': %s", host, port,
+      GST_WARNING ("Failed to connect to host '%s:%d': %s", host, port,
           err->message);
+      if (decoder->error == NULL) {
+        decoder->error = err;
+        err = NULL;
+      }
     }
     g_clear_error (&err);
     g_object_unref (saddr);
@@ -186,6 +200,8 @@ connect_failed:
 gboolean
 rfb_decoder_iterate (RfbDecoder * decoder)
 {
+  gboolean ret;
+
   g_return_val_if_fail (decoder != NULL, FALSE);
   g_return_val_if_fail (decoder->socket != NULL, FALSE);
 
@@ -195,7 +211,16 @@ rfb_decoder_iterate (RfbDecoder * decoder)
   }
 
   GST_DEBUG ("Executing next state in initialization");
-  return decoder->state (decoder);
+  ret = decoder->state (decoder);
+
+  if (ret == FALSE) {
+    if (decoder->error == NULL)
+      GST_WARNING ("Failure, but no error stored");
+    else
+      GST_WARNING ("Failure: %s", decoder->error->message);
+  }
+
+  return ret;
 }
 
 static guint8 *
@@ -232,6 +257,10 @@ recv_error:
       GST_DEBUG ("Read on socket cancelled");
     } else {
       GST_ERROR ("Read error on socket: %s", err->message);
+      if (decoder->error == NULL) {
+        decoder->error = err;
+        err = NULL;
+      }
     }
     g_clear_error (&err);
     decoder->disconnected = TRUE;
@@ -264,6 +293,10 @@ send_error:
       GST_DEBUG ("Send on socket cancelled");
     } else {
       GST_ERROR ("Send error on socket: %s", err->message);
+      if (decoder->error == NULL) {
+        decoder->error = err;
+        err = NULL;
+      }
     }
     g_clear_error (&err);
     goto done;
@@ -374,8 +407,8 @@ rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
 }
 
 /*
- * a string describing the reason (where a string is specified as a length followed
- * by that many ASCII characters)
+ * a string describing the reason (where a string is specified as a length
+ * followed by that many ASCII characters)
  **/
 static gboolean
 rfb_decoder_state_reason (RfbDecoder * decoder)
@@ -387,6 +420,11 @@ rfb_decoder_state_reason (RfbDecoder * decoder)
   reason_length = RFB_GET_UINT32 (decoder->data);
   rfb_decoder_read (decoder, reason_length);
   GST_WARNING ("Reason by server: %s", decoder->data);
+
+  if (decoder->error == NULL) {
+    decoder->error = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+        "VNC server error: %s", decoder->data);
+  }
 
   return FALSE;
 }
@@ -411,7 +449,7 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
     g_return_val_if_fail (decoder->security_type != SECURITY_FAIL,
         rfb_decoder_state_reason (decoder));
   } else {
-    /* \TODO Add behavoir for the rfb 3.7 and 3.8 servers */
+    /* \TODO Add behavior for the rfb 3.7 and 3.8 servers */
     GST_WARNING ("Other versions are not yet supported");
   }
 
@@ -430,14 +468,17 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
       gsize password_len;
 
       /*
-       * VNC authentication is to be used and protocol data is to be sent unencrypted. The
-       * server sends a random 16-byte challenge
+       * VNC authentication is to be used and protocol data is to be sent
+       * unencrypted. The server sends a random 16-byte challenge
        */
       GST_DEBUG ("Security type is VNC Authentication");
       /* VNC Authentication can't be used if the password is not set */
       if (!decoder->password) {
         GST_WARNING
             ("VNC Authentication can't be used if the password is not set");
+        decoder->error =
+            g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+            "VNC servers needs authentication, but no password set");
         return FALSE;
       }
 
@@ -487,10 +528,14 @@ rfb_decoder_state_security_result (RfbDecoder * decoder)
       decoder->state = rfb_decoder_state_reason;
       return TRUE;
     }
+    if (decoder->error == NULL) {
+      decoder->error = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+          "authentication failed");
+    }
     return FALSE;
   }
 
-  GST_DEBUG ("Security handshaking succesfull");
+  GST_DEBUG ("Security handshaking succesful");
   decoder->state = rfb_decoder_state_send_client_initialisation;
 
   return TRUE;

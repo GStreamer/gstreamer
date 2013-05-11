@@ -5,7 +5,9 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS enum
+G_BEGIN_DECLS
+
+enum
 {
   SECURITY_FAIL = 0,
   SECURITY_NONE,
@@ -48,6 +50,8 @@ struct _RfbDecoder
   gpointer decoder_private;
   guint8 *frame;
   guint8 *prev_frame;
+
+  GError *error;
 
   /* settable properties */
   gboolean shared_flag;
