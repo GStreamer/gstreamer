@@ -227,7 +227,7 @@ gst_inter_video_src_get_times (GstBaseSrc * src, GstBuffer * buffer,
 
   /* for live sources, sync on the timestamp of the buffer */
   if (gst_base_src_is_live (src)) {
-    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    GstClockTime timestamp = GST_BUFFER_PTS (buffer);
 
     if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
       /* get duration to calculate end time */
@@ -286,17 +286,17 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
 
   buffer = gst_buffer_make_writable (buffer);
 
-  GST_BUFFER_TIMESTAMP (buffer) =
+  GST_BUFFER_PTS (buffer) =
       gst_util_uint64_scale_int (GST_SECOND * intervideosrc->n_frames,
       GST_VIDEO_INFO_FPS_D (&intervideosrc->info),
       GST_VIDEO_INFO_FPS_N (&intervideosrc->info));
+  GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
   GST_DEBUG_OBJECT (intervideosrc, "create ts %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
   GST_BUFFER_DURATION (buffer) =
       gst_util_uint64_scale_int (GST_SECOND * (intervideosrc->n_frames + 1),
       GST_VIDEO_INFO_FPS_D (&intervideosrc->info),
-      GST_VIDEO_INFO_FPS_N (&intervideosrc->info)) -
-      GST_BUFFER_TIMESTAMP (buffer);
+      GST_VIDEO_INFO_FPS_N (&intervideosrc->info)) - GST_BUFFER_PTS (buffer);
   GST_BUFFER_OFFSET (buffer) = intervideosrc->n_frames;
   GST_BUFFER_OFFSET_END (buffer) = -1;
   GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
