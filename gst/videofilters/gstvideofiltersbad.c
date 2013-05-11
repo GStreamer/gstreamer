@@ -25,6 +25,7 @@
 #include <gst/base/gstbasetransform.h>
 #include "gstscenechange.h"
 #include "gstzebrastripe.h"
+#include "gstvideodiff.h"
 
 
 static gboolean
@@ -35,6 +36,8 @@ plugin_init (GstPlugin * plugin)
       gst_scene_change_get_type ());
   gst_element_register (plugin, "zebrastripe", GST_RANK_NONE,
       gst_zebra_stripe_get_type ());
+  return gst_element_register (plugin, "videodiff", GST_RANK_NONE,
+      GST_TYPE_VIDEO_DIFF);
 
   return TRUE;
 }

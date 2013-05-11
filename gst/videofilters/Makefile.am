@@ -5,7 +5,10 @@ plugin_LTLIBRARIES = libgstvideofiltersbad.la
 
 libgstvideofiltersbad_la_SOURCES = \
 	gstzebrastripe.c \
+	gstzebrastripe.h \
 	gstscenechange.c \
+	gstvideodiff.c \
+	gstvideodiff.h \
 	gstvideofiltersbad.c
 #nodist_libgstvideofiltersbad_la_SOURCES = $(ORC_NODIST_SOURCES)
 libgstvideofiltersbad_la_CFLAGS = \
