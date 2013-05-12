@@ -57,6 +57,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 #define DEFAULT_NEON_HTTP_DEBUG      FALSE
 #define DEFAULT_CONNECT_TIMEOUT      0
 #define DEFAULT_READ_TIMEOUT         0
+#define DEFAULT_IRADIO_MODE          TRUE
 
 enum
 {
@@ -70,8 +71,9 @@ enum
   PROP_CONNECT_TIMEOUT,
   PROP_READ_TIMEOUT,
 #ifndef GST_DISABLE_GST_DEBUG
-  PROP_NEON_HTTP_DEBUG
+  PROP_NEON_HTTP_DEBUG,
 #endif
+  PROP_IRADIO_MODE
 };
 
 static void gst_neonhttp_src_uri_handler_init (gpointer g_iface,
@@ -145,13 +147,6 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
           "Value of the User-Agent HTTP request header field",
           "GStreamer neonhttpsrc", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /**
-   * GstNeonhttpSrc:cookies
-   *
-   * HTTP request cookies
-   *
-   * Since: 0.10.20
-   */
   g_object_class_install_property (gobject_class, PROP_COOKIES,
       g_param_spec_boxed ("cookies", "Cookies", "HTTP request cookies",
           G_TYPE_STRV, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -169,26 +164,12 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
           DEFAULT_ACCEPT_SELF_SIGNED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /**
-   * GstNeonhttpSrc:connect-timeout
-   *
-   * After how many seconds to timeout a connect attempt (0 = default)
-   *
-   * Since: 0.10.20
-   */
   g_object_class_install_property (gobject_class, PROP_CONNECT_TIMEOUT,
       g_param_spec_uint ("connect-timeout", "connect-timeout",
           "Value in seconds to timeout a blocking connection (0 = default).", 0,
           3600, DEFAULT_CONNECT_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /**
-   * GstNeonhttpSrc:read-timeout
-   *
-   * After how many seconds to timeout a blocking read (0 = default)
-   *
-   * Since: 0.10.20
-   */
   g_object_class_install_property (gobject_class, PROP_READ_TIMEOUT,
       g_param_spec_uint ("read-timeout", "read-timeout",
           "Value in seconds to timeout a blocking read (0 = default).", 0,
@@ -202,6 +183,12 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
           "Enable Neon HTTP debug messages",
           DEFAULT_NEON_HTTP_DEBUG, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
+
+  g_object_class_install_property (gobject_class, PROP_IRADIO_MODE,
+      g_param_spec_boolean ("iradio-mode", "iradio-mode",
+          "Enable internet radio mode (ask server to send shoutcast/icecast "
+          "metadata interleaved with the actual stream data)",
+          DEFAULT_IRADIO_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_neonhttp_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_neonhttp_src_stop);
@@ -233,14 +220,12 @@ gst_neonhttp_src_init (GstNeonhttpSrc * src)
   const gchar *str;
 
   src->neon_http_debug = DEFAULT_NEON_HTTP_DEBUG;
-  src->iradio_name = NULL;
-  src->iradio_genre = NULL;
-  src->iradio_url = NULL;
   src->user_agent = g_strdup (DEFAULT_USER_AGENT);
   src->automatic_redirect = DEFAULT_AUTOMATIC_REDIRECT;
   src->accept_self_signed = DEFAULT_ACCEPT_SELF_SIGNED;
   src->connect_timeout = DEFAULT_CONNECT_TIMEOUT;
   src->read_timeout = DEFAULT_READ_TIMEOUT;
+  src->iradio_mode = DEFAULT_IRADIO_MODE;
 
   src->cookies = NULL;
   src->session = NULL;
@@ -269,9 +254,6 @@ gst_neonhttp_src_dispose (GObject * gobject)
   ne_uri_free (&src->proxy);
 
   g_free (src->user_agent);
-  g_free (src->iradio_name);
-  g_free (src->iradio_genre);
-  g_free (src->iradio_url);
 
   if (src->cookies) {
     g_strfreev (src->cookies);
@@ -365,6 +347,9 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
       src->neon_http_debug = g_value_get_boolean (value);
       break;
 #endif
+    case PROP_IRADIO_MODE:
+      src->iradio_mode = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -433,6 +418,9 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, neonhttpsrc->neon_http_debug);
       break;
 #endif
+    case PROP_IRADIO_MODE:
+      g_value_set_boolean (value, neonhttpsrc->iradio_mode);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -525,7 +513,13 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
   if (TRUE) {
     /* Icecast stuff */
     const gchar *str_value;
+    GstTagList *tags;
+    gchar *iradio_name;
+    gchar *iradio_url;
+    gchar *iradio_genre;
     gint icy_metaint;
+
+    tags = gst_tag_list_new_empty ();
 
     str_value = ne_get_response_header (src->request, "icy-metaint");
     if (str_value) {
@@ -541,27 +535,36 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
     /* FIXME: send tags with name, genre, url */
     str_value = ne_get_response_header (src->request, "icy-name");
     if (str_value) {
-      if (src->iradio_name) {
-        g_free (src->iradio_name);
-        src->iradio_name = NULL;
+      iradio_name = gst_neonhttp_src_unicodify (str_value);
+      if (iradio_name) {
+        gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ORGANIZATION,
+            iradio_name, NULL);
+        g_free (iradio_name);
       }
-      src->iradio_name = gst_neonhttp_src_unicodify (str_value);
     }
     str_value = ne_get_response_header (src->request, "icy-genre");
     if (str_value) {
-      if (src->iradio_genre) {
-        g_free (src->iradio_genre);
-        src->iradio_genre = NULL;
+      iradio_genre = gst_neonhttp_src_unicodify (str_value);
+      if (iradio_genre) {
+        gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_GENRE,
+            iradio_genre, NULL);
+        g_free (iradio_genre);
       }
-      src->iradio_genre = gst_neonhttp_src_unicodify (str_value);
     }
     str_value = ne_get_response_header (src->request, "icy-url");
     if (str_value) {
-      if (src->iradio_url) {
-        g_free (src->iradio_url);
-        src->iradio_url = NULL;
+      iradio_url = gst_neonhttp_src_unicodify (str_value);
+      if (iradio_url) {
+        gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_LOCATION,
+            iradio_url, NULL);
+        g_free (iradio_url);
       }
-      src->iradio_url = gst_neonhttp_src_unicodify (str_value);
+    }
+    if (!gst_tag_list_is_empty (tags)) {
+      GST_DEBUG_OBJECT (src, "pushing tag list %" GST_PTR_FORMAT, tags);
+      gst_pad_push_event (GST_BASE_SRC_PAD (src), gst_event_new_tag (tags));
+    } else {
+      gst_tag_list_unref (tags);
     }
   }
 
@@ -603,21 +606,6 @@ gst_neonhttp_src_stop (GstBaseSrc * bsrc)
   GstNeonhttpSrc *src;
 
   src = GST_NEONHTTP_SRC (bsrc);
-
-  if (src->iradio_name) {
-    g_free (src->iradio_name);
-    src->iradio_name = NULL;
-  }
-
-  if (src->iradio_genre) {
-    g_free (src->iradio_genre);
-    src->iradio_genre = NULL;
-  }
-
-  if (src->iradio_url) {
-    g_free (src->iradio_url);
-    src->iradio_url = NULL;
-  }
 
   src->eos = FALSE;
   src->content_size = -1;
@@ -871,7 +859,8 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
       ne_add_request_header (request, "Cookies", *c);
     }
 
-    ne_add_request_header (request, "icy-metadata", "1");
+    if (src->iradio_mode)
+      ne_add_request_header (request, "icy-metadata", "1");
 
     if (offset > 0) {
       ne_print_request_header (request, "Range",

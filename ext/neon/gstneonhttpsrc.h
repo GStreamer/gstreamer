@@ -58,10 +58,8 @@ struct _GstNeonhttpSrc {
 
   gboolean eos;
 
-  /* icecast/audiocast metadata extraction handling */
-  gchar *iradio_name;
-  gchar *iradio_genre;
-  gchar *iradio_url;
+  /* whether to request icecast metadata */
+  gboolean iradio_mode;
 
   /* enable Neon HTTP redirects (HTTP 302 status code) */
   gboolean automatic_redirect;
