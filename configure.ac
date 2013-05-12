@@ -344,7 +344,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  sdi stereo tta \
  videomeasure videosignal vmnc \
  linsys vcd \
- apexsink cdaudio dc1394 dirac directfb \
+ apexsink cdaudio dc1394 directfb \
  gsettings \
  musepack nas openal sdl sndfile timidity \
  directdraw direct3d9 acm wininet \
@@ -1248,14 +1248,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_WAYLAND, true)
 AG_GST_CHECK_FEATURE(WAYLAND, [wayland sink], wayland , [
   PKG_CHECK_MODULES(WAYLAND, wayland-client >= 1.0.0, [
     HAVE_WAYLAND="yes" ], [ HAVE_WAYLAND="no"
-  ])
-])
-
-dnl **** Dirac ****
-translit(dnm, m, l) AM_CONDITIONAL(USE_DIRAC, true)
-AG_GST_CHECK_FEATURE(DIRAC, [dirac], dirac, [
-  PKG_CHECK_MODULES(DIRAC, dirac >= 0.10, HAVE_DIRAC="yes", [
-    HAVE_DIRAC="no"
   ])
 ])
 
@@ -2207,7 +2199,6 @@ AM_CONDITIONAL(USE_DECKLINK, false)
 AM_CONDITIONAL(DECKLINK_OSX, false)
 AM_CONDITIONAL(USE_DIRECTFB, false)
 AM_CONDITIONAL(USE_WAYLAND, false)
-AM_CONDITIONAL(USE_DIRAC, false)
 AM_CONDITIONAL(USE_DTS, false)
 AM_CONDITIONAL(USE_EXIF, false)
 AM_CONDITIONAL(USE_RESINDVD, false)
@@ -2470,7 +2461,6 @@ ext/chromaprint/Makefile
 ext/curl/Makefile
 ext/dash/Makefile
 ext/dc1394/Makefile
-ext/dirac/Makefile
 ext/directfb/Makefile
 ext/wayland/Makefile
 ext/dts/Makefile

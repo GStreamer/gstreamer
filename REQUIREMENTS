@@ -30,8 +30,6 @@ This file lists supporting libraries for which gst-plugins contains plugins,
 as well as their minimum version.  You can find the corresponding plugins in
 ext/(library)
 
-dirac		(Dirac video codec)
-			http://www.bbc.co.uk/rd/projects/dirac/index.shtml
 libdvdread	(for the dvdsrc)
 			http://www.dtek.chalmers.se/groups/dvd/
 			(optional: libcss for encrypted DVDs)

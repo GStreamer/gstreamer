@@ -64,12 +64,6 @@ else
 DC1394_DIR=
 endif
 
-if USE_DIRAC
-DIRAC_DIR=dirac
-else
-DIRAC_DIR=
-endif
-
 if USE_DIRECTFB
 DIRECTFB_DIR=directfb
 else
@@ -396,7 +390,6 @@ SUBDIRS=\
 	$(CURL_DIR) \
 	$(DASH_DIR) \
 	$(DC1394_DIR) \
-	$(DIRAC_DIR) \
 	$(DIRECTFB_DIR) \
 	$(WAYLAND_DIR) \
 	$(DTS_DIR) \
@@ -457,7 +450,6 @@ DIST_SUBDIRS = \
 	chromaprint \
 	curl \
 	dc1394 \
-	dirac \
 	directfb \
 	wayland \
 	faac \

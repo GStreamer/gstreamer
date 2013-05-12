@@ -307,7 +307,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 #%ifnarch s390 s390x
 #%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
 #%endif
-#%{_libdir}/gstreamer-%{majorminor}/libgstdirac.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstjp2k.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstkate.so
