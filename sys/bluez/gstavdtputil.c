@@ -41,6 +41,9 @@
 
 #define TEMPLATE_MAX_BITPOOL 64
 
+GST_DEBUG_CATEGORY_EXTERN (avdtp_debug);
+#define GST_CAT_DEFAULT avdtp_debug
+
 gboolean
 gst_avdtp_connection_acquire (GstAvdtpConnection * conn)
 {

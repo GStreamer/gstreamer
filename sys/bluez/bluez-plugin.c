@@ -27,9 +27,13 @@
 #include "gstavdtpsrc.h"
 #include <string.h>
 
+GST_DEBUG_CATEGORY (avdtp_debug);
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (avdtp_debug, "avdtp", 0, "avdtp utils");
+
   gst_element_register (plugin, "a2dpsink", GST_RANK_NONE, GST_TYPE_A2DP_SINK);
 
   gst_element_register (plugin, "avdtpsink",
