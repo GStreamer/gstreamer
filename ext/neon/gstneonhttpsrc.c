@@ -694,6 +694,20 @@ gst_neonhttp_src_query (GstBaseSrc * bsrc, GstQuery * query)
   if (!ret)
     ret = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
 
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SCHEDULING:{
+      GstSchedulingFlags flags;
+      gint minsize, maxsize, align;
+
+      gst_query_parse_scheduling (query, &flags, &minsize, &maxsize, &align);
+      flags |= GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED;
+      gst_query_set_scheduling (query, flags, minsize, maxsize, align);
+      break;
+    }
+    default:
+      break;
+  }
+
   return ret;
 }
 
