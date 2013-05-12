@@ -62,8 +62,6 @@ struct _GstNeonhttpSrc {
   gchar *iradio_name;
   gchar *iradio_genre;
   gchar *iradio_url;
-  GstCaps *icy_caps;
-  gint icy_metaint;
 
   /* enable Neon HTTP redirects (HTTP 302 status code) */
   gboolean automatic_redirect;
