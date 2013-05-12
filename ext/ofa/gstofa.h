@@ -58,7 +58,7 @@ typedef struct _GstOFAClass GstOFAClass;
 
 struct _GstOFA
 {
-  GstAudioFilter element;
+  GstAudioFilter audiofilter;
 
   /*< private > */
 
@@ -69,7 +69,7 @@ struct _GstOFA
 
 struct _GstOFAClass
 {
-  GstAudioFilterClass parent_class;
+  GstAudioFilterClass audiofilter_class;
 };
 
 GType gst_ofa_get_type (void);

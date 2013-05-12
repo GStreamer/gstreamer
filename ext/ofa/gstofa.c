@@ -1,7 +1,4 @@
-/* GStreamer
- *
- * gstofa.c
- * 
+/* GStreamer ofa fingerprinting element
  * Copyright (C) 2006 M. Derezynski
  * Copyright (C) 2008 Eric Buehl
  * Copyright (C) 2008 Sebastian Dröge <slomo@circular-chaos.org>
@@ -31,13 +28,10 @@
 #include "gstofa.h"
 
 #define PAD_CAPS \
-	"audio/x-raw-int, " \
+	"audio/x-raw, " \
+        "format = { S16LE, S16BE }, " \
         "rate = (int) [ 1, MAX ], " \
-        "channels = (int) [ 1, 2 ], " \
-        "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
-        "width = (int) { 16 }, " \
-        "depth = (int) { 16 }, " \
-	"signed = (boolean) true"
+        "channels = (int) [ 1, 2 ]"
 
 GST_DEBUG_CATEGORY_STATIC (gst_ofa_debug);
 #define GST_CAT_DEFAULT gst_ofa_debug
@@ -48,32 +42,15 @@ enum
   PROP_FINGERPRINT,
 };
 
-
-GST_BOILERPLATE (GstOFA, gst_ofa, GstAudioFilter, GST_TYPE_AUDIO_FILTER);
+#define parent_class gst_ofa_parent_class
+G_DEFINE_TYPE (GstOFA, gst_ofa, GST_TYPE_AUDIO_FILTER);
 
 static void gst_ofa_finalize (GObject * object);
 static void gst_ofa_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstFlowReturn gst_ofa_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
-static gboolean gst_ofa_event (GstBaseTransform * trans, GstEvent * event);
-
-static void
-gst_ofa_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-  GstAudioFilterClass *audio_filter_class = (GstAudioFilterClass *) g_class;
-  GstCaps *caps;
-
-  gst_element_class_set_static_metadata (gstelement_class, "OFA",
-      "MusicIP Fingerprinting element",
-      "Find a music fingerprint using MusicIP's libofa",
-      "Milosz Derezynski <internalerror@gmail.com>, Eric Buehl <eric.buehl@gmail.com>");
-
-  caps = gst_caps_from_string (PAD_CAPS);
-  gst_audio_filter_class_add_pad_templates (audio_filter_class, caps);
-  gst_caps_unref (caps);
-}
+static gboolean gst_ofa_sink_event (GstBaseTransform * trans, GstEvent * event);
 
 static void
 gst_ofa_finalize (GObject * object)
@@ -94,34 +71,45 @@ gst_ofa_finalize (GObject * object)
 static void
 gst_ofa_class_init (GstOFAClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseTransformClass *gstbasetrans_class = GST_BASE_TRANSFORM_CLASS (klass);
+  GstAudioFilterClass *audio_filter_class = GST_AUDIO_FILTER_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstCaps *caps;
 
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_ofa_get_property);
+  gobject_class->get_property = gst_ofa_get_property;
 
   g_object_class_install_property (gobject_class, PROP_FINGERPRINT,
       g_param_spec_string ("fingerprint", "Resulting fingerprint",
           "Resulting fingerprint", NULL,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_ofa_finalize);
+  gobject_class->finalize = gst_ofa_finalize;
 
   gstbasetrans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_ofa_transform_ip);
-  gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_ofa_event);
+  gstbasetrans_class->sink_event = GST_DEBUG_FUNCPTR (gst_ofa_sink_event);
   gstbasetrans_class->passthrough_on_same_caps = TRUE;
+
+  gst_element_class_set_static_metadata (gstelement_class, "OFA",
+      "MusicIP Fingerprinting element",
+      "Find a music fingerprint using MusicIP's libofa",
+      "Milosz Derezynski <internalerror@gmail.com>, "
+      "Eric Buehl <eric.buehl@gmail.com>");
+
+  caps = gst_caps_from_string (PAD_CAPS);
+  gst_audio_filter_class_add_pad_templates (audio_filter_class, caps);
+  gst_caps_unref (caps);
 }
 
 static void
 create_fingerprint (GstOFA * ofa)
 {
-  GstBuffer *buf;
-  GstAudioFilter *ofa_filter = GST_AUDIO_FILTER (ofa);
-  gint rate = ofa_filter->format.rate;
-  gint channels = ofa_filter->format.channels;
-  gint endianness =
-      ofa_filter->format.bigend ? OFA_BIG_ENDIAN : OFA_LITTLE_ENDIAN;
+  GstAudioFilter *audiofilter = GST_AUDIO_FILTER (ofa);
+  const guint8 *samples;
+  const gchar *fingerprint;
+  gint rate, channels, endianness;
   GstTagList *tags;
-  guint available;
+  gsize available;
 
   available = gst_adapter_available (ofa->adapter);
 
@@ -131,52 +119,60 @@ create_fingerprint (GstOFA * ofa)
     return;
   }
 
-  if (GST_AUDIO_FILTER (ofa)->format.bigend)
+  rate = GST_AUDIO_INFO_RATE (&audiofilter->info);
+  channels = GST_AUDIO_INFO_CHANNELS (&audiofilter->info);
+  if (GST_AUDIO_INFO_ENDIANNESS (&audiofilter->info) == G_BIG_ENDIAN)
     endianness = OFA_BIG_ENDIAN;
   else
     endianness = OFA_LITTLE_ENDIAN;
 
 
-  GST_DEBUG_OBJECT (ofa, "Generating fingerprint for %u samples",
-      available / 2);
+  GST_DEBUG_OBJECT (ofa, "Generating fingerprint for %" G_GSIZE_FORMAT
+      " samples", available / sizeof (gint16));
 
-  buf = gst_adapter_take_buffer (ofa->adapter, available);
+  samples = gst_adapter_map (ofa->adapter, available);
 
-  ofa->fingerprint = g_strdup (ofa_create_print (GST_BUFFER_DATA (buf),
-          endianness, GST_BUFFER_SIZE (buf) / 2, rate,
-          (channels == 2) ? 1 : 0));
+  fingerprint = ofa_create_print ((unsigned char *) samples, endianness,
+      available / sizeof (gint16), rate, (channels == 2) ? 1 : 0);
 
-  if (ofa->fingerprint) {
-    GST_INFO_OBJECT (ofa, "Generated fingerprint: %s", ofa->fingerprint);
-  } else {
+  gst_adapter_unmap (ofa->adapter);
+  gst_adapter_flush (ofa->adapter, available);
+
+  if (fingerprint == NULL) {
     GST_WARNING_OBJECT (ofa, "Failed to generate fingerprint");
+    goto done;
   }
 
-  gst_buffer_unref (buf);
+  GST_INFO_OBJECT (ofa, "Generated fingerprint: %s", fingerprint);
+  ofa->fingerprint = g_strdup (fingerprint);
 
-  if (ofa->fingerprint) {
-    tags = gst_tag_list_new ();
-    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
-        GST_TAG_OFA_FINGERPRINT, ofa->fingerprint, NULL);
-    gst_element_found_tags (GST_ELEMENT (ofa), tags);
+  // FIXME: combine with upstream tags
+  tags = gst_tag_list_new (GST_TAG_OFA_FINGERPRINT, ofa->fingerprint, NULL);
+  gst_pad_push_event (GST_BASE_TRANSFORM_SRC_PAD (ofa),
+      gst_event_new_tag (tags));
 
-    g_object_notify (G_OBJECT (ofa), "fingerprint");
-  }
+  g_object_notify (G_OBJECT (ofa), "fingerprint");
+
+done:
 
   ofa->record = FALSE;
 }
 
 static gboolean
-gst_ofa_event (GstBaseTransform * trans, GstEvent * event)
+gst_ofa_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstOFA *ofa = GST_OFA (trans);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       GST_DEBUG_OBJECT (ofa, "Got %s event, clearing buffer",
           GST_EVENT_TYPE_NAME (event));
       gst_adapter_clear (ofa->adapter);
+      /* FIXME: should we really always reset this instead of using an
+       * already-existing fingerprint? Assumes fingerprints are always
+       * extracted in a separate pipeline instead of a live playback
+       * situation */
       ofa->record = TRUE;
       g_free (ofa->fingerprint);
       ofa->fingerprint = NULL;
@@ -192,11 +188,11 @@ gst_ofa_event (GstBaseTransform * trans, GstEvent * event)
       break;
   }
 
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 }
 
 static void
-gst_ofa_init (GstOFA * ofa, GstOFAClass * g_class)
+gst_ofa_init (GstOFA * ofa)
 {
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (ofa), TRUE);
 
@@ -209,14 +205,17 @@ gst_ofa_init (GstOFA * ofa, GstOFAClass * g_class)
 static GstFlowReturn
 gst_ofa_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
+  GstAudioFilter *audiofilter = GST_AUDIO_FILTER (trans);
   GstOFA *ofa = GST_OFA (trans);
-  GstAudioFilter *ofa_filter = GST_AUDIO_FILTER (ofa);
   guint64 nframes;
   GstClockTime duration;
-  gint rate = ofa_filter->format.rate;
-  gint channels = ofa_filter->format.channels;
+  gint rate, channels;
 
-  g_return_val_if_fail (rate > 0 && channels > 0, GST_FLOW_NOT_NEGOTIATED);
+  rate = GST_AUDIO_INFO_RATE (&audiofilter->info);
+  channels = GST_AUDIO_INFO_CHANNELS (&audiofilter->info);
+
+  if (rate == 0 || channels == 0)
+    return GST_FLOW_NOT_NEGOTIATED;
 
   if (!ofa->record)
     return GST_FLOW_OK;
@@ -253,7 +252,6 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
-
   int major, minor, rev;
 
   GST_DEBUG_CATEGORY_INIT (gst_ofa_debug, "ofa", 0, "ofa element");
@@ -273,6 +271,7 @@ plugin_init (GstPlugin * plugin)
   return ret;
 }
 
+/* FIXME: someone write a libofa replacement with an LGPL or BSD license */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     ofa,
