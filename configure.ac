@@ -346,7 +346,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  linsys vcd \
  apexsink cdaudio dc1394 dirac directfb \
  gsettings \
- musepack musicbrainz nas ofa openal sdl sndfile timidity \
+ musepack nas ofa openal sdl sndfile timidity \
  directdraw direct3d9 acm wininet \
  xvid lv2 teletextdec sndio osx_video quicktime"
 AC_SUBST(GST_PLUGINS_NONPORTED)
@@ -1688,14 +1688,6 @@ AG_GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
     ], [HAVE_MUSEPACK="no"])])
 ])
 
-dnl *** musicbrainz ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_MUSICBRAINZ, true)
-AG_GST_CHECK_FEATURE(MUSICBRAINZ, [musicbrainz tag generation], musicbrainz, [
-  PKG_CHECK_MODULES(MUSICBRAINZ, libmusicbrainz >= 2.1.0, HAVE_MUSICBRAINZ="yes", HAVE_MUSICBRAINZ="no")
-  AC_SUBST(MUSICBRAINZ_CFLAGS)
-  AC_SUBST(MUSICBRAINZ_LIBS)
-])
-
 dnl *** MythTV ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MYTHTV, true)
 AG_GST_CHECK_FEATURE(MYTHTV, [MythTV client plugins], mythtvsrc, [
@@ -2238,7 +2230,6 @@ AM_CONDITIONAL(USE_MPEG2ENC, false)
 AM_CONDITIONAL(USE_MPG123, false)
 AM_CONDITIONAL(USE_MPLEX, false)
 AM_CONDITIONAL(USE_MUSEPACK, false)
-AM_CONDITIONAL(USE_MUSICBRAINZ, false)
 AM_CONDITIONAL(USE_MYTHTV, false)
 AM_CONDITIONAL(USE_NAS, false)
 AM_CONDITIONAL(USE_NEON, false)
@@ -2501,7 +2492,6 @@ ext/mpg123/Makefile
 ext/mimic/Makefile
 ext/mplex/Makefile
 ext/musepack/Makefile
-ext/musicbrainz/Makefile
 ext/mythtv/Makefile
 ext/nas/Makefile
 ext/neon/Makefile

@@ -202,12 +202,6 @@ else
 MUSEPACK_DIR=
 endif
 
-if USE_MUSICBRAINZ
-MUSICBRAINZ_DIR=musicbrainz
-else
-MUSICBRAINZ_DIR=
-endif
-
 if USE_MYTHTV
 MYTHTV_DIR=mythtv
 else
@@ -426,7 +420,6 @@ SUBDIRS=\
 	$(MIMIC_DIR) \
 	$(MPLEX_DIR) \
 	$(MUSEPACK_DIR) \
-	$(MUSICBRAINZ_DIR) \
 	$(MYTHTV_DIR) \
 	$(NAS_DIR) \
 	$(NEON_DIR) \
@@ -486,7 +479,6 @@ DIST_SUBDIRS = \
 	mpg123 \
 	mplex \
 	musepack \
-	musicbrainz \
 	mythtv \
 	nas \
 	neon \

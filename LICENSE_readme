@@ -29,7 +29,6 @@ mpeg2enc         libmpeg2enc      (http://mjpeg.sourceforge.net/)
 mplex            libmplex         (http://mjpeg.sourceforge.net/)
 siddec           libsidplay 1.36  (http://www.geocities.com/SiliconValley/Lakes/5147/sidplay/,
                                    http://sourceforge.net/projects/sidplay2/)
-trm              libmusicbrainz   (http://www.musicbrainz.org/)
 xine             libxine          (http://xinehq.de/)
 xvid             libxvidcore      (http://www.xvid.org/)
 

@@ -1396,20 +1396,6 @@ gst_timidity_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-trm</FILE>
-<TITLE>trm</TITLE>
-GstTRM
-<SUBSECTION Standard>
-GstTRMClass
-GST_TRM
-GST_TRM_CLASS
-GST_IS_TRM
-GST_IS_TRM_CLASS
-GST_TYPE_TRM
-gst_trm_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-tunnel</FILE>
 <TITLE>tunnel</TITLE>
 GstTunnel
