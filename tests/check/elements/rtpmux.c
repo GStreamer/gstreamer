@@ -148,6 +148,11 @@ test_basic (const gchar * elem_name, const gchar * sink2, int count,
   gst_pad_set_active (src1, TRUE);
   gst_pad_set_active (src2, TRUE);
 
+  fail_unless (gst_pad_push_event (src1,
+          gst_event_new_stream_start ("stream1")));
+  fail_unless (gst_pad_push_event (src2,
+          gst_event_new_stream_start ("stream2")));
+
   gst_caps_set_simple (sinkcaps,
       "payload", G_TYPE_INT, 98, "seqnum-base", G_TYPE_UINT, 100,
       "clock-base", G_TYPE_UINT, 1000, "ssrc", G_TYPE_UINT, 66, NULL);

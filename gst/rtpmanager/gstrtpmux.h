@@ -75,6 +75,7 @@ struct _GstRTPMux
   GstPad *last_pad; /* protected by object lock */
 
   GstClockTime last_stop;
+  gboolean send_stream_start;
 };
 
 struct _GstRTPMuxClass

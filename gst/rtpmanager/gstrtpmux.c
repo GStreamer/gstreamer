@@ -554,6 +554,16 @@ gst_rtp_mux_setcaps (GstPad * pad, GstRTPMux * rtp_mux, GstCaps * caps)
       "clock-base", G_TYPE_UINT, rtp_mux->ts_base,
       "seqnum-base", G_TYPE_UINT, rtp_mux->seqnum_base, NULL);
 
+  if (rtp_mux->send_stream_start) {
+    gchar s_id[32];
+
+    /* stream-start (FIXME: create id based on input ids) */
+    g_snprintf (s_id, sizeof (s_id), "interleave-%08x", g_random_int ());
+    gst_pad_push_event (rtp_mux->srcpad, gst_event_new_stream_start (s_id));
+
+    rtp_mux->send_stream_start = FALSE;
+  }
+
   GST_DEBUG_OBJECT (rtp_mux,
       "setting caps %" GST_PTR_FORMAT " on src pad..", caps);
   ret = gst_pad_set_caps (rtp_mux->srcpad, caps);
@@ -815,6 +825,7 @@ gst_rtp_mux_ready_to_paused (GstRTPMux * rtp_mux)
   GST_OBJECT_LOCK (rtp_mux);
 
   g_clear_object (&rtp_mux->last_pad);
+  rtp_mux->send_stream_start = TRUE;
 
   if (rtp_mux->ssrc == -1)
     rtp_mux->current_ssrc = g_random_int ();
