@@ -297,6 +297,24 @@ gst_interleave_set_channel_positions (GstInterleave * self, GstStructure * s)
 }
 
 static void
+gst_interleave_send_stream_start (GstInterleave * self)
+{
+  GST_OBJECT_LOCK (self);
+  if (self->send_stream_start) {
+    gchar s_id[32];
+
+    self->send_stream_start = FALSE;
+    GST_OBJECT_UNLOCK (self);
+
+    /* stream-start (FIXME: create id based on input ids) */
+    g_snprintf (s_id, sizeof (s_id), "interleave-%08x", g_random_int ());
+    gst_pad_push_event (self->src, gst_event_new_stream_start (s_id));
+  } else {
+    GST_OBJECT_UNLOCK (self);
+  }
+}
+
+static void
 gst_interleave_class_init (GstInterleaveClass * klass)
 {
   GstElementClass *gstelement_class;
@@ -386,7 +404,6 @@ gst_interleave_init (GstInterleave * self)
   gst_pad_set_event_function (self->src,
       GST_DEBUG_FUNCPTR (gst_interleave_src_event));
 
-  gst_pad_set_active (self->src, TRUE);
   gst_element_add_pad (GST_ELEMENT (self), self->src);
 
   self->collect = gst_collect_pads_new ();
@@ -508,8 +525,7 @@ gst_interleave_request_new_pad (GstElement * element, GstPadTemplate * templ,
     gst_structure_set (s, "channels", G_TYPE_INT, self->channels, NULL);
     gst_interleave_set_channel_positions (self, s);
 
-    /* FIXME: send caps event after stream-start event */
-    gst_pad_set_active (self->src, TRUE);
+    gst_interleave_send_stream_start (self);
     gst_pad_set_caps (self->src, srccaps);
     gst_caps_unref (srccaps);
 
@@ -575,7 +591,7 @@ gst_interleave_release_pad (GstElement * element, GstPad * pad)
       gst_structure_set (s, "channels", G_TYPE_INT, self->channels, NULL);
       gst_interleave_set_channel_positions (self, s);
 
-      gst_pad_set_active (self->src, TRUE);
+      gst_interleave_send_stream_start (self);
       gst_pad_set_caps (self->src, srccaps);
       gst_caps_unref (srccaps);
     } else {
@@ -762,7 +778,7 @@ gst_interleave_sink_setcaps (GstInterleave * self, GstPad * pad,
     gst_structure_set (s, "channels", G_TYPE_INT, self->channels, NULL);
     gst_interleave_set_channel_positions (self, s);
 
-    gst_pad_set_active (self->src, TRUE);
+    gst_interleave_send_stream_start (self);
     res = gst_pad_set_caps (self->src, srccaps);
     gst_caps_unref (srccaps);
 
@@ -1188,18 +1204,6 @@ gst_interleave_collected (GstCollectPads * pads, GstInterleave * self)
   gint width = self->width / 8;
   GstMapInfo write_info;
   GstClockTime timestamp = -1;
-
-  /* FIXME: send caps and tags after stream-start */
-#if 0
-  if (self->send_stream_start) {
-    gchar s_id[32];
-
-    /* stream-start (FIXME: create id based on input ids) */
-    g_snprintf (s_id, sizeof (s_id), "interleave-%08x", g_random_int ());
-    gst_pad_push_event (self->src, gst_event_new_stream_start (s_id));
-    self->send_stream_start = FALSE;
-  }
-#endif
 
   size = gst_collect_pads_available (pads);
   if (size == 0)
