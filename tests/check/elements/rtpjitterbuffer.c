@@ -102,7 +102,7 @@ setup_jitterbuffer (gint num_buffers)
 
   /* create n buffers */
   caps = gst_caps_from_string (RTP_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, jitterbuffer, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   for (i = 0; i < num_buffers; i++) {
