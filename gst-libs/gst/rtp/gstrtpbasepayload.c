@@ -51,6 +51,9 @@ struct _GstRTPBasePayloadPrivate
   gint64 caps_max_ptime;
 
   gboolean negotiated;
+
+  gboolean delay_segment;
+  GstEvent *pending_segment;
 };
 
 /* RTPBasePayload signals and args */
@@ -348,6 +351,7 @@ gst_rtp_base_payload_sink_event_default (GstRTPBasePayload * rtpbasepayload,
     case GST_EVENT_FLUSH_STOP:
       res = gst_pad_event_default (rtpbasepayload->sinkpad, parent, event);
       gst_segment_init (&rtpbasepayload->segment, GST_FORMAT_UNDEFINED);
+      gst_event_replace (&rtpbasepayload->priv->pending_segment, NULL);
       break;
     case GST_EVENT_CAPS:
     {
@@ -379,7 +383,12 @@ gst_rtp_base_payload_sink_event_default (GstRTPBasePayload * rtpbasepayload,
 
       GST_DEBUG_OBJECT (rtpbasepayload,
           "configured SEGMENT %" GST_SEGMENT_FORMAT, segment);
-      res = gst_pad_event_default (rtpbasepayload->sinkpad, parent, event);
+      if (rtpbasepayload->priv->delay_segment) {
+        gst_event_replace (&rtpbasepayload->priv->pending_segment, event);
+        res = TRUE;
+      } else {
+        res = gst_pad_event_default (rtpbasepayload->sinkpad, parent, event);
+      }
       break;
     }
     default:
@@ -910,10 +919,16 @@ gst_rtp_base_payload_push_list (GstRTPBasePayload * payload,
 
   res = gst_rtp_base_payload_prepare_push (payload, list, TRUE);
 
-  if (G_LIKELY (res == GST_FLOW_OK))
+  if (G_LIKELY (res == GST_FLOW_OK)) {
+    if (G_UNLIKELY (payload->priv->pending_segment)) {
+      gst_pad_push_event (payload->srcpad, payload->priv->pending_segment);
+      payload->priv->pending_segment = FALSE;
+      payload->priv->delay_segment = FALSE;
+    }
     res = gst_pad_push_list (payload->srcpad, list);
-  else
+  } else {
     gst_buffer_list_unref (list);
+  }
 
   return res;
 }
@@ -937,10 +952,16 @@ gst_rtp_base_payload_push (GstRTPBasePayload * payload, GstBuffer * buffer)
 
   res = gst_rtp_base_payload_prepare_push (payload, buffer, FALSE);
 
-  if (G_LIKELY (res == GST_FLOW_OK))
+  if (G_LIKELY (res == GST_FLOW_OK)) {
+    if (G_UNLIKELY (payload->priv->pending_segment)) {
+      gst_pad_push_event (payload->srcpad, payload->priv->pending_segment);
+      payload->priv->pending_segment = FALSE;
+      payload->priv->delay_segment = FALSE;
+    }
     res = gst_pad_push (payload->srcpad, buffer);
-  else
+  } else {
     gst_buffer_unref (buffer);
+  }
 
   return res;
 }
@@ -1074,6 +1095,8 @@ gst_rtp_base_payload_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_segment_init (&rtpbasepayload->segment, GST_FORMAT_UNDEFINED);
+      rtpbasepayload->priv->delay_segment = TRUE;
+      gst_event_replace (&rtpbasepayload->priv->pending_segment, NULL);
 
       if (priv->seqnum_offset_random)
         rtpbasepayload->seqnum_base = g_random_int_range (0, G_MAXUINT16);
@@ -1106,7 +1129,8 @@ gst_rtp_base_payload_change_state (GstElement * element,
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       g_atomic_int_set (&rtpbasepayload->priv->notified_first_timestamp, 1);
       break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_event_replace (&rtpbasepayload->priv->pending_segment, NULL);
       break;
     default:
       break;
