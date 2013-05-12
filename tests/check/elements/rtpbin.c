@@ -143,6 +143,7 @@ chain_rtp_packet (GstPad * pad, CleanupData * data)
 {
   GstFlowReturn res;
   static GstCaps *caps = NULL;
+  GstSegment segment;
   GstBuffer *buffer;
   GstMapInfo map;
 
@@ -153,7 +154,10 @@ chain_rtp_packet (GstPad * pad, CleanupData * data)
     data->seqnum = 0;
   }
 
-  gst_pad_set_caps (pad, caps);
+  gst_pad_send_event (pad, gst_event_new_stream_start (gst_pad_get_name (pad)));
+  gst_pad_send_event (pad, gst_event_new_caps (caps));
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  gst_pad_send_event (pad, gst_event_new_segment (&segment));
 
   buffer = gst_buffer_new_and_alloc (sizeof (rtp_packet));
   gst_buffer_map (buffer, &map, GST_MAP_WRITE);
