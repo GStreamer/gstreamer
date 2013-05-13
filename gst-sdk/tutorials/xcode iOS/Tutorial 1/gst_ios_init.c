@@ -496,7 +496,10 @@ GST_PLUGIN_STATIC_DECLARE(sdp);
 void
 gst_ios_init (void)
 {
-    gst_init (NULL, NULL);
+  GstPluginFeature *plugin;
+  GstRegistry *reg;
+
+  gst_init (NULL, NULL);
 
 #if defined(GST_IOS_PLUGIN_COREELEMENTS) || defined(GST_IOS_PLUGINS_CORE)
     GST_PLUGIN_STATIC_REGISTER(coreelements);
@@ -990,4 +993,14 @@ gst_ios_init (void)
 #if defined(GST_IOS_PLUGIN_SDP) || defined(GST_IOS_PLUGINS_NET)
     GST_PLUGIN_STATIC_REGISTER(sdp);
 #endif
+
+  /* Lower the ranks of filesrc and giosrc so iosavassetsrc is
+   * tried first in gst_element_make_from_uri() for file:// */
+  reg = gst_registry_get_default();
+  plugin = gst_registry_lookup_feature(reg, "filesrc");
+  if (plugin)
+    gst_plugin_feature_set_rank(plugin, GST_RANK_SECONDARY);
+  plugin = gst_registry_lookup_feature(reg, "giosrc");
+  if (plugin)
+    gst_plugin_feature_set_rank(plugin, GST_RANK_SECONDARY-1);
 }

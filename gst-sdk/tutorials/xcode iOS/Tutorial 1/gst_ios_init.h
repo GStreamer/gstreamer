@@ -3,9 +3,12 @@
 
 #include <gst/gst.h>
 
+G_BEGIN_DECLS
+
 /* Uncomment each line to enable the plugin categories that your application needs.
  * You can also enable individual plugins. See gst_ios_init.c to see their names
  */
+
 #define GST_IOS_PLUGINS_CORE
 //#define GST_IOS_PLUGINS_CAPTURE
 //#define GST_IOS_PLUGINS_CODECS_RESTRICTED
@@ -21,5 +24,7 @@
 //#define GST_IOS_PLUGINS_NET
 
 void gst_ios_init ();
+
+G_END_DECLS
 
 #endif
