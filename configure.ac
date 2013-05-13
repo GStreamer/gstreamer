@@ -339,7 +339,7 @@ dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" cdxaparse \
  dccp faceoverlay \
  hdvparse ivfparse jp2kdecimator \
- mve mythtv nsf nuvdemux \
+ mve mythtv nuvdemux \
  patchdetect real \
  sdi stereo tta \
  videomeasure videosignal vmnc \
@@ -393,7 +393,6 @@ AG_GST_CHECK_PLUGIN(mpegtsmux)
 AG_GST_CHECK_PLUGIN(mpegpsmux)
 AG_GST_CHECK_PLUGIN(mve)
 AG_GST_CHECK_PLUGIN(mxf)
-AG_GST_CHECK_PLUGIN(nsf)
 AG_GST_CHECK_PLUGIN(nuvdemux)
 AG_GST_CHECK_PLUGIN(patchdetect)
 AG_GST_CHECK_PLUGIN(pcapparse)
@@ -2377,7 +2376,6 @@ gst/mpegtsmux/tsmux/Makefile
 gst/mpegpsmux/Makefile
 gst/mve/Makefile
 gst/mxf/Makefile
-gst/nsf/Makefile
 gst/nuvdemux/Makefile
 gst/patchdetect/Makefile
 gst/pcapparse/Makefile

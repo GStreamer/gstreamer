@@ -43,7 +43,6 @@ GST_PLUGINS_BAD_BUILT_SOURCES := \
 	gst/mpegpsmux/Android.mk \
 	gst/gaudieffects/Android.mk \
 	gst/liveadder/Android.mk \
-	gst/nsf/Android.mk \
 	gst/dvdspu/Android.mk \
 	gst/mpegvideoparse/Android.mk \
 	gst/mpegtsdemux/Android.mk \
@@ -134,7 +133,6 @@ CONFIGURE_TARGETS += gst-plugins-bad-configure
 -include $(GST_PLUGINS_BAD_TOP)/gst/mpegpsmux/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/gaudieffects/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/liveadder/Android.mk
--include $(GST_PLUGINS_BAD_TOP)/gst/nsf/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/dvdspu/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/mpegvideoparse/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/mpegtsdemux/Android.mk
