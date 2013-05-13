@@ -215,6 +215,28 @@ gst_deinterleave_init (GstDeinterleave * self)
   gst_element_add_pad (GST_ELEMENT (self), self->sink);
 }
 
+typedef struct
+{
+  GstCaps *caps;
+  GstPad *pad;
+} CopyStickyEventsData;
+
+static gboolean
+copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  CopyStickyEventsData *data = user_data;
+
+  if (GST_EVENT_TYPE (*event) >= GST_EVENT_CAPS && data->caps) {
+    gst_pad_set_caps (data->pad, data->caps);
+    data->caps = NULL;
+  }
+
+  if (GST_EVENT_TYPE (*event) != GST_EVENT_CAPS)
+    gst_pad_push_event (data->pad, gst_event_ref (*event));
+
+  return TRUE;
+}
+
 static void
 gst_deinterleave_add_new_pads (GstDeinterleave * self, GstCaps * caps)
 {
@@ -223,12 +245,12 @@ gst_deinterleave_add_new_pads (GstDeinterleave * self, GstCaps * caps)
 
   for (i = 0; i < GST_AUDIO_INFO_CHANNELS (&self->audio_info); i++) {
     gchar *name = g_strdup_printf ("src_%u", i);
-
     GstCaps *srccaps;
     GstAudioInfo info;
     GstAudioFormat format = GST_AUDIO_INFO_FORMAT (&self->audio_info);
     gint rate = GST_AUDIO_INFO_RATE (&self->audio_info);
     GstAudioChannelPosition position = GST_AUDIO_CHANNEL_POSITION_MONO;
+    CopyStickyEventsData data;
 
     /* Set channel position if we know it */
     if (self->keep_positions)
@@ -246,7 +268,12 @@ gst_deinterleave_add_new_pads (GstDeinterleave * self, GstCaps * caps)
     gst_pad_set_query_function (pad,
         GST_DEBUG_FUNCPTR (gst_deinterleave_src_query));
     gst_pad_set_active (pad, TRUE);
-    gst_pad_set_caps (pad, srccaps);
+
+    data.pad = pad;
+    data.caps = srccaps;
+    gst_pad_sticky_events_foreach (self->sink, copy_sticky_events, &data);
+    if (data.caps)
+      gst_pad_set_caps (pad, data.caps);
     gst_element_add_pad (GST_ELEMENT (self), pad);
     self->srcpads = g_list_prepend (self->srcpads, gst_object_ref (pad));
 
@@ -265,9 +292,9 @@ gst_deinterleave_set_pads_caps (GstDeinterleave * self, GstCaps * caps)
 
   for (l = self->srcpads, i = 0; l; l = l->next, i++) {
     GstPad *pad = GST_PAD (l->data);
-
     GstCaps *srccaps;
     GstAudioInfo info;
+
     gst_audio_info_from_caps (&info, caps);
     if (self->keep_positions)
       GST_AUDIO_INFO_POSITION (&info, 0) =
@@ -552,13 +579,14 @@ gst_deinterleave_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     }
 
     default:
-      if (self->srcpads) {
-        ret = gst_pad_event_default (pad, parent, event);
-      } else {
+      if (!self->srcpads && !GST_EVENT_IS_STICKY (event)) {
+        /* Sticky events are copied when creating a new pad */
         GST_OBJECT_LOCK (self);
         self->pending_events = g_list_append (self->pending_events, event);
         GST_OBJECT_UNLOCK (self);
         ret = TRUE;
+      } else {
+        ret = gst_pad_event_default (pad, parent, event);
       }
       break;
   }
