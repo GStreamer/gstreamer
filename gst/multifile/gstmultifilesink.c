@@ -271,7 +271,6 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
 
   gobject_class->finalize = gst_multi_file_sink_finalize;
 
-  gstbasesink_class->get_times = NULL;
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_multi_file_sink_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_multi_file_sink_render);
   gstbasesink_class->render_list =
