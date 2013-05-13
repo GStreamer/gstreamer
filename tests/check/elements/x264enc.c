@@ -39,29 +39,39 @@ static GstPad *mysrcpad, *mysinkpad;
                            "width = (int) 384, " \
                            "height = (int) 288, " \
                            "framerate = (fraction) 25/1"
-
-static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (MPEG_CAPS_STRING));
-
-static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (VIDEO_CAPS_STRING));
-
-
 static GstElement *
-setup_x264enc (void)
+setup_x264enc (const gchar * profile, const gchar * stream_format)
 {
+  GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (MPEG_CAPS_STRING));
+
+  GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+      GST_PAD_SRC,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (VIDEO_CAPS_STRING));
   GstElement *x264enc;
+  gchar *caps_str;
+  GstCaps *caps;
 
   GST_DEBUG ("setup_x264enc");
+
+  caps_str = g_strdup_printf ("%s, profile = (string) %s, "
+      "stream-format = (string) %s", MPEG_CAPS_STRING, profile, stream_format);
+  sinktemplate.static_caps.string = caps_str;
+
   x264enc = gst_check_setup_element ("x264enc");
   mysrcpad = gst_check_setup_src_pad (x264enc, &srctemplate);
   mysinkpad = gst_check_setup_sink_pad (x264enc, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
+
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, x264enc, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  g_free (caps_str);
 
   return x264enc;
 }
@@ -128,22 +138,10 @@ test_video_profile (const gchar * profile, gint profile_id)
   gsize size;
   int i, num_buffers;
 
-  x264enc = setup_x264enc ();
+  x264enc = setup_x264enc (profile, "avc");
   fail_unless (gst_element_set_state (x264enc,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
-
-  caps = gst_caps_from_string (MPEG_CAPS_STRING);
-  gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
-  /* code below assumes avc */
-  gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "avc", NULL);
-  gst_pad_set_caps (mysinkpad, caps);
-  gst_caps_unref (caps);
-  gst_pad_use_fixed_caps (mysinkpad);
-
-  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
-  gst_caps_unref (caps);
 
   /* corresponds to I420 buffer for the size mentioned in the caps */
   inbuffer = gst_buffer_new_and_alloc (384 * 288 * 3 / 2);

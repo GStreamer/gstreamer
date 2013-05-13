@@ -48,6 +48,7 @@ GstElement *
 setup_xingmux ()
 {
   GstElement *xingmux;
+  GstCaps *caps;
 
   GST_DEBUG ("setup_xingmux");
   xingmux = gst_check_setup_element ("xingmux");
@@ -55,6 +56,11 @@ setup_xingmux ()
   mysinkpad = gst_check_setup_sink_pad (xingmux, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
+
+  caps = gst_caps_new_simple ("audio/mpeg",
+      "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3, NULL);
+  gst_check_setup_events (mysrcpad, xingmux, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
 
   return xingmux;
 }

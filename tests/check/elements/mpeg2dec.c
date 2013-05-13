@@ -32,7 +32,7 @@ static GstPad *mysrcpad, *mysinkpad;
 /* mpeg2 video created with gst-launch-0.10 videotestsrc num-buffers=32 pattern=blue ! "video/x-raw,format=(string)I420,width=176,height=144,framerate=(fraction)25/1" ! ffenc_mpeg2video ! filesink location=test.mpg
 */
 
-guint8 test_stream1[] = {
+static const guint8 test_stream1[] = {
   0x00, 0x00, 0x01, 0xb3, 0x0b, 0x00, 0x90, 0x13,
   0xff, 0xff, 0xe0, 0x28, 0x00, 0x00, 0x01, 0xb5,
   0x14, 0x8a, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
@@ -548,7 +548,7 @@ guint8 test_stream1[] = {
   0x09, 0x12, 0x70, 0xb3, 0x80,
 };
 
-guint test_stream_sizes[] = {
+static const guint test_stream_sizes[] = {
   497, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90,
   497, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90,
   497, 90
@@ -557,7 +557,7 @@ guint test_stream_sizes[] = {
 /* mpeg2 video created with gst-launch-0.10 videotestsrc num-buffers=32 pattern=blue ! "video/x-raw,format=(string)I420,width=183,height=217,framerate=(fraction)25/1" ! ffenc_mpeg2video ! filesink location=test.mpg
 */
 
-guint8 test_stream2[] = {
+static const guint8 test_stream2[] = {
   0x00, 0x00, 0x01, 0xb3, 0x0b, 0x70, 0xd9, 0x13,
   0xff, 0xff, 0xe0, 0x28, 0x00, 0x00, 0x01, 0xb5,
   0x14, 0x8a, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
@@ -1688,7 +1688,7 @@ guint8 test_stream2[] = {
   0xa5, 0xfb, 0x85, 0xe6, 0xc0
 };
 
-guint test_stream2_sizes[] = {
+static const guint test_stream2_sizes[] = {
   803, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228,
   803, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228,
   803, 228
@@ -1710,7 +1710,7 @@ GstElement *
 setup_mpeg2dec ()
 {
   GstElement *mpeg2dec;
-  GstSegment seg;
+  GstCaps *caps;
 
   GST_DEBUG ("setup_mpeg2dec");
   mpeg2dec = gst_check_setup_element ("mpeg2dec");
@@ -1719,8 +1719,11 @@ setup_mpeg2dec ()
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
-  gst_segment_init (&seg, GST_FORMAT_TIME);
-  gst_pad_push_event (mysrcpad, gst_event_new_segment (&seg));
+  caps = gst_caps_new_simple ("video/mpeg",
+      "systemstream", G_TYPE_BOOLEAN, FALSE,
+      "mpegversion", G_TYPE_INT, 2, NULL);
+  gst_check_setup_events (mysrcpad, mpeg2dec, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
 
   return mpeg2dec;
 }
@@ -1759,8 +1762,8 @@ GST_START_TEST (test_decode_stream1)
   for (i = 0; i < G_N_ELEMENTS (test_stream_sizes); i++) {
     inbuffer =
         gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-        test_stream1 + offset, test_stream_sizes[i], 0, test_stream_sizes[i],
-        NULL, NULL);
+        (guint8 *) test_stream1 + offset, test_stream_sizes[i], 0,
+        test_stream_sizes[i], NULL, NULL);
     offset += test_stream_sizes[i];
     ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
     gst_buffer_ref (inbuffer);
@@ -1835,8 +1838,8 @@ GST_START_TEST (test_decode_stream2)
   for (i = 0; i < G_N_ELEMENTS (test_stream2_sizes); i++) {
     inbuffer =
         gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-        test_stream2 + offset, test_stream2_sizes[i], 0, test_stream2_sizes[i],
-        NULL, NULL);
+        (guint8 *) test_stream2 + offset, test_stream2_sizes[i], 0,
+        test_stream2_sizes[i], NULL, NULL);
     offset += test_stream2_sizes[i];
     ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
     gst_buffer_ref (inbuffer);

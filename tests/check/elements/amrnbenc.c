@@ -75,7 +75,7 @@ setup_amrnbenc (void)
       "could not set to playing");
 
   caps = gst_caps_from_string (SRC_CAPS);
-  fail_unless (gst_pad_set_caps (srcpad, caps));
+  gst_check_setup_events (srcpad, amrnbenc, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   buffers = NULL;
