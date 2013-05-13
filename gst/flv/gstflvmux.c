@@ -1141,6 +1141,8 @@ gst_flv_mux_write_header (GstFlvMux * mux)
   GValue streamheader = { 0 };
   GSList *l;
   GstFlowReturn ret;
+  GstSegment segment;
+  gchar s_id[32];
 
   /* if not streaming, check if downstream is seekable */
   if (!mux->streamable) {
@@ -1216,16 +1218,23 @@ gst_flv_mux_write_header (GstFlvMux * mux)
   if (audio_codec_data != NULL)
     gst_flv_mux_put_buffer_in_streamheader (&streamheader, audio_codec_data);
 
+  /* stream-start (FIXME: create id based on input ids) */
+  g_snprintf (s_id, sizeof (s_id), "flvmux-%08x", g_random_int ());
+  gst_pad_push_event (mux->srcpad, gst_event_new_stream_start (s_id));
+
   /* create the caps and put the streamheader in them */
   caps = gst_caps_new_empty_simple ("video/x-flv");
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_set_value (structure, "streamheader", &streamheader);
   g_value_unset (&streamheader);
 
-  if (!gst_pad_has_current_caps (mux->srcpad))
-    gst_pad_set_caps (mux->srcpad, caps);
+  gst_pad_set_caps (mux->srcpad, caps);
 
   gst_caps_unref (caps);
+
+  /* segment */
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (mux->srcpad, gst_event_new_segment (&segment));
 
   /* push the header buffer, the metadata and the codec info, if any */
   ret = gst_flv_mux_push (mux, header);
@@ -1463,26 +1472,13 @@ gst_flv_mux_handle_buffer (GstCollectPads * pads, GstCollectData * cdata,
   GstFlowReturn ret;
 
   if (mux->state == GST_FLV_MUX_STATE_HEADER) {
-    GstSegment segment;
-    gchar s_id[32];
-
     if (mux->collect->data == NULL) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
           ("No input streams configured"));
       return GST_FLOW_ERROR;
     }
 
-    /* stream-start (FIXME: create id based on input ids) */
-    g_snprintf (s_id, sizeof (s_id), "flvmux-%08x", g_random_int ());
-    gst_pad_push_event (mux->srcpad, gst_event_new_stream_start (s_id));
-
-    /* segment */
-    gst_segment_init (&segment, GST_FORMAT_BYTES);
-    if (gst_pad_push_event (mux->srcpad, gst_event_new_segment (&segment)))
-      ret = gst_flv_mux_write_header (mux);
-    else
-      ret = GST_FLOW_ERROR;
-
+    ret = gst_flv_mux_write_header (mux);
     if (ret != GST_FLOW_OK)
       return ret;
     mux->state = GST_FLV_MUX_STATE_DATA;
