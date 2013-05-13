@@ -159,7 +159,7 @@ cleanup_icydemux (void)
 }
 
 static void
-push_data (const guint8 * data, int len, GstCaps * caps, gint64 offset)
+push_data (const guint8 * data, int len, gint64 offset)
 {
   GstFlowReturn res;
   GstBuffer *buffer = gst_buffer_new_and_alloc (len);
@@ -168,7 +168,6 @@ push_data (const guint8 * data, int len, GstCaps * caps, gint64 offset)
 
   GST_BUFFER_OFFSET (buffer) = offset;
 
-  gst_pad_set_caps (srcpad, caps);
   res = gst_pad_push (srcpad, buffer);
 
   fail_unless (res == GST_FLOW_OK, "Failed pushing buffer: %d", res);
@@ -191,8 +190,9 @@ GST_START_TEST (test_demux)
   caps = gst_caps_from_string (ICYCAPS);
 
   create_icydemux ();
+  gst_check_setup_events (srcpad, icydemux, caps, GST_FORMAT_TIME);
 
-  push_data ((guint8 *) ICY_DATA, sizeof (ICY_DATA), caps, -1);
+  push_data ((guint8 *) ICY_DATA, sizeof (ICY_DATA), -1);
 
   message = gst_bus_poll (bus, GST_MESSAGE_TAG, -1);
   fail_unless (message != NULL);
@@ -235,12 +235,14 @@ GST_START_TEST (test_first_buf_offset_when_merged_for_typefinding)
 
   icy_caps = gst_caps_from_string (ICYCAPS);
 
-  push_data (buf1, G_N_ELEMENTS (buf1), icy_caps, 0);
+  gst_check_setup_events (srcpad, icydemux, icy_caps, GST_FORMAT_TIME);
+
+  push_data (buf1, G_N_ELEMENTS (buf1), 0);
 
   /* one byte isn't really enough for typefinding, can't have a srcpad yet */
   fail_unless (gst_element_get_static_pad (icydemux, "src") == NULL);
 
-  push_data (buf2, G_N_ELEMENTS (buf2), icy_caps, -1);
+  push_data (buf2, G_N_ELEMENTS (buf2), -1);
 
   /* should have been enough to create a audio/x-musepack source pad .. */
   icy_srcpad = gst_element_get_static_pad (icydemux, "src");
@@ -262,8 +264,13 @@ GST_END_TEST;
 GST_START_TEST (test_not_negotiated)
 {
   GstBuffer *buf;
+  GstSegment segment;
 
   create_icydemux ();
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (srcpad, gst_event_new_stream_start ("test"));
+  gst_pad_push_event (srcpad, gst_event_new_segment (&segment));
 
   buf = gst_buffer_new_and_alloc (0);
   GST_BUFFER_OFFSET (buf) = 0;
