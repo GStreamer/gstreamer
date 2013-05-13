@@ -207,6 +207,28 @@ gst_icydemux_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+typedef struct
+{
+  GstCaps *caps;
+  GstPad *pad;
+} CopyStickyEventsData;
+
+static gboolean
+copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  CopyStickyEventsData *data = user_data;
+
+  if (GST_EVENT_TYPE (*event) >= GST_EVENT_CAPS && data->caps) {
+    gst_pad_set_caps (data->pad, data->caps);
+    data->caps = NULL;
+  }
+
+  if (GST_EVENT_TYPE (*event) != GST_EVENT_CAPS)
+    gst_pad_push_event (data->pad, gst_event_ref (*event));
+
+  return TRUE;
+}
+
 static gboolean
 gst_icydemux_add_srcpad (GstICYDemux * icydemux, GstCaps * new_caps)
 {
@@ -225,6 +247,8 @@ gst_icydemux_add_srcpad (GstICYDemux * icydemux, GstCaps * new_caps)
   }
 
   if (icydemux->srcpad == NULL) {
+    CopyStickyEventsData data;
+
     icydemux->srcpad =
         gst_pad_new_from_template (gst_element_class_get_pad_template
         (GST_ELEMENT_GET_CLASS (icydemux), "src"), "src");
@@ -233,10 +257,12 @@ gst_icydemux_add_srcpad (GstICYDemux * icydemux, GstCaps * new_caps)
     gst_pad_use_fixed_caps (icydemux->srcpad);
     gst_pad_set_active (icydemux->srcpad, TRUE);
 
-    if (icydemux->src_caps) {
-      if (!gst_pad_set_caps (icydemux->srcpad, icydemux->src_caps))
-        GST_WARNING_OBJECT (icydemux, "Failed to set caps on src pad");
-    }
+    data.pad = icydemux->srcpad;
+    data.caps = icydemux->src_caps;
+    gst_pad_sticky_events_foreach (icydemux->sinkpad, copy_sticky_events,
+        &data);
+    if (data.caps)
+      gst_pad_set_caps (data.pad, data.caps);
 
     GST_DEBUG_OBJECT (icydemux, "Adding src pad with caps %" GST_PTR_FORMAT,
         icydemux->src_caps);
@@ -383,8 +409,9 @@ gst_icydemux_handle_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         return gst_pad_event_default (pad, parent, event);
       default:
-        icydemux->cached_events = g_list_append (icydemux->cached_events,
-            event);
+        if (!GST_EVENT_IS_STICKY (event))
+          icydemux->cached_events =
+              g_list_append (icydemux->cached_events, event);
         return TRUE;
     }
   } else {
