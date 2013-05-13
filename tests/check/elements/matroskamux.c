@@ -54,8 +54,7 @@ static GstStaticPadTemplate srcac3template = GST_STATIC_PAD_TEMPLATE ("src",
 
 
 static GstPad *
-setup_src_pad (GstElement * element,
-    GstStaticPadTemplate * template, GstCaps * caps)
+setup_src_pad (GstElement * element, GstStaticPadTemplate * template)
 {
   GstPad *srcpad, *sinkpad;
 
@@ -72,8 +71,6 @@ setup_src_pad (GstElement * element,
       GST_ELEMENT_NAME (element));
   /* references are owned by: 1) us, 2) matroskamux, 3) collect pads */
   ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
-  if (caps)
-    fail_unless (gst_pad_set_caps (srcpad, caps));
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
       "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
   gst_object_unref (sinkpad);   /* because we got it higher up */
@@ -110,8 +107,7 @@ teardown_src_pad (GstElement * element)
 }
 
 static GstPad *
-setup_sink_pad (GstElement * element, GstStaticPadTemplate * template,
-    GstCaps * caps)
+setup_sink_pad (GstElement * element, GstStaticPadTemplate * template)
 {
   GstPad *srcpad, *sinkpad;
 
@@ -125,8 +121,6 @@ setup_sink_pad (GstElement * element, GstStaticPadTemplate * template,
   srcpad = gst_element_get_static_pad (element, "src");
   fail_if (srcpad == NULL, "Could not get source pad from %s",
       GST_ELEMENT_NAME (element));
-  if (caps)
-    fail_unless (gst_pad_set_caps (sinkpad, caps));
   gst_pad_set_chain_function (sinkpad, gst_check_chain_func);
 
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
@@ -163,21 +157,16 @@ static GstElement *
 setup_matroskamux (GstStaticPadTemplate * srctemplate)
 {
   GstElement *matroskamux;
-  GstSegment segment;
 
   GST_DEBUG ("setup_matroskamux");
   matroskamux = gst_check_setup_element ("matroskamux");
   g_object_set (matroskamux, "version", 1, NULL);
-  mysrcpad = setup_src_pad (matroskamux, srctemplate, NULL);
-  mysinkpad = setup_sink_pad (matroskamux, &sinktemplate, NULL);
+  mysrcpad = setup_src_pad (matroskamux, srctemplate);
+  mysinkpad = setup_sink_pad (matroskamux, &sinktemplate);
 
   fail_unless (gst_element_set_state (matroskamux,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
-
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  fail_unless (gst_pad_push_event (mysrcpad,
-          gst_event_new_segment (&segment)), "Segment event rejected");
 
   return matroskamux;
 }
@@ -208,6 +197,7 @@ GST_START_TEST (test_ebml_header)
   int num_buffers;
   int i;
   gint available;
+  GstCaps *caps;
   guint8 data[] =
       { 0x1a, 0x45, 0xdf, 0xa3, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x14,
     0x42, 0x82, 0x89, 0x6d, 0x61, 0x74, 0x72, 0x6f, 0x73, 0x6b, 0x61, 0x00,
@@ -216,6 +206,10 @@ GST_START_TEST (test_ebml_header)
   };
 
   matroskamux = setup_matroskamux (&srcac3template);
+
+  caps = gst_caps_from_string (srcac3template.static_caps.string);
+  gst_check_setup_events (mysrcpad, matroskamux, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
 
   inbuffer = gst_buffer_new_allocate (NULL, 1, 0);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -267,7 +261,7 @@ GST_START_TEST (test_vorbis_header)
   matroskamux = setup_matroskamux (&srcvorbistemplate);
 
   caps = gst_caps_from_string (VORBIS_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, matroskamux, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   inbuffer = gst_buffer_new_allocate (NULL, 1, 0);
@@ -326,7 +320,7 @@ GST_START_TEST (test_block_group)
   matroskamux = setup_matroskamux (&srcac3template);
 
   caps = gst_caps_from_string (AC3_CAPS_STRING);
-  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_check_setup_events (mysrcpad, matroskamux, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   /* Generate the header */
@@ -397,8 +391,13 @@ GST_START_TEST (test_reset)
   GstBuffer *outbuffer;
   int num_buffers;
   int i;
+  GstCaps *caps;
 
   matroskamux = setup_matroskamux (&srcac3template);
+
+  caps = gst_caps_from_string (srcac3template.static_caps.string);
+  gst_check_setup_events (mysrcpad, matroskamux, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
 
   inbuffer = gst_buffer_new_allocate (NULL, 1, 0);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -447,7 +446,7 @@ GST_START_TEST (test_link_webmmux_webm_sink)
   GstElement *mux;
 
   mux = gst_check_setup_element ("webmmux");
-  mysinkpad = setup_sink_pad (mux, &webm_sinktemplate, NULL);
+  mysinkpad = setup_sink_pad (mux, &webm_sinktemplate);
   fail_unless (mysinkpad != NULL);
 
   fail_unless (gst_element_set_state (mux,

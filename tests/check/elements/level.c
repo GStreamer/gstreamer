@@ -68,7 +68,6 @@ setup_level (void)
 {
   GstElement *level;
   GstCaps *caps;
-  GstSegment segment;
 
   GST_DEBUG ("setup_level");
   level = gst_check_setup_element ("level");
@@ -78,11 +77,8 @@ setup_level (void)
   gst_pad_set_active (mysinkpad, TRUE);
 
   caps = gst_caps_from_string (LEVEL_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, level, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
-
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment));
 
   return level;
 }
