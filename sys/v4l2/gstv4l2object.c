@@ -2551,9 +2551,9 @@ gst_v4l2_object_copy (GstV4l2Object * v4l2object, GstBuffer * dest,
 
     GST_DEBUG_OBJECT (v4l2object->element, "copy raw bytes");
     gst_buffer_map (src, &map, GST_MAP_READ);
-    gst_buffer_fill (dest, 0, map.data, map.size);
+    gst_buffer_fill (dest, 0, map.data, gst_buffer_get_size (src));
     gst_buffer_unmap (src, &map);
-    gst_buffer_resize (dest, 0, map.size);
+    gst_buffer_resize (dest, 0, gst_buffer_get_size (src));
   }
   GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, v4l2object->element,
       "slow copy into buffer %p", dest);
