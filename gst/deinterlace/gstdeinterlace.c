@@ -2359,7 +2359,11 @@ gst_deinterlace_do_bufferpool (GstDeinterlace * self, GstCaps * outcaps)
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
   else {
     pool = NULL;
-    size = GST_VIDEO_INFO_SIZE (&self->vinfo), min = max = 0;
+    size = GST_VIDEO_INFO_SIZE (&self->vinfo);
+    min =
+        MAX ((gst_deinterlace_method_get_fields_required (self->method) +
+            1) / 2 + 1, 4);
+    max = 0;
   }
 
   if (pool == NULL) {
@@ -2620,7 +2624,9 @@ gst_deinterlace_propose_allocation (GstDeinterlace * self, GstQuery * query)
   gst_query_add_allocation_pool (query, pool, size, 0, 0);
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+  gst_buffer_pool_config_set_params (config, caps, size,
+      (gst_deinterlace_method_get_fields_required (self->method) + 1) / 2 + 1,
+      0);
   gst_buffer_pool_set_config (pool, config);
 
   gst_object_unref (pool);
