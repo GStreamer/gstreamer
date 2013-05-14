@@ -60,7 +60,7 @@ mulawenc_setup (void)
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
-  gst_pad_set_caps (mysrcpad, src_caps);
+  gst_check_setup_events (mysrcpad, mulawenc, src_caps, GST_FORMAT_TIME);
   gst_caps_unref (src_caps);
 }
 
