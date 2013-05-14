@@ -2603,6 +2603,7 @@ gst_deinterlace_propose_allocation (GstDeinterlace * self, GstQuery * query)
   GstCaps *caps;
   GstVideoInfo info;
   guint size;
+  GstStructure *config;
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -2617,6 +2618,11 @@ gst_deinterlace_propose_allocation (GstDeinterlace * self, GstQuery * query)
   pool = gst_video_buffer_pool_new ();
 
   gst_query_add_allocation_pool (query, pool, size, 0, 0);
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+  gst_buffer_pool_set_config (pool, config);
+
   gst_object_unref (pool);
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
 
