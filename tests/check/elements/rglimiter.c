@@ -99,20 +99,26 @@ static const gfloat test_output[] = {
   0.99752737684336523,          /* 2.0  */
 };
 
-static GstBuffer *
-create_test_buffer (void)
+static void
+setup_events (GstElement * element)
 {
-  GstBuffer *buf = gst_buffer_new_and_alloc (sizeof (test_input));
   GstCaps *caps;
-
-  gst_buffer_fill (buf, 0, test_input, sizeof (test_input));
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "rate", G_TYPE_INT, 44100, "channels", G_TYPE_INT, 1,
       "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
       "layout", G_TYPE_STRING, "interleaved", NULL);
-  gst_pad_set_caps (mysrcpad, caps);
+
+  gst_check_setup_events (mysrcpad, element, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
+}
+
+static GstBuffer *
+create_test_buffer (void)
+{
+  GstBuffer *buf = gst_buffer_new_and_alloc (sizeof (test_input));
+
+  gst_buffer_fill (buf, 0, test_input, sizeof (test_input));
 
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
 
@@ -158,6 +164,7 @@ GST_START_TEST (test_disabled)
 
   g_object_set (element, "enabled", FALSE, NULL);
   set_playing_state (element);
+  setup_events (element);
 
   buf = create_test_buffer ();
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
@@ -180,6 +187,7 @@ GST_START_TEST (test_limiting)
   GstBuffer *buf, *out_buf;
 
   set_playing_state (element);
+  setup_events (element);
 
   /* Mutable variant. */
   buf = create_test_buffer ();
@@ -220,6 +228,7 @@ GST_START_TEST (test_gap)
   GstMapInfo m1, m2;
 
   set_playing_state (element);
+  setup_events (element);
 
   buf = create_test_buffer ();
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_GAP);
