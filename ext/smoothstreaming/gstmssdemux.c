@@ -817,16 +817,27 @@ gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
   media_caps = gst_mss_stream_get_caps (stream->manifest_stream);
 
   if (media_caps) {
+    gchar *name = gst_pad_get_name (pad);
+    gchar *stream_id;
     gst_pad_set_active (pad, TRUE);
 
     caps = create_mss_caps (stream, media_caps);
     gst_caps_unref (media_caps);
+
+    stream_id =
+        gst_pad_create_stream_id (pad, GST_ELEMENT_CAST (mssdemux), name);
+    gst_pad_push_event (pad, gst_event_new_stream_start (stream_id));
+    g_free (stream_id);
+    g_free (name);
+
     gst_pad_set_caps (pad, caps);
     stream->caps = caps;
 
     GST_INFO_OBJECT (mssdemux, "Adding srcpad %s:%s with caps %" GST_PTR_FORMAT,
         GST_DEBUG_PAD_NAME (pad), caps);
     gst_object_ref (pad);
+
+    stream->pending_newsegment = gst_event_new_segment (&mssdemux->segment);
     gst_element_add_pad (GST_ELEMENT_CAST (mssdemux), pad);
   } else {
     GST_WARNING_OBJECT (mssdemux,
