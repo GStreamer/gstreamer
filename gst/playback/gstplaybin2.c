@@ -3260,7 +3260,7 @@ _factory_can_sink_caps (GstElementFactory * factory, GstCaps * caps)
       GstCaps *templcaps = gst_static_caps_get (&templ->static_caps);
 
       if (!gst_caps_is_any (templcaps)
-          && gst_caps_can_intersect (templcaps, caps)) {
+          && gst_caps_is_subset (caps, templcaps)) {
         gst_caps_unref (templcaps);
         return TRUE;
       }
@@ -3599,7 +3599,7 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
   gst_play_bin_update_elements_list (playbin);
   factory_list =
       gst_element_factory_list_filter (playbin->elements, caps, GST_PAD_SINK,
-      FALSE);
+      TRUE);
   g_mutex_unlock (&playbin->elements_lock);
 
   GST_DEBUG_OBJECT (playbin, "found factories %p", factory_list);
@@ -3954,9 +3954,9 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
            * any raw format.
            */
           if ((isaudiodec && !(flags & GST_PLAY_FLAG_NATIVE_AUDIO)
-                  && gst_caps_can_intersect (caps, raw_caps)) || (!isaudiodec
+                  && gst_caps_is_subset (caps, raw_caps)) || (!isaudiodec
                   && !(flags & GST_PLAY_FLAG_NATIVE_VIDEO)
-                  && gst_caps_can_intersect (caps, raw_caps))) {
+                  && gst_caps_is_subset (caps, raw_caps))) {
             compatible =
                 gst_element_factory_can_src_any_caps (factory, raw_caps)
                 || gst_element_factory_can_src_any_caps (factory, caps);

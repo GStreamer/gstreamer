@@ -1373,7 +1373,7 @@ gst_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
   gst_decode_bin_update_factories_list (dbin);
   list =
       gst_element_factory_list_filter (dbin->factories, caps, GST_PAD_SINK,
-      FALSE);
+      TRUE);
   g_mutex_unlock (&dbin->factories_lock);
 
   result = g_value_array_new (g_list_length (list));
@@ -1563,7 +1563,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
       GstCaps *raw = gst_static_caps_get (&default_raw_caps);
 
       /* If the caps are raw, this just means we don't want to expose them */
-      if (gst_caps_can_intersect (raw, caps)) {
+      if (gst_caps_is_subset (caps, raw)) {
         g_value_array_free (factories);
         gst_caps_unref (raw);
         gst_object_unref (dpad);
@@ -2702,7 +2702,7 @@ are_final_caps (GstDecodeBin * dbin, GstCaps * caps)
 
   /* lock for getting the caps */
   GST_OBJECT_LOCK (dbin);
-  res = gst_caps_can_intersect (dbin->caps, caps);
+  res = gst_caps_is_subset (caps, dbin->caps);
   GST_OBJECT_UNLOCK (dbin);
 
   GST_LOG_OBJECT (dbin, "Caps are %sfinal caps", res ? "" : "not ");

@@ -441,7 +441,7 @@ static gboolean
 check_factory_for_caps (GstElementFactory * factory, const GstCaps * caps)
 {
   GstCaps *fcaps = _get_sub_caps (factory);
-  gboolean ret = (fcaps) ? gst_caps_can_intersect (fcaps, caps) : FALSE;
+  gboolean ret = (fcaps) ? gst_caps_is_subset (caps, fcaps) : FALSE;
 
   if (fcaps)
     gst_caps_unref (fcaps);
@@ -999,7 +999,7 @@ _link_renderer (GstSubtitleOverlay * self, GstElement * renderer,
   } else {                      /* No video pad */
     GstCaps *allowed_caps, *video_caps = NULL;
     GstPad *video_peer;
-    gboolean can_intersect = FALSE;
+    gboolean is_subset = FALSE;
 
     video_peer = gst_pad_get_peer (self->video_sinkpad);
     if (video_peer) {
@@ -1019,7 +1019,7 @@ _link_renderer (GstSubtitleOverlay * self, GstElement * renderer,
     gst_object_unref (sink);
 
     if (allowed_caps && video_caps)
-      can_intersect = gst_caps_can_intersect (allowed_caps, video_caps);
+      is_subset = gst_caps_is_subset (video_caps, allowed_caps);
 
     if (allowed_caps)
       gst_caps_unref (allowed_caps);
@@ -1027,7 +1027,7 @@ _link_renderer (GstSubtitleOverlay * self, GstElement * renderer,
     if (video_caps)
       gst_caps_unref (video_caps);
 
-    if (G_UNLIKELY (!can_intersect)) {
+    if (G_UNLIKELY (!is_subset)) {
       GST_WARNING_OBJECT (self, "Renderer with custom caps is not "
           "compatible with video stream");
       return FALSE;
