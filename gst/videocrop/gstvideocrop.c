@@ -77,10 +77,12 @@ enum
   ARG_BOTTOM
 };
 
+/* we support the same caps as aspectratiocrop (sync changes) */
 #define VIDEO_CROP_CAPS                                \
   GST_VIDEO_CAPS_MAKE ("{ RGBx, xRGB, BGRx, xBGR, "    \
       "RGBA, ARGB, BGRA, ABGR, RGB, BGR, AYUV, YUY2, " \
-      "YVYU, UYVY, I420, YV12, RGB16, RGB15, GRAY8, NV12, NV21 }")
+      "YVYU, UYVY, I420, YV12, RGB16, RGB15, GRAY8, "  \
+      "NV12, NV21, GRAY16_LE, GRAY16_BE }")
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -693,9 +695,6 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
           /* YUYV = 4:2:2 - [Y0 U0 Y1 V0] [Y2 U2 Y3 V2] [Y4 U4 Y5 V4] = YUY2 */
           crop->macro_y_off = 0;
         }
-        break;
-      case GST_VIDEO_FORMAT_GRAY8:
-        crop->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE;
         break;
       case GST_VIDEO_FORMAT_I420:
       case GST_VIDEO_FORMAT_YV12:
