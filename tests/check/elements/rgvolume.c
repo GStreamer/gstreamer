@@ -57,14 +57,8 @@ static GstBuffer *test_buffer_new (gfloat value);
 static gboolean
 event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GST_DEBUG ("received event %p", event);
-  /* not interested in caps event */
-  if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
-    GST_DEBUG ("dropping caps event");
-    gst_event_unref (event);
-  } else {
-    events = g_list_append (events, event);
-  }
+  GST_DEBUG ("received event %p (%s)", event, GST_EVENT_TYPE_NAME (event));
+  events = g_list_append (events, event);
 
   return TRUE;
 }
@@ -73,7 +67,6 @@ static GstElement *
 setup_rgvolume (void)
 {
   GstElement *element;
-  GstCaps *caps;
 
   GST_DEBUG ("setup_rgvolume");
   element = gst_check_setup_element ("rgvolume");
@@ -86,40 +79,19 @@ setup_rgvolume (void)
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
-  caps = gst_caps_from_string ("audio/x-raw, format = F32LE, "
-      "layout = interleaved, rate = 8000, channels = 1");
-  gst_pad_set_caps (mysrcpad, caps);
-  gst_caps_unref (caps);
-
   return element;
 }
 
 static void
-send_newsegment_and_empty_buffer (void)
+send_empty_buffer (void)
 {
   GstBuffer *buf;
-  GstEvent *ev;
-  GstSegment segment;
 
-  fail_unless (g_list_length (events) == 0);
-
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  ev = gst_event_new_segment (&segment);
-  fail_unless (gst_pad_push_event (mysrcpad, ev),
-      "Pushing newsegment event failed");
-
-  /* makes caps event */
   buf = test_buffer_new (0.0);
   gst_buffer_resize (buf, 0, 0);
   GST_BUFFER_DURATION (buf) = 0;
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET (buf);
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
-
-  fail_unless (g_list_length (events) == 1);
-  fail_unless (events->data == ev);
-  gst_mini_object_unref ((GstMiniObject *) events->data);
-  events = g_list_remove (events, ev);
-  fail_unless (g_list_length (events) == 0);
 
   fail_unless (g_list_length (buffers) == 1);
   fail_unless (buffers->data == buf);
@@ -164,28 +136,37 @@ set_null_state (GstElement * element)
 }
 
 static void
-clear_last_event (GstEventType type)
-{
-  GList *last = g_list_last (events);
-
-  fail_unless (last != NULL);
-  fail_unless_equals_int (GST_EVENT_TYPE (last->data), type);
-  gst_event_unref (GST_EVENT (last->data));
-  events = g_list_delete_link (events, last);
-}
-
-static void
 send_flush_events (GstElement * element)
 {
   gboolean res;
 
   res = gst_pad_push_event (mysrcpad, gst_event_new_flush_start ());
   fail_unless (res, "flush-start even not handled");
-  clear_last_event (GST_EVENT_FLUSH_START);
 
   res = gst_pad_push_event (mysrcpad, gst_event_new_flush_stop (TRUE));
   fail_unless (res, "flush-stop event not handled");
-  clear_last_event (GST_EVENT_FLUSH_STOP);
+}
+
+static void
+send_stream_start_event (GstElement * element)
+{
+  gboolean res;
+
+  res = gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+  fail_unless (res, "STREAM_START event not handled");
+}
+
+static void
+send_caps_event (GstElement * element)
+{
+  GstCaps *caps;
+  gboolean res;
+
+  caps = gst_caps_from_string ("audio/x-raw, format = F32LE, "
+      "layout = interleaved, rate = 8000, channels = 1");
+  res = gst_pad_push_event (mysrcpad, gst_event_new_caps (caps));
+  fail_unless (res, "CAPS event not handled");
+  gst_caps_unref (caps);
 }
 
 static void
@@ -197,7 +178,6 @@ send_segment_event (GstElement * element)
   gst_segment_init (&segment, GST_FORMAT_TIME);
   res = gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment));
   fail_unless (res, "SEGMENT event not handled");
-  clear_last_event (GST_EVENT_SEGMENT);
 }
 
 static void
@@ -205,49 +185,48 @@ send_eos_event (GstElement * element)
 {
   GstEvent *event = gst_event_new_eos ();
 
-  GST_DEBUG ("events : %d", g_list_length (events));
-
-  fail_unless (g_list_length (events) == 0);
   fail_unless (gst_pad_push_event (mysrcpad, event),
       "Pushing EOS event failed");
-  fail_unless (g_list_length (events) == 1);
-  fail_unless (events->data == event);
-  gst_mini_object_unref ((GstMiniObject *) events->data);
-  events = g_list_remove (events, event);
 }
 
 static GstEvent *
 send_tag_event (GstElement * element, GstEvent * event)
 {
+  GList *l;
+  GstTagList *tag_list;
+  gdouble dummy;
+
   g_return_val_if_fail (event->type == GST_EVENT_TAG, NULL);
 
-  fail_unless (g_list_length (events) == 0);
   fail_unless (gst_pad_push_event (mysrcpad, event),
       "Pushing tag event failed");
 
-  if (g_list_length (events) == 0) {
-    /* Event got filtered out. */
-    event = NULL;
-  } else {
-    GstTagList *tag_list;
-    gdouble dummy;
+  event = NULL;
 
-    event = events->data;
-    events = g_list_remove (events, event);
-
-    fail_unless (event->type == GST_EVENT_TAG);
-    gst_event_parse_tag (event, &tag_list);
-
-    /* The element is supposed to filter out ReplayGain related tags. */
-    fail_if (gst_tag_list_get_double (tag_list, GST_TAG_TRACK_GAIN, &dummy),
-        "tag event still contains track gain tag");
-    fail_if (gst_tag_list_get_double (tag_list, GST_TAG_TRACK_PEAK, &dummy),
-        "tag event still contains track peak tag");
-    fail_if (gst_tag_list_get_double (tag_list, GST_TAG_ALBUM_GAIN, &dummy),
-        "tag event still contains album gain tag");
-    fail_if (gst_tag_list_get_double (tag_list, GST_TAG_ALBUM_PEAK, &dummy),
-        "tag event still contains album peak tag");
+  for (l = g_list_last (events); l; l = l->prev) {
+    if (GST_EVENT_TYPE (l->data) == GST_EVENT_TAG) {
+      event = l->data;
+      events = g_list_delete_link (events, l);
+      break;
+    }
   }
+
+  /* Event got filtered out */
+  if (event == NULL)
+    return NULL;
+
+  fail_unless (event->type == GST_EVENT_TAG);
+  gst_event_parse_tag (event, &tag_list);
+
+  /* The element is supposed to filter out ReplayGain related tags. */
+  fail_if (gst_tag_list_get_double (tag_list, GST_TAG_TRACK_GAIN, &dummy),
+      "tag event still contains track gain tag");
+  fail_if (gst_tag_list_get_double (tag_list, GST_TAG_TRACK_PEAK, &dummy),
+      "tag event still contains track peak tag");
+  fail_if (gst_tag_list_get_double (tag_list, GST_TAG_ALBUM_GAIN, &dummy),
+      "tag event still contains album gain tag");
+  fail_if (gst_tag_list_get_double (tag_list, GST_TAG_ALBUM_PEAK, &dummy),
+      "tag event still contains album peak tag");
 
   return event;
 }
@@ -378,8 +357,11 @@ GST_START_TEST (test_events)
   gchar *artist;
 
   set_playing_state (element);
+  send_stream_start_event (element);
+  send_caps_event (element);
+  send_segment_event (element);
 
-  send_newsegment_and_empty_buffer ();
+  send_empty_buffer ();
 
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
@@ -422,8 +404,11 @@ GST_START_TEST (test_simple)
   g_object_set (element, "album-mode", FALSE, "headroom", +0.00,
       "pre-amp", -6.00, "fallback-gain", +1.23, NULL);
   set_playing_state (element);
+  send_stream_start_event (element);
+  send_caps_event (element);
+  send_segment_event (element);
 
-  send_newsegment_and_empty_buffer ();
+  send_empty_buffer ();
 
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
@@ -467,8 +452,11 @@ GST_START_TEST (test_fallback_gain)
   g_object_set (element, "album-mode", FALSE, "headroom", 10.00,
       "pre-amp", -6.00, "fallback-gain", -3.00, NULL);
   set_playing_state (element);
+  send_stream_start_event (element);
+  send_caps_event (element);
+  send_segment_event (element);
 
-  send_newsegment_and_empty_buffer ();
+  send_empty_buffer ();
 
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
@@ -516,8 +504,11 @@ GST_START_TEST (test_fallback_track)
   g_object_set (element, "album-mode", TRUE, "headroom", +0.00,
       "pre-amp", -6.00, "fallback-gain", +1.23, NULL);
   set_playing_state (element);
+  send_stream_start_event (element);
+  send_caps_event (element);
+  send_segment_event (element);
 
-  send_newsegment_and_empty_buffer ();
+  send_empty_buffer ();
 
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
@@ -543,8 +534,11 @@ GST_START_TEST (test_fallback_album)
   g_object_set (element, "album-mode", FALSE, "headroom", +0.00,
       "pre-amp", -6.00, "fallback-gain", +1.23, NULL);
   set_playing_state (element);
+  send_stream_start_event (element);
+  send_caps_event (element);
+  send_segment_event (element);
 
-  send_newsegment_and_empty_buffer ();
+  send_empty_buffer ();
 
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
@@ -567,8 +561,11 @@ GST_START_TEST (test_headroom)
   g_object_set (element, "album-mode", FALSE, "headroom", +0.00,
       "pre-amp", +0.00, "fallback-gain", +1.23, NULL);
   set_playing_state (element);
+  send_stream_start_event (element);
+  send_caps_event (element);
+  send_segment_event (element);
 
-  send_newsegment_and_empty_buffer ();
+  send_empty_buffer ();
 
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
@@ -618,7 +615,11 @@ GST_START_TEST (test_reference_level)
       "headroom", +0.00, "pre-amp", +0.00, "fallback-gain", +1.23, NULL);
   set_playing_state (element);
 
-  send_newsegment_and_empty_buffer ();
+  send_stream_start_event (element);
+  send_caps_event (element);
+  send_segment_event (element);
+
+  send_empty_buffer ();
 
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
