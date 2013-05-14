@@ -96,4 +96,15 @@
     });
 }
 
+-(void) mediaSizeChanged:(NSInteger)width height:(NSInteger)height
+{
+    media_width = width;
+    media_height = height;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self viewDidLayoutSubviews];
+        [video_view setNeedsLayout];
+        [video_view layoutIfNeeded];
+    });
+}
+
 @end

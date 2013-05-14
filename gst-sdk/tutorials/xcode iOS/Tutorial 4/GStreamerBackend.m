@@ -2,6 +2,7 @@
 
 #include <gst/gst.h>
 #include <gst/interfaces/xoverlay.h>
+#include <gst/video/video.h>
 
 GST_DEBUG_CATEGORY_STATIC (debug_category);
 #define GST_CAT_DEFAULT debug_category
@@ -83,6 +84,37 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
     }
 }
 
+static void check_media_size (GStreamerBackend *self) {
+    GstElement *video_sink;
+    GstPad *video_sink_pad;
+    GstCaps *caps;
+    GstVideoFormat fmt;
+    int width;
+    int height;
+
+    /* Retrieve the Caps at the entrance of the video sink */
+    g_object_get (self->pipeline, "video-sink", &video_sink, NULL);
+    video_sink_pad = gst_element_get_static_pad (video_sink, "sink");
+    caps = gst_pad_get_negotiated_caps (video_sink_pad);
+
+    if (gst_video_format_parse_caps(caps, &fmt, &width, &height)) {
+        int par_n, par_d;
+        if (gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d)) {
+            width = width * par_n / par_d;
+        }
+        GST_DEBUG ("Media size is %dx%d, notifying application", width, height);
+
+        if (self->ui_delegate && [self->ui_delegate respondsToSelector:@selector(mediaSizeChanged:height:)])
+        {
+            [self->ui_delegate mediaSizeChanged:width height:height];
+        }
+    }
+
+    gst_caps_unref(caps);
+    gst_object_unref (video_sink_pad);
+    gst_object_unref(video_sink);
+}
+
 /* Retrieve errors from the bus and show them on the UI */
 static void error_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *self)
 {
@@ -109,6 +141,11 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
         gchar *message = g_strdup_printf("State changed to %s", gst_element_state_get_name(new_state));
         [self setUIMessage:message];
         g_free (message);
+
+        if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED)
+        {
+            check_media_size(self);
+        }
     }
 }
 

@@ -11,4 +11,7 @@
  * to the screen. */
 -(void) gstreamerSetUIMessage:(NSString *)message;
 
+/* Called when the media size is first discovered or it changes */
+-(void) mediaSizeChanged:(NSInteger)width height:(NSInteger)height;
+
 @end
