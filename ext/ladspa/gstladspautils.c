@@ -56,6 +56,10 @@
 
 #include <math.h>
 
+#ifdef HAVE_LRDF
+#include <lrdf.h>
+#endif
+
 GST_DEBUG_CATEGORY_EXTERN (ladspa_debug);
 #define GST_CAT_DEFAULT ladspa_debug
 
@@ -72,8 +76,7 @@ gst_ladspa_ladspa_deinterleave_data (GstLADSPA * ladspa, LADSPA_Data * outdata,
 
   for (i = 0; i < audio_in; i++)
     for (j = 0; j < samples; j++)
-      outdata[i * samples + j] =
-          ((LADSPA_Data *) indata)[j * audio_in + i];
+      outdata[i * samples + j] = ((LADSPA_Data *) indata)[j * audio_in + i];
 }
 
 /* 
@@ -89,8 +92,7 @@ gst_ladspa_interleave_ladspa_data (GstLADSPA * ladspa, guint8 * outdata,
 
   for (i = 0; i < audio_out; i++)
     for (j = 0; j < samples; j++)
-      ((LADSPA_Data *) outdata)[j * audio_out + i] =
-          indata[i * samples + j];
+      ((LADSPA_Data *) outdata)[j * audio_out + i] = indata[i * samples + j];
 }
 
 /*
@@ -574,7 +576,7 @@ gst_ladspa_element_class_set_metadata (GstLADSPAClass * ladspa_class,
     lrdf_uris *uris;
     gchar *str, *base_type = NULL;
 
-    GST_DEBUG ("LADSPA uri (id=%d) : %s", desc->UniqueID, uri);
+    GST_DEBUG ("LADSPA uri (id=%lu) : %s", desc->UniqueID, uri);
 
     /* we can take this directly from 'desc', keep this example for future
        attributes. 
@@ -594,7 +596,7 @@ gst_ladspa_element_class_set_metadata (GstLADSPAClass * ladspa_class,
     query.next = NULL;
     uris = lrdf_match_multi (&query);
     if (uris) {
-      if (uris->ladspa.count == 1) {
+      if (uris->count == 1) {
         base_type = g_strdup (uris->items[0]);
         GST_DEBUG ("LADSPA base_type :  %s", base_type);
       }
@@ -607,7 +609,7 @@ gst_ladspa_element_class_set_metadata (GstLADSPAClass * ladspa_class,
       if (uris) {
         guint32 j;
 
-        for (j = 0; j < uris->ladspa.count; j++) {
+        for (j = 0; j < uris->count; j++) {
           if ((str = lrdf_get_label (uris->items[j]))) {
             GST_DEBUG ("LADSPA parent_type_label : %s", str);
             if (extra_ladspa_class_tags) {
@@ -631,7 +633,7 @@ gst_ladspa_element_class_set_metadata (GstLADSPAClass * ladspa_class,
        if (uris) {
        guint32 j;
 
-       for (j = 0; j < uris->ladspa.count; j++) {
+       for (j = 0; j < uris->count; j++) {
        GST_INFO ("setting_uri : %s", uris->items[j]);
        if ((str = lrdf_get_label (uris->items[j]))) {
        GST_INFO ("setting_label : %s", str);
