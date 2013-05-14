@@ -448,12 +448,10 @@ static gboolean
 gst_rg_volume_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstRgVolume *self;
-  GstPad *volume_sink_pad;
   GstEvent *send_event = event;
   gboolean res;
 
   self = GST_RG_VOLUME (parent);
-  volume_sink_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
@@ -477,11 +475,9 @@ gst_rg_volume_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   }
 
   if (G_LIKELY (send_event != NULL))
-    res = gst_pad_send_event (volume_sink_pad, send_event);
+    res = gst_pad_event_default (pad, parent, send_event);
   else
     res = TRUE;
-
-  gst_object_unref (volume_sink_pad);
 
   return res;
 }
