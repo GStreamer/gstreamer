@@ -1784,8 +1784,10 @@ return_data:
   s = gst_structure_copy (template);
   gst_structure_set (s, "width", G_TYPE_INT, (gint) width,
       "height", G_TYPE_INT, (gint) height,
-      "interlace-mode", G_TYPE_STRING, (interlaced ? "mixed" : "progressive"),
       "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
+  if (g_str_equal (gst_structure_get_name (s), "video/x-raw"))
+    gst_structure_set (s, "interlace-mode", G_TYPE_STRING,
+        (interlaced ? "mixed" : "progressive"), NULL);
 
   if (G_IS_VALUE (&rates)) {
     /* only change the framerate on the template when we have a valid probed new
@@ -2045,8 +2047,9 @@ default_frame_sizes:
     else
       gst_structure_set (tmp, "height", GST_TYPE_INT_RANGE, min_h, max_h, NULL);
 
-    gst_structure_set (tmp, "interlace-mode", G_TYPE_STRING,
-        (interlaced ? "mixed" : "progressive"), NULL);
+    if (g_str_equal (gst_structure_get_name (tmp), "video/x-raw"))
+      gst_structure_set (tmp, "interlace-mode", G_TYPE_STRING,
+          (interlaced ? "mixed" : "progressive"), NULL);
     gst_structure_set (tmp, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
         NULL);
 
