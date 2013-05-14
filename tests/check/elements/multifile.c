@@ -144,6 +144,7 @@ GST_START_TEST (test_multifilesink_key_unit)
   gchar *mfs_pattern;
   GstBuffer *buf;
   GstPad *sink;
+  GstSegment segment;
 
   tmpdir = g_get_tmp_dir ();
   template = g_build_filename (tmpdir, "multifile-test-XXXXXX", NULL);
@@ -158,6 +159,11 @@ GST_START_TEST (test_multifilesink_key_unit)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
   sink = gst_element_get_static_pad (mfs, "sink");
+
+  gst_pad_send_event (sink, gst_event_new_stream_start ("test"));
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  gst_pad_send_event (sink, gst_event_new_segment (&segment));
+
   buf = gst_buffer_new_and_alloc (4);
 
   gst_buffer_fill (buf, 0, "foo", 4);
