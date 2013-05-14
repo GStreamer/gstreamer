@@ -1,7 +1,7 @@
 #import <UIKit/UIKit.h>
 #import "GStreamerBackendDelegate.h"
 
-@interface ViewController : UIViewController <GStreamerBackendDelegate> {
+@interface VideoViewController : UIViewController <GStreamerBackendDelegate> {
     IBOutlet UILabel *message_label;
     IBOutlet UIBarButtonItem *play_button;
     IBOutlet UIBarButtonItem *pause_button;
@@ -10,6 +10,8 @@
     IBOutlet NSLayoutConstraint *video_width_constraint;
     IBOutlet NSLayoutConstraint *video_height_constraint;
 }
+
+@property (retain,nonatomic) NSString *uri;
 
 -(IBAction) play:(id)sender;
 -(IBAction) pause:(id)sender;

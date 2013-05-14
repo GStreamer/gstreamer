@@ -76,7 +76,7 @@
 		C6EB8597173BEE5E00C3953D /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C6EB8596173BEE5E00C3953D /* Default-568h@2x.png */; };
 		C6EB859A173BEE5E00C3953D /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C6EB8598173BEE5E00C3953D /* MainStoryboard_iPhone.storyboard */; };
 		C6EB859D173BEE5E00C3953D /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C6EB859B173BEE5E00C3953D /* MainStoryboard_iPad.storyboard */; };
-		C6EB85A0173BEE5E00C3953D /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6EB859F173BEE5E00C3953D /* ViewController.m */; };
+		C6EB85A0173BEE5E00C3953D /* VideoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6EB859F173BEE5E00C3953D /* VideoViewController.m */; };
 		C6EB85B1173BEF2600C3953D /* EaglUIVIew.m in Sources */ = {isa = PBXBuildFile; fileRef = C6EB85AB173BEF2600C3953D /* EaglUIVIew.m */; };
 		C6EB85B2173BEF2600C3953D /* gst_ios_init.c in Sources */ = {isa = PBXBuildFile; fileRef = C6EB85AC173BEF2600C3953D /* gst_ios_init.c */; };
 		C6EB85B3173BEF2600C3953D /* GStreamerBackend.m in Sources */ = {isa = PBXBuildFile; fileRef = C6EB85AF173BEF2600C3953D /* GStreamerBackend.m */; };
@@ -84,6 +84,7 @@
 		C6EB85BA173BEFF800C3953D /* appicon-4-iPad@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C6EB85B6173BEFF800C3953D /* appicon-4-iPad@2x.png */; };
 		C6EB85BB173BEFF800C3953D /* appicon-4-iPhone.png in Resources */ = {isa = PBXBuildFile; fileRef = C6EB85B7173BEFF800C3953D /* appicon-4-iPhone.png */; };
 		C6EB85BC173BEFF800C3953D /* appicon-4-iPhone@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C6EB85B8173BEFF800C3953D /* appicon-4-iPhone@2x.png */; };
+		C6EB85C7174233B400C3953D /* LibraryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6EB85C6174233B300C3953D /* LibraryViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -173,11 +174,11 @@
 		C6EB8596173BEE5E00C3953D /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		C6EB8599173BEE5E00C3953D /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
 		C6EB859C173BEE5E00C3953D /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
-		C6EB859E173BEE5E00C3953D /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		C6EB859F173BEE5E00C3953D /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		C6EB859E173BEE5E00C3953D /* VideoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VideoViewController.h; sourceTree = "<group>"; };
+		C6EB859F173BEE5E00C3953D /* VideoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VideoViewController.m; sourceTree = "<group>"; };
 		C6EB85AA173BEF2600C3953D /* EaglUIVIew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EaglUIVIew.h; sourceTree = "<group>"; };
 		C6EB85AB173BEF2600C3953D /* EaglUIVIew.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EaglUIVIew.m; sourceTree = "<group>"; };
-		C6EB85AC173BEF2600C3953D /* gst_ios_init.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gst_ios_init.c; sourceTree = "<group>"; };
+		C6EB85AC173BEF2600C3953D /* gst_ios_init.c */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.c.c; path = gst_ios_init.c; sourceTree = "<group>"; tabWidth = 2; };
 		C6EB85AD173BEF2600C3953D /* gst_ios_init.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gst_ios_init.h; sourceTree = "<group>"; };
 		C6EB85AE173BEF2600C3953D /* GStreamerBackend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackend.h; sourceTree = "<group>"; };
 		C6EB85AF173BEF2600C3953D /* GStreamerBackend.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GStreamerBackend.m; sourceTree = "<group>"; };
@@ -186,6 +187,8 @@
 		C6EB85B6173BEFF800C3953D /* appicon-4-iPad@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-4-iPad@2x.png"; sourceTree = "<group>"; };
 		C6EB85B7173BEFF800C3953D /* appicon-4-iPhone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-4-iPhone.png"; sourceTree = "<group>"; };
 		C6EB85B8173BEFF800C3953D /* appicon-4-iPhone@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-4-iPhone@2x.png"; sourceTree = "<group>"; };
+		C6EB85C5174233B200C3953D /* LibraryViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LibraryViewController.h; sourceTree = "<group>"; };
+		C6EB85C6174233B300C3953D /* LibraryViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LibraryViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -418,8 +421,10 @@
 				C6EB8590173BEE5E00C3953D /* AppDelegate.m */,
 				C6EB8598173BEE5E00C3953D /* MainStoryboard_iPhone.storyboard */,
 				C6EB859B173BEE5E00C3953D /* MainStoryboard_iPad.storyboard */,
-				C6EB859E173BEE5E00C3953D /* ViewController.h */,
-				C6EB859F173BEE5E00C3953D /* ViewController.m */,
+				C6EB85C5174233B200C3953D /* LibraryViewController.h */,
+				C6EB85C6174233B300C3953D /* LibraryViewController.m */,
+				C6EB859E173BEE5E00C3953D /* VideoViewController.h */,
+				C6EB859F173BEE5E00C3953D /* VideoViewController.m */,
 				C6EB8587173BEE5E00C3953D /* Supporting Files */,
 			);
 			path = "Tutorial 4";
@@ -666,10 +671,11 @@
 			files = (
 				C6EB858D173BEE5E00C3953D /* main.m in Sources */,
 				C6EB8591173BEE5E00C3953D /* AppDelegate.m in Sources */,
-				C6EB85A0173BEE5E00C3953D /* ViewController.m in Sources */,
+				C6EB85A0173BEE5E00C3953D /* VideoViewController.m in Sources */,
 				C6EB85B1173BEF2600C3953D /* EaglUIVIew.m in Sources */,
 				C6EB85B2173BEF2600C3953D /* gst_ios_init.c in Sources */,
 				C6EB85B3173BEF2600C3953D /* GStreamerBackend.m in Sources */,
+				C6EB85C7174233B400C3953D /* LibraryViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

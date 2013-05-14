@@ -45,28 +45,28 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
     return self;
 }
 
--(void) dealloc
+-(void) deinit
 {
-    if (pipeline) {
-        GST_DEBUG("Setting the pipeline to NULL");
-        gst_element_set_state(pipeline, GST_STATE_NULL);
-        gst_object_unref(pipeline);
-        pipeline = NULL;
+    if (main_loop) {
+        g_main_loop_quit(main_loop);
     }
 }
 
 -(void) play
 {
-    if(gst_element_set_state(pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-        [self setUIMessage:"Failed to set pipeline to playing"];
-    }
+    gst_element_set_state(pipeline, GST_STATE_PLAYING);
 }
 
 -(void) pause
 {
-    if(gst_element_set_state(pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE) {
-        [self setUIMessage:"Failed to set pipeline to paused"];
-    }
+    gst_element_set_state(pipeline, GST_STATE_PAUSED);
+}
+
+-(void) setUri:(NSString*)uri
+{
+    const char *char_uri = [uri UTF8String];
+    g_object_set(pipeline, "uri", char_uri, NULL);
+    GST_DEBUG ("URI set to %s", char_uri);
 }
 
 /*
@@ -140,7 +140,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     g_main_context_push_thread_default(context);
     
     /* Build pipeline */
-    pipeline = gst_parse_launch("videotestsrc ! warptv ! ffmpegcolorspace ! autovideosink", &error);
+    pipeline = gst_parse_launch("playbin2", &error);
     if (error) {
         gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
         g_clear_error (&error);
@@ -183,7 +183,11 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     g_main_context_unref (context);
     gst_element_set_state (pipeline, GST_STATE_NULL);
     gst_object_unref (pipeline);
+    pipeline = NULL;
     
+    ui_delegate = NULL;
+    ui_video_view = NULL;
+
     return;
 }
 

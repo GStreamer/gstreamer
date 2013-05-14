@@ -1,8 +1,8 @@
-#import "ViewController.h"
+#import "VideoViewController.h"
 #import "GStreamerBackend.h"
 #import <UIKit/UIKit.h>
 
-@interface ViewController () {
+@interface VideoViewController () {
     GStreamerBackend *gst_backend;
     int media_width;
     int media_height;
@@ -10,7 +10,9 @@
 
 @end
 
-@implementation ViewController
+@implementation VideoViewController
+
+@synthesize uri;
 
 /*
  * Methods from UIViewController
@@ -28,6 +30,14 @@
     media_height = 240;
 
     gst_backend = [[GStreamerBackend alloc] init:self videoView:video_view];
+}
+
+- (void)viewDidDisappear:(BOOL)animated
+{
+    if (gst_backend)
+    {
+        [gst_backend deinit];
+    }
 }
 
 - (void)didReceiveMemoryWarning
@@ -75,6 +85,7 @@
         play_button.enabled = TRUE;
         pause_button.enabled = TRUE;
         message_label.text = @"Ready";
+        [gst_backend setUri:uri];
     });
 }
 
