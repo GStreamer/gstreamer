@@ -1718,7 +1718,7 @@ gst_qtdemux_setcaps (GstQTDemux * demux, GstCaps * caps)
         gst_structure_get_fraction (structure, "framerate", &stream->fps_n,
             &stream->fps_d);
       } else if (g_str_has_prefix (gst_structure_get_name (structure), "audio")) {
-        gint rate;
+        gint rate = 0;
         stream->subtype = FOURCC_soun;
         gst_structure_get_int (structure, "channels", &stream->n_channels);
         gst_structure_get_int (structure, "rate", &rate);
@@ -5561,9 +5561,12 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
   } else if (stream->subtype == FOURCC_soun) {
     if (stream->caps) {
       stream->caps = gst_caps_make_writable (stream->caps);
-      gst_caps_set_simple (stream->caps,
-          "rate", G_TYPE_INT, (int) stream->rate,
-          "channels", G_TYPE_INT, stream->n_channels, NULL);
+      if (stream->rate > 0)
+        gst_caps_set_simple (stream->caps,
+            "rate", G_TYPE_INT, (int) stream->rate, NULL);
+      if (stream->n_channels > 0)
+        gst_caps_set_simple (stream->caps,
+            "channels", G_TYPE_INT, stream->n_channels, NULL);
       if (stream->n_channels > 2) {
         /* FIXME: Need to parse the 'chan' atom to get channel layouts
          * correctly; this is just the minimum we can do - assume
