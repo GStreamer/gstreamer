@@ -34,6 +34,21 @@
 #include <gst/audio/audio.h>
 #include <gst/audio/audio-enumtypes.h>
 
+static void
+gst_check_setup_events_interleave (GstPad * srcpad, GstElement * element,
+    GstCaps * caps, GstFormat format, const gchar * stream_id)
+{
+  GstSegment segment;
+
+  gst_segment_init (&segment, format);
+
+  fail_unless (gst_pad_push_event (srcpad,
+          gst_event_new_stream_start (stream_id)));
+  if (caps)
+    fail_unless (gst_pad_push_event (srcpad, gst_event_new_caps (caps)));
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&segment)));
+}
+
 GST_START_TEST (test_create_and_unref)
 {
   GstElement *interleave;
@@ -161,14 +176,16 @@ GST_START_TEST (test_interleave_2ch)
 
   caps = gst_caps_from_string (CAPS_48khz);
   gst_pad_set_active (mysrcpads[0], TRUE);
-  fail_unless (gst_pad_set_caps (mysrcpads[0], caps));
+  gst_check_setup_events_interleave (mysrcpads[0], interleave, caps,
+      GST_FORMAT_TIME, "0");
   gst_pad_use_fixed_caps (mysrcpads[0]);
 
   mysrcpads[1] = gst_pad_new_from_static_template (&srctemplate, "src1");
   fail_unless (mysrcpads[1] != NULL);
 
   gst_pad_set_active (mysrcpads[1], TRUE);
-  fail_unless (gst_pad_set_caps (mysrcpads[1], caps));
+  gst_check_setup_events_interleave (mysrcpads[1], interleave, caps,
+      GST_FORMAT_TIME, "1");
   gst_pad_use_fixed_caps (mysrcpads[1]);
 
   tmp = gst_element_get_static_pad (queue, "sink");
@@ -205,7 +222,6 @@ GST_START_TEST (test_interleave_2ch)
   for (i = 0; i < 48000; i++)
     indata[i] = -1.0;
   gst_buffer_unmap (inbuf, &map);
-  gst_pad_set_caps (mysrcpads[0], caps);
   fail_unless (gst_pad_push (mysrcpads[0], inbuf) == GST_FLOW_OK);
 
   input[1] = 1.0;
@@ -215,7 +231,6 @@ GST_START_TEST (test_interleave_2ch)
   for (i = 0; i < 48000; i++)
     indata[i] = 1.0;
   gst_buffer_unmap (inbuf, &map);
-  gst_pad_set_caps (mysrcpads[1], caps);
   fail_unless (gst_pad_push (mysrcpads[1], inbuf) == GST_FLOW_OK);
 
   inbuf = gst_buffer_new_and_alloc (48000 * sizeof (gfloat));
@@ -291,14 +306,16 @@ GST_START_TEST (test_interleave_2ch_1eos)
 
   caps = gst_caps_from_string (CAPS_48khz);
   gst_pad_set_active (mysrcpads[0], TRUE);
-  fail_unless (gst_pad_set_caps (mysrcpads[0], caps));
+  gst_check_setup_events_interleave (mysrcpads[0], interleave, caps,
+      GST_FORMAT_TIME, "0");
   gst_pad_use_fixed_caps (mysrcpads[0]);
 
   mysrcpads[1] = gst_pad_new_from_static_template (&srctemplate, "src1");
   fail_unless (mysrcpads[1] != NULL);
 
   gst_pad_set_active (mysrcpads[1], TRUE);
-  fail_unless (gst_pad_set_caps (mysrcpads[1], caps));
+  gst_check_setup_events_interleave (mysrcpads[1], interleave, caps,
+      GST_FORMAT_TIME, "1");
   gst_pad_use_fixed_caps (mysrcpads[1]);
 
   tmp = gst_element_get_static_pad (queue, "sink");
@@ -335,7 +352,6 @@ GST_START_TEST (test_interleave_2ch_1eos)
   for (i = 0; i < 48000; i++)
     indata[i] = -1.0;
   gst_buffer_unmap (inbuf, &map);
-  gst_pad_set_caps (mysrcpads[0], caps);
   fail_unless (gst_pad_push (mysrcpads[0], inbuf) == GST_FLOW_OK);
 
   input[1] = 1.0;
@@ -345,7 +361,6 @@ GST_START_TEST (test_interleave_2ch_1eos)
   for (i = 0; i < 48000; i++)
     indata[i] = 1.0;
   gst_buffer_unmap (inbuf, &map);
-  gst_pad_set_caps (mysrcpads[1], caps);
   fail_unless (gst_pad_push (mysrcpads[1], inbuf) == GST_FLOW_OK);
 
   input[0] = 0.0;
