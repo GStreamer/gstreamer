@@ -103,7 +103,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 /* setup and teardown needs some special handling for muxer */
 static GstPad *
 setup_src_pad (GstElement * element,
-    GstStaticPadTemplate * template, GstCaps * caps, const gchar * sinkname)
+    GstStaticPadTemplate * template, const gchar * sinkname)
 {
   GstPad *srcpad, *sinkpad;
 
@@ -119,8 +119,6 @@ setup_src_pad (GstElement * element,
       GST_ELEMENT_NAME (element));
   /* references are owned by: 1) us, 2) qtmux, 3) collect pads */
   ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
-  if (caps)
-    fail_unless (gst_pad_set_caps (srcpad, caps));
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
       "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
   gst_object_unref (sinkpad);   /* because we got it higher up */
@@ -162,7 +160,7 @@ setup_qtmux (GstStaticPadTemplate * srctemplate, const gchar * sinkname)
 
   GST_DEBUG ("setup_qtmux");
   qtmux = gst_check_setup_element ("qtmux");
-  mysrcpad = setup_src_pad (qtmux, srctemplate, NULL, sinkname);
+  mysrcpad = setup_src_pad (qtmux, srctemplate, sinkname);
   mysinkpad = gst_check_setup_sink_pad (qtmux, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
@@ -203,15 +201,18 @@ check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+
+  caps = gst_pad_get_pad_template_caps (mysrcpad);
+  gst_pad_set_caps (mysrcpad, caps);
+  gst_caps_unref (caps);
+
   /* ensure segment (format) properly setup */
   gst_segment_init (&segment, GST_FORMAT_TIME);
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   inbuffer = gst_buffer_new_and_alloc (1);
   gst_buffer_memset (inbuffer, 0, 0, 1);
-  caps = gst_pad_get_pad_template_caps (mysrcpad);
-  gst_pad_set_caps (mysrcpad, caps);
-  gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_DURATION (inbuffer) = 40 * GST_MSECOND;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -292,15 +293,18 @@ check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+
+  caps = gst_pad_get_pad_template_caps (mysrcpad);
+  gst_pad_set_caps (mysrcpad, caps);
+  gst_caps_unref (caps);
+
   /* ensure segment (format) properly setup */
   gst_segment_init (&segment, GST_FORMAT_TIME);
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   inbuffer = gst_buffer_new_and_alloc (1);
   gst_buffer_memset (inbuffer, 0, 0, 1);
-  caps = gst_pad_get_pad_template_caps (mysrcpad);
-  gst_pad_set_caps (mysrcpad, caps);
-  gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_DURATION (inbuffer) = 40 * GST_MSECOND;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -522,6 +526,12 @@ GST_START_TEST (test_reuse)
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+
+  caps = gst_pad_get_pad_template_caps (mysrcpad);
+  gst_pad_set_caps (mysrcpad, caps);
+  gst_caps_unref (caps);
+
   /* ensure segment (format) properly setup */
   gst_segment_init (&segment, GST_FORMAT_TIME);
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
@@ -529,9 +539,6 @@ GST_START_TEST (test_reuse)
   inbuffer = gst_buffer_new_and_alloc (1);
   fail_unless (inbuffer != NULL);
   gst_buffer_memset (inbuffer, 0, 0, 1);
-  caps = gst_pad_get_pad_template_caps (mysrcpad);
-  gst_pad_set_caps (mysrcpad, caps);
-  gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_DURATION (inbuffer) = 40 * GST_MSECOND;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -803,9 +810,10 @@ test_average_bitrate_custom (const gchar * elementname,
   filesink = gst_element_factory_make ("filesink", NULL);
   g_object_set (filesink, "location", location, NULL);
   gst_element_link (qtmux, filesink);
-  mysrcpad = setup_src_pad (qtmux, tmpl, NULL, sinkpadname);
+  mysrcpad = setup_src_pad (qtmux, tmpl, sinkpadname);
   fail_unless (mysrcpad != NULL);
   gst_pad_set_active (mysrcpad, TRUE);
+
 
   fail_unless (gst_element_set_state (filesink,
           GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE,
@@ -814,6 +822,12 @@ test_average_bitrate_custom (const gchar * elementname,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+
+  caps = gst_pad_get_pad_template_caps (mysrcpad);
+  gst_pad_set_caps (mysrcpad, caps);
+  gst_caps_unref (caps);
+
   /* ensure segment (format) properly setup */
   gst_segment_init (&segment, GST_FORMAT_TIME);
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
@@ -821,9 +835,6 @@ test_average_bitrate_custom (const gchar * elementname,
   for (i = 0; i < 3; i++) {
     inbuffer = gst_buffer_new_and_alloc (bytes[i]);
     gst_buffer_memset (inbuffer, 0, 0, bytes[i]);
-    caps = gst_pad_get_pad_template_caps (mysrcpad);
-    gst_pad_set_caps (mysrcpad, caps);
-    gst_caps_unref (caps);
     GST_BUFFER_TIMESTAMP (inbuffer) = total_duration;
     GST_BUFFER_DURATION (inbuffer) = (GstClockTime) durations[i];
     ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
