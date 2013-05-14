@@ -1919,7 +1919,11 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
         demux->neededbytes = demux->todrop + stream->samples[idx].size;
       } else {
         /* set up for EOS */
-        demux->neededbytes = -1;
+        if (demux->mss_mode) {
+          demux->neededbytes = 16;
+        } else {
+          demux->neededbytes = -1;
+        }
         demux->todrop = 0;
       }
     exit:
