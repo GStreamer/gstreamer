@@ -133,7 +133,8 @@ make_shm_pool (GstWlDisplay * display, int size, void **data)
   char filename[1024];
   static int init = 0;
 
-  snprintf (filename, 256, "%s-%d-%s", "/tmp/wayland-shm", init++, "XXXXXX");
+  snprintf (filename, 256, "%s/%s-%d-%s", g_get_user_runtime_dir (),
+      "wayland-shm", init++, "XXXXXX");
 
   fd = mkstemp (filename);
   if (fd < 0) {
