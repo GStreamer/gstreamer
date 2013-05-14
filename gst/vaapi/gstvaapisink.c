@@ -673,13 +673,7 @@ gst_vaapisink_start(GstBaseSink *base_sink)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
 
-    if (!gst_vaapisink_ensure_display(sink))
-        return FALSE;
-
-    sink->uploader = gst_vaapi_uploader_new(sink->display);
-    if (!sink->uploader)
-        return FALSE;
-    return TRUE;
+    return gst_vaapisink_ensure_uploader(sink);
 }
 
 static gboolean
