@@ -1260,6 +1260,7 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
   guint64 padding = asfmux->prop_padding;
   GstSegment segment;
   GstMapInfo map;
+  gchar s_id[32];
 
   if (padding < ASF_PADDING_OBJECT_SIZE)
     padding = 0;
@@ -1267,6 +1268,10 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
   /* from this point we started writing the headers */
   GST_INFO_OBJECT (asfmux, "Writing headers");
   asfmux->state = GST_ASF_MUX_STATE_HEADERS;
+
+  /* stream-start (FIXME: create id based on input ids) */
+  g_snprintf (s_id, sizeof (s_id), "asfmux-%08x", g_random_int ());
+  gst_pad_push_event (asfmux->srcpad, gst_event_new_stream_start (s_id));
 
   caps = gst_pad_get_pad_template_caps (asfmux->srcpad);
   gst_pad_set_caps (asfmux->srcpad, caps);
