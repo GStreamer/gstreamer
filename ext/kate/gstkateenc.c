@@ -629,6 +629,10 @@ gst_kate_enc_send_headers (GstKateEnc * ke)
       gst_pad_set_caps (ke->srcpad, caps);
       gst_caps_unref (caps);
 
+      if (ke->pending_segment)
+        gst_pad_push_event (ke->srcpad, ke->pending_segment);
+      ke->pending_segment = NULL;
+
       GST_LOG_OBJECT (ke, "pushing headers");
       item = headers;
       while (item) {
@@ -1091,6 +1095,7 @@ gst_kate_enc_change_state (GstElement * element, GstStateChange transition)
         ke->last_timestamp = 0;
         ke->latest_end_time = 0;
       }
+      gst_event_replace (&ke->pending_segment, NULL);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
@@ -1222,16 +1227,23 @@ gst_kate_enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_unref (event);
       break;
     }
-    case GST_EVENT_SEGMENT:
+    case GST_EVENT_SEGMENT: {
+      GstSegment seg;
+
       GST_LOG_OBJECT (ke, "Got newsegment event");
+
+      gst_event_copy_segment (event, &seg);
+
+      if (!ke->headers_sent) {
+        gst_event_replace (&ke->pending_segment, event);
+        event = NULL;
+      }
+
       if (ke->initialized) {
         GST_LOG_OBJECT (ke, "ensuring all headers are in");
         if (gst_kate_enc_flush_headers (ke) != GST_FLOW_OK) {
           GST_WARNING_OBJECT (ke, "Failed to flush headers");
         } else {
-          GstSegment seg;
-
-          gst_event_copy_segment (event, &seg);
           if (seg.format != GST_FORMAT_TIME
               || !GST_CLOCK_TIME_IS_VALID (seg.start)) {
             GST_WARNING_OBJECT (ke,
@@ -1269,9 +1281,12 @@ gst_kate_enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           }
         }
       }
-      ret = gst_pad_push_event (ke->srcpad, event);
+      if (event)
+        ret = gst_pad_push_event (ke->srcpad, event);
+      else
+        ret = TRUE;
       break;
-
+    }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
       GST_LOG_OBJECT (ke, "Got custom downstream event");
       /* adapted from the dvdsubdec element */

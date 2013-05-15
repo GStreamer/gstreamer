@@ -81,6 +81,8 @@ struct _GstKateEnc
   GstClockTime last_timestamp;
   GstClockTime latest_end_time;
 
+  GstEvent *pending_segment;
+
   gboolean headers_sent;
   gboolean initialized;
   gboolean delayed_spu;
