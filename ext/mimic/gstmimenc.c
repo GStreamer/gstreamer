@@ -209,6 +209,7 @@ gst_mim_enc_reset_locked (GstMimEnc * mimenc)
     mimenc->width = 0;
     mimenc->height = 0;
   }
+  gst_event_replace (&mimenc->pending_segment, NULL);
 }
 
 static void
@@ -296,7 +297,6 @@ gst_mim_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
 
   GST_OBJECT_LOCK (mimenc);
 
-
   gst_buffer_map (in, &in_map, GST_MAP_READ);
 
   out = gst_buffer_new_and_alloc (mimenc->buffer_size + TCP_HEADER_SIZE);
@@ -334,6 +334,11 @@ gst_mim_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
 
   gst_buffer_unmap (out, &out_map);
   gst_buffer_resize (out, 0, buffer_size + TCP_HEADER_SIZE);
+
+  if (G_UNLIKELY (mimenc->pending_segment)) {
+    gst_pad_push_event (mimenc->srcpad, mimenc->pending_segment);
+    mimenc->pending_segment = FALSE;
+  }
 
   GST_OBJECT_UNLOCK (mimenc);
 
@@ -375,6 +380,10 @@ gst_mim_enc_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_segment_init (&mimenc->segment, GST_FORMAT_UNDEFINED);
+      gst_event_replace (&mimenc->pending_segment, NULL);
+      break;
     case GST_EVENT_EOS:
       gst_mim_enc_reset (mimenc);
       break;
@@ -396,6 +405,7 @@ gst_mim_enc_event (GstPad * pad, GstObject * parent, GstEvent * event)
       if (mimenc->segment.format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
 
+      gst_event_replace (&mimenc->pending_segment, event);
       forward = FALSE;
       break;
 
@@ -513,12 +523,10 @@ gst_mim_enc_change_state (GstElement * element, GstStateChange transition)
   gboolean paused_mode;
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-
-
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_OBJECT_LOCK (mimenc);
       gst_segment_init (&mimenc->segment, GST_FORMAT_UNDEFINED);
+      gst_event_replace (&mimenc->pending_segment, NULL);
       mimenc->last_buffer = GST_CLOCK_TIME_NONE;
       GST_OBJECT_UNLOCK (mimenc);
       break;

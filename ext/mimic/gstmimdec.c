@@ -353,7 +353,6 @@ gst_mim_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_STREAM_START:
     case GST_EVENT_FLUSH_STOP:
     case GST_EVENT_EOS:
-      mimdec->need_segment = FALSE;
       gst_adapter_clear (mimdec->adapter);
       break;
     default:

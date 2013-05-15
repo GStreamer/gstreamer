@@ -57,6 +57,7 @@ struct _GstMimEnc
 
   gboolean paused_mode;
   GstSegment segment;
+  GstEvent *pending_segment;
   GstClockTime last_buffer;
   GstClockID clock_id;
   gboolean stop_paused_mode;
