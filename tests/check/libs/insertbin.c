@@ -151,6 +151,7 @@ GST_START_TEST (test_insertbin_simple)
   GstElement *elem4;
   GstPad *srcpad;
   GstPad *sinkpad;
+  GstCaps *caps;
 
   g_mutex_init (&mutex);
   g_cond_init (&cond);
@@ -181,6 +182,10 @@ GST_START_TEST (test_insertbin_simple)
   fail_unless (gst_pad_set_active (sinkpad, TRUE));
   fail_unless (gst_element_set_state (insertbin,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+
+  caps = gst_caps_new_empty_simple ("video/test");
+  gst_check_setup_events (srcpad, insertbin, caps, GST_FORMAT_BYTES);
+  gst_caps_unref (caps);
 
   fail_unless (cb_count == 0);
   fail_unless (buffers == NULL);
