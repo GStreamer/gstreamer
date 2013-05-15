@@ -128,7 +128,7 @@ GST_START_TEST (count_in_out)
       "could not set to playing");
 
   caps = gst_caps_from_string (CAPS);
-  gst_pad_set_caps (srcpad, caps);
+  gst_check_setup_events (srcpad, elem, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   /* push 1s audio to get 30 video-frames */
