@@ -97,7 +97,8 @@ do_test (GstBuffer * inbuffer, GstCaps * caps)
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, faad, caps, GST_FORMAT_TIME);
+
   /* need to push twice to get faad output */
   gst_buffer_ref (inbuffer);
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);

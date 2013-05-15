@@ -119,7 +119,7 @@ do_test (gboolean adts)
   /* makes valgrind's memcheck happier */
   gst_buffer_memset (inbuffer, 0, 0, 1024 * nbuffers * 2 * 2);
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, faac, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
