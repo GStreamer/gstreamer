@@ -234,7 +234,8 @@ gst_audio_info_from_caps (GstAudioInfo * info, const GstCaps * caps)
       goto invalid_channel_mask;
   }
 
-  gst_audio_info_set_format (info, format, rate, channels, position);
+  gst_audio_info_set_format (info, format, rate, channels,
+      (channels > 64) ? NULL : position);
 
   return TRUE;
 
