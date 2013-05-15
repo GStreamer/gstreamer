@@ -197,7 +197,6 @@ static GstElement *
 setup_mpeg1layer2dec (void)
 {
   GstElement *mpg123audiodec;
-  GstSegment seg;
   GstCaps *caps;
 
   GST_DEBUG ("setup_mpeg1layer2dec");
@@ -207,9 +206,6 @@ setup_mpeg1layer2dec (void)
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
-  gst_segment_init (&seg, GST_FORMAT_TIME);
-  gst_pad_push_event (mysrcpad, gst_event_new_segment (&seg));
-
   /* This is necessary to trigger a set_format call in the decoder;
    * fixed caps don't trigger it */
   caps = gst_caps_new_simple ("audio/mpeg",
@@ -217,7 +213,7 @@ setup_mpeg1layer2dec (void)
       "layer", G_TYPE_INT, 2,
       "rate", G_TYPE_INT, 44100,
       "channels", G_TYPE_INT, 1, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, mpg123audiodec, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   return mpg123audiodec;
@@ -227,7 +223,6 @@ static GstElement *
 setup_mpeg1layer3dec (void)
 {
   GstElement *mpg123audiodec;
-  GstSegment seg;
   GstCaps *caps;
 
   GST_DEBUG ("setup_mpeg1layer3dec");
@@ -237,9 +232,6 @@ setup_mpeg1layer3dec (void)
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
-  gst_segment_init (&seg, GST_FORMAT_TIME);
-  gst_pad_push_event (mysrcpad, gst_event_new_segment (&seg));
-
   /* This is necessary to trigger a set_format call in the decoder;
    * fixed caps don't trigger it */
   caps = gst_caps_new_simple ("audio/mpeg",
@@ -247,7 +239,7 @@ setup_mpeg1layer3dec (void)
       "layer", G_TYPE_INT, 3,
       "rate", G_TYPE_INT, 44100,
       "channels", G_TYPE_INT, 1, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, mpg123audiodec, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   return mpg123audiodec;
