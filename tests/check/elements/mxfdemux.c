@@ -237,6 +237,7 @@ GST_START_TEST (test_push)
   GstElement *mxfdemux;
   GstBuffer *buffer;
   GstPad *sinkpad;
+  GstCaps *caps;
 
   have_data = FALSE;
   have_eos = FALSE;
@@ -262,6 +263,10 @@ GST_START_TEST (test_push)
 
   gst_pad_set_active (mysinkpad, TRUE);
   gst_pad_set_active (mysrcpad, TRUE);
+
+  caps = gst_caps_new_empty_simple ("application/mxf");
+  gst_check_setup_events (mysrcpad, mxfdemux, caps, GST_FORMAT_BYTES);
+  gst_caps_unref (caps);
 
   gst_element_set_state (mxfdemux, GST_STATE_PLAYING);
 
