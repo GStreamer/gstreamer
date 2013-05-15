@@ -156,6 +156,9 @@ gst_kate_util_decoder_base_queue_event (GstKateDecoderBase * decoder,
       break;
   }
 
+  if (GST_EVENT_IS_STICKY (event) && GST_EVENT_TYPE (event) < GST_EVENT_CAPS)
+    can_be_queued = FALSE;
+
   if (decoder->delay_events && can_be_queued) {
     GstKateDecoderBaseQueuedEvent *item;
     GST_DEBUG_OBJECT (decoder, "We have to delay the event");
