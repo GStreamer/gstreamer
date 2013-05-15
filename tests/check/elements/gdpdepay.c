@@ -128,6 +128,10 @@ GST_START_TEST (test_audio_per_byte)
   gst_caps_unref (caps);
   fail_if (gst_pad_get_current_caps (srcpad));
 
+  caps = gst_caps_new_empty_simple ("application/x-gdp");
+  gst_check_setup_events (mysrcpad, gdpdepay, caps, GST_FORMAT_BYTES);
+  gst_caps_unref (caps);
+
   /* create caps and buffer packets and push them */
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
   fail_unless (pk->packet_from_caps (caps, 0, &len, &header, &payload));
@@ -204,6 +208,10 @@ GST_START_TEST (test_audio_in_one_buffer)
   fail_unless (gst_caps_is_any (caps));
   gst_caps_unref (caps);
   fail_if (gst_pad_get_current_caps (srcpad));
+
+  caps = gst_caps_new_empty_simple ("application/x-gdp");
+  gst_check_setup_events (mysrcpad, gdpdepay, caps, GST_FORMAT_BYTES);
+  gst_caps_unref (caps);
 
   /* create caps and buffer packets and push them as one buffer */
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
@@ -307,6 +315,10 @@ GST_START_TEST (test_streamheader)
   fail_unless (gst_caps_is_any (caps));
   gst_caps_unref (caps);
   fail_if (gst_pad_get_current_caps (srcpad));
+
+  caps = gst_caps_new_empty_simple ("application/x-gdp");
+  gst_check_setup_events (mysrcpad, gdpdepay, caps, GST_FORMAT_BYTES);
+  gst_caps_unref (caps);
 
   /* create a streamheader buffer and the caps containing it */
   caps = gst_caps_from_string ("application/x-gst-test-streamheader");

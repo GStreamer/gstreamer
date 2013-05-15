@@ -95,8 +95,6 @@ GST_START_TEST (test_audio)
   GstCaps *caps;
   GstElement *gdppay;
   GstBuffer *inbuffer, *outbuffer;
-  GstSegment segment;
-  GstEvent *event;
   gchar *caps_string;
   gint length;
 
@@ -106,19 +104,13 @@ GST_START_TEST (test_audio)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  GST_DEBUG ("new segment");
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  segment.stop = GST_SECOND;
-  event = gst_event_new_segment (&segment);
-  fail_unless (gst_pad_push_event (mysrcpad, event));
-
   /* no buffer should be pushed yet, waiting for caps */
   fail_unless_equals_int (g_list_length (buffers), 0);
 
   GST_DEBUG ("first buffer");
   inbuffer = gst_buffer_new_and_alloc (4);
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, gdppay, caps, GST_FORMAT_TIME);
   caps_string = gst_caps_to_string (caps);
 
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -236,8 +228,6 @@ GST_START_TEST (test_streamheader)
   GstCaps *caps, *sinkcaps;
   GstElement *gdppay;
   GstBuffer *inbuffer, *outbuffer, *shbuffer;
-  GstSegment segment;
-  GstEvent *event;
   gchar *caps_string;
   gint length;
   GstStructure *structure;
@@ -246,18 +236,11 @@ GST_START_TEST (test_streamheader)
   const GValue *sh;
   GArray *shbuffers;
 
-
   gdppay = setup_gdppay_streamheader ();
 
   fail_unless (gst_element_set_state (gdppay,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
-
-  GST_DEBUG ("new segment");
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  segment.stop = GST_SECOND;
-  event = gst_event_new_segment (&segment);
-  fail_unless (gst_pad_push_event (myshsrcpad, event));
 
   /* no buffer should be pushed yet, still waiting for caps */
   fail_unless_equals_int (g_list_length (buffers), 0);
@@ -279,7 +262,7 @@ GST_START_TEST (test_streamheader)
   g_value_unset (&array);
   caps_string = gst_caps_to_string (caps);
 
-  gst_pad_set_caps (myshsrcpad, caps);
+  gst_check_setup_events (myshsrcpad, gdppay, caps, GST_FORMAT_TIME);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* pushing gives away my reference */
@@ -431,7 +414,7 @@ GST_START_TEST (test_first_no_new_segment)
   GST_DEBUG ("first buffer");
   inbuffer = gst_buffer_new_and_alloc (4);
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, gdppay, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -461,8 +444,6 @@ GST_START_TEST (test_crc)
   GstCaps *caps;
   GstElement *gdppay;
   GstBuffer *inbuffer, *outbuffer;
-  GstSegment segment;
-  GstEvent *event;
   gchar *caps_string;
   gint length;
   GstMapInfo map;
@@ -475,18 +456,13 @@ GST_START_TEST (test_crc)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  GST_DEBUG ("new segment");
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  event = gst_event_new_segment (&segment);
-  fail_unless (gst_pad_push_event (mysrcpad, event));
-
   /* no buffer should be pushed yet, waiting for caps */
   fail_unless_equals_int (g_list_length (buffers), 0);
 
   GST_DEBUG ("first buffer");
   inbuffer = gst_buffer_new_and_alloc (4);
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, gdppay, caps, GST_FORMAT_TIME);
   caps_string = gst_caps_to_string (caps);
 
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
