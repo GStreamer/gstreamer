@@ -57,7 +57,7 @@ static GstStaticPadTemplate srcaudiotemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 static GstPad *
 setup_src_pad (GstElement * element,
-    GstStaticPadTemplate * template, GstCaps * caps, const gchar * sinkname)
+    GstStaticPadTemplate * template, const gchar * sinkname)
 {
   GstPad *srcpad, *sinkpad;
 
@@ -73,8 +73,6 @@ setup_src_pad (GstElement * element,
       GST_ELEMENT_NAME (element));
   /* references are owned by: 1) us, 2) asfmux, 3) collect pads */
   ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
-  if (caps)
-    fail_unless (gst_pad_set_caps (srcpad, caps));
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
       "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
   gst_object_unref (sinkpad);   /* because we got it higher up */
@@ -127,7 +125,7 @@ setup_asfmux (GstStaticPadTemplate * srctemplate, const gchar * sinkname)
   GST_DEBUG ("setup_asfmux");
   asfmux = gst_check_setup_element ("asfmux");
 
-  mysrcpad = setup_src_pad (asfmux, srctemplate, NULL, sinkname);
+  mysrcpad = setup_src_pad (asfmux, srctemplate, sinkname);
   mysinkpad = gst_check_setup_sink_pad (asfmux, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
@@ -163,7 +161,7 @@ check_asfmux_pad (GstStaticPadTemplate * srctemplate,
 
   inbuffer = gst_buffer_new_and_alloc (1);
   caps = gst_caps_from_string (src_caps_string);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, asfmux, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
