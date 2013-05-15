@@ -1612,11 +1612,16 @@ mpegtsdemux_prepare_srcpad (MpegTsMux * mux)
   GstSegment seg;
   /* we are not going to seek */
   GstEvent *new_seg;
+  gchar s_id[32];
   GstCaps *caps = gst_caps_new_simple ("video/mpegts",
       "systemstream", G_TYPE_BOOLEAN, TRUE,
       "packetsize", G_TYPE_INT,
       (mux->m2ts_mode ? M2TS_PACKET_LENGTH : NORMAL_TS_PACKET_LENGTH),
       NULL);
+
+  /* stream-start (FIXME: create id based on input ids) */
+  g_snprintf (s_id, sizeof (s_id), "mpegtsmux-%08x", g_random_int ());
+  gst_pad_push_event (mux->srcpad, gst_event_new_stream_start (s_id));
 
   gst_segment_init (&seg, GST_FORMAT_TIME);
   new_seg = gst_event_new_segment (&seg);
