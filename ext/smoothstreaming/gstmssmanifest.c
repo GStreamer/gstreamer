@@ -563,50 +563,80 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
   GstCaps *caps;
   GstStructure *structure;
   gchar *fourcc = (gchar *) xmlGetProp (node, (xmlChar *) "FourCC");
-  gchar *channels = (gchar *) xmlGetProp (node, (xmlChar *) "Channels");
-  gchar *rate = (gchar *) xmlGetProp (node, (xmlChar *) "SamplingRate");
-  gchar *codec_data =
+  gchar *channels_str = (gchar *) xmlGetProp (node, (xmlChar *) "Channels");
+  gchar *rate_str = (gchar *) xmlGetProp (node, (xmlChar *) "SamplingRate");
+  gchar *codec_data_str =
       (gchar *) xmlGetProp (node, (xmlChar *) "CodecPrivateData");
+  GstBuffer *codec_data = NULL;
+  gint block_align = 0;
+  gint rate = 0;
+  gint channels = 0;
 
   if (!fourcc)                  /* sometimes the fourcc is omitted, we fallback to the Subtype in the StreamIndex node */
     fourcc = (gchar *) xmlGetProp (node->parent, (xmlChar *) "Subtype");
-  if (!codec_data)
-    codec_data = (gchar *) xmlGetProp (node, (xmlChar *) "WaveFormatEx");
 
   caps = _gst_mss_stream_audio_caps_from_fourcc (fourcc);
   if (!caps)
     goto end;
 
   structure = gst_caps_get_structure (caps, 0);
-  if (channels) {
-    gst_structure_set (structure, "channels", G_TYPE_INT,
-        (int) g_ascii_strtoull (channels, NULL, 10), NULL);
-  }
-  if (rate) {
-    gst_structure_set (structure, "rate", G_TYPE_INT,
-        (int) g_ascii_strtoull (rate, NULL, 10), NULL);
-  }
-  if (q->bitrate) {
-    gst_structure_set (structure, "bitrate", G_TYPE_INT, q->bitrate, NULL);
+  if (codec_data_str && strlen (codec_data_str)) {
+    codec_data = gst_buffer_from_hex_string ((gchar *) codec_data_str);
   }
 
-  if (codec_data && strlen (codec_data)) {
-    GstBuffer *buffer = gst_buffer_from_hex_string ((gchar *) codec_data);
-    gst_structure_set (structure, "codec_data", GST_TYPE_BUFFER, buffer, NULL);
-    gst_buffer_unref (buffer);
-  } else if (strcmp (fourcc, "AACL") == 0 && rate && channels) {
-    GstBuffer *buffer =
-        _make_aacl_codec_data (g_ascii_strtoull (rate, NULL, 10),
-        g_ascii_strtoull (channels, NULL, 10));
-    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buffer, NULL);
-    gst_buffer_unref (buffer);
+  if (rate_str)
+    rate = (gint) g_ascii_strtoull (rate_str, NULL, 10);
+  if (channels_str)
+    channels = (int) g_ascii_strtoull (channels_str, NULL, 10);
+
+  if (!codec_data) {
+    GstMapInfo mapinfo;
+    codec_data_str = (gchar *) xmlGetProp (node, (xmlChar *) "WaveFormatEx");
+    if (codec_data_str && strlen (codec_data_str)) {
+      codec_data = gst_buffer_from_hex_string ((gchar *) codec_data_str);
+
+      /* since this is a waveformatex, try to get the block_align and rate */
+      gst_buffer_map (codec_data, &mapinfo, GST_MAP_READ);
+      if (mapinfo.size >= 14) {
+        if (!channels_str) {
+          channels = GST_READ_UINT16_LE (mapinfo.data + 2);
+        }
+        if (!rate_str) {
+          rate = GST_READ_UINT32_LE (mapinfo.data + 4);
+        }
+        block_align = GST_READ_UINT16_LE (mapinfo.data + 12);
+      }
+      gst_buffer_unmap (codec_data, &mapinfo);
+    }
   }
+
+  if (!codec_data && strcmp (fourcc, "AACL") == 0 && rate && channels) {
+    codec_data = _make_aacl_codec_data (rate, channels);
+  }
+
+  if (block_align)
+    gst_structure_set (structure, "block_align", G_TYPE_INT, block_align, NULL);
+
+  if (channels)
+    gst_structure_set (structure, "channels", G_TYPE_INT, channels, NULL);
+
+  if (rate)
+    gst_structure_set (structure, "rate", G_TYPE_INT, rate, NULL);
+
+  if (q->bitrate)
+    gst_structure_set (structure, "bitrate", G_TYPE_INT, q->bitrate, NULL);
+
+  if (codec_data)
+    gst_structure_set (structure, "codec_data", GST_TYPE_BUFFER, codec_data,
+        NULL);
 
 end:
+  if (codec_data)
+    gst_buffer_unref (codec_data);
   xmlFree (fourcc);
-  xmlFree (channels);
-  xmlFree (rate);
-  xmlFree (codec_data);
+  xmlFree (channels_str);
+  xmlFree (rate_str);
+  xmlFree (codec_data_str);
 
   return caps;
 }
@@ -700,13 +730,9 @@ gst_mss_stream_get_caps (GstMssStream * stream)
   GstCaps *caps = NULL;
 
   if (streamtype == MSS_STREAM_TYPE_VIDEO)
-    caps =
-        _gst_mss_stream_video_caps_from_qualitylevel_xml
-        (qualitylevel);
+    caps = _gst_mss_stream_video_caps_from_qualitylevel_xml (qualitylevel);
   else if (streamtype == MSS_STREAM_TYPE_AUDIO)
-    caps =
-        _gst_mss_stream_audio_caps_from_qualitylevel_xml
-        (qualitylevel);
+    caps = _gst_mss_stream_audio_caps_from_qualitylevel_xml (qualitylevel);
 
   return caps;
 }
