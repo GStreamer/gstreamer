@@ -849,39 +849,47 @@ gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind,
     gboolean check_avail)
 {
   GstTypeFindProbability probability;
-  GstCaps *caps;
+  GstCaps *caps = NULL;
   gsize avail;
   const guint8 *data;
   gboolean have_min, have_max;
 
   GST_OBJECT_LOCK (typefind);
-  avail = gst_adapter_available (typefind->adapter);
-
-  if (check_avail) {
-    have_min = avail >= TYPE_FIND_MIN_SIZE;
-    have_max = avail >= TYPE_FIND_MAX_SIZE;
-  } else {
-    have_min = avail > 0;
-    have_max = TRUE;
+  if (typefind->force_caps) {
+    caps = gst_caps_ref (typefind->force_caps);
+    probability = GST_TYPE_FIND_MAXIMUM;
   }
 
-  if (!have_min)
-    goto not_enough_data;
+  if (!caps) {
+    avail = gst_adapter_available (typefind->adapter);
 
-  /* map all available data */
-  data = gst_adapter_map (typefind->adapter, avail);
-  caps = gst_type_find_helper_for_data (GST_OBJECT (typefind),
-      data, avail, &probability);
-  gst_adapter_unmap (typefind->adapter);
+    if (check_avail) {
+      have_min = avail >= TYPE_FIND_MIN_SIZE;
+      have_max = avail >= TYPE_FIND_MAX_SIZE;
+    } else {
+      have_min = avail > 0;
+      have_max = TRUE;
+    }
 
-  if (caps == NULL && have_max)
-    goto no_type_found;
-  else if (caps == NULL)
-    goto wait_for_data;
+    if (!have_min)
+      goto not_enough_data;
 
-  /* found a type */
-  if (probability < typefind->min_probability)
-    goto low_probability;
+    /* map all available data */
+    data = gst_adapter_map (typefind->adapter, avail);
+    caps = gst_type_find_helper_for_data (GST_OBJECT (typefind),
+        data, avail, &probability);
+    gst_adapter_unmap (typefind->adapter);
+
+    if (caps == NULL && have_max)
+      goto no_type_found;
+    else if (caps == NULL)
+      goto wait_for_data;
+
+    /* found a type */
+    if (probability < typefind->min_probability)
+      goto low_probability;
+  }
+
   GST_OBJECT_UNLOCK (typefind);
 
   /* probability is good enough too, so let's make it known ... emiting this
@@ -993,46 +1001,55 @@ gst_type_find_element_loop (GstPad * pad)
   }
 
   if (typefind->mode == MODE_TYPEFIND) {
-    GstPad *peer;
+    GstPad *peer = NULL;
     GstCaps *found_caps = NULL;
     GstTypeFindProbability probability = GST_TYPE_FIND_NONE;
 
     GST_DEBUG_OBJECT (typefind, "find type in pull mode");
 
-    peer = gst_pad_get_peer (pad);
-    if (peer) {
-      gint64 size;
-      gchar *ext;
+    GST_OBJECT_LOCK (typefind);
+    if (typefind->force_caps) {
+      found_caps = gst_caps_ref (typefind->force_caps);
+      probability = GST_TYPE_FIND_MAXIMUM;
+    }
+    GST_OBJECT_UNLOCK (typefind);
 
-      if (!gst_pad_query_duration (peer, GST_FORMAT_BYTES, &size)) {
-        GST_WARNING_OBJECT (typefind, "Could not query upstream length!");
+    if (!found_caps) {
+      peer = gst_pad_get_peer (pad);
+      if (peer) {
+        gint64 size;
+        gchar *ext;
+
+        if (!gst_pad_query_duration (peer, GST_FORMAT_BYTES, &size)) {
+          GST_WARNING_OBJECT (typefind, "Could not query upstream length!");
+          gst_object_unref (peer);
+
+          ret = GST_FLOW_ERROR;
+          goto pause;
+        }
+
+        /* the size if 0, we cannot continue */
+        if (size == 0) {
+          /* keep message in sync with message in sink event handler */
+          GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
+              (_("Stream contains no data.")), ("Can't typefind empty stream"));
+          gst_object_unref (peer);
+          ret = GST_FLOW_ERROR;
+          goto pause;
+        }
+        ext = gst_type_find_get_extension (typefind, pad);
+
+        found_caps =
+            gst_type_find_helper_get_range (GST_OBJECT_CAST (peer),
+            GST_OBJECT_PARENT (peer),
+            (GstTypeFindHelperGetRangeFunction) (GST_PAD_GETRANGEFUNC (peer)),
+            (guint64) size, ext, &probability);
+        g_free (ext);
+
+        GST_DEBUG ("Found caps %" GST_PTR_FORMAT, found_caps);
+
         gst_object_unref (peer);
-
-        ret = GST_FLOW_ERROR;
-        goto pause;
       }
-
-      /* the size if 0, we cannot continue */
-      if (size == 0) {
-        /* keep message in sync with message in sink event handler */
-        GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
-            (_("Stream contains no data.")), ("Can't typefind empty stream"));
-        gst_object_unref (peer);
-        ret = GST_FLOW_ERROR;
-        goto pause;
-      }
-      ext = gst_type_find_get_extension (typefind, pad);
-
-      found_caps =
-          gst_type_find_helper_get_range (GST_OBJECT_CAST (peer),
-          GST_OBJECT_PARENT (peer),
-          (GstTypeFindHelperGetRangeFunction) (GST_PAD_GETRANGEFUNC (peer)),
-          (guint64) size, ext, &probability);
-      g_free (ext);
-
-      GST_DEBUG ("Found caps %" GST_PTR_FORMAT, found_caps);
-
-      gst_object_unref (peer);
     }
 
     if (!found_caps || probability < typefind->min_probability) {
@@ -1163,36 +1180,9 @@ gst_type_find_element_activate_sink_mode (GstPad * pad, GstObject * parent,
 static gboolean
 gst_type_find_element_activate_sink (GstPad * pad, GstObject * parent)
 {
-  GstTypeFindElement *typefind;
   GstQuery *query;
   gboolean pull_mode;
-  GstCaps *found_caps = NULL;
-  GstTypeFindProbability probability = GST_TYPE_FIND_NONE;
   GstSchedulingFlags sched_flags;
-
-  typefind = GST_TYPE_FIND_ELEMENT (parent);
-
-  /* if we have force caps, use those */
-  GST_OBJECT_LOCK (typefind);
-  if (typefind->force_caps) {
-    found_caps = gst_caps_ref (typefind->force_caps);
-    probability = GST_TYPE_FIND_MAXIMUM;
-    GST_OBJECT_UNLOCK (typefind);
-
-    GST_DEBUG ("Emiting found caps %" GST_PTR_FORMAT, found_caps);
-    g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
-        0, probability, found_caps);
-    gst_caps_unref (found_caps);
-    typefind->mode = MODE_NORMAL;
-    /* the signal above could have made a downstream element activate
-     * the pad in pull mode, we check if the pad is already active now and if
-     * so, we are done */
-    if (gst_pad_is_active (pad))
-      return TRUE;
-
-    goto typefind_push;
-  }
-  GST_OBJECT_UNLOCK (typefind);
 
   query = gst_query_new_scheduling ();
 
