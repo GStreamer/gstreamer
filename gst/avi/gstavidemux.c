@@ -4858,6 +4858,8 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
       GST_DEBUG_OBJECT (avi, "setting DISCONT flag");
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       stream->discont = FALSE;
+    } else {
+      GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
     }
 #if 0
     gst_avi_demux_add_assoc (avi, stream, timestamp, offset, keyframe);
@@ -5158,6 +5160,8 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
             GST_DEBUG_OBJECT (avi, "Setting DISCONT");
             GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
             stream->discont = FALSE;
+          } else {
+            GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
           }
           res = gst_pad_push (stream->pad, buf);
           buf = NULL;
