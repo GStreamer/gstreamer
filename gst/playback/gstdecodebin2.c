@@ -3320,6 +3320,9 @@ gst_decode_chain_is_complete (GstDecodeChain * chain)
   gboolean complete = FALSE;
 
   CHAIN_MUTEX_LOCK (chain);
+  if (chain->dbin->shutdown)
+    goto out;
+
   if (chain->deadend) {
     complete = TRUE;
     goto out;
