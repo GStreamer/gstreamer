@@ -3866,6 +3866,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
     if (!isvideodec && !isaudiodec)
       return GST_AUTOPLUG_SELECT_TRY;
 
+    GST_SOURCE_GROUP_LOCK (group);
     g_mutex_lock (&playbin->elements_lock);
 
     if (isaudiodec) {
@@ -3911,7 +3912,6 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
 
       if (((isaudiodec && !group->audio_sink) ||
               (isvideodec && !group->video_sink))) {
-        GST_SOURCE_GROUP_LOCK (group);
         if (ave && ave->sink) {
           if ((*sinkp = gst_element_factory_create (ave->sink, NULL)) == NULL)
             GST_WARNING_OBJECT (playbin,
@@ -3919,7 +3919,6 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
                 gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (*sinkp)));
           gst_object_ref_sink (*sinkp);
         }
-        GST_SOURCE_GROUP_UNLOCK (group);
       }
 
       /* If it is a decoder and we have a fixed sink for the media
@@ -3978,19 +3977,19 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
          * sink or if we have a fixed sink, skip the decoder */
         if ((isaudiodec && group->audio_sink != playbin->audio_sink) ||
             (isvideodec && group->video_sink != playbin->video_sink)) {
-          GST_SOURCE_GROUP_LOCK (group);
           gst_element_set_state (*sinkp, GST_STATE_NULL);
           gst_object_unref (*sinkp);
           *sinkp = NULL;
-          GST_SOURCE_GROUP_UNLOCK (group);
         } else {
           g_mutex_unlock (&playbin->elements_lock);
+          GST_SOURCE_GROUP_UNLOCK (group);
           return GST_AUTOPLUG_SELECT_SKIP;
         }
       }
     }
     g_list_free (ave_list);
     g_mutex_unlock (&playbin->elements_lock);
+    GST_SOURCE_GROUP_UNLOCK (group);
     return GST_AUTOPLUG_SELECT_TRY;
   }
 
@@ -4130,8 +4129,9 @@ autoplug_query_cb (GstElement * uridecodebin, GstPad * pad, GstQuery * query,
    * check the audio and video sink */
   if (group->suburidecodebin
       && gst_object_has_ancestor (GST_OBJECT_CAST (pad),
-          GST_OBJECT_CAST (group->suburidecodebin)))
+          GST_OBJECT_CAST (group->suburidecodebin))) {
     goto done;
+  }
 
   if ((sink = group->audio_sink)) {
     sinkpad = gst_element_get_static_pad (sink, "sink");
