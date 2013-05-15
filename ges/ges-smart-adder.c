@@ -50,23 +50,13 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink_%u",
 typedef struct _PadInfos
 {
   GESSmartAdder *self;
-  GstPad *ghost;
   GstPad *adder_pad;
-  GstPad *parent_sinkpad;
-
-  GstElement *volume;
-  GstElement *audioconvert;
-  GstElement *audioresample;
   GstElement *bin;
-
 } PadInfos;
 
 static void
-destroy_pad_info (PadInfos * infos)
+destroy_pad (PadInfos * infos)
 {
-  GST_DEBUG_OBJECT (infos->self, "Destroying pad %" GST_PTR_FORMAT,
-      infos->ghost);
-
   if (G_LIKELY (infos->bin)) {
     gst_element_set_state (infos->bin, GST_STATE_NULL);
     gst_element_unlink (infos->bin, infos->self->adder);
@@ -75,73 +65,8 @@ destroy_pad_info (PadInfos * infos)
 
   if (infos->adder_pad)
     gst_element_release_request_pad (infos->self->adder, infos->adder_pad);
-
   g_slice_free (PadInfos, infos);
 }
-
-/****************************************************
- *              Callbacks                           *
- ****************************************************/
-static void
-_connected_to_gnlobject_cb (GstPad * pad, GstPad * peer, PadInfos * infos)
-{
-  GESTrack *track;
-  GESLayer *layer;
-
-  gfloat volume, track_volume, layer_volume;
-  GstElement *gnlobject = gst_pad_get_parent_element (peer);
-  GESTrackElement *track_element = g_object_get_qdata (G_OBJECT (gnlobject),
-      GNL_OBJECT_TRACK_ELEMENT_QUARK);
-
-  g_assert (track_element);
-  g_signal_handlers_disconnect_by_func (pad, _connected_to_gnlobject_cb, infos);
-
-  volume = track_volume = layer_volume = GES_META_VOLUME_DEFAULT;
-  track = ges_track_element_get_track (track_element);
-  layer = ges_clip_get_layer (GES_CLIP (GES_TIMELINE_ELEMENT_PARENT
-          (track_element)));
-
-  if (layer == NULL) {
-    GST_WARNING ("TrackElement is in no layer");
-    goto no_layer;
-  }
-
-  ges_meta_container_get_float (GES_META_CONTAINER (layer),
-      GES_META_VOLUME, &layer_volume);
-  gst_object_unref (layer);
-  ges_meta_container_get_float (GES_META_CONTAINER (track),
-      GES_META_VOLUME, &track_volume);
-
-  volume = track_volume * layer_volume;
-  g_object_set (infos->volume, "volume", volume, NULL);
-
-no_layer:
-  gst_object_unref (gnlobject);
-}
-
-/* Here we get the information that the pad is linked to a ghostpad GNL created,
- * what we want is to get notify when the gnloperation (ghost)sinkpad gets linked
- * to the pad of another gnlobject in the pipeline, so we can get the
- * GESTrackElement that wraps the gnlobject that is linked */
-static void
-_sink_pad_linked_cb (GstPad * adder_pad, GstProxyPad * peer, PadInfos * infos)
-{
-  GESSmartAdder *self = infos->self;
-  /* The peer is a ProxyPad (inside ourself) that is linked to the gnloperation
-   * ProxyPad, we want to get notify about the gnloperation ProxyPad connection
-   */
-  GstProxyPad *parent_sinkpad =
-      gst_proxy_pad_get_internal (GST_PROXY_PAD (peer));
-
-  LOCK (self);
-  infos->parent_sinkpad = GST_PAD (parent_sinkpad);
-  UNLOCK (self);
-
-  g_signal_handlers_disconnect_by_func (adder_pad, _sink_pad_linked_cb, infos);
-  g_signal_connect (parent_sinkpad, "linked",
-      G_CALLBACK (_connected_to_gnlobject_cb), infos);
-}
-
 
 /****************************************************
  *              GstElement vmetods                  *
@@ -150,8 +75,9 @@ static GstPad *
 _request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name, const GstCaps * caps)
 {
-  GstPad *volume_srcpad, *audioconvert_sinkpad, *tmpghost;
-
+  GstPad *audioresample_srcpad, *audioconvert_sinkpad, *tmpghost;
+  GstPad *ghost;
+  GstElement *audioconvert, *audioresample;
   PadInfos *infos = g_slice_new0 (PadInfos);
   GESSmartAdder *self = GES_SMART_ADDER (element);
 
@@ -161,52 +87,46 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
 
     return NULL;
   }
-  infos->self = gst_object_ref (self);
+
+  infos->self = self;
 
   infos->bin = gst_bin_new (NULL);
-  infos->audioconvert = gst_element_factory_make ("audioconvert", NULL);
-  infos->audioresample = gst_element_factory_make ("audioresample", NULL);
-  infos->volume = gst_element_factory_make ("volume", NULL);
-  gst_bin_add_many (GST_BIN (infos->bin), infos->audioconvert,
-      infos->audioresample, infos->volume, NULL);
-  gst_element_link_many (infos->audioconvert, infos->audioresample,
-      infos->volume, NULL);
+  audioconvert = gst_element_factory_make ("audioconvert", NULL);
+  audioresample = gst_element_factory_make ("audioresample", NULL);
 
-  audioconvert_sinkpad = gst_element_get_static_pad (infos->audioconvert,
-      "sink");
+  gst_bin_add_many (GST_BIN (infos->bin), audioconvert, audioresample, NULL);
+  gst_element_link_many (audioconvert, audioresample, NULL);
+
+  audioconvert_sinkpad = gst_element_get_static_pad (audioconvert, "sink");
   tmpghost = GST_PAD (gst_ghost_pad_new (NULL, audioconvert_sinkpad));
   gst_object_unref (audioconvert_sinkpad);
   gst_pad_set_active (tmpghost, TRUE);
   gst_element_add_pad (GST_ELEMENT (infos->bin), tmpghost);
 
   gst_bin_add (GST_BIN (self), infos->bin);
-  infos->ghost = gst_ghost_pad_new (NULL, tmpghost);
-  gst_pad_set_active (infos->ghost, TRUE);
-  if (!gst_element_add_pad (GST_ELEMENT (self), infos->ghost))
+  ghost = gst_ghost_pad_new (NULL, tmpghost);
+  gst_pad_set_active (ghost, TRUE);
+  if (!gst_element_add_pad (GST_ELEMENT (self), ghost))
     goto could_not_add;
 
-
-  volume_srcpad = gst_element_get_static_pad (infos->volume, "src");
-  tmpghost = GST_PAD (gst_ghost_pad_new (NULL, volume_srcpad));
-  gst_object_unref (volume_srcpad);
+  audioresample_srcpad = gst_element_get_static_pad (audioresample, "src");
+  tmpghost = GST_PAD (gst_ghost_pad_new (NULL, audioresample_srcpad));
+  gst_object_unref (audioresample_srcpad);
   gst_pad_set_active (tmpghost, TRUE);
   gst_element_add_pad (GST_ELEMENT (infos->bin), tmpghost);
   gst_pad_link (tmpghost, infos->adder_pad);
 
   LOCK (self);
-  g_hash_table_insert (self->pads_infos, infos->ghost, infos);
+  g_hash_table_insert (self->pads_infos, ghost, infos);
   UNLOCK (self);
 
-  g_signal_connect (infos->ghost, "linked",
-      G_CALLBACK (_sink_pad_linked_cb), infos);
-
-  GST_DEBUG_OBJECT (self, "Returning new pad %" GST_PTR_FORMAT, infos->ghost);
-  return infos->ghost;
+  GST_DEBUG_OBJECT (self, "Returning new pad %" GST_PTR_FORMAT, ghost);
+  return ghost;
 
 could_not_add:
   {
-    GST_DEBUG_OBJECT (self, "could not add pad");
-    destroy_pad_info (infos);
+    GST_ERROR_OBJECT (self, "could not add pad");
+    destroy_pad (infos);
     return NULL;
   }
 }
@@ -275,7 +195,7 @@ ges_smart_adder_init (GESSmartAdder * self)
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   self->pads_infos = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-      NULL, (GDestroyNotify) destroy_pad_info);
+      NULL, (GDestroyNotify) destroy_pad);
 }
 
 GstElement *
