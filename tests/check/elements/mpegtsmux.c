@@ -54,7 +54,7 @@ static GstPad *mysrcpad, *mysinkpad;
 /* setup and teardown needs some special handling for muxer */
 static GstPad *
 setup_src_pad (GstElement * element,
-    GstStaticPadTemplate * template, GstCaps * caps, const gchar * sinkname,
+    GstStaticPadTemplate * template, const gchar * sinkname,
     gchar ** padname)
 {
   GstPad *srcpad, *sinkpad;
@@ -71,8 +71,6 @@ setup_src_pad (GstElement * element,
       GST_ELEMENT_NAME (element));
   /* references are owned by: 1) us, 2) tsmux, 3) collect pads */
   ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
-  if (caps)
-    fail_unless (gst_pad_set_caps (srcpad, caps));
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
       "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
   gst_object_unref (sinkpad);   /* because we got it higher up */
@@ -122,7 +120,7 @@ setup_tsmux (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
 
   GST_DEBUG ("setup_tsmux");
   mux = gst_check_setup_element ("mpegtsmux");
-  mysrcpad = setup_src_pad (mux, srctemplate, NULL, sinkname, padname);
+  mysrcpad = setup_src_pad (mux, srctemplate, sinkname, padname);
   mysinkpad = gst_check_setup_sink_pad (mux, &sink_template);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
@@ -155,19 +153,15 @@ check_tsmux_pad (GstStaticPadTemplate * srctemplate,
   gint i;
   gint pmt_pid = -1, el_pid = -1, pcr_pid = -1, packets = 0;
   gchar *padname;
-  GstSegment segment;
 
   mux = setup_tsmux (srctemplate, sinkname, &padname);
   fail_unless (gst_element_set_state (mux,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
-
   inbuffer = gst_buffer_new_and_alloc (1);
   caps = gst_caps_from_string (src_caps_string);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, mux, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -425,16 +419,25 @@ link_src (GstElement * mpegtsmux, GstPad ** sink, TestData * test_data)
 static void
 setup_caps (GstElement * mpegtsmux, GstPad * src1, GstPad * src2, GstPad * src3)
 {
+  GstSegment segment;
   GstCaps *caps;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
 
   caps = gst_caps_new_simple ("video/x-h264",
       "stream-format", G_TYPE_STRING, "byte-stream", NULL);
-  gst_pad_set_caps (src1, caps);
-  gst_pad_set_caps (src2, caps);
+  gst_pad_push_event (src1, gst_event_new_stream_start ("1"));
+  gst_pad_push_event (src1, gst_event_new_caps (caps));
+  gst_pad_push_event (src1, gst_event_new_segment (&segment));
+  gst_pad_push_event (src2, gst_event_new_stream_start ("2"));
+  gst_pad_push_event (src2, gst_event_new_caps (caps));
+  gst_pad_push_event (src2, gst_event_new_segment (&segment));
   gst_caps_unref (caps);
   caps = gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 4,
       "stream-format", G_TYPE_STRING, "raw", NULL);
-  gst_pad_set_caps (src3, caps);
+  gst_pad_push_event (src3, gst_event_new_stream_start ("3"));
+  gst_pad_push_event (src3, gst_event_new_caps (caps));
+  gst_pad_push_event (src3, gst_event_new_segment (&segment));
   gst_caps_unref (caps);
 }
 
@@ -475,8 +478,6 @@ GST_START_TEST (test_force_key_unit_event_downstream)
   gint count = 0;
   ThreadData *thread_data_1, *thread_data_2, *thread_data_3, *thread_data_4;
   TestData test_data = { 0, };
-  GstSegment segment;
-  GstEvent *event;
 
   mpegtsmux = gst_check_setup_element ("mpegtsmux");
 
@@ -484,15 +485,6 @@ GST_START_TEST (test_force_key_unit_event_downstream)
   link_sinks (mpegtsmux, &src1, &src2, &src3, &test_data);
   gst_element_set_state (mpegtsmux, GST_STATE_PLAYING);
   setup_caps (mpegtsmux, src1, src2, src3);
-
-  /* send segment info */
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  event = gst_event_new_segment (&segment);
-  fail_unless (gst_pad_push_event (src1, event));
-  event = gst_event_new_segment (&segment);
-  fail_unless (gst_pad_push_event (src2, event));
-  event = gst_event_new_segment (&segment);
-  fail_unless (gst_pad_push_event (src3, event));
 
   /* send a force-key-unit event with running_time=2s */
   timestamp = stream_time = running_time = 2 * GST_SECOND;
@@ -542,13 +534,12 @@ GST_START_TEST (test_force_key_unit_event_upstream)
   GstPad *src1;
   GstPad *src2;
   GstPad *src3;
-  GstEvent *event;
   GstClockTime timestamp, stream_time, running_time;
   gboolean all_headers = TRUE;
   gint count = 0;
   TestData test_data = { 0, };
   ThreadData *thread_data_1, *thread_data_2, *thread_data_3, *thread_data_4;
-  GstSegment segment;
+  GstEvent * event;
 
   mpegtsmux = gst_check_setup_element ("mpegtsmux");
 
@@ -556,15 +547,6 @@ GST_START_TEST (test_force_key_unit_event_upstream)
   link_sinks (mpegtsmux, &src1, &src2, &src3, &test_data);
   gst_element_set_state (mpegtsmux, GST_STATE_PLAYING);
   setup_caps (mpegtsmux, src1, src2, src3);
-
-  /* send segment info */
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  event = gst_event_new_segment (&segment);
-  fail_unless (gst_pad_push_event (src1, event));
-  event = gst_event_new_segment (&segment);
-  fail_unless (gst_pad_push_event (src2, event));
-  event = gst_event_new_segment (&segment);
-  fail_unless (gst_pad_push_event (src3, event));
 
   /* send an upstream force-key-unit event with running_time=2s */
   timestamp = stream_time = running_time = 2 * GST_SECOND;
@@ -636,7 +618,6 @@ GST_START_TEST (test_propagate_flow_status)
 {
   GstElement *mux;
   gchar *padname;
-  GstSegment segment;
   GstBuffer *inbuffer;
   GstCaps *caps;
   guint i;
@@ -652,11 +633,8 @@ GST_START_TEST (test_propagate_flow_status)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
-
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, mux, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   for (i = 0; i < G_N_ELEMENTS (expected); ++i) {
@@ -703,7 +681,7 @@ GST_START_TEST (test_multiple_state_change)
   gst_segment_init (&segment, GST_FORMAT_TIME);
 
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
+  gst_check_setup_events (mysrcpad, mux, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   for (i = 0; i < num_transitions_to_test; ++i) {
