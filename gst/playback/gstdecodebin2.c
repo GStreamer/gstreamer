@@ -4410,10 +4410,12 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* Make sure we've cleared all existing chains */
+      EXPOSE_LOCK (dbin);
       if (dbin->decode_chain) {
         gst_decode_chain_free (dbin->decode_chain);
         dbin->decode_chain = NULL;
       }
+      EXPOSE_UNLOCK (dbin);
       DYN_LOCK (dbin);
       GST_LOG_OBJECT (dbin, "clearing shutdown flag");
       dbin->shutdown = FALSE;
@@ -4446,10 +4448,12 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       do_async_done (dbin);
+      EXPOSE_LOCK (dbin);
       if (dbin->decode_chain) {
         gst_decode_chain_free (dbin->decode_chain);
         dbin->decode_chain = NULL;
       }
+      EXPOSE_UNLOCK (dbin);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
     default:
