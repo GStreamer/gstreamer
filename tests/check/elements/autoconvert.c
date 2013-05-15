@@ -100,7 +100,7 @@ GST_START_TEST (test_autoconvert_simple)
 
   /* Setting original caps */
   caps = gst_caps_from_string ("test/caps,type=(int)1");
-  fail_unless (gst_pad_set_caps (test_src_pad, caps));
+  gst_check_setup_events (test_src_pad, autoconvert, caps, GST_FORMAT_BYTES);
   gst_caps_unref (caps);
 
   /* Push 10 items */
