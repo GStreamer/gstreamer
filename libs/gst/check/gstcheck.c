@@ -438,14 +438,13 @@ static gboolean
 buffer_event_function (GstPad * pad, GstObject * noparent, GstEvent * event)
 {
   if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
-    GstCaps *event_caps, *current_caps;
+    GstCaps *event_caps;
+    GstCaps *expected_caps = gst_pad_get_element_private (pad);
 
-    current_caps = gst_pad_get_current_caps (pad);
     gst_event_parse_caps (event, &event_caps);
-    fail_unless (gst_caps_is_fixed (current_caps));
+    fail_unless (gst_caps_is_fixed (expected_caps));
     fail_unless (gst_caps_is_fixed (event_caps));
-    fail_unless (gst_caps_is_equal_fixed (event_caps, current_caps));
-    gst_caps_unref (current_caps);
+    fail_unless (gst_caps_is_equal_fixed (event_caps, expected_caps));
     gst_event_unref (event);
     return TRUE;
   }
@@ -501,8 +500,7 @@ gst_check_element_push_buffer_list (const gchar * element_name,
   /* activate the pad */
   gst_pad_set_active (src_pad, TRUE);
   GST_DEBUG ("src pad activated");
-  if (caps_in)
-    fail_unless (gst_pad_set_caps (src_pad, caps_in));
+  gst_check_setup_events (src_pad, element, caps_in, GST_FORMAT_BYTES);
   pad_peer = gst_element_get_static_pad (element, "sink");
   fail_if (pad_peer == NULL);
   fail_unless (gst_pad_link (src_pad, pad_peer) == GST_PAD_LINK_OK,
@@ -529,9 +527,10 @@ gst_check_element_push_buffer_list (const gchar * element_name,
     /* configure the sink pad */
     gst_pad_set_chain_function (sink_pad, gst_check_chain_func);
     gst_pad_set_active (sink_pad, TRUE);
-    gst_pad_set_caps (sink_pad, caps_out);
-    if (caps_out)
+    if (caps_out) {
+      gst_pad_set_element_private (sink_pad, caps_out);
       gst_pad_set_event_function (sink_pad, buffer_event_function);
+    }
     /* get the peer pad */
     pad_peer = gst_element_get_static_pad (element, "src");
     fail_unless (gst_pad_link (pad_peer, sink_pad) == GST_PAD_LINK_OK,
