@@ -147,11 +147,16 @@ GST_START_TEST (test_opus_id_header)
 {
   GstElement *opusdec;
   GstBuffer *inbuffer;
+  GstCaps *caps;
 
   opusdec = setup_opusdec ();
   fail_unless (gst_element_set_state (opusdec,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+
+  caps = gst_caps_new_empty_simple ("audio/x-opus");
+  gst_check_setup_events (mydecsrcpad, opusdec, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (opus_ogg_id_header));
   gst_buffer_fill (inbuffer, 0, opus_ogg_id_header,
@@ -236,7 +241,7 @@ GST_START_TEST (test_opus_encode_samples)
 
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
   fail_unless (caps != NULL);
-  gst_pad_set_caps (myencsrcpad, caps);
+  gst_check_setup_events (myencsrcpad, opusenc, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   gst_buffer_ref (inbuffer);
 
@@ -307,9 +312,14 @@ GST_START_TEST (test_opus_encode_properties)
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
   fail_unless (caps != NULL);
 
-  gst_pad_set_caps (myencsrcpad, caps);
+  gst_check_setup_events (myencsrcpad, opusenc, caps, GST_FORMAT_TIME);
 
   for (step = 0; step < steps; ++step) {
+    GstSegment segment;
+    
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    gst_pad_push_event (myencsrcpad, gst_event_new_segment (&segment));
+
     inbuffer = gst_buffer_new_and_alloc (nsamples * 2);
     gst_buffer_memset (inbuffer, 0, 0, nsamples * 2);
 
