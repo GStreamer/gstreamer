@@ -204,8 +204,7 @@ static void gst_eglglessink_set_render_rectangle (GstVideoOverlay * overlay,
 /* Utility */
 static gboolean gst_eglglessink_create_window (GstEglGlesSink *
     eglglessink, gint width, gint height);
-static gboolean gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink,
-    gboolean reset);
+static gboolean gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink);
 static gboolean
 gst_eglglessink_configure_caps (GstEglGlesSink * eglglessink, GstCaps * caps);
 static GstFlowReturn gst_eglglessink_upload (GstEglGlesSink * sink,
@@ -740,17 +739,17 @@ gst_eglglessink_expose (GstVideoOverlay * overlay)
 }
 
 static gboolean
-gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
+gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink)
 {
   gdouble render_width, render_height;
   gdouble texture_width, texture_height;
   gdouble x1, x2, y1, y2;
   gdouble tx1, tx2, ty1, ty2;
 
-  GST_INFO_OBJECT (eglglessink, "VBO setup. have_vbo:%d, should reset %d",
-      eglglessink->egl_context->have_vbo, reset);
+  GST_INFO_OBJECT (eglglessink, "VBO setup. have_vbo:%d",
+      eglglessink->egl_context->have_vbo);
 
-  if (eglglessink->egl_context->have_vbo && reset) {
+  if (eglglessink->egl_context->have_vbo) {
     glDeleteBuffers (1, &eglglessink->egl_context->position_buffer);
     glDeleteBuffers (1, &eglglessink->egl_context->index_buffer);
     eglglessink->egl_context->have_vbo = FALSE;
@@ -929,6 +928,7 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
     goto HANDLE_ERROR_LOCKED;
 
   eglglessink->egl_context->have_vbo = TRUE;
+
   GST_DEBUG_OBJECT (eglglessink, "VBO setup done");
 
   return TRUE;
@@ -1673,7 +1673,7 @@ gst_eglglessink_render (GstEglGlesSink * eglglessink)
       glClear (GL_COLOR_BUFFER_BIT);
     }
 
-    if (!gst_eglglessink_setup_vbo (eglglessink, FALSE)) {
+    if (!gst_eglglessink_setup_vbo (eglglessink)) {
       GST_OBJECT_UNLOCK (eglglessink);
       GST_ERROR_OBJECT (eglglessink, "VBO setup failed");
       goto HANDLE_ERROR;
