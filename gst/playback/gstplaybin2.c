@@ -3599,7 +3599,7 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
   gst_play_bin_update_elements_list (playbin);
   factory_list =
       gst_element_factory_list_filter (playbin->elements, caps, GST_PAD_SINK,
-      TRUE);
+      gst_caps_is_fixed (caps));
   g_mutex_unlock (&playbin->elements_lock);
 
   GST_DEBUG_OBJECT (playbin, "found factories %p", factory_list);

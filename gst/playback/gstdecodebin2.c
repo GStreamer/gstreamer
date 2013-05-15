@@ -1373,7 +1373,7 @@ gst_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
   gst_decode_bin_update_factories_list (dbin);
   list =
       gst_element_factory_list_filter (dbin->factories, caps, GST_PAD_SINK,
-      TRUE);
+      gst_caps_is_fixed (caps));
   g_mutex_unlock (&dbin->factories_lock);
 
   result = g_value_array_new (g_list_length (list));
