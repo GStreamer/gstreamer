@@ -126,8 +126,8 @@ gst_audio_visualizer_shader_get_type (void)
   if (G_UNLIKELY (shader_type == 0)) {
     /* TODO: rename when exporting it as a library */
     shader_type =
-        g_enum_register_static ("GstAudioVisualizerShader-BaseExtVisual",
-        shaders);
+        g_enum_register_static
+        ("GstAudioVisualizerShader-BaseExtLibvisual", shaders);
   }
   return shader_type;
 }
@@ -525,7 +525,7 @@ gst_audio_visualizer_get_type (void)
 
     /* TODO: rename when exporting it as a library */
     _type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstAudioVisualizer-BaseExtVisual", &audio_visualizer_info,
+        "GstAudioVisualizer-BaseExtLibvisual", &audio_visualizer_info,
         G_TYPE_FLAG_ABSTRACT);
     g_once_init_leave (&audio_visualizer_type, _type);
   }
@@ -542,8 +542,9 @@ gst_audio_visualizer_class_init (GstAudioVisualizerClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  GST_DEBUG_CATEGORY_INIT (audio_visualizer_debug, "audiobasevisualizer",
-      0, "scope audio visualisation base class");
+  GST_DEBUG_CATEGORY_INIT (audio_visualizer_debug,
+      "baseaudiovisualizer-libvisual", 0,
+      "scope audio visualisation base class");
 
   gobject_class->set_property = gst_audio_visualizer_set_property;
   gobject_class->get_property = gst_audio_visualizer_get_property;
@@ -705,7 +706,9 @@ gst_audio_visualizer_sink_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
   GST_DEBUG_OBJECT (scope, "audio: channels %d, rate %d",
       GST_AUDIO_INFO_CHANNELS (&info), GST_AUDIO_INFO_RATE (&info));
 
-  gst_pad_mark_reconfigure (scope->srcpad);
+  if (!gst_audio_visualizer_src_negotiate (scope)) {
+    goto not_negotiated;
+  }
 
   return TRUE;
 
@@ -713,6 +716,11 @@ gst_audio_visualizer_sink_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
 wrong_caps:
   {
     GST_WARNING_OBJECT (scope, "could not parse caps");
+    return FALSE;
+  }
+not_negotiated:
+  {
+    GST_WARNING_OBJECT (scope, "failed to negotiate");
     return FALSE;
   }
 }
@@ -1017,7 +1025,6 @@ activate_failed:
   }
 }
 
-
 static GstFlowReturn
 gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -1054,7 +1061,6 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
   bps = GST_AUDIO_INFO_BPS (&scope->ainfo);
 
   if (bps == 0) {
-    GST_ERROR_OBJECT (scope, "no BPS set");
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto beach;
   }
@@ -1147,7 +1153,6 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     /* call class->render() vmethod */
     if (klass->render) {
       if (!klass->render (scope, inbuf, &outframe)) {
-        GST_ERROR_OBJECT (scope, "render failed");
         ret = GST_FLOW_ERROR;
       } else {
         /* run various post processing (shading and geometric transformation) */
