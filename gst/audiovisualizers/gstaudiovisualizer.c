@@ -709,7 +709,9 @@ gst_audio_visualizer_sink_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
   GST_DEBUG_OBJECT (scope, "audio: channels %d, rate %d",
       GST_AUDIO_INFO_CHANNELS (&info), GST_AUDIO_INFO_RATE (&info));
 
-  gst_pad_mark_reconfigure (scope->srcpad);
+  if (!gst_audio_visualizer_src_negotiate (scope)) {
+    goto not_negotiated;
+  }
 
   return TRUE;
 
@@ -717,6 +719,11 @@ gst_audio_visualizer_sink_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
 wrong_caps:
   {
     GST_WARNING_OBJECT (scope, "could not parse caps");
+    return FALSE;
+  }
+not_negotiated:
+  {
+    GST_WARNING_OBJECT (scope, "failed to negotiate");
     return FALSE;
   }
 }
