@@ -451,8 +451,9 @@ _gst_mss_stream_add_h264_codec_data (GstCaps * caps, const gchar * codecdatastr)
 }
 
 static GstCaps *
-_gst_mss_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
+_gst_mss_stream_video_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
 {
+  xmlNodePtr node = q->xmlnode;
   GstCaps *caps;
   GstStructure *structure;
   gchar *fourcc = (gchar *) xmlGetProp (node, (xmlChar *) "FourCC");
@@ -556,8 +557,9 @@ _make_aacl_codec_data (guint64 sampling_rate, guint64 channels)
 }
 
 static GstCaps *
-_gst_mss_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
+_gst_mss_stream_audio_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
 {
+  xmlNodePtr node = q->xmlnode;
   GstCaps *caps;
   GstStructure *structure;
   gchar *fourcc = (gchar *) xmlGetProp (node, (xmlChar *) "FourCC");
@@ -583,6 +585,9 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
   if (rate) {
     gst_structure_set (structure, "rate", G_TYPE_INT,
         (int) g_ascii_strtoull (rate, NULL, 10), NULL);
+  }
+  if (q->bitrate) {
+    gst_structure_set (structure, "bitrate", G_TYPE_INT, q->bitrate, NULL);
   }
 
   if (codec_data && strlen (codec_data)) {
@@ -697,11 +702,11 @@ gst_mss_stream_get_caps (GstMssStream * stream)
   if (streamtype == MSS_STREAM_TYPE_VIDEO)
     caps =
         _gst_mss_stream_video_caps_from_qualitylevel_xml
-        (qualitylevel->xmlnode);
+        (qualitylevel);
   else if (streamtype == MSS_STREAM_TYPE_AUDIO)
     caps =
         _gst_mss_stream_audio_caps_from_qualitylevel_xml
-        (qualitylevel->xmlnode);
+        (qualitylevel);
 
   return caps;
 }
