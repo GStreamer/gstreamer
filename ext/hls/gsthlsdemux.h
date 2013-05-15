@@ -28,7 +28,7 @@
 #include <gst/base/gstadapter.h>
 #include "m3u8.h"
 #include "gstfragmented.h"
-#include "gsturidownloader.h"
+#include <gst/uridownloader/gsturidownloader.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_HLS_DEMUX \

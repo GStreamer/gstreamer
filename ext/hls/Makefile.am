@@ -5,13 +5,13 @@ libgstfragmented_la_SOURCES =			\
 	m3u8.c					\
 	gsthlsdemux.c				\
 	gstfragment.c				\
-	gsturidownloader.c			\
 	gstfragmentedplugin.c 			\
 	gsthlssink.c 				\
 	gstm3u8playlist.c
 
 libgstfragmented_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS) $(GNUTLS_CFLAGS)
 libgstfragmented_la_LIBADD = \
+	$(top_builddir)/gst-libs/gst/uridownloader/libgsturidownloader-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_BASE_LIBS) -lgstpbutils-$(GST_API_VERSION) -lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(GIO_LIBS) $(LIBM) $(GNUTLS_LIBS)
 libgstfragmented_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -no-undefined
@@ -24,7 +24,6 @@ noinst_HEADERS = 			\
 	gsthlsdemux.h			\
 	gsthlssink.h			\
 	gstm3u8playlist.h		\
-	gsturidownloader.h		\
 	m3u8.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
