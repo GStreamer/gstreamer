@@ -298,6 +298,7 @@ GST_START_TEST (test_kate_empty_identification_header)
   GstElement *katedec;
   GstBuffer *inbuffer;
   GstBus *bus;
+  GstCaps *caps;
 
   katedec = setup_katedec ();
   bus = gst_bus_new ();
@@ -305,6 +306,10 @@ GST_START_TEST (test_kate_empty_identification_header)
   fail_unless (gst_element_set_state (katedec,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+
+  caps = gst_caps_new_empty_simple ("subtitle/x-kate");
+  gst_check_setup_events (mydecsrcpad, katedec, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
 
   inbuffer = gst_buffer_new_and_alloc (0);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -331,12 +336,17 @@ GST_START_TEST (test_kate_identification_header)
   GstElement *katedec;
   GstBuffer *inbuffer;
   GstBus *bus;
+  GstCaps *caps;
 
   katedec = setup_katedec ();
   fail_unless (gst_element_set_state (katedec,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
   bus = gst_bus_new ();
+
+  caps = gst_caps_new_empty_simple ("subtitle/x-kate");
+  gst_check_setup_events (mydecsrcpad, katedec, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
 
   inbuffer = gst_buffer_new_wrapped (g_memdup (kate_header_0x80,
           sizeof (kate_header_0x80)), sizeof (kate_header_0x80));
@@ -446,7 +456,7 @@ GST_START_TEST (test_kate_encode_empty)
 
   caps = gst_caps_from_string ("text/x-raw, format=utf8");
   fail_unless (caps != NULL);
-  gst_pad_push_event (myencsrcpad, gst_event_new_caps (caps));
+  gst_check_setup_events (myencsrcpad, kateenc, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   gst_element_set_bus (kateenc, bus);
@@ -494,7 +504,7 @@ GST_START_TEST (test_kate_encode_simple)
 
   caps = gst_caps_from_string ("text/x-raw, format=utf8");
   fail_unless (caps != NULL);
-  gst_pad_push_event (myencsrcpad, gst_event_new_caps (caps));
+  gst_check_setup_events (myencsrcpad, kateenc, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   gst_buffer_ref (inbuffer);
 
@@ -548,7 +558,7 @@ GST_START_TEST (test_kate_encode_spu)
 
   caps = gst_caps_from_string ("subpicture/x-dvd");
   fail_unless (caps != NULL);
-  gst_pad_push_event (myencsrcpad, gst_event_new_caps (caps));
+  gst_check_setup_events (myencsrcpad, kateenc, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
   gst_buffer_ref (inbuffer);
 
@@ -609,6 +619,8 @@ GST_START_TEST (test_kate_encode_keepalives)
     g_object_set (kateenc, "keepalive-min-time", cfg[round].keepalive_min_time,
         NULL);
 
+    gst_pad_push_event (myencsrcpad, gst_event_new_stream_start ("test"));
+
     /* the second one here should not emit a keepalive since the time since last packet
        is less than the keepalive delay */
     for (i = 1; i <= n_keepalives; ++i) {
@@ -642,7 +654,7 @@ GST_START_TEST (test_kate_encode_keepalives)
 GST_END_TEST;
 
 static void
-test_kate_send_headers (GstPad * pad)
+test_kate_send_headers (GstElement * element, GstPad * pad)
 {
   GstBuffer *inbuffer;
   GstCaps *caps;
@@ -650,7 +662,7 @@ test_kate_send_headers (GstPad * pad)
   int i;
 
   caps = gst_caps_new_simple ("subtitle/x-kate", NULL, NULL);
-  gst_pad_push_event (pad, gst_event_new_caps (caps));
+  gst_check_setup_events (pad, element, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
   /* push headers */
@@ -694,7 +706,7 @@ GST_START_TEST (test_kate_parse)
 
   gst_element_set_bus (kateparse, bus);
 
-  test_kate_send_headers (myparsesrcpad);
+  test_kate_send_headers (kateparse, myparsesrcpad);
 
   /* push a text packet */
   inbuffer = gst_buffer_new_wrapped (g_memdup (kate_header_0x00,
@@ -752,7 +764,7 @@ GST_START_TEST (test_kate_tag_passthrough)
 
   gst_element_set_bus (katetag, bus);
 
-  test_kate_send_headers (mytagsrcpad);
+  test_kate_send_headers (katetag, mytagsrcpad);
 
   /* signal eos */
   fail_unless (gst_pad_push_event (mytagsrcpad, gst_event_new_eos ()) == TRUE);
@@ -817,7 +829,7 @@ GST_START_TEST (test_kate_tag)
   g_object_set (katetag, "language", "cy", NULL);
   g_object_set (katetag, "category", "subtitles", NULL);
 
-  test_kate_send_headers (mytagsrcpad);
+  test_kate_send_headers (katetag, mytagsrcpad);
 
   /* signal eos */
   fail_unless (gst_pad_push_event (mytagsrcpad, gst_event_new_eos ()) == TRUE);
