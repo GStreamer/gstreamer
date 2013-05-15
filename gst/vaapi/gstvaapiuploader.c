@@ -412,7 +412,6 @@ GstBuffer *
 gst_vaapi_uploader_get_buffer(GstVaapiUploader *uploader)
 {
     GstVaapiUploaderPrivate *priv;
-    GstVaapiSurface *surface;
     GstVaapiImage *image;
     GstVaapiVideoMeta *meta;
     GstBuffer *buffer;
@@ -428,14 +427,10 @@ gst_vaapi_uploader_get_buffer(GstVaapiUploader *uploader)
     }
 
     meta = gst_buffer_get_vaapi_video_meta(buffer);
-
-    surface = gst_vaapi_video_pool_get_object(priv->surfaces);
-    if (!surface) {
+    if (!gst_vaapi_video_meta_set_surface_from_pool(meta, priv->surfaces)) {
         GST_WARNING("failed to allocate VA surface");
         goto error;
     }
-
-    gst_vaapi_video_meta_set_surface(meta, surface);
 
     image = gst_vaapi_video_meta_get_image(meta);
     if (!gst_vaapi_image_map(image)) {
