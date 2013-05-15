@@ -1728,7 +1728,7 @@ AG_GST_CHECK_FEATURE(OFA, [ofa plugins], ofa, [
 dnl *** OpenAL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENAL, true)
 AG_GST_CHECK_FEATURE(OPENAL, [OpenAL plugin], openal, [
-  PKG_CHECK_MODULES(OPENAL, openal, HAVE_OPENAL="yes", [
+  PKG_CHECK_MODULES(OPENAL, openal >= 1.14, HAVE_OPENAL="yes", [
     HAVE_OPENAL="no"
   ])
   AC_SUBST(OPENAL_CFLAGS)
