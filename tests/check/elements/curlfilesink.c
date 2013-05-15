@@ -143,7 +143,7 @@ GST_START_TEST (test_properties)
   /* start playing */
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
   caps = gst_caps_from_string ("application/x-gst-check");
-  fail_unless (gst_pad_set_caps (srcpad, caps));
+  gst_check_setup_events (srcpad, sink, caps, GST_FORMAT_BYTES);
 
   /* setup buffer */
   test_set_and_play_buffer (file_contents);
@@ -201,7 +201,7 @@ GST_START_TEST (test_one_file)
   /* start playing */
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
   caps = gst_caps_from_string ("application/x-gst-check");
-  fail_unless (gst_pad_set_caps (srcpad, caps));
+  gst_check_setup_events (srcpad, sink, caps, GST_FORMAT_BYTES);
 
   /* setup buffer */
   test_set_and_play_buffer (file_content);
@@ -251,7 +251,7 @@ GST_START_TEST (test_one_big_file)
   /* start playing */
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
   caps = gst_caps_from_string ("application/x-gst-check");
-  fail_unless (gst_pad_set_caps (srcpad, caps));
+  gst_check_setup_events (srcpad, sink, caps, GST_FORMAT_BYTES);
 
   /* setup first buffer */
   test_set_and_play_buffer (file_line1);
@@ -306,7 +306,7 @@ GST_START_TEST (test_two_files)
   /* start playing */
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
   caps = gst_caps_from_string ("application/x-gst-check");
-  fail_unless (gst_pad_set_caps (srcpad, caps));
+  gst_check_setup_events (srcpad, sink, caps, GST_FORMAT_BYTES);
 
   /* setup first buffer - content of the first file */
   test_set_and_play_buffer (file_content1);
@@ -362,7 +362,7 @@ GST_START_TEST (test_create_dirs)
   /* start playing */
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
   caps = gst_caps_from_string ("application/x-gst-check");
-  fail_unless (gst_pad_set_caps (srcpad, caps));
+  gst_check_setup_events (srcpad, sink, caps, GST_FORMAT_BYTES);
 
   /* setup buffer */
   test_set_and_play_buffer (file_content);
@@ -419,7 +419,7 @@ GST_START_TEST (test_missing_path)
   /* start playing */
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
   caps = gst_caps_from_string ("application/x-gst-check");
-  fail_unless (gst_pad_set_caps (srcpad, caps));
+  gst_check_setup_events (srcpad, sink, caps, GST_FORMAT_BYTES);
 
   /* setup & play buffer which should fail due to the missing path */
   test_set_and_fail_to_play_buffer (file_content);
