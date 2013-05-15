@@ -57,7 +57,7 @@ setup_schroenc (const gchar * src_caps_str)
   gst_pad_set_active (srcpad, TRUE);
   gst_pad_set_active (sinkpad, TRUE);
 
-  gst_pad_set_caps (srcpad, srccaps);
+  gst_check_setup_events (srcpad, schroenc, srccaps, GST_FORMAT_TIME);
 
   bus = gst_bus_new ();
   gst_element_set_bus (schroenc, bus);
