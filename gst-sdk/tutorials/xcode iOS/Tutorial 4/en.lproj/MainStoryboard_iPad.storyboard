@@ -57,7 +57,6 @@
                                     <constraint firstAttribute="height" constant="44" type="user" id="EwL-Ma-A4v"/>
                                 </constraints>
                                 <items>
-                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="onU-hf-FS4"/>
                                     <barButtonItem systemItem="play" id="UlF-Ga-2VX">
                                         <connections>
                                             <action selector="play:" destination="z7O-8l-Zeo" id="5xC-uv-9lM"/>
@@ -68,7 +67,21 @@
                                             <action selector="pause:" destination="z7O-8l-Zeo" id="BYM-2X-Tel"/>
                                         </connections>
                                     </barButtonItem>
-                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="urI-U7-ALw"/>
+                                    <barButtonItem style="plain" id="s39-nx-e0L">
+                                        <textField key="customView" opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" enabled="NO" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="00:00:00 / 00:00:00" borderStyle="roundedRect" textAlignment="center" minimumFontSize="17" id="G8q-Tu-Qx0" userLabel="Time">
+                                            <rect key="frame" x="90" y="7" width="140" height="30"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                            <textInputTraits key="textInputTraits"/>
+                                        </textField>
+                                    </barButtonItem>
+                                    <barButtonItem style="plain" id="2n0-TO-8Ss">
+                                        <slider key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" id="ufs-E5-87w" userLabel="Slider">
+                                            <rect key="frame" x="240" y="11" width="118" height="23"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        </slider>
+                                    </barButtonItem>
                                 </items>
                             </toolbar>
                         </subviews>
@@ -92,6 +105,9 @@
                         <outlet property="message_label" destination="iLX-h1-Ko5" id="Q0Y-3J-zis"/>
                         <outlet property="pause_button" destination="J3O-8j-Tkt" id="Dls-sg-FPm"/>
                         <outlet property="play_button" destination="UlF-Ga-2VX" id="243-yq-GEe"/>
+                        <outlet property="time_label" destination="G8q-Tu-Qx0" id="jpR-6u-zp0"/>
+                        <outlet property="time_slider" destination="ufs-E5-87w" id="ZUd-jO-4qN"/>
+                        <outlet property="toolbar" destination="MUi-CE-Ydy" id="Lme-0P-4Xq"/>
                         <outlet property="video_container_view" destination="xWd-bg-0b6" id="7dL-Mp-QGc"/>
                         <outlet property="video_height_constraint" destination="A9A-eK-7QX" id="rMe-ze-8l5"/>
                         <outlet property="video_view" destination="6tN-97-YoQ" id="Q0n-dR-hqv"/>
@@ -154,31 +170,6 @@
             <point key="canvasLocation" x="-478" y="-199"/>
         </scene>
     </scenes>
-    <classes>
-        <class className="EaglUIView" superclassName="UIView">
-            <source key="sourceIdentifier" type="project" relativePath="./Classes/EaglUIView.h"/>
-        </class>
-        <class className="LibraryViewController" superclassName="UITableViewController">
-            <source key="sourceIdentifier" type="project" relativePath="./Classes/LibraryViewController.h"/>
-            <relationships>
-                <relationship kind="action" name="refresh:"/>
-            </relationships>
-        </class>
-        <class className="VideoViewController" superclassName="UIViewController">
-            <source key="sourceIdentifier" type="project" relativePath="./Classes/VideoViewController.h"/>
-            <relationships>
-                <relationship kind="action" name="pause:"/>
-                <relationship kind="action" name="play:"/>
-                <relationship kind="outlet" name="message_label" candidateClass="UILabel"/>
-                <relationship kind="outlet" name="pause_button" candidateClass="UIBarButtonItem"/>
-                <relationship kind="outlet" name="play_button" candidateClass="UIBarButtonItem"/>
-                <relationship kind="outlet" name="video_container_view" candidateClass="UIView"/>
-                <relationship kind="outlet" name="video_height_constraint" candidateClass="NSLayoutConstraint"/>
-                <relationship kind="outlet" name="video_view" candidateClass="UIView"/>
-                <relationship kind="outlet" name="video_width_constraint" candidateClass="NSLayoutConstraint"/>
-            </relationships>
-        </class>
-    </classes>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
         <simulatedStatusBarMetrics key="statusBar" statusBarStyle="blackTranslucent"/>
         <simulatedOrientationMetrics key="orientation"/>

@@ -15,6 +15,37 @@
 @synthesize uri;
 
 /*
+ * Private methods
+ */
+- (void) updateTimeWidget
+{
+    NSInteger position = time_slider.value / 1000;
+    NSInteger duration = time_slider.maximumValue / 1000;
+    NSString *position_txt = @" -- ";
+    NSString *duration_txt = @" -- ";
+
+    if (duration > 0) {
+        NSUInteger hours = duration / (60 * 60);
+        NSUInteger minutes = (duration / 60) % 60;
+        NSUInteger seconds = duration % 60;
+
+        duration_txt = [NSString stringWithFormat:@"%02u:%02u:%02u", hours, minutes, seconds];
+    }
+    if (position > 0) {
+        NSUInteger hours = position / (60 * 60);
+        NSUInteger minutes = (position / 60) % 60;
+        NSUInteger seconds = position % 60;
+
+        position_txt = [NSString stringWithFormat:@"%02u:%02u:%02u", hours, minutes, seconds];
+    }
+
+    NSString *text = [NSString stringWithFormat:@"%@ / %@",
+                      position_txt, duration_txt];
+
+    time_label.text = text;
+}
+
+/*
  * Methods from UIViewController
  */
 
@@ -58,6 +89,8 @@
     [gst_backend pause];
 }
 
+/* Called when the size of the main view has changed, so we can
+ * resize the sub-views in ways not allowed by storyboarding. */
 - (void)viewDidLayoutSubviews
 {
     CGFloat view_width = video_container_view.bounds.size.width;
@@ -73,6 +106,8 @@
         video_width_constraint.constant = correct_width;
         video_height_constraint.constant = view_height;
     }
+
+    time_slider.frame = CGRectMake(time_slider.frame.origin.x, time_slider.frame.origin.y, toolbar.frame.size.width - time_slider.frame.origin.x - 8, time_slider.frame.size.height);
 }
 
 /*
@@ -104,6 +139,15 @@
         [self viewDidLayoutSubviews];
         [video_view setNeedsLayout];
         [video_view layoutIfNeeded];
+    });
+}
+
+-(void) setCurrentPosition:(NSInteger)position duration:(NSInteger)duration
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        time_slider.maximumValue = duration;
+        time_slider.value = position;
+        [self updateTimeWidget];
     });
 }
 

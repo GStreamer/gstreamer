@@ -9,6 +9,9 @@
     IBOutlet UIView *video_container_view;
     IBOutlet NSLayoutConstraint *video_width_constraint;
     IBOutlet NSLayoutConstraint *video_height_constraint;
+    IBOutlet UIToolbar *toolbar;
+    IBOutlet UITextField *time_label;
+    IBOutlet UISlider *time_slider;
 }
 
 @property (retain,nonatomic) NSString *uri;

@@ -21,6 +21,8 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
     GMainLoop *main_loop;  /* GLib main loop */
     gboolean initialized;  /* To avoid informing the UI multiple times about the initialization */
     UIView *ui_video_view; /* UIView that holds the video */
+    GstState state;        /* Current pipeline state */
+    gint64 duration;       /* Cached clip duration */
 }
 
 /*
@@ -33,6 +35,7 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
     {
         self->ui_delegate = uiDelegate;
         self->ui_video_view = video_view;
+        self->duration = GST_CLOCK_TIME_NONE;
 
         GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-4", 0, "iOS tutorial 4");
         gst_debug_set_threshold_for_name("tutorial-4", GST_LEVEL_DEBUG);
@@ -82,6 +85,39 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
     {
         [ui_delegate gstreamerSetUIMessage:string];
     }
+}
+
+/* Tell the application what is the current position and clip duration */
+-(void) setCurrentUIPosition:(gint)pos duration:(gint)dur
+{
+    if(ui_delegate && [ui_delegate respondsToSelector:@selector(setCurrentPosition:duration:)])
+    {
+        [ui_delegate setCurrentPosition:pos duration:dur];
+    }
+}
+
+/* If we have pipeline and it is running, query the current position and clip duration and inform
+ * the application */
+static gboolean refresh_ui (GStreamerBackend *self) {
+    GstFormat fmt = GST_FORMAT_TIME;
+    gint64 position;
+
+    /* We do not want to update anything unless we have a working pipeline in the PAUSED or PLAYING state */
+    if (!self || !self->pipeline || self->state < GST_STATE_PAUSED)
+        return TRUE;
+
+    /* If we didn't know it yet, query the stream duration */
+    if (!GST_CLOCK_TIME_IS_VALID (self->duration)) {
+        if (!gst_element_query_duration (self->pipeline, &fmt, &self->duration)) {
+            GST_WARNING ("Could not query current duration");
+        }
+    }
+
+    if (gst_element_query_position (self->pipeline, &fmt, &position)) {
+        /* The UI expects these values in milliseconds, and GStreamer provides nanoseconds */
+        [self setCurrentUIPosition:position / GST_MSECOND duration:self->duration / GST_MSECOND];
+    }
+    return TRUE;
 }
 
 static void check_media_size (GStreamerBackend *self) {
@@ -138,6 +174,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
     /* Only pay attention to messages coming from the pipeline, not its children */
     if (GST_MESSAGE_SRC (msg) == GST_OBJECT (self->pipeline)) {
+        self->state = new_state;
         gchar *message = g_strdup_printf("State changed to %s", gst_element_state_get_name(new_state));
         [self setUIMessage:message];
         g_free (message);
@@ -167,6 +204,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
 -(void) app_function
 {
     GstBus *bus;
+    GSource *timeout_source;
     GSource *bus_source;
     GError *error = NULL;
 
@@ -205,7 +243,13 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     g_signal_connect (G_OBJECT (bus), "message::error", (GCallback)error_cb, (__bridge void *)self);
     g_signal_connect (G_OBJECT (bus), "message::state-changed", (GCallback)state_changed_cb, (__bridge void *)self);
     gst_object_unref (bus);
-    
+
+    /* Register a function that GLib will call 4 times per second */
+    timeout_source = g_timeout_source_new (250);
+    g_source_set_callback (timeout_source, (GSourceFunc)refresh_ui, (__bridge void *)self, NULL);
+    g_source_attach (timeout_source, context);
+    g_source_unref (timeout_source);
+
     /* Create a GLib Main Loop and set it to run */
     GST_DEBUG ("Entering main loop...");
     main_loop = g_main_loop_new (context, FALSE);

@@ -69,20 +69,32 @@
                                             <action selector="pause:" destination="iMo-Z9-PrL" id="mef-Ij-Agl"/>
                                         </connections>
                                     </barButtonItem>
+                                    <barButtonItem style="plain" id="VUJ-y8-aWS">
+                                        <textField key="customView" opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" enabled="NO" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="00:00:00 / 00:00:00" borderStyle="roundedRect" textAlignment="center" minimumFontSize="17" id="R6T-PH-VPd" userLabel="Time">
+                                            <rect key="frame" x="132" y="7" width="139" height="30"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                            <textInputTraits key="textInputTraits"/>
+                                        </textField>
+                                    </barButtonItem>
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="LSl-TA-0qV"/>
                                 </items>
                             </toolbar>
+                            <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="4Ns-t9-gs7" userLabel="Slider"/>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="A2w-65-QSF" firstAttribute="bottom" secondItem="zgN-eK-M4Q" secondAttribute="bottom" constant="20" symbolic="YES" type="user" id="0OY-rR-W60"/>
-                            <constraint firstItem="LmB-wv-Ztp" firstAttribute="top" secondItem="nA3-W2-kn7" secondAttribute="bottom" type="user" id="7xY-sq-nDU"/>
+                            <constraint firstItem="LmB-wv-Ztp" firstAttribute="top" secondItem="nA3-W2-kn7" secondAttribute="bottom" type="user" id="5TL-Gq-YnE"/>
                             <constraint firstItem="A2w-65-QSF" firstAttribute="leading" secondItem="zgN-eK-M4Q" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="Aki-Hx-2C9"/>
+                            <constraint firstItem="4Ns-t9-gs7" firstAttribute="trailing" secondItem="zgN-eK-M4Q" secondAttribute="trailing" type="default" id="HFi-uV-wdo"/>
+                            <constraint firstItem="4Ns-t9-gs7" firstAttribute="bottom" secondItem="A2w-65-QSF" secondAttribute="top" type="default" id="Iml-yC-EDE"/>
+                            <constraint firstItem="4Ns-t9-gs7" firstAttribute="top" secondItem="LmB-wv-Ztp" secondAttribute="bottom" type="user" id="TUy-Wk-veP"/>
                             <constraint firstItem="A2w-65-QSF" firstAttribute="trailing" secondItem="zgN-eK-M4Q" secondAttribute="trailing" constant="20" symbolic="YES" type="user" id="WWj-l6-D2k"/>
-                            <constraint firstItem="LmB-wv-Ztp" firstAttribute="bottom" secondItem="A2w-65-QSF" secondAttribute="top" constant="8" symbolic="YES" type="user" id="cGe-Ok-mYU"/>
                             <constraint firstAttribute="trailing" secondItem="LmB-wv-Ztp" secondAttribute="trailing" constant="20" symbolic="YES" type="user" id="ddw-6a-Ccz"/>
+                            <constraint firstItem="A2w-65-QSF" firstAttribute="bottom" secondItem="zgN-eK-M4Q" secondAttribute="bottom" type="default" id="e3s-lP-iPh"/>
                             <constraint firstAttribute="trailing" secondItem="nA3-W2-kn7" secondAttribute="trailing" type="user" id="lOJ-ew-ZyI"/>
                             <constraint firstItem="nA3-W2-kn7" firstAttribute="top" secondItem="zgN-eK-M4Q" secondAttribute="top" type="user" id="lUb-ik-h6u"/>
+                            <constraint firstItem="4Ns-t9-gs7" firstAttribute="leading" secondItem="zgN-eK-M4Q" secondAttribute="leading" type="default" id="ma4-AV-cQs"/>
                             <constraint firstItem="LmB-wv-Ztp" firstAttribute="leading" secondItem="zgN-eK-M4Q" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="nfT-8Y-Tvw"/>
                             <constraint firstItem="nA3-W2-kn7" firstAttribute="leading" secondItem="zgN-eK-M4Q" secondAttribute="leading" type="user" id="p8G-QE-uZ8"/>
                         </constraints>
@@ -94,6 +106,8 @@
                         <outlet property="message_label" destination="LmB-wv-Ztp" id="YqJ-GW-DBG"/>
                         <outlet property="pause_button" destination="nH5-s3-C0i" id="VWV-EW-jB6"/>
                         <outlet property="play_button" destination="8Yb-MS-rAF" id="5SI-l2-mAJ"/>
+                        <outlet property="time_label" destination="R6T-PH-VPd" id="bGs-Zr-rv3"/>
+                        <outlet property="time_slider" destination="4Ns-t9-gs7" id="9Ne-1N-clc"/>
                         <outlet property="video_container_view" destination="nA3-W2-kn7" id="lEY-hP-YHD"/>
                         <outlet property="video_height_constraint" destination="5z2-ux-czd" id="9R7-fg-G0e"/>
                         <outlet property="video_view" destination="WHW-sv-bWc" id="c6W-td-a74"/>
@@ -178,6 +192,9 @@
                 <relationship kind="outlet" name="message_label" candidateClass="UILabel"/>
                 <relationship kind="outlet" name="pause_button" candidateClass="UIBarButtonItem"/>
                 <relationship kind="outlet" name="play_button" candidateClass="UIBarButtonItem"/>
+                <relationship kind="outlet" name="time_label" candidateClass="UITextField"/>
+                <relationship kind="outlet" name="time_slider" candidateClass="UISlider"/>
+                <relationship kind="outlet" name="toolbar" candidateClass="UIToolbar"/>
                 <relationship kind="outlet" name="video_container_view" candidateClass="UIView"/>
                 <relationship kind="outlet" name="video_height_constraint" candidateClass="NSLayoutConstraint"/>
                 <relationship kind="outlet" name="video_view" candidateClass="UIView"/>

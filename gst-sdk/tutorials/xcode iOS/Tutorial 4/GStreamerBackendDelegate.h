@@ -14,4 +14,7 @@
 /* Called when the media size is first discovered or it changes */
 -(void) mediaSizeChanged:(NSInteger)width height:(NSInteger)height;
 
+/* Called when the media position changes. Times in milliseconds */
+-(void) setCurrentPosition:(NSInteger)position duration:(NSInteger)duration;
+
 @end
