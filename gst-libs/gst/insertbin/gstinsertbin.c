@@ -851,8 +851,8 @@ reject:
 /**
  * gst_insert_bin_prepend:
  * @element: the #GstElement to add
- * @callback: the callback to call when the element has been added or not, or
- *  %NULL
+ * @callback: (scope async): the callback to call when the element has been
+ *  added or not, or %NULL
  * @user_data: The data to pass to the callback
  *
  * This action signal adds the filter like element before any other element
@@ -876,8 +876,8 @@ gst_insert_bin_prepend (GstInsertBin * self, GstElement * element,
 /**
  * gst_insert_bin_append:
  * @element: the #GstElement to add
- * @callback: the callback to call when the element has been added or not, or
- *  %NULL
+ * @callback: (scope async): the callback to call when the element has been
+ *  added or not, or %NULL
  * @user_data: The data to pass to the callback
  *
  * This action signal adds the filter like element after any other element
@@ -902,8 +902,8 @@ gst_insert_bin_append (GstInsertBin * self, GstElement * element,
  * gst_insert_bin_insert_before:
  * @element: the #GstElement to add
  * @sibling: the #GstElement to add @element before
- * @callback: the callback to call when the element has been added or not, or
- *  %NULL
+ * @callback: (scope async): the callback to call when the element has been
+ *  added or not, or %NULL
  * @user_data: The data to pass to the callback
  *
  * This action signal adds the filter like element before the @sibling
@@ -928,8 +928,8 @@ gst_insert_bin_insert_before (GstInsertBin * self, GstElement * element,
  * gst_insert_bin_insert_after:
  * @element: the #GstElement to add
  * @sibling: the #GstElement to add @element after
- * @callback: the callback to call when the element has been added or not, or
- *  %NULL
+ * @callback: (scope async): the callback to call when the element has been
+ *  added or not, or %NULL
  * @user_data: The data to pass to the callback
  *
  * This action signal adds the filter like element after the @sibling
@@ -953,8 +953,8 @@ gst_insert_bin_insert_after (GstInsertBin * self, GstElement * element,
 /**
  * gst_insert_bin_remove:
  * @element: the #GstElement to remove
- * @callback: the callback to call when the element has been removed or not,
- * or %NULL
+ * @callback: (scope async): the callback to call when the element has been
+ *  removed or not, or %NULL
  * @user_data: The data to pass to the callback
  *
  * This action signal removed the filter like element from the bin.
