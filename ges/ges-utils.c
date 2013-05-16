@@ -23,6 +23,8 @@
  *
  */
 
+#include <string.h>
+
 #include "ges-internal.h"
 #include "ges-timeline.h"
 #include "ges-track.h"
@@ -96,4 +98,27 @@ element_end_compare (GESTimelineElement * a, GESTimelineElement * b)
     return -1;
 
   return 1;
+}
+
+gboolean
+pspec_equal (gconstpointer key_spec_1, gconstpointer key_spec_2)
+{
+  const GParamSpec *key1 = key_spec_1;
+  const GParamSpec *key2 = key_spec_2;
+
+  return (key1->owner_type == key2->owner_type &&
+      strcmp (key1->name, key2->name) == 0);
+}
+
+guint
+pspec_hash (gconstpointer key_spec)
+{
+  const GParamSpec *key = key_spec;
+  const gchar *p;
+  guint h = key->owner_type;
+
+  for (p = key->name; *p; p++)
+    h = (h << 5) - h + *p;
+
+  return h;
 }

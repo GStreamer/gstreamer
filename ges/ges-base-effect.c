@@ -24,8 +24,8 @@
  */
 
 #include <glib/gprintf.h>
-#include <string.h>
 
+#include "ges-utils.h"
 #include "ges-internal.h"
 #include "ges-track-element.h"
 #include "ges-base-effect.h"
@@ -33,9 +33,6 @@
 G_DEFINE_ABSTRACT_TYPE (GESBaseEffect, ges_base_effect, GES_TYPE_OPERATION);
 
 static GHashTable *ges_base_effect_get_props_hashtable (GESTrackElement * self);
-guint pspec_hash (gconstpointer key_spec);
-static gboolean pspec_equal (gconstpointer key_spec_1,
-    gconstpointer key_spec_2);
 
 struct _GESBaseEffectPrivate
 {
@@ -58,29 +55,6 @@ ges_base_effect_init (GESBaseEffect * self)
   self->priv =
       G_TYPE_INSTANCE_GET_PRIVATE (self, GES_TYPE_BASE_EFFECT,
       GESBaseEffectPrivate);
-}
-
-static gboolean
-pspec_equal (gconstpointer key_spec_1, gconstpointer key_spec_2)
-{
-  const GParamSpec *key1 = key_spec_1;
-  const GParamSpec *key2 = key_spec_2;
-
-  return (key1->owner_type == key2->owner_type &&
-      strcmp (key1->name, key2->name) == 0);
-}
-
-guint
-pspec_hash (gconstpointer key_spec)
-{
-  const GParamSpec *key = key_spec;
-  const gchar *p;
-  guint h = key->owner_type;
-
-  for (p = key->name; *p; p++)
-    h = (h << 5) - h + *p;
-
-  return h;
 }
 
 /*  Virtual methods */
