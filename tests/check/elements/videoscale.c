@@ -91,6 +91,7 @@ check_pad_template (GstPadTemplate * tmpl)
         case GST_VIDEO_FORMAT_v210:
         case GST_VIDEO_FORMAT_v216:
         case GST_VIDEO_FORMAT_NV12:
+        case GST_VIDEO_FORMAT_NV16:
         case GST_VIDEO_FORMAT_NV21:
         case GST_VIDEO_FORMAT_UYVP:
         case GST_VIDEO_FORMAT_A420:
@@ -121,7 +122,7 @@ check_pad_template (GstPadTemplate * tmpl)
           GST_LOG ("Ignoring lack of support for format %s", fmt_str);
           break;
         default:
-          g_error ("videoconvert doesn't support format '%s'", fmt_str);
+          g_error ("videoscale doesn't support format '%s'", fmt_str);
           break;
       }
     }
