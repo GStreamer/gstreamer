@@ -832,6 +832,7 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
   gint nb_formats = 0, i;
   gint endianness;
   GstVideoFormat vformat;
+  guint32 alpha_mask;
 
   g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), NULL);
 
@@ -904,9 +905,15 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
     GST_DEBUG ("ximagesink is not using XShm extension");
   }
 
-  vformat = gst_video_format_from_masks (xcontext->depth, xcontext->bpp,
-      endianness, xcontext->visual->red_mask, xcontext->visual->green_mask,
-      xcontext->visual->blue_mask, 0);
+  /* extrapolate alpha mask */
+  alpha_mask = ~(xcontext->visual->red_mask
+      | xcontext->visual->green_mask | xcontext->visual->blue_mask);
+  alpha_mask &= 0xffffffff;
+
+  vformat =
+      gst_video_format_from_masks (xcontext->depth, xcontext->bpp, endianness,
+      xcontext->visual->red_mask, xcontext->visual->green_mask,
+      xcontext->visual->blue_mask, alpha_mask);
 
   if (vformat == GST_VIDEO_FORMAT_UNKNOWN)
     goto unknown_format;
