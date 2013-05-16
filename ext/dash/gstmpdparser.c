@@ -3608,7 +3608,7 @@ gst_mpdparser_mimetype_to_caps (const gchar * mimeType)
   if (mimeType == NULL)
     return NULL;
   if (strcmp (mimeType, "video/mp2t") == 0) {
-    return "video/mpegts";
+    return "video/mpegts, systemstream=(bool) true";
   } else if (strcmp (mimeType, "video/mp4") == 0) {
     return "video/quicktime";
   } else if (strcmp (mimeType, "audio/mp4") == 0) {

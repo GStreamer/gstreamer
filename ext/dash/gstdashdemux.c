@@ -1726,7 +1726,7 @@ gst_dash_demux_get_video_input_caps (GstDashDemux * demux,
   if (mimeType == NULL)
     return NULL;
 
-  caps = gst_caps_new_empty_simple (mimeType);
+  caps = gst_caps_from_string (mimeType);
   if (width > 0 && height > 0) {
     gst_caps_set_simple (caps, "width", G_TYPE_INT, width, "height",
         G_TYPE_INT, height, NULL);
@@ -1755,7 +1755,7 @@ gst_dash_demux_get_audio_input_caps (GstDashDemux * demux,
   if (mimeType == NULL)
     return NULL;
 
-  caps = gst_caps_new_empty_simple (mimeType);
+  caps = gst_caps_from_string (mimeType);
   if (rate > 0) {
     gst_caps_set_simple (caps, "rate", G_TYPE_INT, rate, NULL);
   }
@@ -1780,7 +1780,7 @@ gst_dash_demux_get_application_input_caps (GstDashDemux * demux,
   if (mimeType == NULL)
     return NULL;
 
-  caps = gst_caps_new_empty_simple (mimeType);
+  caps = gst_caps_from_string (mimeType);
 
   return caps;
 }
