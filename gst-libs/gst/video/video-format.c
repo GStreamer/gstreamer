@@ -2165,6 +2165,7 @@ gst_video_format_from_masks (gint depth, gint bpp, gint endianness,
     red_mask = GUINT32_TO_BE (red_mask);
     green_mask = GUINT32_TO_BE (green_mask);
     blue_mask = GUINT32_TO_BE (blue_mask);
+    alpha_mask = GUINT32_TO_BE (alpha_mask);
     endianness = G_BIG_ENDIAN;
     if (bpp == 24) {
       red_mask >>= 8;
