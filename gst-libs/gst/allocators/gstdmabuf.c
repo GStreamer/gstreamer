@@ -274,7 +274,7 @@ gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
 
   mem = g_slice_new0 (GstDmaBufMemory);
 
-  gst_memory_init (GST_MEMORY_CAST (mem), 0, allocator, NULL, size, 0, 0, 0);
+  gst_memory_init (GST_MEMORY_CAST (mem), 0, allocator, NULL, size, 0, 0, size);
 
   mem->fd = fd;
   g_mutex_init (&mem->lock);
