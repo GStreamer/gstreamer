@@ -24,6 +24,7 @@
 #include <glib-object.h>
 #include <ges/ges-types.h>
 #include <ges/ges-source.h>
+#include <ges/ges-meta-container.h>
 
 G_BEGIN_DECLS
 

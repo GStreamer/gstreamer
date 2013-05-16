@@ -133,12 +133,16 @@ ges_uri_source_create_element (GESTrackElement * trksrc)
   GstElement *topbin, *volume;
   GstPad *volume_srcpad, *volume_sinkpad;
   GstPad *ghost;
+  GESLayer *layer;
+  gfloat layer_volume;
 
   self = (GESUriSource *) trksrc;
   track = ges_track_element_get_track (trksrc);
 
   switch (track->type) {
     case GES_TRACK_TYPE_AUDIO:
+      GST_DEBUG_OBJECT (trksrc, "Creating a bin uridecodebin ! volume");
+
       topbin = gst_bin_new ("audio-src-bin");
 
       volume = gst_element_factory_make ("volume", NULL);
@@ -154,6 +158,18 @@ ges_uri_source_create_element (GESTrackElement * trksrc)
           volume_sinkpad);
       gst_element_no_more_pads (decodebin);
       gst_bin_add (GST_BIN (topbin), decodebin);
+
+      layer =
+          ges_clip_get_layer (GES_CLIP (ges_timeline_element_get_parent
+              (GES_TIMELINE_ELEMENT (trksrc))));
+
+      if (layer != NULL) {
+        ges_meta_container_get_float (GES_META_CONTAINER (layer),
+            GES_META_VOLUME, &layer_volume);
+        g_object_set (volume, "volume", layer_volume, NULL);
+        GST_DEBUG_OBJECT (trksrc, "Setting the volume to %f", layer_volume);
+      } else
+        GST_DEBUG_OBJECT (trksrc, "NOT setting the volume");
 
       ret = topbin;
       break;
