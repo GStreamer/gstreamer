@@ -36,8 +36,206 @@
 struct _GESUriSourcePrivate
 {
   GHashTable *props_hashtable;
-  void *dummy;
 };
+
+enum
+{
+  PROP_0,
+  PROP_URI
+};
+
+/* Callbacks */
+
+static void
+_pad_added_cb (GstElement * element, GstPad * srcpad, GstPad * sinkpad)
+{
+  gst_element_no_more_pads (element);
+  gst_pad_link (srcpad, sinkpad);
+}
+
+static void
+_ghost_pad_added_cb (GstElement * element, GstPad * srcpad, GstElement * bin)
+{
+  GstPad *ghost;
+
+  ghost = gst_ghost_pad_new ("src", srcpad);
+  gst_pad_set_active (ghost, TRUE);
+  gst_element_add_pad (bin, ghost);
+  gst_element_no_more_pads (element);
+}
+
+/* Internal methods */
+
+static GstElement *
+_create_bin (const gchar * bin_name, GstElement * decodebin, ...)
+{
+  va_list argp;
+
+  GstElement *element;
+  GstElement *prev = NULL;
+  GstElement *first = NULL;
+  GstElement *bin;
+
+  va_start (argp, decodebin);
+  bin = gst_bin_new (bin_name);
+  gst_bin_add (GST_BIN (bin), decodebin);
+
+  while ((element = va_arg (argp, GstElement *)) != NULL) {
+    gst_bin_add (GST_BIN (bin), element);
+    if (prev)
+      gst_element_link (prev, element);
+    prev = element;
+    if (first == NULL)
+      first = element;
+  }
+
+  va_end (argp);
+
+  if (prev != NULL) {
+    GstPad *srcpad, *sinkpad, *ghost;
+
+    srcpad = gst_element_get_static_pad (prev, "src");
+    ghost = gst_ghost_pad_new ("src", srcpad);
+    gst_pad_set_active (ghost, TRUE);
+    gst_element_add_pad (bin, ghost);
+
+    sinkpad = gst_element_get_static_pad (first, "sink");
+    g_signal_connect (decodebin, "pad-added", G_CALLBACK (_pad_added_cb),
+        sinkpad);
+
+    gst_object_unref (srcpad);
+    gst_object_unref (sinkpad);
+
+  } else {
+    /* Our decodebin is alone in the bin, we need to ghost its source when it appears */
+
+    g_signal_connect (decodebin, "pad-added", G_CALLBACK (_ghost_pad_added_cb),
+        bin);
+  }
+
+  return bin;
+}
+
+static void
+_add_element_properties_to_hashtable (GESUriSource * self, GstElement * element,
+    ...)
+{
+  GObjectClass *class;
+  GParamSpec *pspec;
+  va_list argp;
+  const gchar *propname;
+
+  class = G_OBJECT_GET_CLASS (element);
+  va_start (argp, element);
+
+  while ((propname = va_arg (argp, const gchar *)) != NULL)
+  {
+    pspec = g_object_class_find_property (class, propname);
+    if (!pspec) {
+      GST_WARNING ("no such property : %s in element : %s", propname,
+          gst_element_get_name (element));
+      continue;
+    }
+
+    if (self->priv->props_hashtable == NULL)
+      self->priv->props_hashtable =
+          g_hash_table_new_full ((GHashFunc) pspec_hash, pspec_equal,
+          (GDestroyNotify) g_param_spec_unref, gst_object_unref);
+
+    if (pspec->flags & G_PARAM_WRITABLE) {
+      g_hash_table_insert (self->priv->props_hashtable,
+          g_param_spec_ref (pspec), gst_object_ref (element));
+      GST_LOG_OBJECT (self,
+          "added property %s to controllable properties successfully !",
+          propname);
+    } else
+      GST_WARNING ("the property %s for element %s exists but is not writable",
+          propname, gst_element_get_name (element));
+  }
+
+  va_end (argp);
+}
+
+static void
+_sync_element_to_layer_property_float (GESTrackElement * trksrc,
+    GstElement * element, const gchar * meta, const gchar * propname)
+{
+  GESTimelineElement *parent;
+  GESLayer *layer;
+  gfloat value;
+
+  parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
+  layer = ges_clip_get_layer (GES_CLIP (parent));
+
+  gst_object_unref (parent);
+
+  if (layer != NULL) {
+
+    ges_meta_container_get_float (GES_META_CONTAINER (layer), meta, &value);
+    g_object_set (element, propname, value, NULL);
+    GST_DEBUG_OBJECT (trksrc, "Setting %s to %f", propname, value);
+
+  } else {
+
+    GST_DEBUG_OBJECT (trksrc, "NOT setting the %s", propname);
+  }
+
+  gst_object_unref (layer);
+}
+
+/* TrackElement VMethods */
+
+static GstElement *
+ges_uri_source_create_element (GESTrackElement * trksrc)
+{
+  GESUriSource *self;
+  GESTrack *track;
+  GstElement *decodebin;
+  GstElement *topbin, *volume;
+
+  self = (GESUriSource *) trksrc;
+  track = ges_track_element_get_track (trksrc);
+
+  switch (track->type) {
+    case GES_TRACK_TYPE_AUDIO:
+      GST_DEBUG_OBJECT (trksrc, "Creating a bin uridecodebin ! volume");
+
+      decodebin = gst_element_factory_make ("uridecodebin", NULL);
+      volume = gst_element_factory_make ("volume", NULL);
+
+      topbin = _create_bin ("audio-src-bin", decodebin, volume, NULL);
+
+      _sync_element_to_layer_property_float (trksrc, volume, GES_META_VOLUME,
+          "volume");
+      _add_element_properties_to_hashtable (self, volume, "volume", "mute",
+          NULL);
+      break;
+    default:
+      decodebin = gst_element_factory_make ("uridecodebin", NULL);
+      topbin = _create_bin ("video-src-bin", decodebin, NULL);
+      break;
+  }
+
+  g_object_set (decodebin, "caps", ges_track_get_caps (track),
+      "expose-all-streams", FALSE, "uri", self->uri, NULL);
+
+  return topbin;
+}
+
+static GHashTable *
+ges_uri_source_get_props_hashtable (GESTrackElement * element)
+{
+  GESUriSource *self = (GESUriSource *) element;
+
+  if (self->priv->props_hashtable == NULL)
+    self->priv->props_hashtable =
+        g_hash_table_new_full ((GHashFunc) pspec_hash, pspec_equal,
+        (GDestroyNotify) g_param_spec_unref, gst_object_unref);
+
+  return self->priv->props_hashtable;
+}
+
+/* Extractable interface implementation */
 
 static gchar *
 ges_extractable_check_id (GType type, const gchar * id, GError ** error)
@@ -72,11 +270,8 @@ G_DEFINE_TYPE_WITH_CODE (GESUriSource, ges_track_filesource,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 
-enum
-{
-  PROP_0,
-  PROP_URI
-};
+
+/* GObject VMethods */
 
 static void
 ges_track_filesource_get_property (GObject * object, guint property_id,
@@ -101,6 +296,8 @@ ges_track_filesource_set_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_URI:
+      if (uriclip->uri)
+        g_free (uriclip->uri);
       uriclip->uri = g_value_dup_string (value);
       break;
     default:
@@ -117,106 +314,6 @@ ges_track_filesource_dispose (GObject * object)
     g_free (uriclip->uri);
 
   G_OBJECT_CLASS (ges_track_filesource_parent_class)->dispose (object);
-}
-
-static void
-_pad_added_cb (GstElement * element, GstPad * srcpad, GstPad * sinkpad)
-{
-  gst_pad_link (srcpad, sinkpad);
-}
-
-static GstElement *
-ges_uri_source_create_element (GESTrackElement * trksrc)
-{
-  GESUriSource *self;
-  GstElement *ret;
-  GESTrack *track;
-  GstElement *decodebin;
-  GstElement *topbin, *volume;
-  GstPad *volume_srcpad, *volume_sinkpad;
-  GstPad *ghost;
-  GESLayer *layer;
-  gfloat layer_volume;
-  GObjectClass *class;
-  guint i, nb_specs;
-  GParamSpec **parray;
-
-  self = (GESUriSource *) trksrc;
-  track = ges_track_element_get_track (trksrc);
-
-  switch (track->type) {
-    case GES_TRACK_TYPE_AUDIO:
-      GST_DEBUG_OBJECT (trksrc, "Creating a bin uridecodebin ! volume");
-
-      topbin = gst_bin_new ("audio-src-bin");
-
-      volume = gst_element_factory_make ("volume", NULL);
-      gst_bin_add (GST_BIN (topbin), volume);
-      volume_srcpad = gst_element_get_static_pad (volume, "src");
-      ghost = gst_ghost_pad_new ("src", volume_srcpad);
-      gst_pad_set_active (ghost, TRUE);
-      gst_element_add_pad (topbin, ghost);
-
-      decodebin = gst_element_factory_make ("uridecodebin", NULL);
-      volume_sinkpad = gst_element_get_static_pad (volume, "sink");
-      g_signal_connect (decodebin, "pad-added", G_CALLBACK (_pad_added_cb),
-          volume_sinkpad);
-      gst_element_no_more_pads (decodebin);
-      gst_bin_add (GST_BIN (topbin), decodebin);
-
-      layer =
-          ges_clip_get_layer (GES_CLIP (ges_timeline_element_get_parent
-              (GES_TIMELINE_ELEMENT (trksrc))));
-
-      if (layer != NULL) {
-        ges_meta_container_get_float (GES_META_CONTAINER (layer),
-            GES_META_VOLUME, &layer_volume);
-        g_object_set (volume, "volume", layer_volume, NULL);
-        GST_DEBUG_OBJECT (trksrc, "Setting the volume to %f", layer_volume);
-      } else
-        GST_DEBUG_OBJECT (trksrc, "NOT setting the volume");
-
-      class = G_OBJECT_GET_CLASS (volume);
-      parray = g_object_class_list_properties (class, &nb_specs);
-
-      if (self->priv->props_hashtable == NULL)
-        self->priv->props_hashtable =
-            g_hash_table_new_full ((GHashFunc) pspec_hash, pspec_equal,
-            (GDestroyNotify) g_param_spec_unref, gst_object_unref);
-
-      for (i = 0; i < nb_specs; i++) {
-        if (parray[i]->flags & G_PARAM_WRITABLE) {
-          g_hash_table_insert (self->priv->props_hashtable,
-              g_param_spec_ref (parray[i]), gst_object_ref (volume));
-        }
-      }
-      g_free (parray);
-
-      ret = topbin;
-      break;
-    default:
-      ret = gst_element_factory_make ("uridecodebin", NULL);
-      decodebin = ret;
-      break;
-  }
-
-  g_object_set (decodebin, "caps", ges_track_get_caps (track),
-      "expose-all-streams", FALSE, "uri", self->uri, NULL);
-
-  return ret;
-}
-
-static GHashTable *
-ges_uri_source_get_props_hashtable (GESTrackElement * element)
-{
-  GESUriSource *self = (GESUriSource *) element;
-
-  if (self->priv->props_hashtable == NULL)
-    self->priv->props_hashtable =
-        g_hash_table_new_full ((GHashFunc) pspec_hash, pspec_equal,
-        (GDestroyNotify) g_param_spec_unref, gst_object_unref);
-
-  return self->priv->props_hashtable;
 }
 
 static void
