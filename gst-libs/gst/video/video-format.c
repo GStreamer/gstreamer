@@ -2143,11 +2143,11 @@ gst_video_format_from_rgb16_masks (int red_mask, int green_mask, int blue_mask)
  * @depth: the amount of bits used for a pixel
  * @bpp: the amount of bits used to store a pixel. This value is bigger than
  *   @depth
- * @endianness: the endianness of the masks
+ * @endianness: the endianness of the masks, #G_LITTLE_ENDIAN or #G_BIG_ENDIAN
  * @red_mask: the red mask
  * @green_mask: the green mask
  * @blue_mask: the blue mask
- * @alpha_mask: the optional alpha mask
+ * @alpha_mask: the alpha mask, or 0 if no alpha mask
  *
  * Find the #GstVideoFormat for the given parameters.
  *
@@ -2156,7 +2156,7 @@ gst_video_format_from_rgb16_masks (int red_mask, int green_mask, int blue_mask)
  */
 GstVideoFormat
 gst_video_format_from_masks (gint depth, gint bpp, gint endianness,
-    gint red_mask, gint green_mask, gint blue_mask, gint alpha_mask)
+    guint red_mask, guint green_mask, guint blue_mask, guint alpha_mask)
 {
   GstVideoFormat format;
 

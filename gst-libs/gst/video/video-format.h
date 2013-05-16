@@ -426,8 +426,8 @@ struct _GstVideoFormatInfo {
 
 /* format properties */
 GstVideoFormat gst_video_format_from_masks           (gint depth, gint bpp, gint endianness,
-                                                      gint red_mask, gint green_mask,
-                                                      gint blue_mask, gint alpha_mask) G_GNUC_CONST;
+                                                      guint red_mask, guint green_mask,
+                                                      guint blue_mask, guint alpha_mask) G_GNUC_CONST;
 
 GstVideoFormat gst_video_format_from_fourcc          (guint32 fourcc) G_GNUC_CONST;
 GstVideoFormat gst_video_format_from_string          (const gchar *format) G_GNUC_CONST;
