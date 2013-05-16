@@ -117,15 +117,56 @@ ges_track_filesource_dispose (GObject * object)
   G_OBJECT_CLASS (ges_track_filesource_parent_class)->dispose (object);
 }
 
-static GstElement *
-ges_track_filesource_create_gnl_object (GESTrackElement * track_element)
+static void
+_pad_added_cb (GstElement * element, GstPad * srcpad, GstPad * sinkpad)
 {
-  GstElement *gnlobject;
+  gst_pad_link (srcpad, sinkpad);
+}
 
-  gnlobject = gst_element_factory_make ("gnlurisource", NULL);
-  g_object_set (gnlobject, "uri", ((GESUriSource *) track_element)->uri, NULL);
+static GstElement *
+ges_uri_source_create_element (GESTrackElement * trksrc)
+{
+  GESUriSource *self;
+  GstElement *ret;
+  GESTrack *track;
+  GstElement *decodebin;
+  GstElement *topbin, *volume;
+  GstPad *volume_srcpad, *volume_sinkpad;
+  GstPad *ghost;
 
-  return gnlobject;
+  self = (GESUriSource *) trksrc;
+  track = ges_track_element_get_track (trksrc);
+
+  switch (track->type) {
+    case GES_TRACK_TYPE_AUDIO:
+      topbin = gst_bin_new ("audio-src-bin");
+
+      volume = gst_element_factory_make ("volume", NULL);
+      gst_bin_add (GST_BIN (topbin), volume);
+      volume_srcpad = gst_element_get_static_pad (volume, "src");
+      ghost = gst_ghost_pad_new ("src", volume_srcpad);
+      gst_pad_set_active (ghost, TRUE);
+      gst_element_add_pad (topbin, ghost);
+
+      decodebin = gst_element_factory_make ("uridecodebin", NULL);
+      volume_sinkpad = gst_element_get_static_pad (volume, "sink");
+      g_signal_connect (decodebin, "pad-added", G_CALLBACK (_pad_added_cb),
+          volume_sinkpad);
+      gst_element_no_more_pads (decodebin);
+      gst_bin_add (GST_BIN (topbin), decodebin);
+
+      ret = topbin;
+      break;
+    default:
+      ret = gst_element_factory_make ("uridecodebin", NULL);
+      decodebin = ret;
+      break;
+  }
+
+  g_object_set (decodebin, "caps", ges_track_get_caps (track),
+      "expose-all-streams", FALSE, "uri", self->uri, NULL);
+
+  return ret;
 }
 
 static void
@@ -148,7 +189,8 @@ ges_track_filesource_class_init (GESUriSourceClass * klass)
   g_object_class_install_property (object_class, PROP_URI,
       g_param_spec_string ("uri", "URI", "uri of the resource",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-  track_class->create_gnl_object = ges_track_filesource_create_gnl_object;
+
+  track_class->create_element = ges_uri_source_create_element;
 }
 
 static void
