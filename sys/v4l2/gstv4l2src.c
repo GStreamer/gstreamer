@@ -494,6 +494,10 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
   v4l2src = GST_V4L2SRC (src);
   obj = v4l2src->v4l2object;
 
+  /* make sure the caps changed before doing anything */
+  if (gst_v4l2_object_caps_equal (obj, caps))
+    return TRUE;
+
   /* make sure we stop capturing and dealloc buffers */
   if (!gst_v4l2_object_stop (obj))
     return FALSE;

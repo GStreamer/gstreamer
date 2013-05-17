@@ -2483,6 +2483,21 @@ pool_failed:
 }
 
 gboolean
+gst_v4l2_object_caps_equal (GstV4l2Object * v4l2object, GstCaps * caps)
+{
+  GstStructure *s;
+  GstCaps *oldcaps;
+
+  if (!v4l2object->pool)
+    return FALSE;
+
+  s = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (v4l2object->pool));
+  gst_buffer_pool_config_get_params (s, &oldcaps, NULL, NULL, NULL);
+
+  return oldcaps && gst_caps_is_equal (caps, oldcaps);
+}
+
+gboolean
 gst_v4l2_object_unlock (GstV4l2Object * v4l2object)
 {
   GST_LOG_OBJECT (v4l2object->element, "flush poll");

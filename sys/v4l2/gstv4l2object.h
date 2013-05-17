@@ -227,6 +227,8 @@ GstStructure* gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
 
 gboolean      gst_v4l2_object_set_format (GstV4l2Object *v4l2object, GstCaps * caps);
 
+gboolean      gst_v4l2_object_caps_equal  (GstV4l2Object * v4l2object, GstCaps * caps);
+
 gboolean      gst_v4l2_object_unlock      (GstV4l2Object *v4l2object);
 gboolean      gst_v4l2_object_unlock_stop (GstV4l2Object *v4l2object);
 
