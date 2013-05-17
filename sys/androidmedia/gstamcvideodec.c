@@ -841,13 +841,20 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
           src += self->crop_left;
           row_length = self->width;
         } else if (i > 0) {
+          /* skip the Y plane */
           src += slice_height * stride;
-          src += self->crop_top * src_stride;
+
+          /* crop_top/crop_left divided by two
+           * because one byte of the U/V planes
+           * corresponds to two pixels horizontally/vertically */
+          src += self->crop_top / 2 * src_stride;
           src += self->crop_left / 2;
           row_length = (self->width + 1) / 2;
         }
-        if (i == 2)
+        if (i == 2) {
+          /* skip the U plane */
           src += ((slice_height + 1) / 2) * ((stride + 1) / 2);
+        }
 
         dest = GST_VIDEO_FRAME_COMP_DATA (&vframe, i);
         height = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, i);
