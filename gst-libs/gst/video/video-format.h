@@ -144,36 +144,6 @@ typedef enum {
 typedef struct _GstVideoFormatInfo GstVideoFormatInfo;
 
 /**
- * GstVideoChromaSite:
- * @GST_VIDEO_CHROMA_SITE_UNKNOWN: unknown cositing
- * @GST_VIDEO_CHROMA_SITE_NONE: no cositing
- * @GST_VIDEO_CHROMA_SITE_H_COSITED: chroma is horizontally cosited
- * @GST_VIDEO_CHROMA_SITE_V_COSITED: chroma is vertically cosited
- * @GST_VIDEO_CHROMA_SITE_ALT_LINE: choma samples are sited on alternate lines
- * @GST_VIDEO_CHROMA_SITE_COSITED: chroma samples cosited with luma samples
- * @GST_VIDEO_CHROMA_SITE_JPEG: jpeg style cositing, also for mpeg1 and mjpeg
- * @GST_VIDEO_CHROMA_SITE_MPEG2: mpeg2 style cositing
- * @GST_VIDEO_CHROMA_SITE_DV: DV style cositing
- *
- * Various Chroma sitings.
- */
-typedef enum {
-  GST_VIDEO_CHROMA_SITE_UNKNOWN   =  0,
-  GST_VIDEO_CHROMA_SITE_NONE      = (1 << 0),
-  GST_VIDEO_CHROMA_SITE_H_COSITED = (1 << 1),
-  GST_VIDEO_CHROMA_SITE_V_COSITED = (1 << 2),
-  GST_VIDEO_CHROMA_SITE_ALT_LINE  = (1 << 3),
-  /* some common chroma cositing */
-  GST_VIDEO_CHROMA_SITE_COSITED   = (GST_VIDEO_CHROMA_SITE_H_COSITED | GST_VIDEO_CHROMA_SITE_V_COSITED),
-  GST_VIDEO_CHROMA_SITE_JPEG      = (GST_VIDEO_CHROMA_SITE_NONE),
-  GST_VIDEO_CHROMA_SITE_MPEG2     = (GST_VIDEO_CHROMA_SITE_H_COSITED),
-  GST_VIDEO_CHROMA_SITE_DV        = (GST_VIDEO_CHROMA_SITE_COSITED | GST_VIDEO_CHROMA_SITE_ALT_LINE),
-} GstVideoChromaSite;
-
-GstVideoChromaSite    gst_video_chroma_from_string   (const gchar * s);
-const gchar *         gst_video_chroma_to_string     (GstVideoChromaSite site);
-
-/**
  * GstVideoFormatFlags:
  * @GST_VIDEO_FORMAT_FLAG_YUV: The video format is YUV, components are numbered
  *   0=Y, 1=U, 2=V.
@@ -222,6 +192,8 @@ typedef enum
 /* palette components */
 #define GST_VIDEO_COMP_INDEX    0
 #define GST_VIDEO_COMP_PALETTE  1
+
+#include <gst/video/video-chroma.h>
 
 /**
  * GstVideoPackFlags:
