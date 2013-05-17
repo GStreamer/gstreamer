@@ -124,6 +124,7 @@ struct _GstVideoTestSrc {
 
   /* video state */
   GstVideoInfo info;
+  GstVideoChromaResample *subsample;
   gboolean bayer;
   gint x_invert;
   gint y_invert;
@@ -168,6 +169,10 @@ struct _GstVideoTestSrc {
   guint8 *tmpline;
   guint8 *tmpline2;
   guint16 *tmpline_u16;
+
+  guint n_lines;
+  gint offset;
+  gpointer *lines;
 };
 
 struct _GstVideoTestSrcClass {

@@ -197,6 +197,9 @@ videotestsrc_setup_paintinfo (GstVideoTestSrc * v, paintinfo * p, int w, int h)
   p->tmpline2 = v->tmpline2;
   p->tmpline_u8 = v->tmpline_u8;
   p->tmpline_u16 = v->tmpline_u16;
+  p->n_lines = v->n_lines;
+  p->offset = v->offset;
+  p->lines = v->lines;
   p->x_offset = (v->horizontal_speed * v->n_frames) % width;
   if (p->x_offset < 0)
     p->x_offset += width;
@@ -243,6 +246,7 @@ videotestsrc_setup_paintinfo (GstVideoTestSrc * v, paintinfo * p, int w, int h)
   }
   p->background_color.gray = RGB_TO_Y (r, g, b);
 
+  p->subsample = v->subsample;
 }
 
 static void
@@ -1134,13 +1138,24 @@ static void
 convert_hline_generic (paintinfo * p, GstVideoFrame * frame, int y)
 {
   const GstVideoFormatInfo *finfo, *uinfo;
-  gint i, width = GST_VIDEO_FRAME_WIDTH (frame);
-  gpointer src;
+  gint line, offset, i, width, height, bits;
+  guint n_lines;
+  gpointer dest;
 
   finfo = frame->info.finfo;
   uinfo = gst_video_format_get_info (finfo->unpack_format);
 
-  if (GST_VIDEO_FORMAT_INFO_DEPTH (uinfo, 0) == 16) {
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
+
+  bits = GST_VIDEO_FORMAT_INFO_DEPTH (uinfo, 0);
+
+  n_lines = p->n_lines;
+  offset = p->offset;
+  line = y % n_lines;
+  dest = p->lines[line];
+
+  if (bits == 16) {
     /* 16 bits */
     for (i = 0; i < width; i++) {
       p->tmpline_u16[i * 4 + 0] = TO_16 (p->tmpline[i * 4 + 0]);
@@ -1148,13 +1163,34 @@ convert_hline_generic (paintinfo * p, GstVideoFrame * frame, int y)
       p->tmpline_u16[i * 4 + 2] = TO_16 (p->tmpline[i * 4 + 2]);
       p->tmpline_u16[i * 4 + 3] = TO_16 (p->tmpline[i * 4 + 3]);
     }
-    src = p->tmpline_u16;
+    memcpy (dest, p->tmpline_u16, width * 8);
   } else {
-    src = p->tmpline;
+    memcpy (dest, p->tmpline, width * 4);
   }
-  finfo->pack_func (finfo, GST_VIDEO_PACK_FLAG_NONE,
-      src, 0, frame->data, frame->info.stride,
-      frame->info.chroma_site, y, width);
+
+  if (line - offset == n_lines - 1) {
+    gpointer lines[8];
+    guint idx;
+
+    y -= n_lines - 1;
+
+    for (i = 0; i < n_lines; i++) {
+      idx = CLAMP (y + i + offset, 0, height);
+
+      GST_DEBUG ("line %d, %d, idx %d", i, y + i + offset, idx);
+      lines[i] = p->lines[idx % n_lines];
+    }
+
+    if (p->subsample)
+      gst_video_chroma_resample (p->subsample, lines, width);
+
+    for (i = 0; i < n_lines; i++) {
+      GST_DEBUG ("pack line %d", y + i + offset);
+      finfo->pack_func (finfo, GST_VIDEO_PACK_FLAG_NONE,
+          lines[i], 0, frame->data, frame->info.stride,
+          frame->info.chroma_site, y + i + offset, width);
+    }
+  }
 }
 
 static void

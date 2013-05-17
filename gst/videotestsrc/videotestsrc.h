@@ -39,6 +39,7 @@ struct paintinfo_struct
   void (*paint_tmpline) (paintinfo * p, int x, int w);
   void (*convert_tmpline) (paintinfo * p, GstVideoFrame *frame, int y);
   void (*convert_hline) (paintinfo * p, GstVideoFrame *frame, int y);
+  GstVideoChromaResample *subsample;
   int x_offset;
 
   int x_invert;
@@ -48,6 +49,10 @@ struct paintinfo_struct
   guint8 *tmpline2;
   guint8 *tmpline_u8;
   guint16 *tmpline_u16;
+
+  guint n_lines;
+  gint offset;
+  gpointer *lines;
 
   struct vts_color_struct foreground_color;
   struct vts_color_struct background_color;

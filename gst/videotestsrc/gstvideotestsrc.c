@@ -656,6 +656,9 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   const GstStructure *structure;
   GstVideoTestSrc *videotestsrc;
   GstVideoInfo info;
+  guint i;
+  guint n_lines;
+  gint offset;
 
   videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
 
@@ -684,6 +687,31 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
     videotestsrc->x_invert = x_inv;
     videotestsrc->y_invert = y_inv;
   }
+
+  /* create chroma subsampler */
+  if (videotestsrc->subsample)
+    gst_video_chroma_resample_free (videotestsrc->subsample);
+  videotestsrc->subsample = gst_video_chroma_resample_new (0,
+      info.chroma_site, 0, info.finfo->unpack_format, -info.finfo->w_sub[2],
+      -info.finfo->h_sub[2]);
+
+  for (i = 0; i < videotestsrc->n_lines; i++)
+    g_free (videotestsrc->lines[i]);
+  g_free (videotestsrc->lines);
+
+  if (videotestsrc->subsample != NULL) {
+    gst_video_chroma_resample_get_info (videotestsrc->subsample,
+        &n_lines, &offset);
+  } else {
+    n_lines = 1;
+    offset = 0;
+  }
+
+  videotestsrc->lines = g_malloc (sizeof (gpointer) * n_lines);
+  for (i = 0; i < n_lines; i++)
+    videotestsrc->lines[i] = g_malloc ((info.width + 16) * 8);
+  videotestsrc->n_lines = n_lines;
+  videotestsrc->offset = offset;
 
   /* looks ok here */
   videotestsrc->info = info;
@@ -914,6 +942,9 @@ gst_video_test_src_stop (GstBaseSrc * basesrc)
   src->tmpline_u8 = NULL;
   g_free (src->tmpline_u16);
   src->tmpline_u16 = NULL;
+  if (src->subsample)
+    gst_video_chroma_resample_free (src->subsample);
+  src->subsample = NULL;
 
   return TRUE;
 }
