@@ -44,6 +44,27 @@
 		C67B4146172FEA3C008359CC /* appicon-2-iPad@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C67B4142172FEA3C008359CC /* appicon-2-iPad@2x.png */; };
 		C67B4147172FEA3C008359CC /* appicon-2-iPhone.png in Resources */ = {isa = PBXBuildFile; fileRef = C67B4143172FEA3C008359CC /* appicon-2-iPhone.png */; };
 		C67B4148172FEA3C008359CC /* appicon-2-iPhone@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C67B4144172FEA3C008359CC /* appicon-2-iPhone@2x.png */; };
+		C68B1D8917465EB7004FD7D0 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CC172EBEA3008359CC /* UIKit.framework */; };
+		C68B1D8A17465EB7004FD7D0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CE172EBEA3008359CC /* Foundation.framework */; };
+		C68B1D8B17465EB7004FD7D0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D0172EBEA3008359CC /* CoreGraphics.framework */; };
+		C68B1D8C17465EB7004FD7D0 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D2172EBEA3008359CC /* GStreamer.framework */; };
+		C68B1D9217465EB7004FD7D0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C68B1D9017465EB7004FD7D0 /* InfoPlist.strings */; };
+		C68B1D9417465EB7004FD7D0 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C68B1D9317465EB7004FD7D0 /* main.m */; };
+		C68B1D9817465EB7004FD7D0 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C68B1D9717465EB7004FD7D0 /* AppDelegate.m */; };
+		C68B1D9A17465EB7004FD7D0 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = C68B1D9917465EB7004FD7D0 /* Default.png */; };
+		C68B1D9C17465EB7004FD7D0 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C68B1D9B17465EB7004FD7D0 /* Default@2x.png */; };
+		C68B1D9E17465EB7004FD7D0 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C68B1D9D17465EB7004FD7D0 /* Default-568h@2x.png */; };
+		C68B1DA117465EB7004FD7D0 /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C68B1D9F17465EB7004FD7D0 /* MainStoryboard_iPhone.storyboard */; };
+		C68B1DA417465EB7004FD7D0 /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C68B1DA217465EB7004FD7D0 /* MainStoryboard_iPad.storyboard */; };
+		C68B1DA917465EB8004FD7D0 /* gst_ios_init.c in Sources */ = {isa = PBXBuildFile; fileRef = C68B1DA817465EB8004FD7D0 /* gst_ios_init.c */; };
+		C68B1DB617465F96004FD7D0 /* GStreamerBackend.m in Sources */ = {isa = PBXBuildFile; fileRef = C68B1DB017465F95004FD7D0 /* GStreamerBackend.m */; };
+		C68B1DB717465F96004FD7D0 /* LibraryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C68B1DB317465F95004FD7D0 /* LibraryViewController.m */; };
+		C68B1DB817465F96004FD7D0 /* VideoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C68B1DB517465F95004FD7D0 /* VideoViewController.m */; };
+		C68B1DBA17465FD4004FD7D0 /* EaglUIVIew.m in Sources */ = {isa = PBXBuildFile; fileRef = C68B1DB917465FD4004FD7D0 /* EaglUIVIew.m */; };
+		C68B1DC0174660D4004FD7D0 /* appicon-5-iPad.png in Resources */ = {isa = PBXBuildFile; fileRef = C68B1DBC174660D4004FD7D0 /* appicon-5-iPad.png */; };
+		C68B1DC1174660D4004FD7D0 /* appicon-5-iPad@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C68B1DBD174660D4004FD7D0 /* appicon-5-iPad@2x.png */; };
+		C68B1DC2174660D4004FD7D0 /* appicon-5-iPhone.png in Resources */ = {isa = PBXBuildFile; fileRef = C68B1DBE174660D4004FD7D0 /* appicon-5-iPhone.png */; };
+		C68B1DC3174660D4004FD7D0 /* appicon-5-iPhone@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C68B1DBF174660D4004FD7D0 /* appicon-5-iPhone@2x.png */; };
 		C6B6126017395CF2003FC410 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CC172EBEA3008359CC /* UIKit.framework */; };
 		C6B6126117395CF2003FC410 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CE172EBEA3008359CC /* Foundation.framework */; };
 		C6B6126217395CF2003FC410 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D0172EBEA3008359CC /* CoreGraphics.framework */; };
@@ -137,6 +158,33 @@
 		C67B4142172FEA3C008359CC /* appicon-2-iPad@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-2-iPad@2x.png"; sourceTree = "<group>"; };
 		C67B4143172FEA3C008359CC /* appicon-2-iPhone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-2-iPhone.png"; sourceTree = "<group>"; };
 		C67B4144172FEA3C008359CC /* appicon-2-iPhone@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-2-iPhone@2x.png"; sourceTree = "<group>"; };
+		C68B1D8817465EB7004FD7D0 /* Tutorial 5.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tutorial 5.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C68B1D8F17465EB7004FD7D0 /* Tutorial 5-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tutorial 5-Info.plist"; sourceTree = "<group>"; };
+		C68B1D9117465EB7004FD7D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		C68B1D9317465EB7004FD7D0 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		C68B1D9517465EB7004FD7D0 /* Tutorial 5-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tutorial 5-Prefix.pch"; sourceTree = "<group>"; };
+		C68B1D9617465EB7004FD7D0 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		C68B1D9717465EB7004FD7D0 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		C68B1D9917465EB7004FD7D0 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
+		C68B1D9B17465EB7004FD7D0 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
+		C68B1D9D17465EB7004FD7D0 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		C68B1DA017465EB7004FD7D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		C68B1DA317465EB7004FD7D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		C68B1DA817465EB8004FD7D0 /* gst_ios_init.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gst_ios_init.c; sourceTree = "<group>"; };
+		C68B1DAA17465EB8004FD7D0 /* gst_ios_init.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gst_ios_init.h; sourceTree = "<group>"; };
+		C68B1DAE17465F95004FD7D0 /* EaglUIVIew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EaglUIVIew.h; sourceTree = "<group>"; };
+		C68B1DAF17465F95004FD7D0 /* GStreamerBackend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackend.h; sourceTree = "<group>"; };
+		C68B1DB017465F95004FD7D0 /* GStreamerBackend.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GStreamerBackend.m; sourceTree = "<group>"; };
+		C68B1DB117465F95004FD7D0 /* GStreamerBackendDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackendDelegate.h; sourceTree = "<group>"; };
+		C68B1DB217465F95004FD7D0 /* LibraryViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LibraryViewController.h; sourceTree = "<group>"; };
+		C68B1DB317465F95004FD7D0 /* LibraryViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LibraryViewController.m; sourceTree = "<group>"; };
+		C68B1DB417465F95004FD7D0 /* VideoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoViewController.h; sourceTree = "<group>"; };
+		C68B1DB517465F95004FD7D0 /* VideoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoViewController.m; sourceTree = "<group>"; };
+		C68B1DB917465FD4004FD7D0 /* EaglUIVIew.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EaglUIVIew.m; sourceTree = "<group>"; };
+		C68B1DBC174660D4004FD7D0 /* appicon-5-iPad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-5-iPad.png"; sourceTree = "<group>"; };
+		C68B1DBD174660D4004FD7D0 /* appicon-5-iPad@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-5-iPad@2x.png"; sourceTree = "<group>"; };
+		C68B1DBE174660D4004FD7D0 /* appicon-5-iPhone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-5-iPhone.png"; sourceTree = "<group>"; };
+		C68B1DBF174660D4004FD7D0 /* appicon-5-iPhone@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-5-iPhone@2x.png"; sourceTree = "<group>"; };
 		C6B6125F17395CF1003FC410 /* Tutorial 3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tutorial 3.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6B6126617395CF2003FC410 /* Tutorial 3-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tutorial 3-Info.plist"; sourceTree = "<group>"; };
 		C6B6126817395CF2003FC410 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -214,6 +262,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C68B1D8517465EB7004FD7D0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C68B1D8917465EB7004FD7D0 /* UIKit.framework in Frameworks */,
+				C68B1D8A17465EB7004FD7D0 /* Foundation.framework in Frameworks */,
+				C68B1D8B17465EB7004FD7D0 /* CoreGraphics.framework in Frameworks */,
+				C68B1D8C17465EB7004FD7D0 /* GStreamer.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C6B6125C17395CF1003FC410 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -246,6 +305,7 @@
 				C67B4104172FC7F4008359CC /* Tutorial 2 */,
 				C6B6126417395CF2003FC410 /* Tutorial 3 */,
 				C6EB8586173BEE5E00C3953D /* Tutorial 4 */,
+				C68B1D8D17465EB7004FD7D0 /* Tutorial 5 */,
 				C67B40CB172EBEA3008359CC /* Frameworks */,
 				C67B40CA172EBEA3008359CC /* Products */,
 			);
@@ -258,6 +318,7 @@
 				C67B40FF172FC7F4008359CC /* Tutorial 2.app */,
 				C6B6125F17395CF1003FC410 /* Tutorial 3.app */,
 				C6EB8581173BEE5D00C3953D /* Tutorial 4.app */,
+				C68B1D8817465EB7004FD7D0 /* Tutorial 5.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -358,6 +419,55 @@
 				C67B4142172FEA3C008359CC /* appicon-2-iPad@2x.png */,
 				C67B4143172FEA3C008359CC /* appicon-2-iPhone.png */,
 				C67B4144172FEA3C008359CC /* appicon-2-iPhone@2x.png */,
+			);
+			path = Images;
+			sourceTree = "<group>";
+		};
+		C68B1D8D17465EB7004FD7D0 /* Tutorial 5 */ = {
+			isa = PBXGroup;
+			children = (
+				C68B1DAE17465F95004FD7D0 /* EaglUIVIew.h */,
+				C68B1DB917465FD4004FD7D0 /* EaglUIVIew.m */,
+				C68B1DBB174660D4004FD7D0 /* Images */,
+				C68B1DAF17465F95004FD7D0 /* GStreamerBackend.h */,
+				C68B1DB017465F95004FD7D0 /* GStreamerBackend.m */,
+				C68B1D9617465EB7004FD7D0 /* AppDelegate.h */,
+				C68B1D9717465EB7004FD7D0 /* AppDelegate.m */,
+				C68B1D9F17465EB7004FD7D0 /* MainStoryboard_iPhone.storyboard */,
+				C68B1DA217465EB7004FD7D0 /* MainStoryboard_iPad.storyboard */,
+				C68B1DB217465F95004FD7D0 /* LibraryViewController.h */,
+				C68B1DB317465F95004FD7D0 /* LibraryViewController.m */,
+				C68B1DB417465F95004FD7D0 /* VideoViewController.h */,
+				C68B1DB517465F95004FD7D0 /* VideoViewController.m */,
+				C68B1D8E17465EB7004FD7D0 /* Supporting Files */,
+			);
+			path = "Tutorial 5";
+			sourceTree = "<group>";
+		};
+		C68B1D8E17465EB7004FD7D0 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				C68B1D8F17465EB7004FD7D0 /* Tutorial 5-Info.plist */,
+				C68B1D9017465EB7004FD7D0 /* InfoPlist.strings */,
+				C68B1D9317465EB7004FD7D0 /* main.m */,
+				C68B1D9517465EB7004FD7D0 /* Tutorial 5-Prefix.pch */,
+				C68B1D9917465EB7004FD7D0 /* Default.png */,
+				C68B1D9B17465EB7004FD7D0 /* Default@2x.png */,
+				C68B1D9D17465EB7004FD7D0 /* Default-568h@2x.png */,
+				C68B1DA817465EB8004FD7D0 /* gst_ios_init.c */,
+				C68B1DAA17465EB8004FD7D0 /* gst_ios_init.h */,
+				C68B1DB117465F95004FD7D0 /* GStreamerBackendDelegate.h */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C68B1DBB174660D4004FD7D0 /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				C68B1DBC174660D4004FD7D0 /* appicon-5-iPad.png */,
+				C68B1DBD174660D4004FD7D0 /* appicon-5-iPad@2x.png */,
+				C68B1DBE174660D4004FD7D0 /* appicon-5-iPhone.png */,
+				C68B1DBF174660D4004FD7D0 /* appicon-5-iPhone@2x.png */,
 			);
 			path = Images;
 			sourceTree = "<group>";
@@ -495,6 +605,23 @@
 			productReference = C67B40FF172FC7F4008359CC /* Tutorial 2.app */;
 			productType = "com.apple.product-type.application";
 		};
+		C68B1D8717465EB7004FD7D0 /* Tutorial 5 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C68B1DAD17465EB8004FD7D0 /* Build configuration list for PBXNativeTarget "Tutorial 5" */;
+			buildPhases = (
+				C68B1D8417465EB7004FD7D0 /* Sources */,
+				C68B1D8517465EB7004FD7D0 /* Frameworks */,
+				C68B1D8617465EB7004FD7D0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Tutorial 5";
+			productName = "Tutorial 5";
+			productReference = C68B1D8817465EB7004FD7D0 /* Tutorial 5.app */;
+			productType = "com.apple.product-type.application";
+		};
 		C6B6125E17395CF1003FC410 /* Tutorial 3 */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C6B6128517395CF2003FC410 /* Build configuration list for PBXNativeTarget "Tutorial 3" */;
@@ -553,6 +680,7 @@
 				C67B40FE172FC7F4008359CC /* Tutorial 2 */,
 				C6B6125E17395CF1003FC410 /* Tutorial 3 */,
 				C6EB8580173BEE5D00C3953D /* Tutorial 4 */,
+				C68B1D8717465EB7004FD7D0 /* Tutorial 5 */,
 			);
 		};
 /* End PBXProject section */
@@ -588,6 +716,23 @@
 				C67B4146172FEA3C008359CC /* appicon-2-iPad@2x.png in Resources */,
 				C67B4147172FEA3C008359CC /* appicon-2-iPhone.png in Resources */,
 				C67B4148172FEA3C008359CC /* appicon-2-iPhone@2x.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C68B1D8617465EB7004FD7D0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C68B1D9217465EB7004FD7D0 /* InfoPlist.strings in Resources */,
+				C68B1D9A17465EB7004FD7D0 /* Default.png in Resources */,
+				C68B1D9C17465EB7004FD7D0 /* Default@2x.png in Resources */,
+				C68B1D9E17465EB7004FD7D0 /* Default-568h@2x.png in Resources */,
+				C68B1DA117465EB7004FD7D0 /* MainStoryboard_iPhone.storyboard in Resources */,
+				C68B1DA417465EB7004FD7D0 /* MainStoryboard_iPad.storyboard in Resources */,
+				C68B1DC0174660D4004FD7D0 /* appicon-5-iPad.png in Resources */,
+				C68B1DC1174660D4004FD7D0 /* appicon-5-iPad@2x.png in Resources */,
+				C68B1DC2174660D4004FD7D0 /* appicon-5-iPhone.png in Resources */,
+				C68B1DC3174660D4004FD7D0 /* appicon-5-iPhone@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -649,6 +794,20 @@
 				C67B411E172FC7F5008359CC /* ViewController.m in Sources */,
 				C67B412A172FC85D008359CC /* gst_ios_init.c in Sources */,
 				C67B412E172FCC4C008359CC /* GStreamerBackend.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C68B1D8417465EB7004FD7D0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C68B1D9417465EB7004FD7D0 /* main.m in Sources */,
+				C68B1D9817465EB7004FD7D0 /* AppDelegate.m in Sources */,
+				C68B1DA917465EB8004FD7D0 /* gst_ios_init.c in Sources */,
+				C68B1DB617465F96004FD7D0 /* GStreamerBackend.m in Sources */,
+				C68B1DB717465F96004FD7D0 /* LibraryViewController.m in Sources */,
+				C68B1DB817465F96004FD7D0 /* VideoViewController.m in Sources */,
+				C68B1DBA17465FD4004FD7D0 /* EaglUIVIew.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -726,6 +885,30 @@
 			isa = PBXVariantGroup;
 			children = (
 				C67B411A172FC7F5008359CC /* en */,
+			);
+			name = MainStoryboard_iPad.storyboard;
+			sourceTree = "<group>";
+		};
+		C68B1D9017465EB7004FD7D0 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C68B1D9117465EB7004FD7D0 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		C68B1D9F17465EB7004FD7D0 /* MainStoryboard_iPhone.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C68B1DA017465EB7004FD7D0 /* en */,
+			);
+			name = MainStoryboard_iPhone.storyboard;
+			sourceTree = "<group>";
+		};
+		C68B1DA217465EB7004FD7D0 /* MainStoryboard_iPad.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C68B1DA317465EB7004FD7D0 /* en */,
 			);
 			name = MainStoryboard_iPad.storyboard;
 			sourceTree = "<group>";
@@ -1057,6 +1240,138 @@
 			};
 			name = Release;
 		};
+		C68B1DAB17465EB8004FD7D0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = armv7;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"~/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tutorial 5/Tutorial 5-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				INFOPLIST_FILE = "Tutorial 5/Tutorial 5-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-lstdc++",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		C68B1DAC17465EB8004FD7D0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = armv7;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"~/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tutorial 5/Tutorial 5-Prefix.pch";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				INFOPLIST_FILE = "Tutorial 5/Tutorial 5-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-lstdc++",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
 		C6B6128617395CF2003FC410 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1351,6 +1666,14 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		C68B1DAD17465EB8004FD7D0 /* Build configuration list for PBXNativeTarget "Tutorial 5" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C68B1DAB17465EB8004FD7D0 /* Debug */,
+				C68B1DAC17465EB8004FD7D0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		C6B6128517395CF2003FC410 /* Build configuration list for PBXNativeTarget "Tutorial 3" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1367,6 +1690,7 @@
 				C6EB85A9173BEE5F00C3953D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
