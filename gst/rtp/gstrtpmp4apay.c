@@ -294,6 +294,8 @@ gst_rtp_mp4a_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
       cbuffer = gst_buffer_new_and_alloc (map.size + 2);
       gst_buffer_map (cbuffer, &cmap, GST_MAP_WRITE);
 
+      memset (cmap.data, 0, map.size + 2);
+
       /* Create StreamMuxConfig according to ISO/IEC 14496-3:
        *
        * audioMuxVersion           == 0 (1 bit)
