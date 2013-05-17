@@ -327,8 +327,8 @@ _gst_mss_stream_audio_caps_from_fourcc (gchar * fourcc)
   if (strcmp (fourcc, "AACL") == 0) {
     return gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 4,
         NULL);
-  } else if (strcmp (fourcc, "WmaPro") == 0) {
-    return gst_caps_new_simple ("audio/x-wma", "wmaversion", G_TYPE_INT, 2,
+  } else if (strcmp (fourcc, "WmaPro") == 0 || strcmp (fourcc, "WMAP") == 0) {
+    return gst_caps_new_simple ("audio/x-wma", "wmaversion", G_TYPE_INT, 3,
         NULL);
   }
   return NULL;
@@ -565,6 +565,7 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
   gchar *fourcc = (gchar *) xmlGetProp (node, (xmlChar *) "FourCC");
   gchar *channels_str = (gchar *) xmlGetProp (node, (xmlChar *) "Channels");
   gchar *rate_str = (gchar *) xmlGetProp (node, (xmlChar *) "SamplingRate");
+  gchar *block_align_str = (gchar *) xmlGetProp(node, (xmlChar *) "PacketSize");
   gchar *codec_data_str =
       (gchar *) xmlGetProp (node, (xmlChar *) "CodecPrivateData");
   GstBuffer *codec_data = NULL;
@@ -588,6 +589,8 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
     rate = (gint) g_ascii_strtoull (rate_str, NULL, 10);
   if (channels_str)
     channels = (int) g_ascii_strtoull (channels_str, NULL, 10);
+  if (block_align_str)
+    block_align = (int) g_ascii_strtoull (block_align_str, NULL, 10);
 
   if (!codec_data) {
     GstMapInfo mapinfo;
@@ -636,6 +639,7 @@ end:
   xmlFree (fourcc);
   xmlFree (channels_str);
   xmlFree (rate_str);
+  xmlFree (block_align_str);
   xmlFree (codec_data_str);
 
   return caps;
