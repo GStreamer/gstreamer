@@ -97,10 +97,31 @@ static NSString *CellIdentifier = @"CellIdentifier";
         [entries addObject:[NSString stringWithFormat:@"%@/%@",docsPath, e]];
     }
     self->mediaEntries = entries;
-    self->onlineEntries = [NSArray arrayWithObjects:
-        @"http://docs.gstreamer.com/media/sintel_trailer-368p.ogv",
-        @"http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v",
-        nil];
+
+    entries = [[NSMutableArray alloc] init];
+
+    // Big Buck Bunny
+    [entries addObject:@"http://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_surround-fix.avi"];
+    [entries addObject:@"http://mirrorblender.top-ix.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_h264.mov"];
+    [entries addObject:@"http://mirrorblender.top-ix.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_stereo.ogg"];
+    [entries addObject:@"http://mirrorblender.top-ix.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_stereo.avi"];
+
+    // Sintel
+    [entries addObject:@"http://ftp.nluug.nl/ftp/graphics/blender/apricot/trailer/Sintel_Trailer1.480p.DivX_Plus_HD.mkv"];
+    [entries addObject:@"http://ftp.nluug.nl/ftp/graphics/blender/apricot/trailer/sintel_trailer-480p.mp4"];
+    [entries addObject:@"http://ftp.nluug.nl/ftp/graphics/blender/apricot/trailer/sintel_trailer-480p.ogv"];
+    [entries addObject:@"http://mirrorblender.top-ix.org/movies/sintel-1024-surround.mp4"];
+
+    // Tears of Steel
+    [entries addObject:@"http://blender-mirror.kino3d.org/mango/download.blender.org/demo/movies/ToS/tears_of_steel_720p.mkv"];
+    [entries addObject:@"http://blender-mirror.kino3d.org/mango/download.blender.org/demo/movies/ToS/tears_of_steel_720p.mov"];
+    [entries addObject:@"http://media.xiph.org/mango/tears_of_steel_1080p.webm"];
+
+    // Radio stations
+    [entries addObject:@"http://radio.hbr1.com:19800/trance.ogg"];
+    [entries addObject:@"http://radio.hbr1.com:19800/tronic.aac"];
+
+    self->onlineEntries = entries;
 }
 
 @end

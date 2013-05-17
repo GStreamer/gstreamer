@@ -80,6 +80,13 @@
                                         <slider key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" id="ufs-E5-87w" userLabel="Slider">
                                             <rect key="frame" x="240" y="11" width="118" height="23"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                            <connections>
+                                                <action selector="sliderTouchDown:" destination="z7O-8l-Zeo" eventType="touchDown" id="yV6-eN-VUb"/>
+                                                <action selector="sliderTouchUp:" destination="z7O-8l-Zeo" eventType="touchCancel" id="OyS-WZ-sEk"/>
+                                                <action selector="sliderTouchUp:" destination="z7O-8l-Zeo" eventType="touchUpOutside" id="Vfz-se-pJg"/>
+                                                <action selector="sliderTouchUp:" destination="z7O-8l-Zeo" eventType="touchUpInside" id="kZF-uW-GRo"/>
+                                                <action selector="sliderValueChanged:" destination="z7O-8l-Zeo" eventType="valueChanged" id="cwm-pm-BfT"/>
+                                            </connections>
                                         </slider>
                                     </barButtonItem>
                                 </items>

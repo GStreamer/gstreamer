@@ -7,6 +7,10 @@
 GST_DEBUG_CATEGORY_STATIC (debug_category);
 #define GST_CAT_DEFAULT debug_category
 
+/* Do not allow seeks to be performed closer than this distance. It is visually useless, and will probably
+ * confuse some demuxers. */
+#define SEEK_MIN_DELAY (500 * GST_MSECOND)
+
 @interface GStreamerBackend()
 -(void)setUIMessage:(gchar*) message;
 -(void)app_function;
@@ -14,15 +18,17 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 @end
 
 @implementation GStreamerBackend {
-    id ui_delegate;        /* Class that we use to interact with the user interface */
-    GstElement *pipeline;  /* The running pipeline */
-    GstElement *video_sink;/* The video sink element which receives XOverlay commands */
-    GMainContext *context; /* GLib context used to run the main loop */
-    GMainLoop *main_loop;  /* GLib main loop */
-    gboolean initialized;  /* To avoid informing the UI multiple times about the initialization */
-    UIView *ui_video_view; /* UIView that holds the video */
-    GstState state;        /* Current pipeline state */
-    gint64 duration;       /* Cached clip duration */
+    id ui_delegate;              /* Class that we use to interact with the user interface */
+    GstElement *pipeline;        /* The running pipeline */
+    GstElement *video_sink;      /* The video sink element which receives XOverlay commands */
+    GMainContext *context;       /* GLib context used to run the main loop */
+    GMainLoop *main_loop;        /* GLib main loop */
+    gboolean initialized;        /* To avoid informing the UI multiple times about the initialization */
+    UIView *ui_video_view;       /* UIView that holds the video */
+    GstState state;              /* Current pipeline state */
+    gint64 duration;             /* Cached clip duration */
+    gint64 desired_position;     /* Position to seek to, once the pipeline is running */
+    GstClockTime last_seek_time; /* For seeking overflow prevention (throttling) */
 }
 
 /*
@@ -73,6 +79,17 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
     GST_DEBUG ("URI set to %s", char_uri);
 }
 
+-(void) setPosition:(NSInteger)milliseconds
+{
+    gint64 position = (gint64)(milliseconds * GST_MSECOND);
+    if (state >= GST_STATE_PAUSED) {
+        execute_seek(position, self);
+    } else {
+        GST_DEBUG ("Scheduling seek to %" GST_TIME_FORMAT " for later", GST_TIME_ARGS (position));
+        self->desired_position = position;
+    }
+}
+
 /*
  * Private methods
  */
@@ -108,9 +125,7 @@ static gboolean refresh_ui (GStreamerBackend *self) {
 
     /* If we didn't know it yet, query the stream duration */
     if (!GST_CLOCK_TIME_IS_VALID (self->duration)) {
-        if (!gst_element_query_duration (self->pipeline, &fmt, &self->duration)) {
-            GST_WARNING ("Could not query current duration");
-        }
+        gst_element_query_duration (self->pipeline, &fmt, &self->duration);
     }
 
     if (gst_element_query_position (self->pipeline, &fmt, &position)) {
@@ -118,6 +133,51 @@ static gboolean refresh_ui (GStreamerBackend *self) {
         [self setCurrentUIPosition:position / GST_MSECOND duration:self->duration / GST_MSECOND];
     }
     return TRUE;
+}
+
+/* Forward declaration for the delayed seek callback */
+static gboolean delayed_seek_cb (GStreamerBackend *self);
+
+/* Perform seek, if we are not too close to the previous seek. Otherwise, schedule the seek for
+ * some time in the future. */
+static void execute_seek (gint64 position, GStreamerBackend *self) {
+    gint64 diff;
+
+    if (position == GST_CLOCK_TIME_NONE)
+        return;
+
+    diff = gst_util_get_timestamp () - self->last_seek_time;
+
+    if (GST_CLOCK_TIME_IS_VALID (self->last_seek_time) && diff < SEEK_MIN_DELAY) {
+        /* The previous seek was too close, delay this one */
+        GSource *timeout_source;
+
+        if (self->desired_position == GST_CLOCK_TIME_NONE) {
+            /* There was no previous seek scheduled. Setup a timer for some time in the future */
+            timeout_source = g_timeout_source_new ((SEEK_MIN_DELAY - diff) / GST_MSECOND);
+            g_source_set_callback (timeout_source, (GSourceFunc)delayed_seek_cb, (__bridge void *)self, NULL);
+            g_source_attach (timeout_source, self->context);
+            g_source_unref (timeout_source);
+        }
+        /* Update the desired seek position. If multiple petitions are received before it is time
+         * to perform a seek, only the last one is remembered. */
+        self->desired_position = position;
+        GST_DEBUG ("Throttling seek to %" GST_TIME_FORMAT ", will be in %" GST_TIME_FORMAT,
+                   GST_TIME_ARGS (position), GST_TIME_ARGS (SEEK_MIN_DELAY - diff));
+    } else {
+        /* Perform the seek now */
+        GST_DEBUG ("Seeking to %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
+        self->last_seek_time = gst_util_get_timestamp ();
+        gst_element_seek_simple (self->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, position);
+        self->desired_position = GST_CLOCK_TIME_NONE;
+    }
+}
+
+/* Delayed seek callback. This gets called by the timer setup in the above function. */
+static gboolean delayed_seek_cb (GStreamerBackend *self) {
+    GST_DEBUG ("Doing delayed seek to %" GST_TIME_FORMAT, GST_TIME_ARGS (self->desired_position));
+    execute_seek (self->desired_position, self);
+    return FALSE;
 }
 
 static void check_media_size (GStreamerBackend *self) {
@@ -130,6 +190,10 @@ static void check_media_size (GStreamerBackend *self) {
 
     /* Retrieve the Caps at the entrance of the video sink */
     g_object_get (self->pipeline, "video-sink", &video_sink, NULL);
+
+    /* Do nothing if there is no video sink (this might be an audio-only clip */
+    if (!video_sink) return;
+
     video_sink_pad = gst_element_get_static_pad (video_sink, "sink");
     caps = gst_pad_get_negotiated_caps (video_sink_pad);
 
@@ -182,6 +246,10 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
         if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED)
         {
             check_media_size(self);
+
+            /* If there was a scheduled seek, perform it now that we have moved to the Paused state */
+            if (GST_CLOCK_TIME_IS_VALID (self->desired_position))
+                execute_seek (self->desired_position, self);
         }
     }
 }

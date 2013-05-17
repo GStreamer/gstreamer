@@ -6,6 +6,9 @@
     GStreamerBackend *gst_backend;
     int media_width;
     int media_height;
+    Boolean dragging_slider;
+    Boolean is_local_media;
+    Boolean is_playing_desired;
 }
 
 @end
@@ -56,7 +59,7 @@
     play_button.enabled = FALSE;
     pause_button.enabled = FALSE;
     
-    /* Make these constant for now, later tutorials will change them */
+    /* As soon as the GStreamer backend knows the real values, these ones will be replaced */
     media_width = 320;
     media_height = 240;
 
@@ -81,12 +84,37 @@
 -(IBAction) play:(id)sender
 {
     [gst_backend play];
+    is_playing_desired = YES;
 }
 
 /* Called when the Pause button is pressed */
 -(IBAction) pause:(id)sender
 {
     [gst_backend pause];
+    is_playing_desired = NO;
+}
+
+- (IBAction)sliderValueChanged:(id)sender {
+    if (!dragging_slider) return;
+    // If this is a local file, allow scrub seeking, this is, seek as soon as the slider is moved.
+    if (is_local_media)
+        [gst_backend setPosition:time_slider.value];
+    [self updateTimeWidget];
+}
+
+- (IBAction)sliderTouchDown:(id)sender {
+    [gst_backend pause];
+    dragging_slider = YES;
+}
+
+- (IBAction)sliderTouchUp:(id)sender {
+    dragging_slider = NO;
+    // If this is a remote file, scrub seeking is probably not going to work smoothly enough.
+    // Therefore, perform only the seek when the slider is released.
+    if (!is_local_media)
+        [gst_backend setPosition:time_slider.value];
+    if (is_playing_desired)
+        [gst_backend play];
 }
 
 /* Called when the size of the main view has changed, so we can
@@ -121,6 +149,8 @@
         pause_button.enabled = TRUE;
         message_label.text = @"Ready";
         [gst_backend setUri:uri];
+        is_local_media = [uri hasPrefix:@"file://"];
+        is_playing_desired = NO;
     });
 }
 
@@ -144,6 +174,9 @@
 
 -(void) setCurrentPosition:(NSInteger)position duration:(NSInteger)duration
 {
+    /* Ignore messages from the pipeline if the time sliders is being dragged */
+    if (dragging_slider) return;
+
     dispatch_async(dispatch_get_main_queue(), ^{
         time_slider.maximumValue = duration;
         time_slider.value = position;

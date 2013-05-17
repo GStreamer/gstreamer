@@ -18,6 +18,9 @@
 
 -(IBAction) play:(id)sender;
 -(IBAction) pause:(id)sender;
+-(IBAction) sliderValueChanged:(id)sender;
+-(IBAction) sliderTouchDown:(id)sender;
+-(IBAction) sliderTouchUp:(id)sender;
 
 /* From GStreamerBackendDelegate */
 -(void) gstreamerInitialized;
