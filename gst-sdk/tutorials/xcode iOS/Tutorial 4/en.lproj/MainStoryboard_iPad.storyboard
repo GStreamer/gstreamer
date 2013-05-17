@@ -29,7 +29,7 @@
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="xWd-bg-0b6" userLabel="VideoContainer">
                                 <subviews>
-                                    <view contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="6tN-97-YoQ" userLabel="Video" customClass="EaglUIView">
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="6tN-97-YoQ" userLabel="Video" customClass="EaglUIView">
                                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="240" type="user" id="A9A-eK-7QX"/>
@@ -177,6 +177,37 @@
             <point key="canvasLocation" x="-478" y="-199"/>
         </scene>
     </scenes>
+    <classes>
+        <class className="EaglUIView" superclassName="UIView">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/EaglUIView.h"/>
+        </class>
+        <class className="LibraryViewController" superclassName="UITableViewController">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/LibraryViewController.h"/>
+            <relationships>
+                <relationship kind="action" name="refresh:"/>
+            </relationships>
+        </class>
+        <class className="VideoViewController" superclassName="UIViewController">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/VideoViewController.h"/>
+            <relationships>
+                <relationship kind="action" name="pause:"/>
+                <relationship kind="action" name="play:"/>
+                <relationship kind="action" name="sliderTouchDown:"/>
+                <relationship kind="action" name="sliderTouchUp:"/>
+                <relationship kind="action" name="sliderValueChanged:"/>
+                <relationship kind="outlet" name="message_label" candidateClass="UILabel"/>
+                <relationship kind="outlet" name="pause_button" candidateClass="UIBarButtonItem"/>
+                <relationship kind="outlet" name="play_button" candidateClass="UIBarButtonItem"/>
+                <relationship kind="outlet" name="time_label" candidateClass="UITextField"/>
+                <relationship kind="outlet" name="time_slider" candidateClass="UISlider"/>
+                <relationship kind="outlet" name="toolbar" candidateClass="UIToolbar"/>
+                <relationship kind="outlet" name="video_container_view" candidateClass="UIView"/>
+                <relationship kind="outlet" name="video_height_constraint" candidateClass="NSLayoutConstraint"/>
+                <relationship kind="outlet" name="video_view" candidateClass="UIView"/>
+                <relationship kind="outlet" name="video_width_constraint" candidateClass="NSLayoutConstraint"/>
+            </relationships>
+        </class>
+    </classes>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
         <simulatedStatusBarMetrics key="statusBar" statusBarStyle="blackTranslucent"/>
         <simulatedOrientationMetrics key="orientation"/>

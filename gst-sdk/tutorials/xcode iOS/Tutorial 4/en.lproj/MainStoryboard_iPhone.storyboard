@@ -30,7 +30,7 @@
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="nA3-W2-kn7" userLabel="VideoContainer">
                                 <subviews>
-                                    <view contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="WHW-sv-bWc" userLabel="Video" customClass="EaglUIView">
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="WHW-sv-bWc" userLabel="Video" customClass="EaglUIView">
                                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="240" type="user" id="5z2-ux-czd"/>
@@ -80,15 +80,22 @@
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="LSl-TA-0qV"/>
                                 </items>
                             </toolbar>
-                            <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="4Ns-t9-gs7" userLabel="Slider"/>
+                            <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="4Ns-t9-gs7" userLabel="Slider">
+                                <connections>
+                                    <action selector="sliderTouchDown:" destination="iMo-Z9-PrL" eventType="touchDown" id="jGO-Pw-b5d"/>
+                                    <action selector="sliderTouchUp:" destination="iMo-Z9-PrL" eventType="touchCancel" id="L1U-aK-FFn"/>
+                                    <action selector="sliderTouchUp:" destination="iMo-Z9-PrL" eventType="touchUpInside" id="jRZ-vw-FQR"/>
+                                    <action selector="sliderTouchUp:" destination="iMo-Z9-PrL" eventType="touchUpOutside" id="u1u-UD-WJw"/>
+                                    <action selector="sliderValueChanged:" destination="iMo-Z9-PrL" eventType="valueChanged" id="ZOq-XS-0M1"/>
+                                </connections>
+                            </slider>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="LmB-wv-Ztp" firstAttribute="top" secondItem="nA3-W2-kn7" secondAttribute="bottom" type="user" id="5TL-Gq-YnE"/>
+                            <constraint firstAttribute="bottom" secondItem="LmB-wv-Ztp" secondAttribute="bottom" constant="66" id="9mR-hc-MeV"/>
                             <constraint firstItem="A2w-65-QSF" firstAttribute="leading" secondItem="zgN-eK-M4Q" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="Aki-Hx-2C9"/>
                             <constraint firstItem="4Ns-t9-gs7" firstAttribute="trailing" secondItem="zgN-eK-M4Q" secondAttribute="trailing" type="default" id="HFi-uV-wdo"/>
-                            <constraint firstItem="4Ns-t9-gs7" firstAttribute="bottom" secondItem="A2w-65-QSF" secondAttribute="top" type="default" id="Iml-yC-EDE"/>
-                            <constraint firstItem="4Ns-t9-gs7" firstAttribute="top" secondItem="LmB-wv-Ztp" secondAttribute="bottom" type="user" id="TUy-Wk-veP"/>
+                            <constraint firstAttribute="bottom" secondItem="nA3-W2-kn7" secondAttribute="bottom" constant="87" id="Jdn-RD-NPI"/>
                             <constraint firstItem="A2w-65-QSF" firstAttribute="trailing" secondItem="zgN-eK-M4Q" secondAttribute="trailing" constant="20" symbolic="YES" type="user" id="WWj-l6-D2k"/>
                             <constraint firstAttribute="trailing" secondItem="LmB-wv-Ztp" secondAttribute="trailing" constant="20" symbolic="YES" type="user" id="ddw-6a-Ccz"/>
                             <constraint firstItem="A2w-65-QSF" firstAttribute="bottom" secondItem="zgN-eK-M4Q" secondAttribute="bottom" type="default" id="e3s-lP-iPh"/>
@@ -97,6 +104,7 @@
                             <constraint firstItem="4Ns-t9-gs7" firstAttribute="leading" secondItem="zgN-eK-M4Q" secondAttribute="leading" type="default" id="ma4-AV-cQs"/>
                             <constraint firstItem="LmB-wv-Ztp" firstAttribute="leading" secondItem="zgN-eK-M4Q" secondAttribute="leading" constant="20" symbolic="YES" type="user" id="nfT-8Y-Tvw"/>
                             <constraint firstItem="nA3-W2-kn7" firstAttribute="leading" secondItem="zgN-eK-M4Q" secondAttribute="leading" type="user" id="p8G-QE-uZ8"/>
+                            <constraint firstAttribute="bottom" secondItem="4Ns-t9-gs7" secondAttribute="bottom" constant="45" id="qfD-gf-vLB"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="xMw-um-vMA"/>
@@ -184,11 +192,17 @@
                 <relationship kind="action" name="refresh:"/>
             </relationships>
         </class>
+        <class className="NSLayoutConstraint" superclassName="NSObject">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/NSLayoutConstraint.h"/>
+        </class>
         <class className="VideoViewController" superclassName="UIViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/VideoViewController.h"/>
             <relationships>
                 <relationship kind="action" name="pause:"/>
                 <relationship kind="action" name="play:"/>
+                <relationship kind="action" name="sliderTouchDown:"/>
+                <relationship kind="action" name="sliderTouchUp:"/>
+                <relationship kind="action" name="sliderValueChanged:"/>
                 <relationship kind="outlet" name="message_label" candidateClass="UILabel"/>
                 <relationship kind="outlet" name="pause_button" candidateClass="UIBarButtonItem"/>
                 <relationship kind="outlet" name="play_button" candidateClass="UIBarButtonItem"/>
