@@ -288,7 +288,8 @@ gst_mss_demux_stream_free (GstMssDemuxStream * stream)
     gst_object_unref (stream->pad);
     stream->pad = NULL;
   }
-  gst_caps_unref (stream->caps);
+  if (stream->caps)
+    gst_caps_unref (stream->caps);
   g_free (stream);
 }
 
@@ -905,8 +906,6 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
     GstMssDemuxStream *stream = iter->data;
     iter = g_slist_next (iter); /* do it ourselves as we want it done in the beginning of the loop */
     if (!gst_mss_demux_expose_stream (mssdemux, stream)) {
-      if (stream->pad)
-        gst_element_remove_pad (GST_ELEMENT_CAST (mssdemux), stream->pad);
       gst_mss_demux_stream_free (stream);
       mssdemux->streams = g_slist_delete_link (mssdemux->streams, current);
     }
