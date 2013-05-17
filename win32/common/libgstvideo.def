@@ -51,7 +51,13 @@ EXPORTS
 	gst_video_buffer_pool_get_type
 	gst_video_buffer_pool_new
 	gst_video_calculate_display_ratio
+	gst_video_chroma_flags_get_type
 	gst_video_chroma_from_string
+	gst_video_chroma_method_get_type
+	gst_video_chroma_resample
+	gst_video_chroma_resample_free
+	gst_video_chroma_resample_get_info
+	gst_video_chroma_resample_new
 	gst_video_chroma_site_get_type
 	gst_video_chroma_to_string
 	gst_video_codec_frame_get_type

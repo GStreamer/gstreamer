@@ -54,6 +54,46 @@ typedef enum {
 GstVideoChromaSite    gst_video_chroma_from_string   (const gchar * s);
 const gchar *         gst_video_chroma_to_string     (GstVideoChromaSite site);
 
+/**
+ * GstVideoChromaMethod:
+ * @GST_VIDEO_CHROMA_METHOD_NEAREST: Duplicates the chroma samples when
+ *    upsampling and drops when subsampling
+ * @GST_VIDEO_CHROMA_METHOD_LINEAR: Uses linear interpolation to reconstruct
+ *    missing chroma and averaging to subsample
+ *
+ * Different subsampling and upsampling methods
+ */
+typedef enum {
+  GST_VIDEO_CHROMA_METHOD_NEAREST,
+  GST_VIDEO_CHROMA_METHOD_LINEAR
+} GstVideoChromaMethod;
+
+/**
+ * GstVideoChromaFlags:
+ * @GST_VIDEO_CHROMA_FLAG_NONE: no flags
+ *
+ * Extra flags that influence the result from gst_video_chroma_resample_new()
+ * and extra features of the returned resampler.
+ */
+typedef enum {
+  GST_VIDEO_CHROMA_FLAG_NONE       = 0,
+} GstVideoChromaFlags;
+
+typedef struct _GstVideoChromaResample GstVideoChromaResample;
+
+GstVideoChromaResample * gst_video_chroma_resample_new   (GstVideoChromaMethod method,
+                                                          GstVideoChromaSite site,
+                                                          GstVideoChromaFlags flags,
+                                                          GstVideoFormat format,
+                                                          gint h_factor, gint v_factor);
+void                     gst_video_chroma_resample_free  (GstVideoChromaResample *resample);
+
+void                     gst_video_chroma_resample_get_info (GstVideoChromaResample *resample,
+                                                             guint * n_lines, gint *offset);
+
+void                     gst_video_chroma_resample       (GstVideoChromaResample *resample,
+                                                          gpointer lines[], gint width);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_CHROMA_H__ */
