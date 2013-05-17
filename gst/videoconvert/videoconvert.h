@@ -48,12 +48,20 @@ struct _VideoConvert {
 
   guint lines;
 
-  gpointer tmpline;
+  gpointer *tmplines;
   guint16 *errline;
 
-  void (*convert)  (VideoConvert *convert, GstVideoFrame *dest, const GstVideoFrame *src);
-  void (*matrix)   (VideoConvert *convert, gpointer pixels);
-  void (*dither16) (VideoConvert *convert, guint16 * pixels, int j);
+  GstVideoChromaResample *upsample;
+  guint up_n_lines;
+  gint up_offset;
+  GstVideoChromaResample *downsample;
+  guint down_n_lines;
+  gint down_offset;
+
+  void (*convert)      (VideoConvert *convert, GstVideoFrame *dest, const GstVideoFrame *src);
+  void (*matrix)       (VideoConvert *convert, gpointer pixels);
+  void (*dither16)     (VideoConvert *convert, guint16 * pixels, int j);
+
 };
 
 VideoConvert *   videoconvert_convert_new            (GstVideoInfo *in_info,
