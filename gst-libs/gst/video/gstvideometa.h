@@ -129,8 +129,8 @@ GQuark gst_video_meta_transform_scale_get_quark (void);
 
 /**
  * GstVideoMetaTransform:
- * @old_info: the old #GstVideoInfo
- * @new_info: the new #GstVideoInfo
+ * @in_info: the input #GstVideoInfo
+ * @out_info: the output #GstVideoInfo
  *
  * Extra data passed to a video transform #GstMetaTransformFunction such as:
  * "gst-video-scale".
