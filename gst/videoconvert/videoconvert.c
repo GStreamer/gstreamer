@@ -332,15 +332,14 @@ static void
 videoconvert_dither_verterr (VideoConvert * convert, guint16 * pixels, int j)
 {
   int i;
-  guint16 *tmpline = convert->tmpline;
   guint16 *errline = convert->errline;
   unsigned int mask = 0xff;
 
   for (i = 0; i < 4 * convert->width; i++) {
-    int x = tmpline[i] + errline[i];
+    int x = pixels[i] + errline[i];
     if (x > 65535)
       x = 65535;
-    tmpline[i] = x;
+    pixels[i] = x;
     errline[i] = x & mask;
   }
 }
@@ -349,7 +348,6 @@ static void
 videoconvert_dither_halftone (VideoConvert * convert, guint16 * pixels, int j)
 {
   int i;
-  guint16 *tmpline = convert->tmpline;
   static guint16 halftone[8][8] = {
     {0, 128, 32, 160, 8, 136, 40, 168},
     {192, 64, 224, 96, 200, 72, 232, 104},
@@ -363,10 +361,10 @@ videoconvert_dither_halftone (VideoConvert * convert, guint16 * pixels, int j)
 
   for (i = 0; i < convert->width * 4; i++) {
     int x;
-    x = tmpline[i] + halftone[(i >> 2) & 7][j & 7];
+    x = pixels[i] + halftone[(i >> 2) & 7][j & 7];
     if (x > 65535)
       x = 65535;
-    tmpline[i] = x;
+    pixels[i] = x;
   }
 }
 
