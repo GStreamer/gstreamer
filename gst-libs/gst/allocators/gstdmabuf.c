@@ -62,17 +62,18 @@ GST_DEBUG_CATEGORY_STATIC (dmabuf_debug);
 #define GST_CAT_DEFAULT dmabuf_debug
 
 static void
-gst_dmabuf_allocator_free (GstAllocator * allocator, GstMemory * mem)
+gst_dmabuf_allocator_free (GstAllocator * allocator, GstMemory * gmem)
 {
-  GstDmaBufMemory *dbmem = (GstDmaBufMemory *) mem;
+  GstDmaBufMemory *mem = (GstDmaBufMemory *) gmem;
 
-  if (dbmem->data)
-    g_warning ("Freeing memory still mapped");
-
-  close (dbmem->fd);
-  g_mutex_clear (&dbmem->lock);
-  g_slice_free (GstDmaBufMemory, dbmem);
-  GST_DEBUG ("%p: freed", dbmem);
+  if (mem->data) {
+    g_warning (G_STRLOC ":%s: Freeing memory %p still mapped", G_STRFUNC, mem);
+    munmap ((void *) mem->data, mem->mmap_size);
+  }
+  close (mem->fd);
+  g_mutex_clear (&mem->lock);
+  g_slice_free (GstDmaBufMemory, mem);
+  GST_DEBUG ("%p: freed", mem);
 }
 
 static gpointer
