@@ -121,6 +121,10 @@ static NSString *CellIdentifier = @"CellIdentifier";
     [entries addObject:@"http://radio.hbr1.com:19800/trance.ogg"];
     [entries addObject:@"http://radio.hbr1.com:19800/tronic.aac"];
 
+    // Non-existing entries (to debug error reporting facilities)
+    [entries addObject:@"http://non-existing.org/Non_Existing_Server"];
+    [entries addObject:@"http://docs.gstreamer.com/Non_Existing_File"];
+
     self->onlineEntries = entries;
 }
 

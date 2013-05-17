@@ -26,9 +26,11 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
     gboolean initialized;        /* To avoid informing the UI multiple times about the initialization */
     UIView *ui_video_view;       /* UIView that holds the video */
     GstState state;              /* Current pipeline state */
+    GstState target_state;       /* Desired pipeline state, to be set once buffering is complete */
     gint64 duration;             /* Cached clip duration */
     gint64 desired_position;     /* Position to seek to, once the pipeline is running */
     GstClockTime last_seek_time; /* For seeking overflow prevention (throttling) */
+    gboolean is_live;            /* Live streams do not use buffering */
 }
 
 /*
@@ -64,12 +66,14 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 
 -(void) play
 {
-    gst_element_set_state(pipeline, GST_STATE_PLAYING);
+    target_state = GST_STATE_PLAYING;
+    is_live = (gst_element_set_state (pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_NO_PREROLL);
 }
 
 -(void) pause
 {
-    gst_element_set_state(pipeline, GST_STATE_PAUSED);
+    target_state = GST_STATE_PAUSED;
+    is_live = (gst_element_set_state (pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_NO_PREROLL);
 }
 
 -(void) setUri:(NSString*)uri
@@ -231,6 +235,47 @@ static void error_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *self)
     gst_element_set_state (self->pipeline, GST_STATE_NULL);
 }
 
+/* Called when the End Of the Stream is reached. Just move to the beginning of the media and pause. */
+static void eos_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *self) {
+    self->target_state = GST_STATE_PAUSED;
+    self->is_live = (gst_element_set_state (self->pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_NO_PREROLL);
+    execute_seek (0, self);
+}
+
+/* Called when the duration of the media changes. Just mark it as unknown, so we re-query it in the next UI refresh. */
+static void duration_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *self) {
+    self->duration = GST_CLOCK_TIME_NONE;
+}
+
+/* Called when buffering messages are received. We inform the UI about the current buffering level and
+ * keep the pipeline paused until 100% buffering is reached. At that point, set the desired state. */
+static void buffering_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *self) {
+    gint percent;
+
+    if (self->is_live)
+        return;
+
+    gst_message_parse_buffering (msg, &percent);
+    if (percent < 100 && self->target_state >= GST_STATE_PAUSED) {
+        gchar * message_string = g_strdup_printf ("Buffering %d%%", percent);
+        gst_element_set_state (self->pipeline, GST_STATE_PAUSED);
+        [self setUIMessage:message_string];
+        g_free (message_string);
+    } else if (self->target_state >= GST_STATE_PLAYING) {
+        gst_element_set_state (self->pipeline, GST_STATE_PLAYING);
+    } else if (self->target_state >= GST_STATE_PAUSED) {
+        [self setUIMessage:"Buffering complete"];
+    }
+}
+
+/* Called when the clock is lost */
+static void clock_lost_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *self) {
+    if (self->target_state >= GST_STATE_PLAYING) {
+        gst_element_set_state (self->pipeline, GST_STATE_PAUSED);
+        gst_element_set_state (self->pipeline, GST_STATE_PLAYING);
+    }
+}
+
 /* Notify UI about pipeline state changes */
 static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *self)
 {
@@ -309,7 +354,11 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     g_source_attach (bus_source, context);
     g_source_unref (bus_source);
     g_signal_connect (G_OBJECT (bus), "message::error", (GCallback)error_cb, (__bridge void *)self);
+    g_signal_connect (G_OBJECT (bus), "message::eos", (GCallback)eos_cb, (__bridge void *)self);
     g_signal_connect (G_OBJECT (bus), "message::state-changed", (GCallback)state_changed_cb, (__bridge void *)self);
+    g_signal_connect (G_OBJECT (bus), "message::duration", (GCallback)duration_cb, (__bridge void *)self);
+    g_signal_connect (G_OBJECT (bus), "message::buffering", (GCallback)buffering_cb, (__bridge void *)self);
+    g_signal_connect (G_OBJECT (bus), "message::clock-lost", (GCallback)clock_lost_cb, (__bridge void *)self);
     gst_object_unref (bus);
 
     /* Register a function that GLib will call 4 times per second */
