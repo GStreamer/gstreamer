@@ -289,7 +289,7 @@ simple_launch_lines_suite (void)
   tcase_add_test (tc_chain, test_rtp_payloaders);
   tcase_add_test (tc_chain, test_video_encoders_decoders);
   /* FIXME: very rarely fails, maybe because of negotiation issues? */
-  tcase_skip_broken_test (tc_chain, test_videomixer);
+  tcase_add_test (tc_chain, test_videomixer);
 #endif
   return s;
 }
