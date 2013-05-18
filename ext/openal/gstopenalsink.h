@@ -27,6 +27,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
+#include <gst/audio/gstaudiosink.h>
 
 #ifdef _WIN32
 #include <al.h>
