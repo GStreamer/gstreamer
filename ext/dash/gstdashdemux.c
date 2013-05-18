@@ -686,6 +686,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     GstDashDemuxStream *stream;
     GstActiveStream *active_stream;
     GstCaps *caps;
+    gchar *stream_id;
 
     active_stream = gst_mpdparser_get_active_stream_by_index (demux->client, i);
     if (active_stream == NULL)
@@ -708,6 +709,13 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     GST_LOG_OBJECT (demux, "Creating stream %d %" GST_PTR_FORMAT, i, caps);
     streams = g_slist_prepend (streams, stream);
     stream->pad = gst_dash_demux_create_pad (demux);
+
+    stream_id =
+        gst_pad_create_stream_id_printf (stream->pad,
+            GST_ELEMENT_CAST (demux), "%d", i);
+    gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
+    g_free (stream_id);
+
     gst_dash_demux_stream_push_event (stream, gst_event_new_caps (caps));
   }
   streams = g_slist_reverse (streams);
