@@ -92,6 +92,10 @@ struct _GstVideoMixer2
   /* Output caps */
   GstVideoInfo info;
 
+  /* current caps */
+  GstCaps *current_caps;
+  gboolean send_caps;
+
   gboolean newseg_pending;
   gboolean flush_stop_pending;
 

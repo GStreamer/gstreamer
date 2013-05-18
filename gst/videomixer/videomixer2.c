@@ -976,6 +976,14 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
     mix->send_stream_start = FALSE;
   }
 
+  if (mix->send_caps) {
+    if (!gst_pad_push_event (mix->srcpad,
+            gst_event_new_caps (mix->current_caps))) {
+      GST_WARNING_OBJECT (mix->srcpad, "Sending caps event failed");
+    }
+    mix->send_caps = FALSE;
+  }
+
   GST_VIDEO_MIXER2_LOCK (mix);
 
   if (mix->newseg_pending) {
@@ -1604,20 +1612,13 @@ gst_videomixer2_src_setcaps (GstPad * pad, GstVideoMixer2 * mix, GstCaps * caps)
   }
   GST_VIDEO_MIXER2_UNLOCK (mix);
 
-  if (mix->send_stream_start) {
-    gchar s_id[32];
-
-    /* stream-start (FIXME: create id based on input ids) */
-    g_snprintf (s_id, sizeof (s_id), "mix-%08x", g_random_int ());
-    if (!gst_pad_push_event (mix->srcpad, gst_event_new_stream_start (s_id))) {
-      GST_WARNING_OBJECT (mix->srcpad, "Sending stream start event failed");
-    }
-    mix->send_stream_start = FALSE;
+  if (mix->current_caps == NULL ||
+      gst_caps_is_equal (caps, mix->current_caps) == FALSE) {
+    gst_caps_replace (&mix->current_caps, caps);
+    mix->send_caps = TRUE;
   }
 
-  ret = gst_pad_set_caps (pad, caps);
 done:
-
   return ret;
 }
 
@@ -1794,6 +1795,8 @@ gst_videomixer2_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       mix->send_stream_start = TRUE;
+      mix->send_caps = TRUE;
+      gst_caps_replace (&mix->current_caps, NULL);
       GST_LOG_OBJECT (mix, "starting collectpads");
       gst_collect_pads_start (mix->collect);
       break;
@@ -1935,6 +1938,14 @@ gst_videomixer2_finalize (GObject * o)
 }
 
 static void
+gst_videomixer2_dispose (GObject * o)
+{
+  GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (o);
+
+  gst_caps_replace (&mix->current_caps, NULL);
+}
+
+static void
 gst_videomixer2_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
@@ -2012,6 +2023,7 @@ gst_videomixer2_class_init (GstVideoMixer2Class * klass)
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
   gobject_class->finalize = gst_videomixer2_finalize;
+  gobject_class->dispose = gst_videomixer2_dispose;
 
   gobject_class->get_property = gst_videomixer2_get_property;
   gobject_class->set_property = gst_videomixer2_set_property;
@@ -2058,6 +2070,7 @@ gst_videomixer2_init (GstVideoMixer2 * mix)
 
   mix->collect = gst_collect_pads_new ();
   mix->background = DEFAULT_BACKGROUND;
+  mix->current_caps = NULL;
 
   gst_collect_pads_set_function (mix->collect,
       (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_videomixer2_collected),
