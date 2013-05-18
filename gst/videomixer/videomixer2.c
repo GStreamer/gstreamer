@@ -317,9 +317,11 @@ gst_videomixer2_pad_sink_setcaps (GstPad * pad, GstObject * parent,
     if (GST_VIDEO_INFO_FORMAT (&mix->info) != GST_VIDEO_INFO_FORMAT (&info) ||
         GST_VIDEO_INFO_PAR_N (&mix->info) != GST_VIDEO_INFO_PAR_N (&info) ||
         GST_VIDEO_INFO_PAR_D (&mix->info) != GST_VIDEO_INFO_PAR_D (&info)) {
-      GST_ERROR_OBJECT (pad, "Caps not compatible with other pads' caps");
       GST_VIDEO_MIXER2_UNLOCK (mix);
-      goto beach;
+      GST_DEBUG_OBJECT (pad, "got input caps %" GST_PTR_FORMAT ", but "
+          "current caps are %" GST_PTR_FORMAT, caps, mix->current_caps);
+      gst_pad_push_event (pad, gst_event_new_reconfigure ());
+      return FALSE;
     }
   }
 
