@@ -354,6 +354,30 @@ set_hwparams (GstAlsaSrc * alsa)
   if (rrate != alsa->rate)
     goto rate_match;
 
+#ifndef GST_DISABLE_GST_DEBUG
+  /* get and dump some limits */
+  {
+    guint min, max;
+
+    snd_pcm_hw_params_get_buffer_time_min (params, &min, NULL);
+    snd_pcm_hw_params_get_buffer_time_max (params, &max, NULL);
+
+    GST_DEBUG_OBJECT (alsa, "buffer time %u, min %u, max %u",
+        alsa->buffer_time, min, max);
+
+    snd_pcm_hw_params_get_period_time_min (params, &min, NULL);
+    snd_pcm_hw_params_get_period_time_max (params, &max, NULL);
+
+    GST_DEBUG_OBJECT (alsa, "period time %u, min %u, max %u",
+        alsa->period_time, min, max);
+
+    snd_pcm_hw_params_get_periods_min (params, &min, NULL);
+    snd_pcm_hw_params_get_periods_max (params, &max, NULL);
+
+    GST_DEBUG_OBJECT (alsa, "periods min %u, max %u", min, max);
+  }
+#endif
+
   if (alsa->buffer_time != -1) {
     /* set the buffer time */
     CHECK (snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
