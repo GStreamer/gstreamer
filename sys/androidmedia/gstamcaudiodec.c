@@ -98,7 +98,8 @@ gst_amc_audio_dec_get_type (void)
     _type = g_type_register_static (GST_TYPE_AUDIO_DECODER, "GstAmcAudioDec",
         &info, 0);
 
-    GST_DEBUG_CATEGORY_INIT (gst_amc_audio_dec_debug_category, "amcaudiodec", 0, "Android MediaCodec audio decoder");
+    GST_DEBUG_CATEGORY_INIT (gst_amc_audio_dec_debug_category, "amcaudiodec", 0,
+        "Android MediaCodec audio decoder");
 
     g_once_init_leave (&type, _type);
   }
@@ -284,7 +285,7 @@ create_src_caps (const GstAmcCodecInfo * codec_info)
   ret = gst_caps_new_simple ("audio/x-raw",
       "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "format", G_TYPE_STRING, GST_AUDIO_NE(S16), NULL);
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16), NULL);
 
   return ret;
 }
@@ -502,7 +503,8 @@ gst_amc_audio_dec_set_src_caps (GstAmcAudioDec * self, GstAmcFormat * format)
   gst_audio_info_set_format (&self->info, GST_AUDIO_FORMAT_S16, rate, channels,
       to);
 
-  if (!gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (self), &self->info))
+  if (!gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (self),
+          &self->info))
     return FALSE;
 
   self->input_caps_changed = FALSE;

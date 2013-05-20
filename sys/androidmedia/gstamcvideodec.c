@@ -126,7 +126,8 @@ gst_amc_video_dec_get_type (void)
     _type = g_type_register_static (GST_TYPE_VIDEO_DECODER, "GstAmcVideoDec",
         &info, 0);
 
-    GST_DEBUG_CATEGORY_INIT (gst_amc_video_dec_debug_category, "amcvideodec", 0, "Android MediaCodec video decoder");
+    GST_DEBUG_CATEGORY_INIT (gst_amc_video_dec_debug_category, "amcvideodec", 0,
+        "Android MediaCodec video decoder");
 
     g_once_init_leave (&type, _type);
   }
