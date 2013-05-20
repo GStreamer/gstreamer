@@ -143,11 +143,13 @@ struct _GstV4l2Object {
   GList *colors;
   GList *norms;
   GList *channels;
+  GData *controls;
 
   /* properties */
   v4l2_std_id tv_norm;
   gchar *channel;
   gulong frequency;
+  GstStructure *extra_controls;
 
   /* X-overlay */
   GstV4l2Xv *xv;
@@ -176,7 +178,8 @@ GType gst_v4l2_object_get_type (void);
     PROP_SATURATION,			\
     PROP_HUE,                           \
     PROP_TV_NORM,                       \
-    PROP_IO_MODE
+    PROP_IO_MODE,                       \
+    PROP_EXTRA_CONTROLS
 
 /* create/destroy */
 GstV4l2Object *	gst_v4l2_object_new 		 (GstElement * element,

@@ -270,6 +270,32 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       GST_DEBUG_OBJECT (e, "skipping disabled control");
       continue;
     }
+    switch (control.type) {
+      case V4L2_CTRL_TYPE_INTEGER:
+      case V4L2_CTRL_TYPE_BOOLEAN:
+      case V4L2_CTRL_TYPE_MENU:
+      case V4L2_CTRL_TYPE_INTEGER_MENU:
+      case V4L2_CTRL_TYPE_BITMASK:
+      case V4L2_CTRL_TYPE_BUTTON:{
+        int i;
+        control.name[31] = '\0';
+        for (i = 0; control.name[i]; ++i) {
+          control.name[i] = g_ascii_tolower (control.name[i]);
+          if (!g_ascii_isalnum (control.name[i]))
+            control.name[i] = '_';
+        }
+        GST_INFO_OBJECT (e, "adding generic controls '%s'", control.name);
+        g_datalist_id_set_data (&v4l2object->controls,
+            g_quark_from_string ((const gchar *) control.name),
+            GINT_TO_POINTER (n));
+        break;
+      }
+      default:
+        GST_DEBUG_OBJECT (e,
+            "Control type for '%s' not suppored for extra controls.",
+            control.name);
+        break;
+    }
 
     switch (n) {
       case V4L2_CID_BRIGHTNESS:
@@ -407,6 +433,8 @@ gst_v4l2_empty_lists (GstV4l2Object * v4l2object)
   g_list_foreach (v4l2object->colors, (GFunc) g_object_unref, NULL);
   g_list_free (v4l2object->colors);
   v4l2object->colors = NULL;
+
+  g_datalist_clear (&v4l2object->controls);
 }
 
 /******************************************************
@@ -485,6 +513,9 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
     gst_poll_fd_ctl_read (v4l2object->poll, &pollfd, TRUE);
   else
     gst_poll_fd_ctl_write (v4l2object->poll, &pollfd, TRUE);
+
+  if (v4l2object->extra_controls)
+    gst_v4l2_set_controls (v4l2object, v4l2object->extra_controls);
 
   return TRUE;
 
@@ -809,6 +840,33 @@ ctrl_failed:
             value, attribute_num, v4l2object->videodev), GST_ERROR_SYSTEM);
     return FALSE;
   }
+}
+
+static gboolean
+set_contol (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  GstV4l2Object *v4l2object = user_data;
+  gpointer *d = g_datalist_id_get_data (&v4l2object->controls, field_id);
+  if (!d) {
+    GST_WARNING_OBJECT (v4l2object,
+        "Control '%s' does not exist or has an unsupported type.",
+        g_quark_to_string (field_id));
+    return TRUE;
+  }
+  if (!G_VALUE_HOLDS (value, G_TYPE_INT)) {
+    GST_WARNING_OBJECT (v4l2object,
+        "'int' value expected for control '%s'.", g_quark_to_string (field_id));
+    return TRUE;
+  }
+  gst_v4l2_set_attribute (v4l2object, GPOINTER_TO_INT (d),
+      g_value_get_int (value));
+  return TRUE;
+}
+
+gboolean
+gst_v4l2_set_controls (GstV4l2Object * v4l2object, GstStructure * controls)
+{
+  return gst_structure_foreach (controls, set_contol, v4l2object);
 }
 
 gboolean

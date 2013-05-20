@@ -126,6 +126,9 @@ gboolean	gst_v4l2_set_attribute		(GstV4l2Object *v4l2object,
 						 int             attribute,
 						 const int       value);
 
+gboolean	gst_v4l2_set_controls		(GstV4l2Object * v4l2object,
+						 GstStructure * controls);
+
 gboolean        gst_v4l2_get_capabilities       (GstV4l2Object * v4l2object);
 
 

@@ -490,6 +490,20 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
           "I/O mode",
           GST_TYPE_V4L2_IO_MODE, DEFAULT_PROP_IO_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstV4l2Src:extra-controls
+   *
+   * Additional v4l2 controls for the device. The controls are identified
+   * by the control name (lowercase with '_' for any non-alphanumeric
+   * characters).
+   *
+   * Since: 1.2
+   */
+  g_object_class_install_property (gobject_class, PROP_EXTRA_CONTROLS,
+      g_param_spec_boxed ("extra-controls", "Extra Controls",
+          "Extra v4l2 controls (CIDs) for the device",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 GstV4l2Object *
@@ -654,6 +668,17 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
     case PROP_IO_MODE:
       v4l2object->req_mode = g_value_get_enum (value);
       break;
+    case PROP_EXTRA_CONTROLS:{
+      const GstStructure *s = gst_value_get_structure (value);
+
+      if (v4l2object->extra_controls)
+        gst_structure_free (v4l2object->extra_controls);
+
+      v4l2object->extra_controls = s ? gst_structure_copy (s) : NULL;
+      if (GST_V4L2_IS_OPEN (v4l2object))
+        gst_v4l2_set_controls (v4l2object, v4l2object->extra_controls);
+      break;
+    }
     default:
       return FALSE;
       break;
@@ -729,6 +754,9 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
       break;
     case PROP_IO_MODE:
       g_value_set_enum (value, v4l2object->req_mode);
+      break;
+    case PROP_EXTRA_CONTROLS:
+      gst_value_set_structure (value, v4l2object->extra_controls);
       break;
     default:
       return FALSE;
