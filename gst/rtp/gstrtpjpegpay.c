@@ -291,6 +291,9 @@ gst_rtp_jpeg_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
   GstRtpJPEGPay *pay;
   gboolean res;
   gint width = -1, height = -1;
+  gint num = 0, denom;
+  gchar *rate = NULL;
+  gchar *dim = NULL;
 
   pay = GST_RTP_JPEG_PAY (basepayload);
 
@@ -308,6 +311,11 @@ gst_rtp_jpeg_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
     }
   }
 
+  if (gst_structure_get_fraction (caps_structure, "framerate", &num, &denom) &&
+      (num < 0 || denom <= 0)) {
+    goto invalid_framerate;
+  }
+
   if (height > 2040 || width > 2040) {
     pay->height = 0;
     pay->width = 0;
@@ -318,18 +326,36 @@ gst_rtp_jpeg_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 
   gst_rtp_base_payload_set_options (basepayload, "video", TRUE, "JPEG", 90000);
 
-  if (pay->width == 0) {
-    gchar *dim;
+  if (num > 0)
+  {
+    gdouble framerate;
+    gst_util_fraction_to_double (num, denom, &framerate);
+    rate = g_strdup_printf("%f", framerate);
+  }
 
+  if (pay->width == 0) {
     GST_DEBUG_OBJECT (pay,
         "width or height are greater than 2040, adding x-dimensions to caps");
     dim = g_strdup_printf ("%d,%d", width, height);
+  }
+
+  if (rate != NULL && dim != NULL) {
+    res = gst_rtp_base_payload_set_outcaps (basepayload, "a-framerate",
+        G_TYPE_STRING, rate, "x-dimensions", G_TYPE_STRING, dim, NULL);
+  } else if (rate != NULL && dim == NULL) {
+    res = gst_rtp_base_payload_set_outcaps (basepayload, "a-framerate",
+        G_TYPE_STRING, rate, NULL);
+  } else if (rate == NULL && dim != NULL) {
     res = gst_rtp_base_payload_set_outcaps (basepayload, "x-dimensions",
         G_TYPE_STRING, dim, NULL);
-    g_free (dim);
   } else {
     res = gst_rtp_base_payload_set_outcaps (basepayload, NULL);
   }
+
+  if (dim != NULL)
+    g_free (dim);
+  if (rate != NULL)
+    g_free (rate);
 
   return res;
 
@@ -337,6 +363,11 @@ gst_rtp_jpeg_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 invalid_dimension:
   {
     GST_ERROR_OBJECT (pay, "Invalid width/height from caps");
+    return FALSE;
+  }
+invalid_framerate:
+  {
+    GST_ERROR_OBJECT (pay, "Invalid framerate from caps");
     return FALSE;
   }
 }
