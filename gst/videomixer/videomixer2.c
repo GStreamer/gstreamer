@@ -1733,7 +1733,6 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
       pad->mixcol->start_time = -1;
       pad->mixcol->end_time = -1;
 
-      gst_segment_init (&mix->segment, GST_FORMAT_TIME);
       mix->segment.position = -1;
       mix->ts_offset = 0;
       mix->nframes = 0;
@@ -1796,6 +1795,7 @@ gst_videomixer2_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       mix->send_stream_start = TRUE;
       mix->send_caps = TRUE;
+      gst_segment_init (&mix->segment, GST_FORMAT_TIME);
       gst_caps_replace (&mix->current_caps, NULL);
       GST_LOG_OBJECT (mix, "starting collectpads");
       gst_collect_pads_start (mix->collect);
