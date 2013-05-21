@@ -37,6 +37,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/jpeg")
+        /* optional SDP attributes */
+        /*
+         * "width = (int) 0, "
+         * "height = (int) 0, "
+         */
     );
 
 static GstStaticPadTemplate gst_rtp_jpeg_depay_sink_template =
@@ -45,13 +50,15 @@ static GstStaticPadTemplate gst_rtp_jpeg_depay_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"JPEG\"; "
+        "clock-rate = (int) 90000, "
+        "encoding-name = (string) \"JPEG\"; "
         /* optional SDP attributes */
         /*
+         * "width = (int) 0, "
+         * "height = (int) 0, "
          * "a-framerate = (string) 0.00, "
          * "x-framerate = (string) 0.00, "
-         * "a-framesize = (string) 1234-1234, "
-         * "x-dimensions = (string) \"1234,1234\", "
+         * "x-dimensions = (string) "0\,0", "
          */
         "application/x-rtp, "
         "media = (string) \"video\", "
@@ -59,10 +66,11 @@ static GstStaticPadTemplate gst_rtp_jpeg_depay_sink_template =
         "clock-rate = (int) 90000"
         /* optional SDP attributes */
         /*
+         * "width = (int) 0, "
+         * "height = (int) 0, "
          * "a-framerate = (string) 0.00, "
          * "x-framerate = (string) 0.00, "
-         * "a-framesize = (string) 1234-1234, "
-         * "x-dimensions = (string) \"1234,1234\""
+         * "x-dimensions = (string) "0\,0", "
          */
     )
     );
@@ -430,6 +438,7 @@ gst_rtp_jpeg_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   GstStructure *structure;
   gint clock_rate;
   const gchar *media_attr;
+  gint width = 0, height = 0;
 
   rtpjpegdepay = GST_RTP_JPEG_DEPAY (depayload);
 
@@ -450,21 +459,17 @@ gst_rtp_jpeg_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 
   /* check for optional SDP attributes */
   if ((media_attr = gst_structure_get_string (structure, "x-dimensions"))) {
-    gint w, h;
-
-    if (sscanf (media_attr, "%d,%d", &w, &h) == 2) {
-      rtpjpegdepay->media_width = w;
-      rtpjpegdepay->media_height = h;
+    if (sscanf (media_attr, "%d,%d", &width, &height) != 2 || width <= 0 ||
+        height <= 0) {
+      goto invalid_dimension;
     }
   }
 
-  if ((media_attr = gst_structure_get_string (structure, "a-framesize"))) {
-    gint w, h;
-
-    if (sscanf (media_attr, "%d-%d", &w, &h) == 2) {
-      rtpjpegdepay->media_width = w;
-      rtpjpegdepay->media_height = h;
-    }
+  if (gst_structure_get_int (structure, "width", &width) && width <= 0) {
+    goto invalid_dimension;
+  }
+  if (gst_structure_get_int (structure, "height", &height) && height <= 0) {
+    goto invalid_dimension;
   }
 
   /* try to get a framerate */
@@ -494,7 +499,16 @@ gst_rtp_jpeg_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     g_free (s);
   }
 
+  rtpjpegdepay->media_width = width;
+  rtpjpegdepay->media_height = height;
+
   return TRUE;
+
+invalid_dimension:
+  {
+    GST_ERROR_OBJECT (rtpjpegdepay, "invalid width/height from caps");
+    return FALSE;
+  }
 }
 
 static GstBuffer *
@@ -631,8 +645,13 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
       outcaps =
           gst_caps_new_simple ("image/jpeg", "framerate", GST_TYPE_FRACTION,
-          rtpjpegdepay->frate_num, rtpjpegdepay->frate_denom, "width",
-          G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
+          rtpjpegdepay->frate_num, rtpjpegdepay->frate_denom, NULL);
+
+      if (width > 0 && height > 0) {
+        gst_caps_set_simple (outcaps, "width", G_TYPE_INT, width, "height",
+            G_TYPE_INT, height, NULL);
+      }
+
       gst_pad_set_caps (depayload->srcpad, outcaps);
       gst_caps_unref (outcaps);
 

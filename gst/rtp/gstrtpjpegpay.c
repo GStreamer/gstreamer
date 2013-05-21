@@ -45,7 +45,12 @@ static GstStaticPadTemplate gst_rtp_jpeg_pay_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/jpeg; " "video/x-jpeg")
+    GST_STATIC_CAPS ("image/jpeg, "
+        "  width = (int) [ 1, MAX ], "
+        "  height = (int) [ 1, MAX ]; "
+        "  video/x-jpeg, "
+        "  width = (int) [ 1, MAX ], "
+        "  height = (int) [ 1, MAX ]")
     );
 
 static GstStaticPadTemplate gst_rtp_jpeg_pay_src_template =
@@ -57,8 +62,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "  payload = (int) 26 ,        "
         "  clock-rate = (int) 90000,   "
         "  encoding-name = (string) \"JPEG\", "
-        "  width = (int) [ 1, 65536 ], "
-        "  height = (int) [ 1, 65536 ]")
+        "  width = (int) [ 1, MAX ], "
+        "  height = (int) [ 1, MAX ]")
     );
 
 GST_DEBUG_CATEGORY_STATIC (rtpjpegpay_debug);
@@ -293,11 +298,9 @@ gst_rtp_jpeg_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
   GstStructure *caps_structure = gst_caps_get_structure (caps, 0);
   GstRtpJPEGPay *pay;
   gboolean res;
-  gint width = -1, height = -1;
+  gint width, height;
   gint num = 0, denom;
   gchar *rate = NULL;
-  gchar *dim = NULL;
-  gchar *size;
 
   pay = GST_RTP_JPEG_PAY (basepayload);
 
@@ -317,6 +320,8 @@ gst_rtp_jpeg_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
   }
 
   if (height > 2040 || width > 2040) {
+    GST_DEBUG_OBJECT (pay,
+        "width or height > 2040, need to rely on caps instead of RTP header");
     pay->height = 0;
     pay->width = 0;
   } else {
@@ -333,34 +338,17 @@ gst_rtp_jpeg_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
     rate = g_strdup_printf("%f", framerate);
   }
 
-  size = g_strdup_printf("%d-%d", width, height);
-
-  if (pay->width == 0) {
-    GST_DEBUG_OBJECT (pay,
-        "width or height are greater than 2040, adding x-dimensions to caps");
-    dim = g_strdup_printf ("%d,%d", width, height);
+  if (rate != NULL) {
+    res = gst_rtp_base_payload_set_outcaps (basepayload, "width", G_TYPE_INT,
+        width, "height", G_TYPE_INT, height, "a-framerate", G_TYPE_STRING,
+        rate, NULL);
+  } else if (rate == NULL) {
+    res = gst_rtp_base_payload_set_outcaps (basepayload, "width",
+        G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
   }
 
-  if (rate != NULL && dim != NULL) {
-    res = gst_rtp_base_payload_set_outcaps (basepayload, "a-framerate",
-        G_TYPE_STRING, rate, "a-framesize", G_TYPE_STRING, size,
-        "x-dimensions", G_TYPE_STRING, dim, NULL);
-  } else if (rate != NULL && dim == NULL) {
-    res = gst_rtp_base_payload_set_outcaps (basepayload, "a-framerate",
-        G_TYPE_STRING, rate, "a-framesize", G_TYPE_STRING, size, NULL);
-  } else if (rate == NULL && dim != NULL) {
-    res = gst_rtp_base_payload_set_outcaps (basepayload, "x-dimensions",
-        G_TYPE_STRING, dim, "a-framesize", G_TYPE_STRING, size, NULL);
-  } else {
-    res = gst_rtp_base_payload_set_outcaps (basepayload, "a-framesize",
-        G_TYPE_STRING, size, NULL);
-  }
-
-  if (dim != NULL)
-    g_free (dim);
   if (rate != NULL)
     g_free (rate);
-  g_free (size);
 
   return res;
 
