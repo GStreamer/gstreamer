@@ -1205,7 +1205,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
 
           if (buf->pool == bpool) {
             /* nothing, we can queue directly */
-            to_queue = buf;
+            to_queue = gst_buffer_ref (buf);
             GST_LOG_OBJECT (pool, "processing buffer from our pool");
           } else {
             GST_LOG_OBJECT (pool, "alloc buffer from our pool");
@@ -1227,8 +1227,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
             /* this can block if all buffers are outstanding which would be
              * strange because we would expect the upstream element to have
              * allocated them and returned to us.. */
-            ret = GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (bpool,
-                &to_queue, NULL);
+            ret = gst_buffer_pool_acquire_buffer (bpool, &to_queue, NULL);
             if (ret != GST_FLOW_OK)
               goto acquire_failed;
 
@@ -1255,7 +1254,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
 
             /* release the rendered buffer back into the pool. This wakes up any
              * thread waiting for a buffer in _acquire() */
-            gst_v4l2_buffer_pool_release_buffer (bpool, to_queue);
+            gst_buffer_unref (to_queue);
           }
           break;
         }
