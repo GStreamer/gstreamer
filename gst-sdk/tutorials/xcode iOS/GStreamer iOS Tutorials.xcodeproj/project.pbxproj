@@ -105,7 +105,6 @@
 		C6EB85BA173BEFF800C3953D /* appicon-4-iPad@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C6EB85B6173BEFF800C3953D /* appicon-4-iPad@2x.png */; };
 		C6EB85BB173BEFF800C3953D /* appicon-4-iPhone.png in Resources */ = {isa = PBXBuildFile; fileRef = C6EB85B7173BEFF800C3953D /* appicon-4-iPhone.png */; };
 		C6EB85BC173BEFF800C3953D /* appicon-4-iPhone@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C6EB85B8173BEFF800C3953D /* appicon-4-iPhone@2x.png */; };
-		C6EB85C7174233B400C3953D /* LibraryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6EB85C6174233B300C3953D /* LibraryViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -235,8 +234,6 @@
 		C6EB85B6173BEFF800C3953D /* appicon-4-iPad@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-4-iPad@2x.png"; sourceTree = "<group>"; };
 		C6EB85B7173BEFF800C3953D /* appicon-4-iPhone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-4-iPhone.png"; sourceTree = "<group>"; };
 		C6EB85B8173BEFF800C3953D /* appicon-4-iPhone@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-4-iPhone@2x.png"; sourceTree = "<group>"; };
-		C6EB85C5174233B200C3953D /* LibraryViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LibraryViewController.h; sourceTree = "<group>"; };
-		C6EB85C6174233B300C3953D /* LibraryViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LibraryViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -531,8 +528,6 @@
 				C6EB8590173BEE5E00C3953D /* AppDelegate.m */,
 				C6EB8598173BEE5E00C3953D /* MainStoryboard_iPhone.storyboard */,
 				C6EB859B173BEE5E00C3953D /* MainStoryboard_iPad.storyboard */,
-				C6EB85C5174233B200C3953D /* LibraryViewController.h */,
-				C6EB85C6174233B300C3953D /* LibraryViewController.m */,
 				C6EB859E173BEE5E00C3953D /* VideoViewController.h */,
 				C6EB859F173BEE5E00C3953D /* VideoViewController.m */,
 				C6EB8587173BEE5E00C3953D /* Supporting Files */,
@@ -834,7 +829,6 @@
 				C6EB85B1173BEF2600C3953D /* EaglUIVIew.m in Sources */,
 				C6EB85B2173BEF2600C3953D /* gst_ios_init.c in Sources */,
 				C6EB85B3173BEF2600C3953D /* GStreamerBackend.m in Sources */,
-				C6EB85C7174233B400C3953D /* LibraryViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
