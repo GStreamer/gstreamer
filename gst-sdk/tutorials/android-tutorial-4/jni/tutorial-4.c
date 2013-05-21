@@ -170,7 +170,7 @@ static void execute_seek (gint64 desired_position, CustomData *data) {
       g_source_attach (timeout_source, data->context);
       g_source_unref (timeout_source);
     }
-    /* Update the desired seek position. If multiple petitions are received before it is time
+    /* Update the desired seek position. If multiple requests are received before it is time
      * to perform a seek, only the last one is remembered. */
     data->desired_position = desired_position;
     GST_DEBUG ("Throttling seek to %" GST_TIME_FORMAT ", will be in %" GST_TIME_FORMAT,
