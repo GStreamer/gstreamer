@@ -99,6 +99,10 @@ gst_mulawdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
   gsize mulaw_size, linear_size;
   GstBuffer *outbuf;
 
+  if (!buffer) {
+    return GST_FLOW_OK;
+  }
+
   if (!gst_buffer_map (buffer, &inmap, GST_MAP_READ)) {
     GST_ERROR ("failed to map input buffer");
     goto error_failed_map_input_buffer;
@@ -128,7 +132,7 @@ error_failed_map_output_buffer:
   gst_buffer_unref (outbuf);
 
 error_failed_map_input_buffer:
-  return FALSE;
+  return GST_FLOW_ERROR;
 }
 
 static void
