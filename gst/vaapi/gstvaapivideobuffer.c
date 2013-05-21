@@ -27,14 +27,20 @@
 
 #include "gst/vaapi/sysdeps.h"
 #include "gstvaapivideobuffer.h"
-#if USE_X11
+#if USE_X11 && !GST_CHECK_VERSION(1,1,0)
 # include "gstvaapivideoconverter_x11.h"
 #endif
-#if USE_GLX
+#if USE_GLX && !GST_CHECK_VERSION(1,1,0)
 # include "gstvaapivideoconverter_glx.h"
 #endif
 
-#if GST_CHECK_VERSION(1,0,0)
+#if GST_CHECK_VERSION(1,1,0)
+static inline GstBuffer *
+gst_surface_buffer_new(void)
+{
+    return gst_buffer_new();
+}
+#elif GST_CHECK_VERSION(1,0,0)
 #include <gst/video/gstsurfacemeta.h>
 
 #define GST_VAAPI_SURFACE_META_CAST(obj) \
@@ -263,12 +269,12 @@ get_surface_converter(GstVaapiDisplay *display)
     GFunc func;
 
     switch (gst_vaapi_display_get_display_type(display)) {
-#if USE_X11
+#if USE_X11 && !GST_CHECK_VERSION(1,1,0)
     case GST_VAAPI_DISPLAY_TYPE_X11:
         func = (GFunc)gst_vaapi_video_converter_x11_new;
         break;
 #endif
-#if USE_GLX
+#if USE_GLX && !GST_CHECK_VERSION(1,1,0)
     case GST_VAAPI_DISPLAY_TYPE_GLX:
         func = (GFunc)gst_vaapi_video_converter_glx_new;
         break;

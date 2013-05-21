@@ -47,9 +47,11 @@ plugin_init (GstPlugin *plugin)
     gst_element_register(plugin, "vaapidecode",
                          GST_RANK_PRIMARY,
                          GST_TYPE_VAAPIDECODE);
+#if !GST_CHECK_VERSION(1,1,0)
     gst_element_register(plugin, "vaapipostproc",
                          GST_RANK_PRIMARY,
                          GST_TYPE_VAAPIPOSTPROC);
+#endif
     gst_element_register(plugin, "vaapisink",
                          GST_RANK_PRIMARY,
                          GST_TYPE_VAAPISINK);

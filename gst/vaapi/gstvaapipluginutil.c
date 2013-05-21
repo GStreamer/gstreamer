@@ -22,7 +22,9 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
+#if !GST_CHECK_VERSION(1,1,0)
 #include <gst/video/videocontext.h>
+#endif
 #if USE_DRM
 # include <gst/vaapi/gstvaapidisplay_drm.h>
 #endif
@@ -117,9 +119,11 @@ gst_vaapi_ensure_display(
 )
 {
     GstVaapiDisplay *display;
+#if !GST_CHECK_VERSION(1,1,0)
     GstVideoContext *context;
 
     g_return_val_if_fail(GST_IS_VIDEO_CONTEXT(element), FALSE);
+#endif
     g_return_val_if_fail(display_ptr != NULL, FALSE);
 
     /* Already exist ? */
@@ -127,10 +131,12 @@ gst_vaapi_ensure_display(
     if (display)
         return TRUE;
 
+#if !GST_CHECK_VERSION(1,1,0)
     context = GST_VIDEO_CONTEXT(element);
     g_return_val_if_fail(context != NULL, FALSE);
 
     gst_video_context_prepare(context, display_types);
+#endif
 
     /* Neighbour found and it updated the display */
     if (*display_ptr)
@@ -217,6 +223,9 @@ gst_vaapi_set_display(
 gboolean
 gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display)
 {
+#if GST_CHECK_VERSION(1,1,0)
+    return FALSE;
+#else
     GstVaapiDisplayType display_type;
     const gchar **types;
     const gchar *type;
@@ -305,6 +314,7 @@ gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display)
         }
     }
     return res;
+#endif /* !GST_CHECK_VERSION(1,1,0) */
 }
 
 gboolean

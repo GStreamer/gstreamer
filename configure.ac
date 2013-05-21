@@ -27,6 +27,9 @@ m4_define([gst0_plugins_bad_version],   [0.10.22])
 m4_define([gst1_version],               [1.0.0])
 m4_define([gst1_plugins_base_version],  [1.0.0])
 m4_define([gst1_plugins_bad_version],   [1.0.0])
+m4_define([gst12_version],              [1.1.0])
+m4_define([gst12_plugins_base_version], [1.1.0])
+m4_define([gst12_plugins_bad_version],  [1.1.0])
 
 # Wayland minimum version number
 m4_define([wayland_api_version], [1.0.0])
@@ -158,6 +161,11 @@ case $GST_API_VERSION in
     GST_PLUGINS_BASE_VERSION_REQUIRED=gst1_plugins_base_version
     GST_PLUGINS_BAD_VERSION_REQUIRED=gst1_plugins_bad_version
     ;;
+1.2)
+    GST_VERSION_REQUIRED=gst12_version
+    GST_PLUGINS_BASE_VERSION_REQUIRED=gst12_plugins_base_version
+    GST_PLUGINS_BAD_VERSION_REQUIRED=gst12_plugins_bad_version
+    ;;
 *)
     AC_MSG_ERROR([unsupported GStreamer API version $GST_API_VERSION])
     ;;
@@ -169,12 +177,22 @@ AC_SUBST(GST_PLUGINS_BAD_VERSION_REQUIRED)
 
 USE_GST_API_0_10="no"
 USE_GST_API_1_0p="no"
+USE_GST_API_1_2p="no"
 AS_VERSION_COMPARE([$GST_API_VERSION], [0.10],
     [], [USE_GST_API_0_10="yes"], [])
 AS_VERSION_COMPARE([$GST_API_VERSION], [1.0],
     [], [USE_GST_API_1_0p="yes"], [USE_GST_API_1_0p="yes"])
+AS_VERSION_COMPARE([$GST_API_VERSION], [1.2],
+    [], [USE_GST_API_1_2p="yes"], [USE_GST_API_1_2p="yes"])
 AM_CONDITIONAL([USE_GST_API_0_10], [test "$USE_GST_API_0_10" = "yes"])
 AM_CONDITIONAL([USE_GST_API_1_0p], [test "$USE_GST_API_1_0p" = "yes"])
+AM_CONDITIONAL([USE_GST_API_1_2p], [test "$USE_GST_API_1_2p" = "yes"])
+
+dnl XXX: GStreamer 1.2.x APIs don't have their own namespace yet
+GST_API_VERSION_ORIG=$GST_API_VERSION
+if test "$USE_GST_API_1_2p" = "yes"; then
+    GST_API_VERSION="1.0"
+fi
 
 dnl GStreamer Core
 PKG_CHECK_MODULES([GST],
@@ -288,9 +306,11 @@ AC_CACHE_CHECK([for GstVideoDecoder],
 AM_CONDITIONAL([USE_LOCAL_GST_VIDEO_DECODER],
     [test "$ac_cv_have_gst_video_decoder" != "yes"])
 
-dnl GStreamer -bad plugins
+dnl GStreamer -bad plugins (deprecated in GStreamer v1.2)
+if test "$USE_GST_API_1_2p" != "yes"; then
 PKG_CHECK_MODULES([GST_BASEVIDEO],
     [gstreamer-basevideo-$GST_API_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
+fi
 
 dnl ... bitstream parsers
 if test "$enable_builtin_codecparsers" = "yes"; then
@@ -759,7 +779,7 @@ AS_IF([test $USE_WAYLAND -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS wayland"])
 echo
 echo $PACKAGE configuration summary:
 echo
-echo GStreamer API version ............ : $GST_API_VERSION
+echo GStreamer API version ............ : $GST_API_VERSION_ORIG
 echo VA-API version ................... : $VA_VERSION_STR
 echo Video outputs .................... : $VIDEO_OUTPUTS
 echo
