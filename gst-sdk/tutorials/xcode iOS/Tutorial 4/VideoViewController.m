@@ -5,7 +5,7 @@
 @interface VideoViewController () {
     GStreamerBackend *gst_backend;
     int media_width;                /* Width of the clip */
-    int media_height;               /* height ofthe clip */
+    int media_height;               /* height of the clip */
     Boolean dragging_slider;        /* Whether the time slider is being dragged or not */
     Boolean is_local_media;         /* Whether this clip is stored locally or is being streamed */
     Boolean is_playing_desired;     /* Whether the user asked to go to PLAYING */
