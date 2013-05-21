@@ -4,11 +4,11 @@
 
 @interface VideoViewController () {
     GStreamerBackend *gst_backend;
-    int media_width;
-    int media_height;
-    Boolean dragging_slider;
-    Boolean is_local_media;
-    Boolean is_playing_desired;
+    int media_width;                /* Width of the clip */
+    int media_height;               /* height ofthe clip */
+    Boolean dragging_slider;        /* Whether the time slider is being dragged or not */
+    Boolean is_local_media;         /* Whether this clip is stored locally or is being streamed */
+    Boolean is_playing_desired;     /* Whether the user asked to go to PLAYING */
 }
 
 @end
@@ -20,6 +20,9 @@
 /*
  * Private methods
  */
+
+/* The text widget acts as an slave for the seek bar, so it reflects what the seek bar shows, whether
+ * it is an actual pipeline position or the position the user is currently dragging to. */
 - (void) updateTimeWidget
 {
     NSInteger position = time_slider.value / 1000;
@@ -94,6 +97,8 @@
     is_playing_desired = NO;
 }
 
+/* Called when the time slider position has changed, either because the user dragged it or
+ * we programmatically changed its position. dragging_slider tells us which one happened */
 - (IBAction)sliderValueChanged:(id)sender {
     if (!dragging_slider) return;
     // If this is a local file, allow scrub seeking, this is, seek as soon as the slider is moved.
@@ -102,11 +107,13 @@
     [self updateTimeWidget];
 }
 
+/* Called when the user starts to drag the time slider */
 - (IBAction)sliderTouchDown:(id)sender {
     [gst_backend pause];
     dragging_slider = YES;
 }
 
+/* Called when the user stops dragging the time slider */
 - (IBAction)sliderTouchUp:(id)sender {
     dragging_slider = NO;
     // If this is a remote file, scrub seeking is probably not going to work smoothly enough.

@@ -184,41 +184,6 @@ static gboolean delayed_seek_cb (GStreamerBackend *self) {
     return FALSE;
 }
 
-static void check_media_size (GStreamerBackend *self) {
-    GstElement *video_sink;
-    GstPad *video_sink_pad;
-    GstCaps *caps;
-    GstVideoFormat fmt;
-    int width;
-    int height;
-
-    /* Retrieve the Caps at the entrance of the video sink */
-    g_object_get (self->pipeline, "video-sink", &video_sink, NULL);
-
-    /* Do nothing if there is no video sink (this might be an audio-only clip */
-    if (!video_sink) return;
-
-    video_sink_pad = gst_element_get_static_pad (video_sink, "sink");
-    caps = gst_pad_get_negotiated_caps (video_sink_pad);
-
-    if (gst_video_format_parse_caps(caps, &fmt, &width, &height)) {
-        int par_n, par_d;
-        if (gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d)) {
-            width = width * par_n / par_d;
-        }
-        GST_DEBUG ("Media size is %dx%d, notifying application", width, height);
-
-        if (self->ui_delegate && [self->ui_delegate respondsToSelector:@selector(mediaSizeChanged:height:)])
-        {
-            [self->ui_delegate mediaSizeChanged:width height:height];
-        }
-    }
-
-    gst_caps_unref(caps);
-    gst_object_unref (video_sink_pad);
-    gst_object_unref(video_sink);
-}
-
 /* Retrieve errors from the bus and show them on the UI */
 static void error_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *self)
 {
@@ -274,6 +239,42 @@ static void clock_lost_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *self)
         gst_element_set_state (self->pipeline, GST_STATE_PAUSED);
         gst_element_set_state (self->pipeline, GST_STATE_PLAYING);
     }
+}
+
+/* Retrieve the video sink's Caps and tell the application about the media size */
+static void check_media_size (GStreamerBackend *self) {
+    GstElement *video_sink;
+    GstPad *video_sink_pad;
+    GstCaps *caps;
+    GstVideoFormat fmt;
+    int width;
+    int height;
+
+    /* Retrieve the Caps at the entrance of the video sink */
+    g_object_get (self->pipeline, "video-sink", &video_sink, NULL);
+
+    /* Do nothing if there is no video sink (this might be an audio-only clip */
+    if (!video_sink) return;
+
+    video_sink_pad = gst_element_get_static_pad (video_sink, "sink");
+    caps = gst_pad_get_negotiated_caps (video_sink_pad);
+
+    if (gst_video_format_parse_caps(caps, &fmt, &width, &height)) {
+        int par_n, par_d;
+        if (gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d)) {
+            width = width * par_n / par_d;
+        }
+        GST_DEBUG ("Media size is %dx%d, notifying application", width, height);
+
+        if (self->ui_delegate && [self->ui_delegate respondsToSelector:@selector(mediaSizeChanged:height:)])
+        {
+            [self->ui_delegate mediaSizeChanged:width height:height];
+        }
+    }
+
+    gst_caps_unref(caps);
+    gst_object_unref (video_sink_pad);
+    gst_object_unref(video_sink);
 }
 
 /* Notify UI about pipeline state changes */
