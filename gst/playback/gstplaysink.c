@@ -102,7 +102,9 @@ typedef struct
   GstElement *conv;
   GstElement *volume;           /* element with the volume property */
   gboolean sink_volume;         /* if the volume was provided by the sink */
+  gulong notify_volume_id;
   GstElement *mute;             /* element with the mute property */
+  gulong notify_mute_id;
   GstElement *sink;
   GstElement *ts_offset;
 } GstPlayAudioChain;
@@ -207,6 +209,7 @@ struct _GstPlaySink
   GstPad *audio_srcpad_stream_synchronizer;
   GstPad *audio_sinkpad_stream_synchronizer;
   gulong audio_block_id;
+  gulong audio_notify_caps_id;
   /* audio tee */
   GstElement *audio_tee;
   GstPad *audio_tee_sink;
@@ -219,6 +222,7 @@ struct _GstPlaySink
   GstPad *video_srcpad_stream_synchronizer;
   GstPad *video_sinkpad_stream_synchronizer;
   gulong video_block_id;
+  gulong video_notify_caps_id;
   /* text */
   GstPad *text_pad;
   gboolean text_pad_blocked;
@@ -258,6 +262,7 @@ struct _GstPlaySink
   GstColorBalance *colorbalance_element;
   GList *colorbalance_channels; /* CONTRAST, BRIGHTNESS, HUE, SATURATION */
   gint colorbalance_values[4];
+  gulong colorbalance_value_changed_id;
 
   /* sending audio/video flushes break stream changes when the pipeline
    * is paused and played again in 0.10 */
@@ -700,15 +705,14 @@ gst_play_sink_init (GstPlaySink * playsink)
 }
 
 static void
-disconnect_chain (GstPlayAudioChain * chain, GstPlaySink * playsink)
+disconnect_audio_chain (GstPlayAudioChain * chain, GstPlaySink * playsink)
 {
   if (chain) {
-    if (chain->volume)
-      g_signal_handlers_disconnect_by_func (chain->volume, notify_volume_cb,
-          playsink);
-    if (chain->mute)
-      g_signal_handlers_disconnect_by_func (chain->mute, notify_mute_cb,
-          playsink);
+    if (chain->notify_volume_id)
+      g_signal_handler_disconnect (chain->volume, chain->notify_volume_id);
+    if (chain->notify_mute_id)
+      g_signal_handler_disconnect (chain->mute, chain->notify_mute_id);
+    chain->notify_volume_id = chain->notify_mute_id = 0;
   }
 }
 
@@ -1533,8 +1537,7 @@ update_colorbalance (GstPlaySink * playsink)
   if (!balance)
     return;
 
-  g_signal_handlers_block_by_func (balance,
-      G_CALLBACK (colorbalance_value_changed_cb), playsink);
+  g_signal_handler_block (balance, playsink->colorbalance_value_changed_id);
 
   for (i = 0, l = playsink->colorbalance_channels; l; l = l->next, i++) {
     GstColorBalanceChannel *proxy = l->data;
@@ -1557,8 +1560,7 @@ update_colorbalance (GstPlaySink * playsink)
         playsink->colorbalance_values[i]);
   }
 
-  g_signal_handlers_unblock_by_func (balance,
-      G_CALLBACK (colorbalance_value_changed_cb), playsink);
+  g_signal_handler_unblock (balance, playsink->colorbalance_value_changed_id);
 
   gst_object_unref (balance);
 }
@@ -1699,13 +1701,14 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
 
   GST_OBJECT_LOCK (playsink);
   if (playsink->colorbalance_element) {
-    g_signal_handlers_disconnect_by_func (playsink->colorbalance_element,
-        G_CALLBACK (colorbalance_value_changed_cb), playsink);
+    g_signal_handler_disconnect (playsink->colorbalance_element,
+        playsink->colorbalance_value_changed_id);
     gst_object_unref (playsink->colorbalance_element);
   }
   playsink->colorbalance_element = find_color_balance_element (chain->sink);
   if (playsink->colorbalance_element) {
-    g_signal_connect (playsink->colorbalance_element, "value-changed",
+    playsink->colorbalance_value_changed_id =
+        g_signal_connect (playsink->colorbalance_element, "value-changed",
         G_CALLBACK (colorbalance_value_changed_cb), playsink);
   }
   GST_OBJECT_UNLOCK (playsink);
@@ -1723,10 +1726,14 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
         "use-converters", use_converters, "use-balance", use_balance, NULL);
 
     GST_OBJECT_LOCK (playsink);
-    if (use_balance && GST_PLAY_SINK_VIDEO_CONVERT (chain->conv)->balance)
+    if (use_balance && GST_PLAY_SINK_VIDEO_CONVERT (chain->conv)->balance) {
       playsink->colorbalance_element =
           GST_COLOR_BALANCE (gst_object_ref (GST_PLAY_SINK_VIDEO_CONVERT
               (chain->conv)->balance));
+      playsink->colorbalance_value_changed_id =
+          g_signal_connect (playsink->colorbalance_element, "value-changed",
+          G_CALLBACK (colorbalance_value_changed_cb), playsink);
+    }
     GST_OBJECT_UNLOCK (playsink);
 
     gst_bin_add (bin, chain->conv);
@@ -1889,13 +1896,14 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
 
   GST_OBJECT_LOCK (playsink);
   if (playsink->colorbalance_element) {
-    g_signal_handlers_disconnect_by_func (playsink->colorbalance_element,
-        G_CALLBACK (colorbalance_value_changed_cb), playsink);
+    g_signal_handler_disconnect (playsink->colorbalance_element,
+        playsink->colorbalance_value_changed_id);
     gst_object_unref (playsink->colorbalance_element);
   }
   playsink->colorbalance_element = find_color_balance_element (chain->sink);
   if (playsink->colorbalance_element) {
-    g_signal_connect (playsink->colorbalance_element, "value-changed",
+    playsink->colorbalance_value_changed_id =
+        g_signal_connect (playsink->colorbalance_element, "value-changed",
         G_CALLBACK (colorbalance_value_changed_cb), playsink);
   }
   GST_OBJECT_UNLOCK (playsink);
@@ -2548,10 +2556,11 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
   elem =
       gst_play_sink_find_property_sinks (playsink, chain->sink, "volume",
       G_TYPE_DOUBLE);
+  chain->notify_volume_id = chain->notify_mute_id = 0;
   if (elem) {
     chain->volume = elem;
 
-    g_signal_connect (chain->volume, "notify::volume",
+    chain->notify_volume_id = g_signal_connect (chain->volume, "notify::volume",
         G_CALLBACK (notify_volume_cb), playsink);
 
     GST_DEBUG_OBJECT (playsink, "the sink has a volume property");
@@ -2565,7 +2574,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
         G_TYPE_BOOLEAN);
     if (chain->mute) {
       GST_DEBUG_OBJECT (playsink, "the sink has a mute property");
-      g_signal_connect (chain->mute, "notify::mute",
+      chain->notify_mute_id = g_signal_connect (chain->mute, "notify::mute",
           G_CALLBACK (notify_mute_cb), playsink);
     }
     /* use the sink to control the volume and mute */
@@ -2618,12 +2627,13 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
         chain->volume = conv->volume;
         have_volume = TRUE;
 
-        g_signal_connect (chain->volume, "notify::volume",
+        chain->notify_volume_id =
+            g_signal_connect (chain->volume, "notify::volume",
             G_CALLBACK (notify_volume_cb), playsink);
 
         /* volume also has the mute property */
         chain->mute = chain->volume;
-        g_signal_connect (chain->mute, "notify::mute",
+        chain->notify_mute_id = g_signal_connect (chain->mute, "notify::mute",
             G_CALLBACK (notify_mute_cb), playsink);
 
         /* configure with the latest volume and mute */
@@ -2739,6 +2749,9 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
       gst_play_sink_find_property_sinks (playsink, chain->sink, "ts-offset",
           G_TYPE_INT64));
 
+  /* Disconnect signals */
+  disconnect_audio_chain (chain, playsink);
+
   /* check if the sink, or something within the sink, has the volume property.
    * If it does we don't need to add a volume element.  */
   elem =
@@ -2755,7 +2768,7 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
       playsink->volume_changed = FALSE;
     }
 
-    g_signal_connect (chain->volume, "notify::volume",
+    chain->notify_volume_id = g_signal_connect (chain->volume, "notify::volume",
         G_CALLBACK (notify_volume_cb), playsink);
     /* if the sink also has a mute property we can use this as well. We'll only
      * use the mute property if there is a volume property. We can simulate the
@@ -2765,7 +2778,7 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
         G_TYPE_BOOLEAN);
     if (chain->mute) {
       GST_DEBUG_OBJECT (playsink, "the sink has a mute property");
-      g_signal_connect (chain->mute, "notify::mute",
+      chain->notify_mute_id = g_signal_connect (chain->mute, "notify::mute",
           G_CALLBACK (notify_mute_cb), playsink);
     }
 
@@ -2776,17 +2789,15 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
         ! !(playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME), NULL);
     GST_DEBUG_OBJECT (playsink, "the sink has no volume property");
 
-    /* Disconnect signals */
-    disconnect_chain (chain, playsink);
-
     if (conv->volume && (playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME)) {
       chain->volume = conv->volume;
       chain->mute = chain->volume;
 
-      g_signal_connect (chain->volume, "notify::volume",
+      chain->notify_volume_id =
+          g_signal_connect (chain->volume, "notify::volume",
           G_CALLBACK (notify_volume_cb), playsink);
 
-      g_signal_connect (chain->mute, "notify::mute",
+      chain->notify_mute_id = g_signal_connect (chain->mute, "notify::mute",
           G_CALLBACK (notify_mute_cb), playsink);
 
       /* configure with the latest volume and mute */
@@ -3059,8 +3070,8 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
         playsink->overlay_element = NULL;
 
         if (playsink->colorbalance_element) {
-          g_signal_handlers_disconnect_by_func (playsink->colorbalance_element,
-              G_CALLBACK (colorbalance_value_changed_cb), playsink);
+          g_signal_handler_disconnect (playsink->colorbalance_element,
+              playsink->colorbalance_value_changed_id);
           gst_object_unref (playsink->colorbalance_element);
         }
         playsink->colorbalance_element = NULL;
@@ -3193,8 +3204,8 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
     playsink->overlay_element = NULL;
 
     if (playsink->colorbalance_element) {
-      g_signal_handlers_disconnect_by_func (playsink->colorbalance_element,
-          G_CALLBACK (colorbalance_value_changed_cb), playsink);
+      g_signal_handler_disconnect (playsink->colorbalance_element,
+          playsink->colorbalance_value_changed_id);
       gst_object_unref (playsink->colorbalance_element);
     }
     playsink->colorbalance_element = NULL;
@@ -3240,7 +3251,7 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
               playsink->audiochain->sink);
 
         activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
-        disconnect_chain (playsink->audiochain, playsink);
+        disconnect_audio_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
         if (playsink->audiochain->ts_offset)
@@ -3312,7 +3323,7 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       }
 
       if (playsink->audiochain->sink_volume) {
-        disconnect_chain (playsink->audiochain, playsink);
+        disconnect_audio_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
         if (playsink->audiochain->ts_offset)
@@ -4055,7 +4066,8 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
         GST_LOG_OBJECT (playsink, "ghosting tee sinkpad");
         playsink->audio_pad =
             gst_ghost_pad_new (pad_name, playsink->audio_tee_sink);
-        g_signal_connect (G_OBJECT (playsink->audio_pad), "notify::caps",
+        playsink->audio_notify_caps_id =
+            g_signal_connect (G_OBJECT (playsink->audio_pad), "notify::caps",
             G_CALLBACK (caps_notify_cb), playsink);
         created = TRUE;
       }
@@ -4070,7 +4082,8 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
         GST_LOG_OBJECT (playsink, "ghosting videosink");
         playsink->video_pad =
             gst_ghost_pad_new_no_target (pad_name, GST_PAD_SINK);
-        g_signal_connect (G_OBJECT (playsink->video_pad), "notify::caps",
+        playsink->video_notify_caps_id =
+            g_signal_connect (G_OBJECT (playsink->video_pad), "notify::caps",
             G_CALLBACK (caps_notify_cb), playsink);
         created = TRUE;
       }
@@ -4179,13 +4192,13 @@ gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
   GST_PLAY_SINK_LOCK (playsink);
   if (pad == playsink->video_pad) {
     res = &playsink->video_pad;
-    g_signal_handlers_disconnect_by_func (playsink->video_pad, caps_notify_cb,
-        playsink);
+    g_signal_handler_disconnect (playsink->video_pad,
+        playsink->video_notify_caps_id);
     video_set_blocked (playsink, FALSE);
   } else if (pad == playsink->audio_pad) {
     res = &playsink->audio_pad;
-    g_signal_handlers_disconnect_by_func (playsink->audio_pad, caps_notify_cb,
-        playsink);
+    g_signal_handler_disconnect (playsink->audio_pad,
+        playsink->audio_notify_caps_id);
     audio_set_blocked (playsink, FALSE);
   } else if (pad == playsink->text_pad) {
     res = &playsink->text_pad;
@@ -4429,7 +4442,7 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       if (playsink->audiochain && playsink->audiochain->sink_volume) {
         /* remove our links to the mute and volume elements when they were
          * provided by a sink */
-        disconnect_chain (playsink->audiochain, playsink);
+        disconnect_audio_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
       }
@@ -4450,8 +4463,8 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       playsink->overlay_element = NULL;
 
       if (playsink->colorbalance_element) {
-        g_signal_handlers_disconnect_by_func (playsink->colorbalance_element,
-            G_CALLBACK (colorbalance_value_changed_cb), playsink);
+        g_signal_handler_disconnect (playsink->colorbalance_element,
+            playsink->colorbalance_value_changed_id);
         gst_object_unref (playsink->colorbalance_element);
       }
       playsink->colorbalance_element = NULL;
