@@ -1,5 +1,6 @@
 #import "LibraryViewController.h"
 #import "VideoViewController.h"
+#import <AssetsLibrary/AssetsLibrary.h>
 
 @interface LibraryViewController ()
 
@@ -23,14 +24,15 @@
 static NSString *CellIdentifier = @"CellIdentifier";
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return 2;
+    return 3;
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
     switch (section)
     {
-        case 0: return @"Local files (iTunes file sharing)";
+        case 0: return @"Photo library";
+        case 1: return @"iTunes file sharing";
         default: return @"Online files";
     }
 }
@@ -38,8 +40,10 @@ static NSString *CellIdentifier = @"CellIdentifier";
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     switch (section) {
         case 0:
-            return [self->mediaEntries count];
+            return [self->libraryEntries count];
         case 1:
+            return [self->mediaEntries count];
+        case 2:
             return [self->onlineEntries count];
         default:
             return 0;
@@ -52,13 +56,15 @@ static NSString *CellIdentifier = @"CellIdentifier";
     UILabel *title = (UILabel *)[cell.contentView viewWithTag:10];
     UILabel *subtitle = (UILabel *)[cell.contentView viewWithTag:11];
 
-    if(indexPath.section == 0)
-    {
-        subtitle.text = [NSString stringWithFormat:@"file://%@",
-                      [self->mediaEntries objectAtIndex:indexPath.item], nil];
-    } else if (indexPath.section == 1)
-    {
-        subtitle.text = [self->onlineEntries objectAtIndex:indexPath.item];
+    switch (indexPath.section) {
+        case 0: subtitle.text = [self->libraryEntries objectAtIndex:indexPath.item];
+            break;
+        case 1: subtitle.text = [self->mediaEntries objectAtIndex:indexPath.item];
+            break;
+        case 2: subtitle.text = [self->onlineEntries objectAtIndex:indexPath.item];
+            break;
+        default:
+            break;
     }
 
     NSArray *components = [subtitle.text pathComponents];
@@ -91,13 +97,41 @@ static NSString *CellIdentifier = @"CellIdentifier";
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSAllDomainsMask, YES);
     NSString *docsPath = [paths objectAtIndex:0];
 
+    /* Entries from the Photo Library */
     NSMutableArray *entries = [[NSMutableArray alloc] init];
+    ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+    [library enumerateGroupsWithTypes:ALAssetsGroupAll
+        usingBlock:^(ALAssetsGroup *group, BOOL *stop)
+        {
+            if (group) {
+                [group enumerateAssetsUsingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop)
+                {
+                    if(result) {
+                        [entries addObject:[NSString stringWithFormat:@"%@",[result valueForProperty:ALAssetPropertyAssetURL]]];
+                        *stop = NO;
+
+                    }
+                }];
+            } else {
+                [self.tableView reloadData];
+            }
+        }
+        failureBlock:^(NSError *error)
+        {
+            NSLog(@"ERROR");
+        }
+     ];
+    self->libraryEntries = entries;
+
+    /* Retrieve entries from iTunes file sharing */
+    entries = [[NSMutableArray alloc] init];
     for (NSString *e in [[NSFileManager defaultManager] contentsOfDirectoryAtPath:docsPath error:nil])
     {
-        [entries addObject:[NSString stringWithFormat:@"%@/%@",docsPath, e]];
+        [entries addObject:[NSString stringWithFormat:@"file://%@/%@", docsPath, e]];
     }
     self->mediaEntries = entries;
 
+    /* Hardcoded list of Online media files */
     entries = [[NSMutableArray alloc] init];
 
     // Big Buck Bunny

@@ -138,6 +138,9 @@ GST_PLUGIN_STATIC_DECLARE(eglglessink);
 #if defined(GST_IOS_PLUGIN_APPLEMEDIA_NONPUBLIC) || defined(GST_IOS_PLUGINS_SYS)
 GST_PLUGIN_STATIC_DECLARE(applemedia_nonpublic);
 #endif
+#if defined(GST_IOS_PLUGIN_APPLEMEDIA) || defined(GST_IOS_PLUGINS_SYS)
+GST_PLUGIN_STATIC_DECLARE(applemedia);
+#endif
 #if defined(GST_IOS_PLUGIN_LIBVISUAL) || defined(GST_IOS_PLUGINS_VIS)
 GST_PLUGIN_STATIC_DECLARE(libvisual);
 #endif
@@ -638,6 +641,9 @@ gst_ios_init (void)
 #endif
 #if defined(GST_IOS_PLUGIN_APPLEMEDIA_NONPUBLIC) || defined(GST_IOS_PLUGINS_SYS)
     GST_PLUGIN_STATIC_REGISTER(applemedia_nonpublic);
+#endif
+#if defined(GST_IOS_PLUGIN_APPLEMEDIA) || defined(GST_IOS_PLUGINS_SYS)
+    GST_PLUGIN_STATIC_REGISTER(applemedia);
 #endif
 #if defined(GST_IOS_PLUGIN_LIBVISUAL) || defined(GST_IOS_PLUGINS_VIS)
     GST_PLUGIN_STATIC_REGISTER(libvisual);

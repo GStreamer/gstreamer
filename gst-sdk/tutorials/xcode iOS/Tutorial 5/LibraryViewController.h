@@ -2,6 +2,7 @@
 
 @interface LibraryViewController : UITableViewController
 {
+    NSArray *libraryEntries;
     NSArray *mediaEntries;
     NSArray *onlineEntries;
 }
