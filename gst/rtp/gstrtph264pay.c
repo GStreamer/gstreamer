@@ -47,9 +47,11 @@ static GstStaticPadTemplate gst_rtp_h264_pay_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, "
-        "stream-format = (string) avc, alignment = (string) au;"
+        "stream-format = (string) avc, alignment = (string) au, "
+        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ]; "
         "video/x-h264, "
-        "stream-format = (string) byte-stream, alignment = (string) { nal, au }")
+        "stream-format = (string) byte-stream, alignment = (string) { nal, au }, "
+        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ]")
     );
 
 static GstStaticPadTemplate gst_rtp_h264_pay_src_template =
@@ -59,7 +61,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"H264\"")
+        "clock-rate = (int) 90000, "
+        "encoding-name = (string) \"H264\", "
+        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ]")
     );
 
 #define DEFAULT_SPROP_PARAMETER_SETS    NULL
@@ -426,6 +430,7 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
   const gchar *alignment, *stream_format;
   gchar *sprops;
   gboolean caps_set;
+  gint width, height;
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
 
@@ -451,6 +456,13 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
       rtph264pay->stream_format = GST_H264_STREAM_FORMAT_AVC;
     if (g_str_equal (stream_format, "byte-stream"))
       rtph264pay->stream_format = GST_H264_STREAM_FORMAT_BYTESTREAM;
+  }
+
+  if (!gst_structure_get_int (str, "height", &height) || height <= 0) {
+    goto invalid_dimension;
+  }
+  if (!gst_structure_get_int (str, "width", &width) || width <= 0) {
+    goto invalid_dimension;
   }
 
   /* packetized AVC video has a codec_data */
@@ -558,10 +570,12 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
   }
 
   if (sprops != NULL) {
-    caps_set = gst_rtp_base_payload_set_outcaps (basepayload,
+    caps_set = gst_rtp_base_payload_set_outcaps (basepayload, "width",
+        G_TYPE_INT, width, "height", G_TYPE_INT, height,
         "sprop-parameter-sets", G_TYPE_STRING, sprops, NULL);
   } else {
-    caps_set = gst_rtp_base_payload_set_outcaps (basepayload, NULL);
+    caps_set = gst_rtp_base_payload_set_outcaps (basepayload, "width",
+        G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
   }
 
   if (sprops != NULL) {
@@ -592,6 +606,11 @@ avcc_error:
 set_caps_failed:
   {
     GST_ERROR_OBJECT (rtph264pay, "failed to set caps");
+    return FALSE;
+  }
+invalid_dimension:
+  {
+    GST_ERROR_OBJECT (rtph264pay, "invalid width/height from caps");
     return FALSE;
   }
 error:

@@ -519,8 +519,9 @@ GST_START_TEST (rtp_h264)
   /* FIXME 0.11: fully specify h264 caps (and make payloader check) */
   rtp_pipeline_test (rtp_h264_frame_data, rtp_h264_frame_data_size,
       rtp_h264_frame_count,
-      "video/x-h264,stream-format=(string)byte-stream,alignment=(string)nal",
-      "rtph264pay", "rtph264depay", 0, 0, FALSE);
+      "video/x-h264,stream-format=(string)byte-stream,alignment=(string)nal,"
+      "width=(int)320,height=(int)240", "rtph264pay", "rtph264depay", 0, 0,
+      FALSE);
 }
 
 GST_END_TEST;
@@ -546,8 +547,8 @@ GST_START_TEST (rtp_h264_list_lt_mtu)
   /* FIXME 0.11: fully specify h264 caps (and make payloader check) */
   rtp_pipeline_test (rtp_h264_list_lt_mtu_frame_data,
       rtp_h264_list_lt_mtu_frame_data_size, rtp_h264_list_lt_mtu_frame_count,
-      "video/x-h264,stream-format=(string)byte-stream,alignment=(string)nal",
-      "rtph264pay", "rtph264depay",
+      "video/x-h264,stream-format=(string)byte-stream,alignment=(string)nal,"
+      "width=(int)320,height=(int)240", "rtph264pay", "rtph264depay",
       rtp_h264_list_lt_mtu_bytes_sent, rtp_h264_list_lt_mtu_mtu_size, TRUE);
 }
 
@@ -570,9 +571,10 @@ GST_START_TEST (rtp_h264_list_lt_mtu_avc)
   rtp_pipeline_test (rtp_h264_list_lt_mtu_frame_data_avc,
       rtp_h264_list_lt_mtu_frame_data_size, rtp_h264_list_lt_mtu_frame_count,
       "video/x-h264,stream-format=(string)avc,alignment=(string)au,"
-      "codec_data=(buffer)01640014ffe1001867640014acd94141fb0110000003001773594000f142996001000568ebecb22c",
-      "rtph264pay", "rtph264depay",
-      rtp_h264_list_lt_mtu_bytes_sent_avc, rtp_h264_list_lt_mtu_mtu_size, TRUE);
+      "codec_data=(buffer)01640014ffe1001867640014acd94141fb0110000003001773594000f142996001000568ebecb22c,"
+      "width=(int)320,height=(int)240,framerate=(fraction)30/1", "rtph264pay",
+      "rtph264depay", rtp_h264_list_lt_mtu_bytes_sent_avc,
+      rtp_h264_list_lt_mtu_mtu_size, TRUE);
 }
 
 GST_END_TEST;
@@ -600,8 +602,8 @@ GST_START_TEST (rtp_h264_list_gt_mtu)
   /* FIXME 0.11: fully specify h264 caps (and make payloader check) */
   rtp_pipeline_test (rtp_h264_list_gt_mtu_frame_data,
       rtp_h264_list_gt_mtu_frame_data_size, rtp_h264_list_gt_mtu_frame_count,
-      "video/x-h264,stream-format=(string)byte-stream,alignment=(string)nal",
-      "rtph264pay", "rtph264depay",
+      "video/x-h264,stream-format=(string)byte-stream,alignment=(string)nal,"
+      "width=(int)320,height=(int)240", "rtph264pay", "rtph264depay",
       rtp_h264_list_gt_mtu_bytes_sent, rtp_h264_list_gt_mtu_mty_size, TRUE);
 }
 
@@ -625,9 +627,10 @@ GST_START_TEST (rtp_h264_list_gt_mtu_avc)
   rtp_pipeline_test (rtp_h264_list_gt_mtu_frame_data_avc,
       rtp_h264_list_gt_mtu_frame_data_size, rtp_h264_list_gt_mtu_frame_count,
       "video/x-h264,stream-format=(string)avc,alignment=(string)au,"
-      "codec_data=(buffer)01640014ffe1001867640014acd94141fb0110000003001773594000f142996001000568ebecb22c",
-      "rtph264pay", "rtph264depay",
-      rtp_h264_list_gt_mtu_bytes_sent_avc, rtp_h264_list_gt_mtu_mty_size, TRUE);
+      "codec_data=(buffer)01640014ffe1001867640014acd94141fb0110000003001773594000f142996001000568ebecb22c,"
+      "width=(int)320,height=(int)240,framerate=(fraction)30/1" , "rtph264pay",
+      "rtph264depay", rtp_h264_list_gt_mtu_bytes_sent_avc,
+      rtp_h264_list_gt_mtu_mty_size, TRUE);
 }
 
 GST_END_TEST;

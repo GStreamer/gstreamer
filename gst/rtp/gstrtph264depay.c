@@ -45,8 +45,14 @@ static GstStaticPadTemplate gst_rtp_h264_depay_src_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, "
         "stream-format = (string) avc, alignment = (string) au; "
+        /** optional parameters **/
+    /* "width = (int) [ 1, MAX ], " */
+    /* "height = (int) [ 1, MAX ], " */
         "video/x-h264, "
         "stream-format = (string) byte-stream, alignment = (string) { nal, au }")
+        /** optional parameters **/
+    /* "width = (int) [ 1, MAX ], " */
+    /* "height = (int) [ 1, MAX ], " */
     );
 
 static GstStaticPadTemplate gst_rtp_h264_depay_sink_template =
@@ -55,7 +61,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"H264\"")
+        "clock-rate = (int) 90000, "
+        "encoding-name = (string) \"H264\"")
         /** optional parameters **/
     /* "profile-level-id = (string) ANY, " */
     /* "max-mbps = (string) ANY, " */
@@ -72,7 +79,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     /* "deint-buf-cap = (string) ANY, " */
     /* "sprop-init-buf-time = (string) ANY, " */
     /* "sprop-max-don-diff = (string) ANY, " */
-    /* "max-rcmd-nalu-size = (string) ANY " */
+    /* "max-rcmd-nalu-size = (string) ANY, " */
+    /* "width = (int) [ 1, MAX ], " */
+    /* "height = (int) [ 1, MAX ], " */
     );
 
 #define gst_rtp_h264_depay_parent_class parent_class
@@ -147,6 +156,8 @@ gst_rtp_h264_depay_reset (GstRtpH264Depay * rtph264depay)
   rtph264depay->last_ts = 0;
   rtph264depay->current_fu_type = 0;
   rtph264depay->new_codec_data = FALSE;
+  rtph264depay->width = 0;
+  rtph264depay->height = 0;
   g_ptr_array_set_size (rtph264depay->sps, 0);
   g_ptr_array_set_size (rtph264depay->pps, 0);
 }
@@ -304,6 +315,11 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
       "stream-format", G_TYPE_STRING,
       rtph264depay->byte_stream ? "byte-stream" : "avc",
       "alignment", G_TYPE_STRING, rtph264depay->merge ? "au" : "nal", NULL);
+
+  if  (rtph264depay->width > 0 && rtph264depay->height > 0) {
+    gst_caps_set_simple (srccaps, "width", G_TYPE_INT, rtph264depay->width,
+        "height", G_TYPE_INT, rtph264depay->height, NULL);
+  }
 
   if (!rtph264depay->byte_stream) {
     GstBuffer *codec_data;
@@ -519,6 +535,7 @@ gst_rtp_h264_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   GstBuffer *codec_data;
   GstMapInfo map;
   guint8 *ptr;
+  gint width = 0, height = 0;
 
   rtph264depay = GST_RTP_H264_DEPAY (depayload);
 
@@ -618,6 +635,16 @@ gst_rtp_h264_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
       goto incomplete_caps;
   }
 
+  if (gst_structure_get_int (structure, "width", &width) && width <= 0) {
+    goto invalid_dimension;
+  }
+  if (gst_structure_get_int (structure, "height", &height) && height <= 0) {
+    goto invalid_dimension;
+  }
+
+  rtph264depay->width = width;
+  rtph264depay->height = height;
+
   return gst_rtp_h264_set_src_caps (rtph264depay);
 
   /* ERRORS */
@@ -626,6 +653,11 @@ incomplete_caps:
     GST_DEBUG_OBJECT (depayload, "we have incomplete caps,"
         " doing setcaps later");
     return TRUE;
+  }
+invalid_dimension:
+  {
+    GST_ERROR_OBJECT (depayload, "invalid width/height from caps");
+    return FALSE;
   }
 }
 
