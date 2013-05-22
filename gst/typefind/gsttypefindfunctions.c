@@ -2495,7 +2495,8 @@ mpeg4_video_type_find (GstTypeFind * tf, gpointer unused)
 }
 
 /*** video/x-h263 H263 video stream ***/
-static GstStaticCaps h263_video_caps = GST_STATIC_CAPS ("video/x-h263");
+static GstStaticCaps h263_video_caps =
+GST_STATIC_CAPS ("video/x-h263, variant=(string)itu");
 
 #define H263_VIDEO_CAPS gst_static_caps_get(&h263_video_caps)
 
