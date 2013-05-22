@@ -1072,12 +1072,6 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
 
     gst_object_unref (pad_tmpl);
     gst_object_unref (pad);
-
-    /* connect a signal to find out when the typefind element found
-     * a type */
-    decode_bin->have_type_id =
-        g_signal_connect (G_OBJECT (decode_bin->typefind), "have-type",
-        G_CALLBACK (type_found), decode_bin);
   }
 
   g_mutex_init (&decode_bin->expose_lock);
@@ -4426,8 +4420,18 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       dbin->have_type = FALSE;
       ret = GST_STATE_CHANGE_ASYNC;
       do_async_start (dbin);
+
+
+      /* connect a signal to find out when the typefind element found
+       * a type */
+      dbin->have_type_id =
+          g_signal_connect (dbin->typefind, "have-type",
+          G_CALLBACK (type_found), dbin);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (dbin->have_type_id)
+        g_signal_handler_disconnect (dbin->typefind, dbin->have_type_id);
+      dbin->have_type_id = 0;
       DYN_LOCK (dbin);
       GST_LOG_OBJECT (dbin, "setting shutdown flag");
       dbin->shutdown = TRUE;
