@@ -2462,8 +2462,7 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
         "progressive", NULL);
   }
 
-  if (!gst_pad_set_caps (self->srcpad, srccaps))
-    goto caps_not_accepted;
+  gst_pad_set_caps (self->srcpad, srccaps);
 
   if (fps_n != 0) {
     self->field_duration = gst_util_uint64_scale (GST_SECOND, fps_d, fps_n);
@@ -2487,12 +2486,6 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
 invalid_caps:
   {
     GST_ERROR_OBJECT (pad, "Invalid caps: %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
-caps_not_accepted:
-  {
-    GST_ERROR_OBJECT (pad, "Caps not accepted: %" GST_PTR_FORMAT, srccaps);
-    gst_caps_unref (srccaps);
     return FALSE;
   }
 no_bufferpool:
