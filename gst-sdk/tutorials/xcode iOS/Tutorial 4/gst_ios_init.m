@@ -135,6 +135,9 @@ GST_PLUGIN_STATIC_DECLARE(osxaudio);
 #if defined(GST_IOS_PLUGIN_EGLGLESSINK) || defined(GST_IOS_PLUGINS_SYS)
 GST_PLUGIN_STATIC_DECLARE(eglglessink);
 #endif
+#if defined(GST_IOS_PLUGIN_APPLEMEDIA) || defined(GST_IOS_PLUGINS_SYS)
+GST_PLUGIN_STATIC_DECLARE(applemedia);
+#endif
 #if defined(GST_IOS_PLUGIN_APPLEMEDIA_NONPUBLIC) || defined(GST_IOS_PLUGINS_SYS)
 GST_PLUGIN_STATIC_DECLARE(applemedia_nonpublic);
 #endif
@@ -498,10 +501,32 @@ gst_ios_init (void)
 {
   GstPluginFeature *plugin;
   GstRegistry *reg;
-
+  NSString *resources = [[NSBundle mainBundle] resourcePath];
+  NSString *tmp = NSTemporaryDirectory();
+  NSString *cache = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Caches"];
+  NSString *docs = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
+    
+  const gchar *resources_dir = [resources UTF8String];
+  const gchar *tmp_dir = [tmp UTF8String];
+  const gchar *cache_dir = [cache UTF8String];
+  const gchar *docs_dir = [docs UTF8String];
+    
+  g_setenv ("TMP", tmp_dir, TRUE);
+  g_setenv ("TEMP", tmp_dir, TRUE);
+  g_setenv ("TMPDIR", tmp_dir, TRUE);
+  g_setenv ("XDG_RUNTIME_DIR", resources_dir, TRUE);
+  g_setenv ("XDG_CACHE_DIR", cache_dir, TRUE);
+    
+  g_setenv ("HOME", docs_dir, TRUE);
+  g_setenv ("XDG_DATA_DIRS", resources_dir, TRUE);
+  g_setenv ("XDG_CONFIG_DIRS", resources_dir, TRUE);
+  g_setenv ("XDG_CONFIG_HOME", cache_dir, TRUE);
+  g_setenv ("XDG_DATA_HOME", resources_dir, TRUE);
+  g_setenv ("FONTCONFIG_PATH", resources_dir, TRUE);
+    
   gst_init (NULL, NULL);
 
-#if defined(GST_IOS_PLUGIN_COREELEMENTS) || defined(GST_IOS_PLUGINS_CORE)
+  #if defined(GST_IOS_PLUGIN_COREELEMENTS) || defined(GST_IOS_PLUGINS_CORE)
     GST_PLUGIN_STATIC_REGISTER(coreelements);
 #endif
 #if defined(GST_IOS_PLUGIN_COREINDEXERS) || defined(GST_IOS_PLUGINS_CORE)
@@ -635,6 +660,9 @@ gst_ios_init (void)
 #endif
 #if defined(GST_IOS_PLUGIN_EGLGLESSINK) || defined(GST_IOS_PLUGINS_SYS)
     GST_PLUGIN_STATIC_REGISTER(eglglessink);
+#endif
+#if defined(GST_IOS_PLUGIN_APPLEMEDIA) || defined(GST_IOS_PLUGINS_SYS)
+    GST_PLUGIN_STATIC_REGISTER(applemedia);
 #endif
 #if defined(GST_IOS_PLUGIN_APPLEMEDIA_NONPUBLIC) || defined(GST_IOS_PLUGINS_SYS)
     GST_PLUGIN_STATIC_REGISTER(applemedia_nonpublic);
@@ -993,6 +1021,7 @@ gst_ios_init (void)
 #if defined(GST_IOS_PLUGIN_SDP) || defined(GST_IOS_PLUGINS_NET)
     GST_PLUGIN_STATIC_REGISTER(sdp);
 #endif
+
 
   /* Lower the ranks of filesrc and giosrc so iosavassetsrc is
    * tried first in gst_element_make_from_uri() for file:// */
