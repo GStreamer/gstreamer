@@ -36,6 +36,7 @@ libgstvaapi_source_c = \
 	gstvaapisink.c		\
 	gstvaapiuploader.c	\
 	gstvaapivideobuffer.c	\
+	gstvaapivideocontext.c	\
 	gstvaapivideometa.c	\
 	$(NULL)
 
@@ -45,6 +46,7 @@ libgstvaapi_source_h = \
 	gstvaapisink.h		\
 	gstvaapiuploader.h	\
 	gstvaapivideobuffer.h	\
+	gstvaapivideocontext.h	\
 	gstvaapivideometa.h	\
 	$(NULL)
 
