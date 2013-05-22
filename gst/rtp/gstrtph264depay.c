@@ -48,11 +48,13 @@ static GstStaticPadTemplate gst_rtp_h264_depay_src_template =
         /** optional parameters **/
     /* "width = (int) [ 1, MAX ], " */
     /* "height = (int) [ 1, MAX ], " */
+    /* "framerate = (fraction) [ 0/1, MAX/1 ], " */
         "video/x-h264, "
         "stream-format = (string) byte-stream, alignment = (string) { nal, au }")
         /** optional parameters **/
     /* "width = (int) [ 1, MAX ], " */
     /* "height = (int) [ 1, MAX ], " */
+    /* "framerate = (fraction) [ 0/1, MAX/1 ], " */
     );
 
 static GstStaticPadTemplate gst_rtp_h264_depay_sink_template =
@@ -82,6 +84,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     /* "max-rcmd-nalu-size = (string) ANY, " */
     /* "width = (int) [ 1, MAX ], " */
     /* "height = (int) [ 1, MAX ], " */
+    /* "framerate = (fraction) [ 0/1, MAX/1 ] " */
     );
 
 #define gst_rtp_h264_depay_parent_class parent_class
@@ -158,6 +161,8 @@ gst_rtp_h264_depay_reset (GstRtpH264Depay * rtph264depay)
   rtph264depay->new_codec_data = FALSE;
   rtph264depay->width = 0;
   rtph264depay->height = 0;
+  rtph264depay->frate_num = 0;
+  rtph264depay->frate_denom = 1;
   g_ptr_array_set_size (rtph264depay->sps, 0);
   g_ptr_array_set_size (rtph264depay->pps, 0);
 }
@@ -319,6 +324,11 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
   if  (rtph264depay->width > 0 && rtph264depay->height > 0) {
     gst_caps_set_simple (srccaps, "width", G_TYPE_INT, rtph264depay->width,
         "height", G_TYPE_INT, rtph264depay->height, NULL);
+  }
+
+  if (rtph264depay->frate_num > 0) {
+    gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION,
+        rtph264depay->frate_num, rtph264depay->frate_denom, NULL);
   }
 
   if (!rtph264depay->byte_stream) {
@@ -536,6 +546,7 @@ gst_rtp_h264_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   GstMapInfo map;
   guint8 *ptr;
   gint width = 0, height = 0;
+  gint num = 0, denom = 1;
 
   rtph264depay = GST_RTP_H264_DEPAY (depayload);
 
@@ -642,8 +653,15 @@ gst_rtp_h264_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     goto invalid_dimension;
   }
 
+  if (gst_structure_get_fraction (structure, "framerate", &num, &denom) &&
+      (num < 0 || denom <= 0)) {
+    goto invalid_framerate;
+  }
+
   rtph264depay->width = width;
   rtph264depay->height = height;
+  rtph264depay->frate_num = num;
+  rtph264depay->frate_denom = denom;
 
   return gst_rtp_h264_set_src_caps (rtph264depay);
 
@@ -657,6 +675,11 @@ incomplete_caps:
 invalid_dimension:
   {
     GST_ERROR_OBJECT (depayload, "invalid width/height from caps");
+    return FALSE;
+  }
+invalid_framerate:
+  {
+    GST_ERROR_OBJECT (depayload, "invalid framerate from caps");
     return FALSE;
   }
 }

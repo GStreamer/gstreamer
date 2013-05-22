@@ -68,6 +68,8 @@ struct _GstRtpH264Depay
   gboolean new_codec_data;
   gint width;
   gint height;
+  gint frate_num;
+  gint frate_denom;
 };
 
 struct _GstRtpH264DepayClass
