@@ -75,6 +75,7 @@
     {
         [gst_backend deinit];
     }
+    [UIApplication sharedApplication].idleTimerDisabled = NO;
 }
 
 - (void)didReceiveMemoryWarning
@@ -88,6 +89,7 @@
 {
     [gst_backend play];
     is_playing_desired = YES;
+    [UIApplication sharedApplication].idleTimerDisabled = YES;
 }
 
 /* Called when the Pause button is pressed */
@@ -95,6 +97,7 @@
 {
     [gst_backend pause];
     is_playing_desired = NO;
+    [UIApplication sharedApplication].idleTimerDisabled = NO;
 }
 
 /* Called when the time slider position has changed, either because the user dragged it or
