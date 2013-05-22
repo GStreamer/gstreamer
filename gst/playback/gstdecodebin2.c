@@ -367,12 +367,16 @@ struct _GstPendingPad
   GstPad *pad;
   GstDecodeChain *chain;
   gulong event_probe_id;
+  gulong notify_caps_id;
 };
 
 struct _GstDecodeElement
 {
   GstElement *element;
   GstElement *capsfilter;       /* Optional capsfilter for Parser/Convert */
+  gulong pad_added_id;
+  gulong pad_removed_id;
+  gulong no_more_pads_id;
 };
 
 /* GstDecodeGroup
@@ -1422,7 +1426,7 @@ static gboolean is_demuxer_element (GstElement * srcelement);
 static gboolean connect_pad (GstDecodeBin * dbin, GstElement * src,
     GstDecodePad * dpad, GstPad * pad, GstCaps * caps, GValueArray * factories,
     GstDecodeChain * chain);
-static gboolean connect_element (GstDecodeBin * dbin, GstElement * element,
+static gboolean connect_element (GstDecodeBin * dbin, GstDecodeElement * delem,
     GstDecodeChain * chain);
 static void expose_pad (GstDecodeBin * dbin, GstElement * src,
     GstDecodePad * dpad, GstPad * pad, GstCaps * caps, GstDecodeChain * chain);
@@ -1810,7 +1814,7 @@ setup_caps_delay:
         gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
         pad_event_cb, ppad, NULL);
     chain->pending_pads = g_list_prepend (chain->pending_pads, ppad);
-    g_signal_connect (G_OBJECT (pad), "notify::caps",
+    ppad->notify_caps_id = g_signal_connect (pad, "notify::caps",
         G_CALLBACK (caps_notify_cb), chain);
     CHAIN_MUTEX_UNLOCK (chain);
 
@@ -2071,7 +2075,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     GST_LOG_OBJECT (dbin, "linked on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
     CHAIN_MUTEX_LOCK (chain);
-    delem = g_slice_new (GstDecodeElement);
+    delem = g_slice_new0 (GstDecodeElement);
     delem->element = gst_object_ref (element);
     delem->capsfilter = NULL;
     chain->elements = g_list_prepend (chain->elements, delem);
@@ -2121,7 +2125,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     }
 
     /* link this element further */
-    connect_element (dbin, element, chain);
+    connect_element (dbin, delem, chain);
 
     /* try to configure the subtitle encoding property when we can */
     pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element),
@@ -2158,9 +2162,12 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
         /* Disconnect any signal handlers that might be connected
          * in connect_element() or analyze_pad() */
-        g_signal_handlers_disconnect_by_func (tmp, pad_added_cb, chain);
-        g_signal_handlers_disconnect_by_func (tmp, pad_removed_cb, chain);
-        g_signal_handlers_disconnect_by_func (tmp, no_more_pads_cb, chain);
+        if (dtmp->pad_added_id)
+          g_signal_handler_disconnect (tmp, dtmp->pad_added_id);
+        if (dtmp->pad_removed_id)
+          g_signal_handler_disconnect (tmp, dtmp->pad_removed_id);
+        if (dtmp->no_more_pads_id)
+          g_signal_handler_disconnect (tmp, dtmp->no_more_pads_id);
 
         for (l = chain->pending_pads; l;) {
           GstPendingPad *pp = l->data;
@@ -2171,10 +2178,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
             continue;
           }
 
-          g_signal_handlers_disconnect_by_func (pp->pad, caps_notify_cb, chain);
-          gst_pad_remove_probe (pp->pad, pp->event_probe_id);
-          gst_object_unref (pp->pad);
-          g_slice_free (GstPendingPad, pp);
+          gst_pending_pad_free (pp);
 
           /* Remove element from the list, update list head and go to the
            * next element in the list */
@@ -2239,9 +2243,10 @@ get_pad_caps (GstPad * pad)
 }
 
 static gboolean
-connect_element (GstDecodeBin * dbin, GstElement * element,
+connect_element (GstDecodeBin * dbin, GstDecodeElement * delem,
     GstDecodeChain * chain)
 {
+  GstElement *element = delem->element;
   GList *pads;
   gboolean res = TRUE;
   gboolean dynamic = FALSE;
@@ -2313,11 +2318,11 @@ connect_element (GstDecodeBin * dbin, GstElement * element,
   if (dynamic) {
     GST_LOG_OBJECT (dbin, "Adding signals to element %s in chain %p",
         GST_ELEMENT_NAME (element), chain);
-    g_signal_connect (G_OBJECT (element), "pad-added",
+    delem->pad_added_id = g_signal_connect (element, "pad-added",
         G_CALLBACK (pad_added_cb), chain);
-    g_signal_connect (G_OBJECT (element), "pad-removed",
+    delem->pad_removed_id = g_signal_connect (element, "pad-removed",
         G_CALLBACK (pad_removed_cb), chain);
-    g_signal_connect (G_OBJECT (element), "no-more-pads",
+    delem->no_more_pads_id = g_signal_connect (element, "no-more-pads",
         G_CALLBACK (no_more_pads_cb), chain);
   }
 
@@ -2536,7 +2541,6 @@ pad_removed_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
     GstPad *opad = ppad->pad;
 
     if (pad == opad) {
-      g_signal_handlers_disconnect_by_func (pad, caps_notify_cb, chain);
       gst_pending_pad_free (ppad);
       chain->pending_pads = g_list_delete_link (chain->pending_pads, l);
       break;
@@ -2611,8 +2615,6 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstDecodeChain * chain)
 
   /* Disconnect this; if we still need it, we'll reconnect to this in
    * analyze_new_pad */
-  g_signal_handlers_disconnect_by_func (pad, caps_notify_cb, chain);
-
   element = GST_ELEMENT_CAST (gst_pad_get_parent (pad));
 
   CHAIN_MUTEX_LOCK (chain);
@@ -2837,9 +2839,6 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
 
   for (l = chain->pending_pads; l; l = l->next) {
     GstPendingPad *ppad = l->data;
-    GstPad *pad = ppad->pad;
-
-    g_signal_handlers_disconnect_by_func (pad, caps_notify_cb, chain);
     gst_pending_pad_free (ppad);
     l->data = NULL;
   }
@@ -2850,9 +2849,15 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
     GstDecodeElement *delem = l->data;
     GstElement *element = delem->element;
 
-    g_signal_handlers_disconnect_by_func (element, pad_added_cb, chain);
-    g_signal_handlers_disconnect_by_func (element, pad_removed_cb, chain);
-    g_signal_handlers_disconnect_by_func (element, no_more_pads_cb, chain);
+    if (delem->pad_added_id)
+      g_signal_handler_disconnect (element, delem->pad_added_id);
+    delem->pad_added_id = 0;
+    if (delem->pad_removed_id)
+      g_signal_handler_disconnect (element, delem->pad_removed_id);
+    delem->pad_removed_id = 0;
+    if (delem->no_more_pads_id)
+      g_signal_handler_disconnect (element, delem->no_more_pads_id);
+    delem->no_more_pads_id = 0;
 
     if (delem->capsfilter) {
       if (GST_OBJECT_PARENT (delem->capsfilter) ==
@@ -3187,7 +3192,7 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
   }
   decodebin_set_queue_size (dbin, mq, TRUE, seekable);
 
-  group->overrunsig = g_signal_connect (G_OBJECT (mq), "overrun",
+  group->overrunsig = g_signal_connect (mq, "overrun",
       G_CALLBACK (multi_queue_overrun_cb), group);
 
   gst_bin_add (GST_BIN (dbin), gst_object_ref (mq));
@@ -4299,6 +4304,8 @@ gst_pending_pad_free (GstPendingPad * ppad)
 
   if (ppad->event_probe_id != 0)
     gst_pad_remove_probe (ppad->pad, ppad->event_probe_id);
+  if (ppad->notify_caps_id)
+    g_signal_handler_disconnect (ppad->pad, ppad->notify_caps_id);
   gst_object_unref (ppad->pad);
   g_slice_free (GstPendingPad, ppad);
 }
