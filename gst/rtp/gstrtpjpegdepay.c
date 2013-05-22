@@ -41,6 +41,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
         /*
          * "width = (int) 0, "
          * "height = (int) 0, "
+         * "framerate = (fraction) 0/1, "
+         * "x-dimensions = (string) "0\,0", "
          */
     );
 
@@ -56,6 +58,7 @@ static GstStaticPadTemplate gst_rtp_jpeg_depay_sink_template =
         /*
          * "width = (int) 0, "
          * "height = (int) 0, "
+         * "framerate = (fraction) 0/1, "
          * "a-framerate = (string) 0.00, "
          * "x-framerate = (string) 0.00, "
          * "x-dimensions = (string) "0\,0", "
@@ -68,6 +71,7 @@ static GstStaticPadTemplate gst_rtp_jpeg_depay_sink_template =
         /*
          * "width = (int) 0, "
          * "height = (int) 0, "
+         * "framerate = (fraction) 0/1, "
          * "a-framerate = (string) 0.00, "
          * "x-framerate = (string) 0.00, "
          * "x-dimensions = (string) "0\,0", "
@@ -439,6 +443,7 @@ gst_rtp_jpeg_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   gint clock_rate;
   const gchar *media_attr;
   gint width = 0, height = 0;
+  gint num = 0, denom = 1;
 
   rtpjpegdepay = GST_RTP_JPEG_DEPAY (depayload);
 
@@ -448,14 +453,6 @@ gst_rtp_jpeg_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
     clock_rate = 90000;
   depayload->clock_rate = clock_rate;
-
-  /* reset defaults */
-  rtpjpegdepay->width = 0;
-  rtpjpegdepay->height = 0;
-  rtpjpegdepay->media_width = 0;
-  rtpjpegdepay->media_height = 0;
-  rtpjpegdepay->frate_num = 0;
-  rtpjpegdepay->frate_denom = 1;
 
   /* check for optional SDP attributes */
   if ((media_attr = gst_structure_get_string (structure, "x-dimensions"))) {
@@ -478,9 +475,8 @@ gst_rtp_jpeg_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     media_attr = gst_structure_get_string (structure, "x-framerate");
 
   if (media_attr) {
-    GValue src = { 0 };
-    GValue dest = { 0 };
     gchar *s;
+    gdouble rate;
 
     /* canonicalise floating point string so we can handle framerate strings
      * in the form "24.930" or "24,930" irrespective of the current locale */
@@ -488,25 +484,36 @@ gst_rtp_jpeg_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     g_strdelimit (s, ",", '.');
 
     /* convert the float to a fraction */
-    g_value_init (&src, G_TYPE_DOUBLE);
-    g_value_set_double (&src, g_ascii_strtod (s, NULL));
-    g_value_init (&dest, GST_TYPE_FRACTION);
-    g_value_transform (&src, &dest);
-
-    rtpjpegdepay->frate_num = gst_value_get_fraction_numerator (&dest);
-    rtpjpegdepay->frate_denom = gst_value_get_fraction_denominator (&dest);
-
+    rate = g_ascii_strtod (s, NULL);
+    gst_util_double_to_fraction (rate, &num, &denom);
     g_free (s);
+    if (num < 0 || denom <= 0) {
+      goto invalid_framerate;
+    }
   }
 
+  if (gst_structure_get_fraction (structure, "framerate", &num, &denom) &&
+      (num < 0 || denom <= 0)) {
+    goto invalid_framerate;
+  }
+
+  rtpjpegdepay->width = 0;
+  rtpjpegdepay->height = 0;
   rtpjpegdepay->media_width = width;
   rtpjpegdepay->media_height = height;
+  rtpjpegdepay->frate_num = num;
+  rtpjpegdepay->frate_denom = denom;
 
   return TRUE;
 
 invalid_dimension:
   {
     GST_ERROR_OBJECT (rtpjpegdepay, "invalid width/height from caps");
+    return FALSE;
+  }
+invalid_framerate:
+  {
+    GST_ERROR_OBJECT (rtpjpegdepay, "invalid framerate from caps");
     return FALSE;
   }
 }
@@ -643,13 +650,16 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     if (rtpjpegdepay->width != width || rtpjpegdepay->height != height) {
       GstCaps *outcaps;
 
-      outcaps =
-          gst_caps_new_simple ("image/jpeg", "framerate", GST_TYPE_FRACTION,
-          rtpjpegdepay->frate_num, rtpjpegdepay->frate_denom, NULL);
+      outcaps = gst_caps_new_empty_simple ("image/jpeg");
 
       if (width > 0 && height > 0) {
         gst_caps_set_simple (outcaps, "width", G_TYPE_INT, width, "height",
             G_TYPE_INT, height, NULL);
+      }
+
+      if (rtpjpegdepay->frate_num > 0) {
+        gst_caps_set_simple (outcaps, "framerate", GST_TYPE_FRACTION,
+            rtpjpegdepay->frate_num, rtpjpegdepay->frate_denom, NULL);
       }
 
       gst_pad_set_caps (depayload->srcpad, outcaps);
