@@ -105,7 +105,8 @@ gst_vaapi_image_pool_new(GstVaapiDisplay *display, GstCaps *caps)
     if (!pool)
         return NULL;
 
-    gst_vaapi_video_pool_init(pool, display);
+    gst_vaapi_video_pool_init(pool, display,
+        GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE);
     if (!gst_vaapi_image_pool_set_caps(pool, caps))
         goto error;
     return pool;

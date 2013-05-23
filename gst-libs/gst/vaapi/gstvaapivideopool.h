@@ -34,6 +34,18 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiVideoPool               GstVaapiVideoPool;
 
+/**
+ * GstVaapiVideoPoolObjectType:
+ * @GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE: #GstVaapiImage objects.
+ * @GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE: #GstVaapiSurface objects.
+ *
+ * The set of all supported #GstVaapiVideoPool object types.
+ */
+typedef enum {
+    GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE = 1,
+    GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE
+} GstVaapiVideoPoolObjectType;
+
 GstVaapiVideoPool *
 gst_vaapi_video_pool_ref(GstVaapiVideoPool *pool);
 
@@ -46,6 +58,9 @@ gst_vaapi_video_pool_replace(GstVaapiVideoPool **old_pool_ptr,
 
 GstVaapiDisplay *
 gst_vaapi_video_pool_get_display(GstVaapiVideoPool *pool);
+
+GstVaapiVideoPoolObjectType
+gst_vaapi_video_pool_get_object_type(GstVaapiVideoPool *pool);
 
 gpointer
 gst_vaapi_video_pool_get_object(GstVaapiVideoPool *pool);

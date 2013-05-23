@@ -44,6 +44,7 @@ struct _GstVaapiVideoPool {
     /*< private >*/
     GstVaapiMiniObject  parent_instance;
 
+    guint               object_type;
     GstVaapiDisplay    *display;
     GQueue              free_objects;
     GList              *used_objects;
@@ -67,7 +68,8 @@ struct _GstVaapiVideoPoolClass {
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_video_pool_init(GstVaapiVideoPool *pool, GstVaapiDisplay *display);
+gst_vaapi_video_pool_init(GstVaapiVideoPool *pool, GstVaapiDisplay *display,
+    GstVaapiVideoPoolObjectType object_type);
 
 G_GNUC_INTERNAL
 void

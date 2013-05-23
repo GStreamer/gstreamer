@@ -54,8 +54,10 @@ gst_vaapi_video_pool_alloc_object(GstVaapiVideoPool *pool)
 }
 
 void
-gst_vaapi_video_pool_init(GstVaapiVideoPool *pool, GstVaapiDisplay *display)
+gst_vaapi_video_pool_init(GstVaapiVideoPool *pool, GstVaapiDisplay *display,
+    GstVaapiVideoPoolObjectType object_type)
 {
+    pool->object_type   = object_type;
     pool->display       = gst_vaapi_display_ref(display);
     pool->used_objects  = NULL;
     pool->used_count    = 0;
@@ -130,6 +132,23 @@ gst_vaapi_video_pool_get_display(GstVaapiVideoPool *pool)
     g_return_val_if_fail(pool != NULL, NULL);
 
     return pool->display;
+}
+
+/**
+ * gst_vaapi_video_pool_get_object_type:
+ * @pool: a #GstVaapiVideoPool
+ *
+ * Retrieves the type of objects the video @pool supports.
+ *
+ * Return value: the #GstVaapiVideoPoolObjectType of the underlying pool
+ *   objects
+ */
+GstVaapiVideoPoolObjectType
+gst_vaapi_video_pool_get_object_type(GstVaapiVideoPool *pool)
+{
+    g_return_val_if_fail(pool != NULL, (GstVaapiVideoPoolObjectType)0);
+
+    return pool->object_type;
 }
 
 /**
