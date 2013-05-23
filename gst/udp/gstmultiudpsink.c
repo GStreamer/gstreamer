@@ -823,11 +823,17 @@ gst_multiudpsink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_SOCKET:
       g_value_set_object (value, udpsink->socket);
       break;
+    case PROP_SOCKET_V6:
+      g_value_set_object (value, udpsink->socket_v6);
+      break;
     case PROP_CLOSE_SOCKET:
       g_value_set_boolean (value, udpsink->close_socket);
       break;
     case PROP_USED_SOCKET:
       g_value_set_object (value, udpsink->used_socket);
+      break;
+    case PROP_USED_SOCKET_V6:
+      g_value_set_object (value, udpsink->used_socket_v6);
       break;
     case PROP_CLIENTS:
       g_value_take_string (value,
