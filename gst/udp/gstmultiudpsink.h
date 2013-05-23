@@ -83,6 +83,8 @@ struct _GstMultiUDPSink {
 
   gboolean       send_duplicates;
   gint           buffer_size;
+  gchar         *bind_address;
+  gint           bind_port;
 };
 
 struct _GstMultiUDPSinkClass {

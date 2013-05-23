@@ -54,13 +54,17 @@ enum
 
 #define UDP_DEFAULT_SOCKET		NULL
 #define UDP_DEFAULT_CLOSE_SOCKET	TRUE
+#define UDP_DEFAULT_BIND_ADDRESS	NULL
+#define UDP_DEFAULT_BIND_PORT   	0
 
 enum
 {
   PROP_0,
   PROP_SOCKET,
   PROP_SOCKET_V6,
-  PROP_CLOSE_SOCKET
+  PROP_CLOSE_SOCKET,
+  PROP_BIND_ADDRESS,
+  PROP_BIND_PORT
 };
 
 static void gst_dynudpsink_finalize (GObject * object);
@@ -121,6 +125,14 @@ gst_dynudpsink_class_init (GstDynUDPSinkClass * klass)
           "Close socket if passed as property on state change",
           UDP_DEFAULT_CLOSE_SOCKET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_BIND_ADDRESS,
+      g_param_spec_string ("bind-address", "Bind Address",
+          "Address to bind the socket to", UDP_DEFAULT_BIND_ADDRESS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_BIND_PORT,
+      g_param_spec_int ("bind-port", "Bind Port",
+          "Port to bind the socket to", 0, G_MAXUINT16,
+          UDP_DEFAULT_BIND_PORT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
@@ -148,6 +160,8 @@ gst_dynudpsink_init (GstDynUDPSink * sink)
   sink->socket_v6 = UDP_DEFAULT_SOCKET;
   sink->close_socket = UDP_DEFAULT_CLOSE_SOCKET;
   sink->external_socket = FALSE;
+  sink->bind_address = UDP_DEFAULT_BIND_ADDRESS;
+  sink->bind_port = UDP_DEFAULT_BIND_PORT;
 
   sink->used_socket = NULL;
   sink->used_socket_v6 = NULL;
@@ -180,6 +194,9 @@ gst_dynudpsink_finalize (GObject * object)
   if (sink->used_socket_v6)
     g_object_unref (sink->used_socket_v6);
   sink->used_socket_v6 = NULL;
+
+  g_free (sink->bind_address);
+  sink->bind_address = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -306,6 +323,13 @@ gst_dynudpsink_set_property (GObject * object, guint prop_id,
     case PROP_CLOSE_SOCKET:
       udpsink->close_socket = g_value_get_boolean (value);
       break;
+    case PROP_BIND_ADDRESS:
+      g_free (udpsink->bind_address);
+      udpsink->bind_address = g_value_dup_string (value);
+      break;
+    case PROP_BIND_PORT:
+      udpsink->bind_port = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -329,6 +353,12 @@ gst_dynudpsink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_CLOSE_SOCKET:
       g_value_set_boolean (value, udpsink->close_socket);
+      break;
+    case PROP_BIND_ADDRESS:
+      g_value_set_string (value, udpsink->bind_address);
+      break;
+    case PROP_BIND_PORT:
+      g_value_set_int (value, udpsink->bind_port);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -376,32 +406,70 @@ gst_dynudpsink_start (GstBaseSink * bsink)
     GSocketAddress *bind_addr;
     GInetAddress *bind_iaddr;
 
-    /* create sender sockets if none available */
-    if ((udpsink->used_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
-                G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL)
-      goto no_socket;
+    if (udpsink->bind_address) {
+      GSocketFamily family;
 
-    bind_iaddr = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
-    bind_addr = g_inet_socket_address_new (bind_iaddr, 0);
-    g_socket_bind (udpsink->used_socket, bind_addr, TRUE, &err);
-    g_object_unref (bind_addr);
-    g_object_unref (bind_iaddr);
-    if (err != NULL)
-      goto bind_error;
+      bind_iaddr = g_inet_address_new_from_string (udpsink->bind_address);
+      if (!bind_iaddr) {
+        GList *results;
+        GResolver *resolver;
 
-    if ((udpsink->used_socket_v6 = g_socket_new (G_SOCKET_FAMILY_IPV6,
-                G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL) {
-      GST_INFO_OBJECT (udpsink, "Failed to create IPv6 socket: %s",
-          err->message);
-      g_clear_error (&err);
+        resolver = g_resolver_get_default ();
+        results =
+            g_resolver_lookup_by_name (resolver, udpsink->bind_address,
+            udpsink->cancellable, &err);
+        if (!results) {
+          g_object_unref (resolver);
+          goto name_resolve;
+        }
+        bind_iaddr = G_INET_ADDRESS (g_object_ref (results->data));
+        g_resolver_free_addresses (results);
+        g_object_unref (resolver);
+      }
+
+      bind_addr = g_inet_socket_address_new (bind_iaddr, udpsink->bind_port);
+      g_object_unref (bind_iaddr);
+      family = g_socket_address_get_family (G_SOCKET_ADDRESS (bind_addr));
+
+      if ((udpsink->used_socket =
+              g_socket_new (family, G_SOCKET_TYPE_DATAGRAM,
+                  G_SOCKET_PROTOCOL_UDP, &err)) == NULL) {
+        g_object_unref (bind_addr);
+        goto no_socket;
+      }
+
+      g_socket_bind (udpsink->used_socket, bind_addr, TRUE, &err);
+      if (err != NULL)
+        goto bind_error;
     } else {
-      bind_iaddr = g_inet_address_new_any (G_SOCKET_FAMILY_IPV6);
+      /* create sender sockets if none available */
+      if ((udpsink->used_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
+                  G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL)
+        goto no_socket;
+
+      bind_iaddr = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
       bind_addr = g_inet_socket_address_new (bind_iaddr, 0);
-      g_socket_bind (udpsink->used_socket_v6, bind_addr, TRUE, &err);
+      g_socket_bind (udpsink->used_socket, bind_addr, TRUE, &err);
       g_object_unref (bind_addr);
       g_object_unref (bind_iaddr);
       if (err != NULL)
         goto bind_error;
+
+      if ((udpsink->used_socket_v6 = g_socket_new (G_SOCKET_FAMILY_IPV6,
+                  G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP,
+                  &err)) == NULL) {
+        GST_INFO_OBJECT (udpsink, "Failed to create IPv6 socket: %s",
+            err->message);
+        g_clear_error (&err);
+      } else {
+        bind_iaddr = g_inet_address_new_any (G_SOCKET_FAMILY_IPV6);
+        bind_addr = g_inet_socket_address_new (bind_iaddr, 0);
+        g_socket_bind (udpsink->used_socket_v6, bind_addr, TRUE, &err);
+        g_object_unref (bind_addr);
+        g_object_unref (bind_iaddr);
+        if (err != NULL)
+          goto bind_error;
+      }
     }
   }
 
@@ -424,6 +492,14 @@ bind_error:
   {
     GST_ELEMENT_ERROR (udpsink, RESOURCE, FAILED, (NULL),
         ("Failed to bind socket: %s", err->message));
+    g_clear_error (&err);
+    return FALSE;
+  }
+name_resolve:
+  {
+    GST_ELEMENT_ERROR (udpsink, RESOURCE, FAILED, (NULL),
+        ("Failed to resolve bind address %s: %s", udpsink->bind_address,
+            err->message));
     g_clear_error (&err);
     return FALSE;
   }

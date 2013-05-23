@@ -46,6 +46,8 @@ struct _GstDynUDPSink {
   /* properties */
   GSocket *socket, *socket_v6;
   gboolean close_socket;
+  gchar *bind_address;
+  gint bind_port;
 
   /* the socket in use */
   GSocket *used_socket, *used_socket_v6;
