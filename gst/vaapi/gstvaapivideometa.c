@@ -224,7 +224,7 @@ gst_vaapi_video_meta_new(GstVaapiDisplay *display)
 {
     GstVaapiVideoMeta *meta;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(display != NULL, NULL);
 
     meta = _gst_vaapi_video_meta_new();
     if (G_UNLIKELY(!meta))
@@ -289,7 +289,7 @@ gst_vaapi_video_meta_new_with_image(GstVaapiImage *image)
 {
     GstVaapiVideoMeta *meta;
 
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), NULL);
+    g_return_val_if_fail(image != NULL, NULL);
 
     meta = _gst_vaapi_video_meta_new();
     if (G_UNLIKELY(!meta))
@@ -316,7 +316,7 @@ gst_vaapi_video_meta_new_with_surface(GstVaapiSurface *surface)
 {
     GstVaapiVideoMeta *meta;
 
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), NULL);
+    g_return_val_if_fail(surface != NULL, NULL);
 
     meta = _gst_vaapi_video_meta_new();
     if (G_UNLIKELY(!meta))
@@ -671,7 +671,7 @@ guint
 gst_vaapi_video_meta_get_render_flags(GstVaapiVideoMeta *meta)
 {
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), 0);
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(meta->surface), 0);
+    g_return_val_if_fail(meta->surface != NULL, 0);
 
     return meta->render_flags;
 }
@@ -687,7 +687,7 @@ void
 gst_vaapi_video_meta_set_render_flags(GstVaapiVideoMeta *meta, guint flags)
 {
     g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
-    g_return_if_fail(GST_VAAPI_IS_SURFACE(meta->surface));
+    g_return_if_fail(meta->surface != NULL);
 
     meta->render_flags = flags;
 }

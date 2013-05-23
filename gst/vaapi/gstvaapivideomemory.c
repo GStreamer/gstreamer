@@ -366,7 +366,7 @@ gst_vaapi_video_allocator_new(GstVaapiDisplay *display, GstCaps *caps)
     GstVaapiSurface *surface;
     GstVaapiImage *image;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(display != NULL, NULL);
     g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
 
     allocator = g_object_new(GST_VAAPI_TYPE_VIDEO_ALLOCATOR, NULL);

@@ -295,7 +295,7 @@ gst_vaapi_uploader_ensure_display(
 )
 {
     g_return_val_if_fail(GST_VAAPI_IS_UPLOADER(uploader), FALSE);
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+    g_return_val_if_fail(display != NULL, FALSE);
 
     return ensure_display(uploader,display);
 }
