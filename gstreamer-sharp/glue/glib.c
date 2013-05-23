@@ -27,5 +27,9 @@ gboolean gstglibsharp_g_thread_supported (void);
 gboolean
 gstglibsharp_g_thread_supported ()
 {
+#if !GLIB_CHECK_VERSION (2, 35, 0)
   return g_thread_supported ();
+#else
+  return TRUE;
+#endif
 }
