@@ -155,6 +155,7 @@ check_PROGRAMS = \
 	elements/wavpackparse \
 	elements/wavparse \
 	elements/y4menc \
+	elements/videomixer \
 	pipelines/simple-launch-lines \
 	pipelines/effectv \
 	pipelines/tagschecking \
@@ -324,6 +325,8 @@ elements_gdkpixbufsink_CFLAGS = \
 elements_gdkpixbufsink_LDADD = \
 	$(LDADD) $(GDK_PIXBUF_LIBS)
 
+elements_videomixer_LDADD = $(LDADD)  $(GST_BASE_LIBS)
+elements_videomixer_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 pipelines_flacdec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 pipelines_flacdec_LDADD  = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) $(LDADD)
