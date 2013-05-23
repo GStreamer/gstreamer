@@ -73,6 +73,7 @@ struct _GstCurlSmtpSink
 
   gint nbr_attachments_left;
   gboolean reset_transfer_options;
+  gboolean final_boundary_added;
   gboolean eos;
 };
 

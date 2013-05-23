@@ -147,6 +147,26 @@ static size_t transfer_data_buffer (void *curl_ptr, TransferBuffer * buf,
 #define parent_class gst_curl_base_sink_parent_class
 G_DEFINE_TYPE (GstCurlBaseSink, gst_curl_base_sink, GST_TYPE_BASE_SINK);
 
+static gboolean
+gst_curl_base_sink_default_has_buffered_data_unlocked (GstCurlBaseSink * sink)
+{
+  return sink->transfer_buf->len > 0;
+}
+
+static gboolean
+gst_curl_base_sink_has_buffered_data_unlocked (GstCurlBaseSink * sink)
+{
+  GstCurlBaseSinkClass *klass;
+  gboolean res = FALSE;
+
+  klass = GST_CURL_BASE_SINK_GET_CLASS (sink);
+
+  if (klass->has_buffered_data_unlocked)
+    res = klass->has_buffered_data_unlocked (sink);
+
+  return res;
+}
+
 static void
 gst_curl_base_sink_class_init (GstCurlBaseSinkClass * klass)
 {
@@ -179,6 +199,8 @@ gst_curl_base_sink_class_init (GstCurlBaseSinkClass * klass)
   klass->handle_transfer = handle_transfer;
   klass->transfer_read_cb = gst_curl_base_sink_transfer_read_cb;
   klass->transfer_data_buffer = gst_curl_base_sink_transfer_data_buffer;
+  klass->has_buffered_data_unlocked =
+      gst_curl_base_sink_default_has_buffered_data_unlocked;
 
   /* FIXME: check against souphttpsrc and use same names for same properties */
   g_object_class_install_property (gobject_class, PROP_LOCATION,
@@ -685,9 +707,19 @@ gst_curl_base_sink_transfer_read_cb (void *curl_ptr, size_t size, size_t nmemb,
    * then zero will be returned to indicate end of current transfer */
   GST_OBJECT_LOCK (sink);
   if (gst_curl_base_sink_wait_for_data_unlocked (sink) == FALSE) {
+
+    if (gst_curl_base_sink_has_buffered_data_unlocked (sink) &&
+        sink->transfer_thread_close) {
+      GST_WARNING_OBJECT (sink,
+          "discarding render data due to thread close flag");
+
+      GST_OBJECT_UNLOCK (sink);
+      return CURL_READFUNC_ABORT;
+    }
+
     if (klass->flush_data_unlocked) {
       bytes_to_send = klass->flush_data_unlocked (sink, curl_ptr,
-          max_bytes_to_send, sink->new_file);
+          max_bytes_to_send, sink->new_file, sink->transfer_thread_close);
 
       GST_OBJECT_UNLOCK (sink);
 
@@ -800,6 +832,13 @@ handle_transfer (GstCurlBaseSink * sink)
       } else if (errno == EBUSY) {
         GST_DEBUG_OBJECT (sink, "poll stopped");
         retval = GST_FLOW_EOS;
+
+        GST_OBJECT_LOCK (sink);
+        if (gst_curl_base_sink_has_buffered_data_unlocked (sink))
+          GST_WARNING_OBJECT (sink,
+              "discarding render data due to thread close flag");
+        GST_OBJECT_UNLOCK (sink);
+
         goto fail;
       } else {
         GST_DEBUG_OBJECT (sink, "poll failed: %s", g_strerror (errno));
