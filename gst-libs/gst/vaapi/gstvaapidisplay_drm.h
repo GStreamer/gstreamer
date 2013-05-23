@@ -29,9 +29,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_DISPLAY_DRM(obj) \
     ((GstVaapiDisplayDRM *)(obj))
 
-#define GST_VAAPI_IS_DISPLAY_DRM(obj) \
-    ((obj) != NULL)
-
 typedef struct _GstVaapiDisplayDRM              GstVaapiDisplayDRM;
 
 GstVaapiDisplay *

@@ -30,9 +30,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_DISPLAY_WAYLAND(obj) \
     ((GstVaapiDisplayWayland *)(obj))
 
-#define GST_VAAPI_IS_DISPLAY_WAYLAND(obj) \
-    ((obj) != NULL)
-
 typedef struct _GstVaapiDisplayWayland          GstVaapiDisplayWayland;
 
 GstVaapiDisplay *

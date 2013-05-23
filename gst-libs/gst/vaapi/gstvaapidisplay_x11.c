@@ -452,7 +452,7 @@ gst_vaapi_display_x11_new_with_display(Display *x11_display)
 Display *
 gst_vaapi_display_x11_get_display(GstVaapiDisplayX11 *display)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_X11(display), NULL);
+    g_return_val_if_fail(display != NULL, NULL);
 
     return GST_VAAPI_DISPLAY_XDISPLAY(display);
 }
@@ -470,7 +470,7 @@ gst_vaapi_display_x11_get_display(GstVaapiDisplayX11 *display)
 int
 gst_vaapi_display_x11_get_screen(GstVaapiDisplayX11 *display)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_X11(display), -1);
+    g_return_val_if_fail(display != NULL, -1);
 
     return GST_VAAPI_DISPLAY_XSCREEN(display);
 }
@@ -490,7 +490,7 @@ void
 gst_vaapi_display_x11_set_synchronous(GstVaapiDisplayX11 *display,
     gboolean synchronous)
 {
-    g_return_if_fail(GST_VAAPI_IS_DISPLAY_X11(display));
+    g_return_if_fail(display != NULL);
 
     set_synchronous(display, synchronous);
 }

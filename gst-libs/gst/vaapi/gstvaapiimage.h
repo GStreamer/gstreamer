@@ -33,9 +33,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_IMAGE(obj) \
     ((GstVaapiImage *)(obj))
 
-#define GST_VAAPI_IS_IMAGE(obj) \
-    ((obj) != NULL)
-
 /**
  * GST_VAAPI_IMAGE_FORMAT:
  * @image: a #GstVaapiImage

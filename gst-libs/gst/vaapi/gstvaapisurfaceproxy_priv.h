@@ -31,9 +31,6 @@
 #define GST_VAAPI_SURFACE_PROXY(obj) \
     ((GstVaapiSurfaceProxy *)(obj))
 
-#define GST_VAAPI_IS_SURFACE_PROXY(obj) \
-    (GST_VAAPI_SURFACE_PROXY(obj) != NULL)
-
 struct _GstVaapiSurfaceProxy {
     /*< private >*/
     GstVaapiMiniObject  parent_instance;

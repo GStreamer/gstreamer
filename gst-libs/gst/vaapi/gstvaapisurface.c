@@ -218,7 +218,7 @@ error:
 GstVaapiID
 gst_vaapi_surface_get_id(GstVaapiSurface *surface)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), VA_INVALID_SURFACE);
+    g_return_val_if_fail(surface != NULL, VA_INVALID_SURFACE);
 
     return GST_VAAPI_OBJECT_ID(surface);
 }
@@ -234,7 +234,7 @@ gst_vaapi_surface_get_id(GstVaapiSurface *surface)
 GstVaapiChromaType
 gst_vaapi_surface_get_chroma_type(GstVaapiSurface *surface)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), 0);
+    g_return_val_if_fail(surface != NULL, 0);
 
     return surface->chroma_type;
 }
@@ -250,7 +250,7 @@ gst_vaapi_surface_get_chroma_type(GstVaapiSurface *surface)
 guint
 gst_vaapi_surface_get_width(GstVaapiSurface *surface)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), 0);
+    g_return_val_if_fail(surface != NULL, 0);
 
     return surface->width;
 }
@@ -266,7 +266,7 @@ gst_vaapi_surface_get_width(GstVaapiSurface *surface)
 guint
 gst_vaapi_surface_get_height(GstVaapiSurface *surface)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), 0);
+    g_return_val_if_fail(surface != NULL, 0);
 
     return surface->height;
 }
@@ -286,7 +286,7 @@ gst_vaapi_surface_get_size(
     guint           *pheight
 )
 {
-    g_return_if_fail(GST_VAAPI_IS_SURFACE(surface));
+    g_return_if_fail(surface != NULL);
 
     if (pwidth)
         *pwidth = gst_vaapi_surface_get_width(surface);
@@ -310,7 +310,7 @@ gst_vaapi_surface_set_parent_context(
     GstVaapiContext *context
 )
 {
-    g_return_if_fail(GST_VAAPI_IS_SURFACE(surface));
+    g_return_if_fail(surface != NULL);
 
     gst_vaapi_object_replace(&surface->parent_context, context);
 }
@@ -328,7 +328,7 @@ gst_vaapi_surface_set_parent_context(
 GstVaapiContext *
 gst_vaapi_surface_get_parent_context(GstVaapiSurface *surface)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), NULL);
+    g_return_val_if_fail(surface != NULL, NULL);
 
     return surface->parent_context;
 }
@@ -364,7 +364,7 @@ gst_vaapi_surface_derive_image(GstVaapiSurface *surface)
     VAImage va_image;
     VAStatus status;
 
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), NULL);
+    g_return_val_if_fail(surface != NULL, NULL);
 
     display           = GST_VAAPI_OBJECT_DISPLAY(surface);
     va_image.image_id = VA_INVALID_ID;
@@ -403,8 +403,8 @@ gst_vaapi_surface_get_image(GstVaapiSurface *surface, GstVaapiImage *image)
     VAStatus status;
     guint width, height;
 
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(surface != NULL, FALSE);
+    g_return_val_if_fail(image != NULL, FALSE);
 
     display = GST_VAAPI_OBJECT_DISPLAY(surface);
     if (!display)
@@ -450,8 +450,8 @@ gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image)
     VAStatus status;
     guint width, height;
 
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(surface != NULL, FALSE);
+    g_return_val_if_fail(image != NULL, FALSE);
 
     display = GST_VAAPI_OBJECT_DISPLAY(surface);
     if (!display)
@@ -508,8 +508,8 @@ gst_vaapi_surface_associate_subpicture(
 {
     gboolean success;
 
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
-    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), FALSE);
+    g_return_val_if_fail(surface != NULL, FALSE);
+    g_return_val_if_fail(subpicture != NULL, FALSE);
 
     if (!surface->subpictures) {
         surface->subpictures = g_ptr_array_new();
@@ -615,8 +615,8 @@ gst_vaapi_surface_deassociate_subpicture(
 {
     gboolean success;
 
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
-    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), FALSE);
+    g_return_val_if_fail(surface != NULL, FALSE);
+    g_return_val_if_fail(subpicture != NULL, FALSE);
 
     if (!surface->subpictures)
         return TRUE;
@@ -681,7 +681,7 @@ gst_vaapi_surface_sync(GstVaapiSurface *surface)
     GstVaapiDisplay *display;
     VAStatus status;
 
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
+    g_return_val_if_fail(surface != NULL, FALSE);
 
     display = GST_VAAPI_OBJECT_DISPLAY(surface);
     if (!display)
@@ -718,7 +718,7 @@ gst_vaapi_surface_query_status(
     VASurfaceStatus surface_status;
     VAStatus status;
 
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
+    g_return_val_if_fail(surface != NULL, FALSE);
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(surface);
     status = vaQuerySurfaceStatus(
@@ -758,7 +758,7 @@ gst_vaapi_surface_set_subpictures_from_composition(
     GstVaapiDisplay *display;
     guint n, nb_rectangles;
 
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
+    g_return_val_if_fail(surface != NULL, FALSE);
 
     if (propagate_context && surface->parent_context)
         return gst_vaapi_context_apply_composition(surface->parent_context,

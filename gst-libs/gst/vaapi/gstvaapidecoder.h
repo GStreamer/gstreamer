@@ -34,9 +34,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_DECODER(obj) \
     ((GstVaapiDecoder *)(obj))
 
-#define GST_VAAPI_IS_DECODER(obj) \
-    ((obj) != NULL)
-
 typedef struct _GstVaapiDecoder                 GstVaapiDecoder;
 typedef void (*GstVaapiDecoderStateChangedFunc)(GstVaapiDecoder *decoder,
     const GstVideoCodecState *codec_state, gpointer user_data);

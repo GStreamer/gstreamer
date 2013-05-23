@@ -83,7 +83,7 @@ gst_vaapi_object_new(const GstVaapiObjectClass *klass, GstVaapiDisplay *display)
     GstVaapiObject *object;
     guint sub_size;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(display != NULL, NULL);
 
     object = (GstVaapiObject *)gst_vaapi_mini_object_new(object_class);
     if (!object)
@@ -151,7 +151,7 @@ gst_vaapi_object_replace(gpointer old_object_ptr, gpointer new_object)
 GstVaapiDisplay *
 gst_vaapi_object_get_display(GstVaapiObject *object)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_OBJECT(object), NULL);
+    g_return_val_if_fail(object != NULL, NULL);
 
     return GST_VAAPI_OBJECT_DISPLAY(object);
 }
@@ -167,7 +167,7 @@ gst_vaapi_object_get_display(GstVaapiObject *object)
 void
 gst_vaapi_object_lock_display(GstVaapiObject *object)
 {
-    g_return_if_fail(GST_VAAPI_IS_OBJECT(object));
+    g_return_if_fail(object != NULL);
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(object);
 }
@@ -183,7 +183,7 @@ gst_vaapi_object_lock_display(GstVaapiObject *object)
 void
 gst_vaapi_object_unlock_display(GstVaapiObject *object)
 {
-    g_return_if_fail(GST_VAAPI_IS_OBJECT(object));
+    g_return_if_fail(object != NULL);
 
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(object);
 }
@@ -199,7 +199,7 @@ gst_vaapi_object_unlock_display(GstVaapiObject *object)
 GstVaapiID
 gst_vaapi_object_get_id(GstVaapiObject *object)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_OBJECT(object), 0);
+    g_return_val_if_fail(object != NULL, 0);
 
     return GST_VAAPI_OBJECT_ID(object);
 }

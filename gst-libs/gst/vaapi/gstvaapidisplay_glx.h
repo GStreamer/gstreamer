@@ -32,9 +32,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_DISPLAY_GLX(obj) \
     ((GstVaapiDisplayGLX *)(obj))
 
-#define GST_VAAPI_IS_DISPLAY_GLX(obj) \
-    ((obj) != NULL)
-
 typedef struct _GstVaapiDisplayGLX              GstVaapiDisplayGLX;
 
 GstVaapiDisplay *

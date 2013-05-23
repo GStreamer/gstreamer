@@ -63,7 +63,7 @@ gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool)
 {
     GstVaapiSurfaceProxy *proxy;
 
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_POOL(pool), NULL);
+    g_return_val_if_fail(pool != NULL, NULL);
 
     proxy = (GstVaapiSurfaceProxy *)
         gst_vaapi_mini_object_new(gst_vaapi_surface_proxy_class());
@@ -96,7 +96,7 @@ error:
 GstVaapiSurfaceProxy *
 gst_vaapi_surface_proxy_ref(GstVaapiSurfaceProxy *proxy)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
+    g_return_val_if_fail(proxy != NULL, NULL);
 
     return GST_VAAPI_SURFACE_PROXY(gst_vaapi_mini_object_ref(
                                        GST_VAAPI_MINI_OBJECT(proxy)));
@@ -112,7 +112,7 @@ gst_vaapi_surface_proxy_ref(GstVaapiSurfaceProxy *proxy)
 void
 gst_vaapi_surface_proxy_unref(GstVaapiSurfaceProxy *proxy)
 {
-    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
+    g_return_if_fail(proxy != NULL);
 
     gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(proxy));
 }
@@ -147,7 +147,7 @@ gst_vaapi_surface_proxy_replace(GstVaapiSurfaceProxy **old_proxy_ptr,
 GstVaapiSurface *
 gst_vaapi_surface_proxy_get_surface(GstVaapiSurfaceProxy *proxy)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
+    g_return_val_if_fail(proxy != NULL, NULL);
 
     return GST_VAAPI_SURFACE_PROXY_SURFACE(proxy);
 }
@@ -164,7 +164,7 @@ gst_vaapi_surface_proxy_get_surface(GstVaapiSurfaceProxy *proxy)
 guint
 gst_vaapi_surface_proxy_get_flags(GstVaapiSurfaceProxy *proxy)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), 0);
+    g_return_val_if_fail(proxy != NULL, 0);
     
     return GST_VAAPI_SURFACE_PROXY_FLAGS(proxy);
 }
@@ -180,7 +180,7 @@ gst_vaapi_surface_proxy_get_flags(GstVaapiSurfaceProxy *proxy)
 GstVaapiID
 gst_vaapi_surface_proxy_get_surface_id(GstVaapiSurfaceProxy *proxy)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), 0);
+    g_return_val_if_fail(proxy != NULL, 0);
     g_return_val_if_fail(proxy->surface != NULL, 0);
 
     return GST_VAAPI_SURFACE_PROXY_SURFACE_ID(proxy);
@@ -197,7 +197,7 @@ gst_vaapi_surface_proxy_get_surface_id(GstVaapiSurfaceProxy *proxy)
 GstClockTime
 gst_vaapi_surface_proxy_get_timestamp(GstVaapiSurfaceProxy *proxy)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), 0);
+    g_return_val_if_fail(proxy != NULL, 0);
     
     return GST_VAAPI_SURFACE_PROXY_TIMESTAMP(proxy);
 }
@@ -213,7 +213,7 @@ gst_vaapi_surface_proxy_get_timestamp(GstVaapiSurfaceProxy *proxy)
 GstClockTime
 gst_vaapi_surface_proxy_get_duration(GstVaapiSurfaceProxy *proxy)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), 0);
+    g_return_val_if_fail(proxy != NULL, 0);
     
     return GST_VAAPI_SURFACE_PROXY_DURATION(proxy);
 }
@@ -233,7 +233,7 @@ void
 gst_vaapi_surface_proxy_set_destroy_notify(GstVaapiSurfaceProxy *proxy,
     GDestroyNotify destroy_func, gpointer user_data)
 {
-    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
+    g_return_if_fail(proxy != NULL);
 
     proxy->destroy_func = destroy_func;
     proxy->destroy_data = user_data;

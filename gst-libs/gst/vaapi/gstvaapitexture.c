@@ -245,7 +245,7 @@ gst_vaapi_texture_new(
 {
     GstVaapiTexture *texture;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(display != NULL, NULL);
     g_return_val_if_fail(target != GL_NONE, NULL);
     g_return_val_if_fail(format != GL_NONE, NULL);
     g_return_val_if_fail(width > 0, NULL);
@@ -297,7 +297,7 @@ gst_vaapi_texture_new_with_texture(
     GLTextureState ts;
     gboolean success;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(display != NULL, NULL);
     g_return_val_if_fail(target != GL_NONE, NULL);
     g_return_val_if_fail(format != GL_NONE, NULL);
 
@@ -598,7 +598,7 @@ gst_vaapi_texture_put_surface(
 )
 {
     g_return_val_if_fail(texture != NULL, FALSE);
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
+    g_return_val_if_fail(surface != NULL, FALSE);
 
     return _gst_vaapi_texture_put_surface(texture, surface, flags);
 }

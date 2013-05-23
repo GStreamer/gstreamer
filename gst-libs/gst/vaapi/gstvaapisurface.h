@@ -115,9 +115,6 @@ typedef enum {
 #define GST_VAAPI_SURFACE(obj) \
     ((GstVaapiSurface *)(obj))
 
-#define GST_VAAPI_IS_SURFACE(obj) \
-    ((obj) != NULL)
-
 typedef struct _GstVaapiSurface                 GstVaapiSurface;
 typedef struct _GstVaapiSurfaceProxy            GstVaapiSurfaceProxy;
 

@@ -34,9 +34,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_CONTEXT(obj) \
     ((GstVaapiContext *)(obj))
 
-#define GST_VAAPI_IS_CONTEXT(obj) \
-    ((obj) != NULL)
-
 typedef struct _GstVaapiContext                 GstVaapiContext;
 typedef struct _GstVaapiContextInfo             GstVaapiContextInfo;
 

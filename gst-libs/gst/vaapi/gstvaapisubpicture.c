@@ -135,7 +135,7 @@ gst_vaapi_subpicture_new(GstVaapiImage *image, guint flags)
     GstVaapiImageFormat format;
     guint va_flags;
 
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), NULL);
+    g_return_val_if_fail(image != NULL, NULL);
 
     GST_DEBUG("create from image %" GST_VAAPI_ID_FORMAT,
               GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(image)));
@@ -273,7 +273,7 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
 GstVaapiID
 gst_vaapi_subpicture_get_id(GstVaapiSubpicture *subpicture)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), VA_INVALID_ID);
+    g_return_val_if_fail(subpicture != NULL, VA_INVALID_ID);
 
     return GST_VAAPI_OBJECT_ID(subpicture);
 }
@@ -289,7 +289,7 @@ gst_vaapi_subpicture_get_id(GstVaapiSubpicture *subpicture)
 guint
 gst_vaapi_subpicture_get_flags(GstVaapiSubpicture *subpicture)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), 0);
+    g_return_val_if_fail(subpicture != NULL, 0);
 
     return subpicture->flags;
 }
@@ -305,7 +305,7 @@ gst_vaapi_subpicture_get_flags(GstVaapiSubpicture *subpicture)
 GstVaapiImage *
 gst_vaapi_subpicture_get_image(GstVaapiSubpicture *subpicture)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), NULL);
+    g_return_val_if_fail(subpicture != NULL, NULL);
 
     return subpicture->image;
 }
@@ -324,8 +324,8 @@ gboolean
 gst_vaapi_subpicture_set_image(GstVaapiSubpicture *subpicture,
     GstVaapiImage *image)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), FALSE);
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(subpicture != NULL, FALSE);
+    g_return_val_if_fail(image != NULL, FALSE);
 
     gst_vaapi_subpicture_destroy(subpicture);
     return gst_vaapi_subpicture_create(subpicture, image);
@@ -342,7 +342,7 @@ gst_vaapi_subpicture_set_image(GstVaapiSubpicture *subpicture,
 gfloat
 gst_vaapi_subpicture_get_global_alpha(GstVaapiSubpicture *subpicture)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), 1.0);
+    g_return_val_if_fail(subpicture != NULL, 1.0);
 
     return subpicture->global_alpha;
 }
@@ -365,7 +365,7 @@ gst_vaapi_subpicture_set_global_alpha(GstVaapiSubpicture *subpicture,
     GstVaapiDisplay *display;
     VAStatus status;
 
-    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), FALSE);
+    g_return_val_if_fail(subpicture != NULL, FALSE);
 
     if (!(subpicture->flags & GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA))
         return FALSE;

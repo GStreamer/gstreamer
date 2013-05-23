@@ -31,9 +31,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_SURFACE_POOL(obj) \
     ((GstVaapiSurfacePool *)(obj))
 
-#define GST_VAAPI_IS_SURFACE_POOL(obj) \
-    ((obj) != NULL)
-
 typedef struct _GstVaapiSurfacePool             GstVaapiSurfacePool;
 
 GstVaapiVideoPool *

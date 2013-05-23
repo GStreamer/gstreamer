@@ -32,9 +32,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_WINDOW_X11(obj) \
     ((GstVaapiWindowX11 *)(obj))
 
-#define GST_VAAPI_IS_WINDOW_X11(obj) \
-    ((obj) != NULL)
-
 /**
  * GST_VAAPI_WINDOW_XWINDOW:
  * @window: a #GstVaapiWindow

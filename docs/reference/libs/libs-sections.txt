@@ -5,7 +5,6 @@ GstVaapiSurfacePool
 gst_vaapi_surface_pool_new
 <SUBSECTION Standard>
 GST_VAAPI_SURFACE_POOL
-GST_VAAPI_IS_SURFACE_POOL
 gst_vaapi_surface_pool_get_type
 </SECTION>
 
@@ -24,7 +23,6 @@ gst_vaapi_video_pool_get_size
 gst_vaapi_video_pool_reserve
 <SUBSECTION Standard>
 GST_VAAPI_VIDEO_POOL
-GST_VAAPI_IS_VIDEO_POOL
 </SECTION>
 
 <SECTION>
@@ -37,7 +35,6 @@ gst_vaapi_display_x11_get_display
 gst_vaapi_display_x11_get_screen
 <SUBSECTION Standard>
 GST_VAAPI_DISPLAY_X11
-GST_VAAPI_IS_DISPLAY_X11
 </SECTION>
 
 <SECTION>
@@ -51,7 +48,6 @@ gst_vaapi_window_x11_get_xid
 gst_vaapi_window_x11_is_foreign_xid
 <SUBSECTION Standard>
 GST_VAAPI_WINDOW_X11
-GST_VAAPI_IS_WINDOW_X11
 </SECTION>
 
 <SECTION>
@@ -62,7 +58,6 @@ gst_vaapi_display_glx_new
 gst_vaapi_display_glx_new_with_display
 <SUBSECTION Standard>
 GST_VAAPI_DISPLAY_GLX
-GST_VAAPI_IS_DISPLAY_GLX
 </SECTION>
 
 <SECTION>
@@ -109,7 +104,6 @@ gst_vaapi_display_get_render_mode
 gst_vaapi_display_set_render_mode
 <SUBSECTION Standard>
 GST_VAAPI_DISPLAY
-GST_VAAPI_IS_DISPLAY
 </SECTION>
 
 <SECTION>
@@ -119,7 +113,6 @@ GstVaapiImagePool
 gst_vaapi_image_pool_new
 <SUBSECTION Standard>
 GST_VAAPI_IMAGE_POOL
-GST_VAAPI_IS_IMAGE_POOL
 </SECTION>
 
 <SECTION>
@@ -150,7 +143,6 @@ gst_vaapi_window_set_size
 gst_vaapi_window_put_surface
 <SUBSECTION Standard>
 GST_VAAPI_WINDOW
-GST_VAAPI_IS_WINDOW
 </SECTION>
 
 <SECTION>
@@ -163,7 +155,6 @@ gst_vaapi_object_unlock_display
 gst_vaapi_object_get_id
 <SUBSECTION Standard>
 GST_VAAPI_OBJECT
-GST_VAAPI_IS_OBJECT
 </SECTION>
 
 <SECTION>
@@ -194,7 +185,6 @@ gst_vaapi_image_get_raw
 gst_vaapi_image_update_from_buffer
 <SUBSECTION Standard>
 GST_VAAPI_IMAGE
-GST_VAAPI_IS_IMAGE
 </SECTION>
 
 <SECTION>
@@ -219,7 +209,6 @@ gst_vaapi_surface_sync
 gst_vaapi_surface_query_status
 <SUBSECTION Standard>
 GST_VAAPI_SURFACE
-GST_VAAPI_IS_SURFACE
 </SECTION>
 
 <SECTION>
@@ -236,7 +225,6 @@ gst_vaapi_subpicture_get_image
 gst_vaapi_subpicture_set_image
 <SUBSECTION Standard>
 GST_VAAPI_SUBPICTURE
-GST_VAAPI_IS_SUBPICTURE
 </SECTION>
 
 <SECTION>
@@ -300,7 +288,6 @@ gst_vaapi_context_get_surface_count
 gst_vaapi_context_apply_composition
 <SUBSECTION Standard>
 GST_VAAPI_CONTEXT
-GST_VAAPI_IS_CONTEXT
 </SECTION>
 
 <SECTION>
@@ -319,7 +306,6 @@ gst_vaapi_decoder_parse
 gst_vaapi_decoder_decode
 <SUBSECTION Standard>
 GST_VAAPI_DECODER
-GST_VAAPI_IS_DECODER
 </SECTION>
 
 <SECTION>

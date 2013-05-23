@@ -516,7 +516,7 @@ gst_vaapi_decoder_new(const GstVaapiDecoderClass *klass,
 {
     GstVaapiDecoder *decoder;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(display != NULL, NULL);
     g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
 
     decoder = (GstVaapiDecoder *)
@@ -587,7 +587,7 @@ gst_vaapi_decoder_replace(GstVaapiDecoder **old_decoder_ptr,
 gpointer
 gst_vaapi_decoder_get_user_data(GstVaapiDecoder *decoder)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
+    g_return_val_if_fail(decoder != NULL, NULL);
 
     return decoder->user_data;
 }
@@ -603,7 +603,7 @@ gst_vaapi_decoder_get_user_data(GstVaapiDecoder *decoder)
 void
 gst_vaapi_decoder_set_user_data(GstVaapiDecoder *decoder, gpointer user_data)
 {
-    g_return_if_fail(GST_VAAPI_IS_DECODER(decoder));
+    g_return_if_fail(decoder != NULL);
 
     decoder->user_data = user_data;
 }
@@ -619,7 +619,7 @@ gst_vaapi_decoder_set_user_data(GstVaapiDecoder *decoder, gpointer user_data)
 GstVaapiCodec
 gst_vaapi_decoder_get_codec(GstVaapiDecoder *decoder)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), (GstVaapiCodec)0);
+    g_return_val_if_fail(decoder != NULL, (GstVaapiCodec)0);
 
     return decoder->codec;
 }
@@ -637,7 +637,7 @@ gst_vaapi_decoder_get_codec(GstVaapiDecoder *decoder)
 GstVideoCodecState *
 gst_vaapi_decoder_get_codec_state(GstVaapiDecoder *decoder)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
+    g_return_val_if_fail(decoder != NULL, NULL);
 
     return GST_VAAPI_DECODER_CODEC_STATE(decoder);
 }
@@ -655,7 +655,7 @@ void
 gst_vaapi_decoder_set_codec_state_changed_func(GstVaapiDecoder *decoder,
     GstVaapiDecoderStateChangedFunc func, gpointer user_data)
 {
-    g_return_if_fail(GST_VAAPI_IS_DECODER(decoder));
+    g_return_if_fail(decoder != NULL);
 
     decoder->codec_state_changed_func = func;
     decoder->codec_state_changed_data = user_data;
@@ -694,7 +694,7 @@ gst_vaapi_decoder_get_caps(GstVaapiDecoder *decoder)
 gboolean
 gst_vaapi_decoder_put_buffer(GstVaapiDecoder *decoder, GstBuffer *buf)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), FALSE);
+    g_return_val_if_fail(decoder != NULL, FALSE);
 
     if (buf) {
         if (gst_buffer_get_size(buf) == 0)
@@ -725,7 +725,7 @@ gst_vaapi_decoder_get_surface(GstVaapiDecoder *decoder,
     GstVideoCodecFrame *frame;
     GstVaapiDecoderStatus status;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder),
+    g_return_val_if_fail(decoder != NULL,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
     g_return_val_if_fail(out_proxy_ptr != NULL,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
@@ -802,7 +802,7 @@ gst_vaapi_decoder_get_frame_with_timeout(GstVaapiDecoder *decoder,
 {
     GstVideoCodecFrame *out_frame;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder),
+    g_return_val_if_fail(decoder != NULL,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
     g_return_val_if_fail(out_frame_ptr != NULL,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
@@ -982,7 +982,7 @@ gst_vaapi_decoder_parse(GstVaapiDecoder *decoder,
     GstVideoCodecFrame *base_frame, GstAdapter *adapter, gboolean at_eos,
     guint *got_unit_size_ptr, gboolean *got_frame_ptr)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder),
+    g_return_val_if_fail(decoder != NULL,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
     g_return_val_if_fail(base_frame != NULL,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
@@ -1002,7 +1002,7 @@ gst_vaapi_decoder_decode(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
 {
     GstVaapiDecoderStatus status;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder),
+    g_return_val_if_fail(decoder != NULL,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
     g_return_val_if_fail(frame != NULL,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
@@ -1018,7 +1018,7 @@ gst_vaapi_decoder_decode(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
 GstVaapiDecoderStatus
 gst_vaapi_decoder_flush(GstVaapiDecoder *decoder)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder),
+    g_return_val_if_fail(decoder != NULL,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
 
     return do_flush(decoder);

@@ -1071,7 +1071,7 @@ gst_vaapi_display_lock(GstVaapiDisplay *display)
 {
     GstVaapiDisplayClass *klass;
 
-    g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
+    g_return_if_fail(display != NULL);
 
     klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
     if (klass->lock)
@@ -1091,7 +1091,7 @@ gst_vaapi_display_unlock(GstVaapiDisplay *display)
 {
     GstVaapiDisplayClass *klass;
 
-    g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
+    g_return_if_fail(display != NULL);
 
     klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
     if (klass->unlock)
@@ -1114,7 +1114,7 @@ gst_vaapi_display_sync(GstVaapiDisplay *display)
 {
     GstVaapiDisplayClass *klass;
 
-    g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
+    g_return_if_fail(display != NULL);
 
     klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
     if (klass->sync)
@@ -1137,7 +1137,7 @@ gst_vaapi_display_flush(GstVaapiDisplay *display)
 {
     GstVaapiDisplayClass *klass;
 
-    g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
+    g_return_if_fail(display != NULL);
 
     klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
     if (klass->flush)
@@ -1155,8 +1155,7 @@ gst_vaapi_display_flush(GstVaapiDisplay *display)
 GstVaapiDisplayType
 gst_vaapi_display_get_display_type(GstVaapiDisplay *display)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display),
-                         GST_VAAPI_DISPLAY_TYPE_ANY);
+    g_return_val_if_fail(display != NULL, GST_VAAPI_DISPLAY_TYPE_ANY);
 
     return GST_VAAPI_DISPLAY_GET_PRIVATE(display)->display_type;
 }
@@ -1172,7 +1171,7 @@ gst_vaapi_display_get_display_type(GstVaapiDisplay *display)
 VADisplay
 gst_vaapi_display_get_display(GstVaapiDisplay *display)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(display != NULL, NULL);
 
     return GST_VAAPI_DISPLAY_GET_PRIVATE(display)->display;
 }
@@ -1188,7 +1187,7 @@ gst_vaapi_display_get_display(GstVaapiDisplay *display)
 guint
 gst_vaapi_display_get_width(GstVaapiDisplay *display)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), 0);
+    g_return_val_if_fail(display != NULL, 0);
 
     return GST_VAAPI_DISPLAY_GET_PRIVATE(display)->width;
 }
@@ -1204,7 +1203,7 @@ gst_vaapi_display_get_width(GstVaapiDisplay *display)
 guint
 gst_vaapi_display_get_height(GstVaapiDisplay *display)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), 0);
+    g_return_val_if_fail(display != NULL, 0);
 
     return GST_VAAPI_DISPLAY_GET_PRIVATE(display)->height;
 }
@@ -1244,7 +1243,7 @@ gst_vaapi_display_get_pixel_aspect_ratio(
     guint           *par_d
 )
 {
-    g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
+    g_return_if_fail(display != NULL);
 
     if (par_n)
         *par_n = GST_VAAPI_DISPLAY_GET_PRIVATE(display)->par_n;
@@ -1264,7 +1263,7 @@ gst_vaapi_display_get_pixel_aspect_ratio(
 GstCaps *
 gst_vaapi_display_get_decode_caps(GstVaapiDisplay *display)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(display != NULL, NULL);
 
     return get_profile_caps(GST_VAAPI_DISPLAY_GET_PRIVATE(display)->decoders);
 }
@@ -1287,7 +1286,7 @@ gst_vaapi_display_has_decoder(
     GstVaapiEntrypoint  entrypoint
 )
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+    g_return_val_if_fail(display != NULL, FALSE);
 
     return find_config(
         GST_VAAPI_DISPLAY_GET_PRIVATE(display)->decoders, profile, entrypoint);
@@ -1304,7 +1303,7 @@ gst_vaapi_display_has_decoder(
 GstCaps *
 gst_vaapi_display_get_encode_caps(GstVaapiDisplay *display)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(display != NULL, NULL);
 
     return get_profile_caps(GST_VAAPI_DISPLAY_GET_PRIVATE(display)->encoders);
 }
@@ -1327,7 +1326,7 @@ gst_vaapi_display_has_encoder(
     GstVaapiEntrypoint  entrypoint
 )
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+    g_return_val_if_fail(display != NULL, FALSE);
 
     return find_config(
         GST_VAAPI_DISPLAY_GET_PRIVATE(display)->encoders, profile, entrypoint);
@@ -1352,7 +1351,7 @@ gst_vaapi_display_has_encoder(
 GstCaps *
 gst_vaapi_display_get_image_caps(GstVaapiDisplay *display)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(display != NULL, NULL);
 
     return get_format_caps(
         GST_VAAPI_DISPLAY_GET_PRIVATE(display)->image_formats);
@@ -1373,7 +1372,7 @@ gst_vaapi_display_has_image_format(
     GstVaapiImageFormat format
 )
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+    g_return_val_if_fail(display != NULL, FALSE);
     g_return_val_if_fail(format, FALSE);
 
     if (find_format(
@@ -1404,7 +1403,7 @@ gst_vaapi_display_has_image_format(
 GstCaps *
 gst_vaapi_display_get_subpicture_caps(GstVaapiDisplay *display)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(display != NULL, NULL);
 
     return get_format_caps(
         GST_VAAPI_DISPLAY_GET_PRIVATE(display)->subpicture_formats);
@@ -1430,7 +1429,7 @@ gst_vaapi_display_has_subpicture_format(
 {
     const GstVaapiFormatInfo *fip;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+    g_return_val_if_fail(display != NULL, FALSE);
     g_return_val_if_fail(format, FALSE);
 
     fip = find_format_info(
@@ -1458,7 +1457,7 @@ gst_vaapi_display_has_subpicture_format(
 gboolean
 gst_vaapi_display_has_property(GstVaapiDisplay *display, const gchar *name)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+    g_return_val_if_fail(display != NULL, FALSE);
     g_return_val_if_fail(name, FALSE);
 
     return find_property(
@@ -1471,7 +1470,7 @@ gst_vaapi_display_get_property(GstVaapiDisplay *display, const gchar *name,
 {
     const GstVaapiProperty *prop;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+    g_return_val_if_fail(display != NULL, FALSE);
     g_return_val_if_fail(name != NULL, FALSE);
     g_return_val_if_fail(out_value != NULL, FALSE);
 
@@ -1520,7 +1519,7 @@ gst_vaapi_display_set_property(GstVaapiDisplay *display, const gchar *name,
 {
     const GstVaapiProperty *prop;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+    g_return_val_if_fail(display != NULL, FALSE);
     g_return_val_if_fail(name != NULL, FALSE);
     g_return_val_if_fail(value != NULL, FALSE);
 
@@ -1686,7 +1685,7 @@ gst_vaapi_display_get_render_mode(
     GstVaapiRenderMode *pmode
 )
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+    g_return_val_if_fail(display != NULL, FALSE);
 
     /* Try with render-mode attribute */
     if (get_render_mode_VADisplayAttribRenderMode(display, pmode))
@@ -1720,7 +1719,7 @@ gst_vaapi_display_set_render_mode(
 {
     gint modes, devices;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+    g_return_val_if_fail(display != NULL, FALSE);
 
     if (!get_attribute(display, VADisplayAttribRenderDevice, &devices))
         return FALSE;
@@ -1762,7 +1761,7 @@ gst_vaapi_display_get_rotation(GstVaapiDisplay *display)
 {
     gint value;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), DEFAULT_ROTATION);
+    g_return_val_if_fail(display != NULL, DEFAULT_ROTATION);
 
     if (!get_attribute(display, VADisplayAttribRotation, &value))
         value = VA_ROTATION_NONE;
@@ -1790,7 +1789,7 @@ gst_vaapi_display_set_rotation(
 {
     guint value;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+    g_return_val_if_fail(display != NULL, FALSE);
 
     value = from_GstVaapiRotation(rotation);
     if (!set_attribute(display, VADisplayAttribRotation, value))

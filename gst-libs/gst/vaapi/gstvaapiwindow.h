@@ -34,9 +34,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_WINDOW(obj) \
     ((GstVaapiWindow *)(obj))
 
-#define GST_VAAPI_IS_WINDOW(obj) \
-    ((obj) != NULL)
-
 typedef struct _GstVaapiWindow                  GstVaapiWindow;
 typedef struct _GstVaapiWindowClass             GstVaapiWindowClass;
 

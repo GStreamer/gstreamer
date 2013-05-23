@@ -339,7 +339,7 @@ error:
 GstVaapiID
 gst_vaapi_image_get_id(GstVaapiImage *image)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), VA_INVALID_ID);
+    g_return_val_if_fail(image != NULL, VA_INVALID_ID);
 
     return GST_VAAPI_OBJECT_ID(image);
 }
@@ -356,7 +356,7 @@ gst_vaapi_image_get_id(GstVaapiImage *image)
 gboolean
 gst_vaapi_image_get_image(GstVaapiImage *image, VAImage *va_image)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image != NULL, FALSE);
 
     if (va_image)
         *va_image = image->image;
@@ -441,7 +441,7 @@ _gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image)
 GstVaapiImageFormat
 gst_vaapi_image_get_format(GstVaapiImage *image)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
+    g_return_val_if_fail(image != NULL, 0);
 
     return image->format;
 }
@@ -457,7 +457,7 @@ gst_vaapi_image_get_format(GstVaapiImage *image)
 guint
 gst_vaapi_image_get_width(GstVaapiImage *image)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
+    g_return_val_if_fail(image != NULL, 0);
 
     return image->width;
 }
@@ -473,7 +473,7 @@ gst_vaapi_image_get_width(GstVaapiImage *image)
 guint
 gst_vaapi_image_get_height(GstVaapiImage *image)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
+    g_return_val_if_fail(image != NULL, 0);
 
     return image->height;
 }
@@ -489,7 +489,7 @@ gst_vaapi_image_get_height(GstVaapiImage *image)
 void
 gst_vaapi_image_get_size(GstVaapiImage *image, guint *pwidth, guint *pheight)
 {
-    g_return_if_fail(GST_VAAPI_IS_IMAGE(image));
+    g_return_if_fail(image != NULL);
 
     if (pwidth)
         *pwidth = image->width;
@@ -511,7 +511,7 @@ gst_vaapi_image_get_size(GstVaapiImage *image, guint *pwidth, guint *pheight)
 gboolean
 gst_vaapi_image_is_linear(GstVaapiImage *image)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image != NULL, FALSE);
 
     return image->is_linear;
 }
@@ -533,7 +533,7 @@ _gst_vaapi_image_is_mapped(GstVaapiImage *image)
 gboolean
 gst_vaapi_image_is_mapped(GstVaapiImage *image)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image != NULL, FALSE);
 
     return _gst_vaapi_image_is_mapped(image);
 }
@@ -550,7 +550,7 @@ gst_vaapi_image_is_mapped(GstVaapiImage *image)
 gboolean
 gst_vaapi_image_map(GstVaapiImage *image)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image != NULL, FALSE);
 
     return _gst_vaapi_image_map(image, NULL);
 }
@@ -607,7 +607,7 @@ map_success:
 gboolean
 gst_vaapi_image_unmap(GstVaapiImage *image)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image != NULL, FALSE);
 
     return _gst_vaapi_image_unmap(image);
 }
@@ -650,7 +650,7 @@ _gst_vaapi_image_unmap(GstVaapiImage *image)
 guint
 gst_vaapi_image_get_plane_count(GstVaapiImage *image)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
+    g_return_val_if_fail(image != NULL, 0);
     g_return_val_if_fail(_gst_vaapi_image_is_mapped(image), 0);
 
     return image->image.num_planes;
@@ -669,7 +669,7 @@ gst_vaapi_image_get_plane_count(GstVaapiImage *image)
 guchar *
 gst_vaapi_image_get_plane(GstVaapiImage *image, guint plane)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), NULL);
+    g_return_val_if_fail(image != NULL, NULL);
     g_return_val_if_fail(_gst_vaapi_image_is_mapped(image), NULL);
     g_return_val_if_fail(plane < image->image.num_planes, NULL);
 
@@ -689,7 +689,7 @@ gst_vaapi_image_get_plane(GstVaapiImage *image, guint plane)
 guint
 gst_vaapi_image_get_pitch(GstVaapiImage *image, guint plane)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
+    g_return_val_if_fail(image != NULL, 0);
     g_return_val_if_fail(_gst_vaapi_image_is_mapped(image), 0);
     g_return_val_if_fail(plane < image->image.num_planes, 0);
 
@@ -709,7 +709,7 @@ gst_vaapi_image_get_pitch(GstVaapiImage *image, guint plane)
 guint
 gst_vaapi_image_get_data_size(GstVaapiImage *image)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
+    g_return_val_if_fail(image != NULL, 0);
 
     return image->image.data_size;
 }
@@ -979,7 +979,7 @@ gst_vaapi_image_get_buffer(
     GstVaapiImageRaw dst_image, src_image;
     gboolean success;
 
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image != NULL, FALSE);
     g_return_val_if_fail(GST_IS_BUFFER(buffer), FALSE);
 
     if (!init_image_from_buffer(&dst_image, buffer))
@@ -1022,7 +1022,7 @@ gst_vaapi_image_get_raw(
     GstVaapiImageRaw src_image;
     gboolean success;
 
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image != NULL, FALSE);
 
     if (!_gst_vaapi_image_map(image, &src_image))
         return FALSE;
@@ -1057,7 +1057,7 @@ gst_vaapi_image_update_from_buffer(
     GstVaapiImageRaw dst_image, src_image;
     gboolean success;
 
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image != NULL, FALSE);
     g_return_val_if_fail(GST_IS_BUFFER(buffer), FALSE);
 
     if (!init_image_from_buffer(&src_image, buffer))
@@ -1101,7 +1101,7 @@ gst_vaapi_image_update_from_raw(
     GstVaapiImageRaw dst_image;
     gboolean success;
 
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image != NULL, FALSE);
 
     if (!_gst_vaapi_image_map(image, &dst_image))
         return FALSE;

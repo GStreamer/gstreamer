@@ -32,9 +32,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_VIDEO_POOL(obj) \
     ((GstVaapiVideoPool *)(obj))
 
-#define GST_VAAPI_IS_VIDEO_POOL(obj) \
-    ((obj) != NULL)
-
 typedef struct _GstVaapiVideoPool               GstVaapiVideoPool;
 
 GstVaapiVideoPool *

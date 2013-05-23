@@ -30,9 +30,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_WINDOW_DRM(obj) \
     ((GstVaapiWindowDRM *)(obj))
 
-#define GST_VAAPI_IS_WINDOW_DRM(obj) \
-    ((obj) != NULL)
-
 typedef struct _GstVaapiWindowDRM               GstVaapiWindowDRM;
 
 GstVaapiWindow *

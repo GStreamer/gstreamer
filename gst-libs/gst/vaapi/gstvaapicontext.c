@@ -788,7 +788,7 @@ gst_vaapi_context_reset_full(GstVaapiContext *context,
 GstVaapiID
 gst_vaapi_context_get_id(GstVaapiContext *context)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), VA_INVALID_ID);
+    g_return_val_if_fail(context != NULL, VA_INVALID_ID);
 
     return GST_VAAPI_OBJECT_ID(context);
 }
@@ -804,7 +804,7 @@ gst_vaapi_context_get_id(GstVaapiContext *context)
 GstVaapiProfile
 gst_vaapi_context_get_profile(GstVaapiContext *context)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), 0);
+    g_return_val_if_fail(context != NULL, 0);
 
     return context->info.profile;
 }
@@ -824,7 +824,7 @@ gst_vaapi_context_get_profile(GstVaapiContext *context)
 gboolean
 gst_vaapi_context_set_profile(GstVaapiContext *context, GstVaapiProfile profile)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), FALSE);
+    g_return_val_if_fail(context != NULL, FALSE);
     g_return_val_if_fail(profile, FALSE);
 
     return gst_vaapi_context_reset(context,
@@ -845,7 +845,7 @@ gst_vaapi_context_set_profile(GstVaapiContext *context, GstVaapiProfile profile)
 GstVaapiEntrypoint
 gst_vaapi_context_get_entrypoint(GstVaapiContext *context)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), 0);
+    g_return_val_if_fail(context != NULL, 0);
 
     return context->info.entrypoint;
 }
@@ -865,7 +865,7 @@ gst_vaapi_context_get_size(
     guint           *pheight
 )
 {
-    g_return_if_fail(GST_VAAPI_IS_CONTEXT(context));
+    g_return_if_fail(context != NULL);
 
     if (pwidth)
         *pwidth = context->info.width;
@@ -892,7 +892,7 @@ gst_vaapi_context_get_size(
 GstVaapiSurfaceProxy *
 gst_vaapi_context_get_surface_proxy(GstVaapiContext *context)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), NULL);
+    g_return_val_if_fail(context != NULL, NULL);
 
     return gst_vaapi_surface_proxy_new_from_pool(
         GST_VAAPI_SURFACE_POOL(context->surfaces_pool));
@@ -909,7 +909,7 @@ gst_vaapi_context_get_surface_proxy(GstVaapiContext *context)
 guint
 gst_vaapi_context_get_surface_count(GstVaapiContext *context)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), 0);
+    g_return_val_if_fail(context != NULL, 0);
 
     return gst_vaapi_video_pool_get_size(context->surfaces_pool);
 }
@@ -937,7 +937,7 @@ gst_vaapi_context_apply_composition(
     guint i, n_rectangles;
     gboolean reassociate = FALSE;
 
-    g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), FALSE);
+    g_return_val_if_fail(context != NULL, FALSE);
 
     if (!context->surfaces)
         return FALSE;

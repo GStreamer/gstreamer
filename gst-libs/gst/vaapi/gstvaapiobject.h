@@ -31,9 +31,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_OBJECT(obj) \
     ((GstVaapiObject *)(obj))
 
-#define GST_VAAPI_IS_OBJECT(obj) \
-    ((obj) != NULL)
-
 typedef struct _GstVaapiObject                  GstVaapiObject;
 
 gpointer

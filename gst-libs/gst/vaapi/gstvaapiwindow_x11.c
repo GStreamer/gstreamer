@@ -519,7 +519,7 @@ gst_vaapi_window_x11_new_with_xid(GstVaapiDisplay *display, Window xid)
 Window
 gst_vaapi_window_x11_get_xid(GstVaapiWindowX11 *window)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_WINDOW_X11(window), None);
+    g_return_val_if_fail(window != NULL, None);
 
     return GST_VAAPI_OBJECT_ID(window);
 }
@@ -536,7 +536,7 @@ gst_vaapi_window_x11_get_xid(GstVaapiWindowX11 *window)
 gboolean
 gst_vaapi_window_x11_is_foreign_xid(GstVaapiWindowX11 *window)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_WINDOW_X11(window), FALSE);
+    g_return_val_if_fail(window != NULL, FALSE);
 
     return GST_VAAPI_WINDOW(window)->use_foreign_window;
 }

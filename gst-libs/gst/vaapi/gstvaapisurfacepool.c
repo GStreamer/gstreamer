@@ -97,7 +97,7 @@ gst_vaapi_surface_pool_new(GstVaapiDisplay *display, GstCaps *caps)
 {
     GstVaapiVideoPool *pool;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(display != NULL, NULL);
     g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
 
     pool = (GstVaapiVideoPool *)

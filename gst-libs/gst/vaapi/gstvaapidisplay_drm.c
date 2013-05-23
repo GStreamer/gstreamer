@@ -417,7 +417,7 @@ gst_vaapi_display_drm_new_with_device(gint device)
 gint
 gst_vaapi_display_drm_get_device(GstVaapiDisplayDRM *display)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_DRM(display), -1);
+    g_return_val_if_fail(display != NULL, -1);
 
     return GST_VAAPI_DISPLAY_DRM_DEVICE(display);
 }
@@ -438,7 +438,7 @@ gst_vaapi_display_drm_get_device(GstVaapiDisplayDRM *display)
 const gchar *
 gst_vaapi_display_drm_get_device_path(GstVaapiDisplayDRM *display)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_DRM(display), NULL);
+    g_return_val_if_fail(display != NULL, NULL);
 
     return get_device_path(GST_VAAPI_DISPLAY_CAST(display));
 }

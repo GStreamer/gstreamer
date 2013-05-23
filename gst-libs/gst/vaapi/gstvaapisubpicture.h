@@ -33,9 +33,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_SUBPICTURE(obj) \
     ((GstVaapiSubpicture *)(obj))
 
-#define GST_VAAPI_IS_SUBPICTURE(obj) \
-    ((obj) != NULL)
-
 typedef struct _GstVaapiSubpicture              GstVaapiSubpicture;
 
 /**

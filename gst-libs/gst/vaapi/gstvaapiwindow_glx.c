@@ -39,9 +39,6 @@
 #define GST_VAAPI_WINDOW_GLX_GET_PRIVATE(window) \
     (&GST_VAAPI_WINDOW_GLX(window)->priv)
 
-#define GST_VAAPI_IS_WINDOW_GLX(obj) \
-    ((obj) != NULL)
-
 #define GST_VAAPI_WINDOW_GLX_CLASS(klass) \
     ((GstVaapiWindowGLXClass *)(klass))
 
@@ -403,7 +400,7 @@ gst_vaapi_window_glx_new_with_xid(GstVaapiDisplay *display, Window xid)
 GLXContext
 gst_vaapi_window_glx_get_context(GstVaapiWindowGLX *window)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_WINDOW_GLX(window), NULL);
+    g_return_val_if_fail(window != NULL, NULL);
 
     return GST_VAAPI_WINDOW_GLX_GET_PRIVATE(window)->gl_context->context;
 }
@@ -423,7 +420,7 @@ gst_vaapi_window_glx_get_context(GstVaapiWindowGLX *window)
 gboolean
 gst_vaapi_window_glx_set_context(GstVaapiWindowGLX *window, GLXContext ctx)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_WINDOW_GLX(window), FALSE);
+    g_return_val_if_fail(window != NULL, FALSE);
 
     return gst_vaapi_window_glx_ensure_context(GST_VAAPI_WINDOW(window), ctx);
 }
@@ -443,7 +440,7 @@ gst_vaapi_window_glx_make_current(GstVaapiWindowGLX *window)
 {
     gboolean success;
 
-    g_return_val_if_fail(GST_VAAPI_IS_WINDOW_GLX(window), FALSE);
+    g_return_val_if_fail(window != NULL, FALSE);
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
     success = gl_set_current_context(window->priv.gl_context, NULL);
@@ -462,7 +459,7 @@ gst_vaapi_window_glx_make_current(GstVaapiWindowGLX *window)
 void
 gst_vaapi_window_glx_swap_buffers(GstVaapiWindowGLX *window)
 {
-    g_return_if_fail(GST_VAAPI_IS_WINDOW_GLX(window));
+    g_return_if_fail(window != NULL);
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
     gl_swap_buffers(window->priv.gl_context);
@@ -501,7 +498,7 @@ gst_vaapi_window_glx_put_texture(
     guint tex_width, tex_height;
     guint win_width, win_height;
 
-    g_return_val_if_fail(GST_VAAPI_IS_WINDOW_GLX(window), FALSE);
+    g_return_val_if_fail(window != NULL, FALSE);
     g_return_val_if_fail(texture != NULL, FALSE);
 
     gst_vaapi_texture_get_size(texture, &tex_width, &tex_height);
