@@ -61,11 +61,37 @@ set_image(GstVaapiVideoMeta *meta, GstVaapiImage *image)
     set_display(meta, gst_vaapi_object_get_display(GST_VAAPI_OBJECT(image)));
 }
 
+static gboolean
+set_image_from_pool(GstVaapiVideoMeta *meta, GstVaapiVideoPool *pool)
+{
+    GstVaapiImage *image;
+
+    image = gst_vaapi_video_pool_get_object(pool);
+    if (!image)
+        return FALSE;
+    set_image(meta, image);
+    meta->image_pool = gst_vaapi_video_pool_ref(pool);
+    return TRUE;
+}
+
 static inline void
 set_surface(GstVaapiVideoMeta *meta, GstVaapiSurface *surface)
 {
     meta->surface = gst_vaapi_object_ref(surface);
     set_display(meta, gst_vaapi_object_get_display(GST_VAAPI_OBJECT(surface)));
+}
+
+static gboolean
+set_surface_from_pool(GstVaapiVideoMeta *meta, GstVaapiVideoPool *pool)
+{
+    GstVaapiSurface *surface;
+
+    surface = gst_vaapi_video_pool_get_object(pool);
+    if (!surface)
+        return FALSE;
+    set_surface(meta, surface);
+    meta->surface_pool = gst_vaapi_video_pool_ref(pool);
+    return TRUE;
 }
 
 static void
@@ -252,18 +278,22 @@ gst_vaapi_video_meta_new_from_pool(GstVaapiVideoPool *pool)
 {
     GstVaapiVideoMeta *meta;
 
-    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_POOL(pool), NULL);
+    g_return_val_if_fail(pool != NULL, NULL);
 
     meta = _gst_vaapi_video_meta_new();
     if (G_UNLIKELY(!meta))
         return NULL;
 
-    if (!(GST_VAAPI_IS_IMAGE_POOL(pool) &&
-          gst_vaapi_video_meta_set_image_from_pool(meta, pool)) &&
-        !(GST_VAAPI_IS_SURFACE_POOL(pool) &&
-          gst_vaapi_video_meta_set_surface_from_pool(meta, pool)))
-        goto error;
-
+    switch (gst_vaapi_video_pool_get_object_type(pool)) {
+    case GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE:
+        if (!set_image_from_pool(meta, pool))
+            goto error;
+        break;
+    case GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE:
+        if (!set_surface_from_pool(meta, pool))
+            goto error;
+        break;
+    }
     set_display(meta, gst_vaapi_video_pool_get_display(pool));
     return meta;
 
@@ -492,21 +522,14 @@ gboolean
 gst_vaapi_video_meta_set_image_from_pool(GstVaapiVideoMeta *meta,
     GstVaapiVideoPool *pool)
 {
-    GstVaapiImage *image;
-
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), FALSE);
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE_POOL(pool), FALSE);
+    g_return_val_if_fail(pool != NULL, FALSE);
+    g_return_val_if_fail(gst_vaapi_video_pool_get_object_type(pool) ==
+        GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE, FALSE);
 
     gst_vaapi_video_meta_destroy_image(meta);
 
-    if (pool) {
-        image = gst_vaapi_video_pool_get_object(pool);
-        if (!image)
-            return FALSE;
-        set_image(meta, image);
-        meta->image_pool = gst_vaapi_video_pool_ref(pool);
-    }
-    return TRUE;
+    return set_image_from_pool(meta, pool);
 }
 
 /**
@@ -564,21 +587,14 @@ gboolean
 gst_vaapi_video_meta_set_surface_from_pool(GstVaapiVideoMeta *meta,
     GstVaapiVideoPool *pool)
 {
-    GstVaapiSurface *surface;
-
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), FALSE);
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_POOL(pool), FALSE);
+    g_return_val_if_fail(pool != NULL, FALSE);
+    g_return_val_if_fail(gst_vaapi_video_pool_get_object_type(pool) ==
+        GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE, FALSE);
 
     gst_vaapi_video_meta_destroy_surface(meta);
 
-    if (pool) {
-        surface = gst_vaapi_video_pool_get_object(pool);
-        if (!surface)
-            return FALSE;
-        set_surface(meta, surface);
-        meta->surface_pool = gst_vaapi_video_pool_ref(pool);
-    }
-    return TRUE;
+    return set_surface_from_pool(meta, pool);
 }
 
 /**
