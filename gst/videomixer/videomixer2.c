@@ -990,11 +990,13 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
 
   if (mix->newseg_pending) {
     GST_DEBUG_OBJECT (mix, "Sending NEWSEGMENT event");
+    GST_VIDEO_MIXER2_UNLOCK (mix);
     if (!gst_pad_push_event (mix->srcpad,
             gst_event_new_segment (&mix->segment))) {
       ret = GST_FLOW_ERROR;
-      goto done;
+      goto done_unlocked;
     }
+    GST_VIDEO_MIXER2_LOCK (mix);
     mix->newseg_pending = FALSE;
   }
 
@@ -1005,9 +1007,10 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
 
   if (output_start_time >= mix->segment.stop) {
     GST_DEBUG_OBJECT (mix, "Segment done");
+    GST_VIDEO_MIXER2_UNLOCK (mix);
     gst_pad_push_event (mix->srcpad, gst_event_new_eos ());
     ret = GST_FLOW_EOS;
-    goto done;
+    goto done_unlocked;
   }
 
   output_end_time =
@@ -1027,10 +1030,11 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
     GST_DEBUG_OBJECT (mix, "All sinkpads are EOS -- forwarding");
 
     mix->segment.stop = output_end_time;
+    GST_VIDEO_MIXER2_UNLOCK (mix);
     gst_pad_push_event (mix->srcpad, gst_event_new_segment (&mix->segment));
     gst_pad_push_event (mix->srcpad, gst_event_new_eos ());
     ret = GST_FLOW_EOS;
-    goto done;
+    goto done_unlocked;
   } else if (res == -2) {
     GST_ERROR_OBJECT (mix, "Error collecting buffers");
     ret = GST_FLOW_ERROR;
@@ -1074,11 +1078,12 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
         GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
     ret = gst_pad_push (mix->srcpad, outbuf);
   }
-  GST_VIDEO_MIXER2_LOCK (mix);
+  goto done_unlocked;
 
 done:
   GST_VIDEO_MIXER2_UNLOCK (mix);
 
+done_unlocked:
   return ret;
 }
 
