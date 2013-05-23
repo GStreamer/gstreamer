@@ -1318,7 +1318,7 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
   if (stream->state == PENDING_PACKET_EMPTY) {
     if (G_UNLIKELY (!packet->payload_unit_start_indicator)) {
       stream->state = PENDING_PACKET_DISCONT;
-      GST_WARNING ("Didn't get the first packet of this PES");
+      GST_DEBUG ("Didn't get the first packet of this PES");
     } else {
       GST_LOG ("EMPTY=>HEADER");
       stream->state = PENDING_PACKET_HEADER;
