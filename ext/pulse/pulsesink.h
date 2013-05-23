@@ -102,32 +102,41 @@ GType gst_pulsesink_get_type (void);
                      "S24BE, S24LE, S24_32BE, S24_32LE, U8 }"
 #endif
 
-#define _PULSE_SINK_CAPS_COMMON \
+#define _PULSE_SINK_CAPS_LINEAR \
     "audio/x-raw, " \
       "format = (string) " FORMATS ", " \
       "layout = (string) interleaved, " \
       "rate = (int) [ 1, MAX ], " \
-      "channels = (int) [ 1, 32 ];" \
+      "channels = (int) [ 1, 32 ]; "
+#define _PULSE_SINK_CAPS_ALAW \
     "audio/x-alaw, " \
       "layout = (string) interleaved, " \
       "rate = (int) [ 1, MAX], " \
-      "channels = (int) [ 1, 32 ];" \
+      "channels = (int) [ 1, 32 ]; "
+#define _PULSE_SINK_CAPS_MULAW \
     "audio/x-mulaw, " \
       "layout = (string) interleaved, " \
       "rate = (int) [ 1, MAX], " \
-      "channels = (int) [ 1, 32 ];"
+      "channels = (int) [ 1, 32 ]; "
 
-#define _PULSE_SINK_CAPS_1_0 \
-    "audio/x-ac3, framed = (boolean) true;" \
-    "audio/x-eac3, framed = (boolean) true; " \
-    "audio/x-dts, framed = (boolean) true, " \
-      "block-size = (int) { 512, 1024, 2048 }; " \
-    "audio/mpeg, mpegversion = (int) 1, " \
-      "mpegaudioversion = (int) [ 1, 2 ], parsed = (boolean) true;"
+#define _PULSE_SINK_CAPS_AC3 "audio/x-ac3, framed = (boolean) true; "
+#define _PULSE_SINK_CAPS_EAC3 "audio/x-eac3, framed = (boolean) true; "
+#define _PULSE_SINK_CAPS_DTS "audio/x-dts, framed = (boolean) true, " \
+    "block-size = (int) { 512, 1024, 2048 }; "
+#define _PULSE_SINK_CAPS_MP3 "audio/mpeg, mpegversion = (int) 1, " \
+    "mpegaudioversion = (int) [ 1, 2 ], parsed = (boolean) true;"
+
+#define _PULSE_SINK_CAPS_PCM \
+  _PULSE_SINK_CAPS_LINEAR \
+  _PULSE_SINK_CAPS_ALAW \
+  _PULSE_SINK_CAPS_MULAW
 
 #define PULSE_SINK_TEMPLATE_CAPS \
-  _PULSE_SINK_CAPS_COMMON \
-  _PULSE_SINK_CAPS_1_0
+  _PULSE_SINK_CAPS_PCM \
+  _PULSE_SINK_CAPS_AC3 \
+  _PULSE_SINK_CAPS_EAC3 \
+  _PULSE_SINK_CAPS_DTS \
+  _PULSE_SINK_CAPS_MP3
 
 G_END_DECLS
 

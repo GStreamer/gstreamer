@@ -191,6 +191,48 @@ fail:
   return FALSE;
 }
 
+const char *
+gst_pulse_sample_format_to_caps_format (pa_sample_format_t sf)
+{
+  switch (sf) {
+    case PA_SAMPLE_U8:
+      return "U8";
+
+    case PA_SAMPLE_S16LE:
+      return "S16LE";
+
+    case PA_SAMPLE_S16BE:
+      return "S16BE";
+
+    case PA_SAMPLE_FLOAT32LE:
+      return "F32LE";
+
+    case PA_SAMPLE_FLOAT32BE:
+      return "F32BE";
+
+    case PA_SAMPLE_S32LE:
+      return "S32LE";
+
+    case PA_SAMPLE_S32BE:
+      return "S32BE";
+
+    case PA_SAMPLE_S24LE:
+      return "S24LE";
+
+    case PA_SAMPLE_S24BE:
+      return "S24BE";
+
+    case PA_SAMPLE_S24_32LE:
+      return "S24_32LE";
+
+    case PA_SAMPLE_S24_32BE:
+      return "S24_32BE";
+
+    default:
+      return NULL;
+  }
+}
+
 /* PATH_MAX is not defined everywhere, e.g. on GNU Hurd */
 #ifndef PATH_MAX
 #define PATH_MAX 4096

@@ -35,6 +35,7 @@ gboolean gst_pulse_fill_sample_spec (GstAudioRingBufferSpec * spec,
     pa_sample_spec * ss);
 gboolean gst_pulse_fill_format_info (GstAudioRingBufferSpec * spec,
     pa_format_info ** f, guint * channels);
+const char * gst_pulse_sample_format_to_caps_format (pa_sample_format_t sf);
 
 gchar *gst_pulse_client_name (void);
 
