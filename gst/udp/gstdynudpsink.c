@@ -373,17 +373,35 @@ gst_dynudpsink_start (GstBaseSink * bsink)
   }
 
   if (!udpsink->used_socket && !udpsink->used_socket_v6) {
-    /* create sender sockets if none available */
+    GSocketAddress *bind_addr;
+    GInetAddress *bind_iaddr;
 
+    /* create sender sockets if none available */
     if ((udpsink->used_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
                 G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL)
       goto no_socket;
+
+    bind_iaddr = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
+    bind_addr = g_inet_socket_address_new (bind_iaddr, 0);
+    g_socket_bind (udpsink->used_socket, bind_addr, TRUE, &err);
+    g_object_unref (bind_addr);
+    g_object_unref (bind_iaddr);
+    if (err != NULL)
+      goto bind_error;
 
     if ((udpsink->used_socket_v6 = g_socket_new (G_SOCKET_FAMILY_IPV6,
                 G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL) {
       GST_INFO_OBJECT (udpsink, "Failed to create IPv6 socket: %s",
           err->message);
       g_clear_error (&err);
+    } else {
+      bind_iaddr = g_inet_address_new_any (G_SOCKET_FAMILY_IPV6);
+      bind_addr = g_inet_socket_address_new (bind_iaddr, 0);
+      g_socket_bind (udpsink->used_socket_v6, bind_addr, TRUE, &err);
+      g_object_unref (bind_addr);
+      g_object_unref (bind_iaddr);
+      if (err != NULL)
+        goto bind_error;
     }
   }
 
@@ -399,6 +417,13 @@ no_socket:
   {
     GST_ERROR_OBJECT (udpsink, "Failed to create IPv4 socket: %s",
         err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+bind_error:
+  {
+    GST_ELEMENT_ERROR (udpsink, RESOURCE, FAILED, (NULL),
+        ("Failed to bind socket: %s", err->message));
     g_clear_error (&err);
     return FALSE;
   }
