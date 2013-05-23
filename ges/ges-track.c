@@ -676,6 +676,7 @@ ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
         G_CALLBACK (timeline_duration_changed_cb), track);
 
   track->priv->timeline = timeline;
+  resort_and_fill_gaps (track);
 }
 
 /**
