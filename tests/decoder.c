@@ -144,7 +144,7 @@ decoder_put_buffers(GstVaapiDecoder *decoder)
     GstBuffer *buffer;
     gboolean success;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), FALSE);
+    g_return_val_if_fail(decoder != NULL, FALSE);
 
     codec = get_codec_defs(decoder);
     g_return_val_if_fail(codec != NULL, FALSE);
@@ -178,7 +178,7 @@ decoder_get_surface(GstVaapiDecoder *decoder)
     GstVaapiSurfaceProxy *proxy;
     GstVaapiDecoderStatus status;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
+    g_return_val_if_fail(decoder != NULL, NULL);
 
     status = gst_vaapi_decoder_get_surface(decoder, &proxy);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
@@ -198,7 +198,7 @@ decoder_get_codec_name(GstVaapiDecoder *decoder)
 {
     const CodecDefs *codec;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
+    g_return_val_if_fail(decoder != NULL, NULL);
 
     codec = get_codec_defs(decoder);
     g_return_val_if_fail(codec != NULL, FALSE);
