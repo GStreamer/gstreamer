@@ -341,6 +341,48 @@ GST_START_TEST (test_gap_filling_basic)
 
 GST_END_TEST;
 
+GST_START_TEST (test_gap_filling_empty_track)
+{
+  GESAsset *asset;
+  GESTrack *track;
+  GESTimeline *timeline;
+  GstElement *gap;
+  GstElement *composition;
+  GESLayer *layer;
+  GESClip *clip;
+
+  ges_init ();
+
+  track = ges_track_audio_raw_new ();
+
+  layer = ges_layer_new ();
+  timeline = ges_timeline_new ();
+  fail_unless (timeline != NULL);
+  fail_unless (ges_timeline_add_layer (timeline, layer));
+  fail_unless (ges_timeline_add_track (timeline, track));
+  fail_unless (ges_timeline_add_track (timeline, ges_track_video_raw_new ()));
+
+  /* Set some properties */
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+  clip = ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_VIDEO);
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+
+  /* We should not have created any TrackElement in the audio track */
+  fail_unless (ges_track_get_elements (track) == NULL);
+
+  /* Check that a gap was properly added */
+  composition = find_composition (track);
+  assert_equals_int (g_list_length (GST_BIN_CHILDREN (composition)), 1);
+
+  gap = GST_BIN_CHILDREN (composition)->data;
+  fail_unless (gap != NULL);
+  gap_object_check (gap, 0, 10, 0);
+
+  gst_object_unref (timeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -353,6 +395,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_test_source_properties);
   tcase_add_test (tc_chain, test_test_source_in_layer);
   tcase_add_test (tc_chain, test_gap_filling_basic);
+  tcase_add_test (tc_chain, test_gap_filling_empty_track);
 
   return s;
 }

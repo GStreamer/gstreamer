@@ -242,14 +242,8 @@ timeline_duration_changed_cb (GESTimeline * timeline,
   GESTrackPrivate *priv = track->priv;
 
   /* Remove the last gap on the timeline if not needed anymore */
-  if (priv->updating == TRUE && priv->gaps) {
-    Gap *gap = (Gap *) priv->gaps->data;
-    GstClockTime tl_duration = ges_timeline_get_duration (timeline);
-
-    if (gap->start + gap->duration > tl_duration) {
-      free_gap (gap);
-      priv->gaps = g_list_remove (priv->gaps, gap);
-    }
+  if (priv->updating == TRUE) {
+    resort_and_fill_gaps (track);
   }
 }
 
