@@ -238,11 +238,11 @@ _create_uri_source_asset (GESUriClipAsset * asset,
     stream_id = g_strdup_printf ("%i", GPOINTER_TO_INT (sinfo));
   }
 
-  tck_filesource_asset = ges_asset_request (GES_TYPE_TRACK_FILESOURCE,
+  tck_filesource_asset = ges_asset_request (GES_TYPE_URI_SOURCE,
       stream_id, NULL);
   g_free (stream_id);
 
-  priv_tckasset = GES_ASSET_TRACK_FILESOURCE (tck_filesource_asset)->priv;
+  priv_tckasset = GES_URI_SOURCE_ASSET (tck_filesource_asset)->priv;
   priv_tckasset->uri = ges_asset_get_id (GES_ASSET (asset));
   priv_tckasset->sinfo = gst_object_ref (sinfo);
   priv_tckasset->parent_asset = asset;
@@ -526,7 +526,7 @@ static GESExtractable *
 _extract (GESAsset * asset, GError ** error)
 {
   GESTrackElement *trackelement;
-  GESUriSourceAssetPrivate *priv = GES_ASSET_TRACK_FILESOURCE (asset)->priv;
+  GESUriSourceAssetPrivate *priv = GES_URI_SOURCE_ASSET (asset)->priv;
 
   if (GST_IS_DISCOVERER_STREAM_INFO (priv->sinfo) == FALSE) {
     GST_WARNING_OBJECT (asset, "Can not extract as no strean info set");
@@ -568,7 +568,7 @@ ges_uri_source_asset_init (GESUriSourceAsset * self)
   GESUriSourceAssetPrivate *priv;
 
   priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_ASSET_TRACK_FILESOURCE, GESUriSourceAssetPrivate);
+      GES_TYPE_URI_SOURCE_ASSET, GESUriSourceAssetPrivate);
 
   priv->sinfo = NULL;
   priv->parent_asset = NULL;
@@ -586,7 +586,7 @@ ges_uri_source_asset_init (GESUriSourceAsset * self)
 GstDiscovererStreamInfo *
 ges_uri_source_asset_get_stream_info (GESUriSourceAsset * asset)
 {
-  g_return_val_if_fail (GES_IS_ASSET_TRACK_FILESOURCE (asset), NULL);
+  g_return_val_if_fail (GES_IS_URI_SOURCE_ASSET (asset), NULL);
 
   return asset->priv->sinfo;
 }
@@ -594,7 +594,7 @@ ges_uri_source_asset_get_stream_info (GESUriSourceAsset * asset)
 const gchar *
 ges_uri_source_asset_get_stream_uri (GESUriSourceAsset * asset)
 {
-  g_return_val_if_fail (GES_IS_ASSET_TRACK_FILESOURCE (asset), NULL);
+  g_return_val_if_fail (GES_IS_URI_SOURCE_ASSET (asset), NULL);
 
   return asset->priv->uri;
 }
@@ -610,7 +610,7 @@ ges_uri_source_asset_get_stream_uri (GESUriSourceAsset * asset)
 const GESUriClipAsset *
 ges_uri_source_asset_get_filesource_asset (GESUriSourceAsset * asset)
 {
-  g_return_val_if_fail (GES_IS_ASSET_TRACK_FILESOURCE (asset), NULL);
+  g_return_val_if_fail (GES_IS_URI_SOURCE_ASSET (asset), NULL);
 
   return asset->priv->parent_asset;
 }

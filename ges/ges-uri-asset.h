@@ -79,17 +79,17 @@ void ges_uri_clip_asset_class_set_timeout           (GESUriClipAssetClass *class
                                                      GstClockTime timeout);
 const GList * ges_uri_clip_asset_get_stream_assets  (GESUriClipAsset *self);
 
-#define GES_TYPE_ASSET_TRACK_FILESOURCE ges_uri_source_asset_get_type()
-#define GES_ASSET_TRACK_FILESOURCE(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_ASSET_TRACK_FILESOURCE, GESUriSourceAsset))
-#define GES_ASSET_TRACK_FILESOURCE_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_ASSET_TRACK_FILESOURCE, GESUriSourceAssetClass))
-#define GES_IS_ASSET_TRACK_FILESOURCE(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_ASSET_TRACK_FILESOURCE))
-#define GES_IS_ASSET_TRACK_FILESOURCE_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_ASSET_TRACK_FILESOURCE))
-#define GES_ASSET_TRACK_FILESOURCE_GET_CLASS(obj) \
-    (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_ASSET_TRACK_FILESOURCE, GESUriSourceAssetClass))
+#define GES_TYPE_URI_SOURCE_ASSET ges_uri_source_asset_get_type()
+#define GES_URI_SOURCE_ASSET(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_URI_SOURCE_ASSET, GESUriSourceAsset))
+#define GES_URI_SOURCE_ASSET_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_URI_SOURCE_ASSET, GESUriSourceAssetClass))
+#define GES_IS_URI_SOURCE_ASSET(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_URI_SOURCE_ASSET))
+#define GES_IS_URI_SOURCE_ASSET_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_URI_SOURCE_ASSET))
+#define GES_URI_SOURCE_ASSET_GET_CLASS(obj) \
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_URI_SOURCE_ASSET, GESUriSourceAssetClass))
 
 typedef struct _GESUriSourceAssetPrivate GESUriSourceAssetPrivate;
 

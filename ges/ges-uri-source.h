@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TRACK_FILESOURCE
-#define _GES_TRACK_FILESOURCE
+#ifndef _GES_URI_SOURCE
+#define _GES_URI_SOURCE
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -27,22 +27,22 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TRACK_FILESOURCE ges_track_filesource_get_type()
+#define GES_TYPE_URI_SOURCE ges_track_filesource_get_type()
 
-#define GES_TRACK_FILESOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_FILESOURCE, GESUriSource))
+#define GES_URI_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_URI_SOURCE, GESUriSource))
 
-#define GES_TRACK_FILESOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_FILESOURCE, GESUriSourceClass))
+#define GES_URI_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_URI_SOURCE, GESUriSourceClass))
 
-#define GES_IS_TRACK_FILESOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_FILESOURCE))
+#define GES_IS_URI_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_URI_SOURCE))
 
-#define GES_IS_TRACK_FILESOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_FILESOURCE))
+#define GES_IS_URI_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_URI_SOURCE))
 
-#define GES_TRACK_FILESOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_FILESOURCE, GESUriSourceClass))
+#define GES_URI_SOURCE_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_URI_SOURCE, GESUriSourceClass))
 
 typedef struct _GESUriSourcePrivate GESUriSourcePrivate;
 
@@ -75,5 +75,5 @@ GESUriSource* ges_track_filesource_new (gchar *uri);
 
 G_END_DECLS
 
-#endif /* _GES_TRACK_FILESOURCE */
+#endif /* _GES_URI_SOURCE */
 

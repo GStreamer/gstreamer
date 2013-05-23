@@ -55,7 +55,7 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
 static void
 ges_extractable_interface_init (GESExtractableInterface * iface)
 {
-  iface->asset_type = GES_TYPE_ASSET_TRACK_FILESOURCE;
+  iface->asset_type = GES_TYPE_URI_SOURCE_ASSET;
   iface->check_id = ges_extractable_check_id;
   iface->set_asset = extractable_set_asset;
 }
@@ -80,7 +80,7 @@ static void
 ges_track_filesource_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESUriSource *uriclip = GES_TRACK_FILESOURCE (object);
+  GESUriSource *uriclip = GES_URI_SOURCE (object);
 
   switch (property_id) {
     case PROP_URI:
@@ -95,7 +95,7 @@ static void
 ges_track_filesource_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESUriSource *uriclip = GES_TRACK_FILESOURCE (object);
+  GESUriSource *uriclip = GES_URI_SOURCE (object);
 
   switch (property_id) {
     case PROP_URI:
@@ -109,7 +109,7 @@ ges_track_filesource_set_property (GObject * object, guint property_id,
 static void
 ges_track_filesource_dispose (GObject * object)
 {
-  GESUriSource *uriclip = GES_TRACK_FILESOURCE (object);
+  GESUriSource *uriclip = GES_URI_SOURCE (object);
 
   if (uriclip->uri)
     g_free (uriclip->uri);
@@ -155,7 +155,7 @@ static void
 ges_track_filesource_init (GESUriSource * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRACK_FILESOURCE, GESUriSourcePrivate);
+      GES_TYPE_URI_SOURCE, GESUriSourcePrivate);
 }
 
 /**
@@ -170,5 +170,5 @@ ges_track_filesource_init (GESUriSource * self)
 GESUriSource *
 ges_track_filesource_new (gchar * uri)
 {
-  return g_object_new (GES_TYPE_TRACK_FILESOURCE, "uri", uri, NULL);
+  return g_object_new (GES_TYPE_URI_SOURCE, "uri", uri, NULL);
 }
