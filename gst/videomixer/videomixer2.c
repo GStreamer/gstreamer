@@ -1719,9 +1719,9 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
     case GST_EVENT_FLUSH_START:
       GST_COLLECT_PADS_STREAM_LOCK (mix->collect);
       mix->flush_stop_pending = TRUE;
+      GST_COLLECT_PADS_STREAM_UNLOCK (mix->collect);
       ret = gst_collect_pads_event_default (pads, cdata, event, discard);
       event = NULL;
-      GST_COLLECT_PADS_STREAM_UNLOCK (mix->collect);
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_COLLECT_PADS_STREAM_LOCK (mix->collect);
