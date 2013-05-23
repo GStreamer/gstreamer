@@ -859,6 +859,10 @@ gst_multiudpsink_start (GstBaseSink * bsink)
   sink = GST_MULTIUDPSINK (bsink);
 
   if (sink->socket == NULL) {
+    GSocketAddress *bind_addr;
+    GInetAddress *bind_iaddr;
+    GSocketFamily family = G_SOCKET_FAMILY_IPV6;
+
     GST_DEBUG_OBJECT (sink, "creating sockets");
     /* create sender socket try IP6, fall back to IP4 */
     if (sink->force_ipv4 || (sink->used_socket =
@@ -867,7 +871,17 @@ gst_multiudpsink_start (GstBaseSink * bsink)
       if ((sink->used_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
                   G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL)
         goto no_socket;
+      else
+        family = G_SOCKET_FAMILY_IPV4;
     }
+
+    bind_iaddr = g_inet_address_new_any (family);
+    bind_addr = g_inet_socket_address_new (bind_iaddr, 0);
+    g_socket_bind (sink->used_socket, bind_addr, TRUE, &err);
+    g_object_unref (bind_addr);
+    g_object_unref (bind_iaddr);
+    if (err != NULL)
+      goto bind_error;
 
     GST_DEBUG_OBJECT (sink, "have socket");
     sink->external_socket = FALSE;
@@ -936,6 +950,13 @@ no_socket:
   {
     GST_ELEMENT_ERROR (sink, RESOURCE, FAILED, (NULL),
         ("Could not create socket: %s", err->message));
+    g_clear_error (&err);
+    return FALSE;
+  }
+bind_error:
+  {
+    GST_ELEMENT_ERROR (sink, RESOURCE, FAILED, (NULL),
+        ("Failed to bind socket: %s", err->message));
     g_clear_error (&err);
     return FALSE;
   }
