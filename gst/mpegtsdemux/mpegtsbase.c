@@ -1291,7 +1291,7 @@ gst_mpegts_base_handle_eos (MpegTSBase * base)
 }
 
 static inline void
-mpegts_base_flush (MpegTSBase * base)
+mpegts_base_flush (MpegTSBase * base, gboolean hard)
 {
   MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
 
@@ -1299,7 +1299,7 @@ mpegts_base_flush (MpegTSBase * base)
   if (G_UNLIKELY (klass->flush == NULL))
     GST_WARNING_OBJECT (base, "Class doesn't have a 'flush' implementation !");
   else
-    klass->flush (base);
+    klass->flush (base, hard);
 }
 
 static gboolean
@@ -1337,8 +1337,8 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_STOP:
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
-      mpegts_packetizer_flush (base->packetizer);
-      mpegts_base_flush (base);
+      mpegts_packetizer_flush (base->packetizer, TRUE);
+      mpegts_base_flush (base, TRUE);
       gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
       base->seen_pat = FALSE;
       break;
@@ -1684,9 +1684,10 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
     /* send a FLUSH_STOP for the sinkpad, since we need data for seeking */
     GST_DEBUG_OBJECT (base, "sending flush stop");
     gst_pad_push_event (base->sinkpad, gst_event_new_flush_stop (TRUE));
-    /* And actually flush our pending data */
-    mpegts_base_flush (base);
-    mpegts_packetizer_flush (base->packetizer);
+    /* And actually flush our pending data but allow to preserve some info
+     * to perform the seek */
+    mpegts_base_flush (base, FALSE);
+    mpegts_packetizer_flush (base->packetizer, FALSE);
   }
 
   if (flags & (GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_SKIP)) {
