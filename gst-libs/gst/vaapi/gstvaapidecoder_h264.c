@@ -2264,7 +2264,7 @@ exec_ref_pic_marking_adaptive_mmco_3(
     ref_picture->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
     gst_vaapi_picture_h264_set_reference(ref_picture,
         GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE,
-        GST_VAAPI_PICTURE_IS_FRAME(picture));
+        GST_VAAPI_PICTURE_IS_COMPLETE(picture));
 }
 
 /* 8.2.5.4.4. Mark pictures with LongTermFramIdx > max_long_term_frame_idx
@@ -2325,9 +2325,22 @@ exec_ref_pic_marking_adaptive_mmco_6(
     GstH264RefPicMarking *ref_pic_marking
 )
 {
+    GstVaapiDecoderH264Private * const priv = &decoder->priv;
+    guint i;
+
+    for (i = 0; i < priv->long_ref_count; i++) {
+        if (priv->long_ref[i]->long_term_frame_idx == ref_pic_marking->long_term_frame_idx)
+            break;
+    }
+    if (i != priv->long_ref_count) {
+        gst_vaapi_picture_h264_set_reference(priv->long_ref[i], 0, TRUE);
+        ARRAY_REMOVE_INDEX(priv->long_ref, i);
+    }
+
     picture->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
     gst_vaapi_picture_h264_set_reference(picture,
-        GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE, FALSE);
+        GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE,
+        GST_VAAPI_PICTURE_IS_COMPLETE(picture));
 }
 
 /* 8.2.5.4. Adaptive memory control decoded reference picture marking process */
