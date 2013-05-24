@@ -153,14 +153,8 @@ main (gint argc, gchar **argv)
       </listitem>
       <listitem>
         <para>
-          GNOME stores the default video and audio sources and sinks in GConf.
-          &GStreamer; provides a number of elements that create audio and
-          video sources and sinks directly based on those GConf settings. 
-          Those elements are: gconfaudiosink, gconfvideosink, gconfaudiosrc
-          and gconfvideosrc. You can create them with
-          <function>gst_element_factory_make ()</function> and use them
-          directly just like you would use any other source or sink element.
-          All GNOME applications are recommended to use those elements.
+          GNOME uses Pulseaudio for audio, use the pulsesrc and
+          pulsesink elements to have access to all the features.
         </para>
       </listitem>
       <listitem>
