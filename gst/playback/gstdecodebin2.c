@@ -2016,6 +2016,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
      * to error while we test it using READY state. */
     add_error_filter (dbin, element);
 
+    /* We don't yet want the bin to control the element's state */
+    gst_element_set_locked_state (element, TRUE);
+
     /* ... add it ... */
     if (!(gst_bin_add (GST_BIN_CAST (dbin), element))) {
       GST_WARNING_OBJECT (dbin, "Couldn't add %s to the bin",
@@ -2203,6 +2206,10 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
       continue;
     }
+
+    /* Now let the bin handle the state */
+    gst_element_set_locked_state (element, FALSE);
+
     if (subtitle) {
       SUBTITLE_LOCK (dbin);
       /* we added the element now, add it to the list of subtitle-encoding
@@ -3193,8 +3200,8 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
   group->overrunsig = g_signal_connect (mq, "overrun",
       G_CALLBACK (multi_queue_overrun_cb), group);
 
-  gst_bin_add (GST_BIN (dbin), gst_object_ref (mq));
   gst_element_set_state (mq, GST_STATE_PAUSED);
+  gst_bin_add (GST_BIN (dbin), gst_object_ref (mq));
 
   return group;
 
