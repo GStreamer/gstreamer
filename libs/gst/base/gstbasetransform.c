@@ -149,9 +149,8 @@
  *   <itemizedlist><title>Special output buffer allocations</title>
  *   <listitem><para>
  *     Elements which need to do special allocation of their output buffers
- *     other than what gst_buffer_pad_alloc allows should implement a
- *     prepare_output_buffer method, which calls the parent implementation and
- *     passes the newly allocated buffer.
+ *     beyond allocating output buffers via the negotiated allocator or
+ *     buffer pool should implement the prepare_output_buffer method.
  *   </para></listitem>
  *   </itemizedlist>
  *   <itemizedlist>
