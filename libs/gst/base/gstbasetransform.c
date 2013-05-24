@@ -1974,7 +1974,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
           && !gst_caps_is_equal (sink_suggest, priv->sink_alloc);
     }
 
-    if (new_caps && (suggest || !gst_caps_can_intersect (sink_suggest, templ))) {
+    if (new_caps && !gst_caps_can_intersect (sink_suggest, templ)) {
       GstCaps *allowed, *peercaps;
 
       GST_DEBUG_OBJECT (trans,
@@ -2023,6 +2023,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
         }
 
         gst_caps_replace (&sink_suggest, allowed);
+        size_suggest = 0;
         gst_caps_unref (allowed);
 
         suggest = TRUE;
