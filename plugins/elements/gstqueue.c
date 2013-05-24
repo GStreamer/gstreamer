@@ -584,6 +584,7 @@ gst_queue_locked_flush (GstQueue * queue)
     if (!GST_IS_QUERY (data))
       gst_mini_object_unref (data);
   }
+  queue->last_query = FALSE;
   GST_QUEUE_CLEAR_LEVEL (queue->cur_level);
   queue->min_threshold.buffers = queue->orig_min_threshold.buffers;
   queue->min_threshold.bytes = queue->orig_min_threshold.bytes;
