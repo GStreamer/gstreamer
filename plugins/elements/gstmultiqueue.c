@@ -185,6 +185,8 @@ struct _GstMultiQueueItem
 
   GDestroyNotify destroy;
   guint32 posid;
+
+  gboolean is_query;
 };
 
 static GstSingleQueue *gst_single_queue_new (GstMultiQueue * mqueue, guint id);
@@ -1110,7 +1112,7 @@ gst_multi_queue_item_steal_object (GstMultiQueueItem * item)
 static void
 gst_multi_queue_item_destroy (GstMultiQueueItem * item)
 {
-  if (item->object && !GST_IS_QUERY (item->object))
+  if (!item->is_query && item->object)
     gst_mini_object_unref (item->object);
   g_slice_free (GstMultiQueueItem, item);
 }
@@ -1125,6 +1127,7 @@ gst_multi_queue_buffer_item_new (GstMiniObject * object, guint32 curid)
   item->object = object;
   item->destroy = (GDestroyNotify) gst_multi_queue_item_destroy;
   item->posid = curid;
+  item->is_query = GST_IS_QUERY (object);
 
   item->size = gst_buffer_get_size (GST_BUFFER_CAST (object));
   item->duration = GST_BUFFER_DURATION (object);
