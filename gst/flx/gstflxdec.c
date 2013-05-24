@@ -543,6 +543,7 @@ gst_flxdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       memcpy (&flxfh, data, FlxFrameChunkSize);
       FLX_FRAME_CHUNK_FIX_ENDIANNESS (&flxfh);
       gst_adapter_unmap (flxdec->adapter);
+      gst_adapter_flush (flxdec->adapter, FlxFrameChunkSize);
 
       switch (flxfh.id) {
         case FLX_FRAME_TYPE:
