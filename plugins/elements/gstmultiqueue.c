@@ -1146,6 +1146,7 @@ gst_multi_queue_mo_item_new (GstMiniObject * object, guint32 curid)
   item->object = object;
   item->destroy = (GDestroyNotify) gst_multi_queue_item_destroy;
   item->posid = curid;
+  item->is_query = GST_IS_QUERY (object);
 
   item->size = 0;
   item->duration = 0;
