@@ -728,9 +728,6 @@ gst_multi_queue_change_state (GstElement * element, GstStateChange transition)
   }
 
   return result;
-
-
-
 }
 
 static gboolean
@@ -1113,7 +1110,7 @@ gst_multi_queue_item_steal_object (GstMultiQueueItem * item)
 static void
 gst_multi_queue_item_destroy (GstMultiQueueItem * item)
 {
-  if (item->object)
+  if (item->object && !GST_IS_QUERY (item->object))
     gst_mini_object_unref (item->object);
   g_slice_free (GstMultiQueueItem, item);
 }
@@ -1362,6 +1359,8 @@ out_flushing:
     compute_high_time (mq);
     compute_high_id (mq);
     wake_up_next_non_linked (mq);
+    sq->last_query = FALSE;
+    g_cond_signal (&sq->query_handled);
     GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 
     /* upstream needs to see fatal result ASAP to shut things down,
@@ -1462,8 +1461,12 @@ gst_multi_queue_sink_activate_mode (GstPad * pad, GstObject * parent,
         /* All pads start off linked until they push one buffer */
         sq->srcresult = GST_FLOW_OK;
         sq->pushed = FALSE;
+        gst_data_queue_set_flushing (sq->queue, FALSE);
       } else {
         sq->srcresult = GST_FLOW_FLUSHING;
+        sq->last_query = FALSE;
+        g_cond_signal (&sq->query_handled);
+        gst_data_queue_set_flushing (sq->queue, TRUE);
         gst_data_queue_flush (sq->queue);
       }
       res = TRUE;
