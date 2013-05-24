@@ -3128,6 +3128,7 @@ gst_video_decoder_negotiate (GstVideoDecoder * decoder)
   gboolean ret = TRUE;
 
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (decoder), FALSE);
+  g_return_val_if_fail (decoder->priv->output_state, FALSE);
 
   klass = GST_VIDEO_DECODER_GET_CLASS (decoder);
 
@@ -3156,25 +3157,38 @@ GstBuffer *
 gst_video_decoder_allocate_output_buffer (GstVideoDecoder * decoder)
 {
   GstFlowReturn flow;
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
+
+  g_return_val_if_fail (decoder->priv->output_state, NULL);
 
   GST_DEBUG ("alloc src buffer");
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
   if (G_UNLIKELY (decoder->priv->output_state_changed
-          || (decoder->priv->output_state
-              && gst_pad_check_reconfigure (decoder->srcpad))))
-    gst_video_decoder_negotiate (decoder);
+          || gst_pad_check_reconfigure (decoder->srcpad))) {
+    if (!gst_video_decoder_negotiate (decoder)) {
+      GST_DEBUG_OBJECT (decoder, "Failed to negotiate, fallback allocation");
+      goto fallback;
+    }
+  }
 
   flow = gst_buffer_pool_acquire_buffer (decoder->priv->pool, &buffer, NULL);
-
-  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
   if (flow != GST_FLOW_OK) {
     GST_INFO_OBJECT (decoder, "couldn't allocate output buffer, flow %s",
         gst_flow_get_name (flow));
-    buffer = NULL;
+    goto fallback;
   }
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
+  return buffer;
+
+fallback:
+  buffer =
+      gst_buffer_new_allocate (NULL, decoder->priv->output_state->info.size,
+      NULL);
+
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
   return buffer;
 }
@@ -3201,6 +3215,7 @@ gst_video_decoder_allocate_output_frame (GstVideoDecoder *
   GstVideoCodecState *state;
   int num_bytes;
 
+  g_return_val_if_fail (decoder->priv->output_state, GST_FLOW_NOT_NEGOTIATED);
   g_return_val_if_fail (frame->output_buffer == NULL, GST_FLOW_ERROR);
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
@@ -3217,8 +3232,7 @@ gst_video_decoder_allocate_output_frame (GstVideoDecoder *
   }
 
   if (G_UNLIKELY (decoder->priv->output_state_changed
-          || (decoder->priv->output_state
-              && gst_pad_check_reconfigure (decoder->srcpad))))
+          || gst_pad_check_reconfigure (decoder->srcpad)))
     gst_video_decoder_negotiate (decoder);
 
   GST_LOG_OBJECT (decoder, "alloc buffer size %d", num_bytes);
