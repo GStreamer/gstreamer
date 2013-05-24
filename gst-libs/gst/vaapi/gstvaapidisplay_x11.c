@@ -58,10 +58,11 @@ get_default_display_name(void)
     return g_display_name;
 }
 
-static gboolean
-compare_display_name(gconstpointer a, gconstpointer b, gpointer user_data)
+static gint
+compare_display_name(gconstpointer a, gconstpointer b)
 {
-    const gchar *cached_name = a, *cached_name_end;
+    const GstVaapiDisplayInfo * const info = a;
+    const gchar *cached_name = info->display_name, *cached_name_end;
     const gchar *tested_name = b, *tested_name_end;
     guint cached_name_length, tested_name_length;
 
@@ -196,8 +197,8 @@ gst_vaapi_display_x11_open_display(GstVaapiDisplay *base_display,
     if (!set_display_name(display, name))
         return FALSE;
 
-    info = gst_vaapi_display_cache_lookup_by_name(cache, priv->display_name,
-        compare_display_name, NULL);
+    info = gst_vaapi_display_cache_lookup_custom(cache, compare_display_name,
+        priv->display_name);
     if (info) {
         priv->x11_display = info->native_display;
         priv->use_foreign_display = TRUE;

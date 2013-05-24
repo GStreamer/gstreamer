@@ -48,21 +48,6 @@ is_device_path(const gchar *device_path)
     return strncmp(device_path, NAME_PREFIX, NAME_PREFIX_LENGTH) == 0;
 }
 
-static gboolean
-compare_device_path(gconstpointer a, gconstpointer b, gpointer user_data)
-{
-    const gchar *cached_name = a;
-    const gchar *tested_name = b;
-
-    if (!cached_name || !is_device_path(cached_name))
-        return FALSE;
-    g_return_val_if_fail(tested_name && is_device_path(tested_name), FALSE);
-
-    cached_name += NAME_PREFIX_LENGTH;
-    tested_name += NAME_PREFIX_LENGTH;
-    return strcmp(cached_name, tested_name) == 0;
-}
-
 /* Get default device path. Actually, the first match in the DRM subsystem */
 static const gchar *
 get_default_device_path(GstVaapiDisplay *display)
@@ -254,8 +239,7 @@ gst_vaapi_display_drm_open_display(GstVaapiDisplay *display, const gchar *name)
     if (!set_device_path(display, name))
         return FALSE;
 
-    info = gst_vaapi_display_cache_lookup_by_name(cache, priv->device_path,
-        compare_device_path, NULL);
+    info = gst_vaapi_display_cache_lookup_by_name(cache, priv->device_path);
     if (info) {
         priv->drm_device = GPOINTER_TO_INT(info->native_display);
         priv->use_foreign_display = TRUE;
