@@ -460,8 +460,7 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
         /* If upstream is not seekable in TIME format we use
          * our own values here */
         if (!seekable)
-          gst_query_set_seeking (query, GST_FORMAT_TIME,
-              demux->parent.mode != BASE_MODE_PUSHING, 0,
+          gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0,
               demux->segment.duration);
       } else {
         GST_DEBUG_OBJECT (demux, "only TIME is supported for query seeking");

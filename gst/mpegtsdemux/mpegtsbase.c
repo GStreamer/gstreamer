@@ -1007,6 +1007,7 @@ static gboolean
 mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
+  gboolean hard;
   MpegTSBase *base = GST_MPEGTS_BASE (parent);
 
   GST_DEBUG_OBJECT (base, "Got event %s",
@@ -1040,12 +1041,12 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_STOP:
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
-      mpegts_packetizer_flush (base->packetizer, TRUE);
-      mpegts_base_flush (base, TRUE);
+      hard = (base->mode != BASE_MODE_SEEKING);
+      mpegts_packetizer_flush (base->packetizer, hard);
+      mpegts_base_flush (base, hard);
       gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
       base->seen_pat = FALSE;
       break;
-      /* Passthrough */
     default:
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
   }
@@ -1340,10 +1341,24 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
       GST_DEBUG ("upstream handled SEEK event");
       return TRUE;
     }
-    /* FIXME : Actually ... it is supported, we just need to convert
-     * the seek event to BYTES */
-    GST_ERROR ("seeking in push mode not supported");
-    goto push_mode;
+
+    /* If the subclass can seek, do that */
+    if (klass->seek) {
+      ret = klass->seek (base, event);
+      if (G_UNLIKELY (ret != GST_FLOW_OK))
+        GST_WARNING ("seeking failed %s", gst_flow_get_name (ret));
+      else {
+        base->mode = BASE_MODE_SEEKING;
+        if (!gst_pad_push_event (base->sinkpad, gst_event_new_seek (rate,
+                    GST_FORMAT_BYTES, flags,
+                    GST_SEEK_TYPE_SET, base->seek_offset,
+                    GST_SEEK_TYPE_NONE, -1)))
+          ret = GST_FLOW_ERROR;
+        base->mode = BASE_MODE_PUSHING;
+      }
+    }
+
+    return ret == GST_FLOW_OK;
   }
 
   GST_DEBUG ("seek event, rate: %f start: %" GST_TIME_FORMAT
@@ -1404,7 +1419,7 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
 done:
   gst_pad_start_task (base->sinkpad, (GstTaskFunction) mpegts_base_loop, base,
       NULL);
-push_mode:
+
   GST_PAD_STREAM_UNLOCK (base->sinkpad);
   return ret == GST_FLOW_OK;
 }
