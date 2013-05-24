@@ -86,6 +86,34 @@ static const DisplayMap g_display_map[] = {
     { NULL, }
 };
 
+static GstVaapiDisplay *
+gst_vaapi_create_display(GstVaapiDisplayType *display_type)
+{
+    GstVaapiDisplay *display = NULL;
+    const DisplayMap *m;
+
+    for (m = g_display_map; m->type_str != NULL; m++) {
+        if (*display_type != GST_VAAPI_DISPLAY_TYPE_ANY &&
+            *display_type != m->type)
+            continue;
+
+        display = m->create_display(NULL);
+        if (display) {
+            /* FIXME: allocator should return NULL if an error occurred */
+            if (gst_vaapi_display_get_display(display)) {
+                *display_type = m->type;
+                break;
+            }
+            gst_vaapi_display_unref(display);
+            display = NULL;
+        }
+
+        if (display_type != GST_VAAPI_DISPLAY_TYPE_ANY)
+            break;
+    }
+    return display;
+}
+
 gboolean
 gst_vaapi_ensure_display(
     gpointer             element,
@@ -95,7 +123,6 @@ gst_vaapi_ensure_display(
 {
     GstVaapiDisplay *display;
     GstVideoContext *context;
-    const DisplayMap *m;
 
     g_return_val_if_fail(GST_IS_VIDEO_CONTEXT(element), FALSE);
     g_return_val_if_fail(display_ptr != NULL, FALSE);
@@ -115,25 +142,7 @@ gst_vaapi_ensure_display(
         return TRUE;
 
     /* If no neighboor, or application not interested, use system default */
-    for (m = g_display_map; m->type_str != NULL; m++) {
-        if (display_type != GST_VAAPI_DISPLAY_TYPE_ANY &&
-            display_type != m->type)
-            continue;
-
-        display = m->create_display(NULL);
-        if (display) {
-            /* FIXME: allocator should return NULL if an error occurred */
-            if (gst_vaapi_display_get_display(display)) {
-                display_type = m->type;
-                break;
-            }
-            gst_vaapi_display_unref(display);
-            display = NULL;
-        }
-
-        if (display_type != GST_VAAPI_DISPLAY_TYPE_ANY)
-            break;
-    }
+    display = gst_vaapi_create_display(&display_type);
 
     if (display_ptr)
         *display_ptr = display;
