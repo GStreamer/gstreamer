@@ -45,6 +45,9 @@
 # include <va/va_glx.h>
 #endif
 
+/* Set to 1 to check display cache works (shared VA display) */
+#define CHECK_DISPLAY_CACHE 1
+
 static void
 print_value(const GValue *value, const gchar *name)
 {
@@ -271,7 +274,7 @@ dump_info(GstVaapiDisplay *display)
 int
 main(int argc, char *argv[])
 {
-    GstVaapiDisplay *display;
+    GstVaapiDisplay *display, *display2;
     guint width, height, par_n, par_d;
 
     gst_init(&argc, &argv);
@@ -345,6 +348,39 @@ main(int argc, char *argv[])
         if (!display)
             g_error("could not create Gst/VA display");
 
+        if (CHECK_DISPLAY_CACHE) {
+            display2 = gst_vaapi_display_x11_new(NULL);
+
+            /* Check for the same X11 display */
+            g_assert(gst_vaapi_display_x11_get_display(
+                         GST_VAAPI_DISPLAY_X11(display)) ==
+                     gst_vaapi_display_x11_get_display(
+                         GST_VAAPI_DISPLAY_X11(display2)));
+
+            /* Check for the same VA display */
+            g_assert(gst_vaapi_display_get_display(display) ==
+                     gst_vaapi_display_get_display(display2));
+
+            gst_vaapi_display_unref(display2);
+
+#if USE_GLX
+            display2 = gst_vaapi_display_glx_new(NULL);
+
+            /* Check for the different X11 display */
+            /* XXX: it is also desired to cache underlying X11 displays */
+            g_assert(gst_vaapi_display_x11_get_display(
+                         GST_VAAPI_DISPLAY_X11(display)) !=
+                     gst_vaapi_display_x11_get_display(
+                         GST_VAAPI_DISPLAY_X11(display2)));
+
+            /* Check for different VA display */
+            g_assert(gst_vaapi_display_get_display(display) !=
+                     gst_vaapi_display_get_display(display2));
+
+            gst_vaapi_display_unref(display2);
+#endif
+        }
+
         gst_vaapi_display_get_size(display, &width, &height);
         g_print("Display size: %ux%u\n", width, height);
 
@@ -369,6 +405,16 @@ main(int argc, char *argv[])
         display = gst_vaapi_display_x11_new_with_display(x11_display);
         if (!display)
             g_error("could not create Gst/VA display");
+
+        if (CHECK_DISPLAY_CACHE) {
+            display2 = gst_vaapi_display_x11_new_with_display(x11_display);
+
+            /* Check for the same VA display */
+            g_assert(gst_vaapi_display_get_display(display) ==
+                     gst_vaapi_display_get_display(display2));
+
+            gst_vaapi_display_unref(display2);
+        }
 
         dump_info(display);
         gst_vaapi_display_unref(display);
@@ -410,6 +456,36 @@ main(int argc, char *argv[])
         display = gst_vaapi_display_glx_new(NULL);
         if (!display)
             g_error("could not create Gst/VA display");
+
+        if (CHECK_DISPLAY_CACHE) {
+            display2 = gst_vaapi_display_glx_new(NULL);
+
+            /* Check for the same X11 display */
+            g_assert(gst_vaapi_display_x11_get_display(
+                         GST_VAAPI_DISPLAY_X11(display)) ==
+                     gst_vaapi_display_x11_get_display(
+                         GST_VAAPI_DISPLAY_X11(display2)));
+
+            /* Check for the same VA display */
+            g_assert(gst_vaapi_display_get_display(display) ==
+                     gst_vaapi_display_get_display(display2));
+
+            gst_vaapi_display_unref(display2);
+
+            display2 = gst_vaapi_display_x11_new(NULL);
+
+            /* Check for the same X11 display */
+            g_assert(gst_vaapi_display_x11_get_display(
+                         GST_VAAPI_DISPLAY_X11(display)) ==
+                     gst_vaapi_display_x11_get_display(
+                         GST_VAAPI_DISPLAY_X11(display2)));
+
+            /* Check for the same VA display */
+            g_assert(gst_vaapi_display_get_display(display) ==
+                     gst_vaapi_display_get_display(display2));
+
+            gst_vaapi_display_unref(display2);
+        }
 
         gst_vaapi_display_get_size(display, &width, &height);
         g_print("Display size: %ux%u\n", width, height);
