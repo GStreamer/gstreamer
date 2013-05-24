@@ -97,6 +97,9 @@ struct _GstQueue2
   /* the queue of data we're keeping our hands on */
   GQueue queue;
 
+  GCond query_handled;
+  gboolean last_query; /* result of last serialized query */
+
   GstQueue2Size cur_level;       /* currently in the queue */
   GstQueue2Size max_level;       /* max. amount of data allowed in the queue */
   gboolean use_buffering;
