@@ -1297,7 +1297,7 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
   guint8 *data;
   guint size;
 
-  GST_DEBUG ("pid: 0x%04x state:%d", stream->stream.pid, stream->state);
+  GST_LOG ("pid: 0x%04x state:%d", stream->stream.pid, stream->state);
 
   size = packet->data_end - packet->payload;
   data = packet->payload;
@@ -1547,13 +1547,12 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
 {
   GstFlowReturn res = GST_FLOW_OK;
 
-  GST_DEBUG ("data:%p", packet->data);
   GST_LOG ("pid 0x%04x pusi:%d, afc:%d, cont:%d, payload:%p", packet->pid,
       packet->payload_unit_start_indicator, packet->adaptation_field_control,
       packet->continuity_counter, packet->payload);
 
   if (section) {
-    GST_DEBUG ("section complete:%d, buffer size %d",
+    GST_LOG ("section complete:%d, buffer size %d",
         section->complete, section->section_length);
     return res;
   }
@@ -1566,7 +1565,7 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
   if (packet->payload && (res == GST_FLOW_OK || res == GST_FLOW_NOT_LINKED)
       && stream->pad) {
     gst_ts_demux_queue_data (demux, stream, packet);
-    GST_DEBUG ("current_size:%d, expected_size:%d",
+    GST_LOG ("current_size:%d, expected_size:%d",
         stream->current_size, stream->expected_size);
     /* Finally check if the data we queued completes a packet */
     if (stream->expected_size && stream->current_size == stream->expected_size) {
