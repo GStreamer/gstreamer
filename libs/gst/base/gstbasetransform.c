@@ -1592,6 +1592,10 @@ default_prepare_output_buffer (GstBaseTransform * trans,
 
   GST_DEBUG_OBJECT (trans, "doing alloc of size %" G_GSIZE_FORMAT, outsize);
   *outbuf = gst_buffer_new_allocate (priv->allocator, outsize, &priv->params);
+  if (!*outbuf) {
+    ret = GST_FLOW_ERROR;
+    goto alloc_failed;
+  }
 
 copy_meta:
   /* copy the metadata */
