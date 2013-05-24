@@ -2726,15 +2726,26 @@ gst_audio_encoder_allocate_output_buffer (GstAudioEncoder * enc, gsize size)
 
   if (G_UNLIKELY (enc->priv->ctx.output_caps_changed || (enc->priv->ctx.caps
               && gst_pad_check_reconfigure (enc->srcpad)))) {
-    if (!gst_audio_encoder_negotiate (enc))
-      goto done;
+    if (!gst_audio_encoder_negotiate (enc)) {
+      GST_INFO_OBJECT (enc, "Failed to negotiate, fallback allocation");
+      goto fallback;
+    }
   }
 
   buffer =
       gst_buffer_new_allocate (enc->priv->ctx.allocator, size,
       &enc->priv->ctx.params);
+  if (!buffer) {
+    GST_INFO_OBJECT (enc, "couldn't allocate output buffer");
+    goto fallback;
+  }
 
-done:
+  GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
+
+  return buffer;
+
+fallback:
+  buffer = gst_buffer_new_allocate (NULL, size, NULL);
   GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
 
   return buffer;

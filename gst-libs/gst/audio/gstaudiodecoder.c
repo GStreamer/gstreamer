@@ -2985,15 +2985,25 @@ gst_audio_decoder_allocate_output_buffer (GstAudioDecoder * dec, gsize size)
   if (G_UNLIKELY (dec->priv->ctx.output_format_changed ||
           (GST_AUDIO_INFO_IS_VALID (&dec->priv->ctx.info)
               && gst_pad_check_reconfigure (dec->srcpad)))) {
-    if (!gst_audio_decoder_negotiate (dec))
-      goto done;
+    if (!gst_audio_decoder_negotiate (dec)) {
+      GST_INFO_OBJECT (dec, "Failed to negotiate, fallback allocation");
+      goto fallback;
+    }
   }
 
   buffer =
       gst_buffer_new_allocate (dec->priv->ctx.allocator, size,
       &dec->priv->ctx.params);
+  if (!buffer) {
+    GST_INFO_OBJECT (dec, "couldn't allocate output buffer");
+    goto fallback;
+  }
 
-done:
+  GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+
+  return buffer;
+fallback:
+  buffer = gst_buffer_new_allocate (NULL, size, NULL);
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
   return buffer;
