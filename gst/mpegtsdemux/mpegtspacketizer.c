@@ -2472,7 +2472,7 @@ mpegts_packetizer_clear (MpegTSPacketizer2 * packetizer)
 }
 
 void
-mpegts_packetizer_flush (MpegTSPacketizer2 * packetizer)
+mpegts_packetizer_flush (MpegTSPacketizer2 * packetizer, gboolean hard)
 {
   GST_DEBUG ("Flushing");
 
@@ -2493,7 +2493,10 @@ mpegts_packetizer_flush (MpegTSPacketizer2 * packetizer)
   packetizer->priv->offset = 0;
   packetizer->priv->mapped_size = 0;
   packetizer->priv->last_in_time = GST_CLOCK_TIME_NONE;
-  flush_observations (packetizer);
+  if (hard) {
+    /* For pull mode seeks in tsdemux the observation must be preserved */
+    flush_observations (packetizer);
+  }
 }
 
 void

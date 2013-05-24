@@ -165,8 +165,10 @@ struct _MpegTSBaseClass {
   /* seek is called to wait for seeking */
   GstFlowReturn (*seek) (MpegTSBase * base, GstEvent * event);
 
-  /* flush all streams */
-  void (*flush) (MpegTSBase * base);
+  /* flush all streams
+   * The hard inicator is used to flush completelly on FLUSH_STOP events
+   * or partially in pull mode seeks of tsdemux */
+  void (*flush) (MpegTSBase * base, gboolean hard);
 
   /* Notifies subclasses input buffer has been handled */
   GstFlowReturn (*input_done) (MpegTSBase *base, GstBuffer *buffer);

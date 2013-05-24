@@ -167,7 +167,7 @@ G_GNUC_INTERNAL GType mpegts_packetizer_get_type(void);
 
 G_GNUC_INTERNAL MpegTSPacketizer2 *mpegts_packetizer_new (void);
 G_GNUC_INTERNAL void mpegts_packetizer_clear (MpegTSPacketizer2 *packetizer);
-G_GNUC_INTERNAL void mpegts_packetizer_flush (MpegTSPacketizer2 *packetizer);
+G_GNUC_INTERNAL void mpegts_packetizer_flush (MpegTSPacketizer2 *packetizer, gboolean hard);
 G_GNUC_INTERNAL void mpegts_packetizer_push (MpegTSPacketizer2 *packetizer, GstBuffer *buffer);
 G_GNUC_INTERNAL gboolean mpegts_packetizer_has_packets (MpegTSPacketizer2 *packetizer);
 G_GNUC_INTERNAL MpegTSPacketizerPacketReturn mpegts_packetizer_next_packet (MpegTSPacketizer2 *packetizer,

@@ -228,7 +228,7 @@ static void gst_ts_demux_reset (MpegTSBase * base);
 static GstFlowReturn
 gst_ts_demux_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     MpegTSPacketizerSection * section);
-static void gst_ts_demux_flush (MpegTSBase * base);
+static void gst_ts_demux_flush (MpegTSBase * base, gboolean hard);
 static void
 gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * stream,
     MpegTSBaseProgram * program);
@@ -1557,7 +1557,7 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
 }
 
 static void
-gst_ts_demux_flush (MpegTSBase * base)
+gst_ts_demux_flush (MpegTSBase * base, gboolean hard)
 {
   GstTSDemux *demux = GST_TS_DEMUX_CAST (base);
 
@@ -1568,7 +1568,10 @@ gst_ts_demux_flush (MpegTSBase * base)
     demux->segment_event = NULL;
   }
   demux->calculate_update_segment = FALSE;
-  gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
+  if (hard) {
+    /* For pull mode seeks the current segment needs to be preserved */
+    gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
+  }
 }
 
 static GstFlowReturn
