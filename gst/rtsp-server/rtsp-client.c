@@ -2389,7 +2389,6 @@ setup_client (GstRTSPClient * client, GSocket * socket,
   GstRTSPUrl *url;
 
   read_socket = gst_rtsp_connection_get_read_socket (conn);
-  priv->is_ipv6 = g_socket_get_family (socket) == G_SOCKET_FAMILY_IPV6;
 
   if (!(address = g_socket_get_remote_address (read_socket, error)))
     goto no_address;
@@ -2401,9 +2400,12 @@ setup_client (GstRTSPClient * client, GSocket * socket,
 
     iaddr = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (address));
 
+    /* socket might be ipv6 but adress still ipv4 */
+    priv->is_ipv6 = g_inet_address_get_family (iaddr) == G_SOCKET_FAMILY_IPV6;
     priv->server_ip = g_inet_address_to_string (iaddr);
     g_object_unref (address);
   } else {
+    priv->is_ipv6 = g_socket_get_family (socket) == G_SOCKET_FAMILY_IPV6;
     priv->server_ip = g_strdup ("unknown");
   }
 
