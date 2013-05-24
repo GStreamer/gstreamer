@@ -990,8 +990,6 @@ gst_decode_bin_update_factories_list (GstDecodeBin * dbin)
 static void
 gst_decode_bin_init (GstDecodeBin * decode_bin)
 {
-  GST_OBJECT_FLAG_SET (decode_bin, GST_BIN_FLAG_NO_RESYNC);
-
   /* first filter out the interesting element factories */
   decode_bin->factories_lock = g_mutex_new ();
 
