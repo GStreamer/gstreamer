@@ -83,51 +83,66 @@ error:
     return NULL;
 }
 
-#define CACHE_LOOKUP(cache, res, prop, comp_func, comp_data, user_data) do { \
-        GList *l;                                                       \
-                                                                        \
-        g_mutex_lock(&(cache)->mutex);                                  \
-        for (l = (cache)->list; l != NULL; l = l->next) {               \
-            GstVaapiDisplayInfo * const info =                          \
-                &((CacheEntry *)l->data)->info;                         \
-            if (comp_func(info->prop, comp_data, user_data))            \
-                break;                                                  \
-        }                                                               \
-        g_mutex_unlock(&(cache)->mutex);                                \
-        res = l;                                                        \
-    } while (0)
-
-#define compare_equal(a, b, user_data) \
-    ((a) == (b))
-
-#define compare_string(a, b, user_data) \
-    ((a) == (b) || ((a) && (b) && strcmp(a, b) == 0))
-
 static GList *
-cache_lookup_display(GstVaapiDisplayCache *cache, GstVaapiDisplay *display)
+cache_lookup_1(GstVaapiDisplayCache *cache, GCompareFunc func,
+    gconstpointer data)
 {
-    GList *m;
+    GList *l;
 
-    CACHE_LOOKUP(cache, m, display, compare_equal, display, NULL);
-    return m;
+    g_mutex_lock(&cache->mutex);
+    for (l = cache->list; l != NULL; l = l->next) {
+        GstVaapiDisplayInfo * const info = &((CacheEntry *)l->data)->info;
+        if (func(info, data))
+            break;
+    }
+    g_mutex_unlock(&cache->mutex);
+    return l;
 }
 
-static GList *
-cache_lookup_va_display(GstVaapiDisplayCache *cache, VADisplay va_display)
+static inline const GstVaapiDisplayInfo *
+cache_lookup(GstVaapiDisplayCache *cache, GCompareFunc func,
+    gconstpointer data)
 {
-    GList *m;
+    GList * const m = cache_lookup_1(cache, func, data);
 
-    CACHE_LOOKUP(cache, m, va_display, compare_equal, va_display, NULL);
-    return m;
+    return m ? &((CacheEntry *)m->data)->info : NULL;
 }
 
-static GList *
-cache_lookup_native_display(GstVaapiDisplayCache *cache, gpointer native_display)
+static gint
+compare_display(gconstpointer a, gconstpointer display)
 {
-    GList *m;
+    const GstVaapiDisplayInfo * const info = a;
 
-    CACHE_LOOKUP(cache, m, native_display, compare_equal, native_display, NULL);
-    return m;
+    return info->display == display;
+}
+
+static gint
+compare_va_display(gconstpointer a, gconstpointer va_display)
+{
+    const GstVaapiDisplayInfo * const info = a;
+
+    return info->va_display == va_display;
+}
+
+static gint
+compare_native_display(gconstpointer a, gconstpointer native_display)
+{
+    const GstVaapiDisplayInfo * const info = a;
+
+    return info->native_display == native_display;
+}
+
+static gint
+compare_display_name(gconstpointer a, gconstpointer b)
+{
+    const GstVaapiDisplayInfo * const info = a;
+    const gchar * const display_name = b;
+
+    if (info->display_name == NULL && display_name == NULL)
+        return TRUE;
+    if (!info->display_name || !display_name)
+        return FALSE;
+    return strcmp(info->display_name, display_name) == 0;
 }
 
 /**
@@ -241,7 +256,7 @@ gst_vaapi_display_cache_remove(
 {
     GList *m;
 
-    m = cache_lookup_display(cache, display);
+    m = cache_lookup_1(cache, compare_display, display);
     if (!m)
         return;
 
@@ -267,18 +282,39 @@ gst_vaapi_display_cache_lookup(
     GstVaapiDisplay            *display
 )
 {
-    CacheEntry *entry;
-    GList *m;
-
     g_return_val_if_fail(cache != NULL, NULL);
     g_return_val_if_fail(display != NULL, NULL);
 
-    m = cache_lookup_display(cache, display);
-    if (!m)
-        return NULL;
+    return cache_lookup(cache, compare_display, display);
+}
 
-    entry = m->data;
-    return &entry->info;
+/**
+ * gst_vaapi_display_cache_lookup_custom:
+ * @cache: the #GstVaapiDisplayCache
+ * @func: an comparison function
+ * @data: user data passed to the function
+ *
+ * Looks up an element in the display @cache using the supplied
+ * function @func to find the desired element. It iterates over all
+ * elements in cache, calling the given function which should return
+ * %TRUE when the desired element is found.
+ *
+ * The comparison function takes two gconstpointer arguments, a
+ * #GstVaapiDisplayInfo as the first argument, and that is used to
+ * compare against the given user @data argument as the second
+ * argument.
+ *
+ * Return value: a #GstVaapiDisplayInfo causing @func to succeed
+ *   (i.e. returning %TRUE), or %NULL if none was found
+ */
+const GstVaapiDisplayInfo *
+gst_vaapi_display_cache_lookup_custom(GstVaapiDisplayCache *cache,
+    GCompareFunc func, gconstpointer data)
+{
+    g_return_val_if_fail(cache != NULL, NULL);
+    g_return_val_if_fail(func != NULL, NULL);
+
+    return cache_lookup(cache, func, data);
 }
 
 /**
@@ -297,18 +333,10 @@ gst_vaapi_display_cache_lookup_by_va_display(
     VADisplay                   va_display
 )
 {
-    CacheEntry *entry;
-    GList *m;
-
     g_return_val_if_fail(cache != NULL, NULL);
     g_return_val_if_fail(va_display != NULL, NULL);
 
-    m = cache_lookup_va_display(cache, va_display);
-    if (!m)
-        return NULL;
-
-    entry = m->data;
-    return &entry->info;
+    return cache_lookup(cache, compare_va_display, va_display);
 }
 
 /**
@@ -327,30 +355,18 @@ gst_vaapi_display_cache_lookup_by_native_display(
     gpointer                    native_display
 )
 {
-    CacheEntry *entry;
-    GList *m;
-
     g_return_val_if_fail(cache != NULL, NULL);
     g_return_val_if_fail(native_display != NULL, NULL);
 
-    m = cache_lookup_native_display(cache, native_display);
-    if (!m)
-        return NULL;
-
-    entry = m->data;
-    return &entry->info;
+    return cache_lookup(cache, compare_native_display, native_display);
 }
 
 /**
  * gst_vaapi_display_cache_lookup_by_name:
  * @cache: the #GstVaapiDisplayCache
  * @display_name: the display name to match
- * @compare_func: an optional string comparison function
- * @user_data: any relevant data pointer to the comparison function
  *
- * Looks up the display cache for the specified display name. A
- * specific comparison function can be provided to avoid a plain
- * strcmp().
+ * Looks up the display cache for the specified display name.
  *
  * Return value: a #GstVaapiDisplayInfo matching @display_name, or
  *   %NULL if none was found
@@ -358,23 +374,10 @@ gst_vaapi_display_cache_lookup_by_native_display(
 const GstVaapiDisplayInfo *
 gst_vaapi_display_cache_lookup_by_name(
     GstVaapiDisplayCache       *cache,
-    const gchar                *display_name,
-    GCompareDataFunc            compare_func,
-    gpointer                    user_data
+    const gchar                *display_name
 )
 {
-    CacheEntry *entry;
-    GList *m;
-
     g_return_val_if_fail(cache != NULL, NULL);
 
-    if (compare_func)
-        CACHE_LOOKUP(cache, m, display_name, compare_func, display_name, user_data);
-    else
-        CACHE_LOOKUP(cache, m, display_name, compare_string, display_name, NULL);
-    if (!m)
-        return NULL;
-
-    entry = m->data;
-    return &entry->info;
+    return cache_lookup(cache, compare_display_name, display_name);
 }

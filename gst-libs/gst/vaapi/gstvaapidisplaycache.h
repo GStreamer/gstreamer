@@ -54,6 +54,13 @@ gst_vaapi_display_cache_lookup(
 );
 
 const GstVaapiDisplayInfo *
+gst_vaapi_display_cache_lookup_custom(
+    GstVaapiDisplayCache       *cache,
+    GCompareFunc                func,
+    gconstpointer               data
+);
+
+const GstVaapiDisplayInfo *
 gst_vaapi_display_cache_lookup_by_va_display(
     GstVaapiDisplayCache       *cache,
     VADisplay                   va_display
@@ -68,9 +75,7 @@ gst_vaapi_display_cache_lookup_by_native_display(
 const GstVaapiDisplayInfo *
 gst_vaapi_display_cache_lookup_by_name(
     GstVaapiDisplayCache       *cache,
-    const gchar                *display_name,
-    GCompareDataFunc            compare_func,
-    gpointer                    user_data
+    const gchar                *display_name
 );
 
 #endif /* GSTVAAPIDISPLAYCACHE_H */
