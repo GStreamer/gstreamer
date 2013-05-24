@@ -906,7 +906,7 @@ aac_type_find_scan_loas_frames (GstTypeFind * tf, DataScanCtx * scan_ctx,
     /* add size of sync stream header */
     len += 3;
 
-    if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, len)) {
+    if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, len + 2)) {
       GST_DEBUG ("Wrong sync or next frame not within reach, len=%u", len);
       break;
     }
