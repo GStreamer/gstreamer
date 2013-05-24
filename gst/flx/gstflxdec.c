@@ -543,7 +543,6 @@ gst_flxdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       memcpy (&flxfh, data, FlxFrameChunkSize);
       FLX_FRAME_CHUNK_FIX_ENDIANNESS (&flxfh);
       gst_adapter_unmap (flxdec->adapter);
-      gst_adapter_flush (flxdec->adapter, FlxFrameChunkSize);
 
       switch (flxfh.id) {
         case FLX_FRAME_TYPE:
@@ -587,6 +586,13 @@ gst_flxdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
           flxdec->next_time += flxdec->frame_time;
 
           res = gst_pad_push (flxdec->srcpad, out);
+          break;
+        default:
+          /* check if we have the complete frame */
+          if (avail < flxfh.size)
+            goto need_more_data;
+
+          gst_adapter_flush (flxdec->adapter, flxfh.size);
           break;
       }
 
