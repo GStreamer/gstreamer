@@ -1600,14 +1600,14 @@ gst_video_encoder_allocate_output_buffer (GstVideoEncoder * encoder, gsize size)
 {
   GstBuffer *buffer;
 
-  g_return_val_if_fail (encoder->priv->output_state, NULL);
   g_return_val_if_fail (size > 0, NULL);
 
   GST_DEBUG ("alloc src buffer");
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   if (G_UNLIKELY (encoder->priv->output_state_changed
-          || gst_pad_check_reconfigure (encoder->srcpad))) {
+          || (encoder->priv->output_state
+              && gst_pad_check_reconfigure (encoder->srcpad)))) {
     if (!gst_video_encoder_negotiate (encoder)) {
       GST_DEBUG_OBJECT (encoder, "Failed to negotiate, fallback allocation");
       goto fallback;
@@ -1654,11 +1654,11 @@ gst_video_encoder_allocate_output_frame (GstVideoEncoder *
     encoder, GstVideoCodecFrame * frame, gsize size)
 {
   g_return_val_if_fail (frame->output_buffer == NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (encoder->priv->output_state, GST_FLOW_NOT_NEGOTIATED);
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   if (G_UNLIKELY (encoder->priv->output_state_changed
-          || gst_pad_check_reconfigure (encoder->srcpad)))
+          || (encoder->priv->output_state
+              && gst_pad_check_reconfigure (encoder->srcpad))))
     gst_video_encoder_negotiate (encoder);
 
   GST_LOG_OBJECT (encoder, "alloc buffer size %" G_GSIZE_FORMAT, size);
