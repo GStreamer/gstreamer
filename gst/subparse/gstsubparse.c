@@ -55,7 +55,6 @@ gst_sub_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 
-#ifndef GST_DISABLE_XML
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -63,15 +62,6 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
         "application/x-subtitle-tmplayer; application/x-subtitle-mpl2; "
         "application/x-subtitle-dks; application/x-subtitle-qttext")
     );
-#else
-static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-subtitle; application/x-subtitle-dks; "
-        "application/x-subtitle-tmplayer; application/x-subtitle-mpl2; "
-        "application/x-subtitle-qttext")
-    );
-#endif
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -107,11 +97,9 @@ gst_sub_parse_dispose (GObject * object)
     case GST_SUB_PARSE_FORMAT_QTTEXT:
       qttext_context_deinit (&subparse->state);
       break;
-#ifndef GST_DISABLE_XML
     case GST_SUB_PARSE_FORMAT_SAMI:
       sami_context_deinit (&subparse->state);
       break;
-#endif
     default:
       break;
   }
@@ -1173,11 +1161,9 @@ parser_state_dispose (GstSubParse * self, ParserState * state)
   }
   if (state->user_data) {
     switch (self->parser_type) {
-#ifndef GST_DISABLE_XML
       case GST_SUB_PARSE_FORMAT_SAMI:
         sami_context_reset (state);
         break;
-#endif
       default:
         break;
     }
@@ -1283,13 +1269,11 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
     GST_LOG ("MPSub (time based) format detected");
     return GST_SUB_PARSE_FORMAT_MPSUB;
   }
-#ifndef GST_DISABLE_XML
   if (strstr (match_str, "<SAMI>") != NULL ||
       strstr (match_str, "<sami>") != NULL) {
     GST_LOG ("SAMI (time based) format detected");
     return GST_SUB_PARSE_FORMAT_SAMI;
   }
-#endif
   /* we're boldly assuming the first subtitle appears within the first hour */
   if (sscanf (match_str, "0:%02u:%02u:", &n1, &n2) == 2 ||
       sscanf (match_str, "0:%02u:%02u=", &n1, &n2) == 2 ||
@@ -1348,13 +1332,11 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
       self->parse_line = parse_mpsub;
       return gst_caps_new_simple ("text/x-raw",
           "format", G_TYPE_STRING, "utf8", NULL);
-#ifndef GST_DISABLE_XML
     case GST_SUB_PARSE_FORMAT_SAMI:
       self->parse_line = parse_sami;
       sami_context_init (&self->state);
       return gst_caps_new_simple ("text/x-raw",
           "format", G_TYPE_STRING, "pango-markup", NULL);
-#endif
     case GST_SUB_PARSE_FORMAT_TMPLAYER:
       self->parse_line = parse_tmplayer;
       self->state.max_duration = 5 * GST_SECOND;
@@ -1409,10 +1391,8 @@ feed_textbuf (GstSubParse * self, GstBuffer * buf)
     parser_state_init (&self->state);
     g_string_truncate (self->textbuf, 0);
     gst_adapter_clear (self->adapter);
-#ifndef GST_DISABLE_XML
     if (self->parser_type == GST_SUB_PARSE_FORMAT_SAMI)
       sami_context_reset (&self->state);
-#endif
     /* we could set a flag to make sure that the next buffer we push out also
      * has the DISCONT flag set, but there's no point really given that it's
      * subtitles which are discontinuous by nature. */
@@ -1690,10 +1670,8 @@ GST_STATIC_CAPS ("application/x-subtitle-tmplayer");
 static GstStaticCaps sub_caps = GST_STATIC_CAPS ("application/x-subtitle");
 #define MPL2_CAPS (gst_static_caps_get (&mpl2_caps))
 
-#ifndef GST_DISABLE_XML
 static GstStaticCaps smi_caps = GST_STATIC_CAPS ("application/x-subtitle-sami");
 #define SAMI_CAPS (gst_static_caps_get (&smi_caps))
-#endif
 
 static GstStaticCaps dks_caps = GST_STATIC_CAPS ("application/x-subtitle-dks");
 #define DKS_CAPS (gst_static_caps_get (&dks_caps))
@@ -1774,12 +1752,10 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
       GST_DEBUG ("MPSub format detected");
       caps = SUB_CAPS;
       break;
-#ifndef GST_DISABLE_XML
     case GST_SUB_PARSE_FORMAT_SAMI:
       GST_DEBUG ("SAMI (time-based) format detected");
       caps = SAMI_CAPS;
       break;
-#endif
     case GST_SUB_PARSE_FORMAT_TMPLAYER:
       GST_DEBUG ("TMPlayer (time based) format detected");
       caps = TMP_CAPS;
