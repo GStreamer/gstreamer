@@ -337,12 +337,13 @@ mpegts_get_descriptor_from_stream (MpegTSBaseStream * stream, guint8 tag)
   for (i = 0; i < descriptors->n_values; i++) {
     GValue *value = g_value_array_get_nth (descriptors, i);
     GString *desc = g_value_dup_boxed (value);
-    if (DESC_TAG (desc->str) == tag) {
+    if (DESC_TAG (desc->str) == tag && !retval) {
       retval = (guint8 *) desc->str;
       g_string_free (desc, FALSE);
       break;
-    } else
-      g_string_free (desc, FALSE);
+    } else {
+      g_string_free (desc, TRUE);
+    }
   }
   g_value_array_free (descriptors);
 
@@ -404,12 +405,12 @@ mpegts_get_descriptor_from_program (MpegTSBaseProgram * program, guint8 tag)
   for (i = 0; i < descriptors->n_values; i++) {
     GValue *value = g_value_array_get_nth (descriptors, i);
     GString *desc = g_value_dup_boxed (value);
-    if (DESC_TAG (desc->str) == tag) {
+    if (DESC_TAG (desc->str) == tag && !retval) {
       retval = (guint8 *) desc->str;
       g_string_free (desc, FALSE);
       break;
     } else
-      g_string_free (desc, FALSE);
+      g_string_free (desc, TRUE);
   }
   g_value_array_free (descriptors);
 
