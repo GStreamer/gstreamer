@@ -1717,14 +1717,11 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
       break;
     }
     case GST_EVENT_FLUSH_START:
-      GST_COLLECT_PADS_STREAM_LOCK (mix->collect);
       mix->flush_stop_pending = TRUE;
-      GST_COLLECT_PADS_STREAM_UNLOCK (mix->collect);
       ret = gst_collect_pads_event_default (pads, cdata, event, discard);
       event = NULL;
       break;
     case GST_EVENT_FLUSH_STOP:
-      GST_COLLECT_PADS_STREAM_LOCK (mix->collect);
       mix->newseg_pending = TRUE;
       if (mix->flush_stop_pending) {
         GST_DEBUG_OBJECT (pad, "forwarding flush stop");
@@ -1735,7 +1732,6 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
         discard = TRUE;
         GST_DEBUG_OBJECT (pad, "eating flush stop");
       }
-      GST_COLLECT_PADS_STREAM_UNLOCK (mix->collect);
 
       /* FIXME Should we reset in case we were not awaiting a flush stop? */
       gst_videomixer2_reset_qos (mix);
