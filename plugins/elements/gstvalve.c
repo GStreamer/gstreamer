@@ -223,12 +223,13 @@ static gboolean
 gst_valve_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstValve *valve;
+  gboolean is_sticky = GST_EVENT_IS_STICKY (event);
   gboolean ret = TRUE;
 
   valve = GST_VALVE (parent);
 
   if (g_atomic_int_get (&valve->drop)) {
-    valve->need_repush_sticky |= GST_EVENT_IS_STICKY (event);
+    valve->need_repush_sticky |= is_sticky;
     gst_event_unref (event);
   } else {
     if (valve->need_repush_sticky)
@@ -240,7 +241,7 @@ gst_valve_event (GstPad * pad, GstObject * parent, GstEvent * event)
    * downwards.
    */
   if (g_atomic_int_get (&valve->drop)) {
-    valve->need_repush_sticky |= GST_EVENT_IS_STICKY (event);
+    valve->need_repush_sticky |= is_sticky;
     ret = TRUE;
   }
 
