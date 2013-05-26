@@ -139,6 +139,7 @@ struct _GstPulseRingBuffer
 
   pa_context *context;
   pa_stream *stream;
+  pa_stream *probe_stream;
 
   pa_format_info *format;
   guint channels;
@@ -225,6 +226,7 @@ gst_pulseringbuffer_init (GstPulseRingBuffer * pbuf)
   pbuf->stream_name = NULL;
   pbuf->context = NULL;
   pbuf->stream = NULL;
+  pbuf->probe_stream = NULL;
 
   pbuf->format = NULL;
   pbuf->channels = 0;
@@ -241,9 +243,32 @@ gst_pulseringbuffer_init (GstPulseRingBuffer * pbuf)
   pbuf->paused = FALSE;
 }
 
+/* Call with mainloop lock held if wait == TRUE) */
+static void
+gst_pulse_destroy_stream (pa_stream * stream, gboolean wait)
+{
+  /* Make sure we don't get any further callbacks */
+  pa_stream_set_write_callback (stream, NULL, NULL);
+  pa_stream_set_underflow_callback (stream, NULL, NULL);
+  pa_stream_set_overflow_callback (stream, NULL, NULL);
+
+  pa_stream_disconnect (stream);
+
+  if (wait)
+    pa_threaded_mainloop_wait (mainloop);
+
+  pa_stream_set_state_callback (stream, NULL, NULL);
+  pa_stream_unref (stream);
+}
+
 static void
 gst_pulsering_destroy_stream (GstPulseRingBuffer * pbuf)
 {
+  if (pbuf->probe_stream) {
+    gst_pulse_destroy_stream (pbuf->probe_stream, FALSE);
+    pbuf->probe_stream = NULL;
+  }
+
   if (pbuf->stream) {
 
     if (pbuf->m_data) {
@@ -856,6 +881,13 @@ gst_pulseringbuffer_acquire (GstAudioRingBuffer * buf,
   /* we need a context and a no stream */
   g_assert (pbuf->context);
   g_assert (!pbuf->stream);
+
+  /* if we have a probe, disconnect it first so that if we're creating a
+   * compressed stream, it doesn't get blocked by a PCM stream */
+  if (pbuf->probe_stream) {
+    gst_pulse_destroy_stream (pbuf->probe_stream, TRUE);
+    pbuf->probe_stream = NULL;
+  }
 
   /* enable event notifications */
   GST_LOG_OBJECT (psink, "subscribing to context events");
@@ -2139,7 +2171,6 @@ gst_pulsesink_query_getcaps (GstPulseSink * psink, GstCaps * filter)
   GList *i;
   pa_operation *o = NULL;
   pa_stream *stream;
-  const char *device_name;
 
   GST_OBJECT_LOCK (psink);
   pbuf = GST_PULSERING_BUFFER_CAST (GST_AUDIO_BASE_SINK (psink)->ringbuffer);
@@ -2160,9 +2191,17 @@ gst_pulsesink_query_getcaps (GstPulseSink * psink, GstCaps * filter)
     goto unlock;
   }
 
-  if (!pbuf->stream) {
-    /* We're not yet in PAUSED - create a dummy stream to query the correct
-     * sink.
+  if (pbuf->stream) {
+    /* We're in PAUSED or higher */
+    stream = pbuf->stream;
+
+  } else if (pbuf->probe_stream) {
+    /* We're not paused, but have a cached probe stream */
+    stream = pbuf->probe_stream;
+
+  } else {
+    /* We're not yet in PAUSED and still need to create a probe stream.
+     *
      * FIXME: PA doesn't accept "any" format. We fix something reasonable since
      * this is merely a probe. This should eventually be fixed in PA and
      * hard-coding the format should be dropped. */
@@ -2172,27 +2211,23 @@ gst_pulsesink_query_getcaps (GstPulseSink * psink, GstCaps * filter)
     pa_format_info_set_rate (format, GST_AUDIO_DEF_RATE);
     pa_format_info_set_channels (format, GST_AUDIO_DEF_CHANNELS);
 
-    stream = gst_pulsesink_create_probe_stream (psink, pbuf, format);
-    if (!stream) {
+    pbuf->probe_stream = gst_pulsesink_create_probe_stream (psink, pbuf,
+        format);
+    if (!pbuf->probe_stream) {
       GST_WARNING_OBJECT (psink, "Could not create probe stream");
       goto unlock;
     }
 
-    device_name = pa_stream_get_device_name (stream);
-
-    pa_stream_set_state_callback (stream, NULL, NULL);
-    pa_stream_disconnect (stream);
-    pa_stream_unref (stream);
-
     pa_format_info_free (format);
-  } else {
-    device_name = pa_stream_get_device_name (pbuf->stream);
+
+    stream = pbuf->probe_stream;
   }
 
   ret = gst_caps_new_empty ();
 
-  if (!(o = pa_context_get_sink_info_by_name (pbuf->context, device_name,
-              gst_pulsesink_sink_info_cb, &device_info)))
+  if (!(o = pa_context_get_sink_info_by_name (pbuf->context,
+              pa_stream_get_device_name (stream), gst_pulsesink_sink_info_cb,
+              &device_info)))
     goto info_failed;
 
   while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
@@ -2250,7 +2285,6 @@ gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
   gboolean ret = FALSE;
 
   GstAudioRingBufferSpec spec = { 0 };
-  pa_stream *stream = NULL;
   pa_operation *o = NULL;
   pa_channel_map channel_map;
   pa_format_info *format = NULL;
@@ -2312,18 +2346,20 @@ gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
       gst_pulse_gst_to_channel_map (&channel_map, &spec))
     pa_format_info_set_channel_map (format, &channel_map);
 
-  if (pbuf->stream) {
+  if (pbuf->stream || pbuf->probe_stream) {
     /* We're already in PAUSED or above, so just reuse this stream to query
      * sink formats and use those. */
     GList *i;
+    const char *device_name = pa_stream_get_device_name (pbuf->stream ?
+        pbuf->stream : pbuf->probe_stream);
 
-    if (!(o = pa_context_get_sink_info_by_name (pbuf->context, psink->device,
+    if (!(o = pa_context_get_sink_info_by_name (pbuf->context, device_name,
                 gst_pulsesink_sink_info_cb, &device_info)))
       goto info_failed;
 
     while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
       pa_threaded_mainloop_wait (mainloop);
-      if (gst_pulsering_is_dead (psink, pbuf, TRUE))
+      if (gst_pulsering_is_dead (psink, pbuf, FALSE))
         goto out;
     }
 
@@ -2336,8 +2372,9 @@ gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
   } else {
     /* We're in READY, let's connect a stream to see if the format is
      * accepted by whatever sink we're routed to */
-    stream = gst_pulsesink_create_probe_stream (psink, pbuf, format);
-    if (stream)
+    pbuf->probe_stream = gst_pulsesink_create_probe_stream (psink, pbuf,
+        format);
+    if (pbuf->probe_stream)
       ret = TRUE;
   }
 
@@ -2347,13 +2384,6 @@ out:
 
   if (o)
     pa_operation_unref (o);
-
-  if (stream) {
-    free_device_info (&device_info);
-    pa_stream_set_state_callback (stream, NULL, NULL);
-    pa_stream_disconnect (stream);
-    pa_stream_unref (stream);
-  }
 
   pa_threaded_mainloop_unlock (mainloop);
   GST_OBJECT_UNLOCK (pbuf);
