@@ -4451,13 +4451,20 @@ store_sticky_event (GstPad * pad, GstEvent * event)
   const gchar *name = NULL;
   gboolean insert = TRUE;
 
-  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+  type = GST_EVENT_TYPE (event);
+
+  /* Store all sticky events except SEGMENT/SEGMENT when we're flushing,
+   * otherwise they can be dropped and nothing would ever resend them.
+   * Only do that for activated pads though, everything else is a bug!
+   */
+  if (G_UNLIKELY (GST_PAD_MODE (pad) == GST_PAD_MODE_NONE
+          || (GST_PAD_IS_FLUSHING (pad) && (type == GST_EVENT_SEGMENT
+                  || type == GST_EVENT_EOS))))
     goto flushed;
 
   if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
     goto eos;
 
-  type = GST_EVENT_TYPE (event);
   if (type & GST_EVENT_TYPE_STICKY_MULTI)
     name = gst_structure_get_name (gst_event_get_structure (event));
 
@@ -4527,7 +4534,7 @@ store_sticky_event (GstPad * pad, GstEvent * event)
   if (type == GST_EVENT_EOS)
     GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_EOS);
 
-  return GST_FLOW_OK;
+  return GST_PAD_IS_FLUSHING (pad) ? GST_FLOW_FLUSHING : GST_FLOW_OK;
 
   /* ERRORS */
 flushed:
