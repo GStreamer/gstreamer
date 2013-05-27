@@ -1610,6 +1610,10 @@ gst_multi_queue_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
         guint32 curid;
         GstMultiQueueItem *item;
 
+        GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+        if (sq->srcresult != GST_FLOW_OK)
+          goto out_flushing;
+
         /* Get an unique incrementing id. */
         curid = g_atomic_int_add ((gint *) & mq->counter, 1);
 
@@ -1618,8 +1622,6 @@ gst_multi_queue_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
         GST_DEBUG_OBJECT (mq,
             "SingleQueue %d : Enqueuing query %p of type %s with id %d",
             sq->id, query, GST_QUERY_TYPE_NAME (query), curid);
-
-        GST_MULTI_QUEUE_MUTEX_LOCK (mq);
         res = gst_data_queue_push (sq->queue, (GstDataQueueItem *) item);
         g_cond_wait (&sq->query_handled, &mq->qlock);
         res = sq->last_query;
@@ -1631,6 +1633,13 @@ gst_multi_queue_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
   }
   return res;
+
+out_flushing:
+  {
+    GST_DEBUG_OBJECT (mq, "Flushing");
+    GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+    return FALSE;
+  }
 }
 
 static gboolean
