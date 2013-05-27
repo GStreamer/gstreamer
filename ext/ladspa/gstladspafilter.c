@@ -236,8 +236,8 @@ gst_ladspa_filter_type_init (GstLADSPAFilter * ladspa, LADSPA_Descriptor * desc)
   gst_base_transform_set_in_place (base,
       ladspa_class->ladspa.count.audio.in ==
       ladspa_class->ladspa.count.audio.out
-      && !LADSPA_IS_INPLACE_BROKEN (ladspa_class->ladspa.
-          descriptor->Properties));
+      && !LADSPA_IS_INPLACE_BROKEN (ladspa_class->ladspa.descriptor->
+          Properties));
 
 }
 
@@ -270,16 +270,11 @@ gst_ladspa_filter_type_finalize (GObject * object)
 static void
 gst_ladspa_filter_type_base_init (GstLADSPAFilterClass * ladspa_class)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (ladspa_class);
   GstElementClass *elem_class = GST_ELEMENT_CLASS (ladspa_class);
   GstAudioFilterClass *audio_class = GST_AUDIO_FILTER_CLASS (ladspa_class);
-  LADSPA_Descriptor *desc;
 
-  desc =
-      g_type_get_qdata (G_OBJECT_CLASS_TYPE (object_class), descriptor_quark);
-  g_assert (desc);
-
-  gst_ladspa_class_init (&ladspa_class->ladspa, desc);
+  gst_ladspa_class_init (&ladspa_class->ladspa,
+      G_TYPE_FROM_CLASS (ladspa_class));
 
   gst_ladspa_element_class_set_metadata (&ladspa_class->ladspa, elem_class,
       GST_LADSPA_FILTER_CLASS_TAGS);
@@ -345,8 +340,7 @@ gst_ladspa_filter_class_init (GstLADSPAFilterClass * ladspa_class)
  * Construct the type.
  */
 void
-ladspa_describe_filter_plugin (GstPlugin * plugin,
-    const gchar * filename, const LADSPA_Descriptor * desc)
+ladspa_register_filter_element (GstPlugin * plugin, GstStructure * ladspa_meta)
 {
   GTypeInfo info = {
     sizeof (GstLADSPAFilterClass),
@@ -354,16 +348,11 @@ ladspa_describe_filter_plugin (GstPlugin * plugin,
     (GBaseFinalizeFunc) gst_ladspa_filter_type_base_finalize,
     (GClassInitFunc) gst_ladspa_filter_type_class_init,
     NULL,
-    desc,
+    NULL,
     sizeof (GstLADSPAFilter),
     0,
     (GInstanceInitFunc) gst_ladspa_filter_type_init,
     NULL
   };
-  gchar *tmp;
-
-  tmp = g_strdup_printf ("ladspa-%s-%s", filename, desc->Label);
-  ladspa_register_plugin (plugin, GST_TYPE_LADSPA_FILTER, tmp, &info,
-      descriptor_quark, filename, desc);
-  g_free (tmp);
+  ladspa_register_element (plugin, GST_TYPE_LADSPA_FILTER, &info, ladspa_meta);
 }

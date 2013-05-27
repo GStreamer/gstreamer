@@ -2,7 +2,8 @@
  * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
  *               2001 Steve Baker <stevebaker_org@yahoo.co.uk>
  *               2003 Andy Wingo <wingo at pobox.com>
- * Copyright (C) 2013 Juan Manuel Borges Caño <juanmabcmail@gmail.com>
+ *               2013 Juan Manuel Borges Caño <juanmabcmail@gmail.com>
+ *               2013 Stefan Sauer <ensonic@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -49,6 +50,7 @@
 #include "config.h"
 #endif
 
+#include "gstladspa.h"
 #include "gstladspautils.h"
 #include "gstladspafilter.h"
 #include "gstladspasource.h"
@@ -286,11 +288,9 @@ static gchar *
 gst_ladspa_object_class_get_param_name (GstLADSPAClass * ladspa_class,
     GObjectClass * object_class, unsigned long portnum)
 {
-  LADSPA_Descriptor *desc;
+  const LADSPA_Descriptor *desc = ladspa_class->descriptor;
   gchar *name, **namev, **v, *tmp;
   guint i;
-
-  desc = ladspa_class->descriptor;
 
   /* beauty in the mess */
   name = g_strdup ("");
@@ -342,13 +342,11 @@ static GParamSpec *
 gst_ladspa_object_class_get_param_spec (GstLADSPAClass * ladspa_class,
     GObjectClass * object_class, unsigned long portnum)
 {
-  LADSPA_Descriptor *desc;
+  const LADSPA_Descriptor *desc = ladspa_class->descriptor;
   GParamSpec *ret;
   gchar *name;
   gint hintdesc, perms;
   gfloat lower, upper, def;
-
-  desc = ladspa_class->descriptor;
 
   name =
       gst_ladspa_object_class_get_param_name (ladspa_class, object_class,
@@ -544,7 +542,7 @@ void
 gst_ladspa_element_class_set_metadata (GstLADSPAClass * ladspa_class,
     GstElementClass * elem_class, const gchar * ladspa_class_tags)
 {
-  LADSPA_Descriptor *desc = ladspa_class->descriptor;
+  const LADSPA_Descriptor *desc = ladspa_class->descriptor;
   gchar *longname, *author, *extra_ladspa_class_tags = NULL, *tmp;
 #ifdef HAVE_LRDF
   gchar *uri;
@@ -564,7 +562,7 @@ gst_ladspa_element_class_set_metadata (GstLADSPAClass * ladspa_class,
       "Andy Wingo <wingo at pobox.com>",
       "Steve Baker <stevebaker_org@yahoo.co.uk>",
       "Erik Walthinsen <omega@cse.ogi.edu>",
-      "Stefan Kost <ensonic@users.sf.net>",
+      "Stefan Sauer <ensonic@users.sf.net>",
       "Wim Taymans <wim@fluendo.com>", NULL);
   g_free (tmp);
 
@@ -760,30 +758,35 @@ gst_ladspa_finalize (GstLADSPA * ladspa)
 }
 
 void
-gst_ladspa_class_init (GstLADSPAClass * ladspa_class,
-    LADSPA_Descriptor * descriptor)
+gst_ladspa_class_init (GstLADSPAClass * ladspa_class, GType type)
 {
-  guint mapper;
-  struct
-  {
-    struct
-    {
-      guint in, out;
-    } control;
-    struct
-    {
-      guint in, out;
-    } audio;
-  } count;
+  guint mapper, ix;
+  guint audio_in = 0, audio_out = 0, control_in = 0, control_out = 0;
+  const GValue *value =
+      gst_structure_get_value (ladspa_meta_all, g_type_name (type));
+  GstStructure *ladspa_meta = g_value_get_boxed (value);
+  const gchar *file_name;
+  LADSPA_Descriptor_Function descriptor_function;
 
   GST_DEBUG ("LADSPA initializing class");
 
-  ladspa_class->descriptor = descriptor;
-  ladspa_class->properties = 1;
+  file_name = gst_structure_get_string (ladspa_meta, "plugin-filename");
+  ladspa_class->plugin =
+      g_module_open (file_name, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
+  g_module_symbol (ladspa_class->plugin, "ladspa_descriptor",
+      (gpointer *) & descriptor_function);
+  gst_structure_get_uint (ladspa_meta, "element-ix", &ix);
 
-  ladspa_count_ports (ladspa_class->descriptor, &ladspa_class->count.audio.in,
-      &ladspa_class->count.audio.out, &ladspa_class->count.control.in,
+  ladspa_class->descriptor = descriptor_function (ix);
+  gst_structure_get_uint (ladspa_meta, "audio-in",
+      &ladspa_class->count.audio.in);
+  gst_structure_get_uint (ladspa_meta, "audio-out",
+      &ladspa_class->count.audio.out);
+  gst_structure_get_uint (ladspa_meta, "control-in",
+      &ladspa_class->count.control.in);
+  gst_structure_get_uint (ladspa_meta, "control-out",
       &ladspa_class->count.control.out);
+  ladspa_class->properties = 1;
 
   ladspa_class->map.audio.in =
       g_new0 (unsigned long, ladspa_class->count.audio.in);
@@ -795,29 +798,27 @@ gst_ladspa_class_init (GstLADSPAClass * ladspa_class,
   ladspa_class->map.control.out =
       g_new0 (unsigned long, ladspa_class->count.control.out);
 
-  count.audio.in = count.audio.out = count.control.in = count.control.out = 0;
-
   for (mapper = 0; mapper < ladspa_class->descriptor->PortCount; mapper++) {
     LADSPA_PortDescriptor p = ladspa_class->descriptor->PortDescriptors[mapper];
 
     if (LADSPA_IS_PORT_AUDIO (p)) {
       if (LADSPA_IS_PORT_INPUT (p))
-        ladspa_class->map.audio.in[count.audio.in++] = mapper;
+        ladspa_class->map.audio.in[audio_in++] = mapper;
       else
-        ladspa_class->map.audio.out[count.audio.out++] = mapper;
+        ladspa_class->map.audio.out[audio_out++] = mapper;
     } else if (LADSPA_IS_PORT_CONTROL (p)) {
       if (LADSPA_IS_PORT_INPUT (p))
-        ladspa_class->map.control.in[count.control.in++] = mapper;
+        ladspa_class->map.control.in[control_in++] = mapper;
       else
-        ladspa_class->map.control.out[count.control.out++] = mapper;
+        ladspa_class->map.control.out[control_out++] = mapper;
     }
   }
 
-  g_assert (count.control.out == ladspa_class->count.control.out);
-  g_assert (count.control.in == ladspa_class->count.control.in);
+  g_assert (control_out == ladspa_class->count.control.out);
+  g_assert (control_in == ladspa_class->count.control.in);
 
-  g_assert (count.audio.out == ladspa_class->count.audio.out);
-  g_assert (count.audio.in == ladspa_class->count.audio.in);
+  g_assert (audio_out == ladspa_class->count.audio.out);
+  g_assert (audio_in == ladspa_class->count.audio.in);
 }
 
 void
@@ -834,61 +835,21 @@ gst_ladspa_class_finalize (GstLADSPAClass * ladspa_class)
   ladspa_class->map.audio.out = NULL;
   g_free (ladspa_class->map.audio.in);
   ladspa_class->map.audio.in = NULL;
-}
 
-void
-ladspa_count_ports (const LADSPA_Descriptor * descriptor,
-    guint * audio_in, guint * audio_out, guint * control_in,
-    guint * control_out)
-{
-  guint i;
-
-  *audio_in = *audio_out = *control_in = *control_out = 0;
-
-  for (i = 0; i < descriptor->PortCount; i++) {
-    LADSPA_PortDescriptor p = descriptor->PortDescriptors[i];
-
-    if (LADSPA_IS_PORT_AUDIO (p)) {
-      if (LADSPA_IS_PORT_INPUT (p))
-        (*audio_in)++;
-      else
-        (*audio_out)++;
-    } else if (LADSPA_IS_PORT_CONTROL (p)) {
-      if (LADSPA_IS_PORT_INPUT (p))
-        (*control_in)++;
-      else
-        (*control_out)++;
-    }
-  }
+  g_module_close (ladspa_class->plugin);
+  ladspa_class->plugin = NULL;
 }
 
 /* 
- * Register the type.
+ * Create the type & register the element.
  */
 void
-ladspa_register_plugin (GstPlugin * plugin, GType parent_type,
-    const gchar * tmp, const GTypeInfo * info, GQuark descriptor_quark,
-    const gchar * filename, const LADSPA_Descriptor * desc)
+ladspa_register_element (GstPlugin * plugin, GType parent_type,
+    const GTypeInfo * info, GstStructure * ladspa_meta)
 {
-  gchar *name;
-  GType type;
+  const gchar *type_name =
+      gst_structure_get_string (ladspa_meta, "element-type-name");
 
-  name = g_ascii_strdown (tmp, -1);
-  g_strcanon (name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-+", '-');
-
-  /* if it's not already registered, do it */
-  if (!g_type_from_name (name)) {
-    /* create the type now */
-    type = g_type_register_static (parent_type, name, info, 0);
-
-    /* base init is expected to initialize dynamic data */
-    g_type_set_qdata (type, descriptor_quark, (gpointer) desc);
-
-    /* register the element */
-    gst_element_register (plugin, name, GST_RANK_NONE, type);
-  } else
-    GST_WARNING ("Plugin identifier collision for %s (%s:%lu/%s)", name,
-        filename, desc->UniqueID, desc->Label);
-
-  g_free (name);
+  gst_element_register (plugin, type_name, GST_RANK_NONE,
+      g_type_register_static (parent_type, type_name, info, 0));
 }

@@ -60,8 +60,7 @@ GType
 gst_ladspa_filter_get_type (void);
 
 void
-ladspa_describe_filter_plugin (GstPlugin * plugin,
-    const gchar * filename, const LADSPA_Descriptor * desc);
+ladspa_register_filter_element (GstPlugin * plugin, GstStructure *ladspa_meta);
 
 void
 gst_my_audio_filter_class_add_pad_templates (GstAudioFilterClass * audio_class,

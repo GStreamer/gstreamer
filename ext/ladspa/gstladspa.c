@@ -130,7 +130,6 @@
 #include "gstladspasink.h"
 #include <gst/gst-i18n-plugin.h>
 
-#include <gmodule.h>
 #include <string.h>
 #include <ladspa.h>
 #ifdef HAVE_LRDF
@@ -153,29 +152,107 @@ GST_DEBUG_CATEGORY (ladspa_debug);
   "/usr/local/lib/ladspa" G_SEARCHPATH_SEPARATOR_S \
   LIBDIR "/ladspa"
 
-GQuark descriptor_quark = 0;
+GstStructure *ladspa_meta_all = NULL;
 
 static void
-ladspa_describe_plugin (GstPlugin * plugin,
-    const gchar * filename, LADSPA_Descriptor_Function descriptor_function)
+ladspa_plugin_register_element (GstPlugin * plugin, GstStructure * ladspa_meta)
+{
+  guint audio_in, audio_out;
+
+  gst_structure_get_uint (ladspa_meta, "audio-in", &audio_in);
+  gst_structure_get_uint (ladspa_meta, "audio-out", &audio_out);
+
+  if (audio_in == 0) {
+    ladspa_register_source_element (plugin, ladspa_meta);
+  } else if (audio_out == 0) {
+    ladspa_register_sink_element (plugin, ladspa_meta);
+  } else {
+    ladspa_register_filter_element (plugin, ladspa_meta);
+  }
+}
+
+static void
+ladspa_count_ports (const LADSPA_Descriptor * descriptor,
+    guint * audio_in, guint * audio_out, guint * control_in,
+    guint * control_out)
+{
+  guint i;
+
+  *audio_in = *audio_out = *control_in = *control_out = 0;
+
+  for (i = 0; i < descriptor->PortCount; i++) {
+    LADSPA_PortDescriptor p = descriptor->PortDescriptors[i];
+
+    if (LADSPA_IS_PORT_AUDIO (p)) {
+      if (LADSPA_IS_PORT_INPUT (p))
+        (*audio_in)++;
+      else
+        (*audio_out)++;
+    } else if (LADSPA_IS_PORT_CONTROL (p)) {
+      if (LADSPA_IS_PORT_INPUT (p))
+        (*control_in)++;
+      else
+        (*control_out)++;
+    }
+  }
+}
+
+static void
+ladspa_describe_plugin (const gchar * file_name, const gchar * entry_name,
+    LADSPA_Descriptor_Function descriptor_function)
 {
   const LADSPA_Descriptor *desc;
   guint i;
 
   /* walk through all the plugins in this plugin library */
   for (i = 0; (desc = descriptor_function (i)); i++) {
+    GstStructure *ladspa_meta = NULL;
+    GValue value = { 0, };
+    gchar *tmp;
+    gchar *type_name;
     guint audio_in, audio_out, control_in, control_out;
 
     /* count ports of this plugin */
     ladspa_count_ports (desc, &audio_in, &audio_out, &control_in, &control_out);
 
-    /* categorize and register it */
-    if (audio_in == 0)
-      ladspa_describe_source_plugin (plugin, filename, desc);
-    else if (audio_out == 0)
-      ladspa_describe_sink_plugin (plugin, filename, desc);
-    else
-      ladspa_describe_filter_plugin (plugin, filename, desc);
+    /* categorize  */
+    if (audio_in == 0 && audio_out == 0) {
+      GST_WARNING ("Skipping control only element (%s:%lu/%s)",
+          entry_name, desc->UniqueID, desc->Label);
+      continue;
+    } else if (audio_in == 0) {
+      tmp = g_strdup_printf ("ladspasrc-%s-%s", entry_name, desc->Label);
+    } else if (audio_out == 0) {
+      tmp = g_strdup_printf ("ladspasink-%s-%s", entry_name, desc->Label);
+    } else {
+      tmp = g_strdup_printf ("ladspa-%s-%s", entry_name, desc->Label);
+    }
+    type_name = g_ascii_strdown (tmp, -1);
+    g_free (tmp);
+    g_strcanon (type_name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-+", '-');
+
+    /* check if the type is already registered */
+    if (g_type_from_name (type_name)) {
+      GST_WARNING ("Plugin identifier collision for %s (%s:%lu/%s)", type_name,
+          entry_name, desc->UniqueID, desc->Label);
+      g_free (type_name);
+      continue;
+    }
+
+    ladspa_meta = gst_structure_new_empty ("ladspa");
+    gst_structure_set (ladspa_meta,
+        "plugin-filename", G_TYPE_STRING, file_name,
+        "element-ix", G_TYPE_UINT, i,
+        "element-type-name", G_TYPE_STRING, type_name,
+        "audio-in", G_TYPE_UINT, audio_in,
+        "audio-out", G_TYPE_UINT, audio_out,
+        "control-in", G_TYPE_UINT, control_in,
+        "control-out", G_TYPE_UINT, control_out, NULL);
+
+    g_value_init (&value, GST_TYPE_STRUCTURE);
+    g_value_set_boxed (&value, ladspa_meta);
+    gst_structure_set_value (ladspa_meta_all, type_name, &value);
+    g_value_unset (&value);
   }
 }
 
@@ -235,7 +312,7 @@ ladspa_plugin_directory_search (GstPlugin * ladspa_plugin, const char *dir_name)
               (gpointer *) & descriptor_function)) {
         /* we've found a ladspa_descriptor function, now introspect it. */
         GST_INFO ("describe %s", file_name);
-        ladspa_describe_plugin (ladspa_plugin, entry_name, descriptor_function);
+        ladspa_describe_plugin (file_name, entry_name, descriptor_function);
         ok = TRUE;
       } else {
         /* it was a library, but not a LADSPA one. Unload it. */
@@ -322,6 +399,9 @@ ladspa_plugin_path_search (GstPlugin * plugin)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gboolean res = FALSE;
+  gint n = 0;
+
 #ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
       LOCALEDIR);
@@ -331,8 +411,6 @@ plugin_init (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (ladspa_debug, "ladspa", 0, "LADSPA plugins");
 
-  descriptor_quark = g_quark_from_static_string ("ladspa-descriptor");
-
   gst_plugin_add_dependency_simple (plugin,
       "LADSPA_PATH",
       GST_LADSPA_DEFAULT_PATH, NULL, GST_PLUGIN_DEPENDENCY_FLAG_NONE);
@@ -341,8 +419,44 @@ plugin_init (GstPlugin * plugin)
   lrdf_init ();
 #endif
 
-  if (!ladspa_plugin_path_search (plugin))
+  ladspa_meta_all = (GstStructure *) gst_plugin_get_cache_data (plugin);
+  if (ladspa_meta_all) {
+    n = gst_structure_n_fields (ladspa_meta_all);
+  }
+  GST_INFO ("%d entries in cache", n);
+  if (!n) {
+    ladspa_meta_all = gst_structure_new_empty ("ladspa");
+    res = ladspa_plugin_path_search (plugin);
+    if (res) {
+      n = gst_structure_n_fields (ladspa_meta_all);
+      GST_INFO ("%d entries after scanning", n);
+      gst_plugin_set_cache_data (plugin, ladspa_meta_all);
+    }
+  } else {
+    res = TRUE;
+  }
+
+  if (n) {
+    gint i;
+    const gchar *name;
+    const GValue *value;
+
+    GST_INFO ("register types");
+
+    for (i = 0; i < n; i++) {
+      name = gst_structure_nth_field_name (ladspa_meta_all, i);
+      value = gst_structure_get_value (ladspa_meta_all, name);
+      if (G_VALUE_TYPE (value) == GST_TYPE_STRUCTURE) {
+        GstStructure *ladspa_meta = g_value_get_boxed (value);
+
+        ladspa_plugin_register_element (plugin, ladspa_meta);
+      }
+    }
+  }
+
+  if (!res) {
     GST_WARNING ("no LADSPA plugins found, check LADSPA_PATH");
+  }
 
   /* we don't want to fail, even if there are no elements registered */
   return TRUE;

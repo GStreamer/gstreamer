@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) 2013 Juan Manuel Borges Caño <juanmabcmail@gmail.com>
+ *               2013 Stefan Sauer <ensonic@users.sf.net>
  *
  * gstladspa.h: Header for LADSPA plugin
  *
@@ -27,7 +28,7 @@
 
 G_BEGIN_DECLS
 
-extern GQuark descriptor_quark;
+extern GstStructure *ladspa_meta_all;
 
 G_END_DECLS
 

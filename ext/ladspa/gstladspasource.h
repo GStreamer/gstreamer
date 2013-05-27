@@ -78,8 +78,7 @@ GType
 gst_ladspa_source_get_type (void);
 
 void
-ladspa_describe_source_plugin (GstPlugin * plugin,
-    const gchar * filename, const LADSPA_Descriptor * desc);
+ladspa_register_source_element (GstPlugin * plugin, GstStructure *ladspa_meta);
 
 void
 gst_my_base_source_class_add_pad_template (GstBaseSrcClass * base_class,

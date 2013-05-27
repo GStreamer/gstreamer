@@ -66,8 +66,7 @@ GType
 gst_ladspa_sink_get_type (void);
 
 void
-ladspa_describe_sink_plugin (GstPlugin * plugin,
-    const gchar * filename, const LADSPA_Descriptor * desc);
+ladspa_register_sink_element (GstPlugin * plugin, GstStructure *ladspa_meta);
 
 void
 gst_my_base_sink_class_add_pad_template (GstBaseSinkClass * base_class,

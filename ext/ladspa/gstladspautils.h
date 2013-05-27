@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2013 Juan Manuel Borges Caño <juanmabcmail@gmail.com>
+ *               2013 Stefan Sauer <ensonic@users.sf.net>
  *
  * gstladspautils.h: Header for LADSPA plugin utils
  *
@@ -22,6 +23,7 @@
 #ifndef __GST_LADSPA_UTILS_H__
 #define __GST_LADSPA_UTILS_H__
 
+#include <gmodule.h>
 #include <gst/gst.h>
 #include <gst/audio/gstaudiofilter.h>
 #include <gst/base/gstbasesrc.h>
@@ -63,7 +65,8 @@ struct _GstLADSPAClass
 {
   guint properties;
 
-  LADSPA_Descriptor *descriptor;
+  GModule *plugin;
+  const LADSPA_Descriptor *descriptor;
 
   struct
   {
@@ -141,19 +144,14 @@ void
 gst_ladspa_finalize (GstLADSPA * ladspa);
 
 void
-gst_ladspa_class_init (GstLADSPAClass * ladspa_class, LADSPA_Descriptor * desc);
+gst_ladspa_class_init (GstLADSPAClass * ladspa_class, GType type);
 
 void
 gst_ladspa_class_finalize (GstLADSPAClass * ladspa_class);
 
 void
-ladspa_count_ports (const LADSPA_Descriptor * desc, guint * audio_in,
-    guint * audio_out, guint * control_in, guint * control_out);
-
-void
-ladspa_register_plugin (GstPlugin * plugin, GType parent_type,
-    const gchar * tmp, const GTypeInfo * info, GQuark descriptor_quark,
-    const gchar * filename, const LADSPA_Descriptor * desc);
+ladspa_register_element (GstPlugin * plugin, GType parent_type,
+    const GTypeInfo * info, GstStructure * ladspa_meta);
 
 G_END_DECLS
 

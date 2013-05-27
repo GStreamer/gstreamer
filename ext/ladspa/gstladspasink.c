@@ -270,16 +270,11 @@ gst_ladspa_sink_type_finalize (GObject * object)
 static void
 gst_ladspa_sink_type_base_init (GstLADSPASinkClass * ladspa_class)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (ladspa_class);
   GstElementClass *elem_class = GST_ELEMENT_CLASS (ladspa_class);
   GstBaseSinkClass *base_class = GST_BASE_SINK_CLASS (ladspa_class);
-  LADSPA_Descriptor *desc;
 
-  desc =
-      g_type_get_qdata (G_OBJECT_CLASS_TYPE (object_class), descriptor_quark);
-  g_assert (desc);
-
-  gst_ladspa_class_init (&ladspa_class->ladspa, desc);
+  gst_ladspa_class_init (&ladspa_class->ladspa,
+      G_TYPE_FROM_CLASS (ladspa_class));
 
   gst_ladspa_element_class_set_metadata (&ladspa_class->ladspa, elem_class,
       GST_LADSPA_SINK_CLASS_TAGS);
@@ -362,8 +357,7 @@ gst_ladspa_sink_class_init (GstLADSPASinkClass * ladspa_class)
  * Construct the type.
  */
 void
-ladspa_describe_sink_plugin (GstPlugin * plugin,
-    const gchar * filename, const LADSPA_Descriptor * desc)
+ladspa_register_sink_element (GstPlugin * plugin, GstStructure * ladspa_meta)
 {
   GTypeInfo info = {
     sizeof (GstLADSPASinkClass),
@@ -371,16 +365,11 @@ ladspa_describe_sink_plugin (GstPlugin * plugin,
     (GBaseFinalizeFunc) gst_ladspa_sink_type_base_finalize,
     (GClassInitFunc) gst_ladspa_sink_type_class_init,
     NULL,
-    desc,
+    NULL,
     sizeof (GstLADSPASink),
     0,
     (GInstanceInitFunc) gst_ladspa_sink_type_init,
     NULL
   };
-  gchar *tmp;
-
-  tmp = g_strdup_printf ("ladspasink-%s-%s", filename, desc->Label);
-  ladspa_register_plugin (plugin, GST_TYPE_LADSPA_SINK, tmp, &info,
-      descriptor_quark, filename, desc);
-  g_free (tmp);
+  ladspa_register_element (plugin, GST_TYPE_LADSPA_SINK, &info, ladspa_meta);
 }

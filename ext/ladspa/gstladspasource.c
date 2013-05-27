@@ -451,8 +451,7 @@ gst_ladspa_source_type_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_ladspa_source_type_init (GstLADSPASource * ladspa,
-    LADSPA_Descriptor * desc)
+gst_ladspa_source_type_init (GstLADSPASource * ladspa, LADSPA_Descriptor * desc)
 {
   GstLADSPASourceClass *ladspa_class = GST_LADSPA_SOURCE_GET_CLASS (ladspa);
 
@@ -500,16 +499,11 @@ gst_ladspa_source_type_finalize (GObject * object)
 static void
 gst_ladspa_source_type_base_init (GstLADSPASourceClass * ladspa_class)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (ladspa_class);
   GstElementClass *elem_class = GST_ELEMENT_CLASS (ladspa_class);
   GstBaseSrcClass *base_class = GST_BASE_SRC_CLASS (ladspa_class);
-  LADSPA_Descriptor *desc;
 
-  desc =
-      g_type_get_qdata (G_OBJECT_CLASS_TYPE (object_class), descriptor_quark);
-  g_assert (desc);
-
-  gst_ladspa_class_init (&ladspa_class->ladspa, desc);
+  gst_ladspa_class_init (&ladspa_class->ladspa,
+      G_TYPE_FROM_CLASS (ladspa_class));
 
   gst_ladspa_element_class_set_metadata (&ladspa_class->ladspa, elem_class,
       GST_LADSPA_SOURCE_CLASS_TAGS);
@@ -531,27 +525,22 @@ gst_ladspa_source_type_class_init (GstLADSPASourceClass * ladspa_class,
   GObjectClass *object_class = (GObjectClass *) ladspa_class;
   GstBaseSrcClass *base_class = (GstBaseSrcClass *) ladspa_class;
 
-  gst_ladspa_source_type_parent_class =
-      g_type_class_peek_parent (ladspa_class);
+  gst_ladspa_source_type_parent_class = g_type_class_peek_parent (ladspa_class);
 
-  object_class->dispose =
-      GST_DEBUG_FUNCPTR (gst_ladspa_source_type_dispose);
-  object_class->finalize =
-      GST_DEBUG_FUNCPTR (gst_ladspa_source_type_finalize);
+  object_class->dispose = GST_DEBUG_FUNCPTR (gst_ladspa_source_type_dispose);
+  object_class->finalize = GST_DEBUG_FUNCPTR (gst_ladspa_source_type_finalize);
   object_class->set_property =
       GST_DEBUG_FUNCPTR (gst_ladspa_source_type_set_property);
   object_class->get_property =
       GST_DEBUG_FUNCPTR (gst_ladspa_source_type_get_property);
 
-  base_class->set_caps =
-      GST_DEBUG_FUNCPTR (gst_ladspa_source_type_set_caps);
+  base_class->set_caps = GST_DEBUG_FUNCPTR (gst_ladspa_source_type_set_caps);
   base_class->fixate = GST_DEBUG_FUNCPTR (gst_ladspa_source_type_fixate);
   base_class->is_seekable =
       GST_DEBUG_FUNCPTR (gst_ladspa_source_type_is_seekable);
   base_class->do_seek = GST_DEBUG_FUNCPTR (gst_ladspa_source_type_do_seek);
   base_class->query = GST_DEBUG_FUNCPTR (gst_ladspa_source_type_query);
-  base_class->get_times =
-      GST_DEBUG_FUNCPTR (gst_ladspa_source_type_get_times);
+  base_class->get_times = GST_DEBUG_FUNCPTR (gst_ladspa_source_type_get_times);
   base_class->start = GST_DEBUG_FUNCPTR (gst_ladspa_source_type_start);
   base_class->stop = GST_DEBUG_FUNCPTR (gst_ladspa_source_type_stop);
   base_class->fill = GST_DEBUG_FUNCPTR (gst_ladspa_source_type_fill);
@@ -609,8 +598,7 @@ gst_ladspa_source_class_init (GstLADSPASourceClass * ladspa_class)
  * Construct the type.
  */
 void
-ladspa_describe_source_plugin (GstPlugin * plugin,
-    const gchar * filename, const LADSPA_Descriptor * desc)
+ladspa_register_source_element (GstPlugin * plugin, GstStructure * ladspa_meta)
 {
   GTypeInfo info = {
     sizeof (GstLADSPASourceClass),
@@ -618,16 +606,11 @@ ladspa_describe_source_plugin (GstPlugin * plugin,
     (GBaseFinalizeFunc) gst_ladspa_source_type_base_finalize,
     (GClassInitFunc) gst_ladspa_source_type_class_init,
     NULL,
-    desc,
+    NULL,
     sizeof (GstLADSPASource),
     0,
     (GInstanceInitFunc) gst_ladspa_source_type_init,
     NULL
   };
-  gchar *tmp;
-
-  tmp = g_strdup_printf ("ladspasrc-%s-%s", filename, desc->Label);
-  ladspa_register_plugin (plugin, GST_TYPE_LADSPA_SOURCE, tmp, &info,
-      descriptor_quark, filename, desc);
-  g_free (tmp);
+  ladspa_register_element (plugin, GST_TYPE_LADSPA_SOURCE, &info, ladspa_meta);
 }
