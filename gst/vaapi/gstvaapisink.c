@@ -329,12 +329,13 @@ gst_vaapisink_ensure_display(GstVaapiSink *sink)
 {
     GstVaapiDisplayType display_type;
     GstVaapiRenderMode render_mode;
+    const gboolean had_display = sink->display != NULL;
 
     if (!gst_vaapi_ensure_display(sink, sink->display_type, &sink->display))
         return FALSE;
 
     display_type = gst_vaapi_display_get_display_type(sink->display);
-    if (display_type != sink->display_type) {
+    if (display_type != sink->display_type || (!had_display && sink->display)) {
         GST_INFO("created %s %p", get_display_type_name(display_type),
             sink->display);
         sink->display_type = display_type;
