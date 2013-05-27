@@ -589,7 +589,8 @@ gst_queue_locked_flush (GstQueue * queue, gboolean full)
 
     /* Then lose another reference because we are supposed to destroy that
        data when flushing */
-    if (!full && GST_IS_EVENT (qitem->item) && GST_EVENT_IS_STICKY (qitem->item)
+    if (!full && !qitem->is_query && GST_IS_EVENT (qitem->item)
+        && GST_EVENT_IS_STICKY (qitem->item)
         && GST_EVENT_TYPE (qitem->item) != GST_EVENT_SEGMENT
         && GST_EVENT_TYPE (qitem->item) != GST_EVENT_EOS) {
       gst_pad_store_sticky_event (queue->srcpad, GST_EVENT_CAST (qitem->item));

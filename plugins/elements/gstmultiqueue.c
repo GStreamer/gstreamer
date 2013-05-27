@@ -1967,6 +1967,7 @@ static void
 gst_single_queue_flush_queue (GstSingleQueue * sq, gboolean full)
 {
   GstDataQueueItem *sitem;
+  GstMultiQueueItem *mitem;
   gboolean was_flushing = FALSE;
 
   while (!gst_data_queue_is_empty (sq->queue)) {
@@ -1982,10 +1983,13 @@ gst_single_queue_flush_queue (GstSingleQueue * sq, gboolean full)
       continue;
     }
 
+    mitem = (GstMultiQueueItem *) sitem;
+
     data = sitem->object;
 
-    if (!full && GST_IS_EVENT (data) && GST_EVENT_IS_STICKY (data) &&
-        GST_EVENT_TYPE (data) != GST_EVENT_SEGMENT
+    if (!full && !mitem->is_query && GST_IS_EVENT (data)
+        && GST_EVENT_IS_STICKY (data)
+        && GST_EVENT_TYPE (data) != GST_EVENT_SEGMENT
         && GST_EVENT_TYPE (data) != GST_EVENT_EOS) {
       gst_pad_store_sticky_event (sq->srcpad, GST_EVENT_CAST (data));
     }
