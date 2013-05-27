@@ -71,12 +71,13 @@ typedef enum {
 /**
  * GstVideoChromaFlags:
  * @GST_VIDEO_CHROMA_FLAG_NONE: no flags
+ * @GST_VIDEO_CHROMA_FLAG_INTERLACED: the input is interlaced
  *
- * Extra flags that influence the result from gst_video_chroma_resample_new()
- * and extra features of the returned resampler.
+ * Extra flags that influence the result from gst_video_chroma_resample_new().
  */
 typedef enum {
   GST_VIDEO_CHROMA_FLAG_NONE       = 0,
+  GST_VIDEO_CHROMA_FLAG_INTERLACED = (1 << 0),
 } GstVideoChromaFlags;
 
 typedef struct _GstVideoChromaResample GstVideoChromaResample;
