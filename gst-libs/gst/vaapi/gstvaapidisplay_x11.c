@@ -39,18 +39,9 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-#define NAME_PREFIX "X11:"
-#define NAME_PREFIX_LENGTH 4
-
 static const guint g_display_types =
     (1U << GST_VAAPI_DISPLAY_TYPE_X11) |
     (1U << GST_VAAPI_DISPLAY_TYPE_GLX);
-
-static inline gboolean
-is_display_name(const gchar *display_name)
-{
-    return strncmp(display_name, NAME_PREFIX, NAME_PREFIX_LENGTH) == 0;
-}
 
 static inline const gchar *
 get_default_display_name(void)
@@ -70,18 +61,15 @@ compare_display_name(gconstpointer a, gconstpointer b)
     const gchar *tested_name = b, *tested_name_end;
     guint cached_name_length, tested_name_length;
 
-    if (!cached_name || !is_display_name(cached_name))
-        return FALSE;
-    g_return_val_if_fail(tested_name && is_display_name(tested_name), FALSE);
+    g_return_val_if_fail(cached_name, FALSE);
+    g_return_val_if_fail(tested_name, FALSE);
 
-    cached_name += NAME_PREFIX_LENGTH;
     cached_name_end = strchr(cached_name, ':');
     if (cached_name_end)
         cached_name_length = cached_name_end - cached_name;
     else
         cached_name_length = strlen(cached_name);
 
-    tested_name += NAME_PREFIX_LENGTH;
     tested_name_end = strchr(tested_name, ':');
     if (tested_name_end)
         tested_name_length = tested_name_end - tested_name;
@@ -104,18 +92,8 @@ get_display_name(GstVaapiDisplayX11 *display)
     GstVaapiDisplayX11Private * const priv = &display->priv;
     const gchar *display_name = priv->display_name;
 
-    if (!display_name)
+    if (!display_name || *display_name == '\0')
         return NULL;
-
-    if (is_display_name(display_name)) {
-        display_name += NAME_PREFIX_LENGTH;
-        if (*display_name == '\0')
-            return NULL;
-        return display_name;
-    }
-
-    /* XXX: this should not happen */
-    g_assert(0 && "display name without prefix");
     return display_name;
 }
 
@@ -132,7 +110,7 @@ set_display_name(GstVaapiDisplayX11 *display, const gchar *display_name)
         if (!display_name)
             display_name = "";
     }
-    priv->display_name = g_strdup_printf("%s%s", NAME_PREFIX, display_name);
+    priv->display_name = g_strdup(display_name);
     return priv->display_name != NULL;
 }
 

@@ -33,16 +33,7 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-#define NAME_PREFIX "WLD:"
-#define NAME_PREFIX_LENGTH 4
-
 static const guint g_display_types = 1U << GST_VAAPI_DISPLAY_TYPE_WAYLAND;
-
-static inline gboolean
-is_display_name(const gchar *display_name)
-{
-    return strncmp(display_name, NAME_PREFIX, NAME_PREFIX_LENGTH) == 0;
-}
 
 static inline const gchar *
 get_default_display_name(void)
@@ -73,13 +64,10 @@ compare_display_name(gconstpointer a, gconstpointer b)
     const gchar *tested_name = b;
     guint cached_name_length, tested_name_length;
 
-    if (!cached_name || !is_display_name(cached_name))
-        return FALSE;
-    cached_name += NAME_PREFIX_LENGTH;
-    cached_name_length = get_display_name_length(cached_name);
+    g_return_val_if_fail(cached_name, FALSE);
+    g_return_val_if_fail(tested_name, FALSE);
 
-    g_return_val_if_fail(tested_name && is_display_name(tested_name), FALSE);
-    tested_name += NAME_PREFIX_LENGTH;
+    cached_name_length = get_display_name_length(cached_name);
     tested_name_length = get_display_name_length(tested_name);
 
     /* XXX: handle screen number and default WAYLAND_DISPLAY name */
@@ -88,29 +76,6 @@ compare_display_name(gconstpointer a, gconstpointer b)
     if (strncmp(cached_name, tested_name, cached_name_length) != 0)
         return FALSE;
     return TRUE;
-}
-
-/* Reconstruct a display name without our prefix */
-static const gchar *
-get_display_name(GstVaapiDisplayWayland *display)
-{
-    GstVaapiDisplayWaylandPrivate * const priv =
-        GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display);
-    const gchar *display_name = priv->display_name;
-
-    if (!display_name)
-        return NULL;
-
-    if (is_display_name(display_name)) {
-        display_name += NAME_PREFIX_LENGTH;
-        if (*display_name == '\0')
-            return NULL;
-        return display_name;
-    }
-
-    /* XXX: this should not happen */
-    g_assert(0 && "display name without prefix");
-    return display_name;
 }
 
 /* Mangle display name with our prefix */
@@ -127,7 +92,7 @@ set_display_name(GstVaapiDisplay *display, const gchar *display_name)
         if (!display_name)
             display_name = "";
     }
-    priv->display_name = g_strdup_printf("%s%s", NAME_PREFIX, display_name);
+    priv->display_name = g_strdup(display_name);
     return priv->display_name != NULL;
 }
 

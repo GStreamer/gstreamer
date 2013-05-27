@@ -39,16 +39,7 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-#define NAME_PREFIX "DRM:"
-#define NAME_PREFIX_LENGTH 4
-
 static const guint g_display_types = 1U << GST_VAAPI_DISPLAY_TYPE_DRM;
-
-static inline gboolean
-is_device_path(const gchar *device_path)
-{
-    return strncmp(device_path, NAME_PREFIX, NAME_PREFIX_LENGTH) == 0;
-}
 
 /* Get default device path. Actually, the first match in the DRM subsystem */
 static const gchar *
@@ -113,13 +104,7 @@ get_device_path(GstVaapiDisplay *display)
         GST_VAAPI_DISPLAY_DRM_PRIVATE(display);
     const gchar *device_path = priv->device_path;
 
-    if (!device_path)
-        return NULL;
-
-    g_return_val_if_fail(is_device_path(device_path), NULL);
-
-    device_path += NAME_PREFIX_LENGTH;
-    if (*device_path == '\0')
+    if (!device_path || *device_path == '\0')
         return NULL;
     return device_path;
 }
@@ -139,7 +124,7 @@ set_device_path(GstVaapiDisplay *display, const gchar *device_path)
         if (!device_path)
             return FALSE;
     }
-    priv->device_path = g_strdup_printf("%s%s", NAME_PREFIX, device_path);
+    priv->device_path = g_strdup(device_path);
     return priv->device_path != NULL;
 }
 
@@ -198,7 +183,7 @@ set_device_path_from_fd(GstVaapiDisplay *display, gint drm_device)
             continue;
 
         path = udev_device_get_devnode(device);
-        priv->device_path = g_strdup_printf("%s%s", NAME_PREFIX, path);
+        priv->device_path = g_strdup(path);
         udev_device_unref(device);
         break;
     }
