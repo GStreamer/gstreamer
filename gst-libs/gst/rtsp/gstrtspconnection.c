@@ -370,70 +370,13 @@ getnameinfo_failed:
   }
 }
 
-static gchar *
-do_resolve (const gchar * host, GCancellable * cancellable)
-{
-  GResolver *resolver;
-  GInetAddress *addr;
-  GError *err = NULL;
-  gchar *ip;
-
-  addr = g_inet_address_new_from_string (host);
-  if (!addr) {
-    GList *results, *l;
-
-    resolver = g_resolver_get_default ();
-
-    results = g_resolver_lookup_by_name (resolver, host, cancellable, &err);
-    if (!results)
-      goto name_resolve;
-
-    for (l = results; l; l = l->next) {
-      GInetAddress *tmp = l->data;
-
-      if (g_inet_address_get_family (tmp) == G_SOCKET_FAMILY_IPV4 ||
-          g_inet_address_get_family (tmp) == G_SOCKET_FAMILY_IPV6) {
-        addr = G_INET_ADDRESS (g_object_ref (tmp));
-        break;
-      }
-    }
-
-    g_resolver_free_addresses (results);
-    g_object_unref (resolver);
-  }
-
-  if (!addr)
-    return NULL;
-
-  ip = g_inet_address_to_string (addr);
-  g_object_unref (addr);
-
-  return ip;
-
-  /* ERRORS */
-name_resolve:
-  {
-    GST_ERROR ("failed to resolve %s: %s", host, err->message);
-    g_clear_error (&err);
-    g_object_unref (resolver);
-    return NULL;
-  }
-}
-
 static GstRTSPResult
-do_connect (const gchar * ip, guint16 port, GSocket ** socket_out,
+do_connect (GSocketAddress * saddr, GSocket ** socket_out,
     GTimeVal * timeout, GCancellable * cancellable)
 {
   GSocket *socket;
   GstClockTime to;
-  GInetAddress *addr;
-  GSocketAddress *saddr;
   GError *err = NULL;
-
-  addr = g_inet_address_new_from_string (ip);
-  g_assert (addr);
-  saddr = g_inet_socket_address_new (addr, port);
-  g_object_unref (addr);
 
   socket =
       g_socket_new (g_socket_address_get_family (saddr), G_SOCKET_TYPE_STREAM,
@@ -471,7 +414,6 @@ do_connect (const gchar * ip, guint16 port, GSocket ** socket_out,
     goto sys_error;
 
 done:
-  g_object_unref (saddr);
 
   *socket_out = socket;
 
@@ -482,14 +424,12 @@ no_socket:
   {
     GST_ERROR ("no socket: %s", err->message);
     g_clear_error (&err);
-    g_object_unref (saddr);
     return GST_RTSP_ESYS;
   }
 sys_error:
   {
     GST_ERROR ("system error: %s", err->message);
     g_clear_error (&err);
-    g_object_unref (saddr);
     g_object_unref (socket);
     return GST_RTSP_ESYS;
   }
@@ -497,21 +437,20 @@ timeout:
   {
     GST_ERROR ("timeout");
     g_clear_error (&err);
-    g_object_unref (saddr);
     g_object_unref (socket);
     return GST_RTSP_ETIMEOUT;
   }
 }
 
 static GstRTSPResult
-setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
+setup_tunneling (GstRTSPConnection * conn, GSocketAddress * sockaddr,
+    GTimeVal * timeout)
 {
   gint i;
   GstRTSPResult res;
-  gchar *ip;
   gchar *uri;
   gchar *value;
-  guint16 port, url_port;
+  guint16 url_port;
   GstRTSPUrl *url;
   gchar *hostparam;
   GstRTSPMessage *msg;
@@ -534,14 +473,10 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
     uri = g_strdup_printf ("http://%s:%d%s%s%s", url->host, url_port,
         url->abspath, url->query ? "?" : "", url->query ? url->query : "");
     hostparam = g_strdup_printf ("%s:%d", url->host, url_port);
-    ip = conn->proxy_host;
-    port = conn->proxy_port;
   } else {
     uri = g_strdup_printf ("%s%s%s", url->abspath, url->query ? "?" : "",
         url->query ? url->query : "");
     hostparam = NULL;
-    ip = conn->remote_ip;
-    port = url_port;
   }
 
   /* create the GET request for the read connection */
@@ -590,19 +525,66 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
       url->host = g_strdup (value);
       g_free (hostparam);
       hostparam = g_strdup_printf ("%s:%d", url->host, url_port);
-    } else {
-      /* and resolve the new ip address */
-      if (!(ip = do_resolve (value, conn->cancellable)))
-        goto not_resolved;
-      g_free (conn->remote_ip);
-      conn->remote_ip = ip;
-    }
-  }
 
-  /* connect to the host/port */
-  res = do_connect (ip, port, &conn->socket1, timeout, conn->cancellable);
-  if (res != GST_RTSP_OK)
-    goto connect_failed;
+      /* connect to the host/port */
+      res = do_connect (sockaddr, &conn->socket1, timeout, conn->cancellable);
+      if (res != GST_RTSP_OK)
+        goto connect_failed;
+    } else {
+      GSocketConnectable *connectable;
+      GSocketAddressEnumerator *enumerator;
+      GError *error = NULL;
+      gboolean first = TRUE;
+
+      sockaddr = NULL;
+
+      /* and resolve the new ip address */
+      connectable = g_network_address_new (value, url_port);
+      enumerator = g_socket_connectable_enumerate (connectable);
+      g_object_unref (connectable);
+
+      while (TRUE) {
+        sockaddr =
+            g_socket_address_enumerator_next (enumerator, conn->cancellable,
+            &error);
+        if (!sockaddr) {
+          if (!error)
+            GST_DEBUG ("no more addresses");
+          else
+            GST_DEBUG ("failed to retrieve next address %s", error->message);
+
+          g_object_unref (enumerator);
+
+          res = GST_RTSP_ESYS;
+          if (first)
+            goto not_resolved;
+          else
+            goto connect_failed;
+        }
+        first = FALSE;
+
+        /* connect to the host/port */
+        res = do_connect (sockaddr, &conn->socket0, timeout, conn->cancellable);
+
+        if (res == GST_RTSP_OK) {
+          g_free (conn->remote_ip);
+          conn->remote_ip =
+              g_inet_address_to_string (g_inet_socket_address_get_address
+              (G_INET_SOCKET_ADDRESS (sockaddr)));
+          g_object_unref (sockaddr);
+          break;
+        }
+        g_object_unref (sockaddr);
+        sockaddr = NULL;
+      }
+      g_object_unref (enumerator);
+    }
+  } else {
+    /* connect to the host/port */
+    res = do_connect (sockaddr, &conn->socket1, timeout, conn->cancellable);
+    if (res != GST_RTSP_OK)
+      goto connect_failed;
+  }
 
   /* this is now our writing socket */
   conn->write_socket = conn->socket1;
@@ -696,8 +678,11 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
 {
   GstRTSPResult res;
   gchar *ip;
-  guint16 port;
   GstRTSPUrl *url;
+  gboolean proxy = FALSE, first = TRUE;
+  GSocketConnectable *connectable;
+  GSocketAddressEnumerator *enumerator;
+  GSocketAddress *sockaddr = NULL;
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (conn->url != NULL, GST_RTSP_EINVAL);
@@ -705,39 +690,73 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
 
   url = conn->url;
 
+
   if (conn->proxy_host && conn->tunneled) {
-    if (!(ip = do_resolve (conn->proxy_host, conn->cancellable))) {
-      GST_ERROR ("could not resolve %s", conn->proxy_host);
-      goto not_resolved;
-    }
-    port = conn->proxy_port;
-    g_free (conn->proxy_host);
-    conn->proxy_host = ip;
+    connectable = g_network_address_new (conn->proxy_host, conn->proxy_port);
+    proxy = TRUE;
   } else {
-    if (!(ip = do_resolve (url->host, conn->cancellable))) {
-      GST_ERROR ("could not resolve %s", url->host);
-      goto not_resolved;
-    }
+    guint16 port;
+
     /* get the port from the url */
     gst_rtsp_url_get_port (url, &port);
-
-    g_free (conn->remote_ip);
-    conn->remote_ip = ip;
+    connectable = g_network_address_new (url->host, port);
   }
 
-  /* connect to the host/port */
-  res = do_connect (ip, port, &conn->socket0, timeout, conn->cancellable);
-  if (res != GST_RTSP_OK)
-    goto connect_failed;
+  enumerator = g_socket_connectable_enumerate (connectable);
+  g_object_unref (connectable);
+
+  while (TRUE) {
+    GError *error = NULL;
+
+    sockaddr =
+        g_socket_address_enumerator_next (enumerator, conn->cancellable,
+        &error);
+    if (!sockaddr) {
+      if (!error)
+        GST_DEBUG ("no more addresses");
+      else
+        GST_DEBUG ("failed to retrieve next address %s", error->message);
+      g_clear_error (&error);
+
+      g_object_unref (enumerator);
+      res = GST_RTSP_ESYS;
+      if (first)
+        goto not_resolved;
+      else
+        goto connect_failed;
+    }
+    first = FALSE;
+
+    /* connect to the host/port */
+    res = do_connect (sockaddr, &conn->socket0, timeout, conn->cancellable);
+
+    if (res == GST_RTSP_OK) {
+      ip = g_inet_address_to_string (g_inet_socket_address_get_address
+          (G_INET_SOCKET_ADDRESS (sockaddr)));
+      if (proxy) {
+        conn->proxy_host = ip;
+      } else {
+        g_free (conn->remote_ip);
+        conn->remote_ip = ip;
+      }
+      break;
+    }
+    g_object_unref (sockaddr);
+    sockaddr = NULL;
+  }
+  g_object_unref (enumerator);
+  g_assert (sockaddr);
 
   /* this is our read URL */
   conn->read_socket = conn->socket0;
 
   if (conn->tunneled) {
-    res = setup_tunneling (conn, timeout);
+    res = setup_tunneling (conn, sockaddr, timeout);
+    g_object_unref (sockaddr);
     if (res != GST_RTSP_OK)
       goto tunneling_failed;
   } else {
+    g_object_unref (sockaddr);
     conn->write_socket = conn->socket0;
   }
 
