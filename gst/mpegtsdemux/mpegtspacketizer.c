@@ -2636,67 +2636,63 @@ mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
     MpegTSPacketizerPacket * packet)
 {
   MpegTSPacketizerPrivate *priv = packetizer->priv;
-  guint avail;
-  int i;
+  guint skip;
+  guint sync_offset;
 
   if (G_UNLIKELY (!packetizer->know_packet_size)) {
     if (!mpegts_try_discover_packet_size (packetizer))
       return PACKET_NEED_MORE;
   }
 
-  while ((avail = priv->available) >= packetizer->packet_size) {
+  while (priv->available >= packetizer->packet_size) {
     if (priv->mapped == NULL) {
-      priv->mapped_size =
-          priv->available - (priv->available % packetizer->packet_size);
+      priv->mapped_size = priv->available;
       priv->mapped =
           (guint8 *) gst_adapter_map (packetizer->adapter, priv->mapped_size);
       priv->offset = 0;
     }
-    packet->data_start = priv->mapped + priv->offset;
 
     /* M2TS packets don't start with the sync byte, all other variants do */
+    sync_offset = priv->offset;
     if (packetizer->packet_size == MPEGTS_M2TS_PACKETSIZE)
-      packet->data_start += 4;
-
-    /* ALL mpeg-ts variants contain 188 bytes of data. Those with bigger packet
-     * sizes contain either extra data (timesync, FEC, ..) either before or after
-     * the data */
-    packet->data_end = packet->data_start + 188;
-    packet->offset = packetizer->offset;
-    GST_LOG ("offset %" G_GUINT64_FORMAT, packet->offset);
-    packetizer->offset += packetizer->packet_size;
-    GST_MEMDUMP ("data_start", packet->data_start, 16);
-    packet->origts = priv->last_in_time;
+      sync_offset += 4;
 
     /* Check sync byte */
-    if (G_LIKELY (packet->data_start[0] == 0x47))
+    if (G_LIKELY (priv->mapped[sync_offset] == 0x47)) {
+      /* ALL mpeg-ts variants contain 188 bytes of data. Those with bigger
+       * packet sizes contain either extra data (timesync, FEC, ..) either
+       * before or after the data */
+      packet->data_start = priv->mapped + sync_offset;
+      packet->data_end = packet->data_start + 188;
+      packet->offset = packetizer->offset;
+      GST_LOG ("offset %" G_GUINT64_FORMAT, packet->offset);
+      packetizer->offset += packetizer->packet_size;
+      GST_MEMDUMP ("data_start", packet->data_start, 16);
+      packet->origts = priv->last_in_time;
       goto got_valid_packet;
+    }
 
     GST_LOG ("Lost sync %d", packetizer->packet_size);
 
     /* Find the 0x47 in the buffer */
-    for (i = 0; i < packetizer->packet_size; i++)
-      if (packet->data_start[i] == 0x47)
+    for (; sync_offset < priv->mapped_size; sync_offset++)
+      if (priv->mapped[sync_offset] == 0x47)
         break;
 
-    if (packetizer->packet_size == MPEGTS_M2TS_PACKETSIZE) {
-      if (i >= 4)
-        i -= 4;
-      else
-        i += 188;
-    }
-
-    GST_DEBUG ("Flushing %d bytes out", i);
-    /* gst_adapter_flush (packetizer->adapter, i); */
     /* Pop out the remaining data... */
-    priv->offset += i;
-    priv->available -= i;
+    skip = sync_offset - priv->offset;
+    if (packetizer->packet_size == MPEGTS_M2TS_PACKETSIZE)
+      skip -= 4;
+
+    priv->available -= skip;
+    priv->offset += skip;
+    packetizer->offset += skip;
+
     if (G_UNLIKELY (priv->available < packetizer->packet_size)) {
       GST_DEBUG ("Flushing %d bytes out", priv->offset);
       gst_adapter_flush (packetizer->adapter, priv->offset);
       priv->mapped = NULL;
     }
-    continue;
   }
 
   return PACKET_NEED_MORE;
