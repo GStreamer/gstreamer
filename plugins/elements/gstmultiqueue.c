@@ -198,6 +198,8 @@ static void compute_high_time (GstMultiQueue * mq);
 static void single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq);
 static void single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq);
 
+static void gst_single_queue_flush_queue (GstSingleQueue * sq, gboolean full);
+
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
@@ -733,7 +735,8 @@ gst_multi_queue_change_state (GstElement * element, GstStateChange transition)
 }
 
 static gboolean
-gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush)
+gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush,
+    gboolean full)
 {
   gboolean result;
 
@@ -760,7 +763,7 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush)
     sq->sink_tainted = sq->src_tainted = TRUE;
   } else {
     GST_MULTI_QUEUE_MUTEX_LOCK (mq);
-    gst_data_queue_flush (sq->queue);
+    gst_single_queue_flush_queue (sq, full);
     gst_segment_init (&sq->sink_segment, GST_FORMAT_TIME);
     gst_segment_init (&sq->src_segment, GST_FORMAT_TIME);
     /* All pads start off not-linked for a smooth kick-off */
@@ -1372,7 +1375,7 @@ out_flushing:
      * so empty this one and trigger dynamic queue growth. At
      * this point the srcresult is not OK, NOT_LINKED
      * or EOS, i.e. a real failure */
-    gst_data_queue_flush (sq->queue);
+    gst_single_queue_flush_queue (sq, FALSE);
     single_queue_underrun_cb (sq->queue, sq);
     gst_data_queue_set_flushing (sq->queue, TRUE);
     gst_pad_pause_task (sq->srcpad);
@@ -1511,7 +1514,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       res = gst_pad_push_event (sq->srcpad, event);
 
-      gst_single_queue_flush (mq, sq, TRUE);
+      gst_single_queue_flush (mq, sq, TRUE, FALSE);
       goto done;
 
     case GST_EVENT_FLUSH_STOP:
@@ -1520,7 +1523,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       res = gst_pad_push_event (sq->srcpad, event);
 
-      gst_single_queue_flush (mq, sq, FALSE);
+      gst_single_queue_flush (mq, sq, FALSE, FALSE);
       goto done;
     case GST_EVENT_SEGMENT:
       /* take ref because the queue will take ownership and we need the event
@@ -1646,9 +1649,9 @@ gst_multi_queue_src_activate_mode (GstPad * pad, GstObject * parent,
   switch (mode) {
     case GST_PAD_MODE_PUSH:
       if (active) {
-        result = gst_single_queue_flush (mq, sq, FALSE);
+        result = gst_single_queue_flush (mq, sq, FALSE, TRUE);
       } else {
-        result = gst_single_queue_flush (mq, sq, TRUE);
+        result = gst_single_queue_flush (mq, sq, TRUE, TRUE);
         /* make sure streaming finishes */
         result |= gst_pad_stop_task (pad);
       }
@@ -1949,6 +1952,41 @@ single_queue_check_full (GstDataQueue * dataq, guint visible, guint bytes,
   res = IS_FILLED (sq, time, sq->cur_time) || IS_FILLED (sq, bytes, bytes);
 
   return res;
+}
+
+static void
+gst_single_queue_flush_queue (GstSingleQueue * sq, gboolean full)
+{
+  GstDataQueueItem *sitem;
+  gboolean was_flushing = FALSE;
+
+  while (!gst_data_queue_is_empty (sq->queue)) {
+    GstMiniObject *data;
+
+    /* FIXME: If this fails here although the queue is not empty,
+     * we're flushing... but we want to rescue all sticky
+     * events nonetheless.
+     */
+    if (!gst_data_queue_pop (sq->queue, &sitem)) {
+      was_flushing = TRUE;
+      gst_data_queue_set_flushing (sq->queue, FALSE);
+      continue;
+    }
+
+    data = sitem->object;
+
+    if (!full && GST_IS_EVENT (data) && GST_EVENT_IS_STICKY (data) &&
+        GST_EVENT_TYPE (data) != GST_EVENT_SEGMENT
+        && GST_EVENT_TYPE (data) != GST_EVENT_EOS) {
+      gst_pad_store_sticky_event (sq->srcpad, GST_EVENT_CAST (data));
+    }
+
+    sitem->destroy (sitem);
+  }
+
+  gst_data_queue_flush (sq->queue);
+  if (was_flushing)
+    gst_data_queue_set_flushing (sq->queue, TRUE);
 }
 
 static void

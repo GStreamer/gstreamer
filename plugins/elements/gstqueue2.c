@@ -1520,7 +1520,7 @@ gst_queue2_flush_temp_file (GstQueue2 * queue)
 }
 
 static void
-gst_queue2_locked_flush (GstQueue2 * queue)
+gst_queue2_locked_flush (GstQueue2 * queue, gboolean full)
 {
   if (!QUEUE_IS_USING_QUEUE (queue)) {
     if (QUEUE_IS_USING_TEMP_FILE (queue))
@@ -1529,6 +1529,12 @@ gst_queue2_locked_flush (GstQueue2 * queue)
   } else {
     while (!g_queue_is_empty (&queue->queue)) {
       GstMiniObject *data = g_queue_pop_head (&queue->queue);
+
+      if (!full && GST_IS_EVENT (data) && GST_EVENT_IS_STICKY (data) &&
+          GST_EVENT_TYPE (data) != GST_EVENT_SEGMENT
+          && GST_EVENT_TYPE (data) != GST_EVENT_EOS) {
+        gst_pad_store_sticky_event (queue->srcpad, GST_EVENT_CAST (data));
+      }
 
       /* Then lose another reference because we are supposed to destroy that
          data when flushing */
@@ -2202,7 +2208,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
         gst_pad_push_event (queue->srcpad, event);
 
         GST_QUEUE2_MUTEX_LOCK (queue);
-        gst_queue2_locked_flush (queue);
+        gst_queue2_locked_flush (queue, FALSE);
         queue->srcresult = GST_FLOW_OK;
         queue->sinkresult = GST_FLOW_OK;
         queue->is_eos = FALSE;
@@ -3043,7 +3049,7 @@ gst_queue2_sink_activate_mode (GstPad * pad, GstObject * parent,
         GST_DEBUG_OBJECT (queue, "deactivating push mode");
         queue->srcresult = GST_FLOW_FLUSHING;
         queue->sinkresult = GST_FLOW_FLUSHING;
-        gst_queue2_locked_flush (queue);
+        gst_queue2_locked_flush (queue, TRUE);
         GST_QUEUE2_MUTEX_UNLOCK (queue);
       }
       result = TRUE;

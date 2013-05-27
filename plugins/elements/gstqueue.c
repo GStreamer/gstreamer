@@ -209,7 +209,7 @@ static gboolean gst_queue_handle_src_event (GstPad * pad, GstObject * parent,
 static gboolean gst_queue_handle_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
-static void gst_queue_locked_flush (GstQueue * queue);
+static void gst_queue_locked_flush (GstQueue * queue, gboolean full);
 
 static gboolean gst_queue_src_activate_mode (GstPad * pad, GstObject * parent,
     GstPadMode mode, gboolean active);
@@ -573,7 +573,7 @@ apply_buffer (GstQueue * queue, GstBuffer * buffer, GstSegment * segment,
 }
 
 static void
-gst_queue_locked_flush (GstQueue * queue)
+gst_queue_locked_flush (GstQueue * queue, gboolean full)
 {
   GstMiniObject *data;
 
@@ -581,6 +581,11 @@ gst_queue_locked_flush (GstQueue * queue)
     data = gst_queue_array_pop_head (queue->queue);
     /* Then lose another reference because we are supposed to destroy that
        data when flushing */
+    if (!full && GST_IS_EVENT (data) && GST_EVENT_IS_STICKY (data) &&
+        GST_EVENT_TYPE (data) != GST_EVENT_SEGMENT
+        && GST_EVENT_TYPE (data) != GST_EVENT_EOS) {
+      gst_pad_store_sticky_event (queue->srcpad, GST_EVENT_CAST (data));
+    }
     if (!GST_IS_QUERY (data))
       gst_mini_object_unref (data);
   }
@@ -627,7 +632,7 @@ gst_queue_locked_enqueue_event (GstQueue * queue, gpointer item)
       /* Zero the thresholds, this makes sure the queue is completely
        * filled and we can read all data from the queue. */
       if (queue->flush_on_eos)
-        gst_queue_locked_flush (queue);
+        gst_queue_locked_flush (queue, FALSE);
       else
         GST_QUEUE_CLEAR_LEVEL (queue->min_threshold);
       /* mark the queue as EOS. This prevents us from accepting more data. */
@@ -758,7 +763,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_pad_push_event (queue->srcpad, event);
 
       GST_QUEUE_MUTEX_LOCK (queue);
-      gst_queue_locked_flush (queue);
+      gst_queue_locked_flush (queue, FALSE);
       queue->srcresult = GST_FLOW_OK;
       queue->eos = FALSE;
       queue->unexpected = FALSE;
@@ -1228,7 +1233,7 @@ out_flushing:
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "pause task, reason:  %s", gst_flow_get_name (ret));
     if (ret == GST_FLOW_FLUSHING)
-      gst_queue_locked_flush (queue);
+      gst_queue_locked_flush (queue, FALSE);
     else
       GST_QUEUE_SIGNAL_DEL (queue);
     GST_QUEUE_MUTEX_UNLOCK (queue);
@@ -1377,7 +1382,7 @@ gst_queue_sink_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
         /* step 1, unblock chain function */
         GST_QUEUE_MUTEX_LOCK (queue);
         queue->srcresult = GST_FLOW_FLUSHING;
-        gst_queue_locked_flush (queue);
+        gst_queue_locked_flush (queue, TRUE);
         GST_QUEUE_MUTEX_UNLOCK (queue);
       }
       result = TRUE;
