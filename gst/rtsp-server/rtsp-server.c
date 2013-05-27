@@ -1214,20 +1214,20 @@ gst_rtsp_server_io_func (GSocket * socket, GIOCondition condition,
   } else {
     GST_WARNING_OBJECT (server, "received unknown event %08x", condition);
   }
-  return TRUE;
+  return G_SOURCE_CONTINUE;
 
   /* ERRORS */
 client_failed:
   {
     GST_ERROR_OBJECT (server, "failed to create a client");
-    return FALSE;
+    return G_SOURCE_CONTINUE;
   }
 accept_failed:
   {
     GST_ERROR_OBJECT (server, "failed to accept client: %s", error->message);
     g_error_free (error);
     g_object_unref (client);
-    return FALSE;
+    return G_SOURCE_CONTINUE;
   }
 }
 

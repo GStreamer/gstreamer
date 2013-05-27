@@ -2499,7 +2499,8 @@ gst_rtsp_client_accept (GstRTSPClient * client, GSocket * socket,
 accept_failed:
   {
     gchar *str = gst_rtsp_strresult (res);
-
+    *error = g_error_new (GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Could not accept client on server socket %p: %s", socket, str);
     GST_ERROR ("Could not accept client on server socket %p: %s", socket, str);
     g_free (str);
     return FALSE;
