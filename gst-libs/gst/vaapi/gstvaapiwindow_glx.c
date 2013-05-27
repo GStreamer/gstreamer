@@ -363,10 +363,22 @@ GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE(
 GstVaapiWindow *
 gst_vaapi_window_glx_new(GstVaapiDisplay *display, guint width, guint height)
 {
+    GstVaapiWindow *window;
+
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_GLX(display), NULL);
 
-    return gst_vaapi_window_new(GST_VAAPI_WINDOW_CLASS(
+    window = gst_vaapi_window_new(GST_VAAPI_WINDOW_CLASS(
             gst_vaapi_window_glx_class()), display, width, height);
+    if (!window)
+        return NULL;
+
+    if (!gst_vaapi_window_glx_ensure_context(window, NULL))
+        goto error;
+    return window;
+
+error:
+    gst_vaapi_window_unref(window);
+    return NULL;
 }
 
 /**
@@ -384,13 +396,25 @@ gst_vaapi_window_glx_new(GstVaapiDisplay *display, guint width, guint height)
 GstVaapiWindow *
 gst_vaapi_window_glx_new_with_xid(GstVaapiDisplay *display, Window xid)
 {
+    GstVaapiWindow *window;
+
     GST_DEBUG("new window from xid 0x%08x", xid);
 
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_GLX(display), NULL);
     g_return_val_if_fail(xid != None, NULL);
 
-    return gst_vaapi_window_new_from_native(GST_VAAPI_WINDOW_CLASS(
+    window = gst_vaapi_window_new_from_native(GST_VAAPI_WINDOW_CLASS(
             gst_vaapi_window_glx_class()), display, GINT_TO_POINTER(xid));
+    if (!window)
+        return NULL;
+
+    if (!gst_vaapi_window_glx_ensure_context(window, NULL))
+        goto error;
+    return window;
+
+error:
+    gst_vaapi_window_unref(window);
+    return NULL;
 }
 
 /**
