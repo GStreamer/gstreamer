@@ -38,6 +38,7 @@
 #include "gsttextoverlay.h"
 #include "gsthanddetect.h"
 #include "gstskindetect.h"
+#include "gstretinex.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -85,6 +86,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_skin_detect_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_retinex_plugin_init (plugin))
     return FALSE;
 
   return TRUE;
