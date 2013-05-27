@@ -390,8 +390,6 @@ x2 mergewl d, ay, uvuv
 .source 8 ayuv guint8
 .temp 4 ay
 .temp 4 uvuv
-.temp 2 uv1
-.temp 2 uv2
 
 x2 splitlw uvuv, ay, ayuv
 x2 select1wb y, ay
@@ -424,31 +422,6 @@ x2 splitlw uvuv, ay, ayuv
 x2 select1wb y, ay
 select0lw uv, uvuv
 swapw vu, uv
-
-
-.function video_orc_unpack_NV16
-.dest 4 d guint8
-.source 1 y guint8
-.source 2 uv guint8
-.const 1 c255 255
-.temp 2 ay
-.temp 2 tuv
-
-x2 loadupdb tuv, uv
-mergebw ay, c255, y
-mergewl d, ay, tuv
-
-.function video_orc_pack_NV16
-.dest 2 y guint8
-.dest 2 uv guint8
-.source 8 ayuv guint8
-.temp 4 ay
-.temp 4 tuv
-
-x2 splitlw tuv, ay, ayuv
-x2 select1wb y, ay
-select0lw uv, tuv
-
 
 .function video_orc_unpack_A420
 .dest 4 d guint8
