@@ -23,8 +23,13 @@
 #define GST_VAAPI_DISPLAY_DRM_PRIV_H
 
 #include <gst/vaapi/gstvaapidisplay_drm.h>
+#include "gstvaapidisplay_priv.h"
 
 G_BEGIN_DECLS
+
+#define GST_VAAPI_IS_DISPLAY_DRM(display) \
+    ((display) != NULL && \
+     GST_VAAPI_DISPLAY_TYPE(display) == GST_VAAPI_DISPLAY_TYPE_DRM)
 
 #define GST_VAAPI_DISPLAY_DRM_CAST(display) \
     ((GstVaapiDisplayDRM *)(display))

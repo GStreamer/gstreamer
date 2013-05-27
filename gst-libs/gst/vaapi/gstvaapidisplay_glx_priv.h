@@ -28,6 +28,10 @@
 
 G_BEGIN_DECLS
 
+#define GST_VAAPI_IS_DISPLAY_GLX(display) \
+    ((display) != NULL && \
+     GST_VAAPI_DISPLAY_TYPE(display) == GST_VAAPI_DISPLAY_TYPE_GLX)
+
 #define GST_VAAPI_DISPLAY_GLX_CAST(display) \
     ((GstVaapiDisplayGLX *)(display))
 

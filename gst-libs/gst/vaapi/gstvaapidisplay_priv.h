@@ -97,6 +97,16 @@ typedef void     (*GstVaapiDisplayGetSizeMFunc)(GstVaapiDisplay *display,
     gst_vaapi_display_unlock(GST_VAAPI_DISPLAY_CAST(display))
 
 /**
+ * GST_VAAPI_DISPLAY_TYPE:
+ * @display: a #GstVaapiDisplay
+ *
+ * Returns the @display type
+ */
+#undef  GST_VAAPI_DISPLAY_TYPE
+#define GST_VAAPI_DISPLAY_TYPE(display) \
+    GST_VAAPI_DISPLAY_GET_PRIVATE(display)->display_type
+
+/**
  * GST_VAAPI_DISPLAY_TYPES:
  * @display: a #GstVaapiDisplay
  *

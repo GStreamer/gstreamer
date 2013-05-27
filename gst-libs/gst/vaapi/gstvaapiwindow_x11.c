@@ -479,6 +479,8 @@ gst_vaapi_window_x11_new(GstVaapiDisplay *display, guint width, guint height)
 {
     GST_DEBUG("new window, size %ux%u", width, height);
 
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_X11(display), NULL);
+
     return gst_vaapi_window_new(GST_VAAPI_WINDOW_CLASS(
             gst_vaapi_window_x11_class()), display, width, height);
 }
@@ -500,6 +502,7 @@ gst_vaapi_window_x11_new_with_xid(GstVaapiDisplay *display, Window xid)
 {
     GST_DEBUG("new window from xid 0x%08x", xid);
 
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_X11(display), NULL);
     g_return_val_if_fail(xid != None, NULL);
 
     return gst_vaapi_window_new_from_native(GST_VAAPI_WINDOW_CLASS(

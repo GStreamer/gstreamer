@@ -411,6 +411,8 @@ gst_vaapi_window_wayland_new(
 {
     GST_DEBUG("new window, size %ux%u", width, height);
 
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_WAYLAND(display), NULL);
+
     return gst_vaapi_window_new(GST_VAAPI_WINDOW_CLASS(
         gst_vaapi_window_wayland_class()), display, width, height);
 }

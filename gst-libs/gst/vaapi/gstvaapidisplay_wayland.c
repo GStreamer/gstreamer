@@ -420,7 +420,7 @@ gst_vaapi_display_wayland_new_with_display(struct wl_display *wl_display)
 struct wl_display *
 gst_vaapi_display_wayland_get_display(GstVaapiDisplayWayland *display)
 {
-    g_return_val_if_fail(display != NULL, NULL);
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_WAYLAND(display), NULL);
 
     return GST_VAAPI_DISPLAY_WL_DISPLAY(display);
 }

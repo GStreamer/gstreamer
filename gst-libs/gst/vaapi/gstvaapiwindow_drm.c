@@ -27,6 +27,7 @@
 #include "sysdeps.h"
 #include "gstvaapiwindow_drm.h"
 #include "gstvaapiwindow_priv.h"
+#include "gstvaapidisplay_drm_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -146,6 +147,8 @@ gst_vaapi_window_drm_new(
 )
 {
     GST_DEBUG("new window, size %ux%u", width, height);
+
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_DRM(display), NULL);
 
     return gst_vaapi_window_new(GST_VAAPI_WINDOW_CLASS(
             gst_vaapi_window_drm_class()), display, width, height);

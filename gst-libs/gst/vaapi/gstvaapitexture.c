@@ -32,6 +32,7 @@
 #include "gstvaapiutils_glx.h"
 #include "gstvaapidisplay_glx.h"
 #include "gstvaapidisplay_x11_priv.h"
+#include "gstvaapidisplay_glx_priv.h"
 #include "gstvaapiobject_priv.h"
 
 #define DEBUG 1
@@ -245,7 +246,7 @@ gst_vaapi_texture_new(
 {
     GstVaapiTexture *texture;
 
-    g_return_val_if_fail(display != NULL, NULL);
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_GLX(display), NULL);
     g_return_val_if_fail(target != GL_NONE, NULL);
     g_return_val_if_fail(format != GL_NONE, NULL);
     g_return_val_if_fail(width > 0, NULL);
@@ -297,7 +298,7 @@ gst_vaapi_texture_new_with_texture(
     GLTextureState ts;
     gboolean success;
 
-    g_return_val_if_fail(display != NULL, NULL);
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_GLX(display), NULL);
     g_return_val_if_fail(target != GL_NONE, NULL);
     g_return_val_if_fail(format != GL_NONE, NULL);
 
