@@ -1552,8 +1552,8 @@ gst_queue2_locked_flush (GstQueue2 * queue, gboolean full)
       g_slice_free (GstQueue2Item, qitem);
     }
   }
-  g_cond_signal (&queue->query_handled);
   queue->last_query = FALSE;
+  g_cond_signal (&queue->query_handled);
   GST_QUEUE2_CLEAR_LEVEL (queue->cur_level);
   gst_segment_init (&queue->sink_segment, GST_FORMAT_TIME);
   gst_segment_init (&queue->src_segment, GST_FORMAT_TIME);
