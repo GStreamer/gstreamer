@@ -83,15 +83,28 @@ error:
     return NULL;
 }
 
+static inline gboolean
+is_compatible_display_type(const GstVaapiDisplayType display_type,
+    guint display_types)
+{
+    if (display_type == GST_VAAPI_DISPLAY_TYPE_ANY)
+        return TRUE;
+    if (display_types == GST_VAAPI_DISPLAY_TYPE_ANY)
+        return TRUE;
+    return ((1U << display_type) & display_types) != 0;
+}
+
 static GList *
 cache_lookup_1(GstVaapiDisplayCache *cache, GCompareFunc func,
-    gconstpointer data)
+    gconstpointer data, guint display_types)
 {
     GList *l;
 
     g_mutex_lock(&cache->mutex);
     for (l = cache->list; l != NULL; l = l->next) {
         GstVaapiDisplayInfo * const info = &((CacheEntry *)l->data)->info;
+        if (!is_compatible_display_type(info->display_type, display_types))
+            continue;
         if (func(info, data))
             break;
     }
@@ -101,9 +114,9 @@ cache_lookup_1(GstVaapiDisplayCache *cache, GCompareFunc func,
 
 static inline const GstVaapiDisplayInfo *
 cache_lookup(GstVaapiDisplayCache *cache, GCompareFunc func,
-    gconstpointer data)
+    gconstpointer data, guint display_types)
 {
-    GList * const m = cache_lookup_1(cache, func, data);
+    GList * const m = cache_lookup_1(cache, func, data, display_types);
 
     return m ? &((CacheEntry *)m->data)->info : NULL;
 }
@@ -256,7 +269,8 @@ gst_vaapi_display_cache_remove(
 {
     GList *m;
 
-    m = cache_lookup_1(cache, compare_display, display);
+    m = cache_lookup_1(cache, compare_display, display,
+        GST_VAAPI_DISPLAY_TYPE_ANY);
     if (!m)
         return;
 
@@ -285,7 +299,8 @@ gst_vaapi_display_cache_lookup(
     g_return_val_if_fail(cache != NULL, NULL);
     g_return_val_if_fail(display != NULL, NULL);
 
-    return cache_lookup(cache, compare_display, display);
+    return cache_lookup(cache, compare_display, display,
+        GST_VAAPI_DISPLAY_TYPE_ANY);
 }
 
 /**
@@ -308,13 +323,17 @@ gst_vaapi_display_cache_lookup(
  *   (i.e. returning %TRUE), or %NULL if none was found
  */
 const GstVaapiDisplayInfo *
-gst_vaapi_display_cache_lookup_custom(GstVaapiDisplayCache *cache,
-    GCompareFunc func, gconstpointer data)
+gst_vaapi_display_cache_lookup_custom(
+    GstVaapiDisplayCache       *cache,
+    GCompareFunc                func,
+    gconstpointer               data,
+    guint                       display_types
+)
 {
     g_return_val_if_fail(cache != NULL, NULL);
     g_return_val_if_fail(func != NULL, NULL);
 
-    return cache_lookup(cache, func, data);
+    return cache_lookup(cache, func, data, display_types);
 }
 
 /**
@@ -336,7 +355,8 @@ gst_vaapi_display_cache_lookup_by_va_display(
     g_return_val_if_fail(cache != NULL, NULL);
     g_return_val_if_fail(va_display != NULL, NULL);
 
-    return cache_lookup(cache, compare_va_display, va_display);
+    return cache_lookup(cache, compare_va_display, va_display,
+        GST_VAAPI_DISPLAY_TYPE_ANY);
 }
 
 /**
@@ -352,13 +372,15 @@ gst_vaapi_display_cache_lookup_by_va_display(
 const GstVaapiDisplayInfo *
 gst_vaapi_display_cache_lookup_by_native_display(
     GstVaapiDisplayCache       *cache,
-    gpointer                    native_display
+    gpointer                    native_display,
+    guint                       display_types
 )
 {
     g_return_val_if_fail(cache != NULL, NULL);
     g_return_val_if_fail(native_display != NULL, NULL);
 
-    return cache_lookup(cache, compare_native_display, native_display);
+    return cache_lookup(cache, compare_native_display, native_display,
+        display_types);
 }
 
 /**
@@ -374,10 +396,12 @@ gst_vaapi_display_cache_lookup_by_native_display(
 const GstVaapiDisplayInfo *
 gst_vaapi_display_cache_lookup_by_name(
     GstVaapiDisplayCache       *cache,
-    const gchar                *display_name
+    const gchar                *display_name,
+    guint                       display_types
 )
 {
     g_return_val_if_fail(cache != NULL, NULL);
 
-    return cache_lookup(cache, compare_display_name, display_name);
+    return cache_lookup(cache, compare_display_name, display_name,
+        display_types);
 }

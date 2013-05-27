@@ -57,7 +57,8 @@ const GstVaapiDisplayInfo *
 gst_vaapi_display_cache_lookup_custom(
     GstVaapiDisplayCache       *cache,
     GCompareFunc                func,
-    gconstpointer               data
+    gconstpointer               data,
+    guint                       display_types
 );
 
 const GstVaapiDisplayInfo *
@@ -69,13 +70,15 @@ gst_vaapi_display_cache_lookup_by_va_display(
 const GstVaapiDisplayInfo *
 gst_vaapi_display_cache_lookup_by_native_display(
     GstVaapiDisplayCache       *cache,
-    gpointer                    native_display
+    gpointer                    native_display,
+    guint                       display_types
 );
 
 const GstVaapiDisplayInfo *
 gst_vaapi_display_cache_lookup_by_name(
     GstVaapiDisplayCache       *cache,
-    const gchar                *display_name
+    const gchar                *display_name,
+    guint                       display_types
 );
 
 #endif /* GSTVAAPIDISPLAYCACHE_H */

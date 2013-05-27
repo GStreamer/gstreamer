@@ -42,6 +42,10 @@
 #define NAME_PREFIX "X11:"
 #define NAME_PREFIX_LENGTH 4
 
+static const guint g_display_types =
+    (1U << GST_VAAPI_DISPLAY_TYPE_X11) |
+    (1U << GST_VAAPI_DISPLAY_TYPE_GLX);
+
 static inline gboolean
 is_display_name(const gchar *display_name)
 {
@@ -198,7 +202,7 @@ gst_vaapi_display_x11_open_display(GstVaapiDisplay *base_display,
         return FALSE;
 
     info = gst_vaapi_display_cache_lookup_custom(cache, compare_display_name,
-        priv->display_name);
+        priv->display_name, GST_VAAPI_DISPLAY_TYPES(display));
     if (info) {
         priv->x11_display = info->native_display;
         priv->use_foreign_display = TRUE;
@@ -275,7 +279,7 @@ gst_vaapi_display_x11_get_display_info(
     if (!cache)
         return FALSE;
     cached_info = gst_vaapi_display_cache_lookup_by_native_display(
-        cache, priv->x11_display);
+        cache, priv->x11_display, GST_VAAPI_DISPLAY_TYPES(display));
     if (cached_info) {
         *info = *cached_info;
         return TRUE;
@@ -380,6 +384,7 @@ gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass)
     gst_vaapi_display_class_init(&klass->parent_class);
 
     object_class->size          = sizeof(GstVaapiDisplayX11);
+    dpy_class->display_types    = g_display_types;
     dpy_class->bind_display     = gst_vaapi_display_x11_bind_display;
     dpy_class->open_display     = gst_vaapi_display_x11_open_display;
     dpy_class->close_display    = gst_vaapi_display_x11_close_display;

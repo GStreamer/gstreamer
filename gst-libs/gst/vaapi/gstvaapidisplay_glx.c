@@ -37,6 +37,8 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
+static const guint g_display_types = 1U << GST_VAAPI_DISPLAY_TYPE_GLX;
+
 static gboolean
 gst_vaapi_display_glx_get_display_info(
     GstVaapiDisplay     *display,
@@ -64,6 +66,7 @@ gst_vaapi_display_glx_class_init(GstVaapiDisplayGLXClass *klass)
 
     object_class->size          = sizeof(GstVaapiDisplayGLX);
     klass->parent_get_display   = dpy_class->get_display;
+    dpy_class->display_types    = g_display_types;
     dpy_class->get_display      = gst_vaapi_display_glx_get_display_info;
 }
 

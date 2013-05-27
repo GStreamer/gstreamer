@@ -36,6 +36,8 @@
 #define NAME_PREFIX "WLD:"
 #define NAME_PREFIX_LENGTH 4
 
+static const guint g_display_types = 1U << GST_VAAPI_DISPLAY_TYPE_WAYLAND;
+
 static inline gboolean
 is_display_name(const gchar *display_name)
 {
@@ -250,7 +252,7 @@ gst_vaapi_display_wayland_open_display(GstVaapiDisplay *display,
         return FALSE;
 
     info = gst_vaapi_display_cache_lookup_custom(cache, compare_display_name,
-        priv->display_name);
+        priv->display_name, GST_VAAPI_DISPLAY_TYPES(display));
     if (info) {
         priv->wl_display = info->native_display;
         priv->use_foreign_display = TRUE;
@@ -303,7 +305,7 @@ gst_vaapi_display_wayland_get_display_info(
     if (!cache)
         return FALSE;
     cached_info = gst_vaapi_display_cache_lookup_by_native_display(cache,
-        priv->wl_display);
+        priv->wl_display, GST_VAAPI_DISPLAY_TYPES(display));
     if (cached_info) {
         *info = *cached_info;
         return TRUE;
@@ -380,6 +382,7 @@ gst_vaapi_display_wayland_class_init(GstVaapiDisplayWaylandClass * klass)
     gst_vaapi_display_class_init(&klass->parent_class);
 
     object_class->size          = sizeof(GstVaapiDisplayWayland);
+    dpy_class->display_types    = g_display_types;
     dpy_class->init             = gst_vaapi_display_wayland_init;
     dpy_class->bind_display     = gst_vaapi_display_wayland_bind_display;
     dpy_class->open_display     = gst_vaapi_display_wayland_open_display;

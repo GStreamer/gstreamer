@@ -42,6 +42,8 @@
 #define NAME_PREFIX "DRM:"
 #define NAME_PREFIX_LENGTH 4
 
+static const guint g_display_types = 1U << GST_VAAPI_DISPLAY_TYPE_DRM;
+
 static inline gboolean
 is_device_path(const gchar *device_path)
 {
@@ -239,7 +241,8 @@ gst_vaapi_display_drm_open_display(GstVaapiDisplay *display, const gchar *name)
     if (!set_device_path(display, name))
         return FALSE;
 
-    info = gst_vaapi_display_cache_lookup_by_name(cache, priv->device_path);
+    info = gst_vaapi_display_cache_lookup_by_name(cache, priv->device_path,
+        GST_VAAPI_DISPLAY_TYPES(display));
     if (info) {
         priv->drm_device = GPOINTER_TO_INT(info->native_display);
         priv->use_foreign_display = TRUE;
@@ -290,7 +293,8 @@ gst_vaapi_display_drm_get_display_info(GstVaapiDisplay *display,
     if (!cache)
         return FALSE;
     cached_info = gst_vaapi_display_cache_lookup_by_native_display(
-        cache, GINT_TO_POINTER(priv->drm_device));
+        cache, GINT_TO_POINTER(priv->drm_device),
+        GST_VAAPI_DISPLAY_TYPES(display));
     if (cached_info) {
         *info = *cached_info;
         return TRUE;
@@ -327,6 +331,7 @@ gst_vaapi_display_drm_class_init(GstVaapiDisplayDRMClass *klass)
     gst_vaapi_display_class_init(&klass->parent_class);
 
     object_class->size          = sizeof(GstVaapiDisplayDRM);
+    dpy_class->display_types    = g_display_types;
     dpy_class->init             = gst_vaapi_display_drm_init;
     dpy_class->bind_display     = gst_vaapi_display_drm_bind_display;
     dpy_class->open_display     = gst_vaapi_display_drm_open_display;

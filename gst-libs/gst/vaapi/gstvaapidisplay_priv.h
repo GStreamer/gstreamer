@@ -96,6 +96,16 @@ typedef void     (*GstVaapiDisplayGetSizeMFunc)(GstVaapiDisplay *display,
 #define GST_VAAPI_DISPLAY_UNLOCK(display) \
     gst_vaapi_display_unlock(GST_VAAPI_DISPLAY_CAST(display))
 
+/**
+ * GST_VAAPI_DISPLAY_TYPES:
+ * @display: a #GstVaapiDisplay
+ *
+ * Returns compatible @display types as a set of flags
+ */
+#undef  GST_VAAPI_DISPLAY_TYPES
+#define GST_VAAPI_DISPLAY_TYPES(display) \
+    gst_vaapi_display_get_display_types(GST_VAAPI_DISPLAY_CAST(display))
+
 struct _GstVaapiDisplayPrivate {
     GstVaapiDisplay    *parent;
     GRecMutex           mutex;
@@ -145,6 +155,9 @@ struct _GstVaapiDisplayClass {
     /*< private >*/
     GstVaapiMiniObjectClass parent_class;
 
+    /*< protected >*/
+    guint                       display_types;
+
     /*< public >*/
     GstVaapiDisplayInitFunc     init;
     GstVaapiDisplayBindFunc     bind_display;
@@ -175,6 +188,15 @@ gst_vaapi_display_new(const GstVaapiDisplayClass *klass,
 
 GstVaapiDisplayCache *
 gst_vaapi_display_get_cache(void);
+
+static inline guint
+gst_vaapi_display_get_display_types(GstVaapiDisplay *display)
+{
+    const GstVaapiDisplayClass * const dpy_class =
+        GST_VAAPI_DISPLAY_GET_CLASS(display);
+
+    return dpy_class->display_types;
+}
 
 /* Inline reference counting for core libgstvaapi library */
 #ifdef GST_VAAPI_CORE
