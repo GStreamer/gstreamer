@@ -397,7 +397,12 @@ theora_handle_type_packet (GstTheoraDec * dec)
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoCodecState *state;
   GstVideoFormat fmt;
-  GstVideoInfo *info = &dec->input_state->info;
+  GstVideoInfo *info;
+
+  if (!dec->input_state)
+    return GST_FLOW_NOT_NEGOTIATED;
+
+  info = &dec->input_state->info;
 
   GST_DEBUG_OBJECT (dec, "fps %d/%d, PAR %d/%d",
       dec->info.fps_numerator, dec->info.fps_denominator,
