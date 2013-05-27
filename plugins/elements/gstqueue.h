@@ -133,6 +133,7 @@ struct _GstQueue {
   /* whether the first new segment has been applied to src */
   gboolean newseg_applied_to_src;
 
+  GCond query_handled;
   gboolean last_query;
 
   gboolean flush_on_eos; /* flush on EOS */
