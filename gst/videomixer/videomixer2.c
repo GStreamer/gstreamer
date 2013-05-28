@@ -1830,7 +1830,8 @@ gst_videomixer2_request_new_pad (GstElement * element,
     mixcol->end_time = -1;
 
     /* Keep an internal list of mixpads for zordering */
-    mix->sinkpads = g_slist_append (mix->sinkpads, mixpad);
+    mix->sinkpads = g_slist_insert_sorted (mix->sinkpads, mixpad,
+        (GCompareFunc) pad_zorder_compare);
     mix->numpads++;
     GST_VIDEO_MIXER2_UNLOCK (mix);
   } else {
