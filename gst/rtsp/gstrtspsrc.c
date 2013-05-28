@@ -2911,12 +2911,18 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
 
   /* creating another UDP source for RTCP */
   if (max != -1) {
+    GstCaps *caps;
+
     uri = g_strdup_printf ("udp://%s:%d", destination, max);
     stream->udpsrc[1] =
         gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
     g_free (uri);
     if (stream->udpsrc[1] == NULL)
       goto no_element;
+
+    caps = gst_caps_new_empty_simple ("application/x-rtcp");
+    g_object_set (stream->udpsrc[1], "caps", caps, NULL);
+    gst_caps_unref (caps);
 
     /* take ownership */
     gst_object_ref_sink (stream->udpsrc[1]);
@@ -2993,7 +2999,13 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
 
   /* RTCP port */
   if (stream->udpsrc[1]) {
+    GstCaps *caps;
+
     gst_bin_add (GST_BIN_CAST (src), stream->udpsrc[1]);
+
+    caps = gst_caps_new_empty_simple ("application/x-rtcp");
+    g_object_set (stream->udpsrc[1], "caps", caps, NULL);
+    gst_caps_unref (caps);
 
     if (stream->channelpad[1]) {
       GstPad *pad;
