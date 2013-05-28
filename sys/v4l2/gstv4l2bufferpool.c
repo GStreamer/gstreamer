@@ -1246,16 +1246,20 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
               goto start_failed;
 
           if (pool->num_queued == pool->num_allocated) {
+            GstBuffer *out;
             /* all buffers are queued, try to dequeue one and release it back
              * into the pool so that _acquire can get to it again. */
-            ret = gst_v4l2_buffer_pool_dqbuf (pool, &to_queue);
+            ret = gst_v4l2_buffer_pool_dqbuf (pool, &out);
             if (ret != GST_FLOW_OK)
               goto done;
 
             /* release the rendered buffer back into the pool. This wakes up any
-             * thread waiting for a buffer in _acquire() */
-            gst_buffer_unref (to_queue);
+             * thread waiting for a buffer in _acquire(). If the buffer still has
+             * a pool then this will happen when the refcount reaches 0 */
+            if (!out->pool)
+              gst_v4l2_buffer_pool_release_buffer (bpool, out);
           }
+          gst_buffer_unref (to_queue);
           break;
         }
 
