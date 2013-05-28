@@ -667,7 +667,6 @@ GST_START_TEST (test_dks)
 
 GST_END_TEST;
 
-#ifndef GST_DISABLE_XML
 GST_START_TEST (test_sami)
 {
   SubParseInputChunk sami_input[] = {
@@ -703,7 +702,74 @@ GST_START_TEST (test_sami)
 }
 
 GST_END_TEST;
-#endif
+
+GST_START_TEST (test_sami_xml_entities)
+{
+  SubParseInputChunk sami_input[] = {
+    {"<SAMI>\n"
+          "<BODY>\n"
+          "    <SYNC Start=1000>\n"
+          "        <P Class=CC>\n" "            &lt;Hello&gt; &amp;\n",
+          1000 * GST_MSECOND, 2000 * GST_MSECOND,
+        "&lt;Hello&gt; &amp;"},
+    {"    <SYNC Start=2000>\n"
+          "        <P Class=CC>\n"
+          "            &quot;World&apos;\n" "</BODY>\n" "</SAMI>\n",
+          2000 * GST_MSECOND, GST_CLOCK_TIME_NONE,
+        "&quot;World&apos;"}
+
+  };
+
+  do_test (sami_input, G_N_ELEMENTS (sami_input), "pango-markup");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_sami_html_entities)
+{
+  SubParseInputChunk sami_input[] = {
+    {"<SAMI>\n"
+          "<BODY>\n"
+          "    <SYNC Start=1000>\n"
+          "        <P Class=CC>\n" "            &nbsp; &plusmn; &acute;\n",
+          1000 * GST_MSECOND, 2000 * GST_MSECOND,
+        "\xc2\xa0 \xc2\xb1 \xc2\xb4"},
+    {"    <SYNC Start=2000>\n"
+          "        <P Class=CC>\n" "            &Alpha; &omega;\n",
+          2000 * GST_MSECOND, 3000 * GST_MSECOND,
+        "\xce\x91 \xcf\x89"},
+    {"    <SYNC Start=3000>\n"
+          "        <P Class=CC>\n"
+          "            &#xa0; &#177; &#180;\n" "</BODY>\n" "</SAMI>\n",
+          3000 * GST_MSECOND, GST_CLOCK_TIME_NONE,
+        "\xc2\xa0 \xc2\xb1 \xc2\xb4"}
+  };
+
+  do_test (sami_input, G_N_ELEMENTS (sami_input), "pango-markup");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_sami_bad_entities)
+{
+  SubParseInputChunk sami_input[] = {
+    {"<SAMI>\n"
+          "<BODY>\n"
+          "    <SYNC Start=1000>\n"
+          "        <P Class=CC>\n" "            &nbsp &\n",
+          1000 * GST_MSECOND, 2000 * GST_MSECOND,
+        "\xc2\xa0 &amp;"},
+    {"    <SYNC Start=2000>\n"
+          "        <P Class=CC>\n"
+          "            &#xa0 &#177 &#180;\n" "</BODY>\n" "</SAMI>\n",
+          2000 * GST_MSECOND, GST_CLOCK_TIME_NONE,
+        "\xc2\xa0 \xc2\xb1 \xc2\xb4"}
+  };
+
+  do_test (sami_input, G_N_ELEMENTS (sami_input), "pango-markup");
+}
+
+GST_END_TEST;
 
 /* TODO:
  *  - add/modify tests so that lines aren't dogfed to the parsers in complete
@@ -733,9 +799,10 @@ subparse_suite (void)
   tcase_add_test (tc_chain, test_subviewer);
   tcase_add_test (tc_chain, test_subviewer2);
   tcase_add_test (tc_chain, test_dks);
-#ifndef GST_DISABLE_XML
   tcase_add_test (tc_chain, test_sami);
-#endif
+  tcase_add_test (tc_chain, test_sami_xml_entities);
+  tcase_add_test (tc_chain, test_sami_html_entities);
+  tcase_add_test (tc_chain, test_sami_bad_entities);
   return s;
 }
 
