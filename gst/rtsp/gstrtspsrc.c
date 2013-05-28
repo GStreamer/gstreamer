@@ -3871,6 +3871,22 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
       channel);
 
   if (src->need_activate) {
+    gchar *stream_id;
+    GstEvent *event;
+    GChecksum *cs;
+    gchar *uri;
+
+    /* generate an SHA256 sum of the URI */
+    cs = g_checksum_new (G_CHECKSUM_SHA256);
+    uri = src->conninfo.location;
+    g_checksum_update (cs, (const guchar *) uri, strlen (uri));
+    stream_id =
+        g_strdup_printf ("%s/%d", g_checksum_get_string (cs), stream->id);
+    g_checksum_free (cs);
+    event = gst_event_new_stream_start (stream_id);
+    g_free (stream_id);
+    gst_rtspsrc_push_event (src, event);
+
     gst_rtspsrc_activate_streams (src);
     src->need_activate = FALSE;
   }
