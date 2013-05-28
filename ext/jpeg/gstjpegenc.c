@@ -41,7 +41,7 @@
 #include "gstjpeg.h"
 #include <gst/video/video.h>
 #include <gst/video/gstvideometa.h>
-#include <gst/base/base.h>
+#include <gst/base/gstbytereader.h>
 
 /* experimental */
 /* setting smoothig seems to have no effect in libjepeg
