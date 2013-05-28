@@ -4273,6 +4273,93 @@ done:
 }
 
 static gboolean
+autoplug_query_context (GstElement * uridecodebin, GstPad * pad,
+    GstElement * element, GstQuery * query, GstSourceGroup * group)
+{
+  GstElement *sink;
+  GstPad *sinkpad = NULL;
+  GstElementFactory *factory;
+  gboolean res = FALSE;
+
+  GST_SOURCE_GROUP_LOCK (group);
+
+  factory = gst_element_get_factory (element);
+  if (!factory)
+    goto done;
+
+  if (gst_element_factory_list_is_type (factory,
+          GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO |
+          GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE)) {
+    /* If this is from the subtitle uridecodebin we don't need to
+     * check the audio and video sink */
+    if (group->suburidecodebin
+        && gst_object_has_ancestor (GST_OBJECT_CAST (pad),
+            GST_OBJECT_CAST (group->suburidecodebin))) {
+      goto done;
+    }
+
+    if ((sink = group->video_sink)) {
+      sinkpad = gst_element_get_static_pad (sink, "sink");
+      if (sinkpad) {
+        /* Ignore errors here, if a custom sink fails to go
+         * to READY things are wrong and will error out later
+         */
+        if (GST_STATE (sink) < GST_STATE_READY)
+          gst_element_set_state (sink, GST_STATE_READY);
+
+        res = gst_pad_query (sinkpad, query);
+        gst_object_unref (sinkpad);
+      }
+    }
+  } else if (gst_element_factory_list_is_type (factory,
+          GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO)) {
+    /* If this is from the subtitle uridecodebin we don't need to
+     * check the audio and video sink */
+    if (group->suburidecodebin
+        && gst_object_has_ancestor (GST_OBJECT_CAST (pad),
+            GST_OBJECT_CAST (group->suburidecodebin))) {
+      goto done;
+    }
+
+    if ((sink = group->audio_sink)) {
+      sinkpad = gst_element_get_static_pad (sink, "sink");
+      if (sinkpad) {
+        /* Ignore errors here, if a custom sink fails to go
+         * to READY things are wrong and will error out later
+         */
+        if (GST_STATE (sink) < GST_STATE_READY)
+          gst_element_set_state (sink, GST_STATE_READY);
+
+        res = gst_pad_query (sinkpad, query);
+        gst_object_unref (sinkpad);
+      }
+    }
+  } else if (gst_element_factory_list_is_type (factory,
+          GST_ELEMENT_FACTORY_TYPE_MEDIA_SUBTITLE)) {
+    if ((sink = group->playbin->text_sink)) {
+      sinkpad = gst_element_get_static_pad (sink, "sink");
+      if (sinkpad) {
+        /* Ignore errors here, if a custom sink fails to go
+         * to READY things are wrong and will error out later
+         */
+        if (GST_STATE (sink) < GST_STATE_READY)
+          gst_element_set_state (sink, GST_STATE_READY);
+
+        res = gst_pad_query (sinkpad, query);
+        gst_object_unref (sinkpad);
+      }
+    }
+  } else {
+    goto done;
+  }
+
+done:
+  GST_SOURCE_GROUP_UNLOCK (group);
+
+  return res;
+}
+
+static gboolean
 autoplug_query_cb (GstElement * uridecodebin, GstPad * pad,
     GstElement * element, GstQuery * query, GstSourceGroup * group)
 {
@@ -4280,6 +4367,8 @@ autoplug_query_cb (GstElement * uridecodebin, GstPad * pad,
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
       return autoplug_query_caps (uridecodebin, pad, element, query, group);
+    case GST_QUERY_CONTEXT:
+      return autoplug_query_context (uridecodebin, pad, element, query, group);
     default:
       return FALSE;
   }
