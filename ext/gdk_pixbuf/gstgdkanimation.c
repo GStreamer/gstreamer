@@ -70,6 +70,7 @@ gst_gdk_animation_get_type (void)
 
   return object_type;
 }
+
 static void
 gst_gdk_animation_class_init (gpointer g_class, gpointer class_data)
 {
@@ -85,6 +86,7 @@ gst_gdk_animation_class_init (gpointer g_class, gpointer class_data)
   anim_class->get_size = gst_gdk_animation_get_size;
   anim_class->get_iter = gst_gdk_animation_get_iter;
 }
+
 static void
 gst_gdk_animation_finalize (GObject * object)
 {
@@ -210,6 +212,7 @@ gst_gdk_animation_iter_class_init (gpointer g_class, gpointer class_data)
       gst_gdk_animation_iter_on_currently_loading_frame;
   anim_iter_class->advance = gst_gdk_animation_iter_advance;
 }
+
 static void
 gst_gdk_animation_iter_init (GTypeInstance * instance, gpointer g_class)
 {
@@ -218,6 +221,7 @@ gst_gdk_animation_iter_init (GTypeInstance * instance, gpointer g_class)
   iter->buffers = g_queue_new ();
   iter->eos = FALSE;
 }
+
 static void
 gst_gdk_animation_iter_finalize (GObject * object)
 {
@@ -242,6 +246,7 @@ gst_gdk_animation_iter_finalize (GObject * object)
   }
   G_OBJECT_CLASS (iter_parent_class)->finalize (object);
 }
+
 static void
 got_handoff (GstElement * fakesink, GstBuffer * buffer, GstPad * pad,
     GstGdkAnimationIter * iter)
@@ -373,12 +378,14 @@ gst_gdk_animation_get_more_buffers (GstGdkAnimationIter * iter)
   } while (last == g_queue_peek_tail (iter->buffers));
   return last != g_queue_peek_tail (iter->buffers);
 }
+
 static void
 pixbuf_destroy_notify (guchar * pixels, gpointer data)
 {
   GST_LOG ("unreffing buffer %p because pixbuf was destroyed", data);
   gst_data_unref (GST_DATA (data));
 }
+
 static void
 gst_gdk_animation_iter_create_pixbuf (GstGdkAnimationIter * iter)
 {
@@ -427,6 +434,7 @@ gst_gdk_animation_iter_create_pixbuf (GstGdkAnimationIter * iter)
   GST_LOG_OBJECT (iter, "created pixbuf %p from buffer %p (refcount %d)",
       iter->pixbuf, buf, GST_DATA_REFCOUNT_VALUE (buf));
 }
+
 static GdkPixbufAnimationIter *
 gst_gdk_animation_get_iter (GdkPixbufAnimation * anim,
     const GTimeVal * start_time)
@@ -583,6 +591,7 @@ gst_gdk_animation_iter_on_currently_loading_frame (GdkPixbufAnimationIter *
 
   return TRUE;
 }
+
 static GdkPixbuf *
 gst_gdk_animation_get_static_image (GdkPixbufAnimation * animation)
 {
@@ -617,8 +626,8 @@ gst_gdk_animation_get_static_image (GdkPixbufAnimation * animation)
         gst_data_unref (GST_DATA (buf));
       }
       /* now we do evil stuff, be sure to get rid of the iterator afterwards */
-      if (!gst_element_send_event (gst_bin_get_by_name (GST_BIN (iter->
-                      pipeline), "sink"),
+      if (!gst_element_send_event (gst_bin_get_by_name (GST_BIN
+                  (iter->pipeline), "sink"),
               gst_event_new_seek (GST_FORMAT_TIME | GST_SEEK_METHOD_SET |
                   GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, offset))) {
         GST_INFO_OBJECT (ani, "seeking didn't work. Using next image");

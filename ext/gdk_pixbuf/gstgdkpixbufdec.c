@@ -295,6 +295,7 @@ gst_gdk_pixbuf_dec_flush (GstGdkPixbufDec * filter)
   if (GST_VIDEO_INFO_FORMAT (&filter->info) == GST_VIDEO_FORMAT_UNKNOWN) {
     GstVideoInfo info;
     GstVideoFormat fmt;
+    GList *l;
 
     GST_DEBUG ("Set size to %dx%d", width, height);
 
@@ -323,6 +324,11 @@ gst_gdk_pixbuf_dec_flush (GstGdkPixbufDec * filter)
     gst_caps_unref (caps);
 
     gst_gdk_pixbuf_dec_setup_pool (filter, &info);
+
+    for (l = filter->pending_events; l; l = l->next)
+      gst_pad_push_event (filter->srcpad, l->data);
+    g_list_free (filter->pending_events);
+    filter->pending_events = NULL;
   }
 
   ret = gst_buffer_pool_acquire_buffer (filter->pool, &outbuf, NULL);
@@ -412,8 +418,12 @@ gst_gdk_pixbuf_dec_sink_event (GstPad * pad, GstObject * parent,
         }
       }
       break;
-    case GST_EVENT_SEGMENT:
     case GST_EVENT_FLUSH_STOP:
+      g_list_free_full (pixbuf->pending_events,
+          (GDestroyNotify) gst_event_unref);
+      pixbuf->pending_events = NULL;
+      /* Fall through */
+    case GST_EVENT_SEGMENT:
       if (pixbuf->pixbuf_loader != NULL) {
         gdk_pixbuf_loader_close (pixbuf->pixbuf_loader, NULL);
         g_object_unref (G_OBJECT (pixbuf->pixbuf_loader));
@@ -424,7 +434,16 @@ gst_gdk_pixbuf_dec_sink_event (GstPad * pad, GstObject * parent,
       break;
   }
   if (forward) {
-    ret = gst_pad_event_default (pad, parent, event);
+    if (!gst_pad_has_current_caps (pixbuf->srcpad) &&
+        GST_EVENT_IS_SERIALIZED (event)
+        && GST_EVENT_TYPE (event) > GST_EVENT_CAPS
+        && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_STOP
+        && GST_EVENT_TYPE (event) != GST_EVENT_EOS) {
+      ret = TRUE;
+      pixbuf->pending_events = g_list_prepend (pixbuf->pending_events, event);
+    } else {
+      ret = gst_pad_event_default (pad, parent, event);
+    }
   } else {
     gst_event_unref (event);
   }
@@ -516,6 +535,8 @@ gst_gdk_pixbuf_dec_change_state (GstElement * element,
         gst_buffer_pool_set_active (dec->pool, FALSE);
         gst_object_replace ((GstObject **) & dec->pool, NULL);
       }
+      g_list_free_full (dec->pending_events, (GDestroyNotify) gst_event_unref);
+      dec->pending_events = NULL;
       break;
     default:
       break;

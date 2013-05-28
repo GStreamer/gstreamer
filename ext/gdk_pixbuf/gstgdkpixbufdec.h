@@ -54,6 +54,7 @@ struct _GstGdkPixbufDec
 
   GstVideoInfo info;
   GstBufferPool *pool;
+  GList *pending_events;
 };
 
 struct _GstGdkPixbufDecClass
