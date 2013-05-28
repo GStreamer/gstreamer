@@ -973,6 +973,7 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
   GstCaps *outcaps;
   guint8 *data;
   guint size, offset, length;
+  gchar *stream_id;
 
   GST_DEBUG_OBJECT (midiparse, "Parsing song");
 
@@ -1002,6 +1003,10 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
 
   GST_DEBUG_OBJECT (midiparse, "song duration %" GST_TIME_FORMAT,
       GST_TIME_ARGS (midiparse->segment.duration));
+
+  stream_id = gst_pad_create_stream_id (midiparse->srcpad, GST_ELEMENT_CAST (midiparse), NULL);
+  gst_pad_push_event (midiparse->srcpad, gst_event_new_stream_start (stream_id));
+  g_free (stream_id);
 
   outcaps = gst_pad_get_pad_template_caps (midiparse->srcpad);
   gst_pad_set_caps (midiparse->srcpad, outcaps);
