@@ -4239,6 +4239,7 @@ gst_decode_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
   GstDecodePad *dpad = GST_DECODE_PAD (parent);
   gboolean ret = FALSE;
 
+  CHAIN_MUTEX_LOCK (dpad->chain);
   if (!dpad->exposed && !dpad->chain->deadend) {
     ret = FALSE;
     g_signal_emit (G_OBJECT (dpad->dbin),
@@ -4265,6 +4266,7 @@ gst_decode_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_object_unref (target);
     }
   }
+  CHAIN_MUTEX_UNLOCK (dpad->chain);
 
   /* If exposed or nothing handled the query use the default handler */
   if (!ret)
