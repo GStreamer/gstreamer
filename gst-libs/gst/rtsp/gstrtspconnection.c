@@ -469,6 +469,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri)
     goto connect_failed;
 
   socket = g_socket_connection_get_socket (connection);
+  g_socket_set_blocking (socket, FALSE);
 
   /* get remote address */
   g_free (conn->remote_ip);
@@ -603,6 +604,8 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
 
   /* get remote address */
   socket = g_socket_connection_get_socket (connection);
+  g_socket_set_blocking (socket, FALSE);
+
   if (!collect_addresses (socket, &remote_ip, NULL, TRUE, &error))
     goto remote_address_failed;
 
