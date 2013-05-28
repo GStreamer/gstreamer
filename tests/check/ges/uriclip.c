@@ -281,16 +281,13 @@ main (int argc, char **argv)
   int nf;
 
   Suite *s = ges_suite ();
-  SRunner *sr = srunner_create (s);
 
   gst_check_init (&argc, &argv);
 
   av_uri = ges_test_get_audio_video_uri ();
   image_uri = ges_test_get_image_uri ();
 
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
+  nf = gst_check_run_suite (s, "ges", __FILE__);
 
   g_free (av_uri);
   g_free (image_uri);
