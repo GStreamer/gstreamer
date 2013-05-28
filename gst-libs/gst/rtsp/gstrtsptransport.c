@@ -124,6 +124,7 @@ gst_rtsp_lower_trans_get_type (void)
         "udp-multicast"},
     {GST_RTSP_LOWER_TRANS_TCP, "GST_RTSP_LOWER_TRANS_TCP", "tcp"},
     {GST_RTSP_LOWER_TRANS_HTTP, "GST_RTSP_LOWER_TRANS_HTTP", "http"},
+    {GST_RTSP_LOWER_TRANS_TLS, "GST_RTSP_LOWER_TRANS_TLS", "tls"},
     {0, NULL, NULL},
   };
 

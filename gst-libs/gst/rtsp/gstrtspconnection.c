@@ -212,11 +212,15 @@ gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
   GstRTSPConnection *newconn;
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (url != NULL, GST_RTSP_EINVAL);
 
   newconn = g_new0 (GstRTSPConnection, 1);
 
   newconn->cancellable = g_cancellable_new ();
   newconn->client = g_socket_client_new ();
+
+  if (url->transports & GST_RTSP_LOWER_TRANS_TLS)
+    g_socket_client_set_tls (newconn->client, TRUE);
 
   newconn->url = gst_rtsp_url_copy (url);
   newconn->timer = g_timer_new ();
