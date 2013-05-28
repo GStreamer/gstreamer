@@ -1160,6 +1160,12 @@ gst_midi_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* don't forward the event */
       gst_event_unref (event);
       break;
+    case GST_EVENT_CAPS:
+    case GST_EVENT_STREAM_START:
+    case GST_EVENT_SEGMENT:
+      res = TRUE;
+      gst_event_unref (event);
+      break;
     default:
       res = gst_pad_event_default (pad, parent, event);
       break;
