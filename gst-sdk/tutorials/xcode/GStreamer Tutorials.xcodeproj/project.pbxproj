@@ -15,6 +15,14 @@
 		63118CD4156D33040085CF03 /* playback-tutorial-1.c in Sources */ = {isa = PBXBuildFile; fileRef = 63118CD2156D32FE0085CF03 /* playback-tutorial-1.c */; };
 		63118CE5156D35610085CF03 /* playback-tutorial-2.c in Sources */ = {isa = PBXBuildFile; fileRef = 63118CE3156D35390085CF03 /* playback-tutorial-2.c */; };
 		63118CF6156D3ACB0085CF03 /* basic-tutorial-6.c in Sources */ = {isa = PBXBuildFile; fileRef = 63118CF4156D3AB60085CF03 /* basic-tutorial-6.c */; };
+		63B8A64C1754AC1D00121B88 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
+		63B8A64D1754AC1E00121B88 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
+		63B8A64E1754AC1F00121B88 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
+		63B8A64F1754AC2000121B88 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
+		63B8A6501754AC2100121B88 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
+		63B8A6511754AC2100121B88 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
+		63B8A6521754AC2200121B88 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
+		63B8A6531754AC2200121B88 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E2230016073E04001954D7 /* GStreamer.framework */; };
 		63DE883E156DAC18006F2D3B /* basic-tutorial-7.c in Sources */ = {isa = PBXBuildFile; fileRef = 63DE8838156DAC09006F2D3B /* basic-tutorial-7.c */; };
 		63DE883F156DAC1D006F2D3B /* basic-tutorial-8.c in Sources */ = {isa = PBXBuildFile; fileRef = 63DE883A156DAC0E006F2D3B /* basic-tutorial-8.c */; };
 		63DE8840156DAC21006F2D3B /* basic-tutorial-9.c in Sources */ = {isa = PBXBuildFile; fileRef = 63DE883C156DAC15006F2D3B /* basic-tutorial-9.c */; };
@@ -348,6 +356,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63B8A64C1754AC1D00121B88 /* GStreamer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -355,6 +364,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63B8A64D1754AC1E00121B88 /* GStreamer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -362,6 +372,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63B8A64E1754AC1F00121B88 /* GStreamer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -369,6 +380,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63B8A64F1754AC2000121B88 /* GStreamer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -376,6 +388,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63B8A6501754AC2100121B88 /* GStreamer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -383,6 +396,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63B8A6511754AC2100121B88 /* GStreamer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -390,6 +404,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63B8A6521754AC2200121B88 /* GStreamer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -397,6 +412,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63B8A6531754AC2200121B88 /* GStreamer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1442,6 +1458,11 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				OTHER_LDFLAGS = (
+					"-lclutter-osx-1.0",
+					"-lclutter-gst-1.0",
+					"-L/Library/Frameworks/GStreamer.framework/Libraries",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1458,6 +1479,11 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				OTHER_LDFLAGS = (
+					"-lclutter-osx-1.0",
+					"-lclutter-gst-1.0",
+					"-L/Library/Frameworks/GStreamer.framework/Libraries",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1740,6 +1766,7 @@
 				63EA7B0D17539E570032388A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63EA7B1A1753A2700032388A /* Build configuration list for PBXNativeTarget "Tutorial 13" */ = {
 			isa = XCConfigurationList;
@@ -1748,6 +1775,7 @@
 				63EA7B1C1753A2700032388A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63EA7B291753A2B90032388A /* Build configuration list for PBXNativeTarget "Tutorial 15" */ = {
 			isa = XCConfigurationList;
@@ -1756,6 +1784,7 @@
 				63EA7B2B1753A2B90032388A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63EA7B381753A2FE0032388A /* Build configuration list for PBXNativeTarget "Playback Tutorial 3" */ = {
 			isa = XCConfigurationList;
@@ -1764,6 +1793,7 @@
 				63EA7B3A1753A2FE0032388A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63EA7B471753A38E0032388A /* Build configuration list for PBXNativeTarget "Playback Tutorial 4" */ = {
 			isa = XCConfigurationList;
@@ -1772,6 +1802,7 @@
 				63EA7B491753A38E0032388A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63EA7B561753A3B60032388A /* Build configuration list for PBXNativeTarget "Playback Tutorial 5" */ = {
 			isa = XCConfigurationList;
@@ -1780,6 +1811,7 @@
 				63EA7B581753A3B60032388A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63EA7B651753A3F70032388A /* Build configuration list for PBXNativeTarget "Playback Tutorial 6" */ = {
 			isa = XCConfigurationList;
@@ -1788,6 +1820,7 @@
 				63EA7B671753A3F70032388A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63EA7B741753A41C0032388A /* Build configuration list for PBXNativeTarget "Playback Tutorial 7" */ = {
 			isa = XCConfigurationList;
@@ -1796,6 +1829,7 @@
 				63EA7B761753A41C0032388A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
