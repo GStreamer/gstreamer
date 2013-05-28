@@ -254,11 +254,11 @@
 		63EA7B321753A2FE0032388A /* Playback Tutorial 3 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Playback Tutorial 3"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63EA7B3B1753A3740032388A /* playback-tutorial-3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-3.c"; path = "../playback-tutorial-3.c"; sourceTree = SOURCE_ROOT; };
 		63EA7B411753A38D0032388A /* Playback Tutorial 4 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Playback Tutorial 4"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63EA7B4A1753A3AA0032388A /* playback-tutorial-4.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-4.c"; path = "../../playback-tutorial-4.c"; sourceTree = "<group>"; };
+		63EA7B4A1753A3AA0032388A /* playback-tutorial-4.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-4.c"; path = "../playback-tutorial-4.c"; sourceTree = SOURCE_ROOT; };
 		63EA7B501753A3B60032388A /* Playback Tutorial 5 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Playback Tutorial 5"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63EA7B591753A3D00032388A /* playback-tutorial-5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-5.c"; path = "../playback-tutorial-5.c"; sourceTree = SOURCE_ROOT; };
 		63EA7B5F1753A3F70032388A /* Playback Tutorial 6 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Playback Tutorial 6"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63EA7B681753A4100032388A /* playback-tutorial-6.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-6.c"; path = "../../playback-tutorial-6.c"; sourceTree = "<group>"; };
+		63EA7B681753A4100032388A /* playback-tutorial-6.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-6.c"; path = "../playback-tutorial-6.c"; sourceTree = SOURCE_ROOT; };
 		63EA7B6E1753A41C0032388A /* Playback Tutorial 7 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Playback Tutorial 7"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63EA7B771753A4370032388A /* playback-tutorial-7.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-7.c"; path = "../playback-tutorial-7.c"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
