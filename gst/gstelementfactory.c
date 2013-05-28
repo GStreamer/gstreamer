@@ -730,8 +730,9 @@ gst_element_factory_list_is_type (GstElementFactory * factory,
     res = (strstr (klass, "Formatter") != NULL);
 
   /* Filter by media type now, we only test if it
-   * matched any of the types above. */
-  if (res
+   * matched any of the types above or only checking the media
+   * type was requested. */
+  if ((res || !(type & (GST_ELEMENT_FACTORY_TYPE_MAX_ELEMENTS - 1)))
       && (type & (GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO |
               GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO |
               GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE)))
@@ -740,7 +741,11 @@ gst_element_factory_list_is_type (GstElementFactory * factory,
         || ((type & GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO)
         && (strstr (klass, "Video") != NULL))
         || ((type & GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE)
-        && (strstr (klass, "Image") != NULL));
+        && (strstr (klass, "Image") != NULL)) ||
+        ((type & GST_ELEMENT_FACTORY_TYPE_MEDIA_SUBTITLE)
+        && (strstr (klass, "Subtitle") != NULL)) ||
+        ((type & GST_ELEMENT_FACTORY_TYPE_MEDIA_METADATA)
+        && (strstr (klass, "Metadata") != NULL));
 
   return res;
 }
