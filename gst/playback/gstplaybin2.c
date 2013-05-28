@@ -4080,7 +4080,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
 }
 
 static gboolean
-autoplug_query_cb (GstElement * uridecodebin, GstPad * pad, GstQuery * query,
+autoplug_query_caps (GstElement * uridecodebin, GstPad * pad, GstQuery * query,
     GstSourceGroup * group)
 {
   GstCaps *filter, *result = NULL;
@@ -4089,9 +4089,6 @@ autoplug_query_cb (GstElement * uridecodebin, GstPad * pad, GstQuery * query,
   GValueArray *factories;
   gint i, n;
   gboolean have_audio_sink = FALSE, have_video_sink = FALSE;
-
-  if (GST_QUERY_TYPE (query) != GST_QUERY_CAPS)
-    return FALSE;
 
   gst_query_parse_caps (query, &filter);
   GST_SOURCE_GROUP_LOCK (group);
@@ -4241,6 +4238,19 @@ done:
   gst_caps_unref (result);
 
   return TRUE;
+}
+
+static gboolean
+autoplug_query_cb (GstElement * uridecodebin, GstPad * pad, GstQuery * query,
+    GstSourceGroup * group)
+{
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+      return autoplug_query_caps (uridecodebin, pad, query, group);
+    default:
+      return FALSE;
+  }
 }
 
 static void
