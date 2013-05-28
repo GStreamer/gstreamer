@@ -4250,7 +4250,12 @@ done:
   if (!result)
     return FALSE;
 
-  if (0) {
+  /* Add the actual decoder/parser/etc caps at the very end to
+   * make sure we don't cause empty caps to be returned, e.g.
+   * if a parser asks us but a decoder is required after it
+   * because no sink can handle the format directly.
+   */
+  {
     GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
 
     if (target) {
