@@ -1101,6 +1101,31 @@ gst_rtp_session_send_rtp (RTPSession * sess, RTPSource * src,
   return result;
 }
 
+static void
+do_rtcp_events (GstRtpSession * rtpsession, GstPad * srcpad)
+{
+  GstCaps *caps;
+  GstSegment seg;
+  GstEvent *event;
+  gchar *stream_id;
+
+  stream_id =
+      g_strdup_printf ("%08x%08x%08x%08x", g_random_int (), g_random_int (),
+      g_random_int (), g_random_int ());
+
+  event = gst_event_new_stream_start (stream_id);
+  gst_pad_push_event (srcpad, event);
+  g_free (stream_id);
+
+  caps = gst_caps_new_empty_simple ("application/x-rtcp");
+  gst_pad_set_caps (srcpad, caps);
+  gst_caps_unref (caps);
+
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  event = gst_event_new_segment (&seg);
+  gst_pad_push_event (srcpad, event);
+}
+
 /* called when the session manager has an RTCP packet ready for further
  * sending. The eos flag is set when an EOS event should be sent downstream as
  * well. */
@@ -1119,17 +1144,12 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
     goto stopping;
 
   if ((rtcp_src = rtpsession->send_rtcp_src)) {
-    GstCaps *caps;
-
     gst_object_ref (rtcp_src);
     GST_RTP_SESSION_UNLOCK (rtpsession);
 
     /* set rtcp caps on output pad */
-    if (!(caps = gst_pad_get_current_caps (rtcp_src))) {
-      caps = gst_caps_new_empty_simple ("application/x-rtcp");
-      gst_pad_set_caps (rtcp_src, caps);
-    }
-    gst_caps_unref (caps);
+    if (!gst_pad_has_current_caps (rtcp_src))
+      do_rtcp_events (rtpsession, rtcp_src);
 
     GST_LOG_OBJECT (rtpsession, "sending RTCP");
     result = gst_pad_push (rtcp_src, buffer);
@@ -1176,17 +1196,8 @@ gst_rtp_session_sync_rtcp (RTPSession * sess, RTPSource * src,
     goto stopping;
 
   if ((sync_src = rtpsession->sync_src)) {
-    GstCaps *caps;
-
     gst_object_ref (sync_src);
     GST_RTP_SESSION_UNLOCK (rtpsession);
-
-    /* set rtcp caps on output pad */
-    if (!(caps = gst_pad_get_current_caps (sync_src))) {
-      caps = gst_caps_new_empty_simple ("application/x-rtcp");
-      gst_pad_set_caps (sync_src, caps);
-    }
-    gst_caps_unref (caps);
 
     GST_LOG_OBJECT (rtpsession, "sending Sync RTCP");
     result = gst_pad_push (sync_src, buffer);
