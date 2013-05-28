@@ -146,7 +146,7 @@ gst_caps_src_create (GstPushSrc * psrc, GstBuffer ** p_buf)
     gst_pad_set_caps (GST_BASE_SRC_PAD (psrc), src->caps);
   }
 
-  buf = gst_buffer_new ();
+  buf = gst_buffer_new_wrapped (g_malloc0 (4), 4);
   GST_BUFFER_TIMESTAMP (buf) =
       gst_util_uint64_scale (src->nbuffers, GST_SECOND, 25);
   src->nbuffers++;
@@ -460,15 +460,11 @@ gst_codec_demuxer_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   if (demux->srcpad0) {
-    GstBuffer *outbuf = gst_buffer_new ();
-
-    GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+    GstBuffer *outbuf = gst_buffer_copy (buf);
     ret0 = gst_pad_push (demux->srcpad0, outbuf);
   }
   if (demux->srcpad1) {
-    GstBuffer *outbuf = gst_buffer_new ();
-
-    GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+    GstBuffer *outbuf = gst_buffer_copy (buf);
     ret1 = gst_pad_push (demux->srcpad1, outbuf);
   }
   gst_buffer_unref (buf);
@@ -1584,6 +1580,124 @@ GST_START_TEST (test_raw_compressed_audio_stream_demuxer_manual_sink)
 
 GST_END_TEST;
 
+GST_START_TEST (test_raw_raw_audio_stream_adder_manual_sink)
+{
+  GstMessage *msg;
+  GstElement *adder;
+  GstElement *playbin_combiner;
+  GstElement *playbin;
+  GstElement *sink;
+  GstBus *bus;
+  gboolean adder_used = FALSE;
+  gboolean done = FALSE;
+
+  fail_unless (gst_element_register (NULL, "capssrc", GST_RANK_PRIMARY,
+          gst_caps_src_get_type ()));
+  fail_unless (gst_element_register (NULL, "codecdemuxer",
+          GST_RANK_PRIMARY + 100, gst_codec_demuxer_get_type ()));
+  fail_unless (gst_element_register (NULL, "audiocodecsink",
+          GST_RANK_PRIMARY + 100, gst_audio_codec_sink_get_type ()));
+  fail_unless (gst_element_register (NULL, "videocodecsink",
+          GST_RANK_PRIMARY + 100, gst_video_codec_sink_get_type ()));
+
+  playbin = create_playbin ("caps:application/x-container, "
+      "stream0=(string)raw-audio, " "stream1=(string)raw-audio", TRUE);
+
+  /* before playback starts, and with no custom combiner, these should all be NULL */
+  g_object_get (G_OBJECT (playbin), "audio-stream-combiner", &playbin_combiner,
+      NULL);
+  fail_unless (playbin_combiner == NULL);
+  g_object_get (G_OBJECT (playbin), "text-stream-combiner", &playbin_combiner,
+      NULL);
+  fail_unless (playbin_combiner == NULL);
+  g_object_get (G_OBJECT (playbin), "video-stream-combiner", &playbin_combiner,
+      NULL);
+  fail_unless (playbin_combiner == NULL);
+
+  /* set audio combiner */
+  adder = gst_element_factory_make ("adder", NULL);
+  fail_unless (adder != NULL);
+  g_object_set (G_OBJECT (playbin), "audio-stream-combiner", adder, NULL);
+
+  fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_READY),
+      GST_STATE_CHANGE_SUCCESS);
+  fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+
+  /* audio combiner should still be there */
+  g_object_get (G_OBJECT (playbin), "audio-stream-combiner", &playbin_combiner,
+      NULL);
+  fail_unless (playbin_combiner == adder);
+
+  /* text and video combiners should still be NULL */
+  g_object_get (G_OBJECT (playbin), "text-stream-combiner", &playbin_combiner,
+      NULL);
+  fail_unless (playbin_combiner == NULL);
+  g_object_get (G_OBJECT (playbin), "video-stream-combiner", &playbin_combiner,
+      NULL);
+  fail_unless (playbin_combiner == NULL);
+
+  bus = gst_element_get_bus (playbin);
+
+  while (!done) {
+    msg = gst_bus_poll (bus, GST_MESSAGE_ANY, -1);
+
+    switch (GST_MESSAGE_TYPE (msg)) {
+      case GST_MESSAGE_EOS:
+        done = TRUE;
+        break;
+      case GST_MESSAGE_ERROR:
+        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
+        break;
+      case GST_MESSAGE_STATE_CHANGED:
+        if (GST_MESSAGE_SRC (msg) == GST_OBJECT (adder)) {
+          GstState state;
+          gst_message_parse_state_changed (msg, &state, NULL, NULL);
+          if (state == GST_STATE_PAUSED)
+            adder_used = TRUE;
+        }
+      default:
+        break;
+    }
+    gst_message_unref (msg);
+  }
+  gst_object_unref (bus);
+  fail_unless (adder_used);
+
+  g_object_get (G_OBJECT (playbin), "video-sink", &sink, NULL);
+  fail_unless (sink != NULL);
+  {
+    GstVideoCodecSink *csink;
+
+    fail_unless (G_TYPE_FROM_INSTANCE (sink) ==
+        gst_video_codec_sink_get_type ());
+    csink = (GstVideoCodecSink *) sink;
+    fail_unless (csink->audio == FALSE);
+    fail_unless_equals_int (csink->n_raw, 0);
+    fail_unless_equals_int (csink->n_compressed, 0);
+    gst_object_unref (sink);
+  }
+
+  g_object_get (G_OBJECT (playbin), "audio-sink", &sink, NULL);
+  fail_unless (sink != NULL);
+  {
+    GstAudioCodecSink *csink;
+
+    fail_unless (G_TYPE_FROM_INSTANCE (sink) ==
+        gst_audio_codec_sink_get_type ());
+    csink = (GstAudioCodecSink *) sink;
+    fail_unless (csink->audio == TRUE);
+    fail_unless_equals_int (csink->n_raw, NBUFFERS);
+    fail_unless_equals_int (csink->n_compressed, 0);
+    gst_object_unref (sink);
+  }
+
+  gst_element_set_state (playbin, GST_STATE_NULL);
+  gst_object_unref (playbin);
+}
+
+GST_END_TEST;
+
 #if 0
 typedef struct
 {
@@ -2396,6 +2510,8 @@ playbin_compressed_suite (void)
       test_raw_compressed_audio_stream_demuxer_manual_sink);
   tcase_add_test (tc_chain,
       test_raw_compressed_video_stream_demuxer_manual_sink);
+
+  tcase_add_test (tc_chain, test_raw_raw_audio_stream_adder_manual_sink);
 
   /* These tests need something like the stream-activate event
    * and are racy otherwise */
