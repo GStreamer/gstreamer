@@ -690,7 +690,6 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
     /* do we need to message ? */
     if (filter->num_frames >= filter->interval_frames) {
       gst_level_post_message (filter);
-      filter->message_ts += GST_FRAMES_TO_CLOCK_TIME (block_size, rate);
     }
   }
 
@@ -704,15 +703,15 @@ gst_level_post_message (GstLevel * filter)
 {
   guint i;
   gint channels, rate;
+  GstClockTime duration;
 
   channels = GST_AUDIO_INFO_CHANNELS (&filter->info);
   rate = GST_AUDIO_INFO_RATE (&filter->info);
+  duration = GST_FRAMES_TO_CLOCK_TIME (filter->interval_frames, rate);
 
   if (filter->post_messages) {
-    GstMessage *m;
-    GstClockTime duration = GST_FRAMES_TO_CLOCK_TIME (filter->num_frames, rate);
-
-    m = gst_level_message_new (filter, filter->message_ts, duration);
+    GstMessage *m =
+        gst_level_message_new (filter, filter->message_ts, duration);
 
     GST_LOG_OBJECT (filter,
         "message: ts %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
@@ -755,11 +754,11 @@ gst_level_post_message (GstLevel * filter)
       filter->last_peak[i] = 0.0;
     }
 
-    if (filter->post_messages)
-      gst_element_post_message (GST_ELEMENT (filter), m);
+    gst_element_post_message (GST_ELEMENT (filter), m);
 
   }
-  filter->num_frames = 0;
+  filter->num_frames -= filter->interval_frames;
+  filter->message_ts += duration;
 }
 
 
