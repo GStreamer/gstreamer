@@ -253,21 +253,21 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 typedef struct _GstPlayBin GstPlayBin;
 typedef struct _GstPlayBinClass GstPlayBinClass;
 typedef struct _GstSourceGroup GstSourceGroup;
-typedef struct _GstSourceSelect GstSourceSelect;
+typedef struct _GstSourceCombine GstSourceCombine;
 
-typedef GstCaps *(*SourceSelectGetMediaCapsFunc) (void);
+typedef GstCaps *(*SourceCombineGetMediaCapsFunc) (void);
 
-/* has the info for a selector and provides the link to the sink */
-struct _GstSourceSelect
+/* has the info for a combiner and provides the link to the sink */
+struct _GstSourceCombine
 {
-  const gchar *media_list[8];   /* the media types for the selector */
-  SourceSelectGetMediaCapsFunc get_media_caps;  /* more complex caps for the selector */
-  GstPlaySinkType type;         /* the sink pad type of the selector */
+  const gchar *media_list[8];   /* the media types for the combiner */
+  SourceCombineGetMediaCapsFunc get_media_caps; /* more complex caps for the combiner */
+  GstPlaySinkType type;         /* the sink pad type of the combiner */
 
-  GstElement *selector;         /* the selector */
+  GstElement *combiner;         /* the combiner */
   GPtrArray *channels;
-  GstPad *srcpad;               /* the source pad of the selector */
-  GstPad *sinkpad;              /* the sinkpad of the sink when the selector
+  GstPad *srcpad;               /* the source pad of the combiner */
+  GstPad *sinkpad;              /* the sinkpad of the sink when the combiner
                                  * is linked
                                  */
   gulong block_id;
@@ -321,9 +321,9 @@ struct _GstSourceGroup
   GValueArray *streaminfo;
   GstElement *source;
 
-  GPtrArray *video_channels;    /* links to selector pads */
-  GPtrArray *audio_channels;    /* links to selector pads */
-  GPtrArray *text_channels;     /* links to selector pads */
+  GPtrArray *video_channels;    /* links to combiner pads */
+  GPtrArray *audio_channels;    /* links to combiner pads */
+  GPtrArray *text_channels;     /* links to combiner pads */
 
   GstElement *audio_sink;       /* autoplugged audio and video sinks */
   GstElement *video_sink;
@@ -359,8 +359,8 @@ struct _GstSourceGroup
   GMutex suburi_flushes_to_drop_lock;
   GSList *suburi_flushes_to_drop;
 
-  /* selectors for different streams */
-  GstSourceSelect selector[PLAYBIN_STREAM_LAST];
+  /* combiners for different streams */
+  GstSourceCombine combiner[PLAYBIN_STREAM_LAST];
 };
 
 #define GST_PLAY_BIN_GET_LOCK(bin) (&((GstPlayBin*)(bin))->lock)
@@ -1187,7 +1187,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * @playbin: a #GstPlayBin
    * @stream: a video stream number
    *
-   * Action signal to retrieve the stream-selector sinkpad for a specific
+   * Action signal to retrieve the stream-combiner sinkpad for a specific
    * video stream.
    * This pad can be used for notifications of caps changes, stream-specific
    * queries, etc.
@@ -1204,7 +1204,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * @playbin: a #GstPlayBin
    * @stream: an audio stream number
    *
-   * Action signal to retrieve the stream-selector sinkpad for a specific
+   * Action signal to retrieve the stream-combiner sinkpad for a specific
    * audio stream.
    * This pad can be used for notifications of caps changes, stream-specific
    * queries, etc.
@@ -1221,7 +1221,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * @playbin: a #GstPlayBin
    * @stream: a text stream number
    *
-   * Action signal to retrieve the stream-selector sinkpad for a specific
+   * Action signal to retrieve the stream-combiner sinkpad for a specific
    * text stream.
    * This pad can be used for notifications of caps changes, stream-specific
    * queries, etc.
@@ -1265,30 +1265,30 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->audio_channels = g_ptr_array_new ();
   group->text_channels = g_ptr_array_new ();
   g_mutex_init (&group->lock);
-  /* init selectors. The selector is found by finding the first prefix that
+  /* init combiners. The combiner is found by finding the first prefix that
    * matches the media. */
   group->playbin = playbin;
   /* If you add any items to these lists, check that media_list[] is defined
    * above to be large enough to hold MAX(items)+1, so as to accommodate a
    * NULL terminator (set when the memory is zeroed on allocation) */
-  group->selector[PLAYBIN_STREAM_AUDIO].media_list[0] = "audio/";
-  group->selector[PLAYBIN_STREAM_AUDIO].type = GST_PLAY_SINK_TYPE_AUDIO;
-  group->selector[PLAYBIN_STREAM_AUDIO].channels = group->audio_channels;
-  group->selector[PLAYBIN_STREAM_VIDEO].media_list[0] = "video/";
-  group->selector[PLAYBIN_STREAM_VIDEO].media_list[1] = "image/";
-  group->selector[PLAYBIN_STREAM_VIDEO].type = GST_PLAY_SINK_TYPE_VIDEO;
-  group->selector[PLAYBIN_STREAM_VIDEO].channels = group->video_channels;
-  group->selector[PLAYBIN_STREAM_TEXT].media_list[0] = "text/";
-  group->selector[PLAYBIN_STREAM_TEXT].media_list[1] = "application/x-subtitle";
-  group->selector[PLAYBIN_STREAM_TEXT].media_list[2] = "application/x-ssa";
-  group->selector[PLAYBIN_STREAM_TEXT].media_list[3] = "application/x-ass";
-  group->selector[PLAYBIN_STREAM_TEXT].media_list[4] = "subpicture/x-dvd";
-  group->selector[PLAYBIN_STREAM_TEXT].media_list[5] = "subpicture/";
-  group->selector[PLAYBIN_STREAM_TEXT].media_list[6] = "subtitle/";
-  group->selector[PLAYBIN_STREAM_TEXT].get_media_caps =
+  group->combiner[PLAYBIN_STREAM_AUDIO].media_list[0] = "audio/";
+  group->combiner[PLAYBIN_STREAM_AUDIO].type = GST_PLAY_SINK_TYPE_AUDIO;
+  group->combiner[PLAYBIN_STREAM_AUDIO].channels = group->audio_channels;
+  group->combiner[PLAYBIN_STREAM_VIDEO].media_list[0] = "video/";
+  group->combiner[PLAYBIN_STREAM_VIDEO].media_list[1] = "image/";
+  group->combiner[PLAYBIN_STREAM_VIDEO].type = GST_PLAY_SINK_TYPE_VIDEO;
+  group->combiner[PLAYBIN_STREAM_VIDEO].channels = group->video_channels;
+  group->combiner[PLAYBIN_STREAM_TEXT].media_list[0] = "text/";
+  group->combiner[PLAYBIN_STREAM_TEXT].media_list[1] = "application/x-subtitle";
+  group->combiner[PLAYBIN_STREAM_TEXT].media_list[2] = "application/x-ssa";
+  group->combiner[PLAYBIN_STREAM_TEXT].media_list[3] = "application/x-ass";
+  group->combiner[PLAYBIN_STREAM_TEXT].media_list[4] = "subpicture/x-dvd";
+  group->combiner[PLAYBIN_STREAM_TEXT].media_list[5] = "subpicture/";
+  group->combiner[PLAYBIN_STREAM_TEXT].media_list[6] = "subtitle/";
+  group->combiner[PLAYBIN_STREAM_TEXT].get_media_caps =
       gst_subtitle_overlay_create_factory_caps;
-  group->selector[PLAYBIN_STREAM_TEXT].type = GST_PLAY_SINK_TYPE_TEXT;
-  group->selector[PLAYBIN_STREAM_TEXT].channels = group->text_channels;
+  group->combiner[PLAYBIN_STREAM_TEXT].type = GST_PLAY_SINK_TYPE_TEXT;
+  group->combiner[PLAYBIN_STREAM_TEXT].channels = group->text_channels;
 }
 
 static void
@@ -1330,13 +1330,13 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
 }
 
 static void
-notify_volume_cb (GObject * selector, GParamSpec * pspec, GstPlayBin * playbin)
+notify_volume_cb (GObject * combiner, GParamSpec * pspec, GstPlayBin * playbin)
 {
   g_object_notify (G_OBJECT (playbin), "volume");
 }
 
 static void
-notify_mute_cb (GObject * selector, GParamSpec * pspec, GstPlayBin * playbin)
+notify_mute_cb (GObject * combiner, GParamSpec * pspec, GstPlayBin * playbin)
 {
   g_object_notify (G_OBJECT (playbin), "mute");
 }
@@ -1429,7 +1429,7 @@ gst_play_bin_init (GstPlayBin * playbin)
   g_rec_mutex_init (&playbin->lock);
   g_mutex_init (&playbin->dyn_lock);
 
-  /* assume we can create a selector */
+  /* assume we can create an input-selector */
   playbin->have_selector = TRUE;
 
   /* init groups */
@@ -1677,7 +1677,7 @@ get_tags (GstPlayBin * playbin, GstSourceGroup * group, GPtrArray * channels,
   GstTagList *result;
   GstPad *sinkpad;
 
-  if (!channels || stream >= channels->len || !group->selector[stream].has_tags)
+  if (!channels || stream >= channels->len || !group->combiner[stream].has_tags)
     return NULL;
 
   sinkpad = g_ptr_array_index (channels, stream);
@@ -1736,26 +1736,26 @@ gst_play_bin_convert_sample (GstPlayBin * playbin, GstCaps * caps)
 
 /* Returns current stream number, or -1 if none has been selected yet */
 static int
-get_current_stream_number (GstPlayBin * playbin, GstSourceSelect * select,
+get_current_stream_number (GstPlayBin * playbin, GstSourceCombine * combine,
     GPtrArray * channels)
 {
   /* Internal API cleanup would make this easier... */
   int i;
   GstPad *pad, *current;
-  GstObject *selector = NULL;
+  GstObject *combiner = NULL;
   int ret = -1;
 
-  if (!select->has_active_pad) {
+  if (!combine->has_active_pad) {
     GST_WARNING_OBJECT (playbin,
-        "selector doesn't have the \"active-pad\" property");
+        "combiner doesn't have the \"active-pad\" property");
     return ret;
   }
 
   for (i = 0; i < channels->len; i++) {
     pad = g_ptr_array_index (channels, i);
-    if ((selector = gst_pad_get_parent (pad))) {
-      g_object_get (selector, "active-pad", &current, NULL);
-      gst_object_unref (selector);
+    if ((combiner = gst_pad_get_parent (pad))) {
+      g_object_get (combiner, "active-pad", &current, NULL);
+      gst_object_unref (combiner);
 
       if (pad == current) {
         gst_object_unref (current);
@@ -1772,7 +1772,7 @@ get_current_stream_number (GstPlayBin * playbin, GstSourceSelect * select,
 }
 
 static gboolean
-gst_play_bin_send_custom_event (GstObject * selector, const gchar * event_name)
+gst_play_bin_send_custom_event (GstObject * combiner, const gchar * event_name)
 {
   GstPad *src;
   GstPad *peer;
@@ -1780,7 +1780,7 @@ gst_play_bin_send_custom_event (GstObject * selector, const gchar * event_name)
   GstEvent *event;
   gboolean ret = FALSE;
 
-  src = gst_element_get_static_pad (GST_ELEMENT_CAST (selector), "src");
+  src = gst_element_get_static_pad (GST_ELEMENT_CAST (combiner), "src");
   peer = gst_pad_get_peer (src);
   if (peer) {
     s = gst_structure_new_empty (event_name);
@@ -1806,7 +1806,7 @@ gst_play_bin_set_current_video_stream (GstPlayBin * playbin, gint stream)
       playbin->current_video, stream);
 
   group = get_group (playbin);
-  if (!group->selector[PLAYBIN_STREAM_VIDEO].has_active_pad)
+  if (!group->combiner[PLAYBIN_STREAM_VIDEO].has_active_pad)
     goto no_active_pad;
   if (!(channels = group->video_channels))
     goto no_channels;
@@ -1823,23 +1823,23 @@ gst_play_bin_set_current_video_stream (GstPlayBin * playbin, gint stream)
   GST_PLAY_BIN_UNLOCK (playbin);
 
   if (sinkpad) {
-    GstObject *selector;
+    GstObject *combiner;
 
-    if ((selector = gst_pad_get_parent (sinkpad))) {
+    if ((combiner = gst_pad_get_parent (sinkpad))) {
       GstPad *old_sinkpad;
 
-      g_object_get (selector, "active-pad", &old_sinkpad, NULL);
+      g_object_get (combiner, "active-pad", &old_sinkpad, NULL);
 
       if (old_sinkpad != sinkpad) {
-        if (gst_play_bin_send_custom_event (selector,
+        if (gst_play_bin_send_custom_event (combiner,
                 "playsink-custom-video-flush"))
           playbin->video_pending_flush_finish = TRUE;
 
         /* activate the selected pad */
-        g_object_set (selector, "active-pad", sinkpad, NULL);
+        g_object_set (combiner, "active-pad", sinkpad, NULL);
       }
 
-      gst_object_unref (selector);
+      gst_object_unref (combiner);
     }
     gst_object_unref (sinkpad);
   }
@@ -1873,7 +1873,7 @@ gst_play_bin_set_current_audio_stream (GstPlayBin * playbin, gint stream)
       playbin->current_audio, stream);
 
   group = get_group (playbin);
-  if (!group->selector[PLAYBIN_STREAM_AUDIO].has_active_pad)
+  if (!group->combiner[PLAYBIN_STREAM_AUDIO].has_active_pad)
     goto no_active_pad;
   if (!(channels = group->audio_channels))
     goto no_channels;
@@ -1890,22 +1890,22 @@ gst_play_bin_set_current_audio_stream (GstPlayBin * playbin, gint stream)
   GST_PLAY_BIN_UNLOCK (playbin);
 
   if (sinkpad) {
-    GstObject *selector;
+    GstObject *combiner;
 
-    if ((selector = gst_pad_get_parent (sinkpad))) {
+    if ((combiner = gst_pad_get_parent (sinkpad))) {
       GstPad *old_sinkpad;
 
-      g_object_get (selector, "active-pad", &old_sinkpad, NULL);
+      g_object_get (combiner, "active-pad", &old_sinkpad, NULL);
 
       if (old_sinkpad != sinkpad) {
-        if (gst_play_bin_send_custom_event (selector,
+        if (gst_play_bin_send_custom_event (combiner,
                 "playsink-custom-audio-flush"))
           playbin->audio_pending_flush_finish = TRUE;
 
         /* activate the selected pad */
-        g_object_set (selector, "active-pad", sinkpad, NULL);
+        g_object_set (combiner, "active-pad", sinkpad, NULL);
       }
-      gst_object_unref (selector);
+      gst_object_unref (combiner);
     }
     gst_object_unref (sinkpad);
   }
@@ -2030,7 +2030,7 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
       playbin->current_text, stream);
 
   group = get_group (playbin);
-  if (!group->selector[PLAYBIN_STREAM_TEXT].has_active_pad)
+  if (!group->combiner[PLAYBIN_STREAM_TEXT].has_active_pad)
     goto no_active_pad;
   if (!(channels = group->text_channels))
     goto no_channels;
@@ -2047,12 +2047,12 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
   GST_PLAY_BIN_UNLOCK (playbin);
 
   if (sinkpad) {
-    GstObject *selector;
+    GstObject *combiner;
 
-    if ((selector = gst_pad_get_parent (sinkpad))) {
+    if ((combiner = gst_pad_get_parent (sinkpad))) {
       GstPad *old_sinkpad;
 
-      g_object_get (selector, "active-pad", &old_sinkpad, NULL);
+      g_object_get (combiner, "active-pad", &old_sinkpad, NULL);
 
       if (old_sinkpad != sinkpad) {
         gboolean need_unblock, need_block, need_seek;
@@ -2093,12 +2093,12 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
           gst_play_bin_suburidecodebin_block (group, group->suburidecodebin,
               TRUE);
 
-        if (gst_play_bin_send_custom_event (selector,
+        if (gst_play_bin_send_custom_event (combiner,
                 "playsink-custom-subtitle-flush"))
           playbin->text_pending_flush_finish = TRUE;
 
         /* activate the selected pad */
-        g_object_set (selector, "active-pad", sinkpad, NULL);
+        g_object_set (combiner, "active-pad", sinkpad, NULL);
 
         /* Unblock pads if necessary */
         if (need_unblock)
@@ -2109,7 +2109,7 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
         if (need_seek)
           gst_play_bin_suburidecodebin_seek_to_start (group);
       }
-      gst_object_unref (selector);
+      gst_object_unref (combiner);
 
       if (old_sinkpad)
         gst_object_unref (old_sinkpad);
@@ -2320,7 +2320,7 @@ gst_play_bin_get_current_stream_combiner (GstPlayBin * playbin,
   GstElement *combiner;
 
   GST_PLAY_BIN_LOCK (playbin);
-  if ((combiner = playbin->curr_group->selector[stream_type].selector))
+  if ((combiner = playbin->curr_group->combiner[stream_type].combiner))
     gst_object_ref (combiner);
   else if ((combiner = *elem))
     gst_object_ref (combiner);
@@ -2750,40 +2750,40 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
 }
 
 static void
-selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
+combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
     GstPlayBin * playbin)
 {
   const gchar *property;
   GstSourceGroup *group;
-  GstSourceSelect *select = NULL;
+  GstSourceCombine *combine = NULL;
   int i;
 
   GST_PLAY_BIN_LOCK (playbin);
   group = get_group (playbin);
 
   for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
-    if (selector == G_OBJECT (group->selector[i].selector)) {
-      select = &group->selector[i];
+    if (combiner == G_OBJECT (group->combiner[i].combiner)) {
+      combine = &group->combiner[i];
     }
   }
 
   /* We got a pad-change after our group got switched out; no need to notify */
-  if (!select) {
+  if (!combine) {
     GST_PLAY_BIN_UNLOCK (playbin);
     return;
   }
 
-  switch (select->type) {
+  switch (combine->type) {
     case GST_PLAY_SINK_TYPE_VIDEO:
     case GST_PLAY_SINK_TYPE_VIDEO_RAW:
       property = "current-video";
       playbin->current_video = get_current_stream_number (playbin,
-          select, group->video_channels);
+          combine, group->video_channels);
 
       if (playbin->video_pending_flush_finish) {
         playbin->video_pending_flush_finish = FALSE;
         GST_PLAY_BIN_UNLOCK (playbin);
-        gst_play_bin_send_custom_event (GST_OBJECT (selector),
+        gst_play_bin_send_custom_event (GST_OBJECT (combiner),
             "playsink-custom-video-flush-finish");
         goto notify;
       }
@@ -2792,12 +2792,12 @@ selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
     case GST_PLAY_SINK_TYPE_AUDIO_RAW:
       property = "current-audio";
       playbin->current_audio = get_current_stream_number (playbin,
-          select, group->audio_channels);
+          combine, group->audio_channels);
 
       if (playbin->audio_pending_flush_finish) {
         playbin->audio_pending_flush_finish = FALSE;
         GST_PLAY_BIN_UNLOCK (playbin);
-        gst_play_bin_send_custom_event (GST_OBJECT (selector),
+        gst_play_bin_send_custom_event (GST_OBJECT (combiner),
             "playsink-custom-audio-flush-finish");
         goto notify;
       }
@@ -2805,12 +2805,12 @@ selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
     case GST_PLAY_SINK_TYPE_TEXT:
       property = "current-text";
       playbin->current_text = get_current_stream_number (playbin,
-          select, group->text_channels);
+          combine, group->text_channels);
 
       if (playbin->text_pending_flush_finish) {
         playbin->text_pending_flush_finish = FALSE;
         GST_PLAY_BIN_UNLOCK (playbin);
-        gst_play_bin_send_custom_event (GST_OBJECT (selector),
+        gst_play_bin_send_custom_event (GST_OBJECT (combiner),
             "playsink-custom-subtitle-flush-finish");
         goto notify;
       }
@@ -2909,7 +2909,7 @@ notify_tags_cb (GObject * object, GParamSpec * pspec, gpointer user_data)
 }
 
 /* this function is called when a new pad is added to decodebin. We check the
- * type of the pad and add it to the selector element of the group.
+ * type of the pad and add it to the combiner element of the group.
  */
 static void
 pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
@@ -2920,7 +2920,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   const gchar *name;
   GstPad *sinkpad;
   GstPadLinkReturn res;
-  GstSourceSelect *select = NULL;
+  GstSourceCombine *combine = NULL;
   gint i, pass;
   gboolean changed = FALSE;
   GstElement *custom_combiner = NULL;
@@ -2935,18 +2935,18 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       "pad %s:%s with caps %" GST_PTR_FORMAT " added in group %p",
       GST_DEBUG_PAD_NAME (pad), caps, group);
 
-  /* major type of the pad, this determines the selector to use,
+  /* major type of the pad, this determines the combiner to use,
      try exact match first */
-  for (pass = 0; !select && pass < 2; pass++) {
+  for (pass = 0; !combine && pass < 2; pass++) {
     for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
-      if (array_has_value (group->selector[i].media_list, name, pass == 0)) {
-        select = &group->selector[i];
+      if (array_has_value (group->combiner[i].media_list, name, pass == 0)) {
+        combine = &group->combiner[i];
         break;
-      } else if (group->selector[i].get_media_caps) {
-        GstCaps *media_caps = group->selector[i].get_media_caps ();
+      } else if (group->combiner[i].get_media_caps) {
+        GstCaps *media_caps = group->combiner[i].get_media_caps ();
 
         if (media_caps && gst_caps_can_intersect (media_caps, caps)) {
-          select = &group->selector[i];
+          combine = &group->combiner[i];
           gst_caps_unref (media_caps);
           break;
         }
@@ -2954,7 +2954,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       }
     }
     /* get custom stream combiner if there is one */
-    if (select) {
+    if (combine) {
       if (i == PLAYBIN_STREAM_AUDIO) {
         custom_combiner = playbin->audio_stream_combiner;
       } else if (i == PLAYBIN_STREAM_TEXT) {
@@ -2964,22 +2964,22 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       }
     }
   }
-  /* no selector found for the media type, don't bother linking it to a
-   * selector. This will leave the pad unlinked and thus ignored. */
-  if (select == NULL)
+  /* no combiner found for the media type, don't bother linking it to a
+   * combiner. This will leave the pad unlinked and thus ignored. */
+  if (combine == NULL)
     goto unknown_type;
 
   GST_SOURCE_GROUP_LOCK (group);
-  if (select->selector == NULL && playbin->have_selector) {
-    /* no selector, create one */
+  if (combine->combiner == NULL && playbin->have_selector) {
+    /* no combiner, create one */
     GST_DEBUG_OBJECT (playbin, "creating new input selector");
     if (custom_combiner)
-      select->selector = gst_object_ref (custom_combiner);
+      combine->combiner = gst_object_ref (custom_combiner);
     else
-      select->selector = gst_element_factory_make ("input-selector", NULL);
+      combine->combiner = gst_element_factory_make ("input-selector", NULL);
 
-    if (select->selector == NULL) {
-      /* post the missing selector message only once */
+    if (combine->combiner == NULL) {
+      /* post the missing input-selector message only once */
       playbin->have_selector = FALSE;
       gst_element_post_message (GST_ELEMENT_CAST (playbin),
           gst_missing_element_message_new (GST_ELEMENT_CAST (playbin),
@@ -2989,67 +2989,68 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
               "input-selector"), (NULL));
     } else {
       /* find out which properties the stream combiner supports */
-      select->has_active_pad =
-          g_object_class_find_property (G_OBJECT_GET_CLASS (select->selector),
+      combine->has_active_pad =
+          g_object_class_find_property (G_OBJECT_GET_CLASS (combine->combiner),
           "active-pad") != NULL;
 
       if (!custom_combiner) {
         /* sync-mode=1, use clock */
-        if (select->type == GST_PLAY_SINK_TYPE_TEXT)
-          g_object_set (select->selector, "sync-streams", TRUE,
+        if (combine->type == GST_PLAY_SINK_TYPE_TEXT)
+          g_object_set (combine->combiner, "sync-streams", TRUE,
               "sync-mode", 1, "cache-buffers", TRUE, NULL);
         else
-          g_object_set (select->selector, "sync-streams", TRUE, NULL);
+          g_object_set (combine->combiner, "sync-streams", TRUE, NULL);
       }
 
-      if (select->has_active_pad)
-        g_signal_connect (select->selector, "notify::active-pad",
-            G_CALLBACK (selector_active_pad_changed), playbin);
+      if (combine->has_active_pad)
+        g_signal_connect (combine->combiner, "notify::active-pad",
+            G_CALLBACK (combiner_active_pad_changed), playbin);
 
-      GST_DEBUG_OBJECT (playbin, "adding new selector %p", select->selector);
-      gst_bin_add (GST_BIN_CAST (playbin), select->selector);
-      gst_element_set_state (select->selector, GST_STATE_PAUSED);
+      GST_DEBUG_OBJECT (playbin, "adding new stream combiner %p",
+          combine->combiner);
+      gst_bin_add (GST_BIN_CAST (playbin), combine->combiner);
+      gst_element_set_state (combine->combiner, GST_STATE_PAUSED);
     }
   }
 
-  if (select->srcpad == NULL) {
-    if (select->selector) {
-      /* save source pad of the selector */
-      select->srcpad = gst_element_get_static_pad (select->selector, "src");
+  if (combine->srcpad == NULL) {
+    if (combine->combiner) {
+      /* save source pad of the combiner */
+      combine->srcpad = gst_element_get_static_pad (combine->combiner, "src");
     } else {
-      /* no selector, use the pad as the source pad then */
-      select->srcpad = gst_object_ref (pad);
+      /* no combiner, use the pad as the source pad then */
+      combine->srcpad = gst_object_ref (pad);
     }
 
-    /* block the selector srcpad. It's possible that multiple decodebins start
-     * pushing data into the selectors before we have a chance to collect all
+    /* block the combiner srcpad. It's possible that multiple decodebins start
+     * pushing data into the combiners before we have a chance to collect all
      * streams and connect the sinks, resulting in not-linked errors. After we
      * configured the sinks we will unblock them all. */
-    GST_DEBUG_OBJECT (playbin, "blocking %" GST_PTR_FORMAT, select->srcpad);
-    select->block_id =
-        gst_pad_add_probe (select->srcpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+    GST_DEBUG_OBJECT (playbin, "blocking %" GST_PTR_FORMAT, combine->srcpad);
+    combine->block_id =
+        gst_pad_add_probe (combine->srcpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
         NULL, NULL, NULL);
   }
 
   /* get sinkpad for the new stream */
-  if (select->selector) {
-    if ((sinkpad = gst_element_get_request_pad (select->selector, "sink_%u"))) {
+  if (combine->combiner) {
+    if ((sinkpad = gst_element_get_request_pad (combine->combiner, "sink_%u"))) {
 
-      GST_DEBUG_OBJECT (playbin, "got pad %s:%s from selector",
+      GST_DEBUG_OBJECT (playbin, "got pad %s:%s from combiner",
           GST_DEBUG_PAD_NAME (sinkpad));
 
       /* find out which properties the sink pad supports */
-      select->has_always_ok =
+      combine->has_always_ok =
           g_object_class_find_property (G_OBJECT_GET_CLASS (sinkpad),
           "always-ok") != NULL;
-      select->has_tags =
+      combine->has_tags =
           g_object_class_find_property (G_OBJECT_GET_CLASS (sinkpad),
           "tags") != NULL;
 
-      /* store the selector for the pad */
-      g_object_set_data (G_OBJECT (sinkpad), "playbin.select", select);
+      /* store the combiner for the pad */
+      g_object_set_data (G_OBJECT (sinkpad), "playbin.combine", combine);
 
-      if (select->has_tags) {
+      if (combine->has_tags) {
         gulong notify_tags_handler = 0;
         NotifyTagsData *ntdata;
 
@@ -3058,8 +3059,8 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
          */
         ntdata = g_new0 (NotifyTagsData, 1);
         ntdata->playbin = playbin;
-        ntdata->stream_id = select->channels->len;
-        ntdata->type = select->type;
+        ntdata->stream_id = combine->channels->len;
+        ntdata->type = combine->type;
 
         notify_tags_handler =
             g_signal_connect_data (G_OBJECT (sinkpad), "notify::tags",
@@ -3071,27 +3072,27 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
       /* store the pad in the array */
       GST_DEBUG_OBJECT (playbin, "pad %p added to array", sinkpad);
-      g_ptr_array_add (select->channels, sinkpad);
+      g_ptr_array_add (combine->channels, sinkpad);
 
       res = gst_pad_link (pad, sinkpad);
       if (GST_PAD_LINK_FAILED (res))
         goto link_failed;
 
-      /* store selector pad so we can release it */
+      /* store combiner pad so we can release it */
       g_object_set_data (G_OBJECT (pad), "playbin.sinkpad", sinkpad);
 
       changed = TRUE;
-      GST_DEBUG_OBJECT (playbin, "linked pad %s:%s to selector %p",
-          GST_DEBUG_PAD_NAME (pad), select->selector);
+      GST_DEBUG_OBJECT (playbin, "linked pad %s:%s to combiner %p",
+          GST_DEBUG_PAD_NAME (pad), combine->combiner);
     }
   } else {
-    /* no selector, don't configure anything, we'll link the new pad directly to
+    /* no combiner, don't configure anything, we'll link the new pad directly to
      * the sink. */
     changed = FALSE;
     sinkpad = NULL;
 
-    /* store the selector for the pad */
-    g_object_set_data (G_OBJECT (pad), "playbin.select", select);
+    /* store the combiner for the pad */
+    g_object_set_data (G_OBJECT (pad), "playbin.combine", combine);
   }
   GST_SOURCE_GROUP_UNLOCK (group);
 
@@ -3105,7 +3106,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   if (changed) {
     int signal;
 
-    switch (select->type) {
+    switch (combine->type) {
       case GST_PLAY_SINK_TYPE_VIDEO:
       case GST_PLAY_SINK_TYPE_VIDEO_RAW:
         signal = SIGNAL_VIDEO_CHANGED;
@@ -3127,7 +3128,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
        * are not raced past audio/video from decodebin's multiqueue.
        * For pads from suburidecodebin OK should always be returned, otherwise
        * it will most likely stop. */
-      if (select->has_always_ok) {
+      if (combine->has_always_ok) {
         gboolean always_ok = (decodebin == group->suburidecodebin);
         g_object_set (sinkpad, "always-ok", always_ok, NULL);
       }
@@ -3149,7 +3150,7 @@ unknown_type:
 link_failed:
   {
     GST_ERROR_OBJECT (playbin,
-        "failed to link pad %s:%s to selector, reason %d",
+        "failed to link pad %s:%s to combiner, reason %d",
         GST_DEBUG_PAD_NAME (pad), res);
     GST_SOURCE_GROUP_UNLOCK (group);
     goto done;
@@ -3157,14 +3158,14 @@ link_failed:
 }
 
 /* called when a pad is removed from the uridecodebin. We unlink the pad from
- * the selector. This will make the selector select a new pad. */
+ * the combiner. This will make the combiner select a new pad. */
 static void
 pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 {
   GstPlayBin *playbin;
   GstPad *peer;
-  GstElement *selector;
-  GstSourceSelect *select;
+  GstElement *combiner;
+  GstSourceCombine *combine;
 
   playbin = group->playbin;
 
@@ -3173,20 +3174,20 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
   GST_SOURCE_GROUP_LOCK (group);
 
-  if ((select = g_object_get_data (G_OBJECT (pad), "playbin.select"))) {
-    g_assert (select->selector == NULL);
-    g_assert (select->srcpad == pad);
+  if ((combine = g_object_get_data (G_OBJECT (pad), "playbin.combine"))) {
+    g_assert (combine->combiner == NULL);
+    g_assert (combine->srcpad == pad);
     gst_object_unref (pad);
-    select->srcpad = NULL;
+    combine->srcpad = NULL;
     goto exit;
   }
 
-  /* get the selector sinkpad */
+  /* get the combiner sinkpad */
   if (!(peer = g_object_get_data (G_OBJECT (pad), "playbin.sinkpad")))
     goto not_linked;
 
-  if ((select = g_object_get_data (G_OBJECT (peer), "playbin.select"))) {
-    if (select->has_tags) {
+  if ((combine = g_object_get_data (G_OBJECT (peer), "playbin.combine"))) {
+    if (combine->has_tags) {
       gulong notify_tags_handler;
 
       notify_tags_handler =
@@ -3198,37 +3199,37 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     }
 
     /* remove the pad from the array */
-    g_ptr_array_remove (select->channels, peer);
+    g_ptr_array_remove (combine->channels, peer);
     GST_DEBUG_OBJECT (playbin, "pad %p removed from array", peer);
 
-    if (!select->channels->len && select->selector) {
-      GST_DEBUG_OBJECT (playbin, "all selector sinkpads removed");
-      GST_DEBUG_OBJECT (playbin, "removing selector %p", select->selector);
-      gst_object_unref (select->srcpad);
-      select->srcpad = NULL;
-      gst_element_set_state (select->selector, GST_STATE_NULL);
-      gst_bin_remove (GST_BIN_CAST (playbin), select->selector);
-      select->selector = NULL;
+    if (!combine->channels->len && combine->combiner) {
+      GST_DEBUG_OBJECT (playbin, "all combiner sinkpads removed");
+      GST_DEBUG_OBJECT (playbin, "removing combiner %p", combine->combiner);
+      gst_object_unref (combine->srcpad);
+      combine->srcpad = NULL;
+      gst_element_set_state (combine->combiner, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN_CAST (playbin), combine->combiner);
+      combine->combiner = NULL;
     }
   }
 
   /* unlink the pad now (can fail, the pad is unlinked before it's removed) */
   gst_pad_unlink (pad, peer);
 
-  /* get selector, this can be NULL when the element is removing the pads
+  /* get combiner, this can be NULL when the element is removing the pads
    * because it's being disposed. */
-  selector = GST_ELEMENT_CAST (gst_pad_get_parent (peer));
-  if (!selector) {
+  combiner = GST_ELEMENT_CAST (gst_pad_get_parent (peer));
+  if (!combiner) {
     gst_object_unref (peer);
-    goto no_selector;
+    goto no_combiner;
   }
 
-  /* release the pad to the selector, this will make the selector choose a new
+  /* release the pad to the combiner, this will make the combiner choose a new
    * pad. */
-  gst_element_release_request_pad (selector, peer);
+  gst_element_release_request_pad (combiner, peer);
   gst_object_unref (peer);
 
-  gst_object_unref (selector);
+  gst_object_unref (combiner);
 exit:
   GST_SOURCE_GROUP_UNLOCK (group);
 
@@ -3241,9 +3242,9 @@ not_linked:
     GST_SOURCE_GROUP_UNLOCK (group);
     return;
   }
-no_selector:
+no_combiner:
   {
-    GST_DEBUG_OBJECT (playbin, "selector not found");
+    GST_DEBUG_OBJECT (playbin, "combiner not found");
     GST_SOURCE_GROUP_UNLOCK (group);
     return;
   }
@@ -3254,7 +3255,7 @@ no_selector:
  * The main purpose of the code is to see if we have video/audio and subtitles
  * and pick the right pipelines to display them.
  *
- * The selectors installed on the group tell us about the presence of
+ * The combiners installed on the group tell us about the presence of
  * audio/video and subtitle streams. This allows us to see if we need
  * visualisation, video or/and audio.
  */
@@ -3274,34 +3275,34 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
 
   GST_SOURCE_GROUP_LOCK (group);
   for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
-    GstSourceSelect *select = &group->selector[i];
+    GstSourceCombine *combine = &group->combiner[i];
 
-    /* check if the specific media type was detected and thus has a selector
+    /* check if the specific media type was detected and thus has a combiner
      * created for it. If there is the media type, get a sinkpad from the sink
      * and link it. We only do this if we have not yet requested the sinkpad
      * before. */
-    if (select->srcpad && select->sinkpad == NULL) {
-      GST_DEBUG_OBJECT (playbin, "requesting new sink pad %d", select->type);
-      select->sinkpad =
-          gst_play_sink_request_pad (playbin->playsink, select->type);
-    } else if (select->srcpad && select->sinkpad) {
-      GST_DEBUG_OBJECT (playbin, "refreshing new sink pad %d", select->type);
-      gst_play_sink_refresh_pad (playbin->playsink, select->sinkpad,
-          select->type);
-    } else if (select->sinkpad && select->srcpad == NULL) {
-      GST_DEBUG_OBJECT (playbin, "releasing sink pad %d", select->type);
-      gst_play_sink_release_pad (playbin->playsink, select->sinkpad);
-      select->sinkpad = NULL;
+    if (combine->srcpad && combine->sinkpad == NULL) {
+      GST_DEBUG_OBJECT (playbin, "requesting new sink pad %d", combine->type);
+      combine->sinkpad =
+          gst_play_sink_request_pad (playbin->playsink, combine->type);
+    } else if (combine->srcpad && combine->sinkpad) {
+      GST_DEBUG_OBJECT (playbin, "refreshing new sink pad %d", combine->type);
+      gst_play_sink_refresh_pad (playbin->playsink, combine->sinkpad,
+          combine->type);
+    } else if (combine->sinkpad && combine->srcpad == NULL) {
+      GST_DEBUG_OBJECT (playbin, "releasing sink pad %d", combine->type);
+      gst_play_sink_release_pad (playbin->playsink, combine->sinkpad);
+      combine->sinkpad = NULL;
     }
-    if (select->sinkpad && select->srcpad &&
-        !gst_pad_is_linked (select->srcpad)) {
-      res = gst_pad_link (select->srcpad, select->sinkpad);
+    if (combine->sinkpad && combine->srcpad &&
+        !gst_pad_is_linked (combine->srcpad)) {
+      res = gst_pad_link (combine->srcpad, combine->sinkpad);
       GST_DEBUG_OBJECT (playbin, "linked type %s, result: %d",
-          select->media_list[0], res);
+          combine->media_list[0], res);
       if (res != GST_PAD_LINK_OK) {
         GST_ELEMENT_ERROR (playbin, CORE, PAD,
             ("Internal playbin error."),
-            ("Failed to link selector to sink. Error %d", res));
+            ("Failed to link combiner to sink. Error %d", res));
       }
     }
   }
@@ -3354,16 +3355,16 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
 
     /* signal the other decodebins that they can continue now. */
     GST_SOURCE_GROUP_LOCK (group);
-    /* unblock all selectors */
+    /* unblock all combiners */
     for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
-      GstSourceSelect *select = &group->selector[i];
+      GstSourceCombine *combine = &group->combiner[i];
 
-      if (select->srcpad) {
+      if (combine->srcpad) {
         GST_DEBUG_OBJECT (playbin, "unblocking %" GST_PTR_FORMAT,
-            select->srcpad);
-        if (select->block_id) {
-          gst_pad_remove_probe (select->srcpad, select->block_id);
-          select->block_id = 0;
+            combine->srcpad);
+        if (combine->block_id) {
+          gst_pad_remove_probe (combine->srcpad, combine->block_id);
+          combine->block_id = 0;
         }
       }
     }
@@ -3377,28 +3378,28 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
 shutdown:
   {
     GST_DEBUG ("ignoring, we are shutting down");
-    /* Request a flushing pad from playsink that we then link to the selector.
-     * Then we unblock the selectors so that they stop with a WRONG_STATE
+    /* Request a flushing pad from playsink that we then link to the combiner.
+     * Then we unblock the combiners so that they stop with a WRONG_STATE
      * instead of a NOT_LINKED error.
      */
     GST_SOURCE_GROUP_LOCK (group);
     for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
-      GstSourceSelect *select = &group->selector[i];
+      GstSourceCombine *combine = &group->combiner[i];
 
-      if (select->srcpad) {
-        if (select->sinkpad == NULL) {
+      if (combine->srcpad) {
+        if (combine->sinkpad == NULL) {
           GST_DEBUG_OBJECT (playbin, "requesting new flushing sink pad");
-          select->sinkpad =
+          combine->sinkpad =
               gst_play_sink_request_pad (playbin->playsink,
               GST_PLAY_SINK_TYPE_FLUSHING);
-          res = gst_pad_link (select->srcpad, select->sinkpad);
+          res = gst_pad_link (combine->srcpad, combine->sinkpad);
           GST_DEBUG_OBJECT (playbin, "linked flushing, result: %d", res);
         }
         GST_DEBUG_OBJECT (playbin, "unblocking %" GST_PTR_FORMAT,
-            select->srcpad);
-        if (select->block_id) {
-          gst_pad_remove_probe (select->srcpad, select->block_id);
-          select->block_id = 0;
+            combine->srcpad);
+        if (combine->block_id) {
+          gst_pad_remove_probe (combine->srcpad, combine->block_id);
+          combine->block_id = 0;
         }
       }
     }
@@ -4855,40 +4856,40 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
   GST_SOURCE_GROUP_LOCK (group);
   group->active = FALSE;
   for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
-    GstSourceSelect *select = &group->selector[i];
+    GstSourceCombine *combine = &group->combiner[i];
 
-    GST_DEBUG_OBJECT (playbin, "unlinking selector %s", select->media_list[0]);
+    GST_DEBUG_OBJECT (playbin, "unlinking combiner %s", combine->media_list[0]);
 
-    if (select->srcpad) {
-      if (select->sinkpad) {
+    if (combine->srcpad) {
+      if (combine->sinkpad) {
         GST_LOG_OBJECT (playbin, "unlinking from sink");
-        gst_pad_unlink (select->srcpad, select->sinkpad);
+        gst_pad_unlink (combine->srcpad, combine->sinkpad);
 
         /* release back */
         GST_LOG_OBJECT (playbin, "release sink pad");
-        gst_play_sink_release_pad (playbin->playsink, select->sinkpad);
-        select->sinkpad = NULL;
+        gst_play_sink_release_pad (playbin->playsink, combine->sinkpad);
+        combine->sinkpad = NULL;
       }
 
-      gst_object_unref (select->srcpad);
-      select->srcpad = NULL;
+      gst_object_unref (combine->srcpad);
+      combine->srcpad = NULL;
     }
 
-    if (select->selector) {
+    if (combine->combiner) {
       gint n;
 
-      /* release and unref requests pad from the selector */
-      for (n = 0; n < select->channels->len; n++) {
-        GstPad *sinkpad = g_ptr_array_index (select->channels, n);
+      /* release and unref requests pad from the combiner */
+      for (n = 0; n < combine->channels->len; n++) {
+        GstPad *sinkpad = g_ptr_array_index (combine->channels, n);
 
-        gst_element_release_request_pad (select->selector, sinkpad);
+        gst_element_release_request_pad (combine->combiner, sinkpad);
         gst_object_unref (sinkpad);
       }
-      g_ptr_array_set_size (select->channels, 0);
+      g_ptr_array_set_size (combine->channels, 0);
 
-      gst_element_set_state (select->selector, GST_STATE_NULL);
-      gst_bin_remove (GST_BIN_CAST (playbin), select->selector);
-      select->selector = NULL;
+      gst_element_set_state (combine->combiner, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN_CAST (playbin), combine->combiner);
+      combine->combiner = NULL;
     }
   }
   /* delete any custom sinks we might have */
