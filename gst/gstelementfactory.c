@@ -735,7 +735,9 @@ gst_element_factory_list_is_type (GstElementFactory * factory,
   if ((res || !(type & (GST_ELEMENT_FACTORY_TYPE_MAX_ELEMENTS - 1)))
       && (type & (GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO |
               GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO |
-              GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE)))
+              GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE |
+              GST_ELEMENT_FACTORY_TYPE_MEDIA_SUBTITLE |
+              GST_ELEMENT_FACTORY_TYPE_MEDIA_METADATA)))
     res = ((type & GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO)
         && (strstr (klass, "Audio") != NULL))
         || ((type & GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO)
