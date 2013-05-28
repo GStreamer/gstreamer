@@ -27,14 +27,11 @@
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
-#include "libxml/encoding.h"
-#include "libxml/xmlwriter.h"
+#include <libxml/encoding.h>
+#include <libxml/xmlwriter.h>
 
 #include "ges-internal.h"
 #include <ges/ges.h>
-#include <inttypes.h>
-#include <unistd.h>
-#define GetCurrentDir getcwd
 
 /* The PiTiVi etree formatter is 0.1 we set GES one to 0.2 */
 #define VERSION "0.2"
@@ -131,7 +128,7 @@ static void inline
 write_int_attribute (xmlTextWriterPtr writer, guint64 nb, const gchar * attr,
     const gchar * type)
 {
-  gchar *str = g_strdup_printf ("%s%" PRIu64, type, nb);
+  gchar *str = g_strdup_printf ("%s%" G_GUINT64_FORMAT, type, nb);
   xmlTextWriterWriteAttribute (writer, BAD_CAST attr, BAD_CAST str);
   g_free (str);
 }
