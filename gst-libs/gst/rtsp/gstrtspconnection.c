@@ -112,11 +112,14 @@ struct _GstRTSPConnection
   GSocketConnection *connection0;
   GSocketConnection *connection1;
 
+  GInputStream *input_stream;
+  GOutputStream *output_stream;
+
   /* connection state */
   GSocket *read_socket;
   GSocket *write_socket;
-  gboolean manual_http;
   GSocket *socket0, *socket1;
+  gboolean manual_http;
   GCancellable *cancellable;
 
   gchar tunnelid[TUNNELID_LEN];
@@ -280,6 +283,7 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
   GstRTSPResult res;
   GError *err = NULL;
   gchar *local_ip;
+  GSocketConnection *connection;
 
   g_return_val_if_fail (G_IS_SOCKET (socket), GST_RTSP_EINVAL);
   g_return_val_if_fail (ip != NULL, GST_RTSP_EINVAL);
@@ -300,10 +304,16 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
   GST_RTSP_CHECK (gst_rtsp_connection_create (url, &newconn), newconn_failed);
   gst_rtsp_url_free (url);
 
+  connection = g_socket_connection_factory_create_connection (socket);
+
   /* both read and write initially */
-  newconn->socket0 = G_SOCKET (g_object_ref (socket));
-  newconn->socket1 = G_SOCKET (g_object_ref (socket));
+  newconn->socket0 = g_object_ref (socket);
+  newconn->connection0 = connection;
   newconn->write_socket = newconn->read_socket = newconn->socket0;
+  newconn->input_stream =
+      g_io_stream_get_input_stream (G_IO_STREAM (connection));
+  newconn->output_stream =
+      g_io_stream_get_output_stream (G_IO_STREAM (connection));
   newconn->remote_ip = g_strdup (ip);
   newconn->local_ip = local_ip;
   newconn->initial_buffer = g_strdup (initial_buffer);
@@ -388,7 +398,6 @@ getnameinfo_failed:
   }
 }
 
-
 static GstRTSPResult
 setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri)
 {
@@ -425,9 +434,6 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri)
       "application/x-rtsp-tunnelled");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CACHE_CONTROL, "no-cache");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_PRAGMA, "no-cache");
-
-  /* we start by writing to this fd */
-  conn->write_socket = conn->socket0;
 
   /* we need to temporarily set conn->tunneled to FALSE to prevent the HTTP
    * request from being base64 encoded */
@@ -482,6 +488,8 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri)
   conn->connection1 = connection;
   conn->socket1 = g_object_ref (socket);
   conn->write_socket = conn->socket1;
+  conn->output_stream =
+      g_io_stream_get_output_stream (G_IO_STREAM (connection));
 
   /* create the POST request for the write connection */
   GST_RTSP_CHECK (gst_rtsp_message_new_request (&msg, GST_RTSP_POST, uri),
@@ -581,7 +589,7 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (conn->url != NULL, GST_RTSP_EINVAL);
-  g_return_val_if_fail (conn->socket0 == NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (conn->connection0 == NULL, GST_RTSP_EINVAL);
 
   to = timeout ? GST_TIMEVAL_TO_TIME (*timeout) : 0;
   g_socket_client_set_timeout (conn->client,
@@ -615,13 +623,15 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
   conn->socket0 = g_object_ref (socket);
   /* this is our read socket */
   conn->read_socket = conn->socket0;
+  conn->write_socket = conn->socket0;
+  conn->input_stream = g_io_stream_get_input_stream (G_IO_STREAM (connection));
+  conn->output_stream =
+      g_io_stream_get_output_stream (G_IO_STREAM (connection));
 
   if (conn->tunneled) {
     res = setup_tunneling (conn, timeout, uri);
     if (res != GST_RTSP_OK)
       goto tunneling_failed;
-  } else {
-    conn->write_socket = conn->socket0;
   }
   g_free (uri);
 
@@ -798,8 +808,8 @@ gen_date_string (gchar * date_string, guint len)
 }
 
 static GstRTSPResult
-write_bytes (GSocket * socket, const guint8 * buffer, guint * idx, guint size,
-    GCancellable * cancellable)
+write_bytes (GOutputStream * stream, const guint8 * buffer, guint * idx,
+    guint size, GCancellable * cancellable)
 {
   guint left;
 
@@ -812,8 +822,8 @@ write_bytes (GSocket * socket, const guint8 * buffer, guint * idx, guint size,
     GError *err = NULL;
     gssize r;
 
-    r = g_socket_send (socket, (gchar *) & buffer[*idx], left, cancellable,
-        &err);
+    r = g_output_stream_write (stream, (gchar *) & buffer[*idx], left,
+        cancellable, &err);
     if (G_UNLIKELY (r == 0)) {
       return GST_RTSP_EINTR;
     } else if (G_UNLIKELY (r < 0)) {
@@ -854,7 +864,7 @@ fill_raw_bytes (GstRTSPConnection * conn, guint8 * buffer, guint size,
   if (G_LIKELY (size > (guint) out)) {
     gssize r;
 
-    r = g_socket_receive (conn->read_socket, (gchar *) & buffer[out],
+    r = g_input_stream_read (conn->input_stream, (gchar *) & buffer[out],
         size - out, conn->cancellable, err);
     if (r <= 0) {
       if (out == 0)
@@ -1096,7 +1106,7 @@ gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (data != NULL || size == 0, GST_RTSP_EINVAL);
-  g_return_val_if_fail (conn->write_socket != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (conn->output_stream != NULL, GST_RTSP_EINVAL);
 
   to = timeout ? GST_TIMEVAL_TO_TIME (*timeout) : GST_CLOCK_TIME_NONE;
 
@@ -1105,13 +1115,12 @@ gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
   while (TRUE) {
     /* try to write */
     res =
-        write_bytes (conn->write_socket, data, &offset, size,
+        write_bytes (conn->output_stream, data, &offset, size,
         conn->cancellable);
     if (G_LIKELY (res == GST_RTSP_OK))
       break;
     if (G_UNLIKELY (res != GST_RTSP_EINTR))
       goto write_error;
-
     /* not all is written, wait until we can write more */
     g_socket_set_timeout (conn->write_socket,
         (to + GST_SECOND - 1) / GST_SECOND);
@@ -3008,7 +3017,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
         g_slice_free (GstRTSPRec, rec);
       }
 
-      res = write_bytes (watch->conn->write_socket, watch->write_data,
+      res = write_bytes (watch->conn->output_stream, watch->write_data,
           &watch->write_off, watch->write_size, watch->conn->cancellable);
       g_mutex_unlock (&watch->mutex);
 
@@ -3329,7 +3338,7 @@ gst_rtsp_watch_write_data (GstRTSPWatch * watch, const guint8 * data,
   /* try to send the message synchronously first */
   if (watch->messages->length == 0 && watch->write_data == NULL) {
     res =
-        write_bytes (watch->conn->write_socket, data, &off, size,
+        write_bytes (watch->conn->output_stream, data, &off, size,
         watch->conn->cancellable);
     if (res != GST_RTSP_EINTR) {
       if (id != NULL)
