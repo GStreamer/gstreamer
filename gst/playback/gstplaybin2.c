@@ -4086,146 +4086,178 @@ autoplug_query_caps (GstElement * uridecodebin, GstPad * pad,
   GstCaps *filter, *result = NULL;
   GstElement *sink;
   GstPad *sinkpad = NULL;
-  GValueArray *factories;
-  gint i, n;
-  gboolean have_audio_sink = FALSE, have_video_sink = FALSE;
+  GstElementFactory *factory;
+  GstElementFactoryListType factory_type;
+  gboolean have_sink = FALSE;
 
-  gst_query_parse_caps (query, &filter);
   GST_SOURCE_GROUP_LOCK (group);
+  gst_query_parse_caps (query, &filter);
 
-  if ((sink = group->playbin->text_sink))
-    sinkpad = gst_element_get_static_pad (sink, "sink");
-  if (sinkpad) {
-    GstCaps *sinkcaps;
+  factory = gst_element_get_factory (element);
+  if (!factory)
+    goto done;
 
-    /* Ignore errors here, if a custom sink fails to go
-     * to READY things are wrong and will error out later
-     */
-    if (GST_STATE (sink) < GST_STATE_READY)
-      gst_element_set_state (sink, GST_STATE_READY);
+  if (gst_element_factory_list_is_type (factory,
+          GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO |
+          GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE)) {
+    factory_type =
+        GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO |
+        GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE;
 
-    sinkcaps = gst_pad_query_caps (sinkpad, filter);
-    if (!gst_caps_is_any (sinkcaps)) {
-      if (!result)
-        result = sinkcaps;
-      else
-        result = gst_caps_merge (result, sinkcaps);
-    } else {
-      gst_caps_unref (sinkcaps);
+    /* If this is from the subtitle uridecodebin we don't need to
+     * check the audio and video sink */
+    if (group->suburidecodebin
+        && gst_object_has_ancestor (GST_OBJECT_CAST (pad),
+            GST_OBJECT_CAST (group->suburidecodebin))) {
+      goto done;
     }
-    gst_object_unref (sinkpad);
-  } else {
-    GstCaps *subcaps = gst_subtitle_overlay_create_factory_caps ();
-    if (!result)
-      result = subcaps;
-    else
-      result = gst_caps_merge (result, subcaps);
-  }
 
-  /* If this is from the subtitle uridecodebin we don't need to
-   * check the audio and video sink */
-  if (group->suburidecodebin
-      && gst_object_has_ancestor (GST_OBJECT_CAST (pad),
-          GST_OBJECT_CAST (group->suburidecodebin))) {
+    if ((sink = group->video_sink)) {
+      sinkpad = gst_element_get_static_pad (sink, "sink");
+      if (sinkpad) {
+        GstCaps *sinkcaps;
+
+        /* Ignore errors here, if a custom sink fails to go
+         * to READY things are wrong and will error out later
+         */
+        if (GST_STATE (sink) < GST_STATE_READY)
+          gst_element_set_state (sink, GST_STATE_READY);
+
+        sinkcaps = gst_pad_query_caps (sinkpad, filter);
+        if (!gst_caps_is_any (sinkcaps)) {
+          if (!result)
+            result = sinkcaps;
+          else
+            result = gst_caps_merge (result, sinkcaps);
+        } else {
+          gst_caps_unref (sinkcaps);
+        }
+        gst_object_unref (sinkpad);
+      }
+      have_sink = TRUE;
+    }
+  } else if (gst_element_factory_list_is_type (factory,
+          GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO)) {
+    factory_type = GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO;
+
+    /* If this is from the subtitle uridecodebin we don't need to
+     * check the audio and video sink */
+    if (group->suburidecodebin
+        && gst_object_has_ancestor (GST_OBJECT_CAST (pad),
+            GST_OBJECT_CAST (group->suburidecodebin))) {
+      goto done;
+    }
+
+    if ((sink = group->audio_sink)) {
+      sinkpad = gst_element_get_static_pad (sink, "sink");
+      if (sinkpad) {
+        GstCaps *sinkcaps;
+
+        /* Ignore errors here, if a custom sink fails to go
+         * to READY things are wrong and will error out later
+         */
+        if (GST_STATE (sink) < GST_STATE_READY)
+          gst_element_set_state (sink, GST_STATE_READY);
+
+        sinkcaps = gst_pad_query_caps (sinkpad, filter);
+        if (!gst_caps_is_any (sinkcaps)) {
+          if (!result)
+            result = sinkcaps;
+          else
+            result = gst_caps_merge (result, sinkcaps);
+        } else {
+          gst_caps_unref (sinkcaps);
+        }
+        gst_object_unref (sinkpad);
+      }
+      have_sink = TRUE;
+    }
+  } else if (gst_element_factory_list_is_type (factory,
+          GST_ELEMENT_FACTORY_TYPE_MEDIA_SUBTITLE)) {
+    factory_type = GST_ELEMENT_FACTORY_TYPE_MEDIA_SUBTITLE;
+
+    if ((sink = group->playbin->text_sink)) {
+      sinkpad = gst_element_get_static_pad (sink, "sink");
+      if (sinkpad) {
+        GstCaps *sinkcaps;
+
+        /* Ignore errors here, if a custom sink fails to go
+         * to READY things are wrong and will error out later
+         */
+        if (GST_STATE (sink) < GST_STATE_READY)
+          gst_element_set_state (sink, GST_STATE_READY);
+
+        sinkcaps = gst_pad_query_caps (sinkpad, filter);
+        if (!gst_caps_is_any (sinkcaps)) {
+          if (!result)
+            result = sinkcaps;
+          else
+            result = gst_caps_merge (result, sinkcaps);
+        } else {
+          gst_caps_unref (sinkcaps);
+        }
+        gst_object_unref (sinkpad);
+      }
+      have_sink = TRUE;
+    } else {
+      GstCaps *subcaps = gst_subtitle_overlay_create_factory_caps ();
+      if (!result)
+        result = subcaps;
+      else
+        result = gst_caps_merge (result, subcaps);
+    }
+  } else {
     goto done;
   }
 
-  if ((sink = group->audio_sink)) {
-    sinkpad = gst_element_get_static_pad (sink, "sink");
-    if (sinkpad) {
-      GstCaps *sinkcaps;
+  if (!have_sink) {
+    GValueArray *factories;
+    gint i, n;
 
-      /* Ignore errors here, if a custom sink fails to go
-       * to READY things are wrong and will error out later
-       */
-      if (GST_STATE (sink) < GST_STATE_READY)
-        gst_element_set_state (sink, GST_STATE_READY);
+    factories = autoplug_factories_cb (uridecodebin, pad, NULL, group);
+    n = factories->n_values;
+    for (i = 0; i < n; i++) {
+      GValue *v = g_value_array_get_nth (factories, i);
+      GstElementFactory *f = g_value_get_object (v);
+      const GList *templates;
+      const GList *l;
+      GstCaps *templ_caps;
 
-      sinkcaps = gst_pad_query_caps (sinkpad, filter);
-      if (!gst_caps_is_any (sinkcaps)) {
-        if (!result)
-          result = sinkcaps;
-        else
-          result = gst_caps_merge (result, sinkcaps);
-      } else {
-        gst_caps_unref (sinkcaps);
-      }
-      gst_object_unref (sinkpad);
-    }
-    have_audio_sink = TRUE;
-  }
+      if (!gst_element_factory_list_is_type (f, factory_type))
+        continue;
 
-  if ((sink = group->video_sink)) {
-    sinkpad = gst_element_get_static_pad (sink, "sink");
-    if (sinkpad) {
-      GstCaps *sinkcaps;
+      templates = gst_element_factory_get_static_pad_templates (f);
 
-      /* Ignore errors here, if a custom sink fails to go
-       * to READY things are wrong and will error out later
-       */
-      if (GST_STATE (sink) < GST_STATE_READY)
-        gst_element_set_state (sink, GST_STATE_READY);
+      for (l = templates; l; l = l->next) {
+        templ_caps = gst_static_pad_template_get_caps (l->data);
 
-      sinkcaps = gst_pad_query_caps (sinkpad, filter);
-      if (!gst_caps_is_any (sinkcaps)) {
-        if (!result)
-          result = sinkcaps;
-        else
-          result = gst_caps_merge (result, sinkcaps);
-      } else {
-        gst_caps_unref (sinkcaps);
-      }
-      gst_object_unref (sinkpad);
-    }
-    have_video_sink = TRUE;
-  }
-
-  factories = autoplug_factories_cb (uridecodebin, pad, NULL, group);
-  n = factories->n_values;
-  for (i = 0; i < n; i++) {
-    GValue *v = g_value_array_get_nth (factories, i);
-    GstElementFactory *factory = g_value_get_object (v);
-    const GList *templates;
-    const GList *l;
-    GstCaps *templ_caps;
-
-    if (!gst_element_factory_list_is_type (factory,
-            GST_ELEMENT_FACTORY_TYPE_SINK))
-      continue;
-
-    if (have_audio_sink
-        && gst_element_factory_list_is_type (factory,
-            GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO))
-      continue;
-    if (have_video_sink
-        && gst_element_factory_list_is_type (factory,
-            GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO |
-            GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE))
-      continue;
-
-    templates = gst_element_factory_get_static_pad_templates (factory);
-
-    for (l = templates; l; l = l->next) {
-      templ_caps = gst_static_pad_template_get_caps (l->data);
-
-      if (!gst_caps_is_any (templ_caps)) {
-        if (!result)
-          result = templ_caps;
-        else
-          result = gst_caps_merge (result, templ_caps);
-      } else {
-        gst_caps_unref (templ_caps);
+        if (!gst_caps_is_any (templ_caps)) {
+          if (!result)
+            result = templ_caps;
+          else
+            result = gst_caps_merge (result, templ_caps);
+        } else {
+          gst_caps_unref (templ_caps);
+        }
       }
     }
-
+    g_value_array_free (factories);
   }
-  g_value_array_free (factories);
 
 done:
   GST_SOURCE_GROUP_UNLOCK (group);
 
   if (!result)
     return FALSE;
+
+  if (0) {
+    GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
+
+    if (target) {
+      result = gst_caps_merge (result, gst_pad_get_pad_template_caps (target));
+      gst_object_unref (target);
+    }
+  }
 
   if (filter) {
     GstCaps *intersection =

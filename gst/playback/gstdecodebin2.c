@@ -4251,40 +4251,27 @@ gst_decode_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
   gboolean ret = FALSE;
 
   CHAIN_MUTEX_LOCK (dpad->chain);
-  if (!dpad->exposed && !dpad->chain->deadend) {
-    GstDecodeElement *delem =
-        (dpad->chain->elements ? dpad->chain->elements->data : NULL);
+  if (!dpad->exposed && !dpad->chain->deadend && dpad->chain->elements) {
+    GstDecodeElement *delem = dpad->chain->elements->data;
+
+    if (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION) {
+      g_print ("huh\n");
+      g_assert_not_reached ();
+    }
 
     ret = FALSE;
     GST_DEBUG_OBJECT (dpad->dbin,
         "calling autoplug-query for %s (element %s): %" GST_PTR_FORMAT,
-        GST_PAD_NAME (dpad), delem ? GST_ELEMENT_NAME (delem->element) : NULL,
-        query);
+        GST_PAD_NAME (dpad), GST_ELEMENT_NAME (delem->element), query);
     g_signal_emit (G_OBJECT (dpad->dbin),
         gst_decode_bin_signals[SIGNAL_AUTOPLUG_QUERY], 0, dpad, delem->element,
         query, &ret);
 
-    GST_DEBUG_OBJECT (dpad->dbin, "autoplug-query returned %d", ret);
-    if (ret) {
-      GstCaps *result, *filter;
-      GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD (dpad));
-
-      gst_query_parse_caps (query, &filter);
-      gst_query_parse_caps_result (query, &result);
-      result =
-          gst_caps_merge (gst_caps_ref (result),
-          gst_pad_get_pad_template_caps (target));
-      if (filter) {
-        GstCaps *intersection =
-            gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
-        gst_caps_unref (result);
-        result = intersection;
-      }
-      gst_query_set_caps_result (query, result);
-      gst_caps_unref (result);
-
-      gst_object_unref (target);
-    }
+    if (ret)
+      GST_DEBUG_OBJECT (dpad->dbin,
+          "autoplug-query returned %d: %" GST_PTR_FORMAT, ret, query);
+    else
+      GST_DEBUG_OBJECT (dpad->dbin, "autoplug-query returned %d", ret);
   }
   CHAIN_MUTEX_UNLOCK (dpad->chain);
 
