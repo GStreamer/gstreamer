@@ -32,8 +32,6 @@
  * element classification. The functionality you get depends on the LADSPA plugins
  * you have installed.
  * 
- * First off all you can apply not live LADSPA filters without this plugin:
- * 
  * <refsect2>
  * <title>Example LADSPA line without this plugins</title>
  * |[
@@ -74,7 +72,7 @@
  * <refsect2>
  * <title>Inspecting the plugins</title>
  * |[
- * gst-inspect ladspa-retro-flange-1208-so-retroFlange
+ * gst-inspect ladspa-retro-flange-1208-so-retroflange
  * ]| List details of the plugin, parameters, range and defaults included.
  * </refsect2>
  *
@@ -87,25 +85,24 @@
  * gst-launch filesrc location="$myfile" ! decodebin ! audioconvert ! audioresample ! ladspa-calf-so-reverb decay-time=15 high-frq-damp=20000 room-size=5 diffusion=1 wet-amount=2 dry-amount=2 pre-delay=50 bass-cut=20000 treble-cut=20000 ! ladspa-tap-echo-so-tap-stereo-echo l-delay=500 r-haas-delay=500 ! autoaudiosink
  * ]| Decode any audio file, filter it through Calf Reverb LADSPA then TAP Stereo Echo, and play it.
  * </refsect2>
- * <refsect2>
  * </listitem>
  * <listitem><para>Source/Audio/LADSPA:</para> 
  * <refsect2>
  * <title>Example Source/Audio/LADSPA line with this plugins</title>
  * |[
- * gst-launch -e ladspasrc-sine-so-sine-fcac frequency=220 amplitude=100 ! audioconvert ! "audio/x-raw,rate=22050" ! autoaudiosink
- * ]| Generate a sine wave with Sine Oscillator (Freq:control, Amp:control), convert it to 22050 Hz and play it.
+ * gst-launch ladspasrc-sine-so-sine-fcac frequency=220 amplitude=100 ! audioconvert ! autoaudiosink
+ * ]| Generate a sine wave with Sine Oscillator (Freq:control, Amp:control) and play it.
  * </refsect2>
  * <refsect2>
  * <title>Example Source/Audio/LADSPA line with this plugins</title>
  * |[
- * gst-launch -e ladspasrc-caps-so-click bpm=240 volume=1 ! autoaudiosink
+ * gst-launch ladspasrc-caps-so-click bpm=240 volume=1 ! autoaudiosink
  * ]| Generate clicks with CAPS Click - Metronome at 240 beats per minute and play it.
  * </refsect2>
  * <refsect2>
  * <title>Example Source/Audio/LADSPA line with this plugins</title>
  * |[
- * gst-launch -e ladspasrc-random-1661-so-random-fcsc-oa ! ladspa-cmt-so-amp-mono gain=1.5 ! ladspa-caps-so-plate ! tee name=myT myT. ! queue ! autoaudiosink myT. ! queue ! audioconvert ! wavescope ! videoconvert ! autovideosink
+ * gst-launch ladspasrc-random-1661-so-random-fcsc-oa ! ladspa-cmt-so-amp-mono gain=1.5 ! ladspa-caps-so-plate ! tee name=myT myT. ! queue ! autoaudiosink myT. ! queue ! audioconvert ! wavescope ! videoconvert ! autovideosink
  * ]| Generate random wave, filter it trhough Mono Amplifier and Versatile Plate Reverb, and play, while showing, it.
  * </refsect2>
  * </listitem>
@@ -113,8 +110,8 @@
  * <refsect2>
  * <title>Example Sink/Audio/LADSPA line with this plugins</title>
  * |[
- * gst-launch -e autoaudiosrc ! ladspa-cmt-so-amp-mono gain=2 ! ladspa-caps-so-plate ! ladspa-tap-echo-so-tap-stereo-echo l-delay=500 r-haas-delay=500 ! tee name=myT myT. ! audioconvert ! audioresample ! queue ! ladspasink-cmt-so-null-ai myT. ! audioconvert ! audioresample ! queue ! goom ! videoconvert ! xvimagesink pixel-aspect-ratio=3/4
- * ]| Get audio input, filter it trhough Mono Amplifier, CAPS Plate LADSPA and TAP Stereo Echo, explicitily anulate audio with Null (Audio Input), and play a visualization (recommended hearphones).
+ * gst-launch autoaudiosrc ! ladspa-cmt-so-amp-mono gain=2 ! ladspa-caps-so-plate ! ladspa-tap-echo-so-tap-stereo-echo l-delay=500 r-haas-delay=500 ! tee name=myT myT. ! audioconvert ! audioresample ! queue ! ladspasink-cmt-so-null-ai myT. ! audioconvert ! audioresample ! queue ! goom ! videoconvert ! xvimagesink pixel-aspect-ratio=3/4
+ * ]| Get audio input, filter it trhough Mono Amplifier, CAPS Plate LADSPA and TAP Stereo Echo, explicitily anulate audio with Null (Audio Output), and play a visualization (recommended hearphones).
  * </refsect2>
  * </listitem>
  * </itemizedlist>
