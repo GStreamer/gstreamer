@@ -6388,28 +6388,6 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
    * udp sources */
   gst_rtspsrc_send_dummy_packets (src);
 
-  /* activate receive elements;
-   * only in async case, since receive elements may not have been affected
-   * by overall state change (e.g. not around yet),
-   * do not mess with state in sync case (e.g. seeking) */
-  if (async) {
-    /* state change might be happening in the application thread. A
-     * specific case is when chaging state to NULL where we will wait
-     * for this task to finish (gst_rtspsrc_stop). However this task
-     * will try to change the state to PLAYING causing a deadlock. */
-
-    /* make sure we are not in the middle of a state change. The
-     * state lock is a recursive lock so it's safe to lock twice from
-     * the same thread */
-    if (GST_STATE_TRYLOCK (src)) {
-      gst_element_set_state (GST_ELEMENT_CAST (src), GST_STATE_PLAYING);
-      GST_STATE_UNLOCK (src);
-    } else {
-      res = GST_RTSP_ERROR;
-      goto changing_state;
-    }
-  }
-
   /* construct a control url */
   if (src->control)
     control = src->control;
@@ -6569,11 +6547,6 @@ not_supported:
 was_playing:
   {
     GST_DEBUG_OBJECT (src, "we were already PLAYING");
-    goto done;
-  }
-changing_state:
-  {
-    GST_DEBUG_OBJECT (src, "failed going to PLAYING, already changing state");
     goto done;
   }
 create_request_failed:
