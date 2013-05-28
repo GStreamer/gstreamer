@@ -28,7 +28,6 @@ tmp=$tmp/git-update.$(date +%Y%m%d-%H%M-).$RANDOM.$RANDOM.$RANDOM.$$
 }
 
 ERROR_LOG="$tmp/failures.log"
-touch $ERROR_LOG
 ERROR_RETURN=255
 
 for m in $CORE $MODULES $EXTRA_MODULES; do
@@ -124,6 +123,7 @@ if test -e $ERROR_LOG;  then
   echo
   cat $ERROR_LOG
 else
+  echo "Update done"
   rm -rf "$tmp"
 fi
 exit
