@@ -4107,6 +4107,15 @@ source_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
         goto done;
       }
     }
+  } else if (GST_PAD_PROBE_INFO_TYPE (info) &
+      GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM) {
+    GstQuery *query = GST_PAD_PROBE_INFO_QUERY (info);
+
+    if (!GST_QUERY_IS_SERIALIZED (query)) {
+      /* do not block on non-serialized queries */
+      GST_LOG_OBJECT (pad, "Letting non-serialized query through");
+      return GST_PAD_PROBE_PASS;
+    }
   }
   chain = dpad->chain;
   dbin = chain->dbin;
@@ -4174,9 +4183,10 @@ gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked)
     if (blocked) {
       if (dpad->block_id == 0)
         dpad->block_id =
-            gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-            source_pad_blocked_cb, gst_object_ref (dpad),
-            (GDestroyNotify) gst_object_unref);
+            gst_pad_add_probe (opad,
+            GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM |
+            GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM, source_pad_blocked_cb,
+            gst_object_ref (dpad), (GDestroyNotify) gst_object_unref);
     } else {
       if (dpad->block_id != 0) {
         gst_pad_remove_probe (opad, dpad->block_id);
