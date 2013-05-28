@@ -510,10 +510,7 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
   /* copy segment, we need this because we still need the old
    * segment when we close the current segment. */
   memcpy (&seeksegment, &demux->segment, sizeof (GstSegment));
-  if (demux->segment_event) {
-    gst_event_unref (demux->segment_event);
-    demux->segment_event = NULL;
-  }
+
   /* configure the segment with the seek variables */
   GST_DEBUG_OBJECT (demux, "configuring seek");
   GST_DEBUG ("seeksegment before set_seek " SEGMENT_FORMAT,
@@ -539,13 +536,11 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
   base->seek_offset = start_offset;
   res = GST_FLOW_OK;
 
-  /* commit the new segment */
-  memcpy (&demux->segment, &seeksegment, sizeof (GstSegment));
-
-  if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-    gst_element_post_message (GST_ELEMENT_CAST (demux),
-        gst_message_new_segment_start (GST_OBJECT_CAST (demux),
-            demux->segment.format, demux->segment.stop));
+  /* Drop segment info, it needs to be recreated after the actual seek */
+  gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
+  if (demux->segment_event) {
+    gst_event_unref (demux->segment_event);
+    demux->segment_event = NULL;
   }
 
 done:
@@ -1349,20 +1344,6 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
 
   GST_DEBUG ("Creating new newsegment for stream %p", stream);
 
-  /* 0) If we don't have a time segment yet try to recover segment info from
-   *    base when it's in time otherwise just initialize segment with
-   *    defaults.
-   *    It will happen only if it's first program or after flushes. */
-  if (demux->segment.format == GST_FORMAT_UNDEFINED) {
-    if (base->segment.format == GST_FORMAT_TIME) {
-      demux->segment = base->segment;
-      /* We can shortcut and create the segment event directly */
-      demux->segment_event = gst_event_new_segment (&demux->segment);
-    } else {
-      gst_segment_init (&demux->segment, GST_FORMAT_TIME);
-    }
-  }
-
   /* 1) If we need to calculate an update newsegment, do it
    * 2) If we need to calculate a new newsegment, do it
    * 3) If an update_segment is valid, push it
@@ -1404,21 +1385,24 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
     demux->calculate_update_segment = FALSE;
   }
 
-  if (!demux->segment_event) {
-    GstSegment new_segment;
-
+  if (demux->segment.format != GST_FORMAT_TIME) {
+    /* It will happen only if it's first program or after flushes. */
     GST_DEBUG ("Calculating actual segment");
-
-    gst_segment_copy_into (&demux->segment, &new_segment);
-    if (new_segment.format != GST_FORMAT_TIME) {
+    if (base->segment.format == GST_FORMAT_TIME) {
+      /* Try to recover segment info from base if it's in TIME format */
+      demux->segment = base->segment;
+    } else {
       /* Start from the first ts/pts */
-      new_segment.start = firstts;
-      new_segment.stop = GST_CLOCK_TIME_NONE;
-      new_segment.position = firstts;
+      gst_segment_init (&demux->segment, GST_FORMAT_TIME);
+      demux->segment.start = firstts;
+      demux->segment.stop = GST_CLOCK_TIME_NONE;
+      demux->segment.position = firstts;
+      demux->segment.time = firstts;
     }
-
-    demux->segment_event = gst_event_new_segment (&new_segment);
   }
+
+  if (!demux->segment_event)
+    demux->segment_event = gst_event_new_segment (&demux->segment);
 
 push_new_segment:
   if (demux->update_segment) {
