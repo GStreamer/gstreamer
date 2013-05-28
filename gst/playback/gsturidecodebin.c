@@ -658,7 +658,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       g_signal_new ("autoplug-query", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass, autoplug_query),
       _gst_boolean_or_accumulator, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 2, GST_TYPE_PAD,
+      G_TYPE_BOOLEAN, 3, GST_TYPE_PAD, GST_TYPE_ELEMENT,
       GST_TYPE_QUERY | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
@@ -1642,7 +1642,7 @@ remove_decoders (GstURIDecodeBin * bin, gboolean force)
 }
 
 static void
-proxy_unknown_type_signal (GstElement * element, GstPad * pad, GstCaps * caps,
+proxy_unknown_type_signal (GstElement * decodebin, GstPad * pad, GstCaps * caps,
     GstURIDecodeBin * dec)
 {
   GST_DEBUG_OBJECT (dec, "unknown-type signaled");
@@ -1652,7 +1652,7 @@ proxy_unknown_type_signal (GstElement * element, GstPad * pad, GstCaps * caps,
 }
 
 static gboolean
-proxy_autoplug_continue_signal (GstElement * element, GstPad * pad,
+proxy_autoplug_continue_signal (GstElement * decodebin, GstPad * pad,
     GstCaps * caps, GstURIDecodeBin * dec)
 {
   gboolean result;
@@ -1667,7 +1667,7 @@ proxy_autoplug_continue_signal (GstElement * element, GstPad * pad,
 }
 
 static GValueArray *
-proxy_autoplug_factories_signal (GstElement * element, GstPad * pad,
+proxy_autoplug_factories_signal (GstElement * decodebin, GstPad * pad,
     GstCaps * caps, GstURIDecodeBin * dec)
 {
   GValueArray *result;
@@ -1682,7 +1682,7 @@ proxy_autoplug_factories_signal (GstElement * element, GstPad * pad,
 }
 
 static GValueArray *
-proxy_autoplug_sort_signal (GstElement * element, GstPad * pad,
+proxy_autoplug_sort_signal (GstElement * decodebin, GstPad * pad,
     GstCaps * caps, GValueArray * factories, GstURIDecodeBin * dec)
 {
   GValueArray *result;
@@ -1697,7 +1697,7 @@ proxy_autoplug_sort_signal (GstElement * element, GstPad * pad,
 }
 
 static GstAutoplugSelectResult
-proxy_autoplug_select_signal (GstElement * element, GstPad * pad,
+proxy_autoplug_select_signal (GstElement * decodebin, GstPad * pad,
     GstCaps * caps, GstElementFactory * factory, GstURIDecodeBin * dec)
 {
   GstAutoplugSelectResult result;
@@ -1712,13 +1712,14 @@ proxy_autoplug_select_signal (GstElement * element, GstPad * pad,
 }
 
 static gboolean
-proxy_autoplug_query_signal (GstElement * element, GstPad * pad,
-    GstQuery * query, GstURIDecodeBin * dec)
+proxy_autoplug_query_signal (GstElement * decodebin, GstPad * pad,
+    GstElement * element, GstQuery * query, GstURIDecodeBin * dec)
 {
   gboolean ret = FALSE;
 
   g_signal_emit (dec,
-      gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_QUERY], 0, pad, query, &ret);
+      gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_QUERY], 0, pad, element, query,
+      &ret);
 
   GST_DEBUG_OBJECT (dec, "autoplug-query returned %d", ret);
 
@@ -1726,7 +1727,7 @@ proxy_autoplug_query_signal (GstElement * element, GstPad * pad,
 }
 
 static void
-proxy_drained_signal (GstElement * element, GstURIDecodeBin * dec)
+proxy_drained_signal (GstElement * decodebin, GstURIDecodeBin * dec)
 {
   GST_DEBUG_OBJECT (dec, "drained signaled");
 

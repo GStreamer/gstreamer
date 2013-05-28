@@ -4080,8 +4080,8 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
 }
 
 static gboolean
-autoplug_query_caps (GstElement * uridecodebin, GstPad * pad, GstQuery * query,
-    GstSourceGroup * group)
+autoplug_query_caps (GstElement * uridecodebin, GstPad * pad,
+    GstElement * element, GstQuery * query, GstSourceGroup * group)
 {
   GstCaps *filter, *result = NULL;
   GstElement *sink;
@@ -4241,13 +4241,13 @@ done:
 }
 
 static gboolean
-autoplug_query_cb (GstElement * uridecodebin, GstPad * pad, GstQuery * query,
-    GstSourceGroup * group)
+autoplug_query_cb (GstElement * uridecodebin, GstPad * pad,
+    GstElement * element, GstQuery * query, GstSourceGroup * group)
 {
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
-      return autoplug_query_caps (uridecodebin, pad, query, group);
+      return autoplug_query_caps (uridecodebin, pad, element, query, group);
     default:
       return FALSE;
   }

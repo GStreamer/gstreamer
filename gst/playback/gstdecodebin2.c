@@ -800,6 +800,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * @bin: The decodebin.
    * @child: The child element doing the query
    * @pad: The #GstPad.
+   * @element: The #GstElement.
    * @query: The #GstQuery.
    *
    * This signal is emitted whenever an autoplugged element that is
@@ -813,7 +814,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       g_signal_new ("autoplug-query", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, autoplug_query),
       _gst_boolean_or_accumulator, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 2, GST_TYPE_PAD,
+      G_TYPE_BOOLEAN, 3, GST_TYPE_PAD, GST_TYPE_ELEMENT,
       GST_TYPE_QUERY | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
@@ -4241,9 +4242,18 @@ gst_decode_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
   CHAIN_MUTEX_LOCK (dpad->chain);
   if (!dpad->exposed && !dpad->chain->deadend) {
+    GstDecodeElement *delem =
+        (dpad->chain->elements ? dpad->chain->elements->data : NULL);
+
     ret = FALSE;
+    GST_DEBUG_OBJECT (dpad->dbin,
+        "calling autoplug-query for %s (element %s): %" GST_PTR_FORMAT,
+        GST_PAD_NAME (dpad), delem ? GST_ELEMENT_NAME (delem->element) : NULL,
+        query);
     g_signal_emit (G_OBJECT (dpad->dbin),
-        gst_decode_bin_signals[SIGNAL_AUTOPLUG_QUERY], 0, dpad, query, &ret);
+        gst_decode_bin_signals[SIGNAL_AUTOPLUG_QUERY], 0, dpad, delem->element,
+        query, &ret);
+
     GST_DEBUG_OBJECT (dpad->dbin, "autoplug-query returned %d", ret);
     if (ret) {
       GstCaps *result, *filter;
