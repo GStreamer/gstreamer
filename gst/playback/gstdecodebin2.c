@@ -4251,13 +4251,9 @@ gst_decode_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
   gboolean ret = FALSE;
 
   CHAIN_MUTEX_LOCK (dpad->chain);
-  if (!dpad->exposed && !dpad->chain->deadend && dpad->chain->elements) {
+  if (!dpad->exposed && !dpad->dbin->shutdown && !dpad->chain->deadend
+      && dpad->chain->elements) {
     GstDecodeElement *delem = dpad->chain->elements->data;
-
-    if (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION) {
-      g_print ("huh\n");
-      g_assert_not_reached ();
-    }
 
     ret = FALSE;
     GST_DEBUG_OBJECT (dpad->dbin,
