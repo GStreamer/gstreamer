@@ -274,7 +274,9 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       case V4L2_CTRL_TYPE_INTEGER:
       case V4L2_CTRL_TYPE_BOOLEAN:
       case V4L2_CTRL_TYPE_MENU:
+#ifdef V4L2_CTRL_TYPE_INTEGER_MENU
       case V4L2_CTRL_TYPE_INTEGER_MENU:
+#endif
       case V4L2_CTRL_TYPE_BITMASK:
       case V4L2_CTRL_TYPE_BUTTON:{
         int i;
