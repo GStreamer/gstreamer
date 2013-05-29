@@ -2987,7 +2987,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     /* no combiner, create one */
     GST_DEBUG_OBJECT (playbin, "creating new input selector");
     if (custom_combiner)
-      combine->combiner = gst_object_ref (custom_combiner);
+      combine->combiner = custom_combiner;
     else
       combine->combiner = gst_element_factory_make ("input-selector", NULL);
 
