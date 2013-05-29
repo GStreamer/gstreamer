@@ -247,7 +247,7 @@ gst_alsasrc_change_state (GstElement * element, GstStateChange transition)
           if (clocktype == GST_CLOCK_TYPE_MONOTONIC) {
             GST_INFO ("Using driver timestamps !");
             alsa->driver_timestamps = TRUE;
-          }	  
+          }
         }
 
         gst_object_unref (clk);
@@ -386,11 +386,13 @@ set_hwparams (GstAlsaSrc * alsa)
     /* set the buffer time */
     CHECK (snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
             &alsa->buffer_time, NULL), buffer_time);
+    GST_DEBUG_OBJECT (alsa, "buffer time %u", alsa->buffer_time);
   }
   if (alsa->period_time != -1) {
     /* set the period time */
     CHECK (snd_pcm_hw_params_set_period_time_near (alsa->handle, params,
             &alsa->period_time, NULL), period_time);
+    GST_DEBUG_OBJECT (alsa, "period time %u", alsa->period_time);
   }
 
   /* write the parameters to device */
@@ -764,6 +766,22 @@ gst_alsasrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   alsa->bpf = GST_AUDIO_INFO_BPF (&spec->info);
   spec->segsize = alsa->period_size * alsa->bpf;
   spec->segtotal = alsa->buffer_size / alsa->period_size;
+
+  {
+    snd_output_t *out_buf = NULL;
+    char *msg = NULL;
+
+    snd_output_buffer_open (&out_buf);
+    snd_pcm_dump_hw_setup (alsa->handle, out_buf);
+    snd_output_buffer_string (out_buf, &msg);
+    GST_DEBUG_OBJECT (alsa, "Hardware setup: \n%s", msg);
+    snd_output_close (out_buf);
+    snd_output_buffer_open (&out_buf);
+    snd_pcm_dump_sw_setup (alsa->handle, out_buf);
+    snd_output_buffer_string (out_buf, &msg);
+    GST_DEBUG_OBJECT (alsa, "Software setup: \n%s", msg);
+    snd_output_close (out_buf);
+  }
 
   return TRUE;
 
