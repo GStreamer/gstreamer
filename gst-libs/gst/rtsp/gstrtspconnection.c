@@ -2639,13 +2639,16 @@ gst_rtsp_connection_do_tunnel (GstRTSPConnection * conn,
     /* both connections have socket0 as the read/write socket. start by taking the
      * socket from conn2 and set it as the socket in conn */
     conn->socket1 = conn2->socket0;
+    conn->connection1 = conn2->connection0;
+    conn->input_stream = conn2->input_stream;
 
     /* clean up some of the state of conn2 */
     g_cancellable_cancel (conn2->cancellable);
-    conn2->socket0 = 0;
-    g_object_unref (conn2->socket1);
-    conn2->socket1 = NULL;
     conn2->write_socket = conn2->read_socket = NULL;
+    conn2->socket0 = NULL;
+    conn2->connection0 = NULL;
+    conn2->input_stream = NULL;
+    conn2->output_stream = NULL;
     g_cancellable_reset (conn2->cancellable);
 
     /* We make socket0 the write socket and socket1 the read socket. */
