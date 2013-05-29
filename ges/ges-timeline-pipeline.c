@@ -37,6 +37,24 @@
 
 #define DEFAULT_TIMELINE_MODE  TIMELINE_MODE_PREVIEW
 
+/* lock to protect dynamic callbacks, like pad-added or nmp */
+#define DYN_LOCK(pipeline) (&GES_TIMELINE_PIPELINE (pipeline)->priv->dyn_mutex)
+#define LOCK_DYN(pipeline) G_STMT_START {                       \
+    GST_INFO_OBJECT (pipeline, "Getting dynamic lock from %p", \
+        g_thread_self());                                       \
+    g_mutex_lock (DYN_LOCK (pipeline));                     \
+    GST_INFO_OBJECT (pipeline, "Got Dynamic lock from %p",     \
+        g_thread_self());         \
+  } G_STMT_END
+
+#define UNLOCK_DYN(pipeline) G_STMT_START {                         \
+    GST_INFO_OBJECT (pipeline, "Unlocking dynamic lock from %p", \
+        g_thread_self());                                         \
+    g_mutex_unlock (DYN_LOCK (pipeline));                     \
+    GST_INFO_OBJECT (pipeline, "Unlocked Dynamic lock from %p",  \
+        g_thread_self());         \
+  } G_STMT_END
+
 /* Structure corresponding to a timeline - sink link */
 
 typedef struct
@@ -61,6 +79,7 @@ struct _GESTimelinePipelinePrivate
 
   GESPipelineFlags mode;
 
+  GMutex dyn_mutex;
   GList *chains;
 
   GstEncodingProfile *profile;
@@ -462,6 +481,7 @@ new_output_chain_for_track (GESTimelinePipeline * self, GESTrack * track)
   return chain;
 }
 
+/* Should be called with LOCK_DYN */
 static OutputChain *
 get_output_chain_for_track (GESTimelinePipeline * self, GESTrack * track)
 {
@@ -560,6 +580,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   GstCaps *caps;
   gboolean reconfigured = FALSE;
 
+  LOCK_DYN (self);
   caps = gst_pad_query_caps (pad, NULL);
 
   GST_DEBUG_OBJECT (self, "new pad %s:%s , caps:%" GST_PTR_FORMAT,
@@ -571,6 +592,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
 
   if (G_UNLIKELY (!track)) {
     GST_WARNING_OBJECT (self, "Couldn't find coresponding track !");
+    UNLOCK_DYN (self);
     return;
   }
 
@@ -696,6 +718,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   if (!get_output_chain_for_track (self, track))
     self->priv->chains = g_list_append (self->priv->chains, chain);
 
+  UNLOCK_DYN (self);
   GST_DEBUG ("done");
   return;
 
@@ -707,6 +730,7 @@ error:
     if (sinkpad)
       gst_object_unref (sinkpad);
     g_free (chain);
+    UNLOCK_DYN (self);
   }
 }
 
@@ -717,16 +741,19 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   GESTrack *track;
   GstPad *peer;
 
+  LOCK_DYN (self);
   GST_DEBUG_OBJECT (self, "pad removed %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   if (G_UNLIKELY (!(track =
               ges_timeline_get_track_for_pad (self->priv->timeline, pad)))) {
     GST_WARNING_OBJECT (self, "Couldn't find coresponding track !");
+    UNLOCK_DYN (self);
     return;
   }
 
   if (G_UNLIKELY (!(chain = get_output_chain_for_track (self, track)))) {
     GST_DEBUG_OBJECT (self, "Pad wasn't used");
+    UNLOCK_DYN (self);
     return;
   }
 
@@ -765,6 +792,7 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
 
   self->priv->chains = g_list_remove (self->priv->chains, chain);
   g_free (chain);
+  UNLOCK_DYN (self);
 
   GST_DEBUG ("done");
 }
@@ -775,6 +803,7 @@ no_more_pads_cb (GstElement * timeline, GESTimelinePipeline * self)
   GList *tmp;
 
   GST_DEBUG ("received no-more-pads");
+  LOCK_DYN (self);
   for (tmp = self->priv->chains; tmp; tmp = g_list_next (tmp)) {
     OutputChain *chain = (OutputChain *) tmp->data;
 
@@ -786,6 +815,7 @@ no_more_pads_cb (GstElement * timeline, GESTimelinePipeline * self)
       chain->probe_id = 0;
     }
   }
+  UNLOCK_DYN (self);
 }
 
 /**

@@ -65,6 +65,24 @@ GST_DEBUG_CATEGORY_STATIC (ges_timeline_debug);
 #undef GST_CAT_DEFAULT
 #define GST_CAT_DEFAULT ges_timeline_debug
 
+/* lock to protect dynamic callbacks, like pad-added */
+#define DYN_LOCK(timeline) (&GES_TIMELINE (timeline)->priv->dyn_mutex)
+#define LOCK_DYN(timeline) G_STMT_START {                       \
+    GST_INFO_OBJECT (timeline, "Getting dynamic lock from %p", \
+        g_thread_self());                                       \
+    g_rec_mutex_lock (DYN_LOCK (timeline));                     \
+    GST_INFO_OBJECT (timeline, "Got Dynamic lock from %p",     \
+        g_thread_self());         \
+  } G_STMT_END
+
+#define UNLOCK_DYN(timeline) G_STMT_START {                         \
+    GST_INFO_OBJECT (timeline, "Unlocking dynamic lock from %p", \
+        g_thread_self());                                         \
+    g_rec_mutex_unlock (DYN_LOCK (timeline));                     \
+    GST_INFO_OBJECT (timeline, "Unlocked Dynamic lock from %p",  \
+        g_thread_self());         \
+  } G_STMT_END
+
 typedef struct TrackObjIters
 {
   GSequenceIter *iter_start;
@@ -143,6 +161,7 @@ struct _GESTimelinePrivate
   /* We keep 1 reference to our trackelement here */
   GSequence *tracksources;      /* Source-s sorted by start/priorities */
 
+  GRecMutex dyn_mutex;
   GList *priv_tracks;
   /* FIXME: We should definitly offer an API over this,
    * probably through a ges_layer_get_track_elements () method */
@@ -387,7 +406,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
       g_param_spec_boolean ("auto-transition", "Auto-Transition",
           "whether the transitions are added", FALSE, G_PARAM_READWRITE));
 
-  /** 
+  /**
    * GESTimeline:snapping-distance:
    *
    * Distance (in nanoseconds) from which a moving object will snap
@@ -1966,6 +1985,7 @@ layer_object_removed_cb (GESLayer * layer, GESClip * clip,
 
     /* FIXME Check if we should actually check that we control the
      * track in the new management of TrackElement context */
+    LOCK_DYN (timeline);
     if (G_LIKELY (g_list_find_custom (timeline->priv->priv_tracks, track,
                 (GCompareFunc) custom_find_track) || track == NULL)) {
       GST_DEBUG ("Belongs to one of the tracks we control");
@@ -1973,6 +1993,7 @@ layer_object_removed_cb (GESLayer * layer, GESClip * clip,
       ges_container_remove (GES_CONTAINER (clip),
           GES_TIMELINE_ELEMENT (track_element));
     }
+    UNLOCK_DYN (timeline);
   }
   g_signal_handlers_disconnect_by_func (clip, clip_track_element_added_cb,
       timeline);
@@ -2127,6 +2148,7 @@ pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
   }
 
   /* Remember the pad */
+  LOCK_DYN (tr_priv->timeline);
   GST_OBJECT_LOCK (track);
   tr_priv->pad = pad;
 
@@ -2153,6 +2175,7 @@ pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
     GST_DEBUG ("Signaling no-more-pads");
     gst_element_no_more_pads (GST_ELEMENT (tr_priv->timeline));
   }
+  UNLOCK_DYN (tr_priv->timeline);
 }
 
 static void
@@ -2477,8 +2500,10 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   tr_priv->track = track;
 
   /* Add the track to the list of tracks we track */
+  LOCK_DYN (timeline);
   timeline->priv->priv_tracks = g_list_append (timeline->priv->priv_tracks,
       tr_priv);
+  UNLOCK_DYN (timeline);
   timeline->tracks = g_list_append (timeline->tracks, track);
 
   /* Listen to pad-added/-removed */
@@ -2551,14 +2576,17 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
   priv = timeline->priv;
+  LOCK_DYN (timeline);
   if (G_UNLIKELY (!(tmp = g_list_find_custom (priv->priv_tracks,
                   track, (GCompareFunc) custom_find_track)))) {
     GST_WARNING ("Track doesn't belong to this timeline");
+    UNLOCK_DYN (timeline);
     return FALSE;
   }
 
   tr_priv = tmp->data;
   priv->priv_tracks = g_list_remove (priv->priv_tracks, tr_priv);
+  UNLOCK_DYN (timeline);
   timeline->tracks = g_list_remove (timeline->tracks, track);
 
   ges_track_set_timeline (track, NULL);
@@ -2616,11 +2644,15 @@ ges_timeline_get_track_for_pad (GESTimeline * timeline, GstPad * pad)
 {
   GList *tmp;
 
+  LOCK_DYN (timeline);
   for (tmp = timeline->priv->priv_tracks; tmp; tmp = g_list_next (tmp)) {
     TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
-    if (pad == tr_priv->ghostpad)
+    if (pad == tr_priv->ghostpad) {
+      UNLOCK_DYN (timeline);
       return tr_priv->track;
+    }
   }
+  UNLOCK_DYN (timeline);
 
   return NULL;
 }
