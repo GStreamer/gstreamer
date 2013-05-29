@@ -123,6 +123,8 @@ static gboolean default_handle_message (GstRTSPMedia * media,
     GstMessage * message);
 static void finish_unprepare (GstRTSPMedia * media);
 static gboolean default_unprepare (GstRTSPMedia * media);
+static gboolean default_get_range_times (GstRTSPMedia * media,
+    const GstRTSPTimeRange * range, GstClockTime * min, GstClockTime * max);
 
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
 
@@ -211,6 +213,7 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
 
   klass->handle_message = default_handle_message;
   klass->unprepare = default_unprepare;
+  klass->get_range_times = default_get_range_times;
 }
 
 static void
@@ -1124,14 +1127,18 @@ not_prepared:
 gboolean
 gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
 {
+  GstRTSPMediaClass *klass;
   GstRTSPMediaPrivate *priv;
   GstSeekFlags flags;
   gboolean res;
   GstClockTime start, stop;
   GstSeekType start_type, stop_type;
 
+  klass = GST_RTSP_MEDIA_GET_CLASS (media);
+
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
   g_return_val_if_fail (range != NULL, FALSE);
+  g_return_val_if_fail (klass->get_range_times != NULL, FALSE);
 
   priv = media->priv;
 
@@ -1148,7 +1155,7 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
 
   start_type = stop_type = GST_SEEK_TYPE_NONE;
 
-  if (!gst_rtsp_range_get_times (range, &start, &stop))
+  if (!klass->get_range_times (media, range, &start, &stop))
     goto not_supported;
 
   GST_INFO ("got %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
@@ -2042,4 +2049,12 @@ not_prepared:
     g_rec_mutex_unlock (&priv->state_lock);
     return FALSE;
   }
+}
+
+/* called with state-lock */
+static gboolean
+default_get_range_times (GstRTSPMedia * media,
+    const GstRTSPTimeRange * range, GstClockTime * min, GstClockTime * max)
+{
+  return gst_rtsp_range_get_times (range, min, max);
 }
