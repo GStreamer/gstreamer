@@ -1491,6 +1491,19 @@ gst_play_bin_finalize (GObject * object)
     gst_object_unref (playbin->text_sink);
   }
 
+  if (playbin->video_stream_combiner) {
+    gst_element_set_state (playbin->video_stream_combiner, GST_STATE_NULL);
+    gst_object_unref (playbin->video_stream_combiner);
+  }
+  if (playbin->audio_stream_combiner) {
+    gst_element_set_state (playbin->audio_stream_combiner, GST_STATE_NULL);
+    gst_object_unref (playbin->audio_stream_combiner);
+  }
+  if (playbin->text_stream_combiner) {
+    gst_element_set_state (playbin->text_stream_combiner, GST_STATE_NULL);
+    gst_object_unref (playbin->text_stream_combiner);
+  }
+
   if (playbin->elements)
     gst_plugin_feature_list_free (playbin->elements);
 
@@ -3008,8 +3021,8 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
       GST_DEBUG_OBJECT (playbin, "adding new stream combiner %p",
           combine->combiner);
-      gst_bin_add (GST_BIN_CAST (playbin), combine->combiner);
       gst_element_set_state (combine->combiner, GST_STATE_PAUSED);
+      gst_bin_add (GST_BIN_CAST (playbin), combine->combiner);
     }
   }
 
@@ -5143,6 +5156,13 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
         gst_element_set_state (playbin->video_sink, GST_STATE_NULL);
       if (playbin->text_sink)
         gst_element_set_state (playbin->text_sink, GST_STATE_NULL);
+
+      if (playbin->video_stream_combiner)
+        gst_element_set_state (playbin->video_stream_combiner, GST_STATE_NULL);
+      if (playbin->audio_stream_combiner)
+        gst_element_set_state (playbin->audio_stream_combiner, GST_STATE_NULL);
+      if (playbin->text_stream_combiner)
+        gst_element_set_state (playbin->text_stream_combiner, GST_STATE_NULL);
 
       /* make sure the groups don't perform a state change anymore until we
        * enable them again */

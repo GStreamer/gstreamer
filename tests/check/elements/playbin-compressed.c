@@ -1628,6 +1628,7 @@ GST_START_TEST (test_raw_raw_audio_stream_adder_manual_sink)
   g_object_get (G_OBJECT (playbin), "audio-stream-combiner", &playbin_combiner,
       NULL);
   fail_unless (playbin_combiner == adder);
+  gst_object_unref (playbin_combiner);
 
   /* text and video combiners should still be NULL */
   g_object_get (G_OBJECT (playbin), "text-stream-combiner", &playbin_combiner,
