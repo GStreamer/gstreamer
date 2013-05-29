@@ -761,12 +761,14 @@ gst_buffer_new_wrapped_full (GstMemoryFlags flags, gpointer data,
     gsize maxsize, gsize offset, gsize size, gpointer user_data,
     GDestroyNotify notify)
 {
+  GstMemory *mem;
   GstBuffer *newbuf;
 
   newbuf = gst_buffer_new ();
-  gst_buffer_append_memory (newbuf,
-      gst_memory_new_wrapped (flags, data, maxsize, offset, size,
-          user_data, notify));
+  mem =
+      gst_memory_new_wrapped (flags, data, maxsize, offset, size, user_data,
+      notify);
+  _memory_add (newbuf, -1, mem, TRUE);
 
   return newbuf;
 }
