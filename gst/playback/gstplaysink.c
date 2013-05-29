@@ -1543,6 +1543,7 @@ update_colorbalance (GstPlaySink * playsink)
     GstColorBalanceChannel *proxy = l->data;
     GstColorBalanceChannel *channel = NULL;
     const GList *channels, *k;
+    gdouble new_val;
 
     channels = gst_color_balance_list_channels (balance);
     for (k = channels; k; k = k->next) {
@@ -1556,8 +1557,18 @@ update_colorbalance (GstPlaySink * playsink)
 
     g_assert (channel);
 
+    /* Convert to [0, 1] range */
+    new_val =
+        ((gdouble) playsink->colorbalance_values[i] -
+        (gdouble) proxy->min_value) / ((gdouble) proxy->max_value -
+        (gdouble) proxy->min_value);
+    /* Convert to channel range */
+    new_val =
+        channel->min_value + new_val * ((gdouble) channel->max_value -
+        (gdouble) channel->min_value);
+
     gst_color_balance_set_value (balance, channel,
-        playsink->colorbalance_values[i]);
+        (gint) (new_val + 0.5));
   }
 
   g_signal_handler_unblock (balance, playsink->colorbalance_value_changed_id);
