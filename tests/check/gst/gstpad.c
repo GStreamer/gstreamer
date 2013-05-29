@@ -232,8 +232,10 @@ sticky_event (GstPad * pad, GstObject * parent, GstEvent * event)
       || GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START
       || GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT);
 
-  if (GST_EVENT_TYPE (event) != GST_EVENT_CAPS)
+  if (GST_EVENT_TYPE (event) != GST_EVENT_CAPS) {
+    gst_event_unref (event);
     return TRUE;
+  }
 
   /* Ensure we get here just once: */
   fail_unless (event_caps == NULL);
@@ -304,7 +306,6 @@ GST_START_TEST (test_sticky_caps_unlinked)
 
   gst_caps_replace (&caps, NULL);
   gst_caps_replace (&event_caps, NULL);
-
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
   gst_object_unref (src);
