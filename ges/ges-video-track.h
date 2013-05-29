@@ -38,13 +38,20 @@ typedef struct _GESVideoTrackPrivate GESVideoTrackPrivate;
 struct _GESVideoTrackClass
 {
   GESTrackClass parent_class;
+
+  /* Padding for API extension */
+  gpointer    _ges_reserved[GES_PADDING];
 };
 
 struct _GESVideoTrack
 {
   GESTrack parent_instance;
 
+  /*< private >*/
   GESVideoTrackPrivate *priv;
+
+  /* Padding for API extension */
+  gpointer    _ges_reserved[GES_PADDING];
 };
 
 GType ges_video_track_get_type (void) G_GNUC_CONST;
