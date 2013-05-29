@@ -23,6 +23,7 @@ autoregen.sh
 ABOUT-NLS
 _stdint.h
 gst-plugins-good-*.tar.*
+.dirstamp
 
 /m4
 
@@ -34,6 +35,7 @@ gst-plugins-good-*.tar.*
 Makefile.in
 Makefile
 *~
+*.swp
 
 /m4
 
