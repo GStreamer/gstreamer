@@ -23,7 +23,9 @@
 #define _GES_TEST_UTILS
 
 #include <ges/ges.h>
+#include <gst/check/gstcheck.h>
 
+GESTimelinePipeline * ges_test_create_pipeline (GESTimeline *timeline);
 gchar * ges_test_get_audio_only_uri (void);
 gchar * ges_test_get_audio_video_uri (void);
 gchar * ges_test_get_image_uri (void);

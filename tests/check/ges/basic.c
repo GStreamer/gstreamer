@@ -19,6 +19,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include "test-utils.h"
+
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
@@ -689,6 +691,39 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
 
 GST_END_TEST;
 
+GST_START_TEST (test_ges_timeline_pipeline_change_state)
+{
+  GstState state;
+  GESAsset *asset;
+  GESLayer *layer;
+  GESTimeline *timeline;
+  GESTimelinePipeline *pipeline;
+
+  ges_init ();
+
+  layer = ges_layer_new ();
+  timeline = ges_timeline_new_audio_video ();
+  fail_unless (ges_timeline_add_layer (timeline, layer));
+
+  pipeline = ges_test_create_pipeline (timeline);
+
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+  ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+  gst_object_unref (asset);
+
+  ASSERT_SET_STATE (GST_ELEMENT (pipeline), GST_STATE_PLAYING,
+      GST_STATE_CHANGE_ASYNC);
+  fail_unless (gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
+          GST_CLOCK_TIME_NONE) == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (state == GST_STATE_PLAYING);
+  ASSERT_SET_STATE (GST_ELEMENT (pipeline), GST_STATE_NULL,
+      GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -703,6 +738,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_ges_timeline_add_layer_first);
   tcase_add_test (tc_chain, test_ges_timeline_remove_track);
   tcase_add_test (tc_chain, test_ges_timeline_multiple_tracks);
+  tcase_add_test (tc_chain, test_ges_timeline_pipeline_change_state);
 
   return s;
 }
