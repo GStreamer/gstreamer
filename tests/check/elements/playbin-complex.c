@@ -1,4 +1,4 @@
-/* GStreamer unit tests for playbin compressed stream support
+/* GStreamer unit tests for playbin complex stream support
  *
  * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  * Copyright (C) 2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
@@ -2483,9 +2483,9 @@ GST_END_TEST;
 #endif
 
 static Suite *
-playbin_compressed_suite (void)
+playbin_complex_suite (void)
 {
-  Suite *s = suite_create ("playbin_compressed");
+  Suite *s = suite_create ("playbin_complex");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
@@ -2539,4 +2539,4 @@ playbin_compressed_suite (void)
   return s;
 }
 
-GST_CHECK_MAIN (playbin_compressed);
+GST_CHECK_MAIN (playbin_complex);
