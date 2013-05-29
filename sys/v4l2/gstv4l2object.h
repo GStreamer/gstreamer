@@ -171,43 +171,46 @@ struct _GstV4l2ObjectClassHelper {
 
 GType gst_v4l2_object_get_type (void);
 
-#define V4L2_STD_OBJECT_PROPS		\
-    PROP_DEVICE,			\
-    PROP_DEVICE_NAME,			\
-    PROP_DEVICE_FD,			\
-    PROP_FLAGS,                         \
-    PROP_BRIGHTNESS,			\
-    PROP_CONTRAST,			\
-    PROP_SATURATION,			\
-    PROP_HUE,                           \
-    PROP_TV_NORM,                       \
-    PROP_IO_MODE,                       \
-    PROP_EXTRA_CONTROLS,                \
-    PROP_PIXEL_ASPECT_RATIO,            \
+#define V4L2_STD_OBJECT_PROPS \
+    PROP_DEVICE,              \
+    PROP_DEVICE_NAME,         \
+    PROP_DEVICE_FD,           \
+    PROP_FLAGS,               \
+    PROP_BRIGHTNESS,          \
+    PROP_CONTRAST,            \
+    PROP_SATURATION,          \
+    PROP_HUE,                 \
+    PROP_TV_NORM,             \
+    PROP_IO_MODE,             \
+    PROP_EXTRA_CONTROLS,      \
+    PROP_PIXEL_ASPECT_RATIO,  \
     PROP_FORCE_ASPECT_RATIO
 
 /* create/destroy */
-GstV4l2Object *	gst_v4l2_object_new 		 (GstElement * element,
-                                                  enum v4l2_buf_type  type,
-                                                  const char *default_device,
-                   				  GstV4l2GetInOutFunction get_in_out_func,
-                   				  GstV4l2SetInOutFunction set_in_out_func,
-		   				  GstV4l2UpdateFpsFunction   update_fps_func);
-void 	        gst_v4l2_object_destroy 	 (GstV4l2Object * v4l2object);
+GstV4l2Object*  gst_v4l2_object_new       (GstElement * element,
+                                           enum v4l2_buf_type  type,
+                                           const char * default_device,
+                                           GstV4l2GetInOutFunction get_in_out_func,
+                                           GstV4l2SetInOutFunction set_in_out_func,
+                                           GstV4l2UpdateFpsFunction update_fps_func);
+
+void            gst_v4l2_object_destroy   (GstV4l2Object * v4l2object);
 
 /* properties */
 
-void 	  gst_v4l2_object_install_properties_helper (GObjectClass *gobject_class, const char *default_device);
+void         gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
+                                                        const char * default_device);
 
-gboolean  gst_v4l2_object_set_property_helper       (GstV4l2Object *v4l2object,
-				                     guint prop_id, const GValue * value,
-						     GParamSpec * pspec);
-gboolean  gst_v4l2_object_get_property_helper       (GstV4l2Object *v4l2object,
-				                     guint prop_id, GValue * value,
-						     GParamSpec * pspec);
+gboolean     gst_v4l2_object_set_property_helper       (GstV4l2Object * v4l2object,
+                                                        guint prop_id,
+                                                        const GValue * value,
+                                                        GParamSpec * pspec);
+gboolean     gst_v4l2_object_get_property_helper       (GstV4l2Object *v4l2object,
+                                                        guint prop_id, GValue * value,
+                                                        GParamSpec * pspec);
 /* open/close */
-gboolean  gst_v4l2_object_open               (GstV4l2Object *v4l2object);
-gboolean  gst_v4l2_object_close              (GstV4l2Object *v4l2object);
+gboolean     gst_v4l2_object_open            (GstV4l2Object *v4l2object);
+gboolean     gst_v4l2_object_close           (GstV4l2Object *v4l2object);
 
 /* probing */
 #if 0
@@ -228,18 +231,18 @@ GstCaps*      gst_v4l2_object_get_all_caps (void);
 
 GstStructure* gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
 
-gboolean      gst_v4l2_object_set_format (GstV4l2Object *v4l2object, GstCaps * caps);
+gboolean      gst_v4l2_object_set_format  (GstV4l2Object * v4l2object, GstCaps * caps);
 
 gboolean      gst_v4l2_object_caps_equal  (GstV4l2Object * v4l2object, GstCaps * caps);
 
-gboolean      gst_v4l2_object_unlock      (GstV4l2Object *v4l2object);
-gboolean      gst_v4l2_object_unlock_stop (GstV4l2Object *v4l2object);
+gboolean      gst_v4l2_object_unlock      (GstV4l2Object * v4l2object);
+gboolean      gst_v4l2_object_unlock_stop (GstV4l2Object * v4l2object);
 
-gboolean      gst_v4l2_object_stop        (GstV4l2Object *v4l2object);
+gboolean      gst_v4l2_object_stop        (GstV4l2Object * v4l2object);
 
 
 gboolean      gst_v4l2_object_copy        (GstV4l2Object * v4l2object,
-                                           GstBuffer * dest, GstBuffer *src);
+                                           GstBuffer * dest, GstBuffer * src);
 
 GstCaps *     gst_v4l2_object_get_caps    (GstV4l2Object * v4l2object,
                                            GstCaps * filter);
@@ -249,41 +252,41 @@ GstCaps *     gst_v4l2_object_get_caps    (GstV4l2Object * v4l2object,
                                                                                             \
 static void                                                                                 \
 interface_as_function ## _probe_probe_property (GstPropertyProbe * probe,                   \
-			                        guint prop_id,                              \
+                                                guint prop_id,                              \
                                                 const GParamSpec * pspec)                   \
 {                                                                                           \
   Type_Class *this_class = (Type_Class*) G_OBJECT_GET_CLASS (probe);                        \
   gst_v4l2_probe_probe_property (probe, prop_id, pspec,                                     \
-                                        &this_class->v4l2_class_devices);	            \
+                                 &this_class->v4l2_class_devices);                          \
 }                                                                                           \
                                                                                             \
 static gboolean                                                                             \
 interface_as_function ## _probe_needs_probe (GstPropertyProbe * probe,                      \
-			                     guint prop_id,                                 \
+                                             guint prop_id,                                 \
                                              const GParamSpec * pspec)                      \
 {                                                                                           \
   Type_Class *this_class = (Type_Class*) G_OBJECT_GET_CLASS (probe);                        \
   return gst_v4l2_probe_needs_probe (probe, prop_id, pspec,                                 \
-                                        &this_class->v4l2_class_devices);	            \
+                                     &this_class->v4l2_class_devices);                      \
 }                                                                                           \
                                                                                             \
 static GValueArray *                                                                        \
 interface_as_function ## _probe_get_values (GstPropertyProbe * probe,                       \
-			                    guint prop_id,                                  \
+                                            guint prop_id,                                  \
                                             const GParamSpec * pspec)                       \
 {                                                                                           \
   Type_Class *this_class = (Type_Class*) G_OBJECT_GET_CLASS (probe);                        \
   return gst_v4l2_probe_get_values (probe, prop_id, pspec,                                  \
-                                    &this_class->v4l2_class_devices);	                    \
+                                    &this_class->v4l2_class_devices);                       \
 }                                                                                           \
                                                                                             \
-static void								                    \
+static void                                                                                 \
 interface_as_function ## _property_probe_interface_init (GstPropertyProbeInterface * iface) \
 {                                                                                           \
   iface->get_properties = gst_v4l2_probe_get_properties;                                    \
   iface->probe_property = interface_as_function ## _probe_probe_property;                   \
   iface->needs_probe = interface_as_function ## _probe_needs_probe;                         \
-  iface->get_values = interface_as_function ## _probe_get_values;                                            \
+  iface->get_values = interface_as_function ## _probe_get_values;                           \
 }
 
 G_END_DECLS
