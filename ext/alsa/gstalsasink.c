@@ -491,6 +491,7 @@ retry:
       goto retry;
     }
     GST_DEBUG_OBJECT (alsa, "buffer time %u", buffer_time);
+    alsa->buffer_time = buffer_time;
   }
   if (period_time != -1 && !alsa->iec958) {
     /* set the period time */
@@ -504,6 +505,7 @@ retry:
       goto retry;
     }
     GST_DEBUG_OBJECT (alsa, "period time %u", period_time);
+    alsa->period_time = period_time;
   }
 
   /* Set buffer size and period size manually for SPDIF */
