@@ -2733,6 +2733,8 @@ struct _GstRTSPWatch
   GSource *readsrc;
   GSource *writesrc;
 
+  gboolean keep_running;
+
   /* queued message for transmission */
   guint id;
   GMutex mutex;
@@ -2868,21 +2870,21 @@ eof:
     if (watch->funcs.closed)
       watch->funcs.closed (watch, watch->user_data);
 
-    /* always stop when the readfd returns EOF in non-tunneled mode */
+    /* we closed the read connection, stop the watch now */
+    watch->keep_running = FALSE;
+
+    /* always stop when the input returns EOF in non-tunneled mode */
     return FALSE;
   }
 read_error:
   {
     if (watch->funcs.error_full)
-      GST_RTSP_CHECK (watch->funcs.error_full (watch, res, &watch->message,
-              0, watch->user_data), error);
-  }
-error:
-  {
-    if (watch->funcs.error)
+      watch->funcs.error_full (watch, res, &watch->message,
+          0, watch->user_data);
+    else if (watch->funcs.error)
       watch->funcs.error (watch, res, watch->user_data);
 
-    return FALSE;
+    goto eof;
   }
 }
 
@@ -2949,15 +2951,16 @@ write_blocked:
   return TRUE;
 
   /* ERRORS */
+eof:
+  {
+    return FALSE;
+  }
 write_error:
   {
     if (watch->funcs.error_full)
-      GST_RTSP_CHECK (watch->funcs.error_full (watch, res, NULL,
-              watch->write_id, watch->user_data), error);
-  }
-error:
-  {
-    if (watch->funcs.error)
+      watch->funcs.error_full (watch, res, NULL,
+          watch->write_id, watch->user_data);
+    else if (watch->funcs.error)
       watch->funcs.error (watch, res, watch->user_data);
 
     return FALSE;
@@ -3041,6 +3044,7 @@ gst_rtsp_watch_new (GstRTSPConnection * conn,
   result->messages = g_queue_new ();
 
   gst_rtsp_watch_reset (result);
+  result->keep_running = TRUE;
 
   result->funcs = *funcs;
   result->user_data = user_data;
