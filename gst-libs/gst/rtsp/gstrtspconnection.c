@@ -2775,17 +2775,22 @@ gst_rtsp_source_dispatch_read (GPollableInputStream * stream,
     GstRTSPWatch * watch)
 {
   GstRTSPResult res = GST_RTSP_ERROR;
+  GstRTSPConnection *conn = watch->conn;
 
-  res = build_next (&watch->builder, &watch->message, watch->conn, FALSE);
+  /* if this connection was already closed, stop now */
+  if (G_POLLABLE_INPUT_STREAM (conn->input_stream) != stream)
+    goto eof;
+
+  res = build_next (&watch->builder, &watch->message, conn, FALSE);
   if (res == GST_RTSP_EINTR)
     goto done;
   else if (G_UNLIKELY (res == GST_RTSP_EEOF)) {
     /* When we are in tunnelled mode, the read socket can be closed and we
      * should be prepared for a new POST method to reopen it */
-    if (watch->conn->tstate == TUNNEL_STATE_COMPLETE) {
+    if (conn->tstate == TUNNEL_STATE_COMPLETE) {
       /* remove the read connection for the tunnel */
       /* we accept a new POST request */
-      watch->conn->tstate = TUNNEL_STATE_GET;
+      conn->tstate = TUNNEL_STATE_GET;
       /* and signal that we lost our tunnel */
       if (watch->funcs.tunnel_lost)
         res = watch->funcs.tunnel_lost (watch, watch->user_data);
@@ -2793,14 +2798,14 @@ gst_rtsp_source_dispatch_read (GPollableInputStream * stream,
     } else
       goto eof;
   } else if (G_LIKELY (res == GST_RTSP_OK)) {
-    if (!watch->conn->manual_http &&
+    if (!conn->manual_http &&
         watch->message.type == GST_RTSP_MESSAGE_HTTP_REQUEST) {
-      if (watch->conn->tstate == TUNNEL_STATE_NONE &&
+      if (conn->tstate == TUNNEL_STATE_NONE &&
           watch->message.type_data.request.method == GST_RTSP_GET) {
         GstRTSPMessage *response;
         GstRTSPStatusCode code;
 
-        watch->conn->tstate = TUNNEL_STATE_GET;
+        conn->tstate = TUNNEL_STATE_GET;
 
         if (watch->funcs.tunnel_start)
           code = watch->funcs.tunnel_start (watch, watch->user_data);
@@ -2808,13 +2813,13 @@ gst_rtsp_source_dispatch_read (GPollableInputStream * stream,
           code = GST_RTSP_STS_OK;
 
         /* queue the response */
-        response = gen_tunnel_reply (watch->conn, code, &watch->message);
+        response = gen_tunnel_reply (conn, code, &watch->message);
         gst_rtsp_watch_send_message (watch, response, NULL);
         gst_rtsp_message_free (response);
         goto read_done;
-      } else if (watch->conn->tstate == TUNNEL_STATE_NONE &&
+      } else if (conn->tstate == TUNNEL_STATE_NONE &&
           watch->message.type_data.request.method == GST_RTSP_POST) {
-        watch->conn->tstate = TUNNEL_STATE_POST;
+        conn->tstate = TUNNEL_STATE_POST;
 
         /* in the callback the connection should be tunneled with the
          * GET connection */
@@ -2827,7 +2832,7 @@ gst_rtsp_source_dispatch_read (GPollableInputStream * stream,
   } else
     goto read_error;
 
-  if (!watch->conn->manual_http) {
+  if (!conn->manual_http) {
     /* if manual HTTP support is not enabled, then restore the message to
      * what it would have looked like without the support for parsing HTTP
      * messages being present */
@@ -2885,14 +2890,21 @@ static gboolean
 gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
     gpointer user_data G_GNUC_UNUSED)
 {
-  return TRUE;
+  GstRTSPWatch *watch = (GstRTSPWatch *) source;
+
+  return watch->keep_running;
 }
 
 static gboolean
-gst_rtsp_source_dispatch_write (GPollableInputStream * stream,
+gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
     GstRTSPWatch * watch)
 {
   GstRTSPResult res = GST_RTSP_ERROR;
+  GstRTSPConnection *conn = watch->conn;
+
+  /* if this connection was already closed, stop now */
+  if (G_POLLABLE_OUTPUT_STREAM (conn->output_stream) != stream)
+    goto eof;
 
   g_mutex_lock (&watch->mutex);
   do {
@@ -2914,8 +2926,8 @@ gst_rtsp_source_dispatch_write (GPollableInputStream * stream,
       g_slice_free (GstRTSPRec, rec);
     }
 
-    res = write_bytes (watch->conn->output_stream, watch->write_data,
-        &watch->write_off, watch->write_size, FALSE, watch->conn->cancellable);
+    res = write_bytes (conn->output_stream, watch->write_data,
+        &watch->write_off, watch->write_size, FALSE, conn->cancellable);
     g_mutex_unlock (&watch->mutex);
 
     if (res == GST_RTSP_EINTR)
