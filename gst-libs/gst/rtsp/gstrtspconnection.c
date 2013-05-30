@@ -109,8 +109,8 @@ struct _GstRTSPConnection
   GstRTSPUrl *url;
 
   GSocketClient *client;
-  GSocketConnection *connection0;
-  GSocketConnection *connection1;
+  GIOStream *stream0;
+  GIOStream *stream1;
 
   GInputStream *input_stream;
   GOutputStream *output_stream;
@@ -287,7 +287,7 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
   GstRTSPResult res;
   GError *err = NULL;
   gchar *local_ip;
-  GSocketConnection *connection;
+  GIOStream *stream;
 
   g_return_val_if_fail (G_IS_SOCKET (socket), GST_RTSP_EINVAL);
   g_return_val_if_fail (ip != NULL, GST_RTSP_EINVAL);
@@ -305,16 +305,14 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
   GST_RTSP_CHECK (gst_rtsp_connection_create (url, &newconn), newconn_failed);
   gst_rtsp_url_free (url);
 
-  connection = g_socket_connection_factory_create_connection (socket);
+  stream = G_IO_STREAM (g_socket_connection_factory_create_connection (socket));
 
   /* both read and write initially */
-  newconn->socket0 = g_object_ref (socket);
-  newconn->connection0 = connection;
+  newconn->socket0 = socket;
+  newconn->stream0 = stream;
   newconn->write_socket = newconn->read_socket = newconn->socket0;
-  newconn->input_stream =
-      g_io_stream_get_input_stream (G_IO_STREAM (connection));
-  newconn->output_stream =
-      g_io_stream_get_output_stream (G_IO_STREAM (connection));
+  newconn->input_stream = g_io_stream_get_input_stream (stream);
+  newconn->output_stream = g_io_stream_get_output_stream (stream);
   newconn->remote_ip = g_strdup (ip);
   newconn->local_ip = local_ip;
   newconn->initial_buffer = g_strdup (initial_buffer);
@@ -485,11 +483,10 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri)
     goto remote_address_failed;
 
   /* this is now our writing socket */
-  conn->connection1 = connection;
-  conn->socket1 = g_object_ref (socket);
+  conn->stream1 = G_IO_STREAM (connection);
+  conn->socket1 = socket;
   conn->write_socket = conn->socket1;
-  conn->output_stream =
-      g_io_stream_get_output_stream (G_IO_STREAM (connection));
+  conn->output_stream = g_io_stream_get_output_stream (conn->stream1);
 
   /* create the POST request for the write connection */
   GST_RTSP_CHECK (gst_rtsp_message_new_request (&msg, GST_RTSP_POST, uri),
@@ -589,7 +586,7 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (conn->url != NULL, GST_RTSP_EINVAL);
-  g_return_val_if_fail (conn->connection0 == NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (conn->stream0 == NULL, GST_RTSP_EINVAL);
 
   to = timeout ? GST_TIMEVAL_TO_TIME (*timeout) : 0;
   g_socket_client_set_timeout (conn->client,
@@ -618,14 +615,13 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
 
   g_free (conn->remote_ip);
   conn->remote_ip = remote_ip;
-  conn->connection0 = connection;
-  conn->socket0 = g_object_ref (socket);
+  conn->stream0 = G_IO_STREAM (connection);
+  conn->socket0 = socket;
   /* this is our read socket */
   conn->read_socket = conn->socket0;
   conn->write_socket = conn->socket0;
-  conn->input_stream = g_io_stream_get_input_stream (G_IO_STREAM (connection));
-  conn->output_stream =
-      g_io_stream_get_output_stream (G_IO_STREAM (connection));
+  conn->input_stream = g_io_stream_get_input_stream (conn->stream0);
+  conn->output_stream = g_io_stream_get_output_stream (conn->stream0);
 
   if (conn->tunneled) {
     res = setup_tunneling (conn, timeout, uri);
@@ -1967,21 +1963,15 @@ gst_rtsp_connection_close (GstRTSPConnection * conn)
 
   /* last unref closes the connection we don't want to explicitly close here
    * because these sockets might have been provided at construction */
-  if (conn->socket0) {
-    g_object_unref (conn->socket0);
+  if (conn->stream0) {
+    g_object_unref (conn->stream0);
+    conn->stream0 = NULL;
     conn->socket0 = NULL;
   }
-  if (conn->socket1) {
-    g_object_unref (conn->socket1);
+  if (conn->stream1) {
+    g_object_unref (conn->stream1);
+    conn->stream1 = NULL;
     conn->socket1 = NULL;
-  }
-  if (conn->connection0) {
-    g_object_unref (conn->connection0);
-    conn->connection0 = NULL;
-  }
-  if (conn->connection1) {
-    g_object_unref (conn->connection1);
-    conn->connection1 = NULL;
   }
 
   g_free (conn->remote_ip);
@@ -2639,14 +2629,14 @@ gst_rtsp_connection_do_tunnel (GstRTSPConnection * conn,
     /* both connections have socket0 as the read/write socket. start by taking the
      * socket from conn2 and set it as the socket in conn */
     conn->socket1 = conn2->socket0;
-    conn->connection1 = conn2->connection0;
+    conn->stream1 = conn2->stream0;
     conn->input_stream = conn2->input_stream;
 
     /* clean up some of the state of conn2 */
     g_cancellable_cancel (conn2->cancellable);
     conn2->write_socket = conn2->read_socket = NULL;
     conn2->socket0 = NULL;
-    conn2->connection0 = NULL;
+    conn2->stream0 = NULL;
     conn2->input_stream = NULL;
     conn2->output_stream = NULL;
     g_cancellable_reset (conn2->cancellable);
