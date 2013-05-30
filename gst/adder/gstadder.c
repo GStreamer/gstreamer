@@ -219,7 +219,7 @@ static GstCaps *
 gst_adder_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstAdder *adder;
-  GstCaps *result, *peercaps, *sinkcaps, *filter_caps;
+  GstCaps *result, *peercaps, *current_caps, *filter_caps;
 
   adder = GST_ADDER (GST_PAD_PARENT (pad));
 
@@ -246,33 +246,37 @@ gst_adder_sink_getcaps (GstPad * pad, GstCaps * filter)
   peercaps = gst_pad_peer_query_caps (adder->srcpad, filter_caps);
 
   /* get the allowed caps on this sinkpad */
-  sinkcaps = gst_pad_get_current_caps (pad);
-  if (sinkcaps == NULL) {
-    sinkcaps = gst_pad_get_pad_template_caps (pad);
-    if (!sinkcaps)
-      sinkcaps = gst_caps_new_any ();
+  GST_OBJECT_LOCK (adder);
+  current_caps =
+      adder->current_caps ? gst_caps_ref (adder->current_caps) : NULL;
+  if (current_caps == NULL) {
+    current_caps = gst_pad_get_pad_template_caps (pad);
+    if (!current_caps)
+      current_caps = gst_caps_new_any ();
   }
+  GST_OBJECT_UNLOCK (adder);
 
   if (peercaps) {
     /* if the peer has caps, intersect */
-    GST_DEBUG_OBJECT (adder, "intersecting peer and template caps");
+    GST_DEBUG_OBJECT (adder, "intersecting peer and our caps");
     result =
-        gst_caps_intersect_full (peercaps, sinkcaps, GST_CAPS_INTERSECT_FIRST);
+        gst_caps_intersect_full (peercaps, current_caps,
+        GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
-    gst_caps_unref (sinkcaps);
+    gst_caps_unref (current_caps);
   } else {
     /* the peer has no caps (or there is no peer), just use the allowed caps
      * of this sinkpad. */
     /* restrict with filter-caps if any */
     if (filter_caps) {
-      GST_DEBUG_OBJECT (adder, "no peer caps, using filtered sinkcaps");
+      GST_DEBUG_OBJECT (adder, "no peer caps, using filtered caps");
       result =
-          gst_caps_intersect_full (filter_caps, sinkcaps,
+          gst_caps_intersect_full (filter_caps, current_caps,
           GST_CAPS_INTERSECT_FIRST);
-      gst_caps_unref (sinkcaps);
+      gst_caps_unref (current_caps);
     } else {
-      GST_DEBUG_OBJECT (adder, "no peer caps, using sinkcaps");
-      result = sinkcaps;
+      GST_DEBUG_OBJECT (adder, "no peer caps, using our caps");
+      result = current_caps;
     }
   }
 
@@ -311,41 +315,12 @@ gst_adder_sink_query (GstCollectPads * pads, GstCollectData * pad,
   return res;
 }
 
-typedef struct
-{
-  GstPad *pad;
-  GstCaps *caps;
-} IterData;
-
-static void
-setcapsfunc (const GValue * item, IterData * data)
-{
-  GstPad *otherpad = g_value_get_object (item);
-
-  if (otherpad != data->pad) {
-    GST_LOG_OBJECT (data->pad, "calling set_caps with %" GST_PTR_FORMAT,
-        data->caps);
-    gst_pad_set_caps (data->pad, data->caps);
-    gst_pad_use_fixed_caps (data->pad);
-  }
-}
-
 /* the first caps we receive on any of the sinkpads will define the caps for all
  * the other sinkpads because we can only mix streams with the same caps.
  */
 static gboolean
 gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
 {
-  GstIterator *it;
-  GstIteratorResult ires;
-  IterData idata;
-  gboolean done;
-
-  /* this gets called recursively due to gst_iterator_foreach calling
-   * gst_pad_set_caps() */
-  if (adder->in_setcaps)
-    return TRUE;
-
   /* don't allow reconfiguration for now; there's still a race between the
    * different upstream threads doing query_caps + accept_caps + sending
    * (possibly different) CAPS events, but there's not much we can do about
@@ -365,33 +340,10 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
 
   GST_INFO_OBJECT (pad, "setting caps to %" GST_PTR_FORMAT, caps);
 
+  GST_OBJECT_LOCK (adder);
   adder->current_caps = gst_caps_ref (caps);
+  GST_OBJECT_UNLOCK (adder);
   /* send caps event later, after stream-start event */
-
-  it = gst_element_iterate_pads (GST_ELEMENT_CAST (adder));
-
-  /* FIXME, see if the other pads can accept the format. Also lock the
-   * format on the other pads to this new format. */
-  idata.caps = caps;
-  idata.pad = pad;
-
-  adder->in_setcaps = TRUE;
-  done = FALSE;
-  while (!done) {
-    ires = gst_iterator_foreach (it, (GstIteratorForeachFunction) setcapsfunc,
-        &idata);
-
-    switch (ires) {
-      case GST_ITERATOR_RESYNC:
-        gst_iterator_resync (it);
-        break;
-      default:
-        done = TRUE;
-        break;
-    }
-  }
-  adder->in_setcaps = FALSE;
-  gst_iterator_free (it);
 
   GST_INFO_OBJECT (pad, "handle caps change to %" GST_PTR_FORMAT, caps);
 
