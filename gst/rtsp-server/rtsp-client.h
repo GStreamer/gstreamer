@@ -138,6 +138,8 @@ void                  gst_rtsp_client_set_auth          (GstRTSPClient *client, 
 GstRTSPAuth *         gst_rtsp_client_get_auth          (GstRTSPClient *client);
 
 GstRTSPUrl *          gst_rtsp_client_get_uri           (GstRTSPClient *client);
+
+gboolean              gst_rtsp_client_set_connection    (GstRTSPClient *client, GstRTSPConnection *conn);
 GstRTSPConnection *   gst_rtsp_client_get_connection    (GstRTSPClient *client);
 
 void                  gst_rtsp_client_set_send_func     (GstRTSPClient *client,
@@ -146,18 +148,6 @@ void                  gst_rtsp_client_set_send_func     (GstRTSPClient *client,
                                                          GDestroyNotify notify);
 GstRTSPResult         gst_rtsp_client_handle_message    (GstRTSPClient *client,
                                                          GstRTSPMessage *message);
-
-gboolean              gst_rtsp_client_accept            (GstRTSPClient *client,
-                                                         GSocket *socket,
-                                                         GCancellable *cancellable,
-                                                         GError **error);
-
-gboolean              gst_rtsp_client_use_socket        (GstRTSPClient * client,
-                                                         GSocket *socket,
-                                                         const gchar * ip,
-                                                         gint port,
-                                                         const gchar *initial_buffer,
-                                                         GError **error);
 
 guint                 gst_rtsp_client_attach            (GstRTSPClient *client,
                                                          GMainContext *context);

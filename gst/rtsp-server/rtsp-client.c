@@ -2055,6 +2055,71 @@ gst_rtsp_client_get_uri (GstRTSPClient * client)
 }
 
 /**
+ * gst_rtsp_client_set_connection:
+ * @client: a #GstRTSPClient
+ * @conn: (transfer full): a #GstRTSPConnection
+ *
+ * Set the #GstRTSPConnection of @client. This function takes ownership of
+ * @conn.
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_rtsp_client_set_connection (GstRTSPClient * client,
+    GstRTSPConnection * conn)
+{
+  GstRTSPClientPrivate *priv;
+  GSocket *read_socket;
+  GSocketAddress *address;
+  GstRTSPUrl *url;
+  GError *error = NULL;
+
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), FALSE);
+  g_return_val_if_fail (conn != NULL, FALSE);
+
+  priv = client->priv;
+
+  read_socket = gst_rtsp_connection_get_read_socket (conn);
+
+  if (!(address = g_socket_get_remote_address (read_socket, &error)))
+    goto no_address;
+
+  g_free (priv->server_ip);
+  /* keep the original ip that the client connected to */
+  if (G_IS_INET_SOCKET_ADDRESS (address)) {
+    GInetAddress *iaddr;
+
+    iaddr = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (address));
+
+    /* socket might be ipv6 but adress still ipv4 */
+    priv->is_ipv6 = g_inet_address_get_family (iaddr) == G_SOCKET_FAMILY_IPV6;
+    priv->server_ip = g_inet_address_to_string (iaddr);
+    g_object_unref (address);
+  } else {
+    priv->is_ipv6 = g_socket_get_family (read_socket) == G_SOCKET_FAMILY_IPV6;
+    priv->server_ip = g_strdup ("unknown");
+  }
+
+  GST_INFO ("client %p connected to server ip %s, ipv6 = %d", client,
+      priv->server_ip, priv->is_ipv6);
+
+  url = gst_rtsp_connection_get_url (conn);
+  GST_INFO ("added new client %p ip %s:%d", client, url->host, url->port);
+
+  priv->connection = conn;
+
+  return TRUE;
+
+  /* ERRORS */
+no_address:
+  {
+    GST_ERROR ("could not get remote address %s", error->message);
+    g_error_free (error);
+    return FALSE;
+  }
+}
+
+/**
  * gst_rtsp_client_get_connection:
  * @client: a #GstRTSPClient
  *
@@ -2377,134 +2442,6 @@ client_watch_notify (GstRTSPClient * client)
   priv->watch = NULL;
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_CLOSED], 0, NULL);
   g_object_unref (client);
-}
-
-static gboolean
-setup_client (GstRTSPClient * client, GSocket * socket,
-    GstRTSPConnection * conn, GError ** error)
-{
-  GstRTSPClientPrivate *priv = client->priv;
-  GSocket *read_socket;
-  GSocketAddress *address;
-  GstRTSPUrl *url;
-
-  read_socket = gst_rtsp_connection_get_read_socket (conn);
-
-  if (!(address = g_socket_get_remote_address (read_socket, error)))
-    goto no_address;
-
-  g_free (priv->server_ip);
-  /* keep the original ip that the client connected to */
-  if (G_IS_INET_SOCKET_ADDRESS (address)) {
-    GInetAddress *iaddr;
-
-    iaddr = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (address));
-
-    /* socket might be ipv6 but adress still ipv4 */
-    priv->is_ipv6 = g_inet_address_get_family (iaddr) == G_SOCKET_FAMILY_IPV6;
-    priv->server_ip = g_inet_address_to_string (iaddr);
-    g_object_unref (address);
-  } else {
-    priv->is_ipv6 = g_socket_get_family (socket) == G_SOCKET_FAMILY_IPV6;
-    priv->server_ip = g_strdup ("unknown");
-  }
-
-  GST_INFO ("client %p connected to server ip %s, ipv6 = %d", client,
-      priv->server_ip, priv->is_ipv6);
-
-  url = gst_rtsp_connection_get_url (conn);
-  GST_INFO ("added new client %p ip %s:%d", client, url->host, url->port);
-
-  priv->connection = conn;
-
-  return TRUE;
-
-  /* ERRORS */
-no_address:
-  {
-    GST_ERROR ("could not get remote address %s", (*error)->message);
-    return FALSE;
-  }
-}
-
-/**
- * gst_rtsp_client_use_socket:
- * @client: a #GstRTSPClient
- * @socket: a #GSocket
- * @ip: the IP address of the remote client
- * @port: the port used by the other end
- * @initial_buffer: any zero terminated initial data that was already read from
- *     the socket
- * @error: a #GError
- *
- * Take an existing network socket and use it for an RTSP connection.
- *
- * Returns: %TRUE on success.
- */
-gboolean
-gst_rtsp_client_use_socket (GstRTSPClient * client, GSocket * socket,
-    const gchar * ip, gint port, const gchar * initial_buffer, GError ** error)
-{
-  GstRTSPConnection *conn;
-  GstRTSPResult res;
-
-  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), FALSE);
-  g_return_val_if_fail (G_IS_SOCKET (socket), FALSE);
-
-  GST_RTSP_CHECK (gst_rtsp_connection_create_from_socket (socket, ip, port,
-          initial_buffer, &conn), no_connection);
-
-  return setup_client (client, socket, conn, error);
-
-  /* ERRORS */
-no_connection:
-  {
-    gchar *str = gst_rtsp_strresult (res);
-
-    GST_ERROR ("could not create connection from socket %p: %s", socket, str);
-    g_free (str);
-    return FALSE;
-  }
-}
-
-/**
- * gst_rtsp_client_accept:
- * @client: a #GstRTSPClient
- * @socket: a #GSocket
- * @context: the context to run in
- * @cancellable: a #GCancellable
- * @error: a #GError
- *
- * Accept a new connection for @client on @socket.
- *
- * Returns: %TRUE if the client could be accepted.
- */
-gboolean
-gst_rtsp_client_accept (GstRTSPClient * client, GSocket * socket,
-    GCancellable * cancellable, GError ** error)
-{
-  GstRTSPConnection *conn;
-  GstRTSPResult res;
-
-  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), FALSE);
-  g_return_val_if_fail (G_IS_SOCKET (socket), FALSE);
-
-  /* a new client connected. */
-  GST_RTSP_CHECK (gst_rtsp_connection_accept (socket, &conn, cancellable),
-      accept_failed);
-
-  return setup_client (client, socket, conn, error);
-
-  /* ERRORS */
-accept_failed:
-  {
-    gchar *str = gst_rtsp_strresult (res);
-    *error = g_error_new (GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        "Could not accept client on server socket %p: %s", socket, str);
-    GST_ERROR ("Could not accept client on server socket %p: %s", socket, str);
-    g_free (str);
-    return FALSE;
-  }
 }
 
 /**
