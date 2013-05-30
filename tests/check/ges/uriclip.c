@@ -125,7 +125,7 @@ GST_START_TEST (test_filesource_properties)
 
   ges_init ();
 
-  track = ges_track_new (GES_TRACK_TYPE_AUDIO, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_AUDIO, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
 
   layer = ges_layer_new ();
