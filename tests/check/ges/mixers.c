@@ -137,6 +137,62 @@ done:
 
 GST_END_TEST;
 
+GST_START_TEST (audio_video_mixed_with_pipeline)
+{
+  GstBus *bus;
+  GESAsset *asset;
+  GESClip *tmpclip;
+  GstMessage *message;
+  GESLayer *layer, *layer1;
+  GESTrack *track = GES_TRACK (ges_video_track_new ());
+  GESTrack *track_audio = GES_TRACK (ges_audio_track_new ());
+  GESTimeline *timeline = ges_timeline_new ();
+  GESTimelinePipeline *pipeline = ges_test_create_pipeline (timeline);
+
+  ges_timeline_add_track (timeline, track);
+  ges_timeline_add_track (timeline, track_audio);
+  layer = ges_timeline_append_layer (timeline);
+  layer1 = ges_timeline_append_layer (timeline);
+
+  asset = GES_ASSET (ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL));
+
+  tmpclip =
+      ges_layer_add_asset (layer, asset, 0 * GST_SECOND, 0, 2 * GST_SECOND,
+      GES_TRACK_TYPE_UNKNOWN);
+
+  ges_test_clip_set_vpattern (GES_TEST_CLIP (tmpclip), 18);
+
+  tmpclip =
+      ges_layer_add_asset (layer1, asset, 1 * GST_SECOND, 0, 5 * GST_SECOND,
+      GES_TRACK_TYPE_UNKNOWN);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  main_loop = g_main_loop_new (NULL, FALSE);
+
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+  g_signal_connect (bus, "message", (GCallback) message_received_cb, pipeline);
+  fail_if (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING)
+      == GST_STATE_CHANGE_FAILURE);
+
+  message = gst_bus_timed_pop_filtered (bus, 5 * GST_SECOND,
+      GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR);
+
+  if (message == NULL) {
+    fail_unless ("No message after 5 seconds" == NULL);
+    goto done;
+  } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR)
+    fail_error_message (message);
+
+  GST_INFO ("running main loop");
+  g_main_loop_run (main_loop);
+  g_main_loop_unref (main_loop);
+
+done:
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
 
 static Suite *
 ges_suite (void)
@@ -148,6 +204,7 @@ ges_suite (void)
 
   tcase_add_test (tc_chain, simple_smart_adder_test);
   tcase_add_test (tc_chain, simple_audio_mixed_with_pipeline);
+  tcase_add_test (tc_chain, audio_video_mixed_with_pipeline);
 
   return s;
 }
