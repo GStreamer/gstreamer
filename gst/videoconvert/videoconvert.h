@@ -48,6 +48,7 @@ struct _VideoConvert {
 
   guint lines;
 
+  guint n_tmplines;
   gpointer *tmplines;
   guint16 *errline;
 

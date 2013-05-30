@@ -90,7 +90,7 @@ videoconvert_convert_free (VideoConvert * convert)
 {
   gint i;
 
-  for (i = 0; i < convert->lines; i++)
+  for (i = 0; i < convert->n_tmplines; i++)
     g_free (convert->tmplines[i]);
   g_free (convert->tmplines);
   g_free (convert->errline);
@@ -418,6 +418,7 @@ videoconvert_convert_compute_resample (VideoConvert * convert)
 
   lines = MAX (convert->down_n_lines, convert->up_n_lines);
 
+  convert->n_tmplines = lines;
   convert->tmplines = g_malloc (lines * sizeof (gpointer));
   for (i = 0; i < lines; i++)
     convert->tmplines[i] = g_malloc (sizeof (guint16) * (width + 8) * 4);
