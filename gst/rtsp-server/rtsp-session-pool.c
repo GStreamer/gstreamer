@@ -519,11 +519,8 @@ collect_timeout (gchar * sessionid, GstRTSPSession * sess, GstPoolSource * psrc)
 {
   gint timeout;
   GTimeVal now;
-  gint64 tmp;
 
-  tmp = g_source_get_time ((GSource *) psrc);
-  now.tv_sec = tmp / G_USEC_PER_SEC;
-  now.tv_usec = tmp % G_USEC_PER_SEC;
+  g_get_current_time (&now);
 
   timeout = gst_rtsp_session_next_timeout (sess, &now);
   GST_INFO ("%p: next timeout: %d", sess, timeout);
