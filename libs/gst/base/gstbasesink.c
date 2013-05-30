@@ -4247,38 +4247,6 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
   rate = segment->rate * segment->applied_rate;
   latency = basesink->priv->latency;
 
-  if (oformat == GST_FORMAT_TIME) {
-    gint64 start, stop;
-
-    start = basesink->priv->current_sstart;
-    stop = basesink->priv->current_sstop;
-
-    if (in_paused) {
-      /* in paused we use the last position as a lower bound */
-      if (stop == -1 || segment->rate > 0.0)
-        last = start;
-      else
-        last = stop;
-
-      GST_DEBUG_OBJECT (basesink, "in PAUSED using last %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (last));
-    } else {
-      /* in playing, use last stop time as upper bound */
-      if (start == -1 || segment->rate > 0.0)
-        last = stop;
-      else
-        last = start;
-
-      GST_DEBUG_OBJECT (basesink, "in PLAYING using last %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (last));
-    }
-  } else {
-    /* convert last stop to stream time */
-    last = gst_segment_to_stream_time (segment, oformat, segment->position);
-
-    GST_DEBUG_OBJECT (basesink, "in using last %" G_GINT64_FORMAT, last);
-  }
-
   if (in_paused) {
     /* in paused, use start_time */
     base_time = GST_ELEMENT_START_TIME (basesink);
@@ -4299,6 +4267,39 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
    * time */
   if (base_time == -1)
     last_seen = TRUE;
+
+  if (oformat == GST_FORMAT_TIME) {
+    gint64 start, stop;
+
+    start = basesink->priv->current_sstart;
+    stop = basesink->priv->current_sstop;
+
+    if (in_paused || last_seen) {
+      /* in paused or when we don't use the clock, we use the last position
+       * as a lower bound */
+      if (stop == -1 || segment->rate > 0.0)
+        last = start;
+      else
+        last = stop;
+
+      GST_DEBUG_OBJECT (basesink, "in PAUSED using last %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (last));
+    } else {
+      /* in playing, use last stop time as upper bound */
+      if (start == -1 || segment->rate > 0.0)
+        last = stop;
+      else
+        last = start;
+
+      GST_DEBUG_OBJECT (basesink, "in PLAYING using last %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (last));
+    }
+  } else {
+    /* convert position to stream time */
+    last = gst_segment_to_stream_time (segment, oformat, segment->position);
+
+    GST_DEBUG_OBJECT (basesink, "in using last %" G_GINT64_FORMAT, last);
+  }
 
   /* need to release the object lock before we can get the time,
    * a clock might take the LOCK of the provider, which could be
