@@ -49,8 +49,24 @@
 #include <string.h>             /* strcmp */
 #include "gstadderorc.h"
 
+#define GST_CAT_DEFAULT gst_adder_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+
 #define DEFAULT_PAD_VOLUME (1.0)
 #define DEFAULT_PAD_MUTE (FALSE)
+
+/* some defines for audio processing */
+/* the volume factor is a range from 0.0 to (arbitrary) VOLUME_MAX_DOUBLE = 10.0
+ * we map 1.0 to VOLUME_UNITY_INT*
+ */
+#define VOLUME_UNITY_INT8            8  /* internal int for unity 2^(8-5) */
+#define VOLUME_UNITY_INT8_BIT_SHIFT  3  /* number of bits to shift for unity */
+#define VOLUME_UNITY_INT16           2048       /* internal int for unity 2^(16-5) */
+#define VOLUME_UNITY_INT16_BIT_SHIFT 11 /* number of bits to shift for unity */
+#define VOLUME_UNITY_INT24           524288     /* internal int for unity 2^(24-5) */
+#define VOLUME_UNITY_INT24_BIT_SHIFT 19 /* number of bits to shift for unity */
+#define VOLUME_UNITY_INT32           134217728  /* internal int for unity 2^(32-5) */
+#define VOLUME_UNITY_INT32_BIT_SHIFT 27
 
 enum
 {
@@ -90,6 +106,9 @@ gst_adder_pad_set_property (GObject * object, guint prop_id,
     case PROP_PAD_VOLUME:
       GST_OBJECT_LOCK (pad);
       pad->volume = g_value_get_double (value);
+      pad->volume_i8 = pad->volume * VOLUME_UNITY_INT8;
+      pad->volume_i16 = pad->volume * VOLUME_UNITY_INT16;
+      pad->volume_i32 = pad->volume * VOLUME_UNITY_INT32;
       GST_OBJECT_UNLOCK (pad);
       break;
     case PROP_PAD_MUTE:
@@ -133,9 +152,6 @@ enum
   PROP_0,
   PROP_FILTER_CAPS
 };
-
-#define GST_CAT_DEFAULT gst_adder_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 /* elementfactory information */
 
@@ -1274,10 +1290,12 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     if (GST_CLOCK_TIME_IS_VALID (stream_time))
       gst_object_sync_values (GST_OBJECT (pad), stream_time);
 
+    GST_OBJECT_LOCK (pad);
     if (pad->mute || pad->volume < G_MINDOUBLE) {
       had_mute = TRUE;
       GST_DEBUG_OBJECT (adder, "channel %p: skipping muted pad", collect_data);
       gst_buffer_unref (inbuf);
+      GST_OBJECT_UNLOCK (pad);
       continue;
     }
 
@@ -1296,6 +1314,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
           gapbuf = inbuf;
         else
           gst_buffer_unref (inbuf);
+        GST_OBJECT_UNLOCK (pad);
         continue;
       }
 
@@ -1307,6 +1326,46 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
        * only) GAP buffer, it will automatically copy the GAP flag. */
       outbuf = gst_buffer_make_writable (inbuf);
       gst_buffer_map (outbuf, &outmap, GST_MAP_READWRITE);
+
+      if (pad->volume != 1.0) {
+        switch (adder->info.finfo->format) {
+          case GST_AUDIO_FORMAT_U8:
+            adder_orc_volume_u8 ((gpointer) outmap.data, pad->volume_i8,
+                outmap.size / bps);
+            break;
+          case GST_AUDIO_FORMAT_S8:
+            adder_orc_volume_s8 ((gpointer) outmap.data, pad->volume_i8,
+                outmap.size / bps);
+            break;
+          case GST_AUDIO_FORMAT_U16:
+            adder_orc_volume_u16 ((gpointer) outmap.data, pad->volume_i16,
+                outmap.size / bps);
+            break;
+          case GST_AUDIO_FORMAT_S16:
+            adder_orc_volume_s16 ((gpointer) outmap.data, pad->volume_i16,
+                outmap.size / bps);
+            break;
+          case GST_AUDIO_FORMAT_U32:
+            adder_orc_volume_u32 ((gpointer) outmap.data, pad->volume_i32,
+                outmap.size / bps);
+            break;
+          case GST_AUDIO_FORMAT_S32:
+            adder_orc_volume_s32 ((gpointer) outmap.data, pad->volume_i32,
+                outmap.size / bps);
+            break;
+          case GST_AUDIO_FORMAT_F32:
+            adder_orc_volume_f32 ((gpointer) outmap.data, pad->volume,
+                outmap.size / bps);
+            break;
+          case GST_AUDIO_FORMAT_F64:
+            adder_orc_volume_f64 ((gpointer) outmap.data, pad->volume,
+                outmap.size / bps);
+            break;
+          default:
+            g_assert_not_reached ();
+            break;
+        }
+      }
     } else {
       if (!is_gap) {
         /* we had a previous output buffer, mix this non-GAP buffer */
@@ -1322,8 +1381,48 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
             " from data %p", collect_data, inmap.size, inmap.data);
 
         /* further buffers, need to add them */
-        adder->func ((gpointer) outmap.data, (gpointer) inmap.data,
-            inmap.size / bps);
+        if (pad->volume == 1.0) {
+          adder->func ((gpointer) outmap.data, (gpointer) inmap.data,
+              inmap.size / bps);
+        } else {
+          switch (adder->info.finfo->format) {
+            case GST_AUDIO_FORMAT_U8:
+              adder_orc_add_volume_u8 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, pad->volume_i8, inmap.size / bps);
+              break;
+            case GST_AUDIO_FORMAT_S8:
+              adder_orc_add_volume_s8 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, pad->volume_i8, inmap.size / bps);
+              break;
+            case GST_AUDIO_FORMAT_U16:
+              adder_orc_add_volume_u16 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, pad->volume_i16, inmap.size / bps);
+              break;
+            case GST_AUDIO_FORMAT_S16:
+              adder_orc_add_volume_s16 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, pad->volume_i16, inmap.size / bps);
+              break;
+            case GST_AUDIO_FORMAT_U32:
+              adder_orc_add_volume_u32 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, pad->volume_i32, inmap.size / bps);
+              break;
+            case GST_AUDIO_FORMAT_S32:
+              adder_orc_add_volume_s32 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, pad->volume_i32, inmap.size / bps);
+              break;
+            case GST_AUDIO_FORMAT_F32:
+              adder_orc_add_volume_f32 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, pad->volume, inmap.size / bps);
+              break;
+            case GST_AUDIO_FORMAT_F64:
+              adder_orc_add_volume_f64 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, pad->volume, inmap.size / bps);
+              break;
+            default:
+              g_assert_not_reached ();
+              break;
+          }
+        }
         gst_buffer_unmap (inbuf, &inmap);
       } else {
         /* skip gap buffer */
@@ -1331,6 +1430,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
       }
       gst_buffer_unref (inbuf);
     }
+    GST_OBJECT_UNLOCK (pad);
   }
   if (outbuf)
     gst_buffer_unmap (outbuf, &outmap);

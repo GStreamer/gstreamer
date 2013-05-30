@@ -104,6 +104,9 @@ struct _GstAdderPad {
   GstPad parent;
 
   gdouble volume;
+  gint volume_i32;
+  gint volume_i16;
+  gint volume_i8;
   gboolean mute;
 };
 
