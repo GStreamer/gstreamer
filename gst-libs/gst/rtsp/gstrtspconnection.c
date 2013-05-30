@@ -3064,24 +3064,28 @@ gst_rtsp_watch_reset (GstRTSPWatch * watch)
   if (watch->writesrc)
     g_source_remove_child_source ((GSource *) watch, watch->writesrc);
 
-  watch->readsrc =
-      g_pollable_input_stream_create_source (G_POLLABLE_INPUT_STREAM
-      (watch->conn->input_stream), NULL);
-  g_source_set_callback (watch->readsrc,
-      (GSourceFunc) gst_rtsp_source_dispatch_read, watch, NULL);
-  watch->writesrc =
-      g_pollable_output_stream_create_source (G_POLLABLE_OUTPUT_STREAM
-      (watch->conn->output_stream), NULL);
-  g_source_set_callback (watch->writesrc,
-      (GSourceFunc) gst_rtsp_source_dispatch_write, watch, NULL);
-
-  if (watch->readsrc) {
+  if (watch->conn->input_stream) {
+    watch->readsrc =
+        g_pollable_input_stream_create_source (G_POLLABLE_INPUT_STREAM
+        (watch->conn->input_stream), NULL);
+    g_source_set_callback (watch->readsrc,
+        (GSourceFunc) gst_rtsp_source_dispatch_read, watch, NULL);
     g_source_add_child_source ((GSource *) watch, watch->readsrc);
     g_source_unref (watch->readsrc);
+  } else {
+    watch->readsrc = NULL;
   }
-  if (watch->writesrc) {
+
+  if (watch->conn->output_stream) {
+    watch->writesrc =
+        g_pollable_output_stream_create_source (G_POLLABLE_OUTPUT_STREAM
+        (watch->conn->output_stream), NULL);
+    g_source_set_callback (watch->writesrc,
+        (GSourceFunc) gst_rtsp_source_dispatch_write, watch, NULL);
     g_source_add_child_source ((GSource *) watch, watch->writesrc);
     g_source_unref (watch->writesrc);
+  } else {
+    watch->writesrc = NULL;
   }
 }
 
