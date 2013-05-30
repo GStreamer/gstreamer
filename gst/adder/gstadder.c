@@ -1454,6 +1454,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
       gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
       gst_audio_format_fill_silence (adder->info.finfo, map.data, outsize);
       gst_buffer_unmap (outbuf, &map);
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
     } else {
       /* assume EOS otherwise, this should not happen, really */
       goto eos;
