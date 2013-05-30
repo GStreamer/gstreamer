@@ -1318,7 +1318,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
        * are the only one referencing this buffer. If this is the last (and
        * only) GAP buffer, it will automatically copy the GAP flag. */
       outbuf = gst_buffer_make_writable (inbuf);
-      gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
+      gst_buffer_map (outbuf, &outmap, GST_MAP_READWRITE);
     } else {
       if (!is_gap) {
         /* we had a previous output buffer, mix this non-GAP buffer */
