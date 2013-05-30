@@ -312,7 +312,7 @@ gst_vaapi_surface_set_parent_context(
 {
     g_return_if_fail(surface != NULL);
 
-    gst_vaapi_object_replace(&surface->parent_context, context);
+    surface->parent_context = NULL;
 }
 
 /**
