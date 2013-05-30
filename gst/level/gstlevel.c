@@ -354,11 +354,11 @@ gst_level_get_property (GObject * object, guint prop_id,
  *
  * caller must assure num is a multiple of channels
  * samples for multiple channels are interleaved
- * input sample data enters in *in_data as 8 or 16 bit data
+ * input sample data enters in *in_data and is not modified
  * this filter only accepts signed audio data, so mid level is always 0
  *
- * for 16 bit, this code considers the non-existant 32768 value to be
- * full-scale; so 32767 will not map to 1.0
+ * for integers, this code considers the non-existant positive max value to be
+ * full-scale; so max-1 will not map to 1.0
  */
 
 #define DEFINE_INT_LEVEL_CALCULATOR(TYPE, RESOLUTION)                         \
@@ -368,13 +368,13 @@ gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
 {                                                                             \
   TYPE * in = (TYPE *)data;                                                   \
   register guint j;                                                           \
-  gdouble squaresum = 0.0;           /* square sum of the integer samples */  \
+  gdouble squaresum = 0.0;           /* square sum of the input samples */    \
   register gdouble square = 0.0;     /* Square */                             \
   register gdouble peaksquare = 0.0; /* Peak Square Sample */                 \
   gdouble normalizer;                /* divisor to get a [-1.0, 1.0] range */ \
                                                                               \
   /* *NCS = 0.0; Normalized Cumulative Square */                              \
-  /* *NPS = 0.0; Normalized Peask Square */                                   \
+  /* *NPS = 0.0; Normalized Peak Square */                                    \
                                                                               \
   for (j = 0; j < num; j += channels) {                                       \
     square = ((gdouble) in[j]) * in[j];                                       \
@@ -399,12 +399,12 @@ gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
 {                                                                             \
   TYPE * in = (TYPE *)data;                                                   \
   register guint j;                                                           \
-  gdouble squaresum = 0.0;           /* square sum of the integer samples */  \
+  gdouble squaresum = 0.0;           /* square sum of the input samples */    \
   register gdouble square = 0.0;     /* Square */                             \
   register gdouble peaksquare = 0.0; /* Peak Square Sample */                 \
                                                                               \
   /* *NCS = 0.0; Normalized Cumulative Square */                              \
-  /* *NPS = 0.0; Normalized Peask Square */                                   \
+  /* *NPS = 0.0; Normalized Peak Square */                                    \
                                                                               \
   /* orc_level_squaresum_f64(&squaresum,in,num); */                           \
   for (j = 0; j < num; j += channels) {                                       \
@@ -621,16 +621,13 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
     block_size = MIN (block_size, num_frames);
     block_int_size = block_size * channels;
 
-    GST_LOG_OBJECT (filter, "run inner loop for %u sample frames",
-        block_int_size);
-
     for (i = 0; i < channels; ++i) {
       if (!GST_BUFFER_FLAG_IS_SET (in, GST_BUFFER_FLAG_GAP)) {
         filter->process (in_data, block_int_size, channels, &CS,
             &filter->peak[i]);
         GST_LOG_OBJECT (filter,
-            "channel %d, cumulative sum %f, over %d samples/%d channels", i, CS,
-            block_int_size, channels);
+            "[%d]: cumulative squares %lf, over %d samples/%d channels",
+            i, CS, block_int_size, channels);
         filter->CS[i] += CS;
       } else {
         filter->peak[i] = 0.0;
@@ -702,12 +699,12 @@ static void
 gst_level_post_message (GstLevel * filter)
 {
   guint i;
-  gint channels, rate;
+  gint channels, rate, frames = filter->num_frames;
   GstClockTime duration;
 
   channels = GST_AUDIO_INFO_CHANNELS (&filter->info);
   rate = GST_AUDIO_INFO_RATE (&filter->info);
-  duration = GST_FRAMES_TO_CLOCK_TIME (filter->interval_frames, rate);
+  duration = GST_FRAMES_TO_CLOCK_TIME (frames, rate);
 
   if (filter->post_messages) {
     GstMessage *m =
@@ -716,16 +713,15 @@ gst_level_post_message (GstLevel * filter)
     GST_LOG_OBJECT (filter,
         "message: ts %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
         ", num_frames %d", GST_TIME_ARGS (filter->message_ts),
-        GST_TIME_ARGS (duration), filter->num_frames);
+        GST_TIME_ARGS (duration), frames);
 
     for (i = 0; i < channels; ++i) {
       gdouble RMS;
       gdouble RMSdB, peakdB, decaydB;
 
-      RMS = sqrt (filter->CS[i] / filter->num_frames);
+      RMS = sqrt (filter->CS[i] / frames);
       GST_LOG_OBJECT (filter,
-          "message: channel %d, CS %f, num_frames %d, RMS %f",
-          i, filter->CS[i], filter->num_frames, RMS);
+          "message: channel %d, CS %f, RMS %f", i, filter->CS[i], RMS);
       GST_LOG_OBJECT (filter,
           "message: last_peak: %f, decay_peak: %f",
           filter->last_peak[i], filter->decay_peak[i]);
@@ -757,7 +753,7 @@ gst_level_post_message (GstLevel * filter)
     gst_element_post_message (GST_ELEMENT (filter), m);
 
   }
-  filter->num_frames -= filter->interval_frames;
+  filter->num_frames -= frames;
   filter->message_ts += duration;
 }
 
