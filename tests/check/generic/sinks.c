@@ -1114,14 +1114,16 @@ GST_START_TEST (test_async_done)
 
   /* join the thread. At this point we know the sink processed the last buffer
    * and the position should now be 210 seconds; the time of the last buffer we
-   * pushed */
+   * pushed. The element has no clock or base-time so it only reports the
+   * last seen timestamp of the buffer, it does not know how much of the buffer
+   * is consumed. */
   GST_DEBUG ("joining thread");
   g_thread_join (thread);
 
   gst_element_query_position (sink, GST_FORMAT_TIME, &position);
   GST_DEBUG ("last buffer position %" GST_TIME_FORMAT,
       GST_TIME_ARGS (position));
-  fail_unless (position == 310 * GST_SECOND, "position is wrong");
+  fail_unless (position == 210 * GST_SECOND, "position is wrong");
 
   gst_object_unref (sinkpad);
 
