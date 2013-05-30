@@ -64,7 +64,6 @@ struct _GstAdder {
   /* sink event handling */
   GstSegment      segment;
   volatile gboolean new_segment_pending;
-  volatile gboolean wait_for_new_segment;
   volatile gboolean flush_stop_pending;
 
   /* current caps */

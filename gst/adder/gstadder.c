@@ -768,7 +768,7 @@ gst_adder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       /* we're forwarding seek to all upstream peers and wait for one to reply
        * with a newsegment-event before we send a newsegment-event downstream */
-      g_atomic_int_set (&adder->wait_for_new_segment, TRUE);
+      g_atomic_int_set (&adder->new_segment_pending, TRUE);
       result = forward_event (adder, event, flush);
       if (!result) {
         /* seek failed. maybe source is a live source. */
@@ -840,6 +840,7 @@ gst_adder_sink_event (GstCollectPads * pads, GstCollectData * pad,
       /* we received a flush-stop. We will only forward it when
        * flush_stop_pending is set, and we will unset it then.
        */
+      g_atomic_int_set (&adder->new_segment_pending, TRUE);
       GST_COLLECT_PADS_STREAM_LOCK (adder->collect);
       if (adder->flush_stop_pending) {
         GST_DEBUG_OBJECT (pad->pad, "forwarding flush stop");
@@ -864,12 +865,6 @@ gst_adder_sink_event (GstCollectPads * pads, GstCollectData * pad,
       event = NULL;
       break;
     case GST_EVENT_SEGMENT:
-      if (g_atomic_int_compare_and_exchange (&adder->wait_for_new_segment,
-              TRUE, FALSE)) {
-        /* make sure we push a new segment, to inform about new basetime
-         * see FIXME in gst_adder_collected() */
-        g_atomic_int_set (&adder->new_segment_pending, TRUE);
-      }
       discard = TRUE;
       break;
     default:
@@ -1422,9 +1417,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
           FALSE)) {
     GstEvent *event;
 
-    /* FIXME, use rate/applied_rate as set on all sinkpads.
-     * - currently we just set rate as received from last seek-event
-     *
+    /* 
      * When seeking we set the start and stop positions as given in the seek
      * event. We also adjust offset & timestamp accordingly.
      * This basically ignores all newsegments sent by upstream.
@@ -1531,7 +1524,6 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
       adder->offset = 0;
       adder->flush_stop_pending = FALSE;
       adder->new_segment_pending = TRUE;
-      adder->wait_for_new_segment = FALSE;
       adder->send_stream_start = TRUE;
       adder->send_caps = TRUE;
       gst_caps_replace (&adder->current_caps, NULL);
