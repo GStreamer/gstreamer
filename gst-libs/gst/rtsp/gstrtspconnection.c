@@ -108,6 +108,7 @@ struct _GstRTSPConnection
   /* URL for the remote connection */
   GstRTSPUrl *url;
 
+  gboolean server;
   GSocketClient *client;
   GIOStream *stream0;
   GIOStream *stream1;
@@ -308,6 +309,7 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
   stream = G_IO_STREAM (g_socket_connection_factory_create_connection (socket));
 
   /* both read and write initially */
+  newconn->server = TRUE;
   newconn->socket0 = socket;
   newconn->stream0 = stream;
   newconn->write_socket = newconn->read_socket = newconn->socket0;
@@ -395,6 +397,51 @@ getnameinfo_failed:
     g_object_unref (client_sock);
     return GST_RTSP_ERROR;
   }
+}
+
+/**
+ * gst_rtsp_connection_get_tls:
+ * @conn: a #GstRTSPConnection
+ * @error: #GError for error reporting, or NULL to ignore.
+ *
+ * Get the TLS connection of @conn.
+ *
+ * For client side this will return the #GTlsClientConnection when connected
+ * over TLS.
+ *
+ * For server side connections, this function will create a GTlsServerConnection
+ * when called the first time and will return that same connection on subsequent
+ * calls. The server is then responsible for configuring the TLS connection.
+ *
+ * Returns: (transfer none): the TLS connection for @conn.
+ *
+ * Since: 1.2
+ */
+GTlsConnection *
+gst_rtsp_connection_get_tls (GstRTSPConnection * conn, GError ** error)
+{
+  GTlsConnection *result;
+
+  if (G_IS_TLS_CONNECTION (conn->stream0)) {
+    /* we already had one, return it */
+    result = G_TLS_CONNECTION (conn->stream0);
+  } else if (conn->server) {
+    /* no TLS connection but we are server, make one */
+    result = (GTlsConnection *)
+        g_tls_server_connection_new (conn->stream0, NULL, error);
+    if (result) {
+      g_object_unref (conn->stream0);
+      conn->stream0 = G_IO_STREAM (result);
+      conn->input_stream = g_io_stream_get_input_stream (conn->stream0);
+      conn->output_stream = g_io_stream_get_output_stream (conn->stream0);
+    }
+  } else {
+    /* client */
+    result = NULL;
+    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "client not connected with TLS");
+  }
+  return result;
 }
 
 static GstRTSPResult

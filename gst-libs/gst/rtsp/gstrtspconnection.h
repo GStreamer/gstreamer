@@ -72,6 +72,9 @@ GstRTSPResult      gst_rtsp_connection_connect        (GstRTSPConnection *conn, 
 GstRTSPResult      gst_rtsp_connection_close          (GstRTSPConnection *conn);
 GstRTSPResult      gst_rtsp_connection_free           (GstRTSPConnection *conn);
 
+/* TLS connections */
+GTlsConnection *   gst_rtsp_connection_get_tls        (GstRTSPConnection * conn, GError ** error);
+
 
 /* sending/receiving raw bytes */
 GstRTSPResult      gst_rtsp_connection_read           (GstRTSPConnection * conn, guint8 * data,
