@@ -6892,6 +6892,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     stream = qtdemux_find_stream (qtdemux, track_id);
     if (!stream) {
       GST_WARNING_OBJECT (qtdemux, "Stream not found, going to ignore it");
+      goto skip_track;
     }
   }
 
@@ -8070,6 +8071,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   return TRUE;
 
 /* ERRORS */
+skip_track:
 track_disabled:
   {
     GST_INFO_OBJECT (qtdemux, "skip disabled track");
