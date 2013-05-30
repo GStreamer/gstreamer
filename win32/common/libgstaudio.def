@@ -118,6 +118,7 @@ EXPORTS
 	gst_audio_info_from_caps
 	gst_audio_info_get_type
 	gst_audio_info_init
+	gst_audio_info_is_equal
 	gst_audio_info_new
 	gst_audio_info_set_format
 	gst_audio_info_to_caps

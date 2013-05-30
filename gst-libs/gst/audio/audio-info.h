@@ -128,6 +128,9 @@ gboolean       gst_audio_info_convert     (const GstAudioInfo * info,
                                            GstFormat src_fmt, gint64 src_val,
                                            GstFormat dest_fmt, gint64 * dest_val);
 
+gboolean       gst_audio_info_is_equal    (const GstAudioInfo *info,
+                                           const GstAudioInfo *other);
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_INFO_H__ */

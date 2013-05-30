@@ -115,6 +115,7 @@ gst_audio_info_copy
 gst_audio_info_free
 gst_audio_info_new
 gst_audio_info_set_format
+gst_audio_info_is_equal
 
 gst_audio_format_build_integer
 gst_audio_format_fill_silence

@@ -461,3 +461,38 @@ done:
 
   return res;
 }
+
+/**
+ * gst_audio_info_is_equal:
+ * @info: a #GstAudioInfo
+ * @other: a #GstAudioInfo
+ *
+ * Compares two #GstAudioInfo and returns whether they are equal or not
+ *
+ * Returns: %TRUE if @info and @other are equal, else %FALSE.
+ *
+ * Since: 1.2
+ *
+ */
+gboolean
+gst_audio_info_is_equal (const GstAudioInfo * info, const GstAudioInfo * other)
+{
+  if (GST_AUDIO_INFO_FORMAT (info) != GST_AUDIO_INFO_FORMAT (other))
+    return FALSE;
+  if (GST_AUDIO_INFO_FLAGS (info) != GST_AUDIO_INFO_FLAGS (other))
+    return FALSE;
+  if (GST_AUDIO_INFO_LAYOUT (info) != GST_AUDIO_INFO_LAYOUT (other))
+    return FALSE;
+  if (GST_AUDIO_INFO_RATE (info) != GST_AUDIO_INFO_RATE (other))
+    return FALSE;
+  if (GST_AUDIO_INFO_CHANNELS (info) != GST_AUDIO_INFO_CHANNELS (other))
+    return FALSE;
+  if (GST_AUDIO_INFO_BPF (info) != GST_AUDIO_INFO_BPF (other))
+    return FALSE;
+  if (memcmp (info->position, other->position,
+          GST_AUDIO_INFO_CHANNELS (info) * sizeof (GstAudioChannelPosition)) !=
+      0)
+    return FALSE;
+
+  return TRUE;
+}
