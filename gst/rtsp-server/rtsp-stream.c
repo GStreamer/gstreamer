@@ -787,6 +787,8 @@ find_transport (GstRTSPStream * stream, const gchar * rtcp_from)
       break;
     }
   }
+  if (result)
+    g_object_ref (result);
   g_mutex_unlock (&priv->lock);
 
   g_free (dest);
@@ -813,7 +815,8 @@ check_transport (GObject * source, GstRTSPStream * stream)
       if ((trans = find_transport (stream, rtcp_from))) {
         GST_INFO ("%p: found transport %p for source  %p", stream, trans,
             source);
-        g_object_set_qdata (source, ssrc_stream_map_key, trans);
+        g_object_set_qdata_full (source, ssrc_stream_map_key, trans,
+            g_object_unref);
       }
       gst_structure_free (stats);
     }
@@ -879,6 +882,7 @@ on_bye_timeout (GObject * session, GObject * source, GstRTSPStream * stream)
 
   if ((trans = g_object_get_qdata (source, ssrc_stream_map_key))) {
     gst_rtsp_stream_transport_set_timed_out (trans, TRUE);
+    g_object_set_qdata (source, ssrc_stream_map_key, NULL);
   }
 }
 
@@ -891,6 +895,7 @@ on_timeout (GObject * session, GObject * source, GstRTSPStream * stream)
 
   if ((trans = g_object_get_qdata (source, ssrc_stream_map_key))) {
     gst_rtsp_stream_transport_set_timed_out (trans, TRUE);
+    g_object_set_qdata (source, ssrc_stream_map_key, NULL);
   }
 }
 
