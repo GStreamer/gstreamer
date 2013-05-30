@@ -1087,18 +1087,19 @@ done_unlocked:
 static gboolean
 gst_videomixer2_query_caps (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstCaps *filter, *caps;
-  GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (parent);
+  GstCaps *filter;
   GstStructure *s;
   gint n;
+  GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (parent);
+  GstCaps *caps = NULL;
 
   gst_query_parse_caps (query, &filter);
 
-  if (GST_VIDEO_INFO_FORMAT (&mix->info) != GST_VIDEO_FORMAT_UNKNOWN) {
-    caps = gst_pad_get_current_caps (mix->srcpad);
-  } else {
+  if (GST_VIDEO_INFO_FORMAT (&mix->info) != GST_VIDEO_FORMAT_UNKNOWN)
+    caps = gst_caps_ref (mix->current_caps);
+
+  if (caps == NULL)
     caps = gst_pad_get_pad_template_caps (mix->srcpad);
-  }
 
   caps = gst_caps_make_writable (caps);
 
