@@ -1257,6 +1257,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     GstCollectData *collect_data;
     GstBuffer *inbuf;
     gboolean is_gap;
+    GstClockTime timestamp, stream_time;
 
     /* take next to see if this is the last collectdata */
     next = g_slist_next (collected);
@@ -1272,6 +1273,15 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
       GST_LOG_OBJECT (adder, "channel %p: no bytes available", collect_data);
       continue;
     }
+
+    timestamp = GST_BUFFER_TIMESTAMP (inbuf);
+    stream_time =
+        gst_segment_to_stream_time (&collect_data->segment, GST_FORMAT_TIME,
+        timestamp);
+
+    /* sync object properties on stream time */
+    if (GST_CLOCK_TIME_IS_VALID (stream_time))
+      gst_object_sync_values (GST_OBJECT (collect_data->pad), stream_time);
 
     is_gap = GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP);
 
