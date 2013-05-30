@@ -49,6 +49,85 @@
 #include <string.h>             /* strcmp */
 #include "gstadderorc.h"
 
+#define DEFAULT_PAD_VOLUME (1.0)
+#define DEFAULT_PAD_MUTE (FALSE)
+
+enum
+{
+  PROP_PAD_0,
+  PROP_PAD_VOLUME,
+  PROP_PAD_MUTE
+};
+
+G_DEFINE_TYPE (GstAdderPad, gst_adder_pad, GST_TYPE_PAD);
+
+static void
+gst_adder_pad_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstAdderPad *pad = GST_ADDER_PAD (object);
+
+  switch (prop_id) {
+    case PROP_PAD_VOLUME:
+      g_value_set_double (value, pad->volume);
+      break;
+    case PROP_PAD_MUTE:
+      g_value_set_boolean (value, pad->mute);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_adder_pad_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAdderPad *pad = GST_ADDER_PAD (object);
+
+  switch (prop_id) {
+    case PROP_PAD_VOLUME:
+      GST_OBJECT_LOCK (pad);
+      pad->volume = g_value_get_double (value);
+      GST_OBJECT_UNLOCK (pad);
+      break;
+    case PROP_PAD_MUTE:
+      GST_OBJECT_LOCK (pad);
+      pad->mute = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (pad);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_adder_pad_class_init (GstAdderPadClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  gobject_class->set_property = gst_adder_pad_set_property;
+  gobject_class->get_property = gst_adder_pad_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_PAD_VOLUME,
+      g_param_spec_double ("volume", "Volume", "Volume of this pad",
+          0.0, 10.0, DEFAULT_PAD_VOLUME,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PAD_MUTE,
+      g_param_spec_boolean ("mute", "Mute", "Mute this pad",
+          DEFAULT_PAD_MUTE,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+}
+
+static void
+gst_adder_pad_init (GstAdderPad * pad)
+{
+  pad->volume = DEFAULT_PAD_VOLUME;
+  pad->mute = DEFAULT_PAD_MUTE;
+}
+
 enum
 {
   PROP_0,
@@ -1032,7 +1111,8 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
   padcount = g_atomic_int_add (&adder->padcount, 1);
 
   name = g_strdup_printf ("sink_%u", padcount);
-  newpad = gst_pad_new_from_template (templ, name);
+  newpad = g_object_new (GST_TYPE_ADDER_PAD, "name", name, "direction",
+      templ->direction, "template", templ, NULL);
   GST_DEBUG_OBJECT (adder, "request new pad %s", name);
   g_free (name);
 

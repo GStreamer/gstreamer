@@ -38,7 +38,9 @@ G_BEGIN_DECLS
 
 typedef struct _GstAdder             GstAdder;
 typedef struct _GstAdderClass        GstAdderClass;
-typedef struct _GstAdderInputChannel GstAdderInputChannel;
+
+typedef struct _GstAdderPad GstAdderPad;
+typedef struct _GstAdderPadClass GstAdderPadClass;
 
 typedef void (*GstAdderFunction) (gpointer out, gpointer in, guint size);
 
@@ -90,6 +92,26 @@ struct _GstAdderClass {
 };
 
 GType    gst_adder_get_type (void);
+
+#define GST_TYPE_ADDER_PAD            (gst_adder_pad_get_type())
+#define GST_ADDER_PAD(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ADDER_PAD,GstAdderPad))
+#define GST_IS_ADDER_PAD(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ADDER_PAD))
+#define GST_ADDER_PAD_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_ADDER_PAD,GstAdderPadClass))
+#define GST_IS_ADDER_PAD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_ADDER_PAD))
+#define GST_ADDER_PAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_ADDER_PAD,GstAdderPadClass))
+
+struct _GstAdderPad {
+  GstPad parent;
+
+  gdouble volume;
+  gboolean mute;
+};
+
+struct _GstAdderPadClass {
+  GstPadClass parent_class;
+};
+
+GType gst_adder_pad_get_type (void);
 
 G_END_DECLS
 
