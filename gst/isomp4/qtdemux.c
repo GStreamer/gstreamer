@@ -6884,7 +6884,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     goto corrupt_file;
 
   if (!qtdemux->got_moov) {
-    if (!qtdemux->got_moov && qtdemux_find_stream (qtdemux, track_id))
+    if (qtdemux_find_stream (qtdemux, track_id))
       goto existing_stream;
     stream = _create_stream ();
     stream->track_id = track_id;
