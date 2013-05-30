@@ -321,14 +321,17 @@ gst_adder_sink_query (GstCollectPads * pads, GstCollectData * pad,
 static gboolean
 gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
 {
+  GstAudioInfo info;
+
+  if (!gst_audio_info_from_caps (&info, caps))
+    goto invalid_format;
+
   /* don't allow reconfiguration for now; there's still a race between the
    * different upstream threads doing query_caps + accept_caps + sending
    * (possibly different) CAPS events, but there's not much we can do about
    * that, upstream needs to deal with it. */
   if (adder->current_caps != NULL) {
-    /* FIXME: not quite right for optional fields such as channel-mask, which
-     * may or may not be present for mono/stereo */
-    if (gst_caps_is_equal (caps, adder->current_caps)) {
+    if (gst_audio_info_is_equal (&info, &adder->info)) {
       return TRUE;
     } else {
       GST_DEBUG_OBJECT (pad, "got input caps %" GST_PTR_FORMAT ", but "
@@ -342,13 +345,12 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
 
   GST_OBJECT_LOCK (adder);
   adder->current_caps = gst_caps_ref (caps);
+
+  memcpy (&adder->info, &info, sizeof (info));
   GST_OBJECT_UNLOCK (adder);
   /* send caps event later, after stream-start event */
 
   GST_INFO_OBJECT (pad, "handle caps change to %" GST_PTR_FORMAT, caps);
-
-  if (!gst_audio_info_from_caps (&adder->info, caps))
-    goto invalid_format;
 
   return TRUE;
 
