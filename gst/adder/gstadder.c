@@ -196,18 +196,6 @@ static GstFlowReturn gst_adder_do_clip (GstCollectPads * pads,
 static GstFlowReturn gst_adder_collected (GstCollectPads * pads,
     gpointer user_data);
 
-/* non-clipping versions (for float) */
-#define MAKE_FUNC_NC(name,type)                                 \
-static void name (type *out, type *in, gint samples) {          \
-  gint i;                                                       \
-  for (i = 0; i < samples; i++)                                 \
-    out[i] += in[i];                                            \
-}
-
-/* *INDENT-OFF* */
-MAKE_FUNC_NC (adder_orc_add_float64, gdouble)
-/* *INDENT-ON* */
-
 /* we can only accept caps that we and downstream can handle.
  * if we have filtercaps set, use those to constrain the target caps.
  */

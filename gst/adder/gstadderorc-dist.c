@@ -109,6 +109,8 @@ void adder_orc_add_uint8 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
 void adder_orc_add_float32 (float *ORC_RESTRICT d1,
     const float *ORC_RESTRICT s1, int n);
+void adder_orc_add_float64 (double *ORC_RESTRICT d1,
+    const double *ORC_RESTRICT s1, int n);
 
 
 /* begin Orc C target preamble */
@@ -936,6 +938,134 @@ adder_orc_add_float32 (float *ORC_RESTRICT d1, const float *ORC_RESTRICT s1,
       orc_program_add_source (p, 4, "s1");
 
       orc_program_append_2 (p, "addf", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
+          ORC_VAR_D1);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
+/* adder_orc_add_float64 */
+#ifdef DISABLE_ORC
+void
+adder_orc_add_float64 (double *ORC_RESTRICT d1, const double *ORC_RESTRICT s1,
+    int n)
+{
+  int i;
+  orc_union64 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *) d1;
+  ptr4 = (orc_union64 *) s1;
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr0[i];
+    /* 1: loadq */
+    var33 = ptr4[i];
+    /* 2: addd */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var32.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var33.i);
+      _dest1.f = _src1.f + _src2.f;
+      var34.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+#else
+static void
+_backup_adder_orc_add_float64 (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union64 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *) ex->arrays[0];
+  ptr4 = (orc_union64 *) ex->arrays[4];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr0[i];
+    /* 1: loadq */
+    var33 = ptr4[i];
+    /* 2: addd */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var32.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var33.i);
+      _dest1.f = _src1.f + _src2.f;
+      var34.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+adder_orc_add_float64 (double *ORC_RESTRICT d1, const double *ORC_RESTRICT s1,
+    int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 21, 97, 100, 100, 101, 114, 95, 111, 114, 99, 95, 97, 100, 100,
+        95, 102, 108, 111, 97, 116, 54, 52, 11, 8, 8, 12, 8, 8, 212, 0,
+        0, 4, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_adder_orc_add_float64);
+#else
+      p = orc_program_new ();
+      orc_program_set_name (p, "adder_orc_add_float64");
+      orc_program_set_backup_function (p, _backup_adder_orc_add_float64);
+      orc_program_add_destination (p, 8, "d1");
+      orc_program_add_source (p, 8, "s1");
+
+      orc_program_append_2 (p, "addd", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_D1);
 #endif
 

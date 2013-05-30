@@ -47,4 +47,10 @@ addusb d1, d1, s1
 
 addf d1, d1, s1
 
+.function adder_orc_add_float64
+.dest 8 d1 double
+.source 8 s1 double
+
+addd d1, d1, s1
+
 

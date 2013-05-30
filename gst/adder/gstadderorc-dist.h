@@ -87,6 +87,7 @@ void adder_orc_add_uint32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRI
 void adder_orc_add_uint16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, int n);
 void adder_orc_add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
 void adder_orc_add_float32 (float * ORC_RESTRICT d1, const float * ORC_RESTRICT s1, int n);
+void adder_orc_add_float64 (double * ORC_RESTRICT d1, const double * ORC_RESTRICT s1, int n);
 
 #ifdef __cplusplus
 }
