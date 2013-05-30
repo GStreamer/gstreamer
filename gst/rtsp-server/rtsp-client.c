@@ -1133,6 +1133,8 @@ make_server_transport (GstRTSPClient * client, GstRTSPClientState * state,
     GstRTSPTransport * ct)
 {
   GstRTSPTransport *st;
+  GInetAddress *addr;
+  GSocketFamily family;
 
   /* prepare the server transport */
   gst_rtsp_transport_new (&st);
@@ -1141,10 +1143,22 @@ make_server_transport (GstRTSPClient * client, GstRTSPClientState * state,
   st->profile = ct->profile;
   st->lower_transport = ct->lower_transport;
 
+  addr = g_inet_address_new_from_string (ct->destination);
+
+  if (!addr) {
+    GST_ERROR ("failed to get inet addr from client destination");
+    family = G_SOCKET_FAMILY_IPV4;
+  } else {
+    family = g_inet_address_get_family (addr);
+    g_object_unref (addr);
+    addr = NULL;
+  }
+
   switch (st->lower_transport) {
     case GST_RTSP_LOWER_TRANS_UDP:
       st->client_port = ct->client_port;
-      gst_rtsp_stream_get_server_port (state->stream, &st->server_port);
+      gst_rtsp_stream_get_server_port (state->stream, &st->server_port, 
+          family);
       break;
     case GST_RTSP_LOWER_TRANS_UDP_MCAST:
       st->port = ct->port;

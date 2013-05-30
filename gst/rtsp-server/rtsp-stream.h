@@ -20,6 +20,7 @@
 #include <gst/gst.h>
 #include <gst/rtsp/gstrtsprange.h>
 #include <gst/rtsp/gstrtspurl.h>
+#include <gio/gio.h>
 
 #ifndef __GST_RTSP_STREAM_H__
 #define __GST_RTSP_STREAM_H__
@@ -88,7 +89,8 @@ gboolean          gst_rtsp_stream_leave_bin        (GstRTSPStream *stream,
                                                     GstBin *bin, GstElement *rtpbin);
 
 void              gst_rtsp_stream_get_server_port  (GstRTSPStream *stream,
-                                                    GstRTSPRange *server_port);
+                                                    GstRTSPRange *server_port,
+                                                    GSocketFamily family);
 void              gst_rtsp_stream_get_ssrc         (GstRTSPStream *stream,
                                                     guint *ssrc);
 

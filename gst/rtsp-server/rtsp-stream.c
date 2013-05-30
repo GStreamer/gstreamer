@@ -36,7 +36,6 @@ struct _GstRTSPStreamPrivate
   guint idx;
   GstPad *srcpad;
   GstElement *payloader;
-  gboolean is_ipv6;
   guint buffer_size;
   gboolean is_joined;
 
@@ -48,10 +47,16 @@ struct _GstRTSPStreamPrivate
   /* the RTPSession object */
   GObject *session;
 
-  /* sinks used for sending and receiving RTP and RTCP, they share
+  /* sinks used for sending and receiving RTP and RTCP over ipv4, they share
    * sockets */
-  GstElement *udpsrc[2];
+  GstElement *udpsrc_v4[2];
+
+  /* sinks used for sending and receiving RTP and RTCP over ipv6, they share
+   * sockets */
+  GstElement *udpsrc_v6[2];
+
   GstElement *udpsink[2];
+
   /* for TCP transport */
   GstElement *appsrc[2];
   GstElement *appqueue[2];
@@ -60,9 +65,13 @@ struct _GstRTSPStreamPrivate
   GstElement *tee[2];
   GstElement *funnel[2];
 
-  /* server ports for sending/receiving */
-  GstRTSPRange server_port;
-  GstRTSPAddress *server_addr;
+  /* server ports for sending/receiving over ipv4 */
+  GstRTSPRange server_port_v4;
+  GstRTSPAddress *server_addr_v4;
+
+  /* server ports for sending/receiving over ipv6 */
+  GstRTSPRange server_port_v6;
+  GstRTSPAddress *server_addr_v6;
 
   /* multicast addresses */
   GstRTSPAddressPool *pool;
@@ -137,8 +146,10 @@ gst_rtsp_stream_finalize (GObject * obj)
 
   if (priv->addr)
     gst_rtsp_address_free (priv->addr);
-  if (priv->server_addr)
-    gst_rtsp_address_free (priv->server_addr);
+  if (priv->server_addr_v4)
+    gst_rtsp_address_free (priv->server_addr_v4);
+  if (priv->server_addr_v6)
+    gst_rtsp_address_free (priv->server_addr_v6);
   if (priv->pool)
     g_object_unref (priv->pool);
   gst_object_unref (priv->payloader);
@@ -428,11 +439,12 @@ different_address:
   }
 }
 
-/* must be called with lock */
 static gboolean
-alloc_ports (GstRTSPStream * stream)
+alloc_ports_one_family (GstRTSPAddressPool * pool, gint buffer_size,
+    GSocketFamily family, GstElement * udpsrc_out[2],
+    GstElement * udpsink_out[2], GstRTSPRange * server_port_out,
+    GstRTSPAddress ** server_addr_out)
 {
-  GstRTSPStreamPrivate *priv = stream->priv;
   GstStateChangeReturn ret;
   GstElement *udpsrc0, *udpsrc1;
   GstElement *udpsink0, *udpsink1;
@@ -443,10 +455,14 @@ alloc_ports (GstRTSPStream * stream)
   gint rtpport, rtcpport;
   GList *rejected_addresses = NULL;
   GstRTSPAddress *addr = NULL;
-  GSocketFamily family;
   GInetAddress *inetaddr = NULL;
   GSocketAddress *rtp_sockaddr = NULL;
   GSocketAddress *rtcp_sockaddr = NULL;
+  const gchar *multisink_socket = "socket";
+
+  if (family == G_SOCKET_FAMILY_IPV6) {
+    multisink_socket = "socket-v6";
+  }
 
   udpsrc0 = NULL;
   udpsrc1 = NULL;
@@ -457,19 +473,13 @@ alloc_ports (GstRTSPStream * stream)
   /* Start with random port */
   tmp_rtp = 0;
 
-  if (priv->is_ipv6) {
-    family = G_SOCKET_FAMILY_IPV6;
-  } else {
-    family = G_SOCKET_FAMILY_IPV4;
-  }
-
   rtcp_socket = g_socket_new (family, G_SOCKET_TYPE_DATAGRAM,
       G_SOCKET_PROTOCOL_UDP, NULL);
   if (!rtcp_socket)
     goto no_udp_protocol;
 
-  if (priv->server_addr)
-    gst_rtsp_address_free (priv->server_addr);
+  if (*server_addr_out)
+    gst_rtsp_address_free (*server_addr_out);
 
   /* try to allocate 2 UDP ports, the RTP port should be an even
    * number and the RTCP port should be the next (uneven) port */
@@ -482,19 +492,19 @@ again:
       goto no_udp_protocol;
   }
 
-  if (priv->pool && gst_rtsp_address_pool_has_unicast_addresses (priv->pool)) {
+  if (pool && gst_rtsp_address_pool_has_unicast_addresses (pool)) {
     GstRTSPAddressFlags flags;
 
     if (addr)
       rejected_addresses = g_list_prepend (rejected_addresses, addr);
 
     flags = GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_UNICAST;
-    if (priv->is_ipv6)
+    if (family == G_SOCKET_FAMILY_IPV6)
       flags |= GST_RTSP_ADDRESS_FLAG_IPV6;
     else
       flags |= GST_RTSP_ADDRESS_FLAG_IPV4;
 
-    addr = gst_rtsp_address_pool_acquire_address (priv->pool, flags, 2);
+    addr = gst_rtsp_address_pool_acquire_address (pool, flags, 2);
 
     if (addr == NULL)
       goto no_ports;
@@ -576,23 +586,31 @@ again:
   if (rtpport != tmp_rtp || rtcpport != tmp_rtcp)
     goto port_error;
 
-  udpsink0 = gst_element_factory_make ("multiudpsink", NULL);
+  if (udpsink_out[0])
+    udpsink0 = udpsink_out[0];
+  else
+    udpsink0 = gst_element_factory_make ("multiudpsink", NULL);
+
   if (!udpsink0)
     goto no_udp_protocol;
 
   g_object_set (G_OBJECT (udpsink0), "close-socket", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink0), "socket", rtp_socket, NULL);
+  g_object_set (G_OBJECT (udpsink0), multisink_socket, rtp_socket, NULL);
 
-  udpsink1 = gst_element_factory_make ("multiudpsink", NULL);
+  if (udpsink_out[1])
+    udpsink1 = udpsink_out[1];
+  else
+    udpsink1 = gst_element_factory_make ("multiudpsink", NULL);
+
   if (!udpsink1)
     goto no_udp_protocol;
 
   g_object_set (G_OBJECT (udpsink0), "send-duplicates", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink1), "send-duplicates", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink0), "buffer-size", priv->buffer_size, NULL);
+  g_object_set (G_OBJECT (udpsink0), "buffer-size", buffer_size, NULL);
 
   g_object_set (G_OBJECT (udpsink1), "close-socket", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink1), "socket", rtcp_socket, NULL);
+  g_object_set (G_OBJECT (udpsink1), multisink_socket, rtcp_socket, NULL);
   g_object_set (G_OBJECT (udpsink1), "sync", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink1), "async", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink0), "auto-multicast", FALSE, NULL);
@@ -602,14 +620,14 @@ again:
 
   /* we keep these elements, we will further configure them when the
    * client told us to really use the UDP ports. */
-  priv->udpsrc[0] = udpsrc0;
-  priv->udpsrc[1] = udpsrc1;
-  priv->udpsink[0] = udpsink0;
-  priv->udpsink[1] = udpsink1;
-  priv->server_port.min = rtpport;
-  priv->server_port.max = rtcpport;
+  udpsrc_out[0] = udpsrc0;
+  udpsrc_out[1] = udpsrc1;
+  udpsink_out[0] = udpsink0;
+  udpsink_out[1] = udpsink1;
+  server_port_out->min = rtpport;
+  server_port_out->max = rtcpport;
 
-  priv->server_addr = addr;
+  *server_addr_out = addr;
   g_list_free_full (rejected_addresses, (GDestroyNotify) gst_rtsp_address_free);
 
   g_object_unref (rtp_socket);
@@ -670,6 +688,20 @@ cleanup:
   }
 }
 
+/* must be called with lock */
+static gboolean
+alloc_ports (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+
+  return alloc_ports_one_family (priv->pool, priv->buffer_size,
+      G_SOCKET_FAMILY_IPV4, priv->udpsrc_v4, priv->udpsink,
+      &priv->server_port_v4, &priv->server_addr_v4) &&
+      alloc_ports_one_family (priv->pool, priv->buffer_size,
+      G_SOCKET_FAMILY_IPV6, priv->udpsrc_v6, priv->udpsink,
+      &priv->server_port_v6, &priv->server_addr_v6);
+}
+
 /**
  * gst_rtsp_stream_get_server_port:
  * @stream: a #GstRTSPStream
@@ -680,7 +712,7 @@ cleanup:
  */
 void
 gst_rtsp_stream_get_server_port (GstRTSPStream * stream,
-    GstRTSPRange * server_port)
+    GstRTSPRange * server_port, GSocketFamily family)
 {
   GstRTSPStreamPrivate *priv;
 
@@ -689,8 +721,13 @@ gst_rtsp_stream_get_server_port (GstRTSPStream * stream,
   g_return_if_fail (priv->is_joined);
 
   g_mutex_lock (&priv->lock);
-  if (server_port)
-    *server_port = priv->server_port;
+  if (family == G_SOCKET_FAMILY_IPV4) {
+    if (server_port)
+      *server_port = priv->server_port_v4;
+  } else {
+    if (server_port)
+      *server_port = priv->server_port_v6;
+  }
   g_mutex_unlock (&priv->lock);
 }
 
@@ -1104,13 +1141,23 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
 
     /* we set and keep these to playing so that they don't cause NO_PREROLL return
      * values */
-    gst_element_set_state (priv->udpsrc[i], GST_STATE_PLAYING);
-    gst_element_set_locked_state (priv->udpsrc[i], TRUE);
+    gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_PLAYING);
+    gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_PLAYING);
+    gst_element_set_locked_state (priv->udpsrc_v4[i], TRUE);
+    gst_element_set_locked_state (priv->udpsrc_v6[i], TRUE);
     /* add udpsrc */
-    gst_bin_add (bin, priv->udpsrc[i]);
-    /* and link to the funnel */
+    gst_bin_add (bin, priv->udpsrc_v4[i]);
+    gst_bin_add (bin, priv->udpsrc_v6[i]);
+    /* and link to the funnel v4 */
     selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
-    pad = gst_element_get_static_pad (priv->udpsrc[i], "src");
+    pad = gst_element_get_static_pad (priv->udpsrc_v4[i], "src");
+    gst_pad_link (pad, selpad);
+    gst_object_unref (pad);
+    gst_object_unref (selpad);
+
+    /* and link to the funnel v6 */
+    selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
+    pad = gst_element_get_static_pad (priv->udpsrc_v6[i], "src");
     gst_pad_link (pad, selpad);
     gst_object_unref (pad);
     gst_object_unref (selpad);
@@ -1213,12 +1260,15 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
     gst_element_set_state (priv->funnel[i], GST_STATE_NULL);
     gst_element_set_state (priv->appsrc[i], GST_STATE_NULL);
     /* and set udpsrc to NULL now before removing */
-    gst_element_set_locked_state (priv->udpsrc[i], FALSE);
-    gst_element_set_state (priv->udpsrc[i], GST_STATE_NULL);
+    gst_element_set_locked_state (priv->udpsrc_v4[i], FALSE);
+    gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_NULL);
+    gst_element_set_locked_state (priv->udpsrc_v6[i], FALSE);
+    gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_NULL);
 
     /* removing them should also nicely release the request
      * pads when they finalize */
-    gst_bin_remove (bin, priv->udpsrc[i]);
+    gst_bin_remove (bin, priv->udpsrc_v4[i]);
+    gst_bin_remove (bin, priv->udpsrc_v6[i]);
     gst_bin_remove (bin, priv->udpsink[i]);
     gst_bin_remove (bin, priv->appsrc[i]);
     gst_bin_remove (bin, priv->appsink[i]);
@@ -1230,7 +1280,8 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
     gst_object_unref (priv->recv_sink[i]);
     priv->recv_sink[i] = NULL;
 
-    priv->udpsrc[i] = NULL;
+    priv->udpsrc_v4[i] = NULL;
+    priv->udpsrc_v6[i] = NULL;
     priv->udpsink[i] = NULL;
     priv->appsrc[i] = NULL;
     priv->appsink[i] = NULL;
