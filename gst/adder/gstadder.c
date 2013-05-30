@@ -326,24 +326,25 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
   if (!gst_audio_info_from_caps (&info, caps))
     goto invalid_format;
 
+  GST_OBJECT_LOCK (adder);
   /* don't allow reconfiguration for now; there's still a race between the
    * different upstream threads doing query_caps + accept_caps + sending
    * (possibly different) CAPS events, but there's not much we can do about
    * that, upstream needs to deal with it. */
   if (adder->current_caps != NULL) {
     if (gst_audio_info_is_equal (&info, &adder->info)) {
+      GST_OBJECT_UNLOCK (adder);
       return TRUE;
     } else {
       GST_DEBUG_OBJECT (pad, "got input caps %" GST_PTR_FORMAT ", but "
           "current caps are %" GST_PTR_FORMAT, caps, adder->current_caps);
+      GST_OBJECT_UNLOCK (adder);
       gst_pad_push_event (pad, gst_event_new_reconfigure ());
       return FALSE;
     }
   }
 
   GST_INFO_OBJECT (pad, "setting caps to %" GST_PTR_FORMAT, caps);
-
-  GST_OBJECT_LOCK (adder);
   adder->current_caps = gst_caps_ref (caps);
 
   memcpy (&adder->info, &info, sizeof (info));
