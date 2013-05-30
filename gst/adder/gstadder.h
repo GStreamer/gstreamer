@@ -42,8 +42,6 @@ typedef struct _GstAdderClass        GstAdderClass;
 typedef struct _GstAdderPad GstAdderPad;
 typedef struct _GstAdderPadClass GstAdderPadClass;
 
-typedef void (*GstAdderFunction) (gpointer out, gpointer in, guint size);
-
 /**
  * GstAdder:
  *
@@ -59,9 +57,6 @@ struct _GstAdder {
 
   /* the next are valid for both int and float */
   GstAudioInfo    info;
-
-  /* function to add samples */
-  GstAdderFunction func;
 
   /* counters to keep track of timestamps */
   gint64          offset;

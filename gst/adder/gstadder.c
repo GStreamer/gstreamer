@@ -398,34 +398,6 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
   if (!gst_audio_info_from_caps (&adder->info, caps))
     goto invalid_format;
 
-  switch (GST_AUDIO_INFO_FORMAT (&adder->info)) {
-    case GST_AUDIO_FORMAT_S8:
-      adder->func = (GstAdderFunction) adder_orc_add_int8;
-      break;
-    case GST_AUDIO_FORMAT_U8:
-      adder->func = (GstAdderFunction) adder_orc_add_uint8;
-      break;
-    case GST_AUDIO_FORMAT_S16:
-      adder->func = (GstAdderFunction) adder_orc_add_int16;
-      break;
-    case GST_AUDIO_FORMAT_U16:
-      adder->func = (GstAdderFunction) adder_orc_add_uint16;
-      break;
-    case GST_AUDIO_FORMAT_S32:
-      adder->func = (GstAdderFunction) adder_orc_add_int32;
-      break;
-    case GST_AUDIO_FORMAT_U32:
-      adder->func = (GstAdderFunction) adder_orc_add_uint32;
-      break;
-    case GST_AUDIO_FORMAT_F32:
-      adder->func = (GstAdderFunction) adder_orc_add_float32;
-      break;
-    case GST_AUDIO_FORMAT_F64:
-      adder->func = (GstAdderFunction) adder_orc_add_float64;
-      break;
-    default:
-      goto invalid_format;
-  }
   return TRUE;
 
   /* ERRORS */
@@ -1007,7 +979,6 @@ gst_adder_init (GstAdder * adder)
   adder->current_caps = NULL;
   gst_audio_info_init (&adder->info);
   adder->padcount = 0;
-  adder->func = NULL;
 
   adder->filter_caps = NULL;
 
@@ -1207,7 +1178,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   adder = GST_ADDER (user_data);
 
   /* this is fatal */
-  if (G_UNLIKELY (adder->func == NULL))
+  if (G_UNLIKELY (adder->info.finfo->format == GST_AUDIO_FORMAT_UNKNOWN))
     goto not_negotiated;
 
   if (adder->flush_stop_pending == TRUE) {
@@ -1382,8 +1353,43 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
 
         /* further buffers, need to add them */
         if (pad->volume == 1.0) {
-          adder->func ((gpointer) outmap.data, (gpointer) inmap.data,
-              inmap.size / bps);
+          switch (adder->info.finfo->format) {
+            case GST_AUDIO_FORMAT_U8:
+              adder_orc_add_u8 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, inmap.size / bps);
+              break;
+            case GST_AUDIO_FORMAT_S8:
+              adder_orc_add_s8 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, inmap.size / bps);
+              break;
+            case GST_AUDIO_FORMAT_U16:
+              adder_orc_add_u16 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, inmap.size / bps);
+              break;
+            case GST_AUDIO_FORMAT_S16:
+              adder_orc_add_s16 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, inmap.size / bps);
+              break;
+            case GST_AUDIO_FORMAT_U32:
+              adder_orc_add_u32 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, inmap.size / bps);
+              break;
+            case GST_AUDIO_FORMAT_S32:
+              adder_orc_add_s32 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, inmap.size / bps);
+              break;
+            case GST_AUDIO_FORMAT_F32:
+              adder_orc_add_f32 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, inmap.size / bps);
+              break;
+            case GST_AUDIO_FORMAT_F64:
+              adder_orc_add_f64 ((gpointer) outmap.data,
+                  (gpointer) inmap.data, inmap.size / bps);
+              break;
+            default:
+              g_assert_not_reached ();
+              break;
+          }
         } else {
           switch (adder->info.finfo->format) {
             case GST_AUDIO_FORMAT_U8:
