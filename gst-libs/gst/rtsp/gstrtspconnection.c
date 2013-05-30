@@ -863,8 +863,12 @@ write_bytes (GOutputStream * stream, const guint8 * buffer, guint * idx,
   left = size - *idx;
 
   while (left) {
-    r = g_pollable_stream_write (stream, (gchar *) & buffer[*idx], left,
-        block, cancellable, &err);
+    if (block)
+      r = g_output_stream_write (stream, (gchar *) & buffer[*idx], left,
+          cancellable, &err);
+    else
+      r = g_pollable_output_stream_write_nonblocking (G_POLLABLE_OUTPUT_STREAM
+          (stream), (gchar *) & buffer[*idx], left, cancellable, &err);
     if (G_UNLIKELY (r < 0))
       goto error;
 
@@ -917,9 +921,14 @@ fill_raw_bytes (GstRTSPConnection * conn, guint8 * buffer, guint size,
 
   if (G_LIKELY (size > (guint) out)) {
     gssize r;
-
-    r = g_pollable_stream_read (conn->input_stream,
-        (gchar *) & buffer[out], size - out, block, conn->cancellable, err);
+    gsize count = size - out;
+    if (block)
+      r = g_input_stream_read (conn->input_stream, (gchar *) & buffer[out],
+          count, conn->cancellable, err);
+    else
+      r = g_pollable_input_stream_read_nonblocking (G_POLLABLE_INPUT_STREAM
+          (conn->input_stream), (gchar *) & buffer[out], count,
+          conn->cancellable, err);
 
     if (G_UNLIKELY (r < 0)) {
       if (out == 0) {
