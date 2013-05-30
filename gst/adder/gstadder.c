@@ -1198,6 +1198,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   gint64 next_offset;
   gint64 next_timestamp;
   gint rate, bps, bpf;
+  gboolean had_mute = FALSE;
 
   adder = GST_ADDER (user_data);
 
@@ -1257,12 +1258,14 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     GstCollectData *collect_data;
     GstBuffer *inbuf;
     gboolean is_gap;
+    GstAdderPad *pad;
     GstClockTime timestamp, stream_time;
 
     /* take next to see if this is the last collectdata */
     next = g_slist_next (collected);
 
     collect_data = (GstCollectData *) collected->data;
+    pad = GST_ADDER_PAD (collect_data->pad);
 
     /* get a buffer of size bytes, if we get a buffer, it is at least outsize
      * bytes big. */
@@ -1281,7 +1284,14 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
 
     /* sync object properties on stream time */
     if (GST_CLOCK_TIME_IS_VALID (stream_time))
-      gst_object_sync_values (GST_OBJECT (collect_data->pad), stream_time);
+      gst_object_sync_values (GST_OBJECT (pad), stream_time);
+
+    if (pad->mute || pad->volume < G_MINDOUBLE) {
+      had_mute = TRUE;
+      GST_DEBUG_OBJECT (adder, "channel %p: skipping muted pad", collect_data);
+      gst_buffer_unref (inbuf);
+      continue;
+    }
 
     is_gap = GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP);
 
@@ -1342,12 +1352,22 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     if (gapbuf) {
       GST_LOG_OBJECT (adder, "reusing GAP buffer %p", gapbuf);
       outbuf = gapbuf;
-    } else
+    } else if (had_mute) {
+      GstMapInfo map;
+
+      /* Means we had all pads muted, create some silence */
+      outbuf = gst_buffer_new_allocate (NULL, outsize, NULL);
+      gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+      gst_audio_format_fill_silence (adder->info.finfo, map.data, outsize);
+      gst_buffer_unmap (outbuf, &map);
+    } else {
       /* assume EOS otherwise, this should not happen, really */
       goto eos;
-  } else if (gapbuf)
+    }
+  } else if (gapbuf) {
     /* we had an output buffer, unref the gapbuffer we kept */
     gst_buffer_unref (gapbuf);
+  }
 
   if (g_atomic_int_compare_and_exchange (&adder->new_segment_pending, TRUE,
           FALSE)) {
