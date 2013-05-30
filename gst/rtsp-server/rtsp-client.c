@@ -2278,8 +2278,8 @@ error_full (GstRTSPWatch * watch, GstRTSPResult result,
 
   str = gst_rtsp_strresult (result);
   GST_INFO
-      ("client %p: received an error %s when handling message %p with id %d",
-      client, str, message, id);
+      ("client %p: error when handling message %p with id %d: %s",
+      client, message, id, str);
   g_free (str);
 
   return GST_RTSP_OK;
