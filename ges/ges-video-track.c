@@ -23,6 +23,7 @@
  */
 
 #include "ges-video-track.h"
+#include "ges-smart-video-mixer.h"
 
 struct _GESVideoTrackPrivate
 {
@@ -68,6 +69,8 @@ ges_video_track_class_init (GESVideoTrackClass * klass)
   g_type_class_add_private (klass, sizeof (GESVideoTrackPrivate));
 
   object_class->finalize = ges_video_track_finalize;
+
+  GES_TRACK_CLASS (klass)->get_mixing_element = ges_smart_mixer_new;
 }
 
 /**
