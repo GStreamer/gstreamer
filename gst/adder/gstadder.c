@@ -179,8 +179,11 @@ GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_STATIC_CAPS (CAPS)
     );
 
+static void gst_adder_child_proxy_init (gpointer g_iface, gpointer iface_data);
+
 #define gst_adder_parent_class parent_class
-G_DEFINE_TYPE (GstAdder, gst_adder, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE_WITH_CODE (GstAdder, gst_adder, GST_TYPE_ELEMENT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY, gst_adder_child_proxy_init));
 
 static void gst_adder_dispose (GObject * object);
 static void gst_adder_set_property (GObject * object, guint prop_id,
@@ -1048,6 +1051,9 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
   if (!gst_element_add_pad (GST_ELEMENT (adder), newpad))
     goto could_not_add;
 
+  gst_child_proxy_child_added (GST_CHILD_PROXY (adder), G_OBJECT (newpad),
+      GST_OBJECT_NAME (newpad));
+
   return newpad;
 
   /* errors */
@@ -1074,6 +1080,8 @@ gst_adder_release_pad (GstElement * element, GstPad * pad)
 
   GST_DEBUG_OBJECT (adder, "release pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
+  gst_child_proxy_child_removed (GST_CHILD_PROXY (adder), G_OBJECT (pad),
+      GST_OBJECT_NAME (pad));
   if (adder->collect)
     gst_collect_pads_remove_pad (adder->collect, pad);
   gst_element_remove_pad (element, pad);
@@ -1550,6 +1558,45 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
+}
+
+/* GstChildProxy implementation */
+static GObject *
+gst_adder_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
+    guint index)
+{
+  GstAdder *adder = GST_ADDER (child_proxy);
+  GObject *obj = NULL;
+
+  GST_OBJECT_LOCK (adder);
+  obj = g_list_nth_data (GST_ELEMENT_CAST (adder)->sinkpads, index);
+  if (obj)
+    gst_object_ref (obj);
+  GST_OBJECT_UNLOCK (adder);
+  return obj;
+}
+
+static guint
+gst_adder_child_proxy_get_children_count (GstChildProxy * child_proxy)
+{
+  guint count = 0;
+  GstAdder *adder = GST_ADDER (child_proxy);
+
+  GST_OBJECT_LOCK (adder);
+  count = GST_ELEMENT_CAST (adder)->numsinkpads;
+  GST_OBJECT_UNLOCK (adder);
+  GST_INFO_OBJECT (adder, "Children Count: %d", count);
+  return count;
+}
+
+static void
+gst_adder_child_proxy_init (gpointer g_iface, gpointer iface_data)
+{
+  GstChildProxyInterface *iface = g_iface;
+
+  GST_INFO ("intializing child proxy interface");
+  iface->get_child_by_index = gst_adder_child_proxy_get_child_by_index;
+  iface->get_children_count = gst_adder_child_proxy_get_children_count;
 }
 
 static gboolean
