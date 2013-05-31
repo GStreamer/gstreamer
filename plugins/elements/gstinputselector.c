@@ -307,9 +307,13 @@ gst_selector_pad_get_property (GObject * object, guint prop_id,
       GstInputSelector *sel;
 
       sel = GST_INPUT_SELECTOR (gst_pad_get_parent (spad));
-      g_value_set_boolean (value, gst_input_selector_is_active_sinkpad (sel,
-              GST_PAD_CAST (spad)));
-      gst_object_unref (sel);
+      if (sel) {
+        g_value_set_boolean (value, gst_input_selector_is_active_sinkpad (sel,
+                GST_PAD_CAST (spad)));
+        gst_object_unref (sel);
+      } else {
+        g_value_set_boolean (value, FALSE);
+      }
       break;
     }
     case PROP_PAD_ALWAYS_OK:
