@@ -344,14 +344,16 @@ done:
 
 /* take the currently configured SPS and PPS lists and set them on the caps as
  * sprop-parameter-sets */
-static gchar *
+static gboolean
 gst_rtp_h264_pay_set_sps_pps (GstRTPBasePayload * basepayload)
 {
   GstRtpH264Pay *payloader = GST_RTP_H264_PAY (basepayload);
+  gchar *profile;
   gchar *set;
   GList *walk;
   GString *sprops;
   guint count;
+  gboolean res;
   GstMapInfo map;
 
   sprops = g_string_new ("");
@@ -381,12 +383,19 @@ gst_rtp_h264_pay_set_sps_pps (GstRTPBasePayload * basepayload)
     count++;
   }
 
-  if (G_UNLIKELY (count == 0)) {
-    g_string_free (sprops, TRUE);
-    return NULL;
+  if (G_LIKELY (count)) {
+    /* profile is 24 bit. Force it to respect the limit */
+    profile = g_strdup_printf ("%06x", payloader->profile & 0xffffff);
+    /* combine into output caps */
+    res = gst_rtp_base_payload_set_outcaps (basepayload,
+        "sprop-parameter-sets", G_TYPE_STRING, sprops->str, NULL);
+    g_free (profile);
+  } else {
+    res = gst_rtp_base_payload_set_outcaps (basepayload, NULL);
   }
+  g_string_free (sprops, TRUE);
 
-  return g_string_free (sprops, FALSE);
+  return res;
 }
 
 static GList *
@@ -424,8 +433,6 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
   gsize size;
   GstBuffer *buffer;
   const gchar *alignment, *stream_format;
-  gchar *sprops;
-  gboolean caps_set;
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
 
@@ -551,25 +558,10 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
     }
     gst_buffer_unmap (buffer, &map);
     /* and update the caps with the collected data */
-    sprops = gst_rtp_h264_pay_set_sps_pps (basepayload);
+    if (!gst_rtp_h264_pay_set_sps_pps (basepayload))
+      goto set_sps_pps_failed;
   } else {
     GST_DEBUG_OBJECT (rtph264pay, "have bytestream h264");
-    sprops = NULL;
-  }
-
-  if (sprops != NULL) {
-    caps_set = gst_rtp_base_payload_set_outcaps (basepayload,
-        "sprop-parameter-sets", G_TYPE_STRING, sprops, NULL);
-  } else {
-    caps_set = gst_rtp_base_payload_set_outcaps (basepayload, NULL);
-  }
-
-  if (sprops != NULL) {
-    g_free (sprops);
-  }
-
-  if (!caps_set) {
-    goto set_caps_failed;
   }
 
   return TRUE;
@@ -589,10 +581,10 @@ avcc_error:
     GST_ERROR_OBJECT (rtph264pay, "avcC too small ");
     goto error;
   }
-set_caps_failed:
+set_sps_pps_failed:
   {
-    GST_ERROR_OBJECT (rtph264pay, "failed to set caps");
-    return FALSE;
+    GST_ERROR_OBJECT (rtph264pay, "failed to set sps/pps");
+    goto error;
   }
 error:
   {
