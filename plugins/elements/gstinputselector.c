@@ -456,13 +456,19 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GST_DEBUG_OBJECT (selpad, "received event %" GST_PTR_FORMAT, event);
 
   GST_INPUT_SELECTOR_LOCK (sel);
-  prev_active_sinkpad = sel->active_sinkpad;
+  prev_active_sinkpad =
+      sel->active_sinkpad ? gst_object_ref (sel->active_sinkpad) : NULL;
   active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
   if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad) {
+    if (prev_active_sinkpad)
+      g_object_notify (G_OBJECT (prev_active_sinkpad), "active");
+    g_object_notify (G_OBJECT (active_sinkpad), "active");
     g_object_notify (G_OBJECT (sel), "active-pad");
   }
+  if (prev_active_sinkpad)
+    gst_object_unref (prev_active_sinkpad);
 
   GST_INPUT_SELECTOR_LOCK (sel);
   active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
@@ -922,7 +928,7 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstInputSelector *sel;
   GstFlowReturn res;
   GstPad *active_sinkpad;
-  GstPad *prev_active_sinkpad;
+  GstPad *prev_active_sinkpad = NULL;
   GstSelectorPad *selpad;
   GstClockTime start_time;
 
@@ -942,7 +948,8 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   GST_LOG_OBJECT (pad, "getting active pad");
 
-  prev_active_sinkpad = sel->active_sinkpad;
+  prev_active_sinkpad =
+      sel->active_sinkpad ? gst_object_ref (sel->active_sinkpad) : NULL;
   active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
 
   /* In sync mode wait until the active pad has advanced
@@ -1025,8 +1032,14 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
   if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad) {
+    if (prev_active_sinkpad)
+      g_object_notify (G_OBJECT (prev_active_sinkpad), "active");
+    g_object_notify (G_OBJECT (active_sinkpad), "active");
     g_object_notify (G_OBJECT (sel), "active-pad");
   }
+  if (prev_active_sinkpad)
+    gst_object_unref (prev_active_sinkpad);
+  prev_active_sinkpad = NULL;
 
   /* if we have a pending events, push them now */
   if (G_UNLIKELY (prev_active_sinkpad != active_sinkpad
@@ -1072,6 +1085,11 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
 done:
+
+  if (prev_active_sinkpad)
+    gst_object_unref (prev_active_sinkpad);
+  prev_active_sinkpad = NULL;
+
   return res;
 
   /* dropped buffers */
