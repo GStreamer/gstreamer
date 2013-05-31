@@ -7007,7 +7007,9 @@ static const gchar *const *
 gst_rtspsrc_uri_get_protocols (GType type)
 {
   static const gchar *protocols[] =
-      { "rtsp", "rtspu", "rtspt", "rtsph", "rtsp-sdp", NULL };
+      { "rtsp", "rtspu", "rtspt", "rtsph", "rtsp-sdp",
+    "rtsps", "rtspsu", "rtspst", "rtspsh", NULL
+  };
 
   return protocols;
 }
