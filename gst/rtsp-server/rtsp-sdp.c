@@ -100,7 +100,6 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
     gboolean first;
     GString *fmtp;
     GstCaps *caps;
-    gint width, height;
 
     stream = gst_rtsp_media_get_stream (media, i);
     caps = gst_rtsp_stream_get_caps (stream);
@@ -151,18 +150,6 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
       g_free (tmp);
     }
 
-    /* create framesize SDP attribute */
-    if (gst_structure_get_int (s, "width", &width) && width > 0 &&
-        gst_structure_get_int (s, "height", &height) && height > 0) {
-      tmp = g_strdup_printf ("%d %d-%d", caps_pt, width, height);
-      gst_sdp_media_add_attribute (smedia, "framesize", tmp);
-      g_free (tmp);
-
-      tmp = g_strdup_printf (" %d,%d", width, height);
-      gst_sdp_media_add_attribute (smedia, "x-dimensions", tmp);
-      g_free (tmp);
-    }
-
     /* the config uri */
     tmp = g_strdup_printf ("stream=%d", i);
     gst_sdp_media_add_attribute (smedia, "control", tmp);
@@ -194,10 +181,6 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
       if (!strcmp (fname, "clock-base"))
         continue;
       if (!strcmp (fname, "seqnum-base"))
-        continue;
-      if (!strcmp (fname, "width"))
-        continue;
-      if (!strcmp (fname, "height"))
         continue;
 
       if (g_str_has_prefix (fname, "a-")) {
