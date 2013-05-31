@@ -52,8 +52,6 @@ static GstStaticPadTemplate gst_rtp_h264_pay_sink_template =
         "video/x-h264, "
         "stream-format = (string) byte-stream, alignment = (string) { nal, au }, "
         "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ]")
-        /** optional parameters **/
-    /* "framerate = (fraction) [ 0/1, MAX/1 ] " */
     );
 
 static GstStaticPadTemplate gst_rtp_h264_pay_src_template =
@@ -66,8 +64,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) 90000, "
         "encoding-name = (string) \"H264\", "
         "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ]")
-        /** optional parameters **/
-    /* "framerate = (fraction) [ 0/1, MAX/1 ] " */
     );
 
 #define DEFAULT_SPROP_PARAMETER_SETS    NULL
@@ -435,7 +431,6 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
   gchar *sprops;
   gboolean caps_set;
   gint width, height;
-  gint num = 0, denom = 1;
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
 
@@ -468,11 +463,6 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
   }
   if (!gst_structure_get_int (str, "width", &width) || width <= 0) {
     goto invalid_dimension;
-  }
-
-  if (gst_structure_get_fraction (str, "framerate", &num, &denom) &&
-      (num < 0 || denom <= 0)) {
-    goto invalid_framerate;
   }
 
   /* packetized AVC video has a codec_data */
@@ -579,19 +569,10 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
     sprops = NULL;
   }
 
-  if (num > 0 && sprops != NULL) {
-    caps_set = gst_rtp_base_payload_set_outcaps (basepayload, "width",
-        G_TYPE_INT, width, "height", G_TYPE_INT, height,
-        "sprop-parameter-sets", G_TYPE_STRING, sprops, "framerate",
-        GST_TYPE_FRACTION, num, denom, NULL);
-  } else if (num <= 0 && sprops != NULL) {
+  if (sprops != NULL) {
     caps_set = gst_rtp_base_payload_set_outcaps (basepayload, "width",
         G_TYPE_INT, width, "height", G_TYPE_INT, height,
         "sprop-parameter-sets", G_TYPE_STRING, sprops, NULL);
-  } else if (num > 0 && sprops == NULL) {
-    caps_set = gst_rtp_base_payload_set_outcaps (basepayload, "width",
-        G_TYPE_INT, width, "height", G_TYPE_INT, height, "framerate",
-        GST_TYPE_FRACTION, num, denom, NULL);
   } else {
     caps_set = gst_rtp_base_payload_set_outcaps (basepayload, "width",
         G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
@@ -630,11 +611,6 @@ set_caps_failed:
 invalid_dimension:
   {
     GST_ERROR_OBJECT (rtph264pay, "invalid width/height from caps");
-    return FALSE;
-  }
-invalid_framerate:
-  {
-    GST_ERROR_OBJECT (rtph264pay, "invalid framerate from caps");
     return FALSE;
   }
 error:
