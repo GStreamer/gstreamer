@@ -199,7 +199,7 @@ CHANGES
     as buffers, events, messages, caps, etc. Signals, for example, would use the
     boxed type if the argument include GstMiniObject derived types.
 
-    gst_mini_object_new() is removed. You would allocate memory with the the
+    gst_mini_object_new() is removed. You would allocate memory with the
     methods specific for the derived type.
 
     GstParamSpecMiniObject is removed, use boxed param spec now with the GType

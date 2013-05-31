@@ -194,7 +194,7 @@
   /* make memory holding 100 bytes */
   mem = gst_allocator_alloc (NULL, 100, NULL);
 
-  /* add the the buffer */
+  /* add the buffer */
   gst_buffer_append_memory (buffer, mem);
 
 [...]
