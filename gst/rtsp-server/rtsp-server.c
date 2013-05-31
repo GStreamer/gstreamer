@@ -51,6 +51,9 @@ struct _GstRTSPServerPrivate
   /* authentication manager */
   GstRTSPAuth *auth;
 
+  /* the TLS certificate */
+  GTlsCertificate *certificate;
+
   /* the clients that are connected */
   GList *clients;
   GQueue loops;                 /* the main loops used in the threads */
@@ -106,6 +109,8 @@ static void gst_rtsp_server_finalize (GObject * object);
 
 static gpointer do_loop (Loop * loop);
 static GstRTSPClient *default_create_client (GstRTSPServer * server);
+static gboolean default_setup_connection (GstRTSPServer * server,
+    GstRTSPClient * client, GstRTSPConnection * conn);
 
 static void
 gst_rtsp_server_class_init (GstRTSPServerClass * klass)
@@ -209,6 +214,7 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
       gst_rtsp_client_get_type ());
 
   klass->create_client = default_create_client;
+  klass->setup_connection = default_setup_connection;
 
   klass->pool = g_thread_pool_new ((GFunc) do_loop, klass, -1, FALSE, NULL);
 
@@ -252,6 +258,9 @@ gst_rtsp_server_finalize (GObject * object)
 
   if (priv->auth)
     g_object_unref (priv->auth);
+
+  if (priv->certificate)
+    g_object_unref (priv->certificate);
 
   g_mutex_clear (&priv->lock);
 
@@ -678,6 +687,63 @@ gst_rtsp_server_get_max_threads (GstRTSPServer * server)
   return res;
 }
 
+/**
+ * gst_rtsp_server_set_tls_certificate:
+ * @server: a #GstRTSPServer
+ * @cert: (allow none): a #GTlsCertificate
+ *
+ * Set the TLS certificate for the server. Client connections will only
+ * be accepted when TLS is negotiated.
+ */
+void
+gst_rtsp_server_set_tls_certificate (GstRTSPServer * server,
+    GTlsCertificate * cert)
+{
+  GstRTSPServerPrivate *priv;
+  GTlsCertificate *old;
+
+  g_return_if_fail (GST_IS_RTSP_SERVER (server));
+
+  priv = server->priv;
+
+  if (cert)
+    g_object_ref (cert);
+
+  GST_RTSP_SERVER_LOCK (server);
+  old = priv->certificate;
+  priv->certificate = cert;
+  GST_RTSP_SERVER_UNLOCK (server);
+
+  if (old)
+    g_object_unref (old);
+}
+
+/**
+ * gst_rtsp_server_get_tls_certificate:
+ * @server: a #GstRTSPServer
+ *
+ * Get the #GTlsCertificate used for negotiating TLS @server.
+ *
+ * Returns: (transfer full): the #GTlsCertificate of @server. g_object_unref() after
+ * usage.
+ */
+GTlsCertificate *
+gst_rtsp_server_get_tls_certificate (GstRTSPServer * server)
+{
+  GstRTSPServerPrivate *priv;
+  GTlsCertificate *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
+
+  priv = server->priv;
+
+  GST_RTSP_SERVER_LOCK (server);
+  if ((result = priv->certificate))
+    g_object_ref (result);
+  GST_RTSP_SERVER_UNLOCK (server);
+
+  return result;
+}
 
 static void
 gst_rtsp_server_get_property (GObject * object, guint propid,
@@ -1087,6 +1153,25 @@ default_create_client (GstRTSPServer * server)
   return client;
 }
 
+static gboolean
+default_setup_connection (GstRTSPServer * server, GstRTSPClient * client,
+    GstRTSPConnection * conn)
+{
+  GstRTSPServerPrivate *priv = server->priv;
+
+  GST_RTSP_SERVER_LOCK (server);
+  if (priv->certificate) {
+    GTlsConnection *tls;
+
+    /* configure the connection */
+    tls = gst_rtsp_connection_get_tls (conn, NULL);
+    g_tls_connection_set_certificate (tls, priv->certificate);
+  }
+  GST_RTSP_SERVER_UNLOCK (server);
+
+  return TRUE;
+}
+
 /**
  * gst_rtsp_server_transfer_connection:
  * @server: a #GstRTSPServer
@@ -1165,9 +1250,9 @@ gst_rtsp_server_io_func (GSocket * socket, GIOCondition condition,
   GstRTSPClient *client = NULL;
   GstRTSPServerClass *klass;
   GstRTSPResult res;
+  GstRTSPConnection *conn = NULL;
 
   if (condition & G_IO_IN) {
-    GstRTSPConnection *conn;
 
     klass = GST_RTSP_SERVER_GET_CLASS (server);
 
@@ -1180,6 +1265,10 @@ gst_rtsp_server_io_func (GSocket * socket, GIOCondition condition,
     /* a new client connected. */
     GST_RTSP_CHECK (gst_rtsp_connection_accept (socket, &conn, NULL),
         accept_failed);
+
+    if (klass->setup_connection)
+      if (!klass->setup_connection (server, client, conn))
+        goto setup_failed;
 
     /* set connection on the client now */
     gst_rtsp_client_set_connection (client, conn);
@@ -1206,6 +1295,13 @@ accept_failed:
     GST_ERROR_OBJECT (server, "Could not accept client on socket %p: %s",
         socket, str);
     g_free (str);
+    g_object_unref (client);
+    return G_SOURCE_CONTINUE;
+  }
+setup_failed:
+  {
+    GST_ERROR_OBJECT (server, "failed to setup client connection");
+    gst_rtsp_connection_free (conn);
     g_object_unref (client);
     return G_SOURCE_CONTINUE;
   }

@@ -59,7 +59,8 @@ struct _GstRTSPServer {
  *
  * @create_client: Create, configure a new GstRTSPClient
  *          object that handles the new connection on @socket.
- * @accept_client: accept a new GstRTSPClient
+ * @setup_connection: Setup the new client connection. The default
+ *          implementation will configure the TLS certificate.
  *
  * The RTSP server class structure
  */
@@ -69,7 +70,8 @@ struct _GstRTSPServerClass {
   GThreadPool *pool;
 
   GstRTSPClient * (*create_client)      (GstRTSPServer *server);
-
+  gboolean        (*setup_connection)   (GstRTSPServer *server, GstRTSPClient *client,
+                                         GstRTSPConnection *conn);
   /* signals */
   void            (*client_connected)   (GstRTSPServer *server, GstRTSPClient *client);
 };
@@ -100,6 +102,9 @@ GstRTSPAuth *         gst_rtsp_server_get_auth             (GstRTSPServer *serve
 
 void                  gst_rtsp_server_set_max_threads      (GstRTSPServer *server, gint max_threads);
 gint                  gst_rtsp_server_get_max_threads      (GstRTSPServer *server);
+
+void                  gst_rtsp_server_set_tls_certificate  (GstRTSPServer *server, GTlsCertificate *cert);
+GTlsCertificate *     gst_rtsp_server_get_tls_certificate  (GstRTSPServer *server);
 
 gboolean              gst_rtsp_server_transfer_connection  (GstRTSPServer * server, GSocket *socket,
                                                             const gchar * ip, gint port,
