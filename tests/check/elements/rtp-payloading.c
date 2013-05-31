@@ -781,8 +781,8 @@ static int rtp_jpeg_frame_count = 1;
 GST_START_TEST (rtp_jpeg)
 {
   rtp_pipeline_test (rtp_jpeg_frame_data, rtp_jpeg_frame_data_size,
-      rtp_jpeg_frame_count, "video/x-jpeg,height=640,width=480,framerate=30/1",
-      "rtpjpegpay", "rtpjpegdepay", 0, 0, FALSE);
+      rtp_jpeg_frame_count, "video/x-jpeg,height=640,width=480", "rtpjpegpay",
+      "rtpjpegdepay", 0, 0, FALSE);
 }
 
 GST_END_TEST;

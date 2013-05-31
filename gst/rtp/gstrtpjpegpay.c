@@ -48,18 +48,9 @@ static GstStaticPadTemplate gst_rtp_jpeg_pay_sink_template =
     GST_STATIC_CAPS ("image/jpeg, "
         "  width = (int) [ 1, MAX ], "
         "  height = (int) [ 1, MAX ]; "
-        /* optional SDP attributes */
-        /*
-         * "framerate = (fraction) [ 0/1, MAX/1 ], "
-         */
         "  video/x-jpeg, "
         "  width = (int) [ 1, MAX ], "
-        "  height = (int) [ 1, MAX ]"
-        /* optional SDP attributes */
-        /*
-         * "framerate = (fraction) [ 0/1, MAX/1 ] "
-         */
-      )
+        "  height = (int) [ 1, MAX ]")
     );
 
 static GstStaticPadTemplate gst_rtp_jpeg_pay_src_template =
@@ -308,7 +299,8 @@ gst_rtp_jpeg_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
   GstRtpJPEGPay *pay;
   gboolean res;
   gint width, height;
-  gint num = 0, denom = 1;
+  gint num = 0, denom;
+  gchar *rate = NULL;
 
   pay = GST_RTP_JPEG_PAY (basepayload);
 
@@ -339,14 +331,24 @@ gst_rtp_jpeg_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 
   gst_rtp_base_payload_set_options (basepayload, "video", TRUE, "JPEG", 90000);
 
-  if (num > 0) {
+  if (num > 0)
+  {
+    gdouble framerate;
+    gst_util_fraction_to_double (num, denom, &framerate);
+    rate = g_strdup_printf("%f", framerate);
+  }
+
+  if (rate != NULL) {
     res = gst_rtp_base_payload_set_outcaps (basepayload, "width", G_TYPE_INT,
-        width, "height", G_TYPE_INT, height, "framerate", GST_TYPE_FRACTION,
-        num, denom, NULL);
-  } else {
+        width, "height", G_TYPE_INT, height, "a-framerate", G_TYPE_STRING,
+        rate, NULL);
+  } else if (rate == NULL) {
     res = gst_rtp_base_payload_set_outcaps (basepayload, "width",
         G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
   }
+
+  if (rate != NULL)
+    g_free (rate);
 
   return res;
 
