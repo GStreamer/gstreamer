@@ -237,6 +237,16 @@ gst_vaapi_display_wayland_close_display(GstVaapiDisplay * display)
     GstVaapiDisplayWaylandPrivate * const priv =
         GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display);
 
+    if (priv->output) {
+        wl_output_destroy(priv->output);
+        priv->output = NULL;
+    }
+
+    if (priv->shell) {
+        wl_shell_destroy(priv->shell);
+        priv->shell = NULL;
+    }
+
     if (priv->compositor) {
         wl_compositor_destroy(priv->compositor);
         priv->compositor = NULL;
