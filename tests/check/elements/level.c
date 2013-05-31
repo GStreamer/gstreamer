@@ -397,7 +397,7 @@ GST_START_TEST (test_message_on_eos)
 
 GST_END_TEST;
 
-GST_START_TEST (test_message_interval)
+GST_START_TEST (test_message_count)
 {
   GstElement *level;
   GstBuffer *inbuffer, *outbuffer;
@@ -445,6 +445,61 @@ GST_START_TEST (test_message_interval)
 
 GST_END_TEST;
 
+GST_START_TEST (test_message_timestamps)
+{
+  GstElement *level;
+  GstBuffer *inbuffer, *outbuffer;
+  GstBus *bus;
+  GstMessage *message;
+  const GstStructure *structure;
+  GstClockTime ts1, dur1, ts2;
+
+  level = setup_level ();
+  g_object_set (level, "message", TRUE, "interval", GST_SECOND / 20, NULL);
+
+  fail_unless (gst_element_set_state (level,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  /* create a fake 0.1 sec buffer with a half-amplitude block signal */
+  inbuffer = create_buffer (16536, 16536);
+
+  /* create a bus to get the level message on */
+  bus = gst_bus_new ();
+  gst_element_set_bus (level, bus);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  /* ... but it ends up being collected on the global buffer list */
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
+
+  /* check that timestamp + duration is contigous to the next timestamp */
+  message = gst_bus_poll (bus, GST_MESSAGE_ELEMENT, -1);
+  structure = gst_message_get_structure (message);
+  gst_structure_get_clock_time (structure, "timestamp", &ts1);
+  gst_structure_get_clock_time (structure, "duration", &dur1);
+  gst_message_unref (message);
+
+  message = gst_bus_poll (bus, GST_MESSAGE_ELEMENT, -1);
+  structure = gst_message_get_structure (message);
+  gst_structure_get_clock_time (structure, "timestamp", &ts2);
+  gst_message_unref (message);
+
+  fail_unless_equals_int64 (ts1 + dur1, ts2);
+
+  gst_element_set_bus (level, NULL);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
+  gst_object_unref (bus);
+  gst_buffer_unref (outbuffer);
+  fail_unless (gst_element_set_state (level,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+  ASSERT_OBJECT_REFCOUNT (level, "level", 1);
+  cleanup_level (level);
+}
+
+GST_END_TEST;
 
 static Suite *
 level_suite (void)
@@ -456,7 +511,8 @@ level_suite (void)
   tcase_add_test (tc_chain, test_int16);
   tcase_add_test (tc_chain, test_int16_panned);
   tcase_add_test (tc_chain, test_message_on_eos);
-  tcase_add_test (tc_chain, test_message_interval);
+  tcase_add_test (tc_chain, test_message_count);
+  tcase_add_test (tc_chain, test_message_timestamps);
 
   return s;
 }
