@@ -69,8 +69,7 @@ struct _GstRTSPServerClass {
   GThreadPool *pool;
 
   GstRTSPClient * (*create_client)      (GstRTSPServer *server);
-  gboolean        (*accept_client)      (GstRTSPServer *server, GstRTSPClient *client,
-                                         GSocket *socket, GError **error);
+
   /* signals */
   void            (*client_connected)   (GstRTSPServer *server, GstRTSPClient *client);
 };

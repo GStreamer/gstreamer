@@ -106,8 +106,6 @@ static void gst_rtsp_server_finalize (GObject * object);
 
 static gpointer do_loop (Loop * loop);
 static GstRTSPClient *default_create_client (GstRTSPServer * server);
-static gboolean default_accept_client (GstRTSPServer * server,
-    GstRTSPClient * client, GSocket * socket, GError ** error);
 
 static void
 gst_rtsp_server_class_init (GstRTSPServerClass * klass)
@@ -211,7 +209,6 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
       gst_rtsp_client_get_type ());
 
   klass->create_client = default_create_client;
-  klass->accept_client = default_accept_client;
 
   klass->pool = g_thread_pool_new ((GFunc) do_loop, klass, -1, FALSE, NULL);
 
@@ -1090,38 +1087,6 @@ default_create_client (GstRTSPServer * server)
   return client;
 }
 
-/* default method for creating a new client object in the server to accept and
- * handle a client connection on this server */
-static gboolean
-default_accept_client (GstRTSPServer * server, GstRTSPClient * client,
-    GSocket * socket, GError ** error)
-{
-  GstRTSPConnection *conn;
-  GstRTSPResult res;
-
-  /* a new client connected. */
-  GST_RTSP_CHECK (gst_rtsp_connection_accept (socket, &conn, NULL),
-      accept_failed);
-
-  /* configure the connection */
-
-  /* set connection on the client now */
-  gst_rtsp_client_set_connection (client, conn);
-
-  return TRUE;
-
-  /* ERRORS */
-accept_failed:
-  {
-    gchar *str = gst_rtsp_strresult (res);
-    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        "Could not accept client on server socket %p: %s", socket, str);
-    GST_ERROR ("Could not accept client on server socket %p: %s", socket, str);
-    g_free (str);
-    return FALSE;
-  }
-}
-
 /**
  * gst_rtsp_server_transfer_connection:
  * @server: a #GstRTSPServer
@@ -1197,24 +1162,27 @@ gboolean
 gst_rtsp_server_io_func (GSocket * socket, GIOCondition condition,
     GstRTSPServer * server)
 {
-  gboolean result = TRUE;
   GstRTSPClient *client = NULL;
   GstRTSPServerClass *klass;
-  GError *error = NULL;
+  GstRTSPResult res;
 
   if (condition & G_IO_IN) {
+    GstRTSPConnection *conn;
+
     klass = GST_RTSP_SERVER_GET_CLASS (server);
 
+    /* a new client connected, create a client object to handle the client. */
     if (klass->create_client)
       client = klass->create_client (server);
     if (client == NULL)
       goto client_failed;
 
-    /* a new client connected, create a client object to handle the client. */
-    if (klass->accept_client)
-      result = klass->accept_client (server, client, socket, &error);
-    if (!result)
-      goto accept_failed;
+    /* a new client connected. */
+    GST_RTSP_CHECK (gst_rtsp_connection_accept (socket, &conn, NULL),
+        accept_failed);
+
+    /* set connection on the client now */
+    gst_rtsp_client_set_connection (client, conn);
 
     /* manage the client connection */
     manage_client (server, client);
@@ -1234,8 +1202,10 @@ client_failed:
   }
 accept_failed:
   {
-    GST_ERROR_OBJECT (server, "failed to accept client: %s", error->message);
-    g_error_free (error);
+    gchar *str = gst_rtsp_strresult (res);
+    GST_ERROR_OBJECT (server, "Could not accept client on socket %p: %s",
+        socket, str);
+    g_free (str);
     g_object_unref (client);
     return G_SOURCE_CONTINUE;
   }
