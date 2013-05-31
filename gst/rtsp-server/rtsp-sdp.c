@@ -23,7 +23,7 @@
 static gboolean
 get_info_from_tags (GstPad * pad, GstEvent ** event, gpointer user_data)
 {
-  GstSDPMedia * media = (GstSDPMedia *) user_data;
+  GstSDPMedia *media = (GstSDPMedia *) user_data;
 
   if (GST_EVENT_TYPE (*event) == GST_EVENT_TAG) {
     GstTagList *tags;
@@ -35,13 +35,13 @@ get_info_from_tags (GstPad * pad, GstEvent ** event, gpointer user_data)
       return TRUE;
 
     if (!gst_tag_list_get_uint (tags, GST_TAG_MAXIMUM_BITRATE,
-          &bitrate) || bitrate == 0)
+            &bitrate) || bitrate == 0)
       if (!gst_tag_list_get_uint (tags, GST_TAG_BITRATE, &bitrate) ||
           bitrate == 0)
         return TRUE;
 
     /* set bandwidth (kbits/s) */
-    gst_sdp_media_add_bandwidth (media, GST_SDP_BWTYPE_AS, bitrate/1000);
+    gst_sdp_media_add_bandwidth (media, GST_SDP_BWTYPE_AS, bitrate / 1000);
 
     return FALSE;
 
@@ -179,7 +179,7 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
     gst_sdp_media_add_attribute (smedia, "control", tmp);
     g_free (tmp);
 
-    /* collect all other properties and add them to fmtp */
+    /* collect all other properties and add them to fmtp or attributes */
     fmtp = g_string_new ("");
     g_string_append_printf (fmtp, "%d ", caps_pt);
     first = TRUE;
@@ -212,6 +212,19 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
         continue;
       if (!strcmp (fname, "framerate"))
         continue;
+
+      if (g_str_has_prefix (fname, "a-")) {
+        /* attribute */
+        if ((fval = gst_structure_get_string (s, fname)))
+          gst_sdp_media_add_attribute (smedia, fname + 2, fval);
+        continue;
+      }
+      if (g_str_has_prefix (fname, "x-")) {
+        /* attribute */
+        if ((fval = gst_structure_get_string (s, fname)))
+          gst_sdp_media_add_attribute (smedia, fname, fval);
+        continue;
+      }
 
       if ((fval = gst_structure_get_string (s, fname))) {
         g_string_append_printf (fmtp, "%s%s=%s", first ? "" : ";", fname, fval);
