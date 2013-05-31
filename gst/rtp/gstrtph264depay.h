@@ -66,8 +66,6 @@ struct _GstRtpH264Depay
   GPtrArray *sps;
   GPtrArray *pps;
   gboolean new_codec_data;
-  gint width;
-  gint height;
 };
 
 struct _GstRtpH264DepayClass
