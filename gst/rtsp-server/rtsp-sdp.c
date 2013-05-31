@@ -101,7 +101,6 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
     GString *fmtp;
     GstCaps *caps;
     gint width, height;
-    gint num = 0, denom = 1;
 
     stream = gst_rtsp_media_get_stream (media, i);
     caps = gst_rtsp_stream_get_caps (stream);
@@ -164,16 +163,6 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
       g_free (tmp);
     }
 
-    /* create framerate SDP attribute if frame is not zero */
-    if (gst_structure_get_fraction (s, "framerate", &num, &denom) && num > 0) {
-      gdouble rate;
-      gchar framerate [G_ASCII_DTOSTR_BUF_SIZE];
-
-      gst_util_fraction_to_double (num, denom, &rate);
-      g_ascii_formatd (framerate, sizeof (framerate), " %.17g", rate);
-      gst_sdp_media_add_attribute (smedia, "framerate", framerate);
-    }
-
     /* the config uri */
     tmp = g_strdup_printf ("stream=%d", i);
     gst_sdp_media_add_attribute (smedia, "control", tmp);
@@ -209,8 +198,6 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
       if (!strcmp (fname, "width"))
         continue;
       if (!strcmp (fname, "height"))
-        continue;
-      if (!strcmp (fname, "framerate"))
         continue;
 
       if (g_str_has_prefix (fname, "a-")) {
