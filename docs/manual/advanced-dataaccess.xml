@@ -579,7 +579,7 @@ main (gint   argc,
         </listitem>
         <listitem>
           <para>
-            It the appsrc operates in live mode or not. This can be configured
+            If the appsrc operates in live mode or not. This can be configured
             with the is-live property. When operating in live-mode it is
             important to configure the min-latency and max-latency in appsrc.
             The min-latency should be set to the amount of time it takes between
