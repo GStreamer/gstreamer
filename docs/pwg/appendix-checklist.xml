@@ -31,7 +31,7 @@
           element that goes from <classname>PAUSED</classname> to
           <classname>READY</classname> and back to
           <classname>PAUSED</classname> should start reading the
-          stream from he start again.
+          stream from the start again.
         </para>
       </listitem>
       <listitem>

@@ -45,7 +45,7 @@
   }
   </programlisting>
   <para>
-    It makes not sense for all GObject parameter to be real-time controlled.
+    It makes no sense for all GObject parameter to be real-time controlled.
     Therefore the next step is to mark controllable parameters.
     This is done by using the special flag <constant>GST_PARAM_CONTROLLABLE</constant>.
     when setting up GObject params in the <function>_class_init</function> method.    

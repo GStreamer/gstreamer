@@ -183,7 +183,7 @@
       <title>Long term correction</title>
       <para>
         Long term corrections are a bit more difficult to perform. They
-        rely on the value of the propertion in the QOS event. Elements should
+        rely on the value of the proportion in the QOS event. Elements should
         reduce the amount of resources they comsume by the proportion 
         field in the QoS message.
       </para>
