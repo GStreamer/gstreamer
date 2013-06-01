@@ -101,8 +101,8 @@
       <itemizedlist>
         <listitem>
           <para>
-            When going from READY to PAUSED state, udpsrc will require a
-            streaming thread for pushing data into the depayloader. It will
+            When going from READY to PAUSED state, fakesrc will require a
+            streaming thread for pushing data into the fakesink. It will
             post a STREAM_STATUS message indicating its requirement for a
             streaming thread.
           </para>
