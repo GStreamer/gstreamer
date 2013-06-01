@@ -1218,25 +1218,6 @@ wrong_buffer:
 }
 
 static gboolean
-audio_info_is_equal (GstAudioInfo * from, GstAudioInfo * to)
-{
-  if (from == to)
-    return TRUE;
-  if (from->finfo == NULL || to->finfo == NULL)
-    return FALSE;
-  if (GST_AUDIO_INFO_FORMAT (from) != GST_AUDIO_INFO_FORMAT (to))
-    return FALSE;
-  if (GST_AUDIO_INFO_RATE (from) != GST_AUDIO_INFO_RATE (to))
-    return FALSE;
-  if (GST_AUDIO_INFO_CHANNELS (from) != GST_AUDIO_INFO_CHANNELS (to))
-    return FALSE;
-  if (GST_AUDIO_INFO_CHANNELS (from) > 64)
-    return TRUE;
-  return (memcmp (from->position, to->position,
-          GST_AUDIO_INFO_CHANNELS (from) * sizeof (to->position[0])) == 0);
-}
-
-static gboolean
 gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc, GstCaps * caps)
 {
   GstAudioEncoderClass *klass;
@@ -1268,7 +1249,7 @@ gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc, GstCaps * caps)
   if (!gst_audio_info_from_caps (&state, caps))
     goto refuse_caps;
 
-  if (enc->priv->ctx.input_caps && audio_info_is_equal (&state, &ctx->info))
+  if (enc->priv->ctx.input_caps && gst_audio_info_is_equal (&state, &ctx->info))
     goto same_caps;
 
   /* adjust ts tracking to new sample rate */

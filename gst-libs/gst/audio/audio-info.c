@@ -477,6 +477,10 @@ done:
 gboolean
 gst_audio_info_is_equal (const GstAudioInfo * info, const GstAudioInfo * other)
 {
+  if (info == other)
+    return TRUE;
+  if (info->finfo == NULL || other->finfo == NULL)
+    return FALSE;
   if (GST_AUDIO_INFO_FORMAT (info) != GST_AUDIO_INFO_FORMAT (other))
     return FALSE;
   if (GST_AUDIO_INFO_FLAGS (info) != GST_AUDIO_INFO_FLAGS (other))
@@ -487,8 +491,8 @@ gst_audio_info_is_equal (const GstAudioInfo * info, const GstAudioInfo * other)
     return FALSE;
   if (GST_AUDIO_INFO_CHANNELS (info) != GST_AUDIO_INFO_CHANNELS (other))
     return FALSE;
-  if (GST_AUDIO_INFO_BPF (info) != GST_AUDIO_INFO_BPF (other))
-    return FALSE;
+  if (GST_AUDIO_INFO_CHANNELS (info) > 64)
+    return TRUE;
   if (memcmp (info->position, other->position,
           GST_AUDIO_INFO_CHANNELS (info) * sizeof (GstAudioChannelPosition)) !=
       0)
