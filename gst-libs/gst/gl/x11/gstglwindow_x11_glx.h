@@ -36,13 +36,16 @@ G_BEGIN_DECLS
 
 typedef struct _GstGLWindowX11GLX        GstGLWindowX11GLX;
 typedef struct _GstGLWindowX11GLXClass   GstGLWindowX11GLXClass;
+typedef struct _GstGLWindowX11GLXPrivate GstGLWindowX11GLXPrivate;
 
 struct _GstGLWindowX11GLX {
   /*< private >*/
   GstGLWindowX11 parent;
   
   GLXContext glx_context;
-  
+
+  GstGLWindowX11GLXPrivate *priv;
+
   gpointer _reserved[GST_PADDING];
 };
 
