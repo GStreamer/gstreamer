@@ -42,23 +42,23 @@
 
 typedef struct _GstGLShaderVTable
 {
-  GLuint (*CreateProgram) (void);
-  void (*DeleteProgram) (GLuint program);
-  void (*UseProgram) (GLuint program);
-  void (*GetAttachedShaders) (GLuint program, GLsizei maxcount, GLsizei * count,
-      GLuint * shaders);
+  GLuint GSTGLAPI (*CreateProgram) (void);
+  void GSTGLAPI (*DeleteProgram) (GLuint program);
+  void GSTGLAPI (*UseProgram) (GLuint program);
+  void GSTGLAPI (*GetAttachedShaders) (GLuint program, GLsizei maxcount,
+      GLsizei * count, GLuint * shaders);
 
-    GLuint (*CreateShader) (GLenum shaderType);
-  void (*DeleteShader) (GLuint shader);
-  void (*AttachShader) (GLuint program, GLuint shader);
-  void (*DetachShader) (GLuint program, GLuint shader);
+  GLuint GSTGLAPI (*CreateShader) (GLenum shaderType);
+  void GSTGLAPI (*DeleteShader) (GLuint shader);
+  void GSTGLAPI (*AttachShader) (GLuint program, GLuint shader);
+  void GSTGLAPI (*DetachShader) (GLuint program, GLuint shader);
 
-  void (*GetShaderiv) (GLuint program, GLenum pname, GLint * params);
-  void (*GetProgramiv) (GLuint program, GLenum pname, GLint * params);
-  void (*GetShaderInfoLog) (GLuint shader, GLsizei maxLength, GLsizei * length,
-      char *log);
-  void (*GetProgramInfoLog) (GLuint shader, GLsizei maxLength, GLsizei * length,
-      char *log);
+  void GSTGLAPI (*GetShaderiv) (GLuint program, GLenum pname, GLint * params);
+  void GSTGLAPI (*GetProgramiv) (GLuint program, GLenum pname, GLint * params);
+  void GSTGLAPI (*GetShaderInfoLog) (GLuint shader, GLsizei maxLength,
+      GLsizei * length, char *log);
+  void GSTGLAPI (*GetProgramInfoLog) (GLuint shader, GLsizei maxLength,
+      GLsizei * length, char *log);
 } GstGLShaderVTable;
 
 enum

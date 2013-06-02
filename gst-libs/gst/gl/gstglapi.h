@@ -46,6 +46,12 @@
 # endif
 #endif
 
+#ifdef WINAPI
+#define GSTGLAPI WINAPI
+#else
+#define GSTGLAPI
+#endif
+
 #include "glprototypes/gstgl_compat.h"
 
 #include <gst/gst.h>
@@ -76,7 +82,7 @@ typedef enum
 
 #define GST_GL_EXT_BEGIN(name, min_gl, maj_gl, in_gles, ext_suf, ext_name)
 #define GST_GL_EXT_FUNCTION(ret, name, args) \
-  ret (*name) args;
+  ret GSTGLAPI (*name) args;
 #define GST_GL_EXT_END()
 
 typedef struct _GstGLFuncs
