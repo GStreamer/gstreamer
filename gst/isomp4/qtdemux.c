@@ -9215,6 +9215,8 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
   if (!qtdemux->tag_list) {
     qtdemux->tag_list = gst_tag_list_new_empty ();
     gst_tag_list_set_scope (qtdemux->tag_list, GST_TAG_SCOPE_GLOBAL);
+  } else {
+    qtdemux->tag_list = gst_tag_list_make_writable (qtdemux->tag_list);
   }
 
   i = 0;
@@ -9473,6 +9475,14 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   GstDateTime *datetime = NULL;
   gint version;
 
+  /* make sure we have a usable taglist */
+  if (!qtdemux->tag_list) {
+    qtdemux->tag_list = gst_tag_list_new_empty ();
+    gst_tag_list_set_scope (qtdemux->tag_list, GST_TAG_SCOPE_GLOBAL);
+  } else {
+    qtdemux->tag_list = gst_tag_list_make_writable (qtdemux->tag_list);
+  }
+
   mvhd = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_mvhd);
   if (mvhd == NULL) {
     GST_LOG_OBJECT (qtdemux, "No mvhd node found, looking for redirects.");
@@ -9512,11 +9522,6 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
     }
   }
   if (datetime) {
-    if (!qtdemux->tag_list) {
-      qtdemux->tag_list = gst_tag_list_new_empty ();
-      gst_tag_list_set_scope (qtdemux->tag_list, GST_TAG_SCOPE_GLOBAL);
-    }
-
     /* Use KEEP as explicit tags should have a higher priority than mvhd tag */
     gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_KEEP, GST_TAG_DATE_TIME,
         datetime, NULL);
