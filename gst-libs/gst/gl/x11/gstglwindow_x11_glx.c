@@ -35,6 +35,9 @@
 G_DEFINE_TYPE (GstGLWindowX11GLX, gst_gl_window_x11_glx,
     GST_GL_TYPE_WINDOW_X11);
 
+#define GST_GL_WINDOW_X11_GLX_GET_PRIVATE(o) \
+  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW_X11_GLX, GstGLWindowX11GLXPrivate))
+
 static guintptr gst_gl_window_x11_glx_get_gl_context (GstGLWindowX11 *
     window_x11);
 static void gst_gl_window_x11_glx_swap_buffers (GstGLWindowX11 * window_x11);
@@ -49,11 +52,19 @@ GstGLAPI gst_gl_window_x11_glx_get_gl_api (GstGLWindow * window);
 static gpointer gst_gl_window_x11_glx_get_proc_address (GstGLWindow * window,
     const gchar * name);
 
+struct _GstGLWindowX11GLXPrivate
+{
+  int glx_major;
+  int glx_minor;
+};
+
 static void
 gst_gl_window_x11_glx_class_init (GstGLWindowX11GLXClass * klass)
 {
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
   GstGLWindowX11Class *window_x11_class = (GstGLWindowX11Class *) klass;
+
+  g_type_class_add_private (klass, sizeof (GstGLWindowX11GLXPrivate));
 
   window_x11_class->get_gl_context =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_glx_get_gl_context);
@@ -77,6 +88,7 @@ gst_gl_window_x11_glx_class_init (GstGLWindowX11GLXClass * klass)
 static void
 gst_gl_window_x11_glx_init (GstGLWindowX11GLX * window)
 {
+  window->priv = GST_GL_WINDOW_X11_GLX_GET_PRIVATE (window);
 }
 
 /* Must be called in the gl thread */
@@ -130,16 +142,11 @@ static gboolean
 gst_gl_window_x11_glx_choose_format (GstGLWindowX11 * window_x11,
     GError ** error)
 {
+  GstGLWindowX11GLX *window_glx;
   gint error_base;
   gint event_base;
 
-  gint attrib[] = {
-    GLX_RGBA,
-    GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1, GLX_BLUE_SIZE, 1,
-    GLX_DEPTH_SIZE, 16,
-    GLX_DOUBLEBUFFER,
-    None
-  };
+  window_glx = GST_GL_WINDOW_X11_GLX (window_x11);
 
   if (!glXQueryExtension (window_x11->device, &error_base, &event_base)) {
     g_set_error (error, GST_GL_WINDOW_ERROR,
@@ -147,13 +154,69 @@ gst_gl_window_x11_glx_choose_format (GstGLWindowX11 * window_x11,
     goto failure;
   }
 
-  window_x11->visual_info = glXChooseVisual (window_x11->device,
-      window_x11->screen_num, attrib);
-
-  if (!window_x11->visual_info) {
-    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
-        "Bad attributes in glXChooseVisual");
+  if (!glXQueryVersion (window_x11->device, &window_glx->priv->glx_major,
+          &window_glx->priv->glx_minor)) {
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
+        "Failed to query GLX version (glXQueryVersion failed)");
     goto failure;
+  }
+
+  GST_INFO ("GLX Version: %d.%d", window_glx->priv->glx_major,
+      window_glx->priv->glx_minor);
+
+  /* legacy case */
+  if (window_glx->priv->glx_major < 1 || (window_glx->priv->glx_major == 1
+          && window_glx->priv->glx_minor < 3)) {
+    gint attribs[] = {
+      GLX_RGBA,
+      GLX_RED_SIZE, 1,
+      GLX_GREEN_SIZE, 1,
+      GLX_BLUE_SIZE, 1,
+      GLX_DEPTH_SIZE, 16,
+      GLX_DOUBLEBUFFER,
+      None
+    };
+
+    window_x11->visual_info = glXChooseVisual (window_x11->device,
+        window_x11->screen_num, attribs);
+
+    if (!window_x11->visual_info) {
+      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+          "Bad attributes in glXChooseVisual");
+      goto failure;
+    }
+  } else {
+    gint attribs[] = {
+      GLX_RENDER_TYPE, GLX_RGBA_BIT,
+      GLX_RED_SIZE, 1,
+      GLX_GREEN_SIZE, 1,
+      GLX_BLUE_SIZE, 1,
+      GLX_DEPTH_SIZE, 16,
+      GLX_DOUBLEBUFFER, True,
+      None
+    };
+
+    int fbcount;
+
+    GLXFBConfig *fbconfigs = glXChooseFBConfig (window_x11->device,
+        DefaultScreen (window_x11->device), attribs, &fbcount);
+
+    if (!fbconfigs) {
+      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+          "Could not find any FBConfig's to use (check attributes?)");
+      goto failure;
+    }
+
+    window_x11->visual_info = glXGetVisualFromFBConfig (window_x11->device,
+        fbconfigs[0]);
+
+    XFree (fbconfigs);
+
+    if (!window_x11->visual_info) {
+      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+          "Bad attributes in FBConfig");
+      goto failure;
+    }
   }
 
   return TRUE;
