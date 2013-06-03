@@ -45,6 +45,10 @@
 #define gst_gl_window_x11_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstGLWindowX11, gst_gl_window_x11, GST_GL_TYPE_WINDOW);
 
+/* X error trap */
+static int TrappedErrorCode = 0;
+static int (*old_error_handler) (Display *, XErrorEvent *);
+
 enum
 {
   ARG_0,
@@ -607,13 +611,13 @@ gst_gl_window_x11_run (GstGLWindow * window)
           if (window_x11->running) {
 #if SIZEOF_VOID_P == 8
             GstGLWindowCB custom_cb =
-                (GstGLWindowCB) (((event.xclient.data.
-                        l[0] & 0xffffffff) << 32) | (event.xclient.data.
-                    l[1] & 0xffffffff));
+                (GstGLWindowCB) (((event.xclient.
+                        data.l[0] & 0xffffffff) << 32) | (event.xclient.
+                    data.l[1] & 0xffffffff));
             gpointer custom_data =
-                (gpointer) (((event.xclient.data.
-                        l[2] & 0xffffffff) << 32) | (event.xclient.data.
-                    l[3] & 0xffffffff));
+                (gpointer) (((event.xclient.
+                        data.l[2] & 0xffffffff) << 32) | (event.xclient.
+                    data.l[3] & 0xffffffff));
 #else
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];
@@ -642,13 +646,13 @@ gst_gl_window_x11_run (GstGLWindow * window)
             && event.xclient.message_type == wm_quit_loop) {
 #if SIZEOF_VOID_P == 8
           GstGLWindowCB destroy_cb =
-              (GstGLWindowCB) (((event.xclient.data.
-                      l[0] & 0xffffffff) << 32) | (event.xclient.data.
-                  l[1] & 0xffffffff));
+              (GstGLWindowCB) (((event.xclient.
+                      data.l[0] & 0xffffffff) << 32) | (event.xclient.
+                  data.l[1] & 0xffffffff));
           gpointer destroy_data =
-              (gpointer) (((event.xclient.data.
-                      l[2] & 0xffffffff) << 32) | (event.xclient.data.
-                  l[3] & 0xffffffff));
+              (gpointer) (((event.xclient.
+                      data.l[2] & 0xffffffff) << 32) | (event.xclient.
+                  data.l[3] & 0xffffffff));
 #else
           GstGLWindowCB destroy_cb = (GstGLWindowCB) event.xclient.data.l[0];
           gpointer destroy_data = (gpointer) event.xclient.data.l[1];
@@ -666,13 +670,13 @@ gst_gl_window_x11_run (GstGLWindow * window)
                   &pending_event)) {
 #if SIZEOF_VOID_P == 8
             GstGLWindowCB custom_cb =
-                (GstGLWindowCB) (((event.xclient.data.
-                        l[0] & 0xffffffff) << 32) | (event.xclient.data.
-                    l[1] & 0xffffffff));
+                (GstGLWindowCB) (((event.xclient.
+                        data.l[0] & 0xffffffff) << 32) | (event.xclient.
+                    data.l[1] & 0xffffffff));
             gpointer custom_data =
-                (gpointer) (((event.xclient.data.
-                        l[2] & 0xffffffff) << 32) | (event.xclient.data.
-                    l[3] & 0xffffffff));
+                (gpointer) (((event.xclient.
+                        data.l[2] & 0xffffffff) << 32) | (event.xclient.
+                    data.l[3] & 0xffffffff));
 #else
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];
@@ -825,4 +829,38 @@ gst_gl_window_x11_send_message (GstGLWindow * window, GstGLWindowCB callback,
     g_cond_wait (&window_x11->cond_send_message,
         GST_GL_WINDOW_GET_LOCK (window));
   }
+}
+
+static int
+error_handler (Display * xdpy, XErrorEvent * error)
+{
+  TrappedErrorCode = error->error_code;
+  return 0;
+}
+
+/**
+ * gst_gl_window_x11_trap_x_errors:
+ *
+ * Traps every X error until gst_gl_window_x11_untrap_x_errors() is called.
+ */
+void
+gst_gl_window_x11_trap_x_errors (void)
+{
+  TrappedErrorCode = 0;
+  old_error_handler = XSetErrorHandler (error_handler);
+}
+
+/**
+ * gst_gl_window_x11_untrap_x_errors:
+ *
+ * Removes the X error trap and returns the current status.
+ *
+ * Return value: the trapped error code, or 0 for success
+ */
+gint
+gst_gl_window_x11_untrap_x_errors (void)
+{
+  XSetErrorHandler (old_error_handler);
+
+  return TrappedErrorCode;
 }

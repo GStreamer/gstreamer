@@ -97,6 +97,9 @@ GType gst_gl_window_x11_get_type     (void);
 
 GstGLWindowX11 * gst_gl_window_x11_new (void);
 
+void gst_gl_window_x11_trap_x_errors (void);
+gint gst_gl_window_x11_untrap_x_errors (void);
+
 G_END_DECLS
 
 #endif /* __GST_GL_WINDOW_X11_H__ */
