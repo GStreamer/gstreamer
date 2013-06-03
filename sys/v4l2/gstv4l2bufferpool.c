@@ -538,6 +538,23 @@ start_failed:
   }
 }
 
+static void
+gst_v4l2_buffer_pool_free_buffers (GstV4l2BufferPool * pool)
+{
+  if (pool->num_buffers > 0) {
+    struct v4l2_requestbuffers breq;
+    memset (&breq, 0, sizeof (struct v4l2_requestbuffers));
+    breq.type = pool->obj->type;
+    breq.count = 0;
+    breq.memory = V4L2_MEMORY_MMAP;
+    if (v4l2_ioctl (pool->video_fd, VIDIOC_REQBUFS, &breq) < 0) {
+      GST_ERROR_OBJECT (pool, "error releasing buffers: %s",
+          g_strerror (errno));
+    }
+    pool->num_buffers = 0;
+  }
+}
+
 static gboolean
 gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
 {
@@ -582,18 +599,7 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
   g_free (pool->buffers);
   pool->buffers = NULL;
 
-  if (pool->num_buffers > 0) {
-    struct v4l2_requestbuffers breq;
-    memset (&breq, 0, sizeof (struct v4l2_requestbuffers));
-    breq.type = obj->type;
-    breq.count = 0;
-    breq.memory = V4L2_MEMORY_MMAP;
-    if (v4l2_ioctl (pool->video_fd, VIDIOC_REQBUFS, &breq) < 0) {
-      GST_ERROR_OBJECT (pool, "error releasing buffers: %s",
-          g_strerror (errno));
-    }
-    pool->num_buffers = 0;
-  }
+  gst_v4l2_buffer_pool_free_buffers (pool);
 
   return ret;
 
@@ -1002,6 +1008,8 @@ static void
 gst_v4l2_buffer_pool_finalize (GObject * object)
 {
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (object);
+
+  gst_v4l2_buffer_pool_free_buffers (pool);
 
   if (pool->video_fd >= 0)
     v4l2_close (pool->video_fd);
