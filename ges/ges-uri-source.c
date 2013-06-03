@@ -32,10 +32,13 @@
 #include "ges-uri-source.h"
 #include "ges-uri-asset.h"
 #include "ges-extractable.h"
+#include "ges-layer.h"
+#include "gstframepositionner.h"
 
 struct _GESUriSourcePrivate
 {
   GHashTable *props_hashtable;
+  GstFramePositionner *positionner;
 };
 
 enum
@@ -185,6 +188,23 @@ _sync_element_to_layer_property_float (GESTrackElement * trksrc,
 
 /* TrackElement VMethods */
 
+static void
+update_z_order_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
+    GESUriSource * self)
+{
+  GESLayer *layer = ges_clip_get_layer (clip);
+
+  if (layer == NULL)
+    return;
+
+  /* 10000 is the max value of zorder on videomixerpad, hardcoded */
+
+  g_object_set (self->priv->positionner, "zorder",
+      10000 - ges_layer_get_priority (layer), NULL);
+
+  gst_object_unref (layer);
+}
+
 static GstElement *
 ges_uri_source_create_element (GESTrackElement * trksrc)
 {
@@ -192,6 +212,8 @@ ges_uri_source_create_element (GESTrackElement * trksrc)
   GESTrack *track;
   GstElement *decodebin;
   GstElement *topbin, *volume;
+  GstElement *positionner;
+  GESTimelineElement *parent;
 
   self = (GESUriSource *) trksrc;
   track = ges_track_element_get_track (trksrc);
@@ -209,6 +231,27 @@ ges_uri_source_create_element (GESTrackElement * trksrc)
           "volume");
       _add_element_properties_to_hashtable (self, volume, "volume", "mute",
           NULL);
+      break;
+    case GES_TRACK_TYPE_VIDEO:
+      decodebin = gst_element_factory_make ("uridecodebin", NULL);
+
+      /* That positionner will add metadata to buffers according to its
+         properties, acting like a proxy for our smart-mixer dynamic pads. */
+      positionner =
+          gst_element_factory_make ("framepositionner", "frame_tagger");
+      _add_element_properties_to_hashtable (self, positionner, "alpha", "posx",
+          "posy", NULL);
+      topbin = _create_bin ("video-src-bin", decodebin, positionner, NULL);
+      parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
+      if (parent) {
+        self->priv->positionner = GST_FRAME_POSITIONNER (positionner);
+        g_signal_connect (parent, "notify::layer",
+            (GCallback) update_z_order_cb, trksrc);
+        update_z_order_cb (GES_CLIP (parent), NULL, self);
+        gst_object_unref (parent);
+      } else {
+        GST_WARNING ("No parent timeline element, SHOULD NOT HAPPEN");
+      }
       break;
     default:
       decodebin = gst_element_factory_make ("uridecodebin", NULL);
@@ -347,6 +390,7 @@ ges_track_filesource_init (GESUriSource * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_URI_SOURCE, GESUriSourcePrivate);
   self->priv->props_hashtable = NULL;
+  self->priv->positionner = NULL;
 }
 
 /**

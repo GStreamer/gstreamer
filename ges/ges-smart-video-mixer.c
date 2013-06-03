@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 
+#include "gstframepositionner.h"
 #include "ges-types.h"
 #include "ges-internal.h"
 #include "ges-smart-video-mixer.h"
@@ -44,11 +45,14 @@ typedef struct _PadInfos
   GESSmartMixer *self;
   GstPad *mixer_pad;
   GstElement *bin;
+  gulong probe_id;
 } PadInfos;
 
 static void
 destroy_pad (PadInfos * infos)
 {
+  gst_pad_remove_probe (infos->mixer_pad, infos->probe_id);
+
   if (G_LIKELY (infos->bin)) {
     gst_element_set_state (infos->bin, GST_STATE_NULL);
     gst_element_unlink (infos->bin, infos->self->mixer);
@@ -57,7 +61,30 @@ destroy_pad (PadInfos * infos)
 
   if (infos->mixer_pad)
     gst_element_release_request_pad (infos->self->mixer, infos->mixer_pad);
+
   g_slice_free (PadInfos, infos);
+}
+
+/* These metadata will get set by the upstream framepositionner element,
+   added in the video sources' bin */
+static GstPadProbeReturn
+parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info, gpointer unused)
+{
+  GstFramePositionnerMeta *meta;
+
+  meta =
+      (GstFramePositionnerMeta *) gst_buffer_get_meta ((GstBuffer *) info->data,
+      gst_frame_positionner_meta_api_get_type ());
+
+  if (!meta) {
+    GST_WARNING ("The current source should use a framepositionner");
+    return GST_PAD_PROBE_OK;
+  }
+
+  g_object_set (mixer_pad, "alpha", meta->alpha, "xpos", meta->posx, "ypos",
+      meta->posy, "zorder", meta->zorder, NULL);
+
+  return GST_PAD_PROBE_OK;
 }
 
 /****************************************************
@@ -76,8 +103,6 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   infos->mixer_pad = gst_element_request_pad (self->mixer,
       gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (self->mixer),
           "sink_%u"), NULL, NULL);
-
-  g_object_set (G_OBJECT (infos->mixer_pad), "alpha", 0.5, NULL);
 
   if (infos->mixer_pad == NULL) {
     GST_WARNING_OBJECT (element, "Could not get any pad from GstMixer");
@@ -110,6 +135,10 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   gst_pad_set_active (tmpghost, TRUE);
   gst_element_add_pad (GST_ELEMENT (infos->bin), tmpghost);
   gst_pad_link (tmpghost, infos->mixer_pad);
+
+  infos->probe_id =
+      gst_pad_add_probe (infos->mixer_pad, GST_PAD_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) parse_metadata, NULL, NULL);
 
   LOCK (self);
   g_hash_table_insert (self->pads_infos, ghost, infos);

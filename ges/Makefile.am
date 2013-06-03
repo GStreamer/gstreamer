@@ -63,7 +63,8 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-effect-asset.c \
 	ges-smart-adder.c \
 	ges-smart-video-mixer.c \
-	ges-utils.c
+	ges-utils.c \
+	gstframepositionner.c
 
 libges_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/ges/
 libges_@GST_API_VERSION@include_HEADERS = 	\
@@ -123,7 +124,8 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-effect-asset.h \
 	ges-smart-adder.h \
 	ges-smart-video-mixer.h \
-	ges-utils.h
+	ges-utils.h \
+	gstframepositionner.h
 
 noinst_HEADERS = \
 	ges-internal.h \

@@ -19,6 +19,7 @@
  */
 
 #include <ges/ges.h>
+#include "ges/gstframepositionner.h"
 #include "ges-internal.h"
 
 #define GES_GNONLIN_VERSION_NEEDED_MAJOR 0
@@ -92,6 +93,9 @@ ges_init (void)
   /* check the gnonlin elements are available */
   if (!ges_check_gnonlin_availability ())
     return FALSE;
+
+  gst_element_register (NULL, "framepositionner", 0,
+      GST_TYPE_FRAME_POSITIONNER);
 
   /* TODO: user-defined types? */
   ges_initialized = TRUE;
