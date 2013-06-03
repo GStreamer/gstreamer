@@ -401,8 +401,10 @@ gst_vaapi_video_allocator_new(GstVaapiDisplay *display, GstCaps *caps)
                      GST_VIDEO_INFO_FORMAT_STRING(&allocator->surface_info),
                      allocator->has_direct_rendering ? "yes" : "no");
         } while (0);
-        gst_vaapi_object_unref(surface);
-        gst_vaapi_object_unref(image);
+        if (surface)
+            gst_vaapi_object_unref(surface);
+        if (image)
+            gst_vaapi_object_unref(image);
     }
 
     allocator->image_info = *vip;
