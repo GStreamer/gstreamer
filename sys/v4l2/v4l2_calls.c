@@ -109,7 +109,8 @@ cap_failed:
 static gboolean
 gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
 {
-  gint n;
+  gint n, next;
+  struct v4l2_queryctrl control = { 0, };
 
   GstElement *e;
 
@@ -237,10 +238,20 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
   GST_DEBUG_OBJECT (e, "  controls+menus");
 
   /* and lastly, controls+menus (if appropriate) */
-  for (n = V4L2_CID_BASE;; n++) {
-    struct v4l2_queryctrl control = { 0, };
+#ifdef V4L2_CTRL_FLAG_NEXT_CTRL
+  next = V4L2_CTRL_FLAG_NEXT_CTRL;
+  n = 0;
+#else
+  next = 0;
+  n = V4L2_CID_BASE;
+#endif
+  control.id = next;
+  while (TRUE) {
     GstV4l2ColorBalanceChannel *v4l2channel;
     GstColorBalanceChannel *channel;
+
+    if (!next)
+      n++;
 
     /* when we reached the last official CID, continue with private CIDs */
     if (n == V4L2_CID_LASTP1) {
@@ -249,8 +260,19 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     }
     GST_DEBUG_OBJECT (e, "checking control %08x", n);
 
-    control.id = n;
+    control.id = n | next;
     if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_QUERYCTRL, &control) < 0) {
+      if (next) {
+        if (n > 0) {
+          GST_DEBUG_OBJECT (e, "controls finished");
+          break;
+        } else {
+          GST_DEBUG_OBJECT (e, "V4L2_CTRL_FLAG_NEXT_CTRL not supported.");
+          next = 0;
+          n = V4L2_CID_BASE;
+          continue;
+        }
+      }
       if (errno == EINVAL || errno == ENOTTY || errno == EIO || errno == ENOENT) {
         if (n < V4L2_CID_PRIVATE_BASE) {
           GST_DEBUG_OBJECT (e, "skipping control %08x", n);
@@ -266,10 +288,17 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         continue;
       }
     }
+    n = control.id;
     if (control.flags & V4L2_CTRL_FLAG_DISABLED) {
       GST_DEBUG_OBJECT (e, "skipping disabled control");
       continue;
     }
+#ifdef V4L2_CTRL_TYPE_CTRL_CLASS
+    if (control.type == V4L2_CTRL_TYPE_CTRL_CLASS) {
+      GST_DEBUG_OBJECT (e, "starting control class '%s'", control.name);
+      continue;
+    }
+#endif
     switch (control.type) {
       case V4L2_CTRL_TYPE_INTEGER:
       case V4L2_CTRL_TYPE_BOOLEAN:
