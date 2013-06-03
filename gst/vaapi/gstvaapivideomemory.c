@@ -107,9 +107,10 @@ gst_video_meta_map_vaapi_memory(GstVideoMeta *meta, guint plane,
                              allocator), FALSE);
     g_return_val_if_fail(mem->meta, FALSE);
 
-    if ((flags & GST_MAP_READWRITE) == GST_MAP_READ)
+    if ((flags & GST_MAP_READWRITE) != GST_MAP_WRITE)
         goto error_unsupported_map;
 
+    /* Map for writing */
     if (++mem->map_count == 1) {
         if (!ensure_surface(mem))
             goto error_ensure_surface;
@@ -169,7 +170,9 @@ gst_video_meta_unmap_vaapi_memory(GstVideoMeta *meta, guint plane,
     g_return_val_if_fail(mem->image, FALSE);
 
     if (--mem->map_count == 0) {
-        gst_vaapi_image_unmap(mem->image);
+        /* Unmap VA image used for read/writes */
+        if (info->flags & GST_MAP_READWRITE)
+            gst_vaapi_image_unmap(mem->image);
 
         /* Commit VA image to surface */
         if ((info->flags & GST_MAP_WRITE) && !mem->use_direct_rendering) {
