@@ -87,6 +87,9 @@ struct _GstGLFeatureData
 };
 
 gboolean
+gst_gl_check_extension (const char *name, const gchar * ext);
+
+gboolean
 _gst_gl_feature_check (GstGLDisplay *display,
                      const char *driver_prefix,
                      const GstGLFeatureData *data,
