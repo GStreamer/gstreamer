@@ -253,7 +253,9 @@ static void
 gst_vaapisink_destroy(GstVaapiSink *sink)
 {
     gst_buffer_replace(&sink->video_buffer, NULL);
+#if USE_GLX
     gst_vaapi_texture_replace(&sink->texture, NULL);
+#endif
     gst_vaapi_display_replace(&sink->display, NULL);
     g_clear_object(&sink->uploader);
 
