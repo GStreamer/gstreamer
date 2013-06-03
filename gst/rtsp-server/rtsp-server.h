@@ -103,6 +103,10 @@ GstRTSPAuth *         gst_rtsp_server_get_auth             (GstRTSPServer *serve
 void                  gst_rtsp_server_set_max_threads      (GstRTSPServer *server, gint max_threads);
 gint                  gst_rtsp_server_get_max_threads      (GstRTSPServer *server);
 
+void                  gst_rtsp_server_set_use_client_settings (GstRTSPServer *server,
+                                                               gboolean use_client_settings);
+gboolean              gst_rtsp_server_get_use_client_settings (GstRTSPServer *server);
+
 void                  gst_rtsp_server_set_tls_certificate  (GstRTSPServer *server, GTlsCertificate *cert);
 GTlsCertificate *     gst_rtsp_server_get_tls_certificate  (GstRTSPServer *server);
 
