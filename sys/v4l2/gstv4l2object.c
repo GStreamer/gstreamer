@@ -504,6 +504,33 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
       g_param_spec_boxed ("extra-controls", "Extra Controls",
           "Extra v4l2 controls (CIDs) for the device",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstV4l2Src:pixel-aspect-ratio
+   *
+   * The pixel aspect ratio of the device. This overwrites the pixel aspect
+   * ratio queried from the device.
+   *
+   * Since: 1.2
+   */
+  g_object_class_install_property (gobject_class, PROP_PIXEL_ASPECT_RATIO,
+      g_param_spec_string ("pixel-aspect-ratio", "Pixel Aspect Ratio",
+          "Overwrite the pixel aspect ratio of the device", "1/1",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstV4l2Src:force-aspect-ratio
+   *
+   * When enabled, the pixel aspect ratio queried from the device or set
+   * with the pixel-aspect-ratio property will be enforced.
+   *
+   * Since: 1.2
+   */
+  g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
+      g_param_spec_boolean ("force-aspect-ratio", "Force aspect ratio",
+          "When enabled, the pixel aspect ratio will be enforced", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 }
 
 GstV4l2Object *
@@ -539,6 +566,8 @@ gst_v4l2_object_new (GstElement * element,
   v4l2object->colors = NULL;
 
   v4l2object->xwindow_id = 0;
+
+  v4l2object->keep_aspect = TRUE;
 
   return v4l2object;
 }
@@ -679,6 +708,21 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
         gst_v4l2_set_controls (v4l2object, v4l2object->extra_controls);
       break;
     }
+    case PROP_PIXEL_ASPECT_RATIO:
+      g_free (v4l2object->par);
+      v4l2object->par = g_new0 (GValue, 1);
+      g_value_init (v4l2object->par, GST_TYPE_FRACTION);
+      if (!g_value_transform (value, v4l2object->par)) {
+        g_warning ("Could not transform string to aspect ratio");
+        gst_value_set_fraction (v4l2object->par, 1, 1);
+      }
+      GST_DEBUG_OBJECT (v4l2object->element, "set PAR to %d/%d",
+          gst_value_get_fraction_numerator (v4l2object->par),
+          gst_value_get_fraction_denominator (v4l2object->par));
+      break;
+    case PROP_FORCE_ASPECT_RATIO:
+      v4l2object->keep_aspect = g_value_get_boolean (value);
+      break;
     default:
       return FALSE;
       break;
@@ -757,6 +801,13 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
       break;
     case PROP_EXTRA_CONTROLS:
       gst_value_set_structure (value, v4l2object->extra_controls);
+      break;
+    case PROP_PIXEL_ASPECT_RATIO:
+      if (v4l2object->par)
+        g_value_transform (v4l2object->par, value);
+      break;
+    case PROP_FORCE_ASPECT_RATIO:
+      g_value_set_boolean (value, v4l2object->keep_aspect);
       break;
     default:
       return FALSE;
@@ -1625,6 +1676,43 @@ static gboolean
 gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
     guint32 pixelformat, gint * width, gint * height, gboolean * interlaced);
 
+static void
+gst_v4l2_object_add_aspect_ratio (GstV4l2Object * v4l2object, GstStructure * s)
+{
+  struct v4l2_cropcap cropcap;
+  int num = 1, den = 1;
+
+  if (!v4l2object->keep_aspect)
+    return;
+
+  if (v4l2object->par) {
+    num = gst_value_get_fraction_numerator (v4l2object->par);
+    den = gst_value_get_fraction_denominator (v4l2object->par);
+    goto done;
+  }
+
+  memset (&cropcap, 0, sizeof (cropcap));
+
+  cropcap.type = v4l2object->type;
+  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_CROPCAP, &cropcap) < 0)
+    goto cropcap_failed;
+
+  num = cropcap.pixelaspect.numerator;
+  den = cropcap.pixelaspect.denominator;
+
+done:
+  gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION, num, den,
+      NULL);
+  return;
+
+cropcap_failed:
+  if (errno != ENOTTY)
+    GST_WARNING_OBJECT (v4l2object->element,
+        "Failed to probe pixel aspect ratio with VIDIOC_CROPCAP: %s",
+        g_strerror (errno));
+  goto done;
+}
+
 
 /* The frame interval enumeration code first appeared in Linux 2.6.19. */
 #ifdef VIDIOC_ENUM_FRAMEINTERVALS
@@ -1811,8 +1899,8 @@ gst_v4l2_object_probe_caps_for_format_and_size (GstV4l2Object * v4l2object,
 return_data:
   s = gst_structure_copy (template);
   gst_structure_set (s, "width", G_TYPE_INT, (gint) width,
-      "height", G_TYPE_INT, (gint) height,
-      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
+      "height", G_TYPE_INT, (gint) height, NULL);
+  gst_v4l2_object_add_aspect_ratio (v4l2object, s);
   if (g_str_equal (gst_structure_get_name (s), "video/x-raw"))
     gst_structure_set (s, "interlace-mode", G_TYPE_STRING,
         (interlaced ? "mixed" : "progressive"), NULL);
@@ -2078,8 +2166,7 @@ default_frame_sizes:
     if (g_str_equal (gst_structure_get_name (tmp), "video/x-raw"))
       gst_structure_set (tmp, "interlace-mode", G_TYPE_STRING,
           (interlaced ? "mixed" : "progressive"), NULL);
-    gst_structure_set (tmp, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
-        NULL);
+    gst_v4l2_object_add_aspect_ratio (v4l2object, tmp);
 
     gst_caps_append_structure (ret, tmp);
 
