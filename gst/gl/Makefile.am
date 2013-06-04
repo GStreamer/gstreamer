@@ -93,4 +93,5 @@ libgstopengl_la_LIBADD = \
 	$(LIBM)
 
 libgstopengl_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstopengl_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
