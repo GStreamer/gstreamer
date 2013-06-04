@@ -3166,6 +3166,11 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
             flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
         gst_vaapi_parser_info_h264_replace(&priv->prev_slice_pi, pi);
         break;
+    case GST_H264_NAL_SPS_EXT:
+    case GST_H264_NAL_SLICE_AUX:
+        /* skip SPS extension and auxiliary slice for now */
+        flags |= GST_VAAPI_DECODER_UNIT_FLAG_SKIP;
+        break;
     default:
         if (pi->nalu.type >= 14 && pi->nalu.type <= 18)
             flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
