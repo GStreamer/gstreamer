@@ -2732,7 +2732,7 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
   priv->frames = g_list_append (priv->frames, frame);
 
   if (g_list_length (priv->frames) > 10) {
-    GST_WARNING_OBJECT (decoder, "decoder frame list getting long: %d frames,"
+    GST_DEBUG_OBJECT (decoder, "decoder frame list getting long: %d frames,"
         "possible internal leaking?", g_list_length (priv->frames));
   }
 
