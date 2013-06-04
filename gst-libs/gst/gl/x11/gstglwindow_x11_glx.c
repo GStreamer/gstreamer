@@ -27,6 +27,7 @@
 
 #include <gst/gst.h>
 
+#include <gstglfeature.h>
 #include "gstglwindow_x11_glx.h"
 
 #define GST_CAT_DEFAULT gst_gl_window_debug
@@ -56,6 +57,12 @@ struct _GstGLWindowX11GLXPrivate
 {
   int glx_major;
   int glx_minor;
+
+  GstGLAPI context_api;
+
+  GLXFBConfig *fbconfigs;
+    GLXContext (*glXCreateContextAttribsARB) (Display *, GLXFBConfig,
+      GLXContext, Bool, const int *);
 };
 
 static void
@@ -100,21 +107,101 @@ gst_gl_window_x11_glx_new (void)
   return window;
 }
 
+static inline void
+_describe_fbconfig (Display * display, GLXFBConfig config)
+{
+  int val;
+
+  glXGetFBConfigAttrib (display, config, GLX_FBCONFIG_ID, &val);
+  GST_DEBUG ("ID: %d", val);
+  glXGetFBConfigAttrib (display, config, GLX_DOUBLEBUFFER, &val);
+  GST_DEBUG ("double buffering: %d", val);
+  glXGetFBConfigAttrib (display, config, GLX_RED_SIZE, &val);
+  GST_DEBUG ("red: %d", val);
+  glXGetFBConfigAttrib (display, config, GLX_GREEN_SIZE, &val);
+  GST_DEBUG ("green: %d", val);
+  glXGetFBConfigAttrib (display, config, GLX_BLUE_SIZE, &val);
+  GST_DEBUG ("blue: %d", val);
+  glXGetFBConfigAttrib (display, config, GLX_ALPHA_SIZE, &val);
+  GST_DEBUG ("alpha: %d", val);
+  glXGetFBConfigAttrib (display, config, GLX_DEPTH_SIZE, &val);
+  GST_DEBUG ("depth: %d", val);
+  glXGetFBConfigAttrib (display, config, GLX_STENCIL_SIZE, &val);
+  GST_DEBUG ("stencil: %d", val);
+}
+
 static gboolean
 gst_gl_window_x11_glx_create_context (GstGLWindowX11 * window_x11,
     GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
 {
   GstGLWindowX11GLX *window_glx;
+  gboolean create_context;
+  const char *glx_exts;
+  int x_error;
 
   window_glx = GST_GL_WINDOW_X11_GLX (window_x11);
 
-  window_glx->glx_context =
-      glXCreateContext (window_x11->device, window_x11->visual_info,
-      (GLXContext) external_gl_context, TRUE);
+  glx_exts =
+      glXQueryExtensionsString (window_x11->device,
+      DefaultScreen (window_x11->device));
+
+  create_context = gst_gl_check_extension ("GLX_ARB_create_context", glx_exts);
+  window_glx->priv->glXCreateContextAttribsARB =
+      (gpointer) glXGetProcAddressARB ((const GLubyte *)
+      "glXCreateContextAttribsARB");
+
+  if (create_context && window_glx->priv->glXCreateContextAttribsARB) {
+    int context_attribs_3[] = {
+      GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+      GLX_CONTEXT_MINOR_VERSION_ARB, 0,
+      //GLX_CONTEXT_FLAGS_ARB        , GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+      None
+    };
+
+    int context_attribs_pre_3[] = {
+      GLX_CONTEXT_MAJOR_VERSION_ARB, 1,
+      GLX_CONTEXT_MINOR_VERSION_ARB, 4,
+      None
+    };
+
+    gst_gl_window_x11_trap_x_errors ();
+    window_glx->glx_context =
+        window_glx->priv->glXCreateContextAttribsARB (window_x11->device,
+        window_glx->priv->fbconfigs[0], (GLXContext) external_gl_context, True,
+        context_attribs_3);
+
+    x_error = gst_gl_window_x11_untrap_x_errors ();
+    window_glx->priv->context_api = GST_GL_API_OPENGL3 | GST_GL_API_OPENGL;
+
+    if (!window_glx->glx_context || x_error != 0) {
+      GST_DEBUG ("Failed to create an Opengl 3 context. trying a legacy one");
+
+      gst_gl_window_x11_trap_x_errors ();
+      window_glx->glx_context =
+          window_glx->priv->glXCreateContextAttribsARB (window_x11->device,
+          window_glx->priv->fbconfigs[0], (GLXContext) external_gl_context,
+          True, context_attribs_pre_3);
+
+      x_error = gst_gl_window_x11_untrap_x_errors ();
+
+      if (x_error != 0)
+        window_glx->glx_context = NULL;
+      window_glx->priv->context_api = GST_GL_API_OPENGL;
+    }
+
+  } else {
+    window_glx->glx_context =
+        glXCreateContext (window_x11->device, window_x11->visual_info,
+        (GLXContext) external_gl_context, TRUE);
+    window_glx->priv->context_api = GST_GL_API_OPENGL;
+  }
+
+  if (window_glx->priv->fbconfigs)
+    XFree (window_glx->priv->fbconfigs);
 
   if (!window_glx->glx_context) {
     g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
-        "Failed to create opengl context (glXCreateContext failed)");
+        "Failed to create opengl context");
     goto failure;
   }
 
@@ -195,22 +282,21 @@ gst_gl_window_x11_glx_choose_format (GstGLWindowX11 * window_x11,
       GLX_DOUBLEBUFFER, True,
       None
     };
-
     int fbcount;
 
-    GLXFBConfig *fbconfigs = glXChooseFBConfig (window_x11->device,
+    window_glx->priv->fbconfigs = glXChooseFBConfig (window_x11->device,
         DefaultScreen (window_x11->device), attribs, &fbcount);
 
-    if (!fbconfigs) {
+    if (!window_glx->priv->fbconfigs) {
       g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
           "Could not find any FBConfig's to use (check attributes?)");
       goto failure;
     }
 
-    window_x11->visual_info = glXGetVisualFromFBConfig (window_x11->device,
-        fbconfigs[0]);
+    _describe_fbconfig (window_x11->device, window_glx->priv->fbconfigs[0]);
 
-    XFree (fbconfigs);
+    window_x11->visual_info = glXGetVisualFromFBConfig (window_x11->device,
+        window_glx->priv->fbconfigs[0]);
 
     if (!window_x11->visual_info) {
       g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
@@ -255,7 +341,11 @@ gst_gl_window_x11_glx_activate (GstGLWindowX11 * window_x11, gboolean activate)
 GstGLAPI
 gst_gl_window_x11_glx_get_gl_api (GstGLWindow * window)
 {
-  return GST_GL_API_OPENGL;
+  GstGLWindowX11GLX *window_glx;
+
+  window_glx = GST_GL_WINDOW_X11_GLX (window);
+
+  return window_glx->priv->context_api;
 }
 
 static gpointer
