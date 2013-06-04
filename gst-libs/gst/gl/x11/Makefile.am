@@ -30,5 +30,4 @@ libgstgl_x11_la_CFLAGS = \
 
 libgstgl_x11_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) \
-	$(GST_ALL_LDFLAGS) \
-	$(GST_LT_LDFLAGS)
+	$(GST_ALL_LDFLAGS)

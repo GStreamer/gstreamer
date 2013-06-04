@@ -23,5 +23,4 @@ libgstgl_wayland_la_CFLAGS = \
 
 libgstgl_wayland_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) \
-	$(GST_ALL_LDFLAGS) \
-	$(GST_LT_LDFLAGS)
+	$(GST_ALL_LDFLAGS)
