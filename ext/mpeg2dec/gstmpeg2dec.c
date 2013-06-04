@@ -625,10 +625,18 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   if (GST_VIDEO_INFO_PAR_N (vinfo) == 1 &&
       GST_VIDEO_INFO_PAR_D (vinfo) == 1 &&
       sequence->pixel_width != 0 && sequence->pixel_height != 0) {
-    GST_DEBUG_OBJECT (mpeg2dec, "Setting PAR %d x %d",
-        sequence->pixel_width, sequence->pixel_height);
+#if MPEG2_RELEASE >= MPEG2_VERSION(0,5,0)
+    guint pixel_width, pixel_height;
+    if (mpeg2_guess_aspect (sequence, &pixel_width, &pixel_height)) {
+      vinfo->par_n = pixel_width;
+      vinfo->par_d = pixel_height;
+    }
+#else
     vinfo->par_n = sequence->pixel_width;
     vinfo->par_d = sequence->pixel_height;
+#endif
+    GST_DEBUG_OBJECT (mpeg2dec, "Setting PAR %d x %d",
+        vinfo->par_n, vinfo->par_d);
   }
   vinfo->fps_n = 27000000;
   vinfo->fps_d = sequence->frame_period;
