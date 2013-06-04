@@ -30,5 +30,4 @@ libgstgl_cocoa_la_OBJCFLAGS = \
 
 libgstgl_cocoa_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) \
-	$(GST_ALL_LDFLAGS) \
-	$(GST_LT_LDFLAGS)
+	$(GST_ALL_LDFLAGS)
