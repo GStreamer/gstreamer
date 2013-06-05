@@ -449,6 +449,7 @@ DIST_SUBDIRS = \
 	celt \
 	chromaprint \
 	curl \
+	dash \
 	dc1394 \
 	directfb \
 	wayland \
