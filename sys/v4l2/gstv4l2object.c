@@ -1375,7 +1375,9 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
 #endif
 #ifdef V4L2_PIX_FMT_H264
     case V4L2_PIX_FMT_H264:    /* H.264 */
-      structure = gst_structure_new_empty ("video/x-h264");
+      structure = gst_structure_new ("video/x-h264",
+          "stream-format", G_TYPE_STRING, "byte-stream", "alignment",
+          G_TYPE_STRING, "au", NULL);
       break;
 #endif
     case V4L2_PIX_FMT_RGB332:
