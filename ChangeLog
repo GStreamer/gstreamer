@@ -1,9 +1,422 @@
-=== release 1.0.2 ===
+=== release 1.1.1 ===
 
-2012-10-25  Tim-Philipp Müller <tim@centricular.net>
+2013-06-05  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.0.2
+	  releasing 1.1.1
+
+2013-06-05 15:15:16 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From 098c0d7 to 01a7a46
+
+2013-06-04 16:12:27 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: make the aspect ratio calculation more accurate.
+	  Utilize the libmpeg2 api: mpeg2_guess_aspect() to guess the
+	  aspect-ratio if we don't have a valid upstream PAR.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685103
+
+2013-05-15 10:52:09 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 5edcd85 to 098c0d7
+
+2013-05-13 13:19:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/amrnbenc.c:
+	* tests/check/elements/mpeg2dec.c:
+	* tests/check/elements/x264enc.c:
+	* tests/check/elements/xingmux.c:
+	  tests: Fix event handling
+
+2013-05-09 19:40:49 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/lame/gstlamemp3enc.c:
+	  lamemp3enc: Tell GstAudioEncoder about the number of incoming samples
+	  lame does internal resampling, but the base class only cares about
+	  the number of raw samples, so tell finish frames about that, not
+	  the number of samples in the outgoing frame.:
+
+2013-04-30 10:01:29 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: output byte-stream if downstream has ANY caps
+	  It's what people expect when they pipe the output to
+	  filesink or into a tcp connection or pipe.
+
+2013-04-22 23:52:48 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* MAINTAINERS:
+	* README:
+	* README.static-linking:
+	* common:
+	  Automatic update of common submodule
+	  From 3cb3d3c to 5edcd85
+
+2012-10-24 12:15:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* ext/a52dec/Makefile.am:
+	* ext/amrnb/Makefile.am:
+	* ext/amrwbdec/Makefile.am:
+	* ext/cdio/Makefile.am:
+	* ext/dvdread/Makefile.am:
+	* ext/lame/Makefile.am:
+	* ext/mad/Makefile.am:
+	* ext/mpeg2dec/Makefile.am:
+	* ext/sidplay/Makefile.am:
+	* ext/twolame/Makefile.am:
+	* ext/x264/Makefile.am:
+	* gst/asfdemux/Makefile.am:
+	* gst/dvdlpcmdec/Makefile.am:
+	* gst/dvdsub/Makefile.am:
+	* gst/realmedia/Makefile.am:
+	* gst/xingmux/Makefile.am:
+	  gst: Add better support for static plugins
+
+2013-04-14 17:55:44 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From aed87ae to 3cb3d3c
+
+2013-04-09 21:00:43 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 04c7a1e to aed87ae
+
+2013-03-25 18:05:14 -0700  David Schleef <ds@schleef.org>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/realmedia/rmdemux.c:
+	  Use %03u instead of %u in gst_pad_create_stream_id_printf()
+
+2013-03-06 13:28:37 +0000  Tom Greenwood <tgreenwood@Toms-MacBook-Pro.local>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Fix for 0/1 framerate - now uses VFR in this case
+	  Previously did a division by zero.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=695728
+
+2013-03-07 00:02:00 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 2de221c to 04c7a1e
+
+2013-02-08 00:15:01 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: simplify template caps
+	  No need to make an array for one single element.
+
+2013-02-08 00:11:03 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: put all theoretically possible formats in template caps
+	  and decide at runtime which subset of these (8-bit or 10-bit video
+	  formats) is supported. libx264 will be compiled for one of these
+	  two options, and it is possible to switch by pointing the dynamic
+	  linker to a different libx264 build at runtime. If we want our
+	  template caps to be correct, they should contain all then, with
+	  the actually supported ones determined at runtime.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=691935
+
+2013-01-23 10:16:51 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: detect supported bit depth and pixel formats at runtime
+	  http://bugs.debian.org/667573
+	  https://bugzilla.gnome.org/show_bug.cgi?id=691935
+
+2013-01-30 09:15:18 +0100  Benjamin Gaignard <benjamin.gaignard@st.com>
+
+	* autogen.sh:
+	  autogen.sh: allow calling from out-of-tree
+	  Signed-off-by: Benjamin Gaignard <benjamin.gaignard@linaro.org>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692857
+
+2013-01-28 20:43:08 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From a942293 to 2de221c
+
+2013-01-15 15:18:04 +0100  Martin Pitt <martinpitt@gnome.org>
+
+	* tests/check/Makefile.am:
+	  tests: use _1_0 variants for the various registry variables
+	  These override the variants without version suffix. Makes 'make check' work
+	  properly in environments that set the suffixed variant for 1.0, such as
+	  jhbuild.
+
+2013-01-15 15:06:41 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From a72faea to a942293
+
+2012-12-30 23:56:14 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  configure: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+	  AM_CONFIG_HEADER has been removed in the just-released automake 1.13:
+	  https://lists.gnu.org/archive/html/automake/2012-12/msg00038.html
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690881
+
+2012-12-19 17:16:53 +0100  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: use appropriate printf format for gsize
+
+2012-12-19 17:15:03 +0100  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* ext/cdio/gstcdio.h:
+	  cdio: Fix redundant redeclaration of 'cdio_version_string'
+	  cdio/version.h is already included by cdio/cdio.h
+
+2012-12-01 13:26:26 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/sidplay/gstsiddec.cc:
+	  siddec: init debug category
+
+2012-11-30 20:09:03 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* ext/dvdread/Makefile.am:
+	  dvdread: link to libgmodule-2.0 since the g_module_* API is used
+	  And the gmodule lib has been moved into the Requires.private
+	  section of the pkg-config file in core.
+
+2012-11-27 17:07:31 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/cdio/gstcdiocddasrc.c:
+	* ext/cdio/gstcdiocddasrc.h:
+	  cdiocddasrc: detect whether drive produces samples in non-host endianness
+	  If drive produces samples in other endianness than the host,
+	  we need to byte swap them before pushing them out, or we
+	  produce nothing but noise. cdparanoia detects this automatically,
+	  but libcdio does not, so we have to do it ourselves.
+	  This is needed on e.g. the PowerBook G4 with Matshita UJ-816 drive.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=377280
+
+2012-11-19 11:27:21 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From b497c4f to a72faea
+
+2012-11-16 13:32:00 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/xingmux_testdata.h:
+	  xingmux: Fix unit test after change to correctly calculate number of frames
+
+2012-11-15 16:42:09 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Add support for 10-bit color formats
+	  Requires x264 to be built with 10-bit support, which disables
+	  9-bit support. Also only advertise the color formats that were
+	  compiled into x264.
+
+2012-11-15 16:21:49 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Add support for Y444, Y42B and NV12
+
+2012-11-11 20:42:42 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/cdio/Makefile.am:
+	* ext/cdio/gstcdio.c:
+	  cdio: use gst_tag_freeform_string_to_utf8() for CD-TEXT strings
+	  They're probably not going to be UTF-8, but ISO-8859-1 or somesuch
+	  if they're not plain ASCII.
+
+2012-11-09 11:33:40 +0100  Gautier Portet <kassoulet@gmail.com>
+
+	* gst/xingmux/gstxingmux.c:
+	  xingmux: Properly calculate the number of frames
+	  First, the xing header frame is never added to the count,
+	  we have to increment the count.
+	  Secondly, there is a rounding error when calculating the
+	  frame duration, as spf*GST_SECOND/rate is not an integer
+	  (26122448.9) an it must be 26122449.
+
+2012-11-07 20:45:38 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  configure.ac: update courtesy of autoupdate
+
+2012-11-07 20:39:56 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	* configure.ac:
+	  configure: let AG_GST_PLUGIN_DOCS check for python
+	  And update common for move from AS_PATH_PYTHON to AM_PATH_PYTHON,
+	  which as a side-effect should pick up newer python versions as
+	  well.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=563903
+
+2012-11-05 13:16:52 -0800  Michael Smith <msmith@rdio.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	  dvdlpcmdec: Fix parsing of headers to set correct width to allow decode.
+
+2012-11-03 20:40:37 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/random/LICENSE:
+	* ext/a52dec/gsta52dec.c:
+	* ext/a52dec/gsta52dec.h:
+	* ext/amrnb/amrnb.c:
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbdec.h:
+	* ext/amrnb/amrnbenc.c:
+	* ext/amrnb/amrnbenc.h:
+	* ext/amrwbdec/amrwb.c:
+	* ext/amrwbdec/amrwbdec.c:
+	* ext/amrwbdec/amrwbdec.h:
+	* ext/cdio/gstcdio.c:
+	* ext/cdio/gstcdio.h:
+	* ext/cdio/gstcdiocddasrc.c:
+	* ext/cdio/gstcdiocddasrc.h:
+	* ext/dvdread/dvdreadsrc.c:
+	* ext/dvdread/dvdreadsrc.h:
+	* ext/lame/gstlamemp3enc.c:
+	* ext/lame/gstlamemp3enc.h:
+	* ext/lame/plugin.c:
+	* ext/mad/gstmad.c:
+	* ext/mad/gstmad.h:
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	* ext/sidplay/gstsiddec.cc:
+	* ext/sidplay/gstsiddec.h:
+	* ext/twolame/gsttwolamemp2enc.c:
+	* ext/twolame/gsttwolamemp2enc.h:
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	* gst-libs/gst/gettext.h:
+	* gst-libs/gst/glib-compat-private.h:
+	* gst-libs/gst/gst-i18n-plugin.h:
+	* gst/asfdemux/asfheaders.c:
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/asfpacket.c:
+	* gst/asfdemux/asfpacket.h:
+	* gst/asfdemux/gstasf.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	* gst/asfdemux/gstrtpasfdepay.c:
+	* gst/asfdemux/gstrtpasfdepay.h:
+	* gst/asfdemux/gstrtspwms.c:
+	* gst/asfdemux/gstrtspwms.h:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.h:
+	* gst/dvdsub/gstdvdsubdec.c:
+	* gst/dvdsub/gstdvdsubdec.h:
+	* gst/dvdsub/gstdvdsubparse.c:
+	* gst/dvdsub/gstdvdsubparse.h:
+	* gst/realmedia/asmrules.c:
+	* gst/realmedia/asmrules.h:
+	* gst/realmedia/gstrdtbuffer.c:
+	* gst/realmedia/gstrdtbuffer.h:
+	* gst/realmedia/pnmsrc.c:
+	* gst/realmedia/pnmsrc.h:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rademux.h:
+	* gst/realmedia/rdtdepay.c:
+	* gst/realmedia/rdtdepay.h:
+	* gst/realmedia/rdtjitterbuffer.c:
+	* gst/realmedia/rdtjitterbuffer.h:
+	* gst/realmedia/rdtmanager.c:
+	* gst/realmedia/rdtmanager.h:
+	* gst/realmedia/realhash.c:
+	* gst/realmedia/realhash.h:
+	* gst/realmedia/realmedia.c:
+	* gst/realmedia/rmdemux.c:
+	* gst/realmedia/rmdemux.h:
+	* gst/realmedia/rmutils.c:
+	* gst/realmedia/rmutils.h:
+	* gst/realmedia/rtspreal.c:
+	* gst/realmedia/rtspreal.h:
+	* gst/xingmux/gstxingmux.c:
+	* gst/xingmux/gstxingmux.h:
+	* gst/xingmux/plugin.c:
+	* tests/check/elements/amrnbenc.c:
+	* tests/check/elements/mpeg2dec.c:
+	* tests/check/elements/x264enc.c:
+	* tests/check/generic/index.c:
+	* tests/check/generic/states.c:
+	* tests/check/pipelines/lame.c:
+	  Fix FSF address
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687520
+
+2012-10-30 13:39:52 +0100  Andreas Frisch <fraxinas@opendreambox.org>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	  dvdsubdec: allocate correct amount of memory for bitmap
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687192
+
+2012-10-30 09:20:04 +0000  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/sidplay/gstsiddec.cc:
+	  siddec: reset bytes counter
+	  Reset the total_bytes counter so that we get timestamps correct.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=686931
+
+2012-10-25 12:38:47 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* win32/common/config.h:
+	  Back to feature development
+
+=== release 1.0.2 ===
+
+2012-10-25 01:11:10 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.0.2
 
 2012-10-24 20:10:03 +0800  Scott Fan <fanchp@neusoft.com>
 
