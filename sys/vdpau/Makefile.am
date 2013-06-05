@@ -29,11 +29,16 @@ noinst_HEADERS = \
 	gstvdputils.h \
 	gstvdpvideomemory.h \
 	gstvdpvideobufferpool.h \
+	gstvdpdevice.h \
+	gstvdpdecoder.h \
+	gstvdpoutputbuffer.h \
 	gstvdpvideopostprocess.h \
 	gstvdpsink.h \
 	mpeg/gstvdpmpegdec.h \
-	# h264/gsth264dpb.h \
-	# h264/gstvdph264dec.h \
 	mpeg4/mpeg4util.h \
 	mpeg4/gstmpeg4frame.h \
 	mpeg4/gstvdpmpeg4dec.h
+
+ # h264/gsth264dpb.h \
+ # h264/gstvdph264dec.h
+
