@@ -79,6 +79,19 @@ typedef union
 #endif
 #endif
 
+#ifndef ORC_INTERNAL
+#if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define ORC_INTERNAL __hidden
+#elif defined (__GNUC__)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#else
+#define ORC_INTERNAL
+#endif
+#endif
+
+
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
@@ -160,7 +173,11 @@ deinterlace_line_vfir (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   orc_int8 var37;
   orc_int8 var38;
   orc_int8 var39;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var40;
+#else
   orc_union16 var40;
+#endif
   orc_int8 var41;
   orc_union16 var42;
   orc_union16 var43;
@@ -248,7 +265,11 @@ _backup_deinterlace_line_vfir (OrcExecutor * ORC_RESTRICT ex)
   orc_int8 var37;
   orc_int8 var38;
   orc_int8 var39;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var40;
+#else
   orc_union16 var40;
+#endif
   orc_int8 var41;
   orc_union16 var42;
   orc_union16 var43;
@@ -334,6 +355,20 @@ deinterlace_line_vfir (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 21, 100, 101, 105, 110, 116, 101, 114, 108, 97, 99, 101, 95, 108,
+        105, 110, 101, 95, 118, 102, 105, 114, 11, 1, 1, 12, 1, 1, 12, 1,
+        1, 12, 1, 1, 12, 1, 1, 12, 1, 1, 14, 4, 2, 0, 0, 0,
+        14, 4, 1, 0, 0, 0, 14, 4, 4, 0, 0, 0, 14, 4, 3, 0,
+        0, 0, 20, 2, 20, 2, 20, 2, 150, 32, 4, 150, 33, 8, 70, 32,
+        32, 33, 150, 33, 5, 150, 34, 7, 70, 33, 33, 34, 93, 33, 33, 16,
+        150, 34, 6, 93, 34, 34, 17, 98, 33, 33, 32, 70, 33, 33, 34, 70,
+        33, 33, 18, 94, 33, 33, 19, 160, 0, 33, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_deinterlace_line_vfir);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "deinterlace_line_vfir");
       orc_program_set_backup_function (p, _backup_deinterlace_line_vfir);
@@ -379,6 +414,7 @@ deinterlace_line_vfir (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "convsuswb", 0, ORC_VAR_D1, ORC_VAR_T2,
           ORC_VAR_D1, ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -481,6 +517,15 @@ deinterlace_line_linear (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 23, 100, 101, 105, 110, 116, 101, 114, 108, 97, 99, 101, 95, 108,
+        105, 110, 101, 95, 108, 105, 110, 101, 97, 114, 11, 1, 1, 12, 1, 1,
+        12, 1, 1, 39, 0, 4, 5, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_deinterlace_line_linear);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "deinterlace_line_linear");
       orc_program_set_backup_function (p, _backup_deinterlace_line_linear);
@@ -490,6 +535,7 @@ deinterlace_line_linear (guint8 * ORC_RESTRICT d1,
 
       orc_program_append_2 (p, "avgub", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_S2,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -527,7 +573,11 @@ deinterlace_line_linear_blend (guint8 * ORC_RESTRICT d1,
   orc_int8 var35;
   orc_int8 var36;
   orc_int8 var37;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var38;
+#else
   orc_union16 var38;
+#endif
   orc_int8 var39;
   orc_union16 var40;
   orc_union16 var41;
@@ -590,7 +640,11 @@ _backup_deinterlace_line_linear_blend (OrcExecutor * ORC_RESTRICT ex)
   orc_int8 var35;
   orc_int8 var36;
   orc_int8 var37;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var38;
+#else
   orc_union16 var38;
+#endif
   orc_int8 var39;
   orc_union16 var40;
   orc_union16 var41;
@@ -655,6 +709,20 @@ deinterlace_line_linear_blend (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 29, 100, 101, 105, 110, 116, 101, 114, 108, 97, 99, 101, 95, 108,
+        105, 110, 101, 95, 108, 105, 110, 101, 97, 114, 95, 98, 108, 101, 110,
+        100,
+        11, 1, 1, 12, 1, 1, 12, 1, 1, 12, 1, 1, 14, 4, 2, 0,
+        0, 0, 20, 2, 20, 2, 20, 2, 150, 32, 4, 150, 33, 5, 150, 34,
+        6, 70, 32, 32, 33, 70, 34, 34, 34, 70, 32, 32, 34, 70, 32, 32,
+        16, 94, 32, 32, 16, 160, 0, 32, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_deinterlace_line_linear_blend);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "deinterlace_line_linear_blend");
       orc_program_set_backup_function (p,
@@ -686,6 +754,7 @@ deinterlace_line_linear_blend (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "convsuswb", 0, ORC_VAR_D1, ORC_VAR_T1,
           ORC_VAR_D1, ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -723,8 +792,16 @@ deinterlace_line_greedy (orc_uint8 * ORC_RESTRICT d1,
   const orc_int8 *ORC_RESTRICT ptr5;
   const orc_int8 *ORC_RESTRICT ptr6;
   const orc_int8 *ORC_RESTRICT ptr7;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var44;
+#else
   orc_int8 var44;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var45;
+#else
   orc_int8 var45;
+#endif
   orc_int8 var46;
   orc_int8 var47;
   orc_int8 var48;
@@ -830,8 +907,16 @@ _backup_deinterlace_line_greedy (OrcExecutor * ORC_RESTRICT ex)
   const orc_int8 *ORC_RESTRICT ptr5;
   const orc_int8 *ORC_RESTRICT ptr6;
   const orc_int8 *ORC_RESTRICT ptr7;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var44;
+#else
   orc_int8 var44;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var45;
+#else
   orc_int8 var45;
+#endif
   orc_int8 var46;
   orc_int8 var47;
   orc_int8 var48;
@@ -942,6 +1027,23 @@ deinterlace_line_greedy (orc_uint8 * ORC_RESTRICT d1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 23, 100, 101, 105, 110, 116, 101, 114, 108, 97, 99, 101, 95, 108,
+        105, 110, 101, 95, 103, 114, 101, 101, 100, 121, 11, 1, 1, 12, 1, 1,
+        12, 1, 1, 12, 1, 1, 12, 1, 1, 14, 4, 128, 0, 0, 0, 16,
+        1, 20, 1, 20, 1, 20, 1, 20, 1, 20, 1, 20, 1, 20, 1, 20,
+        1, 20, 1, 20, 1, 20, 1, 20, 1, 43, 32, 4, 43, 33, 7, 43,
+        34, 6, 43, 35, 5, 39, 36, 35, 34, 53, 39, 32, 36, 55, 40, 32,
+        36, 65, 37, 39, 40, 53, 39, 33, 36, 55, 40, 33, 36, 65, 38, 39,
+        40, 68, 37, 37, 16, 68, 38, 38, 16, 41, 40, 37, 38, 36, 39, 33,
+        40, 37, 40, 40, 32, 59, 41, 39, 40, 53, 43, 35, 34, 55, 42, 35,
+        34, 35, 43, 43, 24, 67, 42, 42, 24, 55, 41, 41, 43, 53, 0, 41,
+        42, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_deinterlace_line_greedy);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "deinterlace_line_greedy");
       orc_program_set_backup_function (p, _backup_deinterlace_line_greedy);
@@ -1011,6 +1113,7 @@ deinterlace_line_greedy (orc_uint8 * ORC_RESTRICT d1,
           ORC_VAR_T12, ORC_VAR_D1);
       orc_program_append_2 (p, "maxub", 0, ORC_VAR_D1, ORC_VAR_T10, ORC_VAR_T11,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);

@@ -22,10 +22,12 @@ GObject
         GstAuParse
         GstAudioDecoder
           GstFlacDec
+          GstMuLawDec
           GstSpeexDec
           GstWavpackDec
         GstAudioEncoder
           GstFlacEnc
+          GstMuLawEnc
           GstSpeexEnc
           GstWavpackEnc
         GstAviDemux
@@ -167,8 +169,6 @@ GObject
         GstMatroskaMux
           GstWebMMux
         GstMatroskaParse
-        GstMuLawDec
-        GstMuLawEnc
         GstMultipartDemux
         GstMultipartMux
         GstQTDemux
@@ -208,6 +208,7 @@ GObject
           GstRtpQDM2Depay
           GstRtpSPEEXDepay
           GstRtpSV3VDepay
+          GstRtpSbcDepay
           GstRtpTheoraDepay
           GstRtpVP8Depay
           GstRtpVRawDepay

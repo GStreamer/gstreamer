@@ -52,13 +52,16 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Good Plug-ins git"
+#define GST_PACKAGE_NAME "GStreamer Good Plug-ins source release"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2012-10-25T11:29Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2013-06-05"
+
+/* Define if static plugins should be built */
+#undef GST_PLUGIN_BUILD_STATIC
 
 /* struct v4l2_buffer missing */
 #undef GST_V4L2_MISSING_BUFDECL
@@ -75,12 +78,9 @@
 /* Define to enable bz2 library for matroska . */
 #undef HAVE_BZ2
 
-/* Define to enable Cairo graphics rendering (used by cairo). */
+/* Define to enable Cairo graphics rendering and gobject bindings (used by
+   cairo). */
 #undef HAVE_CAIRO
-
-/* Define to enable Cairo graphics rendering gobject bindings (used by
-   cairooverlay). */
-#undef HAVE_CAIRO_GOBJECT
 
 /* Define to 1 if you have the MacOS X function CFLocaleCopyCurrent in the
    CoreFoundation framework. */
@@ -89,6 +89,9 @@
 /* Define to 1 if you have the MacOS X function CFPreferencesCopyAppValue in
    the CoreFoundation framework. */
 #undef HAVE_CFPREFERENCESCOPYAPPVALUE
+
+/* Define to 1 if you have the `clock_gettime' function. */
+#undef HAVE_CLOCK_GETTIME
 
 /* Define to 1 if you have the `cosh' function. */
 #undef HAVE_COSH
@@ -138,6 +141,10 @@
 /* Define if the GNU dcgettext() function is already present or preinstalled.
    */
 #undef HAVE_DCGETTEXT
+
+/* Define to 1 if you have the declaration of `V4L2_MEMORY_DMABUF', and to 0
+   if you don't. */
+#undef HAVE_DECL_V4L2_MEMORY_DMABUF
 
 /* Define to enable DirectSound plug-in (used by directsoundsink). */
 #undef HAVE_DIRECTSOUND
@@ -196,6 +203,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* building for iOS platofrm */
+#undef HAVE_IOS
+
 /* Define if we have struct ip_mreqn */
 #undef HAVE_IP_MREQN
 
@@ -222,9 +232,6 @@
 
 /* Define to enable Portable Network Graphics library (used by png). */
 #undef HAVE_LIBPNG
-
-/* soup gnome integration */
-#undef HAVE_LIBSOUP_GNOME
 
 /* Whether libv4l2 is available for video buffer conversion */
 #undef HAVE_LIBV4L2
@@ -375,7 +382,7 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 1.1.0.1"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 1.1.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
@@ -384,7 +391,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.1.0.1"
+#define PACKAGE_VERSION "1.1.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -418,7 +425,7 @@
 #undef TARGET_CPU
 
 /* Version number of package */
-#define VERSION "1.1.0.1"
+#define VERSION "1.1.1"
 
 /* old wavpack API */
 #undef WAVPACK_OLD_API

@@ -3,10 +3,10 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>1.1.0.1</version>
+  <version>1.1.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -782,7 +782,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)26, clock-rate=(int)90000, encoding-name=(string)JPEG</details>
+          <details>application/x-rtp, media=(string)video, payload=(int)26, clock-rate=(int)90000, encoding-name=(string)JPEG, width=(int)[ 1, 65536 ], height=(int)[ 1, 65536 ]</details>
         </caps>
       </pads>
     </element>
@@ -1203,6 +1203,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-qdm2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpsbcdepay</name>
+      <longname>RTP SBC audio depayloader</longname>
+      <class>Codec/Depayloader/Network/RTP</class>
+      <description>Extracts SBC audio from RTP packets</description>
+      <author>Arun Raghavan &lt;arun.raghavan@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int){ 16000, 32000, 44100, 48000 }, encoding-name=(string)SBC</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-sbc, rate=(int){ 16000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ], mode=(string){ mono, dual, stereo, joint }, blocks=(int){ 4, 8, 12, 16 }, subbands=(int){ 4, 8 }, allocation-method=(string){ snr, loudness }, bitpool=(int)[ 2, 64 ]</details>
         </caps>
       </pads>
     </element>

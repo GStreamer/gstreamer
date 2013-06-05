@@ -40,6 +40,7 @@ GstMJ2Mux GstTagSetter GstTagXmpWriter
 GstMP4Mux GstTagSetter GstTagXmpWriter
 GstMatroskaMux GstTagSetter
 GstMatroskaMux GstTagSetter GstTocSetter
+GstMuLawEnc GstPreset
 GstOss4Mixer GstImplementsInterface GstMixer GstPropertyProbe
 GstOss4Sink GstStreamVolume
 GstOss4Sink GstStreamVolume GstPropertyProbe
@@ -86,6 +87,7 @@ GstVideoBalance GstImplementsInterface GstColorBalance
 GstVideoEncoder GstPreset
 GstVideoMixer GstChildProxy
 GstVideoMixer2 GstChildProxy
+GstWavEnc GstTagSetter GstTocSetter
 GstWavpackEnc GstPreset
 GstWebMMux GstTagSetter
 GstWebMMux GstTagSetter GstTocSetter

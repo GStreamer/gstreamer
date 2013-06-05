@@ -629,6 +629,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstUDPSrc::bind-address</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bind Address</NICK>
+<BLURB>Address to bind the socket to. This is equivalent to the multicast-group property.</BLURB>
+<DEFAULT>"0.0.0.0"</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSMPTE::border</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -926,6 +936,26 @@
 <NICK>proxy-pw</NICK>
 <BLURB>HTTP proxy URI user password for authentication.</BLURB>
 <DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::multicast-iface</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Multicast Interface</NICK>
+<BLURB>The network interface on which to join the multicast group.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::ntp-sync</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync on NTP clock</NICK>
+<BLURB>Synchronize received streams to the NTP clock.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2599,6 +2629,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstDynUDPSink::bind-address</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bind Address</NICK>
+<BLURB>Address to bind the socket to.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDynUDPSink::bind-port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bind Port</NICK>
+<BLURB>Port to bind the socket to.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDynUDPSink::socket-v6</NAME>
+<TYPE>GSocket*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Socket IPv6</NICK>
+<BLURB>Socket to use for UDPv6 sending. (NULL == allocate).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstCdioCddaSrc::read-speed</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[-1,100]</RANGE>
@@ -2774,7 +2834,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Force IPv4</NICK>
-<BLURB>Forcing the use of an IPv4 socket.</BLURB>
+<BLURB>Forcing the use of an IPv4 socket (DEPRECATED, has no effect anymore).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -2786,6 +2846,46 @@
 <NICK>Multicast Interface</NICK>
 <BLURB>The network interface on which to join the multicast group.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::bind-address</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bind Address</NICK>
+<BLURB>Address to bind the socket to.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::bind-port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bind Port</NICK>
+<BLURB>Port to bind the socket to.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::socket-v6</NAME>
+<TYPE>GSocket*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Socket Handle IPv6</NICK>
+<BLURB>Socket to use for UDPv6 sending. (NULL == allocate).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::used-socket-v6</NAME>
+<TYPE>GSocket*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Used Socket Handle IPv6</NICK>
+<BLURB>Socket currently in use for UDPv6 sending. (NULL == no socket).</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -3469,6 +3569,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstV4l2Src::extra-controls</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Extra Controls</NICK>
+<BLURB>Extra v4l2 controls (CIDs) for the device.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Src::force-aspect-ratio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force aspect ratio</NICK>
+<BLURB>When enabled, the pixel aspect ratio will be enforced.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Src::pixel-aspect-ratio</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixel Aspect Ratio</NICK>
+<BLURB>Overwrite the pixel aspect ratio of the device.</BLURB>
+<DEFAULT>"1/1"</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAudioChebBand::lower-frequency</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[0,100000]</RANGE>
@@ -3854,8 +3984,8 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>iradio-mode</NICK>
-<BLURB>Enable internet radio mode (extraction of shoutcast/icecast metadata).</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<BLURB>Enable internet radio mode (ask server to send shoutcast/icecast metadata interleaved with the actual stream data).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20165,7 +20295,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Client Name</NICK>
 <BLURB>The PulseAudio client name to use.</BLURB>
-<DEFAULT>"lt-gst-plugins-good-plugins-scan"</DEFAULT>
+<DEFAULT>"gst-plugins-good-plugins-scan"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20255,7 +20385,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Client Name</NICK>
 <BLURB>The PulseAudio client_name_to_use.</BLURB>
-<DEFAULT>"lt-gst-plugins-good-plugins-scan"</DEFAULT>
+<DEFAULT>"gst-plugins-good-plugins-scan"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21419,6 +21549,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstV4l2Sink::extra-controls</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Extra Controls</NICK>
+<BLURB>Extra v4l2 controls (CIDs) for the device.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::force-aspect-ratio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force aspect ratio</NICK>
+<BLURB>When enabled, the pixel aspect ratio will be enforced.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::pixel-aspect-ratio</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixel Aspect Ratio</NICK>
+<BLURB>Overwrite the pixel aspect ratio of the device.</BLURB>
+<DEFAULT>"1/1"</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstShapeWipe::border</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
@@ -21744,7 +21904,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>dts-method</NICK>
-<BLURB>Method to determine DTS time.</BLURB>
+<BLURB>(DEPRECATED) Method to determine DTS time.</BLURB>
 <DEFAULT>reorder</DEFAULT>
 </ARG>
 
@@ -21874,7 +22034,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>dts-method</NICK>
-<BLURB>Method to determine DTS time.</BLURB>
+<BLURB>(DEPRECATED) Method to determine DTS time.</BLURB>
 <DEFAULT>reorder</DEFAULT>
 </ARG>
 
@@ -21964,7 +22124,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>dts-method</NICK>
-<BLURB>Method to determine DTS time.</BLURB>
+<BLURB>(DEPRECATED) Method to determine DTS time.</BLURB>
 <DEFAULT>reorder</DEFAULT>
 </ARG>
 
@@ -22054,7 +22214,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>dts-method</NICK>
-<BLURB>Method to determine DTS time.</BLURB>
+<BLURB>(DEPRECATED) Method to determine DTS time.</BLURB>
 <DEFAULT>reorder</DEFAULT>
 </ARG>
 
@@ -22234,7 +22394,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>dts-method</NICK>
-<BLURB>Method to determine DTS time.</BLURB>
+<BLURB>(DEPRECATED) Method to determine DTS time.</BLURB>
 <DEFAULT>reorder</DEFAULT>
 </ARG>
 
@@ -23366,6 +23526,16 @@
 <NICK>Vertical scaling mode</NICK>
 <BLURB>Vertical scaling mode.</BLURB>
 <DEFAULT>Normal</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::timebase</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Shortest interframe time</NICK>
+<BLURB>Fraction of one second that is the shortest interframe time - normally left as zero which will default to the framerate.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>

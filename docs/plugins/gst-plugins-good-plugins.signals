@@ -689,3 +689,12 @@ gint  arg1
 GstCaps *arg2
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstRTSPSrc::handle-request</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS></FLAGS>
+GstRTSPSrc *gstrtspsrc
+gpointer  arg1
+gpointer  arg2
+</SIGNAL>
+
