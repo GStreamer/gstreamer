@@ -2741,7 +2741,9 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
   gboolean res = FALSE;
   MpegTSPacketizerStream *stream;
   guint8 pointer, table_id;
+#ifndef GST_DISABLE_GST_DEBUG
   guint16 subtable_extension;
+#endif
   guint section_length;
   guint8 *data, *data_start;
 
@@ -2793,6 +2795,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
 
   if (packet->payload_unit_start_indicator) {
     table_id = *data++;
+#ifndef GST_DISABLE_GST_DEBUG
     /* subtable_extension should be read from 4th and 5th bytes only if
      * section_syntax_indicator is 1 */
     if ((data[0] & 0x80) == 0)
@@ -2801,6 +2804,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
       subtable_extension = GST_READ_UINT16_BE (data + 2);
     GST_DEBUG ("pid: 0x%04x table_id 0x%02x sub_table_extension %d",
         packet->pid, table_id, subtable_extension);
+#endif
 
     section_length = (GST_READ_UINT16_BE (data) & 0x0FFF) + 3;
 
@@ -3385,7 +3389,9 @@ calculate_skew (MpegTSPCR * pcr, guint64 pcrtime, GstClockTime time)
   gint64 old;
   gint pos, i;
   GstClockTime gstpcrtime, out_time;
+#ifndef GST_DISABLE_GST_DEBUG
   guint64 slope;
+#endif
 
   gstpcrtime = PCRTIME_TO_GSTTIME (pcrtime) + pcr->pcroffset;
 
@@ -3474,10 +3480,12 @@ calculate_skew (MpegTSPCR * pcr, guint64 pcrtime, GstClockTime time)
   /* measure the diff */
   delta = ((gint64) recv_diff) - ((gint64) send_diff);
 
+#ifndef GST_DISABLE_GST_DEBUG
   /* measure the slope, this gives a rought estimate between the sender speed
    * and the receiver speed. This should be approximately 8, higher values
    * indicate a burst (especially when the connection starts) */
   slope = recv_diff > 0 ? (send_diff * 8) / recv_diff : 8;
+#endif
 
   GST_DEBUG ("time %" GST_TIME_FORMAT ", base %" GST_TIME_FORMAT ", recv_diff %"
       GST_TIME_FORMAT ", slope %" G_GUINT64_FORMAT, GST_TIME_ARGS (time),

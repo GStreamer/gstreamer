@@ -1228,7 +1228,6 @@ static void
 gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream,
     guint8 * data, guint32 length, guint64 bufferoffset)
 {
-  MpegTSBase *base = (MpegTSBase *) demux;
   PESHeader header;
   gint offset = 0;
   PESParsingResult parseres;
@@ -1247,7 +1246,7 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream,
   gst_ts_demux_record_dts (demux, stream, header.DTS, bufferoffset);
   gst_ts_demux_record_pts (demux, stream, header.PTS, bufferoffset);
 
-  GST_DEBUG_OBJECT (base,
+  GST_DEBUG_OBJECT (demux,
       "stream PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT,
       GST_TIME_ARGS (stream->pts), GST_TIME_ARGS (stream->dts));
 
@@ -1472,7 +1471,9 @@ static GstFlowReturn
 gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
 {
   GstFlowReturn res = GST_FLOW_OK;
+#ifndef GST_DISABLE_GST_DEBUG
   MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
+#endif
   GstBuffer *buffer = NULL;
 
   GST_DEBUG_OBJECT (stream->pad,

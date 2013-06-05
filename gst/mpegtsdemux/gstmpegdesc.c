@@ -37,14 +37,20 @@ GST_DEBUG_CATEGORY (gstmpegtsdesc_debug);
 static guint
 gst_mpeg_descriptor_parse_1 (guint8 * data, guint size)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   guint8 tag;
+#endif
   guint8 length;
 
   /* need at least 2 bytes for tag and length */
   if (size < 2)
     return 0;
 
+#ifndef GST_DISABLE_GST_DEBUG
   tag = *data++;
+#else
+  data++;
+#endif
   length = *data++;
   size -= 2;
 
