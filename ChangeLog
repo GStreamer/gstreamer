@@ -1,9 +1,752 @@
-=== release 1.0.2 ===
+=== release 1.1.1 ===
 
-2012-10-25  Tim-Philipp Müller <tim@centricular.net>
+2013-06-05  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.0.2
+	  releasing 1.1.1
+
+2013-06-05 15:16:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 098c0d7 to 01a7a46
+
+2013-05-20 11:07:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v9.6
+
+2013-05-15 10:53:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 5edcd85 to 098c0d7
+
+2013-05-06 23:56:22 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavcfg.c:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavdemux.c:
+	* ext/libav/gstavmux.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  CODEC_ID_* -> AV_CODEC_ID_*
+
+2013-05-06 23:53:01 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/libav/gstavcodecmap.c:
+	  codecmap: add mapping for WMA Lossless
+	  Only 16 bits is supported for now though.
+
+2013-04-23 14:19:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v9.5
+
+2013-04-23 14:10:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Enable FRAME based threaded decoding if upstream is not live
+	  If upstream is live we don't want FRAME based threaded decoding as
+	  it adds latency.
+
+2013-04-22 23:54:48 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3cb3d3c to 5edcd85
+
+2013-04-16 14:49:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  libav: Fix typo in the SWSCALE libraries for static plugins
+
+2012-09-13 11:10:05 +0000  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* configure.ac:
+	* ext/libav/Makefile.am:
+	* ext/libswscale/Makefile.am:
+	  libav: fix static linking
+
+2012-10-24 12:18:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* ext/libav/Makefile.am:
+	* ext/libswscale/Makefile.am:
+	  gst: Add better support for static plugins
+
+2013-04-09 22:13:42 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  av: Add WMV3 format for WMV 3 caps
+
+2013-04-14 17:57:18 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From aed87ae to 3cb3d3c
+
+2013-04-09 21:01:54 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 04c7a1e to aed87ae
+
+2013-04-09 20:40:06 +0200  Siva Chandran P <siva.chandran.p@gmail.com>
+
+	* ext/libav/gstavviddec.c:
+	  avvidec: Make sure to store newly set caps after resetting the decoder
+	  Otherwise we'll just set the to NULL while resetting the decoder and
+	  don't have them available anymore later.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697548
+
+2013-03-25 18:06:39 -0700  David Schleef <ds@schleef.org>
+
+	* ext/libav/gstavdemux.c:
+	  Use %03u instead of %u in gst_pad_create_stream_id_printf()
+
+2013-03-25 09:47:49 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v9.4
+
+2013-03-07 09:30:55 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Set the assembler used for libav to $CC
+	  libav assumes that it's not just an assembler but something that
+	  can also handle CPPFLAGS and other things.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=694416
+
+2013-03-07 09:04:16 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Add AG_GST_ARG_GCOV to make automake happy again
+	  + running automake -a -c -Wno-portability...
+	  common/check.mak:107: error: GST_GCOV_ENABLED does not appear in AM_CONDITIONAL
+	  tests/check/Makefile.am:1:   'common/check.mak' included from here
+
+2013-03-07 00:03:06 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 2de221c to 04c7a1e
+
+2013-03-02 18:12:39 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/ext/libav:
+	  libav: update to v9.3
+
+2013-03-01 15:10:41 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/libswscale/gstffmpegscale.c:
+	  swscale: Use 1.0-style video/x-raw caps
+
+2013-02-28 19:34:02 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* Makefile.am:
+	* configure.ac:
+	* pkgconfig/.gitignore:
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gstreamer-plugins-libav-uninstalled.pc.in:
+	  Add uninstalled pkg-config file so other modules can find libav elements for unit tests
+	  e.g. gst-plugins-bad has some unit tests that draw on av* elements.
+
+2013-02-15 13:00:02 +0000  Rico Tzschichholz <ricotz@ubuntu.com>
+
+	* gst-libs/ext/Makefile.am:
+	  Fix 'make dist'
+	  This time for real hopefully. Make sure to remove any
+	  libav-dist directories that may still be around from
+	  previous make dist attempts first.
+
+2013-02-12 10:22:11 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: update to v9.1
+
+2013-02-04 18:10:42 -0800  David Schleef <ds@schleef.org>
+
+	* ext/libav/gstavcodecmap.c:
+	  Add mapping for SMPTE 302m audio
+
+2013-01-28 20:44:16 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From a942293 to 2de221c
+
+2013-01-26 12:35:10 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	  Revert "avdec_aac: disable for autoplugging until it gets fixed"
+	  This reverts commit c5980dc52ac57cf0147ed269e3b2c863d7251f84.
+	  It's fixed now.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690940
+
+2013-01-26 12:50:49 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: fix decoding of mono audio as well
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690940
+
+2013-01-25 14:40:15 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: fix garbled audio decoding in some cases
+	  Calculate output buffer size based on the number of
+	  samples, channels and bytes per sample. The buffer
+	  size was calculated based on linesize, which may
+	  be larger than what's required.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690940
+
+2013-01-22 12:57:41 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/libav/gstavaudenc.c:
+	  avenc_aac: downgrade to RANK_NONE until it gets fixed
+	  Currently just fails to initialize.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=691617
+
+2013-01-22 12:53:48 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	  avdec_aac: disable for autoplugging until it gets fixed
+	  Currently outputs garbled audio. Use faad in the meantime.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690940
+
+2013-01-14 17:00:17 +0100  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* configure.ac:
+	  libav: fix checks for internal libav configure options
+	  https://bugzilla.gnome.org/show_bug.cgi?id=691723
+
+2013-01-17 23:56:17 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/Makefile.am:
+	  Disable libswscale/avvideoscale plugin until it works at least somewhat
+	  It needs some fixing.
+
+2013-01-16 12:09:39 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	  tests: use GST_*_1_0 environment variables everywhere
+	  The _1_0 suffixed environment variables override the
+	  non-suffixed ones, so if we're in an environment that
+	  sets the _1_0 suffixed ones, such as jhbuild, we need
+	  to set those to make sure ours actually always get
+	  used.
+
+2013-01-15 15:08:10 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From a72faea to a942293
+
+2012-12-31 00:32:41 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  configure: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+	  AM_CONFIG_HEADER has been removed in the just-released automake 1.13:
+	  https://lists.gnu.org/archive/html/automake/2012-12/msg00038.html
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690881
+
+2012-12-22 10:52:47 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstav.c:
+	* ext/libav/gstav.h:
+	  av: Remove some unused variables and function declarations
+
+2012-12-22 10:49:52 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/Makefile.am:
+	* ext/libav/gstav.h:
+	* ext/libav/gstavdemux.c:
+	* ext/libav/gstavmux.c:
+	* ext/libav/gstavpipe.h:
+	* ext/libav/gstavprotocol.c:
+	* ext/libav/gstavprotocol.h:
+	  av: Move gst_ffmpegdata functions to gstavprotocol.h too
+	  Just for consistency.
+
+2012-12-21 23:16:44 +0100  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* ext/libav/gstav.h:
+	* ext/libav/gstavpipe.h:
+	  av: Fix redefinition of typedef 'GstFFMpegPipe'
+	  Move declaration of pipe function to correct headers file
+
+2012-12-21 14:28:57 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Pass CC, LD, AS, AR and NM to the libav configure if set
+
+2012-12-21 11:03:27 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavviddec.c:
+	  av: Use correct printf format strings for gsize
+
+2012-12-18 10:57:43 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Update to today's master
+
+2012-12-17 16:35:36 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavcfg.c:
+	* ext/libav/gstavdemux.c:
+	* ext/libav/gstavmux.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  av: Fix some memory leaks and misuse of libav API
+
+2012-12-17 15:58:37 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavauddec.h:
+	  avauddec: Use a GstBuffer instead of a GstAdapter for collecting the output buffers
+	  This might cause less memcpies as the GstMemories of the buffers
+	  are just appended into a single buffer.
+
+2012-12-03 16:38:53 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavauddec.h:
+	  avauddec: accumulate buffers from a single input to push it all at once
+	  The base audio decoder wants a 1:1 mapping for input and output
+	  buffers, so this decoder must accumulate data in an adapter and push
+	  it all at once after all input has been processed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=689565
+
+2012-12-17 13:42:13 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Only set "formats" field on raw audio/video caps
+
+2012-12-17 13:41:42 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Correctly convert GStreamer channel positions to libav channel mask
+
+2012-12-17 11:11:12 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Add more and correct restrictions for DV
+	  https://bugzilla.gnome.org/show_bug.cgi?id=600895
+
+2012-12-12 17:36:33 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstav.h:
+	  libav: Fix some compilation errors caused by circular includes
+
+2012-12-12 17:20:03 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Update to today's master
+
+2012-12-12 17:01:28 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodec: set bits_per_coded_sample for G726
+	  Use the bitrate and the samplerate to set the bits_per_coded_sample for G726
+	  because the decoder needs this.
+
+2012-12-12 15:57:19 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Set frame defaults for the audio decoders too
+
+2012-12-12 15:53:34 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavcodecmap.h:
+	  avcodecmap: Remove some unused functions
+
+2012-12-12 16:45:53 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: init frame with defaults
+	  Init the AVFrame with the right method. This sets the extended_data field
+	  correctly that is needed for some formats (G726 for example).
+
+2012-12-12 15:42:09 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavviddec.c:
+	  avdec: Improve src template caps
+
+2012-12-12 13:04:54 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Properly handle planar audio formats with more than AV_NUM_DATA_POINTERS channels
+
+2012-12-12 13:04:38 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Properly handle planar audio formats with more than AV_NUM_DATA_POINTERS channels
+
+2012-12-12 12:09:32 +0000  Christiaan Welvaart <cjw@daneel.dyndns.org>
+
+	* ext/libav/gstav.c:
+	* ext/libav/gstav.h:
+	* ext/libav/gstavdemux.c:
+	* ext/libav/gstavmux.c:
+	* ext/libav/gstavprotocol.c:
+	  avprotocol: Port from the URL protocol handler to saner public API
+
+2012-12-12 09:48:53 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  libav: fix palette support again
+
+2012-12-11 18:56:24 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Take framerate restrictions into account for encoders
+
+2012-12-11 18:48:34 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavaudenc.h:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavvidenc.c:
+	* ext/libav/gstavvidenc.h:
+	  avvidenc: Simplify color formats in the raw video caps
+
+2012-12-11 18:07:34 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavaudenc.h:
+	* ext/libav/gstavcodecmap.c:
+	  avaudenc: Reorder audio channels if necessary and add proper support for channel layouts
+
+2012-12-11 17:25:41 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavcodecmap.h:
+	  avcodecmap: Take channel layout constraints into account if possible
+
+2012-12-11 16:54:09 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Take generic samplerate limitations into account
+
+2012-12-11 16:46:43 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Simplify raw audio caps
+
+2012-12-11 15:14:10 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Close context when it was opened
+
+2012-12-11 10:34:42 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Fix memory leak if we already allocated an output buffer for the frame
+
+2012-12-11 10:22:34 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/libav/gstavviddec.c:
+	  Revert "avviddec: Fix memory leaks and assertions in error cases if we can't allocate a frame"
+	  This reverts commit 47647e1caca117ff8a62caf8bf0b6c94eb6dd025.
+	  Breaks playback when direct rendering is disabled.
+	  The reason is that we set the opaque vaue to NULL and then try to use the NULL
+	  value when we decoded a frame.
+
+2012-12-10 14:54:03 +0100  Rasmus Rohde <rohde@duff.dk>
+
+	* ext/libav/gstavpipe.h:
+	  Fix incorrect use of object in log statement. We are given a pointer to the object and should not try to take the address of it.
+
+2012-12-06 06:29:13 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* ext/libav/gstavutils.c:
+	  avutils: Add missing includes for Windows
+	  Fixes #689751
+
+2012-12-05 19:28:33 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavcodecmap.c:
+	  avaudenc: Add support for planar audio formats
+
+2012-12-05 19:25:37 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  av: Correctly populate the codec context with the defaults
+
+2012-12-05 10:52:34 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  av: Use av_codec_is_{en,de}coder() API instead of private struct fields
+
+2012-12-04 22:09:05 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: release_buffer is not supposed to be used for audio
+	  And calling it causes crashes in some situations.
+
+2012-12-04 20:45:28 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavutils.c:
+	  avauddec: Add support for planar audio formats
+
+2012-12-04 20:44:58 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Fix memory leaks and assertions in error cases if we can't allocate a frame
+
+2012-12-04 18:28:11 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavcfg.c:
+	* ext/libav/gstavdemux.c:
+	* ext/libav/gstavmux.c:
+	* ext/libav/gstavutils.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  av: Port remaining simple bits
+
+2012-12-04 18:02:56 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavviddec.c:
+	  av: Remove palette support for now
+	  It was never ported to the way how paletted color formats work
+	  in 1.0 anyway and the API changed in libav upstream.
+
+2012-12-04 17:56:40 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  av: Update for some constant changes
+
+2012-12-04 17:47:20 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstav.c:
+	* ext/libav/gstav.h:
+	* ext/libav/gstavprotocol.c:
+	  av: Port to new avio protocol handler
+
+2012-11-19 15:25:42 +0100  Luca Barbato <lu_zero@gentoo.org>
+
+	* ext/libav/gstav.c:
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavcfg.c:
+	* ext/libav/gstavdeinterlace.c:
+	* ext/libav/gstavmux.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  av: update to use AVOption variants.
+
+2012-12-04 17:19:11 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Switch to master (9)
+
+2012-12-02 12:31:43 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: log error string as well in debug output
+
+2012-12-01 23:21:41 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: use sample rate as ticks per second fallback
+	  The 25/1 value presumably came from the video encoder class.
+
+2012-12-01 23:05:23 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: fix output timestamping
+	  We need to pass the number of samples encode in the output buffer
+	  to gst_audio_encoder_finish_frame(), not the number of frames.
+	  Fixes output timestamps being way too small, and transcoding
+	  problems.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=689398
+
+2012-11-20 11:56:57 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Implement reset vfunc
+
+2012-11-20 11:53:52 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Don't send any frames downstream when draining unless requested to do so
+
+2012-11-20 11:51:13 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Implement draining
+
+2012-11-20 11:45:34 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Implement flush vfunc properly
+
+2012-11-20 11:39:45 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavauddec.h:
+	  avauddec: Port to non-deprecated avcodec_decode_audio4() API
+	  Fixes bug #666435.
+
+2012-11-20 10:55:55 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavaudenc.h:
+	  avaudenc: Some minor cleanup
+
+2012-11-20 10:53:01 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Use non-deprecated avcodec_encode_audio2() API
+	  This also allows us to always get an output buffer of the required size
+	  instead of risking that it is too small.
+
+2012-11-20 10:36:29 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavaudenc.h:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavcodecmap.h:
+	  avaudenc: Port to audio encoder base class
+
+2012-11-20 10:35:01 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Use gst_caps_truncate()
+
+2012-11-19 17:08:23 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavmux.c:
+	* ext/libav/gstavvidenc.c:
+	  av: Use PROP_ instead of ARG_
+
+2012-11-19 14:10:23 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Y41B is YUV411P, not YUV410P
+
+2012-11-19 12:57:19 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavauddec.h:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavcodecmap.h:
+	  avauddec: Port to audio base classes
+
+2012-11-19 11:29:22 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6bb6951 to a72faea
+
+2012-11-19 10:29:00 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/Makefile.am:
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavauddec.h:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavaudenc.h:
+	* ext/libav/gstavdec.c:
+	* ext/libav/gstavenc.c:
+	* ext/libav/gstavenc.h:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	* ext/libav/gstavvidenc.h:
+	  av: Put declarations in header files and rename audio codec files
+
+2012-11-14 12:43:51 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/libav/gstavenc.c:
+	  gst_adapter_prev_timestamp -> gst_adapter_prev_pts
+
+2012-11-10 16:57:06 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Add mappings for the GBR color formats
+
+2012-11-04 00:22:16 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* COPYING.LIB:
+	* ext/libav/gstav.c:
+	* ext/libav/gstav.h:
+	* ext/libav/gstavaudioresample.c:
+	* ext/libav/gstavcfg.c:
+	* ext/libav/gstavcfg.h:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavcodecmap.h:
+	* ext/libav/gstavdec.c:
+	* ext/libav/gstavdeinterlace.c:
+	* ext/libav/gstavdemux.c:
+	* ext/libav/gstavenc.c:
+	* ext/libav/gstavenc.h:
+	* ext/libav/gstavmux.c:
+	* ext/libav/gstavpipe.h:
+	* ext/libav/gstavprotocol.c:
+	* ext/libav/gstavscale.c:
+	* ext/libav/gstavutils.c:
+	* ext/libav/gstavutils.h:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	* ext/libav/gstavvidenc.h:
+	* ext/libswscale/gstffmpegscale.c:
+	* tests/check/elements/avdec_adpcm.c:
+	* tests/check/elements/avdemux_ape.c:
+	* tests/check/generic/libavcodec-locking.c:
+	* tests/check/generic/plugin-test.c:
+	  Fix FSF address
+
+2012-10-29 14:12:03 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Remove redundant function to map PixelFormat to GstVideoFormat
+	  And merge everything into a single one.
+
+2012-10-25 13:11:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavdec.c:
+	  avdec: Use gst_audio_buffer_clip() instead of manual clipping
+
+2012-10-25 12:51:41 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  Back to feature development
+
+=== release 1.0.2 ===
+
+2012-10-25 01:34:32 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.0.2
 
 2012-10-24 16:01:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
