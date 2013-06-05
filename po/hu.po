@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-04-13 10:43+0100\n"
+"POT-Creation-Date: 2013-06-05 16:24+0200\n"
 "PO-Revision-Date: 2010-11-01 13:39+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -326,8 +326,8 @@ msgstr "kiterjesztett megjegyzés"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
-"az adatokhoz fűzött szabad szöveges megjegyzés kulcs=érték vagy kulcs[hu]"
-"=megjegyzés formában"
+"az adatokhoz fűzött szabad szöveges megjegyzés kulcs=érték vagy "
+"kulcs[hu]=megjegyzés formában"
 
 msgid "track number"
 msgstr "dalsorszám"
@@ -1136,6 +1136,10 @@ msgstr ""
 #, fuzzy, c-format
 msgid "Missing element: %s\n"
 msgstr "nincs „%s” elem"
+
+#, fuzzy, c-format
+msgid "Got context from element '%s': %s\n"
+msgstr "FIGYELMEZTETÉS: a következő elemtől: %s: %s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Kimeneti címkék (metaadatok)"

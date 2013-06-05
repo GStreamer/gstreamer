@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-04-13 10:43+0100\n"
+"POT-Creation-Date: 2013-06-05 16:24+0200\n"
 "PO-Revision-Date: 2011-09-05 12:49+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -1143,6 +1143,10 @@ msgstr ""
 #, fuzzy, c-format
 msgid "Missing element: %s\n"
 msgstr "non hai un elemento «%s»"
+
+#, fuzzy, c-format
+msgid "Got context from element '%s': %s\n"
+msgstr "AVISO: do elemento %s: %s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Etiquetas de saída (tamén coñecido como metadatos)"
