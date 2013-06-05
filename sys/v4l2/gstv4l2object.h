@@ -174,6 +174,10 @@ struct _GstV4l2Object {
   GstV4l2GetInOutFunction  get_in_out_func;
   GstV4l2SetInOutFunction  set_in_out_func;
   GstV4l2UpdateFpsFunction update_fps_func;
+
+  /* Quirks */
+  /* Skips interlacing probes */
+  gboolean never_interlaced;
 };
 
 struct _GstV4l2ObjectClassHelper {

@@ -1830,11 +1830,7 @@ gst_v4l2_object_probe_caps_for_format_and_size (GstV4l2Object * v4l2object,
   gint int_width = width;
   gint int_height = height;
 
-  if (!strcmp ((char *) v4l2object->vcap.driver, "uvcvideo")) {
-    /*
-     * UVC devices are never interlaced, and doing VIDIOC_TRY_FMT on them
-     * causes expensive and slow USB IO, so don't probe them for interlaced
-     */
+  if (v4l2object->never_interlaced) {
     interlaced = FALSE;
   } else {
     /* Interlaced detection using VIDIOC_TRY/S_FMT */
