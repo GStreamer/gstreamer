@@ -43,6 +43,20 @@ typedef struct _GstVaapiVideoAllocatorClass     GstVaapiVideoAllocatorClass;
 #define GST_VAAPI_VIDEO_MEMORY_NAME             "GstVaapiVideoMemory"
 
 /**
+ * GstVaapiVideoMemoryMapType:
+ * @GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE: map with gst_buffer_map()
+ *   as a whole and return a #GstVaapiSurfaceProxy
+ * @GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_PLANAR: map individual plane with
+ *   gst_video_frame_map()
+ *
+ * The set of all #GstVaapiVideoMemory map types.
+ */
+typedef enum {
+    GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE = 1,
+    GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_PLANAR
+} GstVaapiVideoMemoryMapType;
+
+/**
  * GstVaapiVideoMemory:
  *
  * A VA video memory object holder, including VA surfaces, images and
@@ -52,11 +66,13 @@ struct _GstVaapiVideoMemory {
     GstMemory parent_instance;
 
     /*< private >*/
+    GstVaapiSurfaceProxy *proxy;
     const GstVideoInfo *surface_info;
     GstVaapiSurface    *surface;
     const GstVideoInfo *image_info;
     GstVaapiImage      *image;
     GstVaapiVideoMeta  *meta;
+    guint               map_type;
     gint                map_count;
     gboolean            use_direct_rendering;
 };

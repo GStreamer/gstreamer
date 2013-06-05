@@ -107,6 +107,9 @@ gst_video_meta_map_vaapi_memory(GstVideoMeta *meta, guint plane,
                              allocator), FALSE);
     g_return_val_if_fail(mem->meta, FALSE);
 
+    if (mem->map_type &&
+        mem->map_type != GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_PLANAR)
+        goto error_incompatible_map;
     if ((flags & GST_MAP_READWRITE) != GST_MAP_WRITE)
         goto error_unsupported_map;
 
@@ -118,6 +121,7 @@ gst_video_meta_map_vaapi_memory(GstVideoMeta *meta, guint plane,
             goto error_ensure_image;
         if (!gst_vaapi_image_map(mem->image))
             goto error_map_image;
+        mem->map_type = GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_PLANAR;
     }
 
     *data = gst_vaapi_image_get_plane(mem->image, plane);
@@ -126,6 +130,11 @@ gst_video_meta_map_vaapi_memory(GstVideoMeta *meta, guint plane,
     return TRUE;
 
     /* ERRORS */
+error_incompatible_map:
+    {
+        GST_ERROR("incompatible map type (%d)", mem->map_type);
+        return FALSE;
+    }
 error_unsupported_map:
     {
         GST_ERROR("unsupported map flags (0x%x)", flags);
@@ -170,6 +179,8 @@ gst_video_meta_unmap_vaapi_memory(GstVideoMeta *meta, guint plane,
     g_return_val_if_fail(mem->image, FALSE);
 
     if (--mem->map_count == 0) {
+        mem->map_type = 0;
+
         /* Unmap VA image used for read/writes */
         if (info->flags & GST_MAP_READWRITE)
             gst_vaapi_image_unmap(mem->image);
@@ -207,11 +218,13 @@ gst_vaapi_video_memory_new(GstAllocator *base_allocator,
     gst_memory_init(&mem->parent_instance, 0, base_allocator, NULL,
         GST_VIDEO_INFO_SIZE(vip), 0, 0, GST_VIDEO_INFO_SIZE(vip));
 
+    mem->proxy = NULL;
     mem->surface_info = &allocator->surface_info;
     mem->surface = NULL;
     mem->image_info = &allocator->image_info;
     mem->image = NULL;
     mem->meta = gst_vaapi_video_meta_ref(meta);
+    mem->map_type = 0;
     mem->map_count = 0;
     mem->use_direct_rendering = allocator->has_direct_rendering;
     return GST_MEMORY_CAST(mem);
@@ -229,21 +242,69 @@ gst_vaapi_video_memory_free(GstVaapiVideoMemory *mem)
 static gpointer
 gst_vaapi_video_memory_map(GstVaapiVideoMemory *mem, gsize maxsize, guint flags)
 {
-    GST_FIXME("unimplemented GstVaapiVideoAllocator::mem_map() hook");
+    if (mem->map_type &&
+        mem->map_type != GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE)
+        goto error_incompatible_map;
+
+    if (mem->map_count == 0) {
+        gst_vaapi_surface_proxy_replace(&mem->proxy,
+            gst_vaapi_video_meta_get_surface_proxy(mem->meta));
+        if (!mem->proxy)
+            goto error_no_surface_proxy;
+        mem->map_type = GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE;
+    }
+    mem->map_count++;
+    return mem->proxy;
+
+    /* ERRORS */
+error_incompatible_map:
+    GST_ERROR("failed to map memory to a GstVaapiSurfaceProxy");
+    return NULL;
+error_no_surface_proxy:
+    GST_ERROR("failed to extract GstVaapiSurfaceProxy from video meta");
     return NULL;
 }
 
 static void
 gst_vaapi_video_memory_unmap(GstVaapiVideoMemory *mem)
 {
-    GST_FIXME("unimplemented GstVaapiVideoAllocator::mem_unmap() hook");
+    if (mem->map_type &&
+        mem->map_type != GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE)
+        goto error_incompatible_map;
+
+    if (--mem->map_count == 0) {
+        gst_vaapi_surface_proxy_replace(&mem->proxy, NULL);
+        mem->map_type = 0;
+    }
+    return;
+
+    /* ERRORS */
+error_incompatible_map:
+    GST_ERROR("incompatible map type (%d)", mem->map_type);
+    return;
 }
 
 static GstVaapiVideoMemory *
 gst_vaapi_video_memory_copy(GstVaapiVideoMemory *mem,
     gssize offset, gssize size)
 {
-    GST_FIXME("unimplemented GstVaapiVideoAllocator::mem_copy() hook");
+    GstMemory *out_mem;
+
+    if (offset != 0 || size != -1)
+        goto error_unsupported;
+
+    out_mem = gst_vaapi_video_memory_new(mem->parent_instance.allocator,
+        mem->meta);
+    if (!out_mem)
+        goto error_allocate_memory;
+    return GST_VAAPI_VIDEO_MEMORY_CAST(out_mem);
+
+    /* ERRORS */
+error_unsupported:
+    GST_ERROR("failed to copy partial memory (unsupported operation)");
+    return NULL;
+error_allocate_memory:
+    GST_ERROR("failed to allocate GstVaapiVideoMemory copy");
     return NULL;
 }
 
