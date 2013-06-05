@@ -3,10 +3,10 @@
   <description>videoparsers</description>
   <filename>../../gst/videoparsers/.libs/libgstvideoparsersbad.so</filename>
   <basename>libgstvideoparsersbad.so</basename>
-  <version>1.1.0.1</version>
+  <version>1.1.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -83,13 +83,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-divx, divxversion=(int)[ 4, 5 ]</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/mpeg, mpegversion=(int)4, parsed=(boolean)true, systemstream=(boolean)false</details>
+          <details>video/mpeg, mpegversion=(int)4, width=(int)[ 0, 2147483647 ], height=(int)[ 0, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], parsed=(boolean)true, systemstream=(boolean)false; video/x-divx, divxversion=(int)[ 4, 5 ]</details>
         </caps>
       </pads>
     </element>
@@ -111,6 +111,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/mpeg, mpegversion=(int)[ 1, 2 ], parsed=(boolean)true, systemstream=(boolean)false</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>pngparse</name>
+      <longname>PNG parser</longname>
+      <class>Codec/Parser/Video/Image</class>
+      <description>Parses PNG files</description>
+      <author>Olivier Crete &lt;olivier.crete@collabora.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>image/png</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>image/png, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], parsed=(boolean)true</details>
         </caps>
       </pads>
     </element>

@@ -2,12 +2,20 @@ GObject
   GInitiallyUnowned
     GstObject
       GstAllocator
-        GstDefaultAllocator
+        GstAllocatorSysmem
+        GstVdpVideoAllocator
+      GstAudioRingBuffer
+        GstAudioSinkRingBuffer
+        GstAudioSrcRingBuffer
       GstBus
       GstClock
+        GstSystemClock
+          GstAudioClock
       GstControlBinding
       GstControlSource
       GstElement
+        GstAiffMux
+        GstAiffParse
         GstAsfMux
         GstAsfParse
         GstAssRender
@@ -42,8 +50,13 @@ GObject
           GstMpeg4VParse
           GstMpegvParse
           GstOpusParse
+          GstPngParse
           GstVC1Parse
         GstBaseSink
+          GstAudioBaseSink
+            GstAudioSink
+              GstOpenALSink
+          GstAvdtpSink
           GstChecksumSink
           GstCurlBaseSink
             GstCurlFileSink
@@ -58,17 +71,28 @@ GObject
           GstShmSink
           GstVideoSink
             GstEglGlesSink
+            GstFBDEVSink
+            GstWaylandSink
         GstBaseSrc
+          GstAvdtpSrc
           GstDTMFSrc
           GstDataURISrc
           GstFliteTestSrc
           GstInterAudioSrc
           GstInterSubSrc
           GstInterVideoSrc
+          GstLADSPASource
+            ladspasrc-noise-so-noise-white
+            ladspasrc-sine-so-sine-fcac
           GstPushSrc
+            GstAudioBaseSrc
+              GstAudioSrc
+                GstOpenalSrc
             GstDvbSrc
             GstMMS
+            GstNeonhttpSrc
             GstRTMPSrc
+            GstRfbSrc
             GstShmSrc
             frei0r-src-ising0r
             frei0r-src-lissajous0r
@@ -79,10 +103,24 @@ GObject
           GstRTPDTMFSrc
         GstBaseTransform
           GstAudioFilter
+            GstAccurip
+            GstAudioChannelMix
             GstBPMDetect
+            GstChromaprint
+            GstLADSPAFilter
+              ladspa-amp-so-amp-mono
+              ladspa-amp-so-amp-stereo
+              ladspa-delay-so-delay-5s
+              ladspa-filter-so-hpf
+              ladspa-filter-so-lpf
+              ladspa-sine-so-sine-faaa
+              ladspa-sine-so-sine-faac
+              ladspa-sine-so-sine-fcaa
+            GstOFA
           GstBayer2RGB
           GstDebugSpy
-          GstDtmfDetect
+          GstFreeverb
+          GstIvtc
           GstRGB2Bayer
           GstRemoveSilence
           GstVideoFilter
@@ -90,6 +128,7 @@ GObject
             GstChromaHold
             GstChromium
             GstColorEffects
+            GstCombDetect
             GstDilate
             GstDodge
             GstExclusion
@@ -111,9 +150,25 @@ GObject
               GstMirror
               GstRotate
               GstSquare
+            GstOpencvVideoFilter
+              GstCvDilateErode
+                GstCvDilate
+                GstCvErode
+              GstCvEqualizeHist
+              GstCvLaplace
+              GstCvSmooth
+              GstCvSobel
+              GstFaceDetect
+              GstHanddetect
+              GstSkinDetect
+            GstRetinex
+            GstRsvgOverlay
+            GstSceneChange
             GstSmooth
             GstSolarize
+            GstVideoDiff
             GstZBar
+            GstZebraStripe
             frei0r-filter-3-point-color-balance
             frei0r-filter-3dflippo
             frei0r-filter-b
@@ -164,13 +219,18 @@ GObject
             frei0r-filter-vertigo
             frei0r-filter-water
             frei0r-filter-white-balance
+          GstWatchdog
+          GstYadif
         GstBin
           DvbBaseBin
+          GstA2dpSink
           GstAutoConvert
           GstAutoVideoConvert
           GstBaseCameraSrc
+            GstUvcH264Src
             GstWrapperCameraBinSrc
           GstFPSDisplaySink
+          GstHlsSink
           GstPipeline
             GstCameraBin
           GstSDPDemux
@@ -182,8 +242,13 @@ GObject
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
+        GstDashDemux
+        GstDecklinkSrc
+        GstEdgeDetect
+        GstFaceBlur
         GstFestival
         GstFieldAnalysis
+        GstFluidDec
         GstGDPDepay
         GstGDPPay
         GstGmeDec
@@ -191,23 +256,31 @@ GObject
         GstInterlace
         GstJifMux
         GstJpegParse
+        GstKateDec
+        GstKateEnc
+        GstKateParse
+          GstKateTag
         GstLiveAdder
+        GstMXFDemux
+        GstMidiParse
         GstMimDec
         GstMimEnc
         GstModPlug
+        GstMotioncells
         GstMpegPSDemux
+        GstMssDemux
+        GstOpencvTextOverlay
         GstPcapParse
         GstPitch
         GstPnmdec
         GstPnmenc
+        GstPyramidSegment
         GstRTPBaseDepayload
           GstRTPOpusDepay
           GstRtpDTMFDepay
-          GstRtpVP8Depay
         GstRTPBasePayload
           GstRtpAsfPay
           GstRtpOPUSPay
-          GstRtpVP8Pay
         GstRawParse
           GstAudioParse
           GstVideoParse
@@ -218,12 +291,21 @@ GObject
         GstSrtEnc
         GstTagMux
           GstId3Mux
+        GstTemplateMatch
+        GstUvcH264MjpgDemux
         GstVideoDecoder
+          GstOpenJPEGDec
+          GstRsvgDec
           GstSchroDec
+          GstVdpDecoder
+            GstVdpMpegDec
         GstVideoEncoder
+          GstOpenJPEGEnc
           GstSchroEnc
         GstWebvttEnc
+        GstWildmidi
         GstY4mDec
+        MpegPsMux
         MpegTSBase
           GstTSDemux
           MpegTSParse2
@@ -268,12 +350,88 @@ GObject
       GstTask
       GstTaskPool
   GstEncodingProfile
+  GstVdpDevice
+  MXFMetadataBase
+    MXFDescriptiveMetadata
+      MXFDMS1
+        MXFDMS1Address
+        MXFDMS1Communications
+        MXFDMS1ContactsList
+        MXFDMS1Framework
+          MXFDMS1ProductionClipFramework
+            MXFDMS1ClipFramework
+            MXFDMS1ProductionFramework
+          MXFDMS1SceneFramework
+        MXFDMS1NameValue
+        MXFDMS1PictureFormat
+        MXFDMS1Processing
+        MXFDMS1Project
+        MXFDMS1Publication
+        MXFDMS1TextLanguage
+          MXFDMS1Branding
+          MXFDMS1CueWords
+          MXFDMS1Shot
+          MXFDMS1Thesaurus
+            MXFDMS1Annotation
+            MXFDMS1Award
+            MXFDMS1CaptionsDescription
+            MXFDMS1Classification
+            MXFDMS1Contact
+              MXFDMS1Location
+              MXFDMS1Organisation
+              MXFDMS1Person
+            MXFDMS1Contract
+            MXFDMS1DeviceParameters
+            MXFDMS1Event
+            MXFDMS1GroupRelationship
+            MXFDMS1Identification
+            MXFDMS1KeyPoint
+            MXFDMS1Participant
+            MXFDMS1Rights
+            MXFDMS1Scripting
+            MXFDMS1SettingPeriod
+          MXFDMS1Titles
+    MXFMetadata
+      MXFMetadataContentStorage
+      MXFMetadataEssenceContainerData
+      MXFMetadataGenericDescriptor
+        MXFMetadataFileDescriptor
+          MXFMetadataGenericDataEssenceDescriptor
+          MXFMetadataGenericPictureEssenceDescriptor
+            MXFMetadataCDCIPictureEssenceDescriptor
+              MXFMetadataMPEGVideoDescriptor
+            MXFMetadataRGBAPictureEssenceDescriptor
+          MXFMetadataGenericSoundEssenceDescriptor
+            MXFMetadataWaveAudioEssenceDescriptor
+              MXFMetadataAES3AudioEssenceDescriptor
+          MXFMetadataMultipleDescriptor
+      MXFMetadataGenericPackage
+        MXFMetadataMaterialPackage
+        MXFMetadataSourcePackage
+      MXFMetadataIdentification
+      MXFMetadataLocator
+        MXFMetadataNetworkLocator
+        MXFMetadataTextLocator
+      MXFMetadataPreface
+      MXFMetadataSequence
+      MXFMetadataStructuralComponent
+        MXFMetadataDMSegment
+        MXFMetadataFiller
+        MXFMetadataSourceClip
+          MXFMetadataDMSourceClip
+        MXFMetadataTimecodeComponent
+      MXFMetadataTrack
+        MXFMetadataEventTrack
+        MXFMetadataStaticTrack
+        MXFMetadataTimelineTrack
 GInterface
   GTypePlugin
   GstChildProxy
+  GstNavigation
   GstPhotography
   GstPreset
   GstTagSetter
   GstTagXmpWriter
   GstURIHandler
   GstVideoOverlay
+  MXFDescriptiveMetadataFrameworkInterface

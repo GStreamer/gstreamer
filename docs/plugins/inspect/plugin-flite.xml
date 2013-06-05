@@ -3,10 +3,10 @@
   <description>Flite speech synthesizer plugin</description>
   <filename>../../ext/flite/.libs/libgstflite.so</filename>
   <basename>libgstflite.so</basename>
-  <version>1.1.0.1</version>
+  <version>1.1.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -20,7 +20,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string)s16LE, layout=(string)interleaved, rate=(int)48000, channels=(int)[ 1, 8 ]</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)48000, channels=(int)[ 1, 8 ]</details>
         </caps>
       </pads>
     </element>

@@ -199,6 +199,27 @@
       </pads>
     </element>
     <element>
+      <name>handdetect</name>
+      <longname>handdetect</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Performs hand gesture detection on videos, providing detected hand positions via bus message and navigation event, and deals with hand gesture events</description>
+      <author>Andol Li &lt;andol@andol.info&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)RGB, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)RGB, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>motioncells</name>
       <longname>motioncells</longname>
       <class>Filter/Effect/Video</class>
@@ -246,6 +267,48 @@
       <class>Filter/Effect/Video</class>
       <description>Applies pyramid segmentation to a video or image.</description>
       <author>Michael Sheldon &lt;mike@mikeasoft.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)RGB, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)RGB, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>retinex</name>
+      <longname>Retinex image colour enhacement</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Multiscale retinex for colour image enhancement</description>
+      <author>Miguel Casas-Sanchez &lt;miguelecasassanchez@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)RGB, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)RGB, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>skindetect</name>
+      <longname>skindetect</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Performs non-parametric skin detection on input</description>
+      <author>Miguel Casas-Sanchez &lt;miguelecasassanchez@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

@@ -1,9 +1,9 @@
 <plugin>
   <name>fragmented</name>
   <description>Fragmented streaming plugins</description>
-  <filename>../../gst/hls/.libs/libgstfragmented.so</filename>
+  <filename>../../ext/hls/.libs/libgstfragmented.so</filename>
   <basename>libgstfragmented.so</basename>
-  <version>1.1.0.1</version>
+  <version>1.1.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins</package>
@@ -27,6 +27,21 @@ Andoni Morales Alastruey &lt;ylatuya@gmail.com&gt;</author>
           <name>src_%u</name>
           <direction>source</direction>
           <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>hlssink</name>
+      <longname>HTTP Live Streaming sink</longname>
+      <class>Sink</class>
+      <description>HTTP Live Streaming sink</description>
+      <author>Alessandro Decina &lt;alessandro.d@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
           <details>ANY</details>
         </caps>
       </pads>

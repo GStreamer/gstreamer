@@ -1,5 +1,6 @@
 ADPCMEnc GstPreset
 DvbBaseBin GstChildProxy GstURIHandler
+GstA2dpSink GstChildProxy
 GstAmrWbEnc GstPreset
 GstApExSink GstImplementsInterface GstMixer
 GstAsfMux GstTagSetter
@@ -22,6 +23,7 @@ GstEglGlesSink GstVideoOverlay
 GstFPSDisplaySink GstChildProxy
 GstFaac GstPreset
 GstFaceOverlay GstChildProxy
+GstFreeverb GstPreset
 GstGSMEnc GstPreset
 GstGSettingsAudioSink GstChildProxy
 GstGSettingsAudioSrc GstChildProxy
@@ -29,6 +31,8 @@ GstGSettingsSwitchSink GstChildProxy
 GstGSettingsSwitchSrc GstChildProxy
 GstGSettingsVideoSink GstChildProxy
 GstGSettingsVideoSrc GstChildProxy
+GstHanddetect GstNavigation
+GstHlsSink GstChildProxy
 GstId3BaseMux GstTagSetter
 GstId3Mux GstTagSetter
 GstJifMux GstTagSetter GstTagXmpWriter
@@ -38,6 +42,7 @@ GstMMS GstURIHandler
 GstMpeg2enc GstPreset
 GstMythtvSrc GstURIHandler
 GstNeonhttpSrc GstURIHandler
+GstOpenJPEGEnc GstPreset
 GstOpusEnc GstPreset GstTagSetter
 GstPipeline GstChildProxy
 GstRTMPSink GstURIHandler
@@ -47,6 +52,7 @@ GstSDPDemux GstChildProxy
 GstSchroEnc GstPreset
 GstSirenEnc GstPreset
 GstTagMux GstTagSetter
+GstUvcH264Src GstChildProxy
 GstVCDSrc GstURIHandler
 GstVP8Enc GstPreset GstTagSetter
 GstVP8Enc GstTagSetter GstPreset

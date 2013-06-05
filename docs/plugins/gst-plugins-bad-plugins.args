@@ -594,8 +594,8 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>iradio-mode</NICK>
-<BLURB>Enable internet radio mode (extraction of shoutcast/icecast metadata).</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<BLURB>Enable internet radio mode (ask server to send shoutcast/icecast metadata interleaved with the actual stream data).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -23648,8 +23648,8 @@
 <TYPE>guint</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Buffer latency in ms</NICK>
-<BLURB>Amount of data to buffer.</BLURB>
+<NICK>Buffering latency</NICK>
+<BLURB>Amount of data to buffer (in milliseconds).</BLURB>
 <DEFAULT>60</DEFAULT>
 </ARG>
 
@@ -26778,7 +26778,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Color</NICK>
+<NICK>Color (B)</NICK>
 <BLURB>The Source Color.</BLURB>
 <DEFAULT>0.5</DEFAULT>
 </ARG>
@@ -26788,7 +26788,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Color</NICK>
+<NICK>Color (G)</NICK>
 <BLURB>The Source Color.</BLURB>
 <DEFAULT>0.5</DEFAULT>
 </ARG>
@@ -26798,7 +26798,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Color-R</NICK>
+<NICK>Color (R)</NICK>
 <BLURB>The Source Color.</BLURB>
 <DEFAULT>0.5</DEFAULT>
 </ARG>
@@ -26820,7 +26820,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>7.7486e-304</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26858,9 +26858,9 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>splash</NICK>
+<NICK>splash (Y)</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>8.20251e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26868,9 +26868,9 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>splash</NICK>
+<NICK>splash (X)</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>8.20251e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26900,7 +26900,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>3.06544e-115</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26910,7 +26910,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>3.06544e-115</DEFAULT>
+<DEFAULT>8.20251e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26920,7 +26920,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>7.91244e-05</DEFAULT>
+<DEFAULT>1.07509e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26948,9 +26948,9 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Color</NICK>
+<NICK>Color (B)</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>9.33458e-15</DEFAULT>
+<DEFAULT>9.40395e-38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26958,9 +26958,9 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Color</NICK>
+<NICK>Color (G)</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>9.33458e-15</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26968,9 +26968,9 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Color-R</NICK>
+<NICK>Color (R)</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>8.37068e-21</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27300,7 +27300,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>1.71685e-316</DEFAULT>
+<DEFAULT>1.07175e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27320,7 +27320,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>1.34037e-317</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27358,7 +27358,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Neutral Color</NICK>
+<NICK>Neutral Color (B)</NICK>
 <BLURB>Choose a color from the source image that should be white.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -27368,7 +27368,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Neutral Color</NICK>
+<NICK>Neutral Color (G)</NICK>
 <BLURB>Choose a color from the source image that should be white.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -27378,7 +27378,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Neutral Color-R</NICK>
+<NICK>Neutral Color (R)</NICK>
 <BLURB>Choose a color from the source image that should be white.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -27388,7 +27388,7 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Bottom Left</NICK>
+<NICK>Bottom Left (Y)</NICK>
 <BLURB></BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -27398,7 +27398,7 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Bottom Left</NICK>
+<NICK>Bottom Left (X)</NICK>
 <BLURB></BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -27408,7 +27408,7 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Bottom Right</NICK>
+<NICK>Bottom Right (Y)</NICK>
 <BLURB></BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -27418,7 +27418,7 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Bottom Right</NICK>
+<NICK>Bottom Right (X)</NICK>
 <BLURB></BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -27428,7 +27428,7 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Top Left</NICK>
+<NICK>Top Left (Y)</NICK>
 <BLURB></BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -27438,7 +27438,7 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Top Left</NICK>
+<NICK>Top Left (X)</NICK>
 <BLURB></BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -27448,7 +27448,7 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Top Right</NICK>
+<NICK>Top Right (Y)</NICK>
 <BLURB></BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -27458,7 +27458,7 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Top Right</NICK>
+<NICK>Top Right (X)</NICK>
 <BLURB></BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -27490,7 +27490,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>4.63015e-299</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27500,7 +27500,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>1.56483e-316</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27680,7 +27680,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>1.71552e-316</DEFAULT>
+<DEFAULT>1.07185e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -31264,6 +31264,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstAssRender::wait-text</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Wait Text</NICK>
+<BLURB>Whether to wait for subtitles.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>http---invadarecords-com-plugins-lv2-tube-stereo::bypass</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -33698,7 +33708,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Map black to</NICK>
+<NICK>Map black to (B)</NICK>
 <BLURB>The color to map source color with null luminance.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -33708,7 +33718,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Map black to</NICK>
+<NICK>Map black to (G)</NICK>
 <BLURB>The color to map source color with null luminance.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -33718,7 +33728,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Map black to-R</NICK>
+<NICK>Map black to (R)</NICK>
 <BLURB>The color to map source color with null luminance.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -33728,7 +33738,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Map white to</NICK>
+<NICK>Map white to (B)</NICK>
 <BLURB>The color to map source color with full luminance.</BLURB>
 <DEFAULT>0.5</DEFAULT>
 </ARG>
@@ -33738,7 +33748,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Map white to</NICK>
+<NICK>Map white to (G)</NICK>
 <BLURB>The color to map source color with full luminance.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -33748,7 +33758,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Map white to-R</NICK>
+<NICK>Map white to (R)</NICK>
 <BLURB>The color to map source color with full luminance.</BLURB>
 <DEFAULT>0.5</DEFAULT>
 </ARG>
@@ -33768,7 +33778,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Color</NICK>
+<NICK>Color (B)</NICK>
 <BLURB>The color to make transparent (B G R).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -33778,7 +33788,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Color</NICK>
+<NICK>Color (G)</NICK>
 <BLURB>The color to make transparent (B G R).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -33788,7 +33798,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Color-R</NICK>
+<NICK>Color (R)</NICK>
 <BLURB>The color to make transparent (B G R).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -33808,7 +33818,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Black color</NICK>
+<NICK>Black color (B)</NICK>
 <BLURB>Black color.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -33818,7 +33828,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Black color</NICK>
+<NICK>Black color (G)</NICK>
 <BLURB>Black color.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -33828,7 +33838,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Black color-R</NICK>
+<NICK>Black color (R)</NICK>
 <BLURB>Black color.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -33838,7 +33848,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Gray color</NICK>
+<NICK>Gray color (B)</NICK>
 <BLURB>Gray color.</BLURB>
 <DEFAULT>0.5</DEFAULT>
 </ARG>
@@ -33848,7 +33858,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Gray color</NICK>
+<NICK>Gray color (G)</NICK>
 <BLURB>Gray color.</BLURB>
 <DEFAULT>0.5</DEFAULT>
 </ARG>
@@ -33858,7 +33868,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Gray color-R</NICK>
+<NICK>Gray color (R)</NICK>
 <BLURB>Gray color.</BLURB>
 <DEFAULT>0.5</DEFAULT>
 </ARG>
@@ -33888,7 +33898,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>White color</NICK>
+<NICK>White color (B)</NICK>
 <BLURB>White color.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -33898,7 +33908,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>White color</NICK>
+<NICK>White color (G)</NICK>
 <BLURB>White color.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -33908,7 +33918,7 @@
 <TYPE>gfloat</TYPE>
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>White color-R</NICK>
+<NICK>White color (R)</NICK>
 <BLURB>White color.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -47260,7 +47270,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Field pattern</NICK>
 <BLURB>The output field pattern.</BLURB>
-<DEFAULT>2:3</DEFAULT>
+<DEFAULT>2:3 (e.g. 24p -> 60i telecine)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58318,8 +58328,8 @@
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Device</NICK>
-<BLURB>Specific capture device to open, NULL indicate default device.</BLURB>
+<NICK>ALCdevice</NICK>
+<BLURB>User device, default device if NULL.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -58329,7 +58339,7 @@
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Device name</NICK>
-<BLURB>Readable name of device.</BLURB>
+<BLURB>Human-readable name of the device.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -58349,7 +58359,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Device</NICK>
-<BLURB>OpenAL device string.</BLURB>
+<BLURB>Human-readable name of the device.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -58369,7 +58379,7 @@
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Device name</NICK>
-<BLURB>Opened OpenAL device name.</BLURB>
+<BLURB>Human-readable name of the opened device.</BLURB>
 <DEFAULT>""</DEFAULT>
 </ARG>
 
@@ -58380,6 +58390,36 @@
 <FLAGS>rw</FLAGS>
 <NICK>Source ID</NICK>
 <BLURB>Custom playback sID.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenALSink::user-context</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ALCcontext</NICK>
+<BLURB>User context.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenALSink::user-device</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ALCdevice</NICK>
+<BLURB>User device.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenALSink::user-source</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ALsource</NICK>
+<BLURB>User source.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -58399,7 +58439,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Connection</NICK>
-<BLURB>Connection.</BLURB>
+<BLURB>Video input connection to use.</BLURB>
 <DEFAULT>sdi</DEFAULT>
 </ARG>
 
@@ -58409,8 +58449,18 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Mode</NICK>
-<BLURB>Mode.</BLURB>
+<BLURB>Video mode to use for capture.</BLURB>
 <DEFAULT>ntsc</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkSrc::audio-input</NAME>
+<TYPE>GstDecklinkAudioConnection</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Audio Input</NICK>
+<BLURB>Audio input connection.</BLURB>
+<DEFAULT>auto</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59391,5 +59441,1069 @@
 <NICK>Respect aspect ratio when scaling</NICK>
 <BLURB>If set to true, the sink will attempt to preserve the incoming frame's geometry while scaling, taking both the storage's and display's pixel aspect ratio into account.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChannelMix::left-to-left</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Left to Left</NICK>
+<BLURB>Left channel to left channel gain.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChannelMix::left-to-right</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Left to Right</NICK>
+<BLURB>Left channel to right channel gain.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChannelMix::right-to-left</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Right to Left</NICK>
+<BLURB>Right channel to left channel gain.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChannelMix::right-to-right</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Right to Right</NICK>
+<BLURB>Right channel to right channel gain.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWatchdog::timeout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Timeout</NICK>
+<BLURB>Timeout (in ms) after which an element error is sent to the bus if no buffers are received.</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFreeverb::damping</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Damping</NICK>
+<BLURB>Damping of high frequencies.</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFreeverb::level</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Level</NICK>
+<BLURB>dry/wet level.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFreeverb::room-size</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Room size</NICK>
+<BLURB>Size of the simulated room.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFreeverb::width</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Width</NICK>
+<BLURB>Stereo panorama width.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>MpegPsMux::aggregate-gops</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aggregate GOPs</NICK>
+<BLURB>Whether to aggregate GOPs and push them out as buffer lists.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstYadif::mode</NAME>
+<TYPE>GstYadifModes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Deinterlace Mode</NICK>
+<BLURB>Deinterlace mode.</BLURB>
+<DEFAULT>Auto detection</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAvdtpSrc::transport</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transport</NICK>
+<BLURB>Use configured transport.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAvdtpSink::auto-connect</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Auto-connect</NICK>
+<BLURB>Automatically attempt to connect to device.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAvdtpSink::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>Bluetooth remote device address.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAvdtpSink::transport</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transport</NICK>
+<BLURB>Use configured transport.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstA2dpSink::auto-connect</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Auto-connect</NICK>
+<BLURB>Automatically attempt to connect to device.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstA2dpSink::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>Bluetooth remote device address.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstA2dpSink::transport</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transport</NICK>
+<BLURB>Use configured transport.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::average-bitrate</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Average bitrate</NICK>
+<BLURB>The average bitrate in bits/second (dynamic control).</BLURB>
+<DEFAULT>3000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::colorspace-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>colorspace element name</NICK>
+<BLURB>The name of the colorspace element.</BLURB>
+<DEFAULT>"videoconvert"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>device</NICK>
+<BLURB>Device location.</BLURB>
+<DEFAULT>"/dev/video0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::device-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Device name</NICK>
+<BLURB>Name of the device.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::enable-sei</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Enable SEI</NICK>
+<BLURB>Enable SEI picture timing (static control).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::entropy</NAME>
+<TYPE>UvcH264Entropy</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Entropy</NICK>
+<BLURB>Entropy (static control).</BLURB>
+<DEFAULT>CAVLC</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::fixed-framerate</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Fixed framerate</NICK>
+<BLURB>Fixed framerate (static & dynamic control).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::iframe-period</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 65535</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I Frame Period</NICK>
+<BLURB>Time between IDR frames in milliseconds (static control).</BLURB>
+<DEFAULT>10000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::initial-bitrate</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Initial bitrate</NICK>
+<BLURB>Initial bitrate in bits/second (static control).</BLURB>
+<DEFAULT>3000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::jpeg-decoder-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>jpeg decoder element name</NICK>
+<BLURB>The name of the jpeg decoder element.</BLURB>
+<DEFAULT>"jpegdec"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::leaky-bucket-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 65535</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size of the leaky bucket size</NICK>
+<BLURB>Size of the leaky bucket size in milliseconds (static control).</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::level-idc</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 255</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Level IDC</NICK>
+<BLURB>Level IDC (dynamic control).</BLURB>
+<DEFAULT>40</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::ltr-buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>LTR Buffer size</NICK>
+<BLURB>Total number of Long-Term Reference frames (dynamic control).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::ltr-encoder-control</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>LTR frames controled by device</NICK>
+<BLURB>Number of LTR frames the device can control (dynamic control).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::max-bframe-qp</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-127,127]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum B frame QP</NICK>
+<BLURB>The minimum Quantization step size for B frames (dynamic control).</BLURB>
+<DEFAULT>46</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::max-iframe-qp</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-127,127]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum I frame QP</NICK>
+<BLURB>The minimum Quantization step size for I frames (dynamic control).</BLURB>
+<DEFAULT>46</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::max-mbps</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Max macroblocks/second</NICK>
+<BLURB>The number of macroblocks per second for the maximum processing rate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::max-pframe-qp</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-127,127]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum P frame QP</NICK>
+<BLURB>The minimum Quantization step size for P frames (dynamic control).</BLURB>
+<DEFAULT>46</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::min-bframe-qp</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-127,127]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum B frame QP</NICK>
+<BLURB>The minimum Quantization step size for B frames (dynamic control).</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::min-iframe-qp</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-127,127]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum I frame QP</NICK>
+<BLURB>The minimum Quantization step size for I frames (dynamic control).</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::min-pframe-qp</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-127,127]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum P frame QP</NICK>
+<BLURB>The minimum Quantization step size for P frames (dynamic control).</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::num-buffers</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>num-buffers</NICK>
+<BLURB>Number of buffers to output before sending EOS (-1 = unlimited).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::num-clock-samples</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>num-clock-samples</NICK>
+<BLURB>Number of clock samples to gather for the PTS synchronization (-1 = unlimited).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::num-reorder-frames</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 255</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of Reorder frames</NICK>
+<BLURB>Number of B frames between the references frames (static control).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::peak-bitrate</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Peak bitrate</NICK>
+<BLURB>The peak bitrate in bits/second (dynamic control).</BLURB>
+<DEFAULT>3000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::preview-flipped</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flip preview</NICK>
+<BLURB>Horizontal flipped image for non H.264 streams (static control).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::rate-control</NAME>
+<TYPE>UvcH264RateControl</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Rate control</NICK>
+<BLURB>Rate control mode (static & dynamic control).</BLURB>
+<DEFAULT>Constant bit rate</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::slice-mode</NAME>
+<TYPE>UvcH264SliceMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Slice mode</NICK>
+<BLURB>Defines the unit of the slice-units property (static control).</BLURB>
+<DEFAULT>Slice Per Frame</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::slice-units</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 65535</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Slice units</NICK>
+<BLURB>Slice units (static control).</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264Src::usage-type</NAME>
+<TYPE>UvcH264UsageType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Usage type</NICK>
+<BLURB>The usage type (static control).</BLURB>
+<DEFAULT>Realtime (video conferencing)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264MjpgDemux::device-fd</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>device-fd</NICK>
+<BLURB>File descriptor of the v4l2 device.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUvcH264MjpgDemux::num-clock-samples</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>num-clock-samples</NICK>
+<BLURB>Number of clock samples to gather for the PTS synchronization (-1 = unlimited).</BLURB>
+<DEFAULT>32</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspasrc-sine-so-sine-fcac::amplitude</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>amplitude</NICK>
+<BLURB>Amplitude.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspasrc-sine-so-sine-fcac::can-activate-pull</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Can activate pull</NICK>
+<BLURB>Can activate in pull mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspasrc-sine-so-sine-fcac::can-activate-push</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Can activate push</NICK>
+<BLURB>Can activate in push mode.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspasrc-sine-so-sine-fcac::frequency</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,22050]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>frequency</NICK>
+<BLURB>Frequency (Hz).</BLURB>
+<DEFAULT>440</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspasrc-sine-so-sine-fcac::is-live</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Is Live</NICK>
+<BLURB>Whether to act as a live source.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspasrc-sine-so-sine-fcac::samplesperbuffer</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Samples per buffer</NICK>
+<BLURB>Number of samples in each outgoing buffer.</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspasrc-sine-so-sine-fcac::timestamp-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timestamp offset</NICK>
+<BLURB>An offset added to timestamps set on buffers (in ns).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspasrc-noise-so-noise-white::amplitude</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>amplitude</NICK>
+<BLURB>Amplitude.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspasrc-noise-so-noise-white::can-activate-pull</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Can activate pull</NICK>
+<BLURB>Can activate in pull mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspasrc-noise-so-noise-white::can-activate-push</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Can activate push</NICK>
+<BLURB>Can activate in push mode.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspasrc-noise-so-noise-white::is-live</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Is Live</NICK>
+<BLURB>Whether to act as a live source.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspasrc-noise-so-noise-white::samplesperbuffer</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Samples per buffer</NICK>
+<BLURB>Number of samples in each outgoing buffer.</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspasrc-noise-so-noise-white::timestamp-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timestamp offset</NICK>
+<BLURB>An offset added to timestamps set on buffers (in ns).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-sine-so-sine-fcaa::frequency</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,22050]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>frequency</NICK>
+<BLURB>Frequency (Hz).</BLURB>
+<DEFAULT>440</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-sine-so-sine-faac::amplitude</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>amplitude</NICK>
+<BLURB>Amplitude.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-filter-so-lpf::cutoff-frequency</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,22050]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>cutoff-frequency</NICK>
+<BLURB>Cutoff Frequency (Hz).</BLURB>
+<DEFAULT>440</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-filter-so-hpf::cutoff-frequency</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,22050]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>cutoff-frequency</NICK>
+<BLURB>Cutoff Frequency (Hz).</BLURB>
+<DEFAULT>440</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-delay-so-delay-5s::delay</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,5]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>delay</NICK>
+<BLURB>Delay (Seconds).</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-delay-so-delay-5s::dry-wet-balance</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>dry-wet-balance</NICK>
+<BLURB>Dry/Wet Balance.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-amp-so-amp-stereo::gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>gain</NICK>
+<BLURB>Gain.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-amp-so-amp-mono::gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>gain</NICK>
+<BLURB>Gain.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenJPEGEnc::num-layers</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of layers</NICK>
+<BLURB>Number of layers.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenJPEGEnc::num-resolutions</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of resolutions</NICK>
+<BLURB>Number of resolutions.</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenJPEGEnc::progression-order</NAME>
+<TYPE>GstOpenJPEGEncProgressionOrder</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Progression Order</NICK>
+<BLURB>Progression order.</BLURB>
+<DEFAULT>LRCP</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenJPEGEnc::tile-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tile Height</NICK>
+<BLURB>Tile Height.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenJPEGEnc::tile-offset-x</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tile Offset X</NICK>
+<BLURB>Tile Offset X.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenJPEGEnc::tile-offset-y</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tile Offset Y</NICK>
+<BLURB>Tile Offset Y.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenJPEGEnc::tile-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tile Width</NICK>
+<BLURB>Tile Width.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDashDemux::bandwidth-usage</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bandwidth usage [0..1]</NICK>
+<BLURB>Percentage of the available bandwidth to use when selecting representations.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDashDemux::max-bitrate</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1000</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max bitrate</NICK>
+<BLURB>Max of bitrate supported by target decoder.</BLURB>
+<DEFAULT>24000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDashDemux::max-buffering-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 2</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum buffering time</NICK>
+<BLURB>Maximum number of seconds of buffer accumulated during playback.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSkinDetect::method</NAME>
+<TYPE>GstSkindetectMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Method to use</NICK>
+<BLURB>Method to use.</BLURB>
+<DEFAULT>Classic HSV thresholding</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSkinDetect::postprocess</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Postprocess</NICK>
+<BLURB>Apply opening-closing to skin detection to extract large, significant blobs .</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRetinex::method</NAME>
+<TYPE>GstRetinexMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Retinex method to use</NICK>
+<BLURB>Retinex method to use.</BLURB>
+<DEFAULT>Basic retinex restoration</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRetinex::scales</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,4]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>scales</NICK>
+<BLURB>Amount of gaussian filters (scales) used in multiscale retinex.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHanddetect::ROI-HEIGHT</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ROI_HEIGHT</NICK>
+<BLURB>HEIGHT of left-top pointer in region of interest 
+Gestures in the defined region of interest will emit messages.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHanddetect::ROI-WIDTH</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ROI_WIDTH</NICK>
+<BLURB>WIDTH of left-top pointer in region of interest 
+Gestures in the defined region of interest will emit messages.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHanddetect::ROI-X</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ROI_X</NICK>
+<BLURB>X of left-top pointer in region of interest 
+Gestures in the defined region of interest will emit messages.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHanddetect::ROI-Y</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ROI_Y</NICK>
+<BLURB>Y of left-top pointer in region of interest 
+Gestures in the defined region of interest will emit messages.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHanddetect::display</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display</NICK>
+<BLURB>Whether the detected hands are highlighted in output frame.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHanddetect::profile-fist</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Profile_fist</NICK>
+<BLURB>Location of HAAR cascade file (fist gesture).</BLURB>
+<DEFAULT>"/usr/local/share/gst-plugins-bad/1.0/opencv_haarcascades/fist.xml"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHanddetect::profile-palm</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Profile_palm</NICK>
+<BLURB>Location of HAAR cascade file (palm gesture).</BLURB>
+<DEFAULT>"/usr/local/share/gst-plugins-bad/1.0/opencv_haarcascades/palm.xml"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFluidDec::soundfont</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Soundfont</NICK>
+<BLURB>the filename of a soundfont (NULL for default).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFluidDec::synth-chorus</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Synth Chorus</NICK>
+<BLURB>Turn the chorus on or off.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFluidDec::synth-gain</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Synth Gain</NICK>
+<BLURB>Set the master gain.</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFluidDec::synth-polyphony</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Synth Polyphony</NICK>
+<BLURB>The number of simultaneous voices.</BLURB>
+<DEFAULT>256</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFluidDec::synth-reverb</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Synth Reverb</NICK>
+<BLURB>Turn the reverb on or off.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHlsSink::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File Location</NICK>
+<BLURB>Location of the file to write.</BLURB>
+<DEFAULT>"segment%05d.ts"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHlsSink::max-files</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max files</NICK>
+<BLURB>Maximum number of files to keep on disk. Once the maximum is reached,old files start to be deleted to make room for new ones.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHlsSink::playlist-length</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Playlist length</NICK>
+<BLURB>Length of HLS playlist. To allow players to conform to section 6.3.3 of the HLS specification, this should be at least 3.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHlsSink::playlist-location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Playlist Location</NICK>
+<BLURB>Location of the playlist to write.</BLURB>
+<DEFAULT>"playlist.m3u8"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHlsSink::playlist-root</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Playlist Root</NICK>
+<BLURB>Location of the playlist to write.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHlsSink::target-duration</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target duration</NICK>
+<BLURB>The target duration in seconds of a segment/file. (0 - disabled, useful for management of segment duration by the streaming server).</BLURB>
+<DEFAULT>15</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMssDemux::bitrate-limit</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate limit in %</NICK>
+<BLURB>Limit of the available bitrate to use when switching to alternates.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMssDemux::connection-speed</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 4294967</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connection Speed</NICK>
+<BLURB>Network connection speed in kbps (0 = unknown).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMssDemux::max-queue-size-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max queue size in buffers</NICK>
+<BLURB>Maximum buffers that can be stored in each internal stream queue (0 = infinite).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 

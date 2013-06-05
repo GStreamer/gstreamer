@@ -79,6 +79,19 @@ typedef union
 #endif
 #endif
 
+#ifndef ORC_INTERNAL
+#if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define ORC_INTERNAL __hidden
+#elif defined (__GNUC__)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#else
+#define ORC_INTERNAL
+#endif
+#endif
+
+
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
@@ -141,8 +154,16 @@ gaudi_orc_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var35;
   orc_union64 var36;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var37;
+#else
   orc_union32 var37;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var38;
+#else
   orc_union64 var38;
+#endif
   orc_union32 var39;
   orc_union64 var40;
   orc_union64 var41;
@@ -254,8 +275,16 @@ _backup_gaudi_orc_burn (OrcExecutor * ORC_RESTRICT ex)
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var35;
   orc_union64 var36;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var37;
+#else
   orc_union32 var37;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var38;
+#else
   orc_union64 var38;
+#endif
   orc_union32 var39;
   orc_union64 var40;
   orc_union64 var41;
@@ -371,6 +400,19 @@ gaudi_orc_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 9, 14, 103, 97, 117, 100, 105, 95, 111, 114, 99, 95, 98, 117, 114,
+        110, 11, 4, 4, 12, 4, 4, 14, 1, 255, 0, 0, 0, 14, 1, 7,
+        0, 0, 0, 14, 1, 1, 0, 0, 0, 16, 4, 20, 4, 20, 8, 20,
+        8, 21, 2, 42, 32, 4, 21, 2, 150, 33, 32, 21, 2, 70, 34, 33,
+        24, 21, 2, 95, 34, 34, 18, 21, 2, 65, 32, 16, 32, 21, 2, 150,
+        33, 32, 21, 2, 93, 33, 33, 17, 21, 2, 81, 33, 33, 34, 21, 2,
+        98, 33, 16, 33, 21, 2, 157, 32, 33, 128, 0, 32, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_gaudi_orc_burn);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "gaudi_orc_burn");
       orc_program_set_backup_function (p, _backup_gaudi_orc_burn);
@@ -406,6 +448,7 @@ gaudi_orc_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
           ORC_VAR_D1);
       orc_program_append_2 (p, "storel", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
           ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);

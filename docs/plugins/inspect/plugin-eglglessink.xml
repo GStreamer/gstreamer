@@ -3,11 +3,11 @@
   <description>EGL/GLES sink</description>
   <filename>../../ext/eglgles/.libs/libgsteglglessink.so</filename>
   <basename>libgsteglglessink.so</basename>
-  <version>1.1.0.1</version>
+  <version>1.1.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer</package>
-  <origin>http://gstreamer.net/</origin>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>eglglessink</name>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ RGBA, BGRA, ARGB, ABGR, RGBx, BGRx, xRGB, xBGR, AYUV, Y444, I420, YV12, NV12, NV21, YUY2, YVYU, UYVY, Y42B, Y41B, RGB, BGR, RGB16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw(memory:EGLImage), format=(string){ RGBA, BGRA, ARGB, ABGR, RGBx, BGRx, xRGB, xBGR, AYUV, Y444, I420, YV12, NV12, NV21, Y42B, Y41B, RGB, BGR, RGB16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw(meta:GstVideoGLTextureUploadMeta), format=(string){ RGBA, BGRA, ARGB, ABGR, RGBx, BGRx, xRGB, xBGR, AYUV, Y444, I420, YV12, NV12, NV21, Y42B, Y41B, RGB, BGR, RGB16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw, format=(string){ RGBA, BGRA, ARGB, ABGR, RGBx, BGRx, xRGB, xBGR, AYUV, Y444, I420, YV12, NV12, NV21, Y42B, Y41B, RGB, BGR, RGB16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>
