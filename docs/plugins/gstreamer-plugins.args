@@ -44,7 +44,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Allocation Src Pad</NICK>
-<BLURB>The pad used for gst_pad_alloc_buffer.</BLURB>
+<BLURB>The pad ALLOCATION queries will be proxied to (unused).</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
