@@ -2,7 +2,7 @@ GObject
   GInitiallyUnowned
     GstObject
       GstAllocator
-        GstDefaultAllocator
+        GstAllocatorSysmem
       GstAudioRingBuffer
         GstAudioSinkRingBuffer
         GstAudioSrcRingBuffer
@@ -20,7 +20,7 @@ GObject
         GstAudioEncoder
           GstVorbisEnc
         GstAudioRate
-        GstAudioVisualizer-BaseExtVisual
+        GstAudioVisualizer-BaseExtLibvisual
           GstVisual
             GstVisualbumpscope
             GstVisualcorona
@@ -116,6 +116,8 @@ GObject
   GInputStream
   GOutputStream
   GSocket
+  GTypeModule
+    PangoModule
   GstColorBalanceChannel
   GstEncodingProfile
   PangoContext

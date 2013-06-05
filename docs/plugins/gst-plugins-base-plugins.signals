@@ -155,6 +155,16 @@ GstDecodeBin *gstdecodebin
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstDecodeBin::autoplug-query</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodeBin *gstdecodebin
+GstPad *arg1
+GstElement *arg2
+GstQuery *arg3
+</SIGNAL>
+
+<SIGNAL>
 <NAME>CDParanoia::smilie-change</NAME>
 <RETURNS>void</RETURNS>
 CDParanoia *cdparanoia
@@ -330,6 +340,16 @@ GValueArray *arg3
 <FLAGS>l</FLAGS>
 GstURIDecodeBin *gsturidecodebin
 GstElement *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstURIDecodeBin::autoplug-query</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstURIDecodeBin *gsturidecodebin
+GstPad *arg1
+GstElement *arg2
+GstQuery *arg3
 </SIGNAL>
 
 <SIGNAL>
@@ -578,6 +598,14 @@ GstCaps *arg1
 <FLAGS>la</FLAGS>
 GstEncodeBin *gstencodebin
 GstCaps *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstEncodeBin::request-profile-pad</NAME>
+<RETURNS>GstPad*</RETURNS>
+<FLAGS>la</FLAGS>
+GstEncodeBin *gstencodebin
+gchar *arg1
 </SIGNAL>
 
 <SIGNAL>

@@ -9,6 +9,7 @@
 #include "video-info.h"
 #include "colorbalance.h"
 #include "navigation.h"
+#include "video-chroma.h"
 
 /* enumerations from "video-format.h" */
 GType
@@ -63,38 +64,15 @@ gst_video_format_get_type (void)
       {GST_VIDEO_FORMAT_I420_10LE, "GST_VIDEO_FORMAT_I420_10LE", "i420-10le"},
       {GST_VIDEO_FORMAT_I422_10BE, "GST_VIDEO_FORMAT_I422_10BE", "i422-10be"},
       {GST_VIDEO_FORMAT_I422_10LE, "GST_VIDEO_FORMAT_I422_10LE", "i422-10le"},
+      {GST_VIDEO_FORMAT_Y444_10BE, "GST_VIDEO_FORMAT_Y444_10BE", "y444-10be"},
+      {GST_VIDEO_FORMAT_Y444_10LE, "GST_VIDEO_FORMAT_Y444_10LE", "y444-10le"},
+      {GST_VIDEO_FORMAT_GBR, "GST_VIDEO_FORMAT_GBR", "gbr"},
+      {GST_VIDEO_FORMAT_GBR_10BE, "GST_VIDEO_FORMAT_GBR_10BE", "gbr-10be"},
+      {GST_VIDEO_FORMAT_GBR_10LE, "GST_VIDEO_FORMAT_GBR_10LE", "gbr-10le"},
+      {GST_VIDEO_FORMAT_NV16, "GST_VIDEO_FORMAT_NV16", "nv16"},
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_enum_register_static ("GstVideoFormat", values);
-    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
-  }
-  return g_define_type_id__volatile;
-}
-
-GType
-gst_video_chroma_site_get_type (void)
-{
-  static volatile gsize g_define_type_id__volatile = 0;
-  if (g_once_init_enter (&g_define_type_id__volatile)) {
-    static const GFlagsValue values[] = {
-      {GST_VIDEO_CHROMA_SITE_UNKNOWN, "GST_VIDEO_CHROMA_SITE_UNKNOWN",
-          "unknown"},
-      {GST_VIDEO_CHROMA_SITE_NONE, "GST_VIDEO_CHROMA_SITE_NONE", "none"},
-      {GST_VIDEO_CHROMA_SITE_H_COSITED, "GST_VIDEO_CHROMA_SITE_H_COSITED",
-          "h-cosited"},
-      {GST_VIDEO_CHROMA_SITE_V_COSITED, "GST_VIDEO_CHROMA_SITE_V_COSITED",
-          "v-cosited"},
-      {GST_VIDEO_CHROMA_SITE_ALT_LINE, "GST_VIDEO_CHROMA_SITE_ALT_LINE",
-          "alt-line"},
-      {GST_VIDEO_CHROMA_SITE_COSITED, "GST_VIDEO_CHROMA_SITE_COSITED",
-          "cosited"},
-      {GST_VIDEO_CHROMA_SITE_JPEG, "GST_VIDEO_CHROMA_SITE_JPEG", "jpeg"},
-      {GST_VIDEO_CHROMA_SITE_MPEG2, "GST_VIDEO_CHROMA_SITE_MPEG2", "mpeg2"},
-      {GST_VIDEO_CHROMA_SITE_DV, "GST_VIDEO_CHROMA_SITE_DV", "dv"},
-      {0, NULL, NULL}
-    };
-    GType g_define_type_id =
-        g_flags_register_static ("GstVideoChromaSite", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;
@@ -130,14 +108,16 @@ gst_video_pack_flags_get_type (void)
 {
   static volatile gsize g_define_type_id__volatile = 0;
   if (g_once_init_enter (&g_define_type_id__volatile)) {
-    static const GEnumValue values[] = {
+    static const GFlagsValue values[] = {
       {GST_VIDEO_PACK_FLAG_NONE, "GST_VIDEO_PACK_FLAG_NONE", "none"},
       {GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE, "GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE",
           "truncate-range"},
+      {GST_VIDEO_PACK_FLAG_INTERLACED, "GST_VIDEO_PACK_FLAG_INTERLACED",
+          "interlaced"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
-        g_enum_register_static ("GstVideoPackFlags", values);
+        g_flags_register_static ("GstVideoPackFlags", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;
@@ -403,6 +383,73 @@ gst_navigation_event_type_get_type (void)
     };
     GType g_define_type_id =
         g_enum_register_static ("GstNavigationEventType", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "video-chroma.h" */
+GType
+gst_video_chroma_site_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_VIDEO_CHROMA_SITE_UNKNOWN, "GST_VIDEO_CHROMA_SITE_UNKNOWN",
+          "unknown"},
+      {GST_VIDEO_CHROMA_SITE_NONE, "GST_VIDEO_CHROMA_SITE_NONE", "none"},
+      {GST_VIDEO_CHROMA_SITE_H_COSITED, "GST_VIDEO_CHROMA_SITE_H_COSITED",
+          "h-cosited"},
+      {GST_VIDEO_CHROMA_SITE_V_COSITED, "GST_VIDEO_CHROMA_SITE_V_COSITED",
+          "v-cosited"},
+      {GST_VIDEO_CHROMA_SITE_ALT_LINE, "GST_VIDEO_CHROMA_SITE_ALT_LINE",
+          "alt-line"},
+      {GST_VIDEO_CHROMA_SITE_COSITED, "GST_VIDEO_CHROMA_SITE_COSITED",
+          "cosited"},
+      {GST_VIDEO_CHROMA_SITE_JPEG, "GST_VIDEO_CHROMA_SITE_JPEG", "jpeg"},
+      {GST_VIDEO_CHROMA_SITE_MPEG2, "GST_VIDEO_CHROMA_SITE_MPEG2", "mpeg2"},
+      {GST_VIDEO_CHROMA_SITE_DV, "GST_VIDEO_CHROMA_SITE_DV", "dv"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstVideoChromaSite", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_chroma_method_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_CHROMA_METHOD_NEAREST, "GST_VIDEO_CHROMA_METHOD_NEAREST",
+          "nearest"},
+      {GST_VIDEO_CHROMA_METHOD_LINEAR, "GST_VIDEO_CHROMA_METHOD_LINEAR",
+          "linear"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoChromaMethod", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_video_chroma_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_VIDEO_CHROMA_FLAG_NONE, "GST_VIDEO_CHROMA_FLAG_NONE", "none"},
+      {GST_VIDEO_CHROMA_FLAG_INTERLACED, "GST_VIDEO_CHROMA_FLAG_INTERLACED",
+          "interlaced"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstVideoChromaFlags", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;

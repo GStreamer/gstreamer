@@ -188,7 +188,11 @@ video_scale_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
   orc_int8 var36;
   orc_int8 var37;
   orc_union16 var38;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var39;
+#else
   orc_union16 var39;
+#endif
   orc_int8 var40;
   orc_int8 var41;
   orc_union16 var42;
@@ -246,7 +250,11 @@ _backup_video_scale_orc_merge_linear_u8 (OrcExecutor * ORC_RESTRICT ex)
   orc_int8 var36;
   orc_int8 var37;
   orc_union16 var38;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var39;
+#else
   orc_union16 var39;
+#endif
   orc_int8 var40;
   orc_int8 var41;
   orc_union16 var42;
@@ -2300,7 +2308,11 @@ video_scale_orc_merge_bicubic_u8 (guint8 * ORC_RESTRICT d1,
   orc_int8 var39;
   orc_int8 var40;
   orc_int8 var41;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var42;
+#else
   orc_union16 var42;
+#endif
   orc_int8 var43;
   orc_union16 var44;
   orc_union16 var45;
@@ -2383,7 +2395,11 @@ _backup_video_scale_orc_merge_bicubic_u8 (OrcExecutor * ORC_RESTRICT ex)
   orc_int8 var39;
   orc_int8 var40;
   orc_int8 var41;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var42;
+#else
   orc_union16 var42;
+#endif
   orc_int8 var43;
   orc_union16 var44;
   orc_union16 var45;

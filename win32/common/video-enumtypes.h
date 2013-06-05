@@ -11,8 +11,6 @@ G_BEGIN_DECLS
 /* enumerations from "video-format.h" */
 GType gst_video_format_get_type (void);
 #define GST_TYPE_VIDEO_FORMAT (gst_video_format_get_type())
-GType gst_video_chroma_site_get_type (void);
-#define GST_TYPE_VIDEO_CHROMA_SITE (gst_video_chroma_site_get_type())
 GType gst_video_format_flags_get_type (void);
 #define GST_TYPE_VIDEO_FORMAT_FLAGS (gst_video_format_flags_get_type())
 GType gst_video_pack_flags_get_type (void);
@@ -47,6 +45,14 @@ GType gst_navigation_message_type_get_type (void);
 #define GST_TYPE_NAVIGATION_MESSAGE_TYPE (gst_navigation_message_type_get_type())
 GType gst_navigation_event_type_get_type (void);
 #define GST_TYPE_NAVIGATION_EVENT_TYPE (gst_navigation_event_type_get_type())
+
+/* enumerations from "video-chroma.h" */
+GType gst_video_chroma_site_get_type (void);
+#define GST_TYPE_VIDEO_CHROMA_SITE (gst_video_chroma_site_get_type())
+GType gst_video_chroma_method_get_type (void);
+#define GST_TYPE_VIDEO_CHROMA_METHOD (gst_video_chroma_method_get_type())
+GType gst_video_chroma_flags_get_type (void);
+#define GST_TYPE_VIDEO_CHROMA_FLAGS (gst_video_chroma_flags_get_type())
 G_END_DECLS
 
 #endif /* __GST_VIDEO_ENUM_TYPES_H__ */

@@ -1304,7 +1304,11 @@ volume_orc_prepare_volumes (gdouble * ORC_RESTRICT d1,
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var34;
+#else
   orc_union64 var34;
+#endif
   orc_union64 var35;
   orc_union64 var36;
   orc_union64 var37;
@@ -1358,7 +1362,11 @@ _backup_volume_orc_prepare_volumes (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var34;
+#else
   orc_union64 var34;
+#endif
   orc_union64 var35;
   orc_union64 var36;
   orc_union64 var37;

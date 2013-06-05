@@ -240,6 +240,8 @@ gst_audio_ring_buffer_state_get_type (void)
           "paused"},
       {GST_AUDIO_RING_BUFFER_STATE_STARTED,
           "GST_AUDIO_RING_BUFFER_STATE_STARTED", "started"},
+      {GST_AUDIO_RING_BUFFER_STATE_ERROR, "GST_AUDIO_RING_BUFFER_STATE_ERROR",
+          "error"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =

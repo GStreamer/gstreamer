@@ -918,10 +918,18 @@ video_convert_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1,
   const orc_int8 *ORC_RESTRICT ptr5;
   const orc_int8 *ORC_RESTRICT ptr6;
   const orc_int8 *ORC_RESTRICT ptr7;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var36;
+#else
   orc_int8 var36;
+#endif
   orc_int8 var37;
   orc_union32 var38;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var39;
+#else
   orc_int8 var39;
+#endif
   orc_int8 var40;
   orc_union32 var41;
   orc_int8 var42;
@@ -1006,10 +1014,18 @@ _backup_video_convert_orc_convert_I420_AYUV (OrcExecutor * ORC_RESTRICT ex)
   const orc_int8 *ORC_RESTRICT ptr5;
   const orc_int8 *ORC_RESTRICT ptr6;
   const orc_int8 *ORC_RESTRICT ptr7;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var36;
+#else
   orc_int8 var36;
+#endif
   orc_int8 var37;
   orc_union32 var38;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var39;
+#else
   orc_int8 var39;
+#endif
   orc_int8 var40;
   orc_union32 var41;
   orc_int8 var42;
@@ -2410,7 +2426,11 @@ video_convert_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var36;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var37;
+#else
   orc_union16 var37;
+#endif
   orc_union64 var38;
   orc_union16 var39;
   orc_union16 var40;
@@ -2492,7 +2512,11 @@ _backup_video_convert_orc_convert_YUY2_AYUV (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var36;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var37;
+#else
   orc_union16 var37;
+#endif
   orc_union64 var38;
   orc_union16 var39;
   orc_union16 var40;
@@ -2647,7 +2671,11 @@ video_convert_orc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var36;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var37;
+#else
   orc_union16 var37;
+#endif
   orc_union64 var38;
   orc_union16 var39;
   orc_union16 var40;
@@ -2729,7 +2757,11 @@ _backup_video_convert_orc_convert_UYVY_AYUV (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var36;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var37;
+#else
   orc_union16 var37;
+#endif
   orc_union64 var38;
   orc_union16 var39;
   orc_union16 var40;
@@ -5652,7 +5684,11 @@ video_convert_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
   const orc_int8 *ORC_RESTRICT ptr6;
   orc_int8 var36;
   orc_int8 var37;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var38;
+#else
   orc_union16 var38;
+#endif
   orc_union16 var39;
   orc_union64 var40;
   orc_union16 var41;
@@ -5737,7 +5773,11 @@ _backup_video_convert_orc_convert_Y42B_AYUV (OrcExecutor * ORC_RESTRICT ex)
   const orc_int8 *ORC_RESTRICT ptr6;
   orc_int8 var36;
   orc_int8 var37;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var38;
+#else
   orc_union16 var38;
+#endif
   orc_union16 var39;
   orc_union64 var40;
   orc_union16 var41;
@@ -6389,7 +6429,11 @@ video_convert_orc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
   const orc_int8 *ORC_RESTRICT ptr6;
   orc_int8 var34;
   orc_int8 var35;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var36;
+#else
   orc_int8 var36;
+#endif
   orc_int8 var37;
   orc_union32 var38;
   orc_union16 var39;
@@ -6453,7 +6497,11 @@ _backup_video_convert_orc_convert_Y444_AYUV (OrcExecutor * ORC_RESTRICT ex)
   const orc_int8 *ORC_RESTRICT ptr6;
   orc_int8 var34;
   orc_int8 var35;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var36;
+#else
   orc_int8 var36;
+#endif
   orc_int8 var37;
   orc_union32 var38;
   orc_union16 var39;
@@ -6590,13 +6638,41 @@ video_convert_orc_convert_AYUV_ARGB (guint8 * ORC_RESTRICT d1, int d1_stride,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var48;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var49;
+#else
   orc_union32 var49;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var50;
+#else
   orc_union16 var50;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var51;
+#else
   orc_union16 var51;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var52;
+#else
   orc_union16 var52;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var53;
+#else
   orc_union16 var53;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var54;
+#else
   orc_union16 var54;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var55;
+#else
   orc_union32 var55;
+#endif
   orc_union32 var56;
   orc_union32 var57;
   orc_union16 var58;
@@ -6785,13 +6861,41 @@ _backup_video_convert_orc_convert_AYUV_ARGB (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var48;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var49;
+#else
   orc_union32 var49;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var50;
+#else
   orc_union16 var50;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var51;
+#else
   orc_union16 var51;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var52;
+#else
   orc_union16 var52;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var53;
+#else
   orc_union16 var53;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var54;
+#else
   orc_union16 var54;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var55;
+#else
   orc_union32 var55;
+#endif
   orc_union32 var56;
   orc_union32 var57;
   orc_union16 var58;
@@ -7141,13 +7245,41 @@ video_convert_orc_convert_AYUV_BGRA (guint8 * ORC_RESTRICT d1, int d1_stride,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var48;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var49;
+#else
   orc_union32 var49;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var50;
+#else
   orc_union16 var50;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var51;
+#else
   orc_union16 var51;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var52;
+#else
   orc_union16 var52;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var53;
+#else
   orc_union16 var53;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var54;
+#else
   orc_union16 var54;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var55;
+#else
   orc_union32 var55;
+#endif
   orc_union32 var56;
   orc_union32 var57;
   orc_union16 var58;
@@ -7336,13 +7468,41 @@ _backup_video_convert_orc_convert_AYUV_BGRA (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var48;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var49;
+#else
   orc_union32 var49;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var50;
+#else
   orc_union16 var50;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var51;
+#else
   orc_union16 var51;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var52;
+#else
   orc_union16 var52;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var53;
+#else
   orc_union16 var53;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var54;
+#else
   orc_union16 var54;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var55;
+#else
   orc_union32 var55;
+#endif
   orc_union32 var56;
   orc_union32 var57;
   orc_union16 var58;
@@ -7692,13 +7852,41 @@ video_convert_orc_convert_AYUV_ABGR (guint8 * ORC_RESTRICT d1, int d1_stride,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var48;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var49;
+#else
   orc_union32 var49;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var50;
+#else
   orc_union16 var50;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var51;
+#else
   orc_union16 var51;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var52;
+#else
   orc_union16 var52;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var53;
+#else
   orc_union16 var53;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var54;
+#else
   orc_union16 var54;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var55;
+#else
   orc_union32 var55;
+#endif
   orc_union32 var56;
   orc_union32 var57;
   orc_union16 var58;
@@ -7887,13 +8075,41 @@ _backup_video_convert_orc_convert_AYUV_ABGR (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var48;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var49;
+#else
   orc_union32 var49;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var50;
+#else
   orc_union16 var50;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var51;
+#else
   orc_union16 var51;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var52;
+#else
   orc_union16 var52;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var53;
+#else
   orc_union16 var53;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var54;
+#else
   orc_union16 var54;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var55;
+#else
   orc_union32 var55;
+#endif
   orc_union32 var56;
   orc_union32 var57;
   orc_union16 var58;
@@ -8243,13 +8459,41 @@ video_convert_orc_convert_AYUV_RGBA (guint8 * ORC_RESTRICT d1, int d1_stride,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var48;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var49;
+#else
   orc_union32 var49;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var50;
+#else
   orc_union16 var50;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var51;
+#else
   orc_union16 var51;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var52;
+#else
   orc_union16 var52;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var53;
+#else
   orc_union16 var53;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var54;
+#else
   orc_union16 var54;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var55;
+#else
   orc_union32 var55;
+#endif
   orc_union32 var56;
   orc_union32 var57;
   orc_union16 var58;
@@ -8438,13 +8682,41 @@ _backup_video_convert_orc_convert_AYUV_RGBA (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var48;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var49;
+#else
   orc_union32 var49;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var50;
+#else
   orc_union16 var50;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var51;
+#else
   orc_union16 var51;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var52;
+#else
   orc_union16 var52;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var53;
+#else
   orc_union16 var53;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var54;
+#else
   orc_union16 var54;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var55;
+#else
   orc_union32 var55;
+#endif
   orc_union32 var56;
   orc_union32 var57;
   orc_union16 var58;
@@ -8796,16 +9068,56 @@ video_convert_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
   const orc_int8 *ORC_RESTRICT ptr5;
   const orc_int8 *ORC_RESTRICT ptr6;
   orc_int8 var45;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var46;
+#else
   orc_int8 var46;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var47;
+#else
   orc_int8 var47;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var48;
+#else
   orc_int8 var48;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var49;
+#else
   orc_union16 var49;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var50;
+#else
   orc_union16 var50;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var51;
+#else
   orc_union16 var51;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var52;
+#else
   orc_union16 var52;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var53;
+#else
   orc_union16 var53;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var54;
+#else
   orc_int8 var54;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var55;
+#else
   orc_union32 var55;
+#endif
   orc_union32 var56;
   orc_int8 var57;
   orc_union16 var58;
@@ -8983,16 +9295,56 @@ _backup_video_convert_orc_convert_I420_BGRA (OrcExecutor * ORC_RESTRICT ex)
   const orc_int8 *ORC_RESTRICT ptr5;
   const orc_int8 *ORC_RESTRICT ptr6;
   orc_int8 var45;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var46;
+#else
   orc_int8 var46;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var47;
+#else
   orc_int8 var47;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var48;
+#else
   orc_int8 var48;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var49;
+#else
   orc_union16 var49;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var50;
+#else
   orc_union16 var50;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var51;
+#else
   orc_union16 var51;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var52;
+#else
   orc_union16 var52;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var53;
+#else
   orc_union16 var53;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var54;
+#else
   orc_int8 var54;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var55;
+#else
   orc_union32 var55;
+#endif
   orc_union32 var56;
   orc_int8 var57;
   orc_union16 var58;
@@ -9338,16 +9690,56 @@ video_convert_orc_convert_I420_BGRA_avg (guint8 * ORC_RESTRICT d1,
   const orc_int8 *ORC_RESTRICT ptr7;
   const orc_int8 *ORC_RESTRICT ptr8;
   orc_int8 var46;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var47;
+#else
   orc_int8 var47;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var48;
+#else
   orc_int8 var48;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var49;
+#else
   orc_int8 var49;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var50;
+#else
   orc_union16 var50;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var51;
+#else
   orc_union16 var51;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var52;
+#else
   orc_union16 var52;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var53;
+#else
   orc_union16 var53;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var54;
+#else
   orc_union16 var54;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var55;
+#else
   orc_int8 var55;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var56;
+#else
   orc_union32 var56;
+#endif
   orc_union32 var57;
   orc_int8 var58;
   orc_union16 var59;
@@ -9545,16 +9937,56 @@ _backup_video_convert_orc_convert_I420_BGRA_avg (OrcExecutor * ORC_RESTRICT ex)
   const orc_int8 *ORC_RESTRICT ptr7;
   const orc_int8 *ORC_RESTRICT ptr8;
   orc_int8 var46;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var47;
+#else
   orc_int8 var47;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var48;
+#else
   orc_int8 var48;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var49;
+#else
   orc_int8 var49;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var50;
+#else
   orc_union16 var50;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var51;
+#else
   orc_union16 var51;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var52;
+#else
   orc_union16 var52;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var53;
+#else
   orc_union16 var53;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var54;
+#else
   orc_union16 var54;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var55;
+#else
   orc_int8 var55;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var56;
+#else
   orc_union32 var56;
+#endif
   orc_union32 var57;
   orc_int8 var58;
   orc_union16 var59;
@@ -9929,7 +10361,11 @@ video_convert_orc_getline_I420 (guint8 * ORC_RESTRICT d1,
   const orc_int8 *ORC_RESTRICT ptr4;
   const orc_int8 *ORC_RESTRICT ptr5;
   const orc_int8 *ORC_RESTRICT ptr6;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var36;
+#else
   orc_int8 var36;
+#endif
   orc_int8 var37;
   orc_union32 var38;
   orc_int8 var39;
@@ -9989,7 +10425,11 @@ _backup_video_convert_orc_getline_I420 (OrcExecutor * ORC_RESTRICT ex)
   const orc_int8 *ORC_RESTRICT ptr4;
   const orc_int8 *ORC_RESTRICT ptr5;
   const orc_int8 *ORC_RESTRICT ptr6;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var36;
+#else
   orc_int8 var36;
+#endif
   orc_int8 var37;
   orc_union32 var38;
   orc_int8 var39;
@@ -10126,7 +10566,11 @@ video_convert_orc_getline_YUV9 (guint8 * ORC_RESTRICT d1,
   const orc_union16 *ORC_RESTRICT ptr4;
   const orc_int8 *ORC_RESTRICT ptr5;
   const orc_int8 *ORC_RESTRICT ptr6;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var37;
+#else
   orc_union16 var37;
+#endif
   orc_union16 var38;
   orc_union64 var39;
   orc_int8 var40;
@@ -10207,7 +10651,11 @@ _backup_video_convert_orc_getline_YUV9 (OrcExecutor * ORC_RESTRICT ex)
   const orc_union16 *ORC_RESTRICT ptr4;
   const orc_int8 *ORC_RESTRICT ptr5;
   const orc_int8 *ORC_RESTRICT ptr6;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var37;
+#else
   orc_union16 var37;
+#endif
   orc_union16 var38;
   orc_union64 var39;
   orc_int8 var40;
@@ -10367,7 +10815,11 @@ video_convert_orc_getline_YUY2 (guint8 * ORC_RESTRICT d1,
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var36;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var37;
+#else
   orc_union16 var37;
+#endif
   orc_union64 var38;
   orc_union16 var39;
   orc_union16 var40;
@@ -10445,7 +10897,11 @@ _backup_video_convert_orc_getline_YUY2 (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var36;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var37;
+#else
   orc_union16 var37;
+#endif
   orc_union64 var38;
   orc_union16 var39;
   orc_union16 var40;
@@ -10592,7 +11048,11 @@ video_convert_orc_getline_UYVY (guint8 * ORC_RESTRICT d1,
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var36;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var37;
+#else
   orc_union16 var37;
+#endif
   orc_union64 var38;
   orc_union16 var39;
   orc_union16 var40;
@@ -10670,7 +11130,11 @@ _backup_video_convert_orc_getline_UYVY (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var36;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var37;
+#else
   orc_union16 var37;
+#endif
   orc_union64 var38;
   orc_union16 var39;
   orc_union16 var40;
@@ -10817,7 +11281,11 @@ video_convert_orc_getline_YVYU (guint8 * ORC_RESTRICT d1,
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var36;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var37;
+#else
   orc_union16 var37;
+#endif
   orc_union64 var38;
   orc_union16 var39;
   orc_union16 var40;
@@ -10898,7 +11366,11 @@ _backup_video_convert_orc_getline_YVYU (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var36;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var37;
+#else
   orc_union16 var37;
+#endif
   orc_union64 var38;
   orc_union16 var39;
   orc_union16 var40;
@@ -11055,7 +11527,11 @@ video_convert_orc_getline_Y42B (guint8 * ORC_RESTRICT d1,
   const orc_int8 *ORC_RESTRICT ptr6;
   orc_int8 var36;
   orc_int8 var37;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var38;
+#else
   orc_union16 var38;
+#endif
   orc_union16 var39;
   orc_union64 var40;
   orc_union16 var41;
@@ -11136,7 +11612,11 @@ _backup_video_convert_orc_getline_Y42B (OrcExecutor * ORC_RESTRICT ex)
   const orc_int8 *ORC_RESTRICT ptr6;
   orc_int8 var36;
   orc_int8 var37;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var38;
+#else
   orc_union16 var38;
+#endif
   orc_union16 var39;
   orc_union64 var40;
   orc_union16 var41;
@@ -11293,7 +11773,11 @@ video_convert_orc_getline_Y444 (guint8 * ORC_RESTRICT d1,
   const orc_int8 *ORC_RESTRICT ptr6;
   orc_int8 var34;
   orc_int8 var35;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var36;
+#else
   orc_int8 var36;
+#endif
   orc_int8 var37;
   orc_union32 var38;
   orc_union16 var39;
@@ -11353,7 +11837,11 @@ _backup_video_convert_orc_getline_Y444 (OrcExecutor * ORC_RESTRICT ex)
   const orc_int8 *ORC_RESTRICT ptr6;
   orc_int8 var34;
   orc_int8 var35;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var36;
+#else
   orc_int8 var36;
+#endif
   orc_int8 var37;
   orc_union32 var38;
   orc_union16 var39;
@@ -11479,9 +11967,17 @@ video_convert_orc_getline_Y800 (guint8 * ORC_RESTRICT d1,
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_int8 *ORC_RESTRICT ptr4;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var33;
+#else
   orc_int8 var33;
+#endif
   orc_int8 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var35;
+#else
   orc_union16 var35;
+#endif
   orc_union32 var36;
   orc_union16 var37;
 
@@ -11524,9 +12020,17 @@ _backup_video_convert_orc_getline_Y800 (OrcExecutor * ORC_RESTRICT ex)
   int n = ex->n;
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_int8 *ORC_RESTRICT ptr4;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var33;
+#else
   orc_int8 var33;
+#endif
   orc_int8 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var35;
+#else
   orc_union16 var35;
+#endif
   orc_union32 var36;
   orc_union16 var37;
 
@@ -11632,8 +12136,16 @@ video_convert_orc_getline_Y16 (guint8 * ORC_RESTRICT d1,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union16 *ORC_RESTRICT ptr4;
   orc_union16 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var35;
+#else
   orc_int8 var35;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var36;
+#else
   orc_union16 var36;
+#endif
   orc_union32 var37;
   orc_int8 var38;
   orc_union16 var39;
@@ -11680,8 +12192,16 @@ _backup_video_convert_orc_getline_Y16 (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union16 *ORC_RESTRICT ptr4;
   orc_union16 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_int8 var35;
+#else
   orc_int8 var35;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var36;
+#else
   orc_union16 var36;
+#endif
   orc_union32 var37;
   orc_int8 var38;
   orc_union16 var39;
@@ -12354,7 +12874,11 @@ video_convert_orc_getline_NV12 (guint8 * ORC_RESTRICT d1,
   const orc_union16 *ORC_RESTRICT ptr5;
   orc_union16 var34;
   orc_union16 var35;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var36;
+#else
   orc_union16 var36;
+#endif
   orc_union16 var37;
   orc_union64 var38;
   orc_union32 var39;
@@ -12425,7 +12949,11 @@ _backup_video_convert_orc_getline_NV12 (OrcExecutor * ORC_RESTRICT ex)
   const orc_union16 *ORC_RESTRICT ptr5;
   orc_union16 var34;
   orc_union16 var35;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var36;
+#else
   orc_union16 var36;
+#endif
   orc_union16 var37;
   orc_union64 var38;
   orc_union32 var39;
@@ -12562,7 +13090,11 @@ video_convert_orc_getline_NV21 (guint8 * ORC_RESTRICT d1,
   const orc_union16 *ORC_RESTRICT ptr4;
   const orc_union16 *ORC_RESTRICT ptr5;
   orc_union16 var35;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var36;
+#else
   orc_union16 var36;
+#endif
   orc_union16 var37;
   orc_union64 var38;
   orc_union16 var39;
@@ -12633,7 +13165,11 @@ _backup_video_convert_orc_getline_NV21 (OrcExecutor * ORC_RESTRICT ex)
   const orc_union16 *ORC_RESTRICT ptr4;
   const orc_union16 *ORC_RESTRICT ptr5;
   orc_union16 var35;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union16 var36;
+#else
   orc_union16 var36;
+#endif
   orc_union16 var37;
   orc_union64 var38;
   orc_union16 var39;

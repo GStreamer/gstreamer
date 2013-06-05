@@ -259,7 +259,11 @@ audio_convert_orc_unpack_u8 (gint32 * ORC_RESTRICT d1,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_int8 *ORC_RESTRICT ptr4;
   orc_int8 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_union32 var36;
   orc_union16 var37;
   orc_union32 var38;
@@ -297,7 +301,11 @@ _backup_audio_convert_orc_unpack_u8 (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_int8 *ORC_RESTRICT ptr4;
   orc_int8 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_union32 var36;
   orc_union16 var37;
   orc_union32 var38;
@@ -529,7 +537,11 @@ audio_convert_orc_unpack_u16 (gint32 * ORC_RESTRICT d1,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union16 *ORC_RESTRICT ptr4;
   orc_union16 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -564,7 +576,11 @@ _backup_audio_convert_orc_unpack_u16 (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union16 *ORC_RESTRICT ptr4;
   orc_union16 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -780,7 +796,11 @@ audio_convert_orc_unpack_u16_swap (gint32 * ORC_RESTRICT d1,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union16 *ORC_RESTRICT ptr4;
   orc_union16 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_union32 var36;
   orc_union16 var37;
   orc_union32 var38;
@@ -818,7 +838,11 @@ _backup_audio_convert_orc_unpack_u16_swap (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union16 *ORC_RESTRICT ptr4;
   orc_union16 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_union32 var36;
   orc_union16 var37;
   orc_union32 var38;
@@ -1054,7 +1078,11 @@ audio_convert_orc_unpack_u32 (gint32 * ORC_RESTRICT d1,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
 
@@ -1086,7 +1114,11 @@ _backup_audio_convert_orc_unpack_u32 (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
 
@@ -1287,7 +1319,11 @@ audio_convert_orc_unpack_u32_swap (gint32 * ORC_RESTRICT d1,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -1322,7 +1358,11 @@ _backup_audio_convert_orc_unpack_u32_swap (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -1542,8 +1582,16 @@ audio_convert_orc_unpack_float_s32 (guint32 * ORC_RESTRICT d1,
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var33;
+#else
   orc_union32 var33;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -1602,8 +1650,16 @@ _backup_audio_convert_orc_unpack_float_s32 (OrcExecutor * ORC_RESTRICT ex)
   int n = ex->n;
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var33;
+#else
   orc_union32 var33;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -1730,8 +1786,16 @@ audio_convert_orc_unpack_float_s32_swap (guint32 * ORC_RESTRICT d1,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_union32 var36;
   orc_union32 var37;
   orc_union32 var38;
@@ -1793,8 +1857,16 @@ _backup_audio_convert_orc_unpack_float_s32_swap (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_union32 var36;
   orc_union32 var37;
   orc_union32 var38;
@@ -1922,8 +1994,16 @@ audio_convert_orc_unpack_double_s32 (guint32 * ORC_RESTRICT d1,
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union64 *ORC_RESTRICT ptr4;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var33;
+#else
   orc_union64 var33;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var34;
+#else
   orc_union64 var34;
+#endif
   orc_union32 var35;
   orc_union64 var36;
   orc_union64 var37;
@@ -1982,8 +2062,16 @@ _backup_audio_convert_orc_unpack_double_s32 (OrcExecutor * ORC_RESTRICT ex)
   int n = ex->n;
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union64 *ORC_RESTRICT ptr4;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var33;
+#else
   orc_union64 var33;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var34;
+#else
   orc_union64 var34;
+#endif
   orc_union32 var35;
   orc_union64 var36;
   orc_union64 var37;
@@ -2111,8 +2199,16 @@ audio_convert_orc_unpack_double_s32_swap (guint32 * ORC_RESTRICT d1,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union64 *ORC_RESTRICT ptr4;
   orc_union64 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var34;
+#else
   orc_union64 var34;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var35;
+#else
   orc_union64 var35;
+#endif
   orc_union32 var36;
   orc_union64 var37;
   orc_union64 var38;
@@ -2174,8 +2270,16 @@ _backup_audio_convert_orc_unpack_double_s32_swap (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union64 *ORC_RESTRICT ptr4;
   orc_union64 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var34;
+#else
   orc_union64 var34;
+#endif
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var35;
+#else
   orc_union64 var35;
+#endif
   orc_union32 var36;
   orc_union64 var37;
   orc_union64 var38;
@@ -2768,7 +2872,11 @@ audio_convert_orc_unpack_u8_double (gdouble * ORC_RESTRICT d1,
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_int8 *ORC_RESTRICT ptr4;
   orc_int8 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_union64 var36;
   orc_union16 var37;
   orc_union32 var38;
@@ -2809,7 +2917,11 @@ _backup_audio_convert_orc_unpack_u8_double (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_int8 *ORC_RESTRICT ptr4;
   orc_int8 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_union64 var36;
   orc_union16 var37;
   orc_union32 var38;
@@ -3059,7 +3171,11 @@ audio_convert_orc_unpack_u16_double (gdouble * ORC_RESTRICT d1,
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union16 *ORC_RESTRICT ptr4;
   orc_union16 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union64 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -3097,7 +3213,11 @@ _backup_audio_convert_orc_unpack_u16_double (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union16 *ORC_RESTRICT ptr4;
   orc_union16 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union64 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -3331,7 +3451,11 @@ audio_convert_orc_unpack_u16_double_swap (gdouble * ORC_RESTRICT d1,
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union16 *ORC_RESTRICT ptr4;
   orc_union16 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_union64 var36;
   orc_union16 var37;
   orc_union32 var38;
@@ -3372,7 +3496,11 @@ _backup_audio_convert_orc_unpack_u16_double_swap (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union16 *ORC_RESTRICT ptr4;
   orc_union16 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_union64 var36;
   orc_union16 var37;
   orc_union32 var38;
@@ -3623,7 +3751,11 @@ audio_convert_orc_unpack_u32_double (gdouble * ORC_RESTRICT d1,
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union64 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -3658,7 +3790,11 @@ _backup_audio_convert_orc_unpack_u32_double (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union64 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -3879,7 +4015,11 @@ audio_convert_orc_unpack_u32_double_swap (gdouble * ORC_RESTRICT d1,
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union64 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -3917,7 +4057,11 @@ _backup_audio_convert_orc_unpack_u32_double_swap (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union64 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -4152,7 +4296,11 @@ audio_convert_orc_pack_u8 (guint8 * ORC_RESTRICT d1,
   orc_int8 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_int8 var36;
   orc_union32 var37;
   orc_union32 var38;
@@ -4190,7 +4338,11 @@ _backup_audio_convert_orc_pack_u8 (OrcExecutor * ORC_RESTRICT ex)
   orc_int8 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_int8 var36;
   orc_union32 var37;
   orc_union32 var38;
@@ -4421,7 +4573,11 @@ audio_convert_orc_pack_u16 (guint8 * ORC_RESTRICT d1,
   orc_union16 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union16 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -4456,7 +4612,11 @@ _backup_audio_convert_orc_pack_u16 (OrcExecutor * ORC_RESTRICT ex)
   orc_union16 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union16 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -4672,7 +4832,11 @@ audio_convert_orc_pack_u16_swap (guint8 * ORC_RESTRICT d1,
   orc_union16 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_union16 var36;
   orc_union32 var37;
   orc_union32 var38;
@@ -4710,7 +4874,11 @@ _backup_audio_convert_orc_pack_u16_swap (OrcExecutor * ORC_RESTRICT ex)
   orc_union16 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_union16 var36;
   orc_union32 var37;
   orc_union32 var38;
@@ -4946,7 +5114,11 @@ audio_convert_orc_pack_u32 (guint8 * ORC_RESTRICT d1,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
 
@@ -4978,7 +5150,11 @@ _backup_audio_convert_orc_pack_u32 (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
 
@@ -5179,7 +5355,11 @@ audio_convert_orc_pack_u32_swap (guint8 * ORC_RESTRICT d1,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -5214,7 +5394,11 @@ _backup_audio_convert_orc_pack_u32_swap (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -5434,7 +5618,11 @@ audio_convert_orc_pack_s32_float (gfloat * ORC_RESTRICT d1,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
 
@@ -5474,7 +5662,11 @@ _backup_audio_convert_orc_pack_s32_float (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
 
@@ -5577,7 +5769,11 @@ audio_convert_orc_pack_s32_float_swap (gfloat * ORC_RESTRICT d1,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -5620,7 +5816,11 @@ _backup_audio_convert_orc_pack_s32_float_swap (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -5727,7 +5927,11 @@ audio_convert_orc_pack_s32_double (gdouble * ORC_RESTRICT d1,
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var34;
+#else
   orc_union64 var34;
+#endif
   orc_union64 var35;
   orc_union64 var36;
 
@@ -5767,7 +5971,11 @@ _backup_audio_convert_orc_pack_s32_double (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var34;
+#else
   orc_union64 var34;
+#endif
   orc_union64 var35;
   orc_union64 var36;
 
@@ -5871,7 +6079,11 @@ audio_convert_orc_pack_s32_double_swap (gdouble * ORC_RESTRICT d1,
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var34;
+#else
   orc_union64 var34;
+#endif
   orc_union64 var35;
   orc_union64 var36;
   orc_union64 var37;
@@ -5914,7 +6126,11 @@ _backup_audio_convert_orc_pack_s32_double_swap (OrcExecutor * ORC_RESTRICT ex)
   orc_union64 *ORC_RESTRICT ptr0;
   const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union64 var34;
+#else
   orc_union64 var34;
+#endif
   orc_union64 var35;
   orc_union64 var36;
   orc_union64 var37;
@@ -6272,7 +6488,11 @@ audio_convert_orc_pack_double_u8 (guint8 * ORC_RESTRICT d1,
   orc_int8 *ORC_RESTRICT ptr0;
   const orc_union64 *ORC_RESTRICT ptr4;
   orc_union64 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_int8 var36;
   orc_union32 var37;
   orc_union32 var38;
@@ -6319,7 +6539,11 @@ _backup_audio_convert_orc_pack_double_u8 (OrcExecutor * ORC_RESTRICT ex)
   orc_int8 *ORC_RESTRICT ptr0;
   const orc_union64 *ORC_RESTRICT ptr4;
   orc_union64 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_int8 var36;
   orc_union32 var37;
   orc_union32 var38;
@@ -6586,7 +6810,11 @@ audio_convert_orc_pack_double_u16 (guint8 * ORC_RESTRICT d1,
   orc_union16 *ORC_RESTRICT ptr0;
   const orc_union64 *ORC_RESTRICT ptr4;
   orc_union64 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union16 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -6630,7 +6858,11 @@ _backup_audio_convert_orc_pack_double_u16 (OrcExecutor * ORC_RESTRICT ex)
   orc_union16 *ORC_RESTRICT ptr0;
   const orc_union64 *ORC_RESTRICT ptr4;
   orc_union64 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union16 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -6882,7 +7114,11 @@ audio_convert_orc_pack_double_u16_swap (guint8 * ORC_RESTRICT d1,
   orc_union16 *ORC_RESTRICT ptr0;
   const orc_union64 *ORC_RESTRICT ptr4;
   orc_union64 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_union16 var36;
   orc_union32 var37;
   orc_union32 var38;
@@ -6929,7 +7165,11 @@ _backup_audio_convert_orc_pack_double_u16_swap (OrcExecutor * ORC_RESTRICT ex)
   orc_union16 *ORC_RESTRICT ptr0;
   const orc_union64 *ORC_RESTRICT ptr4;
   orc_union64 var34;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var35;
+#else
   orc_union32 var35;
+#endif
   orc_union16 var36;
   orc_union32 var37;
   orc_union32 var38;
@@ -7197,7 +7437,11 @@ audio_convert_orc_pack_double_u32 (guint8 * ORC_RESTRICT d1,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union64 *ORC_RESTRICT ptr4;
   orc_union64 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -7238,7 +7482,11 @@ _backup_audio_convert_orc_pack_double_u32 (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union64 *ORC_RESTRICT ptr4;
   orc_union64 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -7477,7 +7725,11 @@ audio_convert_orc_pack_double_u32_swap (guint8 * ORC_RESTRICT d1,
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union64 *ORC_RESTRICT ptr4;
   orc_union64 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
   orc_union32 var37;
@@ -7521,7 +7773,11 @@ _backup_audio_convert_orc_pack_double_u32_swap (OrcExecutor * ORC_RESTRICT ex)
   orc_union32 *ORC_RESTRICT ptr0;
   const orc_union64 *ORC_RESTRICT ptr4;
   orc_union64 var33;
+#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__)
+  volatile orc_union32 var34;
+#else
   orc_union32 var34;
+#endif
   orc_union32 var35;
   orc_union32 var36;
   orc_union32 var37;

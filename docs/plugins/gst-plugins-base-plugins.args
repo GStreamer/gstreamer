@@ -1369,6 +1369,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstPlayBin::audio-stream-combiner</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio stream combiner</NICK>
+<BLURB>Current audio stream combiner (NULL = input-selector).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::text-stream-combiner</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Text stream combiner</NICK>
+<BLURB>Current text stream combiner (NULL = input-selector).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::video-stream-combiner</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video stream combiner</NICK>
+<BLURB>Current video stream combiner (NULL = input-selector).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAudiorate::add</NAME>
 <TYPE>guint64</TYPE>
 <RANGE></RANGE>
@@ -1975,7 +2005,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Add Borders</NICK>
 <BLURB>Add black borders if necessary to keep the display aspect ratio.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1991,7 +2021,7 @@
 <ARG>
 <NAME>GstVideoScale::envelope</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,5]</RANGE>
+<RANGE>[1,5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Envelope</NICK>
 <BLURB>Size of filter envelope.</BLURB>
@@ -2011,7 +2041,7 @@
 <ARG>
 <NAME>GstVideoScale::sharpness</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,2]</RANGE>
+<RANGE>[0.5,1.5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Sharpness</NICK>
 <BLURB>Sharpness of filter.</BLURB>
@@ -3594,7 +3624,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Emit signals</NICK>
-<BLURB>Emit new-preroll, new-buffer and new-buffer-list signals.</BLURB>
+<BLURB>Emit new-preroll and new-sample signals.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 

@@ -1,4 +1,6 @@
 GSocket GInitable
+GTypeModule GTypePlugin
+GstAdder GstChildProxy
 GstAppSink GstURIHandler
 GstAppSrc GstURIHandler
 GstAudioCdSrc GstURIHandler
@@ -23,3 +25,4 @@ GstVorbisTag GstTagSetter
 GstXImageSink GstNavigation GstVideoOverlay
 GstXvImageSink GstNavigation GstVideoOverlay GstColorBalance
 PangoCairoFcFontMap PangoCairoFontMap
+PangoModule GTypePlugin
