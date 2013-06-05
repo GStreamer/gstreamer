@@ -831,8 +831,7 @@ mpegts_packetizer_parse_pat (MpegTSPacketizer2 * packetizer,
 
     g_value_init (&value, GST_TYPE_STRUCTURE);
     g_value_take_boxed (&value, entry);
-    gst_value_list_append_value (&entries, &value);
-    g_value_unset (&value);
+    gst_value_list_append_and_take_value (&entries, &value);
   }
 
   gst_structure_id_take_value (pat_info, QUARK_PROGRAMS, &entries);
@@ -1038,8 +1037,7 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer2 * packetizer,
 
     g_value_init (&stream_value, GST_TYPE_STRUCTURE);
     g_value_take_boxed (&stream_value, stream_info);
-    gst_value_list_append_value (&programs, &stream_value);
-    g_value_unset (&stream_value);
+    gst_value_list_append_and_take_value (&programs, &stream_value);
   }
 
   gst_structure_id_take_value (pmt, QUARK_STREAMS, &programs);
@@ -1545,8 +1543,8 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
               logical_channel_number, NULL);
           g_value_init (&channel_value, GST_TYPE_STRUCTURE);
           g_value_take_boxed (&channel_value, channel);
-          gst_value_list_append_value (&channel_numbers, &channel_value);
-          g_value_unset (&channel_value);
+          gst_value_list_append_and_take_value (&channel_numbers,
+              &channel_value);
           current_pos += 2;
         }
         gst_structure_id_take_value (transport, QUARK_CHANNELS,
@@ -1602,8 +1600,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
             }
             g_value_init (&frequency, G_TYPE_UINT);
             g_value_set_uint (&frequency, freq);
-            gst_value_list_append_value (&frequencies, &frequency);
-            g_value_unset (&frequency);
+            gst_value_list_append_and_take_value (&frequencies, &frequency);
             current_pos += 4;
           }
 
@@ -1637,8 +1634,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
 
     g_value_init (&transport_value, GST_TYPE_STRUCTURE);
     g_value_take_boxed (&transport_value, transport);
-    gst_value_list_append_value (&transports, &transport_value);
-    g_value_unset (&transport_value);
+    gst_value_list_append_and_take_value (&transports, &transport_value);
 
     transport_stream_loop_length -= data - entry_begin;
   }
@@ -1830,8 +1826,7 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer2 * packetizer,
 
     g_value_init (&service_value, GST_TYPE_STRUCTURE);
     g_value_take_boxed (&service_value, service);
-    gst_value_list_append_value (&services, &service_value);
-    g_value_unset (&service_value);
+    gst_value_list_append_and_take_value (&services, &service_value);
 
     sdt_info_length -= data - entry_begin;
   }
@@ -2076,9 +2071,8 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
 
               g_value_init (&extended_item_value, GST_TYPE_STRUCTURE);
               g_value_take_boxed (&extended_item_value, extended_item);
-              gst_value_list_append_value (&extended_items,
+              gst_value_list_append_and_take_value (&extended_items,
                   &extended_item_value);
-              g_value_unset (&extended_item_value);
             }
 
             if (extended_text) {
@@ -2300,8 +2294,8 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
           if (component) {
             g_value_init (&component_value, GST_TYPE_STRUCTURE);
             g_value_take_boxed (&component_value, component);
-            gst_value_list_append_value (&components, &component_value);
-            g_value_unset (&component_value);
+            gst_value_list_append_and_take_value (&components,
+                &component_value);
             component = NULL;
           }
         }
@@ -2322,8 +2316,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
 
     g_value_init (&event_value, GST_TYPE_STRUCTURE);
     g_value_take_boxed (&event_value, event);
-    gst_value_list_append_value (&events, &event_value);
-    g_value_unset (&event_value);
+    gst_value_list_append_and_take_value (&events, &event_value);
   }
 
   if (data != end - 4) {
