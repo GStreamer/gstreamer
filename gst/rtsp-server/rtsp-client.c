@@ -882,8 +882,8 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   if (res == GST_RTSP_OK) {
     if (gst_rtsp_range_parse (str, &range) == GST_RTSP_OK) {
       /* we have a range, seek to the position */
-      gst_rtsp_media_seek (gst_rtsp_session_media_get_media (media), range);
       unit = range->unit;
+      gst_rtsp_media_seek (gst_rtsp_session_media_get_media (media), range);
       gst_rtsp_range_free (range);
     }
   }

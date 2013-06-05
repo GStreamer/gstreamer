@@ -100,9 +100,8 @@ struct _GstRTSPMediaClass {
   /* vmethods */
   gboolean        (*handle_message)  (GstRTSPMedia *media, GstMessage *message);
   gboolean        (*unprepare)       (GstRTSPMedia *media);
-  gboolean        (*get_range_times) (GstRTSPMedia *media,
-                                      const GstRTSPTimeRange * range,
-                                      GstClockTime * min, GstClockTime * max);
+  gboolean        (*convert_range)   (GstRTSPMedia *media, GstRTSPTimeRange *range,
+                                      GstRTSPRangeUnit unit);
 
   /* signals */
   void            (*new_stream)      (GstRTSPMedia *media, GstRTSPStream * stream);

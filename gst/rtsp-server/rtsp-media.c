@@ -123,8 +123,9 @@ static gboolean default_handle_message (GstRTSPMedia * media,
     GstMessage * message);
 static void finish_unprepare (GstRTSPMedia * media);
 static gboolean default_unprepare (GstRTSPMedia * media);
-static gboolean default_get_range_times (GstRTSPMedia * media,
-    const GstRTSPTimeRange * range, GstClockTime * min, GstClockTime * max);
+static gboolean
+default_convert_range (GstRTSPMedia * media, GstRTSPTimeRange * range,
+    GstRTSPRangeUnit unit);
 
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
 
@@ -213,7 +214,7 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
 
   klass->handle_message = default_handle_message;
   klass->unprepare = default_unprepare;
-  klass->get_range_times = default_get_range_times;
+  klass->convert_range = default_convert_range;
 }
 
 static void
@@ -1076,11 +1077,14 @@ gchar *
 gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play,
     GstRTSPRangeUnit unit)
 {
+  GstRTSPMediaClass *klass;
   GstRTSPMediaPrivate *priv;
   gchar *result;
   GstRTSPTimeRange range;
 
+  klass = GST_RTSP_MEDIA_GET_CLASS (media);
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+  g_return_val_if_fail (klass->convert_range != NULL, FALSE);
 
   priv = media->priv;
 
@@ -1099,7 +1103,9 @@ gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play,
   g_mutex_unlock (&priv->lock);
   g_rec_mutex_unlock (&priv->state_lock);
 
-  gst_rtsp_range_convert_units (&range, unit);
+  if (!klass->convert_range (media, &range, unit)) {
+    goto conversion_failed;
+  }
 
   result = gst_rtsp_range_to_string (&range);
 
@@ -1109,6 +1115,12 @@ gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play,
 not_prepared:
   {
     GST_WARNING ("media %p was not prepared", media);
+    g_rec_mutex_unlock (&priv->state_lock);
+    return NULL;
+  }
+conversion_failed:
+  {
+    GST_WARNING ("range conversion to unit %d failed", unit);
     g_rec_mutex_unlock (&priv->state_lock);
     return NULL;
   }
@@ -1138,7 +1150,7 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
   g_return_val_if_fail (range != NULL, FALSE);
-  g_return_val_if_fail (klass->get_range_times != NULL, FALSE);
+  g_return_val_if_fail (klass->convert_range != NULL, FALSE);
 
   priv = media->priv;
 
@@ -1155,8 +1167,9 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
 
   start_type = stop_type = GST_SEEK_TYPE_NONE;
 
-  if (!klass->get_range_times (media, range, &start, &stop))
+  if (!klass->convert_range (media, range, GST_RTSP_RANGE_NPT))
     goto not_supported;
+  gst_rtsp_range_get_times (range, &start, &stop);
 
   GST_INFO ("got %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
       GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
@@ -1210,7 +1223,7 @@ not_seekable:
 not_supported:
   {
     g_rec_mutex_unlock (&priv->state_lock);
-    GST_WARNING ("seek unit %d not supported", range->unit);
+    GST_WARNING ("conversion to npt not supported");
     return FALSE;
   }
 }
@@ -2053,8 +2066,8 @@ not_prepared:
 
 /* called with state-lock */
 static gboolean
-default_get_range_times (GstRTSPMedia * media,
-    const GstRTSPTimeRange * range, GstClockTime * min, GstClockTime * max)
+default_convert_range (GstRTSPMedia * media, GstRTSPTimeRange * range,
+    GstRTSPRangeUnit unit)
 {
-  return gst_rtsp_range_get_times (range, min, max);
+  return gst_rtsp_range_convert_units (range, unit);
 }
