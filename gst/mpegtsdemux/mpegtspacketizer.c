@@ -692,14 +692,15 @@ set_descriptors_array_on_structure (GstStructure * structure, GQuark quark,
   gst_structure_id_take_value (structure, quark, &value);
 }
 
-static gboolean
+static GValueArray *
 mpegts_packetizer_parse_descriptors (MpegTSPacketizer2 * packetizer,
-    guint8 ** buffer, guint8 * buffer_end, GValueArray * descriptors)
+    guint8 ** buffer, guint8 * buffer_end)
 {
+  GValueArray *descriptors = NULL;
   guint8 length;
   guint8 *data;
-  GValue value = { 0 };
   GString *desc;
+  guint i, nb_desc = 0;
 
   data = *buffer;
 
@@ -713,14 +714,8 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer2 * packetizer,
       goto error;
     }
 
-    /* include length */
-    desc = g_string_new_len ((gchar *) data - 2, length + 2);
     data += length;
-    /* G_TYPE_GSTRING is a GBoxed type and is used so properly marshalled from python */
-    g_value_init (&value, G_TYPE_GSTRING);
-    g_value_take_boxed (&value, desc);
-    g_value_array_append (descriptors, &value);
-    g_value_unset (&value);
+    nb_desc++;
   }
 
   if (data != buffer_end) {
@@ -729,11 +724,28 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer2 * packetizer,
     goto error;
   }
 
+  data = *buffer;
+  descriptors = g_value_array_new (nb_desc);
+
+  for (i = 0; i < nb_desc; i++) {
+    GValue *value = &(descriptors->values[i]);
+    data++;                     /* skip tag */
+    length = *data++;
+
+    /* include length */
+    desc = g_string_new_len ((gchar *) data - 2, length + 2);
+    data += length;
+    /* G_TYPE_GSTRING is a GBoxed type and is used so properly marshalled from python */
+    g_value_init (value, G_TYPE_GSTRING);
+    g_value_take_boxed (value, desc);
+  }
+
   *buffer = data;
 
-  return TRUE;
+  return descriptors;
+
 error:
-  return FALSE;
+  return NULL;
 }
 
 GstStructure *
@@ -767,12 +779,10 @@ mpegts_packetizer_parse_cat (MpegTSPacketizer2 * packetizer,
   /* descriptors */
   desc_len = section->section_length - 4 - 8;
   gst_mpeg_descriptor_parse (&desc, data, desc_len);
-  descriptors = g_value_array_new (desc.n_desc);
-  if (!mpegts_packetizer_parse_descriptors (packetizer, &data, data + desc_len,
-          descriptors)) {
-    g_value_array_free (descriptors);
+  descriptors =
+      mpegts_packetizer_parse_descriptors (packetizer, &data, data + desc_len);
+  if (descriptors == NULL)
     goto error;
-  }
   set_descriptors_array_on_structure (cat_info, QUARK_DESCRIPTORS, descriptors);
 
   return cat_info;
@@ -910,12 +920,11 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer2 * packetizer,
       goto error;
     }
 
-    descriptors = g_value_array_new (0);
-    if (!mpegts_packetizer_parse_descriptors (packetizer,
-            &data, data + program_info_length, descriptors)) {
-      g_value_array_free (descriptors);
+    descriptors =
+        mpegts_packetizer_parse_descriptors (packetizer, &data,
+        data + program_info_length);
+    if (descriptors == NULL)
       goto error;
-    }
 
     set_descriptors_array_on_structure (pmt, QUARK_DESCRIPTORS, descriptors);
   }
@@ -1021,12 +1030,12 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer2 * packetizer,
           g_free (lang_code);
         }
 
-        descriptors = g_value_array_new (desc.n_desc);
-        if (!mpegts_packetizer_parse_descriptors (packetizer,
-                &data, data + stream_info_length, descriptors)) {
+        descriptors =
+            mpegts_packetizer_parse_descriptors (packetizer, &data,
+            data + stream_info_length);
+        if (descriptors == NULL) {
           g_value_unset (&programs);
           gst_structure_free (stream_info);
-          g_value_array_free (descriptors);
           goto error;
         }
 
@@ -1132,11 +1141,11 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
         g_free (networkname_tmp);
       }
 
-      descriptors = g_value_array_new (mpegdescriptor.n_desc);
-      if (!mpegts_packetizer_parse_descriptors (packetizer,
-              &data, data + descriptors_loop_length, descriptors)) {
+      descriptors =
+          mpegts_packetizer_parse_descriptors (packetizer, &data,
+          data + descriptors_loop_length);
+      if (!descriptors) {
         gst_structure_free (nit);
-        g_value_array_free (descriptors);
         goto error;
       }
       set_descriptors_array_on_structure (nit, QUARK_DESCRIPTORS, descriptors);
@@ -1620,11 +1629,11 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
         }
       }
 
-      descriptors = g_value_array_new (mpegdescriptor.n_desc);
-      if (!mpegts_packetizer_parse_descriptors (packetizer,
-              &data, data + descriptors_loop_length, descriptors)) {
+      descriptors =
+          mpegts_packetizer_parse_descriptors (packetizer, &data,
+          data + descriptors_loop_length);
+      if (!descriptors) {
         gst_structure_free (transport);
-        g_value_array_free (descriptors);
         goto error;
       }
 
@@ -1813,11 +1822,10 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer2 * packetizer,
         }
       }
 
-      descriptors = g_value_array_new (mpegdescriptor.n_desc);
-      if (!mpegts_packetizer_parse_descriptors (packetizer,
-              &data, data + descriptors_loop_length, descriptors)) {
+      descriptors = mpegts_packetizer_parse_descriptors (packetizer,
+          &data, data + descriptors_loop_length);
+      if (!descriptors) {
         gst_structure_free (service);
-        g_value_array_free (descriptors);
         goto error;
       }
       set_descriptors_array_on_structure (service, QUARK_DESCRIPTORS,
@@ -2303,11 +2311,10 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
         g_array_free (component_descriptors, TRUE);
       }
 
-      descriptors = g_value_array_new (mpegdescriptor.n_desc);
-      if (!mpegts_packetizer_parse_descriptors (packetizer,
-              &data, data + descriptors_loop_length, descriptors)) {
+      descriptors = mpegts_packetizer_parse_descriptors (packetizer,
+          &data, data + descriptors_loop_length);
+      if (!descriptors) {
         gst_structure_free (event);
-        g_value_array_free (descriptors);
         goto error;
       }
       set_descriptors_array_on_structure (event, QUARK_DESCRIPTORS,
@@ -2420,11 +2427,9 @@ mpegts_packetizer_parse_tot (MpegTSPacketizer2 * packetizer,
 
   desc_len = ((*data++) & 0xf) << 8;
   desc_len |= *data++;
-  descriptors = g_value_array_new (0);
-
-  if (!mpegts_packetizer_parse_descriptors (packetizer, &data, data + desc_len,
-          descriptors)) {
-    g_value_array_free (descriptors);
+  descriptors =
+      mpegts_packetizer_parse_descriptors (packetizer, &data, data + desc_len);
+  if (!descriptors) {
     gst_structure_free (tot);
     return NULL;
   }
