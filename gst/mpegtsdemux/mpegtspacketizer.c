@@ -743,6 +743,8 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer2 * packetizer,
     g_value_take_boxed (value, desc);
   }
 
+  descriptors->n_values = nb_desc;
+
   *buffer = data;
 
   return descriptors;
