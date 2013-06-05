@@ -2076,6 +2076,8 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
               extended_item = gst_structure_new_id (QUARK_EXTENDED_ITEM,
                   QUARK_DESCRIPTION, G_TYPE_STRING, description,
                   QUARK_TEXT, G_TYPE_STRING, text, NULL);
+              g_free (description);
+              g_free (text);
 
               g_value_init (&extended_item_value, GST_TYPE_STRUCTURE);
               g_value_take_boxed (&extended_item_value, extended_item);
@@ -3229,6 +3231,8 @@ get_encoding_and_convert (MpegTSPacketizer2 * packetizer, const gchar * text,
       iconv, is_multibyte, &error);
   if (error != NULL) {
     GST_WARNING ("Could not convert string: %s", error->message);
+    if (converted_str)
+      g_free (converted_str);
     g_error_free (error);
     error = NULL;
 
