@@ -491,9 +491,14 @@ gst_mpeg_video_finalise_mpeg2_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
   w = seqhdr->width;
   h = seqhdr->height;
   if (displayext) {
-    /* Use the display size for calculating PAR when display ext present */
-    w = displayext->display_horizontal_size;
-    h = displayext->display_vertical_size;
+    /* Use the display size for calculating PAR when display ext present.
+     * But we are handling this like what DVD players are doing. Which means,
+     * ignore the display extension values if they are greater than the width/height
+     * values provided by seqhdr and calculate the PAR based on the seqhdr values. */
+    if (displayext->display_horizontal_size < w)
+      w = displayext->display_horizontal_size;
+    if (displayext->display_vertical_size < h)
+      h = displayext->display_vertical_size;
   }
 
   /* Pixel_width = DAR_width * display_vertical_size */
