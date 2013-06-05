@@ -1017,6 +1017,8 @@ gst_v4l2_buffer_pool_finalize (GObject * object)
     gst_object_unref (pool->allocator);
   g_free (pool->buffers);
 
+  gst_object_unref (pool->obj->element);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -1069,6 +1071,8 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   s = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
   gst_buffer_pool_config_set_params (s, caps, obj->sizeimage, 2, 0);
   gst_buffer_pool_set_config (GST_BUFFER_POOL_CAST (pool), s);
+
+  gst_object_ref (obj->element);
 
   return GST_BUFFER_POOL (pool);
 
