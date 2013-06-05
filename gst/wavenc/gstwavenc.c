@@ -835,9 +835,7 @@ gst_wavenc_event (GstPad * pad, GstObject * parent, GstEvent * event)
         if (wavenc->tags != tags) {
           if (wavenc->tags)
             gst_tag_list_unref (wavenc->tags);
-          wavenc->tags = tags;
-        } else {
-          gst_toc_unref (tags);
+          wavenc->tags = gst_tag_list_ref (tags);
         }
       }
       res = gst_pad_event_default (pad, parent, event);
