@@ -681,6 +681,17 @@ not_applicable:
   return TRUE;
 }
 
+static inline void
+set_descriptors_array_on_structure (GstStructure * structure, GQuark quark,
+    GValueArray * descriptors)
+{
+  GValue value = { 0 };
+
+  g_value_init (&value, G_TYPE_VALUE_ARRAY);
+  g_value_take_boxed (&value, descriptors);
+  gst_structure_id_take_value (structure, quark, &value);
+}
+
 static gboolean
 mpegts_packetizer_parse_descriptors (MpegTSPacketizer2 * packetizer,
     guint8 ** buffer, guint8 * buffer_end, GValueArray * descriptors)
@@ -762,9 +773,7 @@ mpegts_packetizer_parse_cat (MpegTSPacketizer2 * packetizer,
     g_value_array_free (descriptors);
     goto error;
   }
-  gst_structure_id_set (cat_info, QUARK_DESCRIPTORS, G_TYPE_VALUE_ARRAY,
-      descriptors, NULL);
-  g_value_array_free (descriptors);
+  set_descriptors_array_on_structure (cat_info, QUARK_DESCRIPTORS, descriptors);
 
   return cat_info;
 error:
@@ -909,9 +918,7 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer2 * packetizer,
       goto error;
     }
 
-    gst_structure_id_set (pmt, QUARK_DESCRIPTORS, G_TYPE_VALUE_ARRAY,
-        descriptors, NULL);
-    g_value_array_free (descriptors);
+    set_descriptors_array_on_structure (pmt, QUARK_DESCRIPTORS, descriptors);
   }
 
   g_value_init (&programs, GST_TYPE_LIST);
@@ -1024,9 +1031,8 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer2 * packetizer,
           goto error;
         }
 
-        gst_structure_id_set (stream_info,
-            QUARK_DESCRIPTORS, G_TYPE_VALUE_ARRAY, descriptors, NULL);
-        g_value_array_free (descriptors);
+        set_descriptors_array_on_structure (stream_info, QUARK_DESCRIPTORS,
+            descriptors);
       }
     }
 
@@ -1135,9 +1141,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
         g_value_array_free (descriptors);
         goto error;
       }
-      gst_structure_id_set (nit, QUARK_DESCRIPTORS, G_TYPE_VALUE_ARRAY,
-          descriptors, NULL);
-      g_value_array_free (descriptors);
+      set_descriptors_array_on_structure (nit, QUARK_DESCRIPTORS, descriptors);
     }
   }
 
@@ -1627,9 +1631,8 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
         goto error;
       }
 
-      gst_structure_id_set (transport, QUARK_DESCRIPTORS, G_TYPE_VALUE_ARRAY,
-          descriptors, NULL);
-      g_value_array_free (descriptors);
+      set_descriptors_array_on_structure (transport, QUARK_DESCRIPTORS,
+          descriptors);
     }
 
     g_value_init (&transport_value, GST_TYPE_STRUCTURE);
@@ -1821,11 +1824,8 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer2 * packetizer,
         g_value_array_free (descriptors);
         goto error;
       }
-
-      gst_structure_id_set (service, QUARK_DESCRIPTORS, G_TYPE_VALUE_ARRAY,
-          descriptors, NULL);
-
-      g_value_array_free (descriptors);
+      set_descriptors_array_on_structure (service, QUARK_DESCRIPTORS,
+          descriptors);
     }
 
     g_value_init (&service_value, GST_TYPE_STRUCTURE);
@@ -2316,9 +2316,8 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
         g_value_array_free (descriptors);
         goto error;
       }
-      gst_structure_id_set (event, QUARK_DESCRIPTORS, G_TYPE_VALUE_ARRAY,
-          descriptors, NULL);
-      g_value_array_free (descriptors);
+      set_descriptors_array_on_structure (event, QUARK_DESCRIPTORS,
+          descriptors);
     }
 
     g_value_init (&event_value, GST_TYPE_STRUCTURE);
