@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 01:45+0100\n"
+"POT-Creation-Date: 2013-06-05 16:34+0200\n"
 "PO-Revision-Date: 2010-10-27 12:16+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -63,6 +63,9 @@ msgstr "Αυτό το αρχείο δεν περιέχει αναπαραγώγ�
 
 msgid "This file is invalid and cannot be played."
 msgstr "Το αρχείο αυτό δεν είναι έγκυρο και δεν μπορεί να αναπαραχθεί."
+
+msgid "Cannot play stream because it is encrypted with PlayReady DRM."
+msgstr ""
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Το αρχείο αυτό είναι κατεστραμμένο και δεν μπορεί να αναπαραχθεί. "

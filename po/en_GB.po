@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 01:45+0100\n"
+"POT-Creation-Date: 2013-06-05 16:34+0200\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -62,6 +62,9 @@ msgid "This file contains no playable streams."
 msgstr ""
 
 msgid "This file is invalid and cannot be played."
+msgstr ""
+
+msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr ""
 
 msgid "This file is corrupt and cannot be played."

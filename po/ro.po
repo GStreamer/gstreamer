@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 01:45+0100\n"
+"POT-Creation-Date: 2013-06-05 16:34+0200\n"
 "PO-Revision-Date: 2010-08-16 03:22+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -65,6 +65,9 @@ msgstr "Acest fișier nu conține fluxuri ce pot fi redate."
 
 msgid "This file is invalid and cannot be played."
 msgstr "Fișierul nu este valid și nu poate fi redat."
+
+msgid "Cannot play stream because it is encrypted with PlayReady DRM."
+msgstr ""
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Acest fișier este corupt și nu poate fi redat."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 01:45+0100\n"
+"POT-Creation-Date: 2013-06-05 16:34+0200\n"
 "PO-Revision-Date: 2011-02-26 18:09+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -61,6 +61,9 @@ msgstr "Berkas ini tidak berisi arus yang dapat diputar."
 
 msgid "This file is invalid and cannot be played."
 msgstr "Berkas ini tidak sah dan tak dapat diputar."
+
+msgid "Cannot play stream because it is encrypted with PlayReady DRM."
+msgstr ""
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Berkas ini rusak dan tak dapat diputar."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 01:45+0100\n"
+"POT-Creation-Date: 2013-06-05 16:34+0200\n"
 "PO-Revision-Date: 2010-10-25 10:11+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -63,6 +63,9 @@ msgstr "Questo file non contiene alcuno stream riproducibile."
 
 msgid "This file is invalid and cannot be played."
 msgstr "Questo file non è valido e non può essere riprodotto."
+
+msgid "Cannot play stream because it is encrypted with PlayReady DRM."
+msgstr ""
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Questo file è alterato e non può essere riprodotto."

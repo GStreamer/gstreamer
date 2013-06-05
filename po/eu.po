@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 01:45+0100\n"
+"POT-Creation-Date: 2013-06-05 16:34+0200\n"
 "PO-Revision-Date: 2010-03-25 12:37+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -67,6 +67,9 @@ msgstr "Fitxategi horretan ez dago erreproduzi daitekeen korronterik."
 
 msgid "This file is invalid and cannot be played."
 msgstr "Fitxategi hau ez da baliozkoa eta ezin da erreproduzitu."
+
+msgid "Cannot play stream because it is encrypted with PlayReady DRM."
+msgstr ""
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Fitxategi hau hondatua dago, eta ezin da erreproduzitu."
