@@ -379,7 +379,6 @@ const gchar* gst_keycode_to_keyname(gint16 keycode)
 - (id) initWithFrame:(NSRect) frame {
   NSOpenGLPixelFormat *fmt;
   NSOpenGLPixelFormatAttribute attribs[] = {
-    NSOpenGLPFAAccelerated,
     NSOpenGLPFANoRecovery,
     NSOpenGLPFADoubleBuffer,
     NSOpenGLPFAColorSize, 24,
