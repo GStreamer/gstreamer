@@ -825,8 +825,7 @@ gst_buffer_pool_config_add_option (GstStructure * config, const gchar * option)
   }
   g_value_init (&option_value, G_TYPE_STRING);
   g_value_set_string (&option_value, option);
-  gst_value_array_append_value ((GValue *) value, &option_value);
-  g_value_unset (&option_value);
+  gst_value_array_append_and_take_value ((GValue *) value, &option_value);
 }
 
 /**

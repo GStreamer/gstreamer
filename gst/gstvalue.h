@@ -418,6 +418,8 @@ gboolean        gst_value_deserialize           (GValue                *dest,
 /* list */
 void            gst_value_list_append_value     (GValue         *value,
                                                  const GValue   *append_value);
+void            gst_value_list_append_and_take_value (GValue         *value,
+                                                 GValue   *append_value);
 void            gst_value_list_prepend_value    (GValue         *value,
                                                  const GValue   *prepend_value);
 void            gst_value_list_concat           (GValue         *dest,
@@ -433,6 +435,8 @@ const GValue *  gst_value_list_get_value        (const GValue   *value,
 /* array */
 void            gst_value_array_append_value    (GValue         *value,
                                                  const GValue   *append_value);
+void            gst_value_array_append_and_take_value    (GValue         *value,
+                                                 GValue   *append_value);
 void            gst_value_array_prepend_value   (GValue         *value,
                                                  const GValue   *prepend_value);
 guint           gst_value_array_get_size        (const GValue   *value);

@@ -1296,6 +1296,7 @@ EXPORTS
 	gst_util_uint64_scale_int_ceil
 	gst_util_uint64_scale_int_round
 	gst_util_uint64_scale_round
+	gst_value_array_append_and_take_value
 	gst_value_array_append_value
 	gst_value_array_get_size
 	gst_value_array_get_type
@@ -1330,6 +1331,7 @@ EXPORTS
 	gst_value_intersect
 	gst_value_is_fixed
 	gst_value_is_subset
+	gst_value_list_append_and_take_value
 	gst_value_list_append_value
 	gst_value_list_concat
 	gst_value_list_get_size

@@ -145,9 +145,9 @@ static gchar *gst_string_take_and_wrap (gchar * s);
 static gchar *gst_string_unwrap (const gchar * s);
 
 static void gst_value_move (GValue * dest, GValue * src);
-static void gst_value_list_append_and_take_value (GValue * value,
+static void _gst_value_list_append_and_take_value (GValue * value,
     GValue * append_value);
-static void gst_value_array_append_and_take_value (GValue * value,
+static void _gst_value_array_append_and_take_value (GValue * value,
     GValue * append_value);
 
 static inline GstValueTable *
@@ -413,17 +413,37 @@ gst_value_list_or_array_are_compatible (const GValue * value1,
   return FALSE;
 }
 
-static void
-gst_value_list_append_and_take_value (GValue * value, GValue * append_value)
+static inline void
+_gst_value_list_append_and_take_value (GValue * value, GValue * append_value)
 {
   g_array_append_vals ((GArray *) value->data[0].v_pointer, append_value, 1);
   memset (append_value, 0, sizeof (GValue));
 }
 
 /**
+ * gst_value_list_append_and_take_value:
+ * @value: a #GValue of type #GST_TYPE_LIST
+ * @append_value: (transfer full): the value to append
+ *
+ * Appends @append_value to the GstValueList in @value.
+ *
+ * Since: 1.2
+ */
+void
+gst_value_list_append_and_take_value (GValue * value, GValue * append_value)
+{
+  g_return_if_fail (GST_VALUE_HOLDS_LIST (value));
+  g_return_if_fail (G_IS_VALUE (append_value));
+  g_return_if_fail (gst_value_list_or_array_are_compatible (value,
+          append_value));
+
+  _gst_value_list_append_and_take_value (value, append_value);
+}
+
+/**
  * gst_value_list_append_value:
  * @value: a #GValue of type #GST_TYPE_LIST
- * @append_value: the value to append
+ * @append_value: (transfer none): the value to append
  *
  * Appends @append_value to the GstValueList in @value.
  */
@@ -672,11 +692,31 @@ gst_value_array_append_value (GValue * value, const GValue * append_value)
   g_array_append_vals ((GArray *) value->data[0].v_pointer, &val, 1);
 }
 
-static void
-gst_value_array_append_and_take_value (GValue * value, GValue * append_value)
+static inline void
+_gst_value_array_append_and_take_value (GValue * value, GValue * append_value)
 {
   g_array_append_vals ((GArray *) value->data[0].v_pointer, append_value, 1);
   memset (append_value, 0, sizeof (GValue));
+}
+
+/**
+ * gst_value_array_append_and_take_value:
+ * @value: a #GValue of type #GST_TYPE_ARRAY
+ * @append_value: (transfer full): the value to append
+ *
+ * Appends @append_value to the GstValueArray in @value.
+ *
+ * Since: 1.2
+ */
+void
+gst_value_array_append_and_take_value (GValue * value, GValue * append_value)
+{
+  g_return_if_fail (GST_VALUE_HOLDS_ARRAY (value));
+  g_return_if_fail (G_IS_VALUE (append_value));
+  g_return_if_fail (gst_value_list_or_array_are_compatible (value,
+          append_value));
+
+  _gst_value_array_append_and_take_value (value, append_value);
 }
 
 /**
@@ -3594,7 +3634,7 @@ gst_value_intersect_list (GValue * dest, const GValue * value1,
         gst_value_move (dest, &intersection);
         ret = TRUE;
       } else if (GST_VALUE_HOLDS_LIST (dest)) {
-        gst_value_list_append_and_take_value (dest, &intersection);
+        _gst_value_list_append_and_take_value (dest, &intersection);
       } else {
         GValue temp;
 
@@ -3641,7 +3681,7 @@ gst_value_intersect_array (GValue * dest, const GValue * src1,
       g_value_unset (dest);
       return FALSE;
     }
-    gst_value_array_append_and_take_value (dest, &val);
+    _gst_value_array_append_and_take_value (dest, &val);
   }
 
   return TRUE;
@@ -4118,7 +4158,7 @@ gst_value_subtract_from_list (GValue * dest, const GValue * minuend,
         ret = TRUE;
       } else if (G_VALUE_HOLDS (dest, ltype)
           && !G_VALUE_HOLDS (&subtraction, ltype)) {
-        gst_value_list_append_and_take_value (dest, &subtraction);
+        _gst_value_list_append_and_take_value (dest, &subtraction);
       } else {
         GValue temp;
 
@@ -5089,7 +5129,7 @@ gst_value_fixate (GValue * dest, const GValue * src)
         gst_value_init_and_copy (&kid, orig_kid);
       else
         res = TRUE;
-      gst_value_array_append_and_take_value (dest, &kid);
+      _gst_value_array_append_and_take_value (dest, &kid);
     }
 
     if (!res)
