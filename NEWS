@@ -1,7 +1,14 @@
-gst-vaapi NEWS -- summary of changes.  2013-04-18
+gst-vaapi NEWS -- summary of changes.  2013-06-DD
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
+
+Version 0.5.4 - DD.Jun.2013
+* Fix destruction of Wayland display resources
+* Fix explicit specification of display type to vaapisink
+* Fix memory leak in vaapiupload in GStreamer 0.10 builds (Halley Zhao)
+* Fix performance regression caused by improper use of GstTask callback
+* Fix raw decoding mode to transfer ownership of surface proxy to caller
 
 Version 0.5.3 - 18.Apr.2013
 * Add support for GStreamer 1.0.x API (+Sreerenj Balachandran)
