@@ -109,6 +109,9 @@ static GQuark QUARK_DURATION;
 static GQuark QUARK_RUNNING_STATUS;
 static GQuark QUARK_FREE_CA_MODE;
 
+static GQuark QUARK_TDT;
+static GQuark QUARK_TOT;
+
 #define MAX_KNOWN_ICONV 25
 /* All these conversions will be to UTF8 */
 typedef enum
@@ -2352,7 +2355,7 @@ error:
 
 static GstStructure *
 parse_tdt_tot_common (MpegTSPacketizer2 * packetizer,
-    MpegTSPacketizerSection * section, const gchar * name)
+    MpegTSPacketizerSection * section, GQuark name)
 {
   GstStructure *res;
   guint16 mjd;
@@ -2391,12 +2394,13 @@ parse_tdt_tot_common (MpegTSPacketizer2 * packetizer,
     minute = ((utc_ptr[1] & 0xF0) >> 4) * 10 + (utc_ptr[1] & 0x0F);
     second = ((utc_ptr[2] & 0xF0) >> 4) * 10 + (utc_ptr[2] & 0x0F);
   }
-  res = gst_structure_new (name,
-      "year", G_TYPE_UINT, year,
-      "month", G_TYPE_UINT, month,
-      "day", G_TYPE_UINT, day,
-      "hour", G_TYPE_UINT, hour,
-      "minute", G_TYPE_UINT, minute, "second", G_TYPE_UINT, second, NULL);
+  res = gst_structure_new_id (name,
+      QUARK_YEAR, G_TYPE_UINT, year,
+      QUARK_MONTH, G_TYPE_UINT, month,
+      QUARK_DAY, G_TYPE_UINT, day,
+      QUARK_HOUR, G_TYPE_UINT, hour,
+      QUARK_MINUTE, G_TYPE_UINT, minute, QUARK_SECOND, G_TYPE_UINT, second,
+      NULL);
 
   return res;
 }
@@ -2408,7 +2412,7 @@ mpegts_packetizer_parse_tdt (MpegTSPacketizer2 * packetizer,
   GstStructure *tdt = NULL;
   GST_DEBUG ("TDT");
 
-  tdt = parse_tdt_tot_common (packetizer, section, "tdt");
+  tdt = parse_tdt_tot_common (packetizer, section, QUARK_TDT);
 
   return tdt;
 }
@@ -2424,7 +2428,7 @@ mpegts_packetizer_parse_tot (MpegTSPacketizer2 * packetizer,
 
   GST_DEBUG ("TOT");
 
-  tot = parse_tdt_tot_common (packetizer, section, "tot");
+  tot = parse_tdt_tot_common (packetizer, section, QUARK_TOT);
   data = section->data + 8;
 
   desc_len = ((*data++) & 0xf) << 8;
@@ -2957,6 +2961,8 @@ _init_local (void)
   QUARK_DURATION = g_quark_from_string ("duration");
   QUARK_RUNNING_STATUS = g_quark_from_string ("running-status");
   QUARK_FREE_CA_MODE = g_quark_from_string ("free-ca-mode");
+  QUARK_TDT = g_quark_from_string ("tdt");
+  QUARK_TOT = g_quark_from_string ("tot");
 }
 
 /**
