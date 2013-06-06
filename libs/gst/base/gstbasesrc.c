@@ -346,7 +346,7 @@ static GstFlowReturn gst_base_src_get_range (GstBaseSrc * src, guint64 offset,
 static gboolean gst_base_src_seekable (GstBaseSrc * src);
 static gboolean gst_base_src_negotiate (GstBaseSrc * basesrc);
 static gboolean gst_base_src_update_length (GstBaseSrc * src, guint64 offset,
-    guint * length);
+    guint * length, gboolean force);
 
 static void
 gst_base_src_class_init (GstBaseSrcClass * klass)
@@ -1018,8 +1018,8 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
           guint length = 0;
 
           /* may have to refresh duration */
-          if (g_atomic_int_get (&src->priv->dynamic_size))
-            gst_base_src_update_length (src, 0, &length);
+          gst_base_src_update_length (src, 0, &length,
+              g_atomic_int_get (&src->priv->dynamic_size));
 
           /* this is the duration as configured by the subclass. */
           GST_OBJECT_LOCK (src);
@@ -2221,13 +2221,13 @@ no_sync:
 
 /* Called with STREAM_LOCK and LIVE_LOCK */
 static gboolean
-gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
+gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length,
+    gboolean force)
 {
   guint64 size, maxsize;
   GstBaseSrcClass *bclass;
   GstFormat format;
   gint64 stop;
-  gboolean dynamic;
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
@@ -2252,14 +2252,11 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
       ", segment.stop %" G_GINT64_FORMAT ", maxsize %" G_GINT64_FORMAT, offset,
       *length, size, stop, maxsize);
 
-  dynamic = g_atomic_int_get (&src->priv->dynamic_size);
-  GST_DEBUG_OBJECT (src, "dynamic size: %d", dynamic);
-
   /* check size if we have one */
   if (maxsize != -1) {
     /* if we run past the end, check if the file became bigger and
      * retry. */
-    if (G_UNLIKELY (offset + *length >= maxsize || dynamic)) {
+    if (G_UNLIKELY (offset + *length >= maxsize || force)) {
       /* see if length of the file changed */
       if (bclass->get_size)
         if (!bclass->get_size (src, &size))
@@ -2327,7 +2324,7 @@ again:
   if (G_UNLIKELY (!bclass->create))
     goto no_function;
 
-  if (G_UNLIKELY (!gst_base_src_update_length (src, offset, &length)))
+  if (G_UNLIKELY (!gst_base_src_update_length (src, offset, &length, FALSE)))
     goto unexpected_length;
 
   /* track position */
