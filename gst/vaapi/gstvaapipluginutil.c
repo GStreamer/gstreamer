@@ -68,15 +68,15 @@ static const DisplayMap g_display_map[] = {
       GST_VAAPI_DISPLAY_TYPE_WAYLAND,
       gst_vaapi_display_wayland_new },
 #endif
-#if USE_X11
-    { "x11",
-      GST_VAAPI_DISPLAY_TYPE_X11,
-      gst_vaapi_display_x11_new },
-#endif
 #if USE_GLX
     { "glx",
       GST_VAAPI_DISPLAY_TYPE_GLX,
       gst_vaapi_display_glx_new },
+#endif
+#if USE_X11
+    { "x11",
+      GST_VAAPI_DISPLAY_TYPE_X11,
+      gst_vaapi_display_x11_new },
 #endif
 #if USE_DRM
     { "drm",
