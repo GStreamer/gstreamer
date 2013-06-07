@@ -580,6 +580,7 @@ decode_sequence(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnit *unit)
     gst_vaapi_parser_info_mpeg2_replace(&priv->seq_ext, NULL);
     gst_vaapi_parser_info_mpeg2_replace(&priv->seq_display_ext, NULL);
     gst_vaapi_parser_info_mpeg2_replace(&priv->seq_scalable_ext, NULL);
+    gst_vaapi_parser_info_mpeg2_replace(&priv->quant_matrix, NULL);
 
     priv->fps_n = seq_hdr->fps_n;
     priv->fps_d = seq_hdr->fps_d;
