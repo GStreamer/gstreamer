@@ -1296,9 +1296,7 @@ mpegts_base_flush (MpegTSBase * base, gboolean hard)
   MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
 
   /* Call implementation */
-  if (G_UNLIKELY (klass->flush == NULL))
-    GST_WARNING_OBJECT (base, "Class doesn't have a 'flush' implementation !");
-  else
+  if (klass->flush)
     klass->flush (base, hard);
 }
 
@@ -1368,21 +1366,6 @@ query_upstream_latency (MpegTSBase * base)
   base->queried_latency = TRUE;
 }
 
-static inline GstFlowReturn
-mpegts_base_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
-    MpegTSPacketizerSection * section)
-{
-  MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
-
-  /* Call implementation */
-  if (G_UNLIKELY (klass->push == NULL)) {
-    GST_ERROR_OBJECT (base, "Class doesn't have a 'push' implementation !");
-    return GST_FLOW_ERROR;
-  }
-
-  return klass->push (base, packet, section);
-}
-
 static GstFlowReturn
 mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
@@ -1443,11 +1426,11 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         }
       }
       /* we need to push section packet downstream */
-      res = mpegts_base_push (base, &packet, &section);
+      res = klass->push (base, &packet, &section);
 
     } else if (MPEGTS_BIT_IS_SET (base->is_pes, packet.pid)) {
       /* push the packet downstream */
-      res = mpegts_base_push (base, &packet, NULL);
+      res = klass->push (base, &packet, NULL);
     }
 
   next:
