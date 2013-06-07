@@ -707,7 +707,7 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
     return FALSE;
   }
 
-  if (strcmp (klass->codec_info->name, "OMX.k3.video.decoder.avc") &&
+  if (strcmp (klass->codec_info->name, "OMX.k3.video.decoder.avc") == 0 &&
       color_format == COLOR_FormatYCbYCr)
     color_format = COLOR_TI_FormatYUV420PackedSemiPlanar;
 
