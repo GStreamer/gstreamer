@@ -698,6 +698,7 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
   gint crop_left, crop_right;
   gint crop_top, crop_bottom;
   GstVideoFormat gst_format;
+  GstAmcVideoDecClass *klass = GST_AMC_VIDEO_DEC_GET_CLASS (self);
 
   if (!gst_amc_format_get_int (format, "color-format", &color_format) ||
       !gst_amc_format_get_int (format, "width", &width) ||
@@ -705,6 +706,10 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
     GST_ERROR_OBJECT (self, "Failed to get output format metadata");
     return FALSE;
   }
+
+  if (strcmp (klass->codec_info->name, "OMX.k3.video.decoder.avc") &&
+      color_format == COLOR_FormatYCbYCr)
+    color_format = COLOR_TI_FormatYUV420PackedSemiPlanar;
 
   if (!gst_amc_format_get_int (format, "stride", &stride) ||
       !gst_amc_format_get_int (format, "slice-height", &slice_height)) {

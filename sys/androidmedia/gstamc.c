@@ -1841,6 +1841,13 @@ scan_codecs (GstPlugin * plugin)
       }
 
       for (k = 0; k < n_elems; k++) {
+        if (strcmp (name_str, "OMX.k3.video.decoder.avc") == 0)
+          if (n_elems == 1 && color_formats_elems[k] == COLOR_FormatYCbYCr) {
+            GST_INFO ("On HuaweiMediaPad it reports a wrong COLOR_FormatYCbYCr,"
+                      "should be COLOR_TI_FormatYUV420PackedSemiPlanar, fix it.");
+            color_formats_elems[k] = COLOR_TI_FormatYUV420PackedSemiPlanar;
+          }
+
         GST_INFO ("Color format %d: %d", k, color_formats_elems[k]);
         gst_codec_type->color_formats[k] = color_formats_elems[k];
       }
