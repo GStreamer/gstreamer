@@ -366,6 +366,67 @@ GST_START_TEST (test_rgb_formats)
 
 GST_END_TEST;
 
+static gboolean
+eos_watch (GstBus * bus, GstMessage * message, GMainLoop * loop)
+{
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_EOS) {
+    g_main_loop_quit (loop);
+  }
+  return TRUE;
+}
+
+GST_START_TEST (test_backward_playback)
+{
+  GstBus *bus;
+  GstElement *bin;
+  GError *error = NULL;
+  GMainLoop *loop;
+  guint bus_watch = 0;
+  GstStateChangeReturn ret;
+
+  bin = gst_parse_launch ("videotestsrc ! fakesink name=sink", &error);
+
+  /* run until we receive EOS */
+  loop = g_main_loop_new (NULL, FALSE);
+  bus = gst_element_get_bus (bin);
+  bus_watch = gst_bus_add_watch (bus, (GstBusFunc) eos_watch, loop);
+  gst_object_unref (bus);
+
+
+  ret = gst_element_set_state (bin, GST_STATE_PAUSED);
+
+  if (ret == GST_STATE_CHANGE_ASYNC) {
+    ret = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+    fail_if (ret != GST_STATE_CHANGE_SUCCESS, "Could not start test pipeline");
+  }
+
+  gst_element_seek (bin, -1.0, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET,
+      0, GST_SEEK_TYPE_SET, 1 * GST_SECOND);
+
+  ret = gst_element_set_state (bin, GST_STATE_PLAYING);
+  fail_if (ret == GST_STATE_CHANGE_FAILURE, "Could not start test pipeline");
+  if (ret == GST_STATE_CHANGE_ASYNC) {
+    ret = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+    fail_if (ret != GST_STATE_CHANGE_SUCCESS, "Could not start test pipeline");
+  }
+  g_main_loop_run (loop);
+
+  ret = gst_element_set_state (bin, GST_STATE_NULL);
+  fail_if (ret == GST_STATE_CHANGE_FAILURE, "Could not stop test pipeline");
+  if (ret == GST_STATE_CHANGE_ASYNC) {
+    ret = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+    fail_if (ret != GST_STATE_CHANGE_SUCCESS, "Could not stop test pipeline");
+  }
+
+  /* clean up */
+  g_main_loop_unref (loop);
+  g_source_remove (bus_watch);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
 
 /* FIXME: add tests for YUV formats */
 
@@ -386,6 +447,7 @@ videotestsrc_suite (void)
 
   tcase_add_test (tc_chain, test_all_patterns);
   tcase_add_test (tc_chain, test_rgb_formats);
+  tcase_add_test (tc_chain, test_backward_playback);
 
   return s;
 }
