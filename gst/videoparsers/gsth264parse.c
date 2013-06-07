@@ -882,7 +882,15 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
       }
     }
 
-    gst_h264_parse_process_nal (h264parse, &nalu);
+    if (nalu.type == GST_H264_NAL_SPS || 
+        nalu.type == GST_H264_NAL_PPS ||
+        (h264parse->have_sps && h264parse->have_pps)) {
+      gst_h264_parse_process_nal (h264parse, &nalu);
+    } else {
+      GST_WARNING_OBJECT (h264parse, "no SPS/PPS yet, nal Type: %d, Size: %u will be dropped", nalu.type, nalu.size);
+      *skipsize = nalu.size;
+      goto skip;
+    }
 
     if (nonext)
       break;
