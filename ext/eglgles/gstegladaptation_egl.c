@@ -131,15 +131,6 @@ gst_egl_adaptation_init_egl_display (GstEglAdaptationContext * ctx)
     GST_ERROR_OBJECT (ctx->element, "Couldn't init EGL platform wrapper");
     goto HANDLE_ERROR;
   }
-#ifdef USE_EGL_RPI
-  /* See https://github.com/raspberrypi/firmware/issues/99 */
-  if (!eglMakeCurrent ((EGLDisplay) 1, EGL_NO_SURFACE, EGL_NO_SURFACE,
-          EGL_NO_CONTEXT)) {
-    got_egl_error ("eglMakeCurrent");
-    GST_ERROR_OBJECT (ctx->element, "Couldn't unbind context");
-    return FALSE;
-  }
-#endif
 
   msg = gst_message_new_need_context (GST_OBJECT_CAST (ctx->element));
   gst_message_add_context_type (msg, GST_EGL_DISPLAY_CONTEXT_TYPE);
