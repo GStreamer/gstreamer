@@ -3926,7 +3926,22 @@ static GstBusSyncReply
 activate_sink_bus_handler (GstBus * bus, GstMessage * msg, GstPlayBin * playbin)
 {
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
-    gst_message_unref (msg);
+    /* Only proxy errors from a fixed sink. If that fails we can just error out
+     * early as stuff will fail later anyway */
+    if (playbin->audio_sink
+        && gst_object_has_ancestor (GST_MESSAGE_SRC (msg),
+            GST_OBJECT_CAST (playbin->audio_sink)))
+      gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
+    else if (playbin->video_sink
+        && gst_object_has_ancestor (GST_MESSAGE_SRC (msg),
+            GST_OBJECT_CAST (playbin->video_sink)))
+      gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
+    else if (playbin->text_sink
+        && gst_object_has_ancestor (GST_MESSAGE_SRC (msg),
+            GST_OBJECT_CAST (playbin->text_sink)))
+      gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
+    else
+      gst_message_unref (msg);
   } else {
     gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
   }
