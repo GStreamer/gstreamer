@@ -4202,7 +4202,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
        * type it outputs, check that the decoder is compatible with this sink */
       if ((isaudiodec && group->audio_sink) || (isvideodec
               && group->video_sink)) {
-        gboolean compatible = TRUE;
+        gboolean compatible = FALSE;
         GstPad *sinkpad;
         GstCaps *caps;
         GstElement *sink;
@@ -4215,6 +4215,23 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
               (isaudiodec) ? gst_static_caps_get (&raw_audio_caps) :
               gst_static_caps_get (&raw_video_caps);
 
+          if (!activate_sink (playbin, sink)) {
+            /* If we can't activate the sink, either continue with the next possible
+             * sink or if we have a fixed sink, try the decoder. We will fail later
+             * anyway */
+            gst_object_unref (sinkpad);
+            if ((isaudiodec && group->audio_sink != playbin->audio_sink) ||
+                (isvideodec && group->video_sink != playbin->video_sink)) {
+              gst_element_set_state (*sinkp, GST_STATE_NULL);
+              gst_object_unref (*sinkp);
+              *sinkp = NULL;
+              continue;
+            } else {
+              g_mutex_unlock (&playbin->elements_lock);
+              GST_SOURCE_GROUP_UNLOCK (group);
+              return GST_AUTOPLUG_SELECT_TRY;
+            }
+          }
           caps = gst_pad_query_caps (sinkpad, NULL);
 
           /* If the sink supports raw audio/video, we first check
