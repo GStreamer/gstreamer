@@ -3891,6 +3891,56 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
   return result;
 }
 
+/* Pass sink messages to the application, e.g. NEED_CONTEXT messages */
+static GstBusSyncReply
+activate_sink_bus_handler (GstBus * bus, GstMessage * msg, GstPlayBin * playbin)
+{
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+    gst_message_unref (msg);
+  } else {
+    gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
+  }
+
+  /* Doesn't really matter, nothing is using this bus */
+  return GST_BUS_DROP;
+}
+
+static gboolean
+activate_sink (GstPlayBin * playbin, GstElement * sink)
+{
+  GstState state;
+  GstBus *bus = NULL;
+  GstStateChangeReturn sret;
+  gboolean ret = FALSE;
+
+  GST_OBJECT_LOCK (sink);
+  state = GST_STATE (sink);
+  GST_OBJECT_UNLOCK (sink);
+  if (state >= GST_STATE_READY) {
+    ret = TRUE;
+    goto done;
+  }
+
+  bus = gst_bus_new ();
+  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) activate_sink_bus_handler,
+      playbin, NULL);
+  gst_element_set_bus (sink, bus);
+
+  sret = gst_element_set_state (sink, GST_STATE_READY);
+  if (sret == GST_STATE_CHANGE_FAILURE)
+    goto done;
+
+  ret = TRUE;
+
+done:
+  if (bus) {
+    gst_element_set_bus (sink, NULL);
+    gst_object_unref (bus);
+  }
+
+  return ret;
+}
+
 /* autoplug-continue decides, if a pad has raw caps that can be exposed
  * directly or if further decoding is necessary. We use this to expose
  * supported subtitles directly */
@@ -3916,8 +3966,7 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     /* Ignore errors here, if a custom sink fails to go
      * to READY things are wrong and will error out later
      */
-    if (GST_STATE (sink) < GST_STATE_READY)
-      gst_element_set_state (sink, GST_STATE_READY);
+    activate_sink (group->playbin, sink);
 
     sinkcaps = gst_pad_query_caps (sinkpad, NULL);
     if (!gst_caps_is_any (sinkcaps))
@@ -3948,8 +3997,7 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
       /* Ignore errors here, if a custom sink fails to go
        * to READY things are wrong and will error out later
        */
-      if (GST_STATE (sink) < GST_STATE_READY)
-        gst_element_set_state (sink, GST_STATE_READY);
+      activate_sink (group->playbin, sink);
 
       sinkcaps = gst_pad_query_caps (sinkpad, NULL);
       if (!gst_caps_is_any (sinkcaps))
@@ -3969,8 +4017,7 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
       /* Ignore errors here, if a custom sink fails to go
        * to READY things are wrong and will error out later
        */
-      if (GST_STATE (sink) < GST_STATE_READY)
-        gst_element_set_state (sink, GST_STATE_READY);
+      activate_sink (group->playbin, sink);
 
       sinkcaps = gst_pad_query_caps (sinkpad, NULL);
       if (!gst_caps_is_any (sinkcaps))
@@ -3991,18 +4038,15 @@ done:
 }
 
 static gboolean
-sink_accepts_caps (GstElement * sink, GstCaps * caps)
+sink_accepts_caps (GstPlayBin * playbin, GstElement * sink, GstCaps * caps)
 {
   GstPad *sinkpad;
 
   /* ... activate it ... We do this before adding it to the bin so that we
    * don't accidentally make it post error messages that will stop
    * everything. */
-  if (GST_STATE (sink) < GST_STATE_READY &&
-      gst_element_set_state (sink,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE) {
+  if (!activate_sink (playbin, sink))
     return FALSE;
-  }
 
   if ((sinkpad = gst_element_get_static_pad (sink, "sink"))) {
     /* Got the sink pad, now let's see if the element actually does accept the
@@ -4223,7 +4267,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   if (*sinkp) {
     GstElement *sink = gst_object_ref (*sinkp);
 
-    if (sink_accepts_caps (sink, caps)) {
+    if (sink_accepts_caps (playbin, sink, caps)) {
       GST_DEBUG_OBJECT (playbin,
           "Existing sink '%s' accepts caps: %" GST_PTR_FORMAT,
           GST_ELEMENT_NAME (sink), caps);
@@ -4241,16 +4285,19 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   }
   GST_DEBUG_OBJECT (playbin, "we have no pending sink, try to create one");
 
-  if ((element = gst_element_factory_create (factory, NULL)) == NULL) {
+  if ((*sinkp = gst_element_factory_create (factory, NULL)) == NULL) {
     GST_WARNING_OBJECT (playbin, "Could not create an element from %s",
         gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
     GST_SOURCE_GROUP_UNLOCK (group);
     return GST_AUTOPLUG_SELECT_SKIP;
   }
 
+  element = *sinkp;
+
   /* Check if the selected sink actually supports the
    * caps and can be set to READY*/
-  if (!sink_accepts_caps (element, caps)) {
+  if (!sink_accepts_caps (playbin, element, caps)) {
+    *sinkp = NULL;
     gst_element_set_state (element, GST_STATE_NULL);
     gst_object_unref (element);
     GST_SOURCE_GROUP_UNLOCK (group);
@@ -4264,7 +4311,6 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
    * reconfigure the sink */
   GST_DEBUG_OBJECT (playbin, "remember sink");
   gst_object_ref_sink (element);
-  *sinkp = element;
   GST_SOURCE_GROUP_UNLOCK (group);
 
   /* tell decodebin to expose the pad because we are going to use this
@@ -4315,8 +4361,7 @@ autoplug_query_caps (GstElement * uridecodebin, GstPad * pad,
         /* Ignore errors here, if a custom sink fails to go
          * to READY things are wrong and will error out later
          */
-        if (GST_STATE (sink) < GST_STATE_READY)
-          gst_element_set_state (sink, GST_STATE_READY);
+        activate_sink (group->playbin, sink);
 
         sinkcaps = gst_pad_query_caps (sinkpad, filter);
         if (!gst_caps_is_any (sinkcaps)) {
@@ -4351,8 +4396,7 @@ autoplug_query_caps (GstElement * uridecodebin, GstPad * pad,
         /* Ignore errors here, if a custom sink fails to go
          * to READY things are wrong and will error out later
          */
-        if (GST_STATE (sink) < GST_STATE_READY)
-          gst_element_set_state (sink, GST_STATE_READY);
+        activate_sink (group->playbin, sink);
 
         sinkcaps = gst_pad_query_caps (sinkpad, filter);
         if (!gst_caps_is_any (sinkcaps)) {
@@ -4379,8 +4423,7 @@ autoplug_query_caps (GstElement * uridecodebin, GstPad * pad,
         /* Ignore errors here, if a custom sink fails to go
          * to READY things are wrong and will error out later
          */
-        if (GST_STATE (sink) < GST_STATE_READY)
-          gst_element_set_state (sink, GST_STATE_READY);
+        activate_sink (group->playbin, sink);
 
         sinkcaps = gst_pad_query_caps (sinkpad, filter);
         if (!gst_caps_is_any (sinkcaps)) {
@@ -4504,8 +4547,7 @@ autoplug_query_context (GstElement * uridecodebin, GstPad * pad,
         /* Ignore errors here, if a custom sink fails to go
          * to READY things are wrong and will error out later
          */
-        if (GST_STATE (sink) < GST_STATE_READY)
-          gst_element_set_state (sink, GST_STATE_READY);
+        activate_sink (group->playbin, sink);
 
         res = gst_pad_query (sinkpad, query);
         gst_object_unref (sinkpad);
@@ -4527,8 +4569,7 @@ autoplug_query_context (GstElement * uridecodebin, GstPad * pad,
         /* Ignore errors here, if a custom sink fails to go
          * to READY things are wrong and will error out later
          */
-        if (GST_STATE (sink) < GST_STATE_READY)
-          gst_element_set_state (sink, GST_STATE_READY);
+        activate_sink (group->playbin, sink);
 
         res = gst_pad_query (sinkpad, query);
         gst_object_unref (sinkpad);
@@ -4542,8 +4583,7 @@ autoplug_query_context (GstElement * uridecodebin, GstPad * pad,
         /* Ignore errors here, if a custom sink fails to go
          * to READY things are wrong and will error out later
          */
-        if (GST_STATE (sink) < GST_STATE_READY)
-          gst_element_set_state (sink, GST_STATE_READY);
+        activate_sink (group->playbin, sink);
 
         res = gst_pad_query (sinkpad, query);
         gst_object_unref (sinkpad);
