@@ -593,6 +593,8 @@ static GstStateChangeReturn gst_play_bin_change_state (GstElement * element,
 
 static void gst_play_bin_handle_message (GstBin * bin, GstMessage * message);
 static gboolean gst_play_bin_query (GstElement * element, GstQuery * query);
+static void gst_play_bin_set_context (GstElement * element,
+    GstContext * context);
 
 static GstTagList *gst_play_bin_get_video_tags (GstPlayBin * playbin,
     gint stream);
@@ -1252,6 +1254,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_bin_change_state);
   gstelement_klass->query = GST_DEBUG_FUNCPTR (gst_play_bin_query);
+  gstelement_klass->set_context = GST_DEBUG_FUNCPTR (gst_play_bin_set_context);
 
   gstbin_klass->handle_message =
       GST_DEBUG_FUNCPTR (gst_play_bin_handle_message);
@@ -3891,6 +3894,33 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
   return result;
 }
 
+static void
+gst_play_bin_set_context (GstElement * element, GstContext * context)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (element);
+
+  /* Proxy contexts to the sinks, they might not be in playsink yet */
+  GST_PLAY_BIN_LOCK (playbin);
+  if (playbin->video_sink)
+    gst_element_set_context (playbin->video_sink, context);
+  if (playbin->audio_sink)
+    gst_element_set_context (playbin->audio_sink, context);
+  if (playbin->text_sink)
+    gst_element_set_context (playbin->text_sink, context);
+
+  GST_SOURCE_GROUP_LOCK (playbin->curr_group);
+
+  if (playbin->curr_group->video_sink)
+    gst_element_set_context (playbin->curr_group->video_sink, context);
+  if (playbin->curr_group->audio_sink)
+    gst_element_set_context (playbin->curr_group->audio_sink, context);
+
+  GST_SOURCE_GROUP_UNLOCK (playbin->curr_group);
+  GST_PLAY_BIN_UNLOCK (playbin);
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
+}
+
 /* Pass sink messages to the application, e.g. NEED_CONTEXT messages */
 static GstBusSyncReply
 activate_sink_bus_handler (GstBus * bus, GstMessage * msg, GstPlayBin * playbin)
@@ -3912,6 +3942,7 @@ activate_sink (GstPlayBin * playbin, GstElement * sink)
   GstBus *bus = NULL;
   GstStateChangeReturn sret;
   gboolean ret = FALSE;
+  GstContext *context;
 
   GST_OBJECT_LOCK (sink);
   state = GST_STATE (sink);
@@ -3919,6 +3950,13 @@ activate_sink (GstPlayBin * playbin, GstElement * sink)
   if (state >= GST_STATE_READY) {
     ret = TRUE;
     goto done;
+  }
+
+  /* Proxy the playbin context to the sink, just in case */
+  context = gst_element_get_context (GST_ELEMENT_CAST (playbin));
+  if (context) {
+    gst_element_set_context (sink, context);
+    gst_context_unref (context);
   }
 
   bus = gst_bus_new ();
