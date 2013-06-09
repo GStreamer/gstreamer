@@ -53,22 +53,9 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 /* Filter signals and args */
 enum
 {
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
   PROP_0,
   PROP_PANORAMA,
   PROP_METHOD
-};
-
-enum
-{
-  METHOD_PSYCHOACOUSTIC = 0,
-  METHOD_SIMPLE,
-  NUM_METHODS
 };
 
 #define GST_TYPE_AUDIO_PANORAMA_METHOD (gst_audio_panorama_method_get_type ())
@@ -249,10 +236,7 @@ gst_audio_panorama_set_process_function (GstAudioPanorama * filter,
   }
 
   format_index = GST_AUDIO_FORMAT_INFO_IS_FLOAT (finfo) ? 1 : 0;
-
   method_index = filter->method;
-  if (method_index >= NUM_METHODS || method_index < 0)
-    method_index = METHOD_PSYCHOACOUSTIC;
 
   filter->process =
       panorama_process_functions[channel_index][format_index][method_index];

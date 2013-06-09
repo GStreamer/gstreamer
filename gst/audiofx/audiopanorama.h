@@ -39,16 +39,22 @@ typedef struct _GstAudioPanoramaClass GstAudioPanoramaClass;
 
 typedef void (*GstAudioPanoramaProcessFunc)(GstAudioPanorama*, guint8*, guint8*, guint);
 
+typedef enum
+{
+  METHOD_PSYCHOACOUSTIC = 0,
+  METHOD_SIMPLE
+} GstAudioPanoramaMethod;
+
 struct _GstAudioPanorama {
   GstBaseTransform element;
 
+  /* properties */
   gfloat panorama;
+  GstAudioPanoramaMethod method;
 
   /* < private > */
   GstAudioPanoramaProcessFunc process;
-
   GstAudioInfo info;
-  gint method;
 };
 
 struct _GstAudioPanoramaClass {
