@@ -868,9 +868,20 @@ gst_adder_sink_event (GstCollectPads * pads, GstCollectData * pad,
       adder->pending_events = g_list_append (adder->pending_events, event);
       event = NULL;
       break;
-    case GST_EVENT_SEGMENT:
+    case GST_EVENT_SEGMENT:{
+      const GstSegment *segment;
+      gst_event_parse_segment (event, &segment);
+      if (segment->rate != adder->segment.rate) {
+        GST_ERROR_OBJECT (pad->pad,
+            "Got segment event with wrong rate %lf, expected %lf",
+            segment->rate, adder->segment.rate);
+        res = FALSE;
+        gst_event_unref (event);
+        event = NULL;
+      }
       discard = TRUE;
       break;
+    }
     default:
       break;
   }
