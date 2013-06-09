@@ -82,6 +82,7 @@ GST_START_TEST (test_test_source_properties)
   assert_equals_uint64 (_DURATION (trackelement), 51);
   assert_equals_uint64 (_INPOINT (trackelement), 12);
 
+  fail_unless (ges_timeline_commit (timeline));
   /* And let's also check that it propagated correctly to GNonLin */
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 42, 51, 12,
       51, 0, TRUE);
@@ -96,15 +97,18 @@ GST_START_TEST (test_test_source_properties)
   assert_equals_uint64 (_DURATION (trackelement), 510);
   assert_equals_uint64 (_INPOINT (trackelement), 120);
 
+  fail_unless (ges_timeline_commit (timeline));
   /* And let's also check that it propagated correctly to GNonLin */
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
       120, 510, 0, TRUE);
 
   /* Test mute support */
   g_object_set (clip, "mute", TRUE, NULL);
+  fail_unless (ges_timeline_commit (timeline));
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
       120, 510, 0, FALSE);
   g_object_set (clip, "mute", FALSE, NULL);
+  fail_unless (ges_timeline_commit (timeline));
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
       120, 510, 0, TRUE);
 
@@ -322,6 +326,7 @@ GST_START_TEST (test_gap_filling_basic)
     }
   }
   fail_unless (gap != NULL);
+  fail_unless (ges_timeline_commit (timeline));
   gap_object_check (gap, 5, 10, 0);
 
   clip2 = GES_CLIP (ges_test_clip_new ());
@@ -376,6 +381,7 @@ GST_START_TEST (test_gap_filling_empty_track)
 
   gap = GST_BIN_CHILDREN (composition)->data;
   fail_unless (gap != NULL);
+  fail_unless (ges_timeline_commit (timeline));
   gap_object_check (gap, 0, 10, 0);
 
   gst_object_unref (timeline);

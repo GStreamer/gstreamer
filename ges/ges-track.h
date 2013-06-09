@@ -80,10 +80,9 @@ struct _GESTrackClass
 };
 
 const GstCaps*     ges_track_get_caps                        (GESTrack *track);
-gboolean           ges_track_is_updating                     (GESTrack *track);
 GList*             ges_track_get_elements                    (GESTrack *track);
 const GESTimeline* ges_track_get_timeline                    (GESTrack *track);
-gboolean           ges_track_enable_update                   (GESTrack *track, gboolean enabled);
+gboolean           ges_track_commit                          (GESTrack *track);
 void               ges_track_set_caps                        (GESTrack *track, const GstCaps *caps);
 void               ges_track_set_timeline                    (GESTrack *track, GESTimeline *timeline);
 gboolean           ges_track_add_element                     (GESTrack *track, GESTrackElement *object);

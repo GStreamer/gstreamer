@@ -563,7 +563,6 @@ GST_START_TEST (test_simple_triming)
   element = ges_layer_get_clips (layer)->data;
 
   deep_check (element, 0, 0, 10);
-  ges_timeline_enable_update (timeline, FALSE);
   ges_clip_edit (GES_CLIP (element), NULL, -1, GES_EDIT_MODE_TRIM,
       GES_EDGE_START, 5);
   deep_check (element, 5, 5, 5);

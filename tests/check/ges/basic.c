@@ -711,6 +711,7 @@ GST_START_TEST (test_ges_timeline_pipeline_change_state)
   ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_UNKNOWN);
   gst_object_unref (asset);
 
+  ges_timeline_commit (timeline);
   ASSERT_SET_STATE (GST_ELEMENT (pipeline), GST_STATE_PLAYING,
       GST_STATE_CHANGE_ASYNC);
   fail_unless (gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,

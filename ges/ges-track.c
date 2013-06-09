@@ -860,49 +860,30 @@ ges_track_get_timeline (GESTrack * track)
 }
 
 /**
- * ges_track_enable_update:
+ * ges_track_commit:
  * @track: a #GESTrack
- * @enabled: Whether the track should update on every change or not.
  *
- * Control whether the track is updated for every change happening within.
+ * Commits all the pending changes of the TrackElement contained in the
+ * track.
  *
- * Users will want to use this method with %FALSE before doing lots of changes,
- * and then call again with %TRUE for the changes to take effect in one go.
+ * When timing changes happen in a timeline, the changes are not
+ * directly done inside GNL. This method needs to be called so any changes
+ * on a clip contained in the timeline actually happen at the media
+ * processing level.
  *
- * Returns: %TRUE if the update status could be changed, else %FALSE.
+ * Returns: %TRUE if something as been commited %FALSE if nothing needed
+ * to be commited
  */
 gboolean
-ges_track_enable_update (GESTrack * track, gboolean enabled)
+ges_track_commit (GESTrack * track)
 {
-  gboolean update;
+  gboolean ret;
 
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
 
-  g_object_set (track->priv->composition, "update", enabled, NULL);
-  g_object_get (track->priv->composition, "update", &update, NULL);
+  g_signal_emit_by_name (track->priv->composition, "commit", TRUE, &ret);
 
-  track->priv->updating = update;
-
-  if (update == TRUE)
-    resort_and_fill_gaps (track);
-
-  return update == enabled;
-}
-
-/**
- * ges_track_is_updating:
- * @track: a #GESTrack
- *
- * Get whether the track is updated for every change happening within or not.
- *
- * Returns: %TRUE if @track is updating on every changes, else %FALSE.
- */
-gboolean
-ges_track_is_updating (GESTrack * track)
-{
-  g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
-
-  return track->priv->updating;
+  return ret;
 }
 
 

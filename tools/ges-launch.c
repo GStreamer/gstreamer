@@ -281,6 +281,7 @@ create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv,
     if (!(timeline = create_timeline (argc, argv, audio, video)))
       goto failure;
   }
+  ges_timeline_commit (timeline);
 
   /* save project if path is given. we do this now in case GES crashes or
    * hangs during playback. */

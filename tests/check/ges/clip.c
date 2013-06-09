@@ -70,6 +70,7 @@ GST_START_TEST (test_object_properties)
   assert_equals_uint64 (_INPOINT (clip), 12);
 
   ges_layer_add_clip (layer, GES_CLIP (clip));
+  ges_timeline_commit (timeline);
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
   trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
@@ -97,6 +98,7 @@ GST_START_TEST (test_object_properties)
   assert_equals_uint64 (_INPOINT (trackelement), 120);
 
   /* And let's also check that it propagated correctly to GNonLin */
+  ges_timeline_commit (timeline);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
       120, 510, 0, TRUE);
 
@@ -104,6 +106,7 @@ GST_START_TEST (test_object_properties)
   /* This time, we move the trackelement to see if the changes move
    * along to the parent and the gnonlin clip */
   g_object_set (trackelement, "start", (guint64) 400, NULL);
+  ges_timeline_commit (timeline);
   assert_equals_uint64 (_START (clip), 400);
   assert_equals_uint64 (_START (trackelement), 400);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 400, 510,
@@ -147,6 +150,7 @@ GST_START_TEST (test_split_object)
   assert_equals_uint64 (_INPOINT (clip), 12);
 
   ges_layer_add_clip (layer, GES_CLIP (clip));
+  ges_timeline_commit (timeline);
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 2);
   trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);

@@ -102,21 +102,6 @@ static guint ges_track_element_signals[LAST_SIGNAL] = { 0 };
 static GstElement *ges_track_element_create_gnl_object_func (GESTrackElement *
     object);
 
-static void gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackElement * track_element);
-
-static void gnlobject_media_start_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackElement * track_element);
-
-static void gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackElement * track_element);
-
-static void gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackElement * track_element);
-
-static void gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg
-    G_GNUC_UNUSED, GESTrackElement * track_element);
-
 static void connect_properties_signals (GESTrackElement * object);
 static void connect_signal (gpointer key, gpointer value, gpointer user_data);
 static void gst_element_prop_changed_cb (GstElement * element, GParamSpec * arg
@@ -322,7 +307,7 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
 
       return FALSE;
 
-    g_object_set (object->priv->gnlobject, "media-start", inpoint, NULL);
+    g_object_set (object->priv->gnlobject, "inpoint", inpoint, NULL);
   } else
     object->priv->pending_inpoint = inpoint;
 
@@ -343,8 +328,7 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
     if (G_UNLIKELY (duration == _DURATION (object)))
       return FALSE;
 
-    g_object_set (priv->gnlobject, "duration", duration,
-        "media-duration", duration, NULL);
+    g_object_set (priv->gnlobject, "duration", duration, NULL);
   } else
     priv->pending_duration = duration;
 
@@ -384,15 +368,22 @@ ges_track_element_set_active (GESTrackElement * object, gboolean active)
 {
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
 
-  GST_DEBUG ("object:%p, active:%d", object, active);
+  GST_DEBUG_OBJECT (object, "object:%p, active:%d", object, active);
 
   if (object->priv->gnlobject != NULL) {
     if (G_UNLIKELY (active == object->active))
       return FALSE;
 
     g_object_set (object->priv->gnlobject, "active", active, NULL);
+
+    if (active != object->active) {
+      object->active = active;
+      if (GES_TRACK_ELEMENT_GET_CLASS (object)->active_changed)
+        GES_TRACK_ELEMENT_GET_CLASS (object)->active_changed (object, active);
+    }
   } else
     object->priv->pending_active = active;
+
   return TRUE;
 }
 
@@ -413,25 +404,6 @@ ges_track_element_get_track_type (GESTrackElement * object)
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), GES_TRACK_TYPE_UNKNOWN);
 
   return object->priv->track_type;
-}
-
-/* Callbacks from the GNonLin object */
-static void
-gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
-    GESTrackElement * track_element)
-{
-  guint64 start;
-
-  g_object_get (gnlobject, "start", &start, NULL);
-
-  GST_DEBUG_OBJECT (gnlobject, "start : %" GST_TIME_FORMAT " current : %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (start),
-      GST_TIME_ARGS (_START (track_element)));
-
-  if (start != _START (track_element)) {
-    ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (track_element),
-        start);
-  }
 }
 
 static void
@@ -466,82 +438,6 @@ connect_properties_signals (GESTrackElement * object)
       (GHFunc) connect_signal, object);
 
 }
-
-/* Callbacks from the GNonLin object */
-static void
-gnlobject_media_start_cb (GstElement * gnlobject,
-    GParamSpec * arg G_GNUC_UNUSED, GESTrackElement * track_element)
-{
-  guint64 inpoint;
-
-  g_object_get (gnlobject, "media-start", &inpoint, NULL);
-
-  GST_DEBUG_OBJECT (gnlobject, "in-point : %" GST_TIME_FORMAT " current : %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (inpoint),
-      GST_TIME_ARGS (_INPOINT (track_element)));
-
-  if (inpoint != _INPOINT (track_element)) {
-    ges_timeline_element_set_inpoint (GES_TIMELINE_ELEMENT (track_element),
-        inpoint);
-  }
-}
-
-static void
-gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
-    GESTrackElement * track_element)
-{
-  guint32 priority;
-
-  g_object_get (gnlobject, "priority", &priority, NULL);
-
-  GST_DEBUG ("gnlobject priority : %d current : %d", priority,
-      _PRIORITY (track_element));
-
-  if (priority != _PRIORITY (track_element)) {
-    ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (track_element),
-        priority);
-  }
-}
-
-static void
-gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
-    GESTrackElement * track_element)
-{
-  guint64 duration;
-
-  g_object_get (gnlobject, "duration", &duration, NULL);
-
-  GST_DEBUG_OBJECT (gnlobject, "duration : %" GST_TIME_FORMAT " current : %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (duration),
-      GST_TIME_ARGS (_DURATION (track_element)));
-
-  if (duration != _DURATION (track_element)) {
-    ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (track_element),
-        duration);
-  }
-}
-
-static void
-gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
-    GESTrackElement * track_element)
-{
-  gboolean active;
-  GESTrackElementClass *klass;
-
-  klass = GES_TRACK_ELEMENT_GET_CLASS (track_element);
-
-  g_object_get (gnlobject, "active", &active, NULL);
-
-  GST_DEBUG ("gnlobject active : %d current : %d", active,
-      track_element->active);
-
-  if (active != track_element->active) {
-    track_element->active = active;
-    if (klass->active_changed)
-      klass->active_changed (track_element, active);
-  }
-}
-
 
 /* default 'create_gnl_object' virtual method implementation */
 static GstElement *
@@ -669,27 +565,21 @@ ensure_gnl_object (GESTrackElement * object)
       res = TRUE;
 
     if (res) {
-      /* Connect to property notifications */
-      /* FIXME : remember the signalids so we can remove them later on !!! */
-      g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::start",
-          G_CALLBACK (gnlobject_start_cb), object);
-      g_signal_connect (G_OBJECT (object->priv->gnlobject),
-          "notify::media-start", G_CALLBACK (gnlobject_media_start_cb), object);
-      g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::duration",
-          G_CALLBACK (gnlobject_duration_cb), object);
-      g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::priority",
-          G_CALLBACK (gnlobject_priority_cb), object);
-      g_signal_connect (G_OBJECT (object->priv->gnlobject), "notify::active",
-          G_CALLBACK (gnlobject_active_cb), object);
-
       /* Set some properties on the GnlObject */
       g_object_set (object->priv->gnlobject,
           "duration", object->priv->pending_duration,
-          "media-duration", object->priv->pending_duration,
           "start", object->priv->pending_start,
-          "media-start", object->priv->pending_inpoint,
+          "inpoint", object->priv->pending_inpoint,
           "priority", object->priv->pending_priority,
           "active", object->priv->pending_active, NULL);
+
+      /* Pendings values are not pending anymore */
+      GES_TIMELINE_ELEMENT_START (object) = object->priv->pending_start;
+      GES_TIMELINE_ELEMENT_INPOINT (object) = object->priv->pending_inpoint;
+      GES_TIMELINE_ELEMENT_DURATION (object) = object->priv->pending_duration;
+      GES_TIMELINE_ELEMENT_PRIORITY (object) = object->priv->pending_priority;
+      object->active = object->priv->pending_active;
+
 
       if (object->priv->track != NULL)
         g_object_set (object->priv->gnlobject,

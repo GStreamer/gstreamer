@@ -35,6 +35,9 @@
  *
  * To save/load a timeline, you can use the ges_timeline_load_from_uri() and
  * ges_timeline_save_to_uri() methods to use the default format. If you wish
+ *
+ * Note that any change you make in the timeline will not actually be taken
+ * into account until you call the #ges_timeline_commit method.
  */
 
 #include "ges-internal.h"
@@ -178,8 +181,6 @@ struct _GESTimelinePrivate
    * and %FALSE otherwize */
   gboolean needs_transitions_update;
 
-  gboolean updates_enabled;
-
   /* While we are creating and adding the TrackElements for a clip, we need to
    * ignore the child-added signal */
   GESClip *ignore_track_element_added;
@@ -284,9 +285,6 @@ ges_timeline_get_property (GObject * object, guint property_id,
     case PROP_SNAPPING_DISTANCE:
       g_value_set_uint64 (value, timeline->priv->snapping_distance);
       break;
-    case PROP_UPDATE:
-      g_value_set_boolean (value, ges_timeline_is_updating (timeline));
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -304,9 +302,6 @@ ges_timeline_set_property (GObject * object, guint property_id,
       break;
     case PROP_SNAPPING_DISTANCE:
       timeline->priv->snapping_distance = g_value_get_uint64 (value);
-      break;
-    case PROP_UPDATE:
-      ges_timeline_enable_update (timeline, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -418,27 +413,6 @@ ges_timeline_class_init (GESTimelineClass * klass)
       G_MAXUINT64, 0, G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_SNAPPING_DISTANCE,
       properties[PROP_SNAPPING_DISTANCE]);
-
-  /**
-   * GESTimeline:update:
-   *
-   * If %TRUE, then all modifications to objects within the timeline will
-   * cause a internal pipeline update (if required).
-   * If %FALSE, then only the timeline start/duration/stop properties
-   * will be updated, and the internal pipeline will only be updated when the
-   * property is set back to %TRUE.
-   *
-   * It is recommended to temporarily set this property to %FALSE before doing
-   * more than one modification in the timeline (like adding or moving
-   * several objects at once) in order to speed up the process, and then setting
-   * back the property to %TRUE when done.
-   */
-
-  properties[PROP_UPDATE] = g_param_spec_boolean ("update", "Update",
-      "Update the internal pipeline on every modification", TRUE,
-      G_PARAM_READWRITE);
-  g_object_class_install_property (object_class, PROP_UPDATE,
-      properties[PROP_UPDATE]);
 
   /**
    * GESTimeline::track-added:
@@ -571,8 +545,6 @@ ges_timeline_init (GESTimeline * self)
   priv->auto_transitions =
       g_hash_table_new_full (g_str_hash, g_str_equal, NULL, gst_object_unref);
   priv->needs_transitions_update = TRUE;
-
-  priv->updates_enabled = TRUE;
 
   g_signal_connect_after (self, "select-tracks-for-object",
       G_CALLBACK (select_tracks_for_object_default), NULL);
@@ -891,7 +863,7 @@ create_transitions (GESTimeline * timeline, GESTrackElement * track_element)
 
   GESTimelinePrivate *priv = timeline->priv;
 
-  if (!priv->needs_transitions_update || !priv->updates_enabled)
+  if (!priv->needs_transitions_update)
     return;
 
   GST_DEBUG_OBJECT (timeline, "Creating transitions around %p", track_element);
@@ -2513,8 +2485,6 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   /* Inform the track that it's currently being used by ourself */
   ges_track_set_timeline (track, timeline);
 
-  ges_track_enable_update (track, timeline->priv->updates_enabled);
-
   GST_DEBUG ("Done adding track, emitting 'track-added' signal");
 
   /* emit 'track-added' */
@@ -2700,64 +2670,40 @@ ges_timeline_get_layers (GESTimeline * timeline)
 }
 
 /**
- * ges_timeline_is_updating:
+ * ges_timeline_commit:
  * @timeline: a #GESTimeline
  *
- * Get whether the timeline is updated for every change happening within or not.
+ * Commits all the pending changes of the clips contained in the
+ * @timeline.
  *
- * Returns: %TRUE if @timeline is updating on every changes, else %FALSE.
+ * When timing changes happen in a timeline, the changes are not
+ * directly done inside GNL. This method needs to be called so any changes
+ * on a clip contained in the timeline actually happen at the media
+ * processing level.
+ *
+ * Returns: %TRUE if something as been commited %FALSE if nothing needed
+ * to be commited
  */
 gboolean
-ges_timeline_is_updating (GESTimeline * timeline)
-{
-  GList *tmp;
-
-  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
-
-  for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
-    if (!ges_track_is_updating (GES_TRACK (tmp->data)))
-      return FALSE;
-  }
-
-  return TRUE;
-}
-
-/**
- * ges_timeline_enable_update:
- * @timeline: a #GESTimeline
- * @enabled: Whether the timeline should update on every change or not.
- *
- * Control whether the timeline is updated for every change happening within.
- *
- * Users will want to use this method with %FALSE before doing lots of changes,
- * and then call again with %TRUE for the changes to take effect in one go.
- *
- * Returns: %TRUE if the update status could be changed, else %FALSE.
- */
-gboolean
-ges_timeline_enable_update (GESTimeline * timeline, gboolean enabled)
+ges_timeline_commit (GESTimeline * timeline)
 {
   GList *tmp;
   gboolean res = TRUE;
 
-  GST_DEBUG_OBJECT (timeline, "%s updates", enabled ? "Enabling" : "Disabling");
+  GST_DEBUG_OBJECT (timeline, "commiting changes");
 
   for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
-    if (!ges_track_enable_update (GES_TRACK (tmp->data), enabled))
+    if (!ges_track_commit (GES_TRACK (tmp->data)))
       res = FALSE;
   }
 
   /* Make sure we reset the context */
   timeline->priv->movecontext.needs_move_ctx = TRUE;
-  timeline->priv->updates_enabled = enabled;
 
   for (tmp = timeline->layers; tmp; tmp = tmp->next) {
     _create_transitions_on_layer (timeline, GES_LAYER (tmp->data),
         NULL, NULL, _find_transition_from_auto_transitions);
   }
-
-  if (res)
-    g_object_notify_by_pspec (G_OBJECT (timeline), properties[PROP_UPDATE]);
 
   return res;
 }

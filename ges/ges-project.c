@@ -98,9 +98,9 @@ static GParamSpec *_properties[LAST_SIGNAL] = { 0 };
 static gboolean
 _emit_loaded_in_idle (EmitLoadedInIdle * data)
 {
+  ges_timeline_commit (data->timeline);
   g_signal_emit (data->project, _signals[LOADED_SIGNAL], 0, data->timeline);
 
-  ges_timeline_enable_update (data->timeline, TRUE);
   gst_object_unref (data->project);
   gst_object_unref (data->timeline);
   g_slice_free (EmitLoadedInIdle, data);
@@ -201,7 +201,6 @@ _load_project (GESProject * project, GESTimeline * timeline, GError ** error)
   }
 
   ges_project_add_formatter (GES_PROJECT (project), formatter);
-  ges_timeline_enable_update (timeline, FALSE);
   ges_formatter_load_from_uri (formatter, timeline, priv->uri, &lerr);
   if (lerr) {
     GST_WARNING_OBJECT (project, "Could not load the timeline,"
@@ -513,10 +512,10 @@ gboolean
 ges_project_set_loaded (GESProject * project, GESFormatter * formatter)
 {
   GST_INFO_OBJECT (project, "Emit project loaded");
+  ges_timeline_commit (formatter->timeline);
   g_signal_emit (project, _signals[LOADED_SIGNAL], 0, formatter->timeline);
 
   /* We are now done with that formatter */
-  ges_timeline_enable_update (formatter->timeline, TRUE);
   ges_project_remove_formatter (project, formatter);
   return TRUE;
 }

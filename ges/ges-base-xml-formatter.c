@@ -382,7 +382,6 @@ _loading_done (GESFormatter * self)
   priv->parsecontext = NULL;
 
   g_hash_table_foreach (priv->layers, (GHFunc) _set_auto_transition, NULL);
-  ges_timeline_enable_update (self->timeline, TRUE);
   ges_project_set_loaded (self->project, self);
 }
 

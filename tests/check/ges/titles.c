@@ -66,6 +66,7 @@ GST_START_TEST (test_title_source_properties)
   assert_equals_uint64 (_INPOINT (clip), 12);
 
   ges_layer_add_clip (layer, GES_CLIP (clip));
+  ges_timeline_commit (timeline);
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
   trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
@@ -85,6 +86,7 @@ GST_START_TEST (test_title_source_properties)
   /* Change more properties, see if they propagate */
   g_object_set (clip, "start", (guint64) 420, "duration", (guint64) 510,
       "in-point", (guint64) 120, NULL);
+  ges_timeline_commit (timeline);
   assert_equals_uint64 (_START (clip), 420);
   assert_equals_uint64 (_DURATION (clip), 510);
   assert_equals_uint64 (_INPOINT (clip), 120);

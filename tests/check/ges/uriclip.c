@@ -146,6 +146,7 @@ GST_START_TEST (test_filesource_properties)
   fail_unless (GES_IS_ASSET (asset));
   clip = ges_layer_add_asset (layer, GES_ASSET (asset),
       42, 12, 51, GES_TRACK_TYPE_AUDIO);
+  ges_timeline_commit (timeline);
   assert_is_type (clip, GES_TYPE_URI_CLIP);
   assert_equals_uint64 (_START (clip), 42);
   assert_equals_uint64 (_DURATION (clip), 51);
@@ -170,6 +171,7 @@ GST_START_TEST (test_filesource_properties)
   /* Change more properties, see if they propagate */
   g_object_set (clip, "start", (guint64) 420, "duration", (guint64) 510,
       "in-point", (guint64) 120, NULL);
+  ges_timeline_commit (timeline);
   assert_equals_uint64 (_START (clip), 420);
   assert_equals_uint64 (_DURATION (clip), 510);
   assert_equals_uint64 (_INPOINT (clip), 120);
@@ -183,9 +185,11 @@ GST_START_TEST (test_filesource_properties)
 
   /* Test mute support */
   g_object_set (clip, "mute", TRUE, NULL);
+  ges_timeline_commit (timeline);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
       120, 510, 0, FALSE);
   g_object_set (clip, "mute", FALSE, NULL);
+  ges_timeline_commit (timeline);
   gnl_object_check (ges_track_element_get_gnlobject (trackelement), 420, 510,
       120, 510, 0, TRUE);
 

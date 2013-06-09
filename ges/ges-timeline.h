@@ -116,8 +116,7 @@ gboolean ges_timeline_remove_track (GESTimeline *timeline, GESTrack *track);
 GESTrack * ges_timeline_get_track_for_pad (GESTimeline *timeline, GstPad *pad);
 GList *ges_timeline_get_tracks (GESTimeline *timeline);
 
-gboolean ges_timeline_enable_update(GESTimeline * timeline, gboolean enabled);
-gboolean ges_timeline_is_updating (GESTimeline * timeline);
+gboolean ges_timeline_commit (GESTimeline * timeline);
 
 GstClockTime ges_timeline_get_duration (GESTimeline *timeline);
 
