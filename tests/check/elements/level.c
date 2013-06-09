@@ -37,19 +37,27 @@ static GstPad *mysrcpad, *mysinkpad;
 
 #define LEVEL_CAPS_TEMPLATE_STRING \
   "audio/x-raw, " \
-    "format = (string) { "GST_AUDIO_NE(S16)" }, " \
+    "format = (string) { "GST_AUDIO_NE(S16)", "GST_AUDIO_NE(F32)" }, " \
     "layout = (string) interleaved, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ]"
 
 /* we use rate = 1000 here for easy buffer size calculations */
-#define LEVEL_CAPS_STRING \
+#define LEVEL_S16_CAPS_STRING \
   "audio/x-raw, " \
     "format = (string) "GST_AUDIO_NE(S16)", " \
     "layout = (string) interleaved, " \
     "rate = (int) 1000, " \
     "channels = (int) 2, "  \
-    "channel-mask = (bitmask) 3"  \
+    "channel-mask = (bitmask) 3"
+
+#define LEVEL_F32_CAPS_STRING \
+  "audio/x-raw, " \
+    "format = (string) "GST_AUDIO_NE(F32)", " \
+    "layout = (string) interleaved, " \
+    "rate = (int) 1000, " \
+    "channels = (int) 2, "  \
+    "channel-mask = (bitmask) 3"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -64,7 +72,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 /* takes over reference for outcaps */
 static GstElement *
-setup_level (void)
+setup_level (const gchar * caps_str)
 {
   GstElement *level;
   GstCaps *caps;
@@ -76,7 +84,7 @@ setup_level (void)
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
-  caps = gst_caps_from_string (LEVEL_CAPS_STRING);
+  caps = gst_caps_from_string (caps_str);
   gst_check_setup_events (mysrcpad, level, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
@@ -97,7 +105,7 @@ cleanup_level (GstElement * level)
 
 /* create a 0.1 sec buffer stereo buffer */
 static GstBuffer *
-create_buffer (gint16 val_l, gint16 val_r)
+create_s16_buffer (gint16 val_l, gint16 val_r)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (2 * 100 * sizeof (gint16));
   GstMapInfo map;
@@ -106,6 +114,25 @@ create_buffer (gint16 val_l, gint16 val_r)
 
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
   data = (gint16 *) map.data;
+  for (j = 0; j < 100; ++j) {
+    *(data++) = val_l;
+    *(data++) = val_r;
+  }
+  gst_buffer_unmap (buf, &map);
+  GST_BUFFER_TIMESTAMP (buf) = G_GUINT64_CONSTANT (0);
+  return buf;
+}
+
+static GstBuffer *
+create_f32_buffer (gfloat val_l, gfloat val_r)
+{
+  GstBuffer *buf = gst_buffer_new_and_alloc (2 * 100 * sizeof (gfloat));
+  GstMapInfo map;
+  gint j;
+  gfloat *data;
+
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = (gfloat *) map.data;
   for (j = 0; j < 100; ++j) {
     *(data++) = val_l;
     *(data++) = val_r;
@@ -124,7 +151,7 @@ GST_START_TEST (test_ref_counts)
   GstBus *bus;
   GstMessage *message;
 
-  level = setup_level ();
+  level = setup_level (LEVEL_S16_CAPS_STRING);
   g_object_set (level, "message", TRUE, "interval", GST_SECOND / 10, NULL);
   fail_unless (gst_element_set_state (level,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
@@ -136,7 +163,7 @@ GST_START_TEST (test_ref_counts)
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
 
   /* create a fake 0.1 sec buffer with a half-amplitude block signal */
-  inbuffer = create_buffer (16536, 16536);
+  inbuffer = create_s16_buffer (16536, 16536);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* pushing gives away my reference ... */
@@ -184,7 +211,7 @@ GST_START_TEST (test_message_is_valid)
   const GstStructure *structure;
   GstClockTime endtime, ts, duration;
 
-  level = setup_level ();
+  level = setup_level (LEVEL_S16_CAPS_STRING);
   g_object_set (level, "message", TRUE, "interval", GST_SECOND / 10, NULL);
   gst_element_set_state (level, GST_STATE_PLAYING);
   /* create a bus to get the level message on */
@@ -192,7 +219,7 @@ GST_START_TEST (test_message_is_valid)
   gst_element_set_bus (level, bus);
 
   /* create a fake 0.1 sec buffer with a half-amplitude block signal and push */
-  inbuffer = create_buffer (16536, 16536);
+  inbuffer = create_s16_buffer (16536, 16536);
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
 
   message = gst_bus_poll (bus, GST_MESSAGE_ELEMENT, -1);
@@ -228,7 +255,7 @@ GST_START_TEST (test_int16)
   gdouble dB;
   const gchar *fields[3] = { "rms", "peak", "decay" };
 
-  level = setup_level ();
+  level = setup_level (LEVEL_S16_CAPS_STRING);
   g_object_set (level, "message", TRUE, "interval", GST_SECOND / 10, NULL);
   gst_element_set_state (level, GST_STATE_PLAYING);
   /* create a bus to get the level message on */
@@ -236,7 +263,7 @@ GST_START_TEST (test_int16)
   gst_element_set_bus (level, bus);
 
   /* create a fake 0.1 sec buffer with a half-amplitude block signal */
-  inbuffer = create_buffer (16536, 16536);
+  inbuffer = create_s16_buffer (16536, 16536);
 
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   fail_unless_equals_int (g_list_length (buffers), 1);
@@ -256,7 +283,7 @@ GST_START_TEST (test_int16)
       value = g_value_array_get_nth (arr, i);
       dB = g_value_get_double (value);
       GST_DEBUG ("%s is %lf", fields[j], dB);
-      fail_if (dB < -6.0);
+      fail_if (dB < -6.1);
       fail_if (dB > -5.9);
     }
   }
@@ -286,7 +313,7 @@ GST_START_TEST (test_int16_panned)
   gdouble dB;
   const gchar *fields[3] = { "rms", "peak", "decay" };
 
-  level = setup_level ();
+  level = setup_level (LEVEL_S16_CAPS_STRING);
   g_object_set (level, "message", TRUE, "interval", GST_SECOND / 10, NULL);
   gst_element_set_state (level, GST_STATE_PLAYING);
   /* create a bus to get the level message on */
@@ -294,7 +321,7 @@ GST_START_TEST (test_int16_panned)
   gst_element_set_bus (level, bus);
 
   /* create a fake 0.1 sec buffer with a half-amplitude block signal */
-  inbuffer = create_buffer (0, 16536);
+  inbuffer = create_s16_buffer (0, 16536);
 
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   fail_unless_equals_int (g_list_length (buffers), 1);
@@ -328,8 +355,66 @@ GST_START_TEST (test_int16_panned)
     value = g_value_array_get_nth (arr, 1);
     dB = g_value_get_double (value);
     GST_DEBUG ("%s[1] is %lf", fields[j], dB);
-    fail_if (dB < -6.0);
+    fail_if (dB < -6.1);
     fail_if (dB > -5.9);
+  }
+
+  /* clean up */
+  /* flush current messages,and future state change messages */
+  gst_bus_set_flushing (bus, TRUE);
+  gst_message_unref (message);
+  gst_element_set_bus (level, NULL);
+  gst_object_unref (bus);
+  gst_buffer_unref (outbuffer);
+  gst_element_set_state (level, GST_STATE_NULL);
+  cleanup_level (level);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_float)
+{
+  GstElement *level;
+  GstBuffer *inbuffer, *outbuffer;
+  GstBus *bus;
+  GstMessage *message;
+  const GstStructure *structure;
+  gint i, j;
+  const GValue *list, *value;
+  gdouble dB;
+  const gchar *fields[3] = { "rms", "peak", "decay" };
+
+  level = setup_level (LEVEL_F32_CAPS_STRING);
+  g_object_set (level, "message", TRUE, "interval", GST_SECOND / 10, NULL);
+  gst_element_set_state (level, GST_STATE_PLAYING);
+  /* create a bus to get the level message on */
+  bus = gst_bus_new ();
+  gst_element_set_bus (level, bus);
+
+  /* create a fake 0.1 sec buffer with a half-amplitude block signal */
+  inbuffer = create_f32_buffer (0.5, 0.5);
+
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
+
+  message = gst_bus_poll (bus, GST_MESSAGE_ELEMENT, -1);
+  structure = gst_message_get_structure (message);
+
+  /* block wave of half amplitude has -5.94 dB for rms, peak and decay */
+  for (i = 0; i < 2; ++i) {
+    for (j = 0; j < 3; ++j) {
+      GValueArray *arr;
+
+      list = gst_structure_get_value (structure, fields[j]);
+      arr = g_value_get_boxed (list);
+      value = g_value_array_get_nth (arr, i);
+      dB = g_value_get_double (value);
+      GST_DEBUG ("%s is %lf", fields[j], dB);
+      fail_if (dB < -6.1);
+      fail_if (dB > -5.9);
+    }
   }
 
   /* clean up */
@@ -357,7 +442,7 @@ GST_START_TEST (test_message_on_eos)
   const GValue *list, *value;
   gdouble dB;
 
-  level = setup_level ();
+  level = setup_level (LEVEL_S16_CAPS_STRING);
   g_object_set (level, "message", TRUE, "interval", GST_SECOND / 5, NULL);
   gst_element_set_state (level, GST_STATE_PLAYING);
   /* create a bus to get the level message on */
@@ -365,7 +450,7 @@ GST_START_TEST (test_message_on_eos)
   gst_element_set_bus (level, bus);
 
   /* create a fake 0.1 sec buffer with a half-amplitude block signal */
-  inbuffer = create_buffer (16536, 16536);
+  inbuffer = create_s16_buffer (16536, 16536);
 
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   fail_unless_equals_int (g_list_length (buffers), 1);
@@ -393,7 +478,7 @@ GST_START_TEST (test_message_on_eos)
       value = g_value_array_get_nth (arr, i);
       dB = g_value_get_double (value);
       GST_DEBUG ("%s is %lf", fields[j], dB);
-      fail_if (dB < -6.0);
+      fail_if (dB < -6.1);
       fail_if (dB > -5.9);
     }
   }
@@ -418,7 +503,7 @@ GST_START_TEST (test_message_count)
   GstBus *bus;
   GstMessage *message;
 
-  level = setup_level ();
+  level = setup_level (LEVEL_S16_CAPS_STRING);
   g_object_set (level, "message", TRUE, "interval", GST_SECOND / 20, NULL);
   gst_element_set_state (level, GST_STATE_PLAYING);
   /* create a bus to get the level message on */
@@ -426,7 +511,7 @@ GST_START_TEST (test_message_count)
   gst_element_set_bus (level, bus);
 
   /* create a fake 0.1 sec buffer with a half-amplitude block signal */
-  inbuffer = create_buffer (16536, 16536);
+  inbuffer = create_s16_buffer (16536, 16536);
 
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   fail_unless_equals_int (g_list_length (buffers), 1);
@@ -459,7 +544,7 @@ GST_START_TEST (test_message_timestamps)
   const GstStructure *structure;
   GstClockTime ts1, dur1, ts2;
 
-  level = setup_level ();
+  level = setup_level (LEVEL_S16_CAPS_STRING);
   g_object_set (level, "message", TRUE, "interval", GST_SECOND / 20, NULL);
   gst_element_set_state (level, GST_STATE_PLAYING);
   /* create a bus to get the level message on */
@@ -467,7 +552,7 @@ GST_START_TEST (test_message_timestamps)
   gst_element_set_bus (level, bus);
 
   /* create a fake 0.1 sec buffer with a half-amplitude block signal */
-  inbuffer = create_buffer (16536, 16536);
+  inbuffer = create_s16_buffer (16536, 16536);
 
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   fail_unless_equals_int (g_list_length (buffers), 1);
@@ -508,6 +593,7 @@ level_suite (void)
   tcase_add_test (tc_chain, test_message_is_valid);
   tcase_add_test (tc_chain, test_int16);
   tcase_add_test (tc_chain, test_int16_panned);
+  tcase_add_test (tc_chain, test_float);
   tcase_add_test (tc_chain, test_message_on_eos);
   tcase_add_test (tc_chain, test_message_count);
   tcase_add_test (tc_chain, test_message_timestamps);
