@@ -37,7 +37,7 @@ G_BEGIN_DECLS
 typedef struct _GstAudioPanorama      GstAudioPanorama;
 typedef struct _GstAudioPanoramaClass GstAudioPanoramaClass;
 
-typedef void (*GstAudioPanoramaProcessFunc)(GstAudioPanorama*, guint8*, guint8*, guint);
+typedef void (*GstAudioPanoramaProcessFunc)(gfloat, guint8*, guint8*, guint);
 
 typedef enum
 {
