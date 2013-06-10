@@ -505,34 +505,32 @@ gst_audio_panorama_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstAudioPanorama *filter = GST_AUDIO_PANORAMA (base);
-  GstClockTime timestamp, stream_time;
+  GstClockTime ts;
   GstMapInfo inmap, outmap;
 
-  timestamp = GST_BUFFER_TIMESTAMP (inbuf);
-  stream_time =
-      gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, timestamp);
+  ts = gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (inbuf));
 
-  GST_DEBUG_OBJECT (filter, "sync to %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (timestamp));
+  if (GST_CLOCK_TIME_IS_VALID (ts)) {
+    GST_DEBUG_OBJECT (filter, "sync to %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
+    gst_object_sync_values (GST_OBJECT (filter), ts);
+  }
 
-  if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (GST_OBJECT (filter), stream_time);
-
-  gst_buffer_map (inbuf, &inmap, GST_MAP_READ);
   gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP))) {
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
     orc_memset (outmap.data, 0, outmap.size);
   } else {
-    /* output always stereo, input mono or stereo,
+    /* output is always stereo, input is mono or stereo,
      * and info describes input format */
     guint num_samples = outmap.size / (2 * GST_AUDIO_INFO_BPS (&filter->info));
 
+    gst_buffer_map (inbuf, &inmap, GST_MAP_READ);
     filter->process (filter->panorama, inmap.data, outmap.data, num_samples);
+    gst_buffer_unmap (inbuf, &inmap);
   }
 
-  gst_buffer_unmap (inbuf, &inmap);
   gst_buffer_unmap (outbuf, &outmap);
 
   return GST_FLOW_OK;
