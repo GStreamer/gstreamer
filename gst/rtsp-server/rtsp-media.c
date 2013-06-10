@@ -174,7 +174,7 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           "The GstBin to use for streaming the media", GST_TYPE_ELEMENT,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
-  g_object_class_install_property (gobject_class, PROP_EOS_SHUTDOWN,
+  g_object_class_install_property (gobject_class, PROP_TIME_PROVIDER,
       g_param_spec_boolean ("time-provider", "Time Provider",
           "Use a NetTimeProvider for clients",
           DEFAULT_TIME_PROVIDER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
