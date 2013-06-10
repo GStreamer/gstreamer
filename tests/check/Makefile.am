@@ -329,7 +329,7 @@ elements_libvisual_CFLAGS = $(CFLAGS) $(AM_CFLAGS)
 elements_playbin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_playbin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
-elements_playbin_complex_LDADD = $(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la $(GST_BASE_LIBS) $(LDADD)
+elements_playbin_complex_LDADD = $(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la $(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la $(GST_BASE_LIBS) $(LDADD)
 elements_playbin_complex_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_decodebin_LDADD = $(GST_BASE_LIBS) $(LDADD)

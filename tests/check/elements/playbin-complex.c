@@ -27,6 +27,7 @@
 #include <gst/base/gstpushsrc.h>
 #include <gst/base/gstbasesink.h>
 #include <gst/audio/streamvolume.h>
+#include <gst/video/gstvideodecoder.h>
 
 #ifndef GST_DISABLE_REGISTRY
 
@@ -37,6 +38,10 @@ static GType gst_codec_demuxer_get_type (void);
 static GType gst_codec_sink_get_type (void);
 static GType gst_audio_codec_sink_get_type (void);
 static GType gst_video_codec_sink_get_type (void);
+static GType gst_video_decoder1_get_type (void);
+static GType gst_video_decoder2_get_type (void);
+static GType gst_video_sink1_get_type (void);
+static GType gst_video_sink2_get_type (void);
 
 typedef struct _GstCapsSrc GstCapsSrc;
 typedef GstPushSrcClass GstCapsSrcClass;
@@ -590,9 +595,201 @@ gst_codec_demuxer_init (GstCodecDemuxer * demux)
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 }
 
+typedef struct _GstVideoDecoder1 GstVideoDecoder1;
+typedef GstVideoDecoderClass GstVideoDecoder1Class;
+
+typedef struct _GstVideoDecoder2 GstVideoDecoder2;
+typedef GstVideoDecoderClass GstVideoDecoder2Class;
+
+typedef struct _GstVideoSink1 GstVideoSink1;
+typedef GstBaseSinkClass GstVideoSink1Class;
+
+typedef struct _GstVideoSink2 GstVideoSink2;
+typedef GstBaseSinkClass GstVideoSink2Class;
+
+struct _GstVideoDecoder1
+{
+  GstVideoDecoder parent;
+};
+
+struct _GstVideoDecoder2
+{
+  GstVideoDecoder parent;
+};
+
+struct _GstVideoSink1
+{
+  GstBaseSink parent;
+};
+
+struct _GstVideoSink2
+{
+  GstBaseSink parent;
+};
+
+#define GST_CAPS_FEATURE_MEMORY_FAKE "memory:FakeMem"
+
+G_DEFINE_TYPE (GstVideoDecoder1, gst_video_decoder1, GST_TYPE_VIDEO_DECODER);
+G_DEFINE_TYPE (GstVideoDecoder2, gst_video_decoder2, GST_TYPE_VIDEO_DECODER);
+G_DEFINE_TYPE (GstVideoSink1, gst_video_sink1, GST_TYPE_BASE_SINK);
+G_DEFINE_TYPE (GstVideoSink2, gst_video_sink2, GST_TYPE_BASE_SINK);
+
+static void
+gst_video_sink1_class_init (GstVideoSink1Class * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+          (GST_CAPS_FEATURE_MEMORY_FAKE,
+              GST_VIDEO_FORMATS_ALL) ";"
+          GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL))
+      );
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_templ));
+
+  gst_element_class_set_static_metadata (element_class,
+      "Fake Video Sink1", "Sink/Video",
+      "fake sink1", "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
+}
+
+static void
+gst_video_sink1_init (GstVideoSink1 * sink)
+{
+}
+
+static void
+gst_video_sink2_class_init (GstVideoSink2Class * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL)));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_templ));
+
+  gst_element_class_set_static_metadata (element_class,
+      "Fake Video Sink2", "Sink/Video",
+      "fake sink2", "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
+}
+
+static void
+gst_video_sink2_init (GstVideoSink2 * sink)
+{
+}
+
+static GstFlowReturn
+fake_theora_dec_handle_frame (GstVideoDecoder * bdec,
+    GstVideoCodecFrame * frame)
+{
+  /* the width and height are hard-coded for ../../files/theora-vorbis.ogg */
+  gst_video_codec_state_unref (gst_video_decoder_set_output_state (bdec,
+          GST_VIDEO_FORMAT_NV12, 320, 240, NULL));
+  gst_video_decoder_allocate_output_frame (bdec, frame);
+  return gst_video_decoder_finish_frame (bdec, frame);
+}
+
+static void
+gst_video_decoder1_class_init (GstVideoDecoder1Class * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstVideoDecoderClass *vd_class = GST_VIDEO_DECODER_CLASS (klass);
+
+  static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS,
+      GST_STATIC_CAPS ("video/x-theora"));
+
+  static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+          (GST_CAPS_FEATURE_MEMORY_FAKE,
+              GST_VIDEO_FORMATS_ALL) ";"
+          GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL)));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_templ));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_templ));
+  gst_element_class_set_static_metadata (element_class,
+      "Fake theora video decoder1", "Codec/Decoder/Video",
+      "decode theora stream",
+      "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
+
+  vd_class->handle_frame = fake_theora_dec_handle_frame;
+}
+
+static void
+gst_video_decoder1_init (GstVideoDecoder1 * dec1)
+{
+}
+
+static void
+gst_video_decoder2_class_init (GstVideoDecoder2Class * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstVideoDecoderClass *vd_class = GST_VIDEO_DECODER_CLASS (klass);
+
+  static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS,
+      GST_STATIC_CAPS ("video/x-theora"));
+
+  static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL)));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_templ));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_templ));
+  gst_element_class_set_static_metadata (element_class,
+      "Fake theora video decoder2", "Codec/Decoder/Video",
+      "decode theora stream",
+      "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
+
+  vd_class->handle_frame = fake_theora_dec_handle_frame;
+}
+
+static void
+gst_video_decoder2_init (GstVideoDecoder2 * dec2)
+{
+}
+
 /****
  * Start of the tests
  ***/
+
+static void
+pipeline_deep_notify_caps_cb (GstObject * pipeline,
+    GstObject * object, GParamSpec * pspec, GstElement ** dec)
+{
+  GstObject *pad_parent;
+
+  if (!GST_IS_PAD (object))
+    return;
+
+  pad_parent = gst_object_get_parent (object);
+
+  if (GST_IS_ELEMENT (pad_parent) && *dec == NULL) {
+    GstElementFactory *factory;
+    GstElement *element;
+    const gchar *klass;
+
+    element = GST_ELEMENT_CAST (pad_parent);
+    if ((factory = gst_element_get_factory (element)) &&
+        (klass =
+            gst_element_factory_get_metadata (factory,
+                GST_ELEMENT_METADATA_KLASS)) && strstr (klass, "Video")
+        && strstr (klass, "Decoder")) {
+      *dec = gst_object_ref (element);
+    }
+  }
+  if (pad_parent)
+    gst_object_unref (pad_parent);
+}
 
 static GstElement *
 create_playbin (const gchar * uri, gboolean set_sink)
@@ -627,6 +824,61 @@ create_playbin (const gchar * uri, gboolean set_sink)
   return playbin;
 }
 
+GST_START_TEST (test_autoplug_decoder_sink_combination)
+{
+  GstElement *playbin;
+  GstElement *decoder = NULL;
+  GstElement *sink;
+  gchar *path, *uri;
+
+  fail_unless (gst_element_register (NULL, "faketheoradec1",
+          GST_RANK_PRIMARY + 1, gst_video_decoder1_get_type ()));
+  fail_unless (gst_element_register (NULL, "faketheoradec2",
+          GST_RANK_PRIMARY + 1, gst_video_decoder2_get_type ()));
+  fail_unless (gst_element_register (NULL, "fakevideosink1",
+          GST_RANK_PRIMARY + 1, gst_video_sink1_get_type ()));
+  fail_unless (gst_element_register (NULL, "fakevideosink2",
+          GST_RANK_PRIMARY + 1, gst_video_sink2_get_type ()));
+
+  path = g_build_filename (GST_TEST_FILES_PATH, "theora-vorbis.ogg", NULL);
+  uri = gst_filename_to_uri (path, NULL);
+  g_free (path);
+
+  playbin = create_playbin (uri, FALSE);
+
+  g_signal_connect (playbin, "deep-notify::caps",
+      G_CALLBACK (pipeline_deep_notify_caps_cb), &decoder);
+
+  fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_READY),
+      GST_STATE_CHANGE_SUCCESS);
+  fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+  fail_unless_equals_int (gst_element_get_state (playbin, NULL, NULL, -1),
+      GST_STATE_CHANGE_SUCCESS);
+
+  /* there shouldn't be any errors */
+  fail_if (gst_bus_poll (GST_ELEMENT_BUS (playbin), GST_MESSAGE_ERROR,
+          0) != NULL);
+
+  g_object_get (G_OBJECT (playbin), "video-sink", &sink, NULL);
+  fail_unless (sink != NULL);
+  {
+    fail_unless (G_TYPE_FROM_INSTANCE (sink) == gst_video_sink1_get_type ());
+    gst_object_unref (sink);
+  }
+
+  fail_unless (decoder != NULL);
+  {
+    fail_unless (G_TYPE_FROM_INSTANCE (decoder) ==
+        gst_video_decoder1_get_type ());
+    gst_object_unref (decoder);
+  }
+
+  gst_element_set_state (playbin, GST_STATE_NULL);
+  gst_object_unref (playbin);
+}
+
+GST_END_TEST;
 GST_START_TEST (test_raw_single_video_stream_manual_sink)
 {
   GstMessage *msg;
@@ -2513,6 +2765,7 @@ playbin_complex_suite (void)
       test_raw_compressed_video_stream_demuxer_manual_sink);
 
   tcase_add_test (tc_chain, test_raw_raw_audio_stream_adder_manual_sink);
+  tcase_add_test (tc_chain, test_autoplug_decoder_sink_combination);
 
   /* These tests need something like the stream-activate event
    * and are racy otherwise */
