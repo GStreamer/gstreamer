@@ -3011,7 +3011,8 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       break;
     }
 
-    if (STRNCMP (&data[4], "ftypisml", 8) == 0) {
+    if (STRNCMP (&data[4], "ftypisml", 8) == 0 ||
+        STRNCMP (&data[4], "ftypavc3", 8) == 0) {
       tip = GST_TYPE_FIND_MAXIMUM;
       variant = "iso-fragmented";
       break;
@@ -3051,7 +3052,9 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
         if (data == NULL)
           goto done;
         if (STRNCMP (&data[4], "isom", 4) == 0 ||
+            STRNCMP (&data[4], "dash", 4) == 0 ||
             STRNCMP (&data[4], "avc1", 4) == 0 ||
+            STRNCMP (&data[4], "avc3", 4) == 0 ||
             STRNCMP (&data[4], "mp41", 4) == 0 ||
             STRNCMP (&data[4], "mp42", 4) == 0) {
           tip = GST_TYPE_FIND_MAXIMUM;
