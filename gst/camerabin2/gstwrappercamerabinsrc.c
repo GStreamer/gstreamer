@@ -552,6 +552,16 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
             "src-videoconvert"))
       goto done;
 
+    if (self->app_vid_filter) {
+      self->video_filter = gst_object_ref (self->app_vid_filter);
+
+      if (!gst_camerabin_add_element (cbin, self->video_filter))
+        goto done;
+      if (!gst_camerabin_create_and_add_element (cbin, "videoconvert",
+              "filter-videoconvert"))
+        goto done;
+    }
+
     if (!(self->src_filter =
             gst_camerabin_create_and_add_element (cbin, "capsfilter",
                 "src-capsfilter")))
