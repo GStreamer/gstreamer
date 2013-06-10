@@ -172,11 +172,11 @@ gst_camerabin_create_and_add_element (GstBin * bin, const gchar * elem_name,
   return new_elem;
 }
 
-/* try to change the state of an element. This function returns the element when
- * the state change could be performed. When this function returns NULL an error
- * occured and the element is unreffed if @unref is TRUE. */
+/* try to change the state of an element. This function returns the element
+ * when the state change could be performed. When this function returns NULL
+ * an error occured and the element is unreffed. */
 static GstElement *
-try_element (GstElement * bin, GstElement * element, gboolean unref)
+try_element (GstElement * bin, GstElement * element)
 {
   GstStateChangeReturn ret;
 
@@ -185,8 +185,7 @@ try_element (GstElement * bin, GstElement * element, gboolean unref)
     if (ret == GST_STATE_CHANGE_FAILURE) {
       GST_DEBUG_OBJECT (bin, "failed state change..");
       gst_element_set_state (element, GST_STATE_NULL);
-      if (unref)
-        gst_object_unref (element);
+      gst_object_unref (element);
       element = NULL;
     }
   }
@@ -202,18 +201,18 @@ gst_camerabin_setup_default_element (GstBin * bin, GstElement * user_elem,
 
   if (user_elem) {
     GST_DEBUG_OBJECT (bin, "trying configured element");
-    elem = try_element (GST_ELEMENT_CAST (bin), user_elem, FALSE);
+    elem = try_element (GST_ELEMENT_CAST (bin), gst_object_ref (user_elem));
   } else {
     /* only try fallback if no specific sink was chosen */
     GST_DEBUG_OBJECT (bin, "trying %s", auto_elem_name);
     elem = gst_element_factory_make (auto_elem_name, instance_name);
-    elem = try_element (GST_ELEMENT_CAST (bin), elem, TRUE);
+    elem = try_element (GST_ELEMENT_CAST (bin), elem);
     if (elem == NULL) {
       /* if default sink from config.h is different then try it too */
       if (strcmp (default_elem_name, auto_elem_name)) {
         GST_DEBUG_OBJECT (bin, "trying %s", default_elem_name);
         elem = gst_element_factory_make (default_elem_name, instance_name);
-        elem = try_element (GST_ELEMENT_CAST (bin), elem, TRUE);
+        elem = try_element (GST_ELEMENT_CAST (bin), elem);
       }
     }
   }

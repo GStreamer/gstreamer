@@ -489,8 +489,6 @@ check_and_replace_src (GstWrapperCameraBinSrc * self)
       }
     }
   }
-  /* we lost the reference */
-  self->app_vid_src = NULL;
 
   /* we listen for changes to max-zoom in the video src so that
    * we can proxy them to the basecamerasrc property */
