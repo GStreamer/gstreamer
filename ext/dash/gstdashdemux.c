@@ -711,7 +711,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
 
     stream_id =
         gst_pad_create_stream_id_printf (stream->pad,
-            GST_ELEMENT_CAST (demux), "%d", i);
+        GST_ELEMENT_CAST (demux), "%d", i);
     gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
     g_free (stream_id);
 
