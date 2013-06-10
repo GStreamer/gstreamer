@@ -102,6 +102,8 @@ struct _GstRTSPMediaClass {
   gboolean        (*unprepare)       (GstRTSPMedia *media);
   gboolean        (*convert_range)   (GstRTSPMedia *media, GstRTSPTimeRange *range,
                                       GstRTSPRangeUnit unit);
+  gboolean        (*query_position)  (GstRTSPMedia *media, gint64 *position);
+  gboolean        (*query_stop)      (GstRTSPMedia *media, gint64 *stop);
 
   /* signals */
   void            (*new_stream)      (GstRTSPMedia *media, GstRTSPStream * stream);

@@ -126,6 +126,9 @@ static gboolean default_unprepare (GstRTSPMedia * media);
 static gboolean
 default_convert_range (GstRTSPMedia * media, GstRTSPTimeRange * range,
     GstRTSPRangeUnit unit);
+static gboolean default_query_position (GstRTSPMedia * media,
+    gint64 * position);
+static gboolean default_query_stop (GstRTSPMedia * media, gint64 * stop);
 
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
 
@@ -215,6 +218,8 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
   klass->handle_message = default_handle_message;
   klass->unprepare = default_unprepare;
   klass->convert_range = default_convert_range;
+  klass->query_position = default_query_position;
+  klass->query_stop = default_query_stop;
 }
 
 static void
@@ -350,7 +355,6 @@ static void
 collect_media_stats (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
-  GstQuery *query;
   gint64 position, stop;
 
   if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED &&
@@ -369,25 +373,30 @@ collect_media_stats (GstRTSPMedia * media)
     priv->range.max.seconds = -1;
     priv->range_stop = -1;
   } else {
+    GstRTSPMediaClass *klass;
+    gboolean ret;
+
+    klass = GST_RTSP_MEDIA_GET_CLASS (media);
+
     /* get the position */
-    if (!gst_element_query_position (priv->pipeline, GST_FORMAT_TIME,
-            &position)) {
+    ret = FALSE;
+    if (klass->query_position)
+      ret = klass->query_position (media, &position);
+
+    if (!ret) {
       GST_INFO ("position query failed");
       position = 0;
     }
 
     /* get the current segment stop */
-    query = gst_query_new_segment (GST_FORMAT_TIME);
-    if (gst_element_query (priv->pipeline, query)) {
-      GstFormat format;
-      gst_query_parse_segment (query, NULL, &format, NULL, &stop);
-      if (format != GST_FORMAT_TIME)
-        stop = -1;
-    } else {
-      GST_INFO ("segment query failed");
+    ret = FALSE;
+    if (klass->query_stop)
+      ret = klass->query_stop (media, &stop);
+
+    if (!ret) {
+      GST_INFO ("stop query failed");
       stop = -1;
     }
-    gst_query_unref (query);
 
     GST_INFO ("stats: position %" GST_TIME_FORMAT ", stop %"
         GST_TIME_FORMAT, GST_TIME_ARGS (position), GST_TIME_ARGS (stop));
@@ -2093,4 +2102,27 @@ default_convert_range (GstRTSPMedia * media, GstRTSPTimeRange * range,
     GstRTSPRangeUnit unit)
 {
   return gst_rtsp_range_convert_units (range, unit);
+}
+
+static gboolean
+default_query_position (GstRTSPMedia * media, gint64 * position)
+{
+  return gst_element_query_position (media->priv->pipeline, GST_FORMAT_TIME,
+      position);
+}
+
+static gboolean
+default_query_stop (GstRTSPMedia * media, gint64 * stop)
+{
+  GstQuery *query;
+  gboolean res;
+
+  query = gst_query_new_segment (GST_FORMAT_TIME);
+  if ((res = gst_element_query (media->priv->pipeline, query))) {
+    GstFormat format;
+    gst_query_parse_segment (query, NULL, &format, NULL, stop);
+    if (format != GST_FORMAT_TIME)
+      *stop = -1;
+  }
+  return res;
 }
