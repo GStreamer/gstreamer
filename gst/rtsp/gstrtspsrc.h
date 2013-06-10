@@ -223,6 +223,7 @@ struct _GstRTSPSrc {
   gboolean          udp_reconnect;
   gchar            *multi_iface;
   gboolean          ntp_sync;
+  gboolean          use_pipeline_clock;
 
   /* state */
   GstRTSPState       state;

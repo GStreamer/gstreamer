@@ -183,6 +183,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_UDP_RECONNECT    TRUE
 #define DEFAULT_MULTICAST_IFACE  NULL
 #define DEFAULT_NTP_SYNC         FALSE
+#define DEFAULT_USE_PIPELINE_CLOCK      FALSE
 
 enum
 {
@@ -213,6 +214,7 @@ enum
   PROP_UDP_RECONNECT,
   PROP_MULTICAST_IFACE,
   PROP_NTP_SYNC,
+  PROP_USE_PIPELINE_CLOCK,
   PROP_LAST
 };
 
@@ -544,6 +546,12 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "Synchronize received streams to the NTP clock", DEFAULT_NTP_SYNC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_USE_PIPELINE_CLOCK,
+      g_param_spec_boolean ("use-pipeline-clock", "Use pipeline clock",
+          "Use the pipeline running-time to set the NTP time in the RTCP SR messages",
+          DEFAULT_USE_PIPELINE_CLOCK,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
@@ -607,6 +615,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->udp_reconnect = DEFAULT_UDP_RECONNECT;
   src->multi_iface = g_strdup (DEFAULT_MULTICAST_IFACE);
   src->ntp_sync = DEFAULT_NTP_SYNC;
+  src->use_pipeline_clock = DEFAULT_USE_PIPELINE_CLOCK;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -852,6 +861,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_NTP_SYNC:
       rtspsrc->ntp_sync = g_value_get_boolean (value);
       break;
+    case PROP_USE_PIPELINE_CLOCK:
+      rtspsrc->use_pipeline_clock = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -970,6 +982,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_NTP_SYNC:
       g_value_set_boolean (value, rtspsrc->ntp_sync);
+      break;
+    case PROP_USE_PIPELINE_CLOCK:
+      g_value_set_boolean (value, rtspsrc->use_pipeline_clock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2573,6 +2588,11 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
 
       if (g_object_class_find_property (klass, "ntp-sync")) {
         g_object_set (src->manager, "ntp-sync", src->ntp_sync, NULL);
+      }
+
+      if (g_object_class_find_property (klass, "use-pipeline-clock")) {
+        g_object_set (src->manager, "use-pipeline-clock",
+            src->use_pipeline_clock, NULL);
       }
 
       if (g_object_class_find_property (klass, "drop-on-latency")) {
