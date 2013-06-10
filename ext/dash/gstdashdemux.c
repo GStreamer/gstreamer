@@ -1728,18 +1728,24 @@ gst_dash_demux_get_next_header (GstDashDemux * demux, guint stream_idx)
       initializationURL, range_start, range_end);
 
   /* check if we have an index */
-  if (gst_mpd_client_get_next_header_index (demux->client, &initializationURL,
-          stream_idx, &range_start, &range_end)) {
-    GST_INFO_OBJECT (demux, "Fetching index %s %" G_GINT64_FORMAT "-%"
-        G_GINT64_FORMAT, initializationURL, range_start, range_end);
-    index_buffer = gst_dash_demux_download_header_fragment (demux, stream_idx,
+  if (header_buffer
+      && gst_mpd_client_get_next_header_index (demux->client,
+          &initializationURL, stream_idx, &range_start, &range_end)) {
+    GST_INFO_OBJECT (demux,
+        "Fetching index %s %" G_GINT64_FORMAT "-%" G_GINT64_FORMAT,
+        initializationURL, range_start, range_end);
+    index_buffer =
+        gst_dash_demux_download_header_fragment (demux, stream_idx,
         initializationURL, range_start, range_end);
   }
 
-  if (index_buffer && header_buffer) {
+  if (header_buffer == NULL) {
+    GST_WARNING_OBJECT (demux, "Unable to fetch header");
+    return NULL;
+  }
+
+  if (index_buffer) {
     header_buffer = gst_buffer_append (header_buffer, index_buffer);
-  } else if (index_buffer) {
-    gst_buffer_unref (index_buffer);
   }
 
   return header_buffer;
@@ -1975,9 +1981,7 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
       if (selected_stream->need_header) {
         /* We need to fetch a new header */
         if ((header_buffer =
-                gst_dash_demux_get_next_header (demux, stream_idx)) == NULL) {
-          GST_WARNING_OBJECT (demux, "Unable to fetch header");
-        } else {
+                gst_dash_demux_get_next_header (demux, stream_idx)) != NULL) {
           buffer = gst_buffer_append (header_buffer, buffer);
         }
         selected_stream->need_header = FALSE;
