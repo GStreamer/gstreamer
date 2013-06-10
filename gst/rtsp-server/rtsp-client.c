@@ -2295,6 +2295,21 @@ gst_rtsp_client_handle_message (GstRTSPClient * client,
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_client_send_request:
+ * @client: a #GstRTSPClient
+ * @session: a #GstRTSPSession to send the request to or %NULL
+ * @message: The #GstRTSPMessage to send
+ *
+ * Send a request message to the client.
+ */
+void
+gst_rtsp_client_send_request (GstRTSPClient * client, GstRTSPSession * session,
+    GstRTSPMessage * message)
+{
+  send_response (client, session, message, FALSE);
+}
+
 static GstRTSPResult
 do_send_message (GstRTSPClient * client, GstRTSPMessage * message,
     gboolean close, gpointer user_data)

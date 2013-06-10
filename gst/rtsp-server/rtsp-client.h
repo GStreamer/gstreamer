@@ -163,6 +163,9 @@ void                  gst_rtsp_client_set_send_func     (GstRTSPClient *client,
 GstRTSPResult         gst_rtsp_client_handle_message    (GstRTSPClient *client,
                                                          GstRTSPMessage *message);
 
+void                  gst_rtsp_client_send_request      (GstRTSPClient * client,
+                                                         GstRTSPSession *session,
+                                                         GstRTSPMessage *message);
 guint                 gst_rtsp_client_attach            (GstRTSPClient *client,
                                                          GMainContext *context);
 
