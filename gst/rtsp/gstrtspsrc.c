@@ -5764,6 +5764,10 @@ gst_rtspsrc_parse_gst_clock (GstRTSPSrc * src, const gchar * gstclock)
       gst_object_unref (src->provided_clock);
     src->provided_clock = netclock;
 
+    gst_element_post_message (GST_ELEMENT_CAST (src),
+        gst_message_new_clock_provide (GST_OBJECT_CAST (src),
+            src->provided_clock, TRUE));
+
     res = TRUE;
   cleanup:
     g_strfreev (fields);
