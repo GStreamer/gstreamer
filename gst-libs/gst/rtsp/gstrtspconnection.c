@@ -647,10 +647,11 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
     uri = g_strdup_printf ("http://%s:%d%s%s%s", url->host, url_port,
         url->abspath, url->query ? "?" : "", url->query ? url->query : "");
   } else {
-    uri = gst_rtsp_url_get_request_uri (conn->url);
+    uri = gst_rtsp_url_get_request_uri (url);
   }
+
   connection = g_socket_client_connect_to_uri (conn->client,
-      uri, 0, conn->cancellable, &error);
+      uri, url_port, conn->cancellable, &error);
   if (connection == NULL)
     goto connect_failed;
 
