@@ -127,11 +127,6 @@ gboolean gst_gl_download_perform_with_memory        (GstGLDownload * download, G
 gboolean gst_gl_download_perform_with_data          (GstGLDownload * download, GLuint texture_id,
                                                      gpointer data[GST_VIDEO_MAX_PLANES]);
 
-GstGLDownload * gst_gl_display_find_download_unlocked (GstGLDisplay * display, GstVideoFormat v_format,
-                                                       guint out_width, guint out_height);
-GstGLDownload * gst_gl_display_find_download          (GstGLDisplay * display, GstVideoFormat v_format,
-                                                       guint out_width, guint out_height);
-
 G_END_DECLS
 
 #endif /* __GST_GL_DOWNLOAD_H__ */
