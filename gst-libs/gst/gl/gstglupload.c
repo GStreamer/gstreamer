@@ -692,8 +692,6 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
 
         GST_INFO ("We have OpenGL shaders");
 
-        display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_GLSL;
-
         _init_upload_fbo (display, upload);
 
         switch (v_format) {
@@ -977,10 +975,13 @@ _do_upload (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_AYUV:
     {
+#if 0
       switch (display->colorspace_conversion) {
         case GST_GL_DISPLAY_CONVERSION_GLSL:
           /* color space conversion is needed */
+#endif
           upload->priv->draw (display, upload);
+#if 0
           break;
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
           /* color space conversion is needed */
@@ -997,6 +998,7 @@ _do_upload (GstGLDisplay * display, GstGLUpload * upload)
           g_assert_not_reached ();
           break;
       }
+#endif
     }
       break;
     default:
@@ -1046,9 +1048,11 @@ _do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
           in_width, in_height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, NULL);
       break;
     case GST_VIDEO_FORMAT_YUY2:
+#if 0
       switch (display->colorspace_conversion) {
         case GST_GL_DISPLAY_CONVERSION_GLSL:
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
+#endif
           gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
               in_width, in_height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
               NULL);
@@ -1057,6 +1061,7 @@ _do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
           gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
               in_width, in_height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
               NULL);
+#if 0
           break;
         case GST_GL_DISPLAY_CONVERSION_MESA:
           gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, in_width,
@@ -1068,11 +1073,14 @@ _do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
           g_assert_not_reached ();
           break;
       }
+#endif
       break;
     case GST_VIDEO_FORMAT_UYVY:
+#if 0
       switch (display->colorspace_conversion) {
         case GST_GL_DISPLAY_CONVERSION_GLSL:
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
+#endif
           glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
               in_width, in_height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
               NULL);
@@ -1081,6 +1089,7 @@ _do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
           glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
               in_width, in_height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
               NULL);
+#if 0
           break;
         case GST_GL_DISPLAY_CONVERSION_MESA:
           glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, in_width,
@@ -1092,6 +1101,7 @@ _do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
           g_assert_not_reached ();
           break;
       }
+#endif
       break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
@@ -1160,10 +1170,13 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_AYUV:
+#if 0
       switch (display->colorspace_conversion) {
         case GST_GL_DISPLAY_CONVERSION_GLSL:
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
+#endif
           gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
+#if 0
           break;
         case GST_GL_DISPLAY_CONVERSION_MESA:
           if (in_width != out_width || in_height != out_height)
@@ -1177,6 +1190,7 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
           g_assert_not_reached ();
           break;
       }
+#endif
       break;
     default:
       gst_gl_display_set_error (display, "Unsupported upload video format %d",
@@ -1216,9 +1230,11 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
           GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_YUY2:
+#if 0
       switch (display->colorspace_conversion) {
         case GST_GL_DISPLAY_CONVERSION_GLSL:
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
+#endif
           gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
               in_height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
 
@@ -1226,6 +1242,7 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
           gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
               GST_ROUND_UP_2 (in_width) / 2, in_height,
               GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, upload->data[0]);
+#if 0
           break;
         case GST_GL_DISPLAY_CONVERSION_MESA:
           gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
@@ -1238,11 +1255,14 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
           g_assert_not_reached ();
           break;
       }
+#endif
       break;
     case GST_VIDEO_FORMAT_UYVY:
+#if 0
       switch (display->colorspace_conversion) {
         case GST_GL_DISPLAY_CONVERSION_GLSL:
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
+#endif
           gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
               in_height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
 
@@ -1250,6 +1270,7 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
           gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
               GST_ROUND_UP_2 (in_width) / 2, in_height,
               GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, upload->data[0]);
+#if 0
           break;
         case GST_GL_DISPLAY_CONVERSION_MESA:
           gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
@@ -1262,6 +1283,7 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
           g_assert_not_reached ();
           break;
       }
+#endif
       break;
     case GST_VIDEO_FORMAT_I420:
     {
@@ -1399,10 +1421,12 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
     {
+#if 0
       switch (display->colorspace_conversion) {
         case GST_GL_DISPLAY_CONVERSION_GLSL:
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
         {
+#endif
           gst_gl_shader_use (upload->shader);
 
           gl->MatrixMode (GL_PROJECTION);
@@ -1431,6 +1455,7 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
               GL_CLAMP_TO_EDGE);
           gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
               GL_CLAMP_TO_EDGE);
+#if 0
         }
           break;
         case GST_GL_DISPLAY_CONVERSION_MESA:
@@ -1457,6 +1482,7 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
           g_assert_not_reached ();
           break;
       }
+#endif
     }
       break;
 
@@ -1645,10 +1671,12 @@ _do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
     {
+#if 0
       switch (display->colorspace_conversion) {
         case GST_GL_DISPLAY_CONVERSION_GLSL:
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
         {
+#endif
           gst_gl_shader_use (upload->shader);
 
           gl->VertexAttribPointer (upload->shader_attr_position_loc, 3,
@@ -1682,6 +1710,7 @@ _do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
               GL_CLAMP_TO_EDGE);
           gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
               GL_CLAMP_TO_EDGE);
+#if 0
         }
           break;
         case GST_GL_DISPLAY_CONVERSION_MESA:
@@ -1704,6 +1733,7 @@ _do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
           g_assert_not_reached ();
           break;
       }
+#endif
     }
       break;
 

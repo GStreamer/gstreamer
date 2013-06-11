@@ -15,7 +15,8 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
         gstglupload.c \
         gstglwindow.c \
         gstglapi.c \
-        gstglfeature.c
+        gstglfeature.c \
+        gstglutils.c
 
 libgstgl_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
@@ -59,7 +60,8 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstgldownload.h \
 	gstglupload.h \
 	gstglapi.h \
-	gstglfeature.h
+	gstglfeature.h \
+	gstglutils.h
 
 libgstgl_@GST_API_VERSION@_la_CFLAGS = \
 	$(GL_CFLAGS) \

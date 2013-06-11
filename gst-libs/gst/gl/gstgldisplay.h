@@ -31,6 +31,7 @@ typedef struct _GstGLShader GstGLShader;
 
 #include "gstglwindow.h"
 #include "gstglshader.h"
+#include "gstglutils.h"
 
 G_BEGIN_DECLS
 
@@ -63,37 +64,7 @@ typedef enum
   GST_GL_DISPLAY_CONVERSION_MESA,
 } GstGLDisplayConversion;
 
-/**
- * GstGLDisplayProjection:
- *
- * %GST_GL_DISPLAY_PROJECTION_ORTHO2D: Orthogonal projection
- * %GST_GL_DISPLAY_CONVERSION_MATRIX: Perspective projection 
- */
-typedef enum
-{
-  GST_GL_DISPLAY_PROJECTION_ORTHO2D,
-  GST_GL_DISPLAY_PROJECTION_PERSPECTIVE
-} GstGLDisplayProjection;
 
-/**
- * CRCB:
- * @width: new width
- * @height: new height:
- * @data: user data
- *
- * client reshape callback
- */
-typedef void (*CRCB) (GLuint width, GLuint height, gpointer data);
-/**
- * CDCB:
- * @texture: texture to draw
- * @width: new width
- * @height: new height:
- * @data: user data
- *
- * client draw callback
- */
-typedef gboolean (*CDCB) (GLuint texture, GLuint width, GLuint height, gpointer data);
 /**
  * GstGLDisplayThreadFunc:
  * @display: a #GstGLDisplay
@@ -102,24 +73,6 @@ typedef gboolean (*CDCB) (GLuint texture, GLuint width, GLuint height, gpointer 
  * Represents a function to run in the GL thread
  */
 typedef void (*GstGLDisplayThreadFunc) (GstGLDisplay * display, gpointer data);
-
-/**
- * GLCB:
- * @width: the width
- * @height: the height
- * @texture: texture
- * @stuff: user data
- *
- * callback definition for operating on textures
- */
-typedef void (*GLCB) (gint, gint, guint, gpointer stuff);
-/**
- * GLCB_V2:
- * @stuff: user data
- *
- * callback definition for operating through a Framebuffer object
- */
-typedef void (*GLCB_V2) (gpointer stuff);
 
 #define GST_GL_DISPLAY_ERR_MSG(obj) ("%s", GST_GL_DISPLAY_CAST(obj)->error_message)
 
@@ -144,12 +97,8 @@ struct _GstGLDisplay
 
   /* gl API we are using */
   GstGLAPI       gl_api;
-  gboolean       keep_aspect_ratio;
-
   /* foreign gl context */
   gulong         external_gl_context;
-
-  GstGLDisplayConversion colorspace_conversion;
 
   gchar *error_message;
 
@@ -164,10 +113,6 @@ struct _GstGLDisplayClass
   GObjectClass object_class;
 };
 
-
-/*-----------------------------------------------------------*\
- -------------------- Public declarations -------------------
-\*-----------------------------------------------------------*/
 GstGLDisplay *gst_gl_display_new (void);
 
 gboolean gst_gl_display_create_context (GstGLDisplay * display,
@@ -175,31 +120,6 @@ gboolean gst_gl_display_create_context (GstGLDisplay * display,
 
 void gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data);
-
-void gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
-    GstVideoFormat v_format, GLint width, GLint height);
-void gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
-    GstVideoFormat v_format, GLint width, GLint height);
-void gst_gl_display_del_texture (GstGLDisplay * display, GLuint * pTexture);
-
-gboolean gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
-    GLuint * fbo, GLuint * depthbuffer);
-gboolean gst_gl_display_use_fbo (GstGLDisplay * display, gint texture_fbo_width,
-    gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
-    GLuint texture_fbo, GLCB cb, gint input_texture_width,
-    gint input_texture_height, GLuint input_texture, gdouble proj_param1,
-    gdouble proj_param2, gdouble proj_param3, gdouble proj_param4,
-    GstGLDisplayProjection projection, gpointer * stuff);
-gboolean gst_gl_display_use_fbo_v2 (GstGLDisplay * display, gint texture_fbo_width,
-    gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
-    GLuint texture_fbo, GLCB_V2 cb, gpointer * stuff);
-void gst_gl_display_del_fbo (GstGLDisplay * display, GLuint fbo,
-    GLuint depth_buffer);
-
-gboolean gst_gl_display_gen_shader (GstGLDisplay * display,
-    const gchar * shader_vertex_source,
-    const gchar * shader_fragment_source, GstGLShader ** shader);
-void gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader);
 
 gulong gst_gl_display_get_internal_gl_context (GstGLDisplay * display);
 void gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate);
