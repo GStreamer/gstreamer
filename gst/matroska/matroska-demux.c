@@ -3238,23 +3238,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
             break;
         }
 
-        if (stream->send_stream_headers) {
-          if (stream->stream_headers != NULL) {
-            ret = gst_matroska_demux_push_stream_headers (demux, stream);
-          } else {
-            /* FIXME: perhaps we can just disable and skip this stream then */
-            GST_ELEMENT_ERROR (demux, STREAM, DECODE, (NULL),
-                ("Failed to extract stream headers from codec private data"));
-          }
-          stream->send_stream_headers = FALSE;
-        }
-
-        if (stream->send_dvd_event) {
-          gst_matroska_demux_push_dvd_clut_change_event (demux, stream);
-          /* FIXME: should we send this event again after (flushing) seek ? */
-          stream->send_dvd_event = FALSE;
-        }
-
         if (ret != GST_FLOW_OK)
           break;
 
@@ -3389,6 +3372,23 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       /* now convey our segment notion downstream */
       gst_matroska_demux_send_event (demux, gst_event_new_segment (segment));
       demux->need_segment = FALSE;
+    }
+
+    if (stream->send_stream_headers) {
+      if (stream->stream_headers != NULL) {
+        ret = gst_matroska_demux_push_stream_headers (demux, stream);
+      } else {
+        /* FIXME: perhaps we can just disable and skip this stream then */
+        GST_ELEMENT_ERROR (demux, STREAM, DECODE, (NULL),
+            ("Failed to extract stream headers from codec private data"));
+      }
+      stream->send_stream_headers = FALSE;
+    }
+
+    if (stream->send_dvd_event) {
+      gst_matroska_demux_push_dvd_clut_change_event (demux, stream);
+      /* FIXME: should we send this event again after (flushing) seek ? */
+      stream->send_dvd_event = FALSE;
     }
 
     if (block_duration != -1) {
