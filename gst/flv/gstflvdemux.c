@@ -3054,7 +3054,7 @@ gst_flv_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     default:
-      ret = gst_flv_demux_push_src_event (demux, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
 
