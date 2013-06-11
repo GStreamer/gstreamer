@@ -1712,6 +1712,19 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
     goto is_reused;
 
   priv->rtpbin = gst_element_factory_make ("rtpbin", NULL);
+  if (priv->rtpbin != NULL) {
+    GstRTSPMediaClass *klass;
+    gboolean success = TRUE;
+
+    klass = GST_RTSP_MEDIA_GET_CLASS (media);
+    if (klass->setup_rtpbin)
+      success = klass->setup_rtpbin (media, priv->rtpbin);
+
+    if (success == FALSE) {
+      gst_object_unref (priv->rtpbin);
+      priv->rtpbin = NULL;
+    }
+  }
   if (priv->rtpbin == NULL)
     goto no_rtpbin;
 
