@@ -1013,7 +1013,7 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
   output_end_time =
       mix->ts_offset + gst_util_uint64_scale (mix->nframes + 1,
       GST_SECOND * GST_VIDEO_INFO_FPS_D (&mix->info),
-      GST_VIDEO_INFO_FPS_N (&mix->info));
+      GST_VIDEO_INFO_FPS_N (&mix->info)) + mix->segment.start;
   if (mix->segment.stop != -1)
     output_end_time = MIN (output_end_time, mix->segment.stop);
 
