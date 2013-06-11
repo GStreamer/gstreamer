@@ -486,7 +486,7 @@ gboolean gst_mpd_client_setup_media_presentation (GstMpdClient *client);
 gboolean gst_mpd_client_setup_streaming (GstMpdClient *client, GstStreamMimeType mimeType, const gchar* lang);
 gboolean gst_mpd_client_setup_representation (GstMpdClient *client, GstActiveStream *stream, GstRepresentationNode *representation);
 GstClockTime gst_mpd_client_get_current_position (GstMpdClient *client);
-GstClockTime gst_mpd_client_get_next_fragment_duration (GstMpdClient * client);
+GstClockTime gst_mpd_client_get_next_fragment_duration (GstMpdClient * client, GstActiveStream * stream);
 GstClockTime gst_mpd_client_get_media_presentation_duration (GstMpdClient *client);
 gboolean gst_mpd_client_get_last_fragment_timestamp (GstMpdClient * client, guint stream_idx, GstClockTime * ts);
 gboolean gst_mpd_client_get_next_fragment_timestamp (GstMpdClient * client, guint stream_idx, GstClockTime * ts);
@@ -495,6 +495,8 @@ gboolean gst_mpd_client_get_next_header (GstMpdClient *client, gchar **uri, guin
 gboolean gst_mpd_client_get_next_header_index (GstMpdClient *client, gchar **uri, guint stream_idx, gint64 * range_start, gint64 * range_end);
 gboolean gst_mpd_client_is_live (GstMpdClient * client);
 gboolean gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream, GstClockTime ts);
+GstDateTime *gst_mpd_client_add_time_difference (GstDateTime * t1, gint64 usecs);
+gint gst_mpd_client_get_segment_index_at_time (GstMpdClient *client, GstActiveStream * stream, const GstDateTime *time);
 
 /* Period selection */
 gboolean gst_mpd_client_set_period_index (GstMpdClient *client, guint period_idx);

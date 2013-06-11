@@ -137,6 +137,10 @@ static gboolean gst_mpd_client_add_media_segment (GstActiveStream * stream,
 static const gchar *gst_mpdparser_mimetype_to_caps (const gchar * mimeType);
 static GstClockTime gst_mpd_client_get_segment_duration (GstMpdClient * client,
     GstActiveStream * stream);
+static GstDateTime *gst_mpd_client_get_availability_start_time (GstMpdClient *
+    client);
+static gint64 gst_mpd_client_calculate_time_difference (const GstDateTime * t1,
+    const GstDateTime * t2);
 
 /* Adaptation Set */
 static GstAdaptationSetNode
@@ -3498,6 +3502,87 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
   return TRUE;
 }
 
+static gint64
+gst_mpd_client_calculate_time_difference (const GstDateTime * t1,
+    const GstDateTime * t2)
+{
+  GDateTime *gdt1, *gdt2;
+  GTimeSpan diff;
+
+  g_assert (t1 != NULL && t2 != NULL);
+  gdt1 = gst_date_time_to_g_date_time ((GstDateTime *) t1);
+  gdt2 = gst_date_time_to_g_date_time ((GstDateTime *) t2);
+  diff = g_date_time_difference (gdt2, gdt1);
+  g_date_time_unref (gdt1);
+  g_date_time_unref (gdt2);
+  return diff * GST_USECOND;
+}
+
+GstDateTime *
+gst_mpd_client_add_time_difference (GstDateTime * t1, gint64 usecs)
+{
+  GDateTime *gdt;
+  GDateTime *gdt2;
+  GstDateTime *rv;
+
+  g_assert (t1 != NULL);
+  gdt = gst_date_time_to_g_date_time (t1);
+  g_assert (gdt != NULL);
+  gdt2 = g_date_time_add (gdt, usecs);
+  g_assert (gdt2 != NULL);
+  g_date_time_unref (gdt);
+  rv = gst_date_time_new_from_g_date_time (gdt2);
+
+  /* Don't g_date_time_unref(gdt2) because gst_date_time_new_from_g_date_time takes
+   * ownership of the GDateTime pointer.
+   */
+
+  return rv;
+}
+
+gint
+gst_mpd_client_get_segment_index_at_time (GstMpdClient * client,
+    GstActiveStream * stream, const GstDateTime * time)
+{
+  GstClockTime seg_duration;
+  gint64 diff;
+  GstDateTime *avail_start =
+      gst_mpd_client_get_availability_start_time (client);
+  GstStreamPeriod *stream_period = gst_mpdparser_get_stream_period (client);
+
+  if (avail_start == NULL)
+    return -1;
+
+  if (stream_period && stream_period->period) {
+    /* intentionally not unreffing avail_start */
+    avail_start = gst_mpd_client_add_time_difference (avail_start,
+        stream_period->period->start * 1000);
+  }
+  diff = gst_mpd_client_calculate_time_difference (avail_start, time);
+  if (diff < 0)
+    return -2;
+  if (diff > gst_mpd_client_get_media_presentation_duration (client))
+    return -3;
+
+  /* TODO: Assumes all fragments are roughly the same duration */
+  seg_duration = gst_mpd_client_get_next_fragment_duration (client, stream);
+  g_assert (seg_duration > 0);
+  return diff / seg_duration;
+}
+
+GstDateTime *
+gst_mpd_client_get_availability_start_time (GstMpdClient * client)
+{
+  GstDateTime *t;
+
+  g_return_val_if_fail (client != NULL, NULL);
+
+  GST_MPD_CLIENT_LOCK (client);
+  t = client->mpd_node->availabilityStartTime;
+  GST_MPD_CLIENT_UNLOCK (client);
+  return t;
+}
+
 gboolean
 gst_mpd_client_get_last_fragment_timestamp (GstMpdClient * client,
     guint stream_idx, GstClockTime * ts)
@@ -3790,13 +3875,11 @@ gst_mpd_client_get_current_position (GstMpdClient * client)
 }
 
 GstClockTime
-gst_mpd_client_get_next_fragment_duration (GstMpdClient * client)
+gst_mpd_client_get_next_fragment_duration (GstMpdClient * client,
+    GstActiveStream * stream)
 {
-  GstActiveStream *stream;
   GstMediaSegment *media_segment;
 
-  GST_DEBUG ("Stream index: %i", client->stream_idx);
-  stream = g_list_nth_data (client->active_streams, client->stream_idx);
   g_return_val_if_fail (stream != NULL, 0);
 
   media_segment =

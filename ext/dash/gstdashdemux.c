@@ -793,8 +793,52 @@ gst_dash_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       gst_dash_demux_advance_period (demux);
 
-      /* start playing from the first segment */
-      gst_mpd_client_set_segment_index_for_all_streams (demux->client, 0);
+      /* If stream is live, try to find the segment that is closest to current time */
+      if (gst_mpd_client_is_live (demux->client)) {
+        GSList *iter;
+        GstDateTime *now = gst_date_time_new_now_utc ();
+        gint seg_idx;
+
+        GST_DEBUG_OBJECT (demux,
+            "Seeking to current time of day for live stream ");
+        if (demux->client->mpd_node->suggestedPresentationDelay != -1) {
+          GstDateTime *target = gst_mpd_client_add_time_difference (now,
+              demux->client->mpd_node->suggestedPresentationDelay * -1000);
+          gst_date_time_unref (now);
+          now = target;
+        }
+        for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+          GstDashDemuxStream *stream = iter->data;
+          GstActiveStream *active_stream;
+
+          active_stream =
+              gst_mpdparser_get_active_stream_by_index (demux->client,
+              stream->index);
+
+          /* Get segment index corresponding to current time. */
+          seg_idx =
+              gst_mpd_client_get_segment_index_at_time (demux->client,
+              active_stream, now);
+          if (seg_idx < 0) {
+            GST_WARNING_OBJECT (demux,
+                "Failed to find a segment that is available "
+                "at this point in time for stream %d.", stream->index);
+            seg_idx = 0;
+          }
+          GST_INFO_OBJECT (demux,
+              "Segment index corresponding to current time for stream "
+              "%d is %d.", stream->index, seg_idx);
+          gst_mpd_client_set_segment_index (active_stream, seg_idx);
+        }
+
+        gst_date_time_unref (now);
+      } else {
+        GST_DEBUG_OBJECT (demux,
+            "Seeking to first segment for on-demand stream ");
+
+        /* start playing from the first segment */
+        gst_mpd_client_set_segment_index_for_all_streams (demux->client, 0);
+      }
 
       /* Send duration message */
       if (!gst_mpd_client_is_live (demux->client)) {
