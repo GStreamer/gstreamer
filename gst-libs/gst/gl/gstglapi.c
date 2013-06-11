@@ -24,6 +24,7 @@ gchar *
 gst_gl_api_string (GstGLAPI api)
 {
   GString *str = NULL;
+  gchar *ret;
 
   if (api == GST_GL_API_NONE) {
     str = g_string_new ("none");
@@ -65,5 +66,7 @@ gst_gl_api_string (GstGLAPI api)
     }
   }
 
-  return str->str;
+  ret = g_string_free (str, FALSE);
+
+  return ret;
 }
