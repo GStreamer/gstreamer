@@ -4582,7 +4582,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
         if (fourcc == FOURCC_moov) {
           /* in usual fragmented setup we could try to scan for more
            * and end up at the the moov (after mdat) again */
-          if (demux->got_moov && demux->n_streams > 0) {
+          if (demux->got_moov && demux->n_streams > 0 && !demux->fragmented) {
             GST_DEBUG_OBJECT (demux,
                 "Skipping moov atom as we have one already");
           } else {
@@ -4591,6 +4591,10 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
             if (demux->got_moov && demux->fragmented) {
               GST_DEBUG_OBJECT (demux,
                   "Got a second moov, clean up data from old one");
+              if (demux->moov_node)
+                g_node_destroy (demux->moov_node);
+              demux->moov_node = NULL;
+              demux->moov_node_compressed = NULL;
             } else {
               /* prepare newsegment to send when streaming actually starts */
               if (!demux->pending_newsegment)
