@@ -304,16 +304,14 @@ gst_gl_test_src_get_property (GObject * object, guint prop_id,
 static gboolean
 gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
-  GstVideoInfo vinfo;
   GstGLTestSrc *gltestsrc = GST_GL_TEST_SRC (bsrc);
   guint out_width, out_height;
 
   GST_DEBUG ("setcaps");
 
-  if (!gst_video_info_from_caps (&vinfo, caps))
+  if (!gst_video_info_from_caps (&gltestsrc->out_info, caps))
     goto wrong_caps;
 
-  gltestsrc->out_info = vinfo;
   gltestsrc->negotiated = TRUE;
   out_width = GST_VIDEO_INFO_WIDTH (&gltestsrc->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&gltestsrc->out_info);
@@ -321,17 +319,6 @@ gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   if (!gst_gl_display_gen_fbo (gltestsrc->display, out_width, out_height,
           &gltestsrc->fbo, &gltestsrc->depthbuffer))
     goto display_error;
-
-  if (gltestsrc->out_tex_id)
-    gst_gl_display_del_texture (gltestsrc->display, &gltestsrc->out_tex_id);
-  gst_gl_display_gen_texture (gltestsrc->display, &gltestsrc->out_tex_id,
-      GST_VIDEO_FORMAT_RGBA, out_width, out_height);
-
-  gltestsrc->download = gst_gl_display_find_download (gltestsrc->display,
-      GST_VIDEO_INFO_FORMAT (&gltestsrc->out_info), out_width, out_height);
-
-  gst_gl_download_init_format (gltestsrc->download,
-      GST_VIDEO_INFO_FORMAT (&gltestsrc->out_info), out_width, out_height);
 
   return TRUE;
 
@@ -480,12 +467,26 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
     GST_INFO ("Output Buffer does not contain correct meta, "
         "attempting to wrap for download");
 
-    out_tex = src->out_tex_id;;
+    if (!src->out_tex_id) {
+      gst_gl_display_gen_texture (src->display, &src->out_tex_id,
+          GST_VIDEO_FORMAT_RGBA, GST_VIDEO_FRAME_WIDTH (&out_frame),
+          GST_VIDEO_FRAME_HEIGHT (&out_frame));
+    }
+    out_tex = src->out_tex_id;
+
+    if (!src->download) {
+      src->download = gst_gl_download_new (src->display);
+
+      gst_gl_download_init_format (src->download,
+          GST_VIDEO_FRAME_FORMAT (&out_frame),
+          GST_VIDEO_FRAME_WIDTH (&out_frame),
+          GST_VIDEO_FRAME_HEIGHT (&out_frame));
+    }
 
     out_gl_wrapped = TRUE;
   }
 
-  src->buffer = gst_buffer_ref (buffer);
+  gst_buffer_replace (&src->buffer, buffer);
 
   //blocking call, generate a FBO
   if (!gst_gl_display_use_fbo (src->display, width, height, src->fbo,
@@ -575,6 +576,14 @@ gst_gl_test_src_stop (GstBaseSrc * basesrc)
   GstGLTestSrc *src = GST_GL_TEST_SRC (basesrc);
 
   if (src->display) {
+    if (src->out_tex_id) {
+      gst_gl_display_del_texture (src->display, &src->out_tex_id);
+    }
+
+    if (src->download) {
+      g_object_unref (src->download);
+      src->download = NULL;
+    }
     //blocking call, delete the FBO
     gst_gl_display_del_fbo (src->display, src->fbo, src->depthbuffer);
     g_object_unref (src->display);

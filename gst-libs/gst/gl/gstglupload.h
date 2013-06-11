@@ -131,13 +131,6 @@ gboolean gst_gl_upload_perform_with_memory_thread (GstGLUpload * upload, GstGLMe
 gboolean gst_gl_upload_perform_with_data_thread   (GstGLUpload * upload, GLuint texture_id,
                                                    gpointer data[GST_VIDEO_MAX_PLANES]);
 
-GstGLUpload * gst_gl_display_find_upload          (GstGLDisplay * display, GstVideoFormat v_format,
-                                                   guint in_width, guint in_height,
-                                                   guint out_width, guint out_height);
-GstGLUpload * gst_gl_display_find_upload_unlocked (GstGLDisplay * display, GstVideoFormat v_format,
-                                                   guint in_width, guint in_height,
-                                                   guint out_width, guint out_height);
-
 G_END_DECLS
 
 #endif /* __GST_GL_UPLOAD_H__ */

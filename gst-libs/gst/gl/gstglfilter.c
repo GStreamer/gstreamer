@@ -934,12 +934,7 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
         "attempting to wrap for upload");
 
     if (!filter->upload) {
-      filter->upload = gst_gl_display_find_upload (filter->display,
-          GST_VIDEO_FRAME_FORMAT (&in_frame),
-          GST_VIDEO_FRAME_WIDTH (&in_frame),
-          GST_VIDEO_FRAME_HEIGHT (&in_frame),
-          GST_VIDEO_FRAME_WIDTH (&out_frame),
-          GST_VIDEO_FRAME_HEIGHT (&out_frame));
+      filter->upload = gst_gl_upload_new (filter->display);
 
       gst_gl_upload_init_format (filter->upload,
           GST_VIDEO_FRAME_FORMAT (&in_frame),
@@ -956,10 +951,7 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
         "attempting to wrap for download");
 
     if (!filter->download) {
-      filter->download = gst_gl_display_find_download (filter->display,
-          GST_VIDEO_FRAME_FORMAT (&out_frame),
-          GST_VIDEO_FRAME_WIDTH (&out_frame),
-          GST_VIDEO_FRAME_HEIGHT (&out_frame));
+      filter->download = gst_gl_download_new (filter->display);
 
       gst_gl_download_init_format (filter->download,
           GST_VIDEO_FRAME_FORMAT (&out_frame),
@@ -971,12 +963,7 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
     out_tex = filter->out_tex_id;
   } else {                      /* both non-GL */
     if (!filter->upload) {
-      filter->upload = gst_gl_display_find_upload (filter->display,
-          GST_VIDEO_FRAME_FORMAT (&in_frame),
-          GST_VIDEO_FRAME_WIDTH (&in_frame),
-          GST_VIDEO_FRAME_HEIGHT (&in_frame),
-          GST_VIDEO_FRAME_WIDTH (&out_frame),
-          GST_VIDEO_FRAME_HEIGHT (&out_frame));
+      filter->upload = gst_gl_upload_new (filter->display);
 
       gst_gl_upload_init_format (filter->upload,
           GST_VIDEO_FRAME_FORMAT (&in_frame),
@@ -987,10 +974,7 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
     }
 
     if (!filter->download) {
-      filter->download = gst_gl_display_find_download (filter->display,
-          GST_VIDEO_FRAME_FORMAT (&out_frame),
-          GST_VIDEO_FRAME_WIDTH (&out_frame),
-          GST_VIDEO_FRAME_HEIGHT (&out_frame));
+      filter->download = gst_gl_download_new (filter->display);
 
       gst_gl_download_init_format (filter->download,
           GST_VIDEO_FRAME_FORMAT (&out_frame),

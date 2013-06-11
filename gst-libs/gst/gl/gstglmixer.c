@@ -1095,7 +1095,6 @@ gst_gl_mixer_src_setcaps (GstPad * pad, GstGLMixer * mix, GstCaps * caps)
   GstGLMixerPrivate *priv = mix->priv;
   GstVideoInfo info;
   guint out_width, out_height;
-  GstVideoFormat out_format;
   gboolean ret = TRUE;
 
   GST_INFO_OBJECT (mix, "set src caps: %" GST_PTR_FORMAT, caps);
@@ -1118,19 +1117,12 @@ gst_gl_mixer_src_setcaps (GstPad * pad, GstGLMixer * mix, GstCaps * caps)
 
   mix->out_info = info;
 
-  out_format = GST_VIDEO_INFO_FORMAT (&mix->out_info);
   out_width = GST_VIDEO_INFO_WIDTH (&mix->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&mix->out_info);
 
   if (!gst_gl_display_gen_fbo (mix->display, out_width, out_height,
           &mix->fbo, &mix->depthbuffer))
     goto display_error;
-
-  mix->download = gst_gl_display_find_download (mix->display,
-      out_format, out_width, out_height);
-
-  gst_gl_download_init_format (mix->download, out_format, out_width,
-      out_height);
 
   if (mix->out_tex_id)
     gst_gl_display_del_texture (mix->display, &mix->out_tex_id);
@@ -1450,6 +1442,14 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 
     out_tex = mix->out_tex_id;;
 
+    if (!mix->download) {
+      mix->download = gst_gl_download_new (mix->display);
+      gst_gl_download_init_format (mix->download,
+          GST_VIDEO_FRAME_FORMAT (&out_frame),
+          GST_VIDEO_FRAME_WIDTH (&out_frame),
+          GST_VIDEO_FRAME_HEIGHT (&out_frame));
+    }
+
     out_gl_wrapped = TRUE;
   }
 
@@ -1501,8 +1501,7 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
         out_height = GST_VIDEO_INFO_HEIGHT (&mix->out_info);
 
         if (!pad->upload) {
-          pad->upload = gst_gl_display_find_upload (mix->display,
-              in_format, in_width, in_height, in_width, in_height);
+          pad->upload = gst_gl_upload_new (mix->display);
 
           gst_gl_upload_init_format (pad->upload, in_format,
               in_width, in_height, in_width, in_height);
@@ -2113,6 +2112,7 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
       guint i;
+      GSList *walk = mix->sinkpads;
 
       GST_LOG_OBJECT (mix, "stopping collectpads");
       gst_collect_pads_stop (mix->collect);
@@ -2132,6 +2132,22 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
         mix->fbo = 0;
         mix->depthbuffer = 0;
       }
+      if (mix->download) {
+        g_object_unref (mix->download);
+        mix->download = NULL;
+      }
+
+      while (walk) {
+        GstGLMixerPad *pad = (GstGLMixerPad *) (walk->data);
+
+        if (pad->upload) {
+          g_object_unref (pad->upload);
+          pad->upload = NULL;
+        }
+
+        walk = walk->next;
+      }
+
       if (mix->display) {
         g_object_unref (mix->display);
         mix->display = NULL;

@@ -80,10 +80,8 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   mem->notify = notify;
   mem->user_data = user_data;
   mem->wrapped = FALSE;
-  mem->upload = gst_gl_display_find_upload (display, v_format,
-      width, height, width, height);
-  mem->download = gst_gl_display_find_download (display, v_format,
-      width, height);
+  mem->upload = gst_gl_upload_new (display);
+  mem->download = gst_gl_download_new (display);
 
   GST_CAT_DEBUG (GST_CAT_GL_MEMORY,
       "new GL texture memory:%p format:%u dimensions:%" G_GSIZE_FORMAT

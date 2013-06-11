@@ -27,14 +27,10 @@
 
 #include <gst/video/video.h>
 
-typedef struct _GstGLUpload GstGLUpload;
-typedef struct _GstGLDownload GstGLDownload;
 typedef struct _GstGLShader GstGLShader;
 
 #include "gstglwindow.h"
 #include "gstglshader.h"
-#include "gstglupload.h"
-#include "gstgldownload.h"
 
 G_BEGIN_DECLS
 
@@ -154,9 +150,6 @@ struct _GstGLDisplay
   gulong         external_gl_context;
 
   GstGLDisplayConversion colorspace_conversion;
-
-  GSList        *uploads;
-  GSList        *downloads;
 
   gchar *error_message;
 

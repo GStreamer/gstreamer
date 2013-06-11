@@ -238,14 +238,6 @@ gst_gl_display_finalize (GObject * object)
     g_free (display->error_message);
     display->error_message = NULL;
   }
-  if (display->uploads) {
-    g_slist_free_full (display->uploads, g_object_unref);
-    display->uploads = NULL;
-  }
-  if (display->downloads) {
-    g_slist_free_full (display->downloads, g_object_unref);
-    display->downloads = NULL;
-  }
 
   if (display->gl_vtable) {
     g_slice_free (GstGLFuncs, display->gl_vtable);

@@ -457,12 +457,12 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
       if (glimage_sink->stored_buffer) {
-        gst_buffer_unref (GST_BUFFER_CAST (glimage_sink->stored_buffer));
+        gst_buffer_unref (glimage_sink->stored_buffer);
         glimage_sink->stored_buffer = NULL;
       }
-      if (glimage_sink->display) {
-        g_object_unref (glimage_sink->display);
-        glimage_sink->display = NULL;
+      if (glimage_sink->upload) {
+        g_object_unref (glimage_sink->upload);
+        glimage_sink->upload = NULL;
       }
 
       glimage_sink->window_id = 0;
@@ -470,8 +470,19 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
 
       GST_VIDEO_SINK_WIDTH (glimage_sink) = 1;
       GST_VIDEO_SINK_HEIGHT (glimage_sink) = 1;
-    }
+
+      gst_gl_window_set_resize_callback (glimage_sink->display->gl_window,
+          GST_GL_WINDOW_RESIZE_CB (NULL), NULL);
+      gst_gl_window_set_draw_callback (glimage_sink->display->gl_window,
+          GST_GL_WINDOW_CB (NULL), NULL);
+      gst_gl_window_set_close_callback (glimage_sink->display->gl_window,
+          GST_GL_WINDOW_CB (NULL), NULL);
+      if (glimage_sink->display) {
+        g_object_unref (glimage_sink->display);
+        glimage_sink->display = NULL;
+      }
       break;
+    }
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
@@ -531,12 +542,6 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     gst_gl_display_del_texture (glimage_sink->display, &glimage_sink->tex_id);
   gst_gl_display_gen_texture (glimage_sink->display, &glimage_sink->tex_id,
       GST_VIDEO_INFO_FORMAT (&vinfo), width, height);
-
-  glimage_sink->upload = gst_gl_display_find_upload (glimage_sink->display,
-      GST_VIDEO_INFO_FORMAT (&vinfo), width, height, width, height);
-
-  gst_gl_upload_init_format (glimage_sink->upload,
-      GST_VIDEO_INFO_FORMAT (&vinfo), width, height, width, height);
 
   par_n = GST_VIDEO_INFO_PAR_N (&vinfo);
   par_d = GST_VIDEO_INFO_PAR_D (&vinfo);
@@ -619,6 +624,15 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   } else {
     GST_INFO ("Input Buffer does not contain correct meta, "
         "attempting to wrap for upload");
+
+    if (!glimage_sink->upload) {
+      glimage_sink->upload = gst_gl_upload_new (glimage_sink->display);
+
+      gst_gl_upload_init_format (glimage_sink->upload,
+          GST_VIDEO_FRAME_FORMAT (&frame), GST_VIDEO_FRAME_WIDTH (&frame),
+          GST_VIDEO_FRAME_HEIGHT (&frame), GST_VIDEO_FRAME_WIDTH (&frame),
+          GST_VIDEO_FRAME_HEIGHT (&frame));
+    }
 
     gst_gl_upload_perform_with_data (glimage_sink->upload,
         glimage_sink->tex_id, frame.data);
