@@ -922,7 +922,6 @@ bus_sync_handler (GstBus * bus, GstMessage * message, gpointer data)
         s1 = gst_context_get_structure (context_new);
         s2 = gst_context_writable_structure (context);
         gst_structure_foreach (s1, merge_structures, s2);
-        gst_context_unref (context);
       } else {
         /* Copy over the context */
         gst_context_replace (&context, context_new);
