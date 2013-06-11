@@ -86,6 +86,7 @@ gst_vaapi_picture_destroy(GstVaapiPicture *picture)
         gst_video_codec_frame_unref(picture->frame);
         picture->frame = NULL;
     }
+    gst_vaapi_picture_replace(&picture->parent_picture, NULL);
 }
 
 gboolean
@@ -98,6 +99,8 @@ gst_vaapi_picture_create(
 
     if (args->flags & GST_VAAPI_CREATE_PICTURE_FLAG_CLONE) {
         GstVaapiPicture * const parent_picture = GST_VAAPI_PICTURE(args->data);
+
+        picture->parent_picture = gst_vaapi_picture_ref(parent_picture);
 
         picture->proxy   = gst_vaapi_surface_proxy_ref(parent_picture->proxy);
         picture->type    = parent_picture->type;
@@ -300,14 +303,15 @@ gst_vaapi_picture_decode(GstVaapiPicture *picture)
     return TRUE;
 }
 
-gboolean
-gst_vaapi_picture_output(GstVaapiPicture *picture)
+static gboolean
+do_output(GstVaapiPicture *picture)
 {
     GstVideoCodecFrame * const out_frame = picture->frame;
     GstVaapiSurfaceProxy *proxy;
     guint flags = 0;
 
-    g_return_val_if_fail(GST_VAAPI_IS_PICTURE(picture), FALSE);
+    if (GST_VAAPI_PICTURE_IS_OUTPUT(picture))
+        return TRUE;
 
     if (!picture->proxy)
         return FALSE;
@@ -337,6 +341,30 @@ gst_vaapi_picture_output(GstVaapiPicture *picture)
 
     GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_OUTPUT);
     return TRUE;
+}
+
+gboolean
+gst_vaapi_picture_output(GstVaapiPicture *picture)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_PICTURE(picture), FALSE);
+
+    if (G_UNLIKELY(picture->parent_picture)) {
+        /* Emit the first field to GstVideoDecoder so that to release
+           the underlying GstVideoCodecFrame. However, mark this
+           picture as skipped so that to not display it */
+        GstVaapiPicture * const parent_picture = picture->parent_picture;
+        do {
+            if (!GST_VAAPI_PICTURE_IS_INTERLACED(parent_picture))
+                break;
+            if (!GST_VAAPI_PICTURE_IS_FIRST_FIELD(parent_picture))
+                break;
+            GST_VAAPI_PICTURE_FLAG_SET(parent_picture,
+                GST_VAAPI_PICTURE_FLAG_SKIPPED);
+            if (!do_output(parent_picture))
+                return FALSE;
+        } while (0);
+    }
+    return do_output(picture);
 }
 
 void

@@ -114,6 +114,7 @@ typedef enum {
 struct _GstVaapiPicture {
     /*< private >*/
     GstVaapiCodecObject         parent_instance;
+    GstVaapiPicture            *parent_picture;
     GstVideoCodecFrame         *frame;
     GstVaapiSurface            *surface;
     GstVaapiSurfaceProxy       *proxy;
