@@ -90,6 +90,11 @@ videoconvert_convert_free (VideoConvert * convert)
 {
   gint i;
 
+  if (convert->upsample)
+    gst_video_chroma_resample_free (convert->upsample);
+  if (convert->downsample)
+    gst_video_chroma_resample_free (convert->downsample);
+
   for (i = 0; i < convert->n_tmplines; i++)
     g_free (convert->tmplines[i]);
   g_free (convert->tmplines);
