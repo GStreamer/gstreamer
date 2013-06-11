@@ -418,6 +418,43 @@ _compiled_api (void)
   return ret;
 }
 
+GstGLAPI
+_parse_gl_api (const gchar * apis_s)
+{
+  GstGLAPI ret = GST_GL_API_NONE;
+  gchar *apis = (gchar *) apis_s;
+
+  while (apis) {
+    if (apis[0] == '\0') {
+      break;
+    } else if (apis[0] == ' ' || apis[0] == ',') {
+      apis = &apis[1];
+    } else if (g_strstr_len (apis, 7, "opengl3")) {
+      ret |= GST_GL_API_OPENGL3;
+      apis = &apis[7];
+    } else if (g_strstr_len (apis, 6, "opengl")) {
+      ret |= GST_GL_API_OPENGL;
+      apis = &apis[6];
+    } else if (g_strstr_len (apis, 5, "gles1")) {
+      ret |= GST_GL_API_GLES;
+      apis = &apis[5];
+    } else if (g_strstr_len (apis, 5, "gles2")) {
+      ret |= GST_GL_API_GLES2;
+      apis = &apis[5];
+    } else if (g_strstr_len (apis, 5, "gles3")) {
+      ret |= GST_GL_API_GLES3;
+      apis = &apis[5];
+    } else {
+      break;
+    }
+  }
+
+  if (ret == GST_GL_API_NONE)
+    ret = GST_GL_API_ANY;
+
+  return ret;
+}
+
 gpointer
 gst_gl_display_thread_create_context (GstGLDisplay * display)
 {
@@ -425,9 +462,11 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   gint gl_major = 0;
   gboolean ret = FALSE;
   GError *error = NULL;
-  GstGLAPI compiled_api;
+  GstGLAPI compiled_api, user_api;
   gchar *api_string;
   gchar *compiled_api_s;
+  gchar *user_api_string;
+  const gchar *user_choice;
 
   gst_gl_display_lock (display);
 
@@ -439,10 +478,22 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
     goto failure;
   }
 
-  if (!gst_gl_window_create_context (display->gl_window, compiled_api,
-          display->external_gl_context, &error)) {
+  user_choice = g_getenv ("GST_GL_API");
+
+  user_api = _parse_gl_api (user_choice);
+  user_api_string = gst_gl_api_string (user_api);
+
+  compiled_api_s = gst_gl_api_string (compiled_api);
+
+  GST_INFO ("Attempting to create opengl context. user chosen api(s):%s, "
+      "compiled api support:%s", user_api_string, compiled_api_s);
+
+  if (!gst_gl_window_create_context (display->gl_window,
+          compiled_api & user_api, display->external_gl_context, &error)) {
     gst_gl_display_set_error (display,
         error ? error->message : "Failed to create gl window");
+    g_free (compiled_api_s);
+    g_free (user_api_string);
     goto failure;
   }
   GST_INFO ("window created context");
@@ -454,18 +505,19 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   api_string = gst_gl_api_string (display->gl_api);
   GST_INFO ("available GL APIs: %s", api_string);
 
-  compiled_api_s = gst_gl_api_string (compiled_api);
-  GST_INFO ("compiled api support: %s", compiled_api_s);
-
-  if ((compiled_api & display->gl_api) == GST_GL_API_NONE) {
-    gst_gl_display_set_error (display, "failed to create_context, window "
-        "could not provide correct api. compiled api supports:%s, window "
-        "supports:%s", compiled_api_s, api_string);
+  if (((compiled_api & display->gl_api) & user_api) == GST_GL_API_NONE) {
+    gst_gl_display_set_error (display, "failed to create context, window "
+        "could not provide correct api. user:%s, compiled:%s, window:%s",
+        user_api_string, compiled_api_s, api_string);
+    g_free (api_string);
+    g_free (compiled_api_s);
+    g_free (user_api_string);
     goto failure;
   }
 
   g_free (api_string);
   g_free (compiled_api_s);
+  g_free (user_api_string);
 
   gl->GetError =
       gst_gl_window_get_proc_address (display->gl_window, "glGetError");
