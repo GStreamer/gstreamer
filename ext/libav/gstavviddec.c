@@ -395,6 +395,12 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   ffmpegdec->context->release_buffer = gst_ffmpegviddec_release_buffer;
   ffmpegdec->context->draw_horiz_band = NULL;
 
+  /* reset coded_width/_height to prevent it being reused from last time when
+   * the codec is opened again, causing a mismatch and possible
+   * segfault/corruption. (Common scenario when renegotiating caps) */
+  ffmpegdec->context->coded_width = 0;
+  ffmpegdec->context->coded_height = 0;
+
   GST_LOG_OBJECT (ffmpegdec, "size %dx%d", ffmpegdec->context->width,
       ffmpegdec->context->height);
 
