@@ -626,6 +626,18 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
           goto error;
         }
 
+        spec->segsize = (gint) (spec->bytes_per_sample * spec->rate * spec->latency_time /
+            GST_MSECOND);
+        spec->segtotal = (gint) ((gfloat) spec->buffer_time /
+            (gfloat) spec->latency_time + 0.5);
+        if (!gst_dshow_configure_latency (pin_mediatype->capture_pin,
+            spec->segsize))
+        {
+          GST_WARNING ("Could not change capture latency");
+          spec->segsize = spec->rate * spec->channels;
+          spec->segtotal = 2;
+        };
+        GST_INFO ("Configuring with segsize:%d segtotal:%d", spec->segsize, spec->segtotal);
         hres = src->filter_graph->ConnectDirect (pin_mediatype->capture_pin,
             input_pin, NULL);
         input_pin->Release ();
@@ -637,8 +649,6 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
           goto error;
         }
 
-        spec->segsize = spec->rate * spec->channels;
-        spec->segtotal = 1;
       }
     }
   }
@@ -720,7 +730,8 @@ gst_dshowaudiosrc_read (GstAudioSrc * asrc, gpointer data, guint length)
       g_mutex_unlock (src->gbarray_lock);
     } else {
       if (src->is_running) {
-        Sleep (100);
+        Sleep (GST_BASE_AUDIO_SRC(src)->ringbuffer->spec.latency_time /
+            GST_MSECOND / 10);
         goto test;
       }
     }

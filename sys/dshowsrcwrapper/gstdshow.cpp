@@ -496,3 +496,21 @@ gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar * name,
 
   return video_caps;
 }
+
+bool gst_dshow_configure_latency (IPin *pCapturePin, guint bufSizeMS)
+{
+  HRESULT hr;
+  ALLOCATOR_PROPERTIES alloc_prop;
+  IAMBufferNegotiation * pNeg = NULL;
+  hr = pCapturePin->QueryInterface(IID_IAMBufferNegotiation, (void **)&pNeg);
+
+  if(!SUCCEEDED (hr))
+    return FALSE;
+
+  alloc_prop.cbAlign = -1;  // -1 means no preference.
+  alloc_prop.cbBuffer = bufSizeMS;
+  alloc_prop.cbPrefix = -1;
+  alloc_prop.cBuffers = -1;
+  hr = pNeg->SuggestAllocatorProperties (&alloc_prop);
+  return SUCCEEDED (hr);
+}

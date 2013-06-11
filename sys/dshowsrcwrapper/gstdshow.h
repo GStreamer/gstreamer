@@ -96,4 +96,7 @@ GstVideoFormat gst_dshow_guid_to_gst_video_format (AM_MEDIA_TYPE *mediatype);
 GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format,
     const gchar * name, GstCapturePinMediaType * pin_mediatype);
 
+/* configure the latency of the capture source */
+bool gst_dshow_configure_latency (IPin *pCapturePin, guint bufSizeMS);
+
 #endif /* _GSTDSHOW_ */
