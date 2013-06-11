@@ -350,7 +350,8 @@ static void
 collect_media_stats (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
-  gint64 position, duration;
+  GstQuery *query;
+  gint64 position, stop;
 
   if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED &&
       priv->status != GST_RTSP_MEDIA_STATUS_PREPARING)
@@ -375,15 +376,18 @@ collect_media_stats (GstRTSPMedia * media)
       position = 0;
     }
 
-    /* get the duration */
-    if (!gst_element_query_duration (priv->pipeline, GST_FORMAT_TIME,
-            &duration)) {
-      GST_INFO ("duration query failed");
-      duration = -1;
+    /* get the current segment stop */
+    query = gst_query_new_segment (GST_FORMAT_TIME);
+    if (gst_element_query (priv->pipeline, query)) {
+      gst_query_parse_segment (query, NULL, NULL, NULL, &stop);
+    } else {
+      GST_INFO ("segment query failed");
+      stop = -1;
     }
+    gst_query_unref (query);
 
-    GST_INFO ("stats: position %" GST_TIME_FORMAT ", duration %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
+    GST_INFO ("stats: position %" GST_TIME_FORMAT ", stop %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (position), GST_TIME_ARGS (stop));
 
     if (position == -1) {
       priv->range.min.type = GST_RTSP_TIME_NOW;
@@ -394,14 +398,14 @@ collect_media_stats (GstRTSPMedia * media)
       priv->range.min.seconds = ((gdouble) position) / GST_SECOND;
       priv->range_start = position;
     }
-    if (duration == -1) {
+    if (stop == -1) {
       priv->range.max.type = GST_RTSP_TIME_END;
       priv->range.max.seconds = -1;
       priv->range_stop = -1;
     } else {
       priv->range.max.type = GST_RTSP_TIME_SECONDS;
-      priv->range.max.seconds = ((gdouble) duration) / GST_SECOND;
-      priv->range_stop = duration;
+      priv->range.max.seconds = ((gdouble) stop) / GST_SECOND;
+      priv->range_stop = stop;
     }
   }
 }
