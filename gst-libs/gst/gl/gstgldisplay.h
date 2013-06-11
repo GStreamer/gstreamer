@@ -179,9 +179,6 @@ GstGLDisplay *gst_gl_display_new (void);
 
 gboolean gst_gl_display_create_context (GstGLDisplay * display,
     gulong external_gl_context);
-gboolean gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture,
-    gint gl_width, gint gl_height, gint window_width, gint window_height,
-    gboolean keep_aspect_ratio);
 
 void gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data);
@@ -210,12 +207,6 @@ gboolean gst_gl_display_gen_shader (GstGLDisplay * display,
     const gchar * shader_vertex_source,
     const gchar * shader_fragment_source, GstGLShader ** shader);
 void gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader);
-
-void gst_gl_display_set_window_id (GstGLDisplay * display, guintptr window_id);
-void gst_gl_display_set_client_reshape_callback (GstGLDisplay * display,
-    CRCB cb);
-void gst_gl_display_set_client_draw_callback (GstGLDisplay * display, CDCB cb);
-void gst_gl_display_set_client_data (GstGLDisplay * display, gpointer data);
 
 gulong gst_gl_display_get_internal_gl_context (GstGLDisplay * display);
 void gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate);
