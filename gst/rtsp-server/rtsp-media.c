@@ -1186,6 +1186,10 @@ gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play,
     goto not_prepared;
 
   g_mutex_lock (&priv->lock);
+
+  /* Update the range value with current position/duration */
+  collect_media_stats (media);
+
   /* make copy */
   range = priv->range;
 
