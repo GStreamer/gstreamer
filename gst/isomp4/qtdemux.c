@@ -5672,6 +5672,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     stream->pad =
         gst_pad_new_from_static_template (&gst_qtdemux_videosrc_template, name);
     g_free (name);
+    gst_qtdemux_configure_stream (qtdemux, stream);
     qtdemux->n_video_streams++;
   } else {
     GST_DEBUG_OBJECT (qtdemux, "unknown stream type");
@@ -5688,8 +5689,6 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     stream->pending_tags = list;
     /* global tags go on each pad anyway */
     stream->send_global_tags = TRUE;
-
-    qtdemux_do_allocation (qtdemux, stream);
   }
 done:
   return TRUE;
@@ -8343,6 +8342,12 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
             NULL));
     gst_element_post_message (GST_ELEMENT_CAST (qtdemux), m);
     qtdemux->posted_redirect = TRUE;
+  }
+
+  for (i = 0; i < qtdemux->n_streams; i++) {
+    QtDemuxStream *stream = qtdemux->streams[i];
+
+    qtdemux_do_allocation (qtdemux, stream);
   }
 
   qtdemux->exposed = TRUE;
