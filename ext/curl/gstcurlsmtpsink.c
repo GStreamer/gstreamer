@@ -557,7 +557,6 @@ gst_curl_smtp_sink_set_payload_headers_unlocked (GstCurlBaseSink * bcsink)
     append_headers = TRUE;
   } else {
     g_assert (sink->base64_chunk->chunk_array != NULL);
-    g_assert (sink->base64_chunk->chunk_array->len == 0);
   }
 
   sink->base64_chunk->state = 0;
