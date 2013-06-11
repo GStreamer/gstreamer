@@ -707,21 +707,6 @@ gst_videomixer2_fill_queues (GstVideoMixer2 * mix,
       g_assert (start_time != -1 && end_time != -1);
       end_time += start_time;   /* convert from duration to position */
 
-      if (mixcol->end_time != -1 && mixcol->end_time > end_time) {
-        GST_WARNING_OBJECT (pad, "Buffer from the past, dropping");
-        if (buf == mixcol->queued) {
-          gst_buffer_unref (buf);
-          gst_buffer_replace (&mixcol->queued, NULL);
-        } else {
-          gst_buffer_unref (buf);
-          buf = gst_collect_pads_pop (mix->collect, &mixcol->collect);
-          gst_buffer_unref (buf);
-        }
-
-        need_more_data = TRUE;
-        continue;
-      }
-
       /* Check if it's inside the segment */
       if (start_time >= segment->stop || end_time < segment->start) {
         GST_DEBUG_OBJECT (pad, "Buffer outside the segment");
@@ -753,6 +738,21 @@ gst_videomixer2_fill_queues (GstVideoMixer2 * mix,
       if (ABS (mix->segment.rate) != 1.0) {
         start_time *= ABS (mix->segment.rate);
         end_time *= ABS (mix->segment.rate);
+      }
+
+      if (mixcol->end_time != -1 && mixcol->end_time > end_time) {
+        GST_DEBUG_OBJECT (pad, "Buffer from the past, dropping");
+        if (buf == mixcol->queued) {
+          gst_buffer_unref (buf);
+          gst_buffer_replace (&mixcol->queued, NULL);
+        } else {
+          gst_buffer_unref (buf);
+          buf = gst_collect_pads_pop (mix->collect, &mixcol->collect);
+          gst_buffer_unref (buf);
+        }
+
+        need_more_data = TRUE;
+        continue;
       }
 
       if (end_time >= output_start_time && start_time < output_end_time) {
