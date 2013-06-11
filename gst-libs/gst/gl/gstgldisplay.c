@@ -75,9 +75,6 @@ static void gst_gl_display_finalize (GObject * object);
 gpointer gst_gl_display_thread_create_context (GstGLDisplay * display);
 void gst_gl_display_thread_destroy_context (GstGLDisplay * display);
 void gst_gl_display_thread_run_generic (GstGLDisplay * display);
-#if GST_GL_HAVE_GLES2
-void gst_gl_display_thread_init_redisplay (GstGLDisplay * display);
-#endif
 void gst_gl_display_thread_gen_fbo (GstGLDisplay * display);
 void gst_gl_display_thread_use_fbo (GstGLDisplay * display);
 void gst_gl_display_thread_use_fbo_v2 (GstGLDisplay * display);
@@ -88,9 +85,6 @@ void gst_gl_display_thread_del_shader (GstGLDisplay * display);
 /* private methods */
 void gst_gl_display_lock (GstGLDisplay * display);
 void gst_gl_display_unlock (GstGLDisplay * display);
-void gst_gl_display_on_resize (GstGLDisplay * display, gint width, gint height);
-void gst_gl_display_on_draw (GstGLDisplay * display);
-void gst_gl_display_on_close (GstGLDisplay * display);
 void gst_gl_display_del_texture_thread (GstGLDisplay * display,
     GLuint * pTexture);
 
@@ -103,29 +97,6 @@ void _del_shader (GstGLDisplay * display);
 void _use_fbo (GstGLDisplay * display);
 void _use_fbo_v2 (GstGLDisplay * display);
 
-#if GST_GL_HAVE_GLES2
-/* *INDENT-OFF* */
-static const gchar *redisplay_vertex_shader_str_gles2 =
-      "attribute vec4 a_position;   \n"
-      "attribute vec2 a_texCoord;   \n"
-      "varying vec2 v_texCoord;     \n"
-      "void main()                  \n"
-      "{                            \n"
-      "   gl_Position = a_position; \n"
-      "   v_texCoord = a_texCoord;  \n"
-      "}                            \n";
-
-static const gchar *redisplay_fragment_shader_str_gles2 =
-      "precision mediump float;                            \n"
-      "varying vec2 v_texCoord;                            \n"
-      "uniform sampler2D s_texture;                        \n"
-      "void main()                                         \n"
-      "{                                                   \n"
-      "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
-      "}                                                   \n";
-/* *INDENT-ON* */
-#endif
-
 struct _GstGLDisplayPrivate
 {
   /* conditions */
@@ -135,18 +106,6 @@ struct _GstGLDisplayPrivate
   /* generic gl code */
   GstGLDisplayThreadFunc generic_callback;
   gpointer data;
-
-  /* action redisplay */
-  GLuint redisplay_texture;
-  GLuint redisplay_texture_width;
-  GLuint redisplay_texture_height;
-#if GST_GL_HAVE_GLES2
-  GstGLShader *redisplay_shader;
-  gchar *redisplay_vertex_shader_str_gles2;
-  gchar *redisplay_fragment_shader_str_gles2;
-  GLint redisplay_attr_position_loc;
-  GLint redisplay_attr_texture_loc;
-#endif
 
   /* action gen and del texture */
   GLuint gen_texture;
@@ -541,14 +500,6 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
     goto failure;
   }
 
-  /* setup callbacks */
-  gst_gl_window_set_resize_callback (display->gl_window,
-      GST_GL_WINDOW_RESIZE_CB (gst_gl_display_on_resize), display);
-  gst_gl_window_set_draw_callback (display->gl_window,
-      GST_GL_WINDOW_CB (gst_gl_display_on_draw), display);
-  gst_gl_window_set_close_callback (display->gl_window,
-      GST_GL_WINDOW_CB (gst_gl_display_on_close), display);
-
   g_cond_signal (&display->priv->cond_create_context);
 
   display->isAlive = TRUE;
@@ -590,13 +541,6 @@ failure:
 void
 gst_gl_display_thread_destroy_context (GstGLDisplay * display)
 {
-#if GST_GL_HAVE_GLES2
-  if (display->priv->redisplay_shader) {
-    g_object_unref (G_OBJECT (display->priv->redisplay_shader));
-    display->priv->redisplay_shader = NULL;
-  }
-#endif
-
   GST_INFO ("Context destroyed");
 }
 
@@ -609,36 +553,6 @@ gst_gl_display_thread_run_generic (GstGLDisplay * display)
 
   display->priv->generic_callback (display, display->priv->data);
 }
-
-#if GST_GL_HAVE_GLES2
-/* Called in the gl thread */
-void
-gst_gl_display_thread_init_redisplay (GstGLDisplay * display)
-{
-  GError *error = NULL;
-  display->priv->redisplay_shader = gst_gl_shader_new (display);
-
-  gst_gl_shader_set_vertex_source (display->priv->redisplay_shader,
-      redisplay_vertex_shader_str_gles2);
-  gst_gl_shader_set_fragment_source (display->priv->redisplay_shader,
-      redisplay_fragment_shader_str_gles2);
-
-  gst_gl_shader_compile (display->priv->redisplay_shader, &error);
-  if (error) {
-    gst_gl_display_set_error (display, "%s", error->message);
-    g_error_free (error);
-    error = NULL;
-    gst_gl_display_clear_shader (display);
-  } else {
-    display->priv->redisplay_attr_position_loc =
-        gst_gl_shader_get_attribute_location (display->priv->redisplay_shader,
-        "a_position");
-    display->priv->redisplay_attr_texture_loc =
-        gst_gl_shader_get_attribute_location (display->priv->redisplay_shader,
-        "a_texCoord");
-  }
-}
-#endif
 
 void
 _gen_fbo (GstGLDisplay * display)
@@ -932,168 +846,6 @@ _del_shader (GstGLDisplay * display)
 //---------------------- BEGIN PRIVATE -----------------------
 //------------------------------------------------------------
 
-
-void
-gst_gl_display_on_resize (GstGLDisplay * display, gint width, gint height)
-{
-  const GstGLFuncs *gl = display->gl_vtable;
-
-  GST_TRACE ("GL Window resized to %ux%u", width, height);
-
-  //check if a client reshape callback is registered
-  if (display->priv->clientReshapeCallback)
-    display->priv->clientReshapeCallback (width, height,
-        display->priv->client_data);
-
-  //default reshape
-  else {
-    if (display->keep_aspect_ratio) {
-      GstVideoRectangle src, dst, result;
-
-      src.x = 0;
-      src.y = 0;
-      src.w = display->priv->redisplay_texture_width;
-      src.h = display->priv->redisplay_texture_height;
-
-      dst.x = 0;
-      dst.y = 0;
-      dst.w = width;
-      dst.h = height;
-
-      gst_video_sink_center_rect (src, dst, &result, TRUE);
-      gl->Viewport (result.x, result.y, result.w, result.h);
-    } else {
-      gl->Viewport (0, 0, width, height);
-    }
-#if GST_GL_HAVE_OPENGL
-    if (USING_OPENGL (display)) {
-      gl->MatrixMode (GL_PROJECTION);
-      gl->LoadIdentity ();
-      gluOrtho2D (0, width, 0, height);
-      gl->MatrixMode (GL_MODELVIEW);
-    }
-#endif
-  }
-}
-
-
-void
-gst_gl_display_on_draw (GstGLDisplay * display)
-{
-  const GstGLFuncs *gl = display->gl_vtable;
-
-  /* check if texture is ready for being drawn */
-  if (!display->priv->redisplay_texture)
-    return;
-  /* opengl scene */
-  GST_TRACE ("drawing texture:%u", display->priv->redisplay_texture);
-
-  /* make sure that the environnement is clean */
-  gst_gl_display_clear_shader (display);
-
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (display))
-    gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
-#endif
-
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
-
-  /* check if a client draw callback is registered */
-  if (display->priv->clientDrawCallback) {
-    gboolean doRedisplay =
-        display->priv->clientDrawCallback (display->priv->redisplay_texture,
-        display->priv->redisplay_texture_width,
-        display->priv->redisplay_texture_height,
-        display->priv->client_data);
-
-    if (doRedisplay && display->gl_window)
-      gst_gl_window_draw_unlocked (display->gl_window,
-          display->priv->redisplay_texture_width,
-          display->priv->redisplay_texture_height);
-  }
-  /* default opengl scene */
-  else {
-#if GST_GL_HAVE_OPENGL
-    if (USING_OPENGL (display)) {
-      gfloat verts[8] = { 1.0f, 1.0f,
-        -1.0f, 1.0f,
-        -1.0f, -1.0f,
-        1.0f, -1.0f
-      };
-      gint texcoords[8] = { display->priv->redisplay_texture_width, 0,
-        0, 0,
-        0, display->priv->redisplay_texture_height,
-        display->priv->redisplay_texture_width,
-        display->priv->redisplay_texture_height
-      };
-      gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-      gl->MatrixMode (GL_PROJECTION);
-      gl->LoadIdentity ();
-
-      gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB,
-          display->priv->redisplay_texture);
-
-      gl->EnableClientState (GL_VERTEX_ARRAY);
-      gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
-      gl->VertexPointer (2, GL_FLOAT, 0, &verts);
-      gl->TexCoordPointer (2, GL_INT, 0, &texcoords);
-
-      gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
-
-      gl->DisableClientState (GL_VERTEX_ARRAY);
-      gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
-
-      gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
-    }
-#endif
-#if GST_GL_HAVE_GLES2
-    if (USING_GLES2 (display)) {
-      const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,
-        1.0f, 0.0f,
-        -1.0f, 1.0f, 0.0f,
-        0.0f, 0.0f,
-        -1.0f, -1.0f, 0.0f,
-        0.0f, 1.0f,
-        1.0f, -1.0f, 0.0f,
-        1.0f, 1.0f
-      };
-
-      GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
-
-      gl->Clear (GL_COLOR_BUFFER_BIT);
-
-      gst_gl_shader_use (display->priv->redisplay_shader);
-
-      /* Load the vertex position */
-      gl->VertexAttribPointer (display->priv->redisplay_attr_position_loc, 3,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-
-      /* Load the texture coordinate */
-      gl->VertexAttribPointer (display->priv->redisplay_attr_texture_loc, 2,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-      gl->EnableVertexAttribArray (display->priv->redisplay_attr_position_loc);
-      gl->EnableVertexAttribArray (display->priv->redisplay_attr_texture_loc);
-
-      gl->ActiveTexture (GL_TEXTURE0);
-      gl->BindTexture (GL_TEXTURE_2D, display->priv->redisplay_texture);
-      gst_gl_shader_set_uniform_1i (display->priv->redisplay_shader,
-          "s_texture", 0);
-
-      gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
-    }
-#endif
-  }                             /* end default opengl scene */
-}
-
-void
-gst_gl_display_on_close (GstGLDisplay * display)
-{
-  gst_gl_display_set_error (display, "Output window was closed");
-}
-
 void
 gst_gl_display_gen_texture_window_cb (GstGLDisplay * display)
 {
@@ -1289,42 +1041,6 @@ gst_gl_display_create_context (GstGLDisplay * display,
   return isAlive;
 }
 
-
-/* Called by the glimagesink element */
-gboolean
-gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture,
-    gint gl_width, gint gl_height, gint window_width, gint window_height,
-    gboolean keep_aspect_ratio)
-{
-  gboolean isAlive;
-
-  gst_gl_display_lock (display);
-  if (display->isAlive) {
-
-#if GST_GL_HAVE_GLES2
-    if (USING_GLES2 (display)) {
-      if (!display->priv->redisplay_shader) {
-        gst_gl_window_send_message (display->gl_window,
-            GST_GL_WINDOW_CB (gst_gl_display_thread_init_redisplay), display);
-      }
-    }
-#endif
-
-    if (texture) {
-      display->priv->redisplay_texture = texture;
-      display->priv->redisplay_texture_width = gl_width;
-      display->priv->redisplay_texture_height = gl_height;
-    }
-    display->keep_aspect_ratio = keep_aspect_ratio;
-    if (display->gl_window)
-      gst_gl_window_draw (display->gl_window, window_width, window_height);
-  }
-  isAlive = display->isAlive;
-  gst_gl_display_unlock (display);
-
-  return isAlive;
-}
-
 void
 gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data)
@@ -1337,7 +1053,6 @@ gst_gl_display_thread_add (GstGLDisplay * display,
   gst_gl_display_unlock (display);
 }
 
-/* Called by gst_gl_buffer_new */
 void
 gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height)
@@ -1357,8 +1072,6 @@ gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
   gst_gl_display_unlock (display);
 }
 
-
-/* Called by gst_gl_buffer_finalize */
 void
 gst_gl_display_del_texture (GstGLDisplay * display, GLuint * pTexture)
 {
@@ -1369,7 +1082,6 @@ gst_gl_display_del_texture (GstGLDisplay * display, GLuint * pTexture)
   gst_gl_display_unlock (display);
 }
 
-/* Called by gltestsrc and glfilter */
 gboolean
 gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
     GLuint * fbo, GLuint * depthbuffer)
@@ -1513,44 +1225,6 @@ gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader)
     gst_gl_window_send_message (display->gl_window,
         GST_GL_WINDOW_CB (_del_shader), display);
   }
-  gst_gl_display_unlock (display);
-}
-
-
-/* Called by the glimagesink */
-void
-gst_gl_display_set_window_id (GstGLDisplay * display, guintptr window_id)
-{
-  gst_gl_display_lock (display);
-  gst_gl_window_set_window_handle (display->gl_window, window_id);
-  gst_gl_display_unlock (display);
-}
-
-
-/* Called by the glimagesink */
-void
-gst_gl_display_set_client_reshape_callback (GstGLDisplay * display, CRCB cb)
-{
-  gst_gl_display_lock (display);
-  display->priv->clientReshapeCallback = cb;
-  gst_gl_display_unlock (display);
-}
-
-
-/* Called by the glimagesink */
-void
-gst_gl_display_set_client_draw_callback (GstGLDisplay * display, CDCB cb)
-{
-  gst_gl_display_lock (display);
-  display->priv->clientDrawCallback = cb;
-  gst_gl_display_unlock (display);
-}
-
-void
-gst_gl_display_set_client_data (GstGLDisplay * display, gpointer data)
-{
-  gst_gl_display_lock (display);
-  display->priv->client_data = data;
   gst_gl_display_unlock (display);
 }
 

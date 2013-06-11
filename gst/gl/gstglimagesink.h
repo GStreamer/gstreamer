@@ -28,6 +28,7 @@
 #include <gst/video/video.h>
 
 #include "gstglbufferpool.h"
+#include <gst/gl/gstglconfig.h>
 
 G_BEGIN_DECLS
 
@@ -73,6 +74,19 @@ struct _GstGLImageSink
     GValue *par;
 
     GstBufferPool *pool;
+
+  /* action redisplay */
+  GLuint redisplay_texture;
+  GLuint redisplay_texture_width;
+  GLuint redisplay_texture_height;
+#if GST_GL_HAVE_GLES2
+  GstGLShader *redisplay_shader;
+  gchar *redisplay_vertex_shader_str_gles2;
+  gchar *redisplay_fragment_shader_str_gles2;
+  GLint redisplay_attr_position_loc;
+  GLint redisplay_attr_texture_loc;
+#endif
+
 };
 
 struct _GstGLImageSinkClass

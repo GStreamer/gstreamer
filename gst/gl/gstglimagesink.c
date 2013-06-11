@@ -90,6 +90,23 @@
 GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
 #define GST_CAT_DEFAULT gst_debug_glimage_sink
 
+#define USING_OPENGL(display) (display->gl_api & GST_GL_API_OPENGL)
+#define USING_OPENGL3(display) (display->gl_api & GST_GL_API_OPENGL3)
+#define USING_GLES(display) (display->gl_api & GST_GL_API_GLES)
+#define USING_GLES2(display) (display->gl_api & GST_GL_API_GLES2)
+#define USING_GLES3(display) (display->gl_api & GST_GL_API_GLES3)
+
+#if GST_GL_HAVE_GLES2
+static void gst_glimage_sink_thread_init_redisplay (GstGLDisplay * display);
+#endif
+static void gst_glimage_sink_on_close (GstGLImageSink * gl_sink);
+static void gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width,
+    gint height);
+static void gst_glimage_sink_on_draw (GstGLImageSink * gl_sink);
+static gboolean gst_glimage_sink_redisplay (GstGLImageSink * gl_sink,
+    GLuint texture, gint gl_width, gint gl_height, gint window_width,
+    gint window_height, gboolean keep_aspect_ratio);
+
 static void gst_glimage_sink_finalize (GObject * object);
 static void gst_glimage_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * param_spec);
@@ -114,6 +131,30 @@ static void gst_glimage_sink_video_overlay_init (GstVideoOverlayInterface *
 static void gst_glimage_sink_set_window_handle (GstVideoOverlay * overlay,
     guintptr id);
 static void gst_glimage_sink_expose (GstVideoOverlay * overlay);
+
+
+#if GST_GL_HAVE_GLES2
+/* *INDENT-OFF* */
+static const gchar *redisplay_vertex_shader_str_gles2 =
+      "attribute vec4 a_position;   \n"
+      "attribute vec2 a_texCoord;   \n"
+      "varying vec2 v_texCoord;     \n"
+      "void main()                  \n"
+      "{                            \n"
+      "   gl_Position = a_position; \n"
+      "   v_texCoord = a_texCoord;  \n"
+      "}                            \n";
+
+static const gchar *redisplay_fragment_shader_str_gles2 =
+      "precision mediump float;                            \n"
+      "varying vec2 v_texCoord;                            \n"
+      "uniform sampler2D s_texture;                        \n"
+      "void main()                                         \n"
+      "{                                                   \n"
+      "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
+      "}                                                   \n";
+/* *INDENT-ON* */
+#endif
 
 static GstStaticPadTemplate gst_glimage_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -390,6 +431,14 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
 
           return GST_STATE_CHANGE_FAILURE;
         }
+
+        /* setup callbacks */
+        gst_gl_window_set_resize_callback (glimage_sink->display->gl_window,
+            GST_GL_WINDOW_RESIZE_CB (gst_glimage_sink_on_resize), glimage_sink);
+        gst_gl_window_set_draw_callback (glimage_sink->display->gl_window,
+            GST_GL_WINDOW_CB (gst_glimage_sink_on_draw), glimage_sink);
+        gst_gl_window_set_close_callback (glimage_sink->display->gl_window,
+            GST_GL_WINDOW_CB (gst_glimage_sink_on_close), glimage_sink);
       }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -489,15 +538,6 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gst_gl_upload_init_format (glimage_sink->upload,
       GST_VIDEO_INFO_FORMAT (&vinfo), width, height, width, height);
 
-  gst_gl_display_set_client_reshape_callback (glimage_sink->display,
-      glimage_sink->clientReshapeCallback);
-
-  gst_gl_display_set_client_draw_callback (glimage_sink->display,
-      glimage_sink->clientDrawCallback);
-
-  gst_gl_display_set_client_data (glimage_sink->display,
-      glimage_sink->client_data);
-
   par_n = GST_VIDEO_INFO_PAR_N (&vinfo);
   par_d = GST_VIDEO_INFO_PAR_D (&vinfo);
 
@@ -588,7 +628,7 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   if (glimage_sink->window_id != glimage_sink->new_window_id) {
     glimage_sink->window_id = glimage_sink->new_window_id;
-    gst_gl_display_set_window_id (glimage_sink->display,
+    gst_gl_window_set_window_handle (glimage_sink->display->gl_window,
         glimage_sink->window_id);
   }
   //the buffer is cleared when an other comes in
@@ -605,7 +645,7 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       GST_VIDEO_SINK_HEIGHT (glimage_sink));
 
   //redisplay opengl scene
-  if (!gst_gl_display_redisplay (glimage_sink->display,
+  if (!gst_glimage_sink_redisplay (glimage_sink,
           tex_id, GST_VIDEO_INFO_WIDTH (&glimage_sink->info),
           GST_VIDEO_INFO_HEIGHT (&glimage_sink->info),
           GST_VIDEO_SINK_WIDTH (glimage_sink),
@@ -657,16 +697,16 @@ gst_glimage_sink_expose (GstVideoOverlay * overlay)
 {
   GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (overlay);
 
-  //redisplay opengl scene
+  /* redisplay opengl scene */
   if (glimage_sink->display && glimage_sink->window_id) {
 
     if (glimage_sink->window_id != glimage_sink->new_window_id) {
       glimage_sink->window_id = glimage_sink->new_window_id;
-      gst_gl_display_set_window_id (glimage_sink->display,
+      gst_gl_window_set_window_handle (glimage_sink->display->gl_window,
           glimage_sink->window_id);
     }
 
-    gst_gl_display_redisplay (glimage_sink->display, 0, 0, 0, 0, 0,
+    gst_glimage_sink_redisplay (glimage_sink, 0, 0, 0, 0, 0,
         glimage_sink->keep_aspect_ratio);
   }
 }
@@ -748,4 +788,238 @@ config_failed:
     GST_DEBUG_OBJECT (bsink, "failed setting config");
     return FALSE;
   }
+}
+
+#if GST_GL_HAVE_GLES2
+/* Called in the gl thread */
+static void
+gst_gl_display_thread_init_redisplay (GstGLImageSink * gl_sink)
+{
+  GError *error = NULL;
+  gl_sink->redisplay_shader = gst_gl_shader_new (gl_sink->display);
+
+  gst_gl_shader_set_vertex_source (gl_sink->redisplay_shader,
+      redisplay_vertex_shader_str_gles2);
+  gst_gl_shader_set_fragment_source (gl_sink->redisplay_shader,
+      redisplay_fragment_shader_str_gles2);
+
+  gst_gl_shader_compile (display->gl_sink->redisplay_shader, &error);
+  if (error) {
+    gst_gl_display_set_error (gl_sink->display, "%s", error->message);
+    g_error_free (error);
+    error = NULL;
+    gst_gl_display_clear_shader (gl_sink->display);
+  } else {
+    gl_sink->redisplay_attr_position_loc =
+        gst_gl_shader_get_attribute_location (display->priv->redisplay_shader,
+        "a_position");
+    gl_sink->redisplay_attr_texture_loc =
+        gst_gl_shader_get_attribute_location (display->priv->redisplay_shader,
+        "a_texCoord");
+  }
+}
+#endif
+
+static void
+gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
+{
+  const GstGLFuncs *gl = gl_sink->display->gl_vtable;
+
+  GST_TRACE ("GL Window resized to %ux%u", width, height);
+
+  /* check if a client reshape callback is registered */
+  if (gl_sink->clientReshapeCallback)
+    gl_sink->clientReshapeCallback (width, height, gl_sink->client_data);
+
+  /* default reshape */
+  else {
+    if (gl_sink->keep_aspect_ratio) {
+      GstVideoRectangle src, dst, result;
+
+      src.x = 0;
+      src.y = 0;
+      src.w = gl_sink->redisplay_texture_width;
+      src.h = gl_sink->redisplay_texture_height;
+
+      dst.x = 0;
+      dst.y = 0;
+      dst.w = width;
+      dst.h = height;
+
+      gst_video_sink_center_rect (src, dst, &result, TRUE);
+      gl->Viewport (result.x, result.y, result.w, result.h);
+    } else {
+      gl->Viewport (0, 0, width, height);
+    }
+#if GST_GL_HAVE_OPENGL
+    if (USING_OPENGL (gl_sink->display)) {
+      gl->MatrixMode (GL_PROJECTION);
+      gl->LoadIdentity ();
+      gluOrtho2D (0, width, 0, height);
+      gl->MatrixMode (GL_MODELVIEW);
+    }
+#endif
+  }
+}
+
+
+static void
+gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
+{
+  const GstGLFuncs *gl = gl_sink->display->gl_vtable;
+
+  /* check if texture is ready for being drawn */
+  if (!gl_sink->redisplay_texture)
+    return;
+  /* opengl scene */
+  GST_TRACE ("redrawing texture:%u", gl_sink->redisplay_texture);
+
+  /* make sure that the environnement is clean */
+  gst_gl_display_clear_shader (gl_sink->display);
+
+#if GST_GL_HAVE_OPENGL
+  if (USING_OPENGL (gl_sink->display))
+    gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+#endif
+
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+
+  /* check if a client draw callback is registered */
+  if (gl_sink->clientDrawCallback) {
+    gboolean doRedisplay =
+        gl_sink->clientDrawCallback (gl_sink->redisplay_texture,
+        gl_sink->redisplay_texture_width,
+        gl_sink->redisplay_texture_height,
+        gl_sink->client_data);
+
+    if (doRedisplay && gl_sink->display->gl_window)
+      gst_gl_window_draw_unlocked (gl_sink->display->gl_window,
+          gl_sink->redisplay_texture_width, gl_sink->redisplay_texture_height);
+  }
+  /* default opengl scene */
+  else {
+#if GST_GL_HAVE_OPENGL
+    if (USING_OPENGL (gl_sink->display)) {
+      gfloat verts[8] = { 1.0f, 1.0f,
+        -1.0f, 1.0f,
+        -1.0f, -1.0f,
+        1.0f, -1.0f
+      };
+      gint texcoords[8] = { gl_sink->redisplay_texture_width, 0,
+        0, 0,
+        0, gl_sink->redisplay_texture_height,
+        gl_sink->redisplay_texture_width,
+        gl_sink->redisplay_texture_height
+      };
+      gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      gl->MatrixMode (GL_PROJECTION);
+      gl->LoadIdentity ();
+
+      gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, gl_sink->redisplay_texture);
+
+      gl->EnableClientState (GL_VERTEX_ARRAY);
+      gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
+      gl->VertexPointer (2, GL_FLOAT, 0, &verts);
+      gl->TexCoordPointer (2, GL_INT, 0, &texcoords);
+
+      gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
+
+      gl->DisableClientState (GL_VERTEX_ARRAY);
+      gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
+
+      gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+    }
+#endif
+#if GST_GL_HAVE_GLES2
+    if (USING_GLES2 (display)) {
+      const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,
+        1.0f, 0.0f,
+        -1.0f, 1.0f, 0.0f,
+        0.0f, 0.0f,
+        -1.0f, -1.0f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, -1.0f, 0.0f,
+        1.0f, 1.0f
+      };
+
+      GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+
+      gl->Clear (GL_COLOR_BUFFER_BIT);
+
+      gst_gl_shader_use (gl_sink->redisplay_shader);
+
+      /* Load the vertex position */
+      gl->VertexAttribPointer (display->priv->redisplay_attr_position_loc, 3,
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
+
+      /* Load the texture coordinate */
+      gl->VertexAttribPointer (display->priv->redisplay_attr_texture_loc, 2,
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
+
+      gl->EnableVertexAttribArray (display->priv->redisplay_attr_position_loc);
+      gl->EnableVertexAttribArray (display->priv->redisplay_attr_texture_loc);
+
+      gl->ActiveTexture (GL_TEXTURE0);
+      gl->BindTexture (GL_TEXTURE_2D, display->priv->redisplay_texture);
+      gst_gl_shader_set_uniform_1i (display->priv->redisplay_shader,
+          "s_texture", 0);
+
+      gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+    }
+#endif
+  }                             /* end default opengl scene */
+}
+
+static void
+gst_glimage_sink_on_close (GstGLImageSink * gl_sink)
+{
+  gst_gl_display_set_error (gl_sink->display, "Output window was closed");
+}
+
+static gboolean
+gst_glimage_sink_redisplay (GstGLImageSink * gl_sink, GLuint texture,
+    gint gl_width, gint gl_height, gint window_width, gint window_height,
+    gboolean keep_aspect_ratio)
+{
+  gboolean isAlive;
+
+  gst_gl_display_lock (gl_sink->display);
+  if (gl_sink->display->isAlive) {
+
+#if GST_GL_HAVE_GLES2
+    if (USING_GLES2 (gl_sink->display)) {
+      if (!gl_sink->redisplay_shader) {
+        gst_gl_window_send_message (display->gl_window,
+            GST_GL_WINDOW_CB (gst_glimage_sink_thread_init_redisplay), display);
+      }
+    }
+#endif
+
+    if (texture) {
+      gl_sink->redisplay_texture = texture;
+      gl_sink->redisplay_texture_width = gl_width;
+      gl_sink->redisplay_texture_height = gl_height;
+    }
+    gl_sink->keep_aspect_ratio = keep_aspect_ratio;
+    if (gl_sink->display->gl_window)
+      gst_gl_window_draw (gl_sink->display->gl_window, window_width,
+          window_height);
+  }
+  isAlive = gl_sink->display->isAlive;
+  gst_gl_display_unlock (gl_sink->display);
+
+  return isAlive;
+}
+
+void
+temp (GstGLImageSink * gl_sink)
+{
+#if GST_GL_HAVE_GLES2
+  if (gl_sink->redisplay_shader) {
+    g_object_unref (G_OBJECT (gl_sink->redisplay_shader));
+    gl_sink->redisplay_shader = NULL;
+  }
+#endif
 }
