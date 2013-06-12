@@ -131,8 +131,17 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
     gst_sdp_media_set_proto (smedia, "RTP/AVP");
 
     /* for the c= line */
-    gst_sdp_media_add_connection (smedia, "IN", info->server_proto,
-        info->server_ip, 16, 0);
+    if (strcmp (info->server_proto, "IP6") == 0) {
+      gst_sdp_media_add_connection (smedia, "IN", info->server_proto,
+          "::", 16, 0);
+    } else {
+      if (strcmp (info->server_proto, "IP4") != 0) {
+        GST_WARNING ("unknown ip version when creating connection line in sdp,"
+            " using IP4");
+      }
+      gst_sdp_media_add_connection (smedia, "IN", info->server_proto,
+          "0.0.0.0", 16, 0);
+    }
 
     /* get clock-rate, media type and params for the rtpmap attribute */
     gst_structure_get_int (s, "clock-rate", &caps_rate);
