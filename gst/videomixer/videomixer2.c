@@ -1024,11 +1024,8 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
     ret = GST_FLOW_OK;
     goto done;
   } else if (res == -1) {
-    GST_DEBUG_OBJECT (mix, "All sinkpads are EOS -- forwarding");
-
-    mix->segment.stop = output_end_time;
     GST_VIDEO_MIXER2_UNLOCK (mix);
-    gst_pad_push_event (mix->srcpad, gst_event_new_segment (&mix->segment));
+    GST_DEBUG_OBJECT (mix, "All sinkpads are EOS -- forwarding");
     gst_pad_push_event (mix->srcpad, gst_event_new_eos ());
     ret = GST_FLOW_EOS;
     goto done_unlocked;
