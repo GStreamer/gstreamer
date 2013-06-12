@@ -2513,6 +2513,8 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   /* Inform the track that it's currently being used by ourself */
   ges_track_set_timeline (track, timeline);
 
+  ges_track_enable_update (track, timeline->priv->updates_enabled);
+
   GST_DEBUG ("Done adding track, emitting 'track-added' signal");
 
   /* emit 'track-added' */
