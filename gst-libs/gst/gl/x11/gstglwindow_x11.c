@@ -213,6 +213,8 @@ static void
 gst_gl_window_x11_init (GstGLWindowX11 * window)
 {
   window->priv = GST_GL_WINDOW_X11_GET_PRIVATE (window);
+
+  g_cond_init (&window->cond_send_message);
 }
 
 /* Must be called in the gl thread */
@@ -255,7 +257,6 @@ gst_gl_window_x11_create_context (GstGLWindow * window,
 
   gst_gl_window_set_need_lock (GST_GL_WINDOW (window_x11), TRUE);
 
-  g_cond_init (&window_x11->cond_send_message);
   window_x11->running = TRUE;
   window_x11->visible = FALSE;
   window_x11->parent_win = 0;
