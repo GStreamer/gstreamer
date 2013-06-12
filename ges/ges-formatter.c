@@ -319,10 +319,8 @@ ges_formatter_load_from_uri (GESFormatter * formatter,
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
 
   if (klass->load_from_uri) {
-    ges_timeline_enable_update (timeline, FALSE);
     formatter->timeline = timeline;
     ret = klass->load_from_uri (formatter, timeline, uri, error);
-    ges_timeline_enable_update (timeline, TRUE);
   }
 
   return ret;

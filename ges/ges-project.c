@@ -100,6 +100,7 @@ _emit_loaded_in_idle (EmitLoadedInIdle * data)
 {
   g_signal_emit (data->project, _signals[LOADED_SIGNAL], 0, data->timeline);
 
+  ges_timeline_enable_update (data->timeline, TRUE);
   gst_object_unref (data->project);
   gst_object_unref (data->timeline);
   g_slice_free (EmitLoadedInIdle, data);
@@ -200,6 +201,7 @@ _load_project (GESProject * project, GESTimeline * timeline, GError ** error)
   }
 
   ges_project_add_formatter (GES_PROJECT (project), formatter);
+  ges_timeline_enable_update (timeline, FALSE);
   ges_formatter_load_from_uri (formatter, timeline, priv->uri, &lerr);
   if (lerr) {
     GST_WARNING_OBJECT (project, "Could not load the timeline,"
@@ -515,6 +517,7 @@ ges_project_set_loaded (GESProject * project, GESFormatter * formatter)
 
   /* We are now done with that formatter */
   ges_project_remove_formatter (project, formatter);
+  ges_timeline_enable_update (formatter->timeline, TRUE);
   return TRUE;
 }
 
