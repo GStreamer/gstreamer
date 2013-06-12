@@ -100,10 +100,21 @@ struct _GstRTSPClient {
   GstRTSPClientPrivate *priv;
 };
 
+/**
+ * GstRTSPClientClass:
+ * @params_set: set parameters. This function should also initialize the
+ * RTSP response(state->response) via a call to gst_rtsp_message_init_response()
+ * @params_get: get parameters. This function should also initialize the
+ * RTSP response(state->response) via a call to gst_rtsp_message_init_response()
+ *
+ * The client class structure.
+ */
 struct _GstRTSPClientClass {
   GObjectClass  parent_class;
 
   GstSDPMessage * (*create_sdp) (GstRTSPClient *client, GstRTSPMedia *media);
+  GstRTSPResult   (*params_set) (GstRTSPClient *client, GstRTSPClientState *state);
+  GstRTSPResult   (*params_get) (GstRTSPClient *client, GstRTSPClientState *state);
 
   /* signals */
   void     (*closed)                  (GstRTSPClient *client);

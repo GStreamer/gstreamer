@@ -104,6 +104,10 @@ static void client_session_finalized (GstRTSPClient * client,
     GstRTSPSession * session);
 static void unlink_session_transports (GstRTSPClient * client,
     GstRTSPSession * session, GstRTSPSessionMedia * media);
+static GstRTSPResult default_params_set (GstRTSPClient * client,
+    GstRTSPClientState * state);
+static GstRTSPResult default_params_get (GstRTSPClient * client,
+    GstRTSPClientState * state);
 
 G_DEFINE_TYPE (GstRTSPClient, gst_rtsp_client, G_TYPE_OBJECT);
 
@@ -121,6 +125,8 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gobject_class->finalize = gst_rtsp_client_finalize;
 
   klass->create_sdp = create_sdp;
+  klass->params_set = default_params_set;
+  klass->params_get = default_params_get;
 
   g_object_class_install_property (gobject_class, PROP_SESSION_POOL,
       g_param_spec_object ("session-pool", "Session Pool",
@@ -706,6 +712,26 @@ not_found:
   }
 }
 
+static GstRTSPResult
+default_params_set (GstRTSPClient * client, GstRTSPClientState * state)
+{
+  GstRTSPResult res;
+
+  res = gst_rtsp_params_set (client, state);
+
+  return res;
+}
+
+static GstRTSPResult
+default_params_get (GstRTSPClient * client, GstRTSPClientState * state)
+{
+  GstRTSPResult res;
+
+  res = gst_rtsp_params_get (client, state);
+
+  return res;
+}
+
 static gboolean
 handle_get_param_request (GstRTSPClient * client, GstRTSPClientState * state)
 {
@@ -722,7 +748,7 @@ handle_get_param_request (GstRTSPClient * client, GstRTSPClientState * state)
     send_generic_response (client, GST_RTSP_STS_OK, state);
   } else {
     /* there is a body, handle the params */
-    res = gst_rtsp_params_get (client, state);
+    res = GST_RTSP_CLIENT_GET_CLASS (client)->params_get (client, state);
     if (res != GST_RTSP_OK)
       goto bad_request;
 
@@ -759,7 +785,7 @@ handle_set_param_request (GstRTSPClient * client, GstRTSPClientState * state)
     send_generic_response (client, GST_RTSP_STS_OK, state);
   } else {
     /* there is a body, handle the params */
-    res = gst_rtsp_params_set (client, state);
+    res = GST_RTSP_CLIENT_GET_CLASS (client)->params_set (client, state);
     if (res != GST_RTSP_OK)
       goto bad_request;
 
