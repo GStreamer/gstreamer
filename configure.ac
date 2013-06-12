@@ -150,7 +150,7 @@ AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 PKG_CHECK_MODULES([GST_EGL], [gstreamer-egl-1.0], [
   AC_DEFINE(HAVE_GST_EGL, 1, [Have gstreamer-egl])
   GST_EGL=yes
-])
+], [GST_EGL=no])
 AM_CONDITIONAL(HAVE_GST_EGL, test "x$GST_EGL" = "xyes")
 
 dnl Check for documentation xrefs
