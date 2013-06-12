@@ -26,8 +26,8 @@ DEBIANGENFILES = \
 	control							\
 	gstreamer$(GST_API_VERSION)-vaapi-doc.install		\
 	gstreamer$(GST_API_VERSION)-vaapi.install		\
+	libgstvaapi$(GST_VAAPI_MAJOR_VERSION)-dev.install	\
 	libgstvaapi$(GST_VAAPI_MAJOR_VERSION).install		\
-	libgstvaapi-dev.install					\
 	libgstvaapi-drm-$(GST_VAAPI_MAJOR_VERSION).install	\
 	libgstvaapi-glx-$(GST_VAAPI_MAJOR_VERSION).install	\
 	libgstvaapi-wayland-$(GST_VAAPI_MAJOR_VERSION).install	\

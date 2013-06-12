@@ -628,9 +628,10 @@ AC_CONFIG_FILES([
 debian.upstream/gstreamer-vaapi-doc.install.in
     debian.upstream/gstreamer$GST_API_VERSION-vaapi.install:\
 debian.upstream/gstreamer-vaapi.install.in
+    debian.upstream/libgstvaapi$GST_API_VERSION-dev.install:\
+debian.upstream/libgstvaapi-dev.install.in
     debian.upstream/libgstvaapi$GST_VAAPI_MAJOR_VERSION.install:\
 debian.upstream/libgstvaapi.install.in
-    debian.upstream/libgstvaapi-dev.install
     debian.upstream/libgstvaapi-drm-$GST_VAAPI_MAJOR_VERSION.install:\
 debian.upstream/libgstvaapi-drm.install.in
     debian.upstream/libgstvaapi-glx-$GST_VAAPI_MAJOR_VERSION.install:\
