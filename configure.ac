@@ -812,7 +812,7 @@ AG_GST_CHECK_FEATURE(PULSE, [pulseaudio plug-in], pulseaudio, [
   dnl used in ext/pulse/pulseutil.c
   AC_CHECK_HEADERS([process.h])
 
-  AG_GST_PKG_CHECK_MODULES(PULSE, libpulse >= 1.0)
+  AG_GST_PKG_CHECK_MODULES(PULSE, libpulse >= 2.0)
 ])
 
 dnl *** dv1394 ***
