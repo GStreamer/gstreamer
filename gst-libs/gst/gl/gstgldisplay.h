@@ -28,6 +28,7 @@
 #include <gst/video/video.h>
 
 typedef struct _GstGLShader GstGLShader;
+typedef struct _GstGLWindow GstGLWindow;
 
 #include "gstglwindow.h"
 #include "gstglshader.h"
@@ -89,12 +90,6 @@ struct _GstGLDisplay
   /* thread safe */
   GMutex         mutex;
 
-  /* gl context */
-  GThread       *gl_thread;
-  GstGLWindow   *gl_window;
-  gboolean       isAlive;
-  gboolean       context_created;
-
   /* gl API we are using */
   GstGLAPI       gl_api;
   /* foreign gl context */
@@ -115,9 +110,6 @@ struct _GstGLDisplayClass
 
 GstGLDisplay *gst_gl_display_new (void);
 
-gboolean gst_gl_display_create_context (GstGLDisplay * display,
-    gulong external_gl_context);
-
 void gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data);
 
@@ -126,14 +118,16 @@ void gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activa
 
 /* Must be called inside a lock/unlock on display, or within the glthread */
 void gst_gl_display_set_error (GstGLDisplay * display, const char * format, ...);
-gboolean gst_gl_display_check_framebuffer_status (GstGLDisplay * display);
 
 void gst_gl_display_lock (GstGLDisplay * display);
 void gst_gl_display_unlock (GstGLDisplay * display);
 GstGLAPI gst_gl_display_get_gl_api (GstGLDisplay * display);
-GstGLAPI gst_gl_display_get_gl_api_unlocked (GstGLDisplay * display);
 
 gpointer gst_gl_display_get_gl_vtable (GstGLDisplay * display);
+
+void gst_gl_display_set_window (GstGLDisplay * display, GstGLWindow * window);
+GstGLWindow * gst_gl_display_get_window (GstGLDisplay * display);
+GstGLWindow * gst_gl_display_get_window_unlocked (GstGLDisplay * display);
 
 G_END_DECLS
 

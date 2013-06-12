@@ -253,11 +253,18 @@ gst_gl_filter_start (GstBaseTransform * bt)
     filter->display =
         g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
   else {
+    GstGLWindow *window;
+    GError *error = NULL;
+
     GST_INFO ("Creating GstGLDisplay");
     filter->display = gst_gl_display_new ();
-    if (!gst_gl_display_create_context (filter->display, 0)) {
+    window = gst_gl_window_new (filter->display);
+    gst_gl_display_set_window (filter->display, window);
+    g_object_unref (window);
+
+    if (!gst_gl_window_create_context (window, 0, &error)) {
       GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
-          GST_GL_DISPLAY_ERR_MSG (filter->display), (NULL));
+          ("%s", error->message), (NULL));
       return FALSE;
     }
   }
@@ -727,9 +734,10 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
   if (filter_class->display_init_cb != NULL) {
     gst_gl_display_thread_add (filter->display, gst_gl_filter_start_gl, filter);
   }
-
+#if 0
   if (!filter->display->isAlive)
     goto error;
+#endif
 
   if (filter_class->onInitFBO) {
     if (!filter_class->onInitFBO (filter))

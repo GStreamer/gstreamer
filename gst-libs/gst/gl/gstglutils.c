@@ -234,17 +234,23 @@ void
 gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height)
 {
+  GstGLWindow *window;
+
   gst_gl_display_lock (display);
 
-  if (display->isAlive) {
+  window = gst_gl_display_get_window_unlocked (display);
+
+  if (gst_gl_window_is_running (window)) {
     gen_texture_width = width;
     gen_texture_height = height;
     gen_texture_video_format = v_format;
-    gst_gl_window_send_message (display->gl_window,
+    gst_gl_window_send_message (window,
         GST_GL_WINDOW_CB (gst_gl_display_gen_texture_window_cb), display);
     *pTexture = gen_texture;
   } else
     *pTexture = 0;
+
+  gst_object_unref (window);
 
   gst_gl_display_unlock (display);
 }
@@ -263,21 +269,26 @@ gboolean
 gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
     GLuint * fbo, GLuint * depthbuffer)
 {
-  gboolean isAlive = FALSE;
+  gboolean alive = FALSE;
+  GstGLWindow *window;
 
   gst_gl_display_lock (display);
-  if (display->isAlive) {
+
+  window = gst_gl_display_get_window_unlocked (display);
+
+  if (gst_gl_window_is_running (window)) {
     gen_fbo_width = width;
     gen_fbo_height = height;
-    gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (_gen_fbo),
-        display);
+    gst_gl_window_send_message (window, GST_GL_WINDOW_CB (_gen_fbo), display);
     *fbo = generated_fbo;
     *depthbuffer = generated_depth_buffer;
   }
-  isAlive = display->isAlive;
+  alive = gst_gl_window_is_running (window);
+
+  gst_object_unref (window);
   gst_gl_display_unlock (display);
 
-  return isAlive;
+  return alive;
 }
 
 
@@ -297,10 +308,13 @@ gst_gl_display_use_fbo (GstGLDisplay * display, gint texture_fbo_width,
     gdouble proj_param2, gdouble proj_param3, gdouble proj_param4,
     GstGLDisplayProjection projection, gpointer * stuff)
 {
-  gboolean isAlive;
+  gboolean alive;
+  GstGLWindow *window;
 
   gst_gl_display_lock (display);
-  if (display->isAlive) {
+
+  window = gst_gl_display_get_window_unlocked (display);
+  if (gst_gl_window_is_running (window)) {
     use_fbo = fbo;
     use_depth_buffer = depth_buffer;
     use_fbo_texture = texture_fbo;
@@ -316,13 +330,14 @@ gst_gl_display_use_fbo (GstGLDisplay * display, gint texture_fbo_width,
     input_texture_width = input_tex_width;
     input_texture_height = input_tex_height;
     input_texture = input_tex;
-    gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (_use_fbo),
-        display);
+    gst_gl_window_send_message (window, GST_GL_WINDOW_CB (_use_fbo), display);
   }
-  isAlive = display->isAlive;
+  alive = gst_gl_window_is_running (window);
+
+  gst_object_unref (window);
   gst_gl_display_unlock (display);
 
-  return isAlive;
+  return alive;
 }
 
 gboolean
@@ -330,10 +345,13 @@ gst_gl_display_use_fbo_v2 (GstGLDisplay * display, gint texture_fbo_width,
     gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
     GLuint texture_fbo, GLCB_V2 cb, gpointer * stuff)
 {
-  gboolean isAlive;
+  gboolean alive;
+  GstGLWindow *window;
 
   gst_gl_display_lock (display);
-  if (display->isAlive) {
+
+  window = gst_gl_display_get_window_unlocked (display);
+  if (gst_gl_window_is_running (window)) {
     use_fbo = fbo;
     use_depth_buffer = depth_buffer;
     use_fbo_texture = texture_fbo;
@@ -341,26 +359,33 @@ gst_gl_display_use_fbo_v2 (GstGLDisplay * display, gint texture_fbo_width,
     use_fbo_height = texture_fbo_height;
     use_fbo_scene_cb_v2 = cb;
     use_fbo_stuff = stuff;
-    gst_gl_window_send_message (display->gl_window,
+    gst_gl_window_send_message (window,
         GST_GL_WINDOW_CB (_use_fbo_v2), display);
   }
-  isAlive = display->isAlive;
+  alive = gst_gl_window_is_running (window);
+
+  gst_object_unref (window);
   gst_gl_display_unlock (display);
 
-  return isAlive;
+  return alive;
 }
 
 /* Called by gltestsrc and glfilter */
 void
 gst_gl_display_del_fbo (GstGLDisplay * display, GLuint fbo, GLuint depth_buffer)
 {
+  GstGLWindow *window;
+
   gst_gl_display_lock (display);
-  if (display->isAlive) {
+
+  window = gst_gl_display_get_window_unlocked (display);
+  if (gst_gl_window_is_running (window)) {
     del_fbo = fbo;
     del_depth_buffer = depth_buffer;
-    gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (_del_fbo),
-        display);
+    gst_gl_window_send_message (window, GST_GL_WINDOW_CB (_del_fbo), display);
   }
+
+  gst_object_unref (window);
   gst_gl_display_unlock (display);
 }
 
@@ -371,13 +396,16 @@ gst_gl_display_gen_shader (GstGLDisplay * display,
     const gchar * shader_vertex_source,
     const gchar * shader_fragment_source, GstGLShader ** shader)
 {
-  gboolean isAlive;
+  gboolean alive;
+  GstGLWindow *window;
 
   gst_gl_display_lock (display);
-  if (display->isAlive) {
+
+  window = gst_gl_display_get_window_unlocked (display);
+  if (gst_gl_window_is_running (window)) {
     gen_shader_vertex_source = shader_vertex_source;
     gen_shader_fragment_source = shader_fragment_source;
-    gst_gl_window_send_message (display->gl_window,
+    gst_gl_window_send_message (window,
         GST_GL_WINDOW_CB (_gen_shader), display);
     if (shader)
       *shader = gen_shader;
@@ -385,10 +413,12 @@ gst_gl_display_gen_shader (GstGLDisplay * display,
     gen_shader_vertex_source = NULL;
     gen_shader_fragment_source = NULL;
   }
-  isAlive = display->isAlive;
+  alive = gst_gl_window_is_running (window);
+
+  gst_object_unref (window);
   gst_gl_display_unlock (display);
 
-  return isAlive;
+  return alive;
 }
 
 
@@ -396,12 +426,18 @@ gst_gl_display_gen_shader (GstGLDisplay * display,
 void
 gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader)
 {
+  GstGLWindow *window;
+
   gst_gl_display_lock (display);
-  if (display->isAlive) {
+
+  window = gst_gl_display_get_window_unlocked (display);
+  if (gst_gl_window_is_running (window)) {
     del_shader = shader;
-    gst_gl_window_send_message (display->gl_window,
+    gst_gl_window_send_message (window,
         GST_GL_WINDOW_CB (_del_shader), display);
   }
+
+  gst_object_unref (window);
   gst_gl_display_unlock (display);
 }
 
