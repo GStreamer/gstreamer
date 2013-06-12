@@ -22,9 +22,12 @@
 #ifndef __GST_GL_WINDOW_H__
 #define __GST_GL_WINDOW_H__
 
+typedef struct _GstGLDisplay GstGLDisplay;
+
 #include <gst/gst.h>
 
 #include "gstglapi.h"
+#include "gstgldisplay.h"
 
 G_BEGIN_DECLS
 
@@ -90,6 +93,8 @@ struct _GstGLWindow {
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
+
+  GstGLWindowPrivate *priv;
 };
 
 struct _GstGLWindowClass {
@@ -119,7 +124,7 @@ struct _GstGLWindowClass {
 GQuark gst_gl_window_error_quark (void);
 GType gst_gl_window_get_type     (void);
 
-GstGLWindow * gst_gl_window_new  (void);
+GstGLWindow * gst_gl_window_new  (GstGLDisplay *display);
 
 void     gst_gl_window_set_draw_callback    (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 void     gst_gl_window_set_resize_callback  (GstGLWindow *window, GstGLWindowResizeCB callback, gpointer data);
@@ -140,10 +145,11 @@ gpointer      gst_gl_window_get_proc_address (GstGLWindow *window, const gchar *
 GstGLPlatform gst_gl_window_get_platform     (GstGLWindow *window);
 GstGLAPI      gst_gl_window_get_gl_api       (GstGLWindow *window);
 
-gboolean gst_gl_window_create_context (GstGLWindow *window, GstGLAPI gl_api,
-                                       guintptr external_gl_context, GError ** error);
+gboolean gst_gl_window_create_context (GstGLWindow *window, guintptr external_gl_context, GError ** error);
 
 gpointer gst_gl_window_default_get_proc_address (GstGLWindow *window, const gchar *name);
+
+gboolean gst_gl_window_is_running (GstGLWindow *window);
 
 GST_DEBUG_CATEGORY_EXTERN (gst_gl_window_debug);
 

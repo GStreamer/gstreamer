@@ -150,6 +150,7 @@ _gst_gl_feature_check (GstGLDisplay * display,
   const char *suffix = NULL;
   int func_num;
   GstGLFuncs *gst_gl = display->gl_vtable;
+  GstGLWindow *window = NULL;
 
   /* First check whether the functions should be directly provided by
      GL */
@@ -172,6 +173,9 @@ _gst_gl_feature_check (GstGLDisplay * display,
   if (suffix == NULL)
     goto error;
 
+  window = gst_gl_display_get_window (display);
+  g_assert (window);
+
   /* Try to get all of the entry points */
   for (func_num = 0; data->functions[func_num].name; func_num++) {
     void *func;
@@ -183,8 +187,7 @@ _gst_gl_feature_check (GstGLDisplay * display,
         suffix, NULL);
     GST_TRACE ("%s should %sbe in core", full_function_name,
         in_core ? "" : "not ");
-    func =
-        gst_gl_window_get_proc_address (display->gl_window, full_function_name);
+    func = gst_gl_window_get_proc_address (window, full_function_name);
 
     if (func == NULL && in_core) {
       GST_TRACE ("%s was not found in core, trying the extension version",
@@ -196,8 +199,7 @@ _gst_gl_feature_check (GstGLDisplay * display,
         g_free (full_function_name);
         full_function_name = g_strconcat ("gl", data->functions[func_num].name,
             suffix, NULL);
-        func = gst_gl_window_get_proc_address (display->gl_window,
-            full_function_name);
+        func = gst_gl_window_get_proc_address (window, full_function_name);
       }
     }
 
@@ -212,6 +214,7 @@ _gst_gl_feature_check (GstGLDisplay * display,
   }
 
   g_free (full_function_name);
+  gst_object_unref (window);
 
   return TRUE;
 
@@ -229,6 +232,9 @@ error:
     GST_TRACE ("failed to find function %s", full_function_name);
     g_free (full_function_name);
   }
+
+  if (window)
+    gst_object_unref (window);
 
   return FALSE;
 }

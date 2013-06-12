@@ -280,7 +280,7 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
   GstGLFuncs *gl = display->gl_vtable;
 
 #if GST_GL_HAVE_OPENGL
-  if (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_OPENGL) {
+  if (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL) {
     gfloat verts[] = { -1.0f, -1.0f,
       1.0f, -1.0f,
       1.0f, 1.0f,
@@ -347,7 +347,7 @@ set_horizontal_swap (GstGLDisplay * display, gpointer data)
 #if GST_GL_HAVE_OPENGL
   GstGLFuncs *gl = display->gl_vtable;
 
-  if (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_OPENGL) {
+  if (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL) {
     const gfloat mirrormatrix[16] = {
       -1.0, 0.0, 0.0, 0.0,
       0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0

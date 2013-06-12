@@ -632,8 +632,9 @@ init_pixbuf_texture (GstGLDisplay * display, gpointer data)
       gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
-  } else
-    display->isAlive = FALSE;
+  }
+  //else
+  //  display->isAlive = FALSE;
 }
 
 static gboolean

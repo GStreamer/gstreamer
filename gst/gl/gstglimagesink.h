@@ -70,6 +70,7 @@ struct _GstGLImageSink
     CDCB clientDrawCallback;
     gpointer client_data;
 
+    volatile gint to_quit;
     gboolean keep_aspect_ratio;
     GValue *par;
 

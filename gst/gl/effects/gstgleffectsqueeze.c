@@ -20,11 +20,11 @@
 
 #include <gstgleffects.h>
 
-#define USING_OPENGL(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_OPENGL)
-#define USING_OPENGL3(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_OPENGL3)
-#define USING_GLES(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_GLES)
-#define USING_GLES2(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_GLES2)
-#define USING_GLES3(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_GLES3)
+#define USING_OPENGL(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL)
+#define USING_OPENGL3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL3)
+#define USING_GLES(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES)
+#define USING_GLES2(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES2)
+#define USING_GLES3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES3)
 
 static void
 gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,

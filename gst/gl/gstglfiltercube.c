@@ -289,8 +289,7 @@ gst_gl_filter_cube_filter_texture (GstGLFilter * filter, guint in_tex,
   GLCB cb = NULL;
   GstGLAPI api;
 
-  api =
-      gst_gl_display_get_gl_api_unlocked (GST_GL_FILTER (cube_filter)->display);
+  api = gst_gl_display_get_gl_api (GST_GL_FILTER (cube_filter)->display);
 
 #if GST_GL_HAVE_OPENGL
   if (api & GST_GL_API_OPENGL)

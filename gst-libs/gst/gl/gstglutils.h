@@ -99,4 +99,6 @@ gboolean gst_gl_display_gen_shader (GstGLDisplay * display,
     const gchar * shader_fragment_source, GstGLShader ** shader);
 void gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader);
 
+gboolean gst_gl_display_check_framebuffer_status (GstGLDisplay * display);
+
 #endif /* __GST_GL_UTILS_H__ */

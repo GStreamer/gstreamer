@@ -139,7 +139,7 @@ static const gchar *bumper_f_src =
     "  gl_FragColor = vec4(irradiance * textureColor.rgb, textureColor.w);\n"
     "}\n";
 
-#define LOAD_ERROR(display, msg) { gst_gl_display_set_error (display, "unable to load %s: %s", bumper->location, msg); display->isAlive = FALSE; return; }
+#define LOAD_ERROR(display, msg) { gst_gl_display_set_error (display, "unable to load %s: %s", bumper->location, msg); return; }
 
 //png reading error handler
 static void

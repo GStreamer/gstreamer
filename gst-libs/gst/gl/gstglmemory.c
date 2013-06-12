@@ -25,6 +25,7 @@
 #include <gst/video/video.h>
 
 #include "gstglmemory.h"
+#include "gstglutils.h"
 
 /**
  * SECTION:gstglmemory

@@ -935,11 +935,18 @@ gst_gl_mixer_activate (GstGLMixer * mix, gboolean activate)
       mix->display =
           g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
     else {
+      GstGLWindow *window;
+      GError *error = NULL;
+
       GST_INFO ("Creating GstGLDisplay");
       mix->display = gst_gl_display_new ();
-      if (!gst_gl_display_create_context (mix->display, 0)) {
+      window = gst_gl_window_new (mix->display);
+      gst_gl_display_set_window (mix->display, window);
+      g_object_unref (window);
+
+      if (!gst_gl_window_create_context (window, 0, &error)) {
         GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
-            GST_GL_DISPLAY_ERR_MSG (mix->display), (NULL));
+            ("%s", error->message), (NULL));
         return FALSE;
       }
     }
