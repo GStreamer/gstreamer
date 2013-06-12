@@ -2095,7 +2095,7 @@ gst_rtsp_client_set_connection (GstRTSPClient * client,
 
   read_socket = gst_rtsp_connection_get_read_socket (conn);
 
-  if (!(address = g_socket_get_remote_address (read_socket, &error)))
+  if (!(address = g_socket_get_local_address (read_socket, &error)))
     goto no_address;
 
   g_free (priv->server_ip);
