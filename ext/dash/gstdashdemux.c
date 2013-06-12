@@ -1697,7 +1697,9 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
       gst_mpd_client_set_segment_index_for_all_streams (demux->client, 0);
       demux->end_of_period = FALSE;
 
-    } else if (!demux->cancelled) {
+    } else if (demux->cancelled) {
+      goto cancelled;
+    } else {
       /* Download failed 'by itself'
        * in case this is live, we might be ahead or before playback, where
        * segments don't exist (are still being created or were already deleted)
@@ -1746,8 +1748,6 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
       } else {
         goto error_downloading;
       }
-    } else if (demux->cancelled) {
-      goto cancelled;
     }
   }
 
