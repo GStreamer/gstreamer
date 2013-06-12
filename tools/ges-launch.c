@@ -203,7 +203,10 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
 
     else {
       gchar *uri;
+      GESAsset *asset;
       guint64 inpoint;
+
+      GError *error = NULL;
 
       if (!(uri = ensure_uri (source))) {
         GST_ERROR ("couldn't create uri for '%s'", source);
@@ -211,7 +214,20 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
       }
 
       inpoint = str_to_time (argv[i * 3 + 1]);
-      clip = GES_CLIP (ges_uri_clip_new (uri));
+      asset = GES_ASSET (ges_uri_clip_asset_request_sync (uri, &error));
+      if (error) {
+        g_printerr ("Can not create asset for %s", uri);
+
+        return NULL;
+      }
+
+      clip = GES_CLIP (ges_asset_extract (asset, &error));
+      if (error) {
+        g_printerr ("Can not extract asset for %s", uri);
+
+        return NULL;
+      }
+
       g_object_set (clip,
           "in-point", (guint64) inpoint, "duration", (guint64) duration, NULL);
 
