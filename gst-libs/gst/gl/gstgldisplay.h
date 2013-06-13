@@ -75,8 +75,6 @@ typedef enum
  */
 typedef void (*GstGLDisplayThreadFunc) (GstGLDisplay * display, gpointer data);
 
-#define GST_GL_DISPLAY_ERR_MSG(obj) ("%s", GST_GL_DISPLAY_CAST(obj)->error_message)
-
 /**
  * GstGLDisplay:
  *
@@ -95,8 +93,6 @@ struct _GstGLDisplay
   /* foreign gl context */
   gulong         external_gl_context;
 
-  gchar *error_message;
-
   GstGLFuncs *gl_vtable;
 
   GstGLDisplayPrivate *priv;
@@ -114,9 +110,6 @@ void gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data);
 
 gulong gst_gl_display_get_internal_gl_context (GstGLDisplay * display);
-
-/* Must be called inside a lock/unlock on display, or within the glthread */
-void gst_gl_display_set_error (GstGLDisplay * display, const char * format, ...);
 
 void gst_gl_display_lock (GstGLDisplay * display);
 void gst_gl_display_unlock (GstGLDisplay * display);

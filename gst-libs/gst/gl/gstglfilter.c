@@ -764,7 +764,7 @@ wrong_caps:
 display_error:
   {
     GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (filter->display), (NULL));
+        ("%s", gst_gl_display_get_error ()), (NULL));
     return FALSE;
   }
 

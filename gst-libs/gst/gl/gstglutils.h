@@ -102,4 +102,7 @@ void gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader);
 gboolean gst_gl_display_check_framebuffer_status (GstGLDisplay * display);
 void gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate);
 
+void gst_gl_display_set_error (GstGLDisplay * display, const char * format, ...);
+gchar *gst_gl_display_get_error (void);
+
 #endif /* __GST_GL_UTILS_H__ */

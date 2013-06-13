@@ -101,11 +101,6 @@ gst_gl_display_finalize (GObject * object)
 
   g_mutex_clear (&display->mutex);
 
-  if (display->error_message) {
-    g_free (display->error_message);
-    display->error_message = NULL;
-  }
-
   if (display->gl_vtable) {
     g_slice_free (GstGLFuncs, display->gl_vtable);
     display->gl_vtable = NULL;
@@ -124,21 +119,6 @@ gst_gl_display_finalize (GObject * object)
 //------------------------------------------------------------
 
 /* Called in the gl thread */
-
-void
-gst_gl_display_set_error (GstGLDisplay * display, const char *format, ...)
-{
-  va_list args;
-
-  if (display->error_message)
-    g_free (display->error_message);
-
-  va_start (args, format);
-  display->error_message = g_strdup_vprintf (format, args);
-  va_end (args);
-
-  GST_WARNING ("%s", display->error_message);
-}
 
 void
 gst_gl_display_thread_run_generic (GstGLDisplay * display)
