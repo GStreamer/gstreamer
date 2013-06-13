@@ -471,7 +471,6 @@ rtp_session_init (RTPSession * sess)
         g_hash_table_new_full (NULL, NULL, NULL,
         (GDestroyNotify) g_object_unref);
   }
-  sess->cnames = g_hash_table_new_full (NULL, NULL, g_free, NULL);
 
   rtp_stats_init_defaults (&sess->stats);
 
@@ -540,7 +539,6 @@ rtp_session_finalize (GObject * object)
 
   g_free (sess->bye_reason);
 
-  g_hash_table_destroy (sess->cnames);
   g_object_unref (sess->source);
 
   G_OBJECT_CLASS (rtp_session_parent_class)->finalize (object);
@@ -1560,33 +1558,6 @@ rtp_session_get_source_by_ssrc (RTPSession * sess, guint32 ssrc)
   return result;
 }
 
-/**
- * rtp_session_get_source_by_cname:
- * @sess: a #RTPSession
- * @cname: an CNAME
- *
- * Find the source with @cname in @sess.
- *
- * Returns: a #RTPSource with CNAME @cname or NULL if the source was not found.
- * g_object_unref() after usage.
- */
-RTPSource *
-rtp_session_get_source_by_cname (RTPSession * sess, const gchar * cname)
-{
-  RTPSource *result;
-
-  g_return_val_if_fail (RTP_IS_SESSION (sess), NULL);
-  g_return_val_if_fail (cname != NULL, NULL);
-
-  RTP_SESSION_LOCK (sess);
-  result = g_hash_table_lookup (sess->cnames, cname);
-  if (result)
-    g_object_ref (result);
-  RTP_SESSION_UNLOCK (sess);
-
-  return result;
-}
-
 /* should be called with the SESSION lock */
 static guint32
 rtp_session_create_new_ssrc (RTPSession * sess)
@@ -2523,7 +2494,8 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
       /* If it is <= 0, then try to estimate the actual bandwidth */
       bandwidth = sess->source->bitrate;
 
-      g_hash_table_foreach (sess->cnames, (GHFunc) add_bitrates, &bandwidth);
+      g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+          (GHFunc) add_bitrates, &bandwidth);
       bandwidth /= 8.0;
     }
     if (bandwidth < 8000)
