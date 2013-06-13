@@ -813,6 +813,11 @@ AG_GST_CHECK_FEATURE(PULSE, [pulseaudio plug-in], pulseaudio, [
   AC_CHECK_HEADERS([process.h])
 
   AG_GST_PKG_CHECK_MODULES(PULSE, libpulse >= 1.0)
+  AG_GST_PKG_CHECK_MODULES(PULSE_2_0, libpulse >= 2.0)
+  if test x$HAVE_PULSE_2_0 = xyes; then
+    AC_DEFINE(HAVE_PULSE_2_0, 1, [defined if pulseaudio >= 2.0 is available])
+  fi
+
 ])
 
 dnl *** dv1394 ***
