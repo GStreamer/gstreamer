@@ -696,7 +696,8 @@ gst_gl_window_x11_run (GstGLWindow * window)
           if (!destroy_cb || !destroy_data)
             GST_FIXME ("destroy cb not correctly set");
 
-          destroy_cb (destroy_data);
+          if (destroy_cb)
+            destroy_cb (destroy_data);
 
         } else
           GST_DEBUG ("client message not recognized");

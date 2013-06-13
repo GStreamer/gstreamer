@@ -73,7 +73,7 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_NO_SHARE,
       allocator, parent, maxsize, 0, 0, maxsize);
 
-  mem->display = g_object_ref (display);
+  mem->display = gst_object_ref (display);
   mem->gl_format = GL_RGBA;
   mem->v_format = v_format;
   mem->width = width;
@@ -338,7 +338,9 @@ _gl_mem_free (GstAllocator * allocator, GstMemory * mem)
   if (gl_mem->tex_id)
     gst_gl_display_del_texture (gl_mem->display, &gl_mem->tex_id);
 
-  g_object_unref (gl_mem->display);
+  gst_object_unref (gl_mem->upload);
+  gst_object_unref (gl_mem->download);
+  gst_object_unref (gl_mem->display);
 
   if (gl_mem->notify)
     gl_mem->notify (gl_mem->user_data);
