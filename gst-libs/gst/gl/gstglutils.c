@@ -233,6 +233,26 @@ gst_gl_display_check_framebuffer_status (GstGLDisplay * display)
 }
 
 void
+gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate)
+{
+  GstGLWindow *window;
+
+  g_return_if_fail (GST_IS_GL_DISPLAY (display));
+
+  if (!activate)
+    gst_gl_display_lock (display);
+
+  window = gst_gl_display_get_window_unlocked (display);
+
+  gst_gl_window_activate (window, activate);
+
+  if (activate)
+    gst_gl_display_unlock (display);
+
+  gst_object_unref (window);
+}
+
+void
 gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height)
 {

@@ -114,7 +114,6 @@ void gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data);
 
 gulong gst_gl_display_get_internal_gl_context (GstGLDisplay * display);
-void gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate);
 
 /* Must be called inside a lock/unlock on display, or within the glthread */
 void gst_gl_display_set_error (GstGLDisplay * display, const char * format, ...);
