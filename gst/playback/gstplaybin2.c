@@ -3182,6 +3182,7 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   GstPad *peer;
   GstElement *combiner;
   GstSourceCombine *combine;
+  int signal = -1;
 
   playbin = group->playbin;
 
@@ -3218,6 +3219,23 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     g_ptr_array_remove (combine->channels, peer);
     GST_DEBUG_OBJECT (playbin, "pad %p removed from array", peer);
 
+    /* get the correct type-changed signal */
+    switch (combine->type) {
+      case GST_PLAY_SINK_TYPE_VIDEO:
+      case GST_PLAY_SINK_TYPE_VIDEO_RAW:
+        signal = SIGNAL_VIDEO_CHANGED;
+        break;
+      case GST_PLAY_SINK_TYPE_AUDIO:
+      case GST_PLAY_SINK_TYPE_AUDIO_RAW:
+        signal = SIGNAL_AUDIO_CHANGED;
+        break;
+      case GST_PLAY_SINK_TYPE_TEXT:
+        signal = SIGNAL_TEXT_CHANGED;
+        break;
+      default:
+        signal = -1;
+    }
+
     if (!combine->channels->len && combine->combiner) {
       GST_DEBUG_OBJECT (playbin, "all combiner sinkpads removed");
       GST_DEBUG_OBJECT (playbin, "removing combiner %p", combine->combiner);
@@ -3249,20 +3267,21 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 exit:
   GST_SOURCE_GROUP_UNLOCK (group);
 
+  if (signal >= 0)
+    g_signal_emit (G_OBJECT (playbin), gst_play_bin_signals[signal], 0, NULL);
+
   return;
 
   /* ERRORS */
 not_linked:
   {
     GST_DEBUG_OBJECT (playbin, "pad not linked");
-    GST_SOURCE_GROUP_UNLOCK (group);
-    return;
+    goto exit;
   }
 no_combiner:
   {
     GST_DEBUG_OBJECT (playbin, "combiner not found");
-    GST_SOURCE_GROUP_UNLOCK (group);
-    return;
+    goto exit;
   }
 }
 
