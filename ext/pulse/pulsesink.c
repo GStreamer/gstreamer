@@ -2016,7 +2016,6 @@ done:
   pa_threaded_mainloop_signal (mainloop, 0);
 }
 
-#ifdef HAVE_PULSE_2_0
 static gboolean
 gst_pulse_format_info_int_prop_to_value (pa_format_info * format,
     const char *key, GValue * value)
@@ -2126,7 +2125,6 @@ gst_pulse_format_info_to_caps (pa_format_info * format)
 out:
   return ret;
 }
-#endif
 
 /* Call with mainloop lock held */
 static pa_stream *
@@ -2164,7 +2162,6 @@ error:
   return NULL;
 }
 
-#ifdef HAVE_PULSE_2_0
 static GstCaps *
 gst_pulsesink_query_getcaps (GstPulseSink * psink, GstCaps * filter)
 {
@@ -2277,7 +2274,6 @@ info_failed:
     goto unlock;
   }
 }
-#endif
 
 static gboolean
 gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
@@ -3129,7 +3125,6 @@ gst_pulsesink_query (GstBaseSink * sink, GstQuery * query)
   gboolean ret;
 
   switch (GST_QUERY_TYPE (query)) {
-#ifdef HAVE_PULSE_2_0
     case GST_QUERY_CAPS:
     {
       GstCaps *caps, *filter;
@@ -3145,7 +3140,6 @@ gst_pulsesink_query (GstBaseSink * sink, GstQuery * query)
         return FALSE;
       }
     }
-#endif
     case GST_QUERY_ACCEPT_CAPS:
     {
       GstCaps *caps;

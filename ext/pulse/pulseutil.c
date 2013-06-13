@@ -191,7 +191,6 @@ fail:
   return FALSE;
 }
 
-#ifdef HAVE_PULSE_2_0
 const char *
 gst_pulse_sample_format_to_caps_format (pa_sample_format_t sf)
 {
@@ -233,7 +232,6 @@ gst_pulse_sample_format_to_caps_format (pa_sample_format_t sf)
       return NULL;
   }
 }
-#endif
 
 /* PATH_MAX is not defined everywhere, e.g. on GNU Hurd */
 #ifndef PATH_MAX
