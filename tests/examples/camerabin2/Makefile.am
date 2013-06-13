@@ -1,5 +1,7 @@
 GST_CAMERABIN_UI_FILES = gst-camera2.ui
 
+AM_CPPFLAGS = -DCAMERA_APPS_UIDIR=\""$(srcdir)"\"
+
 if HAVE_GTK
 
 GST_CAMERABIN_GTK_EXAMPLES = gst-camera2
@@ -21,8 +23,6 @@ gst_camera2_LDADD   = \
 	$(GMODULE_EXPORT_LIBS)
 
 noinst_DATA = $(GST_CAMERABIN_UI_FILES)
-
-INCLUDES = -DCAMERA_APPS_UIDIR=\""$(srcdir)"\"
 
 else
 GST_CAMERABIN_GTK_EXAMPLES =
