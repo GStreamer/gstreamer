@@ -94,10 +94,8 @@ void gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data);
 
 #define GST_GL_DISPLAY_CONTEXT_TYPE "gst.gl.GLDisplay"
-void gst_context_set_gl_display (GstContext * context,
-    GstGLDisplay * display);
-gboolean gst_context_get_gl_display (GstContext * context,
-    GstGLDisplay ** display);
+void     gst_context_set_gl_display (GstContext * context, GstGLDisplay * display);
+gboolean gst_context_get_gl_display (GstContext * context, GstGLDisplay ** display);
 
 G_END_DECLS
 
