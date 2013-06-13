@@ -93,6 +93,21 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_shader_debug);
 G_DEFINE_TYPE_WITH_CODE (GstGLShader, gst_gl_shader, G_TYPE_OBJECT, DEBUG_INIT);
 
 static void
+gst_gl_shader_dispose (GObject * object)
+{
+  GstGLShader *shader;
+
+  shader = GST_GL_SHADER (object);
+
+  if (shader->display) {
+    gst_object_unref (shader->display);
+    shader->display = NULL;
+  }
+
+  G_OBJECT_CLASS (gst_gl_shader_parent_class)->dispose (object);
+}
+
+static void
 gst_gl_shader_finalize (GObject * object)
 {
   GstGLShader *shader;
@@ -181,6 +196,7 @@ gst_gl_shader_class_init (GstGLShaderClass * klass)
   g_type_class_add_private (klass, sizeof (GstGLShaderPrivate));
 
   obj_class->finalize = gst_gl_shader_finalize;
+  obj_class->dispose = gst_gl_shader_dispose;
   obj_class->set_property = gst_gl_shader_set_property;
   obj_class->get_property = gst_gl_shader_get_property;
 
@@ -332,7 +348,7 @@ gst_gl_shader_new (GstGLDisplay * display)
   g_return_val_if_fail (GST_IS_GL_DISPLAY (display), NULL);
 
   shader = g_object_new (GST_GL_TYPE_SHADER, NULL);
-  shader->display = display;
+  shader->display = gst_object_ref (display);
 
   if (!_fill_vtable (shader, display))
     return NULL;

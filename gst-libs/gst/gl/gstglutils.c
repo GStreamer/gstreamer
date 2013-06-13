@@ -52,6 +52,8 @@ static GLuint gen_texture_width;
 static GLuint gen_texture_height;
 static GstVideoFormat gen_texture_video_format;
 
+static GLuint *del_texture;
+
 /* filter gen fbo */
 static GLuint gen_fbo_width;
 static GLuint gen_fbo_height;
@@ -187,9 +189,9 @@ gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
 }
 
 void
-gst_gl_display_del_texture_thread (GstGLDisplay * display, GLuint * pTexture)
+gst_gl_display_del_texture_window_cb (GstGLDisplay * display)
 {
-  //glDeleteTextures (1, pTexture);
+  glDeleteTextures (1, del_texture);
 }
 
 /* called in the gl thread */
@@ -258,10 +260,19 @@ gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
 void
 gst_gl_display_del_texture (GstGLDisplay * display, GLuint * pTexture)
 {
+  GstGLWindow *window;
+
   gst_gl_display_lock (display);
-  if (*pTexture) {
-    gst_gl_display_del_texture_thread (display, pTexture);
+
+  window = gst_gl_display_get_window_unlocked (display);
+  if (gst_gl_window_is_running (window) && *pTexture) {
+    del_texture = pTexture;
+    gst_gl_window_send_message (window,
+        GST_GL_WINDOW_CB (gst_gl_display_del_texture_window_cb), display);
   }
+
+  gst_object_unref (window);
+
   gst_gl_display_unlock (display);
 }
 
@@ -689,7 +700,7 @@ _gen_shader (GstGLDisplay * display)
         g_error_free (error);
         error = NULL;
         gst_gl_display_clear_shader (display);
-        g_object_unref (G_OBJECT (gen_shader));
+        gst_object_unref (gen_shader);
         gen_shader = NULL;
       }
     }
@@ -707,7 +718,7 @@ _del_shader (GstGLDisplay * display)
   GST_TRACE ("Deleting shader %" GST_PTR_FORMAT, del_shader);
 
   if (del_shader) {
-    g_object_unref (G_OBJECT (del_shader));
+    gst_object_unref (del_shader);
     del_shader = NULL;
   }
 }

@@ -43,7 +43,7 @@ setup (void)
 void
 teardown (void)
 {
-  g_object_unref (display);
+  gst_object_unref (display);
 }
 
 GST_START_TEST (test_basic)

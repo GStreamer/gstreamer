@@ -460,7 +460,7 @@ gst_gl_mixer_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
 
   GST_GL_MIXER_LOCK (mix);
   if ((obj = g_slist_nth_data (mix->sinkpads, index)))
-    g_object_ref (obj);
+    gst_object_ref (obj);
   GST_GL_MIXER_UNLOCK (mix);
   return obj;
 }
@@ -933,7 +933,7 @@ gst_gl_mixer_activate (GstGLMixer * mix, gboolean activate)
     id_value = gst_structure_get_value (structure, "gstgldisplay");
     if (G_VALUE_HOLDS_POINTER (id_value))
       mix->display =
-          g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
+          gst_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
     else {
       GstGLWindow *window;
       GError *error = NULL;
@@ -942,7 +942,7 @@ gst_gl_mixer_activate (GstGLMixer * mix, gboolean activate)
       mix->display = gst_gl_display_new ();
       window = gst_gl_window_new (mix->display);
       gst_gl_display_set_window (mix->display, window);
-      g_object_unref (window);
+      gst_object_unref (window);
 
       if (!gst_gl_window_create_context (window, 0, &error)) {
         GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
@@ -2140,7 +2140,7 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
         mix->depthbuffer = 0;
       }
       if (mix->download) {
-        g_object_unref (mix->download);
+        gst_object_unref (mix->download);
         mix->download = NULL;
       }
 
@@ -2148,7 +2148,7 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
         GstGLMixerPad *pad = (GstGLMixerPad *) (walk->data);
 
         if (pad->upload) {
-          g_object_unref (pad->upload);
+          gst_object_unref (pad->upload);
           pad->upload = NULL;
         }
 
@@ -2156,7 +2156,7 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
       }
 
       if (mix->display) {
-        g_object_unref (mix->display);
+        gst_object_unref (mix->display);
         mix->display = NULL;
       }
       break;
