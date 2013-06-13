@@ -40,7 +40,7 @@ gst_gl_effects_twirl_callback (gint width, gint height, guint texture,
           twirl_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
     gst_gl_display_set_error (display, "Failed to initialize twirl shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (display), (NULL));
+        ("%s", gst_gl_display_get_error ()), (NULL));
     return;
   }
 

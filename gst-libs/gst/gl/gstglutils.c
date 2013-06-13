@@ -95,6 +95,8 @@ static void _del_fbo (GstGLDisplay * display);
 static void _gen_shader (GstGLDisplay * display);
 static void _del_shader (GstGLDisplay * display);
 
+static gchar *error_message;
+
 static void
 gst_gl_display_gen_texture_window_cb (GstGLDisplay * display)
 {
@@ -452,6 +454,26 @@ gst_gl_display_gen_shader (GstGLDisplay * display,
   return alive;
 }
 
+void
+gst_gl_display_set_error (GstGLDisplay * display, const char *format, ...)
+{
+  va_list args;
+
+  if (error_message)
+    g_free (error_message);
+
+  va_start (args, format);
+  error_message = g_strdup_vprintf (format, args);
+  va_end (args);
+
+  GST_WARNING ("%s", error_message);
+}
+
+gchar *
+gst_gl_display_get_error (void)
+{
+  return error_message;
+}
 
 /* Called by glfilter */
 void

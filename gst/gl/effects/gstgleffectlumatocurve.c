@@ -42,7 +42,7 @@ gst_gl_effects_luma_to_curve (GstGLEffects * effects,
     gst_gl_display_set_error (display,
         "Failed to initialize luma to curve shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (display), (NULL));
+        ("%s", gst_gl_display_get_error ()), (NULL));
     return;
   }
 

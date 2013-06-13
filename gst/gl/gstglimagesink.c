@@ -677,7 +677,7 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   if (g_atomic_int_get (&glimage_sink->to_quit) != 0) {
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (glimage_sink->display), (NULL));
+        ("%s", gst_gl_display_get_error ()), (NULL));
     return GST_FLOW_ERROR;
   }
 
@@ -688,7 +688,7 @@ redisplay_failed:
   {
     gst_video_frame_unmap (&frame);
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (glimage_sink->display), (NULL));
+        ("%s", gst_gl_display_get_error ()), (NULL));
     return GST_FLOW_ERROR;
   }
 }

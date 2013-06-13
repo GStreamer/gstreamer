@@ -40,7 +40,7 @@ gst_gl_effects_bulge_callback (gint width, gint height, guint texture,
           bulge_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
     gst_gl_display_set_error (display, "Failed to initialize bulge shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (display), (NULL));
+        ("%s", gst_gl_display_get_error ()), (NULL));
     return;
   }
 

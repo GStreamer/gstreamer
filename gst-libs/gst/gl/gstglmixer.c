@@ -1154,7 +1154,7 @@ done:
 display_error:
   {
     GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (mix->display), (NULL));
+        ("%s", gst_gl_display_get_error ()), (NULL));
     return FALSE;
   }
 }

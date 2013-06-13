@@ -332,7 +332,7 @@ wrong_caps:
 display_error:
   {
     GST_ELEMENT_ERROR (gltestsrc, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (gltestsrc->display), (NULL));
+        ("%s", gst_gl_display_get_error ()), (NULL));
     return FALSE;
   }
 }
