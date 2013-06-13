@@ -327,6 +327,7 @@ gst_init_check (int *argc, char **argv[], GError ** err)
 #ifndef GST_DISABLE_OPTION_PARSING
   ctx = g_option_context_new ("- GStreamer initialization");
   g_option_context_set_ignore_unknown_options (ctx, TRUE);
+  g_option_context_set_help_enabled (ctx, FALSE);
   group = gst_init_get_option_group ();
   g_option_context_add_group (ctx, group);
   res = g_option_context_parse (ctx, argc, argv, err);
