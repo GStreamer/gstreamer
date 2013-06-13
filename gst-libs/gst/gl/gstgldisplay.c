@@ -25,22 +25,9 @@
 #include "config.h"
 #endif
 
-#include <stdio.h>
-
-#include <gst/gst.h>
-#include <gst/video/gstvideosink.h>
-#include "gstgldownload.h"
 #include "gstglmemory.h"
-#include "gstglfeature.h"
-#include "gstglapi.h"
 
 #include "gstgldisplay.h"
-
-#define USING_OPENGL(display) (display->gl_api & GST_GL_API_OPENGL)
-#define USING_OPENGL3(display) (display->gl_api & GST_GL_API_OPENGL3)
-#define USING_GLES(display) (display->gl_api & GST_GL_API_GLES)
-#define USING_GLES2(display) (display->gl_api & GST_GL_API_GLES2)
-#define USING_GLES3(display) (display->gl_api & GST_GL_API_GLES3)
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
 #define GST_CAT_DEFAULT gst_gl_display_debug
@@ -55,11 +42,11 @@ G_DEFINE_TYPE_WITH_CODE (GstGLDisplay, gst_gl_display, G_TYPE_OBJECT,
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_DISPLAY, GstGLDisplayPrivate))
 
 static void gst_gl_display_finalize (GObject * object);
+static void _gst_gl_display_thread_run_generic (GstGLDisplay * display);
 
 struct _GstGLDisplayPrivate
 {
-  /* generic gl code */
-  GstGLDisplayThreadFunc generic_callback;
+  GstGLDisplayThreadFunc func;
   gpointer data;
 };
 
@@ -105,13 +92,13 @@ gst_gl_display_finalize (GObject * object)
   G_OBJECT_CLASS (gst_gl_display_parent_class)->finalize (object);
 }
 
-void
-gst_gl_display_thread_run_generic (GstGLDisplay * display)
+static void
+_gst_gl_display_thread_run_generic (GstGLDisplay * display)
 {
   GST_TRACE ("running function:%p data:%p",
-      display->priv->generic_callback, display->priv->data);
+      display->priv->func, display->priv->data);
 
-  display->priv->generic_callback (display, display->priv->data);
+  display->priv->func (display, display->priv->data);
 }
 
 GstGLDisplay *
@@ -131,10 +118,10 @@ gst_gl_display_thread_add (GstGLDisplay * display,
   gst_gl_display_lock (display);
 
   display->priv->data = data;
-  display->priv->generic_callback = func;
+  display->priv->func = func;
 
   gst_gl_window_send_message (display->window,
-      GST_GL_WINDOW_CB (gst_gl_display_thread_run_generic), display);
+      GST_GL_WINDOW_CB (_gst_gl_display_thread_run_generic), display);
 
   gst_gl_display_unlock (display);
 }
@@ -151,13 +138,9 @@ gst_gl_display_get_gl_api (GstGLDisplay * display)
 gpointer
 gst_gl_display_get_gl_vtable (GstGLDisplay * display)
 {
-  gpointer gl;
-
   g_return_val_if_fail (GST_IS_GL_DISPLAY (display), NULL);
 
-  gl = display->gl_vtable;
-
-  return gl;
+  return display->gl_vtable;
 }
 
 void
