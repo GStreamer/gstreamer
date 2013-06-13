@@ -481,6 +481,7 @@ build_huffman_table (GstJpegHuffmanTable * huf_table,
     huf_table->huf_values[i] = e->value;
     n++;
   }
+  huf_table->huf_bits[j - 1] = n;
 
   for (; j < G_N_ELEMENTS (huf_table->huf_bits); j++)
     huf_table->huf_bits[j] = 0;
