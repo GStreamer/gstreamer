@@ -385,20 +385,13 @@ gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
 GstGLAPI
 gst_gl_window_get_gl_api (GstGLWindow * window)
 {
-  GstGLAPI ret;
   GstGLWindowClass *window_class;
 
   g_return_val_if_fail (GST_GL_IS_WINDOW (window), GST_GL_API_NONE);
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_val_if_fail (window_class->get_gl_api != NULL, GST_GL_API_NONE);
 
-  GST_GL_WINDOW_LOCK (window);
-
-  ret = window_class->get_gl_api (window);
-
-  GST_GL_WINDOW_UNLOCK (window);
-
-  return ret;
+  return window_class->get_gl_api (window);
 }
 
 gpointer

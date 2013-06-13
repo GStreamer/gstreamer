@@ -3,6 +3,7 @@
  * Copyright (C) 2007 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
  * Copyright (C) 2008 Filippo Argiolas <filippo.argiolas@gmail.com>
+ * Copyright (C) 2013 Matthew Waters <ystreet00@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,51 +21,30 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_GL_H__
-#define __GST_GL_H__
+#ifndef __GST_GL_DISPLAY_H__
+#define __GST_GL_DISPLAY_H__
 
 #include "gstglconfig.h"
 
-#include <gst/video/video.h>
-
-typedef struct _GstGLShader GstGLShader;
 typedef struct _GstGLWindow GstGLWindow;
 
 #include "gstglwindow.h"
-#include "gstglshader.h"
 #include "gstglutils.h"
 
 G_BEGIN_DECLS
 
 GType gst_gl_display_get_type (void);
-#define GST_GL_TYPE_DISPLAY (gst_gl_display_get_type())
-#define GST_GL_DISPLAY(obj)	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_GL_TYPE_DISPLAY,GstGLDisplay))
-#define GST_GL_DISPLAY_CLASS(klass)	\
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_GL_TYPE_DISPLAY,GstGLDisplayClass))
-#define GST_IS_GL_DISPLAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_GL_TYPE_DISPLAY))
-#define GST_IS_GL_DISPLAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_GL_TYPE_DISPLAY))
-#define GST_GL_DISPLAY_CAST(obj) ((GstGLDisplay*)(obj))
+
+#define GST_TYPE_GL_DISPLAY             (gst_gl_display_get_type())
+#define GST_GL_DISPLAY(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_DISPLAY,GstGLDisplay))
+#define GST_GL_DISPLAY_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_GL_DISPLAY,GstGLDisplayClass))
+#define GST_IS_GL_DISPLAY(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_DISPLAY))
+#define GST_IS_GL_DISPLAY_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_GL_DISPLAY))
+#define GST_GL_DISPLAY_CAST(obj)        ((GstGLDisplay*)(obj))
 
 typedef struct _GstGLDisplay GstGLDisplay;
 typedef struct _GstGLDisplayClass GstGLDisplayClass;
 typedef struct _GstGLDisplayPrivate GstGLDisplayPrivate;
-
-/**
- * GstGLDisplayConversion:
- *
- * %GST_GL_DISPLAY_CONVERSION_GLSL: Convert using GLSL (shaders)
- * %GST_GL_DISPLAY_CONVERSION_MATRIX: Convert using the ARB_imaging extension (not implemented)
- * %GST_GL_DISPLAY_CONVERSION_MESA: Convert using support in MESA
- */
-typedef enum
-{
-  GST_GL_DISPLAY_CONVERSION_GLSL,
-  GST_GL_DISPLAY_CONVERSION_MATRIX,
-  GST_GL_DISPLAY_CONVERSION_MESA,
-} GstGLDisplayConversion;
-
 
 /**
  * GstGLDisplayThreadFunc:
@@ -83,21 +63,16 @@ typedef void (*GstGLDisplayThreadFunc) (GstGLDisplay * display, gpointer data);
  */
 struct _GstGLDisplay
 {
-  GObject        object;
+  GstObject             object;
 
-  /* thread safe */
-  GMutex         mutex;
+  /* <private> */
+  GstGLWindow          *window;
+  GstGLAPI              gl_api;
 
-  /* gl API we are using */
-  GstGLAPI       gl_api;
-  /* foreign gl context */
-  gulong         external_gl_context;
+  GstGLFuncs           *gl_vtable;
 
-  GstGLFuncs *gl_vtable;
-
-  GstGLDisplayPrivate *priv;
+  GstGLDisplayPrivate  *priv;
 };
-
 
 struct _GstGLDisplayClass
 {
@@ -106,21 +81,24 @@ struct _GstGLDisplayClass
 
 GstGLDisplay *gst_gl_display_new (void);
 
+#define gst_gl_display_lock(display)        GST_OBJECT_LOCK (display)
+#define gst_gl_display_unlock(display)      GST_OBJECT_UNLOCK (display)
+
+GstGLAPI      gst_gl_display_get_gl_api             (GstGLDisplay * display);
+gpointer      gst_gl_display_get_gl_vtable          (GstGLDisplay * display);
+void          gst_gl_display_set_window             (GstGLDisplay * display, GstGLWindow * window);
+GstGLWindow * gst_gl_display_get_window             (GstGLDisplay * display);
+GstGLWindow * gst_gl_display_get_window_unlocked    (GstGLDisplay * display);
+
 void gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data);
 
-gulong gst_gl_display_get_internal_gl_context (GstGLDisplay * display);
-
-void gst_gl_display_lock (GstGLDisplay * display);
-void gst_gl_display_unlock (GstGLDisplay * display);
-GstGLAPI gst_gl_display_get_gl_api (GstGLDisplay * display);
-
-gpointer gst_gl_display_get_gl_vtable (GstGLDisplay * display);
-
-void gst_gl_display_set_window (GstGLDisplay * display, GstGLWindow * window);
-GstGLWindow * gst_gl_display_get_window (GstGLDisplay * display);
-GstGLWindow * gst_gl_display_get_window_unlocked (GstGLDisplay * display);
+#define GST_GL_DISPLAY_CONTEXT_TYPE "gst.gl.GLDisplay"
+void gst_context_set_gl_display (GstContext * context,
+    GstGLDisplay * display);
+gboolean gst_context_get_gl_display (GstContext * context,
+    GstGLDisplay ** display);
 
 G_END_DECLS
 
-#endif /* __GST_GL_H__ */
+#endif /* __GST_GL_DISPLAY_H__ */

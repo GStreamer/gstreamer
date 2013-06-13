@@ -25,7 +25,7 @@
 #include <gst/base/gstcollectpads.h>
 
 #include "gstgldisplay.h"
-#include <gst/gl/gstglupload.h>
+#include "gstglupload.h"
 
 G_BEGIN_DECLS
 
