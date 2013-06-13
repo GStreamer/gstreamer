@@ -115,6 +115,9 @@ struct _GstGLWindowClass {
   void     (*quit)               (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
   void     (*send_message)       (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 
+  gboolean (*open)               (GstGLWindow *window, GError **error);
+  void     (*close)              (GstGLWindow *window);
+
   /*< private >*/
   gpointer _reserved[GST_PADDING];
 };

@@ -160,6 +160,7 @@ static void
 gst_gl_window_finalize (GObject * object)
 {
   GstGLWindow *window = GST_GL_WINDOW (object);
+  GstGLWindowClass *window_class = GST_GL_WINDOW_GET_CLASS (window);
 
   if (window) {
     gst_gl_window_set_resize_callback (window, NULL, NULL);
@@ -178,6 +179,10 @@ gst_gl_window_finalize (GObject * object)
     if (ret != NULL)
       GST_ERROR ("gl thread returned a non-null pointer");
     window->priv->gl_thread = NULL;
+  }
+
+  if (window_class->close) {
+    window_class->close (window);
   }
 
   g_mutex_clear (&window->priv->render_lock);
@@ -415,28 +420,6 @@ gst_gl_window_get_proc_address (GstGLWindow * window, const gchar * name)
   return ret;
 }
 
-
-gboolean
-_priv_gst_gl_window_create_context (GstGLWindow * window, GstGLAPI gl_api,
-    guintptr external_gl_context, GError ** error)
-{
-  gboolean ret;
-  GstGLWindowClass *window_class;
-
-  g_return_val_if_fail (GST_GL_IS_WINDOW (window), FALSE);
-  window_class = GST_GL_WINDOW_GET_CLASS (window);
-  g_return_val_if_fail (window_class->create_context != NULL, FALSE);
-
-  GST_GL_WINDOW_LOCK (window);
-
-  ret =
-      window_class->create_context (window, gl_api, external_gl_context, error);
-
-  GST_GL_WINDOW_UNLOCK (window);
-
-  return ret;
-}
-
 gpointer
 gst_gl_window_default_get_proc_address (GstGLWindow * window,
     const gchar * name)
@@ -469,6 +452,11 @@ gst_gl_window_create_context (GstGLWindow * window,
 
   g_mutex_lock (&window->priv->render_lock);
 
+  if (window_class->open) {
+    if (!(alive = window_class->open (window, error)))
+      goto out;
+  }
+
   if (!window->priv->context_created) {
     window->priv->external_gl_context = external_gl_context;
     window->priv->error = error;
@@ -488,6 +476,7 @@ gst_gl_window_create_context (GstGLWindow * window,
 
   g_mutex_unlock (&window->priv->render_lock);
 
+out:
   return alive;
 }
 
@@ -498,16 +487,15 @@ gst_gl_window_is_running (GstGLWindow * window)
 }
 
 static gboolean
-_create_context_gles2 (GstGLWindow * window, gint * gl_major, gint * gl_minor)
+_create_context_gles2 (GstGLWindow * window, gint * gl_major, gint * gl_minor,
+    GError ** error)
 {
   GstGLDisplay *display;
   const GstGLFuncs *gl;
   GLenum gl_err = GL_NO_ERROR;
-  GError **error;
 
   display = window->priv->display;
   gl = display->gl_vtable;
-  error = window->priv->error;
 
   GST_INFO ("GL_VERSION: %s", gl->GetString (GL_VERSION));
   GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
@@ -541,18 +529,17 @@ _create_context_gles2 (GstGLWindow * window, gint * gl_major, gint * gl_minor)
 }
 
 gboolean
-_create_context_opengl (GstGLWindow * window, gint * gl_major, gint * gl_minor)
+_create_context_opengl (GstGLWindow * window, gint * gl_major, gint * gl_minor,
+    GError ** error)
 {
   GstGLDisplay *display;
   const GstGLFuncs *gl;
   guint maj, min;
   GLenum gl_err = GL_NO_ERROR;
   GString *opengl_version = NULL;
-  GError **error;
 
   display = window->priv->display;
   gl = display->gl_vtable;
-  error = window->priv->error;
 
   GST_INFO ("GL_VERSION: %s", gl->GetString (GL_VERSION));
   GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
@@ -720,15 +707,12 @@ _gst_gl_window_thread_create_context (GstGLWindow * window)
 
   /* gl api specific code */
   if (!ret && USING_OPENGL (display))
-    ret = _create_context_opengl (window, &gl_major, NULL);
+    ret = _create_context_opengl (window, &gl_major, NULL, error);
   if (!ret && USING_GLES2 (display))
-    ret = _create_context_gles2 (window, &gl_major, NULL);
+    ret = _create_context_gles2 (window, &gl_major, NULL, error);
 
-  if (!ret || !gl_major) {
-    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
-        "GL api specific initialization failed");
+  if (!ret)
     goto failure;
-  }
 
   g_cond_signal (&window->priv->cond_create_context);
 
