@@ -552,7 +552,7 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
   if (G_VALUE_HOLDS_POINTER (id_value))
     /* at least one gl element is after in our gl chain */
     src->display =
-        g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
+        gst_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
   else {
     GstGLWindow *window;
     GError *error = NULL;
@@ -561,7 +561,7 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
     src->display = gst_gl_display_new ();
     window = gst_gl_window_new (src->display);
     gst_gl_display_set_window (src->display, window);
-    g_object_unref (window);
+    gst_object_unref (window);
 
     if (!gst_gl_window_create_context (window, 0, &error)) {
       GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
@@ -588,12 +588,12 @@ gst_gl_test_src_stop (GstBaseSrc * basesrc)
     }
 
     if (src->download) {
-      g_object_unref (src->download);
+      gst_object_unref (src->download);
       src->download = NULL;
     }
     //blocking call, delete the FBO
     gst_gl_display_del_fbo (src->display, src->fbo, src->depthbuffer);
-    g_object_unref (src->display);
+    gst_object_unref (src->display);
     src->display = NULL;
   }
 

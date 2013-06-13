@@ -271,7 +271,7 @@ gst_gl_upload_new (GstGLDisplay * display)
 
   upload = g_object_new (GST_TYPE_GL_UPLOAD, NULL);
 
-  upload->display = g_object_ref (display);
+  upload->display = gst_object_ref (display);
   priv = upload->priv;
 
   g_mutex_init (&upload->lock);
@@ -322,14 +322,16 @@ gst_gl_upload_finalize (GObject * object)
     upload->depth_buffer = 0;
   }
   if (upload->shader) {
-    g_object_unref (G_OBJECT (upload->shader));
+    gst_object_unref (upload->shader);
     upload->shader = NULL;
   }
 
   if (upload->display) {
-    g_object_unref (G_OBJECT (upload->display));
+    gst_object_unref (upload->display);
     upload->display = NULL;
   }
+
+  G_OBJECT_CLASS (gst_gl_upload_parent_class)->finalize (object);
 }
 
 /**
@@ -637,7 +639,7 @@ _create_shader (GstGLDisplay * display, const gchar * vertex_src,
     gst_gl_display_set_error (display, "%s", error->message);
     g_error_free (error);
     gst_gl_display_clear_shader (display);
-    g_object_unref (G_OBJECT (shader));
+    gst_object_unref (shader);
     return FALSE;
   }
 

@@ -298,7 +298,7 @@ main (int argc, char *argv[])
   glfilter = gst_bin_get_by_name (GST_BIN (pipeline), "glfiltercube0");
   g_object_set (G_OBJECT (glfilter), "external-opengl-context",
       clutter_gl_context, NULL);
-  g_object_unref (glfilter);
+  gst_object_unref (glfilter);
 
   /* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
    * shared with the clutter one */
@@ -336,7 +336,7 @@ main (int argc, char *argv[])
   g_object_set (G_OBJECT (fakesink), "signal-handoffs", TRUE, NULL);
   g_signal_connect (fakesink, "handoff", G_CALLBACK (on_gst_buffer),
       clutter_texture);
-  g_object_unref (fakesink);
+  gst_object_unref (fakesink);
 
   /* play gst */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
@@ -357,7 +357,7 @@ main (int argc, char *argv[])
 
   /* stop and clean up the pipeline */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-  g_object_unref (pipeline);
+  gst_object_unref (pipeline);
 
   /* make sure there is no pending gst gl buffer in the communication queues
    * between clutter and gst-gl

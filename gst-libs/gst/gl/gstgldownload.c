@@ -285,7 +285,7 @@ gst_gl_download_new (GstGLDisplay * display)
 
   download = g_object_new (GST_TYPE_GL_DOWNLOAD, NULL);
 
-  download->display = g_object_ref (display);
+  download->display = gst_object_ref (display);
   priv = download->priv;
 
 #if GST_GL_HAVE_OPENGL
@@ -337,16 +337,18 @@ gst_gl_download_finalize (GObject * object)
     download->depth_buffer = 0;
   }
   if (download->shader) {
-    g_object_unref (G_OBJECT (download->shader));
+    gst_object_unref (download->shader);
     download->shader = NULL;
   }
 
   if (download->display) {
-    g_object_unref (G_OBJECT (download->display));
+    gst_object_unref (download->display);
     download->display = NULL;
   }
 
   g_mutex_clear (&download->lock);
+
+  G_OBJECT_CLASS (gst_gl_download_parent_class)->finalize (object);
 }
 
 static inline gboolean
@@ -832,7 +834,7 @@ _create_shader (GstGLDisplay * display, const gchar * vertex_src,
     gst_gl_display_set_error (display, "%s", error->message);
     g_error_free (error);
     gst_gl_display_clear_shader (display);
-    g_object_unref (G_OBJECT (shader));
+    gst_object_unref (shader);
     return FALSE;
   }
 

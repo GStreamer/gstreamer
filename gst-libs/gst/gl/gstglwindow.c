@@ -296,10 +296,10 @@ gst_gl_window_quit (GstGLWindow * window, GstGLWindowCB callback, gpointer data)
 
   GST_INFO ("quit sent to gl window loop");
 
+  GST_GL_WINDOW_UNLOCK (window);
+
   g_cond_wait (&window->priv->cond_destroy_context, &window->priv->render_lock);
   GST_INFO ("quit received from gl window");
-
-  GST_GL_WINDOW_UNLOCK (window);
 }
 
 void
@@ -742,10 +742,6 @@ _gst_gl_window_thread_create_context (GstGLWindow * window)
   g_mutex_lock (&window->priv->render_lock);
 
   window->priv->alive = FALSE;
-
-//  g_object_unref (G_OBJECT (display->gl_window));
-
-//  display->gl_window = NULL;
 
   g_cond_signal (&window->priv->cond_destroy_context);
 

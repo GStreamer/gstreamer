@@ -170,7 +170,7 @@ main (int argc, char *argv[])
   clutter_main ();
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-  g_object_unref (pipeline);
+  gst_object_unref (pipeline);
 
   return 0;
 }

@@ -307,7 +307,7 @@ main (int argc, char **argv)
   glfilter = gst_bin_get_by_name (GST_BIN (pipeline), "gleffects0");
   g_object_set (G_OBJECT (glfilter), "external-opengl-context",
       sdl_gl_context, NULL);
-  g_object_unref (glfilter);
+  gst_object_unref (glfilter);
 
   /* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
    * shared with the sdl one */
@@ -335,7 +335,7 @@ main (int argc, char **argv)
   g_object_set_data (G_OBJECT (fakesink), "queue_input_buf", queue_input_buf);
   g_object_set_data (G_OBJECT (fakesink), "queue_output_buf", queue_output_buf);
   g_object_set_data (G_OBJECT (fakesink), "loop", loop);
-  g_object_unref (fakesink);
+  gst_object_unref (fakesink);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
@@ -351,7 +351,7 @@ main (int argc, char **argv)
 #endif
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-  g_object_unref (pipeline);
+  gst_object_unref (pipeline);
 
   /* turn on back sdl opengl context */
 #ifdef WIN32

@@ -154,7 +154,7 @@ gst_gl_differencematte_reset_gl_resources (GstGLFilter * filter)
   gl->DeleteTextures (1, &differencematte->newbgtexture);
   for (i = 0; i < 4; i++) {
     if (differencematte->shader[i]) {
-      g_object_unref (differencematte->shader[i]);
+      gst_object_unref (differencematte->shader[i]);
       differencematte->shader[i] = NULL;
     }
     if (differencematte->midtexture[i]) {

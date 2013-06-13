@@ -427,7 +427,7 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
               ("%s", error->message), (NULL));
 
           if (glimage_sink->display) {
-            g_object_unref (glimage_sink->display);
+            gst_object_unref (glimage_sink->display);
             glimage_sink->display = NULL;
           }
           gst_object_unref (window);
@@ -466,7 +466,7 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         glimage_sink->stored_buffer = NULL;
       }
       if (glimage_sink->upload) {
-        g_object_unref (glimage_sink->upload);
+        gst_object_unref (glimage_sink->upload);
         glimage_sink->upload = NULL;
       }
 
@@ -482,8 +482,8 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         gst_gl_window_set_draw_callback (window, NULL, NULL);
         gst_gl_window_set_close_callback (window, NULL, NULL);
 
-        g_object_unref (window);
-        g_object_unref (glimage_sink->display);
+        gst_object_unref (window);
+        gst_object_unref (glimage_sink->display);
         glimage_sink->display = NULL;
       }
       break;
@@ -653,12 +653,8 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
     gst_object_unref (window);
   }
-  //the buffer is cleared when an other comes in
-  if (glimage_sink->stored_buffer) {
-    gst_buffer_unref (glimage_sink->stored_buffer);
-  }
-  //store current buffer
-  glimage_sink->stored_buffer = gst_buffer_ref (buf);
+
+  gst_buffer_replace (&glimage_sink->stored_buffer, buf);
 
   GST_TRACE ("redisplay texture:%u of size:%ux%u, window size:%ux%u", tex_id,
       GST_VIDEO_INFO_WIDTH (&glimage_sink->info),
@@ -1056,7 +1052,7 @@ temp (GstGLImageSink * gl_sink)
 {
 #if GST_GL_HAVE_GLES2
   if (gl_sink->redisplay_shader) {
-    g_object_unref (G_OBJECT (gl_sink->redisplay_shader));
+    gst_object_unref (gl_sink->redisplay_shader);
     gl_sink->redisplay_shader = NULL;
   }
 #endif

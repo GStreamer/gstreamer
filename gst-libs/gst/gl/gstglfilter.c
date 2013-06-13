@@ -220,7 +220,7 @@ gst_gl_filter_reset (GstGLFilter * filter)
     }
     //blocking call, delete the FBO
     gst_gl_display_del_fbo (filter->display, filter->fbo, filter->depthbuffer);
-    g_object_unref (filter->display);
+    gst_object_unref (filter->display);
     filter->display = NULL;
   }
 
@@ -251,7 +251,7 @@ gst_gl_filter_start (GstBaseTransform * bt)
   if (G_VALUE_HOLDS_POINTER (id_value))
     /* at least one gl element is after in our gl chain */
     filter->display =
-        g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
+        gst_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
   else {
     GstGLWindow *window;
     GError *error = NULL;
@@ -260,7 +260,7 @@ gst_gl_filter_start (GstBaseTransform * bt)
     filter->display = gst_gl_display_new ();
     window = gst_gl_window_new (filter->display);
     gst_gl_display_set_window (filter->display, window);
-    g_object_unref (window);
+    gst_object_unref (window);
 
     if (!gst_gl_window_create_context (window, 0, &error)) {
       GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
@@ -1000,6 +1000,9 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
   if (in_gl_wrapped) {
     gst_gl_upload_perform_with_data (filter->upload, in_tex, in_frame.data);
   }
+
+  GST_DEBUG ("calling filter_texture with textures in:%i out:%i", in_tex,
+      out_tex);
 
   g_assert (filter_class->filter_texture);
   ret = filter_class->filter_texture (filter, in_tex, out_tex);

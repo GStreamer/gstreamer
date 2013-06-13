@@ -286,7 +286,7 @@ gst_visual_gl_dispose (GObject * object)
   GstVisualGL *visual = GST_VISUAL_GL (object);
 
   if (visual->adapter) {
-    g_object_unref (visual->adapter);
+    gst_object_unref (visual->adapter);
     visual->adapter = NULL;
   }
 
@@ -1037,7 +1037,7 @@ gst_visual_gl_change_state (GstElement * element, GstStateChange transition)
         if (G_VALUE_HOLDS_POINTER (id_value))
           /* at least one gl element is after in our gl chain */
           visual->display =
-              g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
+              gst_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
         else {
           /* this gl filter is a sink in terms of the gl chain */
           visual->display = gst_gl_display_new ();
@@ -1097,7 +1097,7 @@ gst_visual_gl_change_state (GstElement * element, GstStateChange transition)
         visual->midtexture = 0;
       }
       if (visual->display) {
-        g_object_unref (visual->display);
+        gst_object_unref (visual->display);
         visual->display = NULL;
       }
 
