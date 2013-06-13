@@ -200,21 +200,6 @@ gst_gl_display_get_internal_gl_context (GstGLDisplay * display)
   return gst_gl_window_get_gl_context (display->priv->window);
 }
 
-void
-gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate)
-{
-  g_return_if_fail (GST_IS_GL_DISPLAY (display));
-  g_return_if_fail (GST_GL_IS_WINDOW (display->priv->window));
-
-  if (!activate)
-    gst_gl_display_lock (display);
-
-  gst_gl_window_activate (display->priv->window, activate);
-
-  if (activate)
-    gst_gl_display_unlock (display);
-}
-
 GstGLAPI
 gst_gl_display_get_gl_api (GstGLDisplay * display)
 {

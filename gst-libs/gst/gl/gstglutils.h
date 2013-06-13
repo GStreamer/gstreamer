@@ -100,5 +100,6 @@ gboolean gst_gl_display_gen_shader (GstGLDisplay * display,
 void gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader);
 
 gboolean gst_gl_display_check_framebuffer_status (GstGLDisplay * display);
+void gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate);
 
 #endif /* __GST_GL_UTILS_H__ */
