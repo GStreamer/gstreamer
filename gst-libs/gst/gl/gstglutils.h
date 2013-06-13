@@ -22,8 +22,12 @@
 #define __GST_GL_UTILS_H__
 
 typedef struct _GstGLDisplay GstGLDisplay;
+typedef struct _GstGLShader GstGLShader;
+
+#include <gst/video/video.h>
 
 #include "gstgldisplay.h"
+#include "gstglshader.h"
 
 /**
  * GstGLDisplayProjection:

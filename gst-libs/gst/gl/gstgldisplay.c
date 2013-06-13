@@ -3,6 +3,7 @@
  * Copyright (C) 2007 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
  * Copyright (C) 2008 Filippo Argiolas <filippo.argiolas@gmail.com>
+ * Copyright (C) 2013 Matthew Waters <ystreet00@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -51,19 +52,12 @@ G_DEFINE_TYPE_WITH_CODE (GstGLDisplay, gst_gl_display, G_TYPE_OBJECT,
     DEBUG_INIT);
 
 #define GST_GL_DISPLAY_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_DISPLAY, GstGLDisplayPrivate))
+  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_DISPLAY, GstGLDisplayPrivate))
 
 static void gst_gl_display_finalize (GObject * object);
 
-/* Called in the gl thread, protected by lock and unlock */
-gpointer gst_gl_display_thread_create_context (GstGLDisplay * display);
-void gst_gl_display_thread_destroy_context (GstGLDisplay * display);
-void gst_gl_display_thread_run_generic (GstGLDisplay * display);
-
 struct _GstGLDisplayPrivate
 {
-  GstGLWindow *window;
-
   /* generic gl code */
   GstGLDisplayThreadFunc generic_callback;
   gpointer data;
@@ -86,10 +80,9 @@ gst_gl_display_init (GstGLDisplay * display)
 {
   display->priv = GST_GL_DISPLAY_GET_PRIVATE (display);
 
-  /* thread safe */
-  g_mutex_init (&display->mutex);
-
   display->gl_vtable = g_slice_alloc0 (sizeof (GstGLFuncs));
+
+  display->gl_api = GST_GL_API_NONE;
 
   gst_gl_memory_init ();
 }
@@ -99,26 +92,18 @@ gst_gl_display_finalize (GObject * object)
 {
   GstGLDisplay *display = GST_GL_DISPLAY (object);
 
-  g_mutex_clear (&display->mutex);
-
   if (display->gl_vtable) {
     g_slice_free (GstGLFuncs, display->gl_vtable);
     display->gl_vtable = NULL;
   }
 
-  if (display->priv->window) {
-    gst_object_unref (display->priv->window);
-    display->priv->window = NULL;
+  if (display->window) {
+    gst_object_unref (display->window);
+    display->window = NULL;
   }
 
   G_OBJECT_CLASS (gst_gl_display_parent_class)->finalize (object);
 }
-
-//------------------------------------------------------------
-//------------------ BEGIN GL THREAD PROCS -------------------
-//------------------------------------------------------------
-
-/* Called in the gl thread */
 
 void
 gst_gl_display_thread_run_generic (GstGLDisplay * display)
@@ -129,27 +114,10 @@ gst_gl_display_thread_run_generic (GstGLDisplay * display)
   display->priv->generic_callback (display, display->priv->data);
 }
 
-/*------------------------------------------------------------
-  --------------------- BEGIN PUBLIC -------------------------
-  ----------------------------------------------------------*/
-
-void
-gst_gl_display_lock (GstGLDisplay * display)
-{
-  g_mutex_lock (&display->mutex);
-}
-
-void
-gst_gl_display_unlock (GstGLDisplay * display)
-{
-  g_mutex_unlock (&display->mutex);
-}
-
-/* Called by the first gl element of a video/x-raw-gl flow */
 GstGLDisplay *
 gst_gl_display_new (void)
 {
-  return g_object_new (GST_GL_TYPE_DISPLAY, NULL);
+  return g_object_new (GST_TYPE_GL_DISPLAY, NULL);
 }
 
 void
@@ -157,7 +125,7 @@ gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data)
 {
   g_return_if_fail (GST_IS_GL_DISPLAY (display));
-  g_return_if_fail (GST_GL_IS_WINDOW (display->priv->window));
+  g_return_if_fail (GST_GL_IS_WINDOW (display->window));
   g_return_if_fail (func != NULL);
 
   gst_gl_display_lock (display);
@@ -165,27 +133,19 @@ gst_gl_display_thread_add (GstGLDisplay * display,
   display->priv->data = data;
   display->priv->generic_callback = func;
 
-  gst_gl_window_send_message (display->priv->window,
+  gst_gl_window_send_message (display->window,
       GST_GL_WINDOW_CB (gst_gl_display_thread_run_generic), display);
 
   gst_gl_display_unlock (display);
-}
-
-guintptr
-gst_gl_display_get_internal_gl_context (GstGLDisplay * display)
-{
-  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), 0);
-  g_return_val_if_fail (GST_GL_IS_WINDOW (display->priv->window), 0);
-
-  return gst_gl_window_get_gl_context (display->priv->window);
 }
 
 GstGLAPI
 gst_gl_display_get_gl_api (GstGLDisplay * display)
 {
   g_return_val_if_fail (GST_IS_GL_DISPLAY (display), GST_GL_API_NONE);
+  g_return_val_if_fail (GST_GL_IS_WINDOW (display->window), GST_GL_API_NONE);
 
-  return display->gl_api;
+  return gst_gl_window_get_gl_api (display->window);
 }
 
 gpointer
@@ -208,10 +168,10 @@ gst_gl_display_set_window (GstGLDisplay * display, GstGLWindow * window)
 
   gst_gl_display_lock (display);
 
-  if (display->priv->window)
-    gst_object_unref (display->priv->window);
+  if (display->window)
+    gst_object_unref (display->window);
 
-  display->priv->window = gst_object_ref (window);
+  display->window = gst_object_ref (window);
 
   gst_gl_display_unlock (display);
 }
@@ -225,8 +185,7 @@ gst_gl_display_get_window (GstGLDisplay * display)
 
   gst_gl_display_lock (display);
 
-  window =
-      display->priv->window ? gst_object_ref (display->priv->window) : NULL;
+  window = display->window ? gst_object_ref (display->window) : NULL;
 
   gst_gl_display_unlock (display);
 
@@ -238,5 +197,25 @@ gst_gl_display_get_window_unlocked (GstGLDisplay * display)
 {
   g_return_val_if_fail (GST_IS_GL_DISPLAY (display), NULL);
 
-  return display->priv->window ? gst_object_ref (display->priv->window) : NULL;
+  return display->window ? gst_object_ref (display->window) : NULL;
+}
+
+void
+gst_context_set_gl_display (GstContext * context, GstGLDisplay * display)
+{
+  GstStructure *s;
+
+  s = gst_context_writable_structure (context);
+  gst_structure_set (s, GST_GL_DISPLAY_CONTEXT_TYPE, GST_TYPE_GL_DISPLAY,
+      display, NULL);
+}
+
+gboolean
+gst_context_get_gl_display (GstContext * context, GstGLDisplay ** display)
+{
+  const GstStructure *s;
+
+  s = gst_context_get_structure (context);
+  return gst_structure_get (s, GST_GL_DISPLAY_CONTEXT_TYPE,
+      GST_TYPE_GL_DISPLAY, display, NULL);
 }
