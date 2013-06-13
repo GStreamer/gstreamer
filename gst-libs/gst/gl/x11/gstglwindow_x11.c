@@ -75,67 +75,10 @@ void gst_gl_window_x11_send_message (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data);
 gboolean gst_gl_window_x11_create_context (GstGLWindow * window,
     GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
+gboolean gst_gl_window_x11_open (GstGLWindow * window, GError ** error);
+void gst_gl_window_x11_close (GstGLWindow * window);
 
 static gboolean gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11);
-
-/* Must be called in the gl thread */
-static void
-gst_gl_window_x11_finalize (GObject * object)
-{
-  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (object);
-  GstGLWindowX11Class *window_class = GST_GL_WINDOW_X11_GET_CLASS (window_x11);
-  XEvent event;
-  Bool ret = TRUE;
-
-  GST_GL_WINDOW_LOCK (window_x11);
-
-  window_x11->parent_win = 0;
-  if (window_x11->device) {
-    if (window_x11->internal_win_id)
-      XUnmapWindow (window_x11->device, window_x11->internal_win_id);
-
-    ret = window_class->activate (window_x11, FALSE);
-    if (!ret)
-      GST_DEBUG ("failed to release opengl context");
-    window_class->destroy_context (window_x11);
-
-    XFree (window_x11->visual_info);
-
-    if (window_x11->internal_win_id) {
-      XReparentWindow (window_x11->device, window_x11->internal_win_id,
-          window_x11->root, 0, 0);
-      XDestroyWindow (window_x11->device, window_x11->internal_win_id);
-    }
-    XSync (window_x11->device, FALSE);
-
-    while (XPending (window_x11->device))
-      XNextEvent (window_x11->device, &event);
-
-    XSetCloseDownMode (window_x11->device, DestroyAll);
-
-    /*XAddToSaveSet (display, w)
-       Display *display;
-       Window w; */
-
-    //FIXME: it seems it causes destroy all created windows, even by other display connection:
-    //This is case in: gst-launch-0.10 videotestsrc ! tee name=t t. ! queue ! glimagesink t. ! queue ! glimagesink
-    //When the first window is closed and so its display is closed by the following line, then the other Window managed by the
-    //other glimagesink, is not useable and so each opengl call causes a segmentation fault.
-    //Maybe the solution is to use: XAddToSaveSet
-    //The following line is commented to avoid the disagreement explained before.
-    //XCloseDisplay (window_x11->device);
-
-    GST_DEBUG ("display receiver closed");
-    XCloseDisplay (window_x11->disp_send);
-    GST_DEBUG ("display sender closed");
-  }
-
-  g_cond_clear (&window_x11->cond_send_message);
-
-  GST_GL_WINDOW_UNLOCK (window_x11);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
 
 static void
 gst_gl_window_x11_set_property (GObject * object, guint prop_id,
@@ -185,7 +128,6 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
 
   g_type_class_add_private (klass, sizeof (GstGLWindowX11Private));
 
-  obj_class->finalize = gst_gl_window_x11_finalize;
   obj_class->set_property = gst_gl_window_x11_set_property;
   obj_class->get_property = gst_gl_window_x11_get_property;
 
@@ -207,6 +149,8 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
   window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_x11_quit);
   window_class->send_message =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_send_message);
+  window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_x11_open);
+  window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_x11_close);
 }
 
 static void
@@ -247,20 +191,9 @@ gst_gl_window_x11_new (void)
 }
 
 gboolean
-gst_gl_window_x11_create_context (GstGLWindow * window,
-    GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
+gst_gl_window_x11_open (GstGLWindow * window, GError ** error)
 {
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
-  GstGLWindowX11Class *window_class = GST_GL_WINDOW_X11_GET_CLASS (window_x11);
-
-  setlocale (LC_NUMERIC, "C");
-
-  gst_gl_window_set_need_lock (GST_GL_WINDOW (window_x11), TRUE);
-
-  window_x11->running = TRUE;
-  window_x11->visible = FALSE;
-  window_x11->parent_win = 0;
-  window_x11->allow_extra_expose_events = TRUE;
 
   window_x11->device = XOpenDisplay (window_x11->display_name);
   if (window_x11->device == NULL) {
@@ -279,6 +212,30 @@ gst_gl_window_x11_create_context (GstGLWindow * window,
   XSynchronize (window_x11->disp_send, FALSE);
 
   GST_LOG ("gl display sender: %ld", (gulong) window_x11->disp_send);
+
+  return TRUE;
+
+failure:
+  return FALSE;
+}
+
+gboolean
+gst_gl_window_x11_create_context (GstGLWindow * window,
+    GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
+{
+  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
+  GstGLWindowX11Class *window_class = GST_GL_WINDOW_X11_GET_CLASS (window_x11);
+
+  setlocale (LC_NUMERIC, "C");
+
+  gst_gl_window_set_need_lock (GST_GL_WINDOW (window_x11), TRUE);
+
+  window_x11->running = TRUE;
+  window_x11->visible = FALSE;
+  window_x11->parent_win = 0;
+  window_x11->allow_extra_expose_events = TRUE;
+
+  g_assert (window_x11->device);
 
   window_x11->screen = DefaultScreenOfDisplay (window_x11->device);
   window_x11->screen_num = DefaultScreen (window_x11->device);
@@ -403,6 +360,62 @@ gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
   XFree (text_property.value);
 
   return TRUE;
+}
+
+void
+gst_gl_window_x11_close (GstGLWindow * window)
+{
+  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
+  GstGLWindowX11Class *window_class = GST_GL_WINDOW_X11_GET_CLASS (window_x11);
+  XEvent event;
+  Bool ret = TRUE;
+
+  GST_GL_WINDOW_LOCK (window_x11);
+
+  window_x11->parent_win = 0;
+  if (window_x11->device) {
+    if (window_x11->internal_win_id)
+      XUnmapWindow (window_x11->device, window_x11->internal_win_id);
+
+    ret = window_class->activate (window_x11, FALSE);
+    if (!ret)
+      GST_DEBUG ("failed to release opengl context");
+    window_class->destroy_context (window_x11);
+
+    XFree (window_x11->visual_info);
+
+    if (window_x11->internal_win_id) {
+      XReparentWindow (window_x11->device, window_x11->internal_win_id,
+          window_x11->root, 0, 0);
+      XDestroyWindow (window_x11->device, window_x11->internal_win_id);
+    }
+    XSync (window_x11->device, FALSE);
+
+    while (XPending (window_x11->device))
+      XNextEvent (window_x11->device, &event);
+
+    XSetCloseDownMode (window_x11->device, DestroyAll);
+
+    /*XAddToSaveSet (display, w)
+       Display *display;
+       Window w; */
+
+    //FIXME: it seems it causes destroy all created windows, even by other display connection:
+    //This is case in: gst-launch-0.10 videotestsrc ! tee name=t t. ! queue ! glimagesink t. ! queue ! glimagesink
+    //When the first window is closed and so its display is closed by the following line, then the other Window managed by the
+    //other glimagesink, is not useable and so each opengl call causes a segmentation fault.
+    //Maybe the solution is to use: XAddToSaveSet
+    //The following line is commented to avoid the disagreement explained before.
+    //XCloseDisplay (window_x11->device);
+
+    GST_DEBUG ("display receiver closed");
+    XCloseDisplay (window_x11->disp_send);
+    GST_DEBUG ("display sender closed");
+  }
+
+  g_cond_clear (&window_x11->cond_send_message);
+
+  GST_GL_WINDOW_UNLOCK (window_x11);
 }
 
 guintptr
@@ -612,13 +625,13 @@ gst_gl_window_x11_run (GstGLWindow * window)
           if (window_x11->running) {
 #if SIZEOF_VOID_P == 8
             GstGLWindowCB custom_cb =
-                (GstGLWindowCB) (((event.xclient.
-                        data.l[0] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[1] & 0xffffffff));
+                (GstGLWindowCB) (((event.xclient.data.
+                        l[0] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[1] & 0xffffffff));
             gpointer custom_data =
-                (gpointer) (((event.xclient.
-                        data.l[2] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[3] & 0xffffffff));
+                (gpointer) (((event.xclient.data.
+                        l[2] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[3] & 0xffffffff));
 #else
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];
@@ -647,13 +660,13 @@ gst_gl_window_x11_run (GstGLWindow * window)
             && event.xclient.message_type == wm_quit_loop) {
 #if SIZEOF_VOID_P == 8
           GstGLWindowCB destroy_cb =
-              (GstGLWindowCB) (((event.xclient.
-                      data.l[0] & 0xffffffff) << 32) | (event.xclient.
-                  data.l[1] & 0xffffffff));
+              (GstGLWindowCB) (((event.xclient.data.
+                      l[0] & 0xffffffff) << 32) | (event.xclient.data.
+                  l[1] & 0xffffffff));
           gpointer destroy_data =
-              (gpointer) (((event.xclient.
-                      data.l[2] & 0xffffffff) << 32) | (event.xclient.
-                  data.l[3] & 0xffffffff));
+              (gpointer) (((event.xclient.data.
+                      l[2] & 0xffffffff) << 32) | (event.xclient.data.
+                  l[3] & 0xffffffff));
 #else
           GstGLWindowCB destroy_cb = (GstGLWindowCB) event.xclient.data.l[0];
           gpointer destroy_data = (gpointer) event.xclient.data.l[1];
@@ -671,13 +684,13 @@ gst_gl_window_x11_run (GstGLWindow * window)
                   &pending_event)) {
 #if SIZEOF_VOID_P == 8
             GstGLWindowCB custom_cb =
-                (GstGLWindowCB) (((event.xclient.
-                        data.l[0] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[1] & 0xffffffff));
+                (GstGLWindowCB) (((event.xclient.data.
+                        l[0] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[1] & 0xffffffff));
             gpointer custom_data =
-                (gpointer) (((event.xclient.
-                        data.l[2] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[3] & 0xffffffff));
+                (gpointer) (((event.xclient.data.
+                        l[2] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[3] & 0xffffffff));
 #else
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];
