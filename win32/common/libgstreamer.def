@@ -1102,6 +1102,7 @@ EXPORTS
 	gst_structure_n_fields
 	gst_structure_new
 	gst_structure_new_empty
+	gst_structure_new_from_string
 	gst_structure_new_id
 	gst_structure_new_id_empty
 	gst_structure_new_valist

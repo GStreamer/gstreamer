@@ -2308,9 +2308,30 @@ priv_gst_structure_parse_fields (gchar * str, gchar ** end,
 }
 
 /**
+ * gst_structure_new_from_string:
+ * @string: a string representation of a #GstStructure
+ *
+ * Creates a #GstStructure from a string representation.
+ * If end is not NULL, a pointer to the place inside the given string
+ * where parsing ended will be returned.
+ *
+ * Free-function: gst_structure_free
+ *
+ * Returns: (transfer full): a new #GstStructure or NULL when the string could
+ *     not be parsed. Free with gst_structure_free() after use.
+ *
+ * Since: 1.2
+ */
+GstStructure *
+gst_structure_new_from_string (const gchar * string)
+{
+  return gst_structure_from_string (string, NULL);
+}
+
+/**
  * gst_structure_from_string:
  * @string: a string representation of a #GstStructure.
- * @end: (out) (allow-none) (transfer none): pointer to store the end of the string in.
+ * @end: (out) (allow-none) (transfer none) (skip): pointer to store the end of the string in.
  *
  * Creates a #GstStructure from a string representation.
  * If end is not NULL, a pointer to the place inside the given string

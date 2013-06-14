@@ -101,6 +101,8 @@ GstStructure *        gst_structure_new_id               (GQuark name_quark,
                                                           GQuark field_quark,
                                                           ...) G_GNUC_MALLOC;
 
+GstStructure *        gst_structure_new_from_string      (const gchar * string);
+
 GstStructure *        gst_structure_copy                 (const GstStructure  * structure) G_GNUC_MALLOC;
 
 gboolean              gst_structure_set_parent_refcount  (GstStructure        * structure,
