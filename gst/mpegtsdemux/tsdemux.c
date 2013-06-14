@@ -36,6 +36,7 @@
 
 #include <glib.h>
 #include <gst/tag/tag.h>
+#include <gst/pbutils/pbutils.h>
 
 #include "mpegtsbase.h"
 #include "tsdemux.h"
@@ -998,6 +999,10 @@ done:
     gst_pad_push_event (pad, event);
     g_free (stream_id);
     gst_pad_set_caps (pad, caps);
+    if (!stream->taglist)
+      stream->taglist = gst_tag_list_new_empty ();
+    gst_pb_utils_add_codec_description_to_tag_list (stream->taglist, NULL,
+        caps);
     gst_pad_set_query_function (pad, gst_ts_demux_srcpad_query);
     gst_pad_set_event_function (pad, gst_ts_demux_srcpad_event);
   }
