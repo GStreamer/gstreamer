@@ -4,6 +4,9 @@ Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
 
 Version 0.5.4 - DD.Jun.2013
+* Streamline core libgstvaapi decoding library (API/ABI changes)
+* Use built-in codecparsers by default (or --disable-builtin-codecparsers)
+* Fix default Huffman tables generation (Feng Yuan)
 * Fix destruction of Wayland display resources
 * Fix explicit specification of display type to vaapisink
 * Fix memory leak in vaapiupload in GStreamer 0.10 builds (Halley Zhao)
