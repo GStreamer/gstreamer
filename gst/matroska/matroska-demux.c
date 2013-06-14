@@ -2090,8 +2090,10 @@ next:
     gst_pad_pause_task (demux->common.sinkpad);
   }
   /* ouch */
-  if (!update)
+  if (!update) {
+    GST_PAD_STREAM_LOCK (demux->common.sinkpad);
     goto exit;
+  }
 
   /* now grab the stream lock so that streaming cannot continue, for
    * non flushing seeks when the element is in PAUSED this could block
