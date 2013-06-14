@@ -1157,8 +1157,7 @@ make_server_transport (GstRTSPClient * client, GstRTSPClientState * state,
   switch (st->lower_transport) {
     case GST_RTSP_LOWER_TRANS_UDP:
       st->client_port = ct->client_port;
-      gst_rtsp_stream_get_server_port (state->stream, &st->server_port, 
-          family);
+      gst_rtsp_stream_get_server_port (state->stream, &st->server_port, family);
       break;
     case GST_RTSP_LOWER_TRANS_UDP_MCAST:
       st->port = ct->port;
@@ -1415,14 +1414,12 @@ create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
   gst_sdp_message_add_attribute (sdp, "type", "broadcast");
   gst_sdp_message_add_attribute (sdp, "control", "*");
 
-  info.server_proto = proto;
-  info.server_ip = g_strdup (priv->server_ip);
+  info.is_ipv6 = priv->is_ipv6;
+  info.server_ip = priv->server_ip;
 
   /* create an SDP for the media object */
   if (!gst_rtsp_sdp_from_media (sdp, &info, media))
     goto no_sdp;
-
-  g_free (info.server_ip);
 
   return sdp;
 
@@ -1430,7 +1427,6 @@ create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
 no_sdp:
   {
     GST_ERROR ("client %p: could not create SDP", client);
-    g_free (info.server_ip);
     gst_sdp_message_free (sdp);
     return NULL;
   }

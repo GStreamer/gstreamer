@@ -28,8 +28,8 @@
 G_BEGIN_DECLS
 
 typedef struct {
-  const gchar *server_proto;
-  gchar *server_ip;
+  gboolean is_ipv6;
+  const gchar *server_ip;
 } GstSDPInfo;
 
 /* creating SDP */
