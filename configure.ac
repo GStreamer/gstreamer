@@ -89,6 +89,11 @@ dnl Initialize libtool
 LT_PREREQ([2.2])
 LT_INIT
 
+AC_ARG_ENABLE(builtin_codecparsers,
+    AS_HELP_STRING([--enable-builtin-codecparsers],
+                   [enable built-in codecparsers @<:@default=yes@:>@]),
+    [], [enable_builtin_codecparsers="yes"])
+
 AC_ARG_ENABLE(drm,
     AS_HELP_STRING([--enable-drm],
                    [enable DRM backend @<:@default=yes@:>@]),
@@ -288,6 +293,11 @@ PKG_CHECK_MODULES([GST_BASEVIDEO],
     [gstreamer-basevideo-$GST_API_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
 
 dnl ... bitstream parsers
+if test "$enable_builtin_codecparsers" = "yes"; then
+    ac_cv_have_gst_mpeg2_parser="no"
+    ac_cv_have_gst_h264_parser="no"
+    ac_cv_have_gst_jpeg_parser="no"
+fi
 PKG_CHECK_MODULES([GST_CODEC_PARSERS],
     [gstreamer-codecparsers-$GST_API_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
 
