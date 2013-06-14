@@ -894,6 +894,8 @@ gst_mpegv_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
 
   if (mpvparse->send_mpeg_meta) {
+    GstBuffer *buf;
+
     if (mpvparse->seqhdr_updated)
       seq_hdr = &mpvparse->sequencehdr;
     if (mpvparse->seqext_updated)
@@ -909,10 +911,16 @@ gst_mpegv_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     GST_DEBUG_OBJECT (mpvparse,
         "Adding GstMpegVideoMeta (slice_count:%d, slice_offset:%d)",
         mpvparse->slice_count, mpvparse->slice_offset);
+
+    if (frame->out_buffer) {
+      buf = frame->out_buffer = gst_buffer_make_writable (frame->out_buffer);
+    } else {
+      buf = frame->buffer = gst_buffer_make_writable (frame->buffer);
+    }
+
     meta =
-        gst_buffer_add_mpeg_video_meta (frame->out_buffer ? frame->
-        out_buffer : frame->buffer, seq_hdr, seq_ext, disp_ext, pic_hdr,
-        pic_ext, quant_ext);
+        gst_buffer_add_mpeg_video_meta (buf, seq_hdr, seq_ext, disp_ext,
+        pic_hdr, pic_ext, quant_ext);
     meta->num_slices = mpvparse->slice_count;
     meta->slice_offset = mpvparse->slice_offset;
   }
