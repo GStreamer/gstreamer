@@ -93,6 +93,7 @@
 #include <gst/gst.h>
 
 #include "gstsegmentation.h"
+#include <opencv2/video/background_segm.hpp>
 
 GST_DEBUG_CATEGORY_STATIC (gst_segmentation_debug);
 #define GST_CAT_DEFAULT gst_segmentation_debug

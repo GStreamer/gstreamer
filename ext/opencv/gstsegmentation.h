@@ -48,7 +48,6 @@
 #include <gst/video/gstvideofilter.h>
 
 #include <cv.h>
-#include <opencv2/video/background_segm.hpp>
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
