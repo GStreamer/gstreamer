@@ -1,9 +1,9 @@
-gst-vaapi NEWS -- summary of changes.  2013-06-DD
+gst-vaapi NEWS -- summary of changes.  2013-06-14
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
 
-Version 0.5.4 - DD.Jun.2013
+Version 0.5.4 - 14.Jun.2013
 * Streamline core libgstvaapi decoding library (API/ABI changes)
 * Use built-in codecparsers by default (or --disable-builtin-codecparsers)
 * Fix default Huffman tables generation (Feng Yuan)
