@@ -425,7 +425,8 @@ GST_END_TEST;
 GST_START_TEST (test_pb_utils_taglist_add_codec_info)
 {
   GstTagList *list;
-  GstCaps *caps;
+  GstCaps *caps, *bogus_caps;
+  gchar *res;
 
   gst_pb_utils_init ();
   list = gst_tag_list_new_empty ();
@@ -434,8 +435,6 @@ GST_START_TEST (test_pb_utils_taglist_add_codec_info)
       (gst_pb_utils_add_codec_description_to_tag_list (NULL,
               GST_TAG_VIDEO_CODEC, caps)));
   ASSERT_CRITICAL (fail_if
-      (gst_pb_utils_add_codec_description_to_tag_list (list, NULL, caps)));
-  ASSERT_CRITICAL (fail_if
       (gst_pb_utils_add_codec_description_to_tag_list (list, "asdfa", caps)));
   ASSERT_CRITICAL (fail_if
       (gst_pb_utils_add_codec_description_to_tag_list (list,
@@ -443,10 +442,68 @@ GST_START_TEST (test_pb_utils_taglist_add_codec_info)
   ASSERT_CRITICAL (fail_if
       (gst_pb_utils_add_codec_description_to_tag_list (list,
               GST_TAG_VIDEO_CODEC, NULL)));
-  /* FIXME: do something here */
+
+  /* Try adding bogus caps (should fail) */
+  bogus_caps = gst_caps_new_empty_simple ("bogus/format");
+  fail_if (gst_pb_utils_add_codec_description_to_tag_list (list,
+          GST_TAG_VIDEO_CODEC, bogus_caps));
+  gst_caps_unref (bogus_caps);
+
+  /* Try adding valid caps with known tag */
   fail_unless (gst_pb_utils_add_codec_description_to_tag_list (list,
           GST_TAG_VIDEO_CODEC, caps));
   fail_if (gst_tag_list_is_empty (list));
+  fail_unless (gst_tag_list_get_string (list, GST_TAG_VIDEO_CODEC, &res));
+  g_free (res);
+  gst_tag_list_unref (list);
+
+  /* Try adding valid caps with auto-tag (for video, audio, subtitle, generic) */
+  list = gst_tag_list_new_empty ();
+  fail_unless (gst_pb_utils_add_codec_description_to_tag_list (list, NULL,
+          caps));
+  fail_if (gst_tag_list_is_empty (list));
+  fail_unless (gst_tag_list_get_string (list, GST_TAG_VIDEO_CODEC, &res));
+  g_free (res);
+  gst_tag_list_unref (list);
+  gst_caps_unref (caps);
+
+  list = gst_tag_list_new_empty ();
+  caps = gst_caps_new_empty_simple ("audio/x-vorbis");
+  fail_unless (gst_pb_utils_add_codec_description_to_tag_list (list, NULL,
+          caps));
+  fail_if (gst_tag_list_is_empty (list));
+  fail_unless (gst_tag_list_get_string (list, GST_TAG_AUDIO_CODEC, &res));
+  g_free (res);
+  gst_tag_list_unref (list);
+  gst_caps_unref (caps);
+
+  list = gst_tag_list_new_empty ();
+  caps = gst_caps_new_empty_simple ("subtitle/x-kate");
+  fail_unless (gst_pb_utils_add_codec_description_to_tag_list (list, NULL,
+          caps));
+  fail_if (gst_tag_list_is_empty (list));
+  fail_unless (gst_tag_list_get_string (list, GST_TAG_SUBTITLE_CODEC, &res));
+  g_free (res);
+  gst_tag_list_unref (list);
+  gst_caps_unref (caps);
+
+  list = gst_tag_list_new_empty ();
+  caps = gst_caps_new_empty_simple ("application/ogg");
+  fail_unless (gst_pb_utils_add_codec_description_to_tag_list (list, NULL,
+          caps));
+  fail_if (gst_tag_list_is_empty (list));
+  fail_unless (gst_tag_list_get_string (list, GST_TAG_CONTAINER_FORMAT, &res));
+  g_free (res);
+  gst_tag_list_unref (list);
+  gst_caps_unref (caps);
+
+  list = gst_tag_list_new_empty ();
+  caps = gst_caps_new_empty_simple ("image/bmp");
+  fail_unless (gst_pb_utils_add_codec_description_to_tag_list (list, NULL,
+          caps));
+  fail_if (gst_tag_list_is_empty (list));
+  fail_unless (gst_tag_list_get_string (list, GST_TAG_CODEC, &res));
+  g_free (res);
   gst_tag_list_unref (list);
   gst_caps_unref (caps);
 }
