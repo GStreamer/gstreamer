@@ -21,9 +21,9 @@ libgstvaapi_codecparsers_libs =			\
 gen_source_c = parserutils.c
 gen_source_h = parserutils.h
 
-# Always build VC-1 parser for now
-gen_source_c += gstvc1parser.c
-gen_source_h += gstvc1parser.h
+# Always build VC-1 and MPEG-4 parsers for now
+gen_source_c += gstvc1parser.c gstmpeg4parser.c
+gen_source_h += gstvc1parser.h gstmpeg4parser.h
 
 if USE_LOCAL_CODEC_PARSERS_JPEG
 gen_source_c += gstjpegparser.c

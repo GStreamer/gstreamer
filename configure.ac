@@ -297,9 +297,10 @@ if test "$enable_builtin_codecparsers" = "yes"; then
     ac_cv_have_gst_mpeg2_parser="no"
     ac_cv_have_gst_h264_parser="no"
     ac_cv_have_gst_jpeg_parser="no"
-fi
+else
 PKG_CHECK_MODULES([GST_CODEC_PARSERS],
     [gstreamer-codecparsers-$GST_API_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
+fi
 
 dnl ... MPEG-2 parser, with the required extensions
 AC_CACHE_CHECK([for MPEG-2 parser],
