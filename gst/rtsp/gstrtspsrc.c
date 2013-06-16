@@ -1789,6 +1789,8 @@ again:
    * server told us to really use the UDP ports. */
   stream->udpsrc[0] = gst_object_ref_sink (udpsrc0);
   stream->udpsrc[1] = gst_object_ref_sink (udpsrc1);
+  gst_element_set_locked_state (stream->udpsrc[0], TRUE);
+  gst_element_set_locked_state (stream->udpsrc[1], TRUE);
 
   /* keep track of next available port number when we have a range
    * configured */
@@ -1835,12 +1837,30 @@ cleanup:
 }
 
 static void
+gst_rtspsrc_set_state (GstRTSPSrc * src, GstState state)
+{
+  GList *walk;
+
+  if (src->manager)
+    gst_element_set_state (GST_ELEMENT_CAST (src->manager), state);
+
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+    gint i;
+
+    for (i = 0; i < 2; i++) {
+      if (stream->udpsrc[i])
+        gst_element_set_state (stream->udpsrc[i], state);
+    }
+  }
+}
+
+static void
 gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing)
 {
   GstEvent *event;
-  gint cmd, i;
+  gint cmd;
   GstState state;
-  GList *walk;
 
   if (flush) {
     event = gst_event_new_flush_start ();
@@ -1858,22 +1878,7 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing)
   }
   gst_rtspsrc_push_event (src, event);
   gst_rtspsrc_loop_send_cmd (src, cmd, CMD_LOOP);
-
-  /* to manage jitterbuffer buffer mode */
-  if (src->manager)
-    gst_element_set_state (GST_ELEMENT_CAST (src->manager), state);
-
-  /* make running time start start at 0 again */
-  for (walk = src->streams; walk; walk = g_list_next (walk)) {
-    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
-
-    for (i = 0; i < 2; i++) {
-      /* for udp case */
-      if (stream->udpsrc[i]) {
-        gst_element_set_state (stream->udpsrc[i], state);
-      }
-    }
-  }
+  gst_rtspsrc_set_state (src, state);
 }
 
 static GstRTSPResult
@@ -2541,7 +2546,6 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
     /* configure the manager */
     if (src->manager == NULL) {
       GObjectClass *klass;
-      GstState target;
 
       if (!(src->manager = gst_element_factory_make (manager, "manager"))) {
         /* fallback */
@@ -2556,13 +2560,10 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
       }
 
       /* we manage this element */
+      gst_element_set_locked_state (src->manager, TRUE);
       gst_bin_add (GST_BIN_CAST (src), src->manager);
 
-      GST_OBJECT_LOCK (src);
-      target = GST_STATE_TARGET (src);
-      GST_OBJECT_UNLOCK (src);
-
-      ret = gst_element_set_state (src->manager, target);
+      ret = gst_element_set_state (src->manager, GST_STATE_PAUSED);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto start_manager_failure;
 
@@ -2906,6 +2907,7 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
           src->multi_iface, NULL);
 
     /* change state */
+    gst_element_set_locked_state (stream->udpsrc[0], TRUE);
     gst_element_set_state (stream->udpsrc[0], GST_STATE_PAUSED);
   }
 
@@ -2961,6 +2963,7 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
   /* we manage the UDP elements now. For unicast, the UDP sources where
    * allocated in the stream when we suggested a transport. */
   if (stream->udpsrc[0]) {
+    gst_element_set_locked_state (stream->udpsrc[0], TRUE);
     gst_bin_add (GST_BIN_CAST (src), stream->udpsrc[0]);
 
     GST_DEBUG_OBJECT (src, "setting up UDP source");
@@ -3001,6 +3004,7 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
   if (stream->udpsrc[1]) {
     GstCaps *caps;
 
+    gst_element_set_locked_state (stream->udpsrc[1], TRUE);
     gst_bin_add (GST_BIN_CAST (src), stream->udpsrc[1]);
 
     caps = gst_caps_new_empty_simple ("application/x-rtcp");
@@ -6085,6 +6089,8 @@ gst_rtspsrc_close (GstRTSPSrc * src, gboolean async, gboolean only_close)
 
   GST_DEBUG_OBJECT (src, "TEARDOWN...");
 
+  gst_rtspsrc_set_state (src, GST_STATE_READY);
+
   if (src->state < GST_RTSP_STATE_READY) {
     GST_DEBUG_OBJECT (src, "not ready, doing cleanup");
     goto close;
@@ -6404,6 +6410,8 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
    * udp sources */
   gst_rtspsrc_send_dummy_packets (src);
 
+  gst_rtspsrc_set_state (src, GST_STATE_PLAYING);
+
   /* construct a control url */
   if (src->control)
     control = src->control;
@@ -6659,6 +6667,9 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean async)
     if (control)
       break;
   }
+
+  /* change element states now */
+  gst_rtspsrc_set_state (src, GST_STATE_PAUSED);
 
 no_connection:
   src->state = GST_RTSP_STATE_READY;
@@ -6946,22 +6957,28 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
     goto done;
 
   switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      ret = GST_STATE_CHANGE_SUCCESS;
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      ret = GST_STATE_CHANGE_NO_PREROLL;
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_PLAY, 0);
+      ret = GST_STATE_CHANGE_SUCCESS;
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* send pause request and keep the idle task around */
       gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_PAUSE, CMD_LOOP);
       ret = GST_STATE_CHANGE_NO_PREROLL;
       break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      ret = GST_STATE_CHANGE_NO_PREROLL;
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_CLOSE, CMD_PAUSE);
+      ret = GST_STATE_CHANGE_SUCCESS;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_rtspsrc_stop (rtspsrc);
+      ret = GST_STATE_CHANGE_SUCCESS;
       break;
     default:
       break;
