@@ -186,10 +186,14 @@ gst_gl_window_x11_egl_create_context (GstGLWindowX11 * window_x11,
         GST_WARNING
             ("EGL version (%i.%i) too old for OpenGL support, (needed at least 1.4)",
             majorVersion, minorVersion);
-        if (gl_api & GST_GL_API_GLES2)
+        if (gl_api & GST_GL_API_GLES2) {
           goto try_gles2;
-        else
+        } else {
+          g_set_error (error, GST_GL_WINDOW_ERROR,
+              GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+              "Failed to choose a suitable OpenGL API");
           goto failure;
+        }
       }
     }
 
@@ -301,8 +305,8 @@ gst_gl_window_x11_egl_get_gl_api (GstGLWindow * window)
 {
   GstGLWindowX11EGL *window_egl = GST_GL_WINDOW_X11_EGL (window);
 
-  return window_egl->
-      gl_api ? window_egl->gl_api : GST_GL_API_GLES2 | GST_GL_API_OPENGL;
+  return window_egl->gl_api ? window_egl->
+      gl_api : GST_GL_API_GLES2 | GST_GL_API_OPENGL;
 }
 
 static gpointer

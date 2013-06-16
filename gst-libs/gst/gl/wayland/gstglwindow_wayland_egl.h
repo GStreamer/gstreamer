@@ -86,6 +86,8 @@ struct _GstGLWindowWaylandEGL {
   GMainContext *main_context;
   GMainLoop *loop;
 
+  GstGLAPI gl_api;
+
   gpointer _reserved[GST_PADDING];
 };
 
