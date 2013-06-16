@@ -350,13 +350,6 @@ gst_gl_shader_new (GstGLDisplay * display)
   shader = g_object_new (GST_GL_TYPE_SHADER, NULL);
   shader->display = gst_object_ref (display);
 
-  if (!_fill_vtable (shader, display))
-    return NULL;
-
-  shader->priv->program_handle = shader->priv->vtable.CreateProgram ();
-
-  GST_TRACE ("shader initialized %u", shader->priv->program_handle);
-
   return shader;
 }
 
@@ -385,6 +378,13 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
 
   if (priv->compiled)
     return priv->compiled;
+
+  if (!_fill_vtable (shader, shader->display))
+    return FALSE;
+
+  shader->priv->program_handle = shader->priv->vtable.CreateProgram ();
+
+  GST_TRACE ("shader created %u", shader->priv->program_handle);
 
   g_return_val_if_fail (priv->program_handle, FALSE);
 
@@ -480,9 +480,7 @@ gst_gl_shader_release (GstGLShader * shader)
 
   priv = shader->priv;
 
-  g_return_if_fail (priv->program_handle);
-
-  if (!priv->compiled)
+  if (!priv->compiled || !priv->program_handle)
     return;
 
   if (priv->vertex_handle) {    /* not needed but nvidia doesn't care to respect the spec */
