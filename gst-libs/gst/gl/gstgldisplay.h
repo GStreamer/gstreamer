@@ -76,7 +76,7 @@ struct _GstGLDisplay
 
 struct _GstGLDisplayClass
 {
-  GObjectClass object_class;
+  GstObjectClass object_class;
 };
 
 GstGLDisplay *gst_gl_display_new (void);
