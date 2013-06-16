@@ -192,8 +192,11 @@ be indented, header files may be indented manually for better readability
 (however, please use spaces for indenting, not tabs, even in header files).
         </para>
         <para>
+<!-- TODO(ensonic): link is dead, pending question on desktop-devel
 As for the code itself, the 
-<ulink url="http://developer.gnome.org/doc/guides/programming-guidelines/book1.html">GNOME coding guidelines</ulink> is a good read.
+<ulink url="http://developer.gnome.org/doc/guides/programming-guidelines/book1.html">GNOME
+coding guidelines</ulink> is a good read.
+-->
 Where possible, we try to adhere to the spirit of GObject and use similar
 coding idioms.
         </para>

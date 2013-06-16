@@ -112,7 +112,7 @@
       understanding of the C language.
       Since &GStreamer; adheres to the GObject programming model, this guide
       also assumes that you understand the basics of <ulink type="http"
-      url="http://developer.gnome.org/doc/API/2.0/gobject/index.html">GObject</ulink>
+      url="https://developer.gnome.org/gobject/stable/pt01.html">GObject</ulink>
       programming. 
       You may also want to have a look
       at Eric Harlow's book <emphasis>Developing Linux Applications with

@@ -283,9 +283,9 @@ main (int   argc,
     <para>
       For more information about <classname>GObject</classname>
       properties we recommend you read the <ulink
-      url="http://developer.gnome.org/doc/API/2.0/gobject/index.html"
+      url="https://developer.gnome.org/gobject/stable/rn01.html"
       type="http">GObject manual</ulink> and an introduction to <ulink
-      url="http://developer.gnome.org/doc/API/2.0/gobject/pr01.html" type="http">
+      url="https://developer.gnome.org/gobject/stable/pt01.html" type="http">
 	The Glib Object system</ulink>.
     </para>
     <para>
