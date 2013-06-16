@@ -578,7 +578,7 @@ _compiled_api (void)
   GstGLAPI ret = GST_GL_API_NONE;
 
 #if GST_GL_HAVE_OPENGL
-  ret |= GST_GL_API_OPENGL;
+  ret |= GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
 #endif
 #if GST_GL_HAVE_GLES2
   ret |= GST_GL_API_GLES2;
@@ -655,8 +655,17 @@ _gst_gl_window_thread_create_context (GstGLWindow * window)
 
   compiled_api_s = gst_gl_api_string (compiled_api);
 
-  GST_INFO ("Attempting to create opengl context. user chosen api(s):%s, "
-      "compiled api support:%s", user_api_string, compiled_api_s);
+  if ((user_api & compiled_api) == GST_GL_API_NONE) {
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_API,
+        "Cannot create context with the user requested api (%s).  "
+        "We have support for (%s)", user_api_string, compiled_api_s);
+    g_free (user_api_string);
+    g_free (compiled_api_s);
+    goto failure;
+  }
+
+  GST_INFO ("Attempting to create opengl context. user chosen api(s) (%s), "
+      "compiled api support (%s)", user_api_string, compiled_api_s);
 
   if (!window_class->create_context (window, compiled_api & user_api,
           window->priv->external_gl_context, error)) {
@@ -677,7 +686,7 @@ _gst_gl_window_thread_create_context (GstGLWindow * window)
   if (((compiled_api & display->gl_api) & user_api) == GST_GL_API_NONE) {
     g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_API,
         "failed to create context, window "
-        "could not provide correct api. user:%s, compiled:%s, window:%s",
+        "could not provide correct api. user (%s), compiled (%s), window (%s)",
         user_api_string, compiled_api_s, api_string);
     g_free (api_string);
     g_free (compiled_api_s);
