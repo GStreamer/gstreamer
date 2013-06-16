@@ -593,9 +593,9 @@ link_elements_with_filter (GstElement *element1, GstElement *element2)
       <para>
         See the API references for the full API of
 	<ulink type="http"
-	  url="&URLAPI;GstStructure.html"><classname>GstStructure</classname></ulink>
+	  url="&URLAPI;gstreamer-GstStructure.html"><classname>GstStructure</classname></ulink>
 	and <ulink type="http"
-	  url="&URLAPI;GstCaps.html"><classname>GstCaps</classname></ulink>.
+	  url="&URLAPI;gstreamer-GstCaps.html"><classname>GstCaps</classname></ulink>.
       </para>
     </sect2>
   </sect1>
