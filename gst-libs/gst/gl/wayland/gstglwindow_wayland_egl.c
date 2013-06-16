@@ -56,8 +56,7 @@ static gboolean gst_gl_window_wayland_egl_create_context (GstGLWindow
 static GstGLAPI gst_gl_window_wayland_egl_get_gl_api (GstGLWindow * window);
 static gpointer gst_gl_window_wayland_egl_get_proc_address (GstGLWindow *
     window, const gchar * name);
-
-static void gst_gl_window_wayland_egl_finalize (GObject * object);
+static void gst_gl_window_wayland_egl_close (GstGLWindow * window);
 
 static void
 pointer_handle_enter (void *data, struct wl_pointer *pointer, uint32_t serial,
@@ -256,7 +255,6 @@ static const struct wl_registry_listener registry_listener = {
 static void
 gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
 {
-  GObjectClass *object_class = (GObjectClass *) klass;
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
 
   window_class->create_context =
@@ -278,8 +276,7 @@ gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_gl_api);
   window_class->get_proc_address =
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_proc_address);
-
-  object_class->finalize = gst_gl_window_wayland_egl_finalize;
+  window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_close);
 }
 
 static void
@@ -304,11 +301,11 @@ gst_gl_window_wayland_egl_new (void)
 }
 
 static void
-gst_gl_window_wayland_egl_finalize (GObject * object)
+gst_gl_window_wayland_egl_close (GstGLWindow * window)
 {
   GstGLWindowWaylandEGL *window_egl;
 
-  window_egl = GST_GL_WINDOW_WAYLAND_EGL (object);
+  window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
 
   gst_gl_window_wayland_egl_destroy_context (window_egl);
 
@@ -328,8 +325,6 @@ gst_gl_window_wayland_egl_finalize (GObject * object)
     wl_display_flush (window_egl->display.display);
     wl_display_disconnect (window_egl->display.display);
   }
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -570,7 +565,8 @@ gst_gl_window_wayland_egl_quit (GstGLWindow * window, GstGLWindowCB callback,
 
   window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
 
-  gst_gl_window_wayland_egl_send_message (window, callback, data);
+  if (callback)
+    gst_gl_window_wayland_egl_send_message (window, callback, data);
 
   GST_LOG ("sending quit");
 
