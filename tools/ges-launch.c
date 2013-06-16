@@ -132,8 +132,9 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
   GESTrack *tracka = NULL, *trackv = NULL;
   GESTimeline *timeline;
   guint i;
+  GESProject *project = ges_project_new (NULL);
 
-  timeline = ges_timeline_new ();
+  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
 
   if (audio)
     tracka = ges_track_audio_raw_new ();
@@ -221,6 +222,7 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
         return NULL;
       }
 
+      ges_project_add_asset (project, asset);
       clip = GES_CLIP (ges_asset_extract (asset, &error));
       if (error) {
         g_printerr ("Can not extract asset for %s", uri);
