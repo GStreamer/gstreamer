@@ -285,6 +285,7 @@ gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
 static void
 gst_gl_window_wayland_egl_init (GstGLWindowWaylandEGL * window)
 {
+  window->gl_api = GST_GL_API_NONE;
 }
 
 /* Must be called in the gl thread */
@@ -408,10 +409,45 @@ gst_gl_window_wayland_egl_create_context (GstGLWindow * window,
     goto failure;
   }
 
-  if (!eglBindAPI (EGL_OPENGL_ES_API)) {
-    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_FAILED,
-        "Failed to bind OpenGL|ES API: %s", WlEGLErrorString ());
-    goto failure;
+  if (gl_api & GST_GL_API_OPENGL) {
+    /* egl + opengl only available with EGL 1.4+ */
+    if (majorVersion == 1 && minorVersion <= 3) {
+      if ((gl_api & ~GST_GL_API_OPENGL) == GST_GL_API_NONE) {
+        g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_OLD_LIBS,
+            "EGL version (%i.%i) too old for OpenGL support, (needed at least 1.4)",
+            majorVersion, minorVersion);
+        goto failure;
+      } else {
+        GST_WARNING
+            ("EGL version (%i.%i) too old for OpenGL support, (needed at least 1.4)",
+            majorVersion, minorVersion);
+        if (gl_api & GST_GL_API_GLES2) {
+          goto try_gles2;
+        } else {
+          g_set_error (error, GST_GL_WINDOW_ERROR,
+              GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+              "Failed to choose a suitable OpenGL API");
+          goto failure;
+        }
+      }
+    }
+
+    if (!eglBindAPI (EGL_OPENGL_API)) {
+      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_FAILED,
+          "Failed to bind OpenGL|ES API: %s", WlEGLErrorString ());
+      goto failure;
+    }
+
+    window_egl->gl_api = GST_GL_API_OPENGL;
+  } else if (gl_api & GST_GL_API_GLES2) {
+  try_gles2:
+    if (!eglBindAPI (EGL_OPENGL_ES_API)) {
+      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_FAILED,
+          "Failed to bind OpenGL|ES API: %s", WlEGLErrorString ());
+      goto failure;
+    }
+
+    window_egl->gl_api = GST_GL_API_GLES2;
   }
 
   if (eglChooseConfig (window_egl->egl_display, config_attrib,
@@ -503,7 +539,7 @@ gst_gl_window_wayland_egl_get_gl_context (GstGLWindow * window)
 static GstGLAPI
 gst_gl_window_wayland_egl_get_gl_api (GstGLWindow * window)
 {
-  return GST_GL_API_GLES2;
+  return GST_GL_WINDOW_WAYLAND_EGL (window)->gl_api;
 }
 
 static void
