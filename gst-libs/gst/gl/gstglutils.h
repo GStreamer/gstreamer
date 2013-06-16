@@ -91,10 +91,10 @@ gboolean gst_gl_display_use_fbo (GstGLDisplay * display, gint texture_fbo_width,
     GLuint texture_fbo, GLCB cb, gint input_texture_width,
     gint input_texture_height, GLuint input_texture, gdouble proj_param1,
     gdouble proj_param2, gdouble proj_param3, gdouble proj_param4,
-    GstGLDisplayProjection projection, gpointer * stuff);
+    GstGLDisplayProjection projection, gpointer stuff);
 gboolean gst_gl_display_use_fbo_v2 (GstGLDisplay * display, gint texture_fbo_width,
     gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
-    GLuint texture_fbo, GLCB_V2 cb, gpointer * stuff);
+    GLuint texture_fbo, GLCB_V2 cb, gpointer stuff);
 void gst_gl_display_del_fbo (GstGLDisplay * display, GLuint fbo,
     GLuint depth_buffer);
 
