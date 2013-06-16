@@ -166,7 +166,20 @@ $(BUILDIMAGESDIR)/%.ps: %.png
 # make sure xml validates properly
 check-local: $(BUILDDIR)/$(MAIN)
 	@cp -f $(srcdir)/../image-png $(BUILDDIR)/image.entities
-	cd $(BUILDDIR) && xmllint -noout -valid $(MAIN)
+	@cd $(BUILDDIR) && xmllint -noout -valid $(MAIN)
+	@cd $(BUILDDIR) && \
+	if [ `which curl` ]; then \
+    links=`$(XSLTPROC) $(XSLTPROC_FLAGS) --xinclude $(abs_top_srcdir)/docs/list-ulink.xsl $(MAIN) | egrep '^http' | sort | uniq` && \
+    have_error=0 && \
+    for link in $$links; do \
+      code=`curl -s -m20 -o /dev/null -I -w "%{http_code}" $$link`; \
+      if [ \( $$? -ne 0 \) -o \( $$code -gt 399 \) ]; then \
+        echo "exit_status=$$?, http_code=$$code: $$link"; \
+        grep -Hnr "$$link" .; \
+        have_error=1; \
+      fi; \
+    done \
+  fi
 
 # avoid 'cp: cannot create regular file `build/image.entities': File exists'
 # errors during 'make distcheck' by disabling parallel builds
