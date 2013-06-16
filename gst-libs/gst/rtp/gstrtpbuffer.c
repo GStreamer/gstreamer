@@ -651,7 +651,7 @@ gst_rtp_buffer_set_extension (GstRTPBuffer * rtp, gboolean extension)
 }
 
 /**
- * gst_rtp_buffer_get_extension_data:
+ * gst_rtp_buffer_get_extension_data: (skip)
  * @rtp: the RTP packet
  * @bits: (out): location for result bits
  * @data: (out) (array) (element-type guint8) (transfer none): location for data
@@ -686,6 +686,47 @@ gst_rtp_buffer_get_extension_data (GstRTPBuffer * rtp, guint16 * bits,
     *data = (gpointer *) pdata;
 
   return TRUE;
+}
+
+/**
+ * gst_rtp_buffer_get_extension_bytes:
+ * @rtp: the RTP packet
+ * @bits: (out): location for header bits
+ *
+ * Similar to gst_rtp_buffer_get_extension_data, but more suitable for language
+ * bindings usage. @bits will contain the extension 16 bits of custom data and
+ * the extension data (not including the extension header) is placed in a new
+ * #GBytes structure.
+ *
+ * If @rtp did not contain an extension, this function will return %NULL, with
+ * @bits unchanged. If there is an extension header but no extension data then
+ * an empty #GBytes will be returned.
+ *
+ * Returns: (transfer full): A new #GBytes if an extension header was present
+ * and %NULL otherwise.
+ *
+ * Rename to: gst_rtp_buffer_get_extension_data
+ *
+ * Since: 1.2
+ */
+GBytes *
+gst_rtp_buffer_get_extension_bytes (GstRTPBuffer * rtp, guint16 * bits)
+{
+  gpointer buf_data = NULL;
+  guint buf_len;
+
+  g_return_val_if_fail (rtp != NULL, FALSE);
+
+  if (!gst_rtp_buffer_get_extension_data (rtp, bits, &buf_data, &buf_len))
+    return NULL;
+
+  if (buf_len == 0) {
+    /* if no extension data is present return an empty GBytes */
+    buf_data = NULL;
+  }
+
+  /* multiply length with 4 to get length in bytes */
+  return g_bytes_new (buf_data, 4 * buf_len);
 }
 
 /* ensure header, payload and padding are in separate buffers */
@@ -1057,7 +1098,7 @@ gst_rtp_buffer_get_payload_len (GstRTPBuffer * rtp)
 }
 
 /**
- * gst_rtp_buffer_get_payload:
+ * gst_rtp_buffer_get_payload: (skip)
  * @rtp: the RTP packet
  *
  * Get a pointer to the payload data in @buffer. This pointer is valid as long
@@ -1090,6 +1131,34 @@ gst_rtp_buffer_get_payload (GstRTPBuffer * rtp)
   rtp->size[2] = plen;
 
   return rtp->data[2];
+}
+
+/**
+ * gst_rtp_buffer_get_payload_bytes:
+ * @rtp: the RTP packet
+ *
+ * Similar to gst_rtp_buffer_get_payload, but more suitable for language
+ * bindings usage. The return value is a pointer to a #GBytes structure
+ * containing the payload data in @rtp.
+ *
+ * Returns: (transfer full): A new #GBytes containing the payload data in @rtp.
+ *
+ * Rename to: gst_rtp_buffer_get_payload
+ *
+ * Since: 1.2
+ */
+GBytes *
+gst_rtp_buffer_get_payload_bytes (GstRTPBuffer * rtp)
+{
+  gpointer data;
+
+  g_return_val_if_fail (rtp != NULL, NULL);
+
+  data = gst_rtp_buffer_get_payload (rtp);
+  if (data == NULL)
+    return NULL;
+
+  return g_bytes_new (data, gst_rtp_buffer_get_payload_len (rtp));
 }
 
 /**

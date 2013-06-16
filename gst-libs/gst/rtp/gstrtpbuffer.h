@@ -94,6 +94,7 @@ gboolean        gst_rtp_buffer_get_extension         (GstRTPBuffer *rtp);
 void            gst_rtp_buffer_set_extension         (GstRTPBuffer *rtp, gboolean extension);
 gboolean        gst_rtp_buffer_get_extension_data    (GstRTPBuffer *rtp, guint16 *bits,
                                                       gpointer *data, guint *wordlen);
+GBytes*         gst_rtp_buffer_get_extension_bytes   (GstRTPBuffer *rtp, guint16 *bits);
 gboolean        gst_rtp_buffer_set_extension_data    (GstRTPBuffer *rtp, guint16 bits, guint16 length);
 
 guint32         gst_rtp_buffer_get_ssrc              (GstRTPBuffer *rtp);
@@ -120,6 +121,7 @@ GstBuffer*      gst_rtp_buffer_get_payload_subbuffer (GstRTPBuffer *rtp, guint o
 
 guint           gst_rtp_buffer_get_payload_len       (GstRTPBuffer *rtp);
 gpointer        gst_rtp_buffer_get_payload           (GstRTPBuffer *rtp);
+GBytes*         gst_rtp_buffer_get_payload_bytes     (GstRTPBuffer *rtp);
 
 /* some helpers */
 guint32         gst_rtp_buffer_default_clock_rate    (guint8 payload_type);
