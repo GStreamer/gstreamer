@@ -24,6 +24,7 @@
 
 #include "gstglutils.h"
 #include "gstglfeature.h"
+#include "gstglframebuffer.h"
 
 #ifndef GL_FRAMEBUFFER_UNDEFINED
 #define GL_FRAMEBUFFER_UNDEFINED          0x8219
@@ -54,44 +55,12 @@ static GstVideoFormat gen_texture_video_format;
 
 static GLuint *del_texture;
 
-/* filter gen fbo */
-static GLuint gen_fbo_width;
-static GLuint gen_fbo_height;
-static GLuint generated_fbo;
-static GLuint generated_depth_buffer;
-
-/* filter use fbo */
-static GLuint use_fbo;
-static GLuint use_depth_buffer;
-static GLuint use_fbo_texture;
-static GLuint use_fbo_width;
-static GLuint use_fbo_height;
-static GLCB use_fbo_scene_cb;
-static GLCB_V2 use_fbo_scene_cb_v2;
-static gdouble use_fbo_proj_param1;
-static gdouble use_fbo_proj_param2;
-static gdouble use_fbo_proj_param3;
-static gdouble use_fbo_proj_param4;
-static GstGLDisplayProjection use_fbo_projection;
-static gpointer *use_fbo_stuff;
-static GLuint input_texture_width;
-static GLuint input_texture_height;
-static GLuint input_texture;
-
-/* filter del fbo */
-static GLuint del_fbo;
-static GLuint del_depth_buffer;
-
 /* action gen and del shader */
 static const gchar *gen_shader_fragment_source;
 static const gchar *gen_shader_vertex_source;
 static GstGLShader *gen_shader;
 static GstGLShader *del_shader;
 
-static void _gen_fbo (GstGLDisplay * display);
-static void _use_fbo (GstGLDisplay * display);
-static void _use_fbo_v2 (GstGLDisplay * display);
-static void _del_fbo (GstGLDisplay * display);
 static void _gen_shader (GstGLDisplay * display);
 static void _del_shader (GstGLDisplay * display);
 
@@ -298,32 +267,65 @@ gst_gl_display_del_texture (GstGLDisplay * display, GLuint * pTexture)
   gst_gl_display_unlock (display);
 }
 
+typedef struct _GenFBO
+{
+  GstGLFramebuffer *frame;
+  gint width, height;
+  GLuint *fbo, *depth;
+} GenFBO;
+
+static void
+_gen_fbo (GstGLDisplay * display, GenFBO * data)
+{
+  gst_gl_framebuffer_generate (data->frame, data->width, data->height,
+      data->fbo, data->depth);
+}
+
 gboolean
 gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
     GLuint * fbo, GLuint * depthbuffer)
 {
-  gboolean alive = FALSE;
-  GstGLWindow *window;
+  GstGLFramebuffer *frame = gst_gl_framebuffer_new (display);
 
-  gst_gl_display_lock (display);
+  GenFBO data = { frame, width, height, fbo, depthbuffer };
 
-  window = gst_gl_display_get_window_unlocked (display);
+  gst_gl_display_thread_add (display, (GstGLDisplayThreadFunc) _gen_fbo, &data);
 
-  if (gst_gl_window_is_running (window)) {
-    gen_fbo_width = width;
-    gen_fbo_height = height;
-    gst_gl_window_send_message (window, GST_GL_WINDOW_CB (_gen_fbo), display);
-    *fbo = generated_fbo;
-    *depthbuffer = generated_depth_buffer;
-  }
-  alive = gst_gl_window_is_running (window);
+  gst_object_unref (frame);
 
-  gst_object_unref (window);
-  gst_gl_display_unlock (display);
-
-  return alive;
+  return TRUE;
 }
 
+typedef struct _UseFBO
+{
+  GstGLFramebuffer *frame;
+  gint texture_fbo_width;
+  gint texture_fbo_height;
+  GLuint fbo;
+  GLuint depth_buffer;
+  GLuint texture_fbo;
+  GLCB cb;
+  gint input_tex_width;
+  gint input_tex_height;
+  GLuint input_tex;
+  gdouble proj_param1;
+  gdouble proj_param2;
+  gdouble proj_param3;
+  gdouble proj_param4;
+  GstGLDisplayProjection projection;
+  gpointer stuff;
+} UseFBO;
+
+static void
+_use_fbo (GstGLDisplay * display, UseFBO * data)
+{
+  gst_gl_framebuffer_use (data->frame, data->texture_fbo_width,
+      data->texture_fbo_height, data->fbo, data->depth_buffer,
+      data->texture_fbo, data->cb, data->input_tex_width,
+      data->input_tex_height, data->input_tex, data->proj_param1,
+      data->proj_param2, data->proj_param3, data->proj_param4, data->projection,
+      data->stuff);
+}
 
 /* Called by glfilter */
 /* this function really has to be simplified...  do we really need to
@@ -339,87 +341,88 @@ gst_gl_display_use_fbo (GstGLDisplay * display, gint texture_fbo_width,
     GLuint texture_fbo, GLCB cb, gint input_tex_width,
     gint input_tex_height, GLuint input_tex, gdouble proj_param1,
     gdouble proj_param2, gdouble proj_param3, gdouble proj_param4,
-    GstGLDisplayProjection projection, gpointer * stuff)
+    GstGLDisplayProjection projection, gpointer stuff)
 {
-  gboolean alive;
-  GstGLWindow *window;
+  GstGLFramebuffer *frame = gst_gl_framebuffer_new (display);
 
-  gst_gl_display_lock (display);
+  UseFBO data =
+      { frame, texture_fbo_width, texture_fbo_height, fbo, depth_buffer,
+    texture_fbo, cb, input_tex_width, input_tex_height, input_tex,
+    proj_param1, proj_param2, proj_param3, proj_param4, projection, stuff
+  };
 
-  window = gst_gl_display_get_window_unlocked (display);
-  if (gst_gl_window_is_running (window)) {
-    use_fbo = fbo;
-    use_depth_buffer = depth_buffer;
-    use_fbo_texture = texture_fbo;
-    use_fbo_width = texture_fbo_width;
-    use_fbo_height = texture_fbo_height;
-    use_fbo_scene_cb = cb;
-    use_fbo_proj_param1 = proj_param1;
-    use_fbo_proj_param2 = proj_param2;
-    use_fbo_proj_param3 = proj_param3;
-    use_fbo_proj_param4 = proj_param4;
-    use_fbo_projection = projection;
-    use_fbo_stuff = stuff;
-    input_texture_width = input_tex_width;
-    input_texture_height = input_tex_height;
-    input_texture = input_tex;
-    gst_gl_window_send_message (window, GST_GL_WINDOW_CB (_use_fbo), display);
-  }
-  alive = gst_gl_window_is_running (window);
+  gst_gl_display_thread_add (display, (GstGLDisplayThreadFunc) _use_fbo, &data);
 
-  gst_object_unref (window);
-  gst_gl_display_unlock (display);
+  gst_object_unref (frame);
 
-  return alive;
+  return TRUE;
+}
+
+typedef struct _UseFBO2
+{
+  GstGLFramebuffer *frame;
+  gint texture_fbo_width;
+  gint texture_fbo_height;
+  GLuint fbo;
+  GLuint depth_buffer;
+  GLuint texture_fbo;
+  GLCB_V2 cb;
+  gpointer stuff;
+} UseFBO2;
+
+static void
+_use_fbo_v2 (GstGLDisplay * display, UseFBO2 * data)
+{
+  gst_gl_framebuffer_use_v2 (data->frame, data->texture_fbo_width,
+      data->texture_fbo_height, data->fbo, data->depth_buffer,
+      data->texture_fbo, data->cb, data->stuff);
 }
 
 gboolean
 gst_gl_display_use_fbo_v2 (GstGLDisplay * display, gint texture_fbo_width,
     gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
-    GLuint texture_fbo, GLCB_V2 cb, gpointer * stuff)
+    GLuint texture_fbo, GLCB_V2 cb, gpointer stuff)
 {
-  gboolean alive;
-  GstGLWindow *window;
+  GstGLFramebuffer *frame = gst_gl_framebuffer_new (display);
 
-  gst_gl_display_lock (display);
+  UseFBO2 data =
+      { frame, texture_fbo_width, texture_fbo_height, fbo, depth_buffer,
+    texture_fbo, cb, stuff
+  };
 
-  window = gst_gl_display_get_window_unlocked (display);
-  if (gst_gl_window_is_running (window)) {
-    use_fbo = fbo;
-    use_depth_buffer = depth_buffer;
-    use_fbo_texture = texture_fbo;
-    use_fbo_width = texture_fbo_width;
-    use_fbo_height = texture_fbo_height;
-    use_fbo_scene_cb_v2 = cb;
-    use_fbo_stuff = stuff;
-    gst_gl_window_send_message (window,
-        GST_GL_WINDOW_CB (_use_fbo_v2), display);
-  }
-  alive = gst_gl_window_is_running (window);
+  gst_gl_display_thread_add (display, (GstGLDisplayThreadFunc) _use_fbo_v2,
+      &data);
 
-  gst_object_unref (window);
-  gst_gl_display_unlock (display);
+  gst_object_unref (frame);
 
-  return alive;
+  return TRUE;
+}
+
+typedef struct _DelFBO
+{
+  GstGLFramebuffer *frame;
+  GLuint fbo;
+  GLuint depth;
+} DelFBO;
+
+/* Called in the gl thread */
+static void
+_del_fbo (GstGLDisplay * display, DelFBO * data)
+{
+  gst_gl_framebuffer_delete (data->frame, data->fbo, data->depth);
 }
 
 /* Called by gltestsrc and glfilter */
 void
 gst_gl_display_del_fbo (GstGLDisplay * display, GLuint fbo, GLuint depth_buffer)
 {
-  GstGLWindow *window;
+  GstGLFramebuffer *frame = gst_gl_framebuffer_new (display);
 
-  gst_gl_display_lock (display);
+  DelFBO data = { frame, fbo, depth_buffer };
 
-  window = gst_gl_display_get_window_unlocked (display);
-  if (gst_gl_window_is_running (window)) {
-    del_fbo = fbo;
-    del_depth_buffer = depth_buffer;
-    gst_gl_window_send_message (window, GST_GL_WINDOW_CB (_del_fbo), display);
-  }
+  gst_gl_display_thread_add (display, (GstGLDisplayThreadFunc) _del_fbo, &data);
 
-  gst_object_unref (window);
-  gst_gl_display_unlock (display);
+  gst_object_unref (frame);
 }
 
 
@@ -492,227 +495,6 @@ gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader)
 
   gst_object_unref (window);
   gst_gl_display_unlock (display);
-}
-
-void
-_gen_fbo (GstGLDisplay * display)
-{
-  /* a texture must be attached to the FBO */
-  const GstGLFuncs *gl = display->gl_vtable;
-  GLuint fake_texture = 0;
-
-  GST_TRACE ("creating FBO dimensions:%ux%u", gen_fbo_width, gen_fbo_height);
-
-  /* -- generate frame buffer object */
-
-  if (!gl->GenFramebuffers) {
-    gst_gl_display_set_error (display,
-        "Context, EXT_framebuffer_object not supported");
-    return;
-  }
-  /* setup FBO */
-  gl->GenFramebuffers (1, &generated_fbo);
-  gl->BindFramebuffer (GL_FRAMEBUFFER, generated_fbo);
-
-  /* setup the render buffer for depth */
-  gl->GenRenderbuffers (1, &generated_depth_buffer);
-  gl->BindRenderbuffer (GL_RENDERBUFFER, generated_depth_buffer);
-
-  if (USING_OPENGL (display)) {
-    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
-        gen_fbo_width, gen_fbo_height);
-    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
-        gen_fbo_width, gen_fbo_height);
-  }
-  if (USING_GLES2 (display)) {
-    gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
-        gen_fbo_width, gen_fbo_height);
-  }
-
-  /* setup a texture to render to */
-  gl->GenTextures (1, &fake_texture);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, fake_texture);
-  gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-      gen_fbo_width, gen_fbo_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-      GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-      GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-      GL_CLAMP_TO_EDGE);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-      GL_CLAMP_TO_EDGE);
-
-  /* attach the texture to the FBO to renderer to */
-  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_RECTANGLE_ARB, fake_texture, 0);
-
-  /* attach the depth render buffer to the FBO */
-  gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-      GL_RENDERBUFFER, generated_depth_buffer);
-
-  if (USING_OPENGL (display)) {
-    gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-        GL_RENDERBUFFER, generated_depth_buffer);
-  }
-
-  if (gl->CheckFramebufferStatus (GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    gst_gl_display_set_error (display, "GL framebuffer status incomplete");
-
-  /* unbind the FBO */
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
-
-  gl->DeleteTextures (1, &fake_texture);
-}
-
-static void
-_use_fbo (GstGLDisplay * display)
-{
-  const GstGLFuncs *gl = display->gl_vtable;
-#if GST_GL_HAVE_GLES2
-  GLint viewport_dim[4];
-#endif
-
-  GST_TRACE ("Binding v1 FBO %u dimensions:%ux%u with texture:%u "
-      "dimensions:%ux%u", use_fbo, use_fbo_width,
-      use_fbo_height, use_fbo_texture,
-      input_texture_width, input_texture_height);
-
-  gl->BindFramebuffer (GL_FRAMEBUFFER, use_fbo);
-
-  /*setup a texture to render to */
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, use_fbo_texture);
-
-  /* attach the texture to the FBO to renderer to */
-  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_RECTANGLE_ARB, use_fbo_texture, 0);
-
-  gst_gl_display_clear_shader (display);
-
-
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (display)) {
-    gl->PushAttrib (GL_VIEWPORT_BIT);
-    gl->MatrixMode (GL_PROJECTION);
-    gl->PushMatrix ();
-    gl->LoadIdentity ();
-
-    switch (use_fbo_projection) {
-      case GST_GL_DISPLAY_PROJECTION_ORTHO2D:
-        gluOrtho2D (use_fbo_proj_param1,
-            use_fbo_proj_param2, use_fbo_proj_param3, use_fbo_proj_param4);
-        break;
-      case GST_GL_DISPLAY_PROJECTION_PERSPECTIVE:
-        gluPerspective (use_fbo_proj_param1,
-            use_fbo_proj_param2, use_fbo_proj_param3, use_fbo_proj_param4);
-        break;
-      default:
-        gst_gl_display_set_error (display, "Unknow fbo projection %d",
-            use_fbo_projection);
-    }
-
-    gl->MatrixMode (GL_MODELVIEW);
-    gl->PushMatrix ();
-    gl->LoadIdentity ();
-  }
-#endif
-#if GST_GL_HAVE_GLES2
-  if (USING_GLES2 (display))
-    gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
-#endif
-
-  gl->Viewport (0, 0, use_fbo_width, use_fbo_height);
-
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (display)) {
-    const GLenum rt[] = { GL_COLOR_ATTACHMENT0 };
-    gl->DrawBuffers (1, rt);
-  }
-#endif
-
-  gl->ClearColor (0.0, 0.0, 0.0, 0.0);
-  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  use_fbo_scene_cb (input_texture_width,
-      input_texture_height, input_texture, use_fbo_stuff);
-
-#if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (display)) {
-    const GLenum rt[] = { GL_NONE };
-    gl->DrawBuffers (1, rt);
-    gl->MatrixMode (GL_PROJECTION);
-    gl->PopMatrix ();
-    gl->MatrixMode (GL_MODELVIEW);
-    gl->PopMatrix ();
-    gl->PopAttrib ();
-  }
-#endif
-#if GST_GL_HAVE_GLES2
-  if (USING_GLES2 (display)) {
-    gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
-        viewport_dim[3]);
-  }
-#endif
-
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
-}
-
-/* Called in a gl thread
- * Need full shader support */
-static void
-_use_fbo_v2 (GstGLDisplay * display)
-{
-  const GstGLFuncs *gl = display->gl_vtable;
-  GLint viewport_dim[4];
-
-  GST_TRACE ("Binding v2 FBO %u dimensions:%ux%u with texture:%u ",
-      use_fbo, use_fbo_width, use_fbo_height, use_fbo_texture);
-
-  gl->BindFramebuffer (GL_FRAMEBUFFER, use_fbo);
-
-  /* setup a texture to render to */
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, use_fbo_texture);
-
-  /* attach the texture to the FBO to renderer to */
-  gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_RECTANGLE_ARB, use_fbo_texture, 0);
-
-  gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
-
-  gl->Viewport (0, 0, use_fbo_width, use_fbo_height);
-
-  gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
-
-  gl->ClearColor (0.0, 0.0, 0.0, 0.0);
-  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  /* the opengl scene */
-  use_fbo_scene_cb_v2 (use_fbo_stuff);
-
-  gl->DrawBuffer (GL_NONE);
-
-  gl->Viewport (viewport_dim[0], viewport_dim[1],
-      viewport_dim[2], viewport_dim[3]);
-
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
-}
-
-/* Called in the gl thread */
-static void
-_del_fbo (GstGLDisplay * display)
-{
-  const GstGLFuncs *gl = display->gl_vtable;
-
-  GST_TRACE ("Deleting FBO %u", del_fbo);
-
-  if (del_fbo) {
-    gl->DeleteFramebuffers (1, &del_fbo);
-    del_fbo = 0;
-  }
-  if (del_depth_buffer) {
-    gl->DeleteRenderbuffers (1, &del_depth_buffer);
-    del_depth_buffer = 0;
-  }
 }
 
 /* Called in the gl thread */
