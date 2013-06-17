@@ -108,7 +108,7 @@ gst_gl_window_x11_egl_choose_format (GstGLWindowX11 * window_x11,
 }
 
 static gboolean
-gst_gl_window_x11_egl_choose_config (GstGLWindowX11EGL * window_egl,
+_gst_gl_window_x11_egl_choose_config (GstGLWindowX11EGL * window_egl,
     GError ** error)
 {
   EGLint numConfigs;
@@ -215,7 +215,10 @@ gst_gl_window_x11_egl_create_context (GstGLWindowX11 * window_x11,
     window_egl->gl_api = GST_GL_API_GLES2;
   }
 
-  gst_gl_window_x11_egl_choose_config (window_egl, error);
+  if (!_gst_gl_window_x11_egl_choose_config (window_egl, error)) {
+    g_assert (error == NULL || *error != NULL);
+    goto failure;
+  }
 
   window_egl->egl_surface =
       eglCreateWindowSurface (window_egl->egl_display, window_egl->egl_config,

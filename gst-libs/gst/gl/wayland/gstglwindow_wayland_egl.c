@@ -363,31 +363,53 @@ error:
   return FALSE;
 }
 
+
+static gboolean
+_gst_gl_window_wayland_egl_choose_config (GstGLWindowWaylandEGL * window_egl,
+    GError ** error)
+{
+  EGLint numConfigs;
+  gint i = 0;
+  EGLint config_attrib[20];
+
+  config_attrib[i++] = EGL_SURFACE_TYPE;
+  config_attrib[i++] = EGL_WINDOW_BIT;
+  config_attrib[i++] = EGL_RENDERABLE_TYPE;
+  if (window_egl->gl_api & GST_GL_API_GLES2)
+    config_attrib[i++] = EGL_OPENGL_ES2_BIT;
+  else
+    config_attrib[i++] = EGL_OPENGL_BIT;
+  config_attrib[i++] = EGL_DEPTH_SIZE;
+  config_attrib[i++] = 16;
+  config_attrib[i++] = EGL_NONE;
+
+  if (eglChooseConfig (window_egl->egl_display, config_attrib,
+          &window_egl->egl_config, 1, &numConfigs))
+    GST_INFO ("config set: %ld, %ld", (gulong) window_egl->egl_config,
+        (gulong) numConfigs);
+  else {
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+        "Failed to set window configuration: %s", WlEGLErrorString ());
+    goto failure;
+  }
+
+  return TRUE;
+
+failure:
+  return FALSE;
+}
+
 gboolean
 gst_gl_window_wayland_egl_create_context (GstGLWindow * window,
     GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
 {
   GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
 
-  EGLint config_attrib[] = {
-    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-    EGL_RED_SIZE, 1,
-    EGL_GREEN_SIZE, 1,
-    EGL_BLUE_SIZE, 1,
-    EGL_ALPHA_SIZE, 1,
-    EGL_DEPTH_SIZE, 1,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-    EGL_NONE
-  };
-
-  EGLint context_attrib[] = {
-    EGL_CONTEXT_CLIENT_VERSION, 2,
-    EGL_NONE
-  };
+  EGLint context_attrib[3];
+  gint i = 0;
 
   EGLint majorVersion;
   EGLint minorVersion;
-  EGLint numConfigs;
 
   if (!_setup_wayland (window_egl, error))
     return FALSE;
@@ -445,17 +467,18 @@ gst_gl_window_wayland_egl_create_context (GstGLWindow * window,
     window_egl->gl_api = GST_GL_API_GLES2;
   }
 
-  if (eglChooseConfig (window_egl->egl_display, config_attrib,
-          &window_egl->egl_config, 1, &numConfigs))
-    GST_DEBUG ("config set: %ld, %ld", (gulong) window_egl->egl_config,
-        (gulong) numConfigs);
-  else {
-    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
-        "Failed to set window configuration: %s", WlEGLErrorString ());
+  if (!_gst_gl_window_wayland_egl_choose_config (window_egl, error)) {
+    g_assert (error == NULL || *error != NULL);
     goto failure;
   }
 
   GST_DEBUG ("about to create gl context");
+
+  if (window_egl->gl_api & GST_GL_API_GLES2) {
+    context_attrib[i++] = EGL_CONTEXT_CLIENT_VERSION;
+    context_attrib[i++] = 2;
+  }
+  context_attrib[i++] = EGL_NONE;
 
   window_egl->egl_context =
       eglCreateContext (window_egl->egl_display, window_egl->egl_config,
