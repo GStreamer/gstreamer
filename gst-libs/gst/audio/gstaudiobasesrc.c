@@ -1065,12 +1065,14 @@ alloc_failed:
   }
 stopped:
   {
+    gst_buffer_unmap (buf, &info);
     gst_buffer_unref (buf);
     GST_DEBUG_OBJECT (src, "ringbuffer stopped");
     return GST_FLOW_FLUSHING;
   }
 got_error:
   {
+    gst_buffer_unmap (buf, &info);
     gst_buffer_unref (buf);
     GST_DEBUG_OBJECT (src, "ringbuffer was in error state, bailing out");
     return GST_FLOW_ERROR;
