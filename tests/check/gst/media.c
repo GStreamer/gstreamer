@@ -237,6 +237,31 @@ GST_START_TEST (test_media_dyn_prepare)
 
 GST_END_TEST;
 
+GST_START_TEST (test_media_take_pipeline)
+{
+  GstRTSPMediaFactory *factory;
+  GstRTSPMedia *media;
+  GstRTSPUrl *url;
+  GstElement *pipeline;
+
+  factory = gst_rtsp_media_factory_new ();
+  gst_rtsp_url_parse ("rtsp://localhost:8554/test", &url);
+  gst_rtsp_media_factory_set_launch (factory,
+      "( fakesrc ! text/plain ! rtpgstpay name=pay0 )");
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+
+  pipeline = gst_pipeline_new ("media-pipeline");
+  gst_rtsp_media_take_pipeline (media, GST_PIPELINE_CAST (pipeline));
+
+  g_object_unref (media);
+  gst_rtsp_url_free (url);
+  g_object_unref (factory);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspmedia_suite (void)
 {
@@ -249,6 +274,7 @@ rtspmedia_suite (void)
   tcase_add_test (tc, test_media);
   tcase_add_test (tc, test_media_prepare);
   tcase_add_test (tc, test_media_dyn_prepare);
+  tcase_add_test (tc, test_media_take_pipeline);
 
   return s;
 }

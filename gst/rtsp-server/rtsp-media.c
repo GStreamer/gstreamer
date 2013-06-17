@@ -310,6 +310,7 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
   switch (propid) {
     case PROP_ELEMENT:
       media->priv->element = g_value_get_object (value);
+      gst_object_ref_sink (media->priv->element);
       break;
     case PROP_SHARED:
       gst_rtsp_media_set_shared (media, g_value_get_boolean (value));
@@ -463,7 +464,6 @@ gst_rtsp_media_take_pipeline (GstRTSPMedia * media, GstPipeline * pipeline)
   if (nettime)
     gst_object_unref (nettime);
 
-  gst_object_ref (priv->element);
   gst_bin_add (GST_BIN_CAST (pipeline), priv->element);
 }
 
