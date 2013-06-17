@@ -1,0 +1,9 @@
+prefix=@prefix@
+exec_prefix=${prefix}
+libdir=@libdir@
+
+Name: @ASSEMBLY_TITLE@
+Description: @ASSEMBLY_DESCRIPTION@
+Version: @VERSION@
+Requires: 
+Libs: -r:${libdir}/mono/@ASSEMBLY_NAME@/@ASSEMBLY_NAME@.dll

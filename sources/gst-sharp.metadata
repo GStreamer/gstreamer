@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<metadata>
+	<!-- Conflicts with structs -->
+	<attr path="/api/namespace/callback[@cname='GstMessageFunc']" name="name">MessageFunc</attr>
+	<attr path="/api/namespace/callback[@cname='GstQueryFunc']" name="name">QueryFunc</attr>
+	<!-- No Conversion for GLib.Value -->
+	<attr path="/api/namespace/object[@cname='GstPad']/property[@name='Caps']" name="type">gpointer</attr>
+	<attr path="/api/namespace/object[@cname='GstPad']/property[@name='Caps']" name="type">gpointer</attr>
+	<attr path="/api/namespace/object[@cname='GstPadTemplate']/property[@name='Caps']" name="type">gpointer</attr>
+	<!-- Error with array -->
+	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_formats_contains']" name="hidden">true</attr>
+	<!-- Handle is missing in GstBuffer -->
+	<attr path="/api/namespace/boxed[@cname='GstBuffer']/method[@cname='gst_buffer_set_size']" name="hidden">true</attr>
+	<attr path="/api/namespace/boxed[@cname='GstMessage']/field[@cname='cond']" name="type">GCond*</attr>
+	<!-- Maybe some problems with the name -->
+	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/class_struct/method[@vm='get_type']" name="vm" />
+	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/virtual_method[@cname='get_type']" name="hidden" />
+</metadata>
+
