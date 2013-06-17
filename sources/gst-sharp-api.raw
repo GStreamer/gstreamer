@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <api parser_version="3">
   <namespace name="Gst" library="gstreamer-1.0">
-    <enum name="BufferingMode" cname="GstBufferingMode" gtype="gst_buffering_mode_get_type" type="enum">
+    <enum name="BufferingMode" cname="GstBufferingMode" type="enum" gtype="gst_buffering_mode_get_type">
       <member cname="GST_BUFFERING_STREAM" name="Stream" value="0"/>
       <member cname="GST_BUFFERING_DOWNLOAD" name="Download" value="1"/>
       <member cname="GST_BUFFERING_TIMESHIFT" name="Timeshift" value="2"/>
       <member cname="GST_BUFFERING_LIVE" name="Live" value="3"/>
     </enum>
-    <enum name="BusSyncReply" cname="GstBusSyncReply" gtype="gst_bus_sync_reply_get_type" type="enum">
+    <enum name="BusSyncReply" cname="GstBusSyncReply" type="enum" gtype="gst_bus_sync_reply_get_type">
       <member cname="GST_BUS_DROP" name="Drop" value="0"/>
       <member cname="GST_BUS_PASS" name="Pass" value="1"/>
       <member cname="GST_BUS_ASYNC" name="Async" value="2"/>
     </enum>
-    <enum name="CapsIntersectMode" cname="GstCapsIntersectMode" gtype="gst_caps_intersect_mode_get_type" type="enum">
+    <enum name="CapsIntersectMode" cname="GstCapsIntersectMode" type="enum" gtype="gst_caps_intersect_mode_get_type">
       <member cname="GST_CAPS_INTERSECT_ZIG_ZAG" name="ZigZag" value="0"/>
       <member cname="GST_CAPS_INTERSECT_FIRST" name="First" value="1"/>
     </enum>
-    <enum name="ClockEntryType" cname="GstClockEntryType" gtype="gst_clock_entry_type_get_type" type="enum">
+    <enum name="ClockEntryType" cname="GstClockEntryType" type="enum" gtype="gst_clock_entry_type_get_type">
       <member cname="GST_CLOCK_ENTRY_SINGLE" name="Single" value="0"/>
       <member cname="GST_CLOCK_ENTRY_PERIODIC" name="Periodic" value="1"/>
     </enum>
-    <enum name="ClockReturn" cname="GstClockReturn" gtype="gst_clock_return_get_type" type="enum">
+    <enum name="ClockReturn" cname="GstClockReturn" type="enum" gtype="gst_clock_return_get_type">
       <member cname="GST_CLOCK_OK" name="Ok" value="0"/>
       <member cname="GST_CLOCK_EARLY" name="Early" value="1"/>
       <member cname="GST_CLOCK_UNSCHEDULED" name="Unscheduled" value="2"/>
@@ -30,19 +30,13 @@
       <member cname="GST_CLOCK_UNSUPPORTED" name="Unsupported" value="6"/>
       <member cname="GST_CLOCK_DONE" name="Done" value="7"/>
     </enum>
-    <enum name="ClockType" cname="GstClockType" gtype="gst_clock_type_get_type" type="enum">
+    <enum name="ClockType" cname="GstClockType" type="enum" gtype="gst_clock_type_get_type">
       <member cname="GST_CLOCK_TYPE_REALTIME" name="Realtime" value="0"/>
       <member cname="GST_CLOCK_TYPE_MONOTONIC" name="Monotonic" value="1"/>
       <member cname="GST_CLOCK_TYPE_OTHER" name="Other" value="2"/>
     </enum>
-    <enum name="CoreError" cname="GstCoreError" gtype="gst_core_error_get_type" type="enum">
+    <enum name="CoreError" cname="GstCoreError" type="enum" gtype="gst_core_error_get_type">
       <member cname="GST_CORE_ERROR_FAILED" name="Failed" value="1"/>
-      <member cname="GST_CORE_ERROR_CAPS" name="Caps" value="10"/>
-      <member cname="GST_CORE_ERROR_TAG" name="Tag" value="11"/>
-      <member cname="GST_CORE_ERROR_MISSING_PLUGIN" name="MissingPlugin" value="12"/>
-      <member cname="GST_CORE_ERROR_CLOCK" name="Clock" value="13"/>
-      <member cname="GST_CORE_ERROR_DISABLED" name="Disabled" value="14"/>
-      <member cname="GST_CORE_ERROR_NUM_ERRORS" name="NumErrors" value="15"/>
       <member cname="GST_CORE_ERROR_TOO_LAZY" name="TooLazy" value="2"/>
       <member cname="GST_CORE_ERROR_NOT_IMPLEMENTED" name="NotImplemented" value="3"/>
       <member cname="GST_CORE_ERROR_STATE_CHANGE" name="StateChange" value="4"/>
@@ -51,31 +45,36 @@
       <member cname="GST_CORE_ERROR_NEGOTIATION" name="Negotiation" value="7"/>
       <member cname="GST_CORE_ERROR_EVENT" name="Event" value="8"/>
       <member cname="GST_CORE_ERROR_SEEK" name="Seek" value="9"/>
+      <member cname="GST_CORE_ERROR_CAPS" name="Caps" value="10"/>
+      <member cname="GST_CORE_ERROR_TAG" name="Tag" value="11"/>
+      <member cname="GST_CORE_ERROR_MISSING_PLUGIN" name="MissingPlugin" value="12"/>
+      <member cname="GST_CORE_ERROR_CLOCK" name="Clock" value="13"/>
+      <member cname="GST_CORE_ERROR_DISABLED" name="Disabled" value="14"/>
+      <member cname="GST_CORE_ERROR_NUM_ERRORS" name="NumErrors" value="15"/>
     </enum>
-    <enum name="DebugColorFlags" cname="GstDebugColorFlags" gtype="gst_debug_color_flags_get_type" type="enum">
+    <enum name="DebugColorFlags" cname="GstDebugColorFlags" type="enum" gtype="gst_debug_color_flags_get_type">
       <member cname="GST_DEBUG_FG_BLACK" name="FgBlack" value="0"/>
       <member cname="GST_DEBUG_BG_BLACK" name="BgBlack" value="0"/>
       <member cname="GST_DEBUG_FG_RED" name="FgRed" value="1"/>
-      <member cname="GST_DEBUG_BG_WHITE" name="BgWhite" value="112"/>
-      <member cname="GST_DEBUG_BG_RED" name="BgRed" value="16"/>
       <member cname="GST_DEBUG_FG_GREEN" name="FgGreen" value="2"/>
-      <member cname="GST_DEBUG_BOLD" name="Bold" value="256"/>
       <member cname="GST_DEBUG_FG_YELLOW" name="FgYellow" value="3"/>
-      <member cname="GST_DEBUG_BG_GREEN" name="BgGreen" value="32"/>
       <member cname="GST_DEBUG_FG_BLUE" name="FgBlue" value="4"/>
-      <member cname="GST_DEBUG_BG_YELLOW" name="BgYellow" value="48"/>
       <member cname="GST_DEBUG_FG_MAGENTA" name="FgMagenta" value="5"/>
-      <member cname="GST_DEBUG_UNDERLINE" name="Underline" value="512"/>
       <member cname="GST_DEBUG_FG_CYAN" name="FgCyan" value="6"/>
-      <member cname="GST_DEBUG_BG_BLUE" name="BgBlue" value="64"/>
       <member cname="GST_DEBUG_FG_WHITE" name="FgWhite" value="7"/>
+      <member cname="GST_DEBUG_BG_RED" name="BgRed" value="16"/>
+      <member cname="GST_DEBUG_BG_GREEN" name="BgGreen" value="32"/>
+      <member cname="GST_DEBUG_BG_YELLOW" name="BgYellow" value="48"/>
+      <member cname="GST_DEBUG_BG_BLUE" name="BgBlue" value="64"/>
       <member cname="GST_DEBUG_BG_MAGENTA" name="BgMagenta" value="80"/>
       <member cname="GST_DEBUG_BG_CYAN" name="BgCyan" value="96"/>
+      <member cname="GST_DEBUG_BG_WHITE" name="BgWhite" value="112"/>
+      <member cname="GST_DEBUG_BOLD" name="Bold" value="256"/>
+      <member cname="GST_DEBUG_UNDERLINE" name="Underline" value="512"/>
     </enum>
-    <enum name="DebugLevel" cname="GstDebugLevel" gtype="gst_debug_level_get_type" type="enum">
+    <enum name="DebugLevel" cname="GstDebugLevel" type="enum" gtype="gst_debug_level_get_type">
       <member cname="GST_LEVEL_NONE" name="None" value="0"/>
       <member cname="GST_LEVEL_ERROR" name="Error" value="1"/>
-      <member cname="GST_LEVEL_COUNT" name="Count" value="10"/>
       <member cname="GST_LEVEL_WARNING" name="Warning" value="2"/>
       <member cname="GST_LEVEL_FIXME" name="Fixme" value="3"/>
       <member cname="GST_LEVEL_INFO" name="Info" value="4"/>
@@ -83,15 +82,17 @@
       <member cname="GST_LEVEL_LOG" name="Log" value="6"/>
       <member cname="GST_LEVEL_TRACE" name="Trace" value="7"/>
       <member cname="GST_LEVEL_MEMDUMP" name="Memdump" value="9"/>
+      <member cname="GST_LEVEL_COUNT" name="Count" value="10"/>
     </enum>
-    <enum name="EventType" cname="GstEventType" gtype="gst_event_type_get_type" type="enum">
+    <enum name="EventType" cname="GstEventType" type="enum" gtype="gst_event_type_get_type">
       <member cname="GST_EVENT_UNKNOWN" name="Unknown" value="0"/>
+      <member cname="GST_EVENT_FLUSH_START" name="FlushStart" value="2563"/>
+      <member cname="GST_EVENT_FLUSH_STOP" name="FlushStop" value="5127"/>
       <member cname="GST_EVENT_STREAM_START" name="StreamStart" value="10254"/>
       <member cname="GST_EVENT_CAPS" name="Caps" value="12814"/>
       <member cname="GST_EVENT_SEGMENT" name="Segment" value="17934"/>
       <member cname="GST_EVENT_TAG" name="Tag" value="20510"/>
       <member cname="GST_EVENT_BUFFERSIZE" name="Buffersize" value="23054"/>
-      <member cname="GST_EVENT_FLUSH_START" name="FlushStart" value="2563"/>
       <member cname="GST_EVENT_SINK_MESSAGE" name="SinkMessage" value="25630"/>
       <member cname="GST_EVENT_EOS" name="Eos" value="28174"/>
       <member cname="GST_EVENT_TOC" name="Toc" value="30750"/>
@@ -99,7 +100,6 @@
       <member cname="GST_EVENT_GAP" name="Gap" value="40966"/>
       <member cname="GST_EVENT_QOS" name="Qos" value="48641"/>
       <member cname="GST_EVENT_SEEK" name="Seek" value="51201"/>
-      <member cname="GST_EVENT_FLUSH_STOP" name="FlushStop" value="5127"/>
       <member cname="GST_EVENT_NAVIGATION" name="Navigation" value="53761"/>
       <member cname="GST_EVENT_LATENCY" name="Latency" value="56321"/>
       <member cname="GST_EVENT_STEP" name="Step" value="58881"/>
@@ -112,22 +112,22 @@
       <member cname="GST_EVENT_CUSTOM_BOTH" name="CustomBoth" value="79367"/>
       <member cname="GST_EVENT_CUSTOM_BOTH_OOB" name="CustomBothOob" value="81923"/>
     </enum>
-    <enum name="FlowReturn" cname="GstFlowReturn" gtype="gst_flow_return_get_type" type="enum">
-      <member cname="GST_FLOW_NOT_LINKED" name="NotLinked" value="-1"/>
-      <member cname="GST_FLOW_CUSTOM_ERROR" name="CustomError" value="-100"/>
-      <member cname="GST_FLOW_CUSTOM_ERROR_1" name="CustomError1" value="-101"/>
+    <enum name="FlowReturn" cname="GstFlowReturn" type="enum" gtype="gst_flow_return_get_type">
       <member cname="GST_FLOW_CUSTOM_ERROR_2" name="CustomError2" value="-102"/>
-      <member cname="GST_FLOW_FLUSHING" name="Flushing" value="-2"/>
-      <member cname="GST_FLOW_EOS" name="Eos" value="-3"/>
-      <member cname="GST_FLOW_NOT_NEGOTIATED" name="NotNegotiated" value="-4"/>
-      <member cname="GST_FLOW_ERROR" name="Error" value="-5"/>
+      <member cname="GST_FLOW_CUSTOM_ERROR_1" name="CustomError1" value="-101"/>
+      <member cname="GST_FLOW_CUSTOM_ERROR" name="CustomError" value="-100"/>
       <member cname="GST_FLOW_NOT_SUPPORTED" name="NotSupported" value="-6"/>
+      <member cname="GST_FLOW_ERROR" name="Error" value="-5"/>
+      <member cname="GST_FLOW_NOT_NEGOTIATED" name="NotNegotiated" value="-4"/>
+      <member cname="GST_FLOW_EOS" name="Eos" value="-3"/>
+      <member cname="GST_FLOW_FLUSHING" name="Flushing" value="-2"/>
+      <member cname="GST_FLOW_NOT_LINKED" name="NotLinked" value="-1"/>
       <member cname="GST_FLOW_OK" name="Ok" value="0"/>
       <member cname="GST_FLOW_CUSTOM_SUCCESS" name="CustomSuccess" value="100"/>
       <member cname="GST_FLOW_CUSTOM_SUCCESS_1" name="CustomSuccess1" value="101"/>
       <member cname="GST_FLOW_CUSTOM_SUCCESS_2" name="CustomSuccess2" value="102"/>
     </enum>
-    <enum name="Format" cname="GstFormat" gtype="gst_format_get_type" type="enum">
+    <enum name="Format" cname="GstFormat" type="enum" gtype="gst_format_get_type">
       <member cname="GST_FORMAT_UNDEFINED" name="Undefined" value="0"/>
       <member cname="GST_FORMAT_DEFAULT" name="Default" value="1"/>
       <member cname="GST_FORMAT_BYTES" name="Bytes" value="2"/>
@@ -135,18 +135,18 @@
       <member cname="GST_FORMAT_BUFFERS" name="Buffers" value="4"/>
       <member cname="GST_FORMAT_PERCENT" name="Percent" value="5"/>
     </enum>
-    <enum name="IteratorItem" cname="GstIteratorItem" gtype="gst_iterator_item_get_type" type="enum">
+    <enum name="IteratorItem" cname="GstIteratorItem" type="enum" gtype="gst_iterator_item_get_type">
       <member cname="GST_ITERATOR_ITEM_SKIP" name="Skip" value="0"/>
       <member cname="GST_ITERATOR_ITEM_PASS" name="Pass" value="1"/>
       <member cname="GST_ITERATOR_ITEM_END" name="End" value="2"/>
     </enum>
-    <enum name="IteratorResult" cname="GstIteratorResult" gtype="gst_iterator_result_get_type" type="enum">
+    <enum name="IteratorResult" cname="GstIteratorResult" type="enum" gtype="gst_iterator_result_get_type">
       <member cname="GST_ITERATOR_DONE" name="Done" value="0"/>
       <member cname="GST_ITERATOR_OK" name="Ok" value="1"/>
       <member cname="GST_ITERATOR_RESYNC" name="Resync" value="2"/>
       <member cname="GST_ITERATOR_ERROR" name="Error" value="3"/>
     </enum>
-    <enum name="LibraryError" cname="GstLibraryError" gtype="gst_library_error_get_type" type="enum">
+    <enum name="LibraryError" cname="GstLibraryError" type="enum" gtype="gst_library_error_get_type">
       <member cname="GST_LIBRARY_ERROR_FAILED" name="Failed" value="1"/>
       <member cname="GST_LIBRARY_ERROR_TOO_LAZY" name="TooLazy" value="2"/>
       <member cname="GST_LIBRARY_ERROR_INIT" name="Init" value="3"/>
@@ -155,37 +155,37 @@
       <member cname="GST_LIBRARY_ERROR_ENCODE" name="Encode" value="6"/>
       <member cname="GST_LIBRARY_ERROR_NUM_ERRORS" name="NumErrors" value="7"/>
     </enum>
-    <enum name="PadDirection" cname="GstPadDirection" gtype="gst_pad_direction_get_type" type="enum">
+    <enum name="PadDirection" cname="GstPadDirection" type="enum" gtype="gst_pad_direction_get_type">
       <member cname="GST_PAD_UNKNOWN" name="Unknown" value="0"/>
       <member cname="GST_PAD_SRC" name="Src" value="1"/>
       <member cname="GST_PAD_SINK" name="Sink" value="2"/>
     </enum>
-    <enum name="PadLinkReturn" cname="GstPadLinkReturn" gtype="gst_pad_link_return_get_type" type="enum">
-      <member cname="GST_PAD_LINK_WRONG_HIERARCHY" name="WrongHierarchy" value="-1"/>
-      <member cname="GST_PAD_LINK_WAS_LINKED" name="WasLinked" value="-2"/>
-      <member cname="GST_PAD_LINK_WRONG_DIRECTION" name="WrongDirection" value="-3"/>
-      <member cname="GST_PAD_LINK_NOFORMAT" name="Noformat" value="-4"/>
-      <member cname="GST_PAD_LINK_NOSCHED" name="Nosched" value="-5"/>
+    <enum name="PadLinkReturn" cname="GstPadLinkReturn" type="enum" gtype="gst_pad_link_return_get_type">
       <member cname="GST_PAD_LINK_REFUSED" name="Refused" value="-6"/>
+      <member cname="GST_PAD_LINK_NOSCHED" name="Nosched" value="-5"/>
+      <member cname="GST_PAD_LINK_NOFORMAT" name="Noformat" value="-4"/>
+      <member cname="GST_PAD_LINK_WRONG_DIRECTION" name="WrongDirection" value="-3"/>
+      <member cname="GST_PAD_LINK_WAS_LINKED" name="WasLinked" value="-2"/>
+      <member cname="GST_PAD_LINK_WRONG_HIERARCHY" name="WrongHierarchy" value="-1"/>
       <member cname="GST_PAD_LINK_OK" name="Ok" value="0"/>
     </enum>
-    <enum name="PadMode" cname="GstPadMode" gtype="gst_pad_mode_get_type" type="enum">
+    <enum name="PadMode" cname="GstPadMode" type="enum" gtype="gst_pad_mode_get_type">
       <member cname="GST_PAD_MODE_NONE" name="None" value="0"/>
       <member cname="GST_PAD_MODE_PUSH" name="Push" value="1"/>
       <member cname="GST_PAD_MODE_PULL" name="Pull" value="2"/>
     </enum>
-    <enum name="PadPresence" cname="GstPadPresence" gtype="gst_pad_presence_get_type" type="enum">
+    <enum name="PadPresence" cname="GstPadPresence" type="enum" gtype="gst_pad_presence_get_type">
       <member cname="GST_PAD_ALWAYS" name="Always" value="0"/>
       <member cname="GST_PAD_SOMETIMES" name="Sometimes" value="1"/>
       <member cname="GST_PAD_REQUEST" name="Request" value="2"/>
     </enum>
-    <enum name="PadProbeReturn" cname="GstPadProbeReturn" gtype="gst_pad_probe_return_get_type" type="enum">
+    <enum name="PadProbeReturn" cname="GstPadProbeReturn" type="enum" gtype="gst_pad_probe_return_get_type">
       <member cname="GST_PAD_PROBE_DROP" name="Drop" value="0"/>
       <member cname="GST_PAD_PROBE_OK" name="Ok" value="1"/>
       <member cname="GST_PAD_PROBE_REMOVE" name="Remove" value="2"/>
       <member cname="GST_PAD_PROBE_PASS" name="Pass" value="3"/>
     </enum>
-    <enum name="ParseError" cname="GstParseError" gtype="gst_parse_error_get_type" type="enum">
+    <enum name="ParseError" cname="GstParseError" type="enum" gtype="gst_parse_error_get_type">
       <member cname="GST_PARSE_ERROR_SYNTAX" name="Syntax" value="0"/>
       <member cname="GST_PARSE_ERROR_NO_SUCH_ELEMENT" name="NoSuchElement" value="1"/>
       <member cname="GST_PARSE_ERROR_NO_SUCH_PROPERTY" name="NoSuchProperty" value="2"/>
@@ -194,32 +194,34 @@
       <member cname="GST_PARSE_ERROR_EMPTY_BIN" name="EmptyBin" value="5"/>
       <member cname="GST_PARSE_ERROR_EMPTY" name="Empty" value="6"/>
     </enum>
-    <enum name="PluginError" cname="GstPluginError" gtype="gst_plugin_error_get_type" type="enum">
+    <enum name="PluginError" cname="GstPluginError" type="enum" gtype="gst_plugin_error_get_type">
       <member cname="GST_PLUGIN_ERROR_MODULE" name="Module" value="0"/>
       <member cname="GST_PLUGIN_ERROR_DEPENDENCIES" name="Dependencies" value="1"/>
       <member cname="GST_PLUGIN_ERROR_NAME_MISMATCH" name="NameMismatch" value="2"/>
     </enum>
-    <enum name="ProgressType" cname="GstProgressType" gtype="gst_progress_type_get_type" type="enum">
+    <enum name="ProgressType" cname="GstProgressType" type="enum" gtype="gst_progress_type_get_type">
       <member cname="GST_PROGRESS_TYPE_START" name="Start" value="0"/>
       <member cname="GST_PROGRESS_TYPE_CONTINUE" name="Continue" value="1"/>
       <member cname="GST_PROGRESS_TYPE_COMPLETE" name="Complete" value="2"/>
       <member cname="GST_PROGRESS_TYPE_CANCELED" name="Canceled" value="3"/>
       <member cname="GST_PROGRESS_TYPE_ERROR" name="Error" value="4"/>
     </enum>
-    <enum name="QOSType" cname="GstQOSType" gtype="gst_qos_type_get_type" type="enum">
+    <enum name="QOSType" cname="GstQOSType" type="enum" gtype="gst_qos_type_get_type">
       <member cname="GST_QOS_TYPE_OVERFLOW" name="Overflow" value="0"/>
       <member cname="GST_QOS_TYPE_UNDERFLOW" name="Underflow" value="1"/>
       <member cname="GST_QOS_TYPE_THROTTLE" name="Throttle" value="2"/>
     </enum>
-    <enum name="QueryType" cname="GstQueryType" gtype="gst_query_type_get_type" type="enum">
+    <enum name="QueryType" cname="GstQueryType" type="enum" gtype="gst_query_type_get_type">
       <member cname="GST_QUERY_UNKNOWN" name="Unknown" value="0"/>
+      <member cname="GST_QUERY_POSITION" name="Position" value="2563"/>
+      <member cname="GST_QUERY_DURATION" name="Duration" value="5123"/>
+      <member cname="GST_QUERY_LATENCY" name="Latency" value="7683"/>
       <member cname="GST_QUERY_JITTER" name="Jitter" value="10243"/>
       <member cname="GST_QUERY_RATE" name="Rate" value="12803"/>
       <member cname="GST_QUERY_SEEKING" name="Seeking" value="15363"/>
       <member cname="GST_QUERY_SEGMENT" name="Segment" value="17923"/>
       <member cname="GST_QUERY_CONVERT" name="Convert" value="20483"/>
       <member cname="GST_QUERY_FORMATS" name="Formats" value="23043"/>
-      <member cname="GST_QUERY_POSITION" name="Position" value="2563"/>
       <member cname="GST_QUERY_BUFFERING" name="Buffering" value="28163"/>
       <member cname="GST_QUERY_CUSTOM" name="Custom" value="30723"/>
       <member cname="GST_QUERY_URI" name="Uri" value="33283"/>
@@ -228,23 +230,15 @@
       <member cname="GST_QUERY_ACCEPT_CAPS" name="AcceptCaps" value="40963"/>
       <member cname="GST_QUERY_CAPS" name="Caps" value="43523"/>
       <member cname="GST_QUERY_DRAIN" name="Drain" value="46086"/>
-      <member cname="GST_QUERY_DURATION" name="Duration" value="5123"/>
-      <member cname="GST_QUERY_LATENCY" name="Latency" value="7683"/>
     </enum>
-    <enum name="Rank" cname="GstRank" gtype="gst_rank_get_type" type="enum">
+    <enum name="Rank" cname="GstRank" type="enum" gtype="gst_rank_get_type">
       <member cname="GST_RANK_NONE" name="None" value="0"/>
+      <member cname="GST_RANK_MARGINAL" name="Marginal" value="64"/>
       <member cname="GST_RANK_SECONDARY" name="Secondary" value="128"/>
       <member cname="GST_RANK_PRIMARY" name="Primary" value="256"/>
-      <member cname="GST_RANK_MARGINAL" name="Marginal" value="64"/>
     </enum>
-    <enum name="ResourceError" cname="GstResourceError" gtype="gst_resource_error_get_type" type="enum">
+    <enum name="ResourceError" cname="GstResourceError" type="enum" gtype="gst_resource_error_get_type">
       <member cname="GST_RESOURCE_ERROR_FAILED" name="Failed" value="1"/>
-      <member cname="GST_RESOURCE_ERROR_WRITE" name="Write" value="10"/>
-      <member cname="GST_RESOURCE_ERROR_SEEK" name="Seek" value="11"/>
-      <member cname="GST_RESOURCE_ERROR_SYNC" name="Sync" value="12"/>
-      <member cname="GST_RESOURCE_ERROR_SETTINGS" name="Settings" value="13"/>
-      <member cname="GST_RESOURCE_ERROR_NO_SPACE_LEFT" name="NoSpaceLeft" value="14"/>
-      <member cname="GST_RESOURCE_ERROR_NUM_ERRORS" name="NumErrors" value="15"/>
       <member cname="GST_RESOURCE_ERROR_TOO_LAZY" name="TooLazy" value="2"/>
       <member cname="GST_RESOURCE_ERROR_NOT_FOUND" name="NotFound" value="3"/>
       <member cname="GST_RESOURCE_ERROR_BUSY" name="Busy" value="4"/>
@@ -253,25 +247,31 @@
       <member cname="GST_RESOURCE_ERROR_OPEN_READ_WRITE" name="OpenReadWrite" value="7"/>
       <member cname="GST_RESOURCE_ERROR_CLOSE" name="Close" value="8"/>
       <member cname="GST_RESOURCE_ERROR_READ" name="Read" value="9"/>
+      <member cname="GST_RESOURCE_ERROR_WRITE" name="Write" value="10"/>
+      <member cname="GST_RESOURCE_ERROR_SEEK" name="Seek" value="11"/>
+      <member cname="GST_RESOURCE_ERROR_SYNC" name="Sync" value="12"/>
+      <member cname="GST_RESOURCE_ERROR_SETTINGS" name="Settings" value="13"/>
+      <member cname="GST_RESOURCE_ERROR_NO_SPACE_LEFT" name="NoSpaceLeft" value="14"/>
+      <member cname="GST_RESOURCE_ERROR_NUM_ERRORS" name="NumErrors" value="15"/>
     </enum>
-    <enum name="SearchMode" cname="GstSearchMode" gtype="gst_search_mode_get_type" type="enum">
+    <enum name="SearchMode" cname="GstSearchMode" type="enum" gtype="gst_search_mode_get_type">
       <member cname="GST_SEARCH_MODE_EXACT" name="Exact" value="0"/>
       <member cname="GST_SEARCH_MODE_BEFORE" name="Before" value="1"/>
       <member cname="GST_SEARCH_MODE_AFTER" name="After" value="2"/>
     </enum>
-    <enum name="SeekType" cname="GstSeekType" gtype="gst_seek_type_get_type" type="enum">
+    <enum name="SeekType" cname="GstSeekType" type="enum" gtype="gst_seek_type_get_type">
       <member cname="GST_SEEK_TYPE_NONE" name="None" value="0"/>
       <member cname="GST_SEEK_TYPE_SET" name="Set" value="1"/>
       <member cname="GST_SEEK_TYPE_END" name="End" value="2"/>
     </enum>
-    <enum name="State" cname="GstState" gtype="gst_state_get_type" type="enum">
+    <enum name="State" cname="GstState" type="enum" gtype="gst_state_get_type">
       <member cname="GST_STATE_VOID_PENDING" name="VoidPending" value="0"/>
       <member cname="GST_STATE_NULL" name="Null" value="1"/>
       <member cname="GST_STATE_READY" name="Ready" value="2"/>
       <member cname="GST_STATE_PAUSED" name="Paused" value="3"/>
       <member cname="GST_STATE_PLAYING" name="Playing" value="4"/>
     </enum>
-    <enum name="StateChange" cname="GstStateChange" gtype="gst_state_change_get_type" type="enum">
+    <enum name="StateChange" cname="GstStateChange" type="enum" gtype="gst_state_change_get_type">
       <member cname="GST_STATE_CHANGE_NULL_TO_READY" name="NullToReady" value="10"/>
       <member cname="GST_STATE_CHANGE_READY_TO_NULL" name="ReadyToNull" value="17"/>
       <member cname="GST_STATE_CHANGE_READY_TO_PAUSED" name="ReadyToPaused" value="19"/>
@@ -279,19 +279,14 @@
       <member cname="GST_STATE_CHANGE_PAUSED_TO_PLAYING" name="PausedToPlaying" value="28"/>
       <member cname="GST_STATE_CHANGE_PLAYING_TO_PAUSED" name="PlayingToPaused" value="35"/>
     </enum>
-    <enum name="StateChangeReturn" cname="GstStateChangeReturn" gtype="gst_state_change_return_get_type" type="enum">
+    <enum name="StateChangeReturn" cname="GstStateChangeReturn" type="enum" gtype="gst_state_change_return_get_type">
       <member cname="GST_STATE_CHANGE_FAILURE" name="Failure" value="0"/>
       <member cname="GST_STATE_CHANGE_SUCCESS" name="Success" value="1"/>
       <member cname="GST_STATE_CHANGE_ASYNC" name="Async" value="2"/>
       <member cname="GST_STATE_CHANGE_NO_PREROLL" name="NoPreroll" value="3"/>
     </enum>
-    <enum name="StreamError" cname="GstStreamError" gtype="gst_stream_error_get_type" type="enum">
+    <enum name="StreamError" cname="GstStreamError" type="enum" gtype="gst_stream_error_get_type">
       <member cname="GST_STREAM_ERROR_FAILED" name="Failed" value="1"/>
-      <member cname="GST_STREAM_ERROR_MUX" name="Mux" value="10"/>
-      <member cname="GST_STREAM_ERROR_FORMAT" name="Format" value="11"/>
-      <member cname="GST_STREAM_ERROR_DECRYPT" name="Decrypt" value="12"/>
-      <member cname="GST_STREAM_ERROR_DECRYPT_NOKEY" name="DecryptNokey" value="13"/>
-      <member cname="GST_STREAM_ERROR_NUM_ERRORS" name="NumErrors" value="14"/>
       <member cname="GST_STREAM_ERROR_TOO_LAZY" name="TooLazy" value="2"/>
       <member cname="GST_STREAM_ERROR_NOT_IMPLEMENTED" name="NotImplemented" value="3"/>
       <member cname="GST_STREAM_ERROR_TYPE_NOT_FOUND" name="TypeNotFound" value="4"/>
@@ -300,28 +295,33 @@
       <member cname="GST_STREAM_ERROR_DECODE" name="Decode" value="7"/>
       <member cname="GST_STREAM_ERROR_ENCODE" name="Encode" value="8"/>
       <member cname="GST_STREAM_ERROR_DEMUX" name="Demux" value="9"/>
+      <member cname="GST_STREAM_ERROR_MUX" name="Mux" value="10"/>
+      <member cname="GST_STREAM_ERROR_FORMAT" name="Format" value="11"/>
+      <member cname="GST_STREAM_ERROR_DECRYPT" name="Decrypt" value="12"/>
+      <member cname="GST_STREAM_ERROR_DECRYPT_NOKEY" name="DecryptNokey" value="13"/>
+      <member cname="GST_STREAM_ERROR_NUM_ERRORS" name="NumErrors" value="14"/>
     </enum>
-    <enum name="StreamStatusType" cname="GstStreamStatusType" gtype="gst_stream_status_type_get_type" type="enum">
+    <enum name="StreamStatusType" cname="GstStreamStatusType" type="enum" gtype="gst_stream_status_type_get_type">
       <member cname="GST_STREAM_STATUS_TYPE_CREATE" name="Create" value="0"/>
       <member cname="GST_STREAM_STATUS_TYPE_ENTER" name="Enter" value="1"/>
-      <member cname="GST_STREAM_STATUS_TYPE_STOP" name="Stop" value="10"/>
       <member cname="GST_STREAM_STATUS_TYPE_LEAVE" name="Leave" value="2"/>
       <member cname="GST_STREAM_STATUS_TYPE_DESTROY" name="Destroy" value="3"/>
       <member cname="GST_STREAM_STATUS_TYPE_START" name="Start" value="8"/>
       <member cname="GST_STREAM_STATUS_TYPE_PAUSE" name="Pause" value="9"/>
+      <member cname="GST_STREAM_STATUS_TYPE_STOP" name="Stop" value="10"/>
     </enum>
-    <enum name="StructureChangeType" cname="GstStructureChangeType" gtype="gst_structure_change_type_get_type" type="enum">
+    <enum name="StructureChangeType" cname="GstStructureChangeType" type="enum" gtype="gst_structure_change_type_get_type">
       <member cname="GST_STRUCTURE_CHANGE_TYPE_PAD_LINK" name="Link" value="0"/>
       <member cname="GST_STRUCTURE_CHANGE_TYPE_PAD_UNLINK" name="Unlink" value="1"/>
     </enum>
-    <enum name="TagFlag" cname="GstTagFlag" gtype="gst_tag_flag_get_type" type="enum">
+    <enum name="TagFlag" cname="GstTagFlag" type="enum" gtype="gst_tag_flag_get_type">
       <member cname="GST_TAG_FLAG_UNDEFINED" name="Undefined" value="0"/>
       <member cname="GST_TAG_FLAG_META" name="Meta" value="1"/>
       <member cname="GST_TAG_FLAG_ENCODED" name="Encoded" value="2"/>
       <member cname="GST_TAG_FLAG_DECODED" name="Decoded" value="3"/>
       <member cname="GST_TAG_FLAG_COUNT" name="Count" value="4"/>
     </enum>
-    <enum name="TagMergeMode" cname="GstTagMergeMode" gtype="gst_tag_merge_mode_get_type" type="enum">
+    <enum name="TagMergeMode" cname="GstTagMergeMode" type="enum" gtype="gst_tag_merge_mode_get_type">
       <member cname="GST_TAG_MERGE_UNDEFINED" name="Undefined" value="0"/>
       <member cname="GST_TAG_MERGE_REPLACE_ALL" name="ReplaceAll" value="1"/>
       <member cname="GST_TAG_MERGE_REPLACE" name="Replace" value="2"/>
@@ -331,279 +331,279 @@
       <member cname="GST_TAG_MERGE_KEEP_ALL" name="KeepAll" value="6"/>
       <member cname="GST_TAG_MERGE_COUNT" name="Count" value="7"/>
     </enum>
-    <enum name="TagScope" cname="GstTagScope" gtype="gst_tag_scope_get_type" type="enum">
+    <enum name="TagScope" cname="GstTagScope" type="enum" gtype="gst_tag_scope_get_type">
       <member cname="GST_TAG_SCOPE_STREAM" name="Stream" value="0"/>
       <member cname="GST_TAG_SCOPE_GLOBAL" name="Global" value="1"/>
     </enum>
-    <enum name="TaskState" cname="GstTaskState" gtype="gst_task_state_get_type" type="enum">
+    <enum name="TaskState" cname="GstTaskState" type="enum" gtype="gst_task_state_get_type">
       <member cname="GST_TASK_STARTED" name="Started" value="0"/>
       <member cname="GST_TASK_STOPPED" name="Stopped" value="1"/>
       <member cname="GST_TASK_PAUSED" name="Paused" value="2"/>
     </enum>
-    <enum name="TocEntryType" cname="GstTocEntryType" gtype="gst_toc_entry_type_get_type" type="enum">
-      <member cname="GST_TOC_ENTRY_TYPE_EDITION" name="Edition" value="-1"/>
-      <member cname="GST_TOC_ENTRY_TYPE_VERSION" name="Version" value="-2"/>
+    <enum name="TocEntryType" cname="GstTocEntryType" type="enum" gtype="gst_toc_entry_type_get_type">
       <member cname="GST_TOC_ENTRY_TYPE_ANGLE" name="Angle" value="-3"/>
+      <member cname="GST_TOC_ENTRY_TYPE_VERSION" name="Version" value="-2"/>
+      <member cname="GST_TOC_ENTRY_TYPE_EDITION" name="Edition" value="-1"/>
       <member cname="GST_TOC_ENTRY_TYPE_INVALID" name="Invalid" value="0"/>
       <member cname="GST_TOC_ENTRY_TYPE_TITLE" name="Title" value="1"/>
       <member cname="GST_TOC_ENTRY_TYPE_TRACK" name="Track" value="2"/>
       <member cname="GST_TOC_ENTRY_TYPE_CHAPTER" name="Chapter" value="3"/>
     </enum>
-    <enum name="TocScope" cname="GstTocScope" gtype="gst_toc_scope_get_type" type="enum">
+    <enum name="TocScope" cname="GstTocScope" type="enum" gtype="gst_toc_scope_get_type">
       <member cname="GST_TOC_SCOPE_GLOBAL" name="Global" value="1"/>
       <member cname="GST_TOC_SCOPE_CURRENT" name="Current" value="2"/>
     </enum>
-    <enum name="TypeFindProbability" cname="GstTypeFindProbability" gtype="gst_type_find_probability_get_type" type="enum">
+    <enum name="TypeFindProbability" cname="GstTypeFindProbability" type="enum" gtype="gst_type_find_probability_get_type">
       <member cname="GST_TYPE_FIND_NONE" name="None" value="0"/>
       <member cname="GST_TYPE_FIND_MINIMUM" name="Minimum" value="1"/>
-      <member cname="GST_TYPE_FIND_MAXIMUM" name="Maximum" value="100"/>
       <member cname="GST_TYPE_FIND_POSSIBLE" name="Possible" value="50"/>
       <member cname="GST_TYPE_FIND_LIKELY" name="Likely" value="80"/>
       <member cname="GST_TYPE_FIND_NEARLY_CERTAIN" name="NearlyCertain" value="99"/>
+      <member cname="GST_TYPE_FIND_MAXIMUM" name="Maximum" value="100"/>
     </enum>
-    <enum name="URIError" cname="GstURIError" gtype="gst_uri_error_get_type" type="enum">
+    <enum name="URIError" cname="GstURIError" type="enum" gtype="gst_uri_error_get_type">
       <member cname="GST_URI_ERROR_UNSUPPORTED_PROTOCOL" name="UnsupportedProtocol" value="0"/>
       <member cname="GST_URI_ERROR_BAD_URI" name="BadUri" value="1"/>
       <member cname="GST_URI_ERROR_BAD_STATE" name="BadState" value="2"/>
       <member cname="GST_URI_ERROR_BAD_REFERENCE" name="BadReference" value="3"/>
     </enum>
-    <enum name="URIType" cname="GstURIType" gtype="gst_uri_type_get_type" type="enum">
+    <enum name="URIType" cname="GstURIType" type="enum" gtype="gst_uri_type_get_type">
       <member cname="GST_URI_UNKNOWN" name="Unknown" value="0"/>
       <member cname="GST_URI_SINK" name="Sink" value="1"/>
       <member cname="GST_URI_SRC" name="Src" value="2"/>
     </enum>
-    <enum name="AllocatorFlags" cname="GstAllocatorFlags" type="enum" gtype="gst_allocator_flags_get_type">
-      <member cname="GST_ALLOCATOR_FLAG_LAST" name="Last" value="1048576"/>
+    <enum name="AllocatorFlags" cname="GstAllocatorFlags" type="flags" gtype="gst_allocator_flags_get_type">
       <member cname="GST_ALLOCATOR_FLAG_CUSTOM_ALLOC" name="CustomAlloc" value="16"/>
+      <member cname="GST_ALLOCATOR_FLAG_LAST" name="Last" value="1048576"/>
     </enum>
-    <enum name="BinFlags" cname="GstBinFlags" type="enum" gtype="gst_bin_flags_get_type">
+    <enum name="BinFlags" cname="GstBinFlags" type="flags" gtype="gst_bin_flags_get_type">
       <member cname="GST_BIN_FLAG_NO_RESYNC" name="NoResync" value="16384"/>
       <member cname="GST_BIN_FLAG_LAST" name="Last" value="524288"/>
     </enum>
-    <enum name="BufferCopyFlags" cname="GstBufferCopyFlags" type="enum" gtype="gst_buffer_copy_flags_get_type">
+    <enum name="BufferCopyFlags" cname="GstBufferCopyFlags" type="flags" gtype="gst_buffer_copy_flags_get_type">
       <member cname="GST_BUFFER_COPY_NONE" name="None" value="0"/>
       <member cname="GST_BUFFER_COPY_FLAGS" name="Flags" value="1"/>
-      <member cname="GST_BUFFER_COPY_MERGE" name="Merge" value="16"/>
       <member cname="GST_BUFFER_COPY_TIMESTAMPS" name="Timestamps" value="2"/>
       <member cname="GST_BUFFER_COPY_META" name="Meta" value="4"/>
       <member cname="GST_BUFFER_COPY_MEMORY" name="Memory" value="8"/>
+      <member cname="GST_BUFFER_COPY_MERGE" name="Merge" value="16"/>
     </enum>
-    <enum name="BufferFlags" cname="GstBufferFlags" type="enum" gtype="gst_buffer_flags_get_type">
-      <member cname="GST_BUFFER_FLAG_HEADER" name="Header" value="1024"/>
-      <member cname="GST_BUFFER_FLAG_LAST" name="Last" value="1048576"/>
-      <member cname="GST_BUFFER_FLAG_RESYNC" name="Resync" value="128"/>
+    <enum name="BufferFlags" cname="GstBufferFlags" type="flags" gtype="gst_buffer_flags_get_type">
       <member cname="GST_BUFFER_FLAG_LIVE" name="Live" value="16"/>
-      <member cname="GST_BUFFER_FLAG_GAP" name="Gap" value="2048"/>
-      <member cname="GST_BUFFER_FLAG_CORRUPTED" name="Corrupted" value="256"/>
       <member cname="GST_BUFFER_FLAG_DECODE_ONLY" name="DecodeOnly" value="32"/>
-      <member cname="GST_BUFFER_FLAG_DROPPABLE" name="Droppable" value="4096"/>
-      <member cname="GST_BUFFER_FLAG_MARKER" name="Marker" value="512"/>
       <member cname="GST_BUFFER_FLAG_DISCONT" name="Discont" value="64"/>
+      <member cname="GST_BUFFER_FLAG_RESYNC" name="Resync" value="128"/>
+      <member cname="GST_BUFFER_FLAG_CORRUPTED" name="Corrupted" value="256"/>
+      <member cname="GST_BUFFER_FLAG_MARKER" name="Marker" value="512"/>
+      <member cname="GST_BUFFER_FLAG_HEADER" name="Header" value="1024"/>
+      <member cname="GST_BUFFER_FLAG_GAP" name="Gap" value="2048"/>
+      <member cname="GST_BUFFER_FLAG_DROPPABLE" name="Droppable" value="4096"/>
       <member cname="GST_BUFFER_FLAG_DELTA_UNIT" name="DeltaUnit" value="8192"/>
+      <member cname="GST_BUFFER_FLAG_LAST" name="Last" value="1048576"/>
     </enum>
-    <enum name="BufferPoolAcquireFlags" cname="GstBufferPoolAcquireFlags" type="enum" gtype="gst_buffer_pool_acquire_flags_get_type">
+    <enum name="BufferPoolAcquireFlags" cname="GstBufferPoolAcquireFlags" type="flags" gtype="gst_buffer_pool_acquire_flags_get_type">
       <member cname="GST_BUFFER_POOL_ACQUIRE_FLAG_NONE" name="None" value="0"/>
       <member cname="GST_BUFFER_POOL_ACQUIRE_FLAG_KEY_UNIT" name="KeyUnit" value="1"/>
       <member cname="GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT" name="Dontwait" value="2"/>
       <member cname="GST_BUFFER_POOL_ACQUIRE_FLAG_DISCONT" name="Discont" value="4"/>
       <member cname="GST_BUFFER_POOL_ACQUIRE_FLAG_LAST" name="Last" value="65536"/>
     </enum>
-    <enum name="BusFlags" cname="GstBusFlags" type="enum" gtype="gst_bus_flags_get_type">
+    <enum name="BusFlags" cname="GstBusFlags" type="flags" gtype="gst_bus_flags_get_type">
       <member cname="GST_BUS_FLUSHING" name="Flushing" value="16"/>
       <member cname="GST_BUS_FLAG_LAST" name="FlagLast" value="32"/>
     </enum>
-    <enum name="CapsFlags" cname="GstCapsFlags" type="enum" gtype="gst_caps_flags_get_type">
+    <enum name="CapsFlags" cname="GstCapsFlags" type="flags" gtype="gst_caps_flags_get_type">
       <member cname="GST_CAPS_FLAG_ANY" name="Any" value="16"/>
     </enum>
-    <enum name="ClockFlags" cname="GstClockFlags" type="enum" gtype="gst_clock_flags_get_type">
-      <member cname="GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC" name="CanDoPeriodicAsync" value="128"/>
+    <enum name="ClockFlags" cname="GstClockFlags" type="flags" gtype="gst_clock_flags_get_type">
       <member cname="GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC" name="CanDoSingleSync" value="16"/>
-      <member cname="GST_CLOCK_FLAG_CAN_SET_RESOLUTION" name="CanSetResolution" value="256"/>
       <member cname="GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC" name="CanDoSingleAsync" value="32"/>
-      <member cname="GST_CLOCK_FLAG_LAST" name="Last" value="4096"/>
-      <member cname="GST_CLOCK_FLAG_CAN_SET_MASTER" name="CanSetMaster" value="512"/>
       <member cname="GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC" name="CanDoPeriodicSync" value="64"/>
+      <member cname="GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC" name="CanDoPeriodicAsync" value="128"/>
+      <member cname="GST_CLOCK_FLAG_CAN_SET_RESOLUTION" name="CanSetResolution" value="256"/>
+      <member cname="GST_CLOCK_FLAG_CAN_SET_MASTER" name="CanSetMaster" value="512"/>
+      <member cname="GST_CLOCK_FLAG_LAST" name="Last" value="4096"/>
     </enum>
-    <enum name="DebugGraphDetails" cname="GstDebugGraphDetails" type="enum" gtype="gst_debug_graph_details_get_type">
+    <enum name="DebugGraphDetails" cname="GstDebugGraphDetails" type="flags" gtype="gst_debug_graph_details_get_type">
       <member cname="GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE" name="MediaType" value="1"/>
-      <member cname="GST_DEBUG_GRAPH_SHOW_ALL" name="All" value="15"/>
       <member cname="GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS" name="CapsDetails" value="2"/>
       <member cname="GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS" name="NonDefaultParams" value="4"/>
       <member cname="GST_DEBUG_GRAPH_SHOW_STATES" name="States" value="8"/>
+      <member cname="GST_DEBUG_GRAPH_SHOW_ALL" name="All" value="15"/>
     </enum>
-    <enum name="ElementFlags" cname="GstElementFlags" type="enum" gtype="gst_element_flags_get_type">
-      <member cname="GST_ELEMENT_FLAG_PROVIDE_CLOCK" name="ProvideClock" value="128"/>
+    <enum name="ElementFlags" cname="GstElementFlags" type="flags" gtype="gst_element_flags_get_type">
       <member cname="GST_ELEMENT_FLAG_LOCKED_STATE" name="LockedState" value="16"/>
-      <member cname="GST_ELEMENT_FLAG_LAST" name="Last" value="16384"/>
-      <member cname="GST_ELEMENT_FLAG_REQUIRE_CLOCK" name="RequireClock" value="256"/>
       <member cname="GST_ELEMENT_FLAG_SINK" name="Sink" value="32"/>
-      <member cname="GST_ELEMENT_FLAG_INDEXABLE" name="Indexable" value="512"/>
       <member cname="GST_ELEMENT_FLAG_SOURCE" name="Source" value="64"/>
+      <member cname="GST_ELEMENT_FLAG_PROVIDE_CLOCK" name="ProvideClock" value="128"/>
+      <member cname="GST_ELEMENT_FLAG_REQUIRE_CLOCK" name="RequireClock" value="256"/>
+      <member cname="GST_ELEMENT_FLAG_INDEXABLE" name="Indexable" value="512"/>
+      <member cname="GST_ELEMENT_FLAG_LAST" name="Last" value="16384"/>
     </enum>
-    <enum name="EventTypeFlags" cname="GstEventTypeFlags" type="enum" gtype="gst_event_type_flags_get_type">
+    <enum name="EventTypeFlags" cname="GstEventTypeFlags" type="flags" gtype="gst_event_type_flags_get_type">
       <member cname="GST_EVENT_TYPE_UPSTREAM" name="Upstream" value="1"/>
-      <member cname="GST_EVENT_TYPE_STICKY_MULTI" name="StickyMulti" value="16"/>
       <member cname="GST_EVENT_TYPE_DOWNSTREAM" name="Downstream" value="2"/>
       <member cname="GST_EVENT_TYPE_SERIALIZED" name="Serialized" value="4"/>
       <member cname="GST_EVENT_TYPE_STICKY" name="Sticky" value="8"/>
+      <member cname="GST_EVENT_TYPE_STICKY_MULTI" name="StickyMulti" value="16"/>
     </enum>
-    <enum name="LockFlags" cname="GstLockFlags" type="enum" gtype="gst_lock_flags_get_type">
+    <enum name="LockFlags" cname="GstLockFlags" type="flags" gtype="gst_lock_flags_get_type">
       <member cname="GST_LOCK_FLAG_READ" name="Read" value="1"/>
       <member cname="GST_LOCK_FLAG_WRITE" name="Write" value="2"/>
-      <member cname="GST_LOCK_FLAG_LAST" name="Last" value="256"/>
       <member cname="GST_LOCK_FLAG_EXCLUSIVE" name="Exclusive" value="4"/>
+      <member cname="GST_LOCK_FLAG_LAST" name="Last" value="256"/>
     </enum>
-    <enum name="MapFlags" cname="GstMapFlags" type="enum" gtype="gst_map_flags_get_type">
+    <enum name="MapFlags" cname="GstMapFlags" type="flags" gtype="gst_map_flags_get_type">
       <member cname="GST_MAP_READ" name="Read" value="1"/>
       <member cname="GST_MAP_WRITE" name="Write" value="2"/>
       <member cname="GST_MAP_FLAG_LAST" name="FlagLast" value="65536"/>
     </enum>
-    <enum name="MemoryFlags" cname="GstMemoryFlags" type="enum" gtype="gst_memory_flags_get_type">
-      <member cname="GST_MEMORY_FLAG_LAST" name="Last" value="1048576"/>
-      <member cname="GST_MEMORY_FLAG_NO_SHARE" name="NoShare" value="16"/>
+    <enum name="MemoryFlags" cname="GstMemoryFlags" type="flags" gtype="gst_memory_flags_get_type">
       <member cname="GST_MEMORY_FLAG_READONLY" name="Readonly" value="2"/>
+      <member cname="GST_MEMORY_FLAG_NO_SHARE" name="NoShare" value="16"/>
       <member cname="GST_MEMORY_FLAG_ZERO_PREFIXED" name="ZeroPrefixed" value="32"/>
       <member cname="GST_MEMORY_FLAG_ZERO_PADDED" name="ZeroPadded" value="64"/>
+      <member cname="GST_MEMORY_FLAG_LAST" name="Last" value="1048576"/>
     </enum>
-    <enum name="MessageType" cname="GstMessageType" type="enum" gtype="gst_message_type_get_type">
+    <enum name="MessageType" cname="GstMessageType" type="flags" gtype="gst_message_type_get_type">
       <member cname="GST_MESSAGE_ANY" name="Any" value="-1"/>
       <member cname="GST_MESSAGE_UNKNOWN" name="Unknown" value="0"/>
       <member cname="GST_MESSAGE_EOS" name="Eos" value="1"/>
-      <member cname="GST_MESSAGE_CLOCK_LOST" name="ClockLost" value="1024"/>
-      <member cname="GST_MESSAGE_ASYNC_START" name="AsyncStart" value="1048576"/>
-      <member cname="GST_MESSAGE_STATE_DIRTY" name="StateDirty" value="128"/>
-      <member cname="GST_MESSAGE_SEGMENT_DONE" name="SegmentDone" value="131072"/>
-      <member cname="GST_MESSAGE_RESET_TIME" name="ResetTime" value="134217728"/>
-      <member cname="GST_MESSAGE_TAG" name="Tag" value="16"/>
-      <member cname="GST_MESSAGE_APPLICATION" name="Application" value="16384"/>
-      <member cname="GST_MESSAGE_QOS" name="Qos" value="16777216"/>
       <member cname="GST_MESSAGE_ERROR" name="Error" value="2"/>
-      <member cname="GST_MESSAGE_NEW_CLOCK" name="NewClock" value="2048"/>
-      <member cname="GST_MESSAGE_ASYNC_DONE" name="AsyncDone" value="2097152"/>
-      <member cname="GST_MESSAGE_STEP_DONE" name="StepDone" value="256"/>
-      <member cname="GST_MESSAGE_DURATION_CHANGED" name="DurationChanged" value="262144"/>
-      <member cname="GST_MESSAGE_STREAM_START" name="StreamStart" value="268435456"/>
-      <member cname="GST_MESSAGE_BUFFERING" name="Buffering" value="32"/>
-      <member cname="GST_MESSAGE_ELEMENT" name="Element" value="32768"/>
-      <member cname="GST_MESSAGE_PROGRESS" name="Progress" value="33554432"/>
       <member cname="GST_MESSAGE_WARNING" name="Warning" value="4"/>
-      <member cname="GST_MESSAGE_STRUCTURE_CHANGE" name="StructureChange" value="4096"/>
-      <member cname="GST_MESSAGE_REQUEST_STATE" name="RequestState" value="4194304"/>
-      <member cname="GST_MESSAGE_CLOCK_PROVIDE" name="ClockProvide" value="512"/>
-      <member cname="GST_MESSAGE_LATENCY" name="Latency" value="524288"/>
-      <member cname="GST_MESSAGE_STATE_CHANGED" name="StateChanged" value="64"/>
-      <member cname="GST_MESSAGE_SEGMENT_START" name="SegmentStart" value="65536"/>
-      <member cname="GST_MESSAGE_TOC" name="Toc" value="67108864"/>
       <member cname="GST_MESSAGE_INFO" name="Info" value="8"/>
+      <member cname="GST_MESSAGE_TAG" name="Tag" value="16"/>
+      <member cname="GST_MESSAGE_BUFFERING" name="Buffering" value="32"/>
+      <member cname="GST_MESSAGE_STATE_CHANGED" name="StateChanged" value="64"/>
+      <member cname="GST_MESSAGE_STATE_DIRTY" name="StateDirty" value="128"/>
+      <member cname="GST_MESSAGE_STEP_DONE" name="StepDone" value="256"/>
+      <member cname="GST_MESSAGE_CLOCK_PROVIDE" name="ClockProvide" value="512"/>
+      <member cname="GST_MESSAGE_CLOCK_LOST" name="ClockLost" value="1024"/>
+      <member cname="GST_MESSAGE_NEW_CLOCK" name="NewClock" value="2048"/>
+      <member cname="GST_MESSAGE_STRUCTURE_CHANGE" name="StructureChange" value="4096"/>
       <member cname="GST_MESSAGE_STREAM_STATUS" name="StreamStatus" value="8192"/>
+      <member cname="GST_MESSAGE_APPLICATION" name="Application" value="16384"/>
+      <member cname="GST_MESSAGE_ELEMENT" name="Element" value="32768"/>
+      <member cname="GST_MESSAGE_SEGMENT_START" name="SegmentStart" value="65536"/>
+      <member cname="GST_MESSAGE_SEGMENT_DONE" name="SegmentDone" value="131072"/>
+      <member cname="GST_MESSAGE_DURATION_CHANGED" name="DurationChanged" value="262144"/>
+      <member cname="GST_MESSAGE_LATENCY" name="Latency" value="524288"/>
+      <member cname="GST_MESSAGE_ASYNC_START" name="AsyncStart" value="1048576"/>
+      <member cname="GST_MESSAGE_ASYNC_DONE" name="AsyncDone" value="2097152"/>
+      <member cname="GST_MESSAGE_REQUEST_STATE" name="RequestState" value="4194304"/>
       <member cname="GST_MESSAGE_STEP_START" name="StepStart" value="8388608"/>
+      <member cname="GST_MESSAGE_QOS" name="Qos" value="16777216"/>
+      <member cname="GST_MESSAGE_PROGRESS" name="Progress" value="33554432"/>
+      <member cname="GST_MESSAGE_TOC" name="Toc" value="67108864"/>
+      <member cname="GST_MESSAGE_RESET_TIME" name="ResetTime" value="134217728"/>
+      <member cname="GST_MESSAGE_STREAM_START" name="StreamStart" value="268435456"/>
     </enum>
-    <enum name="MetaFlags" cname="GstMetaFlags" type="enum" gtype="gst_meta_flags_get_type">
+    <enum name="MetaFlags" cname="GstMetaFlags" type="flags" gtype="gst_meta_flags_get_type">
       <member cname="GST_META_FLAG_NONE" name="None" value="0"/>
       <member cname="GST_META_FLAG_READONLY" name="Readonly" value="1"/>
       <member cname="GST_META_FLAG_POOLED" name="Pooled" value="2"/>
       <member cname="GST_META_FLAG_LOCKED" name="Locked" value="4"/>
       <member cname="GST_META_FLAG_LAST" name="Last" value="65536"/>
     </enum>
-    <enum name="MiniObjectFlags" cname="GstMiniObjectFlags" type="enum" gtype="gst_mini_object_flags_get_type">
+    <enum name="MiniObjectFlags" cname="GstMiniObjectFlags" type="flags" gtype="gst_mini_object_flags_get_type">
       <member cname="GST_MINI_OBJECT_FLAG_LOCKABLE" name="Lockable" value="1"/>
-      <member cname="GST_MINI_OBJECT_FLAG_LAST" name="Last" value="16"/>
       <member cname="GST_MINI_OBJECT_FLAG_LOCK_READONLY" name="LockReadonly" value="2"/>
+      <member cname="GST_MINI_OBJECT_FLAG_LAST" name="Last" value="16"/>
     </enum>
-    <enum name="ObjectFlags" cname="GstObjectFlags" type="enum" gtype="gst_object_flags_get_type">
+    <enum name="ObjectFlags" cname="GstObjectFlags" type="flags" gtype="gst_object_flags_get_type">
       <member cname="GST_OBJECT_FLAG_LAST" name="Last" value="16"/>
     </enum>
-    <enum name="PadFlags" cname="GstPadFlags" type="enum" gtype="gst_pad_flags_get_type">
-      <member cname="GST_PAD_FLAG_PENDING_EVENTS" name="PendingEvents" value="1024"/>
-      <member cname="GST_PAD_FLAG_LAST" name="Last" value="1048576"/>
-      <member cname="GST_PAD_FLAG_BLOCKING" name="Blocking" value="128"/>
+    <enum name="PadFlags" cname="GstPadFlags" type="flags" gtype="gst_pad_flags_get_type">
       <member cname="GST_PAD_FLAG_BLOCKED" name="Blocked" value="16"/>
-      <member cname="GST_PAD_FLAG_PROXY_SCHEDULING" name="ProxyScheduling" value="16384"/>
-      <member cname="GST_PAD_FLAG_FIXED_CAPS" name="FixedCaps" value="2048"/>
-      <member cname="GST_PAD_FLAG_NEED_PARENT" name="NeedParent" value="256"/>
       <member cname="GST_PAD_FLAG_FLUSHING" name="Flushing" value="32"/>
-      <member cname="GST_PAD_FLAG_PROXY_CAPS" name="ProxyCaps" value="4096"/>
-      <member cname="GST_PAD_FLAG_NEED_RECONFIGURE" name="NeedReconfigure" value="512"/>
       <member cname="GST_PAD_FLAG_EOS" name="Eos" value="64"/>
+      <member cname="GST_PAD_FLAG_BLOCKING" name="Blocking" value="128"/>
+      <member cname="GST_PAD_FLAG_NEED_PARENT" name="NeedParent" value="256"/>
+      <member cname="GST_PAD_FLAG_NEED_RECONFIGURE" name="NeedReconfigure" value="512"/>
+      <member cname="GST_PAD_FLAG_PENDING_EVENTS" name="PendingEvents" value="1024"/>
+      <member cname="GST_PAD_FLAG_FIXED_CAPS" name="FixedCaps" value="2048"/>
+      <member cname="GST_PAD_FLAG_PROXY_CAPS" name="ProxyCaps" value="4096"/>
       <member cname="GST_PAD_FLAG_PROXY_ALLOCATION" name="ProxyAllocation" value="8192"/>
+      <member cname="GST_PAD_FLAG_PROXY_SCHEDULING" name="ProxyScheduling" value="16384"/>
+      <member cname="GST_PAD_FLAG_LAST" name="Last" value="1048576"/>
     </enum>
-    <enum name="PadLinkCheck" cname="GstPadLinkCheck" type="enum" gtype="gst_pad_link_check_get_type">
+    <enum name="PadLinkCheck" cname="GstPadLinkCheck" type="flags" gtype="gst_pad_link_check_get_type">
       <member cname="GST_PAD_LINK_CHECK_NOTHING" name="Nothing" value="0"/>
       <member cname="GST_PAD_LINK_CHECK_HIERARCHY" name="Hierarchy" value="1"/>
       <member cname="GST_PAD_LINK_CHECK_TEMPLATE_CAPS" name="TemplateCaps" value="2"/>
       <member cname="GST_PAD_LINK_CHECK_CAPS" name="Caps" value="4"/>
       <member cname="GST_PAD_LINK_CHECK_DEFAULT" name="Default" value="5"/>
     </enum>
-    <enum name="PadProbeType" cname="GstPadProbeType" type="enum" gtype="gst_pad_probe_type_get_type">
+    <enum name="PadProbeType" cname="GstPadProbeType" type="flags" gtype="gst_pad_probe_type_get_type">
       <member cname="GST_PAD_PROBE_TYPE_INVALID" name="Invalid" value="0"/>
       <member cname="GST_PAD_PROBE_TYPE_IDLE" name="Idle" value="1"/>
-      <member cname="GST_PAD_PROBE_TYPE_QUERY_UPSTREAM" name="QueryUpstream" value="1024"/>
+      <member cname="GST_PAD_PROBE_TYPE_BLOCK" name="Block" value="2"/>
+      <member cname="GST_PAD_PROBE_TYPE_BLOCKING" name="Blocking" value="3"/>
+      <member cname="GST_PAD_PROBE_TYPE_BUFFER" name="Buffer" value="16"/>
+      <member cname="GST_PAD_PROBE_TYPE_BUFFER_LIST" name="BufferList" value="32"/>
+      <member cname="GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM" name="EventDownstream" value="64"/>
       <member cname="GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM" name="DataDownstream" value="112"/>
       <member cname="GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM" name="BlockDownstream" value="114"/>
-      <member cname="GST_PAD_PROBE_TYPE_SCHEDULING" name="Scheduling" value="12288"/>
       <member cname="GST_PAD_PROBE_TYPE_EVENT_UPSTREAM" name="EventUpstream" value="128"/>
       <member cname="GST_PAD_PROBE_TYPE_DATA_UPSTREAM" name="DataUpstream" value="128"/>
       <member cname="GST_PAD_PROBE_TYPE_BLOCK_UPSTREAM" name="BlockUpstream" value="130"/>
-      <member cname="GST_PAD_PROBE_TYPE_QUERY_BOTH" name="QueryBoth" value="1536"/>
-      <member cname="GST_PAD_PROBE_TYPE_BUFFER" name="Buffer" value="16"/>
-      <member cname="GST_PAD_PROBE_TYPE_ALL_BOTH" name="AllBoth" value="1776"/>
       <member cname="GST_PAD_PROBE_TYPE_EVENT_BOTH" name="EventBoth" value="192"/>
-      <member cname="GST_PAD_PROBE_TYPE_BLOCK" name="Block" value="2"/>
       <member cname="GST_PAD_PROBE_TYPE_DATA_BOTH" name="DataBoth" value="240"/>
       <member cname="GST_PAD_PROBE_TYPE_EVENT_FLUSH" name="EventFlush" value="256"/>
-      <member cname="GST_PAD_PROBE_TYPE_BLOCKING" name="Blocking" value="3"/>
-      <member cname="GST_PAD_PROBE_TYPE_BUFFER_LIST" name="BufferList" value="32"/>
-      <member cname="GST_PAD_PROBE_TYPE_PUSH" name="Push" value="4096"/>
       <member cname="GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM" name="QueryDownstream" value="512"/>
-      <member cname="GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM" name="EventDownstream" value="64"/>
+      <member cname="GST_PAD_PROBE_TYPE_QUERY_UPSTREAM" name="QueryUpstream" value="1024"/>
+      <member cname="GST_PAD_PROBE_TYPE_QUERY_BOTH" name="QueryBoth" value="1536"/>
+      <member cname="GST_PAD_PROBE_TYPE_ALL_BOTH" name="AllBoth" value="1776"/>
+      <member cname="GST_PAD_PROBE_TYPE_PUSH" name="Push" value="4096"/>
       <member cname="GST_PAD_PROBE_TYPE_PULL" name="Pull" value="8192"/>
+      <member cname="GST_PAD_PROBE_TYPE_SCHEDULING" name="Scheduling" value="12288"/>
     </enum>
-    <enum name="PadTemplateFlags" cname="GstPadTemplateFlags" type="enum" gtype="gst_pad_template_flags_get_type">
+    <enum name="PadTemplateFlags" cname="GstPadTemplateFlags" type="flags" gtype="gst_pad_template_flags_get_type">
       <member cname="GST_PAD_TEMPLATE_FLAG_LAST" name="Last" value="256"/>
     </enum>
-    <enum name="ParseFlags" cname="GstParseFlags" type="enum" gtype="gst_parse_flags_get_type">
+    <enum name="ParseFlags" cname="GstParseFlags" type="flags" gtype="gst_parse_flags_get_type">
       <member cname="GST_PARSE_FLAG_NONE" name="None" value="0"/>
       <member cname="GST_PARSE_FLAG_FATAL_ERRORS" name="FatalErrors" value="1"/>
     </enum>
-    <enum name="PipelineFlags" cname="GstPipelineFlags" type="enum" gtype="gst_pipeline_flags_get_type">
+    <enum name="PipelineFlags" cname="GstPipelineFlags" type="flags" gtype="gst_pipeline_flags_get_type">
       <member cname="GST_PIPELINE_FLAG_FIXED_CLOCK" name="FixedClock" value="524288"/>
       <member cname="GST_PIPELINE_FLAG_LAST" name="Last" value="8388608"/>
     </enum>
-    <enum name="PluginDependencyFlags" cname="GstPluginDependencyFlags" type="enum" gtype="gst_plugin_dependency_flags_get_type">
+    <enum name="PluginDependencyFlags" cname="GstPluginDependencyFlags" type="flags" gtype="gst_plugin_dependency_flags_get_type">
       <member cname="GST_PLUGIN_DEPENDENCY_FLAG_NONE" name="None" value="0"/>
       <member cname="GST_PLUGIN_DEPENDENCY_FLAG_RECURSE" name="Recurse" value="1"/>
       <member cname="GST_PLUGIN_DEPENDENCY_FLAG_PATHS_ARE_DEFAULT_ONLY" name="PathsAreDefaultOnly" value="2"/>
       <member cname="GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX" name="FileNameIsSuffix" value="4"/>
     </enum>
-    <enum name="PluginFlags" cname="GstPluginFlags" type="enum" gtype="gst_plugin_flags_get_type">
+    <enum name="PluginFlags" cname="GstPluginFlags" type="flags" gtype="gst_plugin_flags_get_type">
       <member cname="GST_PLUGIN_FLAG_CACHED" name="Cached" value="16"/>
       <member cname="GST_PLUGIN_FLAG_BLACKLISTED" name="Blacklisted" value="32"/>
     </enum>
-    <enum name="QueryTypeFlags" cname="GstQueryTypeFlags" type="enum" gtype="gst_query_type_flags_get_type">
+    <enum name="QueryTypeFlags" cname="GstQueryTypeFlags" type="flags" gtype="gst_query_type_flags_get_type">
       <member cname="GST_QUERY_TYPE_UPSTREAM" name="Upstream" value="1"/>
       <member cname="GST_QUERY_TYPE_DOWNSTREAM" name="Downstream" value="2"/>
       <member cname="GST_QUERY_TYPE_SERIALIZED" name="Serialized" value="4"/>
     </enum>
-    <enum name="SchedulingFlags" cname="GstSchedulingFlags" type="enum" gtype="gst_scheduling_flags_get_type">
+    <enum name="SchedulingFlags" cname="GstSchedulingFlags" type="flags" gtype="gst_scheduling_flags_get_type">
       <member cname="GST_SCHEDULING_FLAG_SEEKABLE" name="Seekable" value="1"/>
       <member cname="GST_SCHEDULING_FLAG_SEQUENTIAL" name="Sequential" value="2"/>
     </enum>
-    <enum name="SeekFlags" cname="GstSeekFlags" type="enum" gtype="gst_seek_flags_get_type">
+    <enum name="SeekFlags" cname="GstSeekFlags" type="flags" gtype="gst_seek_flags_get_type">
       <member cname="GST_SEEK_FLAG_NONE" name="None" value="0"/>
       <member cname="GST_SEEK_FLAG_FLUSH" name="Flush" value="1"/>
-      <member cname="GST_SEEK_FLAG_SKIP" name="Skip" value="16"/>
       <member cname="GST_SEEK_FLAG_ACCURATE" name="Accurate" value="2"/>
-      <member cname="GST_SEEK_FLAG_SNAP_BEFORE" name="SnapBefore" value="32"/>
       <member cname="GST_SEEK_FLAG_KEY_UNIT" name="KeyUnit" value="4"/>
-      <member cname="GST_SEEK_FLAG_SNAP_AFTER" name="SnapAfter" value="64"/>
       <member cname="GST_SEEK_FLAG_SEGMENT" name="Segment" value="8"/>
+      <member cname="GST_SEEK_FLAG_SKIP" name="Skip" value="16"/>
+      <member cname="GST_SEEK_FLAG_SNAP_BEFORE" name="SnapBefore" value="32"/>
+      <member cname="GST_SEEK_FLAG_SNAP_AFTER" name="SnapAfter" value="64"/>
       <member cname="GST_SEEK_FLAG_SNAP_NEAREST" name="SnapNearest" value="96"/>
     </enum>
-    <enum name="SegmentFlags" cname="GstSegmentFlags" type="enum" gtype="gst_segment_flags_get_type">
+    <enum name="SegmentFlags" cname="GstSegmentFlags" type="flags" gtype="gst_segment_flags_get_type">
       <member cname="GST_SEGMENT_FLAG_NONE" name="None" value="0"/>
       <member cname="GST_SEGMENT_FLAG_RESET" name="Reset" value="1"/>
-      <member cname="GST_SEGMENT_FLAG_SKIP" name="Skip" value="16"/>
       <member cname="GST_SEGMENT_FLAG_SEGMENT" name="Segment" value="8"/>
+      <member cname="GST_SEGMENT_FLAG_SKIP" name="Skip" value="16"/>
     </enum>
     <interface name="ChildProxy" cname="GstChildProxy" abstract="false" opaque="false" hidden="false">
       <class_struct cname="GstChildProxyInterface">
