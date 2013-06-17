@@ -1325,16 +1325,16 @@ try_element (GstPlaySink * playsink, GstElement * element, gboolean unref)
 }
 
 /* make the element (bin) that contains the elements needed to perform
- * video display. Only used for *raw* video streams.
+ * video deinterlacing. Only used for *raw* video streams.
  *
- *  +------------------------------------------------------------+
- *  | vbin                                                       |
- *  |      +-------+   +----------+   +----------+   +---------+ |
- *  |      | queue |   |colorspace|   |videoscale|   |videosink| |
- *  |   +-sink    src-sink       src-sink       src-sink       | |
- *  |   |  +-------+   +----------+   +----------+   +---------+ |
- * sink-+                                                        |
- *  +------------------------------------------------------------+
+ *  +---------------------------------------+
+ *  | vbin                                  |
+ *  |      +----------+   +-----------+     |
+ *  |      |colorspace|   |deinterlace|     |
+ *  |   +-sink       src-sink        src-+  |
+ *  |   |  +----------+   +-----------+  |  |
+ * sink-+                                +-src
+ *  +---------------------------------------+
  *
  */
 static GstPlayVideoDeinterlaceChain *
@@ -1567,8 +1567,7 @@ update_colorbalance (GstPlaySink * playsink)
         channel->min_value + new_val * ((gdouble) channel->max_value -
         (gdouble) channel->min_value);
 
-    gst_color_balance_set_value (balance, channel,
-        (gint) (new_val + 0.5));
+    gst_color_balance_set_value (balance, channel, (gint) (new_val + 0.5));
   }
 
   g_signal_handler_unblock (balance, playsink->colorbalance_value_changed_id);
