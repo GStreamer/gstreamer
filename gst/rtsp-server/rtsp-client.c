@@ -104,6 +104,8 @@ static void client_session_finalized (GstRTSPClient * client,
     GstRTSPSession * session);
 static void unlink_session_transports (GstRTSPClient * client,
     GstRTSPSession * session, GstRTSPSessionMedia * media);
+static gboolean default_configure_client_transport (GstRTSPClient * client,
+    GstRTSPClientState * state, GstRTSPTransport * ct);
 static GstRTSPResult default_params_set (GstRTSPClient * client,
     GstRTSPClientState * state);
 static GstRTSPResult default_params_get (GstRTSPClient * client,
@@ -125,6 +127,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gobject_class->finalize = gst_rtsp_client_finalize;
 
   klass->create_sdp = create_sdp;
+  klass->configure_client_transport = default_configure_client_transport;
   klass->params_set = default_params_set;
   klass->params_get = default_params_get;
 
@@ -1097,8 +1100,8 @@ handle_blocksize (GstRTSPMedia * media, GstRTSPStream * stream,
 }
 
 static gboolean
-configure_client_transport (GstRTSPClient * client, GstRTSPClientState * state,
-    GstRTSPTransport * ct)
+default_configure_client_transport (GstRTSPClient * client,
+    GstRTSPClientState * state, GstRTSPTransport * ct)
 {
   GstRTSPClientPrivate *priv = client->priv;
 
@@ -1219,6 +1222,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   GstRTSPMedia *media;
   GstRTSPStream *stream;
   GstRTSPState rtspstate;
+  GstRTSPClientClass *klass;
 
   uri = state->uri;
 
@@ -1307,7 +1311,8 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
     goto invalid_blocksize;
 
   /* update the client transport */
-  if (!configure_client_transport (client, state, ct))
+  klass = GST_RTSP_CLIENT_GET_CLASS (client);
+  if (!klass->configure_client_transport (client, state, ct))
     goto unsupported_client_transport;
 
   /* set in the session media transport */

@@ -113,6 +113,9 @@ struct _GstRTSPClientClass {
   GObjectClass  parent_class;
 
   GstSDPMessage * (*create_sdp) (GstRTSPClient *client, GstRTSPMedia *media);
+  gboolean        (*configure_client_transport) (GstRTSPClient * client,
+                                                 GstRTSPClientState * state,
+                                                 GstRTSPTransport * ct);
   GstRTSPResult   (*params_set) (GstRTSPClient *client, GstRTSPClientState *state);
   GstRTSPResult   (*params_get) (GstRTSPClient *client, GstRTSPClientState *state);
 
