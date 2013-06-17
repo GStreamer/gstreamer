@@ -29,6 +29,8 @@
 #include <ges/ges.h>
 #include <gst/pbutils/encoding-profile.h>
 
+#include <locale.h>             /* for LC_ALL */
+
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
 static GESTimelinePipeline *pipeline = NULL;
@@ -458,6 +460,8 @@ main (int argc, gchar ** argv)
   GOptionContext *ctx;
   GMainLoop *mainloop;
   GstBus *bus;
+
+  setlocale (LC_ALL, "");
 
   ctx = g_option_context_new ("- plays or renders a timeline.");
   g_option_context_set_summary (ctx,
