@@ -2378,6 +2378,8 @@ gst_video_decoder_drop_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
 
   timestamp = frame->pts;
   segment = &dec->output_segment;
+  if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
+    segment = &dec->input_segment;
   stream_time =
       gst_segment_to_stream_time (segment, GST_FORMAT_TIME, timestamp);
   qostime = gst_segment_to_running_time (segment, GST_FORMAT_TIME, timestamp);
