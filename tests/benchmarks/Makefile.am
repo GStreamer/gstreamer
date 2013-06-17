@@ -6,6 +6,7 @@ noinst_PROGRAMS = \
         init \
         mass-elements \
         gstpollstress \
+        gstpoolstress \
         gstclockstress	\
 	gstbufferstress
 
