@@ -1417,7 +1417,29 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
             GST_CLOCK_TIME_NONE));
   }
   if (post_playing) {
+    if (post_paused) {
+      GstElementClass *klass;
+
+      klass = GST_ELEMENT_GET_CLASS (basesink);
+      basesink->have_preroll = TRUE;
+      /* after releasing this lock, the state change function
+       * can execute concurrently with this thread. There is nothing we do to
+       * prevent this for now. subclasses should be prepared to handle it. */
+      GST_BASE_SINK_PREROLL_UNLOCK (basesink);
+
+      if (klass->change_state)
+        klass->change_state (GST_ELEMENT_CAST (basesink),
+            GST_STATE_CHANGE_PAUSED_TO_PLAYING);
+
+      GST_BASE_SINK_PREROLL_LOCK (basesink);
+      /* state change function could have been executed and we could be
+       * flushing now */
+      if (G_UNLIKELY (basesink->flushing))
+        goto stopping;
+    }
     GST_DEBUG_OBJECT (basesink, "posting PLAYING state change message");
+    /* FIXME, we released the PREROLL lock above, it's possible that this
+     * message is not correct anymore when the element went back to PAUSED */
     gst_element_post_message (GST_ELEMENT_CAST (basesink),
         gst_message_new_state_changed (GST_OBJECT_CAST (basesink),
             next, pending, GST_STATE_VOID_PENDING));
