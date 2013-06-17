@@ -149,6 +149,7 @@ mpegts_parse_init (MpegTSParse2 * parse)
   GST_MPEGTS_BASE (parse)->program_size = sizeof (MpegTSParseProgram);
 
   parse->srcpad = gst_pad_new_from_static_template (&src_template, "src");
+  parse->first = TRUE;
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
 }
 
@@ -178,6 +179,33 @@ mpegts_parse_reset (MpegTSBase * base)
   /* SIT */
   MPEGTS_BIT_SET (base->known_psi, 0x1f);
 
+  GST_MPEGTS_PARSE (base)->first = TRUE;
+}
+
+static void
+prepare_src_pad (MpegTSBase * base, MpegTSParse2 * parse)
+{
+  if (base->packetizer->know_packet_size) {
+    gchar *stream_id;
+    GstCaps *caps;
+
+    stream_id =
+        gst_pad_create_stream_id (parse->srcpad, GST_ELEMENT_CAST (base),
+        "multi-program");
+    gst_pad_push_event (parse->srcpad, gst_event_new_stream_start (stream_id));
+    g_free (stream_id);
+
+    caps = gst_caps_new_simple ("video/mpegts",
+        "systemstream", G_TYPE_BOOLEAN, TRUE,
+        "packetsize", G_TYPE_INT, base->packetizer->packet_size, NULL);
+
+    gst_pad_set_caps (parse->srcpad, caps);
+    gst_caps_unref (caps);
+
+    gst_pad_push_event (parse->srcpad, gst_event_new_segment (&base->segment));
+
+    parse->first = FALSE;
+  }
 }
 
 static gboolean
@@ -185,6 +213,15 @@ push_event (MpegTSBase * base, GstEvent * event)
 {
   MpegTSParse2 *parse = (MpegTSParse2 *) base;
   GList *tmp;
+
+  if (G_UNLIKELY (parse->first)) {
+    /* We will send the segment when really starting  */
+    if (G_UNLIKELY (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT)) {
+      gst_event_unref (event);
+      return TRUE;
+    }
+    prepare_src_pad (base, parse);
+  }
 
   for (tmp = parse->srcpads; tmp; tmp = tmp->next) {
     GstPad *pad = (GstPad *) tmp->data;
@@ -470,6 +507,9 @@ static GstFlowReturn
 mpegts_parse_input_done (MpegTSBase * base, GstBuffer * buffer)
 {
   MpegTSParse2 *parse = GST_MPEGTS_PARSE (base);
+
+  if (G_UNLIKELY (parse->first))
+    prepare_src_pad (base, parse);
 
   return gst_pad_push (parse->srcpad, buffer);
 }

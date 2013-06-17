@@ -1314,6 +1314,8 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
       gst_event_copy_segment (event, &base->segment);
+      GST_DEBUG_OBJECT (base, "Received segment %" GST_SEGMENT_FORMAT,
+          &base->segment);
       /* Check if we need to switch PCR/PTS handling */
       if (base->segment.format == GST_FORMAT_TIME) {
         base->packetizer->calculate_offset = FALSE;
@@ -1773,6 +1775,7 @@ mpegts_base_sink_activate_mode (GstPad * pad, GstObject * parent,
         /* When working pull-based, we always use offsets for estimation */
         base->packetizer->calculate_offset = TRUE;
         base->packetizer->calculate_skew = FALSE;
+        gst_segment_init (&base->segment, GST_FORMAT_BYTES);
         res =
             gst_pad_start_task (pad, (GstTaskFunction) mpegts_base_loop, base,
             NULL);

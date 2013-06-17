@@ -52,6 +52,9 @@ struct _MpegTSParse2 {
   GstPad *srcpad;
 
   GList *srcpads;
+
+  /* state */
+  gboolean first;
 };
 
 struct _MpegTSParse2Class {
