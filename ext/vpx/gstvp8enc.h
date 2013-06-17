@@ -22,6 +22,12 @@
 #ifndef __GST_VP8_ENC_H__
 #define __GST_VP8_ENC_H__
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#ifdef HAVE_VP8_ENCODER
+
 #include <gst/gst.h>
 #include <gst/video/gstvideoencoder.h>
 
@@ -110,5 +116,7 @@ struct _GstVP8EncClass
 GType gst_vp8_enc_get_type (void);
 
 G_END_DECLS
+
+#endif
 
 #endif /* __GST_VP8_ENC_H__ */

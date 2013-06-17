@@ -23,6 +23,12 @@
 #ifndef __GST_VP9_DEC_H__
 #define __GST_VP9_DEC_H__
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#ifdef HAVE_VP9_DECODER
+
 #include <gst/gst.h>
 #include <gst/video/gstvideodecoder.h>
 
@@ -80,5 +86,7 @@ struct _GstVP9DecClass
 GType gst_vp9_dec_get_type (void);
 
 G_END_DECLS
+
+#endif
 
 #endif /* __GST_VP9_DEC_H__ */
