@@ -906,7 +906,7 @@ gst_shm_sink_event (GstBaseSink * bsink, GstEvent * event)
       break;
   }
 
-  return TRUE;
+  return GST_BASE_SINK_CLASS (parent_class)->event (bsink, event);
 }
 
 
