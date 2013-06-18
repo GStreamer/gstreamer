@@ -58,6 +58,7 @@
 #define QT_UINT64(a)  ((((guint64)QT_UINT32(a))<<32)|QT_UINT32(((guint8 *)a)+4))
 
 #define FOURCC_avc1     GST_MAKE_FOURCC('a','v','c','1')
+#define FOURCC_avc3     GST_MAKE_FOURCC('a','v','c','3')
 #define FOURCC_avcC     GST_MAKE_FOURCC('a','v','c','C')
 
 GST_DEBUG_CATEGORY_STATIC (rtpxqtdepay_debug);
@@ -179,6 +180,7 @@ gst_rtp_quicktime_parse_sd (GstRtpXQTDepay * rtpxqtdepay, guint8 * data,
 
   switch (fourcc) {
     case FOURCC_avc1:
+    case FOURCC_avc3:
     {
       guint32 chlen;
 

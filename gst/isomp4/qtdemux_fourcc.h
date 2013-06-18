@@ -142,6 +142,7 @@ G_BEGIN_DECLS
 #define FOURCC_H264     GST_MAKE_FOURCC('H','2','6','4')
 #define FOURCC_strf     GST_MAKE_FOURCC('s','t','r','f')
 #define FOURCC_avc1     GST_MAKE_FOURCC('a','v','c','1')
+#define FOURCC_avc3     GST_MAKE_FOURCC('a','v','c','3')
 #define FOURCC_avcC     GST_MAKE_FOURCC('a','v','c','C')
 #define FOURCC_btrt     GST_MAKE_FOURCC('b','t','r','t')
 #define FOURCC_VP31     GST_MAKE_FOURCC('V','P','3','1')

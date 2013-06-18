@@ -3320,7 +3320,8 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
   ste = atom_trak_add_video_entry (trak, context, entry->fourcc);
 
   trak->is_video = TRUE;
-  trak->is_h264 = (entry->fourcc == FOURCC_avc1);
+  trak->is_h264 = (entry->fourcc == FOURCC_avc1
+      || entry->fourcc == FOURCC_avc3);
 
   ste->version = entry->version;
   ste->width = entry->width;
