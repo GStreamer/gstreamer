@@ -25,6 +25,10 @@ gst_core_media_meta_free (GstCoreMediaMeta * meta, GstBuffer * buf)
   if (meta->image_buf != NULL) {
     CVPixelBufferUnlockBaseAddress (meta->image_buf,
         kCVPixelBufferLock_ReadOnly);
+    CVBufferRelease(meta->image_buf);
+  }
+  if (meta->block_buf != NULL) {
+    CFRelease (meta->block_buf);
   }
   CVBufferRelease ((CVBufferRef)meta->sample_buf);
 }
