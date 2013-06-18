@@ -328,8 +328,10 @@ cur_title_get_chapter_bounds (GstDvdReadSrc * src, gint chapter,
 
   *p_first_cell = pgc->program_map[pgn - 1] - 1;
 
+  /* last cell is used as a 'up to boundary', not 'up to and including',
+   * i.e. it is the first cell not included in the chapter range */
   if (chapter == (src->num_chapters - 1)) {
-    *p_last_cell = pgc->nr_of_cells - 1;
+    *p_last_cell = pgc->nr_of_cells;
   } else {
     pgn_next_ch = src->vts_ptt_srpt->title[src->ttn - 1].ptt[chapter + 1].pgn;
     *p_last_cell = pgc->program_map[pgn_next_ch - 1] - 1;
