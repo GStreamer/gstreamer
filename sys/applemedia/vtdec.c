@@ -169,8 +169,10 @@ gst_vtdec_change_state (GstElement * element, GstStateChange transition)
   if (transition == GST_STATE_CHANGE_READY_TO_NULL) {
     gst_vtdec_destroy_session (self, &self->session);
 
-    CFRelease (self->fmt_desc);
-    self->fmt_desc = NULL;
+    if (self->fmt_desc != NULL) {
+      CFRelease (self->fmt_desc);
+      self->fmt_desc = NULL;
+    }
 
     gst_video_info_init (&self->vinfo);
 
