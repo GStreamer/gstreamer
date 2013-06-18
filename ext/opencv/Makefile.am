@@ -25,15 +25,15 @@ libgstopencv_la_SOURCES = gstopencv.c \
 			motioncells_wrapper.cpp \
 			MotionCells.cpp
 
-libgstopencv_la_CXXFLAGS = $(GST_CXXFLAGS) $(OPENCV_CFLAGS)
+libgstopencv_la_CXXFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CXXFLAGS) $(OPENCV_CFLAGS)
 
 # flags used to compile this facedetect
 # add other _CFLAGS and _LIBS as needed
 #
 # override CV_INLINE: GLib will take care of defining 'inline' sufficiently and
 # OpenCV's define isn't good enough to avoid 'unused' gcc warnings (at v2.1.0)
-libgstopencv_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(OPENCV_CFLAGS) \
-	$(GST_PLUGINS_BASE_CFLAGS) \
+libgstopencv_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
+	$(GST_CFLAGS) $(OPENCV_CFLAGS) \
 	-DGST_HAAR_CASCADES_DIR=\"$(pkgdatadir)/@GST_API_VERSION@/opencv_haarcascades\" \
 	-DCV_INLINE="static inline" \
 	-DCV_NO_BACKWARD_COMPATIBILITY
