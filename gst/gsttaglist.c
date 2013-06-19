@@ -1031,12 +1031,20 @@ gst_tag_list_add_value_internal (GstTagList * tag_list, GstTagMergeMode mode,
         gst_structure_id_set_value (list, tag_quark, value);
         break;
       case GST_TAG_MERGE_PREPEND:
-        gst_value_list_merge (&dest, value, value2);
-        gst_structure_id_take_value (list, tag_quark, &dest);
+        if (GST_VALUE_HOLDS_LIST (value2) && !GST_VALUE_HOLDS_LIST (value))
+          gst_value_list_prepend_value ((GValue *) value2, value);
+        else {
+          gst_value_list_merge (&dest, value, value2);
+          gst_structure_id_take_value (list, tag_quark, &dest);
+        }
         break;
       case GST_TAG_MERGE_APPEND:
-        gst_value_list_merge (&dest, value2, value);
-        gst_structure_id_take_value (list, tag_quark, &dest);
+        if (GST_VALUE_HOLDS_LIST (value2) && !GST_VALUE_HOLDS_LIST (value))
+          gst_value_list_append_value ((GValue *) value2, value);
+        else {
+          gst_value_list_merge (&dest, value2, value);
+          gst_structure_id_take_value (list, tag_quark, &dest);
+        }
         break;
       case GST_TAG_MERGE_KEEP:
       case GST_TAG_MERGE_KEEP_ALL:
