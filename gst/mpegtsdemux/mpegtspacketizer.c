@@ -1078,6 +1078,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
   guint16 descriptors_loop_length, transport_stream_loop_length;
   GValue transports = { 0 };
   GValue transport_value = { 0 };
+  GValue tmpval = G_VALUE_INIT;
   GValueArray *descriptors = NULL;
 
   GST_DEBUG ("NIT");
@@ -1312,8 +1313,9 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
             "polarization", G_TYPE_STRING, polarization_str,
             "symbol-rate", G_TYPE_UINT, symbol_rate,
             "inner-fec", G_TYPE_STRING, fec_inner_str, NULL);
-        gst_structure_id_set (transport, QUARK_DELIVERY, GST_TYPE_STRUCTURE,
-            delivery_structure, NULL);
+        g_value_init (&tmpval, GST_TYPE_STRUCTURE);
+        g_value_take_boxed (&tmpval, delivery_structure);
+        gst_structure_id_take_value (transport, QUARK_DELIVERY, &tmpval);
       } else if ((delivery = gst_mpeg_descriptor_find (&mpegdescriptor,
                   DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM))) {
 
@@ -1440,8 +1442,9 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
             QUARK_GUARD_INTERVAL, G_TYPE_UINT, guard_interval,
             QUARK_TRANSMISSION_MODE, G_TYPE_STRING, transmission_mode_str,
             QUARK_OTHER_FREQUENCY, G_TYPE_BOOLEAN, other_frequency, NULL);
-        gst_structure_id_set (transport, QUARK_DELIVERY, GST_TYPE_STRUCTURE,
-            delivery_structure, NULL);
+        g_value_init (&tmpval, GST_TYPE_STRUCTURE);
+        g_value_take_boxed (&tmpval, delivery_structure);
+        gst_structure_id_take_value (transport, QUARK_DELIVERY, &tmpval);
       } else if ((delivery = gst_mpeg_descriptor_find (&mpegdescriptor,
                   DESC_DVB_CABLE_DELIVERY_SYSTEM))) {
 
@@ -1529,13 +1532,9 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
             QUARK_FREQUENCY, G_TYPE_UINT, frequency,
             QUARK_SYMBOL_RATE, G_TYPE_UINT, symbol_rate,
             QUARK_INNER_FEC, G_TYPE_STRING, fec_inner_str, NULL);
-        gst_structure_id_set (transport, QUARK_DELIVERY, GST_TYPE_STRUCTURE,
-            delivery_structure, NULL);
-      }
-      /* free the temporary delivery structure */
-      if (delivery_structure != NULL) {
-        gst_structure_free (delivery_structure);
-        delivery_structure = NULL;
+        g_value_init (&tmpval, GST_TYPE_STRUCTURE);
+        g_value_take_boxed (&tmpval, delivery_structure);
+        gst_structure_id_take_value (transport, QUARK_DELIVERY, &tmpval);
       }
       if ((delivery = gst_mpeg_descriptor_find (&mpegdescriptor,
                   DESC_DTG_LOGICAL_CHANNEL))) {
