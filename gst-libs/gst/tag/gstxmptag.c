@@ -44,6 +44,24 @@
 #include <time.h>
 #include <ctype.h>
 
+#define GST_CAT_DEFAULT gst_tag_ensure_debug_category()
+
+static GstDebugCategory *
+gst_tag_ensure_debug_category (void)
+{
+  static gsize cat_gonce = 0;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    GstDebugCategory *cat = NULL;
+
+    GST_DEBUG_CATEGORY_INIT (cat, "xmp-tags", 0, "XMP GstTag helper functions");
+
+    g_once_init_leave (&cat_gonce, (gsize) cat);
+  }
+
+  return (GstDebugCategory *) cat_gonce;
+}
+
 static const gchar *schema_list[] = {
   "dc",
   "xap",
