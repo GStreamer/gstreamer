@@ -201,6 +201,7 @@ struct _QtDemuxStream
   guint32 fourcc;
 
   gboolean new_caps;
+  gboolean new_stream;          /* signals that a stream_start is required */
 
   /* if the stream has a redirect URI in its headers, we store it here */
   gchar *redirect_uri;
@@ -1651,6 +1652,7 @@ _create_stream (void)
   stream->sample_index = -1;
   stream->offset_in_sample = 0;
   stream->last_ret = GST_FLOW_OK;
+  stream->new_stream = TRUE;
   return stream;
 }
 
@@ -5610,8 +5612,6 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
   }
 
   if (stream->pad) {
-    gchar *stream_id;
-
     GST_PAD_ELEMENT_PRIVATE (stream->pad) = stream;
     gst_pad_set_event_function (stream->pad, gst_qtdemux_handle_src_event);
     gst_pad_set_query_function (stream->pad, gst_qtdemux_handle_src_query);
@@ -5620,11 +5620,16 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
     gst_pad_use_fixed_caps (stream->pad);
 
     GST_DEBUG_OBJECT (qtdemux, "setting caps %" GST_PTR_FORMAT, stream->caps);
-    stream_id =
-        gst_pad_create_stream_id_printf (stream->pad,
-        GST_ELEMENT_CAST (qtdemux), "%03u", stream->track_id);
-    gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
-    g_free (stream_id);
+    if (stream->new_stream) {
+      gchar *stream_id;
+
+      stream->new_stream = FALSE;
+      stream_id =
+          gst_pad_create_stream_id_printf (stream->pad,
+          GST_ELEMENT_CAST (qtdemux), "%03u", stream->track_id);
+      gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
+      g_free (stream_id);
+    }
     gst_pad_set_caps (stream->pad, stream->caps);
     stream->new_caps = FALSE;
   }
