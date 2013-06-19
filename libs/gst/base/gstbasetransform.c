@@ -1236,9 +1236,9 @@ gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
 
     /* get all the formats we can handle on this pad */
     if (direction == GST_PAD_SRC)
-      allowed = gst_pad_query_caps (trans->srcpad, NULL);
+      allowed = gst_pad_query_caps (trans->srcpad, caps);
     else
-      allowed = gst_pad_query_caps (trans->sinkpad, NULL);
+      allowed = gst_pad_query_caps (trans->sinkpad, caps);
 
     if (!allowed) {
       GST_DEBUG_OBJECT (trans, "gst_pad_query_caps() failed");
