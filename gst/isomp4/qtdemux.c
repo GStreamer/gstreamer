@@ -5457,6 +5457,14 @@ qtdemux_tree_get_sibling_by_type (GNode * node, guint32 fourcc)
 static void
 qtdemux_do_allocation (GstQTDemux * qtdemux, QtDemuxStream * stream)
 {
+/* FIXME: This can only reliably work if demuxers have a
+ * separate streaming thread per srcpad. This should be
+ * done in a demuxer base class, which integrates parts
+ * of multiqueue
+ *
+ * https://bugzilla.gnome.org/show_bug.cgi?id=701856
+ */
+#if 0
   GstQuery *query;
 
   query = gst_query_new_allocation (stream->caps, FALSE);
@@ -5480,6 +5488,7 @@ qtdemux_do_allocation (GstQTDemux * qtdemux, QtDemuxStream * stream)
     stream->use_allocator = FALSE;
   }
   gst_query_unref (query);
+#endif
 }
 
 static gboolean
