@@ -743,7 +743,10 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   GST_OBJECT_UNLOCK (self);
 
-  if (rv == -1) {
+  if (rv == 0) {
+    GST_DEBUG_OBJECT (self, "No clients connected, unreffing buffer");
+    gst_buffer_unref (sendbuf);
+  } else if (rv == -1) {
     GST_ELEMENT_ERROR (self, STREAM, FAILED, ("Invalid allocated buffer"),
         ("The shmpipe library rejects our buffer, this is a bug"));
     ret = GST_FLOW_ERROR;
