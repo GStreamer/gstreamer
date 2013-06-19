@@ -154,7 +154,7 @@ typedef struct
    * section_syntax_indicator is 0, sub_table_extension will be set to 0 */
   guint16 subtable_extension;
   guint8 version_number;
-  guint32 crc;
+  GList * crc;
 } MpegTSPacketizerStreamSubtable;
 
 typedef enum {

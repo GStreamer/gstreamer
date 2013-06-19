@@ -320,6 +320,18 @@ mpegts_packetizer_stream_subtable_compare (gconstpointer a, gconstpointer b)
   return -1;
 }
 
+static gboolean
+saw_subtable_crc (GList * list, guint32 crc)
+{
+  GList *tmp;
+
+  for (tmp = list; tmp; tmp = tmp->next)
+    if (GPOINTER_TO_UINT (tmp->data) == crc)
+      return TRUE;
+
+  return FALSE;
+}
+
 static MpegTSPacketizerStreamSubtable *
 mpegts_packetizer_stream_subtable_new (guint8 table_id,
     guint16 subtable_extension)
@@ -330,7 +342,7 @@ mpegts_packetizer_stream_subtable_new (guint8 table_id,
   subtable->version_number = VERSION_NUMBER_UNSET;
   subtable->table_id = table_id;
   subtable->subtable_extension = subtable_extension;
-  subtable->crc = 0;
+  subtable->crc = NULL;
   return subtable;
 }
 
@@ -356,12 +368,21 @@ mpegts_packetizer_clear_section (MpegTSPacketizerStream * stream)
 }
 
 static void
+mpegts_packetizer_stream_subtable_free (MpegTSPacketizerStreamSubtable *
+    subtable)
+{
+  g_list_free (subtable->crc);
+  g_free (subtable);
+}
+
+static void
 mpegts_packetizer_stream_free (MpegTSPacketizerStream * stream)
 {
   mpegts_packetizer_clear_section (stream);
   if (stream->section_data)
     g_free (stream->section_data);
-  g_slist_foreach (stream->subtables, (GFunc) g_free, NULL);
+  g_slist_foreach (stream->subtables,
+      (GFunc) mpegts_packetizer_stream_subtable_free, NULL);
   g_slist_free (stream->subtables);
   g_free (stream);
 }
@@ -626,9 +647,15 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer2 * packetizer,
   subtable_list = g_slist_find_custom (stream->subtables, subtable,
       mpegts_packetizer_stream_subtable_compare);
   if (subtable_list) {
+    GST_DEBUG ("Found previous subtable_extension:%d",
+        section->subtable_extension);
+
     g_free (subtable);
     subtable = (MpegTSPacketizerStreamSubtable *) (subtable_list->data);
   } else {
+    GST_DEBUG ("Appending new subtable_extension:%d",
+        section->subtable_extension);
+
     stream->subtables = g_slist_prepend (stream->subtables, subtable);
   }
 
@@ -657,12 +684,25 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer2 * packetizer,
   crc_data = section->data + section->section_length - 4;
   section->crc = GST_READ_UINT32_BE (crc_data);
 
+  /* If the section version number hasn't changed and we have
+   * already seen this exact section before, don't process further
+   */
   if (section->version_number == subtable->version_number &&
-      section->crc == subtable->crc)
+      saw_subtable_crc (subtable->crc, section->crc))
     goto no_changes;
 
+  /* If the version number changed, reset our observations */
+  if (section->version_number != subtable->version_number)
+    g_list_free (subtable->crc);
+
+  GST_DEBUG
+      ("section changed. pid 0x%04x table_id 0x%03x subtable_extension %d version number:%d (previous%d) crc 0x%x",
+      section->pid, section->table_id, section->subtable_extension,
+      section->version_number, subtable->version_number, section->crc);
+
   subtable->version_number = section->version_number;
-  subtable->crc = section->crc;
+  subtable->crc =
+      g_list_prepend (subtable->crc, GUINT_TO_POINTER (section->crc));
   stream->section_table_id = section->table_id;
 
   return TRUE;
