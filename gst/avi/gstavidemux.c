@@ -510,7 +510,8 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstObject * parent,
 
       /* only act on audio or video streams */
       if (stream->strh->type != GST_RIFF_FCC_auds &&
-          stream->strh->type != GST_RIFF_FCC_vids) {
+          stream->strh->type != GST_RIFF_FCC_vids &&
+          stream->strh->type != GST_RIFF_FCC_iavs) {
         res = FALSE;
         break;
       }
