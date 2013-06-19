@@ -1338,7 +1338,7 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
                   ptag->xmp_tag = xmp_tag;
                   ptag->str = g_strdup (v);
 
-                  pending_tags = g_slist_append (pending_tags, ptag);
+                  pending_tags = g_slist_prepend (pending_tags, ptag);
                 }
               }
               /* restore chars overwritten by '\0' */
@@ -1431,7 +1431,7 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
             ptag->xmp_tag = last_xmp_tag;
             ptag->str = g_strdup (part);
 
-            pending_tags = g_slist_append (pending_tags, ptag);
+            pending_tags = g_slist_prepend (pending_tags, ptag);
           }
         }
       }
@@ -1441,6 +1441,10 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
       pp = part;
     }
   }
+
+  pending_tags = g_slist_reverse (pending_tags);
+
+  GST_DEBUG ("Done accumulating tags, now handling them");
 
   while (pending_tags) {
     PendingXmpTag *ptag = (PendingXmpTag *) pending_tags->data;
