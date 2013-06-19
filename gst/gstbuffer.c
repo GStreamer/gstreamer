@@ -216,7 +216,7 @@ _get_merged_memory (GstBuffer * buffer, guint idx, guint length)
     GstMemory *parent = NULL;
     gsize size, poffset = 0;
 
-    size = gst_buffer_get_size (buffer);
+    size = gst_buffer_get_sizes_range (buffer, idx, length, NULL, NULL);
 
     if (G_UNLIKELY (_is_span (mem + idx, length, &poffset, &parent))) {
       if (GST_MEMORY_IS_NO_SHARE (parent)) {
@@ -236,7 +236,7 @@ _get_merged_memory (GstBuffer * buffer, guint idx, guint length)
       ptr = dinfo.data;
       left = size;
 
-      for (i = idx; i < length && left > 0; i++) {
+      for (i = idx; i < (idx + length) && left > 0; i++) {
         gst_memory_map (mem[i], &sinfo, GST_MAP_READ);
         tocopy = MIN (sinfo.size, left);
         GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
