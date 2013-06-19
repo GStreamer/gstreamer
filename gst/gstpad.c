@@ -2820,15 +2820,15 @@ gst_pad_query_accept_caps_default (GstPad * pad, GstQuery * query)
   GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, pad,
       "fallback ACCEPT_CAPS query, consider implementing a specialized version");
 
-  allowed = gst_pad_query_caps (pad, NULL);
   gst_query_parse_accept_caps (query, &caps);
+  allowed = gst_pad_query_caps (pad, caps);
 
   if (allowed) {
     GST_DEBUG_OBJECT (pad, "allowed caps %" GST_PTR_FORMAT, allowed);
     result = gst_caps_is_subset (caps, allowed);
     gst_caps_unref (allowed);
   } else {
-    GST_DEBUG_OBJECT (pad, "no caps allowed on the pad");
+    GST_DEBUG_OBJECT (pad, "no compatible caps allowed on the pad");
     result = FALSE;
   }
   gst_query_set_accept_caps_result (query, result);
