@@ -1180,8 +1180,12 @@ next:
     }
   } else if (GST_IS_QUERY (data)) {
     GstQuery *query = GST_QUERY_CAST (data);
+    gboolean ret;
 
-    queue->last_query = gst_pad_peer_query (queue->srcpad, query);
+    GST_QUEUE_MUTEX_UNLOCK (queue);
+    ret = gst_pad_peer_query (queue->srcpad, query);
+    GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing_query);
+    queue->last_query = ret;
     g_cond_signal (&queue->query_handled);
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "did query %p, return %d", query, queue->last_query);
@@ -1197,6 +1201,13 @@ no_item:
   }
 out_flushing:
   {
+    GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because we are flushing");
+    return GST_FLOW_FLUSHING;
+  }
+out_flushing_query:
+  {
+    queue->last_query = FALSE;
+    g_cond_signal (&queue->query_handled);
     GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because we are flushing");
     return GST_FLOW_FLUSHING;
   }
