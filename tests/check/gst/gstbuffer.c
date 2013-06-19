@@ -659,6 +659,55 @@ GST_START_TEST (test_map)
 
 GST_END_TEST;
 
+GST_START_TEST (test_map_range)
+{
+  GstBuffer *buf;
+  GstMapInfo map;
+  gsize maxalloc;
+  gsize size, offset;
+
+  buf = gst_buffer_new ();
+  gst_buffer_insert_memory (buf, -1, gst_allocator_alloc (NULL, 50, NULL));
+  gst_buffer_insert_memory (buf, -1, gst_allocator_alloc (NULL, 50, NULL));
+  gst_buffer_insert_memory (buf, -1, gst_allocator_alloc (NULL, 50, NULL));
+
+  size = gst_buffer_get_sizes (buf, &offset, &maxalloc);
+  fail_unless (size == 150);
+  fail_unless (offset == 0);
+  fail_unless (maxalloc >= 150);
+  fail_unless (gst_buffer_n_memory (buf) == 3);
+
+  gst_buffer_ref (buf);
+  /* map should merge */
+  gst_buffer_map_range (buf, 1, 2, &map, GST_MAP_READ);
+  /* merged memory is not stored */
+  fail_unless (gst_buffer_n_memory (buf) == 3);
+  fail_unless (map.size == 100);
+  gst_buffer_unmap (buf, &map);
+
+  fail_unless (gst_buffer_n_memory (buf) == 3);
+
+  gst_buffer_unref (buf);
+
+  /* map should merge */
+  gst_buffer_map_range (buf, 1, 2, &map, GST_MAP_READ);
+  /* merged memory is stored */
+  fail_unless (gst_buffer_n_memory (buf) == 2);
+  fail_unless (map.size == 100);
+  gst_buffer_unmap (buf, &map);
+
+  fail_unless (gst_buffer_n_memory (buf) == 2);
+
+  /* should merge and store */
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  fail_unless (gst_buffer_n_memory (buf) == 1);
+  gst_buffer_unmap (buf, &map);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_find)
 {
   GstBuffer *buf;
@@ -798,6 +847,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_size);
   tcase_add_test (tc_chain, test_resize);
   tcase_add_test (tc_chain, test_map);
+  tcase_add_test (tc_chain, test_map_range);
   tcase_add_test (tc_chain, test_find);
   tcase_add_test (tc_chain, test_fill);
 
