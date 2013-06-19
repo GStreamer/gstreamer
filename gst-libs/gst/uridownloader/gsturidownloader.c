@@ -321,6 +321,24 @@ gst_uri_downloader_cancel (GstUriDownloader * downloader)
 }
 
 static gboolean
+gst_uri_downloader_set_range (GstUriDownloader * downloader,
+    gint64 range_start, gint64 range_end)
+{
+  g_return_val_if_fail (range_start >= 0, FALSE);
+  g_return_val_if_fail (range_end >= -1, FALSE);
+
+  if (range_start || (range_end >= 0)) {
+    GstEvent *seek;
+
+    seek = gst_event_new_seek (1.0, GST_FORMAT_BYTES, GST_SEEK_FLAG_FLUSH,
+        GST_SEEK_TYPE_SET, range_start, GST_SEEK_TYPE_SET, range_end);
+
+    return gst_element_send_event (downloader->priv->urisrc, seek);
+  }
+  return TRUE;
+}
+
+static gboolean
 gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri)
 {
   GstPad *pad;
@@ -353,6 +371,22 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri)
 GstFragment *
 gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri)
 {
+  return gst_uri_downloader_fetch_uri_with_range (downloader, uri, 0, -1);
+}
+
+/**
+ * gst_uri_downloader_fetch_uri_with_range:
+ * @downloader: the #GstUriDownloader
+ * @uri: the uri
+ * @range_start: the starting byte index
+ * @range_end: the final byte index, use -1 for unspecified
+ *
+ * Returns the downloaded #GstFragment
+ */
+GstFragment *
+gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
+    const gchar * uri, gint64 range_start, gint64 range_end)
+{
   GstStateChangeReturn ret;
   GstFragment *download = NULL;
 
@@ -363,12 +397,22 @@ gst_uri_downloader_fetch_uri (GstUriDownloader * downloader, const gchar * uri)
   }
 
   if (!gst_uri_downloader_set_uri (downloader, uri)) {
+    GST_WARNING_OBJECT (downloader, "Failed to set URI");
+    goto quit;
+  }
+
+  gst_bus_set_flushing (downloader->priv->bus, FALSE);
+  ret = gst_element_set_state (downloader->priv->urisrc, GST_STATE_READY);
+  if (ret == GST_STATE_CHANGE_FAILURE) {
+    goto quit;
+  }
+
+  if (!gst_uri_downloader_set_range (downloader, range_start, range_end)) {
+    GST_WARNING_OBJECT (downloader, "Failed to set range");
     goto quit;
   }
 
   downloader->priv->download = gst_fragment_new ();
-
-  gst_bus_set_flushing (downloader->priv->bus, FALSE);
   ret = gst_element_set_state (downloader->priv->urisrc, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
     g_object_unref (downloader->priv->download);
