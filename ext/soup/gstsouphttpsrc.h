@@ -68,6 +68,7 @@ struct _GstSoupHTTPSrc {
   gboolean interrupted;        /* Signal unlock(). */
   gboolean retry;              /* Should attempt to reconnect. */
 
+  gboolean got_headers;        /* Already received headers from the server */
   gboolean have_size;          /* Received and parsed Content-Length
                                   header. */
   guint64 content_size;        /* Value of Content-Length header. */
@@ -86,6 +87,9 @@ struct _GstSoupHTTPSrc {
   GstStructure *extra_headers;
 
   guint timeout;
+
+  GMutex mutex;
+  GCond request_finished_cond;
 };
 
 struct _GstSoupHTTPSrcClass {
