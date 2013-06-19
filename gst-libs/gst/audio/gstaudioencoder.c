@@ -465,7 +465,13 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
     enc->priv->ctx.headers = NULL;
     enc->priv->ctx.new_headers = FALSE;
 
+    if (enc->priv->ctx.allocator)
+      gst_object_unref (enc->priv->ctx.allocator);
+    enc->priv->ctx.allocator = NULL;
+
+    gst_caps_replace (&enc->priv->ctx.input_caps, NULL);
     gst_caps_replace (&enc->priv->ctx.caps, NULL);
+
     memset (&enc->priv->ctx, 0, sizeof (enc->priv->ctx));
     gst_audio_info_init (&enc->priv->ctx.info);
 
@@ -477,12 +483,6 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
     g_list_foreach (enc->priv->pending_events, (GFunc) gst_event_unref, NULL);
     g_list_free (enc->priv->pending_events);
     enc->priv->pending_events = NULL;
-
-    if (enc->priv->ctx.allocator)
-      gst_object_unref (enc->priv->ctx.allocator);
-    enc->priv->ctx.allocator = NULL;
-
-    gst_caps_replace (&enc->priv->ctx.input_caps, NULL);
   }
 
   gst_segment_init (&enc->input_segment, GST_FORMAT_TIME);
