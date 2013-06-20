@@ -347,7 +347,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  apexsink cdaudio dc1394 directfb \
  gsettings \
  musepack nas sdl sndfile timidity \
- directdraw direct3d9 acm wininet \
+ directdraw acm wininet \
  xvid lv2 teletextdec sndio osx_video quicktime"
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
@@ -757,36 +757,35 @@ AG_GST_CHECK_FEATURE(DIRECTDRAW, [DirectDraw plug-in], directdrawsink, [
   AC_SUBST(HAVE_DIRECTDRAW)
 ])
 
-dnl Direct3D9
-AM_CONDITIONAL(USE_DIRECT3D9, true)
-AG_GST_CHECK_FEATURE(DIRECT3D9, [Direct3D9], winscreencap, [
-  HAVE_DIRECT3D9="no"
+dnl winscreencap
+translit(dnm, m, l) AM_CONDITIONAL(USE_WINSCREENCAP, true)
+AG_GST_CHECK_FEATURE(WINSCREENCAP, [winscreencap plug-in], winscreencap, [
+  HAVE_WINSCREENCAP="no"
   save_CFLAGS="$CFLAGS"
   save_LDFLAGS="$LDFLAGS"
   save_LIBS="$LIBS"
   CFLAGS="$CFLAGS $DIRECTX_CFLAGS"
   LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
   LIBS="$LIBS -ld3d9 -lgdi32"
-  AC_MSG_CHECKING(for Direct3D9 LDFLAGS)
+  AC_MSG_CHECKING(for Direct3D LDFLAGS)
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <windows.h>
 #include <d3d9.h>
 ]], [[
   Direct3DCreate9(D3D_SDK_VERSION);
 ]])],
-    [HAVE_DIRECT3D9="yes"],
-    [HAVE_DIRECT3D9="no"])
-  AC_MSG_RESULT($HAVE_DIRECT3D9)
+    [HAVE_WINSCREENCAP="yes"],
+    [HAVE_WINSCREENCAP="no"])
+  AC_MSG_RESULT($HAVE_WINSCREENCAP)
   CFLAGS=$save_CFLAGS
   LDFLAGS=$save_LDFLAGS
   LIBS=$save_LIBS
 
-  if test "x$HAVE_DIRECT3D9" = "xyes";  then
-
-    DIRECT3D9_LIBS="-ld3d9 -lgdi32"
-    AC_SUBST(DIRECT3D9_LIBS)
+  if test "x$HAVE_WINSCREENCAP" = "xyes";  then
+    WINSCREENCAP_LIBS="-ld3d9 -lgdi32"
+    AC_SUBST(WINSCREENCAP_LIBS)
   fi
-  AC_SUBST(HAVE_DIRECT3D9)
+  AC_SUBST(HAVE_WINSCREENCAP)
 ])
 
 dnl DirectShow
