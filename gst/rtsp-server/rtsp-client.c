@@ -664,6 +664,9 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   session = state->session;
 
+  if (!state->uri)
+    goto no_uri;
+
   /* get a handle to the configuration of the media in the session */
   media = gst_rtsp_session_get_media (session, state->uri);
   if (!media)
@@ -705,6 +708,12 @@ no_session:
   {
     GST_ERROR ("client %p: no session", client);
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, state);
+    return FALSE;
+  }
+no_uri:
+  {
+    GST_ERROR ("client %p: no uri supplied", client);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
     return FALSE;
   }
 not_found:
@@ -820,6 +829,9 @@ handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
   if (!(session = state->session))
     goto no_session;
 
+  if (!state->uri)
+    goto no_uri;
+
   /* get a handle to the configuration of the media in the session */
   media = gst_rtsp_session_get_media (session, state->uri);
   if (!media)
@@ -861,6 +873,12 @@ no_session:
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, state);
     return FALSE;
   }
+no_uri:
+  {
+    GST_ERROR ("client %p: no uri supplied", client);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
+    return FALSE;
+  }
 not_found:
   {
     GST_ERROR ("client %p: no media for uri", client);
@@ -892,6 +910,9 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   if (!(session = state->session))
     goto no_session;
+
+  if (!state->uri)
+    goto no_uri;
 
   /* get a handle to the configuration of the media in the session */
   media = gst_rtsp_session_get_media (session, state->uri);
@@ -994,6 +1015,12 @@ no_session:
   {
     GST_ERROR ("client %p: no session", client);
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, state);
+    return FALSE;
+  }
+no_uri:
+  {
+    GST_ERROR ("client %p: no uri supplied", client);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
     return FALSE;
   }
 not_found:
@@ -1224,6 +1251,9 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   GstRTSPState rtspstate;
   GstRTSPClientClass *klass;
 
+  if (!state->uri)
+    goto no_uri;
+
   uri = state->uri;
 
   /* the uri contains the stream number we added in the SDP config, which is
@@ -1358,6 +1388,12 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   return TRUE;
 
   /* ERRORS */
+no_uri:
+  {
+    GST_ERROR ("client %p: no uri", client);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
+    return FALSE;
+  }
 bad_request:
   {
     GST_ERROR ("client %p: bad request", client);
@@ -1476,6 +1512,9 @@ handle_describe_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   klass = GST_RTSP_CLIENT_GET_CLASS (client);
 
+  if (!state->uri)
+    goto no_uri;
+
   /* check what kind of format is accepted, we don't really do anything with it
    * and always return SDP for now. */
   for (i = 0; i++;) {
@@ -1541,6 +1580,12 @@ handle_describe_request (GstRTSPClient * client, GstRTSPClientState * state)
   return TRUE;
 
   /* ERRORS */
+no_uri:
+  {
+    GST_ERROR ("client %p: no uri", client);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
+    return FALSE;
+  }
 no_media:
   {
     GST_ERROR ("client %p: no media", client);
@@ -1686,7 +1731,9 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   state.method = method;
 
   /* we always try to parse the url first */
-  if (gst_rtsp_url_parse (uristr, &uri) != GST_RTSP_OK)
+  if (strcmp (uristr, "*") == 0) {
+    /* special case where we have * as uri, keep uri = NULL */
+  } else if (gst_rtsp_url_parse (uristr, &uri) != GST_RTSP_OK)
     goto bad_request;
 
   /* get the session if there is any */
@@ -1706,7 +1753,8 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   }
 
   /* sanitize the uri */
-  sanitize_uri (uri);
+  if (uri)
+    sanitize_uri (uri);
   state.uri = uri;
   state.session = session;
 
