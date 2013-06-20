@@ -1307,6 +1307,10 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
     if (!(session = gst_rtsp_session_pool_create (priv->session_pool)))
       goto service_unavailable;
 
+    /* signal new session */
+    g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_NEW_SESSION], 0,
+        session);
+
     state->session = session;
 
     /* we need a new media configuration in this session */
@@ -1694,9 +1698,6 @@ client_watch_session (GstRTSPClient * client, GstRTSPSession * session)
   g_object_weak_ref (G_OBJECT (session), (GWeakNotify) client_session_finalized,
       client);
   priv->sessions = g_list_prepend (priv->sessions, session);
-
-  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_NEW_SESSION], 0,
-      session);
 }
 
 static void
