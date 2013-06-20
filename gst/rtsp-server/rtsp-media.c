@@ -379,7 +379,10 @@ collect_media_stats (GstRTSPMedia * media)
     /* get the current segment stop */
     query = gst_query_new_segment (GST_FORMAT_TIME);
     if (gst_element_query (priv->pipeline, query)) {
-      gst_query_parse_segment (query, NULL, NULL, NULL, &stop);
+      GstFormat format;
+      gst_query_parse_segment (query, NULL, &format, NULL, &stop);
+      if (format != GST_FORMAT_TIME)
+        stop = -1;
     } else {
       GST_INFO ("segment query failed");
       stop = -1;
