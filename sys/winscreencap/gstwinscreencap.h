@@ -20,8 +20,9 @@
 #ifndef __GST_WINSCREENCAP_H__
 #define __GST_WINSCREENCAP_H__
 
-#include <glib.h>
 #include <windows.h>
+#include <glib.h>
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 

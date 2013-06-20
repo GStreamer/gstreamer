@@ -22,7 +22,6 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
-#include <gst/interfaces/propertyprobe.h>
 
 #include "gstwinscreencap.h"
 

@@ -20,9 +20,10 @@
 #ifndef __GST_DX9SCREENCAPSRC_H__
 #define __GST_DX9SCREENCAPSRC_H__
 
+#include <d3d9.h>
+
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
-#include <d3d9.h>
 
 #include "gstwinscreencap.h"
 

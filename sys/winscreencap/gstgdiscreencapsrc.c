@@ -53,10 +53,10 @@ GST_DEBUG_CATEGORY_STATIC (gdiscreencapsrc_debug);
 
 static GstStaticPadTemplate src_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGR));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("BGR")));
 
-GST_BOILERPLATE (GstGDIScreenCapSrc, gst_gdiscreencapsrc,
-    GstPushSrc, GST_TYPE_PUSH_SRC);
+#define gst_gdiscreencapsrc_parent_class parent_class
+G_DEFINE_TYPE (GstGDIScreenCapSrc, gst_gdiscreencapsrc, GST_TYPE_PUSH_SRC);
 
 enum
 {
@@ -76,10 +76,10 @@ static void gst_gdiscreencapsrc_set_property (GObject * object, guint prop_id,
 static void gst_gdiscreencapsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_gdiscreencapsrc_fixate (GstPad * pad, GstCaps * caps);
+static GstCaps * gst_gdiscreencapsrc_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 static gboolean gst_gdiscreencapsrc_set_caps (GstBaseSrc * bsrc,
     GstCaps * caps);
-static GstCaps *gst_gdiscreencapsrc_get_caps (GstBaseSrc * bsrc);
+static GstCaps *gst_gdiscreencapsrc_get_caps (GstBaseSrc * bsrc, GstCaps * filter);
 static gboolean gst_gdiscreencapsrc_start (GstBaseSrc * bsrc);
 static gboolean gst_gdiscreencapsrc_stop (GstBaseSrc * bsrc);
 
@@ -93,25 +93,15 @@ static gboolean gst_gdiscreencapsrc_screen_capture (GstGDIScreenCapSrc * src,
 
 /* Implementation. */
 static void
-gst_gdiscreencapsrc_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_set_static_metadata (element_class,
-      "GDI screen capture source", "Source/Video", "Captures screen",
-      "Haakon Sporsheim <hakon.sporsheim@tandberg.com>");
-}
-
-static void
 gst_gdiscreencapsrc_class_init (GstGDIScreenCapSrcClass * klass)
 {
   GObjectClass *go_class;
+  GstElementClass *e_class;
   GstBaseSrcClass *bs_class;
   GstPushSrcClass *ps_class;
 
   go_class = (GObjectClass *) klass;
+  e_class = (GstElementClass *) klass;
   bs_class = (GstBaseSrcClass *) klass;
   ps_class = (GstPushSrcClass *) klass;
 
@@ -124,6 +114,7 @@ gst_gdiscreencapsrc_class_init (GstGDIScreenCapSrcClass * klass)
   bs_class->set_caps = GST_DEBUG_FUNCPTR (gst_gdiscreencapsrc_set_caps);
   bs_class->start = GST_DEBUG_FUNCPTR (gst_gdiscreencapsrc_start);
   bs_class->stop = GST_DEBUG_FUNCPTR (gst_gdiscreencapsrc_stop);
+  bs_class->fixate = GST_DEBUG_FUNCPTR (gst_gdiscreencapsrc_fixate);
 
   ps_class->create = GST_DEBUG_FUNCPTR (gst_gdiscreencapsrc_create);
 
@@ -155,17 +146,20 @@ gst_gdiscreencapsrc_class_init (GstGDIScreenCapSrcClass * klass)
           "Height of screen capture area (0 = maximum)",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
 
+  gst_element_class_add_pad_template (e_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_set_static_metadata (e_class,
+      "GDI screen capture source", "Source/Video", "Captures screen",
+      "Haakon Sporsheim <hakon.sporsheim@tandberg.com>");
+
   GST_DEBUG_CATEGORY_INIT (gdiscreencapsrc_debug,
       "gdiscreencapsrc", 0, "GDI screen capture source");
 }
 
 static void
-gst_gdiscreencapsrc_init (GstGDIScreenCapSrc * src,
-    GstGDIScreenCapSrcClass * klass)
+gst_gdiscreencapsrc_init (GstGDIScreenCapSrc * src)
 {
   /* Set src element inital values... */
-  GstPad *src_pad = GST_BASE_SRC_PAD (src);
-  gst_pad_set_fixatecaps_function (src_pad, gst_gdiscreencapsrc_fixate);
 
   src->frames = 0;
   src->dibMem = NULL;
@@ -197,6 +191,8 @@ gst_gdiscreencapsrc_dispose (GObject * object)
   src->hBitmap = (HBITMAP) INVALID_HANDLE_VALUE;
   src->memDC = (HDC) INVALID_HANDLE_VALUE;
   src->dibMem = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -265,16 +261,22 @@ gst_gdiscreencapsrc_get_property (GObject * object, guint prop_id,
   };
 }
 
-static void
-gst_gdiscreencapsrc_fixate (GstPad * pad, GstCaps * caps)
+static GstCaps *
+gst_gdiscreencapsrc_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstStructure *structure;
+
+  caps = gst_caps_make_writable (caps);
 
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_fixate_field_nearest_int (structure, "width", 640);
   gst_structure_fixate_field_nearest_int (structure, "height", 480);
   gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
+
+  caps = GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
+
+  return caps;
 }
 
 static gboolean
@@ -285,28 +287,8 @@ gst_gdiscreencapsrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   HDC device;
   GstStructure *structure;
   const GValue *framerate;
-  gint red_mask, green_mask, blue_mask;
-  gint bpp;
 
   structure = gst_caps_get_structure (caps, 0);
-
-  gst_structure_get_int (structure, "red_mask", &red_mask);
-  gst_structure_get_int (structure, "green_mask", &green_mask);
-  gst_structure_get_int (structure, "blue_mask", &blue_mask);
-  if (blue_mask != GST_VIDEO_BYTE1_MASK_24_INT ||
-      green_mask != GST_VIDEO_BYTE2_MASK_24_INT ||
-      red_mask != GST_VIDEO_BYTE3_MASK_24_INT) {
-    GST_ERROR ("Wrong red_,green_,blue_ mask provided. "
-        "We only support RGB and BGR");
-
-    return FALSE;
-  }
-
-  gst_structure_get_int (structure, "bpp", &bpp);
-  if (bpp != 24) {
-    GST_ERROR ("Wrong bpp provided %d. We only support 24 bpp", bpp);
-    return FALSE;
-  }
 
   src->src_rect = src->screen_rect;
   if (src->capture_w && src->capture_h) {
@@ -359,10 +341,11 @@ gst_gdiscreencapsrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 }
 
 static GstCaps *
-gst_gdiscreencapsrc_get_caps (GstBaseSrc * bsrc)
+gst_gdiscreencapsrc_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 {
   GstGDIScreenCapSrc *src = GST_GDISCREENCAPSRC (bsrc);
   RECT rect_dst;
+  GstCaps *caps;
 
   src->screen_rect = rect_dst = gst_win32_get_monitor_rect (src->monitor);
 
@@ -383,16 +366,20 @@ gst_gdiscreencapsrc_get_caps (GstBaseSrc * bsrc)
       (gint) (rect_dst.right - rect_dst.left),
       (gint) (rect_dst.bottom - rect_dst.top));
 
-  return gst_caps_new_simple ("video/x-raw-rgb",
-      "bpp", G_TYPE_INT, 24,
-      "depth", G_TYPE_INT, 24,
-      "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-      "red_mask", G_TYPE_INT, GST_VIDEO_BYTE3_MASK_24_INT,
-      "green_mask", G_TYPE_INT, GST_VIDEO_BYTE2_MASK_24_INT,
-      "blue_mask", G_TYPE_INT, GST_VIDEO_BYTE1_MASK_24_INT,
+  caps = gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, "BGR",
       "width", G_TYPE_INT, rect_dst.right - rect_dst.left,
       "height", G_TYPE_INT, rect_dst.bottom - rect_dst.top,
-      "framerate", GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
+      "framerate", GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
+  
+  if (filter) {
+    GstCaps * tmp = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = tmp;
+  }
+
+  return caps;
 }
 
 static gboolean
@@ -437,7 +424,6 @@ gst_gdiscreencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
 {
   GstGDIScreenCapSrc *src = GST_GDISCREENCAPSRC (push_src);
   GstBuffer *new_buf;
-  GstFlowReturn res;
   gint new_buf_size;
   GstClock *clock;
   GstClockTime time = GST_CLOCK_TIME_NONE;
@@ -450,7 +436,7 @@ gst_gdiscreencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
     return GST_FLOW_NOT_NEGOTIATED;
   } else if (G_UNLIKELY (src->rate_numerator == 0 && src->frames == 1)) {
     GST_DEBUG_OBJECT (src, "eos: 0 framerate, frame %d", (gint) src->frames);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 
   new_buf_size = GST_ROUND_UP_4 (src->info.bmiHeader.biWidth * 3) *
@@ -461,16 +447,7 @@ gst_gdiscreencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
       new_buf_size, (gint) src->info.bmiHeader.biWidth,
       (gint) (-src->info.bmiHeader.biHeight), (gint) src->frames);
 
-  res =
-      gst_pad_alloc_buffer_and_set_caps (GST_BASE_SRC_PAD (src),
-      GST_BUFFER_OFFSET_NONE, new_buf_size,
-      GST_PAD_CAPS (GST_BASE_SRC_PAD (push_src)), &new_buf);
-  if (res != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (src, "could not allocate buffer, reason %s",
-        gst_flow_get_name (res));
-    return res;
-  }
-
+  new_buf = gst_buffer_new_and_alloc (new_buf_size);
   clock = gst_element_get_clock (GST_ELEMENT (src));
   if (clock) {
     /* Calculate sync time. */
@@ -501,12 +478,11 @@ gst_gdiscreencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
     /* NONE means forever */
     GST_BUFFER_DURATION (new_buf) = GST_CLOCK_TIME_NONE;
   }
+  gst_object_unref (clock);
 
   GST_BUFFER_OFFSET (new_buf) = src->frames;
   src->frames++;
   GST_BUFFER_OFFSET_END (new_buf) = src->frames;
-
-  gst_object_unref (clock);
 
   *buf = new_buf;
   return GST_FLOW_OK;
@@ -518,6 +494,7 @@ gst_gdiscreencapsrc_screen_capture (GstGDIScreenCapSrc * src, GstBuffer * buf)
   HWND capture;
   HDC winDC;
   gint height, width;
+  GstMapInfo map;
 
   if (G_UNLIKELY (!src->hBitmap || !src->dibMem))
     return FALSE;
@@ -556,7 +533,9 @@ gst_gdiscreencapsrc_screen_capture (GstGDIScreenCapSrc * src, GstBuffer * buf)
   }
 
   /* Copy DC bits to GST buffer */
-  memcpy (GST_BUFFER_DATA (buf), src->dibMem, GST_BUFFER_SIZE (buf));
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  memcpy (map.data, src->dibMem, map.size);
+  gst_buffer_unmap (buf, &map);
 
   return TRUE;
 }
