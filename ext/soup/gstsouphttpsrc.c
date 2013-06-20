@@ -141,7 +141,7 @@ static gboolean gst_soup_http_src_build_message (GstSoupHTTPSrc * src,
 static void gst_soup_http_src_cancel_message (GstSoupHTTPSrc * src);
 static void gst_soup_http_src_queue_message (GstSoupHTTPSrc * src);
 static gboolean gst_soup_http_src_add_range_header (GstSoupHTTPSrc * src,
-    guint64 offset);
+    guint64 offset, guint64 stop_offset);
 static void gst_soup_http_src_session_unpause_message (GstSoupHTTPSrc * src);
 static void gst_soup_http_src_session_pause_message (GstSoupHTTPSrc * src);
 static gboolean gst_soup_http_src_session_open (GstSoupHTTPSrc * src);
@@ -279,6 +279,7 @@ gst_soup_http_src_reset (GstSoupHTTPSrc * src)
   src->seekable = FALSE;
   src->read_position = 0;
   src->request_position = 0;
+  src->stop_position = -1;
   src->content_size = 0;
 
   gst_caps_replace (&src->src_caps, NULL);
@@ -529,15 +530,22 @@ gst_soup_http_src_queue_message (GstSoupHTTPSrc * src)
 }
 
 static gboolean
-gst_soup_http_src_add_range_header (GstSoupHTTPSrc * src, guint64 offset)
+gst_soup_http_src_add_range_header (GstSoupHTTPSrc * src, guint64 offset,
+    guint64 stop_offset)
 {
   gchar buf[64];
 
   gint rc;
 
   soup_message_headers_remove (src->msg->request_headers, "Range");
-  if (offset) {
-    rc = g_snprintf (buf, sizeof (buf), "bytes=%" G_GUINT64_FORMAT "-", offset);
+  if (offset || stop_offset != -1) {
+    if (stop_offset != -1) {
+      rc = g_snprintf (buf, sizeof (buf), "bytes=%" G_GUINT64_FORMAT "-%"
+          G_GUINT64_FORMAT, offset, stop_offset);
+    } else {
+      rc = g_snprintf (buf, sizeof (buf), "bytes=%" G_GUINT64_FORMAT "-",
+          offset);
+    }
     if (rc > sizeof (buf) || rc < 0)
       return FALSE;
     soup_message_headers_append (src->msg->request_headers, "Range", buf);
@@ -1190,7 +1198,8 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src, const gchar * method)
       (src->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT));
   soup_message_set_chunk_allocator (src->msg,
       gst_soup_http_src_chunk_allocator, src, NULL);
-  gst_soup_http_src_add_range_header (src, src->request_position);
+  gst_soup_http_src_add_range_header (src, src->request_position,
+      src->stop_position);
 
   gst_soup_http_src_add_extra_headers (src);
 
@@ -1208,7 +1217,8 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method,
   GST_LOG_OBJECT (src, "Running request for method: %s", method);
   if (src->msg && (src->request_position != src->read_position)) {
     if (src->session_io_status == GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE) {
-      gst_soup_http_src_add_range_header (src, src->request_position);
+      gst_soup_http_src_add_range_header (src, src->request_position,
+          src->stop_position);
     } else {
       GST_DEBUG_OBJECT (src, "Seek from position %" G_GUINT64_FORMAT
           " to %" G_GUINT64_FORMAT ": requeueing connection request",
@@ -1399,11 +1409,13 @@ gst_soup_http_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
 {
   GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (bsrc);
 
-  GST_DEBUG_OBJECT (src, "do_seek(%" G_GUINT64_FORMAT ")", segment->start);
-
+  GST_DEBUG_OBJECT (src, "do_seek(%" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT
+      ")", segment->start, segment->stop);
   if (src->read_position == segment->start &&
-      src->request_position == src->read_position) {
-    GST_DEBUG_OBJECT (src, "Seek to current read position and no seek pending");
+      src->request_position == src->read_position &&
+      src->stop_position == segment->stop) {
+    GST_DEBUG_OBJECT (src,
+        "Seek to current read/end position and no seek pending");
     return TRUE;
   }
 
@@ -1424,6 +1436,7 @@ gst_soup_http_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
 
   /* Wait for create() to handle the jump in offset. */
   src->request_position = segment->start;
+  src->stop_position = segment->stop;
   return TRUE;
 }
 
