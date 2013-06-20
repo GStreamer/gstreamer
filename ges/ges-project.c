@@ -516,8 +516,8 @@ ges_project_set_loaded (GESProject * project, GESFormatter * formatter)
   g_signal_emit (project, _signals[LOADED_SIGNAL], 0, formatter->timeline);
 
   /* We are now done with that formatter */
-  ges_project_remove_formatter (project, formatter);
   ges_timeline_enable_update (formatter->timeline, TRUE);
+  ges_project_remove_formatter (project, formatter);
   return TRUE;
 }
 
