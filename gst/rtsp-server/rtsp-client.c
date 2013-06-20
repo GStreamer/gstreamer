@@ -248,6 +248,27 @@ client_unlink_session (GstRTSPClient * client, GstRTSPSession * session)
 }
 
 static void
+client_watch_session (GstRTSPClient * client, GstRTSPSession * session)
+{
+  GstRTSPClientPrivate *priv = client->priv;
+  GList *walk;
+
+  for (walk = priv->sessions; walk; walk = g_list_next (walk)) {
+    GstRTSPSession *msession = (GstRTSPSession *) walk->data;
+
+    /* we already know about this session */
+    if (msession == session)
+      return;
+  }
+
+  GST_INFO ("watching session %p", session);
+
+  g_object_weak_ref (G_OBJECT (session), (GWeakNotify) client_session_finalized,
+      client);
+  priv->sessions = g_list_prepend (priv->sessions, session);
+}
+
+static void
 client_cleanup_sessions (GstRTSPClient * client)
 {
   GstRTSPClientPrivate *priv = client->priv;
@@ -1307,6 +1328,9 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
     if (!(session = gst_rtsp_session_pool_create (priv->session_pool)))
       goto service_unavailable;
 
+    /* make sure this client is closed when the session is closed */
+    client_watch_session (client, session);
+
     /* signal new session */
     g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_NEW_SESSION], 0,
         session);
@@ -1677,27 +1701,6 @@ client_session_finalized (GstRTSPClient * client, GstRTSPSession * session)
         client);
     close_connection (client);
   }
-}
-
-static void
-client_watch_session (GstRTSPClient * client, GstRTSPSession * session)
-{
-  GstRTSPClientPrivate *priv = client->priv;
-  GList *walk;
-
-  for (walk = priv->sessions; walk; walk = g_list_next (walk)) {
-    GstRTSPSession *msession = (GstRTSPSession *) walk->data;
-
-    /* we already know about this session */
-    if (msession == session)
-      return;
-  }
-
-  GST_INFO ("watching session %p", session);
-
-  g_object_weak_ref (G_OBJECT (session), (GWeakNotify) client_session_finalized,
-      client);
-  priv->sessions = g_list_prepend (priv->sessions, session);
 }
 
 static void
