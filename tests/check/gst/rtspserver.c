@@ -1011,6 +1011,7 @@ GST_START_TEST (test_play_multithreaded_timeout_client)
   GstRTSPSessionPool *pool;
   GstRTSPMessage *request;
   GstRTSPMessage *response;
+  GstRTSPStatusCode code;
 
   gst_rtsp_server_set_max_threads (server, 2);
   pool = gst_rtsp_server_get_session_pool (server);
@@ -1058,9 +1059,18 @@ GST_START_TEST (test_play_multithreaded_timeout_client)
 
   fail_unless (gst_rtsp_message_new (&response) == GST_RTSP_OK);
   fail_unless (gst_rtsp_connection_receive (conn, response, NULL) ==
+      GST_RTSP_OK);
+  gst_rtsp_message_parse_response (response, &code, NULL, NULL);
+  fail_unless (code == GST_RTSP_STS_SESSION_NOT_FOUND);
+  gst_rtsp_message_free (response);
+
+#if 0
+  fail_unless (gst_rtsp_message_new (&response) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_connection_receive (conn, response, NULL) ==
       GST_RTSP_ESYS);
   fail_unless (errno == ECONNRESET);
   gst_rtsp_message_free (response);
+#endif
 
   /* clean up and iterate so the clean-up can finish */
   g_object_unref (pool);
