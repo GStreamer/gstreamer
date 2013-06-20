@@ -783,6 +783,32 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstObject * parent,
       }
       break;
     }
+    case GST_QUERY_SEGMENT:
+    {
+      GstFormat format;
+      gint64 start, stop;
+
+      format = qtdemux->segment.format;
+
+      start =
+          gst_segment_to_stream_time (&qtdemux->segment, format,
+          qtdemux->segment.start);
+      if ((stop = qtdemux->segment.stop) == -1)
+        stop = qtdemux->segment.duration;
+      else
+        stop = gst_segment_to_stream_time (&qtdemux->segment, format, stop);
+
+      if (qtdemux->segment.rate < 0.0) {
+        gint64 tmp;
+        tmp = stop;
+        stop = start;
+        start = tmp;
+      }
+
+      gst_query_set_segment (query, qtdemux->segment.rate, format, start, stop);
+      res = TRUE;
+      break;
+    }
     default:
       res = gst_pad_query_default (pad, parent, query);
       break;
