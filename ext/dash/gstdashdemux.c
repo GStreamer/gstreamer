@@ -1691,9 +1691,10 @@ gst_dash_demux_get_next_header (GstDashDemux * demux, guint stream_idx)
   gchar *initializationURL;
   gchar *next_header_uri;
   GstFragment *fragment;
+  gint64 range_start, range_end;
 
   if (!gst_mpd_client_get_next_header (demux->client, &initializationURL,
-          stream_idx))
+          stream_idx, &range_start, &range_end))
     return NULL;
 
   if (strncmp (initializationURL, "http://", 7) != 0) {
@@ -1705,9 +1706,11 @@ gst_dash_demux_get_next_header (GstDashDemux * demux, guint stream_idx)
     next_header_uri = initializationURL;
   }
 
-  GST_INFO_OBJECT (demux, "Fetching header %s", next_header_uri);
+  GST_INFO_OBJECT (demux, "Fetching header %s %" G_GINT64_FORMAT "-%"
+      G_GINT64_FORMAT, next_header_uri, range_start, range_end);
 
-  fragment = gst_uri_downloader_fetch_uri (demux->downloader, next_header_uri);
+  fragment = gst_uri_downloader_fetch_uri_with_range (demux->downloader,
+      next_header_uri, range_start, range_end);
   g_free (next_header_uri);
 
   return fragment;
@@ -1883,22 +1886,25 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
   if (selected_stream) {
     guint stream_idx = selected_stream->index;
     GstBuffer *buffer;
+    gint64 range_start, range_end;
 
     if (gst_mpd_client_get_next_fragment (demux->client,
-            stream_idx, &discont, &next_fragment_uri, &duration, &timestamp)) {
+            stream_idx, &discont, &next_fragment_uri, &range_start, &range_end,
+            &duration, &timestamp)) {
 
       g_get_current_time (&start);
       GST_INFO_OBJECT (demux, "Next fragment for stream #%i", stream_idx);
       GST_INFO_OBJECT (demux,
           "Fetching next fragment %s ts:%" GST_TIME_FORMAT " dur:%"
-          GST_TIME_FORMAT, next_fragment_uri, GST_TIME_ARGS (timestamp),
-          GST_TIME_ARGS (duration));
+          GST_TIME_FORMAT " Range:%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT,
+          next_fragment_uri, GST_TIME_ARGS (timestamp),
+          GST_TIME_ARGS (duration), range_start, range_end);
 
       /* got a fragment to fetch, no end of period */
       end_of_period = FALSE;
 
-      download = gst_uri_downloader_fetch_uri (demux->downloader,
-          next_fragment_uri);
+      download = gst_uri_downloader_fetch_uri_with_range (demux->downloader,
+          next_fragment_uri, range_start, range_end);
       g_free (next_fragment_uri);
 
       if (download == NULL)
