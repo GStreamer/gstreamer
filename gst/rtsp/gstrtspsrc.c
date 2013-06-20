@@ -4154,7 +4154,7 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
     src->pending_cmd = CMD_WAIT;
     GST_OBJECT_UNLOCK (src);
     /* cancel previous request */
-    GST_DEBUG_OBJECT (src, "cancel previous request");
+    GST_DEBUG_OBJECT (src, "cancel previous request %d", old);
     gst_rtspsrc_loop_cancel_cmd (src, old);
     GST_OBJECT_LOCK (src);
   }
@@ -6721,6 +6721,9 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* unblock the tcp tasks and make the loop waiting */
       gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_WAIT, CMD_LOOP);
+      /* make sure it is waiting before we send PAUSE or PLAY below */
+      GST_RTSP_STREAM_LOCK (rtspsrc);
+      GST_RTSP_STREAM_UNLOCK (rtspsrc);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
