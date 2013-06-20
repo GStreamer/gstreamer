@@ -2779,6 +2779,7 @@ struct _GstRTSPWatch
 
   GSource *readsrc;
   GSource *writesrc;
+  gboolean write_added;
 
   gboolean keep_running;
 
@@ -2962,8 +2963,13 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
 
       /* get a new message from the queue */
       rec = g_queue_pop_tail (watch->messages);
-      if (rec == NULL)
+      if (rec == NULL) {
+        if (watch->write_added) {
+          g_source_remove_child_source ((GSource *) watch, watch->writesrc);
+          watch->write_added = FALSE;
+        }
         break;
+      }
 
       watch->messages_bytes -= rec->size;
 
@@ -3036,6 +3042,11 @@ gst_rtsp_source_finalize (GSource * source)
   watch->messages = NULL;
   watch->messages_bytes = 0;
   g_free (watch->write_data);
+
+  if (watch->readsrc)
+    g_source_unref (watch->readsrc);
+  if (watch->writesrc)
+    g_source_unref (watch->writesrc);
 
   g_mutex_clear (&watch->mutex);
 
@@ -3110,10 +3121,17 @@ gst_rtsp_watch_new (GstRTSPConnection * conn,
 void
 gst_rtsp_watch_reset (GstRTSPWatch * watch)
 {
-  if (watch->readsrc)
+  if (watch->readsrc) {
     g_source_remove_child_source ((GSource *) watch, watch->readsrc);
-  if (watch->writesrc)
-    g_source_remove_child_source ((GSource *) watch, watch->writesrc);
+    g_source_unref (watch->readsrc);
+  }
+  if (watch->writesrc) {
+    if (watch->write_added) {
+      g_source_remove_child_source ((GSource *) watch, watch->writesrc);
+      watch->write_added = FALSE;
+    }
+    g_source_unref (watch->writesrc);
+  }
 
   if (watch->conn->input_stream) {
     watch->readsrc =
@@ -3122,7 +3140,6 @@ gst_rtsp_watch_reset (GstRTSPWatch * watch)
     g_source_set_callback (watch->readsrc,
         (GSourceFunc) gst_rtsp_source_dispatch_read, watch, NULL);
     g_source_add_child_source ((GSource *) watch, watch->readsrc);
-    g_source_unref (watch->readsrc);
   } else {
     watch->readsrc = NULL;
   }
@@ -3133,8 +3150,7 @@ gst_rtsp_watch_reset (GstRTSPWatch * watch)
         (watch->conn->output_stream), NULL);
     g_source_set_callback (watch->writesrc,
         (GSourceFunc) gst_rtsp_source_dispatch_write, watch, NULL);
-    g_source_add_child_source ((GSource *) watch, watch->writesrc);
-    g_source_unref (watch->writesrc);
+    /* we add the write source when we actually have something to write */
   } else {
     watch->writesrc = NULL;
   }
@@ -3306,6 +3322,10 @@ gst_rtsp_watch_write_data (GstRTSPWatch * watch, const guint8 * data,
   /* make sure the main context will now also check for writability on the
    * socket */
   context = ((GSource *) watch)->context;
+  if (!watch->write_added) {
+    g_source_add_child_source ((GSource *) watch, watch->writesrc);
+    watch->write_added = TRUE;
+  }
 
   if (id != NULL)
     *id = rec->id;
