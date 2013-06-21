@@ -1033,7 +1033,10 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
           (GST_AUDIO_INFO_IS_VALID (&ctx->info)
               && gst_pad_check_reconfigure (dec->srcpad)))) {
     if (!gst_audio_decoder_negotiate (dec)) {
-      ret = GST_FLOW_NOT_NEGOTIATED;
+      if (GST_PAD_IS_FLUSHING (dec->srcpad))
+        ret = GST_FLOW_FLUSHING;
+      else
+        ret = GST_FLOW_NOT_NEGOTIATED;
       goto exit;
     }
   }
