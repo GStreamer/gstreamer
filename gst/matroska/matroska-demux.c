@@ -3423,7 +3423,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       if ((is_simpleblock && !(flags & 0x80)) || referenceblock) {
         delta_unit = TRUE;
         invisible_frame = ((flags & 0x08)) &&
-            (strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP8) == 0);
+            (!strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP8) ||
+            !strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP9));
       }
     }
 
@@ -5065,6 +5066,9 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP8)) {
     caps = gst_caps_new_empty_simple ("video/x-vp8");
     *codec_name = g_strdup_printf ("On2 VP8");
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP9)) {
+    caps = gst_caps_new_empty_simple ("video/x-vp9");
+    *codec_name = g_strdup_printf ("On2 VP9");
   } else {
     GST_WARNING ("Unknown codec '%s', cannot build Caps", codec_id);
     return NULL;

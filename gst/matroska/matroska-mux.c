@@ -961,7 +961,8 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
 
   /* set vp8 defaults or let user override it */
   if (GST_MATROSKAMUX_PAD_CAST (pad)->frame_duration_user == FALSE
-      && (!strcmp (mimetype, "video/x-vp8")))
+      && (!strcmp (mimetype, "video/x-vp8")
+          || !strcmp (mimetype, "video/x-vp9")))
     GST_MATROSKAMUX_PAD_CAST (pad)->frame_duration =
         DEFAULT_PAD_FRAME_DURATION_VP8;
 
@@ -1136,6 +1137,8 @@ skip_details:
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_DIRAC);
   } else if (!strcmp (mimetype, "video/x-vp8")) {
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_VP8);
+  } else if (!strcmp (mimetype, "video/x-vp9")) {
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_VP9);
   } else if (!strcmp (mimetype, "video/mpeg")) {
     gint mpegversion;
 
@@ -3262,8 +3265,9 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
       is_video_keyframe = TRUE;
     } else if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DECODE_ONLY) &&
-        !strcmp (collect_pad->track->codec_id,
-            GST_MATROSKA_CODEC_ID_VIDEO_VP8)) {
+        (!strcmp (collect_pad->track->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP8)
+            || !strcmp (collect_pad->track->codec_id,
+                GST_MATROSKA_CODEC_ID_VIDEO_VP9))) {
       GST_LOG_OBJECT (mux,
           "have VP8 video invisible frame, " "ts=%" GST_TIME_FORMAT,
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));

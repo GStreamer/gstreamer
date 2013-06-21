@@ -62,10 +62,11 @@ static GstStaticPadTemplate webm_src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate webm_videosink_templ =
-GST_STATIC_PAD_TEMPLATE ("video_%u",
+    GST_STATIC_PAD_TEMPLATE ("video_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS ("video/x-vp8, " COMMON_VIDEO_CAPS)
+    GST_STATIC_CAPS ("video/x-vp8, " COMMON_VIDEO_CAPS ";"
+        "video/x-vp9, " COMMON_VIDEO_CAPS)
     );
 
 static GstStaticPadTemplate webm_audiosink_templ =
