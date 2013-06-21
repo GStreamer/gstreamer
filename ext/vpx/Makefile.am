@@ -5,6 +5,8 @@ libgstvpx_la_SOURCES = \
 	gstvp8dec.c \
 	gstvp8enc.c \
 	gstvp8utils.c \
+	gstvp9dec.c \
+	gstvp9enc.c \
 	plugin.c
 
 libgstvpx_la_CFLAGS = \
@@ -22,6 +24,8 @@ libgstvpx_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 noinst_HEADERS = \
 	gstvp8dec.h \
 	gstvp8enc.h \
+	gstvp9dec.h \
+	gstvp9enc.h \
 	gstvp8utils.h
 
 presetdir = $(datadir)/gstreamer-$(GST_API_VERSION)/presets

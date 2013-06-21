@@ -27,6 +27,8 @@
 
 #include "gstvp8dec.h"
 #include "gstvp8enc.h"
+#include "gstvp9dec.h"
+#include "gstvp9enc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -39,6 +41,16 @@ plugin_init (GstPlugin * plugin)
 #ifdef HAVE_VP8_ENCODER
   gst_element_register (plugin, "vp8enc", GST_RANK_PRIMARY,
       gst_vp8_enc_get_type ());
+#endif
+
+#ifdef HAVE_VP9_DECODER
+  gst_element_register (plugin, "vp9dec", GST_RANK_PRIMARY,
+      gst_vp9_dec_get_type ());
+#endif
+
+#ifdef HAVE_VP9_ENCODER
+  gst_element_register (plugin, "vp9enc", GST_RANK_PRIMARY,
+      gst_vp9_enc_get_type ());
 #endif
 
   return TRUE;
