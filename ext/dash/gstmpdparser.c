@@ -33,37 +33,41 @@
 #define GST_CAT_DEFAULT gst_dash_demux_debug
 
 /* Property parsing */
-static gchar *gst_mpdparser_get_xml_prop_string (xmlNode * a_node,
-    const gchar * property);
-static gchar **gst_mpdparser_get_xml_prop_string_vector_type (xmlNode * a_node,
-    const gchar * property);
-static guint gst_mpdparser_get_xml_prop_unsigned_integer (xmlNode * a_node,
-    const gchar * property, guint default_val);
-static guint64 gst_mpdparser_get_xml_prop_unsigned_integer_64 (xmlNode * a_node,
-    const gchar * property, guint64 default_val);
-static guint *gst_mpdparser_get_xml_prop_uint_vector_type (xmlNode * a_node,
-    const gchar * property, guint * size);
-static gdouble gst_mpdparser_get_xml_prop_double (xmlNode * a_node,
-    const gchar * property);
+static gboolean gst_mpdparser_get_xml_prop_string (xmlNode * a_node,
+    const gchar * property_name, gchar ** property_value);
+static gboolean gst_mpdparser_get_xml_prop_string_vector_type (xmlNode * a_node,
+    const gchar * property_name, gchar *** property_value);
+static gboolean gst_mpdparser_get_xml_prop_unsigned_integer (xmlNode * a_node,
+    const gchar * property_name, guint default_val, guint * property_value);
+static gboolean gst_mpdparser_get_xml_prop_unsigned_integer_64 (xmlNode *
+    a_node, const gchar * property_name, guint64 default_val,
+    guint64 * property_value);
+static gboolean gst_mpdparser_get_xml_prop_uint_vector_type (xmlNode * a_node,
+    const gchar * property_name, guint ** property_value, guint * value_size);
+static gboolean gst_mpdparser_get_xml_prop_double (xmlNode * a_node,
+    const gchar * property_name, gdouble * property_value);
 static gboolean gst_mpdparser_get_xml_prop_boolean (xmlNode * a_node,
-    const gchar * property);
-static GstMPDFileType gst_mpdparser_get_xml_prop_type (xmlNode * a_node,
-    const gchar * property);
-static GstSAPType gst_mpdparser_get_xml_prop_SAP_type (xmlNode * a_node,
-    const gchar * property);
-static GstRange *gst_mpdparser_get_xml_prop_range (xmlNode * a_node,
-    const gchar * property);
-static GstRatio *gst_mpdparser_get_xml_prop_ratio (xmlNode * a_node,
-    const gchar * property);
-static GstFrameRate *gst_mpdparser_get_xml_prop_framerate (xmlNode * a_node,
-    const gchar * property);
-static GstConditionalUintType *gst_mpdparser_get_xml_prop_cond_uint (xmlNode *
-    a_node, const gchar * property);
-static GstDateTime *gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node,
-    const gchar * property);
-static gint64 gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
-    const gchar * property);
-static gchar *gst_mpdparser_get_xml_node_content (xmlNode * a_node);
+    const gchar * property_name, gboolean default_val,
+    gboolean * property_value);
+static gboolean gst_mpdparser_get_xml_prop_type (xmlNode * a_node,
+    const gchar * property_name, GstMPDFileType * property_value);
+static gboolean gst_mpdparser_get_xml_prop_SAP_type (xmlNode * a_node,
+    const gchar * property_name, GstSAPType * property_value);
+static gboolean gst_mpdparser_get_xml_prop_range (xmlNode * a_node,
+    const gchar * property_name, GstRange ** property_value);
+static gboolean gst_mpdparser_get_xml_prop_ratio (xmlNode * a_node,
+    const gchar * property_name, GstRatio ** property_value);
+static gboolean gst_mpdparser_get_xml_prop_framerate (xmlNode * a_node,
+    const gchar * property_name, GstFrameRate ** property_value);
+static gboolean gst_mpdparser_get_xml_prop_cond_uint (xmlNode * a_node,
+    const gchar * property_name, GstConditionalUintType ** property_value);
+static gboolean gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node,
+    const gchar * property_name, GstDateTime ** property_value);
+static gboolean gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
+    const gchar * property_name, gint64 default_value,
+    gint64 * property_value);
+static gboolean gst_mpdparser_get_xml_node_content (xmlNode * a_node,
+    gchar ** content);
 static gchar *gst_mpdparser_get_xml_node_namespace (xmlNode * a_node,
     const gchar * prefix);
 
@@ -200,229 +204,259 @@ static void gst_mpdparser_free_media_segment (GstMediaSegment * media_segment);
 static void gst_mpdparser_free_active_stream (GstActiveStream * active_stream);
 
 /* functions to parse node namespaces, content and properties */
-static gchar *
-gst_mpdparser_get_xml_prop_string (xmlNode * a_node, const gchar * property)
+static gboolean
+gst_mpdparser_get_xml_prop_string (xmlNode * a_node,
+    const gchar * property_name, gchar ** property_value)
 {
   xmlChar *prop_string;
+  gboolean exists = FALSE;
 
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
-    GST_LOG (" - %s: %s", property, prop_string);
+    *property_value = (gchar *) prop_string;
+    exists = TRUE;
+    GST_LOG (" - %s: %s", property_name, prop_string);
   }
 
-  return (gchar *) prop_string;
+  return exists;
 }
 
-static gchar **
+static gboolean
 gst_mpdparser_get_xml_prop_string_vector_type (xmlNode * a_node,
-    const gchar * property)
+    const gchar * property_name, gchar *** property_value)
 {
   xmlChar *prop_string;
   gchar **prop_string_vector = NULL;
   guint i = 0;
+  gboolean exists = FALSE;
 
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
     prop_string_vector = g_strsplit ((gchar *) prop_string, " ", -1);
-    if (!prop_string_vector) {
+    if (prop_string_vector) {
+      exists = TRUE;
+      *property_value = prop_string_vector;
+      GST_LOG (" - %s:", property_name);
+      while (prop_string_vector[i]) {
+        GST_LOG ("    %s", prop_string_vector[i]);
+        i++;
+      }
+    } else {
       GST_WARNING ("Scan of string vector property failed!");
-      return NULL;
-    }
-    GST_LOG (" - %s:", property);
-    while (prop_string_vector[i]) {
-      GST_LOG ("    %s", prop_string_vector[i]);
-      i++;
     }
     xmlFree (prop_string);
   }
 
-  return prop_string_vector;
+  return exists;
 }
 
-static guint
+static gboolean
 gst_mpdparser_get_xml_prop_unsigned_integer (xmlNode * a_node,
-    const gchar * property, guint default_val)
+    const gchar * property_name, guint default_val, guint * property_value)
 {
   xmlChar *prop_string;
-  guint prop_unsigned_integer = default_val;
+  gboolean exists = FALSE;
 
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  *property_value = default_val;
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
-    if (sscanf ((gchar *) prop_string, "%u", &prop_unsigned_integer)) {
-      GST_LOG (" - %s: %u", property, prop_unsigned_integer);
+    if (sscanf ((gchar *) prop_string, "%u", property_value)) {
+      exists = TRUE;
+      GST_LOG (" - %s: %u", property_name, *property_value);
     } else {
       GST_WARNING
           ("failed to parse unsigned integer property %s from xml string %s",
-          property, prop_string);
+          property_name, prop_string);
     }
     xmlFree (prop_string);
   }
 
-  return prop_unsigned_integer;
+  return exists;
 }
 
-static guint64
+static gboolean
 gst_mpdparser_get_xml_prop_unsigned_integer_64 (xmlNode * a_node,
-    const gchar * property, guint64 default_val)
+    const gchar * property_name, guint64 default_val, guint64 * property_value)
 {
   xmlChar *prop_string;
-  guint64 prop_unsigned_integer = default_val;
+  gboolean exists = FALSE;
 
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  *property_value = default_val;
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
-    if (sscanf ((gchar *) prop_string, "%" G_GUINT64_FORMAT,
-            &prop_unsigned_integer)) {
-      GST_LOG (" - %s: %" G_GUINT64_FORMAT, property, prop_unsigned_integer);
+    if (sscanf ((gchar *) prop_string, "%" G_GUINT64_FORMAT, property_value)) {
+      exists = TRUE;
+      GST_LOG (" - %s: %" G_GUINT64_FORMAT, property_name, *property_value);
     } else {
       GST_WARNING
           ("failed to parse unsigned integer property %s from xml string %s",
-          property, prop_string);
+          property_name, prop_string);
     }
     xmlFree (prop_string);
   }
 
-  return prop_unsigned_integer;
+  return exists;
 }
 
-static guint *
+static gboolean
 gst_mpdparser_get_xml_prop_uint_vector_type (xmlNode * a_node,
-    const gchar * property, guint * size)
+    const gchar * property_name, guint ** property_value, guint * value_size)
 {
   xmlChar *prop_string;
   gchar **str_vector;
   guint *prop_uint_vector = NULL, i;
+  gboolean exists = FALSE;
 
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
     str_vector = g_strsplit ((gchar *) prop_string, " ", -1);
-    if (!str_vector) {
-      GST_WARNING ("Scan of uint vector property failed!");
-      return NULL;
-    }
-    *size = g_strv_length (str_vector);
-    prop_uint_vector = g_malloc (*size * sizeof (guint));
-    if (!prop_uint_vector) {
-      GST_WARNING ("Array allocation failed!");
-    } else {
-      GST_LOG (" - %s:", property);
-      for (i = 0; i < *size; i++) {
-        if (sscanf ((gchar *) str_vector[i], "%u", &prop_uint_vector[i])) {
-          GST_LOG ("    %u", prop_uint_vector[i]);
-        } else {
-          GST_WARNING
-              ("failed to parse uint vector type property %s from xml string %s",
-              property, str_vector[i]);
+    if (str_vector) {
+      *value_size = g_strv_length (str_vector);
+      prop_uint_vector = g_malloc (*value_size * sizeof (guint));
+      if (prop_uint_vector) {
+        exists = TRUE;
+        GST_LOG (" - %s:", property_name);
+        for (i = 0; i < *value_size; i++) {
+          if (sscanf ((gchar *) str_vector[i], "%u", &prop_uint_vector[i])) {
+            GST_LOG ("    %u", prop_uint_vector[i]);
+          } else {
+            GST_WARNING
+                ("failed to parse uint vector type property %s from xml string %s",
+                property_name, str_vector[i]);
+          }
         }
+        *property_value = prop_uint_vector;
+      } else {
+        GST_WARNING ("Array allocation failed!");
       }
+    } else {
+      GST_WARNING ("Scan of uint vector property failed!");
     }
     xmlFree (prop_string);
     g_strfreev (str_vector);
   }
 
-  return prop_uint_vector;
-}
-
-static gdouble
-gst_mpdparser_get_xml_prop_double (xmlNode * a_node, const gchar * property)
-{
-  xmlChar *prop_string;
-  gdouble prop_double = 0;
-
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
-  if (prop_string) {
-    if (sscanf ((gchar *) prop_string, "%lf", &prop_double)) {
-      GST_LOG (" - %s: %lf", property, prop_double);
-    } else {
-      GST_WARNING ("failed to parse double property %s from xml string %s",
-          property, prop_string);
-    }
-    xmlFree (prop_string);
-  }
-
-  return prop_double;
+  return exists;
 }
 
 static gboolean
-gst_mpdparser_get_xml_prop_boolean (xmlNode * a_node, const gchar * property)
+gst_mpdparser_get_xml_prop_double (xmlNode * a_node,
+    const gchar * property_name, gdouble * property_value)
 {
   xmlChar *prop_string;
-  gboolean prop_bool = FALSE;
+  gboolean exists = FALSE;
 
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
-    if (xmlStrcmp (prop_string, (xmlChar *) "false") == 0) {
-      GST_LOG (" - %s: false", property);
-    } else if (xmlStrcmp (prop_string, (xmlChar *) "true") == 0) {
-      GST_LOG (" - %s: true", property);
-      prop_bool = TRUE;
+    if (sscanf ((gchar *) prop_string, "%lf", property_value)) {
+      exists = TRUE;
+      GST_LOG (" - %s: %lf", property_name, *property_value);
     } else {
-      GST_WARNING ("failed to parse boolean property %s from xml string %s",
-          property, prop_string);
+      GST_WARNING ("failed to parse double property %s from xml string %s",
+          property_name, prop_string);
     }
     xmlFree (prop_string);
   }
 
-  return prop_bool;
+  return exists;
 }
 
-static GstMPDFileType
-gst_mpdparser_get_xml_prop_type (xmlNode * a_node, const gchar * property)
+static gboolean
+gst_mpdparser_get_xml_prop_boolean (xmlNode * a_node,
+    const gchar * property_name, gboolean default_val,
+    gboolean * property_value)
 {
   xmlChar *prop_string;
-  GstMPDFileType prop_type = GST_MPD_FILE_TYPE_STATIC;  /* default */
+  gboolean exists = FALSE;
 
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  *property_value = default_val;
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
+  if (prop_string) {
+    if (xmlStrcmp (prop_string, (xmlChar *) "false") == 0) {
+      exists = TRUE;
+      *property_value = FALSE;
+      GST_LOG (" - %s: false", property_name);
+    } else if (xmlStrcmp (prop_string, (xmlChar *) "true") == 0) {
+      exists = TRUE;
+      *property_value = TRUE;
+      GST_LOG (" - %s: true", property_name);
+    } else {
+      GST_WARNING ("failed to parse boolean property %s from xml string %s",
+          property_name, prop_string);
+    }
+    xmlFree (prop_string);
+  }
+
+  return exists;
+}
+
+static gboolean
+gst_mpdparser_get_xml_prop_type (xmlNode * a_node,
+    const gchar * property_name, GstMPDFileType * property_value)
+{
+  xmlChar *prop_string;
+  gboolean exists = FALSE;
+
+  *property_value = GST_MPD_FILE_TYPE_STATIC;   /* default */
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
     if (xmlStrcmp (prop_string, (xmlChar *) "OnDemand") == 0
         || xmlStrcmp (prop_string, (xmlChar *) "static") == 0) {
-      GST_LOG (" - %s: static", property);
-      prop_type = GST_MPD_FILE_TYPE_STATIC;
+      exists = TRUE;
+      *property_value = GST_MPD_FILE_TYPE_STATIC;
+      GST_LOG (" - %s: static", property_name);
     } else if (xmlStrcmp (prop_string, (xmlChar *) "Live") == 0
         || xmlStrcmp (prop_string, (xmlChar *) "dynamic") == 0) {
-      GST_LOG (" - %s: dynamic", property);
-      prop_type = GST_MPD_FILE_TYPE_DYNAMIC;
+      exists = TRUE;
+      *property_value = GST_MPD_FILE_TYPE_DYNAMIC;
+      GST_LOG (" - %s: dynamic", property_name);
     } else {
       GST_WARNING ("failed to parse MPD type property %s from xml string %s",
-          property, prop_string);
+          property_name, prop_string);
     }
     xmlFree (prop_string);
   }
 
-  return prop_type;
+  return exists;
 }
 
-static GstSAPType
-gst_mpdparser_get_xml_prop_SAP_type (xmlNode * a_node, const gchar * property)
+static gboolean
+gst_mpdparser_get_xml_prop_SAP_type (xmlNode * a_node,
+    const gchar * property_name, GstSAPType * property_value)
 {
   xmlChar *prop_string;
   guint prop_SAP_type = 0;
+  gboolean exists = FALSE;
 
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
     if (sscanf ((gchar *) prop_string, "%u", &prop_SAP_type)
         && prop_SAP_type <= 6) {
-      GST_LOG (" - %s: %u", property, prop_SAP_type);
+      exists = TRUE;
+      *property_value = (GstSAPType) prop_SAP_type;
+      GST_LOG (" - %s: %u", property_name, prop_SAP_type);
     } else {
       GST_WARNING
           ("failed to parse unsigned integer property %s from xml string %s",
-          property, prop_string);
+          property_name, prop_string);
     }
     xmlFree (prop_string);
   }
 
-  return (GstSAPType) prop_SAP_type;
+  return exists;
 }
 
-static GstRange *
-gst_mpdparser_get_xml_prop_range (xmlNode * a_node, const gchar * property)
+static gboolean
+gst_mpdparser_get_xml_prop_range (xmlNode * a_node, const gchar * property_name,
+    GstRange ** property_value)
 {
   xmlChar *prop_string;
-  GstRange *prop_range = NULL;
   guint64 first_byte_pos = 0, last_byte_pos = 0;
   guint len, pos;
   gchar *str;
+  gboolean exists = FALSE;
 
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
     len = xmlStrlen (prop_string);
     str = (gchar *) prop_string;
@@ -447,36 +481,39 @@ gst_mpdparser_get_xml_prop_range (xmlNode * a_node, const gchar * property)
       }
     }
     /* malloc return data structure */
-    prop_range = g_slice_new0 (GstRange);
-    if (prop_range == NULL) {
+    *property_value = g_slice_new0 (GstRange);
+    if (*property_value == NULL) {
       GST_WARNING ("Allocation of GstRange failed!");
       goto error;
     }
-    prop_range->first_byte_pos = first_byte_pos;
-    prop_range->last_byte_pos = last_byte_pos;
-    GST_LOG (" - %s: %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT,
-        property, first_byte_pos, last_byte_pos);
+    exists = TRUE;
+    (*property_value)->first_byte_pos = first_byte_pos;
+    (*property_value)->last_byte_pos = last_byte_pos;
     xmlFree (prop_string);
+    GST_LOG (" - %s: %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT,
+        property_name, first_byte_pos, last_byte_pos);
   }
 
-  return prop_range;
+  return exists;
 
 error:
-  GST_WARNING ("failed to parse property %s from xml string %s", property,
+  xmlFree (prop_string);
+  GST_WARNING ("failed to parse property %s from xml string %s", property_name,
       prop_string);
-  return NULL;
+  return FALSE;
 }
 
-static GstRatio *
-gst_mpdparser_get_xml_prop_ratio (xmlNode * a_node, const gchar * property)
+static gboolean
+gst_mpdparser_get_xml_prop_ratio (xmlNode * a_node,
+    const gchar * property_name, GstRatio ** property_value)
 {
   xmlChar *prop_string;
-  GstRatio *prop_ratio = NULL;
   guint num = 0, den = 1;
   guint len, pos;
   gchar *str;
+  gboolean exists = FALSE;
 
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
     len = xmlStrlen (prop_string);
     str = (gchar *) prop_string;
@@ -501,35 +538,38 @@ gst_mpdparser_get_xml_prop_ratio (xmlNode * a_node, const gchar * property)
       }
     }
     /* malloc return data structure */
-    prop_ratio = g_slice_new0 (GstRatio);
-    if (prop_ratio == NULL) {
+    *property_value = g_slice_new0 (GstRatio);
+    if (*property_value == NULL) {
       GST_WARNING ("Allocation of GstRatio failed!");
       goto error;
     }
-    prop_ratio->num = num;
-    prop_ratio->den = den;
-    GST_LOG (" - %s: %u:%u", property, num, den);
+    exists = TRUE;
+    (*property_value)->num = num;
+    (*property_value)->den = den;
     xmlFree (prop_string);
+    GST_LOG (" - %s: %u:%u", property_name, num, den);
   }
 
-  return prop_ratio;
+  return exists;
 
 error:
-  GST_WARNING ("failed to parse property %s from xml string %s", property,
+  xmlFree (prop_string);
+  GST_WARNING ("failed to parse property %s from xml string %s", property_name,
       prop_string);
-  return NULL;
+  return FALSE;
 }
 
-static GstFrameRate *
-gst_mpdparser_get_xml_prop_framerate (xmlNode * a_node, const gchar * property)
+static gboolean
+gst_mpdparser_get_xml_prop_framerate (xmlNode * a_node,
+    const gchar * property_name, GstFrameRate ** property_value)
 {
   xmlChar *prop_string;
-  GstFrameRate *prop_framerate = NULL;
   guint num = 0, den = 1;
   guint len, pos;
   gchar *str;
+  gboolean exists = FALSE;
 
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
     len = xmlStrlen (prop_string);
     str = (gchar *) prop_string;
@@ -550,38 +590,41 @@ gst_mpdparser_get_xml_prop_framerate (xmlNode * a_node, const gchar * property)
       }
     }
     /* alloc return data structure */
-    prop_framerate = g_slice_new0 (GstFrameRate);
-    if (prop_framerate == NULL) {
+    *property_value = g_slice_new0 (GstFrameRate);
+    if (*property_value == NULL) {
       GST_WARNING ("Allocation of GstFrameRate failed!");
       goto error;
     }
-    prop_framerate->num = num;
-    prop_framerate->den = den;
-    if (den == 1)
-      GST_LOG (" - %s: %u", property, num);
-    else
-      GST_LOG (" - %s: %u/%u", property, num, den);
+    exists = TRUE;
+    (*property_value)->num = num;
+    (*property_value)->den = den;
     xmlFree (prop_string);
+    if (den == 1)
+      GST_LOG (" - %s: %u", property_name, num);
+    else
+      GST_LOG (" - %s: %u/%u", property_name, num, den);
   }
 
-  return prop_framerate;
+  return exists;
 
 error:
-  GST_WARNING ("failed to parse property %s from xml string %s", property,
+  xmlFree (prop_string);
+  GST_WARNING ("failed to parse property %s from xml string %s", property_name,
       prop_string);
-  return NULL;
+  return FALSE;
 }
 
-static GstConditionalUintType *
-gst_mpdparser_get_xml_prop_cond_uint (xmlNode * a_node, const gchar * property)
+static gboolean
+gst_mpdparser_get_xml_prop_cond_uint (xmlNode * a_node,
+    const gchar * property_name, GstConditionalUintType ** property_value)
 {
   xmlChar *prop_string;
-  GstConditionalUintType *prop_cond_uint = NULL;
   gchar *str;
   gboolean flag;
   guint val;
+  gboolean exists = FALSE;
 
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
     str = (gchar *) prop_string;
     GST_TRACE ("conditional uint: %s", str);
@@ -599,23 +642,26 @@ gst_mpdparser_get_xml_prop_cond_uint (xmlNode * a_node, const gchar * property)
     }
 
     /* alloc return data structure */
-    prop_cond_uint = g_slice_new0 (GstConditionalUintType);
-    if (prop_cond_uint == NULL) {
+    *property_value = g_slice_new0 (GstConditionalUintType);
+    if (*property_value == NULL) {
       GST_WARNING ("Allocation of GstConditionalUintType failed!");
       goto error;
     }
-    prop_cond_uint->flag = flag;
-    prop_cond_uint->value = val;
-    GST_LOG (" - %s: flag=%s val=%u", property, flag ? "true" : "false", val);
+    exists = TRUE;
+    (*property_value)->flag = flag;
+    (*property_value)->value = val;
     xmlFree (prop_string);
+    GST_LOG (" - %s: flag=%s val=%u", property_name, flag ? "true" : "false",
+        val);
   }
 
-  return prop_cond_uint;
+  return exists;
 
 error:
-  GST_WARNING ("failed to parse property %s from xml string %s", property,
+  xmlFree (prop_string);
+  GST_WARNING ("failed to parse property %s from xml string %s", property_name,
       prop_string);
-  return NULL;
+  return FALSE;
 }
 
 /*
@@ -635,16 +681,17 @@ error:
 
   Note: All components are required!
 */
-
-static GstDateTime *
-gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node, const gchar * property)
+static gboolean
+gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node,
+    const gchar * property_name, GstDateTime ** property_value)
 {
   xmlChar *prop_string;
   gchar *str;
   gint ret, len, pos;
   gint year, month, day, hour, minute, second;
+  gboolean exists = FALSE;
 
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
     len = xmlStrlen (prop_string);
     str = (gchar *) prop_string;
@@ -690,18 +737,22 @@ gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node, const gchar * property)
       goto error;
     GST_TRACE (" - second %d", second);
 
-    GST_LOG (" - %s: %4d/%02d/%02d %02d:%02d:%02d", property,
+    GST_LOG (" - %s: %4d/%02d/%02d %02d:%02d:%02d", property_name,
         year, month, day, hour, minute, second);
 
-    return gst_date_time_new (0, year, month, day, hour, minute, second);
+    exists = TRUE;
+    *property_value =
+        gst_date_time_new (0, year, month, day, hour, minute, second);
+    xmlFree (prop_string);
   }
 
-  return NULL;
+  return exists;
 
 error:
-  GST_WARNING ("failed to parse property %s from xml string %s", property,
+  xmlFree (prop_string);
+  GST_WARNING ("failed to parse property %s from xml string %s", property_name,
       prop_string);
-  return NULL;
+  return FALSE;
 }
 
 /*
@@ -740,19 +791,20 @@ convert_to_millisecs (gint decimals, gint pos)
   return decimals * num / den;
 }
 
-static gint64
-gst_mpdparser_get_xml_prop_duration (xmlNode * a_node, const gchar * property)
+static gboolean
+gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
+    const gchar * property_name, gint64 default_value, gint64 * property_value)
 {
   xmlChar *prop_string;
   gchar *str;
-  gint64 prop_duration = -1;
   gint ret, read, len, pos, posT;
   gint years = 0, months = 0, days = 0, hours = 0, minutes = 0, seconds =
       0, decimals = 0;
   gint sign = 1;
   gboolean have_ms = FALSE;
+  gboolean exists = FALSE;
 
-  prop_string = xmlGetProp (a_node, (const xmlChar *) property);
+  prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
     len = xmlStrlen (prop_string);
     str = (gchar *) prop_string;
@@ -762,7 +814,7 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node, const gchar * property)
     if (pos < len) {            /* found "-" */
       if (pos != 0) {
         GST_WARNING ("sign \"-\" non at the beginning of the string");
-        return -1;
+        goto error;
       }
       GST_TRACE ("found - sign at the beginning");
       sign = -1;
@@ -773,7 +825,7 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node, const gchar * property)
     pos = strcspn (str, "P");
     if (pos != 0) {
       GST_WARNING ("P not found at the beginning of the string!");
-      return -1;
+      goto error;
     }
     str++;
     len--;
@@ -789,7 +841,7 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node, const gchar * property)
         ret = sscanf (str, "%d", &read);
         if (ret != 1) {
           GST_WARNING ("can not read integer value from string %s!", str);
-          return -1;
+          goto error;
         }
         switch (str[pos]) {
           case 'Y':
@@ -803,7 +855,7 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node, const gchar * property)
             break;
           default:
             GST_WARNING ("unexpected char %c!", str[pos]);
-            return -1;
+            goto error;
             break;
         }
         GST_TRACE ("read number %d type %c", read, str[pos]);
@@ -827,7 +879,7 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node, const gchar * property)
         ret = sscanf (str, "%d", &read);
         if (ret != 1) {
           GST_WARNING ("can not read integer value from string %s!", str);
-          return -1;
+          goto error;
         }
         switch (str[pos]) {
           case 'H':
@@ -855,7 +907,7 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node, const gchar * property)
             break;
           default:
             GST_WARNING ("unexpected char %c!", str[pos]);
-            return -1;
+            goto error;
             break;
         }
         GST_TRACE ("read number %d type %c", read, str[pos]);
@@ -867,26 +919,37 @@ gst_mpdparser_get_xml_prop_duration (xmlNode * a_node, const gchar * property)
     }
 
     xmlFree (prop_string);
-    prop_duration =
+    exists = TRUE;
+    *property_value =
         sign * ((((((gint64) years * 365 + months * 30 + days) * 24 +
                     hours) * 60 + minutes) * 60 + seconds) * 1000 + decimals);
-    GST_LOG (" - %s: %" G_GINT64_FORMAT, property, prop_duration);
+    GST_LOG (" - %s: %" G_GINT64_FORMAT, property_name, *property_value);
   }
 
-  return prop_duration;
+  if (!exists) {
+    *property_value = default_value;
+  }
+  return exists;
+
+error:
+  xmlFree (prop_string);
+  return FALSE;
 }
 
-static gchar *
-gst_mpdparser_get_xml_node_content (xmlNode * a_node)
+static gboolean
+gst_mpdparser_get_xml_node_content (xmlNode * a_node, gchar ** content)
 {
-  xmlChar *content = NULL;
+  xmlChar *node_content = NULL;
+  gboolean exists = TRUE;
 
-  content = xmlNodeGetContent (a_node);
-  if (content) {
-    GST_LOG (" - %s: %s", a_node->name, content);
+  node_content = xmlNodeGetContent (a_node);
+  if (node_content) {
+    exists = TRUE;
+    *content = (gchar *) node_content;
+    GST_LOG (" - %s: %s", a_node->name, *content);
   }
 
-  return (gchar *) content;
+  return exists;
 }
 
 static gchar *
@@ -929,13 +992,13 @@ gst_mpdparser_parse_baseURL_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_base_url);
 
   GST_LOG ("content of BaseURL node:");
-  new_base_url->baseURL = gst_mpdparser_get_xml_node_content (a_node);
+  gst_mpdparser_get_xml_node_content (a_node, &new_base_url->baseURL);
 
   GST_LOG ("attributes of BaseURL node:");
-  new_base_url->serviceLocation =
-      gst_mpdparser_get_xml_prop_string (a_node, "serviceLocation");
-  new_base_url->byteRange =
-      gst_mpdparser_get_xml_prop_string (a_node, "byteRange");
+  gst_mpdparser_get_xml_prop_string (a_node, "serviceLocation",
+      &new_base_url->serviceLocation);
+  gst_mpdparser_get_xml_prop_string (a_node, "byteRange",
+      &new_base_url->byteRange);
 }
 
 static void
@@ -951,9 +1014,9 @@ gst_mpdparser_parse_descriptor_type_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_descriptor);
 
   GST_LOG ("attributes of %s node:", a_node->name);
-  new_descriptor->schemeIdUri =
-      gst_mpdparser_get_xml_prop_string (a_node, "schemeIdUri");
-  new_descriptor->value = gst_mpdparser_get_xml_prop_string (a_node, "value");
+  gst_mpdparser_get_xml_prop_string (a_node, "schemeIdUri",
+      &new_descriptor->schemeIdUri);
+  gst_mpdparser_get_xml_prop_string (a_node, "value", &new_descriptor->value);
 }
 
 static void
@@ -970,13 +1033,13 @@ gst_mpdparser_parse_content_component_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_content_component);
 
   GST_LOG ("attributes of ContentComponent node:");
-  new_content_component->id =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "id", 0);
-  new_content_component->lang =
-      gst_mpdparser_get_xml_prop_string (a_node, "lang");
-  new_content_component->contentType =
-      gst_mpdparser_get_xml_prop_string (a_node, "contentType");
-  new_content_component->par = gst_mpdparser_get_xml_prop_ratio (a_node, "par");
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "id", 0,
+      &new_content_component->id);
+  gst_mpdparser_get_xml_prop_string (a_node, "lang",
+      &new_content_component->lang);
+  gst_mpdparser_get_xml_prop_string (a_node, "contentType",
+      &new_content_component->contentType);
+  gst_mpdparser_get_xml_prop_ratio (a_node, "par", &new_content_component->par);
 
   /* explore children nodes */
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -1004,7 +1067,7 @@ gst_mpdparser_parse_location_node (GList ** list, xmlNode * a_node)
   gchar *location;
 
   GST_LOG ("content of Location node:");
-  location = gst_mpdparser_get_xml_node_content (a_node);
+  gst_mpdparser_get_xml_node_content (a_node, &location);
 
   *list = g_list_append (*list, location);
 }
@@ -1022,16 +1085,14 @@ gst_mpdparser_parse_subrepresentation_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_subrep);
 
   GST_LOG ("attributes of SubRepresentation node:");
-  new_subrep->level =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "level", 0);
-  new_subrep->dependencyLevel =
-      gst_mpdparser_get_xml_prop_uint_vector_type (a_node, "dependencyLevel",
-      &new_subrep->size);
-  new_subrep->bandwidth =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "bandwidth", 0);
-  new_subrep->contentComponent =
-      gst_mpdparser_get_xml_prop_string_vector_type (a_node,
-      "contentComponent");
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "level", 0,
+      &new_subrep->level);
+  gst_mpdparser_get_xml_prop_uint_vector_type (a_node, "dependencyLevel",
+      &new_subrep->dependencyLevel, &new_subrep->size);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "bandwidth", 0,
+      &new_subrep->bandwidth);
+  gst_mpdparser_get_xml_prop_string_vector_type (a_node,
+      "contentComponent", &new_subrep->contentComponent);
 
   /* RepresentationBase extension */
   gst_mpdparser_parse_representation_base_type (&new_subrep->RepresentationBase,
@@ -1051,12 +1112,12 @@ gst_mpdparser_parse_segment_url_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_segment_url);
 
   GST_LOG ("attributes of SegmentURL node:");
-  new_segment_url->media = gst_mpdparser_get_xml_prop_string (a_node, "media");
-  new_segment_url->mediaRange =
-      gst_mpdparser_get_xml_prop_range (a_node, "mediaRange");
-  new_segment_url->index = gst_mpdparser_get_xml_prop_string (a_node, "index");
-  new_segment_url->indexRange =
-      gst_mpdparser_get_xml_prop_range (a_node, "indexRange");
+  gst_mpdparser_get_xml_prop_string (a_node, "media", &new_segment_url->media);
+  gst_mpdparser_get_xml_prop_range (a_node, "mediaRange",
+      &new_segment_url->mediaRange);
+  gst_mpdparser_get_xml_prop_string (a_node, "index", &new_segment_url->index);
+  gst_mpdparser_get_xml_prop_range (a_node, "indexRange",
+      &new_segment_url->indexRange);
 }
 
 static void
@@ -1072,9 +1133,9 @@ gst_mpdparser_parse_url_type_node (GstURLType ** pointer, xmlNode * a_node)
   }
 
   GST_LOG ("attributes of URLType node:");
-  new_url_type->sourceURL =
-      gst_mpdparser_get_xml_prop_string (a_node, "sourceURL");
-  new_url_type->range = gst_mpdparser_get_xml_prop_range (a_node, "range");
+  gst_mpdparser_get_xml_prop_string (a_node, "sourceURL",
+      &new_url_type->sourceURL);
+  gst_mpdparser_get_xml_prop_range (a_node, "range", &new_url_type->range);
 }
 
 static void
@@ -1092,15 +1153,14 @@ gst_mpdparser_parse_seg_base_type_ext (GstSegmentBaseType ** pointer,
   }
 
   GST_LOG ("attributes of SegmentBaseType extension:");
-  seg_base_type->timescale =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "timescale", 0);
-  seg_base_type->presentationTimeOffset =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node,
-      "presentationTimeOffset", 0);
-  seg_base_type->indexRange =
-      gst_mpdparser_get_xml_prop_range (a_node, "indexRange");
-  seg_base_type->indexRangeExact =
-      gst_mpdparser_get_xml_prop_boolean (a_node, "indexRangeExact");
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "timescale", 0,
+      &seg_base_type->timescale);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node,
+      "presentationTimeOffset", 0, &seg_base_type->presentationTimeOffset);
+  gst_mpdparser_get_xml_prop_range (a_node, "indexRange",
+      &seg_base_type->indexRange);
+  gst_mpdparser_get_xml_prop_boolean (a_node, "indexRangeExact", FALSE,
+      &seg_base_type->indexRangeExact);
 
   /* explore children nodes */
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -1131,11 +1191,11 @@ gst_mpdparser_parse_s_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_s_node);
 
   GST_LOG ("attributes of S node:");
-  new_s_node->t =
-      gst_mpdparser_get_xml_prop_unsigned_integer_64 (a_node, "t", 0);
-  new_s_node->d =
-      gst_mpdparser_get_xml_prop_unsigned_integer_64 (a_node, "d", 0);
-  new_s_node->r = gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "r", 0);
+  gst_mpdparser_get_xml_prop_unsigned_integer_64 (a_node, "t", 0,
+      &new_s_node->t);
+  gst_mpdparser_get_xml_prop_unsigned_integer_64 (a_node, "d", 0,
+      &new_s_node->d);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "r", 0, &new_s_node->r);
 }
 
 static void
@@ -1177,10 +1237,10 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer,
   }
 
   GST_LOG ("attributes of MultipleSegmentBaseType extension:");
-  mult_seg_base_type->duration =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "duration", 0);
-  mult_seg_base_type->startNumber =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "startNumber", 1);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "duration", 0,
+      &mult_seg_base_type->duration);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "startNumber", 1,
+      &mult_seg_base_type->startNumber);
 
   GST_LOG ("extension of MultipleSegmentBaseType extension:");
   gst_mpdparser_parse_seg_base_type_ext (&mult_seg_base_type->SegBaseType,
@@ -1245,33 +1305,33 @@ gst_mpdparser_parse_representation_base_type (GstRepresentationBaseType **
   }
 
   GST_LOG ("attributes of RepresentationBaseType extension:");
-  representation_base->profiles =
-      gst_mpdparser_get_xml_prop_string (a_node, "profiles");
-  representation_base->width =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "width", 0);
-  representation_base->height =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "height", 0);
-  representation_base->sar = gst_mpdparser_get_xml_prop_ratio (a_node, "sar");
-  representation_base->frameRate =
-      gst_mpdparser_get_xml_prop_framerate (a_node, "frameRate");
-  representation_base->audioSamplingRate =
-      gst_mpdparser_get_xml_prop_string (a_node, "audioSamplingRate");
-  representation_base->mimeType =
-      gst_mpdparser_get_xml_prop_string (a_node, "mimeType");
-  representation_base->segmentProfiles =
-      gst_mpdparser_get_xml_prop_string (a_node, "segmentProfiles");
-  representation_base->codecs =
-      gst_mpdparser_get_xml_prop_string (a_node, "codecs");
-  representation_base->maximumSAPPeriod =
-      gst_mpdparser_get_xml_prop_double (a_node, "maximumSAPPeriod");
-  representation_base->startWithSAP =
-      gst_mpdparser_get_xml_prop_SAP_type (a_node, "startWithSAP");
-  representation_base->maxPlayoutRate =
-      gst_mpdparser_get_xml_prop_double (a_node, "maxPlayoutRate");
-  representation_base->codingDependency =
-      gst_mpdparser_get_xml_prop_boolean (a_node, "codingDependency");
-  representation_base->scanType =
-      gst_mpdparser_get_xml_prop_string (a_node, "scanType");
+  gst_mpdparser_get_xml_prop_string (a_node, "profiles",
+      &representation_base->profiles);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "width", 0,
+      &representation_base->width);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "height", 0,
+      &representation_base->height);
+  gst_mpdparser_get_xml_prop_ratio (a_node, "sar", &representation_base->sar);
+  gst_mpdparser_get_xml_prop_framerate (a_node, "frameRate",
+      &representation_base->frameRate);
+  gst_mpdparser_get_xml_prop_string (a_node, "audioSamplingRate",
+      &representation_base->audioSamplingRate);
+  gst_mpdparser_get_xml_prop_string (a_node, "mimeType",
+      &representation_base->mimeType);
+  gst_mpdparser_get_xml_prop_string (a_node, "segmentProfiles",
+      &representation_base->segmentProfiles);
+  gst_mpdparser_get_xml_prop_string (a_node, "codecs",
+      &representation_base->codecs);
+  gst_mpdparser_get_xml_prop_double (a_node, "maximumSAPPeriod",
+      &representation_base->maximumSAPPeriod);
+  gst_mpdparser_get_xml_prop_SAP_type (a_node, "startWithSAP",
+      &representation_base->startWithSAP);
+  gst_mpdparser_get_xml_prop_double (a_node, "maxPlayoutRate",
+      &representation_base->maxPlayoutRate);
+  gst_mpdparser_get_xml_prop_boolean (a_node, "codingDependency",
+      FALSE, &representation_base->codingDependency);
+  gst_mpdparser_get_xml_prop_string (a_node, "scanType",
+      &representation_base->scanType);
 
   /* explore children nodes */
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -1306,16 +1366,15 @@ gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_representation);
 
   GST_LOG ("attributes of Representation node:");
-  new_representation->id = gst_mpdparser_get_xml_prop_string (a_node, "id");
-  new_representation->bandwidth =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "bandwidth", 0);
-  new_representation->qualityRanking =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "qualityRanking", 0);
-  new_representation->dependencyId =
-      gst_mpdparser_get_xml_prop_string_vector_type (a_node, "dependencyId");
-  new_representation->mediaStreamStructureId =
-      gst_mpdparser_get_xml_prop_string_vector_type (a_node,
-      "mediaStreamStructureId");
+  gst_mpdparser_get_xml_prop_string (a_node, "id", &new_representation->id);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "bandwidth", 0,
+      &new_representation->bandwidth);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "qualityRanking", 0,
+      &new_representation->qualityRanking);
+  gst_mpdparser_get_xml_prop_string_vector_type (a_node, "dependencyId",
+      &new_representation->dependencyId);
+  gst_mpdparser_get_xml_prop_string_vector_type (a_node,
+      "mediaStreamStructureId", &new_representation->mediaStreamStructureId);
 
   /* RepresentationBase extension */
   gst_mpdparser_parse_representation_base_type
@@ -1359,38 +1418,36 @@ gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_adap_set);
 
   GST_LOG ("attributes of AdaptationSet node:");
-  new_adap_set->id =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "id", 0);
-  new_adap_set->group =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "group", 0);
-  new_adap_set->lang = gst_mpdparser_get_xml_prop_string (a_node, "lang");
-  new_adap_set->contentType =
-      gst_mpdparser_get_xml_prop_string (a_node, "contentType");
-  new_adap_set->par = gst_mpdparser_get_xml_prop_ratio (a_node, "par");
-  new_adap_set->minBandwidth =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "minBandwidth", 0);
-  new_adap_set->maxBandwidth =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "maxBandwidth", 0);
-  new_adap_set->minWidth =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "minWidth", 0);
-  new_adap_set->maxWidth =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "maxWidth", 0);
-  new_adap_set->minHeight =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "minHeight", 0);
-  new_adap_set->maxHeight =
-      gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "maxHeight", 0);
-  new_adap_set->minFrameRate =
-      gst_mpdparser_get_xml_prop_framerate (a_node, "minFrameRate");
-  new_adap_set->maxFrameRate =
-      gst_mpdparser_get_xml_prop_framerate (a_node, "maxFrameRate");
-  new_adap_set->segmentAlignment =
-      gst_mpdparser_get_xml_prop_cond_uint (a_node, "segmentAlignment");
-  new_adap_set->subsegmentAlignment =
-      gst_mpdparser_get_xml_prop_cond_uint (a_node, "subsegmentAlignment");
-  new_adap_set->subsegmentStartsWithSAP =
-      gst_mpdparser_get_xml_prop_SAP_type (a_node, "subsegmentStartsWithSAP");
-  new_adap_set->bitstreamSwitching =
-      gst_mpdparser_get_xml_prop_boolean (a_node, "bitstreamSwitching");
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "id", 0,
+      &new_adap_set->id);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "group", 0,
+      &new_adap_set->group);
+  gst_mpdparser_get_xml_prop_string (a_node, "lang", &new_adap_set->lang);
+  gst_mpdparser_get_xml_prop_string (a_node, "contentType",
+      &new_adap_set->contentType);
+  gst_mpdparser_get_xml_prop_ratio (a_node, "par", &new_adap_set->par);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "minBandwidth", 0,
+      &new_adap_set->minBandwidth);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "maxBandwidth", 0,
+      &new_adap_set->maxBandwidth);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "minWidth", 0,
+      &new_adap_set->minWidth);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "maxWidth", 0,
+      &new_adap_set->maxWidth);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "minHeight", 0,
+      &new_adap_set->minHeight);
+  gst_mpdparser_get_xml_prop_unsigned_integer (a_node, "maxHeight", 0,
+      &new_adap_set->maxHeight);
+  gst_mpdparser_get_xml_prop_framerate (a_node, "minFrameRate",
+      &new_adap_set->minFrameRate);
+  gst_mpdparser_get_xml_prop_framerate (a_node, "maxFrameRate",
+      &new_adap_set->maxFrameRate);
+  gst_mpdparser_get_xml_prop_cond_uint (a_node, "segmentAlignment",
+      &new_adap_set->segmentAlignment);
+  gst_mpdparser_get_xml_prop_cond_uint (a_node, "subsegmentAlignment",
+      &new_adap_set->subsegmentAlignment);
+  gst_mpdparser_get_xml_prop_SAP_type (a_node, "subsegmentStartsWithSAP",
+      &new_adap_set->subsegmentStartsWithSAP);
 
   /* RepresentationBase extension */
   gst_mpdparser_parse_representation_base_type
@@ -1447,9 +1504,8 @@ gst_mpdparser_parse_subset_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_subset);
 
   GST_LOG ("attributes of Subset node:");
-  new_subset->contains =
-      gst_mpdparser_get_xml_prop_uint_vector_type (a_node, "contains",
-      &new_subset->size);
+  gst_mpdparser_get_xml_prop_uint_vector_type (a_node, "contains",
+      &new_subset->contains, &new_subset->size);
 }
 
 static void
@@ -1470,14 +1526,14 @@ gst_mpdparser_parse_segment_template_node (GstSegmentTemplateNode ** pointer,
       (&new_segment_template->MultSegBaseType, a_node);
 
   GST_LOG ("attributes of SegmentTemplate node:");
-  new_segment_template->media =
-      gst_mpdparser_get_xml_prop_string (a_node, "media");
-  new_segment_template->index =
-      gst_mpdparser_get_xml_prop_string (a_node, "index");
-  new_segment_template->initialization =
-      gst_mpdparser_get_xml_prop_string (a_node, "initialization");
-  new_segment_template->bitstreamSwitching =
-      gst_mpdparser_get_xml_prop_string (a_node, "bitstreamSwitching");
+  gst_mpdparser_get_xml_prop_string (a_node, "media",
+      &new_segment_template->media);
+  gst_mpdparser_get_xml_prop_string (a_node, "index",
+      &new_segment_template->index);
+  gst_mpdparser_get_xml_prop_string (a_node, "initialization",
+      &new_segment_template->initialization);
+  gst_mpdparser_get_xml_prop_string (a_node, "bitstreamSwitching",
+      &new_segment_template->bitstreamSwitching);
 }
 
 static void
@@ -1496,12 +1552,12 @@ gst_mpdparser_parse_period_node (GList ** list, xmlNode * a_node)
   new_period->start = GST_CLOCK_TIME_NONE;
 
   GST_LOG ("attributes of Period node:");
-  new_period->id = gst_mpdparser_get_xml_prop_string (a_node, "id");
-  new_period->start = gst_mpdparser_get_xml_prop_duration (a_node, "start");
-  new_period->duration =
-      gst_mpdparser_get_xml_prop_duration (a_node, "duration");
-  new_period->bitstreamSwitching =
-      gst_mpdparser_get_xml_prop_boolean (a_node, "bitstreamSwitching");
+  gst_mpdparser_get_xml_prop_string (a_node, "id", &new_period->id);
+  gst_mpdparser_get_xml_prop_duration (a_node, "start", -1, &new_period->start);
+  gst_mpdparser_get_xml_prop_duration (a_node, "duration", -1,
+      &new_period->duration);
+  gst_mpdparser_get_xml_prop_boolean (a_node, "bitstreamSwitching",
+      FALSE, &new_period->bitstreamSwitching);
 
   /* explore children nodes */
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
@@ -1541,21 +1597,21 @@ gst_mpdparser_parse_program_info_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_prog_info);
 
   GST_LOG ("attributes of ProgramInformation node:");
-  new_prog_info->lang = gst_mpdparser_get_xml_prop_string (a_node, "lang");
-  new_prog_info->moreInformationURL =
-      gst_mpdparser_get_xml_prop_string (a_node, "moreInformationURL");
+  gst_mpdparser_get_xml_prop_string (a_node, "lang", &new_prog_info->lang);
+  gst_mpdparser_get_xml_prop_string (a_node, "moreInformationURL",
+      &new_prog_info->moreInformationURL);
 
   /* explore children nodes */
   GST_LOG ("children of ProgramInformation node:");
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
       if (xmlStrcmp (cur_node->name, (xmlChar *) "Title") == 0) {
-        new_prog_info->Title = gst_mpdparser_get_xml_node_content (cur_node);
+        gst_mpdparser_get_xml_node_content (cur_node, &new_prog_info->Title);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "Source") == 0) {
-        new_prog_info->Source = gst_mpdparser_get_xml_node_content (cur_node);
+        gst_mpdparser_get_xml_node_content (cur_node, &new_prog_info->Source);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "Copyright") == 0) {
-        new_prog_info->Copyright =
-            gst_mpdparser_get_xml_node_content (cur_node);
+        gst_mpdparser_get_xml_node_content (cur_node,
+            &new_prog_info->Copyright);
       }
     }
   }
@@ -1574,10 +1630,10 @@ gst_mpdparser_parse_metrics_range_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_metrics_range);
 
   GST_LOG ("attributes of Metrics Range node:");
-  new_metrics_range->starttime =
-      gst_mpdparser_get_xml_prop_duration (a_node, "starttime");
-  new_metrics_range->duration =
-      gst_mpdparser_get_xml_prop_duration (a_node, "duration");
+  gst_mpdparser_get_xml_prop_duration (a_node, "starttime", -1,
+      &new_metrics_range->starttime);
+  gst_mpdparser_get_xml_prop_duration (a_node, "duration", -1,
+      &new_metrics_range->duration);
 }
 
 static void
@@ -1594,7 +1650,7 @@ gst_mpdparser_parse_metrics_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_metrics);
 
   GST_LOG ("attributes of Metrics node:");
-  new_metrics->metrics = gst_mpdparser_get_xml_prop_string (a_node, "metrics");
+  gst_mpdparser_get_xml_prop_string (a_node, "metrics", &new_metrics->metrics);
 
   /* explore children nodes */
   GST_LOG ("children of Metrics node:");
@@ -1633,30 +1689,29 @@ gst_mpdparser_parse_root_node (GstMPDNode ** pointer, xmlNode * a_node)
   new_mpd->namespace_ext = gst_mpdparser_get_xml_node_namespace (a_node, "ext");
 
   GST_LOG ("attributes of root MPD node:");
-  new_mpd->schemaLocation =
-      gst_mpdparser_get_xml_prop_string (a_node, "schemaLocation");
-  new_mpd->id = gst_mpdparser_get_xml_prop_string (a_node, "id");
-  new_mpd->profiles = gst_mpdparser_get_xml_prop_string (a_node, "profiles");
-  new_mpd->type = gst_mpdparser_get_xml_prop_type (a_node, "type");
-  new_mpd->availabilityStartTime =
-      gst_mpdparser_get_xml_prop_dateTime (a_node, "availabilityStartTime");
-  new_mpd->availabilityEndTime =
-      gst_mpdparser_get_xml_prop_dateTime (a_node, "availabilityEndTime");
-  new_mpd->mediaPresentationDuration =
-      gst_mpdparser_get_xml_prop_duration (a_node, "mediaPresentationDuration");
-  new_mpd->minimumUpdatePeriod =
-      gst_mpdparser_get_xml_prop_duration (a_node, "minimumUpdatePeriod");
-  new_mpd->minBufferTime =
-      gst_mpdparser_get_xml_prop_duration (a_node, "minBufferTime");
-  new_mpd->timeShiftBufferDepth =
-      gst_mpdparser_get_xml_prop_duration (a_node, "timeShiftBufferDepth");
-  new_mpd->suggestedPresentationDelay =
-      gst_mpdparser_get_xml_prop_duration (a_node,
-      "suggestedPresentationDelay");
-  new_mpd->maxSegmentDuration =
-      gst_mpdparser_get_xml_prop_duration (a_node, "maxSegmentDuration");
-  new_mpd->maxSubsegmentDuration =
-      gst_mpdparser_get_xml_prop_duration (a_node, "maxSubsegmentDuration");
+  gst_mpdparser_get_xml_prop_string (a_node, "schemaLocation",
+      &new_mpd->schemaLocation);
+  gst_mpdparser_get_xml_prop_string (a_node, "id", &new_mpd->id);
+  gst_mpdparser_get_xml_prop_string (a_node, "profiles", &new_mpd->profiles);
+  gst_mpdparser_get_xml_prop_type (a_node, "type", &new_mpd->type);
+  gst_mpdparser_get_xml_prop_dateTime (a_node, "availabilityStartTime",
+      &new_mpd->availabilityStartTime);
+  gst_mpdparser_get_xml_prop_dateTime (a_node, "availabilityEndTime",
+      &new_mpd->availabilityEndTime);
+  gst_mpdparser_get_xml_prop_duration (a_node, "mediaPresentationDuration", -1,
+      &new_mpd->mediaPresentationDuration);
+  gst_mpdparser_get_xml_prop_duration (a_node, "minimumUpdatePeriod", -1,
+      &new_mpd->minimumUpdatePeriod);
+  gst_mpdparser_get_xml_prop_duration (a_node, "minBufferTime", -1,
+      &new_mpd->minBufferTime);
+  gst_mpdparser_get_xml_prop_duration (a_node, "timeShiftBufferDepth", -1,
+      &new_mpd->timeShiftBufferDepth);
+  gst_mpdparser_get_xml_prop_duration (a_node, "suggestedPresentationDelay", -1,
+      &new_mpd->suggestedPresentationDelay);
+  gst_mpdparser_get_xml_prop_duration (a_node, "maxSegmentDuration", -1,
+      &new_mpd->maxSegmentDuration);
+  gst_mpdparser_get_xml_prop_duration (a_node, "maxSubsegmentDuration", -1,
+      &new_mpd->maxSubsegmentDuration);
 
   /* explore children Period nodes */
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
