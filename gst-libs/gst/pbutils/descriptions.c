@@ -234,6 +234,7 @@ static const FormatInfo formats[] = {
   {"video/x-vp6-alpha", "On2 VP6 with alpha", FLAG_VIDEO, ""},
   {"video/x-vp7", "On2 VP7", FLAG_VIDEO, ""},
   {"video/x-vp8", "VP8", FLAG_VIDEO, ""},
+  {"video/x-vp9", "VP9", FLAG_VIDEO, ""},
   {"video/x-zlib", "Lossless zlib video", FLAG_VIDEO, ""},
   {"video/x-zmbv", "Zip Motion Block video", FLAG_VIDEO, ""},
 
