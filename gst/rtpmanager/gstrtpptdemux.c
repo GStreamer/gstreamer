@@ -337,7 +337,9 @@ forward_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
 {
   GstPad *srcpad = GST_PAD_CAST (user_data);
 
-  gst_pad_push_event (srcpad, gst_event_ref (*event));
+  /* Stream start and caps have already been pushed */
+  if (GST_EVENT_TYPE (*event) >= GST_EVENT_SEGMENT)
+    gst_pad_push_event (srcpad, gst_event_ref (*event));
 
   return TRUE;
 }
@@ -394,15 +396,20 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     gst_pad_set_active (srcpad, TRUE);
 
-    /* First sticky events on sink pad are forwarded to the new src pad */
-    gst_pad_sticky_events_foreach (rtpdemux->sink, forward_sticky_events,
-        srcpad);
+
+    /* First push the stream-start event, it must always come first */
+    gst_pad_push_event (srcpad,
+        gst_pad_get_sticky_event (rtpdemux->sink, GST_EVENT_STREAM_START, 0));
 
     /* Then caps event is sent */
     caps = gst_caps_make_writable (caps);
     gst_caps_set_simple (caps, "payload", G_TYPE_INT, pt, NULL);
     gst_pad_set_caps (srcpad, caps);
     gst_caps_unref (caps);
+
+    /* First sticky events on sink pad are forwarded to the new src pad */
+    gst_pad_sticky_events_foreach (rtpdemux->sink, forward_sticky_events,
+        srcpad);
 
     gst_element_add_pad (GST_ELEMENT_CAST (rtpdemux), srcpad);
 
