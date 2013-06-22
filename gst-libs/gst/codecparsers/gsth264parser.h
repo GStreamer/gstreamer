@@ -49,6 +49,7 @@ G_BEGIN_DECLS
 #define GST_H264_IS_SI_SLICE(slice) (((slice)->type % 5) == GST_H264_SI_SLICE)
 
 /**
+ * GstH264Profile:
  * @GST_H264_PROFILE_BASELINE: Baseline profile (A.2.1)
  * @GST_H264_PROFILE_MAIN: Main profile (A.2.2)
  * @GST_H264_PROFILE_EXTENDED: Extended profile (A.2.3)

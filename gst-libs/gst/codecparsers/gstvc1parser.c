@@ -1674,8 +1674,7 @@ gst_vc1_identify_next_bdu (const guint8 * data, gsize size, GstVC1BDU * bdu)
   g_return_val_if_fail (bdu != NULL, GST_VC1_PARSER_ERROR);
 
   if (size < 4) {
-    GST_DEBUG ("Can't parse, buffer has too small size %" G_GSIZE_FORMAT,
-        size);
+    GST_DEBUG ("Can't parse, buffer has too small size %" G_GSIZE_FORMAT, size);
     return GST_VC1_PARSER_ERROR;
   }
 
@@ -1718,7 +1717,7 @@ gst_vc1_identify_next_bdu (const guint8 * data, gsize size, GstVC1BDU * bdu)
  * gst_vc1_parse_sequence_layer:
  * @data: The data to parse
  * @size: the size of @data
- * @structa: The #GstVC1SeqLayer to set.
+ * @seqlayer: The #GstVC1SeqLayer to set.
  *
  * Parses @data, and fills @seqlayer fields.
  *
@@ -1792,7 +1791,7 @@ gst_vc1_parse_sequence_header_struct_a (const guint8 * data,
  * gst_vc1_parse_sequence_header_struct_b:
  * @data: The data to parse
  * @size: the size of @data
- * @structa: The #GstVC1SeqStructB to set.
+ * @structb: The #GstVC1SeqStructB to set.
  *
  * Parses @data, and fills @structb fields.
  *
@@ -2098,7 +2097,6 @@ failed:
 
 /**
  * gst_vc1_bitplanes_new:
- * @seqhdr: The #GstVC1SeqHdr from which to set @bitplanes
  *
  * Creates a new #GstVC1BitPlanes. It should be freed with
  * gst_vc1_bitplanes_free() after use.

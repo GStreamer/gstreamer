@@ -144,7 +144,7 @@ typedef enum {
 } GstMpeg4VideoObjectCodingType;
 
 /**
- * GstMpeg4ChromaFormat
+ * GstMpeg4ChromaFormat:
  *
  * The chroma format in use as
  * defined in: Table 6-13 -- Meaning of chroma_format
@@ -248,6 +248,8 @@ struct _GstMpeg4VisualObjectSequence {
 };
 
 /**
+ * GstMpeg4VisualObject:
+ *
  * The visual object structure as defined in:
  * 6.2.2 Visual Object Sequence and Visual Object
  */

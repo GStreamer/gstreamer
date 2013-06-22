@@ -384,7 +384,6 @@ struct _GstMpegVideoGop
 
 /**
  * GstMpegVideoTypeOffsetSize:
- *
  * @type: the type of the packet that start at @offset
  * @data: the data containing the packet starting at @offset
  * @offset: the offset of the packet start in bytes, it is the exact, start of the packet, no sync code included
@@ -403,7 +402,7 @@ struct _GstMpegVideoPacket
 gboolean gst_mpeg_video_parse                         (GstMpegVideoPacket * packet,
                                                        const guint8 * data, gsize size, guint offset);
 
-gboolean gst_mpeg_video_parse_sequence_header         (GstMpegVideoSequenceHdr * params,
+gboolean gst_mpeg_video_parse_sequence_header         (GstMpegVideoSequenceHdr * seqhdr,
                                                        const guint8 * data, gsize size, guint offset);
 
 /* seqext and displayext may be NULL if not received */

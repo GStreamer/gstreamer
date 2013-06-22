@@ -34,7 +34,8 @@ G_BEGIN_DECLS
 #define MAX_HRD_NUM_LEAKY_BUCKETS 31
 
 /**
- * @GST_VC1_BFRACTION_BASIS: The @bfraction variable should be divided
+ * GST_VC1_BFRACTION_BASIS:
+ * The @bfraction variable should be divided
  * by this constant to have the actual value.
  */
 #define GST_VC1_BFRACTION_BASIS 840
