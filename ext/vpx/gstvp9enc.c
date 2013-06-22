@@ -353,11 +353,13 @@ static gboolean gst_vp9_enc_sink_event (GstVideoEncoder *
 static gboolean gst_vp9_enc_propose_allocation (GstVideoEncoder * encoder,
     GstQuery * query);
 
+/* FIXME: Y42B and Y444 do not work yet it seems */
 static GstStaticPadTemplate gst_vp9_enc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420"))
+    /*GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12, Y42B, Y444 }")) */
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12 }"))
     );
 
 static GstStaticPadTemplate gst_vp9_enc_src_template =
@@ -1675,9 +1677,32 @@ gst_vp9_enc_set_format (GstVideoEncoder * video_encoder,
   image = &encoder->image;
   memset (image, 0, sizeof (*image));
 
-  image->fmt = VPX_IMG_FMT_I420;
-  image->bps = 12;
-  image->x_chroma_shift = image->y_chroma_shift = 1;
+  switch (encoder->input_state->info.finfo->format) {
+    case GST_VIDEO_FORMAT_I420:
+      image->fmt = VPX_IMG_FMT_I420;
+      image->bps = 12;
+      image->x_chroma_shift = image->y_chroma_shift = 1;
+      break;
+    case GST_VIDEO_FORMAT_YV12:
+      image->fmt = VPX_IMG_FMT_YV12;
+      image->bps = 12;
+      image->x_chroma_shift = image->y_chroma_shift = 1;
+      break;
+    case GST_VIDEO_FORMAT_Y42B:
+      image->fmt = VPX_IMG_FMT_I422;
+      image->bps = 16;
+      image->x_chroma_shift = 1;
+      image->y_chroma_shift = 0;
+      break;
+    case GST_VIDEO_FORMAT_Y444:
+      image->fmt = VPX_IMG_FMT_I444;
+      image->bps = 24;
+      image->x_chroma_shift = image->y_chroma_shift = 0;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
   image->w = image->d_w = GST_VIDEO_INFO_WIDTH (info);
   image->h = image->d_h = GST_VIDEO_INFO_HEIGHT (info);
 

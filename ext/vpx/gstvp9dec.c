@@ -123,7 +123,7 @@ static GstStaticPadTemplate gst_vp9_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12, Y42B, Y444 }"))
     );
 
 #define parent_class gst_vp9_dec_parent_class
@@ -397,7 +397,6 @@ open_codec (GstVP9Dec * dec, GstVideoCodecFrame * frame)
   vpx_codec_stream_info_t stream_info;
   vpx_codec_caps_t caps;
   vpx_codec_dec_cfg_t cfg;
-  GstVideoCodecState *state = dec->input_state;
   vpx_codec_err_t status;
   GstMapInfo minfo;
 
@@ -430,13 +429,6 @@ open_codec (GstVP9Dec * dec, GstVideoCodecFrame * frame)
   /* FIXME: peek_stream_info() does not return valid values, take input caps */
   stream_info.w = dec->input_state->info.width;
   stream_info.h = dec->input_state->info.height;
-
-  g_assert (dec->output_state == NULL);
-  dec->output_state =
-      gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec),
-      GST_VIDEO_FORMAT_I420, stream_info.w, stream_info.h, state);
-  gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec));
-  gst_vp9_dec_send_tags (dec);
 
   cfg.w = stream_info.w;
   cfg.h = stream_info.h;
@@ -531,6 +523,50 @@ gst_vp9_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   img = vpx_codec_get_frame (&dec->decoder, &iter);
   if (img) {
+    GstVideoFormat fmt;
+
+    switch (img->fmt) {
+      case VPX_IMG_FMT_I420:
+        fmt = GST_VIDEO_FORMAT_I420;
+        break;
+      case VPX_IMG_FMT_YV12:
+        fmt = GST_VIDEO_FORMAT_YV12;
+        break;
+      case VPX_IMG_FMT_I422:
+        fmt = GST_VIDEO_FORMAT_Y42B;
+        break;
+      case VPX_IMG_FMT_I444:
+        fmt = GST_VIDEO_FORMAT_Y444;
+        break;
+      default:
+        vpx_img_free (img);
+        GST_ELEMENT_ERROR (decoder, LIBRARY, ENCODE,
+            ("Failed to decode frame"), ("Unsupported color format %d",
+                img->fmt));
+        return GST_FLOW_ERROR;
+        break;
+    }
+
+    /* FIXME: Width/height in the img is wrong */
+    if (!dec->output_state || dec->output_state->info.finfo->format != fmt      /*||
+                                                                                   dec->output_state->info.width != img->w ||
+                                                                                   dec->output_state->info.height != img->h */ ) {
+      gboolean send_tags = !dec->output_state;
+
+      if (dec->output_state)
+        gst_video_codec_state_unref (dec->output_state);
+
+      /* FIXME: The width/height in the img is wrong */
+      dec->output_state =
+          gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec),
+          fmt, dec->input_state->info.width, dec->input_state->info.height,
+          dec->input_state);
+      gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec));
+
+      if (send_tags)
+        gst_vp9_dec_send_tags (dec);
+    }
+
     if (deadline < 0) {
       GST_LOG_OBJECT (dec, "Skipping late frame (%f s past deadline)",
           (double) -deadline / GST_SECOND);
