@@ -76,6 +76,12 @@ else
 WAYLAND_DIR=
 endif
 
+if USE_DAALA
+DAALA_DIR=daala
+else
+DAALA_DIR=
+endif
+
 if USE_DTS
 DTS_DIR=dts
 else
@@ -392,6 +398,7 @@ SUBDIRS=\
 	$(DC1394_DIR) \
 	$(DIRECTFB_DIR) \
 	$(WAYLAND_DIR) \
+	$(DAALA_DIR) \
 	$(DTS_DIR) \
 	$(RESINDVD_DIR) \
 	$(EGLGLES_DIR) \
@@ -464,6 +471,7 @@ DIST_SUBDIRS = \
 	kate \
 	libmms \
 	lv2 \
+	daala \
 	dts \
 	eglgles \
 	modplug \
