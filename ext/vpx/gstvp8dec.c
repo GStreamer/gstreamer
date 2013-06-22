@@ -527,6 +527,14 @@ gst_vp8_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   img = vpx_codec_get_frame (&dec->decoder, &iter);
   if (img) {
+    if (img->fmt != VPX_IMG_FMT_I420) {
+      vpx_img_free (img);
+      GST_ELEMENT_ERROR (decoder, LIBRARY, ENCODE,
+          ("Failed to decode frame"), ("Unsupported color format %d",
+              img->fmt));
+      return GST_FLOW_ERROR;
+    }
+
     if (deadline < 0) {
       GST_LOG_OBJECT (dec, "Skipping late frame (%f s past deadline)",
           (double) -deadline / GST_SECOND);
