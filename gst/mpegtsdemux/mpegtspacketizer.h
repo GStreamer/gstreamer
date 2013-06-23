@@ -153,7 +153,7 @@ typedef struct
    * section when the section_syntax_indicator is set to a value of "1". If 
    * section_syntax_indicator is 0, sub_table_extension will be set to 0 */
   guint16 subtable_extension;
-  guint8 version_number;
+  guint8  version_number;
   GList * crc;
 } MpegTSPacketizerStreamSubtable;
 

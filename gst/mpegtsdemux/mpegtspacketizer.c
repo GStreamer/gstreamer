@@ -508,7 +508,7 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
     return TRUE;
   }
 
-  if (packet->adaptation_field_control == 0x02) {
+  if (packet->adaptation_field_control == 0x20) {
     /* no payload, adaptation field of 183 bytes */
     if (length != 183) {
       GST_DEBUG ("PID %d afc == 0x%x and length %d != 183",
@@ -567,40 +567,43 @@ mpegts_packetizer_parse_packet (MpegTSPacketizer2 * packetizer,
     MpegTSPacketizerPacket * packet)
 {
   guint8 *data;
+  guint8 tmp;
 
   data = packet->data_start;
-  data++;
+  data += 1;
+  tmp = *data;
 
   /* transport_error_indicator 1 */
-  if (G_UNLIKELY (*data >> 7))
+  if (G_UNLIKELY (tmp & 0x80))
     return PACKET_BAD;
 
   /* payload_unit_start_indicator 1 */
-  packet->payload_unit_start_indicator = (*data >> 6) & 0x01;
+  packet->payload_unit_start_indicator = tmp & 0x40;
 
   /* transport_priority 1 */
   /* PID 13 */
   packet->pid = GST_READ_UINT16_BE (data) & 0x1FFF;
   data += 2;
 
+  tmp = *data;
   /* transport_scrambling_control 2 */
-  if (G_UNLIKELY (*data >> 6))
+  if (G_UNLIKELY (tmp & 0xc0))
     return PACKET_BAD;
 
   /* adaptation_field_control 2 */
-  packet->adaptation_field_control = (*data >> 4) & 0x03;
+  packet->adaptation_field_control = tmp & 0x30;
 
   /* continuity_counter 4 */
-  packet->continuity_counter = *data & 0x0F;
+  packet->continuity_counter = tmp & 0x0F;
   data += 1;
 
   packet->data = data;
 
-  if (packet->adaptation_field_control & 0x02)
+  if (packet->adaptation_field_control & 0x20)
     if (!mpegts_packetizer_parse_adaptation_field_control (packetizer, packet))
       return FALSE;
 
-  if (packet->adaptation_field_control & 0x01)
+  if (packet->adaptation_field_control & 0x10)
     packet->payload = packet->data;
   else
     packet->payload = NULL;
@@ -2789,7 +2792,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
   data = packet->data;
   section->pid = packet->pid;
 
-  if (packet->payload_unit_start_indicator == 1) {
+  if (packet->payload_unit_start_indicator) {
     pointer = *data++;
     if (data + pointer > packet->data_end) {
       GST_WARNING ("PID 0x%04x PSI section pointer points past the end "
