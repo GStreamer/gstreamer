@@ -339,8 +339,10 @@ ges_track_filesource_set_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_URI:
-      if (uriclip->uri)
-        g_free (uriclip->uri);
+      if (uriclip->uri) {
+        GST_WARNING_OBJECT (object, "Uri already set to %s", uriclip->uri);
+        return;
+      }
       uriclip->uri = g_value_dup_string (value);
       break;
     default:
