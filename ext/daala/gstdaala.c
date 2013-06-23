@@ -23,9 +23,14 @@
 
 #include <gst/gst.h>
 
+#include "gstdaalaenc.h"
+#include "gstdaaladec.h"
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_daala_enc_register (plugin);
+
   return TRUE;
 }
 

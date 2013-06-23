@@ -1254,7 +1254,7 @@ dnl *** Daala ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DAALA, true)
 AG_GST_CHECK_FEATURE(DAALA, [daala], daala, [
   if test "x$BUILD_EXPERIMENTAL" = "xyes"; then
-    PKG_CHECK_MODULES(DAALA, daala, [
+    PKG_CHECK_MODULES(DAALA, daalaenc daaladec, [
             HAVE_DAALA="yes"
     ], [
             HAVE_DAALA="no"
