@@ -3,5 +3,22 @@
 #include <gst/codecparsers/gsth264parser.h>
 #include <gst/codecparsers/gstmpegvideoparser.h>
 #include <gst/insertbin/gstinsertbin.h>
+#include <gst/mpegts/mpegts.h>
+
+gst_mpegts_section_get_type
+gst_mpeg_ts_section_type_get_type
+gst_mpeg_ts_section_table_id_get_type
+
+gst_mpegts_descriptor_get_type
+gst_mpeg_ts_cable_outer_fec_scheme_get_type
+gst_mpeg_ts_modulation_type_get_type
+gst_mpeg_ts_satellite_polarization_type_get_type
+gst_mpeg_ts_satellite_rolloff_get_type
+gst_mpeg_tsdvb_code_rate_get_type
+gst_mpeg_ts_descriptor_type_get_type
+gst_mpeg_ts_iso639_audio_type_get_type
+gst_mpeg_ts_running_status_get_type
+gst_mpeg_tsdvb_service_type_get_type
+
 
 gst_insert_bin_get_type
