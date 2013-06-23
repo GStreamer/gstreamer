@@ -99,10 +99,6 @@ static gboolean gst_mpeg2enc_sink_event (GstVideoEncoder *
 
 static GstFlowReturn gst_mpeg2enc_finish (GstVideoEncoder * video_encoder);
 static void gst_mpeg2enc_loop (GstVideoEncoder * video_encoder);
-#if 0
-static GstStateChangeReturn gst_mpeg2enc_change_state (GstElement * element,
-    GstStateChange transition);
-#endif
 
 static void gst_mpeg2enc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
@@ -706,32 +702,6 @@ gst_mpeg2enc_set_property (GObject * object,
 {
   GST_MPEG2ENC (object)->options->setProperty (prop_id, value);
 }
-
-#if 0
-static GstStateChangeReturn
-gst_mpeg2enc_change_state (GstElement * element, GstStateChange transition)
-{
-  GstMpeg2enc *enc = GST_MPEG2ENC (element);
-  GstStateChangeReturn ret;
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    goto done;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      GST_MPEG2ENC_MUTEX_LOCK (enc);
-      gst_mpeg2enc_reset (enc);
-      GST_MPEG2ENC_MUTEX_UNLOCK (enc);
-      break;
-    default:
-      break;
-  }
-
-done:
-  return ret;
-}
-#endif
 
 #ifndef GST_DISABLE_GST_DEBUG
 
