@@ -2029,15 +2029,15 @@ setup_daala_mapper (GstOggStream * pad, ogg_packet * packet)
 
   GST_LOG ("daala %d.%d.%d", vmaj, vmin, vrev);
 
-  w = GST_READ_UINT32_BE (data + 9);
-  h = GST_READ_UINT32_BE (data + 13);
+  w = GST_READ_UINT32_LE (data + 9);
+  h = GST_READ_UINT32_LE (data + 13);
 
-  par_n = GST_READ_UINT32_BE (data + 17);
-  par_d = GST_READ_UINT32_BE (data + 21);
+  par_n = GST_READ_UINT32_LE (data + 17);
+  par_d = GST_READ_UINT32_LE (data + 21);
 
-  pad->granulerate_n = GST_READ_UINT32_BE (data + 25);
-  pad->granulerate_d = GST_READ_UINT32_BE (data + 29);
-  frame_duration = GST_READ_UINT32_BE (data + 33);
+  pad->granulerate_n = GST_READ_UINT32_LE (data + 25);
+  pad->granulerate_d = GST_READ_UINT32_LE (data + 29);
+  frame_duration = GST_READ_UINT32_LE (data + 33);
 
   GST_LOG ("fps = %d/%d, dur %d, PAR = %u/%u, width = %u, height = %u",
       pad->granulerate_n, pad->granulerate_d, frame_duration, par_n, par_d, w,
