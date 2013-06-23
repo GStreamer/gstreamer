@@ -306,18 +306,20 @@ flush_observations (MpegTSPacketizer2 * packetizer)
   priv->lastobsid = 0;
 }
 
-static gint
-mpegts_packetizer_stream_subtable_compare (gconstpointer a, gconstpointer b)
+static inline MpegTSPacketizerStreamSubtable *
+find_subtable (GSList * subtables, guint8 table_id, guint16 subtable_extension)
 {
-  MpegTSPacketizerStreamSubtable *asub, *bsub;
+  GSList *tmp;
 
-  asub = (MpegTSPacketizerStreamSubtable *) a;
-  bsub = (MpegTSPacketizerStreamSubtable *) b;
+  for (tmp = subtables; tmp; tmp = tmp->next) {
+    MpegTSPacketizerStreamSubtable *sub =
+        (MpegTSPacketizerStreamSubtable *) tmp->data;
+    if (sub->table_id == table_id
+        && sub->subtable_extension == subtable_extension)
+      return sub;
+  }
 
-  if (asub->table_id == bsub->table_id &&
-      asub->subtable_extension == bsub->subtable_extension)
-    return 0;
-  return -1;
+  return FALSE;
 }
 
 static gboolean
@@ -618,7 +620,6 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer2 * packetizer,
   guint8 tmp;
   guint8 *data, *crc_data;
   MpegTSPacketizerStreamSubtable *subtable;
-  GSList *subtable_list = NULL;
 
   section->complete = TRUE;
   /* get the section buffer, ownership stays with the stream */
@@ -644,20 +645,18 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer2 * packetizer,
   else
     section->subtable_extension = GST_READ_UINT16_BE (data + 2);
 
-  subtable = mpegts_packetizer_stream_subtable_new (section->table_id,
+  subtable =
+      find_subtable (stream->subtables, section->table_id,
       section->subtable_extension);
-
-  subtable_list = g_slist_find_custom (stream->subtables, subtable,
-      mpegts_packetizer_stream_subtable_compare);
-  if (subtable_list) {
+  if (subtable) {
     GST_DEBUG ("Found previous subtable_extension:%d",
         section->subtable_extension);
-
-    g_free (subtable);
-    subtable = (MpegTSPacketizerStreamSubtable *) (subtable_list->data);
   } else {
     GST_DEBUG ("Appending new subtable_extension:%d",
         section->subtable_extension);
+    subtable = mpegts_packetizer_stream_subtable_new (section->table_id,
+        section->subtable_extension);
+
 
     stream->subtables = g_slist_prepend (stream->subtables, subtable);
   }
