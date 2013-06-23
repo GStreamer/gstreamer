@@ -30,6 +30,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gst_daala_enc_register (plugin);
+  gst_daala_dec_register (plugin);
 
   return TRUE;
 }
