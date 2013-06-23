@@ -18,7 +18,9 @@ libgstdvb_la_SOURCES = \
 	parsechannels.c
 
 libgstdvb_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_CFLAGS)
-libgstdvb_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS)
+libgstdvb_la_LIBADD = \
+	$(top_builddir)/gst-libs/gst/mpegts/libgstmpegts-$(GST_API_VERSION).la \
+	$(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS)
 libgstdvb_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdvb_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
@@ -36,4 +38,3 @@ noinst_HEADERS = \
 	camapplicationinfo.h \
 	camconditionalaccess.h \
 	parsechannels.h
-	

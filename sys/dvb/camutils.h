@@ -26,6 +26,7 @@
 
 #include <glib.h>
 #include <gst/gst.h>
+#include <gst/mpegts/mpegts.h>
 
 #define TPDU_HEADER_SIZE_INDICATOR 0x80
 
@@ -54,6 +55,6 @@ typedef enum
 guint8 cam_calc_length_field_size (guint length);
 guint8 cam_write_length_field (guint8 *buff, guint length);
 guint8 cam_read_length_field (guint8 *buff, guint *length);
-guint8 *cam_build_ca_pmt (GstStructure *pmt, guint8 list_management, guint8 cmd_id, guint *size);
+guint8 *cam_build_ca_pmt (GstMpegTSPMT *pmt, guint8 list_management, guint8 cmd_id, guint *size);
 
 #endif /* CAM_UTILS_H */

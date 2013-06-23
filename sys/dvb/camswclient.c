@@ -32,7 +32,6 @@
 
 #include "camswclient.h"
 #include "cam.h"
-#include "camutils.h"
 
 #define GST_CAT_DEFAULT cam_debug_cat
 #define UNIX_PATH_MAX 108
@@ -111,7 +110,7 @@ cam_sw_client_close (CamSwClient * client)
 }
 
 static void
-send_ca_pmt (CamSwClient * client, GstStructure * pmt,
+send_ca_pmt (CamSwClient * client, GstMpegTSPMT * pmt,
     guint8 list_management, guint8 cmd_id)
 {
   guint8 *buffer;
@@ -146,7 +145,7 @@ send_ca_pmt (CamSwClient * client, GstStructure * pmt,
 }
 
 void
-cam_sw_client_set_pmt (CamSwClient * client, GstStructure * pmt)
+cam_sw_client_set_pmt (CamSwClient * client, GstMpegTSPMT * pmt)
 {
   g_return_if_fail (client != NULL);
   g_return_if_fail (pmt != NULL);
@@ -156,7 +155,7 @@ cam_sw_client_set_pmt (CamSwClient * client, GstStructure * pmt)
 }
 
 void
-cam_sw_client_update_pmt (CamSwClient * client, GstStructure * pmt)
+cam_sw_client_update_pmt (CamSwClient * client, GstMpegTSPMT * pmt)
 {
   g_return_if_fail (client != NULL);
   g_return_if_fail (pmt != NULL);
