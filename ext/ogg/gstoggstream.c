@@ -2013,6 +2013,126 @@ extract_tags_opus (GstOggStream * pad, ogg_packet * packet)
   }
 }
 
+/* daala */
+
+static gboolean
+setup_daala_mapper (GstOggStream * pad, ogg_packet * packet)
+{
+  guint8 *data = packet->packet;
+  guint w, h, par_d, par_n;
+  guint8 vmaj, vmin, vrev;
+  guint frame_duration;
+
+  vmaj = data[6];
+  vmin = data[7];
+  vrev = data[8];
+
+  GST_LOG ("daala %d.%d.%d", vmaj, vmin, vrev);
+
+  w = GST_READ_UINT32_BE (data + 9);
+  h = GST_READ_UINT32_BE (data + 13);
+
+  par_n = GST_READ_UINT32_BE (data + 17);
+  par_d = GST_READ_UINT32_BE (data + 21);
+
+  pad->granulerate_n = GST_READ_UINT32_BE (data + 25);
+  pad->granulerate_d = GST_READ_UINT32_BE (data + 29);
+  frame_duration = GST_READ_UINT32_BE (data + 33);
+
+  GST_LOG ("fps = %d/%d, dur %d, PAR = %u/%u, width = %u, height = %u",
+      pad->granulerate_n, pad->granulerate_d, frame_duration, par_n, par_d, w,
+      h);
+
+  pad->granuleshift = GST_READ_UINT8 (data + 37);
+  GST_LOG ("granshift: %d", pad->granuleshift);
+
+  pad->is_video = TRUE;
+  pad->n_header_packets = 3;
+  pad->frame_size = 1;
+
+  if (pad->granulerate_n == 0 || pad->granulerate_d == 0) {
+    GST_WARNING ("frame rate %d/%d", pad->granulerate_n, pad->granulerate_d);
+    return FALSE;
+  }
+
+  pad->caps = gst_caps_new_empty_simple ("video/x-daala");
+
+  if (w > 0 && h > 0) {
+    gst_caps_set_simple (pad->caps, "width", G_TYPE_INT, w, "height",
+        G_TYPE_INT, h, NULL);
+  }
+
+  /* PAR of 0:N, N:0 and 0:0 is allowed and maps to 1:1 */
+  if (par_n == 0 || par_d == 0)
+    par_n = par_d = 1;
+
+  /* only add framerate now so caps look prettier, with width/height first */
+  gst_caps_set_simple (pad->caps, "framerate", GST_TYPE_FRACTION,
+      pad->granulerate_n, pad->granulerate_d, "pixel-aspect-ratio",
+      GST_TYPE_FRACTION, par_n, par_d, NULL);
+
+  return TRUE;
+}
+
+static gint64
+granulepos_to_granule_daala (GstOggStream * pad, gint64 granulepos)
+{
+  gint64 keyindex, keyoffset;
+
+  if (pad->granuleshift != 0) {
+    keyindex = granulepos >> pad->granuleshift;
+    keyoffset = granulepos - (keyindex << pad->granuleshift);
+    return keyindex + keyoffset;
+  } else {
+    return granulepos;
+  }
+}
+
+static gboolean
+is_granulepos_keyframe_daala (GstOggStream * pad, gint64 granulepos)
+{
+  gint64 frame_mask;
+
+  if (granulepos == (gint64) - 1)
+    return FALSE;
+
+  frame_mask = (1 << pad->granuleshift) - 1;
+
+  return ((granulepos & frame_mask) == 0);
+}
+
+static gboolean
+is_packet_keyframe_daala (GstOggStream * pad, ogg_packet * packet)
+{
+  if (packet->bytes == 0)
+    return FALSE;
+  return (packet->packet[0] & 0x40);
+}
+
+static gboolean
+is_header_daala (GstOggStream * pad, ogg_packet * packet)
+{
+  return (packet->bytes > 0 && (packet->packet[0] & 0x80) == 0x80);
+}
+
+static void
+extract_tags_daala (GstOggStream * pad, ogg_packet * packet)
+{
+  if (packet->bytes > 0 && packet->packet[0] == 0x81) {
+    tag_list_from_vorbiscomment_packet (packet,
+        (const guint8 *) "\201daala", 5, &pad->taglist);
+
+    if (!pad->taglist)
+      pad->taglist = gst_tag_list_new_empty ();
+
+    gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_VIDEO_CODEC, "Daala", NULL);
+
+    if (pad->bitrate)
+      gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_BITRATE, (guint) pad->bitrate, NULL);
+  }
+}
 
 /* *INDENT-OFF* */
 /* indent hates our freedoms */
@@ -2249,7 +2369,21 @@ const GstOggMap mappers[] = {
     packet_duration_ogm,
     NULL,
     extract_tags_ogm
-  }
+  },
+  {
+    "\200daala", 6, 42,
+    "video/x-daala",
+    setup_daala_mapper,
+    granulepos_to_granule_daala,
+    granule_to_granulepos_default,
+    is_granulepos_keyframe_daala,
+    is_packet_keyframe_daala,
+    is_header_daala,
+    packet_duration_constant,
+    NULL,
+    extract_tags_daala
+  },
+ 
 };
 /* *INDENT-ON* */
 

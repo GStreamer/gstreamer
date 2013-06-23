@@ -106,7 +106,7 @@ static GstStaticPadTemplate video_sink_factory =
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/x-theora; "
         "application/x-ogm-video; video/x-dirac; "
-        "video/x-smoke; video/x-vp8; ")
+        "video/x-smoke; video/x-vp8; video/x-daala")
     );
 
 static GstStaticPadTemplate audio_sink_factory =
