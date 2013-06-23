@@ -84,7 +84,7 @@ gboolean GstMpeg2Encoder::setup ()
 
     return FALSE;
   }
-  writer = new GstMpeg2EncStreamWriter (video_encoder->srcpad, &parms);
+  writer = new GstMpeg2EncStreamWriter (video_encoder, &parms);
 
   /* encoding internals */
   quantizer = new Quantizer (parms);

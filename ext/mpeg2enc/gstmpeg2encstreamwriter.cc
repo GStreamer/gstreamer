@@ -32,16 +32,15 @@
  * Class init stuff.
  */
 
-GstMpeg2EncStreamWriter::GstMpeg2EncStreamWriter (GstPad * in_pad,
+GstMpeg2EncStreamWriter::GstMpeg2EncStreamWriter (GstVideoEncoder * venc,
     EncoderParams * params)
 {
-  pad = in_pad;
-  gst_object_ref (pad);
+  video_encoder = GST_VIDEO_ENCODER_CAST (gst_object_ref (venc));
 }
 
 GstMpeg2EncStreamWriter::~GstMpeg2EncStreamWriter ()
 {
-  gst_object_unref (pad);
+  gst_object_unref (video_encoder);
 }
 
 void
@@ -50,7 +49,6 @@ GstMpeg2EncStreamWriter::WriteOutBufferUpto (const guint8 * buffer,
 {
   GstVideoCodecFrame *frame;
   GstBuffer *buf;
-  GstVideoEncoder *video_encoder = GST_VIDEO_ENCODER (GST_PAD_PARENT (pad));
   GstMpeg2enc *enc = GST_MPEG2ENC (video_encoder);
 
   frame = gst_video_encoder_get_oldest_frame (video_encoder);
