@@ -30,185 +30,8 @@
 
 #include <glib.h>
 
-/*
- * descriptor_tag TS  PS                      Identification
- *        0       n/a n/a Reserved
- *        1       n/a n/a Reserved
- *        2        X   X  video_stream_descriptor
- *        3        X   X  audio_stream_descriptor
- *        4        X   X  hierarchy_descriptor
- *        5        X   X  registration_descriptor
- *        6        X   X  data_stream_alignment_descriptor
- *        7        X   X  target_background_grid_descriptor
- *        8        X   X  video_window_descriptor
- *        9        X   X  CA_descriptor
- *       10        X   X  ISO_639_language_descriptor
- *       11        X   X  system_clock_descriptor
- *       12        X   X  multiplex_buffer_utilization_descriptor
- *       13        X   X  copyright_descriptor
- *       14        X      maximum bitrate descriptor
- *       15        X   X  private data indicator descriptor
- *       16        X   X  smoothing buffer descriptor
- *       17        X      STD_descriptor
- *       18        X   X  IBP descriptor
- *      19-63     n/a n/a ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved
- *     64-255     n/a n/a User Private
- */
-#define DESC_VIDEO_STREAM                     0x02
-#define DESC_AUDIO_STREAM                     0x03
-#define DESC_HIERARCHY                        0x04
-#define DESC_REGISTRATION                     0x05
-#define DESC_DATA_STREAM_ALIGNMENT            0x06
-#define DESC_TARGET_BACKGROUND_GRID           0x07
-#define DESC_VIDEO_WINDOW                     0x08
-#define DESC_CA                               0x09
-#define DESC_ISO_639_LANGUAGE                 0x0A
-#define DESC_SYSTEM_CLOCK                     0x0B
-#define DESC_MULTIPLEX_BUFFER_UTILISATION     0x0C
-#define DESC_COPYRIGHT                        0x0D
-#define DESC_MAXIMUM_BITRATE                  0x0E
-#define DESC_PRIVATE_DATA_INDICATOR           0x0F
-#define DESC_SMOOTHING_BUFFER                 0x10
-#define DESC_STD                              0x11
-#define DESC_IBP                              0x12
-
-/* 19-26 Defined in ISO/IEC 13818-6 (Extensions for DSM-CC) */
-#define DESC_DVB_CAROUSEL_IDENTIFIER          0x13
-
-/* 27-54 Later additions to ISO/IEC 13818-1 (H222.0 06/2012) */
-#define DESC_MPEG4_VIDEO                      0x1B
-#define DESC_MPEG4_AUDIO                      0x1C
-#define DESC_IOD                              0x1D
-#define DESC_SL                               0x1E
-#define DESC_FMC                              0x1F
-#define DESC_EXTERNAL_ES_ID                   0x20
-#define DESC_MUX_CODE                         0x21
-#define DESC_FMX_BUFFER_SIZE                  0x22
-#define DESC_MULTIPLEX_BUFFER                 0x23
-#define DESC_CONTENT_LABELING                 0x24
-#define DESC_METADATA_POINTER                 0x25
-#define DESC_METADATA                         0x26
-#define DESC_METADATA_STD                     0x27
-#define DESC_AVC_VIDEO                        0x28
-/* defined in ISO/IEC 13818-11, MPEG-2 IPMP */
-#define DESC_IPMP                             0x29
-#define DESC_AVC_TIMING_AND_HRD               0x2A
-#define DESC_MPEG2_AAC_AUDIO                  0x2B
-#define DESC_FLEX_MUX_TIMING                  0x2C
-#define DESC_MPEG4_TEXT                       0x2D
-#define DESC_MPEG4_AUDIO_EXTENSION            0x2E
-#define DESC_AUXILIARY_VIDEO_STREAM           0x2F
-#define DESC_SVC_EXTENSION                    0x30
-#define DESC_MVC_EXTENSION                    0x31
-#define DESC_J2K_VIDEO                        0x32
-#define DESC_MVC_OPERATION_POINT              0x33
-#define DESC_MPEG2_STEREOSCOPIC_VIDEO_FORMAT  0x34
-#define DESC_STEREOSCOPIC_PROGRAM_INFO        0x35
-#define DESC_STEREOSCOPIC_VIDEO_INFO          0x36
-
-/* 55-63 ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved */
-
-/* 64-127 DVB tags ETSI EN 300 468
- * (Specification for Service Information (SI) in DVB systems)
- */
-#define DESC_DVB_NETWORK_NAME                 0x40
-#define DESC_DVB_SERVICE_LIST                 0x41
-#define DESC_DVB_STUFFING                     0x42
-#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM    0x43
-#define DESC_DVB_CABLE_DELIVERY_SYSTEM        0x44
-#define DESC_DVB_VBI_DATA                     0x45
-#define DESC_DVB_VBI_TELETEXT                 0x46
-#define DESC_DVB_BOUQUET_NAME                 0x47
-#define DESC_DVB_SERVICE                      0x48
-#define DESC_DVB_COUNTRY_AVAILABILITY         0x49
-#define DESC_DVB_LINKAGE                      0x4A
-#define DESC_DVB_NVOD_REFERENCE               0x4B
-#define DESC_DVB_TIME_SHIFTED_SERVICE         0x4C
-#define DESC_DVB_SHORT_EVENT                  0x4D
-#define DESC_DVB_EXTENDED_EVENT               0x4E
-#define DESC_DVB_TIME_SHIFTED_EVENT           0x4F
-#define DESC_DVB_COMPONENT                    0x50
-#define DESC_DVB_MOSAIC                       0x51
-#define DESC_DVB_STREAM_IDENTIFIER            0x52
-#define DESC_DVB_CA_IDENTIFIER                0x53
-#define DESC_DVB_CONTENT                      0x54
-#define DESC_DVB_PARENTAL_RATING              0x55
-#define DESC_DVB_TELETEXT                     0x56
-#define DESC_DVB_TELEPHONE                    0x57
-#define DESC_DVB_LOCAL_TIME_OFFSET            0x58
-#define DESC_DVB_SUBTITLING                   0x59
-#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM  0x5A
-#define DESC_DVB_MULTILINGUAL_NETWORK_NAME    0x5B
-#define DESC_DVB_MULTILINGUAL_BOUQUET_NAME    0x5C
-#define DESC_DVB_MULTILINGUAL_SERVICE_NAME    0x5D
-#define DESC_DVB_MULTILINGUAL_COMPONENT       0x5E
-#define DESC_DVB_PRIVATE_DATA                 0x5F
-#define DESC_DVB_SERVICE_MOVE                 0x60
-#define DESC_DVB_SHORT_SMOOTHING_BUFFER       0x61
-#define DESC_DVB_FREQUENCY_LIST               0x62
-#define DESC_DVB_PARTIAL_TRANSPORT_STREAM     0x63
-#define DESC_DVB_DATA_BROADCAST               0x64
-#define DESC_DVB_SCRAMBLING                   0x65
-#define DESC_DVB_DATA_BROADCAST_ID            0x66
-#define DESC_DVB_TRANSPORT_STREAM             0x67
-#define DESC_DVB_DSNG                         0x68
-#define DESC_DVB_PDC                          0x69
-#define DESC_DVB_AC3                          0x6A
-#define DESC_DVB_ANCILLARY_DATA               0x6B
-#define DESC_DVB_CELL_LIST                    0x6C
-#define DESC_DVB_CELL_FREQUENCY_LINK          0x6D
-#define DESC_DVB_ANNOUNCEMENT_SUPPORT         0x6E
-#define DESC_DVB_APPLICATION_SIGNALLING       0x6F
-#define DESC_DVB_ADAPTATION_FIELD_DATA        0x70
-#define DESC_DVB_SERVICE_IDENTIFIER           0x71
-#define DESC_DVB_SERVICE_AVAILABILITY         0x72
-#define DESC_DVB_DEFAULT_AUTHORITY            0x73
-#define DESC_DVB_RELATED_CONTENT              0x74
-#define DESC_DVB_TVA_ID                       0x75
-#define DESC_DVB_CONTENT_IDENTIFIER           0x76
-#define DESC_DVB_TIMESLICE_FEC_IDENTIFIER     0x77
-#define DESC_DVB_ECM_REPETITION_RATE          0x78
-#define DESC_DVB_S2_SATELLITE_DELIVERY_SYSTEM 0x79
-#define DESC_DVB_ENHANCED_AC3                 0x7A
-#define DESC_DVB_DTS                          0x7B
-#define DESC_DVB_AAC                          0x7C
-/* 0x7D and 0x7E are reserved for future use */
-#define DESC_DVB_EXTENSION                    0x7F
-
-/* 0x80 - 0xFE are user defined */
-#define DESC_AC3_AUDIO_STREAM                 0x81
-#define DESC_DTG_LOGICAL_CHANNEL              0x83    /* from DTG D-Book */
-
-/* ATSC A/65 2009 */
-#define DESC_ATSC_STUFFING                    0x80
-#define DESC_ATSC_AC3                         0x83
-#define DESC_ATSC_CAPTION_SERVICE             0x86
-#define DESC_ATSC_CONTENT_ADVISORY            0x87
-#define DESC_ATSC_EXTENDED_CHANNEL_NAME       0xA0
-#define DESC_ATSC_SERVICE_LOCATION            0xA1
-#define DESC_ATSC_TIME_SHIFTED_SERVICE        0xA2
-#define DESC_ATSC_COMPONENT_NAME              0xA3
-#define DESC_ATSC_DCC_DEPARTING_REQUEST       0xA8
-#define DESC_ATSC_DCC_ARRIVING_REQUEST        0xA9
-#define DESC_ATSC_REDISTRIBUTION_CONTROL      0xAA
-#define DESC_ATSC_GENRE                       0xAB
-#define DESC_ATSC_PRIVATE_INFORMATION         0xAD
-
-/* ATSC A/53:3 2009 */
-#define DESC_ATSC_ENHANCED_SIGNALING          0xB2
-
-/* ATSC A/90 */
-#define DESC_ATSC_ASSOCIATION_TAG             0x14
-#define DESC_ATSC_DATA_SERVICE                0xA4
-#define DESC_ATSC_PID_COUNT                   0xA5
-#define DESC_ATSC_DOWNLOAD_DESCRIPTOR         0xA6
-#define DESC_ATSC_MULTIPROTOCOL_ENCAPSULATION 0xA7
-#define DESC_ATSC_MODULE_LINK                 0xB4
-#define DESC_ATSC_CRC32                       0xB5
-#define DESC_ATSC_GROUP_LINK                  0xB8
 
 /* Others */
-#define DESC_DIRAC_TC_PRIVATE                 0xAC
 
 
 /* 0xFF is forbidden */
@@ -389,6 +212,12 @@
 /* AC3_audio_stream_descriptor */
 #define DESC_AC_AUDIO_STREAM_bsid(desc)             ((desc)[2] & 0x1f)
 
+/* FIXME : Move list of well know registration ids to an enum
+ * in the mpegts library.
+ *
+ * See http://www.smpte-ra.org/mpegreg/mpegreg.html for a full list
+ * */
+
 /* registration_descriptor format IDs */
 #define DRF_ID_HDMV       0x48444d56
 #define DRF_ID_VC1        0x56432D31   /* defined in RP227 */
@@ -396,21 +225,5 @@
 #define DRF_ID_DTS2       0x44545332
 #define DRF_ID_DTS3       0x44545333
 #define DRF_ID_S302M      0x42535344
-
-typedef struct
-{
-  guint n_desc;
-  guint8 data_length;
-  guint8 *data;
-} GstMPEGDescriptor;
-
-G_GNUC_INTERNAL void gst_mpegtsdesc_init_debug (void);
-G_GNUC_INTERNAL gboolean gst_mpeg_descriptor_parse (GstMPEGDescriptor *result, guint8 * data, guint size);
-
-G_GNUC_INTERNAL guint gst_mpeg_descriptor_n_desc             (GstMPEGDescriptor * desc);
-G_GNUC_INTERNAL guint8 *gst_mpeg_descriptor_find             (GstMPEGDescriptor * desc, gint tag);
-G_GNUC_INTERNAL GArray *gst_mpeg_descriptor_find_all         (GstMPEGDescriptor * desc, gint tag);
-
-G_GNUC_INTERNAL guint8 *gst_mpeg_descriptor_nth              (GstMPEGDescriptor * desc, guint i);
 
 #endif /* __GST_MPEG_DESC_H__ */

@@ -1,18 +1,18 @@
 plugin_LTLIBRARIES = libgstmpegtsdemux.la
 
 libgstmpegtsdemux_la_SOURCES = \
-	gsttsdemux.c \
-	gstmpegdesc.c \
-	mpegtsbase.c	\
 	mpegtspacketizer.c \
+	mpegtsbase.c	\
 	mpegtsparse.c \
 	tsdemux.c	\
+	gsttsdemux.c \
 	pesparse.c
 
 libgstmpegtsdemux_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstmpegtsdemux_la_LIBADD = \
+	$(top_builddir)/gst-libs/gst/mpegts/libgstmpegts-$(GST_API_VERSION).la \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 libgstmpegtsdemux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

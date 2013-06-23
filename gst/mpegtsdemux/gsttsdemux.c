@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <gst/mpegts/mpegts.h>
 #include "mpegtsbase.h"
 #include "mpegtspacketizer.h"
 #include "mpegtsparse.h"
@@ -30,6 +31,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_mpegts_initialize ();
   if (!gst_mpegtsbase_plugin_init (plugin))
     return FALSE;
   if (!gst_mpegtsparse_plugin_init (plugin))

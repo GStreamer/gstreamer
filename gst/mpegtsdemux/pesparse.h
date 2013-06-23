@@ -26,6 +26,91 @@
 
 G_BEGIN_DECLS
 
+
+/*
+ * PES stream_id assignments:
+ *
+ * 1011 1100                program_stream_map
+ * 1011 1101                private_stream_1
+ * 1011 1110                padding_stream
+ * 1011 1111                private_stream_2
+ * 110x xxxx                ISO/IEC 13818-3 or ISO/IEC 11172-3 audio stream number x xxxx
+ * 1110 xxxx                ITU-T Rec. H.262 | ISO/IEC 13818-2 or ISO/IEC 11172-2 video stream number xxxx
+ * 1111 0000                ECM_stream
+ * 1111 0001                EMM_stream
+ * 1111 0010                ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Annex A or ISO/IEC 13818-6_DSMCC_stream
+ * 1111 0011                ISO/IEC_13522_stream
+ * 1111 0100                ITU-T Rec. H.222.1 type A
+ * 1111 0101                ITU-T Rec. H.222.1 type B
+ * 1111 0110                ITU-T Rec. H.222.1 type C
+ * 1111 0111                ITU-T Rec. H.222.1 type D
+ * 1111 1000                ITU-T Rec. H.222.1 type E
+ * 1111 1001                ancillary_stream
+ * 1111 1010                ISO/IEC 14496-1_SL-packetized_stream
+ * 1111 1011                ISO/IEC 14496-1_FlexMux_stream
+ * 1111 1100                metadata stream
+ * 1111 1101                extended_stream_id
+ * 1111 1110                reserved data stream
+ * 1111 1111                program_stream_directory
+ */
+
+#define ID_PS_END_CODE                          0xB9
+#define ID_PS_PACK_START_CODE                   0xBA
+#define ID_PS_SYSTEM_HEADER_START_CODE          0xBB
+#define ID_PS_PROGRAM_STREAM_MAP                0xBC
+#define ID_PRIVATE_STREAM_1                     0xBD
+#define ID_PADDING_STREAM                       0xBE
+#define ID_PRIVATE_STREAM_2                     0xBF
+#define ID_ISO_IEC_MPEG12_AUDIO_STREAM_0        0xC0
+#define ID_ISO_IEC_MPEG12_AUDIO_STREAM_32       0xDF
+#define ID_ISO_IEC_MPEG12_VIDEO_STREAM_0        0xE0
+#define ID_ISO_IEC_MPEG12_VIDEO_STREAM_16       0xEF
+#define ID_ECM_STREAM                           0xF0
+#define ID_EMM_STREAM                           0xF1
+#define ID_DSMCC_STREAM                         0xF2
+#define ID_ISO_IEC_13522_STREAM                 0xF3
+#define ID_ITU_TREC_H222_TYPE_A_STREAM          0xF4
+#define ID_ITU_TREC_H222_TYPE_B_STREAM          0xF5
+#define ID_ITU_TREC_H222_TYPE_C_STREAM          0xF6
+#define ID_ITU_TREC_H222_TYPE_D_STREAM          0xF7
+#define ID_ITU_TREC_H222_TYPE_E_STREAM          0xF8
+#define ID_ANCILLARY_STREAM                     0xF9
+#define ID_14496_1_SL_PACKETIZED_STREAM         0xFA
+#define ID_14496_1_SL_FLEXMUX_STREAM            0xFB
+#define ID_METADATA_STREAM                      0xFC
+#define ID_EXTENDED_STREAM_ID                   0xFD
+#define ID_RESERVED_STREAM_3                    0xFE
+#define ID_PROGRAM_STREAM_DIRECTORY             0xFF
+
+/*
+ * PES stream_id_extension assignments (if stream_id == ID_EXTENDED_STREAM_ID)
+ *
+ *  000 0000             IPMP Control Information stream
+ *  000 0001             IPMP Stream
+ *  000 0010 - 001 0001  ISO/IEC 14496-17 text Streams
+ *  001 0010 - 010 0001  ISO/IEC 23002-3 auxiliary video data Streams
+ *  ... .... - 011 1111  Reserved
+ *
+ *  PRIVATE STREAM RANGES (But known as used)
+ *  101 0101 - 101 1111  VC-1
+ *  110 0000 - 110 1111  Dirac (VC-1)
+ *
+ *  111 0001             AC3 or independent sub-stream 0 of EAC3/DD+
+ *                       DTS or core sub-stream
+ *  111 0010             dependent sub-stream of EAC3/DD+
+ *                       DTS extension sub-stream
+ *                       Secondary EAC3/DD+
+ *                       Secondary DTS-HD LBR
+ *  111 0110             AC3 in MLP/TrueHD
+ *  1xx xxxx    private_stream
+ */
+#define EXT_ID_IPMP_CONTORL_INFORMATION_STREAM  0x00
+#define EXT_ID_IPMP_STREAM			0x01
+
+/* VC-1 */
+#define EXT_ID_VC1_FIRST			0x55
+#define EXT_ID_VC1_LAST 			0x5F
+
 typedef enum {
   PES_FLAG_PRIORITY		= 1 << 3,	/* PES_priority (present: high-priority) */
   PES_FLAG_DATA_ALIGNMENT	= 1 << 2,	/* data_alignment_indicator */
@@ -57,7 +142,7 @@ typedef enum {
 } PESParsingResult;
 
 typedef struct {
-  guint8	stream_id;	/* See ID_* in gstmpegdefs.h */
+  guint8	stream_id;	/* See ID_* above */
   guint16	packet_length;	/* The size of the PES header and PES data
 				 * (if 0 => unbounded packet) */
   guint16	header_size;	/* The complete size of the PES header */
