@@ -33,8 +33,6 @@
 #include <ontheflyratectl.hh>
 #include <pass1ratectl.hh>
 #include <pass2ratectl.hh>
-#else
-#include <ratectl.hh>
 #endif
 #include <seqencoder.hh>
 #include <mpeg2coder.hh>
@@ -74,32 +72,15 @@ gboolean GstMpeg2Encoder::setup ()
   /* I/O */
   reader = new GstMpeg2EncPictureReader (element, caps, &parms);
   reader->StreamPictureParams (strm);
-#if GST_MJPEGTOOLS_API == 10800
-  /* chain thread caters for reading, do not need another thread for this */
-  options.allow_parallel_read = FALSE;
-#endif
   if (options.SetFormatPresets (strm)) {
     delete reader;
     reader = NULL;
     writer = NULL;
     quantizer = NULL;
-#if GST_MJPEGTOOLS_API < 10900
-    bitrate_controller = NULL;
-#else
     pass1ratectl = NULL;
     pass2ratectl = NULL;
-#endif
-#if GST_MJPEGTOOLS_API >= 10900
     /* sequencer */
     seqencoder = NULL;
-#elif GST_MJPEGTOOLS_API >= 10800
-    /* sequencer */
-    seqencoder = NULL;
-#else
-    coder = NULL;
-    /* sequencer */
-    seqencoder = NULL;
-#endif
 
     return FALSE;
   }
@@ -107,26 +88,11 @@ gboolean GstMpeg2Encoder::setup ()
 
   /* encoding internals */
   quantizer = new Quantizer (parms);
-#if GST_MJPEGTOOLS_API < 10900
-  bitrate_controller = new OnTheFlyRateCtl (parms);
-#else
   pass1ratectl = new OnTheFlyPass1 (parms);
   pass2ratectl = new OnTheFlyPass2 (parms);
-#endif
-#if GST_MJPEGTOOLS_API >= 10900
   /* sequencer */
   seqencoder = new SeqEncoder (parms, *reader, *quantizer,
       *writer, *pass1ratectl, *pass2ratectl);
-#elif GST_MJPEGTOOLS_API >= 10800
-  /* sequencer */
-  seqencoder = new SeqEncoder (parms, *reader, *quantizer,
-      *writer, *bitrate_controller);
-#else
-  coder = new MPEG2Coder (parms, *writer);
-  /* sequencer */
-  seqencoder = new SeqEncoder (parms, *reader, *quantizer,
-      *writer, *coder, *bitrate_controller);
-#endif
 
   return TRUE;
 }
@@ -138,9 +104,7 @@ GstMpeg2Encoder::init ()
     parms.Init (options);
     reader->Init ();
     quantizer->Init ();
-#if GST_MJPEGTOOLS_API >= 10800
     seqencoder->Init ();
-#endif
     init_done = TRUE;
   }
 }
@@ -153,11 +117,7 @@ void
 GstMpeg2Encoder::encode ()
 {
   /* hm, this is all... eek! */
-#if GST_MJPEGTOOLS_API >= 10800
   seqencoder->EncodeStream ();
-#else
-  seqencoder->Encode ();
-#endif
 }
 
 /*

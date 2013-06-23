@@ -495,7 +495,6 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
       g_param_spec_boolean ("constraints", "Constraints",
           "Use strict video resolution and bitrate checks",
           TRUE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-#if GST_MJPEGTOOLS_API >= 10800
   g_object_class_install_property (klass, ARG_DUALPRIME_MPEG2,
       g_param_spec_boolean ("dualprime", "Dual Prime Motion Estimation",
           "Dual Prime Motion Estimation Mode for MPEG-2 I/P-frame only "
@@ -632,11 +631,9 @@ GstMpeg2EncOptions::getProperty (guint prop_id, GValue * value)
     case ARG_CONSTRAINTS:
       g_value_set_boolean (value, !ignore_constraints);
       break;
-#if GST_MJPEGTOOLS_API >= 10800
     case ARG_DUALPRIME_MPEG2:
       g_value_set_boolean (value, hack_dualprime);
       break;
-#endif
     default:
       break;
   }
@@ -770,11 +767,9 @@ GstMpeg2EncOptions::setProperty (guint prop_id, const GValue * value)
     case ARG_CONSTRAINTS:
       ignore_constraints = !g_value_get_boolean (value);
       break;
-#if GST_MJPEGTOOLS_API >= 10800
     case ARG_DUALPRIME_MPEG2:
       hack_dualprime = g_value_get_boolean (value);
       break;
-#endif
     default:
       break;
   }

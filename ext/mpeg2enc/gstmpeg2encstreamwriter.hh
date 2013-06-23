@@ -27,8 +27,6 @@
 
 #include <elemstrmwriter.hh>
 
-#if GST_MJPEGTOOLS_API >= 10800
-
 class GstMpeg2EncStreamWriter : public ElemStrmWriter {
   public:
   GstMpeg2EncStreamWriter (GstPad *pad, EncoderParams *params);
@@ -43,24 +41,5 @@ class GstMpeg2EncStreamWriter : public ElemStrmWriter {
   GstPad *pad;
   GstBuffer *buf;
 };
-
-#else
-
-class GstMpeg2EncStreamWriter : public ElemStrmWriter {
-public:
-  GstMpeg2EncStreamWriter (GstPad *pad, EncoderParams *params);
-  ~GstMpeg2EncStreamWriter ();
-
-  /* output functions */
-  void PutBits (guint32 val, gint n);
-  void FrameBegin ();
-  void FrameFlush ();
-  void FrameDiscard ();
-
-private:
-  GstPad *pad;
-  GstBuffer *buf;
-};
-#endif /* GST_MJPEGTOOLS_API >= 10800 */
 
 #endif /* __GST_MPEG2ENCSTREAMWRITER_H__ */

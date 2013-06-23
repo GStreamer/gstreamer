@@ -104,15 +104,8 @@ GstMpeg2EncPictureReader::StreamPictureParams (MPEG2EncInVidParams & strm)
  */
 
 bool
-#if GST_MJPEGTOOLS_API >= 10900
     GstMpeg2EncPictureReader::LoadFrame (ImagePlanes & image)
-#else
-    GstMpeg2EncPictureReader::LoadFrame ()
-#endif
 {
-#if GST_MJPEGTOOLS_API < 10900
-  gint n;
-#endif
   gint i, x, y, s;
   guint8 *frame;
   GstMpeg2enc *enc;
@@ -137,45 +130,27 @@ bool
   gst_video_frame_map (&vframe, &enc->input_state->info, inframe->input_buffer, GST_MAP_READ);
 
 //  frame = GST_BUFFER_DATA (enc->buffer);
-#if GST_MJPEGTOOLS_API < 10900
-  n = frames_read % input_imgs_buf_size;
-#endif
   frame = GST_VIDEO_FRAME_COMP_DATA (&vframe, 0);
   s = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, 0);
   x = encparams.horizontal_size;
   y = encparams.vertical_size;
 
   for (i = 0; i < y; i++) {
-#if GST_MJPEGTOOLS_API >= 10900
     memcpy (image.Plane (0) + i * encparams.phy_width, frame, x);
-#else
-    memcpy (input_imgs_buf[n][0] + i * encparams.phy_width, frame, x);
-#endif
     frame += s;
   }
-#if GST_MJPEGTOOLS_API < 10900
-  lum_mean[n] = LumMean (input_imgs_buf[n][0]);
-#endif
   frame = GST_VIDEO_FRAME_COMP_DATA (&vframe, 1);
   s = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, 1);
   x >>= 1;
   y >>= 1;
   for (i = 0; i < y; i++) {
-#if GST_MJPEGTOOLS_API >= 10900
     memcpy (image.Plane (1) + i * encparams.phy_chrom_width, frame, x);
-#else
-    memcpy (input_imgs_buf[n][1] + i * encparams.phy_chrom_width, frame, x);
-#endif
     frame += s;
   }
   frame = GST_VIDEO_FRAME_COMP_DATA (&vframe, 2);
   s = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, 2);
   for (i = 0; i < y; i++) {
-#if GST_MJPEGTOOLS_API >= 10900
     memcpy (image.Plane (2) + i * encparams.phy_chrom_width, frame, x);
-#else
-    memcpy (input_imgs_buf[n][2] + i * encparams.phy_chrom_width, frame, x);
-#endif
     frame += s;
   }
   gst_video_frame_unmap (&vframe);
