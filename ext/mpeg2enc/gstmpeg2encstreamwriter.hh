@@ -39,7 +39,6 @@ class GstMpeg2EncStreamWriter : public ElemStrmWriter {
 
   private:
   GstPad *pad;
-  GstBuffer *buf;
 };
 
 #endif /* __GST_MPEG2ENCSTREAMWRITER_H__ */

@@ -37,7 +37,6 @@ GstMpeg2EncStreamWriter::GstMpeg2EncStreamWriter (GstPad * in_pad,
 {
   pad = in_pad;
   gst_object_ref (pad);
-  buf = NULL;
 }
 
 GstMpeg2EncStreamWriter::~GstMpeg2EncStreamWriter ()
