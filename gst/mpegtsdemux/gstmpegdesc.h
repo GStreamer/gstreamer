@@ -75,9 +75,38 @@
 /* 19-26 Defined in ISO/IEC 13818-6 (Extensions for DSM-CC) */
 #define DESC_DVB_CAROUSEL_IDENTIFIER          0x13
 
-/* 27-44 Later additions to ISO/IEC 13818-1 */
+/* 27-54 Later additions to ISO/IEC 13818-1 (H222.0 06/2012) */
+#define DESC_MPEG4_VIDEO                      0x1B
+#define DESC_MPEG4_AUDIO                      0x1C
+#define DESC_IOD                              0x1D
+#define DESC_SL                               0x1E
+#define DESC_FMC                              0x1F
+#define DESC_EXTERNAL_ES_ID                   0x20
+#define DESC_MUX_CODE                         0x21
+#define DESC_FMX_BUFFER_SIZE                  0x22
+#define DESC_MULTIPLEX_BUFFER                 0x23
+#define DESC_CONTENT_LABELING                 0x24
+#define DESC_METADATA_POINTER                 0x25
+#define DESC_METADATA                         0x26
+#define DESC_METADATA_STD                     0x27
+#define DESC_AVC_VIDEO                        0x28
+/* defined in ISO/IEC 13818-11, MPEG-2 IPMP */
+#define DESC_IPMP                             0x29
+#define DESC_AVC_TIMING_AND_HRD               0x2A
+#define DESC_MPEG2_AAC_AUDIO                  0x2B
+#define DESC_FLEX_MUX_TIMING                  0x2C
+#define DESC_MPEG4_TEXT                       0x2D
+#define DESC_MPEG4_AUDIO_EXTENSION            0x2E
+#define DESC_AUXILIARY_VIDEO_STREAM           0x2F
+#define DESC_SVC_EXTENSION                    0x30
+#define DESC_MVC_EXTENSION                    0x31
+#define DESC_J2K_VIDEO                        0x32
+#define DESC_MVC_OPERATION_POINT              0x33
+#define DESC_MPEG2_STEREOSCOPIC_VIDEO_FORMAT  0x34
+#define DESC_STEREOSCOPIC_PROGRAM_INFO        0x35
+#define DESC_STEREOSCOPIC_VIDEO_INFO          0x36
 
-/* 45-63 ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved */
+/* 55-63 ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved */
 
 /* 64-127 DVB tags ETSI EN 300 468
  * (Specification for Service Information (SI) in DVB systems)
