@@ -73,6 +73,9 @@ static void gst_gdk_pixbuf_overlay_before_transform (GstBaseTransform * trans,
 static gboolean gst_gdk_pixbuf_overlay_set_info (GstVideoFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info);
+static gboolean
+gst_gdk_pixbuf_overlay_load_image (GstGdkPixbufOverlay * overlay,
+    GError ** err);
 
 enum
 {
@@ -134,8 +137,9 @@ gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "location",
-          "Location of image file to overlay", NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Location of image file to overlay", NULL, GST_PARAM_CONTROLLABLE
+          | GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE
+          | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_OFFSET_X,
       g_param_spec_int ("offset-x", "X Offset",
           "For positive value, horizontal offset of overlay image in pixels from"
@@ -216,9 +220,16 @@ gst_gdk_pixbuf_overlay_set_property (GObject * object, guint property_id,
   GST_OBJECT_LOCK (overlay);
 
   switch (property_id) {
-    case PROP_LOCATION:
+    case PROP_LOCATION:{
+      GError *err = NULL;
       g_free (overlay->location);
       overlay->location = g_value_dup_string (value);
+      if (!gst_gdk_pixbuf_overlay_load_image (overlay, &err)) {
+        GST_ERROR_OBJECT (overlay, "Could not load overlay image: %s",
+            err->message);
+        g_error_free (err);
+      }
+    }
       break;
     case PROP_OFFSET_X:
       overlay->offset_x = g_value_get_int (value);
@@ -438,27 +449,29 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
   GstVideoOverlayRectangle *rect;
   GstVideoMeta *overlay_meta;
   gint x, y, width, height;
-  gint video_width = GST_VIDEO_INFO_WIDTH (&GST_VIDEO_FILTER (overlay)->in_info);
-  gint video_height = GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_FILTER (overlay)->in_info);
+  gint video_width =
+      GST_VIDEO_INFO_WIDTH (&GST_VIDEO_FILTER (overlay)->in_info);
+  gint video_height =
+      GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_FILTER (overlay)->in_info);
 
   if (overlay->comp) {
     gst_video_overlay_composition_unref (overlay->comp);
     overlay->comp = NULL;
   }
 
-  if (overlay->alpha == 0.0)
+  if (overlay->alpha == 0.0 || overlay->pixels == NULL)
     return;
 
   overlay_meta = gst_buffer_get_video_meta (overlay->pixels);
 
   x = overlay->offset_x < 0 ?
-    video_width + overlay->offset_x - overlay_meta->width +
-    (overlay->relative_x * overlay_meta->width) :
-    overlay->offset_x + (overlay->relative_x * overlay_meta->width);
+      video_width + overlay->offset_x - overlay_meta->width +
+      (overlay->relative_x * overlay_meta->width) :
+      overlay->offset_x + (overlay->relative_x * overlay_meta->width);
   y = overlay->offset_y < 0 ?
-    video_height + overlay->offset_y - overlay_meta->height +
-    (overlay->relative_y * overlay_meta->height) :
-    overlay->offset_y + (overlay->relative_y * overlay_meta->height);
+      video_height + overlay->offset_y - overlay_meta->height +
+      (overlay->relative_y * overlay_meta->height) :
+      overlay->offset_y + (overlay->relative_y * overlay_meta->height);
 
   width = overlay->overlay_width;
   if (width == 0)
@@ -475,8 +488,7 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
       overlay->relative_x * 100.0, overlay->relative_y * 100.0,
       overlay->overlay_height, overlay->overlay_width);
   GST_DEBUG_OBJECT (overlay, "overlay rendered: %d x %d @ %d,%d (onto %d x %d)",
-      width, height, x, y,
-      video_width, video_height);
+      width, height, x, y, video_width, video_height);
 
   rect = gst_video_overlay_rectangle_new_raw (overlay->pixels,
       x, y, width, height, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
