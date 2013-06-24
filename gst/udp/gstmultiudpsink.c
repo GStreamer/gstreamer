@@ -1132,6 +1132,19 @@ gst_multiudpsink_start (GstBaseSink * bsink)
   }
 #endif
 
+#ifdef SO_BINDTODEVICE
+  if (sink->multi_iface) {
+    if (sink->used_socket) {
+      setsockopt (g_socket_get_fd (sink->used_socket), SOL_SOCKET,
+          SO_BINDTODEVICE, sink->multi_iface, strlen (sink->multi_iface));
+    }
+    if (sink->used_socket_v6) {
+      setsockopt (g_socket_get_fd (sink->used_socket_v6), SOL_SOCKET,
+          SO_BINDTODEVICE, sink->multi_iface, strlen (sink->multi_iface));
+    }
+  }
+#endif
+
   if (sink->used_socket)
     g_socket_set_broadcast (sink->used_socket, TRUE);
   if (sink->used_socket_v6)
