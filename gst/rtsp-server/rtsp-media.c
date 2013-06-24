@@ -439,7 +439,7 @@ gst_rtsp_media_new (GstElement * element)
 }
 
 /**
- * gst_rtsp_media_take_element:
+ * gst_rtsp_media_take_pipeline:
  * @media: a #GstRTSPMedia
  * @pipeline: (transfer full): a #GstPipeline
  *
