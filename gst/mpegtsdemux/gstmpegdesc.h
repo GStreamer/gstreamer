@@ -179,13 +179,39 @@
 #define DESC_AC3_AUDIO_STREAM                 0x81
 #define DESC_DTG_LOGICAL_CHANNEL              0x83    /* from DTG D-Book */
 
+/* ATSC A/65 2009 */
+#define DESC_ATSC_STUFFING                    0x80
+#define DESC_ATSC_AC3                         0x83
+#define DESC_ATSC_CAPTION_SERVICE             0x86
+#define DESC_ATSC_CONTENT_ADVISORY            0x87
+#define DESC_ATSC_EXTENDED_CHANNEL_NAME       0xA0
+#define DESC_ATSC_SERVICE_LOCATION            0xA1
+#define DESC_ATSC_TIME_SHIFTED_SERVICE        0xA2
+#define DESC_ATSC_COMPONENT_NAME              0xA3
+#define DESC_ATSC_DCC_DEPARTING_REQUEST       0xA8
+#define DESC_ATSC_DCC_ARRIVING_REQUEST        0xA9
+#define DESC_ATSC_REDISTRIBUTION_CONTROL      0xAA
+#define DESC_ATSC_GENRE                       0xAB
+#define DESC_ATSC_PRIVATE_INFORMATION         0xAD
+
+/* ATSC A/53:3 2009 */
+#define DESC_ATSC_ENHANCED_SIGNALING          0xB2
+
+/* ATSC A/90 */
+#define DESC_ATSC_ASSOCIATION_TAG             0x14
+#define DESC_ATSC_DATA_SERVICE                0xA4
+#define DESC_ATSC_PID_COUNT                   0xA5
+#define DESC_ATSC_DOWNLOAD_DESCRIPTOR         0xA6
+#define DESC_ATSC_MULTIPROTOCOL_ENCAPSULATION 0xA7
+#define DESC_ATSC_MODULE_LINK                 0xB4
+#define DESC_ATSC_CRC32                       0xB5
+#define DESC_ATSC_GROUP_LINK                  0xB8
+
 /* Others */
 #define DESC_DIRAC_TC_PRIVATE                 0xAC
 
 
 /* 0xFF is forbidden */
-
-
 
 /* common for all descriptors */
 #define DESC_TAG(desc) 		(desc[0])
