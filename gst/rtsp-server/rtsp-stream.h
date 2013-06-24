@@ -94,6 +94,9 @@ gboolean          gst_rtsp_stream_leave_bin        (GstRTSPStream *stream,
 void              gst_rtsp_stream_get_server_port  (GstRTSPStream *stream,
                                                     GstRTSPRange *server_port,
                                                     GSocketFamily family);
+
+GObject *         gst_rtsp_stream_get_rtpsession   (GstRTSPStream *stream);
+
 void              gst_rtsp_stream_get_ssrc         (GstRTSPStream *stream,
                                                     guint *ssrc);
 

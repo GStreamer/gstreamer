@@ -271,7 +271,7 @@ gst_rtsp_stream_get_mtu (GstRTSPStream * stream)
 
 /* Update the dscp qos property on the udp sinks */
 static void
-update_dscp_qos (GstRTSPStream *stream)
+update_dscp_qos (GstRTSPStream * stream)
 {
   GstRTSPStreamPrivate *priv;
 
@@ -298,7 +298,7 @@ update_dscp_qos (GstRTSPStream *stream)
  * Configure the dscp qos of the outgoing sockets to @dscp_qos.
  */
 void
-gst_rtsp_stream_set_dscp_qos (GstRTSPStream *stream, gint dscp_qos)
+gst_rtsp_stream_set_dscp_qos (GstRTSPStream * stream, gint dscp_qos)
 {
   GstRTSPStreamPrivate *priv;
 
@@ -327,7 +327,7 @@ gst_rtsp_stream_set_dscp_qos (GstRTSPStream *stream, gint dscp_qos)
  * Returns: the DSCP QoS value of the outgoing sockets, or -1 if disbled.
  */
 gint
-gst_rtsp_stream_get_dscp_qos (GstRTSPStream *stream)
+gst_rtsp_stream_get_dscp_qos (GstRTSPStream * stream)
 {
   GstRTSPStreamPrivate *priv;
 
@@ -803,6 +803,32 @@ gst_rtsp_stream_get_server_port (GstRTSPStream * stream,
       *server_port = priv->server_port_v6;
   }
   g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_stream_get_rtpsession:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the RTP session of this stream.
+ *
+ * Returns: The RTP session of this stream. Unref after usage.
+ */
+GObject *
+gst_rtsp_stream_get_rtpsession (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  GObject *session;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((session = priv->session))
+    g_object_ref (session);
+  g_mutex_unlock (&priv->lock);
+
+  return session;
 }
 
 /**
