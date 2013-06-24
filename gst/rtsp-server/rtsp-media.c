@@ -439,6 +439,22 @@ gst_rtsp_media_new (GstElement * element)
 }
 
 /**
+ * gst_rtsp_media_get_element:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the element that was used when constructing @media.
+ *
+ * Returns: a #GstElement. Unref after usage.
+ */
+GstElement *
+gst_rtsp_media_get_element (GstRTSPMedia * media)
+{
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+
+  return gst_object_ref (media->priv->element);
+}
+
+/**
  * gst_rtsp_media_take_pipeline:
  * @media: a #GstRTSPMedia
  * @pipeline: (transfer full): a #GstPipeline

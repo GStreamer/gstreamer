@@ -117,6 +117,7 @@ GType                 gst_rtsp_media_get_type         (void);
 
 /* creating the media */
 GstRTSPMedia *        gst_rtsp_media_new              (GstElement *element);
+GstElement *          gst_rtsp_media_get_element      (GstRTSPMedia *media);
 
 void                  gst_rtsp_media_take_pipeline    (GstRTSPMedia *media, GstPipeline *pipeline);
 
