@@ -70,6 +70,9 @@ GstPad *          gst_rtsp_stream_get_srcpad       (GstRTSPStream *stream);
 void              gst_rtsp_stream_set_mtu          (GstRTSPStream *stream, guint mtu);
 guint             gst_rtsp_stream_get_mtu          (GstRTSPStream *stream);
 
+void              gst_rtsp_stream_set_dscp_qos     (GstRTSPStream *stream, gint dscp_qos);
+gint              gst_rtsp_stream_get_dscp_qos     (GstRTSPStream *stream);
+
 void              gst_rtsp_stream_set_address_pool (GstRTSPStream *stream, GstRTSPAddressPool *pool);
 GstRTSPAddressPool *
                   gst_rtsp_stream_get_address_pool (GstRTSPStream *stream);

@@ -84,6 +84,8 @@ struct _GstRTSPStreamPrivate
   /* transports we stream to */
   guint n_active;
   GList *transports;
+
+  gint dscp_qos;
 };
 
 
@@ -126,6 +128,8 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
   GST_DEBUG ("new stream %p", stream);
 
   stream->priv = priv;
+
+  stream->priv->dscp_qos = -1;
 
   g_mutex_init (&priv->lock);
 }
@@ -264,6 +268,76 @@ gst_rtsp_stream_get_mtu (GstRTSPStream * stream)
 
   return mtu;
 }
+
+/* Update the dscp qos property on the udp sinks */
+static void
+update_dscp_qos (GstRTSPStream *stream)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  priv = stream->priv;
+
+  if (priv->udpsink[0]) {
+    g_object_set (G_OBJECT (priv->udpsink[0]), "qos-dscp", priv->dscp_qos,
+        NULL);
+  }
+
+  if (priv->udpsink[1]) {
+    g_object_set (G_OBJECT (priv->udpsink[1]), "qos-dscp", priv->dscp_qos,
+        NULL);
+  }
+}
+
+/**
+ * gst_rtsp_stream_set_dscp_qos:
+ * @stream: a #GstRTSPStream
+ * @dscp_qos: a new dscp qos value (0-63, or -1 to disable)
+ *
+ * Configure the dscp qos of the outgoing sockets to @dscp_qos.
+ */
+void
+gst_rtsp_stream_set_dscp_qos (GstRTSPStream *stream, gint dscp_qos)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  priv = stream->priv;
+
+  GST_LOG_OBJECT (stream, "set DSCP QoS %d", dscp_qos);
+
+  if (dscp_qos < -1 || dscp_qos > 63) {
+    GST_WARNING_OBJECT (stream, "trying to set illegal dscp qos %d", dscp_qos);
+    return;
+  }
+
+  priv->dscp_qos = dscp_qos;
+
+  update_dscp_qos (stream);
+}
+
+/**
+ * gst_rtsp_stream_get_dscp_qos:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the configured DSCP QoS in of the outgoing sockets.
+ *
+ * Returns: the DSCP QoS value of the outgoing sockets, or -1 if disbled.
+ */
+gint
+gst_rtsp_stream_get_dscp_qos (GstRTSPStream *stream)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), -1);
+
+  priv = stream->priv;
+
+  return priv->dscp_qos;
+}
+
 
 /**
  * gst_rtsp_stream_set_address_pool:
@@ -1017,6 +1091,9 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
 
   if (!alloc_ports (stream))
     goto no_ports;
+
+  /* update the dscp qos field in the sinks */
+  update_dscp_qos (stream);
 
   /* get a pad for sending RTP */
   name = g_strdup_printf ("send_rtp_sink_%u", idx);
