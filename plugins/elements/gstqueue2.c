@@ -2300,9 +2300,16 @@ gst_queue2_handle_sink_query (GstPad * pad, GstObject * parent,
     default:
       if (GST_QUERY_IS_SERIALIZED (query)) {
         GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received query %p", query);
-        /* serialized events go in the queue */
+        /* serialized events go in the queue. We need to be certain that we
+         * don't cause deadlocks waiting for the query return value. We check if
+         * the queue is empty (nothing is blocking downstream and the query can
+         * be pushed for sure) or we are not buffering. If we are buffering,
+         * the pipeline waits to unblock downstream until our queue fills up
+         * completely, which can not happen if we block on the query..
+         * Therefore we only potentially block when we are not buffering. */
         GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->sinkresult, out_flushing);
-        if (QUEUE_IS_USING_QUEUE (queue)) {
+        if (QUEUE_IS_USING_QUEUE (queue) && (gst_queue2_is_empty (queue)
+                || !queue->use_buffering)) {
           gst_queue2_locked_enqueue (queue, query, GST_QUEUE2_ITEM_TYPE_QUERY);
 
           STATUS (queue, queue->sinkpad, "wait for QUERY");
