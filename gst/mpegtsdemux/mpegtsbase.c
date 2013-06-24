@@ -524,7 +524,8 @@ mpegts_base_program_add_stream (MpegTSBase * base,
       pid, stream_type, stream_info);
 
   if (G_UNLIKELY (program->streams[pid])) {
-    GST_WARNING ("Stream already present !");
+    if (stream_type != 0xff)
+      GST_WARNING ("Stream already present !");
     return NULL;
   }
 
