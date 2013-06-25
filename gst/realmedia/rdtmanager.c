@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2005,2006> Wim Taymans <wim@fluendo.com>
+ *               <2013> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -252,6 +253,16 @@ create_session (GstRDTManager * rdtmanager, gint id)
 }
 
 static gboolean
+forward_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GstPad *srcpad = GST_PAD_CAST (user_data);
+
+  gst_pad_push_event (srcpad, gst_event_ref (*event));
+
+  return TRUE;
+}
+
+static gboolean
 activate_session (GstRDTManager * rdtmanager, GstRDTManagerSession * session,
     guint32 ssrc, guint8 pt)
 {
@@ -306,6 +317,8 @@ activate_session (GstRDTManager * rdtmanager, GstRDTManagerSession * session,
 
   gst_pad_set_active (session->recv_rtp_src, TRUE);
 
+  gst_pad_sticky_events_foreach (session->recv_rtp_sink, forward_sticky_events,
+      session->recv_rtp_src);
   gst_pad_set_caps (session->recv_rtp_src, caps);
   gst_caps_unref (caps);
 
@@ -519,7 +532,7 @@ gst_rdt_manager_class_init (GstRDTManagerClass * g_class)
   gst_element_class_set_static_metadata (gstelement_class, "RTP Decoder",
       "Codec/Parser/Network",
       "Accepts raw RTP and RTCP packets and sends them forward",
-      "Wim Taymans <wim@fluendo.com>");
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   GST_DEBUG_CATEGORY_INIT (rdtmanager_debug, "rdtmanager", 0, "RTP decoder");
 }
