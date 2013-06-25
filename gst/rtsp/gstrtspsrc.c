@@ -560,6 +560,12 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    *
    * Handle a server request in @request and prepare @response.
    *
+   * This signal is called from the streaming thread, you should therefore not
+   * do any state changes on @rtspsrc because this might deadlock. If you want
+   * to modify the state as a result of this signal, post a
+   * #GST_MESSAGE_REQUEST_STATE message on the bus or signal the main thread
+   * in some other way.
+   *
    * Since: 1.2
    */
   gst_rtspsrc_signals[SIGNAL_HANDLE_REQUEST] =
