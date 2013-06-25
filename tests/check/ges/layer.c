@@ -396,6 +396,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_DURATION (src), 1000);
   assert_equals_uint64 (_START (src1), 500);
   assert_equals_uint64 (_DURATION (src1), 1500 - 500);
+  ges_timeline_commit (timeline);
 
   GST_DEBUG ("Checking that a transition has been added");
   objects = ges_layer_get_clips (layer);
@@ -574,6 +575,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   GST_DEBUG
       ("Changig first source duration to 800 2 transitions should be created");
   ges_timeline_element_set_duration (src, 800);
+  ges_timeline_commit (timeline);
   /*             600__________________src_____________1400
    *        500___________src1________1250
    *                                  1250___________src2________2250
@@ -649,6 +651,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   GST_DEBUG
       ("Set third clip start to 1100, 1 new transition should be created");
   ges_timeline_element_set_start (src2, 1100);
+  ges_timeline_commit (timeline);
   /*             600____src___1100
    *        500___________src1________1250
    *                          1100___________src2________2100
@@ -688,6 +691,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   GST_DEBUG ("Set third clip start to 1000, Transition should be updated");
   ges_clip_edit (GES_CLIP (src2), NULL, -1,
       GES_EDIT_MODE_NORMAL, GES_EDGE_START, 1000);
+  ges_timeline_commit (timeline);
   /*             600____src___1100
    *                       !_tr__^
    *        500___________src1________1250
@@ -788,6 +792,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   GST_DEBUG ("Adding clip from 500 -- 1000 to first layer");
   src1 = GES_TIMELINE_ELEMENT (ges_layer_add_asset (layer, asset, 500,
           0, 1000, GES_TRACK_TYPE_UNKNOWN));
+  ges_timeline_commit (timeline);
   fail_unless (GES_IS_CLIP (src1));
 
   /*
@@ -1384,6 +1389,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
 
   GST_DEBUG ("Moving src2 to 1200, check everything updates properly");
   ges_timeline_element_set_start (src2, 1200);
+  ges_timeline_commit (timeline);
   /*
    * 0___________src_________1000
    *        500______tr______1000

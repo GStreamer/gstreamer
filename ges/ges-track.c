@@ -238,22 +238,11 @@ resort_and_fill_gaps (GESTrack * track)
 
 /* callbacks */
 static void
-timeline_duration_changed_cb (GESTimeline * timeline,
-    GParamSpec * arg, GESTrack * track)
-{
-  GESTrackPrivate *priv = track->priv;
-
-  /* Remove the last gap on the timeline if not needed anymore */
-  if (priv->updating == TRUE) {
-    resort_and_fill_gaps (track);
-  }
-}
-
-static void
 sort_track_elements_cb (GESTrackElement * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTrack * track)
 {
-  resort_and_fill_gaps (track);
+  g_sequence_sort (track->priv->trackelements_by_start,
+      (GCompareDataFunc) element_start_compare, NULL);
 }
 
 static void
@@ -643,14 +632,6 @@ ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
 {
   GST_DEBUG ("track:%p, timeline:%p", track, timeline);
 
-  if (track->priv->timeline)
-    g_signal_handlers_disconnect_by_func (track->priv->timeline,
-        timeline_duration_changed_cb, track);
-
-  if (timeline)
-    g_signal_connect (timeline, "notify::duration",
-        G_CALLBACK (timeline_duration_changed_cb), track);
-
   track->priv->timeline = timeline;
   resort_and_fill_gaps (track);
 }
@@ -741,8 +722,6 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
 
   g_signal_connect (GES_TRACK_ELEMENT (object), "notify::priority",
       G_CALLBACK (sort_track_elements_cb), track);
-
-  resort_and_fill_gaps (track);
 
   return TRUE;
 }
@@ -863,6 +842,7 @@ ges_track_commit (GESTrack * track)
 
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
 
+  resort_and_fill_gaps (track);
   g_signal_emit_by_name (track->priv->composition, "commit", TRUE, &ret);
 
   return ret;

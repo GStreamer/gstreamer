@@ -305,6 +305,7 @@ GST_START_TEST (test_gap_filling_basic)
   assert_equals_uint64 (_DURATION (clip1), 5);
 
   ges_layer_add_clip (layer, GES_CLIP (clip1));
+  ges_timeline_commit (timeline);
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip1)), 1);
   trackelement1 = GES_CONTAINER_CHILDREN (clip1)->data;
   fail_unless (trackelement1 != NULL);
@@ -329,13 +330,13 @@ GST_START_TEST (test_gap_filling_basic)
     }
   }
   fail_unless (gap != NULL);
-  fail_unless (ges_timeline_commit (timeline));
   gap_object_check (gap, 5, 10, 1);
 
   clip2 = GES_CLIP (ges_test_clip_new ());
   fail_unless (clip2 != NULL);
   g_object_set (clip2, "start", (guint64) 35, "duration", (guint64) 5, NULL);
   ges_layer_add_clip (layer, GES_CLIP (clip2));
+  fail_unless (ges_timeline_commit (timeline));
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip2)), 1);
   trackelement2 = GES_CONTAINER_CHILDREN (clip2)->data;
   fail_unless (trackelement2 != NULL);
@@ -374,6 +375,7 @@ GST_START_TEST (test_gap_filling_empty_track)
   /* Set some properties */
   asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   clip = ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_VIDEO);
+  ges_timeline_commit (timeline);
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
 
   /* We should not have created any TrackElement in the audio track */
@@ -386,8 +388,8 @@ GST_START_TEST (test_gap_filling_empty_track)
 
   gap = GST_BIN_CHILDREN (composition)->data;
   fail_unless (gap != NULL);
-  fail_unless (ges_timeline_commit (timeline));
   gap_object_check (gap, 0, 10, 1);
+  fail_unless (ges_timeline_commit (timeline));
 
   gst_object_unref (timeline);
 }
