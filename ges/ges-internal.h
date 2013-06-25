@@ -46,6 +46,7 @@ GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define _DURATION(obj) GES_TIMELINE_ELEMENT_DURATION (obj)
 #define _MAXDURATION(obj) GES_TIMELINE_ELEMENT_MAX_DURATION (obj)
 #define _PRIORITY(obj) GES_TIMELINE_ELEMENT_PRIORITY (obj)
+#define _END(obj) (_START (obj) + _DURATION (obj))
 #define _set_start0 ges_timeline_element_set_start
 #define _set_inpoint0 ges_timeline_element_set_inpoint
 #define _set_duration0 ges_timeline_element_set_duration
