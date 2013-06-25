@@ -129,12 +129,13 @@ compare_grouping_prio (GType * a, GType * b)
   GObjectClass *aclass = g_type_class_ref (*a);
   GObjectClass *bclass = g_type_class_ref (*b);
 
+  /* We want higher prios to be first */
   if (GES_CONTAINER_CLASS (aclass)->grouping_priority <
       GES_CONTAINER_CLASS (bclass)->grouping_priority)
-    ret = -1;
+    ret = 1;
   else if (GES_CONTAINER_CLASS (aclass)->grouping_priority >
       GES_CONTAINER_CLASS (bclass)->grouping_priority)
-    ret = 1;
+    ret = -1;
 
   g_type_class_unref (aclass);
   g_type_class_unref (bclass);
