@@ -1279,6 +1279,9 @@ _ripple (GESTimelineElement * element, GstClockTime start)
     return FALSE;
   }
 
+  if (start > _END (element))
+    start = _END (element);
+
   if (GES_CONTAINER_CHILDREN (element)) {
     GESTrackElement *track_element =
         GES_TRACK_ELEMENT (GES_CONTAINER_CHILDREN (element)->data);
