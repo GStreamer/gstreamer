@@ -76,7 +76,7 @@ static GstStaticPadTemplate video_src_template =
     GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("video/x-flash-video; "
+    GST_STATIC_CAPS ("video/x-flash-video, flvversion=(int) 1; "
         "video/x-flash-screen; "
         "video/x-vp6-flash; " "video/x-vp6-alpha; "
         "video/x-h264, stream-format=avc;")
@@ -1183,7 +1183,9 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
   /* Generate caps for that pad */
   switch (codec_tag) {
     case 2:
-      caps = gst_caps_new_empty_simple ("video/x-flash-video");
+      caps =
+          gst_caps_new_simple ("video/x-flash-video", "flvversion", G_TYPE_INT,
+          1, NULL);
       break;
     case 3:
       caps = gst_caps_new_empty_simple ("video/x-flash-screen");
@@ -1697,6 +1699,17 @@ gst_flv_demux_parse_header (GstFlvDemux * demux, GstBuffer * buffer)
       ret = GST_FLOW_EOS;
       goto beach;
     }
+  }
+
+  if (map.data[3] == '1') {
+    GST_DEBUG_OBJECT (demux, "FLV version 1 detected");
+  } else {
+    if (G_UNLIKELY (demux->strict)) {
+      GST_WARNING_OBJECT (demux, "invalid header version detected");
+      ret = GST_FLOW_EOS;
+      goto beach;
+    }
+
   }
 
   /* Now look at audio/video flags */
