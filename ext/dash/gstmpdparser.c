@@ -896,7 +896,7 @@ gst_mpdparser_get_xml_node_namespace (xmlNode * a_node, const gchar * prefix)
 
   if (prefix == NULL) {
     /* return the default namespace */
-    namespace = g_strdup ((gchar *) a_node->ns->href);
+    namespace = xmlMemStrdup ((const gchar *) a_node->ns->href);
     if (namespace) {
       GST_LOG (" - default namespace: %s", namespace);
     }
@@ -904,7 +904,7 @@ gst_mpdparser_get_xml_node_namespace (xmlNode * a_node, const gchar * prefix)
     /* look for the specified prefix in the namespace list */
     for (curr_ns = a_node->ns; curr_ns; curr_ns = curr_ns->next) {
       if (xmlStrcmp (curr_ns->prefix, (xmlChar *) prefix) == 0) {
-        namespace = g_strdup ((gchar *) curr_ns->href);
+        namespace = xmlMemStrdup ((const gchar *) curr_ns->href);
         if (namespace) {
           GST_LOG (" - %s namespace: %s", curr_ns->prefix, curr_ns->href);
         }
@@ -1970,30 +1970,31 @@ static void
 gst_mpdparser_free_mpd_node (GstMPDNode * mpd_node)
 {
   if (mpd_node) {
-    g_free (mpd_node->default_namespace);
-    g_free (mpd_node->namespace_xsi);
-    g_free (mpd_node->namespace_ext);
-    g_free (mpd_node->schemaLocation);
-    g_free (mpd_node->id);
-    g_free (mpd_node->profiles);
+    if (mpd_node->default_namespace)
+      xmlFree (mpd_node->default_namespace);
+    if (mpd_node->namespace_xsi)
+      xmlFree (mpd_node->namespace_xsi);
+    if (mpd_node->namespace_ext)
+      xmlFree (mpd_node->namespace_ext);
+    if (mpd_node->schemaLocation)
+      xmlFree (mpd_node->schemaLocation);
+    if (mpd_node->id)
+      xmlFree (mpd_node->id);
+    if (mpd_node->profiles)
+      xmlFree (mpd_node->profiles);
     if (mpd_node->availabilityStartTime)
       gst_date_time_unref (mpd_node->availabilityStartTime);
     if (mpd_node->availabilityEndTime)
       gst_date_time_unref (mpd_node->availabilityEndTime);
-    g_list_foreach (mpd_node->ProgramInfo,
-        (GFunc) gst_mpdparser_free_prog_info_node, NULL);
-    g_list_free (mpd_node->ProgramInfo);
-    g_list_foreach (mpd_node->BaseURLs,
-        (GFunc) gst_mpdparser_free_base_url_node, NULL);
-    g_list_free (mpd_node->BaseURLs);
-    g_list_foreach (mpd_node->Locations, (GFunc) g_free, NULL);
-    g_list_free (mpd_node->Locations);
-    g_list_foreach (mpd_node->Periods, (GFunc) gst_mpdparser_free_period_node,
-        NULL);
-    g_list_free (mpd_node->Periods);
-    g_list_foreach (mpd_node->Metrics, (GFunc) gst_mpdparser_free_metrics_node,
-        NULL);
-    g_list_free (mpd_node->Metrics);
+    g_list_free_full (mpd_node->ProgramInfo,
+        (GDestroyNotify) gst_mpdparser_free_prog_info_node);
+    g_list_free_full (mpd_node->BaseURLs,
+        (GDestroyNotify) gst_mpdparser_free_base_url_node);
+    g_list_free_full (mpd_node->Locations, (GDestroyNotify) xmlFree);
+    g_list_free_full (mpd_node->Periods,
+        (GDestroyNotify) gst_mpdparser_free_period_node);
+    g_list_free_full (mpd_node->Metrics,
+        (GDestroyNotify) gst_mpdparser_free_metrics_node);
     g_slice_free (GstMPDNode, mpd_node);
   }
 }
@@ -2002,11 +2003,16 @@ static void
 gst_mpdparser_free_prog_info_node (GstProgramInformationNode * prog_info_node)
 {
   if (prog_info_node) {
-    g_free (prog_info_node->lang);
-    g_free (prog_info_node->moreInformationURL);
-    g_free (prog_info_node->Title);
-    g_free (prog_info_node->Source);
-    g_free (prog_info_node->Copyright);
+    if (prog_info_node->lang)
+      xmlFree (prog_info_node->lang);
+    if (prog_info_node->moreInformationURL)
+      xmlFree (prog_info_node->moreInformationURL);
+    if (prog_info_node->Title)
+      xmlFree (prog_info_node->Title);
+    if (prog_info_node->Source)
+      xmlFree (prog_info_node->Source);
+    if (prog_info_node->Copyright)
+      xmlFree (prog_info_node->Copyright);
     g_slice_free (GstProgramInformationNode, prog_info_node);
   }
 }
@@ -2015,10 +2021,11 @@ static void
 gst_mpdparser_free_metrics_node (GstMetricsNode * metrics_node)
 {
   if (metrics_node) {
-    g_free (metrics_node->metrics);
-    g_list_foreach (metrics_node->MetricsRanges,
-        (GFunc) gst_mpdparser_free_metrics_range_node, NULL);
-    g_list_free (metrics_node->MetricsRanges);
+    if (metrics_node->metrics)
+      xmlFree (metrics_node->metrics);
+    g_list_free_full (metrics_node->MetricsRanges,
+        (GDestroyNotify) gst_mpdparser_free_metrics_range_node);
+    g_slice_free (GstMetricsNode, metrics_node);
   }
 }
 
@@ -2034,19 +2041,17 @@ static void
 gst_mpdparser_free_period_node (GstPeriodNode * period_node)
 {
   if (period_node) {
-    g_free (period_node->id);
+    if (period_node->id)
+      xmlFree (period_node->id);
     gst_mpdparser_free_seg_base_type_ext (period_node->SegmentBase);
     gst_mpdparser_free_segment_list_node (period_node->SegmentList);
     gst_mpdparser_free_segment_template_node (period_node->SegmentTemplate);
-    g_list_foreach (period_node->AdaptationSets,
-        (GFunc) gst_mpdparser_free_adaptation_set_node, NULL);
-    g_list_free (period_node->AdaptationSets);
-    g_list_foreach (period_node->Subsets,
-        (GFunc) gst_mpdparser_free_subset_node, NULL);
-    g_list_free (period_node->Subsets);
-    g_list_foreach (period_node->BaseURLs,
-        (GFunc) gst_mpdparser_free_base_url_node, NULL);
-    g_list_free (period_node->BaseURLs);
+    g_list_free_full (period_node->AdaptationSets,
+        (GDestroyNotify) gst_mpdparser_free_adaptation_set_node);
+    g_list_free_full (period_node->Subsets,
+        (GDestroyNotify) gst_mpdparser_free_subset_node);
+    g_list_free_full (period_node->BaseURLs,
+        (GDestroyNotify) gst_mpdparser_free_base_url_node);
     g_slice_free (GstPeriodNode, period_node);
   }
 }
@@ -2055,7 +2060,8 @@ static void
 gst_mpdparser_free_subset_node (GstSubsetNode * subset_node)
 {
   if (subset_node) {
-    g_free (subset_node->contains);
+    if (subset_node->contains)
+      xmlFree (subset_node->contains);
     g_slice_free (GstSubsetNode, subset_node);
   }
 }
@@ -2065,10 +2071,14 @@ gst_mpdparser_free_segment_template_node (GstSegmentTemplateNode *
     segment_template_node)
 {
   if (segment_template_node) {
-    g_free (segment_template_node->media);
-    g_free (segment_template_node->index);
-    g_free (segment_template_node->initialization);
-    g_free (segment_template_node->bitstreamSwitching);
+    if (segment_template_node->media)
+      xmlFree (segment_template_node->media);
+    if (segment_template_node->index)
+      xmlFree (segment_template_node->index);
+    if (segment_template_node->initialization)
+      xmlFree (segment_template_node->initialization);
+    if (segment_template_node->bitstreamSwitching)
+      xmlFree (segment_template_node->bitstreamSwitching);
     /* MultipleSegmentBaseType extension */
     gst_mpdparser_free_mult_seg_base_type_ext
         (segment_template_node->MultSegBaseType);
@@ -2081,23 +2091,26 @@ gst_mpdparser_free_representation_base_type (GstRepresentationBaseType *
     representation_base)
 {
   if (representation_base) {
-    g_free (representation_base->profiles);
+    if (representation_base->profiles)
+      xmlFree (representation_base->profiles);
     g_slice_free (GstRatio, representation_base->sar);
     g_slice_free (GstFrameRate, representation_base->frameRate);
-    g_free (representation_base->audioSamplingRate);
-    g_free (representation_base->mimeType);
-    g_free (representation_base->segmentProfiles);
-    g_free (representation_base->codecs);
-    g_free (representation_base->scanType);
-    g_list_foreach (representation_base->FramePacking,
-        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
-    g_list_free (representation_base->FramePacking);
-    g_list_foreach (representation_base->AudioChannelConfiguration,
-        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
-    g_list_free (representation_base->AudioChannelConfiguration);
-    g_list_foreach (representation_base->ContentProtection,
-        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
-    g_list_free (representation_base->ContentProtection);
+    if (representation_base->audioSamplingRate)
+      xmlFree (representation_base->audioSamplingRate);
+    if (representation_base->mimeType)
+      xmlFree (representation_base->mimeType);
+    if (representation_base->segmentProfiles)
+      xmlFree (representation_base->segmentProfiles);
+    if (representation_base->codecs)
+      xmlFree (representation_base->codecs);
+    if (representation_base->scanType)
+      xmlFree (representation_base->scanType);
+    g_list_free_full (representation_base->FramePacking,
+        (GDestroyNotify) gst_mpdparser_free_descriptor_type_node);
+    g_list_free_full (representation_base->AudioChannelConfiguration,
+        (GDestroyNotify) gst_mpdparser_free_descriptor_type_node);
+    g_list_free_full (representation_base->ContentProtection,
+        (GDestroyNotify) gst_mpdparser_free_descriptor_type_node);
     g_slice_free (GstRepresentationBaseType, representation_base);
   }
 }
@@ -2107,8 +2120,10 @@ gst_mpdparser_free_adaptation_set_node (GstAdaptationSetNode *
     adaptation_set_node)
 {
   if (adaptation_set_node) {
-    g_free (adaptation_set_node->lang);
-    g_free (adaptation_set_node->contentType);
+    if (adaptation_set_node->lang)
+      xmlFree (adaptation_set_node->lang);
+    if (adaptation_set_node->contentType)
+      xmlFree (adaptation_set_node->contentType);
     g_slice_free (GstRatio, adaptation_set_node->par);
     g_slice_free (GstFrameRate, adaptation_set_node->minFrameRate);
     g_slice_free (GstFrameRate, adaptation_set_node->maxFrameRate);
@@ -2116,33 +2131,26 @@ gst_mpdparser_free_adaptation_set_node (GstAdaptationSetNode *
         adaptation_set_node->segmentAlignment);
     g_slice_free (GstConditionalUintType,
         adaptation_set_node->subsegmentAlignment);
-    g_list_foreach (adaptation_set_node->Accessibility,
-        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
-    g_list_free (adaptation_set_node->Accessibility);
-    g_list_foreach (adaptation_set_node->Role,
-        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
-    g_list_free (adaptation_set_node->Role);
-    g_list_foreach (adaptation_set_node->Rating,
-        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
-    g_list_free (adaptation_set_node->Rating);
-    g_list_foreach (adaptation_set_node->Viewpoint,
-        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
-    g_list_free (adaptation_set_node->Viewpoint);
+    g_list_free_full (adaptation_set_node->Accessibility,
+        (GDestroyNotify) gst_mpdparser_free_descriptor_type_node);
+    g_list_free_full (adaptation_set_node->Role,
+        (GDestroyNotify) gst_mpdparser_free_descriptor_type_node);
+    g_list_free_full (adaptation_set_node->Rating,
+        (GDestroyNotify) gst_mpdparser_free_descriptor_type_node);
+    g_list_free_full (adaptation_set_node->Viewpoint,
+        (GDestroyNotify) gst_mpdparser_free_descriptor_type_node);
     gst_mpdparser_free_representation_base_type
         (adaptation_set_node->RepresentationBase);
     gst_mpdparser_free_seg_base_type_ext (adaptation_set_node->SegmentBase);
     gst_mpdparser_free_segment_list_node (adaptation_set_node->SegmentList);
     gst_mpdparser_free_segment_template_node
         (adaptation_set_node->SegmentTemplate);
-    g_list_foreach (adaptation_set_node->BaseURLs,
-        (GFunc) gst_mpdparser_free_base_url_node, NULL);
-    g_list_free (adaptation_set_node->BaseURLs);
-    g_list_foreach (adaptation_set_node->Representations,
-        (GFunc) gst_mpdparser_free_representation_node, NULL);
-    g_list_free (adaptation_set_node->Representations);
-    g_list_foreach (adaptation_set_node->ContentComponents,
-        (GFunc) gst_mpdparser_free_content_component_node, NULL);
-    g_list_free (adaptation_set_node->ContentComponents);
+    g_list_free_full (adaptation_set_node->BaseURLs,
+        (GDestroyNotify) gst_mpdparser_free_base_url_node);
+    g_list_free_full (adaptation_set_node->Representations,
+        (GDestroyNotify) gst_mpdparser_free_representation_node);
+    g_list_free_full (adaptation_set_node->ContentComponents,
+        (GDestroyNotify) gst_mpdparser_free_content_component_node);
     g_slice_free (GstAdaptationSetNode, adaptation_set_node);
   }
 }
@@ -2152,21 +2160,20 @@ gst_mpdparser_free_representation_node (GstRepresentationNode *
     representation_node)
 {
   if (representation_node) {
-    g_free (representation_node->id);
+    if (representation_node->id)
+      xmlFree (representation_node->id);
     g_strfreev (representation_node->dependencyId);
     g_strfreev (representation_node->mediaStreamStructureId);
     gst_mpdparser_free_representation_base_type
         (representation_node->RepresentationBase);
-    g_list_foreach (representation_node->SubRepresentations,
-        (GFunc) gst_mpdparser_free_subrepresentation_node, NULL);
-    g_list_free (representation_node->SubRepresentations);
+    g_list_free_full (representation_node->SubRepresentations,
+        (GDestroyNotify) gst_mpdparser_free_subrepresentation_node);
     gst_mpdparser_free_seg_base_type_ext (representation_node->SegmentBase);
     gst_mpdparser_free_segment_template_node
         (representation_node->SegmentTemplate);
     gst_mpdparser_free_segment_list_node (representation_node->SegmentList);
-    g_list_foreach (representation_node->BaseURLs,
-        (GFunc) gst_mpdparser_free_base_url_node, NULL);
-    g_list_free (representation_node->BaseURLs);
+    g_list_free_full (representation_node->BaseURLs,
+        (GDestroyNotify) gst_mpdparser_free_base_url_node);
     g_slice_free (GstRepresentationNode, representation_node);
   }
 }
@@ -2178,8 +2185,10 @@ gst_mpdparser_free_subrepresentation_node (GstSubRepresentationNode *
   if (subrep_node) {
     gst_mpdparser_free_representation_base_type
         (subrep_node->RepresentationBase);
-    g_free (subrep_node->dependencyLevel);
+    if (subrep_node->dependencyLevel)
+      xmlFree (subrep_node->dependencyLevel);
     g_strfreev (subrep_node->contentComponent);
+    g_slice_free (GstSubRepresentationNode, subrep_node);
   }
 }
 
@@ -2195,8 +2204,8 @@ static void
 gst_mpdparser_free_segment_timeline_node (GstSegmentTimelineNode * seg_timeline)
 {
   if (seg_timeline) {
-    g_list_foreach (seg_timeline->S, (GFunc) gst_mpdparser_free_s_node, NULL);
-    g_list_free (seg_timeline->S);
+    g_list_free_full (seg_timeline->S,
+        (GDestroyNotify) gst_mpdparser_free_s_node);
     g_slice_free (GstSegmentTimelineNode, seg_timeline);
   }
 }
@@ -2205,7 +2214,8 @@ static void
 gst_mpdparser_free_url_type_node (GstURLType * url_type_node)
 {
   if (url_type_node) {
-    g_free (url_type_node->sourceURL);
+    if (url_type_node->sourceURL)
+      xmlFree (url_type_node->sourceURL);
     g_slice_free (GstRange, url_type_node->range);
     g_slice_free (GstURLType, url_type_node);
   }
@@ -2215,7 +2225,8 @@ static void
 gst_mpdparser_free_seg_base_type_ext (GstSegmentBaseType * seg_base_type)
 {
   if (seg_base_type) {
-    g_free (seg_base_type->indexRange);
+    if (seg_base_type->indexRange)
+      xmlFree (seg_base_type->indexRange);
     gst_mpdparser_free_url_type_node (seg_base_type->Initialization);
     gst_mpdparser_free_url_type_node (seg_base_type->RepresentationIndex);
     g_slice_free (GstSegmentBaseType, seg_base_type);
@@ -2240,9 +2251,8 @@ static void
 gst_mpdparser_free_segment_list_node (GstSegmentListNode * segment_list_node)
 {
   if (segment_list_node) {
-    g_list_foreach (segment_list_node->SegmentURL,
-        (GFunc) gst_mpdparser_free_segment_url_node, NULL);
-    g_list_free (segment_list_node->SegmentURL);
+    g_list_free_full (segment_list_node->SegmentURL,
+        (GDestroyNotify) gst_mpdparser_free_segment_url_node);
     /* MultipleSegmentBaseType extension */
     gst_mpdparser_free_mult_seg_base_type_ext
         (segment_list_node->MultSegBaseType);
@@ -2254,9 +2264,11 @@ static void
 gst_mpdparser_free_segment_url_node (GstSegmentURLNode * segment_url)
 {
   if (segment_url) {
-    g_free (segment_url->media);
+    if (segment_url->media)
+      xmlFree (segment_url->media);
     g_slice_free (GstRange, segment_url->mediaRange);
-    g_free (segment_url->index);
+    if (segment_url->index)
+      xmlFree (segment_url->index);
     g_slice_free (GstRange, segment_url->indexRange);
     g_slice_free (GstSegmentURLNode, segment_url);
   }
@@ -2266,9 +2278,12 @@ static void
 gst_mpdparser_free_base_url_node (GstBaseURL * base_url_node)
 {
   if (base_url_node) {
-    g_free (base_url_node->baseURL);
-    g_free (base_url_node->serviceLocation);
-    g_free (base_url_node->byteRange);
+    if (base_url_node->baseURL)
+      xmlFree (base_url_node->baseURL);
+    if (base_url_node->serviceLocation)
+      xmlFree (base_url_node->serviceLocation);
+    if (base_url_node->byteRange)
+      xmlFree (base_url_node->byteRange);
     g_slice_free (GstBaseURL, base_url_node);
   }
 }
@@ -2277,8 +2292,11 @@ static void
 gst_mpdparser_free_descriptor_type_node (GstDescriptorType * descriptor_type)
 {
   if (descriptor_type) {
-    g_free (descriptor_type->schemeIdUri);
-    g_free (descriptor_type->value);
+    if (descriptor_type->schemeIdUri)
+      xmlFree (descriptor_type->schemeIdUri);
+    if (descriptor_type->value)
+      xmlFree (descriptor_type->value);
+    g_slice_free (GstDescriptorType, descriptor_type);
   }
 }
 
@@ -2287,21 +2305,19 @@ gst_mpdparser_free_content_component_node (GstContentComponentNode *
     content_component_node)
 {
   if (content_component_node) {
-    g_free (content_component_node->lang);
-    g_free (content_component_node->contentType);
+    if (content_component_node->lang)
+      xmlFree (content_component_node->lang);
+    if (content_component_node->contentType)
+      xmlFree (content_component_node->contentType);
     g_slice_free (GstRatio, content_component_node->par);
-    g_list_foreach (content_component_node->Accessibility,
-        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
-    g_list_free (content_component_node->Accessibility);
-    g_list_foreach (content_component_node->Role,
-        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
-    g_list_free (content_component_node->Role);
-    g_list_foreach (content_component_node->Rating,
-        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
-    g_list_free (content_component_node->Rating);
-    g_list_foreach (content_component_node->Viewpoint,
-        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
-    g_list_free (content_component_node->Viewpoint);
+    g_list_free_full (content_component_node->Accessibility,
+        (GDestroyNotify) gst_mpdparser_free_descriptor_type_node);
+    g_list_free_full (content_component_node->Role,
+        (GDestroyNotify) gst_mpdparser_free_descriptor_type_node);
+    g_list_free_full (content_component_node->Rating,
+        (GDestroyNotify) gst_mpdparser_free_descriptor_type_node);
+    g_list_free_full (content_component_node->Viewpoint,
+        (GDestroyNotify) gst_mpdparser_free_descriptor_type_node);
     g_slice_free (GstContentComponentNode, content_component_node);
   }
 }
@@ -2330,9 +2346,8 @@ gst_mpdparser_free_active_stream (GstActiveStream * active_stream)
     active_stream->baseURL = NULL;
     g_free (active_stream->queryURL);
     active_stream->queryURL = NULL;
-    g_list_foreach (active_stream->segments,
-        (GFunc) gst_mpdparser_free_media_segment, NULL);
-    g_list_free (active_stream->segments);
+    g_list_free_full (active_stream->segments,
+        (GDestroyNotify) gst_mpdparser_free_media_segment);
     g_slice_free (GstActiveStream, active_stream);
   }
 }
@@ -2622,16 +2637,18 @@ gst_mpd_client_free (GstMpdClient * client)
     gst_mpdparser_free_mpd_node (client->mpd_node);
 
   if (client->periods) {
-    g_list_foreach (client->periods,
-        (GFunc) gst_mpdparser_free_stream_period, NULL);
-    g_list_free (client->periods);
+    g_list_free_full (client->periods,
+        (GDestroyNotify) gst_mpdparser_free_stream_period);
   }
 
   gst_active_streams_free (client);
 
   g_mutex_clear (&client->lock);
 
-  g_free (client->mpd_uri);
+  if (client->mpd_uri) {
+    g_free (client->mpd_uri);
+    client->mpd_uri = NULL;
+  }
 
   g_free (client);
 }
