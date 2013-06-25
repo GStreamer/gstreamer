@@ -1135,9 +1135,8 @@ gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play,
   g_mutex_unlock (&priv->lock);
   g_rec_mutex_unlock (&priv->state_lock);
 
-  if (!klass->convert_range (media, &range, unit)) {
+  if (!klass->convert_range (media, &range, unit))
     goto conversion_failed;
-  }
 
   result = gst_rtsp_range_to_string (&range);
 
@@ -1153,7 +1152,6 @@ not_prepared:
 conversion_failed:
   {
     GST_WARNING ("range conversion to unit %d failed", unit);
-    g_rec_mutex_unlock (&priv->state_lock);
     return NULL;
   }
 }
