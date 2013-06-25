@@ -83,6 +83,10 @@ struct _GESContainer
    * readability purposes */
   guint32 height;       /* the span of priorities this object needs */
 
+  /* <protected> */
+  /*< readonly >*/
+  GESTimelineElement *initiated_move;
+
   /*< private >*/
   GESContainerPrivate *priv;
 

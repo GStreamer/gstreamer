@@ -79,7 +79,6 @@ struct _GESContainerPrivate
   GESChildrenControlMode children_control_mode;
   GHashTable *mappings;
   guint nb_effects;
-  GESTimelineElement *initiated_move;
 };
 
 enum
@@ -201,7 +200,7 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
     ChildMapping *map = g_hash_table_lookup (container->priv->mappings, child);
 
-    if (child == container->priv->initiated_move) {
+    if (child == container->initiated_move) {
       map->inpoint_offset = inpoint - _INPOINT (child);
       continue;
     }
@@ -227,7 +226,7 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
     ChildMapping *map = g_hash_table_lookup (priv->mappings, child);
 
-    if (child == container->priv->initiated_move) {
+    if (child == container->initiated_move) {
       map->duration_offset = duration - _DURATION (child);
       continue;
     }
@@ -436,9 +435,9 @@ _child_start_changed_cb (GESTimelineElement * child,
       "involve our start becoming < 0. In that case, undo the child move.");
 
   /* We update all the children calling our set_start method */
-  container->priv->initiated_move = child;
+  container->initiated_move = child;
   _set_start0 (element, _START (child) + map->start_offset);
-  container->priv->initiated_move = NULL;
+  container->initiated_move = NULL;
 }
 
 static void
@@ -457,9 +456,9 @@ _child_inpoint_changed_cb (GESTimelineElement * child,
   g_assert (map);
 
   /* We update all the children calling our set_inpoint method */
-  container->priv->initiated_move = child;
+  container->initiated_move = child;
   _set_inpoint0 (element, _INPOINT (child) + map->inpoint_offset);
-  container->priv->initiated_move = NULL;
+  container->initiated_move = NULL;
 }
 
 static void
@@ -478,9 +477,9 @@ _child_duration_changed_cb (GESTimelineElement * child,
   g_assert (map);
 
   /* We update all the children calling our set_duration method */
-  container->priv->initiated_move = child;
+  container->initiated_move = child;
   _set_duration0 (element, _DURATION (child) + map->duration_offset);
-  container->priv->initiated_move = NULL;
+  container->initiated_move = NULL;
 }
 
 static void
