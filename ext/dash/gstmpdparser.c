@@ -28,6 +28,9 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include "gstmpdparser.h"
+#include "gstdash_debug.h"
+
+#define GST_CAT_DEFAULT gst_dash_demux_debug
 
 /* Property parsing */
 static gchar *gst_mpdparser_get_xml_prop_string (xmlNode * a_node,

@@ -148,6 +148,7 @@
 #include <inttypes.h>
 #include <gst/base/gsttypefindhelper.h>
 #include "gstdashdemux.h"
+#include "gstdash_debug.h"
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
@@ -159,7 +160,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/dash+xml"));
 
-GST_DEBUG_CATEGORY_STATIC (gst_dash_demux_debug);
+GST_DEBUG_CATEGORY (gst_dash_demux_debug);
 #define GST_CAT_DEFAULT gst_dash_demux_debug
 
 enum
