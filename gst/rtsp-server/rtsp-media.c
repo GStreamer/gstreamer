@@ -2122,5 +2122,6 @@ default_query_stop (GstRTSPMedia * media, gint64 * stop)
     if (format != GST_FORMAT_TIME)
       *stop = -1;
   }
+  gst_query_unref (query);
   return res;
 }
