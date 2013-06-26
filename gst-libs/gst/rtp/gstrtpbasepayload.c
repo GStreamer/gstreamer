@@ -385,6 +385,7 @@ gst_rtp_base_payload_sink_event_default (GstRTPBasePayload * rtpbasepayload,
           "configured SEGMENT %" GST_SEGMENT_FORMAT, segment);
       if (rtpbasepayload->priv->delay_segment) {
         gst_event_replace (&rtpbasepayload->priv->pending_segment, event);
+        gst_event_unref (event);
         res = TRUE;
       } else {
         res = gst_pad_event_default (rtpbasepayload->sinkpad, parent, event);
