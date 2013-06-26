@@ -3631,15 +3631,18 @@ gst_rtspsrc_connection_flush (GstRTSPSrc * src, gboolean flush)
 
   GST_DEBUG_OBJECT (src, "set flushing %d", flush);
   GST_RTSP_STATE_LOCK (src);
-  if (src->conninfo.connection) {
+  if (src->conninfo.connection && src->conninfo.flushing != flush) {
     GST_DEBUG_OBJECT (src, "connection flush");
     gst_rtsp_connection_flush (src->conninfo.connection, flush);
+    src->conninfo.flushing = flush;
   }
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
-    GST_DEBUG_OBJECT (src, "stream %p flush", stream);
-    if (stream->conninfo.connection)
+    if (stream->conninfo.connection && stream->conninfo.flushing != flush) {
+      GST_DEBUG_OBJECT (src, "stream %p flush", stream);
       gst_rtsp_connection_flush (stream->conninfo.connection, flush);
+      stream->conninfo.flushing = flush;
+    }
   }
   GST_RTSP_STATE_UNLOCK (src);
 }
@@ -4006,8 +4009,7 @@ server_eof:
 interrupt:
   {
     gst_rtsp_message_unset (&message);
-    GST_DEBUG_OBJECT (src, "got interrupted: stop connection flush");
-    gst_rtspsrc_connection_flush (src, FALSE);
+    GST_DEBUG_OBJECT (src, "got interrupted");
     return GST_FLOW_FLUSHING;
   }
 receive_error:
@@ -4139,8 +4141,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
 interrupt:
   {
     gst_rtsp_message_unset (&message);
-    GST_DEBUG_OBJECT (src, "got interrupted: stop connection flush");
-    gst_rtspsrc_connection_flush (src, FALSE);
+    GST_DEBUG_OBJECT (src, "got interrupted");
     return GST_FLOW_FLUSHING;
   }
 connect_error:

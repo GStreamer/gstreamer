@@ -87,6 +87,7 @@ struct _GstRTSPConnInfo {
   gchar              *url_str;
   GstRTSPConnection  *connection;
   gboolean            connected;
+  gboolean            flushing;
 };
 
 typedef struct _GstRTSPStream GstRTSPStream;
