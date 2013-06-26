@@ -121,6 +121,7 @@ struct _GstRTSPConnection
   GSocket *write_socket;
   GSocket *socket0, *socket1;
   gboolean manual_http;
+  gboolean may_cancel;
   GCancellable *cancellable;
 
   gchar tunnelid[TUNNELID_LEN];
@@ -217,6 +218,7 @@ gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
 
   newconn = g_new0 (GstRTSPConnection, 1);
 
+  newconn->may_cancel = TRUE;
   newconn->cancellable = g_cancellable_new ();
   newconn->client = g_socket_client_new ();
 
@@ -925,11 +927,11 @@ fill_raw_bytes (GstRTSPConnection * conn, guint8 * buffer, guint size,
     gsize count = size - out;
     if (block)
       r = g_input_stream_read (conn->input_stream, (gchar *) & buffer[out],
-          count, conn->cancellable, err);
+          count, conn->may_cancel ? conn->cancellable : NULL, err);
     else
       r = g_pollable_input_stream_read_nonblocking (G_POLLABLE_INPUT_STREAM
           (conn->input_stream), (gchar *) & buffer[out], count,
-          conn->cancellable, err);
+          conn->may_cancel ? conn->cancellable : NULL, err);
 
     if (G_UNLIKELY (r < 0)) {
       if (out == 0) {
@@ -1663,12 +1665,14 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
         if (c == '$') {
           /* data message, prepare for the header */
           builder->state = STATE_DATA_HEADER;
+          conn->may_cancel = FALSE;
         } else if (c == '\n' || c == '\r') {
           /* skip \n and \r */
           builder->offset = 0;
         } else {
           builder->line = 0;
           builder->state = STATE_READ_LINES;
+          conn->may_cancel = FALSE;
         }
         break;
       }
@@ -1769,6 +1773,8 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
       {
         gchar *session_cookie;
         gchar *session_id;
+
+        conn->may_cancel = TRUE;
 
         if (message->type == GST_RTSP_MESSAGE_DATA) {
           /* data messages don't have headers */
