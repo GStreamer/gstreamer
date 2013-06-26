@@ -142,6 +142,66 @@ compare_grouping_prio (GType * a, GType * b)
   return ret;
 }
 
+/*****************************************************
+ *                                                   *
+ * GESTimelineElement virtual methods implementation *
+ *                                                   *
+ *****************************************************/
+static gboolean
+_set_start (GESTimelineElement * element, GstClockTime start)
+{
+  GList *tmp;
+  ChildMapping *map;
+  GESContainer *container = GES_CONTAINER (element);
+  GESContainerPrivate *priv = container->priv;
+
+  GST_DEBUG_OBJECT (element, "Updating children offsets, (initiated_move: %"
+      GST_PTR_FORMAT ")", container->initiated_move);
+
+  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
+    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
+
+    map = g_hash_table_lookup (priv->mappings, child);
+    map->start_offset = start - _START (child);
+  }
+  priv->children_control_mode = GES_CHILDREN_UPDATE;
+
+  return TRUE;
+}
+
+static gboolean
+_set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
+{
+  GList *tmp;
+  GESContainer *container = GES_CONTAINER (element);
+
+  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
+    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
+    ChildMapping *map = g_hash_table_lookup (container->priv->mappings, child);
+
+    map->inpoint_offset = inpoint - _INPOINT (child);
+  }
+
+  return TRUE;
+}
+
+static gboolean
+_set_duration (GESTimelineElement * element, GstClockTime duration)
+{
+  GList *tmp;
+  GESContainer *container = GES_CONTAINER (element);
+  GESContainerPrivate *priv = container->priv;
+
+  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
+    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
+    ChildMapping *map = g_hash_table_lookup (priv->mappings, child);
+
+    map->duration_offset = duration - _DURATION (child);
+  }
+
+  return TRUE;
+}
+
 /******************************************
  *                                        *
  * GObject virtual methods implementation *
@@ -184,6 +244,7 @@ static void
 ges_container_class_init (GESContainerClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (ges_container_debug, "gescontainer",
       GST_DEBUG_FG_YELLOW, "ges container");
@@ -231,6 +292,10 @@ ges_container_class_init (GESContainerClass * klass)
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       GES_TYPE_TIMELINE_ELEMENT);
 
+
+  element_class->set_start = _set_start;
+  element_class->set_duration = _set_duration;
+  element_class->set_inpoint = _set_inpoint;
 
   /* No default implementations */
   klass->remove_child = NULL;
