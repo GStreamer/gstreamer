@@ -57,8 +57,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "  payload = (int) 26 ,        "
         "  clock-rate = (int) 90000,   "
         "  encoding-name = (string) \"JPEG\", "
-        "  width = (int) [ 1, 65536 ], "
-        "  height = (int) [ 1, 65536 ]")
+        "  width = (int) [ 1, 65536 ], " "  height = (int) [ 1, 65536 ]")
     );
 
 GST_DEBUG_CATEGORY_STATIC (rtpjpegpay_debug);
@@ -326,14 +325,13 @@ gst_rtp_jpeg_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 
   gst_rtp_base_payload_set_options (basepayload, "video", TRUE, "JPEG", 90000);
 
-  if (num > 0)
-  {
+  if (num > 0) {
     gdouble framerate;
     gst_util_fraction_to_double (num, denom, &framerate);
-    rate = g_strdup_printf("%f", framerate);
+    rate = g_strdup_printf ("%f", framerate);
   }
 
-  size = g_strdup_printf("%d-%d", width, height);
+  size = g_strdup_printf ("%d-%d", width, height);
 
   if (pay->width == 0) {
     GST_DEBUG_OBJECT (pay,
@@ -573,37 +571,37 @@ gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
   /* ERRORS */
 wrong_size:
   {
-    GST_ELEMENT_ERROR (pay, STREAM, FORMAT,
+    GST_ELEMENT_WARNING (pay, STREAM, FORMAT,
         ("Wrong size %u (needed %u).", size, off + 17), (NULL));
     return FALSE;
   }
 wrong_length:
   {
-    GST_ELEMENT_ERROR (pay, STREAM, FORMAT,
+    GST_ELEMENT_WARNING (pay, STREAM, FORMAT,
         ("Wrong SOF length %u.", sof_size), (NULL));
     return FALSE;
   }
 bad_precision:
   {
-    GST_ELEMENT_ERROR (pay, STREAM, FORMAT,
+    GST_ELEMENT_WARNING (pay, STREAM, FORMAT,
         ("Wrong precision, expecting 8."), (NULL));
     return FALSE;
   }
 invalid_dimension:
   {
-    GST_ELEMENT_ERROR (pay, STREAM, FORMAT,
+    GST_ELEMENT_WARNING (pay, STREAM, FORMAT,
         ("Wrong dimension, size %ux%u", width, height), (NULL));
     return FALSE;
   }
 bad_components:
   {
-    GST_ELEMENT_ERROR (pay, STREAM, FORMAT,
+    GST_ELEMENT_WARNING (pay, STREAM, FORMAT,
         ("Wrong number of components"), (NULL));
     return FALSE;
   }
 invalid_comp:
   {
-    GST_ELEMENT_ERROR (pay, STREAM, FORMAT, ("Invalid component"), (NULL));
+    GST_ELEMENT_WARNING (pay, STREAM, FORMAT, ("Invalid component"), (NULL));
     return FALSE;
   }
 }
@@ -908,31 +906,31 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
   /* ERRORS */
 unsupported_jpeg:
   {
-    GST_ELEMENT_ERROR (pay, STREAM, FORMAT, ("Unsupported JPEG"), (NULL));
+    GST_ELEMENT_WARNING (pay, STREAM, FORMAT, ("Unsupported JPEG"), (NULL));
     gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
-    return GST_FLOW_NOT_SUPPORTED;
+    return GST_FLOW_OK;
   }
 no_dimension:
   {
-    GST_ELEMENT_ERROR (pay, STREAM, FORMAT, ("No size given"), (NULL));
+    GST_ELEMENT_WARNING (pay, STREAM, FORMAT, ("No size given"), (NULL));
     gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
-    return GST_FLOW_NOT_NEGOTIATED;
+    return GST_FLOW_OK;
   }
 invalid_format:
   {
     /* error was posted */
     gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
-    return GST_FLOW_ERROR;
+    return GST_FLOW_OK;
   }
 invalid_quant:
   {
-    GST_ELEMENT_ERROR (pay, STREAM, FORMAT, ("Invalid quant tables"), (NULL));
+    GST_ELEMENT_WARNING (pay, STREAM, FORMAT, ("Invalid quant tables"), (NULL));
     gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
-    return GST_FLOW_ERROR;
+    return GST_FLOW_OK;
   }
 }
 
