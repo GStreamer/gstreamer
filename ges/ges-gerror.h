@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 /**
  * GES_ERROR:
  *
- * An error happend in GES
+ * An error happened in GES
  */
 #define GES_ERROR g_quark_from_static_string("GES_ERROR")
 

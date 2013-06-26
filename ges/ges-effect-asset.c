@@ -18,9 +18,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/**
- * SECTION: ges-effect-asset
+/* SECTION: ges-effect-asset
  * @short_description: A GESAsset subclass specialized in GESEffect extraction
+ *
+ * This is internal, and implementation details, so we are not showing it in the
+ * documentation
  */
 
 #include "ges-effect-asset.h"
