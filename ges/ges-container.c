@@ -141,155 +141,6 @@ compare_grouping_prio (GType * a, GType * b)
   return ret;
 }
 
-/*****************************************************
- *                                                   *
- * GESTimelineElement virtual methods implementation *
- *                                                   *
- *****************************************************/
-static gboolean
-_set_start (GESTimelineElement * element, GstClockTime start)
-{
-  GList *tmp;
-  ChildMapping *map;
-  GESTimeline *timeline;
-  GESContainer *container = GES_CONTAINER (element);
-  GESContainerPrivate *priv = container->priv;
-
-  GST_DEBUG_OBJECT (element, "Setting children start, (initiated_move: %"
-      GST_PTR_FORMAT ")", container->priv->initiated_move);
-
-  container->priv->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
-  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
-    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
-
-    map = g_hash_table_lookup (priv->mappings, child);
-    if (child != container->priv->initiated_move) {
-      gint64 new_start = start - map->start_offset;
-
-      /* Move the child... */
-      if (new_start < 0) {
-        GST_ERROR ("Trying to set start to a negative value -%" GST_TIME_FORMAT,
-            GST_TIME_ARGS (-(start + map->start_offset)));
-        continue;
-      }
-
-      /* Make the snapping happen if in a timeline */
-      timeline = GES_TIMELINE_ELEMENT_TIMELINE (child);
-      if (timeline == NULL || ges_timeline_move_object_simple (timeline, child,
-              NULL, GES_EDGE_NONE, start) == FALSE)
-        _set_start0 (GES_TIMELINE_ELEMENT (child), start);
-
-    } else {
-      /* ... update the offset for the child that initiated the move */
-      map->start_offset = start - _START (child);
-    }
-  }
-  priv->children_control_mode = GES_CHILDREN_UPDATE;
-
-  return TRUE;
-}
-
-static gboolean
-_set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
-{
-  GList *tmp;
-  GESContainer *container = GES_CONTAINER (element);
-
-  container->priv->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
-  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
-    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
-    ChildMapping *map = g_hash_table_lookup (container->priv->mappings, child);
-
-    if (child == container->initiated_move) {
-      map->inpoint_offset = inpoint - _INPOINT (child);
-      continue;
-    }
-
-    _set_inpoint0 (child, inpoint);
-  }
-  container->priv->children_control_mode = GES_CHILDREN_UPDATE;
-
-  return TRUE;
-}
-
-static gboolean
-_set_duration (GESTimelineElement * element, GstClockTime duration)
-{
-  GList *tmp;
-  GESTimeline *timeline;
-
-  GESContainer *container = GES_CONTAINER (element);
-  GESContainerPrivate *priv = container->priv;
-
-  priv->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
-  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
-    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
-    ChildMapping *map = g_hash_table_lookup (priv->mappings, child);
-
-    if (child == container->initiated_move) {
-      map->duration_offset = duration - _DURATION (child);
-      continue;
-    }
-
-    /* Make the snapping happen if in a timeline */
-    timeline = GES_TIMELINE_ELEMENT_TIMELINE (child);
-    if (timeline == NULL || ges_timeline_trim_object_simple (timeline, child,
-            NULL, GES_EDGE_END, _START (child) + duration, TRUE) == FALSE)
-      _set_duration0 (GES_TIMELINE_ELEMENT (child), duration);
-  }
-  priv->children_control_mode = GES_CHILDREN_UPDATE;
-
-  return TRUE;
-}
-
-static gboolean
-_set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
-{
-  GList *tmp;
-
-  for (tmp = GES_CONTAINER (element)->children; tmp; tmp = g_list_next (tmp))
-    ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (tmp->data),
-        maxduration);
-
-  return TRUE;
-}
-
-static gboolean
-_set_priority (GESTimelineElement * element, guint32 priority)
-{
-  GList *tmp;
-  GESContainerPrivate *priv;
-  guint32 min_prio, max_prio;
-
-  GESContainer *container = GES_CONTAINER (element);
-
-  priv = container->priv;
-
-  GES_CONTAINER_GET_CLASS (element)->get_priority_range (container, &min_prio,
-      &max_prio);
-
-  priv->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
-  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
-    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
-    ChildMapping *map = g_hash_table_lookup (priv->mappings, child);
-    guint32 real_tck_prio = min_prio + priority + map->priority_offset;
-
-    if (real_tck_prio > max_prio) {
-      GST_WARNING ("%p priority of %i, is outside of the its containing "
-          "layer space. (%d/%d) setting it to the maximum it can be",
-          container, priority, min_prio, max_prio);
-
-      real_tck_prio = max_prio;
-    }
-    _set_priority0 (child, real_tck_prio);
-  }
-  priv->children_control_mode = GES_CHILDREN_UPDATE;
-
-  update_height (container);
-
-  return TRUE;
-}
-
 /******************************************
  *                                        *
  * GObject virtual methods implementation *
@@ -332,7 +183,6 @@ static void
 ges_container_class_init (GESContainerClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (ges_container_debug, "gescontainer",
       GST_DEBUG_FG_YELLOW, "ges container");
@@ -380,12 +230,6 @@ ges_container_class_init (GESContainerClass * klass)
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       GES_TYPE_TIMELINE_ELEMENT);
 
-
-  element_class->set_start = _set_start;
-  element_class->set_duration = _set_duration;
-  element_class->set_inpoint = _set_inpoint;
-  element_class->set_priority = _set_priority;
-  element_class->set_max_duration = _set_max_duration;
 
   /* No default implementations */
   klass->remove_child = NULL;
@@ -533,6 +377,10 @@ _ges_container_set_children_control_mode (GESContainer * container,
     GESChildrenControlMode children_control_mode)
 {
   container->priv->children_control_mode = children_control_mode;
+
+  if (children_control_mode == GES_CHILDREN_UPDATE)
+    update_height (container);
+
 }
 
 /**********************************************

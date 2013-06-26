@@ -84,6 +84,130 @@ enum
 
 static GParamSpec *properties[PROP_LAST];
 
+/*****************************************************
+ *                                                   *
+ * GESTimelineElement virtual methods implementation *
+ *                                                   *
+ *****************************************************/
+
+static gboolean
+_set_start (GESTimelineElement * element, GstClockTime start)
+{
+  GList *tmp;
+  GESTimeline *timeline;
+  GESContainer *container = GES_CONTAINER (element);
+
+  GST_DEBUG_OBJECT (element, "Setting children start, (initiated_move: %"
+      GST_PTR_FORMAT ")", container->initiated_move);
+
+  _ges_container_set_children_control_mode (container,
+      GES_CHILDREN_IGNORE_NOTIFIES);
+  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
+    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
+
+    if (child != container->initiated_move) {
+      /* Make the snapping happen if in a timeline */
+      timeline = GES_TIMELINE_ELEMENT_TIMELINE (child);
+      if (timeline == NULL || ges_timeline_move_object_simple (timeline, child,
+              NULL, GES_EDGE_NONE, start) == FALSE)
+        _set_start0 (GES_TIMELINE_ELEMENT (child), start);
+
+    }
+  }
+  _ges_container_set_children_control_mode (container, GES_CHILDREN_UPDATE);
+
+  return TRUE;
+}
+
+static gboolean
+_set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
+{
+  GList *tmp;
+  GESContainer *container = GES_CONTAINER (element);
+
+  _ges_container_set_children_control_mode (container,
+      GES_CHILDREN_IGNORE_NOTIFIES);
+  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
+    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
+
+    if (child != container->initiated_move) {
+      _set_inpoint0 (child, inpoint);
+    }
+  }
+  _ges_container_set_children_control_mode (container, GES_CHILDREN_UPDATE);
+
+  return TRUE;
+}
+
+static gboolean
+_set_duration (GESTimelineElement * element, GstClockTime duration)
+{
+  GList *tmp;
+  GESTimeline *timeline;
+
+  GESContainer *container = GES_CONTAINER (element);
+
+  _ges_container_set_children_control_mode (container,
+      GES_CHILDREN_IGNORE_NOTIFIES);
+  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
+    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
+
+    if (child != container->initiated_move) {
+      /* Make the snapping happen if in a timeline */
+      timeline = GES_TIMELINE_ELEMENT_TIMELINE (child);
+      if (timeline == NULL || ges_timeline_trim_object_simple (timeline, child,
+              NULL, GES_EDGE_END, _START (child) + duration, TRUE) == FALSE)
+        _set_duration0 (GES_TIMELINE_ELEMENT (child), duration);
+    }
+  }
+  _ges_container_set_children_control_mode (container, GES_CHILDREN_UPDATE);
+
+  return TRUE;
+}
+
+static gboolean
+_set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
+{
+  GList *tmp;
+
+  for (tmp = GES_CONTAINER (element)->children; tmp; tmp = g_list_next (tmp))
+    ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (tmp->data),
+        maxduration);
+
+  return TRUE;
+}
+
+static gboolean
+_set_priority (GESTimelineElement * element, guint32 priority)
+{
+  GList *tmp;
+  guint32 min_prio, max_prio;
+
+  GESContainer *container = GES_CONTAINER (element);
+
+  GES_CONTAINER_GET_CLASS (element)->get_priority_range (container, &min_prio,
+      &max_prio);
+
+  _ges_container_set_children_control_mode (container,
+      GES_CHILDREN_IGNORE_NOTIFIES);
+  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
+    guint32 real_tck_prio = min_prio + priority;
+    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
+
+    if (real_tck_prio > max_prio) {
+      GST_WARNING ("%p priority of %i, is outside of the its containing "
+          "layer space. (%d/%d) setting it to the maximum it can be",
+          container, priority, min_prio, max_prio);
+
+      real_tck_prio = max_prio;
+    }
+    _set_priority0 (child, real_tck_prio);
+  }
+  _ges_container_set_children_control_mode (container, GES_CHILDREN_UPDATE);
+
+  return TRUE;
+}
+
 /****************************************************
  *                                                  *
  *  GESContainer virtual methods implementation     *
@@ -491,6 +615,11 @@ ges_clip_class_init (GESClipClass * klass)
   element_class->roll_start = _roll_start;
   element_class->roll_end = _roll_end;
   element_class->trim = _trim;
+  element_class->set_start = _set_start;
+  element_class->set_duration = _set_duration;
+  element_class->set_inpoint = _set_inpoint;
+  element_class->set_priority = _set_priority;
+  element_class->set_max_duration = _set_max_duration;
   /* TODO implement the deep_copy Virtual method */
 
   container_class->get_priority_range = _get_priority_range;
