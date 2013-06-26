@@ -2121,33 +2121,6 @@ gst_rtsp_client_get_auth (GstRTSPClient * client)
 }
 
 /**
- * gst_rtsp_client_get_uri:
- * @client: a #GstRTSPClient
- *
- * Get the #GstRTSPUrl of @client.
- *
- * Returns: (transfer full): the #GstRTSPUrl of @client. Free with
- * gst_rtsp_url_free () after usage.
- */
-GstRTSPUrl *
-gst_rtsp_client_get_uri (GstRTSPClient * client)
-{
-  GstRTSPClientPrivate *priv;
-  GstRTSPUrl *result = NULL;
-
-  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
-
-  priv = client->priv;
-
-  g_mutex_lock (&priv->lock);
-  if (priv->uri != NULL)
-    result = gst_rtsp_url_copy (priv->uri);
-  g_mutex_unlock (&priv->lock);
-
-  return result;
-}
-
-/**
  * gst_rtsp_client_set_connection:
  * @client: a #GstRTSPClient
  * @conn: (transfer full): a #GstRTSPConnection
