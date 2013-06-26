@@ -4787,7 +4787,8 @@ next:
       break;
     case GST_RTSP_MESSAGE_DATA:
       /* get next response */
-      GST_DEBUG_OBJECT (src, "ignoring data response message");
+      GST_DEBUG_OBJECT (src, "handle data response message");
+      gst_rtspsrc_handle_data (src, response);
       goto next;
     default:
       GST_WARNING_OBJECT (src, "ignoring unknown message type %d",
