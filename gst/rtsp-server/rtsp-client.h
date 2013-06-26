@@ -167,6 +167,35 @@ GstRTSPResult         gst_rtsp_client_send_request      (GstRTSPClient * client,
 guint                 gst_rtsp_client_attach            (GstRTSPClient *client,
                                                          GMainContext *context);
 
+/**
+ * GstRTSPClientSessionFilterFunc:
+ * @client: a #GstRTSPClient object
+ * @sess: a #GstRTSPSession in @client
+ * @user_data: user data that has been given to gst_rtsp_client_session_filter()
+ *
+ * This function will be called by the gst_rtsp_client_session_filter(). An
+ * implementation should return a value of #GstRTSPFilterResult.
+ *
+ * When this function returns #GST_RTSP_FILTER_REMOVE, @sess will be removed
+ * from @client.
+ *
+ * A return value of #GST_RTSP_FILTER_KEEP will leave @sess untouched in
+ * @client.
+ *
+ * A value of GST_RTSP_FILTER_REF will add @sess to the result #GList of
+ * gst_rtsp_client_session_filter().
+ *
+ * Returns: a #GstRTSPFilterResult.
+ */
+typedef GstRTSPFilterResult (*GstRTSPClientSessionFilterFunc)  (GstRTSPClient *client,
+                                                                GstRTSPSession *sess,
+                                                                gpointer user_data);
+
+GList *                gst_rtsp_client_session_filter    (GstRTSPClient *client,
+                                                          GstRTSPClientSessionFilterFunc func,
+                                                          gpointer user_data);
+
+
 
 G_END_DECLS
 

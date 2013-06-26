@@ -50,6 +50,8 @@ struct _GstRTSPClientPrivate
   GstRTSPMountPoints *mount_points;
   GstRTSPAuth *auth;
 
+  /* used to cache the media in the last requested DESCRIBE so that
+   * we can pick it up in the next SETUP immediately */
   GstRTSPUrl *uri;
   GstRTSPMedia *media;
 
@@ -269,6 +271,26 @@ client_watch_session (GstRTSPClient * client, GstRTSPSession * session)
 }
 
 static void
+client_unwatch_session (GstRTSPClient * client, GstRTSPSession * session)
+{
+  GstRTSPClientPrivate *priv = client->priv;
+
+  GST_INFO ("unwatching session %p", session);
+
+  g_object_weak_unref (G_OBJECT (session),
+      (GWeakNotify) client_session_finalized, client);
+  priv->sessions = g_list_remove (priv->sessions, session);
+}
+
+static void
+client_cleanup_session (GstRTSPClient * client, GstRTSPSession * session)
+{
+  g_object_weak_unref (G_OBJECT (session),
+      (GWeakNotify) client_session_finalized, client);
+  client_unlink_session (client, session);
+}
+
+static void
 client_cleanup_sessions (GstRTSPClient * client)
 {
   GstRTSPClientPrivate *priv = client->priv;
@@ -276,10 +298,7 @@ client_cleanup_sessions (GstRTSPClient * client)
 
   /* remove weak-ref from sessions */
   for (sessions = priv->sessions; sessions; sessions = g_list_next (sessions)) {
-    GstRTSPSession *session = (GstRTSPSession *) sessions->data;
-    g_object_weak_unref (G_OBJECT (session),
-        (GWeakNotify) client_session_finalized, client);
-    client_unlink_session (client, session);
+    client_cleanup_session (client, (GstRTSPSession *) sessions->data);
   }
   g_list_free (priv->sessions);
   priv->sessions = NULL;
@@ -703,9 +722,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
   unlink_session_transports (client, session, media);
 
   /* remove the session from the watched sessions */
-  g_object_weak_unref (G_OBJECT (session),
-      (GWeakNotify) client_session_finalized, client);
-  priv->sessions = g_list_remove (priv->sessions, session);
+  client_unwatch_session (client, session);
 
   gst_rtsp_session_media_set_state (media, GST_STATE_NULL);
 
@@ -2570,4 +2587,65 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
   res = gst_rtsp_watch_attach (priv->watch, context);
 
   return res;
+}
+
+/**
+ * gst_rtsp_client_session_filter:
+ * @client: a #GstRTSPclient
+ * @func: (scope call): a callback
+ * @user_data: user data passed to @func
+ *
+ * Call @func for each session managed by @client. The result value of @func
+ * determines what happens to the session. @func will be called with @client
+ * locked so no further actions on @client can be performed from @func.
+ *
+ * If @func returns #GST_RTSP_FILTER_REMOVE, the session will be removed from
+ * @client.
+ *
+ * If @func returns #GST_RTSP_FILTER_KEEP, the session will remain in @client.
+ *
+ * If @func returns #GST_RTSP_FILTER_REF, the session will remain in @client but
+ * will also be added with an additional ref to the result #GList of this
+ * function..
+ *
+ * Returns: (element-type GstRTSPSession) (transfer full): a #GList with all
+ * sessions for which @func returned #GST_RTSP_FILTER_REF. After usage, each
+ * element in the #GList should be unreffed before the list is freed.
+ */
+GList *
+gst_rtsp_client_session_filter (GstRTSPClient * client,
+    GstRTSPClientSessionFilterFunc func, gpointer user_data)
+{
+  GstRTSPClientPrivate *priv;
+  GList *result, *walk, *next;
+
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
+  g_return_val_if_fail (func != NULL, NULL);
+
+  priv = client->priv;
+
+  result = NULL;
+
+  g_mutex_lock (&priv->lock);
+  for (walk = priv->sessions; walk; walk = next) {
+    GstRTSPSession *sess = walk->data;
+
+    next = g_list_next (walk);
+
+    switch (func (client, sess, user_data)) {
+      case GST_RTSP_FILTER_REMOVE:
+        /* stop watching the session and pretent it went away */
+        client_cleanup_session (client, sess);
+        break;
+      case GST_RTSP_FILTER_REF:
+        result = g_list_prepend (result, g_object_ref (sess));
+        break;
+      case GST_RTSP_FILTER_KEEP:
+      default:
+        break;
+    }
+  }
+  g_mutex_unlock (&priv->lock);
+
+  return result;
 }
