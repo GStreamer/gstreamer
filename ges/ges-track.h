@@ -90,6 +90,8 @@ void               ges_track_set_timeline                    (GESTrack *track, G
 gboolean           ges_track_add_element                     (GESTrack *track, GESTrackElement *object);
 gboolean           ges_track_remove_element                  (GESTrack *track, GESTrackElement *object);
 void               ges_track_set_create_element_for_gap_func (GESTrack *track, GESCreateElementForGapFunc func);
+void               ges_track_set_mixing                      (GESTrack *track, gboolean mixing);
+gboolean           ges_track_get_mixing                      (GESTrack *track);
 
 /* standard methods */
 GType              ges_track_get_type                        (void);

@@ -67,6 +67,9 @@ struct _GESTrackPrivate
 
   gboolean updating;
 
+  gboolean mixing;
+  GstElement *mixing_operation;
+
   /* Virtual method to create GstElement that fill gaps */
   GESCreateElementForGapFunc create_element_for_gaps;
 };
@@ -451,11 +454,16 @@ ges_track_constructed (GObject * object)
     }
     g_object_set (gnlobject, "expandable", TRUE, NULL);
 
-    if (!gst_bin_add (GST_BIN (self->priv->composition), gnlobject)) {
-      GST_WARNING_OBJECT (self, "Could not add the mixer to our composition");
+    if (self->priv->mixing) {
+      if (!gst_bin_add (GST_BIN (self->priv->composition), gnlobject)) {
+        GST_WARNING_OBJECT (self, "Could not add the mixer to our composition");
 
-      return;
+        return;
+      }
     }
+
+    self->priv->mixing_operation = gst_object_ref (gnlobject);
+
   } else {
     GST_INFO_OBJECT (self, "No way to create a main mixer");
   }
@@ -562,6 +570,7 @@ ges_track_init (GESTrack * self)
       g_hash_table_new (g_direct_hash, g_direct_equal);
   self->priv->create_element_for_gaps = NULL;
   self->priv->gaps = NULL;
+  self->priv->mixing = TRUE;
 
   g_signal_connect (G_OBJECT (self->priv->composition), "notify::duration",
       G_CALLBACK (composition_duration_cb), self);
@@ -663,6 +672,48 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
 
   g_object_set (priv->composition, "caps", caps, NULL);
   /* FIXME : update all trackelements ? */
+}
+
+/**
+ * ges_track_set_mixing:
+ * @track: a #GESTrack
+ * @mixing: TRUE if the track should be mixing, FALSE otherwise.
+ *
+ * Sets if the #GESTrack should be mixing.
+ */
+void
+ges_track_set_mixing (GESTrack * track, gboolean mixing)
+{
+  g_return_if_fail (GES_IS_TRACK (track));
+
+  if (!track->priv->mixing_operation) {
+    GST_DEBUG_OBJECT (track, "Track will be set to mixing = %d", mixing);
+    track->priv->mixing = mixing;
+    return;
+  }
+
+  if (mixing == track->priv->mixing) {
+    GST_DEBUG_OBJECT (track, "Mixing is already set to the same value");
+  }
+
+  if (mixing) {
+    if (!gst_bin_add (GST_BIN (track->priv->composition),
+            track->priv->mixing_operation)) {
+      GST_WARNING_OBJECT (track, "Could not add the mixer to our composition");
+      return;
+    }
+  } else {
+    if (!gst_bin_remove (GST_BIN (track->priv->composition),
+            track->priv->mixing_operation)) {
+      GST_WARNING_OBJECT (track,
+          "Could not remove the mixer from our composition");
+      return;
+    }
+  }
+
+  track->priv->mixing = mixing;
+
+  GST_DEBUG_OBJECT (track, "The track has been set to mixing = %d", mixing);
 }
 
 /**
@@ -824,6 +875,22 @@ ges_track_get_timeline (GESTrack * track)
   g_return_val_if_fail (GES_IS_TRACK (track), NULL);
 
   return track->priv->timeline;
+}
+
+/**
+ * ges_track_get_mixing:
+ * @track: a #GESTrack
+ *
+ *  Gets if the underlying #GnlComposition contains an expandable mixer.
+ *
+ * Returns: #True if there is a mixer, #False otherwise.
+ */
+gboolean
+ges_track_get_mixing (GESTrack * track)
+{
+  g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
+
+  return track->priv->mixing;
 }
 
 /**
