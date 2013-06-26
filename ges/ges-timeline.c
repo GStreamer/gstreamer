@@ -119,10 +119,10 @@ struct _MoveContext
   GList *moving_trackelements;
 
   /* We use it as a set of Clip to move between layers */
-  GHashTable *moving_clips;
-  /* Min priority of the objects currently in moving_clips */
+  GHashTable *toplevel_containers;
+  /* Min priority of the objects currently in toplevel_containers */
   guint min_move_layer;
-  /* Max priority of the objects currently in moving_clips */
+  /* Max priority of the objects currently in toplevel_containers */
   guint max_layer_prio;
 
   /* Never trim so duration would becomes < 0 */
@@ -184,6 +184,7 @@ struct _GESTimelinePrivate
   /* While we are creating and adding the TrackElements for a clip, we need to
    * ignore the child-added signal */
   GESClip *ignore_track_element_added;
+  GList *groups;
 };
 
 /* private structure to contain our track-related information */
@@ -324,9 +325,12 @@ ges_timeline_dispose (GObject * object)
    * objects aren't notified that their gnlobjects have been destroyed.
    */
 
-  while (tl->tracks) {
+  while (tl->tracks)
     ges_timeline_remove_track (GES_TIMELINE (object), tl->tracks->data);
-  }
+
+  while (priv->groups)
+    g_list_free_full (ges_container_ungroup (priv->groups->data, FALSE),
+        gst_object_unref);
 
   g_hash_table_unref (priv->by_start);
   g_hash_table_unref (priv->by_end);
@@ -336,7 +340,7 @@ ges_timeline_dispose (GObject * object)
   g_sequence_free (priv->starts_ends);
   g_sequence_free (priv->tracksources);
   g_list_free (priv->movecontext.moving_trackelements);
-  g_hash_table_unref (priv->movecontext.moving_clips);
+  g_hash_table_unref (priv->movecontext.toplevel_containers);
 
   g_hash_table_unref (priv->auto_transitions);
 
@@ -551,6 +555,18 @@ ges_timeline_init (GESTimeline * self)
 }
 
 /* Private methods */
+
+static inline GESContainer *
+get_toplevel_container (GESTrackElement * element)
+{
+  GESTimelineElement *ret =
+      ges_timeline_element_get_toplevel_parent ((GESTimelineElement
+          *) (element));
+
+  /*  We own a ref to the elements ourself */
+  gst_object_unref (ret);
+  return (GESContainer *) ret;
+}
 
 /* Sorting utils*/
 static gint
@@ -885,7 +901,8 @@ static inline void
 init_movecontext (MoveContext * mv_ctx, gboolean first_init)
 {
   if (G_UNLIKELY (first_init))
-    mv_ctx->moving_clips = g_hash_table_new (g_direct_hash, g_direct_equal);
+    mv_ctx->toplevel_containers =
+        g_hash_table_new (g_direct_hash, g_direct_equal);
 
   mv_ctx->moving_trackelements = NULL;
   mv_ctx->max_trim_pos = G_MAXUINT64;
@@ -900,7 +917,7 @@ static inline void
 clean_movecontext (MoveContext * mv_ctx)
 {
   g_list_free (mv_ctx->moving_trackelements);
-  g_hash_table_remove_all (mv_ctx->moving_clips);
+  g_hash_table_remove_all (mv_ctx->toplevel_containers);
   init_movecontext (mv_ctx, FALSE);
 }
 
@@ -1060,7 +1077,7 @@ ges_timeline_snap_position (GESTimeline * timeline,
   GESTimelinePrivate *priv = timeline->priv;
   GSequenceIter *iter, *prev_iter, *nxt_iter;
   GESTrackElement *tmp_trackelement;
-  GESClip *tmp_clip, *clip;
+  GESContainer *tmp_container, *container;
 
   GstClockTime *last_snap_ts = priv->movecontext.last_snap_ts;
   guint64 snap_distance = timeline->priv->snapping_distance;
@@ -1081,7 +1098,7 @@ ges_timeline_snap_position (GESTimeline * timeline,
     }
   }
 
-  clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (trackelement));
+  container = get_toplevel_container (trackelement);
 
   iter = g_sequence_search (priv->starts_ends, &timecode,
       (GCompareDataFunc) compare_uint64, NULL);
@@ -1092,10 +1109,11 @@ ges_timeline_snap_position (GESTimeline * timeline,
   while (!g_sequence_iter_is_end (nxt_iter)) {
     next_tc = g_sequence_get (iter);
     tmp_trackelement = g_hash_table_lookup (timeline->priv->by_object, next_tc);
-    tmp_clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (tmp_trackelement));
+    tmp_container = get_toplevel_container (tmp_trackelement);
 
     off = timecode > *next_tc ? timecode - *next_tc : *next_tc - timecode;
-    if (next_tc != current && off <= snap_distance && clip != tmp_clip) {
+    if (next_tc != current && off <= snap_distance
+        && container != tmp_container) {
 
       ret = next_tc;
       break;
@@ -1111,11 +1129,11 @@ ges_timeline_snap_position (GESTimeline * timeline,
   while (!g_sequence_iter_is_begin (prev_iter)) {
     prev_tc = g_sequence_get (prev_iter);
     tmp_trackelement = g_hash_table_lookup (timeline->priv->by_object, prev_tc);
-    tmp_clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (tmp_trackelement));
+    tmp_container = get_toplevel_container (tmp_trackelement);
 
     off1 = timecode > *prev_tc ? timecode - *prev_tc : *prev_tc - timecode;
     if (prev_tc != current && off1 < off && off1 <= snap_distance &&
-        clip != tmp_clip) {
+        container != tmp_container) {
       ret = prev_tc;
 
       break;
@@ -1139,35 +1157,39 @@ done:
   return ret;
 }
 
-static inline GESClip *
-add_moving_clip (MoveContext * mv_ctx, GESTrackElement * trackelement)
+static inline GESContainer *
+add_toplevel_container (MoveContext * mv_ctx, GESTrackElement * trackelement)
 {
-  GESClip *clip;
-  GESLayer *layer;
   guint layer_prio;
-
-  clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (trackelement));
+  GESContainer *toplevel = get_toplevel_container (trackelement);
 
   /* Avoid recalculating */
-  if (!g_hash_table_lookup (mv_ctx->moving_clips, clip)) {
-    layer = ges_clip_get_layer (clip);
-    if (layer == NULL) {
-      GST_WARNING_OBJECT (clip, "Not in any layer, can not move"
-          " between layers");
+  if (!g_hash_table_lookup (mv_ctx->toplevel_containers, toplevel)) {
+    if (GES_IS_CLIP (toplevel)) {
 
-    } else {
+      layer_prio = ges_clip_get_layer_priority (GES_CLIP (toplevel));
+      if (layer_prio == (guint32) - 1) {
+        GST_WARNING_OBJECT (toplevel, "Not in any layer, can not move"
+            " between layers");
 
-      g_hash_table_insert (mv_ctx->moving_clips, clip, clip);
-
-      layer_prio = ges_layer_get_priority (layer);
+        return toplevel;
+      }
       mv_ctx->min_move_layer = MIN (mv_ctx->min_move_layer, layer_prio);
       mv_ctx->max_layer_prio = MAX (mv_ctx->max_layer_prio, layer_prio);
+    } else if GES_IS_GROUP
+      (toplevel) {
+      mv_ctx->min_move_layer = MIN (mv_ctx->min_move_layer,
+          _PRIORITY (toplevel));
+      mv_ctx->max_layer_prio = MAX (mv_ctx->max_layer_prio,
+          _PRIORITY (toplevel) + GES_CONTAINER_HEIGHT (toplevel));
+    } else
+      g_assert_not_reached ();
 
-      gst_object_unref (layer);
-    }
+    g_hash_table_insert (mv_ctx->toplevel_containers, toplevel, toplevel);
+
   }
 
-  return clip;
+  return toplevel;
 }
 
 static gboolean
@@ -1292,10 +1314,10 @@ ges_timeline_set_moving_context (GESTimeline * timeline, GESTrackElement * obj,
       default:
         break;
     }
-    add_moving_clip (&timeline->priv->movecontext, editor_trackelement);
+    add_toplevel_container (&timeline->priv->movecontext, editor_trackelement);
   } else {
-    /* We add the main object to the moving_clips set */
-    add_moving_clip (&timeline->priv->movecontext, obj);
+    /* We add the main object to the toplevel_containers set */
+    add_toplevel_container (&timeline->priv->movecontext, obj);
   }
 
 
@@ -1387,7 +1409,7 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackElement * obj,
 {
   GList *tmp, *moved_clips = NULL;
   GESTrackElement *trackelement;
-  GESClip *clip;
+  GESContainer *container;
   guint64 duration, new_start, *snapped, *cur;
   gint64 offset;
 
@@ -1415,11 +1437,11 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackElement * obj,
         trackelement = GES_TRACK_ELEMENT (tmp->data);
         new_start = _START (trackelement) + offset;
 
-        clip = add_moving_clip (mv_ctx, trackelement);
+        container = add_toplevel_container (mv_ctx, trackelement);
         /* Make sure not to move 2 times the same Clip */
-        if (g_list_find (moved_clips, clip) == NULL) {
+        if (g_list_find (moved_clips, container) == NULL) {
           _set_start0 (GES_TIMELINE_ELEMENT (trackelement), new_start);
-          moved_clips = g_list_prepend (moved_clips, clip);
+          moved_clips = g_list_prepend (moved_clips, container);
         }
 
       }
@@ -1445,12 +1467,16 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackElement * obj,
         trackelement = GES_TRACK_ELEMENT (tmp->data);
         new_start = _START (trackelement) + offset;
 
-        clip = add_moving_clip (mv_ctx, trackelement);
+        container = add_toplevel_container (mv_ctx, trackelement);
+        if (GES_IS_GROUP (container))
+          container->children_control_mode = GES_CHILDREN_UPDATE_OFFSETS;
         /* Make sure not to move 2 times the same Clip */
-        if (g_list_find (moved_clips, clip) == NULL) {
+        if (g_list_find (moved_clips, container) == NULL) {
           _set_start0 (GES_TIMELINE_ELEMENT (trackelement), new_start);
-          moved_clips = g_list_prepend (moved_clips, clip);
+          moved_clips = g_list_prepend (moved_clips, container);
         }
+        if (GES_IS_GROUP (container))
+          container->children_control_mode = GES_CHILDREN_UPDATE;
 
       }
 
@@ -1629,7 +1655,7 @@ gboolean
 timeline_move_object (GESTimeline * timeline, GESTrackElement * object,
     GList * layers, GESEdge edge, guint64 position)
 {
-  if (!ges_timeline_set_moving_context (timeline, object, GES_EDIT_MODE_RIPPLE,
+  if (!ges_timeline_set_moving_context (timeline, object, GES_EDIT_MODE_NORMAL,
           edge, layers)) {
     GST_DEBUG_OBJECT (object, "Could not move to %" GST_TIME_FORMAT,
         GST_TIME_ARGS (position));
@@ -1656,11 +1682,12 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
     return FALSE;
 
   track_element = GES_TRACK_ELEMENT (element);
-  end = position + _DURATION (track_element);
+  end = position + _DURATION (get_toplevel_container (track_element));
   cur = g_hash_table_lookup (timeline->priv->by_end, track_element);
 
-  GST_DEBUG_OBJECT (timeline, "Moving to %" GST_TIME_FORMAT " (end %"
-      GST_TIME_FORMAT ")", GST_TIME_ARGS (position), GST_TIME_ARGS (end));
+  GST_DEBUG_OBJECT (timeline, "Moving %" GST_PTR_FORMAT "to %"
+      GST_TIME_FORMAT " (end %" GST_TIME_FORMAT ")", element,
+      GST_TIME_ARGS (position), GST_TIME_ARGS (end));
 
   snap_end = ges_timeline_snap_position (timeline, track_element, cur, end,
       FALSE);
@@ -1670,7 +1697,8 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
     off1 = G_MAXUINT64;
 
   cur = g_hash_table_lookup (timeline->priv->by_start, track_element);
-  snap_st = ges_timeline_snap_position (timeline, track_element, cur, position,
+  snap_st =
+      ges_timeline_snap_position (timeline, track_element, cur, position,
       FALSE);
   if (snap_st)
     off2 = position > *snap_st ? position - *snap_st : *snap_st - position;
@@ -1704,33 +1732,37 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
   /* Layer's priority is always positive */
   if (offset != 0 && (offset > 0 || mv_ctx->min_move_layer >= -offset)) {
     GHashTableIter iter;
-    GESClip *key, *value;
-    GESLayer *new_layer, *layer;
+    GESContainer *key, *value;
+    GESLayer *new_layer;
     guint prio;
 
     mv_ctx->ignore_needs_ctx = TRUE;
 
     GST_DEBUG ("Moving %d object, offset %d",
-        g_hash_table_size (mv_ctx->moving_clips), offset);
+        g_hash_table_size (mv_ctx->toplevel_containers), offset);
 
-    g_hash_table_iter_init (&iter, mv_ctx->moving_clips);
+    g_hash_table_iter_init (&iter, mv_ctx->toplevel_containers);
     while (g_hash_table_iter_next (&iter, (gpointer *) & key,
             (gpointer *) & value)) {
-      layer = ges_clip_get_layer (value);
-      prio = ges_layer_get_priority (layer);
 
-      /* We know that the layer exists as we created it */
-      new_layer = GES_LAYER (g_list_nth_data (timeline->layers, prio + offset));
+      if (GES_IS_CLIP (value)) {
+        prio = ges_clip_get_layer_priority (GES_CLIP (value));
 
-      if (new_layer == NULL) {
-        do {
-          new_layer = ges_timeline_append_layer (timeline);
-        } while (ges_layer_get_priority (new_layer) < prio + offset);
+        /* We know that the layer exists as we created it */
+        new_layer =
+            GES_LAYER (g_list_nth_data (timeline->layers, prio + offset));
+
+        if (new_layer == NULL) {
+          do {
+            new_layer = ges_timeline_append_layer (timeline);
+          } while (ges_layer_get_priority (new_layer) < prio + offset);
+        }
+
+        ret &= ges_clip_move_to_layer (GES_CLIP (key), new_layer);
+      } else if (GES_IS_GROUP (value)) {
+        _set_priority0 (GES_TIMELINE_ELEMENT (value),
+            _PRIORITY (value) + offset);
       }
-
-      ret &= ges_clip_move_to_layer (key, new_layer);
-
-      gst_object_unref (layer);
     }
 
     /* Readjust min_move_layer */
@@ -1740,6 +1772,30 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
   }
 
   return ret;
+}
+
+void
+timeline_add_group (GESTimeline * timeline, GESGroup * group)
+{
+  GST_DEBUG_OBJECT (timeline, "Adding group %" GST_PTR_FORMAT, group);
+
+  timeline->priv->movecontext.needs_move_ctx = TRUE;
+  timeline->priv->groups = g_list_prepend (timeline->priv->groups,
+      gst_object_ref_sink (group));
+
+  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (group), timeline);
+}
+
+void
+timeline_remove_group (GESTimeline * timeline, GESGroup * group)
+{
+  GST_DEBUG_OBJECT (timeline, "Removing group %" GST_PTR_FORMAT, group);
+
+  timeline->priv->groups = g_list_remove (timeline->priv->groups, group);
+
+  timeline->priv->movecontext.needs_move_ctx = TRUE;
+  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (group), NULL);
+  gst_object_unref (group);
 }
 
 static GPtrArray *
@@ -1800,8 +1856,8 @@ layer_auto_transition_changed_cb (GESLayer * layer,
 }
 
 static void
-clip_track_element_added_cb (GESClip * clip, GESTrackElement * track_element,
-    GESTimeline * timeline)
+clip_track_element_added_cb (GESClip * clip,
+    GESTrackElement * track_element, GESTimeline * timeline)
 {
   guint i;
   GESTrack *track;
@@ -1885,8 +1941,8 @@ clip_track_element_added_cb (GESClip * clip, GESTrackElement * track_element,
 }
 
 static void
-clip_track_element_removed_cb (GESClip * clip, GESTrackElement * track_element,
-    GESTimeline * timeline)
+clip_track_element_removed_cb (GESClip * clip,
+    GESTrackElement * track_element, GESTimeline * timeline)
 {
   GESTrack *track = ges_track_element_get_track (track_element);
 
@@ -2081,17 +2137,19 @@ track_element_added_cb (GESTrack * track, GESTrackElement * track_element,
   /* Auto transition should be updated before we receive the signal */
   g_signal_connect_after (GES_TRACK_ELEMENT (track_element), "notify::start",
       G_CALLBACK (trackelement_start_changed_cb), timeline);
-  g_signal_connect_after (GES_TRACK_ELEMENT (track_element), "notify::duration",
-      G_CALLBACK (trackelement_duration_changed_cb), timeline);
-  g_signal_connect_after (GES_TRACK_ELEMENT (track_element), "notify::priority",
-      G_CALLBACK (trackelement_priority_changed_cb), timeline);
+  g_signal_connect_after (GES_TRACK_ELEMENT (track_element),
+      "notify::duration", G_CALLBACK (trackelement_duration_changed_cb),
+      timeline);
+  g_signal_connect_after (GES_TRACK_ELEMENT (track_element),
+      "notify::priority", G_CALLBACK (trackelement_priority_changed_cb),
+      timeline);
 
   start_tracking_track_element (timeline, track_element);
 }
 
 static void
-track_element_removed_cb (GESTrack * track, GESTrackElement * track_element,
-    GESTimeline * timeline)
+track_element_removed_cb (GESTrack * track,
+    GESTrackElement * track_element, GESTimeline * timeline)
 {
 
   if (GES_IS_SOURCE (track_element)) {

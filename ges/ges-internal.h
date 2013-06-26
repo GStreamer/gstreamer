@@ -84,6 +84,14 @@ G_GNUC_INTERNAL gboolean
 timeline_context_to_layer      (GESTimeline *timeline, gint offset);
 
 G_GNUC_INTERNAL void
+timeline_add_group             (GESTimeline *timeline,
+                                GESGroup *group);
+G_GNUC_INTERNAL
+void
+timeline_remove_group          (GESTimeline *timeline,
+                                GESGroup *group);
+
+G_GNUC_INTERNAL void
 ges_asset_cache_init (void);
 
 G_GNUC_INTERNAL void

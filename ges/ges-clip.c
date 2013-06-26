@@ -686,7 +686,9 @@ ges_clip_class_init (GESClipClass * klass)
   /**
    * GESClip:layer:
    *
-   * The GESLayer where this clip is being used.
+   * The GESLayer where this clip is being used. If you want to connect to its
+   * notify signal you should connect to it with g_signal_connect_after as the
+   * signal emission can be stop in the first fase.
    */
   properties[PROP_LAYER] = g_param_spec_object ("layer", "Layer",
       "The GESLayer where this clip is being used.",

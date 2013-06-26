@@ -384,8 +384,8 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   GST_DEBUG_OBJECT (self, "current start: %" GST_TIME_FORMAT
-      " new start: %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
-      GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (self)));
+      " new start: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (self)), GST_TIME_ARGS (start));
 
   if (klass->set_start) {
     if (klass->set_start (self, start)) {
@@ -393,6 +393,8 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_START]);
     }
 
+    GST_DEBUG_OBJECT (self, "New start: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (self)));
     return;
   }
 
@@ -489,8 +491,9 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   GST_DEBUG_OBJECT (self, "current duration: %" GST_TIME_FORMAT
-      " new duration: %" GST_TIME_FORMAT, GST_TIME_ARGS (duration),
-      GST_TIME_ARGS (GES_TIMELINE_ELEMENT_DURATION (self)));
+      " new duration: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GES_TIMELINE_ELEMENT_DURATION (self)),
+      GST_TIME_ARGS (duration));
 
   if (klass->set_duration) {
     if (klass->set_duration (self, duration)) {

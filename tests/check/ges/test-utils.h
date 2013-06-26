@@ -72,4 +72,16 @@ G_STMT_START {                                          \
 #define _INPOINT(obj) GES_TIMELINE_ELEMENT_INPOINT (obj)
 #define _PRIORITY(obj) GES_TIMELINE_ELEMENT_PRIORITY (obj)
 
+#define CHECK_OBJECT_PROPS(obj, start, inpoint, duration) {\
+  assert_equals_uint64 (_START (obj), start);\
+  assert_equals_uint64 (_INPOINT (obj), inpoint);\
+  assert_equals_uint64 (_DURATION (obj), duration);\
+}
+
+#define check_layer(clip, layer_prio) {                                        \
+  GESLayer *tmplayer = ges_clip_get_layer ((clip));                            \
+  assert_equals_int (ges_layer_get_priority (tmplayer),  (layer_prio));        \
+  gst_object_unref (tmplayer);                                                 \
+}
+
 #endif /* _GES_TEST_UTILS */

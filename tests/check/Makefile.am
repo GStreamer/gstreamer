@@ -41,6 +41,7 @@ check_PROGRAMS = \
 	ges/overlays\
 	ges/text_properties\
 	ges/mixers\
+	ges/group\
 	ges/project
 
 noinst_LTLIBRARIES=$(testutils_noisnt_libraries)

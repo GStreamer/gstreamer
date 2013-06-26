@@ -22,6 +22,33 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
+#define DEEP_CHECK(element, start, inpoint, duration)                          \
+{                                                                              \
+  GList *track_elements, *tmp;                                                 \
+  GstClockTime rstart, rinpoint, rduration;                                    \
+                                                                               \
+  rstart = ges_timeline_element_get_start (GES_TIMELINE_ELEMENT (element));    \
+  rinpoint = ges_timeline_element_get_inpoint (GES_TIMELINE_ELEMENT (element));\
+  rduration =                                                                  \
+      ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (element));      \
+                                                                               \
+  assert_equals_uint64 (rstart, start);                                        \
+  assert_equals_uint64 (rinpoint, inpoint);                                    \
+  assert_equals_uint64 (rduration, duration);                                  \
+                                                                               \
+  track_elements = GES_CONTAINER_CHILDREN (element);                           \
+  for (tmp = track_elements; tmp; tmp = tmp->next) {                           \
+    rstart = ges_timeline_element_get_start (GES_TIMELINE_ELEMENT (tmp->data));\
+    rinpoint =                                                                 \
+        ges_timeline_element_get_inpoint (GES_TIMELINE_ELEMENT (tmp->data));   \
+    rduration =                                                                \
+        ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (tmp->data));  \
+    assert_equals_uint64 (rstart, start);                                      \
+    assert_equals_uint64 (rinpoint, inpoint);                                  \
+    assert_equals_uint64 (rduration, duration);                                \
+  }                                                                            \
+}
+
 static gboolean
 my_fill_track_func (GESClip * clip,
     GESTrackElement * track_element, GstElement * gnlobj, gpointer user_data)
@@ -44,12 +71,6 @@ static inline GESClip *
 create_custom_clip (void)
 {
   return GES_CLIP (ges_custom_source_clip_new (my_fill_track_func, NULL));
-}
-
-#define CHECK_OBJECT_PROPS(obj, start, inpoint, duration) {\
-  assert_equals_uint64 (_START (obj), start);\
-  assert_equals_uint64 (_INPOINT (obj), inpoint);\
-  assert_equals_uint64 (_DURATION (obj), duration);\
 }
 
 GST_START_TEST (test_basic_timeline_edition)
@@ -487,35 +508,6 @@ asset_added_cb (GESProject * project, GESAsset * asset, void *mainloop)
   g_main_loop_quit ((GMainLoop *) mainloop);
 }
 
-static void
-deep_check (GESTimelineElement * element, GstClockTime start,
-    GstClockTime inpoint, GstClockTime duration)
-{
-  GList *track_elements, *tmp;
-  GstClockTime rstart, rinpoint, rduration;
-
-  rstart = ges_timeline_element_get_start (GES_TIMELINE_ELEMENT (element));
-  rinpoint = ges_timeline_element_get_inpoint (GES_TIMELINE_ELEMENT (element));
-  rduration =
-      ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (element));
-
-  assert_equals_uint64 (rstart, start);
-  assert_equals_uint64 (rinpoint, inpoint);
-  assert_equals_uint64 (rduration, duration);
-
-  track_elements = GES_CONTAINER_CHILDREN (element);
-  for (tmp = track_elements; tmp; tmp = tmp->next) {
-    rstart = ges_timeline_element_get_start (GES_TIMELINE_ELEMENT (tmp->data));
-    rinpoint =
-        ges_timeline_element_get_inpoint (GES_TIMELINE_ELEMENT (tmp->data));
-    rduration =
-        ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (tmp->data));
-    assert_equals_uint64 (rstart, start);
-    assert_equals_uint64 (rinpoint, inpoint);
-    assert_equals_uint64 (rduration, duration);
-  }
-}
-
 GST_START_TEST (test_simple_triming)
 {
   GList *assets;
@@ -556,10 +548,10 @@ GST_START_TEST (test_simple_triming)
 
   element = ges_layer_get_clips (layer)->data;
 
-  deep_check (element, 0, 0, 10);
+  DEEP_CHECK (element, 0, 0, 10);
   ges_container_edit (GES_CONTAINER (element), NULL, -1, GES_EDIT_MODE_TRIM,
       GES_EDGE_START, 5);
-  deep_check (element, 5, 5, 5);
+  DEEP_CHECK (element, 5, 5, 5);
 
   g_main_loop_unref (mainloop);
   gst_object_unref (timeline);
@@ -1018,6 +1010,274 @@ GST_START_TEST (test_timeline_edition_mode)
 
 GST_END_TEST;
 
+GST_START_TEST (test_groups)
+{
+  GESAsset *asset;
+  GESTimeline *timeline;
+  GESGroup *group;
+  GESLayer *layer, *layer1, *layer2, *layer3;
+  GESClip *c, *c1, *c2, *c3, *c4, *c5;
+
+  GList *clips = NULL;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+
+  /* Our timeline
+   *
+   *    --0------------10-Group-----20---------------30-----------------------70
+   *      | +-----------+                             |+-----------50         |
+   * L    | |    C      |                             ||     C3    |          |
+   *      | +-----------+                             |+-----------+          |
+   *    --|-------------------------------------------|-----40----------------|
+   *      |            +------------+ +-------------+ |      +--------60      |
+   * L1   |            |     C1     | |     C2      | |      |     C4 |       |
+   *      |            +------------+ +-------------+ |      +--------+       |
+   *    --|-------------------------------------------|-----------------------|
+   *      |                                           |             +--------+|
+   * L2   |                                           |             |  c5    ||
+   *      |                                           |             +--------+|
+   *    --+-------------------------------------------+-----------------------+
+   *
+   * L3
+   *
+   *    -----------------------------------------------------------------------
+   */
+
+  layer = ges_timeline_append_layer (timeline);
+  layer1 = ges_timeline_append_layer (timeline);
+  layer2 = ges_timeline_append_layer (timeline);
+  layer3 = ges_timeline_append_layer (timeline);
+  assert_equals_int (ges_layer_get_priority (layer3), 3);
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+
+  c = ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+  c1 = ges_layer_add_asset (layer1, asset, 10, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+  c2 = ges_layer_add_asset (layer1, asset, 20, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+  clips = g_list_prepend (clips, c);
+  clips = g_list_prepend (clips, c1);
+  clips = g_list_prepend (clips, c2);
+  group = GES_GROUP (ges_container_group (clips));
+  fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (group) == timeline);
+  g_list_free (clips);
+
+  fail_unless (GES_IS_GROUP (group));
+  CHECK_OBJECT_PROPS (c, 0, 0, 10);
+  CHECK_OBJECT_PROPS (c1, 10, 0, 10);
+  CHECK_OBJECT_PROPS (c2, 20, 0, 10);
+  CHECK_OBJECT_PROPS (group, 0, 0, 30);
+
+  c3 = ges_layer_add_asset (layer, asset, 30, 0, 20, GES_TRACK_TYPE_UNKNOWN);
+  c4 = ges_layer_add_asset (layer1, asset, 40, 0, 20, GES_TRACK_TYPE_UNKNOWN);
+  c5 = ges_layer_add_asset (layer2, asset, 50, 0, 20, GES_TRACK_TYPE_UNKNOWN);
+
+  CHECK_OBJECT_PROPS (c3, 30, 0, 20);
+  CHECK_OBJECT_PROPS (c4, 40, 0, 20);
+  CHECK_OBJECT_PROPS (c5, 50, 0, 20);
+  check_layer (c, 0);
+  check_layer (c1, 1);
+  check_layer (c2, 1);
+  check_layer (c3, 0);
+  check_layer (c4, 1);
+  check_layer (c5, 2);
+
+  fail_unless (ges_container_edit (GES_CONTAINER (c), NULL, -1,
+          GES_EDIT_MODE_RIPPLE, GES_EDGE_NONE, 10) == TRUE);
+
+  CHECK_OBJECT_PROPS (c, 10, 0, 10);
+  CHECK_OBJECT_PROPS (c1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (c2, 30, 0, 10);
+  CHECK_OBJECT_PROPS (c3, 40, 0, 20);
+  CHECK_OBJECT_PROPS (c4, 50, 0, 20);
+  CHECK_OBJECT_PROPS (c5, 60, 0, 20);
+  check_layer (c, 0);
+  check_layer (c1, 1);
+  check_layer (c2, 1);
+  check_layer (c3, 0);
+  check_layer (c4, 1);
+  check_layer (c5, 2);
+
+  fail_unless (ges_container_edit (GES_CONTAINER (c), NULL, 1,
+          GES_EDIT_MODE_RIPPLE, GES_EDGE_NONE, 10) == TRUE);
+  CHECK_OBJECT_PROPS (c, 10, 0, 10);
+  CHECK_OBJECT_PROPS (c1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (c2, 30, 0, 10);
+  CHECK_OBJECT_PROPS (c3, 40, 0, 20);
+  CHECK_OBJECT_PROPS (c4, 50, 0, 20);
+  CHECK_OBJECT_PROPS (c5, 60, 0, 20);
+  check_layer (c, 1);
+  check_layer (c1, 2);
+  check_layer (c2, 2);
+  check_layer (c3, 1);
+  check_layer (c4, 2);
+  check_layer (c5, 3);
+
+  fail_unless (ges_container_edit (GES_CONTAINER (c1), NULL, 2,
+          GES_EDIT_MODE_RIPPLE, GES_EDGE_END, 40) == TRUE);
+  CHECK_OBJECT_PROPS (c, 10, 0, 10);
+  CHECK_OBJECT_PROPS (c1, 20, 0, 20);
+  CHECK_OBJECT_PROPS (c2, 40, 0, 10);
+  CHECK_OBJECT_PROPS (c3, 50, 0, 20);
+  CHECK_OBJECT_PROPS (c4, 60, 0, 20);
+  CHECK_OBJECT_PROPS (c5, 70, 0, 20);
+  check_layer (c, 1);
+  check_layer (c1, 2);
+  check_layer (c2, 2);
+  check_layer (c3, 1);
+  check_layer (c4, 2);
+  check_layer (c5, 3);
+
+  fail_unless (ges_container_edit (GES_CONTAINER (c1), NULL, 2,
+          GES_EDIT_MODE_RIPPLE, GES_EDGE_END, 30) == TRUE);
+  CHECK_OBJECT_PROPS (c, 10, 0, 10);
+  CHECK_OBJECT_PROPS (c1, 20, 0, 10);
+  CHECK_OBJECT_PROPS (c2, 30, 0, 10);
+  CHECK_OBJECT_PROPS (c3, 40, 0, 20);
+  CHECK_OBJECT_PROPS (c4, 50, 0, 20);
+  CHECK_OBJECT_PROPS (c5, 60, 0, 20);
+  check_layer (c, 1);
+  check_layer (c1, 2);
+  check_layer (c2, 2);
+  check_layer (c3, 1);
+  check_layer (c4, 2);
+  check_layer (c5, 3);
+
+  fail_unless (ges_container_edit (GES_CONTAINER (c), NULL, 0,
+          GES_EDIT_MODE_RIPPLE, GES_EDGE_NONE, 0) == TRUE);
+  CHECK_OBJECT_PROPS (c, 0, 0, 10);
+  CHECK_OBJECT_PROPS (c1, 10, 0, 10);
+  CHECK_OBJECT_PROPS (c2, 20, 0, 10);
+  CHECK_OBJECT_PROPS (c3, 30, 0, 20);
+  CHECK_OBJECT_PROPS (c4, 40, 0, 20);
+  CHECK_OBJECT_PROPS (c5, 50, 0, 20);
+  check_layer (c, 0);
+  check_layer (c1, 1);
+  check_layer (c2, 1);
+  check_layer (c3, 0);
+  check_layer (c4, 1);
+  check_layer (c5, 2);
+
+  fail_unless (ges_container_edit (GES_CONTAINER (c2), NULL, -1,
+          GES_EDIT_MODE_ROLL, GES_EDGE_END, 40) == TRUE);
+  CHECK_OBJECT_PROPS (c, 0, 0, 10);
+  CHECK_OBJECT_PROPS (c1, 10, 0, 10);
+  CHECK_OBJECT_PROPS (c2, 20, 0, 20);
+  CHECK_OBJECT_PROPS (c3, 40, 10, 10);
+  CHECK_OBJECT_PROPS (c4, 40, 0, 20);
+  CHECK_OBJECT_PROPS (c5, 50, 0, 20);
+  CHECK_OBJECT_PROPS (group, 0, 0, 40);
+  check_layer (c, 0);
+  check_layer (c1, 1);
+  check_layer (c2, 1);
+  check_layer (c3, 0);
+  check_layer (c4, 1);
+  check_layer (c5, 2);
+
+  gst_object_unref (timeline);
+  gst_object_unref (asset);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_snapping_groups)
+{
+  GESAsset *asset;
+  GESTimeline *timeline;
+  GESGroup *group;
+  GESLayer *layer, *layer1, *layer2, *layer3;
+  GESClip *c, *c1, *c2, *c3, *c4, *c5;
+
+  GList *clips = NULL;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  g_object_set (timeline, "snapping-distance", (guint64) 3, NULL);
+
+  /* Our timeline
+   *
+   *    --0------------10-Group-----20---------25-----30----------------------70
+   *      | +-----------+                      |       +-----------50         |
+   * L    | |    C      |                      |       |     C3    |          |
+   *      | +-----------+                      |       +-----------+          |
+   *    --|------------------------------------|------------40----------------|
+   *      |            +------------+ +--------+             +--------60      |
+   * L1   |            |     C1     | |     C2 |             |     C4 |       |
+   *      |            +------------+ +--------+             +--------+       |
+   *    --|------------------------------------+------------------------------|
+   *      |                                                         +--------+|
+   * L2   |                                                         |  c5    ||
+   *      |                                                         +--------+|
+   *    --+-------------------------------------------------------------------+
+   *
+   * L3
+   *
+   *    -----------------------------------------------------------------------
+   */
+
+  layer = ges_timeline_append_layer (timeline);
+  layer1 = ges_timeline_append_layer (timeline);
+  layer2 = ges_timeline_append_layer (timeline);
+  layer3 = ges_timeline_append_layer (timeline);
+  assert_equals_int (ges_layer_get_priority (layer3), 3);
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+
+  c = ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+  c1 = ges_layer_add_asset (layer1, asset, 10, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+  c2 = ges_layer_add_asset (layer1, asset, 20, 0, 5, GES_TRACK_TYPE_UNKNOWN);
+  clips = g_list_prepend (clips, c);
+  clips = g_list_prepend (clips, c1);
+  clips = g_list_prepend (clips, c2);
+  group = GES_GROUP (ges_container_group (clips));
+  fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (group) == timeline);
+  g_list_free (clips);
+
+  fail_unless (GES_IS_GROUP (group));
+  CHECK_OBJECT_PROPS (c, 0, 0, 10);
+  CHECK_OBJECT_PROPS (c1, 10, 0, 10);
+  CHECK_OBJECT_PROPS (c2, 20, 0, 5);
+  CHECK_OBJECT_PROPS (group, 0, 0, 25);
+
+  c3 = ges_layer_add_asset (layer, asset, 30, 0, 20, GES_TRACK_TYPE_UNKNOWN);
+  c4 = ges_layer_add_asset (layer1, asset, 40, 0, 20, GES_TRACK_TYPE_UNKNOWN);
+  c5 = ges_layer_add_asset (layer2, asset, 50, 0, 20, GES_TRACK_TYPE_UNKNOWN);
+
+  CHECK_OBJECT_PROPS (c3, 30, 0, 20);
+  CHECK_OBJECT_PROPS (c4, 40, 0, 20);
+  CHECK_OBJECT_PROPS (c5, 50, 0, 20);
+  check_layer (c, 0);
+  check_layer (c1, 1);
+  check_layer (c2, 1);
+  check_layer (c3, 0);
+  check_layer (c4, 1);
+  check_layer (c5, 2);
+
+  /* c2 should snap with C3 and make the group moving to 5 */
+  fail_unless (ges_container_edit (GES_CONTAINER (c), NULL, -1,
+          GES_EDIT_MODE_NORMAL, GES_EDGE_NONE, 3) == TRUE);
+
+  DEEP_CHECK (c, 5, 0, 10);
+  DEEP_CHECK (c1, 15, 0, 10);
+  DEEP_CHECK (c2, 25, 0, 5);
+  DEEP_CHECK (c2, 25, 0, 5);
+  DEEP_CHECK (c4, 40, 0, 20);
+  DEEP_CHECK (c5, 50, 0, 20);
+  CHECK_OBJECT_PROPS (group, 5, 0, 25);
+  check_layer (c, 0);
+  check_layer (c1, 1);
+  check_layer (c2, 1);
+  check_layer (c3, 0);
+  check_layer (c4, 1);
+  check_layer (c5, 2);
+
+
+  gst_object_unref (timeline);
+  gst_object_unref (asset);
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -1030,6 +1290,8 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_snapping);
   tcase_add_test (tc_chain, test_timeline_edition_mode);
   tcase_add_test (tc_chain, test_simple_triming);
+  tcase_add_test (tc_chain, test_groups);
+  tcase_add_test (tc_chain, test_snapping_groups);
 
   return s;
 }

@@ -287,7 +287,11 @@ GST_START_TEST (test_clip_group_ungroup)
   assert_equals_uint64 (_DURATION (clip2), 10);
 
   regrouped_clip = ges_container_group (containers);
-  fail_unless (regrouped_clip == NULL);
+  fail_unless (GES_IS_GROUP (regrouped_clip));
+  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (regrouped_clip)),
+      2);
+  tmp = ges_container_ungroup (regrouped_clip, FALSE);
+  g_list_free_full (tmp, gst_object_unref);
 
   ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (clip), 0);
   regrouped_clip = ges_container_group (containers);

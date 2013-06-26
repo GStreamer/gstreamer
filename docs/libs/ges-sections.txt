@@ -1092,6 +1092,23 @@ GES_URI_CLIP_ASSET_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>ges-group</FILE>
+<TITLE>GESGroup</TITLE>
+GESGroup
+ges_group_new
+<SUBSECTION Standard>
+GESGroupClass
+GESGroupPrivate
+GES_GROUP
+GES_IS_GROUP
+GES_TYPE_GROUP
+ges_group_get_type
+GES_GROUP_CLASS
+GES_IS_GROUP_CLASS
+GES_GROUP_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>ges-asset-track-file-source</FILE>
 <TITLE>GESUriSourceAsset</TITLE>
 GESUriSourceAsset
