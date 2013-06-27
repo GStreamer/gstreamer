@@ -403,6 +403,7 @@ ges_timeline_pipeline_update_caps (GESTimelinePipeline * self)
             rcaps = gst_caps_new_empty_simple ("video/x-raw");
           gst_caps_append (ocaps, rcaps);
           ges_track_set_caps (track, ocaps);
+          gst_caps_unref (ocaps);
         } else {
           GstCaps *caps = NULL;
 
