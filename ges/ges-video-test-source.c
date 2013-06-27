@@ -36,17 +36,16 @@ struct _GESVideoTestSourcePrivate
   GESVideoTestPattern pattern;
 };
 
-static GstElement *ges_video_test_source_create_element (GESTrackElement *
-    self);
+static GstElement *ges_video_test_source_create_source (GESTrackElement * self);
 
 static void
 ges_video_test_source_class_init (GESVideoTestSourceClass * klass)
 {
-  GESTrackElementClass *track_element_class = GES_TRACK_ELEMENT_CLASS (klass);
+  GESSourceClass *source_class = GES_SOURCE_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESVideoTestSourcePrivate));
 
-  track_element_class->create_element = ges_video_test_source_create_element;
+  source_class->create_source = ges_video_test_source_create_source;
 }
 
 static void
@@ -59,7 +58,7 @@ ges_video_test_source_init (GESVideoTestSource * self)
 }
 
 static GstElement *
-ges_video_test_source_create_element (GESTrackElement * self)
+ges_video_test_source_create_source (GESTrackElement * self)
 {
   gint pattern;
   GstElement *ret;

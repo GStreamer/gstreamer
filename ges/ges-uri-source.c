@@ -32,12 +32,10 @@
 #include "ges-uri-source.h"
 #include "ges-uri-asset.h"
 #include "ges-extractable.h"
-#include "ges-layer.h"
-#include "gstframepositionner.h"
 
 struct _GESUriSourcePrivate
 {
-  GstFramePositionner *positionner;
+  void *nothing;
 };
 
 enum
@@ -46,190 +44,24 @@ enum
   PROP_URI
 };
 
-/* Callbacks */
-
-static void
-_pad_added_cb (GstElement * element, GstPad * srcpad, GstPad * sinkpad)
-{
-  gst_element_no_more_pads (element);
-  gst_pad_link (srcpad, sinkpad);
-}
-
-static void
-_ghost_pad_added_cb (GstElement * element, GstPad * srcpad, GstElement * bin)
-{
-  GstPad *ghost;
-
-  ghost = gst_ghost_pad_new ("src", srcpad);
-  gst_pad_set_active (ghost, TRUE);
-  gst_element_add_pad (bin, ghost);
-  gst_element_no_more_pads (element);
-}
-
-/* Internal methods */
-
+/* GESSource VMethod */
 static GstElement *
-_create_bin (const gchar * bin_name, GstElement * decodebin, ...)
-{
-  va_list argp;
-
-  GstElement *element;
-  GstElement *prev = NULL;
-  GstElement *first = NULL;
-  GstElement *bin;
-
-  va_start (argp, decodebin);
-  bin = gst_bin_new (bin_name);
-  gst_bin_add (GST_BIN (bin), decodebin);
-
-  while ((element = va_arg (argp, GstElement *)) != NULL) {
-    gst_bin_add (GST_BIN (bin), element);
-    if (prev)
-      gst_element_link (prev, element);
-    prev = element;
-    if (first == NULL)
-      first = element;
-  }
-
-  va_end (argp);
-
-  if (prev != NULL) {
-    GstPad *srcpad, *sinkpad, *ghost;
-
-    srcpad = gst_element_get_static_pad (prev, "src");
-    ghost = gst_ghost_pad_new ("src", srcpad);
-    gst_pad_set_active (ghost, TRUE);
-    gst_element_add_pad (bin, ghost);
-
-    sinkpad = gst_element_get_static_pad (first, "sink");
-    g_signal_connect (decodebin, "pad-added", G_CALLBACK (_pad_added_cb),
-        sinkpad);
-
-    gst_object_unref (srcpad);
-    gst_object_unref (sinkpad);
-
-  } else {
-    /* Our decodebin is alone in the bin, we need to ghost its source when it appears */
-
-    g_signal_connect (decodebin, "pad-added", G_CALLBACK (_ghost_pad_added_cb),
-        bin);
-  }
-
-  return bin;
-}
-
-static void
-_sync_element_to_layer_property_float (GESTrackElement * trksrc,
-    GstElement * element, const gchar * meta, const gchar * propname)
-{
-  GESTimelineElement *parent;
-  GESLayer *layer;
-  gfloat value;
-
-  parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
-  layer = ges_clip_get_layer (GES_CLIP (parent));
-
-  gst_object_unref (parent);
-
-  if (layer != NULL) {
-
-    ges_meta_container_get_float (GES_META_CONTAINER (layer), meta, &value);
-    g_object_set (element, propname, value, NULL);
-    GST_DEBUG_OBJECT (trksrc, "Setting %s to %f", propname, value);
-
-  } else {
-
-    GST_DEBUG_OBJECT (trksrc, "NOT setting the %s", propname);
-  }
-
-  gst_object_unref (layer);
-}
-
-/* TrackElement VMethods */
-
-static void
-update_z_order_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
-    GESUriSource * self)
-{
-  GESLayer *layer = ges_clip_get_layer (clip);
-
-  if (layer == NULL)
-    return;
-
-  /* 10000 is the max value of zorder on videomixerpad, hardcoded */
-
-  g_object_set (self->priv->positionner, "zorder",
-      10000 - ges_layer_get_priority (layer), NULL);
-
-  gst_object_unref (layer);
-}
-
-static GstElement *
-ges_uri_source_create_element (GESTrackElement * trksrc)
+ges_uri_source_create_source (GESTrackElement * trksrc)
 {
   GESUriSource *self;
   GESTrack *track;
   GstElement *decodebin;
-  GstElement *topbin, *volume;
-  GstElement *positionner;
-  GESTimelineElement *parent;
 
   self = (GESUriSource *) trksrc;
+
   track = ges_track_element_get_track (trksrc);
 
-  switch (track->type) {
-    case GES_TRACK_TYPE_AUDIO:
-    {
-      const gchar *props[] = { "volume", "mute", NULL };
-
-      GST_DEBUG_OBJECT (trksrc, "Creating a bin uridecodebin ! volume");
-
-      decodebin = gst_element_factory_make ("uridecodebin", NULL);
-      volume = gst_element_factory_make ("volume", NULL);
-
-      topbin = _create_bin ("audio-src-bin", decodebin, volume, NULL);
-
-      _sync_element_to_layer_property_float (trksrc, volume, GES_META_VOLUME,
-          "volume");
-      ges_track_element_add_children_props (trksrc, volume, NULL, NULL, props);
-      break;
-    }
-    case GES_TRACK_TYPE_VIDEO:
-    {
-      const gchar *props[] = { "alpha", "posx", "posy", NULL };
-
-      decodebin = gst_element_factory_make ("uridecodebin", NULL);
-
-      /* That positionner will add metadata to buffers according to its
-         properties, acting like a proxy for our smart-mixer dynamic pads. */
-      positionner =
-          gst_element_factory_make ("framepositionner", "frame_tagger");
-
-      ges_track_element_add_children_props (trksrc, positionner, NULL, NULL,
-          props);
-      topbin = _create_bin ("video-src-bin", decodebin, positionner, NULL);
-      parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
-      if (parent) {
-        self->priv->positionner = GST_FRAME_POSITIONNER (positionner);
-        g_signal_connect (parent, "notify::layer",
-            (GCallback) update_z_order_cb, trksrc);
-        update_z_order_cb (GES_CLIP (parent), NULL, self);
-        gst_object_unref (parent);
-      } else {
-        GST_WARNING ("No parent timeline element, SHOULD NOT HAPPEN");
-      }
-      break;
-    }
-    default:
-      decodebin = gst_element_factory_make ("uridecodebin", NULL);
-      topbin = _create_bin ("video-src-bin", decodebin, NULL);
-      break;
-  }
+  decodebin = gst_element_factory_make ("uridecodebin", NULL);
 
   g_object_set (decodebin, "caps", ges_track_get_caps (track),
       "expose-all-streams", FALSE, "uri", self->uri, NULL);
 
-  return topbin;
+  return decodebin;
 }
 
 /* Extractable interface implementation */
@@ -319,7 +151,7 @@ static void
 ges_track_filesource_class_init (GESUriSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTrackElementClass *track_class = GES_TRACK_ELEMENT_CLASS (klass);
+  GESSourceClass *source_class = GES_SOURCE_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESUriSourcePrivate));
 
@@ -336,7 +168,7 @@ ges_track_filesource_class_init (GESUriSourceClass * klass)
       g_param_spec_string ("uri", "URI", "uri of the resource",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
-  track_class->create_element = ges_uri_source_create_element;
+  source_class->create_source = ges_uri_source_create_source;
 }
 
 static void
@@ -344,7 +176,6 @@ ges_track_filesource_init (GESUriSource * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_URI_SOURCE, GESUriSourcePrivate);
-  self->priv->positionner = NULL;
 }
 
 /**

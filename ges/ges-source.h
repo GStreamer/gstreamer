@@ -65,6 +65,7 @@ struct _GESSource {
 
 /**
  * GESSourceClass:
+ * @create_source: method to return the GstElement to put in the source topbin.
  */
 
 struct _GESSourceClass {
@@ -73,6 +74,7 @@ struct _GESSourceClass {
 
   /*< private >*/
   /* Padding for API extension */
+  GstElement*  (*create_source)           (GESTrackElement * object);
   gpointer _ges_reserved[GES_PADDING];
 };
 

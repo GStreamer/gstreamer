@@ -51,21 +51,20 @@ static void ges_audio_test_source_get_property (GObject * object, guint
 static void ges_audio_test_source_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_audio_test_source_create_element (GESTrackElement *
-    self);
+static GstElement *ges_audio_test_source_create_source (GESTrackElement * self);
 
 static void
 ges_audio_test_source_class_init (GESAudioTestSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTrackElementClass *bg_class = GES_TRACK_ELEMENT_CLASS (klass);
+  GESSourceClass *source_class = GES_SOURCE_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESAudioTestSourcePrivate));
 
   object_class->get_property = ges_audio_test_source_get_property;
   object_class->set_property = ges_audio_test_source_set_property;
 
-  bg_class->create_element = ges_audio_test_source_create_element;
+  source_class->create_source = ges_audio_test_source_create_source;
 }
 
 static void
@@ -99,7 +98,7 @@ ges_audio_test_source_set_property (GObject * object,
 }
 
 static GstElement *
-ges_audio_test_source_create_element (GESTrackElement * trksrc)
+ges_audio_test_source_create_source (GESTrackElement * trksrc)
 {
   GESAudioTestSource *self;
   GstElement *ret;

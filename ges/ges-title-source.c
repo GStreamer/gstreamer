@@ -58,13 +58,13 @@ static void ges_title_source_get_property (GObject * object, guint
 static void ges_title_source_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_title_source_create_element (GESTrackElement * self);
+static GstElement *ges_title_source_create_source (GESTrackElement * self);
 
 static void
 ges_title_source_class_init (GESTitleSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTrackElementClass *bg_class = GES_TRACK_ELEMENT_CLASS (klass);
+  GESSourceClass *source_class = GES_SOURCE_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTitleSourcePrivate));
 
@@ -72,7 +72,7 @@ ges_title_source_class_init (GESTitleSourceClass * klass)
   object_class->set_property = ges_title_source_set_property;
   object_class->dispose = ges_title_source_dispose;
 
-  bg_class->create_element = ges_title_source_create_element;
+  source_class->create_source = ges_title_source_create_source;
 }
 
 static void
@@ -139,7 +139,7 @@ ges_title_source_set_property (GObject * object,
 }
 
 static GstElement *
-ges_title_source_create_element (GESTrackElement * object)
+ges_title_source_create_source (GESTrackElement * object)
 {
   GESTitleSource *self = GES_TITLE_SOURCE (object);
   GESTitleSourcePrivate *priv = self->priv;

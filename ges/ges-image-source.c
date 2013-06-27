@@ -110,7 +110,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GstElement * scale)
 }
 
 static GstElement *
-ges_image_source_create_element (GESTrackElement * track_element)
+ges_image_source_create_source (GESTrackElement * track_element)
 {
   GstElement *bin, *source, *scale, *freeze, *iconv;
   GstPad *src, *target;
@@ -150,7 +150,7 @@ static void
 ges_image_source_class_init (GESImageSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTrackElementClass *gesobj_class = GES_TRACK_ELEMENT_CLASS (klass);
+  GESSourceClass *source_class = GES_SOURCE_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESImageSourcePrivate));
 
@@ -166,7 +166,7 @@ ges_image_source_class_init (GESImageSourceClass * klass)
   g_object_class_install_property (object_class, PROP_URI,
       g_param_spec_string ("uri", "URI", "uri of the resource",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-  gesobj_class->create_element = ges_image_source_create_element;
+  source_class->create_source = ges_image_source_create_source;
 }
 
 static void
