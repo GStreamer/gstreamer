@@ -131,6 +131,7 @@ struct _GstRtpJitterBufferPrivate
   GCond jbuf_cond;
   gboolean waiting;
   gboolean discont;
+  gboolean ts_discont;
   gboolean active;
   guint64 out_offset;
 
@@ -1883,6 +1884,10 @@ push_buffer:
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
     priv->discont = FALSE;
   }
+  if (G_UNLIKELY (priv->ts_discont)) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
+    priv->ts_discont = FALSE;
+  }
 
   /* apply timestamp with offset to buffer now */
   GST_BUFFER_PTS (outbuf) = out_time;
@@ -2320,9 +2325,7 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
     case PROP_TS_OFFSET:
       JBUF_LOCK (priv);
       priv->ts_offset = g_value_get_int64 (value);
-      /* FIXME, we don't really have a method for signaling a timestamp
-       * DISCONT without also making this a data discont. */
-      /* priv->discont = TRUE; */
+      priv->ts_discont = TRUE;
       JBUF_UNLOCK (priv);
       break;
     case PROP_DO_LOST:
