@@ -85,6 +85,8 @@ static GstPad *gst_multipart_mux_request_new_pad (GstElement * element,
 static GstStateChangeReturn gst_multipart_mux_change_state (GstElement *
     element, GstStateChange transition);
 
+static gboolean gst_multipart_mux_sink_event (GstCollectPads * pads,
+    GstCollectData * pad, GstEvent * event, GstMultipartMux * mux);
 static GstFlowReturn gst_multipart_mux_collected (GstCollectPads * pads,
     GstMultipartMux * mux);
 
@@ -150,6 +152,9 @@ gst_multipart_mux_init (GstMultipartMux * multipart_mux)
   multipart_mux->boundary = g_strdup (DEFAULT_BOUNDARY);
 
   multipart_mux->collect = gst_collect_pads_new ();
+  gst_collect_pads_set_event_function (multipart_mux->collect,
+      (GstCollectPadsEventFunction) GST_DEBUG_FUNCPTR (gst_multipart_mux_sink_event),
+      multipart_mux);
   gst_collect_pads_set_function (multipart_mux->collect,
       (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_multipart_mux_collected),
       multipart_mux);
@@ -374,6 +379,27 @@ gst_multipart_mux_queue_pads (GstMultipartMux * mux)
   }
 
   return bestpad;
+}
+
+static gboolean
+gst_multipart_mux_sink_event (GstCollectPads * pads, GstCollectData * data,
+    GstEvent * event, GstMultipartMux * mux)
+{
+  gboolean ret;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+    {
+      mux->need_segment = TRUE;
+      break;
+    }
+    default:
+      break;
+  }
+
+  ret = gst_collect_pads_event_default (pads, data, event, FALSE);
+
+  return ret;
 }
 
 /* basic idea:
