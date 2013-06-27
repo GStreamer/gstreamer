@@ -687,6 +687,7 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
         "Failed to get component handle '%s' from core '%s': 0x%08x",
         component_name, core_name, err);
     gst_omx_core_release (core);
+    g_free (comp->name);
     g_slice_free (GstOMXComponent, comp);
     return NULL;
   }
