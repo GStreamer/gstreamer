@@ -93,33 +93,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_shader_debug);
 G_DEFINE_TYPE_WITH_CODE (GstGLShader, gst_gl_shader, G_TYPE_OBJECT, DEBUG_INIT);
 
 static void
-gst_gl_shader_dispose (GObject * object)
+_cleanup_shader (GstGLDisplay * display, GstGLShader * shader)
 {
-  GstGLShader *shader;
-
-  shader = GST_GL_SHADER (object);
-
-  if (shader->display) {
-    gst_object_unref (shader->display);
-    shader->display = NULL;
-  }
-
-  G_OBJECT_CLASS (gst_gl_shader_parent_class)->dispose (object);
-}
-
-static void
-gst_gl_shader_finalize (GObject * object)
-{
-  GstGLShader *shader;
-  GstGLShaderPrivate *priv;
-
-  shader = GST_GL_SHADER (object);
-  priv = shader->priv;
-
-  GST_TRACE ("finalizing shader %u", priv->program_handle);
-
-  g_free (priv->vertex_src);
-  g_free (priv->fragment_src);
+  GstGLShaderPrivate *priv = shader->priv;
 
   /* release shader objects */
   gst_gl_shader_release (shader);
@@ -136,10 +112,33 @@ gst_gl_shader_finalize (GObject * object)
   }
 
   GST_DEBUG ("shader deleted %u", priv->program_handle);
+}
+
+static void
+gst_gl_shader_finalize (GObject * object)
+{
+  GstGLShader *shader;
+  GstGLShaderPrivate *priv;
+
+  shader = GST_GL_SHADER (object);
+  priv = shader->priv;
+
+  GST_TRACE ("finalizing shader %u", priv->program_handle);
+
+  g_free (priv->vertex_src);
+  g_free (priv->fragment_src);
+
+  gst_gl_display_thread_add (shader->display,
+      (GstGLDisplayThreadFunc) _cleanup_shader, shader);
 
   priv->fragment_handle = 0;
   priv->vertex_handle = 0;
   priv->program_handle = 0;
+
+  if (shader->display) {
+    gst_object_unref (shader->display);
+    shader->display = NULL;
+  }
 
   G_OBJECT_CLASS (gst_gl_shader_parent_class)->finalize (object);
 }
@@ -196,7 +195,6 @@ gst_gl_shader_class_init (GstGLShaderClass * klass)
   g_type_class_add_private (klass, sizeof (GstGLShaderPrivate));
 
   obj_class->finalize = gst_gl_shader_finalize;
-  obj_class->dispose = gst_gl_shader_dispose;
   obj_class->set_property = gst_gl_shader_set_property;
   obj_class->get_property = gst_gl_shader_get_property;
 
