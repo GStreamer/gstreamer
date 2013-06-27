@@ -6455,6 +6455,10 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
    * udp sources */
   gst_rtspsrc_send_dummy_packets (src);
 
+  /* require new SR packets */
+  if (src->manager)
+    g_signal_emit_by_name (src->manager, "reset-sync", NULL);
+
   gst_rtspsrc_set_state (src, GST_STATE_PLAYING);
 
   /* construct a control url */
