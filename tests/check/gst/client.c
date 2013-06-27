@@ -247,8 +247,6 @@ GST_START_TEST (test_describe)
   GstRTSPClient *client;
   GstRTSPMessage request = { 0, };
   gchar *str;
-  GstRTSPUrl *uri_client;
-  gchar *uri_str;
 
   client = gst_rtsp_client_new ();
 
@@ -264,11 +262,6 @@ GST_START_TEST (test_describe)
           &request) == GST_RTSP_OK);
   gst_rtsp_message_unset (&request);
 
-  uri_client = gst_rtsp_client_get_uri (client);
-  fail_unless (uri_client == NULL);
-  gst_rtsp_url_free (uri_client);
-
-
   g_object_unref (client);
 
   /* simple DESCRIBE for an existing url */
@@ -283,13 +276,6 @@ GST_START_TEST (test_describe)
   fail_unless (gst_rtsp_client_handle_message (client,
           &request) == GST_RTSP_OK);
   gst_rtsp_message_unset (&request);
-
-  uri_client = gst_rtsp_client_get_uri (client);
-  fail_unless (uri_client != NULL);
-  uri_str = gst_rtsp_url_get_request_uri (uri_client);
-  gst_rtsp_url_free (uri_client);
-  fail_unless (g_strcmp0 (uri_str, "rtsp://localhost/test") == 0);
-  g_free (uri_str);
 
   g_object_unref (client);
 }
