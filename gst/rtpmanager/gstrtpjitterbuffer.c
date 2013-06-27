@@ -275,6 +275,7 @@ gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer);
 static GstClockTime
 gst_rtp_jitter_buffer_set_active (GstRtpJitterBuffer * jitterbuffer,
     gboolean active, guint64 base_time);
+static void do_handle_sync (GstRtpJitterBuffer * jitterbuffer);
 
 static void
 gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
@@ -1392,6 +1393,10 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
               priv->clock_rate, &tail, &percent)))
     goto duplicate;
 
+  /* we had an unhandled SR, handle it now */
+  if (priv->last_sr)
+    do_handle_sync (jitterbuffer);
+
   /* signal addition of new buffer when the _loop is waiting. */
   if (priv->waiting && priv->active)
     JBUF_SIGNAL (priv);
@@ -2007,11 +2012,6 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
 
   priv = jitterbuffer->priv;
 
-  if (priv->last_sr == NULL) {
-    GST_DEBUG_OBJECT (jitterbuffer, "dropping, no SR RTCP");
-    return;
-  }
-
   /* get the last values from the jitterbuffer */
   rtp_jitter_buffer_get_sync (priv->jbuf, &base_rtptime, &base_time,
       &clock_rate, &last_rtptime);
@@ -2065,6 +2065,7 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
         "sr-buffer", GST_TYPE_BUFFER, priv->last_sr, NULL);
 
     GST_DEBUG_OBJECT (jitterbuffer, "signaling sync");
+    gst_buffer_replace (&priv->last_sr, NULL);
     JBUF_UNLOCK (priv);
     g_signal_emit (jitterbuffer,
         gst_rtp_jitter_buffer_signals[SIGNAL_HANDLE_SYNC], 0, s);
