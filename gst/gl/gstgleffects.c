@@ -451,9 +451,7 @@ gst_gl_effects_init_resources (GstGLFilter * filter)
 static gboolean
 gst_gl_effects_on_init_gl_context (GstGLFilter * filter)
 {
-  /* check that your hardware supports shader
-   * if not the pipeline correctly shut down */
-  return gst_gl_display_gen_shader (filter->display, 0, 0, NULL);
+  return TRUE;
 }
 
 static gboolean

@@ -55,15 +55,6 @@ static GstVideoFormat gen_texture_video_format;
 
 static GLuint *del_texture;
 
-/* action gen and del shader */
-static const gchar *gen_shader_fragment_source;
-static const gchar *gen_shader_vertex_source;
-static GstGLShader *gen_shader;
-static GstGLShader *del_shader;
-
-static void _gen_shader (GstGLDisplay * display);
-static void _del_shader (GstGLDisplay * display);
-
 static gchar *error_message;
 
 static void
@@ -425,36 +416,41 @@ gst_gl_display_del_fbo (GstGLDisplay * display, GLuint fbo, GLuint depth_buffer)
   gst_object_unref (frame);
 }
 
+static void
+_compile_shader (GstGLDisplay * display, GstGLShader ** shader)
+{
+  GError *error = NULL;
+
+  gst_gl_shader_compile (*shader, &error);
+  if (error) {
+    gst_gl_display_set_error (display, "%s", error->message);
+    g_error_free (error);
+    error = NULL;
+    gst_gl_display_clear_shader (display);
+    gst_object_unref (*shader);
+    *shader = NULL;
+  }
+}
 
 /* Called by glfilter */
 gboolean
-gst_gl_display_gen_shader (GstGLDisplay * display,
-    const gchar * shader_vertex_source,
-    const gchar * shader_fragment_source, GstGLShader ** shader)
+gst_gl_display_gen_shader (GstGLDisplay * display, const gchar * vert_src,
+    const gchar * frag_src, GstGLShader ** shader)
 {
-  gboolean alive;
-  GstGLWindow *window;
+  g_return_val_if_fail (frag_src != NULL || vert_src != NULL, FALSE);
+  g_return_val_if_fail (shader != NULL, FALSE);
 
-  gst_gl_display_lock (display);
+  *shader = gst_gl_shader_new (display);
 
-  window = gst_gl_display_get_window_unlocked (display);
-  if (gst_gl_window_is_running (window)) {
-    gen_shader_vertex_source = shader_vertex_source;
-    gen_shader_fragment_source = shader_fragment_source;
-    gst_gl_window_send_message (window,
-        GST_GL_WINDOW_CB (_gen_shader), display);
-    if (shader)
-      *shader = gen_shader;
-    gen_shader = NULL;
-    gen_shader_vertex_source = NULL;
-    gen_shader_fragment_source = NULL;
-  }
-  alive = gst_gl_window_is_running (window);
+  if (frag_src)
+    gst_gl_shader_set_fragment_source (*shader, frag_src);
+  if (vert_src)
+    gst_gl_shader_set_vertex_source (*shader, vert_src);
 
-  gst_object_unref (window);
-  gst_gl_display_unlock (display);
+  gst_gl_display_thread_add (display, (GstGLDisplayThreadFunc) _compile_shader,
+      shader);
 
-  return alive;
+  return *shader != NULL;
 }
 
 void
@@ -482,67 +478,5 @@ gst_gl_display_get_error (void)
 void
 gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader)
 {
-  GstGLWindow *window;
-
-  gst_gl_display_lock (display);
-
-  window = gst_gl_display_get_window_unlocked (display);
-  if (gst_gl_window_is_running (window)) {
-    del_shader = shader;
-    gst_gl_window_send_message (window,
-        GST_GL_WINDOW_CB (_del_shader), display);
-  }
-
-  gst_object_unref (window);
-  gst_gl_display_unlock (display);
-}
-
-/* Called in the gl thread */
-static void
-_gen_shader (GstGLDisplay * display)
-{
-  const GstGLFuncs *gl = display->gl_vtable;
-
-  GST_TRACE ("Generating shader %" GST_PTR_FORMAT, gen_shader);
-
-  if (gl->CreateProgramObject || gl->CreateProgram) {
-    if (gen_shader_vertex_source || gen_shader_fragment_source) {
-      GError *error = NULL;
-
-      gen_shader = gst_gl_shader_new (display);
-
-      if (gen_shader_vertex_source)
-        gst_gl_shader_set_vertex_source (gen_shader, gen_shader_vertex_source);
-
-      if (gen_shader_fragment_source)
-        gst_gl_shader_set_fragment_source (gen_shader,
-            gen_shader_fragment_source);
-
-      gst_gl_shader_compile (gen_shader, &error);
-      if (error) {
-        gst_gl_display_set_error (display, "%s", error->message);
-        g_error_free (error);
-        error = NULL;
-        gst_gl_display_clear_shader (display);
-        gst_object_unref (gen_shader);
-        gen_shader = NULL;
-      }
-    }
-  } else {
-    gst_gl_display_set_error (display,
-        "One of the filter required ARB_fragment_shader");
-    gen_shader = NULL;
-  }
-}
-
-/* Called in the gl thread */
-static void
-_del_shader (GstGLDisplay * display)
-{
-  GST_TRACE ("Deleting shader %" GST_PTR_FORMAT, del_shader);
-
-  if (del_shader) {
-    gst_object_unref (del_shader);
-    del_shader = NULL;
-  }
+  gst_object_unref (shader);
 }
