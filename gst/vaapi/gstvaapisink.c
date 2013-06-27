@@ -153,6 +153,7 @@ enum {
     PROP_DISPLAY_TYPE,
     PROP_FULLSCREEN,
     PROP_SYNCHRONOUS,
+    PROP_USE_GLX,
     PROP_USE_REFLECTION,
     PROP_ROTATION,
 };
@@ -1007,18 +1008,21 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
         GST_WARNING("could not update subtitles");
 
     switch (sink->display_type) {
-#if USE_GLX
-    case GST_VAAPI_DISPLAY_TYPE_GLX:
-        success = gst_vaapisink_show_frame_glx(sink, surface, flags);
-        break;
-#endif
 #if USE_DRM
     case GST_VAAPI_DISPLAY_TYPE_DRM:
         success = TRUE;
         break;
 #endif
+#if USE_GLX
+    case GST_VAAPI_DISPLAY_TYPE_GLX:
+        if (!sink->use_glx)
+            goto put_surface_x11;
+        success = gst_vaapisink_show_frame_glx(sink, surface, flags);
+        break;
+#endif
 #if USE_X11
     case GST_VAAPI_DISPLAY_TYPE_X11:
+    put_surface_x11:
         success = gst_vaapisink_put_surface(sink, surface, flags);
         break;
 #endif
@@ -1164,6 +1168,9 @@ gst_vaapisink_set_property(
     case PROP_SYNCHRONOUS:
         sink->synchronous = g_value_get_boolean(value);
         break;
+    case PROP_USE_GLX:
+        sink->use_glx = g_value_get_boolean(value);
+        break;
     case PROP_USE_REFLECTION:
         sink->use_reflection = g_value_get_boolean(value);
         break;
@@ -1195,6 +1202,9 @@ gst_vaapisink_get_property(
         break;
     case PROP_SYNCHRONOUS:
         g_value_set_boolean(value, sink->synchronous);
+        break;
+    case PROP_USE_GLX:
+        g_value_set_boolean(value, sink->use_glx);
         break;
     case PROP_USE_REFLECTION:
         g_value_set_boolean(value, sink->use_reflection);
@@ -1256,6 +1266,15 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 #if USE_GLX
+    g_object_class_install_property
+        (object_class,
+         PROP_USE_GLX,
+         g_param_spec_boolean("use-glx",
+                              "OpenGL rendering",
+                              "Enables OpenGL rendering",
+                              FALSE,
+                              G_PARAM_READWRITE));
+
     g_object_class_install_property
         (object_class,
          PROP_USE_REFLECTION,

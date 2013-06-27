@@ -91,6 +91,7 @@ struct _GstVaapiSink {
     guint               foreign_window  : 1;
     guint               fullscreen      : 1;
     guint               synchronous     : 1;
+    guint               use_glx         : 1;
     guint               use_reflection  : 1;
     guint               use_overlay     : 1;
     guint               use_rotation    : 1;
