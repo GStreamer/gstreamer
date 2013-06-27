@@ -556,10 +556,12 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
       data += nal_size;
       size -= nal_size;
     }
-    gst_buffer_unmap (buffer, &map);
+
     /* and update the caps with the collected data */
     if (!gst_rtp_h264_pay_set_sps_pps (basepayload))
       goto set_sps_pps_failed;
+
+    gst_buffer_unmap (buffer, &map);
   } else {
     GST_DEBUG_OBJECT (rtph264pay, "have bytestream h264");
   }
