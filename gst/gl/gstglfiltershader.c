@@ -254,44 +254,20 @@ gst_gl_filtershader_get_property (GObject * object, guint prop_id,
 }
 
 static int
-gst_gl_filtershader_load_file (char *filename, char **storage)
+gst_gl_filtershader_load_file (const gchar * filename, gchar ** storage)
 {
+  GError *err = NULL;
+  gchar *old_storage = *storage;
 
-  size_t count;
-  size_t bytes;
-  FILE *f;
-
-  // read the filter from file
   GST_INFO ("loading file: %s", filename);
-  f = fopen (filename, O_RDONLY);
-  if (f == NULL) {
-    GST_ERROR ("could not open file: %s", filename);
+  if (!g_file_get_contents (filename, storage, NULL, &err)) {
+    GST_ERROR ("could not open file '%s':", filename, err->message);
+    g_error_free (err);
     return -1;
   }
 
-  if (*storage) {
-    g_free (*storage);
-    *storage = 0;
-  }
-
-  count = fseek (f, 0, SEEK_END);
-  *storage = g_malloc (count + 1);
-  if (!*storage) {
-    GST_ERROR ("g_malloc failed: %u", count);
-    return -1;
-  }
-
-  fseek (f, 0, SEEK_SET);
-  bytes = fread ((void *) *storage, sizeof (char), count, f);
-  if (bytes != count) {
-    GST_ERROR ("read failed: %u/%u", bytes, count);
-    return -1;
-  }
-  ((char *) *storage)[count] = 0;
-
-  if (f)
-    fclose (f);
-  GST_INFO ("read: %u", bytes);
+  g_free (old_storage);
+  GST_INFO ("read: %d bytes", (int) strlen (*storage));
   return 0;
 }
 
