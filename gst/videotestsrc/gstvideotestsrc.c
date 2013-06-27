@@ -933,6 +933,7 @@ static gboolean
 gst_video_test_src_stop (GstBaseSrc * basesrc)
 {
   GstVideoTestSrc *src = GST_VIDEO_TEST_SRC (basesrc);
+  guint i;
 
   g_free (src->tmpline);
   src->tmpline = NULL;
@@ -945,6 +946,12 @@ gst_video_test_src_stop (GstBaseSrc * basesrc)
   if (src->subsample)
     gst_video_chroma_resample_free (src->subsample);
   src->subsample = NULL;
+
+  for (i = 0; i < src->n_lines; i++)
+    g_free (src->lines[i]);
+  g_free (src->lines);
+  src->n_lines = 0;
+  src->lines = NULL;
 
   return TRUE;
 }
