@@ -93,7 +93,7 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
    *
    * The desired x position for the stream.
    */
-  g_object_class_install_property (gobject_class, PROP_ALPHA,
+  g_object_class_install_property (gobject_class, PROP_POSX,
       g_param_spec_int ("posx", "posx", "x position of the stream",
           G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
@@ -102,7 +102,7 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
    *
    * The desired y position for the stream.
    */
-  g_object_class_install_property (gobject_class, PROP_ALPHA,
+  g_object_class_install_property (gobject_class, PROP_POSY,
       g_param_spec_int ("posy", "posy", "y position of the stream",
           G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
