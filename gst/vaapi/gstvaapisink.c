@@ -83,7 +83,9 @@ GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapisink);
 
 /* Default template */
 static const char gst_vaapisink_sink_caps_str[] =
-#if !GST_CHECK_VERSION(1,0,0)
+#if GST_CHECK_VERSION(1,0,0)
+    GST_VIDEO_CAPS_MAKE(GST_VIDEO_FORMATS_ALL) "; "
+#else
     "video/x-raw-yuv, "
     "width  = (int) [ 1, MAX ], "
     "height = (int) [ 1, MAX ]; "
