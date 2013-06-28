@@ -2141,6 +2141,7 @@ mpeg_sys_type_find (GstTypeFind * tf, gpointer unused)
   guint pack_size;
   guint since_last_sync = 0;
   guint32 sync_word = 0xffffffff;
+  guint potential_headers = 0;
 
   G_STMT_START {
     gint len;
@@ -2175,6 +2176,7 @@ mpeg_sys_type_find (GstTypeFind * tf, gpointer unused)
       }
       pack_size = 0;
 
+      potential_headers++;
       if (IS_MPEG_PACK_CODE (data[0])) {
         if ((data[1] & 0xC0) == 0x40) {
           /* MPEG-2 */
@@ -2233,6 +2235,17 @@ suggest:
 
     prob = GST_TYPE_FIND_POSSIBLE + (10 * (pack_headers + pes_headers));
     prob = MIN (prob, GST_TYPE_FIND_MAXIMUM);
+
+    /* With the above test, we get into problems when we try to typefind
+       a MPEG stream from a small amount of data, which can happen when
+       we get data pushed from a HTTP source. We thus make a second test
+       to give higher probability if all the potential headers were either
+       pack or pes headers (ie, no potential header was unrecognized). */
+    if (potential_headers == pack_headers + pes_headers) {
+      GST_LOG ("Only %u headers, but all were recognized", potential_headers);
+      prob += 10;
+      prob = MIN (prob, GST_TYPE_FIND_MAXIMUM);
+    }
 
     /* lower probability if the first packet wasn't right at the start */
     if (data0 != first_sync && prob >= 10)
