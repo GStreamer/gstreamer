@@ -303,6 +303,7 @@ ges_container_class_init (GESContainerClass * klass)
   klass->ungroup = NULL;
   klass->group = NULL;
   klass->grouping_priority = 0;
+  klass->edit = NULL;
 }
 
 static void
@@ -688,4 +689,38 @@ ges_container_group (GList * containers)
 
   g_free (children_types);
   return ret;
+}
+
+/**
+ * ges_container_edit:
+ * @container: the #GESClip to edit
+ * @layers: (element-type GESLayer): The layers you want the edit to
+ *  happen in, %NULL means that the edition is done in all the
+ *  #GESLayers contained in the current timeline.
+ * @new_layer_priority: The priority of the layer @container should land in.
+ *  If the layer you're trying to move the container to doesn't exist, it will
+ *  be created automatically. -1 means no move.
+ * @mode: The #GESEditMode in which the editition will happen.
+ * @edge: The #GESEdge the edit should happen on.
+ * @position: The position at which to edit @container (in nanosecond)
+ *
+ * Edit @container in the different exisiting #GESEditMode modes. In the case of
+ * slide, and roll, you need to specify a #GESEdge
+ *
+ * Returns: %TRUE if the container as been edited properly, %FALSE if an error
+ * occured
+ */
+gboolean
+ges_container_edit (GESContainer * container, GList * layers,
+    gint new_layer_priority, GESEditMode mode, GESEdge edge, guint64 position)
+{
+  g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
+
+  if (G_UNLIKELY (GES_CONTAINER_GET_CLASS (container)->edit == NULL)) {
+    GST_WARNING_OBJECT (container, "No edit vmethod implementation");
+    return FALSE;
+  }
+
+  return GES_CONTAINER_GET_CLASS (container)->edit (container, layers,
+      new_layer_priority, mode, edge, position);
 }

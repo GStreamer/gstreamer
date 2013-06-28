@@ -121,6 +121,12 @@ struct _GESContainerClass
   GList* (*ungroup)               (GESContainer *container, gboolean recursive);
   GESContainer * (*group)         (GList *containers);
   guint32 (*compute_height)       (GESContainer *container);
+  gboolean (*edit)                (GESContainer * container,
+                                   GList * layers, gint new_layer_priority,
+                                   GESEditMode mode,
+                                   GESEdge edge,
+                                   guint64 position);
+
 
 
   /*< private >*/
@@ -142,6 +148,12 @@ GESContainer *ges_container_group (GList *containers);
 /* To be used by subclasses only */
 void _ges_container_set_children_control_mode (GESContainer * container,
                                                GESChildrenControlMode children_control_mode);
+gboolean ges_container_edit                   (GESContainer * container,
+                                               GList * layers, gint new_layer_priority,
+                                               GESEditMode mode,
+                                               GESEdge edge,
+                                               guint64 position);
+
 
 G_END_DECLS
 #endif /* _GES_CONTAINER */

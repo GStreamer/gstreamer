@@ -463,7 +463,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
 
   GST_DEBUG ("Trimming second source to 500 no transition should be created "
       "as they have the same end");
-  ges_clip_edit (GES_CLIP (src1), NULL, -1,
+  ges_container_edit (GES_CONTAINER (src1), NULL, -1,
       GES_EDIT_MODE_TRIM, GES_EDGE_START, 500);
 
   /*    250___________src_________1250
@@ -689,7 +689,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   g_list_free_full (objects, gst_object_unref);
 
   GST_DEBUG ("Set third clip start to 1000, Transition should be updated");
-  ges_clip_edit (GES_CLIP (src2), NULL, -1,
+  ges_container_edit (GES_CONTAINER (src2), NULL, -1,
       GES_EDIT_MODE_NORMAL, GES_EDGE_START, 1000);
   ges_timeline_commit (timeline);
   /*             600____src___1100
@@ -1101,7 +1101,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
 
   GST_DEBUG ("Edit src to first layer start=1500");
-  ges_clip_edit (GES_CLIP (src), NULL, 0,
+  ges_container_edit (GES_CONTAINER (src), NULL, 0,
       GES_EDIT_MODE_NORMAL, GES_EDGE_NONE, 1500);
   /*                                   1500___________src_________2500
    *                                   1500______tr______2000
@@ -1166,7 +1166,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   ASSERT_OBJECT_REFCOUNT (transition, "Only the layer owns a ref", 1);
 
   GST_DEBUG ("Ripple src1 to 700");
-  ges_clip_edit (GES_CLIP (src1), NULL, 0,
+  ges_container_edit (GES_CONTAINER (src1), NULL, 0,
       GES_EDIT_MODE_RIPPLE, GES_EDGE_NONE, 700);
   /*                                           1700___________src_________2700
    *                                           1700__tr__2000

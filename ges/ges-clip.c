@@ -531,6 +531,48 @@ done:
 
 }
 
+static gboolean
+_edit (GESContainer * container, GList * layers,
+    gint new_layer_priority, GESEditMode mode, GESEdge edge, guint64 position)
+{
+  GList *tmp;
+  gboolean ret = TRUE;
+  GESLayer *layer;
+
+  if (!G_UNLIKELY (GES_CONTAINER_CHILDREN (container))) {
+    GST_WARNING_OBJECT (container, "Trying to edit, but not containing"
+        "any TrackElement yet.");
+    return FALSE;
+  }
+
+  for (tmp = GES_CONTAINER_CHILDREN (container); tmp; tmp = g_list_next (tmp)) {
+    if (GES_IS_SOURCE (tmp->data)) {
+      ret &= ges_track_element_edit (tmp->data, layers, mode, edge, position);
+      break;
+    }
+  }
+
+  /* Moving to layer */
+  if (new_layer_priority == -1) {
+    GST_DEBUG_OBJECT (container, "Not moving new prio %d", new_layer_priority);
+  } else {
+    gint priority_offset;
+
+    layer = GES_CLIP (container)->priv->layer;
+    if (layer == NULL) {
+      GST_WARNING_OBJECT (container, "Not in any layer yet, not moving");
+
+      return FALSE;
+    }
+    priority_offset = new_layer_priority - ges_layer_get_priority (layer);
+
+    ret &= timeline_context_to_layer (layer->timeline, priority_offset);
+  }
+
+  return ret;
+}
+
+
 
 /****************************************************
  *                                                  *
@@ -629,6 +671,7 @@ ges_clip_class_init (GESClipClass * klass)
   container_class->ungroup = _ungroup;
   container_class->group = _group;
   container_class->grouping_priority = G_MAXUINT;
+  container_class->edit = _edit;
 
   klass->need_fill_track = TRUE;
 }
@@ -1081,70 +1124,6 @@ ges_clip_set_top_effect_priority (GESClip * clip,
   _set_priority0 (GES_TIMELINE_ELEMENT (track_element), newpriority);
 
   return TRUE;
-}
-
-/**
- * ges_clip_edit:
- * @clip: the #GESClip to edit
- * @layers: (element-type GESLayer): The layers you want the edit to
- *  happen in, %NULL means that the edition is done in all the
- *  #GESLayers contained in the current timeline.
- * @new_layer_priority: The priority of the layer @clip should land in.
- *  If the layer you're trying to move the clip to doesn't exist, it will
- *  be created automatically. -1 means no move.
- * @mode: The #GESEditMode in which the editition will happen.
- * @edge: The #GESEdge the edit should happen on.
- * @position: The position at which to edit @clip (in nanosecond)
- *
- * Edit @clip in the different exisiting #GESEditMode modes. In the case of
- * slide, and roll, you need to specify a #GESEdge
- *
- * Returns: %TRUE if the clip as been edited properly, %FALSE if an error
- * occured
- *
- * Since: 0.10.XX
- */
-gboolean
-ges_clip_edit (GESClip * clip, GList * layers,
-    gint new_layer_priority, GESEditMode mode, GESEdge edge, guint64 position)
-{
-  GList *tmp;
-  gboolean ret = TRUE;
-  GESLayer *layer;
-
-  g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
-
-  if (!G_UNLIKELY (GES_CONTAINER_CHILDREN (clip))) {
-    GST_WARNING_OBJECT (clip, "Trying to edit, but not containing"
-        "any TrackElement yet.");
-    return FALSE;
-  }
-
-  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = g_list_next (tmp)) {
-    if (GES_IS_SOURCE (tmp->data)) {
-      ret &= ges_track_element_edit (tmp->data, layers, mode, edge, position);
-      break;
-    }
-  }
-
-  /* Moving to layer */
-  if (new_layer_priority == -1) {
-    GST_DEBUG_OBJECT (clip, "Not moving new prio %d", new_layer_priority);
-  } else {
-    gint priority_offset;
-
-    layer = clip->priv->layer;
-    if (layer == NULL) {
-      GST_WARNING_OBJECT (clip, "Not in any layer yet, not moving");
-
-      return FALSE;
-    }
-    priority_offset = new_layer_priority - ges_layer_get_priority (layer);
-
-    ret &= timeline_context_to_layer (layer->timeline, priority_offset);
-  }
-
-  return ret;
 }
 
 /**

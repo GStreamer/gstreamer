@@ -172,9 +172,6 @@ gboolean ges_clip_set_top_effect_priority   (GESClip *clip, GESBaseEffect *effec
  *                   Editing                        *
  ****************************************************/
 GESClip* ges_clip_split  (GESClip *clip, guint64  position);
-gboolean ges_clip_edit   (GESClip *clip, GList   *layers,
-                          gint  new_layer_priority, GESEditMode mode,
-                          GESEdge edge, guint64 position);
 
 G_END_DECLS
 #endif /* _GES_CLIP */
