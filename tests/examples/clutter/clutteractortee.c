@@ -71,7 +71,7 @@ create_window (GstBus * bus, GstMessage * message, gpointer data)
 {
   GstGLClutterActor **actor = (GstGLClutterActor **) data;
   static gint count = 0;
-  static GMutex *mutex = NULL;
+  static GMutex mutex;
   // ignore anything but 'prepare-window-handle' element messages
   if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
     return GST_BUS_PASS;
@@ -79,10 +79,7 @@ create_window (GstBus * bus, GstMessage * message, gpointer data)
   if (!gst_is_video_overlay_prepare_window_handle_message (message))
     return GST_BUS_PASS;
 
-  if (!mutex)
-    mutex = g_mutex_new ();
-
-  g_mutex_lock (mutex);
+  g_mutex_lock (&mutex);
 
   if (count < N_ACTORS) {
     g_message ("adding actor %d", count);
@@ -92,7 +89,7 @@ create_window (GstBus * bus, GstMessage * message, gpointer data)
     count++;
   }
 
-  g_mutex_unlock (mutex);
+  g_mutex_unlock (&mutex);
 
   gst_message_unref (message);
   return GST_BUS_DROP;

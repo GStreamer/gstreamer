@@ -132,8 +132,6 @@ main (gint argc, gchar * argv[])
     {NULL}
   };
 
-  g_thread_init (NULL);
-
   context = g_option_context_new (NULL);
   g_option_context_add_main_entries (context, options, NULL);
   g_option_context_add_group (context, gst_init_get_option_group ());
