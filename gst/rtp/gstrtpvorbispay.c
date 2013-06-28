@@ -70,6 +70,11 @@ static GstFlowReturn gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * pad,
 static gboolean gst_rtp_vorbis_pay_sink_event (GstRTPBasePayload * payload,
     GstEvent * event);
 
+static gboolean gst_rtp_vorbis_pay_parse_id (GstRTPBasePayload * basepayload,
+    guint8 * data, guint size);
+static gboolean gst_rtp_vorbis_pay_finish_headers (GstRTPBasePayload *
+    basepayload);
+
 static void
 gst_rtp_vorbis_pay_class_init (GstRtpVorbisPayClass * klass)
 {
@@ -127,12 +132,83 @@ static gboolean
 gst_rtp_vorbis_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 {
   GstRtpVorbisPay *rtpvorbispay;
+  GstStructure *s;
+  const GValue *array;
+  gint asize, i;
+  GstBuffer *buf;
+  GstMapInfo map;
 
   rtpvorbispay = GST_RTP_VORBIS_PAY (basepayload);
 
+  s = gst_caps_get_structure (caps, 0);
+
   rtpvorbispay->need_headers = TRUE;
 
+  if ((array = gst_structure_get_value (s, "streamheader")) == NULL)
+    goto done;
+
+  if (G_VALUE_TYPE (array) != GST_TYPE_ARRAY)
+    goto done;
+
+  if ((asize = gst_value_array_get_size (array)) < 3)
+    goto done;
+
+  for (i = 0; i < asize; i++) {
+    const GValue *value;
+
+    value = gst_value_array_get_value (array, i);
+    if ((buf = gst_value_get_buffer (value)) == NULL)
+      goto null_buffer;
+
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    /* no data packets allowed */
+    if ((map.data[0] & 1) == 0)
+      goto invalid_streamheader;
+
+    /* we need packets with id 1, 3, 5 */
+    if (map.data[0] != (i * 2) + 1)
+      goto invalid_streamheader;
+
+    if (i == 0) {
+      /* identification, we need to parse this in order to get the clock rate. */
+      if (G_UNLIKELY (!gst_rtp_vorbis_pay_parse_id (basepayload, map.data,
+                  map.size)))
+        goto parse_id_failed;
+    }
+    GST_DEBUG_OBJECT (rtpvorbispay, "collecting header %d", i);
+    rtpvorbispay->headers =
+        g_list_append (rtpvorbispay->headers, gst_buffer_ref (buf));
+    gst_buffer_unmap (buf, &map);
+  }
+  if (!gst_rtp_vorbis_pay_finish_headers (basepayload))
+    goto finish_failed;
+
+done:
   return TRUE;
+
+  /* ERRORS */
+null_buffer:
+  {
+    GST_WARNING_OBJECT (rtpvorbispay, "streamheader with null buffer received");
+    return FALSE;
+  }
+invalid_streamheader:
+  {
+    GST_WARNING_OBJECT (rtpvorbispay, "unable to parse initial header");
+    gst_buffer_unmap (buf, &map);
+    return FALSE;
+  }
+parse_id_failed:
+  {
+    GST_WARNING_OBJECT (rtpvorbispay, "unable to parse initial header");
+    gst_buffer_unmap (buf, &map);
+    return FALSE;
+  }
+finish_failed:
+  {
+    GST_WARNING_OBJECT (rtpvorbispay, "unable to finish headers");
+    return FALSE;
+  }
 }
 
 static void
@@ -376,7 +452,11 @@ gst_rtp_vorbis_pay_finish_headers (GstRTPBasePayload * basepayload)
 
     gst_buffer_extract (buf, 0, data, gst_buffer_get_size (buf));
     data += gst_buffer_get_size (buf);
+    gst_buffer_unref (buf);
   }
+  g_list_free (rtpvorbispay->headers);
+  rtpvorbispay->headers = NULL;
+  rtpvorbispay->need_headers = FALSE;
 
   /* serialize to base64 */
   configuration = g_base64_encode (config, configlen);
@@ -520,20 +600,17 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
     /* data */
     VDT = 0;
 
-  if (rtpvorbispay->need_headers) {
-    /* we need to collect the headers and construct a config string from them */
-    if (VDT != 0) {
-      GST_DEBUG_OBJECT (rtpvorbispay, "collecting header");
-      /* append header to the list of headers */
-      gst_buffer_unmap (buffer, &map);
-      rtpvorbispay->headers = g_list_append (rtpvorbispay->headers, buffer);
-      ret = GST_FLOW_OK;
-      goto done;
-    } else {
-      if (!gst_rtp_vorbis_pay_finish_headers (basepayload))
-        goto header_error;
-      rtpvorbispay->need_headers = FALSE;
-    }
+  /* we need to collect the headers and construct a config string from them */
+  if (VDT != 0) {
+    GST_DEBUG_OBJECT (rtpvorbispay, "collecting header");
+    /* append header to the list of headers */
+    gst_buffer_unmap (buffer, &map);
+    rtpvorbispay->headers = g_list_append (rtpvorbispay->headers, buffer);
+    ret = GST_FLOW_OK;
+    goto done;
+  } else if (rtpvorbispay->need_headers) {
+    if (!gst_rtp_vorbis_pay_finish_headers (basepayload))
+      goto header_error;
   }
 
   /* size increases with packet length and 2 bytes size eader. */
