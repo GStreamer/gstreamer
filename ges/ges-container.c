@@ -609,7 +609,7 @@ ges_container_get_children (GESContainer * container)
  * creating new #GESContainer containing those #GESTimelineElement
  * apropriately.
  *
- * Returns: (transfer container) (element-type GESContainer): The list of
+ * Returns: (transfer full) (element-type GESContainer): The list of
  * #GESContainer resulting from the ungrouping operation
  * The user is responsible for unreffing the contained objects
  * and freeing the list.
