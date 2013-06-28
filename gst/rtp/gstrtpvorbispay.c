@@ -161,6 +161,9 @@ gst_rtp_vorbis_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
       goto null_buffer;
 
     gst_buffer_map (buf, &map, GST_MAP_READ);
+    if (map.size < 1)
+      goto invalid_streamheader;
+
     /* no data packets allowed */
     if ((map.data[0] & 1) == 0)
       goto invalid_streamheader;
@@ -608,7 +611,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
     rtpvorbispay->headers = g_list_append (rtpvorbispay->headers, buffer);
     ret = GST_FLOW_OK;
     goto done;
-  } else if (rtpvorbispay->need_headers) {
+  } else if (rtpvorbispay->headers) {
     if (!gst_rtp_vorbis_pay_finish_headers (basepayload))
       goto header_error;
   }
