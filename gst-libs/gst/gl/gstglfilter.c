@@ -113,10 +113,10 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size = gst_gl_filter_get_unit_size;
 
   g_object_class_install_property (gobject_class, PROP_EXTERNAL_OPENGL_CONTEXT,
-      g_param_spec_ulong ("external-opengl-context",
+      g_param_spec_uint64 ("external-opengl-context",
           "External OpenGL context",
           "Give an external OpenGL context with which to share textures",
-          0, G_MAXULONG, 0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          0, G_MAXUINT64, 0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_filter_src_pad_template));
