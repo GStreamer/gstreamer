@@ -462,7 +462,6 @@ gst_rtp_theora_pay_finish_headers (GstRTPBasePayload * basepayload)
   /* store length for each header */
   for (walk = rtptheorapay->headers; walk; walk = g_list_next (walk)) {
     GstBuffer *buf = GST_BUFFER_CAST (walk->data);
-
     guint bsize, size, temp;
     guint flag;
 
@@ -487,7 +486,7 @@ gst_rtp_theora_pay_finish_headers (GstRTPBasePayload * basepayload)
       size--;
       data[size] = (bsize & 0x7f) | flag;
       bsize >>= 7;
-      flag = 0x80;
+      flag = 0x80;              /* Flag bit on all bytes of the length except the last */
     }
     data += temp;
   }
@@ -683,9 +682,9 @@ gst_rtp_theora_pay_payload_buffer (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
       }
     }
     if (fragmented) {
+      gst_rtp_buffer_unmap (&rtp);
       /* fragmented packets are always flushed and have ptks of 0 */
       rtptheorapay->payload_pkts = 0;
-      gst_rtp_buffer_unmap (&rtp);
       ret = gst_rtp_theora_pay_flush_packet (rtptheorapay);
 
       if (size > 0) {
