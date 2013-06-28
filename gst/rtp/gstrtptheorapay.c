@@ -87,6 +87,10 @@ static GstFlowReturn gst_rtp_theora_pay_handle_buffer (GstRTPBasePayload * pad,
 static gboolean gst_rtp_theora_pay_sink_event (GstRTPBasePayload * payload,
     GstEvent * event);
 
+static gboolean gst_rtp_theora_pay_parse_id (GstRTPBasePayload * basepayload,
+    guint8 * data, guint size);
+static gboolean gst_rtp_theora_pay_finish_headers (GstRTPBasePayload *
+    basepayload);
 
 static void gst_rtp_theora_pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -168,12 +172,83 @@ static gboolean
 gst_rtp_theora_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 {
   GstRtpTheoraPay *rtptheorapay;
+  GstStructure *s;
+  const GValue *array;
+  gint asize, i;
+  GstBuffer *buf;
+  GstMapInfo map;
 
   rtptheorapay = GST_RTP_THEORA_PAY (basepayload);
 
+  s = gst_caps_get_structure (caps, 0);
+
   rtptheorapay->need_headers = TRUE;
 
+  if ((array = gst_structure_get_value (s, "streamheader")) == NULL)
+    goto done;
+
+  if (G_VALUE_TYPE (array) != GST_TYPE_ARRAY)
+    goto done;
+
+  if ((asize = gst_value_array_get_size (array)) < 3)
+    goto done;
+
+  for (i = 0; i < asize; i++) {
+    const GValue *value;
+
+    value = gst_value_array_get_value (array, i);
+    if ((buf = gst_value_get_buffer (value)) == NULL)
+      goto null_buffer;
+
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    /* no data packets allowed */
+    if (map.size < 1)
+      goto invalid_streamheader;
+
+    /* we need packets with id 0x80, 0x81, 0x82 */
+    if (map.data[0] != 0x80 + i)
+      goto invalid_streamheader;
+
+    if (i == 0) {
+      /* identification, we need to parse this in order to get the clock rate. */
+      if (G_UNLIKELY (!gst_rtp_theora_pay_parse_id (basepayload, map.data,
+                  map.size)))
+        goto parse_id_failed;
+    }
+    GST_DEBUG_OBJECT (rtptheorapay, "collecting header %d", i);
+    rtptheorapay->headers =
+        g_list_append (rtptheorapay->headers, gst_buffer_ref (buf));
+    gst_buffer_unmap (buf, &map);
+  }
+  if (!gst_rtp_theora_pay_finish_headers (basepayload))
+    goto finish_failed;
+
+done:
   return TRUE;
+
+  /* ERRORS */
+null_buffer:
+  {
+    GST_WARNING_OBJECT (rtptheorapay, "streamheader with null buffer received");
+    return FALSE;
+  }
+invalid_streamheader:
+  {
+    GST_WARNING_OBJECT (rtptheorapay, "unable to parse initial header");
+    gst_buffer_unmap (buf, &map);
+    return FALSE;
+  }
+parse_id_failed:
+  {
+    GST_WARNING_OBJECT (rtptheorapay, "unable to parse initial header");
+    gst_buffer_unmap (buf, &map);
+    return FALSE;
+  }
+finish_failed:
+  {
+    GST_WARNING_OBJECT (rtptheorapay, "unable to finish headers");
+    return FALSE;
+  }
 }
 
 static void
@@ -420,13 +495,14 @@ gst_rtp_theora_pay_finish_headers (GstRTPBasePayload * basepayload)
   /* copy header data */
   for (walk = rtptheorapay->headers; walk; walk = g_list_next (walk)) {
     GstBuffer *buf = GST_BUFFER_CAST (walk->data);
-    GstMapInfo map;
 
-    gst_buffer_map (buf, &map, GST_MAP_READ);
-    memcpy (data, map.data, map.size);
-    gst_buffer_unmap (buf, &map);
-    data += map.size;
+    gst_buffer_extract (buf, 0, data, gst_buffer_get_size (buf));
+    data += gst_buffer_get_size (buf);
+    gst_buffer_unref (buf);
   }
+  g_list_free (rtptheorapay->headers);
+  rtptheorapay->headers = NULL;
+  rtptheorapay->need_headers = FALSE;
 
   /* serialize to base64 */
   configuration = g_base64_encode (config, configlen);
@@ -688,20 +764,17 @@ gst_rtp_theora_pay_handle_buffer (GstRTPBasePayload * basepayload,
     keyframe = ((data[0] & 0x40) == 0);
   }
 
-  if (rtptheorapay->need_headers) {
-    /* we need to collect the headers and construct a config string from them */
-    if (TDT != 0) {
-      GST_DEBUG_OBJECT (rtptheorapay, "collecting header, buffer %p", buffer);
-      /* append header to the list of headers */
-      gst_buffer_unmap (buffer, &map);
-      rtptheorapay->headers = g_list_append (rtptheorapay->headers, buffer);
-      ret = GST_FLOW_OK;
-      goto done;
-    } else {
-      if (!gst_rtp_theora_pay_finish_headers (basepayload))
-        goto header_error;
-      rtptheorapay->need_headers = FALSE;
-    }
+  /* we need to collect the headers and construct a config string from them */
+  if (TDT != 0) {
+    GST_DEBUG_OBJECT (rtptheorapay, "collecting header, buffer %p", buffer);
+    /* append header to the list of headers */
+    gst_buffer_unmap (buffer, &map);
+    rtptheorapay->headers = g_list_append (rtptheorapay->headers, buffer);
+    ret = GST_FLOW_OK;
+    goto done;
+  } else if (rtptheorapay->headers) {
+    if (!gst_rtp_theora_pay_finish_headers (basepayload))
+      goto header_error;
   }
 
   /* there is a config request, see if we need to insert it */
