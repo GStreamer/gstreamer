@@ -310,7 +310,7 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
   }
 #endif
 #if GST_GL_HAVE_GLES2
-  if (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_GLES2) {
+  if (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES2) {
     const GLfloat vVertices[] = {
       -1.0f, -1.0f, 0.0f,
       0.0f, 0.0f,

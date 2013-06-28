@@ -97,7 +97,7 @@ GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
 #define USING_GLES3(display) (display->gl_api & GST_GL_API_GLES3)
 
 #if GST_GL_HAVE_GLES2
-static void gst_glimage_sink_thread_init_redisplay (GstGLDisplay * display);
+static void gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink);
 #endif
 static void gst_glimage_sink_on_close (GstGLImageSink * gl_sink);
 static void gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width,
@@ -820,7 +820,7 @@ config_failed:
 #if GST_GL_HAVE_GLES2
 /* Called in the gl thread */
 static void
-gst_gl_display_thread_init_redisplay (GstGLImageSink * gl_sink)
+gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
 {
   GError *error = NULL;
   gl_sink->redisplay_shader = gst_gl_shader_new (gl_sink->display);
@@ -830,7 +830,7 @@ gst_gl_display_thread_init_redisplay (GstGLImageSink * gl_sink)
   gst_gl_shader_set_fragment_source (gl_sink->redisplay_shader,
       redisplay_fragment_shader_str_gles2);
 
-  gst_gl_shader_compile (display->gl_sink->redisplay_shader, &error);
+  gst_gl_shader_compile (gl_sink->redisplay_shader, &error);
   if (error) {
     gst_gl_display_set_error (gl_sink->display, "%s", error->message);
     g_error_free (error);
@@ -838,10 +838,10 @@ gst_gl_display_thread_init_redisplay (GstGLImageSink * gl_sink)
     gst_gl_display_clear_shader (gl_sink->display);
   } else {
     gl_sink->redisplay_attr_position_loc =
-        gst_gl_shader_get_attribute_location (display->priv->redisplay_shader,
+        gst_gl_shader_get_attribute_location (gl_sink->redisplay_shader,
         "a_position");
     gl_sink->redisplay_attr_texture_loc =
-        gst_gl_shader_get_attribute_location (display->priv->redisplay_shader,
+        gst_gl_shader_get_attribute_location (gl_sink->redisplay_shader,
         "a_texCoord");
   }
 }
@@ -964,7 +964,7 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
     }
 #endif
 #if GST_GL_HAVE_GLES2
-    if (USING_GLES2 (display)) {
+    if (USING_GLES2 (gl_sink->display)) {
       const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,
         1.0f, 0.0f,
         -1.0f, 1.0f, 0.0f,
@@ -982,20 +982,19 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
       gst_gl_shader_use (gl_sink->redisplay_shader);
 
       /* Load the vertex position */
-      gl->VertexAttribPointer (display->priv->redisplay_attr_position_loc, 3,
+      gl->VertexAttribPointer (gl_sink->redisplay_attr_position_loc, 3,
           GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
 
       /* Load the texture coordinate */
-      gl->VertexAttribPointer (display->priv->redisplay_attr_texture_loc, 2,
+      gl->VertexAttribPointer (gl_sink->redisplay_attr_texture_loc, 2,
           GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
-      gl->EnableVertexAttribArray (display->priv->redisplay_attr_position_loc);
-      gl->EnableVertexAttribArray (display->priv->redisplay_attr_texture_loc);
+      gl->EnableVertexAttribArray (gl_sink->redisplay_attr_position_loc);
+      gl->EnableVertexAttribArray (gl_sink->redisplay_attr_texture_loc);
 
       gl->ActiveTexture (GL_TEXTURE0);
-      gl->BindTexture (GL_TEXTURE_2D, display->priv->redisplay_texture);
-      gst_gl_shader_set_uniform_1i (display->priv->redisplay_shader,
-          "s_texture", 0);
+      gl->BindTexture (GL_TEXTURE_2D, gl_sink->redisplay_texture);
+      gst_gl_shader_set_uniform_1i (gl_sink->redisplay_shader, "s_texture", 0);
 
       gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
     }
@@ -1027,7 +1026,8 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink, GLuint texture,
     if (USING_GLES2 (gl_sink->display)) {
       if (!gl_sink->redisplay_shader) {
         gst_gl_window_send_message (window,
-            GST_GL_WINDOW_CB (gst_glimage_sink_thread_init_redisplay), display);
+            GST_GL_WINDOW_CB (gst_glimage_sink_thread_init_redisplay),
+            gl_sink->display);
       }
     }
 #endif

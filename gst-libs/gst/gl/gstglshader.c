@@ -34,11 +34,11 @@
 #define GST_GL_SHADER_GET_PRIVATE(o)					\
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_SHADER, GstGLShaderPrivate))
 
-#define USING_OPENGL(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_OPENGL)
-#define USING_OPENGL3(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_OPENGL3)
-#define USING_GLES(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_GLES)
-#define USING_GLES2(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_GLES2)
-#define USING_GLES3(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_GLES3)
+#define USING_OPENGL(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL)
+#define USING_OPENGL3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL3)
+#define USING_GLES(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES)
+#define USING_GLES2(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES2)
+#define USING_GLES3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES3)
 
 typedef struct _GstGLShaderVTable
 {
