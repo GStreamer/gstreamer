@@ -156,6 +156,12 @@ _set_start (GESTimelineElement * element, GstClockTime start)
 }
 
 static gboolean
+_set_priority (GESTimelineElement * element, guint32 priority)
+{
+  return TRUE;
+}
+
+static gboolean
 _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
 {
   GList *tmp;
@@ -282,6 +288,7 @@ ges_container_class_init (GESContainerClass * klass)
   element_class->set_start = _set_start;
   element_class->set_duration = _set_duration;
   element_class->set_inpoint = _set_inpoint;
+  element_class->set_priority = _set_priority;
 
   /* No default implementations */
   klass->remove_child = NULL;
