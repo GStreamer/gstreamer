@@ -263,6 +263,8 @@ _add_child (GESContainer * container, GESTimelineElement * element)
   guint max_prio, min_prio;
   GESClipPrivate *priv = GES_CLIP (container)->priv;
 
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
+
   /* First make sure we work with a sorted list of GESTimelineElement-s */
   _ges_container_sort_children (container);
 
@@ -432,7 +434,7 @@ _group (GList * containers)
       goto done;
     }
     clip = GES_CLIP (tmp->data);
-    tmptimeline = ges_timeline_element_get_timeline (element);
+    tmptimeline = GES_TIMELINE_ELEMENT_TIMELINE (element);
     if (!timeline) {
       GList *tmptrack;
 

@@ -652,7 +652,7 @@ ges_container_group (GList * containers)
 
   g_return_val_if_fail (containers, NULL);
   element = GES_TIMELINE_ELEMENT (containers->data);
-  timeline = ges_timeline_element_get_timeline (element);
+  timeline = GES_TIMELINE_ELEMENT_TIMELINE (element);
   g_return_val_if_fail (timeline, NULL);
 
   if (g_list_length (containers) == 1)
@@ -660,8 +660,10 @@ ges_container_group (GList * containers)
 
   for (tmp = containers; tmp; tmp = tmp->next) {
     g_return_val_if_fail (GES_IS_CONTAINER (tmp->data), NULL);
-    g_return_val_if_fail (ges_timeline_element_get_timeline
-        (GES_TIMELINE_ELEMENT (tmp->data)) == timeline, NULL);
+    g_return_val_if_fail (GES_TIMELINE_ELEMENT_PARENT (tmp->data) == NULL,
+        NULL);
+    g_return_val_if_fail (GES_TIMELINE_ELEMENT_TIMELINE (tmp->data) == timeline,
+        NULL);
   }
 
   children_types = g_type_children (GES_TYPE_CONTAINER, &n_children);
