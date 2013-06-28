@@ -472,6 +472,7 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
 
   g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (child), FALSE);
+  g_return_val_if_fail (GES_TIMELINE_ELEMENT_PARENT (child) == NULL, FALSE);
 
   class = GES_CONTAINER_GET_CLASS (container);
   priv = container->priv;
