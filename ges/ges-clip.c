@@ -47,6 +47,7 @@ static gboolean _ripple_end (GESTimelineElement * element, GstClockTime end);
 static gboolean _roll_start (GESTimelineElement * element, GstClockTime start);
 static gboolean _roll_end (GESTimelineElement * element, GstClockTime end);
 static gboolean _trim (GESTimelineElement * element, GstClockTime start);
+static void _compute_height (GESContainer * container);
 
 G_DEFINE_ABSTRACT_TYPE (GESClip, ges_clip, GES_TYPE_CONTAINER);
 
@@ -204,6 +205,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
     _set_priority0 (child, real_tck_prio);
   }
   _ges_container_set_children_control_mode (container, GES_CHILDREN_UPDATE);
+  _compute_height (container);
 
   return TRUE;
 }
@@ -214,14 +216,17 @@ _set_priority (GESTimelineElement * element, guint32 priority)
  *                                                  *
  ****************************************************/
 
-static guint32
+static void
 _compute_height (GESContainer * container)
 {
   GList *tmp;
   guint32 min_prio = G_MAXUINT32, max_prio = 0;
 
-  if (container->children == NULL)
-    return 0;
+  if (container->children == NULL) {
+    /* FIXME Why not 0! */
+    _ges_container_set_height (container, 1);
+    return;
+  }
 
   /* Go over all childs and check if height has changed */
   for (tmp = container->children; tmp; tmp = tmp->next) {
@@ -233,7 +238,7 @@ _compute_height (GESContainer * container)
       max_prio = tck_priority;
   }
 
-  return max_prio - min_prio + 1;
+  _ges_container_set_height (container, max_prio - min_prio + 1);
 }
 
 static void
@@ -310,6 +315,18 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
   GST_FIXME_OBJECT (container, "We should set other children prios");
 
   return TRUE;
+}
+
+static void
+_child_added (GESContainer * container, GESTimelineElement * element)
+{
+  _compute_height (container);
+}
+
+static void
+_child_removed (GESContainer * container, GESTimelineElement * element)
+{
+  _compute_height (container);
 }
 
 static void
@@ -665,9 +682,10 @@ ges_clip_class_init (GESClipClass * klass)
   /* TODO implement the deep_copy Virtual method */
 
   container_class->get_priority_range = _get_priority_range;
-  container_class->compute_height = _compute_height;
   container_class->add_child = _add_child;
   container_class->remove_child = _remove_child;
+  container_class->child_removed = _child_removed;
+  container_class->child_added = _child_added;
   container_class->ungroup = _ungroup;
   container_class->group = _group;
   container_class->grouping_priority = G_MAXUINT;

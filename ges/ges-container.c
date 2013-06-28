@@ -94,20 +94,6 @@ static GParamSpec *properties[PROP_LAST];
  *   Private  methods   *
  ************************/
 static void
-update_height (GESContainer * container)
-{
-  guint32 height;
-
-  height = GES_CONTAINER_GET_CLASS (container)->compute_height (container);
-
-  if (container->height != height) {
-    container->height = height;
-    GST_DEBUG_OBJECT (container, "Updating height %i", container->height);
-    g_object_notify (G_OBJECT (container), "height");
-  }
-}
-
-static void
 _free_mapping (ChildMapping * mapping)
 {
   GESTimelineElement *child = mapping->child;
@@ -407,8 +393,6 @@ _child_priority_changed_cb (GESTimelineElement * child,
   if (priv->children_control_mode == GES_CHILDREN_IGNORE_NOTIFIES)
     return;
 
-  update_height (container);
-
   /* Update mapping */
   map = g_hash_table_lookup (priv->mappings, child);
   g_assert (map);
@@ -444,10 +428,16 @@ _ges_container_set_children_control_mode (GESContainer * container,
     GESChildrenControlMode children_control_mode)
 {
   container->priv->children_control_mode = children_control_mode;
+}
 
-  if (children_control_mode == GES_CHILDREN_UPDATE)
-    update_height (container);
-
+void
+_ges_container_set_height (GESContainer * container, guint32 height)
+{
+  if (container->height != height) {
+    container->height = height;
+    GST_DEBUG_OBJECT (container, "Updating height %i", container->height);
+    g_object_notify (G_OBJECT (container), "height");
+  }
 }
 
 /**********************************************
@@ -519,7 +509,6 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   mapping->priority_notifyid =
       g_signal_connect (G_OBJECT (child), "notify::priority",
       G_CALLBACK (_child_priority_changed_cb), container);
-  update_height (container);
 
 
   if (ges_timeline_element_set_parent (child, GES_TIMELINE_ELEMENT (container))
