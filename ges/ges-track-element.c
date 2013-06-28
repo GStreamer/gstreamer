@@ -342,7 +342,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 {
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
 
-  if (priority <= MIN_GNL_PRIO) {
+  if (priority < MIN_GNL_PRIO) {
     GST_INFO_OBJECT (element, "Priority (%d) < MIN_GNL_PRIO, setting it to %d",
         priority, MIN_GNL_PRIO);
     priority = MIN_GNL_PRIO;
