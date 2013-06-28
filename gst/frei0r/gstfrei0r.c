@@ -659,7 +659,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   const gchar *homedir;
-  gchar *path;
+  gchar *path, *libdir_path;
   GHashTable *plugin_names;
   const gchar *frei0r_path;
 
@@ -667,6 +667,7 @@ plugin_init (GstPlugin * plugin)
 
   gst_plugin_add_dependency_simple (plugin,
       "FREI0R_PATH:HOME/.frei0r-1/lib",
+      LIBDIR "/frei0r-1:"
       "/usr/lib/frei0r-1:/usr/local/lib/frei0r-1:"
       "/usr/lib32/frei0r-1:/usr/local/lib32/frei0r-1:"
       "/usr/lib64/frei0r-1:/usr/local/lib64/frei0r-1",
@@ -689,8 +690,11 @@ plugin_init (GstPlugin * plugin)
 #define register_plugins2(plugin, pn, p) register_plugins(plugin, pn, p, p)
     homedir = g_get_home_dir ();
     path = g_build_filename (homedir, ".frei0r-1", "lib", NULL);
+    libdir_path = g_build_filename (LIBDIR, "frei0r-1", NULL);
     register_plugins2 (plugin, plugin_names, path);
     g_free (path);
+    register_plugins2 (plugin, plugin_names, libdir_path);
+    g_free (libdir_path);
     register_plugins2 (plugin, plugin_names, "/usr/local/lib/frei0r-1");
     register_plugins2 (plugin, plugin_names, "/usr/lib/frei0r-1");
     register_plugins2 (plugin, plugin_names, "/usr/local/lib32/frei0r-1");
