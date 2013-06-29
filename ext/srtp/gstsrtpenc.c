@@ -118,8 +118,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_srtp_enc_debug);
 #define DEFAULT_RTCP_AUTH       DEFAULT_RTP_AUTH
 #define DEFAULT_RANDOM_KEY      FALSE
 
-#define OBJECT_LOCK(arg)  {GST_DEBUG("Locking"); GST_OBJECT_LOCK(arg);}
-#define OBJECT_UNLOCK(arg)  {GST_DEBUG("Unlocking"); GST_OBJECT_UNLOCK(arg);}
 
 /* Filter signals and args */
 enum
