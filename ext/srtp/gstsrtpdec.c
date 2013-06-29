@@ -396,12 +396,6 @@ get_stream_from_caps (GstSrtpDec * filter, GstCaps * caps, guint32 ssrc)
   if (!rtp_cipher || !rtp_auth || !rtcp_cipher || !rtcp_auth)
     goto error;
 
-  if (!gst_structure_get (s, "srtp-key", GST_TYPE_BUFFER, &buf, NULL) || !buf) {
-    goto error;
-  } else {
-    GST_DEBUG ("Got key [%p]", buf);
-    stream->key = buf;
-  }
 
   stream->rtp_cipher = enum_value_from_nick (GST_TYPE_SRTP_CIPHER_TYPE,
       rtp_cipher);
@@ -421,6 +415,16 @@ get_stream_from_caps (GstSrtpDec * filter, GstCaps * caps, guint32 ssrc)
     GST_WARNING_OBJECT (filter,
         "Cannot have SRTP NULL authentication with a not-NULL encryption"
         " cipher.");
+    goto error;
+  }
+
+  if (gst_structure_get (s, "srtp-key", GST_TYPE_BUFFER, &buf, NULL) || !buf) {
+    GST_DEBUG ("Got key [%p]", buf);
+    stream->key = buf;
+  } else if (stream->rtp_cipher != GST_SRTP_CIPHER_NULL ||
+      stream->rtcp_cipher != GST_SRTP_CIPHER_NULL ||
+      stream->rtp_auth != GST_SRTP_AUTH_NULL ||
+      stream->rtcp_auth != GST_SRTP_AUTH_NULL) {
     goto error;
   }
 
@@ -455,6 +459,7 @@ init_session_stream (GstSrtpDec * filter, guint32 ssrc,
   err_status_t ret;
   srtp_policy_t policy;
   GstMapInfo map;
+  guchar tmp[1];
 
   memset (&policy, 0, sizeof (srtp_policy_t));
 
@@ -468,11 +473,15 @@ init_session_stream (GstSrtpDec * filter, guint32 ssrc,
   set_crypto_policy_cipher_auth (stream->rtcp_cipher, stream->rtcp_auth,
       &policy.rtcp);
 
-  gst_buffer_map (stream->key, &map, GST_MAP_READ);
+  if (stream->key) {
+    gst_buffer_map (stream->key, &map, GST_MAP_READ);
+    policy.key = (guchar *) map.data;
+  } else {
+    policy.key = tmp;
+  }
 
   policy.ssrc.value = ssrc;
   policy.ssrc.type = ssrc_specific;
-  policy.key = (guchar *) map.data;
   policy.next = NULL;
 
   /* If it is the first stream, create the session
@@ -483,7 +492,8 @@ init_session_stream (GstSrtpDec * filter, guint32 ssrc,
   else
     ret = srtp_add_stream (filter->session, &policy);
 
-  gst_buffer_unmap (stream->key, &map);
+  if (stream->key)
+    gst_buffer_unmap (stream->key, &map);
 
   if (ret == err_status_ok) {
     filter->first_session = FALSE;
@@ -547,7 +557,8 @@ update_session_stream_from_caps (GstSrtpDec * filter, guint32 ssrc,
     err = init_session_stream (filter, ssrc, stream);
 
     if (err != err_status_ok) {
-      gst_buffer_unref (stream->key);
+      if (stream->key)
+        gst_buffer_unref (stream->key);
       g_slice_free (GstSrtpDecSsrcStream, stream);
       stream = NULL;
     }
@@ -559,7 +570,8 @@ update_session_stream_from_caps (GstSrtpDec * filter, guint32 ssrc,
 static void
 clear_stream (GstSrtpDecSsrcStream * stream)
 {
-  gst_buffer_unref (stream->key);
+  if (stream->key)
+    gst_buffer_unref (stream->key);
   g_slice_free (GstSrtpDecSsrcStream, stream);
 }
 
@@ -628,7 +640,6 @@ gst_srtp_dec_sink_setcaps (GstPad * pad, GstObject * parent,
   ps = gst_caps_get_structure (caps, 0);
 
   if (gst_structure_has_field_typed (ps, "ssrc", G_TYPE_UINT) &&
-      gst_structure_has_field_typed (ps, "srtp-key", GST_TYPE_BUFFER) &&
       gst_structure_has_field_typed (ps, "srtp-cipher", G_TYPE_STRING) &&
       gst_structure_has_field_typed (ps, "srtp-auth", G_TYPE_STRING) &&
       gst_structure_has_field_typed (ps, "srtcp-cipher", G_TYPE_STRING) &&
