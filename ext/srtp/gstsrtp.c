@@ -172,8 +172,8 @@ rtcp_buffer_get_ssrc (GstBuffer * buf, guint32 * ssrc)
 }
 
 void
-set_crypto_policy_cipher_auth (guint cipher, guint auth,
-    crypto_policy_t * policy)
+set_crypto_policy_cipher_auth (GstSrtpCipherType cipher,
+    GstSrtpAuthType auth, crypto_policy_t * policy)
 {
   switch (cipher) {
     case GST_SRTP_CIPHER_AES_128_ICM:

@@ -203,10 +203,10 @@ struct _GstSrtpDecSsrcStream
 
   GstCaps *caps;
   GstBuffer *key;
-  guint rtp_cipher;
-  guint rtp_auth;
-  guint rtcp_cipher;
-  guint rtcp_auth;
+  GstSrtpCipherType rtp_cipher;
+  GstSrtpAuthType rtp_auth;
+  GstSrtpCipherType rtcp_cipher;
+  GstSrtpAuthType rtcp_auth;
 };
 
 /* initialize the srtpdec's class */

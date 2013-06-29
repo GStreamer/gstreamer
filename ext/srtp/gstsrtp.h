@@ -49,6 +49,19 @@
 
 #include <srtp/srtp.h>
 
+typedef enum
+{
+  GST_SRTP_CIPHER_NULL,
+  GST_SRTP_CIPHER_AES_128_ICM
+} GstSrtpCipherType;
+
+typedef enum
+{
+  GST_SRTP_AUTH_NULL,
+  GST_SRTP_AUTH_HMAC_SHA1_32,
+  GST_SRTP_AUTH_HMAC_SHA1_80
+} GstSrtpAuthType;
+
 void     gst_srtp_init_event_reporter    (void);
 gboolean gst_srtp_get_soft_limit_reached (void);
 
@@ -57,8 +70,8 @@ gboolean rtcp_buffer_get_ssrc (GstBuffer * buf, guint32 * ssrc);
 const gchar *enum_nick_from_value (GType enum_gtype, gint value);
 gint enum_value_from_nick (GType enum_gtype, const gchar *nick);
 
-void set_crypto_policy_cipher_auth (guint cipher, guint auth,
-    crypto_policy_t * policy);
+void set_crypto_policy_cipher_auth (GstSrtpCipherType cipher,
+    GstSrtpAuthType auth, crypto_policy_t * policy);
 
 
 #endif /* __GST_SRTP_H__ */

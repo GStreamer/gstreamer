@@ -66,19 +66,6 @@ G_BEGIN_DECLS
 typedef struct _GstSrtpEnc      GstSrtpEnc;
 typedef struct _GstSrtpEncClass GstSrtpEncClass;
 
-typedef enum
-{
-  GST_SRTP_CIPHER_NULL,
-  GST_SRTP_CIPHER_AES_128_ICM
-} GstSrtpCipherType;
-
-typedef enum
-{
-  GST_SRTP_AUTH_NULL,
-  GST_SRTP_AUTH_HMAC_SHA1_32,
-  GST_SRTP_AUTH_HMAC_SHA1_80
-} GstSrtpAuthType;
-
 struct _GstSrtpEnc
 {
   GstElement element;
