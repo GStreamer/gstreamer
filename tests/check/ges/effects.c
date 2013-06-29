@@ -226,8 +226,8 @@ GST_START_TEST (test_effect_clip)
         GES_BASE_EFFECT (tmp->data));
     fail_unless (priority > effect_prio);
     fail_unless (GES_IS_EFFECT (tmp->data));
-    fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (tmp->data))->
-        type == track_type[i]);
+    fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (tmp->
+                data))->type == track_type[i]);
     effect_prio = priority;
 
     gst_object_unref (tmp->data);
@@ -256,7 +256,7 @@ GST_START_TEST (test_priorities_clip)
   ges_init ();
 
   timeline = ges_timeline_new ();
-  layer = (GESLayer *) ges_simple_layer_new ();
+  layer = ges_layer_new ();
   track_audio = GES_TRACK (ges_audio_track_new ());
   track_video = GES_TRACK (ges_video_track_new ());
 
@@ -269,9 +269,7 @@ GST_START_TEST (test_priorities_clip)
 
   g_object_set (effect_clip, "duration", 25 * GST_SECOND, NULL);
 
-  ges_simple_layer_add_object ((GESSimpleLayer *) (layer),
-      (GESClip *) effect_clip, 0);
-
+  ges_layer_add_clip ((layer), (GESClip *) effect_clip);
   for (tmp = GES_CONTAINER_CHILDREN (effect_clip); tmp; tmp = tmp->next) {
     if (ges_track_element_get_track_type (GES_TRACK_ELEMENT (tmp->data)) ==
         GES_TRACK_TYPE_AUDIO)
@@ -318,6 +316,22 @@ GST_START_TEST (test_priorities_clip)
   assert_equals_int (GES_CONTAINER_HEIGHT (effect_clip), 4);
 
   effects = ges_clip_get_top_effects (GES_CLIP (effect_clip));
+  for (tmp = effects, i = 0; tmp; tmp = tmp->next, i++) {
+    gint priority = ges_clip_get_top_effect_position (GES_CLIP (effect_clip),
+        GES_BASE_EFFECT (tmp->data));
+    fail_unless (priority > effect_prio);
+    fail_unless (GES_IS_EFFECT (tmp->data));
+    effect_prio = priority;
+
+    gst_object_unref (tmp->data);
+  }
+  g_list_free (effects);
+
+  ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (effect_clip), 2);
+  assert_equals_int (_PRIORITY (effect_clip), 2);
+  assert_equals_int (GES_CONTAINER_HEIGHT (effect_clip), 4);
+  effects = ges_clip_get_top_effects (GES_CLIP (effect_clip));
+  effect_prio = 0;
   for (tmp = effects, i = 0; tmp; tmp = tmp->next, i++) {
     gint priority = ges_clip_get_top_effect_position (GES_CLIP (effect_clip),
         GES_BASE_EFFECT (tmp->data));

@@ -91,6 +91,21 @@ static GParamSpec *properties[PROP_LAST];
  *                                                   *
  *****************************************************/
 
+static void
+_get_priority_range (GESContainer * container, guint32 * min_priority,
+    guint32 * max_priority)
+{
+  GESLayer *layer = GES_CLIP (container)->priv->layer;
+
+  if (layer) {
+    *min_priority = layer->min_gnl_priority;
+    *max_priority = layer->max_gnl_priority;
+  } else {
+    *min_priority = 0;
+    *max_priority = G_MAXUINT32;
+  }
+}
+
 static gboolean
 _set_start (GESTimelineElement * element, GstClockTime start)
 {
@@ -186,14 +201,17 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 
   GESContainer *container = GES_CONTAINER (element);
 
-  GES_CONTAINER_GET_CLASS (element)->get_priority_range (container, &min_prio,
-      &max_prio);
+  _get_priority_range (container, &min_prio, &max_prio);
 
-  _ges_container_set_children_control_mode (container,
-      GES_CHILDREN_IGNORE_NOTIFIES);
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
-    guint32 real_tck_prio = min_prio + priority;
+    guint32 real_tck_prio;
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
+    gint off = _PRIORITY (child) - _PRIORITY (element) - MIN_GNL_PRIO;
+
+    if (off >= LAYER_HEIGHT)
+      off = 0;
+
+    real_tck_prio = min_prio + priority + off;
 
     if (real_tck_prio > max_prio) {
       GST_WARNING ("%p priority of %i, is outside of the its containing "
@@ -239,21 +257,6 @@ _compute_height (GESContainer * container)
   }
 
   _ges_container_set_height (container, max_prio - min_prio + 1);
-}
-
-static void
-_get_priority_range (GESContainer * container, guint32 * min_priority,
-    guint32 * max_priority)
-{
-  GESLayer *layer = GES_CLIP (container)->priv->layer;
-
-  if (layer) {
-    *min_priority = layer->min_gnl_priority;
-    *max_priority = layer->max_gnl_priority;
-  } else {
-    *min_priority = 0;
-    *max_priority = G_MAXUINT32;
-  }
 }
 
 static gboolean
