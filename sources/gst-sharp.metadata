@@ -11,9 +11,18 @@
 	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_formats_contains']" name="hidden">true</attr>
 	<!-- Handle is missing in GstBuffer -->
 	<attr path="/api/namespace/boxed[@cname='GstBuffer']/method[@cname='gst_buffer_set_size']" name="hidden">true</attr>
+	<!-- MiniObject issues -->
 	<attr path="/api/namespace/boxed[@cname='GstMessage']/field[@cname='cond']" name="type">GCond*</attr>
+	<attr path="/api/namespace/struct[@cname='GstMiniObject']/field[@cname='copy']" name="type">gpointer</attr>
+	<attr path="/api/namespace/struct[@cname='GstMiniObject']/field[@cname='free']" name="type">gpointer</attr>
+	<attr path="/api/namespace/struct[@cname='GstMiniObject']/field[@cname='dispose']" name="type">gpointer</attr>
 	<!-- Maybe some problems with the name -->
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/class_struct/method[@vm='get_type']" name="vm" />
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/virtual_method[@cname='get_type']" name="hidden" />
+	<!-- gapi cannot handle count parameters properly -->
+	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_init']/parameters/parameter[@name='argc']" name="name">n_argc</attr>
+	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_init_check']/parameters/parameter[@name='argc']" name="name">n_argc</attr>
+	<!-- calling oldobj.Handle should fix this -->
+	<remove-attr path="/api/namespace/object[@cname='GstObject']/method[@cname='gst_object_replace']/parameters/parameter[@name='oldobj']" name="pass_as" />
 </metadata>
 
