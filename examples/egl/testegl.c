@@ -227,6 +227,21 @@ TRACE_VC_MEMORY_DEFINE_ID (gid0);
 TRACE_VC_MEMORY_DEFINE_ID (gid1);
 TRACE_VC_MEMORY_DEFINE_ID (gid2);
 
+typedef enum
+{
+  GST_PLAY_FLAG_VIDEO = (1 << 0),
+  GST_PLAY_FLAG_AUDIO = (1 << 1),
+  GST_PLAY_FLAG_TEXT = (1 << 2),
+  GST_PLAY_FLAG_VIS = (1 << 3),
+  GST_PLAY_FLAG_SOFT_VOLUME = (1 << 4),
+  GST_PLAY_FLAG_NATIVE_AUDIO = (1 << 5),
+  GST_PLAY_FLAG_NATIVE_VIDEO = (1 << 6),
+  GST_PLAY_FLAG_DOWNLOAD = (1 << 7),
+  GST_PLAY_FLAG_BUFFERING = (1 << 8),
+  GST_PLAY_FLAG_DEINTERLACE = (1 << 9),
+  GST_PLAY_FLAG_SOFT_COLORBALANCE = (1 << 10)
+} GstPlayFlags;
+
 static gboolean
 got_gl_error (const char *wtf)
 {
@@ -1355,7 +1370,8 @@ init_playbin_player (APP_STATE_T * state, const gchar * uri)
   /* Instantiate and configure playbin */
   state->pipeline = gst_element_factory_make ("playbin", "player");
   g_object_set (state->pipeline, "uri", uri,
-      "video-sink", vsink, "audio-sink", asink, "flags", (1 << 6), NULL);
+      "video-sink", vsink, "audio-sink", asink, "flags",
+      GST_PLAY_FLAG_NATIVE_VIDEO | GST_PLAY_FLAG_AUDIO, NULL);
 
   return TRUE;
 }
