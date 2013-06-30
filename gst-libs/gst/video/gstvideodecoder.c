@@ -2429,8 +2429,15 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
   if (G_UNLIKELY (priv->output_state_changed || (priv->output_state
-              && gst_pad_check_reconfigure (decoder->srcpad))))
-    gst_video_decoder_negotiate (decoder);
+              && gst_pad_check_reconfigure (decoder->srcpad)))) {
+    if (!gst_video_decoder_negotiate (decoder)) {
+      if (GST_PAD_IS_FLUSHING (decoder->srcpad))
+        ret = GST_FLOW_FLUSHING;
+      else
+        ret = GST_FLOW_NOT_NEGOTIATED;
+      goto done;
+    }
+  }
 
   gst_video_decoder_prepare_finish_frame (decoder, frame, FALSE);
   priv->processed++;
