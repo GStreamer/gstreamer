@@ -627,7 +627,10 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
   if (G_UNLIKELY (ctx->output_caps_changed
           || gst_pad_check_reconfigure (enc->srcpad))) {
     if (!gst_audio_encoder_negotiate (enc)) {
-      ret = GST_FLOW_NOT_NEGOTIATED;
+      if (GST_PAD_IS_FLUSHING (enc->srcpad))
+        ret = GST_FLOW_FLUSHING;
+      else
+        ret = GST_FLOW_NOT_NEGOTIATED;
       goto exit;
     }
   }
