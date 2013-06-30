@@ -70,6 +70,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <math.h>
+#include <gst/math-compat.h>
+
 #ifdef HAVE_ZLIB
 # include <zlib.h>
 #endif
@@ -5528,11 +5531,19 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       stream->fps_n = 0;
       stream->fps_d = 1;
     } else {
-      stream->fps_n = stream->timescale;
-      if (stream->min_duration == 0)
-        stream->fps_d = 1;
+      /* we might need to scale the timescale to get precise framerate */
+      const int required_scale = rint (log (10000) / 2.303);    /* divide to get log10 */
+      int current_scale = rint (log (stream->timescale) / 2.303);
+      int factor = pow (10.0, MAX (0, required_scale - current_scale));
+
+      stream->fps_n = stream->timescale * factor;
+
+      if (stream->duration == 0)
+        stream->fps_d = factor;
       else
-        stream->fps_d = stream->min_duration;
+        stream->fps_d =
+            gst_util_uint64_scale_int_round (factor, stream->duration,
+            stream->n_samples);
     }
 
     if (stream->caps) {
