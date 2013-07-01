@@ -84,6 +84,7 @@ struct _GESContainer
   guint32 height;       /* the span of priorities this object needs */
 
   /* <protected> */
+  GESChildrenControlMode children_control_mode;
   /*< readonly >*/
   GESTimelineElement *initiated_move;
 
@@ -144,8 +145,6 @@ GList * ges_container_ungroup     (GESContainer * container, gboolean recursive)
 GESContainer *ges_container_group (GList *containers);
 
 /* To be used by subclasses only */
-void _ges_container_set_children_control_mode (GESContainer * container,
-                                               GESChildrenControlMode children_control_mode);
 void _ges_container_set_height                (GESContainer * container,
                                                guint32 height);
 gboolean ges_container_edit                   (GESContainer * container,
@@ -153,6 +152,11 @@ gboolean ges_container_edit                   (GESContainer * container,
                                                GESEditMode mode,
                                                GESEdge edge,
                                                guint64 position);
+gint  _ges_container_get_priority_offset      (GESContainer * container,
+                                               GESTimelineElement *elem);
+void _ges_container_set_priority_offset       (GESContainer * container,
+                                               GESTimelineElement *elem,
+                                               gint32 priority_offset);
 
 
 G_END_DECLS

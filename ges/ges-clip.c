@@ -85,11 +85,9 @@ enum
 
 static GParamSpec *properties[PROP_LAST];
 
-/*****************************************************
- *                                                   *
- * GESTimelineElement virtual methods implementation *
- *                                                   *
- *****************************************************/
+/****************************************************
+ *              Listen to our children              *
+ ****************************************************/
 
 static void
 _get_priority_range (GESContainer * container, guint32 * min_priority,
@@ -106,6 +104,31 @@ _get_priority_range (GESContainer * container, guint32 * min_priority,
   }
 }
 
+static void
+_child_priority_changed_cb (GESTimelineElement * child,
+    GParamSpec * arg G_GNUC_UNUSED, GESContainer * container)
+{
+  guint32 min_prio, max_prio;
+
+  GST_DEBUG_OBJECT (container, "TimelineElement %p priority changed to %i",
+      child, _PRIORITY (child));
+
+  if (container->children_control_mode == GES_CHILDREN_IGNORE_NOTIFIES)
+    return;
+
+  /* Update mapping */
+  _get_priority_range (container, &min_prio, &max_prio);
+
+  _ges_container_set_priority_offset (container, child,
+      min_prio + _PRIORITY (container) - _PRIORITY (child));
+}
+
+/*****************************************************
+ *                                                   *
+ * GESTimelineElement virtual methods implementation *
+ *                                                   *
+ *****************************************************/
+
 static gboolean
 _set_start (GESTimelineElement * element, GstClockTime start)
 {
@@ -116,8 +139,7 @@ _set_start (GESTimelineElement * element, GstClockTime start)
   GST_DEBUG_OBJECT (element, "Setting children start, (initiated_move: %"
       GST_PTR_FORMAT ")", container->initiated_move);
 
-  _ges_container_set_children_control_mode (container,
-      GES_CHILDREN_IGNORE_NOTIFIES);
+  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
 
@@ -130,7 +152,7 @@ _set_start (GESTimelineElement * element, GstClockTime start)
 
     }
   }
-  _ges_container_set_children_control_mode (container, GES_CHILDREN_UPDATE);
+  container->children_control_mode = GES_CHILDREN_UPDATE;
 
   return TRUE;
 }
@@ -141,8 +163,7 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
   GList *tmp;
   GESContainer *container = GES_CONTAINER (element);
 
-  _ges_container_set_children_control_mode (container,
-      GES_CHILDREN_IGNORE_NOTIFIES);
+  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
 
@@ -150,7 +171,7 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
       _set_inpoint0 (child, inpoint);
     }
   }
-  _ges_container_set_children_control_mode (container, GES_CHILDREN_UPDATE);
+  container->children_control_mode = GES_CHILDREN_UPDATE;
 
   return TRUE;
 }
@@ -163,8 +184,7 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
 
   GESContainer *container = GES_CONTAINER (element);
 
-  _ges_container_set_children_control_mode (container,
-      GES_CHILDREN_IGNORE_NOTIFIES);
+  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
 
@@ -176,7 +196,7 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
         _set_duration0 (GES_TIMELINE_ELEMENT (child), duration);
     }
   }
-  _ges_container_set_children_control_mode (container, GES_CHILDREN_UPDATE);
+  container->children_control_mode = GES_CHILDREN_UPDATE;
 
   return TRUE;
 }
@@ -203,6 +223,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 
   _get_priority_range (container, &min_prio, &max_prio);
 
+  container->children_control_mode = GES_CHILDREN_UPDATE_OFFSETS;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     guint32 real_tck_prio;
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
@@ -222,7 +243,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
     }
     _set_priority0 (child, real_tck_prio);
   }
-  _ges_container_set_children_control_mode (container, GES_CHILDREN_UPDATE);
+  container->children_control_mode = GES_CHILDREN_UPDATE;
   _compute_height (container);
 
   return TRUE;
@@ -301,12 +322,11 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 
   /* We set the timing value of the child to ours, we avoid infinite loop
    * making sure the container ignore notifies from the child */
-  _ges_container_set_children_control_mode (container,
-      GES_CHILDREN_IGNORE_NOTIFIES);
+  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
   _set_start0 (element, GES_TIMELINE_ELEMENT_START (container));
   _set_inpoint0 (element, GES_TIMELINE_ELEMENT_INPOINT (container));
   _set_duration0 (element, GES_TIMELINE_ELEMENT_DURATION (container));
-  _ges_container_set_children_control_mode (container, GES_CHILDREN_UPDATE);
+  container->children_control_mode = GES_CHILDREN_UPDATE;
 
   return TRUE;
 }
@@ -325,6 +345,8 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
 static void
 _child_added (GESContainer * container, GESTimelineElement * element)
 {
+  g_signal_connect (G_OBJECT (element), "notify::priority",
+      G_CALLBACK (_child_priority_changed_cb), container);
   _compute_height (container);
 }
 
