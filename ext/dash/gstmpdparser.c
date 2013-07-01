@@ -3356,19 +3356,25 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
   } else if (strncmp (mediaURL, "http://", 7) != 0) {
     fragment->uri =
         g_strconcat (stream->baseURL, mediaURL, stream->queryURL, NULL);
-  } else {
+    g_free (mediaURL);
+  } else if (stream->queryURL) {
     fragment->uri = g_strconcat (mediaURL, stream->queryURL, NULL);
+    g_free (mediaURL);
+  } else {
+    fragment->uri = mediaURL;
   }
-  g_free (mediaURL);
 
   if (indexURL != NULL) {
     if (strncmp (indexURL, "http://", 7) != 0) {
       fragment->index_uri =
           g_strconcat (stream->baseURL, indexURL, stream->queryURL, NULL);
-    } else {
+      g_free (indexURL);
+    } else if (stream->queryURL) {
       fragment->index_uri = g_strconcat (indexURL, stream->queryURL, NULL);
+      g_free (indexURL);
+    } else {
+      fragment->index_uri = indexURL;
     }
-    g_free (indexURL);
   } else if (fragment->index_range_start || fragment->index_range_end != -1) {
     /* index has no specific URL but has a range, we should only use this if
      * the media also has a range, otherwise we are serving some data twice
