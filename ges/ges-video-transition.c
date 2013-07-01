@@ -104,6 +104,13 @@ static void ges_video_transition_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
 static void
+duration_changed_cb (GESTrackElement * self, GParamSpec * arg G_GNUC_UNUSED)
+{
+  ges_video_transition_duration_changed (self,
+      ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (self)));
+}
+
+static void
 ges_video_transition_class_init (GESVideoTransitionClass * klass)
 {
   GObjectClass *object_class;
@@ -156,7 +163,6 @@ ges_video_transition_class_init (GESVideoTransitionClass * klass)
       properties[PROP_INVERT]);
 
   toclass = GES_TRACK_ELEMENT_CLASS (klass);
-  toclass->duration_changed = ges_video_transition_duration_changed;
   toclass->create_element = ges_video_transition_create_element;
 }
 
@@ -212,6 +218,9 @@ ges_video_transition_dispose (GObject * object)
     gst_object_unref (priv->mixer);
     priv->mixer = NULL;
   }
+
+  g_signal_handlers_disconnect_by_func (GES_TRACK_ELEMENT (self),
+      duration_changed_cb, NULL);
 
   G_OBJECT_CLASS (ges_video_transition_parent_class)->dispose (object);
 }
@@ -422,6 +431,9 @@ ges_video_transition_create_element (GESTrackElement * object)
 
   priv->topbin = topbin;
   priv->type = priv->pending_type;
+
+  g_signal_connect (object, "notify::duration",
+      G_CALLBACK (duration_changed_cb), NULL);
 
   return topbin;
 }

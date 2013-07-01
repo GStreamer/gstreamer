@@ -74,7 +74,6 @@ struct _GESTrackElement {
  * @gnlobject_factorytype: name of the GNonLin GStElementFactory type to use.
  * @create_gnl_object: method to create the GNonLin container object.
  * @create_element: method to return the GstElement to put in the gnlobject.
- * @duration_changed: duration property glnobject has changed
  * @active_changed: active property of gnlobject has changed
  * @get_props_hastable: method to list children properties that user could like
  *                      to configure. Since: 0.10.2
@@ -97,7 +96,6 @@ struct _GESTrackElementClass {
   GstElement*  (*create_gnl_object)        (GESTrackElement * object);
   GstElement*  (*create_element)           (GESTrackElement * object);
 
-  void (*duration_changed)     (GESTrackElement *object, guint64 duration);
   void (*active_changed)       (GESTrackElement *object, gboolean active);
 
   /*< private >*/

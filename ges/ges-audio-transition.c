@@ -65,6 +65,13 @@ static void ges_audio_transition_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
 static void
+duration_changed_cb (GESTrackElement * self, GParamSpec * arg G_GNUC_UNUSED)
+{
+  ges_audio_transition_duration_changed (self,
+      ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (self)));
+}
+
+static void
 ges_audio_transition_class_init (GESAudioTransitionClass * klass)
 {
   GObjectClass *object_class;
@@ -79,8 +86,6 @@ ges_audio_transition_class_init (GESAudioTransitionClass * klass)
   object_class->set_property = ges_audio_transition_set_property;
   object_class->dispose = ges_audio_transition_dispose;
   object_class->finalize = ges_audio_transition_finalize;
-
-  toclass->duration_changed = ges_audio_transition_duration_changed;
 
   toclass->create_element = ges_audio_transition_create_element;
 
@@ -112,6 +117,9 @@ ges_audio_transition_dispose (GObject * object)
       gst_object_unref (self->priv->b_control_source);
     self->priv->b_control_source = NULL;
   }
+
+  g_signal_handlers_disconnect_by_func (GES_TRACK_ELEMENT (self),
+      duration_changed_cb, NULL);
 
   G_OBJECT_CLASS (ges_audio_transition_parent_class)->dispose (object);
 }
@@ -224,6 +232,9 @@ ges_audio_transition_create_element (GESTrackElement * track_element)
   duration =
       ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (track_element));
   ges_audio_transition_duration_changed (track_element, duration);
+
+  g_signal_connect (track_element, "notify::duration",
+      G_CALLBACK (duration_changed_cb), NULL);
 
   gst_object_add_control_binding (GST_OBJECT (atarget),
       gst_direct_control_binding_new (GST_OBJECT (atarget), propname,
