@@ -449,11 +449,15 @@ no_address:
 /**
  * gst_rtsp_stream_reserve_address:
  * @stream: a #GstRTSPStream
+ * @address: an address
+ * @port: a port
+ * @n_ports: n_ports
+ * @ttl: a TTL
  *
- * Get a specific multicast address of @stream.
+ * Reserve @address and @port as the address and port of @stream.
  *
- * Returns: the #GstRTSPAddress of @stream or %NULL when no address could be
- * allocated. gst_rtsp_address_free() after usage.
+ * Returns: the #GstRTSPAddress of @stream or %NULL when the address could be
+ * reserved. gst_rtsp_address_free() after usage.
  */
 GstRTSPAddress *
 gst_rtsp_stream_reserve_address (GstRTSPStream * stream,
