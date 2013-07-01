@@ -908,6 +908,7 @@ gst_check_element_push_buffer_list
 gst_check_element_push_buffer
 gst_check_run_suite
 gst_check_setup_events
+gst_check_setup_events_with_stream_id
 
 <SUBSECTION Private>
 MAIN_INIT

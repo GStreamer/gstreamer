@@ -36,10 +36,6 @@ struct TestData
 static void
 setup_test_objects (struct TestData *td, GstPadChainFunction chain_func)
 {
-  GstSegment segment;
-
-  gst_segment_init (&segment, GST_FORMAT_BYTES);
-
   td->mycaps = gst_caps_new_empty_simple ("test/test");
 
   td->funnel = gst_element_factory_make ("funnel", NULL);
@@ -64,16 +60,13 @@ setup_test_objects (struct TestData *td, GstPadChainFunction chain_func)
 
   td->mysrc1 = gst_pad_new ("src1", GST_PAD_SRC);
   gst_pad_set_active (td->mysrc1, TRUE);
-
-  gst_pad_push_event (td->mysrc1, gst_event_new_stream_start ("test"));
-  gst_pad_set_caps (td->mysrc1, td->mycaps);
-  gst_pad_push_event (td->mysrc1, gst_event_new_segment (&segment));
+  gst_check_setup_events_with_stream_id (td->mysrc1, td->funnel, td->mycaps,
+      GST_FORMAT_BYTES, "test1");
 
   td->mysrc2 = gst_pad_new ("src2", GST_PAD_SRC);
   gst_pad_set_active (td->mysrc2, TRUE);
-  gst_pad_push_event (td->mysrc2, gst_event_new_stream_start ("test"));
-  gst_pad_set_caps (td->mysrc2, td->mycaps);
-  gst_pad_push_event (td->mysrc2, gst_event_new_segment (&segment));
+  gst_check_setup_events_with_stream_id (td->mysrc2, td->funnel, td->mycaps,
+      GST_FORMAT_BYTES, "test2");
 
   fail_unless (GST_PAD_LINK_SUCCESSFUL (gst_pad_link (td->funnelsrc,
               td->mysink)));

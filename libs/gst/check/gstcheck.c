@@ -719,23 +719,23 @@ _gst_check_run_test_func (const gchar * func_name)
 }
 
 /**
- * gst_check_setup_events:
+ * gst_check_setup_events_with_stream_id:
  * @srcpad: The src #GstPad to push on
  * @element: The #GstElement use to create the stream id
  * @caps: (allow-none): #GstCaps in case caps event must be sent
  * @format: The #GstFormat of the default segment to send
+ * @stream_id: A unique identifier for the stream
  *
- * Push stream-start, caps and segment event, which concist of the minimum required
- * events to allow streaming. Caps is optional to allow raw src testing.
+ * Push stream-start, caps and segment event, which concist of the minimum
+ * required events to allow streaming. Caps is optional to allow raw src
+ * testing.
  */
 void
-gst_check_setup_events (GstPad * srcpad, GstElement * element,
-    GstCaps * caps, GstFormat format)
+gst_check_setup_events_with_stream_id (GstPad * srcpad, GstElement * element,
+    GstCaps * caps, GstFormat format, const gchar * stream_id)
 {
-  gchar *stream_id;
   GstSegment segment;
 
-  stream_id = gst_pad_create_stream_id (srcpad, element, NULL);
   gst_segment_init (&segment, format);
 
   fail_unless (gst_pad_push_event (srcpad,
@@ -743,6 +743,28 @@ gst_check_setup_events (GstPad * srcpad, GstElement * element,
   if (caps)
     fail_unless (gst_pad_push_event (srcpad, gst_event_new_caps (caps)));
   fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&segment)));
+}
 
+/**
+ * gst_check_setup_events:
+ * @srcpad: The src #GstPad to push on
+ * @element: The #GstElement use to create the stream id
+ * @caps: (allow-none): #GstCaps in case caps event must be sent
+ * @format: The #GstFormat of the default segment to send
+ *
+ * Push stream-start, caps and segment event, which concist of the minimum
+ * required events to allow streaming. Caps is optional to allow raw src
+ * testing. If @element has more than one src or sink pad, use
+ * gst_check_setup_events_with_stream_id() instead.
+ */
+void
+gst_check_setup_events (GstPad * srcpad, GstElement * element,
+    GstCaps * caps, GstFormat format)
+{
+  gchar *stream_id;
+
+  stream_id = gst_pad_create_stream_id (srcpad, element, NULL);
+  gst_check_setup_events_with_stream_id (srcpad, element, caps, format,
+      stream_id);
   g_free (stream_id);
 }

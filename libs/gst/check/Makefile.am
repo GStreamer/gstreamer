@@ -80,6 +80,7 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_check_run_suite \
 	gst_check_setup_element \
 	gst_check_setup_events \
+	gst_check_setup_events_with_stream_id \
 	gst_check_setup_sink_pad \
 	gst_check_setup_sink_pad_by_name \
 	gst_check_setup_src_pad \
