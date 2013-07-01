@@ -77,8 +77,6 @@ void              gst_rtsp_stream_set_address_pool (GstRTSPStream *stream, GstRT
 GstRTSPAddressPool *
                   gst_rtsp_stream_get_address_pool (GstRTSPStream *stream);
 
-GstRTSPAddress *  gst_rtsp_stream_get_address      (GstRTSPStream *stream);
-
 GstRTSPAddress *  gst_rtsp_stream_reserve_address  (GstRTSPStream *stream,
                                                     const gchar * address,
                                                     guint port,
@@ -94,6 +92,9 @@ gboolean          gst_rtsp_stream_leave_bin        (GstRTSPStream *stream,
 void              gst_rtsp_stream_get_server_port  (GstRTSPStream *stream,
                                                     GstRTSPRange *server_port,
                                                     GSocketFamily family);
+GstRTSPAddress *  gst_rtsp_stream_get_multicast_address (GstRTSPStream *stream,
+                                                         GSocketFamily family);
+
 
 GObject *         gst_rtsp_stream_get_rtpsession   (GstRTSPStream *stream);
 

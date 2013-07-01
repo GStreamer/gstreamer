@@ -77,7 +77,8 @@ struct _GstRTSPStreamPrivate
 
   /* multicast addresses */
   GstRTSPAddressPool *pool;
-  GstRTSPAddress *addr;
+  GstRTSPAddress *addr_v4;
+  GstRTSPAddress *addr_v6;
 
   /* the caps of the stream */
   gulong caps_sig;
@@ -150,8 +151,10 @@ gst_rtsp_stream_finalize (GObject * obj)
   /* we really need to be unjoined now */
   g_return_if_fail (!priv->is_joined);
 
-  if (priv->addr)
-    gst_rtsp_address_free (priv->addr);
+  if (priv->addr_v4)
+    gst_rtsp_address_free (priv->addr_v4);
+  if (priv->addr_v6)
+    gst_rtsp_address_free (priv->addr_v6);
   if (priv->server_addr_v4)
     gst_rtsp_address_free (priv->server_addr_v4);
   if (priv->server_addr_v6)
@@ -400,35 +403,48 @@ gst_rtsp_stream_get_address_pool (GstRTSPStream * stream)
 }
 
 /**
- * gst_rtsp_stream_get_address:
+ * gst_rtsp_stream_get_multicast_address:
  * @stream: a #GstRTSPStream
+ * @family: the #GSocketFamily
  *
- * Get the multicast address of @stream.
+ * Get the multicast address of @stream for @family.
  *
  * Returns: the #GstRTSPAddress of @stream or %NULL when no address could be
  * allocated. gst_rtsp_address_free() after usage.
  */
 GstRTSPAddress *
-gst_rtsp_stream_get_address (GstRTSPStream * stream)
+gst_rtsp_stream_get_multicast_address (GstRTSPStream * stream,
+    GSocketFamily family)
 {
   GstRTSPStreamPrivate *priv;
   GstRTSPAddress *result;
+  GstRTSPAddress **addrp;
+  GstRTSPAddressFlags flags;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
 
   priv = stream->priv;
 
+  if (family == G_SOCKET_FAMILY_IPV6) {
+    flags = GST_RTSP_ADDRESS_FLAG_IPV6;
+    addrp = &priv->addr_v4;
+  } else {
+    flags = GST_RTSP_ADDRESS_FLAG_IPV4;
+    addrp = &priv->addr_v6;
+  }
+
   g_mutex_lock (&priv->lock);
-  if (priv->addr == NULL) {
+  if (*addrp == NULL) {
     if (priv->pool == NULL)
       goto no_pool;
 
-    priv->addr = gst_rtsp_address_pool_acquire_address (priv->pool,
-        GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_MULTICAST, 2);
-    if (priv->addr == NULL)
+    flags |= GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_MULTICAST;
+
+    *addrp = gst_rtsp_address_pool_acquire_address (priv->pool, flags, 2);
+    if (*addrp == NULL)
       goto no_address;
   }
-  result = gst_rtsp_address_copy (priv->addr);
+  result = gst_rtsp_address_copy (*addrp);
   g_mutex_unlock (&priv->lock);
 
   return result;
@@ -467,6 +483,9 @@ gst_rtsp_stream_reserve_address (GstRTSPStream * stream,
 {
   GstRTSPStreamPrivate *priv;
   GstRTSPAddress *result;
+  GInetAddress *addr;
+  GSocketFamily family;
+  GstRTSPAddress **addrp;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
   g_return_val_if_fail (address != NULL, NULL);
@@ -476,22 +495,36 @@ gst_rtsp_stream_reserve_address (GstRTSPStream * stream,
 
   priv = stream->priv;
 
+  addr = g_inet_address_new_from_string (address);
+  if (!addr) {
+    GST_ERROR ("failed to get inet addr from %s", address);
+    family = G_SOCKET_FAMILY_IPV4;
+  } else {
+    family = g_inet_address_get_family (addr);
+    g_object_unref (addr);
+  }
+
+  if (family == G_SOCKET_FAMILY_IPV6)
+    addrp = &priv->addr_v4;
+  else
+    addrp = &priv->addr_v6;
+
   g_mutex_lock (&priv->lock);
-  if (priv->addr == NULL) {
+  if (*addrp == NULL) {
     if (priv->pool == NULL)
       goto no_pool;
 
-    priv->addr = gst_rtsp_address_pool_reserve_address (priv->pool, address,
+    *addrp = gst_rtsp_address_pool_reserve_address (priv->pool, address,
         port, n_ports, ttl);
-    if (priv->addr == NULL)
+    if (*addrp == NULL)
       goto no_address;
   } else {
-    if (strcmp (priv->addr->address, address) ||
-        priv->addr->port != port || priv->addr->n_ports != n_ports ||
-        priv->addr->ttl != ttl)
+    if (strcmp ((*addrp)->address, address) ||
+        (*addrp)->port != port || (*addrp)->n_ports != n_ports ||
+        (*addrp)->ttl != ttl)
       goto different_address;
   }
-  result = gst_rtsp_address_copy (priv->addr);
+  result = gst_rtsp_address_copy (*addrp);
   g_mutex_unlock (&priv->lock);
 
   return result;

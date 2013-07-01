@@ -1184,8 +1184,11 @@ default_configure_client_transport (GstRTSPClient * client,
       gst_rtsp_address_free (addr);
     } else {
       GstRTSPAddress *addr;
+      GSocketFamily family;
 
-      addr = gst_rtsp_stream_get_address (state->stream);
+      family = priv->is_ipv6 ? G_SOCKET_FAMILY_IPV6 : G_SOCKET_FAMILY_IPV4;
+
+      addr = gst_rtsp_stream_get_multicast_address (state->stream, family);
       if (addr == NULL)
         goto no_address;
 
