@@ -101,7 +101,6 @@ struct _GESContainer
  * @child_removed: Virtual method that is called right after a #GESTimelineElement is removed
  * @remove_child: Virtual method to remove a child
  * @add_child: Virtual method to add a child
- * @get_priority_range: Returns the range of possible priority in which the children can be in.
  * @ungroup: Ungroups the #GESTimelineElement contained in this #GESContainer, creating new
  * @group: Groups the #GESContainers together
  * #GESContainer containing those #GESTimelineElement apropriately.
@@ -117,7 +116,6 @@ struct _GESContainerClass
   void (*child_removed)           (GESContainer *container, GESTimelineElement *element);
   gboolean (*add_child)           (GESContainer *container, GESTimelineElement *element);
   gboolean (*remove_child)        (GESContainer *container, GESTimelineElement *element);
-  void (*get_priority_range)      (GESContainer *container, guint32 *min_prio, guint32 *max_prio);
   GList* (*ungroup)               (GESContainer *container, gboolean recursive);
   GESContainer * (*group)         (GList *containers);
   gboolean (*edit)                (GESContainer * container,

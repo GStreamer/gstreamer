@@ -708,7 +708,6 @@ ges_clip_class_init (GESClipClass * klass)
   element_class->set_max_duration = _set_max_duration;
   /* TODO implement the deep_copy Virtual method */
 
-  container_class->get_priority_range = _get_priority_range;
   container_class->add_child = _add_child;
   container_class->remove_child = _remove_child;
   container_class->child_removed = _child_removed;

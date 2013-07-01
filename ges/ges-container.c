@@ -449,7 +449,6 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   ChildMapping *mapping;
   GESContainerClass *class;
   GESContainerPrivate *priv;
-  guint32 min_prio, max_prio;
 
   g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (child), FALSE);
@@ -476,8 +475,6 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   mapping->start_offset = _START (container) - _START (child);
   mapping->duration_offset = _DURATION (container) - _DURATION (child);
   mapping->inpoint_offset = _INPOINT (container) - _INPOINT (child);
-  GES_CONTAINER_GET_CLASS (container)->get_priority_range (container,
-      &min_prio, &max_prio);
 
   g_hash_table_insert (priv->mappings, child, mapping);
 
