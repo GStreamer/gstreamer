@@ -1567,11 +1567,8 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
         break;
     }
   } else {
-    gboolean dimensions = TRUE;
-
     if (g_str_equal (mimetype, "video/mpegts")) {
       fourcc = V4L2_PIX_FMT_MPEG;
-      dimensions = FALSE;
     } else if (g_str_equal (mimetype, "video/x-dv")) {
       fourcc = V4L2_PIX_FMT_DV;
     } else if (g_str_equal (mimetype, "image/jpeg")) {
@@ -1605,26 +1602,6 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
       fourcc = V4L2_PIX_FMT_PWC2;
     }
 #endif
-
-    if (dimensions) {
-      const gchar *interlace_mode;
-
-      if (!gst_structure_get_int (structure, "width", &info->width))
-        goto no_width;
-
-      if (!gst_structure_get_int (structure, "height", &info->height))
-        goto no_height;
-
-      interlace_mode = gst_structure_get_string (structure, "interlace-mode");
-      if (g_str_equal (interlace_mode, "progressive")) {
-        info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
-      } else {
-        info->interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
-      }
-      if (!gst_structure_get_fraction (structure, "framerate", &info->fps_n,
-              &info->fps_d))
-        goto no_framerate;
-    }
   }
 
   if (fourcc == 0)
@@ -1639,21 +1616,6 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
   return TRUE;
 
   /* ERRORS */
-no_width:
-  {
-    GST_DEBUG_OBJECT (v4l2object, "no width");
-    return FALSE;
-  }
-no_height:
-  {
-    GST_DEBUG_OBJECT (v4l2object, "no height");
-    return FALSE;
-  }
-no_framerate:
-  {
-    GST_DEBUG_OBJECT (v4l2object, "no framerate");
-    return FALSE;
-  }
 invalid_format:
   {
     GST_DEBUG_OBJECT (v4l2object, "invalid format");
