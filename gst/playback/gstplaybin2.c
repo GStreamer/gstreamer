@@ -4133,7 +4133,6 @@ sink_accepts_caps (GstPlayBin * playbin, GstElement * sink, GstCaps * caps)
   return TRUE;
 }
 
-
 static GstStaticCaps raw_audio_caps = GST_STATIC_CAPS ("audio/x-raw");
 static GstStaticCaps raw_video_caps = GST_STATIC_CAPS ("video/x-raw");
 
@@ -4281,9 +4280,9 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
            * any raw format.
            */
           if ((isaudiodec && !(flags & GST_PLAY_FLAG_NATIVE_AUDIO)
-                  && gst_caps_is_subset (caps, raw_caps)) || (!isaudiodec
+                  && gst_caps_can_intersect (caps, raw_caps)) || (!isaudiodec
                   && !(flags & GST_PLAY_FLAG_NATIVE_VIDEO)
-                  && gst_caps_is_subset (caps, raw_caps))) {
+                  && gst_caps_can_intersect (caps, raw_caps))) {
             compatible =
                 gst_element_factory_can_src_any_caps (factory, raw_caps)
                 || gst_element_factory_can_src_any_caps (factory, caps);
