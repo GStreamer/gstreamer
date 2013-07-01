@@ -160,7 +160,6 @@ static void
 gst_gl_window_finalize (GObject * object)
 {
   GstGLWindow *window = GST_GL_WINDOW (object);
-  GstGLWindowClass *window_class = GST_GL_WINDOW_GET_CLASS (window);
 
   if (window) {
     gst_gl_window_set_resize_callback (window, NULL, NULL);
@@ -179,10 +178,6 @@ gst_gl_window_finalize (GObject * object)
     if (ret != NULL)
       GST_ERROR ("gl thread returned a non-null pointer");
     window->priv->gl_thread = NULL;
-  }
-
-  if (window_class->close) {
-    window_class->close (window);
   }
 
   g_mutex_clear (&window->priv->render_lock);
@@ -728,6 +723,10 @@ _gst_gl_window_thread_create_context (GstGLWindow * window)
   g_mutex_lock (&window->priv->render_lock);
 
   window->priv->alive = FALSE;
+
+  if (window_class->close) {
+    window_class->close (window);
+  }
 
   g_cond_signal (&window->priv->cond_destroy_context);
 
