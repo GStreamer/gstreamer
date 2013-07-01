@@ -1686,35 +1686,63 @@ gst_dash_demux_select_representations (GstDashDemux * demux)
   return ret;
 }
 
-static GstFragment *
+static GstBuffer *
+gst_dash_demux_download_header_fragment (GstDashDemux * demux, guint stream_idx,
+    gchar * path, gint64 range_start, gint64 range_end)
+{
+  GstBuffer *buffer;
+  gchar *next_header_uri;
+  GstFragment *fragment;
+
+  if (strncmp (path, "http://", 7) != 0) {
+    next_header_uri =
+        g_strconcat (gst_mpdparser_get_baseURL (demux->client, stream_idx),
+        path, NULL);
+    g_free (path);
+  } else {
+    next_header_uri = path;
+  }
+
+  fragment = gst_uri_downloader_fetch_uri_with_range (demux->downloader,
+      next_header_uri, range_start, range_end);
+  g_free (next_header_uri);
+  buffer = gst_fragment_get_buffer (fragment);
+  g_object_unref (fragment);
+  return buffer;
+}
+
+static GstBuffer *
 gst_dash_demux_get_next_header (GstDashDemux * demux, guint stream_idx)
 {
   gchar *initializationURL;
-  gchar *next_header_uri;
-  GstFragment *fragment;
+  GstBuffer *header_buffer, *index_buffer = NULL;
   gint64 range_start, range_end;
 
   if (!gst_mpd_client_get_next_header (demux->client, &initializationURL,
           stream_idx, &range_start, &range_end))
     return NULL;
 
-  if (strncmp (initializationURL, "http://", 7) != 0) {
-    next_header_uri =
-        g_strconcat (gst_mpdparser_get_baseURL (demux->client, stream_idx),
-        initializationURL, NULL);
-    g_free (initializationURL);
-  } else {
-    next_header_uri = initializationURL;
+  GST_INFO_OBJECT (demux, "Fetching header %s %" G_GINT64_FORMAT "-%"
+      G_GINT64_FORMAT, initializationURL, range_start, range_end);
+  header_buffer = gst_dash_demux_download_header_fragment (demux, stream_idx,
+      initializationURL, range_start, range_end);
+
+  /* check if we have an index */
+  if (gst_mpd_client_get_next_header_index (demux->client, &initializationURL,
+          stream_idx, &range_start, &range_end)) {
+    GST_INFO_OBJECT (demux, "Fetching index %s %" G_GINT64_FORMAT "-%"
+        G_GINT64_FORMAT, initializationURL, range_start, range_end);
+    index_buffer = gst_dash_demux_download_header_fragment (demux, stream_idx,
+        initializationURL, range_start, range_end);
   }
 
-  GST_INFO_OBJECT (demux, "Fetching header %s %" G_GINT64_FORMAT "-%"
-      G_GINT64_FORMAT, next_header_uri, range_start, range_end);
+  if (index_buffer && header_buffer) {
+    header_buffer = gst_buffer_append (header_buffer, index_buffer);
+  } else if (index_buffer) {
+    gst_buffer_unref (index_buffer);
+  }
 
-  fragment = gst_uri_downloader_fetch_uri_with_range (demux->downloader,
-      next_header_uri, range_start, range_end);
-  g_free (next_header_uri);
-
-  return fragment;
+  return header_buffer;
 }
 
 static GstCaps *
@@ -1824,7 +1852,8 @@ static gboolean
 gst_dash_demux_get_next_fragment (GstDashDemux * demux)
 {
   GstActiveStream *active_stream;
-  GstFragment *download, *header;
+  GstFragment *download;
+  GstBuffer *header_buffer;
   gchar *next_fragment_uri;
   GstClockTime duration;
   GstClockTime timestamp;
@@ -1923,16 +1952,11 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
 
       if (selected_stream->need_header) {
         /* We need to fetch a new header */
-        if ((header =
+        if ((header_buffer =
                 gst_dash_demux_get_next_header (demux, stream_idx)) == NULL) {
           GST_WARNING_OBJECT (demux, "Unable to fetch header");
         } else {
-          GstBuffer *header_buffer;
-          /* Replace fragment with a new one including the header */
-
-          header_buffer = gst_fragment_get_buffer (header);
           buffer = gst_buffer_append (header_buffer, buffer);
-          g_object_unref (header);
         }
         selected_stream->need_header = FALSE;
       }

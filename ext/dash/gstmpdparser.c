@@ -1098,7 +1098,7 @@ gst_mpdparser_parse_seg_base_type_ext (GstSegmentBaseType ** pointer,
       gst_mpdparser_get_xml_prop_unsigned_integer (a_node,
       "presentationTimeOffset", 0);
   seg_base_type->indexRange =
-      gst_mpdparser_get_xml_prop_string (a_node, "indexRange");
+      gst_mpdparser_get_xml_prop_range (a_node, "indexRange");
   seg_base_type->indexRangeExact =
       gst_mpdparser_get_xml_prop_boolean (a_node, "indexRangeExact");
 
@@ -2227,7 +2227,7 @@ gst_mpdparser_free_seg_base_type_ext (GstSegmentBaseType * seg_base_type)
 {
   if (seg_base_type) {
     if (seg_base_type->indexRange)
-      xmlFree (seg_base_type->indexRange);
+      g_slice_free (GstRange, seg_base_type->indexRange);
     gst_mpdparser_free_url_type_node (seg_base_type->Initialization);
     gst_mpdparser_free_url_type_node (seg_base_type->RepresentationIndex);
     g_slice_free (GstSegmentBaseType, seg_base_type);
@@ -3387,6 +3387,54 @@ gst_mpd_client_get_next_header (GstMpdClient * client, gchar ** uri,
     } else if (stream_period->period->SegmentTemplate
         && stream_period->period->SegmentTemplate->initialization) {
       initialization = stream_period->period->SegmentTemplate->initialization;
+    }
+    *uri = gst_mpdparser_build_URL_from_template (initialization,
+        stream->cur_representation->id, 0,
+        stream->cur_representation->bandwidth, 0);
+  }
+  GST_MPD_CLIENT_UNLOCK (client);
+
+  return *uri == NULL ? FALSE : TRUE;
+}
+
+gboolean
+gst_mpd_client_get_next_header_index (GstMpdClient * client, gchar ** uri,
+    guint stream_idx, gint64 * range_start, gint64 * range_end)
+{
+  GstActiveStream *stream;
+  GstStreamPeriod *stream_period;
+
+  stream = gst_mpdparser_get_active_stream_by_index (client, stream_idx);
+  g_return_val_if_fail (stream != NULL, FALSE);
+  g_return_val_if_fail (stream->cur_representation != NULL, FALSE);
+  stream_period = gst_mpdparser_get_stream_period (client);
+  g_return_val_if_fail (stream_period != NULL, FALSE);
+  g_return_val_if_fail (stream_period->period != NULL, FALSE);
+
+  *range_start = 0;
+  *range_end = -1;
+
+  GST_DEBUG ("Looking for current representation index");
+  GST_MPD_CLIENT_LOCK (client);
+  *uri = NULL;
+  if (stream->cur_segment_base && stream->cur_segment_base->indexRange) {
+    *uri =
+        g_strdup (gst_mpdparser_get_initializationURL (stream, stream->cur_segment_base->
+        Initialization));
+    *range_start =
+        stream->cur_segment_base->indexRange->first_byte_pos;
+    *range_end =
+        stream->cur_segment_base->indexRange->last_byte_pos;
+  } else if (stream->cur_seg_template) {
+    const gchar *initialization = NULL;
+    if (stream->cur_seg_template->index) {
+      initialization = stream->cur_seg_template->index;
+    } else if (stream->cur_adapt_set->SegmentTemplate
+        && stream->cur_adapt_set->SegmentTemplate->index) {
+      initialization = stream->cur_adapt_set->SegmentTemplate->index;
+    } else if (stream_period->period->SegmentTemplate
+        && stream_period->period->SegmentTemplate->index) {
+      initialization = stream_period->period->SegmentTemplate->index;
     }
     *uri = gst_mpdparser_build_URL_from_template (initialization,
         stream->cur_representation->id, 0,
