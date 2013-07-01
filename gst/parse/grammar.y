@@ -352,7 +352,8 @@ gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
     else if (g_type_is_a (value_type, GST_TYPE_ELEMENT)) {
        GstElement *bin;
 
-       bin = gst_parse_bin_from_description (set->value_str, TRUE, NULL);
+       bin = gst_parse_bin_from_description_full (set->value_str, TRUE, NULL,
+           GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS, NULL);
        if (bin) {
          g_value_set_object (&v, bin);
          got_value = TRUE;
@@ -447,7 +448,8 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
     else if (g_type_is_a (value_type, GST_TYPE_ELEMENT)) {
        GstElement *bin;
 
-       bin = gst_parse_bin_from_description (pos, TRUE, NULL);
+       bin = gst_parse_bin_from_description_full (pos, TRUE, NULL,
+           GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS, NULL);
        if (bin) {
          g_value_set_object (&v, bin);
          got_value = TRUE;

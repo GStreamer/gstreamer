@@ -3030,8 +3030,9 @@ gst_parse_bin_from_description (const gchar * bin_description,
  * and want them all ghosted, you will have to create the ghost pads
  * yourself).
  *
- * Returns: (transfer full) (type Gst.Bin): a newly-created bin, or
- *   %NULL if an error occurred.
+ * Returns: (transfer full) (type Gst.Element): a newly-created element, which
+ *   is guaranteed to be a bin unless GST_FLAG_NO_SINGLE_ELEMENT_BINS was
+ *   passed, or %NULL if an error occurred.
  */
 GstElement *
 gst_parse_bin_from_description_full (const gchar * bin_description,
@@ -3040,6 +3041,7 @@ gst_parse_bin_from_description_full (const gchar * bin_description,
 {
 #ifndef GST_DISABLE_PARSE
   GstPad *pad = NULL;
+  GstElement *element;
   GstBin *bin;
   gchar *desc;
 
@@ -3049,14 +3051,24 @@ gst_parse_bin_from_description_full (const gchar * bin_description,
   GST_DEBUG ("Making bin from description '%s'", bin_description);
 
   /* parse the pipeline to a bin */
-  desc = g_strdup_printf ("bin.( %s )", bin_description);
-  bin = (GstBin *) gst_parse_launch_full (desc, context, flags, err);
-  g_free (desc);
+  if (flags & GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS) {
+    element = gst_parse_launch_full (bin_description, context, flags, err);
+  } else {
+    desc = g_strdup_printf ("bin.( %s )", bin_description);
+    element = gst_parse_launch_full (desc, context, flags, err);
+    g_free (desc);
+  }
 
-  if (bin == NULL || (err && *err != NULL)) {
-    if (bin)
-      gst_object_unref (bin);
+  if (element == NULL || (err && *err != NULL)) {
+    if (element)
+      gst_object_unref (element);
     return NULL;
+  }
+
+  if (GST_IS_BIN (element)) {
+    bin = GST_BIN (element);
+  } else {
+    return element;
   }
 
   /* find pads and ghost them if necessary */
