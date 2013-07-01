@@ -33,7 +33,7 @@
 
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
-static GESTimelinePipeline *pipeline = NULL;
+static GESPipeline *pipeline = NULL;
 static gboolean seenerrors = FALSE;
 
 static gchar *
@@ -49,13 +49,13 @@ static gboolean
 thumbnail_cb (gpointer pipeline)
 {
   static int i = 0;
-  GESTimelinePipeline *p = (GESTimelinePipeline *) pipeline;
+  GESPipeline *p = (GESPipeline *) pipeline;
   gchar *filename;
   gboolean res;
 
   filename = g_strdup_printf ("thumbnail%d.jpg", i++);
 
-  res = ges_timeline_pipeline_save_thumbnail (p, -1, -1,
+  res = ges_pipeline_save_thumbnail (p, -1, -1,
       (gchar *) "image/jpeg", filename, NULL);
 
   g_free (filename);
@@ -254,11 +254,11 @@ build_failure:
   }
 }
 
-static GESTimelinePipeline *
+static GESPipeline *
 create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv,
     gchar * audio, gchar * video)
 {
-  GESTimelinePipeline *pipeline = NULL;
+  GESPipeline *pipeline = NULL;
   GESTimeline *timeline = NULL;
 
   /* Timeline creation */
@@ -299,10 +299,10 @@ create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv,
 
   /* In order to view our timeline, let's grab a convenience pipeline to put
    * our timeline in. */
-  pipeline = ges_timeline_pipeline_new ();
+  pipeline = ges_pipeline_new ();
 
   /* Add the timeline to that pipeline */
-  if (!ges_timeline_pipeline_add_timeline (pipeline, timeline))
+  if (!ges_pipeline_add_timeline (pipeline, timeline))
     goto failure;
 
   return pipeline;
@@ -532,16 +532,15 @@ main (int argc, gchar ** argv)
     prof = make_encoding_profile (audio, video, video_restriction, audio_preset,
         video_preset, container);
 
-    if (!prof ||
-        !ges_timeline_pipeline_set_render_settings (pipeline, outputuri, prof)
-        || !ges_timeline_pipeline_set_mode (pipeline,
+    if (!prof || !ges_pipeline_set_render_settings (pipeline, outputuri, prof)
+        || !ges_pipeline_set_mode (pipeline,
             smartrender ? TIMELINE_MODE_SMART_RENDER : TIMELINE_MODE_RENDER))
       exit (1);
 
     g_free (outputuri);
     gst_encoding_profile_unref (prof);
   } else {
-    ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW);
+    ges_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW);
   }
 
   if (verbose) {

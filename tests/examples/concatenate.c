@@ -27,7 +27,7 @@ bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop);
 
 static GstEncodingProfile *make_profile_from_info (GstDiscovererInfo * info);
 
-GESTimelinePipeline *pipeline = NULL;
+GESPipeline *pipeline = NULL;
 gchar *output_uri = NULL;
 guint assetsCount = 0;
 guint assetsLoaded = 0;
@@ -54,9 +54,9 @@ asset_loaded_cb (GObject * source_object, GAsyncResult * res,
   if (assetsLoaded == assetsCount) {
     GstDiscovererInfo *info = ges_uri_clip_asset_get_info (mfs);
     GstEncodingProfile *profile = make_profile_from_info (info);
-    ges_timeline_pipeline_set_render_settings (pipeline, output_uri, profile);
+    ges_pipeline_set_render_settings (pipeline, output_uri, profile);
     /* We want the pipeline to render (without any preview) */
-    if (!ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_SMART_RENDER)) {
+    if (!ges_pipeline_set_mode (pipeline, TIMELINE_MODE_SMART_RENDER)) {
       g_main_loop_quit (mainloop);
       return;
     }
@@ -100,10 +100,10 @@ main (int argc, char **argv)
 
   /* In order to view our timeline, let's grab a convenience pipeline to put
    * our timeline in. */
-  pipeline = ges_timeline_pipeline_new ();
+  pipeline = ges_pipeline_new ();
 
   /* Add the timeline to that pipeline */
-  if (!ges_timeline_pipeline_add_timeline (pipeline, timeline))
+  if (!ges_pipeline_add_timeline (pipeline, timeline))
     return -1;
 
   mainloop = g_main_loop_new (NULL, FALSE);

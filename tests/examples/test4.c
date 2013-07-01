@@ -54,7 +54,7 @@ make_encoding_profile (gchar * audio, gchar * container)
 int
 main (int argc, gchar ** argv)
 {
-  GESTimelinePipeline *pipeline;
+  GESPipeline *pipeline;
   GESTimeline *timeline;
   GESTrack *tracka;
   GESLayer *layer;
@@ -130,10 +130,10 @@ main (int argc, gchar ** argv)
 
   /* In order to view our timeline, let's grab a convenience pipeline to put
    * our timeline in. */
-  pipeline = ges_timeline_pipeline_new ();
+  pipeline = ges_pipeline_new ();
 
   /* Add the timeline to that pipeline */
-  if (!ges_timeline_pipeline_add_timeline (pipeline, timeline))
+  if (!ges_pipeline_add_timeline (pipeline, timeline))
     return -1;
 
 
@@ -145,12 +145,11 @@ main (int argc, gchar ** argv)
     output_uri = gst_filename_to_uri (argv[1], NULL);
   }
   profile = make_encoding_profile (audio, container);
-  if (!ges_timeline_pipeline_set_render_settings (pipeline, output_uri,
-          profile))
+  if (!ges_pipeline_set_render_settings (pipeline, output_uri, profile))
     return -1;
 
   /* We want the pipeline to render (without any preview) */
-  if (!ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_SMART_RENDER))
+  if (!ges_pipeline_set_mode (pipeline, TIMELINE_MODE_SMART_RENDER))
     return -1;
 
 

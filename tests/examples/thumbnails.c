@@ -31,7 +31,7 @@
 
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
-GESTimelinePipeline *pipeline = NULL;
+GESPipeline *pipeline = NULL;
 
 static gboolean thumbnail_cb (gpointer pipeline);
 
@@ -42,7 +42,7 @@ thumbnail_cb (gpointer user)
 {
   GstSample *b = NULL;
   GstCaps *caps;
-  GESTimelinePipeline *p;
+  GESPipeline *p;
 
   p = GES_TIMELINE_PIPELINE (user);
 
@@ -50,17 +50,17 @@ thumbnail_cb (gpointer user)
   GST_INFO ("getting thumbnails");
 
   /* check raw rgb use-case with scaling */
-  b = ges_timeline_pipeline_get_thumbnail_rgb24 (p, 320, 240);
+  b = ges_pipeline_get_thumbnail_rgb24 (p, 320, 240);
   g_assert (b);
   gst_sample_unref (b);
 
   /* check encoding use-case from caps */
   b = NULL;
-  b = ges_timeline_pipeline_get_thumbnail (p, caps);
+  b = ges_pipeline_get_thumbnail (p, caps);
   g_assert (b);
   gst_sample_unref (b);
 
-  g_assert (ges_timeline_pipeline_save_thumbnail (p, -1, -1, (gchar *)
+  g_assert (ges_pipeline_save_thumbnail (p, -1, -1, (gchar *)
           "image/jpeg", (gchar *) TEST_PATH, NULL));
   g_assert (g_file_test (TEST_PATH, G_FILE_TEST_EXISTS));
   g_unlink (TEST_PATH);
@@ -69,10 +69,10 @@ thumbnail_cb (gpointer user)
   return FALSE;
 }
 
-static GESTimelinePipeline *
+static GESPipeline *
 create_timeline (void)
 {
-  GESTimelinePipeline *pipeline;
+  GESPipeline *pipeline;
   GESLayer *layer;
   GESTrack *tracka, *trackv;
   GESTimeline *timeline;
@@ -99,9 +99,9 @@ create_timeline (void)
 
   ges_simple_layer_add_object ((GESSimpleLayer *) layer, GES_CLIP (src), 0);
 
-  pipeline = ges_timeline_pipeline_new ();
+  pipeline = ges_pipeline_new ();
 
-  if (!ges_timeline_pipeline_add_timeline (pipeline, timeline))
+  if (!ges_pipeline_add_timeline (pipeline, timeline))
     return NULL;
 
   return pipeline;
@@ -164,7 +164,7 @@ main (int argc, gchar ** argv)
   if (!pipeline)
     exit (-1);
 
-  ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW);
+  ges_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW);
 
   /* Play the pipeline */
   mainloop = g_main_loop_new (NULL, FALSE);

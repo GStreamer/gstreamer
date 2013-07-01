@@ -29,7 +29,7 @@ typedef struct
 GESClip *make_source (char *path, guint64 start, guint64 duration,
     gint priority, gchar * text);
 
-GESTimelinePipeline *make_timeline (char *path, float duration, char *text);
+GESPipeline *make_timeline (char *path, float duration, char *text);
 
 GESClip *
 make_source (char *path, guint64 start, guint64 duration, gint priority,
@@ -50,22 +50,22 @@ make_source (char *path, guint64 start, guint64 duration, gint priority,
   return ret;
 }
 
-GESTimelinePipeline *
+GESPipeline *
 make_timeline (char *path, float duration, char *text)
 {
   GESTimeline *timeline;
   GESTrack *trackv, *tracka;
   GESLayer *layer1;
   GESClip *srca;
-  GESTimelinePipeline *pipeline;
+  GESPipeline *pipeline;
   guint64 aduration;
 
-  pipeline = ges_timeline_pipeline_new ();
+  pipeline = ges_pipeline_new ();
 
-  ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
+  ges_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
 
   timeline = ges_timeline_new ();
-  ges_timeline_pipeline_add_timeline (pipeline, timeline);
+  ges_pipeline_add_timeline (pipeline, timeline);
 
   trackv = GES_TRACK (ges_video_track_new ());
   ges_timeline_add_track (timeline, trackv);
@@ -91,7 +91,7 @@ main (int argc, char **argv)
 {
   GError *err = NULL;
   GOptionContext *ctx;
-  GESTimelinePipeline *pipeline;
+  GESPipeline *pipeline;
   GMainLoop *mainloop;
   gdouble duration;
   char *path, *text;

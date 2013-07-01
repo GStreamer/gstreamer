@@ -691,13 +691,13 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
 
 GST_END_TEST;
 
-GST_START_TEST (test_ges_timeline_pipeline_change_state)
+GST_START_TEST (test_ges_pipeline_change_state)
 {
   GstState state;
   GESAsset *asset;
   GESLayer *layer;
   GESTimeline *timeline;
-  GESTimelinePipeline *pipeline;
+  GESPipeline *pipeline;
 
   ges_init ();
 
@@ -739,7 +739,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_ges_timeline_add_layer_first);
   tcase_add_test (tc_chain, test_ges_timeline_remove_track);
   tcase_add_test (tc_chain, test_ges_timeline_multiple_tracks);
-  tcase_add_test (tc_chain, test_ges_timeline_pipeline_change_state);
+  tcase_add_test (tc_chain, test_ges_pipeline_change_state);
 
   return s;
 }

@@ -53,8 +53,8 @@ typedef struct _GESClipClass GESClipClass;
 typedef struct _GESOperationClip GESOperationClip;
 typedef struct _GESOperationClipClass GESOperationClipClass;
 
-typedef struct _GESTimelinePipeline GESTimelinePipeline;
-typedef struct _GESTimelinePipelineClass GESTimelinePipelineClass;
+typedef struct _GESPipeline GESPipeline;
+typedef struct _GESPipelineClass GESPipelineClass;
 
 typedef struct _GESSourceClip GESSourceClip;
 typedef struct _GESSourceClipClass GESSourceClipClass;

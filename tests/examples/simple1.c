@@ -26,7 +26,7 @@ main (int argc, gchar ** argv)
 {
   GError *err = NULL;
   GOptionContext *ctx;
-  GESTimelinePipeline *pipeline;
+  GESPipeline *pipeline;
   GESTimeline *timeline;
   GESTrack *tracka, *trackv;
   GESLayer *layer1, *layer2;
@@ -69,7 +69,7 @@ main (int argc, gchar ** argv)
   ges_init ();
 
   /* Create an Audio/Video pipeline with two layers */
-  pipeline = ges_timeline_pipeline_new ();
+  pipeline = ges_pipeline_new ();
 
   timeline = ges_timeline_new ();
 
@@ -84,7 +84,7 @@ main (int argc, gchar ** argv)
       !ges_timeline_add_layer (timeline, layer2) ||
       !ges_timeline_add_track (timeline, tracka) ||
       !ges_timeline_add_track (timeline, trackv) ||
-      !ges_timeline_pipeline_add_timeline (pipeline, timeline))
+      !ges_pipeline_add_timeline (pipeline, timeline))
     return -1;
 
   if (1) {

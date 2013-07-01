@@ -32,7 +32,7 @@ GESClip *make_source (gchar * path, guint64 start, guint64 inpoint,
 
 gboolean print_transition_data (GESClip * tr);
 
-GESTimelinePipeline *make_timeline (gchar * nick, double tdur, gchar * patha,
+GESPipeline *make_timeline (gchar * nick, double tdur, gchar * patha,
     gfloat adur, gdouble ainpoint, gchar * pathb, gfloat bdur,
     gdouble binpoint);
 
@@ -83,7 +83,7 @@ print_transition_data (GESClip * tr)
   return FALSE;
 }
 
-GESTimelinePipeline *
+GESPipeline *
 make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
     gdouble ainp, gchar * pathb, gfloat bdur, gdouble binp)
 {
@@ -91,16 +91,16 @@ make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
   GESTrack *trackv, *tracka;
   GESLayer *layer1;
   GESClip *srca, *srcb;
-  GESTimelinePipeline *pipeline;
+  GESPipeline *pipeline;
   guint64 aduration, bduration, tduration, tstart, ainpoint, binpoint;
   GESTransitionClip *tr = NULL;
 
-  pipeline = ges_timeline_pipeline_new ();
+  pipeline = ges_pipeline_new ();
 
-  ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
+  ges_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
 
   timeline = ges_timeline_new ();
-  ges_timeline_pipeline_add_timeline (pipeline, timeline);
+  ges_pipeline_add_timeline (pipeline, timeline);
 
   trackv = GES_TRACK (ges_video_track_new ());
   ges_timeline_add_track (timeline, trackv);
@@ -149,7 +149,7 @@ main (int argc, char **argv)
 {
   GError *err = NULL;
   GOptionContext *ctx;
-  GESTimelinePipeline *pipeline;
+  GESPipeline *pipeline;
   GMainLoop *mainloop;
   gchar *type = (gchar *) "crossfade";
   gchar *patha, *pathb;

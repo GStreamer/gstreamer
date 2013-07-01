@@ -56,7 +56,7 @@ typedef struct SeekInfo
 } SeekInfo;
 
 static GMainLoop *loop;
-static GESTimelinePipeline *pipeline = NULL;
+static GESPipeline *pipeline = NULL;
 static gint64 seeked_position = GST_CLOCK_TIME_NONE;    /* last seeked position */
 static gint64 seek_tol = 0.05 * GST_SECOND;     /* tolerance seek interval */
 static GList *seeks;            /* list of seeks */
@@ -295,13 +295,13 @@ check_timeline (GESTimeline * timeline)
   ret = FALSE;
 
   ges_timeline_commit (timeline);
-  pipeline = ges_timeline_pipeline_new ();
+  pipeline = ges_pipeline_new ();
   if (current_profile != PROFILE_NONE) {
     render_uri = ges_test_file_name (profile_specs[current_profile][3]);
 
     profile = create_audio_video_profile (current_profile);
-    ges_timeline_pipeline_set_render_settings (pipeline, render_uri, profile);
-    ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_RENDER);
+    ges_pipeline_set_render_settings (pipeline, render_uri, profile);
+    ges_pipeline_set_mode (pipeline, TIMELINE_MODE_RENDER);
 
     gst_object_unref (profile);
   }
@@ -310,7 +310,7 @@ check_timeline (GESTimeline * timeline)
   gst_bus_add_watch (bus, my_bus_callback, &ret);
   gst_object_unref (bus);
 
-  ges_timeline_pipeline_add_timeline (pipeline, timeline);
+  ges_pipeline_add_timeline (pipeline, timeline);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);

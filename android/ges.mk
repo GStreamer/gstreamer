@@ -15,7 +15,7 @@ LOCAL_SRC_FILES := 				\
 	ges-timeline.c				\
 	ges-layer.c			\
 	ges-clip.c			\
-	ges-timeline-pipeline.c			\
+	ges-pipeline.c			\
 	ges-source-clip.c			\
 	ges-uri-clip.c		\
 	ges-operation-clip.c		\

@@ -331,7 +331,7 @@ GType ges_video_test_pattern_get_type (void);
  * @TIMELINE_MODE_RENDER: render timeline (forces decoding)
  * @TIMELINE_MODE_SMART_RENDER: render timeline (tries to avoid decoding/reencoding)
  *
- * The various modes the #GESTimelinePipeline can be configured to.
+ * The various modes the #GESPipeline can be configured to.
  */
 typedef enum {
   TIMELINE_MODE_PREVIEW_AUDIO	= 1 << 0,

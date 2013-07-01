@@ -37,7 +37,7 @@ typedef struct App
 {
   /* back-end objects */
   GESTimeline *timeline;
-  GESTimelinePipeline *pipeline;
+  GESPipeline *pipeline;
   GESLayer *layer;
   GESTrack *audio_track;
   GESTrack *video_track;
@@ -1154,7 +1154,7 @@ app_launch_project (App * app, gchar * uri)
 {
   GESTimeline *timeline;
   GMainLoop *mainloop;
-  GESTimelinePipeline *pipeline;
+  GESPipeline *pipeline;
   GstBus *bus;
   GESFormatter *formatter;
 
@@ -1162,13 +1162,13 @@ app_launch_project (App * app, gchar * uri)
   printf ("we will launch this uri : %s\n", uri);
   formatter = GES_FORMATTER (ges_pitivi_formatter_new ());
   timeline = ges_timeline_new ();
-  pipeline = ges_timeline_pipeline_new ();
+  pipeline = ges_pipeline_new ();
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   mainloop = g_main_loop_new (NULL, FALSE);
 
-  ges_timeline_pipeline_add_timeline (pipeline, timeline);
+  ges_pipeline_add_timeline (pipeline, timeline);
   ges_formatter_load_from_uri (formatter, timeline, uri, NULL);
-  ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
+  ges_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", G_CALLBACK (project_bus_message_cb),
@@ -1296,10 +1296,10 @@ app_init (void)
   if (!(ret->timeline = ges_timeline_new ()))
     goto fail;
 
-  if (!(ret->pipeline = ges_timeline_pipeline_new ()))
+  if (!(ret->pipeline = ges_pipeline_new ()))
     goto fail;
 
-  if (!ges_timeline_pipeline_add_timeline (ret->pipeline, ret->timeline))
+  if (!ges_pipeline_add_timeline (ret->pipeline, ret->timeline))
     goto fail;
 
   if (!(create_ui (ret)))

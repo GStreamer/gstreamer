@@ -11,7 +11,7 @@ ges_layer_get_type
 ges_clip_get_type
 ges_operation_clip_get_type
 ges_overlay_clip_get_type
-ges_timeline_pipeline_get_type
+ges_pipeline_get_type
 ges_source_clip_get_type
 ges_test_clip_get_type
 ges_base_transition_clip_get_type

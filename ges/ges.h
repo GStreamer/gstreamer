@@ -31,7 +31,7 @@
 #include <ges/ges-simple-layer.h>
 #include <ges/ges-timeline-element.h>
 #include <ges/ges-clip.h>
-#include <ges/ges-timeline-pipeline.h>
+#include <ges/ges-pipeline.h>
 #include <ges/ges-source-clip.h>
 #include <ges/ges-test-clip.h>
 #include <ges/ges-title-clip.h>

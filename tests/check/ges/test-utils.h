@@ -25,7 +25,7 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
-GESTimelinePipeline * ges_test_create_pipeline (GESTimeline *timeline);
+GESPipeline * ges_test_create_pipeline (GESTimeline *timeline);
 /*  The first 2 GNL priorities are used for:
  *    0- The Mixing element
  *    1- The Gaps

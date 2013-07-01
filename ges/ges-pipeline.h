@@ -27,13 +27,13 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TIMELINE_PIPELINE ges_timeline_pipeline_get_type()
+#define GES_TYPE_TIMELINE_PIPELINE ges_pipeline_get_type()
 
 #define GES_TIMELINE_PIPELINE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE_PIPELINE, GESTimelinePipeline))
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE_PIPELINE, GESPipeline))
 
 #define GES_TIMELINE_PIPELINE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TIMELINE_PIPELINE, GESTimelinePipelineClass))
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TIMELINE_PIPELINE, GESPipelineClass))
 
 #define GES_IS_TIMELINE_PIPELINE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TIMELINE_PIPELINE))
@@ -42,32 +42,32 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TIMELINE_PIPELINE))
 
 #define GES_TIMELINE_PIPELINE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_PIPELINE, GESTimelinePipelineClass))
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_PIPELINE, GESPipelineClass))
 
-typedef struct _GESTimelinePipelinePrivate GESTimelinePipelinePrivate;
+typedef struct _GESPipelinePrivate GESPipelinePrivate;
 
 /**
- * GESTimelinePipeline:
+ * GESPipeline:
  *
  */
 
-struct _GESTimelinePipeline {
+struct _GESPipeline {
   /*< private >*/
   GstPipeline parent;
 
-  GESTimelinePipelinePrivate *priv;
+  GESPipelinePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
- * GESTimelinePipelineClass:
+ * GESPipelineClass:
  * @parent_class: parent class
  *
  */
 
-struct _GESTimelinePipelineClass {
+struct _GESPipelineClass {
   /*< private >*/
   GstPipelineClass parent_class;
 
@@ -75,43 +75,43 @@ struct _GESTimelinePipelineClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_timeline_pipeline_get_type (void);
+GType ges_pipeline_get_type (void);
 
-GESTimelinePipeline* ges_timeline_pipeline_new (void);
+GESPipeline* ges_pipeline_new (void);
 
-gboolean ges_timeline_pipeline_add_timeline (GESTimelinePipeline * pipeline,
+gboolean ges_pipeline_add_timeline (GESPipeline * pipeline,
 					     GESTimeline * timeline);
 
-gboolean ges_timeline_pipeline_set_render_settings (GESTimelinePipeline *pipeline,
+gboolean ges_pipeline_set_render_settings (GESPipeline *pipeline,
 						    const gchar * output_uri,
 						    GstEncodingProfile *profile);
-gboolean ges_timeline_pipeline_set_mode (GESTimelinePipeline *pipeline,
+gboolean ges_pipeline_set_mode (GESPipeline *pipeline,
 					 GESPipelineFlags mode);
 
 GstSample *
-ges_timeline_pipeline_get_thumbnail(GESTimelinePipeline *self, GstCaps *caps);
+ges_pipeline_get_thumbnail(GESPipeline *self, GstCaps *caps);
 
 GstSample *
-ges_timeline_pipeline_get_thumbnail_rgb24(GESTimelinePipeline *self,
+ges_pipeline_get_thumbnail_rgb24(GESPipeline *self,
     gint width, gint height);
 
 gboolean
-ges_timeline_pipeline_save_thumbnail(GESTimelinePipeline *self,
+ges_pipeline_save_thumbnail(GESPipeline *self,
     int width, int height, const gchar *format, const gchar *location,
     GError **error);
 
 GstElement *
-ges_timeline_pipeline_preview_get_video_sink (GESTimelinePipeline * self);
+ges_pipeline_preview_get_video_sink (GESPipeline * self);
 
 void
-ges_timeline_pipeline_preview_set_video_sink (GESTimelinePipeline * self,
+ges_pipeline_preview_set_video_sink (GESPipeline * self,
     GstElement * sink);
 
 GstElement *
-ges_timeline_pipeline_preview_get_audio_sink (GESTimelinePipeline * self);
+ges_pipeline_preview_get_audio_sink (GESPipeline * self);
 
 void
-ges_timeline_pipeline_preview_set_audio_sink (GESTimelinePipeline * self,
+ges_pipeline_preview_set_audio_sink (GESPipeline * self,
     GstElement * sink);
 
 G_END_DECLS

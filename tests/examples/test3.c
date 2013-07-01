@@ -22,7 +22,7 @@
 int
 main (int argc, gchar ** argv)
 {
-  GESTimelinePipeline *pipeline;
+  GESPipeline *pipeline;
   GESTimeline *timeline;
   GESTrack *tracka;
   GESLayer *layer;
@@ -75,10 +75,10 @@ main (int argc, gchar ** argv)
 
   /* In order to view our timeline, let's grab a convenience pipeline to put
    * our timeline in. */
-  pipeline = ges_timeline_pipeline_new ();
+  pipeline = ges_pipeline_new ();
 
   /* Add the timeline to that pipeline */
-  if (!ges_timeline_pipeline_add_timeline (pipeline, timeline))
+  if (!ges_pipeline_add_timeline (pipeline, timeline))
     return -1;
 
   /* The following is standard usage of a GStreamer pipeline (note how you haven't

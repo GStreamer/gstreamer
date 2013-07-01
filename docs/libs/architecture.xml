@@ -104,7 +104,7 @@
       <para>In order to reduce even more the amount of GStreamer interaction
       the application developer has to deal with, a convenience GstPipeline
       has been made available specifically for Timelines : <link
-      linkend="GESTimelinePipeline">GESTimelinePipeline</link>.</para>
+      linkend="GESPipeline">GESPipeline</link>.</para>
     </refsect2>
 
   </refsect1>

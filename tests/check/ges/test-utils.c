@@ -91,13 +91,13 @@ ges_test_file_uri (const gchar * filename)
   return uri;
 }
 
-GESTimelinePipeline *
+GESPipeline *
 ges_test_create_pipeline (GESTimeline * timeline)
 {
-  GESTimelinePipeline *pipeline;
+  GESPipeline *pipeline;
 
-  pipeline = ges_timeline_pipeline_new ();
-  fail_unless (ges_timeline_pipeline_add_timeline (pipeline, timeline));
+  pipeline = ges_pipeline_new ();
+  fail_unless (ges_pipeline_add_timeline (pipeline, timeline));
 
   g_object_set (pipeline, "audio-sink", gst_element_factory_make ("fakesink",
           "test-audiofakesink"), "video-sink",
