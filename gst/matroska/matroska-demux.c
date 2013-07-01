@@ -4962,6 +4962,8 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       priv = gst_buffer_new_wrapped (g_memdup (data, size), size);
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
       gst_buffer_unref (priv);
+
+      gst_codec_utils_mpeg4video_caps_set_level_and_profile (caps, data, size);
     }
     if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP))
       *codec_name = g_strdup ("MPEG-4 advanced simple profile");
