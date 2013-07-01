@@ -99,11 +99,6 @@ gst_rtsp_stream_transport_finalize (GObject * obj)
   if (priv->transport)
     gst_rtsp_transport_free (priv->transport);
 
-#if 0
-  if (priv->rtpsource)
-    g_object_set_qdata (priv->rtpsource, ssrc_stream_map_key, NULL);
-#endif
-
   G_OBJECT_CLASS (gst_rtsp_stream_transport_parent_class)->finalize (obj);
 }
 
