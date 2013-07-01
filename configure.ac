@@ -2461,6 +2461,7 @@ tests/files/Makefile
 tests/examples/Makefile
 tests/examples/camerabin2/Makefile
 tests/examples/directfb/Makefile
+tests/examples/mpegts/Makefile
 tests/examples/mxf/Makefile
 tests/examples/opencv/Makefile
 tests/examples/uvch264/Makefile
