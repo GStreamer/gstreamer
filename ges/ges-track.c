@@ -172,6 +172,7 @@ static inline void
 update_gaps (GESTrack * track)
 {
   Gap *gap;
+  GList *gaps;
   GSequenceIter *it;
 
   GESTrackElement *trackelement;
@@ -185,11 +186,10 @@ update_gaps (GESTrack * track)
     return;
   }
 
-  /* 1- Remove all gaps */
-  g_list_free_full (priv->gaps, (GDestroyNotify) free_gap);
+  gaps = priv->gaps;
   priv->gaps = NULL;
 
-  /* 2- And recalculate gaps */
+  /* 1- And recalculate gaps */
   for (it = g_sequence_get_begin_iter (priv->trackelements_by_start);
       g_sequence_iter_is_end (it) == FALSE; it = g_sequence_iter_next (it)) {
     trackelement = g_sequence_get (it);
@@ -198,7 +198,7 @@ update_gaps (GESTrack * track)
     end = start + _DURATION (trackelement);
 
     if (start > duration) {
-      /* 3- Fill gap */
+      /* 2- Fill gap */
       gap = gap_new (track, duration, start - duration);
 
       if (G_LIKELY (gap != NULL))
@@ -208,7 +208,7 @@ update_gaps (GESTrack * track)
     duration = MAX (duration, end);
   }
 
-  /* 3- Add a gap at the end of the timeline if needed */
+  /* 4- Add a gap at the end of the timeline if needed */
   if (priv->timeline) {
     g_object_get (priv->timeline, "duration", &timeline_duration, NULL);
 
@@ -221,8 +221,10 @@ update_gaps (GESTrack * track)
 
       priv->duration = timeline_duration;
     }
-
   }
+
+  /* 4- Remove old gaps */
+  g_list_free_full (gaps, (GDestroyNotify) free_gap);
 }
 
 static inline void
@@ -775,15 +777,19 @@ ges_track_remove_element (GESTrack * track, GESTrackElement * object)
 
   GST_DEBUG_OBJECT (track, "Removing %" GST_PTR_FORMAT, object);
 
-  if (remove_object_internal (track, object) == TRUE) {
-    it = g_hash_table_lookup (priv->trackelements_iter, object);
-    g_sequence_remove (it);
+  it = g_hash_table_lookup (priv->trackelements_iter, object);
+  g_sequence_remove (it);
+  resort_and_fill_gaps (track);
 
-    resort_and_fill_gaps (track);
+  if (remove_object_internal (track, object) == TRUE) {
     ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (object), NULL);
 
     return TRUE;
   }
+
+  g_hash_table_insert (track->priv->trackelements_iter, object,
+      g_sequence_insert_sorted (track->priv->trackelements_by_start, object,
+          (GCompareDataFunc) element_start_compare, NULL));
 
   return FALSE;
 }
