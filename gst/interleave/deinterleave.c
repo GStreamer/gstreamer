@@ -685,29 +685,28 @@ gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
   GstBuffer **buffers_out = g_new0 (GstBuffer *, channels);
   guint8 *in, *out;
   GstMapInfo read_info;
-
-  gst_buffer_map (buf, &read_info, GST_MAP_READ);
+  GList *pending_events, *l;
 
   /* Send any pending events to all src pads */
   GST_OBJECT_LOCK (self);
-  if (self->pending_events) {
-    GList *events;
+  pending_events = self->pending_events;
+  self->pending_events = NULL;
+  GST_OBJECT_UNLOCK (self);
+
+  if (pending_events) {
     GstEvent *event;
 
     GST_DEBUG_OBJECT (self, "Sending pending events to all src pads");
-
-    for (events = self->pending_events; events != NULL; events = events->next) {
-      event = GST_EVENT (events->data);
-
+    for (l = pending_events; l; l = l->next) {
+      event = l->data;
       for (srcs = self->srcpads; srcs != NULL; srcs = srcs->next)
         gst_pad_push_event (GST_PAD (srcs->data), gst_event_ref (event));
       gst_event_unref (event);
     }
-
-    g_list_free (self->pending_events);
-    self->pending_events = NULL;
+    g_list_free (pending_events);
   }
-  GST_OBJECT_UNLOCK (self);
+
+  gst_buffer_map (buf, &read_info, GST_MAP_READ);
 
   /* Allocate buffers */
   for (srcs = self->srcpads, i = 0; srcs; srcs = srcs->next, i++) {
