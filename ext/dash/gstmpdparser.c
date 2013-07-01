@@ -3319,7 +3319,7 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
   *discontinuity = segment_idx != currentChunk->number;
   *range_start = 0;
   *range_end = -1;
-  if (currentChunk->SegmentURL->mediaRange) {
+  if (currentChunk->SegmentURL && currentChunk->SegmentURL->mediaRange) {
     *range_start = currentChunk->SegmentURL->mediaRange->first_byte_pos;
     *range_end = currentChunk->SegmentURL->mediaRange->last_byte_pos;
   }
