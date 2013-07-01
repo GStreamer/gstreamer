@@ -68,10 +68,12 @@ struct _GstRTSPStreamPrivate
   /* server ports for sending/receiving over ipv4 */
   GstRTSPRange server_port_v4;
   GstRTSPAddress *server_addr_v4;
+  gboolean have_ipv4;
 
   /* server ports for sending/receiving over ipv6 */
   GstRTSPRange server_port_v6;
   GstRTSPAddress *server_addr_v6;
+  gboolean have_ipv6;
 
   /* multicast addresses */
   GstRTSPAddressPool *pool;
@@ -536,11 +538,12 @@ alloc_ports_one_family (GstRTSPAddressPool * pool, gint buffer_size,
   GInetAddress *inetaddr = NULL;
   GSocketAddress *rtp_sockaddr = NULL;
   GSocketAddress *rtcp_sockaddr = NULL;
-  const gchar *multisink_socket = "socket";
+  const gchar *multisink_socket;
 
-  if (family == G_SOCKET_FAMILY_IPV6) {
+  if (family == G_SOCKET_FAMILY_IPV6)
     multisink_socket = "socket-v6";
-  }
+  else
+    multisink_socket = "socket";
 
   udpsrc0 = NULL;
   udpsrc1 = NULL;
@@ -772,12 +775,15 @@ alloc_ports (GstRTSPStream * stream)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
 
-  return alloc_ports_one_family (priv->pool, priv->buffer_size,
+  priv->have_ipv4 = alloc_ports_one_family (priv->pool, priv->buffer_size,
       G_SOCKET_FAMILY_IPV4, priv->udpsrc_v4, priv->udpsink,
-      &priv->server_port_v4, &priv->server_addr_v4) &&
-      alloc_ports_one_family (priv->pool, priv->buffer_size,
+      &priv->server_port_v4, &priv->server_addr_v4);
+
+  priv->have_ipv6 = alloc_ports_one_family (priv->pool, priv->buffer_size,
       G_SOCKET_FAMILY_IPV6, priv->udpsrc_v6, priv->udpsink,
       &priv->server_port_v6, &priv->server_addr_v6);
+
+  return priv->have_ipv4 || priv->have_ipv6;
 }
 
 /**
@@ -1246,28 +1252,34 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
     gst_pad_link (pad, priv->recv_sink[i]);
     gst_object_unref (pad);
 
-    /* we set and keep these to playing so that they don't cause NO_PREROLL return
-     * values */
-    gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_PLAYING);
-    gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_PLAYING);
-    gst_element_set_locked_state (priv->udpsrc_v4[i], TRUE);
-    gst_element_set_locked_state (priv->udpsrc_v6[i], TRUE);
-    /* add udpsrc */
-    gst_bin_add (bin, priv->udpsrc_v4[i]);
-    gst_bin_add (bin, priv->udpsrc_v6[i]);
-    /* and link to the funnel v4 */
-    selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
-    pad = gst_element_get_static_pad (priv->udpsrc_v4[i], "src");
-    gst_pad_link (pad, selpad);
-    gst_object_unref (pad);
-    gst_object_unref (selpad);
+    if (priv->udpsrc_v4[i]) {
+      /* we set and keep these to playing so that they don't cause NO_PREROLL return
+       * values */
+      gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_PLAYING);
+      gst_element_set_locked_state (priv->udpsrc_v4[i], TRUE);
+      /* add udpsrc */
+      gst_bin_add (bin, priv->udpsrc_v4[i]);
 
-    /* and link to the funnel v6 */
-    selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
-    pad = gst_element_get_static_pad (priv->udpsrc_v6[i], "src");
-    gst_pad_link (pad, selpad);
-    gst_object_unref (pad);
-    gst_object_unref (selpad);
+      /* and link to the funnel v4 */
+      selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
+      pad = gst_element_get_static_pad (priv->udpsrc_v4[i], "src");
+      gst_pad_link (pad, selpad);
+      gst_object_unref (pad);
+      gst_object_unref (selpad);
+    }
+
+    if (priv->udpsrc_v6[i]) {
+      gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_PLAYING);
+      gst_element_set_locked_state (priv->udpsrc_v6[i], TRUE);
+      gst_bin_add (bin, priv->udpsrc_v6[i]);
+
+      /* and link to the funnel v6 */
+      selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
+      pad = gst_element_get_static_pad (priv->udpsrc_v6[i], "src");
+      gst_pad_link (pad, selpad);
+      gst_object_unref (pad);
+      gst_object_unref (selpad);
+    }
 
     /* make and add appsrc */
     priv->appsrc[i] = gst_element_factory_make ("appsrc", NULL);
@@ -1366,16 +1378,19 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
     gst_element_set_state (priv->tee[i], GST_STATE_NULL);
     gst_element_set_state (priv->funnel[i], GST_STATE_NULL);
     gst_element_set_state (priv->appsrc[i], GST_STATE_NULL);
-    /* and set udpsrc to NULL now before removing */
-    gst_element_set_locked_state (priv->udpsrc_v4[i], FALSE);
-    gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_NULL);
-    gst_element_set_locked_state (priv->udpsrc_v6[i], FALSE);
-    gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_NULL);
-
-    /* removing them should also nicely release the request
-     * pads when they finalize */
-    gst_bin_remove (bin, priv->udpsrc_v4[i]);
-    gst_bin_remove (bin, priv->udpsrc_v6[i]);
+    if (priv->udpsrc_v4[i]) {
+      /* and set udpsrc to NULL now before removing */
+      gst_element_set_locked_state (priv->udpsrc_v4[i], FALSE);
+      gst_element_set_state (priv->udpsrc_v4[i], GST_STATE_NULL);
+      /* removing them should also nicely release the request
+       * pads when they finalize */
+      gst_bin_remove (bin, priv->udpsrc_v4[i]);
+    }
+    if (priv->udpsrc_v6[i]) {
+      gst_element_set_locked_state (priv->udpsrc_v6[i], FALSE);
+      gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_NULL);
+      gst_bin_remove (bin, priv->udpsrc_v6[i]);
+    }
     gst_bin_remove (bin, priv->udpsink[i]);
     gst_bin_remove (bin, priv->appsrc[i]);
     gst_bin_remove (bin, priv->appsink[i]);
