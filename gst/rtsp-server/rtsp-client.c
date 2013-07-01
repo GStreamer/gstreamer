@@ -2196,7 +2196,7 @@ gst_rtsp_client_set_connection (GstRTSPClient * client,
   /* ERRORS */
 no_address:
   {
-    GST_ERROR ("could not get remote address %s", error->message);
+    GST_ERROR ("could not get local address %s", error->message);
     g_error_free (error);
     return FALSE;
   }
