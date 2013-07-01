@@ -24,5 +24,8 @@
 	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_init_check']/parameters/parameter[@name='argc']" name="name">n_argc</attr>
 	<!-- calling oldobj.Handle should fix this -->
 	<remove-attr path="/api/namespace/object[@cname='GstObject']/method[@cname='gst_object_replace']/parameters/parameter[@name='oldobj']" name="pass_as" />
+	<!-- Element is not abstract but should not be instantiable from managed -->
+	<remove-attr path="/api/namespace/object[@cname='GstElement']" name="abstract" />
+	<attr path="/api/namespace/object[@cname='GstElement']" name="defaultconstructoraccess" >protected</attr>
 </metadata>
 
