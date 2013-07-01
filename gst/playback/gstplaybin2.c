@@ -3100,6 +3100,8 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       changed = TRUE;
       GST_DEBUG_OBJECT (playbin, "linked pad %s:%s to combiner %p",
           GST_DEBUG_PAD_NAME (pad), combine->combiner);
+    } else {
+      goto request_pad_failed;
     }
   } else {
     /* no combiner, don't configure anything, we'll link the new pad directly to
@@ -3171,6 +3173,12 @@ link_failed:
     GST_SOURCE_GROUP_UNLOCK (group);
     goto done;
   }
+request_pad_failed:
+  GST_ELEMENT_ERROR (playbin, CORE, PAD,
+      ("Internal playbin error."),
+      ("Failed to get request pad from combiner %p.", combine->combiner));
+  GST_SOURCE_GROUP_UNLOCK (group);
+  goto done;
 }
 
 /* called when a pad is removed from the uridecodebin. We unlink the pad from
