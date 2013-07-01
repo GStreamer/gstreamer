@@ -34,6 +34,7 @@ G_BEGIN_DECLS
 typedef struct _GstMpdClient              GstMpdClient;
 typedef struct _GstActiveStream           GstActiveStream;
 typedef struct _GstStreamPeriod           GstStreamPeriod;
+typedef struct _GstMediaFragmentInfo      GstMediaFragmentInfo;
 typedef struct _GstMediaSegment           GstMediaSegment;
 typedef struct _GstMPDNode                GstMPDNode;
 typedef struct _GstPeriodNode             GstPeriodNode;
@@ -417,6 +418,21 @@ struct _GstMediaSegment
   GstClockTime duration;                      /* segment duration */
 };
 
+struct _GstMediaFragmentInfo
+{
+  gchar *uri;
+  gint64 range_start;
+  gint64 range_end;
+
+  gchar *index_uri;
+  gint64 index_range_start;
+  gint64 index_range_end;
+
+  gboolean discontinuity;
+  GstClockTime timestamp;
+  GstClockTime duration;
+};
+
 /**
  * GstActiveStream:
  *
@@ -460,6 +476,7 @@ struct _GstMpdClient
 GstMpdClient *gst_mpd_client_new (void);
 void gst_active_streams_free (GstMpdClient * client);
 void gst_mpd_client_free (GstMpdClient * client);
+void gst_media_fragment_info_clear (GstMediaFragmentInfo * fragment);
 
 /* MPD file parsing */
 gboolean gst_mpd_parse (GstMpdClient *client, const gchar *data, gint size);
@@ -473,7 +490,7 @@ GstClockTime gst_mpd_client_get_next_fragment_duration (GstMpdClient * client);
 GstClockTime gst_mpd_client_get_media_presentation_duration (GstMpdClient *client);
 gboolean gst_mpd_client_get_last_fragment_timestamp (GstMpdClient * client, guint stream_idx, GstClockTime * ts);
 gboolean gst_mpd_client_get_next_fragment_timestamp (GstMpdClient * client, guint stream_idx, GstClockTime * ts);
-gboolean gst_mpd_client_get_next_fragment (GstMpdClient *client, guint indexStream, gboolean *discontinuity, gchar **uri, gint64 * range_start, gint64 * range_end, GstClockTime *duration, GstClockTime *timestamp);
+gboolean gst_mpd_client_get_next_fragment (GstMpdClient *client, guint indexStream, GstMediaFragmentInfo * fragment);
 gboolean gst_mpd_client_get_next_header (GstMpdClient *client, gchar **uri, guint stream_idx, gint64 * range_start, gint64 * range_end);
 gboolean gst_mpd_client_get_next_header_index (GstMpdClient *client, gchar **uri, guint stream_idx, gint64 * range_start, gint64 * range_end);
 gboolean gst_mpd_client_is_live (GstMpdClient * client);

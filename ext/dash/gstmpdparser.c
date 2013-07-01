@@ -3281,13 +3281,12 @@ gst_mpd_client_get_next_fragment_timestamp (GstMpdClient * client,
 
 gboolean
 gst_mpd_client_get_next_fragment (GstMpdClient * client,
-    guint indexStream, gboolean * discontinuity, gchar ** uri,
-    gint64 * range_start, gint64 * range_end,
-    GstClockTime * duration, GstClockTime * timestamp)
+    guint indexStream, GstMediaFragmentInfo * fragment)
 {
   GstActiveStream *stream = NULL;
   GstMediaSegment *currentChunk;
   gchar *mediaURL = NULL;
+  gchar *indexURL = NULL;
   guint segment_idx;
 
   /* select stream */
@@ -3296,7 +3295,6 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
   stream = g_list_nth_data (client->active_streams, indexStream);
   g_return_val_if_fail (stream != NULL, FALSE);
   g_return_val_if_fail (stream->cur_representation != NULL, FALSE);
-  g_return_val_if_fail (discontinuity != NULL, FALSE);
 
   GST_MPD_CLIENT_LOCK (client);
   segment_idx = gst_mpd_client_get_segment_index (stream);
@@ -3311,38 +3309,83 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
 
   GST_DEBUG ("currentChunk->SegmentURL = %p", currentChunk->SegmentURL);
   if (currentChunk->SegmentURL != NULL) {
-    mediaURL = g_strdup (gst_mpdparser_get_mediaURL (stream, currentChunk->SegmentURL));
+    mediaURL =
+        g_strdup (gst_mpdparser_get_mediaURL (stream,
+            currentChunk->SegmentURL));
+    indexURL = currentChunk->SegmentURL->index;
   } else if (stream->cur_seg_template != NULL) {
     mediaURL =
         gst_mpdparser_build_URL_from_template (stream->cur_seg_template->media,
         stream->cur_representation->id, currentChunk->number,
         stream->cur_representation->bandwidth, currentChunk->start);
+    if (stream->cur_seg_template->index) {
+      indexURL =
+          gst_mpdparser_build_URL_from_template (stream->cur_seg_template->
+          index, stream->cur_representation->id, currentChunk->number,
+          stream->cur_representation->bandwidth, currentChunk->start);
+    }
   }
   GST_DEBUG ("mediaURL = %s", mediaURL);
+  GST_DEBUG ("indexURL = %s", indexURL);
 
-  *timestamp = currentChunk->start_time;
-  *duration = currentChunk->duration;
-  *discontinuity = segment_idx != currentChunk->number;
-  *range_start = 0;
-  *range_end = -1;
-  if (currentChunk->SegmentURL && currentChunk->SegmentURL->mediaRange) {
-    *range_start = currentChunk->SegmentURL->mediaRange->first_byte_pos;
-    *range_end = currentChunk->SegmentURL->mediaRange->last_byte_pos;
+  fragment->timestamp = currentChunk->start_time;
+  fragment->duration = currentChunk->duration;
+  fragment->discontinuity = segment_idx != currentChunk->number;
+  fragment->range_start = 0;
+  fragment->range_end = -1;
+  fragment->index_uri = NULL;
+  fragment->index_range_start = 0;
+  fragment->index_range_end = -1;
+  if (currentChunk->SegmentURL) {
+    if (currentChunk->SegmentURL->mediaRange) {
+      fragment->range_start =
+          currentChunk->SegmentURL->mediaRange->first_byte_pos;
+      fragment->range_end = currentChunk->SegmentURL->mediaRange->last_byte_pos;
+    }
+    if (currentChunk->SegmentURL->indexRange) {
+      fragment->index_range_start =
+          currentChunk->SegmentURL->indexRange->first_byte_pos;
+      fragment->index_range_end =
+          currentChunk->SegmentURL->indexRange->last_byte_pos;
+    }
   }
 
   if (mediaURL == NULL) {
     /* single segment with URL encoded in the baseURL syntax element */
-    *uri = g_strdup (stream->baseURL);
+    fragment->uri = g_strdup (stream->baseURL);
   } else if (strncmp (mediaURL, "http://", 7) != 0) {
-    *uri = g_strconcat (stream->baseURL, mediaURL, stream->queryURL, NULL);
+    fragment->uri =
+        g_strconcat (stream->baseURL, mediaURL, stream->queryURL, NULL);
   } else {
-    *uri = g_strconcat (mediaURL, stream->queryURL, NULL);
+    fragment->uri = g_strconcat (mediaURL, stream->queryURL, NULL);
   }
   g_free (mediaURL);
+
+  if (indexURL != NULL) {
+    if (strncmp (indexURL, "http://", 7) != 0) {
+      fragment->index_uri =
+          g_strconcat (stream->baseURL, indexURL, stream->queryURL, NULL);
+    } else {
+      fragment->index_uri = g_strconcat (indexURL, stream->queryURL, NULL);
+    }
+    g_free (indexURL);
+  } else if (fragment->index_range_start || fragment->index_range_end != -1) {
+    /* index has no specific URL but has a range, we should only use this if
+     * the media also has a range, otherwise we are serving some data twice
+     * (in the media fragment and again in the index) */
+    if (!(fragment->range_start || fragment->range_end != -1)) {
+      GST_WARNING ("Ignoring index ranges because there isn't a media range "
+          "and URIs would be the same");
+      /* removing index information */
+      fragment->index_range_start = 0;
+      fragment->index_range_end = -1;
+    }
+  }
+
   gst_mpd_client_set_segment_index (stream, segment_idx + 1);
   GST_MPD_CLIENT_UNLOCK (client);
 
-  GST_DEBUG ("Loading chunk with URL %s", *uri);
+  GST_DEBUG ("Loading chunk with URL %s", fragment->uri);
 
   return TRUE;
 }
@@ -3369,8 +3412,8 @@ gst_mpd_client_get_next_header (GstMpdClient * client, gchar ** uri,
   *uri = NULL;
   if (stream->cur_segment_base && stream->cur_segment_base->Initialization) {
     *uri =
-        g_strdup (gst_mpdparser_get_initializationURL (stream, stream->cur_segment_base->
-        Initialization));
+        g_strdup (gst_mpdparser_get_initializationURL (stream,
+            stream->cur_segment_base->Initialization));
     if (stream->cur_segment_base->Initialization->range) {
       *range_start =
           stream->cur_segment_base->Initialization->range->first_byte_pos;
@@ -3419,12 +3462,10 @@ gst_mpd_client_get_next_header_index (GstMpdClient * client, gchar ** uri,
   *uri = NULL;
   if (stream->cur_segment_base && stream->cur_segment_base->indexRange) {
     *uri =
-        g_strdup (gst_mpdparser_get_initializationURL (stream, stream->cur_segment_base->
-        Initialization));
-    *range_start =
-        stream->cur_segment_base->indexRange->first_byte_pos;
-    *range_end =
-        stream->cur_segment_base->indexRange->last_byte_pos;
+        g_strdup (gst_mpdparser_get_initializationURL (stream,
+            stream->cur_segment_base->Initialization));
+    *range_start = stream->cur_segment_base->indexRange->first_byte_pos;
+    *range_end = stream->cur_segment_base->indexRange->last_byte_pos;
   } else if (stream->cur_seg_template) {
     const gchar *initialization = NULL;
     if (stream->cur_seg_template->index) {
@@ -3811,4 +3852,11 @@ gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient * client,
   }
 
   return nb_adapatation_set;
+}
+
+void
+gst_media_fragment_info_clear (GstMediaFragmentInfo * fragment)
+{
+  g_free (fragment->uri);
+  g_free (fragment->index_uri);
 }

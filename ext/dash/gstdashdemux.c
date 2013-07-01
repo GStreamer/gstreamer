@@ -1854,10 +1854,6 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
   GstActiveStream *active_stream;
   GstFragment *download;
   GstBuffer *header_buffer;
-  gchar *next_fragment_uri;
-  GstClockTime duration;
-  GstClockTime timestamp;
-  gboolean discont;
   GTimeVal now;
   GTimeVal start;
   GstClockTime diff;
@@ -1916,39 +1912,65 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
   if (selected_stream) {
     guint stream_idx = selected_stream->index;
     GstBuffer *buffer;
-    gint64 range_start, range_end;
+    GstMediaFragmentInfo fragment;
 
     if (gst_mpd_client_get_next_fragment (demux->client,
-            stream_idx, &discont, &next_fragment_uri, &range_start, &range_end,
-            &duration, &timestamp)) {
+            stream_idx, &fragment)) {
 
       g_get_current_time (&start);
       GST_INFO_OBJECT (demux, "Next fragment for stream #%i", stream_idx);
       GST_INFO_OBJECT (demux,
           "Fetching next fragment %s ts:%" GST_TIME_FORMAT " dur:%"
           GST_TIME_FORMAT " Range:%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT,
-          next_fragment_uri, GST_TIME_ARGS (timestamp),
-          GST_TIME_ARGS (duration), range_start, range_end);
+          fragment.uri, GST_TIME_ARGS (fragment.timestamp),
+          GST_TIME_ARGS (fragment.duration),
+          fragment.range_start, fragment.range_end);
 
       /* got a fragment to fetch, no end of period */
       end_of_period = FALSE;
 
       download = gst_uri_downloader_fetch_uri_with_range (demux->downloader,
-          next_fragment_uri, range_start, range_end);
-      g_free (next_fragment_uri);
+          fragment.uri, fragment.range_start, fragment.range_end);
 
-      if (download == NULL)
+      if (download == NULL) {
+        gst_media_fragment_info_clear (&fragment);
         return FALSE;
+      }
 
       active_stream =
           gst_mpdparser_get_active_stream_by_index (demux->client, stream_idx);
       if (active_stream == NULL) {
+        gst_media_fragment_info_clear (&fragment);
         g_object_unref (download);
         return FALSE;
       }
 
       buffer = gst_fragment_get_buffer (download);
       g_object_unref (download);
+
+      /* it is possible to have an index per fragment, so check and download */
+      if (fragment.index_uri || fragment.index_range_start
+          || fragment.index_range_end != -1) {
+        const gchar *uri = fragment.index_uri;
+        GstBuffer *index_buffer;
+
+        if (!uri)               /* fallback to default media uri */
+          uri = fragment.uri;
+
+        GST_DEBUG_OBJECT (demux,
+            "Fragment index download: %s %" G_GINT64_FORMAT "-%"
+            G_GINT64_FORMAT, uri, fragment.index_range_start,
+            fragment.index_range_end);
+        download =
+            gst_uri_downloader_fetch_uri_with_range (demux->downloader, uri,
+            fragment.index_range_start, fragment.index_range_end);
+        if (download) {
+          index_buffer = gst_fragment_get_buffer (download);
+          if (index_buffer)
+            buffer = gst_buffer_append (index_buffer, buffer);
+          g_object_unref (download);
+        }
+      }
 
       if (selected_stream->need_header) {
         /* We need to fetch a new header */
@@ -1964,10 +1986,12 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
 
       buffer = gst_buffer_make_writable (buffer);
 
-      GST_BUFFER_TIMESTAMP (buffer) = timestamp;
-      GST_BUFFER_DURATION (buffer) = duration;
+      GST_BUFFER_TIMESTAMP (buffer) = fragment.timestamp;
+      GST_BUFFER_DURATION (buffer) = fragment.duration;
       GST_BUFFER_OFFSET (buffer) =
           gst_mpd_client_get_segment_index (active_stream) - 1;
+
+      gst_media_fragment_info_clear (&fragment);
 
       gst_dash_demux_stream_push_data (selected_stream, buffer);
       selected_stream->has_data_queued = TRUE;
