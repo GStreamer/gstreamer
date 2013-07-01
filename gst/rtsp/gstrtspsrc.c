@@ -121,6 +121,7 @@ GST_STATIC_PAD_TEMPLATE ("internalsink_%u",
 enum
 {
   SIGNAL_HANDLE_REQUEST,
+  SIGNAL_ON_SDP,
   LAST_SIGNAL
 };
 
@@ -572,6 +573,27 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       g_signal_new ("handle-request", G_TYPE_FROM_CLASS (klass), 0,
       0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2,
       G_TYPE_POINTER, G_TYPE_POINTER);
+
+  /**
+   * GstRTSPSrc::on-sdp:
+   * @rtspsrc: a #GstRTSPSrc
+   * @sdp: a #GstSDPMessage
+   *
+   * Emited when the client has retrieved the SDP and before it configures the
+   * streams in the SDP. @sdp can be inspected and modified.
+   *
+   * This signal is called from the streaming thread, you should therefore not
+   * do any state changes on @rtspsrc because this might deadlock. If you want
+   * to modify the state as a result of this signal, post a
+   * #GST_MESSAGE_REQUEST_STATE message on the bus or signal the main thread
+   * in some other way.
+   *
+   * Since: 1.2
+   */
+  gst_rtspsrc_signals[SIGNAL_ON_SDP] =
+      g_signal_new ("on-sdp", G_TYPE_FROM_CLASS (klass), 0,
+      0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_SDP_MESSAGE | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
@@ -5815,6 +5837,9 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
     gst_sdp_message_dump (sdp);
 
   gst_rtsp_ext_list_parse_sdp (src->extensions, sdp, src->props);
+
+  /* let the app inspect and change the SDP */
+  g_signal_emit (src, gst_rtspsrc_signals[SIGNAL_ON_SDP], 0, sdp);
 
   gst_segment_init (&src->segment, GST_FORMAT_TIME);
 
