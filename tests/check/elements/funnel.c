@@ -119,10 +119,6 @@ chain_ok (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 GST_START_TEST (test_funnel_simple)
 {
   struct TestData td;
-#if 0
-  GstBuffer *buf1 = NULL;
-  GstBuffer *buf2 = NULL;
-#endif
 
   setup_test_objects (&td, chain_ok);
 
@@ -133,18 +129,6 @@ GST_START_TEST (test_funnel_simple)
   fail_unless (gst_pad_push (td.mysrc2, gst_buffer_new ()) == GST_FLOW_OK);
 
   fail_unless (bufcount == 2);
-
-#if 0
-  fail_unless (gst_pad_alloc_buffer (td.mysrc1, 0, 1024, td.mycaps,
-          &buf1) == GST_FLOW_OK);
-  fail_unless (gst_pad_alloc_buffer (td.mysrc2, 1024, 1024, td.mycaps,
-          &buf2) == GST_FLOW_OK);
-
-  fail_unless (alloccount == 2);
-
-  gst_buffer_unref (buf1);
-  gst_buffer_unref (buf2);
-#endif
 
   release_test_objects (&td);
 }
