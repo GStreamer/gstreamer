@@ -546,20 +546,18 @@ _group (GList * containers)
   supported_formats = GES_CLIP (ret)->priv->supportedformats;
   for (tmpclip = containers->next; tmpclip; tmpclip = tmpclip->next) {
     GESClip *cclip = tmpclip->data;
+    GList *children = ges_container_get_children (GES_CONTAINER (cclip));
 
-    for (tmpelement = GES_CONTAINER_CHILDREN (cclip); tmpelement;
-        tmpelement = tmpelement->next) {
+    for (tmpelement = children; tmpelement; tmpelement = tmpelement->next) {
       GESTimelineElement *celement = GES_TIMELINE_ELEMENT (tmpelement->data);
 
-      /* We need to bump the refcount to avoid the object to be destroyed */
-      gst_object_ref (celement);
       ges_container_remove (GES_CONTAINER (cclip), celement);
       ges_container_add (ret, celement);
-      gst_object_unref (celement);
 
       supported_formats = supported_formats |
           ges_track_element_get_track_type (GES_TRACK_ELEMENT (celement));
     }
+    g_list_free_full (children, gst_object_unref);
 
     ges_layer_remove_clip (layer, tmpclip->data);
   }
