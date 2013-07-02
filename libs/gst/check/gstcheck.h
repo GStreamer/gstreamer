@@ -97,7 +97,8 @@ gint gst_check_run_suite (Suite * suite, const gchar * name,
 void gst_check_setup_events (GstPad * srcpad, GstElement * element,
     GstCaps * caps, GstFormat format);
 void gst_check_setup_events_with_stream_id (GstPad * srcpad,
-    GstElement * element, GstCaps * caps, GstFormat format, const gchar * id);
+    GstElement * element, GstCaps * caps, GstFormat format,
+    const gchar * stream_id);
 
 #define fail_unless_message_error(msg, domain, code)            \
 gst_check_message_error (msg, GST_MESSAGE_ERROR,                \
