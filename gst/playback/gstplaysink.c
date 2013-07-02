@@ -3068,9 +3068,12 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
 
         /* Remove the sink from the bin to keep its state
          * and unparent it to allow reuse */
-        if (playsink->videochain->sink)
+        if (playsink->videochain->sink) {
+          if (playsink->videochain->sink != playsink->video_sink)
+            gst_element_set_state (playsink->videochain->sink, GST_STATE_NULL);
           gst_bin_remove (GST_BIN_CAST (playsink->videochain->chain.bin),
               playsink->videochain->sink);
+        }
 
         activate_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
         free_chain ((GstPlayChain *) playsink->videochain);
@@ -3260,9 +3263,12 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
 
         /* Remove the sink from the bin to keep its state
          * and unparent it to allow reuse */
-        if (playsink->audiochain->sink)
+        if (playsink->audiochain->sink) {
+          if (playsink->audiochain->sink != playsink->audio_sink)
+            gst_element_set_state (playsink->audiochain->sink, GST_STATE_NULL);
           gst_bin_remove (GST_BIN_CAST (playsink->audiochain->chain.bin),
               playsink->audiochain->sink);
+        }
 
         activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
         disconnect_audio_chain (playsink->audiochain, playsink);
