@@ -174,6 +174,8 @@ gchar *               gst_rtsp_media_get_range_string (GstRTSPMedia *media,
 
 gboolean              gst_rtsp_media_set_state        (GstRTSPMedia *media, GstState state,
                                                        GPtrArray *transports);
+void                  gst_rtsp_media_set_pipeline_state (GstRTSPMedia * media,
+                                                         GstState state);
 
 G_END_DECLS
 

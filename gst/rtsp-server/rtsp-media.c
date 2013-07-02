@@ -2063,6 +2063,26 @@ gst_rtsp_media_get_time_provider (GstRTSPMedia * media, const gchar * address,
   return provider;
 }
 
+void
+gst_rtsp_media_set_pipeline_state (GstRTSPMedia * media, GstState state)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+
+  if (state == GST_STATE_NULL) {
+    gst_rtsp_media_unprepare (media);
+  } else {
+    GST_INFO ("state %s media %p", gst_element_state_get_name (state), media);
+    priv->target_state = state;
+    /* when we are buffering, don't update the state yet, this will be done
+     * when buffering finishes */
+    if (priv->buffering) {
+      GST_INFO ("Buffering busy, delay state change");
+    } else {
+      gst_element_set_state (priv->pipeline, state);
+    }
+  }
+}
+
 /**
  * gst_rtsp_media_set_state:
  * @media: a #GstRTSPMedia
@@ -2148,22 +2168,9 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
       media, do_state);
 
   if (priv->target_state != state) {
-    if (do_state) {
-      if (state == GST_STATE_NULL) {
-        gst_rtsp_media_unprepare (media);
-      } else {
-        GST_INFO ("state %s media %p", gst_element_state_get_name (state),
-            media);
-        priv->target_state = state;
-        /* when we are buffering, don't update the state yet, this will be done
-         * when buffering finishes */
-        if (priv->buffering) {
-          GST_INFO ("Buffering busy, delay state change");
-        } else {
-          gst_element_set_state (priv->pipeline, state);
-        }
-      }
-    }
+    if (do_state)
+      gst_rtsp_media_set_pipeline_state (media, state);
+
     g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_NEW_STATE], 0, state,
         NULL);
   }
