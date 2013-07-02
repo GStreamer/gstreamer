@@ -379,60 +379,10 @@ gst_funnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   else
     gst_event_unref (event);
 
-  return res;
-}
-
-static gboolean
-gst_funnel_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
-{
-  GstFunnel *funnel = GST_FUNNEL (parent);
-  gboolean forward = TRUE;
-  gboolean res = TRUE;
-
-  if (forward)
-    res = gst_pad_peer_query (funnel->srcpad, query);
+  if (unlock)
+    GST_PAD_STREAM_UNLOCK (funnel->srcpad);
 
   return res;
-}
-
-static gboolean
-gst_funnel_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
-{
-  GstElement *funnel;
-  GstIterator *iter;
-  GstPad *sinkpad;
-  gboolean result = FALSE;
-  gboolean done = FALSE;
-  GValue value = { 0, };
-
-  funnel = GST_ELEMENT_CAST (parent);
-
-  iter = gst_element_iterate_sink_pads (funnel);
-
-  while (!done) {
-    switch (gst_iterator_next (iter, &value)) {
-      case GST_ITERATOR_OK:
-        sinkpad = g_value_get_object (&value);
-        gst_event_ref (event);
-        result |= gst_pad_push_event (sinkpad, event);
-        g_value_reset (&value);
-        break;
-      case GST_ITERATOR_RESYNC:
-        gst_iterator_resync (iter);
-        result = FALSE;
-        break;
-      case GST_ITERATOR_ERROR:
-        GST_WARNING_OBJECT (funnel, "Error iterating sinkpads");
-      case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
-    }
-  }
-  g_value_unset (&value);
-  gst_iterator_free (iter);
-  gst_event_unref (event);
-
-  return result;
 }
 
 static void
