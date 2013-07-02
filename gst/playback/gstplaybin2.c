@@ -4231,11 +4231,17 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
       if (((isaudiodec && !group->audio_sink) ||
               (isvideodec && !group->video_sink))) {
         if (ave && ave->sink) {
-          if ((*sinkp = gst_element_factory_create (ave->sink, NULL)) == NULL)
+          GST_DEBUG_OBJECT (playbin,
+              "Trying to create sink '%s' for decoder '%s'",
+              gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (ave->sink)),
+              gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
+          if ((*sinkp = gst_element_factory_create (ave->sink, NULL)) == NULL) {
             GST_WARNING_OBJECT (playbin,
                 "Could not create an element from %s",
-                gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (*sinkp)));
-          gst_object_ref_sink (*sinkp);
+                gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (ave->sink)));
+          } else {
+            gst_object_ref_sink (*sinkp);
+          }
         }
       }
 
@@ -4329,7 +4335,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   }
 
   /* it's a sink, see if an instance of it actually works */
-  GST_DEBUG_OBJECT (playbin, "we found a sink");
+  GST_DEBUG_OBJECT (playbin, "we found a sink '%s'", GST_OBJECT_NAME (factory));
 
   klass =
       gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
@@ -4379,7 +4385,8 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
       return GST_AUTOPLUG_SELECT_SKIP;
     }
   }
-  GST_DEBUG_OBJECT (playbin, "we have no pending sink, try to create one");
+  GST_DEBUG_OBJECT (playbin, "we have no pending sink, try to create '%s'",
+      gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
 
   if ((*sinkp = gst_element_factory_create (factory, NULL)) == NULL) {
     GST_WARNING_OBJECT (playbin, "Could not create an element from %s",
