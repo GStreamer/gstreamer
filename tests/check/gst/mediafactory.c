@@ -178,7 +178,7 @@ GST_START_TEST (test_addresspool)
   fail_unless (pool == tmppool);
   g_object_unref (tmppool);
 
-  addr = gst_rtsp_stream_get_address (stream);
+  addr = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV4);
   fail_unless (addr != NULL);
   fail_unless (addr->port == 5000);
   fail_unless (addr->n_ports == 2);
@@ -192,7 +192,7 @@ GST_START_TEST (test_addresspool)
   fail_unless (pool == tmppool);
   g_object_unref (tmppool);
 
-  addr = gst_rtsp_stream_get_address (stream);
+  addr = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV4);
   fail_unless (addr == NULL);
 
 
