@@ -857,6 +857,15 @@ ges_clip_set_layer (GESClip * clip, GESLayer * layer)
     g_object_notify_by_pspec (G_OBJECT (clip), properties[PROP_LAYER]);
 }
 
+guint32
+ges_clip_get_layer_priority (GESClip * clip)
+{
+  if (clip->priv->layer == NULL)
+    return -1;
+
+  return ges_layer_get_priority (clip->priv->layer);
+}
+
 gboolean
 ges_clip_fill_track_element (GESClip * clip,
     GESTrackElement * trackelement, GstElement * gnlobj)
