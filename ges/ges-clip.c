@@ -843,15 +843,18 @@ ges_clip_create_track_elements_func (GESClip * clip, GESTrackType type)
 void
 ges_clip_set_layer (GESClip * clip, GESLayer * layer)
 {
-  GST_DEBUG ("clip:%p, layer:%p", clip, layer);
+  if (layer == clip->priv->layer)
+    return;
 
   clip->priv->layer = layer;
+
+  GST_DEBUG ("clip:%p, layer:%p", clip, layer);
 
   /* We do not want to notify the setting of layer = NULL when
    * it is actually the result of a move between layer (as we know
    * that it will be added to another layer right after, and this
    * is what imports here.) */
-  if (layer || clip->priv->is_moving == FALSE)
+  if (layer && !clip->priv->is_moving)
     g_object_notify_by_pspec (G_OBJECT (clip), properties[PROP_LAYER]);
 }
 
@@ -980,8 +983,10 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
   clip->priv->is_moving = FALSE;
 
   gst_object_unref (clip);
+  g_object_notify_by_pspec (G_OBJECT (clip), properties[PROP_LAYER]);
 
-  return ret;
+
+  return ret && (clip->priv->layer == layer);
 }
 
 /**
