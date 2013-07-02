@@ -38,6 +38,7 @@ struct _GstRTSPStreamPrivate
   GstElement *payloader;
   guint buffer_size;
   gboolean is_joined;
+  gchar *control;
 
   /* pads on the rtpbin */
   GstPad *send_rtp_sink;
@@ -91,10 +92,12 @@ struct _GstRTSPStreamPrivate
   gint dscp_qos;
 };
 
+#define DEFAULT_CONTROL NULL
 
 enum
 {
   PROP_0,
+  PROP_CONTROL,
   PROP_LAST
 };
 
@@ -102,6 +105,11 @@ GST_DEBUG_CATEGORY_STATIC (rtsp_stream_debug);
 #define GST_CAT_DEFAULT rtsp_stream_debug
 
 static GQuark ssrc_stream_map_key;
+
+static void gst_rtsp_stream_get_property (GObject * object, guint propid,
+    GValue * value, GParamSpec * pspec);
+static void gst_rtsp_stream_set_property (GObject * object, guint propid,
+    const GValue * value, GParamSpec * pspec);
 
 static void gst_rtsp_stream_finalize (GObject * obj);
 
@@ -116,7 +124,14 @@ gst_rtsp_stream_class_init (GstRTSPStreamClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
 
+  gobject_class->get_property = gst_rtsp_stream_get_property;
+  gobject_class->set_property = gst_rtsp_stream_set_property;
   gobject_class->finalize = gst_rtsp_stream_finalize;
+
+  g_object_class_install_property (gobject_class, PROP_CONTROL,
+      g_param_spec_string ("control", "Control",
+          "The control string for this stream", DEFAULT_CONTROL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (rtsp_stream_debug, "rtspstream", 0, "GstRTSPStream");
 
@@ -132,7 +147,8 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
 
   stream->priv = priv;
 
-  stream->priv->dscp_qos = -1;
+  priv->dscp_qos = -1;
+  priv->control = g_strdup (DEFAULT_CONTROL);
 
   g_mutex_init (&priv->lock);
 }
@@ -163,9 +179,40 @@ gst_rtsp_stream_finalize (GObject * obj)
     g_object_unref (priv->pool);
   gst_object_unref (priv->payloader);
   gst_object_unref (priv->srcpad);
+  g_free (priv->control);
   g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_rtsp_stream_parent_class)->finalize (obj);
+}
+
+static void
+gst_rtsp_stream_get_property (GObject * object, guint propid,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRTSPStream *stream = GST_RTSP_STREAM (object);
+
+  switch (propid) {
+    case PROP_CONTROL:
+      g_value_take_string (value, gst_rtsp_stream_get_control (stream));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
+  }
+}
+
+static void
+gst_rtsp_stream_set_property (GObject * object, guint propid,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRTSPStream *stream = GST_RTSP_STREAM (object);
+
+  switch (propid) {
+    case PROP_CONTROL:
+      gst_rtsp_stream_set_control (stream, g_value_get_string (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
+  }
 }
 
 /**
@@ -214,7 +261,7 @@ gst_rtsp_stream_get_index (GstRTSPStream * stream)
   return stream->priv->idx;
 }
 
- /**
+/**
  * gst_rtsp_stream_get_srcpad:
  * @stream: a #GstRTSPStream
  *
@@ -228,6 +275,54 @@ gst_rtsp_stream_get_srcpad (GstRTSPStream * stream)
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
 
   return gst_object_ref (stream->priv->srcpad);
+}
+
+/**
+ * gst_rtsp_stream_get_control:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the control string to identify this stream.
+ *
+ * Return: the control string. free after usage.
+ */
+gchar *
+gst_rtsp_stream_get_control (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  gchar *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = g_strdup (priv->control)) == NULL)
+    result = g_strdup_printf ("stream=%d", priv->idx);
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_stream_set_control:
+ * @stream: a #GstRTSPStream
+ * @control: a control string
+ *
+ * Set the control string in @stream.
+ */
+void
+gst_rtsp_stream_set_control (GstRTSPStream * stream, const gchar * control)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  g_free (priv->control);
+  priv->control = g_strdup (control);
+  g_mutex_unlock (&priv->lock);
 }
 
 /**

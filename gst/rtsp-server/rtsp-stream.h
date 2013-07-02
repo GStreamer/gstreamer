@@ -67,6 +67,9 @@ GstRTSPStream *   gst_rtsp_stream_new              (guint idx, GstElement *paylo
 guint             gst_rtsp_stream_get_index        (GstRTSPStream *stream);
 GstPad *          gst_rtsp_stream_get_srcpad       (GstRTSPStream *stream);
 
+void              gst_rtsp_stream_set_control      (GstRTSPStream *stream, const gchar *control);
+gchar *           gst_rtsp_stream_get_control      (GstRTSPStream *stream);
+
 void              gst_rtsp_stream_set_mtu          (GstRTSPStream *stream, guint mtu);
 guint             gst_rtsp_stream_get_mtu          (GstRTSPStream *stream);
 
