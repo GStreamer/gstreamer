@@ -105,7 +105,7 @@ static GstSDPMessage *create_sdp (GstRTSPClient * client, GstRTSPMedia * media);
 static void client_session_finalized (GstRTSPClient * client,
     GstRTSPSession * session);
 static void unlink_session_transports (GstRTSPClient * client,
-    GstRTSPSession * session, GstRTSPSessionMedia * media);
+    GstRTSPSession * session, GstRTSPSessionMedia * sessmedia);
 static gboolean default_configure_client_transport (GstRTSPClient * client,
     GstRTSPClientState * state, GstRTSPTransport * ct);
 static GstRTSPResult default_params_set (GstRTSPClient * client,
@@ -230,13 +230,13 @@ gst_rtsp_client_init (GstRTSPClient * client)
 }
 
 static GstRTSPFilterResult
-filter_session (GstRTSPSession * sess, GstRTSPSessionMedia * media,
+filter_session (GstRTSPSession * sess, GstRTSPSessionMedia * sessmedia,
     gpointer user_data)
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
 
-  gst_rtsp_session_media_set_state (media, GST_STATE_NULL);
-  unlink_session_transports (client, sess, media);
+  gst_rtsp_session_media_set_state (sessmedia, GST_STATE_NULL);
+  unlink_session_transports (client, sess, sessmedia);
 
   /* unmanage the media in the session */
   return GST_RTSP_FILTER_REMOVE;
@@ -649,18 +649,18 @@ unlink_transport (GstRTSPClient * client, GstRTSPSession * session,
 
 static void
 unlink_session_transports (GstRTSPClient * client, GstRTSPSession * session,
-    GstRTSPSessionMedia * media)
+    GstRTSPSessionMedia * sessmedia)
 {
   guint n_streams, i;
 
   n_streams =
-      gst_rtsp_media_n_streams (gst_rtsp_session_media_get_media (media));
+      gst_rtsp_media_n_streams (gst_rtsp_session_media_get_media (sessmedia));
   for (i = 0; i < n_streams; i++) {
     GstRTSPStreamTransport *trans;
     const GstRTSPTransport *tr;
 
     /* get the transport, if there is no transport configured, skip this stream */
-    trans = gst_rtsp_session_media_get_transport (media, i);
+    trans = gst_rtsp_session_media_get_transport (sessmedia, i);
     if (trans == NULL)
       continue;
 
@@ -696,7 +696,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
 {
   GstRTSPClientPrivate *priv = client->priv;
   GstRTSPSession *session;
-  GstRTSPSessionMedia *media;
+  GstRTSPSessionMedia *sessmedia;
   GstRTSPStatusCode code;
 
   if (!state->session)
@@ -708,27 +708,27 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
     goto no_uri;
 
   /* get a handle to the configuration of the media in the session */
-  media = gst_rtsp_session_get_media (session, state->uri);
-  if (!media)
+  sessmedia = gst_rtsp_session_get_media (session, state->uri);
+  if (!sessmedia)
     goto not_found;
 
-  state->sessmedia = media;
+  state->sessmedia = sessmedia;
 
   /* we emit the signal before closing the connection */
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_TEARDOWN_REQUEST],
       0, state);
 
   /* unlink the all TCP callbacks */
-  unlink_session_transports (client, session, media);
+  unlink_session_transports (client, session, sessmedia);
 
   /* remove the session from the watched sessions */
   client_unwatch_session (client, session);
 
-  gst_rtsp_session_media_set_state (media, GST_STATE_NULL);
+  gst_rtsp_session_media_set_state (sessmedia, GST_STATE_NULL);
 
   /* unmanage the media in the session, returns false if all media session
    * are torn down. */
-  if (!gst_rtsp_session_release_media (session, media)) {
+  if (!gst_rtsp_session_release_media (session, sessmedia)) {
     /* remove the session */
     gst_rtsp_session_pool_remove (priv->session_pool, session);
   }
@@ -860,7 +860,7 @@ static gboolean
 handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
 {
   GstRTSPSession *session;
-  GstRTSPSessionMedia *media;
+  GstRTSPSessionMedia *sessmedia;
   GstRTSPStatusCode code;
   GstRTSPState rtspstate;
 
@@ -871,23 +871,23 @@ handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
     goto no_uri;
 
   /* get a handle to the configuration of the media in the session */
-  media = gst_rtsp_session_get_media (session, state->uri);
-  if (!media)
+  sessmedia = gst_rtsp_session_get_media (session, state->uri);
+  if (!sessmedia)
     goto not_found;
 
-  state->sessmedia = media;
+  state->sessmedia = sessmedia;
 
-  rtspstate = gst_rtsp_session_media_get_rtsp_state (media);
+  rtspstate = gst_rtsp_session_media_get_rtsp_state (sessmedia);
   /* the session state must be playing or recording */
   if (rtspstate != GST_RTSP_STATE_PLAYING &&
       rtspstate != GST_RTSP_STATE_RECORDING)
     goto invalid_state;
 
   /* unlink the all TCP callbacks */
-  unlink_session_transports (client, session, media);
+  unlink_session_transports (client, session, sessmedia);
 
   /* then pause sending */
-  gst_rtsp_session_media_set_state (media, GST_STATE_PAUSED);
+  gst_rtsp_session_media_set_state (sessmedia, GST_STATE_PAUSED);
 
   /* construct the response now */
   code = GST_RTSP_STS_OK;
@@ -897,7 +897,7 @@ handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
   send_message (client, session, state->response, FALSE);
 
   /* the state is now READY */
-  gst_rtsp_session_media_set_rtsp_state (media, GST_RTSP_STATE_READY);
+  gst_rtsp_session_media_set_rtsp_state (sessmedia, GST_RTSP_STATE_READY);
 
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PAUSE_REQUEST],
       0, state);
@@ -936,7 +936,8 @@ static gboolean
 handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
 {
   GstRTSPSession *session;
-  GstRTSPSessionMedia *media;
+  GstRTSPSessionMedia *sessmedia;
+  GstRTSPMedia *media;
   GstRTSPStatusCode code;
   GString *rtpinfo;
   guint n_streams, i, infocount;
@@ -953,14 +954,15 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
     goto no_uri;
 
   /* get a handle to the configuration of the media in the session */
-  media = gst_rtsp_session_get_media (session, state->uri);
-  if (!media)
+  sessmedia = gst_rtsp_session_get_media (session, state->uri);
+  if (!sessmedia)
     goto not_found;
 
-  state->sessmedia = media;
+  state->sessmedia = sessmedia;
+  state->media = media = gst_rtsp_session_media_get_media (sessmedia);
 
   /* the session state must be playing or ready */
-  rtspstate = gst_rtsp_session_media_get_rtsp_state (media);
+  rtspstate = gst_rtsp_session_media_get_rtsp_state (sessmedia);
   if (rtspstate != GST_RTSP_STATE_PLAYING && rtspstate != GST_RTSP_STATE_READY)
     goto invalid_state;
 
@@ -971,7 +973,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
     if (gst_rtsp_range_parse (str, &range) == GST_RTSP_OK) {
       /* we have a range, seek to the position */
       unit = range->unit;
-      gst_rtsp_media_seek (gst_rtsp_session_media_get_media (media), range);
+      gst_rtsp_media_seek (media, range);
       gst_rtsp_range_free (range);
     }
   }
@@ -979,8 +981,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   /* grab RTPInfo from the payloaders now */
   rtpinfo = g_string_new ("");
 
-  n_streams =
-      gst_rtsp_media_n_streams (gst_rtsp_session_media_get_media (media));
+  n_streams = gst_rtsp_media_n_streams (media);
   for (i = 0, infocount = 0; i < n_streams; i++) {
     GstRTSPStreamTransport *trans;
     GstRTSPStream *stream;
@@ -989,7 +990,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
     guint rtptime, seq;
 
     /* get the transport, if there is no transport configured, skip this stream */
-    trans = gst_rtsp_session_media_get_transport (media, i);
+    trans = gst_rtsp_session_media_get_transport (sessmedia, i);
     if (trans == NULL) {
       GST_INFO ("stream %d is not configured", i);
       continue;
@@ -1031,17 +1032,15 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   }
 
   /* add the range */
-  str =
-      gst_rtsp_media_get_range_string (gst_rtsp_session_media_get_media (media),
-      TRUE, unit);
+  str = gst_rtsp_media_get_range_string (media, TRUE, unit);
   gst_rtsp_message_take_header (state->response, GST_RTSP_HDR_RANGE, str);
 
   send_message (client, session, state->response, FALSE);
 
   /* start playing after sending the request */
-  gst_rtsp_session_media_set_state (media, GST_STATE_PLAYING);
+  gst_rtsp_session_media_set_state (sessmedia, GST_STATE_PLAYING);
 
-  gst_rtsp_session_media_set_rtsp_state (media, GST_RTSP_STATE_PLAYING);
+  gst_rtsp_session_media_set_rtsp_state (sessmedia, GST_RTSP_STATE_PLAYING);
 
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PLAY_REQUEST],
       0, state);
