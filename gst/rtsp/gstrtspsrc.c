@@ -122,6 +122,7 @@ enum
 {
   SIGNAL_HANDLE_REQUEST,
   SIGNAL_ON_SDP,
+  SIGNAL_SELECT_STREAM,
   LAST_SIGNAL
 };
 
@@ -312,6 +313,27 @@ static guint gst_rtspsrc_signals[LAST_SIGNAL] = { 0 };
 #define gst_rtspsrc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstRTSPSrc, gst_rtspsrc, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_rtspsrc_uri_handler_init));
+
+static gboolean
+default_select_stream (GstRTSPSrc * src, guint id, GstCaps * caps)
+{
+  GST_DEBUG_OBJECT (src, "default handler");
+  return TRUE;
+}
+
+static gboolean
+select_stream_accum (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer data)
+{
+  gboolean myboolean;
+
+  myboolean = g_value_get_boolean (handler_return);
+  GST_DEBUG ("accum %d", myboolean);
+  g_value_set_boolean (return_accu, myboolean);
+
+  /* stop emission if FALSE */
+  return myboolean;
+}
 
 static void
 gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
@@ -595,6 +617,27 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       GST_TYPE_SDP_MESSAGE | G_SIGNAL_TYPE_STATIC_SCOPE);
 
+  /**
+   * GstRTSPSrc::select-stream:
+   * @rtspsrc: a #GstRTSPSrc
+   * @num: the stream number
+   * @caps: the stream caps
+   *
+   * Emited before the client decides to configure the stream @num with
+   * @caps.
+   *
+   * Returns: %TRUE when the stream should be selected, %FALSE when the stream
+   * is to be ignored.
+   *
+   * Since: 1.2
+   */
+  gst_rtspsrc_signals[SIGNAL_SELECT_STREAM] =
+      g_signal_new_class_handler ("select-stream", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP,
+      (GCallback) default_select_stream, select_stream_accum, NULL,
+      g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 2, G_TYPE_UINT,
+      GST_TYPE_CAPS);
+
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
   gstelement_class->change_state = gst_rtspsrc_change_state;
@@ -613,7 +656,6 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
 
   gst_rtsp_ext_list_init ();
 }
-
 
 static void
 gst_rtspsrc_init (GstRTSPSrc * src)
@@ -5359,6 +5401,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
     gchar *transports;
     gint retry = 0;
     guint mask = 0;
+    gboolean selected;
 
     stream = (GstRTSPStream *) walk->data;
 
@@ -5369,6 +5412,15 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
       stream->disabled = TRUE;
       continue;
     }
+
+    g_signal_emit (src, gst_rtspsrc_signals[SIGNAL_SELECT_STREAM], 0,
+        stream->id, stream->caps, &selected);
+    if (!selected) {
+      GST_DEBUG_OBJECT (src, "skipping stream %p, disabled by signal", stream);
+      stream->disabled = TRUE;
+      continue;
+    }
+    stream->disabled = FALSE;
 
     /* merge/overwrite global caps */
     if (stream->caps) {
