@@ -4795,8 +4795,14 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   /* First set up the custom sources */
   if (playbin->audio_sink)
     group->audio_sink = gst_object_ref (playbin->audio_sink);
+  else
+    group->audio_sink =
+        gst_play_sink_get_sink (playbin->playsink, GST_PLAY_SINK_TYPE_AUDIO);
   if (playbin->video_sink)
     group->video_sink = gst_object_ref (playbin->video_sink);
+  else
+    group->video_sink =
+        gst_play_sink_get_sink (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO);
 
   g_list_free (group->stream_changed_pending);
   group->stream_changed_pending = NULL;
