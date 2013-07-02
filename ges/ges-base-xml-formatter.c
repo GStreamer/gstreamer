@@ -752,7 +752,7 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
   /* We do not want the properties that are passed to layer-add_asset to be reset */
   if (properties)
     gst_structure_remove_fields (properties, "supported-formats",
-        "inpoint", "start", "ducation", NULL);
+        "inpoint", "start", "duration", NULL);
 
   asset = ges_asset_request (type, asset_id, NULL);
   if (asset == NULL) {
