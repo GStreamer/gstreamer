@@ -3051,7 +3051,9 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
 
     if (playsink->videochain) {
       /* try to reactivate the chain */
-      if (!setup_video_chain (playsink, raw, async)) {
+      if ((playsink->video_sink
+              && playsink->video_sink != playsink->videochain->sink)
+          || !setup_video_chain (playsink, raw, async)) {
         if (playsink->video_sinkpad_stream_synchronizer) {
           gst_element_release_request_pad (GST_ELEMENT_CAST
               (playsink->stream_synchronizer),
@@ -3233,7 +3235,9 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
 
     if (playsink->audiochain) {
       /* try to reactivate the chain */
-      if (!setup_audio_chain (playsink, raw)) {
+      if ((playsink->audio_sink
+              && playsink->audio_sink != playsink->audiochain->sink)
+          || !setup_audio_chain (playsink, raw)) {
         GST_DEBUG_OBJECT (playsink, "removing current audio chain");
         if (playsink->audio_tee_asrc) {
           gst_element_release_request_pad (playsink->audio_tee,
