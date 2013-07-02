@@ -288,4 +288,7 @@ G_GNUC_INTERNAL void ges_track_element_copy_properties          (GESTimelineElem
 G_GNUC_INTERNAL void ges_track_element_split_bindings (GESTrackElement *element,
 						       GESTrackElement *new_element,
 						       guint64 position);
+
+G_GNUC_INTERNAL GstElement *ges_source_create_topbin (const gchar * bin_name, GstElement * sub_element, ...);
+
 #endif /* __GES_INTERNAL_H__ */

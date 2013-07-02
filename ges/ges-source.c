@@ -23,6 +23,7 @@
  * @short_description: Base Class for single-media sources
  */
 
+#include "ges-internal.h"
 #include "ges/ges-meta-container.h"
 #include "ges-track-element.h"
 #include "ges-source.h"
@@ -37,6 +38,9 @@ struct _GESSourcePrivate
   GstFramePositionner *positionner;
 };
 
+/******************************
+ *   Internal helper methods  *
+ ******************************/
 static void
 _pad_added_cb (GstElement * element, GstPad * srcpad, GstPad * sinkpad)
 {
@@ -55,8 +59,8 @@ _ghost_pad_added_cb (GstElement * element, GstPad * srcpad, GstElement * bin)
   gst_element_no_more_pads (element);
 }
 
-static GstElement *
-_create_bin (const gchar * bin_name, GstElement * sub_element, ...)
+GstElement *
+ges_source_create_topbin (const gchar * bin_name, GstElement * sub_element, ...)
 {
   va_list argp;
 
@@ -187,7 +191,8 @@ ges_source_create_element (GESTrackElement * trksrc)
 
       volume = gst_element_factory_make ("volume", NULL);
 
-      topbin = _create_bin ("audio-src-bin", sub_element, volume, NULL);
+      topbin =
+          ges_source_create_topbin ("audiosrcbin", sub_element, volume, NULL);
 
       _sync_element_to_layer_property_float (trksrc, volume, GES_META_VOLUME,
           "volume");
@@ -207,7 +212,9 @@ ges_source_create_element (GESTrackElement * trksrc)
 
       ges_track_element_add_children_props (trksrc, positionner, NULL, NULL,
           props);
-      topbin = _create_bin ("video-src-bin", sub_element, positionner, NULL);
+      topbin =
+          ges_source_create_topbin ("videosrcbin", sub_element, positionner,
+          NULL);
       parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
       if (parent) {
         self->priv->positionner = GST_FRAME_POSITIONNER (positionner);
@@ -221,7 +228,8 @@ ges_source_create_element (GESTrackElement * trksrc)
       break;
     }
     default:
-      topbin = _create_bin ("a-questionable-name", sub_element, NULL);
+      topbin =
+          ges_source_create_topbin ("a-questionable-name", sub_element, NULL);
       break;
   }
 
