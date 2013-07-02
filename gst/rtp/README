@@ -343,7 +343,7 @@ Some gst-launch-1.0 lines:
  
  Even when sync is enabled, the two different streams will not play synchronised
  against eachother because the receiver does not have enough information to
- perform this task. For this you need to add the gstrtpbin element in both the
+ perform this task. For this you need to add the rtpbin element in both the
  sender and receiver pipeline and use additional sources and sinks to transmit
  RTCP packets used for inter-stream synchronisation.
 

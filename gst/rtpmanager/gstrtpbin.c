@@ -18,8 +18,8 @@
  */
 
 /**
- * SECTION:element-gstrtpbin
- * @see_also: gstrtpjitterbuffer, gstrtpsession, gstrtpptdemux, gstrtpssrcdemux
+ * SECTION:element-rtpbin
+ * @see_also: rtpjitterbuffer, rtpsession, rtpptdemux, rtpssrcdemux
  *
  * RTP bin combines the functions of #GstRtpSession, #GstRtpSsrcDemux,
  * #GstRtpJitterBuffer and #GstRtpPtDemux in one element. It allows for multiple
@@ -36,7 +36,7 @@
  * the packets are released from the jitterbuffer, they will be forwarded to a
  * #GstRtpPtDemux element. The #GstRtpPtDemux element will demux the packets based
  * on the payload type and will create a unique pad recv_rtp_src_\%u_\%u_\%u on
- * gstrtpbin with the session number, SSRC and payload type respectively as the pad
+ * rtpbin with the session number, SSRC and payload type respectively as the pad
  * name.
  *
  * To also use #GstRtpBin as an RTCP receiver, request a recv_rtcp_sink_\%u pad. The
@@ -58,7 +58,7 @@
  * mapping. One can clear the cached values with the #GstRtpSession::clear-pt-map
  * signal.
  *
- * Access to the internal statistics of gstrtpbin is provided with the
+ * Access to the internal statistics of rtpbin is provided with the
  * get-internal-session property. This action signal gives access to the
  * RTPSession object which further provides action signals to retrieve the
  * internal source and other sources.
@@ -67,10 +67,10 @@
  * <title>Example pipelines</title>
  * |[
  * gst-launch-1.0 udpsrc port=5000 caps="application/x-rtp, ..." ! .recv_rtp_sink_0 \
- *     gstrtpbin ! rtptheoradepay ! theoradec ! xvimagesink
- * ]| Receive RTP data from port 5000 and send to the session 0 in gstrtpbin.
+ *     rtpbin ! rtptheoradepay ! theoradec ! xvimagesink
+ * ]| Receive RTP data from port 5000 and send to the session 0 in rtpbin.
  * |[
- * gst-launch-1.0 gstrtpbin name=rtpbin \
+ * gst-launch-1.0 rtpbin name=rtpbin \
  *         v4l2src ! videoconvert ! ffenc_h263 ! rtph263ppay ! rtpbin.send_rtp_sink_0 \
  *                   rtpbin.send_rtp_src_0 ! udpsink port=5000                            \
  *                   rtpbin.send_rtcp_src_0 ! udpsink port=5001 sync=false async=false    \
@@ -89,7 +89,7 @@
  * as soon as possible and do not participate in preroll, sync=false and
  * async=false is configured on udpsink
  * |[
- * gst-launch-1.0 -v gstrtpbin name=rtpbin                                          \
+ * gst-launch-1.0 -v rtpbin name=rtpbin                                          \
  *     udpsrc caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H263-1998" \
  *             port=5000 ! rtpbin.recv_rtp_sink_0                                \
  *         rtpbin. ! rtph263pdepay ! ffdec_h263 ! xvimagesink                    \
