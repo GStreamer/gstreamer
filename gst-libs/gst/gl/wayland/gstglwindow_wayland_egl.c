@@ -637,10 +637,10 @@ gst_gl_window_wayland_egl_send_message (GstGLWindow * window,
   g_mutex_init (&message.lock);
   g_cond_init (&message.cond);
 
-  g_mutex_lock (&message.lock);
-
   g_main_context_invoke (window_egl->main_context, (GSourceFunc) _run_message,
       &message);
+
+  g_mutex_lock (&message.lock);
 
   while (!message.fired)
     g_cond_wait (&message.cond, &message.lock);
