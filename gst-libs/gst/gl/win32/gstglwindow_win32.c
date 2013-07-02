@@ -525,7 +525,8 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         GST_DEBUG ("WM_GST_GL_WINDOW_QUIT\n");
 
-        destroy_cb ((gpointer) wParam);
+        if (destroy_cb)
+          destroy_cb ((gpointer) wParam);
 
         parent_id = GetProp (hWnd, "gl_window_parent_id");
         if (parent_id) {
