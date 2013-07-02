@@ -5517,8 +5517,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
      * parameter */
     if (src->rtp_blocksize > 0) {
       hval = g_strdup_printf ("%d", src->rtp_blocksize);
-      gst_rtsp_message_add_header (&request, GST_RTSP_HDR_BLOCKSIZE, hval);
-      g_free (hval);
+      gst_rtsp_message_take_header (&request, GST_RTSP_HDR_BLOCKSIZE, hval);
     }
 
     if (async)
@@ -6570,8 +6569,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
     if (src->need_range) {
       hval = gen_range_header (src, segment);
 
-      gst_rtsp_message_add_header (&request, GST_RTSP_HDR_RANGE, hval);
-      g_free (hval);
+      gst_rtsp_message_take_header (&request, GST_RTSP_HDR_RANGE, hval);
 
       /* store the newsegment event so it can be sent from the streaming thread. */
       if (src->start_segment)
