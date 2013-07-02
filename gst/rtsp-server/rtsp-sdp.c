@@ -154,7 +154,7 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
     }
 
     /* the config uri */
-    tmp = g_strdup_printf ("stream=%d", i);
+    tmp = gst_rtsp_stream_get_control (stream);
     gst_sdp_media_add_attribute (smedia, "control", tmp);
     g_free (tmp);
 
