@@ -6,10 +6,12 @@ libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@
 libgstglx11includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl/x11
 
 libgstgl_x11_la_SOURCES = \
-	gstglwindow_x11.c
+	gstglwindow_x11.c \
+	x11_event_source.c
 
 libgstglx11include_HEADERS = \
-	gstglwindow_x11.h
+	gstglwindow_x11.h \
+	x11_event_source.h
 
 if USE_GLX
 libgstgl_x11_la_SOURCES += gstglwindow_x11_glx.c

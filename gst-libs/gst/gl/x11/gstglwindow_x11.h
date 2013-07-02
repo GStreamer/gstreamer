@@ -43,8 +43,7 @@ typedef struct _GstGLWindowX11Class   GstGLWindowX11Class;
 struct _GstGLWindowX11 {
   /*< private >*/
   GstGLWindow parent;
-  
-  GCond cond_send_message;
+
   gboolean      running;
   gboolean      visible;
   gboolean      allow_extra_expose_events;
@@ -70,6 +69,10 @@ struct _GstGLWindowX11 {
 
   /* X window */
   Window        internal_win_id;
+
+  GSource *x11_source;
+  GMainContext *main_context;
+  GMainLoop *loop;
 
   /*< private >*/
   GstGLWindowX11Private *priv;

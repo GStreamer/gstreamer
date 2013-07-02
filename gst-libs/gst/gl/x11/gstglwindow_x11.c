@@ -28,6 +28,7 @@
 #include <gst/gst.h>
 #include <locale.h>
 
+#include "x11_event_source.h"
 #include "gstglwindow_x11.h"
 
 #if GST_GL_HAVE_PLATFORM_GLX
@@ -157,8 +158,6 @@ static void
 gst_gl_window_x11_init (GstGLWindowX11 * window)
 {
   window->priv = GST_GL_WINDOW_X11_GET_PRIVATE (window);
-
-  g_cond_init (&window->cond_send_message);
 }
 
 /* Must be called in the gl thread */
@@ -228,7 +227,7 @@ gst_gl_window_x11_create_context (GstGLWindow * window,
 
   setlocale (LC_NUMERIC, "C");
 
-  gst_gl_window_set_need_lock (GST_GL_WINDOW (window_x11), TRUE);
+  gst_gl_window_set_need_lock (GST_GL_WINDOW (window_x11), FALSE);
 
   window_x11->running = TRUE;
   window_x11->visible = FALSE;
@@ -253,7 +252,11 @@ gst_gl_window_x11_create_context (GstGLWindow * window,
   window_x11->device_height =
       DisplayHeight (window_x11->device, window_x11->screen_num);
 
-  window_x11->connection = ConnectionNumber (window_x11->device);
+  window_x11->x11_source = x11_event_source_new (window_x11);
+  window_x11->main_context = g_main_context_new ();
+  window_x11->loop = g_main_loop_new (window_x11->main_context, FALSE);
+
+  g_source_attach (window_x11->x11_source, window_x11->main_context);
 
   if (!window_class->choose_format (window_x11, error)) {
     goto failure;
@@ -286,7 +289,7 @@ gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
   XWMHints wm_hints;
   unsigned long mask;
   const gchar *title = "OpenGL renderer";
-  Atom wm_atoms[3];
+  Atom wm_atoms[1];
 
   static gint x = 0;
   static gint y = 0;
@@ -337,16 +340,8 @@ gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
   if (wm_atoms[0] == None)
     GST_DEBUG ("Cannot create WM_DELETE_WINDOW");
 
-  wm_atoms[1] = XInternAtom (window_x11->device, "WM_GL_WINDOW", False);
-  if (wm_atoms[1] == None)
-    GST_DEBUG ("Cannot create WM_GL_WINDOW");
-
-  wm_atoms[2] = XInternAtom (window_x11->device, "WM_QUIT_LOOP", False);
-  if (wm_atoms[2] == None)
-    GST_DEBUG ("Cannot create WM_QUIT_LOOP");
-
   XSetWMProtocols (window_x11->device, window_x11->internal_win_id, wm_atoms,
-      2);
+      1);
 
   wm_hints.flags = StateHint;
   wm_hints.initial_state = NormalState;
@@ -412,8 +407,6 @@ gst_gl_window_x11_close (GstGLWindow * window)
     XCloseDisplay (window_x11->disp_send);
     GST_DEBUG ("display sender closed");
   }
-
-  g_cond_clear (&window_x11->cond_send_message);
 
   GST_GL_WINDOW_UNLOCK (window_x11);
 }
@@ -577,28 +570,56 @@ gst_gl_window_x11_draw (GstGLWindow * window, guint width, guint height)
   }
 }
 
-/* Called in the gl thread */
+typedef struct _GstGLMessage
+{
+  GstGLWindow *window;
+  GMutex lock;
+  GCond cond;
+  gboolean fired;
+
+  GstGLWindowCB callback;
+  gpointer data;
+} GstGLMessage;
+
+static gboolean
+_run_message (GstGLMessage * message)
+{
+  g_mutex_lock (&message->lock);
+
+  if (message->callback)
+    message->callback (message->data);
+
+  message->fired = TRUE;
+  g_cond_signal (&message->cond);
+  g_mutex_unlock (&message->lock);
+
+  return FALSE;
+}
+
 void
 gst_gl_window_x11_run (GstGLWindow * window)
 {
   GstGLWindowX11 *window_x11;
-  GstGLWindowX11Class *window_class;
 
   window_x11 = GST_GL_WINDOW_X11 (window);
+
+  g_main_loop_run (window_x11->loop);
+}
+
+void
+gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
+{
+  GstGLWindow *window;
+  GstGLWindowX11Class *window_class;
+
+  window = GST_GL_WINDOW (window_x11);
   window_class = GST_GL_WINDOW_X11_GET_CLASS (window_x11);
 
-  GST_DEBUG ("begin loop");
-
-  while (window_x11->running) {
+  if (window_x11->running && XPending (window_x11->device)) {
     XEvent event;
-    XEvent pending_event;
-
-    GST_GL_WINDOW_UNLOCK (window);
 
     /* XSendEvent (which are called in other threads) are done from another display structure */
     XNextEvent (window_x11->device, &event);
-
-    GST_GL_WINDOW_LOCK (window);
 
     // use in generic/cube and other related uses
     window_x11->allow_extra_expose_events = XPending (window_x11->device) <= 2;
@@ -606,114 +627,19 @@ gst_gl_window_x11_run (GstGLWindow * window)
     switch (event.type) {
       case ClientMessage:
       {
-
         Atom wm_delete =
             XInternAtom (window_x11->device, "WM_DELETE_WINDOW", True);
-        Atom wm_gl = XInternAtom (window_x11->device, "WM_GL_WINDOW", True);
-        Atom wm_quit_loop =
-            XInternAtom (window_x11->device, "WM_QUIT_LOOP", True);
 
         if (wm_delete == None)
           GST_DEBUG ("Cannot create WM_DELETE_WINDOW");
-        if (wm_gl == None)
-          GST_DEBUG ("Cannot create WM_GL_WINDOW");
-        if (wm_quit_loop == None)
-          GST_DEBUG ("Cannot create WM_QUIT_LOOP");
-
-        /* Message sent with gst_gl_window_send_message */
-        if (wm_gl != None && event.xclient.message_type == wm_gl) {
-          if (window_x11->running) {
-#if SIZEOF_VOID_P == 8
-            GstGLWindowCB custom_cb =
-                (GstGLWindowCB) (((event.xclient.data.
-                        l[0] & 0xffffffff) << 32) | (event.xclient.data.
-                    l[1] & 0xffffffff));
-            gpointer custom_data =
-                (gpointer) (((event.xclient.data.
-                        l[2] & 0xffffffff) << 32) | (event.xclient.data.
-                    l[3] & 0xffffffff));
-#else
-            GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
-            gpointer custom_data = (gpointer) event.xclient.data.l[1];
-#endif
-
-            if (!custom_cb || !custom_data)
-              GST_DEBUG ("custom cb not initialized");
-
-            custom_cb (custom_data);
-          }
-
-          g_cond_signal (&window_x11->cond_send_message);
-        }
 
         /* User clicked on the cross */
-        else if (wm_delete != None
-            && (Atom) event.xclient.data.l[0] == wm_delete) {
+        if (wm_delete != None && (Atom) event.xclient.data.l[0] == wm_delete) {
           GST_DEBUG ("Close %lud", (gulong) window_x11->internal_win_id);
 
           if (window->close)
             window->close (window->close_data);
         }
-
-        /* message sent with gst_gl_window_quit_loop */
-        else if (wm_quit_loop != None
-            && event.xclient.message_type == wm_quit_loop) {
-#if SIZEOF_VOID_P == 8
-          GstGLWindowCB destroy_cb =
-              (GstGLWindowCB) (((event.xclient.data.
-                      l[0] & 0xffffffff) << 32) | (event.xclient.data.
-                  l[1] & 0xffffffff));
-          gpointer destroy_data =
-              (gpointer) (((event.xclient.data.
-                      l[2] & 0xffffffff) << 32) | (event.xclient.data.
-                  l[3] & 0xffffffff));
-#else
-          GstGLWindowCB destroy_cb = (GstGLWindowCB) event.xclient.data.l[0];
-          gpointer destroy_data = (gpointer) event.xclient.data.l[1];
-#endif
-
-          GST_DEBUG ("Quit loop message %lud",
-              (gulong) window_x11->internal_win_id);
-
-          /* exit loop */
-          window_x11->running = FALSE;
-
-          /* make sure last pendings send message calls are executed */
-          XFlush (window_x11->device);
-          while (XCheckTypedEvent (window_x11->device, ClientMessage,
-                  &pending_event)) {
-#if SIZEOF_VOID_P == 8
-            GstGLWindowCB custom_cb =
-                (GstGLWindowCB) (((event.xclient.data.
-                        l[0] & 0xffffffff) << 32) | (event.xclient.data.
-                    l[1] & 0xffffffff));
-            gpointer custom_data =
-                (gpointer) (((event.xclient.data.
-                        l[2] & 0xffffffff) << 32) | (event.xclient.data.
-                    l[3] & 0xffffffff));
-#else
-            GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
-            gpointer custom_data = (gpointer) event.xclient.data.l[1];
-#endif
-            GST_DEBUG ("execute last pending custom x events");
-
-            if (!custom_cb || !custom_data)
-              GST_DEBUG ("custom cb not initialized");
-
-            custom_cb (custom_data);
-
-            g_cond_signal (&window_x11->cond_send_message);
-          }
-
-          /* Finally we can destroy opengl ressources (texture/shaders/fbo) */
-          if (!destroy_cb || !destroy_data)
-            GST_FIXME ("destroy cb not correctly set");
-
-          if (destroy_cb)
-            destroy_cb (destroy_data);
-
-        } else
-          GST_DEBUG ("client message not recognized");
         break;
       }
 
@@ -767,7 +693,6 @@ gst_gl_window_x11_run (GstGLWindow * window)
     }                           // switch
   }                             // while running
 
-  GST_DEBUG ("end loop");
 }
 
 /* Not called by the gl thread */
@@ -779,32 +704,14 @@ gst_gl_window_x11_quit (GstGLWindow * window, GstGLWindowCB callback,
 
   window_x11 = GST_GL_WINDOW_X11 (window);
 
-  GST_DEBUG ("sending quit, running:%i", window_x11->running);
+  if (callback)
+    gst_gl_window_x11_send_message (window, callback, data);
 
-  if (window_x11->running) {
-    XEvent event;
+  GST_LOG ("sending quit");
 
-    event.xclient.type = ClientMessage;
-    event.xclient.send_event = TRUE;
-    event.xclient.display = window_x11->disp_send;
-    event.xclient.window = window_x11->internal_win_id;
-    event.xclient.message_type =
-        XInternAtom (window_x11->disp_send, "WM_QUIT_LOOP", True);
-    event.xclient.format = 32;
-#if SIZEOF_VOID_P == 8
-    event.xclient.data.l[0] = (((long) callback) >> 32) & 0xffffffff;
-    event.xclient.data.l[1] = (((long) callback)) & 0xffffffff;
-    event.xclient.data.l[2] = (((long) data) >> 32) & 0xffffffff;
-    event.xclient.data.l[3] = (((long) data)) & 0xffffffff;
-#else
-    event.xclient.data.l[0] = (long) callback;
-    event.xclient.data.l[1] = (long) data;
-#endif
+  g_main_loop_quit (window_x11->loop);
 
-    XSendEvent (window_x11->disp_send, window_x11->internal_win_id, FALSE,
-        NoEventMask, &event);
-    XSync (window_x11->disp_send, FALSE);
-  }
+  GST_LOG ("quit sent");
 }
 
 /* Not called by the gl thread */
@@ -817,32 +724,24 @@ gst_gl_window_x11_send_message (GstGLWindow * window, GstGLWindowCB callback,
   window_x11 = GST_GL_WINDOW_X11 (window);
 
   if (window_x11->running) {
-    XEvent event;
+    GstGLMessage message;
 
-    event.xclient.type = ClientMessage;
-    event.xclient.send_event = TRUE;
-    event.xclient.display = window_x11->disp_send;
-    event.xclient.window = window_x11->internal_win_id;
-    event.xclient.message_type =
-        XInternAtom (window_x11->disp_send, "WM_GL_WINDOW", True);
-    event.xclient.format = 32;
-#if SIZEOF_VOID_P == 8
-    event.xclient.data.l[0] = (((long) callback) >> 32) & 0xffffffff;
-    event.xclient.data.l[1] = (((long) callback)) & 0xffffffff;
-    event.xclient.data.l[2] = (((long) data) >> 32) & 0xffffffff;
-    event.xclient.data.l[3] = (((long) data)) & 0xffffffff;
-#else
-    event.xclient.data.l[0] = (long) callback;
-    event.xclient.data.l[1] = (long) data;
-#endif
+    message.window = window;
+    message.callback = callback;
+    message.data = data;
+    message.fired = FALSE;
+    g_mutex_init (&message.lock);
+    g_cond_init (&message.cond);
 
-    XSendEvent (window_x11->disp_send, window_x11->internal_win_id, FALSE,
-        NoEventMask, &event);
-    XSync (window_x11->disp_send, FALSE);
+    g_main_context_invoke (window_x11->main_context, (GSourceFunc) _run_message,
+        &message);
+
+    g_mutex_lock (&message.lock);
 
     /* block until opengl calls have been executed in the gl thread */
-    g_cond_wait (&window_x11->cond_send_message,
-        GST_GL_WINDOW_GET_LOCK (window));
+    while (!message.fired)
+      g_cond_wait (&message.cond, &message.lock);
+    g_mutex_unlock (&message.lock);
   }
 }
 
