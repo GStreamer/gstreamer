@@ -197,6 +197,43 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
 static gchar *
 extractable_check_id (GType type, const gchar * id)
 {
+  const gchar *testing_directory;
+
+  testing_directory = g_getenv ("GES_TESTING_ASSETS_DIRECTORY");
+
+  /* Testing purposes, user can specify a directory to look up for script */
+  if (testing_directory != NULL) {
+    gchar **tokens;
+    gchar *location = NULL;
+    guint i;
+
+    GST_DEBUG ("Checking if the testing directory contains needed media");
+
+    tokens = g_strsplit (id, "media", 2);
+    for (i = 0; tokens[i]; i++)
+      if (i == 1)
+        location = tokens[1];
+
+    if (location == NULL)
+      GST_WARNING ("The provided id doesn't have a media subdirectory");
+    else {
+      gchar *actual_id =
+          g_strconcat ("file://", testing_directory, "/media/", location, NULL);
+
+      if (gst_uri_is_valid (actual_id)) {
+        GST_DEBUG ("Returning new id %s instead of id %s", actual_id, id);
+        g_strfreev (tokens);
+        return (actual_id);
+      } else
+        GST_WARNING ("The constructed id %s was not valid, trying %s anyway",
+            actual_id, id);
+
+      g_free (actual_id);
+    }
+
+    g_strfreev (tokens);
+  }
+
   if (gst_uri_is_valid (id))
     return g_strdup (id);
 
