@@ -772,8 +772,9 @@ gst_gl_window_cocoa_get_gl_api (GstGLWindow * window)
   NSAutoreleasePool *pool;
 
   m_cocoa->priv->running = FALSE;
-  m_callback (m_data);
- 
+  if (m_callback)
+    m_callback (m_data);
+
 #ifdef GNUSTEP
   pool = [[NSAutoreleasePool alloc] init];
   if ([NSApp isRunning])
