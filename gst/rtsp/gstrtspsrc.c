@@ -5458,9 +5458,8 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src, gboolean async)
       goto create_request_failed;
     }
 
-    /* select transport, copy is made when adding to header so we can free it. */
-    gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT, transports);
-    g_free (transports);
+    /* select transport */
+    gst_rtsp_message_take_header (&request, GST_RTSP_HDR_TRANSPORT, transports);
 
     /* if the user wants a non default RTP packet size we add the blocksize
      * parameter */
