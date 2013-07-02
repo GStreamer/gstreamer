@@ -1690,7 +1690,7 @@ static GstBuffer *
 gst_dash_demux_download_header_fragment (GstDashDemux * demux, guint stream_idx,
     gchar * path, gint64 range_start, gint64 range_end)
 {
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
   gchar *next_header_uri;
   GstFragment *fragment;
 
@@ -1706,8 +1706,10 @@ gst_dash_demux_download_header_fragment (GstDashDemux * demux, guint stream_idx,
   fragment = gst_uri_downloader_fetch_uri_with_range (demux->downloader,
       next_header_uri, range_start, range_end);
   g_free (next_header_uri);
-  buffer = gst_fragment_get_buffer (fragment);
-  g_object_unref (fragment);
+  if (fragment) {
+    buffer = gst_fragment_get_buffer (fragment);
+    g_object_unref (fragment);
+  }
   return buffer;
 }
 
