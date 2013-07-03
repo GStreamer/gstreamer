@@ -52,7 +52,7 @@ struct _GstRTSPClientPrivate
 
   /* used to cache the media in the last requested DESCRIBE so that
    * we can pick it up in the next SETUP immediately */
-  GstRTSPUrl *uri;
+  gchar *path;
   GstRTSPMedia *media;
 
   GList *transports;
@@ -329,8 +329,8 @@ gst_rtsp_client_finalize (GObject * obj)
   if (priv->auth)
     g_object_unref (priv->auth);
 
-  if (priv->uri)
-    gst_rtsp_url_free (priv->uri);
+  if (priv->path)
+    g_free (priv->path);
   if (priv->media) {
     gst_rtsp_media_unprepare (priv->media);
     g_object_unref (priv->media);
@@ -464,12 +464,15 @@ handle_unauthorized_request (GstRTSPClient * client, GstRTSPAuth * auth,
 
 
 static gboolean
-compare_uri (const GstRTSPUrl * uri1, const GstRTSPUrl * uri2)
+paths_are_equal (const gchar * path1, const gchar * path2, gint len2)
 {
-  if (uri1 == NULL || uri2 == NULL)
+  if (path1 == NULL || path2 == NULL)
     return FALSE;
 
-  if (strcmp (uri1->abspath, uri2->abspath))
+  if (strlen (path1) != len2)
+    return FALSE;
+
+  if (strncmp (path1, path2, len2))
     return FALSE;
 
   return TRUE;
@@ -479,32 +482,41 @@ compare_uri (const GstRTSPUrl * uri1, const GstRTSPUrl * uri2)
  * but is cached for when the same client (without breaking the connection) is
  * doing a setup for the exact same url. */
 static GstRTSPMedia *
-find_media (GstRTSPClient * client, GstRTSPClientState * state)
+find_media (GstRTSPClient * client, GstRTSPClientState * state, gint * matched)
 {
   GstRTSPClientPrivate *priv = client->priv;
   GstRTSPMediaFactory *factory;
   GstRTSPMedia *media;
   GstRTSPAuth *auth;
+  gchar *path;
+  gint path_len;
 
-  if (!compare_uri (priv->uri, state->uri)) {
+  if (!priv->mount_points)
+    goto no_mount_points;
+
+  path = state->uri->abspath;
+
+  /* find the longest matching factory for the uri first */
+  if (!(factory = gst_rtsp_mount_points_match (priv->mount_points,
+              path, matched)))
+    goto no_factory;
+
+  if (matched)
+    path_len = *matched;
+  else
+    path_len = strlen (path);
+
+  if (!paths_are_equal (priv->path, path, path_len)) {
     /* remove any previously cached values before we try to construct a new
      * media for uri */
-    if (priv->uri)
-      gst_rtsp_url_free (priv->uri);
-    priv->uri = NULL;
+    if (priv->path)
+      g_free (priv->path);
+    priv->path = NULL;
     if (priv->media) {
       gst_rtsp_media_unprepare (priv->media);
       g_object_unref (priv->media);
     }
     priv->media = NULL;
-
-    if (!priv->mount_points)
-      goto no_mount_points;
-
-    /* find the factory for the uri first */
-    if (!(factory = gst_rtsp_mount_points_match (priv->mount_points,
-                state->uri->abspath, NULL)))
-      goto no_factory;
 
     /* check if we have access to the factory */
     if ((auth = gst_rtsp_media_factory_get_auth (factory))) {
@@ -521,23 +533,22 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
     if (!(media = gst_rtsp_media_factory_construct (factory, state->uri)))
       goto no_media;
 
-    g_object_unref (factory);
-    factory = NULL;
-
     /* prepare the media */
     if (!(gst_rtsp_media_prepare (media)))
       goto no_prepare;
 
     /* now keep track of the uri and the media */
-    priv->uri = gst_rtsp_url_copy (state->uri);
+    priv->path = g_strndup (path, path_len);
     priv->media = media;
     state->media = media;
   } else {
-    /* we have seen this uri before, used cached media */
+    /* we have seen this path before, used cached media */
     media = priv->media;
     state->media = media;
-    GST_INFO ("reusing cached media %p", media);
+    GST_INFO ("reusing cached media %p for path %s", media, priv->path);
   }
+
+  g_object_unref (factory);
 
   if (media)
     g_object_ref (media);
@@ -553,7 +564,7 @@ no_mount_points:
   }
 no_factory:
   {
-    GST_ERROR ("client %p: no factory for uri", client);
+    GST_ERROR ("client %p: no factory for uri %s", client, path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
     return NULL;
   }
@@ -578,6 +589,7 @@ no_prepare:
     GST_ERROR ("client %p: can't prepare media", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
     g_object_unref (media);
+    g_object_unref (factory);
     return NULL;
   }
 }
@@ -1294,37 +1306,20 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   GstRTSPStatusCode code;
   GstRTSPSession *session;
   GstRTSPStreamTransport *trans;
-  gchar *trans_str, *pos;
-  guint streamid;
+  gchar *trans_str;
   GstRTSPSessionMedia *sessmedia;
   GstRTSPMedia *media;
   GstRTSPStream *stream;
   GstRTSPState rtspstate;
   GstRTSPClientClass *klass;
-  const gchar *path;
+  gchar *path, *control;
   gint matched;
 
   if (!state->uri)
     goto no_uri;
 
   uri = state->uri;
-  path = state->uri->abspath;
-
-  /* the uri contains the stream number we added in the SDP config, which is
-   * always /stream=%d so we need to strip that off
-   * parse the stream we need to configure, look for the stream in the abspath
-   * first and then in the query. */
-  if (uri->abspath == NULL || !(pos = strstr (uri->abspath, "/stream="))) {
-    if (uri->query == NULL || !(pos = strstr (uri->query, "/stream=")))
-      goto bad_request;
-  }
-
-  /* we can mofify the parsed uri in place */
-  *pos = '\0';
-
-  pos += strlen ("/stream=");
-  if (sscanf (pos, "%u", &streamid) != 1)
-    goto bad_request;
+  path = uri->abspath;
 
   /* parse the transport */
   res =
@@ -1332,16 +1327,6 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
       &transport, 0);
   if (res != GST_RTSP_OK)
     goto no_transport;
-
-  gst_rtsp_transport_new (&ct);
-
-  /* our supported transports */
-  supported = GST_RTSP_LOWER_TRANS_UDP |
-      GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP;
-
-  /* parse and find a usable supported transport */
-  if (!parse_transport (transport, supported, ct))
-    goto unsupported_transports;
 
   /* we create the session after parsing stuff so that we don't make
    * a session for malformed requests */
@@ -1356,6 +1341,37 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
      * return NULL if this is a new url to manage in this session. */
     sessmedia = gst_rtsp_session_get_media (session, path, &matched);
   } else {
+    /* we need a new media configuration in this session */
+    sessmedia = NULL;
+  }
+
+  /* we have no session media, find one and manage it */
+  if (sessmedia == NULL) {
+    /* get a handle to the configuration of the media in the session */
+    media = find_media (client, state, &matched);
+  } else {
+    if ((media = gst_rtsp_session_media_get_media (sessmedia)))
+      g_object_ref (media);
+  }
+  /* no media, not found then */
+  if (media == NULL)
+    goto media_not_found;
+
+  /* path is what matched. We can modify the parsed uri in place */
+  path[matched] = '\0';
+  /* control is remainder */
+  control = &path[matched + 1];
+
+  /* find the stream now using the control part */
+  stream = gst_rtsp_media_find_stream (media, control);
+  if (stream == NULL)
+    goto stream_not_found;
+
+  /* now we have a uri identifying a valid media and stream */
+  state->stream = stream;
+  state->media = media;
+
+  if (session == NULL) {
     /* create a session if this fails we probably reached our session limit or
      * something. */
     if (!(session = gst_rtsp_session_pool_create (priv->session_pool)))
@@ -1369,37 +1385,33 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
         session);
 
     state->session = session;
-
-    /* we need a new media configuration in this session */
-    sessmedia = NULL;
   }
 
-  /* we have no media, find one and manage it */
   if (sessmedia == NULL) {
-    /* get a handle to the configuration of the media in the session */
-    if ((media = find_media (client, state))) {
-      /* manage the media in our session now */
-      sessmedia = gst_rtsp_session_manage_media (session, path, media);
-    }
+    /* manage the media in our session now, if not done already  */
+    sessmedia = gst_rtsp_session_manage_media (session, path, media);
+    /* if we stil have no media, error */
+    if (sessmedia == NULL)
+      goto sessmedia_unavailable;
+  } else {
+    g_object_unref (media);
   }
-
-  /* if we stil have no media, error */
-  if (sessmedia == NULL)
-    goto not_found;
 
   state->sessmedia = sessmedia;
-  state->media = media = gst_rtsp_session_media_get_media (sessmedia);
-
-  /* now get the stream */
-  stream = gst_rtsp_media_get_stream (media, streamid);
-  if (stream == NULL)
-    goto not_found;
-
-  state->stream = stream;
 
   /* set blocksize on this stream */
   if (!handle_blocksize (media, stream, state->request))
     goto invalid_blocksize;
+
+  gst_rtsp_transport_new (&ct);
+
+  /* our supported transports */
+  supported = GST_RTSP_LOWER_TRANS_UDP |
+      GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP;
+
+  /* parse and find a usable supported transport */
+  if (!parse_transport (transport, supported, ct))
+    goto unsupported_transports;
 
   /* update the client transport */
   klass = GST_RTSP_CLIENT_GET_CLASS (client);
@@ -1455,18 +1467,44 @@ no_uri:
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
     return FALSE;
   }
-bad_request:
+no_transport:
   {
-    GST_ERROR ("client %p: bad request", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
+    GST_ERROR ("client %p: no transport", client);
+    send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, state);
     return FALSE;
   }
-not_found:
+no_pool:
   {
-    GST_ERROR ("client %p: media not found", client);
+    GST_ERROR ("client %p: no session pool configured", client);
+    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, state);
+    return FALSE;
+  }
+media_not_found:
+  {
+    GST_ERROR ("client %p: media '%s' not found", client, path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
+    return FALSE;
+  }
+stream_not_found:
+  {
+    GST_ERROR ("client %p: stream '%s' not found", client, control);
+    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
+    g_object_unref (media);
+    return FALSE;
+  }
+service_unavailable:
+  {
+    GST_ERROR ("client %p: can't create session", client);
+    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
+    g_object_unref (media);
+    return FALSE;
+  }
+sessmedia_unavailable:
+  {
+    GST_ERROR ("client %p: can't create session media", client);
+    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
+    g_object_unref (media);
     g_object_unref (session);
-    gst_rtsp_transport_free (ct);
     return FALSE;
   }
 invalid_blocksize:
@@ -1474,21 +1512,6 @@ invalid_blocksize:
     GST_ERROR ("client %p: invalid blocksize", client);
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
     g_object_unref (session);
-    gst_rtsp_transport_free (ct);
-    return FALSE;
-  }
-unsupported_client_transport:
-  {
-    GST_ERROR ("client %p: unsupported client transport", client);
-    send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, state);
-    g_object_unref (session);
-    gst_rtsp_transport_free (ct);
-    return FALSE;
-  }
-no_transport:
-  {
-    GST_ERROR ("client %p: no transport", client);
-    send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, state);
     return FALSE;
   }
 unsupported_transports:
@@ -1496,20 +1519,15 @@ unsupported_transports:
     GST_ERROR ("client %p: unsupported transports", client);
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, state);
     gst_rtsp_transport_free (ct);
+    g_object_unref (session);
     return FALSE;
   }
-no_pool:
+unsupported_client_transport:
   {
-    GST_ERROR ("client %p: no session pool configured", client);
-    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, state);
+    GST_ERROR ("client %p: unsupported client transport", client);
+    send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, state);
     gst_rtsp_transport_free (ct);
-    return FALSE;
-  }
-service_unavailable:
-  {
-    GST_ERROR ("client %p: can't create session", client);
-    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
-    gst_rtsp_transport_free (ct);
+    g_object_unref (session);
     return FALSE;
   }
 }
@@ -1592,7 +1610,7 @@ handle_describe_request (GstRTSPClient * client, GstRTSPClientState * state)
   }
 
   /* find the media object for the uri */
-  if (!(media = find_media (client, state)))
+  if (!(media = find_media (client, state, NULL)))
     goto no_media;
 
   /* create an SDP for the media object on this client */
