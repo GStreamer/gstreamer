@@ -810,10 +810,10 @@ gst_mpegts_descriptor_parse_dvb_service (const GstMpegTsDescriptor *
   if (service_type)
     *service_type = *data;
   data += 1;
-  if (*provider_name)
+  if (provider_name)
     *provider_name = get_encoding_and_convert ((const gchar *) data + 1, *data);
   data += *data + 1;
-  if (*service_name)
+  if (service_name)
     *service_name = get_encoding_and_convert ((const gchar *) data + 1, *data);
 
   return TRUE;
@@ -843,15 +843,15 @@ gst_mpegts_descriptor_parse_dvb_short_event (const GstMpegTsDescriptor *
 
   data = (guint8 *) descriptor->descriptor_data + 2;
 
-  if (*language_code) {
+  if (language_code) {
     *language_code = g_malloc0 (4);
     memcpy (*language_code, data, 3);
   }
   data += 3;
-  if (*event_name)
+  if (event_name)
     *event_name = get_encoding_and_convert ((const gchar *) data + 1, *data);
   data += *data + 1;
-  if (*text)
+  if (text)
     *text = get_encoding_and_convert ((const gchar *) data + 1, *data);
   return TRUE;
 }

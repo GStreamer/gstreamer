@@ -26,6 +26,8 @@
 
 #include <gst/mpegts/gstmpegtsdescriptor.h>
 #include <gst/mpegts/gstmpegtssection.h>
+#include <gst/mpegts/gst-atsc-section.h>
+#include <gst/mpegts/gst-dvb-section.h>
 #include <gst/mpegts/gstmpegts-enumtypes.h>
 
 void gst_mpegts_initialize (void);

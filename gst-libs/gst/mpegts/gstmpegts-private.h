@@ -27,6 +27,7 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_mpegts_debug);
 #define GST_CAT_DEFAULT gst_mpegts_debug
 
-void __initialize_descriptors (void);
+G_GNUC_INTERNAL void __initialize_descriptors (void);
+G_GNUC_INTERNAL guint32 _calc_crc32 (const guint8 *data, guint datalen);
 
 #endif	/* _GST_MPEGTS_PRIVATE_H_ */
