@@ -19,6 +19,8 @@
 
 #define FIXED_POINT 1
 #define OUTSIDE_SPEEX 1
+/* disabled, 16-bit integer NEON support seems broken */
+/* #define _USE_NEON */
 #define RANDOM_PREFIX resample_int
 
 #include "resample.c"
