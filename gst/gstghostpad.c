@@ -77,7 +77,7 @@ static GstPad *gst_proxy_pad_get_target (GstPad * pad);
 /**
  * gst_proxy_pad_iterate_internal_links_default:
  * @pad: the #GstPad to get the internal links of.
- * @parent: the parent of @pad or NULL
+ * @parent: (allow-none): the parent of @pad or NULL
  *
  * Invoke the default iterate internal links function of the proxy pad.
  *
@@ -106,7 +106,7 @@ gst_proxy_pad_iterate_internal_links_default (GstPad * pad, GstObject * parent)
 /**
  * gst_proxy_pad_chain_default:
  * @pad: a sink #GstPad, returns GST_FLOW_ERROR if not.
- * @parent: the parent of @pad or NULL
+ * @parent: (allow-none): the parent of @pad or NULL
  * @buffer: (transfer full): the #GstBuffer to send, return GST_FLOW_ERROR
  *     if not.
  *
@@ -134,7 +134,7 @@ gst_proxy_pad_chain_default (GstPad * pad, GstObject * parent,
 /**
  * gst_proxy_pad_chain_list_default:
  * @pad: a sink #GstPad, returns GST_FLOW_ERROR if not.
- * @parent: the parent of @pad or NULL
+ * @parent: (allow-none): the parent of @pad or NULL
  * @list: (transfer full): the #GstBufferList to send, return GST_FLOW_ERROR
  *     if not.
  *
@@ -334,7 +334,7 @@ gst_ghost_pad_internal_activate_pull_default (GstPad * pad, GstObject * parent,
 /**
  * gst_ghost_pad_internal_activate_mode_default:
  * @pad: the #GstPad to activate or deactivate.
- * @parent: the parent of @pad or NULL
+ * @parent: (allow-none): the parent of @pad or NULL
  * @mode: the requested activation mode
  * @active: whether the pad should be active or not.
  *
@@ -422,7 +422,7 @@ gst_ghost_pad_activate_pull_default (GstPad * pad, GstObject * parent,
 /**
  * gst_ghost_pad_activate_mode_default:
  * @pad: the #GstPad to activate or deactivate.
- * @parent: the parent of @pad or NULL
+ * @parent: (allow-none): the parent of @pad or NULL
  * @mode: the requested activation mode
  * @active: whether the pad should be active or not.
  *

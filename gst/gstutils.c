@@ -2166,7 +2166,7 @@ gst_element_query_position (GstElement * element, GstFormat format,
  * gst_element_query_duration:
  * @element: a #GstElement to invoke the duration query on.
  * @format: the #GstFormat requested
- * @duration: (out): A location in which to store the total duration, or NULL.
+ * @duration: (out) (allow-none): A location in which to store the total duration, or NULL.
  *
  * Queries an element for the total stream duration.
  *
@@ -2531,7 +2531,7 @@ gst_pad_proxy_query_caps (GstPad * pad, GstQuery * query)
  * gst_pad_query_position:
  * @pad: a #GstPad to invoke the position query on.
  * @format: the #GstFormat requested
- * @cur: (out): A location in which to store the current position, or NULL.
+ * @cur: (out) (allow-none): A location in which to store the current position, or NULL.
  *
  * Queries a pad for the stream position.
  *

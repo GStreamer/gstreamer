@@ -494,7 +494,7 @@ GST_EXPORT GstDebugLevel            _gst_debug_min;
  * GST_CAT_LEVEL_LOG:
  * @cat: category to use
  * @level: the severity of the message
- * @object: the #GObject the message belongs to or NULL if none
+ * @object: (allow-none): the #GObject the message belongs to or NULL if none
  * @...: A printf-style message to output
  *
  * Outputs a debugging message. This is the most general macro for outputting

@@ -42,7 +42,7 @@ G_DEFINE_POINTER_TYPE (GstTypeFind, gst_type_find);
 
 /**
  * gst_type_find_register:
- * @plugin: A #GstPlugin, or NULL for a static typefind function
+ * @plugin: (allow-none): A #GstPlugin, or NULL for a static typefind function
  * @name: The name for registering
  * @rank: The rank (or importance) of this typefind function
  * @func: The #GstTypeFindFunction to use
@@ -159,7 +159,7 @@ gst_type_find_suggest (GstTypeFind * find, guint probability, GstCaps * caps)
  * @find: The #GstTypeFind object the function was called with
  * @probability: The probability in percent that the suggestion is right
  * @media_type: the media type of the suggested caps
- * @fieldname: first field of the suggested caps, or NULL
+ * @fieldname: (allow-none): first field of the suggested caps, or NULL
  * @...: additional arguments to the suggested caps in the same format as the
  *     arguments passed to gst_structure_new() (ie. triplets of field name,
  *     field GType and field value)

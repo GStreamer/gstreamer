@@ -246,7 +246,7 @@ helper_find_get_length (gpointer data)
 /**
  * gst_type_find_helper_get_range:
  * @obj: A #GstObject that will be passed as first argument to @func
- * @parent: the parent of @obj or NULL
+ * @parent: (allow-none): the parent of @obj or NULL
  * @func: (scope call): A generic #GstTypeFindHelperGetRangeFunction that will
  *        be used to access data at random offsets when doing the typefinding
  * @size: The length in bytes
@@ -480,7 +480,7 @@ buf_helper_find_suggest (gpointer data, GstTypeFindProbability probability,
 
 /**
  * gst_type_find_helper_for_data:
- * @obj: object doing the typefinding, or NULL (used for logging)
+ * @obj: (allow-none): object doing the typefinding, or NULL (used for logging)
  * @data: (in) (transfer none): a pointer with data to typefind
  * @size: (in) (transfer none): the size of @data
  * @prob: (out) (allow-none): location to store the probability of the found
@@ -552,7 +552,7 @@ gst_type_find_helper_for_data (GstObject * obj, const guint8 * data, gsize size,
 
 /**
  * gst_type_find_helper_for_buffer:
- * @obj: object doing the typefinding, or NULL (used for logging)
+ * @obj: (allow-none): object doing the typefinding, or NULL (used for logging)
  * @buf: (in) (transfer none): a #GstBuffer with data to typefind
  * @prob: (out) (allow-none): location to store the probability of the found
  *     caps, or #NULL

@@ -218,7 +218,7 @@ gst_allocator_register (const gchar * name, GstAllocator * allocator)
 
 /**
  * gst_allocator_find:
- * @name: the name of the allocator
+ * @name: (allow-none): the name of the allocator
  *
  * Find a previously registered allocator with @name. When @name is NULL, the
  * default allocator will be returned.

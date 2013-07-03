@@ -1372,8 +1372,8 @@ gst_message_parse_info (GstMessage * message, GError ** gerror, gchar ** debug)
 /**
  * gst_message_parse_segment_start:
  * @message: A valid #GstMessage of type GST_MESSAGE_SEGMENT_START.
- * @format: (out): Result location for the format, or NULL
- * @position: (out): Result location for the position, or NULL
+ * @format: (out) (allow-none): Result location for the format, or NULL
+ * @position: (out) (allow-none): Result location for the position, or NULL
  *
  * Extracts the position and format from the segment start message.
  *
@@ -1402,8 +1402,8 @@ gst_message_parse_segment_start (GstMessage * message, GstFormat * format,
 /**
  * gst_message_parse_segment_done:
  * @message: A valid #GstMessage of type GST_MESSAGE_SEGMENT_DONE.
- * @format: (out): Result location for the format, or NULL
- * @position: (out): Result location for the position, or NULL
+ * @format: (out) (allow-none): Result location for the format, or NULL
+ * @position: (out) (allow-none): Result location for the position, or NULL
  *
  * Extracts the position and format from the segment done message.
  *
@@ -1432,7 +1432,7 @@ gst_message_parse_segment_done (GstMessage * message, GstFormat * format,
 /**
  * gst_message_parse_async_done:
  * @message: A valid #GstMessage of type GST_MESSAGE_ASYNC_DONE.
- * @running_time: (out): Result location for the running_time or NULL
+ * @running_time: (out) (allow-none): Result location for the running_time or NULL
  *
  * Extract the running_time from the async_done message.
  *
@@ -1456,7 +1456,7 @@ gst_message_parse_async_done (GstMessage * message, GstClockTime * running_time)
 /**
  * gst_message_parse_request_state:
  * @message: A valid #GstMessage of type GST_MESSAGE_REQUEST_STATE.
- * @state: (out): Result location for the requested state or NULL
+ * @state: (out) (allow-none): Result location for the requested state or NULL
  *
  * Extract the requested state from the request_state message.
  *
@@ -2108,7 +2108,8 @@ gst_message_new_reset_time (GstObject * src, GstClockTime running_time)
 /**
  * gst_message_parse_reset_time:
  * @message: A valid #GstMessage of type GST_MESSAGE_RESET_TIME.
- * @running_time: (out): Result location for the running_time or NULL
+ * @running_time: (out) (allow-none): Result location for the running_time or
+ *      NULL
  *
  * Extract the running-time from the RESET_TIME message.
  *
@@ -2315,7 +2316,8 @@ gst_message_new_have_context (GstObject * src, GstContext * context)
 /**
  * gst_message_parse_have_context:
  * @message: A valid #GstMessage of type GST_MESSAGE_HAVE_CONTEXT.
- * @context: (out) (transfer full): Result location for the context or NULL
+ * @context: (out) (transfer full) (allow-none): Result location for the
+ *      context or NULL
  *
  * Extract the context from the HAVE_CONTEXT message.
  *
