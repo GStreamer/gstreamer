@@ -3762,9 +3762,10 @@ gst_mpd_client_get_next_header_index (GstMpdClient * client, gchar ** uri,
         && stream_period->period->SegmentTemplate->index) {
       initialization = stream_period->period->SegmentTemplate->index;
     }
-    *uri = gst_mpdparser_build_URL_from_template (initialization,
-        stream->cur_representation->id, 0,
-        stream->cur_representation->bandwidth, 0);
+    if (initialization)
+      *uri = gst_mpdparser_build_URL_from_template (initialization,
+          stream->cur_representation->id, 0,
+          stream->cur_representation->bandwidth, 0);
   }
   GST_MPD_CLIENT_UNLOCK (client);
 
