@@ -2540,7 +2540,7 @@ gst_mpdparser_parse_baseURL (GstMpdClient * client, GstActiveStream * stream,
       } else {
         ret = tmp1;
       }
-      GST_WARNING ("Got base URI from MPD file URI %s", ret);
+      GST_INFO ("Got base URI from MPD file URI %s", ret);
     }
   }
 
