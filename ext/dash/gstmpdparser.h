@@ -465,7 +465,6 @@ struct _GstMpdClient
   guint period_idx;                           /* index of current Period */
 
   GList *active_streams;                      /* list of GstActiveStream */
-  guint stream_idx;                           /* currently active stream */
 
   guint update_failed_count;
   gchar *mpd_uri;                             /* manifest file URI */
@@ -485,7 +484,6 @@ gboolean gst_mpd_parse (GstMpdClient *client, const gchar *data, gint size);
 gboolean gst_mpd_client_setup_media_presentation (GstMpdClient *client);
 gboolean gst_mpd_client_setup_streaming (GstMpdClient *client, GstStreamMimeType mimeType, const gchar* lang);
 gboolean gst_mpd_client_setup_representation (GstMpdClient *client, GstActiveStream *stream, GstRepresentationNode *representation);
-GstClockTime gst_mpd_client_get_current_position (GstMpdClient *client);
 GstClockTime gst_mpd_client_get_next_fragment_duration (GstMpdClient * client, GstActiveStream * stream);
 GstClockTime gst_mpd_client_get_media_presentation_duration (GstMpdClient *client);
 gboolean gst_mpd_client_get_last_fragment_timestamp (GstMpdClient * client, guint stream_idx, GstClockTime * ts);

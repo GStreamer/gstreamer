@@ -64,8 +64,7 @@ static gboolean gst_mpdparser_get_xml_prop_cond_uint (xmlNode * a_node,
 static gboolean gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node,
     const gchar * property_name, GstDateTime ** property_value);
 static gboolean gst_mpdparser_get_xml_prop_duration (xmlNode * a_node,
-    const gchar * property_name, gint64 default_value,
-    gint64 * property_value);
+    const gchar * property_name, gint64 default_value, gint64 * property_value);
 static gboolean gst_mpdparser_get_xml_node_content (xmlNode * a_node,
     gchar ** content);
 static gchar *gst_mpdparser_get_xml_node_namespace (xmlNode * a_node,
@@ -1978,8 +1977,8 @@ gst_mpdparser_get_adapt_set_with_mimeType_and_idx (GList * AdaptationSets,
   if (AdaptationSets == NULL)
     return NULL;
 
-  // FIXME Use ContentComponent to determine if this adaptation set contains
-  // the content type we're looking for.
+  /* FIXME Use ContentComponent to determine if this adaptation set contains
+   * the content type we're looking for. */
   for (list = g_list_first (AdaptationSets); list; list = g_list_next (list)) {
     adapt_set = (GstAdaptationSetNode *) list->data;
     if (adapt_set) {
@@ -3221,7 +3220,8 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
   }
 
   /* check duration of last segment */
-  last_media_segment = stream->segments ? g_list_last (stream->segments)->data : NULL;
+  last_media_segment =
+      stream->segments ? g_list_last (stream->segments)->data : NULL;
   if (last_media_segment && GST_CLOCK_TIME_IS_VALID (PeriodEnd)) {
     if (last_media_segment->start_time + last_media_segment->duration >
         PeriodEnd) {
@@ -3855,23 +3855,6 @@ gst_mpd_client_get_next_header_index (GstMpdClient * client, gchar ** uri,
   GST_MPD_CLIENT_UNLOCK (client);
 
   return *uri == NULL ? FALSE : TRUE;
-}
-
-GstClockTime
-gst_mpd_client_get_current_position (GstMpdClient * client)
-{
-  GstActiveStream *stream;
-  GstMediaSegment *media_segment;
-
-  stream = g_list_nth_data (client->active_streams, client->stream_idx);
-  g_return_val_if_fail (stream != NULL, GST_CLOCK_TIME_NONE);
-
-  media_segment =
-      g_list_nth_data (stream->segments,
-      gst_mpd_client_get_segment_index (stream));
-  g_return_val_if_fail (media_segment != NULL, GST_CLOCK_TIME_NONE);
-
-  return media_segment->start_time;
 }
 
 GstClockTime

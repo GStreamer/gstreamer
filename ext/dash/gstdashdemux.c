@@ -489,7 +489,7 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GSList *iter;
       gboolean update;
 
-      GST_WARNING_OBJECT (demux, "Received seek event");
+      GST_INFO_OBJECT (demux, "Received seek event");
 
       if (gst_mpd_client_is_live (demux->client)) {
         GST_WARNING_OBJECT (demux, "Received seek event for live stream");
@@ -581,8 +581,8 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
               list = g_list_next (list)) {
             chunk = list->data;
             current_pos = chunk->start_time;
-            //current_sequence = chunk->number;
-            GST_WARNING_OBJECT (demux, "current_pos:%" GST_TIME_FORMAT
+            /* current_sequence = chunk->number; */
+            GST_DEBUG_OBJECT (demux, "current_pos:%" GST_TIME_FORMAT
                 " <= target_pos:%" GST_TIME_FORMAT " duration:%"
                 GST_TIME_FORMAT, GST_TIME_ARGS (current_pos),
                 GST_TIME_ARGS (target_pos), GST_TIME_ARGS (chunk->duration));
@@ -932,7 +932,7 @@ gst_dash_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
     }
     default:{
-      // By default, do not forward queries upstream
+      /* By default, do not forward queries upstream */
       break;
     }
   }
@@ -1966,8 +1966,7 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
     GstBuffer *buffer;
     GstMediaFragmentInfo fragment;
 
-    if (gst_mpd_client_get_next_fragment (demux->client,
-            stream_idx, &fragment)) {
+    if (gst_mpd_client_get_next_fragment (demux->client, stream_idx, &fragment)) {
 
       g_get_current_time (&start);
       GST_INFO_OBJECT (demux, "Next fragment for stream #%i", stream_idx);
