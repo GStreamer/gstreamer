@@ -470,17 +470,8 @@ GST_START_TEST (test_snapping)
   ASSERT_OBJECT_REFCOUNT (clip1, "Second clip", 1);
   ASSERT_OBJECT_REFCOUNT (clip2, "Third clip", 1);
 
-  gst_object_unref (timeline);
-
-  /* Check we destroyed everything */
-  fail_if (G_IS_OBJECT (timeline));
-  fail_if (G_IS_OBJECT (trackelement));
-  fail_if (G_IS_OBJECT (trackelement1));
-  fail_if (G_IS_OBJECT (trackelement2));
-  fail_if (G_IS_OBJECT (clip));
-  fail_if (G_IS_OBJECT (clip1));
-  fail_if (G_IS_OBJECT (clip2));
-  fail_if (G_IS_OBJECT (layer));
+  check_destroyed (G_OBJECT (timeline), G_OBJECT (trackelement),
+      trackelement1, trackelement2, clip, clip1, clip2, layer, NULL);
 }
 
 GST_END_TEST;

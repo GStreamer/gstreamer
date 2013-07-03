@@ -203,10 +203,8 @@ GST_START_TEST (test_split_object)
   /* 1 ref for the Clip, 1 ref for the Track and 1 ref for the timeline */
   ASSERT_OBJECT_REFCOUNT (splittrackelement, "splittrackelement", 3);
 
-  g_object_unref (timeline);
-  fail_if (G_IS_OBJECT (splitclip));
-  fail_if (G_IS_OBJECT (clip));
-  fail_if (G_IS_OBJECT (splittrackelement));
+  check_destroyed (G_OBJECT (timeline), G_OBJECT (splitclip), clip,
+      splittrackelement, NULL);
 }
 
 GST_END_TEST;
@@ -367,10 +365,8 @@ GST_START_TEST (test_clip_refcount_remove_child)
   fail_unless (called == TRUE);
   fail_if (G_IS_OBJECT (effect));
 
-  gst_object_unref (track);
-  gst_object_unref (clip);
-  fail_if (G_IS_OBJECT (track));
-  fail_if (G_IS_OBJECT (clip));
+  check_destroyed (G_OBJECT (track), NULL, NULL);
+  check_destroyed (G_OBJECT (clip), NULL, NULL);
 }
 
 GST_END_TEST;

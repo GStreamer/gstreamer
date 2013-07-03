@@ -165,9 +165,7 @@ GST_START_TEST (test_transition_properties)
       (GES_VIDEO_TRANSITION (trackelement)), 1);
   assert_equals_int (GES_TRANSITION_CLIP (clip)->vtype, 1);
 
-  gst_object_unref (timeline);
-  fail_if (G_IS_OBJECT (track));
-  fail_if (G_IS_OBJECT (clip));
+  check_destroyed (G_OBJECT (timeline), G_OBJECT (track), clip, NULL);
 }
 
 GST_END_TEST;

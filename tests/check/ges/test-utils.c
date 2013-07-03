@@ -22,6 +22,12 @@
 #include "test-utils.h"
 #include <gio/gio.h>
 
+typedef struct _DestroyedObjectStruct
+{
+  GObject *object;
+  gboolean destroyed;
+} DestroyedObjectStruct;
+
 gchar *
 ges_test_get_audio_only_uri (void)
 {
@@ -98,5 +104,48 @@ ges_test_create_pipeline (GESTimeline * timeline)
       gst_element_factory_make ("fakesink", "test-videofakesink"), NULL);
 
   return pipeline;
+
+}
+
+static void
+weak_notify (DestroyedObjectStruct * destroyed, GObject ** object)
+{
+  destroyed->destroyed = TRUE;
+}
+
+void
+check_destroyed (GObject * object_to_unref, GObject * first_object, ...)
+{
+  GObject *object;
+  GList *objs = NULL, *tmp;
+  DestroyedObjectStruct *destroyed = g_slice_new0 (DestroyedObjectStruct);
+
+  destroyed->object = object_to_unref;
+  g_object_weak_ref (object_to_unref, (GWeakNotify) weak_notify, destroyed);
+  objs = g_list_prepend (objs, destroyed);
+
+  if (first_object) {
+    va_list varargs;
+
+    object = first_object;
+
+    va_start (varargs, first_object);
+    while (object) {
+      destroyed = g_slice_new0 (DestroyedObjectStruct);
+      destroyed->object = object;
+      g_object_weak_ref (object, (GWeakNotify) weak_notify, destroyed);
+      objs = g_list_prepend (objs, destroyed);
+      object = va_arg (varargs, GObject *);
+    }
+    va_end (varargs);
+  }
+  gst_object_unref (object_to_unref);
+
+  for (tmp = objs; tmp; tmp = tmp->next) {
+    fail_unless (((DestroyedObjectStruct *) tmp->data)->destroyed == TRUE,
+        "%p is not destroyed", ((DestroyedObjectStruct *) tmp->data)->object);
+    g_slice_free (DestroyedObjectStruct, tmp->data);
+  }
+  g_list_free (objs);
 
 }

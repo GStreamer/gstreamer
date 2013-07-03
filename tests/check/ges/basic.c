@@ -514,11 +514,7 @@ GST_START_TEST (test_ges_timeline_remove_track)
   tmp = ges_layer_get_clips (layer);
   assert_equals_int (g_list_length (tmp), 3);
 
-  gst_object_unref (timeline);
-  fail_if (G_IS_OBJECT (layer));
-  fail_if (G_IS_OBJECT (t1));
-  fail_if (G_IS_OBJECT (t2));
-  fail_if (G_IS_OBJECT (t3));
+  check_destroyed (G_OBJECT (timeline), G_OBJECT (layer), t1, t2, t3, NULL);
 }
 
 GST_END_TEST;
