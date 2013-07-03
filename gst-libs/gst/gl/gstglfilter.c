@@ -34,14 +34,14 @@ static GstStaticPadTemplate gst_gl_filter_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_UPLOAD_VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_GL_DOWNLOAD_VIDEO_CAPS)
     );
 
 static GstStaticPadTemplate gst_gl_filter_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_DOWNLOAD_VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_GL_UPLOAD_VIDEO_CAPS)
     );
 
 /* Properties */
