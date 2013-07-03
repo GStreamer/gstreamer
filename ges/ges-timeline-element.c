@@ -832,3 +832,24 @@ ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
 
   return ret;
 }
+
+/**
+ * ges_timeline_element_get_toplevel_parent:
+ * @self: The #GESTimelineElement to get the toplevel parent from
+ *
+ * Gets the toplevel #GESTimelineElement controlling @self
+ *
+ * Returns: (transfer full): The toplevel controlling parent of @self
+ */
+GESTimelineElement *
+ges_timeline_element_get_toplevel_parent (GESTimelineElement * self)
+{
+  GESTimelineElement *toplevel = self;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
+
+  while (GES_TIMELINE_ELEMENT_PARENT (toplevel))
+    toplevel = GES_TIMELINE_ELEMENT_PARENT (toplevel);
+
+  return gst_object_ref (toplevel);
+}

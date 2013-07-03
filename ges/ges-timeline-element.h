@@ -179,6 +179,8 @@ struct _GESTimelineElementClass
 
 GType ges_timeline_element_get_type (void) G_GNUC_CONST;
 
+GESTimelineElement *
+ges_timeline_element_get_toplevel_parent             (GESTimelineElement *self);
 GESTimelineElement * ges_timeline_element_get_parent (GESTimelineElement * self);
 gboolean ges_timeline_element_set_parent             (GESTimelineElement *self, GESTimelineElement *parent);
 gboolean ges_timeline_element_set_timeline           (GESTimelineElement *self, GESTimeline *timeline);
