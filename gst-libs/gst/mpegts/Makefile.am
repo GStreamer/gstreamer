@@ -51,7 +51,7 @@ GstMpegts-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstmpegts-@GST_API_
 		GST_PLUGIN_SYSTEM_PATH_1_0="" GST_PLUGIN_PATH_1_0="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstMpegts \
 		--nsversion=@GST_API_VERSION@ \
-		--identifier-prefix=GstMpegTS \
+		--identifier-prefix=GstMpegTs \
 		--symbol-prefix=gst_mpegts \
 		--symbol-prefix=gst \
 		--warn-all -v \

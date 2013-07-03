@@ -455,7 +455,7 @@ failed:
  *
  * Note: The data provided in @buffer will not be copied.
  *
- * Returns: (transfer full) (element-type GstMpegTSDescriptor): an
+ * Returns: (transfer full) (element-type GstMpegTsDescriptor): an
  * array of the parsed descriptors or %NULL if there was an error.
  * Release with #g_array_unref when done with it.
  */
@@ -469,7 +469,7 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
 
   /* fast-path */
   if (buf_len == 0)
-    return g_array_new (FALSE, FALSE, sizeof (GstMpegTSDescriptor));
+    return g_array_new (FALSE, FALSE, sizeof (GstMpegTsDescriptor));
 
   data = buffer;
 
@@ -496,12 +496,12 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
     return NULL;
   }
 
-  res = g_array_sized_new (FALSE, FALSE, sizeof (GstMpegTSDescriptor), nb_desc);
+  res = g_array_sized_new (FALSE, FALSE, sizeof (GstMpegTsDescriptor), nb_desc);
 
   data = buffer;
 
   for (i = 0; i < nb_desc; i++) {
-    GstMpegTSDescriptor *desc = &g_array_index (res, GstMpegTSDescriptor, i);
+    GstMpegTsDescriptor *desc = &g_array_index (res, GstMpegTsDescriptor, i);
 
     desc->descriptor_data = data;
     desc->descriptor_tag = *data++;
@@ -525,8 +525,8 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
 
 /**
  * gst_mpegts_find_descriptor:
- * @descriptors: (element-type GstMpegTSDescriptor) (transfer none): an array
- * of #GstMpegTSDescriptor
+ * @descriptors: (element-type GstMpegTsDescriptor) (transfer none): an array
+ * of #GstMpegTsDescriptor
  * @tag: the tag to look for
  *
  * Finds the first descriptor of type @tag in the array.
@@ -536,7 +536,7 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
  *
  * Returns: (transfer none): the first descriptor matchin @tag, else %NULL.
  */
-const GstMpegTSDescriptor *
+const GstMpegTsDescriptor *
 gst_mpegts_find_descriptor (GArray * descriptors, guint8 tag)
 {
   guint i, nb_desc;
@@ -545,20 +545,20 @@ gst_mpegts_find_descriptor (GArray * descriptors, guint8 tag)
 
   nb_desc = descriptors->len;
   for (i = 0; i < nb_desc; i++) {
-    GstMpegTSDescriptor *desc =
-        &g_array_index (descriptors, GstMpegTSDescriptor, i);
+    GstMpegTsDescriptor *desc =
+        &g_array_index (descriptors, GstMpegTsDescriptor, i);
     if (desc->descriptor_tag == tag)
-      return (const GstMpegTSDescriptor *) desc;
+      return (const GstMpegTsDescriptor *) desc;
   }
   return NULL;
 }
 
-static GstMpegTSDescriptor *
-_copy_descriptor (GstMpegTSDescriptor * desc)
+static GstMpegTsDescriptor *
+_copy_descriptor (GstMpegTsDescriptor * desc)
 {
-  GstMpegTSDescriptor *copy;
+  GstMpegTsDescriptor *copy;
 
-  copy = g_new0 (GstMpegTSDescriptor, 1);
+  copy = g_new0 (GstMpegTsDescriptor, 1);
   copy->descriptor_tag = desc->descriptor_tag;
   copy->descriptor_tag_extension = desc->descriptor_tag_extension;
   copy->descriptor_length = desc->descriptor_length;
@@ -572,20 +572,20 @@ _copy_descriptor (GstMpegTSDescriptor * desc)
  * above function. That is why we free the descriptor data (unlike the
  * descriptors created in _parse_descriptors()) */
 static void
-_free_descriptor (GstMpegTSDescriptor * desc)
+_free_descriptor (GstMpegTsDescriptor * desc)
 {
   g_free ((gpointer) desc->descriptor_data);
   g_free (desc);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTSDescriptor, gst_mpegts_descriptor,
+G_DEFINE_BOXED_TYPE (GstMpegTsDescriptor, gst_mpegts_descriptor,
     (GBoxedCopyFunc) _copy_descriptor, (GBoxedFreeFunc) _free_descriptor);
 
 /* GST_MTS_DESC_ISO_639_LANGUAGE (0x0A) */
 /**
  * gst_mpegts_descriptor_parse_iso_639_language:
- * @descriptor: a %GST_MTS_DESC_ISO_639_LANGUAGE #GstMpegTSDescriptor
- * @res: (out) (transfer none): the #GstMpegTSISO639LanguageDescriptor to fill
+ * @descriptor: a %GST_MTS_DESC_ISO_639_LANGUAGE #GstMpegTsDescriptor
+ * @res: (out) (transfer none): the #GstMpegTsISO639LanguageDescriptor to fill
  *
  * Extracts the iso 639-2 language information from @descriptor.
  *
@@ -595,8 +595,8 @@ G_DEFINE_BOXED_TYPE (GstMpegTSDescriptor, gst_mpegts_descriptor,
  * Returns: %TRUE if parsing succeeded, else %FALSE.
  */
 gboolean
-gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTSDescriptor *
-    descriptor, GstMpegTSISO639LanguageDescriptor * res)
+gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *
+    descriptor, GstMpegTsISO639LanguageDescriptor * res)
 {
   guint i;
   guint8 *data;
@@ -622,7 +622,7 @@ gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTSDescriptor *
 /* GST_MTS_DESC_DVB_NETWORK_NAME (0x40) */
 /**
  * gst_mpegts_descriptor_parse_dvb_network_name:
- * @descriptor: a %GST_MTS_DESC_DVB_NETWORK_NAME #GstMpegTSDescriptor
+ * @descriptor: a %GST_MTS_DESC_DVB_NETWORK_NAME #GstMpegTsDescriptor
  * @name: (out) (transfer full): the extracted name
  *
  * Parses out the dvb network name from the @descriptor:
@@ -630,7 +630,7 @@ gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTSDescriptor *
  * Returns: %TRUE if the parsing happened correctly, else %FALSE.
  */
 gboolean
-gst_mpegts_descriptor_parse_dvb_network_name (const GstMpegTSDescriptor *
+gst_mpegts_descriptor_parse_dvb_network_name (const GstMpegTsDescriptor *
     descriptor, gchar ** name)
 {
   g_return_val_if_fail (descriptor != NULL
@@ -645,16 +645,16 @@ gst_mpegts_descriptor_parse_dvb_network_name (const GstMpegTSDescriptor *
 /* GST_MTS_DESC_DVB_SATELLITE_DELIVERY_SYSTEM (0x43) */
 /**
  * gst_mpegts_descriptor_parse_satellite_delivery_system:
- * @descriptor: a %GST_MTS_DESC_DVB_SATELLITE_DELIVERY_SYSTEM #GstMpegTSDescriptor
- * @res: (out) (transfer none): the #GstMpegTSSatelliteDeliverySystemDescriptor to fill
+ * @descriptor: a %GST_MTS_DESC_DVB_SATELLITE_DELIVERY_SYSTEM #GstMpegTsDescriptor
+ * @res: (out) (transfer none): the #GstMpegTsSatelliteDeliverySystemDescriptor to fill
  *
  * Extracts the satellite delivery system information from @descriptor.
  *
  * Returns: %TRUE if parsing succeeded, else %FALSE.
  */
 gboolean
-gst_mpegts_descriptor_parse_satellite_delivery_system (const GstMpegTSDescriptor
-    * descriptor, GstMpegTSSatelliteDeliverySystemDescriptor * res)
+gst_mpegts_descriptor_parse_satellite_delivery_system (const GstMpegTsDescriptor
+    * descriptor, GstMpegTsSatelliteDeliverySystemDescriptor * res)
 {
   guint8 *data;
   guint8 tmp;
@@ -722,16 +722,16 @@ gst_mpegts_descriptor_parse_satellite_delivery_system (const GstMpegTSDescriptor
 /* GST_MTS_DESC_DVB_CABLE_DELIVERY_SYSTEM (0x44) */
 /**
  * gst_mpegts_descriptor_parse_cable_delivery_system:
- * @descriptor: a %GST_MTS_DESC_DVB_CABLE_DELIVERY_SYSTEM #GstMpegTSDescriptor
- * @res: (out) (transfer none): the #GstMpegTSCableDeliverySystemDescriptor to fill
+ * @descriptor: a %GST_MTS_DESC_DVB_CABLE_DELIVERY_SYSTEM #GstMpegTsDescriptor
+ * @res: (out) (transfer none): the #GstMpegTsCableDeliverySystemDescriptor to fill
  *
  * Extracts the cable delivery system information from @descriptor.
  *
  * Returns: %TRUE if parsing succeeded, else %FALSE.
  */
 gboolean
-gst_mpegts_descriptor_parse_cable_delivery_system (const GstMpegTSDescriptor *
-    descriptor, GstMpegTSCableDeliverySystemDescriptor * res)
+gst_mpegts_descriptor_parse_cable_delivery_system (const GstMpegTsDescriptor *
+    descriptor, GstMpegTsCableDeliverySystemDescriptor * res)
 {
   guint8 *data;
 
@@ -785,7 +785,7 @@ gst_mpegts_descriptor_parse_cable_delivery_system (const GstMpegTSDescriptor *
 /* GST_MTS_DESC_DVB_SERVICE (0x48) */
 /**
  * gst_mpegts_descriptor_parse_dvb_service:
- * @descriptor: a %GST_MTS_DESC_DVB_SERVICE #GstMpegTSDescriptor
+ * @descriptor: a %GST_MTS_DESC_DVB_SERVICE #GstMpegTsDescriptor
  * @service_type: (out) (allow-none): the service type
  * @service_name: (out) (transfer full) (allow-none): the service name
  * @provider_name: (out) (transfer full) (allow-none): the provider name
@@ -795,8 +795,8 @@ gst_mpegts_descriptor_parse_cable_delivery_system (const GstMpegTSDescriptor *
  * Returns: %TRUE if parsing succeeded, else %FALSE.
  */
 gboolean
-gst_mpegts_descriptor_parse_dvb_service (const GstMpegTSDescriptor *
-    descriptor, GstMpegTSDVBServiceType * service_type, gchar ** service_name,
+gst_mpegts_descriptor_parse_dvb_service (const GstMpegTsDescriptor *
+    descriptor, GstMpegTsDVBServiceType * service_type, gchar ** service_name,
     gchar ** provider_name)
 {
   guint8 *data;
@@ -822,7 +822,7 @@ gst_mpegts_descriptor_parse_dvb_service (const GstMpegTSDescriptor *
 /* GST_MTS_DESC_DVB_SHORT_EVENT (0x4D) */
 /**
  * gst_mpegts_descriptor_parse_dvb_short_event:
- * @descriptor: a %GST_MTS_DESC_DVB_SHORT_EVENT #GstMpegTSDescriptor
+ * @descriptor: a %GST_MTS_DESC_DVB_SHORT_EVENT #GstMpegTsDescriptor
  * @language_code: (out) (transfer full) (allow-none): the language code
  * @event_name: (out) (transfer full) (allow-none): the event name
  * @text: (out) (transfer full) (allow-none): the event text
@@ -832,7 +832,7 @@ gst_mpegts_descriptor_parse_dvb_service (const GstMpegTSDescriptor *
  * Returns: %TRUE if parsing succeeded, else %FALSE.
  */
 gboolean
-gst_mpegts_descriptor_parse_dvb_short_event (const GstMpegTSDescriptor *
+gst_mpegts_descriptor_parse_dvb_short_event (const GstMpegTsDescriptor *
     descriptor, gchar ** language_code, gchar ** event_name, gchar ** text)
 {
   guint8 *data;
@@ -858,16 +858,16 @@ gst_mpegts_descriptor_parse_dvb_short_event (const GstMpegTSDescriptor *
 
 /**
  * gst_mpegts_descriptor_parse_logical_channel:
- * @descriptor: a %GST_MTS_DESC_DTG_LOGICAL_CHANNEL #GstMpegTSDescriptor
- * @res: (out) (transfer none): the #GstMpegTSLogicalChannelDescriptor to fill
+ * @descriptor: a %GST_MTS_DESC_DTG_LOGICAL_CHANNEL #GstMpegTsDescriptor
+ * @res: (out) (transfer none): the #GstMpegTsLogicalChannelDescriptor to fill
  *
  * Extracts the logical channels from @descriptor.
  *
  * Returns: %TRUE if parsing succeeded, else %FALSE.
  */
 gboolean
-gst_mpegts_descriptor_parse_logical_channel (const GstMpegTSDescriptor *
-    descriptor, GstMpegTSLogicalChannelDescriptor * res)
+gst_mpegts_descriptor_parse_logical_channel (const GstMpegTsDescriptor *
+    descriptor, GstMpegTsLogicalChannelDescriptor * res)
 {
   guint i;
   guint8 *data;

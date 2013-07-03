@@ -60,9 +60,9 @@
  */
 
 /**
- * GstMpegTSDescriptorType:
+ * GstMpegTsDescriptorType:
  *
- * The type of #GstMpegTSDescriptor
+ * The type of #GstMpegTsDescriptor
  *
  * Consult the relevant specifications for more details.
  */
@@ -130,7 +130,9 @@ typedef enum {
   GST_MTS_DESC_STEREOSCOPIC_VIDEO_INFO          = 0x36,
 
   /* 55-63 ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved */
+} GstMpegTsDescriptorType;
 
+typedef enum {
   /* 64-127 DVB tags ETSI EN 300 468
    * (Specification for Service Information (SI) in DVB systems)
    */
@@ -195,13 +197,18 @@ typedef enum {
   GST_MTS_DESC_DVB_ENHANCED_AC3                 = 0x7A,
   GST_MTS_DESC_DVB_DTS                          = 0x7B,
   GST_MTS_DESC_DVB_AAC                          = 0x7C,
-  /* 0x7D and 0x7E are reserved for future use */
+  GST_MTS_DESC_DVB_XAIT_LOCATION                = 0x7D,
+  GST_MTS_DESC_DVB_FTA_CONTENT_MANAGEMENT       = 0x7E,
   GST_MTS_DESC_DVB_EXTENSION                    = 0x7F,
+} GstMpegTsDVBDescriptorType;
 
+typedef enum {
   /* 0x80 - 0xFE are user defined */
   GST_MTS_DESC_AC3_AUDIO_STREAM                 = 0x81,
   GST_MTS_DESC_DTG_LOGICAL_CHANNEL              = 0x83,    /* from DTG D-Book */
+} GstMpegTsMiscDescriptorType;
 
+typedef enum {
   /* ATSC A/65 2009 */
   GST_MTS_DESC_ATSC_STUFFING                    = 0x80,
   GST_MTS_DESC_ATSC_AC3                         = 0x83,
@@ -228,7 +235,9 @@ typedef enum {
   GST_MTS_DESC_ATSC_MODULE_LINK                 = 0xB4,
   GST_MTS_DESC_ATSC_CRC32                       = 0xB5,
   GST_MTS_DESC_ATSC_GROUP_LINK                  = 0xB8,
+} GstMpegTsATSCDescriptorType;
 
+typedef enum {
   /* ISDB ARIB B10 v4.6 */
   GST_MTS_DESC_ISDB_HIERARCHICAL_TRANSMISSION   = 0xC0,
   GST_MTS_DESC_ISDB_DIGITAL_COPY_CONTROL        = 0xC1,
@@ -264,15 +273,15 @@ typedef enum {
   /* ... */
   GST_MTS_DESC_ISDB_SERVICE_GROUP               = 0xe0
   
-} GstMpegTSDescriptorType;
+} GstMpegTsISDBDescriptorType;
 
-typedef struct _GstMpegTSDescriptor GstMpegTSDescriptor;
+typedef struct _GstMpegTsDescriptor GstMpegTsDescriptor;
 
 #define GST_TYPE_MPEGTS_DESCRIPTOR (gst_mpegts_descriptor_get_type())
 GType gst_mpegts_descriptor_get_type (void);
 
 /**
- * GstMpegTSDescriptor:
+ * GstMpegTsDescriptor:
  * @descriptor_tag: the type of descriptor
  * @descriptor_tag_extension: the extended type (if @descriptor_tag is 0x7f)
  * @descriptor_length: the length of the descriptor content (excluding tag/length field)
@@ -280,9 +289,9 @@ GType gst_mpegts_descriptor_get_type (void);
  *
  * Mpeg-TS descriptor (ISO/IEC 13818-1).
  */
-struct _GstMpegTSDescriptor
+struct _GstMpegTsDescriptor
 {
-  GstMpegTSDescriptorType descriptor_tag;
+  guint8 descriptor_tag;
   guint8 descriptor_tag_extension;
   guint8 descriptor_length;
   const guint8 *descriptor_data;
@@ -290,12 +299,12 @@ struct _GstMpegTSDescriptor
 
 GArray *gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len);
 
-const GstMpegTSDescriptor * gst_mpegts_find_descriptor (GArray *descriptors,
+const GstMpegTsDescriptor * gst_mpegts_find_descriptor (GArray *descriptors,
 							guint8 tag);
 
 /* GST_MTS_DESC_ISO_639_LANGUAGE (0x0A) */
 /**
- * GstMpegTSISO639AudioType:
+ * GstMpegTsISO639AudioType:
  *
  * Type of audio streams
  *
@@ -306,32 +315,32 @@ typedef enum {
   GST_MPEGTS_AUDIO_TYPE_CLEAN_EFFECTS,
   GST_MPEGTS_AUDIO_TYPE_HEARING_IMPAIRED,
   GST_MPEGTS_AUDIO_TYPE_VISUAL_IMPAIRED_COMMENTARY
-} GstMpegTSIso639AudioType;
+} GstMpegTsIso639AudioType;
 
 /* FIXME: Make two methods. One for getting the number of languages,
  * and the other for getting the (allocated, null-terminated) language 
  * and audio type */
-typedef struct _GstMpegTSISO639LanguageDescriptor GstMpegTSISO639LanguageDescriptor;
-struct _GstMpegTSISO639LanguageDescriptor
+typedef struct _GstMpegTsISO639LanguageDescriptor GstMpegTsISO639LanguageDescriptor;
+struct _GstMpegTsISO639LanguageDescriptor
 {
   guint                    nb_language;
   gchar                    language[64][3];
-  GstMpegTSIso639AudioType audio_type[64];
+  GstMpegTsIso639AudioType audio_type[64];
 };
 
-gboolean gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTSDescriptor *descriptor,
-						       GstMpegTSISO639LanguageDescriptor *res);
+gboolean gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *descriptor,
+						       GstMpegTsISO639LanguageDescriptor *res);
 
 
 /* GST_MTS_DESC_DVB_CAROUSEL_IDENTIFIER (0x13) */
 /* FIXME : Implement */
 
 /* GST_MTS_DESC_DVB_NETWORK_NAME (0x40) */
-gboolean gst_mpegts_descriptor_parse_dvb_network_name (const GstMpegTSDescriptor *descriptor,
+gboolean gst_mpegts_descriptor_parse_dvb_network_name (const GstMpegTsDescriptor *descriptor,
 						       gchar **name);
 
 /* GST_MTS_DESC_DVB_SATELLITE_DELIVERY_SYSTEM (0x43) */
-typedef struct _GstMpegTSSatelliteDeliverySystemDescriptor GstMpegTSSatelliteDeliverySystemDescriptor;
+typedef struct _GstMpegTsSatelliteDeliverySystemDescriptor GstMpegTsSatelliteDeliverySystemDescriptor;
 
 typedef enum {
   GST_MPEGTS_MODULATION_QPSK    = 0,
@@ -349,7 +358,7 @@ typedef enum {
   GST_MPEGTS_MODULATION_DQPSK,
   GST_MPEGTS_MODULATION_QAM_4_NR_,
   GST_MPEGTS_MODULATION_NONE
-} GstMpegTSModulationType;
+} GstMpegTsModulationType;
 
 typedef enum {
   GST_MPEGTS_FEC_NONE = 0,
@@ -365,7 +374,7 @@ typedef enum {
   GST_MPEGTS_FEC_3_5,
   GST_MPEGTS_FEC_9_10,
   GST_MPEGTS_FEC_2_5
-} GstMpegTSDVBCodeRate;
+} GstMpegTsDVBCodeRate;
 
 typedef enum {
   GST_MPEGTS_ROLLOFF_35 = 0,
@@ -373,17 +382,17 @@ typedef enum {
   GST_MPEGTS_ROLLOFF_25,
   GST_MPEGTS_ROLLOFF_RESERVED,
   GST_MPEGTS_ROLLOFF_AUTO
-} GstMpegTSSatelliteRolloff;
+} GstMpegTsSatelliteRolloff;
 
 typedef enum {
   GST_MPEGTS_POLARIZATION_LINEAR_HORIZONTAL = 0,
   GST_MPEGTS_POLARIZATION_LINEAR_VERTICAL,
   GST_MPEGTS_POLARIZATION_CIRCULAR_LEFT,
   GST_MPEGTS_POLARIZATION_CIRCULAR_RIGHT
-} GstMpegTSSatellitePolarizationType;
+} GstMpegTsSatellitePolarizationType;
 
 /**
- * GstMpegTSSatelliteDeliverySystemDescriptor:
+ * GstMpegTsSatelliteDeliverySystemDescriptor:
  * @frequency: the frequency in kHz (kiloHertz)
  * @orbital_position: the orbital position in degrees
  * @west_east: If %TRUE, the satellite is in the eastern part of the orbit,
@@ -397,23 +406,23 @@ typedef enum {
  *
  * Satellite Delivery System Descriptor (EN 300 468 v.1.13.1)
  */
-struct _GstMpegTSSatelliteDeliverySystemDescriptor
+struct _GstMpegTsSatelliteDeliverySystemDescriptor
 {
   guint32                            frequency;
   gfloat                             orbital_position;
   gboolean                           west_east; 
-  GstMpegTSSatellitePolarizationType polarization;
+  GstMpegTsSatellitePolarizationType polarization;
 
-  GstMpegTSSatelliteRolloff          roll_off;
+  GstMpegTsSatelliteRolloff          roll_off;
   gboolean                           modulation_system;
-  GstMpegTSModulationType            modulation_type;
+  GstMpegTsModulationType            modulation_type;
 
   guint32                            symbol_rate;
-  GstMpegTSDVBCodeRate               fec_inner;
+  GstMpegTsDVBCodeRate               fec_inner;
 };
 
-gboolean gst_mpegts_descriptor_parse_satellite_delivery_system (const GstMpegTSDescriptor *descriptor,
-								GstMpegTSSatelliteDeliverySystemDescriptor *res);
+gboolean gst_mpegts_descriptor_parse_satellite_delivery_system (const GstMpegTsDescriptor *descriptor,
+								GstMpegTsSatelliteDeliverySystemDescriptor *res);
 
 
 /* FIXME : Implement */
@@ -423,11 +432,11 @@ typedef enum {
   GST_MPEGTS_CABLE_OUTER_FEC_UNDEFINED = 0,
   GST_MPEGTS_CABLE_OUTER_FEC_NONE,
   GST_MPEGTS_CABLE_OUTER_FEC_RS_204_188,
-} GstMpegTSCableOuterFECScheme;
+} GstMpegTsCableOuterFECScheme;
 
-typedef struct _GstMpegTSCableDeliverySystemDescriptor GstMpegTSCableDeliverySystemDescriptor;
+typedef struct _GstMpegTsCableDeliverySystemDescriptor GstMpegTsCableDeliverySystemDescriptor;
 /**
- * GstMpegTSCableDeliverySystemDescriptor:
+ * GstMpegTsCableDeliverySystemDescriptor:
  * @frequency: the frequency in Hz (Hertz)
  * @outer_fec: the outer FEC scheme used
  * @modulation: Modulation scheme used
@@ -436,22 +445,22 @@ typedef struct _GstMpegTSCableDeliverySystemDescriptor GstMpegTSCableDeliverySys
  *
  * Cable Delivery System Descriptor (EN 300 468 v.1.13.1)
  */
-struct _GstMpegTSCableDeliverySystemDescriptor
+struct _GstMpegTsCableDeliverySystemDescriptor
 {
   guint32                            frequency;
-  GstMpegTSCableOuterFECScheme       outer_fec;
-  GstMpegTSModulationType            modulation;
+  GstMpegTsCableOuterFECScheme       outer_fec;
+  GstMpegTsModulationType            modulation;
 
   guint32                            symbol_rate;
-  GstMpegTSDVBCodeRate               fec_inner;
+  GstMpegTsDVBCodeRate               fec_inner;
 };
 
-gboolean gst_mpegts_descriptor_parse_cable_delivery_system (const GstMpegTSDescriptor *descriptor,
-							    GstMpegTSCableDeliverySystemDescriptor *res);
+gboolean gst_mpegts_descriptor_parse_cable_delivery_system (const GstMpegTsDescriptor *descriptor,
+							    GstMpegTsCableDeliverySystemDescriptor *res);
 
 /* GST_MTS_DESC_DVB_SERVICE (0x48) */
 /**
- * GstMpegTSDVBServiceType:
+ * GstMpegTsDVBServiceType:
  * 
  * The type of service of a channel.
  *
@@ -490,47 +499,47 @@ typedef enum {
   /* 0x80 - 0xfe user defined */
   /* 0xff Reserved for future use */
   GST_DVB_SERVICE_RESERVED_FF
-} GstMpegTSDVBServiceType;
+} GstMpegTsDVBServiceType;
 
 /* FIXME : enum type for service_type ? */
-gboolean gst_mpegts_descriptor_parse_dvb_service (const GstMpegTSDescriptor *descriptor,
-						  GstMpegTSDVBServiceType *service_type,
+gboolean gst_mpegts_descriptor_parse_dvb_service (const GstMpegTsDescriptor *descriptor,
+						  GstMpegTsDVBServiceType *service_type,
 						  gchar **service_name,
 						  gchar **provider_name);
 
 /* GST_MTS_DESC_DVB_SHORT_EVENT (0x4D) */
-gboolean gst_mpegts_descriptor_parse_dvb_short_event (const GstMpegTSDescriptor *descriptor,
+gboolean gst_mpegts_descriptor_parse_dvb_short_event (const GstMpegTsDescriptor *descriptor,
 						       gchar **language_code,
 						       gchar **event_name,
 						       gchar **text);
 
 /* GST_MTS_DESC_DVB_EXTENDED_EVENT (0x4E) */
-typedef struct _GstMpegTSExtendedEventDescriptor GstMpegTSExtendedEventDescriptor;
-typedef struct _GstMpegTSExtendedEventItem GstMpegTSExtendedEventItem;
+typedef struct _GstMpegTsExtendedEventDescriptor GstMpegTsExtendedEventDescriptor;
+typedef struct _GstMpegTsExtendedEventItem GstMpegTsExtendedEventItem;
 
 /* FIXME : Maybe make a separate method for getting a specific item entry ? */
-struct _GstMpegTSExtendedEventItem
+struct _GstMpegTsExtendedEventItem
 {
   gchar *item_description;
   gchar *item;
 };
 
-struct _GstMpegTSExtendedEventDescriptor
+struct _GstMpegTsExtendedEventDescriptor
 {
   guint8 descriptor_number;
   guint8 last_descriptor_number;
   gchar  language_code[3];
   guint8 nb_items;
-  GstMpegTSExtendedEventItem items[128];
+  GstMpegTsExtendedEventItem items[128];
   gchar *text;
 };
 
-gboolean gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegTSDescriptor *descriptor,
-							  GstMpegTSExtendedEventDescriptor *res);
+gboolean gst_mpegts_descriptor_parse_dvb_extended_event (const GstMpegTsDescriptor *descriptor,
+							  GstMpegTsExtendedEventDescriptor *res);
 
 /* GST_MTS_DESC_DVB_COMPONENT (0x50) */
-typedef struct _GstMpegTSComponentDescriptor GstMpegTSComponentDescriptor;
-struct _GstMpegTSComponentDescriptor
+typedef struct _GstMpegTsComponentDescriptor GstMpegTsComponentDescriptor;
+struct _GstMpegTsComponentDescriptor
 {
   guint8 stream_content;
   guint8 component_type;
@@ -540,11 +549,11 @@ struct _GstMpegTSComponentDescriptor
   gchar *text;
 };
 
-gboolean gst_mpegts_descriptor_parse_dvb_component (const GstMpegTSDescriptor *descriptor,
-						    GstMpegTSComponentDescriptor *res);
+gboolean gst_mpegts_descriptor_parse_dvb_component (const GstMpegTsDescriptor *descriptor,
+						    GstMpegTsComponentDescriptor *res);
 
 /* GST_MTS_DESC_DVB_STREAM_IDENTIFIER (0x52) */
-gboolean gst_mpegts_descriptor_parse_dvb_stream_identifier (const GstMpegTSDescriptor *descriptor,
+gboolean gst_mpegts_descriptor_parse_dvb_stream_identifier (const GstMpegTsDescriptor *descriptor,
 							    guint8 *component_tag);
 
 /* GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM (0x5A) */
@@ -564,26 +573,26 @@ gboolean gst_mpegts_descriptor_parse_dvb_stream_identifier (const GstMpegTSDescr
 
 
 /* GST_MTS_DESC_DTG_LOGICAL_CHANNEL (0x83) */
-typedef struct _GstMpegTSLogicalChannelDescriptor GstMpegTSLogicalChannelDescriptor;
-typedef struct _GstMpegTSLogicalChannel GstMpegTSLogicalChannel;
+typedef struct _GstMpegTsLogicalChannelDescriptor GstMpegTsLogicalChannelDescriptor;
+typedef struct _GstMpegTsLogicalChannel GstMpegTsLogicalChannel;
 
-struct _GstMpegTSLogicalChannel
+struct _GstMpegTsLogicalChannel
 {
   guint16   service_id;
   gboolean  visible_service;
   guint16   logical_channel_number;
 };
 
-struct _GstMpegTSLogicalChannelDescriptor
+struct _GstMpegTsLogicalChannelDescriptor
 {
   guint                   nb_channels;
-  GstMpegTSLogicalChannel channels[64];
+  GstMpegTsLogicalChannel channels[64];
 };
 
 /* FIXME : Maybe make two methods. One for getting the number of channels,
  * and the other for getting the content for one channel ? */
 gboolean
-gst_mpegts_descriptor_parse_logical_channel (const GstMpegTSDescriptor *descriptor,
-					     GstMpegTSLogicalChannelDescriptor *res);
+gst_mpegts_descriptor_parse_logical_channel (const GstMpegTsDescriptor *descriptor,
+					     GstMpegTsLogicalChannelDescriptor *res);
 
 #endif				/* GST_MPEGTS_DESCRIPTOR_H */

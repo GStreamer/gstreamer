@@ -70,7 +70,7 @@ static GQuark QUARK_SECTION;
 
 static GType _gst_mpegts_section_type = 0;
 #define MPEG_TYPE_TS_SECTION (_gst_mpegts_section_type)
-GST_DEFINE_MINI_OBJECT_TYPE (GstMpegTSSection, gst_mpegts_section);
+GST_DEFINE_MINI_OBJECT_TYPE (GstMpegTsSection, gst_mpegts_section);
 
 static const guint32 crc_tab[256] = {
   0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9, 0x130476dc, 0x17c56b6b,
@@ -171,7 +171,7 @@ _parse_utc_time (guint8 * data)
  * GENERIC MPEG-TS SECTION
  */
 static void
-_gst_mpegts_section_free (GstMpegTSSection * section)
+_gst_mpegts_section_free (GstMpegTsSection * section)
 {
   GST_DEBUG ("Freeing section type %d", section->section_type);
 
@@ -183,14 +183,14 @@ _gst_mpegts_section_free (GstMpegTSSection * section)
         break;
       case GST_MPEGTS_SECTION_PMT:
       {
-        GstMpegTSPMT *pmt = (GstMpegTSPMT *) section->cached_parsed;
+        GstMpegTsPMT *pmt = (GstMpegTsPMT *) section->cached_parsed;
         g_array_unref (pmt->descriptors);
         g_ptr_array_unref (pmt->streams);
         break;
       }
       case GST_MPEGTS_SECTION_TOT:
       {
-        GstMpegTSTOT *tot = (GstMpegTSTOT *) section->cached_parsed;
+        GstMpegTsTOT *tot = (GstMpegTsTOT *) section->cached_parsed;
         gst_date_time_unref (tot->utc_time);
         g_array_unref (tot->descriptors);
         break;
@@ -203,20 +203,20 @@ _gst_mpegts_section_free (GstMpegTSSection * section)
         break;
       case GST_MPEGTS_SECTION_NIT:
       {
-        GstMpegTSNIT *nit = (GstMpegTSNIT *) section->cached_parsed;
+        GstMpegTsNIT *nit = (GstMpegTsNIT *) section->cached_parsed;
         g_array_unref (nit->descriptors);
         g_ptr_array_unref (nit->streams);
         break;
       }
       case GST_MPEGTS_SECTION_EIT:
       {
-        GstMpegTSEIT *eit = (GstMpegTSEIT *) section->cached_parsed;
+        GstMpegTsEIT *eit = (GstMpegTsEIT *) section->cached_parsed;
         g_ptr_array_unref (eit->events);
         break;
       }
       case GST_MPEGTS_SECTION_SDT:
       {
-        GstMpegTSSDT *sdt = (GstMpegTSSDT *) section->cached_parsed;
+        GstMpegTsSDT *sdt = (GstMpegTsSDT *) section->cached_parsed;
 
         g_ptr_array_unref (sdt->services);
         break;
@@ -227,15 +227,15 @@ _gst_mpegts_section_free (GstMpegTSSection * section)
   }
   if (section->data)
     g_free (section->data);
-  g_slice_free (GstMpegTSSection, section);
+  g_slice_free (GstMpegTsSection, section);
 }
 
-static GstMpegTSSection *
-_gst_mpegts_section_copy (GstMpegTSSection * section)
+static GstMpegTsSection *
+_gst_mpegts_section_copy (GstMpegTsSection * section)
 {
-  GstMpegTSSection *copy;
+  GstMpegTsSection *copy;
 
-  copy = g_slice_new0 (GstMpegTSSection);
+  copy = g_slice_new0 (GstMpegTsSection);
   gst_mini_object_init (GST_MINI_OBJECT_CAST (copy), 0, MPEG_TYPE_TS_SECTION,
       (GstMiniObjectCopyFunction) _gst_mpegts_section_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_mpegts_section_free);
@@ -266,15 +266,15 @@ _gst_mpegts_section_copy (GstMpegTSSection * section)
  * gst_message_parse_mpegts_section:
  * @message: a #GstMessage
  *
- * Returns the #GstMpegTSSection contained in a message.
+ * Returns the #GstMpegTsSection contained in a message.
  *
- * Returns: (transfer full): the contained #GstMpegTSSection, or %NULL.
+ * Returns: (transfer full): the contained #GstMpegTsSection, or %NULL.
  */
-GstMpegTSSection *
+GstMpegTsSection *
 gst_message_parse_mpegts_section (GstMessage * message)
 {
   const GstStructure *st;
-  GstMpegTSSection *section;
+  GstMpegTsSection *section;
 
   if (message->type != GST_MESSAGE_ELEMENT)
     return NULL;
@@ -291,15 +291,15 @@ gst_message_parse_mpegts_section (GstMessage * message)
 /**
  * gst_message_new_mpegts_section:
  * @parent: (transfer none): The creator of the message
- * @section: (transfer none): The #GstMpegTSSection to put in a message
+ * @section: (transfer none): The #GstMpegTsSection to put in a message
  *
- * Creates a new #GstMessage for a @GstMpegTSSection.
+ * Creates a new #GstMessage for a @GstMpegTsSection.
  *
  * Returns: (transfer full): The new #GstMessage to be posted, or %NULL if the
  * section is not valid.
  */
 GstMessage *
-gst_message_new_mpegts_section (GstObject * parent, GstMpegTSSection * section)
+gst_message_new_mpegts_section (GstObject * parent, GstMpegTsSection * section)
 {
   GstMessage *msg;
   GstStructure *st;
@@ -334,7 +334,7 @@ gst_message_new_mpegts_section (GstObject * parent, GstMpegTSSection * section)
       quark = QUARK_TOT;
       break;
     default:
-      GST_WARNING ("Creating message for unknown GstMpegTSSection");
+      GST_WARNING ("Creating message for unknown GstMpegTsSection");
       quark = QUARK_SECTION;
       break;
   }
@@ -350,11 +350,11 @@ gst_message_new_mpegts_section (GstObject * parent, GstMpegTSSection * section)
 
 /* Program Association Table */
 static GArray *
-_parse_pat (GstMpegTSSection * section)
+_parse_pat (GstMpegTsSection * section)
 {
   GArray *pat;
   guint16 i = 0, nb_programs;
-  GstMpegTSPatProgram *program;
+  GstMpegTsPatProgram *program;
   guint8 *data, *end;
 
   /* Skip already parsed data */
@@ -366,11 +366,11 @@ _parse_pat (GstMpegTSSection * section)
   /* Initialize program list */
   nb_programs = (end - 4 - data) / 4;
   pat =
-      g_array_sized_new (FALSE, FALSE, sizeof (GstMpegTSPatProgram),
+      g_array_sized_new (FALSE, FALSE, sizeof (GstMpegTsPatProgram),
       nb_programs);
 
   while (data < end - 4) {
-    program = &g_array_index (pat, GstMpegTSPatProgram, i);
+    program = &g_array_index (pat, GstMpegTsPatProgram, i);
     program->program_number = GST_READ_UINT16_BE (data);
     data += 2;
 
@@ -393,21 +393,21 @@ _parse_pat (GstMpegTSSection * section)
 
 /**
  * gst_mpegts_section_get_pat:
- * @section: a #GstMpegTSSection of type %GST_MPEGTS_SECTION_PAT
+ * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_PAT
  *
  * Parses a Program Association Table (ITU H.222.0, ISO/IEC 13818-1).
  *
- * Returns the array of #GstMpegTSPatProgram contained in the section.
+ * Returns the array of #GstMpegTsPatProgram contained in the section.
  *
  * Note: The PAT "transport_id" field corresponds to the "subtable_extension"
  * field of the provided @section.
  *
- * Returns: (transfer container) (element-type GstMpegTSPatProgram): The
- * #GstMpegTSPatProgram contained in the section, or %NULL if an error
+ * Returns: (transfer container) (element-type GstMpegTsPatProgram): The
+ * #GstMpegTsPatProgram contained in the section, or %NULL if an error
  * happened. Release with #g_ptr_array_unref when done.
  */
 GArray *
-gst_mpegts_section_get_pat (GstMpegTSSection * section)
+gst_mpegts_section_get_pat (GstMpegTsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_PAT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
@@ -439,45 +439,45 @@ parse_failure:
 
 /* Program Map Table */
 
-static GstMpegTSPMTStream *
-_gst_mpegts_pmt_stream_copy (GstMpegTSPMTStream * pmt)
+static GstMpegTsPMTStream *
+_gst_mpegts_pmt_stream_copy (GstMpegTsPMTStream * pmt)
 {
   /* FIXME : IMPLEMENT */
   return NULL;
 }
 
 static void
-_gst_mpegts_pmt_stream_free (GstMpegTSPMTStream * pmt)
+_gst_mpegts_pmt_stream_free (GstMpegTsPMTStream * pmt)
 {
   g_array_unref (pmt->descriptors);
-  g_slice_free (GstMpegTSPMTStream, pmt);
+  g_slice_free (GstMpegTsPMTStream, pmt);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTSPMTStream, gst_mpegts_pmt_stream,
+G_DEFINE_BOXED_TYPE (GstMpegTsPMTStream, gst_mpegts_pmt_stream,
     (GBoxedCopyFunc) _gst_mpegts_pmt_stream_copy,
     (GFreeFunc) _gst_mpegts_pmt_stream_free);
 
-static GstMpegTSPMT *
-_gst_mpegts_pmt_copy (GstMpegTSPMT * pmt)
+static GstMpegTsPMT *
+_gst_mpegts_pmt_copy (GstMpegTsPMT * pmt)
 {
   /* FIXME : IMPLEMENT */
   return NULL;
 }
 
 static void
-_gst_mpegts_pmt_free (GstMpegTSPMT * pmt)
+_gst_mpegts_pmt_free (GstMpegTsPMT * pmt)
 {
   /* FIXME: IMPLEMENT */
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTSPMT, gst_mpegts_pmt,
+G_DEFINE_BOXED_TYPE (GstMpegTsPMT, gst_mpegts_pmt,
     (GBoxedCopyFunc) _gst_mpegts_pmt_copy, (GFreeFunc) _gst_mpegts_pmt_free);
 
 
-static GstMpegTSPMT *
-_parse_pmt (GstMpegTSSection * section)
+static GstMpegTsPMT *
+_parse_pmt (GstMpegTsSection * section)
 {
-  GstMpegTSPMT *pmt = NULL;
+  GstMpegTsPMT *pmt = NULL;
   guint i = 0, allocated_streams = 8;
   guint8 *data, *end;
   guint program_info_length;
@@ -490,7 +490,7 @@ _parse_pmt (GstMpegTSSection * section)
     goto error;
   }
 
-  pmt = g_slice_new0 (GstMpegTSPMT);
+  pmt = g_slice_new0 (GstMpegTsPMT);
 
   data = section->data;
   end = data + section->section_length;
@@ -525,7 +525,7 @@ _parse_pmt (GstMpegTSSection * section)
   /* parse entries, cycle until there's space for another entry (at least 5
    * bytes) plus the CRC */
   while (data <= end - 4 - 5) {
-    GstMpegTSPMTStream *stream = g_slice_new0 (GstMpegTSPMTStream);
+    GstMpegTsPMTStream *stream = g_slice_new0 (GstMpegTsPMTStream);
 
     g_ptr_array_add (pmt->streams, stream);
 
@@ -566,15 +566,15 @@ error:
 
 /**
  * gst_mpegts_section_get_pmt:
- * @section: a #GstMpegTSSection of type %GST_MPEGTS_SECTION_PMT
+ * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_PMT
  *
- * Returns the #GstMpegTSPMT contained in the @section.
+ * Returns the #GstMpegTsPMT contained in the @section.
  *
- * Returns: The #GstMpegTSPMT contained in the section, or %NULL if an error
+ * Returns: The #GstMpegTsPMT contained in the section, or %NULL if an error
  * happened.
  */
-const GstMpegTSPMT *
-gst_mpegts_section_get_pmt (GstMpegTSSection * section)
+const GstMpegTsPMT *
+gst_mpegts_section_get_pmt (GstMpegTsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_PMT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
@@ -588,7 +588,7 @@ gst_mpegts_section_get_pmt (GstMpegTSSection * section)
       goto parse_failure;
   }
 
-  return (const GstMpegTSPMT *) section->cached_parsed;
+  return (const GstMpegTsPMT *) section->cached_parsed;
 
 bad_crc:
   {
@@ -606,7 +606,7 @@ parse_failure:
 
 /* Conditional Access Table */
 static GArray *
-_parse_cat (GstMpegTSSection * section)
+_parse_cat (GstMpegTsSection * section)
 {
   guint8 *data;
   guint desc_len;
@@ -621,17 +621,17 @@ _parse_cat (GstMpegTSSection * section)
 
 /**
  * gst_mpegts_section_get_cat:
- * @section: a #GstMpegTSSection of type %GST_MPEGTS_SECTION_CAT
+ * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_CAT
  *
- * Returns the array of #GstMpegTSDescriptor contained in the Condtional
+ * Returns the array of #GstMpegTsDescriptor contained in the Condtional
  * Access Table.
  *
- * Returns: (transfer container) (element-type GstMpegTSDescriptor): The
- * #GstMpegTSDescriptor contained in the section, or %NULL if an error
+ * Returns: (transfer container) (element-type GstMpegTsDescriptor): The
+ * #GstMpegTsDescriptor contained in the section, or %NULL if an error
  * happened. Release with #g_array_unref when done.
  */
 GArray *
-gst_mpegts_section_get_cat (GstMpegTSSection * section)
+gst_mpegts_section_get_cat (GstMpegTsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_CAT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
@@ -654,16 +654,16 @@ parse_failure:
 /* Transport Stream Description Table (TSDT) */
 /**
  * gst_mpegts_section_get_tsdt:
- * @section: a #GstMpegTSSection of type %GST_MPEGTS_SECTION_TSDT
+ * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_TSDT
  *
- * Returns the array of #GstMpegTSDescriptor contained in the section
+ * Returns the array of #GstMpegTsDescriptor contained in the section
  *
- * Returns: (transfer container) (element-type GstMpegTSDescriptor): The
- * #GstMpegTSDescriptor contained in the section, or %NULL if an error
+ * Returns: (transfer container) (element-type GstMpegTsDescriptor): The
+ * #GstMpegTsDescriptor contained in the section, or %NULL if an error
  * happened. Release with #g_array_unref when done.
  */
 GArray *
-gst_mpegts_section_get_tsdt (GstMpegTSSection * section)
+gst_mpegts_section_get_tsdt (GstMpegTsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_TSDT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
@@ -677,43 +677,43 @@ gst_mpegts_section_get_tsdt (GstMpegTSSection * section)
 
 
 /* Event Information Table */
-static GstMpegTSEIT *
-_gst_mpegts_eit_copy (GstMpegTSEIT * eit)
+static GstMpegTsEIT *
+_gst_mpegts_eit_copy (GstMpegTsEIT * eit)
 {
   /* FIXME : IMPLEMENT */
   return NULL;
 }
 
 static void
-_gst_mpegts_eit_free (GstMpegTSEIT * eit)
+_gst_mpegts_eit_free (GstMpegTsEIT * eit)
 {
   /* FIXME: IMPLEMENT */
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTSEIT, gst_mpegts_eit,
+G_DEFINE_BOXED_TYPE (GstMpegTsEIT, gst_mpegts_eit,
     (GBoxedCopyFunc) _gst_mpegts_eit_copy, (GFreeFunc) _gst_mpegts_eit_free);
 
-static GstMpegTSEITEvent *
-_gst_mpegts_eit_event_copy (GstMpegTSEITEvent * eit)
+static GstMpegTsEITEvent *
+_gst_mpegts_eit_event_copy (GstMpegTsEITEvent * eit)
 {
   /* FIXME : IMPLEMENT */
   return NULL;
 }
 
 static void
-_gst_mpegts_eit_event_free (GstMpegTSEITEvent * eit)
+_gst_mpegts_eit_event_free (GstMpegTsEITEvent * eit)
 {
   /* FIXME: IMPLEMENT */
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTSEITEvent, gst_mpegts_eit_event,
+G_DEFINE_BOXED_TYPE (GstMpegTsEITEvent, gst_mpegts_eit_event,
     (GBoxedCopyFunc) _gst_mpegts_eit_event_copy,
     (GFreeFunc) _gst_mpegts_eit_event_free);
 
-static GstMpegTSEIT *
-_parse_eit (GstMpegTSSection * section)
+static GstMpegTsEIT *
+_parse_eit (GstMpegTsSection * section)
 {
-  GstMpegTSEIT *eit = NULL;
+  GstMpegTsEIT *eit = NULL;
   guint i = 0, allocated_events = 12;
   guint8 *data, *end, *duration_ptr;
   guint16 descriptors_loop_length;
@@ -725,7 +725,7 @@ _parse_eit (GstMpegTSSection * section)
     goto error;
   }
 
-  eit = g_slice_new0 (GstMpegTSEIT);
+  eit = g_slice_new0 (GstMpegTsEIT);
 
   data = section->data;
   end = data + section->section_length;
@@ -750,7 +750,7 @@ _parse_eit (GstMpegTSSection * section)
       (GDestroyNotify) _gst_mpegts_eit_event_free);
 
   while (data < end - 4) {
-    GstMpegTSEITEvent *event;
+    GstMpegTsEITEvent *event;
 
     /* 12 is the minimum entry size + CRC */
     if (end - data < 12 + 4) {
@@ -759,7 +759,7 @@ _parse_eit (GstMpegTSSection * section)
       goto error;
     }
 
-    event = g_slice_new0 (GstMpegTSEITEvent);
+    event = g_slice_new0 (GstMpegTsEITEvent);
     g_ptr_array_add (eit->events, event);
 
     event->event_id = GST_READ_UINT16_BE (data);
@@ -807,15 +807,15 @@ error:
 
 /**
  * gst_mpegts_section_get_eit:
- * @section: a #GstMpegTSSection of type %GST_MPEGTS_SECTION_EIT
+ * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_EIT
  *
- * Returns the #GstMpegTSEIT contained in the @section.
+ * Returns the #GstMpegTsEIT contained in the @section.
  *
- * Returns: The #GstMpegTSEIT contained in the section, or %NULL if an error
+ * Returns: The #GstMpegTsEIT contained in the section, or %NULL if an error
  * happened.
  */
-const GstMpegTSEIT *
-gst_mpegts_section_get_eit (GstMpegTSSection * section)
+const GstMpegTsEIT *
+gst_mpegts_section_get_eit (GstMpegTsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_EIT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
@@ -829,7 +829,7 @@ gst_mpegts_section_get_eit (GstMpegTSSection * section)
       goto parse_failure;
   }
 
-  return (const GstMpegTSEIT *) section->cached_parsed;
+  return (const GstMpegTsEIT *) section->cached_parsed;
 
 bad_crc:
   {
@@ -845,61 +845,61 @@ parse_failure:
 }
 
 /* Bouquet Association Table */
-static GstMpegTSBAT *
-_gst_mpegts_bat_copy (GstMpegTSBAT * bat)
+static GstMpegTsBAT *
+_gst_mpegts_bat_copy (GstMpegTsBAT * bat)
 {
   /* FIXME : IMPLEMENT */
   return NULL;
 }
 
 static void
-_gst_mpegts_bat_free (GstMpegTSBAT * bat)
+_gst_mpegts_bat_free (GstMpegTsBAT * bat)
 {
   /* FIXME: IMPLEMENT */
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTSBAT, gst_mpegts_bat,
+G_DEFINE_BOXED_TYPE (GstMpegTsBAT, gst_mpegts_bat,
     (GBoxedCopyFunc) _gst_mpegts_bat_copy, (GFreeFunc) _gst_mpegts_bat_free);
 
 /* Network Information Table */
-static GstMpegTSNIT *
-_gst_mpegts_nit_copy (GstMpegTSNIT * nit)
+static GstMpegTsNIT *
+_gst_mpegts_nit_copy (GstMpegTsNIT * nit)
 {
   /* FIXME : IMPLEMENT */
   return NULL;
 }
 
 static void
-_gst_mpegts_nit_free (GstMpegTSNIT * nit)
+_gst_mpegts_nit_free (GstMpegTsNIT * nit)
 {
   /* FIXME: IMPLEMENT */
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTSNIT, gst_mpegts_nit,
+G_DEFINE_BOXED_TYPE (GstMpegTsNIT, gst_mpegts_nit,
     (GBoxedCopyFunc) _gst_mpegts_nit_copy, (GFreeFunc) _gst_mpegts_nit_free);
 
-static GstMpegTSNITStream *
-_gst_mpegts_nit_stream_copy (GstMpegTSNITStream * nit)
+static GstMpegTsNITStream *
+_gst_mpegts_nit_stream_copy (GstMpegTsNITStream * nit)
 {
   /* FIXME : IMPLEMENT */
   return NULL;
 }
 
 static void
-_gst_mpegts_nit_stream_free (GstMpegTSNITStream * nit)
+_gst_mpegts_nit_stream_free (GstMpegTsNITStream * nit)
 {
   g_array_unref (nit->descriptors);
-  g_slice_free (GstMpegTSNITStream, nit);
+  g_slice_free (GstMpegTsNITStream, nit);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTSNITStream, gst_mpegts_nit_stream,
+G_DEFINE_BOXED_TYPE (GstMpegTsNITStream, gst_mpegts_nit_stream,
     (GBoxedCopyFunc) _gst_mpegts_nit_stream_copy,
     (GFreeFunc) _gst_mpegts_nit_stream_free);
 
-static GstMpegTSNIT *
-_parse_nit (GstMpegTSSection * section)
+static GstMpegTsNIT *
+_parse_nit (GstMpegTsSection * section)
 {
-  GstMpegTSNIT *nit = NULL;
+  GstMpegTsNIT *nit = NULL;
   guint i = 0, j, allocated_streams = 12;
   guint8 *data, *end, *entry_begin;
   guint16 descriptors_loop_length, transport_stream_loop_length;
@@ -913,7 +913,7 @@ _parse_nit (GstMpegTSSection * section)
     goto error;
   }
 
-  nit = g_slice_new0 (GstMpegTSNIT);
+  nit = g_slice_new0 (GstMpegTsNIT);
 
   data = section->data;
   end = data + section->section_length;
@@ -953,7 +953,7 @@ _parse_nit (GstMpegTSSection * section)
 
   /* read up to the CRC */
   while (transport_stream_loop_length - 4 > 0) {
-    GstMpegTSNITStream *stream = g_slice_new0 (GstMpegTSNITStream);
+    GstMpegTsNITStream *stream = g_slice_new0 (GstMpegTsNITStream);
 
     g_ptr_array_add (nit->streams, stream);
 
@@ -994,8 +994,8 @@ _parse_nit (GstMpegTSSection * section)
     /* At least notify the descriptors we are not handling :( */
 
     for (j = 0; j < stream->descriptors->len; j++) {
-      GstMpegTSDescriptor *desc =
-          &g_array_index (stream->descriptors, GstMpegTSDescriptor, j);
+      GstMpegTsDescriptor *desc =
+          &g_array_index (stream->descriptors, GstMpegTsDescriptor, j);
 
       switch (desc->descriptor_tag) {
         case GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM:
@@ -1030,15 +1030,15 @@ error:
 
 /**
  * gst_mpegts_section_get_nit:
- * @section: a #GstMpegTSSection of type %GST_MPEGTS_SECTION_NIT
+ * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_NIT
  *
- * Returns the #GstMpegTSNIT contained in the @section.
+ * Returns the #GstMpegTsNIT contained in the @section.
  *
- * Returns: The #GstMpegTSNIT contained in the section, or %NULL if an error
+ * Returns: The #GstMpegTsNIT contained in the section, or %NULL if an error
  * happened.
  */
-const GstMpegTSNIT *
-gst_mpegts_section_get_nit (GstMpegTSSection * section)
+const GstMpegTsNIT *
+gst_mpegts_section_get_nit (GstMpegTsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_NIT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
@@ -1052,7 +1052,7 @@ gst_mpegts_section_get_nit (GstMpegTSSection * section)
       goto parse_failure;
   }
 
-  return (const GstMpegTSNIT *) section->cached_parsed;
+  return (const GstMpegTsNIT *) section->cached_parsed;
 
 bad_crc:
   {
@@ -1070,45 +1070,45 @@ parse_failure:
 
 /* Service Description Table (SDT) */
 
-static GstMpegTSSDT *
-_gst_mpegts_sdt_copy (GstMpegTSSDT * sdt)
+static GstMpegTsSDT *
+_gst_mpegts_sdt_copy (GstMpegTsSDT * sdt)
 {
   /* FIXME : IMPLEMENT */
   return NULL;
 }
 
 static void
-_gst_mpegts_sdt_free (GstMpegTSSDT * sdt)
+_gst_mpegts_sdt_free (GstMpegTsSDT * sdt)
 {
   /* FIXME: IMPLEMENT */
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTSSDT, gst_mpegts_sdt,
+G_DEFINE_BOXED_TYPE (GstMpegTsSDT, gst_mpegts_sdt,
     (GBoxedCopyFunc) _gst_mpegts_sdt_copy, (GFreeFunc) _gst_mpegts_sdt_free);
 
-static GstMpegTSSDTService *
-_gst_mpegts_sdt_service_copy (GstMpegTSSDTService * sdt)
+static GstMpegTsSDTService *
+_gst_mpegts_sdt_service_copy (GstMpegTsSDTService * sdt)
 {
   /* FIXME : IMPLEMENT */
   return NULL;
 }
 
 static void
-_gst_mpegts_sdt_service_free (GstMpegTSSDTService * sdt)
+_gst_mpegts_sdt_service_free (GstMpegTsSDTService * sdt)
 {
   g_array_unref (sdt->descriptors);
-  g_slice_free (GstMpegTSSDTService, sdt);
+  g_slice_free (GstMpegTsSDTService, sdt);
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTSSDTService, gst_mpegts_sdt_service,
+G_DEFINE_BOXED_TYPE (GstMpegTsSDTService, gst_mpegts_sdt_service,
     (GBoxedCopyFunc) _gst_mpegts_sdt_service_copy,
     (GFreeFunc) _gst_mpegts_sdt_service_free);
 
 
-static GstMpegTSSDT *
-_parse_sdt (GstMpegTSSection * section)
+static GstMpegTsSDT *
+_parse_sdt (GstMpegTsSection * section)
 {
-  GstMpegTSSDT *sdt = NULL;
+  GstMpegTsSDT *sdt = NULL;
   guint i = 0, allocated_services = 8;
   guint8 *data, *end, *entry_begin;
   guint tmp;
@@ -1124,7 +1124,7 @@ _parse_sdt (GstMpegTSSection * section)
     goto error;
   }
 
-  sdt = g_slice_new0 (GstMpegTSSDT);
+  sdt = g_slice_new0 (GstMpegTsSDT);
 
   data = section->data;
   end = data + section->section_length;
@@ -1147,7 +1147,7 @@ _parse_sdt (GstMpegTSSection * section)
 
   /* read up to the CRC */
   while (sdt_info_length - 4 > 0) {
-    GstMpegTSSDTService *service = g_slice_new0 (GstMpegTSSDTService);
+    GstMpegTsSDTService *service = g_slice_new0 (GstMpegTsSDTService);
     g_ptr_array_add (sdt->services, service);
 
     entry_begin = data;
@@ -1207,15 +1207,15 @@ error:
 
 /**
  * gst_mpegts_section_get_sdt:
- * @section: a #GstMpegTSSection of type %GST_MPEGTS_SECTION_SDT
+ * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_SDT
  *
- * Returns the #GstMpegTSSDT contained in the @section.
+ * Returns the #GstMpegTsSDT contained in the @section.
  *
- * Returns: The #GstMpegTSSDT contained in the section, or %NULL if an error
+ * Returns: The #GstMpegTsSDT contained in the section, or %NULL if an error
  * happened.
  */
-const GstMpegTSSDT *
-gst_mpegts_section_get_sdt (GstMpegTSSection * section)
+const GstMpegTsSDT *
+gst_mpegts_section_get_sdt (GstMpegTsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_SDT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
@@ -1229,7 +1229,7 @@ gst_mpegts_section_get_sdt (GstMpegTSSection * section)
       goto parse_failure;
   }
 
-  return (const GstMpegTSSDT *) section->cached_parsed;
+  return (const GstMpegTsSDT *) section->cached_parsed;
 
 bad_crc:
   {
@@ -1246,7 +1246,7 @@ parse_failure:
 
 /* Time and Date Table (TDT) */
 static GstDateTime *
-_parse_tdt (GstMpegTSSection * section)
+_parse_tdt (GstMpegTsSection * section)
 {
   /* FIXME : Add length check */
   return _parse_utc_time (section->data + 3);
@@ -1254,7 +1254,7 @@ _parse_tdt (GstMpegTSSection * section)
 
 /**
  * gst_mpegts_section_get_tdt:
- * @section: a #GstMpegTSSection of type %GST_MPEGTS_SECTION_TDT
+ * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_TDT
  *
  * Returns the #GstDateTime of the TDT
  *
@@ -1262,7 +1262,7 @@ _parse_tdt (GstMpegTSSection * section)
  * if an error happened. Release with #gst_date_time_unref when done.
  */
 GstDateTime *
-gst_mpegts_section_get_tdt (GstMpegTSSection * section)
+gst_mpegts_section_get_tdt (GstMpegTsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_TDT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
@@ -1284,34 +1284,34 @@ parse_failure:
 
 
 /* Time Offset Table (TOT) */
-static GstMpegTSTOT *
-_gst_mpegts_tot_copy (GstMpegTSTOT * tot)
+static GstMpegTsTOT *
+_gst_mpegts_tot_copy (GstMpegTsTOT * tot)
 {
   /* FIXME : IMPLEMENT */
   return NULL;
 }
 
 static void
-_gst_mpegts_tot_free (GstMpegTSTOT * tot)
+_gst_mpegts_tot_free (GstMpegTsTOT * tot)
 {
   /* FIXME: IMPLEMENT */
 }
 
-G_DEFINE_BOXED_TYPE (GstMpegTSTOT, gst_mpegts_tot,
+G_DEFINE_BOXED_TYPE (GstMpegTsTOT, gst_mpegts_tot,
     (GBoxedCopyFunc) _gst_mpegts_tot_copy, (GFreeFunc) _gst_mpegts_tot_free);
 
-static GstMpegTSTOT *
-_parse_tot (GstMpegTSSection * section)
+static GstMpegTsTOT *
+_parse_tot (GstMpegTsSection * section)
 {
   guint8 *data;
-  GstMpegTSTOT *tot;
+  GstMpegTsTOT *tot;
   guint16 desc_len;
 
   /* FIXME : Check minimum length */
 
   GST_DEBUG ("TOT");
 
-  tot = g_slice_new0 (GstMpegTSTOT);
+  tot = g_slice_new0 (GstMpegTsTOT);
 
   tot->utc_time = _parse_utc_time (section->data + 3);
 
@@ -1326,15 +1326,15 @@ _parse_tot (GstMpegTSSection * section)
 
 /**
  * gst_mpegts_section_get_tot:
- * @section: a #GstMpegTSSection of type %GST_MPEGTS_SECTION_TOT
+ * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_TOT
  *
- * Returns the #GstMpegTSTOT contained in the @section.
+ * Returns the #GstMpegTsTOT contained in the @section.
  *
- * Returns: The #GstMpegTSTOT contained in the section, or %NULL if an error
+ * Returns: The #GstMpegTsTOT contained in the section, or %NULL if an error
  * happened.
  */
-const GstMpegTSTOT *
-gst_mpegts_section_get_tot (GstMpegTSSection * section)
+const GstMpegTsTOT *
+gst_mpegts_section_get_tot (GstMpegTsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_TOT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
@@ -1348,7 +1348,7 @@ gst_mpegts_section_get_tot (GstMpegTSSection * section)
       goto parse_failure;
   }
 
-  return (const GstMpegTSTOT *) section->cached_parsed;
+  return (const GstMpegTsTOT *) section->cached_parsed;
 
 bad_crc:
   {
@@ -1396,8 +1396,8 @@ gst_mpegts_initialize (void)
   __initialize_descriptors ();
 }
 
-static GstMpegTSSectionType
-_identify_section (GstMpegTSSectionTableID table_id)
+static GstMpegTsSectionType
+_identify_section (GstMpegTsSectionTableID table_id)
 {
   switch (table_id) {
     case GST_MTS_TABLE_ID_PROGRAM_ASSOCIATION:
@@ -1435,7 +1435,7 @@ _identify_section (GstMpegTSSectionTableID table_id)
  * should contain the table_id field).
  * @data_size: size of the @data argument.
  *
- * Creates a new #GstMpegTSSection from the provided @data.
+ * Creates a new #GstMpegTsSection from the provided @data.
  *
  * Note: Ensuring @data is big enough to contain the full section is the
  * responsibility of the caller. If it is not big enough, %NULL will be
@@ -1444,13 +1444,13 @@ _identify_section (GstMpegTSSectionTableID table_id)
  * Note: it is the responsibility of the caller to ensure @data does point
  * to the beginning of the section.
  *
- * Returns: (transfer full): A new #GstMpegTSSection if the data was valid,
+ * Returns: (transfer full): A new #GstMpegTsSection if the data was valid,
  * else %NULL
  */
-GstMpegTSSection *
+GstMpegTsSection *
 gst_mpegts_section_new (guint16 pid, guint8 * data, gsize data_size)
 {
-  GstMpegTSSection *res = NULL;
+  GstMpegTsSection *res = NULL;
   guint8 tmp;
   guint16 section_length;
 
@@ -1459,7 +1459,7 @@ gst_mpegts_section_new (guint16 pid, guint8 * data, gsize data_size)
   if (G_UNLIKELY (data_size < section_length + 3))
     goto short_packet;
 
-  res = g_slice_new0 (GstMpegTSSection);
+  res = g_slice_new0 (GstMpegTsSection);
   gst_mini_object_init (GST_MINI_OBJECT_CAST (res), 0, MPEG_TYPE_TS_SECTION,
       (GstMiniObjectCopyFunction) _gst_mpegts_section_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_mpegts_section_free);

@@ -27,17 +27,17 @@
 #include <gst/gst.h>
 #include <gst/mpegts/gstmpegtsdescriptor.h>
 
-typedef struct _GstMpegTSSection GstMpegTSSection;
+typedef struct _GstMpegTsSection GstMpegTsSection;
 
 #define GST_TYPE_MPEGTS_SECTION (gst_mpegts_section_get_type())
-#define GST_MPEGTS_SECTION(section) ((GstMpegTSSection*) section)
+#define GST_MPEGTS_SECTION(section) ((GstMpegTsSection*) section)
 
 #define GST_MPEGTS_SECTION_TYPE(section) (GST_MPEGTS_SECTION (section)->section_type)
 
 GType gst_mpegts_section_get_type (void);
 
 /**
- * GstMpegTSSectionType:
+ * GstMpegTsSectionType:
  * @GST_MPEGTS_SECTION_UNKNOWN: Unknown section type
  * @GST_MPEGTS_SECTION_PAT: Program Association Table (ISO/IEC 13818-1)
  * @GST_MPEGTS_SECTION_PMT: Program Map Table (ISO/IEC 13818-1)
@@ -51,7 +51,7 @@ GType gst_mpegts_section_get_type (void);
  * @GST_MPEGTS_SECTION_TOT: Time Offset Table (EN 300 468)
  * @GST_MPEGTS_SECTION_LAST:
  *
- * Types of #GstMpegTSSection that the library handles.
+ * Types of #GstMpegTsSection that the library handles.
  */
 typedef enum {
   GST_MPEGTS_SECTION_UNKNOWN           = 0,
@@ -66,7 +66,7 @@ typedef enum {
   GST_MPEGTS_SECTION_TDT, 
   GST_MPEGTS_SECTION_TOT, 
   GST_MPEGTS_SECTION_LAST
-} GstMpegTSSectionType;
+} GstMpegTsSectionType;
 
 /* FIXME : How do we deal with clashing table_id for the various standards:
  * * ISO/IEC 13818-1 and ITU H.222.0 : Takes precedence over all
@@ -79,9 +79,9 @@ typedef enum {
  * Do we create a different enum for variants ?
  */
 /**
- * GstMpegTSSectionTableID:
+ * GstMpegTsSectionTableID:
  *
- * Values for a #GstMpegTSSection table_id
+ * Values for a #GstMpegTsSection table_id
  */
 typedef enum {
   /* ITU H.222.0 / IEC 13818-1 */
@@ -188,10 +188,10 @@ typedef enum {
   /* Unset */
   GST_MTS_TABLE_ID_UNSET = 0xFF
   
-} GstMpegTSSectionTableID;
+} GstMpegTsSectionTableID;
 
 /**
- * GstMpegTSSection:
+ * GstMpegTsSection:
  * @section_type: The type of section
  * @pid: The pid on which this section was found
  * @table_id: The table id of this section
@@ -205,16 +205,16 @@ typedef enum {
  *
  * Mpeg-TS Section Information (SI) (ISO/IEC 13818-1)
  */
-struct _GstMpegTSSection
+struct _GstMpegTsSection
 {
   /*< private >*/
   GstMiniObject parent;
 
   /*< public >*/
-  GstMpegTSSectionType   section_type;
+  GstMpegTsSectionType   section_type;
 
   guint16       pid;
-  GstMpegTSSectionTableID        table_id;
+  GstMpegTsSectionTableID        table_id;
 
   guint16       subtable_extension;
   guint8        version_number;
@@ -243,7 +243,7 @@ struct _GstMpegTSSection
 };
 
 /**
- * GstMpegTSRunningStatus:
+ * GstMpegTsRunningStatus:
  *
  * Running status of a service.
  *
@@ -257,46 +257,46 @@ typedef enum
   GST_MPEGTS_RUNNING_STATUS_PAUSING,
   GST_MPEGTS_RUNNING_STATUS_RUNNING,
   GST_MPEGTS_RUNNING_STATUS_OFF_AIR
-} GstMpegTSRunningStatus;
+} GstMpegTsRunningStatus;
 
 
 /* PAT */
-typedef struct _GstMpegTSPatProgram GstMpegTSPatProgram;
+typedef struct _GstMpegTsPatProgram GstMpegTsPatProgram;
 /**
- * GstMpegTSPatProgram:
+ * GstMpegTsPatProgram:
  * @program_number: the program number
  * @network_or_program_map_PID: the network of program map PID
  *
  * A program entry from a Program Association Table (ITU H.222.0, ISO/IEC 13818-1).
  */
-struct _GstMpegTSPatProgram
+struct _GstMpegTsPatProgram
 {
   guint16 program_number;
   guint16 network_or_program_map_PID;
 };
 
-GArray *gst_mpegts_section_get_pat (GstMpegTSSection *section);
+GArray *gst_mpegts_section_get_pat (GstMpegTsSection *section);
 
 /* CAT */
 
-GArray *gst_mpegts_section_get_cat (GstMpegTSSection *section);
+GArray *gst_mpegts_section_get_cat (GstMpegTsSection *section);
 
 /* PMT */
-typedef struct _GstMpegTSPMTStream GstMpegTSPMTStream;
-typedef struct _GstMpegTSPMT GstMpegTSPMT;
+typedef struct _GstMpegTsPMTStream GstMpegTsPMTStream;
+typedef struct _GstMpegTsPMT GstMpegTsPMT;
 #define GST_TYPE_MPEGTS_PMT (gst_mpegts_pmt_get_type())
 #define GST_TYPE_MPEGTS_PMT_STREAM (gst_mpegts_pmt_stream_get_type())
 
 /**
- * GstMpegTSPMTStream:
+ * GstMpegTsPMTStream:
  * @stream_type: the type of stream
  * @pid: the PID of the stream
- * @descriptors: (element-type GstMpegTSDescriptor): the descriptors of the
+ * @descriptors: (element-type GstMpegTsDescriptor): the descriptors of the
  * stream
  *
  * An individual stream definition.
  */
-struct _GstMpegTSPMTStream
+struct _GstMpegTsPMTStream
 {
   guint8      stream_type;
   guint16     pid;
@@ -305,17 +305,17 @@ struct _GstMpegTSPMTStream
 };
 
 /**
- * GstMpegTSPMT:
+ * GstMpegTsPMT:
  * @pcr_pid: PID of the stream containing PCR
- * @descriptors: (element-type GstMpegTSDescriptor): array of #GstMpegTSDescriptor
- * @streams: (element-type GstMpegTSPMTStream): Array of #GstMpegTSPMTStream
+ * @descriptors: (element-type GstMpegTsDescriptor): array of #GstMpegTsDescriptor
+ * @streams: (element-type GstMpegTsPMTStream): Array of #GstMpegTsPMTStream
  *
  * Program Map Table (ISO/IEC 13818-1).
  *
  * The program_number is contained in the subtable_extension field of the
- * container #GstMpegTSSection.
+ * container #GstMpegTsSection.
  */
-struct _GstMpegTSPMT
+struct _GstMpegTsPMT
 {
   guint16    pcr_pid;
 
@@ -326,28 +326,28 @@ struct _GstMpegTSPMT
 GType gst_mpegts_pmt_get_type (void);
 GType gst_mpegts_pmt_stream_get_type (void);
 
-const GstMpegTSPMT *gst_mpegts_section_get_pmt (GstMpegTSSection *section);
+const GstMpegTsPMT *gst_mpegts_section_get_pmt (GstMpegTsSection *section);
 
 /* TSDT */
 
-GArray *gst_mpegts_section_get_tsdt (GstMpegTSSection *section);
+GArray *gst_mpegts_section_get_tsdt (GstMpegTsSection *section);
 
 /* NIT */
 
-typedef struct _GstMpegTSNITStream GstMpegTSNITStream;
-typedef struct _GstMpegTSNIT GstMpegTSNIT;
+typedef struct _GstMpegTsNITStream GstMpegTsNITStream;
+typedef struct _GstMpegTsNIT GstMpegTsNIT;
 
 #define GST_TYPE_MPEGTS_NIT (gst_mpegts_nit_get_type())
 #define GST_TYPE_MPEGTS_NIT_STREAM (gst_mpegts_nit_stream_get_type())
 
 /**
- * GstMpegTSNITStream:
+ * GstMpegTsNITStream:
  * @transport_stream_id:
  * @original_network_id:
- * @descriptors: (element-type GstMpegTSDescriptor)
+ * @descriptors: (element-type GstMpegTsDescriptor)
  *
  */
-struct _GstMpegTSNITStream
+struct _GstMpegTsNITStream
 {
   guint16  transport_stream_id;
   guint16  original_network_id;
@@ -356,17 +356,17 @@ struct _GstMpegTSNITStream
 };
 
 /**
- * GstMpegTSNIT:
+ * GstMpegTsNIT:
  * @actual_network: Whether this NIT corresponds to the actual stream
- * @descriptors: (element-type GstMpegTSDescriptor) the global descriptors
- * @streams: (element-type GstMpegTSNITStream) the streams
+ * @descriptors: (element-type GstMpegTsDescriptor) the global descriptors
+ * @streams: (element-type GstMpegTsNITStream) the streams
  *
  * Network Information Table (ISO/IEC 13818-1 / EN 300 468)
  *
  * The network_id is contained in the subtable_extension field of the
- * container #GstMpegTSSection.
+ * container #GstMpegTsSection.
  */
-struct _GstMpegTSNIT
+struct _GstMpegTsNIT
 {
   gboolean   actual_network;
 
@@ -378,16 +378,16 @@ struct _GstMpegTSNIT
 GType gst_mpegts_nit_get_type (void);
 GType gst_mpegts_nit_stream_get_type (void);
 
-const GstMpegTSNIT *gst_mpegts_section_get_nit (GstMpegTSSection *section);
+const GstMpegTsNIT *gst_mpegts_section_get_nit (GstMpegTsSection *section);
 
 /* BAT */
 
-typedef struct _GstMpegTSBATStream GstMpegTSBATStream;
-typedef struct _GstMpegTSBAT GstMpegTSBAT;
+typedef struct _GstMpegTsBATStream GstMpegTsBATStream;
+typedef struct _GstMpegTsBAT GstMpegTsBAT;
 
 #define GST_TYPE_MPEGTS_BAT (gst_mpegts_bat_get_type())
 
-struct _GstMpegTSBATStream
+struct _GstMpegTsBATStream
 {
   guint16   transport_stream_id;
   guint16   original_network_id;
@@ -396,11 +396,11 @@ struct _GstMpegTSBATStream
 };
 
 /**
- * GstMpegTSBAT:
+ * GstMpegTsBAT:
  *
  * DVB Bouquet Association Table (EN 300 468)
  */
-struct _GstMpegTSBAT
+struct _GstMpegTsBAT
 {
   gboolean    actual_network;
 
@@ -415,27 +415,27 @@ GType gst_mpegts_bat_get_type (void);
 #define GST_TYPE_MPEGTS_SDT (gst_mpegts_sdt_get_type())
 #define GST_TYPE_MPEGTS_SDT_SERVICE (gst_mpegts_sdt_service_get_type())
 
-typedef struct _GstMpegTSSDTService GstMpegTSSDTService;
-typedef struct _GstMpegTSSDT GstMpegTSSDT;
+typedef struct _GstMpegTsSDTService GstMpegTsSDTService;
+typedef struct _GstMpegTsSDT GstMpegTsSDT;
 
-struct _GstMpegTSSDTService
+struct _GstMpegTsSDTService
 {
   guint16    service_id;
 
   gboolean   EIT_schedule_flag;
   gboolean   EIT_present_following_flag;
-  GstMpegTSRunningStatus running_status;
+  GstMpegTsRunningStatus running_status;
   gboolean   free_CA_mode;
 
   GArray    *descriptors;
 };
 
 /**
- * GstMpegTSSDT:
+ * GstMpegTsSDT:
  *
  * Service Description Table (EN 300 468)
  */
-struct _GstMpegTSSDT
+struct _GstMpegTsSDT
 {
   guint16    original_network_id;
   gboolean   actual_ts;
@@ -446,40 +446,40 @@ struct _GstMpegTSSDT
 GType gst_mpegts_sdt_get_type (void);
 GType gst_mpegts_sdt_service_get_type (void);
 
-const GstMpegTSSDT *gst_mpegts_section_get_sdt (GstMpegTSSection *section);
+const GstMpegTsSDT *gst_mpegts_section_get_sdt (GstMpegTsSection *section);
 
 /* EIT */
 
 #define GST_TYPE_MPEGTS_EIT (gst_mpegts_eit_get_type())
 #define GST_TYPE_MPEGTS_EIT_EVENT (gst_mpegts_eit_event_get_type())
 
-typedef struct _GstMpegTSEITEvent GstMpegTSEITEvent;
-typedef struct _GstMpegTSEIT GstMpegTSEIT;
+typedef struct _GstMpegTsEITEvent GstMpegTsEITEvent;
+typedef struct _GstMpegTsEIT GstMpegTsEIT;
 
 /**
- * GstMpegTSEITEvent:
+ * GstMpegTsEITEvent:
  *
- * Event from a @GstMpegTSEIT
+ * Event from a @GstMpegTsEIT
  */
-struct _GstMpegTSEITEvent
+struct _GstMpegTsEITEvent
 {
   guint16      event_id;
 
   GstDateTime *start_time;
   guint32      duration;
 
-  GstMpegTSRunningStatus running_status;
+  GstMpegTsRunningStatus running_status;
   gboolean     free_CA_mode;
 
   GArray      *descriptors;
 };
 
 /**
- * GstMpegTSEIT:
+ * GstMpegTsEIT:
  *
  * Event Information Table (EN 300 468)
  */
-struct _GstMpegTSEIT
+struct _GstMpegTsEIT
 {
   guint16        transport_stream_id;
   guint16        original_network_id;
@@ -495,21 +495,21 @@ struct _GstMpegTSEIT
 GType gst_mpegts_eit_get_type (void);
 GType gst_mpegts_eit_event_get_type (void);
 
-const GstMpegTSEIT *gst_mpegts_section_get_eit (GstMpegTSSection *section);
+const GstMpegTsEIT *gst_mpegts_section_get_eit (GstMpegTsSection *section);
 
 /* TDT */
-GstDateTime *gst_mpegts_section_get_tdt (GstMpegTSSection *section);
+GstDateTime *gst_mpegts_section_get_tdt (GstMpegTsSection *section);
 
 /* TOT */
 
-typedef struct _GstMpegTSTOT GstMpegTSTOT;
+typedef struct _GstMpegTsTOT GstMpegTsTOT;
 #define GST_TYPE_MPEGTS_TOT (gst_mpegts_tot_get_type())
 /**
- * GstMpegTSTOT:
+ * GstMpegTsTOT:
  *
  * Time Offset Table (EN 300 468)
  */
-struct _GstMpegTSTOT
+struct _GstMpegTsTOT
 {
   GstDateTime   *utc_time;
 
@@ -517,18 +517,18 @@ struct _GstMpegTSTOT
 };
 
 GType gst_mpegts_tot_get_type (void);
-const GstMpegTSTOT *gst_mpegts_section_get_tot (GstMpegTSSection *section);
+const GstMpegTsTOT *gst_mpegts_section_get_tot (GstMpegTsSection *section);
 
 /* generic */
 
-#define gst_mpegts_section_ref(section)   ((GstMpegTSSection*) gst_mini_object_ref (GST_MINI_OBJECT_CAST (section)))
+#define gst_mpegts_section_ref(section)   ((GstMpegTsSection*) gst_mini_object_ref (GST_MINI_OBJECT_CAST (section)))
 #define gst_mpegts_section_unref(section) (gst_mini_object_unref (GST_MINI_OBJECT_CAST (section)))
 
-GstMessage *gst_message_new_mpegts_section (GstObject *parent, GstMpegTSSection *section);
+GstMessage *gst_message_new_mpegts_section (GstObject *parent, GstMpegTsSection *section);
 
-GstMpegTSSection *gst_message_parse_mpegts_section (GstMessage *message);
+GstMpegTsSection *gst_message_parse_mpegts_section (GstMessage *message);
 
-GstMpegTSSection *gst_mpegts_section_new (guint16 pid,
+GstMpegTsSection *gst_mpegts_section_new (guint16 pid,
 					   guint8 * data,
 					   gsize data_size);
 
