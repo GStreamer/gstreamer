@@ -49,7 +49,6 @@ libgstrtspserver_@GST_API_VERSION@_la_LIBADD = \
             -lgstsdp-@GST_API_VERSION@ \
             -lgstapp-@GST_API_VERSION@ \
 	    $(GST_LIBS) $(GIO_LIBS) $(LIBM)
-libgstrtspserver_@GST_API_VERSION@_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstrtspserver_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/rtsp-server
 libgstrtspserver_@GST_API_VERSION@include_HEADERS = $(public_headers)
