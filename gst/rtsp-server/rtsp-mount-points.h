@@ -19,8 +19,6 @@
 
 #include <gst/gst.h>
 
-#include <gst/rtsp/gstrtspurl.h>
-
 #include "rtsp-media-factory.h"
 
 #ifndef __GST_RTSP_MOUNT_POINTS_H__
@@ -65,9 +63,6 @@ struct _GstRTSPMountPoints {
  */
 struct _GstRTSPMountPointsClass {
   GObjectClass  parent_class;
-
-  GstRTSPMediaFactory * (*find_factory)  (GstRTSPMountPoints *mounts,
-                                          const GstRTSPUrl *url);
 };
 
 GType                 gst_rtsp_mount_points_get_type       (void);
@@ -75,13 +70,10 @@ GType                 gst_rtsp_mount_points_get_type       (void);
 /* creating a mount points */
 GstRTSPMountPoints *  gst_rtsp_mount_points_new            (void);
 
-GstRTSPMediaFactory * gst_rtsp_mount_points_find_factory   (GstRTSPMountPoints *mounts,
-                                                            const GstRTSPUrl *url);
-
+/* finding a media factory */
 GstRTSPMediaFactory * gst_rtsp_mount_points_match          (GstRTSPMountPoints *mounts,
                                                             const gchar *path,
                                                             gint * matched);
-/* finding a media factory */
 /* managing media to a mount point */
 void                  gst_rtsp_mount_points_add_factory    (GstRTSPMountPoints *mounts,
                                                             const gchar *path,

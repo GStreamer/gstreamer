@@ -34,19 +34,24 @@ GST_START_TEST (test_create)
   fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test2",
           &url2) == GST_RTSP_OK);
 
-  fail_unless (gst_rtsp_mount_points_find_factory (mounts, url) == NULL);
+  fail_unless (gst_rtsp_mount_points_match (mounts, url->abspath,
+          NULL) == NULL);
 
   factory = gst_rtsp_media_factory_new ();
   gst_rtsp_mount_points_add_factory (mounts, "/test", factory);
 
-  fail_unless (gst_rtsp_mount_points_find_factory (mounts, url) == factory);
+  fail_unless (gst_rtsp_mount_points_match (mounts, url->abspath,
+          NULL) == factory);
   g_object_unref (factory);
-  fail_unless (gst_rtsp_mount_points_find_factory (mounts, url2) == NULL);
+  fail_unless (gst_rtsp_mount_points_match (mounts, url2->abspath,
+          NULL) == NULL);
 
   gst_rtsp_mount_points_remove_factory (mounts, "/test");
 
-  fail_unless (gst_rtsp_mount_points_find_factory (mounts, url) == NULL);
-  fail_unless (gst_rtsp_mount_points_find_factory (mounts, url2) == NULL);
+  fail_unless (gst_rtsp_mount_points_match (mounts, url->abspath,
+          NULL) == NULL);
+  fail_unless (gst_rtsp_mount_points_match (mounts, url2->abspath,
+          NULL) == NULL);
 
   gst_rtsp_url_free (url);
   gst_rtsp_url_free (url2);

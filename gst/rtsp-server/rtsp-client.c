@@ -503,8 +503,8 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
 
     /* find the factory for the uri first */
     if (!(factory =
-            gst_rtsp_mount_points_find_factory (priv->mount_points,
-                state->uri)))
+            gst_rtsp_mount_points_match (priv->mount_points,
+                state->uri->abspath, NULL)))
       goto no_factory;
 
     /* check if we have access to the factory */

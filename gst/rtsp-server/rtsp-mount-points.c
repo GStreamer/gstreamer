@@ -87,9 +87,6 @@ GST_DEBUG_CATEGORY_STATIC (rtsp_media_debug);
 
 static void gst_rtsp_mount_points_finalize (GObject * obj);
 
-static GstRTSPMediaFactory *find_factory (GstRTSPMountPoints * mounts,
-    const GstRTSPUrl * url);
-
 static void
 gst_rtsp_mount_points_class_init (GstRTSPMountPointsClass * klass)
 {
@@ -100,8 +97,6 @@ gst_rtsp_mount_points_class_init (GstRTSPMountPointsClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->finalize = gst_rtsp_mount_points_finalize;
-
-  klass->find_factory = find_factory;
 
   GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmountpoints", 0,
       "GstRTSPMountPoints");
@@ -148,45 +143,6 @@ gst_rtsp_mount_points_new (void)
   GstRTSPMountPoints *result;
 
   result = g_object_new (GST_TYPE_RTSP_MOUNT_POINTS, NULL);
-
-  return result;
-}
-
-static GstRTSPMediaFactory *
-find_factory (GstRTSPMountPoints * mounts, const GstRTSPUrl * url)
-{
-  g_return_val_if_fail (GST_IS_RTSP_MOUNT_POINTS (mounts), NULL);
-  g_return_val_if_fail (url != NULL, NULL);
-
-  return gst_rtsp_mount_points_match (mounts, url->abspath, NULL);
-}
-
-/**
- * gst_rtsp_mount_points_find_factory:
- * @mounts: a #GstRTSPMountPoints
- * @url: a url
- *
- * Find the #GstRTSPMediaFactory for @url. The default implementation of this object
- * will use the media factory added with gst_rtsp_mount_points_add_factory ().
- *
- * Returns: (transfer full): the #GstRTSPMediaFactory for @url. g_object_unref() after usage.
- */
-GstRTSPMediaFactory *
-gst_rtsp_mount_points_find_factory (GstRTSPMountPoints * mounts,
-    const GstRTSPUrl * url)
-{
-  GstRTSPMediaFactory *result;
-  GstRTSPMountPointsClass *klass;
-
-  g_return_val_if_fail (GST_IS_RTSP_MOUNT_POINTS (mounts), NULL);
-  g_return_val_if_fail (url != NULL, NULL);
-
-  klass = GST_RTSP_MOUNT_POINTS_GET_CLASS (mounts);
-
-  if (klass->find_factory)
-    result = klass->find_factory (mounts, url);
-  else
-    result = NULL;
 
   return result;
 }
