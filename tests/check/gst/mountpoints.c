@@ -56,6 +56,66 @@ GST_START_TEST (test_create)
 
 GST_END_TEST;
 
+static const gchar *paths[] = {
+  "/test",
+  "/booz/fooz",
+  "/booz/foo/zoop",
+  "/tark/bar",
+  "/tark/bar/baz",
+  "/tark/bar/baz/t",
+  "/boozop",
+};
+
+GST_START_TEST (test_match)
+{
+  GstRTSPMountPoints *mounts;
+  GstRTSPMediaFactory *f[G_N_ELEMENTS (paths)], *tmp;
+  gint i, matched;
+
+  mounts = gst_rtsp_mount_points_new ();
+
+  for (i = 0; i < G_N_ELEMENTS (paths); i++) {
+    f[i] = gst_rtsp_media_factory_new ();
+    gst_rtsp_mount_points_add_factory (mounts, paths[i], f[i]);
+  }
+
+  tmp = gst_rtsp_mount_points_match (mounts, "/test", &matched);
+  fail_unless (tmp == f[0]);
+  fail_unless (matched == 5);
+  tmp = gst_rtsp_mount_points_match (mounts, "/test/stream=1", &matched);
+  fail_unless (tmp == f[0]);
+  fail_unless (matched == 5);
+  tmp = gst_rtsp_mount_points_match (mounts, "/booz", &matched);
+  fail_unless (tmp == NULL);
+  tmp = gst_rtsp_mount_points_match (mounts, "/booz/foo", &matched);
+  fail_unless (tmp == NULL);
+  tmp = gst_rtsp_mount_points_match (mounts, "/booz/fooz", &matched);
+  fail_unless (tmp == f[1]);
+  fail_unless (matched == 10);
+  tmp = gst_rtsp_mount_points_match (mounts, "/booz/fooz/zoo", &matched);
+  fail_unless (tmp == f[1]);
+  fail_unless (matched == 10);
+  tmp = gst_rtsp_mount_points_match (mounts, "/booz/foo/zoop", &matched);
+  fail_unless (tmp == f[2]);
+  fail_unless (matched == 14);
+  tmp = gst_rtsp_mount_points_match (mounts, "/tark/bar", &matched);
+  fail_unless (tmp == f[3]);
+  fail_unless (matched == 9);
+  tmp = gst_rtsp_mount_points_match (mounts, "/tark/bar/boo", &matched);
+  fail_unless (tmp == f[3]);
+  fail_unless (matched == 9);
+  tmp = gst_rtsp_mount_points_match (mounts, "/tark/bar/ba", &matched);
+  fail_unless (tmp == f[3]);
+  fail_unless (matched == 9);
+  tmp = gst_rtsp_mount_points_match (mounts, "/tark/bar/baz", &matched);
+  fail_unless (tmp == f[4]);
+  fail_unless (matched == 13);
+
+  g_object_unref (mounts);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspmountpoints_suite (void)
 {
@@ -65,6 +125,7 @@ rtspmountpoints_suite (void)
   suite_add_tcase (s, tc);
   tcase_set_timeout (tc, 20);
   tcase_add_test (tc, test_create);
+  tcase_add_test (tc, test_match);
 
   return s;
 }

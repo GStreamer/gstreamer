@@ -66,7 +66,8 @@ struct _GstRTSPMountPoints {
 struct _GstRTSPMountPointsClass {
   GObjectClass  parent_class;
 
-  GstRTSPMediaFactory * (*find_factory)  (GstRTSPMountPoints *mounts, const GstRTSPUrl *url);
+  GstRTSPMediaFactory * (*find_factory)  (GstRTSPMountPoints *mounts,
+                                          const GstRTSPUrl *url);
 };
 
 GType                 gst_rtsp_mount_points_get_type       (void);
@@ -74,13 +75,19 @@ GType                 gst_rtsp_mount_points_get_type       (void);
 /* creating a mount points */
 GstRTSPMountPoints *  gst_rtsp_mount_points_new            (void);
 
-/* finding a media factory */
-GstRTSPMediaFactory * gst_rtsp_mount_points_find_factory   (GstRTSPMountPoints *mounts, const GstRTSPUrl *url);
+GstRTSPMediaFactory * gst_rtsp_mount_points_find_factory   (GstRTSPMountPoints *mounts,
+                                                            const GstRTSPUrl *url);
 
+GstRTSPMediaFactory * gst_rtsp_mount_points_match          (GstRTSPMountPoints *mounts,
+                                                            const gchar *path,
+                                                            gint * matched);
+/* finding a media factory */
 /* managing media to a mount point */
-void                  gst_rtsp_mount_points_add_factory    (GstRTSPMountPoints *mounts, const gchar *path,
+void                  gst_rtsp_mount_points_add_factory    (GstRTSPMountPoints *mounts,
+                                                            const gchar *path,
                                                             GstRTSPMediaFactory *factory);
-void                  gst_rtsp_mount_points_remove_factory (GstRTSPMountPoints *mounts, const gchar *path);
+void                  gst_rtsp_mount_points_remove_factory (GstRTSPMountPoints *mounts,
+                                                            const gchar *path);
 
 G_END_DECLS
 
