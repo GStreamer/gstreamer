@@ -253,6 +253,7 @@ enum
 #define DEFAULT_USE_PIPELINE_CLOCK   FALSE
 #define DEFAULT_RTCP_SYNC            GST_RTP_BIN_RTCP_SYNC_ALWAYS
 #define DEFAULT_RTCP_SYNC_INTERVAL   0
+#define DEFAULT_DO_SYNC_EVENT        FALSE
 
 enum
 {
@@ -268,6 +269,7 @@ enum
   PROP_AUTOREMOVE,
   PROP_BUFFER_MODE,
   PROP_USE_PIPELINE_CLOCK,
+  PROP_DO_SYNC_EVENT,
   PROP_LAST
 };
 
@@ -975,6 +977,25 @@ stream_set_ts_offset (GstRtpBin * bin, GstRtpBinStream * stream,
       stream->ssrc, ts_offset);
 }
 
+static void
+gst_rtp_bin_send_sync_event (GstRtpBinStream * stream)
+{
+  if (stream->bin->send_sync_event) {
+    GstEvent *event;
+    GstPad *srcpad;
+
+    GST_DEBUG_OBJECT (stream->bin,
+        "sending GstRTCPSRReceived event downstream");
+
+    event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+        gst_structure_new ("GstRTCPSRReceived", NULL));
+
+    srcpad = gst_element_get_static_pad (stream->buffer, "src");
+    gst_pad_push_event (srcpad, event);
+    gst_object_unref (srcpad);
+  }
+}
+
 /* associate a stream to the given CNAME. This will make sure all streams for
  * that CNAME are synchronized together.
  * Must be called with GST_RTP_BIN_LOCK */
@@ -1241,6 +1262,8 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
       stream_set_ts_offset (bin, ostream, ts_offset, TRUE);
     }
   }
+  gst_rtp_bin_send_sync_event (stream);
+
   return;
 }
 
@@ -1840,6 +1863,11 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           0, G_MAXUINT, DEFAULT_RTCP_SYNC_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_DO_SYNC_EVENT,
+      g_param_spec_boolean ("do-sync-event", "Do Sync Event",
+          "Send event downstream when a stream is synchronized to the sender",
+          DEFAULT_DO_SYNC_EVENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -1896,6 +1924,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   rtpbin->priv->autoremove = DEFAULT_AUTOREMOVE;
   rtpbin->buffer_mode = DEFAULT_BUFFER_MODE;
   rtpbin->use_pipeline_clock = DEFAULT_USE_PIPELINE_CLOCK;
+  rtpbin->send_sync_event = DEFAULT_DO_SYNC_EVENT;
 
   /* some default SDES entries */
   cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
@@ -2039,6 +2068,9 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       GST_RTP_BIN_UNLOCK (rtpbin);
     }
       break;
+    case PROP_DO_SYNC_EVENT:
+      rtpbin->send_sync_event = g_value_get_boolean (value);
+      break;
     case PROP_BUFFER_MODE:
       GST_RTP_BIN_LOCK (rtpbin);
       rtpbin->buffer_mode = g_value_get_enum (value);
@@ -2099,6 +2131,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_PIPELINE_CLOCK:
       g_value_set_boolean (value, rtpbin->use_pipeline_clock);
+      break;
+    case PROP_DO_SYNC_EVENT:
+      g_value_set_boolean (value, rtpbin->send_sync_event);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

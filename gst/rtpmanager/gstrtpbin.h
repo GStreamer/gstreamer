@@ -56,6 +56,7 @@ struct _GstRtpBin {
   RTPJitterBufferMode buffer_mode;
   gboolean        buffering;
   gboolean        use_pipeline_clock;
+  gboolean        send_sync_event;
   GstClockTime    buffer_start;
   /* a list of session */
   GSList         *sessions;
