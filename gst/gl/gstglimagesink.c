@@ -1026,8 +1026,7 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink, GLuint texture,
     if (USING_GLES2 (gl_sink->display)) {
       if (!gl_sink->redisplay_shader) {
         gst_gl_window_send_message (window,
-            GST_GL_WINDOW_CB (gst_glimage_sink_thread_init_redisplay),
-            gl_sink->display);
+            GST_GL_WINDOW_CB (gst_glimage_sink_thread_init_redisplay), gl_sink);
       }
     }
 #endif
