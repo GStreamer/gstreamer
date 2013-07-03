@@ -738,7 +738,8 @@ gst_dash_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_EOS:{
       gchar *manifest;
       GstQuery *query;
-      gboolean res;
+      gboolean query_res;
+      gboolean ret = TRUE;
       GstMapInfo mapinfo;
 
       if (demux->manifest == NULL) {
@@ -753,8 +754,8 @@ gst_dash_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       demux->client = gst_mpd_client_new ();
 
       query = gst_query_new_uri ();
-      res = gst_pad_peer_query (pad, query);
-      if (res) {
+      query_res = gst_pad_peer_query (pad, query);
+      if (query_res) {
         gst_query_parse_uri (query, &demux->client->mpd_uri);
         GST_DEBUG_OBJECT (demux, "Fetched MPD file at URI: %s",
             demux->client->mpd_uri);
@@ -763,33 +764,40 @@ gst_dash_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       gst_query_unref (query);
 
-      gst_buffer_map (demux->manifest, &mapinfo, GST_MAP_READ);
-
-      manifest = (gchar *) mapinfo.data;
-      if (manifest == NULL) {
+      if (gst_buffer_map (demux->manifest, &mapinfo, GST_MAP_READ)) {
+        manifest = (gchar *) mapinfo.data;
+        if (!gst_mpd_parse (demux->client, manifest, mapinfo.size)) {
+          /* In most cases, this will happen if we set a wrong url in the
+           * source element and we have received the 404 HTML response instead of
+           * the manifest */
+          GST_ELEMENT_ERROR (demux, STREAM, DECODE, ("Invalid manifest."),
+              (NULL));
+          ret = FALSE;
+        }
+        gst_buffer_unmap (demux->manifest, &mapinfo);
+      } else {
         GST_WARNING_OBJECT (demux, "Error validating the manifest.");
-      } else if (!gst_mpd_parse (demux->client, manifest, mapinfo.size)) {
-        /* In most cases, this will happen if we set a wrong url in the
-         * source element and we have received the 404 HTML response instead of
-         * the manifest */
-        GST_ELEMENT_ERROR (demux, STREAM, DECODE, ("Invalid manifest."),
-            (NULL));
-        return FALSE;
+        ret = FALSE;
       }
-      gst_buffer_unmap (demux->manifest, &mapinfo);
       gst_buffer_unref (demux->manifest);
       demux->manifest = NULL;
+
+      if (!ret)
+        goto seek_quit;
 
       if (!gst_mpd_client_setup_media_presentation (demux->client)) {
         GST_ELEMENT_ERROR (demux, STREAM, DECODE,
             ("Incompatible manifest file."), (NULL));
-        return FALSE;
+        ret = FALSE;
+        goto seek_quit;
       }
 
       /* setup video, audio and subtitle streams, starting from first Period */
       if (!gst_mpd_client_set_period_index (demux->client, 0) ||
-          !gst_dash_demux_setup_all_streams (demux))
-        return FALSE;
+          !gst_dash_demux_setup_all_streams (demux)) {
+        ret = FALSE;
+        goto seek_quit;
+      }
 
       gst_dash_demux_advance_period (demux);
 
@@ -860,8 +868,10 @@ gst_dash_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       demux->need_segment = TRUE;
       gst_dash_demux_resume_download_task (demux);
       gst_dash_demux_resume_stream_task (demux);
+
+seek_quit:
       gst_event_unref (event);
-      return TRUE;
+      return ret;
     }
     case GST_EVENT_SEGMENT:
       /* Swallow newsegments, we'll push our own */
