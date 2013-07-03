@@ -763,6 +763,8 @@ gst_base_src_set_do_timestamp (GstBaseSrc * src, gboolean timestamp)
 
   GST_OBJECT_LOCK (src);
   src->priv->do_timestamp = timestamp;
+  if (timestamp && src->segment.format != GST_FORMAT_TIME)
+    gst_segment_init (&src->segment, GST_FORMAT_TIME);
   GST_OBJECT_UNLOCK (src);
 }
 
