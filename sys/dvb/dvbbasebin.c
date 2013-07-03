@@ -85,8 +85,8 @@ typedef struct
   gint program_number;
   guint16 pmt_pid;
   guint16 pcr_pid;
-  GstMpegTSPMT *pmt;
-  GstMpegTSPMT *old_pmt;
+  GstMpegTsPMT *pmt;
+  GstMpegTsPMT *old_pmt;
   gboolean selected;
   gboolean pmt_active;
   gboolean active;
@@ -106,9 +106,9 @@ static GstStateChangeReturn dvb_base_bin_change_state (GstElement * element,
     GstStateChange transition);
 static void dvb_base_bin_handle_message (GstBin * bin, GstMessage * message);
 static void dvb_base_bin_pat_info_cb (DvbBaseBin * dvbbasebin,
-    GstMpegTSSection * pat);
+    GstMpegTsSection * pat);
 static void dvb_base_bin_pmt_info_cb (DvbBaseBin * dvbbasebin,
-    GstMpegTSSection * pmt);
+    GstMpegTsSection * pmt);
 static GstPad *dvb_base_bin_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void dvb_base_bin_release_pad (GstElement * element, GstPad * pad);
@@ -541,7 +541,7 @@ dvb_base_bin_reset_pmtlist (DvbBaseBin * dvbbasebin)
 {
   CamConditionalAccessPmtFlag flag;
   GList *walk;
-  GstMpegTSPMT *pmt;
+  GstMpegTsPMT *pmt;
 
   walk = dvbbasebin->pmtlist;
   while (walk) {
@@ -557,7 +557,7 @@ dvb_base_bin_reset_pmtlist (DvbBaseBin * dvbbasebin)
         flag = CAM_CONDITIONAL_ACCESS_PMT_FLAG_MORE;
     }
 
-    pmt = (GstMpegTSPMT *) walk->data;
+    pmt = (GstMpegTsPMT *) walk->data;
     cam_device_set_pmt (dvbbasebin->hwcam, pmt, flag);
 
     walk = walk->next;
@@ -661,13 +661,13 @@ dvb_base_bin_rebuild_filter (DvbBaseBin * dvbbasebin)
 }
 
 static void
-dvb_base_bin_remove_pmt_streams (DvbBaseBin * dvbbasebin, GstMpegTSPMT * pmt)
+dvb_base_bin_remove_pmt_streams (DvbBaseBin * dvbbasebin, GstMpegTsPMT * pmt)
 {
   gint i;
   DvbBaseBinStream *stream;
 
   for (i = 0; i < pmt->streams->len; i++) {
-    GstMpegTSPMTStream *pmtstream = g_ptr_array_index (pmt->streams, i);
+    GstMpegTsPMTStream *pmtstream = g_ptr_array_index (pmt->streams, i);
 
     stream = dvb_base_bin_get_stream (dvbbasebin, pmtstream->pid);
     if (stream == NULL) {
@@ -681,13 +681,13 @@ dvb_base_bin_remove_pmt_streams (DvbBaseBin * dvbbasebin, GstMpegTSPMT * pmt)
 }
 
 static void
-dvb_base_bin_add_pmt_streams (DvbBaseBin * dvbbasebin, GstMpegTSPMT * pmt)
+dvb_base_bin_add_pmt_streams (DvbBaseBin * dvbbasebin, GstMpegTsPMT * pmt)
 {
   DvbBaseBinStream *stream;
   gint i;
 
   for (i = 0; i < pmt->streams->len; i++) {
-    GstMpegTSPMTStream *pmtstream = g_ptr_array_index (pmt->streams, i);
+    GstMpegTsPMTStream *pmtstream = g_ptr_array_index (pmt->streams, i);
 
     GST_DEBUG ("filtering stream %d stream_type %d", pmtstream->pid,
         pmtstream->stream_type);
@@ -776,7 +776,7 @@ dvb_base_bin_handle_message (GstBin * bin, GstMessage * message)
   dvbbasebin = GST_DVB_BASE_BIN (bin);
 
   if (GST_ELEMENT (message->src) == GST_ELEMENT (dvbbasebin->tsparse)) {
-    GstMpegTSSection *section = gst_message_parse_mpegts_section (message);
+    GstMpegTsSection *section = gst_message_parse_mpegts_section (message);
 
     if (section) {
       switch (GST_MPEGTS_SECTION_TYPE (section)) {
@@ -800,7 +800,7 @@ dvb_base_bin_handle_message (GstBin * bin, GstMessage * message)
 
 
 static void
-dvb_base_bin_pat_info_cb (DvbBaseBin * dvbbasebin, GstMpegTSSection * section)
+dvb_base_bin_pat_info_cb (DvbBaseBin * dvbbasebin, GstMpegTsSection * section)
 {
   GArray *pat;
   DvbBaseBinProgram *program;
@@ -815,7 +815,7 @@ dvb_base_bin_pat_info_cb (DvbBaseBin * dvbbasebin, GstMpegTSSection * section)
   }
 
   for (i = 0; i < pat->len; i++) {
-    GstMpegTSPatProgram *patp = &g_array_index (pat, GstMpegTSPatProgram, i);
+    GstMpegTsPatProgram *patp = &g_array_index (pat, GstMpegTsPatProgram, i);
 
     program = dvb_base_bin_get_program (dvbbasebin, patp->program_number);
     if (program == NULL)
@@ -844,9 +844,9 @@ dvb_base_bin_pat_info_cb (DvbBaseBin * dvbbasebin, GstMpegTSSection * section)
 }
 
 static void
-dvb_base_bin_pmt_info_cb (DvbBaseBin * dvbbasebin, GstMpegTSSection * section)
+dvb_base_bin_pmt_info_cb (DvbBaseBin * dvbbasebin, GstMpegTsSection * section)
 {
-  GstMpegTSPMT *pmt = (GstMpegTSPMT *) section;
+  GstMpegTsPMT *pmt = (GstMpegTsPMT *) section;
   DvbBaseBinProgram *program;
   guint program_number;
 
@@ -860,7 +860,7 @@ dvb_base_bin_pmt_info_cb (DvbBaseBin * dvbbasebin, GstMpegTSSection * section)
   }
 
   program->old_pmt = program->pmt;
-  program->pmt = (GstMpegTSPMT *) gst_mpegts_section_ref (pmt);
+  program->pmt = (GstMpegTsPMT *) gst_mpegts_section_ref (pmt);
 
   /* activate the program if it's selected and either it's not active or its pmt
    * changed */

@@ -70,7 +70,7 @@ cam_conditional_access_destroy (CamConditionalAccess * cas)
 }
 
 static CamReturn
-send_ca_pmt (CamConditionalAccess * cas, GstMpegTSPMT * pmt,
+send_ca_pmt (CamConditionalAccess * cas, GstMpegTsPMT * pmt,
     guint8 list_management, guint8 cmd_id)
 {
   CamReturn ret;
@@ -108,7 +108,7 @@ send_ca_pmt (CamConditionalAccess * cas, GstMpegTSPMT * pmt,
 
 CamReturn
 cam_conditional_access_set_pmt (CamConditionalAccess * cas,
-    GstMpegTSPMT * pmt, CamConditionalAccessPmtFlag flag)
+    GstMpegTsPMT * pmt, CamConditionalAccessPmtFlag flag)
 {
   return send_ca_pmt (cas, pmt, flag, 0x01 /* ok_descrambling */ );
 }

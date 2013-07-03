@@ -178,8 +178,8 @@ get_ca_descriptors_length (GArray * descriptors)
   guint len = 0;
 
   for (i = 0; i < nb_desc; i++) {
-    GstMpegTSDescriptor *desc =
-        &g_array_index (descriptors, GstMpegTSDescriptor, i);
+    GstMpegTsDescriptor *desc =
+        &g_array_index (descriptors, GstMpegTsDescriptor, i);
     if (desc->descriptor_tag == 0x09)
       len += desc->descriptor_length;
   }
@@ -194,8 +194,8 @@ write_ca_descriptors (guint8 * body, GArray * descriptors)
 
   nb_desc = descriptors->len;
   for (i = 0; i < nb_desc; i++) {
-    GstMpegTSDescriptor *desc =
-        &g_array_index (descriptors, GstMpegTSDescriptor, i);
+    GstMpegTsDescriptor *desc =
+        &g_array_index (descriptors, GstMpegTsDescriptor, i);
     if (desc->descriptor_tag == 0x09) {
       memcpy (body, desc->descriptor_data, desc->descriptor_length);
       body += desc->descriptor_length;
@@ -206,10 +206,10 @@ write_ca_descriptors (guint8 * body, GArray * descriptors)
 }
 
 guint8 *
-cam_build_ca_pmt (GstMpegTSPMT * pmt, guint8 list_management, guint8 cmd_id,
+cam_build_ca_pmt (GstMpegTsPMT * pmt, guint8 list_management, guint8 cmd_id,
     guint * size)
 {
-  GstMpegTSSection *section = (GstMpegTSSection *) pmt;
+  GstMpegTsSection *section = (GstMpegTsSection *) pmt;
   guint body_size = 0;
   guint8 *buffer;
   guint8 *body;
@@ -227,7 +227,7 @@ cam_build_ca_pmt (GstMpegTSPMT * pmt, guint8 list_management, guint8 cmd_id,
   body_size += 6 + len;
 
   for (i = 0; i < pmt->streams->len; i++) {
-    GstMpegTSPMTStream *pmtstream = g_ptr_array_index (pmt->streams, i);
+    GstMpegTsPMTStream *pmtstream = g_ptr_array_index (pmt->streams, i);
 
     len = get_ca_descriptors_length (pmtstream->descriptors);
     if (len > 0)
@@ -271,7 +271,7 @@ cam_build_ca_pmt (GstMpegTSPMT * pmt, guint8 list_management, guint8 cmd_id,
   }
 
   for (i = 0; i < pmt->streams->len; i++) {
-    GstMpegTSPMTStream *pmtstream = g_ptr_array_index (pmt->streams, i);
+    GstMpegTsPMTStream *pmtstream = g_ptr_array_index (pmt->streams, i);
 
     *body++ = pmtstream->stream_type;
     GST_WRITE_UINT16_BE (body, pmtstream->pid);

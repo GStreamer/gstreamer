@@ -110,7 +110,7 @@ cam_sw_client_close (CamSwClient * client)
 }
 
 static void
-send_ca_pmt (CamSwClient * client, GstMpegTSPMT * pmt,
+send_ca_pmt (CamSwClient * client, GstMpegTsPMT * pmt,
     guint8 list_management, guint8 cmd_id)
 {
   guint8 *buffer;
@@ -145,7 +145,7 @@ send_ca_pmt (CamSwClient * client, GstMpegTSPMT * pmt,
 }
 
 void
-cam_sw_client_set_pmt (CamSwClient * client, GstMpegTSPMT * pmt)
+cam_sw_client_set_pmt (CamSwClient * client, GstMpegTsPMT * pmt)
 {
   g_return_if_fail (client != NULL);
   g_return_if_fail (pmt != NULL);
@@ -155,7 +155,7 @@ cam_sw_client_set_pmt (CamSwClient * client, GstMpegTSPMT * pmt)
 }
 
 void
-cam_sw_client_update_pmt (CamSwClient * client, GstMpegTSPMT * pmt)
+cam_sw_client_update_pmt (CamSwClient * client, GstMpegTsPMT * pmt)
 {
   g_return_if_fail (client != NULL);
   g_return_if_fail (pmt != NULL);
