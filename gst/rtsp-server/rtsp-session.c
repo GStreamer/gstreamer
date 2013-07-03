@@ -162,10 +162,10 @@ gst_rtsp_session_set_property (GObject * object, guint propid,
 /**
  * gst_rtsp_session_manage_media:
  * @sess: a #GstRTSPSession
- * @uri: the uri for the media
+ * @path: the path for the media
  * @media: (transfer full): a #GstRTSPMedia
  *
- * Manage the media object @obj in @sess. @uri will be used to retrieve this
+ * Manage the media object @obj in @sess. @path will be used to retrieve this
  * media from the session with gst_rtsp_session_get_media().
  *
  * Ownership is taken from @media.
@@ -173,21 +173,21 @@ gst_rtsp_session_set_property (GObject * object, guint propid,
  * Returns: (transfer none): a new @GstRTSPSessionMedia object.
  */
 GstRTSPSessionMedia *
-gst_rtsp_session_manage_media (GstRTSPSession * sess, const GstRTSPUrl * uri,
+gst_rtsp_session_manage_media (GstRTSPSession * sess, const gchar * path,
     GstRTSPMedia * media)
 {
   GstRTSPSessionPrivate *priv;
   GstRTSPSessionMedia *result;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), NULL);
-  g_return_val_if_fail (uri != NULL, NULL);
+  g_return_val_if_fail (path != NULL, NULL);
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
   g_return_val_if_fail (gst_rtsp_media_get_status (media) ==
       GST_RTSP_MEDIA_STATUS_PREPARED, NULL);
 
   priv = sess->priv;
 
-  result = gst_rtsp_session_media_new (uri, media);
+  result = gst_rtsp_session_media_new (path, media);
 
   g_mutex_lock (&priv->lock);
   priv->medias = g_list_prepend (priv->medias, result);
@@ -236,35 +236,47 @@ gst_rtsp_session_release_media (GstRTSPSession * sess,
 /**
  * gst_rtsp_session_get_media:
  * @sess: a #GstRTSPSession
- * @url: the url for the media
+ * @path: the path for the media
+ * @matched: the amount of matched characters
  *
- * Get the session media of the @url.
+ * Get the session media for @path. @matched will contain the number of matched
+ * characters of @path.
  *
- * Returns: (transfer none): the configuration for @url in @sess.
+ * Returns: (transfer none): the configuration for @path in @sess.
  */
 GstRTSPSessionMedia *
-gst_rtsp_session_get_media (GstRTSPSession * sess, const GstRTSPUrl * url)
+gst_rtsp_session_get_media (GstRTSPSession * sess, const gchar * path,
+    gint * matched)
 {
   GstRTSPSessionPrivate *priv;
   GstRTSPSessionMedia *result;
   GList *walk;
+  gint best;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), NULL);
-  g_return_val_if_fail (url != NULL, NULL);
+  g_return_val_if_fail (path != NULL, NULL);
 
   priv = sess->priv;
   result = NULL;
+  best = 0;
 
   g_mutex_lock (&priv->lock);
   for (walk = priv->medias; walk; walk = g_list_next (walk)) {
-    result = (GstRTSPSessionMedia *) walk->data;
+    GstRTSPSessionMedia *test;
 
-    if (gst_rtsp_session_media_matches_url (result, url))
-      break;
+    test = (GstRTSPSessionMedia *) walk->data;
 
-    result = NULL;
+    /* find largest match */
+    if (gst_rtsp_session_media_matches (test, path, matched)) {
+      if (best < *matched) {
+        result = test;
+        best = *matched;
+      }
+    }
   }
   g_mutex_unlock (&priv->lock);
+
+  *matched = best;
 
   return result;
 }

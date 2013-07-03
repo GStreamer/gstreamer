@@ -26,7 +26,8 @@
 struct _GstRTSPSessionMediaPrivate
 {
   GMutex lock;
-  GstRTSPUrl *url;              /* unmutable */
+  gchar *path;                  /* unmutable */
+  gint path_len;                /* unmutable */
   GstRTSPMedia *media;          /* unmutable */
   GstRTSPState state;           /* protected by lock */
   guint counter;                /* protected by lock */
@@ -88,7 +89,7 @@ gst_rtsp_session_media_finalize (GObject * obj)
 
   g_ptr_array_unref (priv->transports);
 
-  gst_rtsp_url_free (priv->url);
+  g_free (priv->path);
   g_object_unref (priv->media);
   g_mutex_clear (&priv->lock);
 
@@ -104,24 +105,24 @@ free_session_media (gpointer data)
 
 /**
  * gst_rtsp_session_media_new:
- * @url: the #GstRTSPUrl
+ * @path: the path
  * @media: the #GstRTSPMedia
  *
  * Create a new #GstRTPSessionMedia that manages the streams
- * in @media for @url. @media should be prepared.
+ * in @media for @path. @media should be prepared.
  *
  * Ownership is taken of @media.
  *
  * Returns: a new #GstRTSPSessionMedia.
  */
 GstRTSPSessionMedia *
-gst_rtsp_session_media_new (const GstRTSPUrl * url, GstRTSPMedia * media)
+gst_rtsp_session_media_new (const gchar * path, GstRTSPMedia * media)
 {
   GstRTSPSessionMediaPrivate *priv;
   GstRTSPSessionMedia *result;
   guint n_streams;
 
-  g_return_val_if_fail (url != NULL, NULL);
+  g_return_val_if_fail (path != NULL, NULL);
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
   g_return_val_if_fail (gst_rtsp_media_get_status (media) ==
       GST_RTSP_MEDIA_STATUS_PREPARED, NULL);
@@ -129,7 +130,8 @@ gst_rtsp_session_media_new (const GstRTSPUrl * url, GstRTSPMedia * media)
   result = g_object_new (GST_TYPE_RTSP_SESSION_MEDIA, NULL);
   priv = result->priv;
 
-  priv->url = gst_rtsp_url_copy ((GstRTSPUrl *) url);
+  priv->path = g_strdup (path);
+  priv->path_len = strlen (path);
   priv->media = media;
 
   /* prealloc the streams now, filled with NULL */
@@ -141,22 +143,41 @@ gst_rtsp_session_media_new (const GstRTSPUrl * url, GstRTSPMedia * media)
 }
 
 /**
- * gst_rtsp_session_media_matches_url:
+ * gst_rtsp_session_media_matches:
  * @media: a #GstRTSPSessionMedia
- * @url: a #GstRTSPUrl
+ * @path: a path
+ * @matched: the amount of matched characters of @path
  *
- * Check if the url of @media matches @url.
+ * Check if the path of @media matches @path. It @path matches, the amount of
+ * matched characters is returned in @matched.
  *
- * Returns: %TRUE when @url matches the url of @media.
+ * Returns: %TRUE when @path matches the path of @media.
  */
 gboolean
-gst_rtsp_session_media_matches_url (GstRTSPSessionMedia * media,
-    const GstRTSPUrl * url)
+gst_rtsp_session_media_matches (GstRTSPSessionMedia * media,
+    const gchar * path, gint * matched)
 {
-  g_return_val_if_fail (GST_IS_RTSP_SESSION_MEDIA (media), FALSE);
-  g_return_val_if_fail (url != NULL, FALSE);
+  GstRTSPSessionMediaPrivate *priv;
+  gint len;
 
-  return g_str_equal (media->priv->url->abspath, url->abspath);
+  g_return_val_if_fail (GST_IS_RTSP_SESSION_MEDIA (media), FALSE);
+  g_return_val_if_fail (path != NULL, FALSE);
+  g_return_val_if_fail (matched != NULL, FALSE);
+
+  priv = media->priv;
+  len = strlen (path);
+
+  /* path needs to be smaller than the media path */
+  if (len < priv->path_len)
+    return FALSE;
+
+  /* if media path is larger, it there should be a / following the path */
+  if (len > priv->path_len && path[priv->path_len] != '/')
+    return FALSE;
+
+  *matched = priv->path_len;
+
+  return strncmp (path, priv->path, priv->path_len) == 0;
 }
 
 /**

@@ -41,14 +41,8 @@ typedef struct _GstRTSPSessionMediaPrivate GstRTSPSessionMediaPrivate;
 
 /**
  * GstRTSPSessionMedia:
- * @url: the url of the media
- * @media: the pipeline for the media
- * @state: the server state
- * @counter: counter for channels
- * @transports: array of #GstRTSPStreamTransport with the configuration
- *   for the transport for each selected stream from @media.
  *
- * State of a client session regarding a specific media identified by uri.
+ * State of a client session regarding a specific media identified by path.
  */
 struct _GstRTSPSessionMedia
 {
@@ -64,11 +58,12 @@ struct _GstRTSPSessionMediaClass
 
 GType                    gst_rtsp_session_media_get_type       (void);
 
-GstRTSPSessionMedia *    gst_rtsp_session_media_new            (const GstRTSPUrl *url,
+GstRTSPSessionMedia *    gst_rtsp_session_media_new            (const gchar *path,
                                                                 GstRTSPMedia *media);
 
-gboolean                 gst_rtsp_session_media_matches_url    (GstRTSPSessionMedia *media,
-                                                                const GstRTSPUrl *url);
+gboolean                 gst_rtsp_session_media_matches        (GstRTSPSessionMedia *media,
+                                                                const gchar *path,
+                                                                gint * matched);
 GstRTSPMedia *           gst_rtsp_session_media_get_media      (GstRTSPSessionMedia *media);
 
 GstClockTime             gst_rtsp_session_media_get_base_time  (GstRTSPSessionMedia *media);

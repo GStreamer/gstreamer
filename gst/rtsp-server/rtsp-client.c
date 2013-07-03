@@ -502,8 +502,7 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
       goto no_mount_points;
 
     /* find the factory for the uri first */
-    if (!(factory =
-            gst_rtsp_mount_points_match (priv->mount_points,
+    if (!(factory = gst_rtsp_mount_points_match (priv->mount_points,
                 state->uri->abspath, NULL)))
       goto no_factory;
 
@@ -698,6 +697,8 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
   GstRTSPSession *session;
   GstRTSPSessionMedia *sessmedia;
   GstRTSPStatusCode code;
+  const gchar *path;
+  gint matched;
 
   if (!state->session)
     goto no_session;
@@ -707,8 +708,10 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
   if (!state->uri)
     goto no_uri;
 
+  path = state->uri->abspath;
+
   /* get a handle to the configuration of the media in the session */
-  sessmedia = gst_rtsp_session_get_media (session, state->uri);
+  sessmedia = gst_rtsp_session_get_media (session, path, &matched);
   if (!sessmedia)
     goto not_found;
 
@@ -863,6 +866,8 @@ handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
   GstRTSPSessionMedia *sessmedia;
   GstRTSPStatusCode code;
   GstRTSPState rtspstate;
+  const gchar *path;
+  gint matched;
 
   if (!(session = state->session))
     goto no_session;
@@ -870,8 +875,10 @@ handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
   if (!state->uri)
     goto no_uri;
 
+  path = state->uri->abspath;
+
   /* get a handle to the configuration of the media in the session */
-  sessmedia = gst_rtsp_session_get_media (session, state->uri);
+  sessmedia = gst_rtsp_session_get_media (session, path, &matched);
   if (!sessmedia)
     goto not_found;
 
@@ -946,6 +953,8 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   GstRTSPResult res;
   GstRTSPState rtspstate;
   GstRTSPRangeUnit unit = GST_RTSP_RANGE_NPT;
+  const gchar *path;
+  gint matched;
 
   if (!(session = state->session))
     goto no_session;
@@ -953,8 +962,10 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   if (!state->uri)
     goto no_uri;
 
+  path = state->uri->abspath;
+
   /* get a handle to the configuration of the media in the session */
-  sessmedia = gst_rtsp_session_get_media (session, state->uri);
+  sessmedia = gst_rtsp_session_get_media (session, path, &matched);
   if (!sessmedia)
     goto not_found;
 
@@ -1290,11 +1301,14 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   GstRTSPStream *stream;
   GstRTSPState rtspstate;
   GstRTSPClientClass *klass;
+  const gchar *path;
+  gint matched;
 
   if (!state->uri)
     goto no_uri;
 
   uri = state->uri;
+  path = state->uri->abspath;
 
   /* the uri contains the stream number we added in the SDP config, which is
    * always /stream=%d so we need to strip that off
@@ -1340,7 +1354,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
     g_object_ref (session);
     /* get a handle to the configuration of the media in the session, this can
      * return NULL if this is a new url to manage in this session. */
-    sessmedia = gst_rtsp_session_get_media (session, uri);
+    sessmedia = gst_rtsp_session_get_media (session, path, &matched);
   } else {
     /* create a session if this fails we probably reached our session limit or
      * something. */
@@ -1365,7 +1379,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
     /* get a handle to the configuration of the media in the session */
     if ((media = find_media (client, state))) {
       /* manage the media in our session now */
-      sessmedia = gst_rtsp_session_manage_media (session, uri, media);
+      sessmedia = gst_rtsp_session_manage_media (session, path, media);
     }
   }
 
