@@ -2940,7 +2940,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
   }
 
   /* check duration of last segment */
-  last_media_segment = g_list_last (stream->segments)->data;
+  last_media_segment = stream->segments ? g_list_last (stream->segments)->data : NULL;
   if (last_media_segment && GST_CLOCK_TIME_IS_VALID (PeriodEnd)) {
     if (last_media_segment->start_time + last_media_segment->duration >
         PeriodEnd) {
