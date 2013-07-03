@@ -739,6 +739,7 @@ _parse_tot (GstMpegTsSection * section)
   data = section->data + 8;
 
   desc_len = GST_READ_UINT16_BE (data) & 0xFFF;
+  data += 2;
   tot->descriptors = gst_mpegts_parse_descriptors (data, desc_len);
 
   return tot;

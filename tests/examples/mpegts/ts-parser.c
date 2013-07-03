@@ -327,6 +327,17 @@ dump_tdt (GstMpegTsSection * section)
 }
 
 static void
+dump_tot (GstMpegTsSection * section)
+{
+  const GstMpegTsTOT *tot = gst_mpegts_section_get_tot (section);
+  gchar *str = gst_date_time_to_iso8601_string (tot->utc_time);
+
+  g_printf ("     utc_time : %s\n", str);
+  dump_descriptors (tot->descriptors, 7);
+  g_free (str);
+}
+
+static void
 dump_section (GstMpegTsSection * section)
 {
   switch (GST_MPEGTS_SECTION_TYPE (section)) {
@@ -338,6 +349,9 @@ dump_section (GstMpegTsSection * section)
       break;
     case GST_MPEGTS_SECTION_TDT:
       dump_tdt (section);
+      break;
+    case GST_MPEGTS_SECTION_TOT:
+      dump_tot (section);
       break;
     case GST_MPEGTS_SECTION_SDT:
       dump_sdt (section);
