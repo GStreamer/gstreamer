@@ -1571,8 +1571,8 @@ gst_event_new_segment_done (GstFormat format, gint64 position)
 /**
  * gst_event_parse_segment_done:
  * @event: A valid #GstEvent of type GST_EVENT_SEGMENT_DONE.
- * @format: (out): Result location for the format, or NULL
- * @position: (out): Result location for the position, or NULL
+ * @format: (out) (allow-none): Result location for the format, or NULL
+ * @position: (out) (allow-none): Result location for the position, or NULL
  *
  * Extracts the position and format from the segment done message.
  *

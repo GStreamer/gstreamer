@@ -106,9 +106,9 @@ _priv_gst_mini_object_initialize (void)
  * @mini_object: a #GstMiniObject
  * @flags: initial #GstMiniObjectFlags
  * @type: the #GType of the mini-object to create
- * @copy_func: the copy function, or NULL
- * @dispose_func: the dispose function, or NULL
- * @free_func: the free function or NULL
+ * @copy_func: (allow-none): the copy function, or NULL
+ * @dispose_func: (allow-none): the dispose function, or NULL
+ * @free_func: (allow-none): the free function or NULL
  *
  * Initializes a mini-object with the desired type and copy/dispose/free
  * functions.

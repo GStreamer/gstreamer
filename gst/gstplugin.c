@@ -1708,15 +1708,15 @@ gst_plugin_ext_dep_equals (GstPluginDep * dep, const gchar ** env_vars,
 /**
  * gst_plugin_add_dependency:
  * @plugin: a #GstPlugin
- * @env_vars: NULL-terminated array of environment variables affecting the
+ * @env_vars: (allow-none): NULL-terminated array of environment variables affecting the
  *     feature set of the plugin (e.g. an environment variable containing
  *     paths where to look for additional modules/plugins of a library),
  *     or NULL. Environment variable names may be followed by a path component
  *      which will be added to the content of the environment variable, e.g.
  *      "HOME/.mystuff/plugins".
- * @paths: NULL-terminated array of directories/paths where dependent files
- *     may be.
- * @names: NULL-terminated array of file names (or file name suffixes,
+ * @paths: (allow-none): NULL-terminated array of directories/paths where dependent files
+ *     may be, or NULL.
+ * @names: (allow-none): NULL-terminated array of file names (or file name suffixes,
  *     depending on @flags) to be used in combination with the paths from
  *     @paths and/or the paths extracted from the environment variables in
  *     @env_vars, or NULL.
@@ -1779,14 +1779,14 @@ gst_plugin_add_dependency (GstPlugin * plugin, const gchar ** env_vars,
 /**
  * gst_plugin_add_dependency_simple:
  * @plugin: the #GstPlugin
- * @env_vars: one or more environment variables (separated by ':', ';' or ','),
+ * @env_vars: (allow-none): one or more environment variables (separated by ':', ';' or ','),
  *      or NULL. Environment variable names may be followed by a path component
  *      which will be added to the content of the environment variable, e.g.
  *      "HOME/.mystuff/plugins:MYSTUFF_PLUGINS_PATH"
- * @paths: one ore more directory paths (separated by ':' or ';' or ','),
+ * @paths: (allow-none): one ore more directory paths (separated by ':' or ';' or ','),
  *      or NULL. Example: "/usr/lib/mystuff/plugins"
- * @names: one or more file names or file name suffixes (separated by commas),
- *   or NULL
+ * @names: (allow-none): one or more file names or file name suffixes (separated by commas),
+ *      or NULL
  * @flags: optional flags, or #GST_PLUGIN_DEPENDENCY_FLAG_NONE
  *
  * Make GStreamer aware of external dependencies which affect the feature
